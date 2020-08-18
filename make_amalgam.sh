@@ -117,10 +117,8 @@ cat "gen_sql.h" >>out/pass1
 cat "crc64xz.h" >>out/pass1
 cat "cg_common.h" >>out/pass1
 cat "cg_c.h" >>out/pass1
-cat "cg_dasm.h" >>out/pass1
 cat "cg_java.h" >>out/pass1
 cat "cg_json_schema.h" >>out/pass1
-cat "cg_msys_schema_utils.h" >>out/pass1
 cat "cg_objc.h" >>out/pass1
 cat "cg_query_plan.h" >>out/pass1
 cat "cg_udf.h" >>out/pass1
@@ -131,12 +129,10 @@ cat "rt.h" >>out/pass1
 
 cat "ast.c" >>out/pass1
 cat "bytebuf.c" >>out/pass1
-cat "cg_dasm.c" >>out/pass1
 cat "cg_c.c" >>out/pass1
 cat "cg_common.c" >>out/pass1
 cat "cg_java.c" >>out/pass1
 cat "cg_json_schema.c" >>out/pass1
-cat "cg_msys_schema_utils.c" >>out/pass1
 cat "cg_objc.c" >>out/pass1
 cat "cg_query_plan.c" >>out/pass1
 cat "cg_udf.c" >>out/pass1
