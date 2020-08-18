@@ -2246,7 +2246,7 @@ result:
 <li><code>@delete(version [, migration proc])</code></li>
 <li><code>@recreate</code></li>
 </ul>
-<p>More details on migration/upgrade procs are available <a href="https://our.intern.facebook.com/intern/wiki/Messenger/LightSpeed/Engineering/Msys/CQL/CQL_Schema_Versioning/CQL_Custom_Schema_Upgrade_Procs/">in this article</a>.</p>
+<p>They have various constraints:</p>
 <ul>
 <li><code>@create</code> and <code>@delete</code> can only be applied to tables and columns</li>
 <li><code>@recreate</code> can only be applied to tables (nothing else needs it anyway)</li>
@@ -2400,12 +2400,11 @@ end;</code></pre>
 <p>With just those annotations you can automatically create the following upgrade script which is itself CQL (and hence has to be compiled). This code is totally readable!</p>
 <p>I’ve split the script into logical pieces to explain what’s going on.</p>
 <h4 id="preamble">Preamble</h4>
-<div class="sourceCode" id="cb155"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb155-1"><a href="#cb155-1"></a><span class="co">-- Copyright 2004-present Facebook. All Rights Reserved.</span></span>
-<span id="cb155-2"><a href="#cb155-2"></a><span class="co">-- @generated SignedSource&lt;&lt;deadbeef8badf00ddefec8edfacefeed&gt;&gt;</span></span>
-<span id="cb155-3"><a href="#cb155-3"></a></span>
-<span id="cb155-4"><a href="#cb155-4"></a><span class="co">-- no columns will be considered hidden in this script</span></span>
-<span id="cb155-5"><a href="#cb155-5"></a><span class="co">-- DDL in procs will not count as declarations</span></span>
-<span id="cb155-6"><a href="#cb155-6"></a><span class="ot">@SCHEMA_UPGRADE_SCRIPT;</span></span></code></pre></div>
+<div class="sourceCode" id="cb155"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb155-1"><a href="#cb155-1"></a><span class="co">-- ...copyright notice... possibly generated source tag... elided to avoid confusion</span></span>
+<span id="cb155-2"><a href="#cb155-2"></a></span>
+<span id="cb155-3"><a href="#cb155-3"></a><span class="co">-- no columns will be considered hidden in this script</span></span>
+<span id="cb155-4"><a href="#cb155-4"></a><span class="co">-- DDL in procs will not count as declarations</span></span>
+<span id="cb155-5"><a href="#cb155-5"></a><span class="ot">@SCHEMA_UPGRADE_SCRIPT;</span></span></code></pre></div>
 <p>Schema upgrade scripts need to see all the columns even the ones that would be logically deleted in normal mode. This is so that things like <code>alter table add column</code> can refer to real columns and <code>drop table</code> can refer to a table that shouldn’t even be visible. Remember in CQL the declarations tell you the logical state of the universe and DLL mutations are expected to create that condition, so you should be dropping tables that are marked with <code>@delete</code> CQL stores the current state of the universe in this table.</p>
 <div class="sourceCode" id="cb156"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb156-1"><a href="#cb156-1"></a><span class="co">-- schema crc -7714030317354747478</span></span></code></pre></div>
 <p>The schema crc is computed by hashing all the schema declarations in canonical form. That’s everything in this next section.</p>

@@ -3600,7 +3600,7 @@ There are three basic flavors of annotation
 * `@delete(version [, migration proc])`
 * `@recreate`
 
-More details on migration/upgrade procs are available [in this article](https://our.intern.facebook.com/intern/wiki/Messenger/LightSpeed/Engineering/Msys/CQL/CQL_Schema_Versioning/CQL_Custom_Schema_Upgrade_Procs/).
+They have various constraints:
 
 * `@create` and `@delete` can only be applied to tables and columns
 * `@recreate` can only be applied to tables (nothing else needs it anyway)
@@ -3761,8 +3761,7 @@ I've split the script into logical pieces to explain what's going on.
 #### Preamble
 
 ```sql
--- Copyright 2004-present Facebook. All Rights Reserved.
--- @generated SignedSource<<deadbeef8badf00ddefec8edfacefeed>>
+-- ...copyright notice... possibly generated source tag... elided to avoid confusion
 
 -- no columns will be considered hidden in this script
 -- DDL in procs will not count as declarations
@@ -4678,6 +4677,7 @@ So, in summary, to get true privacy first make whatever logical regions you like
 
 
 <div style="page-break-after: always; visibility: hidden"></div>
+
 
 ## 11. Previous Schema Validation
 
