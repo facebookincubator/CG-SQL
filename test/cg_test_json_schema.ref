@@ -1,0 +1,2188 @@
+
+{
+  "tables" : [
+    
+    The statement ending at line XXXX
+    
+    CREATE TABLE Foo(
+      id INTEGER NOT NULL,
+      name TEXT
+    )
+    
+    {
+      "name" : "Foo",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "region" : "region0",
+      "deployedInRegion" : "region2",
+      "columns" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "name",
+          "type" : "text",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ],
+      "indices" : [ "region_0_index", "MyIndex", "MyOtherIndex" ]
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE TABLE T2(
+      id INTEGER PRIMARY KEY AUTOINCREMENT
+    )
+    
+    {
+      "name" : "T2",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "columns" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 1,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 1
+        }
+      ],
+      "primaryKey" : [ "id" ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ]
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE TABLE T3(
+      id INTEGER UNIQUE NOT NULL
+    )
+    
+    {
+      "name" : "T3",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "columns" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 1,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+        {
+          "name" : "id_uk",
+          "columns" : [ "id" ]
+        }
+      ]
+    },
+    
+    The statement ending at line XXXX
+    
+    @ATTRIBUTE(foo=bar)
+    @ATTRIBUTE(num=-7)
+    CREATE TABLE T4(
+      @ATTRIBUTE(cool)
+      id INTEGER
+    )
+    
+    {
+      "name" : "T4",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "columns" : [
+        {
+          "name" : "id",
+          "attributes" : [
+            {
+              "name" : "cool",
+              "value" : 1
+            }
+          ],
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ],
+      "attributes" : [
+        {
+          "name" : "foo",
+          "value" : "bar"
+        },
+        {
+          "name" : "num",
+          "value" : -7
+        }
+      ]
+    },
+    
+    The statement ending at line XXXX
+    
+    @ATTRIBUTE(crazy="\\ ' \a \b \f \n \t \r \v \\ \" ")
+    CREATE TABLE T5(
+      r REAL,
+      bl BLOB,
+      b BOOL,
+      l LONG_INT
+    )
+    
+    {
+      "name" : "T5",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "columns" : [
+        {
+          "name" : "r",
+          "type" : "real",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "bl",
+          "type" : "blob",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "b",
+          "type" : "bool",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "l",
+          "type" : "long",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ],
+      "attributes" : [
+        {
+          "name" : "crazy",
+          "value" : "\\ ' \a \b \f \n \t \r \v \\ \" "
+        }
+      ]
+    },
+    
+    The statement ending at line XXXX
+    
+    @ATTRIBUTE(this:that=1)
+    CREATE TEMP TABLE IF NOT EXISTS T6(
+      id INTEGER NOT NULL
+    ) WITHOUT ROWID
+    
+    {
+      "name" : "T6",
+      "isTemp" : 1,
+      "ifNotExists" : 1,
+      "withoutRowid" : 1,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "columns" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ],
+      "attributes" : [
+        {
+          "name" : "this_that",
+          "value" : 1
+        }
+      ]
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE TABLE T7a(
+      id INTEGER @CREATE(1) @DELETE(3)
+    )
+    
+    {
+      "name" : "T7a",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "columns" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 1,
+          "addedVersion" : 1,
+          "isDeleted" : 1,
+          "deletedVersion" : 3,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ]
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE TABLE T7b(
+      id INTEGER @CREATE(1, t7_col_create) @DELETE(3, t7_col_delete)
+    )
+    
+    {
+      "name" : "T7b",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "columns" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 1,
+          "addedVersion" : 1,
+          "addedMigrationProc" : "t7_col_create",
+          "isDeleted" : 1,
+          "deletedVersion" : 3,
+          "deletedMigrationProc" : "t7_col_delete",
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ]
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE TABLE T8a(
+      id INTEGER
+    ) @CREATE(1) @DELETE(3)
+    
+    {
+      "name" : "T8a",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 1,
+      "addedVersion" : 1,
+      "isDeleted" : 1,
+      "deletedVersion" : 3,
+      "isRecreated": 0,
+      "columns" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ]
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE TABLE T8b(
+      id INTEGER
+    ) @CREATE(1, t8_table_create) @DELETE(3, t8_table_delete)
+    
+    {
+      "name" : "T8b",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 1,
+      "addedVersion" : 1,
+      "isDeleted" : 1,
+      "deletedVersion" : 3,
+      "isRecreated": 0,
+      "addedMigrationProc" : "t8_table_create",
+      "deletedMigrationProc" : "t8_table_delete",
+      "columns" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ]
+    },
+    
+    The statement ending at line XXXX
+    
+    @ATTRIBUTE(an_integer=1)
+    @ATTRIBUTE(a_double=2.500000)
+    @ATTRIBUTE(a_double=2.500000)
+    CREATE TABLE T9(
+      id1 INTEGER DEFAULT 3 PRIMARY KEY,
+      id2 INTEGER,
+      id3 INTEGER,
+      name TEXT DEFAULT "xyzzy",
+      val REAL DEFAULT -3.500000,
+      val2 LONG_INT DEFAULT 123456789123456789,
+      CONSTRAINT uk1 UNIQUE (id2, id3)
+    )
+    
+    {
+      "name" : "T9",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "columns" : [
+        {
+          "name" : "id1",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 1,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0,
+          "defaultValue" : 3
+        },
+        {
+          "name" : "id2",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "id3",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "name",
+          "type" : "text",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0,
+          "defaultValue" : "xyzzy"
+        },
+        {
+          "name" : "val",
+          "type" : "real",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0,
+          "defaultValue" : -3.500000
+        },
+        {
+          "name" : "val2",
+          "type" : "long",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0,
+          "defaultValue" : 123456789123456789
+        }
+      ],
+      "primaryKey" : [ "id1" ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+        {
+          "name" : "uk1",
+          "columns" : [ "id2", "id3" ]
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "an_integer",
+          "value" : 1
+        },
+        {
+          "name" : "a_double",
+          "value" : 2.500000
+        },
+        {
+          "name" : "a_double",
+          "value" : 2.500000
+        }
+      ]
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE TABLE T10(
+      id1 INTEGER UNIQUE,
+      id2 INTEGER,
+      id3 INTEGER,
+      id4 INTEGER UNIQUE,
+      PRIMARY KEY (id1, id2),
+      FOREIGN KEY (id1, id2) REFERENCES T9 (id2, id3),
+      CONSTRAINT uk1 UNIQUE (id2, id3),
+      UNIQUE (id3, id4)
+    )
+    
+    {
+      "name" : "T10",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "columns" : [
+        {
+          "name" : "id1",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 1,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "id2",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "id3",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "id4",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 1,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [ "id1", "id2" ],
+      "foreignKeys" : [
+        {
+          "columns" : [ "id1", "id2" ],
+          "referenceTable" : "T9",
+          "referenceColumns" : [ "id2", "id3" ],
+          "onUpdate" : "NO ACTION",
+          "onDelete" : "NO ACTION",
+          "isDeferred" : 0
+        }
+      ],
+      "uniqueKeys" : [
+        {
+          "name" : "id1_uk",
+          "columns" : [ "id1" ]
+        },
+        {
+          "name" : "id4_uk",
+          "columns" : [ "id4" ]
+        },
+        {
+          "name" : "uk1",
+          "columns" : [ "id2", "id3" ]
+        },
+        {
+          "columns" : [ "id3", "id4" ]
+        }
+      ]
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE TABLE T11(
+      id1 INTEGER,
+      id2 INTEGER,
+      id3 INTEGER,
+      FOREIGN KEY (id1) REFERENCES T9 (id1) ON DELETE CASCADE,
+      FOREIGN KEY (id1) REFERENCES T9 (id1) ON UPDATE SET NULL
+    )
+    
+    {
+      "name" : "T11",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "columns" : [
+        {
+          "name" : "id1",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "id2",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "id3",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "foreignKeys" : [
+        {
+          "columns" : [ "id1" ],
+          "referenceTable" : "T9",
+          "referenceColumns" : [ "id1" ],
+          "onUpdate" : "NO ACTION",
+          "onDelete" : "CASCADE",
+          "isDeferred" : 0
+        },
+        {
+          "columns" : [ "id1" ],
+          "referenceTable" : "T9",
+          "referenceColumns" : [ "id1" ],
+          "onUpdate" : "SET NULL",
+          "onDelete" : "NO ACTION",
+          "isDeferred" : 0
+        }
+      ],
+      "uniqueKeys" : [
+      ]
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE TABLE T12(
+      id1 INTEGER,
+      id2 INTEGER,
+      id3 INTEGER,
+      FOREIGN KEY (id1) REFERENCES T9 (id1) ON DELETE SET DEFAULT DEFERRABLE INITIALLY DEFERRED,
+      FOREIGN KEY (id2) REFERENCES T9 (id1) ON UPDATE NO ACTION
+    )
+    
+    {
+      "name" : "T12",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "columns" : [
+        {
+          "name" : "id1",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "id2",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "id3",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "foreignKeys" : [
+        {
+          "columns" : [ "id1" ],
+          "referenceTable" : "T9",
+          "referenceColumns" : [ "id1" ],
+          "onUpdate" : "NO ACTION",
+          "onDelete" : "SET DEFAULT",
+          "isDeferred" : 1
+        },
+        {
+          "columns" : [ "id2" ],
+          "referenceTable" : "T9",
+          "referenceColumns" : [ "id1" ],
+          "onUpdate" : "NO ACTION",
+          "onDelete" : "NO ACTION",
+          "isDeferred" : 0
+        }
+      ],
+      "uniqueKeys" : [
+      ]
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE TABLE T12a(
+      id1 INTEGER,
+      id2 INTEGER,
+      id3 INTEGER,
+      FOREIGN KEY (id1) REFERENCES T9 (id1) ON DELETE RESTRICT NOT DEFERRABLE
+    )
+    
+    {
+      "name" : "T12a",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "columns" : [
+        {
+          "name" : "id1",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "id2",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "id3",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "foreignKeys" : [
+        {
+          "columns" : [ "id1" ],
+          "referenceTable" : "T9",
+          "referenceColumns" : [ "id1" ],
+          "onUpdate" : "NO ACTION",
+          "onDelete" : "RESTRICT",
+          "isDeferred" : 0
+        }
+      ],
+      "uniqueKeys" : [
+      ]
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE TABLE T12b(
+      id1 INTEGER,
+      id2 INTEGER,
+      FOREIGN KEY (id1) REFERENCES T9 (id1) NOT DEFERRABLE
+    )
+    
+    {
+      "name" : "T12b",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "columns" : [
+        {
+          "name" : "id1",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "id2",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "foreignKeys" : [
+        {
+          "columns" : [ "id1" ],
+          "referenceTable" : "T9",
+          "referenceColumns" : [ "id1" ],
+          "onUpdate" : "NO ACTION",
+          "onDelete" : "NO ACTION",
+          "isDeferred" : 0
+        }
+      ],
+      "uniqueKeys" : [
+      ]
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE TABLE with_fk_on_columns(
+      id1 INTEGER NOT NULL REFERENCES T2 (id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED,
+      id2 INTEGER NOT NULL REFERENCES T10 (id4) ON DELETE CASCADE,
+      FOREIGN KEY (id1, id2) REFERENCES T10 (id3, id4)
+    )
+    
+    {
+      "name" : "with_fk_on_columns",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "columns" : [
+        {
+          "name" : "id1",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "id2",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "foreignKeys" : [
+        {
+          "columns" : [ "id1" ],
+          "referenceTable" : "T2",
+          "referenceColumns" : [ "id" ],
+          "onUpdate" : "CASCADE",
+          "onDelete" : "NO ACTION",
+          "isDeferred" : 1
+        },
+        {
+          "columns" : [ "id2" ],
+          "referenceTable" : "T10",
+          "referenceColumns" : [ "id4" ],
+          "onUpdate" : "NO ACTION",
+          "onDelete" : "CASCADE",
+          "isDeferred" : 0
+        },
+        {
+          "columns" : [ "id1", "id2" ],
+          "referenceTable" : "T10",
+          "referenceColumns" : [ "id3", "id4" ],
+          "onUpdate" : "NO ACTION",
+          "onDelete" : "NO ACTION",
+          "isDeferred" : 0
+        }
+      ],
+      "uniqueKeys" : [
+      ]
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE TABLE recreated_in_a_group(
+      id INTEGER
+    ) @RECREATE(my_recreate_group)
+    
+    {
+      "name" : "recreated_in_a_group",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 1,
+      "recreateGroupName" : "my_recreate_group",
+      "columns" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ]
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE TABLE radioactive(
+      id INTEGER NOT NULL,
+      danger TEXT @SENSITIVE
+    )
+    
+    {
+      "name" : "radioactive",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "columns" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "danger",
+          "type" : "text",
+          "isNotNull" : 0,
+          "isSensitive" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ]
+    }
+  ],
+  "views" : [
+    
+    The statement ending at line XXXX
+    
+    CREATE VIEW region_0_view AS
+    SELECT *
+      FROM Foo
+    
+    {
+      "name" : "region_0_view",
+      "isTemp" : 0,
+      "isDeleted" : 0,
+      "region" : "region0",
+      "deployedInRegion" : "region2",
+      "projection" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "name",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ],
+      "select" : "SELECT id, name FROM Foo",
+      "selectArgs" : [  ]
+    }
+    The statement ending at line XXXX
+    
+    CREATE VIEW MyView AS
+    SELECT *
+      FROM Foo
+    
+    ,
+    {
+      "name" : "MyView",
+      "isTemp" : 0,
+      "isDeleted" : 0,
+      "projection" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "name",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ],
+      "select" : "SELECT id, name FROM Foo",
+      "selectArgs" : [  ]
+    }
+    The statement ending at line XXXX
+    
+    CREATE VIEW MyOtherView AS
+    SELECT *
+      FROM Foo
+    
+    ,
+    {
+      "name" : "MyOtherView",
+      "isTemp" : 0,
+      "isDeleted" : 0,
+      "projection" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "name",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ],
+      "select" : "SELECT id, name FROM Foo",
+      "selectArgs" : [  ]
+    }
+    The statement ending at line XXXX
+    
+    CREATE VIEW ADeletedView AS
+    SELECT *
+      FROM Foo @DELETE(1)
+    
+    ,
+    {
+      "name" : "ADeletedView",
+      "isTemp" : 0,
+      "isDeleted" : 1,
+      "deletedVersion" : 1,
+      "projection" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "name",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ],
+      "select" : "SELECT id, name FROM Foo",
+      "selectArgs" : [  ]
+    }
+    The statement ending at line XXXX
+    
+    CREATE VIEW ADeletedViewWithMigrationProc AS
+    SELECT *
+      FROM Foo @DELETE(1, view_delete)
+    
+    ,
+    {
+      "name" : "ADeletedViewWithMigrationProc",
+      "isTemp" : 0,
+      "isDeleted" : 1,
+      "deletedVersion" : 1,
+      "deletedMigrationProc" : "view_delete",
+      "projection" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "name",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ],
+      "select" : "SELECT id, name FROM Foo",
+      "selectArgs" : [  ]
+    }
+  ],
+  "indices" : [
+    
+    The statement ending at line XXXX
+    
+    CREATE INDEX region_0_index ON Foo (name, id)
+    
+    {
+      "name" : "region_0_index",
+      "table" : "Foo",
+      "isUnique" : 0,
+      "ifNotExists" : 0,
+      "isDeleted" : 0,
+      "region" : "region0",
+      "deployedInRegion" : "region2",
+      "columns" : [ "name", "id" ],
+      "sortOrders" : [ "", "" ]
+    }
+    The statement ending at line XXXX
+    
+    CREATE UNIQUE INDEX IF NOT EXISTS MyIndex ON Foo (name DESC, id ASC)
+    
+    ,
+    {
+      "name" : "MyIndex",
+      "table" : "Foo",
+      "isUnique" : 1,
+      "ifNotExists" : 1,
+      "isDeleted" : 0,
+      "columns" : [ "name", "id" ],
+      "sortOrders" : [ "desc", "asc" ]
+    }
+    The statement ending at line XXXX
+    
+    CREATE INDEX MyOtherIndex ON Foo (id)
+    
+    ,
+    {
+      "name" : "MyOtherIndex",
+      "table" : "Foo",
+      "isUnique" : 0,
+      "ifNotExists" : 0,
+      "isDeleted" : 0,
+      "columns" : [ "id" ],
+      "sortOrders" : [ "" ]
+    }
+    The statement ending at line XXXX
+    
+    CREATE INDEX YetAnotherIndex ON Foo (id) @DELETE(1)
+    
+    ,
+    {
+      "name" : "YetAnotherIndex",
+      "table" : "Foo",
+      "isUnique" : 0,
+      "ifNotExists" : 0,
+      "isDeleted" : 1,
+      "deletedVersion" : 1,
+      "columns" : [ "id" ],
+      "sortOrders" : [ "" ]
+    }
+  ],
+  "triggers" : [
+    
+    The statement ending at line XXXX
+    
+    CREATE TEMP TRIGGER IF NOT EXISTS trigger1
+      BEFORE DELETE ON foo
+      FOR EACH ROW
+      WHEN old.id = 3
+    BEGIN
+    DELETE FROM Foo WHERE id = id + 1;
+    
+    DELETE FROM Foo WHERE id = old.id;
+    END
+    
+    {
+      "name" : "trigger1",
+      "target" : "Foo",
+      "isTemp" : 1,
+      "ifNotExists" : 1,
+      "isDeleted" : 0,
+      "isBeforeTrigger" : 1,
+      "isDeleteTrigger" : 1,
+      "forEachRow" : 1,
+      "whenExpr" : "old.id = 3",
+      "whenExprArgs" : [  ],
+      "statement" : "CREATE TEMP TRIGGER IF NOT EXISTS trigger1 BEFORE DELETE ON foo FOR EACH ROW WHEN old.id = 3 BEGIN DELETE FROM Foo WHERE id = id + 1;  DELETE FROM Foo WHERE id = old.id; END",
+      "statementArgs" : [  ],
+      "usesTables" : [ "Foo" ],
+      "deleteTables" : [ "Foo" ]
+    }
+    The statement ending at line XXXX
+    
+    CREATE TRIGGER trigger2
+      AFTER INSERT ON Foo
+    BEGIN
+    DELETE FROM Foo WHERE id > new.id;
+    END
+    
+    ,
+    {
+      "name" : "trigger2",
+      "target" : "Foo",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "isDeleted" : 0,
+      "isAfterTrigger" : 1,
+      "isInsertTrigger" : 1,
+      "statement" : "CREATE TRIGGER trigger2 AFTER INSERT ON Foo BEGIN DELETE FROM Foo WHERE id > new.id; END",
+      "statementArgs" : [  ],
+      "usesTables" : [ "Foo" ],
+      "deleteTables" : [ "Foo" ]
+    }
+    The statement ending at line XXXX
+    
+    CREATE TRIGGER trigger3
+      INSTEAD OF UPDATE ON MyView
+      WHEN old.id > 1 AND new.id < 3
+    BEGIN
+    UPDATE Foo
+    SET id = 7
+      WHERE name > old.name AND name < new.name;
+    
+    INSERT INTO Foo(id, name) VALUES(7, 'goo');
+    END
+    
+    ,
+    {
+      "name" : "trigger3",
+      "target" : "MyView",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "isDeleted" : 0,
+      "isInsteadOfTrigger" : 1,
+      "isUpdateTrigger" : 1,
+      "whenExpr" : "old.id > 1 AND new.id < 3",
+      "whenExprArgs" : [  ],
+      "statement" : "CREATE TRIGGER trigger3 INSTEAD OF UPDATE ON MyView WHEN old.id > 1 AND new.id < 3 BEGIN UPDATE Foo SET id = 7 WHERE name > old.name AND name < new.name;  INSERT INTO Foo(id, name) VALUES(7, 'goo'); END",
+      "statementArgs" : [  ],
+      "usesTables" : [ "Foo" ],
+      "insertTables" : [ "Foo" ],
+      "updateTables" : [ "Foo" ]
+    }
+    The statement ending at line XXXX
+    
+    CREATE TRIGGER trigger4
+      INSTEAD OF UPDATE OF id, name ON MyView
+    BEGIN
+    SELECT 1;
+    END
+    
+    ,
+    {
+      "name" : "trigger4",
+      "target" : "MyView",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "isDeleted" : 0,
+      "isInsteadOfTrigger" : 1,
+      "isUpdateTrigger" : 1,
+      "statement" : "CREATE TRIGGER trigger4 INSTEAD OF UPDATE OF id, name ON MyView BEGIN SELECT 1; END",
+      "statementArgs" : [  ],
+      "usesTables" : [  ]
+    }
+    The statement ending at line XXXX
+    
+    CREATE TEMP TRIGGER IF NOT EXISTS trigger5
+      BEFORE DELETE ON Foo
+    BEGIN
+    SELECT RAISE(ROLLBACK, "omg roll it back!");
+    END
+    
+    ,
+    {
+      "name" : "trigger5",
+      "target" : "Foo",
+      "isTemp" : 1,
+      "ifNotExists" : 1,
+      "isDeleted" : 0,
+      "isBeforeTrigger" : 1,
+      "isDeleteTrigger" : 1,
+      "statement" : "CREATE TEMP TRIGGER IF NOT EXISTS trigger5 BEFORE DELETE ON Foo BEGIN SELECT RAISE(ROLLBACK, 'omg roll it back!'); END",
+      "statementArgs" : [  ],
+      "usesTables" : [  ],
+      "region" : "region0",
+      "deployedInRegion" : "region2"
+    }
+    The statement ending at line XXXX
+    
+    CREATE TRIGGER trigger6
+      AFTER INSERT ON Foo
+    BEGIN
+    SELECT 1;
+    END @DELETE(3)
+    
+    ,
+    {
+      "name" : "trigger6",
+      "target" : "Foo",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "isDeleted" : 1,
+      "deletedVersion" : 3,
+      "isAfterTrigger" : 1,
+      "isInsertTrigger" : 1,
+      "statement" : "CREATE TRIGGER trigger6 AFTER INSERT ON Foo BEGIN SELECT 1; END",
+      "statementArgs" : [  ],
+      "usesTables" : [  ],
+      "region" : "region0",
+      "deployedInRegion" : "region2"
+    }
+  ],
+  
+  The statement ending at line XXXX
+  
+  @ATTRIBUTE(my_other_attribute=('any', ('tree', 'of'), 'values'))
+  @ATTRIBUTE(dbname='fred.sql')
+  @ATTRIBUTE(dbfile='test/cg_test_json_schema.sql')
+  DECLARE database OBJECT
+  
+  "attributes" : [
+    {
+      "name" : "my_other_attribute",
+      "value" : ["any", ["tree", "of"], "values"]
+    },
+    {
+      "name" : "dbname",
+      "value" : "fred.sql"
+    },
+    {
+      "name" : "dbfile",
+      "value" : "test/cg_test_json_schema.sql"
+    }
+  ],
+  "queries" : [
+    
+    The statement ending at line XXXX
+    
+    CREATE PROC a_query (pattern TEXT NOT NULL, reject TEXT)
+    BEGIN
+    SELECT id
+      FROM Foo
+      WHERE name LIKE pattern AND name <> reject;
+    END
+    
+    {
+      "name" : "a_query",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+        {
+          "name" : "pattern",
+          "type" : "text",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "reject",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ],
+      "usesTables" : [ "Foo" ],
+      "fromTables" : [ "Foo" ],
+      "projection" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 1
+        }
+      ],
+      "statement" : "SELECT id FROM Foo WHERE name LIKE ? AND name <> ?",
+      "statementArgs" : [ "pattern", "reject" ]
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE PROC bigger_query (pattern TEXT NOT NULL, reject TEXT)
+    BEGIN
+    SELECT DISTINCT *
+      FROM Foo
+      WHERE name LIKE pattern AND name <> reject
+      GROUP BY name
+      HAVING name > reject
+    ORDER BY pattern
+    LIMIT 1
+    OFFSET 3;
+    END
+    
+    {
+      "name" : "bigger_query",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+        {
+          "name" : "pattern",
+          "type" : "text",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "reject",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ],
+      "usesTables" : [ "Foo" ],
+      "fromTables" : [ "Foo" ],
+      "projection" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "name",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ],
+      "statement" : "SELECT DISTINCT id, name FROM Foo WHERE name LIKE ? AND name <> ? GROUP BY name HAVING name > ? ORDER BY ? LIMIT 1 OFFSET 3",
+      "statementArgs" : [ "pattern", "reject", "reject", "pattern" ]
+    },
+    
+    The statement ending at line XXXX
+    
+    @ATTRIBUTE(my_attribute='This is a string attribute')
+    CREATE PROC joiner (id_ INTEGER NOT NULL)
+    BEGIN
+    SELECT *
+      FROM Foo AS T1
+      INNER JOIN T5 ON T1.id = id_ AND T1.id = T5.l;
+    END
+    
+    {
+      "name" : "joiner",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+        {
+          "name" : "id_",
+          "type" : "integer",
+          "isNotNull" : 1
+        }
+      ],
+      "usesTables" : [ "Foo", "T5" ],
+      "fromTables" : [ "Foo", "T5" ],
+      "attributes" : [
+        {
+          "name" : "my_attribute",
+          "value" : "This is a string attribute"
+        }
+      ],
+      "projection" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "name",
+          "type" : "text",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "r",
+          "type" : "real",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "bl",
+          "type" : "blob",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "b",
+          "type" : "bool",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "l",
+          "type" : "long",
+          "isNotNull" : 0
+        }
+      ],
+      "statement" : "SELECT id, name, r, bl, b, l FROM Foo AS T1 INNER JOIN T5 ON T1.id = ? AND T1.id = T5.l",
+      "statementArgs" : [ "id_" ]
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE PROC radioactive_proc ()
+    BEGIN
+    SELECT *
+      FROM radioactive;
+    END
+    
+    {
+      "name" : "radioactive_proc",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+      ],
+      "usesTables" : [ "radioactive" ],
+      "fromTables" : [ "radioactive" ],
+      "projection" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "danger",
+          "type" : "text",
+          "isNotNull" : 0,
+          "isSensitive" : 1
+        }
+      ],
+      "statement" : "SELECT id, danger FROM radioactive",
+      "statementArgs" : [  ]
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE PROC object_proc (anObject OBJECT)
+    BEGIN
+    SELECT 1 AS x;
+    END
+    
+    {
+      "name" : "object_proc",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+        {
+          "name" : "anObject",
+          "type" : "object",
+          "isNotNull" : 0
+        }
+      ],
+      "usesTables" : [  ],
+      "projection" : [
+        {
+          "name" : "x",
+          "type" : "integer",
+          "isNotNull" : 1
+        }
+      ],
+      "statement" : "SELECT 1 AS x",
+      "statementArgs" : [  ]
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE PROC proc_inside_region ()
+    BEGIN
+    SELECT 1 AS a;
+    END
+    
+    {
+      "name" : "proc_inside_region",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+      ],
+      "usesTables" : [  ],
+      "region" : "region0",
+      "deployedInRegion" : "region2",
+      "projection" : [
+        {
+          "name" : "a",
+          "type" : "integer",
+          "isNotNull" : 1
+        }
+      ],
+      "statement" : "SELECT 1 AS a",
+      "statementArgs" : [  ]
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE PROC with_select_proc ()
+    BEGIN
+    WITH
+    nums (i) AS (SELECT 0
+    UNION ALL
+    SELECT i + 1
+      FROM nums
+    LIMIT 1),
+    vals (v) AS (SELECT i
+      FROM nums)
+    SELECT *
+      FROM vals;
+    END
+    
+    {
+      "name" : "with_select_proc",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+      ],
+      "usesTables" : [  ],
+      "projection" : [
+        {
+          "name" : "v",
+          "type" : "integer",
+          "isNotNull" : 1
+        }
+      ],
+      "statement" : "WITH nums (i) AS (SELECT 0 UNION ALL SELECT i + 1 FROM nums LIMIT 1), vals (v) AS (SELECT i FROM nums) SELECT v FROM vals",
+      "statementArgs" : [  ]
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE PROC json_escapes ()
+    BEGIN
+    SELECT "\\\r\n\t\b\f\"\x01" AS quoted_text;
+    END
+    
+    {
+      "name" : "json_escapes",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+      ],
+      "usesTables" : [  ],
+      "projection" : [
+        {
+          "name" : "quoted_text",
+          "type" : "text",
+          "isNotNull" : 1
+        }
+      ],
+      "statement" : "SELECT '\\\r\n\t\b\f\"\u0001' AS quoted_text",
+      "statementArgs" : [  ]
+    }
+  ],
+  "inserts" : [
+    
+    The statement ending at line XXXX
+    
+    CREATE PROC insert_proc (id_ INTEGER NOT NULL, name_ TEXT)
+    BEGIN
+    INSERT OR REPLACE INTO Foo(id, name) VALUES(id_, name_);
+    END
+    
+    {
+      "name" : "insert_proc",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+        {
+          "name" : "id_",
+          "type" : "integer",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "name_",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ],
+      "usesTables" : [ "Foo" ],
+      "insertTables" : [ "Foo" ],
+      "table" : "Foo",
+      "statement" : "INSERT OR REPLACE INTO Foo(id, name) VALUES(?, ?)",
+      "statementArgs" : [ "id_", "name_" ],
+      "statementType" : "INSERT OR REPLACE",
+      "columns" : [ "id", "name" ],
+      "values" : [
+        {
+          "value" : "?",
+          "valueArgs" : [ "id_" ]
+        },
+        {
+          "value" : "?",
+          "valueArgs" : [ "name_" ]
+        }
+      ]
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE PROC dummy_insert_proc (seed_ INTEGER NOT NULL)
+    BEGIN
+    INSERT INTO fOo(id, name) VALUES(_seed_, printf('name_%d', _seed_)) @DUMMY_SEED(seed_) @DUMMY_NULLABLES;
+    END
+    
+    {
+      "name" : "dummy_insert_proc",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+        {
+          "name" : "seed_",
+          "type" : "integer",
+          "isNotNull" : 1
+        }
+      ],
+      "usesTables" : [ "Foo" ],
+      "insertTables" : [ "Foo" ],
+      "table" : "Foo",
+      "statement" : "INSERT INTO fOo(id, name) VALUES(?, printf('name_%d', ?))",
+      "statementArgs" : [ "_seed_", "_seed_" ],
+      "statementType" : "INSERT",
+      "columns" : [ "id", "name" ],
+      "values" : [
+        {
+          "value" : "?",
+          "valueArgs" : [ "_seed_" ]
+        },
+        {
+          "value" : "printf('name_%d', ?)",
+          "valueArgs" : [ "_seed_" ]
+        }
+      ]
+    }
+  ],
+  "updates" : [
+    
+    The statement ending at line XXXX
+    
+    CREATE PROC update_proc (id_ INTEGER NOT NULL, name_ TEXT)
+    BEGIN
+    UPDATE foO
+    SET name = name_
+      WHERE id = id_
+    ORDER BY name
+    LIMIT 1;
+    END
+    
+    {
+      "name" : "update_proc",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+        {
+          "name" : "id_",
+          "type" : "integer",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "name_",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ],
+      "usesTables" : [ "Foo" ],
+      "updateTables" : [ "Foo" ],
+      "table" : "Foo",
+      "statement" : "UPDATE foO SET name = ? WHERE id = ? ORDER BY name LIMIT 1",
+      "statementArgs" : [ "name_", "id_" ]
+    }
+  ],
+  "deletes" : [
+    
+    The statement ending at line XXXX
+    
+    CREATE PROC delete_proc (name_ TEXT)
+    BEGIN
+    DELETE FROM foO WHERE name LIKE name_;
+    END
+    
+    {
+      "name" : "delete_proc",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+        {
+          "name" : "name_",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ],
+      "usesTables" : [ "Foo" ],
+      "deleteTables" : [ "Foo" ],
+      "table" : "Foo",
+      "statement" : "DELETE FROM foO WHERE name LIKE ?",
+      "statementArgs" : [ "name_" ]
+    }
+  ],
+  "general" : [
+    
+    The statement ending at line XXXX
+    
+    CREATE PROC with_complex_args (OUT pattern TEXT NOT NULL, INOUT arg REAL)
+    BEGIN
+    SELECT 1 AS a;
+    END
+    
+    {
+      "name" : "with_complex_args",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+        {
+          "name" : "pattern",
+          "type" : "text",
+          "isNotNull" : 1,
+          "binding" : "out"
+        },
+        {
+          "name" : "arg",
+          "type" : "real",
+          "isNotNull" : 0,
+          "binding" : "inout"
+        }
+      ],
+      "usesTables" : [  ],
+      "usesDatabase" : 1,
+      "hasStructResult" : 0,
+      "hasRowsetResult" : 1,
+      "projection" : [
+        {
+          "name" : "a",
+          "type" : "integer",
+          "isNotNull" : 1
+        }
+      ]
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE PROC atypical_noreturn ()
+    BEGIN
+    DECLARE C CURSOR LIKE SELECT 1 AS A;
+    END
+    
+    {
+      "name" : "atypical_noreturn",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+      ],
+      "usesTables" : [  ],
+      "usesDatabase" : 0,
+      "hasStructResult" : 0,
+      "hasRowsetResult" : 0
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE PROC typical_outresult ()
+    BEGIN
+    DECLARE C CURSOR LIKE SELECT 1 AS A;
+    
+    FETCH C(A) FROM VALUES(7);
+    
+    OUT C;
+    END
+    
+    {
+      "name" : "typical_outresult",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+      ],
+      "usesTables" : [  ],
+      "usesDatabase" : 0,
+      "hasStructResult" : 1,
+      "hasRowsetResult" : 0,
+      "projection" : [
+        {
+          "name" : "A",
+          "type" : "integer",
+          "isNotNull" : 1
+        }
+      ]
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE PROC typical_select ()
+    BEGIN
+    DECLARE x INTEGER;
+    
+    SELECT *
+      FROM T5;
+    END
+    
+    {
+      "name" : "typical_select",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+      ],
+      "usesTables" : [ "T5" ],
+      "fromTables" : [ "T5" ],
+      "usesDatabase" : 1,
+      "hasStructResult" : 0,
+      "hasRowsetResult" : 1,
+      "projection" : [
+        {
+          "name" : "r",
+          "type" : "real",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "bl",
+          "type" : "blob",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "b",
+          "type" : "bool",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "l",
+          "type" : "long",
+          "isNotNull" : 0
+        }
+      ]
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE PROC insert_with_select ()
+    BEGIN
+    INSERT INTO T3(id) SELECT 1;
+    END
+    
+    {
+      "name" : "insert_with_select",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+      ],
+      "usesTables" : [ "T3" ],
+      "insertTables" : [ "T3" ],
+      "usesDatabase" : 1,
+      "hasStructResult" : 0,
+      "hasRowsetResult" : 0
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE PROC upsert_proc ()
+    BEGIN
+    INSERT INTO T3(id) VALUES(1)
+    ON CONFLICT DO UPDATE
+    SET id = 1
+      WHERE id = 9;
+    END
+    
+    {
+      "name" : "upsert_proc",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+      ],
+      "usesTables" : [ "T3" ],
+      "insertTables" : [ "T3" ],
+      "usesDatabase" : 1,
+      "hasStructResult" : 0,
+      "hasRowsetResult" : 0
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE PROC empty_proc ()
+    BEGIN
+    END
+    
+    {
+      "name" : "empty_proc",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+      ],
+      "usesTables" : [  ],
+      "usesDatabase" : 0,
+      "hasStructResult" : 0,
+      "hasRowsetResult" : 0
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE PROC empty_blocks ()
+    BEGIN
+    IF 1 THEN
+    END IF;
+    
+    IF 2 THEN
+    ELSE
+    END IF;
+    
+    IF 3 THEN
+    ELSE IF 4 THEN
+    ELSE
+    END IF;
+    
+    WHILE 1
+    BEGIN
+    END;
+    
+    DECLARE c CURSOR FOR SELECT 1 AS x;
+    
+    LOOP FETCH c
+    BEGIN
+    END;
+    
+    BEGIN TRY
+    END TRY
+    BEGIN CATCH
+    END CATCH;
+    END
+    
+    {
+      "name" : "empty_blocks",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+      ],
+      "usesTables" : [  ],
+      "usesDatabase" : 1,
+      "hasStructResult" : 0,
+      "hasRowsetResult" : 0
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE PROC proc_with_deps (OUT x INTEGER NOT NULL)
+    BEGIN
+    CALL other_Proc();
+    
+    SET x := proC_aS_Func();
+    END
+    
+    {
+      "name" : "proc_with_deps",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+        {
+          "name" : "x",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "binding" : "out"
+        }
+      ],
+      "usesTables" : [  ],
+      "usesProcedures" : [ "other_proc", "proc_as_func" ],
+      "usesDatabase" : 0,
+      "hasStructResult" : 0,
+      "hasRowsetResult" : 0
+    }
+  ],
+  "regions" : [
+    
+    The statement ending at line XXXX
+    
+    @DECLARE_SCHEMA_REGION region0
+    
+    {
+    "name" : "region0",
+    "isDeployableRoot" : 0,
+    "deployedInRegion" : "region2",
+    "using" : [  ],
+    "usingPrivately" : [  ]
+    }
+    The statement ending at line XXXX
+    
+    @DECLARE_SCHEMA_REGION orphan_region
+    
+    ,
+    {
+    "name" : "orphan_region",
+    "isDeployableRoot" : 0,
+    "deployedInRegion" : "(orphan)",
+    "using" : [  ],
+    "usingPrivately" : [  ]
+    }
+    The statement ending at line XXXX
+    
+    @DECLARE_SCHEMA_REGION region1 USING region0 PRIVATE
+    
+    ,
+    {
+    "name" : "region1",
+    "isDeployableRoot" : 0,
+    "deployedInRegion" : "region2",
+    "using" : [ "region0" ],
+    "usingPrivately" : [ 1 ]
+    }
+    The statement ending at line XXXX
+    
+    @DECLARE_DEPLOYABLE_REGION region2 USING region1, region0
+    
+    ,
+    {
+    "name" : "region2",
+    "isDeployableRoot" : 1,
+    "deployedInRegion" : "region2",
+    "using" : [ "region1", "region0" ],
+    "usingPrivately" : [ 0, 0 ]
+    }
+  ],
+  "adHocMigrationProcs" : [
+    
+    The statement ending at line XXXX
+    
+    @SCHEMA_AD_HOC_MIGRATION(1, ad_hoc_migration_proc_1)
+    
+    {
+      "name" : "ad_hoc_migration_proc_1",
+      "version" : 1
+    }
+    The statement ending at line XXXX
+    
+    @SCHEMA_AD_HOC_MIGRATION(2, ad_hoc_migration_proc_2)
+    
+    ,
+    {
+      "name" : "ad_hoc_migration_proc_2",
+      "version" : 2
+    }
+  ],
+  "tableUsers" : {
+    "Foo" : [ "a_query", "bigger_query", "insert_proc", "delete_proc", "update_proc", "dummy_insert_proc", "joiner" ],
+    "T3" : [ "insert_with_select", "upsert_proc" ],
+    "T5" : [ "typical_select", "joiner" ],
+    "radioactive" : [ "radioactive_proc" ]
+  }
+}

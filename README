@@ -1,0 +1,12 @@
+Initial payload added.  
+
+Test scripts not present yet.
+
+Build with:
+
+make clean
+make
+
+result in out/cql
+
+See CQL_Guide/guide.html for the language summary

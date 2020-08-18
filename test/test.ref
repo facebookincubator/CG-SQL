@@ -1,0 +1,1145 @@
+CREATE TABLE foo(
+  id INTEGER
+);
+
+CREATE TEMP TABLE foo(
+  id INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS foo(
+  id INTEGER
+);
+
+CREATE TEMP TABLE IF NOT EXISTS foo(
+  id INTEGER
+);
+
+CREATE TEMP TABLE temp_foo(
+  LIKE foo
+);
+
+CREATE TABLE foo(
+  id INTEGER
+);
+
+CREATE TABLE foo(
+  id INTEGER,
+  name TEXT,
+  rate LONG_INT
+);
+
+CREATE TABLE foo(
+  id INTEGER NOT NULL,
+  name TEXT,
+  rate LONG_INT
+);
+
+CREATE TABLE foo(
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  name TEXT,
+  rate LONG_INT
+);
+
+CREATE TABLE foo(
+  id INTEGER NOT NULL,
+  name TEXT PRIMARY KEY,
+  rate LONG_INT
+);
+
+CREATE TABLE foo(
+  id INTEGER NOT NULL,
+  name TEXT PRIMARY KEY,
+  rate LONG_INT DEFAULT 22
+);
+
+CREATE TABLE foo(
+  id INTEGER NOT NULL,
+  name TEXT PRIMARY KEY,
+  rate LONG_INT DEFAULT 22
+) WITHOUT ROWID;
+
+CREATE TABLE foo(
+  id BOOL
+);
+
+CREATE TABLE foo(
+  id INTEGER NOT NULL,
+  name TEXT,
+  rate LONG_INT,
+  PRIMARY KEY (id, name)
+);
+
+CREATE TABLE foo(
+  id INTEGER NOT NULL,
+  name TEXT,
+  rate LONG_INT,
+  PRIMARY KEY (id, name),
+  FOREIGN KEY (id, name) REFERENCES baz (id, name2)
+);
+
+CREATE TABLE foo(
+  id INTEGER,
+  FOREIGN KEY (name) REFERENCES baz (name2) ON UPDATE CASCADE
+);
+
+CREATE TABLE T1(
+  C11 INTEGER NOT NULL,
+  C12 INTEGER DEFAULT 37
+);
+
+CREATE TABLE T2(
+  C21 INTEGER NOT NULL,
+  C22 INTEGER DEFAULT 93,
+  PRIMARY KEY (a, b, c)
+);
+
+CREATE TABLE T(
+  C1 INTEGER NOT NULL,
+  C2 REAL,
+  C3 TEXT
+);
+
+CREATE INDEX __idx__participants__thread_key__contact_id ON participants (thread_key, contact_id);
+
+SELECT 2 * 3;
+
+SELECT a
+  FROM b;
+
+SELECT a, b
+  FROM c;
+
+SELECT a AS x, b AS y
+  FROM c;
+
+SELECT a, b
+  FROM c
+  WHERE d = 1;
+
+SELECT DISTINCT a, b
+  FROM c;
+
+SELECT a AS b, c AS d
+  FROM e;
+
+SELECT a, b
+  FROM c
+  INNER JOIN d;
+
+SELECT a, b
+  FROM c
+  INNER JOIN d ON e = f;
+
+SELECT a, b
+  FROM c
+  INNER JOIN d ON e.f = g.h;
+
+SELECT a, b
+  FROM c
+  LEFT OUTER JOIN d ON e.f = g.h;
+
+SELECT P.thread_key, P.contact_id, P.is_admin, P.nickname, P.read_watermark_timestamp_ms, P.delivered_watermark_timestamp_ms, C.profile_picture_url, C.profile_picture_fallback_url, C.profile_picture_url_expiration_timestamp_ms, C.name, C.is_messenger_user
+  FROM participants AS P
+  LEFT OUTER JOIN contacts AS C ON C.id = P.contact_id;
+
+SELECT T.thread_key, T.thread_type, UTN.thread_name AS thread_name, T.thread_picture_url, T.mute_expire_time_ms
+  FROM threads AS T
+  LEFT OUTER JOIN _unified_thread_name AS UTN ON UTN.thread_key = T.thread_key;
+
+SELECT *
+  FROM foo;
+
+SELECT a
+  FROM b;
+
+SELECT T.thread_key, T.thread_type, UTN.thread_name AS thread_name, T.thread_picture_url, T.mute_expire_time_ms
+  FROM threads AS T
+  LEFT OUTER JOIN _unified_thread_name AS UTN ON UTN.thread_key = T.thread_key;
+
+SELECT 2 <> 3;
+
+SELECT x = '';
+
+SELECT 1 AND 2;
+
+SELECT a, b
+  FROM c
+  GROUP BY f;
+
+SELECT a, b
+  FROM c
+ORDER BY f;
+
+SELECT C.id AS contact_id, C.contact_type, C.profile_picture_url, C.profile_picture_fallback_url, C.profile_picture_url_expiration_timestamp_ms, C.name, C.rank
+  FROM contacts AS C
+  WHERE C.name IS NOT NULL AND C.name <> ''
+ORDER BY C.name;
+
+SELECT y IS NULL;
+
+SELECT zz;
+
+SET zz := 123;
+
+SELECT A_Func(a, 3);
+
+SELECT CASE WHEN x = 2 THEN 3
+ELSE 4
+END;
+
+SELECT CASE WHEN x = 1 THEN 2
+WHEN x = 3 THEN 4
+ELSE 5
+END;
+
+SELECT CASE WHEN a = 2 THEN 3
+WHEN b = 4 THEN ( SELECT c
+  FROM d
+  WHERE e = f )
+ELSE g
+END AS h;
+
+SELECT T.thread_key, CASE WHEN count(P.contact_id) > 1 THEN group_concat(coalesce(P.nickname, C.first_name, C.name, 'Facebook User'), ', ')
+WHEN count(P.contact_id) = 1 THEN group_concat(coalesce(P.nickname, C.name, 'Facebook User'), ', ')
+ELSE ( SELECT name
+  FROM contacts
+  WHERE id = UI.facebook_user_id )
+END AS thread_name, CASE WHEN T.thread_type = 2 THEN NULL
+WHEN T.thread_key = UI.facebook_user_id THEN ( SELECT profile_picture_url
+  FROM contacts
+  WHERE id = UI.facebook_user_id )
+ELSE C.profile_picture_url
+END AS other_participant_profile_picture_url, CASE WHEN T.thread_type = 2 THEN NULL
+WHEN T.thread_key = UI.facebook_user_id THEN ( SELECT profile_picture_fallback_url
+  FROM contacts
+  WHERE id = UI.facebook_user_id )
+ELSE C.profile_picture_fallback_url
+END AS other_participant_profile_picture_fallback_url, CASE WHEN T.thread_type = 2 THEN NULL
+WHEN T.thread_key = UI.facebook_user_id THEN ( SELECT profile_picture_url_expiration_timestamp_ms
+  FROM contacts
+  WHERE id = UI.facebook_user_id )
+ELSE C.profile_picture_url_expiration_timestamp_ms
+END AS other_participant_url_expiration_timestamp_ms
+  FROM _user_info AS UI
+  INNER JOIN threads AS T
+  LEFT OUTER JOIN participants AS P ON P.thread_key = T.thread_key AND P.contact_id <> UI.facebook_user_id
+  LEFT OUTER JOIN contacts AS C ON C.id = P.contact_id
+  WHERE UI.id = 1
+  GROUP BY T.thread_key;
+
+CREATE VIEW a AS
+SELECT b
+  FROM c;
+
+CREATE VIEW IF NOT EXISTS qq AS
+SELECT b
+  FROM c;
+
+CREATE VIEW _self_thread_name AS
+SELECT UI.facebook_user_id AS thread_key, C.name AS thread_name
+  FROM _user_info AS UI,
+contacts AS C
+  WHERE UI.facebook_user_id = C.id;
+
+DELETE FROM a;
+
+DELETE FROM a WHERE b > c AND e <= f;
+
+INSERT INTO _sync_status VALUES(1, NULL, NULL);
+
+SELECT a.b - (c('now') - 2440587) * 86400000 > 0 OR d < 0;
+
+SELECT T.mute_expire_time_ms - (julianday('now') - 2440587.500000) * 86400000 > 0 OR T.mute_expire_time_ms < 0;
+
+SELECT 12.300000;
+
+CREATE VIEW zzz AS
+SELECT DISTINCT a, b AS c, d
+  FROM e AS E
+  LEFT OUTER JOIN f AS F ON F.g = e.g
+  LEFT OUTER JOIN x AS X ON y.z = q.w AND h.j = k.l
+ORDER BY o.p DESC;
+
+CREATE VIEW thread_messages AS
+SELECT DISTINCT M.message_id, M.thread_key, M.offline_threading_id, M.sender_id, M.send_status, C.name, C.profile_picture_url, C.profile_picture_fallback_url, C.profile_picture_url_expiration_timestamp_ms, M.body, M.sticker_id, M.timestamp_ms, A.has_xma OR A.has_media AS has_attachment, M.is_admin_message
+  FROM messages AS M
+  LEFT OUTER JOIN contacts AS C ON C.id = M.sender_id
+  LEFT OUTER JOIN attachments AS A ON A.message_id = M.message_id AND A.thread_key = M.thread_key
+ORDER BY M.timestamp_ms DESC;
+
+SELECT *
+  FROM threads
+ORDER BY last_activity_timestamp_ms DESC
+LIMIT 20;
+
+SELECT *
+  FROM threads
+ORDER BY last_activity_timestamp_ms DESC
+LIMIT 20
+OFFSET 7;
+
+SELECT a
+  FROM (SELECT b
+  FROM c) AS X;
+
+CREATE VIEW unread_not_muted_threads_count AS
+SELECT count(*) AS count
+  FROM (SELECT *
+  FROM threads
+ORDER BY last_activity_timestamp_ms DESC
+LIMIT 20) AS T
+  WHERE T.last_activity_timestamp_ms > T.last_read_watermark_timestamp_ms AND (T.mute_expire_time_ms >= 0 AND T.mute_expire_time_ms - strftime('%s', 'now') * 1000 <= 0) AND T.folder_name = 'inbox';
+
+CREATE TABLE pending_tasks(
+  task_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  queue_name TEXT NOT NULL,
+  task_value TEXT NOT NULL,
+  context TEXT,
+  attempt_count INTEGER NOT NULL DEFAULT 0,
+  enqueue_timestamp_ms LONG_INT NOT NULL DEFAULT 0,
+  first_executed_timestamp_ms LONG_INT NOT NULL DEFAULT 0,
+  last_executed_timestamp_ms LONG_INT NOT NULL DEFAULT 0,
+  next_retry_timestamp_ms LONG_INT NOT NULL DEFAULT 0,
+  failure_count INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE pending_query_changes(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  query_id INTEGER UNIQUE NOT NULL
+);
+
+UPDATE a
+SET b = 1;
+
+UPDATE a
+SET x = 1,
+y = 2
+  WHERE z = 3;
+
+UPDATE a
+SET x = 1,
+y = 2
+  WHERE z = 3;
+
+SET a1 := 20;
+
+SET b3 := 40.750000;
+
+CREATE PROC a ()
+BEGIN
+  INSERT INTO d VALUES(e, f);
+  UPDATE g
+  SET h = j,
+  k = l;
+END;
+
+CREATE PROC a (b INTEGER, c TEXT)
+BEGIN
+  INSERT INTO d VALUES(e, f);
+  UPDATE g
+  SET h = j,
+  k = l;
+END;
+
+CREATE PROC a (b INTEGER, IN c TEXT, OUT d LONG_INT, INOUT f TEXT)
+BEGIN
+  INSERT INTO d VALUES(e, f);
+  UPDATE g
+  SET h = j,
+  k = l;
+END;
+
+OPEN x;
+
+CLOSE y;
+
+CONTINUE;
+
+LEAVE;
+
+DECLARE a, b, c INTEGER;
+
+DECLARE a CURSOR FOR SELECT b
+  FROM c;
+
+OPEN a;
+
+LOOP FETCH a INTO b
+BEGIN
+  INSERT INTO d VALUES(e, f);
+  FETCH a INTO x, y;
+  LEAVE;
+  CONTINUE;
+END;
+
+CLOSE a;
+
+IF x > 20 THEN
+  UPDATE x
+  SET y = z;
+END IF;
+
+IF x > 20 THEN
+  UPDATE x
+  SET y = z;
+ELSE
+  UPDATE w
+  SET k = m;
+END IF;
+
+IF a > 1 THEN
+  DELETE FROM b;
+ELSE IF c > 2 THEN
+  DELETE FROM d;
+ELSE IF d > 3 THEN
+  DELETE FROM e;
+ELSE
+  DELETE FROM f;
+END IF;
+
+IF 1 IN (1, 2) THEN
+  DELETE FROM b;
+ELSE
+  DELETE FROM c;
+END IF;
+
+IF 1 NOT IN (1, 2) THEN
+  DELETE FROM b;
+ELSE
+  DELETE FROM c;
+END IF;
+
+IF 1 NOT IN (SELECT 1) THEN
+  DELETE FROM b;
+ELSE
+  DELETE FROM c;
+END IF;
+
+IF 'x' LIKE 'y' THEN
+  DELETE FROM b;
+END IF;
+
+IF 1 BETWEEN 0 AND 2 AND 3 IN (3, 4) THEN
+  DELETE FROM b;
+END IF;
+
+IF 3 NOT BETWEEN 1 AND 2 AND 1 NOT IN (2, 3) THEN
+  DELETE FROM b;
+END IF;
+
+SELECT -1;
+
+SELECT 1 + 2;
+
+SELECT 1 + 2 * 3;
+
+SELECT (1 + 2) * 3;
+
+SELECT -1 + 2 * (-3 + 4);
+
+SELECT (1 + 2) * 3 - 4;
+
+SELECT 1 - 2;
+
+SELECT 1 - 2;
+
+SELECT x;
+
+SELECT x.y + 1;
+
+SELECT 3 * x.y + 1;
+
+SELECT 3 * (x + y + 1);
+
+SELECT 3;
+
+SELECT 5 * 5 + 3;
+
+SELECT 'x';
+
+SELECT '''x''' + 2;
+
+SELECT foo(1);
+
+SELECT foo((1 + 3) * 4, 2 / 7, 5 % 3);
+
+SELECT 1 = 2;
+
+SELECT 1 <> 2;
+
+SELECT 1 <= 2;
+
+SELECT 1 >= 2;
+
+SELECT 1 > 2;
+
+SELECT 1 < 2;
+
+SELECT 3 BETWEEN 4 AND 3;
+
+SELECT 3 + 7 BETWEEN 4 AND 3;
+
+SELECT 3 NOT BETWEEN 4 AND 3;
+
+SELECT 3 + 7 NOT BETWEEN 4 AND 3;
+
+SELECT 1 < 2 AND 2 > 3;
+
+SELECT 1 < (2 AND 2) > 3;
+
+SELECT NOT 1 + 2;
+
+SELECT NOT (1 AND 2);
+
+SELECT NOT 1 AND 2;
+
+SELECT 1 AND 2 AND 3 AND 4;
+
+SELECT 1 AND (2 OR 3) OR 4;
+
+SELECT 1 AND (9 AND 10) OR 4;
+
+SELECT 1, ( SELECT 2 );
+
+SELECT x IS NULL;
+
+SELECT x IS NOT NULL;
+
+SELECT x IS NOT NULL AND y IS NOT NULL;
+
+SELECT x IS NOT NULL AND y OR z IS NOT NULL;
+
+SELECT x IS NOT NULL AND (y OR z) IS NOT NULL;
+
+SELECT x IS NOT NULL AND y + z IS NOT NULL;
+
+SELECT x IS NOT NULL AND y + z IS NULL;
+
+SELECT 1 + (NOT (x IS NULL));
+
+SELECT 1 + (NOT x) IS NULL;
+
+SELECT x IS NOT NULL AND y + (NOT z) IS NULL;
+
+SELECT x IS NOT NULL AND y + (NOT (z IS NULL));
+
+SELECT x + (NOT (z IS NULL));
+
+SELECT x + (NOT (z IS NULL));
+
+SELECT x + (NOT (z IS NULL));
+
+SELECT 1 BETWEEN 0 AND 2 AND 3 IN (3, 4);
+
+SELECT 1 BETWEEN 0 AND (2 AND 3 IN (3, 4));
+
+SELECT 1 BETWEEN 0 AND (2 AND 3) IN (true, false);
+
+SELECT 1 NOT BETWEEN 0 AND 2 AND 3 NOT IN (3, 4);
+
+SELECT 1 NOT BETWEEN 0 AND (2 AND 3 NOT IN (3, 4));
+
+SELECT 1 NOT BETWEEN 0 AND (2 AND 3) NOT IN (true, false);
+
+SELECT 1 + (2 AND 3) IN (true, false);
+
+SELECT 1 + 3 IN (3, 4);
+
+SELECT 1 + (3 IN (3, 4));
+
+SELECT 1 AND 3 IN (3, 4);
+
+SELECT 1 AND 3 IN (3, 4);
+
+SELECT x, y
+  FROM T
+  INNER JOIN Y USING (a, b, c);
+
+UPDATE X
+SET x = 1,
+y = 2
+  WHERE z = 5
+LIMIT 3;
+
+SELECT *
+  FROM foo
+  WHERE x = y
+  GROUP BY x
+  HAVING z = w;
+
+SELECT DISTINCTROW x
+  FROM goo;
+
+SELECT ALL x, y
+  FROM foo;
+
+SELECT a, b
+  FROM X
+  INNER JOIN Y;
+
+SELECT a, b
+  FROM X
+  LEFT JOIN Y;
+
+SELECT a, b
+  FROM X AS XX
+  RIGHT JOIN Y;
+
+SELECT a, b
+  FROM X
+  RIGHT OUTER JOIN Y;
+
+SELECT a, b
+  FROM X
+  LEFT OUTER JOIN Y;
+
+SELECT a, b
+  FROM X
+  CROSS JOIN Y;
+
+SELECT CASE 1 WHEN 1 THEN 'a'
+WHEN 2 THEN 'b'
+ELSE 'c'
+END;
+
+SELECT x
+  FROM (A,
+B,
+C);
+
+SELECT x
+  FROM A
+ORDER BY x ASC;
+
+SELECT x
+  FROM A
+ORDER BY x DESC;
+
+SELECT x, y
+  FROM A
+  GROUP BY a, b;
+
+UPDATE bar
+SET x = 1
+ORDER BY a
+LIMIT 5;
+
+CALL foo();
+
+CALL foo(2);
+
+CREATE PROC foo ()
+BEGIN
+  BEGIN TRY
+    SELECT 'try';
+  END TRY
+  BEGIN CATCH
+    SELECT 'catch';
+  END CATCH;
+END;
+
+BEGIN TRANSACTION;
+
+COMMIT TRANSACTION;
+
+SAVEPOINT foo;
+
+RELEASE SAVEPOINT foo;
+
+ROLLBACK TRANSACTION;
+
+ROLLBACK TRANSACTION TO SAVEPOINT xx;
+
+DECLARE test CURSOR FOR CALL foo(1, 2);
+
+SELECT *
+  FROM foo
+  WHERE EXISTS (SELECT *
+  FROM bar);
+
+SELECT *
+  FROM foo
+  WHERE NOT EXISTS (SELECT *
+  FROM bar);
+
+FETCH my_cursor;
+
+SELECT a
+  FROM (X
+  INNER JOIN Y)
+  LEFT OUTER JOIN (W
+  INNER JOIN Q);
+
+SELECT a
+  FROM (X
+  INNER JOIN Y)
+  LEFT OUTER JOIN (W
+  INNER JOIN Q);
+
+SELECT a, b
+  FROM x
+  GROUP BY a ASC, b DESC;
+
+SELECT CAST(1 AS TEXT);
+
+DECLARE PROC decl1 (id INTEGER);
+
+DECLARE PROC decl2 (id INTEGER) USING TRANSACTION;
+
+DECLARE PROC decl3 (id INTEGER) (A INTEGER NOT NULL, B BOOL);
+
+DECLARE PROC decl3 (id INTEGER) OUT (A INTEGER NOT NULL, B BOOL);
+
+DECLARE PROC decl4 (id INTEGER) OUT (A INTEGER NOT NULL, B BOOL) USING TRANSACTION;
+
+SELECT 1, 2, 3
+UNION
+SELECT 4, 5, 6;
+
+SELECT 1, 2, 3
+UNION ALL
+SELECT 4, 5, 6;
+
+SELECT 1, 2, 3
+UNION ALL
+SELECT 4, 5, 6
+UNION ALL
+SELECT 7, 8, 9;
+
+SELECT 1 AS a, 2, 3
+UNION
+SELECT 4 AS a, 5, 6
+UNION
+SELECT 7 AS a, 8, 9
+ORDER BY a
+LIMIT 2
+OFFSET 3;
+
+SELECT nullable(1);
+
+WITH
+x (a, b) AS (SELECT 1, 2)
+SELECT a, b
+  FROM x;
+
+WITH
+x (a, b) AS (SELECT 1, 2),
+y (c, d) AS (SELECT 5.400000, 7.300000)
+SELECT a, b
+  FROM x
+  INNER JOIN y ON x.a = y.c;
+
+WITH
+x (a, b) AS (SELECT 1, 2)
+SELECT *
+  FROM x AS X
+  INNER JOIN (WITH
+y (a, b) AS (SELECT 1, 3)
+SELECT *
+  FROM y) AS Y ON X.a = y.A;
+
+WITH RECURSIVE
+cnt (x) AS (SELECT 1
+UNION ALL
+SELECT x + 1
+  FROM cnt
+LIMIT 20)
+SELECT x
+  FROM cnt;
+
+SELECT T.*
+  FROM (SELECT 1) AS T;
+
+DECLARE FUNC foo (x INTEGER, y TEXT NOT NULL) INTEGER NOT NULL;
+
+DECLARE obj_var OBJECT;
+
+DECLARE FUNC createobj () CREATE OBJECT;
+
+DECLARE FUNC createobj () CREATE OBJECT NOT NULL;
+
+@ECHO c, "foo\n";
+
+DECLARE foo_obj OBJECT<Foo>;
+
+SELECT valid_utf8_or_null('xxx');
+
+INSERT INTO foo(a, b) VALUES(1, 2);
+
+INSERT OR REPLACE INTO foo(a, b) VALUES(1, 2);
+
+INSERT OR IGNORE INTO foo(a, b) VALUES(1, 2);
+
+CREATE TEMP VIEW foo AS
+SELECT 1 AS A;
+
+ALTER TABLE foo ADD COLUMN bar INTEGER NOT NULL;
+
+CREATE TABLE foo(
+  id INTEGER @CREATE(1, Foo)
+);
+
+CREATE TABLE foo(
+  id INTEGER @DELETE(2, Bar)
+);
+
+CREATE TABLE foo(
+  id INTEGER @CREATE(1, Foo) @DELETE(2, Bar)
+);
+
+CREATE TABLE foo(
+  id INTEGER @CREATE(1) @DELETE(2)
+);
+
+@SCHEMA_UPGRADE (112);
+
+CREATE TABLE foo(
+  id INTEGER
+) @CREATE(1, foo) @DELETE(2, bar);
+
+DROP TABLE foo;
+
+DROP TABLE IF EXISTS foo;
+
+@PREVIOUS_SCHEMA;
+
+SELECT text
+  FROM foo;
+
+@SCHEMA_UPGRADE_SCRIPT;
+
+CREATE VIEW foo AS
+SELECT 1
+  FROM bar @DELETE(2);
+
+SELECT 3147483647;
+
+DROP VIEW foo;
+
+CREATE INDEX foo ON bazzle (goo) @DELETE(7);
+
+DROP INDEX foo;
+
+INSERT INTO foo(x, y) VALUES(1, 2) @DUMMY_SEED(1 + 2 * 3) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
+
+INSERT INTO foo() VALUES();
+
+DECLARE foo BLOB;
+
+DECLARE FUNC foo (x BLOB NOT NULL) CREATE BLOB NOT NULL;
+
+OUT my_cursor;
+
+DECLARE C CURSOR FETCH FROM CALL x();
+
+FETCH C FROM CALL x();
+
+FETCH C FROM VALUES(1, 2, 3);
+
+FETCH C(id, x) FROM VALUES(1.300000, 4);
+
+FETCH C(x, y) FROM VALUES(1, 2) @DUMMY_SEED(1 + 2 * 3) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
+
+DECLARE C0 CURSOR LIKE C1;
+
+DECLARE C CURSOR LIKE SELECT 1 AS A, 2.500000 AS B;
+
+SET x := "this is a test";
+
+SET x := "\"this is a test\" '\n";
+
+@ATTRIBUTE(foo)
+@ATTRIBUTE(foo=1)
+@ATTRIBUTE(foo=bar)
+@ATTRIBUTE(foo='bazzle')
+@ATTRIBUTE(foo=('bazzle', (2.500000, 'razzle'), foo))
+CREATE TABLE bar(
+  @ATTRIBUTE(cute)
+  @ATTRIBUTE(smart)
+  @ATTRIBUTE(coolstuff:main=1)
+  @ATTRIBUTE(coolstuff:alt=1)
+  id INTEGER
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS my_unique_index ON foo (id ASC, name DESC, zone);
+
+CREATE TABLE foo(
+  id INTEGER NOT NULL,
+  name TEXT,
+  rate LONG_INT,
+  PRIMARY KEY (id, name),
+  FOREIGN KEY (id, name) REFERENCES baz (id, name2) ON UPDATE CASCADE ON DELETE NO ACTION NOT DEFERRABLE INITIALLY DEFERRED,
+  FOREIGN KEY (rate) REFERENCES rater (r) ON UPDATE RESTRICT ON DELETE SET DEFAULT DEFERRABLE INITIALLY IMMEDIATE,
+  FOREIGN KEY (name) REFERENCES name_thing (n) ON UPDATE SET NULL ON DELETE SET DEFAULT DEFERRABLE INITIALLY IMMEDIATE
+);
+
+CREATE TABLE foo(
+  id INTEGER REFERENCES goo (another_id) ON UPDATE CASCADE ON DELETE SET NULL
+);
+
+CREATE TABLE lots_o_defaults(
+  c1 INTEGER DEFAULT 2,
+  c2 INTEGER DEFAULT -7,
+  c3 REAL DEFAULT 2.500000,
+  c4 TEXT DEFAULT '''',
+  c5 TEXT DEFAULT "xyzzy"
+);
+
+CREATE TABLE foo(
+  id INTEGER
+) @RECREATE;
+
+WITH
+x (a, b) AS (SELECT 111, 222)
+INSERT INTO foo VALUES(( SELECT a
+  FROM x ), ( SELECT b
+  FROM x ));
+
+WITH RECURSIVE
+x (a, b) AS (SELECT 111, 222)
+INSERT INTO foo(a, b) VALUES(( SELECT a
+  FROM x ), ( SELECT b
+  FROM x ));
+
+INSERT INTO foo() SELECT 1, 2, 3
+  FROM bar;
+
+DECLARE SELECT FUNC foo (id INTEGER) INTEGER NOT NULL;
+
+FETCH a_cursor FROM ARGUMENTS;
+
+FETCH a_cursor FROM ARGUMENTS LIKE some_table;
+
+FETCH a_cursor(x) FROM ARGUMENTS @DUMMY_SEED(7) @DUMMY_DEFAULTS;
+
+FETCH to_cursor FROM from_cursor;
+
+INSERT INTO foo(a, b) FROM ARGUMENTS;
+
+CREATE PROC x (LIKE table_name, id INTEGER)
+BEGIN
+  DECLARE x INTEGER;
+END;
+
+SELECT x MATCH y;
+
+SELECT 1 | 2 & 3;
+
+SELECT 1 & (~2 | 3);
+
+SELECT 1 << 2 + 1 >> 4;
+
+SELECT 1 || 2;
+
+SELECT 'a' || 'b';
+
+SELECT 'x' GLOB 'y';
+
+SELECT 'x' REGEXP 'y';
+
+SELECT 'x' MATCH 'y';
+
+CREATE TEMP TRIGGER IF NOT EXISTS trigger1
+  BEFORE DELETE ON target_table1
+  FOR EACH ROW
+  WHEN complex_when_expression
+BEGIN
+  SELECT a_result;
+END;
+
+CREATE TRIGGER trigger2
+  AFTER INSERT ON target_table2
+BEGIN
+  DELETE FROM foo WHERE id = 1;
+END;
+
+CREATE TRIGGER trigger3
+  INSTEAD OF UPDATE ON target_table3
+BEGIN
+  UPDATE goo
+  SET foo = bar
+    WHERE miz = wiz;
+  INSERT INTO stew VALUES(1);
+END;
+
+CREATE TRIGGER trigger4
+  INSTEAD OF UPDATE OF x, y, z ON target_table4
+BEGIN
+  SELECT 1;
+END;
+
+DROP TRIGGER foo;
+
+DROP TRIGGER IF EXISTS foo;
+
+SELECT RAISE(IGNORE);
+
+SELECT RAISE(FAIL, 'fail it');
+
+SELECT RAISE(ABORT, 'abort it');
+
+SELECT RAISE(ROLLBACK, 'roll it back');
+
+@ATTRIBUTE(cql:identity=(id))
+CREATE PROC simple_identity ()
+BEGIN
+  SELECT 1 AS id, 2 AS data;
+END;
+
+@ATTRIBUTE(cql:identity=(col1, col2))
+CREATE PROC complex_identity ()
+BEGIN
+  SELECT 1 AS col1, 2 AS col2, 3 AS data;
+END;
+
+CREATE TABLE with_sensitive(
+  id INTEGER,
+  name TEXT @SENSITIVE
+);
+
+WITH
+x (a, b) AS (SELECT 1, 2)
+DELETE FROM foo WHERE foo.id IN (SELECT *
+  FROM x);
+
+WITH
+x (a, b) AS (SELECT 1, 2)
+UPDATE foo
+SET xyzzy = 7
+  WHERE foo.id IN (SELECT *
+  FROM x);
+
+@ENFORCE_STRICT FOREIGN KEY ON UPDATE;
+
+@ENFORCE_NORMAL FOREIGN KEY ON DELETE;
+
+@ENFORCE_STRICT JOIN;
+
+@ENFORCE_NORMAL JOIN;
+
+@ENFORCE_STRICT UPSERT STATEMENT;
+
+@ENFORCE_NORMAL UPSERT STATEMENT;
+
+@DECLARE_SCHEMA_REGION foo;
+
+@DECLARE_SCHEMA_REGION bar USING foo;
+
+@DECLARE_SCHEMA_REGION baz USING foo, bar;
+
+@DECLARE_SCHEMA_REGION goo USING foo, bar, baz PRIVATE;
+
+@DECLARE_DEPLOYABLE_REGION dep1;
+
+@DECLARE_DEPLOYABLE_REGION dep2 USING foo, bar;
+
+@BEGIN_SCHEMA_REGION foo;
+
+@END_SCHEMA_REGION;
+
+DECLARE SELECT FUNC garbonzo (id INTEGER) (t TEXT);
+
+SELECT *
+  FROM garbonzo(1, 2, 3) AS T1
+  INNER JOIN xyzzy() AS T2 ON T1.id = T2.id;
+
+CREATE TRIGGER deleted_trigger
+  AFTER INSERT ON target_table2
+BEGIN
+  DELETE FROM foo WHERE id = 1;
+END @DELETE(100);
+
+INSERT INTO foo SELECT C11
+  FROM T1
+  WHERE 1
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO foo(id) VALUES(1)
+ON CONFLICT (id) 
+  WHERE id = 10 DO UPDATE
+SET id = id + 1
+  WHERE id = 20;
+
+INSERT INTO foo(id) VALUES(1)
+ON CONFLICT DO NOTHING;
+
+SELECT 10 * a AS T
+  WHERE T = 1;
+
+EXPLAIN QUERY PLAN
+SELECT *
+  FROM foo;
+
+EXPLAIN
+SELECT 1;
+
+@SCHEMA_AD_HOC_MIGRATION(11, YourProcHere);
+
+CREATE PROC emit_several_rows ()
+BEGIN
+  DECLARE C CURSOR LIKE SELECT 1 AS x, "2" AS y;
+  FETCH C FROM VALUES(1, "2");
+  OUT UNION C;
+  OUT UNION C;
+END;
+
+CREATE PROC compound_select_expr ()
+BEGIN
+  DECLARE x INTEGER;
+  SET x := ( SELECT 1
+    WHERE 0
+  UNION
+  SELECT 2 );
+END;
+
+SELECT id, 
+  row_number() FILTER (WHERE 1) OVER (RANGE BETWEEN id >= 70 PRECEDING AND id < 100 FOLLOWING EXCLUDE NO OTHERS) AS row_num
+  FROM foo;
+
+SELECT id, 
+  row_number() OVER win1, 
+  rank() OVER win2
+  FROM foo
+  WINDOW 
+    win1 AS (), 
+    win2 AS ()
+ORDER BY id;
+
+CREATE PROC foo (x INTEGER, y INTEGER)
+BEGIN
+  INSERT INTO bar(x, y) FROM ARGUMENTS @DUMMY_SEED(1) @DUMMY_NULLABLES;
+END;
+
+UPDATE CURSOR d(a, b) FROM VALUES(1, 'x');
+
+WITH
+foo (*) AS (SELECT 1 AS x, '2' AS y)
+SELECT *
+  FROM foo;
+
+UPDATE CURSOR d(LIKE x) FROM VALUES(1, 2);
+
+UPDATE CURSOR d(LIKE x) FROM CURSOR zz;
+
+FETCH x(a, b) FROM CURSOR n @DUMMY_SEED(1);
+
+SELECT count(DISTINCT id) FILTER (WHERE 1)
+  FROM foo;
+
+SELECT 'x' COLLATE nocase;
+
+SELECT nullif('a', 'b');
+
+SELECT char(1);
+
+SELECT x'1234abcd';
+
+INSERT INTO foo DEFAULT VALUES;
+
+DECLARE PROC p (LIKE foo) (LIKE bar);
+
+SET file := 'path/I/do/not/like';
+
+SET file := 'long/path/I/do/not/like';
+
+SET file := 'long/path/I/do/not/like';

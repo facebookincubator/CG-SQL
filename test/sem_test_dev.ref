@@ -1,0 +1,67 @@
+{stmt_list}: err
+
+The statement ending at line XXXX
+
+EXPLAIN
+SELECT 1;
+
+Error at test/sem_test_dev.sql:XXXX : in explain_stmt : CQL0292: Explain statement is only available in dev mode because its result set may vary between sqlite versions
+
+  {explain_stmt}: err
+  | {int 1}
+  | {select_stmt}
+    | {select_core_list}
+    | | {select_core}
+    |   | {select_expr_list_con}
+    |     | {select_expr_list}
+    |     | | {select_expr}
+    |     |   | {int 1}
+    |     | {select_from_etc}
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+EXPLAIN QUERY PLAN
+SELECT *
+  FROM foo
+  INNER JOIN bar
+  WHERE foo.id = 1;
+
+Error at test/sem_test_dev.sql:XXXX : in explain_stmt : CQL0292: Explain statement is only available in dev mode because its result set may vary between sqlite versions
+
+  {explain_stmt}: err
+  | {int 2}
+  | {select_stmt}
+    | {select_core_list}
+    | | {select_core}
+    |   | {select_expr_list_con}
+    |     | {select_expr_list}
+    |     | | {star}
+    |     | {select_from_etc}
+    |       | {join_clause}
+    |       | | {table_or_subquery}
+    |       | | | {name foo}
+    |       | | {join_target_list}
+    |       |   | {join_target}
+    |       |     | {int 1}
+    |       |     | {table_join}
+    |       |       | {table_or_subquery}
+    |       |         | {name bar}
+    |       | {select_where}
+    |         | {opt_where}
+    |         | | {eq}
+    |         |   | {dot}
+    |         |   | | {name foo}
+    |         |   | | {name id}
+    |         |   | {int 1}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+

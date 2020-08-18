@@ -1,0 +1,443 @@
+{stmt_list}: err
+
+The statement ending at line XXXX
+
+@SCHEMA_UPGRADE (5);
+
+  {schema_upgrade_version_stmt}: ok
+  | {int 5}
+
+The statement ending at line XXXX
+
+CREATE TABLE foo(
+  id INTEGER NOT NULL,
+  rate LONG_INT @DELETE(5, deletor),
+  rate_2 LONG_INT @DELETE(4),
+  id2 INTEGER @CREATE(4),
+  name TEXT @CREATE(5),
+  name_2 TEXT @CREATE(6)
+);
+
+  {create_table_stmt}: foo: { id: integer notnull, rate: longint, id2: integer, name: text }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name foo}
+  | {col_key_list}
+    | {col_def}: id: integer notnull
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |   | | {name id}
+    |   | | {type_int}: integer
+    |   | {col_attrs_not_null}: ok
+    | {col_key_list}
+      | {col_def}: rate: longint @delete(5)
+      | | {col_def_type_attrs}
+      |   | {col_def_name_type}
+      |   | | {name rate}
+      |   | | {type_long}: longint
+      |   | {delete_attr}: ok
+      |     | {version_annotation}
+      |       | {int 5}
+      |       | {name deletor}
+      | {col_key_list}
+        | {col_def}: rate_2: longint hidden @delete(4)
+        | | {col_def_type_attrs}
+        |   | {col_def_name_type}
+        |   | | {name rate_2}
+        |   | | {type_long}: longint
+        |   | {delete_attr}: ok
+        |     | {version_annotation}
+        |       | {int 4}
+        | {col_key_list}
+          | {col_def}: id2: integer @create(4)
+          | | {col_def_type_attrs}
+          |   | {col_def_name_type}
+          |   | | {name id2}
+          |   | | {type_int}: integer
+          |   | {create_attr}: ok
+          |     | {version_annotation}
+          |       | {int 4}
+          | {col_key_list}
+            | {col_def}: name: text @create(5)
+            | | {col_def_type_attrs}
+            |   | {col_def_name_type}
+            |   | | {name name}
+            |   | | {type_text}: text
+            |   | {create_attr}: ok
+            |     | {version_annotation}
+            |       | {int 5}
+            | {col_key_list}
+              | {col_def}: name_2: text hidden @create(6)
+                | {col_def_type_attrs}
+                  | {col_def_name_type}
+                  | | {name name_2}
+                  | | {type_text}: text
+                  | {create_attr}: ok
+                    | {version_annotation}
+                      | {int 6}
+
+The statement ending at line XXXX
+
+CREATE INDEX recent_index ON foo (name_2);
+
+  {create_index_stmt}: ok
+  | {create_index_on_list}
+  | | {name recent_index}
+  | | {name foo}
+  | {flags_names_attrs}
+    | {int 0}
+    | {index_names_and_attrs}
+      | {indexed_columns}
+        | {indexed_column}
+          | {name name_2}
+
+The statement ending at line XXXX
+
+CREATE TABLE fk_not_there_yet(
+  id INTEGER,
+  text1 TEXT REFERENCES foo (name_2),
+  text2 TEXT,
+  FOREIGN KEY (text2) REFERENCES foo (name_2)
+);
+
+  {create_table_stmt}: fk_not_there_yet: { id: integer, text1: text foreign_key, text2: text }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name fk_not_there_yet}
+  | {col_key_list}
+    | {col_def}: id: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: text1: text foreign_key
+      | | {col_def_type_attrs}
+      |   | {col_def_name_type}
+      |   | | {name text1}
+      |   | | {type_text}: text
+      |   | {col_attrs_fk}: ok
+      |     | {fk_target_options}
+      |       | {fk_target}
+      |       | | {name foo}
+      |       | | {name_list}
+      |       |   | {name name_2}
+      |       | {int 0}
+      | {col_key_list}
+        | {col_def}: text2: text
+        | | {col_def_type_attrs}
+        |   | {col_def_name_type}
+        |     | {name text2}
+        |     | {type_text}: text
+        | {col_key_list}
+          | {fk_def}: ok
+            | {name_list}
+            | | {name text2}
+            | {fk_target_options}
+              | {fk_target}
+              | | {name foo}
+              | | {name_list}
+              |   | {name name_2}
+              | {int 0}
+
+The statement ending at line XXXX
+
+SELECT rate_2
+  FROM foo;
+
+Error at test/sem_test_migrate.sql:XXXX : in str : CQL0069: name not found 'rate_2'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {name rate_2}: err
+  |     | {select_from_etc}: TABLE { foo: foo }
+  |       | {table_or_subquery_list}: TABLE { foo: foo }
+  |       | | {table_or_subquery}: TABLE { foo: foo }
+  |       |   | {name foo}: TABLE { foo: foo }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC deletor ()
+BEGIN
+  DECLARE i INTEGER;
+END;
+
+Error at test/sem_test_migrate.sql:XXXX : in str : CQL0188: procedure is supposed to do schema migration but it doesn't have any DML 'deletor'
+
+  {create_proc_stmt}: err
+  | {name deletor}: err
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+        | {name_list}: i: integer variable
+        | | {name i}: i: integer variable
+        | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE bar(
+  id INTEGER NOT NULL,
+  name TEXT @CREATE(5, name_creator)
+);
+
+  {create_table_stmt}: bar: { id: integer notnull, name: text }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name bar}
+  | {col_key_list}
+    | {col_def}: id: integer notnull
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |   | | {name id}
+    |   | | {type_int}: integer
+    |   | {col_attrs_not_null}: ok
+    | {col_key_list}
+      | {col_def}: name: text @create(5)
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+          | | {name name}
+          | | {type_text}: text
+          | {create_attr}: ok
+            | {version_annotation}
+              | {int 5}
+              | {name name_creator}
+
+The statement ending at line XXXX
+
+CREATE PROC name_creator (i INTEGER)
+BEGIN
+  SELECT 1 AS x;
+END;
+
+Error at test/sem_test_migrate.sql:XXXX : in params : CQL0233: procedure previously declared as schema upgrade proc, it can have no args 'name_creator'
+
+  {create_proc_stmt}: err
+  | {name name_creator}: err
+  | {proc_params_stmts}
+    | {params}
+    | | {param}
+    |   | {param_detail}
+    |     | {name i}
+    |     | {type_int}
+    | {stmt_list}
+      | {select_stmt}
+        | {select_core_list}
+        | | {select_core}
+        |   | {select_expr_list_con}
+        |     | {select_expr_list}
+        |     | | {select_expr}
+        |     |   | {int 1}
+        |     |   | {opt_as_alias}
+        |     |     | {name x}
+        |     | {select_from_etc}
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE TABLE t1(
+  id INTEGER
+) @CREATE(7);
+
+  {create_table_stmt}: t1: { id: integer } hidden @create(7)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {create_attr}
+  | |   | {version_annotation}
+  | |     | {int 7}
+  | | {name t1}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE t2(
+  id INTEGER
+) @CREATE(5);
+
+  {create_table_stmt}: t2: { id: integer } @create(5)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {create_attr}
+  | |   | {version_annotation}
+  | |     | {int 5}
+  | | {name t2}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE t3(
+  id INTEGER
+) @DELETE(4);
+
+  {create_table_stmt}: t3: { id: integer } hidden @delete(4)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {delete_attr}
+  | |   | {version_annotation}
+  | |     | {int 4}
+  | | {name t3}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE t4(
+  id INTEGER
+) @DELETE(5);
+
+  {create_table_stmt}: t4: { id: integer } @delete(5)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {delete_attr}
+  | |   | {version_annotation}
+  | |     | {int 5}
+  | | {name t4}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+DELETE FROM t1;
+
+Error at test/sem_test_migrate.sql:XXXX : in str : CQL0151: table in delete statement does not exist (not visible in schema version 5) 't1'
+
+  {delete_stmt}: err
+  | {name t1}
+
+The statement ending at line XXXX
+
+DELETE FROM t2;
+
+  {delete_stmt}: ok
+  | {name t2}: t2: { id: integer } @create(5)
+
+The statement ending at line XXXX
+
+DELETE FROM t3;
+
+Error at test/sem_test_migrate.sql:XXXX : in str : CQL0151: table in delete statement does not exist (not visible in schema version 5) 't3'
+
+  {delete_stmt}: err
+  | {name t3}
+
+The statement ending at line XXXX
+
+DELETE FROM t4;
+
+  {delete_stmt}: ok
+  | {name t4}: t4: { id: integer } @delete(5)
+
+The statement ending at line XXXX
+
+CREATE TRIGGER will_not_be_processed_trigger
+  AFTER INSERT ON lol_table
+BEGIN
+  DELETE FROM rofl WHERE id = 1;
+END;
+
+  {create_trigger_stmt}: ok
+  | {int 0}
+  | {trigger_body_vers}
+    | {trigger_def}
+      | {name will_not_be_processed_trigger}
+      | {trigger_condition}
+        | {int 8}
+        | {trigger_op_target}
+          | {trigger_operation}
+          | | {int 128}
+          | {trigger_target_action}
+            | {name lol_table}
+            | {trigger_action}
+              | {int 0}
+              | {trigger_when_stmts}
+                | {stmt_list}
+                  | {delete_stmt}
+                    | {name rofl}
+                    | {opt_where}
+                      | {eq}
+                        | {name id}
+                        | {int 1}
+
+The statement ending at line XXXX
+
+@SCHEMA_AD_HOC_MIGRATION(5, MyAdHocMigration);
+
+  {schema_ad_hoc_migration_stmt}: ok @create(5)
+  | {version_annotation}
+    | {int 5}
+    | {name MyAdHocMigration}
+
+The statement ending at line XXXX
+
+CREATE PROC MyAdHocMigration ()
+BEGIN
+  UPDATE foo
+  SET id = 1
+    WHERE id = 2;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name MyAdHocMigration}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {update_stmt}: foo: { id: integer notnull, rate: longint, id2: integer, name: text }
+        | {name foo}: foo: { id: integer notnull, rate: longint, id2: integer, name: text }
+        | {update_set}
+          | {update_list}: ok
+          | | {update_entry}: id: integer notnull
+          |   | {name id}: id: integer notnull
+          |   | {int 1}: integer notnull
+          | {update_where}
+            | {opt_where}: bool notnull
+            | | {eq}: bool notnull
+            |   | {name id}: id: integer notnull
+            |   | {int 2}: integer notnull
+            | {update_orderby}
+
+The statement ending at line XXXX
+
+@PREVIOUS_SCHEMA;
+
+Error at test/sem_test_migrate.sql:XXXX : in previous_schema_stmt : CQL0254: switching to previous schema validation mode not allowed if @schema_upgrade_version was used
+
+  {previous_schema_stmt}: err
+

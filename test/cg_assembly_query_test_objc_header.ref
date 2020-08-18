@@ -1,0 +1,75 @@
+// (c) Facebook, Inc. and its affiliates. Confidential and proprietary.
+
+#pragma once
+
+#import <Foundation/Foundation.h>
+
+#import <Test/TestFile.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+@class MBQAssemblyCore;
+
+static inline MBQAssemblyCore *MBQAssemblyCoreFromMCQAssemblyCore(MCQAssemblyCoreResultSetRef resultSet)
+{
+  return (__bridge MBQAssemblyCore *)resultSet;
+}
+
+static inline MCQAssemblyCoreResultSetRef MCQAssemblyCoreFromMBQAssemblyCore(MBQAssemblyCore *resultSet)
+{
+  return (__bridge MCQAssemblyCoreResultSetRef)resultSet;
+}
+
+static inline int32_t MBQAssemblyCoreGetX(MBQAssemblyCore *resultSet, int32_t row)
+{
+  MCQAssemblyCoreResultSetRef cResultSet = MCQAssemblyCoreFromMBQAssemblyCore(resultSet);
+  return MCQAssemblyCoreGetX(cResultSet, row);
+}
+
+static inline NSString *_Nullable MBQAssemblyCoreGetY(MBQAssemblyCore *resultSet, int32_t row)
+{
+  MCQAssemblyCoreResultSetRef cResultSet = MCQAssemblyCoreFromMBQAssemblyCore(resultSet);
+  return (__bridge NSString *)MCQAssemblyCoreGetY(cResultSet, row);
+}
+
+static inline NSNumber *_Nullable MBQAssemblyCoreGetZ(MBQAssemblyCore *resultSet, int32_t row)
+{
+  MCQAssemblyCoreResultSetRef cResultSet = MCQAssemblyCoreFromMBQAssemblyCore(resultSet);
+  return MCQAssemblyCoreGetZIsNull(cResultSet, row) ? nil : @(MCQAssemblyCoreGetZValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable __PRIVATE__MBQAssemblyCoreGetFlag(MBQAssemblyCore *resultSet, int32_t row)
+{
+  MCQAssemblyCoreResultSetRef cResultSet = MCQAssemblyCoreFromMBQAssemblyCore(resultSet);
+  return __PRIVATE__MCQAssemblyCoreGetFlagIsNull(cResultSet, row) ? nil : @(__PRIVATE__MCQAssemblyCoreGetFlagValue(cResultSet, row));
+}
+
+static inline NSString *_Nullable __PRIVATE__MBQAssemblyCoreGetName(MBQAssemblyCore *resultSet, int32_t row)
+{
+  MCQAssemblyCoreResultSetRef cResultSet = MCQAssemblyCoreFromMBQAssemblyCore(resultSet);
+  return (__bridge NSString *)__PRIVATE__MCQAssemblyCoreGetName(cResultSet, row);
+}
+
+static inline int32_t MBQAssemblyCoreResultCount(MBQAssemblyCore *resultSet)
+{
+  return MCQAssemblyCoreResultCount(MCQAssemblyCoreFromMBQAssemblyCore(resultSet));
+}
+
+static inline MBQAssemblyCore *MBQAssemblyCoreCopy(MBQAssemblyCore *resultSet, int32_t from, int32_t count)
+{
+  MCQAssemblyCoreResultSetRef copy;
+  MCQAssemblyCoreCopy(MCQAssemblyCoreFromMBQAssemblyCore(resultSet), &copy, from, count);
+  return (__bridge_transfer MBQAssemblyCore *)copy;
+}
+
+static inline NSUInteger MBQAssemblyCoreRowHash(MBQAssemblyCore *resultSet, int32_t row)
+{
+  return MCQAssemblyCoreRowHash(MCQAssemblyCoreFromMBQAssemblyCore(resultSet), row);
+}
+
+static inline BOOL MBQAssemblyCoreRowEqual(MBQAssemblyCore *resultSet1, int32_t row1, MBQAssemblyCore *resultSet2, int32_t row2)
+{
+  return MCQAssemblyCoreRowEqual(MCQAssemblyCoreFromMBQAssemblyCore(resultSet1), row1, MCQAssemblyCoreFromMBQAssemblyCore(resultSet2), row2);
+}
+
+NS_ASSUME_NONNULL_END

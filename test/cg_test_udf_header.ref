@@ -1,0 +1,10 @@
+// (c) Facebook, Inc. and its affiliates. Confidential and proprietary.
+
+#pragma once
+
+#include "cqlrt.h"
+
+void create_udf(sqlite3 *_Nonnull _db_); 
+
+// The statement ending at line XXXX
+

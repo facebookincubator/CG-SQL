@@ -1,0 +1,3570 @@
+{stmt_list}: err
+
+The statement ending at line XXXX
+
+@DECLARE_DEPLOYABLE_REGION base;
+
+  {declare_deployable_region_stmt}: base: region deployable
+  | {name base}
+
+The statement ending at line XXXX
+
+@DECLARE_DEPLOYABLE_REGION different_region;
+
+  {declare_deployable_region_stmt}: different_region: region deployable
+  | {name different_region}
+
+The statement ending at line XXXX
+
+@BEGIN_SCHEMA_REGION base;
+
+  {begin_schema_region_stmt}: ok
+  | {name base}
+
+The statement ending at line XXXX
+
+CREATE TABLE foo(
+  id INTEGER NOT NULL,
+  rate LONG_INT @DELETE(5, deletor),
+  rate_2 LONG_INT @DELETE(4),
+  id2 INTEGER @CREATE(4),
+  name TEXT @CREATE(5),
+  name_2 TEXT @CREATE(6)
+);
+
+  {create_table_stmt}: foo: { id: integer notnull, id2: integer, name: text, name_2: text } validated
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name foo}
+  | {col_key_list}
+    | {col_def}: id: integer notnull
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |   | | {name id}
+    |   | | {type_int}: integer
+    |   | {col_attrs_not_null}: ok
+    | {col_key_list}
+      | {col_def}: rate: longint hidden @delete(5)
+      | | {col_def_type_attrs}
+      |   | {col_def_name_type}
+      |   | | {name rate}
+      |   | | {type_long}: longint
+      |   | {delete_attr}: ok
+      |     | {version_annotation}
+      |       | {int 5}
+      |       | {name deletor}
+      | {col_key_list}
+        | {col_def}: rate_2: longint hidden @delete(4)
+        | | {col_def_type_attrs}
+        |   | {col_def_name_type}
+        |   | | {name rate_2}
+        |   | | {type_long}: longint
+        |   | {delete_attr}: ok
+        |     | {version_annotation}
+        |       | {int 4}
+        | {col_key_list}
+          | {col_def}: id2: integer @create(4)
+          | | {col_def_type_attrs}
+          |   | {col_def_name_type}
+          |   | | {name id2}
+          |   | | {type_int}: integer
+          |   | {create_attr}: ok
+          |     | {version_annotation}
+          |       | {int 4}
+          | {col_key_list}
+            | {col_def}: name: text @create(5)
+            | | {col_def_type_attrs}
+            |   | {col_def_name_type}
+            |   | | {name name}
+            |   | | {type_text}: text
+            |   | {create_attr}: ok
+            |     | {version_annotation}
+            |       | {int 5}
+            | {col_key_list}
+              | {col_def}: name_2: text @create(6)
+                | {col_def_type_attrs}
+                  | {col_def_name_type}
+                  | | {name name_2}
+                  | | {type_text}: text
+                  | {create_attr}: ok
+                    | {version_annotation}
+                      | {int 6}
+
+The statement ending at line XXXX
+
+CREATE TABLE column_deleted_in_this_table(
+  id INTEGER,
+  being_deleted TEXT @DELETE(6)
+);
+
+  {create_table_stmt}: column_deleted_in_this_table: { id: integer } validated
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name column_deleted_in_this_table}
+  | {col_key_list}
+    | {col_def}: id: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: being_deleted: text hidden @delete(6)
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+          | | {name being_deleted}
+          | | {type_text}: text
+          | {delete_attr}: ok
+            | {version_annotation}
+              | {int 6}
+
+The statement ending at line XXXX
+
+CREATE TABLE column_undeleted_in_this_table(
+  id INTEGER,
+  being_undeleted TEXT
+);
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name column_undeleted_in_this_table}
+  | {col_key_list}
+    | {col_def}: id: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: being_undeleted: text
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+            | {name being_undeleted}
+            | {type_text}: text
+
+The statement ending at line XXXX
+
+CREATE TABLE become_sensitive(
+  id2 INTEGER @SENSITIVE,
+  name TEXT @SENSITIVE
+);
+
+  {create_table_stmt}: become_sensitive: { id2: integer sensitive, name: text sensitive } validated
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name become_sensitive}
+  | {col_key_list}
+    | {col_def}: id2: integer sensitive
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |   | | {name id2}
+    |   | | {type_int}: integer
+    |   | {sensitive_attr}: ok
+    | {col_key_list}
+      | {col_def}: name: text sensitive
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+          | | {name name}
+          | | {type_text}: text
+          | {sensitive_attr}: ok
+
+The statement ending at line XXXX
+
+CREATE TABLE t_create_verison_changed(
+  id INTEGER
+) @CREATE(1);
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {create_attr}
+  | |   | {version_annotation}
+  | |     | {int 1}
+  | | {name t_create_verison_changed}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE t_delete_verison_changed(
+  id INTEGER
+) @DELETE(1);
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {delete_attr}
+  | |   | {version_annotation}
+  | |     | {int 1}
+  | | {name t_delete_verison_changed}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE VIEW t_became_a_view AS
+SELECT 1 AS id;
+
+  {create_view_stmt}: err
+  | {int 0}
+  | {view_and_attrs}
+    | {name_and_select}
+      | {name t_became_a_view}
+      | {select_stmt}: t_became_a_view: { id: integer notnull }
+        | {select_core_list}: t_became_a_view: { id: integer notnull }
+        | | {select_core}: t_became_a_view: { id: integer notnull }
+        |   | {select_expr_list_con}: t_became_a_view: { id: integer notnull }
+        |     | {select_expr_list}: t_became_a_view: { id: integer notnull }
+        |     | | {select_expr}: id: integer notnull
+        |     |   | {int 1}: integer notnull
+        |     |   | {opt_as_alias}
+        |     |     | {name id}
+        |     | {select_from_etc}: ok
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE TABLE t_created_in_wrong_version(
+  id INTEGER
+) @CREATE(1);
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {create_attr}
+  | |   | {version_annotation}
+  | |     | {int 1}
+  | | {name t_created_in_wrong_version}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE t_was_correctly_deleted(
+  id INTEGER
+) @DELETE(1);
+
+  {create_table_stmt}: t_was_correctly_deleted: { id: integer } hidden validated @delete(1)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {delete_attr}
+  | |   | {version_annotation}
+  | |     | {int 1}
+  | | {name t_was_correctly_deleted}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE t_column_name_changed(
+  id_ INTEGER
+);
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_column_name_changed}
+  | {col_key_list}
+    | {col_def}: id_: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id_}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE t_column_type_changed(
+  id REAL
+);
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_column_type_changed}
+  | {col_key_list}
+    | {col_def}: id: real
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_real}: real
+
+The statement ending at line XXXX
+
+CREATE TABLE t_column_attribute_changed(
+  id INTEGER NOT NULL
+);
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_column_attribute_changed}
+  | {col_key_list}
+    | {col_def}: id: integer notnull
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+        | | {name id}
+        | | {type_int}: integer
+        | {col_attrs_not_null}: ok
+
+The statement ending at line XXXX
+
+CREATE TABLE t_column_delete_version_changed(
+  id INTEGER,
+  id2 INTEGER @DELETE(1)
+);
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_column_delete_version_changed}
+  | {col_key_list}
+    | {col_def}: id: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: id2: integer hidden @delete(1)
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+          | | {name id2}
+          | | {type_int}: integer
+          | {delete_attr}: ok
+            | {version_annotation}
+              | {int 1}
+
+The statement ending at line XXXX
+
+CREATE TABLE t_column_create_version_changed(
+  id INTEGER,
+  id2 INTEGER @CREATE(1)
+);
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_column_create_version_changed}
+  | {col_key_list}
+    | {col_def}: id: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: id2: integer @create(1)
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+          | | {name id2}
+          | | {type_int}: integer
+          | {create_attr}: ok
+            | {version_annotation}
+              | {int 1}
+
+The statement ending at line XXXX
+
+CREATE TABLE t_column_default_value_changed(
+  id INTEGER,
+  id2 INTEGER NOT NULL DEFAULT 2
+);
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_column_default_value_changed}
+  | {col_key_list}
+    | {col_def}: id: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: id2: integer notnull has_default
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+          | | {name id2}
+          | | {type_int}: integer
+          | {col_attrs_not_null}: ok
+            | {col_attrs_default}
+              | {int 2}
+
+The statement ending at line XXXX
+
+CREATE TABLE t_column_default_value_ok(
+  id INTEGER,
+  id2 INTEGER NOT NULL DEFAULT 1
+);
+
+  {create_table_stmt}: t_column_default_value_ok: { id: integer, id2: integer notnull has_default } validated
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_column_default_value_ok}
+  | {col_key_list}
+    | {col_def}: id: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: id2: integer notnull has_default
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+          | | {name id2}
+          | | {type_int}: integer
+          | {col_attrs_not_null}: ok
+            | {col_attrs_default}
+              | {int 1}
+
+The statement ending at line XXXX
+
+CREATE TABLE t_additional_attribute_present(
+  a INTEGER NOT NULL,
+  b INTEGER,
+  PRIMARY KEY (a, b)
+);
+
+  {create_table_stmt}: t_additional_attribute_present: { a: integer notnull, b: integer notnull } validated
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_additional_attribute_present}
+  | {col_key_list}
+    | {col_def}: a: integer notnull
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |   | | {name a}
+    |   | | {type_int}: integer
+    |   | {col_attrs_not_null}: ok
+    | {col_key_list}
+      | {col_def}: b: integer
+      | | {col_def_type_attrs}
+      |   | {col_def_name_type}
+      |     | {name b}
+      |     | {type_int}: integer
+      | {col_key_list}
+        | {pk_def}
+          | {name_list}
+            | {name a}
+            | {name_list}
+              | {name b}
+
+The statement ending at line XXXX
+
+CREATE TABLE t_additional_attribute_mismatch(
+  a INTEGER NOT NULL,
+  b INTEGER NOT NULL,
+  PRIMARY KEY (a)
+);
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_additional_attribute_mismatch}
+  | {col_key_list}
+    | {col_def}: a: integer notnull
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |   | | {name a}
+    |   | | {type_int}: integer
+    |   | {col_attrs_not_null}: ok
+    | {col_key_list}
+      | {col_def}: b: integer notnull
+      | | {col_def_type_attrs}
+      |   | {col_def_name_type}
+      |   | | {name b}
+      |   | | {type_int}: integer
+      |   | {col_attrs_not_null}: ok
+      | {col_key_list}
+        | {pk_def}
+          | {name_list}
+            | {name a}
+
+The statement ending at line XXXX
+
+CREATE TABLE t_columns_removed(
+  id INTEGER
+);
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_columns_removed}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE t_attribute_added(
+  a INTEGER NOT NULL,
+  PRIMARY KEY (a)
+);
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_attribute_added}
+  | {col_key_list}
+    | {col_def}: a: integer notnull
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |   | | {name a}
+    |   | | {type_int}: integer
+    |   | {col_attrs_not_null}: ok
+    | {col_key_list}
+      | {pk_def}
+        | {name_list}
+          | {name a}
+
+The statement ending at line XXXX
+
+CREATE TABLE t_additional_column(
+  a INTEGER NOT NULL,
+  b INTEGER
+);
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_additional_column}
+  | {col_key_list}
+    | {col_def}: a: integer notnull
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |   | | {name a}
+    |   | | {type_int}: integer
+    |   | {col_attrs_not_null}: ok
+    | {col_key_list}
+      | {col_def}: b: integer
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+            | {name b}
+            | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE t_additional_column_ok(
+  a INTEGER NOT NULL,
+  b INTEGER @CREATE(2),
+  c INTEGER @CREATE(6)
+);
+
+  {create_table_stmt}: t_additional_column_ok: { a: integer notnull, b: integer, c: integer } validated
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_additional_column_ok}
+  | {col_key_list}
+    | {col_def}: a: integer notnull
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |   | | {name a}
+    |   | | {type_int}: integer
+    |   | {col_attrs_not_null}: ok
+    | {col_key_list}
+      | {col_def}: b: integer @create(2)
+      | | {col_def_type_attrs}
+      |   | {col_def_name_type}
+      |   | | {name b}
+      |   | | {type_int}: integer
+      |   | {create_attr}: ok
+      |     | {version_annotation}
+      |       | {int 2}
+      | {col_key_list}
+        | {col_def}: c: integer @create(6)
+          | {col_def_type_attrs}
+            | {col_def_name_type}
+            | | {name c}
+            | | {type_int}: integer
+            | {create_attr}: ok
+              | {version_annotation}
+                | {int 6}
+
+The statement ending at line XXXX
+
+CREATE TEMP TABLE t_becomes_temp_table(
+  a INTEGER NOT NULL,
+  b INTEGER
+);
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 1}
+  | | {name t_becomes_temp_table}
+  | {col_key_list}
+    | {col_def}: a: integer notnull
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |   | | {name a}
+    |   | | {type_int}: integer
+    |   | {col_attrs_not_null}: ok
+    | {col_key_list}
+      | {col_def}: b: integer
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+            | {name b}
+            | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE t_new_table_ok(
+  a INTEGER NOT NULL,
+  b INTEGER
+) @CREATE(6);
+
+  {create_table_stmt}: t_new_table_ok: { a: integer notnull, b: integer } @create(6)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {create_attr}
+  | |   | {version_annotation}
+  | |     | {int 6}
+  | | {name t_new_table_ok}
+  | {col_key_list}
+    | {col_def}: a: integer notnull
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |   | | {name a}
+    |   | | {type_int}: integer
+    |   | {col_attrs_not_null}: ok
+    | {col_key_list}
+      | {col_def}: b: integer
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+            | {name b}
+            | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE t_new_table_no_annotation(
+  a INTEGER NOT NULL,
+  b INTEGER
+);
+
+Error at test/sem_test_prev.sql:XXXX : in create_table_stmt : CQL0309: new table must be added with @create(6) or later 't_new_table_no_annotation'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_new_table_no_annotation}
+  | {col_key_list}
+    | {col_def}: a: integer notnull
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |   | | {name a}
+    |   | | {type_int}: integer
+    |   | {col_attrs_not_null}: ok
+    | {col_key_list}
+      | {col_def}: b: integer
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+            | {name b}
+            | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE t_new_table_stale_annotation(
+  a INTEGER NOT NULL,
+  b INTEGER
+) @CREATE(2);
+
+Error at test/sem_test_prev.sql:XXXX : in create_table_stmt : CQL0309: new table must be added with @create(6) or later 't_new_table_stale_annotation'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {create_attr}
+  | |   | {version_annotation}
+  | |     | {int 2}
+  | | {name t_new_table_stale_annotation}
+  | {col_key_list}
+    | {col_def}: a: integer notnull
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |   | | {name a}
+    |   | | {type_int}: integer
+    |   | {col_attrs_not_null}: ok
+    | {col_key_list}
+      | {col_def}: b: integer
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+            | {name b}
+            | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE t_new_table_create_and_delete(
+  a INTEGER NOT NULL,
+  b INTEGER @CREATE(6) @DELETE(7)
+);
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_new_table_create_and_delete}
+  | {col_key_list}
+    | {col_def}: a: integer notnull
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |   | | {name a}
+    |   | | {type_int}: integer
+    |   | {col_attrs_not_null}: ok
+    | {col_key_list}
+      | {col_def}: b: integer hidden @create(6) @delete(7)
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+          | | {name b}
+          | | {type_int}: integer
+          | {create_attr}: ok
+            | {version_annotation}
+            | | {int 6}
+            | {delete_attr}
+              | {version_annotation}
+                | {int 7}
+
+The statement ending at line XXXX
+
+CREATE TABLE t_new_legit_column(
+  a INTEGER NOT NULL,
+  b INTEGER @CREATE(6)
+);
+
+  {create_table_stmt}: t_new_legit_column: { a: integer notnull, b: integer } validated
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_new_legit_column}
+  | {col_key_list}
+    | {col_def}: a: integer notnull
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |   | | {name a}
+    |   | | {type_int}: integer
+    |   | {col_attrs_not_null}: ok
+    | {col_key_list}
+      | {col_def}: b: integer @create(6)
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+          | | {name b}
+          | | {type_int}: integer
+          | {create_attr}: ok
+            | {version_annotation}
+              | {int 6}
+
+The statement ending at line XXXX
+
+CREATE TABLE with_create_migrator(
+  id INTEGER
+) @CREATE(1, ACreateMigrator);
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {create_attr}
+  | |   | {version_annotation}
+  | |     | {int 1}
+  | |     | {name ACreateMigrator}
+  | | {name with_create_migrator}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE with_delete_migrator(
+  id INTEGER
+) @DELETE(1, ADeleteMigrator);
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {delete_attr}
+  | |   | {version_annotation}
+  | |     | {int 1}
+  | |     | {name ADeleteMigrator}
+  | | {name with_delete_migrator}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE view_becomes_a_table(
+  id INTEGER
+);
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name view_becomes_a_table}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE VIEW view_was_temp_but_now_it_is_not AS
+SELECT 1 AS X;
+
+  {create_view_stmt}: view_was_temp_but_now_it_is_not: { X: integer notnull }
+  | {int 0}
+  | {view_and_attrs}
+    | {name_and_select}
+      | {name view_was_temp_but_now_it_is_not}
+      | {select_stmt}: view_was_temp_but_now_it_is_not: { X: integer notnull }
+        | {select_core_list}: view_was_temp_but_now_it_is_not: { X: integer notnull }
+        | | {select_core}: view_was_temp_but_now_it_is_not: { X: integer notnull }
+        |   | {select_expr_list_con}: view_was_temp_but_now_it_is_not: { X: integer notnull }
+        |     | {select_expr_list}: view_was_temp_but_now_it_is_not: { X: integer notnull }
+        |     | | {select_expr}: X: integer notnull
+        |     |   | {int 1}: integer notnull
+        |     |   | {opt_as_alias}
+        |     |     | {name X}
+        |     | {select_from_etc}: ok
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE VIEW view_created_with_no_annotation AS
+SELECT 1 AS X;
+
+  {create_view_stmt}: view_created_with_no_annotation: { X: integer notnull }
+  | {int 0}
+  | {view_and_attrs}
+    | {name_and_select}
+      | {name view_created_with_no_annotation}
+      | {select_stmt}: view_created_with_no_annotation: { X: integer notnull }
+        | {select_core_list}: view_created_with_no_annotation: { X: integer notnull }
+        | | {select_core}: view_created_with_no_annotation: { X: integer notnull }
+        |   | {select_expr_list_con}: view_created_with_no_annotation: { X: integer notnull }
+        |     | {select_expr_list}: view_created_with_no_annotation: { X: integer notnull }
+        |     | | {select_expr}: X: integer notnull
+        |     |   | {int 1}: integer notnull
+        |     |   | {opt_as_alias}
+        |     |     | {name X}
+        |     | {select_from_etc}: ok
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE INDEX this_index_was_created_with_no_annotation ON foo (id);
+
+  {create_index_stmt}: ok
+  | {create_index_on_list}
+  | | {name this_index_was_created_with_no_annotation}
+  | | {name foo}
+  | {flags_names_attrs}
+    | {int 0}
+    | {index_names_and_attrs}
+      | {indexed_columns}
+        | {indexed_column}
+          | {name id}: id: integer notnull
+
+The statement ending at line XXXX
+
+CREATE TABLE create_column_migrate_test(
+  id INTEGER UNIQUE,
+  id2 INTEGER @CREATE(2, ChangedColumnCreateMigrator)
+);
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name create_column_migrate_test}
+  | {col_key_list}
+    | {col_def}: id: integer unique_key
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |   | | {name id}
+    |   | | {type_int}: integer
+    |   | {col_attrs_unique}: ok
+    | {col_key_list}
+      | {col_def}: id2: integer @create(2)
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+          | | {name id2}
+          | | {type_int}: integer
+          | {create_attr}: ok
+            | {version_annotation}
+              | {int 2}
+              | {name ChangedColumnCreateMigrator}
+
+The statement ending at line XXXX
+
+CREATE TABLE delete_column_migrate_test(
+  id INTEGER,
+  id2 INTEGER @DELETE(2, ChangedColumnDeleteMigrator)
+);
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name delete_column_migrate_test}
+  | {col_key_list}
+    | {col_def}: id: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: id2: integer hidden @delete(2)
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+          | | {name id2}
+          | | {type_int}: integer
+          | {delete_attr}: ok
+            | {version_annotation}
+              | {int 2}
+              | {name ChangedColumnDeleteMigrator}
+
+The statement ending at line XXXX
+
+CREATE TABLE fk_facet(
+  id INTEGER,
+  FOREIGN KEY (id) REFERENCES create_column_migrate_test (id) ON DELETE CASCADE
+);
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name fk_facet}
+  | {col_key_list}
+    | {col_def}: id: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {fk_def}: ok
+        | {name_list}
+        | | {name id}: id: integer
+        | {fk_target_options}
+          | {fk_target}
+          | | {name create_column_migrate_test}
+          | | {name_list}
+          |   | {name id}: id: integer
+          | {int 3}
+
+The statement ending at line XXXX
+
+CREATE TABLE cannot_change_to_recreate(
+  id INTEGER
+) @RECREATE;
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {recreate_attr}
+  | | {name cannot_change_to_recreate}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE ok_to_delete_recreate_table(
+  id INTEGER
+) @DELETE(6);
+
+  {create_table_stmt}: ok_to_delete_recreate_table: { id: integer } hidden validated @delete(6)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {delete_attr}
+  | |   | {version_annotation}
+  | |     | {int 6}
+  | | {name ok_to_delete_recreate_table}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE ok_to_create_recreate_table(
+  id INTEGER
+) @CREATE(6);
+
+  {create_table_stmt}: ok_to_create_recreate_table: { id: integer } validated @create(6)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {create_attr}
+  | |   | {version_annotation}
+  | |     | {int 6}
+  | | {name ok_to_create_recreate_table}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE recreate_deleted_in_the_past(
+  id INTEGER
+) @DELETE(2);
+
+Error at test/sem_test_prev.sql:XXXX : in create_table_stmt : table must leave @recreate management with @create/delete(6) or later 'recreate_deleted_in_the_past'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {delete_attr}
+  | |   | {version_annotation}
+  | |     | {int 2}
+  | | {name recreate_deleted_in_the_past}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE recreate_feel_the_power(
+  id INTEGER,
+  payload REAL,
+  whatever TEXT
+) @RECREATE;
+
+  {create_table_stmt}: recreate_feel_the_power: { id: integer, payload: real, whatever: text } validated @recreate
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {recreate_attr}
+  | | {name recreate_feel_the_power}
+  | {col_key_list}
+    | {col_def}: id: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: payload: real
+      | | {col_def_type_attrs}
+      |   | {col_def_name_type}
+      |     | {name payload}
+      |     | {type_real}: real
+      | {col_key_list}
+        | {col_def}: whatever: text
+          | {col_def_type_attrs}
+            | {col_def_name_type}
+              | {name whatever}
+              | {type_text}: text
+
+The statement ending at line XXXX
+
+CREATE TABLE direct_to_recreate(
+  id INTEGER
+) @RECREATE;
+
+  {create_table_stmt}: direct_to_recreate: { id: integer } @recreate
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {recreate_attr}
+  | | {name direct_to_recreate}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TRIGGER trigger_added_no_problemo
+  BEFORE DELETE ON foo
+BEGIN
+  SELECT old.id;
+END;
+
+  {create_trigger_stmt}: ok
+  | {int 0}
+  | {trigger_body_vers}
+    | {trigger_def}
+      | {name trigger_added_no_problemo}
+      | {trigger_condition}
+        | {int 4}
+        | {trigger_op_target}
+          | {trigger_operation}
+          | | {int 64}
+          | {trigger_target_action}
+            | {name foo}: foo: { id: integer notnull, id2: integer, name: text, name_2: text }
+            | {trigger_action}
+              | {int 0}
+              | {trigger_when_stmts}
+                | {stmt_list}: ok
+                  | {select_stmt}: select: { id: integer notnull }
+                    | {select_core_list}: select: { id: integer notnull }
+                    | | {select_core}: select: { id: integer notnull }
+                    |   | {select_expr_list_con}: select: { id: integer notnull }
+                    |     | {select_expr_list}: select: { id: integer notnull }
+                    |     | | {select_expr}: id: integer notnull
+                    |     |   | {dot}: id: integer notnull
+                    |     |     | {name old}
+                    |     |     | {name id}
+                    |     | {select_from_etc}: ok
+                    |       | {select_where}
+                    |         | {select_groupby}
+                    |           | {select_having}
+                    | {select_orderby}
+                      | {select_limit}
+                        | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE TRIGGER trigger_will_be_deleted
+  BEFORE DELETE ON foo
+BEGIN
+  SELECT old.id;
+END @DELETE(2);
+
+  {create_trigger_stmt}: ok @delete(2)
+  | {int 0}
+  | {trigger_body_vers}
+    | {trigger_def}
+    | | {name trigger_will_be_deleted}
+    | | {trigger_condition}
+    |   | {int 4}
+    |   | {trigger_op_target}
+    |     | {trigger_operation}
+    |     | | {int 64}
+    |     | {trigger_target_action}
+    |       | {name foo}: foo: { id: integer notnull, id2: integer, name: text, name_2: text }
+    |       | {trigger_action}
+    |         | {int 0}
+    |         | {trigger_when_stmts}
+    |           | {stmt_list}: ok
+    |             | {select_stmt}: select: { id: integer notnull }
+    |               | {select_core_list}: select: { id: integer notnull }
+    |               | | {select_core}: select: { id: integer notnull }
+    |               |   | {select_expr_list_con}: select: { id: integer notnull }
+    |               |     | {select_expr_list}: select: { id: integer notnull }
+    |               |     | | {select_expr}: id: integer notnull
+    |               |     |   | {dot}: id: integer notnull
+    |               |     |     | {name old}
+    |               |     |     | {name id}
+    |               |     | {select_from_etc}: ok
+    |               |       | {select_where}
+    |               |         | {select_groupby}
+    |               |           | {select_having}
+    |               | {select_orderby}
+    |                 | {select_limit}
+    |                   | {select_offset}
+    | {delete_attr}
+      | {version_annotation}
+        | {int 2}
+
+The statement ending at line XXXX
+
+CREATE TABLE t_removed_facet(
+  id INTEGER NOT NULL
+);
+
+  {create_table_stmt}: t_removed_facet: { id: integer notnull } validated
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_removed_facet}
+  | {col_key_list}
+    | {col_def}: id: integer notnull
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+        | | {name id}
+        | | {type_int}: integer
+        | {col_attrs_not_null}: ok
+
+The statement ending at line XXXX
+
+CREATE TABLE t_subtle_column_change(
+  id INTEGER REFERENCES create_column_migrate_test (id)
+);
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_subtle_column_change}
+  | {col_key_list}
+    | {col_def}: id: integer foreign_key
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+        | | {name id}
+        | | {type_int}: integer
+        | {col_attrs_fk}: ok
+          | {fk_target_options}
+            | {fk_target}
+            | | {name create_column_migrate_test}
+            | | {name_list}
+            |   | {name id}: id: integer
+            | {int 0}
+
+The statement ending at line XXXX
+
+CREATE TABLE t_several_columns_added_interleaved(
+  col1 INTEGER,
+  col2 INTEGER @CREATE(2),
+  PRIMARY KEY (col1),
+  col3 INTEGER @CREATE(2)
+);
+
+  {create_table_stmt}: t_several_columns_added_interleaved: { col1: integer notnull, col2: integer, col3: integer } validated
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_several_columns_added_interleaved}
+  | {col_key_list}
+    | {col_def}: col1: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name col1}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: err
+      | | {col_def_type_attrs}
+      |   | {col_def_name_type}
+      |   | | {name col2}
+      |   | | {type_int}: integer
+      |   | {create_attr}: ok
+      |     | {version_annotation}
+      |       | {int 2}
+      | {col_key_list}
+        | {pk_def}
+        | | {name_list}
+        |   | {name col1}
+        | {col_key_list}
+          | {col_def}: err
+            | {col_def_type_attrs}
+              | {col_def_name_type}
+              | | {name col3}
+              | | {type_int}: integer
+              | {create_attr}: ok
+                | {version_annotation}
+                  | {int 2}
+
+The statement ending at line XXXX
+
+@SCHEMA_AD_HOC_MIGRATION(2, WhoopsItChanged);
+
+  {schema_ad_hoc_migration_stmt}: err
+  | {version_annotation}
+    | {int 2}
+    | {name WhoopsItChanged}
+
+The statement ending at line XXXX
+
+@SCHEMA_AD_HOC_MIGRATION(3, MigrateGoodToGo);
+
+  {schema_ad_hoc_migration_stmt}: ok validated @create(3)
+  | {version_annotation}
+    | {int 3}
+    | {name MigrateGoodToGo}
+
+The statement ending at line XXXX
+
+@SCHEMA_AD_HOC_MIGRATION(3, MigrateInThePast);
+
+Error at test/sem_test_prev.sql:XXXX : in schema_ad_hoc_migration_stmt : new ad hoc rule must be added at version 6 or later 'MigrateInThePast'
+
+  {schema_ad_hoc_migration_stmt}: err
+  | {version_annotation}
+    | {int 3}
+    | {name MigrateInThePast}
+
+The statement ending at line XXXX
+
+@SCHEMA_AD_HOC_MIGRATION(6, MigrateNewCurrent);
+
+  {schema_ad_hoc_migration_stmt}: ok @create(6)
+  | {version_annotation}
+    | {int 6}
+    | {name MigrateNewCurrent}
+
+The statement ending at line XXXX
+
+CREATE TABLE Recreated1(
+  id INTEGER PRIMARY KEY
+) @RECREATE(bar);
+
+  {create_table_stmt}: Recreated1: { id: integer notnull primary_key } validated @recreate(bar)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {recreate_attr}
+  | |   | {name bar}
+  | | {name Recreated1}
+  | {col_key_list}
+    | {col_def}: id: integer notnull primary_key
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+        | | {name id}
+        | | {type_int}: integer
+        | {col_attrs_pk}: ok
+
+The statement ending at line XXXX
+
+CREATE TABLE Recreated2(
+  id INTEGER REFERENCES Recreated1 (id)
+) @RECREATE(bar);
+
+  {create_table_stmt}: Recreated2: { id: integer foreign_key } validated @recreate(bar)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {recreate_attr}
+  | |   | {name bar}
+  | | {name Recreated2}
+  | {col_key_list}
+    | {col_def}: id: integer foreign_key
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+        | | {name id}
+        | | {type_int}: integer
+        | {col_attrs_fk}: ok
+          | {fk_target_options}
+            | {fk_target}
+            | | {name Recreated1}
+            | | {name_list}
+            |   | {name id}: id: integer notnull
+            | {int 0}
+
+The statement ending at line XXXX
+
+CREATE TABLE TChanging(
+  id INTEGER
+);
+
+Error at test/sem_test_prev.sql:XXXX : in create_table_stmt : CQL0311: object's deployment region changed from 'different_region' to 'base' 'TChanging'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name TChanging}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE INDEX IChanging ON TChanging (id);
+
+Error at test/sem_test_prev.sql:XXXX : in create_index_stmt : CQL0311: object's deployment region changed from 'different_region' to 'base' 'IChanging'
+
+  {create_index_stmt}: err
+  | {create_index_on_list}
+  | | {name IChanging}
+  | | {name TChanging}
+  | {flags_names_attrs}
+    | {int 0}
+    | {index_names_and_attrs}
+      | {indexed_columns}
+        | {indexed_column}
+          | {name id}: id: integer
+
+The statement ending at line XXXX
+
+CREATE VIEW VChanging AS
+SELECT *
+  FROM TChanging;
+
+Error at test/sem_test_prev.sql:XXXX : in create_view_stmt : CQL0311: object's deployment region changed from 'different_region' to 'base' 'VChanging'
+
+  {create_view_stmt}: err
+  | {int 0}
+  | {view_and_attrs}
+    | {name_and_select}
+      | {name VChanging}
+      | {select_stmt}: VChanging: { id: integer }
+        | {select_core_list}: VChanging: { id: integer }
+        | | {select_core}: VChanging: { id: integer }
+        |   | {select_expr_list_con}: VChanging: { id: integer }
+        |     | {select_expr_list}: VChanging: { id: integer }
+        |     | | {star}: VChanging: { id: integer }
+        |     | {select_from_etc}: TABLE { TChanging: TChanging }
+        |       | {table_or_subquery_list}: TABLE { TChanging: TChanging }
+        |       | | {table_or_subquery}: TABLE { TChanging: TChanging }
+        |       |   | {name TChanging}: TABLE { TChanging: TChanging }
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE TRIGGER TrigChanging
+  BEFORE DELETE ON foo
+BEGIN
+  SELECT old.id;
+END;
+
+Error at test/sem_test_prev.sql:XXXX : in create_trigger_stmt : CQL0311: object's deployment region changed from 'different_region' to 'base' 'TrigChanging'
+
+  {create_trigger_stmt}: err
+  | {int 0}
+  | {trigger_body_vers}
+    | {trigger_def}
+      | {name TrigChanging}
+      | {trigger_condition}
+        | {int 4}
+        | {trigger_op_target}
+          | {trigger_operation}
+          | | {int 64}
+          | {trigger_target_action}
+            | {name foo}: foo: { id: integer notnull, id2: integer, name: text, name_2: text }
+            | {trigger_action}
+              | {int 0}
+              | {trigger_when_stmts}
+                | {stmt_list}: ok
+                  | {select_stmt}: select: { id: integer notnull }
+                    | {select_core_list}: select: { id: integer notnull }
+                    | | {select_core}: select: { id: integer notnull }
+                    |   | {select_expr_list_con}: select: { id: integer notnull }
+                    |     | {select_expr_list}: select: { id: integer notnull }
+                    |     | | {select_expr}: id: integer notnull
+                    |     |   | {dot}: id: integer notnull
+                    |     |     | {name old}
+                    |     |     | {name id}
+                    |     | {select_from_etc}: ok
+                    |       | {select_where}
+                    |         | {select_groupby}
+                    |           | {select_having}
+                    | {select_orderby}
+                      | {select_limit}
+                        | {select_offset}
+
+The statement ending at line XXXX
+
+@SCHEMA_AD_HOC_MIGRATION(2, AdHocChanging);
+
+Error at test/sem_test_prev.sql:XXXX : in schema_ad_hoc_migration_stmt : CQL0311: object's deployment region changed from 'different_region' to 'base' 'AdHocChanging'
+
+  {schema_ad_hoc_migration_stmt}: err
+  | {version_annotation}
+    | {int 2}
+    | {name AdHocChanging}
+
+The statement ending at line XXXX
+
+@END_SCHEMA_REGION;
+
+  {end_schema_region_stmt}: ok
+
+The statement ending at line XXXX
+
+@DECLARE_SCHEMA_REGION SomeLeaf;
+
+  {declare_schema_region_stmt}: SomeLeaf: region
+  | {name SomeLeaf}
+
+The statement ending at line XXXX
+
+@BEGIN_SCHEMA_REGION SomeLeaf;
+
+  {begin_schema_region_stmt}: ok
+  | {name SomeLeaf}
+
+The statement ending at line XXXX
+
+CREATE TABLE TableWithDeferredOwner(
+  id INTEGER
+);
+
+Error at test/sem_test_prev.sql:XXXX : in create_table_stmt : CQL0311: object's deployment region changed from 'DeployableRegion1' to 'DeployableRegion2' 'TableWithDeferredOwner'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name TableWithDeferredOwner}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+@END_SCHEMA_REGION;
+
+  {end_schema_region_stmt}: ok
+
+The statement ending at line XXXX
+
+@DECLARE_DEPLOYABLE_REGION DeployableRegion2 USING SomeLeaf;
+
+  {declare_deployable_region_stmt}: DeployableRegion2: region deployable
+  | {name DeployableRegion2}
+  | {region_list}
+    | {region_spec}
+      | {name SomeLeaf}
+      | {int 0}
+
+The statement ending at line XXXX
+
+@DECLARE_SCHEMA_REGION simple_region_1;
+
+  {declare_schema_region_stmt}: simple_region_1: region
+  | {name simple_region_1}
+
+The statement ending at line XXXX
+
+@BEGIN_SCHEMA_REGION simple_region_1;
+
+  {begin_schema_region_stmt}: ok
+  | {name simple_region_1}
+
+The statement ending at line XXXX
+
+CREATE TABLE logical_moving_T1(
+  id INTEGER PRIMARY KEY
+);
+
+  {create_table_stmt}: logical_moving_T1: { id: integer notnull primary_key } validated
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name logical_moving_T1}
+  | {col_key_list}
+    | {col_def}: id: integer notnull primary_key
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+        | | {name id}
+        | | {type_int}: integer
+        | {col_attrs_pk}: ok
+
+The statement ending at line XXXX
+
+CREATE TABLE logical_moving_T2(
+  id INTEGER REFERENCES logical_moving_T1 (id),
+  name TEXT
+);
+
+  {create_table_stmt}: logical_moving_T2: { id: integer foreign_key, name: text } validated
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name logical_moving_T2}
+  | {col_key_list}
+    | {col_def}: id: integer foreign_key
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |   | | {name id}
+    |   | | {type_int}: integer
+    |   | {col_attrs_fk}: ok
+    |     | {fk_target_options}
+    |       | {fk_target}
+    |       | | {name logical_moving_T1}
+    |       | | {name_list}
+    |       |   | {name id}: id: integer notnull
+    |       | {int 0}
+    | {col_key_list}
+      | {col_def}: name: text
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+            | {name name}
+            | {type_text}: text
+
+The statement ending at line XXXX
+
+@END_SCHEMA_REGION;
+
+  {end_schema_region_stmt}: ok
+
+The statement ending at line XXXX
+
+@DECLARE_SCHEMA_REGION high_numbered_thing;
+
+  {declare_schema_region_stmt}: high_numbered_thing: region
+  | {name high_numbered_thing}
+
+The statement ending at line XXXX
+
+@BEGIN_SCHEMA_REGION high_numbered_thing;
+
+  {begin_schema_region_stmt}: ok
+  | {name high_numbered_thing}
+
+The statement ending at line XXXX
+
+CREATE TABLE high_numbered_thing(
+  id INTEGER
+) @CREATE(9999);
+
+  {create_table_stmt}: high_numbered_thing: { id: integer } validated @create(9999)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {create_attr}
+  | |   | {version_annotation}
+  | |     | {int 9999}
+  | | {name high_numbered_thing}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+@END_SCHEMA_REGION;
+
+  {end_schema_region_stmt}: ok
+
+The statement ending at line XXXX
+
+CREATE TABLE table_staying(
+  col1 INTEGER PRIMARY KEY NOT NULL
+) @RECREATE(my_recreate_group);
+
+  {create_table_stmt}: table_staying: { col1: integer notnull primary_key } validated @recreate(my_recreate_group)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {recreate_attr}
+  | |   | {name my_recreate_group}
+  | | {name table_staying}
+  | {col_key_list}
+    | {col_def}: col1: integer notnull primary_key
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+        | | {name col1}
+        | | {type_int}: integer
+        | {col_attrs_pk}: ok
+          | {col_attrs_not_null}
+
+The statement ending at line XXXX
+
+CREATE TABLE table_going(
+  col1 TEXT,
+  col2 INTEGER,
+  FOREIGN KEY (col2) REFERENCES table_staying (col1) ON UPDATE CASCADE ON DELETE CASCADE
+) @DELETE(1);
+
+Error at test/sem_test_prev.sql:XXXX : in create_table_stmt : table must leave @recreate management with @create/delete(6) or later 'table_going'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {delete_attr}
+  | |   | {version_annotation}
+  | |     | {int 1}
+  | | {name table_going}
+  | {col_key_list}
+    | {col_def}: col1: text
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name col1}
+    |     | {type_text}: text
+    | {col_key_list}
+      | {col_def}: col2: integer
+      | | {col_def_type_attrs}
+      |   | {col_def_name_type}
+      |     | {name col2}
+      |     | {type_int}: integer
+      | {col_key_list}
+        | {fk_def}: ok
+          | {name_list}
+          | | {name col2}: col2: integer
+          | {fk_target_options}
+            | {fk_target}
+            | | {name table_staying}
+            | | {name_list}
+            |   | {name col1}: col1: integer notnull
+            | {int 51}
+
+The statement ending at line XXXX
+
+@PREVIOUS_SCHEMA;
+
+  {previous_schema_stmt}: ok
+
+The statement ending at line XXXX
+
+@DECLARE_DEPLOYABLE_REGION base;
+
+  {declare_deployable_region_stmt}: base: region deployable
+  | {name base}
+
+The statement ending at line XXXX
+
+@DECLARE_DEPLOYABLE_REGION different_region;
+
+  {declare_deployable_region_stmt}: different_region: region deployable
+  | {name different_region}
+
+The statement ending at line XXXX
+
+@BEGIN_SCHEMA_REGION base;
+
+  {begin_schema_region_stmt}: ok
+  | {name base}
+
+The statement ending at line XXXX
+
+CREATE TABLE foo(
+  id INTEGER NOT NULL,
+  rate LONG_INT @DELETE(5, deletor),
+  rate_2 LONG_INT @DELETE(4),
+  id2 INTEGER @CREATE(4),
+  name TEXT @CREATE(5),
+  name_2 TEXT @CREATE(6)
+);
+
+  {create_table_stmt}: foo: { id: integer notnull, id2: integer, name: text, name_2: text }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name foo}
+  | {col_key_list}
+    | {col_def}: id: integer notnull
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |   | | {name id}
+    |   | | {type_int}: integer
+    |   | {col_attrs_not_null}: ok
+    | {col_key_list}
+      | {col_def}: rate: longint hidden @delete(5)
+      | | {col_def_type_attrs}
+      |   | {col_def_name_type}
+      |   | | {name rate}
+      |   | | {type_long}: longint
+      |   | {delete_attr}: ok
+      |     | {version_annotation}
+      |       | {int 5}
+      |       | {name deletor}
+      | {col_key_list}
+        | {col_def}: rate_2: longint hidden @delete(4)
+        | | {col_def_type_attrs}
+        |   | {col_def_name_type}
+        |   | | {name rate_2}
+        |   | | {type_long}: longint
+        |   | {delete_attr}: ok
+        |     | {version_annotation}
+        |       | {int 4}
+        | {col_key_list}
+          | {col_def}: id2: integer @create(4)
+          | | {col_def_type_attrs}
+          |   | {col_def_name_type}
+          |   | | {name id2}
+          |   | | {type_int}: integer
+          |   | {create_attr}: ok
+          |     | {version_annotation}
+          |       | {int 4}
+          | {col_key_list}
+            | {col_def}: name: text @create(5)
+            | | {col_def_type_attrs}
+            |   | {col_def_name_type}
+            |   | | {name name}
+            |   | | {type_text}: text
+            |   | {create_attr}: ok
+            |     | {version_annotation}
+            |       | {int 5}
+            | {col_key_list}
+              | {col_def}: name_2: text @create(6)
+                | {col_def_type_attrs}
+                  | {col_def_name_type}
+                  | | {name name_2}
+                  | | {type_text}: text
+                  | {create_attr}: ok
+                    | {version_annotation}
+                      | {int 6}
+
+The statement ending at line XXXX
+
+CREATE TABLE column_deleted_in_this_table(
+  id INTEGER,
+  being_deleted TEXT
+);
+
+  {create_table_stmt}: column_deleted_in_this_table: { id: integer, being_deleted: text }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name column_deleted_in_this_table}
+  | {col_key_list}
+    | {col_def}: id: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: being_deleted: text
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+            | {name being_deleted}
+            | {type_text}: text
+
+The statement ending at line XXXX
+
+CREATE TABLE column_undeleted_in_this_table(
+  id INTEGER,
+  being_undeleted TEXT @DELETE(6)
+);
+
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0122: column current delete version not equal to previous delete version 'being_undeleted'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name column_undeleted_in_this_table}
+  | {col_key_list}
+    | {col_def}: id: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: err
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+          | | {name being_undeleted}
+          | | {type_text}: text
+          | {delete_attr}: ok
+            | {version_annotation}
+              | {int 6}
+
+The statement ending at line XXXX
+
+CREATE TABLE become_sensitive(
+  id2 INTEGER,
+  name TEXT
+);
+
+  {create_table_stmt}: become_sensitive: { id2: integer, name: text }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name become_sensitive}
+  | {col_key_list}
+    | {col_def}: id2: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name id2}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: name: text
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+            | {name name}
+            | {type_text}: text
+
+The statement ending at line XXXX
+
+CREATE TABLE t_create_verison_changed(
+  id INTEGER
+) @CREATE(2);
+
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0115: current create version not equal to previous create version for 't_create_verison_changed'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {create_attr}
+  | |   | {version_annotation}
+  | |     | {int 2}
+  | | {name t_create_verison_changed}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE t_delete_verison_changed(
+  id INTEGER
+) @DELETE(2);
+
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0116: current delete version not equal to previous delete version for 't_delete_verison_changed'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {delete_attr}
+  | |   | {version_annotation}
+  | |     | {int 2}
+  | | {name t_delete_verison_changed}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE t_not_present_in_new_schema(
+  id INTEGER
+);
+
+Error at test/sem_test_prev.sql:XXXX : in create_table_stmt : CQL0126: table was present but now it does not exist (use @delete instead) 't_not_present_in_new_schema'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_not_present_in_new_schema}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE t_became_a_view(
+  id INTEGER
+);
+
+Error at test/sem_test_prev.sql:XXXX : in create_view_stmt : CQL0127: object was a table but is now a view 't_became_a_view'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_became_a_view}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE t_created_in_wrong_version(
+  id INTEGER
+);
+
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0115: current create version not equal to previous create version for 't_created_in_wrong_version'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_created_in_wrong_version}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE t_was_correctly_deleted(
+  id INTEGER
+);
+
+  {create_table_stmt}: t_was_correctly_deleted: { id: integer }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_was_correctly_deleted}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE t_column_name_changed(
+  id INTEGER
+);
+
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0119: column name is different between previous and current schema 'id_'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_column_name_changed}
+  | {col_key_list}
+    | {col_def}: err
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE t_column_type_changed(
+  id INTEGER
+);
+
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0120: column type is different between previous and current schema 'id'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_column_type_changed}
+  | {col_key_list}
+    | {col_def}: err
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE t_column_attribute_changed(
+  id INTEGER
+);
+
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0120: column type is different between previous and current schema 'id'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_column_attribute_changed}
+  | {col_key_list}
+    | {col_def}: err
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE t_column_delete_version_changed(
+  id INTEGER,
+  id2 INTEGER @DELETE(2)
+);
+
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0122: column current delete version not equal to previous delete version 'id2'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_column_delete_version_changed}
+  | {col_key_list}
+    | {col_def}: id: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: err
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+          | | {name id2}
+          | | {type_int}: integer
+          | {delete_attr}: ok
+            | {version_annotation}
+              | {int 2}
+
+The statement ending at line XXXX
+
+CREATE TABLE t_column_create_version_changed(
+  id INTEGER,
+  id2 INTEGER @CREATE(2)
+);
+
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0121: column current create version not equal to previous create version 'id2'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_column_create_version_changed}
+  | {col_key_list}
+    | {col_def}: id: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: err
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+          | | {name id2}
+          | | {type_int}: integer
+          | {create_attr}: ok
+            | {version_annotation}
+              | {int 2}
+
+The statement ending at line XXXX
+
+CREATE TABLE t_column_default_value_changed(
+  id INTEGER,
+  id2 INTEGER NOT NULL DEFAULT 1
+);
+
+Incompatible declarations found
+Error at test/sem_test_prev.sql:XXXX : in int : 1
+Error at test/sem_test_prev.sql:XXXX : in int : 2
+The above must be identical.
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0125: column current default value not equal to previous default value 'id2'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_column_default_value_changed}
+  | {col_key_list}
+    | {col_def}: id: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: err
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+          | | {name id2}
+          | | {type_int}: integer
+          | {col_attrs_not_null}: ok
+            | {col_attrs_default}
+              | {int 1}
+
+The statement ending at line XXXX
+
+CREATE TABLE t_column_default_value_ok(
+  id INTEGER,
+  id2 INTEGER NOT NULL DEFAULT 1
+);
+
+  {create_table_stmt}: t_column_default_value_ok: { id: integer, id2: integer notnull has_default }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_column_default_value_ok}
+  | {col_key_list}
+    | {col_def}: id: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: id2: integer notnull has_default
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+          | | {name id2}
+          | | {type_int}: integer
+          | {col_attrs_not_null}: ok
+            | {col_attrs_default}
+              | {int 1}
+
+The statement ending at line XXXX
+
+CREATE TABLE t_additional_attribute_present(
+  a INTEGER NOT NULL,
+  b INTEGER,
+  PRIMARY KEY (a, b)
+);
+
+  {create_table_stmt}: t_additional_attribute_present: { a: integer notnull, b: integer notnull }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_additional_attribute_present}
+  | {col_key_list}
+    | {col_def}: a: integer notnull
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |   | | {name a}
+    |   | | {type_int}: integer
+    |   | {col_attrs_not_null}: ok
+    | {col_key_list}
+      | {col_def}: b: integer
+      | | {col_def_type_attrs}
+      |   | {col_def_name_type}
+      |     | {name b}
+      |     | {type_int}: integer
+      | {col_key_list}
+        | {pk_def}
+          | {name_list}
+            | {name a}
+            | {name_list}
+              | {name b}
+
+The statement ending at line XXXX
+
+CREATE TABLE t_additional_attribute_mismatch(
+  a INTEGER NOT NULL,
+  b INTEGER NOT NULL,
+  PRIMARY KEY (a, b)
+);
+
+Incompatible declarations found
+Error at test/sem_test_prev.sql:XXXX : in pk_def : PRIMARY KEY (a)
+Error at test/sem_test_prev.sql:XXXX : in pk_def : PRIMARY KEY (a, b)
+The above must be identical.
+Error at test/sem_test_prev.sql:XXXX : in pk_def : CQL0132: table has a facet that is different in the previous and current schema 't_additional_attribute_mismatch'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_additional_attribute_mismatch}
+  | {col_key_list}
+    | {col_def}: a: integer notnull
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |   | | {name a}
+    |   | | {type_int}: integer
+    |   | {col_attrs_not_null}: ok
+    | {col_key_list}
+      | {col_def}: b: integer notnull
+      | | {col_def_type_attrs}
+      |   | {col_def_name_type}
+      |   | | {name b}
+      |   | | {type_int}: integer
+      |   | {col_attrs_not_null}: ok
+      | {col_key_list}
+        | {pk_def}
+          | {name_list}
+            | {name a}
+            | {name_list}
+              | {name b}
+
+The statement ending at line XXXX
+
+CREATE TABLE t_columns_removed(
+  id INTEGER,
+  id2 INTEGER
+);
+
+Error at test/sem_test_prev.sql:XXXX : in col_key_list : CQL0129: a column was removed from the table rather than marked with @delete 'id2'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_columns_removed}
+  | {col_key_list}
+    | {col_def}: id: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: id2: integer
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+            | {name id2}
+            | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE t_attribute_added(
+  a INTEGER NOT NULL
+);
+
+Error at test/sem_test_prev.sql:XXXX : in col_key_list : CQL0134: table has a new non-column facet in the current schema 't_attribute_added'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_attribute_added}
+  | {col_key_list}
+    | {col_def}: a: integer notnull
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+        | | {name a}
+        | | {type_int}: integer
+        | {col_attrs_not_null}: ok
+
+The statement ending at line XXXX
+
+CREATE TABLE t_additional_column(
+  a INTEGER NOT NULL
+);
+
+Error at test/sem_test_prev.sql:XXXX : in col_def : CQL0130: table has columns added without marking them @create 't_additional_column'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_additional_column}
+  | {col_key_list}
+    | {col_def}: a: integer notnull
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+        | | {name a}
+        | | {type_int}: integer
+        | {col_attrs_not_null}: ok
+
+The statement ending at line XXXX
+
+CREATE TABLE t_additional_column_ok(
+  a INTEGER NOT NULL,
+  b INTEGER @CREATE(2)
+);
+
+  {create_table_stmt}: t_additional_column_ok: { a: integer notnull, b: integer }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_additional_column_ok}
+  | {col_key_list}
+    | {col_def}: a: integer notnull
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |   | | {name a}
+    |   | | {type_int}: integer
+    |   | {col_attrs_not_null}: ok
+    | {col_key_list}
+      | {col_def}: b: integer @create(2)
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+          | | {name b}
+          | | {type_int}: integer
+          | {create_attr}: ok
+            | {version_annotation}
+              | {int 2}
+
+The statement ending at line XXXX
+
+CREATE TABLE t_becomes_temp_table(
+  a INTEGER NOT NULL,
+  b INTEGER
+);
+
+Error at test/sem_test_prev.sql:XXXX : in create_table_stmt : CQL0135: table create statement attributes different than previous version 't_becomes_temp_table'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_becomes_temp_table}
+  | {col_key_list}
+    | {col_def}: a: integer notnull
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |   | | {name a}
+    |   | | {type_int}: integer
+    |   | {col_attrs_not_null}: ok
+    | {col_key_list}
+      | {col_def}: b: integer
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+            | {name b}
+            | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE t_new_table_create_and_delete(
+  a INTEGER NOT NULL
+);
+
+Error at test/sem_test_prev.sql:XXXX : in col_def : CQL0131: table has newly added columns that are marked both @create and @delete 't_new_table_create_and_delete'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_new_table_create_and_delete}
+  | {col_key_list}
+    | {col_def}: a: integer notnull
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+        | | {name a}
+        | | {type_int}: integer
+        | {col_attrs_not_null}: ok
+
+The statement ending at line XXXX
+
+CREATE TABLE t_new_legit_column(
+  a INTEGER NOT NULL
+);
+
+  {create_table_stmt}: t_new_legit_column: { a: integer notnull }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_new_legit_column}
+  | {col_key_list}
+    | {col_def}: a: integer notnull
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+        | | {name a}
+        | | {type_int}: integer
+        | {col_attrs_not_null}: ok
+
+The statement ending at line XXXX
+
+CREATE TABLE with_create_migrator(
+  id INTEGER
+) @CREATE(1);
+
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0118: @create procedure changed in object 'with_create_migrator'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {create_attr}
+  | |   | {version_annotation}
+  | |     | {int 1}
+  | | {name with_create_migrator}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE with_create_migrator(
+  id INTEGER
+) @CREATE(1, ADifferentCreateMigrator);
+
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0118: @create procedure changed in object 'with_create_migrator'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {create_attr}
+  | |   | {version_annotation}
+  | |     | {int 1}
+  | |     | {name ADifferentCreateMigrator}
+  | | {name with_create_migrator}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE with_delete_migrator(
+  id INTEGER
+) @DELETE(1);
+
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0117: @delete procedure changed in object 'with_delete_migrator'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {delete_attr}
+  | |   | {version_annotation}
+  | |     | {int 1}
+  | | {name with_delete_migrator}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE with_delete_migrator(
+  id INTEGER
+) @DELETE(1, ADifferentDeleteMigrator);
+
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0117: @delete procedure changed in object 'with_delete_migrator'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {delete_attr}
+  | |   | {version_annotation}
+  | |     | {int 1}
+  | |     | {name ADifferentDeleteMigrator}
+  | | {name with_delete_migrator}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE VIEW view_becomes_a_table AS
+SELECT 1 AS X;
+
+Error at test/sem_test_prev.sql:XXXX : in create_table_stmt : CQL0105: object was a view but is now a table 'view_becomes_a_table'
+
+  {create_view_stmt}: err
+  | {int 0}
+  | {view_and_attrs}
+    | {name_and_select}
+      | {name view_becomes_a_table}
+      | {select_stmt}
+        | {select_core_list}
+        | | {select_core}
+        |   | {select_expr_list_con}
+        |     | {select_expr_list}
+        |     | | {select_expr}
+        |     |   | {int 1}
+        |     |   | {opt_as_alias}
+        |     |     | {name X}
+        |     | {select_from_etc}
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE VIEW view_was_zomg_deleted AS
+SELECT 1 AS X;
+
+Error at test/sem_test_prev.sql:XXXX : in create_view_stmt : CQL0104: view was present but now it does not exist (use @delete instead) 'view_was_zomg_deleted'
+
+  {create_view_stmt}: err
+  | {int 0}
+  | {view_and_attrs}
+    | {name_and_select}
+      | {name view_was_zomg_deleted}
+      | {select_stmt}
+        | {select_core_list}
+        | | {select_core}
+        |   | {select_expr_list_con}
+        |     | {select_expr_list}
+        |     | | {select_expr}
+        |     |   | {int 1}
+        |     |   | {opt_as_alias}
+        |     |     | {name X}
+        |     | {select_from_etc}
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE TEMP VIEW view_was_temp_but_now_it_is_not AS
+SELECT 1 AS X;
+
+  {create_view_stmt}: ok
+  | {int 1}
+  | {view_and_attrs}
+    | {name_and_select}
+      | {name view_was_temp_but_now_it_is_not}
+      | {select_stmt}
+        | {select_core_list}
+        | | {select_core}
+        |   | {select_expr_list_con}
+        |     | {select_expr_list}
+        |     | | {select_expr}
+        |     |   | {int 1}
+        |     |   | {opt_as_alias}
+        |     |     | {name X}
+        |     | {select_from_etc}
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE INDEX this_index_was_deleted_with_no_annotation ON foo (id);
+
+Error at test/sem_test_prev.sql:XXXX : in create_index_stmt : CQL0017: index was present but now it does not exist (use @delete instead) 'this_index_was_deleted_with_no_annotation'
+
+  {create_index_stmt}: err
+  | {create_index_on_list}
+  | | {name this_index_was_deleted_with_no_annotation}
+  | | {name foo}
+  | {flags_names_attrs}
+    | {int 0}
+    | {index_names_and_attrs}
+      | {indexed_columns}
+        | {indexed_column}
+          | {name id}
+
+The statement ending at line XXXX
+
+CREATE TABLE create_column_migrate_test(
+  id INTEGER UNIQUE,
+  id2 INTEGER @CREATE(2, PreviousColumnCreateMigrator)
+);
+
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0124: column @create procedure changed 'id2'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name create_column_migrate_test}
+  | {col_key_list}
+    | {col_def}: id: integer unique_key
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |   | | {name id}
+    |   | | {type_int}: integer
+    |   | {col_attrs_unique}: ok
+    | {col_key_list}
+      | {col_def}: err
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+          | | {name id2}
+          | | {type_int}: integer
+          | {create_attr}: ok
+            | {version_annotation}
+              | {int 2}
+              | {name PreviousColumnCreateMigrator}
+
+The statement ending at line XXXX
+
+CREATE TABLE delete_column_migrate_test(
+  id INTEGER,
+  id2 INTEGER @DELETE(2, PreviousColumnDeleteMigrator)
+);
+
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0123: column @delete procedure changed 'id2'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name delete_column_migrate_test}
+  | {col_key_list}
+    | {col_def}: id: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: err
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+          | | {name id2}
+          | | {type_int}: integer
+          | {delete_attr}: ok
+            | {version_annotation}
+              | {int 2}
+              | {name PreviousColumnDeleteMigrator}
+
+The statement ending at line XXXX
+
+CREATE TABLE fk_facet(
+  id INTEGER,
+  FOREIGN KEY (id) REFERENCES create_column_migrate_test (id) ON UPDATE CASCADE
+);
+
+Incompatible declarations found
+Error at test/sem_test_prev.sql:XXXX : in fk_def : FOREIGN KEY (id) REFERENCES create_column_migrate_test (id) ON DELETE CASCADE
+Error at test/sem_test_prev.sql:XXXX : in fk_def : FOREIGN KEY (id) REFERENCES create_column_migrate_test (id) ON UPDATE CASCADE
+The above must be identical.
+Error at test/sem_test_prev.sql:XXXX : in fk_def : CQL0132: table has a facet that is different in the previous and current schema 'fk_facet'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name fk_facet}
+  | {col_key_list}
+    | {col_def}: id: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {fk_def}: ok
+        | {name_list}
+        | | {name id}
+        | {fk_target_options}
+          | {fk_target}
+          | | {name create_column_migrate_test}
+          | | {name_list}
+          |   | {name id}
+          | {int 48}
+
+The statement ending at line XXXX
+
+CREATE TABLE cannot_change_to_recreate(
+  id INTEGER
+) @CREATE(1);
+
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0114: current schema can't go back to @recreate semantics for 'cannot_change_to_recreate'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {create_attr}
+  | |   | {version_annotation}
+  | |     | {int 1}
+  | | {name cannot_change_to_recreate}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE ok_to_delete_recreate_table(
+  id INTEGER
+) @RECREATE;
+
+  {create_table_stmt}: ok_to_delete_recreate_table: { id: integer } @recreate
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {recreate_attr}
+  | | {name ok_to_delete_recreate_table}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE ok_to_create_recreate_table(
+  id INTEGER
+) @RECREATE;
+
+  {create_table_stmt}: ok_to_create_recreate_table: { id: integer } @recreate
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {recreate_attr}
+  | | {name ok_to_create_recreate_table}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE recreate_deleted_in_the_past(
+  id INTEGER
+) @RECREATE;
+
+  {create_table_stmt}: recreate_deleted_in_the_past: { id: integer } @recreate
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {recreate_attr}
+  | | {name recreate_deleted_in_the_past}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE recreate_feel_the_power(
+  id TEXT,
+  payload TEXT,
+  whatever INTEGER
+) @RECREATE;
+
+  {create_table_stmt}: recreate_feel_the_power: { id: text, payload: text, whatever: integer } @recreate
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {recreate_attr}
+  | | {name recreate_feel_the_power}
+  | {col_key_list}
+    | {col_def}: id: text
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_text}: text
+    | {col_key_list}
+      | {col_def}: payload: text
+      | | {col_def_type_attrs}
+      |   | {col_def_name_type}
+      |     | {name payload}
+      |     | {type_text}: text
+      | {col_key_list}
+        | {col_def}: whatever: integer
+          | {col_def_type_attrs}
+            | {col_def_name_type}
+              | {name whatever}
+              | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE disapparing_recreate(
+  id INTEGER
+) @RECREATE;
+
+Error at test/sem_test_prev.sql:XXXX : in create_table_stmt : CQL0126: table was present but now it does not exist (use @delete instead) 'disapparing_recreate'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {recreate_attr}
+  | | {name disapparing_recreate}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TRIGGER trigger_removed_with_no_annotation
+  BEFORE DELETE ON foo
+  FOR EACH ROW
+  WHEN old.id > 7
+BEGIN
+  SELECT old.id;
+END;
+
+Error at test/sem_test_prev.sql:XXXX : in create_trigger_stmt : CQL0106: trigger was present but now it does not exist (use @delete instead) 'trigger_removed_with_no_annotation'
+
+  {create_trigger_stmt}: err
+  | {int 0}
+  | {trigger_body_vers}
+    | {trigger_def}
+      | {name trigger_removed_with_no_annotation}
+      | {trigger_condition}
+        | {int 4}
+        | {trigger_op_target}
+          | {trigger_operation}
+          | | {int 64}
+          | {trigger_target_action}
+            | {name foo}
+            | {trigger_action}
+              | {int 256}
+              | {trigger_when_stmts}
+                | {gt}
+                | | {dot}
+                | | | {name old}
+                | | | {name id}
+                | | {int 7}
+                | {stmt_list}
+                  | {select_stmt}
+                    | {select_core_list}
+                    | | {select_core}
+                    |   | {select_expr_list_con}
+                    |     | {select_expr_list}
+                    |     | | {select_expr}
+                    |     |   | {dot}
+                    |     |     | {name old}
+                    |     |     | {name id}
+                    |     | {select_from_etc}
+                    |       | {select_where}
+                    |         | {select_groupby}
+                    |           | {select_having}
+                    | {select_orderby}
+                      | {select_limit}
+                        | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE TRIGGER trigger_will_be_deleted
+  BEFORE DELETE ON foo
+BEGIN
+  SELECT old.id;
+END;
+
+  {create_trigger_stmt}: ok
+  | {int 0}
+  | {trigger_body_vers}
+    | {trigger_def}
+      | {name trigger_will_be_deleted}
+      | {trigger_condition}
+        | {int 4}
+        | {trigger_op_target}
+          | {trigger_operation}
+          | | {int 64}
+          | {trigger_target_action}
+            | {name foo}
+            | {trigger_action}
+              | {int 0}
+              | {trigger_when_stmts}
+                | {stmt_list}
+                  | {select_stmt}
+                    | {select_core_list}
+                    | | {select_core}
+                    |   | {select_expr_list_con}
+                    |     | {select_expr_list}
+                    |     | | {select_expr}
+                    |     |   | {dot}
+                    |     |     | {name old}
+                    |     |     | {name id}
+                    |     | {select_from_etc}
+                    |       | {select_where}
+                    |         | {select_groupby}
+                    |           | {select_having}
+                    | {select_orderby}
+                      | {select_limit}
+                        | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE TABLE t_removed_facet(
+  id INTEGER NOT NULL,
+  PRIMARY KEY (id)
+);
+
+Error at test/sem_test_prev.sql:XXXX : in col_key_list : CQL0133: non-column facets have been removed from the table 't_removed_facet'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_removed_facet}
+  | {col_key_list}
+    | {col_def}: id: integer notnull
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |   | | {name id}
+    |   | | {type_int}: integer
+    |   | {col_attrs_not_null}: ok
+    | {col_key_list}
+      | {pk_def}
+        | {name_list}
+          | {name id}
+
+The statement ending at line XXXX
+
+CREATE TABLE t_subtle_column_change(
+  id INTEGER REFERENCES create_column_migrate_test (id) ON DELETE CASCADE
+);
+
+Incompatible declarations found
+Error at test/sem_test_prev.sql:XXXX : in col_def : id INTEGER REFERENCES create_column_migrate_test (id)
+Error at test/sem_test_prev.sql:XXXX : in col_def : id INTEGER REFERENCES create_column_migrate_test (id) ON DELETE CASCADE
+The above must be identical.
+Error at test/sem_test_prev.sql:XXXX : in col_def : CQL0128: table has a column that is different in the previous and current schema 'id'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_subtle_column_change}
+  | {col_key_list}
+    | {col_def}: id: integer foreign_key
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+        | | {name id}
+        | | {type_int}: integer
+        | {col_attrs_fk}: ok
+          | {fk_target_options}
+            | {fk_target}
+            | | {name create_column_migrate_test}
+            | | {name_list}
+            |   | {name id}
+            | {int 3}
+
+The statement ending at line XXXX
+
+CREATE TABLE t_several_columns_added_interleaved(
+  col1 INTEGER,
+  PRIMARY KEY (col1)
+);
+
+  {create_table_stmt}: t_several_columns_added_interleaved: { col1: integer notnull }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t_several_columns_added_interleaved}
+  | {col_key_list}
+    | {col_def}: col1: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name col1}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {pk_def}
+        | {name_list}
+          | {name col1}
+
+The statement ending at line XXXX
+
+@SCHEMA_AD_HOC_MIGRATION(1, WhoopsItsGone);
+
+Error at test/sem_test_prev.sql:XXXX : in schema_ad_hoc_migration_stmt : CQL0286: ad hoc schema migration directive was removed; this is not allowed 'WhoopsItsGone'
+
+  {schema_ad_hoc_migration_stmt}: err
+  | {version_annotation}
+    | {int 1}
+    | {name WhoopsItsGone}
+
+The statement ending at line XXXX
+
+@SCHEMA_AD_HOC_MIGRATION(1, WhoopsItChanged);
+
+Error at test/sem_test_prev.sql:XXXX : in schema_ad_hoc_migration_stmt : CQL0285: ad hoc schema migration directive version number changed 'WhoopsItChanged'
+
+  {schema_ad_hoc_migration_stmt}: err
+  | {version_annotation}
+    | {int 1}
+    | {name WhoopsItChanged}
+
+The statement ending at line XXXX
+
+@SCHEMA_AD_HOC_MIGRATION(3, MigrateGoodToGo);
+
+  {schema_ad_hoc_migration_stmt}: ok @create(3)
+  | {version_annotation}
+    | {int 3}
+    | {name MigrateGoodToGo}
+
+The statement ending at line XXXX
+
+CREATE TABLE Recreated1(
+  id INTEGER
+) @RECREATE(foo);
+
+  {create_table_stmt}: Recreated1: { id: integer } @recreate(foo)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {recreate_attr}
+  | |   | {name foo}
+  | | {name Recreated1}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE Recreated2(
+  id INTEGER REFERENCES Recreated1 (id)
+) @RECREATE(foo);
+
+  {create_table_stmt}: Recreated2: { id: integer foreign_key } @recreate(foo)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {recreate_attr}
+  | |   | {name foo}
+  | | {name Recreated2}
+  | {col_key_list}
+    | {col_def}: id: integer foreign_key
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+        | | {name id}
+        | | {type_int}: integer
+        | {col_attrs_fk}: ok
+          | {fk_target_options}
+            | {fk_target}
+            | | {name Recreated1}
+            | | {name_list}
+            |   | {name id}
+            | {int 0}
+
+The statement ending at line XXXX
+
+@END_SCHEMA_REGION;
+
+  {end_schema_region_stmt}: ok
+
+The statement ending at line XXXX
+
+@BEGIN_SCHEMA_REGION different_region;
+
+  {begin_schema_region_stmt}: ok
+  | {name different_region}
+
+The statement ending at line XXXX
+
+CREATE TABLE TChanging(
+  id INTEGER
+);
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name TChanging}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE INDEX IChanging ON TChanging (id);
+
+  {create_index_stmt}: err
+  | {create_index_on_list}
+  | | {name IChanging}
+  | | {name TChanging}
+  | {flags_names_attrs}
+    | {int 0}
+    | {index_names_and_attrs}
+      | {indexed_columns}
+        | {indexed_column}
+          | {name id}
+
+The statement ending at line XXXX
+
+CREATE VIEW VChanging AS
+SELECT *
+  FROM TChanging;
+
+  {create_view_stmt}: err
+  | {int 0}
+  | {view_and_attrs}
+    | {name_and_select}
+      | {name VChanging}
+      | {select_stmt}
+        | {select_core_list}
+        | | {select_core}
+        |   | {select_expr_list_con}
+        |     | {select_expr_list}
+        |     | | {star}
+        |     | {select_from_etc}
+        |       | {table_or_subquery_list}
+        |       | | {table_or_subquery}
+        |       |   | {name TChanging}
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE TRIGGER TrigChanging
+  BEFORE DELETE ON foo
+BEGIN
+  SELECT old.id;
+END;
+
+  {create_trigger_stmt}: err
+  | {int 0}
+  | {trigger_body_vers}
+    | {trigger_def}
+      | {name TrigChanging}
+      | {trigger_condition}
+        | {int 4}
+        | {trigger_op_target}
+          | {trigger_operation}
+          | | {int 64}
+          | {trigger_target_action}
+            | {name foo}
+            | {trigger_action}
+              | {int 0}
+              | {trigger_when_stmts}
+                | {stmt_list}
+                  | {select_stmt}
+                    | {select_core_list}
+                    | | {select_core}
+                    |   | {select_expr_list_con}
+                    |     | {select_expr_list}
+                    |     | | {select_expr}
+                    |     |   | {dot}
+                    |     |     | {name old}
+                    |     |     | {name id}
+                    |     | {select_from_etc}
+                    |       | {select_where}
+                    |         | {select_groupby}
+                    |           | {select_having}
+                    | {select_orderby}
+                      | {select_limit}
+                        | {select_offset}
+
+The statement ending at line XXXX
+
+@SCHEMA_AD_HOC_MIGRATION(2, AdHocChanging);
+
+  {schema_ad_hoc_migration_stmt}: err
+  | {version_annotation}
+    | {int 2}
+    | {name AdHocChanging}
+
+The statement ending at line XXXX
+
+@END_SCHEMA_REGION;
+
+  {end_schema_region_stmt}: ok
+
+The statement ending at line XXXX
+
+@DECLARE_SCHEMA_REGION SomeLeaf;
+
+  {declare_schema_region_stmt}: SomeLeaf: region
+  | {name SomeLeaf}
+
+The statement ending at line XXXX
+
+@BEGIN_SCHEMA_REGION SomeLeaf;
+
+  {begin_schema_region_stmt}: ok
+  | {name SomeLeaf}
+
+The statement ending at line XXXX
+
+CREATE TABLE TableWithDeferredOwner(
+  id INTEGER
+);
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name TableWithDeferredOwner}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+@END_SCHEMA_REGION;
+
+  {end_schema_region_stmt}: ok
+
+The statement ending at line XXXX
+
+@DECLARE_DEPLOYABLE_REGION DeployableRegion1 USING SomeLeaf;
+
+  {declare_deployable_region_stmt}: DeployableRegion1: region deployable
+  | {name DeployableRegion1}
+  | {region_list}
+    | {region_spec}
+      | {name SomeLeaf}
+      | {int 0}
+
+The statement ending at line XXXX
+
+@DECLARE_SCHEMA_REGION simple_region_2;
+
+  {declare_schema_region_stmt}: simple_region_2: region
+  | {name simple_region_2}
+
+The statement ending at line XXXX
+
+@BEGIN_SCHEMA_REGION simple_region_2;
+
+  {begin_schema_region_stmt}: ok
+  | {name simple_region_2}
+
+The statement ending at line XXXX
+
+CREATE TABLE logical_moving_T1(
+  id INTEGER PRIMARY KEY
+);
+
+  {create_table_stmt}: logical_moving_T1: { id: integer notnull primary_key }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name logical_moving_T1}
+  | {col_key_list}
+    | {col_def}: id: integer notnull primary_key
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+        | | {name id}
+        | | {type_int}: integer
+        | {col_attrs_pk}: ok
+
+The statement ending at line XXXX
+
+CREATE TABLE logical_moving_T2(
+  id INTEGER REFERENCES logical_moving_T1 (id),
+  name TEXT
+);
+
+  {create_table_stmt}: logical_moving_T2: { id: integer foreign_key, name: text }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name logical_moving_T2}
+  | {col_key_list}
+    | {col_def}: id: integer foreign_key
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |   | | {name id}
+    |   | | {type_int}: integer
+    |   | {col_attrs_fk}: ok
+    |     | {fk_target_options}
+    |       | {fk_target}
+    |       | | {name logical_moving_T1}
+    |       | | {name_list}
+    |       |   | {name id}
+    |       | {int 0}
+    | {col_key_list}
+      | {col_def}: name: text
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+            | {name name}
+            | {type_text}: text
+
+The statement ending at line XXXX
+
+@END_SCHEMA_REGION;
+
+  {end_schema_region_stmt}: ok
+
+The statement ending at line XXXX
+
+@DECLARE_SCHEMA_REGION high_numbered_thing;
+
+  {declare_schema_region_stmt}: high_numbered_thing: region
+  | {name high_numbered_thing}
+
+The statement ending at line XXXX
+
+@BEGIN_SCHEMA_REGION high_numbered_thing;
+
+  {begin_schema_region_stmt}: ok
+  | {name high_numbered_thing}
+
+The statement ending at line XXXX
+
+CREATE TABLE high_numbered_thing(
+  id INTEGER
+) @CREATE(9999);
+
+  {create_table_stmt}: high_numbered_thing: { id: integer } @create(9999)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {create_attr}
+  | |   | {version_annotation}
+  | |     | {int 9999}
+  | | {name high_numbered_thing}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE INDEX deleted_index ON t_was_correctly_deleted (id);
+
+  {create_index_stmt}: ok
+  | {create_index_on_list}
+  | | {name deleted_index}
+  | | {name t_was_correctly_deleted}
+  | {flags_names_attrs}
+    | {int 0}
+    | {index_names_and_attrs}
+      | {indexed_columns}
+        | {indexed_column}
+          | {name id}
+
+The statement ending at line XXXX
+
+CREATE TRIGGER trigger_deleted_no_problemo
+  BEFORE DELETE ON t_was_correctly_deleted
+BEGIN
+  SELECT old.id;
+END;
+
+  {create_trigger_stmt}: ok
+  | {int 0}
+  | {trigger_body_vers}
+    | {trigger_def}
+      | {name trigger_deleted_no_problemo}
+      | {trigger_condition}
+        | {int 4}
+        | {trigger_op_target}
+          | {trigger_operation}
+          | | {int 64}
+          | {trigger_target_action}
+            | {name t_was_correctly_deleted}
+            | {trigger_action}
+              | {int 0}
+              | {trigger_when_stmts}
+                | {stmt_list}
+                  | {select_stmt}
+                    | {select_core_list}
+                    | | {select_core}
+                    |   | {select_expr_list_con}
+                    |     | {select_expr_list}
+                    |     | | {select_expr}
+                    |     |   | {dot}
+                    |     |     | {name old}
+                    |     |     | {name id}
+                    |     | {select_from_etc}
+                    |       | {select_where}
+                    |         | {select_groupby}
+                    |           | {select_having}
+                    | {select_orderby}
+                      | {select_limit}
+                        | {select_offset}
+
+The statement ending at line XXXX
+
+@END_SCHEMA_REGION;
+
+  {end_schema_region_stmt}: ok
+
+The statement ending at line XXXX
+
+CREATE TABLE table_staying(
+  col1 INTEGER PRIMARY KEY NOT NULL
+) @RECREATE(my_recreate_group);
+
+  {create_table_stmt}: table_staying: { col1: integer notnull primary_key } @recreate(my_recreate_group)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {recreate_attr}
+  | |   | {name my_recreate_group}
+  | | {name table_staying}
+  | {col_key_list}
+    | {col_def}: col1: integer notnull primary_key
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+        | | {name col1}
+        | | {type_int}: integer
+        | {col_attrs_pk}: ok
+          | {col_attrs_not_null}
+
+The statement ending at line XXXX
+
+CREATE TABLE table_going(
+  col1 TEXT,
+  col2 INTEGER,
+  FOREIGN KEY (col2) REFERENCES table_staying (col1) ON UPDATE CASCADE ON DELETE CASCADE
+) @RECREATE(my_recreate_group);
+
+  {create_table_stmt}: table_going: { col1: text, col2: integer } @recreate(my_recreate_group)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {recreate_attr}
+  | |   | {name my_recreate_group}
+  | | {name table_going}
+  | {col_key_list}
+    | {col_def}: col1: text
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name col1}
+    |     | {type_text}: text
+    | {col_key_list}
+      | {col_def}: col2: integer
+      | | {col_def_type_attrs}
+      |   | {col_def_name_type}
+      |     | {name col2}
+      |     | {type_int}: integer
+      | {col_key_list}
+        | {fk_def}: ok
+          | {name_list}
+          | | {name col2}
+          | {fk_target_options}
+            | {fk_target}
+            | | {name table_staying}
+            | | {name_list}
+            |   | {name col1}
+            | {int 51}
+

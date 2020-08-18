@@ -1,0 +1,105 @@
+// (c) Facebook, Inc. and its affiliates. Confidential and proprietary.
+
+#pragma once
+
+#import <Foundation/Foundation.h>
+
+#import <Test/TestFile.h>
+
+#import <MessengerBridgeQueries/MBQAssemblyCore.h>
+
+#import <MessengerBridgeQueries/MBQAssemblyNonCore.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+static inline int32_t MBQExtensionFragmentOneGetX(MBQAssemblyCore *resultSet, int32_t row)
+{
+  return MBQAssemblyCoreGetX(resultSet, row);
+}
+
+static inline NSString *_Nullable MBQExtensionFragmentOneGetY(MBQAssemblyCore *resultSet, int32_t row)
+{
+  return MBQAssemblyCoreGetY(resultSet, row);
+}
+
+static inline NSNumber *_Nullable MBQExtensionFragmentOneGetZ(MBQAssemblyCore *resultSet, int32_t row)
+{
+  return MBQAssemblyCoreGetZ(resultSet, row);
+}
+
+static inline NSNumber *_Nullable MBQExtensionFragmentOneGetFlag(MBQAssemblyCore *resultSet, int32_t row)
+{
+  return __PRIVATE__MBQAssemblyCoreGetFlag(resultSet, row);
+}
+
+static inline int32_t MBQExtensionFragmentOneResultCount(MBQAssemblyCore *resultSet)
+{
+  return MBQAssemblyCoreResultCount(resultSet);
+}
+
+static inline MBQAssemblyCore *MBQExtensionFragmentOneCopy(MBQAssemblyCore *resultSet, int32_t from, int32_t count)
+{
+  return MBQAssemblyCoreCopy(resultSet, from, count);
+}
+
+static inline NSString *MBQExtensionFragmentThreeGetA(MBQAssemblyNonCore *resultSet, int32_t row)
+{
+  return MBQAssemblyNonCoreGetA(resultSet, row);
+}
+
+static inline NSString *_Nullable MBQExtensionFragmentThreeGetB(MBQAssemblyNonCore *resultSet, int32_t row)
+{
+  return MBQAssemblyNonCoreGetB(resultSet, row);
+}
+
+static inline NSNumber *_Nullable MBQExtensionFragmentThreeGetC(MBQAssemblyNonCore *resultSet, int32_t row)
+{
+  return MBQAssemblyNonCoreGetC(resultSet, row);
+}
+
+static inline NSNumber *_Nullable MBQExtensionFragmentThreeGetD(MBQAssemblyNonCore *resultSet, int32_t row)
+{
+  return __PRIVATE__MBQAssemblyNonCoreGetD(resultSet, row);
+}
+
+static inline int32_t MBQExtensionFragmentThreeResultCount(MBQAssemblyNonCore *resultSet)
+{
+  return MBQAssemblyNonCoreResultCount(resultSet);
+}
+
+static inline MBQAssemblyNonCore *MBQExtensionFragmentThreeCopy(MBQAssemblyNonCore *resultSet, int32_t from, int32_t count)
+{
+  return MBQAssemblyNonCoreCopy(resultSet, from, count);
+}
+
+static inline int32_t MBQExtensionFragmentTwoGetX(MBQAssemblyCore *resultSet, int32_t row)
+{
+  return MBQAssemblyCoreGetX(resultSet, row);
+}
+
+static inline NSString *_Nullable MBQExtensionFragmentTwoGetY(MBQAssemblyCore *resultSet, int32_t row)
+{
+  return MBQAssemblyCoreGetY(resultSet, row);
+}
+
+static inline NSNumber *_Nullable MBQExtensionFragmentTwoGetZ(MBQAssemblyCore *resultSet, int32_t row)
+{
+  return MBQAssemblyCoreGetZ(resultSet, row);
+}
+
+static inline NSString *_Nullable MBQExtensionFragmentTwoGetName(MBQAssemblyCore *resultSet, int32_t row)
+{
+  return __PRIVATE__MBQAssemblyCoreGetName(resultSet, row);
+}
+
+static inline int32_t MBQExtensionFragmentTwoResultCount(MBQAssemblyCore *resultSet)
+{
+  return MBQAssemblyCoreResultCount(resultSet);
+}
+
+static inline MBQAssemblyCore *MBQExtensionFragmentTwoCopy(MBQAssemblyCore *resultSet, int32_t from, int32_t count)
+{
+  return MBQAssemblyCoreCopy(resultSet, from, count);
+}
+
+NS_ASSUME_NONNULL_END
