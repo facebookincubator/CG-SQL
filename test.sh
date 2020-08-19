@@ -17,7 +17,6 @@ AT_GENERATED_TAG="@$GENERATED_TAG"
 
 set_linux() {
   MAKE_LINUX_ARGS="LINUX=1"
-  BUCK_ARGS="--linux"
   IS_LINUX=1
 }
 
