@@ -42,13 +42,8 @@ do
      CQL=${OUT_DIR}/cql_amalgam
      shift 1
      USE_AMALGAM=1
-  elif [ "$1" == "--use_buck" ]
-  then
-     CQL="buck run -v 0 //xplat/msys/tools/cql:cql -- "
-     shift 1
-     USE_BUCK=1
   else
-     echo "Usage: test.sh [--linux] [--coverage] [--use_buck] [--use_amalgam]"
+     echo "Usage: test.sh [--linux] [--coverage] [--use_amalgam]"
      exit 1
   fi
 done
@@ -1224,12 +1219,6 @@ run_test
 upgrade_test
 query_plan_test
 signatures_test
-
-if [ "${USE_AMALGAM}" == "1" ]
-then
-   echo amalgam tests passed, signing the amalgam
-   "${FBSOURCE_DIR}/tools/signedsource" sign ${OUT_DIR}/cql_amalgam.c
-fi
 
 make_clean_msg
 echo '--------------------------------- DONE SUCCESS'

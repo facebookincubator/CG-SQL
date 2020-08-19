@@ -1,12 +1,52 @@
-Initial payload added.  
+--------------
+DOCUMENTATION
+--------------
 
-Test scripts not present yet.
+See CQL_Guide/guide.html for the language summary.
 
-Build with:
+--------
+BUILDING
+--------
 
 make clean
 make
 
 result in out/cql
 
-See CQL_Guide/guide.html for the language summary
+-------
+TESTING
+-------
+
+./test.sh
+
+This will build and run the test suite
+
+-------------
+CODE COVERAGE
+-------------
+
+./cov.sh
+
+This will run the test scripts with the coverage flag, which causes the coverage build.
+If the tests pass a coverage report is created.
+
+-------------
+AMALGAM BUILD
+-------------
+
+The amalgam is created by ./make_amalgam.sh and the result is in out/cql_amalgam.c
+
+You can create and test the amalgam in one step (preferred) using
+
+./test.sh --use_amalgam
+
+This will cause the amalgam to be created and compiled.  Then the test suite will run against that binary.
+
+---------
+DEV CYCLE
+---------
+
+See dev_notes.md
+
+
+
