@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 /* 
  * Note this file is set up to verify the .h file rather than the .c file in test.sh
  */
