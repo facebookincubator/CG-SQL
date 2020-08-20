@@ -2453,6 +2453,54 @@ begin
   end if;
 end;
 
+create table ext_test_table (
+  f1 integer not null,
+  f2 integer not null,
+  f3 integer not null
+);
+
+-- TEST: define a base fragment, no output for this
+-- - get
+-- - set
+-- - void
+-- - return
+@attribute(cql:base_fragment=frag_test)
+create proc baseline()
+begin
+  with
+    frag_test(*) as (select 1 id)
+  select * from frag_test;
+end;
+
+-- TEST: extension creates getters for the base columns and the new columns it added
+-- + cql_int32 ext_get_id(frag_test_result_set_ref _Nonnull result_set, cql_int32 row) {
+-- +   return frag_test_get_id(result_set, row);
+-- + cql_bool ext_get_f2_is_null(frag_test_result_set_ref _Nonnull result_set, cql_int32 row) {
+-- +   return __PRIVATE__frag_test_get_f2_is_null(result_set, row);
+-- + cql_int32 ext_get_f2_value(frag_test_result_set_ref _Nonnull result_set, cql_int32 row) {
+-- +   return __PRIVATE__frag_test_get_f2_value(result_set, row);
+-- + cql_int32 ext_result_count(frag_test_result_set_ref _Nonnull result_set) {
+-- +   return cql_result_set_get_count((cql_result_set_ref)result_set);
+@attribute(cql:extension_fragment=frag_test)
+create proc ext()
+begin
+  with
+    frag_test(*) as (select 1 id),
+    ext(*) as (select frag_test.*, f2 from frag_test left outer join ext_test_table on f1 = id)
+  select * from ext;
+end;
+
+-- TEST: another extension, this one should not include anything about f2, it doesn't "know" about that column
+-- - f2
+@attribute(cql:extension_fragment=frag_test)
+create proc ext2()
+begin
+  with
+    frag_test(*) as (select 1 id),
+    ext2(*) as (select frag_test.*, f3 from frag_test left outer join ext_test_table on f1 = id)
+  select * from ext2;
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

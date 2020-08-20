@@ -5,1690 +5,1732 @@
 
 #import <Test/TestFile.h>
 
+#import <CGCFragTest.h>
+
 NS_ASSUME_NONNULL_BEGIN
 
-@class MBQWithResultSet;
-
-static inline MBQWithResultSet *MBQWithResultSetFromCGCWithResultSet(CGCWithResultSetResultSetRef resultSet)
+static inline int32_t CGCExtGetId(CGCFragTest *resultSet, int32_t row)
 {
-  return (__bridge MBQWithResultSet *)resultSet;
+  return CGCFragTestGetId(resultSet, row);
 }
 
-static inline CGCWithResultSetResultSetRef CGCWithResultSetFromMBQWithResultSet(MBQWithResultSet *resultSet)
+static inline NSNumber *_Nullable CGCExtGetF2(CGCFragTest *resultSet, int32_t row)
+{
+  return __PRIVATE__CGCFragTestGetF2(resultSet, row);
+}
+
+static inline int32_t CGCExtResultCount(CGCFragTest *resultSet)
+{
+  return CGCFragTestResultCount(resultSet);
+}
+
+static inline CGCFragTest *CGCExtCopy(CGCFragTest *resultSet, int32_t from, int32_t count)
+{
+  return CGCFragTestCopy(resultSet, from, count);
+}
+
+static inline int32_t CGCExt2GetId(CGCFragTest *resultSet, int32_t row)
+{
+  return CGCFragTestGetId(resultSet, row);
+}
+
+static inline NSNumber *_Nullable CGCExt2GetF3(CGCFragTest *resultSet, int32_t row)
+{
+  return __PRIVATE__CGCFragTestGetF3(resultSet, row);
+}
+
+static inline int32_t CGCExt2ResultCount(CGCFragTest *resultSet)
+{
+  return CGCFragTestResultCount(resultSet);
+}
+
+static inline CGCFragTest *CGCExt2Copy(CGCFragTest *resultSet, int32_t from, int32_t count)
+{
+  return CGCFragTestCopy(resultSet, from, count);
+}
+
+@class CGCWithResultSet;
+
+static inline CGCWithResultSet *CGCWithResultSetFromCGCWithResultSet(CGCWithResultSetResultSetRef resultSet)
+{
+  return (__bridge CGCWithResultSet *)resultSet;
+}
+
+static inline CGCWithResultSetResultSetRef CGCWithResultSetFromCGCWithResultSet(CGCWithResultSet *resultSet)
 {
   return (__bridge CGCWithResultSetResultSetRef)resultSet;
 }
 
-static inline int32_t MBQWithResultSetGetId(MBQWithResultSet *resultSet, int32_t row)
+static inline int32_t CGCWithResultSetGetId(CGCWithResultSet *resultSet, int32_t row)
 {
-  CGCWithResultSetResultSetRef cResultSet = CGCWithResultSetFromMBQWithResultSet(resultSet);
+  CGCWithResultSetResultSetRef cResultSet = CGCWithResultSetFromCGCWithResultSet(resultSet);
   return CGCWithResultSetGetId(cResultSet, row);
 }
 
-static inline NSString *_Nullable MBQWithResultSetGetName(MBQWithResultSet *resultSet, int32_t row)
+static inline NSString *_Nullable CGCWithResultSetGetName(CGCWithResultSet *resultSet, int32_t row)
 {
-  CGCWithResultSetResultSetRef cResultSet = CGCWithResultSetFromMBQWithResultSet(resultSet);
+  CGCWithResultSetResultSetRef cResultSet = CGCWithResultSetFromCGCWithResultSet(resultSet);
   return (__bridge NSString *)CGCWithResultSetGetName(cResultSet, row);
 }
 
-static inline NSNumber *_Nullable MBQWithResultSetGetRate(MBQWithResultSet *resultSet, int32_t row)
+static inline NSNumber *_Nullable CGCWithResultSetGetRate(CGCWithResultSet *resultSet, int32_t row)
 {
-  CGCWithResultSetResultSetRef cResultSet = CGCWithResultSetFromMBQWithResultSet(resultSet);
+  CGCWithResultSetResultSetRef cResultSet = CGCWithResultSetFromCGCWithResultSet(resultSet);
   return CGCWithResultSetGetRateIsNull(cResultSet, row) ? nil : @(CGCWithResultSetGetRateValue(cResultSet, row));
 }
 
-static inline NSNumber *_Nullable MBQWithResultSetGetType(MBQWithResultSet *resultSet, int32_t row)
+static inline NSNumber *_Nullable CGCWithResultSetGetType(CGCWithResultSet *resultSet, int32_t row)
 {
-  CGCWithResultSetResultSetRef cResultSet = CGCWithResultSetFromMBQWithResultSet(resultSet);
+  CGCWithResultSetResultSetRef cResultSet = CGCWithResultSetFromCGCWithResultSet(resultSet);
   return CGCWithResultSetGetTypeIsNull(cResultSet, row) ? nil : @(CGCWithResultSetGetTypeValue(cResultSet, row));
 }
 
-static inline NSNumber *_Nullable MBQWithResultSetGetSize(MBQWithResultSet *resultSet, int32_t row)
+static inline NSNumber *_Nullable CGCWithResultSetGetSize(CGCWithResultSet *resultSet, int32_t row)
 {
-  CGCWithResultSetResultSetRef cResultSet = CGCWithResultSetFromMBQWithResultSet(resultSet);
+  CGCWithResultSetResultSetRef cResultSet = CGCWithResultSetFromCGCWithResultSet(resultSet);
   return CGCWithResultSetGetSizeIsNull(cResultSet, row) ? nil : @(CGCWithResultSetGetSizeValue(cResultSet, row));
 }
 
-static inline int32_t MBQWithResultSetResultCount(MBQWithResultSet *resultSet)
+static inline int32_t CGCWithResultSetResultCount(CGCWithResultSet *resultSet)
 {
-  return CGCWithResultSetResultCount(CGCWithResultSetFromMBQWithResultSet(resultSet));
+  return CGCWithResultSetResultCount(CGCWithResultSetFromCGCWithResultSet(resultSet));
 }
 
-static inline MBQWithResultSet *MBQWithResultSetCopy(MBQWithResultSet *resultSet, int32_t from, int32_t count)
+static inline CGCWithResultSet *CGCWithResultSetCopy(CGCWithResultSet *resultSet, int32_t from, int32_t count)
 {
   CGCWithResultSetResultSetRef copy;
-  CGCWithResultSetCopy(CGCWithResultSetFromMBQWithResultSet(resultSet), &copy, from, count);
-  return (__bridge_transfer MBQWithResultSet *)copy;
+  CGCWithResultSetCopy(CGCWithResultSetFromCGCWithResultSet(resultSet), &copy, from, count);
+  return (__bridge_transfer CGCWithResultSet *)copy;
 }
 
-static inline NSUInteger MBQWithResultSetRowHash(MBQWithResultSet *resultSet, int32_t row)
+static inline NSUInteger CGCWithResultSetRowHash(CGCWithResultSet *resultSet, int32_t row)
 {
-  return CGCWithResultSetRowHash(CGCWithResultSetFromMBQWithResultSet(resultSet), row);
+  return CGCWithResultSetRowHash(CGCWithResultSetFromCGCWithResultSet(resultSet), row);
 }
 
-static inline BOOL MBQWithResultSetRowEqual(MBQWithResultSet *resultSet1, int32_t row1, MBQWithResultSet *resultSet2, int32_t row2)
+static inline BOOL CGCWithResultSetRowEqual(CGCWithResultSet *resultSet1, int32_t row1, CGCWithResultSet *resultSet2, int32_t row2)
 {
-  return CGCWithResultSetRowEqual(CGCWithResultSetFromMBQWithResultSet(resultSet1), row1, CGCWithResultSetFromMBQWithResultSet(resultSet2), row2);
+  return CGCWithResultSetRowEqual(CGCWithResultSetFromCGCWithResultSet(resultSet1), row1, CGCWithResultSetFromCGCWithResultSet(resultSet2), row2);
 }
 
-@class MBQSelectFromView;
+@class CGCSelectFromView;
 
-static inline MBQSelectFromView *MBQSelectFromViewFromCGCSelectFromView(CGCSelectFromViewResultSetRef resultSet)
+static inline CGCSelectFromView *CGCSelectFromViewFromCGCSelectFromView(CGCSelectFromViewResultSetRef resultSet)
 {
-  return (__bridge MBQSelectFromView *)resultSet;
+  return (__bridge CGCSelectFromView *)resultSet;
 }
 
-static inline CGCSelectFromViewResultSetRef CGCSelectFromViewFromMBQSelectFromView(MBQSelectFromView *resultSet)
+static inline CGCSelectFromViewResultSetRef CGCSelectFromViewFromCGCSelectFromView(CGCSelectFromView *resultSet)
 {
   return (__bridge CGCSelectFromViewResultSetRef)resultSet;
 }
 
-static inline int32_t MBQSelectFromViewGetId(MBQSelectFromView *resultSet, int32_t row)
+static inline int32_t CGCSelectFromViewGetId(CGCSelectFromView *resultSet, int32_t row)
 {
-  CGCSelectFromViewResultSetRef cResultSet = CGCSelectFromViewFromMBQSelectFromView(resultSet);
+  CGCSelectFromViewResultSetRef cResultSet = CGCSelectFromViewFromCGCSelectFromView(resultSet);
   return CGCSelectFromViewGetId(cResultSet, row);
 }
 
-static inline NSNumber *_Nullable MBQSelectFromViewGetType(MBQSelectFromView *resultSet, int32_t row)
+static inline NSNumber *_Nullable CGCSelectFromViewGetType(CGCSelectFromView *resultSet, int32_t row)
 {
-  CGCSelectFromViewResultSetRef cResultSet = CGCSelectFromViewFromMBQSelectFromView(resultSet);
+  CGCSelectFromViewResultSetRef cResultSet = CGCSelectFromViewFromCGCSelectFromView(resultSet);
   return CGCSelectFromViewGetTypeIsNull(cResultSet, row) ? nil : @(CGCSelectFromViewGetTypeValue(cResultSet, row));
 }
 
-static inline int32_t MBQSelectFromViewResultCount(MBQSelectFromView *resultSet)
+static inline int32_t CGCSelectFromViewResultCount(CGCSelectFromView *resultSet)
 {
-  return CGCSelectFromViewResultCount(CGCSelectFromViewFromMBQSelectFromView(resultSet));
+  return CGCSelectFromViewResultCount(CGCSelectFromViewFromCGCSelectFromView(resultSet));
 }
 
-static inline MBQSelectFromView *MBQSelectFromViewCopy(MBQSelectFromView *resultSet, int32_t from, int32_t count)
+static inline CGCSelectFromView *CGCSelectFromViewCopy(CGCSelectFromView *resultSet, int32_t from, int32_t count)
 {
   CGCSelectFromViewResultSetRef copy;
-  CGCSelectFromViewCopy(CGCSelectFromViewFromMBQSelectFromView(resultSet), &copy, from, count);
-  return (__bridge_transfer MBQSelectFromView *)copy;
+  CGCSelectFromViewCopy(CGCSelectFromViewFromCGCSelectFromView(resultSet), &copy, from, count);
+  return (__bridge_transfer CGCSelectFromView *)copy;
 }
 
-static inline NSUInteger MBQSelectFromViewRowHash(MBQSelectFromView *resultSet, int32_t row)
+static inline NSUInteger CGCSelectFromViewRowHash(CGCSelectFromView *resultSet, int32_t row)
 {
-  return CGCSelectFromViewRowHash(CGCSelectFromViewFromMBQSelectFromView(resultSet), row);
+  return CGCSelectFromViewRowHash(CGCSelectFromViewFromCGCSelectFromView(resultSet), row);
 }
 
-static inline BOOL MBQSelectFromViewRowEqual(MBQSelectFromView *resultSet1, int32_t row1, MBQSelectFromView *resultSet2, int32_t row2)
+static inline BOOL CGCSelectFromViewRowEqual(CGCSelectFromView *resultSet1, int32_t row1, CGCSelectFromView *resultSet2, int32_t row2)
 {
-  return CGCSelectFromViewRowEqual(CGCSelectFromViewFromMBQSelectFromView(resultSet1), row1, CGCSelectFromViewFromMBQSelectFromView(resultSet2), row2);
+  return CGCSelectFromViewRowEqual(CGCSelectFromViewFromCGCSelectFromView(resultSet1), row1, CGCSelectFromViewFromCGCSelectFromView(resultSet2), row2);
 }
 
-@class MBQGetData;
+@class CGCGetData;
 
-static inline MBQGetData *MBQGetDataFromCGCGetData(CGCGetDataResultSetRef resultSet)
+static inline CGCGetData *CGCGetDataFromCGCGetData(CGCGetDataResultSetRef resultSet)
 {
-  return (__bridge MBQGetData *)resultSet;
+  return (__bridge CGCGetData *)resultSet;
 }
 
-static inline CGCGetDataResultSetRef CGCGetDataFromMBQGetData(MBQGetData *resultSet)
+static inline CGCGetDataResultSetRef CGCGetDataFromCGCGetData(CGCGetData *resultSet)
 {
   return (__bridge CGCGetDataResultSetRef)resultSet;
 }
 
-static inline int32_t MBQGetDataGetId(MBQGetData *resultSet, int32_t row)
+static inline int32_t CGCGetDataGetId(CGCGetData *resultSet, int32_t row)
 {
-  CGCGetDataResultSetRef cResultSet = CGCGetDataFromMBQGetData(resultSet);
+  CGCGetDataResultSetRef cResultSet = CGCGetDataFromCGCGetData(resultSet);
   return CGCGetDataGetId(cResultSet, row);
 }
 
-static inline NSString *_Nullable MBQGetDataGetName(MBQGetData *resultSet, int32_t row)
+static inline NSString *_Nullable CGCGetDataGetName(CGCGetData *resultSet, int32_t row)
 {
-  CGCGetDataResultSetRef cResultSet = CGCGetDataFromMBQGetData(resultSet);
+  CGCGetDataResultSetRef cResultSet = CGCGetDataFromCGCGetData(resultSet);
   return (__bridge NSString *)CGCGetDataGetName(cResultSet, row);
 }
 
-static inline NSNumber *_Nullable MBQGetDataGetRate(MBQGetData *resultSet, int32_t row)
+static inline NSNumber *_Nullable CGCGetDataGetRate(CGCGetData *resultSet, int32_t row)
 {
-  CGCGetDataResultSetRef cResultSet = CGCGetDataFromMBQGetData(resultSet);
+  CGCGetDataResultSetRef cResultSet = CGCGetDataFromCGCGetData(resultSet);
   return CGCGetDataGetRateIsNull(cResultSet, row) ? nil : @(CGCGetDataGetRateValue(cResultSet, row));
 }
 
-static inline NSNumber *_Nullable MBQGetDataGetType(MBQGetData *resultSet, int32_t row)
+static inline NSNumber *_Nullable CGCGetDataGetType(CGCGetData *resultSet, int32_t row)
 {
-  CGCGetDataResultSetRef cResultSet = CGCGetDataFromMBQGetData(resultSet);
+  CGCGetDataResultSetRef cResultSet = CGCGetDataFromCGCGetData(resultSet);
   return CGCGetDataGetTypeIsNull(cResultSet, row) ? nil : @(CGCGetDataGetTypeValue(cResultSet, row));
 }
 
-static inline NSNumber *_Nullable MBQGetDataGetSize(MBQGetData *resultSet, int32_t row)
+static inline NSNumber *_Nullable CGCGetDataGetSize(CGCGetData *resultSet, int32_t row)
 {
-  CGCGetDataResultSetRef cResultSet = CGCGetDataFromMBQGetData(resultSet);
+  CGCGetDataResultSetRef cResultSet = CGCGetDataFromCGCGetData(resultSet);
   return CGCGetDataGetSizeIsNull(cResultSet, row) ? nil : @(CGCGetDataGetSizeValue(cResultSet, row));
 }
 
-static inline int32_t MBQGetDataResultCount(MBQGetData *resultSet)
+static inline int32_t CGCGetDataResultCount(CGCGetData *resultSet)
 {
-  return CGCGetDataResultCount(CGCGetDataFromMBQGetData(resultSet));
+  return CGCGetDataResultCount(CGCGetDataFromCGCGetData(resultSet));
 }
 
-static inline MBQGetData *MBQGetDataCopy(MBQGetData *resultSet, int32_t from, int32_t count)
+static inline CGCGetData *CGCGetDataCopy(CGCGetData *resultSet, int32_t from, int32_t count)
 {
   CGCGetDataResultSetRef copy;
-  CGCGetDataCopy(CGCGetDataFromMBQGetData(resultSet), &copy, from, count);
-  return (__bridge_transfer MBQGetData *)copy;
+  CGCGetDataCopy(CGCGetDataFromCGCGetData(resultSet), &copy, from, count);
+  return (__bridge_transfer CGCGetData *)copy;
 }
 
-static inline NSUInteger MBQGetDataRowHash(MBQGetData *resultSet, int32_t row)
+static inline NSUInteger CGCGetDataRowHash(CGCGetData *resultSet, int32_t row)
 {
-  return CGCGetDataRowHash(CGCGetDataFromMBQGetData(resultSet), row);
+  return CGCGetDataRowHash(CGCGetDataFromCGCGetData(resultSet), row);
 }
 
-static inline BOOL MBQGetDataRowEqual(MBQGetData *resultSet1, int32_t row1, MBQGetData *resultSet2, int32_t row2)
+static inline BOOL CGCGetDataRowEqual(CGCGetData *resultSet1, int32_t row1, CGCGetData *resultSet2, int32_t row2)
 {
-  return CGCGetDataRowEqual(CGCGetDataFromMBQGetData(resultSet1), row1, CGCGetDataFromMBQGetData(resultSet2), row2);
+  return CGCGetDataRowEqual(CGCGetDataFromCGCGetData(resultSet1), row1, CGCGetDataFromCGCGetData(resultSet2), row2);
 }
 
-@class MBQComplexReturn;
+@class CGCComplexReturn;
 
-static inline MBQComplexReturn *MBQComplexReturnFromCGCComplexReturn(CGCComplexReturnResultSetRef resultSet)
+static inline CGCComplexReturn *CGCComplexReturnFromCGCComplexReturn(CGCComplexReturnResultSetRef resultSet)
 {
-  return (__bridge MBQComplexReturn *)resultSet;
+  return (__bridge CGCComplexReturn *)resultSet;
 }
 
-static inline CGCComplexReturnResultSetRef CGCComplexReturnFromMBQComplexReturn(MBQComplexReturn *resultSet)
+static inline CGCComplexReturnResultSetRef CGCComplexReturnFromCGCComplexReturn(CGCComplexReturn *resultSet)
 {
   return (__bridge CGCComplexReturnResultSetRef)resultSet;
 }
 
-static inline BOOL MBQComplexReturnGetBool(MBQComplexReturn *resultSet, int32_t row)
+static inline BOOL CGCComplexReturnGetBool(CGCComplexReturn *resultSet, int32_t row)
 {
-  CGCComplexReturnResultSetRef cResultSet = CGCComplexReturnFromMBQComplexReturn(resultSet);
+  CGCComplexReturnResultSetRef cResultSet = CGCComplexReturnFromCGCComplexReturn(resultSet);
   return CGCComplexReturnGetBool(cResultSet, row) ? YES : NO;
 }
 
-static inline int32_t MBQComplexReturnGetInteger(MBQComplexReturn *resultSet, int32_t row)
+static inline int32_t CGCComplexReturnGetInteger(CGCComplexReturn *resultSet, int32_t row)
 {
-  CGCComplexReturnResultSetRef cResultSet = CGCComplexReturnFromMBQComplexReturn(resultSet);
+  CGCComplexReturnResultSetRef cResultSet = CGCComplexReturnFromCGCComplexReturn(resultSet);
   return CGCComplexReturnGetInteger(cResultSet, row);
 }
 
-static inline int64_t MBQComplexReturnGetLongint(MBQComplexReturn *resultSet, int32_t row)
+static inline int64_t CGCComplexReturnGetLongint(CGCComplexReturn *resultSet, int32_t row)
 {
-  CGCComplexReturnResultSetRef cResultSet = CGCComplexReturnFromMBQComplexReturn(resultSet);
+  CGCComplexReturnResultSetRef cResultSet = CGCComplexReturnFromCGCComplexReturn(resultSet);
   return CGCComplexReturnGetLongint(cResultSet, row);
 }
 
-static inline double MBQComplexReturnGetReal(MBQComplexReturn *resultSet, int32_t row)
+static inline double CGCComplexReturnGetReal(CGCComplexReturn *resultSet, int32_t row)
 {
-  CGCComplexReturnResultSetRef cResultSet = CGCComplexReturnFromMBQComplexReturn(resultSet);
+  CGCComplexReturnResultSetRef cResultSet = CGCComplexReturnFromCGCComplexReturn(resultSet);
   return CGCComplexReturnGetReal(cResultSet, row);
 }
 
-static inline NSString *MBQComplexReturnGetText(MBQComplexReturn *resultSet, int32_t row)
+static inline NSString *CGCComplexReturnGetText(CGCComplexReturn *resultSet, int32_t row)
 {
-  CGCComplexReturnResultSetRef cResultSet = CGCComplexReturnFromMBQComplexReturn(resultSet);
+  CGCComplexReturnResultSetRef cResultSet = CGCComplexReturnFromCGCComplexReturn(resultSet);
   return (__bridge NSString *)CGCComplexReturnGetText(cResultSet, row);
 }
 
-static inline NSNumber *_Nullable MBQComplexReturnGetNullableBool(MBQComplexReturn *resultSet, int32_t row)
+static inline NSNumber *_Nullable CGCComplexReturnGetNullableBool(CGCComplexReturn *resultSet, int32_t row)
 {
-  CGCComplexReturnResultSetRef cResultSet = CGCComplexReturnFromMBQComplexReturn(resultSet);
+  CGCComplexReturnResultSetRef cResultSet = CGCComplexReturnFromCGCComplexReturn(resultSet);
   return CGCComplexReturnGetNullableBoolIsNull(cResultSet, row) ? nil : @(CGCComplexReturnGetNullableBoolValue(cResultSet, row));
 }
 
-static inline int32_t MBQComplexReturnResultCount(MBQComplexReturn *resultSet)
+static inline int32_t CGCComplexReturnResultCount(CGCComplexReturn *resultSet)
 {
-  return CGCComplexReturnResultCount(CGCComplexReturnFromMBQComplexReturn(resultSet));
+  return CGCComplexReturnResultCount(CGCComplexReturnFromCGCComplexReturn(resultSet));
 }
 
-static inline MBQComplexReturn *MBQComplexReturnCopy(MBQComplexReturn *resultSet, int32_t from, int32_t count)
+static inline CGCComplexReturn *CGCComplexReturnCopy(CGCComplexReturn *resultSet, int32_t from, int32_t count)
 {
   CGCComplexReturnResultSetRef copy;
-  CGCComplexReturnCopy(CGCComplexReturnFromMBQComplexReturn(resultSet), &copy, from, count);
-  return (__bridge_transfer MBQComplexReturn *)copy;
+  CGCComplexReturnCopy(CGCComplexReturnFromCGCComplexReturn(resultSet), &copy, from, count);
+  return (__bridge_transfer CGCComplexReturn *)copy;
 }
 
-static inline NSUInteger MBQComplexReturnRowHash(MBQComplexReturn *resultSet, int32_t row)
+static inline NSUInteger CGCComplexReturnRowHash(CGCComplexReturn *resultSet, int32_t row)
 {
-  return CGCComplexReturnRowHash(CGCComplexReturnFromMBQComplexReturn(resultSet), row);
+  return CGCComplexReturnRowHash(CGCComplexReturnFromCGCComplexReturn(resultSet), row);
 }
 
-static inline BOOL MBQComplexReturnRowEqual(MBQComplexReturn *resultSet1, int32_t row1, MBQComplexReturn *resultSet2, int32_t row2)
+static inline BOOL CGCComplexReturnRowEqual(CGCComplexReturn *resultSet1, int32_t row1, CGCComplexReturn *resultSet2, int32_t row2)
 {
-  return CGCComplexReturnRowEqual(CGCComplexReturnFromMBQComplexReturn(resultSet1), row1, CGCComplexReturnFromMBQComplexReturn(resultSet2), row2);
+  return CGCComplexReturnRowEqual(CGCComplexReturnFromCGCComplexReturn(resultSet1), row1, CGCComplexReturnFromCGCComplexReturn(resultSet2), row2);
 }
 
-@class MBQHierarchicalQuery;
+@class CGCHierarchicalQuery;
 
-static inline MBQHierarchicalQuery *MBQHierarchicalQueryFromCGCHierarchicalQuery(CGCHierarchicalQueryResultSetRef resultSet)
+static inline CGCHierarchicalQuery *CGCHierarchicalQueryFromCGCHierarchicalQuery(CGCHierarchicalQueryResultSetRef resultSet)
 {
-  return (__bridge MBQHierarchicalQuery *)resultSet;
+  return (__bridge CGCHierarchicalQuery *)resultSet;
 }
 
-static inline CGCHierarchicalQueryResultSetRef CGCHierarchicalQueryFromMBQHierarchicalQuery(MBQHierarchicalQuery *resultSet)
+static inline CGCHierarchicalQueryResultSetRef CGCHierarchicalQueryFromCGCHierarchicalQuery(CGCHierarchicalQuery *resultSet)
 {
   return (__bridge CGCHierarchicalQueryResultSetRef)resultSet;
 }
 
-static inline int32_t MBQHierarchicalQueryGetId(MBQHierarchicalQuery *resultSet, int32_t row)
+static inline int32_t CGCHierarchicalQueryGetId(CGCHierarchicalQuery *resultSet, int32_t row)
 {
-  CGCHierarchicalQueryResultSetRef cResultSet = CGCHierarchicalQueryFromMBQHierarchicalQuery(resultSet);
+  CGCHierarchicalQueryResultSetRef cResultSet = CGCHierarchicalQueryFromCGCHierarchicalQuery(resultSet);
   return CGCHierarchicalQueryGetId(cResultSet, row);
 }
 
-static inline int32_t MBQHierarchicalQueryResultCount(MBQHierarchicalQuery *resultSet)
+static inline int32_t CGCHierarchicalQueryResultCount(CGCHierarchicalQuery *resultSet)
 {
-  return CGCHierarchicalQueryResultCount(CGCHierarchicalQueryFromMBQHierarchicalQuery(resultSet));
+  return CGCHierarchicalQueryResultCount(CGCHierarchicalQueryFromCGCHierarchicalQuery(resultSet));
 }
 
-static inline MBQHierarchicalQuery *MBQHierarchicalQueryCopy(MBQHierarchicalQuery *resultSet, int32_t from, int32_t count)
+static inline CGCHierarchicalQuery *CGCHierarchicalQueryCopy(CGCHierarchicalQuery *resultSet, int32_t from, int32_t count)
 {
   CGCHierarchicalQueryResultSetRef copy;
-  CGCHierarchicalQueryCopy(CGCHierarchicalQueryFromMBQHierarchicalQuery(resultSet), &copy, from, count);
-  return (__bridge_transfer MBQHierarchicalQuery *)copy;
+  CGCHierarchicalQueryCopy(CGCHierarchicalQueryFromCGCHierarchicalQuery(resultSet), &copy, from, count);
+  return (__bridge_transfer CGCHierarchicalQuery *)copy;
 }
 
-static inline NSUInteger MBQHierarchicalQueryRowHash(MBQHierarchicalQuery *resultSet, int32_t row)
+static inline NSUInteger CGCHierarchicalQueryRowHash(CGCHierarchicalQuery *resultSet, int32_t row)
 {
-  return CGCHierarchicalQueryRowHash(CGCHierarchicalQueryFromMBQHierarchicalQuery(resultSet), row);
+  return CGCHierarchicalQueryRowHash(CGCHierarchicalQueryFromCGCHierarchicalQuery(resultSet), row);
 }
 
-static inline BOOL MBQHierarchicalQueryRowEqual(MBQHierarchicalQuery *resultSet1, int32_t row1, MBQHierarchicalQuery *resultSet2, int32_t row2)
+static inline BOOL CGCHierarchicalQueryRowEqual(CGCHierarchicalQuery *resultSet1, int32_t row1, CGCHierarchicalQuery *resultSet2, int32_t row2)
 {
-  return CGCHierarchicalQueryRowEqual(CGCHierarchicalQueryFromMBQHierarchicalQuery(resultSet1), row1, CGCHierarchicalQueryFromMBQHierarchicalQuery(resultSet2), row2);
+  return CGCHierarchicalQueryRowEqual(CGCHierarchicalQueryFromCGCHierarchicalQuery(resultSet1), row1, CGCHierarchicalQueryFromCGCHierarchicalQuery(resultSet2), row2);
 }
 
-@class MBQHierarchicalUnmatchedQuery;
+@class CGCHierarchicalUnmatchedQuery;
 
-static inline MBQHierarchicalUnmatchedQuery *MBQHierarchicalUnmatchedQueryFromCGCHierarchicalUnmatchedQuery(CGCHierarchicalUnmatchedQueryResultSetRef resultSet)
+static inline CGCHierarchicalUnmatchedQuery *CGCHierarchicalUnmatchedQueryFromCGCHierarchicalUnmatchedQuery(CGCHierarchicalUnmatchedQueryResultSetRef resultSet)
 {
-  return (__bridge MBQHierarchicalUnmatchedQuery *)resultSet;
+  return (__bridge CGCHierarchicalUnmatchedQuery *)resultSet;
 }
 
-static inline CGCHierarchicalUnmatchedQueryResultSetRef CGCHierarchicalUnmatchedQueryFromMBQHierarchicalUnmatchedQuery(MBQHierarchicalUnmatchedQuery *resultSet)
+static inline CGCHierarchicalUnmatchedQueryResultSetRef CGCHierarchicalUnmatchedQueryFromCGCHierarchicalUnmatchedQuery(CGCHierarchicalUnmatchedQuery *resultSet)
 {
   return (__bridge CGCHierarchicalUnmatchedQueryResultSetRef)resultSet;
 }
 
-static inline int32_t MBQHierarchicalUnmatchedQueryGetId(MBQHierarchicalUnmatchedQuery *resultSet, int32_t row)
+static inline int32_t CGCHierarchicalUnmatchedQueryGetId(CGCHierarchicalUnmatchedQuery *resultSet, int32_t row)
 {
-  CGCHierarchicalUnmatchedQueryResultSetRef cResultSet = CGCHierarchicalUnmatchedQueryFromMBQHierarchicalUnmatchedQuery(resultSet);
+  CGCHierarchicalUnmatchedQueryResultSetRef cResultSet = CGCHierarchicalUnmatchedQueryFromCGCHierarchicalUnmatchedQuery(resultSet);
   return CGCHierarchicalUnmatchedQueryGetId(cResultSet, row);
 }
 
-static inline int32_t MBQHierarchicalUnmatchedQueryResultCount(MBQHierarchicalUnmatchedQuery *resultSet)
+static inline int32_t CGCHierarchicalUnmatchedQueryResultCount(CGCHierarchicalUnmatchedQuery *resultSet)
 {
-  return CGCHierarchicalUnmatchedQueryResultCount(CGCHierarchicalUnmatchedQueryFromMBQHierarchicalUnmatchedQuery(resultSet));
+  return CGCHierarchicalUnmatchedQueryResultCount(CGCHierarchicalUnmatchedQueryFromCGCHierarchicalUnmatchedQuery(resultSet));
 }
 
-static inline MBQHierarchicalUnmatchedQuery *MBQHierarchicalUnmatchedQueryCopy(MBQHierarchicalUnmatchedQuery *resultSet, int32_t from, int32_t count)
+static inline CGCHierarchicalUnmatchedQuery *CGCHierarchicalUnmatchedQueryCopy(CGCHierarchicalUnmatchedQuery *resultSet, int32_t from, int32_t count)
 {
   CGCHierarchicalUnmatchedQueryResultSetRef copy;
-  CGCHierarchicalUnmatchedQueryCopy(CGCHierarchicalUnmatchedQueryFromMBQHierarchicalUnmatchedQuery(resultSet), &copy, from, count);
-  return (__bridge_transfer MBQHierarchicalUnmatchedQuery *)copy;
+  CGCHierarchicalUnmatchedQueryCopy(CGCHierarchicalUnmatchedQueryFromCGCHierarchicalUnmatchedQuery(resultSet), &copy, from, count);
+  return (__bridge_transfer CGCHierarchicalUnmatchedQuery *)copy;
 }
 
-static inline NSUInteger MBQHierarchicalUnmatchedQueryRowHash(MBQHierarchicalUnmatchedQuery *resultSet, int32_t row)
+static inline NSUInteger CGCHierarchicalUnmatchedQueryRowHash(CGCHierarchicalUnmatchedQuery *resultSet, int32_t row)
 {
-  return CGCHierarchicalUnmatchedQueryRowHash(CGCHierarchicalUnmatchedQueryFromMBQHierarchicalUnmatchedQuery(resultSet), row);
+  return CGCHierarchicalUnmatchedQueryRowHash(CGCHierarchicalUnmatchedQueryFromCGCHierarchicalUnmatchedQuery(resultSet), row);
 }
 
-static inline BOOL MBQHierarchicalUnmatchedQueryRowEqual(MBQHierarchicalUnmatchedQuery *resultSet1, int32_t row1, MBQHierarchicalUnmatchedQuery *resultSet2, int32_t row2)
+static inline BOOL CGCHierarchicalUnmatchedQueryRowEqual(CGCHierarchicalUnmatchedQuery *resultSet1, int32_t row1, CGCHierarchicalUnmatchedQuery *resultSet2, int32_t row2)
 {
-  return CGCHierarchicalUnmatchedQueryRowEqual(CGCHierarchicalUnmatchedQueryFromMBQHierarchicalUnmatchedQuery(resultSet1), row1, CGCHierarchicalUnmatchedQueryFromMBQHierarchicalUnmatchedQuery(resultSet2), row2);
+  return CGCHierarchicalUnmatchedQueryRowEqual(CGCHierarchicalUnmatchedQueryFromCGCHierarchicalUnmatchedQuery(resultSet1), row1, CGCHierarchicalUnmatchedQueryFromCGCHierarchicalUnmatchedQuery(resultSet2), row2);
 }
 
-@class MBQUnionSelect;
+@class CGCUnionSelect;
 
-static inline MBQUnionSelect *MBQUnionSelectFromCGCUnionSelect(CGCUnionSelectResultSetRef resultSet)
+static inline CGCUnionSelect *CGCUnionSelectFromCGCUnionSelect(CGCUnionSelectResultSetRef resultSet)
 {
-  return (__bridge MBQUnionSelect *)resultSet;
+  return (__bridge CGCUnionSelect *)resultSet;
 }
 
-static inline CGCUnionSelectResultSetRef CGCUnionSelectFromMBQUnionSelect(MBQUnionSelect *resultSet)
+static inline CGCUnionSelectResultSetRef CGCUnionSelectFromCGCUnionSelect(CGCUnionSelect *resultSet)
 {
   return (__bridge CGCUnionSelectResultSetRef)resultSet;
 }
 
-static inline int32_t MBQUnionSelectGetA(MBQUnionSelect *resultSet, int32_t row)
+static inline int32_t CGCUnionSelectGetA(CGCUnionSelect *resultSet, int32_t row)
 {
-  CGCUnionSelectResultSetRef cResultSet = CGCUnionSelectFromMBQUnionSelect(resultSet);
+  CGCUnionSelectResultSetRef cResultSet = CGCUnionSelectFromCGCUnionSelect(resultSet);
   return CGCUnionSelectGetA(cResultSet, row);
 }
 
-static inline int32_t MBQUnionSelectResultCount(MBQUnionSelect *resultSet)
+static inline int32_t CGCUnionSelectResultCount(CGCUnionSelect *resultSet)
 {
-  return CGCUnionSelectResultCount(CGCUnionSelectFromMBQUnionSelect(resultSet));
+  return CGCUnionSelectResultCount(CGCUnionSelectFromCGCUnionSelect(resultSet));
 }
 
-static inline MBQUnionSelect *MBQUnionSelectCopy(MBQUnionSelect *resultSet, int32_t from, int32_t count)
+static inline CGCUnionSelect *CGCUnionSelectCopy(CGCUnionSelect *resultSet, int32_t from, int32_t count)
 {
   CGCUnionSelectResultSetRef copy;
-  CGCUnionSelectCopy(CGCUnionSelectFromMBQUnionSelect(resultSet), &copy, from, count);
-  return (__bridge_transfer MBQUnionSelect *)copy;
+  CGCUnionSelectCopy(CGCUnionSelectFromCGCUnionSelect(resultSet), &copy, from, count);
+  return (__bridge_transfer CGCUnionSelect *)copy;
 }
 
-static inline NSUInteger MBQUnionSelectRowHash(MBQUnionSelect *resultSet, int32_t row)
+static inline NSUInteger CGCUnionSelectRowHash(CGCUnionSelect *resultSet, int32_t row)
 {
-  return CGCUnionSelectRowHash(CGCUnionSelectFromMBQUnionSelect(resultSet), row);
+  return CGCUnionSelectRowHash(CGCUnionSelectFromCGCUnionSelect(resultSet), row);
 }
 
-static inline BOOL MBQUnionSelectRowEqual(MBQUnionSelect *resultSet1, int32_t row1, MBQUnionSelect *resultSet2, int32_t row2)
+static inline BOOL CGCUnionSelectRowEqual(CGCUnionSelect *resultSet1, int32_t row1, CGCUnionSelect *resultSet2, int32_t row2)
 {
-  return CGCUnionSelectRowEqual(CGCUnionSelectFromMBQUnionSelect(resultSet1), row1, CGCUnionSelectFromMBQUnionSelect(resultSet2), row2);
+  return CGCUnionSelectRowEqual(CGCUnionSelectFromCGCUnionSelect(resultSet1), row1, CGCUnionSelectFromCGCUnionSelect(resultSet2), row2);
 }
 
-@class MBQUnionAllSelect;
+@class CGCUnionAllSelect;
 
-static inline MBQUnionAllSelect *MBQUnionAllSelectFromCGCUnionAllSelect(CGCUnionAllSelectResultSetRef resultSet)
+static inline CGCUnionAllSelect *CGCUnionAllSelectFromCGCUnionAllSelect(CGCUnionAllSelectResultSetRef resultSet)
 {
-  return (__bridge MBQUnionAllSelect *)resultSet;
+  return (__bridge CGCUnionAllSelect *)resultSet;
 }
 
-static inline CGCUnionAllSelectResultSetRef CGCUnionAllSelectFromMBQUnionAllSelect(MBQUnionAllSelect *resultSet)
+static inline CGCUnionAllSelectResultSetRef CGCUnionAllSelectFromCGCUnionAllSelect(CGCUnionAllSelect *resultSet)
 {
   return (__bridge CGCUnionAllSelectResultSetRef)resultSet;
 }
 
-static inline int32_t MBQUnionAllSelectGetA(MBQUnionAllSelect *resultSet, int32_t row)
+static inline int32_t CGCUnionAllSelectGetA(CGCUnionAllSelect *resultSet, int32_t row)
 {
-  CGCUnionAllSelectResultSetRef cResultSet = CGCUnionAllSelectFromMBQUnionAllSelect(resultSet);
+  CGCUnionAllSelectResultSetRef cResultSet = CGCUnionAllSelectFromCGCUnionAllSelect(resultSet);
   return CGCUnionAllSelectGetA(cResultSet, row);
 }
 
-static inline int32_t MBQUnionAllSelectResultCount(MBQUnionAllSelect *resultSet)
+static inline int32_t CGCUnionAllSelectResultCount(CGCUnionAllSelect *resultSet)
 {
-  return CGCUnionAllSelectResultCount(CGCUnionAllSelectFromMBQUnionAllSelect(resultSet));
+  return CGCUnionAllSelectResultCount(CGCUnionAllSelectFromCGCUnionAllSelect(resultSet));
 }
 
-static inline MBQUnionAllSelect *MBQUnionAllSelectCopy(MBQUnionAllSelect *resultSet, int32_t from, int32_t count)
+static inline CGCUnionAllSelect *CGCUnionAllSelectCopy(CGCUnionAllSelect *resultSet, int32_t from, int32_t count)
 {
   CGCUnionAllSelectResultSetRef copy;
-  CGCUnionAllSelectCopy(CGCUnionAllSelectFromMBQUnionAllSelect(resultSet), &copy, from, count);
-  return (__bridge_transfer MBQUnionAllSelect *)copy;
+  CGCUnionAllSelectCopy(CGCUnionAllSelectFromCGCUnionAllSelect(resultSet), &copy, from, count);
+  return (__bridge_transfer CGCUnionAllSelect *)copy;
 }
 
-static inline NSUInteger MBQUnionAllSelectRowHash(MBQUnionAllSelect *resultSet, int32_t row)
+static inline NSUInteger CGCUnionAllSelectRowHash(CGCUnionAllSelect *resultSet, int32_t row)
 {
-  return CGCUnionAllSelectRowHash(CGCUnionAllSelectFromMBQUnionAllSelect(resultSet), row);
+  return CGCUnionAllSelectRowHash(CGCUnionAllSelectFromCGCUnionAllSelect(resultSet), row);
 }
 
-static inline BOOL MBQUnionAllSelectRowEqual(MBQUnionAllSelect *resultSet1, int32_t row1, MBQUnionAllSelect *resultSet2, int32_t row2)
+static inline BOOL CGCUnionAllSelectRowEqual(CGCUnionAllSelect *resultSet1, int32_t row1, CGCUnionAllSelect *resultSet2, int32_t row2)
 {
-  return CGCUnionAllSelectRowEqual(CGCUnionAllSelectFromMBQUnionAllSelect(resultSet1), row1, CGCUnionAllSelectFromMBQUnionAllSelect(resultSet2), row2);
+  return CGCUnionAllSelectRowEqual(CGCUnionAllSelectFromCGCUnionAllSelect(resultSet1), row1, CGCUnionAllSelectFromCGCUnionAllSelect(resultSet2), row2);
 }
 
-@class MBQUnionAllWithNullable;
+@class CGCUnionAllWithNullable;
 
-static inline MBQUnionAllWithNullable *MBQUnionAllWithNullableFromCGCUnionAllWithNullable(CGCUnionAllWithNullableResultSetRef resultSet)
+static inline CGCUnionAllWithNullable *CGCUnionAllWithNullableFromCGCUnionAllWithNullable(CGCUnionAllWithNullableResultSetRef resultSet)
 {
-  return (__bridge MBQUnionAllWithNullable *)resultSet;
+  return (__bridge CGCUnionAllWithNullable *)resultSet;
 }
 
-static inline CGCUnionAllWithNullableResultSetRef CGCUnionAllWithNullableFromMBQUnionAllWithNullable(MBQUnionAllWithNullable *resultSet)
+static inline CGCUnionAllWithNullableResultSetRef CGCUnionAllWithNullableFromCGCUnionAllWithNullable(CGCUnionAllWithNullable *resultSet)
 {
   return (__bridge CGCUnionAllWithNullableResultSetRef)resultSet;
 }
 
-static inline NSString *_Nullable MBQUnionAllWithNullableGetName(MBQUnionAllWithNullable *resultSet, int32_t row)
+static inline NSString *_Nullable CGCUnionAllWithNullableGetName(CGCUnionAllWithNullable *resultSet, int32_t row)
 {
-  CGCUnionAllWithNullableResultSetRef cResultSet = CGCUnionAllWithNullableFromMBQUnionAllWithNullable(resultSet);
+  CGCUnionAllWithNullableResultSetRef cResultSet = CGCUnionAllWithNullableFromCGCUnionAllWithNullable(resultSet);
   return (__bridge NSString *)CGCUnionAllWithNullableGetName(cResultSet, row);
 }
 
-static inline int32_t MBQUnionAllWithNullableResultCount(MBQUnionAllWithNullable *resultSet)
+static inline int32_t CGCUnionAllWithNullableResultCount(CGCUnionAllWithNullable *resultSet)
 {
-  return CGCUnionAllWithNullableResultCount(CGCUnionAllWithNullableFromMBQUnionAllWithNullable(resultSet));
+  return CGCUnionAllWithNullableResultCount(CGCUnionAllWithNullableFromCGCUnionAllWithNullable(resultSet));
 }
 
-static inline MBQUnionAllWithNullable *MBQUnionAllWithNullableCopy(MBQUnionAllWithNullable *resultSet, int32_t from, int32_t count)
+static inline CGCUnionAllWithNullable *CGCUnionAllWithNullableCopy(CGCUnionAllWithNullable *resultSet, int32_t from, int32_t count)
 {
   CGCUnionAllWithNullableResultSetRef copy;
-  CGCUnionAllWithNullableCopy(CGCUnionAllWithNullableFromMBQUnionAllWithNullable(resultSet), &copy, from, count);
-  return (__bridge_transfer MBQUnionAllWithNullable *)copy;
+  CGCUnionAllWithNullableCopy(CGCUnionAllWithNullableFromCGCUnionAllWithNullable(resultSet), &copy, from, count);
+  return (__bridge_transfer CGCUnionAllWithNullable *)copy;
 }
 
-static inline NSUInteger MBQUnionAllWithNullableRowHash(MBQUnionAllWithNullable *resultSet, int32_t row)
+static inline NSUInteger CGCUnionAllWithNullableRowHash(CGCUnionAllWithNullable *resultSet, int32_t row)
 {
-  return CGCUnionAllWithNullableRowHash(CGCUnionAllWithNullableFromMBQUnionAllWithNullable(resultSet), row);
+  return CGCUnionAllWithNullableRowHash(CGCUnionAllWithNullableFromCGCUnionAllWithNullable(resultSet), row);
 }
 
-static inline BOOL MBQUnionAllWithNullableRowEqual(MBQUnionAllWithNullable *resultSet1, int32_t row1, MBQUnionAllWithNullable *resultSet2, int32_t row2)
+static inline BOOL CGCUnionAllWithNullableRowEqual(CGCUnionAllWithNullable *resultSet1, int32_t row1, CGCUnionAllWithNullable *resultSet2, int32_t row2)
 {
-  return CGCUnionAllWithNullableRowEqual(CGCUnionAllWithNullableFromMBQUnionAllWithNullable(resultSet1), row1, CGCUnionAllWithNullableFromMBQUnionAllWithNullable(resultSet2), row2);
+  return CGCUnionAllWithNullableRowEqual(CGCUnionAllWithNullableFromCGCUnionAllWithNullable(resultSet1), row1, CGCUnionAllWithNullableFromCGCUnionAllWithNullable(resultSet2), row2);
 }
 
-@class MBQWithStmt;
+@class CGCWithStmt;
 
-static inline MBQWithStmt *MBQWithStmtFromCGCWithStmt(CGCWithStmtResultSetRef resultSet)
+static inline CGCWithStmt *CGCWithStmtFromCGCWithStmt(CGCWithStmtResultSetRef resultSet)
 {
-  return (__bridge MBQWithStmt *)resultSet;
+  return (__bridge CGCWithStmt *)resultSet;
 }
 
-static inline CGCWithStmtResultSetRef CGCWithStmtFromMBQWithStmt(MBQWithStmt *resultSet)
+static inline CGCWithStmtResultSetRef CGCWithStmtFromCGCWithStmt(CGCWithStmt *resultSet)
 {
   return (__bridge CGCWithStmtResultSetRef)resultSet;
 }
 
-static inline int32_t MBQWithStmtGetA(MBQWithStmt *resultSet, int32_t row)
+static inline int32_t CGCWithStmtGetA(CGCWithStmt *resultSet, int32_t row)
 {
-  CGCWithStmtResultSetRef cResultSet = CGCWithStmtFromMBQWithStmt(resultSet);
+  CGCWithStmtResultSetRef cResultSet = CGCWithStmtFromCGCWithStmt(resultSet);
   return CGCWithStmtGetA(cResultSet, row);
 }
 
-static inline int32_t MBQWithStmtGetB(MBQWithStmt *resultSet, int32_t row)
+static inline int32_t CGCWithStmtGetB(CGCWithStmt *resultSet, int32_t row)
 {
-  CGCWithStmtResultSetRef cResultSet = CGCWithStmtFromMBQWithStmt(resultSet);
+  CGCWithStmtResultSetRef cResultSet = CGCWithStmtFromCGCWithStmt(resultSet);
   return CGCWithStmtGetB(cResultSet, row);
 }
 
-static inline int32_t MBQWithStmtGetC(MBQWithStmt *resultSet, int32_t row)
+static inline int32_t CGCWithStmtGetC(CGCWithStmt *resultSet, int32_t row)
 {
-  CGCWithStmtResultSetRef cResultSet = CGCWithStmtFromMBQWithStmt(resultSet);
+  CGCWithStmtResultSetRef cResultSet = CGCWithStmtFromCGCWithStmt(resultSet);
   return CGCWithStmtGetC(cResultSet, row);
 }
 
-static inline int32_t MBQWithStmtResultCount(MBQWithStmt *resultSet)
+static inline int32_t CGCWithStmtResultCount(CGCWithStmt *resultSet)
 {
-  return CGCWithStmtResultCount(CGCWithStmtFromMBQWithStmt(resultSet));
+  return CGCWithStmtResultCount(CGCWithStmtFromCGCWithStmt(resultSet));
 }
 
-static inline MBQWithStmt *MBQWithStmtCopy(MBQWithStmt *resultSet, int32_t from, int32_t count)
+static inline CGCWithStmt *CGCWithStmtCopy(CGCWithStmt *resultSet, int32_t from, int32_t count)
 {
   CGCWithStmtResultSetRef copy;
-  CGCWithStmtCopy(CGCWithStmtFromMBQWithStmt(resultSet), &copy, from, count);
-  return (__bridge_transfer MBQWithStmt *)copy;
+  CGCWithStmtCopy(CGCWithStmtFromCGCWithStmt(resultSet), &copy, from, count);
+  return (__bridge_transfer CGCWithStmt *)copy;
 }
 
-static inline NSUInteger MBQWithStmtRowHash(MBQWithStmt *resultSet, int32_t row)
+static inline NSUInteger CGCWithStmtRowHash(CGCWithStmt *resultSet, int32_t row)
 {
-  return CGCWithStmtRowHash(CGCWithStmtFromMBQWithStmt(resultSet), row);
+  return CGCWithStmtRowHash(CGCWithStmtFromCGCWithStmt(resultSet), row);
 }
 
-static inline BOOL MBQWithStmtRowEqual(MBQWithStmt *resultSet1, int32_t row1, MBQWithStmt *resultSet2, int32_t row2)
+static inline BOOL CGCWithStmtRowEqual(CGCWithStmt *resultSet1, int32_t row1, CGCWithStmt *resultSet2, int32_t row2)
 {
-  return CGCWithStmtRowEqual(CGCWithStmtFromMBQWithStmt(resultSet1), row1, CGCWithStmtFromMBQWithStmt(resultSet2), row2);
+  return CGCWithStmtRowEqual(CGCWithStmtFromCGCWithStmt(resultSet1), row1, CGCWithStmtFromCGCWithStmt(resultSet2), row2);
 }
 
-@class MBQWithRecursiveStmt;
+@class CGCWithRecursiveStmt;
 
-static inline MBQWithRecursiveStmt *MBQWithRecursiveStmtFromCGCWithRecursiveStmt(CGCWithRecursiveStmtResultSetRef resultSet)
+static inline CGCWithRecursiveStmt *CGCWithRecursiveStmtFromCGCWithRecursiveStmt(CGCWithRecursiveStmtResultSetRef resultSet)
 {
-  return (__bridge MBQWithRecursiveStmt *)resultSet;
+  return (__bridge CGCWithRecursiveStmt *)resultSet;
 }
 
-static inline CGCWithRecursiveStmtResultSetRef CGCWithRecursiveStmtFromMBQWithRecursiveStmt(MBQWithRecursiveStmt *resultSet)
+static inline CGCWithRecursiveStmtResultSetRef CGCWithRecursiveStmtFromCGCWithRecursiveStmt(CGCWithRecursiveStmt *resultSet)
 {
   return (__bridge CGCWithRecursiveStmtResultSetRef)resultSet;
 }
 
-static inline int32_t MBQWithRecursiveStmtGetA(MBQWithRecursiveStmt *resultSet, int32_t row)
+static inline int32_t CGCWithRecursiveStmtGetA(CGCWithRecursiveStmt *resultSet, int32_t row)
 {
-  CGCWithRecursiveStmtResultSetRef cResultSet = CGCWithRecursiveStmtFromMBQWithRecursiveStmt(resultSet);
+  CGCWithRecursiveStmtResultSetRef cResultSet = CGCWithRecursiveStmtFromCGCWithRecursiveStmt(resultSet);
   return CGCWithRecursiveStmtGetA(cResultSet, row);
 }
 
-static inline int32_t MBQWithRecursiveStmtGetB(MBQWithRecursiveStmt *resultSet, int32_t row)
+static inline int32_t CGCWithRecursiveStmtGetB(CGCWithRecursiveStmt *resultSet, int32_t row)
 {
-  CGCWithRecursiveStmtResultSetRef cResultSet = CGCWithRecursiveStmtFromMBQWithRecursiveStmt(resultSet);
+  CGCWithRecursiveStmtResultSetRef cResultSet = CGCWithRecursiveStmtFromCGCWithRecursiveStmt(resultSet);
   return CGCWithRecursiveStmtGetB(cResultSet, row);
 }
 
-static inline int32_t MBQWithRecursiveStmtGetC(MBQWithRecursiveStmt *resultSet, int32_t row)
+static inline int32_t CGCWithRecursiveStmtGetC(CGCWithRecursiveStmt *resultSet, int32_t row)
 {
-  CGCWithRecursiveStmtResultSetRef cResultSet = CGCWithRecursiveStmtFromMBQWithRecursiveStmt(resultSet);
+  CGCWithRecursiveStmtResultSetRef cResultSet = CGCWithRecursiveStmtFromCGCWithRecursiveStmt(resultSet);
   return CGCWithRecursiveStmtGetC(cResultSet, row);
 }
 
-static inline int32_t MBQWithRecursiveStmtResultCount(MBQWithRecursiveStmt *resultSet)
+static inline int32_t CGCWithRecursiveStmtResultCount(CGCWithRecursiveStmt *resultSet)
 {
-  return CGCWithRecursiveStmtResultCount(CGCWithRecursiveStmtFromMBQWithRecursiveStmt(resultSet));
+  return CGCWithRecursiveStmtResultCount(CGCWithRecursiveStmtFromCGCWithRecursiveStmt(resultSet));
 }
 
-static inline MBQWithRecursiveStmt *MBQWithRecursiveStmtCopy(MBQWithRecursiveStmt *resultSet, int32_t from, int32_t count)
+static inline CGCWithRecursiveStmt *CGCWithRecursiveStmtCopy(CGCWithRecursiveStmt *resultSet, int32_t from, int32_t count)
 {
   CGCWithRecursiveStmtResultSetRef copy;
-  CGCWithRecursiveStmtCopy(CGCWithRecursiveStmtFromMBQWithRecursiveStmt(resultSet), &copy, from, count);
-  return (__bridge_transfer MBQWithRecursiveStmt *)copy;
+  CGCWithRecursiveStmtCopy(CGCWithRecursiveStmtFromCGCWithRecursiveStmt(resultSet), &copy, from, count);
+  return (__bridge_transfer CGCWithRecursiveStmt *)copy;
 }
 
-static inline NSUInteger MBQWithRecursiveStmtRowHash(MBQWithRecursiveStmt *resultSet, int32_t row)
+static inline NSUInteger CGCWithRecursiveStmtRowHash(CGCWithRecursiveStmt *resultSet, int32_t row)
 {
-  return CGCWithRecursiveStmtRowHash(CGCWithRecursiveStmtFromMBQWithRecursiveStmt(resultSet), row);
+  return CGCWithRecursiveStmtRowHash(CGCWithRecursiveStmtFromCGCWithRecursiveStmt(resultSet), row);
 }
 
-static inline BOOL MBQWithRecursiveStmtRowEqual(MBQWithRecursiveStmt *resultSet1, int32_t row1, MBQWithRecursiveStmt *resultSet2, int32_t row2)
+static inline BOOL CGCWithRecursiveStmtRowEqual(CGCWithRecursiveStmt *resultSet1, int32_t row1, CGCWithRecursiveStmt *resultSet2, int32_t row2)
 {
-  return CGCWithRecursiveStmtRowEqual(CGCWithRecursiveStmtFromMBQWithRecursiveStmt(resultSet1), row1, CGCWithRecursiveStmtFromMBQWithRecursiveStmt(resultSet2), row2);
+  return CGCWithRecursiveStmtRowEqual(CGCWithRecursiveStmtFromCGCWithRecursiveStmt(resultSet1), row1, CGCWithRecursiveStmtFromCGCWithRecursiveStmt(resultSet2), row2);
 }
 
-@class MBQParentProc;
+@class CGCParentProc;
 
-static inline MBQParentProc *MBQParentProcFromCGCParentProc(CGCParentProcResultSetRef resultSet)
+static inline CGCParentProc *CGCParentProcFromCGCParentProc(CGCParentProcResultSetRef resultSet)
 {
-  return (__bridge MBQParentProc *)resultSet;
+  return (__bridge CGCParentProc *)resultSet;
 }
 
-static inline CGCParentProcResultSetRef CGCParentProcFromMBQParentProc(MBQParentProc *resultSet)
+static inline CGCParentProcResultSetRef CGCParentProcFromCGCParentProc(CGCParentProc *resultSet)
 {
   return (__bridge CGCParentProcResultSetRef)resultSet;
 }
 
-static inline int32_t MBQParentProcGetOne(MBQParentProc *resultSet, int32_t row)
+static inline int32_t CGCParentProcGetOne(CGCParentProc *resultSet, int32_t row)
 {
-  CGCParentProcResultSetRef cResultSet = CGCParentProcFromMBQParentProc(resultSet);
+  CGCParentProcResultSetRef cResultSet = CGCParentProcFromCGCParentProc(resultSet);
   return CGCParentProcGetOne(cResultSet, row);
 }
 
-static inline int32_t MBQParentProcGetTwo(MBQParentProc *resultSet, int32_t row)
+static inline int32_t CGCParentProcGetTwo(CGCParentProc *resultSet, int32_t row)
 {
-  CGCParentProcResultSetRef cResultSet = CGCParentProcFromMBQParentProc(resultSet);
+  CGCParentProcResultSetRef cResultSet = CGCParentProcFromCGCParentProc(resultSet);
   return CGCParentProcGetTwo(cResultSet, row);
 }
 
-static inline int32_t MBQParentProcGetThree(MBQParentProc *resultSet, int32_t row)
+static inline int32_t CGCParentProcGetThree(CGCParentProc *resultSet, int32_t row)
 {
-  CGCParentProcResultSetRef cResultSet = CGCParentProcFromMBQParentProc(resultSet);
+  CGCParentProcResultSetRef cResultSet = CGCParentProcFromCGCParentProc(resultSet);
   return CGCParentProcGetThree(cResultSet, row);
 }
 
-static inline int32_t MBQParentProcResultCount(MBQParentProc *resultSet)
+static inline int32_t CGCParentProcResultCount(CGCParentProc *resultSet)
 {
-  return CGCParentProcResultCount(CGCParentProcFromMBQParentProc(resultSet));
+  return CGCParentProcResultCount(CGCParentProcFromCGCParentProc(resultSet));
 }
 
-static inline MBQParentProc *MBQParentProcCopy(MBQParentProc *resultSet, int32_t from, int32_t count)
+static inline CGCParentProc *CGCParentProcCopy(CGCParentProc *resultSet, int32_t from, int32_t count)
 {
   CGCParentProcResultSetRef copy;
-  CGCParentProcCopy(CGCParentProcFromMBQParentProc(resultSet), &copy, from, count);
-  return (__bridge_transfer MBQParentProc *)copy;
+  CGCParentProcCopy(CGCParentProcFromCGCParentProc(resultSet), &copy, from, count);
+  return (__bridge_transfer CGCParentProc *)copy;
 }
 
-static inline NSUInteger MBQParentProcRowHash(MBQParentProc *resultSet, int32_t row)
+static inline NSUInteger CGCParentProcRowHash(CGCParentProc *resultSet, int32_t row)
 {
-  return CGCParentProcRowHash(CGCParentProcFromMBQParentProc(resultSet), row);
+  return CGCParentProcRowHash(CGCParentProcFromCGCParentProc(resultSet), row);
 }
 
-static inline BOOL MBQParentProcRowEqual(MBQParentProc *resultSet1, int32_t row1, MBQParentProc *resultSet2, int32_t row2)
+static inline BOOL CGCParentProcRowEqual(CGCParentProc *resultSet1, int32_t row1, CGCParentProc *resultSet2, int32_t row2)
 {
-  return CGCParentProcRowEqual(CGCParentProcFromMBQParentProc(resultSet1), row1, CGCParentProcFromMBQParentProc(resultSet2), row2);
+  return CGCParentProcRowEqual(CGCParentProcFromCGCParentProc(resultSet1), row1, CGCParentProcFromCGCParentProc(resultSet2), row2);
 }
 
-@class MBQParentProcChild;
+@class CGCParentProcChild;
 
-static inline MBQParentProcChild *MBQParentProcChildFromCGCParentProcChild(CGCParentProcChildResultSetRef resultSet)
+static inline CGCParentProcChild *CGCParentProcChildFromCGCParentProcChild(CGCParentProcChildResultSetRef resultSet)
 {
-  return (__bridge MBQParentProcChild *)resultSet;
+  return (__bridge CGCParentProcChild *)resultSet;
 }
 
-static inline CGCParentProcChildResultSetRef CGCParentProcChildFromMBQParentProcChild(MBQParentProcChild *resultSet)
+static inline CGCParentProcChildResultSetRef CGCParentProcChildFromCGCParentProcChild(CGCParentProcChild *resultSet)
 {
   return (__bridge CGCParentProcChildResultSetRef)resultSet;
 }
 
-static inline int32_t MBQParentProcChildGetFour(MBQParentProcChild *resultSet, int32_t row)
+static inline int32_t CGCParentProcChildGetFour(CGCParentProcChild *resultSet, int32_t row)
 {
-  CGCParentProcChildResultSetRef cResultSet = CGCParentProcChildFromMBQParentProcChild(resultSet);
+  CGCParentProcChildResultSetRef cResultSet = CGCParentProcChildFromCGCParentProcChild(resultSet);
   return CGCParentProcChildGetFour(cResultSet, row);
 }
 
-static inline int32_t MBQParentProcChildGetFive(MBQParentProcChild *resultSet, int32_t row)
+static inline int32_t CGCParentProcChildGetFive(CGCParentProcChild *resultSet, int32_t row)
 {
-  CGCParentProcChildResultSetRef cResultSet = CGCParentProcChildFromMBQParentProcChild(resultSet);
+  CGCParentProcChildResultSetRef cResultSet = CGCParentProcChildFromCGCParentProcChild(resultSet);
   return CGCParentProcChildGetFive(cResultSet, row);
 }
 
-static inline int32_t MBQParentProcChildGetSix(MBQParentProcChild *resultSet, int32_t row)
+static inline int32_t CGCParentProcChildGetSix(CGCParentProcChild *resultSet, int32_t row)
 {
-  CGCParentProcChildResultSetRef cResultSet = CGCParentProcChildFromMBQParentProcChild(resultSet);
+  CGCParentProcChildResultSetRef cResultSet = CGCParentProcChildFromCGCParentProcChild(resultSet);
   return CGCParentProcChildGetSix(cResultSet, row);
 }
 
-static inline int32_t MBQParentProcChildResultCount(MBQParentProcChild *resultSet)
+static inline int32_t CGCParentProcChildResultCount(CGCParentProcChild *resultSet)
 {
-  return CGCParentProcChildResultCount(CGCParentProcChildFromMBQParentProcChild(resultSet));
+  return CGCParentProcChildResultCount(CGCParentProcChildFromCGCParentProcChild(resultSet));
 }
 
-static inline MBQParentProcChild *MBQParentProcChildCopy(MBQParentProcChild *resultSet, int32_t from, int32_t count)
+static inline CGCParentProcChild *CGCParentProcChildCopy(CGCParentProcChild *resultSet, int32_t from, int32_t count)
 {
   CGCParentProcChildResultSetRef copy;
-  CGCParentProcChildCopy(CGCParentProcChildFromMBQParentProcChild(resultSet), &copy, from, count);
-  return (__bridge_transfer MBQParentProcChild *)copy;
+  CGCParentProcChildCopy(CGCParentProcChildFromCGCParentProcChild(resultSet), &copy, from, count);
+  return (__bridge_transfer CGCParentProcChild *)copy;
 }
 
-static inline NSUInteger MBQParentProcChildRowHash(MBQParentProcChild *resultSet, int32_t row)
+static inline NSUInteger CGCParentProcChildRowHash(CGCParentProcChild *resultSet, int32_t row)
 {
-  return CGCParentProcChildRowHash(CGCParentProcChildFromMBQParentProcChild(resultSet), row);
+  return CGCParentProcChildRowHash(CGCParentProcChildFromCGCParentProcChild(resultSet), row);
 }
 
-static inline BOOL MBQParentProcChildRowEqual(MBQParentProcChild *resultSet1, int32_t row1, MBQParentProcChild *resultSet2, int32_t row2)
+static inline BOOL CGCParentProcChildRowEqual(CGCParentProcChild *resultSet1, int32_t row1, CGCParentProcChild *resultSet2, int32_t row2)
 {
-  return CGCParentProcChildRowEqual(CGCParentProcChildFromMBQParentProcChild(resultSet1), row1, CGCParentProcChildFromMBQParentProcChild(resultSet2), row2);
+  return CGCParentProcChildRowEqual(CGCParentProcChildFromCGCParentProcChild(resultSet1), row1, CGCParentProcChildFromCGCParentProcChild(resultSet2), row2);
 }
 
-@class MBQUsesProcForResult;
+@class CGCUsesProcForResult;
 
-static inline MBQUsesProcForResult *MBQUsesProcForResultFromCGCUsesProcForResult(CGCUsesProcForResultResultSetRef resultSet)
+static inline CGCUsesProcForResult *CGCUsesProcForResultFromCGCUsesProcForResult(CGCUsesProcForResultResultSetRef resultSet)
 {
-  return (__bridge MBQUsesProcForResult *)resultSet;
+  return (__bridge CGCUsesProcForResult *)resultSet;
 }
 
-static inline CGCUsesProcForResultResultSetRef CGCUsesProcForResultFromMBQUsesProcForResult(MBQUsesProcForResult *resultSet)
+static inline CGCUsesProcForResultResultSetRef CGCUsesProcForResultFromCGCUsesProcForResult(CGCUsesProcForResult *resultSet)
 {
   return (__bridge CGCUsesProcForResultResultSetRef)resultSet;
 }
 
-static inline int32_t MBQUsesProcForResultGetId(MBQUsesProcForResult *resultSet, int32_t row)
+static inline int32_t CGCUsesProcForResultGetId(CGCUsesProcForResult *resultSet, int32_t row)
 {
-  CGCUsesProcForResultResultSetRef cResultSet = CGCUsesProcForResultFromMBQUsesProcForResult(resultSet);
+  CGCUsesProcForResultResultSetRef cResultSet = CGCUsesProcForResultFromCGCUsesProcForResult(resultSet);
   return CGCUsesProcForResultGetId(cResultSet, row);
 }
 
-static inline NSString *_Nullable MBQUsesProcForResultGetName(MBQUsesProcForResult *resultSet, int32_t row)
+static inline NSString *_Nullable CGCUsesProcForResultGetName(CGCUsesProcForResult *resultSet, int32_t row)
 {
-  CGCUsesProcForResultResultSetRef cResultSet = CGCUsesProcForResultFromMBQUsesProcForResult(resultSet);
+  CGCUsesProcForResultResultSetRef cResultSet = CGCUsesProcForResultFromCGCUsesProcForResult(resultSet);
   return (__bridge NSString *)CGCUsesProcForResultGetName(cResultSet, row);
 }
 
-static inline NSNumber *_Nullable MBQUsesProcForResultGetRate(MBQUsesProcForResult *resultSet, int32_t row)
+static inline NSNumber *_Nullable CGCUsesProcForResultGetRate(CGCUsesProcForResult *resultSet, int32_t row)
 {
-  CGCUsesProcForResultResultSetRef cResultSet = CGCUsesProcForResultFromMBQUsesProcForResult(resultSet);
+  CGCUsesProcForResultResultSetRef cResultSet = CGCUsesProcForResultFromCGCUsesProcForResult(resultSet);
   return CGCUsesProcForResultGetRateIsNull(cResultSet, row) ? nil : @(CGCUsesProcForResultGetRateValue(cResultSet, row));
 }
 
-static inline NSNumber *_Nullable MBQUsesProcForResultGetType(MBQUsesProcForResult *resultSet, int32_t row)
+static inline NSNumber *_Nullable CGCUsesProcForResultGetType(CGCUsesProcForResult *resultSet, int32_t row)
 {
-  CGCUsesProcForResultResultSetRef cResultSet = CGCUsesProcForResultFromMBQUsesProcForResult(resultSet);
+  CGCUsesProcForResultResultSetRef cResultSet = CGCUsesProcForResultFromCGCUsesProcForResult(resultSet);
   return CGCUsesProcForResultGetTypeIsNull(cResultSet, row) ? nil : @(CGCUsesProcForResultGetTypeValue(cResultSet, row));
 }
 
-static inline NSNumber *_Nullable MBQUsesProcForResultGetSize(MBQUsesProcForResult *resultSet, int32_t row)
+static inline NSNumber *_Nullable CGCUsesProcForResultGetSize(CGCUsesProcForResult *resultSet, int32_t row)
 {
-  CGCUsesProcForResultResultSetRef cResultSet = CGCUsesProcForResultFromMBQUsesProcForResult(resultSet);
+  CGCUsesProcForResultResultSetRef cResultSet = CGCUsesProcForResultFromCGCUsesProcForResult(resultSet);
   return CGCUsesProcForResultGetSizeIsNull(cResultSet, row) ? nil : @(CGCUsesProcForResultGetSizeValue(cResultSet, row));
 }
 
-static inline int32_t MBQUsesProcForResultResultCount(MBQUsesProcForResult *resultSet)
+static inline int32_t CGCUsesProcForResultResultCount(CGCUsesProcForResult *resultSet)
 {
-  return CGCUsesProcForResultResultCount(CGCUsesProcForResultFromMBQUsesProcForResult(resultSet));
+  return CGCUsesProcForResultResultCount(CGCUsesProcForResultFromCGCUsesProcForResult(resultSet));
 }
 
-static inline MBQUsesProcForResult *MBQUsesProcForResultCopy(MBQUsesProcForResult *resultSet, int32_t from, int32_t count)
+static inline CGCUsesProcForResult *CGCUsesProcForResultCopy(CGCUsesProcForResult *resultSet, int32_t from, int32_t count)
 {
   CGCUsesProcForResultResultSetRef copy;
-  CGCUsesProcForResultCopy(CGCUsesProcForResultFromMBQUsesProcForResult(resultSet), &copy, from, count);
-  return (__bridge_transfer MBQUsesProcForResult *)copy;
+  CGCUsesProcForResultCopy(CGCUsesProcForResultFromCGCUsesProcForResult(resultSet), &copy, from, count);
+  return (__bridge_transfer CGCUsesProcForResult *)copy;
 }
 
-static inline NSUInteger MBQUsesProcForResultRowHash(MBQUsesProcForResult *resultSet, int32_t row)
+static inline NSUInteger CGCUsesProcForResultRowHash(CGCUsesProcForResult *resultSet, int32_t row)
 {
-  return CGCUsesProcForResultRowHash(CGCUsesProcForResultFromMBQUsesProcForResult(resultSet), row);
+  return CGCUsesProcForResultRowHash(CGCUsesProcForResultFromCGCUsesProcForResult(resultSet), row);
 }
 
-static inline BOOL MBQUsesProcForResultRowEqual(MBQUsesProcForResult *resultSet1, int32_t row1, MBQUsesProcForResult *resultSet2, int32_t row2)
+static inline BOOL CGCUsesProcForResultRowEqual(CGCUsesProcForResult *resultSet1, int32_t row1, CGCUsesProcForResult *resultSet2, int32_t row2)
 {
-  return CGCUsesProcForResultRowEqual(CGCUsesProcForResultFromMBQUsesProcForResult(resultSet1), row1, CGCUsesProcForResultFromMBQUsesProcForResult(resultSet2), row2);
+  return CGCUsesProcForResultRowEqual(CGCUsesProcForResultFromCGCUsesProcForResult(resultSet1), row1, CGCUsesProcForResultFromCGCUsesProcForResult(resultSet2), row2);
 }
 
-@class MBQBlobReturner;
+@class CGCBlobReturner;
 
-static inline MBQBlobReturner *MBQBlobReturnerFromCGCBlobReturner(CGCBlobReturnerResultSetRef resultSet)
+static inline CGCBlobReturner *CGCBlobReturnerFromCGCBlobReturner(CGCBlobReturnerResultSetRef resultSet)
 {
-  return (__bridge MBQBlobReturner *)resultSet;
+  return (__bridge CGCBlobReturner *)resultSet;
 }
 
-static inline CGCBlobReturnerResultSetRef CGCBlobReturnerFromMBQBlobReturner(MBQBlobReturner *resultSet)
+static inline CGCBlobReturnerResultSetRef CGCBlobReturnerFromCGCBlobReturner(CGCBlobReturner *resultSet)
 {
   return (__bridge CGCBlobReturnerResultSetRef)resultSet;
 }
 
-static inline int32_t MBQBlobReturnerGetBlobId(MBQBlobReturner *resultSet, int32_t row)
+static inline int32_t CGCBlobReturnerGetBlobId(CGCBlobReturner *resultSet, int32_t row)
 {
-  CGCBlobReturnerResultSetRef cResultSet = CGCBlobReturnerFromMBQBlobReturner(resultSet);
+  CGCBlobReturnerResultSetRef cResultSet = CGCBlobReturnerFromCGCBlobReturner(resultSet);
   return CGCBlobReturnerGetBlobId(cResultSet, row);
 }
 
-static inline NSData *MBQBlobReturnerGetBNotnull(MBQBlobReturner *resultSet, int32_t row)
+static inline NSData *CGCBlobReturnerGetBNotnull(CGCBlobReturner *resultSet, int32_t row)
 {
-  CGCBlobReturnerResultSetRef cResultSet = CGCBlobReturnerFromMBQBlobReturner(resultSet);
+  CGCBlobReturnerResultSetRef cResultSet = CGCBlobReturnerFromCGCBlobReturner(resultSet);
   return (__bridge NSData *)CGCBlobReturnerGetBNotnull(cResultSet, row);
 }
 
-static inline NSData *_Nullable MBQBlobReturnerGetBNullable(MBQBlobReturner *resultSet, int32_t row)
+static inline NSData *_Nullable CGCBlobReturnerGetBNullable(CGCBlobReturner *resultSet, int32_t row)
 {
-  CGCBlobReturnerResultSetRef cResultSet = CGCBlobReturnerFromMBQBlobReturner(resultSet);
+  CGCBlobReturnerResultSetRef cResultSet = CGCBlobReturnerFromCGCBlobReturner(resultSet);
   return (__bridge NSData *)CGCBlobReturnerGetBNullable(cResultSet, row);
 }
 
-static inline int32_t MBQBlobReturnerResultCount(MBQBlobReturner *resultSet)
+static inline int32_t CGCBlobReturnerResultCount(CGCBlobReturner *resultSet)
 {
-  return CGCBlobReturnerResultCount(CGCBlobReturnerFromMBQBlobReturner(resultSet));
+  return CGCBlobReturnerResultCount(CGCBlobReturnerFromCGCBlobReturner(resultSet));
 }
 
-static inline MBQBlobReturner *MBQBlobReturnerCopy(MBQBlobReturner *resultSet, int32_t from, int32_t count)
+static inline CGCBlobReturner *CGCBlobReturnerCopy(CGCBlobReturner *resultSet, int32_t from, int32_t count)
 {
   CGCBlobReturnerResultSetRef copy;
-  CGCBlobReturnerCopy(CGCBlobReturnerFromMBQBlobReturner(resultSet), &copy, from, count);
-  return (__bridge_transfer MBQBlobReturner *)copy;
+  CGCBlobReturnerCopy(CGCBlobReturnerFromCGCBlobReturner(resultSet), &copy, from, count);
+  return (__bridge_transfer CGCBlobReturner *)copy;
 }
 
-static inline NSUInteger MBQBlobReturnerRowHash(MBQBlobReturner *resultSet, int32_t row)
+static inline NSUInteger CGCBlobReturnerRowHash(CGCBlobReturner *resultSet, int32_t row)
 {
-  return CGCBlobReturnerRowHash(CGCBlobReturnerFromMBQBlobReturner(resultSet), row);
+  return CGCBlobReturnerRowHash(CGCBlobReturnerFromCGCBlobReturner(resultSet), row);
 }
 
-static inline BOOL MBQBlobReturnerRowEqual(MBQBlobReturner *resultSet1, int32_t row1, MBQBlobReturner *resultSet2, int32_t row2)
+static inline BOOL CGCBlobReturnerRowEqual(CGCBlobReturner *resultSet1, int32_t row1, CGCBlobReturner *resultSet2, int32_t row2)
 {
-  return CGCBlobReturnerRowEqual(CGCBlobReturnerFromMBQBlobReturner(resultSet1), row1, CGCBlobReturnerFromMBQBlobReturner(resultSet2), row2);
+  return CGCBlobReturnerRowEqual(CGCBlobReturnerFromCGCBlobReturner(resultSet1), row1, CGCBlobReturnerFromCGCBlobReturner(resultSet2), row2);
 }
 
-@class MBQOutCursorProc;
+@class CGCOutCursorProc;
 
-static inline MBQOutCursorProc *MBQOutCursorProcFromCGCOutCursorProc(CGCOutCursorProcResultSetRef resultSet)
+static inline CGCOutCursorProc *CGCOutCursorProcFromCGCOutCursorProc(CGCOutCursorProcResultSetRef resultSet)
 {
-  return (__bridge MBQOutCursorProc *)resultSet;
+  return (__bridge CGCOutCursorProc *)resultSet;
 }
 
-static inline CGCOutCursorProcResultSetRef CGCOutCursorProcFromMBQOutCursorProc(MBQOutCursorProc *resultSet)
+static inline CGCOutCursorProcResultSetRef CGCOutCursorProcFromCGCOutCursorProc(CGCOutCursorProc *resultSet)
 {
   return (__bridge CGCOutCursorProcResultSetRef)resultSet;
 }
 
-static inline int32_t MBQOutCursorProcGetId(MBQOutCursorProc *resultSet)
+static inline int32_t CGCOutCursorProcGetId(CGCOutCursorProc *resultSet)
 {
-  CGCOutCursorProcResultSetRef cResultSet = CGCOutCursorProcFromMBQOutCursorProc(resultSet);
+  CGCOutCursorProcResultSetRef cResultSet = CGCOutCursorProcFromCGCOutCursorProc(resultSet);
   return CGCOutCursorProcGetId(cResultSet);
 }
 
-static inline NSString *_Nullable MBQOutCursorProcGetName(MBQOutCursorProc *resultSet)
+static inline NSString *_Nullable CGCOutCursorProcGetName(CGCOutCursorProc *resultSet)
 {
-  CGCOutCursorProcResultSetRef cResultSet = CGCOutCursorProcFromMBQOutCursorProc(resultSet);
+  CGCOutCursorProcResultSetRef cResultSet = CGCOutCursorProcFromCGCOutCursorProc(resultSet);
   return (__bridge NSString *)CGCOutCursorProcGetName(cResultSet);
 }
 
-static inline NSNumber *_Nullable MBQOutCursorProcGetRate(MBQOutCursorProc *resultSet)
+static inline NSNumber *_Nullable CGCOutCursorProcGetRate(CGCOutCursorProc *resultSet)
 {
-  CGCOutCursorProcResultSetRef cResultSet = CGCOutCursorProcFromMBQOutCursorProc(resultSet);
+  CGCOutCursorProcResultSetRef cResultSet = CGCOutCursorProcFromCGCOutCursorProc(resultSet);
   return CGCOutCursorProcGetRateIsNull(cResultSet) ? nil : @(CGCOutCursorProcGetRateValue(cResultSet));
 }
 
-static inline NSNumber *_Nullable MBQOutCursorProcGetType(MBQOutCursorProc *resultSet)
+static inline NSNumber *_Nullable CGCOutCursorProcGetType(CGCOutCursorProc *resultSet)
 {
-  CGCOutCursorProcResultSetRef cResultSet = CGCOutCursorProcFromMBQOutCursorProc(resultSet);
+  CGCOutCursorProcResultSetRef cResultSet = CGCOutCursorProcFromCGCOutCursorProc(resultSet);
   return CGCOutCursorProcGetTypeIsNull(cResultSet) ? nil : @(CGCOutCursorProcGetTypeValue(cResultSet));
 }
 
-static inline NSNumber *_Nullable MBQOutCursorProcGetSize(MBQOutCursorProc *resultSet)
+static inline NSNumber *_Nullable CGCOutCursorProcGetSize(CGCOutCursorProc *resultSet)
 {
-  CGCOutCursorProcResultSetRef cResultSet = CGCOutCursorProcFromMBQOutCursorProc(resultSet);
+  CGCOutCursorProcResultSetRef cResultSet = CGCOutCursorProcFromCGCOutCursorProc(resultSet);
   return CGCOutCursorProcGetSizeIsNull(cResultSet) ? nil : @(CGCOutCursorProcGetSizeValue(cResultSet));
 }
 
-static inline NSString *MBQOutCursorProcGetExtra1(MBQOutCursorProc *resultSet)
+static inline NSString *CGCOutCursorProcGetExtra1(CGCOutCursorProc *resultSet)
 {
-  CGCOutCursorProcResultSetRef cResultSet = CGCOutCursorProcFromMBQOutCursorProc(resultSet);
+  CGCOutCursorProcResultSetRef cResultSet = CGCOutCursorProcFromCGCOutCursorProc(resultSet);
   return (__bridge NSString *)CGCOutCursorProcGetExtra1(cResultSet);
 }
 
-static inline NSString *MBQOutCursorProcGetExtra2(MBQOutCursorProc *resultSet)
+static inline NSString *CGCOutCursorProcGetExtra2(CGCOutCursorProc *resultSet)
 {
-  CGCOutCursorProcResultSetRef cResultSet = CGCOutCursorProcFromMBQOutCursorProc(resultSet);
+  CGCOutCursorProcResultSetRef cResultSet = CGCOutCursorProcFromCGCOutCursorProc(resultSet);
   return (__bridge NSString *)CGCOutCursorProcGetExtra2(cResultSet);
 }
 
-static inline int32_t MBQOutCursorProcResultCount(MBQOutCursorProc *resultSet)
+static inline int32_t CGCOutCursorProcResultCount(CGCOutCursorProc *resultSet)
 {
-  return CGCOutCursorProcResultCount(CGCOutCursorProcFromMBQOutCursorProc(resultSet));
+  return CGCOutCursorProcResultCount(CGCOutCursorProcFromCGCOutCursorProc(resultSet));
 }
 
-static inline MBQOutCursorProc *MBQOutCursorProcCopy(MBQOutCursorProc *resultSet)
+static inline CGCOutCursorProc *CGCOutCursorProcCopy(CGCOutCursorProc *resultSet)
 {
   CGCOutCursorProcResultSetRef copy;
-  CGCOutCursorProcCopy(CGCOutCursorProcFromMBQOutCursorProc(resultSet), &copy);
-  return (__bridge_transfer MBQOutCursorProc *)copy;
+  CGCOutCursorProcCopy(CGCOutCursorProcFromCGCOutCursorProc(resultSet), &copy);
+  return (__bridge_transfer CGCOutCursorProc *)copy;
 }
 
-static inline NSUInteger MBQOutCursorProcHash(MBQOutCursorProc *resultSet)
+static inline NSUInteger CGCOutCursorProcHash(CGCOutCursorProc *resultSet)
 {
-  return CGCOutCursorProcHash(CGCOutCursorProcFromMBQOutCursorProc(resultSet));
+  return CGCOutCursorProcHash(CGCOutCursorProcFromCGCOutCursorProc(resultSet));
 }
 
-static inline BOOL MBQOutCursorProcEqual(MBQOutCursorProc *resultSet1, MBQOutCursorProc *resultSet2)
+static inline BOOL CGCOutCursorProcEqual(CGCOutCursorProc *resultSet1, CGCOutCursorProc *resultSet2)
 {
-  return CGCOutCursorProcEqual(CGCOutCursorProcFromMBQOutCursorProc(resultSet1), CGCOutCursorProcFromMBQOutCursorProc(resultSet2));
+  return CGCOutCursorProcEqual(CGCOutCursorProcFromCGCOutCursorProc(resultSet1), CGCOutCursorProcFromCGCOutCursorProc(resultSet2));
 }
 
-@class MBQThreadThemeInfoList;
+@class CGCThreadThemeInfoList;
 
-static inline MBQThreadThemeInfoList *MBQThreadThemeInfoListFromCGCThreadThemeInfoList(CGCThreadThemeInfoListResultSetRef resultSet)
+static inline CGCThreadThemeInfoList *CGCThreadThemeInfoListFromCGCThreadThemeInfoList(CGCThreadThemeInfoListResultSetRef resultSet)
 {
-  return (__bridge MBQThreadThemeInfoList *)resultSet;
+  return (__bridge CGCThreadThemeInfoList *)resultSet;
 }
 
-static inline CGCThreadThemeInfoListResultSetRef CGCThreadThemeInfoListFromMBQThreadThemeInfoList(MBQThreadThemeInfoList *resultSet)
+static inline CGCThreadThemeInfoListResultSetRef CGCThreadThemeInfoListFromCGCThreadThemeInfoList(CGCThreadThemeInfoList *resultSet)
 {
   return (__bridge CGCThreadThemeInfoListResultSetRef)resultSet;
 }
 
-static inline int64_t MBQThreadThemeInfoListGetThreadKey(MBQThreadThemeInfoList *resultSet, int32_t row)
+static inline int64_t CGCThreadThemeInfoListGetThreadKey(CGCThreadThemeInfoList *resultSet, int32_t row)
 {
-  CGCThreadThemeInfoListResultSetRef cResultSet = CGCThreadThemeInfoListFromMBQThreadThemeInfoList(resultSet);
+  CGCThreadThemeInfoListResultSetRef cResultSet = CGCThreadThemeInfoListFromCGCThreadThemeInfoList(resultSet);
   return CGCThreadThemeInfoListGetThreadKey(cResultSet, row);
 }
 
-static inline int32_t MBQThreadThemeInfoListResultCount(MBQThreadThemeInfoList *resultSet)
+static inline int32_t CGCThreadThemeInfoListResultCount(CGCThreadThemeInfoList *resultSet)
 {
-  return CGCThreadThemeInfoListResultCount(CGCThreadThemeInfoListFromMBQThreadThemeInfoList(resultSet));
+  return CGCThreadThemeInfoListResultCount(CGCThreadThemeInfoListFromCGCThreadThemeInfoList(resultSet));
 }
 
-static inline MBQThreadThemeInfoList *MBQThreadThemeInfoListCopy(MBQThreadThemeInfoList *resultSet, int32_t from, int32_t count)
+static inline CGCThreadThemeInfoList *CGCThreadThemeInfoListCopy(CGCThreadThemeInfoList *resultSet, int32_t from, int32_t count)
 {
   CGCThreadThemeInfoListResultSetRef copy;
-  CGCThreadThemeInfoListCopy(CGCThreadThemeInfoListFromMBQThreadThemeInfoList(resultSet), &copy, from, count);
-  return (__bridge_transfer MBQThreadThemeInfoList *)copy;
+  CGCThreadThemeInfoListCopy(CGCThreadThemeInfoListFromCGCThreadThemeInfoList(resultSet), &copy, from, count);
+  return (__bridge_transfer CGCThreadThemeInfoList *)copy;
 }
 
-static inline NSUInteger MBQThreadThemeInfoListRowHash(MBQThreadThemeInfoList *resultSet, int32_t row)
+static inline NSUInteger CGCThreadThemeInfoListRowHash(CGCThreadThemeInfoList *resultSet, int32_t row)
 {
-  return CGCThreadThemeInfoListRowHash(CGCThreadThemeInfoListFromMBQThreadThemeInfoList(resultSet), row);
+  return CGCThreadThemeInfoListRowHash(CGCThreadThemeInfoListFromCGCThreadThemeInfoList(resultSet), row);
 }
 
-static inline BOOL MBQThreadThemeInfoListRowEqual(MBQThreadThemeInfoList *resultSet1, int32_t row1, MBQThreadThemeInfoList *resultSet2, int32_t row2)
+static inline BOOL CGCThreadThemeInfoListRowEqual(CGCThreadThemeInfoList *resultSet1, int32_t row1, CGCThreadThemeInfoList *resultSet2, int32_t row2)
 {
-  return CGCThreadThemeInfoListRowEqual(CGCThreadThemeInfoListFromMBQThreadThemeInfoList(resultSet1), row1, CGCThreadThemeInfoListFromMBQThreadThemeInfoList(resultSet2), row2);
+  return CGCThreadThemeInfoListRowEqual(CGCThreadThemeInfoListFromCGCThreadThemeInfoList(resultSet1), row1, CGCThreadThemeInfoListFromCGCThreadThemeInfoList(resultSet2), row2);
 }
 
-@class MBQOutNoDb;
+@class CGCOutNoDb;
 
-static inline MBQOutNoDb *MBQOutNoDbFromCGCOutNoDb(CGCOutNoDbResultSetRef resultSet)
+static inline CGCOutNoDb *CGCOutNoDbFromCGCOutNoDb(CGCOutNoDbResultSetRef resultSet)
 {
-  return (__bridge MBQOutNoDb *)resultSet;
+  return (__bridge CGCOutNoDb *)resultSet;
 }
 
-static inline CGCOutNoDbResultSetRef CGCOutNoDbFromMBQOutNoDb(MBQOutNoDb *resultSet)
+static inline CGCOutNoDbResultSetRef CGCOutNoDbFromCGCOutNoDb(CGCOutNoDb *resultSet)
 {
   return (__bridge CGCOutNoDbResultSetRef)resultSet;
 }
 
-static inline int32_t MBQOutNoDbGetA(MBQOutNoDb *resultSet)
+static inline int32_t CGCOutNoDbGetA(CGCOutNoDb *resultSet)
 {
-  CGCOutNoDbResultSetRef cResultSet = CGCOutNoDbFromMBQOutNoDb(resultSet);
+  CGCOutNoDbResultSetRef cResultSet = CGCOutNoDbFromCGCOutNoDb(resultSet);
   return CGCOutNoDbGetA(cResultSet);
 }
 
-static inline double MBQOutNoDbGetB(MBQOutNoDb *resultSet)
+static inline double CGCOutNoDbGetB(CGCOutNoDb *resultSet)
 {
-  CGCOutNoDbResultSetRef cResultSet = CGCOutNoDbFromMBQOutNoDb(resultSet);
+  CGCOutNoDbResultSetRef cResultSet = CGCOutNoDbFromCGCOutNoDb(resultSet);
   return CGCOutNoDbGetB(cResultSet);
 }
 
-static inline int32_t MBQOutNoDbResultCount(MBQOutNoDb *resultSet)
+static inline int32_t CGCOutNoDbResultCount(CGCOutNoDb *resultSet)
 {
-  return CGCOutNoDbResultCount(CGCOutNoDbFromMBQOutNoDb(resultSet));
+  return CGCOutNoDbResultCount(CGCOutNoDbFromCGCOutNoDb(resultSet));
 }
 
-static inline MBQOutNoDb *MBQOutNoDbCopy(MBQOutNoDb *resultSet)
+static inline CGCOutNoDb *CGCOutNoDbCopy(CGCOutNoDb *resultSet)
 {
   CGCOutNoDbResultSetRef copy;
-  CGCOutNoDbCopy(CGCOutNoDbFromMBQOutNoDb(resultSet), &copy);
-  return (__bridge_transfer MBQOutNoDb *)copy;
+  CGCOutNoDbCopy(CGCOutNoDbFromCGCOutNoDb(resultSet), &copy);
+  return (__bridge_transfer CGCOutNoDb *)copy;
 }
 
-static inline NSUInteger MBQOutNoDbHash(MBQOutNoDb *resultSet)
+static inline NSUInteger CGCOutNoDbHash(CGCOutNoDb *resultSet)
 {
-  return CGCOutNoDbHash(CGCOutNoDbFromMBQOutNoDb(resultSet));
+  return CGCOutNoDbHash(CGCOutNoDbFromCGCOutNoDb(resultSet));
 }
 
-static inline BOOL MBQOutNoDbEqual(MBQOutNoDb *resultSet1, MBQOutNoDb *resultSet2)
+static inline BOOL CGCOutNoDbEqual(CGCOutNoDb *resultSet1, CGCOutNoDb *resultSet2)
 {
-  return CGCOutNoDbEqual(CGCOutNoDbFromMBQOutNoDb(resultSet1), CGCOutNoDbFromMBQOutNoDb(resultSet2));
+  return CGCOutNoDbEqual(CGCOutNoDbFromCGCOutNoDb(resultSet1), CGCOutNoDbFromCGCOutNoDb(resultSet2));
 }
 
-@class MBQDeclareCursorLikeCursor;
+@class CGCDeclareCursorLikeCursor;
 
-static inline MBQDeclareCursorLikeCursor *MBQDeclareCursorLikeCursorFromCGCDeclareCursorLikeCursor(CGCDeclareCursorLikeCursorResultSetRef resultSet)
+static inline CGCDeclareCursorLikeCursor *CGCDeclareCursorLikeCursorFromCGCDeclareCursorLikeCursor(CGCDeclareCursorLikeCursorResultSetRef resultSet)
 {
-  return (__bridge MBQDeclareCursorLikeCursor *)resultSet;
+  return (__bridge CGCDeclareCursorLikeCursor *)resultSet;
 }
 
-static inline CGCDeclareCursorLikeCursorResultSetRef CGCDeclareCursorLikeCursorFromMBQDeclareCursorLikeCursor(MBQDeclareCursorLikeCursor *resultSet)
+static inline CGCDeclareCursorLikeCursorResultSetRef CGCDeclareCursorLikeCursorFromCGCDeclareCursorLikeCursor(CGCDeclareCursorLikeCursor *resultSet)
 {
   return (__bridge CGCDeclareCursorLikeCursorResultSetRef)resultSet;
 }
 
-static inline int32_t MBQDeclareCursorLikeCursorGetA(MBQDeclareCursorLikeCursor *resultSet)
+static inline int32_t CGCDeclareCursorLikeCursorGetA(CGCDeclareCursorLikeCursor *resultSet)
 {
-  CGCDeclareCursorLikeCursorResultSetRef cResultSet = CGCDeclareCursorLikeCursorFromMBQDeclareCursorLikeCursor(resultSet);
+  CGCDeclareCursorLikeCursorResultSetRef cResultSet = CGCDeclareCursorLikeCursorFromCGCDeclareCursorLikeCursor(resultSet);
   return CGCDeclareCursorLikeCursorGetA(cResultSet);
 }
 
-static inline double MBQDeclareCursorLikeCursorGetB(MBQDeclareCursorLikeCursor *resultSet)
+static inline double CGCDeclareCursorLikeCursorGetB(CGCDeclareCursorLikeCursor *resultSet)
 {
-  CGCDeclareCursorLikeCursorResultSetRef cResultSet = CGCDeclareCursorLikeCursorFromMBQDeclareCursorLikeCursor(resultSet);
+  CGCDeclareCursorLikeCursorResultSetRef cResultSet = CGCDeclareCursorLikeCursorFromCGCDeclareCursorLikeCursor(resultSet);
   return CGCDeclareCursorLikeCursorGetB(cResultSet);
 }
 
-static inline int32_t MBQDeclareCursorLikeCursorResultCount(MBQDeclareCursorLikeCursor *resultSet)
+static inline int32_t CGCDeclareCursorLikeCursorResultCount(CGCDeclareCursorLikeCursor *resultSet)
 {
-  return CGCDeclareCursorLikeCursorResultCount(CGCDeclareCursorLikeCursorFromMBQDeclareCursorLikeCursor(resultSet));
+  return CGCDeclareCursorLikeCursorResultCount(CGCDeclareCursorLikeCursorFromCGCDeclareCursorLikeCursor(resultSet));
 }
 
-static inline MBQDeclareCursorLikeCursor *MBQDeclareCursorLikeCursorCopy(MBQDeclareCursorLikeCursor *resultSet)
+static inline CGCDeclareCursorLikeCursor *CGCDeclareCursorLikeCursorCopy(CGCDeclareCursorLikeCursor *resultSet)
 {
   CGCDeclareCursorLikeCursorResultSetRef copy;
-  CGCDeclareCursorLikeCursorCopy(CGCDeclareCursorLikeCursorFromMBQDeclareCursorLikeCursor(resultSet), &copy);
-  return (__bridge_transfer MBQDeclareCursorLikeCursor *)copy;
+  CGCDeclareCursorLikeCursorCopy(CGCDeclareCursorLikeCursorFromCGCDeclareCursorLikeCursor(resultSet), &copy);
+  return (__bridge_transfer CGCDeclareCursorLikeCursor *)copy;
 }
 
-static inline NSUInteger MBQDeclareCursorLikeCursorHash(MBQDeclareCursorLikeCursor *resultSet)
+static inline NSUInteger CGCDeclareCursorLikeCursorHash(CGCDeclareCursorLikeCursor *resultSet)
 {
-  return CGCDeclareCursorLikeCursorHash(CGCDeclareCursorLikeCursorFromMBQDeclareCursorLikeCursor(resultSet));
+  return CGCDeclareCursorLikeCursorHash(CGCDeclareCursorLikeCursorFromCGCDeclareCursorLikeCursor(resultSet));
 }
 
-static inline BOOL MBQDeclareCursorLikeCursorEqual(MBQDeclareCursorLikeCursor *resultSet1, MBQDeclareCursorLikeCursor *resultSet2)
+static inline BOOL CGCDeclareCursorLikeCursorEqual(CGCDeclareCursorLikeCursor *resultSet1, CGCDeclareCursorLikeCursor *resultSet2)
 {
-  return CGCDeclareCursorLikeCursorEqual(CGCDeclareCursorLikeCursorFromMBQDeclareCursorLikeCursor(resultSet1), CGCDeclareCursorLikeCursorFromMBQDeclareCursorLikeCursor(resultSet2));
+  return CGCDeclareCursorLikeCursorEqual(CGCDeclareCursorLikeCursorFromCGCDeclareCursorLikeCursor(resultSet1), CGCDeclareCursorLikeCursorFromCGCDeclareCursorLikeCursor(resultSet2));
 }
 
-@class MBQDeclareCursorLikeProc;
+@class CGCDeclareCursorLikeProc;
 
-static inline MBQDeclareCursorLikeProc *MBQDeclareCursorLikeProcFromCGCDeclareCursorLikeProc(CGCDeclareCursorLikeProcResultSetRef resultSet)
+static inline CGCDeclareCursorLikeProc *CGCDeclareCursorLikeProcFromCGCDeclareCursorLikeProc(CGCDeclareCursorLikeProcResultSetRef resultSet)
 {
-  return (__bridge MBQDeclareCursorLikeProc *)resultSet;
+  return (__bridge CGCDeclareCursorLikeProc *)resultSet;
 }
 
-static inline CGCDeclareCursorLikeProcResultSetRef CGCDeclareCursorLikeProcFromMBQDeclareCursorLikeProc(MBQDeclareCursorLikeProc *resultSet)
+static inline CGCDeclareCursorLikeProcResultSetRef CGCDeclareCursorLikeProcFromCGCDeclareCursorLikeProc(CGCDeclareCursorLikeProc *resultSet)
 {
   return (__bridge CGCDeclareCursorLikeProcResultSetRef)resultSet;
 }
 
-static inline NSNumber *_Nullable MBQDeclareCursorLikeProcGetA(MBQDeclareCursorLikeProc *resultSet)
+static inline NSNumber *_Nullable CGCDeclareCursorLikeProcGetA(CGCDeclareCursorLikeProc *resultSet)
 {
-  CGCDeclareCursorLikeProcResultSetRef cResultSet = CGCDeclareCursorLikeProcFromMBQDeclareCursorLikeProc(resultSet);
+  CGCDeclareCursorLikeProcResultSetRef cResultSet = CGCDeclareCursorLikeProcFromCGCDeclareCursorLikeProc(resultSet);
   return CGCDeclareCursorLikeProcGetAIsNull(cResultSet) ? nil : @(CGCDeclareCursorLikeProcGetAValue(cResultSet));
 }
 
-static inline NSString *_Nullable MBQDeclareCursorLikeProcGetB(MBQDeclareCursorLikeProc *resultSet)
+static inline NSString *_Nullable CGCDeclareCursorLikeProcGetB(CGCDeclareCursorLikeProc *resultSet)
 {
-  CGCDeclareCursorLikeProcResultSetRef cResultSet = CGCDeclareCursorLikeProcFromMBQDeclareCursorLikeProc(resultSet);
+  CGCDeclareCursorLikeProcResultSetRef cResultSet = CGCDeclareCursorLikeProcFromCGCDeclareCursorLikeProc(resultSet);
   return (__bridge NSString *)CGCDeclareCursorLikeProcGetB(cResultSet);
 }
 
-static inline int32_t MBQDeclareCursorLikeProcResultCount(MBQDeclareCursorLikeProc *resultSet)
+static inline int32_t CGCDeclareCursorLikeProcResultCount(CGCDeclareCursorLikeProc *resultSet)
 {
-  return CGCDeclareCursorLikeProcResultCount(CGCDeclareCursorLikeProcFromMBQDeclareCursorLikeProc(resultSet));
+  return CGCDeclareCursorLikeProcResultCount(CGCDeclareCursorLikeProcFromCGCDeclareCursorLikeProc(resultSet));
 }
 
-static inline MBQDeclareCursorLikeProc *MBQDeclareCursorLikeProcCopy(MBQDeclareCursorLikeProc *resultSet)
+static inline CGCDeclareCursorLikeProc *CGCDeclareCursorLikeProcCopy(CGCDeclareCursorLikeProc *resultSet)
 {
   CGCDeclareCursorLikeProcResultSetRef copy;
-  CGCDeclareCursorLikeProcCopy(CGCDeclareCursorLikeProcFromMBQDeclareCursorLikeProc(resultSet), &copy);
-  return (__bridge_transfer MBQDeclareCursorLikeProc *)copy;
+  CGCDeclareCursorLikeProcCopy(CGCDeclareCursorLikeProcFromCGCDeclareCursorLikeProc(resultSet), &copy);
+  return (__bridge_transfer CGCDeclareCursorLikeProc *)copy;
 }
 
-static inline NSUInteger MBQDeclareCursorLikeProcHash(MBQDeclareCursorLikeProc *resultSet)
+static inline NSUInteger CGCDeclareCursorLikeProcHash(CGCDeclareCursorLikeProc *resultSet)
 {
-  return CGCDeclareCursorLikeProcHash(CGCDeclareCursorLikeProcFromMBQDeclareCursorLikeProc(resultSet));
+  return CGCDeclareCursorLikeProcHash(CGCDeclareCursorLikeProcFromCGCDeclareCursorLikeProc(resultSet));
 }
 
-static inline BOOL MBQDeclareCursorLikeProcEqual(MBQDeclareCursorLikeProc *resultSet1, MBQDeclareCursorLikeProc *resultSet2)
+static inline BOOL CGCDeclareCursorLikeProcEqual(CGCDeclareCursorLikeProc *resultSet1, CGCDeclareCursorLikeProc *resultSet2)
 {
-  return CGCDeclareCursorLikeProcEqual(CGCDeclareCursorLikeProcFromMBQDeclareCursorLikeProc(resultSet1), CGCDeclareCursorLikeProcFromMBQDeclareCursorLikeProc(resultSet2));
+  return CGCDeclareCursorLikeProcEqual(CGCDeclareCursorLikeProcFromCGCDeclareCursorLikeProc(resultSet1), CGCDeclareCursorLikeProcFromCGCDeclareCursorLikeProc(resultSet2));
 }
 
-@class MBQDeclareCursorLikeTable;
+@class CGCDeclareCursorLikeTable;
 
-static inline MBQDeclareCursorLikeTable *MBQDeclareCursorLikeTableFromCGCDeclareCursorLikeTable(CGCDeclareCursorLikeTableResultSetRef resultSet)
+static inline CGCDeclareCursorLikeTable *CGCDeclareCursorLikeTableFromCGCDeclareCursorLikeTable(CGCDeclareCursorLikeTableResultSetRef resultSet)
 {
-  return (__bridge MBQDeclareCursorLikeTable *)resultSet;
+  return (__bridge CGCDeclareCursorLikeTable *)resultSet;
 }
 
-static inline CGCDeclareCursorLikeTableResultSetRef CGCDeclareCursorLikeTableFromMBQDeclareCursorLikeTable(MBQDeclareCursorLikeTable *resultSet)
+static inline CGCDeclareCursorLikeTableResultSetRef CGCDeclareCursorLikeTableFromCGCDeclareCursorLikeTable(CGCDeclareCursorLikeTable *resultSet)
 {
   return (__bridge CGCDeclareCursorLikeTableResultSetRef)resultSet;
 }
 
-static inline int32_t MBQDeclareCursorLikeTableGetId(MBQDeclareCursorLikeTable *resultSet)
+static inline int32_t CGCDeclareCursorLikeTableGetId(CGCDeclareCursorLikeTable *resultSet)
 {
-  CGCDeclareCursorLikeTableResultSetRef cResultSet = CGCDeclareCursorLikeTableFromMBQDeclareCursorLikeTable(resultSet);
+  CGCDeclareCursorLikeTableResultSetRef cResultSet = CGCDeclareCursorLikeTableFromCGCDeclareCursorLikeTable(resultSet);
   return CGCDeclareCursorLikeTableGetId(cResultSet);
 }
 
-static inline NSString *_Nullable MBQDeclareCursorLikeTableGetName(MBQDeclareCursorLikeTable *resultSet)
+static inline NSString *_Nullable CGCDeclareCursorLikeTableGetName(CGCDeclareCursorLikeTable *resultSet)
 {
-  CGCDeclareCursorLikeTableResultSetRef cResultSet = CGCDeclareCursorLikeTableFromMBQDeclareCursorLikeTable(resultSet);
+  CGCDeclareCursorLikeTableResultSetRef cResultSet = CGCDeclareCursorLikeTableFromCGCDeclareCursorLikeTable(resultSet);
   return (__bridge NSString *)CGCDeclareCursorLikeTableGetName(cResultSet);
 }
 
-static inline NSNumber *_Nullable MBQDeclareCursorLikeTableGetRate(MBQDeclareCursorLikeTable *resultSet)
+static inline NSNumber *_Nullable CGCDeclareCursorLikeTableGetRate(CGCDeclareCursorLikeTable *resultSet)
 {
-  CGCDeclareCursorLikeTableResultSetRef cResultSet = CGCDeclareCursorLikeTableFromMBQDeclareCursorLikeTable(resultSet);
+  CGCDeclareCursorLikeTableResultSetRef cResultSet = CGCDeclareCursorLikeTableFromCGCDeclareCursorLikeTable(resultSet);
   return CGCDeclareCursorLikeTableGetRateIsNull(cResultSet) ? nil : @(CGCDeclareCursorLikeTableGetRateValue(cResultSet));
 }
 
-static inline NSNumber *_Nullable MBQDeclareCursorLikeTableGetType(MBQDeclareCursorLikeTable *resultSet)
+static inline NSNumber *_Nullable CGCDeclareCursorLikeTableGetType(CGCDeclareCursorLikeTable *resultSet)
 {
-  CGCDeclareCursorLikeTableResultSetRef cResultSet = CGCDeclareCursorLikeTableFromMBQDeclareCursorLikeTable(resultSet);
+  CGCDeclareCursorLikeTableResultSetRef cResultSet = CGCDeclareCursorLikeTableFromCGCDeclareCursorLikeTable(resultSet);
   return CGCDeclareCursorLikeTableGetTypeIsNull(cResultSet) ? nil : @(CGCDeclareCursorLikeTableGetTypeValue(cResultSet));
 }
 
-static inline NSNumber *_Nullable MBQDeclareCursorLikeTableGetSize(MBQDeclareCursorLikeTable *resultSet)
+static inline NSNumber *_Nullable CGCDeclareCursorLikeTableGetSize(CGCDeclareCursorLikeTable *resultSet)
 {
-  CGCDeclareCursorLikeTableResultSetRef cResultSet = CGCDeclareCursorLikeTableFromMBQDeclareCursorLikeTable(resultSet);
+  CGCDeclareCursorLikeTableResultSetRef cResultSet = CGCDeclareCursorLikeTableFromCGCDeclareCursorLikeTable(resultSet);
   return CGCDeclareCursorLikeTableGetSizeIsNull(cResultSet) ? nil : @(CGCDeclareCursorLikeTableGetSizeValue(cResultSet));
 }
 
-static inline int32_t MBQDeclareCursorLikeTableResultCount(MBQDeclareCursorLikeTable *resultSet)
+static inline int32_t CGCDeclareCursorLikeTableResultCount(CGCDeclareCursorLikeTable *resultSet)
 {
-  return CGCDeclareCursorLikeTableResultCount(CGCDeclareCursorLikeTableFromMBQDeclareCursorLikeTable(resultSet));
+  return CGCDeclareCursorLikeTableResultCount(CGCDeclareCursorLikeTableFromCGCDeclareCursorLikeTable(resultSet));
 }
 
-static inline MBQDeclareCursorLikeTable *MBQDeclareCursorLikeTableCopy(MBQDeclareCursorLikeTable *resultSet)
+static inline CGCDeclareCursorLikeTable *CGCDeclareCursorLikeTableCopy(CGCDeclareCursorLikeTable *resultSet)
 {
   CGCDeclareCursorLikeTableResultSetRef copy;
-  CGCDeclareCursorLikeTableCopy(CGCDeclareCursorLikeTableFromMBQDeclareCursorLikeTable(resultSet), &copy);
-  return (__bridge_transfer MBQDeclareCursorLikeTable *)copy;
+  CGCDeclareCursorLikeTableCopy(CGCDeclareCursorLikeTableFromCGCDeclareCursorLikeTable(resultSet), &copy);
+  return (__bridge_transfer CGCDeclareCursorLikeTable *)copy;
 }
 
-static inline NSUInteger MBQDeclareCursorLikeTableHash(MBQDeclareCursorLikeTable *resultSet)
+static inline NSUInteger CGCDeclareCursorLikeTableHash(CGCDeclareCursorLikeTable *resultSet)
 {
-  return CGCDeclareCursorLikeTableHash(CGCDeclareCursorLikeTableFromMBQDeclareCursorLikeTable(resultSet));
+  return CGCDeclareCursorLikeTableHash(CGCDeclareCursorLikeTableFromCGCDeclareCursorLikeTable(resultSet));
 }
 
-static inline BOOL MBQDeclareCursorLikeTableEqual(MBQDeclareCursorLikeTable *resultSet1, MBQDeclareCursorLikeTable *resultSet2)
+static inline BOOL CGCDeclareCursorLikeTableEqual(CGCDeclareCursorLikeTable *resultSet1, CGCDeclareCursorLikeTable *resultSet2)
 {
-  return CGCDeclareCursorLikeTableEqual(CGCDeclareCursorLikeTableFromMBQDeclareCursorLikeTable(resultSet1), CGCDeclareCursorLikeTableFromMBQDeclareCursorLikeTable(resultSet2));
+  return CGCDeclareCursorLikeTableEqual(CGCDeclareCursorLikeTableFromCGCDeclareCursorLikeTable(resultSet1), CGCDeclareCursorLikeTableFromCGCDeclareCursorLikeTable(resultSet2));
 }
 
-@class MBQDeclareCursorLikeView;
+@class CGCDeclareCursorLikeView;
 
-static inline MBQDeclareCursorLikeView *MBQDeclareCursorLikeViewFromCGCDeclareCursorLikeView(CGCDeclareCursorLikeViewResultSetRef resultSet)
+static inline CGCDeclareCursorLikeView *CGCDeclareCursorLikeViewFromCGCDeclareCursorLikeView(CGCDeclareCursorLikeViewResultSetRef resultSet)
 {
-  return (__bridge MBQDeclareCursorLikeView *)resultSet;
+  return (__bridge CGCDeclareCursorLikeView *)resultSet;
 }
 
-static inline CGCDeclareCursorLikeViewResultSetRef CGCDeclareCursorLikeViewFromMBQDeclareCursorLikeView(MBQDeclareCursorLikeView *resultSet)
+static inline CGCDeclareCursorLikeViewResultSetRef CGCDeclareCursorLikeViewFromCGCDeclareCursorLikeView(CGCDeclareCursorLikeView *resultSet)
 {
   return (__bridge CGCDeclareCursorLikeViewResultSetRef)resultSet;
 }
 
-static inline int32_t MBQDeclareCursorLikeViewGetF1(MBQDeclareCursorLikeView *resultSet)
+static inline int32_t CGCDeclareCursorLikeViewGetF1(CGCDeclareCursorLikeView *resultSet)
 {
-  CGCDeclareCursorLikeViewResultSetRef cResultSet = CGCDeclareCursorLikeViewFromMBQDeclareCursorLikeView(resultSet);
+  CGCDeclareCursorLikeViewResultSetRef cResultSet = CGCDeclareCursorLikeViewFromCGCDeclareCursorLikeView(resultSet);
   return CGCDeclareCursorLikeViewGetF1(cResultSet);
 }
 
-static inline int32_t MBQDeclareCursorLikeViewGetF2(MBQDeclareCursorLikeView *resultSet)
+static inline int32_t CGCDeclareCursorLikeViewGetF2(CGCDeclareCursorLikeView *resultSet)
 {
-  CGCDeclareCursorLikeViewResultSetRef cResultSet = CGCDeclareCursorLikeViewFromMBQDeclareCursorLikeView(resultSet);
+  CGCDeclareCursorLikeViewResultSetRef cResultSet = CGCDeclareCursorLikeViewFromCGCDeclareCursorLikeView(resultSet);
   return CGCDeclareCursorLikeViewGetF2(cResultSet);
 }
 
-static inline int32_t MBQDeclareCursorLikeViewGetF3(MBQDeclareCursorLikeView *resultSet)
+static inline int32_t CGCDeclareCursorLikeViewGetF3(CGCDeclareCursorLikeView *resultSet)
 {
-  CGCDeclareCursorLikeViewResultSetRef cResultSet = CGCDeclareCursorLikeViewFromMBQDeclareCursorLikeView(resultSet);
+  CGCDeclareCursorLikeViewResultSetRef cResultSet = CGCDeclareCursorLikeViewFromCGCDeclareCursorLikeView(resultSet);
   return CGCDeclareCursorLikeViewGetF3(cResultSet);
 }
 
-static inline int32_t MBQDeclareCursorLikeViewResultCount(MBQDeclareCursorLikeView *resultSet)
+static inline int32_t CGCDeclareCursorLikeViewResultCount(CGCDeclareCursorLikeView *resultSet)
 {
-  return CGCDeclareCursorLikeViewResultCount(CGCDeclareCursorLikeViewFromMBQDeclareCursorLikeView(resultSet));
+  return CGCDeclareCursorLikeViewResultCount(CGCDeclareCursorLikeViewFromCGCDeclareCursorLikeView(resultSet));
 }
 
-static inline MBQDeclareCursorLikeView *MBQDeclareCursorLikeViewCopy(MBQDeclareCursorLikeView *resultSet)
+static inline CGCDeclareCursorLikeView *CGCDeclareCursorLikeViewCopy(CGCDeclareCursorLikeView *resultSet)
 {
   CGCDeclareCursorLikeViewResultSetRef copy;
-  CGCDeclareCursorLikeViewCopy(CGCDeclareCursorLikeViewFromMBQDeclareCursorLikeView(resultSet), &copy);
-  return (__bridge_transfer MBQDeclareCursorLikeView *)copy;
+  CGCDeclareCursorLikeViewCopy(CGCDeclareCursorLikeViewFromCGCDeclareCursorLikeView(resultSet), &copy);
+  return (__bridge_transfer CGCDeclareCursorLikeView *)copy;
 }
 
-static inline NSUInteger MBQDeclareCursorLikeViewHash(MBQDeclareCursorLikeView *resultSet)
+static inline NSUInteger CGCDeclareCursorLikeViewHash(CGCDeclareCursorLikeView *resultSet)
 {
-  return CGCDeclareCursorLikeViewHash(CGCDeclareCursorLikeViewFromMBQDeclareCursorLikeView(resultSet));
+  return CGCDeclareCursorLikeViewHash(CGCDeclareCursorLikeViewFromCGCDeclareCursorLikeView(resultSet));
 }
 
-static inline BOOL MBQDeclareCursorLikeViewEqual(MBQDeclareCursorLikeView *resultSet1, MBQDeclareCursorLikeView *resultSet2)
+static inline BOOL CGCDeclareCursorLikeViewEqual(CGCDeclareCursorLikeView *resultSet1, CGCDeclareCursorLikeView *resultSet2)
 {
-  return CGCDeclareCursorLikeViewEqual(CGCDeclareCursorLikeViewFromMBQDeclareCursorLikeView(resultSet1), CGCDeclareCursorLikeViewFromMBQDeclareCursorLikeView(resultSet2));
+  return CGCDeclareCursorLikeViewEqual(CGCDeclareCursorLikeViewFromCGCDeclareCursorLikeView(resultSet1), CGCDeclareCursorLikeViewFromCGCDeclareCursorLikeView(resultSet2));
 }
 
-@class MBQFetchToCursorFromCursor;
+@class CGCFetchToCursorFromCursor;
 
-static inline MBQFetchToCursorFromCursor *MBQFetchToCursorFromCursorFromCGCFetchToCursorFromCursor(CGCFetchToCursorFromCursorResultSetRef resultSet)
+static inline CGCFetchToCursorFromCursor *CGCFetchToCursorFromCursorFromCGCFetchToCursorFromCursor(CGCFetchToCursorFromCursorResultSetRef resultSet)
 {
-  return (__bridge MBQFetchToCursorFromCursor *)resultSet;
+  return (__bridge CGCFetchToCursorFromCursor *)resultSet;
 }
 
-static inline CGCFetchToCursorFromCursorResultSetRef CGCFetchToCursorFromCursorFromMBQFetchToCursorFromCursor(MBQFetchToCursorFromCursor *resultSet)
+static inline CGCFetchToCursorFromCursorResultSetRef CGCFetchToCursorFromCursorFromCGCFetchToCursorFromCursor(CGCFetchToCursorFromCursor *resultSet)
 {
   return (__bridge CGCFetchToCursorFromCursorResultSetRef)resultSet;
 }
 
-static inline int32_t MBQFetchToCursorFromCursorGetA(MBQFetchToCursorFromCursor *resultSet)
+static inline int32_t CGCFetchToCursorFromCursorGetA(CGCFetchToCursorFromCursor *resultSet)
 {
-  CGCFetchToCursorFromCursorResultSetRef cResultSet = CGCFetchToCursorFromCursorFromMBQFetchToCursorFromCursor(resultSet);
+  CGCFetchToCursorFromCursorResultSetRef cResultSet = CGCFetchToCursorFromCursorFromCGCFetchToCursorFromCursor(resultSet);
   return CGCFetchToCursorFromCursorGetA(cResultSet);
 }
 
-static inline NSString *MBQFetchToCursorFromCursorGetB(MBQFetchToCursorFromCursor *resultSet)
+static inline NSString *CGCFetchToCursorFromCursorGetB(CGCFetchToCursorFromCursor *resultSet)
 {
-  CGCFetchToCursorFromCursorResultSetRef cResultSet = CGCFetchToCursorFromCursorFromMBQFetchToCursorFromCursor(resultSet);
+  CGCFetchToCursorFromCursorResultSetRef cResultSet = CGCFetchToCursorFromCursorFromCGCFetchToCursorFromCursor(resultSet);
   return (__bridge NSString *)CGCFetchToCursorFromCursorGetB(cResultSet);
 }
 
-static inline int32_t MBQFetchToCursorFromCursorResultCount(MBQFetchToCursorFromCursor *resultSet)
+static inline int32_t CGCFetchToCursorFromCursorResultCount(CGCFetchToCursorFromCursor *resultSet)
 {
-  return CGCFetchToCursorFromCursorResultCount(CGCFetchToCursorFromCursorFromMBQFetchToCursorFromCursor(resultSet));
+  return CGCFetchToCursorFromCursorResultCount(CGCFetchToCursorFromCursorFromCGCFetchToCursorFromCursor(resultSet));
 }
 
-static inline MBQFetchToCursorFromCursor *MBQFetchToCursorFromCursorCopy(MBQFetchToCursorFromCursor *resultSet)
+static inline CGCFetchToCursorFromCursor *CGCFetchToCursorFromCursorCopy(CGCFetchToCursorFromCursor *resultSet)
 {
   CGCFetchToCursorFromCursorResultSetRef copy;
-  CGCFetchToCursorFromCursorCopy(CGCFetchToCursorFromCursorFromMBQFetchToCursorFromCursor(resultSet), &copy);
-  return (__bridge_transfer MBQFetchToCursorFromCursor *)copy;
+  CGCFetchToCursorFromCursorCopy(CGCFetchToCursorFromCursorFromCGCFetchToCursorFromCursor(resultSet), &copy);
+  return (__bridge_transfer CGCFetchToCursorFromCursor *)copy;
 }
 
-static inline NSUInteger MBQFetchToCursorFromCursorHash(MBQFetchToCursorFromCursor *resultSet)
+static inline NSUInteger CGCFetchToCursorFromCursorHash(CGCFetchToCursorFromCursor *resultSet)
 {
-  return CGCFetchToCursorFromCursorHash(CGCFetchToCursorFromCursorFromMBQFetchToCursorFromCursor(resultSet));
+  return CGCFetchToCursorFromCursorHash(CGCFetchToCursorFromCursorFromCGCFetchToCursorFromCursor(resultSet));
 }
 
-static inline BOOL MBQFetchToCursorFromCursorEqual(MBQFetchToCursorFromCursor *resultSet1, MBQFetchToCursorFromCursor *resultSet2)
+static inline BOOL CGCFetchToCursorFromCursorEqual(CGCFetchToCursorFromCursor *resultSet1, CGCFetchToCursorFromCursor *resultSet2)
 {
-  return CGCFetchToCursorFromCursorEqual(CGCFetchToCursorFromCursorFromMBQFetchToCursorFromCursor(resultSet1), CGCFetchToCursorFromCursorFromMBQFetchToCursorFromCursor(resultSet2));
+  return CGCFetchToCursorFromCursorEqual(CGCFetchToCursorFromCursorFromCGCFetchToCursorFromCursor(resultSet1), CGCFetchToCursorFromCursorFromCGCFetchToCursorFromCursor(resultSet2));
 }
 
-@class MBQSimpleIdentity;
+@class CGCSimpleIdentity;
 
-static inline MBQSimpleIdentity *MBQSimpleIdentityFromCGCSimpleIdentity(CGCSimpleIdentityResultSetRef resultSet)
+static inline CGCSimpleIdentity *CGCSimpleIdentityFromCGCSimpleIdentity(CGCSimpleIdentityResultSetRef resultSet)
 {
-  return (__bridge MBQSimpleIdentity *)resultSet;
+  return (__bridge CGCSimpleIdentity *)resultSet;
 }
 
-static inline CGCSimpleIdentityResultSetRef CGCSimpleIdentityFromMBQSimpleIdentity(MBQSimpleIdentity *resultSet)
+static inline CGCSimpleIdentityResultSetRef CGCSimpleIdentityFromCGCSimpleIdentity(CGCSimpleIdentity *resultSet)
 {
   return (__bridge CGCSimpleIdentityResultSetRef)resultSet;
 }
 
-static inline int32_t MBQSimpleIdentityGetId(MBQSimpleIdentity *resultSet, int32_t row)
+static inline int32_t CGCSimpleIdentityGetId(CGCSimpleIdentity *resultSet, int32_t row)
 {
-  CGCSimpleIdentityResultSetRef cResultSet = CGCSimpleIdentityFromMBQSimpleIdentity(resultSet);
+  CGCSimpleIdentityResultSetRef cResultSet = CGCSimpleIdentityFromCGCSimpleIdentity(resultSet);
   return CGCSimpleIdentityGetId(cResultSet, row);
 }
 
-static inline int32_t MBQSimpleIdentityGetData(MBQSimpleIdentity *resultSet, int32_t row)
+static inline int32_t CGCSimpleIdentityGetData(CGCSimpleIdentity *resultSet, int32_t row)
 {
-  CGCSimpleIdentityResultSetRef cResultSet = CGCSimpleIdentityFromMBQSimpleIdentity(resultSet);
+  CGCSimpleIdentityResultSetRef cResultSet = CGCSimpleIdentityFromCGCSimpleIdentity(resultSet);
   return CGCSimpleIdentityGetData(cResultSet, row);
 }
 
-static inline int32_t MBQSimpleIdentityResultCount(MBQSimpleIdentity *resultSet)
+static inline int32_t CGCSimpleIdentityResultCount(CGCSimpleIdentity *resultSet)
 {
-  return CGCSimpleIdentityResultCount(CGCSimpleIdentityFromMBQSimpleIdentity(resultSet));
+  return CGCSimpleIdentityResultCount(CGCSimpleIdentityFromCGCSimpleIdentity(resultSet));
 }
 
-static inline MBQSimpleIdentity *MBQSimpleIdentityCopy(MBQSimpleIdentity *resultSet, int32_t from, int32_t count)
+static inline CGCSimpleIdentity *CGCSimpleIdentityCopy(CGCSimpleIdentity *resultSet, int32_t from, int32_t count)
 {
   CGCSimpleIdentityResultSetRef copy;
-  CGCSimpleIdentityCopy(CGCSimpleIdentityFromMBQSimpleIdentity(resultSet), &copy, from, count);
-  return (__bridge_transfer MBQSimpleIdentity *)copy;
+  CGCSimpleIdentityCopy(CGCSimpleIdentityFromCGCSimpleIdentity(resultSet), &copy, from, count);
+  return (__bridge_transfer CGCSimpleIdentity *)copy;
 }
 
-static inline NSUInteger MBQSimpleIdentityRowHash(MBQSimpleIdentity *resultSet, int32_t row)
+static inline NSUInteger CGCSimpleIdentityRowHash(CGCSimpleIdentity *resultSet, int32_t row)
 {
-  return CGCSimpleIdentityRowHash(CGCSimpleIdentityFromMBQSimpleIdentity(resultSet), row);
+  return CGCSimpleIdentityRowHash(CGCSimpleIdentityFromCGCSimpleIdentity(resultSet), row);
 }
 
-static inline BOOL MBQSimpleIdentityRowEqual(MBQSimpleIdentity *resultSet1, int32_t row1, MBQSimpleIdentity *resultSet2, int32_t row2)
+static inline BOOL CGCSimpleIdentityRowEqual(CGCSimpleIdentity *resultSet1, int32_t row1, CGCSimpleIdentity *resultSet2, int32_t row2)
 {
-  return CGCSimpleIdentityRowEqual(CGCSimpleIdentityFromMBQSimpleIdentity(resultSet1), row1, CGCSimpleIdentityFromMBQSimpleIdentity(resultSet2), row2);
+  return CGCSimpleIdentityRowEqual(CGCSimpleIdentityFromCGCSimpleIdentity(resultSet1), row1, CGCSimpleIdentityFromCGCSimpleIdentity(resultSet2), row2);
 }
 
-@class MBQComplexIdentity;
+@class CGCComplexIdentity;
 
-static inline MBQComplexIdentity *MBQComplexIdentityFromCGCComplexIdentity(CGCComplexIdentityResultSetRef resultSet)
+static inline CGCComplexIdentity *CGCComplexIdentityFromCGCComplexIdentity(CGCComplexIdentityResultSetRef resultSet)
 {
-  return (__bridge MBQComplexIdentity *)resultSet;
+  return (__bridge CGCComplexIdentity *)resultSet;
 }
 
-static inline CGCComplexIdentityResultSetRef CGCComplexIdentityFromMBQComplexIdentity(MBQComplexIdentity *resultSet)
+static inline CGCComplexIdentityResultSetRef CGCComplexIdentityFromCGCComplexIdentity(CGCComplexIdentity *resultSet)
 {
   return (__bridge CGCComplexIdentityResultSetRef)resultSet;
 }
 
-static inline int32_t MBQComplexIdentityGetCol1(MBQComplexIdentity *resultSet, int32_t row)
+static inline int32_t CGCComplexIdentityGetCol1(CGCComplexIdentity *resultSet, int32_t row)
 {
-  CGCComplexIdentityResultSetRef cResultSet = CGCComplexIdentityFromMBQComplexIdentity(resultSet);
+  CGCComplexIdentityResultSetRef cResultSet = CGCComplexIdentityFromCGCComplexIdentity(resultSet);
   return CGCComplexIdentityGetCol1(cResultSet, row);
 }
 
-static inline int32_t MBQComplexIdentityGetCol2(MBQComplexIdentity *resultSet, int32_t row)
+static inline int32_t CGCComplexIdentityGetCol2(CGCComplexIdentity *resultSet, int32_t row)
 {
-  CGCComplexIdentityResultSetRef cResultSet = CGCComplexIdentityFromMBQComplexIdentity(resultSet);
+  CGCComplexIdentityResultSetRef cResultSet = CGCComplexIdentityFromCGCComplexIdentity(resultSet);
   return CGCComplexIdentityGetCol2(cResultSet, row);
 }
 
-static inline int32_t MBQComplexIdentityGetData(MBQComplexIdentity *resultSet, int32_t row)
+static inline int32_t CGCComplexIdentityGetData(CGCComplexIdentity *resultSet, int32_t row)
 {
-  CGCComplexIdentityResultSetRef cResultSet = CGCComplexIdentityFromMBQComplexIdentity(resultSet);
+  CGCComplexIdentityResultSetRef cResultSet = CGCComplexIdentityFromCGCComplexIdentity(resultSet);
   return CGCComplexIdentityGetData(cResultSet, row);
 }
 
-static inline int32_t MBQComplexIdentityResultCount(MBQComplexIdentity *resultSet)
+static inline int32_t CGCComplexIdentityResultCount(CGCComplexIdentity *resultSet)
 {
-  return CGCComplexIdentityResultCount(CGCComplexIdentityFromMBQComplexIdentity(resultSet));
+  return CGCComplexIdentityResultCount(CGCComplexIdentityFromCGCComplexIdentity(resultSet));
 }
 
-static inline MBQComplexIdentity *MBQComplexIdentityCopy(MBQComplexIdentity *resultSet, int32_t from, int32_t count)
+static inline CGCComplexIdentity *CGCComplexIdentityCopy(CGCComplexIdentity *resultSet, int32_t from, int32_t count)
 {
   CGCComplexIdentityResultSetRef copy;
-  CGCComplexIdentityCopy(CGCComplexIdentityFromMBQComplexIdentity(resultSet), &copy, from, count);
-  return (__bridge_transfer MBQComplexIdentity *)copy;
+  CGCComplexIdentityCopy(CGCComplexIdentityFromCGCComplexIdentity(resultSet), &copy, from, count);
+  return (__bridge_transfer CGCComplexIdentity *)copy;
 }
 
-static inline NSUInteger MBQComplexIdentityRowHash(MBQComplexIdentity *resultSet, int32_t row)
+static inline NSUInteger CGCComplexIdentityRowHash(CGCComplexIdentity *resultSet, int32_t row)
 {
-  return CGCComplexIdentityRowHash(CGCComplexIdentityFromMBQComplexIdentity(resultSet), row);
+  return CGCComplexIdentityRowHash(CGCComplexIdentityFromCGCComplexIdentity(resultSet), row);
 }
 
-static inline BOOL MBQComplexIdentityRowEqual(MBQComplexIdentity *resultSet1, int32_t row1, MBQComplexIdentity *resultSet2, int32_t row2)
+static inline BOOL CGCComplexIdentityRowEqual(CGCComplexIdentity *resultSet1, int32_t row1, CGCComplexIdentity *resultSet2, int32_t row2)
 {
-  return CGCComplexIdentityRowEqual(CGCComplexIdentityFromMBQComplexIdentity(resultSet1), row1, CGCComplexIdentityFromMBQComplexIdentity(resultSet2), row2);
+  return CGCComplexIdentityRowEqual(CGCComplexIdentityFromCGCComplexIdentity(resultSet1), row1, CGCComplexIdentityFromCGCComplexIdentity(resultSet2), row2);
 }
 
-@class MBQOutCursorIdentity;
+@class CGCOutCursorIdentity;
 
-static inline MBQOutCursorIdentity *MBQOutCursorIdentityFromCGCOutCursorIdentity(CGCOutCursorIdentityResultSetRef resultSet)
+static inline CGCOutCursorIdentity *CGCOutCursorIdentityFromCGCOutCursorIdentity(CGCOutCursorIdentityResultSetRef resultSet)
 {
-  return (__bridge MBQOutCursorIdentity *)resultSet;
+  return (__bridge CGCOutCursorIdentity *)resultSet;
 }
 
-static inline CGCOutCursorIdentityResultSetRef CGCOutCursorIdentityFromMBQOutCursorIdentity(MBQOutCursorIdentity *resultSet)
+static inline CGCOutCursorIdentityResultSetRef CGCOutCursorIdentityFromCGCOutCursorIdentity(CGCOutCursorIdentity *resultSet)
 {
   return (__bridge CGCOutCursorIdentityResultSetRef)resultSet;
 }
 
-static inline int32_t MBQOutCursorIdentityGetId(MBQOutCursorIdentity *resultSet)
+static inline int32_t CGCOutCursorIdentityGetId(CGCOutCursorIdentity *resultSet)
 {
-  CGCOutCursorIdentityResultSetRef cResultSet = CGCOutCursorIdentityFromMBQOutCursorIdentity(resultSet);
+  CGCOutCursorIdentityResultSetRef cResultSet = CGCOutCursorIdentityFromCGCOutCursorIdentity(resultSet);
   return CGCOutCursorIdentityGetId(cResultSet);
 }
 
-static inline int32_t MBQOutCursorIdentityGetData(MBQOutCursorIdentity *resultSet)
+static inline int32_t CGCOutCursorIdentityGetData(CGCOutCursorIdentity *resultSet)
 {
-  CGCOutCursorIdentityResultSetRef cResultSet = CGCOutCursorIdentityFromMBQOutCursorIdentity(resultSet);
+  CGCOutCursorIdentityResultSetRef cResultSet = CGCOutCursorIdentityFromCGCOutCursorIdentity(resultSet);
   return CGCOutCursorIdentityGetData(cResultSet);
 }
 
-static inline int32_t MBQOutCursorIdentityResultCount(MBQOutCursorIdentity *resultSet)
+static inline int32_t CGCOutCursorIdentityResultCount(CGCOutCursorIdentity *resultSet)
 {
-  return CGCOutCursorIdentityResultCount(CGCOutCursorIdentityFromMBQOutCursorIdentity(resultSet));
+  return CGCOutCursorIdentityResultCount(CGCOutCursorIdentityFromCGCOutCursorIdentity(resultSet));
 }
 
-static inline MBQOutCursorIdentity *MBQOutCursorIdentityCopy(MBQOutCursorIdentity *resultSet)
+static inline CGCOutCursorIdentity *CGCOutCursorIdentityCopy(CGCOutCursorIdentity *resultSet)
 {
   CGCOutCursorIdentityResultSetRef copy;
-  CGCOutCursorIdentityCopy(CGCOutCursorIdentityFromMBQOutCursorIdentity(resultSet), &copy);
-  return (__bridge_transfer MBQOutCursorIdentity *)copy;
+  CGCOutCursorIdentityCopy(CGCOutCursorIdentityFromCGCOutCursorIdentity(resultSet), &copy);
+  return (__bridge_transfer CGCOutCursorIdentity *)copy;
 }
 
-static inline NSUInteger MBQOutCursorIdentityHash(MBQOutCursorIdentity *resultSet)
+static inline NSUInteger CGCOutCursorIdentityHash(CGCOutCursorIdentity *resultSet)
 {
-  return CGCOutCursorIdentityHash(CGCOutCursorIdentityFromMBQOutCursorIdentity(resultSet));
+  return CGCOutCursorIdentityHash(CGCOutCursorIdentityFromCGCOutCursorIdentity(resultSet));
 }
 
-static inline BOOL MBQOutCursorIdentityEqual(MBQOutCursorIdentity *resultSet1, MBQOutCursorIdentity *resultSet2)
+static inline BOOL CGCOutCursorIdentityEqual(CGCOutCursorIdentity *resultSet1, CGCOutCursorIdentity *resultSet2)
 {
-  return CGCOutCursorIdentityEqual(CGCOutCursorIdentityFromMBQOutCursorIdentity(resultSet1), CGCOutCursorIdentityFromMBQOutCursorIdentity(resultSet2));
+  return CGCOutCursorIdentityEqual(CGCOutCursorIdentityFromCGCOutCursorIdentity(resultSet1), CGCOutCursorIdentityFromCGCOutCursorIdentity(resultSet2));
 }
 
-@class MBQRadioactiveProc;
+@class CGCRadioactiveProc;
 
-static inline MBQRadioactiveProc *MBQRadioactiveProcFromCGCRadioactiveProc(CGCRadioactiveProcResultSetRef resultSet)
+static inline CGCRadioactiveProc *CGCRadioactiveProcFromCGCRadioactiveProc(CGCRadioactiveProcResultSetRef resultSet)
 {
-  return (__bridge MBQRadioactiveProc *)resultSet;
+  return (__bridge CGCRadioactiveProc *)resultSet;
 }
 
-static inline CGCRadioactiveProcResultSetRef CGCRadioactiveProcFromMBQRadioactiveProc(MBQRadioactiveProc *resultSet)
+static inline CGCRadioactiveProcResultSetRef CGCRadioactiveProcFromCGCRadioactiveProc(CGCRadioactiveProc *resultSet)
 {
   return (__bridge CGCRadioactiveProcResultSetRef)resultSet;
 }
 
-static inline int32_t MBQRadioactiveProcGetId(MBQRadioactiveProc *resultSet, int32_t row)
+static inline int32_t CGCRadioactiveProcGetId(CGCRadioactiveProc *resultSet, int32_t row)
 {
-  CGCRadioactiveProcResultSetRef cResultSet = CGCRadioactiveProcFromMBQRadioactiveProc(resultSet);
+  CGCRadioactiveProcResultSetRef cResultSet = CGCRadioactiveProcFromCGCRadioactiveProc(resultSet);
   return CGCRadioactiveProcGetId(cResultSet, row);
 }
 
-static inline NSString *_Nullable MBQRadioactiveProcGetData(MBQRadioactiveProc *resultSet, int32_t row)
+static inline NSString *_Nullable CGCRadioactiveProcGetData(CGCRadioactiveProc *resultSet, int32_t row)
 {
-  CGCRadioactiveProcResultSetRef cResultSet = CGCRadioactiveProcFromMBQRadioactiveProc(resultSet);
+  CGCRadioactiveProcResultSetRef cResultSet = CGCRadioactiveProcFromCGCRadioactiveProc(resultSet);
   return (__bridge NSString *)CGCRadioactiveProcGetData(cResultSet, row);
 }
 
-static inline int32_t MBQRadioactiveProcResultCount(MBQRadioactiveProc *resultSet)
+static inline int32_t CGCRadioactiveProcResultCount(CGCRadioactiveProc *resultSet)
 {
-  return CGCRadioactiveProcResultCount(CGCRadioactiveProcFromMBQRadioactiveProc(resultSet));
+  return CGCRadioactiveProcResultCount(CGCRadioactiveProcFromCGCRadioactiveProc(resultSet));
 }
 
-static inline MBQRadioactiveProc *MBQRadioactiveProcCopy(MBQRadioactiveProc *resultSet, int32_t from, int32_t count)
+static inline CGCRadioactiveProc *CGCRadioactiveProcCopy(CGCRadioactiveProc *resultSet, int32_t from, int32_t count)
 {
   CGCRadioactiveProcResultSetRef copy;
-  CGCRadioactiveProcCopy(CGCRadioactiveProcFromMBQRadioactiveProc(resultSet), &copy, from, count);
-  return (__bridge_transfer MBQRadioactiveProc *)copy;
+  CGCRadioactiveProcCopy(CGCRadioactiveProcFromCGCRadioactiveProc(resultSet), &copy, from, count);
+  return (__bridge_transfer CGCRadioactiveProc *)copy;
 }
 
-static inline NSUInteger MBQRadioactiveProcRowHash(MBQRadioactiveProc *resultSet, int32_t row)
+static inline NSUInteger CGCRadioactiveProcRowHash(CGCRadioactiveProc *resultSet, int32_t row)
 {
-  return CGCRadioactiveProcRowHash(CGCRadioactiveProcFromMBQRadioactiveProc(resultSet), row);
+  return CGCRadioactiveProcRowHash(CGCRadioactiveProcFromCGCRadioactiveProc(resultSet), row);
 }
 
-static inline BOOL MBQRadioactiveProcRowEqual(MBQRadioactiveProc *resultSet1, int32_t row1, MBQRadioactiveProc *resultSet2, int32_t row2)
+static inline BOOL CGCRadioactiveProcRowEqual(CGCRadioactiveProc *resultSet1, int32_t row1, CGCRadioactiveProc *resultSet2, int32_t row2)
 {
-  return CGCRadioactiveProcRowEqual(CGCRadioactiveProcFromMBQRadioactiveProc(resultSet1), row1, CGCRadioactiveProcFromMBQRadioactiveProc(resultSet2), row2);
+  return CGCRadioactiveProcRowEqual(CGCRadioactiveProcFromCGCRadioactiveProc(resultSet1), row1, CGCRadioactiveProcFromCGCRadioactiveProc(resultSet2), row2);
 }
 
-@class MBQAutodropper;
+@class CGCAutodropper;
 
-static inline MBQAutodropper *MBQAutodropperFromCGCAutodropper(CGCAutodropperResultSetRef resultSet)
+static inline CGCAutodropper *CGCAutodropperFromCGCAutodropper(CGCAutodropperResultSetRef resultSet)
 {
-  return (__bridge MBQAutodropper *)resultSet;
+  return (__bridge CGCAutodropper *)resultSet;
 }
 
-static inline CGCAutodropperResultSetRef CGCAutodropperFromMBQAutodropper(MBQAutodropper *resultSet)
+static inline CGCAutodropperResultSetRef CGCAutodropperFromCGCAutodropper(CGCAutodropper *resultSet)
 {
   return (__bridge CGCAutodropperResultSetRef)resultSet;
 }
 
-static inline int32_t MBQAutodropperGetA(MBQAutodropper *resultSet, int32_t row)
+static inline int32_t CGCAutodropperGetA(CGCAutodropper *resultSet, int32_t row)
 {
-  CGCAutodropperResultSetRef cResultSet = CGCAutodropperFromMBQAutodropper(resultSet);
+  CGCAutodropperResultSetRef cResultSet = CGCAutodropperFromCGCAutodropper(resultSet);
   return CGCAutodropperGetA(cResultSet, row);
 }
 
-static inline int32_t MBQAutodropperGetB(MBQAutodropper *resultSet, int32_t row)
+static inline int32_t CGCAutodropperGetB(CGCAutodropper *resultSet, int32_t row)
 {
-  CGCAutodropperResultSetRef cResultSet = CGCAutodropperFromMBQAutodropper(resultSet);
+  CGCAutodropperResultSetRef cResultSet = CGCAutodropperFromCGCAutodropper(resultSet);
   return CGCAutodropperGetB(cResultSet, row);
 }
 
-static inline int32_t MBQAutodropperResultCount(MBQAutodropper *resultSet)
+static inline int32_t CGCAutodropperResultCount(CGCAutodropper *resultSet)
 {
-  return CGCAutodropperResultCount(CGCAutodropperFromMBQAutodropper(resultSet));
+  return CGCAutodropperResultCount(CGCAutodropperFromCGCAutodropper(resultSet));
 }
 
-static inline MBQAutodropper *MBQAutodropperCopy(MBQAutodropper *resultSet, int32_t from, int32_t count)
+static inline CGCAutodropper *CGCAutodropperCopy(CGCAutodropper *resultSet, int32_t from, int32_t count)
 {
   CGCAutodropperResultSetRef copy;
-  CGCAutodropperCopy(CGCAutodropperFromMBQAutodropper(resultSet), &copy, from, count);
-  return (__bridge_transfer MBQAutodropper *)copy;
+  CGCAutodropperCopy(CGCAutodropperFromCGCAutodropper(resultSet), &copy, from, count);
+  return (__bridge_transfer CGCAutodropper *)copy;
 }
 
-static inline NSUInteger MBQAutodropperRowHash(MBQAutodropper *resultSet, int32_t row)
+static inline NSUInteger CGCAutodropperRowHash(CGCAutodropper *resultSet, int32_t row)
 {
-  return CGCAutodropperRowHash(CGCAutodropperFromMBQAutodropper(resultSet), row);
+  return CGCAutodropperRowHash(CGCAutodropperFromCGCAutodropper(resultSet), row);
 }
 
-static inline BOOL MBQAutodropperRowEqual(MBQAutodropper *resultSet1, int32_t row1, MBQAutodropper *resultSet2, int32_t row2)
+static inline BOOL CGCAutodropperRowEqual(CGCAutodropper *resultSet1, int32_t row1, CGCAutodropper *resultSet2, int32_t row2)
 {
-  return CGCAutodropperRowEqual(CGCAutodropperFromMBQAutodropper(resultSet1), row1, CGCAutodropperFromMBQAutodropper(resultSet2), row2);
+  return CGCAutodropperRowEqual(CGCAutodropperFromCGCAutodropper(resultSet1), row1, CGCAutodropperFromCGCAutodropper(resultSet2), row2);
 }
 
-@class MBQSimpleCursorProc;
+@class CGCSimpleCursorProc;
 
-static inline MBQSimpleCursorProc *MBQSimpleCursorProcFromCGCSimpleCursorProc(CGCSimpleCursorProcResultSetRef resultSet)
+static inline CGCSimpleCursorProc *CGCSimpleCursorProcFromCGCSimpleCursorProc(CGCSimpleCursorProcResultSetRef resultSet)
 {
-  return (__bridge MBQSimpleCursorProc *)resultSet;
+  return (__bridge CGCSimpleCursorProc *)resultSet;
 }
 
-static inline CGCSimpleCursorProcResultSetRef CGCSimpleCursorProcFromMBQSimpleCursorProc(MBQSimpleCursorProc *resultSet)
+static inline CGCSimpleCursorProcResultSetRef CGCSimpleCursorProcFromCGCSimpleCursorProc(CGCSimpleCursorProc *resultSet)
 {
   return (__bridge CGCSimpleCursorProcResultSetRef)resultSet;
 }
 
-static inline int32_t MBQSimpleCursorProcGetId(MBQSimpleCursorProc *resultSet)
+static inline int32_t CGCSimpleCursorProcGetId(CGCSimpleCursorProc *resultSet)
 {
-  CGCSimpleCursorProcResultSetRef cResultSet = CGCSimpleCursorProcFromMBQSimpleCursorProc(resultSet);
+  CGCSimpleCursorProcResultSetRef cResultSet = CGCSimpleCursorProcFromCGCSimpleCursorProc(resultSet);
   return CGCSimpleCursorProcGetId(cResultSet);
 }
 
-static inline int32_t MBQSimpleCursorProcResultCount(MBQSimpleCursorProc *resultSet)
+static inline int32_t CGCSimpleCursorProcResultCount(CGCSimpleCursorProc *resultSet)
 {
-  return CGCSimpleCursorProcResultCount(CGCSimpleCursorProcFromMBQSimpleCursorProc(resultSet));
+  return CGCSimpleCursorProcResultCount(CGCSimpleCursorProcFromCGCSimpleCursorProc(resultSet));
 }
 
-static inline MBQSimpleCursorProc *MBQSimpleCursorProcCopy(MBQSimpleCursorProc *resultSet)
+static inline CGCSimpleCursorProc *CGCSimpleCursorProcCopy(CGCSimpleCursorProc *resultSet)
 {
   CGCSimpleCursorProcResultSetRef copy;
-  CGCSimpleCursorProcCopy(CGCSimpleCursorProcFromMBQSimpleCursorProc(resultSet), &copy);
-  return (__bridge_transfer MBQSimpleCursorProc *)copy;
+  CGCSimpleCursorProcCopy(CGCSimpleCursorProcFromCGCSimpleCursorProc(resultSet), &copy);
+  return (__bridge_transfer CGCSimpleCursorProc *)copy;
 }
 
-static inline NSUInteger MBQSimpleCursorProcHash(MBQSimpleCursorProc *resultSet)
+static inline NSUInteger CGCSimpleCursorProcHash(CGCSimpleCursorProc *resultSet)
 {
-  return CGCSimpleCursorProcHash(CGCSimpleCursorProcFromMBQSimpleCursorProc(resultSet));
+  return CGCSimpleCursorProcHash(CGCSimpleCursorProcFromCGCSimpleCursorProc(resultSet));
 }
 
-static inline BOOL MBQSimpleCursorProcEqual(MBQSimpleCursorProc *resultSet1, MBQSimpleCursorProc *resultSet2)
+static inline BOOL CGCSimpleCursorProcEqual(CGCSimpleCursorProc *resultSet1, CGCSimpleCursorProc *resultSet2)
 {
-  return CGCSimpleCursorProcEqual(CGCSimpleCursorProcFromMBQSimpleCursorProc(resultSet1), CGCSimpleCursorProcFromMBQSimpleCursorProc(resultSet2));
+  return CGCSimpleCursorProcEqual(CGCSimpleCursorProcFromCGCSimpleCursorProc(resultSet1), CGCSimpleCursorProcFromCGCSimpleCursorProc(resultSet2));
 }
 
-@class MBQRedundantCast;
+@class CGCRedundantCast;
 
-static inline MBQRedundantCast *MBQRedundantCastFromCGCRedundantCast(CGCRedundantCastResultSetRef resultSet)
+static inline CGCRedundantCast *CGCRedundantCastFromCGCRedundantCast(CGCRedundantCastResultSetRef resultSet)
 {
-  return (__bridge MBQRedundantCast *)resultSet;
+  return (__bridge CGCRedundantCast *)resultSet;
 }
 
-static inline CGCRedundantCastResultSetRef CGCRedundantCastFromMBQRedundantCast(MBQRedundantCast *resultSet)
+static inline CGCRedundantCastResultSetRef CGCRedundantCastFromCGCRedundantCast(CGCRedundantCast *resultSet)
 {
   return (__bridge CGCRedundantCastResultSetRef)resultSet;
 }
 
-static inline int32_t MBQRedundantCastGetPlugh(MBQRedundantCast *resultSet, int32_t row)
+static inline int32_t CGCRedundantCastGetPlugh(CGCRedundantCast *resultSet, int32_t row)
 {
-  CGCRedundantCastResultSetRef cResultSet = CGCRedundantCastFromMBQRedundantCast(resultSet);
+  CGCRedundantCastResultSetRef cResultSet = CGCRedundantCastFromCGCRedundantCast(resultSet);
   return CGCRedundantCastGetPlugh(cResultSet, row);
 }
 
-static inline int32_t MBQRedundantCastGetFive(MBQRedundantCast *resultSet, int32_t row)
+static inline int32_t CGCRedundantCastGetFive(CGCRedundantCast *resultSet, int32_t row)
 {
-  CGCRedundantCastResultSetRef cResultSet = CGCRedundantCastFromMBQRedundantCast(resultSet);
+  CGCRedundantCastResultSetRef cResultSet = CGCRedundantCastFromCGCRedundantCast(resultSet);
   return CGCRedundantCastGetFive(cResultSet, row);
 }
 
-static inline int32_t MBQRedundantCastResultCount(MBQRedundantCast *resultSet)
+static inline int32_t CGCRedundantCastResultCount(CGCRedundantCast *resultSet)
 {
-  return CGCRedundantCastResultCount(CGCRedundantCastFromMBQRedundantCast(resultSet));
+  return CGCRedundantCastResultCount(CGCRedundantCastFromCGCRedundantCast(resultSet));
 }
 
-static inline MBQRedundantCast *MBQRedundantCastCopy(MBQRedundantCast *resultSet, int32_t from, int32_t count)
+static inline CGCRedundantCast *CGCRedundantCastCopy(CGCRedundantCast *resultSet, int32_t from, int32_t count)
 {
   CGCRedundantCastResultSetRef copy;
-  CGCRedundantCastCopy(CGCRedundantCastFromMBQRedundantCast(resultSet), &copy, from, count);
-  return (__bridge_transfer MBQRedundantCast *)copy;
+  CGCRedundantCastCopy(CGCRedundantCastFromCGCRedundantCast(resultSet), &copy, from, count);
+  return (__bridge_transfer CGCRedundantCast *)copy;
 }
 
-static inline NSUInteger MBQRedundantCastRowHash(MBQRedundantCast *resultSet, int32_t row)
+static inline NSUInteger CGCRedundantCastRowHash(CGCRedundantCast *resultSet, int32_t row)
 {
-  return CGCRedundantCastRowHash(CGCRedundantCastFromMBQRedundantCast(resultSet), row);
+  return CGCRedundantCastRowHash(CGCRedundantCastFromCGCRedundantCast(resultSet), row);
 }
 
-static inline BOOL MBQRedundantCastRowEqual(MBQRedundantCast *resultSet1, int32_t row1, MBQRedundantCast *resultSet2, int32_t row2)
+static inline BOOL CGCRedundantCastRowEqual(CGCRedundantCast *resultSet1, int32_t row1, CGCRedundantCast *resultSet2, int32_t row2)
 {
-  return CGCRedundantCastRowEqual(CGCRedundantCastFromMBQRedundantCast(resultSet1), row1, CGCRedundantCastFromMBQRedundantCast(resultSet2), row2);
+  return CGCRedundantCastRowEqual(CGCRedundantCastFromCGCRedundantCast(resultSet1), row1, CGCRedundantCastFromCGCRedundantCast(resultSet2), row2);
 }
 
-@class MBQOutUnionTwo;
+@class CGCOutUnionTwo;
 
-static inline MBQOutUnionTwo *MBQOutUnionTwoFromCGCOutUnionTwo(CGCOutUnionTwoResultSetRef resultSet)
+static inline CGCOutUnionTwo *CGCOutUnionTwoFromCGCOutUnionTwo(CGCOutUnionTwoResultSetRef resultSet)
 {
-  return (__bridge MBQOutUnionTwo *)resultSet;
+  return (__bridge CGCOutUnionTwo *)resultSet;
 }
 
-static inline CGCOutUnionTwoResultSetRef CGCOutUnionTwoFromMBQOutUnionTwo(MBQOutUnionTwo *resultSet)
+static inline CGCOutUnionTwoResultSetRef CGCOutUnionTwoFromCGCOutUnionTwo(CGCOutUnionTwo *resultSet)
 {
   return (__bridge CGCOutUnionTwoResultSetRef)resultSet;
 }
 
-static inline int32_t MBQOutUnionTwoGetX(MBQOutUnionTwo *resultSet, int32_t row)
+static inline int32_t CGCOutUnionTwoGetX(CGCOutUnionTwo *resultSet, int32_t row)
 {
-  CGCOutUnionTwoResultSetRef cResultSet = CGCOutUnionTwoFromMBQOutUnionTwo(resultSet);
+  CGCOutUnionTwoResultSetRef cResultSet = CGCOutUnionTwoFromCGCOutUnionTwo(resultSet);
   return CGCOutUnionTwoGetX(cResultSet, row);
 }
 
-static inline NSString *MBQOutUnionTwoGetY(MBQOutUnionTwo *resultSet, int32_t row)
+static inline NSString *CGCOutUnionTwoGetY(CGCOutUnionTwo *resultSet, int32_t row)
 {
-  CGCOutUnionTwoResultSetRef cResultSet = CGCOutUnionTwoFromMBQOutUnionTwo(resultSet);
+  CGCOutUnionTwoResultSetRef cResultSet = CGCOutUnionTwoFromCGCOutUnionTwo(resultSet);
   return (__bridge NSString *)CGCOutUnionTwoGetY(cResultSet, row);
 }
 
-static inline int32_t MBQOutUnionTwoResultCount(MBQOutUnionTwo *resultSet)
+static inline int32_t CGCOutUnionTwoResultCount(CGCOutUnionTwo *resultSet)
 {
-  return CGCOutUnionTwoResultCount(CGCOutUnionTwoFromMBQOutUnionTwo(resultSet));
+  return CGCOutUnionTwoResultCount(CGCOutUnionTwoFromCGCOutUnionTwo(resultSet));
 }
 
-static inline MBQOutUnionTwo *MBQOutUnionTwoCopy(MBQOutUnionTwo *resultSet, int32_t from, int32_t count)
+static inline CGCOutUnionTwo *CGCOutUnionTwoCopy(CGCOutUnionTwo *resultSet, int32_t from, int32_t count)
 {
   CGCOutUnionTwoResultSetRef copy;
-  CGCOutUnionTwoCopy(CGCOutUnionTwoFromMBQOutUnionTwo(resultSet), &copy, from, count);
-  return (__bridge_transfer MBQOutUnionTwo *)copy;
+  CGCOutUnionTwoCopy(CGCOutUnionTwoFromCGCOutUnionTwo(resultSet), &copy, from, count);
+  return (__bridge_transfer CGCOutUnionTwo *)copy;
 }
 
-static inline NSUInteger MBQOutUnionTwoRowHash(MBQOutUnionTwo *resultSet, int32_t row)
+static inline NSUInteger CGCOutUnionTwoRowHash(CGCOutUnionTwo *resultSet, int32_t row)
 {
-  return CGCOutUnionTwoRowHash(CGCOutUnionTwoFromMBQOutUnionTwo(resultSet), row);
+  return CGCOutUnionTwoRowHash(CGCOutUnionTwoFromCGCOutUnionTwo(resultSet), row);
 }
 
-static inline BOOL MBQOutUnionTwoRowEqual(MBQOutUnionTwo *resultSet1, int32_t row1, MBQOutUnionTwo *resultSet2, int32_t row2)
+static inline BOOL CGCOutUnionTwoRowEqual(CGCOutUnionTwo *resultSet1, int32_t row1, CGCOutUnionTwo *resultSet2, int32_t row2)
 {
-  return CGCOutUnionTwoRowEqual(CGCOutUnionTwoFromMBQOutUnionTwo(resultSet1), row1, CGCOutUnionTwoFromMBQOutUnionTwo(resultSet2), row2);
+  return CGCOutUnionTwoRowEqual(CGCOutUnionTwoFromCGCOutUnionTwo(resultSet1), row1, CGCOutUnionTwoFromCGCOutUnionTwo(resultSet2), row2);
 }
 
-@class MBQOutUnionFromSelect;
+@class CGCOutUnionFromSelect;
 
-static inline MBQOutUnionFromSelect *MBQOutUnionFromSelectFromCGCOutUnionFromSelect(CGCOutUnionFromSelectResultSetRef resultSet)
+static inline CGCOutUnionFromSelect *CGCOutUnionFromSelectFromCGCOutUnionFromSelect(CGCOutUnionFromSelectResultSetRef resultSet)
 {
-  return (__bridge MBQOutUnionFromSelect *)resultSet;
+  return (__bridge CGCOutUnionFromSelect *)resultSet;
 }
 
-static inline CGCOutUnionFromSelectResultSetRef CGCOutUnionFromSelectFromMBQOutUnionFromSelect(MBQOutUnionFromSelect *resultSet)
+static inline CGCOutUnionFromSelectResultSetRef CGCOutUnionFromSelectFromCGCOutUnionFromSelect(CGCOutUnionFromSelect *resultSet)
 {
   return (__bridge CGCOutUnionFromSelectResultSetRef)resultSet;
 }
 
-static inline int32_t MBQOutUnionFromSelectGetX(MBQOutUnionFromSelect *resultSet, int32_t row)
+static inline int32_t CGCOutUnionFromSelectGetX(CGCOutUnionFromSelect *resultSet, int32_t row)
 {
-  CGCOutUnionFromSelectResultSetRef cResultSet = CGCOutUnionFromSelectFromMBQOutUnionFromSelect(resultSet);
+  CGCOutUnionFromSelectResultSetRef cResultSet = CGCOutUnionFromSelectFromCGCOutUnionFromSelect(resultSet);
   return CGCOutUnionFromSelectGetX(cResultSet, row);
 }
 
-static inline NSString *MBQOutUnionFromSelectGetY(MBQOutUnionFromSelect *resultSet, int32_t row)
+static inline NSString *CGCOutUnionFromSelectGetY(CGCOutUnionFromSelect *resultSet, int32_t row)
 {
-  CGCOutUnionFromSelectResultSetRef cResultSet = CGCOutUnionFromSelectFromMBQOutUnionFromSelect(resultSet);
+  CGCOutUnionFromSelectResultSetRef cResultSet = CGCOutUnionFromSelectFromCGCOutUnionFromSelect(resultSet);
   return (__bridge NSString *)CGCOutUnionFromSelectGetY(cResultSet, row);
 }
 
-static inline int32_t MBQOutUnionFromSelectResultCount(MBQOutUnionFromSelect *resultSet)
+static inline int32_t CGCOutUnionFromSelectResultCount(CGCOutUnionFromSelect *resultSet)
 {
-  return CGCOutUnionFromSelectResultCount(CGCOutUnionFromSelectFromMBQOutUnionFromSelect(resultSet));
+  return CGCOutUnionFromSelectResultCount(CGCOutUnionFromSelectFromCGCOutUnionFromSelect(resultSet));
 }
 
-static inline MBQOutUnionFromSelect *MBQOutUnionFromSelectCopy(MBQOutUnionFromSelect *resultSet, int32_t from, int32_t count)
+static inline CGCOutUnionFromSelect *CGCOutUnionFromSelectCopy(CGCOutUnionFromSelect *resultSet, int32_t from, int32_t count)
 {
   CGCOutUnionFromSelectResultSetRef copy;
-  CGCOutUnionFromSelectCopy(CGCOutUnionFromSelectFromMBQOutUnionFromSelect(resultSet), &copy, from, count);
-  return (__bridge_transfer MBQOutUnionFromSelect *)copy;
+  CGCOutUnionFromSelectCopy(CGCOutUnionFromSelectFromCGCOutUnionFromSelect(resultSet), &copy, from, count);
+  return (__bridge_transfer CGCOutUnionFromSelect *)copy;
 }
 
-static inline NSUInteger MBQOutUnionFromSelectRowHash(MBQOutUnionFromSelect *resultSet, int32_t row)
+static inline NSUInteger CGCOutUnionFromSelectRowHash(CGCOutUnionFromSelect *resultSet, int32_t row)
 {
-  return CGCOutUnionFromSelectRowHash(CGCOutUnionFromSelectFromMBQOutUnionFromSelect(resultSet), row);
+  return CGCOutUnionFromSelectRowHash(CGCOutUnionFromSelectFromCGCOutUnionFromSelect(resultSet), row);
 }
 
-static inline BOOL MBQOutUnionFromSelectRowEqual(MBQOutUnionFromSelect *resultSet1, int32_t row1, MBQOutUnionFromSelect *resultSet2, int32_t row2)
+static inline BOOL CGCOutUnionFromSelectRowEqual(CGCOutUnionFromSelect *resultSet1, int32_t row1, CGCOutUnionFromSelect *resultSet2, int32_t row2)
 {
-  return CGCOutUnionFromSelectRowEqual(CGCOutUnionFromSelectFromMBQOutUnionFromSelect(resultSet1), row1, CGCOutUnionFromSelectFromMBQOutUnionFromSelect(resultSet2), row2);
+  return CGCOutUnionFromSelectRowEqual(CGCOutUnionFromSelectFromCGCOutUnionFromSelect(resultSet1), row1, CGCOutUnionFromSelectFromCGCOutUnionFromSelect(resultSet2), row2);
 }
 
-@class MBQWindowFunctionInvocation;
+@class CGCWindowFunctionInvocation;
 
-static inline MBQWindowFunctionInvocation *MBQWindowFunctionInvocationFromCGCWindowFunctionInvocation(CGCWindowFunctionInvocationResultSetRef resultSet)
+static inline CGCWindowFunctionInvocation *CGCWindowFunctionInvocationFromCGCWindowFunctionInvocation(CGCWindowFunctionInvocationResultSetRef resultSet)
 {
-  return (__bridge MBQWindowFunctionInvocation *)resultSet;
+  return (__bridge CGCWindowFunctionInvocation *)resultSet;
 }
 
-static inline CGCWindowFunctionInvocationResultSetRef CGCWindowFunctionInvocationFromMBQWindowFunctionInvocation(MBQWindowFunctionInvocation *resultSet)
+static inline CGCWindowFunctionInvocationResultSetRef CGCWindowFunctionInvocationFromCGCWindowFunctionInvocation(CGCWindowFunctionInvocation *resultSet)
 {
   return (__bridge CGCWindowFunctionInvocationResultSetRef)resultSet;
 }
 
-static inline int32_t MBQWindowFunctionInvocationGetId(MBQWindowFunctionInvocation *resultSet, int32_t row)
+static inline int32_t CGCWindowFunctionInvocationGetId(CGCWindowFunctionInvocation *resultSet, int32_t row)
 {
-  CGCWindowFunctionInvocationResultSetRef cResultSet = CGCWindowFunctionInvocationFromMBQWindowFunctionInvocation(resultSet);
+  CGCWindowFunctionInvocationResultSetRef cResultSet = CGCWindowFunctionInvocationFromCGCWindowFunctionInvocation(resultSet);
   return CGCWindowFunctionInvocationGetId(cResultSet, row);
 }
 
-static inline int32_t MBQWindowFunctionInvocationGetRowNum(MBQWindowFunctionInvocation *resultSet, int32_t row)
+static inline int32_t CGCWindowFunctionInvocationGetRowNum(CGCWindowFunctionInvocation *resultSet, int32_t row)
 {
-  CGCWindowFunctionInvocationResultSetRef cResultSet = CGCWindowFunctionInvocationFromMBQWindowFunctionInvocation(resultSet);
+  CGCWindowFunctionInvocationResultSetRef cResultSet = CGCWindowFunctionInvocationFromCGCWindowFunctionInvocation(resultSet);
   return CGCWindowFunctionInvocationGetRowNum(cResultSet, row);
 }
 
-static inline int32_t MBQWindowFunctionInvocationResultCount(MBQWindowFunctionInvocation *resultSet)
+static inline int32_t CGCWindowFunctionInvocationResultCount(CGCWindowFunctionInvocation *resultSet)
 {
-  return CGCWindowFunctionInvocationResultCount(CGCWindowFunctionInvocationFromMBQWindowFunctionInvocation(resultSet));
+  return CGCWindowFunctionInvocationResultCount(CGCWindowFunctionInvocationFromCGCWindowFunctionInvocation(resultSet));
 }
 
-static inline MBQWindowFunctionInvocation *MBQWindowFunctionInvocationCopy(MBQWindowFunctionInvocation *resultSet, int32_t from, int32_t count)
+static inline CGCWindowFunctionInvocation *CGCWindowFunctionInvocationCopy(CGCWindowFunctionInvocation *resultSet, int32_t from, int32_t count)
 {
   CGCWindowFunctionInvocationResultSetRef copy;
-  CGCWindowFunctionInvocationCopy(CGCWindowFunctionInvocationFromMBQWindowFunctionInvocation(resultSet), &copy, from, count);
-  return (__bridge_transfer MBQWindowFunctionInvocation *)copy;
+  CGCWindowFunctionInvocationCopy(CGCWindowFunctionInvocationFromCGCWindowFunctionInvocation(resultSet), &copy, from, count);
+  return (__bridge_transfer CGCWindowFunctionInvocation *)copy;
 }
 
-static inline NSUInteger MBQWindowFunctionInvocationRowHash(MBQWindowFunctionInvocation *resultSet, int32_t row)
+static inline NSUInteger CGCWindowFunctionInvocationRowHash(CGCWindowFunctionInvocation *resultSet, int32_t row)
 {
-  return CGCWindowFunctionInvocationRowHash(CGCWindowFunctionInvocationFromMBQWindowFunctionInvocation(resultSet), row);
+  return CGCWindowFunctionInvocationRowHash(CGCWindowFunctionInvocationFromCGCWindowFunctionInvocation(resultSet), row);
 }
 
-static inline BOOL MBQWindowFunctionInvocationRowEqual(MBQWindowFunctionInvocation *resultSet1, int32_t row1, MBQWindowFunctionInvocation *resultSet2, int32_t row2)
+static inline BOOL CGCWindowFunctionInvocationRowEqual(CGCWindowFunctionInvocation *resultSet1, int32_t row1, CGCWindowFunctionInvocation *resultSet2, int32_t row2)
 {
-  return CGCWindowFunctionInvocationRowEqual(CGCWindowFunctionInvocationFromMBQWindowFunctionInvocation(resultSet1), row1, CGCWindowFunctionInvocationFromMBQWindowFunctionInvocation(resultSet2), row2);
+  return CGCWindowFunctionInvocationRowEqual(CGCWindowFunctionInvocationFromCGCWindowFunctionInvocation(resultSet1), row1, CGCWindowFunctionInvocationFromCGCWindowFunctionInvocation(resultSet2), row2);
 }
 
-@class MBQUseReturn;
+@class CGCUseReturn;
 
-static inline MBQUseReturn *MBQUseReturnFromCGCUseReturn(CGCUseReturnResultSetRef resultSet)
+static inline CGCUseReturn *CGCUseReturnFromCGCUseReturn(CGCUseReturnResultSetRef resultSet)
 {
-  return (__bridge MBQUseReturn *)resultSet;
+  return (__bridge CGCUseReturn *)resultSet;
 }
 
-static inline CGCUseReturnResultSetRef CGCUseReturnFromMBQUseReturn(MBQUseReturn *resultSet)
+static inline CGCUseReturnResultSetRef CGCUseReturnFromCGCUseReturn(CGCUseReturn *resultSet)
 {
   return (__bridge CGCUseReturnResultSetRef)resultSet;
 }
 
-static inline int32_t MBQUseReturnGetX(MBQUseReturn *resultSet, int32_t row)
+static inline int32_t CGCUseReturnGetX(CGCUseReturn *resultSet, int32_t row)
 {
-  CGCUseReturnResultSetRef cResultSet = CGCUseReturnFromMBQUseReturn(resultSet);
+  CGCUseReturnResultSetRef cResultSet = CGCUseReturnFromCGCUseReturn(resultSet);
   return CGCUseReturnGetX(cResultSet, row);
 }
 
-static inline int32_t MBQUseReturnResultCount(MBQUseReturn *resultSet)
+static inline int32_t CGCUseReturnResultCount(CGCUseReturn *resultSet)
 {
-  return CGCUseReturnResultCount(CGCUseReturnFromMBQUseReturn(resultSet));
+  return CGCUseReturnResultCount(CGCUseReturnFromCGCUseReturn(resultSet));
 }
 
-static inline MBQUseReturn *MBQUseReturnCopy(MBQUseReturn *resultSet, int32_t from, int32_t count)
+static inline CGCUseReturn *CGCUseReturnCopy(CGCUseReturn *resultSet, int32_t from, int32_t count)
 {
   CGCUseReturnResultSetRef copy;
-  CGCUseReturnCopy(CGCUseReturnFromMBQUseReturn(resultSet), &copy, from, count);
-  return (__bridge_transfer MBQUseReturn *)copy;
+  CGCUseReturnCopy(CGCUseReturnFromCGCUseReturn(resultSet), &copy, from, count);
+  return (__bridge_transfer CGCUseReturn *)copy;
 }
 
-static inline NSUInteger MBQUseReturnRowHash(MBQUseReturn *resultSet, int32_t row)
+static inline NSUInteger CGCUseReturnRowHash(CGCUseReturn *resultSet, int32_t row)
 {
-  return CGCUseReturnRowHash(CGCUseReturnFromMBQUseReturn(resultSet), row);
+  return CGCUseReturnRowHash(CGCUseReturnFromCGCUseReturn(resultSet), row);
 }
 
-static inline BOOL MBQUseReturnRowEqual(MBQUseReturn *resultSet1, int32_t row1, MBQUseReturn *resultSet2, int32_t row2)
+static inline BOOL CGCUseReturnRowEqual(CGCUseReturn *resultSet1, int32_t row1, CGCUseReturn *resultSet2, int32_t row2)
 {
-  return CGCUseReturnRowEqual(CGCUseReturnFromMBQUseReturn(resultSet1), row1, CGCUseReturnFromMBQUseReturn(resultSet2), row2);
+  return CGCUseReturnRowEqual(CGCUseReturnFromCGCUseReturn(resultSet1), row1, CGCUseReturnFromCGCUseReturn(resultSet2), row2);
 }
 
 NS_ASSUME_NONNULL_END

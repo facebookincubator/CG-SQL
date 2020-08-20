@@ -7,6 +7,9 @@
 extern CQL_WARN_UNUSED cql_code assembly_core(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_, cql_int32 id_, cql_string_ref _Nonnull name_);
 
 // The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
 
 /*
 CREATE PROC assembly_core (id_ INTEGER NOT NULL, name_ TEXT NOT NULL)
@@ -41,39 +44,32 @@ typedef struct assembly_core_row {
   cql_string_ref _Nullable name;
 } assembly_core_row;
 
-cql_int32 assembly_core_get_x(assembly_core_result_set_ref _Nonnull result_set, cql_int32 row) {
-  assembly_core_row *data = (assembly_core_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
-  return data[row].x;
+extern cql_int32 assembly_core_get_x(assembly_core_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 0);
 }
 
-cql_string_ref _Nullable assembly_core_get_y(assembly_core_result_set_ref _Nonnull result_set, cql_int32 row) {
-  assembly_core_row *data = (assembly_core_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
-  return data[row].y;
+extern cql_string_ref _Nullable assembly_core_get_y(assembly_core_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 1) ? NULL : cql_result_set_get_string_col((cql_result_set_ref)result_set, row, 1);
 }
 
-cql_bool assembly_core_get_z_is_null(assembly_core_result_set_ref _Nonnull result_set, cql_int32 row) {
-  assembly_core_row *data = (assembly_core_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
-  return data[row].z.is_null;
+extern cql_bool assembly_core_get_z_is_null(assembly_core_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 2);
 }
 
-cql_int64 assembly_core_get_z_value(assembly_core_result_set_ref _Nonnull result_set, cql_int32 row) {
-  assembly_core_row *data = (assembly_core_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
-  return data[row].z.value;
+extern cql_int64 assembly_core_get_z_value(assembly_core_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_int64_col((cql_result_set_ref)result_set, row, 2);
 }
 
-cql_bool __PRIVATE__assembly_core_get_flag_is_null(assembly_core_result_set_ref _Nonnull result_set, cql_int32 row) {
-  assembly_core_row *data = (assembly_core_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
-  return data[row].flag.is_null;
+extern cql_bool __PRIVATE__assembly_core_get_flag_is_null(assembly_core_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 3);
 }
 
-cql_bool __PRIVATE__assembly_core_get_flag_value(assembly_core_result_set_ref _Nonnull result_set, cql_int32 row) {
-  assembly_core_row *data = (assembly_core_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
-  return data[row].flag.value;
+extern cql_bool __PRIVATE__assembly_core_get_flag_value(assembly_core_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_bool_col((cql_result_set_ref)result_set, row, 3);
 }
 
-cql_string_ref _Nullable __PRIVATE__assembly_core_get_name(assembly_core_result_set_ref _Nonnull result_set, cql_int32 row) {
-  assembly_core_row *data = (assembly_core_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
-  return data[row].name;
+extern cql_string_ref _Nullable __PRIVATE__assembly_core_get_name(assembly_core_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 4) ? NULL : cql_result_set_get_string_col((cql_result_set_ref)result_set, row, 4);
 }
 
 uint8_t assembly_core_data_types[assembly_core_data_types_count] = {

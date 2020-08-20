@@ -1,0 +1,153 @@
+
+#pragma once
+
+#include "cqlrt.h"
+
+
+// The statement ending at line XXXX
+//
+#define CRC_selector -2086804524444672762L
+
+extern cql_string_ref _Nonnull selector_stored_procedure_name;
+
+#define selector_data_types_count 12
+
+extern uint8_t selector_data_types[selector_data_types_count];
+
+cql_result_set_type_decl(selector_result_set, selector_result_set_ref);
+
+static inline cql_int32 selector_get_f1(selector_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 0);
+}
+
+static inline cql_string_ref _Nonnull selector_get_f2(selector_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_string_col((cql_result_set_ref)result_set, row, 1);
+}
+
+static inline cql_double selector_get_f3(selector_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_double_col((cql_result_set_ref)result_set, row, 2);
+}
+
+static inline cql_bool selector_get_f4(selector_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_bool_col((cql_result_set_ref)result_set, row, 3);
+}
+
+static inline cql_int64 selector_get_f5(selector_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_int64_col((cql_result_set_ref)result_set, row, 4);
+}
+
+static inline cql_blob_ref _Nonnull selector_get_f6(selector_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_blob_col((cql_result_set_ref)result_set, row, 5);
+}
+
+static inline cql_bool selector_get_g1_is_null(selector_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 6);
+}
+
+static inline cql_int32 selector_get_g1_value(selector_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 6);
+}
+
+static inline cql_string_ref _Nullable selector_get_g2(selector_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 7) ? NULL : cql_result_set_get_string_col((cql_result_set_ref)result_set, row, 7);
+}
+
+static inline cql_bool selector_get_g3_is_null(selector_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 8);
+}
+
+static inline cql_double selector_get_g3_value(selector_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_double_col((cql_result_set_ref)result_set, row, 8);
+}
+
+static inline cql_bool selector_get_g4_is_null(selector_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 9);
+}
+
+static inline cql_bool selector_get_g4_value(selector_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_bool_col((cql_result_set_ref)result_set, row, 9);
+}
+
+static inline cql_bool selector_get_g5_is_null(selector_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 10);
+}
+
+static inline cql_int64 selector_get_g5_value(selector_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_int64_col((cql_result_set_ref)result_set, row, 10);
+}
+
+static inline cql_blob_ref _Nullable selector_get_g6(selector_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 11) ? NULL : cql_result_set_get_blob_col((cql_result_set_ref)result_set, row, 11);
+}
+
+extern cql_int32 selector_result_count(selector_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code selector_fetch_results(sqlite3 *_Nonnull _db_, selector_result_set_ref _Nullable *_Nonnull result_set);
+#define selector_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define selector_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define selector_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+#define CRC_ext 8280780522605848147L
+
+cql_result_set_type_decl(frag_test_result_set, frag_test_result_set_ref);
+
+static inline cql_int32 ext_get_id(frag_test_result_set_ref _Nonnull result_set, cql_int32 row) {
+  extern cql_int32 frag_test_get_id(frag_test_result_set_ref _Nonnull result_set, int32_t row);
+  return frag_test_get_id(result_set, row);
+}
+
+static inline cql_string_ref _Nullable ext_get_f2(frag_test_result_set_ref _Nonnull result_set, cql_int32 row) {
+  extern cql_string_ref _Nullable __PRIVATE__frag_test_get_f2(frag_test_result_set_ref _Nonnull result_set, int32_t row);
+  return __PRIVATE__frag_test_get_f2(result_set, row);
+}
+
+extern cql_int32 ext_result_count(frag_test_result_set_ref _Nonnull result_set);
+#define ext_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+
+// The statement ending at line XXXX
+//
+#define CRC_ext2 -8626991334703178005L
+
+cql_result_set_type_decl(frag_test_result_set, frag_test_result_set_ref);
+
+static inline cql_int32 ext2_get_id(frag_test_result_set_ref _Nonnull result_set, cql_int32 row) {
+  extern cql_int32 frag_test_get_id(frag_test_result_set_ref _Nonnull result_set, int32_t row);
+  return frag_test_get_id(result_set, row);
+}
+
+static inline cql_bool ext2_get_f3_is_null(frag_test_result_set_ref _Nonnull result_set, cql_int32 row) {
+  extern cql_bool __PRIVATE__frag_test_get_f3_is_null(frag_test_result_set_ref _Nonnull result_set, int32_t row);
+  return __PRIVATE__frag_test_get_f3_is_null(result_set, row);
+}
+
+static inline cql_double ext2_get_f3_value(frag_test_result_set_ref _Nonnull result_set, cql_int32 row) {
+  extern cql_double __PRIVATE__frag_test_get_f3_value(frag_test_result_set_ref _Nonnull result_set, int32_t row);
+  return __PRIVATE__frag_test_get_f3_value(result_set, row);
+}
+
+extern cql_int32 ext2_result_count(frag_test_result_set_ref _Nonnull result_set);
+#define ext2_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)

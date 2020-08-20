@@ -1,0 +1,146 @@
+
+#include "out/cg_test_c_with_type_getters.out.h"
+
+#pragma clang diagnostic ignored "-Wbitwise-op-parentheses"
+#pragma clang diagnostic ignored "-Wshift-op-parentheses"
+#pragma clang diagnostic ignored "-Wlogical-not-parentheses"
+extern CQL_WARN_UNUSED cql_code selector(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_);
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC selector ()
+BEGIN
+  SELECT *
+    FROM foo;
+END;
+*/
+
+static int32_t selector_perf_index;
+
+cql_string_literal(selector_stored_procedure_name, "selector");
+
+typedef struct selector_row {
+  cql_int32 f1;
+  cql_double f3;
+  cql_bool f4;
+  cql_int64 f5;
+  cql_nullable_int32 g1;
+  cql_nullable_double g3;
+  cql_nullable_bool g4;
+  cql_nullable_int64 g5;
+  cql_string_ref _Nonnull f2;
+  cql_blob_ref _Nonnull f6;
+  cql_string_ref _Nullable g2;
+  cql_blob_ref _Nullable g6;
+} selector_row;
+
+uint8_t selector_data_types[selector_data_types_count] = {
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // f1
+  CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_NOT_NULL, // f2
+  CQL_DATA_TYPE_DOUBLE | CQL_DATA_TYPE_NOT_NULL, // f3
+  CQL_DATA_TYPE_BOOL | CQL_DATA_TYPE_NOT_NULL, // f4
+  CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_NOT_NULL, // f5
+  CQL_DATA_TYPE_BLOB | CQL_DATA_TYPE_NOT_NULL, // f6
+  CQL_DATA_TYPE_INT32, // g1
+  CQL_DATA_TYPE_STRING, // g2
+  CQL_DATA_TYPE_DOUBLE, // g3
+  CQL_DATA_TYPE_BOOL, // g4
+  CQL_DATA_TYPE_INT64, // g5
+  CQL_DATA_TYPE_BLOB, // g6
+};
+
+#define selector_refs_offset cql_offsetof(selector_row, f2) // count = 4
+
+static cql_uint16 selector_col_offsets[] = { 12,
+  cql_offsetof(selector_row, f1),
+  cql_offsetof(selector_row, f2),
+  cql_offsetof(selector_row, f3),
+  cql_offsetof(selector_row, f4),
+  cql_offsetof(selector_row, f5),
+  cql_offsetof(selector_row, f6),
+  cql_offsetof(selector_row, g1),
+  cql_offsetof(selector_row, g2),
+  cql_offsetof(selector_row, g3),
+  cql_offsetof(selector_row, g4),
+  cql_offsetof(selector_row, g5),
+  cql_offsetof(selector_row, g6)
+};
+
+cql_int32 selector_result_count(selector_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code selector_fetch_results(sqlite3 *_Nonnull _db_, selector_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_selector, &selector_perf_index);
+  cql_code rc = selector(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = selector_data_types,
+    .col_offsets = selector_col_offsets,
+    .refs_count = 4,
+    .refs_offset = selector_refs_offset,
+    .rowsize = sizeof(selector_row),
+    .crc = CRC_selector,
+    .perf_index = &selector_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+CQL_WARN_UNUSED cql_code selector(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_ = NULL;
+  _rc_ = cql_prepare(_db_, _result_,
+    "SELECT f1, f2, f3, f4, f5, f6, g1, g2, g3, g4, g5, g6 "
+      "FROM foo");
+  if (_rc_ != SQLITE_OK) goto cql_cleanup;
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
+  return _rc_;
+}
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC ext ()
+BEGIN
+  WITH
+  frag_test (id) AS (SELECT 1 AS id),
+  ext (id, f2) AS (SELECT frag_test.*, f2
+    FROM frag_test
+    LEFT OUTER JOIN foo ON f1 = id)
+  SELECT *
+    FROM ext;
+END;
+*/
+
+cql_int32 ext_result_count(frag_test_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC ext2 ()
+BEGIN
+  WITH
+  frag_test (id) AS (SELECT 1 AS id),
+  ext2 (id, f3) AS (SELECT frag_test.*, f3
+    FROM frag_test
+    LEFT OUTER JOIN foo ON f1 = id)
+  SELECT *
+    FROM ext2;
+END;
+*/
+
+cql_int32 ext2_result_count(frag_test_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}

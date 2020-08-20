@@ -4162,7 +4162,11 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
   if (misc_attrs && is_ast_create_proc_stmt(stmt)) {
     // The base fragment never creates any code, it only defines types and so forth.
     if (find_base_fragment_attr(misc_attrs, NULL, NULL)) {
-      // If we find the base attribute, we're done.
+      // If we find the base attribute, we're done.  We just need the testing tag.
+      if (options.test) {
+        bprintf(cg_header_output, "\n// The statement ending at line %d\n//\n", stmt->lineno);
+        bprintf(cg_declarations_output, "\n// The statement ending at line %d\n//\n", stmt->lineno);
+      }
       return;
     }
 
@@ -4199,6 +4203,11 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
     skip_comment |= is_ast_declare_select_func_stmt(stmt);
     skip_comment |= (!options.test && is_ast_echo_stmt(stmt));
     skip_comment |= entry->val == cg_no_op;
+
+    // put a line marker in the header file in case we want a test suite that verifies that
+    if (options.test) {
+      bprintf(cg_header_output, "\n// The statement ending at line %d\n//\n", stmt->lineno);
+    }
 
     // emit comments for most statements: we do not want to require the global proc block
     // just because there was a comment so this is suppressed for "no code" things
@@ -4716,7 +4725,7 @@ static void cg_proc_result_set(ast_node *ast) {
   }
 
   // If we are generating the typed getters, setup the function tables.
-  if (rt->generate_type_getters && !is_ext_fragment) {
+  if (options.generate_type_getters && !is_ext_fragment) {
     bprintf(h,
             "\n%suint8_t %s[%s];\n",
             rt->symbol_visibility,
@@ -4775,7 +4784,7 @@ static void cg_proc_result_set(ast_node *ast) {
       info.is_private = i >= col_count_for_base;
     }
 
-    if (rt->generate_type_getters) {
+    if (options.generate_type_getters) {
       if (col_is_nullable && !is_ref_type(sem_type)) {
         info.ret_type = SEM_TYPE_BOOL | SEM_TYPE_NOTNULL;
         info.name_type = SEM_TYPE_NULL;
@@ -4813,7 +4822,7 @@ static void cg_proc_result_set(ast_node *ast) {
     }
   }
 
-  if (rt->generate_type_getters) {
+  if (options.generate_type_getters) {
     bprintf(h, "\n");
   }
 

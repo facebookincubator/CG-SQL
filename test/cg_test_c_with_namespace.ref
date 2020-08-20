@@ -4367,6 +4367,9 @@ cql_cleanup:
 }
 
 // The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
 
 /*
 CREATE PROC simple_cursor_proc ()
@@ -5634,6 +5637,71 @@ CQL_WARN_UNUSED cql_code early_out_rc_cleared(sqlite3 *_Nonnull _db_, cql_nullab
 cql_cleanup:
   cql_finalize_stmt(_db_, &C);
   return _rc_;
+}
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC ext ()
+BEGIN
+  WITH
+  frag_test (id) AS (SELECT 1 AS id),
+  ext (id, f2) AS (SELECT frag_test.*, f2
+    FROM frag_test
+    LEFT OUTER JOIN ext_test_table ON f1 = id)
+  SELECT *
+    FROM ext;
+END;
+*/
+
+cql_int32 ext_get_id(frag_test_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return frag_test_get_id(result_set, row);
+}
+
+cql_bool ext_get_f2_is_null(frag_test_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return __PRIVATE__frag_test_get_f2_is_null(result_set, row);
+}
+
+cql_int32 ext_get_f2_value(frag_test_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return __PRIVATE__frag_test_get_f2_value(result_set, row);
+}
+
+cql_int32 ext_result_count(frag_test_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC ext2 ()
+BEGIN
+  WITH
+  frag_test (id) AS (SELECT 1 AS id),
+  ext2 (id, f3) AS (SELECT frag_test.*, f3
+    FROM frag_test
+    LEFT OUTER JOIN ext_test_table ON f1 = id)
+  SELECT *
+    FROM ext2;
+END;
+*/
+
+cql_int32 ext2_get_id(frag_test_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return frag_test_get_id(result_set, row);
+}
+
+cql_bool ext2_get_f3_is_null(frag_test_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return __PRIVATE__frag_test_get_f3_is_null(result_set, row);
+}
+
+cql_int32 ext2_get_f3_value(frag_test_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return __PRIVATE__frag_test_get_f3_value(result_set, row);
+}
+
+cql_int32 ext2_result_count(frag_test_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
 }
 
 // The statement ending at line XXXX

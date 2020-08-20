@@ -221,6 +221,24 @@ code_gen_c_test() {
     failed
   fi
 
+  echo running codegen test with type getters enabled
+  if ! ${CQL} --test --cg ${OUT_DIR}/cg_test_c_with_type_getters.out.h ${OUT_DIR}/cg_test_c_with_type_getters.out.c --in ${TEST_DIR}/cg_test_c_type_getters.sql --global_proc cql_startup --generate_copy --generate_type_getters  2>${OUT_DIR}/cg_test_c_err.out
+  then
+    echo "ERROR:"
+    cat ${OUT_DIR}/cg_test_c_err.out
+    failed
+  fi
+
+  on_invalid_sig_exit ${OUT_DIR}/cg_test_c_with_type_getters.out.h
+  on_invalid_sig_exit ${OUT_DIR}/cg_test_c_with_type_getters.out.c
+
+  echo validating codegen
+  if ! ${OUT_DIR}/cql-verify ${TEST_DIR}/cg_test_c_type_getters.sql ${OUT_DIR}/cg_test_c_with_type_getters.out.h
+  then
+    echo "ERROR: failed verification"
+    failed
+  fi
+
   echo running codegen test with namespace enabled
   if ! ${CQL} --test --cg ${OUT_DIR}/cg_test_c_with_namespace.out.h ${OUT_DIR}/cg_test_c_with_namespace.out.c ${OUT_DIR}/cg_test_imports_with_namespace.ref --in ${TEST_DIR}/cg_test.sql --global_proc cql_startup --generate_copy --c_include_namespace test_namespace --generate_exports 2>${OUT_DIR}/cg_test_c_err.out
   then
@@ -240,7 +258,7 @@ code_gen_c_test() {
   fi
 
   echo running codegen test for extension query fragment
-  if ! ${CQL} --test --cg ${OUT_DIR}/cg_extension_fragment_test_c.out.h ${OUT_DIR}/cg_extension_fragment_test_c.out.c ${OUT_DIR}/cg_extension_fragment_test_imports.ref --in ${TEST_DIR}/cg_extension_fragment_test.sql --global_proc cql_startup --generate_copy --generate_exports 2>${OUT_DIR}/cg_test_c_err.out
+  if ! ${CQL} --test --generate_type_getters --cg ${OUT_DIR}/cg_extension_fragment_test_c.out.h ${OUT_DIR}/cg_extension_fragment_test_c.out.c ${OUT_DIR}/cg_extension_fragment_test_imports.ref --in ${TEST_DIR}/cg_extension_fragment_test.sql --global_proc cql_startup --generate_copy --generate_exports 2>${OUT_DIR}/cg_test_c_err.out
   then
     echo "ERROR:"
     cat ${OUT_DIR}/cg_test_c_err.out
@@ -255,7 +273,7 @@ code_gen_c_test() {
   fi
 
   echo running codegen test for assembly query
-  if ! ${CQL} --test --cg ${OUT_DIR}/cg_assembly_query_test_c.out.h ${OUT_DIR}/cg_assembly_query_test_c.out.c ${OUT_DIR}/cg_assembly_query_test_imports.ref --in ${TEST_DIR}/cg_assembly_query_test.sql --global_proc cql_startup --generate_copy --generate_exports 2>${OUT_DIR}/cg_test_c_err.out
+  if ! ${CQL} --test --generate_type_getters --cg ${OUT_DIR}/cg_assembly_query_test_c.out.h ${OUT_DIR}/cg_assembly_query_test_c.out.c ${OUT_DIR}/cg_assembly_query_test_imports.ref --in ${TEST_DIR}/cg_assembly_query_test.sql --global_proc cql_startup --generate_copy --generate_exports 2>${OUT_DIR}/cg_test_c_err.out
   then
     echo "ERROR:"
     cat ${OUT_DIR}/cg_test_c_err.out
@@ -280,6 +298,8 @@ code_gen_c_test() {
   on_diff_exit ${TEST_DIR}/cg_test_c_header.ref ${OUT_DIR}/cg_test_c.out.h
   on_diff_exit ${TEST_DIR}/cg_test_c_with_namespace.ref ${OUT_DIR}/cg_test_c_with_namespace.out.c
   on_diff_exit ${TEST_DIR}/cg_test_c_header_with_namespace.ref ${OUT_DIR}/cg_test_c_with_namespace.out.h
+  on_diff_exit ${TEST_DIR}/cg_test_c_with_type_getters.ref ${OUT_DIR}/cg_test_c_with_type_getters.out.c
+  on_diff_exit ${TEST_DIR}/cg_test_c_header_with_type_getters.ref ${OUT_DIR}/cg_test_c_with_type_getters.out.h
   on_diff_exit ${TEST_DIR}/cg_test_exports.ref ${OUT_DIR}/cg_test_exports.out
   on_diff_exit ${TEST_DIR}/cg_extension_fragment_test_c.ref ${OUT_DIR}/cg_extension_fragment_test_c.out.c
   on_diff_exit ${TEST_DIR}/cg_extension_fragment_test_c_header.ref ${OUT_DIR}/cg_extension_fragment_test_c.out.h
@@ -394,7 +414,7 @@ code_gen_java_test() {
 code_gen_objc_test() {
   echo '--------------------------------- STAGE 9 -- OBJ-C CODE GEN TEST'
   echo running codegen test
-  if ! ${CQL} --test --cg ${OUT_DIR}/cg_test_objc.out --objc_c_include_path Test/TestFile.h --in ${TEST_DIR}/cg_test.sql --rt objc 2>${OUT_DIR}/cg_test_objc_err.out
+  if ! ${CQL} --test --cg ${OUT_DIR}/cg_test_objc.out --objc_c_include_path Test/TestFile.h --in ${TEST_DIR}/cg_test.sql --rt objc --objc_assembly_query_namespace . 2>${OUT_DIR}/cg_test_objc_err.out
   then
     echo "ERROR:"
     cat ${OUT_DIR}/cg_test_objc_err.out

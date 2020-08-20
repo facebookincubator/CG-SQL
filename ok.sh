@@ -32,6 +32,8 @@ cp ${OUT_DIR}/cg_test_c.out.h ${TEST_DIR}/cg_test_c_header.ref 2>/dev/null
 cp ${OUT_DIR}/cg_test_exports.out ${TEST_DIR}/cg_test_exports.ref 2>/dev/null
 cp ${OUT_DIR}/cg_test_c_with_namespace.out.c ${TEST_DIR}/cg_test_c_with_namespace.ref 2>/dev/null
 cp ${OUT_DIR}/cg_test_c_with_namespace.out.h ${TEST_DIR}/cg_test_c_header_with_namespace.ref 2>/dev/null
+cp ${OUT_DIR}/cg_test_c_with_type_getters.out.c ${TEST_DIR}/cg_test_c_with_type_getters.ref 2>/dev/null
+cp ${OUT_DIR}/cg_test_c_with_type_getters.out.h ${TEST_DIR}/cg_test_c_header_with_type_getters.ref 2>/dev/null
 cp ${OUT_DIR}/cg_extension_fragment_test_c.out.c ${TEST_DIR}/cg_extension_fragment_test_c.ref 2>/dev/null
 cp ${OUT_DIR}/cg_extension_fragment_test_c.out.h ${TEST_DIR}/cg_extension_fragment_test_c_header.ref 2>/dev/null
 cp ${OUT_DIR}/cg_assembly_query_test_c.out.c ${TEST_DIR}/cg_assembly_query_test_c.ref 2>/dev/null

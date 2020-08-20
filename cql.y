@@ -1547,6 +1547,8 @@ static void parse_cmd(int argc, char **argv) {
         options.run_unit_tests = 1;
     } else if (strcmp(arg, "--generate_exports") == 0) {
         options.generate_exports = 1;
+    } else if (strcmp(arg, "--generate_type_getters") == 0) {
+        options.generate_type_getters = 1;
     } else if (strcmp(arg, "--cg") == 0) {
       a = gather_arg_params(a, argc, argv, &options.file_names_count, &options.file_names);
       options.codegen = 1;

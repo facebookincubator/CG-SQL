@@ -81,7 +81,7 @@ static rtdata rt_c = {
   .cql_result_set_get_int64 = "cql_result_set_get_int64_col",
   .cql_result_set_get_string = "cql_result_set_get_string_col",
   .cql_result_set_get_blob = "cql_result_set_get_blob_col",
-  .cql_result_set_get_is_null = "cql_result_set_get_is_null",
+  .cql_result_set_get_is_null = "cql_result_set_get_is_null_col",
 };
 
 typedef struct cg_proc_name_node {
@@ -125,9 +125,8 @@ static rtdata rt_objc = {
   .header_wrapper_begin = "\nNS_ASSUME_NONNULL_BEGIN\n",
   .header_wrapper_end = "\nNS_ASSUME_NONNULL_END\n",
   .symbol_case = cg_symbol_case_pascal,
-  .generate_type_getters = 1,
   .generate_equality_macros = 1,
-  .symbol_prefix = "MBQ",
+  .symbol_prefix = "CGC",
   .impl_symbol_prefix = "CGC",
   .symbol_visibility = "CGC_EXPORT ",
   .cql_contract = "CGCContract",
@@ -156,7 +155,6 @@ static rtdata rt_java = {
     "import javax.annotation.Nullable;\n\n",
   .source_wrapper_end = "\nCGC_EXTERN_C_END\n",
   .symbol_case = cg_symbol_case_camel,
-  .generate_type_getters = 1,
   .generate_equality_macros = 1,
   .register_proc_name = cg_msys_register_proc_name,
   .test_proc_generate_copy = cg_msys_test_proc_generate_copy,
@@ -287,5 +285,11 @@ cql_noexport rtdata *find_rtdata(CSTR name) {
     }
     i++;
   }
+
+  // the result type can override this, we don't want to check both places so normalize to the option.
+  if (rt_) { 
+    options.generate_type_getters |= rt_->generate_type_getters;
+  }
+
   return rt_;
 }

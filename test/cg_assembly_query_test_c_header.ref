@@ -3,13 +3,22 @@
 
 #include "cqlrt.h"
 
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
 #define CRC_assembly_core -1084533396335137227L
 
 extern cql_string_ref _Nonnull assembly_core_stored_procedure_name;
 
 #define assembly_core_data_types_count 5
 
+extern uint8_t assembly_core_data_types[assembly_core_data_types_count];
+
 cql_result_set_type_decl(assembly_core_result_set, assembly_core_result_set_ref);
+
 extern cql_int32 assembly_core_get_x(assembly_core_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_string_ref _Nullable assembly_core_get_y(assembly_core_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_bool assembly_core_get_z_is_null(assembly_core_result_set_ref _Nonnull result_set, cql_int32 row);

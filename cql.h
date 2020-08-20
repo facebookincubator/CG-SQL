@@ -72,6 +72,7 @@ typedef struct cmd_options {
   bool_t semantic;
   bool_t codegen;
   bool_t compress;
+  bool_t generate_type_getters;
   bool_t generate_exports;
   bool_t generate_copy;
   bool_t run_unit_tests;
