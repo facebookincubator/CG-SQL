@@ -176,9 +176,8 @@ static void cg_set_parent_fragment_name(CSTR _Nonnull name, ast_node *_Nonnull _
 static void cg_result_set_type_decl(charbuf *output, CSTR sym, CSTR ref) {
   bprintf(output, "cql_result_set_type_decl(%s, %s);\n", sym, ref);
 
-  if (!Strcasecmp("msys", options.rt)) {
-    bprintf(output, "#define %sGetTypeID() MCICQLResultSetGetTypeID()\n", sym);
-  }
+  // if the result type needs extra type info, let it do so.
+  rt->result_set_type_decl_extra && rt->result_set_type_decl_extra(output, sym, ref);
 }
 
 // When emitting a variable reference, you might want the full local variable
@@ -4829,7 +4828,7 @@ static void cg_proc_result_set(ast_node *ast) {
 
   // Check whether we need to generate a copy function.
   bool_t generate_copy = (options.generate_copy ||
-                         (rt->test_proc_generate_copy && rt->test_proc_generate_copy(name)));
+                         (rt->proc_should_generate_copy && rt->proc_should_generate_copy(name)));
 
   int32_t refs_count = refs_count_sptr(sptr);
   // Skip generating reference and column offsets for extension fragment since it always

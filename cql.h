@@ -65,6 +65,9 @@ typedef long long int llint_t;
 // patternlint-disable-next-line prefer-sized-ints-in-msys
 int main(int argc, char **argv);
 
+// we need this for some callbacks
+struct charbuf;
+
 typedef struct cmd_options {
   bool_t test;
   bool_t print_ast;
@@ -170,9 +173,12 @@ typedef struct rtdata {
   // Called for each proc name that is processed.
   bool_t (*register_proc_name)(const char *proc_name);
 
-  // Test function to determine whether to implicitly generate the copy function for a result set.  The generate_copy
-  // command line argument overrides the value, if specified.
-  bool_t (*test_proc_generate_copy)(const char *proc_name);
+  // Predicate function to determine whether to implicitly generate the copy function for a result set.
+  // The generate_copy command line argument overrides the value, if specified.
+  bool_t (*proc_should_generate_copy)(const char *proc_name);
+
+  // Provides a chance to add some extra definitions to the result set type, specify if extra stuff needed.
+  bool_t (*result_set_type_decl_extra)(struct charbuf *output, CSTR sym, CSTR ref);
 
   // Prefix for public symbol.
   const char *symbol_prefix;
