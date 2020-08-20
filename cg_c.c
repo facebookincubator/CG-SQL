@@ -4665,9 +4665,8 @@ static void cg_proc_result_set(ast_node *ast) {
   charbuf *h = cg_header_output;
   charbuf *d = cg_declarations_output;
 
-  if (rt->register_proc_name) {
-    rt->register_proc_name(name);
-  }
+  // register the proc name if there is a callback, the particular result type will do whatever it wants
+  rt->register_proc_name && rt->register_proc_name(name);
 
   // name replacement such that extension fragment should always reference to
   // parent result set type instead of setting up their own
@@ -4830,8 +4829,7 @@ static void cg_proc_result_set(ast_node *ast) {
 
   // Check whether we need to generate a copy function.
   bool_t generate_copy = (options.generate_copy ||
-                          (rt->test_proc_generate_copy &&
-                           rt->test_proc_generate_copy(name)));
+                         (rt->test_proc_generate_copy && rt->test_proc_generate_copy(name)));
 
   int32_t refs_count = refs_count_sptr(sptr);
   // Skip generating reference and column offsets for extension fragment since it always

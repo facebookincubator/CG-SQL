@@ -1708,6 +1708,7 @@ int cql_main(int argc, char **argv) {
   sem_cleanup();
   ast_cleanup();
   gen_cleanup();
+  rt_cleanup();
 
 #ifdef CQL_AMALGAM
   // the variables need to be set back to zero so we can

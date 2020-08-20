@@ -168,7 +168,7 @@ typedef struct rtdata {
   bool_t generate_equality_macros;
 
   // Called for each proc name that is processed.
-  void (*register_proc_name)(const char *proc_name);
+  bool_t (*register_proc_name)(const char *proc_name);
 
   // Test function to determine whether to implicitly generate the copy function for a result set.  The generate_copy
   // command line argument overrides the value, if specified.

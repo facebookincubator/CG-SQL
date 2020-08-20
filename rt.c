@@ -16,6 +16,7 @@
 #include "cg_query_plan.h"
 #include "cg_udf.h"
 #include "cg_objc.h"
+#include "rt.h"
 
 static rtdata rt_c = {
   .name = "c",
@@ -89,30 +90,6 @@ typedef struct cg_proc_name_node {
   struct cg_proc_name_node *next;
 } cg_proc_name_node;
 
-static cg_proc_name_node *cg_proc_name_list = NULL;
-
-// Store the proc names that we've seen already in this codegen run.
-static void cg_msys_register_proc_name(const char *proc_name) {
-  cg_proc_name_node *node = _new(cg_proc_name_node);
-  node->proc_name = Strdup(proc_name);
-  node->next = cg_proc_name_list;
-  cg_proc_name_list = node;
-}
-
-// Return 1 if we have already seen a proc name that is a prefix for the current proc name.
-// For msys, this implies a child query, so we want to generate the copy functions in order
-// to be able to connect the result sets together after making both queries.
-static bool_t cg_msys_test_proc_generate_copy(const char *proc_name) {
-  // Skip the first proc name node, because it is the current proc name.
-  cg_proc_name_node *node = cg_proc_name_list;
-  while ((node = node->next)) {
-    if (Strncasecmp(proc_name, node->proc_name, strlen(node->proc_name)) == 0) {
-      return 1;
-    }
-  }
-  return 0;
-}
-
 static rtdata rt_objc = {
   .name = "objc",
   .code_generator = &cg_objc_main,
@@ -156,8 +133,8 @@ static rtdata rt_java = {
   .source_wrapper_end = "\nCGC_EXTERN_C_END\n",
   .symbol_case = cg_symbol_case_camel,
   .generate_equality_macros = 1,
-  .register_proc_name = cg_msys_register_proc_name,
-  .test_proc_generate_copy = cg_msys_test_proc_generate_copy,
+  .register_proc_name = NULL,
+  .test_proc_generate_copy = NULL,
   .symbol_prefix = "",
   .impl_symbol_prefix = "",
   .symbol_visibility = "CGC_EXPORT ",
@@ -277,6 +254,8 @@ static rtdata *(rt_all[]) = {
 };
 
 cql_noexport rtdata *find_rtdata(CSTR name) {
+  rt_cleanup();
+
   int32_t i = 0;
   rtdata *rt_ = NULL;
   while ((rt_ = rt_all[i])) {
@@ -292,4 +271,8 @@ cql_noexport rtdata *find_rtdata(CSTR name) {
   }
 
   return rt_;
+}
+
+cql_noexport void rt_cleanup() {
+  // no state in this version of rt, so nothing to cleanup
 }
