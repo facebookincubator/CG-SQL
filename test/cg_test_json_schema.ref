@@ -1709,6 +1709,37 @@
       ],
       "statement" : "SELECT '\\\r\n\t\b\f\"\u0001' AS quoted_text",
       "statementArgs" : [  ]
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE PROC use_view ()
+    BEGIN
+    SELECT *
+      FROM MyView;
+    END
+    
+    {
+      "name" : "use_view",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+      ],
+      "usesTables" : [ "Foo" ],
+      "fromTables" : [ "Foo" ],
+      "projection" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "name",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ],
+      "statement" : "SELECT id, name FROM MyView",
+      "statementArgs" : [  ]
     }
   ],
   "inserts" : [
@@ -2180,7 +2211,7 @@
     }
   ],
   "tableUsers" : {
-    "Foo" : [ "a_query", "bigger_query", "insert_proc", "delete_proc", "update_proc", "dummy_insert_proc", "joiner" ],
+    "Foo" : [ "a_query", "bigger_query", "insert_proc", "delete_proc", "update_proc", "dummy_insert_proc", "joiner", "use_view" ],
     "T3" : [ "insert_with_select", "upsert_proc" ],
     "T5" : [ "typical_select", "joiner" ],
     "radioactive" : [ "radioactive_proc" ]

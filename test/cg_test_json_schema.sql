@@ -829,3 +829,12 @@ end;
 -- + "name" : "ad_hoc_migration_proc_2",
 -- + "version" : 2
 @schema_ad_hoc_migration(2, ad_hoc_migration_proc_2);
+
+
+-- TEST: make sure we can walk dependencies from a view to a table
+-- + "usesTables" : [ "Foo" ],
+-- + "fromTables" : [ "Foo" ],
+create proc use_view()
+begin
+  select * from MyView;
+end;
