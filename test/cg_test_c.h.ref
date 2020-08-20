@@ -1,0 +1,1952 @@
+// @generated SignedSource<<deadbeef8badf00ddefec8edfacefeed>>
+
+#pragma once
+
+#include "cqlrt.h"
+
+
+// The statement ending at line XXXX
+//
+extern cql_nullable_int32 i0_nullable;
+
+// The statement ending at line XXXX
+//
+extern cql_nullable_int32 i1_nullable;
+
+// The statement ending at line XXXX
+//
+extern cql_nullable_double r0_nullable;
+
+// The statement ending at line XXXX
+//
+extern cql_nullable_int64 l0_nullable;
+
+// The statement ending at line XXXX
+//
+extern cql_nullable_int64 l1_nullable;
+
+// The statement ending at line XXXX
+//
+extern cql_nullable_bool b0_nullable;
+
+// The statement ending at line XXXX
+//
+extern cql_string_ref _Nullable t0_nullable;
+
+// The statement ending at line XXXX
+//
+extern cql_int32 i2;
+
+// The statement ending at line XXXX
+//
+extern cql_double r2;
+
+// The statement ending at line XXXX
+//
+extern cql_int64 l2;
+
+// The statement ending at line XXXX
+//
+extern cql_bool b2;
+
+// The statement ending at line XXXX
+//
+extern cql_string_ref _Nonnull t2;
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+extern cql_nullable_int32 side_effect1(void);
+
+// The statement ending at line XXXX
+//
+extern cql_nullable_int32 side_effect2(void);
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+extern void test(cql_int32 i);
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+extern void out_test(cql_int32 *_Nonnull i, cql_nullable_int32 *_Nonnull ii);
+
+// The statement ending at line XXXX
+//
+extern cql_nullable_int64 longint_var;
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+extern cql_nullable_int32 col1;
+
+// The statement ending at line XXXX
+//
+extern cql_double col2;
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+extern cql_int32 arg1;
+
+// The statement ending at line XXXX
+//
+extern cql_int32 arg2;
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code outparm_test(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull foo);
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code throwing(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+#define CRC_with_result_set -8462755000888307759L
+
+extern cql_string_ref _Nonnull with_result_set_stored_procedure_name;
+
+#define with_result_set_data_types_count 5
+
+cql_result_set_type_decl(with_result_set_result_set, with_result_set_result_set_ref);
+extern cql_int32 with_result_set_get_id(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_string_ref _Nullable with_result_set_get_name(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool with_result_set_get_rate_is_null(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int64 with_result_set_get_rate_value(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool with_result_set_get_type_is_null(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 with_result_set_get_type_value(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool with_result_set_get_size_is_null(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double with_result_set_get_size_value(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 with_result_set_result_count(with_result_set_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code with_result_set_fetch_results(sqlite3 *_Nonnull _db_, with_result_set_result_set_ref _Nullable *_Nonnull result_set);
+#define with_result_set_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define with_result_set_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define with_result_set_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+//
+#define CRC_select_from_view 1538727920194423091L
+
+extern cql_string_ref _Nonnull select_from_view_stored_procedure_name;
+
+#define select_from_view_data_types_count 2
+
+cql_result_set_type_decl(select_from_view_result_set, select_from_view_result_set_ref);
+extern cql_int32 select_from_view_get_id(select_from_view_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool select_from_view_get_type_is_null(select_from_view_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 select_from_view_get_type_value(select_from_view_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 select_from_view_result_count(select_from_view_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code select_from_view_fetch_results(sqlite3 *_Nonnull _db_, select_from_view_result_set_ref _Nullable *_Nonnull result_set);
+#define select_from_view_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define select_from_view_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define select_from_view_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code make_view(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code make_index(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+#define CRC_get_data -1330313969999978982L
+
+extern cql_string_ref _Nonnull get_data_stored_procedure_name;
+
+#define get_data_data_types_count 5
+
+cql_result_set_type_decl(get_data_result_set, get_data_result_set_ref);
+extern cql_int32 get_data_get_id(get_data_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_string_ref _Nullable get_data_get_name(get_data_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool get_data_get_rate_is_null(get_data_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int64 get_data_get_rate_value(get_data_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool get_data_get_type_is_null(get_data_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 get_data_get_type_value(get_data_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool get_data_get_size_is_null(get_data_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double get_data_get_size_value(get_data_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 get_data_result_count(get_data_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code get_data_fetch_results(sqlite3 *_Nonnull _db_, get_data_result_set_ref _Nullable *_Nonnull result_set, cql_string_ref _Nonnull name_, cql_int32 id_);
+#define get_data_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define get_data_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define get_data_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code easy_fetch(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+extern void copy_int(cql_nullable_int32 a, cql_nullable_int32 *_Nonnull b);
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code insert_rowid_reader(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+extern cql_string_ref _Nonnull s;
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code xyzzy_test(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+#define CRC_complex_return 8153353821257004813L
+
+extern cql_string_ref _Nonnull complex_return_stored_procedure_name;
+
+#define complex_return_data_types_count 6
+
+cql_result_set_type_decl(complex_return_result_set, complex_return_result_set_ref);
+extern cql_bool complex_return_get__bool(complex_return_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 complex_return_get__integer(complex_return_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int64 complex_return_get__longint(complex_return_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double complex_return_get__real(complex_return_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_string_ref _Nonnull complex_return_get__text(complex_return_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool complex_return_get__nullable_bool_is_null(complex_return_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool complex_return_get__nullable_bool_value(complex_return_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 complex_return_result_count(complex_return_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code complex_return_fetch_results(sqlite3 *_Nonnull _db_, complex_return_result_set_ref _Nullable *_Nonnull result_set);
+#define complex_return_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define complex_return_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define complex_return_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+//
+#define CRC_hierarchical_query -2548306388193447686L
+
+extern cql_string_ref _Nonnull hierarchical_query_stored_procedure_name;
+
+#define hierarchical_query_data_types_count 1
+
+cql_result_set_type_decl(hierarchical_query_result_set, hierarchical_query_result_set_ref);
+extern cql_int32 hierarchical_query_get_id(hierarchical_query_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 hierarchical_query_result_count(hierarchical_query_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code hierarchical_query_fetch_results(sqlite3 *_Nonnull _db_, hierarchical_query_result_set_ref _Nullable *_Nonnull result_set, cql_int64 rate_, cql_int32 limit_, cql_int32 offset_);
+#define hierarchical_query_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define hierarchical_query_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define hierarchical_query_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+//
+#define CRC_hierarchical_unmatched_query -3803198157393737800L
+
+extern cql_string_ref _Nonnull hierarchical_unmatched_query_stored_procedure_name;
+
+#define hierarchical_unmatched_query_data_types_count 1
+
+cql_result_set_type_decl(hierarchical_unmatched_query_result_set, hierarchical_unmatched_query_result_set_ref);
+extern cql_int32 hierarchical_unmatched_query_get_id(hierarchical_unmatched_query_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 hierarchical_unmatched_query_result_count(hierarchical_unmatched_query_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code hierarchical_unmatched_query_fetch_results(sqlite3 *_Nonnull _db_, hierarchical_unmatched_query_result_set_ref _Nullable *_Nonnull result_set, cql_int64 rate_, cql_int32 limit_, cql_int32 offset_);
+#define hierarchical_unmatched_query_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define hierarchical_unmatched_query_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define hierarchical_unmatched_query_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+//
+#define CRC_union_select -7442745365923835667L
+
+extern cql_string_ref _Nonnull union_select_stored_procedure_name;
+
+#define union_select_data_types_count 1
+
+cql_result_set_type_decl(union_select_result_set, union_select_result_set_ref);
+extern cql_int32 union_select_get_A(union_select_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 union_select_result_count(union_select_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code union_select_fetch_results(sqlite3 *_Nonnull _db_, union_select_result_set_ref _Nullable *_Nonnull result_set);
+#define union_select_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define union_select_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define union_select_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+//
+#define CRC_union_all_select -8038533317083411538L
+
+extern cql_string_ref _Nonnull union_all_select_stored_procedure_name;
+
+#define union_all_select_data_types_count 1
+
+cql_result_set_type_decl(union_all_select_result_set, union_all_select_result_set_ref);
+extern cql_int32 union_all_select_get_A(union_all_select_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 union_all_select_result_count(union_all_select_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code union_all_select_fetch_results(sqlite3 *_Nonnull _db_, union_all_select_result_set_ref _Nullable *_Nonnull result_set);
+#define union_all_select_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define union_all_select_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define union_all_select_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+//
+#define CRC_union_all_with_nullable -7529651333981875221L
+
+extern cql_string_ref _Nonnull union_all_with_nullable_stored_procedure_name;
+
+#define union_all_with_nullable_data_types_count 1
+
+cql_result_set_type_decl(union_all_with_nullable_result_set, union_all_with_nullable_result_set_ref);
+extern cql_string_ref _Nullable union_all_with_nullable_get_name(union_all_with_nullable_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 union_all_with_nullable_result_count(union_all_with_nullable_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code union_all_with_nullable_fetch_results(sqlite3 *_Nonnull _db_, union_all_with_nullable_result_set_ref _Nullable *_Nonnull result_set);
+#define union_all_with_nullable_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define union_all_with_nullable_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define union_all_with_nullable_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code with_stmt_using_cursor(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+#define CRC_with_stmt 4334962548519502302L
+
+extern cql_string_ref _Nonnull with_stmt_stored_procedure_name;
+
+#define with_stmt_data_types_count 3
+
+cql_result_set_type_decl(with_stmt_result_set, with_stmt_result_set_ref);
+extern cql_int32 with_stmt_get_a(with_stmt_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 with_stmt_get_b(with_stmt_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 with_stmt_get_c(with_stmt_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 with_stmt_result_count(with_stmt_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code with_stmt_fetch_results(sqlite3 *_Nonnull _db_, with_stmt_result_set_ref _Nullable *_Nonnull result_set);
+#define with_stmt_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define with_stmt_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define with_stmt_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+//
+#define CRC_with_recursive_stmt -6110972863628360529L
+
+extern cql_string_ref _Nonnull with_recursive_stmt_stored_procedure_name;
+
+#define with_recursive_stmt_data_types_count 3
+
+cql_result_set_type_decl(with_recursive_stmt_result_set, with_recursive_stmt_result_set_ref);
+extern cql_int32 with_recursive_stmt_get_a(with_recursive_stmt_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 with_recursive_stmt_get_b(with_recursive_stmt_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 with_recursive_stmt_get_c(with_recursive_stmt_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 with_recursive_stmt_result_count(with_recursive_stmt_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code with_recursive_stmt_fetch_results(sqlite3 *_Nonnull _db_, with_recursive_stmt_result_set_ref _Nullable *_Nonnull result_set);
+#define with_recursive_stmt_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define with_recursive_stmt_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define with_recursive_stmt_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+//
+#define CRC_parent_proc -4084833990162251007L
+
+extern cql_string_ref _Nonnull parent_proc_stored_procedure_name;
+
+#define parent_proc_data_types_count 3
+
+cql_result_set_type_decl(parent_proc_result_set, parent_proc_result_set_ref);
+extern cql_int32 parent_proc_get_one(parent_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 parent_proc_get_two(parent_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 parent_proc_get_three(parent_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 parent_proc_result_count(parent_proc_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code parent_proc_fetch_results(sqlite3 *_Nonnull _db_, parent_proc_result_set_ref _Nullable *_Nonnull result_set);
+#define parent_proc_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define parent_proc_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define parent_proc_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+//
+#define CRC_parent_proc_child 5714243254880406781L
+
+extern cql_string_ref _Nonnull parent_proc_child_stored_procedure_name;
+
+#define parent_proc_child_data_types_count 3
+
+cql_result_set_type_decl(parent_proc_child_result_set, parent_proc_child_result_set_ref);
+extern cql_int32 parent_proc_child_get_four(parent_proc_child_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 parent_proc_child_get_five(parent_proc_child_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 parent_proc_child_get_six(parent_proc_child_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 parent_proc_child_result_count(parent_proc_child_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code parent_proc_child_fetch_results(sqlite3 *_Nonnull _db_, parent_proc_child_result_set_ref _Nullable *_Nonnull result_set);
+#define parent_proc_child_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define parent_proc_child_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define parent_proc_child_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code outint_nullable(sqlite3 *_Nonnull _db_, cql_nullable_int32 *_Nonnull output, cql_bool *_Nonnull result);
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code outint_notnull(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull output, cql_bool *_Nonnull result);
+
+// The statement ending at line XXXX
+//
+extern cql_nullable_double simple_func(cql_nullable_int32 int1);
+
+// The statement ending at line XXXX
+//
+extern cql_nullable_double result;
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+extern cql_string_ref _Nonnull text_func(cql_nullable_int32 int1, cql_int32 int2);
+
+// The statement ending at line XXXX
+//
+extern cql_string_ref _Nullable text_result;
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+extern cql_object_ref _Nullable obj_var;
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+extern cql_object_ref _Nonnull obj_var2;
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+extern void obj_proc(cql_object_ref _Nullable *_Nonnull an_object);
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+extern cql_object_ref _Nullable obj_func(void);
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+extern cql_object_ref _Nullable obj_func_create(void);
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+extern cql_string_ref _Nullable text_func_create(void);
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+extern void unused_temp(cql_nullable_int32 i, cql_int32 *_Nonnull o);
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code insert_values(sqlite3 *_Nonnull _db_, cql_int32 id_, cql_nullable_int32 type_);
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code alter_table_test(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code drop_table_test(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+#define CRC_uses_proc_for_result -9152262322045682524L
+
+extern cql_string_ref _Nonnull uses_proc_for_result_stored_procedure_name;
+
+#define uses_proc_for_result_data_types_count 5
+
+cql_result_set_type_decl(uses_proc_for_result_result_set, uses_proc_for_result_result_set_ref);
+extern cql_int32 uses_proc_for_result_get_id(uses_proc_for_result_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_string_ref _Nullable uses_proc_for_result_get_name(uses_proc_for_result_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool uses_proc_for_result_get_rate_is_null(uses_proc_for_result_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int64 uses_proc_for_result_get_rate_value(uses_proc_for_result_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool uses_proc_for_result_get_type_is_null(uses_proc_for_result_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 uses_proc_for_result_get_type_value(uses_proc_for_result_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool uses_proc_for_result_get_size_is_null(uses_proc_for_result_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double uses_proc_for_result_get_size_value(uses_proc_for_result_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 uses_proc_for_result_result_count(uses_proc_for_result_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code uses_proc_for_result_fetch_results(sqlite3 *_Nonnull _db_, uses_proc_for_result_result_set_ref _Nullable *_Nonnull result_set);
+#define uses_proc_for_result_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define uses_proc_for_result_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define uses_proc_for_result_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+//
+extern cql_nullable_int32 voidfunc(void);
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code index_dropper(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code misc_dml_proc(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code dummy_user(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+extern void proc_with_out_arg(cql_string_ref _Nullable *_Nonnull foo);
+
+// The statement ending at line XXXX
+//
+extern void calls_out_proc(cql_string_ref _Nullable *_Nonnull foo);
+
+// The statement ending at line XXXX
+//
+extern cql_blob_ref _Nullable blob_var;
+
+// The statement ending at line XXXX
+//
+extern cql_blob_ref _Nonnull blob_var2;
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+extern void blob_proc(cql_blob_ref _Nullable *_Nonnull a_blob);
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+extern cql_blob_ref _Nullable blob_func(void);
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+extern cql_blob_ref _Nullable blob_func_create(void);
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+extern cql_blob_ref _Nonnull blob_var_notnull;
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+#define CRC_blob_returner 3241832673956482800L
+
+extern cql_string_ref _Nonnull blob_returner_stored_procedure_name;
+
+#define blob_returner_data_types_count 3
+
+cql_result_set_type_decl(blob_returner_result_set, blob_returner_result_set_ref);
+extern cql_int32 blob_returner_get_blob_id(blob_returner_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_blob_ref _Nonnull blob_returner_get_b_notnull(blob_returner_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_blob_ref _Nullable blob_returner_get_b_nullable(blob_returner_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 blob_returner_result_count(blob_returner_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code blob_returner_fetch_results(sqlite3 *_Nonnull _db_, blob_returner_result_set_ref _Nullable *_Nonnull result_set);
+#define blob_returner_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define blob_returner_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define blob_returner_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+extern void voidproc(void);
+
+// The statement ending at line XXXX
+//
+#define CRC_out_cursor_proc -7895376640878571837L
+
+extern cql_string_ref _Nonnull out_cursor_proc_stored_procedure_name;
+
+#define out_cursor_proc_data_types_count 7
+
+cql_result_set_type_decl(out_cursor_proc_result_set, out_cursor_proc_result_set_ref);
+extern cql_int32 out_cursor_proc_get_id(out_cursor_proc_result_set_ref _Nonnull result_set);
+extern cql_string_ref _Nullable out_cursor_proc_get_name(out_cursor_proc_result_set_ref _Nonnull result_set);
+extern cql_bool out_cursor_proc_get_rate_is_null(out_cursor_proc_result_set_ref _Nonnull result_set);
+extern cql_int64 out_cursor_proc_get_rate_value(out_cursor_proc_result_set_ref _Nonnull result_set);
+extern cql_bool out_cursor_proc_get_type_is_null(out_cursor_proc_result_set_ref _Nonnull result_set);
+extern cql_int32 out_cursor_proc_get_type_value(out_cursor_proc_result_set_ref _Nonnull result_set);
+extern cql_bool out_cursor_proc_get_size_is_null(out_cursor_proc_result_set_ref _Nonnull result_set);
+extern cql_double out_cursor_proc_get_size_value(out_cursor_proc_result_set_ref _Nonnull result_set);
+extern cql_string_ref _Nonnull out_cursor_proc_get_extra1(out_cursor_proc_result_set_ref _Nonnull result_set);
+extern cql_string_ref _Nonnull out_cursor_proc_get_extra2(out_cursor_proc_result_set_ref _Nonnull result_set);
+extern cql_int32 out_cursor_proc_result_count(out_cursor_proc_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code out_cursor_proc_fetch_results(sqlite3 *_Nonnull _db_, out_cursor_proc_result_set_ref _Nullable *_Nonnull result_set);
+#define out_cursor_proc_copy(result_set, result_set_to) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  0, \
+  1)
+#define out_cursor_proc_hash(result_set) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), 0)
+#define out_cursor_proc_equal(rs1, rs2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  0, \
+  (cql_result_set_ref)(rs2), \
+  0)
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code read_cursor_proc(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code declare_cursor_then_fetch_from_proc(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code dml_user(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull a_);
+
+// The statement ending at line XXXX
+//
+#define CRC_thread_theme_info_list -4641848489331687415L
+
+extern cql_string_ref _Nonnull thread_theme_info_list_stored_procedure_name;
+
+#define thread_theme_info_list_data_types_count 1
+
+cql_result_set_type_decl(thread_theme_info_list_result_set, thread_theme_info_list_result_set_ref);
+extern cql_int64 thread_theme_info_list_get_thread_key(thread_theme_info_list_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 thread_theme_info_list_result_count(thread_theme_info_list_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code thread_theme_info_list_fetch_results(sqlite3 *_Nonnull _db_, thread_theme_info_list_result_set_ref _Nullable *_Nonnull result_set, cql_int64 thread_key_);
+#define thread_theme_info_list_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define thread_theme_info_list_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define thread_theme_info_list_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+//
+extern void fetch_values_dummy(void);
+
+// The statement ending at line XXXX
+//
+extern void c_literal(cql_string_ref _Nullable *_Nonnull x);
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code no_cleanup_label_needed_proc(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code no_code_after_catch(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+#define CRC_out_no_db 6405231635538004839L
+
+extern cql_string_ref _Nonnull out_no_db_stored_procedure_name;
+
+#define out_no_db_data_types_count 2
+
+cql_result_set_type_decl(out_no_db_result_set, out_no_db_result_set_ref);
+extern cql_int32 out_no_db_get_A(out_no_db_result_set_ref _Nonnull result_set);
+extern cql_double out_no_db_get_B(out_no_db_result_set_ref _Nonnull result_set);
+extern cql_int32 out_no_db_result_count(out_no_db_result_set_ref _Nonnull result_set);
+extern void out_no_db_fetch_results( out_no_db_result_set_ref _Nullable *_Nonnull result_set);
+#define out_no_db_copy(result_set, result_set_to) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  0, \
+  1)
+#define out_no_db_hash(result_set) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), 0)
+#define out_no_db_equal(rs1, rs2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  0, \
+  (cql_result_set_ref)(rs2), \
+  0)
+
+// The statement ending at line XXXX
+//
+#define CRC_declare_cursor_like_cursor 6877362305148286669L
+
+extern cql_string_ref _Nonnull declare_cursor_like_cursor_stored_procedure_name;
+
+#define declare_cursor_like_cursor_data_types_count 2
+
+cql_result_set_type_decl(declare_cursor_like_cursor_result_set, declare_cursor_like_cursor_result_set_ref);
+extern cql_int32 declare_cursor_like_cursor_get_A(declare_cursor_like_cursor_result_set_ref _Nonnull result_set);
+extern cql_double declare_cursor_like_cursor_get_B(declare_cursor_like_cursor_result_set_ref _Nonnull result_set);
+extern cql_int32 declare_cursor_like_cursor_result_count(declare_cursor_like_cursor_result_set_ref _Nonnull result_set);
+extern void declare_cursor_like_cursor_fetch_results( declare_cursor_like_cursor_result_set_ref _Nullable *_Nonnull result_set);
+#define declare_cursor_like_cursor_copy(result_set, result_set_to) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  0, \
+  1)
+#define declare_cursor_like_cursor_hash(result_set) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), 0)
+#define declare_cursor_like_cursor_equal(rs1, rs2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  0, \
+  (cql_result_set_ref)(rs2), \
+  0)
+
+// The statement ending at line XXXX
+//
+#define CRC_declare_cursor_like_proc -7347092251664083859L
+
+extern cql_string_ref _Nonnull declare_cursor_like_proc_stored_procedure_name;
+
+#define declare_cursor_like_proc_data_types_count 2
+
+cql_result_set_type_decl(declare_cursor_like_proc_result_set, declare_cursor_like_proc_result_set_ref);
+extern cql_bool declare_cursor_like_proc_get_a_is_null(declare_cursor_like_proc_result_set_ref _Nonnull result_set);
+extern cql_int32 declare_cursor_like_proc_get_a_value(declare_cursor_like_proc_result_set_ref _Nonnull result_set);
+extern cql_string_ref _Nullable declare_cursor_like_proc_get_b(declare_cursor_like_proc_result_set_ref _Nonnull result_set);
+extern cql_int32 declare_cursor_like_proc_result_count(declare_cursor_like_proc_result_set_ref _Nonnull result_set);
+extern void declare_cursor_like_proc_fetch_results( declare_cursor_like_proc_result_set_ref _Nullable *_Nonnull result_set);
+#define declare_cursor_like_proc_copy(result_set, result_set_to) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  0, \
+  1)
+#define declare_cursor_like_proc_hash(result_set) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), 0)
+#define declare_cursor_like_proc_equal(rs1, rs2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  0, \
+  (cql_result_set_ref)(rs2), \
+  0)
+
+// The statement ending at line XXXX
+//
+#define CRC_declare_cursor_like_table -1889008868386577987L
+
+extern cql_string_ref _Nonnull declare_cursor_like_table_stored_procedure_name;
+
+#define declare_cursor_like_table_data_types_count 5
+
+cql_result_set_type_decl(declare_cursor_like_table_result_set, declare_cursor_like_table_result_set_ref);
+extern cql_int32 declare_cursor_like_table_get_id(declare_cursor_like_table_result_set_ref _Nonnull result_set);
+extern cql_string_ref _Nullable declare_cursor_like_table_get_name(declare_cursor_like_table_result_set_ref _Nonnull result_set);
+extern cql_bool declare_cursor_like_table_get_rate_is_null(declare_cursor_like_table_result_set_ref _Nonnull result_set);
+extern cql_int64 declare_cursor_like_table_get_rate_value(declare_cursor_like_table_result_set_ref _Nonnull result_set);
+extern cql_bool declare_cursor_like_table_get_type_is_null(declare_cursor_like_table_result_set_ref _Nonnull result_set);
+extern cql_int32 declare_cursor_like_table_get_type_value(declare_cursor_like_table_result_set_ref _Nonnull result_set);
+extern cql_bool declare_cursor_like_table_get_size_is_null(declare_cursor_like_table_result_set_ref _Nonnull result_set);
+extern cql_double declare_cursor_like_table_get_size_value(declare_cursor_like_table_result_set_ref _Nonnull result_set);
+extern cql_int32 declare_cursor_like_table_result_count(declare_cursor_like_table_result_set_ref _Nonnull result_set);
+extern void declare_cursor_like_table_fetch_results( declare_cursor_like_table_result_set_ref _Nullable *_Nonnull result_set);
+#define declare_cursor_like_table_copy(result_set, result_set_to) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  0, \
+  1)
+#define declare_cursor_like_table_hash(result_set) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), 0)
+#define declare_cursor_like_table_equal(rs1, rs2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  0, \
+  (cql_result_set_ref)(rs2), \
+  0)
+
+// The statement ending at line XXXX
+//
+#define CRC_declare_cursor_like_view -5701296118673669415L
+
+extern cql_string_ref _Nonnull declare_cursor_like_view_stored_procedure_name;
+
+#define declare_cursor_like_view_data_types_count 3
+
+cql_result_set_type_decl(declare_cursor_like_view_result_set, declare_cursor_like_view_result_set_ref);
+extern cql_int32 declare_cursor_like_view_get_f1(declare_cursor_like_view_result_set_ref _Nonnull result_set);
+extern cql_int32 declare_cursor_like_view_get_f2(declare_cursor_like_view_result_set_ref _Nonnull result_set);
+extern cql_int32 declare_cursor_like_view_get_f3(declare_cursor_like_view_result_set_ref _Nonnull result_set);
+extern cql_int32 declare_cursor_like_view_result_count(declare_cursor_like_view_result_set_ref _Nonnull result_set);
+extern void declare_cursor_like_view_fetch_results( declare_cursor_like_view_result_set_ref _Nullable *_Nonnull result_set);
+#define declare_cursor_like_view_copy(result_set, result_set_to) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  0, \
+  1)
+#define declare_cursor_like_view_hash(result_set) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), 0)
+#define declare_cursor_like_view_equal(rs1, rs2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  0, \
+  (cql_result_set_ref)(rs2), \
+  0)
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code weird_quoting(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code long_auto_table_maker(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+extern void blob_call1(void);
+
+// The statement ending at line XXXX
+//
+extern void blob_call2(void);
+
+// The statement ending at line XXXX
+//
+extern void blob_no_else(void);
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code with_inserter(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code multi_rewrite(sqlite3 *_Nonnull _db_, cql_int32 blob_id_, cql_blob_ref _Nonnull b_notnull_, cql_blob_ref _Nullable b_nullable_, cql_int32 id_, cql_string_ref _Nullable name_, cql_nullable_int64 rate_, cql_nullable_int32 type_, cql_nullable_double size_, cql_int32 *_Nonnull out_arg);
+
+// The statement ending at line XXXX
+//
+#define CRC_fetch_to_cursor_from_cursor 2469333203870699311L
+
+extern cql_string_ref _Nonnull fetch_to_cursor_from_cursor_stored_procedure_name;
+
+#define fetch_to_cursor_from_cursor_data_types_count 2
+
+cql_result_set_type_decl(fetch_to_cursor_from_cursor_result_set, fetch_to_cursor_from_cursor_result_set_ref);
+extern cql_int32 fetch_to_cursor_from_cursor_get_A(fetch_to_cursor_from_cursor_result_set_ref _Nonnull result_set);
+extern cql_string_ref _Nonnull fetch_to_cursor_from_cursor_get_B(fetch_to_cursor_from_cursor_result_set_ref _Nonnull result_set);
+extern cql_int32 fetch_to_cursor_from_cursor_result_count(fetch_to_cursor_from_cursor_result_set_ref _Nonnull result_set);
+extern void fetch_to_cursor_from_cursor_fetch_results( fetch_to_cursor_from_cursor_result_set_ref _Nullable *_Nonnull result_set);
+#define fetch_to_cursor_from_cursor_copy(result_set, result_set_to) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  0, \
+  1)
+#define fetch_to_cursor_from_cursor_hash(result_set) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), 0)
+#define fetch_to_cursor_from_cursor_equal(rs1, rs2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  0, \
+  (cql_result_set_ref)(rs2), \
+  0)
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code loop_statement_cursor(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code loop_statement_not_auto_cursor(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code make_trigger(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+extern void is_test(void);
+
+// The statement ending at line XXXX
+//
+extern void is_not_test(void);
+
+// The statement ending at line XXXX
+//
+extern void in_test(cql_nullable_int32 x, cql_nullable_bool *_Nonnull b);
+
+// The statement ending at line XXXX
+//
+extern void not_in_test(cql_nullable_int32 x, cql_nullable_bool *_Nonnull b);
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code drop_trigger_test(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+#define CRC_simple_identity 336016010359056406L
+
+extern cql_string_ref _Nonnull simple_identity_stored_procedure_name;
+
+#define simple_identity_data_types_count 2
+
+cql_result_set_type_decl(simple_identity_result_set, simple_identity_result_set_ref);
+extern cql_int32 simple_identity_get_id(simple_identity_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 simple_identity_get_data(simple_identity_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 simple_identity_result_count(simple_identity_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code simple_identity_fetch_results(sqlite3 *_Nonnull _db_, simple_identity_result_set_ref _Nullable *_Nonnull result_set);
+#define simple_identity_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define simple_identity_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define simple_identity_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+#define simple_identity_row_same(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsSame( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+//
+#define CRC_complex_identity 26713709601603392L
+
+extern cql_string_ref _Nonnull complex_identity_stored_procedure_name;
+
+#define complex_identity_data_types_count 3
+
+cql_result_set_type_decl(complex_identity_result_set, complex_identity_result_set_ref);
+extern cql_int32 complex_identity_get_col1(complex_identity_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 complex_identity_get_col2(complex_identity_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 complex_identity_get_data(complex_identity_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 complex_identity_result_count(complex_identity_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code complex_identity_fetch_results(sqlite3 *_Nonnull _db_, complex_identity_result_set_ref _Nullable *_Nonnull result_set);
+#define complex_identity_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define complex_identity_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define complex_identity_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+#define complex_identity_row_same(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsSame( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+//
+#define CRC_out_cursor_identity 8497338404862860919L
+
+extern cql_string_ref _Nonnull out_cursor_identity_stored_procedure_name;
+
+#define out_cursor_identity_data_types_count 2
+
+cql_result_set_type_decl(out_cursor_identity_result_set, out_cursor_identity_result_set_ref);
+extern cql_int32 out_cursor_identity_get_id(out_cursor_identity_result_set_ref _Nonnull result_set);
+extern cql_int32 out_cursor_identity_get_data(out_cursor_identity_result_set_ref _Nonnull result_set);
+extern cql_int32 out_cursor_identity_result_count(out_cursor_identity_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code out_cursor_identity_fetch_results(sqlite3 *_Nonnull _db_, out_cursor_identity_result_set_ref _Nullable *_Nonnull result_set);
+#define out_cursor_identity_copy(result_set, result_set_to) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  0, \
+  1)
+#define out_cursor_identity_hash(result_set) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), 0)
+#define out_cursor_identity_equal(rs1, rs2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  0, \
+  (cql_result_set_ref)(rs2), \
+  0)
+#define out_cursor_identity_same(rs1, rs2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsSame( \
+  (cql_result_set_ref)(rs1), \
+  0, \
+  (cql_result_set_ref)(rs2), \
+  0)
+
+// The statement ending at line XXXX
+//
+#define CRC_radioactive_proc -5485552865991672731L
+
+extern cql_string_ref _Nonnull radioactive_proc_stored_procedure_name;
+
+#define radioactive_proc_data_types_count 2
+
+cql_result_set_type_decl(radioactive_proc_result_set, radioactive_proc_result_set_ref);
+extern cql_int32 radioactive_proc_get_id(radioactive_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_string_ref _Nullable radioactive_proc_get_data(radioactive_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 radioactive_proc_result_count(radioactive_proc_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code radioactive_proc_fetch_results(sqlite3 *_Nonnull _db_, radioactive_proc_result_set_ref _Nullable *_Nonnull result_set);
+#define radioactive_proc_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define radioactive_proc_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define radioactive_proc_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code with_deleter(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code with_updater(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+#define CRC_autodropper 1776998687585002437L
+
+extern cql_string_ref _Nonnull autodropper_stored_procedure_name;
+
+#define autodropper_data_types_count 2
+
+cql_result_set_type_decl(autodropper_result_set, autodropper_result_set_ref);
+extern cql_int32 autodropper_get_a(autodropper_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 autodropper_get_b(autodropper_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 autodropper_result_count(autodropper_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code autodropper_fetch_results(sqlite3 *_Nonnull _db_, autodropper_result_set_ref _Nullable *_Nonnull result_set);
+#define autodropper_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define autodropper_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define autodropper_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+#define CRC_simple_cursor_proc -6717012445748654937L
+
+extern cql_string_ref _Nonnull simple_cursor_proc_stored_procedure_name;
+
+#define simple_cursor_proc_data_types_count 1
+
+cql_result_set_type_decl(simple_cursor_proc_result_set, simple_cursor_proc_result_set_ref);
+extern cql_int32 simple_cursor_proc_get_id(simple_cursor_proc_result_set_ref _Nonnull result_set);
+extern cql_int32 simple_cursor_proc_result_count(simple_cursor_proc_result_set_ref _Nonnull result_set);
+extern void simple_cursor_proc_fetch_results( simple_cursor_proc_result_set_ref _Nullable *_Nonnull result_set);
+#define simple_cursor_proc_copy(result_set, result_set_to) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  0, \
+  1)
+#define simple_cursor_proc_hash(result_set) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), 0)
+#define simple_cursor_proc_equal(rs1, rs2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  0, \
+  (cql_result_set_ref)(rs2), \
+  0)
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+#define CRC_redundant_cast 3726092864985662652L
+
+extern cql_string_ref _Nonnull redundant_cast_stored_procedure_name;
+
+#define redundant_cast_data_types_count 2
+
+cql_result_set_type_decl(redundant_cast_result_set, redundant_cast_result_set_ref);
+extern cql_int32 redundant_cast_get_plugh(redundant_cast_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 redundant_cast_get_five(redundant_cast_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 redundant_cast_result_count(redundant_cast_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code redundant_cast_fetch_results(sqlite3 *_Nonnull _db_, redundant_cast_result_set_ref _Nullable *_Nonnull result_set);
+#define redundant_cast_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define redundant_cast_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define redundant_cast_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code view_creator(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code settings_info(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code use_with_select(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code rowset_object_reader(sqlite3 *_Nonnull _db_, cql_object_ref _Nullable rowset);
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code upsert_do_something(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code upsert_do_nothing(sqlite3 *_Nonnull _db_, cql_int32 id_);
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code use_many_out_cursors(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code fetch_many_times(sqlite3 *_Nonnull _db_, cql_bool arg);
+
+// The statement ending at line XXXX
+//
+#define CRC_out_union_two -7047738911302453990L
+
+extern cql_string_ref _Nonnull out_union_two_stored_procedure_name;
+
+#define out_union_two_data_types_count 2
+
+cql_result_set_type_decl(out_union_two_result_set, out_union_two_result_set_ref);
+extern cql_int32 out_union_two_get_x(out_union_two_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_string_ref _Nonnull out_union_two_get_y(out_union_two_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 out_union_two_result_count(out_union_two_result_set_ref _Nonnull result_set);
+#define out_union_two_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define out_union_two_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define out_union_two_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+extern void out_union_two_fetch_results(out_union_two_result_set_ref _Nullable *_Nonnull _result_set_);
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code out_union_reader(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+#define CRC_out_union_from_select -3373972202385251196L
+
+extern cql_string_ref _Nonnull out_union_from_select_stored_procedure_name;
+
+#define out_union_from_select_data_types_count 2
+
+cql_result_set_type_decl(out_union_from_select_result_set, out_union_from_select_result_set_ref);
+extern cql_int32 out_union_from_select_get_x(out_union_from_select_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_string_ref _Nonnull out_union_from_select_get_y(out_union_from_select_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 out_union_from_select_result_count(out_union_from_select_result_set_ref _Nonnull result_set);
+#define out_union_from_select_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define out_union_from_select_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define out_union_from_select_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+extern CQL_WARN_UNUSED cql_code out_union_from_select_fetch_results(sqlite3 *_Nonnull _db_, out_union_from_select_result_set_ref _Nullable *_Nonnull _result_set_);
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code out_union_dml_reader(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code compound_select_expr(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+#define CRC_window_function_invocation 5118069911674996300L
+
+extern cql_string_ref _Nonnull window_function_invocation_stored_procedure_name;
+
+#define window_function_invocation_data_types_count 2
+
+cql_result_set_type_decl(window_function_invocation_result_set, window_function_invocation_result_set_ref);
+extern cql_int32 window_function_invocation_get_id(window_function_invocation_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window_function_invocation_get_row_num(window_function_invocation_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window_function_invocation_result_count(window_function_invocation_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code window_function_invocation_fetch_results(sqlite3 *_Nonnull _db_, window_function_invocation_result_set_ref _Nullable *_Nonnull result_set);
+#define window_function_invocation_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define window_function_invocation_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define window_function_invocation_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code update_cursor(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+#define CRC_use_return 6020670114685873144L
+
+extern cql_string_ref _Nonnull use_return_stored_procedure_name;
+
+#define use_return_data_types_count 1
+
+cql_result_set_type_decl(use_return_result_set, use_return_result_set_ref);
+extern cql_int32 use_return_get_x(use_return_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 use_return_result_count(use_return_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code use_return_fetch_results(sqlite3 *_Nonnull _db_, use_return_result_set_ref _Nullable *_Nonnull result_set);
+#define use_return_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define use_return_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define use_return_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+//
+extern void use_return_no_error_flow(void);
+
+// The statement ending at line XXXX
+//
+extern void empty_proc(void);
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code empty_blocks(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code tail_catch(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code pretty_print_with_quote(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code hex_quote(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+//
+#define CRC_lotsa_columns_no_getters -713697970532333955L
+
+extern cql_string_ref _Nonnull lotsa_columns_no_getters_stored_procedure_name;
+
+#define lotsa_columns_no_getters_data_types_count 5
+
+cql_result_set_type_decl(lotsa_columns_no_getters_result_set, lotsa_columns_no_getters_result_set_ref);
+extern cql_int32 lotsa_columns_no_getters_result_count(lotsa_columns_no_getters_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code lotsa_columns_no_getters_fetch_results(sqlite3 *_Nonnull _db_, lotsa_columns_no_getters_result_set_ref _Nullable *_Nonnull result_set);
+#define lotsa_columns_no_getters_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define lotsa_columns_no_getters_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define lotsa_columns_no_getters_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+//
+extern CQL_WARN_UNUSED cql_code early_out_rc_cleared(sqlite3 *_Nonnull _db_, cql_nullable_int32 *_Nonnull x);
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+//
+#define CRC_ext 8280780522605848147L
+
+cql_result_set_type_decl(frag_test_result_set, frag_test_result_set_ref);
+extern cql_int32 ext_get_id(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 frag_test_get_id(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
+
+extern cql_bool ext_get_f2_is_null(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool __PRIVATE__frag_test_get_f2_is_null(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
+
+extern cql_int32 ext_get_f2_value(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 __PRIVATE__frag_test_get_f2_value(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
+
+extern cql_int32 ext_result_count(frag_test_result_set_ref _Nonnull result_set);
+#define ext_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+
+// The statement ending at line XXXX
+//
+#define CRC_ext2 -8626991334703178005L
+
+cql_result_set_type_decl(frag_test_result_set, frag_test_result_set_ref);
+extern cql_int32 ext2_get_id(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 frag_test_get_id(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
+
+extern cql_bool ext2_get_f3_is_null(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool __PRIVATE__frag_test_get_f3_is_null(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
+
+extern cql_int32 ext2_get_f3_value(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 __PRIVATE__frag_test_get_f3_value(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
+
+extern cql_int32 ext2_result_count(frag_test_result_set_ref _Nonnull result_set);
+#define ext2_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+
+// The statement ending at line XXXX
+//
+extern void end_proc(void);
+
+// The statement ending at line XXXX
+//
+extern cql_nullable_int32 end_marker;

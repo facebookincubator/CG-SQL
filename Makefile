@@ -106,7 +106,6 @@ clean:
 	rm -rf cql_amalgam.gcno
 	rm -rf $O
 	mkdir $O
-	touch $O/.hgempty
 
 amalgam: $O/cql.c $O/cql.y.c $O/cql.y.h
 	bash make_amalgam.sh
@@ -116,16 +115,16 @@ amalgam: $O/cql.c $O/cql.y.c $O/cql.y.h
 $O/cql.y.o: $O/cql.y.c $O/cql.y.h
 
 cg_test:
-	$(CC) $(CFLAGS) -c -o $O/cg_test $O/cg_test.c
+	$(CC) $(CFLAGS) -c -o $O/cg_test.o $O/cg_test_c.c
 
-cg_extension_fragment_test:
-	$(CC) $(CFLAGS) -c -o $O/cg_extension_fragment_test $O/cg_extension_fragment_test.c
+cg_test_extension_fragment:
+	$(CC) $(CFLAGS) -c -o $O/cg_test_extension_fragment.o $O/cg_test_extension_fragment_c.c
 
-cg_assembly_query_test:
-	$(CC) $(CFLAGS) -c -o $O/cg_assembly_query_test $O/cg_assembly_query_test.c
+cg_test_assembly_query:
+	$(CC) $(CFLAGS) -c -o $O/cg_test_assembly_query.o $O/cg_test_assembly_query_c.c
 
 cg_test_schema_upgrade:
-	$(CC) $(CFLAGS) -c -o ${O}/cg_test_schema_upgrade.o ${O}/cg_test_schema_upgrade.out.c
+	$(CC) $(CFLAGS) -c -o ${O}/cg_test_schema_upgrade.o ${O}/cg_test_schema_upgrade.c
 
 $O/cqltest.o: $(TEST_DIR)/cqltest.c
 	$(CC) $(CFLAGS) -c -o $O/cqltest.o $(TEST_DIR)/cqltest.c

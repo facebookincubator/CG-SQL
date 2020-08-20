@@ -1,8 +1,5 @@
 #!/bin/bash
-# Copyright (c) Facebook, Inc. and its affiliates.
-#
-# This source code is licensed under the MIT license found in the
-# LICENSE file in the root directory of this source tree.
+# (c) Facebook, Inc. and its affiliates. Confidential and proprietary.
 
 colordiff() {
   diff \
@@ -32,7 +29,8 @@ normalize_lines() {
       -e "s/\.sql:[0-9]* :/.sql:XXXX :/" <"$@" >"${OUT_DIR}/__temp"
 }
 
-on_diff_exit() {
+
+__on_xdiff_exit() {
   normalize_lines "$2"
   if ! colordiff "$1" "${OUT_DIR}/__temp"
   then
@@ -42,4 +40,8 @@ on_diff_exit() {
     echo " "
     failed
   fi
+}
+
+on_diff_exit() {
+   __on_xdiff_exit "${TEST_DIR}/$1.ref" "${OUT_DIR}/$1" 
 }
