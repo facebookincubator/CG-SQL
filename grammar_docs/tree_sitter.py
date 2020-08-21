@@ -120,12 +120,16 @@ def add_sub_sequence(tokens):
     return name
 
 
+# Process a subquence within a sequence. they are a group of words within a string
+# e.g: "ELSE IF"
 def get_sub_sequence(seq):
     tokens = SPACE_PATTERN.split(seq.strip('"'))
     name = add_sub_sequence(tokens)
     return get_rule_ref(name)
 
 
+# Process a sequence in a rule.
+# e.g: else_if: "else" "if"
 def get_sequence(sequence):
     tokens_list = []
     for tk in sequence:
@@ -138,7 +142,6 @@ def get_sequence(sequence):
             else:
                 tokens_list.append(get_rule_ref(tk))
     return tokens_list
-
 
 with open(cql_grammar) as fp:
     for line in RULE_PATTERN.finditer(fp.read()):
@@ -158,7 +161,8 @@ with open(cql_grammar) as fp:
         rule_defs[name] = choices
         sorted_rule_names.append(name)
 
-# add comment, line directive and macro rules to stmt_list rule.
+# tree_sitter.py generator is base on cql_grammar.txt which does not contains the rules for
+# comment, line_directive and macro. Therefore I need to add them manually into stmt_list rule.
 rule_defs["stmt_list"] = [["stmt", "';'"], ["comment"], ["line_directive"], ["macro"]]
 
 for name in sorted_rule_names:
@@ -172,7 +176,9 @@ for name in sorted_rule_names:
         seq = get_sequence(rule)
         size = len(seq)
         if size == 0:
-            # optional rule
+            # An empty sequence in the rule indicates that the rule is optional.
+            # We dont need to do anything here, we just move on. later it's
+            # used to add the "optional()" function to optional rule's definition.
             continue
         elif size == 1:
             choices.append(seq[0])

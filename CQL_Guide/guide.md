@@ -1,3 +1,10 @@
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
+
 ## 1. Introduction
 
 CQL was designed as a precompiled addition to the the SQLite runtime system.  SQLite lacks
@@ -239,6 +246,13 @@ The above causes the C compiler to invoke only the pre-processor `-E` and to tre
 <div style="page-break-after: always; visibility: hidden"></div>
 
 
+
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
 
 # 2. Using Data
 
@@ -652,6 +666,13 @@ Which probably doesn't come up very often but it does illustrate several things:
 
 <div style="page-break-after: always; visibility: hidden"></div>
 
+
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
 
 ## 3. Expressions, Literals, Nullability, Sensitivity
 
@@ -1373,6 +1394,13 @@ cql_cleanup:
 <div style="page-break-after: always; visibility: hidden"></div>
 
 
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
+
 ## 4. Procedures, Functions, and Control Flow
 
 
@@ -1644,6 +1672,14 @@ This feature is really only syntatic sugar for the "awkward" form above, but it 
 
 
 <div style="page-break-after: always; visibility: hidden"></div>
+
+
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
 
 ## 5. Types of Cursors, OUT and OUT UNION, and FETCH flavors
 
@@ -2284,6 +2320,14 @@ The sugar features on `fetch`, `insert`, and `update cursor` are as symmetric as
  
 <div style="page-break-after: always; visibility: hidden"></div>
 
+
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
+
 ## 6. Calling Procedures Defined Elsewhere
 
 CQL generally doesn't see the whole world in one compilation.  
@@ -2551,6 +2595,14 @@ as long as they are not recombined with SQLite statements.
 
 <div style="page-break-after: always; visibility: hidden"></div>
 
+
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
+
 ## 7. CQL Result Sets
 Most of this tutorial is about the CQL language itself but here we must diverge a bit.  The purpose of the 
 result set features of CQL is to create a C interface to SQLite data.  Because of this 
@@ -2796,6 +2848,14 @@ Of course, if you make a million rows, well, that would burn a lot of memory.
 
 <div style="page-break-after: always; visibility: hidden"></div>
 
+
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
+
 ## 8. Functions
 
 CQL stored procs have a very simple contract so it is easy to declare procedures and then implement them in regular C, the C functions just have to conform to the contract.  However, there is no notion of functions at all and this makes it very inconvenient to use some external code and is not doing database things and wants to return values.  Even a random number generator or something would be difficult to use because it could not be called in the context of an expression.  To allow for this CQL adds declared functions
@@ -2976,6 +3036,14 @@ Special Functions
 `Ptr` is used to cause a reference type variable to be bound as a long integer to SQLite. This is a way of giving object pointers to SQLite UDFs.
 
 See [SQLite Core Functions](https://www.sqlite.org/lang_corefunc.html).
+
+
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
 
 ## 9. Statements Summary and Error Checking
 
@@ -3581,6 +3649,14 @@ Now in CQL, the `*` and `T.*` forms are automatically expanded, SQLite doesn't s
 In fact, only the `select *` form could possibly be different, so in most cases this ends up being moot anyway.  Typically you don't to use `*` in the presence of joins because of name duplication and ambiguity of the column names of the result set.  CQL's automatic expansion means you have a much better idea exactly what columns you will get -- those that were present in the schema you declared.
 
 <div style="page-break-after: always; visibility: hidden"></div>
+
+
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
 
 ## 10. Schema Management Features
 
@@ -4679,6 +4755,13 @@ So, in summary, to get true privacy first make whatever logical regions you like
 <div style="page-break-after: always; visibility: hidden"></div>
 
 
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
+
 ## 11. Previous Schema Validation
 
 As we saw in the previous chapter, CQL includes powerful schema management tools for creating automatic
@@ -5239,6 +5322,14 @@ NOTE: in addition to these errors, there are many more that do not require the p
 
 <div style="page-break-after: always; visibility: hidden"></div>
 
+
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
+
 ## 12. Testability Features
 CQL includes a number of features to make it easier to create what you might call "Test" procedures.  These primarily are concerned with loading up the database with dummy data, and/or validating the result of normal procedures that query the database.  There are several interesting language features in these dimensions.
 
@@ -5770,6 +5861,14 @@ CQL_WARN_UNUSED cql_code test_the_subject_populate_tables(sqlite3 *_Nonnull _db_
 So it's fairly easy to call from C/C++ test code or from CQL test code.
 
 <div style="page-break-after: always; visibility: hidden"></div>
+
+
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
 
 ## 13. JSON Output
 
@@ -6682,6 +6781,13 @@ NOTE: `@ATTRIBUTE` can be applied any number of times to the entities here, incl
 <div style="page-break-after: always; visibility: hidden"></div>
 
 
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
+
 ## 14. CQL Query Fragments
 
 CQL Query fragments are the most sophisticated rewrite CQL offers for productivity.  The idea is that a very large query
@@ -7002,6 +7108,13 @@ With the combined set of methods you can flexibilty create a variety of assemble
 <div style="page-break-after: always; visibility: hidden"></div>
 
 
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
+
 ## Appendix 1 : Command Line Options
 
 CQL has a variety of command line options but many of them are only interesting for cql development.  Nonetheless this is a comprehensive list:
@@ -7141,7 +7254,16 @@ NOTE: different result types require a different number of output files with dif
 * see the section on JSON output for details
 
 <div style="page-break-after: always; visibility: hidden"></div>
+
+
 <div style="page-break-after: always; visibility: hidden"></div>
+
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
 
 ## Appendix 2: CQL Grammar
 
@@ -8191,7 +8313,15 @@ enforce_normal_stmt: "@ENFORCE_NORMAL" enforcement_options
  
 ```
 
+
 <div style="page-break-after: always; visibility: hidden"></div>
+
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
 
 The control directives are those statements that begin with `@` and they are distinguished from other statements because they influence the compiler rather than the program logic.  Some of these are of great importance and discussed elsewhere.
 
@@ -8267,7 +8397,16 @@ The complete list (as of this writing) is:
   * `cql:assembly_fragment=frag_name` for assembly fragments (See Chapter 14)
   * `cql:no_table_scan` for query plan processing, indicates that the table in question should never be table scanned in any plan (for better diagnostics)
   * `cql:autotest=([many forms])` declares various autotest features (See Chapter 12)
+
+
 <div style="page-break-after: always; visibility: hidden"></div>
+
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
 
 ## Appendix 3: CQL Error Codes
 
@@ -10929,6 +11068,7 @@ number of the referenced table such that it was accidentally bigger you'd create
 So we check for that situation here and reject it to prevent that sort of typo.
 
 If you see this error there is almost certainly a typo in the version number of the referenced table; it should be fixed.
+
 
 <div style="page-break-after: always; visibility: hidden"></div>
 

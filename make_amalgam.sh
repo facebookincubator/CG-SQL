@@ -4,9 +4,19 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+cat <<EOF >>out/cql_amalgam.c
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+EOF
+
 # We do this cheesy business so that the @ and generated are never together in the script
 # if they were it wuold look like the script is auto generated and it isn't.
-echo "// (c) Facebook, Inc. and its affiliates. Confidential and proprietary." >out/cql_amalgam.c
+
 echo -n "// @" >>out/cql_amalgam.c
 
 # We now resume normality starting from the trailing @ with no newline

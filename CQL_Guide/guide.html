@@ -1,3 +1,9 @@
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
 <h2 id="introduction">1. Introduction</h2>
 <p>CQL was designed as a precompiled addition to the the SQLite runtime system. SQLite lacks stored procedures, but has a rich C runtime interface that allows you to create any kind of control flow mixed with any SQL operations that you might need. However, SQLite’s programming interface is both verbose and error-prone in that small changes in SQL statements can require significant swizzling of the C code that calls them. Additionally, many of the SQLite runtime functions have error codes which must be strictly checked to ensure correct behavior. In practice, it’s easy to get some or all of this wrong.</p>
 <p>CQL simplifies this situation by providing a high level SQL language not unlike the stored procedure forms that are available in client/server SQL solutions and lowering that language to “The C you could have written to do that job using the normal SQLite interfaces.”</p>
@@ -166,6 +172,12 @@
 <div style="page-break-after: always; visibility: hidden">
 
 </div>
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
 <h1 id="using-data">2. Using Data</h1>
 <p>The point of using CQL is to facilitate access to a SQLite database so we’ll switch gears to a slightly more complicated setup. We’ll still keep things fairly simple but let’s start to use some database features. Note: it is not the intent of this tutorial to also be a primer for the SQLite programming language which is so ably documented on https://sqlite.org/. Please refer to that site for details on the meaning of the SQL statements used here if you are new to SQL.</p>
 <h3 id="a-sample-program">A Sample Program</h3>
@@ -409,6 +421,12 @@ This includes common table expressions, and even recursive versions of the same.
 <div style="page-break-after: always; visibility: hidden">
 
 </div>
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
 <h2 id="expressions-literals-nullability-sensitivity">3. Expressions, Literals, Nullability, Sensitivity</h2>
 <p>Until this point we’ve only discussed simple kinds of expressions and as well as variables and table columns marked with <code>NOT NULL</code> . These are indeed the easiest types for CQL to work with as they tend to correspond most directly to the types known to C. However SQL provides for many more types of expressions as well as nullable types and these require handling in any language that purports to be like SQL.</p>
 <h3 id="expression-examples">Expression Examples</h3>
@@ -993,6 +1011,12 @@ cql_cleanup:
 <div style="page-break-after: always; visibility: hidden">
 
 </div>
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
 <h2 id="procedures-functions-and-control-flow">4. Procedures, Functions, and Control Flow</h2>
 <p>All kinds of control flow happens in the context of some procedure, though we’ve already introduced examples of procedures let’s now go over some of the additional aspects we have not yet illustrated.</p>
 <h3 id="out-parameters">Out Parameters</h3>
@@ -1152,6 +1176,12 @@ Any failures can be caught with <code>try/catch</code> as usual. This feature is
 <div style="page-break-after: always; visibility: hidden">
 
 </div>
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
 <h2 id="types-of-cursors-out-and-out-union-and-fetch-flavors">5. Types of Cursors, OUT and OUT UNION, and FETCH flavors</h2>
 <p>In the previous chapters we have used cursor variables without fully discussing them. Most of the uses are fairly self-evident but a more exhaustive discussion is also useful.</p>
 <p>First there are three types of cursors, as we will see below.</p>
@@ -1568,6 +1598,12 @@ insert into my_table(a, b, c, m, n, x, y) values(7, 1000, 1000, 1000, 1000, 1000
 <div style="page-break-after: always; visibility: hidden">
 
 </div>
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
 <h2 id="calling-procedures-defined-elsewhere">6. Calling Procedures Defined Elsewhere</h2>
 <p>CQL generally doesn’t see the whole world in one compilation.<br />
 In this way it’s a lot more like say the C compiler than it is like say Java or C# or something like that. This means several things:</p>
@@ -1729,6 +1765,12 @@ This form implies <code>USING TRANSACTION</code>.</p>
 <div style="page-break-after: always; visibility: hidden">
 
 </div>
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
 <h2 id="cql-result-sets">7. CQL Result Sets</h2>
 <p>Most of this tutorial is about the CQL language itself but here we must diverge a bit. The purpose of the result set features of CQL is to create a C interface to SQLite data. Because of this there are a lot of essential details that require looking carefully at the generated C code. Appendix 2 covers this code in even more detail but here it makes sense to at least talk about the interface.</p>
 <p>If we have this simple stored procedure:</p>
@@ -1882,6 +1924,12 @@ if (C_._has_row_) cql_bytebuf_append(&amp;_rows_, (const void *)&amp;C_, sizeof(
 <div style="page-break-after: always; visibility: hidden">
 
 </div>
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
 <h2 id="functions">8. Functions</h2>
 <p>CQL stored procs have a very simple contract so it is easy to declare procedures and then implement them in regular C, the C functions just have to conform to the contract. However, there is no notion of functions at all and this makes it very inconvenient to use some external code and is not doing database things and wants to return values. Even a random number generator or something would be difficult to use because it could not be called in the context of an expression. To allow for this CQL adds declared functions</p>
 <p>In an other example of the two-headed nature of CQL, there are two ways to declare functions. As we have already seen you can make function-like procedures and call them like functions simply by making a procedure with an <code>out</code> parameter. However, there are also cases where it is reasonable to make function calls to external functions of other kinds. There are three major types of functions you might wish to call.</p>
@@ -1987,6 +2035,12 @@ if (C_._has_row_) cql_bytebuf_append(&amp;_rows_, (const void *)&amp;C_, sizeof(
 <p><code>Nullable</code> casts an operand to the nullable version of its type and otherwise does nothing. This cast might be useful if you need an exact type match in a situation. It is stripped from any generated SQL and generated C so it has no runtime effect at all other than the indirect consequences of changing the storage class of its operand.</p>
 <p><code>Ptr</code> is used to cause a reference type variable to be bound as a long integer to SQLite. This is a way of giving object pointers to SQLite UDFs.</p>
 <p>See <a href="https://www.sqlite.org/lang_corefunc.html">SQLite Core Functions</a>.</p>
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
 <h2 id="statements-summary-and-error-checking">9. Statements Summary and Error Checking</h2>
 <p>The following is a brief discussion of the major statement types and the semantic rules that CQL enforces for each of the statements. A detailed discussion of SQL statements (the bulk of these) is beyond the scope of this document and you should refer to the SQLite documentation for most details. However, in many cases CQL does provide additional enforcement and it is helpful to describe the basic checking that happens for each fragment of CQL. A much more authoritative list of the things CQL checks for can be inferred from the error documentation. “Tricky” errors have examples and suggested remediation.</p>
 <h3 id="the-primary-sql-statements">The Primary SQL Statements</h3>
@@ -2231,6 +2285,12 @@ result:
 <div style="page-break-after: always; visibility: hidden">
 
 </div>
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
 <h2 id="schema-management-features">10. Schema Management Features</h2>
 <p>CQL has a lot of schema knowledge already and so it’s well positioned to think about schema upgrades and versioning.</p>
 <p>It seemed essential to be able to record changes to the schema over time so CQL got an understanding of versioning. This lets you do things like:</p>
@@ -3077,6 +3137,12 @@ Master Deployment 2
 <div style="page-break-after: always; visibility: hidden">
 
 </div>
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
 <h2 id="previous-schema-validation">11. Previous Schema Validation</h2>
 <p>As we saw in the previous chapter, CQL includes powerful schema management tools for creating automatic upgrade scripts for your databases. However, not all schema alterations are possible after-the-fact and so CQL also includes schema comparison tools to help you avoid problems as you version your schema over time.</p>
 <p>You can compare the previous version of a schema with the current version to do additional checks such as:</p>
@@ -3464,6 +3530,12 @@ For easy visibility I have brought each fragment of current and previous schema 
 <div style="page-break-after: always; visibility: hidden">
 
 </div>
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
 <h2 id="testability-features">12. Testability Features</h2>
 <p>CQL includes a number of features to make it easier to create what you might call “Test” procedures. These primarily are concerned with loading up the database with dummy data, and/or validating the result of normal procedures that query the database. There are several interesting language features in these dimensions.</p>
 <h3 id="dummy-data">Dummy Data</h3>
@@ -3824,6 +3896,12 @@ END;</code></pre>
 <div style="page-break-after: always; visibility: hidden">
 
 </div>
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
 <h2 id="json-output">13. JSON Output</h2>
 <p>To help facilitate additional tools that might want to depend on CQL input files further down the toolchain CQL includes a JSON output format for SQL DDL as well as stored procedure information, including special information for a single-statement DML. “Single-statement DML” refers to those stored procedures that that consist of a single <code>insert</code>, <code>select</code>, <code>update</code>, or <code>delete</code>. Even though such procedures are just one statement, good argument binding can create very powerful DML fragments that are re-usable. Many CQL stored procedures are of this form (in practice maybe 95% are just one statement).</p>
 <p>Below are some examples of the JSON output taken from a CQL test file. Note that the JSON has free text inserted into it as part of the test output, that obviously doesn’t appear in the final output but it is especially illustrative here. This example illustrates almost all the possible JSON fragments.</p>
@@ -4677,6 +4755,12 @@ END;</code></pre>
 <div style="page-break-after: always; visibility: hidden">
 
 </div>
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
 <h2 id="cql-query-fragments">14. CQL Query Fragments</h2>
 <p>CQL Query fragments are the most sophisticated rewrite CQL offers for productivity. The idea is that a very large query can be represented in “fragments” that add columns or add rows based on the original “core” query. The final query will be an assembled rewrite of all the fragments chained together. Specifically, the motivation for this is that you can have a “core” query that fetches the essential columns for some UI design and then you can add query extension fragments that add new/additional columns for some new set of features. The core and extended columns can be in their own fragment and they can be compiled independently. The result of this is that any errors are in much smaller and easier to understand fragments rather than in some monster “fetch everything” query; any given extension does not have to know all the details of all the other extensions and can take a limited dependency on even the core query.</p>
 <p>It’s easiest to illustrate this with an example so let’s begin there.</p>
@@ -4922,6 +5006,12 @@ end;</code></pre>
 <div style="page-break-after: always; visibility: hidden">
 
 </div>
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
 <h2 id="appendix-1-command-line-options">Appendix 1 : Command Line Options</h2>
 <p>CQL has a variety of command line options but many of them are only interesting for cql development. Nonetheless this is a comprehensive list:</p>
 <h3 id="no-options">no-options</h3>
@@ -5065,6 +5155,12 @@ end;</code></pre>
 <div style="page-break-after: always; visibility: hidden">
 
 </div>
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
 <h2 id="appendix-2-cql-grammar">Appendix 2: CQL Grammar</h2>
 <p>What follows is taken from a grammar snapshot with the tree building rules removed.<br />
 It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
@@ -6099,6 +6195,12 @@ enforce_normal_stmt: &quot;@ENFORCE_NORMAL&quot; enforcement_options
 <div style="page-break-after: always; visibility: hidden">
 
 </div>
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
 <p>The control directives are those statements that begin with <code>@</code> and they are distinguished from other statements because they influence the compiler rather than the program logic. Some of these are of great importance and discussed elsewhere.</p>
 <p>The complete list (as of this writing) is:</p>
 <p><code>@ENFORCE_STRICT</code> <code>@ENFORCE_NORMAL</code></p>
@@ -6135,11 +6237,17 @@ enforce_normal_stmt: &quot;@ENFORCE_NORMAL&quot; enforcement_options
 <li><code>cql:extension_fragment=frag_name</code> for extension fragments (See Chapter 14)</li>
 <li><code>cql:assembly_fragment=frag_name</code> for assembly fragments (See Chapter 14)</li>
 <li><code>cql:no_table_scan</code> for query plan processing, indicates that the table in question should never be table scanned in any plan (for better diagnostics)</li>
-<li><code>cql:autotest=([many forms])</code> declares various autotest features (See Chapter 12)
+<li><code>cql:autotest=([many forms])</code> declares various autotest features (See Chapter 12)</li>
+</ul>
 <div style="page-break-after: always; visibility: hidden">
 
-</div></li>
-</ul>
+</div>
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
 <h2 id="appendix-3-cql-error-codes">Appendix 3: CQL Error Codes</h2>
 <h3 id="cql0001-operands-must-be-an-integer-type-not-real">CQL0001: operands must be an integer type, not real</h3>
 <p>integer math operators like &lt;&lt; &gt;&gt; &amp; and | are not compatible with real-valued arguments</p>
