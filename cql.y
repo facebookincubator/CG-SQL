@@ -1579,7 +1579,7 @@ static void parse_cmd(int argc, char **argv) {
       } else {
         fprintf(
           stderr,
-          "--rt requires an additional runtime param (c, msys, objc, java, schema)\n");
+          "--rt requires an additional runtime param (e.g. c, objc, java, json_schema)\n");
         cql_cleanup_and_exit(1);
       }
     } else if (strcmp(arg, "--test") == 0) {

@@ -1,1 +1,1 @@
---rt requires an additional runtime param (c, msys, objc, java, schema)
+--rt requires an additional runtime param (e.g. c, objc, java, json_schema)
