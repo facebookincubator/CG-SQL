@@ -2,8 +2,8 @@
 
 package com.facebook.cqlviewmodels; 
 
-import com.facebook.msys.mci.CQLResultSet;
-import com.facebook.msys.mci.CQLViewModel;
+import com.facebook.cgsql.CQLResultSet;
+import com.facebook.cgsql.CQLViewModel;
 import javax.annotation.Nullable;
 
 public final class cg_test_java_out_union extends CQLViewModel {

@@ -1,5 +1,8 @@
 #!/bin/bash
-# (c) Facebook, Inc. and its affiliates. Confidential and proprietary.
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
 
 OUT_DIR="out"
 TEST_DIR="test"
@@ -125,3 +128,4 @@ done
 printf "\n"
 echo having run ok.sh, you certify that the current output is correct, or at least ready to be reviewed
 printf "\n"
+

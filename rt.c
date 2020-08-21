@@ -125,8 +125,8 @@ static rtdata rt_java = {
     "// @" "generated S" "ignedSource<<deadbeef8badf00ddefec8edfacefeed>>\n\n",
   .source_wrapper_begin =
     "package %s; \n\n"
-    "import com.facebook.msys.mci.CQLResultSet;\n"
-    "import com.facebook.msys.mci.CQLViewModel;\n"
+    "import com.facebook.cgsql.CQLResultSet;\n"
+    "import com.facebook.cgsql.CQLViewModel;\n"
     "import javax.annotation.Nullable;\n\n",
   .source_wrapper_end = "\nCGC_EXTERN_C_END\n",
   .symbol_case = cg_symbol_case_camel,
