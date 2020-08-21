@@ -119,11 +119,6 @@ create_unwritable_file() {
   chmod -rw "$file_name"
 }
 
-strip_signature() {
-   grep -v "$AT_GENERATED_TAG SignedSource" $1 >"${OUT_DIR}/__nosig"
-   cp "${OUT_DIR}/__nosig" $1
-}
-
 on_invalid_sig_exit() {
   file_name=$1
   if ! grep -q "$AT_GENERATED_TAG SignedSource" "$file_name"
