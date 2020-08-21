@@ -22,7 +22,7 @@ echo -n "// @" >>out/cql_amalgam.c
 # We now resume normality starting from the trailing @ with no newline
 # the generated line needs to be first, the rest is normal source order.
 cat <<EOF >>out/cql_amalgam.c
-generated SignedSource<<898e90290e7f0a026553a4ccbe6b0bd8>>
+generated SignedSource<<deadbeef8badf00ddefec8edfacefeed>>
 
 #ifndef CQL_NO_SYSTEM_HEADERS
 
@@ -174,7 +174,7 @@ cat <<EOF >>out/pass1
 EOF
 
 echo "static void cql_reset_globals() {" >>out/pass1
-grep cql_data_decl *.h | grep -v '#define' | \
+grep cql_data_decl ./*.h | grep -v '#define' | \
   sed -e "s/ );//" -e "s/.* //" -e "s/\*//" -e "s/^/  /" -e "s/$/ = 0;/"  -e "s/options = 0/memset(\&options, 0, sizeof(options));/" \
   >>out/pass1
 echo "}" >>out/pass1

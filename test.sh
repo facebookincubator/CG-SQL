@@ -13,23 +13,9 @@ source test_helpers.sh || exit 1
 GENERATED_TAG=generated
 AT_GENERATED_TAG="@$GENERATED_TAG"
 
-set_linux() {
-  MAKE_LINUX_ARGS="LINUX=1"
-  IS_LINUX=1
-}
-
-# This is a quick and dirty test for a devserver, if it matches you don't need to also add --linux
-if [[ ${HOSTNAME} == *".facebook.com"* ]]; then
-  set_linux
-fi
-
 while [ "$1" != "" ]
 do
-  if [ "$1" == "--linux" ]
-  then
-     set_linux
-     shift 1
-  elif [ "$1" == "--coverage" ]
+  if [ "$1" == "--coverage" ]
   then
      MAKE_COVERAGE_ARGS="COVERAGE=1"
      TEST_COVERAGE_ARGS="--coverage"
@@ -40,12 +26,12 @@ do
      shift 1
      USE_AMALGAM=1
   else
-     echo "Usage: test.sh [--linux] [--coverage] [--use_amalgam]"
+     echo "Usage: test.sh [--coverage] [--use_amalgam]"
      exit 1
   fi
 done
 
-MAKE_ARGS="${MAKE_COVERAGE_ARGS} ${MAKE_LINUX_ARGS}"
+MAKE_ARGS="${MAKE_COVERAGE_ARGS}"
 
 failed() {
   echo '--------------------------------- FAILED'
@@ -54,9 +40,9 @@ failed() {
 }
 
 do_make() {
-  if [ "${MAKE_ARGS}" == " " ]
+  if [ "${MAKE_ARGS}" == "" ]
   then
-    # we don't want to send empty strings " " to make, so avoid that
+    # we don't want to send empty strings "" to make, so avoid that
     make "$@"
   else
     make "$@" "${MAKE_ARGS}"

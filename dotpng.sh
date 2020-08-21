@@ -4,7 +4,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-tmpfile=$(mktemp /tmp/cql.dot.output)
-./out/cql --dot < $1 >  tmpfile
-dot tmpfile -Tpng -o /out/$1.png
-open /out/$1.png
+./out/cql --dot < "$1" > "out/$1.dot"
+dot "out/$1.dot" -Tpng -o "out/$1.png"
+echo "Created out/$1.dot and made out/$1.png with it."
+open "out/$1.png"

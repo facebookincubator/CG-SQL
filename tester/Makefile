@@ -3,6 +3,11 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+TARGET = $(shell uname)
+ifeq ($(TARGET), Linux)
+LINUX = 1
+endif
+
 ifdef LINUX
 SQLITE_PATH=$(shell hg root)/xplat/third-party/sqlite/sqlite-3280000/upstream_full/
 CC = cc -g -std=c99 -D_Nullable= -D_Nonnull= -I$(SQLITE_PATH)
@@ -25,3 +30,4 @@ regen:
 
 clean:
 	rm -f *.o ${OUT_DIR}/cql-verify
+
