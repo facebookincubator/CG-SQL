@@ -24,7 +24,6 @@ colordiff() {
 # so the reference output has the line numbers stripped.  When comparing against
 # the reference output we replace the line numbers with XXXX
 normalize_lines() {
-  echo normalize output file "$1"
   sed -e "s/The statement ending at line .*/The statement ending at line XXXX/" \
       -e "/(c) Facebook, Inc. and its affiliates/d" \
       -e "/g.nerated S.gnedSource<<.*>>/d" \
@@ -35,6 +34,7 @@ normalize_lines() {
 
 
 __on_diff_exit() {
+  normalize_lines "$1"
   normalize_lines "$2"
   if ! colordiff "$1" "$2"
   then
