@@ -24,15 +24,19 @@ colordiff() {
 # so the reference output has the line numbers stripped.  When comparing against
 # the reference output we replace the line numbers with XXXX
 normalize_lines() {
-  echo normalize line numbers in "$@"
+  echo normalize output file "$1"
   sed -e "s/The statement ending at line .*/The statement ending at line XXXX/" \
-      -e "s/\.sql:[0-9]* :/.sql:XXXX :/" <"$@" >"${OUT_DIR}/__temp"
+      -e "/(c) Facebook, Inc. and its affiliates/d" \
+      -e "/g.nerated S.gnedSource<<.*>>/d" \
+      -e "s/\.sql:[0-9]* :/.sql:XXXX :/" <"$1" >"$1.tmp"
+  cp "$1.tmp" "$1"
+  rm "$1.tmp"
 }
 
 
-__on_xdiff_exit() {
+__on_diff_exit() {
   normalize_lines "$2"
-  if ! colordiff "$1" "${OUT_DIR}/__temp"
+  if ! colordiff "$1" "$2"
   then
     echo "When running: diff" "$@"
     echo "The above differences were detected. If these are expected then run ok.sh to proceed."
@@ -43,5 +47,5 @@ __on_xdiff_exit() {
 }
 
 on_diff_exit() {
-   __on_xdiff_exit "${TEST_DIR}/$1.ref" "${OUT_DIR}/$1" 
+   __on_diff_exit "${TEST_DIR}/$1.ref" "${OUT_DIR}/$1" 
 }

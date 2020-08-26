@@ -64,7 +64,26 @@ REPLACEMENT_RULE_NAMES = {
 DEFAULT_RULES = [
     "comment: $ => token(choice(seq('--', /(\\\\(.|\\r?\\n)|[^\\\\\\n])*/), seq('/*', /[^*]*\*+([^/*][^*]*\*+)*/, '/')))",
     "line_directive: $ => seq(/#[ \\t]*/, $.INT_LIT, $.C_STR_LIT, /[^\\n]*/, /\\n/)",
-    "macro: $ => choice(seq(/#[ \\t]*/, repeat($.ID)))",
+    "macro: $ => choice($.preproc_include, $.preproc_def, $.preproc_function_def, $.preproc_call)",
+    "preproc_def: $ => seq(preprocessor('define'),field('name', $.ID),field('value', optional($.preproc_arg)),'\\n')",
+    "preproc_call: $ => seq(field('directive', $.preproc_directive),field('argument', optional($.preproc_arg)),'\\n')",
+    "...preprocIf('', $ => $.stmt)",
+    "...preprocIf('_in_field_declaration_list', $ => $.field_declaration_list_item)",
+    "field_declaration_list_item: $ => choice($.declare_stmt,$.preproc_def,$.preproc_function_def,$.preproc_call,alias($.preproc_if_in_field_declaration_list, $.preproc_if),alias($.preproc_ifdef_in_field_declaration_list, $.preproc_ifdef),)",
+    "preproc_include: $ => seq(preprocessor('include'),field('path', choice($.string_literal,$.system_lib_string,$.ID,alias($.preproc_call_expression, $.call_expression),)),'\\n')",
+    "preproc_function_def: $ => seq(preprocessor('define'),field('name', $.ID),field('parameters', $.preproc_params),field('value', optional($.preproc_arg)),'\\n')",
+    "preproc_directive: $ => /#[ \\t]*[a-zA-Z]\\w*/, preproc_arg: $ => token(prec(-1, repeat1(/.|\\\\\\r?\\n/)))",
+    "preproc_expression: $ => choice($.ID,$.expr)",
+    "call_expression: $ => prec(1, seq(field('function', $.expression),field('arguments', $.argument_list)))",
+    "preproc_call_expression: $ => prec(1, seq(field('function', $.ID),field('arguments', alias($.preproc_argument_list, $.argument_list))))",
+    "preproc_argument_list: $ => seq('(',commaSep($.preproc_expression),')')",
+    "argument_list: $ => seq('(', commaSep($.expression), ')')",
+    "preproc_expression: $ => $.expression",
+    "expression: $ => $.expr",
+    "string_literal: $ => seq(choice(\'L\"\', \'u\"\', \'U\"\', \'u8\"\', \'\"\'),repeat(choice(token.immediate(prec(1, /[^\\\\\"\\n]+/)),$.escape_sequence)),\'\"\',)",
+    "escape_sequence: $ => token(prec(1, seq('\\\\',choice(/[^xuU]/,/\d{2,3}/,/x[0-9a-fA-F]{2,}/,/u[0-9a-fA-F]{4}/,/U[0-9a-fA-F]{8}/))))",
+    "system_lib_string: $ => token(seq('<',repeat(choice(/[^>\\n]/, '\\\\>')),'>'))",
+    "preproc_params: $ => seq(token.immediate('('), commaSep(choice($.ID, '...')), ')')",
 ]
 
 cql_grammar = "cql_grammar.txt"
@@ -239,5 +258,54 @@ print(
     "     .map(letter => `[${letter}${letter.toUpperCase()}]`)\n"
     "     .join('')\n"
     "  )\n"
-    "}"
+    "}\n"
+    "// generic rule for macro directives where the directive\n"
+    "// is going to be case insensitive.\n"
+    "function preprocessor (command) {\n"
+    "  return alias(new RegExp('#[ \\t]*' + command), '#' + command)\n"
+    "}\n\n"
+    "// generic rule making optional commaSep1.\n"
+    "function commaSep (rule) {\n"
+    "  return optional(commaSep1(rule))\n"
+    "}\n\n"
+    "// generic rule for a list of ID separated by \",\"\n"
+    "function commaSep1 (rule) {\n"
+    "  return seq(rule, repeat(seq(',', rule)))\n"
+    "}\n\n"
+    "function preprocIf (suffix, content) {\n"
+    "  function elseBlock ($) {\n"
+    "    return choice(\n"
+    "      suffix ? alias($['preproc_else' + suffix], $.preproc_else) : $.preproc_else,\n"
+    "      suffix ? alias($['preproc_elif' + suffix], $.preproc_elif) : $.preproc_elif,\n"
+    "    );\n"
+    "  }\n"
+    "  return {\n"
+    "    ['preproc_if' + suffix]: $ => seq(\n"
+    "      preprocessor('if'),\n"
+    "      field('condition', $.preproc_expression),\n"
+    "      '\\n',\n"
+    "      repeat(content($)),\n"
+    "      field('alternative', optional(elseBlock($))),\n"
+    "      preprocessor('endif')\n"
+    "    ),\n"
+    "    ['preproc_ifdef' + suffix]: $ => seq(\n"
+    "      choice(preprocessor('ifdef'), preprocessor('ifndef')),\n"
+    "      field('name', $.ID),\n"
+    "      repeat(content($)),\n"
+    "      field('alternative', optional(elseBlock($))),\n"
+    "      preprocessor('endif')\n"
+    "    ),\n"
+    "    ['preproc_else' + suffix]: $ => seq(\n"
+    "      preprocessor('else'),\n"
+    "      repeat(content($))\n"
+    "    ),\n"
+    "    ['preproc_elif' + suffix]: $ => seq(\n"
+    "      preprocessor('elif'),\n"
+    "      field('condition', $.preproc_expression),\n"
+    "      '\\n',\n"
+    "      repeat(content($)),\n"
+    "      field('alternative', optional(elseBlock($))),\n"
+    "    )\n"
+    "  }\n"
+    "}\n"
 )

@@ -1,4 +1,9 @@
--- (c) Facebook, Inc. and its affiliates. Confidential and proprietary.
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 
 -- TEST: query plan
 -- +1 DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
@@ -14,12 +19,15 @@
 -- + CREATE TABLE plan_temp
 -- + CREATE TABLE no_table_scan
 -- + CREATE TABLE ok_table_scan
--- +16 CREATE PROC populate_query_plan_%()
+-- + CREATE TABLE foo
+-- + CREATE TABLE foo_
+-- + CREATE TABLE _foo
+-- +17 CREATE PROC populate_query_plan_%()
 -- + CREATE PROC populate_alert_table(table_ text not null)
--- +16 INSERT INTO sql_temp(id, sql)
--- +16 INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(%, C.iselectid, C.iorder, C.ifrom, C.zdetail);
--- +16 DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
--- +1 INSERT INTO ok_table_scan(sql_id, proc_name, table_names) VALUES(%, "use_ok_table_scan_attr", "scan_ok, t3");
+-- +17 INSERT INTO sql_temp(id, sql)
+-- +17 INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(%, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+-- +17 DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+-- +1 INSERT INTO ok_table_scan(sql_id, proc_name, table_names) VALUES(%, "use_ok_table_scan_attr", "#scan_ok#,#t3#");
 -- + CREATE PROC print_sql_statement(sql_id integer not null)
 -- + CREATE PROC print_query_plan_stat(id_ integer not null)
 -- + CREATE PROC print_query_plan_graph(id_ integer not null)
@@ -30,7 +38,7 @@
 -- + CALL print_query_plan_graph(sql_id);
 -- + CREATE PROC query_plan()
 -- + CALL create_schema();
--- +16 CALL populate_query_plan_%();
+-- +17 CALL populate_query_plan_%();
 -- + CREATE PROC populate_no_table_scan()
 -- +1  INSERT OR IGNORE INTO no_table_scan(table_name)
 -- +1  INSERT OR IGNORE INTO alert
@@ -44,6 +52,10 @@ create table t4(id long int primary key autoincrement, data blob);
 create table t5(id long int, foreign key (id) references t4(id) on update cascade on delete cascade);
 @attribute(cql:no_table_scan)
 create table scan_ok(id int);
+@attribute(cql:no_table_scan)
+create table foo(id int);
+create table _foo(id int);
+create table foo_(id int);
 create index it1 ON t1(name, id);
 create index it4 ON t4(data, id);
 create view my_view as select * from t1 inner join t2 using(id);
@@ -144,4 +156,10 @@ end;
 create proc use_ok_table_scan_attr()
 begin
   select * from scan_ok;
+end;
+
+-- test no table scan on "foo_", "_foo" but should be on "foo"
+create proc table_name_like_t1()
+begin
+  select 1 as n from foo_, _foo;
 end;

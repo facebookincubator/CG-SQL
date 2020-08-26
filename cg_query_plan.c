@@ -126,9 +126,11 @@ static void cg_qp_ok_table_scan_callback(
   charbuf *ok_table_scan_buf = (charbuf *)context;
   EXTRACT_STRING(table_name, misc_attr_value);
   if (ok_table_scan_buf->used > 1) {
-    bprintf(ok_table_scan_buf, ", ");
+    bprintf(ok_table_scan_buf, ",");
   }
-  bprintf(ok_table_scan_buf, table_name);
+  // the "#" around the table_name are used as delimiter of the
+  // table_name's word to later find tables that are ok to scan.
+  bprintf(ok_table_scan_buf, "#%s#", table_name);
 }
 
 // There are now extract work to be done in create_proc_stmt substree.
@@ -284,13 +286,17 @@ static void emit_print_sql_statement_proc(charbuf *output) {
 }
 
 static void emit_populate_alert_table_proc(charbuf *output) {
-  bprintf(output,
-          "%s",
-          "CREATE PROC populate_alert_table(table_ text not null)\n"
-          "BEGIN\n"
-          "  INSERT OR IGNORE INTO alert SELECT upper(table_) as table_name FROM plan_temp WHERE zdetail LIKE printf('\%\%%s\%\%%s\%\%', 'scan', table_) AND sql_id NOT IN (SELECT sql_id from ok_table_scan where table_names LIKE printf('\%\%%s\%\%', table_));\n"
-          "END;\n"
-  );
+  bprintf(output, "CREATE PROC populate_alert_table(table_ text not null)\n");
+  bprintf(output, "BEGIN\n");
+  bprintf(output, "  INSERT OR IGNORE INTO alert SELECT upper(table_) as table_name FROM plan_temp\n");
+  bprintf(output, "    WHERE ( zdetail GLOB ('*[Ss][Cc][Aa][Nn]* ' || table_) OR \n");
+  bprintf(output, "            zdetail GLOB ('*[Ss][Cc][Aa][Nn]* ' || table_ || ' *')\n");
+  bprintf(output, "          )\n");
+  bprintf(output, "    AND sql_id NOT IN (\n");
+  bprintf(output, "      SELECT sql_id from ok_table_scan\n");
+  bprintf(output, "        WHERE table_names GLOB ('*#' || table_ || '#*')\n");
+  bprintf(output, "    );\n");
+  bprintf(output, "END;\n");
 }
 
 static void emit_print_table_scan_violation_proc(charbuf *output) {

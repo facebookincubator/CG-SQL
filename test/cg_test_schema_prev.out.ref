@@ -1,4 +1,3 @@
--- @generated SignedSource<<deadbeef8badf00ddefec8edfacefeed>>
 
 DECLARE SELECT FUNC filter_ (id INTEGER) INTEGER NOT NULL;
 

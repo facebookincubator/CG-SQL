@@ -359,6 +359,32 @@
         ],
         "\n?\n|...SCAN TABLE scan_ok"
       ],
+      [
+        "SELECT 1 AS n\n  FROM foo_,\n_foo",
+        [
+          [],
+          [
+            {
+              "value": "SCAN",
+              "style": {
+                "fontSize": 14,
+                "color": "red",
+                "fontWeight": "bold"
+              }
+            },
+            {
+              "value": 2,
+              "style": {
+                "fontSize": 14,
+                "color": "red",
+                "fontWeight": "bold"
+              }
+            }
+          ],
+          []
+        ],
+        "\n?\n|...SCAN TABLE foo_\n|...SCAN TABLE _foo"
+      ],
       []
     ]
   ],

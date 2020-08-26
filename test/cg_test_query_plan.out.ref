@@ -1,4 +1,3 @@
--- @generated SignedSource<<deadbeef8badf00ddefec8edfacefeed>>
 
 -- The statement ending at line XXXX
 
@@ -29,6 +28,15 @@ BEGIN
     FOREIGN KEY (id) REFERENCES t4 (id) ON UPDATE CASCADE ON DELETE CASCADE
   );
   CREATE TABLE scan_ok(
+    id INTEGER
+  );
+  CREATE TABLE foo(
+    id INTEGER
+  );
+  CREATE TABLE _foo(
+    id INTEGER
+  );
+  CREATE TABLE foo_(
     id INTEGER
   );
   CREATE INDEX it1 ON t1 (name, id);
@@ -72,7 +80,8 @@ CREATE PROC populate_no_table_scan()
 BEGIN
   INSERT OR IGNORE INTO no_table_scan(table_name) SELECT "t1"
   UNION  SELECT "t2"
-  UNION  SELECT "scan_ok";
+  UNION  SELECT "scan_ok"
+  UNION  SELECT "foo";
 END;
 
 CREATE PROC populate_query_plan_1()
@@ -311,7 +320,7 @@ BEGIN
   DECLARE stmt TEXT NOT NULL;
   SET stmt := "SELECT *\\n  FROM scan_ok";
   INSERT INTO sql_temp(id, sql) VALUES(16, stmt);
-  INSERT INTO ok_table_scan(sql_id, proc_name, table_names) VALUES(16, "use_ok_table_scan_attr", "scan_ok, t3");
+  INSERT INTO ok_table_scan(sql_id, proc_name, table_names) VALUES(16, "use_ok_table_scan_attr", "#scan_ok#,#t3#");
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   SELECT *
     FROM scan_ok;
@@ -321,10 +330,32 @@ BEGIN
   END;
 END;
 
+CREATE PROC populate_query_plan_17()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "SELECT 1 AS n\\n  FROM foo_,\\n_foo";
+  INSERT INTO sql_temp(id, sql) VALUES(17, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  SELECT 1 AS n
+    FROM foo_,
+  _foo;
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(17, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
 
 CREATE PROC populate_alert_table(table_ text not null)
 BEGIN
-  INSERT OR IGNORE INTO alert SELECT upper(table_) as table_name FROM plan_temp WHERE zdetail LIKE printf('%%%s%%%s%%', 'scan', table_) AND sql_id NOT IN (SELECT sql_id from ok_table_scan where table_names LIKE printf('%%%s%%', table_));
+  INSERT OR IGNORE INTO alert SELECT upper(table_) as table_name FROM plan_temp
+    WHERE ( zdetail GLOB ('*[Ss][Cc][Aa][Nn]* ' || table_) OR 
+            zdetail GLOB ('*[Ss][Cc][Aa][Nn]* ' || table_ || ' *')
+          )
+    AND sql_id NOT IN (
+      SELECT sql_id from ok_table_scan
+        WHERE table_names GLOB ('*#' || table_ || '#*')
+    );
 END;
 
 CREATE PROC print_table_scan_violation()
@@ -583,6 +614,13 @@ BEGIN
     CALL printf("failed populating query 16\n");
     THROW;
   END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_17();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 17\n");
+    THROW;
+  END CATCH;
   CALL printf("[\n");
   CALL print_table_scan_violation();
   CALL printf("[\n");
@@ -604,6 +642,7 @@ BEGIN
   CALL print_query_plan(14);
   CALL print_query_plan(15);
   CALL print_query_plan(16);
+  CALL print_query_plan(17);
   CALL printf("[]\n");
   CALL printf("]\n");
   CALL printf("],\n");
