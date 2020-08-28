@@ -134,6 +134,7 @@ static bool_t sem_validate_identical_text(ast_node *prev_def, ast_node *def, gen
 static bool_t sem_validate_identical_ddl(ast_node *cur, ast_node *prev);
 static void sem_setup_region_filters(void);
 static void sem_inside_create_proc_stmt(ast_node *ast);
+static void sem_one_stmt(ast_node *stmt);
 
 static void lazy_free_symtab(void *syms) {
   symtab_delete(syms);
@@ -12219,6 +12220,106 @@ cleanup:
   }
 }
 
+// Helper function to validate that ok_table_scan attribution is semantically correctly.
+// ok_table_scan value can only be a table name and should be used in a create proc statement
+static void sem_validate_ok_table_scan_value(ast_node *misc_attrs, ast_node *ast_misc_attr_value) {
+  if (!is_ast_str(ast_misc_attr_value)) {
+    report_error(ast_misc_attr_value, "CQL0325: ok_table_scan attribute must be a name", NULL);
+    record_error(ast_misc_attr_value);
+    return;
+  }
+
+  EXTRACT_STRING(table_name, ast_misc_attr_value);
+  if (!find_usable_table_or_view_even_hidden(table_name, misc_attrs, "CQL0326: the table name in ok_table_scan does not exist")) {
+    record_error(ast_misc_attr_value);
+    return;
+  }
+
+  record_ok(ast_misc_attr_value);
+}
+
+// Semantic anlysis of ok_table_scan and no_table_scan attribution.
+// ok_table_scan: can only be assigned to a create proc statement and
+// the value can only be table names.
+// no_table_scan: can only be assigned to a create table statement and
+// has not value.
+static void sem_misc_attrs_callback(
+  CSTR _Nullable misc_attr_prefix,
+  CSTR _Nonnull misc_attr_name,
+  ast_node *_Nullable ast_misc_attr_values,
+  void *_Nullable context) {
+  EXTRACT_NOTNULL(misc_attrs, context);
+
+  if (!misc_attr_prefix) {
+    return;
+  }
+
+  // We can stop as soon as any misc_attr has an error.
+  if (is_error(misc_attrs)) {
+    return;
+  }
+
+  EXTRACT_NOTNULL(stmt_and_attr, misc_attrs->parent);
+  EXTRACT_ANY_NOTNULL(any_stmt, stmt_and_attr->right);
+
+  if (!Strcasecmp(misc_attr_prefix, "cql") &&
+      !Strcasecmp(misc_attr_name, "ok_table_scan")) {
+    if (!is_ast_create_proc_stmt(any_stmt)) {
+        report_error(misc_attrs, "CQL0329: ok_table_scan attribute can only be used in a create procedure statement", NULL);
+        record_error(misc_attrs);
+        return;
+    } else if (is_ast_misc_attr_value_list(ast_misc_attr_values)) {
+      // the value in ok_table_scan attributions is a list of value. we have to go
+      // through the list and validate each of them.
+      for (ast_node *list = ast_misc_attr_values; list; list = list->right) {
+        ast_node *ast_misc_attr_value = list->left;
+        sem_validate_ok_table_scan_value(misc_attrs, ast_misc_attr_value);
+        if (is_error(ast_misc_attr_value)) {
+          record_error(misc_attrs);
+          return;
+        }
+      }
+    }
+    else {
+      // The value in ok_table_scan attributions should be str node otherwise it's an error.
+      sem_validate_ok_table_scan_value(misc_attrs, ast_misc_attr_values);
+      if (is_error(ast_misc_attr_values)) {
+        record_error(misc_attrs);
+        return;
+      }
+    }
+  }
+
+  if (!Strcasecmp(misc_attr_prefix, "cql") &&
+      !Strcasecmp(misc_attr_name, "no_table_scan")) {
+    if (ast_misc_attr_values != NULL) {
+      report_error(ast_misc_attr_values, "CQL0327: a value should not be assigned to no_table_scan attribute", NULL);
+      record_error(ast_misc_attr_values);
+      record_error(misc_attrs);
+      return;
+    }
+
+    if (is_ast_stmt_and_attr(misc_attrs->parent)) {
+      ast_node *stmt = misc_attrs->parent->right;
+      if (!is_ast_create_table_stmt(stmt)) {
+        report_error(misc_attrs, "CQL0328: no_table_scan attribute may only be added to a create table statement", NULL);
+        record_error(misc_attrs);
+        return;
+      }
+    }
+  }
+}
+
+// Semantic analysis of any attributions that can appear in any statement
+static void sem_misc_attrs(ast_node *ast) {
+  Contract(is_ast_misc_attrs(ast));
+
+  // Assume the node is ok;  only some nodes get semantic analysis.
+  record_ok(ast);
+
+  find_misc_attrs(ast, sem_misc_attrs_callback, ast);
+}
+
 // Semantic analysis of stored procedures is fairly easy at the core:
 //  * check for duplicate names
 //  * validate the paramaters are well formed
@@ -13891,7 +13992,6 @@ static void sem_call_stmt(ast_node *ast) {
   }
 }
 
-
 // This is the main entry point for any kind of statement.  When we don't know
 // what the statement is yet (such as we're walking a statement list) this will
 // dispatch to the correct method.  Also, the top level statement captures
@@ -13904,19 +14004,44 @@ static void sem_one_stmt(ast_node *stmt) {
     error_capture = &errbuf;
   }
 
-  symtab_entry *entry = symtab_find(non_sql_stmts, stmt->type);
-  if (entry) {
-    ((void (*)(ast_node*))entry->val)(stmt);
-  }
-  else {
-    // If you use any of the following then you are a DML proc.
-    has_dml = 1;
-    entry = symtab_find(sql_stmts, stmt->type);
+  ast_node *stmt_and_attr = NULL;
+  bool_t error = false;
+  // We need to validate attributions of a statement, such as cql:ok_table_scan
+  // or cql:no_table_scan which can only appear on a specific type of stmt.
+  if(is_ast_stmt_and_attr(stmt->parent)) {
+    stmt_and_attr = stmt->parent;
+    EXTRACT_NOTNULL(misc_attrs, stmt_and_attr->left);
 
-    // These are all the statements there are, we have to find it in this table
-    // or else someone added a new statement and it isn't supported yet.
-    Invariant(entry);
-    ((void (*)(ast_node*))entry->val)(stmt);
+    sem_misc_attrs(misc_attrs);
+    if (is_error(misc_attrs)) {
+      record_error(stmt_and_attr);
+      record_error(stmt);
+      error = true;
+    }
+  }
+
+  if (!error) {
+    symtab_entry *entry = symtab_find(non_sql_stmts, stmt->type);
+    if (entry) {
+      ((void (*)(ast_node*))entry->val)(stmt);
+    }
+    else {
+      // If you use any of the following then you are a DML proc.
+      has_dml = 1;
+      entry = symtab_find(sql_stmts, stmt->type);
+
+      // These are all the statements there are, we have to find it in this table
+      // or else someone added a new statement and it isn't supported yet.
+      Invariant(entry);
+      ((void (*)(ast_node*))entry->val)(stmt);
+    }
+  }
+
+  error |= is_error(stmt);
+  // if stmt_and_attr exist then we should report the error to it since it's the root node
+  // of a cql statement.
+  if (stmt_and_attr) {
+    error ? record_error(stmt_and_attr) : record_ok(stmt_and_attr);
   }
 
   if (capture_now) {
@@ -13940,9 +14065,9 @@ static void sem_stmt_list(ast_node *head) {
     ast_node *stmt = ast->left;
     if (is_ast_stmt_and_attr(stmt)) {
       stmt = stmt->right;
-      EXTRACT_NOTNULL(misc_attrs, ast->left->left);
     }
     sem_one_stmt(stmt);
+
     if (is_error(stmt)) {
       error = true;
     }
@@ -14882,6 +15007,7 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(call_stmt);
   STMT_INIT(declare_vars_type);
   STMT_INIT(assign);
+  STMT_INIT(misc_attrs);
   STMT_INIT(create_proc_stmt);
   STMT_INIT(declare_proc_stmt);
   STMT_INIT(declare_func_stmt);

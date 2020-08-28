@@ -795,4 +795,10 @@ Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'idx'
 Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'idx'
 Error at test/sem_test.sql:XXXX : in name_list : CQL0272: the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table 'self_ref5'
 Error at test/sem_test.sql:XXXX : in name_list : CQL0272: the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table 'self_ref2'
+Error at test/sem_test.sql:XXXX : in int : CQL0325: ok_table_scan attribute must be a name
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0326: the table name in ok_table_scan does not exist 'bogus'
+Error at test/sem_test.sql:XXXX : in int : CQL0325: ok_table_scan attribute must be a name
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0329: ok_table_scan attribute can only be used in a create procedure statement
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0328: no_table_scan attribute may only be added to a create table statement
+Error at test/sem_test.sql:XXXX : in int : CQL0327: a value should not be assigned to no_table_scan attribute
 semantic errors present; no code gen.

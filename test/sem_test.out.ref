@@ -5180,8 +5180,8 @@ END;
         | {cond_action}: integer notnull
         | | {int 1}: integer notnull
         | | {stmt_list}: ok
-        |   | {stmt_and_attr}
-        |     | {misc_attrs}
+        |   | {stmt_and_attr}: ok
+        |     | {misc_attrs}: ok
         |     | | {misc_attr}
         |     |   | {name goo}
         |     | {return_stmt}: ok
@@ -5228,8 +5228,8 @@ Error at test/sem_test.sql:XXXX : in return_stmt : CQL0308: statement should be 
         | {cond_action}: err
         | | {int 1}: integer notnull
         | | {stmt_list}: err
-        |   | {stmt_and_attr}
-        |   | | {misc_attrs}
+        |   | {stmt_and_attr}: err
+        |   | | {misc_attrs}: ok
         |   | | | {misc_attr}
         |   | |   | {name goo}
         |   | | {return_stmt}: err
@@ -19246,8 +19246,8 @@ CREATE TABLE misc_attr_table(
   id INTEGER NOT NULL
 );
 
-  {stmt_and_attr}
-  | {misc_attrs}
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
   | | {misc_attr}
   | | | {name foo}
   | | {misc_attrs}
@@ -25659,7 +25659,7 @@ BEGIN
     FROM bar;
 END;
 
-  {stmt_and_attr}
+  {stmt_and_attr}: ok
   | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
@@ -25705,7 +25705,7 @@ BEGIN
     FROM bar;
 END;
 
-  {stmt_and_attr}
+  {stmt_and_attr}: ok
   | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
@@ -25774,7 +25774,7 @@ BEGIN
     FROM bar;
 END;
 
-  {stmt_and_attr}
+  {stmt_and_attr}: ok
   | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
@@ -25827,7 +25827,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0276: autotest attribute 'dummy_test' has invalid value type in 'id'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -25879,7 +25879,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in dbl : CQL0276: autotest attribute 'dummy_test' has invalid value type in 'id'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -25927,7 +25927,7 @@ BEGIN
     FROM bar;
 END;
 
-  {stmt_and_attr}
+  {stmt_and_attr}: ok
   | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
@@ -25975,7 +25975,7 @@ BEGIN
     FROM bar;
 END;
 
-  {stmt_and_attr}
+  {stmt_and_attr}: ok
   | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
@@ -26026,7 +26026,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0276: autotest attribute 'dummy_test' has invalid value type in 'id'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -26078,7 +26078,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in lng : CQL0276: autotest attribute 'dummy_test' has invalid value type in 'id'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -26130,7 +26130,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0273: autotest attribute has incorrect format (column name should be nested) in 'dummy_test'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -26184,7 +26184,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0273: autotest attribute has incorrect format (too many column values) in 'dummy_test'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -26238,7 +26238,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0273: autotest attribute has incorrect format (mismatch number of column and values) in 'dummy_test'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -26292,7 +26292,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0273: autotest attribute has incorrect format (column value should be nested) in 'dummy_test'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -26343,7 +26343,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in misc_attr_value_list : CQL0273: autotest attribute has incorrect format (table name should be nested) in 'dummy_test'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -26395,7 +26395,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0273: autotest attribute has incorrect format (column name should be nested) in 'dummy_test'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -26447,7 +26447,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0273: autotest attribute has incorrect format (column value should be nested) in 'dummy_test'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -26498,7 +26498,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0275: autotest attribute 'dummy_test' has non existent column 'bogus_col'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -26553,7 +26553,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0274: autotest attribute 'dummy_test' has non existent table 'bogus_table'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -26608,7 +26608,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0278: autotest attribute name is not valid 'dummy_bogus'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -26648,7 +26648,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0277: autotest has incorrect format
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -26691,7 +26691,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0277: autotest has incorrect format
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -26740,7 +26740,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0277: autotest has incorrect format
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -26831,7 +26831,7 @@ BEGIN
     FROM table1;
 END;
 
-  {stmt_and_attr}
+  {stmt_and_attr}: ok
   | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
@@ -26873,7 +26873,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in misc_attr_value_list : CQL0181: autodrop temp table does not exist 'not_an_object'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -26913,7 +26913,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in misc_attr_value_list : CQL0182: autodrop target is not a table 'ViewShape'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -26953,7 +26953,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in misc_attr_value_list : CQL0183: autodrop target must be a temporary table 'not_a_temp_table'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -26992,7 +26992,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0234: autodrop annotation can only go on a procedure that returns a result set 'autodrop_not_really_a_result_set_proc'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -27023,7 +27023,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0236: autodrop annotation can only go on a procedure that uses the database 'autodrop_no_db'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -27819,7 +27819,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0239: procedure identity column does not exist in result set 'col3'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -27870,7 +27870,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0240: identity annotation can only go on a procedure that returns a result set 'no_result_set_identity'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -27902,7 +27902,7 @@ BEGIN
     FROM core;
 END;
 
-  {stmt_and_attr}
+  {stmt_and_attr}: ok
   | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
@@ -27989,7 +27989,7 @@ BEGIN
     FROM another_core;
 END;
 
-  {stmt_and_attr}
+  {stmt_and_attr}: ok
   | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
@@ -28095,7 +28095,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0256: fragment name conflicts with existing base fragment 'core'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -28183,7 +28183,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in select_stmt : CQL0251: fragment must end with exactly 'SELECT * FROM core_one'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -28272,7 +28272,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in select_stmt : CQL0251: fragment must end with exactly 'SELECT * FROM core_two'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -28360,7 +28360,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0253: base fragment must include a single CTE named same as the fragment 'bar'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -28445,7 +28445,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH..SELECT
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -28537,7 +28537,7 @@ BEGIN
     FROM plugin_one;
 END;
 
-  {stmt_and_attr}
+  {stmt_and_attr}: ok
   | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
@@ -28684,7 +28684,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0322: fragment parameters must be exactly '(id_ INTEGER NOT NULL)'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -28830,7 +28830,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0255: fragment name is not a previously declared base fragment 'wrong_core'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -28977,7 +28977,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0268: extension/assembly fragment must have the CTE named same as the base fragment 'core'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -29127,7 +29127,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in cte_tables : CQL0258: extension fragment must add exactly one CTE; found extra named 'plugin_wrong_three'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -29328,7 +29328,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in cte_tables : CQL0260: extension fragment CTE must be a simple left outer join from 'core'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -29455,7 +29455,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in cte_tables : CQL0260: extension fragment CTE must be a simple left outer join from 'core'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -29668,7 +29668,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in cte_tables : CQL0260: extension fragment CTE must be a simple left outer join from 'core'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -29819,7 +29819,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in cte_decl : CQL0268: extension/assembly fragment must use base CTE column list same as from the base fragment 'core'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -29974,7 +29974,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in select_from_etc : CQL0320: extension fragment CTE must have a FROM clause an no other top level clauses 'bogus_extra_clauses'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -30130,7 +30130,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in select_from_etc : CQL0320: extension fragment CTE must have a FROM clause an no other top level clauses 'bogus_extra_clauses'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -30279,7 +30279,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in cte_tables : CQL0259: extension fragment CTE must select T.* from base CTE 'core'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -30418,7 +30418,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in cte_tables : CQL0260: extension fragment CTE must be a simple left outer join from 'core'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -30565,7 +30565,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in select_stmt : CQL0251: fragment must end with exactly 'SELECT * FROM plugin_wrong_six'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -30715,7 +30715,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in select_stmt : CQL0251: fragment must end with exactly 'SELECT * FROM plugin_wrong_seven'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -30862,7 +30862,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in cte_tables : CQL0259: extension fragment CTE must select T.* from base CTE 'core'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -31001,7 +31001,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in cte_tables : CQL0259: extension fragment CTE must select T.* from base CTE 'core'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -31136,7 +31136,7 @@ BEGIN
     FROM plugin_wrong_nine;
 END;
 
-  {stmt_and_attr}
+  {stmt_and_attr}: ok
   | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
@@ -31275,7 +31275,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in cte_table : CQL0266: extension fragment name conflicts with existing fragment 'plugin_wrong_nine'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -31409,7 +31409,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH..SELECT
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -31459,7 +31459,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in select_expr_list : CQL0287: extension/assembly fragment must add stub for base CTE with same types from base fragment (expected longint; found integer) 'rate'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -31598,7 +31598,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in select_expr_list : CQL0288: extension/assembly fragment stub for base CTE column must be exact type match (including nullability) (expected longint; found longint notnull) 'rate'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -31733,7 +31733,7 @@ BEGIN
     FROM plugin_two;
 END;
 
-  {stmt_and_attr}
+  {stmt_and_attr}: ok
   | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
@@ -31897,8 +31897,8 @@ END;
 
 Error at test/sem_test.sql:XXXX : in select_core : CQL0058: if multiple selects, all column names must be identical so they have unambiguous names 'name'
 
-  {stmt_and_attr}
-  | {misc_attrs}
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
   |   | | {name cql}
@@ -32060,8 +32060,8 @@ END;
 
 Error at test/sem_test.sql:XXXX : in select_core : CQL0057: if multiple selects, all must have the same column count
 
-  {stmt_and_attr}
-  | {misc_attrs}
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
   |   | | {name cql}
@@ -32218,7 +32218,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in cte_tables : CQL0259: extension fragment CTE must select T.* from base CTE 'core'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -32382,7 +32382,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in cte_tables : CQL0259: extension fragment CTE must select T.* from base CTE 'core'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -32568,7 +32568,7 @@ BEGIN
     FROM assembly_core;
 END;
 
-  {stmt_and_attr}
+  {stmt_and_attr}: ok
   | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
@@ -32655,7 +32655,7 @@ BEGIN
     FROM assembly_one;
 END;
 
-  {stmt_and_attr}
+  {stmt_and_attr}: ok
   | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
@@ -32831,7 +32831,7 @@ BEGIN
     FROM assembly_two;
 END;
 
-  {stmt_and_attr}
+  {stmt_and_attr}: ok
   | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
@@ -32998,7 +32998,7 @@ BEGIN
     FROM assembly_two;
 END;
 
-  {stmt_and_attr}
+  {stmt_and_attr}: ok
   | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
@@ -33243,7 +33243,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH..SELECT
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -33314,7 +33314,7 @@ BEGIN
     FROM for_bad;
 END;
 
-  {stmt_and_attr}
+  {stmt_and_attr}: ok
   | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
@@ -33385,7 +33385,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH..SELECT
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -33484,7 +33484,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH..SELECT
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -33557,7 +33557,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0264: duplicate assembly fragments of base fragment 'assembly_core'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -33643,7 +33643,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in cte_tables : CQL0265: assembly fragment can only have one CTE 'another_core'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -33747,7 +33747,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0255: fragment name is not a previously declared base fragment 'wrong_core'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -33836,7 +33836,7 @@ BEGIN
     FROM test_bad_assembly_base_fragment;
 END;
 
-  {stmt_and_attr}
+  {stmt_and_attr}: ok
   | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
@@ -33921,7 +33921,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH..SELECT
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -33979,7 +33979,7 @@ BEGIN
     FROM assembly_core_bad_one;
 END;
 
-  {stmt_and_attr}
+  {stmt_and_attr}: ok
   | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
@@ -34066,7 +34066,7 @@ BEGIN
     FROM assembly_bad_one;
 END;
 
-  {stmt_and_attr}
+  {stmt_and_attr}: ok
   | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
@@ -34211,7 +34211,7 @@ BEGIN
     FROM assembly_bad_two;
 END;
 
-  {stmt_and_attr}
+  {stmt_and_attr}: ok
   | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
@@ -34363,7 +34363,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in name_list : CQL0267: extension fragments of same base fragment share the same cte column 'a'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -34559,7 +34559,7 @@ BEGIN
     FROM assembly_core_bad_two;
 END;
 
-  {stmt_and_attr}
+  {stmt_and_attr}: ok
   | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
@@ -34645,7 +34645,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in select_expr_list : CQL0288: extension/assembly fragment stub for base CTE column must be exact type match (including nullability) (expected longint; found longint notnull) 'rate'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -34729,7 +34729,7 @@ BEGIN
     FROM assembly_core_bad_three;
 END;
 
-  {stmt_and_attr}
+  {stmt_and_attr}: ok
   | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
@@ -34815,7 +34815,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in select_expr_list : CQL0287: extension/assembly fragment must add stub for base CTE with same types from base fragment (expected text; found integer) 'name'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -34902,7 +34902,7 @@ BEGIN
     FROM assembly_core_simple;
 END;
 
-  {stmt_and_attr}
+  {stmt_and_attr}: ok
   | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
@@ -34973,7 +34973,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0322: fragment parameters must be exactly '(idx_ INTEGER NOT NULL)'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -41704,7 +41704,7 @@ BEGIN
     FROM sens_table;
 END;
 
-  {stmt_and_attr}
+  {stmt_and_attr}: ok
   | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
@@ -41761,8 +41761,8 @@ Error at test/sem_test.sql:XXXX : in create_proc_stmt : DECLARE PROC incompatibl
 The above must be identical.
 Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0189: procedure declarations/definitions do not match 'incompatible_result_proc'
 
-  {stmt_and_attr}
-  | {misc_attrs}
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
   |   | | {name cql}
@@ -41990,7 +41990,7 @@ BEGIN
     FROM blob_stuff;
 END;
 
-  {stmt_and_attr}
+  {stmt_and_attr}: ok
   | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
@@ -42069,7 +42069,7 @@ BEGIN
     FROM blob_ext;
 END;
 
-  {stmt_and_attr}
+  {stmt_and_attr}: ok
   | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
@@ -42201,7 +42201,7 @@ BEGIN
     FROM blob_ext;
 END;
 
-  {stmt_and_attr}
+  {stmt_and_attr}: ok
   | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
@@ -42966,7 +42966,7 @@ BEGIN
   DECLARE x INTEGER;
 END;
 
-  {stmt_and_attr}
+  {stmt_and_attr}: ok
   | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
@@ -42998,7 +42998,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0318: more than one fragment annotation on procedure 'dup_base'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: ok
   | | {misc_attr}
   | | | {dot}
@@ -43036,7 +43036,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0318: more than one fragment annotation on procedure 'mixed_frag_types1'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: ok
   | | {misc_attr}
   | | | {dot}
@@ -43074,7 +43074,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0318: more than one fragment annotation on procedure 'mixed_frag_types2'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: ok
   | | {misc_attr}
   | | | {dot}
@@ -43112,7 +43112,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0318: more than one fragment annotation on procedure 'mixed_frag_types3'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: ok
   | | {misc_attr}
   | | | {dot}
@@ -43154,7 +43154,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0319: the name of the assembly procedure must match the name of the base fragment 'wrong_assembly_frag_name'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -43240,7 +43240,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in select_stmt : CQL0251: fragment must end with exactly 'SELECT * FROM core'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -43312,7 +43312,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in select_stmt : CQL0251: fragment must end with exactly 'SELECT * FROM core'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -43409,7 +43409,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in select_stmt : CQL0251: fragment must end with exactly 'SELECT * FROM core'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -43500,7 +43500,7 @@ END;
 
 Error at test/sem_test.sql:XXXX : in select_stmt : CQL0251: fragment must end with exactly 'SELECT * FROM core'
 
-  {stmt_and_attr}
+  {stmt_and_attr}: err
   | {misc_attrs}: err
   | | {misc_attr}
   |   | {dot}
@@ -44132,7 +44132,7 @@ BEGIN
     FROM self_ref1;
 END;
 
-  {stmt_and_attr}
+  {stmt_and_attr}: ok
   | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
@@ -44179,4 +44179,287 @@ END;
           | {select_orderby}
             | {select_limit}
               | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:ok_table_scan=foo)
+CREATE PROC ok_table_scan ()
+BEGIN
+  SELECT *
+    FROM foo;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name ok_table_scan}
+  |   | {name foo}: ok
+  | {create_proc_stmt}: select: { id: integer notnull } dml_proc
+    | {name ok_table_scan}: select: { id: integer notnull } dml_proc
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {select_stmt}: select: { id: integer notnull }
+          | {select_core_list}: select: { id: integer notnull }
+          | | {select_core}: select: { id: integer notnull }
+          |   | {select_expr_list_con}: select: { id: integer notnull }
+          |     | {select_expr_list}: select: { id: integer notnull }
+          |     | | {star}: select: { id: integer notnull }
+          |     | {select_from_etc}: TABLE { foo: foo }
+          |       | {table_or_subquery_list}: TABLE { foo: foo }
+          |       | | {table_or_subquery}: TABLE { foo: foo }
+          |       |   | {name foo}: TABLE { foo: foo }
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:ok_table_scan=(foo, 1))
+CREATE PROC ok_table_scan_value ()
+BEGIN
+  SELECT *
+    FROM foo;
+END;
+
+Error at test/sem_test.sql:XXXX : in int : CQL0325: ok_table_scan attribute must be a name
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name ok_table_scan}
+  |   | {misc_attr_value_list}
+  |     | {name foo}: ok
+  |     | {misc_attr_value_list}
+  |       | {int 1}: err
+  | {create_proc_stmt}: err
+    | {name ok_table_scan_value}
+    | {proc_params_stmts}
+      | {stmt_list}
+        | {select_stmt}
+          | {select_core_list}
+          | | {select_core}
+          |   | {select_expr_list_con}
+          |     | {select_expr_list}
+          |     | | {star}
+          |     | {select_from_etc}
+          |       | {table_or_subquery_list}
+          |       | | {table_or_subquery}
+          |       |   | {name foo}
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:ok_table_scan=bogus)
+@ATTRIBUTE(cql:attr)
+CREATE PROC ok_table_scan_bogus ()
+BEGIN
+  SELECT *
+    FROM foo;
+END;
+
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0326: the table name in ok_table_scan does not exist 'bogus'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  | | | {dot}
+  | | | | {name cql}
+  | | | | {name ok_table_scan}
+  | | | {name bogus}: err
+  | | {misc_attrs}
+  |   | {misc_attr}
+  |     | {dot}
+  |       | {name cql}
+  |       | {name attr}
+  | {create_proc_stmt}: err
+    | {name ok_table_scan_bogus}
+    | {proc_params_stmts}
+      | {stmt_list}
+        | {select_stmt}
+          | {select_core_list}
+          | | {select_core}
+          |   | {select_expr_list_con}
+          |     | {select_expr_list}
+          |     | | {star}
+          |     | {select_from_etc}
+          |       | {table_or_subquery_list}
+          |       | | {table_or_subquery}
+          |       |   | {name foo}
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:ok_table_scan=1)
+CREATE PROC ok_table_scan_value_int ()
+BEGIN
+  SELECT *
+    FROM foo;
+END;
+
+Error at test/sem_test.sql:XXXX : in int : CQL0325: ok_table_scan attribute must be a name
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name ok_table_scan}
+  |   | {int 1}: err
+  | {create_proc_stmt}: err
+    | {name ok_table_scan_value_int}
+    | {proc_params_stmts}
+      | {stmt_list}
+        | {select_stmt}
+          | {select_core_list}
+          | | {select_core}
+          |   | {select_expr_list_con}
+          |     | {select_expr_list}
+          |     | | {star}
+          |     | {select_from_etc}
+          |       | {table_or_subquery_list}
+          |       | | {table_or_subquery}
+          |       |   | {name foo}
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:ok_table_scan=foo)
+SELECT *
+  FROM foo;
+
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0329: ok_table_scan attribute can only be used in a create procedure statement
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name ok_table_scan}
+  |   | {name foo}
+  | {select_stmt}: err
+    | {select_core_list}
+    | | {select_core}
+    |   | {select_expr_list_con}
+    |     | {select_expr_list}
+    |     | | {star}
+    |     | {select_from_etc}
+    |       | {table_or_subquery_list}
+    |       | | {table_or_subquery}
+    |       |   | {name foo}
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:no_table_scan)
+SELECT *
+  FROM foo;
+
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0328: no_table_scan attribute may only be added to a create table statement
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name no_table_scan}
+  | {select_stmt}: err
+    | {select_core_list}
+    | | {select_core}
+    |   | {select_expr_list_con}
+    |     | {select_expr_list}
+    |     | | {star}
+    |     | {select_from_etc}
+    |       | {table_or_subquery_list}
+    |       | | {table_or_subquery}
+    |       |   | {name foo}
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:no_table_scan)
+CREATE TABLE no_table_scan(
+  id TEXT
+);
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name no_table_scan}
+  | {create_table_stmt}: no_table_scan: { id: text }
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name no_table_scan}
+    | {col_key_list}
+      | {col_def}: id: text
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+            | {name id}
+            | {type_text}: text
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:no_table_scan=1)
+SELECT *
+  FROM foo;
+
+Error at test/sem_test.sql:XXXX : in int : CQL0327: a value should not be assigned to no_table_scan attribute
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name no_table_scan}
+  |   | {int 1}: err
+  | {select_stmt}: err
+    | {select_core_list}
+    | | {select_core}
+    |   | {select_expr_list_con}
+    |     | {select_expr_list}
+    |     | | {star}
+    |     | {select_from_etc}
+    |       | {table_or_subquery_list}
+    |       | | {table_or_subquery}
+    |       |   | {name foo}
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
 

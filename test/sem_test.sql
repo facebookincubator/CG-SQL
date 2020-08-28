@@ -10967,3 +10967,89 @@ create proc self_ref_proc_table()
 begin
   select * from self_ref1;
 end;
+
+-- TEST: test ok_scan_table attribution
+-- + {stmt_and_attr}: ok
+-- + {misc_attrs}: ok
+-- + {name cql}
+-- + {name ok_table_scan}
+-- + {name foo}: ok
+-- - Error
+@attribute(cql:ok_table_scan=foo)
+create proc ok_table_scan()
+begin
+  select * from foo;
+end;
+
+-- TEST: test list of value for ok_scan_table attribution
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- + {name cql}
+-- + {name ok_table_scan}
+-- + {name foo}: ok
+-- + {int 1}: err
+-- + Error % ok_table_scan attribute must be a name
+-- +1 Error
+@attribute(cql:ok_table_scan=(foo, 1))
+create proc ok_table_scan_value()
+begin
+  select * from foo;
+end;
+
+-- TEST: bogus table name in ok_scan_table attribution
+-- + misc_attrs}: err
+-- + {name bogus}: err
+-- + {name foo}
+-- Error % the table name in ok_table_scan does not exist 'bogus'
+-- +1 Error
+@attribute(cql:ok_table_scan=bogus)
+@attribute(cql:attr)
+create proc ok_table_scan_bogus()
+begin
+  select * from foo;
+end;
+
+-- TEST: bogus integer in ok_scan_table attribution
+-- + misc_attrs}: err
+-- + {int 1}: err
+-- Error %  ok_table_scan attribute must be a name
+-- +1 Error
+@attribute(cql:ok_table_scan=1)
+create proc ok_table_scan_value_int()
+begin
+  select * from foo;
+end;
+
+-- TEST: ok_scan_table attribution not on a create proc statement
+-- + misc_attrs}: err
+-- + {select_stmt}: err
+-- Error %  ok_table_scan attribute can only be used in a create procedure statement
+-- +1 Error
+@attribute(cql:ok_table_scan=foo)
+select * from foo;
+
+-- TEST: no_scan_table attribution is not on create table node
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- + {select_stmt}: err
+-- Error % no_table_scan attribute may only be added to a create table statement
+-- +1 Error
+@attribute(cql:no_table_scan)
+select * from foo;
+
+-- TEST: no_scan_table attribution on create table node
+-- + {stmt_and_attr}: ok
+-- + {misc_attrs}: ok
+-- - Error
+@attribute(cql:no_table_scan)
+create table no_table_scan(id text);
+
+-- TEST: no_scan_table attribution with a value
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- + {select_stmt}: err
+-- + {int 1}: err
+-- Error % a value should not be assigned to no_table_scan attribute
+-- +1 Error
+@attribute(cql:no_table_scan=1)
+select * from foo;
