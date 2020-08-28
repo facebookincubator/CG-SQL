@@ -26,7 +26,7 @@ cql-verify : main.c ../cqlrt.c ../cqlrt.h dbhelp.c
 	$(CC) -I.. -o ${OUT_DIR}/cql-verify main.c ../cqlrt.c dbhelp.c $(SQLITE)
 
 regen:
-	../out/cql --in dbhelp.sql --cg dbhelp.h dbhelp.c
+	./regen.sh
 
 clean:
 	rm -f *.o ${OUT_DIR}/cql-verify
