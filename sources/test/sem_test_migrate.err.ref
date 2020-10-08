@@ -1,0 +1,7 @@
+Error at test/sem_test_migrate.sql:XXXX : in str : CQL0069: name not found 'rate_2'
+Error at test/sem_test_migrate.sql:XXXX : in str : CQL0188: procedure is supposed to do schema migration but it doesn't have any DML 'deletor'
+Error at test/sem_test_migrate.sql:XXXX : in params : CQL0233: procedure previously declared as schema upgrade proc, it can have no args 'name_creator'
+Error at test/sem_test_migrate.sql:XXXX : in str : CQL0151: table in delete statement does not exist (not visible in schema version 5) 't1'
+Error at test/sem_test_migrate.sql:XXXX : in str : CQL0151: table in delete statement does not exist (not visible in schema version 5) 't3'
+Error at test/sem_test_migrate.sql:XXXX : in previous_schema_stmt : CQL0254: switching to previous schema validation mode not allowed if @schema_upgrade_version was used
+semantic errors present; no code gen.

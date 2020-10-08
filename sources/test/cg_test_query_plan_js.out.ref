@@ -1,0 +1,392 @@
+[
+  [
+    "Alert"
+  ],
+  [
+    {
+      "value": "TABLE SCAN VIOLATION:  T1, T2",
+      "style": {
+        "fontSize": 14,
+        "color": "red",
+        "fontWeight": "bold"
+      }
+    }
+  ],
+  [
+    [
+      [
+        "Query",
+        "Stat",
+        "Graph"
+      ],
+      [
+        "SELECT *\n  FROM t1\n  WHERE name = 'Nelly' AND id IN (SELECT id\n  FROM t2\n  WHERE id = 1\nUNION\nSELECT id\n  FROM t3)\nORDER BY name ASC",
+        [
+          [],
+          [
+            {
+              "value": "SCAN",
+              "style": {
+                "fontSize": 14,
+                "color": "red",
+                "fontWeight": "bold"
+              }
+            },
+            {
+              "value": 1,
+              "style": {
+                "fontSize": 14,
+                "color": "red",
+                "fontWeight": "bold"
+              }
+            }
+          ],
+          [
+            {
+              "value": "TEMP B-TREE",
+              "style": {
+                "fontSize": 14,
+                "color": "red",
+                "fontWeight": "bold"
+              }
+            },
+            {
+              "value": 1,
+              "style": {
+                "fontSize": 14,
+                "color": "red",
+                "fontWeight": "bold"
+              }
+            }
+          ],
+          [
+            "SEARCH",
+            1
+          ],
+          [
+            "SEARCH USING COVERING",
+            1
+          ],
+          []
+        ],
+        "\n?\n|...SEARCH TABLE t1 USING COVERING INDEX it1 (name=? AND id=? AND rowid=?)\n|...LIST SUBQUERY 2\n    |...COMPOUND QUERY\n        |...LEFT-MOST SUBQUERY\n            |...SEARCH TABLE t2 USING INTEGER PRIMARY KEY (rowid=?)\n        |...UNION USING TEMP B-TREE\n            |...SCAN TABLE t3"
+      ],
+      [
+        "SELECT is_declare_func_wall(id)\n  FROM t4\n  WHERE data = cast('1' as blob)",
+        [
+          [],
+          [
+            "SEARCH USING COVERING",
+            1
+          ],
+          []
+        ],
+        "\n?\n|...SEARCH TABLE t4 USING COVERING INDEX it4 (data=?)"
+      ],
+      [
+        "UPDATE t1\nSET id = 1,\nname = '1'\n  WHERE name IN (SELECT NAME\n  FROM t3)",
+        [
+          [],
+          [
+            {
+              "value": "SCAN",
+              "style": {
+                "fontSize": 14,
+                "color": "red",
+                "fontWeight": "bold"
+              }
+            },
+            {
+              "value": 1,
+              "style": {
+                "fontSize": 14,
+                "color": "red",
+                "fontWeight": "bold"
+              }
+            }
+          ],
+          [
+            "SEARCH USING COVERING",
+            1
+          ],
+          []
+        ],
+        "\n?\n|...SEARCH TABLE t1 USING COVERING INDEX it1 (name=?)\n|...LIST SUBQUERY 1\n    |...SCAN TABLE t3"
+      ],
+      [
+        "DELETE FROM t1 WHERE name IN (SELECT t2.name\n  FROM t2\n  INNER JOIN t3 USING (name))",
+        [
+          [],
+          [
+            {
+              "value": "SCAN",
+              "style": {
+                "fontSize": 14,
+                "color": "red",
+                "fontWeight": "bold"
+              }
+            },
+            {
+              "value": 1,
+              "style": {
+                "fontSize": 14,
+                "color": "red",
+                "fontWeight": "bold"
+              }
+            }
+          ],
+          [
+            "SEARCH",
+            1
+          ],
+          [
+            "SEARCH USING COVERING",
+            1
+          ],
+          []
+        ],
+        "\n?\n|...SEARCH TABLE t1 USING INDEX it1 (name=?)\n|...LIST SUBQUERY 1\n    |...SCAN TABLE t2\n    |...SEARCH TABLE t3 USING AUTOMATIC COVERING INDEX (name=?)"
+      ],
+      [
+        "WITH\nt4 (name) AS (SELECT t2.name\n  FROM t2\n  INNER JOIN t3 USING (id))\nDELETE FROM t1 WHERE name NOT IN (SELECT *\n  FROM t4)",
+        [
+          [],
+          [
+            {
+              "value": "SCAN",
+              "style": {
+                "fontSize": 14,
+                "color": "red",
+                "fontWeight": "bold"
+              }
+            },
+            {
+              "value": 2,
+              "style": {
+                "fontSize": 14,
+                "color": "red",
+                "fontWeight": "bold"
+              }
+            }
+          ],
+          [
+            "SEARCH",
+            1
+          ],
+          []
+        ],
+        "\n?\n|...SCAN TABLE t1\n|...LIST SUBQUERY 2\n    |...SCAN TABLE t2\n    |...SEARCH TABLE t3 USING INTEGER PRIMARY KEY (rowid=?)"
+      ],
+      [
+        "INSERT INTO t1(id, name) SELECT *\n  FROM t2\nUNION ALL\nSELECT *\n  FROM t3",
+        [
+          [],
+          [
+            {
+              "value": "SCAN",
+              "style": {
+                "fontSize": 14,
+                "color": "red",
+                "fontWeight": "bold"
+              }
+            },
+            {
+              "value": 2,
+              "style": {
+                "fontSize": 14,
+                "color": "red",
+                "fontWeight": "bold"
+              }
+            }
+          ],
+          []
+        ],
+        "\n?\n|...COMPOUND QUERY\n    |...LEFT-MOST SUBQUERY\n        |...SCAN TABLE t2\n    |...UNION ALL\n        |...SCAN TABLE t3"
+      ],
+      [
+        "WITH\na (id, name) AS (SELECT 1, 'x')\nINSERT INTO t1(id, name) SELECT *\n  FROM a",
+        [
+          [],
+          [
+            {
+              "value": "SCAN",
+              "style": {
+                "fontSize": 14,
+                "color": "red",
+                "fontWeight": "bold"
+              }
+            },
+            {
+              "value": 2,
+              "style": {
+                "fontSize": 14,
+                "color": "red",
+                "fontWeight": "bold"
+              }
+            }
+          ],
+          []
+        ],
+        "\n?\n|...CO-ROUTINE 1\n    |...SCAN CONSTANT ROW\n|...SCAN SUBQUERY 1"
+      ],
+      [
+        "BEGIN TRANSACTION",
+        [
+          [],
+          []
+        ],
+        "\n?"
+      ],
+      [
+        "INSERT INTO t1(id, name) VALUES(1, 'Irene')\nON CONFLICT (id) DO UPDATE\nSET name = excluded.name || 'replace' || ' \u2022 ' || '\\x01\\x02\\xA1\\x1b\\x00\\xg' || 'it''s high noon\\r\\n\\f\\b\\t\\v' || 'it''s' || name",
+        [
+          [],
+          []
+        ],
+        "\n?"
+      ],
+      [
+        "COMMIT TRANSACTION",
+        [
+          [],
+          []
+        ],
+        "\n?"
+      ],
+      [
+        "DROP TABLE IF EXISTS t1",
+        [
+          [],
+          []
+        ],
+        "\n?"
+      ],
+      [
+        "DROP VIEW my_view",
+        [
+          [],
+          []
+        ],
+        "\n?"
+      ],
+      [
+        "DROP INDEX it1",
+        [
+          [],
+          []
+        ],
+        "\n?"
+      ],
+      [
+        "WITH\nt4 (name) AS (SELECT t2.name\n  FROM t2\n  INNER JOIN t3 USING (id))\nSELECT *\n  FROM t4",
+        [
+          [],
+          [
+            {
+              "value": "SCAN",
+              "style": {
+                "fontSize": 14,
+                "color": "red",
+                "fontWeight": "bold"
+              }
+            },
+            {
+              "value": 1,
+              "style": {
+                "fontSize": 14,
+                "color": "red",
+                "fontWeight": "bold"
+              }
+            }
+          ],
+          [
+            "SEARCH",
+            1
+          ],
+          []
+        ],
+        "\n?\n|...SCAN TABLE t2\n|...SEARCH TABLE t3 USING INTEGER PRIMARY KEY (rowid=?)"
+      ],
+      [
+        "SELECT array_num_at(1, id) AS idx\n  FROM t1",
+        [
+          [],
+          [
+            {
+              "value": "SCAN",
+              "style": {
+                "fontSize": 14,
+                "color": "red",
+                "fontWeight": "bold"
+              }
+            },
+            {
+              "value": 1,
+              "style": {
+                "fontSize": 14,
+                "color": "red",
+                "fontWeight": "bold"
+              }
+            }
+          ],
+          []
+        ],
+        "\n?\n|...SCAN TABLE t1"
+      ],
+      [
+        "SELECT *\n  FROM scan_ok",
+        [
+          [],
+          [
+            {
+              "value": "SCAN",
+              "style": {
+                "fontSize": 14,
+                "color": "red",
+                "fontWeight": "bold"
+              }
+            },
+            {
+              "value": 1,
+              "style": {
+                "fontSize": 14,
+                "color": "red",
+                "fontWeight": "bold"
+              }
+            }
+          ],
+          []
+        ],
+        "\n?\n|...SCAN TABLE scan_ok"
+      ],
+      [
+        "SELECT 1 AS n\n  FROM foo_,\n_foo",
+        [
+          [],
+          [
+            {
+              "value": "SCAN",
+              "style": {
+                "fontSize": 14,
+                "color": "red",
+                "fontWeight": "bold"
+              }
+            },
+            {
+              "value": 2,
+              "style": {
+                "fontSize": 14,
+                "color": "red",
+                "fontWeight": "bold"
+              }
+            }
+          ],
+          []
+        ],
+        "\n?\n|...SCAN TABLE foo_\n|...SCAN TABLE _foo"
+      ],
+      []
+    ]
+  ],
+  []
+]

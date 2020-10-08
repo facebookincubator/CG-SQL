@@ -1,0 +1,830 @@
+Incompatible declarations found
+Error at test/sem_test.sql:XXXX : in create_table_stmt : CREATE TABLE foo(
+  id INTEGER PRIMARY KEY AUTOINCREMENT
+)
+Error at test/sem_test.sql:XXXX : in create_table_stmt : CREATE TABLE foo(
+  id INTEGER
+)
+The above must be identical.
+Error at test/sem_test.sql:XXXX : in str : CQL0103: duplicate table/view name 'foo'
+Error at test/sem_test.sql:XXXX : in str : CQL0142: duplicate column name 'id'
+Error at test/sem_test.sql:XXXX : in table_or_subquery_list : CQL0016: duplicate table name in join 'T1'
+Error at test/sem_test.sql:XXXX : in str : CQL0065: identifier is ambiguous 'id'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'not_found'
+Error at test/sem_test.sql:XXXX : in str : CQL0007: left operand cannot be a string in '+'
+Error at test/sem_test.sql:XXXX : in num : CQL0042: left operand must be a string in 'LIKE'
+Error at test/sem_test.sql:XXXX : in num : CQL0042: left operand must be a string in 'NOT LIKE'
+Error at test/sem_test.sql:XXXX : in num : CQL0043: right operand must be a string in 'LIKE'
+Error at test/sem_test.sql:XXXX : in str : CQL0008: right operand cannot be a string in '+'
+Error at test/sem_test.sql:XXXX : in str : CQL0007: left operand cannot be a string in '+'
+Error at test/sem_test.sql:XXXX : in str : CQL0007: left operand cannot be a string in 'AND'
+Error at test/sem_test.sql:XXXX : in str : CQL0008: right operand cannot be a string in 'AND'
+Error at test/sem_test.sql:XXXX : in lt : CQL0009: incompatible types in expression '<'
+Error at test/sem_test.sql:XXXX : in gt : CQL0012: incompatible types in expression '>'
+Error at test/sem_test.sql:XXXX : in gt : CQL0012: incompatible types in expression '>'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'foo'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in '-'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in is : CQL0009: incompatible types in expression 'IS'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in '-'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in '-'
+Error at test/sem_test.sql:XXXX : in star : CQL0052: select * cannot be used with no FROM clause
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'c'
+Error at test/sem_test.sql:XXXX : in table_or_subquery : CQL0095: table/view not defined 'goo'
+Error at test/sem_test.sql:XXXX : in eq : CQL0009: incompatible types in expression '='
+Error at test/sem_test.sql:XXXX : in num : CQL0009: incompatible types in expression 'then'
+Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expression 'when'
+Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expression 'when'
+Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expression 'else'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in between : CQL0009: incompatible types in expression 'BETWEEN'
+Error at test/sem_test.sql:XXXX : in between : CQL0009: incompatible types in expression 'BETWEEN'
+Error at test/sem_test.sql:XXXX : in between : CQL0012: incompatible types in expression 'BETWEEN/AND'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in not_between : CQL0009: incompatible types in expression 'NOT BETWEEN'
+Error at test/sem_test.sql:XXXX : in not_between : CQL0009: incompatible types in expression 'NOT BETWEEN'
+Error at test/sem_test.sql:XXXX : in not_between : CQL0012: incompatible types in expression 'NOT BETWEEN/AND'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0232: nested select expression must return exactly one column
+Error at test/sem_test.sql:XXXX : in table_or_subquery_list : CQL0016: duplicate table name in join 'foo'
+Error at test/sem_test.sql:XXXX : in on : CQL0015: expected numeric expression 'ON'
+Error at test/sem_test.sql:XXXX : in opt_where : CQL0015: expected numeric expression 'WHERE'
+Error at test/sem_test.sql:XXXX : in opt_having : CQL0099: HAVING clause requires GROUP BY clause
+Error at test/sem_test.sql:XXXX : in opt_having : CQL0015: expected numeric expression 'HAVING'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'bogus'
+Error at test/sem_test.sql:XXXX : in opt_limit : CQL0015: expected numeric expression 'LIMIT'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in in_pred : CQL0012: incompatible types in expression 'IN'
+Error at test/sem_test.sql:XXXX : in in_pred : CQL0009: incompatible types in expression 'IN'
+Error at test/sem_test.sql:XXXX : in in_pred : CQL0012: incompatible types in expression 'IN'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in not_in : CQL0012: incompatible types in expression 'NOT IN'
+Error at test/sem_test.sql:XXXX : in not_in : CQL0009: incompatible types in expression 'NOT IN'
+Error at test/sem_test.sql:XXXX : in not_in : CQL0012: incompatible types in expression 'NOT IN'
+Incompatible declarations found
+Error at test/sem_test.sql:XXXX : in create_view_stmt : CREATE VIEW MyView AS
+SELECT 1 AS f1, 2 AS f2, 3 AS f3
+Error at test/sem_test.sql:XXXX : in create_view_stmt : CREATE VIEW MyView AS
+SELECT 1 AS y
+The above must be identical.
+Error at test/sem_test.sql:XXXX : in str : CQL0103: duplicate table/view name 'MyView'
+Incompatible declarations found
+Error at test/sem_test.sql:XXXX : in create_table_stmt : CREATE TABLE foo(
+  id INTEGER PRIMARY KEY AUTOINCREMENT
+)
+Error at test/sem_test.sql:XXXX : in create_view_stmt : CREATE VIEW foo AS
+SELECT 2 AS x
+The above must be identical.
+Error at test/sem_test.sql:XXXX : in str : CQL0103: duplicate table/view name 'foo'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in table_or_subquery : CQL0095: table/view not defined 'V'
+Error at test/sem_test.sql:XXXX : in create_index_stmt : CQL0321: migration proc not allowed on object 'index_4'
+Incompatible declarations found
+Error at test/sem_test.sql:XXXX : in create_index_stmt : CREATE INDEX index_1 ON foo (id)
+Error at test/sem_test.sql:XXXX : in create_index_stmt : CREATE INDEX index_1 ON bar (id)
+The above must be identical.
+Error at test/sem_test.sql:XXXX : in str : CQL0018: duplicate index name 'index_1'
+Error at test/sem_test.sql:XXXX : in str : CQL0019: create index table name not found 'doesNotExist'
+Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'doesNotExist'
+Error at test/sem_test.sql:XXXX : in str : CQL0024: table does not have pk column 'pk_col_not_exist'
+Error at test/sem_test.sql:XXXX : in str : CQL0143: more than one primary key in table 'baz'
+Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this unique key is redundant with previous unique keys
+Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this unique key is redundant with previous unique keys
+Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this unique key is redundant with previous unique keys
+Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this unique key is redundant with previous unique keys
+Error at test/sem_test.sql:XXXX : in unq_def : CQL0020: duplicate unique key in table 'ak1'
+Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this unique key is redundant with previous unique keys
+Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'ak_col_not_exist'
+Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'ak_col_not_exist'
+Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'bogus'
+Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'bogus'
+Error at test/sem_test.sql:XXXX : in fk_def : CQL0021: foreign key refers to non-existent table 'bogus'
+Error at test/sem_test.sql:XXXX : in str : CQL0150: expected numeric expression in IF predicate
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0150: expected numeric expression in IF predicate
+Error at test/sem_test.sql:XXXX : in str : CQL0150: expected numeric expression in IF predicate
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0197: duplicate variable name in the same scope 'X'
+Error at test/sem_test.sql:XXXX : in str : CQL0198: global variable hides table/view name 'foo'
+Error at test/sem_test.sql:XXXX : in declare_cursor : CQL0197: duplicate variable name in the same scope 'my_cursor'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in leave_stmt : CQL0308: statement should be the last thing in a statement list
+Error at test/sem_test.sql:XXXX : in continue_stmt : CQL0308: statement should be the last thing in a statement list
+Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'X'
+Error at test/sem_test.sql:XXXX : in str : CQL0204: cursor not found 'not_a_variable'
+Error at test/sem_test.sql:XXXX : in leave_stmt : CQL0219: leave must be inside of a 'loop' or 'while' statement
+Error at test/sem_test.sql:XXXX : in continue_stmt : CQL0218: continue must be inside of a 'loop' or 'while' statement
+Error at test/sem_test.sql:XXXX : in return_stmt : CQL0308: statement should be the last thing in a statement list
+Error at test/sem_test.sql:XXXX : in return_stmt : CQL0308: statement should be the last thing in a statement list
+Error at test/sem_test.sql:XXXX : in return_stmt : CQL0307: return statement should be in a procedure and not at the top level
+Error at test/sem_test.sql:XXXX : in return_stmt : CQL0307: return statement should be in a procedure and not at the top level
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'X'
+Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'X'
+Error at test/sem_test.sql:XXXX : in str : CQL0151: table in delete statement does not exist 'bogus_table'
+Error at test/sem_test.sql:XXXX : in str : CQL0152: cannot delete from a view 'MyView'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'missing_column'
+Error at test/sem_test.sql:XXXX : in str : CQL0315: mandatory column with no default value in INSERT INTO name DEFAULT VALUES statement 'id'
+Error at test/sem_test.sql:XXXX : in str : CQL0160: table in insert statement does not exist 'bogus_table'
+Error at test/sem_test.sql:XXXX : in str : CQL0161: cannot insert into a view 'MyView'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'id'
+Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expression 'id'
+Error at test/sem_test.sql:XXXX : in num : CQL0009: incompatible types in expression 'name'
+Error at test/sem_test.sql:XXXX : in insert_stmt : CQL0157: count of columns differs from count of values
+Error at test/sem_test.sql:XXXX : in values : CQL0336: select statement with VALUES clause requires a non empty list of values
+Error at test/sem_test.sql:XXXX : in null : CQL0013: cannot assign/copy possibly null expression to not null target 'id'
+Error at test/sem_test.sql:XXXX : in str : CQL0040: table can only have one autoinc column 'id2'
+Error at test/sem_test.sql:XXXX : in assign : CQL0173: variable not found 'XX'
+Error at test/sem_test.sql:XXXX : in assign : CQL0174: cannot set a cursor 'my_cursor'
+Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expression 'X'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in fetch_stmt : CQL0217: number of variables did not match count of columns in cursor 'fetch_cursor'
+Error at test/sem_test.sql:XXXX : in fetch_stmt : CQL0217: number of variables did not match count of columns in cursor 'fetch_cursor'
+Error at test/sem_test.sql:XXXX : in str : CQL0009: incompatible types in expression 'a_string2'
+Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expression 'an_int2'
+Error at test/sem_test.sql:XXXX : in str : CQL0204: cursor not found 'not_a_cursor'
+Error at test/sem_test.sql:XXXX : in str : CQL0216: FETCH variable not found 'non_existent_variable'
+Error at test/sem_test.sql:XXXX : in str : CQL0206: duplicate name in list 'var_id'
+Error at test/sem_test.sql:XXXX : in str : CQL0172: name list has duplicate name 'id'
+Error at test/sem_test.sql:XXXX : in str : CQL0172: name list has duplicate name 'key_id'
+Error at test/sem_test.sql:XXXX : in str : CQL0172: name list has duplicate name 'key_id'
+Error at test/sem_test.sql:XXXX : in str : CQL0172: name list has duplicate name 'col_id'
+Error at test/sem_test.sql:XXXX : in str : CQL0172: name list has duplicate name 'ref_id1'
+Error at test/sem_test.sql:XXXX : in str : CQL0155: cannot update a view 'myView'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in opt_limit : CQL0015: expected numeric expression 'LIMIT'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'non_existent_column'
+Error at test/sem_test.sql:XXXX : in update_entry : CQL0012: incompatible types in expression 'id'
+Error at test/sem_test.sql:XXXX : in update_entry : CQL0009: incompatible types in expression 'name'
+Error at test/sem_test.sql:XXXX : in update_entry : CQL0013: cannot assign/copy possibly null expression to not null target 'id'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'X'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0186: duplicate stored proc name 'proc1'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'arg1'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'arg2'
+Error at test/sem_test.sql:XXXX : in str : CQL0175: duplicate parameter name 'arg1'
+Error at test/sem_test.sql:XXXX : in str : CQL0186: duplicate stored proc name 'proc3'
+Error at test/sem_test.sql:XXXX : in str : CQL0197: duplicate variable name in the same scope 'arg1'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'bar'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'T'
+Error at test/sem_test.sql:XXXX : in dot : CQL0069: name not found 'id'
+Error at test/sem_test.sql:XXXX : in str : CQL0013: cannot assign/copy possibly null expression to not null target 'int_nn'
+Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expression 'arg1'
+Error at test/sem_test.sql:XXXX : in num : CQL0009: incompatible types in expression 'arg2'
+Error at test/sem_test.sql:XXXX : in call_stmt : CQL0235: too many arguments provided to procedure 'proc2'
+Error at test/sem_test.sql:XXXX : in call_stmt : CQL0212: too few arguments provided to procedure 'proc2'
+Error at test/sem_test.sql:XXXX : in call_stmt : CQL0213: procedure had errors, can't call 'proc3'
+Error at test/sem_test.sql:XXXX : in num : CQL0207: proc out parameter: formal cannot be fulfilled by non-variable 'arg2'
+Error at test/sem_test.sql:XXXX : in num : CQL0207: proc out parameter: formal cannot be fulfilled by non-variable 'arg3'
+Error at test/sem_test.sql:XXXX : in str : CQL0208: proc out parameter: formal cannot be fulfilled by in-only variable 'arg1'
+Error at test/sem_test.sql:XXXX : in call : CQL0304: DISTINCT may only be used with one explicit argument in an aggregate function 'count'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'total'
+Error at test/sem_test.sql:XXXX : in star : CQL0051: argument can only be used in count(*) '*'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'count'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'max'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'avg'
+Error at test/sem_test.sql:XXXX : in str : CQL0082: argument must be numeric 'avg'
+Error at test/sem_test.sql:XXXX : in str : CQL0082: argument must be numeric 'avg'
+Error at test/sem_test.sql:XXXX : in str : CQL0094: function not yet implemented 'some_unknown_function'
+Error at test/sem_test.sql:XXXX : in while_stmt : CQL0015: expected numeric expression 'WHILE'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0184: stored procedures cannot be nested 'bar'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0061: if multiple selects, all columns must be an exact type match (expected real notnull; found integer notnull) 'B'
+Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0057: if multiple selects, all must have the same column count
+Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0062: if multiple selects, all columns must be an exact type match (including nullability) (expected integer notnull; found integer) 'A'
+Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0058: if multiple selects, all column names must be identical so they have unambiguous names 'B'
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0055: all columns in the select must have a name
+Error at test/sem_test.sql:XXXX : in call_stmt : CQL0214: procedures with results can only be called using a cursor in global context 'with_result_set'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in call_stmt : CQL0199: cursor requires a procedure that returns a result set via select 'curs'
+Error at test/sem_test.sql:XXXX : in opt_offset : CQL0015: expected numeric expression 'OFFSET'
+Error at test/sem_test.sql:XXXX : in call : CQL0081: aggregates only make sense if there is a FROM clause 'count'
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'count'
+Error at test/sem_test.sql:XXXX : in call : CQL0081: aggregates only make sense if there is a FROM clause 'max'
+Error at test/sem_test.sql:XXXX : in call : CQL0081: aggregates only make sense if there is a FROM clause 'avg'
+Error at test/sem_test.sql:XXXX : in str : CQL0013: cannot assign/copy possibly null expression to not null target 'my_int'
+Error at test/sem_test.sql:XXXX : in str : CQL0209: proc out parameter: arg must be an exact type match (expected integer; found real) 'my_real'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in exists_expr : CQL0080: function may not appear in this context 'exists'
+Error at test/sem_test.sql:XXXX : in exists_expr : CQL0080: function may not appear in this context 'exists'
+Error at test/sem_test.sql:XXXX : in release_savepoint_stmt : CQL0221: savepoint has not been mentioned yet, probably wrong 'garbonzo'
+Error at test/sem_test.sql:XXXX : in rollback_trans_stmt : CQL0220: savepoint has not been mentioned yet, probably wrong 'another_garbonzo'
+Error at test/sem_test.sql:XXXX : in dot : CQL0068: field not found in cursor 'three'
+Error at test/sem_test.sql:XXXX : in dot : CQL0067: cursor was not used with 'fetch [cursor]' 'my_cursor'
+Error at test/sem_test.sql:XXXX : in str : CQL0206: duplicate name in list 'id'
+Error at test/sem_test.sql:XXXX : in name_list : CQL0096: join using column not found on the left side of the join 'idx'
+Error at test/sem_test.sql:XXXX : in name_list : CQL0097: join using column not found on the right side of the join 'name'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in null : CQL0076: Null literal is useless in function 'coalesce'
+Error at test/sem_test.sql:XXXX : in num : CQL0077: encountered arg known to be not null before the end of the list, rendering the rest useless.
+Error at test/sem_test.sql:XXXX : in str : CQL0075: Incorrect number of arguments 'ifnull'
+Error at test/sem_test.sql:XXXX : in str : CQL0074: Too few arguments provided 'ifnull'
+Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expression 'ifnull'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in fk_def : CQL0023: The number of columns on both sides of a foreign key must match
+Error at test/sem_test.sql:XXXX : in str : CQL0022: the exact type of both sides of a foreign key must match (expected real; found integer notnull) 'id'
+Error at test/sem_test.sql:XXXX : in name_list : CQL0098: left/right column types in join USING(...) do not match exactly 'id'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'last_insert_rowid'
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'last_insert_rowid'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'printf'
+Error at test/sem_test.sql:XXXX : in call : CQL0086: first argument must be a string in function 'printf'
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'printf'
+Error at test/sem_test.sql:XXXX : in str : CQL0153: duplicate target column name in update statement 'id'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'sum'
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'sum'
+Error at test/sem_test.sql:XXXX : in str : CQL0083: argument must be numeric 'sum'
+Error at test/sem_test.sql:XXXX : in call : CQL0084: second argument must be a string in function 'group_concat'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'group_concat'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'group_concat'
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'group_concat'
+Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'strftime'
+Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'strftime'
+Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'strftime'
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'strftime'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'strftime'
+Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'date'
+Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'date'
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'date'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'date'
+Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'time'
+Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'time'
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'time'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'time'
+Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'datetime'
+Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'datetime'
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'datetime'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'datetime'
+Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'julianday'
+Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'julianday'
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'julianday'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'julianday'
+Error at test/sem_test.sql:XXXX : in cast_expr : CQL0073: CAST may only appear in the context of SQL statement
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0194: declared procedures must be top level 'yy'
+Incompatible declarations found
+Error at test/sem_test.sql:XXXX : in declare_proc_stmt : DECLARE PROC decl1 (id INTEGER)
+Error at test/sem_test.sql:XXXX : in declare_proc_stmt : DECLARE PROC decl1 (id INTEGER NOT NULL)
+The above must be identical.
+Error at test/sem_test.sql:XXXX : in declare_proc_stmt : CQL0196: procedure declarations/definitions do not match 'decl1'
+Error at test/sem_test.sql:XXXX : in str : CQL0175: duplicate parameter name 'id'
+Error at test/sem_test.sql:XXXX : in str : CQL0190: duplicate column name 'id'
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0232: nested select expression must return exactly one column
+Error at test/sem_test.sql:XXXX : in in_pred : CQL0012: incompatible types in expression 'IN'
+Error at test/sem_test.sql:XXXX : in not_in : CQL0012: incompatible types in expression 'NOT IN'
+Error at test/sem_test.sql:XXXX : in select_core : CQL0058: if multiple selects, all column names must be identical so they have unambiguous names 'B'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'nullable'
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'nullable'
+Error at test/sem_test.sql:XXXX : in str : CQL0206: duplicate name in list 'a'
+Error at test/sem_test.sql:XXXX : in cte_decl : CQL0100: duplicate common table name 'foo'
+Error at test/sem_test.sql:XXXX : in cte_decl : CQL0101: too few column names specified in common table expression 'foo'
+Error at test/sem_test.sql:XXXX : in cte_decl : CQL0102: too many column names specified in common table expression 'foo'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0206: duplicate name in list 'current'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in table_star : CQL0053: select [table].* cannot be used with no FROM clause
+Error at test/sem_test.sql:XXXX : in table_star : CQL0054: table not found 'T'
+Error at test/sem_test.sql:XXXX : in str : CQL0193: duplicate function name 'simple_func'
+Error at test/sem_test.sql:XXXX : in str : CQL0195: proc name conflicts with func name 'simple_func'
+Error at test/sem_test.sql:XXXX : in str : CQL0185: proc name conflicts with func name 'simple_func'
+Error at test/sem_test.sql:XXXX : in str : CQL0192: func name conflicts with proc name 'proc1'
+Error at test/sem_test.sql:XXXX : in str : CQL0191: declared functions must be top level 'foo'
+Error at test/sem_test.sql:XXXX : in str : CQL0175: duplicate parameter name 'a'
+Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expression 'arg1'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in call : CQL0088: User function may not appear in the context of a SQL statement 'simple_func'
+Error at test/sem_test.sql:XXXX : in str : CQL0002: left operand cannot be an object in '<'
+Error at test/sem_test.sql:XXXX : in str : CQL0003: right operand cannot be an object in '<'
+Error at test/sem_test.sql:XXXX : in str : CQL0002: left operand cannot be an object in '+'
+Error at test/sem_test.sql:XXXX : in str : CQL0003: right operand cannot be an object in '+'
+Error at test/sem_test.sql:XXXX : in str : CQL0049: object operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0046: object operand not allowed in '-'
+Error at test/sem_test.sql:XXXX : in str : CQL0009: incompatible types in expression 'a_string'
+Error at test/sem_test.sql:XXXX : in str : CQL0010: incompatible types in expression 'obj_var'
+Error at test/sem_test.sql:XXXX : in str : CQL0041: tables cannot have object columns 'obj'
+Error at test/sem_test.sql:XXXX : in str : CQL0064: object variables may not appear in the context of a SQL statement (except table-valued functions) 'obj_var'
+Error at test/sem_test.sql:XXXX : in in_pred : CQL0010: incompatible types in expression 'IN'
+Error at test/sem_test.sql:XXXX : in in_pred : CQL0010: incompatible types in expression 'IN'
+Error at test/sem_test.sql:XXXX : in in_pred : CQL0009: incompatible types in expression 'IN'
+Error at test/sem_test.sql:XXXX : in str : CQL0072: first operand cannot be an object in 'BETWEEN'
+Error at test/sem_test.sql:XXXX : in between : CQL0012: incompatible types in expression 'BETWEEN'
+Error at test/sem_test.sql:XXXX : in between : CQL0012: incompatible types in expression 'BETWEEN'
+Error at test/sem_test.sql:XXXX : in str : CQL0072: first operand cannot be an object in 'NOT BETWEEN'
+Error at test/sem_test.sql:XXXX : in not_between : CQL0012: incompatible types in expression 'NOT BETWEEN'
+Error at test/sem_test.sql:XXXX : in not_between : CQL0012: incompatible types in expression 'NOT BETWEEN'
+Error at test/sem_test.sql:XXXX : in call : CQL0087: no object/blob types are allowed in arguments for function 'printf'
+Error at test/sem_test.sql:XXXX : in echo_stmt : CQL0224: literal output can only appear outside of procedures
+Error at test/sem_test.sql:XXXX : in str : CQL0070: incompatible object type 'Foo'
+Error at test/sem_test.sql:XXXX : in str : CQL0070: incompatible object type 'Foo'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'bar_object'
+Error at test/sem_test.sql:XXXX : in str : CQL0070: incompatible object type 'Foo'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'foo_object'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in insert_stmt : CQL0158: required column missing in INSERT statement 'id'
+Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'garbonzo'
+Error at test/sem_test.sql:XXXX : in str : CQL0172: name list has duplicate name 'id'
+Error at test/sem_test.sql:XXXX : in str : CQL0161: cannot insert into a view 'MyView'
+Error at test/sem_test.sql:XXXX : in str : CQL0160: table in insert statement does not exist 'garbonzo'
+Error at test/sem_test.sql:XXXX : in str : CQL0070: incompatible object type 'Bar'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in insert_stmt : CQL0157: count of columns differs from count of values
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expression 'id'
+Error at test/sem_test.sql:XXXX : in col_def : CQL0147: adding a not nullable column with no default value is not allowed 'name'
+Error at test/sem_test.sql:XXXX : in col_def : CQL0149: added column must be an exact match for the column type declared in the table 'name'
+Error at test/sem_test.sql:XXXX : in col_def : CQL0148: added column must already be reflected in declared schema, with @create, exact name match required 'goo'
+Error at test/sem_test.sql:XXXX : in col_def : CQL0148: added column must already be reflected in declared schema, with @create, exact name match required 'NAME'
+Error at test/sem_test.sql:XXXX : in str : CQL0041: tables cannot have object columns 'foo'
+Error at test/sem_test.sql:XXXX : in col_def : CQL0146: adding an auto increment column is not allowed 'id'
+Error at test/sem_test.sql:XXXX : in str : CQL0144: table in alter statement does not exist 'garbonzo'
+Error at test/sem_test.sql:XXXX : in str : CQL0144: cannot alter a view 'MyView'
+Error at test/sem_test.sql:XXXX : in schema_upgrade_version_stmt : CQL0230: schema upgrade version declaration must be outside of any proc
+Error at test/sem_test.sql:XXXX : in schema_upgrade_version_stmt : CQL0231: schema upgrade version declaration must come before any tables are declared
+Error at test/sem_test.sql:XXXX : in schema_upgrade_version_stmt : CQL0228: schema upgrade version must be a positive integer
+Error at test/sem_test.sql:XXXX : in col_def : CQL0145: version annotations not valid in alter statement 'name'
+Error at test/sem_test.sql:XXXX : in col_def : CQL0145: version annotations not valid in alter statement 'name'
+Error at test/sem_test.sql:XXXX : in delete_attr : CQL0026: duplicate version annotation
+Error at test/sem_test.sql:XXXX : in create_attr : CQL0026: duplicate version annotation
+Error at test/sem_test.sql:XXXX : in create_attr : CQL0025: version number in annotation must be positive
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'id'
+Error at test/sem_test.sql:XXXX : in str : CQL0027: a procedure can appear in only one annotation 'creator'
+Error at test/sem_test.sql:XXXX : in str : CQL0187: @schema_upgrade_version not declared or doesn't match upgrade version 4 for proc 'creator'
+Error at test/sem_test.sql:XXXX : in col_def : CQL0032: created columns must be at the end and must be in version order 'col3'
+Error at test/sem_test.sql:XXXX : in col_def : CQL0034: create/delete version numbers can only be applied to columns that are nullable or have a default value 'col2'
+Error at test/sem_test.sql:XXXX : in col_def : CQL0034: create/delete version numbers can only be applied to columns that are nullable or have a default value 'col2'
+Error at test/sem_test.sql:XXXX : in col_def : CQL0035: column delete version can't be <= column create version 'col2'
+Error at test/sem_test.sql:XXXX : in create_attr : CQL0338: the name of a migration procedure may not end in '_crc' 'x_crc'
+Error at test/sem_test.sql:XXXX : in create_attr : CQL0026: duplicate version annotation
+Error at test/sem_test.sql:XXXX : in delete_attr : CQL0026: duplicate version annotation
+Error at test/sem_test.sql:XXXX : in str : CQL0019: create index table name not found (hidden by @delete) 'versioned_table'
+Error at test/sem_test.sql:XXXX : in fk_def : CQL0021: foreign key refers to non-existent table (hidden by @delete) 'versioned_table'
+Error at test/sem_test.sql:XXXX : in table_or_subquery : CQL0095: table/view not defined (hidden by @delete) 'versioned_table'
+Error at test/sem_test.sql:XXXX : in str : CQL0151: table in delete statement does not exist (hidden by @delete) 'versioned_table'
+Error at test/sem_test.sql:XXXX : in str : CQL0160: table in insert statement does not exist (hidden by @delete) 'versioned_table'
+Error at test/sem_test.sql:XXXX : in str : CQL0160: table in insert statement does not exist (hidden by @delete) 'versioned_table'
+Incompatible declarations found
+Error at test/sem_test.sql:XXXX : in create_table_stmt : CREATE TABLE versioned_table(
+  id INTEGER @CREATE(2)
+) @CREATE(1, table_create_proc) @DELETE(3, table_delete_proc)
+Error at test/sem_test.sql:XXXX : in create_view_stmt : CREATE VIEW versioned_table AS
+SELECT 1 AS x
+The above must be identical.
+Error at test/sem_test.sql:XXXX : in str : CQL0103: duplicate table/view name 'versioned_table'
+Error at test/sem_test.sql:XXXX : in str : CQL0198: global variable hides table/view name 'versioned_table'
+Incompatible declarations found
+Error at test/sem_test.sql:XXXX : in create_table_stmt : CREATE TABLE versioned_table(
+  id INTEGER @CREATE(2)
+) @CREATE(1, table_create_proc) @DELETE(3, table_delete_proc)
+Error at test/sem_test.sql:XXXX : in create_table_stmt : CREATE TABLE versioned_table(
+  id2 INTEGER
+)
+The above must be identical.
+Error at test/sem_test.sql:XXXX : in str : CQL0103: duplicate table/view name 'versioned_table'
+Error at test/sem_test.sql:XXXX : in str : CQL0108: table in drop statement does not exist 'garbonzo'
+Error at test/sem_test.sql:XXXX : in str : CQL0109: cannot drop a view with drop table 'MyView'
+Error at test/sem_test.sql:XXXX : in col_def : CQL0036: column delete version can't be <= the table create version 'id'
+Error at test/sem_test.sql:XXXX : in col_def : CQL0038: column create version can't be <= the table create version 'id'
+Error at test/sem_test.sql:XXXX : in col_def : CQL0037: column delete version can't be >= the table delete version 'id'
+Error at test/sem_test.sql:XXXX : in col_def : CQL0039: column create version can't be >= the table delete version 'id'
+Error at test/sem_test.sql:XXXX : in previous_schema_stmt : CQL0225: switching to previous schema validation mode must be outside of any proc
+Error at test/sem_test.sql:XXXX : in str : CQL0180: duplicate column name in result not allowed 'id'
+Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0180: duplicate column name in result not allowed 'id'
+Error at test/sem_test.sql:XXXX : in schema_upgrade_script_stmt : CQL0227: schema upgrade declaration must come before any tables are declared
+Error at test/sem_test.sql:XXXX : in schema_upgrade_script_stmt : CQL0226: schema upgrade declaration must be outside of any proc
+Error at test/sem_test.sql:XXXX : in col_def : CQL0148: added column must already be reflected in declared schema, with @create, exact name match required 'id'
+Error at test/sem_test.sql:XXXX : in col_def : CQL0148: added column must already be reflected in declared schema, with @create, exact name match required 'something_deleted'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0110: view in drop statement does not exist 'view_not_present'
+Error at test/sem_test.sql:XXXX : in str : CQL0111: cannot drop a table with drop view 'foo'
+Error at test/sem_test.sql:XXXX : in str : CQL0112: index in drop statement was not declared 'I_dont_see_no_steekin_index'
+Error at test/sem_test.sql:XXXX : in col_attrs_not_null : CQL0030: a column attribute was specified twice on the same column 'id'
+Error at test/sem_test.sql:XXXX : in col_def : CQL0031: column can't be primary key and also unique key 'id'
+Error at test/sem_test.sql:XXXX : in str : CQL0143: more than one primary key in table 'baz'
+Error at test/sem_test.sql:XXXX : in str : CQL0156: seed expression must be a non-nullable integer
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0004: left operand cannot be a blob in '<'
+Error at test/sem_test.sql:XXXX : in str : CQL0005: right operand cannot be a blob in '<'
+Error at test/sem_test.sql:XXXX : in str : CQL0004: left operand cannot be a blob in '+'
+Error at test/sem_test.sql:XXXX : in str : CQL0005: right operand cannot be a blob in '+'
+Error at test/sem_test.sql:XXXX : in str : CQL0048: blob operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0045: blob operand not allowed in '-'
+Error at test/sem_test.sql:XXXX : in str : CQL0009: incompatible types in expression 'a_string'
+Error at test/sem_test.sql:XXXX : in str : CQL0011: incompatible types in expression 'blob_var'
+Error at test/sem_test.sql:XXXX : in concat : CQL0241: CONCAT may only appear in the context of a SQL statement
+Error at test/sem_test.sql:XXXX : in str : CQL0243: blob operand must be converted to string first in '||'
+Error at test/sem_test.sql:XXXX : in str : CQL0243: blob operand must be converted to string first in '||'
+Error at test/sem_test.sql:XXXX : in in_pred : CQL0011: incompatible types in expression 'IN'
+Error at test/sem_test.sql:XXXX : in in_pred : CQL0011: incompatible types in expression 'IN'
+Error at test/sem_test.sql:XXXX : in in_pred : CQL0009: incompatible types in expression 'IN'
+Error at test/sem_test.sql:XXXX : in str : CQL0071: first operand cannot be a blob in 'BETWEEN'
+Error at test/sem_test.sql:XXXX : in between : CQL0012: incompatible types in expression 'BETWEEN'
+Error at test/sem_test.sql:XXXX : in between : CQL0012: incompatible types in expression 'BETWEEN'
+Error at test/sem_test.sql:XXXX : in str : CQL0071: first operand cannot be a blob in 'NOT BETWEEN'
+Error at test/sem_test.sql:XXXX : in not_between : CQL0012: incompatible types in expression 'NOT BETWEEN'
+Error at test/sem_test.sql:XXXX : in not_between : CQL0012: incompatible types in expression 'NOT BETWEEN'
+Error at test/sem_test.sql:XXXX : in call : CQL0087: no object/blob types are allowed in arguments for function 'printf'
+Error at test/sem_test.sql:XXXX : in str : CQL0010: incompatible types in expression 'o1'
+Error at test/sem_test.sql:XXXX : in in_pred : CQL0078: [not] in (select ...) is only allowed inside of select lists, where, on, and having clauses
+Error at test/sem_test.sql:XXXX : in not_in : CQL0078: [not] in (select ...) is only allowed inside of select lists, where, on, and having clauses
+Error at test/sem_test.sql:XXXX : in out_stmt : CQL0223: the cursor was not fetched with the auto-fetch syntax 'fetch [cursor]' 'C'
+Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0058: if multiple selects, all column names must be identical so they have unambiguous names 'C'
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0063: can't mix and match out, out union, or select/call for return values 'out_cursor_proc_mixed_cursor_select'
+Error at test/sem_test.sql:XXXX : in out_stmt : CQL0063: can't mix and match out, out union, or select/call for return values 'out_cursor_proc_mixed_cursor_select_select_first'
+Error at test/sem_test.sql:XXXX : in out_union_stmt : CQL0063: can't mix and match out, out union, or select/call for return values 'out_cursor_proc_mixed_cursor_select_then_union'
+Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'C'
+Error at test/sem_test.sql:XXXX : in out_stmt : CQL0222: the out cursor statement only makes sense inside of a procedure
+Error at test/sem_test.sql:XXXX : in str : CQL0215: value cursors are not used with FETCH C, or FETCH C INTO 'C'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in call_stmt : CQL0203: cursor requires a procedure that returns a cursor with OUT 'C'
+Error at test/sem_test.sql:XXXX : in declare_value_cursor : CQL0197: duplicate variable name in the same scope 'C'
+Error at test/sem_test.sql:XXXX : in call : CQL0305: DISTINCT may only be used in function that are aggregated or user defined 'proc_func'
+Error at test/sem_test.sql:XXXX : in call : CQL0235: too many arguments provided to procedure 'proc_with_output'
+Error at test/sem_test.sql:XXXX : in call : CQL0091: Stored procs that deal with result sets or cursors cannot be invoked as functions 'out_cursor_proc'
+Error at test/sem_test.sql:XXXX : in param : CQL0211: last formal arg of procedure is not an out arg, cannot use proc as a function 'proc2'
+Error at test/sem_test.sql:XXXX : in call : CQL0090: Stored proc calls may not appear in the context of a SQL statement 'proc_with_output'
+Error at test/sem_test.sql:XXXX : in call_stmt : CQL0203: cursor requires a procedure that returns a cursor with OUT 'C'
+Error at test/sem_test.sql:XXXX : in call_stmt : CQL0235: too many arguments provided to procedure 'out_cursor_proc'
+Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'C'
+Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'C'
+Error at test/sem_test.sql:XXXX : in str : CQL0058: if multiple selects, all column names must be identical so they have unambiguous names 'B'
+Error at test/sem_test.sql:XXXX : in str : CQL0204: cursor not found 'not_a_cursor'
+Error at test/sem_test.sql:XXXX : in str : CQL0165: fetch values is only for value cursors, not for sqlite cursors 'my_cursor'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in fetch_values_stmt : CQL0166: count of columns differs from count of values
+Error at test/sem_test.sql:XXXX : in fetch_values_stmt : CQL0168: there's no good way to generate dummy blobs; not supported for now
+Error at test/sem_test.sql:XXXX : in fetch_values_stmt : CQL0167: required column missing in FETCH statement 'B'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expression 'B'
+Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'C0'
+Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'C1'
+Error at test/sem_test.sql:XXXX : in str : CQL0170: cursor must be a value cursor, not a statement cursor 'C1'
+Error at test/sem_test.sql:XXXX : in str : CQL0058: if multiple selects, all column names must be identical so they have unambiguous names 'B'
+Error at test/sem_test.sql:XXXX : in str : CQL0169: cannot fetch from a cursor without fields 'C0'
+Error at test/sem_test.sql:XXXX : in like : CQL0200: variable is not a cursor 'C0'
+Error at test/sem_test.sql:XXXX : in declare_cursor_like_name : CQL0197: duplicate variable name in the same scope 'C0'
+Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, table, or view 'C0'
+Error at test/sem_test.sql:XXXX : in like : CQL0178: proc has no result 'decl1'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in declare_cursor_like_select : CQL0197: duplicate variable name in the same scope 'X'
+Error at test/sem_test.sql:XXXX : in dot : CQL0069: name not found 'rowid'
+Error at test/sem_test.sql:XXXX : in str : CQL0066: identifier is ambiguous 'rowid'
+Error at test/sem_test.sql:XXXX : in str : CQL0154: table in update statement does not exist 'This_Table_Does_Not_Exist'
+Error at test/sem_test.sql:XXXX : in col_def : CQL0028: the FK reference must be exactly one column with the correct type 'fk_src'
+Error at test/sem_test.sql:XXXX : in col_def : CQL0028: the FK reference must be exactly one column with the correct type 'fk_src'
+Error at test/sem_test.sql:XXXX : in col_def : CQL0021: foreign key refers to non-existent table 'no_such_table'
+Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'no_such_column'
+Error at test/sem_test.sql:XXXX : in col_attrs_autoinc : CQL0029: autoincrement column must be [LONG_]INTEGER PRIMARY KEY 'id'
+Error at test/sem_test.sql:XXXX : in create_table_stmt : CQL0141: table has an AUTOINCREMENT column; it cannot also be WITHOUT ROWID 'bogus_without_rowid'
+Error at test/sem_test.sql:XXXX : in col_def : CQL0033: columns in a table marked @recreate cannot have @create or @delete 'id'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in insert_stmt : CQL0157: count of columns differs from count of values
+Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expression 'id'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in call : CQL0089: User function may only appear in the context of a SQL statement 'SqlUserFunc'
+Error at test/sem_test.sql:XXXX : in call : CQL0089: User function may only appear in the context of a SQL statement 'SqlUserFunc'
+Error at test/sem_test.sql:XXXX : in call : CQL0089: User function may only appear in the context of a SQL statement 'SqlUserFunc'
+Error at test/sem_test.sql:XXXX : in str : CQL0192: func name conflicts with proc name 'foo'
+Error at test/sem_test.sql:XXXX : in columns_values : CQL0201: expanding FROM ARGUMENTS, there is no argument matching 'name'
+Error at test/sem_test.sql:XXXX : in columns_values : CQL0201: expanding FROM ARGUMENTS, there is no argument matching 'rate'
+Error at test/sem_test.sql:XXXX : in from_arguments : CQL0202: must be a cursor, proc, table, or view 'bogus_name_here'
+Error at test/sem_test.sql:XXXX : in columns_values : CQL0163: FROM ARGUMENTS construct is only valid inside a procedure
+Error at test/sem_test.sql:XXXX : in columns_values : CQL0164: too few arguments available
+Error at test/sem_test.sql:XXXX : in from_arguments : CQL0162: FROM ARGUMENTS is redundant if column list is empty
+Error at test/sem_test.sql:XXXX : in columns_values : CQL0164: too few arguments available
+Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, table, or view 'garbonzo'
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0055: all columns in the select must have a name
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0055: all columns in the select must have a name
+Error at test/sem_test.sql:XXXX : in like : CQL0178: proc has no result 'proc1'
+Error at test/sem_test.sql:XXXX : in like : CQL0178: proc has no result 'proc1'
+Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, table, or view 'this_thing_doesnt_exist'
+Error at test/sem_test.sql:XXXX : in str : CQL0142: duplicate column name 'f1'
+Error at test/sem_test.sql:XXXX : in create_table_stmt : CQL0139: temp tables may not have versioning annotations 'bogus_temp_with_create_versioning'
+Error at test/sem_test.sql:XXXX : in create_table_stmt : CQL0139: temp tables may not have versioning annotations 'bogus_temp_with_delete_versioning'
+Error at test/sem_test.sql:XXXX : in create_table_stmt : CQL0139: temp tables may not have versioning annotations 'bogus_temp_with_recreate_versioning'
+Error at test/sem_test.sql:XXXX : in col_def : CQL0140: columns in a temp table may not have versioning attributes 'id'
+Error at test/sem_test.sql:XXXX : in match : CQL0044: operator may only appear in the context of a SQL statement 'MATCH'
+Error at test/sem_test.sql:XXXX : in glob : CQL0044: operator may only appear in the context of a SQL statement 'GLOB'
+Error at test/sem_test.sql:XXXX : in match : CQL0044: operator may only appear in the context of a SQL statement 'MATCH'
+Error at test/sem_test.sql:XXXX : in regexp : CQL0044: operator may only appear in the context of a SQL statement 'REGEXP'
+Error at test/sem_test.sql:XXXX : in bin_and : CQL0001: operands must be an integer type, not real '&'
+Error at test/sem_test.sql:XXXX : in tilde : CQL0001: operands must be an integer type, not real '~'
+Error at test/sem_test.sql:XXXX : in dot : CQL0069: name not found 'id'
+Error at test/sem_test.sql:XXXX : in dot : CQL0069: name not found 'id'
+Incompatible declarations found
+Error at test/sem_test.sql:XXXX : in create_trigger_stmt : CREATE TRIGGER trigger3
+  INSTEAD OF UPDATE ON ViewShape
+  WHEN old.b > 1 AND new.b < 3
+BEGIN
+UPDATE bar
+SET id = 7
+  WHERE rate > old.b AND rate < new.b;
+
+INSERT INTO bar(id, name, rate) VALUES(7, 'goo', 1.7);
+END
+Error at test/sem_test.sql:XXXX : in create_trigger_stmt : CREATE TRIGGER trigger3
+  INSTEAD OF UPDATE ON ViewShape
+BEGIN
+SELECT 1;
+END
+The above must be identical.
+Error at test/sem_test.sql:XXXX : in str : CQL0136: trigger already exists 'trigger3'
+Error at test/sem_test.sql:XXXX : in str : CQL0172: name list has duplicate name 'a'
+Error at test/sem_test.sql:XXXX : in str : CQL0138: a trigger on a view must be the INSTEAD OF form 'ViewShape'
+Error at test/sem_test.sql:XXXX : in str : CQL0137: table/view not found 'no_such_table_dude'
+Error at test/sem_test.sql:XXXX : in dot : CQL0069: name not found 'id'
+Error at test/sem_test.sql:XXXX : in str : CQL0113: trigger in drop statement was not declared 'this_trigger_does_not_exist'
+Error at test/sem_test.sql:XXXX : in create_table_stmt : CQL0107: delete version can't be <= create version 'retro_deleted_table'
+Error at test/sem_test.sql:XXXX : in raise : CQL0092: RAISE may only be used in a trigger statement
+Error at test/sem_test.sql:XXXX : in num : CQL0093: RAISE 2nd argument must be a string
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in create_trigger_stmt : CQL0321: migration proc not allowed on object 'trigger8'
+Error at test/sem_test.sql:XXXX : in select_core : CQL0057: if multiple selects, all must have the same column count
+Error at test/sem_test.sql:XXXX : in select_core : CQL0012: incompatible types in expression 'A'
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0056: NULL column did not specify a type 'n'
+Error at test/sem_test.sql:XXXX : in str : CQL0056: NULL column did not specify a type 'n'
+Error at test/sem_test.sql:XXXX : in str : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'name'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'a_key_'
+Error at test/sem_test.sql:XXXX : in dot : CQL0069: name not found 'a_key_'
+Error at test/sem_test.sql:XXXX : in str : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'X'
+Error at test/sem_test.sql:XXXX : in str : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'id'
+Error at test/sem_test.sql:XXXX : in str : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'X'
+Error at test/sem_test.sql:XXXX : in str : CQL0013: cannot assign/copy possibly null expression to not null target 'int_nn'
+Error at test/sem_test.sql:XXXX : in str : CQL0210: proc out parameter: arg must be an exact type match (even nullability) (expected integer notnull; found integer) 'X'
+Error at test/sem_test.sql:XXXX : in call : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'id'
+Error at test/sem_test.sql:XXXX : in update_entry : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'id'
+Error at test/sem_test.sql:XXXX : in str : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'non_sens_text'
+Error at test/sem_test.sql:XXXX : in str : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 't'
+Error at test/sem_test.sql:XXXX : in select_core : CQL0012: incompatible types in expression '_anon'
+Error at test/sem_test.sql:XXXX : in str : CQL0151: table in delete statement does not exist 'not_valid_table'
+Error at test/sem_test.sql:XXXX : in select_core : CQL0012: incompatible types in expression '_anon'
+Error at test/sem_test.sql:XXXX : in str : CQL0154: table in update statement does not exist 'not_valid_table'
+Error at test/sem_test.sql:XXXX : in str : CQL0186: duplicate stored proc name 'decl1'
+Incompatible declarations found
+Error at test/sem_test.sql:XXXX : in declare_proc_stmt : DECLARE PROC decl2 (id INTEGER) USING TRANSACTION
+Error at test/sem_test.sql:XXXX : in create_proc_stmt : DECLARE PROC decl2 (id INTEGER)
+The above must be identical.
+Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0189: procedure declarations/definitions do not match 'decl2'
+Error at test/sem_test.sql:XXXX : in str : CQL0276: autotest attribute 'dummy_test' has invalid value type in 'id'
+Error at test/sem_test.sql:XXXX : in num : CQL0276: autotest attribute 'dummy_test' has invalid value type in 'id'
+Error at test/sem_test.sql:XXXX : in str : CQL0276: autotest attribute 'dummy_test' has invalid value type in 'id'
+Error at test/sem_test.sql:XXXX : in num : CQL0276: autotest attribute 'dummy_test' has invalid value type in 'id'
+Error at test/sem_test.sql:XXXX : in str : CQL0273: autotest attribute has incorrect format (column name should be nested) in 'dummy_test'
+Error at test/sem_test.sql:XXXX : in str : CQL0273: autotest attribute has incorrect format (too many column values) in 'dummy_test'
+Error at test/sem_test.sql:XXXX : in str : CQL0273: autotest attribute has incorrect format (mismatch number of column and values) in 'dummy_test'
+Error at test/sem_test.sql:XXXX : in str : CQL0273: autotest attribute has incorrect format (column value should be nested) in 'dummy_test'
+Error at test/sem_test.sql:XXXX : in misc_attr_value_list : CQL0273: autotest attribute has incorrect format (table name should be nested) in 'dummy_test'
+Error at test/sem_test.sql:XXXX : in str : CQL0273: autotest attribute has incorrect format (column name should be nested) in 'dummy_test'
+Error at test/sem_test.sql:XXXX : in str : CQL0273: autotest attribute has incorrect format (column value should be nested) in 'dummy_test'
+Error at test/sem_test.sql:XXXX : in str : CQL0275: autotest attribute 'dummy_test' has non existent column 'bogus_col'
+Error at test/sem_test.sql:XXXX : in str : CQL0274: autotest attribute 'dummy_test' has non existent table 'bogus_table'
+Error at test/sem_test.sql:XXXX : in str : CQL0278: autotest attribute name is not valid 'dummy_bogus'
+Error at test/sem_test.sql:XXXX : in str : CQL0277: autotest has incorrect format
+Error at test/sem_test.sql:XXXX : in str : CQL0277: autotest has incorrect format
+Error at test/sem_test.sql:XXXX : in str : CQL0277: autotest has incorrect format
+Error at test/sem_test.sql:XXXX : in misc_attr_value_list : CQL0181: autodrop temp table does not exist 'not_an_object'
+Error at test/sem_test.sql:XXXX : in misc_attr_value_list : CQL0182: autodrop target is not a table 'ViewShape'
+Error at test/sem_test.sql:XXXX : in misc_attr_value_list : CQL0183: autodrop target must be a temporary table 'not_a_temp_table'
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0234: autodrop annotation can only go on a procedure that returns a result set 'autodrop_not_really_a_result_set_proc'
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0236: autodrop annotation can only go on a procedure that uses the database 'autodrop_no_db'
+Error at test/sem_test.sql:XXXX : in name_list : CQL0272: the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table 'referenceable'
+Error at test/sem_test.sql:XXXX : in name_list : CQL0272: the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table 'referenceable'
+Error at test/sem_test.sql:XXXX : in name_list : CQL0272: the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table 'referenceable'
+Error at test/sem_test.sql:XXXX : in name_list : CQL0272: the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table 'referenceable'
+Error at test/sem_test.sql:XXXX : in name_list : CQL0272: the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table 'referenceable'
+Error at test/sem_test.sql:XXXX : in name_list : CQL0272: the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table 'referenceable'
+Error at test/sem_test.sql:XXXX : in col_attrs_fk : CQL0237: strict FK validation requires that some ON UPDATE option be selected for every foreign key
+Error at test/sem_test.sql:XXXX : in col_attrs_fk : CQL0238: strict FK validation requires that some ON DELETE option be selected for every foreign key
+Error at test/sem_test.sql:XXXX : in fk_def : CQL0238: strict FK validation requires that some ON DELETE option be selected for every foreign key
+Error at test/sem_test.sql:XXXX : in fk_def : CQL0237: strict FK validation requires that some ON UPDATE option be selected for every foreign key
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0239: procedure identity column does not exist in result set 'col3'
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0240: identity annotation can only go on a procedure that returns a result set 'no_result_set_identity'
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0256: fragment name conflicts with existing base fragment 'core'
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0251: fragment must end with exactly 'SELECT * FROM core_one'
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0251: fragment must end with exactly 'SELECT * FROM core_two'
+Error at test/sem_test.sql:XXXX : in str : CQL0253: base fragment must include a single CTE named same as the fragment 'bar'
+Error at test/sem_test.sql:XXXX : in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH..SELECT
+Error at test/sem_test.sql:XXXX : in select_core_compound : CQL0333: all the compound operators in this CTE must be UNION ALL 'not_union_all'
+Error at test/sem_test.sql:XXXX : in select_core : CQL0332: all extension fragments that use UNION ALL must come before those that use LEFT OUTER JOIN 'out_of_order'
+Error at test/sem_test.sql:XXXX : in str : CQL0322: fragment parameters must be exactly '(id_ INTEGER NOT NULL)'
+Error at test/sem_test.sql:XXXX : in str : CQL0255: fragment name is not a previously declared base fragment 'wrong_core'
+Error at test/sem_test.sql:XXXX : in str : CQL0268: extension/assembly fragment must have the CTE named same as the base fragment 'core'
+Error at test/sem_test.sql:XXXX : in cte_tables : CQL0258: extension fragment must add exactly one CTE; found extra named 'plugin_wrong_three'
+Error at test/sem_test.sql:XXXX : in cte_tables : CQL0260: extension fragment CTE must be a simple left outer join from 'core'
+Error at test/sem_test.sql:XXXX : in cte_tables : CQL0260: extension fragment CTE must be a simple left outer join from 'core'
+Error at test/sem_test.sql:XXXX : in cte_tables : CQL0260: extension fragment CTE must be a simple left outer join from 'core'
+Error at test/sem_test.sql:XXXX : in cte_decl : CQL0268: extension/assembly fragment must use base CTE column list same as from the base fragment 'core'
+Error at test/sem_test.sql:XXXX : in select_from_etc : CQL0320: extension fragment CTE must have a FROM clause and no other top level clauses 'bogus_extra_clauses'
+Error at test/sem_test.sql:XXXX : in select_core : CQL0331: extension fragment CTE must have not have ORDER BY or LIMIT clauses 'bogus_extra_clauses2'
+Error at test/sem_test.sql:XXXX : in select_from_etc : CQL0320: extension fragment CTE must have a FROM clause and no other top level clauses 'bogus_extra_clauses'
+Error at test/sem_test.sql:XXXX : in cte_tables : CQL0259: extension fragment CTE must select T.* from base CTE 'core'
+Error at test/sem_test.sql:XXXX : in cte_tables : CQL0260: extension fragment CTE must be a simple left outer join from 'core'
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0251: fragment must end with exactly 'SELECT * FROM plugin_wrong_six'
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0251: fragment must end with exactly 'SELECT * FROM plugin_wrong_seven'
+Error at test/sem_test.sql:XXXX : in cte_tables : CQL0259: extension fragment CTE must select T.* from base CTE 'core'
+Error at test/sem_test.sql:XXXX : in cte_tables : CQL0259: extension fragment CTE must select T.* from base CTE 'core'
+Error at test/sem_test.sql:XXXX : in cte_table : CQL0266: extension fragment name conflicts with existing fragment 'plugin_wrong_nine'
+Error at test/sem_test.sql:XXXX : in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH..SELECT
+Error at test/sem_test.sql:XXXX : in select_expr_list : CQL0287: extension/assembly fragment must add stub for base CTE with same types from base fragment (expected longint; found integer) 'rate'
+Error at test/sem_test.sql:XXXX : in select_expr_list : CQL0288: extension/assembly fragment stub for base CTE column must be exact type match (including nullability) (expected longint; found longint notnull) 'rate'
+Error at test/sem_test.sql:XXXX : in select_core : CQL0058: if multiple selects, all column names must be identical so they have unambiguous names 'name'
+Error at test/sem_test.sql:XXXX : in select_core : CQL0057: if multiple selects, all must have the same column count
+Error at test/sem_test.sql:XXXX : in select_core : CQL0330: fragment must start with exactly 'SELECT * FROM core'
+Error at test/sem_test.sql:XXXX : in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH..SELECT
+Error at test/sem_test.sql:XXXX : in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH..SELECT
+Error at test/sem_test.sql:XXXX : in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH..SELECT
+Error at test/sem_test.sql:XXXX : in str : CQL0264: duplicate assembly fragments of base fragment 'assembly_core'
+Error at test/sem_test.sql:XXXX : in cte_tables : CQL0265: assembly fragment can only have one CTE 'another_core'
+Error at test/sem_test.sql:XXXX : in str : CQL0255: fragment name is not a previously declared base fragment 'wrong_core'
+Error at test/sem_test.sql:XXXX : in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH..SELECT
+Error at test/sem_test.sql:XXXX : in name_list : CQL0267: extension fragments of same base fragment share the same cte column 'a'
+Error at test/sem_test.sql:XXXX : in select_expr_list : CQL0288: extension/assembly fragment stub for base CTE column must be exact type match (including nullability) (expected longint; found longint notnull) 'rate'
+Error at test/sem_test.sql:XXXX : in select_expr_list : CQL0287: extension/assembly fragment must add stub for base CTE with same types from base fragment (expected text; found integer) 'name'
+Error at test/sem_test.sql:XXXX : in str : CQL0322: fragment parameters must be exactly '(idx_ INTEGER NOT NULL)'
+Error at test/sem_test.sql:XXXX : in declare_schema_region_stmt : CQL0245: schema region already defined 'root_region'
+Error at test/sem_test.sql:XXXX : in region_list : CQL0244: unknown schema region 'unknown_region'
+Error at test/sem_test.sql:XXXX : in region_spec : CQL0206: duplicate name in list 'root_region'
+Error at test/sem_test.sql:XXXX : in begin_schema_region_stmt : CQL0246: schema regions do not nest; end the current region before starting a new one
+Error at test/sem_test.sql:XXXX : in end_schema_region_stmt : CQL0247: you must begin a schema region before you can end one
+Error at test/sem_test.sql:XXXX : in str : CQL0244: unknown schema region 'what_is_this_region'
+Error at test/sem_test.sql:XXXX : in declare_schema_region_stmt : CQL0248: schema region directives may not appear inside of a procedure
+Error at test/sem_test.sql:XXXX : in begin_schema_region_stmt : CQL0248: schema region directives may not appear inside of a procedure
+Error at test/sem_test.sql:XXXX : in end_schema_region_stmt : CQL0248: schema region directives may not appear inside of a procedure
+Error at test/sem_test.sql:XXXX : in mod : CQL0001: operands must be an integer type, not real '%'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0113: trigger in drop statement was not declared (while in schema region 'dep_region', accessing an object that isn't in a region is invalid) 'trigger2'
+Error at test/sem_test.sql:XXXX : in str : CQL0110: view in drop statement does not exist (while in schema region 'dep_region', accessing an object that isn't in a region is invalid) 'MyView'
+Error at test/sem_test.sql:XXXX : in str : CQL0108: table in drop statement does not exist (while in schema region 'dep_region', accessing an object that isn't in a region is invalid) 'foo'
+Error at test/sem_test.sql:XXXX : in str : CQL0112: index in drop statement was not declared (while in schema region 'dep_region', accessing an object that isn't in a region is invalid) 'index_1'
+Error at test/sem_test.sql:XXXX : in table_or_subquery : CQL0095: table/view not defined (object is in schema region 'dep_region' not accessible from region 'dep2_region') 'a_table_in_dep_region'
+Error at test/sem_test.sql:XXXX : in table_or_subquery : CQL0095: table/view not defined (while in schema region 'dep2_region', accessing an object that isn't in a region is invalid) 'bar'
+Error at test/sem_test.sql:XXXX : in create_index_stmt : CQL0066: if a table is marked @recreate, its indices must be in its schema region 'invalid_wrong_group_index'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expression 'id'
+Error at test/sem_test.sql:XXXX : in str : CQL0249: function is not a table-valued-function 'SqlUserFunc'
+Error at test/sem_test.sql:XXXX : in str : CQL0250: table-valued function not declared 'ThisDoesNotExist'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'ptr'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'ptr'
+Error at test/sem_test.sql:XXXX : in str : CQL0059: a variable name might be ambiguous with a column name, this is an anti-pattern 'id'
+Error at test/sem_test.sql:XXXX : in call : CQL0257: argument must be a string or numeric in 'min'
+Error at test/sem_test.sql:XXXX : in call : CQL0012: incompatible types in expression 'min'
+Error at test/sem_test.sql:XXXX : in call : CQL0257: argument must be a string or numeric in 'min'
+Error at test/sem_test.sql:XXXX : in call : CQL0257: argument must be a string or numeric in 'min'
+Error at test/sem_test.sql:XXXX : in col_def : CQL0060: referenced table can be independently be recreated so it cannot be used in a foreign key 'recreatable'
+Error at test/sem_test.sql:XXXX : in col_def : CQL0060: referenced table can be independently be recreated so it cannot be used in a foreign key 'recreatable'
+Error at test/sem_test.sql:XXXX : in col_def : CQL0060: referenced table can be independently be recreated so it cannot be used in a foreign key 'in_group_test'
+Error at test/sem_test.sql:XXXX : in col_def : CQL0060: referenced table can be independently be recreated so it cannot be used in a foreign key 'in_group_test'
+Error at test/sem_test.sql:XXXX : in fk_def : CQL0021: foreign key refers to non-existent table 'table_not_found'
+Error at test/sem_test.sql:XXXX : in table_or_subquery_list : CQL0263: non-ANSI joins are forbidden if strict join mode is enabled
+Error at test/sem_test.sql:XXXX : in declare_cursor : CQL0270: use FETCH FROM for procedures that returns a cursor with OUT 'C'
+Error at test/sem_test.sql:XXXX : in opt_offset : CQL0271: the OFFSET clause may only be used if LIMIT is also present
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'bogus'
+Error at test/sem_test.sql:XXXX : in str : CQL0281: upsert statement does not include table name in the update statement 'foo'
+Error at test/sem_test.sql:XXXX : in insert_stmt : CQL0280: upsert statement requires a where clause if the insert clause uses select
+Error at test/sem_test.sql:XXXX : in insert_or_ignore : CQL0283: upsert syntax only supports INSERT INTO 'foo'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'bogus'
+Error at test/sem_test.sql:XXXX : in update_stmt : CQL0282: update statement require table name
+Error at test/sem_test.sql:XXXX : in indexed_columns : CQL0279: the set of columns referenced in the conflict target should match exactly a unique key in table we apply upsert
+Error at test/sem_test.sql:XXXX : in upsert_stmt : CQL0289: upsert statement are forbidden if strict upsert statement mode is enabled
+Error at test/sem_test.sql:XXXX : in window_func_inv : CQL0312: window function invocation are forbidden if strict window function mode is enabled
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'max'
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'substr'
+Error at test/sem_test.sql:XXXX : in call : CQL0086: first argument must be a string in function 'substr'
+Error at test/sem_test.sql:XXXX : in str : CQL0083: argument must be numeric 'substr'
+Error at test/sem_test.sql:XXXX : in str : CQL0083: argument must be numeric 'substr'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'substr'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'substr'
+Error at test/sem_test.sql:XXXX : in schema_ad_hoc_migration_stmt : CQL0338: the name of a migration procedure may not end in '_crc' 'not_allowed_crc'
+Error at test/sem_test.sql:XXXX : in str : CQL0027: a procedure can appear in only one annotation 'MyAdHocMigration'
+Error at test/sem_test.sql:XXXX : in schema_ad_hoc_migration_stmt : CQL0284: ad hoc schema migration directive must provide a procedure to run
+Error at test/sem_test.sql:XXXX : in insert_normal : CQL0316: the upsert-clause is not compatible with DEFAULT VALUES 'foo'
+Error at test/sem_test.sql:XXXX : in declare_deployable_region_stmt : CQL0245: schema region already defined 'root_deployable_region'
+Error at test/sem_test.sql:XXXX : in declare_schema_region_stmt : CQL0291: region links into the middle of a deployable region; you must point to the root of 'uses_leaf_3' not into the middle: 'pending_leaf_user'
+Error at test/sem_test.sql:XXXX : in declare_schema_region_stmt : CQL0291: region links into the middle of a deployable region; you must point to the root of 'depl1' not into the middle: 'error_region'
+Error at test/sem_test.sql:XXXX : in col_def : CQL0021: foreign key refers to non-existent table (object is in schema region 'private_region' not accessible from region 'client_region') 'private_region_table'
+Error at test/sem_test.sql:XXXX : in explain_stmt : CQL0293: Only [EXPLAIN QUERY PLAN ...] statement is supported
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'bogus'
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'row_number'
+Error at test/sem_test.sql:XXXX : in window_func_inv : CQL0294: Window function invocations can only appear in the select list of a select statement
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'row_number'
+Error at test/sem_test.sql:XXXX : in str : CQL0295: Window name is not defined 'bogus'
+Error at test/sem_test.sql:XXXX : in str : CQL0296: Window name definition is not used 'win'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'alias'
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'row_number'
+Error at test/sem_test.sql:XXXX : in call : CQL0306: FILTER clause may only be used in function that are aggregated or user defined 'row_number'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'bogus'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'bogus'
+Error at test/sem_test.sql:XXXX : in call : CQL0300: Argument must be an integer (between 1 and max integer) in function 'ntile'
+Error at test/sem_test.sql:XXXX : in call : CQL0300: Argument must be an integer (between 1 and max integer) in function 'ntile'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'ntile'
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'ntile'
+Error at test/sem_test.sql:XXXX : in call : CQL0301: The second argument must be an integer (between 0 and max integer) in function 'lag'
+Error at test/sem_test.sql:XXXX : in str : CQL0008: right operand cannot be a string in '|'
+Error at test/sem_test.sql:XXXX : in call : CQL0302: The first and third arguments must be of the same type in function 'lag'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'lag'
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'first_value'
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'nth_value'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'nth_value'
+Error at test/sem_test.sql:XXXX : in call : CQL0303: The second argument must be an integer between 1 and max integer in function 'nth_value'
+Error at test/sem_test.sql:XXXX : in from_cursor : CQL0297: FROM CURSOR is redundant if column list is empty
+Error at test/sem_test.sql:XXXX : in str : CQL0298: cannot insert from a cursor without fields 'fetch_cursor'
+Error at test/sem_test.sql:XXXX : in columns_values : CQL0299: cursor has too few fields for this insert 'small_cursor'
+Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'X'
+Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expression 'x'
+Error at test/sem_test.sql:XXXX : in update_cursor_stmt : CQL0157: count of columns differs from count of values
+Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'w'
+Error at test/sem_test.sql:XXXX : in str : CQL0067: cursor was not used with 'fetch [cursor]' 'my_cursor'
+Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, table, or view 'not_a_symbol'
+Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'X'
+Error at test/sem_test.sql:XXXX : in select_core : CQL0055: all columns in the select must have a name
+Error at test/sem_test.sql:XXXX : in fetch_values_stmt : CQL0167: required column missing in FETCH statement 'c1'
+Error at test/sem_test.sql:XXXX : in str : CQL0204: cursor not found 'not_a_symbol'
+Error at test/sem_test.sql:XXXX : in str : CQL0204: cursor not found 'not_a_symbol'
+Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, table, or view 'not_a_symbol'
+Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, table, or view 'not_a_symbol'
+Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, table, or view 'not_a_symbol'
+Incompatible declarations found
+Error at test/sem_test.sql:XXXX : in declare_proc_stmt : DECLARE PROC incompatible_result_proc () (t TEXT)
+Error at test/sem_test.sql:XXXX : in create_proc_stmt : DECLARE PROC incompatible_result_proc () (t INTEGER NOT NULL)
+The above must be identical.
+Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0189: procedure declarations/definitions do not match 'incompatible_result_proc'
+Error at test/sem_test.sql:XXXX : in collate : CQL0241: COLLATE may only appear in the context of a SQL statement
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in blb : CQL0313: blob literals may only appear in the context of a SQL statement
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'nullif'
+Error at test/sem_test.sql:XXXX : in str : CQL0009: incompatible types in expression 'NULLIF'
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'nullif'
+Error at test/sem_test.sql:XXXX : in str : CQL0314: select function does not require a declaration, it is a CQL built-in 'nullif'
+Error at test/sem_test.sql:XXXX : in str : CQL0086: first argument must be a string in function 'upper'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'upper'
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'upper'
+Error at test/sem_test.sql:XXXX : in call : CQL0317: char function arguments must be integer 'char'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'char'
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'char'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'abs'
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'abs'
+Error at test/sem_test.sql:XXXX : in str : CQL0082: argument must be numeric 'abs'
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'instr'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'instr'
+Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'instr'
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0318: more than one fragment annotation on procedure 'dup_base'
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0318: more than one fragment annotation on procedure 'mixed_frag_types1'
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0318: more than one fragment annotation on procedure 'mixed_frag_types2'
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0318: more than one fragment annotation on procedure 'mixed_frag_types3'
+Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0319: the name of the assembly procedure must match the name of the base fragment 'wrong_assembly_frag_name'
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0251: fragment must end with exactly 'SELECT * FROM core'
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0251: fragment must end with exactly 'SELECT * FROM core'
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0251: fragment must end with exactly 'SELECT * FROM core'
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0251: fragment must end with exactly 'SELECT * FROM core'
+Error at test/sem_test.sql:XXXX : in fk_def : CQL0021: foreign key refers to non-existent table 'this_table_does_not_exist'
+Error at test/sem_test.sql:XXXX : in call_stmt : CQL0323: calls to undeclared procedures are forbidden if strict procedure mode is enabled 'some_external_thing'
+Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, table, or view 'invalid_type_name'
+Error at test/sem_test.sql:XXXX : in fk_def : CQL0324: referenced table was created in a later version so it cannot be used in a foreign key 'from_the_future'
+Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'idx'
+Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'idx'
+Error at test/sem_test.sql:XXXX : in name_list : CQL0272: the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table 'self_ref5'
+Error at test/sem_test.sql:XXXX : in name_list : CQL0272: the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table 'self_ref2'
+Error at test/sem_test.sql:XXXX : in num : CQL0325: ok_table_scan attribute must be a name
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0326: the table name in ok_table_scan does not exist 'bogus'
+Error at test/sem_test.sql:XXXX : in num : CQL0325: ok_table_scan attribute must be a name
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0329: ok_table_scan attribute can only be used in a create procedure statement
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0328: no_table_scan attribute may only be added to a create table statement
+Error at test/sem_test.sql:XXXX : in num : CQL0327: a value should not be assigned to no_table_scan attribute
+Error at test/sem_test.sql:XXXX : in num : CQL0337: the number of columns values for each row should be identical in VALUES clause
+Error at test/sem_test.sql:XXXX : in num : CQL0009: incompatible types in expression 'VALUES clause'
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0334: @dummy_seed @dummy_nullables @dummy_defaults many only be used with a single VALUES row
+Error at test/sem_test.sql:XXXX : in with_select_stmt : CQL0334: @dummy_seed @dummy_nullables @dummy_defaults many only be used with a single VALUES row
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0334: @dummy_seed @dummy_nullables @dummy_defaults many only be used with a single VALUES row
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0334: @dummy_seed @dummy_nullables @dummy_defaults many only be used with a single VALUES row
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'bogus'
+Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expression 'id'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'l'
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0334: @dummy_seed @dummy_nullables @dummy_defaults many only be used with a single VALUES row
+Error at test/sem_test.sql:XXXX : in num : CQL0337: the number of columns values for each row should be identical in VALUES clause
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'bogus'
+Error at test/sem_test.sql:XXXX : in create_table_stmt : CQL0339: WITHOUT ROWID tables are forbidden if strict without rowid mode is enabled 'table_with_invalid_without_rowid_mode'
+Error at test/sem_test.sql:XXXX : in str : CQL0204: cursor not found 'not_a_cursor'
+Error at test/sem_test.sql:XXXX : in dot : CQL0067: cursor was not used with 'fetch [cursor]' 'C'
+Error at test/sem_test.sql:XXXX : in str : CQL0202: must be a cursor, proc, table, or view 'not_a_real_shape'
+Error at test/sem_test.sql:XXXX : in expr_list : CQL0340: FROM ARGUMENTS used in a procedure with no arguments 'arg_rewrite_no_args'
+Error at test/sem_test.sql:XXXX : in expr_list : CQL0163: FROM ARGUMENTS construct is only valid inside a procedure
+Error at test/sem_test.sql:XXXX : in expr_list : CQL0201: expanding FROM ARGUMENTS, there is no argument matching 'id'
+Error at test/sem_test.sql:XXXX : in str : CQL0202: must be a cursor, proc, table, or view 'no_such_type_dude'
+semantic errors present; no code gen.

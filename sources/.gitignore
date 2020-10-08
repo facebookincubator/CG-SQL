@@ -1,0 +1,20 @@
+# Performance Notice:
+#
+# Gitignore is parsed lazily. Prefer putting rules in subdirectories.
+# For example, to ignore "foo/bar/baz", do:
+#
+#   # In foo/bar/.gitignore:
+#   /baz
+#
+# Instead of:
+#
+#   # COUNTER EXAMPLE
+#   # In .gitignore
+#   /foo/bar/baz
+
+# Lines that start with '#' are comments.
+
+/out
+*.gcda
+*.gcno
+.pbcopy.swp

@@ -1,0 +1,2 @@
+Error at: test/error.sql:8 syntax error, unexpected ID
+Parse errors found, no further passes will run.

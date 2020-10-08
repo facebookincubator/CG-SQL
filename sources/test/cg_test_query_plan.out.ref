@@ -1,0 +1,651 @@
+
+-- The statement ending at line XXXX
+
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_wall (id INTEGER) INTEGER NOT NULL;
+DECLARE SELECT FUNC array_num_at (array_object_ptr LONG_INT NOT NULL, idx INTEGER NOT NULL) LONG_INT;
+
+CREATE PROC create_schema()
+BEGIN
+  CREATE TABLE t1(
+    id INTEGER PRIMARY KEY,
+    name TEXT
+  );
+  CREATE TABLE t2(
+    id INTEGER PRIMARY KEY,
+    name TEXT
+  );
+  CREATE TABLE t3(
+    id INTEGER PRIMARY KEY,
+    name TEXT
+  );
+  CREATE TABLE t4(
+    id LONG_INT PRIMARY KEY AUTOINCREMENT,
+    data BLOB
+  );
+  CREATE TABLE t5(
+    id LONG_INT,
+    FOREIGN KEY (id) REFERENCES t4 (id) ON UPDATE CASCADE ON DELETE CASCADE
+  );
+  CREATE TABLE scan_ok(
+    id INTEGER
+  );
+  CREATE TABLE foo(
+    id INTEGER
+  );
+  CREATE TABLE _foo(
+    id INTEGER
+  );
+  CREATE TABLE foo_(
+    id INTEGER
+  );
+  CREATE INDEX it1 ON t1 (name, id);
+  CREATE INDEX it4 ON t4 (data, id);
+  CREATE VIEW my_view AS
+  SELECT *
+    FROM t1
+    INNER JOIN t2 USING (id);
+  CREATE TRIGGER my_trigger
+    AFTER INSERT ON t1
+    WHEN is_declare_func_enabled() AND is_declare_func_wall(new.id) = 99
+  BEGIN
+  DELETE FROM t2 WHERE id > new.id;
+  END;
+  CREATE TABLE sql_temp(
+    id INT NOT NULL PRIMARY KEY,
+    sql TEXT NOT NULL
+  ) WITHOUT ROWID;
+  CREATE TABLE plan_temp(
+    iselectid INT NOT NULL,
+    iorder INT NOT NULL,
+    ifrom INT NOT NULL,
+    zdetail TEXT NOT NULL,
+    sql_id INT NOT NULL,
+    FOREIGN KEY (sql_id) REFERENCES sql_temp(id)
+  );
+  CREATE TABLE no_table_scan(
+    table_name TEXT NOT NULL PRIMARY KEY
+  );
+  CREATE TABLE alert(
+    table_name TEXT NOT NULL PRIMARY KEY
+  );
+  CREATE TABLE ok_table_scan(
+    sql_id INT NOT NULL PRIMARY KEY,
+    proc_name TEXT NOT NULL,
+    table_names TEXT NOT NULL
+  ) WITHOUT ROWID;
+END;
+
+CREATE PROC populate_no_table_scan()
+BEGIN
+  INSERT OR IGNORE INTO no_table_scan(table_name) SELECT "t1"
+  UNION  SELECT "t2"
+  UNION  SELECT "scan_ok"
+  UNION  SELECT "foo";
+END;
+
+CREATE PROC populate_query_plan_1()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "SELECT *\\n  FROM t1\\n  WHERE name = 'Nelly' AND id IN (SELECT id\\n  FROM t2\\n  WHERE id = 1\\nUNION\\nSELECT id\\n  FROM t3)\\nORDER BY name ASC";
+  INSERT INTO sql_temp(id, sql) VALUES(1, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  SELECT *
+    FROM t1
+    WHERE name = 'Nelly' AND id IN (SELECT id
+    FROM t2
+    WHERE id = 1
+  UNION
+  SELECT id
+    FROM t3)
+  ORDER BY name ASC;
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(1, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+CREATE PROC populate_query_plan_2()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "SELECT is_declare_func_wall(id)\\n  FROM t4\\n  WHERE data = cast('1' as blob)";
+  INSERT INTO sql_temp(id, sql) VALUES(2, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  SELECT is_declare_func_wall(id)
+    FROM t4
+    WHERE data = cast('1' as blob);
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(2, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+CREATE PROC populate_query_plan_3()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "UPDATE t1\\nSET id = 1,\\nname = '1'\\n  WHERE name IN (SELECT NAME\\n  FROM t3)";
+  INSERT INTO sql_temp(id, sql) VALUES(3, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  UPDATE t1
+  SET id = 1,
+  name = '1'
+    WHERE name IN (SELECT NAME
+    FROM t3);
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(3, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+CREATE PROC populate_query_plan_4()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "DELETE FROM t1 WHERE name IN (SELECT t2.name\\n  FROM t2\\n  INNER JOIN t3 USING (name))";
+  INSERT INTO sql_temp(id, sql) VALUES(4, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  DELETE FROM t1 WHERE name IN (SELECT t2.name
+    FROM t2
+    INNER JOIN t3 USING (name));
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(4, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+CREATE PROC populate_query_plan_5()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "WITH\\nt4 (name) AS (SELECT t2.name\\n  FROM t2\\n  INNER JOIN t3 USING (id))\\nDELETE FROM t1 WHERE name NOT IN (SELECT *\\n  FROM t4)";
+  INSERT INTO sql_temp(id, sql) VALUES(5, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  WITH
+  t4 (name) AS (SELECT t2.name
+    FROM t2
+    INNER JOIN t3 USING (id))
+  DELETE FROM t1 WHERE name NOT IN (SELECT *
+    FROM t4);
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(5, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+CREATE PROC populate_query_plan_6()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "INSERT INTO t1(id, name) SELECT *\\n  FROM t2\\nUNION ALL\\nSELECT *\\n  FROM t3";
+  INSERT INTO sql_temp(id, sql) VALUES(6, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  INSERT INTO t1(id, name) SELECT *
+    FROM t2
+  UNION ALL
+  SELECT *
+    FROM t3;
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(6, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+CREATE PROC populate_query_plan_7()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "WITH\\na (id, name) AS (SELECT 1, 'x')\\nINSERT INTO t1(id, name) SELECT *\\n  FROM a";
+  INSERT INTO sql_temp(id, sql) VALUES(7, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  WITH
+  a (id, name) AS (SELECT 1, 'x')
+  INSERT INTO t1(id, name) SELECT *
+    FROM a;
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(7, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+CREATE PROC populate_query_plan_8()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "BEGIN TRANSACTION";
+  INSERT INTO sql_temp(id, sql) VALUES(8, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  BEGIN TRANSACTION;
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(8, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+CREATE PROC populate_query_plan_9()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "INSERT INTO t1(id, name) VALUES(1, 'Irene')\\nON CONFLICT (id) DO UPDATE\\nSET name = excluded.name || 'replace' || ' • ' || '\\\\x01\\\\x02\\\\xA1\\\\x1b\\\\x00\\\\xg' || 'it''s high noon\\\\r\\\\n\\\\f\\\\b\\\\t\\\\v' || 'it''s' || name";
+  INSERT INTO sql_temp(id, sql) VALUES(9, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  INSERT INTO t1(id, name) VALUES(1, 'Irene')
+  ON CONFLICT (id) DO UPDATE
+  SET name = excluded.name || 'replace' || ' • ' || '\x01\x02\xA1\x1b\x00\xg' || 'it''s high noon\r\n\f\b\t\v' || 'it''s' || name;
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(9, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+CREATE PROC populate_query_plan_10()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "COMMIT TRANSACTION";
+  INSERT INTO sql_temp(id, sql) VALUES(10, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  COMMIT TRANSACTION;
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(10, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+CREATE PROC populate_query_plan_11()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "DROP TABLE IF EXISTS t1";
+  INSERT INTO sql_temp(id, sql) VALUES(11, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  DROP TABLE IF EXISTS t1;
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(11, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+CREATE PROC populate_query_plan_12()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "DROP VIEW my_view";
+  INSERT INTO sql_temp(id, sql) VALUES(12, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  DROP VIEW my_view;
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(12, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+CREATE PROC populate_query_plan_13()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "DROP INDEX it1";
+  INSERT INTO sql_temp(id, sql) VALUES(13, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  DROP INDEX it1;
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(13, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+CREATE PROC populate_query_plan_14()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "WITH\\nt4 (name) AS (SELECT t2.name\\n  FROM t2\\n  INNER JOIN t3 USING (id))\\nSELECT *\\n  FROM t4";
+  INSERT INTO sql_temp(id, sql) VALUES(14, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  WITH
+  t4 (name) AS (SELECT t2.name
+    FROM t2
+    INNER JOIN t3 USING (id))
+  SELECT *
+    FROM t4;
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(14, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+CREATE PROC populate_query_plan_15()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "SELECT array_num_at(1, id) AS idx\\n  FROM t1";
+  INSERT INTO sql_temp(id, sql) VALUES(15, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  SELECT array_num_at(1, id) AS idx
+    FROM t1;
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(15, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+CREATE PROC populate_query_plan_16()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "SELECT *\\n  FROM scan_ok";
+  INSERT INTO sql_temp(id, sql) VALUES(16, stmt);
+  INSERT INTO ok_table_scan(sql_id, proc_name, table_names) VALUES(16, "use_ok_table_scan_attr", "#scan_ok#,#t3#");
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  SELECT *
+    FROM scan_ok;
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(16, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+CREATE PROC populate_query_plan_17()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "SELECT 1 AS n\\n  FROM foo_,\\n_foo";
+  INSERT INTO sql_temp(id, sql) VALUES(17, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  SELECT 1 AS n
+    FROM foo_,
+  _foo;
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(17, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+
+CREATE PROC populate_alert_table(table_ text not null)
+BEGIN
+  INSERT OR IGNORE INTO alert SELECT upper(table_) as table_name FROM plan_temp
+    WHERE ( zdetail GLOB ('*[Ss][Cc][Aa][Nn]* ' || table_) OR 
+            zdetail GLOB ('*[Ss][Cc][Aa][Nn]* ' || table_ || ' *')
+          )
+    AND sql_id NOT IN (
+      SELECT sql_id from ok_table_scan
+        WHERE table_names GLOB ('*#' || table_ || '#*')
+    );
+END;
+
+CREATE PROC print_table_scan_violation()
+BEGIN
+  DECLARE C CURSOR FOR SELECT table_name FROM no_table_scan;
+  LOOP FETCH C
+  BEGIN
+    CALL populate_alert_table(C.table_name);
+  END;
+
+  DECLARE count INTEGER NOT NULL;
+  SET count := (SELECT COUNT(*) FROM alert);
+  IF count > 0 THEN 
+    CALL printf("[\"Alert\"],\n");
+    CALL printf("[{\"value\": \"TABLE SCAN VIOLATION:  ");
+    DECLARE C2 CURSOR FOR SELECT group_concat(table_name, ', ') AS table_list FROM alert;
+    FETCH C2;
+    CALL printf("%s", C2.table_list);
+    CALL printf("\", \"style\": {\"fontSize\": 14, \"color\": \"red\", \"fontWeight\": \"bold\"}}],\n");
+  ELSE
+    CALL printf("[],\n");
+  END IF;END;
+
+CREATE PROC print_sql_statement(sql_id integer not null)
+BEGIN
+  DECLARE C CURSOR FOR SELECT * FROM sql_temp WHERE id = sql_id LIMIT 1;
+  FETCH C;
+  CALL printf("  \"%s\",\n", C.sql);
+END;
+
+CREATE PROC print_query_plan_stat(id_ integer not null)
+BEGIN
+  CALL printf("  [\n");
+  DECLARE Ca CURSOR FOR
+  WITH
+    scan(name, count, priority) AS (
+      SELECT 'SCAN', COUNT(*), 0 
+        FROM plan_temp 
+        WHERE zdetail LIKE '%scan%' AND sql_id = id_
+    ),
+    search(name, count, priority) AS (
+      SELECT 'SEARCH', COUNT(*), 4 
+        FROM plan_temp 
+        WHERE zdetail LIKE '%search%' AND iselectid NOT IN (
+          SELECT iselectid 
+          FROM plan_temp 
+          WHERE zdetail LIKE '%search%using%covering%'
+        ) AND sql_id = id_
+    ),
+    search_fast(name, count, priority) AS (
+      SELECT 'SEARCH USING COVERING', COUNT(*), 5 
+        FROM plan_temp 
+        WHERE zdetail LIKE '%search%using%covering%' AND sql_id = id_
+    ),
+    bree(name, count, priority) AS (
+      SELECT 'TEMP B-TREE', COUNT(*), 1 
+        FROM plan_temp 
+        WHERE zdetail LIKE '%temp b-tree%' AND sql_id = id_
+    ),
+    compound_subqueries(name, count, priority) AS (
+      SELECT 'COMPOUND SUBQUERIES', COUNT(*), 2 
+        FROM plan_temp 
+        WHERE zdetail LIKE '%compound subqueries%' AND sql_id = id_
+    ),
+    execute_scalar(name, count, priority) AS (
+      SELECT 'EXECUTE SCALAR', COUNT(*), 3 
+        FROM plan_temp 
+        WHERE zdetail LIKE '%execute scalar%' AND sql_id = id_
+    )
+  SELECT 
+   CASE name
+     WHEN 'SCAN' THEN '{"value": "' || name || '", "style": {"fontSize": 14, "color": "red", "fontWeight": "bold"}}'
+     WHEN 'TEMP B-TREE' THEN '{"value": "' || name || '", "style": {"fontSize": 14, "color": "red", "fontWeight": "bold"}}'
+     ELSE '"' || name || '"'
+   END name,
+   CASE name
+     WHEN 'SCAN' THEN '{"value": ' || count || ', "style": {"fontSize": 14, "color": "red", "fontWeight": "bold"}}'
+     WHEN 'TEMP B-TREE' THEN '{"value": ' || count || ', "style": {"fontSize": 14, "color": "red", "fontWeight": "bold"}}'
+     ELSE '' || count
+   END value
+   FROM (
+   SELECT * FROM scan
+   UNION ALL
+   SELECT * FROM search
+   UNION ALL
+   SELECT * FROM search_fast
+   UNION ALL
+   SELECT * FROM bree
+   UNION ALL
+   SELECT * FROM compound_subqueries
+   UNION ALL
+   SELECT * FROM execute_scalar
+  )
+  WHERE count > 0 ORDER BY priority ASC, count DESC;
+  CALL printf("    [],\n");
+  LOOP FETCH Ca
+  BEGIN
+    CALL printf("    [%s, %s],\n", Ca.name, Ca.value);
+  END;
+  CALL printf("    []\n");
+  CALL printf("  ],\n");
+END;
+
+CREATE PROC print_query_plan_graph(id_ integer not null)
+BEGIN
+  CALL printf("  \"");
+  DECLARE C CURSOR FOR
+  WITH RECURSIVE
+    plan_chain(iselectid,  zdetail, level) AS (
+     SELECT 0 as  iselectid, '?' as  zdetail, 0 as level
+     UNION ALL
+     SELECT plan_temp.iselectid, plan_temp.zdetail, plan_chain.level+1 as level
+      FROM plan_temp JOIN plan_chain ON plan_temp.iorder=plan_chain.iselectid WHERE plan_temp.sql_id = id_
+     ORDER BY 3 DESC
+    )
+    SELECT
+     substr('                              ', 1, max(level - 1, 0)*4) ||
+     substr('|.............................', 1, min(level, 1)*4) ||
+     zdetail as graph_line FROM plan_chain;
+
+  LOOP FETCH C
+  BEGIN
+    CALL printf("\\n%s", C.graph_line);
+  END;
+  CALL printf("\"\n");
+END;
+
+CREATE PROC print_query_plan(sql_id integer not null)
+BEGIN
+  CALL printf("[\n");
+  CALL print_sql_statement(sql_id);
+  CALL print_query_plan_stat(sql_id);
+  CALL print_query_plan_graph(sql_id);
+  CALL printf("],\n");
+END;
+
+CREATE PROC query_plan()
+BEGIN
+  CALL create_schema();
+  BEGIN TRY
+    CALL populate_no_table_scan();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating no_table_scan table\n");
+    THROW;
+  END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_1();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 1\n");
+    THROW;
+  END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_2();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 2\n");
+    THROW;
+  END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_3();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 3\n");
+    THROW;
+  END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_4();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 4\n");
+    THROW;
+  END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_5();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 5\n");
+    THROW;
+  END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_6();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 6\n");
+    THROW;
+  END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_7();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 7\n");
+    THROW;
+  END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_8();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 8\n");
+    THROW;
+  END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_9();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 9\n");
+    THROW;
+  END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_10();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 10\n");
+    THROW;
+  END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_11();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 11\n");
+    THROW;
+  END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_12();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 12\n");
+    THROW;
+  END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_13();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 13\n");
+    THROW;
+  END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_14();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 14\n");
+    THROW;
+  END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_15();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 15\n");
+    THROW;
+  END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_16();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 16\n");
+    THROW;
+  END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_17();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 17\n");
+    THROW;
+  END CATCH;
+  CALL printf("[\n");
+  CALL print_table_scan_violation();
+  CALL printf("[\n");
+  CALL printf("[\n");
+  CALL printf("[\"Query\", \"Stat\", \"Graph\"],\n");
+  CALL print_query_plan(1);
+  CALL print_query_plan(2);
+  CALL print_query_plan(3);
+  CALL print_query_plan(4);
+  CALL print_query_plan(5);
+  CALL print_query_plan(6);
+  CALL print_query_plan(7);
+  CALL print_query_plan(8);
+  CALL print_query_plan(9);
+  CALL print_query_plan(10);
+  CALL print_query_plan(11);
+  CALL print_query_plan(12);
+  CALL print_query_plan(13);
+  CALL print_query_plan(14);
+  CALL print_query_plan(15);
+  CALL print_query_plan(16);
+  CALL print_query_plan(17);
+  CALL printf("[]\n");
+  CALL printf("]\n");
+  CALL printf("],\n");
+  CALL printf("[]\n");
+  CALL printf("]");
+END;

@@ -1,0 +1,2312 @@
+
+
+-- The statement ending at line XXXX
+DECLARE PROC sample_proc1 () (id INTEGER NOT NULL, dl REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+
+-- The statement ending at line XXXX
+DECLARE PROC sample_proc2 () (id INTEGER NOT NULL, dl REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+
+-- The statement ending at line XXXX
+DECLARE PROC sample_proc3 () (id INTEGER NOT NULL, dl REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+
+-- The statement ending at line XXXX
+DECLARE PROC sample_proc4 () (id INTEGER NOT NULL);
+
+-- The statement ending at line XXXX
+DECLARE PROC sample_proc5 () (id INTEGER NOT NULL);
+
+-- The statement ending at line XXXX
+DECLARE PROC sample_proc6 () (id INTEGER NOT NULL);
+
+-- The statement ending at line XXXX
+DECLARE PROC sample_proc7 () (id INTEGER NOT NULL);
+
+-- The statement ending at line XXXX
+DECLARE PROC sample_proc11 () OUT (id INTEGER NOT NULL) USING TRANSACTION;
+
+-- The statement ending at line XXXX
+DECLARE PROC sample_proc12 () OUT (id INTEGER NOT NULL) USING TRANSACTION;
+
+-- The statement ending at line XXXX
+DECLARE PROC sample_proc13 () OUT (id INTEGER NOT NULL) USING TRANSACTION;
+
+-- The statement ending at line XXXX
+DECLARE PROC sample_proc21 () (id INTEGER NOT NULL, dl REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+
+-- The statement ending at line XXXX
+DECLARE PROC sample_proc22 () (id INTEGER NOT NULL, dl REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+
+-- The statement ending at line XXXX
+DECLARE PROC sample_proc24 () (id INTEGER NOT NULL, dl REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+
+-- The statement ending at line XXXX
+DECLARE PROC sample_proc25 () (id INTEGER NOT NULL, dl REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+
+
+-- The statement ending at line XXXX
+CREATE PROC open_sample_proc1()
+BEGIN
+  CREATE TEMP TABLE test_sample_proc1(LIKE sample_proc1);
+END;
+
+CREATE PROC close_sample_proc1()
+BEGIN
+  DROP TABLE test_sample_proc1;
+END;
+
+-- The statement ending at line XXXX
+CREATE PROC insert_sample_proc2(LIKE sample_proc2)
+BEGIN
+  INSERT INTO test_sample_proc2 FROM ARGUMENTS;
+END;
+
+-- The statement ending at line XXXX
+CREATE PROC select_sample_proc3()
+BEGIN
+  SELECT * FROM test_sample_proc3;
+END;
+
+-- The statement ending at line XXXX
+CREATE PROC open_sample_proc4()
+BEGIN
+  CREATE TEMP TABLE test_sample_proc4(LIKE sample_proc4);
+END;
+
+CREATE PROC close_sample_proc4()
+BEGIN
+  DROP TABLE test_sample_proc4;
+END;
+
+CREATE PROC insert_sample_proc4(LIKE sample_proc4)
+BEGIN
+  INSERT INTO test_sample_proc4 FROM ARGUMENTS;
+END;
+
+-- The statement ending at line XXXX
+CREATE PROC open_sample_proc5()
+BEGIN
+  CREATE TEMP TABLE test_sample_proc5(LIKE sample_proc5);
+END;
+
+CREATE PROC close_sample_proc5()
+BEGIN
+  DROP TABLE test_sample_proc5;
+END;
+
+CREATE PROC select_sample_proc5()
+BEGIN
+  SELECT * FROM test_sample_proc5;
+END;
+
+-- The statement ending at line XXXX
+CREATE PROC select_sample_proc6()
+BEGIN
+  SELECT * FROM test_sample_proc6;
+END;
+
+CREATE PROC insert_sample_proc6(LIKE sample_proc6)
+BEGIN
+  INSERT INTO test_sample_proc6 FROM ARGUMENTS;
+END;
+
+-- The statement ending at line XXXX
+CREATE PROC open_sample_proc7()
+BEGIN
+  CREATE TEMP TABLE test_sample_proc7(LIKE sample_proc7);
+END;
+
+CREATE PROC close_sample_proc7()
+BEGIN
+  DROP TABLE test_sample_proc7;
+END;
+
+CREATE PROC insert_sample_proc7(LIKE sample_proc7)
+BEGIN
+  INSERT INTO test_sample_proc7 FROM ARGUMENTS;
+END;
+
+CREATE PROC select_sample_proc7()
+BEGIN
+  SELECT * FROM test_sample_proc7;
+END;
+
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_sample_proc7_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS Baa(
+    id INTEGER NOT NULL,
+    id2 LONG_INT,
+    id3 TEXT
+  );
+  CREATE TABLE IF NOT EXISTS Aaa(
+    dl REAL NOT NULL PRIMARY KEY
+  );
+  CREATE TABLE IF NOT EXISTS dbl_table(
+    num REAL,
+    label TEXT,
+    tag TEXT,
+    CONSTRAINT unq UNIQUE (num, label)
+  );
+  CREATE TABLE IF NOT EXISTS Caa(
+    id INTEGER NOT NULL,
+    dl REAL NOT NULL,
+    uid REAL,
+    name TEXT,
+    name2 TEXT,
+    num LONG_INT,
+    FOREIGN KEY (id, num) REFERENCES Baa (id, id2) ON UPDATE NO ACTION,
+    FOREIGN KEY (dl) REFERENCES Aaa (dl) ON UPDATE NO ACTION,
+    FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
+  );
+  CREATE VIEW IF NOT EXISTS Foo AS
+  SELECT *
+    FROM Caa;
+END;
+
+CREATE PROC test_sample_proc7_create_triggers()
+BEGIN
+  CREATE TRIGGER IF NOT EXISTS triggerAaa
+    BEFORE DELETE ON Aaa
+    WHEN is_declare_func_enabled()
+  BEGIN
+  DELETE FROM dbl_table WHERE num = OLD.dl;
+  END;
+  CREATE TRIGGER IF NOT EXISTS onAaa
+    BEFORE DELETE ON Aaa
+  BEGIN
+  DELETE FROM dbl_table WHERE num = OLD.dl;
+  END;
+END;
+
+CREATE PROC test_sample_proc7_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO Baa(id, id2) VALUES(1, 1) @dummy_seed(123);
+  INSERT OR IGNORE INTO Baa(id, id2) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Aaa(dl) VALUES(1) @dummy_seed(125);
+  INSERT OR IGNORE INTO Aaa(dl) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(127);
+  INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_sample_proc7_drop_tables()
+BEGIN
+  DROP VIEW IF EXISTS Foo;
+  DROP TABLE IF EXISTS Caa;
+  DROP TABLE IF EXISTS dbl_table;
+  DROP TABLE IF EXISTS Aaa;
+  DROP TABLE IF EXISTS Baa;
+END;
+
+CREATE PROC test_sample_proc7_drop_triggers()
+BEGIN
+  DROP TRIGGER IF EXISTS triggerAaa;
+  DROP TRIGGER IF EXISTS onAaa;
+END;
+
+CREATE PROC test_sample_proc7_read_Baa()
+BEGIN
+ SELECT * FROM Baa;
+END;
+
+CREATE PROC test_sample_proc7_read_Aaa()
+BEGIN
+ SELECT * FROM Aaa;
+END;
+
+CREATE PROC test_sample_proc7_read_dbl_table()
+BEGIN
+ SELECT * FROM dbl_table;
+END;
+
+CREATE PROC test_sample_proc7_read_Caa()
+BEGIN
+ SELECT * FROM Caa;
+END;
+
+CREATE PROC test_sample_proc7_read_Foo()
+BEGIN
+ SELECT * FROM Foo;
+END;
+
+CREATE PROC test_sample_proc7_create_indexes()
+BEGIN
+  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
+END;
+
+CREATE PROC test_sample_proc7_drop_indexes()
+BEGIN
+  DROP INDEX IF EXISTS baa_id;
+END;
+
+-- The statement ending at line XXXX
+CREATE PROC select_sample_proc11()
+BEGIN
+  SELECT * FROM test_sample_proc11;
+END;
+
+-- The statement ending at line XXXX
+CREATE PROC generate_sample_proc12_row(LIKE sample_proc12)
+BEGIN
+  DECLARE curs CURSOR LIKE sample_proc12;
+  FETCH curs FROM ARGUMENTS;
+  OUT curs;
+END;
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_sample_proc13_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS Baa(
+    id INTEGER NOT NULL,
+    id2 LONG_INT,
+    id3 TEXT
+  );
+  CREATE TABLE IF NOT EXISTS Aaa(
+    dl REAL NOT NULL PRIMARY KEY
+  );
+  CREATE TABLE IF NOT EXISTS dbl_table(
+    num REAL,
+    label TEXT,
+    tag TEXT,
+    CONSTRAINT unq UNIQUE (num, label)
+  );
+  CREATE TABLE IF NOT EXISTS Caa(
+    id INTEGER NOT NULL,
+    dl REAL NOT NULL,
+    uid REAL,
+    name TEXT,
+    name2 TEXT,
+    num LONG_INT,
+    FOREIGN KEY (id, num) REFERENCES Baa (id, id2) ON UPDATE NO ACTION,
+    FOREIGN KEY (dl) REFERENCES Aaa (dl) ON UPDATE NO ACTION,
+    FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
+  );
+  CREATE VIEW IF NOT EXISTS Foo AS
+  SELECT *
+    FROM Caa;
+END;
+
+CREATE PROC test_sample_proc13_create_triggers()
+BEGIN
+  CREATE TRIGGER IF NOT EXISTS triggerAaa
+    BEFORE DELETE ON Aaa
+    WHEN is_declare_func_enabled()
+  BEGIN
+  DELETE FROM dbl_table WHERE num = OLD.dl;
+  END;
+  CREATE TRIGGER IF NOT EXISTS onAaa
+    BEFORE DELETE ON Aaa
+  BEGIN
+  DELETE FROM dbl_table WHERE num = OLD.dl;
+  END;
+END;
+
+CREATE PROC test_sample_proc13_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO Baa(id, id2) VALUES(1, 1) @dummy_seed(123);
+  INSERT OR IGNORE INTO Baa(id, id2) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Aaa(dl) VALUES(1) @dummy_seed(125);
+  INSERT OR IGNORE INTO Aaa(dl) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(127);
+  INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_sample_proc13_drop_tables()
+BEGIN
+  DROP VIEW IF EXISTS Foo;
+  DROP TABLE IF EXISTS Caa;
+  DROP TABLE IF EXISTS dbl_table;
+  DROP TABLE IF EXISTS Aaa;
+  DROP TABLE IF EXISTS Baa;
+END;
+
+CREATE PROC test_sample_proc13_drop_triggers()
+BEGIN
+  DROP TRIGGER IF EXISTS triggerAaa;
+  DROP TRIGGER IF EXISTS onAaa;
+END;
+
+CREATE PROC test_sample_proc13_read_Baa()
+BEGIN
+ SELECT * FROM Baa;
+END;
+
+CREATE PROC test_sample_proc13_read_Aaa()
+BEGIN
+ SELECT * FROM Aaa;
+END;
+
+CREATE PROC test_sample_proc13_read_dbl_table()
+BEGIN
+ SELECT * FROM dbl_table;
+END;
+
+CREATE PROC test_sample_proc13_read_Caa()
+BEGIN
+ SELECT * FROM Caa;
+END;
+
+CREATE PROC test_sample_proc13_read_Foo()
+BEGIN
+ SELECT * FROM Foo;
+END;
+
+CREATE PROC test_sample_proc13_create_indexes()
+BEGIN
+  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
+END;
+
+CREATE PROC test_sample_proc13_drop_indexes()
+BEGIN
+  DROP INDEX IF EXISTS baa_id;
+END;
+
+CREATE PROC open_sample_proc13()
+BEGIN
+  CREATE TEMP TABLE test_sample_proc13(LIKE sample_proc13);
+END;
+
+CREATE PROC close_sample_proc13()
+BEGIN
+  DROP TABLE test_sample_proc13;
+END;
+
+CREATE PROC insert_sample_proc13(LIKE sample_proc13)
+BEGIN
+  INSERT INTO test_sample_proc13 FROM ARGUMENTS;
+END;
+
+CREATE PROC select_sample_proc13()
+BEGIN
+  SELECT * FROM test_sample_proc13;
+END;
+
+CREATE PROC generate_sample_proc13_row(LIKE sample_proc13)
+BEGIN
+  DECLARE curs CURSOR LIKE sample_proc13;
+  FETCH curs FROM ARGUMENTS;
+  OUT curs;
+END;
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_sample_proc14_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS Baa(
+    id INTEGER NOT NULL,
+    id2 LONG_INT,
+    id3 TEXT
+  );
+  CREATE TABLE IF NOT EXISTS Aaa(
+    dl REAL NOT NULL PRIMARY KEY
+  );
+  CREATE TABLE IF NOT EXISTS dbl_table(
+    num REAL,
+    label TEXT,
+    tag TEXT,
+    CONSTRAINT unq UNIQUE (num, label)
+  );
+  CREATE TABLE IF NOT EXISTS Caa(
+    id INTEGER NOT NULL,
+    dl REAL NOT NULL,
+    uid REAL,
+    name TEXT,
+    name2 TEXT,
+    num LONG_INT,
+    FOREIGN KEY (id, num) REFERENCES Baa (id, id2) ON UPDATE NO ACTION,
+    FOREIGN KEY (dl) REFERENCES Aaa (dl) ON UPDATE NO ACTION,
+    FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
+  );
+  CREATE VIEW IF NOT EXISTS Foo AS
+  SELECT *
+    FROM Caa;
+END;
+
+CREATE PROC test_sample_proc14_create_triggers()
+BEGIN
+  CREATE TRIGGER IF NOT EXISTS triggerAaa
+    BEFORE DELETE ON Aaa
+    WHEN is_declare_func_enabled()
+  BEGIN
+  DELETE FROM dbl_table WHERE num = OLD.dl;
+  END;
+  CREATE TRIGGER IF NOT EXISTS onAaa
+    BEFORE DELETE ON Aaa
+  BEGIN
+  DELETE FROM dbl_table WHERE num = OLD.dl;
+  END;
+END;
+
+CREATE PROC test_sample_proc14_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO Baa(id, id2) VALUES(1, 1) @dummy_seed(123);
+  INSERT OR IGNORE INTO Baa(id, id2) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Aaa(dl) VALUES(1) @dummy_seed(125);
+  INSERT OR IGNORE INTO Aaa(dl) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(127);
+  INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_sample_proc14_drop_tables()
+BEGIN
+  DROP VIEW IF EXISTS Foo;
+  DROP TABLE IF EXISTS Caa;
+  DROP TABLE IF EXISTS dbl_table;
+  DROP TABLE IF EXISTS Aaa;
+  DROP TABLE IF EXISTS Baa;
+END;
+
+CREATE PROC test_sample_proc14_drop_triggers()
+BEGIN
+  DROP TRIGGER IF EXISTS triggerAaa;
+  DROP TRIGGER IF EXISTS onAaa;
+END;
+
+CREATE PROC test_sample_proc14_read_Baa()
+BEGIN
+ SELECT * FROM Baa;
+END;
+
+CREATE PROC test_sample_proc14_read_Aaa()
+BEGIN
+ SELECT * FROM Aaa;
+END;
+
+CREATE PROC test_sample_proc14_read_dbl_table()
+BEGIN
+ SELECT * FROM dbl_table;
+END;
+
+CREATE PROC test_sample_proc14_read_Caa()
+BEGIN
+ SELECT * FROM Caa;
+END;
+
+CREATE PROC test_sample_proc14_read_Foo()
+BEGIN
+ SELECT * FROM Foo;
+END;
+
+CREATE PROC test_sample_proc14_create_indexes()
+BEGIN
+  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
+END;
+
+CREATE PROC test_sample_proc14_drop_indexes()
+BEGIN
+  DROP INDEX IF EXISTS baa_id;
+END;
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_sample_proc15_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS primary_as_column(
+    id_ TEXT NOT NULL,
+    seat TEXT,
+    lable TEXT,
+    PRIMARY KEY (id_, seat)
+  );
+  CREATE TABLE IF NOT EXISTS Baa(
+    id INTEGER NOT NULL,
+    id2 LONG_INT,
+    id3 TEXT
+  );
+  CREATE TABLE IF NOT EXISTS Aaa(
+    dl REAL NOT NULL PRIMARY KEY
+  );
+  CREATE TABLE IF NOT EXISTS dbl_table(
+    num REAL,
+    label TEXT,
+    tag TEXT,
+    CONSTRAINT unq UNIQUE (num, label)
+  );
+  CREATE TABLE IF NOT EXISTS Caa(
+    id INTEGER NOT NULL,
+    dl REAL NOT NULL,
+    uid REAL,
+    name TEXT,
+    name2 TEXT,
+    num LONG_INT,
+    FOREIGN KEY (id, num) REFERENCES Baa (id, id2) ON UPDATE NO ACTION,
+    FOREIGN KEY (dl) REFERENCES Aaa (dl) ON UPDATE NO ACTION,
+    FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
+  );
+  CREATE VIEW IF NOT EXISTS Foo AS
+  SELECT *
+    FROM Caa;
+END;
+
+CREATE PROC test_sample_proc15_create_triggers()
+BEGIN
+  CREATE TRIGGER IF NOT EXISTS triggerAaa
+    BEFORE DELETE ON Aaa
+    WHEN is_declare_func_enabled()
+  BEGIN
+  DELETE FROM dbl_table WHERE num = OLD.dl;
+  END;
+  CREATE TRIGGER IF NOT EXISTS onAaa
+    BEFORE DELETE ON Aaa
+  BEGIN
+  DELETE FROM dbl_table WHERE num = OLD.dl;
+  END;
+END;
+
+CREATE PROC test_sample_proc15_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('1', '1') @dummy_seed(123);
+  INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('2', '2') @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Baa(id, id2) VALUES(1, 1) @dummy_seed(125);
+  INSERT OR IGNORE INTO Baa(id, id2) VALUES(2, 2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Aaa(dl) VALUES(1) @dummy_seed(127);
+  INSERT OR IGNORE INTO Aaa(dl) VALUES(2) @dummy_seed(128) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(129);
+  INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(130) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(131);
+  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(132) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_sample_proc15_drop_tables()
+BEGIN
+  DROP VIEW IF EXISTS Foo;
+  DROP TABLE IF EXISTS Caa;
+  DROP TABLE IF EXISTS dbl_table;
+  DROP TABLE IF EXISTS Aaa;
+  DROP TABLE IF EXISTS Baa;
+  DROP TABLE IF EXISTS primary_as_column;
+END;
+
+CREATE PROC test_sample_proc15_drop_triggers()
+BEGIN
+  DROP TRIGGER IF EXISTS triggerAaa;
+  DROP TRIGGER IF EXISTS onAaa;
+END;
+
+CREATE PROC test_sample_proc15_read_primary_as_column()
+BEGIN
+ SELECT * FROM primary_as_column;
+END;
+
+CREATE PROC test_sample_proc15_read_Baa()
+BEGIN
+ SELECT * FROM Baa;
+END;
+
+CREATE PROC test_sample_proc15_read_Aaa()
+BEGIN
+ SELECT * FROM Aaa;
+END;
+
+CREATE PROC test_sample_proc15_read_dbl_table()
+BEGIN
+ SELECT * FROM dbl_table;
+END;
+
+CREATE PROC test_sample_proc15_read_Caa()
+BEGIN
+ SELECT * FROM Caa;
+END;
+
+CREATE PROC test_sample_proc15_read_Foo()
+BEGIN
+ SELECT * FROM Foo;
+END;
+
+CREATE PROC test_sample_proc15_create_indexes()
+BEGIN
+  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
+  CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
+END;
+
+CREATE PROC test_sample_proc15_drop_indexes()
+BEGIN
+  DROP INDEX IF EXISTS baa_id;
+  DROP INDEX IF EXISTS p_id;
+END;
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_sample_proc16_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS Baa(
+    id INTEGER NOT NULL,
+    id2 LONG_INT,
+    id3 TEXT
+  );
+  CREATE TABLE IF NOT EXISTS Aaa(
+    dl REAL NOT NULL PRIMARY KEY
+  );
+  CREATE TABLE IF NOT EXISTS dbl_table(
+    num REAL,
+    label TEXT,
+    tag TEXT,
+    CONSTRAINT unq UNIQUE (num, label)
+  );
+  CREATE TABLE IF NOT EXISTS Caa(
+    id INTEGER NOT NULL,
+    dl REAL NOT NULL,
+    uid REAL,
+    name TEXT,
+    name2 TEXT,
+    num LONG_INT,
+    FOREIGN KEY (id, num) REFERENCES Baa (id, id2) ON UPDATE NO ACTION,
+    FOREIGN KEY (dl) REFERENCES Aaa (dl) ON UPDATE NO ACTION,
+    FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
+  );
+END;
+
+CREATE PROC test_sample_proc16_create_triggers()
+BEGIN
+  CREATE TRIGGER IF NOT EXISTS triggerAaa
+    BEFORE DELETE ON Aaa
+    WHEN is_declare_func_enabled()
+  BEGIN
+  DELETE FROM dbl_table WHERE num = OLD.dl;
+  END;
+  CREATE TRIGGER IF NOT EXISTS onAaa
+    BEFORE DELETE ON Aaa
+  BEGIN
+  DELETE FROM dbl_table WHERE num = OLD.dl;
+  END;
+END;
+
+CREATE PROC test_sample_proc16_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO Baa(id, id2) VALUES(1, 1) @dummy_seed(123);
+  INSERT OR IGNORE INTO Baa(id, id2) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Aaa(dl) VALUES(1) @dummy_seed(125);
+  INSERT OR IGNORE INTO Aaa(dl) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(127);
+  INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_sample_proc16_drop_tables()
+BEGIN
+  DROP TABLE IF EXISTS Caa;
+  DROP TABLE IF EXISTS dbl_table;
+  DROP TABLE IF EXISTS Aaa;
+  DROP TABLE IF EXISTS Baa;
+END;
+
+CREATE PROC test_sample_proc16_drop_triggers()
+BEGIN
+  DROP TRIGGER IF EXISTS triggerAaa;
+  DROP TRIGGER IF EXISTS onAaa;
+END;
+
+CREATE PROC test_sample_proc16_read_Baa()
+BEGIN
+ SELECT * FROM Baa;
+END;
+
+CREATE PROC test_sample_proc16_read_Aaa()
+BEGIN
+ SELECT * FROM Aaa;
+END;
+
+CREATE PROC test_sample_proc16_read_dbl_table()
+BEGIN
+ SELECT * FROM dbl_table;
+END;
+
+CREATE PROC test_sample_proc16_read_Caa()
+BEGIN
+ SELECT * FROM Caa;
+END;
+
+CREATE PROC test_sample_proc16_create_indexes()
+BEGIN
+  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
+END;
+
+CREATE PROC test_sample_proc16_drop_indexes()
+BEGIN
+  DROP INDEX IF EXISTS baa_id;
+END;
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_sample_proc17_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS Baa(
+    id INTEGER NOT NULL,
+    id2 LONG_INT,
+    id3 TEXT
+  );
+  CREATE TABLE IF NOT EXISTS Aaa(
+    dl REAL NOT NULL PRIMARY KEY
+  );
+  CREATE TABLE IF NOT EXISTS dbl_table(
+    num REAL,
+    label TEXT,
+    tag TEXT,
+    CONSTRAINT unq UNIQUE (num, label)
+  );
+  CREATE TABLE IF NOT EXISTS Caa(
+    id INTEGER NOT NULL,
+    dl REAL NOT NULL,
+    uid REAL,
+    name TEXT,
+    name2 TEXT,
+    num LONG_INT,
+    FOREIGN KEY (id, num) REFERENCES Baa (id, id2) ON UPDATE NO ACTION,
+    FOREIGN KEY (dl) REFERENCES Aaa (dl) ON UPDATE NO ACTION,
+    FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
+  );
+  CREATE VIEW IF NOT EXISTS Foo AS
+  SELECT *
+    FROM Caa;
+  CREATE TABLE IF NOT EXISTS primary_as_column(
+    id_ TEXT NOT NULL,
+    seat TEXT,
+    lable TEXT,
+    PRIMARY KEY (id_, seat)
+  );
+END;
+
+CREATE PROC test_sample_proc17_create_triggers()
+BEGIN
+  CREATE TRIGGER IF NOT EXISTS triggerAaa
+    BEFORE DELETE ON Aaa
+    WHEN is_declare_func_enabled()
+  BEGIN
+  DELETE FROM dbl_table WHERE num = OLD.dl;
+  END;
+  CREATE TRIGGER IF NOT EXISTS onAaa
+    BEFORE DELETE ON Aaa
+  BEGIN
+  DELETE FROM dbl_table WHERE num = OLD.dl;
+  END;
+END;
+
+CREATE PROC test_sample_proc17_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO Baa(id, id2) VALUES(1, 1) @dummy_seed(123);
+  INSERT OR IGNORE INTO Baa(id, id2) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Aaa(dl) VALUES(1) @dummy_seed(125);
+  INSERT OR IGNORE INTO Aaa(dl) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(127);
+  INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('1', '1') @dummy_seed(131);
+  INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('2', '2') @dummy_seed(132) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_sample_proc17_drop_tables()
+BEGIN
+  DROP TABLE IF EXISTS primary_as_column;
+  DROP VIEW IF EXISTS Foo;
+  DROP TABLE IF EXISTS Caa;
+  DROP TABLE IF EXISTS dbl_table;
+  DROP TABLE IF EXISTS Aaa;
+  DROP TABLE IF EXISTS Baa;
+END;
+
+CREATE PROC test_sample_proc17_drop_triggers()
+BEGIN
+  DROP TRIGGER IF EXISTS triggerAaa;
+  DROP TRIGGER IF EXISTS onAaa;
+END;
+
+CREATE PROC test_sample_proc17_read_Baa()
+BEGIN
+ SELECT * FROM Baa;
+END;
+
+CREATE PROC test_sample_proc17_read_Aaa()
+BEGIN
+ SELECT * FROM Aaa;
+END;
+
+CREATE PROC test_sample_proc17_read_dbl_table()
+BEGIN
+ SELECT * FROM dbl_table;
+END;
+
+CREATE PROC test_sample_proc17_read_Caa()
+BEGIN
+ SELECT * FROM Caa;
+END;
+
+CREATE PROC test_sample_proc17_read_Foo()
+BEGIN
+ SELECT * FROM Foo;
+END;
+
+CREATE PROC test_sample_proc17_read_primary_as_column()
+BEGIN
+ SELECT * FROM primary_as_column;
+END;
+
+CREATE PROC test_sample_proc17_create_indexes()
+BEGIN
+  CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
+  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
+END;
+
+CREATE PROC test_sample_proc17_drop_indexes()
+BEGIN
+  DROP INDEX IF EXISTS p_id;
+  DROP INDEX IF EXISTS baa_id;
+END;
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_sample_proc18_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS Baa(
+    id INTEGER NOT NULL,
+    id2 LONG_INT,
+    id3 TEXT
+  );
+  CREATE TABLE IF NOT EXISTS Aaa(
+    dl REAL NOT NULL PRIMARY KEY
+  );
+  CREATE TABLE IF NOT EXISTS dbl_table(
+    num REAL,
+    label TEXT,
+    tag TEXT,
+    CONSTRAINT unq UNIQUE (num, label)
+  );
+  CREATE TABLE IF NOT EXISTS Caa(
+    id INTEGER NOT NULL,
+    dl REAL NOT NULL,
+    uid REAL,
+    name TEXT,
+    name2 TEXT,
+    num LONG_INT,
+    FOREIGN KEY (id, num) REFERENCES Baa (id, id2) ON UPDATE NO ACTION,
+    FOREIGN KEY (dl) REFERENCES Aaa (dl) ON UPDATE NO ACTION,
+    FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
+  );
+END;
+
+CREATE PROC test_sample_proc18_create_triggers()
+BEGIN
+  CREATE TRIGGER IF NOT EXISTS triggerAaa
+    BEFORE DELETE ON Aaa
+    WHEN is_declare_func_enabled()
+  BEGIN
+  DELETE FROM dbl_table WHERE num = OLD.dl;
+  END;
+  CREATE TRIGGER IF NOT EXISTS onAaa
+    BEFORE DELETE ON Aaa
+  BEGIN
+  DELETE FROM dbl_table WHERE num = OLD.dl;
+  END;
+END;
+
+CREATE PROC test_sample_proc18_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO Baa(id, id2) VALUES(1, 1) @dummy_seed(123);
+  INSERT OR IGNORE INTO Baa(id, id2) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Aaa(dl) VALUES(1) @dummy_seed(125);
+  INSERT OR IGNORE INTO Aaa(dl) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(127);
+  INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_sample_proc18_drop_tables()
+BEGIN
+  DROP TABLE IF EXISTS Caa;
+  DROP TABLE IF EXISTS dbl_table;
+  DROP TABLE IF EXISTS Aaa;
+  DROP TABLE IF EXISTS Baa;
+END;
+
+CREATE PROC test_sample_proc18_drop_triggers()
+BEGIN
+  DROP TRIGGER IF EXISTS triggerAaa;
+  DROP TRIGGER IF EXISTS onAaa;
+END;
+
+CREATE PROC test_sample_proc18_read_Baa()
+BEGIN
+ SELECT * FROM Baa;
+END;
+
+CREATE PROC test_sample_proc18_read_Aaa()
+BEGIN
+ SELECT * FROM Aaa;
+END;
+
+CREATE PROC test_sample_proc18_read_dbl_table()
+BEGIN
+ SELECT * FROM dbl_table;
+END;
+
+CREATE PROC test_sample_proc18_read_Caa()
+BEGIN
+ SELECT * FROM Caa;
+END;
+
+CREATE PROC test_sample_proc18_create_indexes()
+BEGIN
+  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
+END;
+
+CREATE PROC test_sample_proc18_drop_indexes()
+BEGIN
+  DROP INDEX IF EXISTS baa_id;
+END;
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_sample_proc19_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS Baa(
+    id INTEGER NOT NULL,
+    id2 LONG_INT,
+    id3 TEXT
+  );
+END;
+
+CREATE PROC test_sample_proc19_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO Baa(id, id2) VALUES(1, 1) @dummy_seed(123);
+  INSERT OR IGNORE INTO Baa(id, id2) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_sample_proc19_drop_tables()
+BEGIN
+  DROP TABLE IF EXISTS Baa;
+END;
+
+CREATE PROC test_sample_proc19_read_Baa()
+BEGIN
+ SELECT * FROM Baa;
+END;
+
+CREATE PROC test_sample_proc19_create_indexes()
+BEGIN
+  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
+END;
+
+CREATE PROC test_sample_proc19_drop_indexes()
+BEGIN
+  DROP INDEX IF EXISTS baa_id;
+END;
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_sample_proc20_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS Baa(
+    id INTEGER NOT NULL,
+    id2 LONG_INT,
+    id3 TEXT
+  );
+  CREATE TABLE IF NOT EXISTS Aaa(
+    dl REAL NOT NULL PRIMARY KEY
+  );
+  CREATE TABLE IF NOT EXISTS dbl_table(
+    num REAL,
+    label TEXT,
+    tag TEXT,
+    CONSTRAINT unq UNIQUE (num, label)
+  );
+  CREATE TABLE IF NOT EXISTS Caa(
+    id INTEGER NOT NULL,
+    dl REAL NOT NULL,
+    uid REAL,
+    name TEXT,
+    name2 TEXT,
+    num LONG_INT,
+    FOREIGN KEY (id, num) REFERENCES Baa (id, id2) ON UPDATE NO ACTION,
+    FOREIGN KEY (dl) REFERENCES Aaa (dl) ON UPDATE NO ACTION,
+    FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
+  );
+END;
+
+CREATE PROC test_sample_proc20_create_triggers()
+BEGIN
+  CREATE TRIGGER IF NOT EXISTS triggerAaa
+    BEFORE DELETE ON Aaa
+    WHEN is_declare_func_enabled()
+  BEGIN
+  DELETE FROM dbl_table WHERE num = OLD.dl;
+  END;
+  CREATE TRIGGER IF NOT EXISTS onAaa
+    BEFORE DELETE ON Aaa
+  BEGIN
+  DELETE FROM dbl_table WHERE num = OLD.dl;
+  END;
+END;
+
+CREATE PROC test_sample_proc20_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO Baa(id, id2) VALUES(1, 1) @dummy_seed(123);
+  INSERT OR IGNORE INTO Baa(id, id2) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Aaa(dl) VALUES(1) @dummy_seed(125);
+  INSERT OR IGNORE INTO Aaa(dl) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(127);
+  INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_sample_proc20_drop_tables()
+BEGIN
+  DROP TABLE IF EXISTS Caa;
+  DROP TABLE IF EXISTS dbl_table;
+  DROP TABLE IF EXISTS Aaa;
+  DROP TABLE IF EXISTS Baa;
+END;
+
+CREATE PROC test_sample_proc20_drop_triggers()
+BEGIN
+  DROP TRIGGER IF EXISTS triggerAaa;
+  DROP TRIGGER IF EXISTS onAaa;
+END;
+
+CREATE PROC test_sample_proc20_read_Baa()
+BEGIN
+ SELECT * FROM Baa;
+END;
+
+CREATE PROC test_sample_proc20_read_Aaa()
+BEGIN
+ SELECT * FROM Aaa;
+END;
+
+CREATE PROC test_sample_proc20_read_dbl_table()
+BEGIN
+ SELECT * FROM dbl_table;
+END;
+
+CREATE PROC test_sample_proc20_read_Caa()
+BEGIN
+ SELECT * FROM Caa;
+END;
+
+CREATE PROC test_sample_proc20_create_indexes()
+BEGIN
+  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
+END;
+
+CREATE PROC test_sample_proc20_drop_indexes()
+BEGIN
+  DROP INDEX IF EXISTS baa_id;
+END;
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_sample_proc21_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS Baa(
+    id INTEGER NOT NULL,
+    id2 LONG_INT,
+    id3 TEXT
+  );
+  CREATE TABLE IF NOT EXISTS Aaa(
+    dl REAL NOT NULL PRIMARY KEY
+  );
+  CREATE TABLE IF NOT EXISTS dbl_table(
+    num REAL,
+    label TEXT,
+    tag TEXT,
+    CONSTRAINT unq UNIQUE (num, label)
+  );
+  CREATE TABLE IF NOT EXISTS Caa(
+    id INTEGER NOT NULL,
+    dl REAL NOT NULL,
+    uid REAL,
+    name TEXT,
+    name2 TEXT,
+    num LONG_INT,
+    FOREIGN KEY (id, num) REFERENCES Baa (id, id2) ON UPDATE NO ACTION,
+    FOREIGN KEY (dl) REFERENCES Aaa (dl) ON UPDATE NO ACTION,
+    FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
+  );
+  CREATE TABLE IF NOT EXISTS primary_as_column(
+    id_ TEXT NOT NULL,
+    seat TEXT,
+    lable TEXT,
+    PRIMARY KEY (id_, seat)
+  );
+  CREATE VIEW IF NOT EXISTS Complex_view AS
+  SELECT *
+    FROM Caa
+    WHERE name IN (SELECT id_
+    FROM primary_as_column);
+END;
+
+CREATE PROC test_sample_proc21_create_triggers()
+BEGIN
+  CREATE TRIGGER IF NOT EXISTS triggerAaa
+    BEFORE DELETE ON Aaa
+    WHEN is_declare_func_enabled()
+  BEGIN
+  DELETE FROM dbl_table WHERE num = OLD.dl;
+  END;
+  CREATE TRIGGER IF NOT EXISTS onAaa
+    BEFORE DELETE ON Aaa
+  BEGIN
+  DELETE FROM dbl_table WHERE num = OLD.dl;
+  END;
+END;
+
+CREATE PROC test_sample_proc21_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO Baa(id, id2) VALUES(111, 1) @dummy_seed(123);
+  INSERT OR IGNORE INTO Baa(id, id2) VALUES(333, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Baa(id, id2) VALUES(444, 3) @dummy_seed(125);
+  INSERT OR IGNORE INTO Aaa(dl) VALUES(1) @dummy_seed(126);
+  INSERT OR IGNORE INTO Aaa(dl) VALUES(2) @dummy_seed(127) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO dbl_table(label, num) VALUES('Nelly', 1) @dummy_seed(128);
+  INSERT OR IGNORE INTO dbl_table(label, num) VALUES('Babeth', 2) @dummy_seed(129) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Caa(id, name, dl, uid, num) VALUES(333, 'Nelly', 1, 1, 1) @dummy_seed(130);
+  INSERT OR IGNORE INTO Caa(id, name, dl, uid, num) VALUES(444, 'Babeth', 2, 2, 2) @dummy_seed(131) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('1', '1') @dummy_seed(132);
+  INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('2', '2') @dummy_seed(133) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_sample_proc21_drop_tables()
+BEGIN
+  DROP VIEW IF EXISTS Complex_view;
+  DROP TABLE IF EXISTS primary_as_column;
+  DROP TABLE IF EXISTS Caa;
+  DROP TABLE IF EXISTS dbl_table;
+  DROP TABLE IF EXISTS Aaa;
+  DROP TABLE IF EXISTS Baa;
+END;
+
+CREATE PROC test_sample_proc21_drop_triggers()
+BEGIN
+  DROP TRIGGER IF EXISTS triggerAaa;
+  DROP TRIGGER IF EXISTS onAaa;
+END;
+
+CREATE PROC test_sample_proc21_read_Baa()
+BEGIN
+ SELECT * FROM Baa;
+END;
+
+CREATE PROC test_sample_proc21_read_Aaa()
+BEGIN
+ SELECT * FROM Aaa;
+END;
+
+CREATE PROC test_sample_proc21_read_dbl_table()
+BEGIN
+ SELECT * FROM dbl_table;
+END;
+
+CREATE PROC test_sample_proc21_read_Caa()
+BEGIN
+ SELECT * FROM Caa;
+END;
+
+CREATE PROC test_sample_proc21_read_primary_as_column()
+BEGIN
+ SELECT * FROM primary_as_column;
+END;
+
+CREATE PROC test_sample_proc21_read_Complex_view()
+BEGIN
+ SELECT * FROM Complex_view;
+END;
+
+CREATE PROC test_sample_proc21_create_indexes()
+BEGIN
+  CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
+  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
+END;
+
+CREATE PROC test_sample_proc21_drop_indexes()
+BEGIN
+  DROP INDEX IF EXISTS p_id;
+  DROP INDEX IF EXISTS baa_id;
+END;
+
+CREATE PROC open_sample_proc21()
+BEGIN
+  CREATE TEMP TABLE test_sample_proc21(LIKE sample_proc21);
+END;
+
+CREATE PROC close_sample_proc21()
+BEGIN
+  DROP TABLE test_sample_proc21;
+END;
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_sample_proc22_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS Baa(
+    id INTEGER NOT NULL,
+    id2 LONG_INT,
+    id3 TEXT
+  );
+  CREATE TABLE IF NOT EXISTS Aaa(
+    dl REAL NOT NULL PRIMARY KEY
+  );
+  CREATE TABLE IF NOT EXISTS dbl_table(
+    num REAL,
+    label TEXT,
+    tag TEXT,
+    CONSTRAINT unq UNIQUE (num, label)
+  );
+  CREATE TABLE IF NOT EXISTS Caa(
+    id INTEGER NOT NULL,
+    dl REAL NOT NULL,
+    uid REAL,
+    name TEXT,
+    name2 TEXT,
+    num LONG_INT,
+    FOREIGN KEY (id, num) REFERENCES Baa (id, id2) ON UPDATE NO ACTION,
+    FOREIGN KEY (dl) REFERENCES Aaa (dl) ON UPDATE NO ACTION,
+    FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
+  );
+  CREATE TABLE IF NOT EXISTS primary_as_column(
+    id_ TEXT NOT NULL,
+    seat TEXT,
+    lable TEXT,
+    PRIMARY KEY (id_, seat)
+  );
+  CREATE VIEW IF NOT EXISTS Complex_view AS
+  SELECT *
+    FROM Caa
+    WHERE name IN (SELECT id_
+    FROM primary_as_column);
+END;
+
+CREATE PROC test_sample_proc22_create_triggers()
+BEGIN
+  CREATE TRIGGER IF NOT EXISTS triggerAaa
+    BEFORE DELETE ON Aaa
+    WHEN is_declare_func_enabled()
+  BEGIN
+  DELETE FROM dbl_table WHERE num = OLD.dl;
+  END;
+  CREATE TRIGGER IF NOT EXISTS onAaa
+    BEFORE DELETE ON Aaa
+  BEGIN
+  DELETE FROM dbl_table WHERE num = OLD.dl;
+  END;
+END;
+
+CREATE PROC test_sample_proc22_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO Baa(id, id2) VALUES(111, 1) @dummy_seed(123);
+  INSERT OR IGNORE INTO Baa(id, id2) VALUES(222, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Aaa(dl) VALUES(1) @dummy_seed(125);
+  INSERT OR IGNORE INTO Aaa(dl) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO dbl_table(label, num) VALUES('Nelly', 1) @dummy_seed(127);
+  INSERT OR IGNORE INTO dbl_table(label, num) VALUES('Babeth', 2) @dummy_seed(128) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Caa(id, name, dl, uid, num) VALUES(111, 'Nelly', 1, 1, 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO Caa(id, name, dl, uid, num) VALUES(222, 'Babeth', 2, 2, 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('1', '1') @dummy_seed(131);
+  INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('2', '2') @dummy_seed(132) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_sample_proc22_drop_tables()
+BEGIN
+  DROP VIEW IF EXISTS Complex_view;
+  DROP TABLE IF EXISTS primary_as_column;
+  DROP TABLE IF EXISTS Caa;
+  DROP TABLE IF EXISTS dbl_table;
+  DROP TABLE IF EXISTS Aaa;
+  DROP TABLE IF EXISTS Baa;
+END;
+
+CREATE PROC test_sample_proc22_drop_triggers()
+BEGIN
+  DROP TRIGGER IF EXISTS triggerAaa;
+  DROP TRIGGER IF EXISTS onAaa;
+END;
+
+CREATE PROC test_sample_proc22_read_Baa()
+BEGIN
+ SELECT * FROM Baa;
+END;
+
+CREATE PROC test_sample_proc22_read_Aaa()
+BEGIN
+ SELECT * FROM Aaa;
+END;
+
+CREATE PROC test_sample_proc22_read_dbl_table()
+BEGIN
+ SELECT * FROM dbl_table;
+END;
+
+CREATE PROC test_sample_proc22_read_Caa()
+BEGIN
+ SELECT * FROM Caa;
+END;
+
+CREATE PROC test_sample_proc22_read_primary_as_column()
+BEGIN
+ SELECT * FROM primary_as_column;
+END;
+
+CREATE PROC test_sample_proc22_read_Complex_view()
+BEGIN
+ SELECT * FROM Complex_view;
+END;
+
+CREATE PROC test_sample_proc22_create_indexes()
+BEGIN
+  CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
+  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
+END;
+
+CREATE PROC test_sample_proc22_drop_indexes()
+BEGIN
+  DROP INDEX IF EXISTS p_id;
+  DROP INDEX IF EXISTS baa_id;
+END;
+
+CREATE PROC open_sample_proc22()
+BEGIN
+  CREATE TEMP TABLE test_sample_proc22(LIKE sample_proc22);
+END;
+
+CREATE PROC close_sample_proc22()
+BEGIN
+  DROP TABLE test_sample_proc22;
+END;
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_sample_proc23_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS Baa(
+    id INTEGER NOT NULL,
+    id2 LONG_INT,
+    id3 TEXT
+  );
+  CREATE TABLE IF NOT EXISTS Aaa(
+    dl REAL NOT NULL PRIMARY KEY
+  );
+  CREATE TABLE IF NOT EXISTS dbl_table(
+    num REAL,
+    label TEXT,
+    tag TEXT,
+    CONSTRAINT unq UNIQUE (num, label)
+  );
+  CREATE TABLE IF NOT EXISTS Caa(
+    id INTEGER NOT NULL,
+    dl REAL NOT NULL,
+    uid REAL,
+    name TEXT,
+    name2 TEXT,
+    num LONG_INT,
+    FOREIGN KEY (id, num) REFERENCES Baa (id, id2) ON UPDATE NO ACTION,
+    FOREIGN KEY (dl) REFERENCES Aaa (dl) ON UPDATE NO ACTION,
+    FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
+  );
+  CREATE TABLE IF NOT EXISTS primary_as_column(
+    id_ TEXT NOT NULL,
+    seat TEXT,
+    lable TEXT,
+    PRIMARY KEY (id_, seat)
+  );
+  CREATE VIEW IF NOT EXISTS Complex_view AS
+  SELECT *
+    FROM Caa
+    WHERE name IN (SELECT id_
+    FROM primary_as_column);
+END;
+
+CREATE PROC test_sample_proc23_create_triggers()
+BEGIN
+  CREATE TRIGGER IF NOT EXISTS triggerAaa
+    BEFORE DELETE ON Aaa
+    WHEN is_declare_func_enabled()
+  BEGIN
+  DELETE FROM dbl_table WHERE num = OLD.dl;
+  END;
+  CREATE TRIGGER IF NOT EXISTS onAaa
+    BEFORE DELETE ON Aaa
+  BEGIN
+  DELETE FROM dbl_table WHERE num = OLD.dl;
+  END;
+END;
+
+CREATE PROC test_sample_proc23_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO Baa(id, id2) VALUES(1, 1) @dummy_seed(123);
+  INSERT OR IGNORE INTO Baa(id, id2) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Aaa(dl) VALUES(1) @dummy_seed(125);
+  INSERT OR IGNORE INTO Aaa(dl) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(127);
+  INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('1', '1') @dummy_seed(131);
+  INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('2', '2') @dummy_seed(132) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_sample_proc23_drop_tables()
+BEGIN
+  DROP VIEW IF EXISTS Complex_view;
+  DROP TABLE IF EXISTS primary_as_column;
+  DROP TABLE IF EXISTS Caa;
+  DROP TABLE IF EXISTS dbl_table;
+  DROP TABLE IF EXISTS Aaa;
+  DROP TABLE IF EXISTS Baa;
+END;
+
+CREATE PROC test_sample_proc23_drop_triggers()
+BEGIN
+  DROP TRIGGER IF EXISTS triggerAaa;
+  DROP TRIGGER IF EXISTS onAaa;
+END;
+
+CREATE PROC test_sample_proc23_read_Baa()
+BEGIN
+ SELECT * FROM Baa;
+END;
+
+CREATE PROC test_sample_proc23_read_Aaa()
+BEGIN
+ SELECT * FROM Aaa;
+END;
+
+CREATE PROC test_sample_proc23_read_dbl_table()
+BEGIN
+ SELECT * FROM dbl_table;
+END;
+
+CREATE PROC test_sample_proc23_read_Caa()
+BEGIN
+ SELECT * FROM Caa;
+END;
+
+CREATE PROC test_sample_proc23_read_primary_as_column()
+BEGIN
+ SELECT * FROM primary_as_column;
+END;
+
+CREATE PROC test_sample_proc23_read_Complex_view()
+BEGIN
+ SELECT * FROM Complex_view;
+END;
+
+CREATE PROC test_sample_proc23_create_indexes()
+BEGIN
+  CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
+  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
+END;
+
+CREATE PROC test_sample_proc23_drop_indexes()
+BEGIN
+  DROP INDEX IF EXISTS p_id;
+  DROP INDEX IF EXISTS baa_id;
+END;
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_sample_proc24_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS Baa(
+    id INTEGER NOT NULL,
+    id2 LONG_INT,
+    id3 TEXT
+  );
+  CREATE TABLE IF NOT EXISTS Aaa(
+    dl REAL NOT NULL PRIMARY KEY
+  );
+  CREATE TABLE IF NOT EXISTS dbl_table(
+    num REAL,
+    label TEXT,
+    tag TEXT,
+    CONSTRAINT unq UNIQUE (num, label)
+  );
+  CREATE TABLE IF NOT EXISTS Caa(
+    id INTEGER NOT NULL,
+    dl REAL NOT NULL,
+    uid REAL,
+    name TEXT,
+    name2 TEXT,
+    num LONG_INT,
+    FOREIGN KEY (id, num) REFERENCES Baa (id, id2) ON UPDATE NO ACTION,
+    FOREIGN KEY (dl) REFERENCES Aaa (dl) ON UPDATE NO ACTION,
+    FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
+  );
+END;
+
+CREATE PROC test_sample_proc24_create_triggers()
+BEGIN
+  CREATE TRIGGER IF NOT EXISTS triggerAaa
+    BEFORE DELETE ON Aaa
+    WHEN is_declare_func_enabled()
+  BEGIN
+  DELETE FROM dbl_table WHERE num = OLD.dl;
+  END;
+  CREATE TRIGGER IF NOT EXISTS onAaa
+    BEFORE DELETE ON Aaa
+  BEGIN
+  DELETE FROM dbl_table WHERE num = OLD.dl;
+  END;
+END;
+
+CREATE PROC test_sample_proc24_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO Baa(id, id2) VALUES(1, 1) @dummy_seed(123);
+  INSERT OR IGNORE INTO Baa(id, id2) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Aaa(dl) VALUES(1) @dummy_seed(125);
+  INSERT OR IGNORE INTO Aaa(dl) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO dbl_table(label, num) VALUES('Chris', 777.0) @dummy_seed(127);
+  INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(1, 1, 777.0, 'Chris', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(2, 2, 777.0, 'Chris', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_sample_proc24_drop_tables()
+BEGIN
+  DROP TABLE IF EXISTS Caa;
+  DROP TABLE IF EXISTS dbl_table;
+  DROP TABLE IF EXISTS Aaa;
+  DROP TABLE IF EXISTS Baa;
+END;
+
+CREATE PROC test_sample_proc24_drop_triggers()
+BEGIN
+  DROP TRIGGER IF EXISTS triggerAaa;
+  DROP TRIGGER IF EXISTS onAaa;
+END;
+
+CREATE PROC test_sample_proc24_read_Baa()
+BEGIN
+ SELECT * FROM Baa;
+END;
+
+CREATE PROC test_sample_proc24_read_Aaa()
+BEGIN
+ SELECT * FROM Aaa;
+END;
+
+CREATE PROC test_sample_proc24_read_dbl_table()
+BEGIN
+ SELECT * FROM dbl_table;
+END;
+
+CREATE PROC test_sample_proc24_read_Caa()
+BEGIN
+ SELECT * FROM Caa;
+END;
+
+CREATE PROC test_sample_proc24_create_indexes()
+BEGIN
+  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
+END;
+
+CREATE PROC test_sample_proc24_drop_indexes()
+BEGIN
+  DROP INDEX IF EXISTS baa_id;
+END;
+
+CREATE PROC open_sample_proc24()
+BEGIN
+  CREATE TEMP TABLE test_sample_proc24(LIKE sample_proc24);
+END;
+
+CREATE PROC close_sample_proc24()
+BEGIN
+  DROP TABLE test_sample_proc24;
+END;
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_sample_proc25_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS Baa(
+    id INTEGER NOT NULL,
+    id2 LONG_INT,
+    id3 TEXT
+  );
+  CREATE TABLE IF NOT EXISTS Aaa(
+    dl REAL NOT NULL PRIMARY KEY
+  );
+  CREATE TABLE IF NOT EXISTS dbl_table(
+    num REAL,
+    label TEXT,
+    tag TEXT,
+    CONSTRAINT unq UNIQUE (num, label)
+  );
+  CREATE TABLE IF NOT EXISTS Caa(
+    id INTEGER NOT NULL,
+    dl REAL NOT NULL,
+    uid REAL,
+    name TEXT,
+    name2 TEXT,
+    num LONG_INT,
+    FOREIGN KEY (id, num) REFERENCES Baa (id, id2) ON UPDATE NO ACTION,
+    FOREIGN KEY (dl) REFERENCES Aaa (dl) ON UPDATE NO ACTION,
+    FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
+  );
+END;
+
+CREATE PROC test_sample_proc25_create_triggers()
+BEGIN
+  CREATE TRIGGER IF NOT EXISTS triggerAaa
+    BEFORE DELETE ON Aaa
+    WHEN is_declare_func_enabled()
+  BEGIN
+  DELETE FROM dbl_table WHERE num = OLD.dl;
+  END;
+  CREATE TRIGGER IF NOT EXISTS onAaa
+    BEFORE DELETE ON Aaa
+  BEGIN
+  DELETE FROM dbl_table WHERE num = OLD.dl;
+  END;
+END;
+
+CREATE PROC test_sample_proc25_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO Baa(id, id2) VALUES(1, 1) @dummy_seed(123);
+  INSERT OR IGNORE INTO Baa(id, id2) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Aaa(dl) VALUES(1) @dummy_seed(125);
+  INSERT OR IGNORE INTO Aaa(dl) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO dbl_table(num, label) VALUES(777.0, '1') @dummy_seed(127);
+  INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Caa(uid, id, dl, name, num) VALUES(777.0, 1, 1, '1', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(2, 2, 777.0, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_sample_proc25_drop_tables()
+BEGIN
+  DROP TABLE IF EXISTS Caa;
+  DROP TABLE IF EXISTS dbl_table;
+  DROP TABLE IF EXISTS Aaa;
+  DROP TABLE IF EXISTS Baa;
+END;
+
+CREATE PROC test_sample_proc25_drop_triggers()
+BEGIN
+  DROP TRIGGER IF EXISTS triggerAaa;
+  DROP TRIGGER IF EXISTS onAaa;
+END;
+
+CREATE PROC test_sample_proc25_read_Baa()
+BEGIN
+ SELECT * FROM Baa;
+END;
+
+CREATE PROC test_sample_proc25_read_Aaa()
+BEGIN
+ SELECT * FROM Aaa;
+END;
+
+CREATE PROC test_sample_proc25_read_dbl_table()
+BEGIN
+ SELECT * FROM dbl_table;
+END;
+
+CREATE PROC test_sample_proc25_read_Caa()
+BEGIN
+ SELECT * FROM Caa;
+END;
+
+CREATE PROC test_sample_proc25_create_indexes()
+BEGIN
+  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
+END;
+
+CREATE PROC test_sample_proc25_drop_indexes()
+BEGIN
+  DROP INDEX IF EXISTS baa_id;
+END;
+
+CREATE PROC open_sample_proc25()
+BEGIN
+  CREATE TEMP TABLE test_sample_proc25(LIKE sample_proc25);
+END;
+
+CREATE PROC close_sample_proc25()
+BEGIN
+  DROP TABLE test_sample_proc25;
+END;
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_sample_proc26_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS dbl_table(
+    num REAL,
+    label TEXT,
+    tag TEXT,
+    CONSTRAINT unq UNIQUE (num, label)
+  );
+END;
+
+CREATE PROC test_sample_proc26_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO dbl_table(num, label) VALUES(-0.1, '1') @dummy_seed(123);
+  INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(124) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_sample_proc26_drop_tables()
+BEGIN
+  DROP TABLE IF EXISTS dbl_table;
+END;
+
+CREATE PROC test_sample_proc26_read_dbl_table()
+BEGIN
+ SELECT * FROM dbl_table;
+END;
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_sample_proc27_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS experiment_value(
+    config TEXT NOT NULL,
+    param TEXT NOT NULL,
+    value TEXT,
+    type LONG_INT NOT NULL,
+    logging_id TEXT,
+    PRIMARY KEY (config, param)
+  );
+END;
+
+CREATE PROC test_sample_proc27_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO experiment_value(config, logging_id, type, param, value) VALUES('rtc_overlayconfig_exampleconfig', '1234', 9223372036854775807, 'enabled', '0') @dummy_seed(123);
+  INSERT OR IGNORE INTO experiment_value(config, logging_id, type, param, value) VALUES('rtc_overlayconfig_exampleconfig', '5678', 9223372036854775807, 'some_integer', '42') @dummy_seed(124) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_sample_proc27_drop_tables()
+BEGIN
+  DROP TABLE IF EXISTS experiment_value;
+END;
+
+CREATE PROC test_sample_proc27_read_experiment_value()
+BEGIN
+ SELECT * FROM experiment_value;
+END;
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_sample_proc28_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS Aaa(
+    dl REAL NOT NULL PRIMARY KEY
+  );
+  CREATE TABLE IF NOT EXISTS dbl_table(
+    num REAL,
+    label TEXT,
+    tag TEXT,
+    CONSTRAINT unq UNIQUE (num, label)
+  );
+END;
+
+CREATE PROC test_sample_proc28_create_triggers()
+BEGIN
+  CREATE TRIGGER IF NOT EXISTS triggerAaa
+    BEFORE DELETE ON Aaa
+    WHEN is_declare_func_enabled()
+  BEGIN
+  DELETE FROM dbl_table WHERE num = OLD.dl;
+  END;
+  CREATE TRIGGER IF NOT EXISTS onAaa
+    BEFORE DELETE ON Aaa
+  BEGIN
+  DELETE FROM dbl_table WHERE num = OLD.dl;
+  END;
+END;
+
+CREATE PROC test_sample_proc28_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO Aaa(dl) VALUES(1) @dummy_seed(123);
+  INSERT OR IGNORE INTO Aaa(dl) VALUES(2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(125);
+  INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(126) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_sample_proc28_drop_tables()
+BEGIN
+  DROP TABLE IF EXISTS dbl_table;
+  DROP TABLE IF EXISTS Aaa;
+END;
+
+CREATE PROC test_sample_proc28_drop_triggers()
+BEGIN
+  DROP TRIGGER IF EXISTS triggerAaa;
+  DROP TRIGGER IF EXISTS onAaa;
+END;
+
+CREATE PROC test_sample_proc28_read_Aaa()
+BEGIN
+ SELECT * FROM Aaa;
+END;
+
+CREATE PROC test_sample_proc28_read_dbl_table()
+BEGIN
+ SELECT * FROM dbl_table;
+END;
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_sample_proc29_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS dbl_table(
+    num REAL,
+    label TEXT,
+    tag TEXT,
+    CONSTRAINT unq UNIQUE (num, label)
+  );
+END;
+
+CREATE PROC test_sample_proc29_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(123);
+  INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(124) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_sample_proc29_drop_tables()
+BEGIN
+  DROP TABLE IF EXISTS dbl_table;
+END;
+
+CREATE PROC test_sample_proc29_read_dbl_table()
+BEGIN
+ SELECT * FROM dbl_table;
+END;
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_sample_proc30_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS Aaa(
+    dl REAL NOT NULL PRIMARY KEY
+  );
+  CREATE TABLE IF NOT EXISTS dbl_table(
+    num REAL,
+    label TEXT,
+    tag TEXT,
+    CONSTRAINT unq UNIQUE (num, label)
+  );
+END;
+
+CREATE PROC test_sample_proc30_create_triggers()
+BEGIN
+  CREATE TRIGGER IF NOT EXISTS triggerAaa
+    BEFORE DELETE ON Aaa
+    WHEN is_declare_func_enabled()
+  BEGIN
+  DELETE FROM dbl_table WHERE num = OLD.dl;
+  END;
+  CREATE TRIGGER IF NOT EXISTS onAaa
+    BEFORE DELETE ON Aaa
+  BEGIN
+  DELETE FROM dbl_table WHERE num = OLD.dl;
+  END;
+END;
+
+CREATE PROC test_sample_proc30_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO Aaa(dl) VALUES(1) @dummy_seed(123);
+  INSERT OR IGNORE INTO Aaa(dl) VALUES(2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(125);
+  INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(126) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_sample_proc30_drop_tables()
+BEGIN
+  DROP TABLE IF EXISTS dbl_table;
+  DROP TABLE IF EXISTS Aaa;
+END;
+
+CREATE PROC test_sample_proc30_drop_triggers()
+BEGIN
+  DROP TRIGGER IF EXISTS triggerAaa;
+  DROP TRIGGER IF EXISTS onAaa;
+END;
+
+CREATE PROC test_sample_proc30_read_Aaa()
+BEGIN
+ SELECT * FROM Aaa;
+END;
+
+CREATE PROC test_sample_proc30_read_dbl_table()
+BEGIN
+ SELECT * FROM dbl_table;
+END;
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_sample_proc31_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS T1(
+    id INTEGER
+  );
+  CREATE TABLE IF NOT EXISTS T2(
+    id INTEGER
+  );
+  CREATE TABLE IF NOT EXISTS T4(
+    id INTEGER PRIMARY KEY
+  );
+  CREATE TABLE IF NOT EXISTS T3(
+    id INTEGER,
+    FOREIGN KEY (id) REFERENCES T4 (id) ON UPDATE NO ACTION
+  );
+END;
+
+CREATE PROC test_sample_proc31_create_triggers()
+BEGIN
+  CREATE TRIGGER IF NOT EXISTS R1
+    BEFORE DELETE ON T1
+  BEGIN
+  DELETE FROM T2 WHERE id = OLD.id;
+  END;
+  CREATE TRIGGER IF NOT EXISTS R2
+    BEFORE DELETE ON T2
+  BEGIN
+  DELETE FROM T3 WHERE id = OLD.id;
+  END;
+END;
+
+CREATE PROC test_sample_proc31_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO T1() VALUES() @dummy_seed(123);
+  INSERT OR IGNORE INTO T1() VALUES() @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO T2() VALUES() @dummy_seed(125);
+  INSERT OR IGNORE INTO T2() VALUES() @dummy_seed(126) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO T4(id) VALUES(1) @dummy_seed(127);
+  INSERT OR IGNORE INTO T4(id) VALUES(2) @dummy_seed(128) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO T3(id) VALUES(1) @dummy_seed(129);
+  INSERT OR IGNORE INTO T3(id) VALUES(2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_sample_proc31_drop_tables()
+BEGIN
+  DROP TABLE IF EXISTS T3;
+  DROP TABLE IF EXISTS T4;
+  DROP TABLE IF EXISTS T2;
+  DROP TABLE IF EXISTS T1;
+END;
+
+CREATE PROC test_sample_proc31_drop_triggers()
+BEGIN
+  DROP TRIGGER IF EXISTS R1;
+  DROP TRIGGER IF EXISTS R2;
+END;
+
+CREATE PROC test_sample_proc31_read_T1()
+BEGIN
+ SELECT * FROM T1;
+END;
+
+CREATE PROC test_sample_proc31_read_T2()
+BEGIN
+ SELECT * FROM T2;
+END;
+
+CREATE PROC test_sample_proc31_read_T4()
+BEGIN
+ SELECT * FROM T4;
+END;
+
+CREATE PROC test_sample_proc31_read_T3()
+BEGIN
+ SELECT * FROM T3;
+END;
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_sample_proc311_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS Baa(
+    id INTEGER NOT NULL,
+    id2 LONG_INT,
+    id3 TEXT
+  );
+  CREATE TABLE IF NOT EXISTS Aaa(
+    dl REAL NOT NULL PRIMARY KEY
+  );
+  CREATE TABLE IF NOT EXISTS dbl_table(
+    num REAL,
+    label TEXT,
+    tag TEXT,
+    CONSTRAINT unq UNIQUE (num, label)
+  );
+  CREATE TABLE IF NOT EXISTS Caa(
+    id INTEGER NOT NULL,
+    dl REAL NOT NULL,
+    uid REAL,
+    name TEXT,
+    name2 TEXT,
+    num LONG_INT,
+    FOREIGN KEY (id, num) REFERENCES Baa (id, id2) ON UPDATE NO ACTION,
+    FOREIGN KEY (dl) REFERENCES Aaa (dl) ON UPDATE NO ACTION,
+    FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
+  );
+END;
+
+CREATE PROC test_sample_proc311_create_triggers()
+BEGIN
+  CREATE TRIGGER IF NOT EXISTS triggerAaa
+    BEFORE DELETE ON Aaa
+    WHEN is_declare_func_enabled()
+  BEGIN
+  DELETE FROM dbl_table WHERE num = OLD.dl;
+  END;
+  CREATE TRIGGER IF NOT EXISTS onAaa
+    BEFORE DELETE ON Aaa
+  BEGIN
+  DELETE FROM dbl_table WHERE num = OLD.dl;
+  END;
+END;
+
+CREATE PROC test_sample_proc311_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO Baa(id, id2) VALUES(-99, 1) @dummy_seed(123);
+  INSERT OR IGNORE INTO Baa(id, id2) VALUES(-444, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Aaa(dl) VALUES(1) @dummy_seed(125);
+  INSERT OR IGNORE INTO Aaa(dl) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(127);
+  INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(-444, 1, 1, '1', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(-444, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_sample_proc311_drop_tables()
+BEGIN
+  DROP TABLE IF EXISTS Caa;
+  DROP TABLE IF EXISTS dbl_table;
+  DROP TABLE IF EXISTS Aaa;
+  DROP TABLE IF EXISTS Baa;
+END;
+
+CREATE PROC test_sample_proc311_drop_triggers()
+BEGIN
+  DROP TRIGGER IF EXISTS triggerAaa;
+  DROP TRIGGER IF EXISTS onAaa;
+END;
+
+CREATE PROC test_sample_proc311_read_Baa()
+BEGIN
+ SELECT * FROM Baa;
+END;
+
+CREATE PROC test_sample_proc311_read_Aaa()
+BEGIN
+ SELECT * FROM Aaa;
+END;
+
+CREATE PROC test_sample_proc311_read_dbl_table()
+BEGIN
+ SELECT * FROM dbl_table;
+END;
+
+CREATE PROC test_sample_proc311_read_Caa()
+BEGIN
+ SELECT * FROM Caa;
+END;
+
+CREATE PROC test_sample_proc311_create_indexes()
+BEGIN
+  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
+END;
+
+CREATE PROC test_sample_proc311_drop_indexes()
+BEGIN
+  DROP INDEX IF EXISTS baa_id;
+END;
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_no_long_to_conversion_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS t5(
+    id LONG_INT PRIMARY KEY AUTOINCREMENT,
+    data TEXT
+  );
+  CREATE TABLE IF NOT EXISTS t6(
+    id LONG_INT PRIMARY KEY,
+    FOREIGN KEY (id) REFERENCES t5 (id) ON UPDATE CASCADE ON DELETE CASCADE
+  );
+END;
+
+CREATE PROC test_no_long_to_conversion_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO t5(id) VALUES(1) @dummy_seed(123);
+  INSERT OR IGNORE INTO t5(id) VALUES(2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO t6(id) VALUES(1) @dummy_seed(125);
+  INSERT OR IGNORE INTO t6(id) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_no_long_to_conversion_drop_tables()
+BEGIN
+  DROP TABLE IF EXISTS t6;
+  DROP TABLE IF EXISTS t5;
+END;
+
+CREATE PROC test_no_long_to_conversion_read_t5()
+BEGIN
+ SELECT * FROM t5;
+END;
+
+CREATE PROC test_no_long_to_conversion_read_t6()
+BEGIN
+ SELECT * FROM t6;
+END;
+
+-- The statement ending at line XXXX
+-- no output generated --
+
+-- The statement ending at line XXXX
+-- no output generated --
+
+-- The statement ending at line XXXX
+-- no output generated --
+
+-- The statement ending at line XXXX
+-- no output generated --
+
+-- The statement ending at line XXXX
+-- no output generated --
+
+-- The statement ending at line XXXX
+-- no output generated --
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_self_ref_proc_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS self_ref_table(
+    id INTEGER PRIMARY KEY,
+    id2 INTEGER,
+    FOREIGN KEY (id2) REFERENCES self_ref_table (id),
+    name TEXT
+  );
+END;
+
+CREATE PROC test_self_ref_proc_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO self_ref_table(id, id2) VALUES(1, NULL) @dummy_seed(123);
+  INSERT OR IGNORE INTO self_ref_table(id, id2) VALUES(2, 1) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_self_ref_proc_drop_tables()
+BEGIN
+  DROP TABLE IF EXISTS self_ref_table;
+END;
+
+CREATE PROC test_self_ref_proc_read_self_ref_table()
+BEGIN
+ SELECT * FROM self_ref_table;
+END;
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_self_ref_proc_no_data_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS self_ref_table(
+    id INTEGER PRIMARY KEY,
+    id2 INTEGER,
+    FOREIGN KEY (id2) REFERENCES self_ref_table (id),
+    name TEXT
+  );
+END;
+
+CREATE PROC test_self_ref_proc_no_data_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO self_ref_table(id, id2) VALUES(1, 1) @dummy_seed(123);
+  INSERT OR IGNORE INTO self_ref_table(id, id2) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_self_ref_proc_no_data_drop_tables()
+BEGIN
+  DROP TABLE IF EXISTS self_ref_table;
+END;
+
+CREATE PROC test_self_ref_proc_no_data_read_self_ref_table()
+BEGIN
+ SELECT * FROM self_ref_table;
+END;
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_self_ref_proc2_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS self_ref_table2(
+    id INTEGER PRIMARY KEY,
+    id2 INTEGER REFERENCES self_ref_table2 (id),
+    name TEXT
+  );
+END;
+
+CREATE PROC test_self_ref_proc2_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO self_ref_table2(id, id2) VALUES(1, NULL) @dummy_seed(123);
+  INSERT OR IGNORE INTO self_ref_table2(id, id2) VALUES(2, 1) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_self_ref_proc2_drop_tables()
+BEGIN
+  DROP TABLE IF EXISTS self_ref_table2;
+END;
+
+CREATE PROC test_self_ref_proc2_read_self_ref_table2()
+BEGIN
+ SELECT * FROM self_ref_table2;
+END;
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_self_ref_proc2_no_data_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS self_ref_table2(
+    id INTEGER PRIMARY KEY,
+    id2 INTEGER REFERENCES self_ref_table2 (id),
+    name TEXT
+  );
+END;
+
+CREATE PROC test_self_ref_proc2_no_data_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO self_ref_table2(id, id2) VALUES(1, 1) @dummy_seed(123);
+  INSERT OR IGNORE INTO self_ref_table2(id, id2) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_self_ref_proc2_no_data_drop_tables()
+BEGIN
+  DROP TABLE IF EXISTS self_ref_table2;
+END;
+
+CREATE PROC test_self_ref_proc2_no_data_read_self_ref_table2()
+BEGIN
+ SELECT * FROM self_ref_table2;
+END;

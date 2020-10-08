@@ -1,0 +1,698 @@
+
+-- no columns will be considered hidden in this script
+-- DDL in procs will not count as declarations
+@SCHEMA_UPGRADE_SCRIPT;
+
+-- schema crc -5843418114172149250
+
+-- declare sqlite_master -- 
+CREATE TABLE sqlite_master (
+  type TEXT NOT NULL,
+  name TEXT NOT NULL,
+  tbl_name TEXT NOT NULL,
+  rootpage INTEGER NOT NULL,
+  sql TEXT NOT NULL
+);
+
+-- declare full schema of tables and views to be upgraded and their dependencies -- 
+DECLARE SELECT FUNC filter_ (id INTEGER) INTEGER NOT NULL;
+
+@DECLARE_SCHEMA_REGION shared;
+
+@DECLARE_SCHEMA_REGION extra USING shared;
+
+@DECLARE_SCHEMA_REGION other;
+
+@begin_schema_region shared;
+CREATE TABLE foo(
+  id INTEGER PRIMARY KEY,
+  rate LONG_INT @DELETE(5),
+  rate_2 LONG_INT @DELETE(4, DeleteRate2Proc),
+  id2 INTEGER DEFAULT 12345 @CREATE(4, CreateId2Proc),
+  name TEXT @CREATE(5),
+  name_2 TEXT @CREATE(6)
+);
+@end_schema_region;
+
+@begin_schema_region shared;
+CREATE TABLE added_table(
+  id INTEGER NOT NULL,
+  name1 TEXT,
+  name2 TEXT @CREATE(4)
+) @CREATE(3) @DELETE(5);
+@end_schema_region;
+
+@begin_schema_region shared;
+CREATE TABLE g1(
+  id INTEGER PRIMARY KEY,
+  name TEXT
+) @RECREATE(gr1);
+@end_schema_region;
+
+@begin_schema_region shared;
+CREATE TABLE use_g1(
+  id INTEGER PRIMARY KEY REFERENCES g1 (id),
+  name2 TEXT
+) @RECREATE(gr1);
+@end_schema_region;
+
+@begin_schema_region extra;
+CREATE TABLE table2(
+  id INTEGER NOT NULL REFERENCES foo (id),
+  name1 TEXT @CREATE(2, CreateName1Proc),
+  name2 TEXT @CREATE(2, CreateName2Proc),
+  name3 TEXT @CREATE(2),
+  name4 TEXT @CREATE(2)
+);
+@end_schema_region;
+
+@begin_schema_region other;
+CREATE TABLE other_table(
+  id INTEGER
+);
+@end_schema_region;
+
+CREATE TABLE table_to_recreate(
+  id INTEGER NOT NULL,
+  name TEXT
+) @RECREATE;
+
+CREATE TABLE grouped_table_1(
+  id INTEGER NOT NULL,
+  name TEXT
+) @RECREATE(my_group);
+
+CREATE TABLE grouped_table_2(
+  id INTEGER NOT NULL,
+  name TEXT
+) @RECREATE(my_group);
+
+CREATE TABLE grouped_table_3(
+  id INTEGER NOT NULL,
+  name TEXT
+) @RECREATE(my_group);
+
+CREATE TABLE t5(
+  id LONG_INT PRIMARY KEY AUTOINCREMENT,
+  data TEXT
+);
+
+CREATE TABLE t6(
+  id LONG_INT PRIMARY KEY,
+  FOREIGN KEY (id) REFERENCES t5 (id) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+@begin_schema_region shared;
+CREATE VIEW shared_view AS
+SELECT *
+  FROM foo;
+@end_schema_region;
+
+@begin_schema_region shared;
+CREATE VIEW live_view AS
+SELECT *
+  FROM foo;
+@end_schema_region;
+
+@begin_schema_region shared;
+CREATE VIEW dead_view AS
+SELECT *
+  FROM foo @DELETE(2, DeadViewMigration);
+@end_schema_region;
+
+@begin_schema_region extra;
+CREATE VIEW another_live_view AS
+SELECT *
+  FROM table2;
+@end_schema_region;
+
+@begin_schema_region shared;
+CREATE INDEX shared_index ON foo (name, name_2);
+@end_schema_region;
+
+@begin_schema_region shared;
+CREATE INDEX gr1_index ON g1 (name);
+@end_schema_region;
+
+@begin_schema_region shared;
+CREATE INDEX gr1_index2 ON g1 (name, id);
+@end_schema_region;
+
+@begin_schema_region shared;
+CREATE INDEX gr1_index3 ON g1 (name, id) @DELETE(5);
+@end_schema_region;
+
+@begin_schema_region extra;
+CREATE INDEX not_shared_present_index ON table2 (name1, name2);
+@end_schema_region;
+
+@begin_schema_region extra;
+CREATE INDEX index_going_away ON table2 (name3) @DELETE(3);
+@end_schema_region;
+
+@begin_schema_region shared;
+CREATE TRIGGER shared_trigger
+  BEFORE INSERT ON foo
+BEGIN
+SELECT 1;
+END;
+@end_schema_region;
+
+@begin_schema_region extra;
+CREATE TRIGGER not_shared_trigger
+  BEFORE INSERT ON foo
+BEGIN
+SELECT new.id;
+END;
+@end_schema_region;
+
+@begin_schema_region shared;
+CREATE TRIGGER insert_trigger
+  BEFORE INSERT ON foo
+  FOR EACH ROW
+  WHEN new.id > 7
+BEGIN
+SELECT new.id;
+END;
+@end_schema_region;
+
+@begin_schema_region shared;
+CREATE TRIGGER old_trigger_was_deleted
+  BEFORE INSERT ON foo
+BEGIN
+SELECT new.id;
+END @DELETE(3);
+@end_schema_region;
+
+CREATE TRIGGER trig_with_filter
+  BEFORE INSERT ON foo
+  WHEN filter_(new.id) = 3
+BEGIN
+DELETE FROM foo WHERE id = 77;
+END;
+
+@begin_schema_region shared;
+@SCHEMA_AD_HOC_MIGRATION(5, MyAdHocMigrationScript);
+@end_schema_region;
+
+-- facets table declaration --
+CREATE TABLE IF NOT EXISTS test_cql_schema_facets(
+  facet TEXT NOT NULL PRIMARY KEY,
+  version LONG INTEGER NOT NULL
+);
+
+-- saved facets table declaration --
+CREATE TEMP TABLE test_cql_schema_facets_saved(
+  facet TEXT NOT NULL PRIMARY KEY,
+  version LONG INTEGER NOT NULL
+);
+
+-- helper proc for testing for the presence of a column/type
+CREATE PROCEDURE test_check_column_exists(table_name TEXT NOT NULL, decl TEXT NOT NULL, OUT present BOOL NOT NULL)
+BEGIN
+  SET present := (SELECT EXISTS(SELECT * FROM sqlite_master WHERE tbl_name = table_name AND sql GLOB decl));
+END;
+
+-- helper proc for creating the schema version table
+CREATE PROCEDURE test_create_cql_schema_facets_if_needed()
+BEGIN
+  CREATE TABLE IF NOT EXISTS test_cql_schema_facets(
+    facet TEXT NOT NULL PRIMARY KEY,
+    version LONG INTEGER NOT NULL
+  );
+END;
+
+-- helper proc for saving the schema version table
+CREATE PROCEDURE test_save_cql_schema_facets()
+BEGIN
+  DROP TABLE IF EXISTS test_cql_schema_facets_saved;
+  CREATE TEMP TABLE test_cql_schema_facets_saved(
+    facet TEXT NOT NULL PRIMARY KEY,
+    version LONG INTEGER NOT NULL
+  );
+  INSERT INTO test_cql_schema_facets_saved
+    SELECT * FROM test_cql_schema_facets;
+END;
+
+-- helper proc for setting the schema version of a facet
+CREATE PROCEDURE test_cql_set_facet_version(_facet TEXT NOT NULL, _version LONG INTEGER NOT NULL)
+BEGIN
+  INSERT OR REPLACE INTO test_cql_schema_facets (facet, version) VALUES(_facet, _version);
+END;
+
+-- helper proc for getting the schema version of a facet
+CREATE PROCEDURE test_cql_get_facet_version(_facet TEXT NOT NULL, out _version LONG INTEGER NOT NULL)
+BEGIN
+  BEGIN TRY
+    SET _version := (SELECT version FROM test_cql_schema_facets WHERE facet = _facet LIMIT 1);
+  END TRY;
+  BEGIN CATCH
+    SET _version := -1;
+  END CATCH;
+END;
+
+-- helper proc for getting the schema version CRC for a version index
+CREATE PROCEDURE test_cql_get_version_crc(_v INTEGER NOT NULL, out _crc LONG INTEGER NOT NULL)
+BEGIN
+  BEGIN TRY
+    SET _crc := (SELECT version FROM test_cql_schema_facets WHERE facet = 'cql_schema_v'||_v LIMIT 1);
+  END TRY;
+  BEGIN CATCH
+    SET _crc := -1;
+  END CATCH;
+END;
+
+-- helper proc for setting the schema version CRC for a version index
+CREATE PROCEDURE test_cql_set_version_crc(_v INTEGER NOT NULL, _crc LONG INTEGER NOT NULL)
+BEGIN
+  INSERT OR REPLACE INTO test_cql_schema_facets (facet, version) VALUES('cql_schema_v'||_v, _crc);
+END;
+
+-- helper proc to reset any triggers that are on the old plan --
+DECLARE PROCEDURE cql_exec_internal(sql TEXT NOT NULL) USING TRANSACTION;
+CREATE PROCEDURE test_cql_drop_legacy_triggers()
+BEGIN
+  DECLARE C CURSOR FOR SELECT name from sqlite_master
+     WHERE type = 'trigger' AND name GLOB 'tr__*';
+  LOOP FETCH C
+  BEGIN
+    call cql_exec_internal(printf('DROP TRIGGER %s;', C.name));
+  END;
+END;
+
+CREATE PROCEDURE test_cql_install_baseline_schema()
+BEGIN
+  CREATE TABLE IF NOT EXISTS foo(
+    id INTEGER PRIMARY KEY,
+    rate LONG_INT,
+    rate_2 LONG_INT
+  );
+  
+  CREATE TABLE IF NOT EXISTS table2(
+    id INTEGER NOT NULL REFERENCES foo (id)
+  );
+  
+  CREATE TABLE IF NOT EXISTS other_table(
+    id INTEGER
+  );
+  
+  CREATE TABLE IF NOT EXISTS t5(
+    id LONG_INT PRIMARY KEY AUTOINCREMENT,
+    data TEXT
+  );
+  
+  CREATE TABLE IF NOT EXISTS t6(
+    id LONG_INT PRIMARY KEY,
+    FOREIGN KEY (id) REFERENCES t5 (id) ON UPDATE CASCADE ON DELETE CASCADE
+  );
+  
+END;
+-- declared upgrade procedures if any
+DECLARE proc CreateName1Proc() USING TRANSACTION;
+DECLARE proc CreateName2Proc() USING TRANSACTION;
+DECLARE proc DeadViewMigration() USING TRANSACTION;
+DECLARE proc CreateId2Proc() USING TRANSACTION;
+DECLARE proc DeleteRate2Proc() USING TRANSACTION;
+DECLARE proc MyAdHocMigrationScript() USING TRANSACTION;
+
+-- drop all the views we know
+CREATE PROCEDURE test_cql_drop_all_views()
+BEGIN
+  DROP VIEW IF EXISTS shared_view;
+  DROP VIEW IF EXISTS live_view;
+  DROP VIEW IF EXISTS dead_view;
+  DROP VIEW IF EXISTS another_live_view;
+END;
+
+-- create all the views we know
+CREATE PROCEDURE test_cql_create_all_views()
+BEGIN
+  CREATE VIEW shared_view AS
+  SELECT *
+    FROM foo;
+  CREATE VIEW live_view AS
+  SELECT *
+    FROM foo;
+  CREATE VIEW another_live_view AS
+  SELECT *
+    FROM table2;
+END;
+
+-- drop all the indices that are deleted or changing
+CREATE PROCEDURE test_cql_drop_all_indices()
+BEGIN
+  DECLARE index_crc LONG INTEGER NOT NULL;
+  CALL test_cql_get_facet_version('shared_index_index_crc', index_crc);
+  IF index_crc <> -8812401562048594220 THEN
+    DROP INDEX IF EXISTS shared_index;
+  END IF;
+  DROP INDEX IF EXISTS gr1_index3;
+  CALL test_cql_get_facet_version('not_shared_present_index_index_crc', index_crc);
+  IF index_crc <> -4019575091142856767 THEN
+    DROP INDEX IF EXISTS not_shared_present_index;
+  END IF;
+  DROP INDEX IF EXISTS index_going_away;
+END;
+
+-- create all the indices we need
+CREATE PROCEDURE test_cql_create_all_indices()
+BEGIN
+  DECLARE index_crc LONG INTEGER NOT NULL;
+  CALL test_cql_get_facet_version('shared_index_index_crc', index_crc);
+  IF index_crc <> -8812401562048594220 THEN
+    CREATE INDEX shared_index ON foo (name, name_2);
+    CALL test_cql_set_facet_version('shared_index_index_crc', -8812401562048594220);
+  END IF;
+  CALL test_cql_get_facet_version('not_shared_present_index_index_crc', index_crc);
+  IF index_crc <> -4019575091142856767 THEN
+    CREATE INDEX not_shared_present_index ON table2 (name1, name2);
+    CALL test_cql_set_facet_version('not_shared_present_index_index_crc', -4019575091142856767);
+  END IF;
+END;
+
+-- drop all the triggers we know
+CREATE PROCEDURE test_cql_drop_all_triggers()
+BEGIN
+  CALL test_cql_drop_legacy_triggers();
+  DROP TRIGGER IF EXISTS shared_trigger;
+  DROP TRIGGER IF EXISTS not_shared_trigger;
+  DROP TRIGGER IF EXISTS insert_trigger;
+  DROP TRIGGER IF EXISTS old_trigger_was_deleted;
+  DROP TRIGGER IF EXISTS trig_with_filter;
+END;
+
+-- create all the triggers we know
+CREATE PROCEDURE test_cql_create_all_triggers()
+BEGIN
+  CREATE TRIGGER shared_trigger
+    BEFORE INSERT ON foo
+  BEGIN
+  SELECT 1;
+  END;
+  CREATE TRIGGER not_shared_trigger
+    BEFORE INSERT ON foo
+  BEGIN
+  SELECT new.id;
+  END;
+  CREATE TRIGGER insert_trigger
+    BEFORE INSERT ON foo
+    FOR EACH ROW
+    WHEN new.id > 7
+  BEGIN
+  SELECT new.id;
+  END;
+  CREATE TRIGGER trig_with_filter
+    BEFORE INSERT ON foo
+    WHEN filter_(new.id) = 3
+  BEGIN
+  DELETE FROM foo WHERE id = 77;
+  END;
+END;
+
+-- recreate all the @recreate tables that might have changed
+CREATE PROCEDURE test_cql_recreate_tables()
+BEGIN
+  DECLARE table_crc LONG INTEGER NOT NULL;
+  CALL test_cql_get_facet_version('table_to_recreate_table_crc', table_crc);
+  IF table_crc <> 3137661388576624799 THEN
+    DROP TABLE IF EXISTS table_to_recreate;
+    CREATE TABLE table_to_recreate(
+      id INTEGER NOT NULL,
+      name TEXT
+    );
+    CALL test_cql_set_facet_version('table_to_recreate_table_crc', 3137661388576624799);
+  END IF;
+  CALL test_cql_get_facet_version('gr1_group_crc', table_crc);
+  IF table_crc <> -5344641248211221614 THEN
+    DROP TABLE IF EXISTS use_g1;
+    CREATE TABLE use_g1(
+      id INTEGER PRIMARY KEY REFERENCES g1 (id),
+      name2 TEXT
+    );
+    DROP TABLE IF EXISTS g1;
+    CREATE TABLE g1(
+      id INTEGER PRIMARY KEY,
+      name TEXT
+    );
+    CREATE INDEX gr1_index ON g1 (name);
+    CREATE INDEX gr1_index2 ON g1 (name, id);
+    CALL test_cql_set_facet_version('gr1_group_crc', -5344641248211221614);
+  END IF;
+  CALL test_cql_get_facet_version('my_group_group_crc', table_crc);
+  IF table_crc <> 5282334304804635811 THEN
+    DROP TABLE IF EXISTS grouped_table_3;
+    CREATE TABLE grouped_table_3(
+      id INTEGER NOT NULL,
+      name TEXT
+    );
+    DROP TABLE IF EXISTS grouped_table_2;
+    CREATE TABLE grouped_table_2(
+      id INTEGER NOT NULL,
+      name TEXT
+    );
+    DROP TABLE IF EXISTS grouped_table_1;
+    CREATE TABLE grouped_table_1(
+      id INTEGER NOT NULL,
+      name TEXT
+    );
+    CALL test_cql_set_facet_version('my_group_group_crc', 5282334304804635811);
+  END IF;
+END;
+
+CREATE PROCEDURE test_cql_install_temp_schema()
+BEGIN
+  CREATE TEMP TABLE this_table_appears_in_temp_section(
+    temp_section_integer INTEGER
+  );
+  
+  CREATE TEMP VIEW temp_view_in_temp_section AS
+  SELECT *
+    FROM foo;
+  
+  CREATE TEMP TRIGGER temp_trigger_in_temp_section
+    BEFORE DELETE ON foo
+    FOR EACH ROW
+    WHEN old.id > 7
+  BEGIN
+  SELECT old.id;
+  END;
+  
+END;
+CREATE PROCEDURE test_perform_needed_upgrades()
+BEGIN
+  DECLARE column_exists BOOL NOT NULL;
+  DECLARE facet_version LONG INTEGER NOT NULL;
+  DECLARE schema_version LONG INTEGER NOT NULL;
+
+  -- fetch current schema version --
+  CALL test_cql_get_facet_version('cql_schema_version', schema_version);
+
+  -- check for downgrade --
+
+  IF schema_version > 6 THEN
+    SELECT 'downgrade detected' facet;
+  ELSE
+
+    -- save the current facets so we can diff them later --
+    CALL test_save_cql_schema_facets();
+    -- dropping all views --
+    CALL test_cql_drop_all_views();
+
+    -- dropping condemned or changing indices --
+    CALL test_cql_drop_all_indices();
+
+    -- dropping condemned or changing triggers --
+    CALL test_cql_drop_all_triggers();
+
+    ---- install baseline schema if needed ----
+
+    CALL test_cql_get_version_crc(0, schema_version);
+    IF schema_version != -3326748048717007772 THEN
+      CALL test_cql_install_baseline_schema();
+      CALL test_cql_set_version_crc(0, -3326748048717007772);
+    END IF;
+
+    ---- upgrade to schema version 2 ----
+
+    CALL test_cql_get_version_crc(2, schema_version);
+    IF schema_version != -401344828189278189 THEN
+      -- altering table table2 to add column name1 TEXT;
+
+      CALL test_check_column_exists('table2', '*[( ]name1 TEXT*', column_exists);
+      IF NOT column_exists THEN
+        ALTER TABLE table2 ADD COLUMN name1 TEXT;
+      END IF;
+
+      -- altering table table2 to add column name2 TEXT;
+
+      CALL test_check_column_exists('table2', '*[( ]name2 TEXT*', column_exists);
+      IF NOT column_exists THEN
+        ALTER TABLE table2 ADD COLUMN name2 TEXT;
+      END IF;
+
+      -- altering table table2 to add column name3 TEXT;
+
+      CALL test_check_column_exists('table2', '*[( ]name3 TEXT*', column_exists);
+      IF NOT column_exists THEN
+        ALTER TABLE table2 ADD COLUMN name3 TEXT;
+      END IF;
+
+      -- altering table table2 to add column name4 TEXT;
+
+      CALL test_check_column_exists('table2', '*[( ]name4 TEXT*', column_exists);
+      IF NOT column_exists THEN
+        ALTER TABLE table2 ADD COLUMN name4 TEXT;
+      END IF;
+
+      -- delete migration proc for dead_view will run
+
+      -- data migration procedures
+      CALL test_cql_get_facet_version('CreateName1Proc', facet_version);
+      IF facet_version = -1 THEN
+        CALL CreateName1Proc();
+        CALL test_cql_set_facet_version('CreateName1Proc', 2);
+      END IF;
+      CALL test_cql_get_facet_version('CreateName2Proc', facet_version);
+      IF facet_version = -1 THEN
+        CALL CreateName2Proc();
+        CALL test_cql_set_facet_version('CreateName2Proc', 2);
+      END IF;
+      CALL test_cql_get_facet_version('DeadViewMigration', facet_version);
+      IF facet_version = -1 THEN
+        CALL DeadViewMigration();
+        CALL test_cql_set_facet_version('DeadViewMigration', 2);
+      END IF;
+
+      CALL test_cql_set_version_crc(2, -401344828189278189);
+    END IF;
+
+    ---- upgrade to schema version 3 ----
+
+    CALL test_cql_get_version_crc(3, schema_version);
+    IF schema_version != -4851321700834943637 THEN
+      -- creating table added_table
+
+      CREATE TABLE IF NOT EXISTS added_table(
+        id INTEGER NOT NULL,
+        name1 TEXT
+      );
+
+      CALL test_cql_set_version_crc(3, -4851321700834943637);
+    END IF;
+
+    ---- upgrade to schema version 4 ----
+
+    CALL test_cql_get_version_crc(4, schema_version);
+    IF schema_version != 2834173113521169614 THEN
+      -- altering table added_table to add column name2 TEXT;
+
+      CALL test_check_column_exists('added_table', '*[( ]name2 TEXT*', column_exists);
+      IF NOT column_exists THEN
+        ALTER TABLE added_table ADD COLUMN name2 TEXT;
+      END IF;
+
+      -- altering table foo to add column id2 INTEGER;
+
+      CALL test_check_column_exists('foo', '*[( ]id2 INTEGER*', column_exists);
+      IF NOT column_exists THEN
+        ALTER TABLE foo ADD COLUMN id2 INTEGER DEFAULT 12345;
+      END IF;
+
+      -- logical delete of column rate_2 from foo; -- no ddl
+
+      -- data migration procedures
+      CALL test_cql_get_facet_version('CreateId2Proc', facet_version);
+      IF facet_version = -1 THEN
+        CALL CreateId2Proc();
+        CALL test_cql_set_facet_version('CreateId2Proc', 4);
+      END IF;
+      CALL test_cql_get_facet_version('DeleteRate2Proc', facet_version);
+      IF facet_version = -1 THEN
+        CALL DeleteRate2Proc();
+        CALL test_cql_set_facet_version('DeleteRate2Proc', 4);
+      END IF;
+
+      CALL test_cql_set_version_crc(4, 2834173113521169614);
+    END IF;
+
+    ---- upgrade to schema version 5 ----
+
+    CALL test_cql_get_version_crc(5, schema_version);
+    IF schema_version != -3402344138949501972 THEN
+      -- altering table foo to add column name TEXT;
+
+      CALL test_check_column_exists('foo', '*[( ]name TEXT*', column_exists);
+      IF NOT column_exists THEN
+        ALTER TABLE foo ADD COLUMN name TEXT;
+      END IF;
+
+      -- logical delete of column rate from foo; -- no ddl
+
+      -- dropping table added_table
+
+      DROP TABLE IF EXISTS added_table;
+
+      -- ad hoc migration proc MyAdHocMigrationScript will run
+
+      -- data migration procedures
+      CALL test_cql_get_facet_version('MyAdHocMigrationScript', facet_version);
+      IF facet_version = -1 THEN
+        CALL MyAdHocMigrationScript();
+        CALL test_cql_set_facet_version('MyAdHocMigrationScript', 5);
+      END IF;
+
+      CALL test_cql_set_version_crc(5, -3402344138949501972);
+    END IF;
+
+    ---- upgrade to schema version 6 ----
+
+    CALL test_cql_get_version_crc(6, schema_version);
+    IF schema_version != 3572608284749506390 THEN
+      -- altering table foo to add column name_2 TEXT;
+
+      CALL test_check_column_exists('foo', '*[( ]name_2 TEXT*', column_exists);
+      IF NOT column_exists THEN
+        ALTER TABLE foo ADD COLUMN name_2 TEXT;
+      END IF;
+
+      CALL test_cql_set_version_crc(6, 3572608284749506390);
+    END IF;
+
+    CALL test_cql_recreate_tables();
+    CALL test_cql_create_all_views();
+    CALL test_cql_create_all_indices();
+    CALL test_cql_create_all_triggers();
+    CALL test_cql_set_facet_version('cql_schema_version', 6);
+    CALL test_cql_set_facet_version('cql_schema_crc', -5843418114172149250);
+
+    -- finally produce the list of differences
+    SELECT T1.facet FROM
+      test_cql_schema_facets T1
+      LEFT OUTER JOIN test_cql_schema_facets_saved T2
+        ON T1.facet = T2.facet
+      WHERE T1.version is not T2.version;
+  END IF;
+END;
+
+CREATE PROCEDURE test()
+BEGIN
+  DECLARE schema_crc LONG INTEGER NOT NULL;
+
+  -- create schema facets information table --
+  CALL test_create_cql_schema_facets_if_needed();
+
+  -- fetch the last known schema crc, if it's different do the upgrade --
+  CALL test_cql_get_facet_version('cql_schema_crc', schema_crc);
+
+  IF schema_crc <> -5843418114172149250 THEN
+    -- save the current facets so we can diff them later --
+    CALL test_perform_needed_upgrades();
+  ELSE
+    -- some canonical result for no differences --
+    SELECT 'no differences' facet;
+  END IF;
+  ---- install temp schema after upgrade is complete ----
+  CALL test_cql_install_temp_schema();
+
+END;
+

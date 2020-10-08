@@ -1,0 +1,65 @@
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0122: column current delete version not equal to previous delete version 'being_undeleted'
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0115: current create version not equal to previous create version for 't_create_verison_changed'
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0116: current delete version not equal to previous delete version for 't_delete_verison_changed'
+Error at test/sem_test_prev.sql:XXXX : in create_table_stmt : CQL0126: table was present but now it does not exist (use @delete instead) 't_not_present_in_new_schema'
+Error at test/sem_test_prev.sql:XXXX : in create_view_stmt : CQL0127: object was a table but is now a view 't_became_a_view'
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0115: current create version not equal to previous create version for 't_created_in_wrong_version'
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0119: column name is different between previous and current schema 'id_'
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0120: column type is different between previous and current schema 'id'
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0120: column type is different between previous and current schema 'id'
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0122: column current delete version not equal to previous delete version 'id2'
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0121: column current create version not equal to previous create version 'id2'
+Incompatible declarations found
+Error at test/sem_test_prev.sql:XXXX : in num : 1
+Error at test/sem_test_prev.sql:XXXX : in num : 2
+The above must be identical.
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0125: column current default value not equal to previous default value 'id2'
+Incompatible declarations found
+Error at test/sem_test_prev.sql:XXXX : in pk_def : PRIMARY KEY (a)
+Error at test/sem_test_prev.sql:XXXX : in pk_def : PRIMARY KEY (a, b)
+The above must be identical.
+Error at test/sem_test_prev.sql:XXXX : in pk_def : CQL0132: table has a facet that is different in the previous and current schema 't_additional_attribute_mismatch'
+Error at test/sem_test_prev.sql:XXXX : in col_key_list : CQL0129: a column was removed from the table rather than marked with @delete 'id2'
+Error at test/sem_test_prev.sql:XXXX : in col_key_list : CQL0134: table has a new non-column facet in the current schema 't_attribute_added'
+Error at test/sem_test_prev.sql:XXXX : in col_def : CQL0130: table has columns added without marking them @create 't_additional_column'
+Error at test/sem_test_prev.sql:XXXX : in create_table_stmt : CQL0135: table create statement attributes different than previous version 't_becomes_temp_table'
+Error at test/sem_test_prev.sql:XXXX : in col_def : CQL0131: table has newly added columns that are marked both @create and @delete 't_new_table_create_and_delete'
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0118: @create procedure changed in object 'with_create_migrator'
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0118: @create procedure changed in object 'with_create_migrator'
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0117: @delete procedure changed in object 'with_delete_migrator'
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0117: @delete procedure changed in object 'with_delete_migrator'
+Error at test/sem_test_prev.sql:XXXX : in create_table_stmt : CQL0105: object was a view but is now a table 'view_becomes_a_table'
+Error at test/sem_test_prev.sql:XXXX : in create_view_stmt : CQL0104: view was present but now it does not exist (use @delete instead) 'view_was_zomg_deleted'
+Error at test/sem_test_prev.sql:XXXX : in create_index_stmt : CQL0017: index was present but now it does not exist (use @delete instead) 'this_index_was_deleted_with_no_annotation'
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0124: column @create procedure changed 'id2'
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0123: column @delete procedure changed 'id2'
+Incompatible declarations found
+Error at test/sem_test_prev.sql:XXXX : in fk_def : FOREIGN KEY (id) REFERENCES create_column_migrate_test (id) ON DELETE CASCADE
+Error at test/sem_test_prev.sql:XXXX : in fk_def : FOREIGN KEY (id) REFERENCES create_column_migrate_test (id) ON UPDATE CASCADE
+The above must be identical.
+Error at test/sem_test_prev.sql:XXXX : in fk_def : CQL0132: table has a facet that is different in the previous and current schema 'fk_facet'
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0114: current schema can't go back to @recreate semantics for 'cannot_change_to_recreate'
+Error at test/sem_test_prev.sql:XXXX : in create_table_stmt : CQL0126: table was present but now it does not exist (use @delete instead) 'disapparing_recreate'
+Error at test/sem_test_prev.sql:XXXX : in create_trigger_stmt : CQL0106: trigger was present but now it does not exist (use @delete instead) 'trigger_removed_with_no_annotation'
+Error at test/sem_test_prev.sql:XXXX : in col_key_list : CQL0133: non-column facets have been removed from the table 't_removed_facet'
+Incompatible declarations found
+Error at test/sem_test_prev.sql:XXXX : in col_def : id INTEGER REFERENCES create_column_migrate_test (id)
+Error at test/sem_test_prev.sql:XXXX : in col_def : id INTEGER REFERENCES create_column_migrate_test (id) ON DELETE CASCADE
+The above must be identical.
+Error at test/sem_test_prev.sql:XXXX : in col_def : CQL0128: table has a column that is different in the previous and current schema 'id'
+Error at test/sem_test_prev.sql:XXXX : in schema_ad_hoc_migration_stmt : CQL0286: ad hoc schema migration directive was removed; this is not allowed 'WhoopsItsGone'
+Error at test/sem_test_prev.sql:XXXX : in schema_ad_hoc_migration_stmt : CQL0285: ad hoc schema migration directive version number changed 'WhoopsItChanged'
+Error at test/sem_test_prev.sql:XXXX : in create_table_stmt : CQL0309: new table must be added with @create(6) or later 't_new_table_no_annotation'
+Error at test/sem_test_prev.sql:XXXX : in create_table_stmt : CQL0309: new table must be added with @create(6) or later 't_new_table_stale_annotation'
+Error at test/sem_test_prev.sql:XXXX : in col_def : CQL0310: new column must be added with @create(6) or later 'col3'
+Error at test/sem_test_prev.sql:XXXX : in col_def : CQL0310: new column must be added with @create(6) or later 'col2'
+Error at test/sem_test_prev.sql:XXXX : in create_table_stmt : table must leave @recreate management with @create/delete(6) or later 'recreate_deleted_in_the_past'
+Error at test/sem_test_prev.sql:XXXX : in create_table_stmt : table must leave @recreate management with @create/delete(6) or later 'table_going'
+Error at test/sem_test_prev.sql:XXXX : in schema_ad_hoc_migration_stmt : new ad hoc rule must be added at version 6 or later 'MigrateInThePast'
+Error at test/sem_test_prev.sql:XXXX : in create_table_stmt : CQL0311: object's deployment region changed from 'different_region' to 'base' 'TChanging'
+Error at test/sem_test_prev.sql:XXXX : in create_index_stmt : CQL0311: object's deployment region changed from 'different_region' to 'base' 'IChanging'
+Error at test/sem_test_prev.sql:XXXX : in create_view_stmt : CQL0311: object's deployment region changed from 'different_region' to 'base' 'VChanging'
+Error at test/sem_test_prev.sql:XXXX : in create_trigger_stmt : CQL0311: object's deployment region changed from 'different_region' to 'base' 'TrigChanging'
+Error at test/sem_test_prev.sql:XXXX : in schema_ad_hoc_migration_stmt : CQL0311: object's deployment region changed from 'different_region' to 'base' 'AdHocChanging'
+Error at test/sem_test_prev.sql:XXXX : in create_table_stmt : CQL0311: object's deployment region changed from 'DeployableRegion1' to 'DeployableRegion2' 'TableWithDeferredOwner'
+semantic errors present; no code gen.

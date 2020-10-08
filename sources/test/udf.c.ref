@@ -1,0 +1,43 @@
+
+#include "out/udf.h"
+
+static void _udf_callback(sqlite3_context* context, int argc, sqlite3_value** argv) {
+}
+
+void create_udf(sqlite3 *_Nonnull _db_) {
+  sqlite3_create_function_v2(
+    _db_,
+    "is_declare_func_enabled",
+    0,
+    SQLITE_UTF8 | SQLITE_DETERMINISTIC,
+    NULL,
+    &_udf_callback,
+    NULL,
+    NULL,
+    NULL
+  );
+  sqlite3_create_function_v2(
+    _db_,
+    "is_declare_func_wall",
+    1,
+    SQLITE_UTF8 | SQLITE_DETERMINISTIC,
+    NULL,
+    &_udf_callback,
+    NULL,
+    NULL,
+    NULL
+  );
+  sqlite3_create_function_v2(
+    _db_,
+    "array_num_at",
+    2,
+    SQLITE_UTF8 | SQLITE_DETERMINISTIC,
+    NULL,
+    &_udf_callback,
+    NULL,
+    NULL,
+    NULL
+  );
+}
+// The statement ending at line XXXX
+
