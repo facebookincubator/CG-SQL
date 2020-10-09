@@ -5,6 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 rm -f guide.md
+(echo -n "<!--- @" ; echo "generated -->") >guide.md
 for f in ch*.md
 do
   ( cat "$f"; echo ""; echo "" ) >>guide.md

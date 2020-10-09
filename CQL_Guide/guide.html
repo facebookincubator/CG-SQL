@@ -1,3 +1,4 @@
+<!--- @generated -->
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
 --
@@ -1884,7 +1885,7 @@ As it turns out the underlying data type for all result sets is the same, only t
 <span id="cb138-8"><a href="#cb138-8"></a>   read_foo_result_set_ref  _Nonnull result_set, </span>
 <span id="cb138-9"><a href="#cb138-9"></a>   cql_int32 row);</span></code></pre></div>
 <p>These let you read the <code>id</code> of a particular row, and get a <code>cql_int32</code> or you can read the nullable boolean, using the <code>read_foo_get_b_is_null</code> function first to see if the boolean is null and then <code>read_foo_get_b_value</code> to get the value. Finally the string can be accessed with <code>read_foo_get_t</code>. As you can see there is a simple naming convention for each of the field readers.</p>
-<p>Note: the <code>--rt msys</code> option produces a slightly different naming convention as well as using CamelCasing. Additional customizations may be created by making new runtime arrays into the CQL compiler.</p>
+<p>Note: The compiler has runtime arrays that control naming conventions as well as using CamelCasing. Additional customizations may be created by adding new runtime arrays into the CQL compiler.</p>
 <p>Finally, also part of the public interface, are these macros:</p>
 <div class="sourceCode" id="cb139"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb139-1"><a href="#cb139-1"></a><span class="pp">#define read_foo_row_hash(result_set, row) </span></span>
 <span id="cb139-2"><a href="#cb139-2"></a><span class="pp">#define read_foo_row_equal(rs1, row1, rs2, row2)</span></span></code></pre></div>
@@ -5135,7 +5136,7 @@ end;</code></pre>
 </ul>
 <h3 id="compress">–compress</h3>
 <ul>
-<li>for use with the C/Msys result types</li>
+<li>for use with the C result type, (or any similar types added to the runtime array in your compiler)</li>
 <li>string literals for the SQL are broken into “fragments” the DML is then represented by an array of fragments</li>
 <li>since DML is often very similar there is a lot of token sharing possible</li>
 <li>the original string is recreated at runtime from the fragments and then executed</li>
@@ -5165,28 +5166,16 @@ end;</code></pre>
 <li>requires two output files (foo.h and foo.c)</li>
 <li>this is the standard C compilation of the sql file</li>
 </ul>
-<h3 id="rt-msys">–rt msys</h3>
-<ul>
-<li>the same about as <code>--rt c</code> with symbols formatted for typical MSYS usage</li>
-<li>CamelCase instead of snake_case and MCQ prefix on everything</li>
-<li>CQL primitive types are mapped onto MCFStringRef and so forth</li>
-</ul>
-<h3 id="rt-msys_schema_utils">–rt msys_schema_utils</h3>
-<ul>
-<li>two output files</li>
-<li>produces a dependency analysis of the CQL input with arrays that are initialized so that you can know what stored procedures depended on which tables</li>
-<li>requires two output files (foo.h and foo.c)</li>
-</ul>
 <h3 id="rt-objc">–rt objc</h3>
 <ul>
 <li>objective C wrappers for result sets produced by the stored procedures in the input</li>
-<li>these depend on the output of a <code>--rt msys</code> run so this is additive</li>
+<li>these depend on the output of a standard codegen run so this is additive</li>
 <li>requires one output file (foo.h)</li>
 </ul>
 <h3 id="rt-java">–rt java</h3>
 <ul>
 <li>java wrappers for result sets produced by the stored procedures in the input</li>
-<li>these depend on the output of a <code>--rt msys</code> run so this is additive</li>
+<li>these depend on the output of a standard codegen run so this is additive</li>
 <li>requires one output file (foo.java)</li>
 </ul>
 <h3 id="rt-schema">–rt schema</h3>

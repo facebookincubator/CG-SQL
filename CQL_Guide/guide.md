@@ -1,3 +1,4 @@
+<!--- @generated -->
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
 --
@@ -2789,7 +2790,7 @@ using the `read_foo_get_b_is_null` function first to see if the boolean is null 
 to get the value.  Finally the string can be accessed with `read_foo_get_t`.  As you can see there is a
 simple naming convention for each of the field readers.
 
-Note:  the `--rt msys` option produces a slightly different naming convention as well as using CamelCasing.  Additional customizations may be created by making new runtime arrays into the CQL compiler.
+Note:  The compiler has runtime arrays that control naming conventions as well as using CamelCasing.  Additional customizations may be created by adding new runtime arrays into the CQL compiler.
 
 Finally, also part of the public interface, are these macros:
 
@@ -7302,7 +7303,7 @@ cql --in foo.sql --cg foo.h foo.c
 * when generating a schema migrate script the global proc name is used as a prefix on all of the artifacts so that there can be several independent migrations linked into a single executable
 
 ### --compress
-* for use with the C/Msys result types
+* for use with the C result type, (or any similar types added to the runtime array in your compiler)
 * string literals for the SQL are broken into "fragments" the DML is then represented by an array of fragments
 * since DML is often very similar there is a lot of token sharing possible
 * the original string is recreated at runtime from the fragments and then executed
@@ -7329,24 +7330,14 @@ NOTE: different result types require a different number of output files with dif
 * requires two output files (foo.h and foo.c)
 * this is the standard C compilation of the sql file
 
-### --rt msys
-* the same about as `--rt c` with symbols formatted for typical MSYS usage
-* CamelCase instead of snake_case and MCQ prefix on everything
-* CQL primitive types are mapped onto MCFStringRef and so forth
-
-### --rt msys_schema_utils
-* two output files
-* produces a dependency analysis of the CQL input with arrays that are initialized so that you can know what stored procedures depended on which tables
-* requires two output files (foo.h and foo.c)
-
 ### --rt objc
 * objective C wrappers for result sets produced by the stored procedures in the input
-* these depend on the output of a `--rt msys` run so this is additive
+* these depend on the output of a standard codegen run so this is additive
 * requires one output file (foo.h)
 
 ### --rt java
 * java wrappers for result sets produced by the stored procedures in the input
-* these depend on the output of a `--rt msys` run so this is additive
+* these depend on the output of a standard codegen run so this is additive
 * requires one output file (foo.java)
 
 ### --rt schema
