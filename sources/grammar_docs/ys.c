@@ -87,6 +87,16 @@ void process_single_quote() {
   }
 }
 
+// read  up to a ']'.
+void process_name_alias() {
+  // note, put might be a no-op if in_code
+  for (;;) {
+    int32_t ch = get();
+    if (ch == ']')
+      return;
+  }
+}
+
 // skip code until we find the matching close brace
 void process_code() {
   in_code = 1;
@@ -131,6 +141,9 @@ int32_t main(int32_t argc, char **argv)
     else if (ch == '\'') {
       put(ch);
       process_single_quote();
+    }
+    else if (ch == '[') {
+      process_name_alias(); // output will be suppressed
     }
     else if (ch == '%' && peek() == '%') {
       // end of rules, ignore the code after
