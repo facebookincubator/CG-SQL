@@ -10,7 +10,7 @@
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed Oct  7 12:37:44 PDT 2020
+Snapshot as of Fri Oct  9 13:41:39 PDT 2020
 
 ### Operators and Literals
 
@@ -491,7 +491,9 @@ case_list: "WHEN" expr "THEN" expr
   ; 
  
 arg_expr: '*'  
-  | expr 
+  | expr  
+  | cursor_arguments  
+  | from_arguments  
   ; 
  
 arg_list: /* nil */  

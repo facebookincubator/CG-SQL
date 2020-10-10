@@ -45,6 +45,7 @@ static void gen_query_parts(ast_node *ast);
 static void gen_select_stmt(ast_node *_Nonnull ast);
 static void gen_opt_where_without_new_line(ast_node *ast);
 static void gen_opt_orderby(ast_node *ast);
+static void gen_cursor_arg(ast_node *ast);
 static void gen_insert_list(ast_node *_Nullable ast);
 static void gen_column_spec(ast_node *ast);
 static void gen_from_cursor(ast_node *ast);
@@ -603,6 +604,12 @@ static void gen_concat(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
 static void gen_arg_expr(ast_node *ast) {
   if (is_ast_star(ast)) {
     gen_printf("*");
+  }
+  else if (is_ast_from_arguments(ast)) {
+    gen_from_arguments(ast);
+  }
+  else if (is_ast_from_cursor(ast)) {
+    gen_cursor_arg(ast);
   }
   else {
     gen_root_expr(ast);

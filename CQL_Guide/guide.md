@@ -1943,7 +1943,7 @@ rows from a computed source.  This is exactly what `out union` provides.
 
 Here's a (somewhat contrived) example of the kind of thing you can do with this form:
 
-```
+```sql
 create proc foo(n integer not null)
 begin
   declare C cursor like select 1 value;
@@ -2055,7 +2055,7 @@ create table big (
 
 We're going to emit two rows as the result of this proc.  Easy enough...
 
-```
+```sql
 create proc foo(id_ integer not null)
 begin
   -- this is the shape of the result we want, it's some of the columns of "big"
@@ -2108,7 +2108,7 @@ if necessary, not desired here.
 
 Here is the rewritten version of the above procedure; this is what ultimately gets compiled into C.
 
-```
+```sql
 CREATE PROC foo (id_ INTEGER NOT NULL)
 BEGIN
   DECLARE result CURSOR LIKE SELECT id, b, c, d FROM big;
@@ -2131,7 +2131,7 @@ Of course you could have typed all that before but when there’s 50 odd columns
 
 Finally, while I've shown both `LIKE` forms seperately they can also be used together.  For instance
 
-```
+```sql
     update cursor C(like X) from cursor D(like X);
 ```
 
@@ -2265,14 +2265,14 @@ procedure calls as follows.
 
 First we'll define some shapes to use in the examples.  Note that we made `U` using `T`.
 
-```
+```sql
 create table T(x integer not null, y integer not null,  z integer not null);
 create table U(like T, a integer not null, b integer not null);
 ```
 
 As we've seen, we can do this:
 
-```
+```sql
 create proc p1(like T)
 begin
    call printf("%d %d %d\n", x_, y_, z_);
@@ -2282,7 +2282,7 @@ end;
 But the following is also possible. It isn't an especially fabulous example but of course
 it generalizes. The arguments will be `x_`, `y_`, and `z_`.
 
-```
+```sql
 create proc p2(like T)
 begin
   call printf("%d %d %d\n", from arguments);
@@ -2292,7 +2292,7 @@ end;
 Now we might want to chain these things together.  This next example uses a cursor to
 call `p1`.
 
-```
+```sql
 create proc q1()
 begin
  declare C cursor for select * from T;
@@ -2308,7 +2308,7 @@ The `like` construct allows you to select some of the arguments, or
 some of a cursor to use as arguments.  This next procedure has more arguments
 than just `T`. The arguments will be `x_`, `y_`, `z_`, `a_`, `b_`
 
-```
+```sql
 create proc q2(like U)
 begin
   /* just the args that match T: so this is still call p(x_, y_, z_) */
@@ -2318,7 +2318,7 @@ end;
 
 Or similarly. using a cursor.
 
-```
+```sql
 create proc q3(like U)
 begin
  declare C cursor for select * from U;
@@ -2333,11 +2333,25 @@ end;
 Note that the `from` argument forms do not have to be all the arguments.  For instance
 you can get columns from two cursors like so:
 
-```
+```sql
   call something(from C, from D)
 ```
 
-All the varieties can be combined but of course the procedure signature must match.
+All the varieties can be combined but of course the procedure signature must match.  And
+all these forms work in function expressions as well as procedure calls.
+
+e.g.
+
+```sql
+  set x := a_function(from C);
+```
+
+Since these forms are simply syntatic sugar, they can also appear inside of functions in
+SQL statements. The variables mentioned will be expanded and become bound variables just
+like any other variable that appears in a SQL statement.
+
+Note the form  x IN (from arguments) is not supported at this time, though this is a realitively
+easy addition.
 
 ### Missing Data Columns, Nulls and Dummy Data
 
@@ -7383,7 +7397,7 @@ NOTE: different result types require a different number of output files with dif
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Sep  8 13:06:49 PDT 2020
+Snapshot as of Fri Oct  9 13:41:39 PDT 2020
 
 ### Operators and Literals
 
@@ -7476,6 +7490,7 @@ any_stmt: select_stmt
   | update_stmt 
   | update_cursor_stmt 
   | upsert_stmt 
+  | with_upsert_stmt 
   | set_stmt 
   | create_proc_stmt 
   | declare_proc_stmt 
@@ -7863,7 +7878,9 @@ case_list: "WHEN" expr "THEN" expr
   ; 
  
 arg_expr: '*'  
-  | expr 
+  | expr  
+  | cursor_arguments  
+  | from_arguments  
   ; 
  
 arg_list: /* nil */  
@@ -7871,9 +7888,21 @@ arg_list: /* nil */
   | arg_expr ',' arg_list  
   ; 
  
-expr_list: 
-  expr  
+expr_list: expr  
   | expr ',' expr_list  
+  ; 
+ 
+cursor_arguments : "FROM" name  
+  | "FROM" name "LIKE" name  
+  ; 
+ 
+call_expr: expr  
+  | cursor_arguments  
+  | from_arguments  
+  ; 
+ 
+call_expr_list: call_expr  
+  | call_expr ',' call_expr_list  
   ; 
  
 cte_tables:  cte_table  
@@ -8168,9 +8197,11 @@ opt_column_spec: /* nil */
   ; 
  
 from_cursor:  "FROM" "CURSOR" name opt_column_spec  
+  ; 
  
 from_arguments: "FROM" "ARGUMENTS"  
   | "FROM" "ARGUMENTS" "LIKE" name  
+  ; 
  
 insert_stmt: insert_stmt_type name opt_column_spec select_stmt opt_insert_dummy_spec  
   | insert_stmt_type name opt_column_spec from_arguments opt_insert_dummy_spec  
@@ -8197,6 +8228,9 @@ update_entry: name '=' expr
  
 update_list: update_entry  
   | update_entry ',' update_list  
+  ; 
+ 
+with_upsert_stmt: with_prefix upsert_stmt  
   ; 
  
 upsert_stmt: insert_stmt "ON CONFLICT" conflict_target "DO" "NOTHING"  
@@ -8276,8 +8310,8 @@ declare_stmt: "DECLARE" name_list data_type_opt_notnull
   | "DECLARE" name "CURSOR" "LIKE" select_stmt  
   ; 
  
-call_stmt: "CALL" name '(' ')' 
-  | "CALL" name '(' expr_list ')'  
+call_stmt: "CALL" name '(' ')'  
+  | "CALL" name '(' call_expr_list ')'  
   ; 
  
 while_stmt: "WHILE" expr "BEGIN" opt_stmt_list "END"  
@@ -8441,6 +8475,7 @@ enforcement_options:
   | "UPSERT" "STATEMENT"  
   | "WINDOW" function  
   | procedure  
+  | "WITHOUT" "ROWID"  
   ; 
  
 enforce_strict_stmt: "@ENFORCE_STRICT" enforcement_options  

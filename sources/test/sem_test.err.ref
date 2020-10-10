@@ -827,4 +827,5 @@ Error at test/sem_test.sql:XXXX : in expr_list : CQL0340: FROM ARGUMENTS used in
 Error at test/sem_test.sql:XXXX : in expr_list : CQL0163: FROM ARGUMENTS construct is only valid inside a procedure
 Error at test/sem_test.sql:XXXX : in expr_list : CQL0201: expanding FROM ARGUMENTS, there is no argument matching 'id'
 Error at test/sem_test.sql:XXXX : in str : CQL0202: must be a cursor, proc, table, or view 'no_such_type_dude'
+Error at test/sem_test.sql:XXXX : in str : CQL0202: must be a cursor, proc, table, or view 'not_a_shape'
 semantic errors present; no code gen.

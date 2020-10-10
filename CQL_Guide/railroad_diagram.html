@@ -4054,7 +4054,7 @@
             <li><a href="#update_entry" title="update_entry">update_entry</a></li>
             <li><a href="#while_stmt" title="while_stmt">while_stmt</a></li>
          </ul>
-      </p><br xmlns:xhtml="http://www.w3.org/1999/xhtml" /><p xmlns:xhtml="http://www.w3.org/1999/xhtml" style="font-size: 14px; font-weight:bold"><a name="arg_expr">arg_expr:</a></p><svg xmlns="http://www.w3.org/2000/svg" width="147" height="81">
+      </p><br xmlns:xhtml="http://www.w3.org/1999/xhtml" /><p xmlns:xhtml="http://www.w3.org/1999/xhtml" style="font-size: 14px; font-weight:bold"><a name="arg_expr">arg_expr:</a></p><svg xmlns="http://www.w3.org/2000/svg" width="235" height="169">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -4091,12 +4091,20 @@
          <text class="terminal" x="59" y="21">*</text><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#expr" xlink:title="expr">
             <rect x="51" y="47" width="48" height="32"/>
             <rect x="49" y="45" width="48" height="32" class="nonterminal"/>
-            <text class="nonterminal" x="59" y="65">expr</text></a><path xmlns:svg="http://www.w3.org/2000/svg" class="line" d="m17 17 h2 m20 0 h10 m28 0 h10 m0 0 h20 m-88 0 h20 m68 0 h20 m-108 0 q10 0 10 10 m88 0 q0 -10 10 -10 m-98 10 v24 m88 0 v-24 m-88 24 q0 10 10 10 m68 0 q10 0 10 -10 m-78 10 h10 m48 0 h10 m23 -44 h-3"/>
-         <polygon points="137 17 145 13 145 21"/>
-         <polygon points="137 17 129 13 129 21"/></svg><p xmlns:xhtml="http://www.w3.org/1999/xhtml">
+            <text class="nonterminal" x="59" y="65">expr</text></a><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#cursor_arguments" xlink:title="cursor_arguments">
+            <rect x="51" y="91" width="136" height="32"/>
+            <rect x="49" y="89" width="136" height="32" class="nonterminal"/>
+            <text class="nonterminal" x="59" y="109">cursor_arguments</text></a><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#from_arguments" xlink:title="from_arguments">
+            <rect x="51" y="135" width="126" height="32"/>
+            <rect x="49" y="133" width="126" height="32" class="nonterminal"/>
+            <text class="nonterminal" x="59" y="153">from_arguments</text></a><path xmlns:svg="http://www.w3.org/2000/svg" class="line" d="m17 17 h2 m20 0 h10 m28 0 h10 m0 0 h108 m-176 0 h20 m156 0 h20 m-196 0 q10 0 10 10 m176 0 q0 -10 10 -10 m-186 10 v24 m176 0 v-24 m-176 24 q0 10 10 10 m156 0 q10 0 10 -10 m-166 10 h10 m48 0 h10 m0 0 h88 m-166 -10 v20 m176 0 v-20 m-176 20 v24 m176 0 v-24 m-176 24 q0 10 10 10 m156 0 q10 0 10 -10 m-166 10 h10 m136 0 h10 m-166 -10 v20 m176 0 v-20 m-176 20 v24 m176 0 v-24 m-176 24 q0 10 10 10 m156 0 q10 0 10 -10 m-166 10 h10 m126 0 h10 m0 0 h10 m23 -132 h-3"/>
+         <polygon points="225 17 233 13 233 21"/>
+         <polygon points="225 17 217 13 217 21"/></svg><p xmlns:xhtml="http://www.w3.org/1999/xhtml">
          <div class="ebnf"><code>
                <div><a href="#arg_expr" title="arg_expr">arg_expr</a> ::= '*'</div>
-               <div>           | <a href="#expr" title="expr">expr</a></div></code></div>
+               <div>           | <a href="#expr" title="expr">expr</a></div>
+               <div>           | <a href="#cursor_arguments" title="cursor_arguments">cursor_arguments</a></div>
+               <div>           | <a href="#from_arguments" title="from_arguments">from_arguments</a></div></code></div>
       </p>
       <p xmlns:xhtml="http://www.w3.org/1999/xhtml">referenced by:
          <ul>
@@ -4253,6 +4261,7 @@
       </p>
       <p xmlns:xhtml="http://www.w3.org/1999/xhtml">referenced by:
          <ul>
+            <li><a href="#arg_expr" title="arg_expr">arg_expr</a></li>
             <li><a href="#call_expr" title="call_expr">call_expr</a></li>
          </ul>
       </p><br xmlns:xhtml="http://www.w3.org/1999/xhtml" /><p xmlns:xhtml="http://www.w3.org/1999/xhtml" style="font-size: 14px; font-weight:bold"><a name="call_expr">call_expr:</a></p><svg xmlns="http://www.w3.org/2000/svg" width="235" height="125">
@@ -7755,6 +7764,7 @@
       </p>
       <p xmlns:xhtml="http://www.w3.org/1999/xhtml">referenced by:
          <ul>
+            <li><a href="#arg_expr" title="arg_expr">arg_expr</a></li>
             <li><a href="#call_expr" title="call_expr">call_expr</a></li>
             <li><a href="#fetch_values_stmt" title="fetch_values_stmt">fetch_values_stmt</a></li>
             <li><a href="#insert_stmt" title="insert_stmt">insert_stmt</a></li>

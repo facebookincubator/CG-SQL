@@ -718,7 +718,9 @@ case_list: WHEN expr THEN expr { $$ = new_ast_case_list(new_ast_when($2, $4), NU
   ;
 
 arg_expr: '*' { $$ = new_ast_star(); }
-  | expr
+  | expr { $$ = $1; }
+  | cursor_arguments { $$ = $1; }
+  | from_arguments { $$ = $1; }
   ;
 
 arg_list: /* nil */ { $$ = NULL; }
