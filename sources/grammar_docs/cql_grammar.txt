@@ -64,7 +64,7 @@ basic_expr ::= name | name '.' name | any_literal | '(' expr ')' | call | window
 math_expr ::= basic_expr | math_expr '&' math_expr | math_expr '|' math_expr | math_expr "<<" math_expr | math_expr ">>" math_expr | math_expr '+' math_expr | math_expr '-' math_expr | math_expr '*' math_expr | math_expr '/' math_expr | math_expr '%' math_expr | '-' math_expr  | math_expr "||" math_expr  
 expr ::= basic_expr | expr '&' expr | expr '|' expr | expr "<<" expr | expr ">>" expr | expr '+' expr | expr '-' expr | expr '*' expr | expr '/' expr | expr '%' expr | '-' expr  | "NOT" expr | '~' expr | expr "COLLATE" name | expr "AND" expr | expr "OR" expr | expr '=' expr | expr "==" expr | expr '<' expr | expr '>' expr | expr "<>" expr | expr "!=" expr | expr ">=" expr | expr "<=" expr | expr "NOT" "IN" '(' expr_list ')' | expr "NOT" "IN" '(' select_stmt ')' | expr "IN" '(' expr_list ')' | expr "IN" '(' select_stmt ')' | expr "LIKE" expr | expr "NOT LIKE" expr | expr "MATCH" expr | expr "REGEXP" expr | expr "GLOB" expr | expr "NOT" "BETWEEN" math_expr "AND" math_expr | expr "BETWEEN" math_expr "AND" math_expr | expr "IS NOT" expr | expr "IS" expr | expr "||" expr | "CASE" expr case_list "END" | "CASE" expr case_list "ELSE" expr "END" | "CASE" case_list "END" | "CASE" case_list "ELSE" expr "END" | "CAST" '(' expr "AS" data_type ')'  
 case_list ::= "WHEN" expr "THEN" expr | "WHEN" expr "THEN" expr case_list  
-arg_expr ::= '*' | expr  
+arg_expr ::= '*' | expr | cursor_arguments | from_arguments  
 arg_list ::= /* nil */ | arg_expr | arg_expr ',' arg_list  
 expr_list ::= expr | expr ',' expr_list  
 cursor_arguments ::= "FROM" name | "FROM" name "LIKE" name  

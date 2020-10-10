@@ -11586,3 +11586,29 @@ begin
   -- the table foo has a column 'id' but we have no such arg
   call lotsa_ints(1, 2, 3, from arguments like no_such_type_dude);
 end;
+
+-- this procedure ends with an out arg, can be called as a function
+declare proc funclike(like shape, out z integer not null);
+
+-- TEST: use argument expansion in a function call context
+-- This is strictly a rewrite
+-- + CREATE PROC arg_caller (x_ INTEGER NOT NULL, y_ TEXT NOT NULL, OUT z INTEGER NOT NULL)
+-- + SET z := funclike(x_, y_);
+-- - Error
+create proc arg_caller(like shape, out z integer not null)
+begin
+   set z := funclike(from arguments like shape);
+end;
+
+-- TEST: use argument expansion in a function call context
+-- + Error % must be a cursor, proc, table, or view 'not_a_shape'
+-- +1 Error
+-- + {call}: err
+-- + {arg_list}: err
+-- + {name not_a_shape}: err
+-- from arguments not replaced because the rewrite failed
+-- + {from_arguments}
+create proc arg_caller_bogus_shape(like shape, out z integer not null)
+begin
+   set z := funclike(from arguments like not_a_shape);
+end;

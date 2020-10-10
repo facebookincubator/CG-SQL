@@ -1146,6 +1146,8 @@ CALL something(FROM ARGUMENTS, FROM ARGUMENTS);
 
 CALL something(FROM ARGUMENTS LIKE something);
 
+SET x := foo(FROM ARGUMENTS LIKE X, FROM C LIKE A, FROM X, FROM ARGUMENTS);
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

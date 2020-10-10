@@ -7298,7 +7298,7 @@ Error at test/sem_test.sql:XXXX : in call : CQL0304: DISTINCT may only be used w
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | | {distinct}
-  |     |       | {arg_list}
+  |     |       | {arg_list}: ok
   |     |         | {star}
   |     | {select_from_etc}: TABLE { foo: foo }
   |       | {table_or_subquery_list}: TABLE { foo: foo }
@@ -47110,4 +47110,116 @@ Error at test/sem_test.sql:XXXX : in str : CQL0202: must be a cursor, proc, tabl
               | {expr_list}
                 | {from_arguments}
                   | {name no_such_type_dude}: err
+
+The statement ending at line XXXX
+
+DECLARE PROC funclike (x_ INTEGER NOT NULL, y_ TEXT NOT NULL, OUT z INTEGER NOT NULL);
+
+  {declare_proc_stmt}: ok
+  | {proc_name_type}
+  | | {name funclike}: ok
+  | | {int 0}
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: x_: integer notnull variable in
+      | | {param_detail}: x_: integer notnull variable in
+      |   | {name x_}: x_: integer notnull variable in
+      |   | {notnull}: integer notnull
+      |     | {type_int}: integer
+      | {params}
+        | {param}: y_: text notnull variable in
+        | | {param_detail}: y_: text notnull variable in
+        |   | {name y_}: y_: text notnull variable in
+        |   | {notnull}: text notnull
+        |     | {type_text}: text
+        | {params}
+          | {param}: z: integer notnull variable out
+            | {out}
+            | {param_detail}: z: integer notnull variable out
+              | {name z}: z: integer notnull variable out
+              | {notnull}: integer notnull
+                | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE PROC arg_caller (x_ INTEGER NOT NULL, y_ TEXT NOT NULL, OUT z INTEGER NOT NULL)
+BEGIN
+  SET z := funclike(x_, y_);
+END;
+
+  {create_proc_stmt}: ok
+  | {name arg_caller}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: x_: integer notnull variable in
+    | | | {param_detail}: x_: integer notnull variable in
+    | |   | {name x_}: x_: integer notnull variable in
+    | |   | {notnull}: integer notnull
+    | |     | {type_int}: integer
+    | | {params}
+    |   | {param}: y_: text notnull variable in
+    |   | | {param_detail}: y_: text notnull variable in
+    |   |   | {name y_}: y_: text notnull variable in
+    |   |   | {notnull}: text notnull
+    |   |     | {type_text}: text
+    |   | {params}
+    |     | {param}: z: integer notnull variable out
+    |       | {out}
+    |       | {param_detail}: z: integer notnull variable out
+    |         | {name z}: z: integer notnull variable out
+    |         | {notnull}: integer notnull
+    |           | {type_int}: integer
+    | {stmt_list}: ok
+      | {assign}: z: integer notnull variable out
+        | {name z}: z: integer notnull variable out
+        | {call}: integer notnull
+          | {name funclike}
+          | {call_arg_list}
+            | {call_filter_clause}
+            | {arg_list}: ok
+              | {name x_}: x_: integer notnull variable in
+              | {arg_list}
+                | {name y_}: y_: text notnull variable in
+
+The statement ending at line XXXX
+
+CREATE PROC arg_caller_bogus_shape (x_ INTEGER NOT NULL, y_ TEXT NOT NULL, OUT z INTEGER NOT NULL)
+BEGIN
+  SET z := funclike(FROM ARGUMENTS LIKE not_a_shape);
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0202: must be a cursor, proc, table, or view 'not_a_shape'
+
+  {create_proc_stmt}: err
+  | {name arg_caller_bogus_shape}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: x_: integer notnull variable in
+    | | | {param_detail}: x_: integer notnull variable in
+    | |   | {name x_}: x_: integer notnull variable in
+    | |   | {notnull}: integer notnull
+    | |     | {type_int}: integer
+    | | {params}
+    |   | {param}: y_: text notnull variable in
+    |   | | {param_detail}: y_: text notnull variable in
+    |   |   | {name y_}: y_: text notnull variable in
+    |   |   | {notnull}: text notnull
+    |   |     | {type_text}: text
+    |   | {params}
+    |     | {param}: z: integer notnull variable out
+    |       | {out}
+    |       | {param_detail}: z: integer notnull variable out
+    |         | {name z}: z: integer notnull variable out
+    |         | {notnull}: integer notnull
+    |           | {type_int}: integer
+    | {stmt_list}: err
+      | {assign}: err
+        | {name z}: z: integer notnull variable out
+        | {call}: err
+          | {name funclike}
+          | {call_arg_list}
+            | {call_filter_clause}
+            | {arg_list}: err
+              | {from_arguments}
+                | {name not_a_shape}: err
 

@@ -124,6 +124,8 @@ static void sem_rewrite_insert_list_from_arguments(ast_node *ast, uint32_t count
 static void sem_rewrite_insert_list_from_cursor(ast_node *ast, ast_node *from_cursor, uint32_t count);
 static void sem_rewrite_like_column_spec_if_needed(ast_node *columns_values);
 static void sem_rewrite_from_cursor_if_needed(ast_node *ast_stmt, ast_node *columns_values);
+static void sem_rewrite_from_cursor_args(ast_node *head);
+static void sem_rewrite_from_arguments_in_call(ast_node *head);
 static bool_t sem_rewrite_col_key_list(ast_node *ast);
 static void enqueue_pending_region_validation(ast_node *prev, ast_node *cur, CSTR name);
 static void sem_validate_previous_deployable_region(ast_node *root, deployable_validation *v);
@@ -5643,6 +5645,25 @@ static void sem_expr_raise(ast_node *ast, CSTR cstr) {
   ast->sem = new_sem(SEM_TYPE_NULL);
 }
 
+// We can't just return the error in the tree like we usually do because
+// arg_list might be null and we're trying to do all the helper logic here.
+static bool_t sem_rewrite_call_args_if_needed(ast_node *arg_list) {
+ if (arg_list) {
+    // if there are any cursor forms in the arg list that need to be expanded, do that here.
+    sem_rewrite_from_cursor_args(arg_list);
+    if (is_error(arg_list)) {
+      return false;
+    }
+
+    // if there are any "from arguments" forms in the arg list that need to be expanded, do that here.
+    sem_rewrite_from_arguments_in_call(arg_list);
+    if (is_error(arg_list)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 // This validates that the call is to one of the functions that we know and
 // then delegates to the appropriate shared helper function for that type
 // of call for additional validation.  We compute the semantic type of all
@@ -5669,6 +5690,12 @@ static void sem_expr_call(ast_node *ast, CSTR cstr) {
       record_error(ast);
       return;
     }
+  }
+
+  // expand any FROM forms in the arg list
+  if (!sem_rewrite_call_args_if_needed(arg_list)) {
+    record_error(ast);
+    return;
   }
 
   uint32_t arg_count = 0;
@@ -13878,12 +13905,14 @@ static void sem_validate_args_vs_formals(ast_node *ast, CSTR name, ast_node *arg
 // FROM cursor_name [LIKE type ] entries we encounter.  We don't validate
 // the types here.  That happens after expansion.  It's possible that the
 // types don't match at all, but we don't care yet.
-void sem_rewrite_from_cursor_args(ast_node *head) {
-  Contract(is_ast_expr_list(head));
+static void sem_rewrite_from_cursor_args(ast_node *head) {
+  Contract(is_ast_expr_list(head) || is_ast_arg_list(head));
+
+  // We might need to make arg_list nodes or expr_list nodes, they are the same really
+  // so we'll change the node type to what we need
+  CSTR node_type = head->type;
 
   for (ast_node *item = head ; item ; item = item->right) {
-    Invariant(is_ast_expr_list(item));
-
     EXTRACT_ANY_NOTNULL(arg, item->left);
     if (is_ast_from_cursor(arg)) {
       EXTRACT_ANY_NOTNULL(cursor, arg->left);
@@ -13929,6 +13958,7 @@ void sem_rewrite_from_cursor_args(ast_node *head) {
           // we leave arg_list pointed to the end of what we inserted
           ast_node *right = item->right;
           ast_node *new_item = new_ast_expr_list(dot, right);
+          new_item->type = node_type;
           ast_set_right(item, new_item);
           item = new_item;
         }
@@ -13946,12 +13976,14 @@ void sem_rewrite_from_cursor_args(ast_node *head) {
 // FROM ARGUMENTS [LIKE type ] entries we encounter.  We don't validate
 // the types here.  That happens after expansion.  It's possible that the
 // types don't match at all, but we don't care yet.
-void sem_rewrite_from_arguments_in_call(ast_node *head) {
-  Contract(is_ast_expr_list(head));
+static void sem_rewrite_from_arguments_in_call(ast_node *head) {
+  Contract(is_ast_expr_list(head) || is_ast_arg_list(head));
+
+  // We might need to make arg_list nodes or expr_list nodes, they are the same really
+  // so we'll change the node type to what we need
+  CSTR node_type = head->type;
 
   for (ast_node *item = head ; item ; item = item->right) {
-    Invariant(is_ast_expr_list(item));
-
     EXTRACT_ANY_NOTNULL(arg, item->left);
     if (is_ast_from_arguments(arg)) {
 
@@ -14027,6 +14059,7 @@ void sem_rewrite_from_arguments_in_call(ast_node *head) {
             // we leave arg_list pointed to the end of what we inserted
             ast_node *right = item->right;
             ast_node *new_item = new_ast_expr_list(ast_arg, right);
+            new_item->type = node_type;
             ast_set_right(item, new_item);
             item = new_item;
           }
@@ -14051,6 +14084,7 @@ void sem_rewrite_from_arguments_in_call(ast_node *head) {
             // we leave arg_list pointed to the end of what we inserted
             ast_node *right = item->right;
             ast_node *new_item = new_ast_expr_list(ast_arg, right);
+            new_item->type = node_type;
             ast_set_right(item, new_item);
             item = new_item;
           }
@@ -14098,7 +14132,7 @@ void sem_rewrite_from_arguments_in_call(ast_node *head) {
 static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name) {
   Contract(is_ast_call_stmt(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
-  EXTRACT_ANY(arg_list, ast->right);
+  EXTRACT(expr_list, ast->right);
   EXTRACT_STRING(name, name_ast);
 
   ast_node *proc_stmt = find_proc(name);
@@ -14124,24 +14158,14 @@ static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name) {
     }
   }
 
-  if (arg_list) {
-    // if there are any cursor forms in the arg list that need to be expanded, do that here.
-    sem_rewrite_from_cursor_args(arg_list);
-    if (is_error(arg_list)) {
-      record_error(ast);
-      return;
-    }
-
-    // if there are any "from arguments" forms in the arg list that need to be expanded, do that here.
-    sem_rewrite_from_arguments_in_call(arg_list);
-    if (is_error(arg_list)) {
-      record_error(ast);
-      return;
-    }
+  // expand any FROM forms in the arg list
+  if (!sem_rewrite_call_args_if_needed(expr_list)) {
+    record_error(ast);
+    return;
   }
 
   // compute semantic type of each arg, reporting errors
-  sem_validate_args(ast, arg_list);
+  sem_validate_args(ast, expr_list);
   if (is_error(ast)) {
     return;
   }
@@ -14158,7 +14182,7 @@ static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name) {
 
     has_dml |= is_dml_proc(proc_stmt->sem->sem_type);
 
-    sem_validate_args_vs_formals(ast, name, arg_list, params, NORMAL_CALL);
+    sem_validate_args_vs_formals(ast, name, expr_list, params, NORMAL_CALL);
     if (is_error(ast)) {
       return;
     }

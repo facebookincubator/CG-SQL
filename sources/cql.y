@@ -777,7 +777,9 @@ case_list[result]:
 
 arg_expr:
   '*'  { $arg_expr = new_ast_star(); }
-  | expr
+  | expr { $arg_expr = $expr; }
+  | cursor_arguments { $arg_expr = $cursor_arguments; }
+  | from_arguments { $arg_expr = $from_arguments; }
   ;
 
 arg_list[result]:
@@ -1629,6 +1631,10 @@ trigger_stmts[result]:
   trigger_stmt  { $result = new_ast_stmt_list($trigger_stmt, NULL); }
   | trigger_stmt  trigger_stmts[ts]  { $result = new_ast_stmt_list($trigger_stmt, $ts); }
   ;
+
+/* These forms are slightly different than the normal statements, not all variations are allowed.
+ * This section clearly states the mapping.  It could be done more tersely but this costs us nothing.
+ */
 
 trigger_stmt:
   trigger_update_stmt ';'  { $trigger_stmt = $trigger_update_stmt; }
