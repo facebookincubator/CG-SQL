@@ -67,6 +67,17 @@ void process_double_quote() {
   }
 }
 
+// read up to a matching close paren, there are no escapes for these labels
+void process_non_terminal_label() {
+  // note, put might be a no-op if in_code
+  for (;;) {
+    int32_t ch = get();
+    if (ch == EOF || ch == ']') {
+      return;
+    }
+  }
+}
+
 // read up to a matching single quote, handles \' as well.
 void process_single_quote() {
   // note, put might be a no-op if in_code
@@ -121,7 +132,10 @@ int32_t main(int32_t argc, char **argv)
 
   for (;;) {
     int32_t ch = get();
-    if (ch == '{') {
+    if (ch == '[') {
+      process_non_terminal_label();
+    }
+    else if (ch == '{') {
       process_code();
     }
     else if (ch == '"') {

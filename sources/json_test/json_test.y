@@ -34,6 +34,8 @@ void yyset_lineno(int);
 
 %}
 
+%define parse.error verbose
+
 %union {
   char *sval;
 }

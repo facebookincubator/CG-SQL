@@ -3,8 +3,11 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+ifndef NON_STD_YACC
 LEX = flex
 YACC = bison
+endif
+
 O=out
 T=test
 CQL_DIR=./
@@ -53,13 +56,13 @@ $O/cql: $(OBJECTS) $(SQLITE_OBJ)
 	${CC} -DSQLIT_DEBUG ${CFLAGS} -o $O/cql $(OBJECTS)
 
 $O/cql.y.c $O/cql.y.h: cql.y encoders.h charbuf.h
-	${YACC} -y -vd cql.y -o $O/cql.y.c
+	${YACC} -vd cql.y -o $O/cql.y.c
 
 $O/cql.c: cql.l
 	${LEX} -o $*.c $<
 
 $O/cql.y.o: $O/cql.y.c $O/cql.y.h
-	$(CC) $(CFLAGS) -DYYERROR_VERBOSE -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $O/cql.o: $O/cql.c $O/cql.y.h cql.h ast.h
 
@@ -187,8 +190,8 @@ cql-verify: tester/main.c cqlrt.c cqlrt.h tester/dbhelp.c tester/dbhelp.h
 json-test: $O/json_test
 
 $O/json_test: json_test/json_test.y json_test/json_test.l
-	${YACC} -y -vd json_test/json_test.y -o $O/json_test.y.c
+	${YACC} -vd json_test/json_test.y -o $O/json_test.y.c
 	${LEX} -o $O/json_test.c json_test/json_test.l
 	$(CC) -c $(CFLAGS) -o $O/json_test.o $O/json_test.c
-	$(CC) -c $(CFLAGS) -DYYERROR_VERBOSE -o $O/json_test.y.o $O/json_test.y.c
+	$(CC) -c $(CFLAGS) -o $O/json_test.y.o $O/json_test.y.c
 	$(CC) $(CFLAGS) -o $O/json_test $O/json_test.y.o $O/json_test.o

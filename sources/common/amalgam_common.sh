@@ -175,6 +175,7 @@ cat <<EOF >>out/pass1
 #pragma clang diagnostic ignored "-Wsign-conversion"
 EOF
 
+cat "out/cql.y.h" >>out/pass1
 cat "out/cql.y.c" >>out/pass1
 cat "out/cql.c" >>out/pass1
 
