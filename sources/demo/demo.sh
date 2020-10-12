@@ -9,7 +9,6 @@ set -e
 O="../out"
 CQL="${O}/cql"
 
-${CQL} --in demo.sql --cg ${O}/demo.h ${O}/demo.c --generate_copy
-cc -g -I.. -I${O} -o ${O}/demo ${O}/demo.c ../cqlrt.c demo_client.c -lsqlite3
+(cd ..; make demo-binary)
 ${O}/demo
 echo "SUCCESS"

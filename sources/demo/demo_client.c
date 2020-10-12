@@ -77,7 +77,7 @@ int main(int argc, char **argv) {
   cql_result_set_release(result_set);
   cql_result_set_release(result_set_copy);
 
-  (void)mandelbrot(db);
+  SQL_E(mandelbrot(db));
   return 0;
 
 error:
