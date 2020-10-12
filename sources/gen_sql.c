@@ -433,6 +433,8 @@ static void gen_col_attrs(ast_node *_Nullable attrs) {
     } else if (is_ast_col_attrs_fk(attr)) {
       gen_printf(" ");
       gen_fk_target_options(attr->left);
+    } else if (is_ast_col_attrs_check(attr)) {
+    } else if (is_ast_col_attrs_collate(attr)) {
     } else {
       Contract(is_ast_col_attrs_default(attr));
       gen_printf(" DEFAULT ");
