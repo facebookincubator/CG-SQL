@@ -8,13 +8,19 @@ See `CQL_Guide/guide.html` for the language summary.
 
 ## Building
 
+With requirements met (see below)
+
 ```
 make clean
 make
 ```
 
+This puts the result in `out/cql`
+
+
 ### Requirements
-The default bison on Mac is quite old.  You'll need to replace it.
+The default bison on Mac is quite old (v2.3).  You'll need to replace it. The Build
+produces an error if this is happening.  You can get a more recent bison like this:
 
 ```
   brew install bison
@@ -24,8 +30,6 @@ The default bison on Mac is quite old.  You'll need to replace it.
 The default SQLite on Ubuntu systems is also fairly old.  Some of the tests (particularly
 the query plan tests) use features not available in this version.  You'll want to link
 against a newer sqlite to pass all the tests.
-
-This puts the result in `out/cql`
 
 ### Options
 

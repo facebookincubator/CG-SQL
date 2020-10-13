@@ -49,11 +49,14 @@ OBJECTS = $O/cql.y.o $O/cql.o $O/ast.o $O/gen_sql.o $O/sem.o $O/list.o $O/bytebu
 
 OBJECTS+=$(ADDITIONAL_OBJECTS)
 
-$O/%.o : %.c
+$O/%.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$O/cql: $(OBJECTS) $(SQLITE_OBJ)
-	${CC} -DSQLIT_DEBUG ${CFLAGS} -o $O/cql $(OBJECTS)
+test-bison:
+	common/test_bison.sh $(YACC)
+
+$O/cql: test-bison $(OBJECTS) $(SQLITE_OBJ)
+	${CC} -DSQLITE_DEBUG ${CFLAGS} -o $O/cql $(OBJECTS)
 
 $O/cql.y.c $O/cql.y.h: cql.y encoders.h charbuf.h
 	${YACC} -vd cql.y -o $O/cql.y.c
