@@ -12,7 +12,7 @@
 #include <stdint.h>
 #include <sqlite3.h>
 
-#ifdef __GNUC__
+#ifndef __clang__
 #ifndef _Nonnull
     /* Clang-only nullability specifiers */
     #define _Nonnull

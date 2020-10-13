@@ -35,7 +35,7 @@
 #pragma clang diagnostic error "-Wunused-function"
 #endif
 
-#ifdef __GNUC__
+#ifndef __clang__
 #ifndef _Nonnull
     /* Clang-only nullability specifiers */
     #define _Nonnull
