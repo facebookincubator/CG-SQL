@@ -193,7 +193,7 @@
 </ul></li>
 <li><a href="#appendix-1-command-line-options">Appendix 1 : Command Line Options</a>
 <ul>
-<li><a href="#no-options">no-options</a></li>
+<li><a href="#with-no-options">With No Options</a></li>
 <li><a href="#in-file">–in file</a></li>
 <li><a href="#sem">–sem</a></li>
 <li><a href="#print">–print</a></li>
@@ -205,18 +205,8 @@
 <li><a href="#java_package_name">–java_package_name</a></li>
 <li><a href="#c_include_namespace">–c_include_namespace</a></li>
 <li><a href="#objc_c_include_path">–objc_c_include_path</a></li>
+<li><a href="#result-types-rt">Result Types (–rt *)</a></li>
 </ul></li>
-</ul></li>
-<li><a href="#result-types">Result Types</a>
-<ul>
-<li><a href="#rt-c">–rt c</a></li>
-<li><a href="#rt-objc">–rt objc</a></li>
-<li><a href="#rt-java">–rt java</a></li>
-<li><a href="#rt-schema">–rt schema</a></li>
-<li><a href="#rt-schema_upgrade">–rt schema_upgrade</a></li>
-<li><a href="#include_regions-a-b-c">–include_regions a b c</a></li>
-<li><a href="#exclude_regions-x-y-z">–exclude_regions x y z</a></li>
-<li><a href="#rt-json_schema">–rt json_schema</a></li>
 <li><a href="#appendix-2-cql-grammar">Appendix 2: CQL Grammar</a>
 <ul>
 <li><a href="#operators-and-literals">Operators and Literals</a></li>
@@ -5658,7 +5648,7 @@ end;</code></pre>
 -->
 <h2 id="appendix-1-command-line-options">Appendix 1 : Command Line Options</h2>
 <p>CQL has a variety of command line options but many of them are only interesting for cql development. Nonetheless this is a comprehensive list:</p>
-<h3 id="no-options">no-options</h3>
+<h3 id="with-no-options">With No Options</h3>
 <ul>
 <li>CQL reads its input and echos it back as normalized SQL</li>
 <li>this only validates that the input can be parsed</li>
@@ -5732,25 +5722,26 @@ end;</code></pre>
 <ul>
 <li>for ObjC codegen runtimes that need to refer to the generated C code, this represents the header of the C generated code that will be used during inclusion from the ObjC file</li>
 </ul>
-<h1 id="result-types">Result Types</h1>
-<h3 id="rt-c">–rt c</h3>
+<h3 id="result-types-rt">Result Types (–rt *)</h3>
+<p>These are the various outputs the compiler can produce.</p>
+<h4 id="rt-c">–rt c</h4>
 <ul>
 <li>requires two output files (foo.h and foo.c)</li>
 <li>this is the standard C compilation of the sql file</li>
 </ul>
-<h3 id="rt-objc">–rt objc</h3>
+<h4 id="rt-objc">–rt objc</h4>
 <ul>
 <li>objective C wrappers for result sets produced by the stored procedures in the input</li>
 <li>these depend on the output of a standard codegen run so this is additive</li>
 <li>requires one output file (foo.h)</li>
 </ul>
-<h3 id="rt-java">–rt java</h3>
+<h4 id="rt-java">–rt java</h4>
 <ul>
 <li>java wrappers for result sets produced by the stored procedures in the input</li>
 <li>these depend on the output of a standard codegen run so this is additive</li>
 <li>requires one output file (foo.java)</li>
 </ul>
-<h3 id="rt-schema">–rt schema</h3>
+<h4 id="rt-schema">–rt schema</h4>
 <ul>
 <li>produces the canonical schema for the given input files</li>
 <li>stored procedures etc. are removed</li>
@@ -5758,24 +5749,24 @@ end;</code></pre>
 <li>suitable for use to create the next or first “previous” schema for schema validation</li>
 <li>requires one output file</li>
 </ul>
-<h3 id="rt-schema_upgrade">–rt schema_upgrade</h3>
+<h4 id="rt-schema_upgrade">–rt schema_upgrade</h4>
 <ul>
 <li>produces a CQL schema upgrade script (one file) which can then be compiled with CQL itself</li>
 <li>see the section on schema upgrade/migration</li>
 <li>requires one output file (foo.sql)</li>
 </ul>
-<h3 id="include_regions-a-b-c">–include_regions a b c</h3>
+<h5 id="include_regions-a-b-c">–include_regions a b c</h5>
 <ul>
 <li>the indicated regions will be declared</li>
 <li>used with <code>--rt schema_upgrade</code> or <code>--rt schema</code></li>
 <li>in the upgrade case excluded regions will not be themselves upgraded, but may be referred, to by things that are being upgraded</li>
 </ul>
-<h3 id="exclude_regions-x-y-z">–exclude_regions x y z</h3>
+<h5 id="exclude_regions-x-y-z">–exclude_regions x y z</h5>
 <ul>
 <li>the indicated regions will still be declared but the upgrade code will be suppressed, the presumption being that a different script already upgrades x y z</li>
 <li>used with <code>--rt schema_upgrade</code></li>
 </ul>
-<h3 id="rt-json_schema">–rt json_schema</h3>
+<h4 id="rt-json_schema">–rt json_schema</h4>
 <ul>
 <li>produces JSON output suitable for consumption by downstream codegen like the android mlite system</li>
 <li>the JSON includes a definition of the various entities in the input</li>
