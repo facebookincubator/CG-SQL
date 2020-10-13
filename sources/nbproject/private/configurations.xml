@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="100">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <df root="." name="0">
+      <df name="common">
+      </df>
+      <df name="demo">
+        <in>demo_client.c</in>
+      </df>
+      <df name="grammar_docs">
+        <in>ys.c</in>
+      </df>
+      <df name="java">
+        <df name="com">
+          <df name="facebook">
+            <df name="cgsql">
+            </df>
+          </df>
+        </df>
+        <in>TestResult.c</in>
+        <in>TestResult.h</in>
+        <in>com_facebook_cgsql_CQLResultSet.c</in>
+        <in>com_facebook_cgsql_CQLResultSet.h</in>
+      </df>
+      <df name="json_test">
+        <in>json_test.l</in>
+        <in>json_test.y</in>
+      </df>
+      <df name="out">
+        <in>cql.c</in>
+        <in>cql.y.c</in>
+        <in>cql.y.h</in>
+      </df>
+      <df name="test">
+        <in>cqltest.c</in>
+        <in>cqltest.h</in>
+      </df>
+      <df name="tester">
+        <in>dbhelp.c</in>
+        <in>dbhelp.h</in>
+        <in>main.c</in>
+      </df>
+      <df name="upgrade">
+        <in>downgrade_test.c</in>
+        <in>upgrade_test.c</in>
+      </df>
+      <in>ast.c</in>
+      <in>ast.h</in>
+      <in>bytebuf.c</in>
+      <in>bytebuf.h</in>
+      <in>cg_c.c</in>
+      <in>cg_c.h</in>
+      <in>cg_common.c</in>
+      <in>cg_common.h</in>
+      <in>cg_java.c</in>
+      <in>cg_java.h</in>
+      <in>cg_json_schema.c</in>
+      <in>cg_json_schema.h</in>
+      <in>cg_objc.c</in>
+      <in>cg_objc.h</in>
+      <in>cg_query_plan.c</in>
+      <in>cg_query_plan.h</in>
+      <in>cg_schema.c</in>
+      <in>cg_schema.h</in>
+      <in>cg_test_helpers.c</in>
+      <in>cg_test_helpers.h</in>
+      <in>cg_udf.c</in>
+      <in>cg_udf.h</in>
+      <in>charbuf.c</in>
+      <in>charbuf.h</in>
+      <in>compat.c</in>
+      <in>compat.h</in>
+      <in>cql.h</in>
+      <in>cql.l</in>
+      <in>cql.y</in>
+      <in>cqlrt.c</in>
+      <in>cqlrt.h</in>
+      <in>cqlrt_common.c</in>
+      <in>cqlrt_common.h</in>
+      <in>crc64xz.c</in>
+      <in>crc64xz.h</in>
+      <in>diags.h</in>
+      <in>encoders.c</in>
+      <in>encoders.h</in>
+      <in>gen_sql.c</in>
+      <in>gen_sql.h</in>
+      <in>list.c</in>
+      <in>list.h</in>
+      <in>minipool.c</in>
+      <in>minipool.h</in>
+      <in>query_plan_test.c</in>
+      <in>result_set_extension.c</in>
+      <in>rt.c</in>
+      <in>rt.h</in>
+      <in>rt_common.c</in>
+      <in>run_test_client.c</in>
+      <in>sem.c</in>
+      <in>sem.h</in>
+      <in>symtab.c</in>
+      <in>symtab.h</in>
+      <in>unit_tests.c</in>
+      <in>unit_tests.h</in>
+    </df>
+  </logicalFolder>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Default" type="0">
+      <toolsSet>
+        <developmentServer>localhost</developmentServer>
+        <platform>2</platform>
+      </toolsSet>
+      <compile>
+        <compiledirpicklist>
+          <compiledirpicklistitem>.</compiledirpicklistitem>
+          <compiledirpicklistitem>${AUTO_FOLDER}</compiledirpicklistitem>
+        </compiledirpicklist>
+        <compiledir>${AUTO_FOLDER}</compiledir>
+        <compilecommandpicklist>
+          <compilecommandpicklistitem>${MAKE} ${ITEM_NAME}.o</compilecommandpicklistitem>
+          <compilecommandpicklistitem>${AUTO_COMPILE}</compilecommandpicklistitem>
+        </compilecommandpicklist>
+        <compilecommand>${AUTO_COMPILE}</compilecommand>
+      </compile>
+      <dbx_gdbdebugger version="1">
+        <gdb_pathmaps>
+        </gdb_pathmaps>
+        <gdb_interceptlist>
+          <gdbinterceptoptions gdb_all="false" gdb_unhandled="true" gdb_unexpected="true"/>
+        </gdb_interceptlist>
+        <gdb_options>
+          <DebugOptions>
+          </DebugOptions>
+        </gdb_options>
+        <gdb_buildfirst gdb_buildfirst_overriden="false" gdb_buildfirst_old="false"/>
+      </dbx_gdbdebugger>
+      <nativedebugger version="1">
+        <engine>gdb</engine>
+      </nativedebugger>
+      <runprofile version="9">
+        <runcommandpicklist>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
+        </runcommandpicklist>
+        <runcommand>"${OUTPUT_PATH}"</runcommand>
+        <rundir>.</rundir>
+        <buildfirst>false</buildfirst>
+        <terminal-type>0</terminal-type>
+        <remove-instrumentation>0</remove-instrumentation>
+        <environment>
+        </environment>
+      </runprofile>
+    </conf>
+  </confs>
+</configurationDescriptor>
