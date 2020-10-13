@@ -12,6 +12,14 @@
 #include <stdint.h>
 #include <sqlite3.h>
 
+#ifdef __GNUC__
+#ifndef _Nonnull
+    /* Clang-only nullability specifiers */
+    #define _Nonnull
+    #define _Nullable
+#endif
+#endif
+
 #define cql_contract assert
 #define cql_invariant assert
 #define cql_log_database_error(...)
