@@ -546,6 +546,8 @@ AST(window_defn_orderby)
 AST(col_attrs_not_null)
 AST(col_attrs_pk)
 AST(col_attrs_default)
+AST(col_attrs_check)
+AST(col_attrs_collate)
 AST0(col_attrs_autoinc)
 AST(col_attrs_unique)
 AST(sensitive_attr);
