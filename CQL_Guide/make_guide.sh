@@ -19,4 +19,4 @@ do
    echo '<div style="page-break-after: always; visibility: hidden"></div>'; \
    echo "" ) >>guide.md
 done
-pandoc -f markdown -t html guide.md -o guide.html
+pandoc --toc -s -f markdown -t html guide.md -o guide.html
