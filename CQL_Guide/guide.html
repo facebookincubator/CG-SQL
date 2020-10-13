@@ -1,3 +1,571 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>The CQL Programming Language</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">The CQL Programming Language</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#introduction">1. Introduction</a>
+<ul>
+<li><a href="#getting-started">Getting Started</a></li>
+<li><a href="#why-did-this-work">Why did this work?</a></li>
+<li><a href="#variables-and-arithmetic">Variables and Arithmetic</a></li>
+<li><a href="#basic-conversion-rules">Basic Conversion Rules</a></li>
+<li><a href="#preprocessing-features">Preprocessing Features</a></li>
+</ul></li>
+<li><a href="#using-data">2. Using Data</a>
+<ul>
+<li><a href="#a-sample-program">A Sample Program</a></li>
+<li><a href="#providing-a-suitable-database">Providing a Suitable Database</a></li>
+<li><a href="#declaring-schema">Declaring Schema</a></li>
+<li><a href="#explaining-the-new-hello-world">Explaining The New Hello World</a></li>
+<li><a href="#introducing-cursors">Introducing Cursors</a></li>
+<li><a href="#going-crazy">Going Crazy</a></li>
+<li><a href="#expressions-literals-nullability-sensitivity">3. Expressions, Literals, Nullability, Sensitivity</a>
+<ul>
+<li><a href="#expression-examples">Expression Examples</a></li>
+<li><a href="#order-of-evaluation">Order of Evaluation</a></li>
+<li><a href="#nullability">Nullability</a></li>
+<li><a href="#types-of-literals">Types of Literals</a></li>
+<li><a href="#nullability-rules">Nullability Rules</a></li>
+<li><a href="#expression-types">Expression Types</a></li>
+<li><a href="#case-expressions">CASE Expressions</a></li>
+<li><a href="#marking-data-as-sensitive">Marking Data as Sensitive</a></li>
+<li><a href="#reference-semantics">Reference Semantics</a></li>
+<li><a href="#function-return-values">Function Return Values</a></li>
+<li><a href="#comparison">Comparison</a></li>
+<li><a href="#blob-and-object"><code>BLOB</code> and <code>OBJECT</code></a></li>
+<li><a href="#text"><code>TEXT</code></a></li>
+<li><a href="#sample-code">Sample Code</a></li>
+</ul></li>
+<li><a href="#procedures-functions-and-control-flow">4. Procedures, Functions, and Control Flow</a>
+<ul>
+<li><a href="#out-parameters">Out Parameters</a></li>
+<li><a href="#procedure-calls">Procedure Calls</a></li>
+<li><a href="#the-if-statement">The IF statement</a></li>
+<li><a href="#the-while-statement">The WHILE statement</a></li>
+<li><a href="#the-try-catch-and-throw-statements">The TRY, CATCH, and THROW Statements</a></li>
+<li><a href="#procedures-as-functions-motivation-and-example">Procedures as Functions: Motivation and Example</a></li>
+</ul></li>
+<li><a href="#types-of-cursors-out-and-out-union-and-fetch-flavors">5. Types of Cursors, OUT and OUT UNION, and FETCH flavors</a>
+<ul>
+<li><a href="#statement-cursors">Statement Cursors</a></li>
+<li><a href="#value-cursors">Value Cursors</a></li>
+<li><a href="#out-statement">OUT Statement</a></li>
+<li><a href="#out-union-statement">OUT UNION Statement</a></li>
+<li><a href="#result-set-cursors">Result Set Cursors</a></li>
+<li><a href="#reshaping-data-cursor-like-forms">Reshaping Data, Cursor <code>LIKE</code> forms</a></li>
+<li><a href="#fetch-statement-specifics">Fetch Statement Specifics</a></li>
+<li><a href="#calling-procedures-with-bulk-arguments">Calling Procedures with Bulk Arguments</a></li>
+<li><a href="#missing-data-columns-nulls-and-dummy-data">Missing Data Columns, Nulls and Dummy Data</a></li>
+</ul></li>
+<li><a href="#calling-procedures-defined-elsewhere">6. Calling Procedures Defined Elsewhere</a>
+<ul>
+<li><a href="#declaring-procedures-defined-elsewhere">Declaring Procedures Defined Elsewhere</a></li>
+<li><a href="#simple-procedures-database-free">Simple Procedures (database free):</a></li>
+<li><a href="#procedures-that-use-the-database">Procedures that use the database</a></li>
+<li><a href="#procedures-that-create-a-result-set">Procedures that create a result set</a></li>
+<li><a href="#procedures-that-return-a-single-row-with-a-value-cursor">Procedures that return a single row with a value cursor</a></li>
+<li><a href="#procedures-that-return-a-full-result-set">Procedures that return a full result set</a></li>
+<li><a href="#exporting-declared-symbols-automatically">Exporting Declared Symbols Automatically</a></li>
+<li><a href="#declaration-examples">Declaration Examples</a></li>
+</ul></li>
+<li><a href="#cql-result-sets">7. CQL Result Sets</a>
+<ul>
+<li><a href="#results-sets-from-out-union">Results Sets From <code>OUT UNION</code></a></li>
+</ul></li>
+<li><a href="#functions">8. Functions</a>
+<ul>
+<li><a href="#notes-on-builtin-functions">Notes on Builtin Functions</a></li>
+</ul></li>
+<li><a href="#statements-summary-and-error-checking">9. Statements Summary and Error Checking</a>
+<ul>
+<li><a href="#the-primary-sql-statements">The Primary SQL Statements</a></li>
+<li><a href="#the-primary-procedure-statements">The Primary Procedure Statements</a></li>
+<li><a href="#the-meta-statements">The “Meta” Statements</a></li>
+<li><a href="#important-program-fragments">Important Program Fragments</a></li>
+<li><a href="#special-note-on-the-joinusing-form">Special Note on the JOIN…USING form</a></li>
+</ul></li>
+<li><a href="#schema-management-features">10. Schema Management Features</a>
+<ul>
+<li><a href="#annotations">Annotations</a></li>
+<li><a href="#semantics">Semantics</a></li>
+<li><a href="#allowable-changes">Allowable changes</a></li>
+<li><a href="#prosecution">Prosecution</a></li>
+<li><a href="#example-migration">Example Migration</a></li>
+<li><a href="#sample-upgrade-script">Sample Upgrade Script</a></li>
+<li><a href="#schema-regions">Schema Regions</a></li>
+</ul></li>
+<li><a href="#previous-schema-validation">11. Previous Schema Validation</a>
+<ul>
+<li><a href="#basic-usage">Basic Usage</a></li>
+</ul></li>
+<li><a href="#testability-features">12. Testability Features</a>
+<ul>
+<li><a href="#dummy-data">Dummy Data</a></li>
+<li><a href="#autotest-attributes">Autotest Attributes</a></li>
+</ul></li>
+<li><a href="#json-output">13. JSON Output</a></li>
+<li><a href="#cql-query-fragments">14. CQL Query Fragments</a>
+<ul>
+<li><a href="#base-query-fragments">Base Query Fragments</a></li>
+<li><a href="#extension-query-fragments">Extension Query Fragments</a></li>
+</ul></li>
+<li><a href="#appendix-1-command-line-options">Appendix 1 : Command Line Options</a>
+<ul>
+<li><a href="#no-options">no-options</a></li>
+<li><a href="#in-file">–in file</a></li>
+<li><a href="#sem">–sem</a></li>
+<li><a href="#print">–print</a></li>
+<li><a href="#dot">–dot</a></li>
+<li><a href="#cg-output1-output2">–cg output1 output2 …</a></li>
+<li><a href="#global_proc-name">–global_proc name</a></li>
+<li><a href="#compress">–compress</a></li>
+<li><a href="#test">–test</a></li>
+<li><a href="#java_package_name">–java_package_name</a></li>
+<li><a href="#c_include_namespace">–c_include_namespace</a></li>
+<li><a href="#objc_c_include_path">–objc_c_include_path</a></li>
+</ul></li>
+</ul></li>
+<li><a href="#result-types">Result Types</a>
+<ul>
+<li><a href="#rt-c">–rt c</a></li>
+<li><a href="#rt-objc">–rt objc</a></li>
+<li><a href="#rt-java">–rt java</a></li>
+<li><a href="#rt-schema">–rt schema</a></li>
+<li><a href="#rt-schema_upgrade">–rt schema_upgrade</a></li>
+<li><a href="#include_regions-a-b-c">–include_regions a b c</a></li>
+<li><a href="#exclude_regions-x-y-z">–exclude_regions x y z</a></li>
+<li><a href="#rt-json_schema">–rt json_schema</a></li>
+<li><a href="#appendix-2-cql-grammar">Appendix 2: CQL Grammar</a>
+<ul>
+<li><a href="#operators-and-literals">Operators and Literals</a></li>
+<li><a href="#statementtype-keywords">Statement/Type Keywords</a></li>
+<li><a href="#rules">Rules</a></li>
+</ul></li>
+<li><a href="#appendix-3-cql-error-codes">Appendix 3: CQL Error Codes</a>
+<ul>
+<li><a href="#cql0001-operands-must-be-an-integer-type-not-real">CQL0001: operands must be an integer type, not real</a></li>
+<li><a href="#cql0002-left-operand-cannot-be-an-object-in-operator">CQL0002: left operand cannot be an object in ‘operator’</a></li>
+<li><a href="#cql0003-left-operand-cannot-be-an-object-in-operator">CQL0003: left operand cannot be an object in ‘operator’</a></li>
+<li><a href="#cql0004-left-operand-cannot-be-a-blob-in-operator">CQL0004: left operand cannot be a blob in ‘operator’</a></li>
+<li><a href="#cql0005-right-operand-cannot-be-a-blob-in-operator">CQL0005: right operand cannot be a blob in ‘operator’</a></li>
+<li><a href="#cql0007-left-operand-cannot-be-a-string-in-operator">CQL0007: left operand cannot be a string in ‘operator’</a></li>
+<li><a href="#cql0008-right-operand-cannot-be-a-string-in-operator">CQL0008: right operand cannot be a string in ‘operator’</a></li>
+<li><a href="#cql0009-incompatible-types-in-expression-subject">CQL0009: incompatible types in expression ‘subject’</a></li>
+<li><a href="#cql0010-incompatible-types-in-expression-subject">CQL0010: incompatible types in expression ‘subject’</a></li>
+<li><a href="#cql0011-incompatible-types-in-expression-subject">CQL0011: incompatible types in expression ‘subject’</a></li>
+<li><a href="#cql0012-incompatible-types-in-expression-subject">CQL0012: incompatible types in expression ‘subject’</a></li>
+<li><a href="#cql0013-cannot-assigncopy-possibly-null-expression-to-not-null-target-target">CQL0013: cannot assign/copy possibly null expression to not null target ‘target’</a></li>
+<li><a href="#cql0014-cannot-assigncopy-sensitive-expression-to-not-null-target-target">CQL0014: cannot assign/copy sensitive expression to not null target ‘target’</a></li>
+<li><a href="#cql0015-expected-numeric-expression-context">CQL0015: expected numeric expression ‘context’</a></li>
+<li><a href="#cql0016-duplicate-table-name-in-join-table">CQL0016: duplicate table name in join ‘table’</a></li>
+<li><a href="#cql0017-index-was-present-but-now-it-does-not-exist-use-delete-instead-index">CQL0017: index was present but now it does not exist (use <code>@delete</code> instead) ‘index’</a></li>
+<li><a href="#cql0018-duplicate-index-name-index">CQL0018: duplicate index name ‘index’</a></li>
+<li><a href="#cql0019-create-index-table-name-not-found-table_name">CQL0019: create index table name not found ‘table_name’</a></li>
+<li><a href="#cql0020-duplicate-unique-key-in-table-key_name">CQL0020: duplicate unique key in table ‘key_name’</a></li>
+<li><a href="#cql0021-foreign-key-refers-to-non-existent-table-table_name">CQL0021: foreign key refers to non-existent table ‘table_name’</a></li>
+<li><a href="#cql0022-the-exact-type-of-both-sides-of-a-foreign-key-must-match-expected-expected_type-found-actual_type-key_name">CQL0022: the exact type of both sides of a foreign key must match (expected expected_type; found actual_type) ‘key_name’</a></li>
+<li><a href="#cql0023-the-number-of-columns-on-both-sides-of-a-foreign-key-must-match">CQL0023: The number of columns on both sides of a foreign key must match</a></li>
+<li><a href="#cql0024-table-does-not-have-pk-column-column">CQL0024: table does not have pk column ‘column’</a></li>
+<li><a href="#cql0025-version-number-in-annotation-must-be-positive">CQL0025: version number in annotation must be positive</a></li>
+<li><a href="#cql0026-duplicate-version-annotation">CQL0026: duplicate version annotation</a></li>
+<li><a href="#cql0027-a-procedure-can-appear-in-only-one-annotation-procedure_name">CQL0027: a procedure can appear in only one annotation ‘procedure_name’</a></li>
+<li><a href="#cql0028-the-fk-reference-must-be-exactly-one-column-with-the-correct-type-column_name">CQL0028: the FK reference must be exactly one column with the correct type ‘column_name’</a></li>
+<li><a href="#cql0029-autoincrement-column-must-be-long_integer-primary-key-column-name">CQL0029: autoincrement column must be [LONG_]INTEGER PRIMARY KEY ‘column name’</a></li>
+<li><a href="#cql0030-a-column-attribute-was-specified-twice-on-the-same-column-column_name">CQL0030: a column attribute was specified twice on the same column ‘column_name’</a></li>
+<li><a href="#cql0031-column-cant-be-primary-key-and-also-unique-key-column">CQL0031: column can’t be primary key and also unique key ‘column’</a></li>
+<li><a href="#cql0032-created-columns-must-be-at-the-end-and-must-be-in-version-order-column">CQL0032: created columns must be at the end and must be in version order", ‘column’</a></li>
+<li><a href="#cql0033-columns-in-a-table-marked-recreate-cannot-have-create-or-delete-column">CQL0033: columns in a table marked <span class="citation" data-cites="recreate">@recreate</span> cannot have <span class="citation" data-cites="create">@create</span> or <code>@delete</code>, ‘column’</a></li>
+<li><a href="#cql0035-column-delete-version-cant-be-column-create-version-column">CQL0035: column delete version can’t be &lt;= column create version", ‘column’</a></li>
+<li><a href="#cql0036-column-delete-version-cant-be-the-table-create-version-column">CQL0036: column delete version can’t be &lt;= the table create version ‘column’</a></li>
+<li><a href="#cql0038-column-create-version-cant-be-the-table-create-version-column">CQL0038: column create version can’t be <code>&lt;=</code> the table create version ‘column’</a></li>
+<li><a href="#cql0039-column-create-version-cant-be-the-table-delete-version-column">CQL0039: column create version can’t be <code>&gt;=</code> the table delete version ‘column’</a></li>
+<li><a href="#cql0040-table-can-only-have-one-autoinc-column-column">CQL0040: table can only have one autoinc column ‘column’</a></li>
+<li><a href="#cql0041-tables-cannot-have-object-columns-column">CQL0041: tables cannot have object columns ‘column’</a></li>
+<li><a href="#cql0042-left-operand-must-be-a-string-in-likematchglob">CQL0042: left operand must be a string in ‘LIKE/MATCH/GLOB’</a></li>
+<li><a href="#cql0043-right-operand-must-be-a-string-in-likematchglob">CQL0043: right operand must be a string in ‘LIKE/MATCH/GLOB’</a></li>
+<li><a href="#cql0044-operator-may-only-appear-in-the-context-of-a-sql-statement-match">CQL0044: operator may only appear in the context of a SQL statement ‘MATCH’</a></li>
+<li><a href="#cql0045-blob-operand-not-allowed-in-operator">CQL0045: blob operand not allowed in ‘operator’</a></li>
+<li><a href="#cql0046-object-operand-not-allowed-in-operator">CQL0046: object operand not allowed in ‘operator’</a></li>
+<li><a href="#cql0047-string-operand-not-allowed-in-operator">CQL0047: string operand not allowed in ‘operator’</a></li>
+<li><a href="#cql0048-blob-operand-not-allowed-in-not">CQL0048: blob operand not allowed in ‘NOT’</a></li>
+<li><a href="#cql0049-object-operand-not-allowed-in-not">CQL0049: object operand not allowed in ‘NOT’</a></li>
+<li><a href="#cql0050-string-operand-not-allowed-in-not">CQL0050: string operand not allowed in ‘NOT’</a></li>
+<li><a href="#cql0051-argument-can-only-be-used-in-count">CQL0051: argument can only be used in count(<em>) ’</em>’</a></li>
+<li><a href="#cql0052-select-cannot-be-used-with-no-from-clause">CQL0052: select * cannot be used with no FROM clause</a></li>
+<li><a href="#cql0053-select-table.-cannot-be-used-with-no-from-clause">CQL0053: select [table].* cannot be used with no FROM clause</a></li>
+<li><a href="#cql0054-table-not-found-table">CQL0054: table not found ‘table’</a></li>
+<li><a href="#cql0055-all-columns-in-the-select-must-have-a-name">CQL0055: all columns in the select must have a name</a></li>
+<li><a href="#cql0056-null-column-did-not-specify-a-type-column">CQL0056: NULL column did not specify a type ‘column’</a></li>
+<li><a href="#cql0057-if-multiple-selects-all-must-have-the-same-column-count">CQL0057: if multiple selects, all must have the same column count</a></li>
+<li><a href="#cql0058-if-multiple-selects-all-column-names-must-be-identical-so-they-have-unambiguous-names-column">CQL0058: if multiple selects, all column names must be identical so they have unambiguous names ‘column’</a></li>
+<li><a href="#cql0059-a-variable-name-might-be-ambiguous-with-a-column-name-this-is-an-anti-pattern-name">CQL0059: a variable name might be ambiguous with a column name, this is an anti-pattern ‘name’</a></li>
+<li><a href="#cql0060-referenced-table-can-be-independently-be-recreated-so-it-cannot-be-used-in-a-foreign-key-referenced_table">CQL0060: referenced table can be independently be recreated so it cannot be used in a foreign key, ‘referenced_table’</a></li>
+<li><a href="#cql0061-if-multiple-selects-all-columns-must-be-an-exact-type-match-expected-expected_type-found-actual_type-column">CQL0061: if multiple selects, all columns must be an exact type match (expected expected_type; found actual_type) ‘column’</a></li>
+<li><a href="#cql0062-if-multiple-selects-all-columns-must-be-an-exact-type-match-including-nullability-expected-expected_type-found-actual_type-column">CQL0062: if multiple selects, all columns must be an exact type match (including nullability) (expected expected_type; found actual_type) ‘column’</a></li>
+<li><a href="#cql0063-cant-mix-and-match-out-statement-with-selectcall-for-return-values-procedure_name">CQL0063: can’t mix and match out statement with select/call for return values ‘procedure_name’</a></li>
+<li><a href="#cql0064-object-variables-may-not-appear-in-the-context-of-a-sql-statement">CQL0064: object variables may not appear in the context of a SQL statement</a></li>
+<li><a href="#cql0065-identifier-is-ambiguous-name">CQL0065: identifier is ambiguous ‘name’</a></li>
+<li><a href="#cql0066-if-a-table-is-marked-recreate-its-indices-must-be-in-its-schema-region-index_name">CQL0066: if a table is marked <code>@recreate</code>, its indices must be in its schema region ‘index_name’</a></li>
+<li><a href="#cql0067-cursor-was-not-used-with-fetch-cursor-cursor_name">CQL0067: cursor was not used with ‘fetch [cursor]’ ‘cursor_name’</a></li>
+<li><a href="#cql0068-field-not-found-in-cursor-field">CQL0068: field not found in cursor ‘field’</a></li>
+<li><a href="#cql0069-name-not-found-name">CQL0069: name not found ‘name’</a></li>
+<li><a href="#cql0071-first-operand-cannot-be-a-blob-in-betweennot-between">CQL0071: first operand cannot be a blob in ‘BETWEEN/NOT BETWEEN’</a></li>
+<li><a href="#cql0072-first-operand-cannot-be-a-blob-in-betweennot-between">CQL0072: first operand cannot be a blob in ‘BETWEEN/NOT BETWEEN’</a></li>
+<li><a href="#cql0073-cast-may-only-appear-in-the-context-of-sql-statement">CQL0073: CAST may only appear in the context of SQL statement</a></li>
+<li><a href="#cql0074-too-few-arguments-provided-coalesce">CQL0074: Too few arguments provided ‘coalesce’</a></li>
+<li><a href="#cql0075-incorrect-number-of-arguments-ifnull">CQL0075: Incorrect number of arguments ‘ifnull’</a></li>
+<li><a href="#cql0076-null-literal-is-useless-in-function-ifnullcoalesce">CQL0076: Null literal is useless in function ‘ifnull/coalesce’</a></li>
+<li><a href="#cql0077-encountered-arg-known-to-be-not-null-before-the-end-of-the-list-rendering-the-rest-useless.">CQL0077: encountered arg known to be not null before the end of the list, rendering the rest useless.</a></li>
+<li><a href="#cql0078-not-in-select-is-only-allowed-inside-of-select-lists-where-on-and-having-clauses">CQL0078: [not] in (select …) is only allowed inside of select lists, where, on, and having clauses</a></li>
+<li><a href="#cql0079-function-got-incorrect-number-of-arguments-name">CQL0079: function got incorrect number of arguments ‘name’</a></li>
+<li><a href="#cql0080-function-may-not-appear-in-this-context-name">CQL0080: function may not appear in this context ‘name’</a></li>
+<li><a href="#cql0081-aggregates-only-make-sense-if-there-is-a-from-clause-name">CQL0081: aggregates only make sense if there is a FROM clause ‘name’</a></li>
+<li><a href="#cql0082-argument-must-be-numeric-average">CQL0082: argument must be numeric ‘AVERAGE’</a></li>
+<li><a href="#cql0083-argument-must-be-numeric-sum">CQL0083: argument must be numeric ‘SUM’</a></li>
+<li><a href="#cql0084-second-argument-must-be-a-string-in-function-group_concat">CQL0084: second argument must be a string in function ‘group_concat’</a></li>
+<li><a href="#cql0085-all-arguments-must-be-strings-strftime">CQL0085: all arguments must be strings ‘strftime’</a></li>
+<li><a href="#cql0086-first-argument-must-be-a-string-in-function-printf">CQL0086: first argument must be a string in function ‘printf’</a></li>
+<li><a href="#cql0087-no-objectblob-types-are-allowed-in-arguments-for-function-printf">CQL0087: no object/blob types are allowed in arguments for function ‘printf’</a></li>
+<li><a href="#cql0088-user-function-may-not-appear-in-the-context-of-a-sql-statement-function_name">CQL0088: User function may not appear in the context of a SQL statement ‘function_name’</a></li>
+<li><a href="#cql0089-user-function-may-only-appear-in-the-context-of-a-sql-statement-function_name">CQL0089: User function may only appear in the context of a SQL statement ‘function_name’</a></li>
+<li><a href="#cql0090-stored-proc-calls-may-not-appear-in-the-context-of-a-sql-statement-proc_name">CQL0090: Stored proc calls may not appear in the context of a SQL statement ‘proc_name’</a></li>
+<li><a href="#cql0091-stored-procs-that-deal-with-result-sets-or-cursors-cannot-be-invoked-as-functions-name">CQL0091: Stored procs that deal with result sets or cursors cannot be invoked as functions ‘name’</a></li>
+<li><a href="#cql0092-raise-may-only-be-used-in-a-trigger-statement">CQL0092: RAISE may only be used in a trigger statement</a></li>
+<li><a href="#cql0093-raise-2nd-argument-must-be-a-string">CQL0093: RAISE 2nd argument must be a string</a></li>
+<li><a href="#cql0094-function-not-yet-implemented-function">CQL0094: function not yet implemented ‘function’</a></li>
+<li><a href="#cql0095-tableview-not-defined-name">CQL0095: table/view not defined ‘name’</a></li>
+<li><a href="#cql0096-join-using-column-not-found-on-the-left-side-of-the-join-column_name">CQL0096: join using column not found on the left side of the join ‘column_name’</a></li>
+<li><a href="#cql0097-join-using-column-not-found-on-the-right-side-of-the-join-column_name">CQL0097: join using column not found on the right side of the join ‘column_name’</a></li>
+<li><a href="#cql0098-leftright-column-types-in-join-using-do-not-match-exactly-column_name">CQL0098: left/right column types in join USING(…) do not match exactly ‘column_name’</a></li>
+<li><a href="#cql0099-having-clause-requires-group-by-clause">CQL0099: HAVING clause requires GROUP BY clause</a></li>
+<li><a href="#cql0100-duplicate-common-table-name-name">CQL0100: duplicate common table name ‘name’</a></li>
+<li><a href="#cql0101-too-few-column-names-specified-in-common-table-expression-name">CQL0101: too few column names specified in common table expression ‘name’</a></li>
+<li><a href="#cql0102-too-many-column-names-specified-in-common-table-expression-name">CQL0102: too many column names specified in common table expression ‘name’</a></li>
+<li><a href="#cql0103-duplicate-tableview-name-name">CQL0103: duplicate table/view name ‘name’</a></li>
+<li><a href="#cql0104-view-was-present-but-now-it-does-not-exist-use-delete-instead-name">CQL0104: view was present but now it does not exist (use <code>@delete</code> instead) ‘name’</a></li>
+<li><a href="#cql0105-object-was-a-view-but-is-now-a-table-name">CQL0105: object was a view but is now a table ‘name’</a></li>
+<li><a href="#cql0106-trigger-was-present-but-now-it-does-not-exist-use-delete-instead-name">CQL0106: trigger was present but now it does not exist (use <code>@delete</code> instead) ‘name’</a></li>
+<li><a href="#cql0107-delete-version-cant-be-create-version-name">CQL0107: delete version can’t be &lt;= create version ‘name’</a></li>
+<li><a href="#cql0108-table-in-drop-statement-does-not-exist-table_name">CQL0108: table in drop statement does not exist ‘table_name’</a></li>
+<li><a href="#cql0109-cannot-drop-a-view-with-drop-table-view_name">CQL0109: cannot drop a view with drop table ‘view_name’</a></li>
+<li><a href="#cql0110-view-in-drop-statement-does-not-exist-view_name">CQL0110: view in drop statement does not exist ‘view_name’</a></li>
+<li><a href="#cql0111-cannot-drop-a-table-with-drop-view-name">CQL0111: cannot drop a table with drop view ‘name’</a></li>
+<li><a href="#cql0112-index-in-drop-statement-was-not-declared-index_name">CQL0112: index in drop statement was not declared ‘index_name’</a></li>
+<li><a href="#cql0113-trigger-in-drop-statement-was-not-declared-name">CQL0113: trigger in drop statement was not declared ‘name’</a></li>
+<li><a href="#cql0114-current-schema-cant-go-back-to-recreate-semantics-for-table_name">CQL0114: current schema can’t go back to recreate semantics for ‘table_name’</a></li>
+<li><a href="#cql0115-current-create-version-not-equal-to-previous-create-version-for-table">CQL0115: current create version not equal to previous create version for ‘table’</a></li>
+<li><a href="#cql0116-current-delete-version-not-equal-to-previous-delete-version-for-table">CQL0116: current delete version not equal to previous delete version for ‘table’</a></li>
+<li><a href="#cql0117-delete-procedure-changed-in-object-table_name">CQL0117: <code>@delete</code> procedure changed in object ‘table_name’</a></li>
+<li><a href="#cql0118-create-procedure-changed-in-object-table_name">CQL0118: <code>@create</code> procedure changed in object ‘table_name’</a></li>
+<li><a href="#cql0119-column-name-is-different-between-previous-and-current-schema-name">CQL0119: column name is different between previous and current schema ‘name’</a></li>
+<li><a href="#cql0120-column-type-is-different-between-previous-and-current-schema-name">CQL0120: column type is different between previous and current schema ‘name’</a></li>
+<li><a href="#cql0121-column-current-create-version-not-equal-to-previous-create-version-name">CQL0121: column current create version not equal to previous create version ‘name’</a></li>
+<li><a href="#cql0122-column-current-delete-version-not-equal-to-previous-delete-version-name">CQL0122: column current delete version not equal to previous delete version ‘name’</a></li>
+<li><a href="#cql0123-column-delete-procedure-changed-name">CQL0123: column <code>@delete</code> procedure changed ‘name’</a></li>
+<li><a href="#cql0124-column-create-procedure-changed-name">CQL0124: column <code>@create</code> procedure changed ‘name’</a></li>
+<li><a href="#cql0125-column-current-default-value-not-equal-to-previous-default-value-column">CQL0125: column current default value not equal to previous default value ‘column’</a></li>
+<li><a href="#cql0126-table-was-present-but-now-it-does-not-exist-use-delete-instead-table">CQL0126: table was present but now it does not exist (use <code>@delete</code> instead) ‘table’</a></li>
+<li><a href="#cql0127-object-was-a-table-but-is-now-a-view-name">CQL0127: object was a table but is now a view ‘name’</a></li>
+<li><a href="#cql0128-table-has-a-column-that-is-different-in-the-previous-and-current-schema-column">CQL0128: table has a column that is different in the previous and current schema ‘column’</a></li>
+<li><a href="#cql0129-a-column-was-removed-from-the-table-rather-than-marked-with-delete-column_name">CQL0129: a column was removed from the table rather than marked with <code>@delete</code> ‘column_name’</a></li>
+<li><a href="#cql0130-table-has-columns-added-without-marking-them-create-column_name">CQL0130: table has columns added without marking them <code>@create</code> ‘column_name’</a></li>
+<li><a href="#cql0131-table-has-newly-added-columns-that-are-marked-both-create-and-delete-column_name">CQL0131: table has newly added columns that are marked both <code>@create</code> and <code>@delete</code> ‘column_name’</a></li>
+<li><a href="#cql0132-table-has-a-facet-that-is-different-in-the-previous-and-current-schema-table_name">CQL0132: table has a facet that is different in the previous and current schema ‘table_name’</a></li>
+<li><a href="#cql0133-non-column-facets-have-been-removed-from-the-table-name">CQL0133: non-column facets have been removed from the table ‘name’</a></li>
+<li><a href="#cql0134-table-has-a-new-non-column-facet-in-the-current-schema-table_name">CQL0134: table has a new non-column facet in the current schema ‘table_name’</a></li>
+<li><a href="#cql0135-table-create-statement-attributes-different-than-previous-version-table_name">CQL0135: table create statement attributes different than previous version ‘table_name’</a></li>
+<li><a href="#cql0136-trigger-already-exists-trigger_name">CQL0136: trigger already exists ‘trigger_name’</a></li>
+<li><a href="#cql0137-tableview-not-found-name">CQL0137: table/view not found ‘name’</a></li>
+<li><a href="#cql0138-a-trigger-on-a-view-must-be-the-instead-of-form-name">CQL0138: a trigger on a view must be the INSTEAD OF form ‘name’</a></li>
+<li><a href="#cql0139-temp-tables-may-not-have-versioning-annotations-table_name">CQL0139: temp tables may not have versioning annotations ‘table_name’</a></li>
+<li><a href="#cql0140-columns-in-a-temp-table-may-not-have-versioning-attributes-column_name">CQL0140: columns in a temp table may not have versioning attributes ‘column_name’</a></li>
+<li><a href="#cql0141-table-has-an-autoincrement-column-it-cannot-also-be-without-rowid-table_name">CQL0141: table has an AUTOINCREMENT column; it cannot also be WITHOUT ROWID ‘table_name’</a></li>
+<li><a href="#cql0142-duplicate-column-name-column_name">CQL0142: duplicate column name ‘column_name’</a></li>
+<li><a href="#cql0143-more-than-one-primary-key-in-table-table_name">CQL0143: more than one primary key in table ‘table_name’</a></li>
+<li><a href="#cql0144-cannot-alter-a-view-view_name">CQL0144: cannot alter a view ‘view_name’</a></li>
+<li><a href="#cql0144-table-in-alter-statement-does-not-exist-table_name">CQL0144: table in alter statement does not exist ‘table_name’</a></li>
+<li><a href="#cql0145-version-annotations-not-valid-in-alter-statement-column_name">CQL0145: version annotations not valid in alter statement ‘column_name’</a></li>
+<li><a href="#cql0146-adding-an-auto-increment-column-is-not-allowed-column_name">CQL0146: adding an auto increment column is not allowed ‘column_name’</a></li>
+<li><a href="#cql0147-adding-a-not-nullable-column-with-no-default-value-is-not-allowed-column_name">CQL0147: adding a not nullable column with no default value is not allowed ‘column_name’</a></li>
+<li><a href="#cql0148-added-column-must-already-be-reflected-in-declared-schema-with-create-exact-name-match-required-column_name">CQL0148: added column must already be reflected in declared schema, with <code>@create</code>, exact name match required ‘column_name’</a></li>
+<li><a href="#cql0149-added-column-must-be-an-exact-match-for-the-column-type-declared-in-the-table-column_name">CQL0149: added column must be an exact match for the column type declared in the table ‘column_name’</a></li>
+<li><a href="#cql0150-expected-numeric-expression-in-if-predicate">CQL0150: expected numeric expression in IF predicate</a></li>
+<li><a href="#cql0151-table-in-delete-statement-does-not-exist-table_name">CQL0151: table in delete statement does not exist ‘table_name’</a></li>
+<li><a href="#cql0152-cannot-delete-from-a-view-view_name">CQL0152: cannot delete from a view ‘view_name’</a></li>
+<li><a href="#cql0153-duplicate-target-column-name-in-update-statement-column_name">CQL0153: duplicate target column name in update statement ‘column_name’</a></li>
+<li><a href="#cql0154-table-in-update-statement-does-not-exist-table_name">CQL0154: table in update statement does not exist ‘table_name’</a></li>
+<li><a href="#cql0155-cannot-update-a-view-view_name">CQL0155: cannot update a view ‘view_name’</a></li>
+<li><a href="#cql0156-seed-expression-must-be-a-non-nullable-integer">CQL0156: seed expression must be a non-nullable integer</a></li>
+<li><a href="#cql0157-count-of-columns-differs-from-count-of-values">CQL0157: count of columns differs from count of values</a></li>
+<li><a href="#cql0158-required-column-missing-in-insert-statement-column_name">CQL0158: required column missing in INSERT statement ‘column_name’</a></li>
+<li><a href="#cql0159-theres-no-good-way-to-generate-dummy-blobs-not-supported-for-now">CQL0159: there’s no good way to generate dummy blobs; not supported for now</a></li>
+<li><a href="#cql0160-table-in-insert-statement-does-not-exist-table_name">CQL0160: table in insert statement does not exist ‘table_name’</a></li>
+<li><a href="#cql0161-cannot-insert-into-a-view-view_name">CQL0161: cannot insert into a view ‘view_name’</a></li>
+<li><a href="#cql0162-from-arguments-is-redundant-if-insert-column-list-is-empty">CQL0162: FROM ARGUMENTS is redundant if insert column list is empty</a></li>
+<li><a href="#cql0163-from-arguments-construct-is-only-valid-inside-a-procedure">CQL0163: FROM ARGUMENTS construct is only valid inside a procedure</a></li>
+<li><a href="#cql0164-too-few-arguments-available">CQL0164: too few arguments available</a></li>
+<li><a href="#cql0165-fetch-values-is-only-for-value-cursors-not-for-sqlite-cursors-cursor_name">CQL0165: fetch values is only for value cursors, not for sqlite cursors ‘cursor_name’</a></li>
+<li><a href="#cql0166-count-of-columns-differs-from-count-of-values">CQL0166: count of columns differs from count of values</a></li>
+<li><a href="#cql0167-required-column-missing-in-fetch-statement-column_name">CQL0167: required column missing in FETCH statement ‘column_name’</a></li>
+<li><a href="#cql0168-theres-no-good-way-to-generate-dummy-blobs-not-supported-for-now">CQL0168: there’s no good way to generate dummy blobs; not supported for now</a></li>
+<li><a href="#cql0169-cannot-fetch-from-a-cursor-without-fields-cursor_name">CQL0169: cannot fetch from a cursor without fields ‘cursor_name’</a></li>
+<li><a href="#cql0170-cursor-must-be-a-value-cursor-not-a-statement-cursor-cursor_name">CQL0170: cursor must be a value cursor, not a statement cursor ‘cursor_name’</a></li>
+<li><a href="#cql0171-name-not-found-name">CQL0171: name not found ‘name’</a></li>
+<li><a href="#cql0172-name-list-has-duplicate-name-name">CQL0172: name list has duplicate name ‘name’</a></li>
+<li><a href="#cql0173-variable-not-found-variable_name">CQL0173: variable not found ‘variable_name’</a></li>
+<li><a href="#cql0174-cannot-set-a-cursor-cursor_name">CQL0174: cannot set a cursor ‘cursor_name’</a></li>
+<li><a href="#cql0175-duplicate-parameter-name-parameter_name">CQL0175: duplicate parameter name ‘parameter_name’</a></li>
+<li><a href="#cql0176-proc-has-no-result-proc_name">CQL0176: proc has no result ‘proc_name’</a></li>
+<li><a href="#cql0177-tableviewproc-not-found-name">CQL0177: table/view/proc not found ‘name’</a></li>
+<li><a href="#cql0178-proc-has-no-result-like_name">CQL0178: proc has no result ‘like_name’</a></li>
+<li><a href="#cql0179-tableviewproc-not-found-like_name">CQL0179: table/view/proc not found ‘like_name’</a></li>
+<li><a href="#cql0180-duplicate-column-name-in-result-not-allowed-column_name">CQL0180: duplicate column name in result not allowed ‘column_name’</a></li>
+<li><a href="#cql0181-autodrop-temp-table-does-not-exist-name">CQL0181: autodrop temp table does not exist ‘name’</a></li>
+<li><a href="#cql0182-autodrop-target-is-not-a-table-name">CQL0182: autodrop target is not a table ‘name’</a></li>
+<li><a href="#cql0183-autodrop-target-must-be-a-temporary-table-name">CQL0183: autodrop target must be a temporary table ‘name’</a></li>
+<li><a href="#cql0184-stored-procedures-cannot-be-nested-name">CQL0184: stored procedures cannot be nested ‘name’</a></li>
+<li><a href="#cql0185-proc-name-conflicts-with-func-name-name">CQL0185: proc name conflicts with func name ‘name’</a></li>
+<li><a href="#cql0186-duplicate-stored-proc-name-name">CQL0186: duplicate stored proc name ‘name’</a></li>
+<li><a href="#cql0187-schema_upgrade_version-not-declared-or-doesnt-match-upgrade-version-for-proc-name">CQL0187: <span class="citation" data-cites="schema_upgrade_version">@schema_upgrade_version</span> not declared or doesn’t match upgrade version <N> for proc ‘name’</a></li>
+<li><a href="#cql0188-procedure-is-supposed-to-do-schema-migration-but-it-doesnt-have-any-dml-name">CQL0188: procedure is supposed to do schema migration but it doesn’t have any DML ‘name’</a></li>
+<li><a href="#cql0189-procedure-declarationsdefinitions-do-not-match-name">CQL0189: procedure declarations/definitions do not match ‘name’</a></li>
+<li><a href="#cql0190-duplicate-column-name-name">CQL0190: duplicate column name ‘name’</a></li>
+<li><a href="#cql0191-declared-functions-must-be-top-level-function_name">CQL0191: declared functions must be top level ‘function_name’</a></li>
+<li><a href="#cql0192-func-name-conflicts-with-proc-name-name">CQL0192: func name conflicts with proc name ‘name’</a></li>
+<li><a href="#cql0193-duplicate-function-name-name">CQL0193: duplicate function name ‘name’</a></li>
+<li><a href="#cql0194-declared-procedures-must-be-top-level-name">CQL0194: declared procedures must be top level ‘name’</a></li>
+<li><a href="#cql0195-proc-name-conflicts-with-func-name-name">CQL0195: proc name conflicts with func name ‘name’</a></li>
+<li><a href="#cql0196-procedure-declarationsdefinitions-do-not-match-name">CQL0196: procedure declarations/definitions do not match ‘name’</a></li>
+<li><a href="#cql0197-duplicate-variable-name-in-the-same-scope-name">CQL0197: duplicate variable name in the same scope ‘name’</a></li>
+<li><a href="#cql0198-global-variable-hides-tableview-name-name">CQL0198: global variable hides table/view name ‘name’</a></li>
+<li><a href="#cql0199-cursor-requires-a-procedure-that-returns-a-result-set-via-select-proc_name">CQL0199: cursor requires a procedure that returns a result set via select ‘proc_name’</a></li>
+<li><a href="#cql0200-variable-is-not-a-cursor-another_cursor">CQL0200: variable is not a cursor ‘another_cursor’</a></li>
+<li><a href="#cql0201-expanding-from-arguments-there-is-no-argument-matching-required_arg">CQL0201: expanding FROM ARGUMENTS, there is no argument matching ‘required_arg’</a></li>
+<li><a href="#cql0202-must-be-a-cursor-proc-table-or-view-like_name">CQL0202: must be a cursor, proc, table, or view ‘like_name’</a></li>
+<li><a href="#cql0203-cursor-requires-a-procedure-that-returns-a-cursor-with-out-cursor_name">CQL0203: cursor requires a procedure that returns a cursor with OUT ‘cursor_name’</a></li>
+<li><a href="#cql0204-cursor-not-found-name">CQL0204: cursor not found ‘name’</a></li>
+<li><a href="#cql0205-variable-is-not-a-cursor-name">CQL0205: variable is not a cursor ‘name’</a></li>
+<li><a href="#cql0206-duplicate-name-in-list-name">CQL0206: duplicate name in list ‘name’</a></li>
+<li><a href="#cql0207-proc-out-parameter-formal-cannot-be-fulfilled-by-non-variable-param_name">CQL0207: proc out parameter: formal cannot be fulfilled by non-variable ‘param_name’</a></li>
+<li><a href="#cql0208-proc-out-parameter-formal-cannot-be-fulfilled-by-in-only-variable-variable_name">CQL0208: proc out parameter: formal cannot be fulfilled by in-only variable ‘variable_name’</a></li>
+<li><a href="#cql0209-proc-out-parameter-arg-must-be-an-exact-type-match-expected-expected_type-found-actual_type-param_name">CQL0209: proc out parameter: arg must be an exact type match (expected expected_type; found actual_type) ‘param_name’</a></li>
+<li><a href="#cql0210-proc-out-parameter-arg-must-be-an-exact-type-match-even-nullability">CQL0210: proc out parameter: arg must be an exact type match (even nullability)</a></li>
+<li><a href="#cql0211-last-formal-arg-of-procedure-is-not-an-out-arg-cannot-use-proc-as-a-function-name">CQL0211: last formal arg of procedure is not an out arg, cannot use proc as a function ‘name’</a></li>
+<li><a href="#cql0212-too-few-arguments-provided-to-procedure-name">CQL0212: too few arguments provided to procedure ‘name’</a></li>
+<li><a href="#cql0213-procedure-had-errors-cant-call.-proc_name">CQL0213: procedure had errors, can’t call. ‘proc_name’</a></li>
+<li><a href="#cql0214-procedures-with-results-can-only-be-called-using-a-cursor-in-global-context-name">CQL0214: procedures with results can only be called using a cursor in global context ‘name’</a></li>
+<li><a href="#cql0215-value-cursors-are-not-used-with-fetch-c-or-fetch-c-into-cursor_name">CQL0215: value cursors are not used with FETCH C, or FETCH C INTO ‘cursor_name’</a></li>
+<li><a href="#cql0216-fetch-variable-not-found-cursor_name">CQL0216: FETCH variable not found ‘cursor_name’</a></li>
+<li><a href="#cql0217-number-of-variables-did-not-match-count-of-columns-in-cursor-cursor_name">CQL0217: number of variables did not match count of columns in cursor ‘cursor_name’</a></li>
+<li><a href="#cql0218-continue-must-be-inside-of-a-loop-or-while-statement">CQL0218: continue must be inside of a ‘loop’ or ‘while’ statement</a></li>
+<li><a href="#cql0219-leave-must-be-inside-of-a-loop-or-while-statement">CQL0219: leave must be inside of a ‘loop’ or ‘while’ statement</a></li>
+<li><a href="#cql0220-savepoint-has-not-been-mentioned-yet-probably-wrong-name">CQL0220: savepoint has not been mentioned yet, probably wrong ‘name’</a></li>
+<li><a href="#cql0221-savepoint-has-not-been-mentioned-yet-probably-wrong-name">CQL0221: savepoint has not been mentioned yet, probably wrong ‘name’</a></li>
+<li><a href="#cql0222-the-out-cursor-statement-only-makes-sense-inside-of-a-procedure">CQL0222: the out cursor statement only makes sense inside of a procedure</a></li>
+<li><a href="#cql0223-the-cursor-was-not-fetched-with-the-auto-fetch-syntax-fetch-cursor-cursor_name">CQL0223: the cursor was not fetched with the auto-fetch syntax ‘fetch [cursor]’ ‘cursor_name’</a></li>
+<li><a href="#cql0224-literal-output-can-only-appear-outside-of-procedures">CQL0224: literal output can only appear outside of procedures</a></li>
+<li><a href="#cql0225-switching-to-previous-schema-validation-mode-must-be-outside-of-any-proc">CQL0225: switching to previous schema validation mode must be outside of any proc</a></li>
+<li><a href="#cql0226-schema-upgrade-declaration-must-be-outside-of-any-proc">CQL0226: schema upgrade declaration must be outside of any proc</a></li>
+<li><a href="#cql0227-schema-upgrade-declaration-must-come-before-any-tables-are-declared">CQL0227: schema upgrade declaration must come before any tables are declared</a></li>
+<li><a href="#cql0228-schema-upgrade-version-must-be-a-positive-integer">CQL0228: schema upgrade version must be a positive integer</a></li>
+<li><a href="#cql0229-schema-upgrade-version-declaration-may-only-appear-once">CQL0229: schema upgrade version declaration may only appear once</a></li>
+<li><a href="#cql0230-schema-upgrade-version-declaration-must-be-outside-of-any-proc">CQL0230: schema upgrade version declaration must be outside of any proc</a></li>
+<li><a href="#cql0231-schema-upgrade-version-declaration-must-come-before-any-tables-are-declared">CQL0231: schema upgrade version declaration must come before any tables are declared</a></li>
+<li><a href="#cql0232-nested-select-expression-must-return-exactly-one-column">CQL0232: nested select expression must return exactly one column</a></li>
+<li><a href="#cql0233-procedure-previously-declared-as-schema-upgrade-proc-it-can-have-no-args-proc_name">CQL0233: procedure previously declared as schema upgrade proc, it can have no args ‘proc_name’</a></li>
+<li><a href="#cql0234-autodrop-annotation-can-only-go-on-a-procedure-that-returns-a-result-set-proc_name">CQL0234: autodrop annotation can only go on a procedure that returns a result set ‘proc_name’</a></li>
+<li><a href="#cql0235-too-many-arguments-provided-to-procedure-proc_name">CQL0235: too many arguments provided to procedure ‘proc_name’</a></li>
+<li><a href="#cql0236-autodrop-annotation-can-only-go-on-a-procedure-that-uses-the-database-name">CQL0236: autodrop annotation can only go on a procedure that uses the database ‘name’</a></li>
+<li><a href="#cql0237-strict-fk-validation-requires-that-some-on-update-option-be-selected-for-every-foreign-key">CQL0237: strict FK validation requires that some ON UPDATE option be selected for every foreign key</a></li>
+<li><a href="#cql0238-strict-fk-validation-requires-that-some-on-delete-option-be-selected-for-every-foreign-key">CQL0238: strict FK validation requires that some ON DELETE option be selected for every foreign key</a></li>
+<li><a href="#cql0239-procedure-identity-column-does-not-exist-in-result-set-column_name">CQL0239: procedure identity column does not exist in result set ‘column_name’</a></li>
+<li><a href="#cql0240-identity-annotation-can-only-go-on-a-procedure-that-returns-a-result-set-proc_name">CQL0240: identity annotation can only go on a procedure that returns a result set ‘proc_name’</a></li>
+<li><a href="#cql0241-concat-may-only-appear-in-the-context-of-sql-statement">CQL0241: CONCAT may only appear in the context of SQL statement</a></li>
+<li><a href="#cql0242">CQL0242</a></li>
+<li><a href="#cql0243-blob-operand-must-be-converted-to-string-first-in">CQL0243: blob operand must be converted to string first in ‘||’</a></li>
+<li><a href="#cql0244-unknown-schema-region-region">CQL0244: unknown schema region ‘region’</a></li>
+<li><a href="#cql0245-schema-region-already-defined-region">CQL0245: schema region already defined ‘region’</a></li>
+<li><a href="#cql0246-schema-regions-do-not-nest-end-the-current-region-before-starting-a-new-one">CQL0246: schema regions do not nest; end the current region before starting a new one</a></li>
+<li><a href="#cql0247-you-must-begin-a-schema-region-before-you-can-end-one">CQL0247: you must begin a schema region before you can end one</a></li>
+<li><a href="#cql0248-schema-region-directives-may-not-appear-inside-of-a-procedure">CQL0248: schema region directives may not appear inside of a procedure</a></li>
+<li><a href="#cql0249-function-is-not-a-table-valued-function-function_name">CQL0249: function is not a table-valued-function ‘function_name’</a></li>
+<li><a href="#cql0250-table-valued-function-not-declared-function_name">CQL0250: table-valued function not declared ‘function_name’</a></li>
+<li><a href="#cql0251-fragment-must-end-with-exactly-select-from-cte">CQL0251: fragment must end with exactly ‘SELECT * FROM CTE’</a></li>
+<li><a href="#cql0252-available-for-re-use">CQL0252: available for re-use</a></li>
+<li><a href="#cql0253-base-fragment-must-include-a-single-cte-named-same-as-the-fragment-name">CQL0253: base fragment must include a single CTE named same as the fragment ‘name’</a></li>
+<li><a href="#cql0254-switching-to-previous-schema-validation-mode-not-allowed-if-schema_upgrade_version-was-used">CQL0254: switching to previous schema validation mode not allowed if <code>@schema_upgrade_version</code> was used</a></li>
+<li><a href="#cql0255-fragment-name-is-not-a-previously-declared-base-fragment-bad_fragment_name">CQL0255: fragment name is not a previously declared base fragment ‘bad_fragment_name’</a></li>
+<li><a href="#cql0256-fragment-name-conflicts-with-existing-base-fragment-name">CQL0256: fragment name conflicts with existing base fragment ‘NAME’</a></li>
+<li><a href="#cql0257-argument-must-be-a-string-or-numeric-in-function">CQL0257: argument must be a string or numeric in ‘function’</a></li>
+<li><a href="#cql0258-extension-fragment-must-add-exactly-one-cte-found-extra-named-name">CQL0258: extension fragment must add exactly one CTE; found extra named ‘name’</a></li>
+<li><a href="#cql0259-extension-fragment-cte-must-select-t.-from-base-cte">CQL0259: extension fragment CTE must select T.* from base CTE</a></li>
+<li><a href="#cql0260-extension-fragment-cte-must-be-a-simple-left-outer-join-from-table_name">CQL0260: extension fragment CTE must be a simple left outer join from ‘table_name’</a></li>
+<li><a href="#cql0261-available-for-re-use">CQL0261: available for re-use</a></li>
+<li><a href="#cql0262-available-for-re-use">CQL0262: available for re-use</a></li>
+<li><a href="#cql0263-non-ansi-joins-are-forbidden-if-strict-join-mode-is-enabled.">CQL0263: non-ANSI joins are forbidden if strict join mode is enabled.</a></li>
+<li><a href="#cql0264-duplicate-assembly-fragments-of-base-fragment">CQL0264: duplicate assembly fragments of base fragment</a></li>
+<li><a href="#cql0265-assembly-fragment-can-only-have-one-cte">CQL0265: assembly fragment can only have one CTE</a></li>
+<li><a href="#cql0266-extension-fragment-name-conflicts-with-existing-fragment">CQL0266: extension fragment name conflicts with existing fragment</a></li>
+<li><a href="#cql0267-extension-fragments-of-same-base-fragment-share-the-same-cte-column">CQL0267: extension fragments of same base fragment share the same cte column</a></li>
+<li><a href="#cql0268-extensionassembly-fragment-must-have-the-cte-columns-same-as-the-base-fragment">CQL0268: extension/assembly fragment must have the CTE columns same as the base fragment</a></li>
+<li><a href="#cql0269-at-least-part-of-this-unique-key-is-redundant-with-previous-unique-keys">CQL0269: at least part of this unique key is redundant with previous unique keys</a></li>
+<li><a href="#cql0270-use-fetch-from-for-procedures-that-returns-a-cursor-with-out-cursor">CQL0270: use FETCH FROM for procedures that returns a cursor with OUT ‘cursor’</a></li>
+<li><a href="#cql0271-the-offset-clause-may-only-be-used-if-limit-is-also-present">CQL0271: the OFFSET clause may only be used if LIMIT is also present</a></li>
+<li><a href="#cql0272-the-set-of-columns-referenced-in-the-foreign-key-statement-should-match-exactly-a-unique-key-in-parent-table">CQL0272: THE SET OF COLUMNS REFERENCED IN THE FOREIGN KEY STATEMENT SHOULD MATCH EXACTLY A UNIQUE KEY IN PARENT TABLE</a></li>
+<li><a href="#cql0273-autotest-attribute-has-incorrect-format-in-dummy_test">CQL0273: autotest attribute has incorrect format (…) in ‘dummy_test’</a></li>
+<li><a href="#cql0274-autotest-attribute-dummy_test-has-non-existent-table">CQL0274: autotest attribute ‘dummy_test’ has non existent table</a></li>
+<li><a href="#cql0275-autotest-attribute-dummy_test-has-non-existent-column">CQL0275: autotest attribute ‘dummy_test’ has non existent column</a></li>
+<li><a href="#cql0276-autotest-attribute-dummy_test-has-invalid-value-type-in">CQL0276: autotest attribute ‘dummy_test’ has invalid value type in</a></li>
+<li><a href="#cql0277-autotest-has-incorrect-format">CQL0277: autotest has incorrect format</a></li>
+<li><a href="#cql0278-autotest-attribute-name-is-not-valid">CQL0278: autotest attribute name is not valid</a></li>
+<li><a href="#cql0279-the-set-of-columns-referenced-in-the-conflict-target-should-match-exactly-a-unique-key-in-table-we-apply-upsert">CQL0279: the set of columns referenced in the conflict target should match exactly a unique key in table we apply upsert</a></li>
+<li><a href="#cql0280-upsert-statement-requires-a-where-clause-if-the-insert-clause-uses-select">CQL0280: upsert statement requires a where clause if the insert clause uses select</a></li>
+<li><a href="#cql0281-upsert-statement-does-not-include-table-name-in-the-update-statement">CQL0281: upsert statement does not include table name in the update statement</a></li>
+<li><a href="#cql0282-update-statement-require-table-name">CQL0282: update statement require table name</a></li>
+<li><a href="#cql0283-upsert-syntax-only-support-insert-into">CQL0283: upsert syntax only support INSERT INTO</a></li>
+<li><a href="#cql0284-ad-hoc-schema-migration-directive-must-provide-a-procedure-to-run">CQL0284: ad hoc schema migration directive must provide a procedure to run</a></li>
+<li><a href="#cql0285-ad-hoc-schema-migration-directive-version-number-changed-proc_name">CQL0285: ad hoc schema migration directive version number changed ‘proc_name’</a></li>
+<li><a href="#cql0286-ad-hoc-schema-migration-directive-was-removed-this-is-not-allowed-proc_name">CQL0286: ad hoc schema migration directive was removed; this is not allowed ‘proc_name’</a></li>
+<li><a href="#cql0287-extensionassembly-fragment-must-add-stub">CQL0287: extension/assembly fragment must add stub "</a></li>
+<li><a href="#cql0288-extensionassembly-fragment-stub-for-base-cte-column-must-be">CQL0288: extension/assembly fragment stub for base CTE column must be "</a></li>
+<li><a href="#cql0289-upsert-statement-are-forbidden-if-strict-upsert-statement-mode-is-enabled">CQL0289: upsert statement are forbidden if strict upsert statement mode is enabled</a></li>
+<li><a href="#cql0290-fragments-can-only-have-one-statement-in-the-statement-list-and-it-must-be-a-with..select">CQL0290: fragments can only have one statement in the statement list and it must be a WITH..SELECT</a></li>
+<li><a href="#cql0291-region-links-into-the-middle-of-a-deployable-region-you-must-point-to-the-root-of-deployable_region-not-into-the-middle-error_region">CQL0291: region links into the middle of a deployable region; you must point to the root of <code>&lt;deployable_region&gt;</code> not into the middle: <code>&lt;error_region&gt;</code></a></li>
+<li><a href="#cql0292-explain-statement-is-only-available-in-dev-mode-because-its-result-set-may-vary-between-sqlite-versions">CQL0292: Explain statement is only available in dev mode because its result set may vary between sqlite versions</a></li>
+<li><a href="#cql0293-only-explain-query-plan-statement-is-supported">CQL0293: Only [EXPLAIN QUERY PLAN …] statement is supported</a></li>
+<li><a href="#cql0294-window-function-invocations-can-only-appear-in-the-select-list-of-a-select-statement">CQL0294: Window function invocations can only appear in the select list of a select statement</a></li>
+<li><a href="#cql0295-window-name-is-not-defined">CQL0295: Window name is not defined</a></li>
+<li><a href="#cql0296-window-name-definition-is-not-used">CQL0296: Window name definition is not used</a></li>
+<li><a href="#cql0297-from-cursor-is-redundant-if-column-list-is-empty">CQL0297: FROM CURSOR is redundant if column list is empty</a></li>
+<li><a href="#cql0298-cannot-insert-from-a-cursor-without-fields-cursor_name">CQL0298: cannot insert from a cursor without fields ‘cursor_name’</a></li>
+<li><a href="#cql0299-cursor-has-too-few-fields-for-this-insert-cursor_name">CQL0299: cursor has too few fields for this insert, ‘cursor_name’</a></li>
+<li><a href="#cql0300-argument-must-be-an-integer-between-1-and-max-integer-in-function-function_name">CQL0300: Argument must be an integer (between 1 and max integer) in function ‘function_name’</a></li>
+<li><a href="#cql0301-the-second-argument-must-be-an-integer-between-0-and-max-integer-in-function-function_name">CQL0301: The second argument must be an integer (between 0 and max integer) in function ‘function_name’</a></li>
+<li><a href="#cql0302-the-first-and-third-arguments-must-be-of-the-same-type-in-function-function_name">CQL0302: The first and third arguments must be of the same type in function ‘function_name’</a></li>
+<li><a href="#cql0303-the-second-argument-must-be-an-integer-between-1-and-max-integer-in-function-function_name">CQL0303: The second argument must be an integer between 1 and max integer in function ‘function_name’</a></li>
+<li><a href="#cql0304-distinct-may-only-be-used-with-one-explicit-argument-in-an-aggregate-function">CQL0304: DISTINCT may only be used with one explicit argument in an aggregate function</a></li>
+<li><a href="#cql0305-distinct-may-only-be-used-in-function-that-are-aggregated-or-user-defined">CQL0305: DISTINCT may only be used in function that are aggregated or user defined</a></li>
+<li><a href="#cql0306-filter-clause-may-only-be-used-in-function-that-are-aggregated-or-user-defined">CQL0306: FILTER clause may only be used in function that are aggregated or user defined</a></li>
+<li><a href="#cql0307-return-statement-should-be-in-a-procedure-and-not-at-the-top-level">CQL0307: return statement should be in a procedure and not at the top level</a></li>
+<li><a href="#cql0308-statement-should-be-the-last-thing-in-a-statement-list">CQL0308: statement should be the last thing in a statement list</a></li>
+<li><a href="#cql0309-new-table-must-be-added-with-createnumber-or-later-table_name">CQL0309: new table must be added with <span class="citation" data-cites="create">@create</span>([number]) or later ‘table_name’</a></li>
+<li><a href="#cql0310-new-column-must-be-added-with-createnumber-or-later-column_name">CQL0310: new column must be added with <span class="citation" data-cites="create">@create</span>([number]) or later" ‘column_name’</a></li>
+<li><a href="#cql0311-cql0311-objects-deployment-region-changed-from-to-object_name">CQL0311: CQL0311: object’s deployment region changed from ‘<previous_region>’ to ‘<current_region>’ ‘object_name’</a></li>
+<li><a href="#cql0312-window-function-invocation-are-forbidden-if-strict-window-function-mode-is-enabled">CQL0312: window function invocation are forbidden if strict window function mode is enabled</a></li>
+<li><a href="#cql0313-blob-literals-may-only-appear-in-the-context-of-a-sql-statement">CQL0313: blob literals may only appear in the context of a SQL statement</a></li>
+<li><a href="#cql0314-select-function-does-not-require-a-declaration-it-is-a-cql-built-in">CQL0314: select function does not require a declaration, it is a CQL built-in</a></li>
+<li><a href="#cql0315-mandatory-column-with-no-default-value-in-insert-into-name-default-values-statement.">CQL0315: mandatory column with no default value in INSERT INTO name DEFAULT VALUES statement.</a></li>
+<li><a href="#cql0316-the-upsert-clause-is-not-compatible-with-default-values">CQL0316: the upsert-clause is not compatible with DEFAULT VALUES</a></li>
+<li><a href="#cql0317-char-function-arguments-must-be-integer">CQL0317: char function arguments must be integer</a></li>
+<li><a href="#cql0318-more-than-one-fragment-annotation-on-procedure-procedure_name">CQL0318: more than one fragment annotation on procedure ‘procedure_name’</a></li>
+<li><a href="#cql0319-the-name-of-the-assembly-procedure-must-match-the-name-of-the-base-fragment-procedure_name">CQL0319: the name of the assembly procedure must match the name of the base fragment ‘procedure_name’</a></li>
+<li><a href="#cql0320-extension-fragment-cte-must-have-a-from-clause-and-no-other-top-level-clauses-frag_name">CQL0320: extension fragment CTE must have a FROM clause and no other top level clauses ‘frag_name’</a></li>
+<li><a href="#cql0321-migration-proc-not-allowed-on-object-object_name">CQL0321: migration proc not allowed on object ‘object_name’</a></li>
+<li><a href="#cql0322-fragment-parameters-must-be-exactly-arguments-procedure_name">CQL0322: fragment parameters must be exactly ‘[arguments]’ ‘procedure_name’</a></li>
+<li><a href="#cql0323-calls-to-undeclared-procedures-are-forbidden-if-strict-procedure-mode-is-enabled-procedure_name">CQL0323: calls to undeclared procedures are forbidden if strict procedure mode is enabled ‘procedure_name’</a></li>
+<li><a href="#cql0324-referenced-table-was-created-in-a-later-version-so-it-cannot-be-used-in-a-foreign-key-referenced_table">CQL0324: referenced table was created in a later version so it cannot be used in a foreign key ‘referenced_table’</a></li>
+<li><a href="#cql0325-ok_table_scan-attribute-must-be-a-name">CQL0325: ok_table_scan attribute must be a name</a></li>
+<li><a href="#cql0326-the-table-name-in-ok_table_scan-does-not-exist-table_name">CQL0326: the table name in ok_table_scan does not exist ‘table_name’</a></li>
+<li><a href="#cql0327-a-value-should-not-be-assigned-to-no_table_scan-attribute">CQL0327: a value should not be assigned to no_table_scan attribute</a></li>
+<li><a href="#cql0328-no_table_scan-attribute-may-only-be-added-to-a-create-table-statement">CQL0328: no_table_scan attribute may only be added to a create table statement</a></li>
+<li><a href="#cql0329-ok_table_scan-attribute-can-only-be-used-in-a-create-procedure-statement">CQL0329: ok_table_scan attribute can only be used in a create procedure statement</a></li>
+<li><a href="#cql0330-fragment-must-start-with-exactly-select-from-cte">CQL0330: fragment must start with exactly ‘SELECT * FROM CTE’</a></li>
+<li><a href="#cql0331-extension-fragment-cte-must-have-not-have-order-by-or-limit-clauses-frag_name">CQL0331: extension fragment CTE must have not have ORDER BY or LIMIT clauses ‘frag_name’</a></li>
+<li><a href="#cql0332-all-extension-fragments-that-use-union-all-must-come-before-those-that-use-left-outer-join-frag_name">CQL0332: all extension fragments that use UNION ALL must come before those that use LEFT OUTER JOIN ‘frag_name’</a></li>
+<li><a href="#cql0333-all-the-compound-operators-in-this-cte-must-be-union-all">CQL0333: all the compound operators in this CTE must be UNION ALL</a></li>
+<li><a href="#cql0334-dummy_seed-dummy_nullables-dummy_defaults-many-only-be-used-with-a-single-values-row">CQL0334: <span class="citation" data-cites="dummy_seed">@dummy_seed</span> <span class="citation" data-cites="dummy_nullables">@dummy_nullables</span> <span class="citation" data-cites="dummy_defaults">@dummy_defaults</span> many only be used with a single VALUES row</a></li>
+<li><a href="#cql0336-select-statement-with-values-clause-requires-a-non-empty-list-of-values">CQL0336: select statement with VALUES clause requires a non empty list of values</a></li>
+<li><a href="#cql0337-the-number-of-columns-values-for-each-row-should-be-identical-in-values-clause">CQL0337: the number of columns values for each row should be identical in VALUES clause</a></li>
+<li><a href="#cql0338-the-name-of-a-migration-procedure-may-not-end-in-_crc-procedure_name">CQL0338: the name of a migration procedure may not end in ’_crc’ ‘procedure_name’</a></li>
+<li><a href="#cql0339-without-rowid-tables-are-forbidden-if-strict-without-rowid-mode-is-enabled">CQL0339: WITHOUT ROWID tables are forbidden if strict without rowid mode is enabled</a></li>
+<li><a href="#cql0340-from-arguments-used-in-a-procedure-with-no-arguments-procedure_name">CQL0340: FROM ARGUMENTS used in a procedure with no arguments ‘procedure_name’</a></li>
+</ul></li>
+<li><a href="#appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</a></li>
+</ul></li>
+</ul>
+</nav>
 <!--- @generated -->
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
@@ -5274,57 +5842,57 @@ AT_BEGIN_SCHEMA_REGION AT_END_SCHEMA_REGION
 AT_DECLARE_SCHEMA_REGION AT_DECLARE_DEPLOYABLE_REGION AT_SCHEMA_AD_HOC_MIGRATION PRIVATE</code></pre>
 <h3 id="rules">Rules</h3>
 <p>Note that in many cases the grammar is more generous than the overall language and errors have to be checked on top of this, often this is done on purpose because even when it’s possible it might be very inconvenient to do checks with syntax. For example the grammar cannot enforce non-duplicate ids in id lists, but it could enforce non-duplicate attributes in attribute lists. It chooses to do neither as they are easily done with semantic validation. Thus the grammar is not the final authority on what constitutes a valid program but it’s a good start.</p>
-<pre><code> 
- 
-program: opt_stmt_list  
-  ; 
- 
-opt_stmt_list: /*nil*/  
-  | stmt_list  
- 
-stmt_list: stmt &#39;;&#39;  
-  | stmt &#39;;&#39; stmt_list  
-  ; 
- 
-stmt: misc_attrs any_stmt  
- 
-any_stmt: select_stmt 
-  | explain_stmt 
-  | create_trigger_stmt 
-  | create_table_stmt 
-  | create_index_stmt 
-  | create_view_stmt 
-  | alter_table_add_column_stmt 
-  | drop_table_stmt 
-  | drop_view_stmt 
-  | drop_index_stmt 
-  | drop_trigger_stmt 
-  | with_delete_stmt 
-  | delete_stmt 
-  | call_stmt 
-  | with_insert_stmt 
-  | insert_stmt 
-  | with_update_stmt 
-  | update_stmt 
-  | update_cursor_stmt 
-  | upsert_stmt 
-  | with_upsert_stmt 
-  | set_stmt 
-  | create_proc_stmt 
-  | declare_proc_stmt 
-  | declare_func_stmt 
-  | declare_stmt 
-  | fetch_stmt 
-  | fetch_values_stmt 
-  | fetch_call_stmt 
-  | fetch_cursor_stmt 
-  | while_stmt 
-  | loop_stmt 
-  | leave_stmt 
-  | return_stmt 
-  | continue_stmt 
-  | if_stmt 
-  | open_stmt 
+<pre><code>
+
+program: opt_stmt_list
+  ;
+
+opt_stmt_list: /*nil*/
+  | stmt_list
+
+stmt_list: stmt &#39;;&#39;
+  | stmt &#39;;&#39; stmt_list
+  ;
+
+stmt: misc_attrs any_stmt
+
+any_stmt: select_stmt
+  | explain_stmt
+  | create_trigger_stmt
+  | create_table_stmt
+  | create_index_stmt
+  | create_view_stmt
+  | alter_table_add_column_stmt
+  | drop_table_stmt
+  | drop_view_stmt
+  | drop_index_stmt
+  | drop_trigger_stmt
+  | with_delete_stmt
+  | delete_stmt
+  | call_stmt
+  | with_insert_stmt
+  | insert_stmt
+  | with_update_stmt
+  | update_stmt
+  | update_cursor_stmt
+  | upsert_stmt
+  | with_upsert_stmt
+  | set_stmt
+  | create_proc_stmt
+  | declare_proc_stmt
+  | declare_func_stmt
+  | declare_stmt
+  | fetch_stmt
+  | fetch_values_stmt
+  | fetch_call_stmt
+  | fetch_cursor_stmt
+  | while_stmt
+  | loop_stmt
+  | leave_stmt
+  | return_stmt
+  | continue_stmt
+  | if_stmt
+  | open_stmt
   | close_stmt 
   | out_stmt 
   | out_union_stmt 
@@ -8294,3 +8862,5 @@ ad_hoc_migration: &#39;{&#39;
 <div style="page-break-after: always; visibility: hidden">
 
 </div>
+</body>
+</html>

@@ -7456,57 +7456,57 @@ AT_DECLARE_SCHEMA_REGION AT_DECLARE_DEPLOYABLE_REGION AT_SCHEMA_AD_HOC_MIGRATION
 
 Note that in many cases the grammar is more generous than the overall language and errors have to be checked on top of this, often this is done on purpose because even when it's possible it might be very inconvenient to do checks with syntax.  For example the grammar cannot enforce non-duplicate ids in id lists, but it could enforce non-duplicate attributes in attribute lists.  It chooses to do neither as they are easily done with semantic validation.  Thus the grammar is not the final authority on what constitutes a valid program but it's a good start.
 ```
- 
- 
-program: opt_stmt_list  
-  ; 
- 
-opt_stmt_list: /*nil*/  
-  | stmt_list  
- 
-stmt_list: stmt ';'  
-  | stmt ';' stmt_list  
-  ; 
- 
-stmt: misc_attrs any_stmt  
- 
-any_stmt: select_stmt 
-  | explain_stmt 
-  | create_trigger_stmt 
-  | create_table_stmt 
-  | create_index_stmt 
-  | create_view_stmt 
-  | alter_table_add_column_stmt 
-  | drop_table_stmt 
-  | drop_view_stmt 
-  | drop_index_stmt 
-  | drop_trigger_stmt 
-  | with_delete_stmt 
-  | delete_stmt 
-  | call_stmt 
-  | with_insert_stmt 
-  | insert_stmt 
-  | with_update_stmt 
-  | update_stmt 
-  | update_cursor_stmt 
-  | upsert_stmt 
-  | with_upsert_stmt 
-  | set_stmt 
-  | create_proc_stmt 
-  | declare_proc_stmt 
-  | declare_func_stmt 
-  | declare_stmt 
-  | fetch_stmt 
-  | fetch_values_stmt 
-  | fetch_call_stmt 
-  | fetch_cursor_stmt 
-  | while_stmt 
-  | loop_stmt 
-  | leave_stmt 
-  | return_stmt 
-  | continue_stmt 
-  | if_stmt 
-  | open_stmt 
+
+
+program: opt_stmt_list
+  ;
+
+opt_stmt_list: /*nil*/
+  | stmt_list
+
+stmt_list: stmt ';'
+  | stmt ';' stmt_list
+  ;
+
+stmt: misc_attrs any_stmt
+
+any_stmt: select_stmt
+  | explain_stmt
+  | create_trigger_stmt
+  | create_table_stmt
+  | create_index_stmt
+  | create_view_stmt
+  | alter_table_add_column_stmt
+  | drop_table_stmt
+  | drop_view_stmt
+  | drop_index_stmt
+  | drop_trigger_stmt
+  | with_delete_stmt
+  | delete_stmt
+  | call_stmt
+  | with_insert_stmt
+  | insert_stmt
+  | with_update_stmt
+  | update_stmt
+  | update_cursor_stmt
+  | upsert_stmt
+  | with_upsert_stmt
+  | set_stmt
+  | create_proc_stmt
+  | declare_proc_stmt
+  | declare_func_stmt
+  | declare_stmt
+  | fetch_stmt
+  | fetch_values_stmt
+  | fetch_call_stmt
+  | fetch_cursor_stmt
+  | while_stmt
+  | loop_stmt
+  | leave_stmt
+  | return_stmt
+  | continue_stmt
+  | if_stmt
+  | open_stmt
   | close_stmt 
   | out_stmt 
   | out_union_stmt 
