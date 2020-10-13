@@ -2903,6 +2903,10 @@ static sem_t sem_col_attrs(ast_node *def, ast_node *_Nullable head, coldef_info 
       // DEFAULT can be used here.
       new_flags = SEM_TYPE_HAS_DEFAULT;
     }
+    else if (is_ast_col_attrs_check(ast)) {
+    }
+    else if (is_ast_col_attrs_collate(ast)) {
+    }
     else if (is_ast_col_attrs_pk(ast)) {
       // sqlite defines all pk columns to be not null
       new_flags = SEM_TYPE_PK;

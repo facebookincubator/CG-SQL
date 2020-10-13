@@ -142,7 +142,7 @@ static void cql_reset_globals(void);
 %left CONCAT
 
 %token EXCLUDE_GROUP EXCLUDE_CURRENT_ROW EXCLUDE_TIES EXCLUDE_NO_OTHERS CURRENT_ROW UNBOUNDED PRECEDING FOLLOWING
-%token CREATE DROP TABLE WITHOUT ROWID PRIMARY KEY NULL_ DEFAULT AT_DUMMY_SEED
+%token CREATE DROP TABLE WITHOUT ROWID PRIMARY KEY NULL_ DEFAULT CHECK AT_DUMMY_SEED
 %token OBJECT TEXT BLOB LONG_ INT_ INTEGER LONG_INTEGER REAL ON UPDATE CASCADE ON_CONFLICT DO NOTHING
 %token DELETE INDEX FOREIGN REFERENCES CONSTRAINT UPSERT STATEMENT
 %token INSERT INTO VALUES VIEW SELECT QUERY_PLAN EXPLAIN OVER WINDOW FILTER PARTITION RANGE ROWS GROUPS
@@ -619,6 +619,8 @@ col_attrs[result]:
   | DEFAULT '-' num_literal col_attrs[ca]  { $result = new_ast_col_attrs_default(new_ast_uminus($num_literal), $ca);}
   | DEFAULT num_literal col_attrs[ca]  { $result = new_ast_col_attrs_default($num_literal, $ca);}
   | DEFAULT str_literal col_attrs[ca]  { $result = new_ast_col_attrs_default($str_literal, $ca);}
+  | COLLATE name col_attrs[ca]  { $result = new_ast_col_attrs_collate($name, $ca);}
+  | CHECK '(' expr ')' col_attrs[ca]  { $result = new_ast_col_attrs_check($expr, $ca);}
   | UNIQUE col_attrs[ca]  { $result = new_ast_col_attrs_unique(NULL, $ca);}
   | AT_SENSITIVE col_attrs[ca]  { $result = new_ast_sensitive_attr(NULL, $ca); }
   | AT_CREATE version_annotation col_attrs[ca]  { $result = new_ast_create_attr($version_annotation, $ca);}

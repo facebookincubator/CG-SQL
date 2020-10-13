@@ -383,6 +383,18 @@ static void cg_json_col_attrs(charbuf *output, col_info *info) {
     cg_json_default_value(output, sem_get_col_default_value(info->attrs));
   }
 
+  // check/collate are not setting sem_type flags, we have to walk the list of attributes and gather them all
+  for (ast_node *attr = info->attrs; attr; attr = attr->right) {
+    if (is_ast_col_attrs_check(attr)) {
+      bprintf(output, ",\n\"check\" : \"??\"");
+      /*Need hep here !!!!!*/
+      /*cg_json_attr_value(output, attr->left);*/
+    } else if (is_ast_col_attrs_collate(attr)) {
+      bprintf(output, ",\n\"collate\" : ");
+      cg_json_attr_value(output, attr->left);
+    }
+  }
+
   if (sem_type & SEM_TYPE_PK) {
     bprintf(info->col_pk, "\"%s\"", name);
   }

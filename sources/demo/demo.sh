@@ -11,4 +11,5 @@ CQL="${O}/cql"
 
 (cd ..; make demo-binary)
 ${O}/demo
+$CQL --in demo.sql --rt json_schema --cg demo.json
 echo "SUCCESS"
