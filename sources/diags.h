@@ -34,3 +34,11 @@
 #pragma clang diagnostic error "-Wunused-variable"
 #pragma clang diagnostic error "-Wunused-function"
 #endif
+
+#ifdef __GNUC__
+#ifndef _Nonnull
+    /* Clang-only nullability specifiers */
+    #define _Nonnull
+    #define _Nullable
+#endif
+#endif
