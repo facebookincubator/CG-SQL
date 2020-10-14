@@ -5,4 +5,4 @@
 
 # the common make file requires no overrides for the OSS build
 
-include common/Makefile.common
+include common/Makefile_common
