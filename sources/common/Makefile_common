@@ -52,10 +52,11 @@ OBJECTS+=$(ADDITIONAL_OBJECTS)
 $O/%.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-test-bison:
+$O/bison_tested:
 	common/test_bison.sh $(YACC)
+	touch $O/bison_tested
 
-$O/cql: test-bison $(OBJECTS) $(SQLITE_OBJ)
+$O/cql: $O/bison_tested $(OBJECTS) $(SQLITE_OBJ)
 	${CC} -DSQLITE_DEBUG ${CFLAGS} -o $O/cql $(OBJECTS)
 
 $O/cql.y.c $O/cql.y.h: cql.y encoders.h charbuf.h
