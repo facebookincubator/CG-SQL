@@ -2,8 +2,6 @@
 
 #import <Foundation/Foundation.h>
 
-#import <Test/TestFile.h>
-
 #import <CGCAssemblyCore.h>
 
 #import <CGCAssemblyNonCore.h>

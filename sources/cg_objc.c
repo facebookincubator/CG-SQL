@@ -484,7 +484,11 @@ cql_noexport void cg_objc_main(ast_node *head) {
   }
 
   bprintf(&header_file, "%s", rt->header_prefix);
-  bprintf(&header_file, "\n#import <%s>\n", options.objc_c_include_path);
+  // if it is an extension fragment we don't need to include the C header,
+  // extension will rely only on assembly header to access data
+  if (!is_extension_fragment) {
+    bprintf(&header_file, "\n#import <%s>\n", options.objc_c_include_path);
+  }
   if (is_extension_fragment && !is_assembly_query) {
     CSTR assembly_query_namespace_val = options.objc_assembly_query_namespace;
     // if we are currently emitting for extension fragment, it has to import and use row getters from parent

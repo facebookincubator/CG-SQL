@@ -2,8 +2,6 @@
 
 #import <Foundation/Foundation.h>
 
-#import <Test/TestFile.h>
-
 #import <MessengerBridgeQueries/CGCAssemblyCore.h>
 
 #import <MessengerBridgeQueries/CGCAssemblyNonCore.h>
