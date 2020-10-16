@@ -78,4 +78,4 @@ This will cause the amalgam to be created and compiled.  Then the test suite wil
 
 ## Dev Cycle
 
-See `dev_notes.md` for workflow tips
+See `docs/dev_notes.md` for workflow tips
