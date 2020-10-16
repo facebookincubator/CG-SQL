@@ -1148,6 +1148,15 @@ CALL something(FROM ARGUMENTS LIKE something);
 
 SET x := foo(FROM ARGUMENTS LIKE X, FROM C LIKE A, FROM X, FROM ARGUMENTS);
 
+CREATE PROC foo ()
+BEGIN
+  DECLARE w TEXT;
+  SET w := @PROC;
+  SAVEPOINT @PROC;
+  RELEASE SAVEPOINT @PROC;
+  ROLLBACK TRANSACTION TO SAVEPOINT @PROC;
+END;
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

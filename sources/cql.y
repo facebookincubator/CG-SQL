@@ -156,7 +156,7 @@ static void cql_reset_globals(void);
 %token SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
 %token CAST WITH RECURSIVE REPLACE IGNORE ADD COLUMN RENAME ALTER
 %token AT_ECHO AT_CREATE AT_RECREATE AT_DELETE AT_SCHEMA_UPGRADE_VERSION AT_PREVIOUS_SCHEMA AT_SCHEMA_UPGRADE_SCRIPT
-%token AT_FILE AT_ATTRIBUTE AT_SENSITIVE DEFERRED NOT_DEFERRABLE DEFERRABLE IMMEDIATE RESTRICT ACTION INITIALLY NO
+%token AT_PROC AT_FILE AT_ATTRIBUTE AT_SENSITIVE DEFERRED NOT_DEFERRABLE DEFERRABLE IMMEDIATE RESTRICT ACTION INITIALLY NO
 %token BEFORE AFTER INSTEAD OF FOR_EACH_ROW EXISTS RAISE FAIL ABORT AT_ENFORCE_STRICT AT_ENFORCE_NORMAL
 %token AT_BEGIN_SCHEMA_REGION AT_END_SCHEMA_REGION
 %token AT_DECLARE_SCHEMA_REGION AT_DECLARE_DEPLOYABLE_REGION AT_SCHEMA_AD_HOC_MIGRATION PRIVATE
@@ -676,6 +676,7 @@ any_literal:
   | num_literal  { $any_literal = $num_literal; }
   | NULL_  { $any_literal = new_ast_null(); }
   | AT_FILE '(' str_literal ')'  { $any_literal = file_literal($str_literal); }
+  | AT_PROC  { $any_literal = new_ast_str("@PROC"); }
   | BLOBLIT  { $any_literal = new_astb($BLOBLIT); }
   ;
 
@@ -1547,8 +1548,12 @@ begin_trans_stmt:
   ;
 
 rollback_trans_stmt:
-  ROLLBACK TRANSACTION  { $rollback_trans_stmt = new_ast_rollback_trans_stmt(NULL); }
-  | ROLLBACK TRANSACTION TO SAVEPOINT name  { $rollback_trans_stmt = new_ast_rollback_trans_stmt($name); }
+  ROLLBACK TRANSACTION  { 
+      $rollback_trans_stmt = new_ast_rollback_trans_stmt(NULL); }
+  | ROLLBACK TRANSACTION TO SAVEPOINT name  { 
+      $rollback_trans_stmt = new_ast_rollback_trans_stmt($name); }
+  | ROLLBACK TRANSACTION TO SAVEPOINT AT_PROC  { 
+      $rollback_trans_stmt = new_ast_rollback_trans_stmt(new_ast_str("@PROC")); }
   ;
 
 commit_trans_stmt:
@@ -1556,11 +1561,17 @@ commit_trans_stmt:
   ;
 
 savepoint_stmt:
-  SAVEPOINT name  { $savepoint_stmt = new_ast_savepoint_stmt($name); }
+  SAVEPOINT name  { 
+    $savepoint_stmt = new_ast_savepoint_stmt($name); }
+  | SAVEPOINT AT_PROC { 
+    $savepoint_stmt = new_ast_savepoint_stmt(new_ast_str("@PROC")); }
   ;
 
 release_savepoint_stmt:
-  RELEASE SAVEPOINT name  { $release_savepoint_stmt = new_ast_release_savepoint_stmt($name); }
+  RELEASE SAVEPOINT name  {
+    $release_savepoint_stmt = new_ast_release_savepoint_stmt($name); }
+  | RELEASE SAVEPOINT AT_PROC {
+    $release_savepoint_stmt = new_ast_release_savepoint_stmt(new_ast_str("@PROC")); }
   ;
 
 echo_stmt:

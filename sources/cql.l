@@ -139,6 +139,7 @@ OR                           { return OR; }
 LIMIT                        { return LIMIT; }
 OFFSET                       { return OFFSET; }
 PROC                         { return PROC; }
+@PROC                        { return AT_PROC; }
 PROCEDURE                    { return PROCEDURE; }
 FUNCTION                     { return FUNCTION; }
 FUNC                         { return FUNC; }

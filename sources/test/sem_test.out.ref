@@ -9025,7 +9025,7 @@ RELEASE SAVEPOINT garbonzo;
 Error at test/sem_test.sql:XXXX : in release_savepoint_stmt : CQL0221: savepoint has not been mentioned yet, probably wrong 'garbonzo'
 
   {release_savepoint_stmt}: err
-  | {name garbonzo}
+  | {name garbonzo}: ok
 
 The statement ending at line XXXX
 
@@ -9034,7 +9034,7 @@ ROLLBACK TRANSACTION TO SAVEPOINT another_garbonzo;
 Error at test/sem_test.sql:XXXX : in rollback_trans_stmt : CQL0220: savepoint has not been mentioned yet, probably wrong 'another_garbonzo'
 
   {rollback_trans_stmt}: err
-  | {name another_garbonzo}
+  | {name another_garbonzo}: ok
 
 The statement ending at line XXXX
 
@@ -47222,4 +47222,70 @@ Error at test/sem_test.sql:XXXX : in str : CQL0202: must be a cursor, proc, tabl
             | {arg_list}: err
               | {from_arguments}
                 | {name not_a_shape}: err
+
+The statement ending at line XXXX
+
+SET a_string := @PROC;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0252: @PROC literal can only appear inside of procedures
+
+  {assign}: err
+  | {name a_string}: a_string: text variable
+  | {name @PROC}: err
+
+The statement ending at line XXXX
+
+SAVEPOINT @PROC;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0252: @PROC literal can only appear inside of procedures
+
+  {savepoint_stmt}: err
+  | {name @PROC}: err
+
+The statement ending at line XXXX
+
+RELEASE SAVEPOINT @PROC;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0252: @PROC literal can only appear inside of procedures
+
+  {release_savepoint_stmt}: err
+  | {name @PROC}: err
+
+The statement ending at line XXXX
+
+ROLLBACK TRANSACTION TO SAVEPOINT @PROC;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0252: @PROC literal can only appear inside of procedures
+
+  {rollback_trans_stmt}: err
+  | {name @PROC}: err
+
+The statement ending at line XXXX
+
+CREATE PROC savepoint_proc_stuff ()
+BEGIN
+  DECLARE p TEXT;
+  SET p := 'savepoint_proc_stuff';
+  SAVEPOINT savepoint_proc_stuff;
+  ROLLBACK TRANSACTION TO SAVEPOINT savepoint_proc_stuff;
+  RELEASE SAVEPOINT savepoint_proc_stuff;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name savepoint_proc_stuff}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: text
+      | | {name_list}: p: text variable
+      | | | {name p}: p: text variable
+      | | {type_text}: text
+      | {assign}: p: text variable
+      | | {name p}: p: text variable
+      | | {strlit 'savepoint_proc_stuff'}: text notnull
+      | {savepoint_stmt}: ok
+      | | {name savepoint_proc_stuff}: ok
+      | {rollback_trans_stmt}: ok
+      | | {name savepoint_proc_stuff}: ok
+      | {release_savepoint_stmt}: ok
+        | {name savepoint_proc_stuff}: ok
 

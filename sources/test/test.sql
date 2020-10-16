@@ -1083,6 +1083,15 @@ call something(from arguments like something);
 
 set x := foo(from arguments like X, from C like A, from X, from arguments);
 
+create proc foo()
+begin
+  declare w text;
+  set w := @PROC;
+  savepoint @proc;
+  release savepoint @proc;
+  rollback transaction to savepoint @proc;
+end;
+
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 
 # 1 "long/path/I/do/not/like"
@@ -1090,3 +1099,4 @@ set x := foo(from arguments like X, from C like A, from X, from arguments);
 set file := @FILE('path/');  -- take starting at path
 set file := @FILE('');  -- keep the whole string
 set file := @FILE('xxxx');  -- pattern not found, keep it all
+

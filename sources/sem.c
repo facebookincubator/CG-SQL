@@ -120,6 +120,8 @@ static void sem_validate_marked_create_or_delete(ast_node *root, ast_node *ast, 
 static bool_t sem_validate_compatable_table_cols_vals(ast_node *table_ast, ast_node *name_list, ast_node *insert_list);
 static bool_t sem_validate_compatable_table_cols_select(ast_node *table_ast, ast_node *name_list, ast_node *select_stmt);
 static bool_t sem_validate_compatable_cols_vals(ast_node *name_list, ast_node *values);
+static CSTR process_proclit(ast_node *ast, CSTR name);
+static void rewrite_proclit(ast_node *ast);
 static void sem_rewrite_insert_list_from_arguments(ast_node *ast, uint32_t count);
 static void sem_rewrite_insert_list_from_cursor(ast_node *ast, ast_node *from_cursor, uint32_t count);
 static void sem_rewrite_like_column_spec_if_needed(ast_node *columns_values);
@@ -14462,6 +14464,11 @@ static void sem_rollback_trans_stmt(ast_node *ast) {
   Contract(is_ast_rollback_trans_stmt(ast));
 
   if (ast->left) {
+    rewrite_proclit(ast->left);
+    if (is_error(ast->left)) {
+      record_error(ast);
+      return;
+    }
     EXTRACT_STRING(name, ast->left);
     if (!symtab_find(savepoints, name)) {
       report_error(ast, "CQL0220: savepoint has not been mentioned yet, probably wrong", name);
@@ -14476,6 +14483,11 @@ static void sem_rollback_trans_stmt(ast_node *ast) {
 // as having been seen so we can verify it in rollback.
 static void sem_savepoint_stmt(ast_node *ast) {
   Contract(is_ast_savepoint_stmt(ast));
+  rewrite_proclit(ast->left);
+  if (is_error(ast->left)) {
+    record_error(ast);
+    return;
+  }
   EXTRACT_STRING(name, ast->left);
 
   // these don't have lexical semantics but at least we can verify that
@@ -14485,10 +14497,45 @@ static void sem_savepoint_stmt(ast_node *ast) {
   record_ok(ast);
 }
 
+// The name @proc refers to the current procedure name, this can appear in various
+// contexts either as a literal string or a valid id.  If it matches replace it here
+static CSTR process_proclit(ast_node *ast, CSTR name) {
+  if (!Strcasecmp(name, "@proc")) {
+    if (!current_proc) {
+       report_error(ast, "CQL0252: @PROC literal can only appear inside of procedures", NULL);
+       record_error(ast);
+       return NULL;
+    }
+
+    ast_node *name_ast = get_proc_name(current_proc);
+    EXTRACT_STRING(proc_name, name_ast);
+    name = proc_name;
+  }
+
+  record_ok(ast);
+  return name;
+}
+
+// @PROC can be used in place of an ID in various places
+// replace that name if appropriate
+static void rewrite_proclit(ast_node *ast) {
+  Contract(is_ast_str(ast));
+  EXTRACT_STRING(name, ast);
+  CSTR newname = process_proclit(ast, name);
+  if (newname) {
+    ((str_ast_node*)ast)->value = newname;
+  }
+}
+
 // Release savepoint can go anywhere but we must have
 // seen that name in a savepoint statement or it's an error.
 static void sem_release_savepoint_stmt(ast_node *ast) {
   Contract(is_ast_release_savepoint_stmt(ast));
+  rewrite_proclit(ast->left);
+  if (is_error(ast->left)) {
+    record_error(ast);
+    return;
+  }
   EXTRACT_STRING(name, ast->left);
 
   if (!symtab_find(savepoints, name)) {
@@ -14789,6 +14836,23 @@ static void sem_stmt_list(ast_node *head) {
   sem_stmt_level--;
 }
 
+// Expression type for current proc literal
+static void sem_expr_proclit(ast_node *ast) {
+  Contract(is_ast_str(ast));
+
+  // name already known to match or we wouldn't be here
+  CSTR name = process_proclit(ast, "@proc");
+  if (!name) {
+    return;
+  }
+
+  // replace with a standard string literal
+  CSTR strlit = dup_printf("'%s'", name);
+  ((str_ast_node*)ast)->value = strlit;
+
+  ast->sem = new_sem(SEM_TYPE_TEXT | SEM_TYPE_NOTNULL);
+}
+
 // Expression type for numeric primitives
 static void sem_expr_num(ast_node *ast, CSTR cstr) {
   Contract(is_ast_num(ast));
@@ -14831,6 +14895,9 @@ static void sem_expr_str(ast_node *ast, CSTR cstr) {
   if (is_ast_strlit(ast)) {
     // note str is the lexeme, so it is still quoted and escaped
     ast->sem = new_sem(SEM_TYPE_TEXT | SEM_TYPE_NOTNULL);
+  }
+  else if (is_ast_proclit(ast)) {
+    sem_expr_proclit(ast);
   }
   else {
     // identifier
