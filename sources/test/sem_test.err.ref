@@ -839,4 +839,9 @@ Error at test/sem_test.sql:XXXX : in str : CQL0343: arguments must be cursors wi
 Error at test/sem_test.sql:XXXX : in str : CQL0061: in cql_cursor_diff, all columns must be an exact type match (expected integer notnull; found text notnull) 'x'
 Error at test/sem_test.sql:XXXX : in call : CQL0342: the cursor arguments must have identical column count 'cql_cursor_diff'
 Error at test/sem_test.sql:XXXX : in str : CQL0058: in cql_cursor_diff, all column names must be identical so they have unambiguous names 'z'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'trim'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'trim'
+Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'trim'
+Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'trim'
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'trim'
 semantic errors present; no code gen.

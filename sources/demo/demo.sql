@@ -39,8 +39,6 @@ begin
   select * from mixed order by id limit lim;
 end;
 
-declare select func rtrim(x text) text;
-
 create procedure mandelbrot()
 begin
  declare C cursor for 

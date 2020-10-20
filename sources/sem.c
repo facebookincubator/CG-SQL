@@ -4777,6 +4777,52 @@ static void sem_func_ifnull(ast_node *ast, uint32_t arg_count) {
   sem_coalesce(ast, 1);  // set "ifnull"
 }
 
+static void sem_func_trim(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  // trim can only appear inside of SQL
+  if (!sem_validate_appear_inside_sql_stmt(ast)) {
+    return;
+  }
+
+  // one or two args
+  if (arg_count != 1 && !sem_validate_arg_count(ast, arg_count, 2)) {
+    return;
+  }
+
+  ast_node *arg1 = first_arg(arg_list);
+  ast_node *arg2 = arg_count == 1 ? NULL : second_arg(arg_list);
+
+  if (!is_text(arg1->sem->sem_type) || (arg2 && !is_text(arg2->sem->sem_type))) {
+    report_error(ast, "CQL0085: all arguments must be strings", name);
+    record_error(ast);
+    return;
+  }
+
+  // type text, not null if arg1 is not null
+  sem_t sem_type = SEM_TYPE_TEXT | (arg1->sem->sem_type & SEM_TYPE_NOTNULL);
+
+  // add sensitivity if either is sensitive
+  sem_type |= (arg1->sem->sem_type & SEM_TYPE_SENSITIVE);
+  sem_type |= arg2 ? (arg2->sem->sem_type & SEM_TYPE_SENSITIVE) : 0;
+
+  name_ast->sem = ast->sem = new_sem(sem_type);
+}
+
+// ltrim has the same semantics as trim
+static void sem_func_ltrim(ast_node *ast, uint32_t arg_count) {
+  sem_func_trim(ast, arg_count);
+}
+
+// rtrim has the same semantics as trim
+static void sem_func_rtrim(ast_node *ast, uint32_t arg_count) {
+  sem_func_trim(ast, arg_count);
+}
+
 static void sem_func_nullif(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
@@ -15958,6 +16004,10 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(first_value);
   FUNC_INIT(last_value);
   FUNC_INIT(nth_value);
+
+  FUNC_INIT(trim);
+  FUNC_INIT(ltrim);
+  FUNC_INIT(rtrim);
 
   EXPR_INIT(num, sem_expr_num, "NUM");
   EXPR_INIT(str, sem_expr_str, "STR");

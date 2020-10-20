@@ -47789,3 +47789,312 @@ END;
                 | {arg_list}
                   | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable auto_cursor
 
+The statement ending at line XXXX
+
+SET a_string := ( SELECT trim("x", "y") );
+
+  {assign}: a_string: text variable
+  | {name a_string}: a_string: text variable
+  | {select_stmt}: _anon: text notnull
+    | {select_core_list}: select: { _anon: text notnull }
+    | | {select_core}: select: { _anon: text notnull }
+    |   | {select_expr_list_con}: select: { _anon: text notnull }
+    |     | {select_expr_list}: select: { _anon: text notnull }
+    |     | | {select_expr}: text notnull
+    |     |   | {call}: text notnull
+    |     |     | {name trim}: text notnull
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {strlit 'x'}: text notnull
+    |     |         | {arg_list}
+    |     |           | {strlit 'y'}: text notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET a_string := ( SELECT trim("x") );
+
+  {assign}: a_string: text variable
+  | {name a_string}: a_string: text variable
+  | {select_stmt}: _anon: text notnull
+    | {select_core_list}: select: { _anon: text notnull }
+    | | {select_core}: select: { _anon: text notnull }
+    |   | {select_expr_list_con}: select: { _anon: text notnull }
+    |     | {select_expr_list}: select: { _anon: text notnull }
+    |     | | {select_expr}: text notnull
+    |     |   | {call}: text notnull
+    |     |     | {name trim}: text notnull
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {strlit 'x'}: text notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET a_string := ( SELECT ltrim("x", "y") );
+
+  {assign}: a_string: text variable
+  | {name a_string}: a_string: text variable
+  | {select_stmt}: _anon: text notnull
+    | {select_core_list}: select: { _anon: text notnull }
+    | | {select_core}: select: { _anon: text notnull }
+    |   | {select_expr_list_con}: select: { _anon: text notnull }
+    |     | {select_expr_list}: select: { _anon: text notnull }
+    |     | | {select_expr}: text notnull
+    |     |   | {call}: text notnull
+    |     |     | {name ltrim}: text notnull
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {strlit 'x'}: text notnull
+    |     |         | {arg_list}
+    |     |           | {strlit 'y'}: text notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET a_string := ( SELECT rtrim("x", "y") );
+
+  {assign}: a_string: text variable
+  | {name a_string}: a_string: text variable
+  | {select_stmt}: _anon: text notnull
+    | {select_core_list}: select: { _anon: text notnull }
+    | | {select_core}: select: { _anon: text notnull }
+    |   | {select_expr_list_con}: select: { _anon: text notnull }
+    |     | {select_expr_list}: select: { _anon: text notnull }
+    |     | | {select_expr}: text notnull
+    |     |   | {call}: text notnull
+    |     |     | {name rtrim}: text notnull
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {strlit 'x'}: text notnull
+    |     |         | {arg_list}
+    |     |           | {strlit 'y'}: text notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET a_string := ( SELECT trim() );
+
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'trim'
+
+  {assign}: err
+  | {name a_string}: a_string: text variable
+  | {select_stmt}: err
+    | {select_core_list}: err
+    | | {select_core}: err
+    |   | {select_expr_list_con}: err
+    |     | {select_expr_list}: err
+    |     | | {select_expr}: err
+    |     |   | {call}: err
+    |     |     | {name trim}: err
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET a_string := ( SELECT trim(1, 2, 3) );
+
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'trim'
+
+  {assign}: err
+  | {name a_string}: a_string: text variable
+  | {select_stmt}: err
+    | {select_core_list}: err
+    | | {select_core}: err
+    |   | {select_expr_list_con}: err
+    |     | {select_expr_list}: err
+    |     | | {select_expr}: err
+    |     |   | {call}: err
+    |     |     | {name trim}: err
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {int 1}: integer notnull
+    |     |         | {arg_list}
+    |     |           | {int 2}: integer notnull
+    |     |           | {arg_list}
+    |     |             | {int 3}: integer notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET a_string := ( SELECT trim(1, "x") );
+
+Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'trim'
+
+  {assign}: err
+  | {name a_string}: a_string: text variable
+  | {select_stmt}: err
+    | {select_core_list}: err
+    | | {select_core}: err
+    |   | {select_expr_list_con}: err
+    |     | {select_expr_list}: err
+    |     | | {select_expr}: err
+    |     |   | {call}: err
+    |     |     | {name trim}
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {int 1}: integer notnull
+    |     |         | {arg_list}
+    |     |           | {strlit 'x'}: text notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET a_string := ( SELECT trim("x", 1) );
+
+Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'trim'
+
+  {assign}: err
+  | {name a_string}: a_string: text variable
+  | {select_stmt}: err
+    | {select_core_list}: err
+    | | {select_core}: err
+    |   | {select_expr_list_con}: err
+    |     | {select_expr_list}: err
+    |     | | {select_expr}: err
+    |     |   | {call}: err
+    |     |     | {name trim}
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {strlit 'x'}: text notnull
+    |     |         | {arg_list}
+    |     |           | {int 1}: integer notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET a_string := trim("x", 1);
+
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'trim'
+
+  {assign}: err
+  | {name a_string}: a_string: text variable
+  | {call}: err
+    | {name trim}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {strlit 'x'}: text notnull
+        | {arg_list}
+          | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+SET sens_text := ( SELECT trim(name)
+  FROM with_sensitive );
+
+  {assign}: sens_text: text variable sensitive
+  | {name sens_text}: sens_text: text variable sensitive
+  | {select_stmt}: _anon: text sensitive
+    | {select_core_list}: select: { _anon: text sensitive }
+    | | {select_core}: select: { _anon: text sensitive }
+    |   | {select_expr_list_con}: select: { _anon: text sensitive }
+    |     | {select_expr_list}: select: { _anon: text sensitive }
+    |     | | {select_expr}: text sensitive
+    |     |   | {call}: text sensitive
+    |     |     | {name trim}: text sensitive
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {name name}: name: text sensitive
+    |     | {select_from_etc}: TABLE { with_sensitive: with_sensitive }
+    |       | {table_or_subquery_list}: TABLE { with_sensitive: with_sensitive }
+    |       | | {table_or_subquery}: TABLE { with_sensitive: with_sensitive }
+    |       |   | {name with_sensitive}: TABLE { with_sensitive: with_sensitive }
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET sens_text := ( SELECT trim("xxx", name) AS result
+  FROM with_sensitive );
+
+  {assign}: sens_text: text variable sensitive
+  | {name sens_text}: sens_text: text variable sensitive
+  | {select_stmt}: result: text notnull sensitive
+    | {select_core_list}: select: { result: text notnull sensitive }
+    | | {select_core}: select: { result: text notnull sensitive }
+    |   | {select_expr_list_con}: select: { result: text notnull sensitive }
+    |     | {select_expr_list}: select: { result: text notnull sensitive }
+    |     | | {select_expr}: result: text notnull sensitive
+    |     |   | {call}: text notnull sensitive
+    |     |   | | {name trim}: text notnull sensitive
+    |     |   | | {call_arg_list}
+    |     |   |   | {call_filter_clause}
+    |     |   |   | {arg_list}: ok
+    |     |   |     | {strlit 'xxx'}: text notnull
+    |     |   |     | {arg_list}
+    |     |   |       | {name name}: name: text sensitive
+    |     |   | {opt_as_alias}
+    |     |     | {name result}
+    |     | {select_from_etc}: TABLE { with_sensitive: with_sensitive }
+    |       | {table_or_subquery_list}: TABLE { with_sensitive: with_sensitive }
+    |       | | {table_or_subquery}: TABLE { with_sensitive: with_sensitive }
+    |       |   | {name with_sensitive}: TABLE { with_sensitive: with_sensitive }
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+

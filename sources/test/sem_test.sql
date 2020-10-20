@@ -11761,3 +11761,74 @@ begin
   fetch c2;
   call printf(cql_cursor_diff(c1, c2));
 end;
+
+-- TEST: simple trim call (two args)
+-- + {call}: text notnull
+-- + {name trim}: text notnull
+-- - sensitive
+-- - Error
+set a_string := (select trim("x", "y"));
+
+-- TEST: simple trim call (one arg)
+-- + {call}: text notnull
+-- + {name trim}: text notnull
+-- - sensitive
+-- - Error
+set a_string := (select trim("x"));
+
+-- TEST: simple ltrim call
+-- + {call}: text notnull
+-- + {name ltrim}: text notnull
+-- - sensitive
+-- - Error
+set a_string := (select ltrim("x", "y"));
+
+-- TEST: simple rtrim call
+-- + {call}: text notnull
+-- + {name rtrim}: text notnull
+-- - sensitive
+-- - Error
+set a_string := (select rtrim("x", "y"));
+
+-- TEST: trim failure: no args
+-- + {call}: err
+-- + Error % function got incorrect number of arguments 'trim'
+-- +1 Error
+set a_string := (select trim());
+
+-- TEST: trim failure: three args
+-- + {call}: err
+-- + Error % function got incorrect number of arguments 'trim'
+-- +1 Error
+set a_string := (select trim(1,2,3));
+
+-- TEST: trim failure: arg 1 is not a string
+-- + {call}: err
+-- + Error % all arguments must be strings 'trim'
+-- +1 Error
+set a_string := (select trim(1,"x"));
+
+-- TEST: trim failure: arg 2 is not a string
+-- + {call}: err
+-- + Error % all arguments must be strings 'trim'
+-- +1 Error
+set a_string := (select trim("x", 1));
+
+-- TEST: trim failure: not in a SQL context
+-- + {call}: err
+-- + Error % function may not appear in this context 'trim'
+-- +1 Error
+set a_string := trim("x", 1);
+
+-- TEST: trim must preserve sensitivity
+-- + {call}: text sensitive
+-- + {name trim}: text sensitive
+-- - Error
+set sens_text := (select trim(name) from with_sensitive);
+
+-- TEST: trim must preserve sensitivity (2nd arg too, 1st arg not null)
+-- + {select_stmt}: result: text notnull sensitive
+-- + {call}: text notnull sensitive
+-- + {name trim}: text notnull sensitive
+-- - Error
+set sens_text := (select trim("xxx", name) result from with_sensitive);
