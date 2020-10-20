@@ -8058,7 +8058,7 @@ BEGIN
   END IF;
 END;
 
-Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0061: if multiple selects, all columns must be an exact type match (expected real notnull; found integer notnull) 'B'
+Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0061: in multiple select statements, all columns must be an exact type match (expected real notnull; found integer notnull) 'B'
 
   {create_proc_stmt}: err
   | {name with_wrong_types}: err
@@ -8130,7 +8130,7 @@ BEGIN
   END IF;
 END;
 
-Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0057: if multiple selects, all must have the same column count
+Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0057: in multiple select statements, all must have the same column count
 
   {create_proc_stmt}: err
   | {name with_wrong_count}: err
@@ -8197,7 +8197,7 @@ BEGIN
   END IF;
 END;
 
-Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0062: if multiple selects, all columns must be an exact type match (including nullability) (expected integer notnull; found integer) 'A'
+Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0062: in multiple select statements, all columns must be an exact type match (including nullability) (expected integer notnull; found integer) 'A'
 
   {create_proc_stmt}: err
   | {name with_wrong_flags}: err
@@ -8321,7 +8321,7 @@ BEGIN
   END IF;
 END;
 
-Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0058: if multiple selects, all column names must be identical so they have unambiguous names 'B'
+Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0058: in multiple select statements, all column names must be identical so they have unambiguous names 'B'
 
   {create_proc_stmt}: err
   | {name with_bad_names}: err
@@ -17549,7 +17549,7 @@ BEGIN
   OUT D;
 END;
 
-Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0058: if multiple selects, all column names must be identical so they have unambiguous names 'C'
+Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0058: in multiple select statements, all column names must be identical so they have unambiguous names 'C'
 
   {create_proc_stmt}: err
   | {name out_cursor_proc_incompat_results}: err
@@ -18357,7 +18357,7 @@ BEGIN
   OUT C;
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0058: if multiple selects, all column names must be identical so they have unambiguous names 'B'
+Error at test/sem_test.sql:XXXX : in str : CQL0058: in multiple select statements, all column names must be identical so they have unambiguous names 'B'
 
   {create_proc_stmt}: err
   | {name fetch_from_call_to_proc_with_different_column_names}: err
@@ -18937,7 +18937,7 @@ BEGIN
   FETCH C1 FROM C0;
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0058: if multiple selects, all column names must be identical so they have unambiguous names 'B'
+Error at test/sem_test.sql:XXXX : in str : CQL0058: in multiple select statements, all column names must be identical so they have unambiguous names 'B'
 
   {create_proc_stmt}: err
   | {name fetch_to_cursor_from_cursor_with_different_columns}: err
@@ -47288,4 +47288,504 @@ END;
       | | {name savepoint_proc_stuff}: ok
       | {release_savepoint_stmt}: ok
         | {name savepoint_proc_stuff}: ok
+
+The statement ending at line XXXX
+
+SET a_string := cql_cursor_diff(1, "bogus");
+
+Error at test/sem_test.sql:XXXX : in num : CQL0341: argument must be a variable in function 'cql_cursor_diff'
+
+  {assign}: err
+  | {name a_string}: a_string: text variable
+  | {call}: err
+    | {name cql_cursor_diff}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {int 1}: err
+        | {arg_list}
+          | {strlit 'bogus'}: text notnull
+
+The statement ending at line XXXX
+
+SET a_string := cql_cursor_diff(an_int, an_int2);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'an_int'
+
+  {assign}: err
+  | {name a_string}: a_string: text variable
+  | {call}: err
+    | {name cql_cursor_diff}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {name an_int}: err
+        | {arg_list}
+          | {name an_int2}: an_int2: integer variable
+
+The statement ending at line XXXX
+
+SET a_string := cql_cursor_diff(an_int, an_int2, 1);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'cql_cursor_diff'
+
+  {assign}: err
+  | {name a_string}: a_string: text variable
+  | {call}: err
+    | {name cql_cursor_diff}: err
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {name an_int}: an_int: integer variable
+        | {arg_list}
+          | {name an_int2}: an_int2: integer variable
+          | {arg_list}
+            | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+CREATE PROC cql_cursor_diff_without_cursor_arg ()
+BEGIN
+  DECLARE c1 CURSOR FOR SELECT 1 AS x, 'y' AS y;
+  DECLARE c2 CURSOR FOR SELECT 1 AS x, 'y' AS y;
+  FETCH c2;
+  SET a_string := cql_cursor_diff(c1, c2);
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0343: arguments must be cursors with fetched values 'cql_cursor_diff'
+
+  {create_proc_stmt}: err
+  | {name cql_cursor_diff_without_cursor_arg}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor}: c1: select: { x: integer notnull, y: text notnull } variable
+      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable
+      | | {select_stmt}: select: { x: integer notnull, y: text notnull }
+      |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
+      |   | | {select_core}: select: { x: integer notnull, y: text notnull }
+      |   |   | {select_expr_list_con}: select: { x: integer notnull, y: text notnull }
+      |   |     | {select_expr_list}: select: { x: integer notnull, y: text notnull }
+      |   |     | | {select_expr}: x: integer notnull
+      |   |     | | | {int 1}: integer notnull
+      |   |     | | | {opt_as_alias}
+      |   |     | |   | {name x}
+      |   |     | | {select_expr_list}
+      |   |     |   | {select_expr}: y: text notnull
+      |   |     |     | {strlit 'y'}: text notnull
+      |   |     |     | {opt_as_alias}
+      |   |     |       | {name y}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {declare_cursor}: c2: select: { x: integer notnull, y: text notnull } variable
+      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | | {select_stmt}: select: { x: integer notnull, y: text notnull }
+      |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
+      |   | | {select_core}: select: { x: integer notnull, y: text notnull }
+      |   |   | {select_expr_list_con}: select: { x: integer notnull, y: text notnull }
+      |   |     | {select_expr_list}: select: { x: integer notnull, y: text notnull }
+      |   |     | | {select_expr}: x: integer notnull
+      |   |     | | | {int 1}: integer notnull
+      |   |     | | | {opt_as_alias}
+      |   |     | |   | {name x}
+      |   |     | | {select_expr_list}
+      |   |     |   | {select_expr}: y: text notnull
+      |   |     |     | {strlit 'y'}: text notnull
+      |   |     |     | {opt_as_alias}
+      |   |     |       | {name y}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_stmt}: c2: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | {assign}: err
+        | {name a_string}: a_string: text variable
+        | {call}: err
+          | {name cql_cursor_diff}
+          | {call_arg_list}
+            | {call_filter_clause}
+            | {arg_list}: ok
+              | {name c1}: err
+              | {arg_list}
+                | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable auto_cursor
+
+The statement ending at line XXXX
+
+CREATE PROC cql_cursor_diff_wrong_cursor_type ()
+BEGIN
+  DECLARE c1 CURSOR FOR SELECT 1 AS x;
+  DECLARE c2 CURSOR FOR SELECT '1' AS x;
+  FETCH c1;
+  FETCH c2;
+  SET a_string := cql_cursor_diff(c1, c2);
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0061: in cql_cursor_diff, all columns must be an exact type match (expected integer notnull; found text notnull) 'x'
+
+  {create_proc_stmt}: err
+  | {name cql_cursor_diff_wrong_cursor_type}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor}: c1: select: { x: integer notnull } variable
+      | | {name c1}: c1: select: { x: integer notnull } variable auto_cursor
+      | | {select_stmt}: select: { x: integer notnull }
+      |   | {select_core_list}: select: { x: integer notnull }
+      |   | | {select_core}: select: { x: integer notnull }
+      |   |   | {select_expr_list_con}: select: { x: integer notnull }
+      |   |     | {select_expr_list}: select: { x: integer notnull }
+      |   |     | | {select_expr}: x: integer notnull
+      |   |     |   | {int 1}: integer notnull
+      |   |     |   | {opt_as_alias}
+      |   |     |     | {name x}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {declare_cursor}: c2: select: { x: text notnull } variable
+      | | {name c2}: c2: select: { x: text notnull } variable auto_cursor
+      | | {select_stmt}: select: { x: text notnull }
+      |   | {select_core_list}: select: { x: text notnull }
+      |   | | {select_core}: select: { x: text notnull }
+      |   |   | {select_expr_list_con}: select: { x: text notnull }
+      |   |     | {select_expr_list}: select: { x: text notnull }
+      |   |     | | {select_expr}: x: text notnull
+      |   |     |   | {strlit '1'}: text notnull
+      |   |     |   | {opt_as_alias}
+      |   |     |     | {name x}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_stmt}: c1: select: { x: integer notnull } variable auto_cursor
+      | | {name c1}: c1: select: { x: integer notnull } variable auto_cursor
+      | {fetch_stmt}: c2: select: { x: text notnull } variable auto_cursor
+      | | {name c2}: c2: select: { x: text notnull } variable auto_cursor
+      | {assign}: err
+        | {name a_string}: a_string: text variable
+        | {call}: err
+          | {name cql_cursor_diff}
+          | {call_arg_list}
+            | {call_filter_clause}
+            | {arg_list}: ok
+              | {name c1}: err
+              | {arg_list}
+                | {name c2}: err
+
+The statement ending at line XXXX
+
+CREATE PROC cql_cursor_diff_with_wrong_col_count_arg ()
+BEGIN
+  DECLARE c1 CURSOR FOR SELECT 1 AS x, 'z' AS z;
+  DECLARE c2 CURSOR FOR SELECT 1 AS x;
+  FETCH c1;
+  FETCH c2;
+  SET a_string := cql_cursor_diff(c1, c2);
+END;
+
+Error at test/sem_test.sql:XXXX : in call : CQL0342: the cursor arguments must have identical column count 'cql_cursor_diff'
+
+  {create_proc_stmt}: err
+  | {name cql_cursor_diff_with_wrong_col_count_arg}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor}: c1: select: { x: integer notnull, z: text notnull } variable
+      | | {name c1}: c1: select: { x: integer notnull, z: text notnull } variable auto_cursor
+      | | {select_stmt}: select: { x: integer notnull, z: text notnull }
+      |   | {select_core_list}: select: { x: integer notnull, z: text notnull }
+      |   | | {select_core}: select: { x: integer notnull, z: text notnull }
+      |   |   | {select_expr_list_con}: select: { x: integer notnull, z: text notnull }
+      |   |     | {select_expr_list}: select: { x: integer notnull, z: text notnull }
+      |   |     | | {select_expr}: x: integer notnull
+      |   |     | | | {int 1}: integer notnull
+      |   |     | | | {opt_as_alias}
+      |   |     | |   | {name x}
+      |   |     | | {select_expr_list}
+      |   |     |   | {select_expr}: z: text notnull
+      |   |     |     | {strlit 'z'}: text notnull
+      |   |     |     | {opt_as_alias}
+      |   |     |       | {name z}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {declare_cursor}: c2: select: { x: integer notnull } variable
+      | | {name c2}: c2: select: { x: integer notnull } variable auto_cursor
+      | | {select_stmt}: select: { x: integer notnull }
+      |   | {select_core_list}: select: { x: integer notnull }
+      |   | | {select_core}: select: { x: integer notnull }
+      |   |   | {select_expr_list_con}: select: { x: integer notnull }
+      |   |     | {select_expr_list}: select: { x: integer notnull }
+      |   |     | | {select_expr}: x: integer notnull
+      |   |     |   | {int 1}: integer notnull
+      |   |     |   | {opt_as_alias}
+      |   |     |     | {name x}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_stmt}: c1: select: { x: integer notnull, z: text notnull } variable auto_cursor
+      | | {name c1}: c1: select: { x: integer notnull, z: text notnull } variable auto_cursor
+      | {fetch_stmt}: c2: select: { x: integer notnull } variable auto_cursor
+      | | {name c2}: c2: select: { x: integer notnull } variable auto_cursor
+      | {assign}: err
+        | {name a_string}: a_string: text variable
+        | {call}: err
+          | {name cql_cursor_diff}
+          | {call_arg_list}
+            | {call_filter_clause}
+            | {arg_list}: ok
+              | {name c1}: c1: select: { x: integer notnull, z: text notnull } variable auto_cursor
+              | {arg_list}
+                | {name c2}: c2: select: { x: integer notnull } variable auto_cursor
+
+The statement ending at line XXXX
+
+CREATE PROC cql_cursor_diff_compatible_cursor_with_diff_col_name ()
+BEGIN
+  DECLARE c1 CURSOR FOR SELECT 1 AS x, 'y' AS y;
+  DECLARE c2 CURSOR FOR SELECT 1 AS z, 'v' AS v;
+  FETCH c1;
+  FETCH c2;
+  SET a_string := cql_cursor_diff(c1, c2);
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0058: in cql_cursor_diff, all column names must be identical so they have unambiguous names 'z'
+
+  {create_proc_stmt}: err
+  | {name cql_cursor_diff_compatible_cursor_with_diff_col_name}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor}: c1: select: { x: integer notnull, y: text notnull } variable
+      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | | {select_stmt}: select: { x: integer notnull, y: text notnull }
+      |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
+      |   | | {select_core}: select: { x: integer notnull, y: text notnull }
+      |   |   | {select_expr_list_con}: select: { x: integer notnull, y: text notnull }
+      |   |     | {select_expr_list}: select: { x: integer notnull, y: text notnull }
+      |   |     | | {select_expr}: x: integer notnull
+      |   |     | | | {int 1}: integer notnull
+      |   |     | | | {opt_as_alias}
+      |   |     | |   | {name x}
+      |   |     | | {select_expr_list}
+      |   |     |   | {select_expr}: y: text notnull
+      |   |     |     | {strlit 'y'}: text notnull
+      |   |     |     | {opt_as_alias}
+      |   |     |       | {name y}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {declare_cursor}: c2: select: { z: integer notnull, v: text notnull } variable
+      | | {name c2}: c2: select: { z: integer notnull, v: text notnull } variable auto_cursor
+      | | {select_stmt}: select: { z: integer notnull, v: text notnull }
+      |   | {select_core_list}: select: { z: integer notnull, v: text notnull }
+      |   | | {select_core}: select: { z: integer notnull, v: text notnull }
+      |   |   | {select_expr_list_con}: select: { z: integer notnull, v: text notnull }
+      |   |     | {select_expr_list}: select: { z: integer notnull, v: text notnull }
+      |   |     | | {select_expr}: z: integer notnull
+      |   |     | | | {int 1}: integer notnull
+      |   |     | | | {opt_as_alias}
+      |   |     | |   | {name z}
+      |   |     | | {select_expr_list}
+      |   |     |   | {select_expr}: v: text notnull
+      |   |     |     | {strlit 'v'}: text notnull
+      |   |     |     | {opt_as_alias}
+      |   |     |       | {name v}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_stmt}: c1: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | {fetch_stmt}: c2: select: { z: integer notnull, v: text notnull } variable auto_cursor
+      | | {name c2}: c2: select: { z: integer notnull, v: text notnull } variable auto_cursor
+      | {assign}: err
+        | {name a_string}: a_string: text variable
+        | {call}: err
+          | {name cql_cursor_diff}
+          | {call_arg_list}
+            | {call_filter_clause}
+            | {arg_list}: ok
+              | {name c1}: err
+              | {arg_list}
+                | {name c2}: err
+
+The statement ending at line XXXX
+
+CREATE PROC cql_cursor_diff_with_auto_cursor ()
+BEGIN
+  DECLARE c1 CURSOR FOR SELECT 1 AS x, 'y' AS y;
+  DECLARE c2 CURSOR FOR SELECT 1 AS x, 'y' AS y;
+  FETCH c1;
+  FETCH c2;
+  SET a_string := cql_cursor_diff(c1, c2);
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name cql_cursor_diff_with_auto_cursor}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor}: c1: select: { x: integer notnull, y: text notnull } variable
+      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | | {select_stmt}: select: { x: integer notnull, y: text notnull }
+      |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
+      |   | | {select_core}: select: { x: integer notnull, y: text notnull }
+      |   |   | {select_expr_list_con}: select: { x: integer notnull, y: text notnull }
+      |   |     | {select_expr_list}: select: { x: integer notnull, y: text notnull }
+      |   |     | | {select_expr}: x: integer notnull
+      |   |     | | | {int 1}: integer notnull
+      |   |     | | | {opt_as_alias}
+      |   |     | |   | {name x}
+      |   |     | | {select_expr_list}
+      |   |     |   | {select_expr}: y: text notnull
+      |   |     |     | {strlit 'y'}: text notnull
+      |   |     |     | {opt_as_alias}
+      |   |     |       | {name y}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {declare_cursor}: c2: select: { x: integer notnull, y: text notnull } variable
+      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | | {select_stmt}: select: { x: integer notnull, y: text notnull }
+      |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
+      |   | | {select_core}: select: { x: integer notnull, y: text notnull }
+      |   |   | {select_expr_list_con}: select: { x: integer notnull, y: text notnull }
+      |   |     | {select_expr_list}: select: { x: integer notnull, y: text notnull }
+      |   |     | | {select_expr}: x: integer notnull
+      |   |     | | | {int 1}: integer notnull
+      |   |     | | | {opt_as_alias}
+      |   |     | |   | {name x}
+      |   |     | | {select_expr_list}
+      |   |     |   | {select_expr}: y: text notnull
+      |   |     |     | {strlit 'y'}: text notnull
+      |   |     |     | {opt_as_alias}
+      |   |     |       | {name y}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_stmt}: c1: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | {fetch_stmt}: c2: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | {assign}: a_string: text variable
+        | {name a_string}: a_string: text variable
+        | {call}: text
+          | {name cql_cursor_diff}: text
+          | {call_arg_list}
+            | {call_filter_clause}
+            | {arg_list}: ok
+              | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable auto_cursor
+              | {arg_list}
+                | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable auto_cursor
+
+The statement ending at line XXXX
+
+CREATE PROC print_call_cql_cursor_diff ()
+BEGIN
+  DECLARE c1 CURSOR FOR SELECT 1 AS x, 'y' AS y;
+  DECLARE c2 CURSOR FOR SELECT 1 AS x, 'v' AS y;
+  FETCH c1;
+  FETCH c2;
+  CALL printf(cql_cursor_diff(c1, c2));
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name print_call_cql_cursor_diff}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor}: c1: select: { x: integer notnull, y: text notnull } variable
+      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | | {select_stmt}: select: { x: integer notnull, y: text notnull }
+      |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
+      |   | | {select_core}: select: { x: integer notnull, y: text notnull }
+      |   |   | {select_expr_list_con}: select: { x: integer notnull, y: text notnull }
+      |   |     | {select_expr_list}: select: { x: integer notnull, y: text notnull }
+      |   |     | | {select_expr}: x: integer notnull
+      |   |     | | | {int 1}: integer notnull
+      |   |     | | | {opt_as_alias}
+      |   |     | |   | {name x}
+      |   |     | | {select_expr_list}
+      |   |     |   | {select_expr}: y: text notnull
+      |   |     |     | {strlit 'y'}: text notnull
+      |   |     |     | {opt_as_alias}
+      |   |     |       | {name y}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {declare_cursor}: c2: select: { x: integer notnull, y: text notnull } variable
+      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | | {select_stmt}: select: { x: integer notnull, y: text notnull }
+      |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
+      |   | | {select_core}: select: { x: integer notnull, y: text notnull }
+      |   |   | {select_expr_list_con}: select: { x: integer notnull, y: text notnull }
+      |   |     | {select_expr_list}: select: { x: integer notnull, y: text notnull }
+      |   |     | | {select_expr}: x: integer notnull
+      |   |     | | | {int 1}: integer notnull
+      |   |     | | | {opt_as_alias}
+      |   |     | |   | {name x}
+      |   |     | | {select_expr_list}
+      |   |     |   | {select_expr}: y: text notnull
+      |   |     |     | {strlit 'v'}: text notnull
+      |   |     |     | {opt_as_alias}
+      |   |     |       | {name y}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_stmt}: c1: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | {fetch_stmt}: c2: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | {call_stmt}: ok
+        | {name printf}: ok
+        | {expr_list}: ok
+          | {call}: text
+            | {name cql_cursor_diff}: text
+            | {call_arg_list}
+              | {call_filter_clause}
+              | {arg_list}: ok
+                | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable auto_cursor
+                | {arg_list}
+                  | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable auto_cursor
 

@@ -106,7 +106,7 @@ static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name);
 static void resolve_cursor_field(ast_node *expr, ast_node *cursor, CSTR field);
 static bool_t sem_validate_context(ast_node *ast, CSTR name, uint32_t valid_contexts);
 static void sem_expr_select(ast_node *ast, CSTR cstr);
-static void sem_verify_identical_columns(ast_node *left, ast_node *right);
+static void sem_verify_identical_columns(ast_node *left, ast_node *right, CSTR target);
 static void sem_verify_no_anon_no_null_columns(ast_node *ast);
 static void sem_with_select_stmt(ast_node *ast);
 static void sem_upsert_stmt(ast_node *ast);
@@ -3693,7 +3693,7 @@ static sem_struct *sem_unify_compatible_columns(ast_node *left, ast_node *right)
   return sptr;
 }
 
-static void sem_verify_identical_columns(ast_node *left, ast_node *right) {
+static void sem_verify_identical_columns(ast_node *left, ast_node *right, CSTR target) {
   Invariant(is_struct(left->sem->sem_type));
   sem_struct *sptr_left = left->sem->sptr;
   Invariant(is_struct(right->sem->sem_type));
@@ -3702,7 +3702,8 @@ static void sem_verify_identical_columns(ast_node *left, ast_node *right) {
   // Count, type, and names of columns must be an *exact* match.
 
   if (sptr_left->count != sptr_right->count) {
-    report_error(left, "CQL0057: if multiple selects, all must have the same column count", NULL);
+    CSTR errmsg = dup_printf("CQL0057: %s, all must have the same column count", target);
+    report_error(left, errmsg, NULL);
     record_error(left);
     record_error(right);
     return;
@@ -3715,15 +3716,17 @@ static void sem_verify_identical_columns(ast_node *left, ast_node *right) {
     const char *col2 = sptr_right->names[i];
 
     if (strcmp(col1, col2)) {
-      report_error(left, "CQL0058: if multiple selects,"
-                         " all column names must be identical so they have unambiguous names", col2);
+      CSTR errmsg = dup_printf(
+        "CQL0058: %s,"
+        " all column names must be identical so they have unambiguous names", target);
+      report_error(left, errmsg, col2);
       record_error(left);
       record_error(right);
       return;
     }
 
     if (core_type_of(sem_type_1) != core_type_of(sem_type_2)) {
-      CSTR error_message = "CQL0061: if multiple selects, all columns must be an exact type match";
+      CSTR error_message = dup_printf("CQL0061: %s, all columns must be an exact type match", target);
       report_sem_type_mismatch(sem_type_1, sem_type_2, left, error_message, col2);
       record_error(left);
       record_error(right);
@@ -3732,8 +3735,8 @@ static void sem_verify_identical_columns(ast_node *left, ast_node *right) {
 
     if (is_nullable(sem_type_1) != is_nullable(sem_type_2)) {
       CSTR error_message =
-          "CQL0062: if multiple selects, all columns must be "
-          "an exact type match (including nullability)";
+        dup_printf("CQL0062: %s, all columns must be "
+        "an exact type match (including nullability)", target);
       report_sem_type_mismatch(
           sem_type_1, sem_type_2, left, error_message, col2);
       record_error(left);
@@ -3834,7 +3837,7 @@ static void sem_update_proc_type_for_select(ast_node *ast) {
     return;
   }
 
-  sem_verify_identical_columns(current_proc, ast);
+  sem_verify_identical_columns(current_proc, ast, "in multiple select statements");
 }
 
 // Look for the given name as a local or global variable.  First local.
@@ -4909,6 +4912,78 @@ static void sem_func_char(ast_node *ast, uint32_t arg_count) {
 
   // grab the name from our first arg, if it has one, we want it.
   name_ast->sem->name = first_arg_name;
+}
+
+// Validate the variable argument is a auto cursor. This is called to validate
+// cql_cursor_diff(X,Y) arguments.
+static bool_t sem_validate_cursor_from_variable(ast_node *ast) {
+  if (is_variable(ast->sem->sem_type)) {
+
+    sem_cursor(ast);
+    if (is_error(ast)) {
+      return false;
+    }
+
+    return true;
+  } else {
+    report_error(ast, "CQL0341: argument must be a variable in function", "cql_cursor_diff");
+    record_error(ast);
+    return false;
+  }
+}
+
+// validate expression with cql_cursor_diff func is semantically correct.
+// cql_cursor_diff is a CQL builtin function that compare the values of a
+// row between two cursor.
+static void sem_func_cql_cursor_diff(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  if (!sem_validate_arg_count(ast, arg_count, 2)) {
+    return;
+  }
+
+  ast_node *arg1 = first_arg(arg_list);
+  ast_node *arg2 = second_arg(arg_list);
+  if (!sem_validate_cursor_from_variable(arg1) || !sem_validate_cursor_from_variable(arg2)) {
+    record_error(ast);
+    return;
+  }
+
+  // We've already validated that the two argument are variables for auto cursor. We just
+  // need to validate their shapes are identical
+  sem_struct *sptr1 = arg1->sem->sptr;
+  sem_struct *sptr2 = arg2->sem->sptr;
+
+  if (sptr1->count != sptr2->count) {
+    report_error(ast, "CQL0342: the cursor arguments must have identical column count", name);
+    record_error(ast);
+    return;
+  }
+
+  if (!(arg1->sem->sem_type & SEM_TYPE_AUTO_CURSOR) ||
+      !(arg2->sem->sem_type & SEM_TYPE_AUTO_CURSOR)) {
+    report_error(arg1, "CQL0343: arguments must be cursors with fetched values", name);
+    record_error(arg1);
+    record_error(ast);
+    return;
+  }
+
+  // we're making sure the two arguments cursor have the same shape, because we can
+  // only do diffing with cursors with the same shape.
+  sem_verify_identical_columns(arg1, arg2, "in cql_cursor_diff");
+  if (is_error(arg1)) {
+    record_error(ast);
+    return;
+  }
+
+  // the function always return a string which is the name of the first column in the
+  // cursors that are different otherwise null.
+  name_ast->sem = new_sem(SEM_TYPE_TEXT);
+  ast->sem = name_ast->sem;
 }
 
 static void sem_func_upper(ast_node *ast, uint32_t arg_count) {
@@ -10609,7 +10684,7 @@ static void sem_fetch_cursor_stmt(ast_node *ast) {
     return;
   }
 
-  sem_verify_identical_columns(to_cursor, from_cursor);
+  sem_verify_identical_columns(to_cursor, from_cursor, "in multiple select statements");
   if (is_error(to_cursor)) {
     record_error(ast);
     return;
@@ -14327,7 +14402,7 @@ static void sem_fetch_call_stmt(ast_node *ast) {
     return;
   }
 
-  sem_verify_identical_columns(cursor, call_stmt);
+  sem_verify_identical_columns(cursor, call_stmt, "in multiple select statements");
   if (is_error(cursor)) {
     record_error(ast);
     return;
@@ -15857,6 +15932,7 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(ifnull);
   FUNC_INIT(nullif);
   FUNC_INIT(upper);
+  FUNC_INIT(cql_cursor_diff);
   FUNC_INIT(char);
   FUNC_INIT(abs);
   FUNC_INIT(instr);

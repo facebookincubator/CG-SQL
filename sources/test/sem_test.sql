@@ -2442,7 +2442,7 @@ begin
 end;
 
 -- TEST: this procedure will have have not matching arg types
--- + Error % if multiple selects, all columns must be an exact type match (expected real notnull; found integer notnull) 'B'
+-- + Error % in multiple select statements, all columns must be an exact type match (expected real notnull; found integer notnull) 'B'
 -- + {select_expr_list}: select: { A: integer notnull, B: real notnull }
 -- + {select_expr_list}: select: { A: integer notnull, B: integer notnull }
 create procedure with_wrong_types(i integer)
@@ -2455,7 +2455,7 @@ begin
 end;
 
 -- TEST: this procedure will have have not matching arg counts
--- + Error % if multiple selects, all must have the same column count
+-- + Error % in multiple select statements, all must have the same column count
 -- + {select_expr_list}: select: { A: integer notnull, B: real notnull }
 -- + {select_expr_list}: select: { A: integer notnull }
 create procedure with_wrong_count(i integer)
@@ -2468,7 +2468,7 @@ begin
 end;
 
 -- TEST: this procedure will have nullability mismatch
--- + Error % if multiple selects, all columns must be an exact type match (including nullability) (expected integer notnull; found integer) 'A'
+-- + Error % in multiple select statements, all columns must be an exact type match (including nullability) (expected integer notnull; found integer) 'A'
 -- + {create_proc_stmt}: err
 -- + {select_stmt}: select: { A: integer notnull variable in }
 -- + {select_expr_list_con}: select: { A: integer variable }
@@ -2496,7 +2496,7 @@ begin
 end;
 
 -- TEST: this procedure will not match column names
--- + Error % if multiple selects, all column names must be identical so they have unambiguous names 'B'
+-- + Error % in multiple select statements, all column names must be identical so they have unambiguous names 'B'
 -- + {create_proc_stmt}: err
 -- + {select_stmt}: select: { A: integer notnull }
 -- + {select_expr_list_con}: select: { B: integer notnull }
@@ -4828,7 +4828,7 @@ end;
 -- TEST: use non-fetched cursor for out statement
 -- + {create_proc_stmt}: err
 -- + {out_stmt}: err
--- + Error % if multiple selects, all column names must be identical so they have unambiguous names 'C'
+-- + Error % in multiple select statements, all column names must be identical so they have unambiguous names 'C'
 -- +1 Error
 create proc out_cursor_proc_incompat_results()
 begin
@@ -5100,7 +5100,7 @@ end;
 -- + {fetch_call_stmt}: err
 -- + {name C}: err
 -- + {call_stmt}: err
--- + Error % if multiple selects, all column names must be identical so they have unambiguous names 'B'
+-- + Error % in multiple select statements, all column names must be identical so they have unambiguous names 'B'
 -- +1 Error
 create proc fetch_from_call_to_proc_with_different_column_names()
 begin
@@ -5271,7 +5271,7 @@ end;
 -- + {fetch_cursor_stmt}: err
 -- + {name C1}: err
 -- + {name C0}: err
--- + Error % if multiple selects, all column names must be identical so they have unambiguous names 'B'
+-- + Error % in multiple select statements, all column names must be identical so they have unambiguous names 'B'
 -- +1 Error
 create proc fetch_to_cursor_from_cursor_with_different_columns()
 begin
@@ -11521,7 +11521,7 @@ begin
    call lotsa_ints(1, from arguments like small_shape, 2, 3);
    call lotsa_ints(1, 2, from arguments like small_shape, 3);
    call lotsa_ints(1, 2, 3, from arguments like small_shape);
-   call lotsa_ints(from arguments like small_shape, 
+   call lotsa_ints(from arguments like small_shape,
                    from arguments like small_shape,
                    from arguments like small_shape,
                    from arguments like small_shape);
@@ -11542,7 +11542,7 @@ begin
    call lotsa_ints(1, from arguments like small_shape, 2, 3);
    call lotsa_ints(1, 2, from arguments like small_shape, 3);
    call lotsa_ints(1, 2, 3, from arguments like small_shape);
-   call lotsa_ints(from arguments like small_shape, 
+   call lotsa_ints(from arguments like small_shape,
                    from arguments like small_shape,
                    from arguments like small_shape,
                    from arguments like small_shape);
@@ -11649,4 +11649,115 @@ begin
   savepoint @proc;
   rollback transaction to savepoint @proc;
   release savepoint @proc;
+end;
+
+-- TEST: call cql_cursor_diff with non variable arguments
+-- + {assign}: err
+-- + {call}: err
+-- + Error % argument must be a variable in function 'cql_cursor_diff'
+-- +1 Error
+set a_string := cql_cursor_diff(1, "bogus");
+
+-- TEST: call cql_cursor_diff with invalid variable arguments
+-- + {assign}: err
+-- + {call}: err
+-- + Error % variable is not a cursor 'an_int'
+-- +1 Error
+set a_string := cql_cursor_diff(an_int, an_int2);
+
+-- TEST: call cql_cursor_diff with incorrect number of arguments
+-- + {assign}: err
+-- + {call}: err
+-- + {name cql_cursor_diff}: err
+-- + Error % function got incorrect number of arguments 'cql_cursor_diff'
+-- +1 Error
+set a_string := cql_cursor_diff(an_int, an_int2, 1);
+
+-- TEST: call cql_cursor_diff with cursor with fetch value and same shape
+-- + {create_proc_stmt}: err
+-- + {assign}: err
+-- + {call}: err
+-- + {name c1}: err
+-- + Error % arguments must be cursors with fetched values 'cql_cursor_diff'
+-- +1 Error
+create proc cql_cursor_diff_without_cursor_arg()
+begin
+  declare c1 cursor for select 1 x, 'y' y;
+  declare c2 cursor for select 1 x, 'y' y;
+  fetch c2;
+  set a_string := cql_cursor_diff(c1, c2);
+end;
+
+-- TEST: call cql_cursor_diff with incompatible cursor types
+-- + {create_proc_stmt}: err
+-- + {assign}: err
+-- + {call}: err
+-- + {name c1}: err
+-- + Error % in cql_cursor_diff, all columns must be an exact type match (expected integer notnull; found text notnull) 'x'
+-- +1 Error
+create proc cql_cursor_diff_wrong_cursor_type()
+begin
+  declare c1 cursor for select 1 x;
+  declare c2 cursor for select '1' x;
+  fetch c1;
+  fetch c2;
+  set a_string := cql_cursor_diff(c1, c2);
+end;
+
+-- TEST: call cql_cursor_diff with invalid column count arguments
+-- + {create_proc_stmt}: err
+-- + {assign}: err
+-- + {call}: err
+-- + Error % the cursor arguments must have identical column count 'cql_cursor_diff'
+-- +1 Error
+create proc cql_cursor_diff_with_wrong_col_count_arg()
+begin
+  declare c1 cursor for select 1 x, 'z' z;
+  declare c2 cursor for select 1 x;
+  fetch c1;
+  fetch c2;
+  set a_string := cql_cursor_diff(c1, c2);
+end;
+
+-- TEST: call cql_cursor_diff with valid cursor param but different column name
+-- + {create_proc_stmt}: err
+-- + {assign}: err
+-- + {call}: err
+-- + Error % in cql_cursor_diff, all column names must be identical so they have unambiguous names 'z'
+-- +1 Error
+create proc cql_cursor_diff_compatible_cursor_with_diff_col_name()
+begin
+  declare c1 cursor for select 1 x, 'y' y;
+  declare c2 cursor for select 1 z, 'v' v;
+  fetch c1;
+  fetch c2;
+  set a_string := cql_cursor_diff(c1, c2);
+end;
+
+-- TEST: call cql_cursor_diff with cursor with fetch value and same shape
+-- + {create_proc_stmt}: ok dml_proc
+-- + {assign}: a_string: text variable
+-- + {call}: text
+-- - Error
+create proc cql_cursor_diff_with_auto_cursor()
+begin
+  declare c1 cursor for select 1 x, 'y' y;
+  declare c2 cursor for select 1 x, 'y' y;
+  fetch c1;
+  fetch c2;
+  set a_string := cql_cursor_diff(c1, c2);
+end;
+
+-- TEST: call cql_cursor_diff from another func
+-- + {create_proc_stmt}: ok dml_proc
+-- + {call_stmt}: ok
+-- + {call}: text
+-- - Error
+create proc print_call_cql_cursor_diff()
+begin
+  declare c1 cursor for select 1 x, 'y' y;
+  declare c2 cursor for select 1 x, 'v' y;
+  fetch c1;
+  fetch c2;
+  call printf(cql_cursor_diff(c1, c2));
 end;
