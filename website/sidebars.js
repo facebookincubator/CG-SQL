@@ -8,8 +8,8 @@
  */
 
 module.exports = {
-    docs: {
-    'Quick Start': ['introduction', 'building',  'code-coverage', 'testing'],
+  someSidebar: {
+    'Quick Start': ['introduction', 'building', 'code-coverage', 'testing'],
     Resources: ['dev-notes'],
-  }
+  },
 };

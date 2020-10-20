@@ -6,12 +6,12 @@
 
 rm -f guide.md
 (echo -n "<!--- @" ; echo "generated -->") >guide.md
-for f in ch*.md
+for f in ../ch*.md
 do
   ( cat "$f"; echo ""; echo "" ) >>guide.md
 done
-  
-for f in x*.md
+
+for f in ../x*.md
 do
   (cat "$f"; \
    echo ""; \

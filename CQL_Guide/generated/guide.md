@@ -1,13 +1,15 @@
 <!--- @generated -->
+---
+id: ch01
+title: "Chapter 1: Introduction"
+sidebar_label: "Chapter 1: Introduction"
+---
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-
-## 1. Introduction
-
 CQL was designed as a precompiled addition to the the SQLite runtime system.  SQLite lacks
 stored procedures, but has a rich C runtime interface that allows you to create any kind
 of control flow mixed with any SQL operations that you might need.  However, SQLite's programming
@@ -60,10 +62,10 @@ However, hello.c will not have a `main` -- rather it will have a function like t
 void hello(void);
 ```
 
-The declaration of this function can be found in `hello.h`.  
+The declaration of this function can be found in `hello.h`.
 
 That `hello` function is not quite adequate to do get a running program, which brings us to the next step in
-getting things running.  Typically you have some kind of client program that will execute the procedures you 
+getting things running.  Typically you have some kind of client program that will execute the procedures you
 create in CQL.  Let's create a simple one in a file we'll creatively name `main.c`.
 
 A very simple CQL main might look like this:
@@ -133,7 +135,7 @@ begin
 end;
 ```
 
-You may notice that both the SQL style `--` line prefix comments and the C style `/* */` forms 
+You may notice that both the SQL style `--` line prefix comments and the C style `/* */` forms
 are acceptable comment forms. Indeed, it's actually quite normal to pass CQL source through the C pre-processor before giving
 it to the CQL compiler, thereby gaining `#define` and `#include` as well as other pre-processing options
 like token pasting in addition to the other comment forms.  More on this later.
@@ -145,23 +147,23 @@ procedure even if they are declared within a nested `begin` and `end` block.
 
 The most basic types are the scalar or "unitary" types (as they are referred to in the compiler)
 
-|type      |aliases      | notes                              |
-|----------|-------------|------------------------------------|
-|integer   |int          | a 32 bit integer                   |
-|long *    |long integer | a 64 bit integer                   |
-|bool      |boolean      | an 8 bit integer, normalized to 0/1|
-|real      |n/a          | a C double                         |
-|text      |n/a          | an immutable string reference      |
-|blob      |n/a          | an immutable blob reference        |
-|object    |n/a          | an object reference                |
-|object<T> |n/a          | an object reference of type T      |
+|type        |aliases      | notes                              |
+|------------|-------------|------------------------------------|
+|`integer`   |int          | a 32 bit integer                   |
+|`long` *    |long integer | a 64 bit integer                   |
+|`bool`      |boolean      | an 8 bit integer, normalized to 0/1|
+|`real`      |n/a          | a C double                         |
+|`text`      |n/a          | an immutable string reference      |
+|`blob`      |n/a          | an immutable blob reference        |
+|`object`    |n/a          | an object reference                |
+|`object<T>` |n/a          | an object reference of type T      |
 
 \* SQLite makes no distinction between integer storage and long integer storage, but the declaration
 tells CQL whether it should use the SQLite methods for binding and reading 64 bit or 32 bit quantities
 from the column.
 
 There will be more notes on these types later, but importantly, all keywords and names in CQL
-are case insensitive just like in the underlying SQL language.   Additionally all of the 
+are case insensitive just like in the underlying SQL language.   Additionally all of the
 above may be combined with `not null` to indicate that a `null` value may not be stored
 in that variable (as in the example).  When generating the C code, the case used in the declaration
 becomes the canonical case of the variable and all other cases are converted to that in the emitted
@@ -176,7 +178,7 @@ All reference types are initialized to `NULL` when they are declared.
 The programs execution begins with three assignments:
 
 ```sql
-  set lower := 0; 
+  set lower := 0;
   set upper := 300;
   set step := 20;
 ```
@@ -193,7 +195,7 @@ The table is then printed using a `while` loop
   end;
 ```
 
-This has the usual meaning, with the statements in the `begin/end` block being executed repeatedly 
+This has the usual meaning, with the statements in the `begin/end` block being executed repeatedly
 until the condition becomes false.
 
 The body of a `begin/end` block such as the one in the `while` statement can contain one or more statements.
@@ -244,19 +246,18 @@ cc -x c -E your_program.sql | cql --cg your_program.h your_program.c
 
 The above causes the C compiler to invoke only the pre-processor `-E` and to treat the input as though it were C code `-x c` even though it is in a `.sql` file. Later examples will assume that you have configured CQL to be used with the C pre-processor as above.
 
-<div style="page-break-after: always; visibility: hidden"></div>
 
-
-
+---
+id: ch02
+title: "Chapter 2: Using Data"
+sidebar_label: "Chapter 2: Using Data"
+---
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-
-# 2. Using Data
-
 The point of using CQL is to facilitate access to a SQLite database so we'll switch gears to a slightly more complicated setup.  We'll
 still keep things fairly simple but let's start to use some database features.  Note: it is not the intent of this tutorial to also be
 a primer for the SQLite programming language which is so ably documented on https://sqlite.org/.  Please refer to that site for details
@@ -284,8 +285,8 @@ Well, it doesn't.  At least, not yet.  Let's walk through the various things tha
 
 ### Providing a Suitable Database
 
-CQL is just a compiler, it doesn't know how the code it creates will be provisioned any more than say clang does.  
-It creates functions with predictable signatures so that they can be called from C just as easily as the SQLite API 
+CQL is just a compiler, it doesn't know how the code it creates will be provisioned any more than say clang does.
+It creates functions with predictable signatures so that they can be called from C just as easily as the SQLite API
 itself, and using the same currency.  Our new version of `hello` now requires a database handle because it performs
 database operations.  Also there are now opportunities for the database operations to fail, and so `hello` now provides a
 return code.
@@ -312,7 +313,7 @@ int main(int argc, char **argv)
 }
 ```
 
-If we re-run CQL and look in the `hello.h` output file we'll see that the declaration of the `hello` function is now: 
+If we re-run CQL and look in the `hello.h` output file we'll see that the declaration of the `hello` function is now:
 
 ```C
   cql_code hello(sqlite3 *_db_);
@@ -320,7 +321,7 @@ If we re-run CQL and look in the `hello.h` output file we'll see that the declar
 
 indicating that the database is used and a SQLite return code is provided.  We're nearly there.  If you attempt
 to build the program as before there will be several link-time errors due to missing functions.  Typically these
-are resolved by providing the SQLite library to the command line and also adding the CQL runtime.  
+are resolved by providing the SQLite library to the command line and also adding the CQL runtime.
 The new command line looks something like this:
 
 ```bash
@@ -332,19 +333,19 @@ Hello, world
 The cql runtime can be anywhere you want it to be, and of course the usual C seperate compilation methods
 can be applied. More on that later.
 
-But actually, that program doesn't quite work yet.  If you run it, you'll get an error result code, not the message 
+But actually, that program doesn't quite work yet.  If you run it, you'll get an error result code, not the message
 "Hello, world".
 
 Let's talk about the final missing bit.
 
 ### Declaring Schema
 
-In CQL a loose piece of Data Definition Language (henceforth DDL) does not actually create or drop anything.  
-In most CQL programs,  the normal situation is that "something" has already created the database and put some 
-data in it.  You need to tell the CQL compiler about the schema so that it knows what the tables are and what to 
-expect to find in those tables.  This is because typically you're reconnecting to some sort of existing database. 
+In CQL a loose piece of Data Definition Language (henceforth DDL) does not actually create or drop anything.
+In most CQL programs,  the normal situation is that "something" has already created the database and put some
+data in it.  You need to tell the CQL compiler about the schema so that it knows what the tables are and what to
+expect to find in those tables.  This is because typically you're reconnecting to some sort of existing database.
 So, in CQL, loose DDL simply *declares* schema, it does not create it.  To create schema you have to put the DDL
-into a procedure you can run.  If you do that, then the DDL still serves a declaration, but also the schema will be 
+into a procedure you can run.  If you do that, then the DDL still serves a declaration, but also the schema will be
 created when the procedure is executed.
 
 We need to change our program a tiny bit.
@@ -371,8 +372,8 @@ Let's go over every important line of the new program, starting from main.
   int rc = sqlite3_open(":memory:", &db);
 ```
 
-This statement gives us an empty private in-memory only database to work with.  This is the simplest case 
-and it's still very useful.  The `sqlite_open` and `sqlite_open_v2` functions can be used to create a variety of 
+This statement gives us an empty private in-memory only database to work with.  This is the simplest case
+and it's still very useful.  The `sqlite_open` and `sqlite_open_v2` functions can be used to create a variety of
 databases per the SQLite documentation.
 
 We'll need such a database to use our procedure, and we use it in the call here:
@@ -381,7 +382,7 @@ We'll need such a database to use our procedure, and we use it in the call here:
   rc = hello(db);
 ```
 
-This provides a valid db handle to our procedure.  Note that the procedure doesn't know what database it is 
+This provides a valid db handle to our procedure.  Note that the procedure doesn't know what database it is
 supposed to operate on, it expects to be handed a suitable database on a silver platter.  In fact any given proc
 could be used with various databases at various times.  Just like SQLite, CQL does not enforce any particular
 database setup;  it does what you tell it to.
@@ -409,9 +410,9 @@ Next we declare a local variable to hold our data.
   declare t text not null;
 ```
 
-This is a simple string reference, it will be initialized to `NULL` by default.  That's actually important; 
-even though the variable is `NOT NULL` there is no reasonable default value for it other than `NULL`.  
-The `NOT NULL` declaration will guard against `NULL` assignments but it will not prevent reference types 
+This is a simple string reference, it will be initialized to `NULL` by default.  That's actually important;
+even though the variable is `NOT NULL` there is no reasonable default value for it other than `NULL`.
+The `NOT NULL` declaration will guard against `NULL` assignments but it will not prevent reference types
 from beginning with `NULL` as their value.  Junk would be worse and some random initialized value
 would create unnecessary cost.  This mirrors the choice the C language makes with its `_Nonnull` extensions.
 
@@ -421,17 +422,17 @@ At this point we can read back our data.
   set t := (select * from my_data);
 ```
 
-This form of database reading has very limited usability but it does work for this case and it is illustrative.  
+This form of database reading has very limited usability but it does work for this case and it is illustrative.
 The presence of `(select ...)` indicates to the CQL compiler that parenthesized expression should be given to
-SQLite for evaluation according to the SQLite rules.  The expression is statically checked at compile time to 
+SQLite for evaluation according to the SQLite rules.  The expression is statically checked at compile time to
 ensure that it has exactly one result column. In this case the `*` is just column `t`, and actually it would have
-be clearer to use `t` directly here but then there wouldn't have a reason to talk about `*` and multiple columns.  
+be clearer to use `t` directly here but then there wouldn't have a reason to talk about `*` and multiple columns.
 At run time, the `select` query must return exactly one row or an error code will be returned.  It's not uncommmon
 to see `(select ... limit 1)` to force the issue.  But that still leaves the possibility of zero rows, which would be an error.  We'll talk about more flexible ways to read from the database later.
 
-At this point it seems wise to bring up the unusual expression evaluation properties of CQL.  
-CQL is by necessity a two-headed beast.  On the one side there is a rich expression evaluation language for 
-working with local variables. Those expressions are compiled into C logic that emulates the behavior of SQLite 
+At this point it seems wise to bring up the unusual expression evaluation properties of CQL.
+CQL is by necessity a two-headed beast.  On the one side there is a rich expression evaluation language for
+working with local variables. Those expressions are compiled into C logic that emulates the behavior of SQLite
 on the data.  It provides complex expression constructs such `IN` and `CASE` but it is ultimately evaluated by C
 execution.  Alternately, anything that is inside of a piece of SQL is necessarily evaluated by SQLite itself.  To make this clearer let's change the example a little bit before we move on.
 
@@ -453,9 +454,9 @@ Returning now to our code as written, we see something very familiar:
   call printf('%s', t);
 ```
 
-Note we've used the single quote syntax here for no good reason other than illustration. There are no escape 
+Note we've used the single quote syntax here for no good reason other than illustration. There are no escape
 sequences here so either form would the job. Importantly, the string literal will not create a string object as before
-but the text variable `t` is of course a string reference.  Before it can be used in a call to an un-declared function it 
+but the text variable `t` is of course a string reference.  Before it can be used in a call to an un-declared function it
 must be converted into a temporary C string.  This might require allocation in general, that allocation is automatically
 managed.  Note that by default CQL assumes that calls to unknown C functions should be emitted as written.  In this way you can use `printf` even though CQL knows nothing about it.
 
@@ -468,14 +469,14 @@ Lastly we have:
 This is not strictly necessary because the database is in memory anyway and the program is about to exit but there
 it is for illustration.
 
-Now the Data Manipulation Langauge (i.e. insert and select here; and henceforth DML) and the DDL might fail for various reasons.  If that happens the proc will `goto` a cleanup handler and return the failed return code instead of running the rest of the code.  Any temporary memory allocations will be freed and any pending 
+Now the Data Manipulation Langauge (i.e. insert and select here; and henceforth DML) and the DDL might fail for various reasons.  If that happens the proc will `goto` a cleanup handler and return the failed return code instead of running the rest of the code.  Any temporary memory allocations will be freed and any pending
 SQLite statements will be finalized.  More on that later when we discuss error handling.
 
 With that we have a much more complicated program that prints "Hello, world"
 
 ### Introducing Cursors
 
-In order to read data with reasonable flexibility, we need a more powerful construction.  
+In order to read data with reasonable flexibility, we need a more powerful construction.
 Let's change our example again and start using some database features.
 
 ```sql
@@ -497,7 +498,7 @@ begin
     call printf("%d: %s\n", C.pos, C.txt);
   end;
   close C;
-  
+
   drop table my_data;
 end;
 ```
@@ -536,7 +537,7 @@ We've created a non-scalar variable `C`, a cursor over the indicated result set.
 ```
 
 This loop will run until there are no results left (it might not run at all if there are zero rows, that is not an error).  The `FETCH` construct allows you to specify target variables, but if you do not do so, then a synethetic structure is
-automatically created to capture the projection of the `select`.  In this case the columns are `pos` and `txt`.  
+automatically created to capture the projection of the `select`.  In this case the columns are `pos` and `txt`.
 The automatically created storage exactly matches the type of the columns in the select list which could itself be tricky to calculate if the `select` is complex.  In this case the `select` is quite simple and the columns of the result directly match the schema for `my_data`.  An integer and a string reference.  Both not null.
 
 
@@ -551,8 +552,8 @@ Double quotes were used in the format string to get the newline in there easily.
   close C;
 ```
 
-The cursor is automatically released at the end of the procedure but in this case we'd like to release it before the 
-`drop table` happens so there is an explicit `close`. This is frequently elided in favor of the automatic cleanup.  
+The cursor is automatically released at the end of the procedure but in this case we'd like to release it before the
+`drop table` happens so there is an explicit `close`. This is frequently elided in favor of the automatic cleanup.
 There is an `open` cursor statement as well but it doesn't do anything.  It's there because many systems have that
 construct and it does balance the `close`.
 
@@ -570,14 +571,12 @@ $ ./hello
 
 So the data was inserted and then sorted.
 
-<div style="page-break-after: always; visibility: hidden"></div>
-
 ### Going Crazy
 
-We've only scratched the surface of what SQLite can do and most DML constructs are supported by CQL.  
-This includes common table expressions, and even recursive versions of the same. But remember, when it 
-comes to DML, the CQL compiler only has to validate the types and figure out what the result shape will be -- 
-SQLite always does all the heavy lifting of evaluation. All of this means with remarkably little additional code, 
+We've only scratched the surface of what SQLite can do and most DML constructs are supported by CQL.
+This includes common table expressions, and even recursive versions of the same. But remember, when it
+comes to DML, the CQL compiler only has to validate the types and figure out what the result shape will be --
+SQLite always does all the heavy lifting of evaluation. All of this means with remarkably little additional code,
 the example below from the SQLite documentation can be turned into a CQL stored proc using the constructs
 we have defined above.
 
@@ -627,8 +626,6 @@ begin
 end;
 ```
 
-<div style="page-break-after: always; visibility: hidden"></div>
-
 This code uses all kinds of SQLite features to produce this text:
 
 ```bash
@@ -665,18 +662,17 @@ Which probably doesn't come up very often but it does illustrate several things:
    *  in general CQL doesn't know what these declared functions do, so it cannot emulate them
    *  some would be very hard to emulate correctly under the best of circumstances
 
-<div style="page-break-after: always; visibility: hidden"></div>
-
-
+---
+id: ch03
+title: "Chapter 3: Expressions, Literals, Nullability, Sensitivity"
+sidebar_label: "Chapter 3: Expressions, Literals, Nullability, Sensitivity"
+---
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-
-## 3. Expressions, Literals, Nullability, Sensitivity
-
 Until this point we've only discussed simple kinds of expressions and as well as variables and table columns marked with `NOT NULL` . These are indeed the easiest types for CQL to work with as they tend to correspond most directly to the types known to C.  However
 SQL provides for many more types of expressions as well as nullable types and these require handling in any language that purports to be like SQL.
 
@@ -696,9 +692,9 @@ Example expressions (these are all true)
 7 & 3 == 2 | 1
 1 << 2 == 4
 ```
-However, before going any further it's important to note that CQL is inherently a two-headed beast.  Expressions are either evaluated by transpiling to C (like the predicate of an IF statement, or a variable assignment) or by sending them to SQLIte for evaluation (like expressions inside a `SELECT` statement or the `WHERE` part of a `DELETE`).  
+However, before going any further it's important to note that CQL is inherently a two-headed beast.  Expressions are either evaluated by transpiling to C (like the predicate of an IF statement, or a variable assignment) or by sending them to SQLIte for evaluation (like expressions inside a `SELECT` statement or the `WHERE` part of a `DELETE`).
 
-CQL evaluation rules are designed to be as similar as possible but some variance is inevitable because evaluation is done in two fundamentally different way. 
+CQL evaluation rules are designed to be as similar as possible but some variance is inevitable because evaluation is done in two fundamentally different way.
 
 ### Order of Evaluation
 
@@ -756,7 +752,7 @@ There are a number of literal objects that may be expressed in CQL.  These are a
 #### String Literals
 
 * A double quoted string is a C style string literal
-  * the usual simple C escape sequences are supported, however 
+  * the usual simple C escape sequences are supported, however
   * the \xNN form is not supported, nor is the \0NNN octal form supported
     * these are actually invaluable and likely to be supported in the near future
 * a single quoted string is a SQL style string literal
@@ -765,7 +761,7 @@ There are a number of literal objects that may be expressed in CQL.  These are a
   * the value of this literal is the path of the current compiland starting at the letters in `some_string`, or
   * the entire path of the current compiland if `some_string` does not occur in the path
   * the purpose of the `@FILE` construct is to provide a partial path to a file for diagnostics that is consistent even if the file is built in various different root paths on different build machines
-  
+
 #### Blob Literals
 * SQLite Blob literals are supported in SQL contexts (i.e. where they will be processed by SQLite), CQL produces an error if you attempt to use a blob literal in a loose expression
 
@@ -797,7 +793,7 @@ Note:  constructs like `CAST(NULL as TEXT)` are always rewritten to just `NULL` 
 
 There are no boolean literals other than the integers `0` and `1`.
 
-The C pre-processor is often combined with CQL in which case the `_FILE_` and `_LINE_` directives may be used to create literals; they will be preprocessed into normal literals.  
+The C pre-processor is often combined with CQL in which case the `_FILE_` and `_LINE_` directives may be used to create literals; they will be preprocessed into normal literals.
 
 The use of `_FILE_` can give surprising results in the presence of build systems, hence the existence of `@FILE(...)`.
 
@@ -805,7 +801,7 @@ The use of `_FILE_` can give surprising results in the presence of build systems
 
 #### General Rule
 
-Except as noted in the exceptions below, the result of an operator is nullable if and only if any of its operands 
+Except as noted in the exceptions below, the result of an operator is nullable if and only if any of its operands
 are nullable. This applies no matter the number of operands the operator requires.
 
 Note: CQL does not do constant folding or other inferencing, it only uses the types of the values
@@ -833,7 +829,7 @@ The following rules apply when considering nullability of a `CASE` expression.
 * otherwise the result is not nullable
 
 The SQL `CASE` construct is quite powerful and unlike the C `switch` statement it is actually an expression.  So it's rather more like a highly generalized ternary `a ? b : c` operator rather than the switch statement.   There can be
-arbitrarily many conditions specified each with their own result and the conditions need not be constants and 
+arbitrarily many conditions specified each with their own result and the conditions need not be constants and
 typically are not.
 
 #### The IFNULL and COALESCE Functions
@@ -842,15 +838,15 @@ These functions are nullable or non-nullable based on their arguments. If the `I
 at least one non-nullable argument then the result is non-nullable.
 
 #### LEFT and RIGHT OUTER JOINS
-In most join operations the nullability of each column participating in the join is preserved.  However in a 
-`LEFT OUTER` join the columns on the right side of the join are always considered nullable and in a 
+In most join operations the nullability of each column participating in the join is preserved.  However in a
+`LEFT OUTER` join the columns on the right side of the join are always considered nullable and in a
 `RIGHT OUTER` join the columns on the left side of the join are considered nullable.
 
 NOTE: CQL does not use constraints in the `WHERE`, `ON`, or `HAVING` clause to infer non-null status even where this would be possible.  CQL does no data-flow at all.
 
 ### Expression Types
 
-CQL supports a variety of expressions, nearly everything from the SQLite world.  The following are the various supported operators, they are presented in order from the weakest binding strength to the strongest.  
+CQL supports a variety of expressions, nearly everything from the SQLite world.  The following are the various supported operators, they are presented in order from the weakest binding strength to the strongest.
 Note that the binding order is NOT the same as C, in some cases it is radically different (e.g. boolean math)
 
 #### UNION and UNION ALL
@@ -878,7 +874,7 @@ The `ORDER BY` applies to the result of the union, so any results from the 2nd b
 
 #### Assignment
 
-Assignment only occurs in the `UPDATE` statement or in the `SET` statement.  In both cases the left side 
+Assignment only occurs in the `UPDATE` statement or in the `SET` statement.  In both cases the left side
 is a simple target and the right side is a general expression.  The expression is evaluated before the assignment.
 
 example:
@@ -965,7 +961,7 @@ These considerations force the grammar to contain special rules for expressions 
 The one operand of logical not must be a numeric.  `NOT 'x'` is illegal.
 
 
-#### Non-ordering tests !=, <>, =, ==, LIKE, GLOB, MATCH, IN, NOT IN, IS, IS NOT
+#### Non-ordering tests `!=`, `<>`, `=`, `==`, `LIKE`, `GLOB`, `MATCH`, `IN`, `NOT IN`, `IS`, `IS NOT`
 
 These operations do some non-ordered comparison of their two operands.
 
@@ -995,8 +991,8 @@ NOTE: CQL uses `strcmp` for string comparison. In SQL expressions the comparison
 
 #### Bitwise operators <<, >>, &, |
 
-These are the bit-manipulation operations.  Their binding strength is VERY different than C so beware.  
-And notably the `&` operator has the same binding strength as the `|` operator so they bind left to right, 
+These are the bit-manipulation operations.  Their binding strength is VERY different than C so beware.
+And notably the `&` operator has the same binding strength as the `|` operator so they bind left to right,
 this is utterly unlike most systems.  Many parenthesis are likely to be needed to get the usual "or of ands" patterns codified correctly.  Likewise the shift operators `<<` and `>>` are the same strength as `&` and `|` which is very atypical. Consider:
 
 ```sql
@@ -1022,7 +1018,7 @@ These operators do the typical math.  Note that there are no unsigned numerics s
 * only numeric operands are legal (no multiplying strings)
 * if any operand is `NULL` the result is `NULL`
 
-EXCEPTION: the `%` operator doesn't make sense on real values, so real values produces an error. 
+EXCEPTION: the `%` operator doesn't make sense on real values, so real values produces an error.
 
 #### Unary operators -, ~
 Unary negation (`-`) and bitwise invert (`~`) are the strongest binding operators.
@@ -1040,8 +1036,8 @@ set x := 'y';
 select case x
   when 'y' then 1
   when 'z' then 2
-  else 3 
-end; 
+  else 3
+end;
 ```
 
 In this form the expression in the case `x` here is evaluated exactly once and then compared against each `when` clause, they must be type compatible with the expression.  The `then` expression that corresponds is evaluated and becomes the result, or the `else` expression if present and no `when` matches.  If there is no else and no match the result is `null`.
@@ -1051,10 +1047,10 @@ If that's not general enough, there is an alternate form:
 ```sql
 set y := 'yy';
 set z := 'z';
-select case 
-  when y = 'y' then 1 
-  when z = 'z' then 2 
-  else 3 
+select case
+  when y = 'y' then 1
+  when z = 'z' then 2
+  else 3
 end;
 ```
 
@@ -1211,7 +1207,7 @@ We can use those as stand-ins for lots of expressions, but the essential calculu
 -- assigning a sensitive to a sensitive is ok
 set sens := sens + 1;
 
--- assigning not sensitive data to a sensitive is ok 
+-- assigning not sensitive data to a sensitive is ok
 -- this is needed so you can (e.g.) initialize to zero
 set sens := not_sens;
 
@@ -1390,20 +1386,18 @@ cql_cleanup:
 }
 ```
 
-<div style="page-break-after: always; visibility: hidden"></div>
-
-
+---
+id: ch04
+title: "Chapter 4: Procedures, Functions, and Control Flow"
+sidebar_label: "Chapter 4: Procedures, Functions, and Control Flow"
+---
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-
-## 4. Procedures, Functions, and Control Flow
-
-
-All kinds of control flow happens in the context of some procedure, though we've already introduced examples of procedures let's 
+All kinds of control flow happens in the context of some procedure, though we've already introduced examples of procedures let's
 now go over some of the additional aspects we have not yet illustrated.
 
 ### Out Parameters
@@ -1412,8 +1406,8 @@ Consider this procedure:
 
 ```sql
 create procedure echo (in arg1 integer not null, out arg2 integer not null)
-begin 
-  set arg2 := arg1; 
+begin
+  set arg2 := arg1;
 end;
 ```
 
@@ -1425,7 +1419,7 @@ variable can end up with a null in it.
 Looking at the one line in the body of this procedure:
 
 ```sql
-  set arg2 := arg1; 
+  set arg2 := arg1;
 ```
 
 The input argument `arg1` is unconditionally stored in the output.  Note that the `in` keyword is entirely optional and does
@@ -1444,8 +1438,8 @@ These invariants are very important when considering how reference types are han
 * `inout` reference arguments are assumed valid at entry
 
 If CQL changes an `out` or `inout` value it first releases the existing value and then retains the new value.
-In all cases the caller will ultimately release any non-null out reference either because it was borrowed (`in`) or 
-the caller now/still owns it (`inout` or `in`).  
+In all cases the caller will ultimately release any non-null out reference either because it was borrowed (`in`) or
+the caller now/still owns it (`inout` or `in`).
 
 Aggressively putting `NULL` into `out` argumetns normalizes pointer handling for all `out` types.
 
@@ -1455,8 +1449,8 @@ Aggressively putting `NULL` into `out` argumetns normalizes pointer handling for
 The usual `call` syntax is used to invoke a procedure.  It returns no value but it can have any number of `out` arguments.
 
 ```
-  declare scratch integer not null; 
-  call echo(12, scratch); 
+  declare scratch integer not null;
+  call echo(12, scratch);
   scratch == 12; -- true
 ```
 
@@ -1464,7 +1458,7 @@ The let's go over the most essential bits of control flow.
 
 ### The IF statement
 
-The CQL `IF` statement has no syntatic ambiguities at the expense of being somewhat more verbose than many other languages. 
+The CQL `IF` statement has no syntatic ambiguities at the expense of being somewhat more verbose than many other languages.
 In CQL the `ELSE IF` portion is baked into the `IF` statement, so what you see below is logically a single statement.
 
 ```sql
@@ -1473,7 +1467,7 @@ begin
   if foo = 1 then
    set result := 1;
   else if foo = 2 then
-   set result := 3; 
+   set result := 3;
   else
    set result := 5;
   end if;
@@ -1531,7 +1525,7 @@ This is an immediate sign that there will be an unusual exit condition.  The loo
      leave;
 ```
 Now here we've encoded our exit condition a bit strangely we might have done the equivalent job with a normal conditionn in the predicate
-part of the `while` statement but for illustration anyway, when x becomes negative `leave` will cause us to exit the loop.  This is like 
+part of the `while` statement but for illustration anyway, when x becomes negative `leave` will cause us to exit the loop.  This is like
 `break` in C.
 
 ```sql
@@ -1552,7 +1546,7 @@ Finishing up the control flow, on every 10th iteration we print the value of the
 
 ### The TRY, CATCH, and THROW Statements
 
-This example illustrates catching an error from some DML, and recovering rather than letting the error cascade up.  
+This example illustrates catching an error from some DML, and recovering rather than letting the error cascade up.
 This is the common "upsert" pattern (insert or update)
 
 ```sql
@@ -1560,8 +1554,8 @@ create procedure upsert_foo(id_ integer, t_ text)
 begin
   begin try
     insert into foo(id, t) values(id_, t_)
-  end try; 
-  begin catch 
+  end try;
+  begin catch
     begin try
       update foo set t = t_ where id = id_;
     end try;
@@ -1569,7 +1563,7 @@ begin
       printf("Error!\n");
       throw;
     end catch;
-  end catch; 
+  end catch;
 end;
 ```
 
@@ -1578,14 +1572,14 @@ Once again, let's go over this section by section:
 ```sql
   begin try
     insert into foo(id, t) values(id_, t_)
-  end try; 
+  end try;
 ```
 
 Normally if the `insert` statement fails, the procedure will exit with a failure result code.  Here, instead,
 we prepare to catch that error.
 
 ```sql
-  begin catch 
+  begin catch
     begin try
       update foo set t = t_ where id = id_;
     end try;
@@ -1601,23 +1595,23 @@ that row instead.  However that might also fail, so we  wrap it in another try. 
     end catch;
 ```
 
-Here we print a diagnostic message and then use the `throw` keyword to rethrow the previous failure.  Throw will create a failure in 
+Here we print a diagnostic message and then use the `throw` keyword to rethrow the previous failure.  Throw will create a failure in
 the current block using the most recent result code from SQLite if it is an error, or else the general `SQLITE_ERROR` result code
 if there is no such error.  In this case the failure code for the `update` statement will become the result code of the current procedure.
 
 This leaves only the closing markers:
 
 ```sql
-  end catch; 
+  end catch;
 end;
 ```
 
-If control flow reaches the normal end of the procedure it will return `SQLITE_OK`.  
+If control flow reaches the normal end of the procedure it will return `SQLITE_OK`.
 
 ### Procedures as Functions: Motivation and Example
 
 
-The calling convention for CQL stored procedures often (usually) requires that the procedure returns a result code from SQLite.  
+The calling convention for CQL stored procedures often (usually) requires that the procedure returns a result code from SQLite.
 This makes it impossible to write a procedure that returns a result like a function, the result position is already used for
 the error code.  You can get around this problem by using `out` arguments as your return codes.  So for instance, this version
 of the Fibonacci function is possible.
@@ -1625,36 +1619,36 @@ of the Fibonacci function is possible.
 
 ```sql
 -- this works, but it is awkward
-create procedure fib (in arg integer not null, out result integer not null) 
+create procedure fib (in arg integer not null, out result integer not null)
 begin
   if (arg <= 2) then
     set result := 1;
-  else 
-    declare t integer not null; 
-    call fib(arg - 1,  result); 
-    call fib(arg - 2,  t); 
+  else
+    declare t integer not null;
+    call fib(arg - 1,  result);
+    call fib(arg - 2,  t);
     set result := t + result;
-  end if; 
+  end if;
 end;
 ```
 
 The above works, but the notation is very awkward.
 
 
-CQL has a "procedures as functions" feature that tries to make this more pleasant by making it possible to use function call notation 
+CQL has a "procedures as functions" feature that tries to make this more pleasant by making it possible to use function call notation
 on a procedure whose last argument is an `out` variable.  You simply call the procedure like it was a function and omit the last argument in the call.
-A temporary variable is automatically created to hold the result and that temporary becomes the logical return of the function. 
+A temporary variable is automatically created to hold the result and that temporary becomes the logical return of the function.
 For semantic analysis, the result type of the function becomes the type of the `out` argument.
 
 ```sql
 -- rewritten with function call syntax
-create procedure fib (in arg integer not null, out result integer not null) 
+create procedure fib (in arg integer not null, out result integer not null)
 begin
   if (arg <= 2) then
     set result := 1;
-  else 
+  else
     set result := fib(arg - 1) + fib(arg - 2);
-  end if; 
+  end if;
 end;
 ```
 
@@ -1664,24 +1658,23 @@ This form is allowed when:
 * the formal parameter for that last argument was marked with `out` (neither `in` nor `inout` are acceptable)
 * the procedure did not also be returning a result set using a `select` statement or `out` statement (more on these later)
 
-If the procedure in question uses SQLite, or calls something that uses SQLite, then it might fail.  
-If that happens the result code will propagate just like it would have with a the usual `call` form.  
+If the procedure in question uses SQLite, or calls something that uses SQLite, then it might fail.
+If that happens the result code will propagate just like it would have with a the usual `call` form.
 Any failures can be caught with `try/catch` as usual.
 This feature is really only syntatic sugar for the "awkward" form above, but it does allow for slightly better generated C code.
 
 
-<div style="page-break-after: always; visibility: hidden"></div>
-
-
+---
+id: ch05
+title: "Chapter 5: Types of Cursors, OUT and OUT UNION, and FETCH flavors"
+sidebar_label: "Chapter 5: Types of Cursors, OUT and OUT UNION, and FETCH flavors"
+---
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-
-## 5. Types of Cursors, OUT and OUT UNION, and FETCH flavors
-
 In the previous chapters we have used cursor variables without fully discussing them.
 Most of the uses are fairly self-evident but a more exhaustive discussion is also useful.
 
@@ -2419,24 +2412,22 @@ insert into my_table(a, b, c, m, n, x, y) values(7, 1000, 1000, 1000, 1000, 1000
 The sugar features on `fetch`, `insert`, and `update cursor` are as symmetric as possible, but again, dummy data is generally only interesting in test code. Dummy  data will continue to give you valid test rows even if columns are added or removed from the tables in question.
 
 
-
-<div style="page-break-after: always; visibility: hidden"></div>
-
-
+---
+id: ch06
+title: "Chapter 6: Calling Procedures Defined Elsewhere"
+sidebar_label: "Chapter 6: Calling Procedures Defined Elsewhere"
+---
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-
-## 6. Calling Procedures Defined Elsewhere
-
-CQL generally doesn't see the whole world in one compilation.  
+CQL generally doesn't see the whole world in one compilation.
 In this way it's a lot more like say the C compiler than it is like say Java
 or C# or something like that.  This means several things:
 
-* You don't have to tell CQL about all your schema in all your files, 
+* You don't have to tell CQL about all your schema in all your files,
 so particular stored procs can be more encapsulated
 * You can have different databases mounted in different places and CQL
 won't care; you provide the database connection to the stored procedures when you call them, and that database is assumed to have the tables declared in this translation unit
@@ -2457,7 +2448,7 @@ the sections below.
 DECLARE PROCEDURE foo(id integer, out name text not null);
 ```
 
-This introduces the symbol name without providing the body.  
+This introduces the symbol name without providing the body.
 This has important variations.
 
 ### Procedures that use the database
@@ -2466,7 +2457,7 @@ This has important variations.
 DECLARE PROCEDURE foo(id integer, out name text not null) USING TRANSACTION;
 ```
 
-Most procedures you write will use SQLite in some fashion, 
+Most procedures you write will use SQLite in some fashion,
 maybe a `select` or something.  The `USING TRANSACTION` annotation indicates that
 the proc in question uses the database and therefore the generated code
 will need a database connection in-argument and it will return a SQLite error code.
@@ -2477,16 +2468,16 @@ If the procedure in question is going to use `select` or `call` to create a resu
 the type of that result set has to be declared.  An example might look like this:
 
 ```sql
-DECLARE PROC with_result_set () (id INTEGER NOT NULL, 
-                                 name TEXT, 
-                                 rate LONG INTEGER, 
-                                 type INTEGER, 
+DECLARE PROC with_result_set () (id INTEGER NOT NULL,
+                                 name TEXT,
+                                 rate LONG INTEGER,
+                                 type INTEGER,
                                  size REAL);
 ```
 
-This says that the procedure takes no arguments (other than the implicit database 
+This says that the procedure takes no arguments (other than the implicit database
 connection) and it has an implicit out-argument that can be read to get a result
-set with the indicated columns: id, name, rate, type, and size.  
+set with the indicated columns: id, name, rate, type, and size.
 This form implies `USING TRANSACTION`.
 
 ### Procedures that return a single row with a value cursor
@@ -2495,25 +2486,25 @@ If the procedure emits a cursor with the `OUT` statement to produce a single
 row then it can be declared as follows:
 
 ```sql
-DECLARE PROC with_result_set () OUT (id INTEGER NOT NULL, 
-                                     name TEXT, 
-                                     rate LONG INTEGER, 
-                                     type INTEGER, 
+DECLARE PROC with_result_set () OUT (id INTEGER NOT NULL,
+                                     name TEXT,
+                                     rate LONG INTEGER,
+                                     type INTEGER,
                                      size REAL);
 ```
 
 This form can have `USING TRANSACTION`  or not, since it is possible to emit a row with a value cursor and never use the database.  See the previous chapter for details on the `OUT` statement.
 
-### Procedures that return a full result set 
+### Procedures that return a full result set
 
 If the procedure emits many rows with the `OUT UNION` statement to produce a full result set
 then it can be declared as follows:
 
 ```sql
-DECLARE PROC with_result_set () OUT UNION (id INTEGER NOT NULL, 
-                                     name TEXT, 
-                                     rate LONG INTEGER, 
-                                     type INTEGER, 
+DECLARE PROC with_result_set () OUT UNION (id INTEGER NOT NULL,
+                                     name TEXT,
+                                     rate LONG INTEGER,
+                                     type INTEGER,
                                      size REAL);
 ```
 
@@ -2527,11 +2518,11 @@ by adding something like `--generate_exports` to the command line. This will req
 That file can then be used with `#include` when you combine the C pre-processor
 with CQL as is normally done.
 
-Nomenclature is perhaps a bit weird here.  You use `--generate_exports` to export 
+Nomenclature is perhaps a bit weird here.  You use `--generate_exports` to export
 the stored procedure declarations from the translation units.  Of course those
 exported symbols are what you then import in some other module.  Sometimes this
 output file is called `foo_imports.sql` because those exports are of course exactly
-what you need to import `foo`.  You can use whatever convention you like of course, 
+what you need to import `foo`.  You can use whatever convention you like of course,
 CQL doesn't care.  The full command line might look something like this:
 
 ```
@@ -2563,21 +2554,21 @@ DECLARE PROC make_view () USING TRANSACTION;
 
 DECLARE PROC copy_int (a INTEGER, OUT b INTEGER);
 
-DECLARE PROC complex_return () 
-  (_bool BOOL NOT NULL, 
-   _integer INTEGER NOT NULL, 
-   _longint LONG INTEGER NOT NULL, 
-   _real REAL NOT NULL, 
-   _text TEXT NOT NULL, 
+DECLARE PROC complex_return ()
+  (_bool BOOL NOT NULL,
+   _integer INTEGER NOT NULL,
+   _longint LONG INTEGER NOT NULL,
+   _real REAL NOT NULL,
+   _text TEXT NOT NULL,
    _nullable_bool BOOL);
 
 DECLARE PROC outint_nullable (
-  OUT output INTEGER, 
+  OUT output INTEGER,
   OUT result BOOL NOT NULL)
 USING TRANSACTION;
 
 DECLARE PROC outint_notnull (
-  OUT output INTEGER NOT NULL, 
+  OUT output INTEGER NOT NULL,
   OUT result BOOL NOT NULL)
 USING TRANSACTION;
 
@@ -2597,15 +2588,15 @@ generated C to demystify all this.  There is a very straightforward conversion.
 void test(cql_int32 i);
 
 void out_test(
-  cql_int32 *_Nonnull i, 
+  cql_int32 *_Nonnull i,
   cql_nullable_int32 *_Nonnull ii);
 
 cql_code outparm_test(
-  sqlite3 *_Nonnull _db_, 
+  sqlite3 *_Nonnull _db_,
   cql_int32 *_Nonnull foo);
 
 cql_code select_from_view_fetch_results(
-  sqlite3 *_Nonnull _db_, 
+  sqlite3 *_Nonnull _db_,
   select_from_view_result_set_ref _Nullable *_Nonnull result_set);
 
 cql_code make_view(sqlite3 *_Nonnull _db_);
@@ -2613,25 +2604,25 @@ cql_code make_view(sqlite3 *_Nonnull _db_);
 void copy_int(cql_nullable_int32 a, cql_nullable_int32 *_Nonnull b);
 
 cql_code complex_return_fetch_results(
-  sqlite3 *_Nonnull _db_, 
+  sqlite3 *_Nonnull _db_,
   complex_return_result_set_ref _Nullable *_Nonnull result_set);
 
 cql_code outint_nullable(
-  sqlite3 *_Nonnull _db_, 
-  cql_nullable_int32 *_Nonnull output, 
+  sqlite3 *_Nonnull _db_,
+  cql_nullable_int32 *_Nonnull output,
   cql_bool *_Nonnull result);
 
 cql_code outint_notnull(
-  sqlite3 *_Nonnull _db_, 
-  cql_int32 *_Nonnull output, 
+  sqlite3 *_Nonnull _db_,
+  cql_int32 *_Nonnull output,
   cql_bool *_Nonnull result);
 
 void obj_proc(
   cql_object_ref _Nullable *_Nonnull an_object);
 
 cql_code insert_values(
-  sqlite3 *_Nonnull _db_, 
-  cql_int32 id_, 
+  sqlite3 *_Nonnull _db_,
+  cql_int32 id_,
   cql_nullable_int32 type_);
 ```
 
@@ -2695,19 +2686,20 @@ a value cursor as we previously saw.
 These combinations allow for pretty general composition of stored procedures
 as long as they are not recombined with SQLite statements.
 
-<div style="page-break-after: always; visibility: hidden"></div>
 
-
+---
+id: ch07
+title: "Chapter 7: CQL Result Sets"
+sidebar_label: "Chapter 7: CQL Result Sets"
+---
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-
-## 7. CQL Result Sets
-Most of this tutorial is about the CQL language itself but here we must diverge a bit.  The purpose of the 
-result set features of CQL is to create a C interface to SQLite data.  Because of this 
+Most of this tutorial is about the CQL language itself but here we must diverge a bit.  The purpose of the
+result set features of CQL is to create a C interface to SQLite data.  Because of this
 there are a lot of essential details that require looking carefully at the generated C code.  Appendix 2
 covers this code in even more detail but here it makes sense to at least talk about the interface.
 
@@ -2723,7 +2715,7 @@ end;
 ```
 
 We've created a simple data reader, this CQL code will cause the compiler to
-generated helper functions to read the data and materialize a result set.  
+generated helper functions to read the data and materialize a result set.
 
 Let's look at the public interface of that result set now considering the most essential pieces.
 
@@ -2736,17 +2728,17 @@ cql_result_set_type_decl(
 
 extern cql_int32 read_foo_get_id(read_foo_result_set_ref
   _Nonnull result_set, cql_int32 row);
-extern cql_bool read_foo_get_b_is_null(read_foo_result_set_ref 
+extern cql_bool read_foo_get_b_is_null(read_foo_result_set_ref
   _Nonnull result_set, cql_int32 row);
-extern cql_bool read_foo_get_b_value(read_foo_result_set_ref 
+extern cql_bool read_foo_get_b_value(read_foo_result_set_ref
   _Nonnull result_set, cql_int32 row);
 extern cql_string_ref _Nullable read_foo_get_t(
-   read_foo_result_set_ref  _Nonnull result_set, 
+   read_foo_result_set_ref  _Nonnull result_set,
    cql_int32 row);
-extern cql_int32 read_foo_result_count(read_foo_result_set_ref 
+extern cql_int32 read_foo_result_count(read_foo_result_set_ref
   _Nonnull result_set);
-extern cql_code read_foo_fetch_results(sqlite3 *_Nonnull _db_, 
-  read_foo_result_set_ref _Nullable *_Nonnull result_set, 
+extern cql_code read_foo_fetch_results(sqlite3 *_Nonnull _db_,
+  read_foo_result_set_ref _Nullable *_Nonnull result_set,
   cql_int32 id_);
 #define read_foo_row_hash(result_set, row) \
   cql_result_set_get_meta((cql_result_set_ref)(result_set))->\
@@ -2761,16 +2753,16 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1)) \
 Let's consider some of these individually now
 ```C
 cql_result_set_type_decl(
-  read_foo_result_set, 
+  read_foo_result_set,
   read_foo_result_set_ref);
 ```
-This declares the data type for `read_foo_result_set` and the associated object reference `read_foo_result_set_ref`.  
+This declares the data type for `read_foo_result_set` and the associated object reference `read_foo_result_set_ref`.
 As it turns out the underlying data type for all result sets is the same, only the shape of the data varies.
 
 
 ```C
-extern cql_code read_foo_fetch_results(sqlite3 *_Nonnull _db_, 
-  read_foo_result_set_ref _Nullable *_Nonnull result_set, 
+extern cql_code read_foo_fetch_results(sqlite3 *_Nonnull _db_,
+  read_foo_result_set_ref _Nullable *_Nonnull result_set,
   cql_int32 id_);
 ```
 The result set fetcher method gives you a `read_foo_result_set_ref` if it succeeds.  It accepts the `id_` argument which it
@@ -2780,27 +2772,27 @@ This method is the main public entry point for result sets.
 Once you have a result set, you can read values out of it.
 
 ```C
-extern cql_int32 read_foo_result_count(read_foo_result_set_ref 
+extern cql_int32 read_foo_result_count(read_foo_result_set_ref
   _Nonnull result_set);
 ```
-That function tells you how many rows are in the result set.  
+That function tells you how many rows are in the result set.
 
 For each row you can use any of the row readers:
 
 ```C
 extern cql_int32 read_foo_get_id(read_foo_result_set_ref
   _Nonnull result_set, cql_int32 row);
-extern cql_bool read_foo_get_b_is_null(read_foo_result_set_ref 
+extern cql_bool read_foo_get_b_is_null(read_foo_result_set_ref
   _Nonnull result_set, cql_int32 row);
-extern cql_bool read_foo_get_b_value(read_foo_result_set_ref 
+extern cql_bool read_foo_get_b_value(read_foo_result_set_ref
   _Nonnull result_set, cql_int32 row);
 extern cql_string_ref _Nullable read_foo_get_t(
-   read_foo_result_set_ref  _Nonnull result_set, 
+   read_foo_result_set_ref  _Nonnull result_set,
    cql_int32 row);
 ```
 
 These let you read the `id` of a particular row, and get a `cql_int32` or you can read the nullable boolean,
-using the `read_foo_get_b_is_null` function first to see if the boolean is null and then `read_foo_get_b_value` 
+using the `read_foo_get_b_is_null` function first to see if the boolean is null and then `read_foo_get_b_value`
 to get the value.  Finally the string can be accessed with `read_foo_get_t`.  As you can see there is a
 simple naming convention for each of the field readers.
 
@@ -2809,14 +2801,14 @@ Note:  The compiler has runtime arrays that control naming conventions as well a
 Finally, also part of the public interface, are these macros:
 
 ```C
-#define read_foo_row_hash(result_set, row) 
+#define read_foo_row_hash(result_set, row)
 #define read_foo_row_equal(rs1, row1, rs2, row2)
 ```
 
-These use the CQL runtime to hash a row or compare two rows from identical result 
-set types.  Metadata included in the result set allows general purpose code to work for 
+These use the CQL runtime to hash a row or compare two rows from identical result
+set types.  Metadata included in the result set allows general purpose code to work for
 every result set.  Based on configuration, result set copying methods can also
-be generated.   When you're done with a result set you can use the `cql_release(...)` 
+be generated.   When you're done with a result set you can use the `cql_release(...)`
 method to free the memory.
 
 Importantly, all of the rows from the query in the stored procedure are materialized
@@ -2827,7 +2819,7 @@ The code that actually creates the result set starting from the prepared stateme
 The essential parts are:
 
 
-First, a constant array that holds the data types for each column. 
+First, a constant array that holds the data types for each column.
 
 ```
 uint8_t read_foo_data_types[read_foo_data_types_count] = {
@@ -2856,18 +2848,18 @@ static cql_uint16 read_foo_col_offsets[] = { 3,
 
 Using the above we can now write this fetcher
 ```
-CQL_WARN_UNUSED cql_code 
+CQL_WARN_UNUSED cql_code
 read_foo_fetch_results(
-  sqlite3 *_Nonnull _db_, 
-  read_foo_result_set_ref _Nullable *_Nonnull result_set, 
-  cql_int32 id_) 
+  sqlite3 *_Nonnull _db_,
+  read_foo_result_set_ref _Nullable *_Nonnull result_set,
+  cql_int32 id_)
 {
   sqlite3_stmt *stmt = NULL;
   cql_profile_start(CRC_read_foo, &read_foo_perf_index);
-  
+
   // we call the original procedure, it gives us a prepared statement
   cql_code rc = read_foo(_db_, &stmt, id_);
-  
+
   // this is everything you need to know to fetch the result
   cql_fetch_info info = {
     .rc = rc,
@@ -2881,7 +2873,7 @@ read_foo_fetch_results(
     .crc = CRC_read_foo,
     .perf_index = &read_foo_perf_index,
   };
-  
+
   // this function does all the work, it cleans up if .rc is an error code.
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
@@ -2911,7 +2903,7 @@ begin
 end;
 ```
 
-In this example the entire result set is made up out of thin air.  Of course any combination of this computation or data-access is possible, so you can ultimately make any rows you want in any order using SQLite to help you as much or as little as you need.  
+In this example the entire result set is made up out of thin air.  Of course any combination of this computation or data-access is possible, so you can ultimately make any rows you want in any order using SQLite to help you as much or as little as you need.
 
 Virtually all the code pieces to do this already exist for normal result sets.  The important parts of the output code look like this in your generated C.
 
@@ -2928,38 +2920,38 @@ We need to be able to copy the cursor into the buffer and retain any internal re
 
 ```
 // This bit is what you get when you "out union" a cursor "C"
-// first we +1 any references in the cursor then we copy its bits 
+// first we +1 any references in the cursor then we copy its bits
 cql_retain_row(C_);   // a no-op if there is no row in the cursor
 if (C_._has_row_) cql_bytebuf_append(&_rows_, (const void *)&C_, sizeof(C_));
 ```
 
-Finally, we make the rowset when the procedure exits. If the procedure is returning with no errors the result set is created, otherwise the buffer is released.  The global `some_integers_info` has constants that describe the shape produced by this procedure just like the other cases that produce a result set. 
+Finally, we make the rowset when the procedure exits. If the procedure is returning with no errors the result set is created, otherwise the buffer is released.  The global `some_integers_info` has constants that describe the shape produced by this procedure just like the other cases that produce a result set.
 ```
-cql_results_from_data(_rc_, 
-                      &_rows_, 
-                      &some_integers_info, 
+cql_results_from_data(_rc_,
+                      &_rows_,
+                      &some_integers_info,
                       (cql_result_set_ref *)_result_set_);
 ```
-The operations here are basically the same ones that will happen inside of the standard helper 
-`cql_fetch_all_results`, the difference is of course that you write the loop manually and therefore have 
+The operations here are basically the same ones that will happen inside of the standard helper
+`cql_fetch_all_results`, the difference is of course that you write the loop manually and therefore have
 full control of the rows as they go in to the result set.
 
 In short, the overhead is pretty low.  What you’re left with is pretty much the base cost of your algorithm.  The cost here is very similar to what it would be for any other thing that make rows.
 
 Of course, if you make a million rows, well, that would burn a lot of memory.
 
-<div style="page-break-after: always; visibility: hidden"></div>
 
-
+---
+id: ch08
+title: "Chapter 8: Functions"
+sidebar_label: "Chapter 8: Functions"
+---
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-
-## 8. Functions
-
 CQL stored procs have a very simple contract so it is easy to declare procedures and then implement them in regular C, the C functions just have to conform to the contract.  However, there is no notion of functions at all and this makes it very inconvenient to use some external code and is not doing database things and wants to return values.  Even a random number generator or something would be difficult to use because it could not be called in the context of an expression.  To allow for this CQL adds declared functions
 
 In an other example of the two-headed nature of CQL, there are two ways to declare functions.  As we have already
@@ -2995,8 +2987,8 @@ If we also declare this procedure:
 
 ```sql
 declare procedure dict_add(
-    dict object not null, 
-    key_ text not null, 
+    dict object not null,
+    key_ text not null,
     value text not null);
 ```
 
@@ -3114,7 +3106,7 @@ CQL's hard-coded builtin list includes:
  * datetime
  * julianday
  * substr
- 
+
 *Window Functions*
 
  * row_number
@@ -3137,18 +3129,18 @@ Special Functions
 
 `Ptr` is used to cause a reference type variable to be bound as a long integer to SQLite. This is a way of giving object pointers to SQLite UDFs.
 
-See [SQLite Core Functions](https://www.sqlite.org/lang_corefunc.html).
 
-
+---
+id: ch09
+title: "Chapter 9: Statements Summary and Error Checking"
+sidebar_label: "Chapter 9: Statements Summary and Error Checking"
+---
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-
-## 9. Statements Summary and Error Checking
-
 The following is a brief discussion of the major statement types and the semantic rules that CQL enforces for each of the statements.  A detailed discussion of SQL statements (the bulk of these) is beyond the scope of this document and you should refer to the SQLite documentation for most details.  However, in many cases CQL does provide additional enforcement and it is helpful to describe the basic checking that happens for each fragment of CQL.  A much
 more authoritative list of the things CQL checks for can be inferred from the error documentation.  "Tricky" errors have examples and suggested remediation.
 
@@ -3171,7 +3163,7 @@ Among the things that are verified:
 
 #### The `SELECT *` Statement
 Select * is special in that it creates its own struct type by assembling
-all the columns of all the tables in the selects join result.  CQL rewrites these statement into 
+all the columns of all the tables in the selects join result.  CQL rewrites these statement into
 a select with the specific columns explicitly listed.  While this makes the program
 slightly bigger it means that logically deleted columns are never present in results
 because `SELECT *` won't select them and attempting to use a logically deleted
@@ -3469,7 +3461,7 @@ then we set the output type of the procedure we're in accordingly
 ### The "Meta" Statements
 
 The programs control the overall meaning the program or give the compiler specific directives
-as to how the program should be compiled.  
+as to how the program should be compiled.
 
 #### The `@ECHO` Statement
 echo is valid in any top level contexts
@@ -3547,7 +3539,7 @@ Try to look up a [possibly] scoped name in one of the places:
 otherwise, name not found.
 
 #### Object Types with a Discriminator
-We check that object<Foo> only combines with object<Foo> or object in lists of objects (like IN)
+We check that object `<Foo>` only combines with object `<Foo>` or object in lists of objects (like IN)
 * If there is a current object type, then the next item in the expression or must match
 * If there is no such type, then an object type that arrives becomes the required type
 * If they ever don't match record an error
@@ -3640,9 +3632,9 @@ The validation rules are:
 * arg expressions must match formal parameters
 The name of the resulting table is the name of the function
  * but it can be aliased later with "AS"
- 
+
  ### Special Note on the `select *` and `select T.*` forms
- 
+
  The `select *` construct is very popular in many codebases but it can be unsafe to use in production code because, if the schema changes, the code might get columns it does not expect.  Note the extra columns could have appeared anywhere in the result set because the `*` applies to the entire result of the `FROM` clause, joins and all,  so extra columns are not necessarily at the end and column ordinals are not preserved.  CQL mitigates this situation somewhat with some useful constraints/features:
 
 * in a `select *`, and indeed in any query, the column names of the select must be unique, this is because:
@@ -3652,7 +3644,7 @@ The name of the resulting table is the name of the function
 * when issuing a `select *` or a `select T.*` CQL will automatically expand the `*` into the actual logical columns that exist in the schema at the time the code was compiled
    * this is important because if a column had been logically deleted from a table it would be unexpected in the result set even though it is still present in the database and would throw everything off
    * likewise if the schema were to change without updating the code, the code will still get the columns it was compiled with, not new columns
-   
+
 Expanding the `*` at compile time means Sqlite cannot see anything that might tempt it to include different columns in the result.
 
 With this done we just have to look at the places a `select *` might appear so we can see if it is safe to use `*` and, by extension of the same argument, `T.*`, or at least reasonably safe.
@@ -3679,8 +3671,8 @@ In a cursor statement like `declare C cursor for select * from table_or_view` th
 * In this case the number and type of the columns must match exactly with the specified variables
 * If new columns are added, deleted, or changed, the above code will not compile
 
-So consdering these cases above we can conclude that auto expanding the `*` into the exact columns present in the compile-time schema version ensures that any incompatible changes result in compile time errors. Adding columns to tables does not cause problems even if the code is not recompiled. This makes the `*` construct much safer, if not perfect, but no semantic would be safe from arbitary schema changes without recompilation.  At the very least here we can expect a meaningful runtime error rather than silently fetching the wrong columns.  
- 
+So consdering these cases above we can conclude that auto expanding the `*` into the exact columns present in the compile-time schema version ensures that any incompatible changes result in compile time errors. Adding columns to tables does not cause problems even if the code is not recompiled. This makes the `*` construct much safer, if not perfect, but no semantic would be safe from arbitary schema changes without recompilation.  At the very least here we can expect a meaningful runtime error rather than silently fetching the wrong columns.
+
 ### Special Note on the JOIN...USING form
 
 CQL varies slightly from SQLite in terms of the expected results for joins if the USING syntax is employed.  This is not the most common syntax (typically an ON clause is used) but Sqlite has special rules for this kind of join.
@@ -3750,18 +3742,18 @@ Now in CQL, the `*` and `T.*` forms are automatically expanded, SQLite doesn't s
 
 In fact, only the `select *` form could possibly be different, so in most cases this ends up being moot anyway.  Typically you don't to use `*` in the presence of joins because of name duplication and ambiguity of the column names of the result set.  CQL's automatic expansion means you have a much better idea exactly what columns you will get -- those that were present in the schema you declared.
 
-<div style="page-break-after: always; visibility: hidden"></div>
 
-
+---
+id: ch10
+title: "Chapter 10: Schema Management Features"
+sidebar_label: "Chapter 10: Schema Management Features"
+---
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-
-## 10. Schema Management Features
-
 CQL has a lot of schema knowledge already and so it's well positioned to think about schema upgrades and versioning.
 
 It seemed essential to be able to record changes to the schema over time so CQL got an understanding of versioning.  This lets you do things like:
@@ -3795,7 +3787,7 @@ In addition, if there is some data migration that needs to happen at a particula
 
 `@create` declares that the annotated object first appeared in the indicated version, and at that time the migration proc needs to be executed to fill in default values, denormalize values, or whatever the case may be.
 
-`@delete` declares that the annotated object disappeared in the indicated version, and at that time the migration proc needs to be executed to clean up the contents, or potentially move them elsewhere. 
+`@delete` declares that the annotated object disappeared in the indicated version, and at that time the migration proc needs to be executed to clean up the contents, or potentially move them elsewhere.
 
 `@recreate` declares that the annotated object can be dropped and recreated when it changes, there is no need to preserve its contents during an upgrade. Such objects may be changed arbitrarily from version to version
 
@@ -3804,7 +3796,7 @@ In addition, if there is some data migration that needs to happen at a particula
 
 NOTE: all annotations are suppressed from generated SQL.  SQLite never sees them.
 
-NOTE: looking at the annotations it is possible to compute the logical schema at any version, especially the original schema -- it's what you get if you disregard all ```@delete``` entirely (don't delete) and then remove anything marked with ```@create``` directives. 
+NOTE: looking at the annotations it is possible to compute the logical schema at any version, especially the original schema -- it's what you get if you disregard all ```@delete``` entirely (don't delete) and then remove anything marked with ```@create``` directives.
 
 ### Allowable changes
 Not all migrations are possible in a sensible fashion, therefore CQL enforces certain limitations:
@@ -3879,7 +3871,7 @@ create table foo(
   name_2 text @create(6)
 );
 
--- much simpler table, lots of stuff added in v2.  
+-- much simpler table, lots of stuff added in v2.
 -- note v1 is the first new version and v0 is base version
 create table table2(
   id integer not null,
@@ -3947,7 +3939,7 @@ I've split the script into logical pieces to explain what's going on.
 ```
 
 Schema upgrade scripts need to see all the columns even the ones that would be logically deleted in normal mode.  This is so that things like `alter table add column` can refer to real columns and `drop table` can refer to a table that shouldn't even be visible.  Remember in CQL the declarations tell you the logical state of the universe and DLL mutations are expected to create that condition, so you should be dropping tables that are marked with `@delete`
-CQL stores the current state of the universe in this table.  
+CQL stores the current state of the universe in this table.
 
 ```sql
 -- schema crc -7714030317354747478
@@ -3959,7 +3951,7 @@ The schema crc is computed by hashing all the schema declarations in canonical f
 Wherein all the necessary objects are declared...
 
 ```sql
--- declare sqlite_master -- 
+-- declare sqlite_master --
 CREATE TABLE sqlite_master (
   type TEXT NOT NULL,
   name TEXT NOT NULL,
@@ -3971,7 +3963,7 @@ CREATE TABLE sqlite_master (
 The `sqlite_master` table is built-in but it has to be introduced to CQL so that we can query it. Like all the other loose DDL declarations here there is no code generated for this.  We are simply declaring tables.  To create code you have to put the DDL in a proc.  Normally DDL in procs also declares the table but since we may need the original version of a table created and the final version declared we have `@schema_upgrade_script` to help avoid name conflicts.
 
 ```sql
--- declare full schema of tables and views to be upgraded -- 
+-- declare full schema of tables and views to be upgraded --
 CREATE TABLE foo(
   id INTEGER NOT NULL,
   rate LONG INT @DELETE(5),
@@ -4053,11 +4045,11 @@ NOTE: the prefix "test" was specified when this file was built so all the method
 #### Helper Procedures
 ```sql
 -- helper proc for testing for the presence of a column/type
-CREATE PROCEDURE test_check_column_exists(table_name TEXT NOT NULL, 
-                                          decl TEXT NOT NULL, 
+CREATE PROCEDURE test_check_column_exists(table_name TEXT NOT NULL,
+                                          decl TEXT NOT NULL,
                                           OUT present BOOL NOT NULL)
 BEGIN
-  SET present := (SELECT EXISTS(SELECT * FROM sqlite_master 
+  SET present := (SELECT EXISTS(SELECT * FROM sqlite_master
                   WHERE tbl_name = table_name AND sql GLOB decl));
 END;
 ```
@@ -4090,24 +4082,24 @@ BEGIN
 END;
 ```
 
-The `save_sql_schema_facets` procedure simply makes a snapshot of the current facets table.  Later we use 
+The `save_sql_schema_facets` procedure simply makes a snapshot of the current facets table.  Later we use
 this snapshot to report the differences by joining these tables.
 
 ```sql
 -- helper proc for setting the schema version of a facet
-CREATE PROCEDURE test_cql_set_facet_version(_facet TEXT NOT NULL, 
+CREATE PROCEDURE test_cql_set_facet_version(_facet TEXT NOT NULL,
                                             _version LONG INTEGER NOT NULL)
 BEGIN
-  INSERT OR REPLACE INTO test_cql_schema_facets (facet, version) 
+  INSERT OR REPLACE INTO test_cql_schema_facets (facet, version)
        VALUES(_facet, _version);
 END;
 
 -- helper proc for getting the schema version of a facet
-CREATE PROCEDURE test_cql_get_facet_version(_facet TEXT NOT NULL, 
+CREATE PROCEDURE test_cql_get_facet_version(_facet TEXT NOT NULL,
                                             out _version LONG INTEGER NOT NULL)
 BEGIN
   BEGIN TRY
-    SET _version := (SELECT version FROM test_cql_schema_facets 
+    SET _version := (SELECT version FROM test_cql_schema_facets
         WHERE facet = _facet LIMIT 1);
   END TRY;
   BEGIN CATCH
@@ -4121,11 +4113,11 @@ There are two additional helper procedures that do essentially the same thing us
 
 ```sql
 -- helper proc for getting the schema version CRC for a version index
-CREATE PROCEDURE test_cql_get_version_crc(_v INTEGER NOT NULL, 
+CREATE PROCEDURE test_cql_get_version_crc(_v INTEGER NOT NULL,
                                           out _crc LONG INTEGER NOT NULL)
 BEGIN
   BEGIN TRY
-    SET _crc := (SELECT version FROM test_cql_schema_facets 
+    SET _crc := (SELECT version FROM test_cql_schema_facets
         WHERE facet = 'cql_schema_v'||_v LIMIT 1);
   END TRY;
   BEGIN CATCH
@@ -4134,10 +4126,10 @@ BEGIN
 END;
 
 -- helper proc for setting the schema version CRC for a version index
-CREATE PROCEDURE test_cql_set_version_crc(_v INTEGER NOT NULL, 
+CREATE PROCEDURE test_cql_set_version_crc(_v INTEGER NOT NULL,
                                           _crc LONG INTEGER NOT NULL)
 BEGIN
-  INSERT OR REPLACE INTO test_cql_schema_facets (facet, version) 
+  INSERT OR REPLACE INTO test_cql_schema_facets (facet, version)
        VALUES('cql_schema_v'||_v, _crc);
 END;
 ```
@@ -4532,7 +4524,7 @@ BEGIN
 END;
 ```
 
-This entry point can be used any time you need the temp tables.  But normally it is 
+This entry point can be used any time you need the temp tables.  But normally it is
 automatically invoked.
 
 ```sql
@@ -4854,18 +4846,17 @@ Once this is done it becomes an error to try to make new regions that peek into 
 So, in summary, to get true privacy first make whatever logical regions you like that are helpful.  Put privacy where you need/want it.  Import logical regions as much as you want in your own bundle of regions.  Then wrap that bundle up in a deployable region (they nest) and then your private regions are safe from unwanted usage.
 
 
-<div style="page-break-after: always; visibility: hidden"></div>
-
-
+---
+id: ch11
+title: "Chapter 11: Previous Schema Validation"
+sidebar_label: "Chapter 11: Previous Schema Validation"
+---
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-
-## 11. Previous Schema Validation
-
 As we saw in the previous chapter, CQL includes powerful schema management tools for creating automatic
 upgrade scripts for your databases.  However, not all schema alterations are possible after-the-fact
 and so CQL also includes schema comparison tools to help you avoid problems as you version your schema over time.
@@ -4943,7 +4934,7 @@ the declared schema.  Which means the `--rt schema` result type will not see it.
 operation like so:
 
 ```bash
-cc -E -x c prev_check.sql | cql --cg new_previous_schema.sql --rt schema 
+cc -E -x c prev_check.sql | cql --cg new_previous_schema.sql --rt schema
 ```
 
 The above command will generate the schema in new_previous_schema and, if this command succeeds, it's safe to replace the existing
@@ -4952,7 +4943,7 @@ The above command will generate the schema in new_previous_schema and, if this c
 NOTE: you can bootstrap the above by leaving off the `@previous_schema` and what follows to get your first previous schema from the command above.
 
 Now as, you can imagine, comparing against the previous schema allows many more kinds of errors to be discovered.
-What follows is a large chuck of the CQL tests for this area taken from the test files themselves.  
+What follows is a large chuck of the CQL tests for this area taken from the test files themselves.
 For easy visibility I have brought each fragment of current and previous schema close to each other
 and I show the errors that are reported.  We start with a valid fragment and go from there.
 
@@ -5202,7 +5193,7 @@ Table became a TEMP table, there is no way to generate an alter statement for th
 ```sql
 create table t_new_table_ok(a int not null, b int) @create(6);
 -------
--- no previous version 
+-- no previous version
 ```
 No errors here, properly created new table.
 
@@ -5210,7 +5201,7 @@ No errors here, properly created new table.
 ```sql
 create table t_new_table_no_annotation(a int not null, b int);
 -------
--- no previous version 
+-- no previous version
 
 Error at sem_test_prev.sql:85 : in create_table_stmt : new table must be added with
 @create(6) or later 't_new_table_no_annotation'
@@ -5221,7 +5212,7 @@ This table was added with no annotation.  It has to have an @create and be at le
 ```sql
 create table t_new_table_stale_annotation(a int not null, b int) @create(2);
 -------
--- no previous version 
+-- no previous version
 
 Error at sem_test_prev.sql:91 : in create_table_stmt : new table must be added with
 @create(6) or later 't_new_table_stale_annotation'
@@ -5422,22 +5413,23 @@ You can't change the `@delete` migration stored proc on columns.
 
 NOTE: in addition to these errors, there are many more that do not require the previous schema which are also checked (not shown here).  These comprise things like making sure the delete version is greater than the create version on any item.  There is a lot of sensibility checking that can happen without reference to the previous schema.
 
-<div style="page-break-after: always; visibility: hidden"></div>
 
-
+---
+id: ch12
+title: "Chapter 12: Testability Features"
+sidebar_label: "Chapter 12: Testability Features"
+---
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-
-## 12. Testability Features
 CQL includes a number of features to make it easier to create what you might call "Test" procedures.  These primarily are concerned with loading up the database with dummy data, and/or validating the result of normal procedures that query the database.  There are several interesting language features in these dimensions.
 
 ### Dummy Data
 
-Test code can be needlessly brittle, especially when creating dummy data; any column changes typically cause all sorts of data insertion code to need to be repaired.  
+Test code can be needlessly brittle, especially when creating dummy data; any column changes typically cause all sorts of data insertion code to need to be repaired.
 In many cases the actual data values are completely uninteresting to the test -- any values would do.  There are several strategies you can use to get good dummy data into your database in a more maintainable way.
 
 #### Simple Inserts With Dummy Data
@@ -5447,7 +5439,7 @@ The simplest form uses a variant of the insert statement that fills in any missi
 ```sql
 create proc dummy_user()
 begin
-  insert into users () values () @dummy_seed(123) 
+  insert into users () values () @dummy_seed(123)
      @dummy_nullables @dummy_defaults;
 end;
 ```
@@ -5456,7 +5448,7 @@ This statement causes all values including columns that are nullable or have a d
 
 If you omit the `@dummy_nullables` then any nullable fields will be null as usual.  And likewise if you omit `@dummy_defaults` then any fields with a default value will use thatt value as usual.  You might want any combination of those for your tests (null values are handy in your tests and default behavior is also handy).
 
-The `@dummy_seed` expression provided can be anything that resolves to a non-null integer value, so it can be pretty flexible.  You might use a `while` loop to insert a bunch of 
+The `@dummy_seed` expression provided can be anything that resolves to a non-null integer value, so it can be pretty flexible.  You might use a `while` loop to insert a bunch of
 rows with the seed value being computed from the `while` loop variable.
 
 The form above is sort of like `insert * into table` in that it is giving dummy values for all columns but you can also specify some of the columns while using the seed value for others.  Importantly, you can specify values you particularly want to control either for purposes of creating a more tailored test or because you need them
@@ -5494,7 +5486,7 @@ begin
   FROM dummy;
 end;
 ```
-The first part of the above creates a series of numbers from 1 to `lim`.  The second uses those values to create dummy columns.  
+The first part of the above creates a series of numbers from 1 to `lim`.  The second uses those values to create dummy columns.
 Any result shape can be generated in this fashion.
 
 You get data like this from the above:
@@ -5511,8 +5503,8 @@ You get data like this from the above:
 10|name_10|0|13.0|10|10
 ```
 
-The result of the select statement is itself quite flexible and if more dummy data is what you wanted, this form can be combined with 
-`INSERT ... FROM SELECT...` to create dummy data in real tables.   And of course once you have a core query you could use it in a variety of ways 
+The result of the select statement is itself quite flexible and if more dummy data is what you wanted, this form can be combined with
+`INSERT ... FROM SELECT...` to create dummy data in real tables.   And of course once you have a core query you could use it in a variety of ways
 combined with cursors or any other strategy to `select` out pieces and `insert` them into various tables.
 
 #### Using Temporary Tables
@@ -5528,8 +5520,8 @@ emulating the results of `my_proc`.
 create proc begin_dummy()
 begin
    drop table if exists my_dummy_data;
-   
-   -- the shape of my_dummy_data matches the columns 
+
+   -- the shape of my_dummy_data matches the columns
    -- returned by proc_I_want_to_emulate
    create temp table my_dummy_data(
      like proc_I_want_to_emulate;
@@ -5538,7 +5530,7 @@ end;
 ```
 
 Next, you will need a procedure that accepts and writes a single row to your temp table.  You can of course write this all explicitly but the testing
-support features provide more support to make things easier; In this example, arguments  of the procedure will exactly match the output of the procedure we emulating, 
+support features provide more support to make things easier; In this example, arguments  of the procedure will exactly match the output of the procedure we emulating,
 one argument for each column the proc returns. The `insert` statement gets its values from the arguments.
 
 ```sql
@@ -5632,7 +5624,7 @@ The attributes dummy_table, dummy_insert, and dummy_select can be used together 
 
 Example:
 
-To create a dummy row set for `sample_proc`, add the cql:autotest attribute with dummy_table, dummy_insert, and dummy_select values. 
+To create a dummy row set for `sample_proc`, add the cql:autotest attribute with dummy_table, dummy_insert, and dummy_select values.
 
 ```sql
 create table foo(
@@ -5686,23 +5678,23 @@ When compiled, the above will create C methods that can create, drop, insert, an
 ```
 CQL_WARN_UNUSED cql_code open_sample_proc(
   sqlite3 *_Nonnull _db_);
-  
+
 CQL_WARN_UNUSED cql_code close_sample_proc(
   sqlite3 *_Nonnull _db_);
-  
+
 CQL_WARN_UNUSED cql_code insert_sample_proc(
-  sqlite3 *_Nonnull _db_, 
-  cql_int32 id_, 
+  sqlite3 *_Nonnull _db_,
+  cql_int32 id_,
   cql_string_ref _Nonnull name_);
 
 CQL_WARN_UNUSED cql_code select_sample_proc_fetch_results(
-  sqlite3 *_Nonnull _db_, 
+  sqlite3 *_Nonnull _db_,
   select_sample_proc_result_set_ref _Nullable *_Nonnull result_set);
 ```
 
 #### Single Row ResultSet
 
-In some cases, using four APIs to generate fake data can be verbose. 
+In some cases, using four APIs to generate fake data can be verbose.
 In the case that only a single row of data needs to be faked, the dummy_result_set attribute can be more convenient.
 
 Example:
@@ -5730,8 +5722,8 @@ Which generates this C API:
 
 ```C
 void generate_sample_proc_row_fetch_results(
-    generate_sample_proc_row_rowset_ref _Nullable *_Nonnull result_set, 
-    string_ref _Nonnull foo_, 
+    generate_sample_proc_row_rowset_ref _Nullable *_Nonnull result_set,
+    string_ref _Nonnull foo_,
     int64_t bar_);
 ```
 
@@ -5902,12 +5894,12 @@ Finally, the most complicated helper is the one that used that large annotation.
 CREATE PROC test_the_subject_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO foo(id) VALUES(1) @dummy_seed(123);
-  
-  INSERT OR IGNORE INTO foo(id) VALUES(2) @dummy_seed(124) 
+
+  INSERT OR IGNORE INTO foo(id) VALUES(2) @dummy_seed(124)
       @dummy_nullables @dummy_defaults;
-  
+
 INSERT OR IGNORE INTO bar(data, id) VALUES('plugh', 1) @dummy_seed(125);
-  
+
   INSERT OR IGNORE INTO bar(id) VALUES(2) @dummy_seed(126)
      @dummy_nullables @dummy_defaults;
 END;
@@ -5926,7 +5918,7 @@ NOTE: if you include primary key and/or foreign key columns among the explicit v
 Generalizing the example a little bit, we could use the following:
 
 ```
-(dummy_test, (foo, (name), ('fred'), ('barney'), ('wilma'), ('betty')), 
+(dummy_test, (foo, (name), ('fred'), ('barney'), ('wilma'), ('betty')),
                         (bar, (id, data), (1, 'dino'), (2, 'hopparoo'))))
 ```
 
@@ -5936,17 +5928,17 @@ to generate this population:
 CREATE PROC test_the_subject_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO foo(name, id) VALUES('fred', 1) @dummy_seed(123);
-  
+
   INSERT OR IGNORE INTO foo(name, id) VALUES('barney', 2) @dummy_seed(124)
     @dummy_nullables @dummy_defaults;
-  
+
   INSERT OR IGNORE INTO foo(name, id) VALUES('wilma', 3) @dummy_seed(125);
-  
+
   INSERT OR IGNORE INTO foo(name, id) VALUES('betty', 4) @dummy_seed(126)
     @dummy_nullables @dummy_defaults;
-    
+
   INSERT OR IGNORE INTO bar(id, data) VALUES(1, 'dino') @dummy_seed(127);
-  
+
   INSERT OR IGNORE INTO bar(id, data) VALUES(2, 'hopparoo') @dummy_seed(128)
     @dummy_nullables @dummy_defaults;
 END;
@@ -5962,18 +5954,18 @@ CQL_WARN_UNUSED cql_code test_the_subject_populate_tables(sqlite3 *_Nonnull _db_
 
 So it's fairly easy to call from C/C++ test code or from CQL test code.
 
-<div style="page-break-after: always; visibility: hidden"></div>
 
-
+---
+id: ch13
+title: "Chapter 13: JSON Output"
+sidebar_label: "Chapter 13: JSON Output"
+---
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-
-## 13. JSON Output
-
 To help facilitate additional tools that might want to depend on CQL input files further down the toolchain CQL includes a JSON output format for SQL DDL as well as stored procedure information, including special information for a single-statement DML.  "Single-statement DML" refers to those stored procedures that that consist of a single `insert`, `select`, `update`, or `delete`.   Even though such procedures are just one statement, good argument binding can create very powerful DML fragments that are re-usable.  Many CQL stored procedures are of this form (in practice maybe 95% are just one statement).
 
 Below are some examples of the JSON output taken from a CQL test file.  Note that the JSON has free text inserted into it as part of the test output, that obviously doesn't appear in the final output but it is especially illustrative here.  This example illustrates almost all the possible JSON fragments.
@@ -5981,17 +5973,17 @@ Below are some examples of the JSON output taken from a CQL test file.  Note tha
 ```
 {
   "tables" : [
-    
+
 ```
 Each table appears fully formed in its own JSON hunk as below.  `isAdded` and `isDeleted` correspond to the presence of an `@create` or `@delete` annotation respectively.
 
 ```
- 
+
     CREATE TABLE Foo(
       id INTEGER NOT NULL,
       name TEXT
     )
-    
+
     {
       "name" : "Foo",
       "temp" : 0,
@@ -6028,15 +6020,15 @@ Each table appears fully formed in its own JSON hunk as below.  `isAdded` and `i
       ],
       "indices" : [ "region_0_index", "MyIndex", "MyOtherIndex" ]
     },
-    
+
 ```
 Here we introduce a primary key and its JSON.
 ```
-    
+
     CREATE TABLE T2(
       id INTEGER PRIMARY KEY
     )
-    
+
     {
       "name" : "T2",
       "temp" : 0,
@@ -6052,15 +6044,15 @@ Here we introduce a primary key and its JSON.
       "primaryKey" : [ "id" ],
       ...
     },
-    
+
 ```
 General purpose column information is also present.  Again a fragment for brevity.
 ```
-    
+
     CREATE TABLE T3(
       id INTEGER UNIQUE AUTOINCREMENT
     )
-    
+
     {
       "name" : "T3",
        ...
@@ -6078,17 +6070,17 @@ General purpose column information is also present.  Again a fragment for brevit
       ],
      ...
     },
-    
+
 ```
 Columns and tables can have flexible attributes which are used downstream.
 ```
-    
+
     @ATTRIBUTE(foo=bar)
     CREATE TABLE T4(
       @ATTRIBUTE(cool)
       id INTEGER
     )
-    
+
     {
       "name" : "T4",
       ...
@@ -6113,15 +6105,15 @@ Columns and tables can have flexible attributes which are used downstream.
         }
       ]
     },
-    
-    
+
+
 ```
 Here's an example with revision marks
 ```
     CREATE TABLE T8(
       id INTEGER
     ) @CREATE(1) @DELETE(3)
-    
+
     {
       "name" : "T8",
       "temp" : 0,
@@ -6138,10 +6130,10 @@ Here's an example with revision marks
       ],
       ...
     },
-    
+
 ```
 The usual constraints are also recorded.   This example has a unqiue key on a column and foreign keys.  Note that the unique key is reported the same as if it had been declared in a standalone fashion.  There is a lot of stuff in this table...
-```    
+```
     CREATE TABLE T10(
       id1 INTEGER UNIQUE,
       id2 INTEGER,
@@ -6152,7 +6144,7 @@ The usual constraints are also recorded.   This example has a unqiue key on a co
       CONSTRAINT uk1 UNIQUE (id2, id3),
       CONSTRAINT uk2 UNIQUE (id3, id4)
     )
-    
+
     {
       "name" : "T10",
       ...
@@ -6228,11 +6220,11 @@ The usual constraints are also recorded.   This example has a unqiue key on a co
         }
       ]
     },
-    
+
 ```
 Foreign keys can include the full set of actions.  Here are a couple of examples:
 ```
-    
+
     CREATE TABLE T11(
       id1 INTEGER,
       id2 INTEGER,
@@ -6240,7 +6232,7 @@ Foreign keys can include the full set of actions.  Here are a couple of examples
       FOREIGN KEY (id1) REFERENCES T9 (id1) ON DELETE CASCADE,
       FOREIGN KEY (id1) REFERENCES T9 (id1) ON UPDATE SET NULL
     )
-    
+
     {
       "name" : "T11",
        ...
@@ -6282,11 +6274,11 @@ Foreign keys can include the full set of actions.  Here are a couple of examples
       ],
       ...
     },
-    
+
 ```
 Deferred FK actions can also be specified.  Note: per the SQLite documentation, the norm is immediate on everything except `deferrable initially deferred`.
 ```
-    
+
     CREATE TABLE T12(
       id1 INTEGER,
       id2 INTEGER,
@@ -6295,7 +6287,7 @@ Deferred FK actions can also be specified.  Note: per the SQLite documentation, 
        DEFERRABLE INITIALLY DEFERRED,
       FOREIGN KEY (id2) REFERENCES T9 (id1) ON UPDATE NO ACTION
     )
-    
+
     {
       "name" : "T12",
       ...
@@ -6334,17 +6326,17 @@ Deferred FK actions can also be specified.  Note: per the SQLite documentation, 
       ],
     ...
     },
-    
+
 ```
 Just like unique keys, foreign keys on the columns are moved down as though they had been independently declared.  There are 3 foreign keys below.
-```   
+```
     CREATE TABLE with_fk_on_columns(
       id1 INTEGER NOT NULL REFERENCES T2 (id) ON UPDATE CASCADE
         DEFERRABLE INITIALLY DEFERRED,
       id2 INTEGER NOT NULL REFERENCES T10 (id4) ON DELETE CASCADE,
       FOREIGN KEY (id1, id2) REFERENCES T10 (id3, id4)
     )
-    
+
     {
       "name" : "with_fk_on_columns",
       "temp" : 0,
@@ -6447,11 +6439,11 @@ Columns can be marked with `@sensitive` for privacy reasons.  This declaration f
 The next major section is the views.  Each view includes its projection (that is the net columns it creates from the select clause) and its general statement information.  One example tells the story pretty clearly.  Views don't have arguments in any supported cases but the arguments are included for symmetry with the other forms.  Note: projection columns can be sensitive and will be so-marked if they are.
 ```
   "views" : [
-    
+
     CREATE VIEW MyView AS
     SELECT *
       FROM Foo
-    
+
     {
       "name" : "MyView",
       "temp" : 0,
@@ -6473,12 +6465,12 @@ The next major section is the views.  Each view includes its projection (that is
   ],
 
 ```
-Likewise indices contain the table and indexed columns.  This one example illustrates things fairly clearly. 
+Likewise indices contain the table and indexed columns.  This one example illustrates things fairly clearly.
 ```
   "indices" : [
-    
+
     CREATE UNIQUE INDEX IF NOT EXISTS MyIndex ON Foo (name DESC, id ASC)
-    
+
     {
       "name" : "MyIndex",
       "table" : "Foo",
@@ -6489,16 +6481,16 @@ Likewise indices contain the table and indexed columns.  This one example illust
     }
   ],
 ```
-The top level attributes go, by convention, on a the global variable named `database` of type `object`.  These attributes move into the JSON.  Other globals are ignored. 
+The top level attributes go, by convention, on a the global variable named `database` of type `object`.  These attributes move into the JSON.  Other globals are ignored.
 
 NOTE: attributes are very flexible, allowing nesting of arrays.  Attributes values can either be any literal, or a name, or an array of values, recursively.
 ```
-  
+
   @ATTRIBUTE(my_other_attribute=('any', ('tree', 'of'), 'values'))
   @ATTRIBUTE(dbname='fred.sql')
   @ATTRIBUTE(dbfile='cg_test_mlite_query.sql')
   DECLARE database OBJECT
-  
+
   "attributes" : [
     {
       "name" : "my_other_attribute",
@@ -6524,19 +6516,19 @@ The queries section corresponds to the stored procedures with a SELECT statement
 * the query projection (aka the result shape of the select)
 * the full SQL statement and the arguments that should be bound to each `?`
 
-There are two examples below: 
+There are two examples below:
 
 ```
   "queries" : [
- 
-    
+
+
     CREATE PROC a_query (pattern TEXT NOT NULL, reject TEXT)
     BEGIN
     SELECT id
       FROM Foo
       WHERE name LIKE pattern AND name <> reject;
     END
-    
+
     {
       "name" : "a_query",
       "args" : [
@@ -6562,8 +6554,8 @@ There are two examples below:
       "statement" : "SELECT id FROM Foo WHERE name LIKE ? AND name <> ?",
       "statementArgs" : [ "pattern", "reject" ],
     },
-    
-    
+
+
     CREATE PROC bigger_query (pattern TEXT NOT NULL, reject TEXT)
     BEGIN
     SELECT DISTINCT *
@@ -6575,7 +6567,7 @@ There are two examples below:
       LIMIT 1
       OFFSET 3;
     END
-    
+
     {
       "name" : "bigger_query",
       "args" : [
@@ -6603,36 +6595,36 @@ There are two examples below:
           "isNotNull" : 0
         }
       ],
-      "statement" : "SELECT DISTINCT id, name FROM Foo WHERE name LIKE ? AND 
-          name <> ? GROUP BY name HAVING name > ? ORDER BY ? 
+      "statement" : "SELECT DISTINCT id, name FROM Foo WHERE name LIKE ? AND
+          name <> ? GROUP BY name HAVING name > ? ORDER BY ?
           LIMIT 1 OFFSET 3",
       "statementArgs" : [ "pattern", "reject", "reject", "pattern" ],
     },
-    
+
 ```
 The section on insert statements is very similar in shape.  Again the fields are:
 
 * the name of the procedure
 * the arguments and argument types
 * the tables used by the insert statement (usually just the one but value expressions can be select statements so it can be more)
-* the table we are inserting into (certainly present in `usesTables`) 
+* the table we are inserting into (certainly present in `usesTables`)
 * the overall statement and its arguments (easiest form to use)
 * the statement type (e.g. `INSERT` or `INSERT OR REPLACE`)
-* the inserted columns 
+* the inserted columns
   * present even if the `insert into table values (...)` form was used
 * the array of value expressions and arguments, one for each value
 
 Again, simple insert forms are readily recognized and complex forms are supported.
 ```
   "inserts" : [
-    
+
     The statement ending at line 277
-    
+
     CREATE PROC insert_proc (id_ INTEGER NOT NULL, name_ TEXT)
     BEGIN
     INSERT OR REPLACE INTO Foo (id, name) VALUES (id_, name_);
     END
-    
+
     {
       "name" : "insert_proc",
       "args" : [
@@ -6664,16 +6656,16 @@ Again, simple insert forms are readily recognized and complex forms are supporte
         }
       ]
     },
-    
+
 ```
 As another example, this fairly easy to write CQL transparently creates dummy values.  Great for use in testing.  The JSON shows the net insert created from the original source below.
 ```
-    
+
     CREATE PROC dummy_insert_proc (seed_ INTEGER NOT NULL)
     BEGIN
     INSERT INTO Foo () VALUES () @DUMMY_SEED(seed_) @DUMMY_NULLABLES;
     END
-    
+
     {
       "name" : "dummy_insert_proc",
       "args" : [
@@ -6685,7 +6677,7 @@ As another example, this fairly easy to write CQL transparently creates dummy va
       ],
       "usesTables" : [ "Foo" ],
       "table" : "Foo",
-      "statement" : "INSERT INTO Foo (id, name) 
+      "statement" : "INSERT INTO Foo (id, name)
             VALUES (?, printf('name_%d', ?))",
       "statementArgs" : [ "_seed_", "_seed_" ],
       "statementType" : "INSERT",
@@ -6757,9 +6749,9 @@ Update statements are handled very much like the others, but there are no statem
 This is the minimum information needed to bind and run the statement.  Note that arguments can be in any part of the update.
 ```
   "updates" : [
-    
+
     The statement ending at line 306
-    
+
     CREATE PROC update_proc (id_ INTEGER NOT NULL, name_ TEXT)
     BEGIN
     UPDATE Foo
@@ -6768,7 +6760,7 @@ This is the minimum information needed to bind and run the statement.  Note that
       ORDER BY name
       LIMIT 1;
     END
-    
+
     {
       "name" : "update_proc",
       "args" : [
@@ -6785,7 +6777,7 @@ This is the minimum information needed to bind and run the statement.  Note that
       ],
       "usesTables" : [ "Foo" ],
       "table" : "Foo",
-      "statement" : "UPDATE Foo SET name = ? 
+      "statement" : "UPDATE Foo SET name = ?
               WHERE id = ? ORDER BY name LIMIT 1",
       "statementArgs" : [ "name_", "id_" ]
     }
@@ -6798,14 +6790,14 @@ The delete section looks exactly like the update section.
 * statement and arguments
 ```
   "deletes" : [
-    
+
     The statement ending at line 297
-    
+
     CREATE PROC delete_proc (name_ TEXT)
     BEGIN
     DELETE FROM Foo WHERE name LIKE name_;
     END
-    
+
     {
       "name" : "delete_proc",
       "args" : [
@@ -6829,12 +6821,12 @@ And finally the section for procedures that were encountered that are not one of
 * the procedure has no projection (no result of any type)
 ```
   "general" : [
-    
+
     CREATE PROC with_complex_args (OUT pattern TEXT NOT NULL, INOUT arg REAL)
     BEGIN
       SELECT 1 AS a;
     END
-    
+
     {
       "name" : "with_complex_args",
       "args" : [
@@ -6862,13 +6854,13 @@ And finally the section for procedures that were encountered that are not one of
       ],
       "usesDatabase" : 1
     },
-    
-    
+
+
     CREATE PROC atypical_noreturn ()
     BEGIN
       DECLARE C CURSOR LIKE SELECT 1 AS A;
     END
-    
+
     {
       "name" : "atypical_noreturn",
       "args" : [
@@ -6876,15 +6868,15 @@ And finally the section for procedures that were encountered that are not one of
       "usesTables" : [  ],
       "usesDatabase" : 0
     },
-    
-  
+
+
     CREATE PROC typical_outresult ()
     BEGIN
-      DECLARE C CURSOR LIKE SELECT 1 AS A; 
-      FETCH C (A) FROM VALUES (7);    
+      DECLARE C CURSOR LIKE SELECT 1 AS A;
+      FETCH C (A) FROM VALUES (7);
       OUT C;
     END
-    
+
     {
       "name" : "typical_outresult",
       "args" : [
@@ -6900,7 +6892,7 @@ And finally the section for procedures that were encountered that are not one of
       ],
       "usesDatabase" : 0
     },
-    
+
 ```
 
 Some additional properties not mentioned above that are worth noting:
@@ -6910,7 +6902,7 @@ Some additional properties not mentioned above that are worth noting:
   * the `updateTables` key will give you an array of the tables that were used as the target of an `update` statement
   * the `deleteTables` key will give you an array of the tables that were used as the target of an `delete` statement
   * the `fromTables` key will give you an array of tables that were used the the `from` clause of a select or some other `select`-ish context in which you only read from the table
-* the `usesProcedures` key for a given proc has an array of the procedures it calls, this allows for complete dependency analysis if needed 
+* the `usesProcedures` key for a given proc has an array of the procedures it calls, this allows for complete dependency analysis if needed
 
 
 To use cql in this fashion:
@@ -6921,18 +6913,18 @@ cql --in input.sql --rt json_schema --cg out.json
 
 NOTE: `@ATTRIBUTE` can be applied any number of times to the entities here, including the procedures (i.e. immediately before the `CREATE PROCEDURE`) .  Those attributes appear in the JSON in an optional `attributes` chunk.  Attributes are quite flexible (you can easily encode a lisp program in attributes if you were so inclined) so you can use them very effectively to annotate your CQL entities as needed for downstream tools.
 
-<div style="page-break-after: always; visibility: hidden"></div>
 
-
+---
+id: ch14
+title: "Chapter 14: CQL Query Fragments"
+sidebar_label: "Chapter 14: CQL Query Fragments"
+---
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-
-## 14. CQL Query Fragments
-
 CQL Query fragments are the most sophisticated rewrite CQL offers for productivity.  The idea is that a very large query
 can be represented in "fragments" that add columns or add rows based on the original "core" query.  The final query
 will be an assembled rewrite of all the fragments chained together.  Specifically, the motivation for this is that you
@@ -7242,18 +7234,18 @@ extern CQL_WARN_UNUSED cql_code base_frag_fetch_results(
 
 With the combined set of methods you can create a variety of assembled queries from extensions in a fairly straightforward way.
 
-<div style="page-break-after: always; visibility: hidden"></div>
 
-
+---
+id: x1
+title: "Appendix 1: Command Line Options"
+sidebar_label: "Appendix 1: Command Line Options"
+---
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-
-## Appendix 1 : Command Line Options
-
 CQL has a variety of command line options but many of them are only interesting for cql development.  Nonetheless this is a comprehensive list:
 
 ### With No Options
@@ -7383,20 +7375,20 @@ These are the various outputs the compiler can produce.
 * the JSON includes a definition of the various entities in the input
 * see the section on JSON output for details
 
-<div style="page-break-after: always; visibility: hidden"></div>
-
 
 <div style="page-break-after: always; visibility: hidden"></div>
 
+---
+id: x2
+title: "Appendix 2: CQL Grammar"
+sidebar_label: "Appendix 2: CQL Grammar"
+---
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-
-## Appendix 2: CQL Grammar
-
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
@@ -7510,988 +7502,993 @@ any_stmt: select_stmt
   | continue_stmt
   | if_stmt
   | open_stmt
-  | close_stmt 
-  | out_stmt 
-  | out_union_stmt 
-  | throw_stmt 
-  | trycatch_stmt 
-  | begin_trans_stmt 
-  | rollback_trans_stmt 
-  | commit_trans_stmt 
-  | savepoint_stmt 
-  | release_savepoint_stmt 
-  | echo_stmt 
-  | schema_upgrade_version_stmt 
-  | schema_upgrade_script_stmt 
-  | previous_schema_stmt 
-  | enforce_strict_stmt 
-  | enforce_normal_stmt 
-  | declare_schema_region_stmt 
-  | declare_deployable_region_stmt 
-  | begin_schema_region_stmt 
-  | end_schema_region_stmt 
-  | schema_ad_hoc_migration_stmt 
-  ; 
- 
-explain_stmt: "EXPLAIN" opt_query_plan explain_target  
-  ; 
- 
-opt_query_plan: /* nil */  
-  | "QUERY PLAN"  
-  ; 
- 
-explain_target: select_stmt 
-  | update_stmt 
-  | delete_stmt 
-  | with_delete_stmt 
-  | with_insert_stmt 
-  | insert_stmt 
-  | upsert_stmt 
-  | drop_table_stmt 
-  | drop_view_stmt 
-  | drop_index_stmt 
-  | drop_trigger_stmt 
-  | begin_trans_stmt 
-  | commit_trans_stmt 
-  ; 
- 
-previous_schema_stmt: "@PREVIOUS_SCHEMA"  
-  ; 
- 
-schema_upgrade_script_stmt: "@SCHEMA_UPGRADE_SCRIPT"  
-  ; 
- 
-schema_upgrade_version_stmt: "@SCHEMA_UPGRADE_VERSION" '(' "integer-literal" ')'  
-  ; 
- 
-set_stmt: "SET" name ":=" expr    
-  ; 
- 
-version_attrs_opt_recreate: /* nil */  
-  | "@RECREATE"  
-  | "@RECREATE" '(' name ')'   
-  | version_attrs  
-  ; 
- 
-opt_version_attrs: /* nil */  
-  | version_attrs  
-  ; 
- 
-version_attrs: "@CREATE" version_annotation opt_version_attrs  
-  | "@DELETE" version_annotation opt_version_attrs  
-  ; 
- 
-opt_delete_version_attr: /* nil */  
-  | "@DELETE" version_annotation  
-  ; 
- 
-drop_table_stmt: "DROP" "TABLE" "IF" "EXISTS" name  
-  | "DROP" "TABLE" name  
-  ; 
- 
-drop_view_stmt: "DROP" "VIEW" "IF" "EXISTS" name  
-  | "DROP" "VIEW" name  
-  ; 
- 
-drop_index_stmt: "DROP" "INDEX" "IF" "EXISTS" name  
-  | "DROP" "INDEX" name  
-  ; 
- 
-drop_trigger_stmt: "DROP" "TRIGGER" "IF" "EXISTS" name  
-  | "DROP" "TRIGGER" name  
-  ; 
- 
-create_table_stmt: "CREATE" opt_temp "TABLE" opt_if_not_exists name '(' col_key_list ')' opt_no_rowid version_attrs_opt_recreate  
-  ; 
- 
-opt_temp: /* nil */  
-  | "TEMP"  
-  ; 
- 
-opt_if_not_exists: /* nil */  
-  | "IF" "NOT" "EXISTS"  
-  ; 
- 
-opt_no_rowid: /* nil */  
-  | "WITHOUT" "ROWID"  
-  ; 
- 
-col_key_list: col_key_def  
-  | col_key_def ',' col_key_list   
-  ; 
- 
-col_key_def: col_def 
-  | pk_def 
-  | fk_def 
-  | unq_def 
-  | "LIKE" name  
-  ; 
- 
-col_name: name  
-  ; 
- 
-misc_attr_key: name  
-  | name ':' name  
-  ; 
- 
-misc_attr_value_list: misc_attr_value  
-  | misc_attr_value ',' misc_attr_value_list  
-  ; 
- 
-misc_attr_value: name  
-  | any_literal  
-  | '(' misc_attr_value_list ')'  
-  | '-' num_literal  
-  ; 
- 
-misc_attr:  "@ATTRIBUTE" '(' misc_attr_key ')'  
-  | "@ATTRIBUTE" '(' misc_attr_key '=' misc_attr_value ')'  
-  ; 
- 
-misc_attrs: /* nil */  
-  | misc_attr misc_attrs  
-  ; 
- 
-col_def: misc_attrs col_name data_type col_attrs  
-  ; 
- 
-pk_def: "PRIMARY" "KEY" '(' name_list ')'   
-  ; 
- 
-opt_fk_options: /* nil */  
-  | fk_options  
-  ; 
- 
-fk_options: fk_on_options  
-  | fk_deferred_options  
-  | fk_on_options fk_deferred_options   
-  ; 
- 
-fk_on_options: 
-    "ON" "DELETE" fk_action  
-  | "ON" "UPDATE" fk_action  
-  | "ON" "UPDATE" fk_action "ON" "DELETE" fk_action  
-  | "ON" "DELETE" fk_action "ON" "UPDATE" fk_action  
-  ; 
- 
-fk_action: 
-    "SET" "NULL"  
-  | "SET" "DEFAULT"  
-  | "CASCADE"  
-  | "RESTRICT"  
-  | "NO" "ACTION"  
-  ; 
- 
-fk_deferred_options: 
-    "DEFERRABLE" fk_initial_state  
-  | "NOT DEFERRABLE" fk_initial_state  
-  ; 
- 
-fk_initial_state: /* nil */  
-  | "INITIALLY" "DEFERRED"  
-  | "INITIALLY" "IMMEDIATE"  
-  ; 
- 
-fk_def: "FOREIGN" "KEY" '(' name_list ')' fk_target_options  
-  ; 
- 
-fk_target_options : "REFERENCES" name '(' name_list ')' opt_fk_options  
-  ; 
- 
-unq_def: "CONSTRAINT" name "UNIQUE" '(' name_list ')'  
-  | "UNIQUE" '(' name_list ')'  
-  ; 
- 
-opt_unique: /* nil */  
-  | "UNIQUE"  
-  ; 
- 
-indexed_column: name opt_asc_desc  
-  ; 
- 
-indexed_columns: indexed_column  
-  | indexed_column ',' indexed_columns  
-  ; 
- 
-create_index_stmt: "CREATE" opt_unique "INDEX" opt_if_not_exists name "ON" name '(' indexed_columns ')' opt_delete_version_attr  
-  ; 
- 
-name: "ID"  
-  | "TEXT"  
-  | "TRIGGER"  
-  | "ROWID"  
-  ; 
- 
-opt_name: /* nil */  
-  | name  
-  ; 
- 
-name_list: name  
-  |  name ',' name_list   
-  ; 
- 
-opt_name_list: /* nil */  
-  | name_list  
-  ; 
- 
-col_attrs: /* nil */  
-  | "NOT" "NULL" col_attrs  
-  | "PRIMARY" "KEY" col_attrs  
-  | "PRIMARY" "KEY" "AUTOINCREMENT" col_attrs  
-  | "DEFAULT" '-' num_literal col_attrs  
-  | "DEFAULT" num_literal col_attrs  
-  | "DEFAULT" str_literal col_attrs  
-  | "UNIQUE" col_attrs  
-  | "@SENSITIVE" col_attrs  
-  | "@CREATE" version_annotation col_attrs  
-  | "@DELETE" version_annotation col_attrs  
-  | fk_target_options col_attrs  
-  ; 
- 
-version_annotation: '(' "integer-literal" ',' name ')'  
-  | '(' "integer-literal" ')'  
-  ; 
- 
-object_type: 
-    "OBJECT"  
-  | "OBJECT" '<' name '>'  
-  ; 
- 
-data_type: 
-    "INT"  
-  | "INTEGER"  
-  | "TEXT"  
-  | "REAL"  
-  | "LONG"  
-  | "BOOL"  
-  | "LONG" "INTEGER"  
-  | "LONG" "INT"  
-  | "LONG_INT" | "LONG_INTEGER"  
-  | "BLOB"  
-  | object_type  
-  ; 
- 
-data_type_opt_notnull: data_type  
-  | data_type "NOT" "NULL"  
-  | data_type "@SENSITIVE"  
-  | data_type "@SENSITIVE" "NOT" "NULL"  
-  | data_type "NOT" "NULL" "@SENSITIVE"   
-  ; 
- 
-str_literal: "sql-string-literal"  
-  | "c-string-literal"  
-  ; 
- 
-num_literal:  "integer-literal"  
-  | "long-literal"  
-  | "real-literal"  
-  ; 
- 
-any_literal: str_literal  
-  | num_literal  
-  | "NULL"  
-  | "@FILE" '(' str_literal ')'  
-  | "sql-blob-literal"  
-  ; 
- 
-raise_expr: 
-    "RAISE" '(' "IGNORE" ')'   
-  | "RAISE" '(' "ROLLBACK" ','  expr ')'  
-  | "RAISE" '(' "ABORT" ','  expr ')'  
-  | "RAISE" '(' "FAIL" ','  expr ')'  
-  ; 
- 
-call: 
-    name '(' arg_list ')' opt_filter_clause  
-  | name '(' "DISTINCT" arg_list ')' opt_filter_clause  
-  ; 
- 
-basic_expr: name  
-  | name '.' name  
-  | any_literal  
-  | '(' expr ')'  
-  | call  
-  | window_func_inv  
-  | raise_expr  
-  | '(' select_stmt ')'  
-  | "EXISTS" '(' select_stmt ')'  
-  ; 
- 
-math_expr: basic_expr  
-  | math_expr '&' math_expr  
-  | math_expr '|' math_expr  
-  | math_expr "<<" math_expr  
-  | math_expr ">>"  math_expr  
-  | math_expr '+' math_expr  
-  | math_expr '-' math_expr  
-  | math_expr '*' math_expr  
-  | math_expr '/' math_expr  
-  | math_expr '%' math_expr  
-  | '-' math_expr   
-  | math_expr "||" math_expr  
-  ; 
- 
-expr: basic_expr  
-  | expr '&' expr  
-  | expr '|' expr  
-  | expr "<<" expr  
-  | expr ">>" expr  
-  | expr '+' expr  
-  | expr '-' expr  
-  | expr '*' expr  
-  | expr '/' expr  
-  | expr '%' expr  
-  | '-' expr   
-  | "NOT" expr  
-  | '~' expr  
-  | expr "COLLATE" name  
-  | expr "AND" expr  
-  | expr "OR" expr  
-  | expr '=' expr  
-  | expr "==" expr  
-  | expr '<' expr  
-  | expr '>' expr  
-  | expr "<>" expr  
-  | expr "!=" expr  
-  | expr ">=" expr  
-  | expr "<=" expr  
-  | expr "NOT" "IN" '(' expr_list ')'  
-  | expr "NOT" "IN" '(' select_stmt ')'  
-  | expr "IN" '(' expr_list ')'  
-  | expr "IN" '(' select_stmt ')'  
-  | expr "LIKE" expr  
-  | expr "NOT LIKE" expr  
-  | expr "MATCH" expr  
-  | expr "REGEXP" expr  
-  | expr "GLOB" expr  
-  | expr "NOT" "BETWEEN" math_expr "AND" math_expr   
-  | expr "BETWEEN" math_expr "AND" math_expr   
-  | expr "IS NOT" expr  
-  | expr "IS" expr  
-  | expr "||" expr  
-  | "CASE" expr case_list "END"  
-  | "CASE" expr case_list "ELSE" expr "END"  
-  | "CASE" case_list "END"  
-  | "CASE" case_list "ELSE" expr "END"  
-  | "CAST" '(' expr "AS" data_type ')'  
-  ; 
- 
-case_list: "WHEN" expr "THEN" expr  
-  | "WHEN" expr "THEN" expr case_list  
-  ; 
- 
-arg_expr: '*'  
-  | expr  
-  | cursor_arguments  
-  | from_arguments  
-  ; 
- 
-arg_list: /* nil */  
-  | arg_expr  
-  | arg_expr ',' arg_list  
-  ; 
- 
-expr_list: expr  
-  | expr ',' expr_list  
-  ; 
- 
-cursor_arguments : "FROM" name  
-  | "FROM" name "LIKE" name  
-  ; 
- 
-call_expr: expr  
-  | cursor_arguments  
-  | from_arguments  
-  ; 
- 
-call_expr_list: call_expr  
-  | call_expr ',' call_expr_list  
-  ; 
- 
-cte_tables:  cte_table  
-  | cte_table ',' cte_tables  
-  ; 
- 
-cte_table: cte_decl "AS" '(' select_stmt_no_with ')'  
-  ; 
- 
-cte_decl: name '(' name_list ')'  
-  | name '(' '*' ')'  
-  ; 
- 
-with_prefix: "WITH" cte_tables  
-  | "WITH" "RECURSIVE" cte_tables  
-  ; 
- 
-with_select_stmt: with_prefix select_stmt_no_with  
-  ; 
- 
-select_stmt: with_select_stmt  
-  | select_stmt_no_with  
-  ; 
- 
-select_stmt_no_with: select_core_list opt_orderby opt_limit opt_offset  
-  ; 
- 
-select_core_list: select_core  
-  | select_core select_core_compound  
-  ; 
- 
-select_core_compound: compound_operator select_core_list  
-  ; 
- 
- 
-values: '(' insert_list ')'  
-  | '(' insert_list ')' ',' values  
-  ; 
- 
-select_core: "SELECT" select_opts select_expr_list opt_from_query_parts opt_where opt_groupby opt_having opt_select_window  
-  | "VALUES" values  
-  ; 
- 
-compound_operator: 
-    "UNION"  
-  | "UNION ALL"  
-  | "INTERSECT"  
-  | "EXCEPT"  
-  ; 
- 
-window_func_inv: name '(' arg_list ')' opt_filter_clause "OVER" window_name_or_defn  
-  ; 
- 
-opt_filter_clause: /* nil */  
-  | "FILTER" '(' opt_where ')'  
-  ; 
- 
-window_name_or_defn: window_defn 
-  | name 
-  ; 
- 
-window_defn: '(' opt_partition_by opt_orderby opt_frame_spec ')'  
-  ; 
- 
-opt_frame_spec: /* nil */  
-  | frame_type frame_boundary_opts frame_exclude  
-  ; 
- 
-frame_type: "RANGE"  
-  | "ROWS"  
-  | "GROUPS"  
-  ; 
- 
-frame_exclude: /* nil */  
-  | "EXCLUDE NO OTHERS"  
-  | "EXCLUDE CURRENT ROW"  
-  | "EXCLUDE GROUP"  
-  | "EXCLUDE TIES"  
-  ; 
- 
-frame_boundary_opts: frame_boundary  
-  | "BETWEEN" frame_boundary_start "AND" frame_boundary_end  
-  ; 
- 
-frame_boundary_start: "UNBOUNDED" "PRECEDING"  
-  | expr "PRECEDING"  
-  | "CURRENT ROW"  
-  | expr "FOLLOWING"  
-  ; 
- 
-frame_boundary_end: expr "PRECEDING"  
-  | "CURRENT ROW"  
-  | expr "FOLLOWING"  
-  | "UNBOUNDED" "FOLLOWING"  
-  ; 
- 
-frame_boundary: "UNBOUNDED" "PRECEDING"  
-  | expr "PRECEDING"  
-  | "CURRENT ROW"  
-  ; 
- 
-opt_partition_by: /* nil */  
-  | "PARTITION" "BY" expr_list  
-  ; 
- 
-opt_select_window: /* nil */  
-  | window_clause  
-  ; 
- 
-window_clause: "WINDOW" window_name_defn_list  
-  ; 
- 
-window_name_defn_list: window_name_defn  
-  | window_name_defn ',' window_name_defn_list  
-  ; 
- 
-window_name_defn: name "AS" window_defn  
- 
-region_spec: 
-    name   
-  | name "PRIVATE"  
-  ; 
- 
-region_list : 
-    region_spec ',' region_list  
-  | region_spec  
-  ; 
- 
-declare_schema_region_stmt: 
-  "@DECLARE_SCHEMA_REGION" name  
-  | "@DECLARE_SCHEMA_REGION" name "USING" region_list  
-  ; 
- 
-declare_deployable_region_stmt: 
-  "@DECLARE_DEPLOYABLE_REGION"  name  
-  | "@DECLARE_DEPLOYABLE_REGION" name "USING" region_list  
-  ; 
- 
-begin_schema_region_stmt: "@BEGIN_SCHEMA_REGION" name  
-  ; 
- 
-end_schema_region_stmt: "@END_SCHEMA_REGION"  
-  ; 
- 
-schema_ad_hoc_migration_stmt: "@SCHEMA_AD_HOC_MIGRATION" version_annotation  
-  ; 
- 
-opt_from_query_parts: /* nil */  
-  | "FROM" query_parts  
-  ; 
- 
-opt_where: /* nil */  
-  | "WHERE" expr  
-  ; 
- 
-opt_groupby: /* nil */  
-  | "GROUP" "BY" groupby_list  
-  ; 
- 
-groupby_list: groupby_item  
-  | groupby_item ',' groupby_list  
-  ; 
- 
-groupby_item: expr opt_asc_desc  
-  ; 
- 
-opt_asc_desc: /* nil */  
-  | "ASC"  
-  | "DESC"  
-  ; 
- 
-opt_having: /* nil */  
-  | "HAVING" expr  
-  ; 
- 
-opt_orderby: /* nil */  
-  | "ORDER" "BY" groupby_list  
-  ; 
- 
-opt_limit: /* nil */  
-  | "LIMIT" expr  
-  ; 
- 
-opt_offset: /* nil */  
-  | "OFFSET" expr  
-  ; 
- 
-select_opts: /* nil */  
-  | "ALL"   
-  | "DISTINCT"  
-  | "DISTINCTROW"  
-  ; 
- 
-select_expr_list: select_expr  
-  | select_expr ',' select_expr_list  
-  | '*'  
-  ; 
- 
-select_expr: expr opt_as_alias  
-  |  name '.' '*'  
-  ; 
- 
-opt_as_alias: /* nil */  
-  | "AS" name  
-  | name  
-  ; 
- 
-query_parts: table_or_subquery_list  
-  | join_clause  
-  ; 
- 
-table_or_subquery_list: table_or_subquery  
-  | table_or_subquery ',' table_or_subquery_list  
-  ; 
- 
-join_clause: table_or_subquery join_target_list  
-  ; 
- 
-join_target_list: join_target  
-  | join_target join_target_list  
-  ; 
- 
-table_or_subquery: name opt_as_alias  
-  | '(' select_stmt ')' opt_as_alias  
-  | table_function opt_as_alias  
-  | '(' query_parts ')'  
-  ; 
- 
-join_target: opt_inner_cross "JOIN" table_or_subquery opt_join_cond  
-  | left_or_right opt_outer "JOIN" table_or_subquery opt_join_cond  
-  ; 
- 
-opt_inner_cross: /* nil */  
-  | "INNER"  
-  | "CROSS"  
-  ; 
- 
-opt_outer: /* nil */  
-  | "OUTER"  
-  ; 
- 
-left_or_right: "LEFT"  
-  | "RIGHT"  
-  ; 
- 
-opt_join_cond: /* nil */  
-  | join_cond 
-  ; 
- 
-join_cond: "ON" expr  
-  | "USING" '(' name_list ')'  
-  ; 
- 
-table_function: name '(' arg_list ')'  
-  ; 
- 
-create_view_stmt: "CREATE" opt_temp "VIEW" opt_if_not_exists name "AS" select_stmt opt_delete_version_attr  
-  ; 
- 
-with_delete_stmt: with_prefix delete_stmt  
-  ; 
- 
-delete_stmt: "DELETE" "FROM" name opt_where  
-  ; 
- 
-opt_insert_dummy_spec : /*nil*/   
-  | "@DUMMY_SEED" '(' expr ')' dummy_modifier  
-  ; 
- 
-dummy_modifier: /* nil */  
-  | "@DUMMY_NULLABLES"  
-  | "@DUMMY_DEFAULTS"   
-  | "@DUMMY_NULLABLES" "@DUMMY_DEFAULTS"   
-  | "@DUMMY_DEFAULTS" "@DUMMY_NULLABLES"   
-  ; 
- 
-insert_stmt_type : "INSERT" "INTO"  
-  | "INSERT" "OR" "REPLACE" "INTO"  
-  | "INSERT" "OR" "IGNORE" "INTO"  
-  | "INSERT" "OR" "ROLLBACK" "INTO"  
-  | "INSERT" "OR" "ABORT" "INTO"  
-  | "INSERT" "OR" "FAIL" "INTO"  
-  | "REPLACE" "INTO"  
-  ; 
- 
-with_insert_stmt: with_prefix insert_stmt  
-  ; 
- 
-opt_column_spec: /* nil */  
-  | '(' opt_name_list ')'  
-  | '(' "LIKE" name ')'  
-  ; 
- 
-from_cursor:  "FROM" "CURSOR" name opt_column_spec  
-  ; 
- 
-from_arguments: "FROM" "ARGUMENTS"  
-  | "FROM" "ARGUMENTS" "LIKE" name  
-  ; 
- 
-insert_stmt: insert_stmt_type name opt_column_spec select_stmt opt_insert_dummy_spec  
-  | insert_stmt_type name opt_column_spec from_arguments opt_insert_dummy_spec  
-  | insert_stmt_type name opt_column_spec from_cursor opt_insert_dummy_spec  
-  | insert_stmt_type name "DEFAULT" "VALUES"  
-  ; 
- 
-insert_list:  
-  | expr  
-  | expr ',' insert_list  
-  ; 
- 
-basic_update_stmt: "UPDATE" opt_name "SET" update_list opt_where  
-  ; 
- 
-with_update_stmt: with_prefix update_stmt  
-  ; 
- 
-update_stmt: "UPDATE" name "SET" update_list opt_where opt_orderby opt_limit  
-  ; 
- 
-update_entry: name '=' expr  
-  ; 
- 
-update_list: update_entry  
-  | update_entry ',' update_list  
-  ; 
- 
-with_upsert_stmt: with_prefix upsert_stmt  
-  ; 
- 
-upsert_stmt: insert_stmt "ON CONFLICT" conflict_target "DO" "NOTHING"  
-  | insert_stmt "ON CONFLICT" conflict_target "DO" basic_update_stmt  
-  ; 
- 
-update_cursor_stmt: 
-    "UPDATE" "CURSOR" name opt_column_spec "FROM" "VALUES" '(' insert_list ')'   
-  | "UPDATE" "CURSOR" name opt_column_spec from_cursor  
-  ; 
- 
-conflict_target:  /* nil */  
-  | '(' indexed_columns ')' opt_where  
-  ; 
- 
-creation_type: object_type  
-  | object_type "NOT" "NULL"  
-  | "TEXT"  
-  | "TEXT" "NOT" "NULL"  
-  | "BLOB"  
-  | "BLOB" "NOT" "NULL"  
-  ; 
- 
-function: "FUNC" | "FUNCTION" 
-  ; 
- 
-declare_func_stmt: "DECLARE" function name '(' params ')' data_type_opt_notnull  
-  | "DECLARE" "SELECT" function name '(' params ')' data_type_opt_notnull  
-  | "DECLARE" function name '(' params ')' "CREATE" creation_type  
-  | "DECLARE" "SELECT" function name '(' params ')' '(' typed_names ')'  
-  ; 
- 
-procedure: "PROC" | "PROCEDURE" 
-  ; 
- 
-declare_proc_stmt: "DECLARE" procedure name '(' params ')'  
-  | "DECLARE" procedure name '(' params ')' '(' typed_names ')'  
-  | "DECLARE" procedure name '(' params ')' "USING" "TRANSACTION"  
-  | "DECLARE" procedure name '(' params ')' "OUT" '(' typed_names ')'  
-  | "DECLARE" procedure name '(' params ')' "OUT" '(' typed_names ')' "USING" "TRANSACTION"  
-  | "DECLARE" procedure name '(' params ')' "OUT" "UNION" '(' typed_names ')'  
-  | "DECLARE" procedure name '(' params ')' "OUT" "UNION" '(' typed_names ')' "USING" "TRANSACTION"  
-  ; 
- 
-create_proc_stmt: "CREATE" procedure name '(' params ')' "BEGIN" opt_stmt_list "END"  
-  ; 
- 
-opt_inout: /* nil */  
-  | "IN"  
-  | "OUT"  
-  | "INOUT"  
-  ; 
- 
-typed_name: name data_type_opt_notnull  
-  | "LIKE" name  
-  ; 
- 
-typed_names: typed_name   
-  | typed_name ',' typed_names  
-  ; 
- 
-param: opt_inout name data_type_opt_notnull  
-  | "LIKE" name  
-  ; 
- 
-params: /* nil */  
-  | param  
-  |  param ',' params   
-  ; 
- 
-declare_stmt: "DECLARE" name_list data_type_opt_notnull  
-  | "DECLARE" name "CURSOR FOR" select_stmt  
-  | "DECLARE" name "CURSOR FOR" explain_stmt  
-  | "DECLARE" name "CURSOR FOR" call_stmt   
-  | "DECLARE" name "CURSOR" "FETCH" "FROM" call_stmt  
-  | "DECLARE" name "CURSOR" "LIKE" name  
-  | "DECLARE" name "CURSOR" "LIKE" select_stmt  
-  ; 
- 
-call_stmt: "CALL" name '(' ')'  
-  | "CALL" name '(' call_expr_list ')'  
-  ; 
- 
-while_stmt: "WHILE" expr "BEGIN" opt_stmt_list "END"  
-  ; 
- 
-loop_stmt: "LOOP" fetch_stmt "BEGIN" opt_stmt_list "END"  
-  ; 
- 
-leave_stmt: "LEAVE"  
-  ; 
- 
-return_stmt: "RETURN"  
-  ; 
- 
-throw_stmt: "THROW"  
-  ; 
- 
-trycatch_stmt: "BEGIN" "TRY" opt_stmt_list "END" "TRY" ';' "BEGIN" "CATCH" opt_stmt_list "END" "CATCH"  
-  ; 
- 
-continue_stmt: "CONTINUE"  
-  ; 
- 
-fetch_stmt: "FETCH" name "INTO" name_list  
-  | "FETCH" name  
-  ; 
- 
-fetch_values_stmt: 
-    "FETCH" name opt_column_spec "FROM" "VALUES" '(' insert_list ')' opt_insert_dummy_spec  
-  | "FETCH" name opt_column_spec from_arguments opt_insert_dummy_spec  
-  | "FETCH" name opt_column_spec from_cursor opt_insert_dummy_spec  
-  ; 
- 
-fetch_call_stmt: "FETCH" name opt_column_spec "FROM" call_stmt  
-  ; 
- 
-fetch_cursor_stmt: "FETCH" name opt_column_spec "FROM" name  
-  ; 
- 
-open_stmt: "OPEN" name  
-  ; 
- 
-close_stmt: "CLOSE" name   
-  ; 
- 
-out_stmt: "OUT" name   
-  ; 
- 
-out_union_stmt: "OUT" "UNION" name   
-  ; 
- 
-if_stmt: "IF" expr "THEN" opt_stmt_list opt_elseif_list opt_else "END" "IF"  
-  ; 
- 
-opt_else: /* nil */  
-  | "ELSE" opt_stmt_list  
-  ; 
- 
-elseif_item: "ELSE IF" expr "THEN" opt_stmt_list  
-  ; 
- 
-elseif_list: elseif_item  
-  | elseif_item elseif_list  
-  ; 
- 
-opt_elseif_list: /* nil */  
-  | elseif_list  
-  ; 
- 
-begin_trans_stmt: "BEGIN" "TRANSACTION"  
-  ; 
- 
-rollback_trans_stmt: "ROLLBACK" "TRANSACTION"  
-  | "ROLLBACK" "TRANSACTION" "TO" "SAVEPOINT" name  
-  ; 
- 
-commit_trans_stmt: "COMMIT" "TRANSACTION"  
-  ; 
- 
-savepoint_stmt: "SAVEPOINT" name  
-  ; 
- 
-release_savepoint_stmt: "RELEASE" "SAVEPOINT" name  
-  ; 
- 
-echo_stmt: "@ECHO" name ',' str_literal  
-  ; 
- 
-alter_table_add_column_stmt: "ALTER" "TABLE" name "ADD" "COLUMN" col_def  
-  ; 
- 
-create_trigger_stmt:  "CREATE" opt_temp "TRIGGER" opt_if_not_exists trigger_def opt_delete_version_attr  
-  ; 
- 
-trigger_def: name trigger_condition trigger_operation "ON" name trigger_action  
-  ; 
- 
-trigger_condition: 
-   /* nil */   
- | "BEFORE"      
- | "AFTER"       
- | "INSTEAD" "OF"  
- ; 
- 
-trigger_operation: 
-    "DELETE"   
-  | "INSERT"   
-  | "UPDATE" opt_of  
-  ; 
- 
-opt_of: 
-    /* nil */  
-  | "OF" name_list  
-  ; 
- 
-trigger_action:  opt_foreachrow opt_when_expr "BEGIN" trigger_stmts "END"  
-  ; 
- 
-opt_foreachrow: 
-    /* nil */  
-  | "FOR EACH ROW"   
-  ; 
- 
-opt_when_expr: 
-    /* nil */  
-  | "WHEN" expr  
-  ; 
- 
-trigger_stmts: 
-    trigger_stmt   
-  | trigger_stmt  trigger_stmts  
-  ; 
- 
-/* These forms are slightly different than the normal statements, not all variations are allowed. 
- * This section clearly states the mapping.  It could be done more tersely but this costs us nothing. 
- */ 
- 
-trigger_stmt: 
-    trigger_update_stmt ';'  
-  | trigger_insert_stmt ';'  
-  | trigger_delete_stmt ';'  
-  | trigger_select_stmt ';'  
-  ; 
- 
-trigger_select_stmt : select_stmt_no_with  
-  ; 
- 
-trigger_insert_stmt : insert_stmt  
-  ; 
- 
-trigger_delete_stmt : delete_stmt  
-  ; 
- 
-trigger_update_stmt : basic_update_stmt  
-  ; 
- 
-enforcement_options: 
-    "FOREIGN" "KEY" "ON" "UPDATE"  
-  | "FOREIGN" "KEY" "ON" "DELETE"  
-  | "JOIN"  
-  | "UPSERT" "STATEMENT"  
-  | "WINDOW" function  
-  | procedure  
-  | "WITHOUT" "ROWID"  
-  ; 
- 
-enforce_strict_stmt: "@ENFORCE_STRICT" enforcement_options  
-  ; 
- 
-enforce_normal_stmt: "@ENFORCE_NORMAL" enforcement_options  
-  ; 
- 
+  | close_stmt
+  | out_stmt
+  | out_union_stmt
+  | throw_stmt
+  | trycatch_stmt
+  | begin_trans_stmt
+  | rollback_trans_stmt
+  | commit_trans_stmt
+  | savepoint_stmt
+  | release_savepoint_stmt
+  | echo_stmt
+  | schema_upgrade_version_stmt
+  | schema_upgrade_script_stmt
+  | previous_schema_stmt
+  | enforce_strict_stmt
+  | enforce_normal_stmt
+  | declare_schema_region_stmt
+  | declare_deployable_region_stmt
+  | begin_schema_region_stmt
+  | end_schema_region_stmt
+  | schema_ad_hoc_migration_stmt
+  ;
+
+explain_stmt: "EXPLAIN" opt_query_plan explain_target
+  ;
+
+opt_query_plan: /* nil */
+  | "QUERY PLAN"
+  ;
+
+explain_target: select_stmt
+  | update_stmt
+  | delete_stmt
+  | with_delete_stmt
+  | with_insert_stmt
+  | insert_stmt
+  | upsert_stmt
+  | drop_table_stmt
+  | drop_view_stmt
+  | drop_index_stmt
+  | drop_trigger_stmt
+  | begin_trans_stmt
+  | commit_trans_stmt
+  ;
+
+previous_schema_stmt: "@PREVIOUS_SCHEMA"
+  ;
+
+schema_upgrade_script_stmt: "@SCHEMA_UPGRADE_SCRIPT"
+  ;
+
+schema_upgrade_version_stmt: "@SCHEMA_UPGRADE_VERSION" '(' "integer-literal" ')'
+  ;
+
+set_stmt: "SET" name ":=" expr
+  ;
+
+version_attrs_opt_recreate: /* nil */
+  | "@RECREATE"
+  | "@RECREATE" '(' name ')'
+  | version_attrs
+  ;
+
+opt_version_attrs: /* nil */
+  | version_attrs
+  ;
+
+version_attrs: "@CREATE" version_annotation opt_version_attrs
+  | "@DELETE" version_annotation opt_version_attrs
+  ;
+
+opt_delete_version_attr: /* nil */
+  | "@DELETE" version_annotation
+  ;
+
+drop_table_stmt: "DROP" "TABLE" "IF" "EXISTS" name
+  | "DROP" "TABLE" name
+  ;
+
+drop_view_stmt: "DROP" "VIEW" "IF" "EXISTS" name
+  | "DROP" "VIEW" name
+  ;
+
+drop_index_stmt: "DROP" "INDEX" "IF" "EXISTS" name
+  | "DROP" "INDEX" name
+  ;
+
+drop_trigger_stmt: "DROP" "TRIGGER" "IF" "EXISTS" name
+  | "DROP" "TRIGGER" name
+  ;
+
+create_table_stmt: "CREATE" opt_temp "TABLE" opt_if_not_exists name '(' col_key_list ')' opt_no_rowid version_attrs_opt_recreate
+  ;
+
+opt_temp: /* nil */
+  | "TEMP"
+  ;
+
+opt_if_not_exists: /* nil */
+  | "IF" "NOT" "EXISTS"
+  ;
+
+opt_no_rowid: /* nil */
+  | "WITHOUT" "ROWID"
+  ;
+
+col_key_list: col_key_def
+  | col_key_def ',' col_key_list
+  ;
+
+col_key_def: col_def
+  | pk_def
+  | fk_def
+  | unq_def
+  | "LIKE" name
+  ;
+
+col_name: name
+  ;
+
+misc_attr_key: name
+  | name ':' name
+  ;
+
+misc_attr_value_list: misc_attr_value
+  | misc_attr_value ',' misc_attr_value_list
+  ;
+
+misc_attr_value: name
+  | any_literal
+  | '(' misc_attr_value_list ')'
+  | '-' num_literal
+  ;
+
+misc_attr:  "@ATTRIBUTE" '(' misc_attr_key ')'
+  | "@ATTRIBUTE" '(' misc_attr_key '=' misc_attr_value ')'
+  ;
+
+misc_attrs: /* nil */
+  | misc_attr misc_attrs
+  ;
+
+col_def: misc_attrs col_name data_type col_attrs
+  ;
+
+pk_def: "PRIMARY" "KEY" '(' name_list ')'
+  ;
+
+opt_fk_options: /* nil */
+  | fk_options
+  ;
+
+fk_options: fk_on_options
+  | fk_deferred_options
+  | fk_on_options fk_deferred_options
+  ;
+
+fk_on_options:
+    "ON" "DELETE" fk_action
+  | "ON" "UPDATE" fk_action
+  | "ON" "UPDATE" fk_action "ON" "DELETE" fk_action
+  | "ON" "DELETE" fk_action "ON" "UPDATE" fk_action
+  ;
+
+fk_action:
+    "SET" "NULL"
+  | "SET" "DEFAULT"
+  | "CASCADE"
+  | "RESTRICT"
+  | "NO" "ACTION"
+  ;
+
+fk_deferred_options:
+    "DEFERRABLE" fk_initial_state
+  | "NOT DEFERRABLE" fk_initial_state
+  ;
+
+fk_initial_state: /* nil */
+  | "INITIALLY" "DEFERRED"
+  | "INITIALLY" "IMMEDIATE"
+  ;
+
+fk_def: "FOREIGN" "KEY" '(' name_list ')' fk_target_options
+  ;
+
+fk_target_options : "REFERENCES" name '(' name_list ')' opt_fk_options
+  ;
+
+unq_def: "CONSTRAINT" name "UNIQUE" '(' name_list ')'
+  | "UNIQUE" '(' name_list ')'
+  ;
+
+opt_unique: /* nil */
+  | "UNIQUE"
+  ;
+
+indexed_column: name opt_asc_desc
+  ;
+
+indexed_columns: indexed_column
+  | indexed_column ',' indexed_columns
+  ;
+
+create_index_stmt: "CREATE" opt_unique "INDEX" opt_if_not_exists name "ON" name '(' indexed_columns ')' opt_delete_version_attr
+  ;
+
+name: "ID"
+  | "TEXT"
+  | "TRIGGER"
+  | "ROWID"
+  ;
+
+opt_name: /* nil */
+  | name
+  ;
+
+name_list: name
+  |  name ',' name_list
+  ;
+
+opt_name_list: /* nil */
+  | name_list
+  ;
+
+col_attrs: /* nil */
+  | "NOT" "NULL" col_attrs
+  | "PRIMARY" "KEY" col_attrs
+  | "PRIMARY" "KEY" "AUTOINCREMENT" col_attrs
+  | "DEFAULT" '-' num_literal col_attrs
+  | "DEFAULT" num_literal col_attrs
+  | "DEFAULT" str_literal col_attrs
+  | "UNIQUE" col_attrs
+  | "@SENSITIVE" col_attrs
+  | "@CREATE" version_annotation col_attrs
+  | "@DELETE" version_annotation col_attrs
+  | fk_target_options col_attrs
+  ;
+
+version_annotation: '(' "integer-literal" ',' name ')'
+  | '(' "integer-literal" ')'
+  ;
+
+object_type:
+    "OBJECT"
+  | "OBJECT" '<' name '>'
+  ;
+
+data_type:
+    "INT"
+  | "INTEGER"
+  | "TEXT"
+  | "REAL"
+  | "LONG"
+  | "BOOL"
+  | "LONG" "INTEGER"
+  | "LONG" "INT"
+  | "LONG_INT" | "LONG_INTEGER"
+  | "BLOB"
+  | object_type
+  ;
+
+data_type_opt_notnull: data_type
+  | data_type "NOT" "NULL"
+  | data_type "@SENSITIVE"
+  | data_type "@SENSITIVE" "NOT" "NULL"
+  | data_type "NOT" "NULL" "@SENSITIVE"
+  ;
+
+str_literal: "sql-string-literal"
+  | "c-string-literal"
+  ;
+
+num_literal:  "integer-literal"
+  | "long-literal"
+  | "real-literal"
+  ;
+
+any_literal: str_literal
+  | num_literal
+  | "NULL"
+  | "@FILE" '(' str_literal ')'
+  | "sql-blob-literal"
+  ;
+
+raise_expr:
+    "RAISE" '(' "IGNORE" ')'
+  | "RAISE" '(' "ROLLBACK" ','  expr ')'
+  | "RAISE" '(' "ABORT" ','  expr ')'
+  | "RAISE" '(' "FAIL" ','  expr ')'
+  ;
+
+call:
+    name '(' arg_list ')' opt_filter_clause
+  | name '(' "DISTINCT" arg_list ')' opt_filter_clause
+  ;
+
+basic_expr: name
+  | name '.' name
+  | any_literal
+  | '(' expr ')'
+  | call
+  | window_func_inv
+  | raise_expr
+  | '(' select_stmt ')'
+  | "EXISTS" '(' select_stmt ')'
+  ;
+
+math_expr: basic_expr
+  | math_expr '&' math_expr
+  | math_expr '|' math_expr
+  | math_expr "<<" math_expr
+  | math_expr ">>"  math_expr
+  | math_expr '+' math_expr
+  | math_expr '-' math_expr
+  | math_expr '*' math_expr
+  | math_expr '/' math_expr
+  | math_expr '%' math_expr
+  | '-' math_expr
+  | math_expr "||" math_expr
+  ;
+
+expr: basic_expr
+  | expr '&' expr
+  | expr '|' expr
+  | expr "<<" expr
+  | expr ">>" expr
+  | expr '+' expr
+  | expr '-' expr
+  | expr '*' expr
+  | expr '/' expr
+  | expr '%' expr
+  | '-' expr
+  | "NOT" expr
+  | '~' expr
+  | expr "COLLATE" name
+  | expr "AND" expr
+  | expr "OR" expr
+  | expr '=' expr
+  | expr "==" expr
+  | expr '<' expr
+  | expr '>' expr
+  | expr "<>" expr
+  | expr "!=" expr
+  | expr ">=" expr
+  | expr "<=" expr
+  | expr "NOT" "IN" '(' expr_list ')'
+  | expr "NOT" "IN" '(' select_stmt ')'
+  | expr "IN" '(' expr_list ')'
+  | expr "IN" '(' select_stmt ')'
+  | expr "LIKE" expr
+  | expr "NOT LIKE" expr
+  | expr "MATCH" expr
+  | expr "REGEXP" expr
+  | expr "GLOB" expr
+  | expr "NOT" "BETWEEN" math_expr "AND" math_expr
+  | expr "BETWEEN" math_expr "AND" math_expr
+  | expr "IS NOT" expr
+  | expr "IS" expr
+  | expr "||" expr
+  | "CASE" expr case_list "END"
+  | "CASE" expr case_list "ELSE" expr "END"
+  | "CASE" case_list "END"
+  | "CASE" case_list "ELSE" expr "END"
+  | "CAST" '(' expr "AS" data_type ')'
+  ;
+
+case_list: "WHEN" expr "THEN" expr
+  | "WHEN" expr "THEN" expr case_list
+  ;
+
+arg_expr: '*'
+  | expr
+  | cursor_arguments
+  | from_arguments
+  ;
+
+arg_list: /* nil */
+  | arg_expr
+  | arg_expr ',' arg_list
+  ;
+
+expr_list: expr
+  | expr ',' expr_list
+  ;
+
+cursor_arguments : "FROM" name
+  | "FROM" name "LIKE" name
+  ;
+
+call_expr: expr
+  | cursor_arguments
+  | from_arguments
+  ;
+
+call_expr_list: call_expr
+  | call_expr ',' call_expr_list
+  ;
+
+cte_tables:  cte_table
+  | cte_table ',' cte_tables
+  ;
+
+cte_table: cte_decl "AS" '(' select_stmt_no_with ')'
+  ;
+
+cte_decl: name '(' name_list ')'
+  | name '(' '*' ')'
+  ;
+
+with_prefix: "WITH" cte_tables
+  | "WITH" "RECURSIVE" cte_tables
+  ;
+
+with_select_stmt: with_prefix select_stmt_no_with
+  ;
+
+select_stmt: with_select_stmt
+  | select_stmt_no_with
+  ;
+
+select_stmt_no_with: select_core_list opt_orderby opt_limit opt_offset
+  ;
+
+select_core_list: select_core
+  | select_core select_core_compound
+  ;
+
+select_core_compound: compound_operator select_core_list
+  ;
+
+
+values: '(' insert_list ')'
+  | '(' insert_list ')' ',' values
+  ;
+
+select_core: "SELECT" select_opts select_expr_list opt_from_query_parts opt_where opt_groupby opt_having opt_select_window
+  | "VALUES" values
+  ;
+
+compound_operator:
+    "UNION"
+  | "UNION ALL"
+  | "INTERSECT"
+  | "EXCEPT"
+  ;
+
+window_func_inv: name '(' arg_list ')' opt_filter_clause "OVER" window_name_or_defn
+  ;
+
+opt_filter_clause: /* nil */
+  | "FILTER" '(' opt_where ')'
+  ;
+
+window_name_or_defn: window_defn
+  | name
+  ;
+
+window_defn: '(' opt_partition_by opt_orderby opt_frame_spec ')'
+  ;
+
+opt_frame_spec: /* nil */
+  | frame_type frame_boundary_opts frame_exclude
+  ;
+
+frame_type: "RANGE"
+  | "ROWS"
+  | "GROUPS"
+  ;
+
+frame_exclude: /* nil */
+  | "EXCLUDE NO OTHERS"
+  | "EXCLUDE CURRENT ROW"
+  | "EXCLUDE GROUP"
+  | "EXCLUDE TIES"
+  ;
+
+frame_boundary_opts: frame_boundary
+  | "BETWEEN" frame_boundary_start "AND" frame_boundary_end
+  ;
+
+frame_boundary_start: "UNBOUNDED" "PRECEDING"
+  | expr "PRECEDING"
+  | "CURRENT ROW"
+  | expr "FOLLOWING"
+  ;
+
+frame_boundary_end: expr "PRECEDING"
+  | "CURRENT ROW"
+  | expr "FOLLOWING"
+  | "UNBOUNDED" "FOLLOWING"
+  ;
+
+frame_boundary: "UNBOUNDED" "PRECEDING"
+  | expr "PRECEDING"
+  | "CURRENT ROW"
+  ;
+
+opt_partition_by: /* nil */
+  | "PARTITION" "BY" expr_list
+  ;
+
+opt_select_window: /* nil */
+  | window_clause
+  ;
+
+window_clause: "WINDOW" window_name_defn_list
+  ;
+
+window_name_defn_list: window_name_defn
+  | window_name_defn ',' window_name_defn_list
+  ;
+
+window_name_defn: name "AS" window_defn
+
+region_spec:
+    name
+  | name "PRIVATE"
+  ;
+
+region_list :
+    region_spec ',' region_list
+  | region_spec
+  ;
+
+declare_schema_region_stmt:
+  "@DECLARE_SCHEMA_REGION" name
+  | "@DECLARE_SCHEMA_REGION" name "USING" region_list
+  ;
+
+declare_deployable_region_stmt:
+  "@DECLARE_DEPLOYABLE_REGION"  name
+  | "@DECLARE_DEPLOYABLE_REGION" name "USING" region_list
+  ;
+
+begin_schema_region_stmt: "@BEGIN_SCHEMA_REGION" name
+  ;
+
+end_schema_region_stmt: "@END_SCHEMA_REGION"
+  ;
+
+schema_ad_hoc_migration_stmt: "@SCHEMA_AD_HOC_MIGRATION" version_annotation
+  ;
+
+opt_from_query_parts: /* nil */
+  | "FROM" query_parts
+  ;
+
+opt_where: /* nil */
+  | "WHERE" expr
+  ;
+
+opt_groupby: /* nil */
+  | "GROUP" "BY" groupby_list
+  ;
+
+groupby_list: groupby_item
+  | groupby_item ',' groupby_list
+  ;
+
+groupby_item: expr opt_asc_desc
+  ;
+
+opt_asc_desc: /* nil */
+  | "ASC"
+  | "DESC"
+  ;
+
+opt_having: /* nil */
+  | "HAVING" expr
+  ;
+
+opt_orderby: /* nil */
+  | "ORDER" "BY" groupby_list
+  ;
+
+opt_limit: /* nil */
+  | "LIMIT" expr
+  ;
+
+opt_offset: /* nil */
+  | "OFFSET" expr
+  ;
+
+select_opts: /* nil */
+  | "ALL"
+  | "DISTINCT"
+  | "DISTINCTROW"
+  ;
+
+select_expr_list: select_expr
+  | select_expr ',' select_expr_list
+  | '*'
+  ;
+
+select_expr: expr opt_as_alias
+  |  name '.' '*'
+  ;
+
+opt_as_alias: /* nil */
+  | "AS" name
+  | name
+  ;
+
+query_parts: table_or_subquery_list
+  | join_clause
+  ;
+
+table_or_subquery_list: table_or_subquery
+  | table_or_subquery ',' table_or_subquery_list
+  ;
+
+join_clause: table_or_subquery join_target_list
+  ;
+
+join_target_list: join_target
+  | join_target join_target_list
+  ;
+
+table_or_subquery: name opt_as_alias
+  | '(' select_stmt ')' opt_as_alias
+  | table_function opt_as_alias
+  | '(' query_parts ')'
+  ;
+
+join_target: opt_inner_cross "JOIN" table_or_subquery opt_join_cond
+  | left_or_right opt_outer "JOIN" table_or_subquery opt_join_cond
+  ;
+
+opt_inner_cross: /* nil */
+  | "INNER"
+  | "CROSS"
+  ;
+
+opt_outer: /* nil */
+  | "OUTER"
+  ;
+
+left_or_right: "LEFT"
+  | "RIGHT"
+  ;
+
+opt_join_cond: /* nil */
+  | join_cond
+  ;
+
+join_cond: "ON" expr
+  | "USING" '(' name_list ')'
+  ;
+
+table_function: name '(' arg_list ')'
+  ;
+
+create_view_stmt: "CREATE" opt_temp "VIEW" opt_if_not_exists name "AS" select_stmt opt_delete_version_attr
+  ;
+
+with_delete_stmt: with_prefix delete_stmt
+  ;
+
+delete_stmt: "DELETE" "FROM" name opt_where
+  ;
+
+opt_insert_dummy_spec : /*nil*/
+  | "@DUMMY_SEED" '(' expr ')' dummy_modifier
+  ;
+
+dummy_modifier: /* nil */
+  | "@DUMMY_NULLABLES"
+  | "@DUMMY_DEFAULTS"
+  | "@DUMMY_NULLABLES" "@DUMMY_DEFAULTS"
+  | "@DUMMY_DEFAULTS" "@DUMMY_NULLABLES"
+  ;
+
+insert_stmt_type : "INSERT" "INTO"
+  | "INSERT" "OR" "REPLACE" "INTO"
+  | "INSERT" "OR" "IGNORE" "INTO"
+  | "INSERT" "OR" "ROLLBACK" "INTO"
+  | "INSERT" "OR" "ABORT" "INTO"
+  | "INSERT" "OR" "FAIL" "INTO"
+  | "REPLACE" "INTO"
+  ;
+
+with_insert_stmt: with_prefix insert_stmt
+  ;
+
+opt_column_spec: /* nil */
+  | '(' opt_name_list ')'
+  | '(' "LIKE" name ')'
+  ;
+
+from_cursor:  "FROM" "CURSOR" name opt_column_spec
+  ;
+
+from_arguments: "FROM" "ARGUMENTS"
+  | "FROM" "ARGUMENTS" "LIKE" name
+  ;
+
+insert_stmt: insert_stmt_type name opt_column_spec select_stmt opt_insert_dummy_spec
+  | insert_stmt_type name opt_column_spec from_arguments opt_insert_dummy_spec
+  | insert_stmt_type name opt_column_spec from_cursor opt_insert_dummy_spec
+  | insert_stmt_type name "DEFAULT" "VALUES"
+  ;
+
+insert_list:
+  | expr
+  | expr ',' insert_list
+  ;
+
+basic_update_stmt: "UPDATE" opt_name "SET" update_list opt_where
+  ;
+
+with_update_stmt: with_prefix update_stmt
+  ;
+
+update_stmt: "UPDATE" name "SET" update_list opt_where opt_orderby opt_limit
+  ;
+
+update_entry: name '=' expr
+  ;
+
+update_list: update_entry
+  | update_entry ',' update_list
+  ;
+
+with_upsert_stmt: with_prefix upsert_stmt
+  ;
+
+upsert_stmt: insert_stmt "ON CONFLICT" conflict_target "DO" "NOTHING"
+  | insert_stmt "ON CONFLICT" conflict_target "DO" basic_update_stmt
+  ;
+
+update_cursor_stmt:
+    "UPDATE" "CURSOR" name opt_column_spec "FROM" "VALUES" '(' insert_list ')'
+  | "UPDATE" "CURSOR" name opt_column_spec from_cursor
+  ;
+
+conflict_target:  /* nil */
+  | '(' indexed_columns ')' opt_where
+  ;
+
+creation_type: object_type
+  | object_type "NOT" "NULL"
+  | "TEXT"
+  | "TEXT" "NOT" "NULL"
+  | "BLOB"
+  | "BLOB" "NOT" "NULL"
+  ;
+
+function: "FUNC" | "FUNCTION"
+  ;
+
+declare_func_stmt: "DECLARE" function name '(' params ')' data_type_opt_notnull
+  | "DECLARE" "SELECT" function name '(' params ')' data_type_opt_notnull
+  | "DECLARE" function name '(' params ')' "CREATE" creation_type
+  | "DECLARE" "SELECT" function name '(' params ')' '(' typed_names ')'
+  ;
+
+procedure: "PROC" | "PROCEDURE"
+  ;
+
+declare_proc_stmt: "DECLARE" procedure name '(' params ')'
+  | "DECLARE" procedure name '(' params ')' '(' typed_names ')'
+  | "DECLARE" procedure name '(' params ')' "USING" "TRANSACTION"
+  | "DECLARE" procedure name '(' params ')' "OUT" '(' typed_names ')'
+  | "DECLARE" procedure name '(' params ')' "OUT" '(' typed_names ')' "USING" "TRANSACTION"
+  | "DECLARE" procedure name '(' params ')' "OUT" "UNION" '(' typed_names ')'
+  | "DECLARE" procedure name '(' params ')' "OUT" "UNION" '(' typed_names ')' "USING" "TRANSACTION"
+  ;
+
+create_proc_stmt: "CREATE" procedure name '(' params ')' "BEGIN" opt_stmt_list "END"
+  ;
+
+opt_inout: /* nil */
+  | "IN"
+  | "OUT"
+  | "INOUT"
+  ;
+
+typed_name: name data_type_opt_notnull
+  | "LIKE" name
+  ;
+
+typed_names: typed_name
+  | typed_name ',' typed_names
+  ;
+
+param: opt_inout name data_type_opt_notnull
+  | "LIKE" name
+  ;
+
+params: /* nil */
+  | param
+  |  param ',' params
+  ;
+
+declare_stmt: "DECLARE" name_list data_type_opt_notnull
+  | "DECLARE" name "CURSOR FOR" select_stmt
+  | "DECLARE" name "CURSOR FOR" explain_stmt
+  | "DECLARE" name "CURSOR FOR" call_stmt
+  | "DECLARE" name "CURSOR" "FETCH" "FROM" call_stmt
+  | "DECLARE" name "CURSOR" "LIKE" name
+  | "DECLARE" name "CURSOR" "LIKE" select_stmt
+  ;
+
+call_stmt: "CALL" name '(' ')'
+  | "CALL" name '(' call_expr_list ')'
+  ;
+
+while_stmt: "WHILE" expr "BEGIN" opt_stmt_list "END"
+  ;
+
+loop_stmt: "LOOP" fetch_stmt "BEGIN" opt_stmt_list "END"
+  ;
+
+leave_stmt: "LEAVE"
+  ;
+
+return_stmt: "RETURN"
+  ;
+
+throw_stmt: "THROW"
+  ;
+
+trycatch_stmt: "BEGIN" "TRY" opt_stmt_list "END" "TRY" ';' "BEGIN" "CATCH" opt_stmt_list "END" "CATCH"
+  ;
+
+continue_stmt: "CONTINUE"
+  ;
+
+fetch_stmt: "FETCH" name "INTO" name_list
+  | "FETCH" name
+  ;
+
+fetch_values_stmt:
+    "FETCH" name opt_column_spec "FROM" "VALUES" '(' insert_list ')' opt_insert_dummy_spec
+  | "FETCH" name opt_column_spec from_arguments opt_insert_dummy_spec
+  | "FETCH" name opt_column_spec from_cursor opt_insert_dummy_spec
+  ;
+
+fetch_call_stmt: "FETCH" name opt_column_spec "FROM" call_stmt
+  ;
+
+fetch_cursor_stmt: "FETCH" name opt_column_spec "FROM" name
+  ;
+
+open_stmt: "OPEN" name
+  ;
+
+close_stmt: "CLOSE" name
+  ;
+
+out_stmt: "OUT" name
+  ;
+
+out_union_stmt: "OUT" "UNION" name
+  ;
+
+if_stmt: "IF" expr "THEN" opt_stmt_list opt_elseif_list opt_else "END" "IF"
+  ;
+
+opt_else: /* nil */
+  | "ELSE" opt_stmt_list
+  ;
+
+elseif_item: "ELSE IF" expr "THEN" opt_stmt_list
+  ;
+
+elseif_list: elseif_item
+  | elseif_item elseif_list
+  ;
+
+opt_elseif_list: /* nil */
+  | elseif_list
+  ;
+
+begin_trans_stmt: "BEGIN" "TRANSACTION"
+  ;
+
+rollback_trans_stmt: "ROLLBACK" "TRANSACTION"
+  | "ROLLBACK" "TRANSACTION" "TO" "SAVEPOINT" name
+  ;
+
+commit_trans_stmt: "COMMIT" "TRANSACTION"
+  ;
+
+savepoint_stmt: "SAVEPOINT" name
+  ;
+
+release_savepoint_stmt: "RELEASE" "SAVEPOINT" name
+  ;
+
+echo_stmt: "@ECHO" name ',' str_literal
+  ;
+
+alter_table_add_column_stmt: "ALTER" "TABLE" name "ADD" "COLUMN" col_def
+  ;
+
+create_trigger_stmt:  "CREATE" opt_temp "TRIGGER" opt_if_not_exists trigger_def opt_delete_version_attr
+  ;
+
+trigger_def: name trigger_condition trigger_operation "ON" name trigger_action
+  ;
+
+trigger_condition:
+   /* nil */
+ | "BEFORE"
+ | "AFTER"
+ | "INSTEAD" "OF"
+ ;
+
+trigger_operation:
+    "DELETE"
+  | "INSERT"
+  | "UPDATE" opt_of
+  ;
+
+opt_of:
+    /* nil */
+  | "OF" name_list
+  ;
+
+trigger_action:  opt_foreachrow opt_when_expr "BEGIN" trigger_stmts "END"
+  ;
+
+opt_foreachrow:
+    /* nil */
+  | "FOR EACH ROW"
+  ;
+
+opt_when_expr:
+    /* nil */
+  | "WHEN" expr
+  ;
+
+trigger_stmts:
+    trigger_stmt
+  | trigger_stmt  trigger_stmts
+  ;
+
+/* These forms are slightly different than the normal statements, not all variations are allowed.
+ * This section clearly states the mapping.  It could be done more tersely but this costs us nothing.
+ */
+
+trigger_stmt:
+    trigger_update_stmt ';'
+  | trigger_insert_stmt ';'
+  | trigger_delete_stmt ';'
+  | trigger_select_stmt ';'
+  ;
+
+trigger_select_stmt : select_stmt_no_with
+  ;
+
+trigger_insert_stmt : insert_stmt
+  ;
+
+trigger_delete_stmt : delete_stmt
+  ;
+
+trigger_update_stmt : basic_update_stmt
+  ;
+
+enforcement_options:
+    "FOREIGN" "KEY" "ON" "UPDATE"
+  | "FOREIGN" "KEY" "ON" "DELETE"
+  | "JOIN"
+  | "UPSERT" "STATEMENT"
+  | "WINDOW" function
+  | procedure
+  | "WITHOUT" "ROWID"
+  ;
+
+enforce_strict_stmt: "@ENFORCE_STRICT" enforcement_options
+  ;
+
+enforce_normal_stmt: "@ENFORCE_NORMAL" enforcement_options
+  ;
+
 ```
 
 
 <div style="page-break-after: always; visibility: hidden"></div>
 
+---
+id: x3
+title: Appendix 3
+sidebar_label: "Appendix 3"
+---
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
 --
@@ -8518,7 +8515,7 @@ The complete list (as of this writing) is:
  * marks a column or variable as 'sensitive' for privacy purposes, this behaves somewhat like nullability (See Chapter 3) in that it is radioactive, contaminating anything it touches
  * the intent of this annotation is to make it clear where sensitive data is being returned or consumed in your procedures
  * this information appears in the JSON output for further codegen or for analysis (See Chapter 13)
- 
+
 `@DECLARE_SCHEMA_REGION`
 `@DECLARE_DEPLOYABLE_REGION`
 `@BEGIN_SCHEMA_REGION`
@@ -8532,7 +8529,7 @@ The complete list (as of this writing) is:
 `@ECHO`
  * Emits text into the C output stream, useful for emiting things like function prototypes or preprocessor directives
  * e.g. `echo C, '#define foo bar'
- 
+
 `@RECREATE`
 `@CREATE`
 `@DELETE`
@@ -8542,16 +8539,16 @@ The complete list (as of this writing) is:
  * used to indicate that the code that follows is part of a migration script for the indicated schema version
  * this has the effect of making the schema appear to be how it existed at the indicated version
  * the idea here is that migration procedures operate on previous versions of the schema where (e.g.) some columns/tables hadn't been deleted yet
- 
+
 `@PREVIOUS_SCHEMA`
  * indicates the start of the previous version of the schema for comparison (See Chapter 11)
- 
+
 `@SCHEMA_UPGRADE_SCRIPT`
  * CQL emits a schema upgrade script as part of its upgrade features, this script declares tables in their final form but also creates the same tables as they existed when they were first created
  * this directive instructs CQL to ignore the incompatible creations, the first declaration controls
  * the idea here is that the upgrade script is in the business of getting you to the finish line in an orderly fashion and some of the interim steps are just not all the way there yet
  * note that the upgrade script recapitulates the version history, it does not take you directly to the finish line, this is so that all instances get to the same place the same way (and this fleshes out any bugs in migration)
- 
+
 `@DUMMY_NULLABLES`
 `@DUMMY_DEFAULTS`
 `@DUMMY_SEED`
@@ -8559,12 +8556,12 @@ The complete list (as of this writing) is:
 
 `@FILE`
  * a string literal that corresponds to the current file name with a prefix stripped (to remove build lab junk in the path)
- 
+
 `@ATTRIBUTE`
   * the main purpose of `@attribute` is to appear in the JSON output so that it can control later codegen stages in whatever way you deem appropriate
   * the nested nature of attribute values is sufficiently flexible than you could encode an arbitary LISP program in an attribute, so really anything you might need to express is possible
   * there are a number of attributes known to the compiler which I list below (complete as of this writing)
-  
+
   * `cql:autodrop=(table1, table2, ...)` when present the indicated tables, which must be temp tables, are dropped when the results of the procedure have been fetched into a rowset
   * `cql:indentity=(column1, column2, ...)` the indicated columns are used to create a row comparator for the rowset corresponding to the procedure, this appears in a C macro of the form `procedure_name_row_same(rowset1, row1, rowset2, row2)`
   * `cql:suppres_getters` the indicated procedure should not emit the column getter functions (useful if you only indend to call the procedure from CQL, or if you wish to restrict access in C)
@@ -8577,15 +8574,17 @@ The complete list (as of this writing) is:
 
 <div style="page-break-after: always; visibility: hidden"></div>
 
+---
+id: x4
+title: "Chapter 4: CQL Error Codes"
+sidebar_label: "Chapter 4: CQL Error Codes"
+---
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-
-## Appendix 3: CQL Error Codes
-
 ### CQL0001: operands must be an integer type, not real
 
 integer math operators like << >> & and | are not compatible with real-valued arguments
@@ -9993,7 +9992,7 @@ In a `CREATE PROCEDURE` statement, the indicated name already corresponds to a c
 
 -----
 
-### CQL0187: @schema_upgrade_version not declared or doesn't match upgrade version <N> for proc 'name'
+### CQL0187: @schema_upgrade_version not declared or doesn't match upgrade version `N` for proc 'name'
 
 The named procedure was declared as a schema migration procedure in an `@create` or `@delete` annotation for schema version `N`.  In order to correctly type check such a procedure it must be compiled in the context of schema version `N`.  This restriction is required so that the tables and columns the procedure sees are the ones that existed in version `N` not the ones that exist in the most recent version as usual.
 
@@ -10584,7 +10583,9 @@ Query fragments have an exact prescription for their shape.  This prescription i
 
 -----
 
-### CQL0252:  available for re-use
+### CQL0252: @PROC literal can only appear inside of procedures
+
+An @PROC literal was used outside of any procedure.  It cannot be resolved if it isn't inside a procedure.
 
 -----
 
@@ -11136,7 +11137,7 @@ CQL built-in function does not require a select function declaration. You can us
 
 ### CQL0315: mandatory column with no default value in INSERT INTO name DEFAULT VALUES statement.
 
-Columns on a table must have default value or be nullable in order to use INSERT INTO <table> DEFAULT VALUES statement.
+Columns on a table must have default value or be nullable in order to use INSERT INTO `<table>` DEFAULT VALUES statement.
 
 ------
 
@@ -11376,522 +11377,523 @@ This is almost certainly a cut/paste from a different location that needs to be 
 
 <div style="page-break-after: always; visibility: hidden"></div>
 
+---
+id: x5
+title: "Appendix 5: JSON Schema Grammar"
+sidebar_label: "Appendix 5: JSON Schema Grammar"
+---
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-
-## Appendix 5: JSON Schema Grammar
-
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
 Snapshot as of Tue Sep  8 13:06:45 PDT 2020
 ### Rules
 
 ```
- 
- 
-json_schema: '{' 
-         '"tables"' ':' '[' opt_tables ']' ',' 
-         '"views"' ':' '[' opt_views ']' ',' 
-         '"indices"' ':' '[' opt_indices ']' ',' 
-         '"triggers"' ':' '[' opt_triggers ']' ',' 
-         '"attributes"' ':' '[' opt_attribute_list ']' ',' 
-         '"queries"' ':' '[' opt_queries ']' ',' 
-         '"inserts"' ':' '[' opt_inserts ']' ',' 
-         '"updates"' ':' '[' opt_updates ']' ',' 
-         '"deletes"' ':' '[' opt_deletes ']' ',' 
-         '"general"' ':' '[' opt_generals ']' ',' 
-         '"regions"' ':' '[' opt_regions ']' ',' 
-         '"adHocMigrationProcs"' ':' '[' opt_ad_hoc_migrations ']' 
-         '}' 
-  ; 
- 
-BOOL_LITERAL: '0' | '1' 
-  ; 
- 
-opt_tables: | tables 
-  ; 
- 
-tables: table | table ',' tables 
-  ; 
- 
-table: '{' 
-       '"name"' ':' STRING_LITERAL ',' 
-       '"isTemp"' ':' BOOL_LITERAL ',' 
-       '"ifNotExists"' ':' BOOL_LITERAL ',' 
-       '"withoutRowid"' ':' BOOL_LITERAL ',' 
-       '"isAdded"' ':' BOOL_LITERAL ',' 
-       opt_added_version 
-       '"isDeleted"' ':' BOOL_LITERAL ',' 
-       opt_deleted_version 
-       '"isRecreated"' ':' BOOL_LITERAL ',' 
-       opt_recreate_group_name 
-       opt_region_info 
-       opt_table_indices 
-       opt_attributes 
-       '"columns"' ':' '[' columns ']' ',' 
-       '"primaryKey"' ':' '[' opt_column_names ']' ',' 
-       '"foreignKeys"' ':' '[' opt_foreign_keys ']' ',' 
-       '"uniqueKeys"' ':' '[' opt_unique_keys ']' 
-       '}' 
-  ; 
- 
-opt_added_version: | '"addedVersion"' ':' any_integer ',' opt_added_migration_proc 
-  ; 
- 
-opt_added_migration_proc: | '"addedMigrationProc"' ':' STRING_LITERAL ',' 
-  ; 
- 
-opt_deleted_version: | '"deletedVersion"' ':' any_integer ',' opt_deleted_migration_proc 
-  ; 
- 
-opt_deleted_migration_proc: | '"deletedMigrationProc"' ':' STRING_LITERAL ',' 
-  ; 
- 
-opt_recreate_group_name: | '"recreateGroupName"' ':' STRING_LITERAL ',' 
-  ; 
- 
-opt_index_names: | index_names 
-  ; 
- 
-index_names: STRING_LITERAL | STRING_LITERAL ',' index_names 
-  ; 
- 
-opt_arg_names: | arg_names 
-  ; 
- 
-arg_names: STRING_LITERAL | STRING_LITERAL ',' arg_names 
-  ; 
- 
-opt_column_names: | column_names 
-  ; 
- 
-column_names: STRING_LITERAL | STRING_LITERAL ',' column_names 
-  ; 
- 
-opt_table_names: | table_names 
-  ; 
- 
-table_names: STRING_LITERAL | STRING_LITERAL ',' table_names 
-  ; 
- 
-opt_procedure_names: | procedure_names 
-  ; 
- 
-procedure_names: STRING_LITERAL | STRING_LITERAL ',' procedure_names 
-  ; 
- 
-sort_order_names: STRING_LITERAL | STRING_LITERAL ',' sort_order_names 
-  ; 
- 
-columns: column | column ',' columns 
-  ; 
- 
-column: '{' 
-        '"name"' ':' STRING_LITERAL ',' 
-        opt_attributes 
-        '"type"' ':' STRING_LITERAL ',' 
-        opt_is_sensitive 
-        '"isNotNull"' ':' BOOL_LITERAL ',' 
-        '"isAdded"' ':' BOOL_LITERAL ',' 
-        opt_added_version 
-        '"isDeleted"' ':' BOOL_LITERAL ',' 
-        opt_deleted_version 
-        '"isPrimaryKey"' ':' BOOL_LITERAL ',' 
-        '"isUniqueKey"' ':' BOOL_LITERAL ',' 
-        '"isAutoIncrement"' ':' BOOL_LITERAL 
-        opt_default_value 
-        '}' 
-  ; 
- 
-opt_default_value: | ',' '"defaultValue"' ':' any_literal 
-  ; 
- 
-opt_foreign_keys : | foreign_keys 
-  ; 
- 
-opt_is_sensitive: | '"isSensitive"' ':' '1' ',' 
-  ; 
- 
-foreign_keys :  foreign_key | foreign_key ',' foreign_keys 
-  ; 
- 
-foreign_key : '{' 
-               '"columns"' ':' '[' column_names ']' ',' 
-               '"referenceTable"' ':' STRING_LITERAL ',' 
-               '"referenceColumns"' ':' '[' column_names ']' ',' 
-               '"onUpdate"' ':' STRING_LITERAL ',' 
-               '"onDelete"' ':' STRING_LITERAL ',' 
-               '"isDeferred"' ':' BOOL_LITERAL 
-              '}' 
-  ; 
- 
-opt_unique_keys :  | unique_keys 
-  ; 
- 
-unique_keys : unique_key | unique_key ',' unique_keys 
-  ; 
- 
-unique_key:  '{' 
-              opt_name 
-              '"columns"' ':' '[' column_names ']' 
-             '}' 
-  ; 
- 
-opt_name: | '"name"' ':' STRING_LITERAL ',' 
-  ; 
- 
-opt_table_indices: | table_indices 
-  ; 
- 
-table_indices: '"indices"' ':' '[' opt_index_names ']' ',' 
-  ; 
- 
-opt_attributes:  | attributes 
-  ; 
- 
-attributes: '"attributes"' ':' '[' attribute_list ']' ',' 
-  ; 
- 
-opt_attribute_list: | attribute_list 
-  ; 
- 
-attribute_list: attribute | attribute ',' attribute_list 
-  ; 
- 
-attribute:  '{' 
-             '"name"' ':' STRING_LITERAL ',' 
-             '"value"' ':' attribute_value 
-            '}' 
-  ; 
- 
-attribute_array: '[' opt_attribute_value_list ']' 
-  ; 
- 
-opt_attribute_value_list: | attribute_value_list 
-  ; 
- 
-attribute_value_list: attribute_value | attribute_value ',' attribute_value_list 
-  ; 
- 
-attribute_value: any_literal | attribute_array 
-  ; 
- 
-any_integer: BOOL_LITERAL | INT_LITERAL 
-  ; 
- 
-any_literal:  BOOL_LITERAL | 
-              INT_LITERAL | '-' INT_LITERAL | 
-              LONG_LITERAL | '-' LONG_LITERAL | 
-              REAL_LITERAL | '-' REAL_LITERAL | 
-              STRING_LITERAL | NULL_LITERAL 
-  ; 
- 
-opt_views: | views 
-  ; 
- 
-views: view | view ',' views 
-  ; 
- 
-view:  '{' 
-       '"name"' ':' STRING_LITERAL ',' 
-       '"isTemp"' ':' BOOL_LITERAL ',' 
-       '"isDeleted"' ':' BOOL_LITERAL ',' 
-       opt_deleted_version 
-       opt_region_info 
-       projection 
-       '"select"' ':' STRING_LITERAL ',' 
-       '"selectArgs"' ':' '[' ']' 
-       '}' 
-  ; 
- 
-opt_region_info: | '"region"' ':' STRING_LITERAL ',' |  '"region"' ':' STRING_LITERAL ',' '"deployedInRegion"' ':' STRING_LITERAL ',' 
-  ; 
- 
-opt_projection: | projection 
-  ; 
- 
-projection: '"projection"' ':' '[' projected_columns ']' ',' 
-  ; 
- 
-projected_columns: projected_column | projected_column ',' projected_columns 
-  ; 
- 
-projected_column: '{' 
-                   '"name"' ':' STRING_LITERAL ',' 
-                   '"type"' ':' STRING_LITERAL ',' 
-                   opt_is_sensitive 
-                   '"isNotNull"' ':' BOOL_LITERAL 
-                  '}' 
-  ; 
- 
-opt_indices:  | indices 
-  ; 
- 
-indices: index  | index ',' indices 
-  ; 
- 
-index: '{' 
-        '"name"' ':' STRING_LITERAL ',' 
-        '"table"' ':' STRING_LITERAL ',' 
-        '"isUnique"' ':' BOOL_LITERAL ',' 
-        '"ifNotExists"' ':' BOOL_LITERAL ',' 
-        '"isDeleted"' ':' BOOL_LITERAL ',' 
-        opt_deleted_version 
-        opt_region_info 
-        '"columns"' ':' '[' column_names ']' ',' 
-        '"sortOrders"' ':' '[' sort_order_names ']' 
-       '}' 
-  ; 
- 
-opt_triggers: | triggers 
-  ; 
- 
-triggers: trigger | trigger ',' triggers 
-  ; 
- 
-trigger: '{' 
-          '"name"' ':' STRING_LITERAL ',' 
-          '"target"' ':' STRING_LITERAL ',' 
-          '"isTemp"' ':' BOOL_LITERAL ',' 
-          '"ifNotExists"' ':' BOOL_LITERAL ',' 
-          '"isDeleted"' ':' BOOL_LITERAL ',' 
-          opt_deleted_version 
-          before_after_instead ',' 
-          delete_insert_update ',' 
-          opt_for_each_row 
-          opt_when_expr 
-          '"statement"' ':' STRING_LITERAL ',' 
-          '"statementArgs"' ':' '[' opt_arg_names ']' ',' 
-          opt_region_info 
-          dependencies 
-         '}' 
-  ; 
- 
-before_after_instead: '"isBeforeTrigger"' ':' '1' | '"isAfterTrigger"' ':' '1'  | '"isInsteadOfTrigger"' ':' '1' 
-  ; 
- 
-delete_insert_update: '"isDeleteTrigger"' ':' '1' | '"isInsertTrigger"' ':' '1' | '"isUpdateTrigger"' ':' '1' 
-  ; 
- 
-opt_for_each_row: | '"forEachRow"' ':' BOOL_LITERAL ',' 
-  ; 
- 
-opt_when_expr: | '"whenExpr"' ':' STRING_LITERAL ',' '"whenExprArgs"' ':' '[' opt_arg_names ']' ',' 
-  ; 
- 
-dependencies: opt_insert_tables 
-            opt_update_tables 
-            opt_delete_tables 
-            opt_from_tables 
-            opt_uses_procedures 
-            '"usesTables"' ':' '[' opt_table_names ']' 
-  ; 
- 
-opt_insert_tables: | '"insertTables"' ':' '[' opt_table_names ']' ',' 
-  ; 
- 
-opt_update_tables: | '"updateTables"' ':' '[' opt_table_names ']' ',' 
-  ; 
- 
-opt_delete_tables: | '"deleteTables"' ':' '[' opt_table_names ']' ',' 
-  ; 
- 
-opt_from_tables: | '"fromTables"' ':' '[' opt_table_names ']' ',' 
-  ; 
- 
-opt_uses_procedures : | '"usesProcedures"' ':' '[' opt_procedure_names ']' ',' 
-  ; 
- 
-opt_queries: | queries ; 
- 
-queries: query | query ',' queries ; 
- 
-query: '{' 
-       '"name"' ':' STRING_LITERAL ',' 
-       '"definedInFile"' ':' STRING_LITERAL ',' 
-       '"args"' ':' '[' opt_args ']' ',' 
-       dependencies ',' 
-       opt_region_info 
-       opt_attributes 
-       projection 
-       '"statement"' ':' STRING_LITERAL ',' 
-       '"statementArgs"' ':' '[' opt_arg_names ']' 
-       '}' 
-  ; 
- 
-opt_args: | args 
-  ; 
- 
-args: arg | arg ',' args 
-  ; 
- 
-arg: '{' 
-      '"name"' ':' STRING_LITERAL ',' 
-      '"type"' ':' STRING_LITERAL ',' 
-      opt_is_sensitive 
-      '"isNotNull"' ':' BOOL_LITERAL 
-      '}' 
-  ; 
- 
-opt_inserts: | inserts 
-  ; 
- 
-inserts: insert | insert ',' inserts 
-  ; 
- 
-insert : '{' 
-         '"name"' ':' STRING_LITERAL ',' 
-         '"definedInFile"' ':' STRING_LITERAL ',' 
-         '"args"' ':' '[' opt_args ']' ',' 
-         dependencies ',' 
-         opt_region_info 
-         opt_attributes 
-         '"table"' ':' STRING_LITERAL ',' 
-         '"statement"' ':' STRING_LITERAL ',' 
-         '"statementArgs"' ':' '[' opt_arg_names ']' ',' 
-         '"statementType"' ':' STRING_LITERAL ',' 
-         '"columns"' ':' '[' column_names ']' ',' 
-         '"values"' ':' '[' opt_values ']' 
-         '}' 
-  ; 
- 
-opt_values: | values 
-  ; 
- 
-values: value | value ',' values 
-  ; 
- 
-value:  '{' 
-         '"value"' ':' STRING_LITERAL ',' 
-         '"valueArgs"' ':' '[' opt_arg_names ']' 
-        '}' 
-  ; 
- 
-opt_updates: | updates 
-  ; 
- 
-updates: update | update ',' updates 
-  ; 
- 
-update : '{' 
-         '"name"' ':' STRING_LITERAL ',' 
-         '"definedInFile"' ':' STRING_LITERAL ',' 
-         '"args"' ':' '[' opt_args ']' ',' 
-         dependencies ',' 
-         opt_region_info 
-         opt_attributes 
-         '"table"' ':' STRING_LITERAL ',' 
-         '"statement"' ':' STRING_LITERAL ',' 
-         '"statementArgs"' ':' '[' opt_arg_names ']' 
-         '}' 
-  ; 
- 
-opt_deletes: | deletes 
-  ; 
- 
-deletes: delete | delete ',' deletes 
-  ; 
- 
-delete : '{' 
-         '"name"' ':' STRING_LITERAL ',' 
-         '"definedInFile"' ':' STRING_LITERAL ',' 
-         '"args"' ':' '[' opt_args ']' ',' 
-         dependencies ',' 
-         opt_region_info 
-         opt_attributes 
-         '"table"' ':' STRING_LITERAL ',' 
-         '"statement"' ':' STRING_LITERAL ',' 
-         '"statementArgs"' ':' '[' opt_arg_names ']' 
-         '}' 
-  ; 
- 
-opt_generals: | generals 
-  ; 
- 
-generals: general | general ',' generals 
-  ; 
- 
-general: '{' 
-          '"name"' ':' STRING_LITERAL ',' 
-          '"definedInFile"' ':' STRING_LITERAL ',' 
-          '"args"' ':' '[' opt_complex_args ']' ',' 
-          dependencies ',' 
-          opt_regions 
-          opt_attributes 
-          '"hasStructResult"' ':' BOOL_LITERAL ',' 
-          '"hasRowsetResult"' ':' BOOL_LITERAL ',' 
-          opt_projection 
-          opt_result_contract 
-          '"usesDatabase"' ':' BOOL_LITERAL 
-         '}' 
-  ; 
- 
-opt_result_contract: | '"hasSelectResult"' ':' '1' ',' | '"hasOutResult"' ':' '1' ',' | '"hasOutUnionResult"' ':''1' ',' 
-  ; 
- 
-opt_complex_args: | complex_args 
-  ; 
- 
-complex_args: complex_arg | complex_arg ',' complex_args 
-  ; 
- 
-complex_arg: '{' 
-              opt_binding 
-              '"name"' ':' STRING_LITERAL ',' 
-              '"type"' ':' STRING_LITERAL ',' 
-              opt_is_sensitive 
-              '"isNotNull"' ':' BOOL_LITERAL 
-             '}' 
-  ; 
- 
-opt_binding: | '"binding"' ':' STRING_LITERAL ',' 
-  ; 
- 
-opt_regions: | regions 
-  ; 
- 
-regions: region | region ',' regions 
-  ; 
- 
-region:  '{' 
-          '"name"' ':' STRING_LITERAL ',' 
-          '"isDeployableRoot"' ':' BOOL_LITERAL ',' 
-          '"deployedInRegion"' ':' STRING_LITERAL ',' 
-          '"using"' ':' '[' opt_region_names ']' ',' 
-          '"usingPrivately"' ':' '[' opt_bool_list ']' 
-         '}' 
-  ; 
- 
-opt_region_names: | region_names 
-  ; 
- 
-region_names: STRING_LITERAL | STRING_LITERAL ',' region_names 
-  ; 
- 
-opt_bool_list: | bool_list 
-  ; 
- 
-bool_list: BOOL_LITERAL | BOOL_LITERAL ',' bool_list 
-  ; 
- 
-opt_ad_hoc_migrations: | ad_hoc_migrations 
-  ; 
- 
-ad_hoc_migrations: ad_hoc_migration | ad_hoc_migrations ',' ad_hoc_migrations 
-  ; 
- 
-ad_hoc_migration: '{' 
-                  '"name"' ':' STRING_LITERAL ',' 
-                  '"version"' ':' any_integer 
-                  '}' 
-  ; 
- 
+
+
+json_schema: '{'
+         '"tables"' ':' '[' opt_tables ']' ','
+         '"views"' ':' '[' opt_views ']' ','
+         '"indices"' ':' '[' opt_indices ']' ','
+         '"triggers"' ':' '[' opt_triggers ']' ','
+         '"attributes"' ':' '[' opt_attribute_list ']' ','
+         '"queries"' ':' '[' opt_queries ']' ','
+         '"inserts"' ':' '[' opt_inserts ']' ','
+         '"updates"' ':' '[' opt_updates ']' ','
+         '"deletes"' ':' '[' opt_deletes ']' ','
+         '"general"' ':' '[' opt_generals ']' ','
+         '"regions"' ':' '[' opt_regions ']' ','
+         '"adHocMigrationProcs"' ':' '[' opt_ad_hoc_migrations ']'
+         '}'
+  ;
+
+BOOL_LITERAL: '0' | '1'
+  ;
+
+opt_tables: | tables
+  ;
+
+tables: table | table ',' tables
+  ;
+
+table: '{'
+       '"name"' ':' STRING_LITERAL ','
+       '"isTemp"' ':' BOOL_LITERAL ','
+       '"ifNotExists"' ':' BOOL_LITERAL ','
+       '"withoutRowid"' ':' BOOL_LITERAL ','
+       '"isAdded"' ':' BOOL_LITERAL ','
+       opt_added_version
+       '"isDeleted"' ':' BOOL_LITERAL ','
+       opt_deleted_version
+       '"isRecreated"' ':' BOOL_LITERAL ','
+       opt_recreate_group_name
+       opt_region_info
+       opt_table_indices
+       opt_attributes
+       '"columns"' ':' '[' columns ']' ','
+       '"primaryKey"' ':' '[' opt_column_names ']' ','
+       '"foreignKeys"' ':' '[' opt_foreign_keys ']' ','
+       '"uniqueKeys"' ':' '[' opt_unique_keys ']'
+       '}'
+  ;
+
+opt_added_version: | '"addedVersion"' ':' any_integer ',' opt_added_migration_proc
+  ;
+
+opt_added_migration_proc: | '"addedMigrationProc"' ':' STRING_LITERAL ','
+  ;
+
+opt_deleted_version: | '"deletedVersion"' ':' any_integer ',' opt_deleted_migration_proc
+  ;
+
+opt_deleted_migration_proc: | '"deletedMigrationProc"' ':' STRING_LITERAL ','
+  ;
+
+opt_recreate_group_name: | '"recreateGroupName"' ':' STRING_LITERAL ','
+  ;
+
+opt_index_names: | index_names
+  ;
+
+index_names: STRING_LITERAL | STRING_LITERAL ',' index_names
+  ;
+
+opt_arg_names: | arg_names
+  ;
+
+arg_names: STRING_LITERAL | STRING_LITERAL ',' arg_names
+  ;
+
+opt_column_names: | column_names
+  ;
+
+column_names: STRING_LITERAL | STRING_LITERAL ',' column_names
+  ;
+
+opt_table_names: | table_names
+  ;
+
+table_names: STRING_LITERAL | STRING_LITERAL ',' table_names
+  ;
+
+opt_procedure_names: | procedure_names
+  ;
+
+procedure_names: STRING_LITERAL | STRING_LITERAL ',' procedure_names
+  ;
+
+sort_order_names: STRING_LITERAL | STRING_LITERAL ',' sort_order_names
+  ;
+
+columns: column | column ',' columns
+  ;
+
+column: '{'
+        '"name"' ':' STRING_LITERAL ','
+        opt_attributes
+        '"type"' ':' STRING_LITERAL ','
+        opt_is_sensitive
+        '"isNotNull"' ':' BOOL_LITERAL ','
+        '"isAdded"' ':' BOOL_LITERAL ','
+        opt_added_version
+        '"isDeleted"' ':' BOOL_LITERAL ','
+        opt_deleted_version
+        '"isPrimaryKey"' ':' BOOL_LITERAL ','
+        '"isUniqueKey"' ':' BOOL_LITERAL ','
+        '"isAutoIncrement"' ':' BOOL_LITERAL
+        opt_default_value
+        '}'
+  ;
+
+opt_default_value: | ',' '"defaultValue"' ':' any_literal
+  ;
+
+opt_foreign_keys : | foreign_keys
+  ;
+
+opt_is_sensitive: | '"isSensitive"' ':' '1' ','
+  ;
+
+foreign_keys :  foreign_key | foreign_key ',' foreign_keys
+  ;
+
+foreign_key : '{'
+               '"columns"' ':' '[' column_names ']' ','
+               '"referenceTable"' ':' STRING_LITERAL ','
+               '"referenceColumns"' ':' '[' column_names ']' ','
+               '"onUpdate"' ':' STRING_LITERAL ','
+               '"onDelete"' ':' STRING_LITERAL ','
+               '"isDeferred"' ':' BOOL_LITERAL
+              '}'
+  ;
+
+opt_unique_keys :  | unique_keys
+  ;
+
+unique_keys : unique_key | unique_key ',' unique_keys
+  ;
+
+unique_key:  '{'
+              opt_name
+              '"columns"' ':' '[' column_names ']'
+             '}'
+  ;
+
+opt_name: | '"name"' ':' STRING_LITERAL ','
+  ;
+
+opt_table_indices: | table_indices
+  ;
+
+table_indices: '"indices"' ':' '[' opt_index_names ']' ','
+  ;
+
+opt_attributes:  | attributes
+  ;
+
+attributes: '"attributes"' ':' '[' attribute_list ']' ','
+  ;
+
+opt_attribute_list: | attribute_list
+  ;
+
+attribute_list: attribute | attribute ',' attribute_list
+  ;
+
+attribute:  '{'
+             '"name"' ':' STRING_LITERAL ','
+             '"value"' ':' attribute_value
+            '}'
+  ;
+
+attribute_array: '[' opt_attribute_value_list ']'
+  ;
+
+opt_attribute_value_list: | attribute_value_list
+  ;
+
+attribute_value_list: attribute_value | attribute_value ',' attribute_value_list
+  ;
+
+attribute_value: any_literal | attribute_array
+  ;
+
+any_integer: BOOL_LITERAL | INT_LITERAL
+  ;
+
+any_literal:  BOOL_LITERAL |
+              INT_LITERAL | '-' INT_LITERAL |
+              LONG_LITERAL | '-' LONG_LITERAL |
+              REAL_LITERAL | '-' REAL_LITERAL |
+              STRING_LITERAL | NULL_LITERAL
+  ;
+
+opt_views: | views
+  ;
+
+views: view | view ',' views
+  ;
+
+view:  '{'
+       '"name"' ':' STRING_LITERAL ','
+       '"isTemp"' ':' BOOL_LITERAL ','
+       '"isDeleted"' ':' BOOL_LITERAL ','
+       opt_deleted_version
+       opt_region_info
+       projection
+       '"select"' ':' STRING_LITERAL ','
+       '"selectArgs"' ':' '[' ']'
+       '}'
+  ;
+
+opt_region_info: | '"region"' ':' STRING_LITERAL ',' |  '"region"' ':' STRING_LITERAL ',' '"deployedInRegion"' ':' STRING_LITERAL ','
+  ;
+
+opt_projection: | projection
+  ;
+
+projection: '"projection"' ':' '[' projected_columns ']' ','
+  ;
+
+projected_columns: projected_column | projected_column ',' projected_columns
+  ;
+
+projected_column: '{'
+                   '"name"' ':' STRING_LITERAL ','
+                   '"type"' ':' STRING_LITERAL ','
+                   opt_is_sensitive
+                   '"isNotNull"' ':' BOOL_LITERAL
+                  '}'
+  ;
+
+opt_indices:  | indices
+  ;
+
+indices: index  | index ',' indices
+  ;
+
+index: '{'
+        '"name"' ':' STRING_LITERAL ','
+        '"table"' ':' STRING_LITERAL ','
+        '"isUnique"' ':' BOOL_LITERAL ','
+        '"ifNotExists"' ':' BOOL_LITERAL ','
+        '"isDeleted"' ':' BOOL_LITERAL ','
+        opt_deleted_version
+        opt_region_info
+        '"columns"' ':' '[' column_names ']' ','
+        '"sortOrders"' ':' '[' sort_order_names ']'
+       '}'
+  ;
+
+opt_triggers: | triggers
+  ;
+
+triggers: trigger | trigger ',' triggers
+  ;
+
+trigger: '{'
+          '"name"' ':' STRING_LITERAL ','
+          '"target"' ':' STRING_LITERAL ','
+          '"isTemp"' ':' BOOL_LITERAL ','
+          '"ifNotExists"' ':' BOOL_LITERAL ','
+          '"isDeleted"' ':' BOOL_LITERAL ','
+          opt_deleted_version
+          before_after_instead ','
+          delete_insert_update ','
+          opt_for_each_row
+          opt_when_expr
+          '"statement"' ':' STRING_LITERAL ','
+          '"statementArgs"' ':' '[' opt_arg_names ']' ','
+          opt_region_info
+          dependencies
+         '}'
+  ;
+
+before_after_instead: '"isBeforeTrigger"' ':' '1' | '"isAfterTrigger"' ':' '1'  | '"isInsteadOfTrigger"' ':' '1'
+  ;
+
+delete_insert_update: '"isDeleteTrigger"' ':' '1' | '"isInsertTrigger"' ':' '1' | '"isUpdateTrigger"' ':' '1'
+  ;
+
+opt_for_each_row: | '"forEachRow"' ':' BOOL_LITERAL ','
+  ;
+
+opt_when_expr: | '"whenExpr"' ':' STRING_LITERAL ',' '"whenExprArgs"' ':' '[' opt_arg_names ']' ','
+  ;
+
+dependencies: opt_insert_tables
+            opt_update_tables
+            opt_delete_tables
+            opt_from_tables
+            opt_uses_procedures
+            '"usesTables"' ':' '[' opt_table_names ']'
+  ;
+
+opt_insert_tables: | '"insertTables"' ':' '[' opt_table_names ']' ','
+  ;
+
+opt_update_tables: | '"updateTables"' ':' '[' opt_table_names ']' ','
+  ;
+
+opt_delete_tables: | '"deleteTables"' ':' '[' opt_table_names ']' ','
+  ;
+
+opt_from_tables: | '"fromTables"' ':' '[' opt_table_names ']' ','
+  ;
+
+opt_uses_procedures : | '"usesProcedures"' ':' '[' opt_procedure_names ']' ','
+  ;
+
+opt_queries: | queries ;
+
+queries: query | query ',' queries ;
+
+query: '{'
+       '"name"' ':' STRING_LITERAL ','
+       '"definedInFile"' ':' STRING_LITERAL ','
+       '"args"' ':' '[' opt_args ']' ','
+       dependencies ','
+       opt_region_info
+       opt_attributes
+       projection
+       '"statement"' ':' STRING_LITERAL ','
+       '"statementArgs"' ':' '[' opt_arg_names ']'
+       '}'
+  ;
+
+opt_args: | args
+  ;
+
+args: arg | arg ',' args
+  ;
+
+arg: '{'
+      '"name"' ':' STRING_LITERAL ','
+      '"type"' ':' STRING_LITERAL ','
+      opt_is_sensitive
+      '"isNotNull"' ':' BOOL_LITERAL
+      '}'
+  ;
+
+opt_inserts: | inserts
+  ;
+
+inserts: insert | insert ',' inserts
+  ;
+
+insert : '{'
+         '"name"' ':' STRING_LITERAL ','
+         '"definedInFile"' ':' STRING_LITERAL ','
+         '"args"' ':' '[' opt_args ']' ','
+         dependencies ','
+         opt_region_info
+         opt_attributes
+         '"table"' ':' STRING_LITERAL ','
+         '"statement"' ':' STRING_LITERAL ','
+         '"statementArgs"' ':' '[' opt_arg_names ']' ','
+         '"statementType"' ':' STRING_LITERAL ','
+         '"columns"' ':' '[' column_names ']' ','
+         '"values"' ':' '[' opt_values ']'
+         '}'
+  ;
+
+opt_values: | values
+  ;
+
+values: value | value ',' values
+  ;
+
+value:  '{'
+         '"value"' ':' STRING_LITERAL ','
+         '"valueArgs"' ':' '[' opt_arg_names ']'
+        '}'
+  ;
+
+opt_updates: | updates
+  ;
+
+updates: update | update ',' updates
+  ;
+
+update : '{'
+         '"name"' ':' STRING_LITERAL ','
+         '"definedInFile"' ':' STRING_LITERAL ','
+         '"args"' ':' '[' opt_args ']' ','
+         dependencies ','
+         opt_region_info
+         opt_attributes
+         '"table"' ':' STRING_LITERAL ','
+         '"statement"' ':' STRING_LITERAL ','
+         '"statementArgs"' ':' '[' opt_arg_names ']'
+         '}'
+  ;
+
+opt_deletes: | deletes
+  ;
+
+deletes: delete | delete ',' deletes
+  ;
+
+delete : '{'
+         '"name"' ':' STRING_LITERAL ','
+         '"definedInFile"' ':' STRING_LITERAL ','
+         '"args"' ':' '[' opt_args ']' ','
+         dependencies ','
+         opt_region_info
+         opt_attributes
+         '"table"' ':' STRING_LITERAL ','
+         '"statement"' ':' STRING_LITERAL ','
+         '"statementArgs"' ':' '[' opt_arg_names ']'
+         '}'
+  ;
+
+opt_generals: | generals
+  ;
+
+generals: general | general ',' generals
+  ;
+
+general: '{'
+          '"name"' ':' STRING_LITERAL ','
+          '"definedInFile"' ':' STRING_LITERAL ','
+          '"args"' ':' '[' opt_complex_args ']' ','
+          dependencies ','
+          opt_regions
+          opt_attributes
+          '"hasStructResult"' ':' BOOL_LITERAL ','
+          '"hasRowsetResult"' ':' BOOL_LITERAL ','
+          opt_projection
+          opt_result_contract
+          '"usesDatabase"' ':' BOOL_LITERAL
+         '}'
+  ;
+
+opt_result_contract: | '"hasSelectResult"' ':' '1' ',' | '"hasOutResult"' ':' '1' ',' | '"hasOutUnionResult"' ':''1' ','
+  ;
+
+opt_complex_args: | complex_args
+  ;
+
+complex_args: complex_arg | complex_arg ',' complex_args
+  ;
+
+complex_arg: '{'
+              opt_binding
+              '"name"' ':' STRING_LITERAL ','
+              '"type"' ':' STRING_LITERAL ','
+              opt_is_sensitive
+              '"isNotNull"' ':' BOOL_LITERAL
+             '}'
+  ;
+
+opt_binding: | '"binding"' ':' STRING_LITERAL ','
+  ;
+
+opt_regions: | regions
+  ;
+
+regions: region | region ',' regions
+  ;
+
+region:  '{'
+          '"name"' ':' STRING_LITERAL ','
+          '"isDeployableRoot"' ':' BOOL_LITERAL ','
+          '"deployedInRegion"' ':' STRING_LITERAL ','
+          '"using"' ':' '[' opt_region_names ']' ','
+          '"usingPrivately"' ':' '[' opt_bool_list ']'
+         '}'
+  ;
+
+opt_region_names: | region_names
+  ;
+
+region_names: STRING_LITERAL | STRING_LITERAL ',' region_names
+  ;
+
+opt_bool_list: | bool_list
+  ;
+
+bool_list: BOOL_LITERAL | BOOL_LITERAL ',' bool_list
+  ;
+
+opt_ad_hoc_migrations: | ad_hoc_migrations
+  ;
+
+ad_hoc_migrations: ad_hoc_migration | ad_hoc_migrations ',' ad_hoc_migrations
+  ;
+
+ad_hoc_migration: '{'
+                  '"name"' ':' STRING_LITERAL ','
+                  '"version"' ':' any_integer
+                  '}'
+  ;
+
 ```
 
 
 <div style="page-break-after: always; visibility: hidden"></div>
-

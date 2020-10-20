@@ -7,10 +7,12 @@
  * @format
  */
 
+const path = require('path');
+
 module.exports = {
   title: 'CG/SQL',
   tagline: 'Code Generator for SQLite',
-  url: 'https://facebookincubator.github.com',
+  url: 'https://facebookincubator.github.io',
   baseUrl: '/',
   onBrokenLinks: 'ignore',
   favicon: 'img/favicon.ico',
@@ -23,6 +25,11 @@ module.exports = {
         {
           to: 'docs/introduction',
           label: 'Docs',
+          position: 'left',
+        },
+        {
+          to: 'cql-guide/ch01',
+          label: 'CQL Guide',
           position: 'left',
         },
         {to: 'blog', label: 'Blog', position: 'left'},
@@ -91,6 +98,19 @@ module.exports = {
       copyright: `Copyright © ${new Date().getFullYear()} Facebook, Inc. Built with Docusaurus.`,
     },
   },
+  plugins: [
+    [
+      '@docusaurus/plugin-content-docs',
+      {
+        id: 'cql-guide',
+        path: '../CQL_Guide',
+        routeBasePath: 'cql-guide',
+        sidebarPath: require.resolve('./sidebarsGuide.js'),
+        showLastUpdateAuthor: true,
+        showLastUpdateTime: true,
+      },
+    ],
+  ],
   presets: [
     [
       '@docusaurus/preset-classic',
@@ -98,6 +118,10 @@ module.exports = {
         docs: {
           path: '../docs',
           sidebarPath: require.resolve('./sidebars.js'),
+        },
+        googleAnalytics: {
+          trackingID: 'UA-44373548-49',
+          anonymizeIP: true,
         },
         blog: {
           showReadingTime: true,
