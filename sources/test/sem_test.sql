@@ -11737,7 +11737,9 @@ end;
 -- TEST: call cql_cursor_diff with cursor with fetch value and same shape
 -- + {create_proc_stmt}: ok dml_proc
 -- + {assign}: a_string: text variable
--- + {call}: text
+-- + SET a_string := CASE WHEN c1.x IS NOT c2.x THEN 'x'
+-- + WHEN c1.y IS NOT c2.y THEN 'y'
+-- + END;
 -- - Error
 create proc cql_cursor_diff_with_auto_cursor()
 begin
@@ -11751,7 +11753,9 @@ end;
 -- TEST: call cql_cursor_diff from another func
 -- + {create_proc_stmt}: ok dml_proc
 -- + {call_stmt}: ok
--- + {call}: text
+-- + CALL printf(CASE WHEN c1.x IS NOT c2.x THEN 'x'
+-- + WHEN c1.y IS NOT c2.y THEN 'y'
+-- + END);
 -- - Error
 create proc print_call_cql_cursor_diff()
 begin

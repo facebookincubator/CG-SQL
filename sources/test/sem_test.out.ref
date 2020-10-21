@@ -47644,7 +47644,9 @@ BEGIN
   DECLARE c2 CURSOR FOR SELECT 1 AS x, 'y' AS y;
   FETCH c1;
   FETCH c2;
-  SET a_string := cql_cursor_diff(c1, c2);
+  SET a_string := CASE WHEN c1.x IS NOT c2.x THEN 'x'
+  WHEN c1.y IS NOT c2.y THEN 'y'
+  END;
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -47703,14 +47705,28 @@ END;
       | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable auto_cursor
       | {assign}: a_string: text variable
         | {name a_string}: a_string: text variable
-        | {call}: text
-          | {name cql_cursor_diff}: text
-          | {call_arg_list}
-            | {call_filter_clause}
-            | {arg_list}: ok
-              | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable auto_cursor
-              | {arg_list}
-                | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable auto_cursor
+        | {case_expr}: text
+          | {connector}: text
+            | {case_list}: text notnull
+              | {when}: text notnull
+              | | {is_not}: bool notnull
+              | | | {dot}: c1_.x: integer notnull variable
+              | | | | {name c1}
+              | | | | {name x}
+              | | | {dot}: c2_.x: integer notnull variable
+              | |   | {name c2}
+              | |   | {name x}
+              | | {strlit 'x'}: text notnull
+              | {case_list}: text notnull
+                | {when}: text notnull
+                  | {is_not}: bool notnull
+                  | | {dot}: c1_.y: text notnull variable
+                  | | | {name c1}
+                  | | | {name y}
+                  | | {dot}: c2_.y: text notnull variable
+                  |   | {name c2}
+                  |   | {name y}
+                  | {strlit 'y'}: text notnull
 
 The statement ending at line XXXX
 
@@ -47720,7 +47736,9 @@ BEGIN
   DECLARE c2 CURSOR FOR SELECT 1 AS x, 'v' AS y;
   FETCH c1;
   FETCH c2;
-  CALL printf(cql_cursor_diff(c1, c2));
+  CALL printf(CASE WHEN c1.x IS NOT c2.x THEN 'x'
+  WHEN c1.y IS NOT c2.y THEN 'y'
+  END);
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -47780,14 +47798,28 @@ END;
       | {call_stmt}: ok
         | {name printf}: ok
         | {expr_list}: ok
-          | {call}: text
-            | {name cql_cursor_diff}: text
-            | {call_arg_list}
-              | {call_filter_clause}
-              | {arg_list}: ok
-                | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable auto_cursor
-                | {arg_list}
-                  | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable auto_cursor
+          | {case_expr}: text
+            | {connector}: text
+              | {case_list}: text notnull
+                | {when}: text notnull
+                | | {is_not}: bool notnull
+                | | | {dot}: c1_.x: integer notnull variable
+                | | | | {name c1}
+                | | | | {name x}
+                | | | {dot}: c2_.x: integer notnull variable
+                | |   | {name c2}
+                | |   | {name x}
+                | | {strlit 'x'}: text notnull
+                | {case_list}: text notnull
+                  | {when}: text notnull
+                    | {is_not}: bool notnull
+                    | | {dot}: c1_.y: text notnull variable
+                    | | | {name c1}
+                    | | | {name y}
+                    | | {dot}: c2_.y: text notnull variable
+                    |   | {name c2}
+                    |   | {name y}
+                    | {strlit 'y'}: text notnull
 
 The statement ending at line XXXX
 

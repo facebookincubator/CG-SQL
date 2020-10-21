@@ -5787,6 +5787,79 @@ static bool_t sem_rewrite_call_args_if_needed(ast_node *arg_list) {
   return true;
 }
 
+// Generate a 'case_expr' node from two cursors variables. This is used to rewrite cql_cursor_diff(X,Y)
+// function to a case expr.
+// e.g:
+// cql_cursor_diff(C1, C2); ===> CASE WHEN C1.x IS NOT C2.x THEN 'x' WHEN C1.y IS NOT C2.y THEN 'y'
+static ast_node *sem_generate_case_expr(ast_node *var1, ast_node *var2) {
+  Contract(is_variable(var1->sem->sem_type));
+  Contract(is_variable(var2->sem->sem_type));
+
+  CSTR c1_name = var1->sem->name;
+  CSTR c2_name = var2->sem->name;
+  sem_struct *sptr1 = var1->sem->sptr;
+  sem_struct *sptr2 = var2->sem->sptr;
+
+  Invariant(sptr1->count == sptr2->count);
+
+  // We don't need to make sure both cursors have the same shape because it's has been done
+  // already. Therefore we just assume both cursors have identical shape
+  int32_t count = (int32_t) sptr1->count;
+  ast_node *case_list = NULL;
+  for (int32_t i = count - 1; i >= 0; i--) {
+    Invariant(sptr1->names[i]);
+    // left side of IS NOT
+    ast_node *dot1 = new_ast_dot(new_ast_str(c1_name), new_ast_str(sptr1->names[i]));
+    // right side of IS NOT
+    ast_node *dot2 = new_ast_dot(new_ast_str(c2_name), new_ast_str(sptr2->names[i]));
+    ast_node *is_not = new_ast_is_not(dot1, dot2);
+    // the THEN part of WHEN THEN
+    CSTR name_lit = dup_printf("'%s'", sptr1->names[i]);  // this turns into literal name
+    ast_node *val = new_ast_str(name_lit);
+    // The WHEN node and the CASE LIST that holds it
+    ast_node *when = new_ast_when(is_not, val);
+    ast_node *new_case_list = new_ast_case_list(when, case_list);
+    case_list = new_case_list;
+  }
+
+  // case list with no ELSE (we get ELSE NULL by default)
+  ast_node *connector = new_ast_connector(case_list, NULL);
+  // CASE WHEN expr THEN result form; not CASE expr WHEN val THEN result
+  ast_node *case_expr = new_ast_case_expr(NULL, connector);
+
+  return case_expr;
+}
+
+// rewrite call node with cql_cursor_diff(X,Y) to a case_expr statement
+// e.g: C1 and C2 are two cursor variable with the same shape
+// cql_cursor_diff(C1, C2); ===> CASE WHEN C1.x IS NOT C2.x THEN 'x' WHEN C1.y IS NOT C2.y THEN 'y'
+static void sem_rewrite_cql_cursor_diff(ast_node *ast) {
+  Contract(is_ast_call(ast));
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+  Contract(!Strcasecmp("cql_cursor_diff", name));
+
+  AST_REWRITE_INFO_SET(name_ast->lineno, name_ast->filename);
+
+  ast_node *arg1 = first_arg(arg_list);
+  ast_node *arg2 = second_arg(arg_list);
+
+  ast_node *case_expr = sem_generate_case_expr(arg1, arg2);
+
+  // Reset the cql_cursor_diff function call node to a case_expr
+  // node.
+  ast->type = case_expr->type;
+  ast_set_left(ast, case_expr->left);
+  ast_set_right(ast, case_expr->right);
+
+  // do semantic analysis of the rewrite AST to validate the rewrite
+  sem_expr(ast);
+
+  AST_REWRITE_INFO_RESET();
+}
+
 // This validates that the call is to one of the functions that we know and
 // then delegates to the appropriate shared helper function for that type
 // of call for additional validation.  We compute the semantic type of all
@@ -5827,6 +5900,7 @@ static void sem_expr_call(ast_node *ast, CSTR cstr) {
   // The count function is allowed to use '*'
   bool_t is_count_function = !Strcasecmp("count", name);
   bool_t is_ptr_function = !Strcasecmp("ptr", name);
+  bool_t is_cql_cursor_diff = !Strcasecmp("cql_cursor_diff", name);
 
   // In any aggregate function that takes a single argument, that argument can be preceded by the keyword DISTINCT
   if (distinct && (arg_count != 1 || is_ast_star(first_arg(arg_list)))) {
@@ -5856,6 +5930,13 @@ static void sem_expr_call(ast_node *ast, CSTR cstr) {
   symtab_entry *entry = symtab_find(builtin_funcs, name);
   if (entry) {
     ((void (*)(ast_node*, uint32_t))entry->val)(ast, arg_count);
+
+    // We have a cql_cursor_diff function call, we rewrite the node to
+    // a case_expr node.
+    if (is_cql_cursor_diff && !is_error(ast)) {
+      sem_rewrite_cql_cursor_diff(ast);
+    }
+
     goto cleanup;
   }
 
