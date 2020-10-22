@@ -141,6 +141,8 @@ static bool_t sem_validate_identical_ddl(ast_node *cur, ast_node *prev);
 static void sem_setup_region_filters(void);
 static void sem_inside_create_proc_stmt(ast_node *ast);
 static void sem_one_stmt(ast_node *stmt);
+static void sem_rewrite_cql_cursor_diff(ast_node *ast);
+static void sem_rewrite_cql_cursor_format(ast_node *ast);
 
 static void lazy_free_symtab(void *syms) {
   symtab_delete(syms);
@@ -941,6 +943,20 @@ CSTR coretype_string(sem_t sem_type) {
     case SEM_TYPE_REAL: result = "REAL"; break;
     case SEM_TYPE_BOOL: result = "BOOL"; break;
     case SEM_TYPE_BLOB: result = "BLOB"; break;
+  }
+  Invariant(result);
+  return result;
+}
+
+CSTR coretype_format(sem_t sem_type) {
+  CSTR result = NULL;
+  switch (core_type_of(sem_type)) {
+    case SEM_TYPE_INTEGER:
+    case SEM_TYPE_BOOL: result = "%d"; break;
+    case SEM_TYPE_LONG_INTEGER: result = "%lld"; break;
+    case SEM_TYPE_REAL: result = "%f"; break;
+    case SEM_TYPE_TEXT: result = "%s"; break;
+    case SEM_TYPE_BLOB: result = "%s"; break;
   }
   Invariant(result);
   return result;
@@ -4962,7 +4978,7 @@ static void sem_func_char(ast_node *ast, uint32_t arg_count) {
 
 // Validate the variable argument is a auto cursor. This is called to validate
 // cql_cursor_diff(X,Y) arguments.
-static bool_t sem_validate_cursor_from_variable(ast_node *ast) {
+static bool_t sem_validate_cursor_from_variable(ast_node *ast, CSTR target) {
   if (is_variable(ast->sem->sem_type)) {
 
     sem_cursor(ast);
@@ -4972,7 +4988,7 @@ static bool_t sem_validate_cursor_from_variable(ast_node *ast) {
 
     return true;
   } else {
-    report_error(ast, "CQL0341: argument must be a variable in function", "cql_cursor_diff");
+    report_error(ast, "CQL0341: argument must be a variable in function", target);
     record_error(ast);
     return false;
   }
@@ -4981,6 +4997,7 @@ static bool_t sem_validate_cursor_from_variable(ast_node *ast) {
 // validate expression with cql_cursor_diff func is semantically correct.
 // cql_cursor_diff is a CQL builtin function that compare the values of a
 // row between two cursor.
+// Note cql_cursor_diff is also rewritten to a case_expr node
 static void sem_func_cql_cursor_diff(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
@@ -4995,7 +5012,8 @@ static void sem_func_cql_cursor_diff(ast_node *ast, uint32_t arg_count) {
   ast_node *arg1 = first_arg(arg_list);
   ast_node *arg2 = second_arg(arg_list);
 
-  if (!sem_validate_cursor_from_variable(arg1) || !sem_validate_cursor_from_variable(arg2)) {
+  if (!sem_validate_cursor_from_variable(arg1, name) ||
+      !sem_validate_cursor_from_variable(arg2, name)) {
     record_error(ast);
     return;
   }
@@ -5011,12 +5029,11 @@ static void sem_func_cql_cursor_diff(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  bool_t not_arg1_auto_cursor = !(arg1->sem->sem_type & SEM_TYPE_AUTO_CURSOR);
-  bool_t not_arg2_auto_cursor = !(arg2->sem->sem_type & SEM_TYPE_AUTO_CURSOR);
-  if (not_arg1_auto_cursor || not_arg2_auto_cursor) {
+  if (!(arg1->sem->sem_type & SEM_TYPE_AUTO_CURSOR) ||
+      !(arg2->sem->sem_type & SEM_TYPE_AUTO_CURSOR)) {
     EXTRACT_STRING(arg1_name, arg1);
     EXTRACT_STRING(arg2_name, arg2);
-    CSTR cursor_name = not_arg1_auto_cursor ? arg1_name : arg2_name;
+    CSTR cursor_name = !(arg1->sem->sem_type & SEM_TYPE_AUTO_CURSOR) ? arg1_name : arg2_name;
     report_error(arg1, "CQL0067: cursor was not used with 'fetch [cursor]'", cursor_name);
     record_error(arg1);
     record_error(ast);
@@ -5035,6 +5052,10 @@ static void sem_func_cql_cursor_diff(ast_node *ast, uint32_t arg_count) {
   // cursors that are different otherwise null.
   name_ast->sem = new_sem(SEM_TYPE_TEXT);
   ast->sem = name_ast->sem;
+
+  // We have a cql_cursor_diff function call, we rewrite the node to
+  // a case_expr node.
+  sem_rewrite_cql_cursor_diff(ast);
 }
 
 static void sem_func_upper(ast_node *ast, uint32_t arg_count) {
@@ -5592,6 +5613,48 @@ static void sem_func_last_insert_rowid(ast_node *ast, uint32_t arg_count) {
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL);
 }
 
+// The cql_cursor_format function converts a cursor row value to a string.
+// cql_cursor_format() function is rewritten to printf() AST.
+static void sem_func_cql_cursor_format(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  if (!sem_validate_arg_count(ast, arg_count, 1)) {
+    return;
+  }
+
+  ast_node *arg = first_arg(arg_list);
+  if (!sem_validate_cursor_from_variable(arg, name)) {
+    record_error(arg);
+    record_error(ast);
+    return;
+  }
+
+  if (!(arg->sem->sem_type & SEM_TYPE_AUTO_CURSOR)) {
+    EXTRACT_STRING(cursor_name, arg);
+    report_error(arg, "CQL0067: cursor was not used with 'fetch [cursor]'", cursor_name);
+    record_error(arg);
+    record_error(ast);
+    return;
+  }
+
+  // We do not do a context validation on purpose because after we
+  // rewrite cql_cursor_format() to printf(), the semantic analysis
+  // of printf() will do it for us.
+
+  // return type is the same as printf function.
+  name_ast->sem = ast->sem = new_sem(SEM_TYPE_TEXT | SEM_TYPE_NOTNULL);
+
+  // We have a cql_cursor_format function call, we rewrite the node to
+  // a call printf(...); node.
+  sem_rewrite_cql_cursor_format(ast);
+  return;
+}
+
+
 // The printf function converts its arguments to a string.  There must be
 // a format string and of course it must be text.
 static void sem_func_printf(ast_node *ast, uint32_t arg_count) {
@@ -5792,6 +5855,92 @@ static bool_t sem_rewrite_call_args_if_needed(ast_node *arg_list) {
   return true;
 }
 
+// Generate printf(...) function node. This is used by
+// sem_generate_cursor_printf() to generate the rewrite for cql_cursor_format
+// function. e.g: cusor_name = C, dot_name = x, type = text PRINTF("%s", C.x);
+static ast_node* sem_generate_printf_call(CSTR cusor_name, CSTR dot_name, sem_t type) {
+  // left to arg_list node
+  ast_node* dot = NULL;
+  if (is_blob(type)) {
+    // if the variable is a blob we only print the size of the blob in printf
+    // TODO: T78145393 replace this with blob size
+    dot = new_ast_str("'<non-null-blob>'");
+  } else {
+    dot = new_ast_dot(new_ast_str(cusor_name), new_ast_str(dot_name));
+  }
+  // right to first arg_list node
+  ast_node* arg_list = new_ast_arg_list(dot, NULL);
+  // format value of the print literal
+  CSTR format = dup_printf("'%s'", coretype_format(type));
+  // right to call_arg_list node
+  ast_node* first_arg_list = new_ast_arg_list(new_ast_str(format), arg_list);
+  // right to call node
+  ast_node* call_arg_list = new_ast_call_arg_list(
+      new_ast_call_filter_clause(NULL, NULL), first_arg_list);
+  ast_node* call = new_ast_call(new_ast_str("printf"), call_arg_list);
+  return call;
+}
+
+// Generate a 'call' node for printf function from a cursor variable.
+// This is used to rewrite cql_cursor_format(X) when called from a
+// sql context.
+// e.g:
+// select cql_cursor_format(C) as p; ===> select printf("x:%d|y:%s", C.x, C.y) as p;
+static ast_node *sem_generate_cursor_printf(ast_node *variable) {
+  Contract(is_variable(variable->sem->sem_type));
+
+  CHARBUF_OPEN(format);
+  sem_struct *sptr = variable->sem->sptr;
+  int32_t count = (int32_t) sptr->count;
+  Invariant(count > 0);
+  ast_node *arg_list = NULL;
+
+  for (int32_t i = count - 1; i >= 0; i--) {
+    Invariant(sptr->names[i]);
+    // left side of IS
+    ast_node* dot = new_ast_dot(
+        new_ast_str(variable->sem->name), new_ast_str(sptr->names[i]));
+    // right side of IS
+    ast_node* null_node = new_ast_null();
+    // left side of WHEN
+    ast_node* is_node = new_ast_is(dot, null_node);
+    // the THEN part of WHEN THEN
+    ast_node* val = new_ast_str("'null'");
+    // left case_list node
+    ast_node* when = new_ast_when(is_node, val);
+    // left connector node
+    ast_node* case_list = new_ast_case_list(when, NULL);
+    // right connector node: printf(...)
+    ast_node* call_printf = sem_generate_printf_call(
+        variable->sem->name, sptr->names[i], sptr->semtypes[i]);
+    // case list with no ELSE (we get ELSE NULL by default)
+    ast_node* connector = new_ast_connector(case_list, call_printf);
+    // CASE WHEN expr THEN result form; not CASE expr WHEN val THEN result
+    ast_node* case_expr = new_ast_case_expr(NULL, connector);
+    // new arg_list node
+    ast_node* new_arg_list = new_ast_arg_list(case_expr, arg_list);
+    arg_list = new_arg_list;
+  }
+
+  for (int32_t i = 0; i < count; i++) {
+    if (i > 0) {
+      bprintf(&format, "|");
+    }
+    bprintf(&format, "%s:%s", sptr->names[i], "%s");
+  }
+
+  CSTR format_lit = dup_printf("'%s'", format.ptr); // this turns into literal name
+  ast_node *first_arg_list = new_ast_arg_list(new_ast_str(format_lit), arg_list);
+  // call_arg_list node
+  ast_node *call_arg_list = new_ast_call_arg_list(new_ast_call_filter_clause(NULL, NULL), first_arg_list);
+  ast_node *call = new_ast_call(new_ast_str("printf"), call_arg_list);
+
+  CHARBUF_CLOSE(format);
+
+  return call;
+}
+
+
 // Generate a 'case_expr' node from two cursors variables. This is used to rewrite cql_cursor_diff(X,Y)
 // function to a case expr.
 // e.g:
@@ -5834,6 +5983,35 @@ static ast_node *sem_generate_case_expr(ast_node *var1, ast_node *var2) {
 
   return case_expr;
 }
+
+// rewrite call node with cql_cursor_format(X) to a printf(format, arg ...)
+// statement. e.g: C cursor has column text x, y
+// cql_cursor_format(C); ===> printf("x:%s|y:%s", C.x, C.y);
+static void sem_rewrite_cql_cursor_format(ast_node *ast) {
+  Contract(is_ast_call(ast));
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+  Contract(!Strcasecmp("cql_cursor_format", name));
+
+  AST_REWRITE_INFO_SET(name_ast->lineno, name_ast->filename);
+
+  ast_node *arg = first_arg(arg_list);
+  ast_node *printf_node = sem_generate_cursor_printf(arg);
+
+  // Reset the cql_cursor_format function call node to a case_expr
+  // node.
+  ast->type = printf_node->type;
+  ast_set_left(ast, printf_node->left);
+  ast_set_right(ast, printf_node->right);
+
+  // do semantic analysis of the rewritten AST to validate it
+  sem_expr(ast);
+
+  AST_REWRITE_INFO_RESET();
+}
+
 
 // rewrite call node with cql_cursor_diff(X,Y) to a case_expr statement
 // e.g: C1 and C2 are two cursor variable with the same shape
@@ -5905,7 +6083,6 @@ static void sem_expr_call(ast_node *ast, CSTR cstr) {
   // The count function is allowed to use '*'
   bool_t is_count_function = !Strcasecmp("count", name);
   bool_t is_ptr_function = !Strcasecmp("ptr", name);
-  bool_t is_cql_cursor_diff = !Strcasecmp("cql_cursor_diff", name);
 
   // In any aggregate function that takes a single argument, that argument can be preceded by the keyword DISTINCT
   if (distinct && (arg_count != 1 || is_ast_star(first_arg(arg_list)))) {
@@ -5935,12 +6112,6 @@ static void sem_expr_call(ast_node *ast, CSTR cstr) {
   symtab_entry *entry = symtab_find(builtin_funcs, name);
   if (entry) {
     ((void (*)(ast_node*, uint32_t))entry->val)(ast, arg_count);
-
-    // We have a cql_cursor_diff function call, we rewrite the node to
-    // a case_expr node.
-    if (is_cql_cursor_diff && !is_error(ast)) {
-      sem_rewrite_cql_cursor_diff(ast);
-    }
 
     goto cleanup;
   }
@@ -16065,6 +16236,7 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(nullif);
   FUNC_INIT(upper);
   FUNC_INIT(cql_cursor_diff);
+  FUNC_INIT(cql_cursor_format);
   FUNC_INIT(char);
   FUNC_INIT(abs);
   FUNC_INIT(instr);

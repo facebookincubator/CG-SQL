@@ -844,4 +844,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect numbe
 Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'trim'
 Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'trim'
 Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'trim'
+Error at test/sem_test.sql:XXXX : in str : CQL0067: cursor was not used with 'fetch [cursor]' 'c'
+Error at test/sem_test.sql:XXXX : in num : CQL0341: argument must be a variable in function 'cql_cursor_format'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'cql_cursor_format'
 semantic errors present; no code gen.
