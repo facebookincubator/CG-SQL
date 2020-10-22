@@ -11678,7 +11678,7 @@ set a_string := cql_cursor_diff(an_int, an_int2, 1);
 -- + {assign}: err
 -- + {call}: err
 -- + {name c1}: err
--- + Error % arguments must be cursors with fetched values 'cql_cursor_diff'
+-- + Error % cursor was not used with 'fetch [cursor]' 'c1'
 -- +1 Error
 create proc cql_cursor_diff_without_cursor_arg()
 begin

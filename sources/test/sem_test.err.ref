@@ -835,7 +835,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0252: @PROC literal can only appea
 Error at test/sem_test.sql:XXXX : in num : CQL0341: argument must be a variable in function 'cql_cursor_diff'
 Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'an_int'
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'cql_cursor_diff'
-Error at test/sem_test.sql:XXXX : in str : CQL0343: arguments must be cursors with fetched values 'cql_cursor_diff'
+Error at test/sem_test.sql:XXXX : in str : CQL0067: cursor was not used with 'fetch [cursor]' 'c1'
 Error at test/sem_test.sql:XXXX : in str : CQL0061: in cql_cursor_diff, all columns must be an exact type match (expected integer notnull; found text notnull) 'x'
 Error at test/sem_test.sql:XXXX : in call : CQL0342: the cursor arguments must have identical column count 'cql_cursor_diff'
 Error at test/sem_test.sql:XXXX : in str : CQL0058: in cql_cursor_diff, all column names must be identical so they have unambiguous names 'z'

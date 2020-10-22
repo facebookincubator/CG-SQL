@@ -4994,6 +4994,7 @@ static void sem_func_cql_cursor_diff(ast_node *ast, uint32_t arg_count) {
 
   ast_node *arg1 = first_arg(arg_list);
   ast_node *arg2 = second_arg(arg_list);
+
   if (!sem_validate_cursor_from_variable(arg1) || !sem_validate_cursor_from_variable(arg2)) {
     record_error(ast);
     return;
@@ -5010,9 +5011,13 @@ static void sem_func_cql_cursor_diff(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  if (!(arg1->sem->sem_type & SEM_TYPE_AUTO_CURSOR) ||
-      !(arg2->sem->sem_type & SEM_TYPE_AUTO_CURSOR)) {
-    report_error(arg1, "CQL0343: arguments must be cursors with fetched values", name);
+  bool_t not_arg1_auto_cursor = !(arg1->sem->sem_type & SEM_TYPE_AUTO_CURSOR);
+  bool_t not_arg2_auto_cursor = !(arg2->sem->sem_type & SEM_TYPE_AUTO_CURSOR);
+  if (not_arg1_auto_cursor || not_arg2_auto_cursor) {
+    EXTRACT_STRING(arg1_name, arg1);
+    EXTRACT_STRING(arg2_name, arg2);
+    CSTR cursor_name = not_arg1_auto_cursor ? arg1_name : arg2_name;
+    report_error(arg1, "CQL0067: cursor was not used with 'fetch [cursor]'", cursor_name);
     record_error(arg1);
     record_error(ast);
     return;

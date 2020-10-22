@@ -47352,7 +47352,7 @@ BEGIN
   SET a_string := cql_cursor_diff(c1, c2);
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0343: arguments must be cursors with fetched values 'cql_cursor_diff'
+Error at test/sem_test.sql:XXXX : in str : CQL0067: cursor was not used with 'fetch [cursor]' 'c1'
 
   {create_proc_stmt}: err
   | {name cql_cursor_diff_without_cursor_arg}: err
