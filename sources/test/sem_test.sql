@@ -11888,3 +11888,34 @@ set a_string := cql_cursor_format(1);
 -- + Error % function got incorrect number of arguments 'cql_cursor_format'
 -- +1 Error
 set a_string := cql_cursor_format(1, 2);
+
+-- TEST: length failure: no args
+-- + {call}: err
+-- + Error % function got incorrect number of arguments 'length'
+-- +1 Error
+set an_int := (select length());
+
+-- TEST: length failure: arg is not a string
+-- + {call}: err
+-- + Error % all arguments must be strings 'length'
+-- +1 Error
+set an_int := (select length(1));
+
+-- TEST: length failure: not in a SQL context
+-- + {call}: err
+-- + Error % function may not appear in this context 'length'
+-- +1 Error
+set an_int := length("x");
+
+-- TEST: length must preserve sensitivity
+-- + {call}: integer sensitive
+-- + {name length}: integer sensitive
+-- - Error
+set _sens := (select length(name) from with_sensitive);
+
+-- TEST: length must preserve nullability
+-- + {assign}: an_int: integer variable
+-- + {select_stmt}: _anon: integer notnull
+-- + {call}: integer notnull
+-- - Error
+set an_int := (select length("x"));

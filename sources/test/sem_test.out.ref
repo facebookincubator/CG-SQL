@@ -48434,3 +48434,128 @@ Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect numbe
         | {arg_list}
           | {int 2}: integer notnull
 
+The statement ending at line XXXX
+
+SET an_int := ( SELECT length() );
+
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'length'
+
+  {assign}: err
+  | {name an_int}: an_int: integer variable
+  | {select_stmt}: err
+    | {select_core_list}: err
+    | | {select_core}: err
+    |   | {select_expr_list_con}: err
+    |     | {select_expr_list}: err
+    |     | | {select_expr}: err
+    |     |   | {call}: err
+    |     |     | {name length}: err
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET an_int := ( SELECT length(1) );
+
+Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'length'
+
+  {assign}: err
+  | {name an_int}: an_int: integer variable
+  | {select_stmt}: err
+    | {select_core_list}: err
+    | | {select_core}: err
+    |   | {select_expr_list_con}: err
+    |     | {select_expr_list}: err
+    |     | | {select_expr}: err
+    |     |   | {call}: err
+    |     |     | {name length}
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {int 1}: integer notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET an_int := length("x");
+
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'length'
+
+  {assign}: err
+  | {name an_int}: an_int: integer variable
+  | {call}: err
+    | {name length}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {strlit 'x'}: text notnull
+
+The statement ending at line XXXX
+
+SET _sens := ( SELECT length(name)
+  FROM with_sensitive );
+
+  {assign}: _sens: integer variable sensitive
+  | {name _sens}: _sens: integer variable sensitive
+  | {select_stmt}: _anon: integer sensitive
+    | {select_core_list}: select: { _anon: integer sensitive }
+    | | {select_core}: select: { _anon: integer sensitive }
+    |   | {select_expr_list_con}: select: { _anon: integer sensitive }
+    |     | {select_expr_list}: select: { _anon: integer sensitive }
+    |     | | {select_expr}: integer sensitive
+    |     |   | {call}: integer sensitive
+    |     |     | {name length}: integer sensitive
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {name name}: name: text sensitive
+    |     | {select_from_etc}: TABLE { with_sensitive: with_sensitive }
+    |       | {table_or_subquery_list}: TABLE { with_sensitive: with_sensitive }
+    |       | | {table_or_subquery}: TABLE { with_sensitive: with_sensitive }
+    |       |   | {name with_sensitive}: TABLE { with_sensitive: with_sensitive }
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET an_int := ( SELECT length("x") );
+
+  {assign}: an_int: integer variable
+  | {name an_int}: an_int: integer variable
+  | {select_stmt}: _anon: integer notnull
+    | {select_core_list}: select: { _anon: integer notnull }
+    | | {select_core}: select: { _anon: integer notnull }
+    |   | {select_expr_list_con}: select: { _anon: integer notnull }
+    |     | {select_expr_list}: select: { _anon: integer notnull }
+    |     | | {select_expr}: integer notnull
+    |     |   | {call}: integer notnull
+    |     |     | {name length}: integer notnull
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {strlit 'x'}: text notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
