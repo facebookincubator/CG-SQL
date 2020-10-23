@@ -16,7 +16,6 @@ do
   (cat "$f"; \
    echo ""; \
    echo ""; \
-   echo '<div style="page-break-after: always; visibility: hidden"></div>'; \
    echo "" ) >>guide.tmp
 done
 
