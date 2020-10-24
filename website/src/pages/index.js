@@ -60,6 +60,29 @@ function Feature({imageUrl, title, description}) {
   );
 }
 
+function Video() {
+  return (
+    <div id="video" className={styles.videoSection}>
+      <div className="container padding-vert--xl text--left">
+        <div className="row">
+          <div className="col">
+            <h1 className="text--center">See CG/SQL in Practice</h1>
+            <div align="center">
+              <iframe
+                width="560"
+                height="315"
+                src="https://www.youtube.com/embed/videoseries?list=PLJE37RiwD_9pvAT-1bpuCx7CGM-Nkwjj0"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen></iframe>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Home() {
   const context = useDocusaurusContext();
   const {siteConfig = {}} = context;
@@ -69,38 +92,61 @@ function Home() {
       description="CG/SQL is a compiler that converts a SQL Stored Procedure like language into C for SQLite. CG/CQL also generates other useful artifacts for testing and schema maintenance.">
       <header className={clsx('hero hero--primary', styles.heroBanner)}>
         <div className="container">
+          <img
+            className={styles.heroLogo}
+            src="img/CGSQL-Icon.png"
+            alt="CG/SQL Logo"
+            width="170"
+          />
           <h1 className="hero__title">{siteConfig.title}</h1>
           <p className="hero__subtitle">{siteConfig.tagline}</p>
           <div className={styles.buttons}>
             <Link
               className={clsx(
                 'button button--outline button--secondary button--lg',
-                styles.getStarted,
+                styles.buttons,
               )}
               to={useBaseUrl('docs/introduction')}>
               Get Started
+            </Link>
+            <Link
+              className={clsx(
+                'button button--outline button--secondary button--lg',
+                styles.buttons,
+              )}
+              to={'#video'}>
+              Watch Demos
             </Link>
           </div>
         </div>
       </header>
       <main>
-        {features && features.length > 0 && (
-          <section className={styles.features}>
-            <div className="container">
-              <div className="row">
-                {features.map(({title, imageUrl, description}) => (
-                  <Feature
-                    key={title}
-                    title={title}
-                    imageUrl={imageUrl}
-                    description={description}
-                  />
-                ))}
-              </div>
+        <div className="container padding-vert--xl text--left">
+          <div className="row">
+            <div className="col">
+              <h1 className="text--center">Key Features</h1>
+              {features && features.length > 0 && (
+                <section className={styles.features}>
+                  <div className="container">
+                    <div className="row">
+                      {features.map(({title, imageUrl, description}) => (
+                        <Feature
+                          key={title}
+                          title={title}
+                          imageUrl={imageUrl}
+                          description={description}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </section>
+              )}
             </div>
-          </section>
-        )}
+          </div>
+        </div>
       </main>
+
+      <Video />
     </Layout>
   );
 }

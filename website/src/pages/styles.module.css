@@ -42,3 +42,22 @@
   height: 200px;
   width: 200px;
 }
+
+.features {
+  display: flex;
+  align-items: center;
+  padding: 4rem 0;
+  width: 100%;
+}
+
+.featureImage {
+  margin: 0 auto;
+}
+
+.videoSection {
+  background-color: #f7f7f7;
+}
+
+html[data-theme='dark'] .videoSection {
+  background-color: #33363b;
+}

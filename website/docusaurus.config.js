@@ -13,14 +13,18 @@ module.exports = {
   title: 'CG/SQL',
   tagline: 'Code Generator for SQLite',
   url: 'https://facebookincubator.github.io',
-  baseUrl: '/',
+  baseUrl: '/CG-SQL/',
   onBrokenLinks: 'ignore',
   favicon: 'img/favicon.ico',
   organizationName: 'facebookincubator',
-  projectName: 'cg-sql',
+  projectName: 'CG-SQL',
   themeConfig: {
     navbar: {
       title: 'CQ/SQL',
+      logo: {
+        alt: 'CG/SQL Logo',
+        src: 'img/CGSQL-Icon.svg',
+      },
       items: [
         {
           to: 'docs/introduction',
@@ -55,6 +59,10 @@ module.exports = {
         {
           title: 'Community',
           items: [
+            {
+              label: 'Youtube',
+              href: 'https://www.youtube.com/channel/UC2lTapw2Um90sZpGQVaynEg',
+            },
             {
               label: 'Twitter',
               href: 'https://twitter.com/fbOpenSource',
