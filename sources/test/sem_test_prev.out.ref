@@ -1764,6 +1764,50 @@ Error at test/sem_test_prev.sql:XXXX : in create_table_stmt : table must leave @
 
 The statement ending at line XXXX
 
+CREATE TABLE adding_with_migrators_ok(
+  id INTEGER PRIMARY KEY,
+  id2 INTEGER @DELETE(3, delete_me),
+  id3 INTEGER @CREATE(3, create_me)
+) @CREATE(2);
+
+  {create_table_stmt}: adding_with_migrators_ok: { id: integer notnull primary_key, id3: integer } validated @create(2)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {create_attr}
+  | |   | {version_annotation}
+  | |     | {int 2}
+  | | {name adding_with_migrators_ok}
+  | {col_key_list}
+    | {col_def}: id: integer notnull primary_key
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |   | | {name id}
+    |   | | {type_int}: integer
+    |   | {col_attrs_pk}: ok
+    | {col_key_list}
+      | {col_def}: id2: integer hidden @delete(3)
+      | | {col_def_type_attrs}
+      |   | {col_def_name_type}
+      |   | | {name id2}
+      |   | | {type_int}: integer
+      |   | {delete_attr}: ok
+      |     | {version_annotation}
+      |       | {int 3}
+      |       | {name delete_me}
+      | {col_key_list}
+        | {col_def}: err
+          | {col_def_type_attrs}
+            | {col_def_name_type}
+            | | {name id3}
+            | | {type_int}: integer
+            | {create_attr}: ok
+              | {version_annotation}
+                | {int 3}
+                | {name create_me}
+
+The statement ending at line XXXX
+
 @PREVIOUS_SCHEMA;
 
   {previous_schema_stmt}: ok
@@ -3567,4 +3611,33 @@ CREATE TABLE table_going(
             | | {name_list}
             |   | {name col1}
             | {int 51}
+
+The statement ending at line XXXX
+
+CREATE TABLE adding_with_migrators_ok(
+  id INTEGER PRIMARY KEY,
+  id2 INTEGER
+) @CREATE(2);
+
+  {create_table_stmt}: adding_with_migrators_ok: { id: integer notnull primary_key, id2: integer } @create(2)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {create_attr}
+  | |   | {version_annotation}
+  | |     | {int 2}
+  | | {name adding_with_migrators_ok}
+  | {col_key_list}
+    | {col_def}: id: integer notnull primary_key
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |   | | {name id}
+    |   | | {type_int}: integer
+    |   | {col_attrs_pk}: ok
+    | {col_key_list}
+      | {col_def}: id2: integer
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+            | {name id2}
+            | {type_int}: integer
 

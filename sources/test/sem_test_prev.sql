@@ -387,6 +387,16 @@ create table table_going(
   foreign key(col2) references table_staying(col1) on update cascade on delete cascade
 ) @delete(1);
 
+
+-- TEST: it's ok for items to appear with a migration
+-- create validated in normal processing, delete validated in previous
+-- - Error
+create table adding_with_migrators_ok(
+  id integer primary key,
+  id2 integer @delete(3, delete_me),
+  id3 integer @create(3, create_me)
+) @create(2);
+
 ------------------------------------------------------------------------------------------------------------
 @previous_schema;
 ------------------------------------------------------------------------------------------------------------
@@ -838,8 +848,6 @@ end;
 
 @end_schema_region;
 
-
-
 create table table_staying(
   col1 int primary key not null
 ) @recreate(my_recreate_group);
@@ -849,3 +857,10 @@ create table table_going(
   col2 int,
   foreign key(col2) references table_staying(col1) on update cascade on delete cascade
 ) @recreate(my_recreate_group);
+
+-- TEST: new attributes will be added with migrators that's ok
+-- - Error
+create table adding_with_migrators_ok(
+  id integer primary key,
+  id2 integer
+) @create(2);

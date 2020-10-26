@@ -8412,12 +8412,18 @@ static void sem_validate_col_def_prev_cur(ast_node *def, ast_node *prev_def, ver
     return;
   }
 
-  if (!sem_match_optional_string(prev_cd_info.delete_proc, cur_cd_info.delete_proc)) {
-    report_error(name_ast, "CQL0123: column @delete procedure changed", name);
-    record_error(prev_def);
-    return;
+  // if the column was already deleted then the procedure name must match
+  if (prev_cd_info.delete_version != -1) {
+    if (!sem_match_optional_string(prev_cd_info.delete_proc, cur_cd_info.delete_proc)) {
+      report_error(name_ast, "CQL0123: column @delete procedure changed", name);
+      record_error(prev_def);
+      return;
+    }
   }
 
+  // The create case is a little easier (no -1 check) because if the column was just created then
+  // it isn't in the prevous schema at all and hence we wouldn't even be here.  This loop only
+  // covers columns that exist in previous by definition.
   if (!sem_match_optional_string(prev_cd_info.create_proc, cur_cd_info.create_proc)) {
     report_error(name_ast, "CQL0124: column @create procedure changed", name);
     record_error(prev_def);

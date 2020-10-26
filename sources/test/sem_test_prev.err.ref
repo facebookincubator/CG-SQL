@@ -51,6 +51,7 @@ Error at test/sem_test_prev.sql:XXXX : in schema_ad_hoc_migration_stmt : CQL0286
 Error at test/sem_test_prev.sql:XXXX : in schema_ad_hoc_migration_stmt : CQL0285: ad hoc schema migration directive version number changed 'WhoopsItChanged'
 Error at test/sem_test_prev.sql:XXXX : in create_table_stmt : CQL0309: new table must be added with @create(6) or later 't_new_table_no_annotation'
 Error at test/sem_test_prev.sql:XXXX : in create_table_stmt : CQL0309: new table must be added with @create(6) or later 't_new_table_stale_annotation'
+Error at test/sem_test_prev.sql:XXXX : in col_def : CQL0310: new column must be added with @create(6) or later 'id3'
 Error at test/sem_test_prev.sql:XXXX : in col_def : CQL0310: new column must be added with @create(6) or later 'col3'
 Error at test/sem_test_prev.sql:XXXX : in col_def : CQL0310: new column must be added with @create(6) or later 'col2'
 Error at test/sem_test_prev.sql:XXXX : in create_table_stmt : table must leave @recreate management with @create/delete(6) or later 'recreate_deleted_in_the_past'
