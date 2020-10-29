@@ -1673,6 +1673,12 @@ cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
   count)
 
 // The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code try_boxing(sqlite3 *_Nonnull _db_, cql_object_ref _Nullable *_Nonnull result);
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code try_unboxing(sqlite3 *_Nonnull _db_, cql_object_ref _Nullable boxed_cursor);
+
+// The statement ending at line XXXX
 extern void end_proc(void);
 
 // The statement ending at line XXXX

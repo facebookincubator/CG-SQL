@@ -33,6 +33,7 @@ typedef unsigned char cql_bool;
 #define CQL_C_TYPE_STRING 0
 #define CQL_C_TYPE_BLOB 1
 #define CQL_C_TYPE_RESULTS 2
+#define CQL_C_TYPE_BOXED_STMT 3
 
 typedef unsigned long cql_hash_code;
 typedef int32_t cql_int32;
@@ -60,6 +61,13 @@ typedef struct cql_object {
 } cql_object;
 #define cql_object_retain(object) cql_retain((cql_type_ref)object);
 #define cql_object_release(object) cql_release((cql_type_ref)object);
+
+// builtin statement box
+typedef struct cql_boxed_stmt *cql_boxed_stmt_ref;
+typedef struct cql_boxed_stmt {
+  cql_type base;
+  sqlite3_stmt *_Nullable stmt;
+} cql_boxed_stmt;
 
 // builtin blob
 typedef struct cql_blob *cql_blob_ref;
@@ -189,6 +197,9 @@ SQLITE_API cql_code mockable_sqlite3_step(sqlite3_stmt *_Nonnull);
 
 // the basic version doesn't use column getters
 #define CQL_NO_GETTERS 1
+
+cql_object_ref _Nonnull cql_box_stmt(sqlite3_stmt *_Nullable stmt);
+sqlite3_stmt *_Nullable cql_unbox_stmt(cql_object_ref _Nonnull ref);
 
 // NOTE: This must be included *after* all of the above symbols/macros.
 #include "cqlrt_common.h"

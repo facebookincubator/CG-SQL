@@ -2547,6 +2547,31 @@ begin
   select * from ext2;
 end;
 
+-- TEST: simple box operation
+-- + sqlite3_stmt *C = NULL;
+-- + cql_object_ref C_object_ = NULL;
+-- 1 for the boxing and 1 for the cleanup
+-- +2 cql_object_release(C_object_);
+-- + C_object_ = cql_box_stmt(C);
+-- - cql_finalize_stmt(_db_, &C);
+create proc try_boxing(out result object<bar cursor>)
+begin
+  declare C cursor for select * from bar;
+  set result from cursor C;
+end;
+
+-- TEST: simple unbox
+-- + C = cql_unbox_stmt(boxed_cursor);
+-- + cql_set_object_ref(&C_object_, boxed_cursor);
+-- + _rc_ = sqlite3_step(C);
+-- + cql_object_release(C_object_);
+-- - cql_finalize_stmt(_db_, &C);
+create proc try_unboxing(boxed_cursor object<bar cursor>)
+begin
+  declare C cursor for boxed_cursor;
+  fetch C;
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

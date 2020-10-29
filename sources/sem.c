@@ -13985,7 +13985,6 @@ static ast_node *sem_find_likeable_from_var_type(ast_node *var) {
   // it has to be a typed object variable
   if (!is_object(var->sem->sem_type) || !var->sem->object_type) {
     report_error(var, "CQL0343: the variable must be of type object<T cursor> where T is a valid shape name", var_name);
-    record_error(var);
     return NULL;
   }
 
@@ -13996,7 +13995,6 @@ static ast_node *sem_find_likeable_from_var_type(ast_node *var) {
   size_t len_tail = strlen(tail);
   if (len < len_tail + 1 || strcmp(tail, object_type + len - len_tail)) {
     report_error(var, "CQL0343: the variable must be of type object<T cursor> where T is a valid shape name", var_name);
-    record_error(var);
     return NULL;
   }
 
@@ -14099,6 +14097,11 @@ static void sem_set_from_cursor(ast_node *ast) {
   ast->sem = cursor_var->sem;
 }
 
+// Here we're going to make a new value cursor using the indicated name for the shape.
+// The name has to be "likeable" meaning it refers to some named thing with a shape
+// such as a table, a view, another cursor, or a procedure that returns a result set.
+// These are the so called "value cursors" in that they have no underlying statement
+// that they move through.  You can just load them up with a row and pass them around.
 static void sem_declare_cursor_like_name(ast_node *ast) {
   Contract(is_ast_declare_cursor_like_name(ast));
   EXTRACT_ANY_NOTNULL(new_cursor_ast, ast->left);
@@ -14107,18 +14110,21 @@ static void sem_declare_cursor_like_name(ast_node *ast) {
   EXTRACT_ANY_NOTNULL(name_ast, like_ast->left);
   EXTRACT_STRING(like_name, name_ast);
 
+  // no duplicates allowed
   if (!sem_verify_legal_variable_name(ast, new_cursor_name)) {
     record_error(new_cursor_ast);
     record_error(ast);
     return;
   }
 
+  // must be a valid shape
   ast_node *found_ast = sem_find_likeable_ast(like_ast);
   if (!found_ast) {
     record_error(ast);
     return;
   }
 
+  // good to go, make our cursor, with storage.
   name_ast->sem = like_ast->sem = found_ast->sem;
   new_cursor_ast->sem = new_sem(SEM_TYPE_STRUCT | SEM_TYPE_VARIABLE | SEM_TYPE_VALUE_CURSOR | SEM_TYPE_AUTO_CURSOR);
   new_cursor_ast->sem->sptr = found_ast->sem->sptr;

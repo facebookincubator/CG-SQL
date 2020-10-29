@@ -550,7 +550,14 @@ static void cg_copy(charbuf *output, CSTR var, sem_t sem_type_var, CSTR value) {
     bprintf(output, "cql_set_blob_ref(&%s, %s);\n", var, value);
   }
   else if (is_object(sem_type_var)) {
-    bprintf(output, "cql_set_object_ref(&%s, %s);\n", var, value);
+    if (var[0] == '*') {
+      // this is just to avoid weird looking &*foo in the output which happens
+      // when the target is an output variable
+      bprintf(output, "cql_set_object_ref(%s, %s);\n", var+1, value);
+    }
+    else {
+      bprintf(output, "cql_set_object_ref(&%s, %s);\n", var, value);
+    }
   }
   else {
     bprintf(output, "%s = %s;\n", var, value);
@@ -562,8 +569,6 @@ static void cg_copy(charbuf *output, CSTR var, sem_t sem_type_var, CSTR value) {
 // We release whatever we're holding and then hammer it with the new value
 // with no upcount using the +1 we were given.
 static void cg_copy_for_create(charbuf *output, CSTR var, sem_t sem_type_var, CSTR value) {
-  Contract(is_create_func(sem_type_var));
-
   if (is_text(sem_type_var)) {
     bprintf(cg_main_output, "%s(%s);\n", rt->cql_string_release, var);
   }
@@ -3080,10 +3085,21 @@ static void cg_declare_cursor(ast_node *ast) {
   EXTRACT_STRING(cursor_name, name_ast);
 
   bool_t out_union_proc = false;
+  bool_t is_boxed = !!(name_ast->sem->sem_type & SEM_TYPE_BOXED);
+  bool_t is_unboxing = is_ast_str(ast->right);
 
   if (is_ast_call_stmt(ast->right)) {
     out_union_proc = has_out_union_stmt_result(ast);
   }
+
+  // only one of these (is boxed makes no sense with out union)
+  Invariant(!out_union_proc || !is_boxed);
+
+  // can't be both of these either
+  Invariant(!out_union_proc || !is_unboxing);
+
+  // unboxing implies is_boxed   a->b <==> (!a | b)
+  Invariant(!is_unboxing || is_boxed);
 
   if (out_union_proc) {
     EXTRACT_STRING(name, ast->right->left);
@@ -3099,7 +3115,11 @@ static void cg_declare_cursor(ast_node *ast) {
   }
   else {
     bprintf(cg_declarations_output, "sqlite3_stmt *%s = NULL;\n", cursor_name);
-    bprintf(cg_cleanup_output, "  cql_finalize_stmt(_db_, &%s);\n", cursor_name);
+
+    if (!is_boxed) {
+      // easy case, no boxing, just finalize on exit.
+      bprintf(cg_cleanup_output, "  cql_finalize_stmt(_db_, &%s);\n", cursor_name);
+    }
   }
 
   if (is_select_stmt(ast->right)) {
@@ -3107,12 +3127,60 @@ static void cg_declare_cursor(ast_node *ast) {
     // or
     // DECLARE [name] CURSOR FOR [explain_stmt]
     EXTRACT_ANY_NOTNULL(select_stmt, ast->right);
+
+    if (is_boxed) {
+      // The next prepare will finalize the statement, we don't want to do that
+      // if the cursor is being handled by boxes. The box downcount will take care of it
+      bprintf(cg_main_output, "%s = NULL;\n", cursor_name);
+    }
     cg_bound_sql_statement(cursor_name, select_stmt, CG_PREPARE|CG_MINIFY_ALIASES);
+  }
+  else if (is_unboxing) {
+    // DECLARE [name] CURSOR FOR [named_box_object]
+
+    CHARBUF_OPEN(box_name);
+    bprintf(cg_main_output, "%s = cql_unbox_stmt(%s);\n", cursor_name, ast->right->sem->name);
+    bprintf(&box_name, "%s_object_", cursor_name);
+    cg_copy(cg_main_output, box_name.ptr, SEM_TYPE_OBJECT, ast->right->sem->name);
+    CHARBUF_CLOSE(box_name);
   }
   else {
     // DECLARE [name] CURSOR FOR [call_stmt]]
+    if (is_boxed) {
+      // The next prepare will finalize the statement, we don't want to do that
+      // if the cursor is being handled by boxes. The box downcount will take care of it
+      bprintf(cg_main_output, "%s = NULL;\n", cursor_name);
+    }
     EXTRACT_NOTNULL(call_stmt, ast->right);
     cg_call_stmt_with_cursor(call_stmt, cursor_name);
+  }
+
+  if (is_boxed) {
+    // An object will control the lifetime of the cursor.  If the cursor is boxed
+    // this is the object reference that will be used.  This way the exit path is
+    // uniform regardless of whether or not the object was in fact boxed in the
+    // control flow.  This is saying that it might be boxed later so we use this
+    // general mechanism for lifetime. The cg_var_decl helper handles cleanup too.
+
+    CHARBUF_OPEN(box_name);
+    bprintf(&box_name, "%s_object_", cursor_name);
+
+    cg_var_decl(cg_declarations_output, SEM_TYPE_OBJECT, box_name.ptr, CG_VAR_DECL_LOCAL);
+
+    // the unbox case gets the object from the unbox operation above, so skip if unboxing
+
+    if (!is_unboxing) {
+      // Note we have to clear the stashed box object and then accept the new box without
+      // increasing the retain count on the new box because it starts with a +1 as usual.
+      // This is a job for cg_copy_for_create!
+
+      CHARBUF_OPEN(box_value);
+      bprintf(&box_value, "cql_box_stmt(%s)", cursor_name);
+      cg_copy_for_create(cg_main_output, box_name.ptr, SEM_TYPE_OBJECT, box_value.ptr);
+      CHARBUF_CLOSE(box_value);
+    }
+
+    CHARBUF_CLOSE(box_name);
   }
 
   if (name_ast->sem->sem_type & SEM_TYPE_AUTO_CURSOR) {
@@ -3125,6 +3193,23 @@ static void cg_declare_cursor(ast_node *ast) {
     cg_var_decl(cg_declarations_output, SEM_TYPE_BOOL | SEM_TYPE_NOTNULL, temp.ptr, CG_VAR_DECL_LOCAL);
     CHARBUF_CLOSE(temp);
   }
+}
+
+// This is the cursor boxing primitive, we'll make an object variable for this cursor here
+// Note since the cursor is boxed its lifetime is already controlled by an object associated
+// with the cursor.  This happens as soon as the cursor is created, however it is created.
+// The codegen system knows that the cursor may be boxed at some point using the SEM_TYPE_BOXED flag
+static void cg_set_from_cursor(ast_node *ast) {
+  Contract(is_ast_set_from_cursor(ast));
+  EXTRACT_ANY_NOTNULL(variable, ast->left);
+  EXTRACT_ANY_NOTNULL(cursor, ast->right);
+  EXTRACT_STRING(cursor_name, cursor);
+  EXTRACT_STRING(var_name, variable);
+
+  CHARBUF_OPEN(value);
+  bprintf(&value, "%s_object_", cursor_name);
+  cg_copy(cg_main_output, var_name, SEM_TYPE_OBJECT, value.ptr);
+  CHARBUF_CLOSE(value);
 }
 
 static void cg_declare_cursor_like(ast_node *name_ast) {
@@ -5306,6 +5391,7 @@ static void cg_c_init(void) {
   STMT_INIT(call_stmt);
   STMT_INIT(declare_vars_type);
   STMT_INIT(assign);
+  STMT_INIT(set_from_cursor);
   STMT_INIT(create_proc_stmt);
   STMT_INIT(declare_proc_stmt);
   STMT_INIT(declare_func_stmt);
@@ -5317,6 +5403,7 @@ static void cg_c_init(void) {
   STMT_INIT(declare_cursor_like_name);
   STMT_INIT(declare_cursor_like_select);
   STMT_INIT(declare_value_cursor);
+
   STMT_INIT(loop_stmt);
   STMT_INIT(fetch_stmt);
   STMT_INIT(fetch_values_stmt);

@@ -1931,7 +1931,7 @@ END;
 
 void obj_proc(cql_object_ref _Nullable *_Nonnull an_object) {
   *(void **)an_object = NULL; // set out arg to non-garbage
-  cql_set_object_ref(&*an_object, NULL);
+  cql_set_object_ref(an_object, NULL);
 
 }
 
@@ -5850,6 +5850,87 @@ cql_int32 ext2_get_f3_value(frag_test_result_set_ref _Nonnull result_set, cql_in
 
 cql_int32 ext2_result_count(frag_test_result_set_ref _Nonnull result_set) {
   return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC try_boxing (OUT result OBJECT<bar CURSOR>)
+BEGIN
+  DECLARE C CURSOR FOR SELECT *
+    FROM bar;
+  SET result FROM CURSOR C;
+END;
+*/
+
+CQL_WARN_UNUSED cql_code try_boxing(sqlite3 *_Nonnull _db_, cql_object_ref _Nullable *_Nonnull result) {
+  cql_code _rc_ = SQLITE_OK;
+  sqlite3_stmt *C = NULL;
+  cql_object_ref C_object_ = NULL;
+  cql_bool _C_has_row_ = 0;
+
+  *(void **)result = NULL; // set out arg to non-garbage
+  C = NULL;
+  _rc_ = cql_prepare(_db_, &C,
+    "SELECT id, name, rate, type, size "
+      "FROM bar");
+  if (_rc_ != SQLITE_OK) goto cql_cleanup;
+  cql_object_release(C_object_);
+  C_object_ = cql_box_stmt(C);
+  cql_set_object_ref(&result, C_object_);
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_object_release(C_object_);
+  return _rc_;
+}
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC try_unboxing (boxed_cursor OBJECT<bar CURSOR>)
+BEGIN
+  DECLARE C CURSOR FOR boxed_cursor;
+  FETCH C;
+END;
+*/
+
+
+typedef struct try_unboxing_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 id;
+  cql_nullable_int64 rate;
+  cql_nullable_int32 type;
+  cql_nullable_double size;
+  cql_string_ref _Nullable name;
+} try_unboxing_C_row;
+
+#define try_unboxing_C_refs_offset cql_offsetof(try_unboxing_C_row, name) // count = 1
+CQL_WARN_UNUSED cql_code try_unboxing(sqlite3 *_Nonnull _db_, cql_object_ref _Nullable boxed_cursor) {
+  cql_code _rc_ = SQLITE_OK;
+  sqlite3_stmt *C = NULL;
+  cql_object_ref C_object_ = NULL;
+  try_unboxing_C_row C_ = { ._refs_count_ = 1, ._refs_offset_ = try_unboxing_C_refs_offset };
+
+  C = cql_unbox_stmt(boxed_cursor);
+  cql_set_object_ref(&C_object_, boxed_cursor);
+  _rc_ = sqlite3_step(C);
+  C_._has_row_ = _rc_ == SQLITE_ROW;
+  cql_multifetch(_rc_, C, 5,
+                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C_.id,
+                 CQL_DATA_TYPE_STRING, &C_.name,
+                 CQL_DATA_TYPE_INT64, &C_.rate,
+                 CQL_DATA_TYPE_INT32, &C_.type,
+                 CQL_DATA_TYPE_DOUBLE, &C_.size);
+  if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) goto cql_cleanup;
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_object_release(C_object_);
+  cql_teardown_row(C_);
+  return _rc_;
 }
 
 // The statement ending at line XXXX

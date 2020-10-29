@@ -2636,5 +2636,82 @@ BEGIN_TEST(rowset_via_union_failed)
 
 END_TEST(rowset_via_union_failed)
 
+BEGIN_TEST(boxing_cursors)
+  declare i integer not null;
+
+  set i := 0;
+  while i < 5
+  begin
+    declare C cursor for 
+      with data(x,y) as (values (1,2), (3,4), (5,6))
+      select * from data;
+
+    declare box object<C cursor>;
+    set box from cursor C;
+    declare D cursor for box;
+
+    fetch C;
+    EXPECT(C.x == 1);
+    EXPECT(C.y == 2);
+
+    fetch D;
+    -- C did not change
+    EXPECT(C.x == 1);
+    EXPECT(C.y == 2);
+    EXPECT(D.x == 3);
+    EXPECT(D.y == 4);
+
+    fetch C;
+    -- C advanced D values held
+    EXPECT(C.x == 5);
+    EXPECT(C.y == 6);
+    EXPECT(D.x == 3);
+    EXPECT(D.y == 4);
+
+    set i := i + 1;
+  end;
+END_TEST(boxing_cursors)
+
+create proc a_few_rows()
+begin
+  with data(x,y) as (values (1,2), (3,4), (5,6))
+  select * from data;
+end;
+
+BEGIN_TEST(boxing_from_call)
+  declare i integer not null;
+
+  set i := 0;
+  while i < 5
+  begin
+    declare C cursor for call a_few_rows();
+
+    declare box object<C cursor>;
+    set box from cursor C;
+    declare D cursor for box;
+
+    fetch C;
+    EXPECT(C.x == 1);
+    EXPECT(C.y == 2);
+
+    fetch D;
+    -- C did not change
+    EXPECT(C.x == 1);
+    EXPECT(C.y == 2);
+    EXPECT(D.x == 3);
+    EXPECT(D.y == 4);
+
+    fetch C;
+    -- C advanced D values held
+    EXPECT(C.x == 5);
+    EXPECT(C.y == 6);
+    EXPECT(D.x == 3);
+    EXPECT(D.y == 4);
+
+    set i := i + 1;
+  end;
+END_TEST(boxing_from_call)
+
+END_SUITE()
 
 END_SUITE()

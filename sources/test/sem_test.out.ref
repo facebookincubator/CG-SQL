@@ -48642,7 +48642,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0343: the variable must be of type
     | {stmt_list}: err
       | {declare_cursor}: err
         | {name C}
-        | {name box}: err
+        | {name box}: box: object variable in
 
 The statement ending at line XXXX
 
@@ -48665,7 +48665,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0343: the variable must be of type
     | {stmt_list}: err
       | {declare_cursor}: err
         | {name C}
-        | {name box}: err
+        | {name box}: box: object<bar> variable in
 
 The statement ending at line XXXX
 
