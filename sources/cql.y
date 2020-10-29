@@ -91,6 +91,8 @@ void yyset_lineno(int);
 static void cql_reset_globals(void);
 #endif
 
+#define AST_STR(node) (((str_ast_node *)node)->value)
+
 %}
 
 %define parse.error verbose
@@ -380,6 +382,7 @@ schema_upgrade_version_stmt:
 
 set_stmt:
   SET name ASSIGN expr  { $set_stmt = new_ast_assign($name, $expr); }
+  | SET name[id] FROM CURSOR name[cursor] { $set_stmt = new_ast_set_from_cursor($id, $cursor); }
   ;
 
 version_attrs_opt_recreate:
@@ -636,6 +639,9 @@ version_annotation:
 object_type:
   OBJECT  { $object_type = new_ast_type_object(NULL); }
   | OBJECT '<' name '>'  { $object_type = new_ast_type_object($name); }
+  | OBJECT '<' name CURSOR '>' { 
+    CSTR type = dup_printf("%s CURSOR", AST_STR($name)); 
+    $object_type = new_ast_type_object(new_ast_str(type)); }
   ;
 
 data_type:
@@ -1432,6 +1438,7 @@ declare_stmt:
   | DECLARE name CURSOR FETCH FROM call_stmt  { $declare_stmt = new_ast_declare_value_cursor($name, $call_stmt); }
   | DECLARE name[n1] CURSOR LIKE name[n2]  { $declare_stmt = new_ast_declare_cursor_like_name($n1, new_ast_like($n2, NULL)); }
   | DECLARE name CURSOR LIKE select_stmt  { $declare_stmt = new_ast_declare_cursor_like_select($name, $select_stmt); }
+  | DECLARE name[id] CURSOR_FOR name[obj] { $declare_stmt = new_ast_declare_cursor($id, $obj); }
   ;
 
 call_stmt:
@@ -1548,11 +1555,11 @@ begin_trans_stmt:
   ;
 
 rollback_trans_stmt:
-  ROLLBACK TRANSACTION  { 
+  ROLLBACK TRANSACTION  {
       $rollback_trans_stmt = new_ast_rollback_trans_stmt(NULL); }
-  | ROLLBACK TRANSACTION TO SAVEPOINT name  { 
+  | ROLLBACK TRANSACTION TO SAVEPOINT name  {
       $rollback_trans_stmt = new_ast_rollback_trans_stmt($name); }
-  | ROLLBACK TRANSACTION TO SAVEPOINT AT_PROC  { 
+  | ROLLBACK TRANSACTION TO SAVEPOINT AT_PROC  {
       $rollback_trans_stmt = new_ast_rollback_trans_stmt(new_ast_str("@PROC")); }
   ;
 
@@ -1561,9 +1568,9 @@ commit_trans_stmt:
   ;
 
 savepoint_stmt:
-  SAVEPOINT name  { 
+  SAVEPOINT name  {
     $savepoint_stmt = new_ast_savepoint_stmt($name); }
-  | SAVEPOINT AT_PROC { 
+  | SAVEPOINT AT_PROC {
     $savepoint_stmt = new_ast_savepoint_stmt(new_ast_str("@PROC")); }
   ;
 

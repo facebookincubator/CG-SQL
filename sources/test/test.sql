@@ -1092,6 +1092,12 @@ begin
   rollback transaction to savepoint @proc;
 end;
 
+declare obj object<foo cursor>;
+
+declare C cursor for obj;
+
+set X from cursor C;
+
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 
 # 1 "long/path/I/do/not/like"
@@ -1099,4 +1105,3 @@ end;
 set file := @FILE('path/');  -- take starting at path
 set file := @FILE('');  -- keep the whole string
 set file := @FILE('xxxx');  -- pattern not found, keep it all
-

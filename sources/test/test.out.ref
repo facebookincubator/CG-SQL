@@ -1157,6 +1157,12 @@ BEGIN
   ROLLBACK TRANSACTION TO SAVEPOINT @PROC;
 END;
 
+DECLARE obj OBJECT<foo CURSOR>;
+
+DECLARE C CURSOR FOR obj;
+
+SET X FROM CURSOR C;
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

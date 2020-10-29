@@ -2502,10 +2502,19 @@ static void gen_declare_vars_type(ast_node *ast) {
 static void gen_declare_cursor(ast_node *ast) {
   Contract(is_ast_declare_cursor(ast));
   EXTRACT_STRING(name, ast->left);
-  EXTRACT_ANY_NOTNULL(stmt, ast->right);
+  EXTRACT_ANY_NOTNULL(source, ast->right);
 
   gen_printf("DECLARE %s CURSOR FOR ", name);
-  gen_one_stmt(stmt);
+
+  if (is_ast_str(source)) {
+    // The unboxing case gives a name rather than a statement
+    EXTRACT_STRING(var_name, ast->right);
+    gen_printf("%s", var_name);
+  }
+  else {
+    // The two statement cases are unified
+    gen_one_stmt(source);
+  }
 }
 
 static void gen_declare_cursor_like_name(ast_node *ast) {
@@ -2533,6 +2542,14 @@ static void gen_declare_value_cursor(ast_node *ast) {
 
   gen_printf("DECLARE %s CURSOR FETCH FROM ", name);
   gen_one_stmt(stmt);
+}
+
+static void gen_set_from_cursor(ast_node *ast) {
+  Contract(is_ast_set_from_cursor(ast));
+  EXTRACT_STRING(var_name, ast->left);
+  EXTRACT_STRING(cursor_name, ast->right);
+
+  gen_printf("SET %s FROM CURSOR %s", var_name, cursor_name);
 }
 
 static void gen_fetch_stmt(ast_node *ast) {
@@ -2970,6 +2987,7 @@ cql_noexport void gen_init() {
   STMT_INIT(call_stmt);
   STMT_INIT(declare_vars_type);
   STMT_INIT(assign);
+  STMT_INIT(set_from_cursor);
   STMT_INIT(create_proc_stmt);
   STMT_INIT(trycatch_stmt);
   STMT_INIT(throw_stmt);
