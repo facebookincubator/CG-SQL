@@ -48559,3 +48559,356 @@ SET an_int := ( SELECT length("x") );
       | {select_limit}
         | {select_offset}
 
+The statement ending at line XXXX
+
+CREATE PROC cursor_box (OUT B OBJECT<bar CURSOR>)
+BEGIN
+  DECLARE C CURSOR FOR SELECT *
+    FROM bar;
+  SET B FROM CURSOR C;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name cursor_box}: ok dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: B: object<bar CURSOR> variable out
+    |   | {out}
+    |   | {param_detail}: B: object<bar CURSOR> variable out
+    |     | {name B}: B: object<bar CURSOR> variable out
+    |     | {type_object}: object<bar CURSOR>
+    |       | {name bar CURSOR}
+    | {stmt_list}: ok
+      | {declare_cursor}: C: select: { id: integer notnull, name: text, rate: longint } variable
+      | | {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable boxed
+      | | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
+      |   | {select_core_list}: select: { id: integer notnull, name: text, rate: longint }
+      |   | | {select_core}: select: { id: integer notnull, name: text, rate: longint }
+      |   |   | {select_expr_list_con}: select: { id: integer notnull, name: text, rate: longint }
+      |   |     | {select_expr_list}: select: { id: integer notnull, name: text, rate: longint }
+      |   |     | | {star}: select: { id: integer notnull, name: text, rate: longint }
+      |   |     | {select_from_etc}: TABLE { bar: bar }
+      |   |       | {table_or_subquery_list}: TABLE { bar: bar }
+      |   |       | | {table_or_subquery}: TABLE { bar: bar }
+      |   |       |   | {name bar}: TABLE { bar: bar }
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {set_from_cursor}: C: select: { id: integer notnull, name: text, rate: longint } variable boxed
+        | {name B}: B: object<bar CURSOR> variable out
+        | {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable
+
+The statement ending at line XXXX
+
+CREATE PROC cursor_unbox (box OBJECT<bar CURSOR>)
+BEGIN
+  DECLARE C CURSOR FOR box;
+END;
+
+  {create_proc_stmt}: ok
+  | {name cursor_unbox}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: box: object<bar CURSOR> variable in
+    |   | {param_detail}: box: object<bar CURSOR> variable in
+    |     | {name box}: box: object<bar CURSOR> variable in
+    |     | {type_object}: object<bar CURSOR>
+    |       | {name bar CURSOR}
+    | {stmt_list}: ok
+      | {declare_cursor}: C: bar: { id: integer notnull, name: text, rate: longint } variable boxed
+        | {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable boxed
+        | {name box}: box: object<bar CURSOR> variable in
+
+The statement ending at line XXXX
+
+CREATE PROC cursor_unbox_untyped (box OBJECT)
+BEGIN
+  DECLARE C CURSOR FOR box;
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0343: the variable must be of type object<T cursor> where T is a valid shape name 'box'
+
+  {create_proc_stmt}: err
+  | {name cursor_unbox_untyped}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: box: object variable in
+    |   | {param_detail}: box: object variable in
+    |     | {name box}: box: object variable in
+    |     | {type_object}: object
+    | {stmt_list}: err
+      | {declare_cursor}: err
+        | {name C}
+        | {name box}: err
+
+The statement ending at line XXXX
+
+CREATE PROC cursor_unbox_not_cursor (box OBJECT<bar>)
+BEGIN
+  DECLARE C CURSOR FOR box;
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0343: the variable must be of type object<T cursor> where T is a valid shape name 'box'
+
+  {create_proc_stmt}: err
+  | {name cursor_unbox_not_cursor}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: box: object<bar> variable in
+    |   | {param_detail}: box: object<bar> variable in
+    |     | {name box}: box: object<bar> variable in
+    |     | {type_object}: object<bar>
+    |       | {name bar}
+    | {stmt_list}: err
+      | {declare_cursor}: err
+        | {name C}
+        | {name box}: err
+
+The statement ending at line XXXX
+
+CREATE PROC cursor_unbox_not_a_type (box OBJECT<not_a_type CURSOR>)
+BEGIN
+  DECLARE C CURSOR FOR box;
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0202: must be a cursor, proc, table, or view 'not_a_type'
+
+  {create_proc_stmt}: err
+  | {name cursor_unbox_not_a_type}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: box: object<not_a_type CURSOR> variable in
+    |   | {param_detail}: box: object<not_a_type CURSOR> variable in
+    |     | {name box}: box: object<not_a_type CURSOR> variable in
+    |     | {type_object}: object<not_a_type CURSOR>
+    |       | {name not_a_type CURSOR}
+    | {stmt_list}: err
+      | {declare_cursor}: err
+        | {name C}
+        | {name box}: err
+
+The statement ending at line XXXX
+
+CREATE PROC cursor_unbox_duplicate (box OBJECT<bar CURSOR>)
+BEGIN
+  DECLARE C CURSOR FOR box;
+  DECLARE C CURSOR FOR box;
+END;
+
+Error at test/sem_test.sql:XXXX : in declare_cursor : CQL0197: duplicate variable name in the same scope 'C'
+
+  {create_proc_stmt}: err
+  | {name cursor_unbox_duplicate}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: box: object<bar CURSOR> variable in
+    |   | {param_detail}: box: object<bar CURSOR> variable in
+    |     | {name box}: box: object<bar CURSOR> variable in
+    |     | {type_object}: object<bar CURSOR>
+    |       | {name bar CURSOR}
+    | {stmt_list}: err
+      | {declare_cursor}: C: bar: { id: integer notnull, name: text, rate: longint } variable boxed
+      | | {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable boxed
+      | | {name box}: box: object<bar CURSOR> variable in
+      | {declare_cursor}: err
+        | {name C}: err
+        | {name box}
+
+The statement ending at line XXXX
+
+CREATE PROC cursor_unbox_not_exists ()
+BEGIN
+  DECLARE C CURSOR FOR box;
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'box'
+
+  {create_proc_stmt}: err
+  | {name cursor_unbox_not_exists}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor}: err
+        | {name C}
+        | {name box}: err
+
+The statement ending at line XXXX
+
+CREATE PROC cursor_box_value (OUT box OBJECT<bar CURSOR>)
+BEGIN
+  DECLARE C CURSOR LIKE bar;
+  SET box FROM CURSOR C;
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0344: the cursor did not originate from a SQLite statement, it only has values 'C'
+
+  {create_proc_stmt}: err
+  | {name cursor_box_value}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: box: object<bar CURSOR> variable out
+    |   | {out}
+    |   | {param_detail}: box: object<bar CURSOR> variable out
+    |     | {name box}: box: object<bar CURSOR> variable out
+    |     | {type_object}: object<bar CURSOR>
+    |       | {name bar CURSOR}
+    | {stmt_list}: err
+      | {declare_cursor_like_name}: C: bar: { id: integer notnull, name: text, rate: longint } variable auto_cursor value_cursor
+      | | {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable auto_cursor value_cursor
+      | | {like}: bar: { id: integer notnull, name: text, rate: longint }
+      |   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
+      | {set_from_cursor}: err
+        | {name box}: box: object<bar CURSOR> variable out
+        | {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable auto_cursor value_cursor
+
+The statement ending at line XXXX
+
+CREATE PROC cursor_box_not_a_shape (OUT box OBJECT<barf CURSOR>)
+BEGIN
+  DECLARE C CURSOR FOR SELECT *
+    FROM bar;
+  SET box FROM CURSOR C;
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0202: must be a cursor, proc, table, or view 'barf'
+
+  {create_proc_stmt}: err
+  | {name cursor_box_not_a_shape}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: err
+    |   | {out}
+    |   | {param_detail}: box: object<barf CURSOR> variable out
+    |     | {name box}: box: object<barf CURSOR> variable out
+    |     | {type_object}: object<barf CURSOR>
+    |       | {name barf CURSOR}
+    | {stmt_list}: err
+      | {declare_cursor}: C: select: { id: integer notnull, name: text, rate: longint } variable
+      | | {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable
+      | | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
+      |   | {select_core_list}: select: { id: integer notnull, name: text, rate: longint }
+      |   | | {select_core}: select: { id: integer notnull, name: text, rate: longint }
+      |   |   | {select_expr_list_con}: select: { id: integer notnull, name: text, rate: longint }
+      |   |     | {select_expr_list}: select: { id: integer notnull, name: text, rate: longint }
+      |   |     | | {star}: select: { id: integer notnull, name: text, rate: longint }
+      |   |     | {select_from_etc}: TABLE { bar: bar }
+      |   |       | {table_or_subquery_list}: TABLE { bar: bar }
+      |   |       | | {table_or_subquery}: TABLE { bar: bar }
+      |   |       |   | {name bar}: TABLE { bar: bar }
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {set_from_cursor}: err
+        | {name box}: box: object<barf CURSOR> variable out
+        | {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable
+
+The statement ending at line XXXX
+
+CREATE PROC cursor_box_wrong_shape (OUT box OBJECT<foo CURSOR>)
+BEGIN
+  DECLARE C CURSOR FOR SELECT *
+    FROM bar;
+  SET box FROM CURSOR C;
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0057: in the cursor and the variable type, all must have the same column count
+
+  {create_proc_stmt}: err
+  | {name cursor_box_wrong_shape}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: box: object<foo CURSOR> variable out
+    |   | {out}
+    |   | {param_detail}: box: object<foo CURSOR> variable out
+    |     | {name box}: box: object<foo CURSOR> variable out
+    |     | {type_object}: object<foo CURSOR>
+    |       | {name foo CURSOR}
+    | {stmt_list}: err
+      | {declare_cursor}: C: select: { id: integer notnull, name: text, rate: longint } variable
+      | | {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable
+      | | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
+      |   | {select_core_list}: select: { id: integer notnull, name: text, rate: longint }
+      |   | | {select_core}: select: { id: integer notnull, name: text, rate: longint }
+      |   |   | {select_expr_list_con}: select: { id: integer notnull, name: text, rate: longint }
+      |   |     | {select_expr_list}: select: { id: integer notnull, name: text, rate: longint }
+      |   |     | | {star}: select: { id: integer notnull, name: text, rate: longint }
+      |   |     | {select_from_etc}: TABLE { bar: bar }
+      |   |       | {table_or_subquery_list}: TABLE { bar: bar }
+      |   |       | | {table_or_subquery}: TABLE { bar: bar }
+      |   |       |   | {name bar}: TABLE { bar: bar }
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {set_from_cursor}: err
+        | {name box}: box: object<foo CURSOR> variable out
+        | {name C}: err
+
+The statement ending at line XXXX
+
+CREATE PROC cursor_box_not_a_cursor (OUT box OBJECT<foo CURSOR>)
+BEGIN
+  SET box FROM CURSOR XYZZY;
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0204: cursor not found 'XYZZY'
+
+  {create_proc_stmt}: err
+  | {name cursor_box_not_a_cursor}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: box: object<foo CURSOR> variable out
+    |   | {out}
+    |   | {param_detail}: box: object<foo CURSOR> variable out
+    |     | {name box}: box: object<foo CURSOR> variable out
+    |     | {type_object}: object<foo CURSOR>
+    |       | {name foo CURSOR}
+    | {stmt_list}: err
+      | {set_from_cursor}: err
+        | {name box}
+        | {name XYZZY}: err
+
+The statement ending at line XXXX
+
+CREATE PROC cursor_box_var_not_found ()
+BEGIN
+  DECLARE C CURSOR FOR SELECT *
+    FROM bar;
+  SET box FROM CURSOR C;
+END;
+
+Error at test/sem_test.sql:XXXX : in set_from_cursor : CQL0173: variable not found 'box'
+
+  {create_proc_stmt}: err
+  | {name cursor_box_var_not_found}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor}: C: select: { id: integer notnull, name: text, rate: longint } variable
+      | | {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable
+      | | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
+      |   | {select_core_list}: select: { id: integer notnull, name: text, rate: longint }
+      |   | | {select_core}: select: { id: integer notnull, name: text, rate: longint }
+      |   |   | {select_expr_list_con}: select: { id: integer notnull, name: text, rate: longint }
+      |   |     | {select_expr_list}: select: { id: integer notnull, name: text, rate: longint }
+      |   |     | | {star}: select: { id: integer notnull, name: text, rate: longint }
+      |   |     | {select_from_etc}: TABLE { bar: bar }
+      |   |       | {table_or_subquery_list}: TABLE { bar: bar }
+      |   |       | | {table_or_subquery}: TABLE { bar: bar }
+      |   |       |   | {name bar}: TABLE { bar: bar }
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {set_from_cursor}: err
+        | {name box}
+        | {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable
+

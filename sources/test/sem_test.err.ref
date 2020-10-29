@@ -850,4 +850,14 @@ Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect numbe
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'length'
 Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'length'
 Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'length'
+Error at test/sem_test.sql:XXXX : in str : CQL0343: the variable must be of type object<T cursor> where T is a valid shape name 'box'
+Error at test/sem_test.sql:XXXX : in str : CQL0343: the variable must be of type object<T cursor> where T is a valid shape name 'box'
+Error at test/sem_test.sql:XXXX : in str : CQL0202: must be a cursor, proc, table, or view 'not_a_type'
+Error at test/sem_test.sql:XXXX : in declare_cursor : CQL0197: duplicate variable name in the same scope 'C'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'box'
+Error at test/sem_test.sql:XXXX : in str : CQL0344: the cursor did not originate from a SQLite statement, it only has values 'C'
+Error at test/sem_test.sql:XXXX : in str : CQL0202: must be a cursor, proc, table, or view 'barf'
+Error at test/sem_test.sql:XXXX : in str : CQL0057: in the cursor and the variable type, all must have the same column count
+Error at test/sem_test.sql:XXXX : in str : CQL0204: cursor not found 'XYZZY'
+Error at test/sem_test.sql:XXXX : in set_from_cursor : CQL0173: variable not found 'box'
 semantic errors present; no code gen.

@@ -11919,3 +11919,108 @@ set _sens := (select length(name) from with_sensitive);
 -- + {call}: integer notnull
 -- - Error
 set an_int := (select length("x"));
+
+-- TEST: box a cursor (success path)
+-- + {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable
+-- + {set_from_cursor}: C: select: { id: integer notnull, name: text, rate: longint } variable boxed
+-- - Error
+create proc cursor_box(out B object<bar cursor>)
+begin
+  declare C cursor for select * from bar;
+  set B from cursor C;
+end;
+
+-- TEST: unbox a cursor (success path)
+-- + {declare_cursor}: C: bar: { id: integer notnull, name: text, rate: longint } variable boxed
+-- + {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable boxed
+-- + {name box}: box: object<bar CURSOR> variable in
+-- - Error
+create proc cursor_unbox(box object<bar cursor>)
+begin
+  declare C cursor for box;
+end;
+
+-- TEST: unbox from an object that has no type spec
+-- + Error % the variable must be of type object<T cursor> where T is a valid shape name 'box'
+-- +1 Error
+create proc cursor_unbox_untyped(box object)
+begin
+  declare C cursor for box;
+end;
+
+-- TEST: unbox from an object that is not marked CURSOR
+-- + Error % the variable must be of type object<T cursor> where T is a valid shape name 'box'
+-- +1 Error
+create proc cursor_unbox_not_cursor(box object<bar>)
+begin
+  declare C cursor for box;
+end;
+
+-- TEST: unbox from an object that has a type spec that isn't a valid shape
+-- + Error % must be a cursor, proc, table, or view 'not_a_type'
+-- +1 Error
+create proc cursor_unbox_not_a_type(box object<not_a_type cursor>)
+begin
+  declare C cursor for box;
+end;
+
+-- TEST: unbox and attempt to redeclare the same cursor
+-- + Error % duplicate variable name in the same scope 'C'
+-- +1 Error
+create proc cursor_unbox_duplicate(box object<bar cursor>)
+begin
+  declare C cursor for box;
+  declare C cursor for box;
+end;
+
+-- TEST: unbox from a variable that does not exist
+-- + Error % name not found 'box'
+-- +1 Error
+create proc cursor_unbox_not_exists()
+begin
+  declare C cursor for box;
+end;
+
+-- TEST: try to box a value cursor
+-- + Error % the cursor did not originate from a SQLite statement, it only has values 'C'
+-- +1 Error
+create proc cursor_box_value(out box object<bar cursor>)
+begin
+  declare C cursor like bar;
+  set box from cursor C;
+end;
+
+-- TEST: try to box but the type isn't a shape
+-- + Error % must be a cursor, proc, table, or view 'barf'
+-- +1 Error
+create proc cursor_box_not_a_shape(out box object<barf cursor>)
+begin
+  declare C cursor for select * from bar;
+  set box from cursor C;
+end;
+
+-- TEST: try to box but the type doesn't match
+-- + Error % in the cursor and the variable type, all must have the same column count
+-- +1 Error
+create proc cursor_box_wrong_shape(out box object<foo cursor>)
+begin
+  declare C cursor for select * from bar;
+  set box from cursor C;
+end;
+
+-- TEST: try to box but the source isnt a cursor
+-- + Error % cursor not found 'XYZZY'
+-- +1 Error
+create proc cursor_box_not_a_cursor(out box object<foo cursor>)
+begin
+  set box from cursor XYZZY;
+end;
+
+-- TEST: try to box but the source isnt a cursor
+-- + Error % variable not found 'box'
+-- +1 Error
+create proc cursor_box_var_not_found()
+begin
+  declare C cursor for select * from bar;
+  set box from cursor C;
+end;

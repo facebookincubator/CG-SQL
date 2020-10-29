@@ -135,6 +135,7 @@ static void sem_opt_where(ast_node *ast);
 static void sem_opt_orderby(ast_node *ast);
 static ast_node *sem_generate_full_column_list(sem_struct *sptr);
 static ast_node *sem_find_likeable_ast(ast_node *like_ast);
+static ast_node *sem_find_likeable_from_var_type(ast_node *var);
 static void sem_opt_filter_clause(ast_node *ast);
 static bool_t sem_validate_identical_text(ast_node *prev_def, ast_node *def, gen_func fn, gen_sql_callbacks *callbacks);
 static bool_t sem_validate_identical_ddl(ast_node *cur, ast_node *prev);
@@ -143,6 +144,7 @@ static void sem_inside_create_proc_stmt(ast_node *ast);
 static void sem_one_stmt(ast_node *stmt);
 static void sem_rewrite_cql_cursor_diff(ast_node *ast);
 static void sem_rewrite_cql_cursor_format(ast_node *ast);
+static void sem_declare_cursor_for_name(ast_node *ast);
 
 static void lazy_free_symtab(void *syms) {
   symtab_delete(syms);
@@ -1294,6 +1296,9 @@ static void get_sem_flags(sem_t sem_type, charbuf *out) {
   }
   if (sem_type & SEM_TYPE_DEPLOYABLE) {
     bprintf(out, " deployable");
+  }
+  if (sem_type & SEM_TYPE_BOXED) {
+    bprintf(out, " boxed");
   }
 }
 
@@ -11632,7 +11637,7 @@ static ast_node *sem_find_likeable_ast(ast_node *like_ast) {
     }
   }
 
-  if (!found_ast) {
+  if (!found_ast || is_error(found_ast)) {
     report_error(like_ast, "CQL0202: must be a cursor, proc, table, or view", like_name);
     goto error;
   }
@@ -13835,7 +13840,7 @@ static void sem_declare_vars_type(ast_node *declare_vars_type) {
       continue;
     }
 
-    variable->sem =  ast->sem = new_sem(sem_type | SEM_TYPE_VARIABLE);
+    variable->sem = ast->sem = new_sem(sem_type | SEM_TYPE_VARIABLE);
     variable->sem->name = name;
     variable->sem->object_type = data_type->sem->object_type;
     symtab_add(current_variables, name, variable);
@@ -13868,7 +13873,11 @@ static void sem_declare_cursor(ast_node *ast) {
 
   sem_t out_union = 0;
 
-  if (is_select_stmt(ast->right)) {
+  if (is_ast_str(ast->right)) {
+    sem_declare_cursor_for_name(ast);
+    return;
+  }
+  else if (is_select_stmt(ast->right)) {
     EXTRACT_ANY_NOTNULL(select_stmt, ast->right);
 
     // DECLARE [name] CURSOR FOR [select_stmt]
@@ -13918,6 +13927,176 @@ static void sem_declare_cursor(ast_node *ast) {
   ast->sem = cursor->sem;
 
   symtab_add(current_variables, name, cursor);
+}
+
+// This is the "unboxing" primitive for cursors.  The idea here is that
+// you have an object variable with a statement in it and you want to
+// make a cursor over that statement.
+static void sem_declare_cursor_for_name(ast_node *ast) {
+  Contract(is_ast_declare_cursor);
+  EXTRACT_ANY_NOTNULL(cursor, ast->left);
+  EXTRACT_ANY_NOTNULL(var, ast->right);
+  EXTRACT_STRING(name, cursor);
+  EXTRACT_STRING(var_name, var);
+
+  // DECLARE cursor_name CURSOR FOR var_name
+
+  if (!sem_verify_legal_variable_name(ast, name)) {
+    record_error(ast->left);
+    record_error(ast);
+    return;
+  }
+
+  // we know it's a simple identifier from the AST shape which was validated above
+  sem_expr(var);
+  if (is_error(var)) {
+    record_error(ast);
+    return;
+  }
+
+  // the indicated type must be a valid shape name (one we could use in LIKE T)
+  ast_node *like_target = sem_find_likeable_from_var_type(var);
+  if (!like_target) {
+    record_error(ast);
+    return;
+  }
+
+  // the cursor is marked as BOXED because there is a boxed object controlling its lifetime
+
+  // SEM_TYPE_STRUCT | SEM_TYPE_VARIABLE <=> it's a cursor
+  cursor->sem = new_sem(SEM_TYPE_STRUCT | SEM_TYPE_VARIABLE | SEM_TYPE_BOXED);
+  cursor->sem->sptr = like_target->sem->sptr;
+  cursor->sem->name = name;
+  ast->sem = cursor->sem;
+
+  symtab_add(current_variables, name, cursor);
+}
+
+// Verify that the indicated variable has a valid cursor type
+// and return the type associated with it.  The rules are:
+//  * the variable must be of type object<T CURSOR>  for some T
+//  * the T part must be a "likeable" expression (i.e. a shape)
+// there is some string massaging to check for and remove the 
+// " CURSOR" and a temporary node is created so we can re-use
+// the usual likeable name check.
+static ast_node *sem_find_likeable_from_var_type(ast_node *var) {
+  CSTR var_name = var->sem->name;
+
+  // it has to be a typed object variable
+  if (!is_object(var->sem->sem_type) || !var->sem->object_type) {
+    report_error(var, "CQL0343: the variable must be of type object<T cursor> where T is a valid shape name", var_name);
+    record_error(var);
+    return NULL;
+  }
+
+  CSTR object_type = var->sem->object_type;
+
+  size_t len = strlen(object_type);
+  CSTR tail = " CURSOR";
+  size_t len_tail = strlen(tail);
+  if (len < len_tail + 1 || strcmp(tail, object_type + len - len_tail)) {
+    report_error(var, "CQL0343: the variable must be of type object<T cursor> where T is a valid shape name", var_name);
+    record_error(var);
+    return NULL;
+  }
+
+  // now we extract just the type name having ignored the " CURSOR" part.
+  CHARBUF_OPEN(tmp);
+  for (int32_t i = 0; i < len - len_tail; i++) {
+    bputc(&tmp, object_type[i]);
+  }
+
+  // We make a string node for the object type (which is itself not in AST here)
+  // so that we can use the standard likeable helpers for error checking
+  AST_REWRITE_INFO_SET(var->lineno, var->filename);
+  ast_node * type_node = new_ast_str(tmp.ptr);
+  AST_REWRITE_INFO_RESET();
+
+  CHARBUF_CLOSE(tmp);
+
+  // the indicated type must be a valid shape name (one we could use in LIKE T)
+  ast_node *like_target = sem_find_likeable_ast(type_node);
+  if (!like_target) {
+    record_error(var);
+    return NULL;
+  }
+
+  return like_target;
+}
+
+// This is the boxing primitive for cursors.  We will take the statement cursor
+// and construct an object variable with a type name that corresponds to the
+// shape of the cursor.  This variable can then be passed around as usual
+// and at a later time you can extract the underlying statement with the
+// unboxing primitive above.  There are a number of things that can go wrong
+// here.  There must be a suitable cursor, a suitable shape, and the shape
+// must exactly match the cursor shape for starters.
+static void sem_set_from_cursor(ast_node *ast) {
+  Contract(is_ast_set_from_cursor(ast));
+  EXTRACT_ANY_NOTNULL(cursor, ast->right);
+  EXTRACT_STRING(cursor_name, cursor);
+  EXTRACT_STRING(var_name, ast->left);
+
+  // DECLARE var_name CURSOR OBJECT<type_name> FROM cursor_name
+
+  // must be a valid cursor
+  sem_cursor(cursor);
+  if (is_error(cursor)) {
+    record_error(ast);
+    return;
+  }
+
+  // SET [name] FROM CURSOR [cursor_name]
+  ast_node *var = find_local_or_global_variable(var_name);
+
+  if (!var) {
+    report_error(ast, "CQL0173: variable not found", var_name);
+    record_error(ast);
+    return;
+  }
+
+  ast->left->sem = var->sem;
+
+  // the indicated type must be a valid shape name (one we could use in LIKE T)
+  ast_node *like_target = sem_find_likeable_from_var_type(var);
+  if (!like_target) {
+    record_error(ast);
+    return;
+  }
+
+  // the cursor has to be a statement cursor
+  if (cursor->sem->sem_type & SEM_TYPE_VALUE_CURSOR) {
+    report_error(cursor,
+       "CQL0344: the cursor did not originate from a SQLite statement, it only has values", cursor->sem->name);
+    record_error(ast);
+    return;
+  }
+
+  // The verification below marks both sides as erroneous if there is a mismatch
+  // but we don't want to mark the original like_target with any errors
+  // so we make a scratch node with the right sptr and pass that.
+  AST_REWRITE_INFO_SET(like_target->lineno, like_target->filename);
+  ast_node *tmp = new_ast_str("scratch");
+  tmp->sem = new_sem(SEM_TYPE_STRUCT);
+  tmp->sem->sptr = like_target->sem->sptr;
+  AST_REWRITE_INFO_RESET();
+
+  sem_verify_identical_columns(cursor, tmp, "in the cursor and the variable type");
+  if (is_error(cursor)) {
+    record_error(ast);
+    return;
+  }
+
+  // Tag the cursor *variable* (i.e. the AST from the original definition site
+  // of the cursor) as a boxed cursor. This is necessary because we need to
+  // have this information available when we process the declaration in codegen
+  // before we see that it was boxed.
+  ast_node *cursor_var = find_local_or_global_variable(cursor->sem->name);
+  Invariant(cursor_var);
+  Invariant(is_cursor(cursor_var->sem->sem_type));
+  sem_add_flags(cursor_var, SEM_TYPE_BOXED);
+
+  ast->sem = cursor_var->sem;
 }
 
 static void sem_declare_cursor_like_name(ast_node *ast) {
@@ -14656,7 +14835,8 @@ static void sem_fetch_stmt(ast_node *ast) {
 
     // Tag the cursor *variable* (i.e. the AST from the original definition site
     // of the cursor) as an auto cursor. This is necessary because we need to
-    // have this information available for any future uses of the cursor.
+    // have this information available during codegen before we see that the
+    // cursor was used in a fetch.  So we leave this breadcrumb.
     ast_node *cursor_var = find_local_or_global_variable(cursor->sem->name);
     Invariant(cursor_var);
     Invariant(is_cursor(cursor_var->sem->sem_type));
@@ -16202,6 +16382,7 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(call_stmt);
   STMT_INIT(declare_vars_type);
   STMT_INIT(assign);
+  STMT_INIT(set_from_cursor);
   STMT_INIT(misc_attrs);
   STMT_INIT(create_proc_stmt);
   STMT_INIT(declare_proc_stmt);

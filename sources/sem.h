@@ -139,7 +139,8 @@ cql_data_decl( bytebuf *recreate_annotations );
 #define SEM_TYPE_VALUE_CURSOR  0x2000000   // set only if SEM_TYPE_AUTO_CURSOR is set and the cursor has no statement
 #define SEM_TYPE_SENSITIVE     0x4000000   // set if the object is privacy sensitive
 #define SEM_TYPE_DEPLOYABLE    0x8000000   // set if the object is a deployable region
-#define SEM_TYPE_FLAGS         0xFFFFF00   // all the flag bits we have so far
+#define SEM_TYPE_BOXED        0x10000000   // set if a cursor's lifetime is managed by a box object
+#define SEM_TYPE_FLAGS        0x1FFFFF00   // all the flag bits we have so far
 
 #define SEM_EXPR_CONTEXT_NONE           0x001
 #define SEM_EXPR_CONTEXT_SELECT_LIST    0x002
