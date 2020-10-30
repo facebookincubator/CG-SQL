@@ -4299,14 +4299,16 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
     if (options.test) {
       bprintf(cg_header_output, "\n// The statement ending at line %d\n", stmt->lineno);
     }
-
+    
     // emit comments for most statements: we do not want to require the global proc block
     // just because there was a comment so this is suppressed for "no code" things
     if (!skip_comment) {
       if (options.test) {
         bprintf(out, "\n// The statement ending at line %d\n", stmt->lineno);
+      } else {
+        bprintf(cg_header_output, "\n// Generated from %s:%d\n", stmt->filename, stmt->lineno);
+        bprintf(cg_declarations_output, "\n// Generated from %s:%d\n", stmt->filename, stmt->lineno);
       }
-
       // emit source comment
       bprintf(out, "\n/*\n");
       gen_stmt_level = 1;

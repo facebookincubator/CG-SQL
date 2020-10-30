@@ -891,6 +891,24 @@ misc_cases() {
   fi
 
   on_diff_exit java_classname_noargs.err
+
+  echo 'testing the generated from comments in non-test environment.'
+  if ! ${CQL} --cg "${OUT_DIR}/cg_test_generated_from.h" "${OUT_DIR}/cg_test_generated_from.c" "${OUT_DIR}/cg_test_generated_from.out" --in "${TEST_DIR}/cg_test_generated_from.sql" 2>"${OUT_DIR}/cg_test_generated_from.err"
+  then
+    echo 'ERROR: Compilation failed.'
+    failed
+  fi
+
+  if ! grep "Generated from test/cg_test_generated_from.sql:21" "${OUT_DIR}/cg_test_generated_from.h" >/dev/null
+  then
+    echo Generated from text did not appear in the header output.
+    failed
+  fi
+  if ! grep "Generated from test/cg_test_generated_from.sql:21" "${OUT_DIR}/cg_test_generated_from.c" >/dev/null
+  then
+    echo Generated from text did not appear in the implementation output.
+    failed
+  fi
 }
 
 json_schema_test() {
