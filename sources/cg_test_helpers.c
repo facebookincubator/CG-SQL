@@ -10,6 +10,7 @@
 // This file performs codegen for those procedures
 
 #include "cg_test_helpers.h"
+#include <stdint.h>
 
 #include "ast.h"
 #include "cg_common.h"
@@ -399,6 +400,15 @@ static void find_parent_column(
   }
 }
 
+// make sure a value is within 1 and DUMMY_TEST_INSERT_ROWS
+static int32_t cg_validate_value_range(int32_t value) {
+  if (1 <= value && value <= DUMMY_TEST_INSERT_ROWS) {
+    return value;
+  } else {
+    return (value % DUMMY_TEST_INSERT_ROWS) + 1;
+  }
+}
+
 // Emit a value of a parent column referenced by child column "column_name".
 // It allows the insert statement of a child table to include the column value
 // from the parent table.
@@ -494,8 +504,17 @@ static void cg_dummy_test_populate (charbuf *gen_insert_tables, ast_node *table_
         if (!symtab_find(column_name_cache, column_name)) {
           if (is_referenceable_by_foreign_key(table_ast, column_name) || is_foreign_key(col_type)) {
             CHARBUF_OPEN(str_val);
+            // we do +1 because index value start at zero and we don't want to insert zero as primary key
+            int32_t index_value = row_index + 1;
             if (is_foreign_key(col_type)) {
               cg_parent_column_value(&str_val, table_name, column_name, row_index);
+              if (str_val.used <= 1) {
+                // The parent table does not have explicit dummy info on this column.
+                // In this case the parent table key referenced here was created with default value
+                // between 1 and DUMMY_TEST_INSERT_ROWS. We just need to select one of these default
+                // value.
+                bprintf(&str_val, is_numeric(col_type) ? "%d" : "\'%d\'", cg_validate_value_range(index_value));
+              }
             }
             bprintf(&names, "%s%s", comma, column_name);
             bprintf(&values, "%s", comma);
@@ -504,7 +523,7 @@ static void cg_dummy_test_populate (charbuf *gen_insert_tables, ast_node *table_
             if (str_val.used > 1) {
               bprintf(&values, "%s", str_val.ptr);
             } else {
-              bprintf(&values, is_numeric(col_type) ? "%d" : "\'%d\'", row_index + 1);
+              bprintf(&values, is_numeric(col_type) ? "%d" : "\'%d\'", index_value);
             }
             CHARBUF_CLOSE(str_val);
           }
@@ -652,7 +671,6 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
   CHARBUF_OPEN(gen_populate_tables);
   CHARBUF_OPEN(gen_read_tables);
   CHARBUF_OPEN(gen_declare_funcs);
-  CHARBUF_OPEN(gen_create_indexes);
   CHARBUF_OPEN(gen_drop_indexes);
 
   helper_flags |= DUMMY_TEST;
@@ -662,25 +680,27 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
     Invariant(is_ast_create_table_stmt(table_or_view) || is_ast_create_view_stmt(table_or_view));
     CSTR table_name = get_table_or_view_name(table_or_view);
     bprintf(&gen_drop_tables, "DROP %s IF EXISTS %s;\n", is_ast_create_table_stmt(table_or_view) ? "TABLE" : "VIEW", table_name);
-    cg_emit_index_stmt(table_name, &gen_create_indexes, &gen_drop_indexes, &callbacks);
   }
 
   // reverse the list to get the tables back into the declared order like that we can loop over
   // to emit table creation of parent tables before child tables.
   reverse_list(&info.sorted_tables_ast);
 
-  gen_set_output_buffer(&gen_create_tables);
   for (list_item *item = info.sorted_tables_ast; item; item = item->next) {
     EXTRACT_ANY_NOTNULL(table_or_view, item->ast);
 
+    gen_set_output_buffer(&gen_create_tables);
     gen_statement_with_callbacks(table_or_view, &callbacks);
     bprintf(&gen_create_tables, ";\n");
+
+    CSTR table_name = get_table_or_view_name(table_or_view);
+
+    cg_emit_index_stmt(table_name, &gen_create_tables, &gen_drop_indexes, &callbacks);
 
     if (is_ast_create_table_stmt(table_or_view)) {
       cg_dummy_test_populate(&gen_populate_tables, table_or_view, &value_seed);
     }
 
-    CSTR table_name = get_table_or_view_name(table_or_view);
     bprintf(&gen_read_tables, "\n");
     bprintf(&gen_read_tables, "CREATE PROC test_%s_read_%s()\n", proc_name, table_name);
     bprintf(&gen_read_tables, "BEGIN\n");
@@ -755,15 +775,6 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
   // read tables proc
   bprintf(cg_th_procs, "%s", gen_read_tables.ptr);
 
-  // create indexes proc
-  if (gen_create_indexes.used > 1) {
-    bprintf(cg_th_procs, "\n");
-    bprintf(cg_th_procs, "CREATE PROC test_%s_create_indexes()\n", proc_name);
-    bprintf(cg_th_procs, "BEGIN\n");
-    bindent(cg_th_procs, &gen_create_indexes, 2);
-    bprintf(cg_th_procs, "END;\n");
-  }
-
   // drop indexes proc
   if (gen_drop_indexes.used > 1) {
     bprintf(cg_th_procs, "\n");
@@ -774,7 +785,6 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
   }
 
   CHARBUF_CLOSE(gen_drop_indexes);
-  CHARBUF_CLOSE(gen_create_indexes);
   CHARBUF_CLOSE(gen_declare_funcs);
   CHARBUF_CLOSE(gen_read_tables);
   CHARBUF_CLOSE(gen_populate_tables);
@@ -803,7 +813,7 @@ static bool_t is_column_value_exist(bytebuf *column_values, sem_t column_type, a
         col_type == SEM_TYPE_INTEGER ||
         col_type == SEM_TYPE_REAL ||
         col_type == SEM_TYPE_BOOL) {
- 
+
       bool_t minus_l = is_ast_uminus(l);
       if (minus_l) {
         Contract(is_ast_num(l->left));

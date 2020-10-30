@@ -55,12 +55,32 @@ BEGIN
 END;
 
 -- The statement ending at line XXXX
+CREATE PROC open_sample_proc2()
+BEGIN
+  CREATE TEMP TABLE test_sample_proc2(LIKE sample_proc2);
+END;
+
+CREATE PROC close_sample_proc2()
+BEGIN
+  DROP TABLE test_sample_proc2;
+END;
+
 CREATE PROC insert_sample_proc2(LIKE sample_proc2)
 BEGIN
   INSERT INTO test_sample_proc2 FROM ARGUMENTS;
 END;
 
 -- The statement ending at line XXXX
+CREATE PROC open_sample_proc3()
+BEGIN
+  CREATE TEMP TABLE test_sample_proc3(LIKE sample_proc3);
+END;
+
+CREATE PROC close_sample_proc3()
+BEGIN
+  DROP TABLE test_sample_proc3;
+END;
+
 CREATE PROC select_sample_proc3()
 BEGIN
   SELECT * FROM test_sample_proc3;
@@ -99,6 +119,16 @@ BEGIN
 END;
 
 -- The statement ending at line XXXX
+CREATE PROC open_sample_proc6()
+BEGIN
+  CREATE TEMP TABLE test_sample_proc6(LIKE sample_proc6);
+END;
+
+CREATE PROC close_sample_proc6()
+BEGIN
+  DROP TABLE test_sample_proc6;
+END;
+
 CREATE PROC select_sample_proc6()
 BEGIN
   SELECT * FROM test_sample_proc6;
@@ -139,6 +169,7 @@ BEGIN
     id2 LONG_INT,
     id3 TEXT
   );
+  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
   CREATE TABLE IF NOT EXISTS Aaa(
     dl REAL NOT NULL PRIMARY KEY
   );
@@ -231,17 +262,22 @@ BEGIN
  SELECT * FROM Foo;
 END;
 
-CREATE PROC test_sample_proc7_create_indexes()
-BEGIN
-  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
-END;
-
 CREATE PROC test_sample_proc7_drop_indexes()
 BEGIN
   DROP INDEX IF EXISTS baa_id;
 END;
 
 -- The statement ending at line XXXX
+CREATE PROC open_sample_proc11()
+BEGIN
+  CREATE TEMP TABLE test_sample_proc11(LIKE sample_proc11);
+END;
+
+CREATE PROC close_sample_proc11()
+BEGIN
+  DROP TABLE test_sample_proc11;
+END;
+
 CREATE PROC select_sample_proc11()
 BEGIN
   SELECT * FROM test_sample_proc11;
@@ -265,6 +301,7 @@ BEGIN
     id2 LONG_INT,
     id3 TEXT
   );
+  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
   CREATE TABLE IF NOT EXISTS Aaa(
     dl REAL NOT NULL PRIMARY KEY
   );
@@ -357,11 +394,6 @@ BEGIN
  SELECT * FROM Foo;
 END;
 
-CREATE PROC test_sample_proc13_create_indexes()
-BEGIN
-  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
-END;
-
 CREATE PROC test_sample_proc13_drop_indexes()
 BEGIN
   DROP INDEX IF EXISTS baa_id;
@@ -404,6 +436,7 @@ BEGIN
     id2 LONG_INT,
     id3 TEXT
   );
+  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
   CREATE TABLE IF NOT EXISTS Aaa(
     dl REAL NOT NULL PRIMARY KEY
   );
@@ -496,11 +529,6 @@ BEGIN
  SELECT * FROM Foo;
 END;
 
-CREATE PROC test_sample_proc14_create_indexes()
-BEGIN
-  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
-END;
-
 CREATE PROC test_sample_proc14_drop_indexes()
 BEGIN
   DROP INDEX IF EXISTS baa_id;
@@ -517,11 +545,13 @@ BEGIN
     lable TEXT,
     PRIMARY KEY (id_, seat)
   );
+  CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
   CREATE TABLE IF NOT EXISTS Baa(
     id INTEGER NOT NULL,
     id2 LONG_INT,
     id3 TEXT
   );
+  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
   CREATE TABLE IF NOT EXISTS Aaa(
     dl REAL NOT NULL PRIMARY KEY
   );
@@ -622,16 +652,10 @@ BEGIN
  SELECT * FROM Foo;
 END;
 
-CREATE PROC test_sample_proc15_create_indexes()
-BEGIN
-  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
-  CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
-END;
-
 CREATE PROC test_sample_proc15_drop_indexes()
 BEGIN
-  DROP INDEX IF EXISTS baa_id;
   DROP INDEX IF EXISTS p_id;
+  DROP INDEX IF EXISTS baa_id;
 END;
 
 -- The statement ending at line XXXX
@@ -644,6 +668,7 @@ BEGIN
     id2 LONG_INT,
     id3 TEXT
   );
+  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
   CREATE TABLE IF NOT EXISTS Aaa(
     dl REAL NOT NULL PRIMARY KEY
   );
@@ -727,11 +752,6 @@ BEGIN
  SELECT * FROM Caa;
 END;
 
-CREATE PROC test_sample_proc16_create_indexes()
-BEGIN
-  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
-END;
-
 CREATE PROC test_sample_proc16_drop_indexes()
 BEGIN
   DROP INDEX IF EXISTS baa_id;
@@ -747,6 +767,7 @@ BEGIN
     id2 LONG_INT,
     id3 TEXT
   );
+  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
   CREATE TABLE IF NOT EXISTS Aaa(
     dl REAL NOT NULL PRIMARY KEY
   );
@@ -776,6 +797,7 @@ BEGIN
     lable TEXT,
     PRIMARY KEY (id_, seat)
   );
+  CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
 END;
 
 CREATE PROC test_sample_proc17_create_triggers()
@@ -853,16 +875,10 @@ BEGIN
  SELECT * FROM primary_as_column;
 END;
 
-CREATE PROC test_sample_proc17_create_indexes()
-BEGIN
-  CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
-  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
-END;
-
 CREATE PROC test_sample_proc17_drop_indexes()
 BEGIN
-  DROP INDEX IF EXISTS p_id;
   DROP INDEX IF EXISTS baa_id;
+  DROP INDEX IF EXISTS p_id;
 END;
 
 -- The statement ending at line XXXX
@@ -875,6 +891,7 @@ BEGIN
     id2 LONG_INT,
     id3 TEXT
   );
+  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
   CREATE TABLE IF NOT EXISTS Aaa(
     dl REAL NOT NULL PRIMARY KEY
   );
@@ -958,11 +975,6 @@ BEGIN
  SELECT * FROM Caa;
 END;
 
-CREATE PROC test_sample_proc18_create_indexes()
-BEGIN
-  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
-END;
-
 CREATE PROC test_sample_proc18_drop_indexes()
 BEGIN
   DROP INDEX IF EXISTS baa_id;
@@ -978,6 +990,7 @@ BEGIN
     id2 LONG_INT,
     id3 TEXT
   );
+  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
 END;
 
 CREATE PROC test_sample_proc19_populate_tables()
@@ -996,11 +1009,6 @@ BEGIN
  SELECT * FROM Baa;
 END;
 
-CREATE PROC test_sample_proc19_create_indexes()
-BEGIN
-  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
-END;
-
 CREATE PROC test_sample_proc19_drop_indexes()
 BEGIN
   DROP INDEX IF EXISTS baa_id;
@@ -1016,6 +1024,7 @@ BEGIN
     id2 LONG_INT,
     id3 TEXT
   );
+  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
   CREATE TABLE IF NOT EXISTS Aaa(
     dl REAL NOT NULL PRIMARY KEY
   );
@@ -1099,11 +1108,6 @@ BEGIN
  SELECT * FROM Caa;
 END;
 
-CREATE PROC test_sample_proc20_create_indexes()
-BEGIN
-  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
-END;
-
 CREATE PROC test_sample_proc20_drop_indexes()
 BEGIN
   DROP INDEX IF EXISTS baa_id;
@@ -1119,6 +1123,7 @@ BEGIN
     id2 LONG_INT,
     id3 TEXT
   );
+  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
   CREATE TABLE IF NOT EXISTS Aaa(
     dl REAL NOT NULL PRIMARY KEY
   );
@@ -1145,6 +1150,7 @@ BEGIN
     lable TEXT,
     PRIMARY KEY (id_, seat)
   );
+  CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
   CREATE VIEW IF NOT EXISTS Complex_view AS
   SELECT *
     FROM Caa
@@ -1228,16 +1234,10 @@ BEGIN
  SELECT * FROM Complex_view;
 END;
 
-CREATE PROC test_sample_proc21_create_indexes()
-BEGIN
-  CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
-  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
-END;
-
 CREATE PROC test_sample_proc21_drop_indexes()
 BEGIN
-  DROP INDEX IF EXISTS p_id;
   DROP INDEX IF EXISTS baa_id;
+  DROP INDEX IF EXISTS p_id;
 END;
 
 CREATE PROC open_sample_proc21()
@@ -1260,6 +1260,7 @@ BEGIN
     id2 LONG_INT,
     id3 TEXT
   );
+  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
   CREATE TABLE IF NOT EXISTS Aaa(
     dl REAL NOT NULL PRIMARY KEY
   );
@@ -1286,6 +1287,7 @@ BEGIN
     lable TEXT,
     PRIMARY KEY (id_, seat)
   );
+  CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
   CREATE VIEW IF NOT EXISTS Complex_view AS
   SELECT *
     FROM Caa
@@ -1368,16 +1370,10 @@ BEGIN
  SELECT * FROM Complex_view;
 END;
 
-CREATE PROC test_sample_proc22_create_indexes()
-BEGIN
-  CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
-  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
-END;
-
 CREATE PROC test_sample_proc22_drop_indexes()
 BEGIN
-  DROP INDEX IF EXISTS p_id;
   DROP INDEX IF EXISTS baa_id;
+  DROP INDEX IF EXISTS p_id;
 END;
 
 CREATE PROC open_sample_proc22()
@@ -1400,6 +1396,7 @@ BEGIN
     id2 LONG_INT,
     id3 TEXT
   );
+  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
   CREATE TABLE IF NOT EXISTS Aaa(
     dl REAL NOT NULL PRIMARY KEY
   );
@@ -1426,6 +1423,7 @@ BEGIN
     lable TEXT,
     PRIMARY KEY (id_, seat)
   );
+  CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
   CREATE VIEW IF NOT EXISTS Complex_view AS
   SELECT *
     FROM Caa
@@ -1508,16 +1506,10 @@ BEGIN
  SELECT * FROM Complex_view;
 END;
 
-CREATE PROC test_sample_proc23_create_indexes()
-BEGIN
-  CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
-  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
-END;
-
 CREATE PROC test_sample_proc23_drop_indexes()
 BEGIN
-  DROP INDEX IF EXISTS p_id;
   DROP INDEX IF EXISTS baa_id;
+  DROP INDEX IF EXISTS p_id;
 END;
 
 -- The statement ending at line XXXX
@@ -1530,6 +1522,7 @@ BEGIN
     id2 LONG_INT,
     id3 TEXT
   );
+  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
   CREATE TABLE IF NOT EXISTS Aaa(
     dl REAL NOT NULL PRIMARY KEY
   );
@@ -1613,11 +1606,6 @@ BEGIN
  SELECT * FROM Caa;
 END;
 
-CREATE PROC test_sample_proc24_create_indexes()
-BEGIN
-  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
-END;
-
 CREATE PROC test_sample_proc24_drop_indexes()
 BEGIN
   DROP INDEX IF EXISTS baa_id;
@@ -1643,6 +1631,7 @@ BEGIN
     id2 LONG_INT,
     id3 TEXT
   );
+  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
   CREATE TABLE IF NOT EXISTS Aaa(
     dl REAL NOT NULL PRIMARY KEY
   );
@@ -1724,11 +1713,6 @@ END;
 CREATE PROC test_sample_proc25_read_Caa()
 BEGIN
  SELECT * FROM Caa;
-END;
-
-CREATE PROC test_sample_proc25_create_indexes()
-BEGIN
-  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
 END;
 
 CREATE PROC test_sample_proc25_drop_indexes()
@@ -2047,6 +2031,7 @@ BEGIN
     id2 LONG_INT,
     id3 TEXT
   );
+  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
   CREATE TABLE IF NOT EXISTS Aaa(
     dl REAL NOT NULL PRIMARY KEY
   );
@@ -2128,11 +2113,6 @@ END;
 CREATE PROC test_sample_proc311_read_Caa()
 BEGIN
  SELECT * FROM Caa;
-END;
-
-CREATE PROC test_sample_proc311_create_indexes()
-BEGIN
-  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
 END;
 
 CREATE PROC test_sample_proc311_drop_indexes()
@@ -2309,4 +2289,88 @@ END;
 CREATE PROC test_self_ref_proc2_no_data_read_self_ref_table2()
 BEGIN
  SELECT * FROM self_ref_table2;
+END;
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_test_too_many_row_in_child_table_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS test1(
+    id INTEGER PRIMARY KEY
+  );
+  CREATE TABLE IF NOT EXISTS test2(
+    name TEXT,
+    id INTEGER,
+    FOREIGN KEY (id) REFERENCES test1 (id)
+  );
+END;
+
+CREATE PROC test_test_too_many_row_in_child_table_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO test1(id) VALUES(1) @dummy_seed(123);
+  INSERT OR IGNORE INTO test1(id) VALUES(2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO test2(name, id) VALUES('name_1', 1) @dummy_seed(125);
+  INSERT OR IGNORE INTO test2(name, id) VALUES('name_2', 2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO test2(name, id) VALUES('name_3', 2) @dummy_seed(127);
+  INSERT OR IGNORE INTO test2(name, id) VALUES('name_4', 1) @dummy_seed(128) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_test_too_many_row_in_child_table_drop_tables()
+BEGIN
+  DROP TABLE IF EXISTS test2;
+  DROP TABLE IF EXISTS test1;
+END;
+
+CREATE PROC test_test_too_many_row_in_child_table_read_test1()
+BEGIN
+ SELECT * FROM test1;
+END;
+
+CREATE PROC test_test_too_many_row_in_child_table_read_test2()
+BEGIN
+ SELECT * FROM test2;
+END;
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_test_too_many_row_in_child_table_2_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS test1(
+    id INTEGER PRIMARY KEY
+  );
+  CREATE TABLE IF NOT EXISTS test2(
+    name TEXT,
+    id INTEGER,
+    FOREIGN KEY (id) REFERENCES test1 (id)
+  );
+END;
+
+CREATE PROC test_test_too_many_row_in_child_table_2_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO test1(id) VALUES(90) @dummy_seed(123);
+  INSERT OR IGNORE INTO test1(id) VALUES(91) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO test1(id) VALUES(92) @dummy_seed(125);
+  INSERT OR IGNORE INTO test1(id) VALUES(93) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO test2(id) VALUES(90) @dummy_seed(127);
+  INSERT OR IGNORE INTO test2(id) VALUES(91) @dummy_seed(128) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO test2(id) VALUES(92) @dummy_seed(129);
+  INSERT OR IGNORE INTO test2(id) VALUES(93) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_test_too_many_row_in_child_table_2_drop_tables()
+BEGIN
+  DROP TABLE IF EXISTS test2;
+  DROP TABLE IF EXISTS test1;
+END;
+
+CREATE PROC test_test_too_many_row_in_child_table_2_read_test1()
+BEGIN
+ SELECT * FROM test1;
+END;
+
+CREATE PROC test_test_too_many_row_in_child_table_2_read_test2()
+BEGIN
+ SELECT * FROM test2;
 END;

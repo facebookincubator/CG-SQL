@@ -976,16 +976,39 @@ test_helpers_test() {
     failed
   fi
 
-  echo validating test helpers codegen
+  echo validating test helpers cql codegen
   echo "  computing diffs (empty if none)"
   on_diff_exit cg_test_test_helpers.out
 
   echo running semantic analysis on test helpers output
-  if ! sem_check --sem --print --in "${TEST_DIR}/cg_test_test_helpers.ref" >/dev/null 2>"${OUT_DIR}/cg_test_test_helpers.err"
+  if ! ${CQL} --sem --print --in "${OUT_DIR}/cg_test_test_helpers.out" >/dev/null 2>"${OUT_DIR}/cg_test_test_helpers.err"
   then
      echo "CQL semantic analysis returned unexpected error code"
      cat "${OUT_DIR}/cg_test_test_helpers.err"
      failed
+  fi
+
+  echo build test helpers c codegen
+  if ! ${CQL} --test --dev --cg "${OUT_DIR}/test_helpers.h" "${OUT_DIR}/test_helpers.c" --in "${OUT_DIR}/cg_test_test_helpers.out" 2>"${OUT_DIR}/cg_test_test_helpers.err"
+  then
+    echo "ERROR:"
+    cat "${OUT_DIR}/cg_test_test_helpers.err"
+    failed
+  fi
+
+  echo compile test helpers c code
+  if ! do_make test_helpers_test
+  then
+    echo build failed
+    failed
+  fi
+
+  echo run test helpers in c
+  if ! "./${OUT_DIR}/test_helpers_test" >/dev/null 2>"${OUT_DIR}/cg_test_test_helpers.err"
+  then
+    echo "${OUT_DIR}/test_helpers_test returned a failure code"
+    cat "${OUT_DIR}/cg_test_test_helpers.err"
+    failed
   fi
 }
 

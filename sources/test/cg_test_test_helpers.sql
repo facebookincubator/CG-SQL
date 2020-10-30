@@ -143,7 +143,7 @@ end;
 -- TEST: dummy_insert only
 -- + %DECLARE PROC sample_proc2 () (id INTEGER NOT NULL, dl REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);%
 -- + %INSERT INTO test_sample_proc2 FROM ARGUMENTS;%
-@attribute(cql:autotest=(dummy_insert))
+@attribute(cql:autotest=(dummy_table, dummy_insert))
 create proc sample_proc2()
 begin
   select * from Foo;
@@ -152,7 +152,7 @@ end;
 -- TEST: dummy_select only
 -- + %DECLARE PROC sample_proc3 () (id INTEGER NOT NULL, dl REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);%
 -- + %SELECT * FROM test_sample_proc3;%
-@attribute(cql:autotest=(dummy_select))
+@attribute(cql:autotest=(dummy_table, dummy_select))
 create proc sample_proc3()
 begin
   select * from Foo;
@@ -184,7 +184,7 @@ end;
 -- + %DECLARE PROC sample_proc6 () (id INTEGER NOT NULL);%
 -- + %INSERT INTO test_sample_proc6 FROM ARGUMENTS;%
 -- + %SELECT * FROM test_sample_proc6;%
-@attribute(cql:autotest=(dummy_select, dummy_insert))
+@attribute(cql:autotest=(dummy_table, dummy_select, dummy_insert))
 create proc sample_proc6()
 begin
   select id from Foo;
@@ -202,7 +202,6 @@ end;
 -- + CREATE PROC test_sample_proc7_read_Baa()
 -- + CREATE PROC test_sample_proc7_read_Caa()
 -- + CREATE PROC test_sample_proc7_read_Foo()
--- + CREATE PROC test_sample_proc7_create_indexes()
 -- + CREATE PROC test_sample_proc7_drop_indexes()
 @attribute(cql:autotest=(dummy_table, dummy_insert, dummy_select, dummy_test))
 create proc sample_proc7()
@@ -212,7 +211,7 @@ end;
 
 -- TEST: Proc has fetch_result instead of result_set
 -- + %SELECT * FROM test_sample_proc11;%
-@attribute(cql:autotest=(dummy_select))
+@attribute(cql:autotest=(dummy_table, dummy_select))
 create proc sample_proc11()
 begin
   DECLARE curs CURSOR FOR SELECT id FROM FOO;
@@ -247,7 +246,6 @@ end;
 -- + CREATE PROC test_sample_proc13_read_Baa()
 -- + CREATE PROC test_sample_proc13_read_Caa()
 -- + CREATE PROC test_sample_proc13_read_Foo()
--- + CREATE PROC test_sample_proc13_create_indexes()
 -- + CREATE PROC test_sample_proc13_drop_indexes()
 @attribute(cql:autotest=(dummy_test, dummy_table, dummy_insert, dummy_select, dummy_result_set))
 create proc sample_proc13()
@@ -263,7 +261,6 @@ end;
 -- + CREATE PROC test_sample_proc14_read_Baa()
 -- + CREATE PROC test_sample_proc14_read_Caa()
 -- + CREATE PROC test_sample_proc14_read_Foo()
--- + CREATE PROC test_sample_proc14_create_indexes()
 -- + CREATE PROC test_sample_proc14_drop_indexes()
 @attribute(cql:autotest=(dummy_test))
 create proc sample_proc14()
@@ -276,7 +273,6 @@ end;
 -- + CREATE PROC test_sample_proc15_populate_tables()
 -- + CREATE PROC test_sample_proc15_read_primary_as_column()
 -- + CREATE PROC test_sample_proc15_read_foo()
--- + CREATE PROC test_sample_proc15_create_indexes()
 -- + CREATE PROC test_sample_proc15_drop_indexes()
 @attribute(cql:autotest=(dummy_test))
 create proc sample_proc15()
@@ -290,7 +286,6 @@ end;
 -- + CREATE PROC test_sample_proc16_read_Caa()
 -- + CREATE PROC test_sample_proc16_read_Baa()
 -- + CREATE PROC test_sample_proc16_read_dbl_table()
--- + CREATE PROC test_sample_proc16_create_indexes()
 -- + CREATE PROC test_sample_proc16_drop_indexes()
 @attribute(cql:autotest=(dummy_test))
 create proc sample_proc16()
@@ -304,7 +299,6 @@ end;
 -- + CREATE PROC test_sample_proc17_read_Caa()
 -- + CREATE PROC test_sample_proc17_read_Baa()
 -- + CREATE PROC test_sample_proc17_read_primary_as_column()
--- + CREATE PROC test_sample_proc17_create_indexes()
 -- + CREATE PROC test_sample_proc17_drop_indexes()
 @attribute(cql:autotest=(dummy_test))
 create proc sample_proc17()
@@ -320,7 +314,6 @@ end;
 -- + CREATE PROC test_sample_proc18_drop_tables()
 -- + CREATE PROC test_sample_proc18_read_Caa()
 -- + CREATE PROC test_sample_proc18_read_Baa()
--- + CREATE PROC test_sample_proc18_create_indexes()
 -- + CREATE PROC test_sample_proc18_drop_indexes()
 @attribute(cql:autotest=(dummy_test))
 create proc sample_proc18()
@@ -332,7 +325,6 @@ end;
 -- + CREATE PROC test_sample_proc19_create_tables()
 -- + CREATE PROC test_sample_proc19_populate_tables()
 -- + CREATE PROC test_sample_proc19_read_Baa()
--- + CREATE PROC test_sample_proc19_create_indexes()
 -- + CREATE PROC test_sample_proc19_drop_indexes()
 @attribute(cql:autotest=(dummy_test))
 create proc sample_proc19()
@@ -349,7 +341,6 @@ end;
 -- + CREATE PROC test_sample_proc20_populate_tables()
 -- + CREATE PROC test_sample_proc20_read_Caa()
 -- + CREATE PROC test_sample_proc20_read_Baa()
--- + CREATE PROC test_sample_proc20_create_indexes()
 -- + CREATE PROC test_sample_proc20_drop_indexes()
 @attribute(cql:autotest=(dummy_test))
 create proc sample_proc20()
@@ -386,7 +377,6 @@ end;
 -- + CREATE PROC test_sample_proc21_read_Baa()
 -- + CREATE PROC test_sample_proc21_read_Complex_view()
 -- + CREATE PROC test_sample_proc21_read_primary_as_column()
--- + CREATE PROC test_sample_proc21_create_indexes()
 -- + CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
 -- + CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
 -- + CREATE PROC test_sample_proc21_drop_indexes()
@@ -426,7 +416,6 @@ end;
 -- + CREATE PROC test_sample_proc22_read_Baa()
 -- + CREATE PROC test_sample_proc22_read_Complex_view()
 -- + CREATE PROC test_sample_proc22_read_primary_as_column()
--- + CREATE PROC test_sample_proc22_create_indexes()
 -- + CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
 -- + CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
 -- + CREATE PROC test_sample_proc22_drop_indexes()
@@ -452,9 +441,8 @@ end;
 -- + INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('2', '2')
 -- + INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1')
 -- + INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2')
--- + INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(1, 1, 1, '1', 1)
 -- + INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(2, 2, 2, '2', 2)
--- + CREATE PROC test_sample_proc23_create_indexes()
+-- + INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(1, 1, 1, '1', 1)
 -- + CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
 -- + CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
 -- + CREATE PROC test_sample_proc23_drop_indexes()
@@ -478,7 +466,6 @@ end;
 -- + INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2')
 -- + INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(1, 1, 777.0, 'Chris', 1)
 -- + INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(2, 2, 777.0, 'Chris', 2)
--- + CREATE PROC test_sample_proc24_create_indexes()
 -- + CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
 -- + CREATE PROC test_sample_proc24_drop_indexes()
 -- + DROP INDEX IF EXISTS baa_id;
@@ -493,7 +480,6 @@ end;
 -- + INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2')
 -- + INSERT OR IGNORE INTO Caa(uid, id, dl, name, num) VALUES(777.0, 1, 1, '1', 1)
 -- + INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(2, 2, 777.0, '2', 2)
--- + CREATE PROC test_sample_proc25_create_indexes()
 -- + CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
 -- + CREATE PROC test_sample_proc25_drop_indexes()
 -- + DROP INDEX IF EXISTS baa_id;
@@ -766,4 +752,66 @@ end;
 create proc self_ref_proc2_no_data()
 begin
   select * from self_ref_table2;
+end;
+
+-- TEST:
+create table test1(
+  id int primary key
+);
+create table test2(
+  name text,
+  id int,
+  foreign key (id) references test1(id)
+);
+
+-- TEST: test too many row in the child table compare to the parent table.
+-- + INSERT OR IGNORE INTO test1(id) VALUES(1) @dummy_seed(123);
+-- + INSERT OR IGNORE INTO test1(id) VALUES(2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+-- + INSERT OR IGNORE INTO test2(name, id) VALUES('name_1', 1) @dummy_seed(125);
+-- + INSERT OR IGNORE INTO test2(name, id) VALUES('name_2', 2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+-- + INSERT OR IGNORE INTO test2(name, id) VALUES('name_3', 2) @dummy_seed(127);
+-- + INSERT OR IGNORE INTO test2(name, id) VALUES('name_4', 1) @dummy_seed(128) @dummy_nullables @dummy_defaults;
+@attribute(
+  cql:autotest=(
+    (dummy_test,
+      (test2,
+        (name),
+        ('name_1'),
+        ('name_2'),
+        ('name_3'),
+        ('name_4')
+      )
+    )
+  )
+)
+create proc test_too_many_row_in_child_table()
+begin
+  select * from test2;
+end;
+
+-- TEST: test too many row in the child table compare to the parent table with foreign key defined.
+-- + INSERT OR IGNORE INTO test1(id) VALUES(90) @dummy_seed(123);
+-- + INSERT OR IGNORE INTO test1(id) VALUES(91) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+-- + INSERT OR IGNORE INTO test1(id) VALUES(92) @dummy_seed(125);
+-- + INSERT OR IGNORE INTO test1(id) VALUES(93) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+-- + INSERT OR IGNORE INTO test2(id) VALUES(90) @dummy_seed(127);
+-- + INSERT OR IGNORE INTO test2(id) VALUES(91) @dummy_seed(128) @dummy_nullables @dummy_defaults;
+-- + INSERT OR IGNORE INTO test2(id) VALUES(92) @dummy_seed(129);
+-- + INSERT OR IGNORE INTO test2(id) VALUES(93) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+@attribute(
+  cql:autotest=(
+    (dummy_test,
+      (test2,
+        (id),
+        (90),
+        (91),
+        (92),
+        (93)
+      )
+    )
+  )
+)
+create proc test_too_many_row_in_child_table_2()
+begin
+  select * from test2;
 end;
