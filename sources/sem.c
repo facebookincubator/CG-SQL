@@ -4364,10 +4364,16 @@ static void sem_expr_cast(ast_node *ast, CSTR cstr) {
 
   sem_data_type_column(data_type);
 
-  if (CURRENT_EXPR_CONTEXT_IS(SEM_EXPR_CONTEXT_NONE)) {
-    report_error(ast, "CQL0073: CAST may only appear in the context of SQL statement", NULL);
-    record_error(ast);
-    return;
+  // We allow conversion between numeric types without going to SQLite, the text conversions
+  // are crazy complex and basically impossible to clone so you have to do (select cast(...))
+  // for those.
+
+  if (!is_numeric(data_type->sem->sem_type) || !is_numeric(expr->sem->sem_type)) {
+    if (CURRENT_EXPR_CONTEXT_IS(SEM_EXPR_CONTEXT_NONE)) {
+      report_error(ast, "CQL0073: CAST may only appear in the context of SQL statement", NULL);
+      record_error(ast);
+      return;
+    }
   }
 
   sem_t combined_flags = not_nullable_flag(expr->sem->sem_type) | sensitive_flag(expr->sem->sem_type);

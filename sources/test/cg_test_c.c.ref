@@ -4,6 +4,7 @@
 #pragma clang diagnostic ignored "-Wbitwise-op-parentheses"
 #pragma clang diagnostic ignored "-Wshift-op-parentheses"
 #pragma clang diagnostic ignored "-Wlogical-not-parentheses"
+#pragma clang diagnostic ignored "-Wliteral-conversion"
 extern CQL_WARN_UNUSED cql_code with_result_set(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_);
 extern CQL_WARN_UNUSED cql_code select_from_view(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_);
 extern CQL_WARN_UNUSED cql_code get_data(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_, cql_string_ref _Nonnull name_, cql_int32 id_);
@@ -5931,6 +5932,278 @@ cql_cleanup:
   cql_object_release(C_object_);
   cql_teardown_row(C_);
   return _rc_;
+}
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC local_cast_int_notnull ()
+BEGIN
+  DECLARE x INTEGER NOT NULL;
+  SET x := CAST(3.2 AS INTEGER);
+END;
+*/
+
+void local_cast_int_notnull(void) {
+  cql_int32 x = 0;
+
+  x = ((cql_int32)(3.2));
+
+cql_cleanup:
+  ; // label requires some statement
+}
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC local_cast_int ()
+BEGIN
+  DECLARE x INTEGER;
+  DECLARE r REAL;
+  SET r := 3.2;
+  SET x := CAST(r AS INTEGER);
+END;
+*/
+
+void local_cast_int(void) {
+  cql_nullable_int32 x;
+  cql_set_null(x);
+  cql_nullable_double r;
+  cql_set_null(r);
+
+  cql_set_notnull(r, 3.2);
+  cql_set_nullable(x, r.is_null, ((cql_int32)(r.value)));
+
+cql_cleanup:
+  ; // label requires some statement
+}
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC local_cast_long_notnull ()
+BEGIN
+  DECLARE x LONG_INT NOT NULL;
+  SET x := CAST(3.2 AS LONG_INT);
+END;
+*/
+
+void local_cast_long_notnull(void) {
+  cql_int64 x = 0;
+
+  x = ((cql_int64)(3.2));
+
+cql_cleanup:
+  ; // label requires some statement
+}
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC local_cast_long ()
+BEGIN
+  DECLARE x LONG_INT;
+  DECLARE r REAL;
+  SET r := 3.2;
+  SET x := CAST(r AS LONG_INT);
+END;
+*/
+
+void local_cast_long(void) {
+  cql_nullable_int64 x;
+  cql_set_null(x);
+  cql_nullable_double r;
+  cql_set_null(r);
+
+  cql_set_notnull(r, 3.2);
+  cql_set_nullable(x, r.is_null, ((cql_int64)(r.value)));
+
+cql_cleanup:
+  ; // label requires some statement
+}
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC local_cast_real_notnull ()
+BEGIN
+  DECLARE x REAL NOT NULL;
+  SET x := CAST(3 AS REAL);
+END;
+*/
+
+void local_cast_real_notnull(void) {
+  cql_double x = 0;
+
+  x = ((cql_double)(3));
+
+cql_cleanup:
+  ; // label requires some statement
+}
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC local_cast_real ()
+BEGIN
+  DECLARE x REAL;
+  DECLARE r INTEGER;
+  SET r := 3;
+  SET x := CAST(r AS REAL);
+END;
+*/
+
+void local_cast_real(void) {
+  cql_nullable_double x;
+  cql_set_null(x);
+  cql_nullable_int32 r;
+  cql_set_null(r);
+
+  cql_set_notnull(r, 3);
+  cql_set_nullable(x, r.is_null, ((cql_double)(r.value)));
+
+cql_cleanup:
+  ; // label requires some statement
+}
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC local_cast_bool_notnull ()
+BEGIN
+  DECLARE x BOOL NOT NULL;
+  SET x := CAST(3.2 AS BOOL);
+END;
+*/
+
+void local_cast_bool_notnull(void) {
+  cql_bool x = 0;
+
+  x = ((cql_bool)!!(3.2));
+
+cql_cleanup:
+  ; // label requires some statement
+}
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC local_cast_bool ()
+BEGIN
+  DECLARE x BOOL;
+  DECLARE r REAL;
+  SET r := 3.2;
+  SET x := CAST(r AS BOOL);
+END;
+*/
+
+void local_cast_bool(void) {
+  cql_nullable_bool x;
+  cql_set_null(x);
+  cql_nullable_double r;
+  cql_set_null(r);
+
+  cql_set_notnull(r, 3.2);
+  cql_set_nullable(x, r.is_null, ((cql_bool)!!(r.value)));
+
+cql_cleanup:
+  ; // label requires some statement
+}
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC local_cast_from_bool_notnull ()
+BEGIN
+  DECLARE b BOOL NOT NULL;
+  SET b := 1;
+  DECLARE x REAL NOT NULL;
+  SET x := CAST(b AS REAL);
+END;
+*/
+
+void local_cast_from_bool_notnull(void) {
+  cql_bool b = 0;
+  cql_double x = 0;
+
+  b = 1;
+  x = ((cql_double)!!(b));
+
+cql_cleanup:
+  ; // label requires some statement
+}
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC local_cast_from_bool ()
+BEGIN
+  DECLARE b BOOL;
+  SET b := 1;
+  DECLARE x REAL;
+  SET x := CAST(b AS REAL);
+END;
+*/
+
+void local_cast_from_bool(void) {
+  cql_nullable_bool b;
+  cql_set_null(b);
+  cql_nullable_double x;
+  cql_set_null(x);
+
+  cql_set_notnull(b, 1);
+  cql_set_nullable(x, b.is_null, ((cql_double)!!(b.value)));
+
+cql_cleanup:
+  ; // label requires some statement
+}
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC local_cast_from_bool_no_op_notnull ()
+BEGIN
+  DECLARE x BOOL NOT NULL;
+  DECLARE b BOOL NOT NULL;
+  SET b := 1;
+  SET x := CAST(b AS BOOL);
+END;
+*/
+
+void local_cast_from_bool_no_op_notnull(void) {
+  cql_bool x = 0;
+  cql_bool b = 0;
+
+  b = 1;
+  x = b;
+
+cql_cleanup:
+  ; // label requires some statement
+}
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC local_cast_from_bool_no_op ()
+BEGIN
+  DECLARE b BOOL;
+  SET b := 1;
+  DECLARE x BOOL;
+  SET x := CAST(b AS BOOL);
+END;
+*/
+
+void local_cast_from_bool_no_op(void) {
+  cql_nullable_bool b;
+  cql_set_null(b);
+  cql_nullable_bool x;
+  cql_set_null(x);
+
+  cql_set_notnull(b, 1);
+  cql_set_nullable(x, b.is_null, b.value);
+
+cql_cleanup:
+  ; // label requires some statement
 }
 
 // The statement ending at line XXXX

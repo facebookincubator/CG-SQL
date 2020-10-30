@@ -2572,6 +2572,118 @@ begin
   fetch C;
 end;
 
+-- TEST: numeric cast operation int32
+-- + x = ((cql_int32)(3.2));
+create proc local_cast_int_notnull()
+begin
+  declare x integer not null;
+  set x := cast(3.2 as integer);
+end;
+
+-- TEST: numeric cast operation int32 nullable
+-- + cql_set_nullable(x, r.is_null, ((cql_int32)(r.value)));
+create proc local_cast_int()
+begin
+  declare x integer;
+  declare r real;
+  set r := 3.2;
+  set x := cast(r as integer);
+end;
+
+-- TEST: numeric cast operation int64 nullable
+-- + x = ((cql_int64)(3.2));
+create proc local_cast_long_notnull()
+begin
+  declare x long not null;
+  set x := cast(3.2 as long);
+end;
+
+-- TEST: numeric cast operation int64 nullable
+-- + cql_set_nullable(x, r.is_null, ((cql_int64)(r.value)));
+create proc local_cast_long()
+begin
+  declare x long;
+  declare r real;
+  set r := 3.2;
+  set x := cast(r as long);
+end;
+
+-- TEST: numeric cast operation real
+-- + x = ((cql_double)(3));
+create proc local_cast_real_notnull()
+begin
+  declare x real not null;
+  set x := cast(3 as real);
+end;
+
+-- TEST: numeric cast operation real nullable
+-- + cql_set_nullable(x, r.is_null, ((cql_double)(r.value)));
+create proc local_cast_real()
+begin
+  declare x real;
+  declare r int;
+  set r := 3;
+  set x := cast(r as real);
+end;
+
+-- TEST: numeric cast operation bool (and normalize)
+-- + x = ((cql_bool)!!(3.2));
+create proc local_cast_bool_notnull()
+begin
+  declare x bool not null;
+  set x := cast(3.2 as bool);
+end;
+
+-- TEST: numeric cast operation bool nullable (and normalize)
+-- + cql_set_nullable(x, r.is_null, ((cql_bool)!!(r.value)));
+create proc local_cast_bool()
+begin
+  declare x bool;
+  declare r real;
+  set r := 3.2;
+  set x := cast(r as bool);
+end;
+
+-- TEST: numeric cast operation from bool (normalize b)
+-- + x = ((cql_double)!!(b));
+create proc local_cast_from_bool_notnull()
+begin
+  declare b bool not null;
+  set b := 1;
+  declare x real not null;
+  set x := cast(b as real);
+end;
+
+-- TEST: numeric cast operation from bool nullable (normalize b)
+-- + cql_set_nullable(x, b.is_null, ((cql_double)!!(b.value)));
+create proc local_cast_from_bool()
+begin
+  declare b bool;
+  set b := 1;
+  declare x real;
+  set x := cast(b as real);
+end;
+
+-- TEST: numeric cast operation from bool not nullable (no-op version)
+-- + x = b;
+create proc local_cast_from_bool_no_op_notnull()
+begin
+  declare x bool not null;
+  declare b bool not null;
+  set b := 1;
+  set x := cast(b as bool);
+end;
+
+-- TEST: numeric cast operation from bool nullable (no-op version)
+-- + cql_set_nullable(x, b.is_null, b.value);
+create proc local_cast_from_bool_no_op()
+begin
+  declare b bool;
+  set b := 1;
+  declare x bool;
+  set x := cast(b as bool);
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

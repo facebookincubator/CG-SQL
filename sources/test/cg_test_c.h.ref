@@ -1679,6 +1679,42 @@ extern CQL_WARN_UNUSED cql_code try_boxing(sqlite3 *_Nonnull _db_, cql_object_re
 extern CQL_WARN_UNUSED cql_code try_unboxing(sqlite3 *_Nonnull _db_, cql_object_ref _Nullable boxed_cursor);
 
 // The statement ending at line XXXX
+extern void local_cast_int_notnull(void);
+
+// The statement ending at line XXXX
+extern void local_cast_int(void);
+
+// The statement ending at line XXXX
+extern void local_cast_long_notnull(void);
+
+// The statement ending at line XXXX
+extern void local_cast_long(void);
+
+// The statement ending at line XXXX
+extern void local_cast_real_notnull(void);
+
+// The statement ending at line XXXX
+extern void local_cast_real(void);
+
+// The statement ending at line XXXX
+extern void local_cast_bool_notnull(void);
+
+// The statement ending at line XXXX
+extern void local_cast_bool(void);
+
+// The statement ending at line XXXX
+extern void local_cast_from_bool_notnull(void);
+
+// The statement ending at line XXXX
+extern void local_cast_from_bool(void);
+
+// The statement ending at line XXXX
+extern void local_cast_from_bool_no_op_notnull(void);
+
+// The statement ending at line XXXX
+extern void local_cast_from_bool_no_op(void);
+
+// The statement ending at line XXXX
 extern void end_proc(void);
 
 // The statement ending at line XXXX

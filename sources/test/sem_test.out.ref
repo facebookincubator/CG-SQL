@@ -11559,7 +11559,7 @@ SELECT CAST(1 AS TEXT);
 
 The statement ending at line XXXX
 
-SET X := CAST(5.0 AS INTEGER);
+SET X := CAST(5.0 AS TEXT);
 
 Error at test/sem_test.sql:XXXX : in cast_expr : CQL0073: CAST may only appear in the context of SQL statement
 
@@ -11567,7 +11567,7 @@ Error at test/sem_test.sql:XXXX : in cast_expr : CQL0073: CAST may only appear i
   | {name X}: X: integer variable
   | {cast_expr}: err
     | {dbl 5.0}: real notnull
-    | {type_int}: integer
+    | {type_text}: text
 
 The statement ending at line XXXX
 

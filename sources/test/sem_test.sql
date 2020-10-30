@@ -3221,7 +3221,7 @@ select cast(1 as text);
 -- + Error % CAST may only appear in the context of SQL statement
 -- +1 Error
 -- + {cast_expr}: err
-set X := cast(5.0 as integer);
+set X := cast(5.0 as text);
 
 -- TEST: cast expression with expression error
 -- + Error % string operand not allowed in 'NOT'

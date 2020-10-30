@@ -107,4 +107,16 @@ DECLARE PROC lotsa_columns_no_getters () (id INTEGER NOT NULL, name TEXT, rate L
 DECLARE PROC early_out_rc_cleared (OUT x INTEGER) USING TRANSACTION;
 DECLARE PROC try_boxing (OUT result OBJECT<bar CURSOR>) USING TRANSACTION;
 DECLARE PROC try_unboxing (boxed_cursor OBJECT<bar CURSOR>) USING TRANSACTION;
+DECLARE PROC local_cast_int_notnull ();
+DECLARE PROC local_cast_int ();
+DECLARE PROC local_cast_long_notnull ();
+DECLARE PROC local_cast_long ();
+DECLARE PROC local_cast_real_notnull ();
+DECLARE PROC local_cast_real ();
+DECLARE PROC local_cast_bool_notnull ();
+DECLARE PROC local_cast_bool ();
+DECLARE PROC local_cast_from_bool_notnull ();
+DECLARE PROC local_cast_from_bool ();
+DECLARE PROC local_cast_from_bool_no_op_notnull ();
+DECLARE PROC local_cast_from_bool_no_op ();
 DECLARE PROC end_proc ();

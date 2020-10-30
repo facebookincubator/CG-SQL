@@ -2712,6 +2712,50 @@ BEGIN_TEST(boxing_from_call)
   end;
 END_TEST(boxing_from_call)
 
-END_SUITE()
+BEGIN_TEST(numeric_casts)
+  declare b bool not null;
+  declare i int not null;
+  declare l long not null;
+  declare r real not null;
+  declare b0 bool;
+  declare i0 int;
+  declare l0 long;
+  declare r0 real;
+
+  -- force conversion (not null)
+  set b := cast(7.5 as bool);
+  EXPECT(b == 1);
+  set i := cast(1.9 as integer);
+  EXPECT(i == 1);
+  set l := cast(12.9 as long);
+  EXPECT(l == 12);
+  set r := cast(12 as real);
+  EXPECT(r == 12.0);
+
+  -- null cases
+  EXPECT(cast(b0 as bool) is null);
+  EXPECT(cast(b0 as int) is null);
+  EXPECT(cast(b0 as long) is null);
+  EXPECT(cast(b0 as real) is null);
+
+  -- force conversion (nullable)
+  declare x real;
+  set x := 7.5;
+  set b0 := cast(x as bool);
+  EXPECT(b0 == 1);
+  set x := 1.9;
+  set i0 := cast(x as integer);
+  EXPECT(i0 == 1);
+  set x := 12.9;
+  set l0 := cast(x as long);
+  EXPECT(l0 == 12);
+  set x := 12.0;
+  set r0 := cast(x as real);
+  EXPECT(r0 == 12.0);
+  set l := 12;
+  set r0 := cast(l as real);
+  EXPECT(r0 == 12.0);
+
+END_TEST(numeric_casts)
 
 END_SUITE()

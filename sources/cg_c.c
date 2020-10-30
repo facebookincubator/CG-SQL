@@ -1543,6 +1543,72 @@ static void cg_expr_case(ast_node *case_expr, CSTR str, charbuf *is_null, charbu
   bprintf(cg_main_output, "} while (0);\n");
 }
 
+static void cg_expr_cast(ast_node *cast_expr, CSTR str, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
+  Contract(is_ast_cast_expr(cast_expr));
+
+  sem_t sem_type_result = cast_expr->sem->sem_type;
+  sem_t core_type_result = core_type_of(sem_type_result);
+
+  ast_node *expr = cast_expr->left;
+  sem_t core_type_expr = core_type_of(expr->sem->sem_type);
+
+  CSTR type_text = NULL;
+  CSTR bool_norm = "";
+
+  if (core_type_expr == SEM_TYPE_BOOL) {
+    // convert bool to 0/1
+    bool_norm = "!!";
+  }
+
+  switch (core_type_result) {
+    case SEM_TYPE_INTEGER:
+      type_text = rt->cql_int32;
+      break;
+
+    case SEM_TYPE_LONG_INTEGER:
+      type_text = rt->cql_int64;
+      break;
+
+    case SEM_TYPE_REAL:
+      type_text = rt->cql_double;
+      break;
+
+    case SEM_TYPE_BOOL:
+      // convert to 0/1 as part of conversion
+      bool_norm = "!!"; 
+      type_text = rt->cql_bool;
+      break;
+  }
+
+  Invariant(type_text);  // all other types forbidden by semantic analysis
+
+  CG_RESERVE_RESULT_VAR(cast_expr, sem_type_result);
+  CG_PUSH_EVAL(expr, pri_new);
+  CHARBUF_OPEN(result);
+
+  bprintf(&result, "((%s)%s(%s))", type_text, bool_norm, expr_value.ptr);
+
+  if (core_type_expr == core_type_result) {
+    // no-op cast, just pass through
+    bprintf(is_null, "%s", expr_is_null.ptr);
+    bprintf(value, "%s", expr_value.ptr);
+  }
+  else if (is_not_nullable(sem_type_result)) {
+    // simple cast, use the result with no temporary
+    bprintf(value, "%s", result.ptr);
+    bprintf(is_null, "0");
+  }
+  else {
+    // nullable form, make a result variable and store
+    CG_USE_RESULT_VAR();
+    cg_set_nullable(cg_main_output, result_var.ptr, expr_is_null.ptr, result.ptr);
+  }
+
+  CHARBUF_CLOSE(result);
+  CG_POP_EVAL(expr);
+  CG_CLEANUP_RESULT_VAR();
+}
+
 // A CQL string literal needs to be stored somewhere so it looks like a string_ref.
 // Here is a helper method for creating the name of the literal.  We use
 // some letters from the text of the literal in the variable name to make it
@@ -5280,8 +5346,11 @@ cql_noexport void cg_c_main(ast_node *head) {
   bprintf(&body_file, "#pragma clang diagnostic ignored \"-Wbitwise-op-parentheses\"\n");
   bprintf(&body_file, "#pragma clang diagnostic ignored \"-Wshift-op-parentheses\"\n");
   bprintf(&body_file, "#pragma clang diagnostic ignored \"-Wlogical-not-parentheses\"\n");
+  bprintf(&body_file, "#pragma clang diagnostic ignored \"-Wliteral-conversion\"\n");
+
   bprintf(&body_file, "%s", cg_fwd_ref_output->ptr);
   bprintf(&body_file, "%s", cg_constants_output->ptr);
+
   if (cg_fragments_output->used > 1) {
     bprintf(&body_file, "static const char _fragments_[] = \n%s;\n", cg_fragments_output->ptr);
   }
@@ -5461,6 +5530,7 @@ static void cg_c_init(void) {
   EXPR_INIT(in_pred, cg_expr_in_pred_or_not_in, "IN", C_EXPR_PRI_ROOT);
   EXPR_INIT(not_in, cg_expr_in_pred_or_not_in, "NOT IN", C_EXPR_PRI_ROOT);
   EXPR_INIT(case_expr, cg_expr_case, "CASE", C_EXPR_PRI_ROOT);
+  EXPR_INIT(cast_expr, cg_expr_cast, "CAST", C_EXPR_PRI_ROOT);
 }
 
 cql_noexport void cg_c_cleanup() {
