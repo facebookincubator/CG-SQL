@@ -2992,8 +2992,8 @@ select id from bar where group_concat(name) = 'foo';
 
 -- TEST: strftime basic correct case
 -- - Error
--- + {select_stmt}: select: { _anon: text }
--- + {name strftime}: text
+-- + {select_stmt}: select: { _anon: text notnull }
+-- + {name strftime}: text notnull
 select strftime('%s', 'now');
 
 -- TEST: strftime with a modifier
@@ -3041,8 +3041,8 @@ select strftime('now');
 
 -- TEST: date basic correct case
 -- - Error
--- + {select_stmt}: select: { _anon: text }
--- + {name date}: text
+-- + {select_stmt}: select: { _anon: text notnull }
+-- + {name date}: text notnull
 select date('now');
 
 -- TEST: date with a modifier
@@ -3084,8 +3084,8 @@ select date();
 
 -- TEST: time basic correct case
 -- - Error
--- + {select_stmt}: select: { _anon: text }
--- + {name time}: text
+-- + {select_stmt}: select: { _anon: text notnull }
+-- + {name time}: text notnull
 select time('now');
 
 -- TEST: time with a modifier
@@ -3127,8 +3127,8 @@ select time();
 
 -- TEST: datetime basic correct case
 -- - Error
--- + {select_stmt}: select: { _anon: text }
--- + {name datetime}: text
+-- + {select_stmt}: select: { _anon: text notnull }
+-- + {name datetime}: text notnull
 select datetime('now');
 
 -- TEST: datetime with a modifier
@@ -3170,8 +3170,8 @@ select datetime();
 
 -- TEST: julianday basic correct case
 -- - Error
--- + {select_stmt}: select: { _anon: real }
--- + {name julianday}: real
+-- + {select_stmt}: select: { _anon: real notnull }
+-- + {name julianday}: real notnull
 select julianday('now');
 
 -- TEST: julianday with a modifier

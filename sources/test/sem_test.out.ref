@@ -10623,14 +10623,14 @@ The statement ending at line XXXX
 
 SELECT strftime('%s', 'now');
 
-  {select_stmt}: select: { _anon: text }
-  | {select_core_list}: select: { _anon: text }
-  | | {select_core}: select: { _anon: text }
-  |   | {select_expr_list_con}: select: { _anon: text }
-  |     | {select_expr_list}: select: { _anon: text }
-  |     | | {select_expr}: text
-  |     |   | {call}: text
-  |     |     | {name strftime}: text
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name strftime}: text notnull
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
@@ -10840,14 +10840,14 @@ The statement ending at line XXXX
 
 SELECT date('now');
 
-  {select_stmt}: select: { _anon: text }
-  | {select_core_list}: select: { _anon: text }
-  | | {select_core}: select: { _anon: text }
-  |   | {select_expr_list_con}: select: { _anon: text }
-  |     | {select_expr_list}: select: { _anon: text }
-  |     | | {select_expr}: text
-  |     |   | {call}: text
-  |     |     | {name date}: text
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name date}: text notnull
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
@@ -11015,14 +11015,14 @@ The statement ending at line XXXX
 
 SELECT time('now');
 
-  {select_stmt}: select: { _anon: text }
-  | {select_core_list}: select: { _anon: text }
-  | | {select_core}: select: { _anon: text }
-  |   | {select_expr_list_con}: select: { _anon: text }
-  |     | {select_expr_list}: select: { _anon: text }
-  |     | | {select_expr}: text
-  |     |   | {call}: text
-  |     |     | {name time}: text
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name time}: text notnull
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
@@ -11190,14 +11190,14 @@ The statement ending at line XXXX
 
 SELECT datetime('now');
 
-  {select_stmt}: select: { _anon: text }
-  | {select_core_list}: select: { _anon: text }
-  | | {select_core}: select: { _anon: text }
-  |   | {select_expr_list_con}: select: { _anon: text }
-  |     | {select_expr_list}: select: { _anon: text }
-  |     | | {select_expr}: text
-  |     |   | {call}: text
-  |     |     | {name datetime}: text
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name datetime}: text notnull
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
@@ -11365,14 +11365,14 @@ The statement ending at line XXXX
 
 SELECT julianday('now');
 
-  {select_stmt}: select: { _anon: real }
-  | {select_core_list}: select: { _anon: real }
-  | | {select_core}: select: { _anon: real }
-  |   | {select_expr_list_con}: select: { _anon: real }
-  |     | {select_expr_list}: select: { _anon: real }
-  |     | | {select_expr}: real
-  |     |   | {call}: real
-  |     |     | {name julianday}: real
+  {select_stmt}: select: { _anon: real notnull }
+  | {select_core_list}: select: { _anon: real notnull }
+  | | {select_core}: select: { _anon: real notnull }
+  |   | {select_expr_list_con}: select: { _anon: real notnull }
+  |     | {select_expr_list}: select: { _anon: real notnull }
+  |     | | {select_expr}: real notnull
+  |     |   | {call}: real notnull
+  |     |     | {name julianday}: real notnull
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok

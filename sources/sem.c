@@ -5555,6 +5555,31 @@ static void sem_strftime(ast_node *ast, uint32_t arg_count, bool_t has_format, s
     }
   }
 
+  // Handling the very special case of strftime('now') as returning not null
+  // this is super common.  This is just a format, and the known safe format.
+  if (arg_count == 2 && has_format) {
+    ast_node *first = first_arg(arg_list);
+    ast_node *second = second_arg(arg_list);
+    if (is_ast_str(first) && is_ast_str(second)) {
+       EXTRACT_STRING(arg1, first);
+       EXTRACT_STRING(arg2, second);
+       if (!strcmp(arg1, "'%s'") && !strcmp(arg2, "'now'")) {
+         sem_type |= SEM_TYPE_NOTNULL;
+       }
+    }
+  }
+
+  // the common special case of just a timestring and it's the 'now' literal
+  if (has_format == 0 && arg_count == 1) {
+    ast_node *first = first_arg(arg_list);
+    if (is_ast_str(first)) {
+      EXTRACT_STRING(arg1, first);
+      if (!strcmp(arg1, "'now'")) {
+        sem_type |= SEM_TYPE_NOTNULL;
+      }
+    }
+  }
+
   // Without validating a lot of logic for strftime, we must assume that the
   // result is nullable, as any modifier param may render the result NULL.
   name_ast->sem = ast->sem = new_sem(sem_type);
