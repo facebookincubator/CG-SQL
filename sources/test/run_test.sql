@@ -2566,7 +2566,7 @@ BEGIN_TEST(read_all_types_rowset)
 END_TEST(read_all_types_rowset)
 
 -- make something to fake out CQL so we can call the real fetcher
-DECLARE PROC load_all_types_table_shim() out union 
+DECLARE PROC load_all_types_table_shim() out union
    (b0 BOOL, i0 INTEGER, l0 LONG_INT, d0 REAL, s0 TEXT, bl0 BLOB,
     b1 BOOL NOT NULL, i1 INTEGER NOT NULL, l1 LONG_INT NOT NULL, d1 REAL NOT NULL, s1 TEXT NOT NULL, bl1 BLOB NOT NULL)
     using transaction;
@@ -2612,6 +2612,7 @@ BEGIN_TEST(read_all_types_auto_fetcher)
   EXPECT(C.d1 IS 1);
   EXPECT(C.s1 == "s1_1");
   EXPECT(string_from_blob(C.bl1) == "bl1_1");
+  EXPECT(cql_get_blob_size(C.bl1) == 5);
 
   fetch C;
   EXPECT(not C);

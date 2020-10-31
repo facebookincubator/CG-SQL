@@ -229,6 +229,9 @@ typedef struct rtdata {
   // The type for a blob ref.
   const char *cql_blob_ref;
 
+  // Get size of a blob ref.
+  const char *cql_get_blob_size;
+
   // Adds a reference count to the blob.
   // @param blob The blob to be retained.
   // void cql_blob_retain(cql_blob_ref _Nullable blob);

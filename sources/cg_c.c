@@ -1856,6 +1856,38 @@ static void cg_func_printf(ast_node *call_ast, charbuf *is_null, charbuf *value)
   CG_CLEANUP_RESULT_VAR();
 }
 
+static void cg_func_cql_get_blob_size(ast_node *ast, charbuf*is_null, charbuf *value) {
+  Contract(is_ast_call(ast));
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+  EXTRACT_ANY_NOTNULL(expr, arg_list->left);
+
+  sem_t sem_type_var = name_ast->sem->sem_type;
+
+  CG_RESERVE_RESULT_VAR(ast, sem_type_var);
+  // Evaluate the expression and stow it in a temporary.
+  CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
+  CHARBUF_OPEN(temp);
+
+  // store cql_get_blob_size call in temp. e.g: cql_get_blob_size(expr_value)
+  bprintf(&temp, "%s(%s)", rt->cql_get_blob_size, expr_value.ptr);
+
+  if (is_not_nullable(sem_type_var)) {
+    // The result is known to be not nullable therefore we can store directly the value to the result buff
+    bprintf(is_null, "0");
+    bprintf(value, "%s", temp.ptr);
+  } else {
+    CG_USE_RESULT_VAR();
+    cg_store(cg_main_output, result_var.ptr, sem_type_var, sem_type_var, expr_is_null.ptr, temp.ptr);
+  }
+
+  CHARBUF_CLOSE(temp);
+  CG_POP_EVAL(expr);
+  CG_CLEANUP_RESULT_VAR();
+}
+
 // This is some kind of function call in an expression context.  Look up the method
 // and call one of the cg_func_* workers above.  All arg combos are known to be good
 // because semantic analysis verified them already.
@@ -5492,6 +5524,7 @@ static void cg_c_init(void) {
   FUNC_INIT(coalesce);
   FUNC_INIT(last_insert_rowid);
   FUNC_INIT(printf);
+  FUNC_INIT(cql_get_blob_size);
 
   EXPR_INIT(num, cg_expr_num, "num", C_EXPR_PRI_ROOT);
   EXPR_INIT(str, cg_expr_str, "STR", C_EXPR_PRI_ROOT);

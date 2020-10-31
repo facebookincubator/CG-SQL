@@ -1715,6 +1715,10 @@ extern void local_cast_from_bool_no_op_notnull(void);
 extern void local_cast_from_bool_no_op(void);
 
 // The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
 extern void end_proc(void);
 
 // The statement ending at line XXXX

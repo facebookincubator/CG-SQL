@@ -2684,6 +2684,14 @@ begin
   set x := cast(b as bool);
 end;
 
+-- TEST: test cql_get_blob_size codegen
+-- + cql_set_nullable(l0_nullable, !_tmp_n_blob_1, cql_get_blob_size(_tmp_n_blob_1));
+set l0_nullable := cql_get_blob_size((select blob_var));
+
+-- TEST: test cql_get_blob_size codegen with not null blob
+-- + l2 = cql_get_blob_size(blob_var2);
+set l2 := cql_get_blob_size(blob_var2);
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------
