@@ -5980,6 +5980,15 @@ DECLARE a_nullable TEXT;
 
 The statement ending at line XXXX
 
+DECLARE an_long LONG_INT;
+
+  {declare_vars_type}: longint
+  | {name_list}: an_long: longint variable
+  | | {name an_long}: an_long: longint variable
+  | {type_long}: longint
+
+The statement ending at line XXXX
+
 FETCH fetch_cursor INTO an_int, a_string, a_nullable;
 
   {fetch_stmt}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable
@@ -48911,4 +48920,77 @@ Error at test/sem_test.sql:XXXX : in set_from_cursor : CQL0173: variable not fou
       | {set_from_cursor}: err
         | {name box}
         | {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable
+
+The statement ending at line XXXX
+
+SET an_long := cql_get_blob_size(blob_var);
+
+  {assign}: an_long: longint variable
+  | {name an_long}: an_long: longint variable
+  | {call}: longint
+    | {name cql_get_blob_size}: longint
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {name blob_var}: blob_var: blob variable
+
+The statement ending at line XXXX
+
+SET an_long := cql_get_blob_size(blob_var, 0);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'cql_get_blob_size'
+
+  {assign}: err
+  | {name an_long}: an_long: longint variable
+  | {call}: err
+    | {name cql_get_blob_size}: err
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {name blob_var}: blob_var: blob variable
+        | {arg_list}
+          | {int 0}: integer notnull
+
+The statement ending at line XXXX
+
+SET an_long := cql_get_blob_size(an_int);
+
+Error at test/sem_test.sql:XXXX : in call : CQL0345: all arguments must be blob 'cql_get_blob_size'
+
+  {assign}: err
+  | {name an_long}: an_long: longint variable
+  | {call}: err
+    | {name cql_get_blob_size}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {name an_int}: an_int: integer variable
+
+The statement ending at line XXXX
+
+SET an_long := ( SELECT cql_get_blob_size(an_int) );
+
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'cql_get_blob_size'
+
+  {assign}: err
+  | {name an_long}: an_long: longint variable
+  | {select_stmt}: err
+    | {select_core_list}: err
+    | | {select_core}: err
+    |   | {select_expr_list_con}: err
+    |     | {select_expr_list}: err
+    |     | | {select_expr}: err
+    |     |   | {call}: err
+    |     |     | {name cql_get_blob_size}
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {name an_int}: an_int: integer variable
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
 

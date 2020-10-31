@@ -860,4 +860,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0202: must be a cursor, proc, tabl
 Error at test/sem_test.sql:XXXX : in str : CQL0057: in the cursor and the variable type, all must have the same column count
 Error at test/sem_test.sql:XXXX : in str : CQL0204: cursor not found 'XYZZY'
 Error at test/sem_test.sql:XXXX : in set_from_cursor : CQL0173: variable not found 'box'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'cql_get_blob_size'
+Error at test/sem_test.sql:XXXX : in call : CQL0345: all arguments must be blob 'cql_get_blob_size'
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'cql_get_blob_size'
 semantic errors present; no code gen.

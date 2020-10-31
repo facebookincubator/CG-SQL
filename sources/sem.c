@@ -4804,6 +4804,39 @@ static void sem_func_ifnull(ast_node *ast, uint32_t arg_count) {
   sem_coalesce(ast, 1);  // set "ifnull"
 }
 
+static void sem_func_cql_get_blob_size(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  if (!sem_validate_context(ast, name, SEM_EXPR_CONTEXT_NONE)) {
+    return;
+  }
+
+  // only one argument
+  if (!sem_validate_arg_count(ast, arg_count, 1)) {
+    return;
+  }
+
+  ast_node *arg = first_arg(arg_list);
+  if (!is_blob(arg->sem->sem_type)) {
+    report_error(ast, "CQL0345: all arguments must be blob", name);
+    record_error(ast);
+    return;
+  }
+
+  // integer type
+  sem_t sem_type = SEM_TYPE_LONG_INTEGER;
+  // add sensitivity if argument is sensitive
+  sem_type |= sensitive_flag(arg->sem->sem_type);
+  // add nullability if argument is nullable
+  sem_type |=  not_nullable_flag(arg->sem->sem_type);
+
+  name_ast->sem = ast->sem = new_sem(sem_type);
+}
+
 static void sem_func_length(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
@@ -14007,7 +14040,7 @@ static void sem_declare_cursor_for_name(ast_node *ast) {
 // and return the type associated with it.  The rules are:
 //  * the variable must be of type object<T CURSOR>  for some T
 //  * the T part must be a "likeable" expression (i.e. a shape)
-// there is some string massaging to check for and remove the 
+// there is some string massaging to check for and remove the
 // " CURSOR" and a temporary node is created so we can re-use
 // the usual likeable name check.
 static ast_node *sem_find_likeable_from_var_type(ast_node *var) {
@@ -16526,6 +16559,8 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(rtrim);
 
   FUNC_INIT(length);
+
+  FUNC_INIT(cql_get_blob_size);
 
   EXPR_INIT(num, sem_expr_num, "NUM");
   EXPR_INIT(str, sem_expr_str, "STR");

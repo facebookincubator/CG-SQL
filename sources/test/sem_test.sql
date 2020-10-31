@@ -1730,6 +1730,7 @@ declare an_int2 integer;
 declare a_string text;
 declare a_string2 text;
 declare a_nullable text;
+declare an_long long integer;
 
 -- TEST: ok to fetch_stmt
 -- - Error
@@ -12024,3 +12025,32 @@ begin
   declare C cursor for select * from bar;
   set box from cursor C;
 end;
+
+-- TEST: test cql_get_blob_size cql builtin function
+-- + {assign}: an_long: longint variable
+-- + {name cql_get_blob_size}: longint
+-- - Error
+set an_long := cql_get_blob_size(blob_var);
+
+-- TEST: test cql_get_blob_size with too many arguments
+-- + {assign}: err
+-- + {name cql_get_blob_size}: err
+-- + Error % function got incorrect number of arguments 'cql_get_blob_size'
+-- +1 Error
+set an_long := cql_get_blob_size(blob_var, 0);
+
+-- TEST: test cql_get_blob_size with invalid argument type
+-- + {assign}: err
+-- + {call}: err
+-- + {name cql_get_blob_size}
+-- + Error % all arguments must be blob 'cql_get_blob_size'
+-- +1 Error
+set an_long := cql_get_blob_size(an_int);
+
+-- TEST: test cql_get_blob_size used in SQL context
+-- + {assign}: err
+-- + {call}: err
+-- + {name cql_get_blob_size}
+-- + Error % function may not appear in this context 'cql_get_blob_size'
+-- +1 Error
+set an_long := (select cql_get_blob_size(an_int));
