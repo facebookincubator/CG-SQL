@@ -7,7 +7,7 @@
 
 -- TEST: query plan
 -- +1 DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
--- +1 DECLARE SELECT FUNC is_declare_func_wall (id INTEGER) INTEGER NOT NULL;
+-- +1 DECLARE SELECT FUNC is_declare_func_wall (id LONG_INT) BOOL NOT NULL;
 -- + CREATE PROC create_schema()
 -- + CREATE TABLE t1
 -- + CREATE TABLE t2
@@ -61,7 +61,7 @@ create index it4 ON t4(data, id);
 create view my_view as select * from t1 inner join t2 using(id);
 declare function any_func() bool not null;
 declare select function is_declare_func_enabled() bool not null;
-declare select function is_declare_func_wall(id integer) integer not null;
+declare select function is_declare_func_wall(id long integer) bool not null;
 declare select function array_num_at(array_object_ptr LONG NOT NULL, idx integer not null) long;
 declare function blob_from_string(str text) create blob not null;
 declare timer_var int;
@@ -71,7 +71,7 @@ set timer_var := 1;
 set label_var := 'Eric';
 set data_var := blob_from_string('1');
 create trigger my_trigger
-  after insert on t1 when is_declare_func_enabled() and (is_declare_func_wall(new.id) = 99)
+  after insert on t1 when is_declare_func_enabled() and (is_declare_func_wall(new.id) = 1)
 begin
   delete from t2 where id > new.id;
 end;

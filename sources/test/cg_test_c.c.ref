@@ -1896,9 +1896,9 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-DECLARE result REAL;
+DECLARE result INTEGER;
 */
-cql_nullable_double result;
+cql_nullable_int32 result;
 
 // The statement ending at line XXXX
 
@@ -6235,7 +6235,6 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_nullable_bool _tmp_n_bool_1;
   cql_nullable_bool _tmp_n_bool_0;
-  cql_nullable_double _tmp_n_double_0;
   cql_nullable_double _tmp_n_double_1;
   cql_nullable_double _tmp_n_double_2;
   cql_nullable_double _tmp_n_double_3;
@@ -6247,6 +6246,7 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   cql_nullable_int32 _tmp_n_int_0;
   cql_nullable_bool _tmp_n_bool_2;
   cql_nullable_int64 _tmp_n_int64_1;
+  cql_nullable_int32 _tmp_n_int_1;
   cql_string_ref _tmp_text_0 = NULL;
   cql_object_ref _tmp_n_object_2 = NULL;
   cql_object_ref _tmp_object_2 = NULL;
@@ -6359,18 +6359,16 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
   
   /*
-  SET i0_nullable := r0_nullable * i1_nullable;
+  SET r0_nullable := r0_nullable * i1_nullable;
   */
-  cql_combine_nullables(_tmp_n_double_0, r0_nullable.is_null, i1_nullable.is_null, r0_nullable.value * i1_nullable.value);
-  cql_set_nullable(i0_nullable, _tmp_n_double_0.is_null, _tmp_n_double_0.value);
+  cql_combine_nullables(r0_nullable, r0_nullable.is_null, i1_nullable.is_null, r0_nullable.value * i1_nullable.value);
   
   // The statement ending at line XXXX
   
   /*
-  SET i0_nullable := r0_nullable * i2;
+  SET r0_nullable := r0_nullable * i2;
   */
-  cql_set_nullable(_tmp_n_double_0, r0_nullable.is_null, r0_nullable.value * i2);
-  cql_set_nullable(i0_nullable, _tmp_n_double_0.is_null, _tmp_n_double_0.value);
+  cql_set_nullable(r0_nullable, r0_nullable.is_null, r0_nullable.value * i2);
   
   // The statement ending at line XXXX
   
@@ -6389,23 +6387,21 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
   
   /*
-  SET i0_nullable := r0_nullable * i1_nullable + r0_nullable * i1_nullable;
+  SET r0_nullable := r0_nullable * i1_nullable + r0_nullable * i1_nullable;
   */
   cql_combine_nullables(_tmp_n_double_1, r0_nullable.is_null, i1_nullable.is_null, r0_nullable.value * i1_nullable.value);
   cql_combine_nullables(_tmp_n_double_2, r0_nullable.is_null, i1_nullable.is_null, r0_nullable.value * i1_nullable.value);
-  cql_combine_nullables(_tmp_n_double_0, _tmp_n_double_1.is_null, _tmp_n_double_2.is_null, _tmp_n_double_1.value + _tmp_n_double_2.value);
-  cql_set_nullable(i0_nullable, _tmp_n_double_0.is_null, _tmp_n_double_0.value);
+  cql_combine_nullables(r0_nullable, _tmp_n_double_1.is_null, _tmp_n_double_2.is_null, _tmp_n_double_1.value + _tmp_n_double_2.value);
   
   // The statement ending at line XXXX
   
   /*
-  SET i0_nullable := r0_nullable * i1_nullable + r0_nullable * i0_nullable + r0_nullable;
+  SET r0_nullable := r0_nullable * i1_nullable + r0_nullable * i0_nullable + r0_nullable;
   */
   cql_combine_nullables(_tmp_n_double_2, r0_nullable.is_null, i1_nullable.is_null, r0_nullable.value * i1_nullable.value);
   cql_combine_nullables(_tmp_n_double_3, r0_nullable.is_null, i0_nullable.is_null, r0_nullable.value * i0_nullable.value);
   cql_combine_nullables(_tmp_n_double_1, _tmp_n_double_2.is_null, _tmp_n_double_3.is_null, _tmp_n_double_2.value + _tmp_n_double_3.value);
-  cql_combine_nullables(_tmp_n_double_0, _tmp_n_double_1.is_null, r0_nullable.is_null, _tmp_n_double_1.value + r0_nullable.value);
-  cql_set_nullable(i0_nullable, _tmp_n_double_0.is_null, _tmp_n_double_0.value);
+  cql_combine_nullables(r0_nullable, _tmp_n_double_1.is_null, r0_nullable.is_null, _tmp_n_double_1.value + r0_nullable.value);
   
   // The statement ending at line XXXX
   
@@ -7282,9 +7278,8 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   SET result := simple_func(simple_func(1));
   */
   cql_set_notnull(_tmp_n_int_3, 1);
-  _tmp_n_double_1 = simple_func(_tmp_n_int_3);
-  cql_set_nullable(_tmp_n_int_2, _tmp_n_double_1.is_null, _tmp_n_double_1.value);
-  result = simple_func(_tmp_n_int_2);
+  _tmp_n_int_1 = simple_func(_tmp_n_int_3);
+  result = simple_func(_tmp_n_int_1);
   
   // The statement ending at line XXXX
   

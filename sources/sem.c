@@ -1735,25 +1735,92 @@ static bool_t sem_verify_compat(ast_node *ast, sem_t sem_type_needed, sem_t sem_
   return true;
 }
 
+// When performing assignment either explicity ( set X := Y ) or implicit (binding args to a proc call)
+// there are additional type compat checks to be done beyond the normal is compat.  The above helps you
+// with symmetric operations like X == Y where either side can be promoted.  In an assignment the left
+// side cannot be promoted so the store can be lossy.  This checks for the lossy cases that are otherwise
+// compatible.  That is, we assume that the above has already been called.
+static bool_t sem_verify_safeassign(ast_node *ast, sem_t sem_type_needed, sem_t sem_type_found, CSTR subject) {
+  // normalize even if we weren't given core types
+  sem_t core_type_needed = core_type_of(sem_type_needed);
+  sem_t core_type_found = core_type_of(sem_type_found);
+  CSTR err_type = NULL;
+
+  Invariant(is_unitary(core_type_needed));
+  Invariant(is_unitary(core_type_found));
+
+  // the target of an assignment cannot be of type null
+  Invariant(core_type_needed != SEM_TYPE_NULL);
+
+  switch (core_type_needed) {
+    case SEM_TYPE_TEXT:
+    case SEM_TYPE_OBJECT:
+    case SEM_TYPE_BLOB:
+    case SEM_TYPE_BOOL:
+    case SEM_TYPE_REAL:
+      // this is called only after we've already verified basic compatibility (see above)
+      // so these are always safe
+      //  * assign to real gives you a free floating conversion
+      //  * assign to bool converts to truthiness
+      //  * blob, object, text require exact match for compat
+      return true;
+
+    // these are the possible lossy cases
+
+    case SEM_TYPE_INTEGER:
+    case SEM_TYPE_LONG_INTEGER:
+      if (core_type_found == SEM_TYPE_REAL) {
+         err_type = "REAL";
+         goto error;
+      }
+
+      if (core_type_found == SEM_TYPE_LONG_INTEGER && core_type_needed == SEM_TYPE_INTEGER) {
+         err_type = "LONG_INT";
+         goto error;
+      }
+      break;
+  }
+
+  Invariant(!err_type);
+  return true;
+
+error:
+  Invariant(err_type);
+  CHARBUF_OPEN(tmp);
+  bprintf(&tmp, "CQL0242: lossy conversion from type '%s' in ", err_type);
+
+  // append the text of the offensive expression
+  gen_sql_callbacks callbacks;
+  init_gen_sql_callbacks(&callbacks);
+  callbacks.for_sqlite = false; // we want all the text, unexpanded, so NOT for sqlite output (this is raw echo)
+  gen_set_output_buffer(&tmp);
+  gen_with_callbacks(ast, gen_root_expr, &callbacks);
+  report_error(ast, tmp.ptr, NULL);
+  CHARBUF_CLOSE(tmp);
+
+  return false;
+}
+
 // This verifies that the types are compatible and that it's ok to assign
 // the expression to the variable.  In practice that means the variable
 // must be nullable if the expression is nullable.  Here ast is used only
 // to get the line number.
 static bool_t sem_verify_assignment(ast_node *ast, sem_t sem_type_needed, sem_t sem_type_found, CSTR var_name) {
   if (!sem_verify_compat(ast, sem_type_needed, sem_type_found, var_name)) {
-    record_error(ast);
+    return false;
+  }
+
+  if (!sem_verify_safeassign(ast, sem_type_needed, sem_type_found, var_name)) {
     return false;
   }
 
   if (is_nullable(sem_type_found) && is_not_nullable(sem_type_needed)) {
     report_error(ast, "CQL0013: cannot assign/copy possibly null expression to not null target", var_name);
-    record_error(ast);
     return false;
   }
 
   if (sensitive_flag(sem_type_found) && !sensitive_flag(sem_type_needed)) {
     report_error(ast, "CQL0014: cannot assign/copy sensitive expression to non-sensitive target", var_name);
-    record_error(ast);
     return false;
   }
 
@@ -11442,7 +11509,8 @@ static void sem_assign(ast_node *ast) {
     return;
   }
 
-  if (!sem_verify_assignment(name_ast, sem_type_var, expr->sem->sem_type, name)) {
+  if (!sem_verify_assignment(expr, sem_type_var, expr->sem->sem_type, name)) {
+    record_error(name_ast);
     record_error(ast);
   }
 

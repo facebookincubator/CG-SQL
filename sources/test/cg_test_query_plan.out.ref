@@ -2,7 +2,7 @@
 -- The statement ending at line XXXX
 
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
-DECLARE SELECT FUNC is_declare_func_wall (id INTEGER) INTEGER NOT NULL;
+DECLARE SELECT FUNC is_declare_func_wall (id LONG_INT) BOOL NOT NULL;
 DECLARE SELECT FUNC array_num_at (array_object_ptr LONG_INT NOT NULL, idx INTEGER NOT NULL) LONG_INT;
 
 CREATE PROC create_schema()
@@ -47,7 +47,7 @@ BEGIN
     INNER JOIN t2 USING (id);
   CREATE TRIGGER my_trigger
     AFTER INSERT ON t1
-    WHEN is_declare_func_enabled() AND is_declare_func_wall(new.id) = 99
+    WHEN is_declare_func_enabled() AND is_declare_func_wall(new.id) = 1
   BEGIN
   DELETE FROM t2 WHERE id > new.id;
   END;

@@ -1920,7 +1920,6 @@ update bar set name = 2;
 -- +1 Error
 -- + {update_stmt}: err
 -- + {update_list}: err
--- + {update_entry}: err
 -- + {name id}: id: integer notnull
 -- + {null}: null
 update bar set id = null;
@@ -6281,7 +6280,7 @@ create trigger trigger3
   when old.b > 1 and new.b < 3
 begin
   update bar set id = 7 where rate > old.b and rate < new.b;
-  insert into bar values (7, 'goo', 1.7);
+  insert into bar values (7, 'goo', 17L);
 end;
 
 -- TEST: exact duplicate trigger is ok
@@ -6296,7 +6295,7 @@ create trigger trigger3
   when old.b > 1 and new.b < 3
 begin
   update bar set id = 7 where rate > old.b and rate < new.b;
-  insert into bar values (7, 'goo', 1.7);
+  insert into bar values (7, 'goo', 17L);
 end;
 
 -- TEST: duplicate trigger
@@ -6874,14 +6873,13 @@ select T1.id from with_sensitive T1 inner join with_sensitive T2 using(id);
 
 -- TEST: try to assign sensitive data to a non-sensitive variable
 -- + {assign}: err
--- + {name X}: err
 -- + {name _sens}: _sens: integer variable sensitive
 -- + Error % cannot assign/copy sensitive expression to non-sensitive target 'X'
 -- +1 Error
 set X := _sens;
 
 -- TEST: try to call a normal proc with a sensitive parameter
--- + {name _sens}: err
+-- + {call_stmt}: err
 -- + Error % cannot assign/copy sensitive expression to non-sensitive target 'id'
 -- +1 Error
 call decl1(_sens);
@@ -6891,7 +6889,6 @@ declare proc non_sens_proc(out foo integer);
 declare proc non_sens_proc_nonnull(out foo integer not null);
 
 -- TEST: try to call a proc with a sensitive out parameter
--- + {name X}: err
 -- + Error % cannot assign/copy sensitive expression to non-sensitive target 'X'
 -- +1 Error
 call sens_proc(X);
@@ -6944,7 +6941,6 @@ set non_sens_text := sens_func(1, 'x');
 -- TEST: not ok to pass sensitive text as non-sensitive arg
 -- + Error % cannot assign/copy sensitive expression to non-sensitive target 't'
 -- + {call}: err
--- + {name sens_text}: err
 -- +1 Error
 set sens_text := sens_func(1, sens_text);
 
@@ -8614,10 +8610,10 @@ begin
 end;
 
 -- TEST: division of reals is ok (promotes to real)
--- + {assign}: X: integer variable
+-- + {assign}: my_real: real variable
 -- + {div}: real notnull
 -- - Error
-set X := 1.3 / 2;
+set my_real := 1.3 / 2;
 
 -- TEST: modulus of reals is NOT ok (this makes no sense)
 -- + {mod}: err
@@ -8934,7 +8930,7 @@ end;
 -- it also doesn't need a from clause
 -- + {select_expr_list_con}: select: { min_stuff: real notnull }
 -- - Error
-set X := (select min(1.2, 2, 3) as min_stuff);
+set my_real := (select min(1.2, 2, 3) as min_stuff);
 
 -- TEST: create a sum using a bool
 -- + {select_stmt}: select: { _anon: integer }
@@ -11889,6 +11885,24 @@ set a_string := cql_cursor_format(1);
 -- + Error % function got incorrect number of arguments 'cql_cursor_format'
 -- +1 Error
 set a_string := cql_cursor_format(1, 2);
+
+-- TEST: assigning an int64 to an int is not ok
+-- + {assign}: err
+-- + Error % lossy conversion from type 'LONG_INT'
+-- +1 Error
+set an_int := 1L;
+
+-- TEST: assigning a real to an int is not ok
+-- + {assign}: err
+-- + Error % lossy conversion from type 'REAL'
+-- +1 Error
+set an_int := 1.0;
+
+-- TEST: assigning a real to a long int is not ok
+-- + {assign}: err
+-- + Error % lossy conversion from type 'REAL'
+-- +1 Error
+set ll := 1.0;
 
 -- TEST: length failure: no args
 -- + {call}: err

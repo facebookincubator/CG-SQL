@@ -628,10 +628,10 @@ extern CQL_WARN_UNUSED cql_code outint_nullable(sqlite3 *_Nonnull _db_, cql_null
 extern CQL_WARN_UNUSED cql_code outint_notnull(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull output, cql_bool *_Nonnull result);
 
 // The statement ending at line XXXX
-extern cql_nullable_double simple_func(cql_nullable_int32 int1);
+extern cql_nullable_int32 simple_func(cql_nullable_int32 int1);
 
 // The statement ending at line XXXX
-extern cql_nullable_double result;
+extern cql_nullable_int32 result;
 
 // The statement ending at line XXXX
 

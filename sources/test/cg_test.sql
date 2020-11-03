@@ -93,14 +93,12 @@ set i2 := NOT NOT b2;
 set i2 := 1 * 3 + 5;
 
 -- TEST: everything in sight is nullable
--- + cql_combine_nullables(_tmp_n_double_0, r0_nullable.is_null, i1_nullable.is_null, r0_nullable.value * i1_nullable.value);
--- + cql_set_nullable(i0_nullable, _tmp_n_double_0.is_null, _tmp_n_double_0.value);
-set i0_nullable := r0_nullable * i1_nullable;
+-- + cql_combine_nullables(r0_nullable, r0_nullable.is_null, i1_nullable.is_null, r0_nullable.value * i1_nullable.value);
+set r0_nullable := r0_nullable * i1_nullable;
 
 -- TEST: right operand is not null
--- + cql_set_nullable(_tmp_n_double_0, r0_nullable.is_null, r0_nullable.value * i2);
--- + cql_set_nullable(i0_nullable, _tmp_n_double_0.is_null, _tmp_n_double_0.value);
-set i0_nullable := r0_nullable * i2;
+-- + cql_set_nullable(r0_nullable, r0_nullable.is_null, r0_nullable.value * i2);
+set r0_nullable := r0_nullable * i2;
 
 -- TEST: left operand is not null
 -- + cql_set_nullable(i0_nullable, i1_nullable.is_null, 12 * i1_nullable.value);
@@ -111,19 +109,17 @@ set i0_nullable := 12 * i1_nullable;
 set i0_nullable := null * i1_nullable;
 
 -- TEST: make sure the stacking is working correctly
--- + cql_combine_nullables(_tmp_n_double_1, %, r0_nullable.value * i1_nullable.value);
--- + cql_combine_nullables(_tmp_n_double_2, %, r0_nullable.value * i1_nullable.value);
--- + cql_combine_nullables(_tmp_n_double_0, %, _tmp_n_double_1.value + _tmp_n_double_2.value);
--- + cql_set_nullable(i0_nullable, _tmp_n_double_0.is_null, _tmp_n_double_0.value);
-set i0_nullable := r0_nullable * i1_nullable + r0_nullable * i1_nullable;
+-- + cql_combine_nullables(_tmp_n_double_1, r0_nullable.is_null, i1_nullable.is_null, r0_nullable.value * i1_nullable.value);
+-- + cql_combine_nullables(_tmp_n_double_2, r0_nullable.is_null, i1_nullable.is_null, r0_nullable.value * i1_nullable.value);
+-- + cql_combine_nullables(r0_nullable, _tmp_n_double_1.is_null, _tmp_n_double_2.is_null, _tmp_n_double_1.value + _tmp_n_double_2.value);
+set r0_nullable := r0_nullable * i1_nullable + r0_nullable * i1_nullable;
 
 -- TEST: a more complex stacking example
--- + cql_combine_nullables(_tmp_n_double_2, %, r0_nullable.value * i1_nullable.value);
--- + cql_combine_nullables(_tmp_n_double_3, %, r0_nullable.value * i0_nullable.value);
--- + cql_combine_nullables(_tmp_n_double_1, %, _tmp_n_double_2.value + _tmp_n_double_3.value);
--- + cql_combine_nullables(_tmp_n_double_0, %, _tmp_n_double_1.value + r0_nullable.value);
--- + cql_set_nullable(i0_nullable, _tmp_n_double_0.is_null, _tmp_n_double_0.value);
-set i0_nullable := (r0_nullable * i1_nullable + r0_nullable * i0_nullable) + r0_nullable;
+-- + cql_combine_nullables(_tmp_n_double_2, r0_nullable.is_null, i1_nullable.is_null, r0_nullable.value * i1_nullable.value);
+-- + cql_combine_nullables(_tmp_n_double_3, r0_nullable.is_null, i0_nullable.is_null, r0_nullable.value * i0_nullable.value);
+-- + cql_combine_nullables(_tmp_n_double_1, _tmp_n_double_2.is_null, _tmp_n_double_3.is_null, _tmp_n_double_2.value + _tmp_n_double_3.value);
+-- + cql_combine_nullables(r0_nullable, _tmp_n_double_1.is_null, r0_nullable.is_null, _tmp_n_double_1.value + r0_nullable.value);
+set r0_nullable := (r0_nullable * i1_nullable + r0_nullable * i0_nullable) + r0_nullable;
 
 -- TEST: string assignment -- nasty string
 -- + cql_set_string_ref(&t2, _literal%This_is_a_test_);
@@ -1000,8 +996,8 @@ begin
   set result := C;
 END;
 
-declare function simple_func(int1 integer) real;
-declare result real;
+declare function simple_func(int1 integer) integer;
+declare result integer;
 
 -- TEST: call external function
 -- + cql_set_notnull(_tmp_n_int_2, 2);
@@ -1010,9 +1006,8 @@ set result := simple_func(2);
 
 -- TEST: call external function
 -- + cql_set_notnull(_tmp_n_int_3, 1);
--- + _tmp_n_double_1 = simple_func(_tmp_n_int_3);
--- + cql_set_nullable(_tmp_n_int_2, _tmp_n_double_1.is_null, _tmp_n_double_1.value);
--- + result = simple_func(_tmp_n_int_2);
+-- + _tmp_n_int_1 = simple_func(_tmp_n_int_3);
+-- + result = simple_func(_tmp_n_int_1);
 set result := simple_func(simple_func(1));
 
 declare function text_func(int1 integer, int2 integer not null) text not null;

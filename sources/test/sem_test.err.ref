@@ -175,7 +175,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0197: duplicate variable name in t
 Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'bar'
 Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'T'
 Error at test/sem_test.sql:XXXX : in dot : CQL0069: name not found 'id'
-Error at test/sem_test.sql:XXXX : in str : CQL0013: cannot assign/copy possibly null expression to not null target 'int_nn'
+Error at test/sem_test.sql:XXXX : in null : CQL0013: cannot assign/copy possibly null expression to not null target 'int_nn'
 Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expression 'arg1'
 Error at test/sem_test.sql:XXXX : in num : CQL0009: incompatible types in expression 'arg2'
 Error at test/sem_test.sql:XXXX : in call_stmt : CQL0235: too many arguments provided to procedure 'proc2'
@@ -534,7 +534,7 @@ UPDATE bar
 SET id = 7
   WHERE rate > old.b AND rate < new.b;
 
-INSERT INTO bar(id, name, rate) VALUES(7, 'goo', 1.7);
+INSERT INTO bar(id, name, rate) VALUES(7, 'goo', 17L);
 END
 Error at test/sem_test.sql:XXXX : in create_trigger_stmt : CREATE TRIGGER trigger3
   INSTEAD OF UPDATE ON ViewShape
@@ -567,7 +567,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0013: cannot assign/copy possibly 
 Error at test/sem_test.sql:XXXX : in str : CQL0210: proc out parameter: arg must be an exact type match (even nullability) (expected integer notnull; found integer) 'X'
 Error at test/sem_test.sql:XXXX : in call : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'id'
 Error at test/sem_test.sql:XXXX : in update_entry : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'id'
-Error at test/sem_test.sql:XXXX : in str : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'non_sens_text'
+Error at test/sem_test.sql:XXXX : in call : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'non_sens_text'
 Error at test/sem_test.sql:XXXX : in str : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 't'
 Error at test/sem_test.sql:XXXX : in select_core : CQL0012: incompatible types in expression '_anon'
 Error at test/sem_test.sql:XXXX : in str : CQL0151: table in delete statement does not exist 'not_valid_table'
@@ -847,6 +847,9 @@ Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in 
 Error at test/sem_test.sql:XXXX : in str : CQL0067: cursor was not used with 'fetch [cursor]' 'c'
 Error at test/sem_test.sql:XXXX : in num : CQL0341: argument must be a variable in function 'cql_cursor_format'
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'cql_cursor_format'
+Error at test/sem_test.sql:XXXX : in num : CQL0242: lossy conversion from type 'LONG_INT' in 1L
+Error at test/sem_test.sql:XXXX : in num : CQL0242: lossy conversion from type 'REAL' in 1.0
+Error at test/sem_test.sql:XXXX : in num : CQL0242: lossy conversion from type 'REAL' in 1.0
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'length'
 Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'length'
 Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'length'
