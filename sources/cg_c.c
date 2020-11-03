@@ -1831,6 +1831,29 @@ static void cg_func_ifnull(ast_node *call_ast, charbuf *is_null, charbuf *value)
   cg_func_coalesce(call_ast, is_null, value);
 }
 
+static void cg_func_attest_notnull(ast_node *call_ast, charbuf *is_null, charbuf *value) {
+  Contract(is_ast_call(call_ast));
+  EXTRACT_ANY_NOTNULL(name_ast, call_ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, call_ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  // notnull ( a_nullable_expression )
+
+  EXTRACT_ANY_NOTNULL(expr, arg_list->left);
+
+  // result known to be not null so easy codegen
+
+  sem_t sem_type_expr = expr->sem->sem_type;
+  Invariant(is_nullable(sem_type_expr));  // expression must already be in a temp
+
+  CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
+    bprintf(cg_main_output, "cql_invariant(!%s);\n", expr_is_null.ptr);
+    bprintf(is_null, "0");
+    bprintf(value, "%s", expr_value.ptr);
+  CG_POP_EVAL(expr);
+}
+
 // There's a helper for this method, just call it.  Super easy.
 static void cg_func_last_insert_rowid(ast_node *ast, charbuf *is_null, charbuf *value) {
   bprintf(is_null, "0");
@@ -5520,6 +5543,7 @@ static void cg_c_init(void) {
   STMT_INIT(out_union_stmt);
   STMT_INIT(echo_stmt);
 
+  FUNC_INIT(attest_notnull);
   FUNC_INIT(ifnull);
   FUNC_INIT(coalesce);
   FUNC_INIT(last_insert_rowid);

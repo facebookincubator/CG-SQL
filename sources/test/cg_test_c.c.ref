@@ -6251,6 +6251,7 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   cql_object_ref _tmp_n_object_2 = NULL;
   cql_object_ref _tmp_object_2 = NULL;
   cql_object_ref _tmp_n_object_1 = NULL;
+  cql_object_ref _tmp_n_object_0 = NULL;
   cql_blob_ref _tmp_n_blob_2 = NULL;
   cql_blob_ref _tmp_blob_2 = NULL;
   cql_blob_ref _tmp_n_blob_1 = NULL;
@@ -7435,6 +7436,33 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
   
   /*
+  SET obj_var2 := attest_notnull(obj_func());
+  */
+  cql_set_object_ref(&_tmp_n_object_0, obj_func());
+  cql_invariant(!!_tmp_n_object_0);
+  cql_set_object_ref(&obj_var2, _tmp_n_object_0);
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SET obj_var2 := attest_notnull(obj_func_create());
+  */
+  cql_object_release(_tmp_n_object_0);
+  _tmp_n_object_0 = obj_func_create();
+  cql_invariant(!!_tmp_n_object_0);
+  cql_set_object_ref(&obj_var2, _tmp_n_object_0);
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SET i2 := attest_notnull(i0_nullable);
+  */
+  cql_invariant(!i0_nullable.is_null);
+  i2 = i0_nullable.value;
+  
+  // The statement ending at line XXXX
+  
+  /*
   INSERT OR REPLACE INTO bar(id, type) VALUES(1, 5);
   */
   _rc_ = cql_exec(_db_,
@@ -7947,6 +7975,7 @@ cql_cleanup:
   cql_object_release(_tmp_n_object_2);
   cql_object_release(_tmp_object_2);
   cql_object_release(_tmp_n_object_1);
+  cql_object_release(_tmp_n_object_0);
   cql_finalize_stmt(_db_, &expanded_select);
   cql_finalize_stmt(_db_, &table_expanded_select);
   cql_blob_release(blob_var);

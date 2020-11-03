@@ -3851,6 +3851,40 @@ declare function creater_func() create object not null;
 -- - Error
 declare function maybe_create_func() create object;
 
+-- Storage for these next few tests
+-- - Error
+declare not_null_object object not null;
+
+-- TEST: convert object to not null
+-- + {assign}: not_null_object: object notnull variable
+-- + {name not_null_object}: not_null_object: object notnull variable
+-- - Error
+set not_null_object := attest_notnull(obj_var);
+
+-- TEST: convert to not null -- fails already not null
+-- + {call}: err
+-- + Error % argument must be a nullable type (but not constant NULL) in 'attest_notnull'
+-- +1 Error
+set not_null_object := attest_notnull(not_null_object);
+
+-- TEST: convert to not null -- fails can't do this to 'null'
+-- + {call}: err
+-- + Error % argument must be a nullable type (but not constant NULL) in 'attest_notnull'
+-- +1 Error
+set not_null_object := attest_notnull(null);
+
+-- TEST: convert to not null -- fails wrong arg count
+-- + {call}: err
+-- + Error % function got incorrect number of arguments 'attest_notnull'
+-- +1 Error
+set not_null_object := attest_notnull(1, 7);
+
+-- TEST: convert to not null -- fails in SQL context
+-- + {call}: err
+-- + Error % operator may only appear in the context of a SQL statement 'attest_notnull'
+-- +1 Error
+set not_null_object := (select attest_notnull(1));
+
 -- TEST: echo statement is ok in any top level context
 -- + {echo_stmt}: ok
 -- + {name c}

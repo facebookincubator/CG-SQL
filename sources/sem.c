@@ -5139,6 +5139,40 @@ static bool_t sem_validate_cursor_from_variable(ast_node *ast, CSTR target) {
   }
 }
 
+// notnull is a CQL builtin function that returns its input if not null
+// or failfast if null.  The notion here is you already checked that the expression
+// is notnull and you want to tell the type system this. The runtime check is
+// only a failsafe.
+static void sem_func_attest_notnull(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  if (CURRENT_EXPR_CONTEXT_IS_NOT(SEM_EXPR_CONTEXT_NONE)) {
+    report_error(ast, "CQL0044: operator may only appear in the context of a SQL statement", name);
+    record_error(ast);
+    return;
+  }
+
+  if (!sem_validate_arg_count(ast, arg_count, 1)) {
+    return;
+  }
+
+  ast_node *arg1 = first_arg(arg_list);
+  sem_t sem_type = arg1->sem->sem_type;
+
+  if (is_null_type(sem_type) || is_not_nullable(sem_type)) {
+     report_error(arg1, "CQL0261: argument must be a nullable type (but not constant NULL) in", name);
+     record_error(ast);
+     return;
+  }
+
+  ast->sem = arg1->sem;
+  sem_add_flags(ast, SEM_TYPE_NOTNULL); // note this makes a copy
+}
+
 // validate expression with cql_cursor_diff func is semantically correct.
 // cql_cursor_diff is a CQL builtin function that compare the values of a
 // row between two cursor.
@@ -16607,6 +16641,7 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(time);
   FUNC_INIT(datetime);
   FUNC_INIT(julianday);
+  FUNC_INIT(attest_notnull);
   FUNC_INIT(nullable);
   FUNC_INIT(ptr);
   FUNC_INIT(substr);

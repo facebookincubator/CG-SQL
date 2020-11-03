@@ -1357,6 +1357,13 @@ BEGIN_TEST(external_set)
  EXPECT(not set_add(_set, "garbonzo")); -- duplicate addition
 END_TEST(external_set)
 
+BEGIN_TEST(object_notnull)
+ declare _setNN object not null;
+ declare _set object;
+ set _set := set_create();
+ set _setNN := attest_notnull(_set);
+ EXPECT(_set == _setNN); // should be the same pointer
+END_TEST(object_notnull)
 
 BEGIN_TEST(dummy_values)
   delete from mixed;

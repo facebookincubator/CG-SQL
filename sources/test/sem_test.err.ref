@@ -327,6 +327,10 @@ Error at test/sem_test.sql:XXXX : in str : CQL0072: first operand cannot be an o
 Error at test/sem_test.sql:XXXX : in not_between : CQL0012: incompatible types in expression 'NOT BETWEEN'
 Error at test/sem_test.sql:XXXX : in not_between : CQL0012: incompatible types in expression 'NOT BETWEEN'
 Error at test/sem_test.sql:XXXX : in call : CQL0087: no object/blob types are allowed in arguments for function 'printf'
+Error at test/sem_test.sql:XXXX : in str : CQL0261: argument must be a nullable type (but not constant NULL) in 'attest_notnull'
+Error at test/sem_test.sql:XXXX : in null : CQL0261: argument must be a nullable type (but not constant NULL) in 'attest_notnull'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'attest_notnull'
+Error at test/sem_test.sql:XXXX : in call : CQL0044: operator may only appear in the context of a SQL statement 'attest_notnull'
 Error at test/sem_test.sql:XXXX : in echo_stmt : CQL0224: literal output can only appear outside of procedures
 Error at test/sem_test.sql:XXXX : in str : CQL0070: incompatible object type 'Foo'
 Error at test/sem_test.sql:XXXX : in str : CQL0070: incompatible object type 'Foo'

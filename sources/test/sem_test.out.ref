@@ -14539,6 +14539,104 @@ DECLARE FUNC maybe_create_func () CREATE OBJECT;
 
 The statement ending at line XXXX
 
+DECLARE not_null_object OBJECT NOT NULL;
+
+  {declare_vars_type}: object notnull
+  | {name_list}: not_null_object: object notnull variable
+  | | {name not_null_object}: not_null_object: object notnull variable
+  | {notnull}: object notnull
+    | {type_object}: object
+
+The statement ending at line XXXX
+
+SET not_null_object := attest_notnull(obj_var);
+
+  {assign}: not_null_object: object notnull variable
+  | {name not_null_object}: not_null_object: object notnull variable
+  | {call}: obj_var: object notnull variable
+    | {name attest_notnull}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {name obj_var}: obj_var: object variable
+
+The statement ending at line XXXX
+
+SET not_null_object := attest_notnull(not_null_object);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0261: argument must be a nullable type (but not constant NULL) in 'attest_notnull'
+
+  {assign}: err
+  | {name not_null_object}: not_null_object: object notnull variable
+  | {call}: err
+    | {name attest_notnull}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {name not_null_object}: not_null_object: object notnull variable
+
+The statement ending at line XXXX
+
+SET not_null_object := attest_notnull(NULL);
+
+Error at test/sem_test.sql:XXXX : in null : CQL0261: argument must be a nullable type (but not constant NULL) in 'attest_notnull'
+
+  {assign}: err
+  | {name not_null_object}: not_null_object: object notnull variable
+  | {call}: err
+    | {name attest_notnull}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {null}: null
+
+The statement ending at line XXXX
+
+SET not_null_object := attest_notnull(1, 7);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'attest_notnull'
+
+  {assign}: err
+  | {name not_null_object}: not_null_object: object notnull variable
+  | {call}: err
+    | {name attest_notnull}: err
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {int 1}: integer notnull
+        | {arg_list}
+          | {int 7}: integer notnull
+
+The statement ending at line XXXX
+
+SET not_null_object := ( SELECT attest_notnull(1) );
+
+Error at test/sem_test.sql:XXXX : in call : CQL0044: operator may only appear in the context of a SQL statement 'attest_notnull'
+
+  {assign}: err
+  | {name not_null_object}: not_null_object: object notnull variable
+  | {select_stmt}: err
+    | {select_core_list}: err
+    | | {select_core}: err
+    |   | {select_expr_list_con}: err
+    |     | {select_expr_list}: err
+    |     | | {select_expr}: err
+    |     |   | {call}: err
+    |     |     | {name attest_notnull}
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {int 1}: integer notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
 @ECHO c, 'foo\n';
 
   {echo_stmt}: ok
