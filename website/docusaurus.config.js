@@ -12,19 +12,15 @@ const path = require('path');
 module.exports = {
   title: 'CG/SQL',
   tagline: 'Code Generator for SQLite',
-  url: 'https://facebookincubator.github.io',
-  baseUrl: '/CG-SQL/',
+  url: 'https://cgsql.dev',
+  baseUrl: '/',
   onBrokenLinks: 'ignore',
   favicon: 'img/favicon.ico',
   organizationName: 'facebookincubator',
-  projectName: 'CG-SQL',
+  projectName: 'cg-sql',
   themeConfig: {
     navbar: {
       title: 'CQ/SQL',
-      logo: {
-        alt: 'CG/SQL Logo',
-        src: 'img/CGSQL-Icon.svg',
-      },
       items: [
         {
           to: 'docs/introduction',
@@ -36,6 +32,8 @@ module.exports = {
           label: 'CQL Guide',
           position: 'left',
         },
+        {to: 'program-diagram', label: 'Railroad Diagram', position: 'left'},
+        {to: 'json-diagram', label: 'Railroad Diagram: JSON', position: 'left'},
         {to: 'blog', label: 'Blog', position: 'left'},
         {
           href: 'https://github.com/facebookincubator/CG-SQL',
@@ -118,6 +116,7 @@ module.exports = {
         showLastUpdateTime: true,
       },
     ],
+    'my-loaders',
   ],
   presets: [
     [
