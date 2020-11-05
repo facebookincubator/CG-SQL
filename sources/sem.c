@@ -5807,22 +5807,17 @@ static void sem_func_nullable(ast_node *ast, uint32_t arg_count) {
   name_ast->sem = ast->sem = new_sem(core_type_of(arg->sem->sem_type));
 }
 
-// The last_insert_rowid function is fair game in most places and
-// since it takes no args not a lot can go wrong.
-static void sem_func_last_insert_rowid(ast_node *ast, uint32_t arg_count) {
-  Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
-  EXTRACT_STRING(name, name_ast);
-  EXTRACT_NOTNULL(call_arg_list, ast->right);
-  EXTRACT(arg_list, call_arg_list->right);
-
+// This is a helper method that performs validation for builtin functions that have no arguments
+// and only require a database connection. They are fair game in most places and since they take
+// no args, not a lot can go wrong.
+static bool sem_validate_db_func_with_no_args(ast_node *ast, uint32_t arg_count) {
   has_dml = 1;
 
   if (!sem_validate_arg_count(ast, arg_count, 0)) {
-    return;
+    return 1;
   }
 
-  // last_insert_rowid can appear reasonably in most places, but not for grouping or limiting
+  // DB functions can appear reasonably in most places, but not for grouping or limiting
   if (!sem_validate_function_context(ast,
           SEM_EXPR_CONTEXT_SELECT_LIST |
           SEM_EXPR_CONTEXT_ON |
@@ -5830,7 +5825,32 @@ static void sem_func_last_insert_rowid(ast_node *ast, uint32_t arg_count) {
           SEM_EXPR_CONTEXT_HAVING |
           SEM_EXPR_CONTEXT_TABLE_FUNC |
           SEM_EXPR_CONTEXT_NONE)) {
-            return;
+            return 1;
+  }
+
+  return 0;
+}
+
+// The changes function is used to get the integer number of rows changed
+// by the most recent update/insert/delete.
+static void sem_func_changes(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+
+  if (sem_validate_db_func_with_no_args(ast, arg_count)) {
+    return;
+  }
+
+  name_ast->sem = ast->sem = new_sem(SEM_TYPE_INTEGER | SEM_TYPE_NOTNULL);
+}
+
+// The last_insert_rowid function is used to get the rowid of the most recently inserted row with a rowid.
+static void sem_func_last_insert_rowid(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+
+  if (sem_validate_db_func_with_no_args(ast, arg_count)) {
+    return;
   }
 
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL);
@@ -16835,6 +16855,7 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(instr);
   FUNC_INIT(coalesce);
   FUNC_INIT(last_insert_rowid);
+  FUNC_INIT(changes);
   FUNC_INIT(printf);
   FUNC_INIT(strftime);
   FUNC_INIT(date);

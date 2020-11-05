@@ -913,6 +913,27 @@ CQL_WARN_UNUSED cql_code insert_rowid_reader(sqlite3 *_Nonnull _db_) {
 // The statement ending at line XXXX
 
 /*
+CREATE PROC changes_reader ()
+BEGIN
+  DECLARE ct INTEGER;
+  SET ct := changes();
+END;
+*/
+
+CQL_WARN_UNUSED cql_code changes_reader(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_nullable_int32 ct;
+  cql_set_null(ct);
+
+  cql_set_notnull(ct, sqlite3_changes(_db_));
+  _rc_ = SQLITE_OK;
+
+  return _rc_;
+}
+
+// The statement ending at line XXXX
+
+/*
 DECLARE s TEXT NOT NULL;
 */
 cql_string_ref s = NULL;

@@ -339,6 +339,9 @@ extern void copy_int(cql_nullable_int32 a, cql_nullable_int32 *_Nonnull b);
 extern CQL_WARN_UNUSED cql_code insert_rowid_reader(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code changes_reader(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
 extern cql_string_ref _Nonnull s;
 
 // The statement ending at line XXXX

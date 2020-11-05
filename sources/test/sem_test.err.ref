@@ -236,6 +236,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0022: the exact type of both sides
 Error at test/sem_test.sql:XXXX : in name_list : CQL0098: left/right column types in join USING(...) do not match exactly 'id'
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'last_insert_rowid'
 Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'last_insert_rowid'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'changes'
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'changes'
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'printf'
 Error at test/sem_test.sql:XXXX : in call : CQL0086: first argument must be a string in function 'printf'
 Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'printf'

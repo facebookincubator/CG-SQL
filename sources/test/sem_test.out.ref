@@ -10040,6 +10040,126 @@ Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in 
 
 The statement ending at line XXXX
 
+DECLARE rowid_result LONG_INT NOT NULL;
+
+  {declare_vars_type}: longint notnull
+  | {name_list}: rowid_result: longint notnull variable
+  | | {name rowid_result}: rowid_result: longint notnull variable
+  | {notnull}: longint notnull
+    | {type_long}: longint
+
+The statement ending at line XXXX
+
+SET rowid_result := last_insert_rowid();
+
+  {assign}: rowid_result: longint notnull variable
+  | {name rowid_result}: rowid_result: longint notnull variable
+  | {call}: longint notnull
+    | {name last_insert_rowid}: longint notnull
+    | {call_arg_list}
+      | {call_filter_clause}
+
+The statement ending at line XXXX
+
+SELECT changes();
+
+  {select_stmt}: select: { _anon: integer notnull }
+  | {select_core_list}: select: { _anon: integer notnull }
+  | | {select_core}: select: { _anon: integer notnull }
+  |   | {select_expr_list_con}: select: { _anon: integer notnull }
+  |     | {select_expr_list}: select: { _anon: integer notnull }
+  |     | | {select_expr}: integer notnull
+  |     |   | {call}: integer notnull
+  |     |     | {name changes}: integer notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT changes(1);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'changes'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name changes}: err
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT *
+  FROM foo
+LIMIT changes();
+
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'changes'
+
+  {select_stmt}: err
+  | {select_core_list}: select: { id: integer notnull }
+  | | {select_core}: select: { id: integer notnull }
+  |   | {select_expr_list_con}: select: { id: integer notnull }
+  |     | {select_expr_list}: select: { id: integer notnull }
+  |     | | {star}: select: { id: integer notnull }
+  |     | {select_from_etc}: TABLE { foo: foo }
+  |       | {table_or_subquery_list}: TABLE { foo: foo }
+  |       | | {table_or_subquery}: TABLE { foo: foo }
+  |       |   | {name foo}: TABLE { foo: foo }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}: err
+    | {select_limit}
+      | {opt_limit}: err
+      | | {call}: err
+      |   | {name changes}
+      |   | {call_arg_list}
+      |     | {call_filter_clause}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+DECLARE changes_result INTEGER NOT NULL;
+
+  {declare_vars_type}: integer notnull
+  | {name_list}: changes_result: integer notnull variable
+  | | {name changes_result}: changes_result: integer notnull variable
+  | {notnull}: integer notnull
+    | {type_int}: integer
+
+The statement ending at line XXXX
+
+SET changes_result := changes();
+
+  {assign}: changes_result: integer notnull variable
+  | {name changes_result}: changes_result: integer notnull variable
+  | {call}: integer notnull
+    | {name changes}: integer notnull
+    | {call_arg_list}
+      | {call_filter_clause}
+
+The statement ending at line XXXX
+
 SELECT printf('%s %d', 'x', 5);
 
   {select_stmt}: select: { _anon: text notnull }

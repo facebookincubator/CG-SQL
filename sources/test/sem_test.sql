@@ -2885,6 +2885,46 @@ select last_insert_rowid(1);
 -- + {select_stmt}: err
 select * from foo limit last_insert_rowid();
 
+-- declare result for last_insert_rowid
+declare rowid_result long int not null;
+
+-- TEST: set last_insert_rowid outside of select statement
+-- + {assign}: rowid_result: longint notnull variable
+-- + {name rowid_result}: rowid_result: longint notnull variable
+-- + {call}: longint notnull
+-- + {name last_insert_rowid}: longint notnull
+-- - Error
+set rowid_result := last_insert_rowid();
+
+-- TEST: use changes, validate it's ok
+-- + {select_stmt}: select: { _anon: integer notnull }
+-- + {name changes}: integer notnull
+-- - Error
+select changes();
+
+-- TEST: changes doesn't take args
+-- + Error % function got incorrect number of arguments 'changes'
+-- + {name changes}: err
+-- + {select_stmt}: err
+select changes(1);
+
+-- TEST: changes is not ok in a limit
+-- + Error % function may not appear in this context 'changes'
+-- + {call}: err
+-- + {select_stmt}: err
+select * from foo limit changes();
+
+-- declare result for changes function
+declare changes_result int not null;
+
+-- TEST: set changes outside of select statement
+-- + {assign}: changes_result: integer notnull variable
+-- + {name changes_result}: changes_result: integer notnull variable
+-- + {call}: integer notnull
+-- + {name changes}: integer notnull
+-- - Error
+set changes_result := changes();
+
 -- TEST: printf is ok in a select
 -- + {select_stmt}: select: { _anon: text notnull }
 -- + {select_expr}: text notnull

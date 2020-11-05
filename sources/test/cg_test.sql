@@ -837,6 +837,15 @@ begin
   set row := last_insert_rowid();
 end;
 
+-- TEST: try out changes()
+-- + cql_set_notnull(ct, sqlite3_changes(_db_));
+-- - cql_cleanup
+create proc changes_reader()
+begin
+  declare ct integer;
+  set ct := changes();
+end;
+
 -- TEST: try out printf expression
 declare s text not null;
 -- + _printf_result = sqlite3_mprintf("%d and %d", 1, 2);

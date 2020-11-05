@@ -1575,7 +1575,7 @@ static void cg_expr_cast(ast_node *cast_expr, CSTR str, charbuf *is_null, charbu
 
     case SEM_TYPE_BOOL:
       // convert to 0/1 as part of conversion
-      bool_norm = "!!"; 
+      bool_norm = "!!";
       type_text = rt->cql_bool;
       break;
   }
@@ -1852,6 +1852,12 @@ static void cg_func_attest_notnull(ast_node *call_ast, charbuf *is_null, charbuf
     bprintf(is_null, "0");
     bprintf(value, "%s", expr_value.ptr);
   CG_POP_EVAL(expr);
+}
+
+// There's a helper for this method, just call it.  Super easy.
+static void cg_func_changes(ast_node *ast, charbuf *is_null, charbuf *value) {
+  bprintf(is_null, "0");
+  bprintf(value, "sqlite3_changes(_db_)");
 }
 
 // There's a helper for this method, just call it.  Super easy.
@@ -4420,7 +4426,7 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
     if (options.test) {
       bprintf(cg_header_output, "\n// The statement ending at line %d\n", stmt->lineno);
     }
-    
+
     // emit comments for most statements: we do not want to require the global proc block
     // just because there was a comment so this is suppressed for "no code" things
     if (!skip_comment) {
@@ -5547,6 +5553,7 @@ static void cg_c_init(void) {
   FUNC_INIT(ifnull);
   FUNC_INIT(coalesce);
   FUNC_INIT(last_insert_rowid);
+  FUNC_INIT(changes);
   FUNC_INIT(printf);
   FUNC_INIT(cql_get_blob_size);
 
