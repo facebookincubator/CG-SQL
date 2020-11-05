@@ -11682,119 +11682,119 @@ begin
   release savepoint @proc;
 end;
 
--- TEST: call cql_cursor_diff with non variable arguments
+-- TEST: call cql_cursor_diff_col with non variable arguments
 -- + {assign}: err
 -- + {call}: err
--- + Error % argument must be a variable in function 'cql_cursor_diff'
+-- + Error % argument must be a variable in function 'cql_cursor_diff_col'
 -- +1 Error
-set a_string := cql_cursor_diff(1, "bogus");
+set a_string := cql_cursor_diff_col(1, "bogus");
 
--- TEST: call cql_cursor_diff with invalid variable arguments
+-- TEST: call cql_cursor_diff_col with invalid variable arguments
 -- + {assign}: err
 -- + {call}: err
 -- + Error % variable is not a cursor 'an_int'
 -- +1 Error
-set a_string := cql_cursor_diff(an_int, an_int2);
+set a_string := cql_cursor_diff_col(an_int, an_int2);
 
--- TEST: call cql_cursor_diff with incorrect number of arguments
+-- TEST: call cql_cursor_diff_col with incorrect number of arguments
 -- + {assign}: err
 -- + {call}: err
--- + {name cql_cursor_diff}: err
--- + Error % function got incorrect number of arguments 'cql_cursor_diff'
+-- + {name cql_cursor_diff_col}: err
+-- + Error % function got incorrect number of arguments 'cql_cursor_diff_col'
 -- +1 Error
-set a_string := cql_cursor_diff(an_int, an_int2, 1);
+set a_string := cql_cursor_diff_col(an_int, an_int2, 1);
 
--- TEST: call cql_cursor_diff with cursor with fetch value and same shape
+-- TEST: call cql_cursor_diff_col with cursor with fetch value and same shape
 -- + {create_proc_stmt}: err
 -- + {assign}: err
 -- + {call}: err
 -- + {name c1}: err
 -- + Error % cursor was not used with 'fetch [cursor]' 'c1'
 -- +1 Error
-create proc cql_cursor_diff_without_cursor_arg()
+create proc cql_cursor_diff_col_without_cursor_arg()
 begin
   declare c1 cursor for select 1 x, 'y' y;
   declare c2 cursor for select 1 x, 'y' y;
   fetch c2;
-  set a_string := cql_cursor_diff(c1, c2);
+  set a_string := cql_cursor_diff_col(c1, c2);
 end;
 
--- TEST: call cql_cursor_diff with incompatible cursor types
+-- TEST: call cql_cursor_diff_col with incompatible cursor types
 -- + {create_proc_stmt}: err
 -- + {assign}: err
 -- + {call}: err
 -- + {name c1}: err
--- + Error % in cql_cursor_diff, all columns must be an exact type match (expected integer notnull; found text notnull) 'x'
+-- + Error % in cql_cursor_diff_col, all columns must be an exact type match (expected integer notnull; found text notnull) 'x'
 -- +1 Error
-create proc cql_cursor_diff_wrong_cursor_type()
+create proc cql_cursor_diff_col_wrong_cursor_type()
 begin
   declare c1 cursor for select 1 x;
   declare c2 cursor for select '1' x;
   fetch c1;
   fetch c2;
-  set a_string := cql_cursor_diff(c1, c2);
+  set a_string := cql_cursor_diff_col(c1, c2);
 end;
 
--- TEST: call cql_cursor_diff with invalid column count arguments
+-- TEST: call cql_cursor_diff_col with invalid column count arguments
 -- + {create_proc_stmt}: err
 -- + {assign}: err
 -- + {call}: err
--- + Error % the cursor arguments must have identical column count 'cql_cursor_diff'
+-- + Error % the cursor arguments must have identical column count 'cql_cursor_diff_col'
 -- +1 Error
-create proc cql_cursor_diff_with_wrong_col_count_arg()
+create proc cql_cursor_diff_col_with_wrong_col_count_arg()
 begin
   declare c1 cursor for select 1 x, 'z' z;
   declare c2 cursor for select 1 x;
   fetch c1;
   fetch c2;
-  set a_string := cql_cursor_diff(c1, c2);
+  set a_string := cql_cursor_diff_col(c1, c2);
 end;
 
--- TEST: call cql_cursor_diff with valid cursor param but different column name
+-- TEST: call cql_cursor_diff_col with valid cursor param but different column name
 -- + {create_proc_stmt}: err
 -- + {assign}: err
 -- + {call}: err
--- + Error % in cql_cursor_diff, all column names must be identical so they have unambiguous names 'z'
+-- + Error % in cql_cursor_diff_col, all column names must be identical so they have unambiguous names 'z'
 -- +1 Error
-create proc cql_cursor_diff_compatible_cursor_with_diff_col_name()
+create proc cql_cursor_diff_col_compatible_cursor_with_diff_col_name()
 begin
   declare c1 cursor for select 1 x, 'y' y;
   declare c2 cursor for select 1 z, 'v' v;
   fetch c1;
   fetch c2;
-  set a_string := cql_cursor_diff(c1, c2);
+  set a_string := cql_cursor_diff_col(c1, c2);
 end;
 
--- TEST: call cql_cursor_diff with cursor with fetch value and same shape
+-- TEST: call cql_cursor_diff_col with cursor with fetch value and same shape
 -- + {create_proc_stmt}: ok dml_proc
 -- + {assign}: a_string: text variable
 -- + SET a_string := CASE WHEN c1.x IS NOT c2.x THEN 'x'
 -- + WHEN c1.y IS NOT c2.y THEN 'y'
 -- + END;
 -- - Error
-create proc cql_cursor_diff_with_auto_cursor()
+create proc cql_cursor_diff_col_with_auto_cursor()
 begin
   declare c1 cursor for select 1 x, 'y' y;
   declare c2 cursor for select 1 x, 'y' y;
   fetch c1;
   fetch c2;
-  set a_string := cql_cursor_diff(c1, c2);
+  set a_string := cql_cursor_diff_col(c1, c2);
 end;
 
--- TEST: call cql_cursor_diff from another func
+-- TEST: call cql_cursor_diff_col from another func
 -- + {create_proc_stmt}: ok dml_proc
 -- + {call_stmt}: ok
 -- + CALL printf(CASE WHEN c1.x IS NOT c2.x THEN 'x'
 -- + WHEN c1.y IS NOT c2.y THEN 'y'
 -- + END);
 -- - Error
-create proc print_call_cql_cursor_diff()
+create proc print_call_cql_cursor_diff_col()
 begin
   declare c1 cursor for select 1 x, 'y' y;
   declare c2 cursor for select 1 x, 'v' y;
   fetch c1;
   fetch c2;
-  call printf(cql_cursor_diff(c1, c2));
+  call printf(cql_cursor_diff_col(c1, c2));
 end;
 
 -- TEST: simple trim call (two args)

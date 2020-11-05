@@ -142,7 +142,7 @@ static bool_t sem_validate_identical_ddl(ast_node *cur, ast_node *prev);
 static void sem_setup_region_filters(void);
 static void sem_inside_create_proc_stmt(ast_node *ast);
 static void sem_one_stmt(ast_node *stmt);
-static void sem_rewrite_cql_cursor_diff(ast_node *ast);
+static void sem_rewrite_cql_cursor_diff_col(ast_node *ast);
 static void sem_rewrite_cql_cursor_format(ast_node *ast);
 static void sem_declare_cursor_for_name(ast_node *ast);
 
@@ -5122,7 +5122,7 @@ static void sem_func_char(ast_node *ast, uint32_t arg_count) {
 }
 
 // Validate the variable argument is a auto cursor. This is called to validate
-// cql_cursor_diff(X,Y) arguments.
+// cql_cursor_diff_col(X,Y) arguments.
 static bool_t sem_validate_cursor_from_variable(ast_node *ast, CSTR target) {
   if (is_variable(ast->sem->sem_type)) {
 
@@ -5173,11 +5173,11 @@ static void sem_func_attest_notnull(ast_node *ast, uint32_t arg_count) {
   sem_add_flags(ast, SEM_TYPE_NOTNULL); // note this makes a copy
 }
 
-// validate expression with cql_cursor_diff func is semantically correct.
-// cql_cursor_diff is a CQL builtin function that compare the values of a
+// validate expression with cql_cursor_diff_col func is semantically correct.
+// cql_cursor_diff_col is a CQL builtin function that compare the values of a
 // row between two cursor.
-// Note cql_cursor_diff is also rewritten to a case_expr node
-static void sem_func_cql_cursor_diff(ast_node *ast, uint32_t arg_count) {
+// Note cql_cursor_diff_col is also rewritten to a case_expr node
+static void sem_func_cql_cursor_diff_col(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -5221,7 +5221,7 @@ static void sem_func_cql_cursor_diff(ast_node *ast, uint32_t arg_count) {
 
   // we're making sure the two arguments cursor have the same shape, because we can
   // only do diffing with cursors with the same shape.
-  sem_verify_identical_columns(arg1, arg2, "in cql_cursor_diff");
+  sem_verify_identical_columns(arg1, arg2, "in cql_cursor_diff_col");
   if (is_error(arg1)) {
     record_error(ast);
     return;
@@ -5232,9 +5232,9 @@ static void sem_func_cql_cursor_diff(ast_node *ast, uint32_t arg_count) {
   name_ast->sem = new_sem(SEM_TYPE_TEXT);
   ast->sem = name_ast->sem;
 
-  // We have a cql_cursor_diff function call, we rewrite the node to
+  // We have a cql_cursor_diff_col function call, we rewrite the node to
   // a case_expr node.
-  sem_rewrite_cql_cursor_diff(ast);
+  sem_rewrite_cql_cursor_diff_col(ast);
 }
 
 static void sem_func_upper(ast_node *ast, uint32_t arg_count) {
@@ -6145,10 +6145,10 @@ static ast_node *sem_generate_cursor_printf(ast_node *variable) {
 }
 
 
-// Generate a 'case_expr' node from two cursors variables. This is used to rewrite cql_cursor_diff(X,Y)
+// Generate a 'case_expr' node from two cursors variables. This is used to rewrite cql_cursor_diff_col(X,Y)
 // function to a case expr.
 // e.g:
-// cql_cursor_diff(C1, C2); ===> CASE WHEN C1.x IS NOT C2.x THEN 'x' WHEN C1.y IS NOT C2.y THEN 'y'
+// cql_cursor_diff_col(C1, C2); ===> CASE WHEN C1.x IS NOT C2.x THEN 'x' WHEN C1.y IS NOT C2.y THEN 'y'
 static ast_node *sem_generate_case_expr(ast_node *var1, ast_node *var2) {
   Contract(is_variable(var1->sem->sem_type));
   Contract(is_variable(var2->sem->sem_type));
@@ -6217,16 +6217,16 @@ static void sem_rewrite_cql_cursor_format(ast_node *ast) {
 }
 
 
-// rewrite call node with cql_cursor_diff(X,Y) to a case_expr statement
+// rewrite call node with cql_cursor_diff_col(X,Y) to a case_expr statement
 // e.g: C1 and C2 are two cursor variable with the same shape
-// cql_cursor_diff(C1, C2); ===> CASE WHEN C1.x IS NOT C2.x THEN 'x' WHEN C1.y IS NOT C2.y THEN 'y'
-static void sem_rewrite_cql_cursor_diff(ast_node *ast) {
+// cql_cursor_diff_col(C1, C2); ===> CASE WHEN C1.x IS NOT C2.x THEN 'x' WHEN C1.y IS NOT C2.y THEN 'y'
+static void sem_rewrite_cql_cursor_diff_col(ast_node *ast) {
   Contract(is_ast_call(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
-  Contract(!Strcasecmp("cql_cursor_diff", name));
+  Contract(!Strcasecmp("cql_cursor_diff_col", name));
 
   AST_REWRITE_INFO_SET(name_ast->lineno, name_ast->filename);
 
@@ -6235,7 +6235,7 @@ static void sem_rewrite_cql_cursor_diff(ast_node *ast) {
 
   ast_node *case_expr = sem_generate_case_expr(arg1, arg2);
 
-  // Reset the cql_cursor_diff function call node to a case_expr
+  // Reset the cql_cursor_diff_col function call node to a case_expr
   // node.
   ast->type = case_expr->type;
   ast_set_left(ast, case_expr->left);
@@ -16628,7 +16628,7 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(ifnull);
   FUNC_INIT(nullif);
   FUNC_INIT(upper);
-  FUNC_INIT(cql_cursor_diff);
+  FUNC_INIT(cql_cursor_diff_col);
   FUNC_INIT(cql_cursor_format);
   FUNC_INIT(char);
   FUNC_INIT(abs);

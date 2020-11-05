@@ -47398,14 +47398,14 @@ END;
 
 The statement ending at line XXXX
 
-SET a_string := cql_cursor_diff(1, "bogus");
+SET a_string := cql_cursor_diff_col(1, "bogus");
 
-Error at test/sem_test.sql:XXXX : in num : CQL0341: argument must be a variable in function 'cql_cursor_diff'
+Error at test/sem_test.sql:XXXX : in num : CQL0341: argument must be a variable in function 'cql_cursor_diff_col'
 
   {assign}: err
   | {name a_string}: a_string: text variable
   | {call}: err
-    | {name cql_cursor_diff}
+    | {name cql_cursor_diff_col}
     | {call_arg_list}
       | {call_filter_clause}
       | {arg_list}: ok
@@ -47415,14 +47415,14 @@ Error at test/sem_test.sql:XXXX : in num : CQL0341: argument must be a variable 
 
 The statement ending at line XXXX
 
-SET a_string := cql_cursor_diff(an_int, an_int2);
+SET a_string := cql_cursor_diff_col(an_int, an_int2);
 
 Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'an_int'
 
   {assign}: err
   | {name a_string}: a_string: text variable
   | {call}: err
-    | {name cql_cursor_diff}
+    | {name cql_cursor_diff_col}
     | {call_arg_list}
       | {call_filter_clause}
       | {arg_list}: ok
@@ -47432,14 +47432,14 @@ Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'an
 
 The statement ending at line XXXX
 
-SET a_string := cql_cursor_diff(an_int, an_int2, 1);
+SET a_string := cql_cursor_diff_col(an_int, an_int2, 1);
 
-Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'cql_cursor_diff'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'cql_cursor_diff_col'
 
   {assign}: err
   | {name a_string}: a_string: text variable
   | {call}: err
-    | {name cql_cursor_diff}: err
+    | {name cql_cursor_diff_col}: err
     | {call_arg_list}
       | {call_filter_clause}
       | {arg_list}: ok
@@ -47451,18 +47451,18 @@ Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect numbe
 
 The statement ending at line XXXX
 
-CREATE PROC cql_cursor_diff_without_cursor_arg ()
+CREATE PROC cql_cursor_diff_col_without_cursor_arg ()
 BEGIN
   DECLARE c1 CURSOR FOR SELECT 1 AS x, 'y' AS y;
   DECLARE c2 CURSOR FOR SELECT 1 AS x, 'y' AS y;
   FETCH c2;
-  SET a_string := cql_cursor_diff(c1, c2);
+  SET a_string := cql_cursor_diff_col(c1, c2);
 END;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0067: cursor was not used with 'fetch [cursor]' 'c1'
 
   {create_proc_stmt}: err
-  | {name cql_cursor_diff_without_cursor_arg}: err
+  | {name cql_cursor_diff_col_without_cursor_arg}: err
   | {proc_params_stmts}
     | {stmt_list}: err
       | {declare_cursor}: c1: select: { x: integer notnull, y: text notnull } variable
@@ -47516,7 +47516,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0067: cursor was not used with 'fe
       | {assign}: err
         | {name a_string}: a_string: text variable
         | {call}: err
-          | {name cql_cursor_diff}
+          | {name cql_cursor_diff_col}
           | {call_arg_list}
             | {call_filter_clause}
             | {arg_list}: ok
@@ -47526,19 +47526,19 @@ Error at test/sem_test.sql:XXXX : in str : CQL0067: cursor was not used with 'fe
 
 The statement ending at line XXXX
 
-CREATE PROC cql_cursor_diff_wrong_cursor_type ()
+CREATE PROC cql_cursor_diff_col_wrong_cursor_type ()
 BEGIN
   DECLARE c1 CURSOR FOR SELECT 1 AS x;
   DECLARE c2 CURSOR FOR SELECT '1' AS x;
   FETCH c1;
   FETCH c2;
-  SET a_string := cql_cursor_diff(c1, c2);
+  SET a_string := cql_cursor_diff_col(c1, c2);
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0061: in cql_cursor_diff, all columns must be an exact type match (expected integer notnull; found text notnull) 'x'
+Error at test/sem_test.sql:XXXX : in str : CQL0061: in cql_cursor_diff_col, all columns must be an exact type match (expected integer notnull; found text notnull) 'x'
 
   {create_proc_stmt}: err
-  | {name cql_cursor_diff_wrong_cursor_type}: err
+  | {name cql_cursor_diff_col_wrong_cursor_type}: err
   | {proc_params_stmts}
     | {stmt_list}: err
       | {declare_cursor}: c1: select: { x: integer notnull } variable
@@ -47584,7 +47584,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0061: in cql_cursor_diff, all colu
       | {assign}: err
         | {name a_string}: a_string: text variable
         | {call}: err
-          | {name cql_cursor_diff}
+          | {name cql_cursor_diff_col}
           | {call_arg_list}
             | {call_filter_clause}
             | {arg_list}: ok
@@ -47594,19 +47594,19 @@ Error at test/sem_test.sql:XXXX : in str : CQL0061: in cql_cursor_diff, all colu
 
 The statement ending at line XXXX
 
-CREATE PROC cql_cursor_diff_with_wrong_col_count_arg ()
+CREATE PROC cql_cursor_diff_col_with_wrong_col_count_arg ()
 BEGIN
   DECLARE c1 CURSOR FOR SELECT 1 AS x, 'z' AS z;
   DECLARE c2 CURSOR FOR SELECT 1 AS x;
   FETCH c1;
   FETCH c2;
-  SET a_string := cql_cursor_diff(c1, c2);
+  SET a_string := cql_cursor_diff_col(c1, c2);
 END;
 
-Error at test/sem_test.sql:XXXX : in call : CQL0342: the cursor arguments must have identical column count 'cql_cursor_diff'
+Error at test/sem_test.sql:XXXX : in call : CQL0342: the cursor arguments must have identical column count 'cql_cursor_diff_col'
 
   {create_proc_stmt}: err
-  | {name cql_cursor_diff_with_wrong_col_count_arg}: err
+  | {name cql_cursor_diff_col_with_wrong_col_count_arg}: err
   | {proc_params_stmts}
     | {stmt_list}: err
       | {declare_cursor}: c1: select: { x: integer notnull, z: text notnull } variable
@@ -47657,7 +47657,7 @@ Error at test/sem_test.sql:XXXX : in call : CQL0342: the cursor arguments must h
       | {assign}: err
         | {name a_string}: a_string: text variable
         | {call}: err
-          | {name cql_cursor_diff}
+          | {name cql_cursor_diff_col}
           | {call_arg_list}
             | {call_filter_clause}
             | {arg_list}: ok
@@ -47667,19 +47667,19 @@ Error at test/sem_test.sql:XXXX : in call : CQL0342: the cursor arguments must h
 
 The statement ending at line XXXX
 
-CREATE PROC cql_cursor_diff_compatible_cursor_with_diff_col_name ()
+CREATE PROC cql_cursor_diff_col_compatible_cursor_with_diff_col_name ()
 BEGIN
   DECLARE c1 CURSOR FOR SELECT 1 AS x, 'y' AS y;
   DECLARE c2 CURSOR FOR SELECT 1 AS z, 'v' AS v;
   FETCH c1;
   FETCH c2;
-  SET a_string := cql_cursor_diff(c1, c2);
+  SET a_string := cql_cursor_diff_col(c1, c2);
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0058: in cql_cursor_diff, all column names must be identical so they have unambiguous names 'z'
+Error at test/sem_test.sql:XXXX : in str : CQL0058: in cql_cursor_diff_col, all column names must be identical so they have unambiguous names 'z'
 
   {create_proc_stmt}: err
-  | {name cql_cursor_diff_compatible_cursor_with_diff_col_name}: err
+  | {name cql_cursor_diff_col_compatible_cursor_with_diff_col_name}: err
   | {proc_params_stmts}
     | {stmt_list}: err
       | {declare_cursor}: c1: select: { x: integer notnull, y: text notnull } variable
@@ -47735,7 +47735,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0058: in cql_cursor_diff, all colu
       | {assign}: err
         | {name a_string}: a_string: text variable
         | {call}: err
-          | {name cql_cursor_diff}
+          | {name cql_cursor_diff_col}
           | {call_arg_list}
             | {call_filter_clause}
             | {arg_list}: ok
@@ -47745,7 +47745,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0058: in cql_cursor_diff, all colu
 
 The statement ending at line XXXX
 
-CREATE PROC cql_cursor_diff_with_auto_cursor ()
+CREATE PROC cql_cursor_diff_col_with_auto_cursor ()
 BEGIN
   DECLARE c1 CURSOR FOR SELECT 1 AS x, 'y' AS y;
   DECLARE c2 CURSOR FOR SELECT 1 AS x, 'y' AS y;
@@ -47757,7 +47757,7 @@ BEGIN
 END;
 
   {create_proc_stmt}: ok dml_proc
-  | {name cql_cursor_diff_with_auto_cursor}: ok dml_proc
+  | {name cql_cursor_diff_col_with_auto_cursor}: ok dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_cursor}: c1: select: { x: integer notnull, y: text notnull } variable
@@ -47837,7 +47837,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC print_call_cql_cursor_diff ()
+CREATE PROC print_call_cql_cursor_diff_col ()
 BEGIN
   DECLARE c1 CURSOR FOR SELECT 1 AS x, 'y' AS y;
   DECLARE c2 CURSOR FOR SELECT 1 AS x, 'v' AS y;
@@ -47849,7 +47849,7 @@ BEGIN
 END;
 
   {create_proc_stmt}: ok dml_proc
-  | {name print_call_cql_cursor_diff}: ok dml_proc
+  | {name print_call_cql_cursor_diff_col}: ok dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_cursor}: c1: select: { x: integer notnull, y: text notnull } variable

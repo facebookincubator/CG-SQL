@@ -457,7 +457,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><a href="#cql0258-extension-fragment-must-add-exactly-one-cte-found-extra-named-name">CQL0258: extension fragment must add exactly one CTE; found extra named ‘name’</a></li>
 <li><a href="#cql0259-extension-fragment-cte-must-select-t.-from-base-cte">CQL0259: extension fragment CTE must select T.* from base CTE</a></li>
 <li><a href="#cql0260-extension-fragment-cte-must-be-a-simple-left-outer-join-from-table_name">CQL0260: extension fragment CTE must be a simple left outer join from ‘table_name’</a></li>
-<li><a href="#cql0261-available-for-re-use">CQL0261: available for re-use</a></li>
+<li><a href="#cql0261-argument-must-be-a-nullable-type-but-not-constant-null-in-function">CQL0261: argument must be a nullable type (but not constant NULL) in ‘function’</a></li>
 <li><a href="#cql0262-available-for-re-use">CQL0262: available for re-use</a></li>
 <li><a href="#cql0263-non-ansi-joins-are-forbidden-if-strict-join-mode-is-enabled.">CQL0263: non-ANSI joins are forbidden if strict join mode is enabled.</a></li>
 <li><a href="#cql0264-duplicate-assembly-fragments-of-base-fragment">CQL0264: duplicate assembly fragments of base fragment</a></li>
@@ -536,8 +536,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><a href="#cql0338-the-name-of-a-migration-procedure-may-not-end-in-_crc-procedure_name">CQL0338: the name of a migration procedure may not end in ’_crc’ ‘procedure_name’</a></li>
 <li><a href="#cql0339-without-rowid-tables-are-forbidden-if-strict-without-rowid-mode-is-enabled">CQL0339: WITHOUT ROWID tables are forbidden if strict without rowid mode is enabled</a></li>
 <li><a href="#cql0340-from-arguments-used-in-a-procedure-with-no-arguments-procedure_name">CQL0340: FROM ARGUMENTS used in a procedure with no arguments ‘procedure_name’</a></li>
-<li><a href="#cql0341-argument-must-be-a-variable-in-function-cql_cursor_diff">CQL0341: argument must be a variable in function ‘cql_cursor_diff’</a></li>
-<li><a href="#cql0342-the-cursor-arguments-must-have-identical-column-count-cql_cursor_diff">CQL0342: the cursor arguments must have identical column count ‘cql_cursor_diff’</a></li>
+<li><a href="#cql0341-argument-must-be-a-variable-in-function-function_name">CQL0341: argument must be a variable in function ‘function_name’</a></li>
+<li><a href="#cql0342-the-cursor-arguments-must-have-identical-column-count-function_name">CQL0342: the cursor arguments must have identical column count ‘function_name’</a></li>
 <li><a href="#cql0344-the-cursor-did-not-originate-from-a-sqlite-statement-it-only-has-values-name">CQL0344: the cursor did not originate from a SQLite statement, it only has values ‘name’</a></li>
 <li><a href="#cql0343-all-arguments-must-be-blob-cql_get_blob_size">CQL0343: all arguments must be blob ‘cql_get_blob_size’</a></li>
 </ul></li>
@@ -7899,7 +7899,9 @@ select * from my_function(1,2,3);</code></pre>
 <a class="sourceLine" id="cb357-8" data-line-number="8"><span class="kw">end</span>;</a></code></pre></div>
 <p>Here extension <code>ext1</code> is adding <code>extra_column</code> which came from <code>extra_stuff</code>. There could have been any desired join condition or indeed any join expression at all but it has to begin with <code>from core left outer join</code> so that all the core columns will be present and now rows can be removed.</p>
 <hr />
-<h3 id="cql0261-available-for-re-use">CQL0261: available for re-use</h3>
+<h3 id="cql0261-argument-must-be-a-nullable-type-but-not-constant-null-in-function">CQL0261: argument must be a nullable type (but not constant NULL) in ‘function’</h3>
+<p>Functions like <code>attest_notnull</code> only make sense if the argument is nullable. If it’s already not null the operation is uninteresting/redundant.</p>
+<p>The most likely cause is that the function call in question is vestigial and you can simply remove it.</p>
 <hr />
 <h3 id="cql0262-available-for-re-use">CQL0262: available for re-use</h3>
 <hr />
@@ -8249,10 +8251,10 @@ insert into foo(id) values(1) on conflict do update set id=10;</code></pre>
 <h3 id="cql0340-from-arguments-used-in-a-procedure-with-no-arguments-procedure_name">CQL0340: FROM ARGUMENTS used in a procedure with no arguments ‘procedure_name’</h3>
 <p>The named procedure has a call that uses the FROM ARGUMENTS pattern but it doesn’t have any arguments. This is almost certainly a cut/paste from a different location that needs to be adjusted.</p>
 <hr />
-<h3 id="cql0341-argument-must-be-a-variable-in-function-cql_cursor_diff">CQL0341: argument must be a variable in function ‘cql_cursor_diff’</h3>
-<p>The argument for the CQL builtin function cql_cursor_diff should always be a variable. It can not be an expression for example</p>
+<h3 id="cql0341-argument-must-be-a-variable-in-function-function_name">CQL0341: argument must be a variable in function ‘function_name’</h3>
+<p>The argument for the CQL builtin function ‘function_name’ should always be a variable. It can not be an expression for example</p>
 <hr />
-<h3 id="cql0342-the-cursor-arguments-must-have-identical-column-count-cql_cursor_diff">CQL0342: the cursor arguments must have identical column count ‘cql_cursor_diff’</h3>
+<h3 id="cql0342-the-cursor-arguments-must-have-identical-column-count-function_name">CQL0342: the cursor arguments must have identical column count ‘function_name’</h3>
 <p>The number of column in the cursor arguments must be identical to accurately do diffing between two cursor.</p>
 <table style="width:8%;">
 <colgroup>

@@ -10600,7 +10600,12 @@ been any desired join condition or indeed any join expression at all but it has 
 
 -----
 
-### CQL0261: available for re-use
+### CQL0261: argument must be a nullable type (but not constant NULL) in 'function'
+
+Functions like `attest_notnull` only make sense if the argument is nullable.  If it's already
+not null the operation is uninteresting/redundant.
+
+The most likely cause is that the function call in question is vestigial and you can simply remove it.
 
 -----
 
@@ -11301,13 +11306,13 @@ This is almost certainly a cut/paste from a different location that needs to be 
 
 -----
 
-### CQL0341: argument must be a variable in function 'cql_cursor_diff'
+### CQL0341: argument must be a variable in function 'function_name'
 
-The argument for the CQL builtin function cql_cursor_diff should always be a variable. It can not be an expression for example
+The argument for the CQL builtin function 'function_name' should always be a variable. It can not be an expression for example
 
 -----
 
-### CQL0342: the cursor arguments must have identical column count 'cql_cursor_diff'
+### CQL0342: the cursor arguments must have identical column count 'function_name'
 
 The number of column in the cursor arguments must be identical to accurately do diffing between two cursor.
 
