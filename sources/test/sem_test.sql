@@ -11901,10 +11901,10 @@ set sens_text := (select trim(name) from with_sensitive);
 set sens_text := (select trim("xxx", name) result from with_sensitive);
 
 -- TEST: call cql_cursor_format on a auto cursor
--- + {create_proc_stmt}: select: { p: text notnull } dml_proc
+-- + {create_proc_stmt}: ok dml_proc
 -- + DECLARE c1 CURSOR FOR SELECT CAST(1 AS BOOL) AS a, 1 AS b, 99L AS c, 'x' AS d, 1.1 AS e, CAST('y' AS BLOB) AS f;
 -- + FETCH c1;
--- + SELECT printf('a:%s|b:%s|c:%s|d:%s|e:%s', CASE WHEN c1.a IS NULL THEN 'null'
+-- + SET a_string := printf('a:%s|b:%s|c:%s|d:%s|e:%s|f:%s', CASE WHEN c1.a IS NULL THEN 'null'
 -- + ELSE printf('%d', c1.a)
 -- + END, CASE WHEN c1.b IS NULL THEN 'null'
 -- + ELSE printf('%d', c1.b)
@@ -11915,19 +11915,31 @@ set sens_text := (select trim("xxx", name) result from with_sensitive);
 -- + END, CASE WHEN c1.e IS NULL THEN 'null'
 -- + ELSE printf('%f', c1.e)
 -- + END, CASE WHEN c1.f IS NULL THEN 'null'
--- + ELSE printf('%s', '<non-null-blob>')
--- + END) AS p;
+-- + ELSE printf('length %lld blob', cql_get_blob_size(c1.f))
+-- + END);
 -- - Error
 create proc print_call_cql_cursor_format()
 begin
   declare c1 cursor for select cast(1 as bool) a, 1 b, 99L c, 'x' d, 1.1 e, cast('y' as blob) f;
+  fetch c1;
+  set a_string := cql_cursor_format(c1);
+end;
+
+-- TEST: call cql_cursor_format in select context
+-- + {create_proc_stmt}: err
+-- + {select_stmt}: err
+-- + {call}: err
+-- + Error % function may not appear in this context 'cql_cursor_format'
+-- +1 Error
+create proc select_cql_cursor_format()
+begin
+  declare c1 cursor for select 1 as a;
   fetch c1;
   select cql_cursor_format(c1) as p;
 end;
 
 -- TEST: call cql_cursor_format on a not auto cursor
 -- + {create_proc_stmt}: err
--- + {select_stmt}: err
 -- + {call}: err
 -- + {name c}: err
 -- + Error % cursor was not used with 'fetch [cursor]' 'c'
@@ -11935,7 +11947,7 @@ end;
 create proc print_call_cql_not_fetch_cursor_format()
 begin
   declare c cursor for select 1;
-  select cql_cursor_format(c) as p;
+  set a_string := cql_cursor_format(c);
 end;
 
 -- TEST: test cql_cursor_format with a non cursor params

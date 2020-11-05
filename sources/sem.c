@@ -955,10 +955,10 @@ CSTR coretype_format(sem_t sem_type) {
   switch (core_type_of(sem_type)) {
     case SEM_TYPE_INTEGER:
     case SEM_TYPE_BOOL: result = "%d"; break;
+    case SEM_TYPE_BLOB:
     case SEM_TYPE_LONG_INTEGER: result = "%lld"; break;
     case SEM_TYPE_REAL: result = "%f"; break;
     case SEM_TYPE_TEXT: result = "%s"; break;
-    case SEM_TYPE_BLOB: result = "%s"; break;
   }
   Invariant(result);
   return result;
@@ -5845,6 +5845,16 @@ static void sem_func_cql_cursor_format(ast_node *ast, uint32_t arg_count) {
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
+  // Cursors don't make a lot of sense in the SQL context.  It could be
+  // done as just zillions of bound variables but the result wouldn't be very
+  // useful in SQL and if you want to format you can simply format the result
+  // from the cursor it arrives in anyway.  So in a SQL context this is probably
+  // just an error or an unrecommended pattern.
+
+  if (!sem_validate_context(ast, name, SEM_EXPR_CONTEXT_NONE)) {
+    return;
+  }
+
   if (!sem_validate_arg_count(ast, arg_count, 1)) {
     return;
   }
@@ -6085,22 +6095,26 @@ static ast_node* sem_generate_arg_list(
     CSTR col_name,
     sem_t type) {
   // left to arg_list node
-  ast_node* dot = NULL;
+  ast_node* dot = new_ast_dot(new_ast_str(cusor_name), new_ast_str(col_name));
+  // If the argument is blob type we need to print just its size therefore we rewrite
+  // ast to call cql_get_blob_size(<blob>) which return the size of the argument
   if (is_blob(type)) {
-    // if the variable is a blob we only print the size of the blob in printf
-    // TODO: T78145393 replace this with blob size
-    dot = new_ast_str("'<non-null-blob>'");
-  } else {
-    dot = new_ast_dot(new_ast_str(cusor_name), new_ast_str(col_name));
+    // right to call_arg_list node
+    ast_node* arg_list = new_ast_arg_list(dot, NULL);
+    ast_node* call_arg_list =
+        new_ast_call_arg_list(new_ast_call_filter_clause(NULL, NULL), arg_list);
+    dot = new_ast_call(new_ast_str("cql_get_blob_size"), call_arg_list);
   }
 
-  bprintf(format_buf, "%s", coretype_format(type));
+  bprintf(format_buf, is_blob(type) ? "length %s blob" : "%s", coretype_format(type));
   return new_ast_arg_list(dot, NULL);
 }
 
 // Generate printf(...) function node. This is used by
 // sem_generate_cursor_printf() to generate the rewrite for cql_cursor_format
-// function. e.g: cusor_name = C, dot_name = x, type = text PRINTF("%s", C.x);
+// function.
+// e.g: cusor_name = C, dot_name = x, type = text PRINTF("%s", C.x);
+// e.g: cusor_name = C, dot_name = x, type = blob PRINTF("length %d blob", cql_get_blob_size(C.x));
 static ast_node* sem_generate_printf_call(CSTR format, ast_node *arg_list) {
   CSTR copy_format = dup_printf("'%s'", format);
   // right to call_arg_list node

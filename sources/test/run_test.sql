@@ -2650,7 +2650,7 @@ BEGIN_TEST(boxing_cursors)
   set i := 0;
   while i < 5
   begin
-    declare C cursor for 
+    declare C cursor for
       with data(x,y) as (values (1,2), (3,4), (5,6))
       select * from data;
 

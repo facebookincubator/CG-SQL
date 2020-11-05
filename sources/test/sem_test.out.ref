@@ -48461,7 +48461,7 @@ CREATE PROC print_call_cql_cursor_format ()
 BEGIN
   DECLARE c1 CURSOR FOR SELECT CAST(1 AS BOOL) AS a, 1 AS b, 99L AS c, 'x' AS d, 1.1 AS e, CAST('y' AS BLOB) AS f;
   FETCH c1;
-  SELECT printf('a:%s|b:%s|c:%s|d:%s|e:%s|f:%s', CASE WHEN c1.a IS NULL THEN 'null'
+  SET a_string := printf('a:%s|b:%s|c:%s|d:%s|e:%s|f:%s', CASE WHEN c1.a IS NULL THEN 'null'
   ELSE printf('%d', c1.a)
   END, CASE WHEN c1.b IS NULL THEN 'null'
   ELSE printf('%d', c1.b)
@@ -48472,12 +48472,12 @@ BEGIN
   END, CASE WHEN c1.e IS NULL THEN 'null'
   ELSE printf('%f', c1.e)
   END, CASE WHEN c1.f IS NULL THEN 'null'
-  ELSE printf('%s', '<non-null-blob>')
-  END) AS p;
+  ELSE printf('length %lld blob', cql_get_blob_size(c1.f))
+  END);
 END;
 
-  {create_proc_stmt}: select: { p: text notnull } dml_proc
-  | {name print_call_cql_cursor_format}: select: { p: text notnull } dml_proc
+  {create_proc_stmt}: ok dml_proc
+  | {name print_call_cql_cursor_format}: ok dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_cursor}: c1: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull } variable
@@ -48529,142 +48529,193 @@ END;
       |       | {select_offset}
       | {fetch_stmt}: c1: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull } variable auto_cursor
       | | {name c1}: c1: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull } variable auto_cursor
-      | {select_stmt}: select: { p: text notnull }
-        | {select_core_list}: select: { p: text notnull }
-        | | {select_core}: select: { p: text notnull }
-        |   | {select_expr_list_con}: select: { p: text notnull }
-        |     | {select_expr_list}: select: { p: text notnull }
-        |     | | {select_expr}: p: text notnull
-        |     |   | {call}: text notnull
-        |     |   | | {name printf}: text notnull
+      | {assign}: a_string: text variable
+        | {name a_string}: a_string: text variable
+        | {call}: text notnull
+          | {name printf}: text notnull
+          | {call_arg_list}
+            | {call_filter_clause}
+            | {arg_list}: ok
+              | {strlit 'a:%s|b:%s|c:%s|d:%s|e:%s|f:%s'}: text notnull
+              | {arg_list}
+                | {case_expr}: text notnull
+                | | {connector}: text notnull
+                |   | {case_list}: text notnull
+                |   | | {when}: text notnull
+                |   |   | {is}: bool notnull
+                |   |   | | {dot}: c1_.a: bool notnull variable
+                |   |   | | | {name c1}
+                |   |   | | | {name a}
+                |   |   | | {null}: null
+                |   |   | {strlit 'null'}: text notnull
+                |   | {call}: text notnull
+                |     | {name printf}: text notnull
+                |     | {call_arg_list}
+                |       | {call_filter_clause}
+                |       | {arg_list}: ok
+                |         | {strlit '%d'}: text notnull
+                |         | {arg_list}
+                |           | {dot}: c1_.a: bool notnull variable
+                |             | {name c1}
+                |             | {name a}
+                | {arg_list}
+                  | {case_expr}: text notnull
+                  | | {connector}: text notnull
+                  |   | {case_list}: text notnull
+                  |   | | {when}: text notnull
+                  |   |   | {is}: bool notnull
+                  |   |   | | {dot}: c1_.b: integer notnull variable
+                  |   |   | | | {name c1}
+                  |   |   | | | {name b}
+                  |   |   | | {null}: null
+                  |   |   | {strlit 'null'}: text notnull
+                  |   | {call}: text notnull
+                  |     | {name printf}: text notnull
+                  |     | {call_arg_list}
+                  |       | {call_filter_clause}
+                  |       | {arg_list}: ok
+                  |         | {strlit '%d'}: text notnull
+                  |         | {arg_list}
+                  |           | {dot}: c1_.b: integer notnull variable
+                  |             | {name c1}
+                  |             | {name b}
+                  | {arg_list}
+                    | {case_expr}: text notnull
+                    | | {connector}: text notnull
+                    |   | {case_list}: text notnull
+                    |   | | {when}: text notnull
+                    |   |   | {is}: bool notnull
+                    |   |   | | {dot}: c1_.c: longint notnull variable
+                    |   |   | | | {name c1}
+                    |   |   | | | {name c}
+                    |   |   | | {null}: null
+                    |   |   | {strlit 'null'}: text notnull
+                    |   | {call}: text notnull
+                    |     | {name printf}: text notnull
+                    |     | {call_arg_list}
+                    |       | {call_filter_clause}
+                    |       | {arg_list}: ok
+                    |         | {strlit '%lld'}: text notnull
+                    |         | {arg_list}
+                    |           | {dot}: c1_.c: longint notnull variable
+                    |             | {name c1}
+                    |             | {name c}
+                    | {arg_list}
+                      | {case_expr}: text notnull
+                      | | {connector}: text notnull
+                      |   | {case_list}: text notnull
+                      |   | | {when}: text notnull
+                      |   |   | {is}: bool notnull
+                      |   |   | | {dot}: c1_.d: text notnull variable
+                      |   |   | | | {name c1}
+                      |   |   | | | {name d}
+                      |   |   | | {null}: null
+                      |   |   | {strlit 'null'}: text notnull
+                      |   | {call}: text notnull
+                      |     | {name printf}: text notnull
+                      |     | {call_arg_list}
+                      |       | {call_filter_clause}
+                      |       | {arg_list}: ok
+                      |         | {strlit '%s'}: text notnull
+                      |         | {arg_list}
+                      |           | {dot}: c1_.d: text notnull variable
+                      |             | {name c1}
+                      |             | {name d}
+                      | {arg_list}
+                        | {case_expr}: text notnull
+                        | | {connector}: text notnull
+                        |   | {case_list}: text notnull
+                        |   | | {when}: text notnull
+                        |   |   | {is}: bool notnull
+                        |   |   | | {dot}: c1_.e: real notnull variable
+                        |   |   | | | {name c1}
+                        |   |   | | | {name e}
+                        |   |   | | {null}: null
+                        |   |   | {strlit 'null'}: text notnull
+                        |   | {call}: text notnull
+                        |     | {name printf}: text notnull
+                        |     | {call_arg_list}
+                        |       | {call_filter_clause}
+                        |       | {arg_list}: ok
+                        |         | {strlit '%f'}: text notnull
+                        |         | {arg_list}
+                        |           | {dot}: c1_.e: real notnull variable
+                        |             | {name c1}
+                        |             | {name e}
+                        | {arg_list}
+                          | {case_expr}: text notnull
+                            | {connector}: text notnull
+                              | {case_list}: text notnull
+                              | | {when}: text notnull
+                              |   | {is}: bool notnull
+                              |   | | {dot}: c1_.f: blob notnull variable
+                              |   | | | {name c1}
+                              |   | | | {name f}
+                              |   | | {null}: null
+                              |   | {strlit 'null'}: text notnull
+                              | {call}: text notnull
+                                | {name printf}: text notnull
+                                | {call_arg_list}
+                                  | {call_filter_clause}
+                                  | {arg_list}: ok
+                                    | {strlit 'length %lld blob'}: text notnull
+                                    | {arg_list}
+                                      | {call}: longint notnull
+                                        | {name cql_get_blob_size}: longint notnull
+                                        | {call_arg_list}
+                                          | {call_filter_clause}
+                                          | {arg_list}: ok
+                                            | {dot}: c1_.f: blob notnull variable
+                                              | {name c1}
+                                              | {name f}
+
+The statement ending at line XXXX
+
+CREATE PROC select_cql_cursor_format ()
+BEGIN
+  DECLARE c1 CURSOR FOR SELECT 1 AS a;
+  FETCH c1;
+  SELECT cql_cursor_format(c1) AS p;
+END;
+
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'cql_cursor_format'
+
+  {create_proc_stmt}: err
+  | {name select_cql_cursor_format}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor}: c1: select: { a: integer notnull } variable
+      | | {name c1}: c1: select: { a: integer notnull } variable auto_cursor
+      | | {select_stmt}: select: { a: integer notnull }
+      |   | {select_core_list}: select: { a: integer notnull }
+      |   | | {select_core}: select: { a: integer notnull }
+      |   |   | {select_expr_list_con}: select: { a: integer notnull }
+      |   |     | {select_expr_list}: select: { a: integer notnull }
+      |   |     | | {select_expr}: a: integer notnull
+      |   |     |   | {int 1}: integer notnull
+      |   |     |   | {opt_as_alias}
+      |   |     |     | {name a}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_stmt}: c1: select: { a: integer notnull } variable auto_cursor
+      | | {name c1}: c1: select: { a: integer notnull } variable auto_cursor
+      | {select_stmt}: err
+        | {select_core_list}: err
+        | | {select_core}: err
+        |   | {select_expr_list_con}: err
+        |     | {select_expr_list}: err
+        |     | | {select_expr}: err
+        |     |   | {call}: err
+        |     |   | | {name cql_cursor_format}
         |     |   | | {call_arg_list}
         |     |   |   | {call_filter_clause}
         |     |   |   | {arg_list}: ok
-        |     |   |     | {strlit 'a:%s|b:%s|c:%s|d:%s|e:%s|f:%s'}: text notnull
-        |     |   |     | {arg_list}
-        |     |   |       | {case_expr}: text notnull
-        |     |   |       | | {connector}: text notnull
-        |     |   |       |   | {case_list}: text notnull
-        |     |   |       |   | | {when}: text notnull
-        |     |   |       |   |   | {is}: bool notnull
-        |     |   |       |   |   | | {dot}: c1_.a: bool notnull variable
-        |     |   |       |   |   | | | {name c1}
-        |     |   |       |   |   | | | {name a}
-        |     |   |       |   |   | | {null}: null
-        |     |   |       |   |   | {strlit 'null'}: text notnull
-        |     |   |       |   | {call}: text notnull
-        |     |   |       |     | {name printf}: text notnull
-        |     |   |       |     | {call_arg_list}
-        |     |   |       |       | {call_filter_clause}
-        |     |   |       |       | {arg_list}: ok
-        |     |   |       |         | {strlit '%d'}: text notnull
-        |     |   |       |         | {arg_list}
-        |     |   |       |           | {dot}: c1_.a: bool notnull variable
-        |     |   |       |             | {name c1}
-        |     |   |       |             | {name a}
-        |     |   |       | {arg_list}
-        |     |   |         | {case_expr}: text notnull
-        |     |   |         | | {connector}: text notnull
-        |     |   |         |   | {case_list}: text notnull
-        |     |   |         |   | | {when}: text notnull
-        |     |   |         |   |   | {is}: bool notnull
-        |     |   |         |   |   | | {dot}: c1_.b: integer notnull variable
-        |     |   |         |   |   | | | {name c1}
-        |     |   |         |   |   | | | {name b}
-        |     |   |         |   |   | | {null}: null
-        |     |   |         |   |   | {strlit 'null'}: text notnull
-        |     |   |         |   | {call}: text notnull
-        |     |   |         |     | {name printf}: text notnull
-        |     |   |         |     | {call_arg_list}
-        |     |   |         |       | {call_filter_clause}
-        |     |   |         |       | {arg_list}: ok
-        |     |   |         |         | {strlit '%d'}: text notnull
-        |     |   |         |         | {arg_list}
-        |     |   |         |           | {dot}: c1_.b: integer notnull variable
-        |     |   |         |             | {name c1}
-        |     |   |         |             | {name b}
-        |     |   |         | {arg_list}
-        |     |   |           | {case_expr}: text notnull
-        |     |   |           | | {connector}: text notnull
-        |     |   |           |   | {case_list}: text notnull
-        |     |   |           |   | | {when}: text notnull
-        |     |   |           |   |   | {is}: bool notnull
-        |     |   |           |   |   | | {dot}: c1_.c: longint notnull variable
-        |     |   |           |   |   | | | {name c1}
-        |     |   |           |   |   | | | {name c}
-        |     |   |           |   |   | | {null}: null
-        |     |   |           |   |   | {strlit 'null'}: text notnull
-        |     |   |           |   | {call}: text notnull
-        |     |   |           |     | {name printf}: text notnull
-        |     |   |           |     | {call_arg_list}
-        |     |   |           |       | {call_filter_clause}
-        |     |   |           |       | {arg_list}: ok
-        |     |   |           |         | {strlit '%lld'}: text notnull
-        |     |   |           |         | {arg_list}
-        |     |   |           |           | {dot}: c1_.c: longint notnull variable
-        |     |   |           |             | {name c1}
-        |     |   |           |             | {name c}
-        |     |   |           | {arg_list}
-        |     |   |             | {case_expr}: text notnull
-        |     |   |             | | {connector}: text notnull
-        |     |   |             |   | {case_list}: text notnull
-        |     |   |             |   | | {when}: text notnull
-        |     |   |             |   |   | {is}: bool notnull
-        |     |   |             |   |   | | {dot}: c1_.d: text notnull variable
-        |     |   |             |   |   | | | {name c1}
-        |     |   |             |   |   | | | {name d}
-        |     |   |             |   |   | | {null}: null
-        |     |   |             |   |   | {strlit 'null'}: text notnull
-        |     |   |             |   | {call}: text notnull
-        |     |   |             |     | {name printf}: text notnull
-        |     |   |             |     | {call_arg_list}
-        |     |   |             |       | {call_filter_clause}
-        |     |   |             |       | {arg_list}: ok
-        |     |   |             |         | {strlit '%s'}: text notnull
-        |     |   |             |         | {arg_list}
-        |     |   |             |           | {dot}: c1_.d: text notnull variable
-        |     |   |             |             | {name c1}
-        |     |   |             |             | {name d}
-        |     |   |             | {arg_list}
-        |     |   |               | {case_expr}: text notnull
-        |     |   |               | | {connector}: text notnull
-        |     |   |               |   | {case_list}: text notnull
-        |     |   |               |   | | {when}: text notnull
-        |     |   |               |   |   | {is}: bool notnull
-        |     |   |               |   |   | | {dot}: c1_.e: real notnull variable
-        |     |   |               |   |   | | | {name c1}
-        |     |   |               |   |   | | | {name e}
-        |     |   |               |   |   | | {null}: null
-        |     |   |               |   |   | {strlit 'null'}: text notnull
-        |     |   |               |   | {call}: text notnull
-        |     |   |               |     | {name printf}: text notnull
-        |     |   |               |     | {call_arg_list}
-        |     |   |               |       | {call_filter_clause}
-        |     |   |               |       | {arg_list}: ok
-        |     |   |               |         | {strlit '%f'}: text notnull
-        |     |   |               |         | {arg_list}
-        |     |   |               |           | {dot}: c1_.e: real notnull variable
-        |     |   |               |             | {name c1}
-        |     |   |               |             | {name e}
-        |     |   |               | {arg_list}
-        |     |   |                 | {case_expr}: text notnull
-        |     |   |                   | {connector}: text notnull
-        |     |   |                     | {case_list}: text notnull
-        |     |   |                     | | {when}: text notnull
-        |     |   |                     |   | {is}: bool notnull
-        |     |   |                     |   | | {dot}: c1_.f: blob notnull variable
-        |     |   |                     |   | | | {name c1}
-        |     |   |                     |   | | | {name f}
-        |     |   |                     |   | | {null}: null
-        |     |   |                     |   | {strlit 'null'}: text notnull
-        |     |   |                     | {call}: text notnull
-        |     |   |                       | {name printf}: text notnull
-        |     |   |                       | {call_arg_list}
-        |     |   |                         | {call_filter_clause}
-        |     |   |                         | {arg_list}: ok
-        |     |   |                           | {strlit '%s'}: text notnull
-        |     |   |                           | {arg_list}
-        |     |   |                             | {strlit '<non-null-blob>'}: text notnull
+        |     |   |     | {name c1}: c1_._has_row_: bool notnull variable
         |     |   | {opt_as_alias}
         |     |     | {name p}
         |     | {select_from_etc}: ok
@@ -48680,7 +48731,7 @@ The statement ending at line XXXX
 CREATE PROC print_call_cql_not_fetch_cursor_format ()
 BEGIN
   DECLARE c CURSOR FOR SELECT 1;
-  SELECT cql_cursor_format(c) AS p;
+  SET a_string := cql_cursor_format(c);
 END;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0067: cursor was not used with 'fetch [cursor]' 'c'
@@ -48705,27 +48756,14 @@ Error at test/sem_test.sql:XXXX : in str : CQL0067: cursor was not used with 'fe
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {select_stmt}: err
-        | {select_core_list}: err
-        | | {select_core}: err
-        |   | {select_expr_list_con}: err
-        |     | {select_expr_list}: err
-        |     | | {select_expr}: err
-        |     |   | {call}: err
-        |     |   | | {name cql_cursor_format}
-        |     |   | | {call_arg_list}
-        |     |   |   | {call_filter_clause}
-        |     |   |   | {arg_list}: ok
-        |     |   |     | {name c}: err
-        |     |   | {opt_as_alias}
-        |     |     | {name p}
-        |     | {select_from_etc}: ok
-        |       | {select_where}
-        |         | {select_groupby}
-        |           | {select_having}
-        | {select_orderby}
-          | {select_limit}
-            | {select_offset}
+      | {assign}: err
+        | {name a_string}: a_string: text variable
+        | {call}: err
+          | {name cql_cursor_format}
+          | {call_arg_list}
+            | {call_filter_clause}
+            | {arg_list}: ok
+              | {name c}: err
 
 The statement ending at line XXXX
 
