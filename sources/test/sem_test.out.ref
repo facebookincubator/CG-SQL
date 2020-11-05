@@ -14564,7 +14564,7 @@ The statement ending at line XXXX
 
 SET not_null_object := attest_notnull(not_null_object);
 
-Error at test/sem_test.sql:XXXX : in str : CQL0261: argument must be a nullable type (but not constant NULL) in 'attest_notnull'
+Error at test/sem_test.sql:XXXX : in str : CQL0344: argument must be a nullable type (but not constant NULL) in 'attest_notnull'
 
   {assign}: err
   | {name not_null_object}: not_null_object: object notnull variable
@@ -14579,7 +14579,7 @@ The statement ending at line XXXX
 
 SET not_null_object := attest_notnull(NULL);
 
-Error at test/sem_test.sql:XXXX : in null : CQL0261: argument must be a nullable type (but not constant NULL) in 'attest_notnull'
+Error at test/sem_test.sql:XXXX : in null : CQL0344: argument must be a nullable type (but not constant NULL) in 'attest_notnull'
 
   {assign}: err
   | {name not_null_object}: not_null_object: object notnull variable
@@ -21042,8 +21042,9 @@ Error at test/sem_test.sql:XXXX : in columns_values : CQL0201: expanding FROM AR
             |     | {name name}
             |     | {name_list}
             |       | {name rate}
-            | {from_arguments}: ok
-              | {name bar}
+            | {from_arguments}
+              | {like}: ok
+                | {name bar}
 
 The statement ending at line XXXX
 
@@ -21052,7 +21053,7 @@ BEGIN
   INSERT INTO bar(id, name, rate) FROM ARGUMENTS LIKE bogus_name_here;
 END;
 
-Error at test/sem_test.sql:XXXX : in from_arguments : CQL0202: must be a cursor, proc, table, or view 'bogus_name_here'
+Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, table, or view 'bogus_name_here'
 
   {create_proc_stmt}: err
   | {name insert_bar_from_bogus}: err
@@ -21091,8 +21092,9 @@ Error at test/sem_test.sql:XXXX : in from_arguments : CQL0202: must be a cursor,
             |     | {name name}
             |     | {name_list}
             |       | {name rate}
-            | {from_arguments}: err
-              | {name bogus_name_here}: err
+            | {from_arguments}
+              | {like}: err
+                | {name bogus_name_here}: err
 
 The statement ending at line XXXX
 
@@ -46654,7 +46656,7 @@ BEGIN
   CALL shape_y_only(FROM C LIKE not_a_real_shape);
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0202: must be a cursor, proc, table, or view 'not_a_real_shape'
+Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, table, or view 'not_a_real_shape'
 
   {create_proc_stmt}: err
   | {name shape_some_columns_bogus_name}: err
@@ -46682,7 +46684,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0202: must be a cursor, proc, tabl
         | {expr_list}: err
           | {from_cursor}
             | {name C}: C: select: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
-            | {name not_a_real_shape}: err
+            | {like}: err
+              | {name not_a_real_shape}: err
 
 The statement ending at line XXXX
 
@@ -47186,7 +47189,8 @@ Error at test/sem_test.sql:XXXX : in expr_list : CQL0201: expanding FROM ARGUMEN
               | {int 3}
               | {expr_list}
                 | {from_arguments}
-                  | {name foo}: ok
+                  | {like}: ok
+                    | {name foo}
 
 The statement ending at line XXXX
 
@@ -47195,7 +47199,7 @@ BEGIN
   CALL lotsa_ints(1, 2, 3, FROM ARGUMENTS LIKE no_such_type_dude);
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0202: must be a cursor, proc, table, or view 'no_such_type_dude'
+Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, table, or view 'no_such_type_dude'
 
   {create_proc_stmt}: err
   | {name call_from_arguments_bogus_type}: err
@@ -47216,7 +47220,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0202: must be a cursor, proc, tabl
               | {int 3}
               | {expr_list}
                 | {from_arguments}
-                  | {name no_such_type_dude}: err
+                  | {like}: err
+                    | {name no_such_type_dude}: err
 
 The statement ending at line XXXX
 
@@ -47295,7 +47300,7 @@ BEGIN
   SET z := funclike(FROM ARGUMENTS LIKE not_a_shape);
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0202: must be a cursor, proc, table, or view 'not_a_shape'
+Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, table, or view 'not_a_shape'
 
   {create_proc_stmt}: err
   | {name arg_caller_bogus_shape}: err
@@ -47328,7 +47333,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0202: must be a cursor, proc, tabl
             | {call_filter_clause}
             | {arg_list}: err
               | {from_arguments}
-                | {name not_a_shape}: err
+                | {like}: err
+                  | {name not_a_shape}: err
 
 The statement ending at line XXXX
 
@@ -49022,7 +49028,7 @@ BEGIN
   DECLARE C CURSOR FOR box;
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0343: the variable must be of type object<T cursor> where T is a valid shape name 'box'
+Error at test/sem_test.sql:XXXX : in str : CQL0345: the variable must be of type object<T cursor> where T is a valid shape name 'box'
 
   {create_proc_stmt}: err
   | {name cursor_unbox_untyped}: err
@@ -49067,7 +49073,7 @@ BEGIN
   DECLARE C CURSOR FOR box;
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0202: must be a cursor, proc, table, or view 'not_a_type'
+Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, table, or view 'not_a_type'
 
   {create_proc_stmt}: err
   | {name cursor_unbox_not_a_type}: err
@@ -49135,7 +49141,7 @@ BEGIN
   SET box FROM CURSOR C;
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0344: the cursor did not originate from a SQLite statement, it only has values 'C'
+Error at test/sem_test.sql:XXXX : in str : CQL0261: the cursor did not originate from a SQLite statement, it only has values 'C'
 
   {create_proc_stmt}: err
   | {name cursor_box_value}: err
@@ -49165,7 +49171,7 @@ BEGIN
   SET box FROM CURSOR C;
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0202: must be a cursor, proc, table, or view 'barf'
+Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, table, or view 'barf'
 
   {create_proc_stmt}: err
   | {name cursor_box_not_a_shape}: err
@@ -49377,4 +49383,248 @@ Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in 
     | {select_orderby}
       | {select_limit}
         | {select_offset}
+
+The statement ending at line XXXX
+
+DECLARE PROC some_proc (id INTEGER, t TEXT, t1 TEXT NOT NULL, b BLOB, OUT x INTEGER NOT NULL);
+
+  {declare_proc_stmt}: ok
+  | {proc_name_type}
+  | | {name some_proc}: ok
+  | | {int 0}
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: id: integer variable in
+      | | {param_detail}: id: integer variable in
+      |   | {name id}: id: integer variable in
+      |   | {type_int}: integer
+      | {params}
+        | {param}: t: text variable in
+        | | {param_detail}: t: text variable in
+        |   | {name t}: t: text variable in
+        |   | {type_text}: text
+        | {params}
+          | {param}: t1: text notnull variable in
+          | | {param_detail}: t1: text notnull variable in
+          |   | {name t1}: t1: text notnull variable in
+          |   | {notnull}: text notnull
+          |     | {type_text}: text
+          | {params}
+            | {param}: b: blob variable in
+            | | {param_detail}: b: blob variable in
+            |   | {name b}: b: blob variable in
+            |   | {type_blob}: blob
+            | {params}
+              | {param}: x: integer notnull variable out
+                | {out}
+                | {param_detail}: x: integer notnull variable out
+                  | {name x}: x: integer notnull variable out
+                  | {notnull}: integer notnull
+                    | {type_int}: integer
+
+The statement ending at line XXXX
+
+DECLARE Q CURSOR LIKE some_proc ARGUMENTS;
+
+  {declare_cursor_like_name}: Q: proc_args: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out } variable auto_cursor value_cursor
+  | {name Q}: Q: proc_args: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out } variable auto_cursor value_cursor
+  | {like}: proc_args: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out }
+    | {name some_proc}: proc_args: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out }
+    | {name some_proc}: proc_args: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out }
+
+The statement ending at line XXXX
+
+CREATE PROC some_proc_proxy (id INTEGER, t TEXT, t1 TEXT NOT NULL, b BLOB, OUT x INTEGER NOT NULL)
+BEGIN
+  CALL some_proc(id, t, t1, b, x);
+END;
+
+  {create_proc_stmt}: ok
+  | {name some_proc_proxy}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: id: integer variable in
+    | | | {param_detail}: id: integer variable in
+    | |   | {name id}: id: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: t: text variable in
+    |   | | {param_detail}: t: text variable in
+    |   |   | {name t}: t: text variable in
+    |   |   | {type_text}: text
+    |   | {params}
+    |     | {param}: t1: text notnull variable in
+    |     | | {param_detail}: t1: text notnull variable in
+    |     |   | {name t1}: t1: text notnull variable in
+    |     |   | {notnull}: text notnull
+    |     |     | {type_text}: text
+    |     | {params}
+    |       | {param}: b: blob variable in
+    |       | | {param_detail}: b: blob variable in
+    |       |   | {name b}: b: blob variable in
+    |       |   | {type_blob}: blob
+    |       | {params}
+    |         | {param}: x: integer notnull variable out
+    |           | {out}
+    |           | {param_detail}: x: integer notnull variable out
+    |             | {name x}: x: integer notnull variable out
+    |             | {notnull}: integer notnull
+    |               | {type_int}: integer
+    | {stmt_list}: ok
+      | {call_stmt}: ok
+        | {name some_proc}: ok
+        | {expr_list}: ok
+          | {name id}: id: integer variable in
+          | {expr_list}
+            | {name t}: t: text variable in
+            | {expr_list}
+              | {name t1}: t1: text notnull variable in
+              | {expr_list}
+                | {name b}: b: blob variable in
+                | {expr_list}
+                  | {name x}: x: integer notnull variable out
+
+The statement ending at line XXXX
+
+DECLARE PROC some_proc2 (INOUT id INTEGER, t TEXT, t1 TEXT NOT NULL, b BLOB, OUT x INTEGER NOT NULL);
+
+  {declare_proc_stmt}: ok
+  | {proc_name_type}
+  | | {name some_proc2}: ok
+  | | {int 0}
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: id: integer variable in out
+      | | {inout}
+      | | {param_detail}: id: integer variable in out
+      |   | {name id}: id: integer variable in out
+      |   | {type_int}: integer
+      | {params}
+        | {param}: t: text variable in
+        | | {param_detail}: t: text variable in
+        |   | {name t}: t: text variable in
+        |   | {type_text}: text
+        | {params}
+          | {param}: t1: text notnull variable in
+          | | {param_detail}: t1: text notnull variable in
+          |   | {name t1}: t1: text notnull variable in
+          |   | {notnull}: text notnull
+          |     | {type_text}: text
+          | {params}
+            | {param}: b: blob variable in
+            | | {param_detail}: b: blob variable in
+            |   | {name b}: b: blob variable in
+            |   | {type_blob}: blob
+            | {params}
+              | {param}: x: integer notnull variable out
+                | {out}
+                | {param_detail}: x: integer notnull variable out
+                  | {name x}: x: integer notnull variable out
+                  | {notnull}: integer notnull
+                    | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE PROC some_proc2_proxy (INOUT id INTEGER, t TEXT, t1 TEXT NOT NULL, b BLOB, OUT x INTEGER NOT NULL)
+BEGIN
+  CALL some_proc(id, t, t1, b, x);
+END;
+
+  {create_proc_stmt}: ok
+  | {name some_proc2_proxy}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: id: integer variable in out
+    | | | {inout}
+    | | | {param_detail}: id: integer variable in out
+    | |   | {name id}: id: integer variable in out
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: t: text variable in
+    |   | | {param_detail}: t: text variable in
+    |   |   | {name t}: t: text variable in
+    |   |   | {type_text}: text
+    |   | {params}
+    |     | {param}: t1: text notnull variable in
+    |     | | {param_detail}: t1: text notnull variable in
+    |     |   | {name t1}: t1: text notnull variable in
+    |     |   | {notnull}: text notnull
+    |     |     | {type_text}: text
+    |     | {params}
+    |       | {param}: b: blob variable in
+    |       | | {param_detail}: b: blob variable in
+    |       |   | {name b}: b: blob variable in
+    |       |   | {type_blob}: blob
+    |       | {params}
+    |         | {param}: x: integer notnull variable out
+    |           | {out}
+    |           | {param_detail}: x: integer notnull variable out
+    |             | {name x}: x: integer notnull variable out
+    |             | {notnull}: integer notnull
+    |               | {type_int}: integer
+    | {stmt_list}: ok
+      | {call_stmt}: ok
+        | {name some_proc}: ok
+        | {expr_list}: ok
+          | {name id}: id: integer variable in out
+          | {expr_list}
+            | {name t}: t: text variable in
+            | {expr_list}
+              | {name t1}: t1: text notnull variable in
+              | {expr_list}
+                | {name b}: b: blob variable in
+                | {expr_list}
+                  | {name x}: x: integer notnull variable out
+
+The statement ending at line XXXX
+
+CREATE PROC some_proc3_proxy (LIKE some_proc3 ARGUMENTS)
+BEGIN
+  CALL some_proc(FROM ARGUMENTS);
+END;
+
+Error at test/sem_test.sql:XXXX : in like : CQL0069: name not found 'some_proc3'
+
+  {create_proc_stmt}: err
+  | {name some_proc3_proxy}: err
+  | {proc_params_stmts}
+    | {params}: err
+    | | {param}: err
+    |   | {like}: err
+    |     | {name some_proc3}: err
+    |     | {name some_proc3}: err
+    | {stmt_list}
+      | {call_stmt}
+        | {name some_proc}
+        | {expr_list}
+          | {from_arguments}
+
+The statement ending at line XXXX
+
+CREATE PROC some_proc4_proxy (LIKE proc1 ARGUMENTS)
+BEGIN
+END;
+
+Error at test/sem_test.sql:XXXX : in like : CQL0262: LIKE ... ARGUMENTS used on a procedure with no arguments 'proc1'
+
+  {create_proc_stmt}: err
+  | {name some_proc4_proxy}: err
+  | {proc_params_stmts}
+    | {params}: err
+      | {param}: err
+        | {like}: err
+          | {name proc1}: err
+          | {name proc1}: err
+
+The statement ending at line XXXX
+
+DECLARE invalid_object_cursor CURSOR LIKE obj_proc ARGUMENTS;
+
+Error at test/sem_test.sql:XXXX : in like : CQL0335: the procedure has an object argument, this is not yet supported 'obj_proc'
+
+  {declare_cursor_like_name}: err
+  | {name invalid_object_cursor}
+  | {like}: err
+    | {name obj_proc}: err
+    | {name obj_proc}: err
 

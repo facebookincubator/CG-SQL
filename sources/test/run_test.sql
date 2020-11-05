@@ -2766,4 +2766,18 @@ BEGIN_TEST(numeric_casts)
 
 END_TEST(numeric_casts)
 
+create proc dummy(seed integer not null, i integer not null, r real not null, b bool not null)
+begin
+   EXPECT(seed == i);
+   EXPECT(seed == r);
+   EXPECT(not seed == not b);
+end;
+
+BEGIN_TEST(cursor_args)
+  declare args cursor like dummy arguments;
+  fetch args() from values() @dummy_seed(12);
+  call dummy(from args);
+END_TEST(cursor_args)
+
+
 END_SUITE()

@@ -1163,6 +1163,8 @@ DECLARE C CURSOR FOR obj;
 
 SET X FROM CURSOR C;
 
+DECLARE C CURSOR LIKE P2 ARGUMENTS;
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

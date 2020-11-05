@@ -327,8 +327,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0072: first operand cannot be an o
 Error at test/sem_test.sql:XXXX : in not_between : CQL0012: incompatible types in expression 'NOT BETWEEN'
 Error at test/sem_test.sql:XXXX : in not_between : CQL0012: incompatible types in expression 'NOT BETWEEN'
 Error at test/sem_test.sql:XXXX : in call : CQL0087: no object/blob types are allowed in arguments for function 'printf'
-Error at test/sem_test.sql:XXXX : in str : CQL0261: argument must be a nullable type (but not constant NULL) in 'attest_notnull'
-Error at test/sem_test.sql:XXXX : in null : CQL0261: argument must be a nullable type (but not constant NULL) in 'attest_notnull'
+Error at test/sem_test.sql:XXXX : in str : CQL0344: argument must be a nullable type (but not constant NULL) in 'attest_notnull'
+Error at test/sem_test.sql:XXXX : in null : CQL0344: argument must be a nullable type (but not constant NULL) in 'attest_notnull'
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'attest_notnull'
 Error at test/sem_test.sql:XXXX : in call : CQL0044: operator may only appear in the context of a SQL statement 'attest_notnull'
 Error at test/sem_test.sql:XXXX : in echo_stmt : CQL0224: literal output can only appear outside of procedures
@@ -505,7 +505,7 @@ Error at test/sem_test.sql:XXXX : in call : CQL0089: User function may only appe
 Error at test/sem_test.sql:XXXX : in str : CQL0192: func name conflicts with proc name 'foo'
 Error at test/sem_test.sql:XXXX : in columns_values : CQL0201: expanding FROM ARGUMENTS, there is no argument matching 'name'
 Error at test/sem_test.sql:XXXX : in columns_values : CQL0201: expanding FROM ARGUMENTS, there is no argument matching 'rate'
-Error at test/sem_test.sql:XXXX : in from_arguments : CQL0202: must be a cursor, proc, table, or view 'bogus_name_here'
+Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, table, or view 'bogus_name_here'
 Error at test/sem_test.sql:XXXX : in columns_values : CQL0163: FROM ARGUMENTS construct is only valid inside a procedure
 Error at test/sem_test.sql:XXXX : in columns_values : CQL0164: too few arguments available
 Error at test/sem_test.sql:XXXX : in from_arguments : CQL0162: FROM ARGUMENTS is redundant if column list is empty
@@ -826,12 +826,12 @@ Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'bogus'
 Error at test/sem_test.sql:XXXX : in create_table_stmt : CQL0339: WITHOUT ROWID tables are forbidden if strict without rowid mode is enabled 'table_with_invalid_without_rowid_mode'
 Error at test/sem_test.sql:XXXX : in str : CQL0204: cursor not found 'not_a_cursor'
 Error at test/sem_test.sql:XXXX : in dot : CQL0067: cursor was not used with 'fetch [cursor]' 'C'
-Error at test/sem_test.sql:XXXX : in str : CQL0202: must be a cursor, proc, table, or view 'not_a_real_shape'
+Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, table, or view 'not_a_real_shape'
 Error at test/sem_test.sql:XXXX : in expr_list : CQL0340: FROM ARGUMENTS used in a procedure with no arguments 'arg_rewrite_no_args'
 Error at test/sem_test.sql:XXXX : in expr_list : CQL0163: FROM ARGUMENTS construct is only valid inside a procedure
 Error at test/sem_test.sql:XXXX : in expr_list : CQL0201: expanding FROM ARGUMENTS, there is no argument matching 'id'
-Error at test/sem_test.sql:XXXX : in str : CQL0202: must be a cursor, proc, table, or view 'no_such_type_dude'
-Error at test/sem_test.sql:XXXX : in str : CQL0202: must be a cursor, proc, table, or view 'not_a_shape'
+Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, table, or view 'no_such_type_dude'
+Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, table, or view 'not_a_shape'
 Error at test/sem_test.sql:XXXX : in str : CQL0252: @PROC literal can only appear inside of procedures
 Error at test/sem_test.sql:XXXX : in str : CQL0252: @PROC literal can only appear inside of procedures
 Error at test/sem_test.sql:XXXX : in str : CQL0252: @PROC literal can only appear inside of procedures
@@ -859,17 +859,20 @@ Error at test/sem_test.sql:XXXX : in num : CQL0242: lossy conversion from type '
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'length'
 Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'length'
 Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'length'
+Error at test/sem_test.sql:XXXX : in str : CQL0345: the variable must be of type object<T cursor> where T is a valid shape name 'box'
 Error at test/sem_test.sql:XXXX : in str : CQL0343: the variable must be of type object<T cursor> where T is a valid shape name 'box'
-Error at test/sem_test.sql:XXXX : in str : CQL0343: the variable must be of type object<T cursor> where T is a valid shape name 'box'
-Error at test/sem_test.sql:XXXX : in str : CQL0202: must be a cursor, proc, table, or view 'not_a_type'
+Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, table, or view 'not_a_type'
 Error at test/sem_test.sql:XXXX : in declare_cursor : CQL0197: duplicate variable name in the same scope 'C'
 Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'box'
-Error at test/sem_test.sql:XXXX : in str : CQL0344: the cursor did not originate from a SQLite statement, it only has values 'C'
-Error at test/sem_test.sql:XXXX : in str : CQL0202: must be a cursor, proc, table, or view 'barf'
+Error at test/sem_test.sql:XXXX : in str : CQL0261: the cursor did not originate from a SQLite statement, it only has values 'C'
+Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, table, or view 'barf'
 Error at test/sem_test.sql:XXXX : in str : CQL0057: in the cursor and the variable type, all must have the same column count
 Error at test/sem_test.sql:XXXX : in str : CQL0204: cursor not found 'XYZZY'
 Error at test/sem_test.sql:XXXX : in set_from_cursor : CQL0173: variable not found 'box'
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'cql_get_blob_size'
 Error at test/sem_test.sql:XXXX : in call : CQL0345: all arguments must be blob 'cql_get_blob_size'
 Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'cql_get_blob_size'
+Error at test/sem_test.sql:XXXX : in like : CQL0069: name not found 'some_proc3'
+Error at test/sem_test.sql:XXXX : in like : CQL0262: LIKE ... ARGUMENTS used on a procedure with no arguments 'proc1'
+Error at test/sem_test.sql:XXXX : in like : CQL0335: the procedure has an object argument, this is not yet supported 'obj_proc'
 semantic errors present; no code gen.

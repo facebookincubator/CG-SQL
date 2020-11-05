@@ -34,7 +34,7 @@ static charbuf *gen_output;
 static gen_sql_callbacks *gen_callbacks = NULL;
 static symtab *used_alias_syms = NULL;
 
-
+// forward references for things that appear out of order or mutually call each other
 static void gen_select_core_list(ast_node *ast);
 static void gen_groupby_list(ast_node *_Nonnull ast);
 static void gen_stmt_list(ast_node *_Nullable ast);
@@ -52,6 +52,7 @@ static void gen_from_cursor(ast_node *ast);
 static void gen_opt_filter_clause(ast_node *ast);
 static void gen_if_not_exists(ast_node *ast, bool_t if_not_exist);
 static void gen_from_arguments(ast_node *ast);
+static void gen_shape_def(ast_node *ast);
 
 #define gen_printf(...) bprintf(output, __VA_ARGS__)
 
@@ -515,8 +516,7 @@ cql_noexport void gen_col_or_key(ast_node *def) {
   } else if (is_ast_fk_def(def)) {
     gen_fk_def(def);
   } else if (is_ast_like(def)) {
-    EXTRACT_STRING(name, def->left);
-    gen_printf("LIKE %s", name);
+    gen_shape_def(def);
   } else {
     Contract(is_ast_unq_def(def));
     gen_unq_def(def);
@@ -650,8 +650,8 @@ static void gen_cursor_arg(ast_node *ast) {
   EXTRACT_STRING(cursor, ast->left);
   gen_printf("FROM %s", cursor);
   if (ast->right) {
-    EXTRACT_STRING(type, ast->right);
-    gen_printf(" LIKE %s", type);
+    gen_printf(" ");
+    gen_shape_def(ast->right);
   }
 }
 
@@ -2101,14 +2101,23 @@ static void gen_insert_dummy_spec(ast_node *ast) {
   }
 }
 
+static void gen_shape_def(ast_node *ast) {
+  Contract(is_ast_like(ast));
+  EXTRACT_STRING(name, ast->left);
+  EXTRACT_ANY(from_args, ast->right);
+
+  gen_printf("LIKE %s", name);
+  if (from_args) {
+    gen_printf(" ARGUMENTS");
+  }
+}
+
 static void gen_column_spec(ast_node *ast) {
   // allow null column_spec here so we don't have to test it everywhere
   if (ast) {
     gen_printf("(");
     if (is_ast_like(ast->left)) {
-      EXTRACT_NOTNULL(like, ast->left);
-      EXTRACT_STRING(name, like->left);
-      gen_printf("LIKE %s", name);
+      gen_shape_def(ast->left);
     }
     else {
       EXTRACT(name_list, ast->left);
@@ -2124,8 +2133,8 @@ static void gen_from_arguments(ast_node *ast) {
   Contract(is_ast_from_arguments(ast));
   gen_printf("FROM ARGUMENTS");
   if (ast->left) {
-    EXTRACT_STRING(name, ast->left);
-    gen_printf(" LIKE %s", name);
+    gen_printf(" ");
+    gen_shape_def(ast->left);
   }
 }
 
@@ -2251,9 +2260,7 @@ static void gen_normal_param(ast_node *ast) {
 static void gen_like_param(ast_node *ast) {
   Contract(is_ast_param(ast));
   EXTRACT_NOTNULL(like, ast->left);
-  EXTRACT_STRING(name, like->left);
-
-  gen_printf("LIKE %s", name);
+  gen_shape_def(like);
 }
 
 static void gen_param(ast_node *ast) {
@@ -2357,8 +2364,7 @@ cql_noexport void gen_declare_proc_from_create_proc(ast_node *ast) {
 
 static void gen_typed_name(ast_node *ast) {
   if (is_ast_like(ast)) {
-    EXTRACT_STRING(name, ast->left);
-    gen_printf("LIKE %s", name);
+    gen_shape_def(ast);
   }
   else {
     EXTRACT(typed_name, ast);
@@ -2521,9 +2527,9 @@ static void gen_declare_cursor_like_name(ast_node *ast) {
   Contract(is_ast_declare_cursor_like_name(ast));
   EXTRACT_STRING(new_cursor_name, ast->left);
   EXTRACT_NOTNULL(like, ast->right);
-  EXTRACT_STRING(like_name, like->left);
 
-  gen_printf("DECLARE %s CURSOR LIKE %s", new_cursor_name, like_name);
+  gen_printf("DECLARE %s CURSOR ", new_cursor_name);
+  gen_shape_def(like);
 }
 
 static void gen_declare_cursor_like_select(ast_node *ast) {

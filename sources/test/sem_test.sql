@@ -12146,3 +12146,50 @@ set an_long := cql_get_blob_size(an_int);
 -- + Error % function may not appear in this context 'cql_get_blob_size'
 -- +1 Error
 set an_long := (select cql_get_blob_size(an_int));
+
+declare proc some_proc(id integer, t text, t1 text not null, b blob, out x integer not null);
+
+-- TEST: make a cursor using the arguments of a procedure as the shape
+-- + DECLARE Q CURSOR LIKE some_proc ARGUMENTS;
+-- + {declare_cursor_like_name}: Q: proc_args: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out } variable auto_cursor value_cursor
+-- - Error
+declare Q cursor like some_proc arguments;
+
+-- TEST: make a procedure using a declared shape (rewrite test)
+-- + CREATE PROC some_proc_proxy (id INTEGER, t TEXT, t1 TEXT NOT NULL, b BLOB, OUT x INTEGER NOT NULL)
+-- - Error
+create proc some_proc_proxy(like some_proc arguments)
+begin
+   call some_proc(from arguments);
+end;
+
+declare proc some_proc2(inout id integer, t text, t1 text not null, b blob, out x integer not null);
+
+-- TEST: make a procedure using a declared shape (rewrite test)
+-- + CREATE PROC some_proc2_proxy (INOUT id INTEGER, t TEXT, t1 TEXT NOT NULL, b BLOB, OUT x INTEGER NOT NULL)
+-- - Error
+create proc some_proc2_proxy(like some_proc2 arguments)
+begin
+   call some_proc(from arguments);
+end;
+
+-- TEST: there is no some_proc3 -- error
+-- + CREATE PROC some_proc3_proxy (LIKE some_proc3 ARGUMENTS)
+-- + Error % name not found 'some_proc3'
+-- +1 Error
+create proc some_proc3_proxy(like some_proc3 arguments)
+begin
+   call some_proc(from arguments);
+end;
+
+-- TEST: there is no some_proc3 -- error
+-- + Error % LIKE ... ARGUMENTS used on a procedure with no arguments 'proc1'
+-- +1 Error
+create proc some_proc4_proxy(like proc1 arguments)
+begin
+end;
+
+-- TEST: object arguments are not yet supported (this requires cursor generalizations)
+-- + Error % the procedure has an object argument, this is not yet supported 'obj_proc'
+-- +1 Error
+declare invalid_object_cursor cursor like obj_proc arguments;

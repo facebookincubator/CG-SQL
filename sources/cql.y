@@ -237,7 +237,7 @@ static void cql_reset_globals(void);
 %type <aval> trycatch_stmt
 %type <aval> version_annotation
 %type <aval> while_stmt
-%type <aval> enforce_strict_stmt enforce_normal_stmt enforcement_options
+%type <aval> enforce_strict_stmt enforce_normal_stmt enforcement_options shape_def
 
 %start program
 
@@ -464,7 +464,12 @@ col_key_def:
   | pk_def
   | fk_def
   | unq_def
-  | LIKE name  { $col_key_def = new_ast_like($name, NULL); }
+  | shape_def
+  ;
+
+shape_def:
+    LIKE name { $shape_def = new_ast_like($name, NULL); }
+  | LIKE name ARGUMENTS { $shape_def = new_ast_like($name, $name); }
   ;
 
 col_name:
@@ -639,8 +644,8 @@ version_annotation:
 object_type:
   OBJECT  { $object_type = new_ast_type_object(NULL); }
   | OBJECT '<' name '>'  { $object_type = new_ast_type_object($name); }
-  | OBJECT '<' name CURSOR '>' { 
-    CSTR type = dup_printf("%s CURSOR", AST_STR($name)); 
+  | OBJECT '<' name CURSOR '>' {
+    CSTR type = dup_printf("%s CURSOR", AST_STR($name));
     $object_type = new_ast_type_object(new_ast_str(type)); }
   ;
 
@@ -803,7 +808,7 @@ expr_list[result]:
 
 cursor_arguments:
   FROM name  { $cursor_arguments = new_ast_from_cursor($name, NULL); }
-  | FROM name[n1] LIKE name[n2]  { $cursor_arguments = new_ast_from_cursor($n1, $n2); }
+  | FROM name shape_def  { $cursor_arguments = new_ast_from_cursor($name, $shape_def); }
   ;
 
 call_expr:
@@ -1246,7 +1251,7 @@ with_insert_stmt:
 opt_column_spec:
   /* nil */  { $opt_column_spec = NULL; }
   | '(' opt_name_list ')'  { $opt_column_spec = new_ast_column_spec($opt_name_list); }
-  | '(' LIKE name ')'  { $opt_column_spec = new_ast_column_spec(new_ast_like($name, NULL)); }
+  | '(' shape_def ')'  { $opt_column_spec = new_ast_column_spec($shape_def); }
   ;
 
 from_cursor:
@@ -1255,7 +1260,7 @@ from_cursor:
 
 from_arguments:
   FROM ARGUMENTS  { $from_arguments = new_ast_from_arguments(NULL); }
-  | FROM ARGUMENTS LIKE name  { $from_arguments = new_ast_from_arguments($name); }
+  | FROM ARGUMENTS shape_def  { $from_arguments = new_ast_from_arguments($shape_def); }
   ;
 
 insert_stmt:
@@ -1411,7 +1416,7 @@ opt_inout:
 
 typed_name:
   name data_type_opt_notnull  { $typed_name = new_ast_typed_name($name, $data_type_opt_notnull); }
-  | LIKE name  { $typed_name = new_ast_like($name, NULL); }
+  | shape_def  { $typed_name = $shape_def; }
   ;
 
 typed_names[result]:
@@ -1421,7 +1426,7 @@ typed_names[result]:
 
 param:
   opt_inout name data_type_opt_notnull  { $param = new_ast_param($opt_inout, new_ast_param_detail($name, $data_type_opt_notnull)); }
-  | LIKE name  { $param = new_ast_param(new_ast_like($name, NULL), NULL); }
+  | shape_def  { $param = new_ast_param($shape_def, NULL); }
   ;
 
 params[result]:
@@ -1436,7 +1441,7 @@ declare_stmt:
   | DECLARE name CURSOR_FOR explain_stmt  { $declare_stmt = new_ast_declare_cursor($name, $explain_stmt); }
   | DECLARE name CURSOR_FOR call_stmt  { $declare_stmt = new_ast_declare_cursor($name, $call_stmt); }
   | DECLARE name CURSOR FETCH FROM call_stmt  { $declare_stmt = new_ast_declare_value_cursor($name, $call_stmt); }
-  | DECLARE name[n1] CURSOR LIKE name[n2]  { $declare_stmt = new_ast_declare_cursor_like_name($n1, new_ast_like($n2, NULL)); }
+  | DECLARE name CURSOR shape_def  { $declare_stmt = new_ast_declare_cursor_like_name($name, $shape_def); }
   | DECLARE name CURSOR LIKE select_stmt  { $declare_stmt = new_ast_declare_cursor_like_select($name, $select_stmt); }
   | DECLARE name[id] CURSOR_FOR name[obj] { $declare_stmt = new_ast_declare_cursor($id, $obj); }
   ;

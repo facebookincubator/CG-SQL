@@ -5164,7 +5164,7 @@ static void sem_func_attest_notnull(ast_node *ast, uint32_t arg_count) {
   sem_t sem_type = arg1->sem->sem_type;
 
   if (is_null_type(sem_type) || is_not_nullable(sem_type)) {
-     report_error(arg1, "CQL0261: argument must be a nullable type (but not constant NULL) in", name);
+     report_error(arg1, "CQL0344: argument must be a nullable type (but not constant NULL) in", name);
      record_error(ast);
      return;
   }
@@ -10864,7 +10864,7 @@ static void sem_rewrite_insert_list_from_arguments(ast_node *ast, uint32_t count
 
   if (from_name) {
     // args like name
-    found_ast = sem_find_likeable_ast(from_arguments);
+    found_ast = sem_find_likeable_ast(from_arguments->left);
     if (!found_ast) {
       record_error(ast);
       return;
@@ -11822,7 +11822,15 @@ static void sem_rewrite_one_param(ast_node *param, symtab *param_names) {
 
   for (int32_t i = 0; i < count; i++) {
     sem_t sem_type = sptr->semtypes[i];
-    CSTR param_name = dup_printf("%s_", sptr->names[i]);
+    CSTR param_name = sptr->names[i];
+
+    // If the shape came from a procedure we keep the args unchanged
+    // If the shape came from a data type or cursor then we add _
+    // The idea here is that if it came from a procedure we want to keep the same signature
+    // exactly and if any _ needed to be added to avoid conflict with a column name then it already was.
+    if (!(sem_type & (SEM_TYPE_IN_PARAMETER | SEM_TYPE_OUT_PARAMETER))) {
+      param_name = dup_printf("%s_", sptr->names[i]);
+    }
 
     // skip any that we have already added or that are manually present
     if (!symtab_add(param_names, param_name, NULL)) {
@@ -11833,10 +11841,20 @@ static void sem_rewrite_one_param(ast_node *param, symtab *param_names) {
     ast_node *name_ast = new_ast_str(param_name);
     ast_node *param_detail = new_ast_param_detail(name_ast, type);
 
+    ast_node *inout = NULL; // IN by default
+    if (sem_type & SEM_TYPE_OUT_PARAMETER) {
+      if (sem_type & SEM_TYPE_IN_PARAMETER) {
+        inout = new_ast_inout();
+      }
+      else {
+        inout = new_ast_out();
+      }
+    }
+
     if (!first_rewrite) {
       // for the 2nd and subsequent args make a new node
       ast_node *params = param->parent;
-      ast_node *new_param = new_ast_param(NULL, param_detail);
+      ast_node *new_param = new_ast_param(inout, param_detail);
       ast_set_right(params, new_ast_params(new_param, params->right));
       param = new_param;
     }
@@ -11849,7 +11867,7 @@ static void sem_rewrite_one_param(ast_node *param, symtab *param_names) {
       // replace the like entry with a real param detail
       // on the next iteration, we will insert to the right of ast
       ast_set_right(param, param_detail);
-      ast_set_left(param, NULL);   // opt_in_out (none -> IN)
+      ast_set_left(param, inout);
       first_rewrite = false;
     }
   }
@@ -11867,12 +11885,84 @@ static void sem_rewrite_one_param(ast_node *param, symtab *param_names) {
   AST_REWRITE_INFO_RESET();
 }
 
+// This handles the case where you are using the LIKE proc ARGUMENTS form
+// There are quite a few rules here that need to be enforced:
+//   * the proc must exist
+//   * it must have some args
+//   * none of the args may be of type 'object'
+//     * because declaring cursors of this form is not yet supported (easy)
+//     * because then you have to deal with object<T> in struct_type (not that easy)
+//     * because then you have to disallow OUT [cursor] on such cursors (easy)
+//     * for now punt on that, as the non-object cases are very valuable
+//  With all that done we just make a fake ast node that has the type we need in it
+//  and return that.  The type is the usual struct_type
+static ast_node *sem_find_likeable_proc_args(ast_node *like_ast) {
+  Contract(is_ast_like(like_ast));
+
+  EXTRACT_ANY_NOTNULL(name_ast, like_ast->left);
+  EXTRACT_STRING(like_name, name_ast);
+
+  ast_node *proc= find_proc(like_name);
+  if (!proc) {
+    report_error(like_ast, "CQL0069: name not found", like_name);
+    goto error;
+  }
+
+  // we're goign to make a synthetic type node for the procedures arguments
+  AST_REWRITE_INFO_SET(like_ast->lineno, like_ast->filename);
+  ast_node *result = new_ast_str(like_name);
+  AST_REWRITE_INFO_RESET();
+
+  uint32_t count =0 ;
+
+  ast_node *params = get_proc_params(proc);
+
+  if (!params) {
+    report_error(like_ast, "CQL0262: LIKE ... ARGUMENTS used on a procedure with no arguments", like_name);
+    goto error;
+  }
+
+  for (; params; params = params->right, count++) ;
+
+  sem_struct *sptr = new_sem_struct("proc_args", count);
+
+  params = get_proc_params(proc);
+
+  uint32_t i = 0;
+  for (; params; params = params->right, i++) {
+    EXTRACT_NOTNULL(param, params->left);
+
+    Invariant(param->sem);
+    sem_t sem_type_param = param->sem->sem_type;
+
+    sem_t core_type = core_type_of(sem_type_param);
+    if (core_type == SEM_TYPE_OBJECT) {
+      report_error(like_ast, "CQL0335: the procedure has an object argument, this is not yet supported", like_name);
+      goto error;
+    }
+
+    sem_type_param &= sem_not(SEM_TYPE_VARIABLE);
+
+    sptr->semtypes[i] = sem_type_param;
+    sptr->names[i] = param->sem->name;
+  }
+
+  result->sem = new_sem(SEM_TYPE_STRUCT);
+  result->sem->sptr = sptr;
+  return result;
+
+error:
+    record_error(like_ast);
+    record_error(name_ast);
+    return NULL;
+}
+
 // This is the general helper for handling the "LIKE [name]" form
 // Basically we are going to replace the LIKE sequence with a list
 // of names.  We just need to find an named object that has a structure
 // type.  It can be
 //   * a cursor
-//   * a proc that returns a result set
+//   * a proc that returns a result set (or any proc if using ARGUMENTS form)
 //   * a table
 //   * a view
 // The source doesn't matter, we just need its shape.  In most cases
@@ -11880,10 +11970,14 @@ static void sem_rewrite_one_param(ast_node *param, symtab *param_names) {
 // (e.g. create cursor X like Y needs the type info)
 //
 static ast_node *sem_find_likeable_ast(ast_node *like_ast) {
-  Contract(is_ast_like(like_ast) || is_ast_from_arguments(like_ast) || is_ast_str(like_ast));
+  Contract(is_ast_like(like_ast));
 
-  // if it's a plain string we can just use it
-  EXTRACT_ANY_NOTNULL(name_ast, is_ast_str(like_ast) ? like_ast : like_ast->left);
+  if (like_ast->right) {
+    // from arguments form, only proc names allowed
+    return sem_find_likeable_proc_args(like_ast);
+  }
+
+  EXTRACT_ANY_NOTNULL(name_ast, like_ast->left);
   EXTRACT_STRING(like_name, name_ast);
 
   ast_node *found_ast = find_local_or_global_variable(like_name);
@@ -14256,7 +14350,7 @@ static ast_node *sem_find_likeable_from_var_type(ast_node *var) {
 
   // it has to be a typed object variable
   if (!is_object(var->sem->sem_type) || !var->sem->object_type) {
-    report_error(var, "CQL0343: the variable must be of type object<T cursor> where T is a valid shape name", var_name);
+    report_error(var, "CQL0345: the variable must be of type object<T cursor> where T is a valid shape name", var_name);
     return NULL;
   }
 
@@ -14276,16 +14370,17 @@ static ast_node *sem_find_likeable_from_var_type(ast_node *var) {
     bputc(&tmp, object_type[i]);
   }
 
-  // We make a string node for the object type (which is itself not in AST here)
+  // We make a like node for the object type (which is itself not in AST here)
   // so that we can use the standard likeable helpers for error checking
   AST_REWRITE_INFO_SET(var->lineno, var->filename);
-  ast_node * type_node = new_ast_str(tmp.ptr);
+  ast_node *type_node = new_ast_str(tmp.ptr);
+  ast_node *like_node = new_ast_like(type_node, NULL);
   AST_REWRITE_INFO_RESET();
 
   CHARBUF_CLOSE(tmp);
 
   // the indicated type must be a valid shape name (one we could use in LIKE T)
-  ast_node *like_target = sem_find_likeable_ast(type_node);
+  ast_node *like_target = sem_find_likeable_ast(like_node);
   if (!like_target) {
     record_error(var);
     return NULL;
@@ -14306,8 +14401,6 @@ static void sem_set_from_cursor(ast_node *ast) {
   EXTRACT_ANY_NOTNULL(cursor, ast->right);
   EXTRACT_STRING(cursor_name, cursor);
   EXTRACT_STRING(var_name, ast->left);
-
-  // DECLARE var_name CURSOR OBJECT<type_name> FROM cursor_name
 
   // must be a valid cursor
   sem_cursor(cursor);
@@ -14337,7 +14430,7 @@ static void sem_set_from_cursor(ast_node *ast) {
   // the cursor has to be a statement cursor
   if (cursor->sem->sem_type & SEM_TYPE_VALUE_CURSOR) {
     report_error(cursor,
-       "CQL0344: the cursor did not originate from a SQLite statement, it only has values", cursor->sem->name);
+       "CQL0261: the cursor did not originate from a SQLite statement, it only has values", cursor->sem->name);
     record_error(ast);
     return;
   }
