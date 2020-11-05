@@ -906,6 +906,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
 
   CHARBUF_CLOSE(all_schema);
 
+  CHARBUF_OPEN(preamble);
   CHARBUF_OPEN(main);
   CHARBUF_OPEN(decls);
   CHARBUF_OPEN(pending);
@@ -925,27 +926,28 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   cg_schema_emit_baseline_tables_proc(&decls, &baseline);
 
   int32_t view_creates = 0, view_drops = 0;
-  cg_schema_manage_views(&main, &view_drops, &view_creates);
+  cg_schema_manage_views(&preamble, &view_drops, &view_creates);
 
   int32_t index_creates = 0, index_drops = 0;
-  cg_schema_manage_indices(&main, &index_drops, &index_creates);
+  cg_schema_manage_indices(&preamble, &index_drops, &index_creates);
 
   int32_t trigger_creates = 0, trigger_drops = 0;
-  cg_schema_manage_triggers(&main, &trigger_drops, &trigger_creates);
+  cg_schema_manage_triggers(&preamble, &trigger_drops, &trigger_creates);
 
   if (recreate_items_count) {
-    cg_schema_manage_recreate_tables(&main, recreates, recreate_items_count);
+    cg_schema_manage_recreate_tables(&preamble, recreates, recreate_items_count);
   }
 
-  bool_t has_temp_schema = cg_schema_emit_temp_schema_proc(&main);
+  bool_t has_temp_schema = cg_schema_emit_temp_schema_proc(&preamble);
+  bool_t column_exists_out = false;
+  bool_t facet_version_out = false;
 
   bprintf(&decls, "-- declared upgrade procedures if any\n");
 
-  bprintf(&main, "CREATE PROCEDURE %s_perform_needed_upgrades()\n", global_proc_name);
-  bprintf(&main, "BEGIN\n");
-  bprintf(&main, "  DECLARE column_exists BOOL NOT NULL;\n");
-  bprintf(&main, "  DECLARE facet_version LONG INTEGER NOT NULL;\n");
+  bprintf(&preamble, "CREATE PROCEDURE %s_perform_needed_upgrades()\n", global_proc_name);
+  bprintf(&preamble, "BEGIN\n");
   bprintf(&main, "  DECLARE schema_version LONG INTEGER NOT NULL;\n");
+
   bprintf(&main, "\n");
   bprintf(&main, "  -- fetch current schema version --\n");
   bprintf(&main, "  CALL %s_cql_get_facet_version('cql_schema_version', schema_version);\n\n", global_proc_name);
@@ -1027,6 +1029,11 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
         // no-op callbacks still suppress @create/@delete which is not legal in alter table
         gen_col_def_with_callbacks(def, &callbacks);
 
+        if (!column_exists_out) {
+          bprintf(&preamble, "  DECLARE column_exists BOOL NOT NULL;\n");
+          column_exists_out = true;
+        }
+
         bprintf(&upgrade, "      -- altering table %s to add column %s %s;\n\n", target_name, col_name, col_type);
         bprintf(&upgrade, "      CALL %s_check_column_exists('%s', '*[( ]%s %s*', column_exists);\n", global_proc_name, target_name, col_name, col_type);
         bprintf(&upgrade, "      IF NOT column_exists THEN\n");
@@ -1094,6 +1101,11 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
 
     // handle any migration proc for any annotation
     if (version_annotation->right) {
+      if (!facet_version_out) {
+        bprintf(&preamble, "  DECLARE facet_version LONG INTEGER NOT NULL;\n");
+        facet_version_out = true;
+      }
+
       EXTRACT_STRING(proc, version_annotation->right);
       bprintf(&pending, "      CALL %s_cql_get_facet_version('%s', facet_version);\n", global_proc_name, proc);
       bprintf(&pending, "      IF facet_version = -1 THEN\n");
@@ -1160,6 +1172,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
 
   CHARBUF_OPEN(output_file);
   bprintf(&output_file, "%s\n", decls.ptr);
+  bprintf(&output_file, "%s", preamble.ptr);
   bprintf(&output_file, "%s", main.ptr);
 
   cql_write_file(options.file_names[0], output_file.ptr);
@@ -1171,4 +1184,5 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   CHARBUF_CLOSE(pending);
   CHARBUF_CLOSE(decls);
   CHARBUF_CLOSE(main);
+  CHARBUF_CLOSE(preamble);
 }
