@@ -47451,6 +47451,25 @@ Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect numbe
 
 The statement ending at line XXXX
 
+SET a_string := cql_cursor_diff_val(an_int, an_int2, 1);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'cql_cursor_diff_val'
+
+  {assign}: err
+  | {name a_string}: a_string: text variable
+  | {call}: err
+    | {name cql_cursor_diff_val}: err
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {name an_int}: an_int: integer variable
+        | {arg_list}
+          | {name an_int2}: an_int2: integer variable
+          | {arg_list}
+            | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
 CREATE PROC cql_cursor_diff_col_without_cursor_arg ()
 BEGIN
   DECLARE c1 CURSOR FOR SELECT 1 AS x, 'y' AS y;
@@ -47927,6 +47946,205 @@ END;
                     |   | {name c2}
                     |   | {name y}
                     | {strlit 'y'}: text notnull
+
+The statement ending at line XXXX
+
+CREATE PROC print_call_cql_cursor_diff_val ()
+BEGIN
+  DECLARE c1 CURSOR FOR SELECT 1 AS x, 'y' AS y;
+  DECLARE c2 CURSOR FOR SELECT 1 AS x, 'v' AS y;
+  FETCH c1;
+  FETCH c2;
+  CALL printf(CASE WHEN c1.x IS NOT c2.x THEN printf('column:%s left:%s right:%s', 'x', CASE WHEN c1.x IS NULL THEN 'null'
+  ELSE printf('%d', c1.x)
+  END, CASE WHEN c2.x IS NULL THEN 'null'
+  ELSE printf('%d', c2.x)
+  END)
+  WHEN c1.y IS NOT c2.y THEN printf('column:%s left:%s right:%s', 'y', CASE WHEN c1.y IS NULL THEN 'null'
+  ELSE printf('%s', c1.y)
+  END, CASE WHEN c2.y IS NULL THEN 'null'
+  ELSE printf('%s', c2.y)
+  END)
+  END);
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name print_call_cql_cursor_diff_val}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor}: c1: select: { x: integer notnull, y: text notnull } variable
+      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | | {select_stmt}: select: { x: integer notnull, y: text notnull }
+      |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
+      |   | | {select_core}: select: { x: integer notnull, y: text notnull }
+      |   |   | {select_expr_list_con}: select: { x: integer notnull, y: text notnull }
+      |   |     | {select_expr_list}: select: { x: integer notnull, y: text notnull }
+      |   |     | | {select_expr}: x: integer notnull
+      |   |     | | | {int 1}: integer notnull
+      |   |     | | | {opt_as_alias}
+      |   |     | |   | {name x}
+      |   |     | | {select_expr_list}
+      |   |     |   | {select_expr}: y: text notnull
+      |   |     |     | {strlit 'y'}: text notnull
+      |   |     |     | {opt_as_alias}
+      |   |     |       | {name y}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {declare_cursor}: c2: select: { x: integer notnull, y: text notnull } variable
+      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | | {select_stmt}: select: { x: integer notnull, y: text notnull }
+      |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
+      |   | | {select_core}: select: { x: integer notnull, y: text notnull }
+      |   |   | {select_expr_list_con}: select: { x: integer notnull, y: text notnull }
+      |   |     | {select_expr_list}: select: { x: integer notnull, y: text notnull }
+      |   |     | | {select_expr}: x: integer notnull
+      |   |     | | | {int 1}: integer notnull
+      |   |     | | | {opt_as_alias}
+      |   |     | |   | {name x}
+      |   |     | | {select_expr_list}
+      |   |     |   | {select_expr}: y: text notnull
+      |   |     |     | {strlit 'v'}: text notnull
+      |   |     |     | {opt_as_alias}
+      |   |     |       | {name y}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_stmt}: c1: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | {fetch_stmt}: c2: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | {call_stmt}: ok
+        | {name printf}: ok
+        | {expr_list}: ok
+          | {case_expr}: text
+            | {connector}: text
+              | {case_list}: text notnull
+                | {when}: text notnull
+                | | {is_not}: bool notnull
+                | | | {dot}: c1_.x: integer notnull variable
+                | | | | {name c1}
+                | | | | {name x}
+                | | | {dot}: c2_.x: integer notnull variable
+                | |   | {name c2}
+                | |   | {name x}
+                | | {call}: text notnull
+                |   | {name printf}: text notnull
+                |   | {call_arg_list}
+                |     | {call_filter_clause}
+                |     | {arg_list}: ok
+                |       | {strlit 'column:%s left:%s right:%s'}: text notnull
+                |       | {arg_list}
+                |         | {strlit 'x'}: text notnull
+                |         | {arg_list}
+                |           | {case_expr}: text notnull
+                |           | | {connector}: text notnull
+                |           |   | {case_list}: text notnull
+                |           |   | | {when}: text notnull
+                |           |   |   | {is}: bool notnull
+                |           |   |   | | {dot}: c1_.x: integer notnull variable
+                |           |   |   | | | {name c1}
+                |           |   |   | | | {name x}
+                |           |   |   | | {null}: null
+                |           |   |   | {strlit 'null'}: text notnull
+                |           |   | {call}: text notnull
+                |           |     | {name printf}: text notnull
+                |           |     | {call_arg_list}
+                |           |       | {call_filter_clause}
+                |           |       | {arg_list}: ok
+                |           |         | {strlit '%d'}: text notnull
+                |           |         | {arg_list}
+                |           |           | {dot}: c1_.x: integer notnull variable
+                |           |             | {name c1}
+                |           |             | {name x}
+                |           | {arg_list}
+                |             | {case_expr}: text notnull
+                |               | {connector}: text notnull
+                |                 | {case_list}: text notnull
+                |                 | | {when}: text notnull
+                |                 |   | {is}: bool notnull
+                |                 |   | | {dot}: c2_.x: integer notnull variable
+                |                 |   | | | {name c2}
+                |                 |   | | | {name x}
+                |                 |   | | {null}: null
+                |                 |   | {strlit 'null'}: text notnull
+                |                 | {call}: text notnull
+                |                   | {name printf}: text notnull
+                |                   | {call_arg_list}
+                |                     | {call_filter_clause}
+                |                     | {arg_list}: ok
+                |                       | {strlit '%d'}: text notnull
+                |                       | {arg_list}
+                |                         | {dot}: c2_.x: integer notnull variable
+                |                           | {name c2}
+                |                           | {name x}
+                | {case_list}: text notnull
+                  | {when}: text notnull
+                    | {is_not}: bool notnull
+                    | | {dot}: c1_.y: text notnull variable
+                    | | | {name c1}
+                    | | | {name y}
+                    | | {dot}: c2_.y: text notnull variable
+                    |   | {name c2}
+                    |   | {name y}
+                    | {call}: text notnull
+                      | {name printf}: text notnull
+                      | {call_arg_list}
+                        | {call_filter_clause}
+                        | {arg_list}: ok
+                          | {strlit 'column:%s left:%s right:%s'}: text notnull
+                          | {arg_list}
+                            | {strlit 'y'}: text notnull
+                            | {arg_list}
+                              | {case_expr}: text notnull
+                              | | {connector}: text notnull
+                              |   | {case_list}: text notnull
+                              |   | | {when}: text notnull
+                              |   |   | {is}: bool notnull
+                              |   |   | | {dot}: c1_.y: text notnull variable
+                              |   |   | | | {name c1}
+                              |   |   | | | {name y}
+                              |   |   | | {null}: null
+                              |   |   | {strlit 'null'}: text notnull
+                              |   | {call}: text notnull
+                              |     | {name printf}: text notnull
+                              |     | {call_arg_list}
+                              |       | {call_filter_clause}
+                              |       | {arg_list}: ok
+                              |         | {strlit '%s'}: text notnull
+                              |         | {arg_list}
+                              |           | {dot}: c1_.y: text notnull variable
+                              |             | {name c1}
+                              |             | {name y}
+                              | {arg_list}
+                                | {case_expr}: text notnull
+                                  | {connector}: text notnull
+                                    | {case_list}: text notnull
+                                    | | {when}: text notnull
+                                    |   | {is}: bool notnull
+                                    |   | | {dot}: c2_.y: text notnull variable
+                                    |   | | | {name c2}
+                                    |   | | | {name y}
+                                    |   | | {null}: null
+                                    |   | {strlit 'null'}: text notnull
+                                    | {call}: text notnull
+                                      | {name printf}: text notnull
+                                      | {call_arg_list}
+                                        | {call_filter_clause}
+                                        | {arg_list}: ok
+                                          | {strlit '%s'}: text notnull
+                                          | {arg_list}
+                                            | {dot}: c2_.y: text notnull variable
+                                              | {name c2}
+                                              | {name y}
 
 The statement ending at line XXXX
 

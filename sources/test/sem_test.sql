@@ -11704,6 +11704,14 @@ set a_string := cql_cursor_diff_col(an_int, an_int2);
 -- +1 Error
 set a_string := cql_cursor_diff_col(an_int, an_int2, 1);
 
+-- TEST: call cql_cursor_diff_val with incorrect number of arguments
+-- + {assign}: err
+-- + {call}: err
+-- + {name cql_cursor_diff_val}: err
+-- + Error % function got incorrect number of arguments 'cql_cursor_diff_val'
+-- +1 Error
+set a_string := cql_cursor_diff_val(an_int, an_int2, 1);
+
 -- TEST: call cql_cursor_diff_col with cursor with fetch value and same shape
 -- + {create_proc_stmt}: err
 -- + {assign}: err
@@ -11795,6 +11803,30 @@ begin
   fetch c1;
   fetch c2;
   call printf(cql_cursor_diff_col(c1, c2));
+end;
+
+-- TEST: call cql_cursor_diff_val from another func
+-- + {create_proc_stmt}: ok dml_proc
+-- + {call_stmt}: ok
+-- + CALL printf(CASE WHEN c1.x IS NOT c2.x THEN printf('column:%s left:%s right:%s', 'x', CASE WHEN c1.x IS NULL THEN 'null'
+-- + ELSE printf('%d', c1.x)
+-- + END, CASE WHEN c2.x IS NULL THEN 'null'
+-- + ELSE printf('%d', c2.x)
+-- + END)
+-- + WHEN c1.y IS NOT c2.y THEN printf('column:%s left:%s right:%s', 'y', CASE WHEN c1.y IS NULL THEN 'null'
+-- + ELSE printf('%s', c1.y)
+-- + END, CASE WHEN c2.y IS NULL THEN 'null'
+-- + ELSE printf('%s', c2.y)
+-- + END)
+-- + END);
+-- - Error
+create proc print_call_cql_cursor_diff_val()
+begin
+  declare c1 cursor for select 1 x, 'y' y;
+  declare c2 cursor for select 1 x, 'v' y;
+  fetch c1;
+  fetch c2;
+  call printf(cql_cursor_diff_val(c1, c2));
 end;
 
 -- TEST: simple trim call (two args)
