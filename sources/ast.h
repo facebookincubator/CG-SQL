@@ -767,6 +767,8 @@ AST0(schema_upgrade_script_stmt);
 AST0(previous_schema_stmt);
 AST(create_trigger_stmt)
 AST(raise);
+AST(expr_names);
+AST(expr_name);
 AST(trigger_action);
 AST(trigger_target_action);
 AST(trigger_condition);

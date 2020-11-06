@@ -49748,3 +49748,81 @@ Error at test/sem_test.sql:XXXX : in like : CQL0335: the procedure has an object
     | {name obj_proc}: err
     | {name obj_proc}: err
 
+The statement ending at line XXXX
+
+CREATE PROC test_fetch_using ()
+BEGIN
+  DECLARE C CURSOR LIKE bar;
+  FETCH C(id, name, rate) FROM VALUES(1, NULL, 99);
+END;
+
+  {create_proc_stmt}: ok
+  | {name test_fetch_using}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor_like_name}: C: bar: { id: integer notnull, name: text, rate: longint } variable auto_cursor value_cursor
+      | | {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable auto_cursor value_cursor
+      | | {like}: bar: { id: integer notnull, name: text, rate: longint }
+      |   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
+      | {fetch_values_stmt}: ok
+        | {name_columns_values}
+          | {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable auto_cursor value_cursor
+          | {columns_values}: ok
+            | {column_spec}
+            | | {name_list}
+            |   | {name id}: id: integer notnull
+            |   | {name_list}
+            |     | {name name}: name: text
+            |     | {name_list}
+            |       | {name rate}: rate: longint
+            | {insert_list}
+              | {int 1}: integer notnull
+              | {insert_list}
+                | {null}: null
+                | {insert_list}
+                  | {int 99}: integer notnull
+
+The statement ending at line XXXX
+
+CREATE PROC test_fetch_using_with_dummy_seed ()
+BEGIN
+  DECLARE C CURSOR LIKE bar;
+  FETCH C(id, name, rate) FROM VALUES(1, printf('name_%d', _seed_), _seed_) @DUMMY_SEED(9) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
+END;
+
+  {create_proc_stmt}: ok
+  | {name test_fetch_using_with_dummy_seed}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor_like_name}: C: bar: { id: integer notnull, name: text, rate: longint } variable auto_cursor value_cursor
+      | | {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable auto_cursor value_cursor
+      | | {like}: bar: { id: integer notnull, name: text, rate: longint }
+      |   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
+      | {fetch_values_stmt}: ok
+        | {insert_dummy_spec}: integer notnull
+        | | {int 9}: integer notnull
+        | | {int 3}
+        | {name_columns_values}
+          | {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable auto_cursor value_cursor
+          | {columns_values}: ok
+            | {column_spec}
+            | | {name_list}
+            |   | {name id}: id: integer notnull
+            |   | {name_list}
+            |     | {name name}: name: text
+            |     | {name_list}
+            |       | {name rate}: rate: longint
+            | {insert_list}
+              | {int 1}: integer notnull
+              | {insert_list}
+                | {call}: text notnull
+                | | {name printf}: text notnull
+                | | {call_arg_list}
+                |   | {call_filter_clause}
+                |   | {arg_list}: ok
+                |     | {strlit 'name_%d'}: text notnull
+                |     | {arg_list}
+                |       | {name _seed_}: _seed_: integer notnull variable
+                | {insert_list}
+                  | {name _seed_}: _seed_: integer notnull variable
+

@@ -10375,6 +10375,41 @@ static ast_node *sem_generate_full_column_list(sem_struct *sptr) {
   return  name_list;
 }
 
+// This helper function rewrites the expr_names ast to the columns_values ast.
+// e.g: fetch C using 1 a, 2 b, 3 c; ==> fetch C (a,b,c) values (1, 2, 3);
+static void sem_rewrite_expr_names_to_columns_values(ast_node* columns_values) {
+  Contract(is_ast_expr_names(columns_values));
+
+  AST_REWRITE_INFO_SET(columns_values->lineno, columns_values->filename);
+
+  EXTRACT(expr_names, columns_values);
+  ast_node *name_list = NULL;
+  ast_node *insert_list = NULL;
+
+  for ( ; expr_names->right ; expr_names = expr_names->right) ;
+
+  do {
+    EXTRACT(expr_name, expr_names->left);
+    EXTRACT_ANY(expr, expr_name->left);
+    EXTRACT_ANY(as_alias, expr_name->right);
+    EXTRACT_ANY_NOTNULL(name, as_alias->left);
+
+    name_list = new_ast_name_list(name, name_list);
+    insert_list = new_ast_insert_list(expr, insert_list);
+
+    expr_names = expr_names->parent;
+  } while (is_ast_expr_names(expr_names));
+
+  ast_node *opt_column_spec = new_ast_column_spec(name_list);
+  ast_node *new_columns_values = new_ast_columns_values(opt_column_spec, insert_list);
+
+  columns_values->type = new_columns_values->type;
+  ast_set_left(columns_values, new_columns_values->left);
+  ast_set_right(columns_values, new_columns_values->right);
+
+  AST_REWRITE_INFO_RESET();
+}
+
 // There are two reasons the columns might be missing. A form like this:
 //    INSERT C FROM VALUES(...);
 // or
@@ -11129,11 +11164,12 @@ static void sem_fetch_values_stmt(ast_node *ast) {
   EXTRACT(insert_dummy_spec, ast->left);
   EXTRACT(name_columns_values, ast->right);
   EXTRACT_ANY_NOTNULL(cursor, name_columns_values->left)
-  EXTRACT_NOTNULL(columns_values, name_columns_values->right);
+  EXTRACT_ANY_NOTNULL(columns_values, name_columns_values->right);
 
   // FETCH name [( name_list )] FROM VALUES (insert_list) [insert_dummy_spec]
   // FETCH name FROM ARGUMENTS;  (rewritten into the first form)
   // FETCH name [(name_list )] FROM ARGUMENTS; (rewritten into the first form)
+  // FETCH name USING expr_names;
 
   sem_cursor(cursor);
   if (is_error(cursor)) {
@@ -11146,6 +11182,11 @@ static void sem_fetch_values_stmt(ast_node *ast) {
     record_error(ast);
     return;
   }
+
+  if (is_ast_expr_names(columns_values)) {
+    sem_rewrite_expr_names_to_columns_values(columns_values);
+  }
+  Invariant(is_ast_columns_values(columns_values));
 
   sem_rewrite_empty_column_list(columns_values, cursor->sem->sptr);
 

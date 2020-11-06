@@ -12233,3 +12233,23 @@ end;
 -- + Error % the procedure has an object argument, this is not yet supported 'obj_proc'
 -- +1 Error
 declare invalid_object_cursor cursor like obj_proc arguments;
+
+-- TEST: test rewrite for [FETCH [c] USING ... ] grammar
+-- + {create_proc_stmt}: ok
+-- + FETCH C(id, name, rate) FROM VALUES(1, NULL, 99);
+-- - Error
+create proc test_fetch_using()
+begin
+  declare C cursor like bar;
+  fetch C using 1 id, NULL as name, 99 rate;
+end;
+
+-- TEST: test rewrite for [FETCH [c] USING ... ] grammar with dummy_seed
+-- + {create_proc_stmt}: ok
+-- + FETCH C(id, name, rate) FROM VALUES(1, printf('name_%d', _seed_), _seed_) @DUMMY_SEED(9) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
+-- - Error
+create proc test_fetch_using_with_dummy_seed()
+begin
+  declare C cursor like bar;
+  fetch C using 1 id @dummy_seed(9) @dummy_defaults @dummy_nullables;
+end;

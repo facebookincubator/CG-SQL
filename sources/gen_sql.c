@@ -2190,30 +2190,53 @@ static void gen_with_insert_stmt(ast_node *ast) {
   gen_insert_stmt(insert_stmt);
 }
 
+static void gen_expr_names(ast_node *ast) {
+  Contract(is_ast_expr_names(ast));
+
+  for (ast_node *list = ast; list; list = list->right) {
+    EXTRACT(expr_name, list->left);
+    EXTRACT_ANY(expr, expr_name->left);
+    EXTRACT_NOTNULL(opt_as_alias, expr_name->right);
+
+    gen_expr(expr, EXPR_PRI_ROOT);
+    gen_as_alias(opt_as_alias);
+
+    if(list->right) {
+      gen_printf(", ");
+    }
+  }
+}
+
 static void gen_fetch_values_stmt(ast_node *ast) {
   Contract(is_ast_fetch_values_stmt(ast));
 
   EXTRACT(insert_dummy_spec, ast->left);
   EXTRACT_NOTNULL(name_columns_values, ast->right);
   EXTRACT_STRING(name, name_columns_values->left);
-  EXTRACT_NOTNULL(columns_values, name_columns_values->right);
-  EXTRACT(column_spec, columns_values->left);
+  EXTRACT_ANY_NOTNULL(columns_values, name_columns_values->right);
 
   gen_printf("FETCH %s", name);
-  gen_column_spec(column_spec);
-  gen_printf(" ");
 
-  if (is_ast_from_arguments(columns_values->right)) {
-    gen_from_arguments(columns_values->right);
-  }
-  else if (is_ast_from_cursor(columns_values->right)) {
-    gen_from_cursor(columns_values->right);
-  }
-  else {
-    EXTRACT(insert_list, columns_values->right);
-    gen_printf("FROM VALUES(", name);
-    gen_insert_list(insert_list);
-    gen_printf(")");
+  if (is_ast_expr_names(columns_values)) {
+    gen_printf(" USING ");
+    gen_expr_names(columns_values);
+  } else {
+    EXTRACT(column_spec, columns_values->left);
+    gen_column_spec(column_spec);
+    gen_printf(" ");
+
+    if (is_ast_from_arguments(columns_values->right)) {
+      gen_from_arguments(columns_values->right);
+    }
+    else if (is_ast_from_cursor(columns_values->right)) {
+      gen_from_cursor(columns_values->right);
+    }
+    else {
+      EXTRACT(insert_list, columns_values->right);
+      gen_printf("FROM VALUES(", name);
+      gen_insert_list(insert_list);
+      gen_printf(")");
+    }
   }
 
   if (insert_dummy_spec) {

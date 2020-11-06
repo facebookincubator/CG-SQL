@@ -186,13 +186,13 @@ static void cql_reset_globals(void);
 
 /* dml stuff */
 %type <aval> with_delete_stmt delete_stmt
-%type <aval> insert_stmt with_insert_stmt insert_list insert_stmt_type opt_column_spec opt_insert_dummy_spec
+%type <aval> insert_stmt with_insert_stmt insert_list insert_stmt_type opt_column_spec opt_insert_dummy_spec expr_names, expr_name
 %type <aval> with_prefix with_select_stmt cte_decl cte_table cte_tables
 %type <aval> select_expr select_expr_list select_opts select_stmt select_core values explain_stmt explain_target
 %type <aval> select_stmt_no_with select_core_compound select_core_list
 %type <aval> window_func_inv opt_filter_clause window_name_or_defn window_defn opt_select_window
 %type <aval> opt_partition_by opt_frame_spec frame_boundary_opts frame_boundary_start frame_boundary_end frame_boundary
-%type <aval> opt_where opt_groupby opt_having opt_orderby opt_limit opt_offset opt_as_alias window_clause
+%type <aval> opt_where opt_groupby opt_having opt_orderby opt_limit opt_offset opt_as_alias as_alias window_clause
 %type <aval> groupby_item groupby_list opt_asc_desc window_name_defn window_name_defn_list
 %type <aval> table_or_subquery table_or_subquery_list query_parts table_function opt_from_query_parts
 %type <aval> opt_join_cond opt_outer join_cond join_clause join_target join_target_list opt_inner_cross left_or_right
@@ -1107,8 +1107,12 @@ select_expr:
 
 opt_as_alias:
   /* nil */  { $opt_as_alias = NULL;  }
-  | AS name  { $opt_as_alias = new_ast_opt_as_alias($name); }
-  | name  { $opt_as_alias = new_ast_opt_as_alias($name); }
+  | as_alias
+  ;
+
+as_alias:
+  AS name  { $as_alias = new_ast_opt_as_alias($name); }
+  | name  { $as_alias = new_ast_opt_as_alias($name); }
   ;
 
 query_parts:
@@ -1497,6 +1501,17 @@ fetch_values_stmt:
     struct ast_node *columns_values = new_ast_columns_values($opt_column_spec, $from_cursor);
     struct ast_node *name_columns_values = new_ast_name_columns_values($name, columns_values);
     $fetch_values_stmt = new_ast_fetch_values_stmt($opt_insert_dummy_spec, name_columns_values); }
+  | FETCH name USING expr_names opt_insert_dummy_spec {
+    struct ast_node *name_columns_values = new_ast_name_columns_values($name, $expr_names);
+    $fetch_values_stmt = new_ast_fetch_values_stmt($opt_insert_dummy_spec, name_columns_values); }
+  ;
+
+expr_names[result]:
+  expr_name  { $result = new_ast_expr_names($expr_name, NULL); }
+  |  expr_name ',' expr_names[sel]  { $result = new_ast_expr_names($expr_name, $sel); }
+  ;
+
+expr_name: expr as_alias { $expr_name = new_ast_expr_name($expr, $as_alias); }
   ;
 
 fetch_call_stmt:

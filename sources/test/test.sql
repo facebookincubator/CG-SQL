@@ -797,6 +797,8 @@ fetch C from call x();
 fetch C from values(1,2,3);
 fetch C(id, x) from values (1.3, 4);
 fetch C(x, y) from values(1,2) @dummy_seed(1 + 2*3) @dummy_defaults @dummy_nullables;
+fetch C using 1 a, 2 b @dummy_seed(1 + 2*3) @dummy_defaults @dummy_nullables;
+
 
 -- declare a cursor of the type of another cursor
 declare C0 cursor like C1;
