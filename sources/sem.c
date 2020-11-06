@@ -4889,7 +4889,7 @@ static void sem_func_cql_get_blob_size(ast_node *ast, uint32_t arg_count) {
 
   ast_node *arg = first_arg(arg_list);
   if (!is_blob(arg->sem->sem_type)) {
-    report_error(ast, "CQL0345: all arguments must be blob", name);
+    report_error(ast, "CQL0345: the argument must be of type blob", name);
     record_error(ast);
     return;
   }
@@ -14106,6 +14106,8 @@ static void sem_declare_select_func_stmt(ast_node *ast) {
   Contract(is_ast_declare_select_func_stmt(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left)
   EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(func_params_return, ast->right);
+  EXTRACT_ANY_NOTNULL(ret_data_type, func_params_return->right);
 
   sem_declare_func_stmt(ast);
   if (is_error(ast)) {
@@ -14114,6 +14116,12 @@ static void sem_declare_select_func_stmt(ast_node *ast) {
 
   if (symtab_find(builtin_funcs, name)) {
     report_error(name_ast, "CQL0314: select function does not require a declaration, it is a CQL built-in", name);
+    record_error(ast);
+    return;
+  }
+
+  if (core_type_of(ret_data_type->sem->sem_type) == SEM_TYPE_OBJECT) {
+    report_error(name_ast, "CQL0347: select function may not return type OBJECT", name);
     record_error(ast);
     return;
   }
@@ -14414,7 +14422,7 @@ static ast_node *sem_find_likeable_from_var_type(ast_node *var) {
 
   // it has to be a typed object variable
   if (!is_object(var->sem->sem_type) || !var->sem->object_type) {
-    report_error(var, "CQL0345: the variable must be of type object<T cursor> where T is a valid shape name", var_name);
+    report_error(var, "CQL0346: the variable must be of type object<T cursor> where T is a valid shape name", var_name);
     return NULL;
   }
 

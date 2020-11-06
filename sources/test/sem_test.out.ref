@@ -49148,7 +49148,7 @@ BEGIN
   DECLARE C CURSOR FOR box;
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0345: the variable must be of type object<T cursor> where T is a valid shape name 'box'
+Error at test/sem_test.sql:XXXX : in str : CQL0346: the variable must be of type object<T cursor> where T is a valid shape name 'box'
 
   {create_proc_stmt}: err
   | {name cursor_unbox_untyped}: err
@@ -49465,7 +49465,7 @@ The statement ending at line XXXX
 
 SET an_long := cql_get_blob_size(an_int);
 
-Error at test/sem_test.sql:XXXX : in call : CQL0345: all arguments must be blob 'cql_get_blob_size'
+Error at test/sem_test.sql:XXXX : in call : CQL0345: the argument must be of type blob 'cql_get_blob_size'
 
   {assign}: err
   | {name an_long}: an_long: longint variable
@@ -49825,4 +49825,15 @@ END;
                 |       | {name _seed_}: _seed_: integer notnull variable
                 | {insert_list}
                   | {name _seed_}: _seed_: integer notnull variable
+
+The statement ending at line XXXX
+
+DECLARE SELECT FUNC returns_object_is_bogus () OBJECT;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0347: select function may not return type OBJECT 'returns_object_is_bogus'
+
+  {declare_select_func_stmt}: err
+  | {name returns_object_is_bogus}: object
+  | {func_params_return}
+    | {type_object}: object
 

@@ -12175,7 +12175,7 @@ set an_long := cql_get_blob_size(blob_var, 0);
 -- + {assign}: err
 -- + {call}: err
 -- + {name cql_get_blob_size}
--- + Error % all arguments must be blob 'cql_get_blob_size'
+-- + Error % the argument must be of type blob 'cql_get_blob_size'
 -- +1 Error
 set an_long := cql_get_blob_size(an_int);
 
@@ -12253,3 +12253,9 @@ begin
   declare C cursor like bar;
   fetch C using 1 id @dummy_seed(9) @dummy_defaults @dummy_nullables;
 end;
+
+-- TEST: try to return object from a select function
+-- + {declare_select_func_stmt}: err
+-- + Error % select function may not return type OBJECT 'returns_object_is_bogus'
+-- +1 Error
+declare select function returns_object_is_bogus() object;

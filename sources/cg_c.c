@@ -135,8 +135,8 @@ static CSTR current_proc_name() {
 // We might need several temporaries at the same level if different types appear
 // at the same level but in practice we tend not to run into such things.  Mostly
 // this works very well at arranging for the same scratch nullable int (or whatever)
-// to be re-used in every statement.  The stack depth is limited to 64 with this
-// representation. One bit for each stack level tracks if the temp has been
+// to be re-used in every statement.  The stack depth is limited to bundles of 64bits
+//  with thisrepresentation. One bit for each stack level tracks if the temp has been
 // generated.  This could be extended if needed...
 typedef struct cg_type_masks {
   uint64_t reals[CQL_MAX_STACK/64];
