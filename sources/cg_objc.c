@@ -256,8 +256,12 @@ static void cg_objc_proc_result_set(ast_node *ast) {
   EXTRACT_MISC_ATTRS(ast, misc_attrs);
 
   // if getters are suppressed the entire class is moot
-  bool_t suppress_getters = misc_attrs && exists_attribute_str(misc_attrs, "suppress_getters");
-  if (suppress_getters) {
+  // if result set is suppressed the entire class is moot
+  bool_t suppressed = 
+    exists_attribute_str(misc_attrs, "suppress_getters") ||
+    exists_attribute_str(misc_attrs, "suppress_result_set");
+
+  if (suppressed) {
     return;
   }
 

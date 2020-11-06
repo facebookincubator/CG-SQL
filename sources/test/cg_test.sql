@@ -2509,6 +2509,21 @@ begin
   select * from bar;
 end;
 
+
+-- TEST: no result set items should be generated at all
+-- - CQL_DATA_TYPE
+-- - lotsa_columns_no_result_set_fetch_results
+-- - lotsa_columns_no_result_set_get_
+-- - lotsa_columns_no_result_set_data_types
+-- - lotsa_columns_no_result_set_refs_offset
+-- - lotsa_columns_no_result_set_col_offsets
+-- - lotsa_columns_no_result_set_result_count
+@attribute(cql:suppress_result_set)
+create proc lotsa_columns_no_result_set()
+begin
+  select * from bar;
+end;
+
 -- TEST: make sure that _rc_ is set to SQLITE_OK when we return
 -- + _rc_ = SQLITE_OK; // clean up any SQLITE_ROW value or other non-error
 -- + goto cql_cleanup; // return

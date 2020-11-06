@@ -107,7 +107,7 @@ cql_data_decl( cmd_options options );
 #define CQL_NICE_LITERAL_NAME_LIMIT 32
 
 // note this is not easily changed, storage for used strach variables is in an unsigned long long
-#define CQL_MAX_STACK 64
+#define CQL_MAX_STACK 128
 
 typedef const char *CSTR;
 

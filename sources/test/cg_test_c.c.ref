@@ -198,6 +198,7 @@ extern void out_union_no_dml_fetch_results(out_union_no_dml_result_set_ref _Null
 
 extern CQL_WARN_UNUSED cql_code use_return(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_);
 extern CQL_WARN_UNUSED cql_code lotsa_columns_no_getters(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_);
+extern CQL_WARN_UNUSED cql_code lotsa_columns_no_result_set(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_);
 cql_string_literal(_literal_1_This_is_a_test_, "This is a \" \\ test '' \n \" ");
 cql_string_literal(_literal_2_b_, "b");
 cql_string_literal(_literal_3_c_, "c");
@@ -5753,6 +5754,30 @@ CQL_WARN_UNUSED cql_code lotsa_columns_no_getters_fetch_results(sqlite3 *_Nonnul
 }
 
 CQL_WARN_UNUSED cql_code lotsa_columns_no_getters(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_ = NULL;
+  _rc_ = cql_prepare(_db_, _result_,
+    "SELECT id, name, rate, type, size "
+      "FROM bar");
+  if (_rc_ != SQLITE_OK) goto cql_cleanup;
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
+  return _rc_;
+}
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC lotsa_columns_no_result_set ()
+BEGIN
+  SELECT *
+    FROM bar;
+END;
+*/
+
+CQL_WARN_UNUSED cql_code lotsa_columns_no_result_set(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_) {
   cql_code _rc_ = SQLITE_OK;
   *_result_ = NULL;
   _rc_ = cql_prepare(_db_, _result_,

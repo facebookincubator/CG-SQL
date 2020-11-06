@@ -449,8 +449,12 @@ static void ast_exists_ast_misc_attr_callback(
 
 // Helper function to extract the specified string type attribute (if any) from the misc attributes
 // provided, and invoke the callback function
-cql_noexport uint32_t exists_attribute_str( ast_node *_Nullable misc_attr_list, const char *attribute_name)
+cql_noexport uint32_t exists_attribute_str(ast_node *_Nullable misc_attr_list, const char *attribute_name)
 {
+  if (!misc_attr_list) {
+    return 0;
+  }
+
   Contract(is_ast_misc_attrs(misc_attr_list));
 
   misc_attrs_type misc = {

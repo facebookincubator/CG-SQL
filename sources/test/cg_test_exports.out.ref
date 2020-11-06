@@ -105,6 +105,7 @@ DECLARE PROC tail_catch () USING TRANSACTION;
 DECLARE PROC pretty_print_with_quote () USING TRANSACTION;
 DECLARE PROC hex_quote () USING TRANSACTION;
 DECLARE PROC lotsa_columns_no_getters () (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
+DECLARE PROC lotsa_columns_no_result_set () (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
 DECLARE PROC early_out_rc_cleared (OUT x INTEGER) USING TRANSACTION;
 DECLARE PROC try_boxing (OUT result OBJECT<bar CURSOR>) USING TRANSACTION;
 DECLARE PROC try_unboxing (boxed_cursor OBJECT<bar CURSOR>) USING TRANSACTION;

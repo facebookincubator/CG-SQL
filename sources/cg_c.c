@@ -139,13 +139,13 @@ static CSTR current_proc_name() {
 // representation. One bit for each stack level tracks if the temp has been
 // generated.  This could be extended if needed...
 typedef struct cg_type_masks {
-  uint64_t reals;
-  uint64_t bools;
-  uint64_t ints;
-  uint64_t longs;
-  uint64_t strings;
-  uint64_t objects;
-  uint64_t blobs;
+  uint64_t reals[CQL_MAX_STACK/64];
+  uint64_t bools[CQL_MAX_STACK/64];
+  uint64_t ints[CQL_MAX_STACK/64];
+  uint64_t longs[CQL_MAX_STACK/64];
+  uint64_t strings[CQL_MAX_STACK/64];
+  uint64_t objects[CQL_MAX_STACK/64];
+  uint64_t blobs[CQL_MAX_STACK/64];
 } cg_type_masks;
 
 // There is one set of masks for nullables and another for not-nullables.
@@ -418,40 +418,41 @@ static void cg_scratch_var(ast_node *ast, sem_t sem_type, charbuf *var, charbuf 
     switch (core_type) {
       case SEM_TYPE_INTEGER:
         bprintf(var, "%s_int_%d", prefix, stack_level);
-        usedmask = &pmask->ints;
+        usedmask = pmask->ints;
         break;
       case SEM_TYPE_BLOB:
         bprintf(var, "%s_blob_%d", prefix, stack_level);
-        usedmask = &pmask->blobs;
+        usedmask = pmask->blobs;
         break;
       case SEM_TYPE_OBJECT:
         bprintf(var, "%s_object_%d", prefix, stack_level);
-        usedmask = &pmask->objects;
+        usedmask = pmask->objects;
         break;
       case SEM_TYPE_TEXT:
         bprintf(var, "%s_text_%d", prefix, stack_level);
-        usedmask = &pmask->strings;
+        usedmask = pmask->strings;
         break;
       case SEM_TYPE_LONG_INTEGER:
         bprintf(var, "%s_int64_%d", prefix, stack_level);
-        usedmask = &pmask->longs;
+        usedmask = pmask->longs;
         break;
       case SEM_TYPE_REAL:
         bprintf(var, "%s_double_%d", prefix, stack_level);
-        usedmask = &pmask->reals;
+        usedmask = pmask->reals;
         break;
       case SEM_TYPE_BOOL:
         bprintf(var, "%s_bool_%d", prefix, stack_level);
-        usedmask = &pmask->bools;
+        usedmask = pmask->bools;
         break;
     }
 
-    unsigned long long mask = 1LL << stack_level;
+    int32_t index = stack_level/64;
+    unsigned long long mask = 1LL << (stack_level % 64);
 
     // Emit scratch if needed.
-    if (!(*usedmask & mask)) {
+    if (!(usedmask[index] & mask)) {
       cg_var_decl(cg_scratch_vars_output, sem_type, var->ptr, CG_VAR_DECL_LOCAL);
-      *usedmask |= mask;
+      usedmask[index] |= mask;
     }
   }
 
@@ -4869,6 +4870,11 @@ static void cg_proc_result_set(ast_node *ast) {
   EXTRACT_STRING(name, ast->left);
   EXTRACT_MISC_ATTRS(ast, misc_attrs);
 
+  bool_t suppress_result_set = misc_attrs && exists_attribute_str(misc_attrs, "suppress_result_set");
+  if (suppress_result_set) {
+    return;
+  }
+
   bool_t uses_out = has_out_stmt_result(ast);
   bool_t uses_out_union = has_out_union_stmt_result(ast);
   bool_t result_set_proc = has_result_set(ast);
@@ -4881,6 +4887,7 @@ static void cg_proc_result_set(ast_node *ast) {
       find_extension_fragment_attr(misc_attrs, cg_set_parent_fragment_name, NULL);
 
   bool_t suppress_getters = misc_attrs && exists_attribute_str(misc_attrs, "suppress_getters");
+
   is_assembly_query = misc_attrs && find_assembly_query_attr(misc_attrs, NULL, NULL);
   charbuf *h = cg_header_output;
   charbuf *d = cg_declarations_output;
