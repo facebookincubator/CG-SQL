@@ -11848,12 +11848,12 @@ end;
 -- TEST: call cql_cursor_diff_val from another func
 -- + {create_proc_stmt}: ok dml_proc
 -- + {call_stmt}: ok
--- + CALL printf(CASE WHEN c1.x IS NOT c2.x THEN printf('column:%s left:%s right:%s', 'x', CASE WHEN c1.x IS NULL THEN 'null'
+-- + CALL printf(CASE WHEN c1.x IS NOT c2.x THEN printf('column:%s c1:%s c2:%s', 'x', CASE WHEN c1.x IS NULL THEN 'null'
 -- + ELSE printf('%d', c1.x)
 -- + END, CASE WHEN c2.x IS NULL THEN 'null'
 -- + ELSE printf('%d', c2.x)
 -- + END)
--- + WHEN c1.y IS NOT c2.y THEN printf('column:%s left:%s right:%s', 'y', CASE WHEN c1.y IS NULL THEN 'null'
+-- + WHEN c1.y IS NOT c2.y THEN printf('column:%s c1:%s c2:%s', 'y', CASE WHEN c1.y IS NULL THEN 'null'
 -- + ELSE printf('%s', c1.y)
 -- + END, CASE WHEN c2.y IS NULL THEN 'null'
 -- + ELSE printf('%s', c2.y)

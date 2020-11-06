@@ -48081,12 +48081,12 @@ BEGIN
   DECLARE c2 CURSOR FOR SELECT 1 AS x, 'v' AS y;
   FETCH c1;
   FETCH c2;
-  CALL printf(CASE WHEN c1.x IS NOT c2.x THEN printf('column:%s left:%s right:%s', 'x', CASE WHEN c1.x IS NULL THEN 'null'
+  CALL printf(CASE WHEN c1.x IS NOT c2.x THEN printf('column:%s c1:%s c2:%s', 'x', CASE WHEN c1.x IS NULL THEN 'null'
   ELSE printf('%d', c1.x)
   END, CASE WHEN c2.x IS NULL THEN 'null'
   ELSE printf('%d', c2.x)
   END)
-  WHEN c1.y IS NOT c2.y THEN printf('column:%s left:%s right:%s', 'y', CASE WHEN c1.y IS NULL THEN 'null'
+  WHEN c1.y IS NOT c2.y THEN printf('column:%s c1:%s c2:%s', 'y', CASE WHEN c1.y IS NULL THEN 'null'
   ELSE printf('%s', c1.y)
   END, CASE WHEN c2.y IS NULL THEN 'null'
   ELSE printf('%s', c2.y)
@@ -48167,7 +48167,7 @@ END;
                 |   | {call_arg_list}
                 |     | {call_filter_clause}
                 |     | {arg_list}: ok
-                |       | {strlit 'column:%s left:%s right:%s'}: text notnull
+                |       | {strlit 'column:%s c1:%s c2:%s'}: text notnull
                 |       | {arg_list}
                 |         | {strlit 'x'}: text notnull
                 |         | {arg_list}
@@ -48226,7 +48226,7 @@ END;
                       | {call_arg_list}
                         | {call_filter_clause}
                         | {arg_list}: ok
-                          | {strlit 'column:%s left:%s right:%s'}: text notnull
+                          | {strlit 'column:%s c1:%s c2:%s'}: text notnull
                           | {arg_list}
                             | {strlit 'y'}: text notnull
                             | {arg_list}

@@ -6294,7 +6294,10 @@ static ast_node *sem_generate_case_expr(ast_node *var1, ast_node *var2, bool_t r
       arg_list = new_ast_arg_list(printf_arg_list1, arg_list);
 
       // printf call node
-      val = sem_generate_printf_call("column:%s left:%s right:%s", arg_list);
+      CHARBUF_OPEN(tmp);
+        bprintf(&tmp, "column:%%s %s:%%s %s:%%s", c1_name, c2_name);
+        val = sem_generate_printf_call(tmp.ptr, arg_list);
+      CHARBUF_CLOSE(tmp);
 
       CHARBUF_CLOSE(format_output);
     }
