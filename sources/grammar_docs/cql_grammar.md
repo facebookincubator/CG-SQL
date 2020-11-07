@@ -10,7 +10,7 @@
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Sat Oct 10 16:32:56 PDT 2020
+Snapshot as of Fri Nov  6 11:27:45 PST 2020
 
 ### Operators and Literals
 
@@ -60,7 +60,7 @@ OPEN CLOSE ELSE_IF WHILE CALL TRY CATCH THROW RETURN
 SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
 CAST WITH RECURSIVE REPLACE IGNORE ADD COLUMN RENAME ALTER
 AT_ECHO AT_CREATE AT_RECREATE AT_DELETE AT_SCHEMA_UPGRADE_VERSION AT_PREVIOUS_SCHEMA AT_SCHEMA_UPGRADE_SCRIPT
-AT_FILE AT_ATTRIBUTE AT_SENSITIVE DEFERRED NOT_DEFERRABLE DEFERRABLE IMMEDIATE RESTRICT ACTION INITIALLY NO
+AT_PROC AT_FILE AT_ATTRIBUTE AT_SENSITIVE DEFERRED NOT_DEFERRABLE DEFERRABLE IMMEDIATE RESTRICT ACTION INITIALLY NO
 BEFORE AFTER INSTEAD OF FOR_EACH_ROW EXISTS RAISE FAIL ABORT AT_ENFORCE_STRICT AT_ENFORCE_NORMAL
 AT_BEGIN_SCHEMA_REGION AT_END_SCHEMA_REGION
 AT_DECLARE_SCHEMA_REGION AT_DECLARE_DEPLOYABLE_REGION AT_SCHEMA_AD_HOC_MIGRATION PRIVATE
@@ -187,6 +187,7 @@ schema_upgrade_version_stmt:
 
 set_stmt:
   "SET" name ":=" expr
+  | "SET" name "FROM" "CURSOR" name
   ;
 
 version_attrs_opt_recreate:
@@ -260,7 +261,12 @@ col_key_def:
   | pk_def
   | fk_def
   | unq_def
-  | "LIKE" name
+  | shape_def
+  ;
+
+shape_def:
+    "LIKE" name
+  | "LIKE" name "ARGUMENTS"
   ;
 
 col_name:
@@ -415,6 +421,7 @@ version_annotation:
 object_type:
   "OBJECT"
   | "OBJECT" '<' name '>'
+  | "OBJECT" '<' name "CURSOR" '>'
   ;
 
 data_type:
@@ -455,6 +462,7 @@ any_literal:
   | num_literal
   | "NULL"
   | "@FILE" '(' str_literal ')'
+  | "@PROC"
   | "sql-blob-literal"
   ;
 
@@ -567,7 +575,7 @@ expr_list:
 
 cursor_arguments:
   "FROM" name
-  | "FROM" name "LIKE" name
+  | "FROM" name shape_def
   ;
 
 call_expr:
@@ -825,7 +833,11 @@ select_expr:
 
 opt_as_alias:
   /* nil */
-  | "AS" name
+  | as_alias
+  ;
+
+as_alias:
+  "AS" name
   | name
   ;
 
@@ -932,7 +944,7 @@ with_insert_stmt:
 opt_column_spec:
   /* nil */
   | '(' opt_name_list ')'
-  | '(' "LIKE" name ')'
+  | '(' shape_def ')'
   ;
 
 from_cursor:
@@ -941,7 +953,7 @@ from_cursor:
 
 from_arguments:
   "FROM" "ARGUMENTS"
-  | "FROM" "ARGUMENTS" "LIKE" name
+  | "FROM" "ARGUMENTS" shape_def
   ;
 
 insert_stmt:
@@ -952,7 +964,7 @@ insert_stmt:
   ;
 
 insert_list:
-
+  /* nil */
   | expr
   | expr ',' insert_list
   ;
@@ -1042,7 +1054,7 @@ opt_inout:
 
 typed_name:
   name data_type_opt_notnull
-  | "LIKE" name
+  | shape_def
   ;
 
 typed_names:
@@ -1052,7 +1064,7 @@ typed_names:
 
 param:
   opt_inout name data_type_opt_notnull
-  | "LIKE" name
+  | shape_def
   ;
 
 params:
@@ -1067,8 +1079,9 @@ declare_stmt:
   | "DECLARE" name "CURSOR FOR" explain_stmt
   | "DECLARE" name "CURSOR FOR" call_stmt
   | "DECLARE" name "CURSOR" "FETCH" "FROM" call_stmt
-  | "DECLARE" name "CURSOR" "LIKE" name
+  | "DECLARE" name "CURSOR" shape_def
   | "DECLARE" name "CURSOR" "LIKE" select_stmt
+  | "DECLARE" name "CURSOR FOR" name
   ;
 
 call_stmt:
@@ -1113,6 +1126,15 @@ fetch_values_stmt:
   "FETCH" name opt_column_spec "FROM" "VALUES" '(' insert_list ')' opt_insert_dummy_spec
   | "FETCH" name opt_column_spec from_arguments opt_insert_dummy_spec
   | "FETCH" name opt_column_spec from_cursor opt_insert_dummy_spec
+  | "FETCH" name "USING" expr_names opt_insert_dummy_spec
+  ;
+
+expr_names:
+  expr_name
+  |  expr_name ',' expr_names
+  ;
+
+expr_name: expr as_alias
   ;
 
 fetch_call_stmt:
@@ -1169,6 +1191,7 @@ begin_trans_stmt:
 rollback_trans_stmt:
   "ROLLBACK" "TRANSACTION"
   | "ROLLBACK" "TRANSACTION" "TO" "SAVEPOINT" name
+  | "ROLLBACK" "TRANSACTION" "TO" "SAVEPOINT" "@PROC"
   ;
 
 commit_trans_stmt:
@@ -1177,10 +1200,12 @@ commit_trans_stmt:
 
 savepoint_stmt:
   "SAVEPOINT" name
+  | "SAVEPOINT" "@PROC"
   ;
 
 release_savepoint_stmt:
   "RELEASE" "SAVEPOINT" name
+  | "RELEASE" "SAVEPOINT" "@PROC"
   ;
 
 echo_stmt:

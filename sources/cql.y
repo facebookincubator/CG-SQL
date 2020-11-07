@@ -1291,7 +1291,7 @@ insert_stmt:
   ;
 
 insert_list[result]:
-    { $result = NULL; }
+  /* nil */  { $result = NULL; }
   | expr  { $result = new_ast_insert_list($expr, NULL); }
   | expr ',' insert_list[il]  { $result = new_ast_insert_list($expr, $il); }
   ;

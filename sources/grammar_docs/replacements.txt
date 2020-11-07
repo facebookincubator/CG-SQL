@@ -148,6 +148,7 @@ s/[[:<:]]PRIMARY[[:>:]]/"PRIMARY"/g
 s/[[:<:]]PRIVATE[[:>:]]/"PRIVATE"/g
 s/[[:<:]]PROC[[:>:]]/"PROC"/g
 s/[[:<:]]PROCEDURE[[:>:]]/"PROCEDURE"/g
+s/[[:<:]]AT_PROC[[:>:]]/"@PROC"/g
 s/[[:<:]]QUERY_PLAN[[:>:]]/"QUERY PLAN"/g
 s/[[:<:]]RAISE[[:>:]]/"RAISE"/g
 s/[[:<:]]RANGE[[:>:]]/"RANGE"/g
