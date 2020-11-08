@@ -186,7 +186,7 @@ static void cql_reset_globals(void);
 
 /* dml stuff */
 %type <aval> with_delete_stmt delete_stmt
-%type <aval> insert_stmt with_insert_stmt insert_list insert_stmt_type opt_column_spec opt_insert_dummy_spec expr_names, expr_name
+%type <aval> insert_stmt with_insert_stmt insert_list insert_stmt_type opt_column_spec opt_insert_dummy_spec expr_names expr_name
 %type <aval> with_prefix with_select_stmt cte_decl cte_table cte_tables
 %type <aval> select_expr select_expr_list select_opts select_stmt select_core values explain_stmt explain_target
 %type <aval> select_stmt_no_with select_core_compound select_core_list
