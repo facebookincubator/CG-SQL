@@ -1167,6 +1167,10 @@ SET X FROM CURSOR C;
 
 DECLARE C CURSOR LIKE P2 ARGUMENTS;
 
+CREATE TABLE foo(
+  id INTEGER COLLATE bar CHECK(id = 3 AND goo = 5) 
+);
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

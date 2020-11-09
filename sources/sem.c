@@ -145,6 +145,9 @@ static void sem_one_stmt(ast_node *stmt);
 static void sem_rewrite_cql_cursor_diff(ast_node *ast, bool_t report_column_name);
 static void sem_rewrite_cql_cursor_format(ast_node *ast);
 static void sem_declare_cursor_for_name(ast_node *ast);
+static sem_join * new_sem_join(uint32_t count);
+static void sem_validate_check_expr(ast_node *table, ast_node *expr);
+static void sem_numeric_expr(ast_node *expr, ast_node *context, CSTR subject, uint32_t expr_context);
 
 static void lazy_free_symtab(void *syms) {
   symtab_delete(syms);
@@ -398,49 +401,97 @@ static ast_node *current_upsert_table_ast;
 // If we encounter an FK that refers to the table it is in then we have to defer processing
 // of that FK until the table's columns and types are all known.  This just gives us an
 // easy way to hold the data we need to validate until later.
-typedef struct pending_fk_validation {
-  struct pending_fk_validation *next;
+typedef struct pending_table_validation {
+  struct pending_table_validation *next;
   ast_node *ref_table_ast;
   ast_node *table_ast;
   ast_node *def;
   ast_node *fk;  // for fk attributes
-} pending_fk_validation;
+  ast_node *check; // for check expressions
+} pending_table_validation;
 
 // The list of pending FK validations
-static pending_fk_validation *pending_fk_validations_head;
+static pending_table_validation *pending_table_validations_head;
 
-static void sem_validate_fk_attr(pending_fk_validation *pending);
+static void sem_validate_fk_attr(pending_table_validation *pending);
 
 // If a foreign key in a table is self-referencing (i.e. T references T)
 // then we have to defer the validation until we're done with the table and
 // have compute all the types of all the columns.  So store the data so we can
 // run it later
-static void enqueue_pending_fk_validation(pending_fk_validation *pending) {
-  pending_fk_validation *v = _ast_pool_new(pending_fk_validation);
+static void enqueue_pending_table_validation(pending_table_validation *pending) {
+  pending_table_validation *v = _ast_pool_new(pending_table_validation);
   *v = *pending;
-  v->next = pending_fk_validations_head;
-  pending_fk_validations_head = v;
+  v->next = pending_table_validations_head;
+  pending_table_validations_head = v;
 }
 
 // Once we're done with the table, if any validations are pending we can dispatch them
-// There are two types:  the attribute type e.g. "ref_id references T(id)" and the
-// constraint type e.g. "foreign key (ref_id) references T(id)".  The second type
-// is never deferred because it already happens after we know the types of all the columns.
-static void run_pending_fk_validations() {
-  for (pending_fk_validation *v = pending_fk_validations_head; v; v = v->next) {
-    Invariant(v->fk);
-    sem_validate_fk_attr(v);
-    if (is_error(v->fk)) {
-      record_error(v->table_ast);
-      record_error(v->def);
-      break;
+// There are two types:  the attribute type e.g. "ref_id references T(id)" and 
+// the check expression type e.g. check(length(name) <32).  Both cases can be
+// resolved after the table is fully processed because at that point we know all the
+// column names in the table.  FK references seem like they could be resolved immediately
+// until you consider that a table may FK to its own columns so we have to know
+// all the names to be sure to give correct errors in that case, too.
+static void run_pending_table_validations() {
+  pending_table_validation *v = pending_table_validations_head;
+
+  for (; v; v = v->next) {
+    if (v->fk) {
+      sem_validate_fk_attr(v);
+      if (is_error(v->fk)) {
+        goto error;
+      }
+    }
+    else {
+      Invariant(v->check);
+      sem_validate_check_expr(v->table_ast, v->check);
+      if (is_error(v->check)) {
+        goto error;
+      }
     }
   }
 
-  // the minipool will free these
-  pending_fk_validations_head = NULL;
+  pending_table_validations_head = NULL;  // the minipool will free these
+  return;
+
+error:
+  record_error(v->table_ast);
+  record_error(v->def);
+  pending_table_validations_head = NULL;  // the minipool will free these
 }
 
+// This is validation for a check expression: deferred
+// The tables columns are now known that there is a computed sptr for
+// the tables type. We can put all it's columns into scope by creating
+// a pending join expression the one struct in it. There is nothing
+// else in scope here.  Note variables are allowed, but weird.
+// You can in principle bind variables in place of constants in DDL
+// but this is basically never done. Still, for symmettry we allow
+// this (not new here but expressions are few in DDL)
+//   * create a join context with a table that is impossible to name
+//   * expressions like T.id are always invalid hence we use $$$ for the name
+//     because that can match no syntactically correct "T".
+//   * do smeantic analysis as usual on the expression, any numeric is
+//     ok for a bool
+static void sem_validate_check_expr(ast_node *table, ast_node *expr) {
+  Contract(is_ast_create_table_stmt(table));
+  Contract(expr);
+
+  sem_join *jptr;
+  sem_struct *sptr = table->sem->sptr;
+
+  jptr = new_sem_join(1);
+  jptr->names[0] = "$$"; // there is no scope name for this make something that is an invalidate identifier
+  jptr->tables[0] = sptr;
+
+  PUSH_JOIN(expr_scope, jptr);
+  sem_numeric_expr(expr, NULL, "CHECK", SEM_EXPR_CONTEXT_WHERE);
+  POP_JOIN();
+
+  // expr is already marked with an error by the above, no further record_error needed
+  // jptr is freed by the mini allocator
+}
 
 // data needed for processing a column defintion
 typedef struct coldef_info {
@@ -1245,6 +1296,12 @@ static void get_sem_flags(sem_t sem_type, charbuf *out) {
   }
   if (sem_type & SEM_TYPE_HAS_DEFAULT) {
     bprintf(out, " has_default");
+  }
+  if (sem_type & SEM_TYPE_HAS_CHECK) {
+    bprintf(out, " has_check");
+  }
+  if (sem_type & SEM_TYPE_HAS_COLLATE) {
+    bprintf(out, " has_collate");
   }
   if (sem_type & SEM_TYPE_IN_PARAMETER) {
     bprintf(out, " in");
@@ -2882,7 +2939,7 @@ static void sem_col_attrs_fk(ast_node *fk, ast_node *def, coldef_info *info) {
     return;
   }
 
-  pending_fk_validation pending = {
+  pending_table_validation pending = {
     .ref_table_ast = ref_table_ast,
     .table_ast = info->table_info->target_ast,
     .def = def,
@@ -2892,7 +2949,7 @@ static void sem_col_attrs_fk(ast_node *fk, ast_node *def, coldef_info *info) {
   // If this is an FK from a table to itself then we have to defer this work because
   // the names and types of the columns are not yet computed. For simplicity we just
   // defer the work always.
-  enqueue_pending_fk_validation(&pending);
+  enqueue_pending_table_validation(&pending);
 
   // ok for now
   record_ok(fk);
@@ -2904,7 +2961,7 @@ static void sem_col_attrs_fk(ast_node *fk, ast_node *def, coldef_info *info) {
 //    create table T(id primary key, id2 references T(id))
 // In that case T is not yet in the symbol table, as validation is incomplete.
 // That's ok, we known the node for the current table without having to look it up.
-void sem_validate_fk_attr(pending_fk_validation *pending) {
+void sem_validate_fk_attr(pending_table_validation *pending) {
   Contract(!current_joinscope);  // I don't belong inside a select(!)
 
   ast_node *fk = pending->fk;
@@ -2983,15 +3040,44 @@ static sem_t sem_col_attrs(ast_node *def, ast_node *_Nullable head, coldef_info 
     }
     else if (is_ast_col_attrs_not_null(ast)) {
       // We need this so that we can avoid generating null checks.
-      new_flags = SEM_TYPE_NOTNULL;
+      new_flags = SEM_TYPE_NOTNULL; // prevent two of the same
     }
     else if (is_ast_sensitive_attr(ast)) {
-      new_flags = SEM_TYPE_SENSITIVE;
+      new_flags = SEM_TYPE_SENSITIVE; // prevent two of the same
     }
     else if (is_ast_col_attrs_default(ast)) {
       // We need this so that we can validate INSERT statements
       // DEFAULT can be used here.
-      new_flags = SEM_TYPE_HAS_DEFAULT;
+      new_flags = SEM_TYPE_HAS_DEFAULT;  // prevent two of the same
+    }
+    else if (is_ast_col_attrs_check(ast)) {
+      // we can't check the expression until the table is defined and we know all the columns so wait...
+      EXTRACT_ANY_NOTNULL(expr, ast->left)
+      pending_table_validation pending = {
+        .table_ast = info->table_info->target_ast,
+        .def = ast,
+        .check = expr,
+      };
+
+      enqueue_pending_table_validation(&pending);
+      new_flags = SEM_TYPE_HAS_CHECK;   // prevent two of the same
+    }
+    else if (is_ast_col_attrs_collate(ast)) {
+      // Nothing much can go wrong here, the grammar only allows an id and it can be any id
+      // In principle only some ids are valid but we have no way of knowing which at compile time.
+      // We could make you declare them all but that's for another time, if ever. 
+      // All we're left with is make sure the column is text.  You could try to collate blobs but that
+      // seems like a really bad idea so we're taking a stand on that.  This could be relaxed later if
+      // it proves to be a mistake.
+
+      sem_t core_type = core_type_of(info->col_sem_type);
+      if (core_type != SEM_TYPE_TEXT) {
+        report_error(ast->left, "CQL0348: collate applied to a non-text column", info->col_name);
+        record_error(head);
+        return false;
+      }
+
+      new_flags = SEM_TYPE_HAS_COLLATE;   // prevent two of the same
     }
     else if (is_ast_col_attrs_pk(ast)) {
       // sqlite defines all pk columns to be not null
@@ -3018,14 +3104,14 @@ static sem_t sem_col_attrs(ast_node *def, ast_node *_Nullable head, coldef_info 
         record_error(head);
         return false;
       }
-      new_flags = SEM_TYPE_FK;
+      new_flags = SEM_TYPE_FK; // prevent two of the same
     }
     else {
       // this is all that's left
       Contract(is_ast_col_attrs_unique(ast));
       // while it's not normal, it is possible for exactly one row to be NULL
       // so this attribute doesn't affect nullability
-      new_flags = SEM_TYPE_UK;
+      new_flags = SEM_TYPE_UK; // prevent two of the same
     }
 
     if (flags & new_flags) {
@@ -9462,7 +9548,7 @@ static void sem_create_table_stmt(ast_node *ast) {
   ast->sem->recreate            = table_vers_info.recreate;
   ast->sem->recreate_group_name = table_vers_info.recreate_group_name;
 
-  run_pending_fk_validations();
+  run_pending_table_validations();
 
   if (!is_error(ast)) {
     if (prev_defn) {
@@ -17101,7 +17187,7 @@ cql_noexport void sem_cleanup() {
   sem_ok = NULL;
   validating_previous_schema = false;
   between_count = 0;
-  pending_fk_validations_head = NULL;
+  pending_table_validations_head = NULL;
   current_table_name = NULL;
   current_table_ast = NULL;
 }

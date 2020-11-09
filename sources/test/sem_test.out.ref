@@ -49837,3 +49837,133 @@ Error at test/sem_test.sql:XXXX : in str : CQL0347: select function may not retu
   | {func_params_return}
     | {type_object}: object
 
+The statement ending at line XXXX
+
+CREATE TABLE with_check(
+  id INTEGER,
+  lo INTEGER CHECK(lo <= hi) ,
+  hi INTEGER
+);
+
+  {create_table_stmt}: with_check: { id: integer, lo: integer has_check, hi: integer }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name with_check}
+  | {col_key_list}
+    | {col_def}: id: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: lo: integer has_check
+      | | {col_def_type_attrs}
+      |   | {col_def_name_type}
+      |   | | {name lo}
+      |   | | {type_int}: integer
+      |   | {col_attrs_check}: ok
+      |     | {le}: bool
+      |       | {name lo}: lo: integer has_check
+      |       | {name hi}: hi: integer
+      | {col_key_list}
+        | {col_def}: hi: integer
+          | {col_def_type_attrs}
+            | {col_def_name_type}
+              | {name hi}
+              | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE with_check_bogus_column(
+  id INTEGER,
+  lo INTEGER CHECK(lo <= hip) ,
+  hi INTEGER
+);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'hip'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name with_check_bogus_column}
+  | {col_key_list}
+    | {col_def}: id: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: lo: integer has_check
+      | | {col_def_type_attrs}
+      |   | {col_def_name_type}
+      |   | | {name lo}
+      |   | | {type_int}: integer
+      |   | {col_attrs_check}: err
+      |     | {le}: err
+      |       | {name lo}: lo: integer has_check
+      |       | {name hip}: err
+      | {col_key_list}
+        | {col_def}: hi: integer
+          | {col_def_type_attrs}
+            | {col_def_name_type}
+              | {name hi}
+              | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE with_collate(
+  id INTEGER,
+  t TEXT COLLATE garbonzo
+);
+
+  {create_table_stmt}: with_collate: { id: integer, t: text has_collate }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name with_collate}
+  | {col_key_list}
+    | {col_def}: id: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: t: text has_collate
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+          | | {name t}
+          | | {type_text}: text
+          | {col_attrs_collate}: ok
+            | {name garbonzo}
+
+The statement ending at line XXXX
+
+CREATE TABLE with_collate(
+  id INTEGER,
+  i REAL COLLATE garbonzo
+);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0348: collate applied to a non-text column 'i'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name with_collate}
+  | {col_key_list}
+    | {col_def}: id: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: err
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+          | | {name i}
+          | | {type_real}: real
+          | {col_attrs_collate}: err
+            | {name garbonzo}
+

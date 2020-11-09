@@ -374,14 +374,6 @@ static void cg_json_col_attrs(charbuf *output, col_info *info) {
     bprintf(output, ",\n\"deletedVersion\" : %d", col->sem->delete_version);
     cg_json_deleted_migration_proc(output, info->attrs);
   }
-  bprintf(output, ",\n\"isPrimaryKey\" : %d", !!(sem_type & SEM_TYPE_PK));
-  bprintf(output, ",\n\"isUniqueKey\" : %d", !!(sem_type & SEM_TYPE_UK));
-  bprintf(output, ",\n\"isAutoIncrement\" : %d", !!(sem_type & SEM_TYPE_AUTOINCREMENT));
-
-  if (sem_type & SEM_TYPE_HAS_DEFAULT) {
-    bprintf(output, ",\n\"defaultValue\" : ");
-    cg_json_default_value(output, sem_get_col_default_value(info->attrs));
-  }
 
   if (sem_type & SEM_TYPE_PK) {
     bprintf(info->col_pk, "\"%s\"", name);
@@ -396,6 +388,7 @@ static void cg_json_col_attrs(charbuf *output, col_info *info) {
 
   // There could be several foreign keys, we have to walk the list of attributes and gather them all
   for (ast_node *attr = info->attrs; attr; attr = attr->right) {
+    charbuf *saved = output;
     output = info->col_fk;
     if (is_ast_col_attrs_fk(attr)) {
       if (output->used > 1) {
@@ -408,7 +401,38 @@ static void cg_json_col_attrs(charbuf *output, col_info *info) {
       END_INDENT(fk);
       bprintf(output,"\n}");
     }
+    output = saved;
   }
+
+  if (sem_type & SEM_TYPE_HAS_DEFAULT) {
+    bprintf(output, ",\n\"defaultValue\" : ");
+    cg_json_default_value(output, sem_get_col_default_value(info->attrs));
+  }
+
+  if (sem_type & SEM_TYPE_HAS_COLLATE) {
+    // find the collate attribute and emit it (there can only be one)
+    for (ast_node *attr = info->attrs; attr; attr = attr->right) {
+      if (is_ast_col_attrs_collate(attr)) {
+        bprintf(output, ",\n\"collate\" : ");
+        cg_json_attr_value(output, attr->left);
+      }
+    }
+  }
+
+  if (sem_type & SEM_TYPE_HAS_CHECK) {
+    // find the check attribute and emit it (there can only be one)
+    for (ast_node *attr = info->attrs; attr; attr = attr->right) {
+      if (is_ast_col_attrs_check(attr)) {
+        EXTRACT_ANY_NOTNULL(when_expr, attr->left);
+        cg_fragment_with_params(output, "checkExpr", when_expr, gen_root_expr);
+      }
+    }
+  }
+
+  // end with mandatory columns, this makes the json validation with yacc a little easier
+  bprintf(output, ",\n\"isPrimaryKey\" : %d", !!(sem_type & SEM_TYPE_PK));
+  bprintf(output, ",\n\"isUniqueKey\" : %d", !!(sem_type & SEM_TYPE_UK));
+  bprintf(output, ",\n\"isAutoIncrement\" : %d", !!(sem_type & SEM_TYPE_AUTOINCREMENT));
 }
 
 // Starting from a semantic type, emit the appropriate JSON type

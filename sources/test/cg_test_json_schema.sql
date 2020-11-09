@@ -176,9 +176,9 @@ create table T7a (
 -- + "name" : "T7b"
 -- + "isAdded" : 1,
 -- + "addedVersion" : 1,
--- + "addedMigrationProc" : "t7_col_create",
+-- + "addedMigrationProc" : "t7_col_create"
 -- + "isDeleted" : 1,
--- + "deletedMigrationProc" : "t7_col_delete",
+-- + "deletedMigrationProc" : "t7_col_delete"
 -- + "deletedVersion" : 3
 create table T7b (
   id integer @create(1, t7_col_create) @delete(3, t7_col_delete)
@@ -964,8 +964,18 @@ begin
 end;
 
 -- TEST: make sure that null values in the attributes are lowercase in json
+-- +  "value" : [["dummy_test", ["Foo", ["id", "name"], [1, null], [2, "hi"]]]]
 @attribute(cql:autotest=((dummy_test, (Foo, (id, name), (1, null), (2, "hi")))))
 create proc null_attribute()
 begin
   select * from Foo;
 end;
+
+-- TEST: verify collate and checkExpression
+-- + "collate" : "bar"
+-- + "checkExpr" : "id >= '_' AND id <= 'zzzzz'",
+-- + "checkExprArgs" : [  ]
+create table with_collate_and_check
+( 
+ id text collate bar check (id >= '_' and id <= 'zzzzz')
+);

@@ -61,7 +61,7 @@ void yyset_lineno(int);
 %token QUERIES ARGS DEFINED_IN_FILE VALUE_ARGS STATEMENT_TYPE INSERTS UPDATES DELETES GENERAL_INSERTS
 %token USES_DATABASE HAS_SELECT_RESULT HAS_OUT_UNION_RESULT HAS_OUT_RESULT REGIONS GENERAL
 %token USING USING_PRIVATELY IS_DEPLOYABLE_ROOT AD_HOC_MIGRATION_PROCS VERSION
-%token BINDING_INOUT BINDING_OUT
+%token BINDING_INOUT BINDING_OUT COLLATE CHECK_EXPR CHECK_EXPR_ARGS
 
 %start json_schema
 
@@ -175,14 +175,22 @@ column: '{'
         opt_added_version
         IS_DELETED BOOL_LITERAL ','
         opt_deleted_version
+        opt_default_value
+        opt_collate
+        opt_check_expr
         IS_PRIMARY_KEY BOOL_LITERAL ','
         IS_UNIQUE_KEY BOOL_LITERAL ','
         IS_AUTO_INCREMENT BOOL_LITERAL
-        opt_default_value
         '}'
   ;
 
-opt_default_value: | ',' DEFAULT_VALUE any_literal
+opt_collate : | COLLATE STRING_LITERAL ','
+  ;
+
+opt_check_expr: | CHECK_EXPR STRING_LITERAL ',' CHECK_EXPR_ARGS '[' opt_arg_names ']' ','
+  ;
+
+opt_default_value: | DEFAULT_VALUE any_literal ','
   ;
 
 opt_foreign_keys : | foreign_keys

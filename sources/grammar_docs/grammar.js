@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Fri Nov  6 11:27:45 2020
+// Snapshot as of Sun Nov  8 23:52:36 2020
 
 
 const PREC = {
@@ -77,7 +77,7 @@ module.exports = grammar({
     opt_name: $ => $.name,
     name_list: $ => choice($.name, seq($.name, ',', $.name_list)),
     opt_name_list: $ => $.name_list,
-    col_attrs: $ => choice(seq($.NOT, $.NULL, optional($.col_attrs)), seq($.PRIMARY, $.KEY, optional($.col_attrs)), seq($.PRIMARY, $.KEY, $.AUTOINCREMENT, optional($.col_attrs)), seq($.DEFAULT, '-', $.num_literal, optional($.col_attrs)), seq($.DEFAULT, $.num_literal, optional($.col_attrs)), seq($.DEFAULT, $.str_literal, optional($.col_attrs)), seq($.UNIQUE, optional($.col_attrs)), seq($.AT_SENSITIVE, optional($.col_attrs)), seq($.AT_CREATE, $.version_annotation, optional($.col_attrs)), seq($.AT_DELETE, $.version_annotation, optional($.col_attrs)), seq($.fk_target_options, optional($.col_attrs))),
+    col_attrs: $ => choice(seq($.NOT, $.NULL, optional($.col_attrs)), seq($.PRIMARY, $.KEY, optional($.col_attrs)), seq($.PRIMARY, $.KEY, $.AUTOINCREMENT, optional($.col_attrs)), seq($.DEFAULT, '-', $.num_literal, optional($.col_attrs)), seq($.DEFAULT, $.num_literal, optional($.col_attrs)), seq($.DEFAULT, $.str_literal, optional($.col_attrs)), seq($.COLLATE, $.name, optional($.col_attrs)), seq($.CHECK, '(', $.expr, ')', optional($.col_attrs)), seq($.UNIQUE, optional($.col_attrs)), seq($.AT_SENSITIVE, optional($.col_attrs)), seq($.AT_CREATE, $.version_annotation, optional($.col_attrs)), seq($.AT_DELETE, $.version_annotation, optional($.col_attrs)), seq($.fk_target_options, optional($.col_attrs))),
     version_annotation: $ => choice(seq('(', $.INT_LIT, ',', $.name, ')'), seq('(', $.INT_LIT, ')')),
     object_type: $ => choice($.OBJECT, seq($.OBJECT, '<', $.name, '>'), seq($.OBJECT, '<', $.name, $.CURSOR, '>')),
     data_type: $ => choice($.INT, $.INTEGER, $.TEXT, $.REAL, $.LONG, $.BOOL, seq($.LONG, $.INTEGER), seq($.LONG, $.INT), $.LONG_INT, $.LONG_INTEGER, $.BLOB, $.object_type),
@@ -319,6 +319,8 @@ module.exports = grammar({
     UNIQUE: $ => CI('unique'),
     TEXT: $ => CI('text'),
     AUTOINCREMENT: $ => CI('autoincrement'),
+    COLLATE: $ => CI('collate'),
+    CHECK: $ => CI('check'),
     AT_SENSITIVE: $ => CI('@sensitive'),
     OBJECT: $ => CI('object'),
     INT: $ => CI('int'),
@@ -337,7 +339,6 @@ module.exports = grammar({
     ABORT: $ => CI('abort'),
     FAIL: $ => CI('fail'),
     DISTINCT: $ => CI('distinct'),
-    COLLATE: $ => CI('collate'),
     AND: $ => CI('and'),
     OR: $ => CI('or'),
     IN: $ => CI('in'),

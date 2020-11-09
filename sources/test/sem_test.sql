@@ -12259,3 +12259,51 @@ end;
 -- + Error % select function may not return type OBJECT 'returns_object_is_bogus'
 -- +1 Error
 declare select function returns_object_is_bogus() object;
+
+-- TEST: simple check expression -> valid case
+-- + {create_table_stmt}: with_check: { id: integer, lo: integer has_check, hi: integer }
+-- + {col_attrs_check}: ok
+-- + {le}: bool
+-- + {name lo}: lo: integer
+-- + {name hi}: hi: integer
+-- - Error
+create table with_check
+( 
+  id integer,
+  lo integer check (lo <= hi),
+  hi integer
+);
+
+-- TEST: simple check expression -> bogus identifier
+-- + {create_table_stmt}: err
+-- + {col_attrs_check}: err
+-- + {le}: err
+-- + Error % name not found 'hip'
+-- +1 Error
+create table with_check_bogus_column
+( 
+  id integer,
+  lo integer check (lo <= hip),
+  hi integer
+);
+
+-- TEST: simple collate, no problem
+-- + {create_table_stmt}: with_collate: { id: integer, t: text has_collate }
+-- + {col_attrs_collate}: ok
+-- - Error
+create table with_collate
+( 
+  id integer,
+  t text collate garbonzo
+);
+
+-- TEST: simple collate, bogus column type
+-- + {create_table_stmt}: err
+-- + {col_attrs_collate}: err
+-- + Error % collate applied to a non-text column 'i'
+-- +1 Error
+create table with_collate
+( 
+  id integer,
+  i real collate garbonzo
+);

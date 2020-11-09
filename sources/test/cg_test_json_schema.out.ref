@@ -477,10 +477,10 @@
           "isNotNull" : 1,
           "isAdded" : 0,
           "isDeleted" : 0,
+          "defaultValue" : 3,
           "isPrimaryKey" : 1,
           "isUniqueKey" : 0,
-          "isAutoIncrement" : 0,
-          "defaultValue" : 3
+          "isAutoIncrement" : 0
         },
         {
           "name" : "id2",
@@ -508,10 +508,10 @@
           "isNotNull" : 0,
           "isAdded" : 0,
           "isDeleted" : 0,
+          "defaultValue" : "xyzzy",
           "isPrimaryKey" : 0,
           "isUniqueKey" : 0,
-          "isAutoIncrement" : 0,
-          "defaultValue" : "xyzzy"
+          "isAutoIncrement" : 0
         },
         {
           "name" : "val",
@@ -519,10 +519,10 @@
           "isNotNull" : 0,
           "isAdded" : 0,
           "isDeleted" : 0,
+          "defaultValue" : -3.5,
           "isPrimaryKey" : 0,
           "isUniqueKey" : 0,
-          "isAutoIncrement" : 0,
-          "defaultValue" : -3.5
+          "isAutoIncrement" : 0
         },
         {
           "name" : "val2",
@@ -530,10 +530,10 @@
           "isNotNull" : 0,
           "isAdded" : 0,
           "isDeleted" : 0,
+          "defaultValue" : 123456789123456789,
           "isPrimaryKey" : 0,
           "isUniqueKey" : 0,
-          "isAutoIncrement" : 0,
-          "defaultValue" : 123456789123456789
+          "isAutoIncrement" : 0
         }
       ],
       "primaryKey" : [ "id1" ],
@@ -1039,6 +1039,42 @@
           "isNotNull" : 0,
           "isAdded" : 0,
           "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ]
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE TABLE with_collate_and_check(
+      id TEXT COLLATE bar CHECK(id >= '_' AND id <= 'zzzzz') 
+    )
+    
+    {
+      "name" : "with_collate_and_check",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "columns" : [
+        {
+          "name" : "id",
+          "type" : "text",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "collate" : "bar",
+          "checkExpr" : "id >= '_' AND id <= 'zzzzz'",
+          "checkExprArgs" : [  ],
           "isPrimaryKey" : 0,
           "isUniqueKey" : 0,
           "isAutoIncrement" : 0

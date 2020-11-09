@@ -10,7 +10,7 @@
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Fri Nov  6 11:27:45 PST 2020
+Snapshot as of Sun Nov  8 23:52:35 PST 2020
 
 ### Operators and Literals
 
@@ -46,7 +46,7 @@ REALLIT /* floating point literal */
 ### Statement/Type Keywords
 ```
 EXCLUDE_GROUP EXCLUDE_CURRENT_ROW EXCLUDE_TIES EXCLUDE_NO_OTHERS CURRENT_ROW UNBOUNDED PRECEDING FOLLOWING
-CREATE DROP TABLE WITHOUT ROWID PRIMARY KEY NULL_ DEFAULT AT_DUMMY_SEED
+CREATE DROP TABLE WITHOUT ROWID PRIMARY KEY NULL_ DEFAULT CHECK AT_DUMMY_SEED
 OBJECT TEXT BLOB LONG_ INT_ INTEGER LONG_INTEGER REAL ON UPDATE CASCADE ON_CONFLICT DO NOTHING
 DELETE INDEX FOREIGN REFERENCES CONSTRAINT UPSERT STATEMENT
 INSERT INTO VALUES VIEW SELECT QUERY_PLAN EXPLAIN OVER WINDOW FILTER PARTITION RANGE ROWS GROUPS
@@ -406,6 +406,8 @@ col_attrs:
   | "DEFAULT" '-' num_literal col_attrs
   | "DEFAULT" num_literal col_attrs
   | "DEFAULT" str_literal col_attrs
+  | "COLLATE" name col_attrs
+  | "CHECK" '(' expr ')' col_attrs
   | "UNIQUE" col_attrs
   | "@SENSITIVE" col_attrs
   | "@CREATE" version_annotation col_attrs

@@ -81,3 +81,7 @@ s/[[:<:]]USING_PRIVATELY[[:>:]]/'"usingPrivately"' ':'/g
 s/[[:<:]]IS_DEPLOYABLE_ROOT[[:>:]]/'"isDeployableRoot"' ':'/g
 s/[[:<:]]AD_HOC_MIGRATION_PROCS[[:>:]]/'"adHocMigrationProcs"' ':'/g
 s/[[:<:]]VERSION[[:>:]]/'"version"' ':'/g
+s/[[:<:]]COLLATE[[:>:]]/'"collate"' ':'/g
+s/[[:<:]]CHECK_EXPR[[:>:]]/'"checkExpr"' ':'/g
+s/[[:<:]]CHECK_EXPR_ARGS[[:>:]]/'"checkExprArgs"' ':'/g
+s/[ ][ ]*$//

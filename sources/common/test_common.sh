@@ -948,7 +948,7 @@ json_schema_test() {
   echo "checking for CQL JSON grammar conformance"
   if ! out/json_test <"${OUT_DIR}/__temp.out" >"${OUT_DIR}/json_errors.txt"
   then
-    echo json did not pass grammar check
+    echo "json did not pass grammar check (see ${OUT_DIR}/__temp.out)"
     cat "${OUT_DIR}/json_errors.txt"
     failed
   fi

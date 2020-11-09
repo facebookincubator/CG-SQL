@@ -140,7 +140,9 @@ cql_data_decl( bytebuf *recreate_annotations );
 #define SEM_TYPE_SENSITIVE     0x4000000   // set if the object is privacy sensitive
 #define SEM_TYPE_DEPLOYABLE    0x8000000   // set if the object is a deployable region
 #define SEM_TYPE_BOXED        0x10000000   // set if a cursor's lifetime is managed by a box object
-#define SEM_TYPE_FLAGS        0x1FFFFF00   // all the flag bits we have so far
+#define SEM_TYPE_HAS_CHECK    0x20000000   // set for table columsn with a "check" clause
+#define SEM_TYPE_HAS_COLLATE  0x40000000   // set for table columss with a "collate" clause
+#define SEM_TYPE_FLAGS        0x7FFFFF00   // all the flag bits we have so far
 
 #define SEM_EXPR_CONTEXT_NONE           0x001
 #define SEM_EXPR_CONTEXT_SELECT_LIST    0x002

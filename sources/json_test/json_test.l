@@ -111,6 +111,9 @@ int fileno(FILE *);
 \"isDeployableRoot\"[ \t]*:      { return IS_DEPLOYABLE_ROOT; }
 \"adHocMigrationProcs\"[ \t]*:   { return AD_HOC_MIGRATION_PROCS; }
 \"version\"[ \t]*:               { return VERSION; }
+\"collate\"[ \t]*:               { return COLLATE; }
+\"checkExpr\"[ \t]*:             { return CHECK_EXPR; }
+\"checkExprArgs\"[ \t]*:         { return CHECK_EXPR_ARGS; }
 
 [01]                             { return yytext[0]; }
 [0-9]+L                          { return LONG_LITERAL; }

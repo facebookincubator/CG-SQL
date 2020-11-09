@@ -198,4 +198,5 @@ s/[[:<:]]WITH[[:>:]]/"WITH"/g
 s/[[:<:]]WITHOUT[[:>:]]/"WITHOUT"/g
 s/[[:<:]]AT_CREATE[[:>:]]/"@CREATE"/g
 s/[[:<:]]AT_DELETE[[:>:]]/"@DELETE"/g
+s/[[:<:]]CHECK[[:>:]]/"CHECK"/g
 s/[ ][ ]*$//

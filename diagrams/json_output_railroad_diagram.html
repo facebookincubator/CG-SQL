@@ -1119,6 +1119,7 @@
          <ul>
             <li><a href="#delete" title="delete">delete</a></li>
             <li><a href="#insert_details" title="insert_details">insert_details</a></li>
+            <li><a href="#opt_check_expr" title="opt_check_expr">opt_check_expr</a></li>
             <li><a href="#opt_when_expr" title="opt_when_expr">opt_when_expr</a></li>
             <li><a href="#query" title="query">query</a></li>
             <li><a href="#trigger" title="trigger">trigger</a></li>
@@ -1322,7 +1323,7 @@
          <ul>
             <li><a href="#opt_uses_procedures" title="opt_uses_procedures">opt_uses_procedures</a></li>
          </ul>
-      </p><br xmlns:xhtml="http://www.w3.org/1999/xhtml" /><p xmlns:xhtml="http://www.w3.org/1999/xhtml" style="font-size: 14px; font-weight:bold"><a name="column">column:</a></p><svg xmlns="http://www.w3.org/2000/svg" width="993" height="235">
+      </p><br xmlns:xhtml="http://www.w3.org/1999/xhtml" /><p xmlns:xhtml="http://www.w3.org/1999/xhtml" style="font-size: 14px; font-weight:bold"><a name="column">column:</a></p><svg xmlns="http://www.w3.org/2000/svg" width="993" height="301">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -1410,61 +1411,192 @@
             <text class="nonterminal" x="708" y="87">opt_added_version</text></a><rect x="864" y="69" width="96" height="32" rx="10"/>
          <rect x="862" y="67" width="96" height="32" class="terminal" rx="10"/>
          <text class="terminal" x="872" y="87">"isDeleted"</text>
-         <rect x="39" y="135" width="24" height="32" rx="10"/>
-         <rect x="37" y="133" width="24" height="32" class="terminal" rx="10"/>
-         <text class="terminal" x="47" y="153">:</text><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#BOOL_LITERAL" xlink:title="BOOL_LITERAL">
-            <rect x="83" y="135" width="112" height="32"/>
-            <rect x="81" y="133" width="112" height="32" class="nonterminal"/>
-            <text class="nonterminal" x="91" y="153">BOOL_LITERAL</text></a><rect x="215" y="135" width="24" height="32" rx="10"/>
-         <rect x="213" y="133" width="24" height="32" class="terminal" rx="10"/>
-         <text class="terminal" x="223" y="153">,</text><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#opt_deleted_version" xlink:title="opt_deleted_version">
-            <rect x="259" y="135" width="152" height="32"/>
-            <rect x="257" y="133" width="152" height="32" class="nonterminal"/>
-            <text class="nonterminal" x="267" y="153">opt_deleted_version</text></a><rect x="431" y="135" width="124" height="32" rx="10"/>
-         <rect x="429" y="133" width="124" height="32" class="terminal" rx="10"/>
-         <text class="terminal" x="439" y="153">"isPrimaryKey"</text>
-         <rect x="575" y="135" width="24" height="32" rx="10"/>
-         <rect x="573" y="133" width="24" height="32" class="terminal" rx="10"/>
-         <text class="terminal" x="583" y="153">:</text><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#BOOL_LITERAL" xlink:title="BOOL_LITERAL">
-            <rect x="619" y="135" width="112" height="32"/>
-            <rect x="617" y="133" width="112" height="32" class="nonterminal"/>
-            <text class="nonterminal" x="627" y="153">BOOL_LITERAL</text></a><rect x="751" y="135" width="24" height="32" rx="10"/>
-         <rect x="749" y="133" width="24" height="32" class="terminal" rx="10"/>
-         <text class="terminal" x="759" y="153">,</text>
-         <rect x="795" y="135" width="118" height="32" rx="10"/>
-         <rect x="793" y="133" width="118" height="32" class="terminal" rx="10"/>
-         <text class="terminal" x="803" y="153">"isUniqueKey"</text>
-         <rect x="933" y="135" width="24" height="32" rx="10"/>
-         <rect x="931" y="133" width="24" height="32" class="terminal" rx="10"/>
-         <text class="terminal" x="941" y="153">:</text><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#BOOL_LITERAL" xlink:title="BOOL_LITERAL">
-            <rect x="263" y="201" width="112" height="32"/>
-            <rect x="261" y="199" width="112" height="32" class="nonterminal"/>
-            <text class="nonterminal" x="271" y="219">BOOL_LITERAL</text></a><rect x="395" y="201" width="24" height="32" rx="10"/>
-         <rect x="393" y="199" width="24" height="32" class="terminal" rx="10"/>
-         <text class="terminal" x="403" y="219">,</text>
-         <rect x="439" y="201" width="146" height="32" rx="10"/>
-         <rect x="437" y="199" width="146" height="32" class="terminal" rx="10"/>
-         <text class="terminal" x="447" y="219">"isAutoIncrement"</text>
-         <rect x="605" y="201" width="24" height="32" rx="10"/>
-         <rect x="603" y="199" width="24" height="32" class="terminal" rx="10"/>
-         <text class="terminal" x="613" y="219">:</text><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#BOOL_LITERAL" xlink:title="BOOL_LITERAL">
-            <rect x="649" y="201" width="112" height="32"/>
-            <rect x="647" y="199" width="112" height="32" class="nonterminal"/>
-            <text class="nonterminal" x="657" y="219">BOOL_LITERAL</text></a><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#opt_default_value" xlink:title="opt_default_value">
-            <rect x="781" y="201" width="136" height="32"/>
-            <rect x="779" y="199" width="136" height="32" class="nonterminal"/>
-            <text class="nonterminal" x="789" y="219">opt_default_value</text></a><rect x="937" y="201" width="28" height="32" rx="10"/>
-         <rect x="935" y="199" width="28" height="32" class="terminal" rx="10"/>
-         <text class="terminal" x="945" y="219">}</text>
-         <path xmlns:svg="http://www.w3.org/2000/svg" class="line" d="m17 17 h2 m0 0 h10 m28 0 h10 m0 0 h10 m70 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m124 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m110 0 h10 m0 0 h10 m64 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m124 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m124 0 h10 m2 0 l2 0 m2 0 l2 0 m2 0 l2 0 m-979 66 l2 0 m2 0 l2 0 m2 0 l2 0 m2 0 h10 m96 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m112 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m88 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m112 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m144 0 h10 m0 0 h10 m96 0 h10 m2 0 l2 0 m2 0 l2 0 m2 0 l2 0 m-965 66 l2 0 m2 0 l2 0 m2 0 l2 0 m2 0 h10 m24 0 h10 m0 0 h10 m112 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m152 0 h10 m0 0 h10 m124 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m112 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m118 0 h10 m0 0 h10 m24 0 h10 m2 0 l2 0 m2 0 l2 0 m2 0 l2 0 m-738 66 l2 0 m2 0 l2 0 m2 0 l2 0 m2 0 h10 m112 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m146 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m112 0 h10 m0 0 h10 m136 0 h10 m0 0 h10 m28 0 h10 m3 0 h-3"/>
-         <polygon points="983 215 991 211 991 219"/>
-         <polygon points="983 215 975 211 975 219"/></svg><p xmlns:xhtml="http://www.w3.org/1999/xhtml">
+         <rect x="37" y="135" width="24" height="32" rx="10"/>
+         <rect x="35" y="133" width="24" height="32" class="terminal" rx="10"/>
+         <text class="terminal" x="45" y="153">:</text><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#BOOL_LITERAL" xlink:title="BOOL_LITERAL">
+            <rect x="81" y="135" width="112" height="32"/>
+            <rect x="79" y="133" width="112" height="32" class="nonterminal"/>
+            <text class="nonterminal" x="89" y="153">BOOL_LITERAL</text></a><rect x="213" y="135" width="24" height="32" rx="10"/>
+         <rect x="211" y="133" width="24" height="32" class="terminal" rx="10"/>
+         <text class="terminal" x="221" y="153">,</text><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#opt_deleted_version" xlink:title="opt_deleted_version">
+            <rect x="257" y="135" width="152" height="32"/>
+            <rect x="255" y="133" width="152" height="32" class="nonterminal"/>
+            <text class="nonterminal" x="265" y="153">opt_deleted_version</text></a><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#opt_default_value" xlink:title="opt_default_value">
+            <rect x="429" y="135" width="136" height="32"/>
+            <rect x="427" y="133" width="136" height="32" class="nonterminal"/>
+            <text class="nonterminal" x="437" y="153">opt_default_value</text></a><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#opt_collate" xlink:title="opt_collate">
+            <rect x="585" y="135" width="90" height="32"/>
+            <rect x="583" y="133" width="90" height="32" class="nonterminal"/>
+            <text class="nonterminal" x="593" y="153">opt_collate</text></a><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#opt_check_expr" xlink:title="opt_check_expr">
+            <rect x="695" y="135" width="120" height="32"/>
+            <rect x="693" y="133" width="120" height="32" class="nonterminal"/>
+            <text class="nonterminal" x="703" y="153">opt_check_expr</text></a><rect x="835" y="135" width="124" height="32" rx="10"/>
+         <rect x="833" y="133" width="124" height="32" class="terminal" rx="10"/>
+         <text class="terminal" x="843" y="153">"isPrimaryKey"</text>
+         <rect x="48" y="201" width="24" height="32" rx="10"/>
+         <rect x="46" y="199" width="24" height="32" class="terminal" rx="10"/>
+         <text class="terminal" x="56" y="219">:</text><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#BOOL_LITERAL" xlink:title="BOOL_LITERAL">
+            <rect x="92" y="201" width="112" height="32"/>
+            <rect x="90" y="199" width="112" height="32" class="nonterminal"/>
+            <text class="nonterminal" x="100" y="219">BOOL_LITERAL</text></a><rect x="224" y="201" width="24" height="32" rx="10"/>
+         <rect x="222" y="199" width="24" height="32" class="terminal" rx="10"/>
+         <text class="terminal" x="232" y="219">,</text>
+         <rect x="268" y="201" width="118" height="32" rx="10"/>
+         <rect x="266" y="199" width="118" height="32" class="terminal" rx="10"/>
+         <text class="terminal" x="276" y="219">"isUniqueKey"</text>
+         <rect x="406" y="201" width="24" height="32" rx="10"/>
+         <rect x="404" y="199" width="24" height="32" class="terminal" rx="10"/>
+         <text class="terminal" x="414" y="219">:</text><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#BOOL_LITERAL" xlink:title="BOOL_LITERAL">
+            <rect x="450" y="201" width="112" height="32"/>
+            <rect x="448" y="199" width="112" height="32" class="nonterminal"/>
+            <text class="nonterminal" x="458" y="219">BOOL_LITERAL</text></a><rect x="582" y="201" width="24" height="32" rx="10"/>
+         <rect x="580" y="199" width="24" height="32" class="terminal" rx="10"/>
+         <text class="terminal" x="590" y="219">,</text>
+         <rect x="626" y="201" width="146" height="32" rx="10"/>
+         <rect x="624" y="199" width="146" height="32" class="terminal" rx="10"/>
+         <text class="terminal" x="634" y="219">"isAutoIncrement"</text>
+         <rect x="792" y="201" width="24" height="32" rx="10"/>
+         <rect x="790" y="199" width="24" height="32" class="terminal" rx="10"/>
+         <text class="terminal" x="800" y="219">:</text><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#BOOL_LITERAL" xlink:title="BOOL_LITERAL">
+            <rect x="836" y="201" width="112" height="32"/>
+            <rect x="834" y="199" width="112" height="32" class="nonterminal"/>
+            <text class="nonterminal" x="844" y="219">BOOL_LITERAL</text></a><rect x="937" y="267" width="28" height="32" rx="10"/>
+         <rect x="935" y="265" width="28" height="32" class="terminal" rx="10"/>
+         <text class="terminal" x="945" y="285">}</text>
+         <path xmlns:svg="http://www.w3.org/2000/svg" class="line" d="m17 17 h2 m0 0 h10 m28 0 h10 m0 0 h10 m70 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m124 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m110 0 h10 m0 0 h10 m64 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m124 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m124 0 h10 m2 0 l2 0 m2 0 l2 0 m2 0 l2 0 m-979 66 l2 0 m2 0 l2 0 m2 0 l2 0 m2 0 h10 m96 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m112 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m88 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m112 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m144 0 h10 m0 0 h10 m96 0 h10 m2 0 l2 0 m2 0 l2 0 m2 0 l2 0 m-967 66 l2 0 m2 0 l2 0 m2 0 l2 0 m2 0 h10 m24 0 h10 m0 0 h10 m112 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m152 0 h10 m0 0 h10 m136 0 h10 m0 0 h10 m90 0 h10 m0 0 h10 m120 0 h10 m0 0 h10 m124 0 h10 m2 0 l2 0 m2 0 l2 0 m2 0 l2 0 m-955 66 l2 0 m2 0 l2 0 m2 0 l2 0 m2 0 h10 m24 0 h10 m0 0 h10 m112 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m118 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m112 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m146 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m112 0 h10 m2 0 l2 0 m2 0 l2 0 m2 0 l2 0 m-55 66 l2 0 m2 0 l2 0 m2 0 l2 0 m2 0 h10 m28 0 h10 m3 0 h-3"/>
+         <polygon points="983 281 991 277 991 285"/>
+         <polygon points="983 281 975 277 975 285"/></svg><p xmlns:xhtml="http://www.w3.org/1999/xhtml">
          <div class="ebnf"><code>
-               <div><a href="#column" title="column">column</a>   ::= '{' '"name"' ':' <a href="#STRING_LITERAL" title="STRING_LITERAL">STRING_LITERAL</a> ',' <a href="#opt_attributes" title="opt_attributes">opt_attributes</a> '"type"' ':' <a href="#STRING_LITERAL" title="STRING_LITERAL">STRING_LITERAL</a> ',' <a href="#opt_is_sensitive" title="opt_is_sensitive">opt_is_sensitive</a> '"isNotNull"' ':' <a href="#BOOL_LITERAL" title="BOOL_LITERAL">BOOL_LITERAL</a> ',' '"isAdded"' ':' <a href="#BOOL_LITERAL" title="BOOL_LITERAL">BOOL_LITERAL</a> ',' <a href="#opt_added_version" title="opt_added_version">opt_added_version</a> '"isDeleted"' ':' <a href="#BOOL_LITERAL" title="BOOL_LITERAL">BOOL_LITERAL</a> ',' <a href="#opt_deleted_version" title="opt_deleted_version">opt_deleted_version</a> '"isPrimaryKey"' ':' <a href="#BOOL_LITERAL" title="BOOL_LITERAL">BOOL_LITERAL</a> ',' '"isUniqueKey"' ':' <a href="#BOOL_LITERAL" title="BOOL_LITERAL">BOOL_LITERAL</a> ',' '"isAutoIncrement"' ':' <a href="#BOOL_LITERAL" title="BOOL_LITERAL">BOOL_LITERAL</a> <a href="#opt_default_value" title="opt_default_value">opt_default_value</a> '}'</div></code></div>
+               <div><a href="#column" title="column">column</a>   ::= '{' '"name"' ':' <a href="#STRING_LITERAL" title="STRING_LITERAL">STRING_LITERAL</a> ',' <a href="#opt_attributes" title="opt_attributes">opt_attributes</a> '"type"' ':' <a href="#STRING_LITERAL" title="STRING_LITERAL">STRING_LITERAL</a> ',' <a href="#opt_is_sensitive" title="opt_is_sensitive">opt_is_sensitive</a> '"isNotNull"' ':' <a href="#BOOL_LITERAL" title="BOOL_LITERAL">BOOL_LITERAL</a> ',' '"isAdded"' ':' <a href="#BOOL_LITERAL" title="BOOL_LITERAL">BOOL_LITERAL</a> ',' <a href="#opt_added_version" title="opt_added_version">opt_added_version</a> '"isDeleted"' ':' <a href="#BOOL_LITERAL" title="BOOL_LITERAL">BOOL_LITERAL</a> ',' <a href="#opt_deleted_version" title="opt_deleted_version">opt_deleted_version</a> <a href="#opt_default_value" title="opt_default_value">opt_default_value</a> <a href="#opt_collate" title="opt_collate">opt_collate</a> <a href="#opt_check_expr" title="opt_check_expr">opt_check_expr</a> '"isPrimaryKey"' ':' <a href="#BOOL_LITERAL" title="BOOL_LITERAL">BOOL_LITERAL</a> ',' '"isUniqueKey"' ':' <a href="#BOOL_LITERAL" title="BOOL_LITERAL">BOOL_LITERAL</a> ',' '"isAutoIncrement"' ':' <a href="#BOOL_LITERAL" title="BOOL_LITERAL">BOOL_LITERAL</a> '}'</div></code></div>
       </p>
       <p xmlns:xhtml="http://www.w3.org/1999/xhtml">referenced by:
          <ul>
             <li><a href="#table" title="table">table</a></li>
+         </ul>
+      </p><br xmlns:xhtml="http://www.w3.org/1999/xhtml" /><p xmlns:xhtml="http://www.w3.org/1999/xhtml" style="font-size: 14px; font-weight:bold"><a name="opt_collate">opt_collate:</a></p><svg xmlns="http://www.w3.org/2000/svg" width="409" height="57">
+         <defs>
+            <style type="text/css">
+    @namespace "http://www.w3.org/2000/svg";
+    .line                 {fill: none; stroke: #332900; stroke-width: 1;}
+    .bold-line            {stroke: #141000; shape-rendering: crispEdges; stroke-width: 2;}
+    .thin-line            {stroke: #1F1800; shape-rendering: crispEdges}
+    .filled               {fill: #332900; stroke: none;}
+    text.terminal         {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #141000;
+                            font-weight: bold;
+                          }
+    text.nonterminal      {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #1A1400;
+                            font-weight: normal;
+                          }
+    text.regexp           {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #1F1800;
+                            font-weight: normal;
+                          }
+    rect, circle, polygon {fill: #332900; stroke: #332900;}
+    rect.terminal         {fill: #FFDB4D; stroke: #332900; stroke-width: 1;}
+    rect.nonterminal      {fill: #FFEC9E; stroke: #332900; stroke-width: 1;}
+    rect.text             {fill: none; stroke: none;}
+    polygon.regexp        {fill: #FFF4C7; stroke: #332900; stroke-width: 1;}
+  </style>
+         </defs>
+         <polygon points="9 5 1 1 1 9"/>
+         <polygon points="17 5 9 1 9 9"/>
+         <rect x="51" y="23" width="78" height="32" rx="10"/>
+         <rect x="49" y="21" width="78" height="32" class="terminal" rx="10"/>
+         <text class="terminal" x="59" y="41">"collate"</text>
+         <rect x="149" y="23" width="24" height="32" rx="10"/>
+         <rect x="147" y="21" width="24" height="32" class="terminal" rx="10"/>
+         <text class="terminal" x="157" y="41">:</text><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#STRING_LITERAL" xlink:title="STRING_LITERAL">
+            <rect x="193" y="23" width="124" height="32"/>
+            <rect x="191" y="21" width="124" height="32" class="nonterminal"/>
+            <text class="nonterminal" x="201" y="41">STRING_LITERAL</text></a><rect x="337" y="23" width="24" height="32" rx="10"/>
+         <rect x="335" y="21" width="24" height="32" class="terminal" rx="10"/>
+         <text class="terminal" x="345" y="41">,</text>
+         <path xmlns:svg="http://www.w3.org/2000/svg" class="line" d="m17 5 h2 m20 0 h10 m0 0 h320 m-350 0 h20 m330 0 h20 m-370 0 q10 0 10 10 m350 0 q0 -10 10 -10 m-360 10 v12 m350 0 v-12 m-350 12 q0 10 10 10 m330 0 q10 0 10 -10 m-340 10 h10 m78 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m124 0 h10 m0 0 h10 m24 0 h10 m23 -32 h-3"/>
+         <polygon points="399 5 407 1 407 9"/>
+         <polygon points="399 5 391 1 391 9"/></svg><p xmlns:xhtml="http://www.w3.org/1999/xhtml">
+         <div class="ebnf"><code>
+               <div><a href="#opt_collate" title="opt_collate">opt_collate</a></div>
+               <div>         ::= ( '"collate"' ':' <a href="#STRING_LITERAL" title="STRING_LITERAL">STRING_LITERAL</a> ',' )?</div></code></div>
+      </p>
+      <p xmlns:xhtml="http://www.w3.org/1999/xhtml">referenced by:
+         <ul>
+            <li><a href="#column" title="column">column</a></li>
+         </ul>
+      </p><br xmlns:xhtml="http://www.w3.org/1999/xhtml" /><p xmlns:xhtml="http://www.w3.org/1999/xhtml" style="font-size: 14px; font-weight:bold"><a name="opt_check_expr">opt_check_expr:</a></p><svg xmlns="http://www.w3.org/2000/svg" width="907" height="57">
+         <defs>
+            <style type="text/css">
+    @namespace "http://www.w3.org/2000/svg";
+    .line                 {fill: none; stroke: #332900; stroke-width: 1;}
+    .bold-line            {stroke: #141000; shape-rendering: crispEdges; stroke-width: 2;}
+    .thin-line            {stroke: #1F1800; shape-rendering: crispEdges}
+    .filled               {fill: #332900; stroke: none;}
+    text.terminal         {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #141000;
+                            font-weight: bold;
+                          }
+    text.nonterminal      {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #1A1400;
+                            font-weight: normal;
+                          }
+    text.regexp           {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #1F1800;
+                            font-weight: normal;
+                          }
+    rect, circle, polygon {fill: #332900; stroke: #332900;}
+    rect.terminal         {fill: #FFDB4D; stroke: #332900; stroke-width: 1;}
+    rect.nonterminal      {fill: #FFEC9E; stroke: #332900; stroke-width: 1;}
+    rect.text             {fill: none; stroke: none;}
+    polygon.regexp        {fill: #FFF4C7; stroke: #332900; stroke-width: 1;}
+  </style>
+         </defs>
+         <polygon points="9 5 1 1 1 9"/>
+         <polygon points="17 5 9 1 9 9"/>
+         <rect x="51" y="23" width="102" height="32" rx="10"/>
+         <rect x="49" y="21" width="102" height="32" class="terminal" rx="10"/>
+         <text class="terminal" x="59" y="41">"checkExpr"</text>
+         <rect x="173" y="23" width="24" height="32" rx="10"/>
+         <rect x="171" y="21" width="24" height="32" class="terminal" rx="10"/>
+         <text class="terminal" x="181" y="41">:</text><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#STRING_LITERAL" xlink:title="STRING_LITERAL">
+            <rect x="217" y="23" width="124" height="32"/>
+            <rect x="215" y="21" width="124" height="32" class="nonterminal"/>
+            <text class="nonterminal" x="225" y="41">STRING_LITERAL</text></a><rect x="361" y="23" width="24" height="32" rx="10"/>
+         <rect x="359" y="21" width="24" height="32" class="terminal" rx="10"/>
+         <text class="terminal" x="369" y="41">,</text>
+         <rect x="405" y="23" width="134" height="32" rx="10"/>
+         <rect x="403" y="21" width="134" height="32" class="terminal" rx="10"/>
+         <text class="terminal" x="413" y="41">"checkExprArgs"</text>
+         <rect x="559" y="23" width="24" height="32" rx="10"/>
+         <rect x="557" y="21" width="24" height="32" class="terminal" rx="10"/>
+         <text class="terminal" x="567" y="41">:</text>
+         <rect x="603" y="23" width="26" height="32" rx="10"/>
+         <rect x="601" y="21" width="26" height="32" class="terminal" rx="10"/>
+         <text class="terminal" x="611" y="41">[</text><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#opt_arg_names" xlink:title="opt_arg_names">
+            <rect x="649" y="23" width="120" height="32"/>
+            <rect x="647" y="21" width="120" height="32" class="nonterminal"/>
+            <text class="nonterminal" x="657" y="41">opt_arg_names</text></a><rect x="789" y="23" width="26" height="32" rx="10"/>
+         <rect x="787" y="21" width="26" height="32" class="terminal" rx="10"/>
+         <text class="terminal" x="797" y="41">]</text>
+         <rect x="835" y="23" width="24" height="32" rx="10"/>
+         <rect x="833" y="21" width="24" height="32" class="terminal" rx="10"/>
+         <text class="terminal" x="843" y="41">,</text>
+         <path xmlns:svg="http://www.w3.org/2000/svg" class="line" d="m17 5 h2 m20 0 h10 m0 0 h818 m-848 0 h20 m828 0 h20 m-868 0 q10 0 10 10 m848 0 q0 -10 10 -10 m-858 10 v12 m848 0 v-12 m-848 12 q0 10 10 10 m828 0 q10 0 10 -10 m-838 10 h10 m102 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m124 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m134 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m120 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m24 0 h10 m23 -32 h-3"/>
+         <polygon points="897 5 905 1 905 9"/>
+         <polygon points="897 5 889 1 889 9"/></svg><p xmlns:xhtml="http://www.w3.org/1999/xhtml">
+         <div class="ebnf"><code>
+               <div><a href="#opt_check_expr" title="opt_check_expr">opt_check_expr</a></div>
+               <div>         ::= ( '"checkExpr"' ':' <a href="#STRING_LITERAL" title="STRING_LITERAL">STRING_LITERAL</a> ',' '"checkExprArgs"' ':' '[' <a href="#opt_arg_names" title="opt_arg_names">opt_arg_names</a> ']' ',' )?</div></code></div>
+      </p>
+      <p xmlns:xhtml="http://www.w3.org/1999/xhtml">referenced by:
+         <ul>
+            <li><a href="#column" title="column">column</a></li>
          </ul>
       </p><br xmlns:xhtml="http://www.w3.org/1999/xhtml" /><p xmlns:xhtml="http://www.w3.org/1999/xhtml" style="font-size: 14px; font-weight:bold"><a name="opt_default_value">opt_default_value:</a></p><svg xmlns="http://www.w3.org/2000/svg" width="411" height="57">
          <defs>
@@ -1498,23 +1630,23 @@
          </defs>
          <polygon points="9 5 1 1 1 9"/>
          <polygon points="17 5 9 1 9 9"/>
-         <rect x="51" y="23" width="24" height="32" rx="10"/>
-         <rect x="49" y="21" width="24" height="32" class="terminal" rx="10"/>
-         <text class="terminal" x="59" y="41">,</text>
-         <rect x="95" y="23" width="118" height="32" rx="10"/>
-         <rect x="93" y="21" width="118" height="32" class="terminal" rx="10"/>
-         <text class="terminal" x="103" y="41">"defaultValue"</text>
-         <rect x="233" y="23" width="24" height="32" rx="10"/>
-         <rect x="231" y="21" width="24" height="32" class="terminal" rx="10"/>
-         <text class="terminal" x="241" y="41">:</text><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#any_literal" xlink:title="any_literal">
-            <rect x="277" y="23" width="86" height="32"/>
-            <rect x="275" y="21" width="86" height="32" class="nonterminal"/>
-            <text class="nonterminal" x="285" y="41">any_literal</text></a><path xmlns:svg="http://www.w3.org/2000/svg" class="line" d="m17 5 h2 m20 0 h10 m0 0 h322 m-352 0 h20 m332 0 h20 m-372 0 q10 0 10 10 m352 0 q0 -10 10 -10 m-362 10 v12 m352 0 v-12 m-352 12 q0 10 10 10 m332 0 q10 0 10 -10 m-342 10 h10 m24 0 h10 m0 0 h10 m118 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m86 0 h10 m23 -32 h-3"/>
+         <rect x="51" y="23" width="118" height="32" rx="10"/>
+         <rect x="49" y="21" width="118" height="32" class="terminal" rx="10"/>
+         <text class="terminal" x="59" y="41">"defaultValue"</text>
+         <rect x="189" y="23" width="24" height="32" rx="10"/>
+         <rect x="187" y="21" width="24" height="32" class="terminal" rx="10"/>
+         <text class="terminal" x="197" y="41">:</text><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#any_literal" xlink:title="any_literal">
+            <rect x="233" y="23" width="86" height="32"/>
+            <rect x="231" y="21" width="86" height="32" class="nonterminal"/>
+            <text class="nonterminal" x="241" y="41">any_literal</text></a><rect x="339" y="23" width="24" height="32" rx="10"/>
+         <rect x="337" y="21" width="24" height="32" class="terminal" rx="10"/>
+         <text class="terminal" x="347" y="41">,</text>
+         <path xmlns:svg="http://www.w3.org/2000/svg" class="line" d="m17 5 h2 m20 0 h10 m0 0 h322 m-352 0 h20 m332 0 h20 m-372 0 q10 0 10 10 m352 0 q0 -10 10 -10 m-362 10 v12 m352 0 v-12 m-352 12 q0 10 10 10 m332 0 q10 0 10 -10 m-342 10 h10 m118 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m86 0 h10 m0 0 h10 m24 0 h10 m23 -32 h-3"/>
          <polygon points="401 5 409 1 409 9"/>
          <polygon points="401 5 393 1 393 9"/></svg><p xmlns:xhtml="http://www.w3.org/1999/xhtml">
          <div class="ebnf"><code>
                <div><a href="#opt_default_value" title="opt_default_value">opt_default_value</a></div>
-               <div>         ::= ( ',' '"defaultValue"' ':' <a href="#any_literal" title="any_literal">any_literal</a> )?</div></code></div>
+               <div>         ::= ( '"defaultValue"' ':' <a href="#any_literal" title="any_literal">any_literal</a> ',' )?</div></code></div>
       </p>
       <p xmlns:xhtml="http://www.w3.org/1999/xhtml">referenced by:
          <ul>
