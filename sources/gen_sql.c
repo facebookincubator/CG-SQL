@@ -1992,20 +1992,28 @@ static void gen_update_cursor_stmt(ast_node *ast) {
   Contract(is_ast_update_cursor_stmt(ast));
   EXTRACT_ANY(cursor, ast->left);
   EXTRACT_STRING(name, cursor);
-  EXTRACT_NOTNULL(columns_values, ast->right);
-  EXTRACT_ANY(column_spec, columns_values->left);
-  EXTRACT_ANY(insert_list, columns_values->right);
+  EXTRACT_ANY_NOTNULL(columns_values, ast->right);
 
   gen_printf("UPDATE CURSOR %s", name);
-  gen_column_spec(column_spec);
-  gen_printf(" ");
-  if (is_ast_from_cursor(insert_list)) {
-    gen_from_cursor(insert_list);
+
+  if (is_ast_expr_names(columns_values)) {
+    gen_printf(" USING ");
+    gen_expr_names(columns_values);
   }
   else {
-    gen_printf("FROM VALUES(");
-    gen_insert_list(insert_list);
-    gen_printf(")");
+    EXTRACT_ANY(column_spec, columns_values->left);
+    EXTRACT_ANY(insert_list, columns_values->right);
+
+    gen_column_spec(column_spec);
+    gen_printf(" ");
+    if (is_ast_from_cursor(insert_list)) {
+      gen_from_cursor(insert_list);
+    }
+    else {
+      gen_printf("FROM VALUES(");
+      gen_insert_list(insert_list);
+      gen_printf(")");
+    }
   }
 }
 

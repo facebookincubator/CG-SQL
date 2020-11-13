@@ -50235,3 +50235,23 @@ END;
       |       | {int 2}: integer notnull
       | {int 2}: integer notnull
 
+The statement ending at line XXXX
+
+CREATE PROC test_update_cursor_using ()
+BEGIN
+  UPDATE CURSOR small_cursor(x) FROM VALUES(2);
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name test_update_cursor_using}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {update_cursor_stmt}: ok
+        | {name small_cursor}: small_cursor: select: { x: integer notnull } variable auto_cursor value_cursor
+        | {columns_values}: ok
+          | {column_spec}
+          | | {name_list}
+          |   | {name x}: x: integer notnull
+          | {insert_list}
+            | {int 2}: integer notnull
+

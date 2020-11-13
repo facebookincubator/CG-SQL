@@ -12385,3 +12385,12 @@ select iif(an_int is null, 2, x'23');
 -- + END;
 -- - Error
 set an_int := iif(an_int is null, 2, iif(1, 2, 3));
+
+-- TEST: test rewrite for [UPDATE cursor USING ... ] grammar
+-- + {create_proc_stmt}: ok dml_proc
+-- + UPDATE CURSOR small_cursor(x) FROM VALUES(2);
+-- - Error
+create proc test_update_cursor_using()
+begin
+  update cursor small_cursor using 2 x;
+end;

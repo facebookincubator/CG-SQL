@@ -1052,6 +1052,8 @@ end;
 
 update cursor d(a, b) from values (1, 'x');
 
+update cursor d using 1 a, 'x' b;
+
 with foo(*) as (select 1 x, '2' y)
  select * from foo;
 
@@ -1103,7 +1105,7 @@ set X from cursor C;
 declare C cursor like P2 arguments;
 
 create table foo
-( 
+(
  id integer collate bar check (id = 3 and goo = 5)
 );
 

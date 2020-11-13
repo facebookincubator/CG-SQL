@@ -149,6 +149,7 @@ static sem_join * new_sem_join(uint32_t count);
 static void sem_validate_check_expr(ast_node *table, ast_node *expr);
 static void sem_numeric_expr(ast_node *expr, ast_node *context, CSTR subject, uint32_t expr_context);
 static void sem_rewrite_iif(ast_node *ast);
+static void sem_rewrite_expr_names_to_columns_values(ast_node* columns_values);
 
 static void lazy_free_symtab(void *syms) {
   symtab_delete(syms);
@@ -10162,12 +10163,18 @@ static void sem_update_cursor_stmt(ast_node *ast) {
   Contract(is_ast_update_cursor_stmt(ast));
   EXTRACT_ANY(cursor, ast->left);
   EXTRACT_STRING(name, cursor);
-  EXTRACT_NOTNULL(columns_values, ast->right);
+  EXTRACT_ANY_NOTNULL(columns_values, ast->right);
 
   sem_cursor(cursor);
   if (is_error(cursor)) {
     record_error(ast);
     return;
+  }
+
+  // expr_names node is a sugar syntax we need to rewrite [USING ...] part to [FROM VALUES(...)]
+  if (is_ast_expr_names(columns_values)) {
+    sem_rewrite_expr_names_to_columns_values(columns_values);
+    Contract(is_ast_columns_values(columns_values));
   }
 
   sem_rewrite_like_column_spec_if_needed(columns_values);

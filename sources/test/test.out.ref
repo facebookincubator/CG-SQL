@@ -1114,6 +1114,8 @@ END;
 
 UPDATE CURSOR d(a, b) FROM VALUES(1, 'x');
 
+UPDATE CURSOR d USING 1 AS a, 'x' AS b;
+
 WITH
 foo (*) AS (SELECT 1 AS x, '2' AS y)
 SELECT *

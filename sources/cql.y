@@ -1352,6 +1352,8 @@ update_cursor_stmt:
   | UPDATE CURSOR name opt_column_spec from_cursor  {
     struct ast_node *columns_values = new_ast_columns_values($opt_column_spec, $from_cursor);
     $update_cursor_stmt = new_ast_update_cursor_stmt($name, columns_values); }
+  | UPDATE CURSOR name USING expr_names {
+    $update_cursor_stmt = new_ast_update_cursor_stmt($name, $expr_names); }
   ;
 
 conflict_target:
