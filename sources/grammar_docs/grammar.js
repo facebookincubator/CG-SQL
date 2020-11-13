@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Sun Nov  8 23:52:36 2020
+// Snapshot as of Fri Nov 13 00:54:21 2020
 
 
 const PREC = {
@@ -177,7 +177,7 @@ module.exports = grammar({
     opt_column_spec: $ => choice(seq('(', optional($.opt_name_list), ')'), seq('(', $.shape_def, ')')),
     from_cursor: $ => seq($.FROM, $.CURSOR, $.name, optional($.opt_column_spec)),
     from_arguments: $ => choice(seq($.FROM, $.ARGUMENTS), seq($.FROM, $.ARGUMENTS, $.shape_def)),
-    insert_stmt: $ => choice(seq($.insert_stmt_type, $.name, optional($.opt_column_spec), $.select_stmt, optional($.opt_insert_dummy_spec)), seq($.insert_stmt_type, $.name, optional($.opt_column_spec), $.from_arguments, optional($.opt_insert_dummy_spec)), seq($.insert_stmt_type, $.name, optional($.opt_column_spec), $.from_cursor, optional($.opt_insert_dummy_spec)), seq($.insert_stmt_type, $.name, $.DEFAULT, $.VALUES)),
+    insert_stmt: $ => choice(seq($.insert_stmt_type, $.name, optional($.opt_column_spec), $.select_stmt, optional($.opt_insert_dummy_spec)), seq($.insert_stmt_type, $.name, optional($.opt_column_spec), $.from_arguments, optional($.opt_insert_dummy_spec)), seq($.insert_stmt_type, $.name, optional($.opt_column_spec), $.from_cursor, optional($.opt_insert_dummy_spec)), seq($.insert_stmt_type, $.name, $.DEFAULT, $.VALUES), seq($.insert_stmt_type, $.name, $.USING, $.expr_names, optional($.opt_insert_dummy_spec))),
     insert_list: $ => choice($.expr, seq($.expr, ',', optional($.insert_list))),
     basic_update_stmt: $ => seq($.UPDATE, optional($.opt_name), $.SET, $.update_list, optional($.opt_where)),
     with_update_stmt: $ => seq($.with_prefix, $.update_stmt),
@@ -187,7 +187,7 @@ module.exports = grammar({
     with_upsert_stmt: $ => seq($.with_prefix, $.upsert_stmt),
     ON_CONFLICT: $ => prec.left(1, seq(CI('on'), CI('conflict'))),
     upsert_stmt: $ => choice(seq($.insert_stmt, $.ON_CONFLICT, optional($.conflict_target), $.DO, $.NOTHING), seq($.insert_stmt, $.ON_CONFLICT, optional($.conflict_target), $.DO, $.basic_update_stmt)),
-    update_cursor_stmt: $ => choice(seq($.UPDATE, $.CURSOR, $.name, optional($.opt_column_spec), $.FROM, $.VALUES, '(', optional($.insert_list), ')'), seq($.UPDATE, $.CURSOR, $.name, optional($.opt_column_spec), $.from_cursor)),
+    update_cursor_stmt: $ => choice(seq($.UPDATE, $.CURSOR, $.name, optional($.opt_column_spec), $.FROM, $.VALUES, '(', optional($.insert_list), ')'), seq($.UPDATE, $.CURSOR, $.name, optional($.opt_column_spec), $.from_cursor), seq($.UPDATE, $.CURSOR, $.name, $.USING, $.expr_names)),
     conflict_target: $ => seq('(', $.indexed_columns, ')', optional($.opt_where)),
     creation_type: $ => choice($.object_type, seq($.object_type, $.NOT, $.NULL), $.TEXT, seq($.TEXT, $.NOT, $.NULL), $.BLOB, seq($.BLOB, $.NOT, $.NULL)),
     function: $ => choice($.FUNC, $.FUNCTION),

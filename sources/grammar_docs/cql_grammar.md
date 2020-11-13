@@ -10,7 +10,7 @@
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Sun Nov  8 23:52:35 PST 2020
+Snapshot as of Fri Nov 13 00:54:21 PST 2020
 
 ### Operators and Literals
 
@@ -963,6 +963,7 @@ insert_stmt:
   | insert_stmt_type name opt_column_spec from_arguments opt_insert_dummy_spec
   | insert_stmt_type name opt_column_spec from_cursor opt_insert_dummy_spec
   | insert_stmt_type name "DEFAULT" "VALUES"
+  | insert_stmt_type name "USING" expr_names opt_insert_dummy_spec
   ;
 
 insert_list:
@@ -1004,6 +1005,7 @@ upsert_stmt:
 update_cursor_stmt:
   "UPDATE" "CURSOR" name opt_column_spec "FROM" "VALUES" '(' insert_list ')'
   | "UPDATE" "CURSOR" name opt_column_spec from_cursor
+  | "UPDATE" "CURSOR" name "USING" expr_names
   ;
 
 conflict_target:
