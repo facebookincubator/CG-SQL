@@ -427,7 +427,7 @@ static void enqueue_pending_table_validation(pending_table_validation *pending) 
 }
 
 // Once we're done with the table, if any validations are pending we can dispatch them
-// There are two types:  the attribute type e.g. "ref_id references T(id)" and 
+// There are two types:  the attribute type e.g. "ref_id references T(id)" and
 // the check expression type e.g. check(length(name) <32).  Both cases can be
 // resolved after the table is fully processed because at that point we know all the
 // column names in the table.  FK references seem like they could be resolved immediately
@@ -3065,7 +3065,7 @@ static sem_t sem_col_attrs(ast_node *def, ast_node *_Nullable head, coldef_info 
     else if (is_ast_col_attrs_collate(ast)) {
       // Nothing much can go wrong here, the grammar only allows an id and it can be any id
       // In principle only some ids are valid but we have no way of knowing which at compile time.
-      // We could make you declare them all but that's for another time, if ever. 
+      // We could make you declare them all but that's for another time, if ever.
       // All we're left with is make sure the column is text.  You could try to collate blobs but that
       // seems like a really bad idea so we're taking a stand on that.  This could be relaxed later if
       // it proves to be a mistake.
@@ -10678,6 +10678,12 @@ static void sem_insert_stmt(ast_node *ast) {
     report_error(name_ast, "CQL0161: cannot insert into a view", name);
     record_error(ast);
     return;
+  }
+
+  // expr_names node is a sugar syntax we need to rewrite it to a SQL syntax
+  if (is_ast_expr_names(columns_values)) {
+    sem_rewrite_expr_names_to_columns_values(columns_values);
+    Contract(is_ast_columns_values(columns_values));
   }
 
   // This means we're in upsert tree. We want to record table_ast to be used

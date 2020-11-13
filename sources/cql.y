@@ -1290,6 +1290,10 @@ insert_stmt:
     struct ast_node *name_columns_values = new_ast_name_columns_values($name, default_columns_values);
     $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values);
   }
+  | insert_stmt_type name USING expr_names opt_insert_dummy_spec {
+    struct ast_node *name_columns_values = new_ast_name_columns_values($name, $expr_names);
+    $insert_stmt_type->left = $opt_insert_dummy_spec;
+    $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values); }
   ;
 
 insert_list[result]:

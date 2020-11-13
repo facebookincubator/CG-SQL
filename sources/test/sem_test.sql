@@ -12268,7 +12268,7 @@ declare select function returns_object_is_bogus() object;
 -- + {name hi}: hi: integer
 -- - Error
 create table with_check
-( 
+(
   id integer,
   lo integer check (lo <= hi),
   hi integer
@@ -12281,7 +12281,7 @@ create table with_check
 -- + Error % name not found 'hip'
 -- +1 Error
 create table with_check_bogus_column
-( 
+(
   id integer,
   lo integer check (lo <= hip),
   hi integer
@@ -12292,7 +12292,7 @@ create table with_check_bogus_column
 -- + {col_attrs_collate}: ok
 -- - Error
 create table with_collate
-( 
+(
   id integer,
   t text collate garbonzo
 );
@@ -12303,7 +12303,7 @@ create table with_collate
 -- + Error % collate applied to a non-text column 'i'
 -- +1 Error
 create table with_collate
-( 
+(
   id integer,
   i real collate garbonzo
 );
@@ -12317,3 +12317,35 @@ create table bad_order(
  primary key (id),
  t text
 );
+
+-- TEST: test rewrite for [INSERT name USING ... ] grammar
+-- + {create_proc_stmt}: ok dml_proc
+-- + INSERT INTO foo(id) VALUES(1);
+-- - Error
+create proc test_insert_using()
+begin
+  insert into foo using 1 id;
+end;
+
+-- TEST: test rewrite for [INSERT name USING ... ] grammar with dummy_seed
+-- + {create_proc_stmt}: ok dml_proc
+-- + INSERT INTO bar(id, name, rate) VALUES(1, printf('name_%d', _seed_), _seed_) @DUMMY_SEED(9) @DUMMY_DEFAULTS @DUMMY_NULLABLES
+-- - Error
+create proc test_insert_using_with_dummy_seed()
+begin
+  insert into bar using 1 id @dummy_seed(9) @dummy_defaults @dummy_nullables;
+end;
+
+-- TEST: test rewrite for [INSERT name USING ... ] grammar printed
+-- + {create_proc_stmt}: err
+-- note: because the proc is a duplicate it won't be further analyzed
+-- which means that we get to see the printout of the proc before
+-- it is rewritten so this is a test for printing the before SQL
+-- not a semantic test of the rewrite.  gen_sql code is exercised here.
+-- + INSERT INTO foo USING 1 AS bogus;
+-- + Error % duplicate stored proc name 'test_insert_using'
+-- +1 Error
+create proc test_insert_using()
+begin
+  insert into foo using 1 bogus;
+end;

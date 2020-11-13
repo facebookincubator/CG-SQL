@@ -53,6 +53,7 @@ static void gen_opt_filter_clause(ast_node *ast);
 static void gen_if_not_exists(ast_node *ast, bool_t if_not_exist);
 static void gen_from_arguments(ast_node *ast);
 static void gen_shape_def(ast_node *ast);
+static void gen_expr_names(ast_node *ast);
 
 #define gen_printf(...) bprintf(output, __VA_ARGS__)
 
@@ -2156,7 +2157,11 @@ static void gen_insert_stmt(ast_node *ast) {
   gen_insert_type(insert_type);
   gen_printf(" INTO %s", name);
 
-  if (is_ast_columns_values(columns_values)) {
+  if (is_ast_expr_names(columns_values)) {
+    gen_printf(" USING ");
+    gen_expr_names(columns_values);
+  }
+  else if (is_ast_columns_values(columns_values)) {
     EXTRACT(column_spec, columns_values->left);
     EXTRACT_ANY(insert_list, columns_values->right);
     gen_column_spec(column_spec);

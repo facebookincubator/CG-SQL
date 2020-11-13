@@ -49999,3 +49999,88 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0349: column definitions may n
               | {name t}
               | {type_text}
 
+The statement ending at line XXXX
+
+CREATE PROC test_insert_using ()
+BEGIN
+  INSERT INTO foo(id) VALUES(1);
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name test_insert_using}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {insert_stmt}: ok
+        | {insert_normal}
+        | {name_columns_values}
+          | {name foo}: foo: { id: integer notnull primary_key autoinc }
+          | {columns_values}: ok
+            | {column_spec}
+            | | {name_list}
+            |   | {name id}: id: integer notnull
+            | {insert_list}
+              | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+CREATE PROC test_insert_using_with_dummy_seed ()
+BEGIN
+  INSERT INTO bar(id, name, rate) VALUES(1, printf('name_%d', _seed_), _seed_) @DUMMY_SEED(9) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name test_insert_using_with_dummy_seed}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {insert_stmt}: ok
+        | {insert_normal}
+        | | {insert_dummy_spec}: integer notnull
+        |   | {int 9}: integer notnull
+        |   | {int 3}
+        | {name_columns_values}
+          | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
+          | {columns_values}: ok
+            | {column_spec}
+            | | {name_list}
+            |   | {name id}: id: integer notnull
+            |   | {name_list}
+            |     | {name name}: name: text
+            |     | {name_list}
+            |       | {name rate}: rate: longint
+            | {insert_list}
+              | {int 1}: integer notnull
+              | {insert_list}
+                | {call}: text notnull
+                | | {name printf}: text notnull
+                | | {call_arg_list}
+                |   | {call_filter_clause}
+                |   | {arg_list}: ok
+                |     | {strlit 'name_%d'}: text notnull
+                |     | {arg_list}
+                |       | {name _seed_}: _seed_: integer notnull variable
+                | {insert_list}
+                  | {name _seed_}: _seed_: integer notnull variable
+
+The statement ending at line XXXX
+
+CREATE PROC test_insert_using ()
+BEGIN
+  INSERT INTO foo USING 1 AS bogus;
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0186: duplicate stored proc name 'test_insert_using'
+
+  {create_proc_stmt}: err
+  | {name test_insert_using}: err
+  | {proc_params_stmts}
+    | {stmt_list}
+      | {insert_stmt}
+        | {insert_normal}
+        | {name_columns_values}
+          | {name foo}
+          | {expr_names}
+            | {expr_name}
+              | {int 1}
+              | {opt_as_alias}
+                | {name bogus}
+

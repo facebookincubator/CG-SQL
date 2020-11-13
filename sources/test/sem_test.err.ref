@@ -881,4 +881,5 @@ Error at test/sem_test.sql:XXXX : in str : CQL0347: select function may not retu
 Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'hip'
 Error at test/sem_test.sql:XXXX : in str : CQL0348: collate applied to a non-text column 'i'
 Error at test/sem_test.sql:XXXX : in col_def : CQL0349: column definitions may not come after constraints 'id'
+Error at test/sem_test.sql:XXXX : in str : CQL0186: duplicate stored proc name 'test_insert_using'
 semantic errors present; no code gen.
