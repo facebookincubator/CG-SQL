@@ -148,6 +148,7 @@ static void sem_declare_cursor_for_name(ast_node *ast);
 static sem_join * new_sem_join(uint32_t count);
 static void sem_validate_check_expr(ast_node *table, ast_node *expr);
 static void sem_numeric_expr(ast_node *expr, ast_node *context, CSTR subject, uint32_t expr_context);
+static void sem_rewrite_iif(ast_node *ast);
 
 static void lazy_free_symtab(void *syms) {
   symtab_delete(syms);
@@ -5342,6 +5343,35 @@ static void sem_func_cql_cursor_diff_val(ast_node *ast, uint32_t arg_count) {
   sem_rewrite_cql_cursor_diff(ast, false);
 }
 
+static void sem_func_iif(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  if (!sem_validate_arg_count(ast, arg_count, 3)) {
+    return;
+  }
+
+  ast_node *arg1 = first_arg(arg_list);
+  if (!is_numeric(arg1->sem->sem_type)) {
+    report_error(name_ast, "CQL0082: argument must be numeric", name);
+    record_error(ast);
+    return;
+  }
+
+  ast_node *arg2 = second_arg(arg_list);
+  ast_node *arg3 = third_arg(arg_list);
+  if (!sem_verify_compat(name_ast, arg2->sem->sem_type, arg3->sem->sem_type, name)) {
+    record_error(ast);
+    return;
+  }
+
+  // We have a iif function call, we rewrite the node to a case_expr node.
+  sem_rewrite_iif(ast);
+}
+
 static void sem_func_upper(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
@@ -6297,12 +6327,10 @@ static ast_node *sem_generate_cursor_printf(ast_node *variable) {
 
 // This helper generates a case_expr node that check if an expression to return value or
 // otherwise another value
-// e.g: (expr, val1, val2) => CASE WHEN expr IS NULL THEN val2 ELSE val1;
-static ast_node *sem_generate_null_check_case_expr(ast_node *expr, ast_node *val1, ast_node *val2) {
-  // left side of WHEN
-  ast_node* is_node = new_ast_is(expr, new_ast_null());
+// e.g: (expr, val1, val2) => CASE WHEN expr THEN val2 ELSE val1;
+static ast_node *sem_generate_iif_case_expr(ast_node *expr, ast_node *val1, ast_node *val2) {
   // left case_list node
-  ast_node* when = new_ast_when(is_node, val2);
+  ast_node* when = new_ast_when(expr, val2);
   // left connector node
   ast_node* case_list = new_ast_case_list(when, NULL);
   // case list with no ELSE (we get ELSE NULL by default)
@@ -6354,9 +6382,13 @@ static ast_node *sem_generate_case_expr(ast_node *var1, ast_node *var2, bool_t r
           &format_output, c2_name, sptr2->names[i], sptr2->semtypes[i]);
       // CALL PRINTF ast on fourth argument
       ast_node *call_printf3 = sem_generate_printf_call(format_output.ptr, printf_arg_list3);
+      // left of is node
+      ast_node *expr = new_ast_dot(new_ast_str(c2_name), new_ast_str(sptr2->names[i]));
+      // left of WHEN expr
+      ast_node* is_node = new_ast_is(expr, new_ast_null());
       // case_expr node: CASE WHEN C.x IS NULL THEN 'null' ELSE printf("%s", C.x)
-      ast_node *check_call_printf3 = sem_generate_null_check_case_expr(
-        new_ast_dot(new_ast_str(c2_name), new_ast_str(sptr2->names[i])),
+      ast_node *check_call_printf3 = sem_generate_iif_case_expr(
+        is_node,
         call_printf3,
         new_ast_str("'null'"));
       arg_list = new_ast_arg_list(check_call_printf3, NULL);
@@ -6367,9 +6399,13 @@ static ast_node *sem_generate_case_expr(ast_node *var1, ast_node *var2, bool_t r
           &format_output, c1_name, sptr1->names[i], sptr1->semtypes[i]);
       // CALL PRINTF ast on third argument
       ast_node *call_printf2 = sem_generate_printf_call(format_output.ptr, printf_arg_list2);
+      // left of IS node
+      expr = new_ast_dot(new_ast_str(c1_name), new_ast_str(sptr1->names[i]));
+      // left of WHEN expr
+      is_node = new_ast_is(expr, new_ast_null());
       // case_expr node: CASE WHEN C.x IS NULL THEN 'null' ELSE printf("%s", C.x)
-      ast_node *check_call_printf2 = sem_generate_null_check_case_expr(
-        new_ast_dot(new_ast_str(c1_name), new_ast_str(sptr2->names[i])),
+      ast_node *check_call_printf2 = sem_generate_iif_case_expr(
+        is_node,
         call_printf2,
         new_ast_str("'null'"));
       arg_list = new_ast_arg_list(check_call_printf2, arg_list);
@@ -6412,10 +6448,11 @@ static void sem_rewrite_cql_cursor_format(ast_node *ast) {
   EXTRACT(arg_list, call_arg_list->right);
   Contract(!Strcasecmp("cql_cursor_format", name));
 
-  AST_REWRITE_INFO_SET(name_ast->lineno, name_ast->filename);
-
   ast_node *arg = first_arg(arg_list);
+
+  AST_REWRITE_INFO_SET(name_ast->lineno, name_ast->filename);
   ast_node *printf_node = sem_generate_cursor_printf(arg);
+  AST_REWRITE_INFO_RESET();
 
   // Reset the cql_cursor_format function call node to a case_expr
   // node.
@@ -6426,7 +6463,8 @@ static void sem_rewrite_cql_cursor_format(ast_node *ast) {
   // do semantic analysis of the rewritten AST to validate it
   sem_expr(ast);
 
-  AST_REWRITE_INFO_RESET();
+  // the rewrite is not expected to have any semantic error
+  Invariant(!is_error(ast));
 }
 
 
@@ -6443,12 +6481,14 @@ static void sem_rewrite_cql_cursor_diff(ast_node *ast, bool_t report_column_name
       !Strcasecmp("cql_cursor_diff_col", name) ||
       !Strcasecmp("cql_cursor_diff_val", name));
 
-  AST_REWRITE_INFO_SET(name_ast->lineno, name_ast->filename);
-
   ast_node *arg1 = first_arg(arg_list);
   ast_node *arg2 = second_arg(arg_list);
 
+  AST_REWRITE_INFO_SET(name_ast->lineno, name_ast->filename);
+
   ast_node *case_expr = sem_generate_case_expr(arg1, arg2, report_column_name);
+
+  AST_REWRITE_INFO_RESET();
 
   // Reset the cql_cursor_diff_col function call node to a case_expr
   // node.
@@ -6459,7 +6499,40 @@ static void sem_rewrite_cql_cursor_diff(ast_node *ast, bool_t report_column_name
   // do semantic analysis of the rewrite AST to validate the rewrite
   sem_expr(ast);
 
+  // the rewrite is not expected to have any semantic error
+  Invariant(!is_error(ast));
+}
+
+// This helper function rewrite iif ast to case_expr ast.
+// e.g: if(X, Y, Z) => CASE WHEN X THEN Y ELSE Z END;
+static void sem_rewrite_iif(ast_node *ast) {
+  Contract(is_ast_call(ast));
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  ast_node *arg1 = first_arg(arg_list);
+  ast_node *arg2 = second_arg(arg_list);
+  ast_node *arg3 = third_arg(arg_list);
+
+  AST_REWRITE_INFO_SET(name_ast->lineno, name_ast->filename);
+
+  ast_node *case_expr = sem_generate_iif_case_expr(arg1, arg2, arg3);
+
   AST_REWRITE_INFO_RESET();
+
+  // Reset the cql_cursor_diff_col function call node to a case_expr
+  // node.
+  ast->type = case_expr->type;
+  ast_set_left(ast, case_expr->left);
+  ast_set_right(ast, case_expr->right);
+
+  // do semantic analysis of the rewrite AST to validate the rewrite
+  sem_expr(ast);
+
+  // the rewrite is not expected to have any semantic error
+  Invariant(!is_error(ast));
 }
 
 // This validates that the call is to one of the functions that we know and
@@ -17008,6 +17081,7 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(abs);
   FUNC_INIT(instr);
   FUNC_INIT(coalesce);
+  FUNC_INIT(iif);
   FUNC_INIT(last_insert_rowid);
   FUNC_INIT(changes);
   FUNC_INIT(printf);

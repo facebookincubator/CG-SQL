@@ -50084,3 +50084,154 @@ Error at test/sem_test.sql:XXXX : in str : CQL0186: duplicate stored proc name '
               | {opt_as_alias}
                 | {name bogus}
 
+The statement ending at line XXXX
+
+SELECT CASE WHEN an_int IS NULL THEN 3
+ELSE 2
+END;
+
+  {select_stmt}: select: { _anon: integer notnull }
+  | {select_core_list}: select: { _anon: integer notnull }
+  | | {select_core}: select: { _anon: integer notnull }
+  |   | {select_expr_list_con}: select: { _anon: integer notnull }
+  |     | {select_expr_list}: select: { _anon: integer notnull }
+  |     | | {select_expr}: integer notnull
+  |     |   | {case_expr}: integer notnull
+  |     |     | {connector}: integer notnull
+  |     |       | {case_list}: integer notnull
+  |     |       | | {when}: integer notnull
+  |     |       |   | {is}: bool notnull
+  |     |       |   | | {name an_int}: an_int: integer variable
+  |     |       |   | | {null}: null
+  |     |       |   | {int 3}: integer notnull
+  |     |       | {int 2}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT iif(an_int IS NULL, 2, 3, 4);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'iif'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name iif}: err
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {is}: bool notnull
+  |     |         | | {name an_int}: an_int: integer variable
+  |     |         | | {null}: null
+  |     |         | {arg_list}
+  |     |           | {int 2}: integer notnull
+  |     |           | {arg_list}
+  |     |             | {int 3}: integer notnull
+  |     |             | {arg_list}
+  |     |               | {int 4}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT iif('x', 2, 3);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0082: argument must be numeric 'iif'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name iif}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit 'x'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {int 2}: integer notnull
+  |     |           | {arg_list}
+  |     |             | {int 3}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT iif(an_int IS NULL, 2, x'23');
+
+Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expression 'iif'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name iif}: err
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {is}: bool notnull
+  |     |         | | {name an_int}: an_int: integer variable
+  |     |         | | {null}: null
+  |     |         | {arg_list}
+  |     |           | {int 2}: integer notnull
+  |     |           | {arg_list}
+  |     |             | {blob x'23'}: blob notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SET an_int := CASE WHEN an_int IS NULL THEN CASE WHEN 1 THEN 3
+ELSE 2
+END
+ELSE 2
+END;
+
+  {assign}: an_int: integer variable
+  | {name an_int}: an_int: integer variable
+  | {case_expr}: integer notnull
+    | {connector}: integer notnull
+      | {case_list}: integer notnull
+      | | {when}: integer notnull
+      |   | {is}: bool notnull
+      |   | | {name an_int}: an_int: integer variable
+      |   | | {null}: null
+      |   | {case_expr}: integer notnull
+      |     | {connector}: integer notnull
+      |       | {case_list}: integer notnull
+      |       | | {when}: integer notnull
+      |       |   | {int 1}: integer notnull
+      |       |   | {int 3}: integer notnull
+      |       | {int 2}: integer notnull
+      | {int 2}: integer notnull
+

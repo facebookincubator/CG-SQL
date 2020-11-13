@@ -12349,3 +12349,39 @@ create proc test_insert_using()
 begin
   insert into foo using 1 bogus;
 end;
+
+-- TEST: test rewrite for IIF func
+-- + {select_stmt}: select: { _anon: integer notnull }
+-- + SELECT CASE WHEN an_int IS NULL THEN 3
+-- + ELSE 2
+-- + END;
+-- - Error
+select iif(an_int is null, 2, 3);
+
+-- TEST: test rewrite for IIF func with invalid argument count
+-- + {select_stmt}: err
+-- + Error % function got incorrect number of arguments 'iif'
+-- + Error
+select iif(an_int is null, 2, 3, 4);
+
+-- TEST: test rewrite for IIF func with invalid argument count
+-- + {select_stmt}: err
+-- + Error % argument must be numeric 'iif'
+-- + Error
+select iif('x', 2, 3);
+
+-- TEST: test rewrite for IIF func with invalid argument count
+-- + {select_stmt}: err
+-- + Error % incompatible types in expression 'iif'
+-- + Error
+select iif(an_int is null, 2, x'23');
+
+-- TEST: test rewrite for IIF func out of sql context
+-- + {assign}: an_int: integer variable
+-- + SET an_int := CASE WHEN an_int IS NULL THEN CASE WHEN 1 THEN 3
+-- + ELSE 2
+-- + END
+-- + ELSE 2
+-- + END;
+-- - Error
+set an_int := iif(an_int is null, 2, iif(1, 2, 3));
