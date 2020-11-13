@@ -1285,8 +1285,8 @@ The statement ending at line XXXX
 CREATE TABLE t_several_columns_added_interleaved(
   col1 INTEGER,
   col2 INTEGER @CREATE(2),
-  PRIMARY KEY (col1),
-  col3 INTEGER @CREATE(2)
+  col3 INTEGER @CREATE(2),
+  PRIMARY KEY (col1)
 );
 
   {create_table_stmt}: t_several_columns_added_interleaved: { col1: integer notnull, col2: integer, col3: integer } validated
@@ -1310,18 +1310,18 @@ CREATE TABLE t_several_columns_added_interleaved(
       |     | {version_annotation}
       |       | {int 2}
       | {col_key_list}
-        | {pk_def}
-        | | {name_list}
-        |   | {name col1}
+        | {col_def}: err
+        | | {col_def_type_attrs}
+        |   | {col_def_name_type}
+        |   | | {name col3}
+        |   | | {type_int}: integer
+        |   | {create_attr}: ok
+        |     | {version_annotation}
+        |       | {int 2}
         | {col_key_list}
-          | {col_def}: err
-            | {col_def_type_attrs}
-              | {col_def_name_type}
-              | | {name col3}
-              | | {type_int}: integer
-              | {create_attr}: ok
-                | {version_annotation}
-                  | {int 2}
+          | {pk_def}
+            | {name_list}
+              | {name col1}
 
 The statement ending at line XXXX
 

@@ -9415,11 +9415,18 @@ static void sem_create_table_stmt(ast_node *ast) {
 
   // first count up the columns (and only the columns)
   uint32_t cols = 0;
+  bool_t found_constraint = false;
   for (ast_node *item = col_key_list; item; item = item->right) {
     Contract(is_ast_col_key_list(item));
     EXTRACT_ANY_NOTNULL(def, item->left);
 
     if (is_ast_col_def(def)) {
+      if (found_constraint) {
+        report_error(def, "CQL0349: column definitions may not come after constraints", col_info.col_name);
+        record_error(ast);
+        goto cleanup;;
+      }
+
       sem_col_def(def, &col_info);
       if (is_error(def)) {
         record_error(ast);
@@ -9437,6 +9444,9 @@ static void sem_create_table_stmt(ast_node *ast) {
       }
 
       cols++;
+    }
+    else {
+      found_constraint = true;
     }
   }
 

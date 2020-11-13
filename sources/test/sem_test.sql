@@ -4527,9 +4527,9 @@ insert into hides_id_not_name values('x');
 -- - Error
 create table trickier_alter_target(
   id integer,
-  primary key(id),
   something_deleted text @create(1) @delete(2),
-  added text @create(2)
+  added text @create(2),
+  primary key(id)
 );
 
 -- TEST: try to add id --> doesn't work
@@ -12306,4 +12306,14 @@ create table with_collate
 ( 
   id integer,
   i real collate garbonzo
+);
+
+-- TEST: make sure all constraints come after all columns
+-- + {create_table_stmt}: err
+-- + Error % column definitions may not come after constraints 'id'
+-- +1 Error
+create table bad_order(
+ id integer,
+ primary key (id),
+ t text
 );

@@ -261,8 +261,8 @@ create table t_subtle_column_change(
 create table t_several_columns_added_interleaved(
   col1 integer,
   col2 integer @create(2),
-  primary key (col1),
-  col3 integer @create(2)
+  col3 integer @create(2),
+  primary key (col1)
 );
 
 -- this will cause a failure, it's changed from version 1

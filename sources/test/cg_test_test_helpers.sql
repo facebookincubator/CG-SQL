@@ -52,8 +52,8 @@ create table self_ref_table
 (
   id integer primary key,
   id2 integer @sensitive, -- @sensitive forces attrs to be examined
-  foreign key (id2) references self_ref_table(id),
-  name text
+  name text,
+  foreign key (id2) references self_ref_table(id)
 );
 
 create table self_ref_table2

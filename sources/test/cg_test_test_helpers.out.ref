@@ -2185,8 +2185,8 @@ BEGIN
   CREATE TABLE IF NOT EXISTS self_ref_table(
     id INTEGER PRIMARY KEY,
     id2 INTEGER,
-    FOREIGN KEY (id2) REFERENCES self_ref_table (id),
-    name TEXT
+    name TEXT,
+    FOREIGN KEY (id2) REFERENCES self_ref_table (id)
   );
 END;
 
@@ -2214,8 +2214,8 @@ BEGIN
   CREATE TABLE IF NOT EXISTS self_ref_table(
     id INTEGER PRIMARY KEY,
     id2 INTEGER,
-    FOREIGN KEY (id2) REFERENCES self_ref_table (id),
-    name TEXT
+    name TEXT,
+    FOREIGN KEY (id2) REFERENCES self_ref_table (id)
   );
 END;
 

@@ -880,4 +880,5 @@ Error at test/sem_test.sql:XXXX : in like : CQL0335: the procedure has an object
 Error at test/sem_test.sql:XXXX : in str : CQL0347: select function may not return type OBJECT 'returns_object_is_bogus'
 Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'hip'
 Error at test/sem_test.sql:XXXX : in str : CQL0348: collate applied to a non-text column 'i'
+Error at test/sem_test.sql:XXXX : in col_def : CQL0349: column definitions may not come after constraints 'id'
 semantic errors present; no code gen.

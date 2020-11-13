@@ -16666,9 +16666,9 @@ The statement ending at line XXXX
 
 CREATE TABLE trickier_alter_target(
   id INTEGER,
-  PRIMARY KEY (id),
   something_deleted TEXT @CREATE(1) @DELETE(2),
-  added TEXT @CREATE(2)
+  added TEXT @CREATE(2),
+  PRIMARY KEY (id)
 );
 
   {create_table_stmt}: trickier_alter_target: { id: integer notnull, added: text }
@@ -16683,30 +16683,30 @@ CREATE TABLE trickier_alter_target(
     |     | {name id}
     |     | {type_int}: integer
     | {col_key_list}
-      | {pk_def}
-      | | {name_list}
-      |   | {name id}
+      | {col_def}: something_deleted: text hidden @create(1) @delete(2)
+      | | {col_def_type_attrs}
+      |   | {col_def_name_type}
+      |   | | {name something_deleted}
+      |   | | {type_text}: text
+      |   | {create_attr}: ok
+      |     | {version_annotation}
+      |     | | {int 1}
+      |     | {delete_attr}
+      |       | {version_annotation}
+      |         | {int 2}
       | {col_key_list}
-        | {col_def}: something_deleted: text hidden @create(1) @delete(2)
+        | {col_def}: added: text @create(2)
         | | {col_def_type_attrs}
         |   | {col_def_name_type}
-        |   | | {name something_deleted}
+        |   | | {name added}
         |   | | {type_text}: text
         |   | {create_attr}: ok
         |     | {version_annotation}
-        |     | | {int 1}
-        |     | {delete_attr}
-        |       | {version_annotation}
-        |         | {int 2}
+        |       | {int 2}
         | {col_key_list}
-          | {col_def}: added: text @create(2)
-            | {col_def_type_attrs}
-              | {col_def_name_type}
-              | | {name added}
-              | | {type_text}: text
-              | {create_attr}: ok
-                | {version_annotation}
-                  | {int 2}
+          | {pk_def}
+            | {name_list}
+              | {name id}
 
 The statement ending at line XXXX
 
@@ -49966,4 +49966,36 @@ Error at test/sem_test.sql:XXXX : in str : CQL0348: collate applied to a non-tex
           | | {type_real}: real
           | {col_attrs_collate}: err
             | {name garbonzo}
+
+The statement ending at line XXXX
+
+CREATE TABLE bad_order(
+  id INTEGER,
+  PRIMARY KEY (id),
+  t TEXT
+);
+
+Error at test/sem_test.sql:XXXX : in col_def : CQL0349: column definitions may not come after constraints 'id'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name bad_order}
+  | {col_key_list}
+    | {col_def}: id: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {pk_def}
+      | | {name_list}
+      |   | {name id}
+      | {col_key_list}
+        | {col_def}
+          | {col_def_type_attrs}
+            | {col_def_name_type}
+              | {name t}
+              | {type_text}
 
