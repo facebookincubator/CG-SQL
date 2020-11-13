@@ -10,6 +10,7 @@
 #pragma clang diagnostic ignored "-Wbitwise-op-parentheses"
 #pragma clang diagnostic ignored "-Wshift-op-parentheses"
 #pragma clang diagnostic ignored "-Wlogical-not-parentheses"
+#pragma clang diagnostic ignored "-Wliteral-conversion"
 extern CQL_WARN_UNUSED cql_code dbhelp_source(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_);
 
 
@@ -20,6 +21,8 @@ extern CQL_WARN_UNUSED cql_code dbhelp_source(sqlite3 *_Nonnull _db_, sqlite3_st
 // while things are still otherwise broken.  Rebuild with 'make regen'
 //
 
+
+// Generated from dbhelp.sql:38
 
 /*
 CREATE PROC dbhelp_setup ()
@@ -63,6 +66,8 @@ cql_cleanup:
   return _rc_;
 }
 
+// Generated from dbhelp.sql:48
+
 /*
 CREATE PROC dbhelp_prev_line (line_ INTEGER NOT NULL, OUT prev INTEGER NOT NULL)
 BEGIN
@@ -93,7 +98,7 @@ CQL_WARN_UNUSED cql_code dbhelp_prev_line(sqlite3 *_Nonnull _db_, cql_int32 line
     _rc_ = sqlite3_step(_temp_stmt);
     if (_rc_ != SQLITE_ROW) goto catch_start_1;
       *prev = sqlite3_column_int(_temp_stmt, 0);
-    cql_finalize_stmt(_db_, &_temp_stmt);
+    cql_finalize_stmt(&_temp_stmt);
     goto catch_end_1;
   }
   catch_start_1: {
@@ -102,9 +107,11 @@ CQL_WARN_UNUSED cql_code dbhelp_prev_line(sqlite3 *_Nonnull _db_, cql_int32 line
   catch_end_1:;
   _rc_ = SQLITE_OK;
 
-  cql_finalize_stmt(_db_, &_temp_stmt);
+  cql_finalize_stmt(&_temp_stmt);
   return _rc_;
 }
+
+// Generated from dbhelp.sql:54
 
 /*
 CREATE PROC dbhelp_add (line INTEGER NOT NULL, data TEXT NOT NULL)
@@ -125,13 +132,15 @@ CQL_WARN_UNUSED cql_code dbhelp_add(sqlite3 *_Nonnull _db_, cql_int32 line, cql_
   if (_rc_ != SQLITE_OK) goto cql_cleanup;
   _rc_ = sqlite3_step(_temp_stmt);
   if (_rc_ != SQLITE_DONE) goto cql_cleanup;
-  cql_finalize_stmt(_db_, &_temp_stmt);
+  cql_finalize_stmt(&_temp_stmt);
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
-  cql_finalize_stmt(_db_, &_temp_stmt);
+  cql_finalize_stmt(&_temp_stmt);
   return _rc_;
 }
+
+// Generated from dbhelp.sql:59
 
 /*
 CREATE PROC dbhelp_add_source (line INTEGER NOT NULL, data TEXT NOT NULL)
@@ -152,13 +161,15 @@ CQL_WARN_UNUSED cql_code dbhelp_add_source(sqlite3 *_Nonnull _db_, cql_int32 lin
   if (_rc_ != SQLITE_OK) goto cql_cleanup;
   _rc_ = sqlite3_step(_temp_stmt);
   if (_rc_ != SQLITE_DONE) goto cql_cleanup;
-  cql_finalize_stmt(_db_, &_temp_stmt);
+  cql_finalize_stmt(&_temp_stmt);
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
-  cql_finalize_stmt(_db_, &_temp_stmt);
+  cql_finalize_stmt(&_temp_stmt);
   return _rc_;
 }
+
+// Generated from dbhelp.sql:68
 
 /*
 CREATE PROC dbhelp_dump_line (line_ INTEGER NOT NULL)
@@ -210,10 +221,12 @@ CQL_WARN_UNUSED cql_code dbhelp_dump_line(sqlite3 *_Nonnull _db_, cql_int32 line
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
-  cql_finalize_stmt(_db_, &C);
+  cql_finalize_stmt(&C);
   cql_teardown_row(C_);
   return _rc_;
 }
+
+// Generated from dbhelp.sql:76
 
 /*
 CREATE PROC dbhelp_find (line_ INTEGER NOT NULL, pattern TEXT NOT NULL, OUT search_line INTEGER NOT NULL, OUT found INTEGER NOT NULL)
@@ -243,7 +256,7 @@ CQL_WARN_UNUSED cql_code dbhelp_find(sqlite3 *_Nonnull _db_, cql_int32 line_, cq
   _rc_ = sqlite3_step(_temp_stmt);
   if (_rc_ != SQLITE_ROW) goto cql_cleanup;
     *search_line = sqlite3_column_int(_temp_stmt, 0);
-  cql_finalize_stmt(_db_, &_temp_stmt);
+  cql_finalize_stmt(&_temp_stmt);
   _rc_ = cql_prepare(_db_, &_temp_stmt,
     "SELECT count(*) "
       "FROM test_output "
@@ -255,13 +268,15 @@ CQL_WARN_UNUSED cql_code dbhelp_find(sqlite3 *_Nonnull _db_, cql_int32 line_, cq
   _rc_ = sqlite3_step(_temp_stmt);
   if (_rc_ != SQLITE_ROW) goto cql_cleanup;
     *found = sqlite3_column_int(_temp_stmt, 0);
-  cql_finalize_stmt(_db_, &_temp_stmt);
+  cql_finalize_stmt(&_temp_stmt);
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
-  cql_finalize_stmt(_db_, &_temp_stmt);
+  cql_finalize_stmt(&_temp_stmt);
   return _rc_;
 }
+
+// Generated from dbhelp.sql:85
 
 /*
 CREATE PROC dbhelp_dump_source (line1 INTEGER NOT NULL, line2 INTEGER NOT NULL)
@@ -314,10 +329,12 @@ CQL_WARN_UNUSED cql_code dbhelp_dump_source(sqlite3 *_Nonnull _db_, cql_int32 li
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
-  cql_finalize_stmt(_db_, &C);
+  cql_finalize_stmt(&C);
   cql_teardown_row(C_);
   return _rc_;
 }
+
+// Generated from dbhelp.sql:90
 
 /*
 CREATE PROC dbhelp_source ()

@@ -37,10 +37,10 @@ void cql_best_error(cql_code *_Nonnull prc) {
 // The indicated statement should be immediately finalized out latest result was not SQLITE_OK
 // This code is used during binding (which is now always done with multibind)
 // in order to ensure that the statement exits finalized in the event of any binding failure.
-void cql_finalize_on_error(cql_code rc, sqlite3 *_Nonnull db, sqlite3_stmt *_Nullable *_Nonnull pstmt) {
+void cql_finalize_on_error(cql_code rc, sqlite3_stmt *_Nullable *_Nonnull pstmt) {
   cql_contract(pstmt && *pstmt);
   if (rc != SQLITE_OK) {
-    cql_finalize_stmt(db, pstmt);
+    cql_finalize_stmt(pstmt);
   }
 }
 
@@ -49,7 +49,7 @@ void cql_finalize_on_error(cql_code rc, sqlite3 *_Nonnull db, sqlite3_stmt *_Nul
 // the cursor used to hold.  This lets us do simple preparation in a loop without added
 // conditionals in the generated code.
 cql_code cql_prepare(sqlite3 *_Nonnull db, sqlite3_stmt *_Nullable *_Nonnull pstmt, const char *_Nonnull sql) {
-  cql_finalize_stmt(db, pstmt);
+  cql_finalize_stmt(pstmt);
   return cql_sqlite3_prepare_v2(db, sql, -1, pstmt, NULL);
 }
 
@@ -119,7 +119,7 @@ cql_code cql_prepare_frags(sqlite3 *_Nonnull db,
                            const char *_Nonnull base,
                            const char *_Nonnull frags) {
   // NOTE: len is the allocation size (includes trailing \0)
-  cql_finalize_stmt(db, pstmt);
+  cql_finalize_stmt(pstmt);
   int32_t len;
   frags = cql_decode(frags, &len);
   STACK_BYTES_ALLOC(sql, len);
@@ -145,10 +145,10 @@ cql_code cql_exec_frags(sqlite3 *_Nonnull db,
 // Finalizes the statement if it is not null.  Note that the statement pointer
 // must be not null but the statement it holds may or may not be initialized.
 // Also note that ALL CQL STATEMENTS ARE INITIALIZED TO NULL!!
-void cql_finalize_stmt(sqlite3 *_Nonnull db, sqlite3_stmt *_Nullable *_Nonnull pstmt) {
+void cql_finalize_stmt(sqlite3_stmt *_Nullable *_Nonnull pstmt) {
   cql_contract(pstmt);
   if (*pstmt) {
-    cql_sqlite3_finalize(db, *pstmt);
+    cql_sqlite3_finalize(*pstmt);
     *pstmt = NULL;
   }
 }
@@ -366,7 +366,7 @@ static int _cql_compat_sqlite3_strlike(const char *_Nonnull zGlob, const char *_
   if (rc == SQLITE_OK) rc = sqlite3_bind_text(stmt, 3, zEsc, 1, SQLITE_TRANSIENT);
   if (rc == SQLITE_OK) rc = sqlite3_step(stmt);
   if (rc == SQLITE_ROW) result = !sqlite3_column_int(stmt, 0);
-  cql_finalize_stmt(db, &stmt);
+  cql_finalize_stmt(&stmt);
   return result;
 }
 
@@ -876,7 +876,7 @@ void cql_multibind(cql_code *_Nonnull prc, sqlite3 *_Nonnull db, sqlite3_stmt *_
         }
       }
     }
-    cql_finalize_on_error(*prc, db, pstmt);
+    cql_finalize_on_error(*prc, pstmt);
   }
 
   va_end(args);
@@ -1460,7 +1460,7 @@ cql_code cql_fetch_all_results(cql_fetch_info *_Nonnull info,
   // If all is well, we close the statement and we're done with OK result.
   // If anything went wrong we free all the memory and we're outta here.
 
-  cql_finalize_stmt(info->db, &stmt);
+  cql_finalize_stmt(&stmt);
   cql_result_set_meta meta;
   cql_initialize_meta(&meta, info);
 
@@ -1468,6 +1468,7 @@ cql_code cql_fetch_all_results(cql_fetch_info *_Nonnull info,
   cql_autodrop_tables(info->db, info->autodrop_tables);
   cql_profile_stop(info->crc, info->perf_index);
   return SQLITE_OK;
+
 cql_error:
   // If we have allocated any rows, and they need cleanup, clean them up now
   if (info->refs_count) {
@@ -1477,7 +1478,7 @@ cql_error:
     }
   }
   cql_bytebuf_close(&b);
-  cql_finalize_stmt(info->db, &stmt);
+  cql_finalize_stmt(&stmt);
   cql_log_database_error(info->db, "cql", "database error");
   cql_autodrop_tables(info->db, info->autodrop_tables);
   cql_profile_stop(info->crc, info->perf_index);

@@ -96,7 +96,7 @@ cql_string_ref _Nonnull cql_string_ref_new(const char *_Nonnull cstr) {
 
 static void cql_boxed_stmt_finalize(cql_type_ref _Nonnull ref) {
   cql_boxed_stmt_ref boxed_stmt = (cql_boxed_stmt_ref)ref;
-  cql_finalize_stmt(sqlite3_db_handle(boxed_stmt->stmt), &boxed_stmt->stmt);
+  cql_finalize_stmt(&boxed_stmt->stmt);
 }
 
 cql_object_ref _Nonnull cql_box_stmt(sqlite3_stmt *_Nullable stmt) {

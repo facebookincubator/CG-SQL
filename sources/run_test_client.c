@@ -339,7 +339,7 @@ cql_code test_cql_finalize_on_error(sqlite3 *db) {
   sqlite3_stmt *stmt = NULL;
   SQL_E(sqlite3_prepare_v2(db, "select * from sqlite_master", -1, &stmt, NULL), "stmt prepare failed\n");
 
-  cql_finalize_on_error(SQLITE_ERROR, db, &stmt);
+  cql_finalize_on_error(SQLITE_ERROR,&stmt);
   E(stmt == NULL, "expected statement to be finalized\n");
 
   tests_passed++;

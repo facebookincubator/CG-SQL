@@ -117,8 +117,8 @@ CQL_EXPORT cql_code cql_exec_frags(sqlite3 *_Nonnull db,
                                    const char *_Nonnull base,
                                    const char *_Nonnull frags);
 
-CQL_EXPORT void cql_finalize_on_error(cql_code rc, sqlite3 *_Nonnull db, sqlite3_stmt *_Nullable *_Nonnull pstmt);
-CQL_EXPORT void cql_finalize_stmt(sqlite3 *_Nonnull db, sqlite3_stmt *_Nullable *_Nonnull pstmt);
+CQL_EXPORT void cql_finalize_on_error(cql_code rc, sqlite3_stmt *_Nullable *_Nonnull pstmt);
+CQL_EXPORT void cql_finalize_stmt(sqlite3_stmt *_Nullable *_Nonnull pstmt);
 
 CQL_EXPORT void cql_column_nullable_bool(sqlite3_stmt *_Nonnull stmt, cql_int32 index, cql_nullable_bool *_Nonnull data);
 CQL_EXPORT void cql_column_nullable_int32(sqlite3_stmt *_Nonnull stmt, cql_int32 index, cql_nullable_int32 *_Nonnull data);
@@ -211,7 +211,7 @@ CQL_EXPORT void cql_initialize_meta(cql_result_set_meta *_Nonnull meta, cql_fetc
 #define cql_sqlite3_prepare_v2(db, sql, len, stmt, tail) sqlite3_prepare_v2((db), (sql), (len), (stmt), (tail))
 #endif // cql_sqlite3_prepare_v2
 #ifndef cql_sqlite3_finalize
-#define cql_sqlite3_finalize(db, stmt) sqlite3_finalize((stmt))
+#define cql_sqlite3_finalize(stmt) sqlite3_finalize((stmt))
 #endif // cql_sqlite3_finalize
 
 void cql_results_from_data(cql_code rc,

@@ -8,13 +8,29 @@
 
 #include "cqlrt.h"
 
+
+// Generated from dbhelp.sql:38
 extern CQL_WARN_UNUSED cql_code dbhelp_setup(sqlite3 *_Nonnull _db_);
+
+// Generated from dbhelp.sql:48
 extern CQL_WARN_UNUSED cql_code dbhelp_prev_line(sqlite3 *_Nonnull _db_, cql_int32 line_, cql_int32 *_Nonnull prev);
+
+// Generated from dbhelp.sql:54
 extern CQL_WARN_UNUSED cql_code dbhelp_add(sqlite3 *_Nonnull _db_, cql_int32 line, cql_string_ref _Nonnull data);
+
+// Generated from dbhelp.sql:59
 extern CQL_WARN_UNUSED cql_code dbhelp_add_source(sqlite3 *_Nonnull _db_, cql_int32 line, cql_string_ref _Nonnull data);
+
+// Generated from dbhelp.sql:68
 extern CQL_WARN_UNUSED cql_code dbhelp_dump_line(sqlite3 *_Nonnull _db_, cql_int32 line_);
+
+// Generated from dbhelp.sql:76
 extern CQL_WARN_UNUSED cql_code dbhelp_find(sqlite3 *_Nonnull _db_, cql_int32 line_, cql_string_ref _Nonnull pattern, cql_int32 *_Nonnull search_line, cql_int32 *_Nonnull found);
+
+// Generated from dbhelp.sql:85
 extern CQL_WARN_UNUSED cql_code dbhelp_dump_source(sqlite3 *_Nonnull _db_, cql_int32 line1, cql_int32 line2);
+
+// Generated from dbhelp.sql:90
 #define CRC_dbhelp_source -2582919431962037637L
 
 extern cql_string_ref _Nonnull dbhelp_source_stored_procedure_name;

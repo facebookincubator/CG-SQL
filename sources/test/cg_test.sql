@@ -455,7 +455,7 @@ open basic_cursor;
 -- +                CQL_DATA_TYPE_INT32, &col1,
 -- +                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_DOUBLE, &col2);
 fetch basic_cursor into col1, col2;
--- + cql_finalize_stmt(_db_, &basic_cursor);
+-- + cql_finalize_stmt(&basic_cursor);
 close basic_cursor;
 
 -- TEST: the most expensive way to swap two variables ever :)
@@ -473,7 +473,7 @@ open exchange_cursor;
 -- +                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &arg1,
 -- +                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &arg2);
 fetch exchange_cursor into arg1, arg2;
--- + cql_finalize_stmt(_db_, &exchange_cursor);
+-- + cql_finalize_stmt(&exchange_cursor);
 close exchange_cursor;
 
 -- TEST: simple nested select
@@ -485,7 +485,7 @@ close exchange_cursor;
 -- + _rc_ = sqlite3_step(_temp_stmt);
 -- + if (_rc_ != SQLITE_ROW) goto cql_cleanup;
 -- + i2 = sqlite3_column_int(_temp_stmt, 0);
--- + cql_finalize_stmt(_db_, &_temp_stmt);
+-- + cql_finalize_stmt(&_temp_stmt);
 set i2 := (select i2+1);
 
 -- TEST: nested select with nullable
@@ -791,9 +791,9 @@ end;
 -- + cql_multibind(&_rc_, _db_, &C2, 2,
 -- +               CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_BOOL, C_._has_row_,
 -- +               CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, C_.id);
--- + cql_finalize_stmt(_db_, &C);
+-- + cql_finalize_stmt(&C);
 -- + cql_teardown_row(C_);
--- + cql_finalize_stmt(_db_, &C2);
+-- + cql_finalize_stmt(&C2);
 create proc easy_fetch()
 begin
   declare C cursor for select * from bar;
@@ -2590,7 +2590,7 @@ end;
 -- 1 for the boxing and 1 for the cleanup
 -- +2 cql_object_release(C_object_);
 -- + C_object_ = cql_box_stmt(C);
--- - cql_finalize_stmt(_db_, &C);
+-- - cql_finalize_stmt(&C);
 create proc try_boxing(out result object<bar cursor>)
 begin
   declare C cursor for select * from bar;
@@ -2602,7 +2602,7 @@ end;
 -- + cql_set_object_ref(&C_object_, boxed_cursor);
 -- + _rc_ = sqlite3_step(C);
 -- + cql_object_release(C_object_);
--- - cql_finalize_stmt(_db_, &C);
+-- - cql_finalize_stmt(&C);
 create proc try_unboxing(boxed_cursor object<bar cursor>)
 begin
   declare C cursor for boxed_cursor;

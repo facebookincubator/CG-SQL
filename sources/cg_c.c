@@ -2024,7 +2024,7 @@ static void cg_expr_select(ast_node *ast, CSTR op, charbuf *is_null, charbuf *va
   bprintf(cg_main_output, "_rc_ = sqlite3_step(_temp_stmt);\n");
   bprintf(cg_main_output, "if (_rc_ != SQLITE_ROW) goto %s;\n", error_target);
   cg_get_column(sem_type_result, "_temp_stmt", 0, result_var.ptr, cg_main_output);
-  bprintf(cg_main_output, "cql_finalize_stmt(_db_, &_temp_stmt);\n");
+  bprintf(cg_main_output, "cql_finalize_stmt(&_temp_stmt);\n");
   error_target_used = 1;
 
   CG_CLEANUP_RESULT_VAR();
@@ -2935,7 +2935,7 @@ static void cg_bind_column(sem_t sem_type, CSTR var) {
 static void ensure_temp_statement() {
   if (!temp_statement_emitted) {
     bprintf(cg_declarations_output, "sqlite3_stmt *_temp_stmt = NULL;\n");
-    bprintf(cg_cleanup_output, "  cql_finalize_stmt(_db_, &_temp_stmt);\n");
+    bprintf(cg_cleanup_output, "  cql_finalize_stmt(&_temp_stmt);\n");
     temp_statement_emitted = 1;
   }
 }
@@ -3161,7 +3161,7 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_fl
   if (exec_only && vars) {
     bprintf(cg_main_output, "_rc_ = sqlite3_step(%s);\n", stmt_name);
     bprintf(cg_main_output, "if (_rc_ != SQLITE_DONE) goto %s;\n", error_target);
-    bprintf(cg_main_output, "cql_finalize_stmt(_db_, &%s);\n", stmt_name);
+    bprintf(cg_main_output, "cql_finalize_stmt(&%s);\n", stmt_name);
   }
 
   // vars is pool allocated, so we don't need to free it
@@ -3246,7 +3246,7 @@ static void cg_declare_cursor(ast_node *ast) {
 
     if (!is_boxed) {
       // easy case, no boxing, just finalize on exit.
-      bprintf(cg_cleanup_output, "  cql_finalize_stmt(_db_, &%s);\n", cursor_name);
+      bprintf(cg_cleanup_output, "  cql_finalize_stmt(&%s);\n", cursor_name);
     }
   }
 
@@ -3703,7 +3703,7 @@ static void cg_close_stmt(ast_node *ast) {
   EXTRACT_STRING(name, ast->left);
 
   // CLOSE [name]
-  bprintf(cg_main_output, "cql_finalize_stmt(_db_, &%s);\n", name);
+  bprintf(cg_main_output, "cql_finalize_stmt(&%s);\n", name);
 }
 
 // The OUT statement copies the current value of a cursor into an implicit
