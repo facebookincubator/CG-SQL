@@ -7065,35 +7065,29 @@ The statement ending at line XXXX
 
 CREATE PROC proc_with_output (IN arg1 INTEGER, INOUT arg2 INTEGER, OUT arg3 INTEGER)
 BEGIN
-  DECLARE xxx INTEGER;
 END;
 
   {create_proc_stmt}: ok
   | {name proc_with_output}: ok
   | {proc_params_stmts}
     | {params}: ok
-    | | {param}: arg1: integer variable in
-    | | | {in}
-    | | | {param_detail}: arg1: integer variable in
-    | |   | {name arg1}: arg1: integer variable in
-    | |   | {type_int}: integer
-    | | {params}
-    |   | {param}: arg2: integer variable in out
-    |   | | {inout}
-    |   | | {param_detail}: arg2: integer variable in out
-    |   |   | {name arg2}: arg2: integer variable in out
-    |   |   | {type_int}: integer
-    |   | {params}
-    |     | {param}: arg3: integer variable out
-    |       | {out}
-    |       | {param_detail}: arg3: integer variable out
-    |         | {name arg3}: arg3: integer variable out
-    |         | {type_int}: integer
-    | {stmt_list}: ok
-      | {declare_vars_type}: integer
-        | {name_list}: xxx: integer variable
-        | | {name xxx}: xxx: integer variable
-        | {type_int}: integer
+      | {param}: arg1: integer variable in
+      | | {in}
+      | | {param_detail}: arg1: integer variable in
+      |   | {name arg1}: arg1: integer variable in
+      |   | {type_int}: integer
+      | {params}
+        | {param}: arg2: integer variable in out
+        | | {inout}
+        | | {param_detail}: arg2: integer variable in out
+        |   | {name arg2}: arg2: integer variable in out
+        |   | {type_int}: integer
+        | {params}
+          | {param}: arg3: integer variable out
+            | {out}
+            | {param_detail}: arg3: integer variable out
+              | {name arg3}: arg3: integer variable out
+              | {type_int}: integer
 
 The statement ending at line XXXX
 
@@ -21684,7 +21678,7 @@ END;
 The statement ending at line XXXX
 
 CREATE VIEW ViewShape AS
-SELECT CAST(1 AS BOOL) AS a, 2.5 AS b, 'xxx' AS c;
+SELECT CAST(1 AS BOOL) AS a, 2.5 AS b, 'xyz' AS c;
 
   {create_view_stmt}: ViewShape: { a: bool notnull, b: real notnull, c: text notnull }
   | {int 0}
@@ -21709,7 +21703,7 @@ SELECT CAST(1 AS BOOL) AS a, 2.5 AS b, 'xxx' AS c;
         |     |   |   | {name b}
         |     |   | {select_expr_list}
         |     |     | {select_expr}: c: text notnull
-        |     |       | {strlit 'xxx'}: text notnull
+        |     |       | {strlit 'xyz'}: text notnull
         |     |       | {opt_as_alias}
         |     |         | {name c}
         |     | {select_from_etc}: ok
@@ -48569,7 +48563,7 @@ SET sens_text := ( SELECT trim(name)
 
 The statement ending at line XXXX
 
-SET sens_text := ( SELECT trim("xxx", name) AS result
+SET sens_text := ( SELECT trim("xyz", name) AS result
   FROM with_sensitive );
 
   {assign}: sens_text: text variable sensitive
@@ -48585,7 +48579,7 @@ SET sens_text := ( SELECT trim("xxx", name) AS result
     |     |   | | {call_arg_list}
     |     |   |   | {call_filter_clause}
     |     |   |   | {arg_list}: ok
-    |     |   |     | {strlit 'xxx'}: text notnull
+    |     |   |     | {strlit 'xyz'}: text notnull
     |     |   |     | {arg_list}
     |     |   |       | {name name}: name: text sensitive
     |     |   | {opt_as_alias}
@@ -50274,4 +50268,155 @@ END;
           |   | {name x}: x: integer notnull
           | {insert_list}
             | {int 2}: integer notnull
+
+The statement ending at line XXXX
+
+CREATE PROC proc_savepoint_basic ()
+BEGIN
+  PROC SAVEPOINT
+  BEGIN
+    IF 1 THEN
+      ROLLBACK RETURN;
+    ELSE
+      COMMIT RETURN;
+    END IF;
+  END;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name proc_savepoint_basic}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {proc_savepoint_stmt}: ok
+        | {stmt_list}: ok
+          | {if_stmt}: integer notnull
+            | {cond_action}: integer notnull
+            | | {int 1}: integer notnull
+            | | {stmt_list}: ok
+            |   | {rollback_return_stmt}: ok
+            | {if_alt}: ok
+              | {else}: ok
+                | {stmt_list}: ok
+                  | {commit_return_stmt}: ok
+
+The statement ending at line XXXX
+
+CREATE PROC proc_savepoint_error_in_stmt_list ()
+BEGIN
+  PROC SAVEPOINT
+  BEGIN
+    SET X := NOT 'x';
+  END;
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+
+  {create_proc_stmt}: err
+  | {name proc_savepoint_error_in_stmt_list}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {proc_savepoint_stmt}: err
+        | {stmt_list}: err
+          | {assign}: err
+            | {name X}: X: integer variable
+            | {not}: err
+              | {strlit 'x'}: text notnull
+
+The statement ending at line XXXX
+
+PROC SAVEPOINT
+BEGIN
+END;
+
+Error at test/sem_test.sql:XXXX : in proc_savepoint_stmt : CQL0351: statement should be in a procedure and at the top level
+
+  {proc_savepoint_stmt}: err
+
+The statement ending at line XXXX
+
+CREATE PROC savepoint_nested ()
+BEGIN
+  IF 1 THEN
+    PROC SAVEPOINT
+    BEGIN
+    END;
+  END IF;
+END;
+
+Error at test/sem_test.sql:XXXX : in proc_savepoint_stmt : CQL0351: statement should be in a procedure and at the top level
+
+  {create_proc_stmt}: err
+  | {name savepoint_nested}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {if_stmt}: err
+        | {cond_action}: err
+        | | {int 1}: integer notnull
+        | | {stmt_list}: err
+        |   | {proc_savepoint_stmt}: err
+        | {if_alt}
+
+The statement ending at line XXXX
+
+CREATE PROC rollback_return_invalid ()
+BEGIN
+  IF 1 THEN
+    ROLLBACK RETURN;
+  END IF;
+END;
+
+Error at test/sem_test.sql:XXXX : in rollback_return_stmt : CQL0350: statement must appear inside of a PROC SAVEPOINT block
+
+  {create_proc_stmt}: err
+  | {name rollback_return_invalid}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {if_stmt}: err
+        | {cond_action}: err
+        | | {int 1}: integer notnull
+        | | {stmt_list}: err
+        |   | {rollback_return_stmt}: err
+        | {if_alt}
+
+The statement ending at line XXXX
+
+CREATE PROC commit_return_invalid ()
+BEGIN
+  IF 1 THEN
+    COMMIT RETURN;
+  END IF;
+END;
+
+Error at test/sem_test.sql:XXXX : in commit_return_stmt : CQL0350: statement must appear inside of a PROC SAVEPOINT block
+
+  {create_proc_stmt}: err
+  | {name commit_return_invalid}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {if_stmt}: err
+        | {cond_action}: err
+        | | {int 1}: integer notnull
+        | | {stmt_list}: err
+        |   | {commit_return_stmt}: err
+        | {if_alt}
+
+The statement ending at line XXXX
+
+CREATE PROC regular_return_invalid ()
+BEGIN
+  PROC SAVEPOINT
+  BEGIN
+    RETURN;
+  END;
+END;
+
+Error at test/sem_test.sql:XXXX : in return_stmt : CQL0352: use COMMIT RETURN or ROLLBACK RETURN in within a proc savepoint block
+
+  {create_proc_stmt}: err
+  | {name regular_return_invalid}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {proc_savepoint_stmt}: err
+        | {stmt_list}: err
+          | {return_stmt}: err
 

@@ -886,4 +886,10 @@ Error at test/sem_test.sql:XXXX : in str : CQL0186: duplicate stored proc name '
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'iif'
 Error at test/sem_test.sql:XXXX : in str : CQL0082: argument must be numeric 'iif'
 Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expression 'iif'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in proc_savepoint_stmt : CQL0351: statement should be in a procedure and at the top level
+Error at test/sem_test.sql:XXXX : in proc_savepoint_stmt : CQL0351: statement should be in a procedure and at the top level
+Error at test/sem_test.sql:XXXX : in rollback_return_stmt : CQL0350: statement must appear inside of a PROC SAVEPOINT block
+Error at test/sem_test.sql:XXXX : in commit_return_stmt : CQL0350: statement must appear inside of a PROC SAVEPOINT block
+Error at test/sem_test.sql:XXXX : in return_stmt : CQL0352: use COMMIT RETURN or ROLLBACK RETURN in within a proc savepoint block
 semantic errors present; no code gen.

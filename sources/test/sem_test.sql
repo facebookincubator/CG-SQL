@@ -752,7 +752,7 @@ where 'w'
 having 'x'
 limit 'y';
 
--- TEST: select with bogus order by xxx limit xxx
+-- TEST: select with bogus order by x limit x
 -- + Error % name not found 'bogus'
 -- + Error % expected numeric expression 'LIMIT'
 -- +2 Error
@@ -2164,7 +2164,6 @@ call proc3(1, 'foo');
 -- test method with some out arguments, used in tests below
 create procedure proc_with_output(in arg1 integer, inout arg2 integer, out arg3 integer)
 begin
-  declare xxx int;
 end;
 
 -- TEST: can't use an integer for inout arg
@@ -6027,7 +6026,7 @@ create proc two_arg_sources_fully_redundant(like args1, like args1, like args1)
 begin
 end;
 
-create view ViewShape as select cast(1 as bool) a, 2.5 b, 'xxx' c;
+create view ViewShape as select cast(1 as bool) a, 2.5 b, 'xyz' c;
 
 -- + CREATE PROC like_a_view (a_ BOOL NOT NULL, b_ REAL NOT NULL, c_ TEXT NOT NULL)
 -- +   SELECT *
@@ -11948,7 +11947,7 @@ set sens_text := (select trim(name) from with_sensitive);
 -- + {call}: text notnull sensitive
 -- + {name trim}: text notnull sensitive
 -- - Error
-set sens_text := (select trim("xxx", name) result from with_sensitive);
+set sens_text := (select trim("xyz", name) result from with_sensitive);
 
 -- TEST: call cql_cursor_format on a auto cursor
 -- + {create_proc_stmt}: ok dml_proc
@@ -12403,4 +12402,87 @@ set an_int := iif(an_int is null, 2, iif(1, 2, 3));
 create proc test_update_cursor_using()
 begin
   update cursor small_cursor using 2 x;
+end;
+
+-- TEST basic use of proc savepoint rollback return and commit return
+-- + {create_proc_stmt}: ok dml_proc
+-- + {name proc_savepoint_basic}: ok dml_proc
+-- + {proc_savepoint_stmt}: ok
+-- + {rollback_return_stmt}: ok
+-- + {commit_return_stmt}: ok
+create proc proc_savepoint_basic()
+begin
+  proc savepoint
+  begin
+     if 1 then
+       rollback return;
+     else
+       commit return;
+     end if;
+  end;
+end;
+
+-- TEST proc savepoint with an error, the outer statement should be marked error
+-- + {create_proc_stmt}: err
+-- + {proc_savepoint_stmt}: err
+-- + Error % string operand not allowed in 'NOT'
+create proc proc_savepoint_error_in_stmt_list()
+begin
+  proc savepoint
+  begin
+     set X := not 'x';
+  end;
+end;
+
+-- TEST: proc savepoint invalid outside of a proc
+-- + {proc_savepoint_stmt}: err
+-- + Error % should be in a procedure and at the top level
+-- +1 Error
+proc savepoint begin end;
+
+-- TEST: proc savepoint invalid outside of a proc
+-- + {proc_savepoint_stmt}: err
+-- + Error % should be in a procedure and at the top level
+-- +1 Error
+create proc savepoint_nested()
+begin
+   if 1 then
+     proc savepoint begin end;
+   end if;
+end;
+
+-- TEST: rollback return invalid outside of proc savepoint
+-- + {rollback_return_stmt}: err
+-- + Error % statement must appear inside of a PROC SAVEPOINT block
+-- +1 Error
+create proc rollback_return_invalid()
+begin
+   if 1 then
+     rollback return;
+   end if;
+end;
+
+-- TEST: commit return invalid outside of proc savepoint
+-- + {commit_return_stmt}: err
+-- + Error % statement must appear inside of a PROC SAVEPOINT block
+-- +1 Error
+create proc commit_return_invalid()
+begin
+   if 1 then
+     commit return;
+   end if;
+end;
+
+-- TEST: may not use a return statement inside of a savepoint block
+-- + {create_proc_stmt}: err
+-- + {proc_savepoint_stmt}: err
+-- + {return_stmt}: err
+-- + Error % use COMMIT RETURN or ROLLBACK RETURN in within a proc savepoint block
+-- +1 Error
+create proc regular_return_invalid()
+begin
+   proc savepoint
+   begin
+     return;
+   end;
 end;

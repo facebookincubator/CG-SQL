@@ -262,6 +262,9 @@ static bool_t has_dml;
 // If the current context is a trigger statement list
 static bool_t in_trigger;
 
+// If we are within a proc savepoint block, then true
+static bool_t in_proc_savepoint;
+
 // The schema version can be overrided to look at previous versions for upgrade scripts
 // -1 indicates that the lastest schema should be used
 static int32_t schema_upgrade_version;
@@ -13712,6 +13715,7 @@ static void sem_inside_create_proc_stmt(ast_node *ast) {
   has_dml = 0;
   current_variables = locals = symtab_new();
   between_count = 0;
+  in_proc_savepoint = false;
 
   // we process the parameter list even if there are no statements
   if (params) {
@@ -15614,11 +15618,10 @@ static void sem_leave_stmt(ast_node *ast) {
   sem_last_statement_in_block(ast);
 }
 
-
 // Return should not appear at the top level, it's redundant.  It also should be
 // the last thing in a statement block.
-static void sem_return_stmt(ast_node *ast) {
-  Contract(is_ast_return_stmt(ast));
+static void sem_return_common(ast_node *ast) {
+  Contract(is_ast_return_stmt(ast) || is_ast_rollback_return_stmt(ast) || is_ast_commit_return_stmt(ast));
 
   // RETURN
   if (sem_stmt_level <= 1) {
@@ -15632,6 +15635,76 @@ static void sem_return_stmt(ast_node *ast) {
 
   sem_last_statement_in_block(ast);
 }
+
+// The usual return rules plus a return statement may not appear inside of a proc savepoint
+// you have to use either rollback or commit return.
+static void sem_return_stmt(ast_node *ast) {
+  if (in_proc_savepoint) {
+    report_error(ast, "CQL0352: use COMMIT RETURN or ROLLBACK RETURN in within a proc savepoint block", NULL);
+    record_error(ast);
+    return;
+  }
+  sem_return_common(ast);
+}
+
+// Must be inside of a proc savepoint plus the usual return rules
+static void sem_commit_return_stmt(ast_node *ast) {
+  Contract(is_ast_commit_return_stmt(ast));
+
+  if (!in_proc_savepoint) {
+    report_error(ast, "CQL0350: statement must appear inside of a PROC SAVEPOINT block", NULL);
+    record_error(ast);
+    return;
+  }
+
+  // and the usual return rules
+  sem_return_common(ast);
+}
+
+// Must be inside of a proc savepoint plus the usual return rules
+static void sem_rollback_return_stmt(ast_node *ast) {
+  Contract(is_ast_rollback_return_stmt(ast));
+
+  if (!in_proc_savepoint) {
+    report_error(ast, "CQL0350: statement must appear inside of a PROC SAVEPOINT block", NULL);
+    record_error(ast);
+    return;
+  }
+
+  // and the usual return rules
+  sem_return_common(ast);
+}
+
+// The rules here:
+//  * it must be in a procedure
+//  * it must be at the top level
+static void sem_proc_savepoint_stmt(ast_node *ast)
+{
+  Contract(is_ast_proc_savepoint_stmt(ast));
+  EXTRACT(stmt_list, ast->left);
+
+  if (!current_proc || sem_stmt_level != 1 ) {
+    report_error(ast, "CQL0351: statement should be in a procedure and at the top level", NULL);
+    record_error(ast);
+    return;
+  }
+
+  Invariant(!in_proc_savepoint);
+
+  if (stmt_list) {
+   in_proc_savepoint = true;
+   sem_stmt_list(stmt_list);
+   in_proc_savepoint = false;
+
+   if (is_error(stmt_list)) {
+     record_error(ast);
+     return;
+    }
+  }
+
+  record_ok(ast);
+}
+
 
 // No analysis needed here other than that the two statement lists are ok.
 static void sem_trycatch_stmt(ast_node *ast) {
@@ -17004,6 +17077,8 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(leave_stmt);
   STMT_INIT(continue_stmt);
   STMT_INIT(return_stmt);
+  STMT_INIT(rollback_return_stmt);
+  STMT_INIT(commit_return_stmt);
   STMT_INIT(call_stmt);
   STMT_INIT(declare_vars_type);
   STMT_INIT(assign);
@@ -17068,6 +17143,7 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(begin_schema_region_stmt);
   STMT_INIT(end_schema_region_stmt);
   STMT_INIT(schema_ad_hoc_migration_stmt);
+  STMT_INIT(proc_savepoint_stmt);
 
   AGGR_FUNC_INIT(count);
   AGGR_FUNC_INIT(max);
@@ -17273,6 +17349,7 @@ cql_noexport void sem_cleanup() {
   in_trigger = false;
   in_upsert = false;
   loop_depth = 0;
+  in_proc_savepoint = false;
   max_previous_schema_version = -1;
   memset(&enforcement, 0, sizeof(enforcement));
   monitor_jptr = NULL;
