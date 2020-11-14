@@ -15662,8 +15662,8 @@ static void sem_trycatch_stmt(ast_node *ast) {
 static void sem_throw_stmt(ast_node *ast) {
   Contract(is_ast_throw_stmt(ast));
 
-  // always ok to throw :D
-  record_ok(ast);
+  // ok to throw at the end of any block
+  sem_last_statement_in_block(ast);
 }
 
 // Begin trans can go anywhere, it's ok.

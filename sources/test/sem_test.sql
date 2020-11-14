@@ -2009,6 +2009,16 @@ begin
   throw; -- whatever, anything
 end;
 
+-- TEST: throw not at the end of a block
+-- + Error % statement should be the last thing in a statement list
+-- +1 Error
+-- + {create_proc_stmt}: err
+create procedure proc_throw_not_at_end()
+begin
+  throw;
+  declare x integer;
+end;
+
 -- TEST: procedure call with arguments mixing in/out legally
 -- - Error
 -- + {create_proc_stmt}: ok

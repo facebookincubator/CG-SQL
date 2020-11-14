@@ -63,7 +63,6 @@ s/[[:<:]]CROSS[[:>:]]/"CROSS"/g
 s/[[:<:]]CSTRLIT[[:>:]]/"c-string-literal"/g
 s/[[:<:]]CURRENT_ROW[[:>:]]/"CURRENT ROW"/g
 s/[[:<:]]CURSOR[[:>:]]/"CURSOR"/g
-s/[[:<:]]CURSOR_FOR[[:>:]]/"CURSOR FOR"/g
 s/[[:<:]]DECLARE[[:>:]]/"DECLARE"/g
 s/[[:<:]]DEFAULT[[:>:]]/"DEFAULT"/g
 s/[[:<:]]DEFERRABLE[[:>:]]/"DEFERRABLE"/g
@@ -199,4 +198,5 @@ s/[[:<:]]WITHOUT[[:>:]]/"WITHOUT"/g
 s/[[:<:]]AT_CREATE[[:>:]]/"@CREATE"/g
 s/[[:<:]]AT_DELETE[[:>:]]/"@DELETE"/g
 s/[[:<:]]CHECK[[:>:]]/"CHECK"/g
+s/[[:<:]]FOR[[:>:]]/"FOR"/g
 s/[ ][ ]*$//

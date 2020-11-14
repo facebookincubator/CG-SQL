@@ -147,6 +147,7 @@ FUNC                         { return FUNC; }
 BEGIN                        { return BEGIN_; }
 IN                           { return IN; }
 TO                           { return TO; }
+FOR                          { return FOR; }
 THROW                        { return THROW; }
 TRY                          { return TRY; }
 CATCH                        { return CATCH; }
@@ -159,7 +160,6 @@ BETWEEN                      { return BETWEEN; }
 OUT                          { return OUT; }
 INOUT                        { return INOUT; }
 CURSOR                       { return CURSOR; }
-CURSOR[ \t\n]FOR             { return CURSOR_FOR; }
 DECLARE                      { return DECLARE; }
 FETCH                        { return FETCH; }
 LOOP                         { return LOOP; }

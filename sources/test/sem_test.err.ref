@@ -171,6 +171,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'arg1'
 Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'arg2'
 Error at test/sem_test.sql:XXXX : in str : CQL0175: duplicate parameter name 'arg1'
 Error at test/sem_test.sql:XXXX : in str : CQL0186: duplicate stored proc name 'proc3'
+Error at test/sem_test.sql:XXXX : in throw_stmt : CQL0308: statement should be the last thing in a statement list
 Error at test/sem_test.sql:XXXX : in str : CQL0197: duplicate variable name in the same scope 'arg1'
 Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'bar'
 Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'T'

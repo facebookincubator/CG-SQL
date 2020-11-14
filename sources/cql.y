@@ -153,7 +153,7 @@ static void cql_reset_globals(void);
 %token DESC INNER FCOUNT AUTOINCREMENT DISTINCT
 %token LIMIT OFFSET TEMP TRIGGER IF ALL CROSS USING RIGHT
 %token UNIQUE HAVING SET TO DISTINCTROW
-%token FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR CURSOR_FOR DECLARE FETCH LOOP LEAVE CONTINUE
+%token FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR DECLARE FETCH LOOP LEAVE CONTINUE FOR
 %token OPEN CLOSE ELSE_IF WHILE CALL TRY CATCH THROW RETURN
 %token SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
 %token CAST WITH RECURSIVE REPLACE IGNORE ADD COLUMN RENAME ALTER
@@ -1449,13 +1449,13 @@ params[result]:
 
 declare_stmt:
   DECLARE name_list data_type_opt_notnull  { $declare_stmt = new_ast_declare_vars_type($name_list, $data_type_opt_notnull); }
-  | DECLARE name CURSOR_FOR select_stmt  { $declare_stmt = new_ast_declare_cursor($name, $select_stmt); }
-  | DECLARE name CURSOR_FOR explain_stmt  { $declare_stmt = new_ast_declare_cursor($name, $explain_stmt); }
-  | DECLARE name CURSOR_FOR call_stmt  { $declare_stmt = new_ast_declare_cursor($name, $call_stmt); }
+  | DECLARE name CURSOR FOR select_stmt  { $declare_stmt = new_ast_declare_cursor($name, $select_stmt); }
+  | DECLARE name CURSOR FOR explain_stmt  { $declare_stmt = new_ast_declare_cursor($name, $explain_stmt); }
+  | DECLARE name CURSOR FOR call_stmt  { $declare_stmt = new_ast_declare_cursor($name, $call_stmt); }
   | DECLARE name CURSOR FETCH FROM call_stmt  { $declare_stmt = new_ast_declare_value_cursor($name, $call_stmt); }
   | DECLARE name CURSOR shape_def  { $declare_stmt = new_ast_declare_cursor_like_name($name, $shape_def); }
   | DECLARE name CURSOR LIKE select_stmt  { $declare_stmt = new_ast_declare_cursor_like_select($name, $select_stmt); }
-  | DECLARE name[id] CURSOR_FOR name[obj] { $declare_stmt = new_ast_declare_cursor($id, $obj); }
+  | DECLARE name[id] CURSOR FOR name[obj] { $declare_stmt = new_ast_declare_cursor($id, $obj); }
   ;
 
 call_stmt:

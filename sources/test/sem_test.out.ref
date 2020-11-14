@@ -6656,6 +6656,26 @@ Error at test/sem_test.sql:XXXX : in str : CQL0186: duplicate stored proc name '
 
 The statement ending at line XXXX
 
+CREATE PROC proc_throw_not_at_end ()
+BEGIN
+  THROW;
+  DECLARE x INTEGER;
+END;
+
+Error at test/sem_test.sql:XXXX : in throw_stmt : CQL0308: statement should be the last thing in a statement list
+
+  {create_proc_stmt}: err
+  | {name proc_throw_not_at_end}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {throw_stmt}: err
+      | {declare_vars_type}: integer
+        | {name_list}: x: integer variable
+        | | {name x}: x: integer variable
+        | {type_int}: integer
+
+The statement ending at line XXXX
+
 CREATE PROC proc4 (IN arg1 INTEGER, OUT arg2 TEXT, INOUT arg3 REAL)
 BEGIN
   CALL anything(arg1, arg3);
