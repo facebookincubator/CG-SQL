@@ -6255,6 +6255,141 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
+CREATE PROC base_proc_savepoint ()
+BEGIN
+  PROC SAVEPOINT
+  BEGIN
+    DECLARE X INTEGER;
+  END;
+END;
+*/
+
+CQL_WARN_UNUSED cql_code base_proc_savepoint(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_nullable_int32 X;
+  cql_set_null(X);
+
+  _rc_ = cql_exec(_db_,
+    "SAVEPOINT base_proc_savepoint");
+  if (_rc_ != SQLITE_OK) goto cql_cleanup;
+  // try
+  {
+    _rc_ = cql_exec(_db_,
+      "RELEASE SAVEPOINT base_proc_savepoint");
+    if (_rc_ != SQLITE_OK) goto catch_start_8;
+    goto catch_end_8;
+  }
+  catch_start_8: {
+    _rc_ = cql_exec(_db_,
+      "ROLLBACK TRANSACTION TO SAVEPOINT base_proc_savepoint");
+    if (_rc_ != SQLITE_OK) goto cql_cleanup;
+    cql_best_error(&_rc_);
+    goto cql_cleanup;
+  }
+  catch_end_8:;
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  return _rc_;
+}
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC base_proc_savepoint_commit_return ()
+BEGIN
+  PROC SAVEPOINT
+  BEGIN
+    IF 1 THEN
+      COMMIT RETURN;
+    END IF;
+  END;
+END;
+*/
+
+CQL_WARN_UNUSED cql_code base_proc_savepoint_commit_return(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  _rc_ = cql_exec(_db_,
+    "SAVEPOINT base_proc_savepoint_commit_return");
+  if (_rc_ != SQLITE_OK) goto cql_cleanup;
+  // try
+  {
+    if (1) {
+      _rc_ = cql_exec(_db_,
+        "RELEASE SAVEPOINT base_proc_savepoint_commit_return");
+      if (_rc_ != SQLITE_OK) goto catch_start_9;
+      _rc_ = SQLITE_OK; // clean up any SQLITE_ROW value or other non-error
+      goto cql_cleanup; // return
+    }
+    _rc_ = cql_exec(_db_,
+      "RELEASE SAVEPOINT base_proc_savepoint_commit_return");
+    if (_rc_ != SQLITE_OK) goto catch_start_9;
+    goto catch_end_9;
+  }
+  catch_start_9: {
+    _rc_ = cql_exec(_db_,
+      "ROLLBACK TRANSACTION TO SAVEPOINT base_proc_savepoint_commit_return");
+    if (_rc_ != SQLITE_OK) goto cql_cleanup;
+    cql_best_error(&_rc_);
+    goto cql_cleanup;
+  }
+  catch_end_9:;
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  return _rc_;
+}
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC base_proc_savepoint_rollback_return ()
+BEGIN
+  PROC SAVEPOINT
+  BEGIN
+    IF 1 THEN
+      ROLLBACK RETURN;
+    END IF;
+  END;
+END;
+*/
+
+CQL_WARN_UNUSED cql_code base_proc_savepoint_rollback_return(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  _rc_ = cql_exec(_db_,
+    "SAVEPOINT base_proc_savepoint_rollback_return");
+  if (_rc_ != SQLITE_OK) goto cql_cleanup;
+  // try
+  {
+    if (1) {
+      _rc_ = cql_exec(_db_,
+        "ROLLBACK TRANSACTION TO SAVEPOINT base_proc_savepoint_rollback_return");
+      if (_rc_ != SQLITE_OK) goto catch_start_10;
+      _rc_ = SQLITE_OK; // clean up any SQLITE_ROW value or other non-error
+      goto cql_cleanup; // return
+    }
+    _rc_ = cql_exec(_db_,
+      "RELEASE SAVEPOINT base_proc_savepoint_rollback_return");
+    if (_rc_ != SQLITE_OK) goto catch_start_10;
+    goto catch_end_10;
+  }
+  catch_start_10: {
+    _rc_ = cql_exec(_db_,
+      "ROLLBACK TRANSACTION TO SAVEPOINT base_proc_savepoint_rollback_return");
+    if (_rc_ != SQLITE_OK) goto cql_cleanup;
+    cql_best_error(&_rc_);
+    goto cql_cleanup;
+  }
+  catch_end_10:;
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  return _rc_;
+}
+
+// The statement ending at line XXXX
+
+/*
 CREATE PROC end_proc ()
 BEGIN
   DECLARE x INTEGER;

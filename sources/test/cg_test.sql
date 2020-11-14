@@ -2729,6 +2729,50 @@ set l0_nullable := cql_get_blob_size((select blob_var));
 -- + l2 = cql_get_blob_size(blob_var2);
 set l2 := cql_get_blob_size(blob_var2);
 
+-- TEST: test basic proc savepoint structure
+-- + "SAVEPOINT base_proc_savepoint");
+-- + // try
+-- + "RELEASE SAVEPOINT base_proc_savepoint");
+-- + catch_start% {
+-- + "ROLLBACK TRANSACTION TO SAVEPOINT base_proc_savepoint");
+-- + cql_best_error(&_rc_);
+-- + catch_end%:;
+create proc base_proc_savepoint()
+begin
+  proc savepoint
+  begin
+    declare X integer;
+  end;
+end;
+
+-- TEST: commit returns will have two commit  paths
+-- +1 "SAVEPOINT base_proc_savepoint_commit_return"
+-- +2 "RELEASE SAVEPOINT base_proc_savepoint_commit_return"
+-- +1 "ROLLBACK TRANSACTION TO SAVEPOINT base_proc_savepoint_commit_return"
+create proc base_proc_savepoint_commit_return()
+begin
+  proc savepoint
+  begin
+    if 1 then
+      commit return;
+    end if;
+  end;
+end;
+
+-- TEST: rollback returns will have two rollback paths
+-- +1 "SAVEPOINT base_proc_savepoint_rollback_return"
+-- +2 "ROLLBACK TRANSACTION TO SAVEPOINT base_proc_savepoint_rollback_return"
+-- +1 "RELEASE SAVEPOINT base_proc_savepoint_rollback_return"
+create proc base_proc_savepoint_rollback_return()
+begin
+  proc savepoint
+  begin
+    if 1 then
+      rollback return;
+    end if;
+  end;
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------
@@ -2738,3 +2782,4 @@ create proc end_proc() begin declare x integer; end;
 -- + cql_code cql_startup(sqlite3 *_Nonnull _db_)
 declare end_marker integer;
 --------------------------------------------------------------------
+

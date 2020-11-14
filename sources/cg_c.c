@@ -3675,7 +3675,7 @@ static void cg_leave_stmt(ast_node *ast) {
 
 // Only SQL loops are allowed to use C loops, so "break" is perfect
 static void cg_return_stmt(ast_node *ast) {
-  Contract(is_ast_return_stmt(ast));
+  Contract(is_ast_return_stmt(ast) || is_ast_rollback_return_stmt(ast) || is_ast_commit_return_stmt(ast));
 
   // RETURN
   bool_t dml_proc = is_dml_proc(current_proc->sem->sem_type);
@@ -3685,6 +3685,27 @@ static void cg_return_stmt(ast_node *ast) {
   bprintf(cg_main_output, "goto %s; // return\n", CQL_CLEANUP_DEFAULT_LABEL);
   return_used = true;
 }
+
+static void cg_rollback_return_stmt(ast_node *ast) {
+  Contract(is_ast_rollback_return_stmt(ast));
+
+  AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
+  ast_node *rollback  = new_ast_rollback_trans_stmt(new_ast_str(current_proc_name()));
+  AST_REWRITE_INFO_RESET();
+  cg_bound_sql_statement(NULL, rollback, CG_EXEC);
+  cg_return_stmt(ast);
+}
+
+static void cg_commit_return_stmt(ast_node *ast) {
+  Contract(is_ast_commit_return_stmt(ast));
+
+  AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
+  ast_node *commit = new_ast_release_savepoint_stmt(new_ast_str(current_proc_name()));
+  AST_REWRITE_INFO_RESET();
+  cg_bound_sql_statement(NULL, commit, CG_EXEC);
+  cg_return_stmt(ast);
+}
+
 
 // This is a no-op in sqlite.
 static void cg_open_stmt(ast_node *ast) {
@@ -4308,11 +4329,7 @@ static void cg_upsert_stmt(ast_node *ast) {
 // "goto" the current error target.  That target is usually CQL_CLEANUP_DEFAULT_LABEL.
 // Inside the try block, the cleanup handler is changed to the catch block.
 // The catch block puts it back.  Otherwise, generate nested statements as usual.
-static void cg_trycatch_stmt(ast_node *ast) {
-  Contract(is_ast_trycatch_stmt(ast));
-  EXTRACT_NAMED(try_list, stmt_list, ast->left);
-  EXTRACT_NAMED(catch_list, stmt_list, ast->right);
-
+static void cg_trycatch_helper(ast_node *try_list, ast_node *try_extras, ast_node *catch_list) {
   CHARBUF_OPEN(catch_start);
   CHARBUF_OPEN(catch_end);
 
@@ -4331,6 +4348,10 @@ static void cg_trycatch_stmt(ast_node *ast) {
   bprintf(cg_main_output, "// try\n{\n");
 
   cg_stmt_list(try_list);
+
+  if (try_extras) {
+    cg_stmt_list(try_extras);
+  }
 
   // If we get to the end, skip the catch block.
   bprintf(cg_main_output, "  goto %s;\n}\n", catch_end.ptr);
@@ -4352,6 +4373,34 @@ static void cg_trycatch_stmt(ast_node *ast) {
 
   CHARBUF_CLOSE(catch_end);
   CHARBUF_CLOSE(catch_start);
+}
+
+// the helper does all the work, see those notes
+static void cg_trycatch_stmt(ast_node *ast) {
+  Contract(is_ast_trycatch_stmt(ast));
+  EXTRACT_NAMED(try_list, stmt_list, ast->left);
+  EXTRACT_NAMED(catch_list, stmt_list, ast->right);
+
+  cg_trycatch_helper(try_list, NULL, catch_list);
+}
+
+// this is just a special try/catch
+static void cg_proc_savepoint_stmt(ast_node *ast) {
+  Contract(is_ast_proc_savepoint_stmt(ast));
+  EXTRACT(stmt_list, ast->left);
+
+  if (stmt_list) {
+    AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
+    ast_node *savepoint = new_ast_savepoint_stmt(new_ast_str(current_proc_name()));
+    ast_node *release   = new_ast_release_savepoint_stmt(new_ast_str(current_proc_name()));
+    ast_node *rollback  = new_ast_rollback_trans_stmt(new_ast_str(current_proc_name()));
+    ast_node *try_extra_stmts = new_ast_stmt_list(release, NULL);
+    ast_node *throw_stmt = new_ast_throw_stmt();
+    ast_node *catch_stmts = new_ast_stmt_list(rollback, new_ast_stmt_list(throw_stmt, NULL));
+    AST_REWRITE_INFO_RESET();
+    cg_bound_sql_statement(NULL, savepoint, CG_EXEC);
+    cg_trycatch_helper(stmt_list, try_extra_stmts, catch_stmts);
+  }
 }
 
 // Convert _rc_ into an error code.  If it already is one keep it.
@@ -4445,7 +4494,6 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
       bprintf(out, ";\n*/\n");
     }
   }
-
 
   // These are all the statements there are, we have to find it in this table
   // or else someone added a new statement and it isn't supported yet.
@@ -5527,6 +5575,8 @@ static void cg_c_init(void) {
   STMT_INIT(leave_stmt);
   STMT_INIT(continue_stmt);
   STMT_INIT(return_stmt);
+  STMT_INIT(rollback_return_stmt);
+  STMT_INIT(commit_return_stmt);
   STMT_INIT(call_stmt);
   STMT_INIT(declare_vars_type);
   STMT_INIT(assign);
@@ -5536,6 +5586,7 @@ static void cg_c_init(void) {
   STMT_INIT(declare_func_stmt);
   STMT_INIT(declare_select_func_stmt);
   STMT_INIT(trycatch_stmt);
+  STMT_INIT(proc_savepoint_stmt);
   STMT_INIT(throw_stmt);
 
   STMT_INIT(declare_cursor);
