@@ -1173,6 +1173,18 @@ CREATE TABLE foo(
   id INTEGER COLLATE bar CHECK(id = 3 AND goo = 5) 
 );
 
+CREATE PROC foo ()
+BEGIN
+  PROC SAVEPOINT
+  BEGIN
+    IF 1 THEN
+      ROLLBACK RETURN;
+    ELSE
+      COMMIT RETURN;
+    END IF;
+  END;
+END;
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

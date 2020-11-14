@@ -2691,6 +2691,28 @@ static void gen_return_stmt(ast_node *ast) {
   gen_printf("RETURN");
 }
 
+static void gen_rollback_return_stmt(ast_node *ast) {
+  Contract(is_ast_rollback_return_stmt(ast));
+
+  gen_printf("ROLLBACK RETURN");
+}
+
+static void gen_commit_return_stmt(ast_node *ast) {
+  Contract(is_ast_commit_return_stmt(ast));
+
+  gen_printf("COMMIT RETURN");
+}
+
+static void gen_proc_savepoint_stmt(ast_node *ast) {
+  Contract(is_ast_proc_savepoint_stmt(ast));
+  EXTRACT(stmt_list, ast->left);
+
+  gen_printf("PROC SAVEPOINT");
+  gen_printf("\nBEGIN\n");
+  gen_stmt_list(stmt_list);
+  gen_printf("END");
+}
+
 static void gen_throw_stmt(ast_node *ast) {
   Contract(is_ast_throw_stmt(ast));
 
@@ -3033,6 +3055,8 @@ cql_noexport void gen_init() {
   STMT_INIT(leave_stmt);
   STMT_INIT(continue_stmt);
   STMT_INIT(return_stmt);
+  STMT_INIT(rollback_return_stmt);
+  STMT_INIT(commit_return_stmt);
   STMT_INIT(call_stmt);
   STMT_INIT(declare_vars_type);
   STMT_INIT(assign);
@@ -3078,6 +3102,7 @@ cql_noexport void gen_init() {
   STMT_INIT(begin_trans_stmt);
   STMT_INIT(commit_trans_stmt);
   STMT_INIT(rollback_trans_stmt);
+  STMT_INIT(proc_savepoint_stmt);
   STMT_INIT(savepoint_stmt);
   STMT_INIT(release_savepoint_stmt);
   STMT_INIT(close_stmt);

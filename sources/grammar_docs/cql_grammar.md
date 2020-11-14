@@ -10,7 +10,7 @@
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Fri Nov 13 00:54:21 PST 2020
+Snapshot as of Fri Nov 13 15:43:31 PST 2020
 
 ### Operators and Literals
 
@@ -55,7 +55,7 @@ OUTER JOIN WHERE GROUP BY ORDER ASC
 DESC INNER FCOUNT AUTOINCREMENT DISTINCT
 LIMIT OFFSET TEMP TRIGGER IF ALL CROSS USING RIGHT
 UNIQUE HAVING SET TO DISTINCTROW
-FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR CURSOR_FOR DECLARE FETCH LOOP LEAVE CONTINUE
+FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR DECLARE FETCH LOOP LEAVE CONTINUE FOR
 OPEN CLOSE ELSE_IF WHILE CALL TRY CATCH THROW RETURN
 SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
 CAST WITH RECURSIVE REPLACE IGNORE ADD COLUMN RENAME ALTER
@@ -123,6 +123,8 @@ any_stmt: select_stmt
   | loop_stmt
   | leave_stmt
   | return_stmt
+  | rollback_return_stmt
+  | commit_return_stmt
   | continue_stmt
   | if_stmt
   | open_stmt
@@ -134,6 +136,7 @@ any_stmt: select_stmt
   | begin_trans_stmt
   | rollback_trans_stmt
   | commit_trans_stmt
+  | proc_savepoint_stmt
   | savepoint_stmt
   | release_savepoint_stmt
   | echo_stmt
@@ -1079,13 +1082,13 @@ params:
 
 declare_stmt:
   "DECLARE" name_list data_type_opt_notnull
-  | "DECLARE" name "CURSOR FOR" select_stmt
-  | "DECLARE" name "CURSOR FOR" explain_stmt
-  | "DECLARE" name "CURSOR FOR" call_stmt
+  | "DECLARE" name "CURSOR" "FOR" select_stmt
+  | "DECLARE" name "CURSOR" "FOR" explain_stmt
+  | "DECLARE" name "CURSOR" "FOR" call_stmt
   | "DECLARE" name "CURSOR" "FETCH" "FROM" call_stmt
   | "DECLARE" name "CURSOR" shape_def
   | "DECLARE" name "CURSOR" "LIKE" select_stmt
-  | "DECLARE" name "CURSOR FOR" name
+  | "DECLARE" name "CURSOR" "FOR" name
   ;
 
 call_stmt:
@@ -1107,6 +1110,14 @@ leave_stmt:
 
 return_stmt:
   "RETURN"
+  ;
+
+rollback_return_stmt:
+  "ROLLBACK" "RETURN"
+  ;
+
+commit_return_stmt:
+  "COMMIT" "RETURN"
   ;
 
 throw_stmt:
@@ -1202,6 +1213,9 @@ commit_trans_stmt:
   "COMMIT" "TRANSACTION"
   ;
 
+proc_savepoint_stmt:  procedure "SAVEPOINT" "BEGIN" opt_stmt_list "END"
+  ;
+
 savepoint_stmt:
   "SAVEPOINT" name
   | "SAVEPOINT" "@PROC"
@@ -1252,7 +1266,7 @@ trigger_action:
 
 opt_foreachrow:
   /* nil */
-  | "FOR EACH ROW"
+  | "FOR" "EACH" "ROW"
   ;
 
 opt_when_expr:

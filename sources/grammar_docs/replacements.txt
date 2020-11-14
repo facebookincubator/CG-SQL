@@ -91,7 +91,6 @@ s/[[:<:]]FETCH[[:>:]]/"FETCH"/g
 s/[[:<:]]FILTER[[:>:]]/"FILTER"/g
 s/[[:<:]]FOLLOWING[[:>:]]/"FOLLOWING"/g
 s/[[:<:]]FOREIGN[[:>:]]/"FOREIGN"/g
-s/[[:<:]]FOR_EACH_ROW[[:>:]]/"FOR EACH ROW"/g
 s/[[:<:]]FROM[[:>:]]/"FROM"/g
 s/[[:<:]]FUNC[[:>:]]/"FUNC"/g
 s/[[:<:]]FUNCTION[[:>:]]/"FUNCTION"/g
@@ -199,4 +198,5 @@ s/[[:<:]]AT_CREATE[[:>:]]/"@CREATE"/g
 s/[[:<:]]AT_DELETE[[:>:]]/"@DELETE"/g
 s/[[:<:]]CHECK[[:>:]]/"CHECK"/g
 s/[[:<:]]FOR[[:>:]]/"FOR"/g
+s/[[:<:]]FOR_EACH_ROW[[:>:]]/"FOR" "EACH" "ROW"/g
 s/[ ][ ]*$//

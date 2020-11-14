@@ -789,5 +789,8 @@ AST0(end_schema_region_stmt);
 AST1(schema_ad_hoc_migration_stmt);
 AST(region_spec);
 AST(region_list);
+AST1(proc_savepoint_stmt);
+AST0(rollback_return_stmt);
+AST0(commit_return_stmt);
 
 #pragma clang diagnostic pop

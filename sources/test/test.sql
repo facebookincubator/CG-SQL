@@ -1109,6 +1109,18 @@ create table foo
  id integer collate bar check (id = 3 and goo = 5)
 );
 
+create proc foo()
+begin
+  proc savepoint 
+  begin
+     if 1 then
+       rollback return;
+     else
+       commit return;
+     end if;
+  end;
+end;
+
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 
 # 1 "long/path/I/do/not/like"

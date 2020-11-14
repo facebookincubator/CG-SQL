@@ -216,19 +216,19 @@ static void cql_reset_globals(void);
 %type <aval> begin_trans_stmt
 %type <aval> call_stmt
 %type <aval> close_stmt
-%type <aval> commit_trans_stmt
+%type <aval> commit_trans_stmt commit_return_stmt
 %type <aval> continue_stmt
 %type <aval> declare_stmt
 %type <aval> echo_stmt
 %type <aval> fetch_stmt fetch_values_stmt fetch_call_stmt fetch_cursor_stmt from_cursor
-%type <aval> if_stmt elseif_item elseif_list opt_else opt_elseif_list
+%type <aval> if_stmt elseif_item elseif_list opt_else opt_elseif_list proc_savepoint_stmt
 %type <aval> leave_stmt return_stmt
 %type <aval> loop_stmt
 %type <aval> open_stmt
 %type <aval> out_stmt out_union_stmt
 %type <aval> previous_schema_stmt
 %type <aval> release_savepoint_stmt
-%type <aval> rollback_trans_stmt
+%type <aval> rollback_trans_stmt rollback_return_stmt
 %type <aval> savepoint_stmt
 %type <aval> schema_upgrade_script_stmt
 %type <aval> schema_upgrade_version_stmt
@@ -317,6 +317,8 @@ any_stmt: select_stmt
   | loop_stmt
   | leave_stmt
   | return_stmt
+  | rollback_return_stmt
+  | commit_return_stmt
   | continue_stmt
   | if_stmt
   | open_stmt
@@ -328,6 +330,7 @@ any_stmt: select_stmt
   | begin_trans_stmt
   | rollback_trans_stmt
   | commit_trans_stmt
+  | proc_savepoint_stmt
   | savepoint_stmt
   | release_savepoint_stmt
   | echo_stmt
@@ -1479,6 +1482,14 @@ return_stmt:
   RETURN  { $return_stmt = new_ast_return_stmt(); }
   ;
 
+rollback_return_stmt:
+  ROLLBACK RETURN { $rollback_return_stmt = new_ast_rollback_return_stmt(); }
+  ;
+
+commit_return_stmt:
+  COMMIT RETURN  { $commit_return_stmt = new_ast_commit_return_stmt(); }
+  ;
+
 throw_stmt:
   THROW  { $throw_stmt = new_ast_throw_stmt(); }
   ;
@@ -1593,6 +1604,11 @@ rollback_trans_stmt:
 
 commit_trans_stmt:
   COMMIT TRANSACTION  { $commit_trans_stmt = new_ast_commit_trans_stmt(); }
+  ;
+
+proc_savepoint_stmt:  procedure SAVEPOINT BEGIN_ opt_stmt_list END {
+    $proc_savepoint_stmt = new_ast_proc_savepoint_stmt($opt_stmt_list);
+  }
   ;
 
 savepoint_stmt:
