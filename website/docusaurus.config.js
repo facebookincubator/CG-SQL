@@ -20,7 +20,7 @@ module.exports = {
   projectName: 'cg-sql',
   themeConfig: {
     navbar: {
-      title: 'CQ/SQL',
+      title: 'CG/SQL',
       items: [
         {
           to: 'docs/introduction',
