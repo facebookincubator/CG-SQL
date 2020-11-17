@@ -30,8 +30,8 @@
 // an optimization.
 //
 
-typedef uint32_t sem_t;
-#define sem_not(x) u32_not(x)
+typedef uint64_t sem_t;
+#define sem_not(x) u64_not(x)
 
 typedef struct sem_node {
   sem_t sem_type;                   // core type plus flags
@@ -140,9 +140,10 @@ cql_data_decl( bytebuf *recreate_annotations );
 #define SEM_TYPE_SENSITIVE     0x4000000   // set if the object is privacy sensitive
 #define SEM_TYPE_DEPLOYABLE    0x8000000   // set if the object is a deployable region
 #define SEM_TYPE_BOXED        0x10000000   // set if a cursor's lifetime is managed by a box object
-#define SEM_TYPE_HAS_CHECK    0x20000000   // set for table columsn with a "check" clause
-#define SEM_TYPE_HAS_COLLATE  0x40000000   // set for table columss with a "collate" clause
-#define SEM_TYPE_FLAGS        0x7FFFFF00   // all the flag bits we have so far
+#define SEM_TYPE_HAS_CHECK    0x20000000   // set for table column with a "check" clause
+#define SEM_TYPE_HAS_COLLATE  0x40000000   // set for table column with a "collate" clause
+#define SEM_TYPE_USES_THROW   0x80000000   // set for a procedure that has a throw in it
+#define SEM_TYPE_FLAGS        0xFFFFFF00   // all the flag bits we have so far
 
 #define SEM_EXPR_CONTEXT_NONE           0x001
 #define SEM_EXPR_CONTEXT_SELECT_LIST    0x002
@@ -238,3 +239,4 @@ cql_data_decl( charbuf *error_capture );
 // These are the symbol tables with the accumulated included/excluded regions
 cql_data_decl( symtab *included_regions );
 cql_data_decl( symtab *excluded_regions );
+cql_data_decl( sem_t global_proc_flags );

@@ -30,6 +30,8 @@ BEGIN
 END;
 */
 
+#undef _PROC_
+#define _PROC_ "assembly_core"
 static int32_t assembly_core_perf_index;
 
 cql_string_literal(assembly_core_stored_procedure_name, "assembly_core");
@@ -124,7 +126,7 @@ CQL_WARN_UNUSED cql_code assembly_core(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nu
   cql_multibind(&_rc_, _db_, _result_, 2,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, id_,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, id_);
-  if (_rc_ != SQLITE_OK) goto cql_cleanup;
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 
 cql_cleanup:

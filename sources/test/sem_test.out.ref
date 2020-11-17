@@ -6676,6 +6676,51 @@ Error at test/sem_test.sql:XXXX : in throw_stmt : CQL0308: statement should be t
 
 The statement ending at line XXXX
 
+CREATE PROC throw_before_out ()
+BEGIN
+  BEGIN TRY
+    DECLARE C CURSOR FOR SELECT 1 AS x;
+    FETCH C;
+  END TRY
+  BEGIN CATCH
+    THROW;
+  END CATCH;
+  OUT C;
+END;
+
+  {create_proc_stmt}: C: select: { x: integer notnull } variable dml_proc auto_cursor uses_out uses_throw
+  | {name throw_before_out}: C: select: { x: integer notnull } variable dml_proc auto_cursor uses_out uses_throw
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {trycatch_stmt}: ok
+      | | {stmt_list}: ok
+      | | | {declare_cursor}: C: select: { x: integer notnull } variable
+      | | | | {name C}: C: select: { x: integer notnull } variable auto_cursor
+      | | | | {select_stmt}: select: { x: integer notnull }
+      | | |   | {select_core_list}: select: { x: integer notnull }
+      | | |   | | {select_core}: select: { x: integer notnull }
+      | | |   |   | {select_expr_list_con}: select: { x: integer notnull }
+      | | |   |     | {select_expr_list}: select: { x: integer notnull }
+      | | |   |     | | {select_expr}: x: integer notnull
+      | | |   |     |   | {int 1}: integer notnull
+      | | |   |     |   | {opt_as_alias}
+      | | |   |     |     | {name x}
+      | | |   |     | {select_from_etc}: ok
+      | | |   |       | {select_where}
+      | | |   |         | {select_groupby}
+      | | |   |           | {select_having}
+      | | |   | {select_orderby}
+      | | |     | {select_limit}
+      | | |       | {select_offset}
+      | | | {fetch_stmt}: C: select: { x: integer notnull } variable auto_cursor
+      | |   | {name C}: C: select: { x: integer notnull } variable auto_cursor
+      | | {stmt_list}: ok
+      |   | {throw_stmt}: ok
+      | {out_stmt}: C: select: { x: integer notnull } variable auto_cursor
+        | {name C}: C: select: { x: integer notnull } variable auto_cursor
+
+The statement ending at line XXXX
+
 CREATE PROC proc4 (IN arg1 INTEGER, OUT arg2 TEXT, INOUT arg3 REAL)
 BEGIN
   CALL anything(arg1, arg3);
@@ -50283,8 +50328,8 @@ BEGIN
   END;
 END;
 
-  {create_proc_stmt}: ok dml_proc
-  | {name proc_savepoint_basic}: ok dml_proc
+  {create_proc_stmt}: ok dml_proc uses_throw
+  | {name proc_savepoint_basic}: ok dml_proc uses_throw
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {proc_savepoint_stmt}: ok

@@ -27,11 +27,11 @@
 // This code is used in the event of a THROW inside a stored proc.  When that happens
 // we want to keep the result code we have if there was a recent error. If we recently
 // got a success, then use SQLITE_ERROR as the thrown error instead.
-void cql_best_error(cql_code *_Nonnull prc) {
-  cql_code rc = *prc;
+cql_code cql_best_error(cql_code rc) {
   if (rc == SQLITE_OK || rc == SQLITE_DONE || rc == SQLITE_ROW) {
-    *prc = SQLITE_ERROR;
+    return SQLITE_ERROR;
   }
+  return rc;
 }
 
 // The indicated statement should be immediately finalized out latest result was not SQLITE_OK

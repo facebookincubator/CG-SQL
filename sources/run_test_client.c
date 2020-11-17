@@ -26,6 +26,7 @@ cql_code test_cql_bytebuf_alloc_within_bytebuf_exp_growth_cap(sqlite3 *db);
 cql_code test_cql_bytebuf_alloc_over_bytebuf_exp_growth_cap(sqlite3 *db);
 
 static int32_t steps_until_fail = 0;
+static int32_t trace_received = 0;
 
 #undef sqlite3_step
 
@@ -61,6 +62,11 @@ cql_code mockable_sqlite3_step(sqlite3_stmt *stmt) {
 }
 
 cql_code run_client(sqlite3 *db) {
+
+  E(fails_because_bogus_table(db) != SQLITE_OK, "procedure should have returned an error\n");
+  E(trace_received == 1, "failure proc did not trigger a trace\n");
+  E(!cql_outstanding_refs, "outstanding refs in fails_because_bogus_table: %d\n", cql_outstanding_refs);
+
   SQL_E(test_c_rowsets(db), NULL);
   E(!cql_outstanding_refs, "outstanding refs in test_c_rowsets: %d\n", cql_outstanding_refs);
 
@@ -114,6 +120,25 @@ cql_code run_client(sqlite3 *db) {
     cql_outstanding_refs);
 
   return SQLITE_OK;
+}
+
+void run_test_trace_callback(const char *proc, const char *file, int32_t line) {
+  if (strcmp(proc, "fails_because_bogus_table"))  {
+    printf("failure trace not recieved on correct proc\n");
+    return;
+  }
+
+  if (!file || strlen(file) < 8) {
+    printf("callback file not a reasonable value\n");
+    return;
+  }
+
+  if (line < 1000) {
+    printf("line number in callback not a reasonable value\n");
+    return;
+  }
+
+  trace_received++;
 }
 
 cql_code test_c_rowsets(sqlite3 *db) {

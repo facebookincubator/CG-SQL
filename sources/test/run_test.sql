@@ -27,7 +27,6 @@ BEGIN_TEST(arithmetic)
   EXPECT(1+-3 == -2);
 END_TEST(arithmetic)
 
-
 declare side_effect_0_count integer not null;
 declare side_effect_1_count integer not null;
 declare side_effect_null_count integer not null;
@@ -2779,5 +2778,29 @@ BEGIN_TEST(cursor_args)
   call dummy(from args);
 END_TEST(cursor_args)
 
-
 END_SUITE()
+
+-- manually force tracing on by redefining the macros
+@echo c,"#undef cql_error_trace\n";
+@echo c,"#define cql_error_trace() run_test_trace_callback(_PROC_, __FILE__, __LINE__)\n";
+@echo c,"void run_test_trace_callback(const char *proc, const char *file, int32_t line);\n";
+
+-- this table will never actually be created, only declared
+-- hence it is a good source of db errors
+create table does_not_exist(id integer);
+
+create proc fails_because_bogus_table()
+begin
+   begin try
+     declare D cursor for select * from does_not_exist;
+   end try;
+   begin catch
+     -- this code would have been lost because there was a successful op
+     drop table if exists does_not_exist;
+     -- now we save the code
+     throw;
+   end catch;
+end;
+
+@echo c,"#undef cql_error_trace\n";
+@echo c,"#define cql_error_trace()\n";

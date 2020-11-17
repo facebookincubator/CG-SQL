@@ -432,7 +432,7 @@ set longint_var := (l0_nullable + l1_nullable) * 5;
 -- + cql_multibind(&_rc_, _db_, &foo_cursor, 2,
 -- +               CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, i2,
 -- +               CQL_DATA_TYPE_INT32, &i0_nullable);
--- + if (_rc_ != SQLITE_OK) goto cql_cleanup;
+-- + if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 declare foo_cursor cursor for select id, i2 from foo where id = i0_nullable;
 
 -- TEST: fetch a cursor
@@ -442,7 +442,7 @@ declare foo_cursor cursor for select id, i2 from foo where id = i0_nullable;
 -- + cql_multifetch(_rc_, foo_cursor, 2,
 -- +                CQL_DATA_TYPE_INT32, &i0_nullable,
 -- +                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &i2);
--- + if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) goto cql_cleanup;
+-- + if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
 fetch foo_cursor into i0_nullable, i2;
 
 -- TEST: test elementary cursor on select with no tables, still round trips through sqlite
@@ -481,9 +481,9 @@ close exchange_cursor;
 -- +  "SELECT ? + 1"
 -- + cql_multibind(&_rc_, _db_, &_temp_stmt, 1,
 -- +               CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, i2);
--- + if (_rc_ != SQLITE_OK) goto cql_cleanup;
+-- + if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 -- + _rc_ = sqlite3_step(_temp_stmt);
--- + if (_rc_ != SQLITE_ROW) goto cql_cleanup;
+-- + if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
 -- + i2 = sqlite3_column_int(_temp_stmt, 0);
 -- + cql_finalize_stmt(&_temp_stmt);
 set i2 := (select i2+1);
@@ -509,11 +509,11 @@ begin
 end;
 
 -- TEST: a simple stored proc that throws
--- + if (_rc_ != SQLITE_OK) goto catch_start_1;
+-- + if (_rc_ != SQLITE_OK) { cql_error_trace(); goto catch_start_1; }
 -- + goto catch_end_1;
 -- + catch_start_1: {
 -- + printf("error\n");
--- + cql_best_error(&_rc_);
+-- + _rc_ = cql_best_error(_rc_thrown_);
 -- + goto cql_cleanup;
 -- + catch_end_1:
 -- + _rc_ = SQLITE_OK;
@@ -869,7 +869,7 @@ set S := 'x';
 declare proc xyzzy(id integer) ( A integer not null );
 
 -- + _rc_ = xyzzy(_db_, &xyzzy_cursor, _tmp_n_int_%);
--- +  if (_rc_ != SQLITE_OK) goto cql_cleanup;
+-- +  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 create proc xyzzy_test()
 begin
   declare xyzzy_cursor cursor for call xyzzy(1);
@@ -982,7 +982,7 @@ end;
 -- + _C_has_row_ = _rc_ == SQLITE_ROW;
 -- + cql_multifetch(_rc_, C, 1,
 -- +                CQL_DATA_TYPE_INT32, output);
--- + if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) goto cql_cleanup;
+-- + if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
 -- + *result = _C_has_row_;
 create proc outint_nullable(out output integer, out result bool not null)
 begin
@@ -996,7 +996,7 @@ END;
 -- + _C_has_row_ = _rc_ == SQLITE_ROW;
 -- + cql_multifetch(_rc_, C, 1,
 -- +                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, output);
--- + if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) goto cql_cleanup;
+-- + if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
 -- + *result = _C_has_row_;
 create proc outint_notnull(out output integer not null, out result bool not null)
 begin
@@ -1167,7 +1167,7 @@ end;
 -- TEST: drop table
 -- + _rc_ = cql_exec(_db_,
 -- + "DROP TABLE IF EXISTS bar"
--- + if (_rc_ != SQLITE_OK) goto cql_cleanup;
+-- + if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 -- + _rc_ = SQLITE_OK;
 create proc drop_table_test()
 begin
@@ -1405,7 +1405,7 @@ end;
 -- + read_cursor_proc_C_row C_ = { ._refs_count_ = 3, ._refs_offset_ = read_cursor_proc_C_refs_offset };
 -- +2 cql_teardown_row(C_);
 -- +1 _rc_ = out_cursor_proc(_db_, (out_cursor_proc_row *)&C_);
--- + if (_rc_ != SQLITE_OK) goto cql_cleanup;
+-- + if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 create proc read_cursor_proc()
 begin
   declare C cursor fetch from call out_cursor_proc();
@@ -1432,7 +1432,7 @@ declare proc totally_void_proc();
 -- TEST: call out proc like a function
 -- + SET i2 := outparm_test();
 -- + _rc_ = outparm_test(_db_, &i2);
--- +  if (_rc_ != SQLITE_OK) goto cql_cleanup;
+-- +  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 set i2 := outparm_test();
 
 declare proc compute(in a_ integer not null, out b_ integer not null);
@@ -1447,9 +1447,9 @@ declare proc dml_compute(in a_ integer not null, out b_ integer not null) USING 
 
 -- TEST: call out proc like a function, this one has args and uses the db
 -- + _rc_ = dml_compute(_db_, 1, &_tmp_int_1);
--- + if (_rc_ != SQLITE_OK) goto cql_cleanup;
+-- + if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 -- + _rc_ = dml_compute(_db_, _tmp_int_1, &i2);
--- + if (_rc_ != SQLITE_OK) goto cql_cleanup;
+-- + if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 set i2 := dml_compute(dml_compute(1));
 
 -- TEST: write the result of a proc-as-func call to an out variable
@@ -1507,7 +1507,7 @@ end;
 
 -- TEST: no cleanup label needed proc
 -- - cql_cleanup
--- + if (_rc_ != SQLITE_OK) goto catch_start
+-- + if (_rc_ != SQLITE_OK) { cql_error_trace(); goto catch_start%; }
 -- + catch_start%:
 create proc no_cleanup_label_needed_proc()
 begin
@@ -1762,7 +1762,7 @@ end;
 -- + loop_statement_cursor_C_row C_ = { 0 };
 -- + "SELECT 1"
 -- + C_._has_row_ = _rc_ == SQLITE_ROW;
--- + if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) goto cql_cleanup;
+-- + if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
 -- + if (!C_._has_row_) break
 create proc loop_statement_cursor()
 begin
@@ -1779,7 +1779,7 @@ end;
 -- + cql_int32 A_ = 0;
 -- + "SELECT 1"
 -- + _C_has_row_ = _rc_ == SQLITE_ROW;
--- + if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) goto cql_cleanup;
+-- + if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
 -- + if (!_C_has_row_) break
 create proc loop_statement_not_auto_cursor()
 begin
@@ -2178,7 +2178,7 @@ END;
 -- + "foo (id) AS (SELECT 1 AS id) "
 -- + "INSERT INTO bar(id) VALUES(ifnull(( SELECT id "
 -- + "FROM foo ), 0))");
--- + if (_rc_ != SQLITE_OK) goto cql_cleanup;
+-- + if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 with foo(id) as (select 1 id)
 insert into bar(id)
 values (ifnull((select id from foo), 0))
@@ -2190,7 +2190,7 @@ values (ifnull((select id from foo), 0))
 -- + "INSERT INTO bar(id) VALUES(1) "
 -- + "ON CONFLICT (id) DO UPDATE "
 -- + "SET id = 10");
--- + if (_rc_ != SQLITE_OK) goto cql_cleanup;
+-- + if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 insert into bar(id) values(1) @dummy_seed(1338)
 on conflict(id) do
 update set id=10;
@@ -2269,7 +2269,7 @@ end;
 -- +                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C_.x,
 -- +                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C_.y);
 -- NOT PRESENT !!
--- -   if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) goto cql_cleanup;
+-- -   if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
 -- +   if (!C_._has_row_) break;
 -- + }
 -- + cql_object_release(c_result_set_);
@@ -2303,7 +2303,7 @@ end;
 -- slightly different call path
 -- + _rc_ = out_union_from_select_fetch_results(_db_, &c_result_set_);
 -- + c_row_num_ = c_row_count_ = -1;
--- + if (_rc_ != SQLITE_OK) goto cql_cleanup;
+-- + if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 -- + c_row_count_ = cql_result_set_get_count((cql_result_set_ref)c_result_set_);
 create proc out_union_dml_reader()
 begin
@@ -2735,7 +2735,7 @@ set l2 := cql_get_blob_size(blob_var2);
 -- + "RELEASE SAVEPOINT base_proc_savepoint");
 -- + catch_start% {
 -- + "ROLLBACK TRANSACTION TO SAVEPOINT base_proc_savepoint");
--- + cql_best_error(&_rc_);
+-- + _rc_ = cql_best_error(_rc_thrown_);
 -- + catch_end%:;
 create proc base_proc_savepoint()
 begin
@@ -2782,4 +2782,3 @@ create proc end_proc() begin declare x integer; end;
 -- + cql_code cql_startup(sqlite3 *_Nonnull _db_)
 declare end_marker integer;
 --------------------------------------------------------------------
-

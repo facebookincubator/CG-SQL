@@ -2019,6 +2019,22 @@ begin
   declare x integer;
 end;
 
+-- TEST: the out statement will force the proc type to be recomputed, it must not lose the
+-- throw state when that happens.
+-- + {create_proc_stmt}: C: select: { x: integer notnull } variable dml_proc auto_cursor uses_out uses_throw
+-- - Error
+create proc throw_before_out()
+begin
+  begin try
+    declare C cursor for select 1 x;
+    fetch C;
+  end try;
+  begin catch
+    throw;
+  end catch;
+  out C;
+end;
+
 -- TEST: procedure call with arguments mixing in/out legally
 -- - Error
 -- + {create_proc_stmt}: ok
@@ -12486,3 +12502,4 @@ begin
      return;
    end;
 end;
+

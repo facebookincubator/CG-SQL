@@ -114,6 +114,9 @@ static symtab *string_literals;
 // Statement text fragments are frequently duplicated, we want a unique constant for each chunk of DML/DDL
 static symtab *text_fragments;
 
+// If the proc we are generating uses throw, we need to save the _rc_ in every catch block
+static bool_t proc_uses_throw = false;
+
 // return the symbol name for the string literal if there is one
 static CSTR find_literal(CSTR str) {
   symtab_entry *entry = symtab_find(string_literals, str);
@@ -129,6 +132,25 @@ static CSTR current_proc_name() {
   }
 
   return NULL;
+}
+
+// generate an error if the given expression is true (note this drives tracing)
+static void cg_error_on_expr(CSTR expr) {
+  bprintf(cg_main_output, "if (%s) { cql_error_trace(); goto %s; }\n", expr, error_target);
+  error_target_used = true;
+}
+
+// generate an error if the return code is not the required value (helper for common case)
+static void cg_error_on_rc_notequal(CSTR required) {
+  CHARBUF_OPEN(tmp);
+  bprintf(&tmp, "_rc_ != %s", required);
+  cg_error_on_expr(tmp.ptr);
+  CHARBUF_CLOSE(tmp);
+}
+
+// generate an error if the return code is not SQLITE_OK (helper for common case)
+static void cg_error_on_not_sqlite_ok() {
+  cg_error_on_expr("_rc_ != SQLITE_OK");
 }
 
 // We have a series of masks to remember if we have emitted any given scratch variable.
@@ -2022,10 +2044,9 @@ static void cg_expr_select(ast_node *ast, CSTR op, charbuf *is_null, charbuf *va
 
   // exactly one column is allowed, already checked in semantic analysis, fetch it
   bprintf(cg_main_output, "_rc_ = sqlite3_step(_temp_stmt);\n");
-  bprintf(cg_main_output, "if (_rc_ != SQLITE_ROW) goto %s;\n", error_target);
+  cg_error_on_rc_notequal("SQLITE_ROW");
   cg_get_column(sem_type_result, "_temp_stmt", 0, result_var.ptr, cg_main_output);
   bprintf(cg_main_output, "cql_finalize_stmt(&_temp_stmt);\n");
-  error_target_used = 1;
 
   CG_CLEANUP_RESULT_VAR();
 
@@ -2390,6 +2411,15 @@ static void cg_struct_teardown_info(charbuf *output, sem_struct *sptr, CSTR name
   CHARBUF_CLOSE(count_sym);
 }
 
+// Emit the return code variables for the procedure
+// if the procedure uses throw then it needs the saved RC as well so we can re-throw it
+void cg_emit_rc_vars(charbuf *output) {
+  bprintf(output, "  %s _rc_ = SQLITE_OK;\n", rt->cql_code);
+  if (proc_uses_throw) {
+    bprintf(output, "  %s _rc_thrown_ = SQLITE_OK;\n", rt->cql_code);
+  }
+}
+
 // Emitting a stored proc is mostly setup.  We have a bunch of housekeeping to do:
 //  * create new scratch buffers for the body and the locals and the cleanup section
 //  * save the current output globals
@@ -2419,6 +2449,9 @@ static void cg_create_proc_stmt(ast_node *ast) {
     cg_proc_result_set(ast);
     return;
   }
+
+  // set up proc_uses_throw from the state bits
+  proc_uses_throw = !!(ast->sem->sem_type & SEM_TYPE_USES_THROW);
 
   CHARBUF_OPEN(proc_fwd_ref);
   CHARBUF_OPEN(proc_body);
@@ -2461,6 +2494,9 @@ static void cg_create_proc_stmt(ast_node *ast) {
   CHARBUF_OPEN(proc_decl);
   CG_CHARBUF_OPEN_SYM(proc_name_base, name);
   CG_CHARBUF_OPEN_SYM(proc_sym, name, suffix);
+
+  bprintf(cg_declarations_output, "#undef _PROC_\n");
+  bprintf(cg_declarations_output, "#define _PROC_ \"%s\"\n", proc_sym.ptr);
 
   if (out_stmt_proc || out_union_proc) {
     cg_c_struct_for_sptr(cg_fwd_ref_output, ast->sem->sptr, NULL);
@@ -2566,7 +2602,7 @@ static void cg_create_proc_stmt(ast_node *ast) {
   bprintf(cg_declarations_output, "%s) {\n", proc_decl.ptr);
 
   if (dml_proc) {
-    bprintf(cg_declarations_output, "  %s _rc_ = SQLITE_OK;\n", rt->cql_code);
+    cg_emit_rc_vars(cg_declarations_output);
     if (result_set_proc) {
       bprintf(cg_declarations_output, "  *_result_ = NULL;\n");
     }
@@ -3155,12 +3191,12 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_fl
     bprintf(cg_main_output, ");\n");
   }
 
-  bprintf(cg_main_output, "if (_rc_ != SQLITE_OK) goto %s;\n", error_target);
-  error_target_used = 1;
+  cg_error_on_not_sqlite_ok();
 
   if (exec_only && vars) {
     bprintf(cg_main_output, "_rc_ = sqlite3_step(%s);\n", stmt_name);
-    bprintf(cg_main_output, "if (_rc_ != SQLITE_DONE) goto %s;\n", error_target);
+    cg_error_on_rc_notequal("SQLITE_DONE");
+
     bprintf(cg_main_output, "cql_finalize_stmt(&%s);\n", stmt_name);
   }
 
@@ -3498,8 +3534,7 @@ static void cg_fetch_stmt(ast_node *ast) {
   }
   bprintf(cg_main_output, ");\n");
   if (!uses_out_union) {
-    bprintf(cg_main_output, "if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) goto %s;\n", error_target);
-    error_target_used = 1;
+    cg_error_on_expr("_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE");
   }
 }
 
@@ -4084,8 +4119,7 @@ static void cg_user_func(ast_node *ast, charbuf *is_null, charbuf *value) {
     bprintf(cg_main_output, "%s;\n", invocation.ptr);
     if (dml_proc) {
       // cascade the failure
-      bprintf(cg_main_output, "if (_rc_ != SQLITE_OK) goto %s;\n", error_target);
-      error_target_used = 1;
+      cg_error_on_not_sqlite_ok();
     }
   }
   else if (is_create_func(func_stmt->sem->sem_type)) {
@@ -4223,8 +4257,7 @@ static void cg_call_stmt_with_cursor(ast_node *ast, CSTR cursor_name) {
 
   if (dml_proc) {
     // cascade the failure
-    bprintf(cg_main_output, "if (_rc_ != SQLITE_OK) goto %s;\n", error_target);
-    error_target_used = 1;
+    cg_error_on_not_sqlite_ok();
   }
 
   if (out_union_proc) {
@@ -4367,6 +4400,10 @@ static void cg_trycatch_helper(ast_node *try_list, ast_node *try_extras, ast_nod
 
   bprintf(cg_main_output, "{\n");
 
+  if (proc_uses_throw) {
+    bprintf(cg_main_output, "  _rc_thrown_ = _rc_;\n");
+  }
+
   cg_stmt_list(catch_list);
 
   bprintf(cg_main_output, "}\n%s:;\n", catch_end.ptr);
@@ -4408,7 +4445,7 @@ static void cg_proc_savepoint_stmt(ast_node *ast) {
 static void cg_throw_stmt(ast_node *ast) {
   Contract(is_ast_throw_stmt(ast));
 
-  bprintf(cg_main_output, "cql_best_error(&_rc_);\n");
+  bprintf(cg_main_output, "_rc_ = cql_best_error(_rc_thrown_);\n");
   bprintf(cg_main_output, "goto %s;\n", error_target);
   error_target_used = 1;
 }
@@ -5479,9 +5516,14 @@ cql_noexport void cg_c_main(ast_node *head) {
   if (global_proc_needed) {
     exit_on_no_global_proc();
 
+    proc_uses_throw = !!(global_proc_flags & SEM_TYPE_USES_THROW);
+    bprintf(&body_file, "\n#undef _PROC_\n");
+    bprintf(&body_file, "#define _PROC_ %s\n", global_proc_name);
+
     bindent(&indent, cg_scratch_vars_output, 2);
     bprintf(&body_file, "\ncql_code %s(sqlite3 *_Nonnull _db_) {\n", global_proc_name);
-    bprintf(&body_file, "  cql_code _rc_ = SQLITE_OK;\n");
+    cg_emit_rc_vars(&body_file);
+
     bprintf(&body_file, "%s", indent.ptr);
     bprintf(&body_file, "%s", cg_main_output->ptr);
     bprintf(&body_file, "\n");

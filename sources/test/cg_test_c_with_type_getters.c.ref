@@ -17,6 +17,8 @@ BEGIN
 END;
 */
 
+#undef _PROC_
+#define _PROC_ "selector"
 static int32_t selector_perf_index;
 
 cql_string_literal(selector_stored_procedure_name, "selector");
@@ -97,7 +99,7 @@ CQL_WARN_UNUSED cql_code selector(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullabl
   _rc_ = cql_prepare(_db_, _result_,
     "SELECT f1, f2, f3, f4, f5, f6, g1, g2, g3, g4, g5, g6 "
       "FROM foo");
-  if (_rc_ != SQLITE_OK) goto cql_cleanup;
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 
 cql_cleanup:

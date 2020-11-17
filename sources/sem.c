@@ -253,6 +253,9 @@ static int32_t between_count;
 // If creating debug/test output, we will hold errors for a given statement in this buffer.
 cql_data_defn( charbuf *error_capture );
 
+// The flags for the global proc (which has no ast node) this is what captures loose statements
+cql_data_defn( sem_t global_proc_flags );
+
 // If we are nested in a loop/while.
 static int32_t loop_depth;
 
@@ -1361,6 +1364,9 @@ static void get_sem_flags(sem_t sem_type, charbuf *out) {
   }
   if (sem_type & SEM_TYPE_BOXED) {
     bprintf(out, " boxed");
+  }
+  if (sem_type & SEM_TYPE_USES_THROW) {
+    bprintf(out, " uses_throw");
   }
 }
 
@@ -3970,14 +3976,17 @@ static void sem_update_proc_type_for_select(ast_node *ast) {
   }
 
   // If we haven't seen any other result type, then we're good to go, use this one.
-  if (current_proc->sem->sem_type == SEM_TYPE_OK) {
+  if (core_type_of(current_proc->sem->sem_type) == SEM_TYPE_OK) {
+    // this must survive the upgrade
+    bool_t uses_throw = !!(current_proc->sem->sem_type & SEM_TYPE_USES_THROW);
+
     // start with the source of the data for the shape
     current_proc->sem = ast->sem;
 
     // strip the out/out union flag from the source of the select
     // instead use the correct flag for the current proc
     sem_t sem_type = current_proc->sem->sem_type;
-    sem_type &= u32_not(SEM_TYPE_USES_OUT | SEM_TYPE_USES_OUT_UNION);
+    sem_type &= sem_not(SEM_TYPE_USES_OUT | SEM_TYPE_USES_OUT_UNION);
 
     // add back what we need
     if (is_out_union) {
@@ -3986,6 +3995,10 @@ static void sem_update_proc_type_for_select(ast_node *ast) {
 
     if (is_out){
       sem_type |= SEM_TYPE_USES_OUT;
+    }
+
+    if (uses_throw) {
+      sem_type |= SEM_TYPE_USES_THROW;
     }
 
     // this clones the sem entirely, replacing the flags
@@ -15702,6 +15715,9 @@ static void sem_proc_savepoint_stmt(ast_node *ast)
     }
   }
 
+  // implicit throw associated with savepoint
+  sem_add_flags(current_proc, SEM_TYPE_USES_THROW);
+
   record_ok(ast);
 }
 
@@ -15734,6 +15750,13 @@ static void sem_trycatch_stmt(ast_node *ast) {
 // Throw can literally go anywhere, so it's ok.
 static void sem_throw_stmt(ast_node *ast) {
   Contract(is_ast_throw_stmt(ast));
+
+  if (current_proc) {
+    sem_add_flags(current_proc, SEM_TYPE_USES_THROW);
+  }
+  else {
+    global_proc_flags |= SEM_TYPE_USES_THROW;
+  }
 
   // ok to throw at the end of any block
   sem_last_statement_in_block(ast);
