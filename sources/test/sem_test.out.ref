@@ -6681,7 +6681,7 @@ BEGIN
   BEGIN TRY
     DECLARE C CURSOR FOR SELECT 1 AS x;
     FETCH C;
-  END TRY
+  END TRY;
   BEGIN CATCH
     THROW;
   END CATCH;
@@ -7930,7 +7930,7 @@ The statement ending at line XXXX
 
 BEGIN TRY
   SELECT 1;
-END TRY
+END TRY;
 BEGIN CATCH
   THROW;
 END CATCH;
@@ -7958,7 +7958,7 @@ The statement ending at line XXXX
 
 BEGIN TRY
   SELECT NOT 'x';
-END TRY
+END TRY;
 BEGIN CATCH
   THROW;
 END CATCH;
@@ -7989,7 +7989,7 @@ The statement ending at line XXXX
 
 BEGIN TRY
   THROW;
-END TRY
+END TRY;
 BEGIN CATCH
   SELECT NOT 'x';
 END CATCH;

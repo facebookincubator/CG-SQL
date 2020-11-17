@@ -2763,7 +2763,7 @@ static void gen_trycatch_stmt(ast_node *ast) {
 
   gen_printf("BEGIN TRY\n");
   gen_stmt_list(try_list);
-  gen_printf("END TRY\n");
+  gen_printf("END TRY;\n");
   gen_printf("BEGIN CATCH\n");
   gen_stmt_list(catch_list);
   gen_printf("END CATCH");

@@ -2391,7 +2391,7 @@
     END;
     
     BEGIN TRY
-    END TRY
+    END TRY;
     BEGIN CATCH
     END CATCH;
     END

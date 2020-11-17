@@ -632,7 +632,7 @@ CREATE PROC foo ()
 BEGIN
   BEGIN TRY
     SELECT 'try';
-  END TRY
+  END TRY;
   BEGIN CATCH
     SELECT 'catch';
   END CATCH;
