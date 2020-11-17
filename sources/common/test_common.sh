@@ -34,6 +34,16 @@ sem_check() {
   fi
 }
 
+errors_documented() {
+  echo '--------------------------------- VERIFYING ALL ERRORS DOCUMENTED'
+  grep '"CQL[0-9][0-9][0-9][0-9]:' sem.c | sed -e 's/:.*//' -e "s/.*CQL/CQL/" | sort -u >"${OUT_DIR}/errs_used.txt"
+  grep '### CQL[0-9][0-9][0-9][0-9]:' "${ERROR_DOC}" | sed -e 's/:.*//' -e "s/.*CQL/CQL/" | sort -u >"${OUT_DIR}/errs_documented.txt"
+  echo "missing lines (usually red) need to be added to docs"
+  echo "extras lines (usually green) need to be marked as available for re-use"
+  echo "when marking lines available (remove the ':' so they don't match)"
+  echo "errors are documented in" "${ERROR_DOC}"
+  __on_diff_exit "${OUT_DIR}/errs_used.txt" "${OUT_DIR}/errs_documented.txt"
+}
 
 building() {
   echo '--------------------------------- STAGE 1 -- make clean, then make'
@@ -77,6 +87,8 @@ building() {
     cat "${OUT_DIR}/build.err"
     failed
   fi
+
+  errors_documented
 }
 
 create_unwritable_file() {
@@ -96,6 +108,7 @@ basic_test() {
   echo "  computing diffs (empty if none)"
   on_diff_exit test.out
 }
+
 
 dot_test() {
   echo '--------------------------------- STAGE 3 -- .DOT OUTPUT TEST'
