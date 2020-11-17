@@ -31,7 +31,7 @@ Make an object that can hold a cursor:
 declare obj object<T cursor>;
 ```
 
-Where T is the name of a shape. It can be a table name, or a view name, or it can be the name of the canonical procedure that returns the result.  You really want this to be  some kind of global name though.  Something you can get with a `#include` in various places. In this case choices for `T` might be `shape_source` the table or `proc_that_returns_a_shape` the procedure.
+Where `T` is the name of a shape. It can be a table name, or a view name, or it can be the name of the canonical procedure that returns the result.  You really want this to be  some kind of global name though.  Something you can get with a `#include` in various places. In this case choices for `T` might be `shape_source` the table or `proc_that_returns_a_shape` the procedure.
 
 Remember you can always make a fake procedure that returns a result to sort of typedef a shape name.  e.g.
 
