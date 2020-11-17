@@ -3725,9 +3725,12 @@ static void cg_rollback_return_stmt(ast_node *ast) {
   Contract(is_ast_rollback_return_stmt(ast));
 
   AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
-  ast_node *rollback  = new_ast_rollback_trans_stmt(new_ast_str(current_proc_name()));
+  ast_node *rollback = new_ast_rollback_trans_stmt(new_ast_str(current_proc_name()));
+  ast_node *release = new_ast_release_savepoint_stmt(new_ast_str(current_proc_name()));
   AST_REWRITE_INFO_RESET();
+
   cg_bound_sql_statement(NULL, rollback, CG_EXEC);
+  cg_bound_sql_statement(NULL, release, CG_EXEC);
   cg_return_stmt(ast);
 }
 
@@ -3737,6 +3740,7 @@ static void cg_commit_return_stmt(ast_node *ast) {
   AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
   ast_node *commit = new_ast_release_savepoint_stmt(new_ast_str(current_proc_name()));
   AST_REWRITE_INFO_RESET();
+
   cg_bound_sql_statement(NULL, commit, CG_EXEC);
   cg_return_stmt(ast);
 }
@@ -4429,11 +4433,15 @@ static void cg_proc_savepoint_stmt(ast_node *ast) {
   if (stmt_list) {
     AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
     ast_node *savepoint = new_ast_savepoint_stmt(new_ast_str(current_proc_name()));
-    ast_node *release   = new_ast_release_savepoint_stmt(new_ast_str(current_proc_name()));
+    ast_node *release1  = new_ast_release_savepoint_stmt(new_ast_str(current_proc_name()));
+    ast_node *release2  = new_ast_release_savepoint_stmt(new_ast_str(current_proc_name()));
     ast_node *rollback  = new_ast_rollback_trans_stmt(new_ast_str(current_proc_name()));
-    ast_node *try_extra_stmts = new_ast_stmt_list(release, NULL);
+    ast_node *try_extra_stmts = new_ast_stmt_list(release1, NULL);
     ast_node *throw_stmt = new_ast_throw_stmt();
-    ast_node *catch_stmts = new_ast_stmt_list(rollback, new_ast_stmt_list(throw_stmt, NULL));
+    ast_node *catch_stmts = 
+		new_ast_stmt_list(rollback, 
+                new_ast_stmt_list(release2, 
+                new_ast_stmt_list(throw_stmt, NULL)));
     AST_REWRITE_INFO_RESET();
     cg_bound_sql_statement(NULL, savepoint, CG_EXEC);
     cg_trycatch_helper(stmt_list, try_extra_stmts, catch_stmts);

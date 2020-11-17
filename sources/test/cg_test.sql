@@ -2747,7 +2747,7 @@ end;
 
 -- TEST: commit returns will have two commit  paths
 -- +1 "SAVEPOINT base_proc_savepoint_commit_return"
--- +2 "RELEASE SAVEPOINT base_proc_savepoint_commit_return"
+-- +3 "RELEASE SAVEPOINT base_proc_savepoint_commit_return"
 -- +1 "ROLLBACK TRANSACTION TO SAVEPOINT base_proc_savepoint_commit_return"
 create proc base_proc_savepoint_commit_return()
 begin
@@ -2762,7 +2762,7 @@ end;
 -- TEST: rollback returns will have two rollback paths
 -- +1 "SAVEPOINT base_proc_savepoint_rollback_return"
 -- +2 "ROLLBACK TRANSACTION TO SAVEPOINT base_proc_savepoint_rollback_return"
--- +1 "RELEASE SAVEPOINT base_proc_savepoint_rollback_return"
+-- +3 "RELEASE SAVEPOINT base_proc_savepoint_rollback_return"
 create proc base_proc_savepoint_rollback_return()
 begin
   proc savepoint

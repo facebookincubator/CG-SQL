@@ -6533,6 +6533,9 @@ CQL_WARN_UNUSED cql_code base_proc_savepoint(sqlite3 *_Nonnull _db_) {
     _rc_ = cql_exec(_db_,
       "ROLLBACK TRANSACTION TO SAVEPOINT base_proc_savepoint");
     if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+    _rc_ = cql_exec(_db_,
+      "RELEASE SAVEPOINT base_proc_savepoint");
+    if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
     _rc_ = cql_best_error(_rc_thrown_);
     goto cql_cleanup;
   }
@@ -6584,6 +6587,9 @@ CQL_WARN_UNUSED cql_code base_proc_savepoint_commit_return(sqlite3 *_Nonnull _db
     _rc_ = cql_exec(_db_,
       "ROLLBACK TRANSACTION TO SAVEPOINT base_proc_savepoint_commit_return");
     if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+    _rc_ = cql_exec(_db_,
+      "RELEASE SAVEPOINT base_proc_savepoint_commit_return");
+    if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
     _rc_ = cql_best_error(_rc_thrown_);
     goto cql_cleanup;
   }
@@ -6622,6 +6628,9 @@ CQL_WARN_UNUSED cql_code base_proc_savepoint_rollback_return(sqlite3 *_Nonnull _
       _rc_ = cql_exec(_db_,
         "ROLLBACK TRANSACTION TO SAVEPOINT base_proc_savepoint_rollback_return");
       if (_rc_ != SQLITE_OK) { cql_error_trace(); goto catch_start_10; }
+      _rc_ = cql_exec(_db_,
+        "RELEASE SAVEPOINT base_proc_savepoint_rollback_return");
+      if (_rc_ != SQLITE_OK) { cql_error_trace(); goto catch_start_10; }
       _rc_ = SQLITE_OK; // clean up any SQLITE_ROW value or other non-error
       goto cql_cleanup; // return
     }
@@ -6634,6 +6643,9 @@ CQL_WARN_UNUSED cql_code base_proc_savepoint_rollback_return(sqlite3 *_Nonnull _
     _rc_thrown_ = _rc_;
     _rc_ = cql_exec(_db_,
       "ROLLBACK TRANSACTION TO SAVEPOINT base_proc_savepoint_rollback_return");
+    if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+    _rc_ = cql_exec(_db_,
+      "RELEASE SAVEPOINT base_proc_savepoint_rollback_return");
     if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
     _rc_ = cql_best_error(_rc_thrown_);
     goto cql_cleanup;
