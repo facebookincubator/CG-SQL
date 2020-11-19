@@ -360,10 +360,11 @@ static int _cql_compat_sqlite3_strlike(const char *_Nonnull zGlob, const char *_
   sqlite3 *db;
   sqlite3_stmt *stmt = NULL;
   int rc = _cql_get_compat_db(&db);
-  if (rc == SQLITE_OK) rc = cql_sqlite3_prepare_v2(db, "SELECT like(?, ?, ?);", -1, &stmt, NULL);
+  const char *expr = cEsc ? "SELECT like(?, ?, ?);" : "SELECT like(?,?);";
+  if (rc == SQLITE_OK) rc = cql_sqlite3_prepare_v2(db, expr, -1, &stmt, NULL);
   if (rc == SQLITE_OK) rc = sqlite3_bind_text(stmt, 1, zGlob, -1, SQLITE_TRANSIENT);
   if (rc == SQLITE_OK) rc = sqlite3_bind_text(stmt, 2, zStr, -1, SQLITE_TRANSIENT);
-  if (rc == SQLITE_OK) rc = sqlite3_bind_text(stmt, 3, zEsc, 1, SQLITE_TRANSIENT);
+  if (rc == SQLITE_OK && cEsc) rc = sqlite3_bind_text(stmt, 3, zEsc, 1, SQLITE_TRANSIENT);
   if (rc == SQLITE_OK) rc = sqlite3_step(stmt);
   if (rc == SQLITE_ROW) result = !sqlite3_column_int(stmt, 0);
   cql_finalize_stmt(&stmt);

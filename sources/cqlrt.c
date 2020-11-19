@@ -147,7 +147,7 @@ cql_bool cql_string_equal(cql_string_ref _Nullable s1, cql_string_ref _Nullable 
 int cql_string_like(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2) {
   cql_invariant(s1 != NULL);
   cql_invariant(s2 != NULL);
-  return cql_compat_sqlite3_strlike(s2->ptr, s1->ptr, '%');
+  return cql_compat_sqlite3_strlike(s2->ptr, s1->ptr, '\0');
 }
 
 static void cql_result_set_finalize(cql_type_ref _Nonnull ref) {
