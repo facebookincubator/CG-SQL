@@ -1012,7 +1012,7 @@ DECLARE PROC plugh (id INTEGER);
 /*
 CREATE PROC complex_return ()
 BEGIN
-  SELECT CAST(1 AS BOOL) AS _bool, 2 AS _integer, CAST(3 AS LONG_INT) AS _longint, 3.0 AS _real, 'xxx' AS _text, CAST(NULL AS BOOL) AS _nullable_bool;
+  SELECT CAST(1 AS BOOL) AS _bool, 2 AS _integer, CAST(3 AS LONG_INT) AS _longint, 3.0 AS _real, 'xyz' AS _text, CAST(NULL AS BOOL) AS _nullable_bool;
 END;
 */
 
@@ -1113,7 +1113,7 @@ CQL_WARN_UNUSED cql_code complex_return(sqlite3 *_Nonnull _db_, sqlite3_stmt *_N
   cql_code _rc_ = SQLITE_OK;
   *_result_ = NULL;
   _rc_ = cql_prepare(_db_, _result_,
-    "SELECT CAST(1 AS BOOL), 2, CAST(3 AS LONG_INT), 3.0, 'xxx', NULL");
+    "SELECT CAST(1 AS BOOL), 2, CAST(3 AS LONG_INT), 3.0, 'xyz', NULL");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 
@@ -6660,6 +6660,13 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
+DECLARE x INTEGER NOT NULL;
+*/
+cql_int32 x = 0;
+
+// The statement ending at line XXXX
+
+/*
 CREATE PROC end_proc ()
 BEGIN
   DECLARE x INTEGER;
@@ -8407,6 +8414,202 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   SET l2 := cql_get_blob_size(blob_var2);
   */
   l2 = cql_get_blob_size(blob_var2);
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SET x := 1 * (2 / 3);
+  */
+  x = 1 * (2 / 3);
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SET x := 1 * 2 / 3;
+  */
+  x = 1 * 2 / 3;
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SET x := 1 + 2 / 3;
+  */
+  x = 1 + 2 / 3;
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SET x := 1 + (2 - 3);
+  */
+  x = 1 + (2 - 3);
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SET x := 1 + 2 * 3;
+  */
+  x = 1 + 2 * 3;
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SET x := 1 * (2 + 3);
+  */
+  x = 1 * (2 + 3);
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SET x := 1 - (2 + 3);
+  */
+  x = 1 - (2 + 3);
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SET x := 1 - (2 - 3);
+  */
+  x = 1 - (2 - 3);
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SET x := 1 - 2 - (2 - 3);
+  */
+  x = 1 - 2 - (2 - 3);
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SET x := 1 - 2 - (2 - 3);
+  */
+  x = 1 - 2 - (2 - 3);
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SET x := 1 / 2 / 3;
+  */
+  x = 1 / 2 / 3;
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SET x := 1 / (2 / 3);
+  */
+  x = 1 / (2 / 3);
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SET x := 1 / 2;
+  */
+  x = 1 / 2;
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SET x := 1 * 2 * (3 * 4);
+  */
+  x = 1 * 2 * (3 * 4);
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SET x := 1 * 2 * (3 * 4);
+  */
+  x = 1 * 2 * (3 * 4);
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SET x := 1 | 2 & 3;
+  */
+  x = (1 | 2) & 3;
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SET x := 1 | (2 & 3);
+  */
+  x = 1 | 2 & 3;
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SET x := 1 | 2 | 3;
+  */
+  x = 1 | 2 | 3;
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SET x := 1 | (2 | 3);
+  */
+  x = 1 | (2 | 3);
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SET x := 1 | (3 + 4 | 5);
+  */
+  x = 1 | (3 + 4 | 5);
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SET x := 1 | 3 + (4 | 5);
+  */
+  x = 1 | 3 + (4 | 5);
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SET x := (1 | 3) + (4 | 5);
+  */
+  x = (1 | 3) + (4 | 5);
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SET x := (1 + 2) * 5;
+  */
+  x = (1 + 2) * 5;
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SET x := 1 + 2 - 1;
+  */
+  x = 1 + 2 - 1;
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SET x := 1 << 2 | 3;
+  */
+  x = 1 << 2 | 3;
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SET x := 1 << (2 | 3);
+  */
+  x = 1 << (2 | 3);
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SET x := 1 | (2 << 3);
+  */
+  x = 1 | 2 << 3;
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SET x := 1 << (2 << 3);
+  */
+  x = 1 << (2 << 3);
 
 cql_cleanup:
   cql_string_release(t0_nullable);

@@ -153,6 +153,28 @@ static void cg_error_on_not_sqlite_ok() {
   cg_error_on_expr("_rc_ != SQLITE_OK");
 }
 
+// This tells us if a subtree should be wrapped in ()
+// Basically we know the binding strength of the context (pri) and the current element (pri_new)
+// Weaker contexts get parens.  Equal contexts get parens on the right side because all ops
+// are left to right associtive in SQL. Stronger child contexts never need parens because
+// the operator already binds tighter than its parent in the tree.
+static bool_t needs_paren(ast_node *ast, int32_t pri_new, int32_t pri) {
+  // if the priorities are different then parens are needed 
+  // if and only if the new priority (this node) is weaker than the
+  // containing priority (the parent node)
+
+  if (pri_new != pri) {
+    return pri_new < pri;
+  }
+
+  // If equal binding strength, put parens on the right of the expression
+  // because our entire world is left associative.
+  //
+  //  so e.g.  *(a, /(b,c)) becomes a*(b/c);
+
+  return ast->parent->right == ast;
+}
+
 // We have a series of masks to remember if we have emitted any given scratch variable.
 // We might need several temporaries at the same level if different types appear
 // at the same level but in practice we tend not to run into such things.  Mostly
@@ -684,7 +706,7 @@ static void cg_binary_compare(ast_node *ast, CSTR op, charbuf *is_null, charbuf 
 
   CHARBUF_OPEN(comparison);
 
-  if (pri_new < pri) {
+  if (needs_paren(ast, pri_new, pri)) {
     bprintf(&comparison, "(");
   }
 
@@ -705,7 +727,7 @@ static void cg_binary_compare(ast_node *ast, CSTR op, charbuf *is_null, charbuf 
     bprintf(&comparison, "%s(%s, %s) %s 0", rt->cql_string_compare, l_value.ptr, r_value.ptr, op);
   }
 
-  if (pri_new < pri) {
+  if (needs_paren(ast, pri_new, pri)) {
     bprintf(&comparison, ")");
   }
 
@@ -731,7 +753,7 @@ static void cg_binary_compare(ast_node *ast, CSTR op, charbuf *is_null, charbuf 
 //   * is_null and value are the usual outputs
 //   * pri is the strength of the caller
 //   * pri_new is the strength of "op"
-//     * so if pri_new < pri we need parens.  That's the canonical formula
+// The helper needs_paren() tells us if we should wrap this subtree in parens (see above)
 // If the inputs are not nullable then we can make the easy case of returning the
 // result in the value string (and 0 for is null).  Otherwise, cg_combine_nullables
 // does the job.
@@ -755,7 +777,7 @@ static void cg_binary(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, 
   bprintf(&result, "%s %s %s", l_value.ptr, op, r_value.ptr);
 
   if (is_not_nullable(sem_type_left) && is_not_nullable(sem_type_right)) {
-    if (pri_new < pri) {
+    if (needs_paren(ast, pri_new, pri)) {
       bprintf(value, "(%s)", result.ptr);
     }
     else {
@@ -873,7 +895,7 @@ static void cg_expr_is(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value,
   bool_t notnull = is_not_nullable(sem_type_left) && is_not_nullable(sem_type_right);
 
   if (notnull || refs) {
-    if (pri_new < pri) {
+    if (needs_paren(ast, pri_new, pri)) {
       bprintf(value, "(%s == %s)", l_value.ptr, r_value.ptr);
     }
     else {
@@ -938,7 +960,7 @@ static void cg_expr_is_not(ast_node *ast, CSTR op, charbuf *is_null, charbuf *va
   bool_t notnull = is_not_nullable(sem_type_left) && is_not_nullable(sem_type_right);
 
   if (notnull || refs) {
-    if (pri_new < pri) {
+    if (needs_paren(ast, pri_new, pri)) {
       bprintf(value, "(%s != %s)", l_value.ptr, r_value.ptr);
     }
     else {
@@ -1037,7 +1059,7 @@ static void cg_expr_or(ast_node *ast, CSTR str, charbuf *is_null, charbuf *value
   // it's ok if statement generation is needed for the left because that never needs to short circuit (left
   // is always evaluated).
   if (!is_nullable(sem_type_result) && right_eval.used == 1) {
-    if (pri_new < pri) {
+    if (needs_paren(ast, pri_new, pri)) {
       bprintf(value, "(");
     }
 
@@ -1048,7 +1070,7 @@ static void cg_expr_or(ast_node *ast, CSTR str, charbuf *is_null, charbuf *value
 
     CG_POP_EVAL(l);
 
-    if (pri_new < pri) {
+    if (needs_paren(ast, pri_new, pri)) {
       bprintf(value, ")");
     }
   }
@@ -1154,7 +1176,7 @@ static void cg_expr_and(ast_node *ast, CSTR str, charbuf *is_null, charbuf *valu
   // it's ok if statement generation is needed for the left because that never needs to short circuit (left
   // is always evaluated).
   if (!is_nullable(sem_type_result) && right_eval.used == 1) {
-    if (pri_new < pri) {
+    if (needs_paren(ast, pri_new, pri)) {
       bprintf(value, "(");
     }
 
@@ -1165,7 +1187,7 @@ static void cg_expr_and(ast_node *ast, CSTR str, charbuf *is_null, charbuf *valu
 
     CG_POP_EVAL(l);
 
-    if (pri_new < pri) {
+    if (needs_paren(ast, pri_new, pri)) {
       bprintf(value, ")");
     }
   }

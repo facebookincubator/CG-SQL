@@ -889,7 +889,7 @@ begin
    2 as _integer,
    cast(3 as long integer) as _longint,
    3.0 as _real,
-   'xxx' as _text,
+   'xyz' as _text,
    cast(null as bool) as _nullable_bool;
 end;
 
@@ -2772,6 +2772,101 @@ begin
     end if;
   end;
 end;
+
+DECLARE x INTEGER NOT NULL;
+
+-- TEST: a series of paren checks on left association
+
+-- + x = 1 * (2 / 3);
+SET x := 1 * (2 / 3);
+
+-- + x = 1 * 2 / 3;
+SET x := 1 * 2 / 3;
+
+-- + x = 1 + 2 / 3;
+SET x := 1 + 2 / 3;
+
+-- + x = 1 + (2 - 3);
+SET x := 1 + (2 - 3);
+
+-- + x = 1 + 2 * 3;
+SET x := 1 + 2 * 3;
+
+-- + x = 1 * (2 + 3);
+SET x := 1 * (2 + 3);
+
+-- + x = 1 - (2 + 3);
+SET x := 1 - (2 + 3);
+
+-- + x = 1 - (2 - 3);
+SET x := 1 - (2 - 3);
+
+-- + x = 1 - 2 - (2 - 3);
+SET x := 1 - 2 - (2 - 3);
+
+-- the first parens do not change eval order from left to right at all
+-- + x = 1 - 2 - (2 - 3);
+SET x := (1 - 2) - (2 - 3);
+
+-- + x = 1 / 2 / 3;
+SET x := 1 / 2 / 3;
+
+-- + x = 1 / (2 / 3);
+SET x := 1 / (2 / 3);
+
+-- + x = 1 / 2;
+SET x := 1 / 2;
+
+-- + x = 1 * 2 * (3 * 4)
+SET x := 1 * 2 * (3 * 4);
+
+-- the first parens don't change anything
+-- the second parens could matter if it was floating point
+-- + x = 1 * 2 * (3 * 4)
+SET x := (1 * 2) * (3 * 4);
+
+-- note that in C & binds tighter than | so parens are required in C
+-- note that in SQL | and & are equal so this expression left associates
+-- + x = (1 | 2) & 3;
+SET x := 1 | 2 & 3;
+
+-- + x = 1 | 2 & 3;
+SET x := 1 | (2 & 3);
+
+-- + x = 1 | 2 | 3
+SET x := 1 | 2 | 3;
+
+-- sub optimal but we're trying to preserve written order due to floating point
+-- + x = 1 | (2 | 3)
+SET x := 1 | (2 | 3);
+
+-- + x = 1 | (3 + 4 | 5);
+SET x := 1 | (3 + 4 | 5);
+
+-- + x = 1 | 3 + (4 | 5);
+SET x := 1 | 3 + (4 | 5);
+
+-- +  x = (1 | 3) + (4 | 5);
+SET x := (1 | 3) + (4 | 5);
+
+-- + x = (1 + 2) * 5;
+set x := (1 + 2) * 5;
+
+-- + x = 1 + 2 - 1;
+set x := (1 + 2) - 1;
+
+-- + x = 1 << 2 | 3;
+set x := 1 << 2 | 3;
+
+-- + x = 1 << (2 | 3);
+set x := 1 << (2 | 3);
+
+-- + x = 1 | 2 << 3
+set x := 1 | (2 << 3);
+
+-- + x = 1 << (2 << 3);
+set x := 1 << (2 << 3);
+
 
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------

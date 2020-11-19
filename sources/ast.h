@@ -236,7 +236,7 @@ cql_noexport CSTR _Nonnull get_compound_operator_name(int32_t compound_operator)
   PRI_BINARY <<   >>   &    |
   PRI_ADD     +    -
   PRI_MUL     *    /    %
-  PRI_CONCAT  ||   (nyi)
+  PRI_CONCAT  ||
 */
 
 /*
