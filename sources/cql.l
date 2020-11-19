@@ -223,9 +223,9 @@ OF                           { return OF; }
 TRIGGER                      { return TRIGGER; }
 FOR[ \t\n]EACH[ \t\n]ROW     { return FOR_EACH_ROW; }
 
-0x[0-9a-fA-F]+               { char *s = Strdup(yytext); yylval.sval = s; return strtol(s+2, NULL, 16) <= 0x7fffffff ? INTLIT: LONGLIT; }
+0x[0-9a-fA-F]+               { char *s = Strdup(yytext); yylval.sval = s; return strtoll(s+2, NULL, 16) <= 0x7fffffff ? INTLIT: LONGLIT; }
 0x[0-9a-fA-F]+L              { char *s = Strdup(yytext); s[strlen(s)-1] = 0; /* remove the L */ yylval.sval = s; return LONGLIT; }
-[0-9]+                       { char *s = Strdup(yytext); yylval.sval = s; return atol(s) <= 0x7fffffff ? INTLIT: LONGLIT; }
+[0-9]+                       { char *s = Strdup(yytext); yylval.sval = s; return atoll(s) <= 0x7fffffff ? INTLIT: LONGLIT; }
 [0-9]+L                      { char *s = Strdup(yytext); s[strlen(s)-1] = 0; /* remove the L */ yylval.sval = s; return LONGLIT; }
 
 ([0-9]+"."[0-9]*|"."[0-9]+)(E("+"|"-")?[0-9]+)? { yylval.sval = Strdup(yytext); return REALLIT; }
