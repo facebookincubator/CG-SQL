@@ -1,0 +1,1 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[20],{75:function(s){s.exports=JSON.parse('{"allTagsPath":"/blog/tags","slug":"cg-sql","name":"cg-sql","count":6,"permalink":"/blog/tags/cg-sql"}')}}]);
