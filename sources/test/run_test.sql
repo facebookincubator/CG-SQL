@@ -2778,6 +2778,23 @@ BEGIN_TEST(cursor_args)
   call dummy(from args);
 END_TEST(cursor_args)
 
+DECLARE PROCEDURE cql_exec_internal(sql TEXT NOT NULL) USING TRANSACTION;
+create table xyzzy(id integer, name text);
+
+BEGIN_TEST(exec_internal)
+  call cql_exec_internal("create table xyzzy(id integer, name text);");
+  insert into xyzzy using 1 id, 'x' name;
+  insert into xyzzy using 2 id, 'y' name;
+  declare C cursor for select * from xyzzy;
+  declare D cursor like C;
+  fetch C;
+  fetch D using 1 id, 'x' name;
+  EXPECT(cql_cursor_diff_val(C,D) is null);
+  fetch C;
+  fetch D using 2 id, 'y' name;
+  EXPECT(cql_cursor_diff_val(C,D) is null);
+END_TEST(exec_internal)
+
 END_SUITE()
 
 -- manually force tracing on by redefining the macros

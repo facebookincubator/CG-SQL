@@ -40890,7 +40890,7 @@ SELECT id,
 The statement ending at line XXXX
 
 SELECT id, 
-  row_number() OVER (ROWS BETWEEN CURRENT ROW AND CURRENT ROW UNBOUNDED FOLLOWINGEXCLUDE GROUP)
+  row_number() OVER (ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING EXCLUDE GROUP)
   FROM foo;
 
   {select_stmt}: select: { id: integer notnull, _anon: integer notnull }
@@ -50464,4 +50464,257 @@ Error at test/sem_test.sql:XXXX : in return_stmt : CQL0352: use COMMIT RETURN or
       | {proc_savepoint_stmt}: err
         | {stmt_list}: err
           | {return_stmt}: err
+
+The statement ending at line XXXX
+
+CREATE TABLE SalesInfo(
+  month INTEGER,
+  amount REAL
+);
+
+  {create_table_stmt}: SalesInfo: { month: integer, amount: real }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name SalesInfo}
+  | {col_key_list}
+    | {col_def}: month: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name month}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: amount: real
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+            | {name amount}
+            | {type_real}: real
+
+The statement ending at line XXXX
+
+SELECT month, amount, 
+  AVG(amount) OVER (ORDER BY month ROWS BETWEEN 1 PRECEDING AND sum(month) FOLLOWING) AS SalesMovingAverage
+  FROM SalesInfo;
+
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'sum'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: month: integer
+  |     | | | {name month}: month: integer
+  |     | | {select_expr_list}
+  |     |   | {select_expr}: amount: real
+  |     |   | | {name amount}: amount: real
+  |     |   | {select_expr_list}
+  |     |     | {select_expr}: err
+  |     |       | {window_func_inv}: err
+  |     |       | | {call}: amount: real
+  |     |       | | | {name AVG}: amount: real
+  |     |       | | | {call_arg_list}
+  |     |       | |   | {call_filter_clause}
+  |     |       | |   | {arg_list}: ok
+  |     |       | |     | {name amount}: amount: real
+  |     |       | | {window_defn}: err
+  |     |       |   | {window_defn_orderby}
+  |     |       |     | {opt_orderby}: ok
+  |     |       |     | | {groupby_list}: ok
+  |     |       |     |   | {groupby_item}
+  |     |       |     |     | {name month}: month: integer
+  |     |       |     | {opt_frame_spec}: err
+  |     |       |       | {int 266370}
+  |     |       |       | {expr_list}
+  |     |       |         | {int 1}: integer notnull
+  |     |       |         | {call}: err
+  |     |       |           | {name sum}
+  |     |       |           | {call_arg_list}
+  |     |       |             | {call_filter_clause}
+  |     |       |             | {arg_list}: ok
+  |     |       |               | {name month}: month: integer
+  |     |       | {opt_as_alias}
+  |     |         | {name SalesMovingAverage}
+  |     | {select_from_etc}: TABLE { SalesInfo: SalesInfo }
+  |       | {table_or_subquery_list}: TABLE { SalesInfo: SalesInfo }
+  |       | | {table_or_subquery}: TABLE { SalesInfo: SalesInfo }
+  |       |   | {name SalesInfo}: TABLE { SalesInfo: SalesInfo }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT month, amount, 
+  AVG(amount) OVER (PARTITION BY sum(month) ROWS BETWEEN 1 PRECEDING AND 3 FOLLOWING) AS SalesMovingAverage
+  FROM SalesInfo;
+
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'sum'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: month: integer
+  |     | | | {name month}: month: integer
+  |     | | {select_expr_list}
+  |     |   | {select_expr}: amount: real
+  |     |   | | {name amount}: amount: real
+  |     |   | {select_expr_list}
+  |     |     | {select_expr}: err
+  |     |       | {window_func_inv}: err
+  |     |       | | {call}: amount: real
+  |     |       | | | {name AVG}: amount: real
+  |     |       | | | {call_arg_list}
+  |     |       | |   | {call_filter_clause}
+  |     |       | |   | {arg_list}: ok
+  |     |       | |     | {name amount}: amount: real
+  |     |       | | {window_defn}: err
+  |     |       |   | {opt_partition_by}: err
+  |     |       |   | | {expr_list}: err
+  |     |       |   |   | {call}: err
+  |     |       |   |     | {name sum}
+  |     |       |   |     | {call_arg_list}
+  |     |       |   |       | {call_filter_clause}
+  |     |       |   |       | {arg_list}: ok
+  |     |       |   |         | {name month}: month: integer
+  |     |       |   | {window_defn_orderby}
+  |     |       |     | {opt_frame_spec}: ok
+  |     |       |       | {int 266370}
+  |     |       |       | {expr_list}
+  |     |       |         | {int 1}: integer notnull
+  |     |       |         | {int 3}: integer notnull
+  |     |       | {opt_as_alias}
+  |     |         | {name SalesMovingAverage}
+  |     | {select_from_etc}: TABLE { SalesInfo: SalesInfo }
+  |       | {table_or_subquery_list}: TABLE { SalesInfo: SalesInfo }
+  |       | | {table_or_subquery}: TABLE { SalesInfo: SalesInfo }
+  |       |   | {name SalesInfo}: TABLE { SalesInfo: SalesInfo }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT month, amount, 
+  AVG(amount) OVER (ORDER BY month ROWS BETWEEN sum(month) PRECEDING AND 1 FOLLOWING) AS SalesMovingAverage
+  FROM SalesInfo;
+
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'sum'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: month: integer
+  |     | | | {name month}: month: integer
+  |     | | {select_expr_list}
+  |     |   | {select_expr}: amount: real
+  |     |   | | {name amount}: amount: real
+  |     |   | {select_expr_list}
+  |     |     | {select_expr}: err
+  |     |       | {window_func_inv}: err
+  |     |       | | {call}: amount: real
+  |     |       | | | {name AVG}: amount: real
+  |     |       | | | {call_arg_list}
+  |     |       | |   | {call_filter_clause}
+  |     |       | |   | {arg_list}: ok
+  |     |       | |     | {name amount}: amount: real
+  |     |       | | {window_defn}: err
+  |     |       |   | {window_defn_orderby}
+  |     |       |     | {opt_orderby}: ok
+  |     |       |     | | {groupby_list}: ok
+  |     |       |     |   | {groupby_item}
+  |     |       |     |     | {name month}: month: integer
+  |     |       |     | {opt_frame_spec}: err
+  |     |       |       | {int 266370}
+  |     |       |       | {expr_list}
+  |     |       |         | {call}: err
+  |     |       |         | | {name sum}
+  |     |       |         | | {call_arg_list}
+  |     |       |         |   | {call_filter_clause}
+  |     |       |         |   | {arg_list}: ok
+  |     |       |         |     | {name month}: month: integer
+  |     |       |         | {int 1}: integer notnull
+  |     |       | {opt_as_alias}
+  |     |         | {name SalesMovingAverage}
+  |     | {select_from_etc}: TABLE { SalesInfo: SalesInfo }
+  |       | {table_or_subquery_list}: TABLE { SalesInfo: SalesInfo }
+  |       | | {table_or_subquery}: TABLE { SalesInfo: SalesInfo }
+  |       |   | {name SalesInfo}: TABLE { SalesInfo: SalesInfo }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT month, amount, 
+  AVG(amount) FILTER (WHERE sum(month) = 1) OVER (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING EXCLUDE NO OTHERS) AS SalesMovingAverage
+  FROM SalesInfo;
+
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'sum'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: month: integer
+  |     | | | {name month}: month: integer
+  |     | | {select_expr_list}
+  |     |   | {select_expr}: amount: real
+  |     |   | | {name amount}: amount: real
+  |     |   | {select_expr_list}
+  |     |     | {select_expr}: err
+  |     |       | {window_func_inv}: err
+  |     |       | | {call}: err
+  |     |       | | | {name AVG}
+  |     |       | | | {call_arg_list}
+  |     |       | |   | {call_filter_clause}
+  |     |       | |   | | {opt_filter_clause}: err
+  |     |       | |   |   | {opt_where}: err
+  |     |       | |   |     | {eq}: err
+  |     |       | |   |       | {call}: err
+  |     |       | |   |       | | {name sum}
+  |     |       | |   |       | | {call_arg_list}
+  |     |       | |   |       |   | {call_filter_clause}
+  |     |       | |   |       |   | {arg_list}: ok
+  |     |       | |   |       |     | {name month}: month: integer
+  |     |       | |   |       | {int 1}: integer notnull
+  |     |       | |   | {arg_list}
+  |     |       | |     | {name amount}
+  |     |       | | {window_defn}: ok
+  |     |       |   | {window_defn_orderby}
+  |     |       |     | {opt_orderby}: ok
+  |     |       |     | | {groupby_list}: ok
+  |     |       |     |   | {groupby_item}
+  |     |       |     |     | {name month}: month: integer
+  |     |       |     | {opt_frame_spec}: ok
+  |     |       |       | {int 20610}
+  |     |       |       | {expr_list}
+  |     |       |         | {int 1}: integer notnull
+  |     |       |         | {int 2}: integer notnull
+  |     |       | {opt_as_alias}
+  |     |         | {name SalesMovingAverage}
+  |     | {select_from_etc}: TABLE { SalesInfo: SalesInfo }
+  |       | {table_or_subquery_list}: TABLE { SalesInfo: SalesInfo }
+  |       | | {table_or_subquery}: TABLE { SalesInfo: SalesInfo }
+  |       |   | {name SalesInfo}: TABLE { SalesInfo: SalesInfo }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
 

@@ -926,6 +926,14 @@ begin
   select a_result;
 end;
 
+create temp trigger if not exists trigger1
+   delete on target_table1
+   for each row
+   when complex_when_expression
+begin
+  select a_result;
+end;
+
 create trigger trigger2
    after insert on target_table2
 begin
@@ -1111,7 +1119,7 @@ create table foo
 
 create proc foo()
 begin
-  proc savepoint 
+  proc savepoint
   begin
      if 1 then
        rollback return;
@@ -1120,6 +1128,84 @@ begin
      end if;
   end;
 end;
+
+SELECT month, amount, AVG(amount) OVER
+  (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING)
+SalesMovingAverage FROM SalesInfo;
+
+SELECT month, amount, SUM(amount) OVER
+  (ORDER BY month) RunningTotal
+FROM SalesInfo;
+
+SELECT month, amount, AVG(amount) OVER
+  (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING EXCLUDE NO OTHERS)
+SalesMovingAverage FROM SalesInfo;
+
+SELECT month, amount, AVG(amount) OVER
+  (ORDER BY month ROWS BETWEEN 3 PRECEDING AND 4 FOLLOWING EXCLUDE CURRENT ROW)
+SalesMovingAverage FROM SalesInfo;
+
+SELECT month, amount, AVG(amount) OVER
+  (ORDER BY month ROWS BETWEEN 4 PRECEDING AND 5 FOLLOWING EXCLUDE GROUP)
+SalesMovingAverage FROM SalesInfo;
+
+SELECT month, amount, AVG(amount) OVER
+  (ORDER BY month ROWS BETWEEN 6 PRECEDING AND 7 FOLLOWING EXCLUDE TIES)
+SalesMovingAverage FROM SalesInfo;
+
+SELECT month, amount, AVG(amount) OVER
+  (ORDER BY month RANGE BETWEEN 8 PRECEDING AND 9 FOLLOWING EXCLUDE TIES)
+SalesMovingAverage FROM SalesInfo;
+
+SELECT month, amount, AVG(amount) OVER
+  (ORDER BY month GROUPS BETWEEN 10 PRECEDING AND 11 FOLLOWING EXCLUDE TIES)
+SalesMovingAverage FROM SalesInfo;
+
+SELECT month, amount, AVG(amount) OVER
+  (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND 12 FOLLOWING EXCLUDE TIES)
+SalesMovingAverage FROM SalesInfo;
+
+SELECT month, amount, AVG(amount) OVER
+  (ORDER BY month GROUPS BETWEEN 13 FOLLOWING AND 14 PRECEDING)
+SalesMovingAverage FROM SalesInfo;
+
+SELECT month, amount, AVG(amount) OVER
+  (ORDER BY month GROUPS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
+SalesMovingAverage FROM SalesInfo;
+
+SELECT month, amount, AVG(amount) OVER
+  (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+SalesMovingAverage FROM SalesInfo;
+
+SELECT month, amount, AVG(amount) OVER
+  (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW EXCLUDE TIES)
+SalesMovingAverage FROM SalesInfo;
+
+SELECT month, amount, AVG(amount) OVER
+  (PARTITION BY something ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW EXCLUDE TIES)
+SalesMovingAverage FROM SalesInfo;
+
+SELECT month, amount, AVG(amount) OVER
+  (GROUPS CURRENT ROW)
+SalesMovingAverage FROM SalesInfo;
+
+/* test trigger is a valid name */
+set trigger := 1;
+
+declare x integer not null @sensitive;
+declare x integer @sensitive not null;
+
+set z := 1 between 1 & 2 and 3;
+set z := 1 between 1 | 2 and 3;
+set z := 1 between 1 << 2 and 3;
+set z := 1 between 1 >> 2 and 3;
+set z := 1 between 1 + 2 and 3;
+set z := 1 between 1 - 2 and 3;
+set z := 1 between 1 * 2 and 3;
+set z := 1 between 1 / 2 and 3;
+set z := 1 between 1 % 2 and 3;
+set z := 1 between -1 and 3;
+set z := 1 between 'x' || 'y' and 'z';
 
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 

@@ -2867,6 +2867,121 @@ set x := 1 | (2 << 3);
 -- + x = 1 << (2 << 3);
 set x := 1 << (2 << 3);
 
+-- + x = 1 < (2 > 3);
+set x := 1 < (2 > 3);
+
+-- + x = 1 << (2 >> 3);
+set x := 1 << (2 >> 3);
+
+-- + x = 1 | (2 | 3);
+set x := 1 | (2 | 3);
+
+-- + x = 1 | 2 | 3;
+set x := (1 | 2) | 3;
+
+-- + x = 1 == (2 != 3);
+set x := 1 == (2 != 3);
+
+create table SalesInfo(
+  month integer,
+  amount real
+);
+
+-- TEST: ORDERBY BETWEEN PRECEEDING AND FOLLOWING NO FILTER NO EXCLUDE
+-- + AVG(amount) OVER (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) AS SalesMovingAverage
+SELECT month, amount, AVG(amount) OVER
+  (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING)
+SalesMovingAverage FROM SalesInfo;
+
+-- TEST: simple OVER and ORDER BY
+-- + SUM(amount) OVER (ORDER BY month) AS RunningTotal
+SELECT month, amount, SUM(amount) OVER
+  (ORDER BY month) RunningTotal
+FROM SalesInfo;
+
+-- TEST: ROWS expr preceeding and expr following, exclude no others
+-- + AVG(amount) OVER (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING EXCLUDE NO OTHERS) AS SalesMovingAverage
+SELECT month, amount, AVG(amount) OVER
+  (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING EXCLUDE NO OTHERS)
+SalesMovingAverage FROM SalesInfo;
+
+-- TEST: ROWS expr preceeding and expr following, exclude no others with FILTER
+-- + AVG(amount) FILTER (WHERE month = 1) OVER (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING EXCLUDE NO OTHERS) AS SalesMovingAverage
+SELECT month, amount, AVG(amount) FILTER(WHERE month = 1) OVER
+  (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING EXCLUDE NO OTHERS)
+SalesMovingAverage FROM SalesInfo;
+
+-- TEST: ROWS expr preceeding and expr following, exclude current row
+-- + AVG(amount) OVER (ORDER BY month ROWS BETWEEN 3 PRECEDING AND 4 FOLLOWING EXCLUDE CURRENT ROW) AS SalesMovingAverage
+SELECT month, amount, AVG(amount) OVER
+  (ORDER BY month ROWS BETWEEN 3 PRECEDING AND 4 FOLLOWING EXCLUDE CURRENT ROW)
+SalesMovingAverage FROM SalesInfo;
+
+-- TEST: ROWS expr preceeding and expr following, exclude group
+-- + AVG(amount) OVER (ORDER BY month ROWS BETWEEN 4 PRECEDING AND 5 FOLLOWING EXCLUDE GROUP) AS SalesMovingAverage
+SELECT month, amount, AVG(amount) OVER
+  (ORDER BY month ROWS BETWEEN 4 PRECEDING AND 5 FOLLOWING EXCLUDE GROUP)
+SalesMovingAverage FROM SalesInfo;
+
+-- TEST: ROWS expr preceeding and expr following, exclude ties
+-- + AVG(amount) OVER (ORDER BY month ROWS BETWEEN 6 PRECEDING AND 7 FOLLOWING EXCLUDE TIES) AS SalesMovingAverage
+SELECT month, amount, AVG(amount) OVER
+  (ORDER BY month ROWS BETWEEN 6 PRECEDING AND 7 FOLLOWING EXCLUDE TIES)
+SalesMovingAverage FROM SalesInfo;
+
+-- TEST: RANGE expr preceeding and expr following, exclude ties
+-- + AVG(amount) OVER (ORDER BY month RANGE BETWEEN 8 PRECEDING AND 9 FOLLOWING EXCLUDE TIES) AS SalesMovingAverage
+SELECT month, amount, AVG(amount) OVER
+  (ORDER BY month RANGE BETWEEN 8 PRECEDING AND 9 FOLLOWING EXCLUDE TIES)
+SalesMovingAverage FROM SalesInfo;
+
+-- TEST: GROUPS expr preceeding and expr following, exclude ties
+-- + AVG(amount) OVER (ORDER BY month GROUPS BETWEEN 10 PRECEDING AND 11 FOLLOWING EXCLUDE TIES) AS SalesMovingAverage
+SELECT month, amount, AVG(amount) OVER
+  (ORDER BY month GROUPS BETWEEN 10 PRECEDING AND 11 FOLLOWING EXCLUDE TIES)
+SalesMovingAverage FROM SalesInfo;
+
+-- TEST: GROUPS unbounded proceeding and expr following, exclude ties
+-- + AVG(amount) OVER (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND 12 FOLLOWING EXCLUDE TIES) AS SalesMovingAverage
+SELECT month, amount, AVG(amount) OVER
+  (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND 12 FOLLOWING EXCLUDE TIES)
+SalesMovingAverage FROM SalesInfo;
+
+-- TEST: GROUPS expr following and expr preceeding 
+-- + AVG(amount) OVER (ORDER BY month GROUPS BETWEEN 13 FOLLOWING AND 14 PRECEDING) AS SalesMovingAverage
+SELECT month, amount, AVG(amount) OVER
+  (ORDER BY month GROUPS BETWEEN 13 FOLLOWING AND 14 PRECEDING)
+SalesMovingAverage FROM SalesInfo;
+
+-- TEST: GROUPS between current row and unbounded following
+-- + AVG(amount) OVER (ORDER BY month GROUPS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) AS SalesMovingAverage
+SELECT month, amount, AVG(amount) OVER
+  (ORDER BY month GROUPS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
+SalesMovingAverage FROM SalesInfo;
+
+-- TEST: GROUPS between unbounded preceding and current row with no exclude
+-- + AVG(amount) OVER (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS SalesMovingAverage
+SELECT month, amount, AVG(amount) OVER
+  (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+SalesMovingAverage FROM SalesInfo;
+
+-- TEST: GROUPS between unbounded preceding and current row with exclude ties
+-- +  AVG(amount) OVER (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW EXCLUDE TIES) AS SalesMovingAverage
+SELECT month, amount, AVG(amount) OVER
+  (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW EXCLUDE TIES)
+SalesMovingAverage FROM SalesInfo;
+
+-- TEST: correct parse and re-emit of CURRENT_ROW
+-- + AVG(amount) OVER (PARTITION BY month ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW EXCLUDE TIES) AS SalesMovingAverage
+SELECT month, amount, AVG(amount) OVER
+  (PARTITION BY month ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW EXCLUDE TIES)
+SalesMovingAverage FROM SalesInfo;
+
+-- TEST: correct parse and re-emit of CURRENT_ROW
+-- + AVG(amount) OVER (GROUPS CURRENT ROW) AS SalesMovingAverage
+SELECT month, amount, AVG(amount) OVER
+  (GROUPS CURRENT ROW)
+SalesMovingAverage FROM SalesInfo;
 
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
