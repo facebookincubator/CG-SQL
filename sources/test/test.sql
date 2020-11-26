@@ -1207,6 +1207,10 @@ set z := 1 between 1 % 2 and 3;
 set z := 1 between -1 and 3;
 set z := 1 between 'x' || 'y' and 'z';
 
+create proc foo(x like this, y like that)
+begin
+end;
+
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 
 # 1 "long/path/I/do/not/like"

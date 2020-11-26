@@ -2322,12 +2322,22 @@ static void gen_normal_param(ast_node *ast) {
 
 static void gen_like_param(ast_node *ast) {
   Contract(is_ast_param(ast));
-  EXTRACT_NOTNULL(like, ast->left);
+  EXTRACT_NOTNULL(param_detail, ast->right);
+  EXTRACT_NOTNULL(like, param_detail->right);
+
+  if (param_detail->left) {
+    EXTRACT_STRING(name, param_detail->left);
+    gen_printf("%s ", name);
+  }
+
   gen_shape_def(like);
 }
 
 static void gen_param(ast_node *ast) {
-  if (is_ast_like(ast->left)) {
+  Contract(is_ast_param(ast));
+
+  EXTRACT_NOTNULL(param_detail, ast->right);
+  if (is_ast_like(param_detail->right)) {
     gen_like_param(ast);
   }
   else {
@@ -2426,13 +2436,17 @@ cql_noexport void gen_declare_proc_from_create_proc(ast_node *ast) {
 }
 
 static void gen_typed_name(ast_node *ast) {
-  if (is_ast_like(ast)) {
-    gen_shape_def(ast);
-  }
-  else {
-    EXTRACT(typed_name, ast);
+  EXTRACT(typed_name, ast);
+
+  if (typed_name->left) {
     EXTRACT_STRING(name, typed_name->left);
     gen_printf("%s ", name);
+  }
+
+  if (is_ast_like(typed_name->right)) {
+    gen_shape_def(typed_name->right);
+  }
+  else {
     gen_data_type(typed_name->right);
   }
 }

@@ -41,9 +41,14 @@ sudo apt install
 * bison
 * sqlite3
 * libsqlite3-dev
-* gcovr
 
 After which I was able to do the normal installations.
+
+For the coverage build you need
+* gcovr
+
+And if you want to do the AST visualizations in PNG form you need
+* graphviz
 
 ### Options
 

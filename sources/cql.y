@@ -207,7 +207,7 @@ static void cql_reset_globals(void);
 
 /* proc stuff */
 %type <aval> create_proc_stmt declare_func_stmt declare_proc_stmt
-%type <aval> arg_expr arg_list opt_inout param params
+%type <aval> arg_expr arg_list inout param params
 
 /* statements */
 %type <aval> stmt
@@ -1422,16 +1422,16 @@ create_proc_stmt:
     $create_proc_stmt = new_ast_create_proc_stmt($name, new_ast_proc_params_stmts($params, $opt_stmt_list)); }
   ;
 
-opt_inout:
-  /* nil */  { $opt_inout = NULL ; }
-  | IN  { $opt_inout = new_ast_in(); }
-  | OUT  { $opt_inout = new_ast_out(); }
-  | INOUT  { $opt_inout = new_ast_inout(); }
+inout:
+  IN  { $inout = new_ast_in(); }
+  | OUT  { $inout = new_ast_out(); }
+  | INOUT  { $inout = new_ast_inout(); }
   ;
 
 typed_name:
   name data_type_opt_notnull  { $typed_name = new_ast_typed_name($name, $data_type_opt_notnull); }
-  | shape_def  { $typed_name = $shape_def; }
+  | shape_def  { $typed_name = new_ast_typed_name(NULL, $shape_def); }
+  | name shape_def  { $typed_name = new_ast_typed_name($name, $shape_def); }
   ;
 
 typed_names[result]:
@@ -1440,8 +1440,10 @@ typed_names[result]:
   ;
 
 param:
-  opt_inout name data_type_opt_notnull  { $param = new_ast_param($opt_inout, new_ast_param_detail($name, $data_type_opt_notnull)); }
-  | shape_def  { $param = new_ast_param($shape_def, NULL); }
+  name data_type_opt_notnull  { $param = new_ast_param(NULL, new_ast_param_detail($name, $data_type_opt_notnull)); }
+  | inout name data_type_opt_notnull  { $param = new_ast_param($inout, new_ast_param_detail($name, $data_type_opt_notnull)); }
+  | shape_def  { $param = new_ast_param(NULL, new_ast_param_detail(NULL, $shape_def)); }
+  | name shape_def  { $param = new_ast_param(NULL, new_ast_param_detail($name, $shape_def)); }
   ;
 
 params[result]:
