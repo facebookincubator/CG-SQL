@@ -288,6 +288,16 @@ Error at test/sem_test.sql:XXXX : in select_core : CQL0058: if multiple selects,
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'nullable'
+Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
 Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'nullable'
 Error at test/sem_test.sql:XXXX : in str : CQL0206: duplicate name in list 'a'
 Error at test/sem_test.sql:XXXX : in cte_decl : CQL0100: duplicate common table name 'foo'

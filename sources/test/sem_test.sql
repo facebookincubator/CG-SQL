@@ -3474,6 +3474,68 @@ select nullable(1);
 -- +1 Error
 select nullable(1, 2);
 
+-- try some const cases especially those with errors
+
+-- TEST: variables not allowed in constant expressions (duh)
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x);
+
+-- TEST: forcing errors in binary operators to make them prop:  comparison type
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x == x);
+
+-- TEST: forcing errors in binary operators to make them prop:  is/is_not comparison type
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x is x);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x + x);
+
+-- TEST: forcing errors in binary operators to make them prop:  and error in first arg
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x and 0);
+
+-- TEST: forcing errors in binary operators to make them prop:  and error in second arg
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1 and x);
+
+-- TEST: forcing errors in binary operators to make them prop:  or: error in first arg
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x or 0);
+
+-- TEST: forcing errors in binary operators to make them prop:  or: force error in second arg
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(0 or x);
+
+-- TEST: forcing errors in binary operators to make them prop:  and: force error in 2nd arg
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1 and x);
+
+-- TEST: forcing errors in cast
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(cast(x as real));
+
 -- TEST: use nullable in the wrong context
 -- + Error % function may not appear in this context 'nullable'
 -- +1 Error
@@ -11114,7 +11176,6 @@ create proc using_like_shape_bad_name(x like _stuff1)
 begin
   call printf("%s\n", x.xyzzy);
 end;
-
 
 -- TEST try to pass some of my args along
 -- + CREATE PROC arg_shape_forwarder (args_arg1 INTEGER, args_arg2 TEXT, extra_args_id INTEGER, extra_args_name TEXT)

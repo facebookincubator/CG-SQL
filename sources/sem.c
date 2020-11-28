@@ -24,6 +24,7 @@
 #include "list.h"
 #include "gen_sql.h"
 #include "symtab.h"
+#include "eval.h"
 
 #define NORMAL_CALL  0  // a normal procedure or function call
 #define PROC_AS_FUNC 1  // treating a proc like a function with the out-arg trick
@@ -5016,6 +5017,33 @@ static void sem_aggr_func_avg(ast_node *ast, uint32_t arg_count) {
 
 static void sem_func_ifnull(ast_node *ast, uint32_t arg_count) {
   sem_coalesce(ast, 1);  // set "ifnull"
+}
+
+static void sem_func_const(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  // only one argument
+  if (!sem_validate_arg_count(ast, arg_count, 1)) {
+    return;
+  }
+  ast_node *arg = first_arg(arg_list);
+
+  eval_node result = {};
+  eval(arg, &result);
+
+  if (result.sem_type == SEM_TYPE_ERROR) {
+    report_error(ast, "CQL0353: evaluation of constant failed", NULL);
+    record_error(ast);
+    return;
+  }
+
+  ast_node *ast_new = eval_set(ast, &result);
+  sem_root_expr(ast_new, SEM_EXPR_CONTEXT_NONE);
+  ast->sem = ast_new->sem;
 }
 
 static void sem_func_cql_get_blob_size(ast_node *ast, uint32_t arg_count) {
@@ -17163,6 +17191,7 @@ cql_noexport void exit_on_validating_schema() {
 cql_noexport void sem_main(ast_node *ast) {
   // restore all globals and statics we own
   sem_cleanup();
+  eval_init();
 
   AST_REWRITE_INFO_START();
 
@@ -17316,10 +17345,10 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(trim);
   FUNC_INIT(ltrim);
   FUNC_INIT(rtrim);
-
   FUNC_INIT(length);
 
   FUNC_INIT(cql_get_blob_size);
+  FUNC_INIT(const);
 
   EXPR_INIT(num, sem_expr_num, "NUM");
   EXPR_INIT(str, sem_expr_str, "STR");
@@ -17419,6 +17448,8 @@ cql_noexport void sem_main(ast_node *ast) {
 }
 
 cql_noexport void sem_cleanup() {
+  eval_cleanup();
+
   BYTEBUF_CLEANUP(deployable_validations);
   BYTEBUF_CLEANUP(recreate_annotations);
   BYTEBUF_CLEANUP(schema_annotations);
