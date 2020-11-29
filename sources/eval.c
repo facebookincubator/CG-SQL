@@ -41,7 +41,6 @@ static void eval_num(ast_node *expr, eval_node *result) {
   sem_t core_type = core_type_of(expr->sem->sem_type);
   result->sem_type = core_type;
 
-  EXTRACT_NUM_TYPE(num_type, expr);
   EXTRACT_NUM_VALUE(lit, expr);
 
   bool known_type = false;
@@ -116,13 +115,13 @@ static void eval_cast_to(eval_node *result, sem_t sem_type) {
     case SEM_TYPE_BOOL:
       switch (core_type_source) {
         case SEM_TYPE_REAL:
-          result->_bool = (bool_t)!!result->_real;
+           result->_bool = (result->_real != 0);
           break;
         case SEM_TYPE_INTEGER:
-          result->_bool = (bool_t)!!result->_int32;
+          result->_bool = (result->_int32 != 0);
           break;
         case SEM_TYPE_LONG_INTEGER:
-          result->_bool = (bool_t)!!result->_int64;
+          result->_bool = (result->_int64 != 0);
           break;
       }
       break;
@@ -229,7 +228,7 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
     break; \
   \
   case SEM_TYPE_BOOL: \
-    result->_bool = !!(left._bool op right._bool); \
+    result->_bool = 0 != (left._bool op right._bool); \
     break; \
   \
   case SEM_TYPE_REAL: \
@@ -270,7 +269,7 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
     break; \
   \
   case SEM_TYPE_BOOL: \
-    result->_bool = !!(left._bool op right._bool); \
+    result->_bool = 0 != (left._bool op right._bool); \
     break; \
   \
   } \
@@ -308,7 +307,7 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
     break; \
   \
   case SEM_TYPE_BOOL: \
-    result->_bool = !!(left._bool op right._bool); \
+    result->_bool = 0 != (left._bool op right._bool); \
     break; \
   \
   case SEM_TYPE_REAL: \
@@ -383,7 +382,7 @@ static void eval_is(ast_node *expr, eval_node *result) {
   eval_node right = {};
   eval(expr->left, &left);
   eval(expr->right, &right);
-  
+
   sem_t core_type = eval_combined_type(&left, &right);
 
   if (left.sem_type == SEM_TYPE_ERROR || right.sem_type == SEM_TYPE_ERROR) { \
@@ -392,7 +391,7 @@ static void eval_is(ast_node *expr, eval_node *result) {
   }
 
   result->sem_type = SEM_TYPE_BOOL;
- 
+
   if (left.sem_type == SEM_TYPE_NULL || right.sem_type == SEM_TYPE_NULL) {
     result->_bool = (left.sem_type == SEM_TYPE_NULL && right.sem_type == SEM_TYPE_NULL);
     return;
@@ -409,11 +408,11 @@ static void eval_is(ast_node *expr, eval_node *result) {
     case SEM_TYPE_LONG_INTEGER:
       result->_bool = (left._int64 == right._int64);
       break;
-  
+
     case SEM_TYPE_BOOL:
-      result->_bool = !!(left._bool == right._bool);
+      result->_bool = 0 != (left._bool == right._bool);
       break;
-   
+
     case SEM_TYPE_REAL:
       result->_bool = (left._real == right._real);
       break;
@@ -451,11 +450,11 @@ static void eval_tilde(ast_node *expr, eval_node *result) {
     case SEM_TYPE_LONG_INTEGER:
       result->_int64 = ~result->_int64;
       break;
-  
+
     case SEM_TYPE_BOOL:
       result->sem_type = SEM_TYPE_INTEGER;
       result->_int32 = ~result->_bool;
-      break;  
+      break;
   }
 }
 
@@ -473,18 +472,18 @@ static void eval_uminus(ast_node *expr, eval_node *result) {
     case SEM_TYPE_LONG_INTEGER:
       result->_int64 = -result->_int64;
       break;
-    
+
     case SEM_TYPE_REAL:
       result->_real = -result->_real;
       break;
-  
+
     case SEM_TYPE_BOOL:
       result->sem_type = SEM_TYPE_INTEGER;
       result->_int32 = -result->_bool;
-      break;  
+      break;
   }
 }
- 
+
 static void eval_and(ast_node *expr, eval_node *result) {
   eval_node left = {};
   eval(expr->left, &left);
@@ -520,7 +519,7 @@ static void eval_and(ast_node *expr, eval_node *result) {
     result->sem_type = SEM_TYPE_BOOL;
     result->_bool = 0;
     return;
-  } 
+  }
 
   if (left.sem_type == SEM_TYPE_NULL) {
     result->sem_type = SEM_TYPE_NULL;
@@ -566,7 +565,7 @@ static void eval_or(ast_node *expr, eval_node *result) {
     result->sem_type = SEM_TYPE_BOOL;
     result->_bool = 1;
     return;
-  } 
+  }
 
   if (left.sem_type == SEM_TYPE_NULL) {
     result->sem_type = SEM_TYPE_NULL;
