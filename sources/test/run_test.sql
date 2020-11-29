@@ -2954,6 +2954,36 @@ BEGIN_TEST(const_folding)
   EXPECT(const(cast(3L as bool) == 1));
   EXPECT(const(cast(0L as bool) == 0));
 
+  EXPECT(const(not 0) == 1);
+  EXPECT(const(not 1) == 0);
+  EXPECT(const(not 2) == 0);
+  EXPECT(const(not 0L) == 1);
+  EXPECT(const(not 1L) == 0);
+  EXPECT(const(not 2L) == 0);
+  EXPECT(const(not 2.0) == 0);
+  EXPECT(const(not 0.0) == 1);
+  EXPECT(const(not not 2) == 1);
+  EXPECT(const(not NULL) is NULL);
+
+  EXPECT(const(~0) == -1);
+  EXPECT(const(~0L) == -1L);
+  EXPECT(const(~ ~0L) == 0L);
+  EXPECT(const(~NULL) is NULL);
+  EXPECT(const(~(0==0)) == -2);
+  EXPECT(const(~(0==1)) == -1);
+
+  EXPECT(const(-1) == -1);
+  EXPECT(const(-2) == -2);
+  EXPECT(const(-1.0) == -1.0);
+  EXPECT(const(-2.0) == -2.0);
+  EXPECT(const((0 + -2)) == -2);
+  EXPECT(const(-(1 + 1)) == -2);
+  EXPECT(const(-1L) == -1L);
+  EXPECT(const(- -1L) == 1L);
+  EXPECT(const(-NULL) is NULL);
+  EXPECT(const(-(0==0)) == -1);
+  EXPECT(const(-(0==1)) == 0);
+  
 END_TEST(const_folding)
 
 END_SUITE()
@@ -2973,7 +3003,9 @@ begin
      declare D cursor for select * from does_not_exist;
    end try;
    begin catch
-     -- this code would have been lost because there was a successful op
+     -- Without tracing this failure code can be seen, the cursor D
+     -- will be finalized as part of cleanup and THAT success will be
+     -- the sqlite3_errmsg() result.  Tracing lets you see the error as it happens.
      drop table if exists does_not_exist;
      -- now we save the code
      throw;

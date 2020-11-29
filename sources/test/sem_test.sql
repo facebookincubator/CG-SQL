@@ -3482,6 +3482,12 @@ select nullable(1, 2);
 -- +1 Error
 select const(x);
 
+-- TEST: non integer arguments not allowed
+-- + {call}: err
+-- + Error % operands must be an integer type, not real '~'
+-- +1 Error
+select const(~1.3);
+
 -- TEST: forcing errors in binary operators to make them prop:  comparison type
 -- + {call}: err
 -- + Error % evaluation of constant failed

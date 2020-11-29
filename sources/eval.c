@@ -428,6 +428,64 @@ static void eval_is_not(ast_node *expr, eval_node *result) {
   }
 }
 
+static void eval_not(ast_node *expr, eval_node *result) {
+  eval(expr->left, result);
+  if (result->sem_type == SEM_TYPE_ERROR || result->sem_type == SEM_TYPE_NULL) {
+    return;
+  }
+
+  eval_cast_to(result, SEM_TYPE_BOOL);
+  result->_bool = !result->_bool;
+}
+
+static void eval_tilde(ast_node *expr, eval_node *result) {
+  eval(expr->left, result);
+  if (result->sem_type == SEM_TYPE_ERROR || result->sem_type == SEM_TYPE_NULL) {
+    return;
+  }
+
+  switch (result->sem_type) {
+    case SEM_TYPE_INTEGER:
+      result->_int32 = ~result->_int32;
+      break;
+
+    case SEM_TYPE_LONG_INTEGER:
+      result->_int64 = ~result->_int64;
+      break;
+  
+    case SEM_TYPE_BOOL:
+      result->sem_type = SEM_TYPE_INTEGER;
+      result->_int32 = ~result->_bool;
+      break;  
+  }
+}
+
+static void eval_uminus(ast_node *expr, eval_node *result) {
+  eval(expr->left, result);
+  if (result->sem_type == SEM_TYPE_ERROR || result->sem_type == SEM_TYPE_NULL) {
+    return;
+  }
+
+  switch (result->sem_type) {
+    case SEM_TYPE_INTEGER:
+      result->_int32 = -result->_int32;
+      break;
+
+    case SEM_TYPE_LONG_INTEGER:
+      result->_int64 = -result->_int64;
+      break;
+    
+    case SEM_TYPE_REAL:
+      result->_real = -result->_real;
+      break;
+  
+    case SEM_TYPE_BOOL:
+      result->sem_type = SEM_TYPE_INTEGER;
+      result->_int32 = -result->_bool;
+      break;  
+  }
+}
+
 static void eval_and(ast_node *expr, eval_node *result) {
   eval_node left = {};
   eval(expr->left, &left);
@@ -594,36 +652,21 @@ EXPR_INIT(or);
 EXPR_INIT(is);
 EXPR_INIT(is_not);
 EXPR_INIT(cast_expr);
-
-/*
-EXPR_INIT(str);
-EXPR_INIT(blob);
-EXPR_INIT(dot);
-EXPR_INIT(collate);
 EXPR_INIT(not);
 EXPR_INIT(tilde);
 EXPR_INIT(uminus);
+
+/*
 EXPR_INIT(call);
-EXPR_INIT(window_func_inv);
-EXPR_INIT(raise);
-EXPR_INIT(exists_expr);
 EXPR_INIT(between);
 EXPR_INIT(not_between);
-EXPR_INIT(select_stmt);
-EXPR_INIT(with_select_stmt);
-EXPR_INIT(like);
-EXPR_INIT(not_like);
-EXPR_INIT(match);
-EXPR_INIT(regexp);
-EXPR_INIT(glob);
 EXPR_INIT(in_pred);
 EXPR_INIT(not_in);
 EXPR_INIT(case_expr);
-EXPR_INIT(concat);
 */
 }
 
 cql_noexport void eval_cleanup() {
-SYMTAB_CLEANUP(evals);
-SYMTAB_CLEANUP(eval_funcs);
+  SYMTAB_CLEANUP(evals);
+  SYMTAB_CLEANUP(eval_funcs);
 }

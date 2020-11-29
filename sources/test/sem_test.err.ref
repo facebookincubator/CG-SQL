@@ -289,6 +289,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed i
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'nullable'
 Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in tilde : CQL0001: operands must be an integer type, not real '~'
 Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
 Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
 Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
