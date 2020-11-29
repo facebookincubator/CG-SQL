@@ -161,6 +161,8 @@ cql_data_decl( bytebuf *recreate_annotations );
 #define CURRENT_EXPR_CONTEXT_IS(x)  (!!(current_expr_context & (x)))
 #define CURRENT_EXPR_CONTEXT_IS_NOT(x)  (!(current_expr_context & (x)))
 
+#define has_hex_prefix(s) (s[0] == '0' && (s[1] == 'x' || s[1] == 'X'))
+
 cql_noexport sem_t core_type_of(sem_t sem_type);
 cql_noexport sem_t sensitive_flag(sem_t sem_type);
 cql_noexport CSTR coretype_string(sem_t sem_type);
