@@ -3482,6 +3482,11 @@ select nullable(1, 2);
 -- +1 Error
 select const(x);
 
+-- TEST: wrong number of arguments
+-- + Error % function got incorrect number of arguments 'const'
+-- +1 Error
+select const(1, 2);
+
 -- TEST: non integer arguments not allowed
 -- + {call}: err
 -- + Error % operands must be an integer type, not real '~'
