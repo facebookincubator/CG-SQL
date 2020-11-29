@@ -30,7 +30,6 @@
 // node type.
 
 static symtab *evals;
-static symtab *eval_funcs;
 
 typedef void (*eval_dispatch)(ast_node *expr, eval_node *result);
 
@@ -485,7 +484,7 @@ static void eval_uminus(ast_node *expr, eval_node *result) {
       break;  
   }
 }
-
+ 
 static void eval_and(ast_node *expr, eval_node *result) {
   eval_node left = {};
   eval(expr->left, &left);
@@ -578,7 +577,7 @@ static void eval_or(ast_node *expr, eval_node *result) {
   result->_bool = 0;
 }
 
-cql_noexport void eval_cast_expr(ast_node *expr, eval_node *result) {
+static void eval_cast_expr(ast_node *expr, eval_node *result) {
   eval(expr->left, result);
 
   if (result->sem_type == SEM_TYPE_ERROR) {
@@ -591,7 +590,6 @@ cql_noexport void eval_cast_expr(ast_node *expr, eval_node *result) {
 
   eval_cast_to(result, core_type_of(expr->sem->sem_type));
 }
-
 
 cql_noexport void eval(ast_node *expr, eval_node *result) {
   // These are all the expressions there are, we have to find it in this table
@@ -621,14 +619,6 @@ cql_noexport void eval_init() {
 eval_cleanup();
 
 evals = symtab_new();
-eval_funcs = symtab_new();
-
-/*
-FUNC_INIT(ifnull);
-FUNC_INIT(nullif);
-FUNC_INIT(abs);
-FUNC_INIT(coalesce);
-*/
 
 EXPR_INIT(null);
 EXPR_INIT(num);
@@ -656,17 +646,10 @@ EXPR_INIT(not);
 EXPR_INIT(tilde);
 EXPR_INIT(uminus);
 
-/*
-EXPR_INIT(call);
-EXPR_INIT(between);
-EXPR_INIT(not_between);
-EXPR_INIT(in_pred);
-EXPR_INIT(not_in);
-EXPR_INIT(case_expr);
-*/
+// EXPR_INIT(case_expr);  -> we'll do this one because it's super flexible
+
 }
 
 cql_noexport void eval_cleanup() {
   SYMTAB_CLEANUP(evals);
-  SYMTAB_CLEANUP(eval_funcs);
 }

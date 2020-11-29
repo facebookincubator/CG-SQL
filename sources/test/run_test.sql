@@ -2983,7 +2983,7 @@ BEGIN_TEST(const_folding)
   EXPECT(const(-NULL) is NULL);
   EXPECT(const(-(0==0)) == -1);
   EXPECT(const(-(0==1)) == 0);
-  
+
 END_TEST(const_folding)
 
 END_SUITE()
