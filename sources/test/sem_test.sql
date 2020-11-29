@@ -3482,6 +3482,30 @@ select nullable(1, 2);
 -- +1 Error
 select const(x);
 
+-- TEST: variables not allowed in constant expressions (duh)
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(case x when 1 then 2 end);
+
+-- TEST: variables not allowed in constant expressions (duh)
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(case 1 when x then 2 end);
+
+-- TEST: variables not allowed in constant expressions (duh)
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(case 1 when 1 then x end);
+
+-- TEST: variables not allowed in constant expressions (duh)
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(case when x then 2 end);
+
 -- TEST: wrong number of arguments
 -- + Error % function got incorrect number of arguments 'const'
 -- +1 Error
@@ -12494,7 +12518,7 @@ end;
 -- + ELSE 2
 -- + END;
 -- - Error
-select iif(an_int is null, 2, 3);
+select iif(an_int is null, 3, 2);
 
 -- TEST: test rewrite for IIF func with invalid argument count
 -- + {select_stmt}: err
@@ -12516,13 +12540,13 @@ select iif(an_int is null, 2, x'23');
 
 -- TEST: test rewrite for IIF func out of sql context
 -- + {assign}: an_int: integer variable
--- + SET an_int := CASE WHEN an_int IS NULL THEN CASE WHEN 1 THEN 3
--- + ELSE 2
+-- + SET an_int := CASE WHEN an_int IS NULL THEN CASE WHEN 4 THEN 5
+-- + ELSE 6
 -- + END
 -- + ELSE 2
 -- + END;
 -- - Error
-set an_int := iif(an_int is null, 2, iif(1, 2, 3));
+set an_int := iif(an_int is null, iif(4, 5, 6), 2);
 
 -- TEST: test rewrite for [UPDATE cursor USING ... ] grammar
 -- + {create_proc_stmt}: ok dml_proc

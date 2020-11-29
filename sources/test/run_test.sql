@@ -2984,6 +2984,37 @@ BEGIN_TEST(const_folding)
   EXPECT(const(-(0==0)) == -1);
   EXPECT(const(-(0==1)) == 0);
 
+  -- IIF gets rewritten to case/when so we use that here for convenience
+  EXPECT(const(iif(1, 3, 5)) == 3);
+  EXPECT(const(iif(0, 3, 5)) == 5);
+  EXPECT(const(iif(1L, 3, 5)) == 3);
+  EXPECT(const(iif(0L, 3, 5)) == 5);
+  EXPECT(const(iif(1.0, 3, 5)) == 3);
+  EXPECT(const(iif(0.0, 3, 5)) == 5);
+  EXPECT(const(iif((1==1), 3, 5)) == 3);
+  EXPECT(const(iif((1==0), 3, 5)) == 5);
+
+  EXPECT(const(case 1 when 2 then 20 else 10 end) == 10);
+  EXPECT(const(case 2 when 2 then 20 else 10 end) == 20);
+  EXPECT(const(case 2 when 1 then 10 when 2 then 20 else 40 end) == 20);
+  EXPECT(const(case 1 when 1 then 10 when 2 then 20 else 40 end) == 10);
+  EXPECT(const(case 5 when 1 then 10 when 2 then 20 else 40 end) == 40);
+  EXPECT(const(case null when 1 then 10 when 2 then 20 else 40 end) == 40);
+
+  EXPECT(const(case 1.0 when 2 then 20 else 10 end) == 10);
+  EXPECT(const(case 2.0 when 2 then 20 else 10 end) == 20);
+  EXPECT(const(case 2.0 when 1 then 10 when 2 then 20 else 40 end) == 20);
+  EXPECT(const(case 1.0 when 1 then 10 when 2 then 20 else 40 end) == 10);
+  EXPECT(const(case 5.0 when 1 then 10 when 2 then 20 else 40 end) == 40);
+
+  EXPECT(const(case 1L when 2 then 20 else 10 end) == 10);
+  EXPECT(const(case 2L when 2 then 20 else 10 end) == 20);
+  EXPECT(const(case 2L when 1 then 10 when 2 then 20 else 40 end) == 20);
+  EXPECT(const(case 1L when 1 then 10 when 2 then 20 else 40 end) == 10);
+  EXPECT(const(case 5L when 1 then 10 when 2 then 20 else 40 end) == 40);
+
+  EXPECT(const(case 5L when 1 then 10 when 2 then 20 end) is NULL);
+
 END_TEST(const_folding)
 
 END_SUITE()

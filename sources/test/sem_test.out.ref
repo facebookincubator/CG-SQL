@@ -12765,6 +12765,137 @@ Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant fail
 
 The statement ending at line XXXX
 
+SELECT const(CASE x WHEN 1 THEN 2
+END);
+
+Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name const}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {case_expr}: integer
+  |     |           | {name x}: X: integer variable
+  |     |           | {connector}: integer
+  |     |             | {case_list}: integer notnull
+  |     |               | {when}: integer notnull
+  |     |                 | {int 1}: integer notnull
+  |     |                 | {int 2}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT const(CASE 1 WHEN x THEN 2
+END);
+
+Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name const}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {case_expr}: integer
+  |     |           | {int 1}: integer notnull
+  |     |           | {connector}: integer
+  |     |             | {case_list}: integer notnull
+  |     |               | {when}: integer notnull
+  |     |                 | {name x}: X: integer variable
+  |     |                 | {int 2}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT const(CASE 1 WHEN 1 THEN x
+END);
+
+Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name const}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {case_expr}: integer variable
+  |     |           | {int 1}: integer notnull
+  |     |           | {connector}: integer variable
+  |     |             | {case_list}: integer variable
+  |     |               | {when}: X: integer variable
+  |     |                 | {int 1}: integer notnull
+  |     |                 | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT const(CASE WHEN x THEN 2
+END);
+
+Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name const}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {case_expr}: integer
+  |     |           | {connector}: integer
+  |     |             | {case_list}: integer notnull
+  |     |               | {when}: integer notnull
+  |     |                 | {name x}: X: integer variable
+  |     |                 | {int 2}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
 SELECT const(1, 2);
 
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'const'
@@ -50800,8 +50931,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expres
 
 The statement ending at line XXXX
 
-SET an_int := CASE WHEN an_int IS NULL THEN CASE WHEN 1 THEN 3
-ELSE 2
+SET an_int := CASE WHEN an_int IS NULL THEN CASE WHEN 4 THEN 5
+ELSE 6
 END
 ELSE 2
 END;
@@ -50819,9 +50950,9 @@ END;
       |     | {connector}: integer notnull
       |       | {case_list}: integer notnull
       |       | | {when}: integer notnull
-      |       |   | {int 1}: integer notnull
-      |       |   | {int 3}: integer notnull
-      |       | {int 2}: integer notnull
+      |       |   | {int 4}: integer notnull
+      |       |   | {int 5}: integer notnull
+      |       | {int 6}: integer notnull
       | {int 2}: integer notnull
 
 The statement ending at line XXXX

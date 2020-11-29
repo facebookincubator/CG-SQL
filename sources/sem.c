@@ -6418,11 +6418,11 @@ static ast_node *sem_generate_cursor_printf(ast_node *variable) {
 // e.g: (expr, val1, val2) => CASE WHEN expr THEN val2 ELSE val1;
 static ast_node *sem_generate_iif_case_expr(ast_node *expr, ast_node *val1, ast_node *val2) {
   // left case_list node
-  ast_node* when = new_ast_when(expr, val2);
+  ast_node* when = new_ast_when(expr, val1);
   // left connector node
   ast_node* case_list = new_ast_case_list(when, NULL);
   // case list with no ELSE (we get ELSE NULL by default)
-  ast_node* connector = new_ast_connector(case_list, val1);
+  ast_node* connector = new_ast_connector(case_list, val2);
   // CASE WHEN expr THEN result form; not CASE expr WHEN val THEN result
   ast_node* case_expr = new_ast_case_expr(NULL, connector);
   return case_expr;
@@ -6477,8 +6477,8 @@ static ast_node *sem_generate_case_expr(ast_node *var1, ast_node *var2, bool_t r
       // case_expr node: CASE WHEN C.x IS NULL THEN 'null' ELSE printf("%s", C.x)
       ast_node *check_call_printf3 = sem_generate_iif_case_expr(
         is_node,
-        call_printf3,
-        new_ast_str("'null'"));
+        new_ast_str("'null'"),
+        call_printf3);
       arg_list = new_ast_arg_list(check_call_printf3, NULL);
       bclear(&format_output);
 
@@ -6494,8 +6494,8 @@ static ast_node *sem_generate_case_expr(ast_node *var1, ast_node *var2, bool_t r
       // case_expr node: CASE WHEN C.x IS NULL THEN 'null' ELSE printf("%s", C.x)
       ast_node *check_call_printf2 = sem_generate_iif_case_expr(
         is_node,
-        call_printf2,
-        new_ast_str("'null'"));
+        new_ast_str("'null'"),
+        call_printf2);
       arg_list = new_ast_arg_list(check_call_printf2, arg_list);
       bclear(&format_output);
 

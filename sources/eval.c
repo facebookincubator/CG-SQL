@@ -590,6 +590,130 @@ static void eval_cast_expr(ast_node *expr, eval_node *result) {
   eval_cast_to(result, core_type_of(expr->sem->sem_type));
 }
 
+static bool eval_are_equal(eval_node *_left, eval_node *_right) {
+  eval_node left = *_left;
+  eval_node right = *_right;
+
+  Invariant(right.sem_type != SEM_TYPE_ERROR);
+  Invariant(left.sem_type != SEM_TYPE_ERROR);
+
+  // null isn't equal to anything
+  if (right.sem_type == SEM_TYPE_NULL || left.sem_type == SEM_TYPE_NULL) {
+    return false;
+  }
+
+  sem_t core_type = eval_combined_type(&left, &right);
+  eval_cast_to(&left, core_type);
+  eval_cast_to(&right, core_type);
+
+  // there must be a conversion or semantic would have stopped us and both
+  // are now promoted... we just compare the values
+  Invariant(left.sem_type == right.sem_type);
+
+  bool_t result = false;
+  bool_t matched = false;
+
+  switch (left.sem_type) {
+    case SEM_TYPE_INTEGER:
+      result = left._int32 == right._int32;
+      matched = true;
+      break;
+
+    case SEM_TYPE_LONG_INTEGER:
+      result = left._int64 == right._int64;
+      matched = true;
+      break;
+
+    case SEM_TYPE_REAL:
+      result = left._real == right._real;
+      matched = true;
+      break;
+
+    case SEM_TYPE_BOOL:
+      result = left._bool == right._bool;
+      matched = true;
+      break;
+  }
+
+  Invariant(matched);
+  return result;
+}
+
+static void eval_case_expr(ast_node *ast, eval_node *result) {
+  EXTRACT_ANY(expr, ast->left);
+  EXTRACT_NOTNULL(connector, ast->right);
+  EXTRACT_NOTNULL(case_list, connector->left);
+  EXTRACT_ANY(else_expr, connector->right);
+
+  // Case can have expression or just when clauses
+  if (expr) {
+    // This branch has a test expression, save its value
+    eval_node test_result;
+    eval(expr, &test_result);
+    if (test_result.sem_type == SEM_TYPE_ERROR) {
+      result->sem_type = SEM_TYPE_ERROR;
+      return;
+    }
+
+    // now walk through the case list, and choose the matching THEN
+    ast = case_list;
+    while (ast) {
+      EXTRACT_NOTNULL(when, ast->left);
+      EXTRACT_ANY_NOTNULL(case_expr, when->left);
+      EXTRACT_ANY_NOTNULL(then_expr, when->right);
+
+      eval_node case_result;
+      eval(case_expr, &case_result);
+      if (case_result.sem_type == SEM_TYPE_ERROR) {
+        result->sem_type = SEM_TYPE_ERROR;
+        return;
+      }
+
+      if (eval_are_equal(&test_result, &case_result)) {
+        eval(then_expr, result);
+        return;
+      }
+      ast = ast->right;
+    }
+  }
+  else {
+    // this is the case where we're looking for the first true expressions
+    eval_node zero;
+    zero._bool = 0;
+    zero.sem_type = SEM_TYPE_BOOL;
+
+    // now walk through the case list, and choose the matching THEN
+    ast = case_list;
+    while (ast) {
+      EXTRACT_NOTNULL(when, ast->left);
+      EXTRACT_ANY_NOTNULL(case_expr, when->left);
+      EXTRACT_ANY_NOTNULL(then_expr, when->right);
+
+      eval_node case_result;
+      eval(case_expr, &case_result);
+      if (case_result.sem_type == SEM_TYPE_ERROR) {
+        result->sem_type = SEM_TYPE_ERROR;
+        return;
+      }
+
+      if (!eval_are_equal(&zero, &case_result)) {
+        eval(then_expr, result);
+        return;
+      }
+
+      ast = ast->right;
+    }
+  }
+
+  // if we get this far, there's no match, use the else clause if there is one
+  if (else_expr) {
+    eval(else_expr, result);
+  }
+  else {
+    result->sem_type = SEM_TYPE_NULL;
+  }
+}
+
 cql_noexport void eval(ast_node *expr, eval_node *result) {
   // These are all the expressions there are, we have to find it in this table
   // or else someone added a new expression type and it isn't supported yet.
@@ -614,39 +738,37 @@ cql_noexport void eval(ast_node *expr, eval_node *result) {
 // with the appropriate tokens ready to go.  Using our own symbol tables for
 // dispatch saves us a lot of if/else string comparison verbosity.
 cql_noexport void eval_init() {
-// restore all globals and statics we own
-eval_cleanup();
+  // restore all globals and statics we own
+  eval_cleanup();
 
-evals = symtab_new();
+  evals = symtab_new();
 
-EXPR_INIT(null);
-EXPR_INIT(num);
-EXPR_INIT(add);
-EXPR_INIT(mul);
-EXPR_INIT(div);
-EXPR_INIT(mod);
-EXPR_INIT(sub);
-EXPR_INIT(lshift);
-EXPR_INIT(rshift);
-EXPR_INIT(bin_and);
-EXPR_INIT(bin_or);
-EXPR_INIT(eq);
-EXPR_INIT(lt);
-EXPR_INIT(gt);
-EXPR_INIT(ne);
-EXPR_INIT(ge);
-EXPR_INIT(le);
-EXPR_INIT(and);
-EXPR_INIT(or);
-EXPR_INIT(is);
-EXPR_INIT(is_not);
-EXPR_INIT(cast_expr);
-EXPR_INIT(not);
-EXPR_INIT(tilde);
-EXPR_INIT(uminus);
-
-// EXPR_INIT(case_expr);  -> we'll do this one because it's super flexible
-
+  EXPR_INIT(null);
+  EXPR_INIT(num);
+  EXPR_INIT(add);
+  EXPR_INIT(mul);
+  EXPR_INIT(div);
+  EXPR_INIT(mod);
+  EXPR_INIT(sub);
+  EXPR_INIT(lshift);
+  EXPR_INIT(rshift);
+  EXPR_INIT(bin_and);
+  EXPR_INIT(bin_or);
+  EXPR_INIT(eq);
+  EXPR_INIT(lt);
+  EXPR_INIT(gt);
+  EXPR_INIT(ne);
+  EXPR_INIT(ge);
+  EXPR_INIT(le);
+  EXPR_INIT(and);
+  EXPR_INIT(or);
+  EXPR_INIT(is);
+  EXPR_INIT(is_not);
+  EXPR_INIT(cast_expr);
+  EXPR_INIT(not);
+  EXPR_INIT(tilde);
+  EXPR_INIT(uminus);
+  EXPR_INIT(case_expr);
 }
 
 cql_noexport void eval_cleanup() {
