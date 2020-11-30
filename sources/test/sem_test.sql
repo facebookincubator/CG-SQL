@@ -3482,6 +3482,49 @@ select nullable(1, 2);
 -- +1 Error
 select const(x);
 
+-- TEST: divide by zero yields error in all forms (integer)
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1/0);
+
+-- TEST: divide by zero yields error in all forms (real)
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1/0.0);
+
+-- TEST: divide by zero yields error in all forms (long)
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1/0L);
+
+-- TEST: divide by zero yields error in all forms (bool)
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1/not 1);
+
+-- TEST: divide by zero yields error in all forms (integer)
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1%0);
+
+
+-- TEST: divide by zero yields error in all forms (long)
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1%0L);
+
+-- TEST: divide by zero yields error in all forms (bool)
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1%not 1);
+
 -- TEST: variables not allowed in constant expressions (duh)
 -- + {call}: err
 -- + Error % evaluation of constant failed

@@ -255,29 +255,40 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
     return; \
   } \
   \
+  if ((#op)[0] == '/' && eval_is_false(&right)) { \
+    /* special case to prevent divide by zero */ \
+    result->sem_type = SEM_TYPE_ERROR; \
+    return; \
+  } \
+  \
   sem_t core_type = eval_combined_type(&left, &right); \
   eval_cast_to(&left, core_type); \
   eval_cast_to(&right, core_type); \
+  result->sem_type = SEM_TYPE_ERROR; \
   \
   switch (core_type) { \
   case SEM_TYPE_INTEGER: \
+    result->sem_type = SEM_TYPE_INTEGER; \
     result->_int32 = (left._int32 op right._int32); \
     break; \
   \
   case SEM_TYPE_LONG_INTEGER: \
+    result->sem_type = SEM_TYPE_LONG_INTEGER; \
     result->_int64 = (left._int64 op right._int64); \
     break; \
   \
   case SEM_TYPE_BOOL: \
+    result->sem_type = SEM_TYPE_BOOL; \
     result->_bool = 0 != (left._bool op right._bool); \
     break; \
   \
   case SEM_TYPE_REAL: \
+    result->sem_type = SEM_TYPE_REAL; \
     result->_real = (left._real op right._real); \
     break; \
   } \
   \
-  result->sem_type = core_type;
+  Invariant(result->sem_type == core_type)
 
 // This is exactly like the standard binary operator macro except it is for
 // the operators that are not allowed to apply to real numbers.  e.g. 
@@ -297,27 +308,36 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
     result->sem_type = SEM_TYPE_NULL; \
     return; \
   } \
+  \
+  if ((#op)[0] == '%' && eval_is_false(&right)) { \
+    /* special case to prevent divide by zero */ \
+    result->sem_type = SEM_TYPE_ERROR; \
+    return; \
+  } \
   sem_t core_type = eval_combined_type(&left, &right); \
   \
   eval_cast_to(&left, core_type); \
   eval_cast_to(&right, core_type); \
+  result->sem_type = SEM_TYPE_ERROR; \
   \
   switch (core_type) { \
   case SEM_TYPE_INTEGER: \
+    result->sem_type = SEM_TYPE_INTEGER; \
     result->_int32 = (left._int32 op right._int32); \
     break; \
   \
   case SEM_TYPE_LONG_INTEGER: \
+    result->sem_type = SEM_TYPE_LONG_INTEGER; \
     result->_int64 = (left._int64 op right._int64); \
     break; \
   \
   case SEM_TYPE_BOOL: \
+    result->sem_type = SEM_TYPE_BOOL; \
     result->_bool = 0 != (left._bool op right._bool); \
     break; \
-  \
   } \
   \
-  result->sem_type = core_type;
+  Invariant(result->sem_type == core_type)
 
 // The final large class of operators are the comparisons. These
 // have similar rules to the normal operators but the return type
@@ -341,7 +361,7 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
     result->sem_type = SEM_TYPE_ERROR; \
     return; \
   } \
- \
+  \
   if (left.sem_type == SEM_TYPE_NULL || right.sem_type == SEM_TYPE_NULL) { \
     result->sem_type = SEM_TYPE_NULL; \
     return; \
@@ -350,26 +370,56 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
   sem_t core_type = eval_combined_type(&left, &right); \
   eval_cast_to(&left, core_type); \
   eval_cast_to(&right, core_type); \
+  result->sem_type = SEM_TYPE_ERROR; \
   \
   switch (core_type) { \
   case SEM_TYPE_INTEGER: \
+    result->sem_type = SEM_TYPE_BOOL; \
     result->_bool = (left._int32 op right._int32); \
     break; \
   \
   case SEM_TYPE_LONG_INTEGER: \
+    result->sem_type = SEM_TYPE_BOOL; \
     result->_bool = (left._int64 op right._int64); \
     break; \
   \
   case SEM_TYPE_BOOL: \
+    result->sem_type = SEM_TYPE_BOOL; \
     result->_bool = 0 != (left._bool op right._bool); \
     break; \
   \
   case SEM_TYPE_REAL: \
+    result->sem_type = SEM_TYPE_BOOL; \
     result->_bool = (left._real op right._real); \
     break; \
   } \
   \
-  result->sem_type = SEM_TYPE_BOOL;
+  Invariant(result->sem_type == SEM_TYPE_BOOL);
+
+// True if the node is a zero; not err, not NULL, an actual zero
+static bool_t eval_is_false(eval_node *result) {
+  // null is not false
+  if (result->sem_type == SEM_TYPE_NULL || result->sem_type == SEM_TYPE_ERROR) {
+    return false;
+  }
+
+  eval_node temp = *result;
+  eval_cast_to(&temp, SEM_TYPE_BOOL);
+  return !temp._bool;
+}
+
+// True if the node is not zero; not err, not NULL, an actual non-zero
+static bool_t eval_is_true(eval_node *result) {
+  // null/error is not true
+  if (result->sem_type == SEM_TYPE_NULL || result->sem_type == SEM_TYPE_ERROR) {
+    return false;
+  }
+
+  eval_node temp = *result;
+  eval_cast_to(&temp, SEM_TYPE_BOOL);
+  return temp._bool;
+}
+
 
 // Having defined the helper macros all of the normal operators
 // are now just one of the standard expansions
@@ -386,12 +436,12 @@ static void eval_mul(ast_node *expr, eval_node *result) {
   BINARY_OP(*);
 }
 
-// todo: divide by zero
+// note: BINARY_OP has divide by zero logic
 static void eval_div(ast_node *expr, eval_node *result) {
   BINARY_OP(/);
 }
 
-// todo: divide by zero
+// note: BINARY_OP_NO_REAL has divide by zero logic
 static void eval_mod(ast_node *expr, eval_node *result) {
   BINARY_OP_NO_REAL(%);
 }
@@ -436,6 +486,15 @@ static void eval_bin_or(ast_node *expr, eval_node *result) {
   BINARY_OP_NO_REAL(|);
 }
 
+// The 'is' form is very similar to the others but the null handling is different
+// so there's an early out for that;  The logic is:
+// * any error in left or right yields an error
+// * if either left or right is null, the result is true if and only if both are null
+// * at this point all the error/null cases are handled so it's just like the
+//   back end of the BINARY_OP case;  the args have arleady been evaluated so:
+//   * compute the smallest type that holds both values
+//   * convert to that type
+//   * return true if and only if the values are equal as that type
 static void eval_is(ast_node *expr, eval_node *result) {
   eval_node left = {};
   eval_node right = {};
@@ -457,26 +516,36 @@ static void eval_is(ast_node *expr, eval_node *result) {
   sem_t core_type = eval_combined_type(&left, &right);
   eval_cast_to(&left, core_type);
   eval_cast_to(&right, core_type);
+  
+  result->sem_type = SEM_TYPE_ERROR;
 
   switch (core_type) {
     case SEM_TYPE_INTEGER:
+      result->sem_type = SEM_TYPE_BOOL;
       result->_bool = (left._int32 == right._int32);
       break;
 
     case SEM_TYPE_LONG_INTEGER:
+      result->sem_type = SEM_TYPE_BOOL;
       result->_bool = (left._int64 == right._int64);
       break;
 
     case SEM_TYPE_BOOL:
+      result->sem_type = SEM_TYPE_BOOL;
       result->_bool = 0 != (left._bool == right._bool);
       break;
 
     case SEM_TYPE_REAL:
+      result->sem_type = SEM_TYPE_BOOL;
       result->_bool = (left._real == right._real);
       break;
   }
+
+  Invariant(result->sem_type == SEM_TYPE_BOOL);
 }
 
+// We can use the 'is' logic to do this, we simply run "is", if the result
+// was a bool (i.e. not an error) then we simply invert the bool.
 static void eval_is_not(ast_node *expr, eval_node *result) {
   eval_is(expr, result);
   if (result->sem_type == SEM_TYPE_BOOL) {
@@ -484,6 +553,8 @@ static void eval_is_not(ast_node *expr, eval_node *result) {
   }
 }
 
+// Not has simple rules;  If the operand is an error or null it is unchanged
+// any other operator is converted to a bool and then inverted.
 static void eval_not(ast_node *expr, eval_node *result) {
   eval(expr->left, result);
   if (result->sem_type == SEM_TYPE_ERROR || result->sem_type == SEM_TYPE_NULL) {
@@ -491,83 +562,95 @@ static void eval_not(ast_node *expr, eval_node *result) {
   }
 
   eval_cast_to(result, SEM_TYPE_BOOL);
+  Invariant(result->sem_type == SEM_TYPE_BOOL);  // set by the above
   result->_bool = !result->_bool;
 }
 
+// The bitwise not operator is rather like the normal not with a few twists:
+//  * an error or null argument is returned unchanged
+//  * integers and long integers are bitwise inverted with ~
+//  * bool is promoted to integer so the only possible result values are:
+//    -1 for ~0, and -2 for ~1;  This is also what SQLite does.
 static void eval_tilde(ast_node *expr, eval_node *result) {
   eval(expr->left, result);
   if (result->sem_type == SEM_TYPE_ERROR || result->sem_type == SEM_TYPE_NULL) {
     return;
   }
 
+  // only the numeric cases left
+  bool matched = false;
+
   switch (result->sem_type) {
     case SEM_TYPE_INTEGER:
       result->_int32 = ~result->_int32;
+      matched = true;
       break;
 
     case SEM_TYPE_LONG_INTEGER:
       result->_int64 = ~result->_int64;
+      matched = true;
       break;
 
     case SEM_TYPE_BOOL:
       result->sem_type = SEM_TYPE_INTEGER;
-      result->_int32 = ~result->_bool;
+      // use ternary in case bool has a true value other than 1
+      // this is clearer than writing ~!!result->_bool I think...
+      result->_int32 = result->_bool ? ~1 : ~0;
+      matched = true;
       break;
   }
+  Invariant(matched);
 }
 
+// Unary minus (negation) is very much like bitwise not:
+// * error or null are unchanged
+// * all others are negated
+// * bool promotes to an int and is negated so the valid results are 0 and -1
 static void eval_uminus(ast_node *expr, eval_node *result) {
   eval(expr->left, result);
   if (result->sem_type == SEM_TYPE_ERROR || result->sem_type == SEM_TYPE_NULL) {
     return;
   }
 
+  // only the numeric cases left
+  bool matched = false;
+
   switch (result->sem_type) {
     case SEM_TYPE_INTEGER:
+      matched = true;
       result->_int32 = -result->_int32;
       break;
 
     case SEM_TYPE_LONG_INTEGER:
+      matched = true;
       result->_int64 = -result->_int64;
       break;
 
     case SEM_TYPE_REAL:
+      matched = true;
       result->_real = -result->_real;
       break;
 
     case SEM_TYPE_BOOL:
+      matched = true;
       result->sem_type = SEM_TYPE_INTEGER;
-      result->_int32 = -result->_bool;
+      // use ternary in case bool has a true value other than 1
+      // this is clearer than writing -!!result->_bool I think...
+      result->_int32 = result->_bool ? -1 : 0;  
       break;
   }
+  Invariant(matched);
 }
 
-static bool_t eval_is_false(eval_node *result) {
-  Contract(result->sem_type != SEM_TYPE_ERROR);
-
-  // null is not false
-  if (result->sem_type == SEM_TYPE_NULL) {
-    return false;
-  }
-
-  eval_node temp = *result;
-  eval_cast_to(&temp, SEM_TYPE_BOOL);
-  return !temp._bool;
-}
-
-static bool_t eval_is_true(eval_node *result) {
-  Contract(result->sem_type != SEM_TYPE_ERROR);
-
-  // null is not false
-  if (result->sem_type == SEM_TYPE_NULL) {
-    return false;
-  }
-
-  eval_node temp = *result;
-  eval_cast_to(&temp, SEM_TYPE_BOOL);
-  return temp._bool;
-}
-
+// logical AND is tricky because it has to follow the truth table and also
+// short circuit.
+//   * if the left arg is an error the result is an error
+//   * if the left result is false the answer is false and the right are is
+//     not evaluated.
+//   * if the right arg is an error the result is an error
+//   * if the right arg is false the answer is false
+//   * if either are null the answer is null
+//   * otherwise the answer is true.
 static void eval_and(ast_node *expr, eval_node *result) {
   eval_node left = {};
   eval(expr->left, &left);
@@ -605,6 +688,15 @@ static void eval_and(ast_node *expr, eval_node *result) {
   result->_bool = 1;
 }
 
+// logical OR is tricky because it has to follow the truth table and also
+// short circuit.
+//   * if the left arg is an error the result is an error
+//   * if the left result is true the answer is true and the right are is
+//     not evaluated.
+//   * if the right arg is an error the result is an error
+//   * if the right arg is true the answer is true
+//   * if either are null the answer is null
+//   * otherwise the answer is false.
 static void eval_or(ast_node *expr, eval_node *result) {
   eval_node left = {};
   eval(expr->left, &left);
@@ -642,6 +734,8 @@ static void eval_or(ast_node *expr, eval_node *result) {
   result->_bool = 0;
 }
 
+// Cast is super easy because we arleady have the eval_cast_to helper
+// we just do the evaluation it and early out on error or null
 static void eval_cast_expr(ast_node *expr, eval_node *result) {
   eval(expr->left, result);
 
@@ -653,9 +747,16 @@ static void eval_cast_expr(ast_node *expr, eval_node *result) {
     return;
   }
 
+  // known to be numeric, eval_cast_to can do the job now.
   eval_cast_to(result, core_type_of(expr->sem->sem_type));
 }
 
+// This helper is used in the evaluation of case expressions
+// it's very much like the "==" operator.  Errors have already
+// been handled in the caller.
+//  * null is not equal to anything
+//  * convert to the smallest type that can hold left or right
+//  * compare using that type
 static bool eval_are_equal(eval_node *_left, eval_node *_right) {
   eval_node left = *_left;
   eval_node right = *_right;
@@ -676,35 +777,38 @@ static bool eval_are_equal(eval_node *_left, eval_node *_right) {
   // are now promoted... we just compare the values
   Invariant(left.sem_type == right.sem_type);
 
-  bool_t result = false;
-  bool_t matched = false;
+  int32_t result = -1;
 
   switch (left.sem_type) {
     case SEM_TYPE_INTEGER:
       result = left._int32 == right._int32;
-      matched = true;
       break;
 
     case SEM_TYPE_LONG_INTEGER:
       result = left._int64 == right._int64;
-      matched = true;
       break;
 
     case SEM_TYPE_REAL:
       result = left._real == right._real;
-      matched = true;
       break;
 
     case SEM_TYPE_BOOL:
       result = left._bool == right._bool;
-      matched = true;
       break;
   }
 
-  Invariant(matched);
+  Invariant(result == 0 || result == 1);
   return result;
 }
 
+// Case expression evaluation is fairly complex with the two cases outlined below.
+// In short:
+//   * evaluate the test expression if there is one
+//   * visit the WHEN expressions and use equality or truth
+//     to pick the correct THEN expression
+//   * use the else expression if there is one, else use NULL
+//   * any errors encountered yield an error
+//   * the usual null equality rules apply
 static void eval_case_expr(ast_node *ast, eval_node *result) {
   EXTRACT_ANY(expr, ast->left);
   EXTRACT_NOTNULL(connector, ast->right);
@@ -776,29 +880,29 @@ static void eval_case_expr(ast_node *ast, eval_node *result) {
   }
 }
 
+static eval_node err_result = { .sem_type = SEM_TYPE_ERROR };
+
+// Dispatch to the worker function using the token string in the ast and the symbol table
+// any unknown symbols are evaluation errors due to unsupported const expression form.
 cql_noexport void eval(ast_node *expr, eval_node *result) {
-  // These are all the expressions there are, we have to find it in this table
-  // or else someone added a new expression type and it isn't supported yet.
+  // this saves us a whole lot of string compares...
   symtab_entry *entry = symtab_find(evals, expr->type);
   if (!entry) {
-    eval_node err_result = { .sem_type = SEM_TYPE_ERROR };
     *result = err_result;
     return;
   }
 
   eval_dispatch disp = (eval_dispatch)entry->val;
   disp(expr, result);
+  if (result->sem_type == SEM_TYPE_ERROR) {
+    *result = err_result;  // blast any state that may be in there leaving just the error
+  }
 }
-
-#undef FUNC_INIT
-#define FUNC_INIT(x) symtab_add(eval_funcs, #x, (void *)eval_func_ ## x)
 
 #undef EXPR_INIT
 #define EXPR_INIT(x) symtab_add(evals, #x, (void *)eval_ ## x)
 
-// This method loads up the global symbol tables in either empty state or
-// with the appropriate tokens ready to go.  Using our own symbol tables for
-// dispatch saves us a lot of if/else string comparison verbosity.
+// This method loads up the global symbol table and cleans any pending state we had
 cql_noexport void eval_init() {
   // restore all globals and statics we own
   eval_cleanup();
@@ -833,6 +937,7 @@ cql_noexport void eval_init() {
   EXPR_INIT(case_expr);
 }
 
+// the only global state we have is the symbol table, clean that up
 cql_noexport void eval_cleanup() {
   SYMTAB_CLEANUP(evals);
 }
