@@ -568,7 +568,7 @@ static void eval_not(ast_node *expr, eval_node *result) {
 
 // The bitwise not operator is rather like the normal not with a few twists:
 //  * an error or null argument is returned unchanged
-//  * integers and long integers are bitwise inverted with ~
+//  * integers and long_integers are bitwise inverted with ~
 //  * bool is promoted to integer so the only possible result values are:
 //    -1 for ~0, and -2 for ~1;  This is also what SQLite does.
 static void eval_tilde(ast_node *expr, eval_node *result) {
@@ -605,7 +605,7 @@ static void eval_tilde(ast_node *expr, eval_node *result) {
 // Unary minus (negation) is very much like bitwise not:
 // * error or null are unchanged
 // * all others are negated
-// * bool promotes to an int and is negated so the valid results are 0 and -1
+// * bool promotes to an integer and is negated so the valid results are 0 and -1
 static void eval_uminus(ast_node *expr, eval_node *result) {
   eval(expr->left, result);
   if (result->sem_type == SEM_TYPE_ERROR || result->sem_type == SEM_TYPE_NULL) {
