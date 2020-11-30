@@ -12503,3 +12503,35 @@ begin
    end;
 end;
 
+create table SalesInfo(
+  month integer,
+  amount real
+);
+
+-- TEST: sum is not allowed in a window range
+-- + Error % function may not appear in this context 'sum'
+-- +1 Error
+SELECT month, amount, AVG(amount) OVER
+  (ORDER BY month ROWS BETWEEN 1 PRECEDING AND sum(month) FOLLOWING)
+SalesMovingAverage FROM SalesInfo;
+
+-- TEST: sum is not allowed in a window range
+-- + Error % function may not appear in this context 'sum'
+-- +1 Error
+SELECT month, amount, AVG(amount) OVER
+  (PARTITION BY sum(month) ROWS BETWEEN 1 PRECEDING AND 3 FOLLOWING)
+SalesMovingAverage FROM SalesInfo;
+
+-- TEST: sum is not allowed in a window range
+-- + Error % function may not appear in this context 'sum'
+-- +1 Error
+SELECT month, amount, AVG(amount) OVER
+  (ORDER BY month ROWS BETWEEN sum(month) PRECEDING AND 1 FOLLOWING)
+SalesMovingAverage FROM SalesInfo;
+
+-- TEST: sum is not allowed in a filter expression
+-- + Error % function may not appear in this context 'sum'
+-- +1 Error
+SELECT month, amount, AVG(amount) FILTER(WHERE sum(month) = 1) OVER
+  (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING EXCLUDE NO OTHERS)
+SalesMovingAverage FROM SalesInfo;

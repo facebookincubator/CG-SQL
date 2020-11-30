@@ -882,30 +882,30 @@ static void gen_opt_partition_by(ast_node *ast) {
 
 static void gen_frame_spec_flags(int32_t flags) {
   if (flags & FRAME_TYPE_RANGE) {
-    gen_printf("RANGE ");
+    gen_printf("RANGE");
   }
   if (flags & FRAME_TYPE_ROWS) {
-      gen_printf("ROWS ");
+    gen_printf("ROWS");
   }
   if (flags & FRAME_TYPE_GROUPS) {
-    gen_printf("GROUPS ");
+    gen_printf("GROUPS");
   }
   if (flags & FRAME_BOUNDARY_UNBOUNDED || flags & FRAME_BOUNDARY_START_UNBOUNDED) {
-    gen_printf("UNBOUNDED PRECEDING ");
+    gen_printf("UNBOUNDED PRECEDING");
   }
   if (flags & FRAME_BOUNDARY_PRECEDING ||
       flags & FRAME_BOUNDARY_START_PRECEDING ||
       flags & FRAME_BOUNDARY_END_PRECEDING) {
-    gen_printf("PRECEDING ");
+    gen_printf("PRECEDING");
   }
   if (flags & FRAME_BOUNDARY_CURRENT_ROW ||
       flags & FRAME_BOUNDARY_START_CURRENT_ROW ||
       flags & FRAME_BOUNDARY_END_CURRENT_ROW) {
-    gen_printf("CURRENT ROW ");
+    gen_printf("CURRENT ROW");
   }
   if (flags & FRAME_BOUNDARY_START_FOLLOWING ||
       flags & FRAME_BOUNDARY_END_FOLLOWING) {
-    gen_printf("FOLLOWING ");
+    gen_printf("FOLLOWING");
   }
   if (flags & FRAME_BOUNDARY_END_UNBOUNDED) {
     gen_printf("UNBOUNDED FOLLOWING");
@@ -923,16 +923,24 @@ static void gen_frame_spec_flags(int32_t flags) {
     gen_printf("EXCLUDE TIES");
   }
 }
+
 static void gen_frame_type(int32_t flags) {
+  Invariant(flags == (flags & FRAME_TYPE_FLAGS));
   gen_frame_spec_flags(flags);
+  gen_printf(" ");
 }
 
 static void gen_frame_exclude(int32_t flags) {
+  Invariant(flags == (flags & FRAME_EXCLUDE_FLAGS));
+  if (flags != FRAME_EXCLUDE_NONE) {
+    gen_printf(" ");
+  }
   gen_frame_spec_flags(flags);
 }
 
 static void gen_frame_boundary(ast_node *ast, int32_t flags) {
   EXTRACT_ANY(expr, ast->left);
+  Invariant(flags == (flags & FRAME_BOUNDARY_FLAGS));
 
   if (expr) {
     gen_root_expr(expr);
@@ -944,6 +952,7 @@ static void gen_frame_boundary(ast_node *ast, int32_t flags) {
 static void gen_frame_boundary_start(ast_node *ast, int32_t flags) {
   Contract(is_ast_expr_list(ast));
   EXTRACT_ANY(expr, ast->left);
+  Invariant(flags == (flags & FRAME_BOUNDARY_START_FLAGS));
 
   gen_printf("BETWEEN ");
   if (expr) {
@@ -956,8 +965,9 @@ static void gen_frame_boundary_start(ast_node *ast, int32_t flags) {
 static void gen_frame_boundary_end(ast_node *ast, int32_t flags) {
   Contract(is_ast_expr_list(ast));
   EXTRACT_ANY(expr, ast->right);
+  Invariant(flags == (flags & FRAME_BOUNDARY_END_FLAGS));
 
-  gen_printf("AND ");
+  gen_printf(" AND ");
   if (expr) {
     gen_root_expr(expr);
     gen_printf(" ");
@@ -1000,14 +1010,24 @@ static void gen_window_defn(ast_node *ast) {
   EXTRACT(opt_orderby, window_defn_orderby->left);
   EXTRACT(opt_frame_spec, window_defn_orderby->right);
 
+  // the first optional element never needs a space
+  bool need_space = 0;
+
   gen_printf(" (");
   if (opt_partition_by) {
+    Invariant(!need_space);
     gen_opt_partition_by(opt_partition_by);
+    need_space = 1;
   }
+
   if (opt_orderby) {
+    if (need_space) gen_printf(" ");
     gen_opt_orderby(opt_orderby);
+    need_space = 1;
   }
+
   if (opt_frame_spec) {
+    if (need_space) gen_printf(" ");
     gen_opt_frame_spec(opt_frame_spec);
   }
   gen_printf(")");

@@ -971,11 +971,11 @@ frame_boundary_start:
   UNBOUNDED PRECEDING  { $frame_boundary_start = new_ast_frame_boundary_start(new_ast_opt(FRAME_BOUNDARY_START_UNBOUNDED), NULL); }
   | expr PRECEDING  { $frame_boundary_start = new_ast_frame_boundary_start(new_ast_opt(FRAME_BOUNDARY_START_PRECEDING), $expr); }
   | CURRENT_ROW  { $frame_boundary_start = new_ast_frame_boundary_start(new_ast_opt(FRAME_BOUNDARY_START_CURRENT_ROW), NULL); }
-  | expr FOLLOWING  { $frame_boundary_start = new_ast_frame_boundary_start(new_ast_opt(FRAME_BOUNDARY_START_CURRENT_ROW), $expr); }
+  | expr FOLLOWING  { $frame_boundary_start = new_ast_frame_boundary_start(new_ast_opt(FRAME_BOUNDARY_START_FOLLOWING), $expr); }
   ;
 
 frame_boundary_end:
-  expr PRECEDING  { $frame_boundary_end = new_ast_frame_boundary_end($expr, new_ast_opt(FRAME_BOUNDARY_END_PRECEDING)); }
+  expr PRECEDING  { $frame_boundary_end = new_ast_frame_boundary_end(new_ast_opt(FRAME_BOUNDARY_END_PRECEDING), $expr); }
   | CURRENT_ROW  { $frame_boundary_end = new_ast_frame_boundary_end(new_ast_opt(FRAME_BOUNDARY_END_CURRENT_ROW), NULL); }
   | expr FOLLOWING  { $frame_boundary_end = new_ast_frame_boundary_end(new_ast_opt(FRAME_BOUNDARY_END_FOLLOWING), $expr); }
   | UNBOUNDED FOLLOWING  { $frame_boundary_end = new_ast_frame_boundary_end(new_ast_opt(FRAME_BOUNDARY_END_UNBOUNDED), NULL); }
@@ -1656,7 +1656,7 @@ trigger_def:
   ;
 
 trigger_condition:
-  /* nil */  { $trigger_condition = 0; }
+  /* nil */  { $trigger_condition = TRIGGER_BEFORE; /* before is the default per https://sqlite.org/lang_createtrigger.html */ }
   | BEFORE  { $trigger_condition = TRIGGER_BEFORE; }
   | AFTER  { $trigger_condition = TRIGGER_AFTER; }
   | INSTEAD OF  { $trigger_condition = TRIGGER_INSTEAD_OF; }

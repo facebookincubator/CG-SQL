@@ -949,6 +949,14 @@ BEGIN
   SELECT a_result;
 END;
 
+CREATE TEMP TRIGGER IF NOT EXISTS trigger1
+  BEFORE DELETE ON target_table1
+  FOR EACH ROW
+  WHEN complex_when_expression
+BEGIN
+  SELECT a_result;
+END;
+
 CREATE TRIGGER trigger2
   AFTER INSERT ON target_table2
 BEGIN
@@ -1184,6 +1192,94 @@ BEGIN
     END IF;
   END;
 END;
+
+SELECT month, amount, 
+  AVG(amount) OVER (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) AS SalesMovingAverage
+  FROM SalesInfo;
+
+SELECT month, amount, 
+  SUM(amount) OVER (ORDER BY month) AS RunningTotal
+  FROM SalesInfo;
+
+SELECT month, amount, 
+  AVG(amount) OVER (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING EXCLUDE NO OTHERS) AS SalesMovingAverage
+  FROM SalesInfo;
+
+SELECT month, amount, 
+  AVG(amount) OVER (ORDER BY month ROWS BETWEEN 3 PRECEDING AND 4 FOLLOWING EXCLUDE CURRENT ROW) AS SalesMovingAverage
+  FROM SalesInfo;
+
+SELECT month, amount, 
+  AVG(amount) OVER (ORDER BY month ROWS BETWEEN 4 PRECEDING AND 5 FOLLOWING EXCLUDE GROUP) AS SalesMovingAverage
+  FROM SalesInfo;
+
+SELECT month, amount, 
+  AVG(amount) OVER (ORDER BY month ROWS BETWEEN 6 PRECEDING AND 7 FOLLOWING EXCLUDE TIES) AS SalesMovingAverage
+  FROM SalesInfo;
+
+SELECT month, amount, 
+  AVG(amount) OVER (ORDER BY month RANGE BETWEEN 8 PRECEDING AND 9 FOLLOWING EXCLUDE TIES) AS SalesMovingAverage
+  FROM SalesInfo;
+
+SELECT month, amount, 
+  AVG(amount) OVER (ORDER BY month GROUPS BETWEEN 10 PRECEDING AND 11 FOLLOWING EXCLUDE TIES) AS SalesMovingAverage
+  FROM SalesInfo;
+
+SELECT month, amount, 
+  AVG(amount) OVER (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND 12 FOLLOWING EXCLUDE TIES) AS SalesMovingAverage
+  FROM SalesInfo;
+
+SELECT month, amount, 
+  AVG(amount) OVER (ORDER BY month GROUPS BETWEEN 13 FOLLOWING AND 14 PRECEDING) AS SalesMovingAverage
+  FROM SalesInfo;
+
+SELECT month, amount, 
+  AVG(amount) OVER (ORDER BY month GROUPS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) AS SalesMovingAverage
+  FROM SalesInfo;
+
+SELECT month, amount, 
+  AVG(amount) OVER (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS SalesMovingAverage
+  FROM SalesInfo;
+
+SELECT month, amount, 
+  AVG(amount) OVER (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW EXCLUDE TIES) AS SalesMovingAverage
+  FROM SalesInfo;
+
+SELECT month, amount, 
+  AVG(amount) OVER (PARTITION BY something ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW EXCLUDE TIES) AS SalesMovingAverage
+  FROM SalesInfo;
+
+SELECT month, amount, 
+  AVG(amount) OVER (GROUPS CURRENT ROW) AS SalesMovingAverage
+  FROM SalesInfo;
+
+SET trigger := 1;
+
+DECLARE x INTEGER NOT NULL @SENSITIVE;
+
+DECLARE x INTEGER NOT NULL @SENSITIVE;
+
+SET z := 1 BETWEEN (1 & 2) AND 3;
+
+SET z := 1 BETWEEN (1 | 2) AND 3;
+
+SET z := 1 BETWEEN (1 << 2) AND 3;
+
+SET z := 1 BETWEEN (1 >> 2) AND 3;
+
+SET z := 1 BETWEEN 1 + 2 AND 3;
+
+SET z := 1 BETWEEN 1 - 2 AND 3;
+
+SET z := 1 BETWEEN 1 * 2 AND 3;
+
+SET z := 1 BETWEEN 1 / 2 AND 3;
+
+SET z := 1 BETWEEN 1 % 2 AND 3;
+
+SET z := 1 BETWEEN -1 AND 3;
+
+SET z := 1 BETWEEN 'x' || 'y' AND 'z';
 
 SET file := 'path/I/do/not/like';
 

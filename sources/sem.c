@@ -4805,6 +4805,7 @@ static bool_t sem_validate_aggregate_context(ast_node *ast) {
             SEM_EXPR_CONTEXT_SELECT_LIST |
             SEM_EXPR_CONTEXT_HAVING |
             SEM_EXPR_CONTEXT_ORDER_BY |
+            SEM_EXPR_CONTEXT_WINDOW |
             SEM_EXPR_CONTEXT_WINDOW_FILTER)) {
     return false;
   }
@@ -6685,8 +6686,12 @@ static void sem_opt_partition_by(ast_node *ast) {
   Contract(is_ast_opt_partition_by(ast));
   EXTRACT_NOTNULL(expr_list, ast->left);
 
+  PUSH_EXPR_CONTEXT(SEM_EXPR_CONTEXT_WHERE);
+
   // compute semantic type of each expr, reporting errors
   sem_validate_args(ast, expr_list);
+
+  POP_EXPR_CONTEXT();
 }
 
 static void sem_opt_frame_spec(ast_node *ast) {
@@ -6707,18 +6712,18 @@ static void sem_opt_frame_spec(ast_node *ast) {
   if (frame_boundary_flags) {
     Contract(!frame_boundary_start_flags && !frame_boundary_end_flags);
     if (left_expr) {
-      sem_expr(left_expr);
+      sem_root_expr(left_expr, SEM_EXPR_CONTEXT_WHERE);
       error = is_error(left_expr);
     }
   }
   else {
     Contract(frame_boundary_start_flags && frame_boundary_end_flags);
     if (left_expr) {
-      sem_expr(left_expr);
+      sem_root_expr(left_expr, SEM_EXPR_CONTEXT_WHERE);
       error |= is_error(left_expr);
     }
     if (right_expr) {
-    sem_expr(right_expr);
+      sem_root_expr(right_expr, SEM_EXPR_CONTEXT_WHERE);
       error |= is_error(right_expr);
     }
   }
@@ -12414,178 +12419,177 @@ static bool_t sem_autotest_dummy_test(
   bytebuf column_types = {};
   bytebuf column_names = {};
 
-  if (is_autotest_dummy_test(autotest_attr_name)) {
-    int32_t *error = (int32_t *)context;
+  int32_t *error = (int32_t *)context;
 
-    // walkthrough dummy_test tree and retreive the table name then the column name
-    // of the table name and then the column values of the column names. We repeat
-    // it for the next table info.
-    for (ast_node *dummy_test_list = misc_attr_value_list->right; dummy_test_list; dummy_test_list = dummy_test_list->right) {
+  // walkthrough dummy_test tree and retreive the table name then the column name
+  // of the table name and then the column values of the column names. We repeat
+  // it for the next table info.
+  for (ast_node *dummy_test_list = misc_attr_value_list->right; dummy_test_list; dummy_test_list = dummy_test_list->right) {
+    bytebuf_open(&column_types);
+    bytebuf_open(&column_names);
 
-      bytebuf_open(&column_types);
-      bytebuf_open(&column_names);
-      int32_t column_count = 0;
+    int32_t column_count = 0;
 
-      // find table name
-      if (!is_ast_misc_attr_value_list(dummy_test_list->left) || !is_ast_str(dummy_test_list->left->left)) {
-        report_dummy_test_error(
-          dummy_test_list->left,
-          "CQL0273: autotest attribute has incorrect format (table name should be nested) in",
-          "dummy_test",
-          error);
-        goto cleanup;
-      }
-
-      ast_node *table_list = dummy_test_list->left;
-      EXTRACT_STRING(table_name, table_list->left);
-      ast_node *table = find_table_or_view_even_hidden(table_name);
-      if (!table) {
-        report_dummy_test_error(
-          table_list->left,
-          "CQL0274: autotest attribute 'dummy_test' has non existent table",
-          table_name,
-          error);
-        goto cleanup;
-      }
-
-      record_ok(table_list->left);
-
-      // find column names
-      ast_node *column_name_list = table_list->right;
-      if (!is_ast_misc_attr_value_list(column_name_list->left)) {
-        report_dummy_test_error(
-          table_list->left,
-          "CQL0273: autotest attribute has incorrect format (column name should be nested) in",
-          "dummy_test",
-          error);
-        goto cleanup;
-      }
-
-      for (ast_node *list = column_name_list->left; list; list = list->right) {
-        if (!is_ast_str(list->left)) {
-          report_dummy_test_error(
-            table_list->left,
-            "CQL0273: autotest attribute has incorrect format (column name should be nested) in",
-            "dummy_test",
-            error);
-          goto cleanup;
-        }
-        ast_node *misc_attr_value = list->left;
-        EXTRACT_STRING(column_name, misc_attr_value);
-        sem_t col_type = find_column_type(table_name, column_name);
-        if (!col_type) {
-          report_dummy_test_error(
-            misc_attr_value,
-            "CQL0275: autotest attribute 'dummy_test' has non existent column",
-            column_name,
-            error);
-          goto cleanup;
-        }
-        record_ok(misc_attr_value);
-        sem_t *col_type_ptr = bytebuf_alloc(&column_types, sizeof(sem_t));
-        *col_type_ptr = col_type;
-        CSTR *colum_name_ptr = bytebuf_alloc(&column_names, sizeof(CSTR));
-        *colum_name_ptr = column_name;
-        column_count++;
-      }
-
-      // find column values
-      if (!is_ast_misc_attr_value_list(column_name_list->right)) {
-        report_dummy_test_error(
-          table_list->left,
-          "CQL0273: autotest attribute has incorrect format (column value should be nested) in",
-          "dummy_test",
-          error);
-        goto cleanup;
-      }
-
-      for (ast_node *column_values_list = column_name_list->right; column_values_list; column_values_list = column_values_list->right) {
-        if (!is_ast_misc_attr_value_list(column_values_list->left)) {
-          report_dummy_test_error(
-            table_list->left,
-            "CQL0273: autotest attribute has incorrect format (column value should be nested) in",
-            "dummy_test",
-            error);
-          goto cleanup;
-        }
-
-        int32_t column_value_count = 0;
-        for (ast_node *list = column_values_list->left; list; list = list->right) {
-
-          if (column_value_count >= column_count) {
-            report_dummy_test_error(
-              table_list->left,
-              "CQL0273: autotest attribute has incorrect format (too many column values) in",
-              "dummy_test",
-              error);
-            goto cleanup;
-          }
-
-          ast_node *misc_attr_value = list->left;
-          sem_t col_type = ((sem_t *)column_types.ptr)[column_value_count];
-          sem_t core_type = core_type_of(col_type);
-
-          if (is_ast_uminus(misc_attr_value)) {
-            Contract(is_ast_num(misc_attr_value->left));
-            misc_attr_value = misc_attr_value->left;
-          }
-
-          bool_t ok = false;
-
-          if (is_ast_num(misc_attr_value)) {
-             // an integer literal is good for any numeric type
-             EXTRACT_NUM_TYPE(num_type, misc_attr_value);
-
-             if (num_type == NUM_INT) {
-               // an integer literal is good for any numeric type
-               ok = is_numeric(core_type);
-             }
-             else if (num_type == NUM_LONG) {
-               // NUM_LONG might not fit in REAL, compatible only with itself
-               ok = core_type == SEM_TYPE_LONG_INTEGER;
-             }
-             else {
-               Contract(num_type == NUM_REAL);
-               // a real literal is only good for a real column
-               ok = core_type == SEM_TYPE_REAL;
-             }
-          }
-          else if (is_ast_strlit(misc_attr_value)) {
-             // a string literal is ok for any text column
-             ok = core_type == SEM_TYPE_TEXT;
-          }
-          else if (is_ast_null(misc_attr_value)) {
-             // the null token is ok for any nullable column
-             ok = is_nullable(col_type);
-          }
-
-          if (!ok) {
-            report_dummy_test_error(
-              misc_attr_value,
-              "CQL0276: autotest attribute 'dummy_test' has invalid value type in",
-              ((CSTR *) column_names.ptr)[column_value_count],
-              error);
-            goto cleanup;
-          }
-          record_ok(misc_attr_value);
-          column_value_count++;
-        }
-
-        if (column_count != column_value_count) {
-          report_dummy_test_error(
-            table_list->left,
-            "CQL0273: autotest attribute has incorrect format (mismatch number of column and values) in",
-            "dummy_test",
-            error);
-          goto cleanup;
-        }
-      }
-
-      bytebuf_close(&column_types);
-      bytebuf_close(&column_names);
+    // find table name
+    if (!is_ast_misc_attr_value_list(dummy_test_list->left) || !is_ast_str(dummy_test_list->left->left)) {
+      report_dummy_test_error(
+	dummy_test_list->left,
+	"CQL0273: autotest attribute has incorrect format (table name should be nested) in",
+	"dummy_test",
+	error);
+      goto cleanup;
     }
-    record_ok(misc_attr_value_list->left);
+
+    ast_node *table_list = dummy_test_list->left;
+    EXTRACT_STRING(table_name, table_list->left);
+    ast_node *table = find_table_or_view_even_hidden(table_name);
+    if (!table) {
+      report_dummy_test_error(
+	table_list->left,
+	"CQL0274: autotest attribute 'dummy_test' has non existent table",
+	table_name,
+	error);
+      goto cleanup;
+    }
+
+    record_ok(table_list->left);
+
+    // find column names
+    ast_node *column_name_list = table_list->right;
+    if (!is_ast_misc_attr_value_list(column_name_list->left)) {
+      report_dummy_test_error(
+	table_list->left,
+	"CQL0273: autotest attribute has incorrect format (column name should be nested) in",
+	"dummy_test",
+	error);
+      goto cleanup;
+    }
+
+    for (ast_node *list = column_name_list->left; list; list = list->right) {
+      if (!is_ast_str(list->left)) {
+	report_dummy_test_error(
+	  table_list->left,
+	  "CQL0273: autotest attribute has incorrect format (column name should be nested) in",
+	  "dummy_test",
+	  error);
+	goto cleanup;
+      }
+      ast_node *misc_attr_value = list->left;
+      EXTRACT_STRING(column_name, misc_attr_value);
+      sem_t col_type = find_column_type(table_name, column_name);
+      if (!col_type) {
+	report_dummy_test_error(
+	  misc_attr_value,
+	  "CQL0275: autotest attribute 'dummy_test' has non existent column",
+	  column_name,
+	  error);
+	goto cleanup;
+      }
+      record_ok(misc_attr_value);
+      sem_t *col_type_ptr = bytebuf_alloc(&column_types, sizeof(sem_t));
+      *col_type_ptr = col_type;
+      CSTR *colum_name_ptr = bytebuf_alloc(&column_names, sizeof(CSTR));
+      *colum_name_ptr = column_name;
+      column_count++;
+    }
+
+    // find column values
+    if (!is_ast_misc_attr_value_list(column_name_list->right)) {
+      report_dummy_test_error(
+	table_list->left,
+	"CQL0273: autotest attribute has incorrect format (column value should be nested) in",
+	"dummy_test",
+	error);
+      goto cleanup;
+    }
+
+    for (ast_node *column_values_list = column_name_list->right; column_values_list; column_values_list = column_values_list->right) {
+      if (!is_ast_misc_attr_value_list(column_values_list->left)) {
+	report_dummy_test_error(
+	  table_list->left,
+	  "CQL0273: autotest attribute has incorrect format (column value should be nested) in",
+	  "dummy_test",
+	  error);
+	goto cleanup;
+      }
+
+      int32_t column_value_count = 0;
+      for (ast_node *list = column_values_list->left; list; list = list->right) {
+
+	if (column_value_count >= column_count) {
+	  report_dummy_test_error(
+	    table_list->left,
+	    "CQL0273: autotest attribute has incorrect format (too many column values) in",
+	    "dummy_test",
+	    error);
+	  goto cleanup;
+	}
+
+	ast_node *misc_attr_value = list->left;
+	sem_t col_type = ((sem_t *)column_types.ptr)[column_value_count];
+	sem_t core_type = core_type_of(col_type);
+
+	if (is_ast_uminus(misc_attr_value)) {
+	  Contract(is_ast_num(misc_attr_value->left));
+	  misc_attr_value = misc_attr_value->left;
+	}
+
+	bool_t ok = false;
+
+	if (is_ast_num(misc_attr_value)) {
+	   // an integer literal is good for any numeric type
+	   EXTRACT_NUM_TYPE(num_type, misc_attr_value);
+
+	   if (num_type == NUM_INT) {
+	     // an integer literal is good for any numeric type
+	     ok = is_numeric(core_type);
+	   }
+	   else if (num_type == NUM_LONG) {
+	     // NUM_LONG might not fit in REAL, compatible only with itself
+	     ok = core_type == SEM_TYPE_LONG_INTEGER;
+	   }
+	   else {
+	     Contract(num_type == NUM_REAL);
+	     // a real literal is only good for a real column
+	     ok = core_type == SEM_TYPE_REAL;
+	   }
+	}
+	else if (is_ast_strlit(misc_attr_value)) {
+	   // a string literal is ok for any text column
+	   ok = core_type == SEM_TYPE_TEXT;
+	}
+	else if (is_ast_null(misc_attr_value)) {
+	   // the null token is ok for any nullable column
+	   ok = is_nullable(col_type);
+	}
+
+	if (!ok) {
+	  report_dummy_test_error(
+	    misc_attr_value,
+	    "CQL0276: autotest attribute 'dummy_test' has invalid value type in",
+	    ((CSTR *) column_names.ptr)[column_value_count],
+	    error);
+	  goto cleanup;
+	}
+	record_ok(misc_attr_value);
+	column_value_count++;
+      }
+
+      if (column_count != column_value_count) {
+	report_dummy_test_error(
+	  table_list->left,
+	  "CQL0273: autotest attribute has incorrect format (mismatch number of column and values) in",
+	  "dummy_test",
+	  error);
+	goto cleanup;
+      }
+    }
+
+    bytebuf_close(&column_types);
+    bytebuf_close(&column_names);
   }
+
+  record_ok(misc_attr_value_list->left);
 
 cleanup:
   if (column_types.ptr) {

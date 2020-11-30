@@ -5706,9 +5706,9 @@ static void cg_c_init(void) {
   EXPR_INIT(tilde, cg_unary, "~", C_EXPR_PRI_UNARY);
   EXPR_INIT(uminus, cg_unary, "-", C_EXPR_PRI_UNARY);
   EXPR_INIT(eq, cg_binary_compare, "==", C_EXPR_PRI_EQ_NE);
+  EXPR_INIT(ne, cg_binary_compare, "!=", C_EXPR_PRI_EQ_NE);
   EXPR_INIT(lt, cg_binary_compare, "<", C_EXPR_PRI_LT_GT);
   EXPR_INIT(gt, cg_binary_compare, ">", C_EXPR_PRI_LT_GT);
-  EXPR_INIT(ne, cg_binary_compare, "!=", C_EXPR_PRI_LT_GT);
   EXPR_INIT(ge, cg_binary_compare, ">=", C_EXPR_PRI_LT_GT);
   EXPR_INIT(le, cg_binary_compare, "<=", C_EXPR_PRI_LT_GT);
   EXPR_INIT(call, cg_expr_call, "CALL", C_EXPR_PRI_ROOT);

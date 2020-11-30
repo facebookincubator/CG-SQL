@@ -100,7 +100,7 @@
 #define FRAME_BOUNDARY_END_CURRENT_ROW   0x00800
 #define FRAME_BOUNDARY_END_FOLLOWING     0x01000
 #define FRAME_BOUNDARY_END_UNBOUNDED     0x02000
-#define FRAME_BOUNDARY_END_FLAGS         0x03F00 // bit mask for the frame spec boundary end
+#define FRAME_BOUNDARY_END_FLAGS         0x03C00 // bit mask for the frame spec boundary end
 
 #define FRAME_EXCLUDE_NO_OTHERS          0x04000
 #define FRAME_EXCLUDE_CURRENT_ROW        0x08000
