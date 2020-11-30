@@ -43,7 +43,7 @@ static void eval_num(ast_node *expr, eval_node *result) {
   EXTRACT_NUM_TYPE(num_type, expr);
   EXTRACT_NUM_VALUE(lit, expr);
 
-  result->sem_type == SEM_TYPE_ERROR;
+  result->sem_type = SEM_TYPE_ERROR;
 
   switch (num_type) {
   case NUM_INT:
