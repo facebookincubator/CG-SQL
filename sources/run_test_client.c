@@ -47,9 +47,10 @@ static int32_t trace_received = 0;
 }
 
 #define E(cond_, ...) _E(cond_, SQLITE_ERROR, __VA_ARGS__)
-#define SQL_E(rc_, ...) { \
+
+#define SQL_E(rc_) { \
   cql_code __saved_rc_ = (rc_); \
-  _E(SQLITE_OK == __saved_rc_, __saved_rc_, __VA_ARGS__); \
+  _E(SQLITE_OK == __saved_rc_, __saved_rc_, "failed return code %s:%d %s\n", __FILE__, __LINE__, #rc_); \
 }
 
 cql_code mockable_sqlite3_step(sqlite3_stmt *stmt) {
@@ -67,54 +68,54 @@ cql_code run_client(sqlite3 *db) {
   E(trace_received == 1, "failure proc did not trigger a trace\n");
   E(!cql_outstanding_refs, "outstanding refs in fails_because_bogus_table: %d\n", cql_outstanding_refs);
 
-  SQL_E(test_c_rowsets(db), NULL);
+  SQL_E(test_c_rowsets(db));
   E(!cql_outstanding_refs, "outstanding refs in test_c_rowsets: %d\n", cql_outstanding_refs);
 
-  SQL_E(test_rowset_same(db), NULL);
+  SQL_E(test_rowset_same(db));
   E(!cql_outstanding_refs, "outstanding refs in test_rowset_same: %d\n", cql_outstanding_refs);
 
-  SQL_E(test_blob_rowsets(db), NULL);
+  SQL_E(test_blob_rowsets(db));
   E(!cql_outstanding_refs, "outstanding refs in test_blob_rowsets: %d\n", cql_outstanding_refs);
 
-  SQL_E(test_ref_comparisons(db), NULL);
+  SQL_E(test_ref_comparisons(db));
   E(!cql_outstanding_refs, "outstanding refs in test_ref_comparisons: %d\n", cql_outstanding_refs);
 
-  SQL_E(test_sparse_blob_rowsets(db), NULL);
+  SQL_E(test_sparse_blob_rowsets(db));
   E(!cql_outstanding_refs, "outstanding refs in test_sparse_blob_rowsets: %d\n", cql_outstanding_refs);
 
-  SQL_E(test_bytebuf_growth(db), NULL);
+  SQL_E(test_bytebuf_growth(db));
   E(!cql_outstanding_refs, "outstanding refs in test bytebuf growth: %d\n", cql_outstanding_refs);
 
-  SQL_E(test_cql_finalize_on_error(db), NULL);
+  SQL_E(test_cql_finalize_on_error(db));
   E(!cql_outstanding_refs, "outstanding refs in test finalize on error: %d\n", cql_outstanding_refs);
 
-  SQL_E(test_c_one_row_result(db), NULL);
+  SQL_E(test_c_one_row_result(db));
   E(!cql_outstanding_refs, "outstanding refs in test_c_one_row_result: %d\n", cql_outstanding_refs);
 
-  SQL_E(test_all_column_fetchers(db), NULL);
+  SQL_E(test_all_column_fetchers(db));
   E(!cql_outstanding_refs, "outstanding refs in test_all_column_fetchers: %d\n", cql_outstanding_refs);
 
-  SQL_E(test_error_case_rowset(db), NULL);
+  SQL_E(test_error_case_rowset(db));
   E(!cql_outstanding_refs, "outstanding refs in test_error_case_rowset: %d\n", cql_outstanding_refs);
 
-  SQL_E(test_autodrop_rowset(db), NULL);
+  SQL_E(test_autodrop_rowset(db));
   E(!cql_outstanding_refs, "outstanding refs in test_autodrop_rowset (run 1): %d\n", cql_outstanding_refs);
 
-  SQL_E(test_autodrop_rowset(db), NULL);
+  SQL_E(test_autodrop_rowset(db));
   E(!cql_outstanding_refs, "outstanding refs in test_autodrop_rowset (run 2): %d\n", cql_outstanding_refs);
 
-  SQL_E(test_one_row_result(db), NULL);
+  SQL_E(test_one_row_result(db));
   E(!cql_outstanding_refs, "outstanding refs in one_row_result: %d\n", cql_outstanding_refs);
 
-  SQL_E(test_cql_bytebuf_open(db), NULL);
+  SQL_E(test_cql_bytebuf_open(db));
   E(!cql_outstanding_refs, "outstanding refs in test_cql_bytebuf_open: %d\n", cql_outstanding_refs);
 
-  SQL_E(test_cql_bytebuf_alloc_within_bytebuf_exp_growth_cap(db), NULL);
+  SQL_E(test_cql_bytebuf_alloc_within_bytebuf_exp_growth_cap(db));
   E(!cql_outstanding_refs,
     "outstanding refs in test_cql_bytebuf_alloc_within_bytebuf_exp_growth_cap: %d\n",
     cql_outstanding_refs);
 
-  SQL_E(test_cql_bytebuf_alloc_over_bytebuf_exp_growth_cap(db), NULL);
+  SQL_E(test_cql_bytebuf_alloc_over_bytebuf_exp_growth_cap(db));
   E(!cql_outstanding_refs,
     "outstanding refs in test_cql_bytebuf_alloc_over_bytebuf_exp_growth_cap: %d\n",
     cql_outstanding_refs);
@@ -146,13 +147,13 @@ cql_code test_c_rowsets(sqlite3 *db) {
   tests++;
 
   // we haven't created the table yet
-  SQL_E(drop_mixed(db), "error cleaning up mixed table");
+  SQL_E(drop_mixed(db));
   get_mixed_result_set_ref result_set;
   E(SQLITE_OK != get_mixed_fetch_results(db, &result_set, 100), "table didn't exist, yet there was data...\n");
 
-  SQL_E(make_mixed(db), "failed creating table\n");
-  SQL_E(load_mixed_with_nulls(db), "failed loading table\n");
-  SQL_E(get_mixed_fetch_results(db, &result_set, 100), "data access failed\n");
+  SQL_E(make_mixed(db));
+  SQL_E(load_mixed_with_nulls(db));
+  SQL_E(get_mixed_fetch_results(db, &result_set, 100));
 
   cql_int32 count = get_mixed_result_count(result_set);
   E(count == 4, "expected 4 rows from mixed\n");
@@ -259,26 +260,25 @@ cql_code test_rowset_same(sqlite3 *db) {
   cql_string_ref updated_name = string_create();
   cql_blob_ref updated_bl = blob_from_string(updated_name);
 
-  SQL_E(drop_mixed(db), "error cleaning up mixed table");
-  SQL_E(make_mixed(db), "failed creating table\n");
-  SQL_E(load_mixed_with_nulls(db), "failed loading table\n");
-  SQL_E(get_mixed_fetch_results(db, &result_set, 100), "data access failed\n");
+  SQL_E(drop_mixed(db));
+  SQL_E(make_mixed(db));
+  SQL_E(load_mixed_with_nulls(db));
+  SQL_E(get_mixed_fetch_results(db, &result_set, 100));
 
   // Update row 0 with just a new name, so the identity columns should still match the previous result set
   SQL_E(update_mixed(db,
                      get_mixed_get_id(result_set, 0),
                      updated_name,
                      get_nullable_code(result_set, 0),
-                     get_mixed_get_bl(result_set, 0)),
-        "updating mixed row 0 failed\n");
+                     get_mixed_get_bl(result_set, 0)));
+        
 
   // Update row 1 with just a new code, so only 1 of the identity columns should not match the previous result set
   SQL_E(update_mixed(db,
                      get_mixed_get_id(result_set, 1),
                      get_mixed_get_name(result_set, 1),
                      make_nullable_code(0, 1234),
-                     get_mixed_get_bl(result_set, 1)),
-        "updating mixed row 1 failed\n");
+                     get_mixed_get_bl(result_set, 1)));
 
   // Update row 2 with just a new bl, so a ref type identity column should not match the previous result set
   // This also is testing that the last column in the identity columns is properly tested.
@@ -286,11 +286,10 @@ cql_code test_rowset_same(sqlite3 *db) {
                      get_mixed_get_id(result_set, 2),
                      get_mixed_get_name(result_set, 2),
                      get_nullable_code(result_set, 2),
-                     updated_bl),
-        "updating mixed row 2 failed\n");
+                     updated_bl));
 
   // Get the updated result set
-  SQL_E(get_mixed_fetch_results(db, &result_set_updated, 100), "updated data access failed\n");
+  SQL_E(get_mixed_fetch_results(db, &result_set_updated, 100));
 
   E(get_mixed_row_same(result_set, 0, result_set_updated, 0),
     "updated row 0 should be the same as original row 0 (identity column check)\n");
@@ -316,9 +315,9 @@ cql_code test_ref_comparisons(sqlite3 *db) {
 
   // we haven't created the table yet
   get_mixed_result_set_ref result_set;
-  SQL_E(load_mixed_dupes(db), "failed loading table\n");
+  SQL_E(load_mixed_dupes(db));
 
-  SQL_E(get_mixed_fetch_results(db, &result_set, 100), "data access failed\n");
+  SQL_E(get_mixed_fetch_results(db, &result_set, 100));
   E(get_mixed_result_count(result_set) == 6, "expected 6 rows from mixed\n");
 
   // Check that the row hashes are equal from the source to the copy
@@ -342,10 +341,10 @@ cql_code test_bytebuf_growth(sqlite3 *db) {
   tests++;
   printf("Running C client test with huge number of rows\n");
 
-  SQL_E(bulk_load_mixed(db, 10000), "failed loading table\n");
+  SQL_E(bulk_load_mixed(db, 10000));
 
   get_mixed_result_set_ref result_set;
-  SQL_E(get_mixed_fetch_results(db, &result_set, 100000), "data access failed\n");
+  SQL_E(get_mixed_fetch_results(db, &result_set, 100000));
   E(get_mixed_result_count(result_set) == 10000, "expected 10000 rows from mixed\n");
 
   cql_result_set_release(result_set);
@@ -359,10 +358,10 @@ cql_code test_cql_finalize_on_error(sqlite3 *db) {
   tests++;
 
   expectations++;
-  SQL_E(load_mixed(db), "failed loading table\n");
+  SQL_E(load_mixed(db));
 
   sqlite3_stmt *stmt = NULL;
-  SQL_E(sqlite3_prepare_v2(db, "select * from sqlite_master", -1, &stmt, NULL), "stmt prepare failed\n");
+  SQL_E(sqlite3_prepare_v2(db, "select * from sqlite_master", -1, &stmt, NULL));
 
   cql_finalize_on_error(SQLITE_ERROR,&stmt);
   E(stmt == NULL, "expected statement to be finalized\n");
@@ -473,10 +472,10 @@ cql_code test_blob_rowsets(sqlite3 *db) {
   printf("Running blob rowset test\n");
   tests++;
 
-  SQL_E(load_blobs(db), "failed creating blob_table\n");
+  SQL_E(load_blobs(db));
 
   get_blob_table_result_set_ref result_set;
-  SQL_E(get_blob_table_fetch_results(db, &result_set), "blob table data access failed\n");
+  SQL_E(get_blob_table_fetch_results(db, &result_set));
 
   E(get_blob_table_result_count(result_set) == 20, "expected 20 rows from blob table\n");
 
@@ -511,10 +510,10 @@ cql_code test_sparse_blob_rowsets(sqlite3 *db) {
   printf("Running sparse blob rowset test\n");
   tests++;
 
-  SQL_E(load_sparse_blobs(db), "failed creating blob_table\n");
+  SQL_E(load_sparse_blobs(db));
 
   get_blob_table_result_set_ref result_set;
-  SQL_E(get_blob_table_fetch_results(db, &result_set), "blob table data access failed\n");
+  SQL_E(get_blob_table_fetch_results(db, &result_set));
 
   E(get_blob_table_result_count(result_set) == 20, "expected 20 rows from blob table\n");
 
@@ -561,15 +560,15 @@ cql_code test_c_one_row_result(sqlite3 *db) {
   printf("Running C one row result set test\n");
   tests++;
 
-  SQL_E(drop_mixed(db), "error cleaning up mixed table");
+  SQL_E(drop_mixed(db));
 
   // we haven't created the table yet
   get_one_from_mixed_result_set_ref result_set;
   E(SQLITE_OK != get_one_from_mixed_fetch_results(db, &result_set, 1), "table didn't exist, yet there was data...\n");
-  SQL_E(make_mixed(db), "failed creating table\n");
-  SQL_E(load_mixed_with_nulls(db), "failed loading table\n");
+  SQL_E(make_mixed(db));
+  SQL_E(load_mixed_with_nulls(db));
 
-  SQL_E(get_one_from_mixed_fetch_results(db, &result_set, 1), "data access failed\n");
+  SQL_E(get_one_from_mixed_fetch_results(db, &result_set, 1));
   E(get_one_from_mixed_result_count(result_set) == 1, "expected 1 rows from mixed\n");
 
   cql_bool b_is_null;
@@ -592,7 +591,7 @@ cql_code test_c_one_row_result(sqlite3 *db) {
 
   // Compare to a result from a row with different values
   get_one_from_mixed_result_set_ref result_set2;
-  SQL_E(get_one_from_mixed_fetch_results(db, &result_set2, 2), "data access failed\n");
+  SQL_E(get_one_from_mixed_fetch_results(db, &result_set2, 2));
   E(get_one_from_mixed_result_count(result_set2) == 1, "expected 1 rows from mixed\n");
 
   cql_bool b_is_null2;
@@ -629,7 +628,7 @@ cql_code test_c_one_row_result(sqlite3 *db) {
   cql_result_set_release(result_set2);
 
   // Compare results fetched from the same row
-  SQL_E(get_one_from_mixed_fetch_results(db, &result_set2, 1), "data access failed\n");
+  SQL_E(get_one_from_mixed_fetch_results(db, &result_set2, 1));
 
   E(get_one_from_mixed_equal(result_set, result_set2), "result sets for same row are not equal\n");
   E(get_one_from_mixed_hash(result_set) == get_one_from_mixed_hash(result_set2),
@@ -638,7 +637,7 @@ cql_code test_c_one_row_result(sqlite3 *db) {
   cql_result_set_release(result_set);
   cql_result_set_release(result_set2);
 
-  SQL_E(get_one_from_mixed_fetch_results(db, &result_set, 999), "data access failed\n");
+  SQL_E(get_one_from_mixed_fetch_results(db, &result_set, 999));
   E(get_one_from_mixed_result_count(result_set) == 0, "expected 0 rows from mixed\n");
 
   cql_result_set_release(result_set);
@@ -652,7 +651,7 @@ cql_code test_all_column_fetchers(sqlite3 *db) {
   tests++;
 
   load_all_types_table_result_set_ref result_set;
-  SQL_E(load_all_types_table_fetch_results(db, &result_set), "all types table data access failed\n");
+  SQL_E(load_all_types_table_fetch_results(db, &result_set));
   E(load_all_types_table_result_count(result_set) == 2, "expected 2 rows from result table\n");
   E(cql_result_set_get_meta(result_set)->columnCount == 12, "expected 12 columns from result table\n");
   cql_result_set_ref rs = (cql_result_set_ref)result_set;
@@ -732,7 +731,7 @@ cql_code test_error_case_rowset(sqlite3 *db) {
   printf("Running error case rowset test\n");
   tests++;
 
-  SQL_E(load_sparse_blobs(db), "failed creating blob_table\n");
+  SQL_E(load_sparse_blobs(db));
 
   steps_until_fail = 5;
 
@@ -753,7 +752,7 @@ cql_code test_autodrop_rowset(sqlite3 *db) {
 
   read_three_tables_and_autodrop_result_set_ref result_set;
 
-  SQL_E(SQLITE_OK != read_three_tables_and_autodrop_fetch_results(db, &result_set), "failed reading from temp tables\n");
+  SQL_E(SQLITE_OK != read_three_tables_and_autodrop_fetch_results(db, &result_set));
 
   for (cql_int32 i = 0; i < 3; i++) {
     int32_t id = read_three_tables_and_autodrop_get_id(result_set, i);

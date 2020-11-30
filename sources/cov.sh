@@ -7,7 +7,7 @@
 OUT_DIR="out"
 
 coverage() {
-  if ! sh test.sh --coverage
+  if ! ./test.sh --coverage
   then
     echo "you can't run coverage until the tests all pass"
     return 1

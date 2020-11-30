@@ -31,9 +31,28 @@ The default SQLite on Ubuntu systems is also fairly old.  Some of the tests (par
 the query plan tests) use features not available in this version.  You'll want to link
 against a newer sqlite to pass all the tests.
 
+From a bare Ubuntu installation, you might need to add these components:
+
+sudo apt install
+
+* make
+* gcc
+* flex
+* bison
+* sqlite3
+* libsqlite3-dev
+
+After which I was able to do the normal installations.
+
+For the coverage build you need
+* gcovr
+
+And if you want to do the AST visualizations in PNG form you need
+* graphviz
+
 ### Options
 
-* If you add `CGSQL_GCC` to your environment the `Makefile` will add `CFLAGS += -std=c99 -D_Nullable= -D_Nonnull=`
+* If you add `CGSQL_GCC` to your environment the `Makefile` will add `CFLAGS += -std=c99
 to try to be more interoperable with gcc.
 
 * If you add `SQLITE_PATH` to your environment the `Makefile` will try to compile `sqlite3-all.c` from that path
