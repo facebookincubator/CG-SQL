@@ -16,14 +16,13 @@
 
 typedef struct {
   sem_t sem_type;
-  int64_t _int64;
-  int32_t _int32;
-  double  _real;
-  bool_t  _bool;
-  CSTR    _str;
+  int64_t int64_value;
+  int32_t int32_value;
+  double  real_value;
+  bool_t  bool_value;
 } eval_node;
 
 cql_noexport void eval_init();
 cql_noexport void eval_cleanup();
-cql_noexport void eval(ast_node *expr, eval_node *result);
-cql_noexport ast_node *_Nonnull eval_set(ast_node *expr, eval_node *result);
+cql_noexport void eval(ast_node *_Nonnull expr, eval_node *_Nonnull result);
+cql_noexport ast_node *_Nonnull eval_set(ast_node *_Nonnull expr, eval_node *_Nonnull result);
