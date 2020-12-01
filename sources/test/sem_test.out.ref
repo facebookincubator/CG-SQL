@@ -51326,6 +51326,154 @@ Error at test/sem_test.sql:XXXX : in return_stmt : CQL0352: use COMMIT RETURN or
 
 The statement ending at line XXXX
 
+DECLARE ENUM integer_things INTEGER (
+  pen,
+  paper = 7,
+  pencil
+);
+
+  {declare_enum_stmt}: integer_things: integer
+  | {typed_name}: integer_things: integer
+  | | {name integer_things}
+  | | {type_int}: integer_things: integer
+  | {enum_values}
+    | {enum_value}
+    | | {name pen}: integer = 1
+    | {enum_values}
+      | {enum_value}
+      | | {name paper}: integer = 7
+      | | {int 7}: integer notnull
+      | {enum_values}
+        | {enum_value}
+          | {name pencil}: integer = 8
+
+The statement ending at line XXXX
+
+DECLARE ENUM real_things REAL (
+  pen,
+  paper = 7,
+  pencil
+);
+
+  {declare_enum_stmt}: real_things: real
+  | {typed_name}: real_things: real
+  | | {name real_things}
+  | | {type_real}: real_things: real
+  | {enum_values}
+    | {enum_value}
+    | | {name pen}: real = 1.000000e+00
+    | {enum_values}
+      | {enum_value}
+      | | {name paper}: real = 7.000000e+00
+      | | {int 7}: integer notnull
+      | {enum_values}
+        | {enum_value}
+          | {name pencil}: real = 8.000000e+00
+
+The statement ending at line XXXX
+
+DECLARE ENUM bool_things BOOL (
+  pen,
+  paper = 7,
+  pencil
+);
+
+  {declare_enum_stmt}: bool_things: bool
+  | {typed_name}: bool_things: bool
+  | | {name bool_things}
+  | | {type_bool}: bool_things: bool
+  | {enum_values}
+    | {enum_value}
+    | | {name pen}: bool = 1
+    | {enum_values}
+      | {enum_value}
+      | | {name paper}: bool = 1
+      | | {int 7}: integer notnull
+      | {enum_values}
+        | {enum_value}
+          | {name pencil}: bool = 0
+
+The statement ending at line XXXX
+
+DECLARE ENUM long_things LONG_INT (
+  pen,
+  paper = -7,
+  pencil
+);
+
+  {declare_enum_stmt}: long_things: longint
+  | {typed_name}: long_things: longint
+  | | {name long_things}
+  | | {type_long}: long_things: longint
+  | {enum_values}
+    | {enum_value}
+    | | {name pen}: longint = 1
+    | {enum_values}
+      | {enum_value}
+      | | {name paper}: longint = -7
+      | | {uminus}: integer notnull
+      |   | {int 7}: integer notnull
+      | {enum_values}
+        | {enum_value}
+          | {name pencil}: longint = -6
+
+The statement ending at line XXXX
+
+DECLARE ENUM long_things INTEGER (
+  foo
+);
+
+Error at test/sem_test.sql:XXXX : in str : CQLxxxx duplicate enum name 'long_things'
+
+  {declare_enum_stmt}: err
+  | {typed_name}: long_things: integer
+  | | {name long_things}
+  | | {type_int}: long_things: integer
+  | {enum_values}
+    | {enum_value}
+      | {name foo}
+
+The statement ending at line XXXX
+
+DECLARE ENUM duplicated_things INTEGER (
+  two,
+  two
+);
+
+Error at test/sem_test.sql:XXXX : in enum_value : CQLxxxx duplicate enum member 'two'
+
+  {declare_enum_stmt}: err
+  | {typed_name}: duplicated_things: integer
+  | | {name duplicated_things}
+  | | {type_int}: duplicated_things: integer
+  | {enum_values}
+    | {enum_value}
+    | | {name two}: integer = 1
+    | {enum_values}
+      | {enum_value}
+        | {name two}
+
+The statement ending at line XXXX
+
+DECLARE ENUM invalid_things INTEGER (
+  boo = 1 / 0
+);
+
+Error at test/sem_test.sql:XXXX : in enum_value : CQLxxxx evaluation failed 'boo'
+
+  {declare_enum_stmt}: err
+  | {typed_name}: invalid_things: integer
+  | | {name invalid_things}
+  | | {type_int}: invalid_things: integer
+  | {enum_values}
+    | {enum_value}
+      | {name boo}
+      | {div}: integer notnull
+        | {int 1}: integer notnull
+        | {int 0}: integer notnull
+
+The statement ending at line XXXX
+
 CREATE TABLE SalesInfo(
   month INTEGER,
   amount REAL

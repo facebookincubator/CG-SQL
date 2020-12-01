@@ -360,6 +360,7 @@ static symtab *tables;
 static symtab *indices;
 static symtab *globals;
 static symtab *locals;
+static symtab *enums;
 static symtab *current_variables;
 static symtab *savepoints;
 static symtab *table_items;  // assorted things that go into a table
@@ -1210,14 +1211,22 @@ static ast_node *find_usable_trigger(CSTR name, ast_node *err_target, CSTR msg) 
   return trigger_ast;
 }
 
-// Wrappers for the proc table.
-static bool_t add_proc(ast_node *ast, CSTR name) {
+// Wrappers for the enum table.
+static bool_t add_enum(ast_node *ast, CSTR name) {
   return symtab_add(procs, name, ast);
 }
 
-static ast_node *find_arg_bundle(CSTR name) {
-  symtab_entry *entry = symtab_find(arg_bundles, name);
+/* not used yet, saving this for now
+
+ast_node *find_enum(CSTR name) {
+  symtab_entry *entry = symtab_find(enums, name);
   return entry ? (ast_node*)(entry->val) : NULL;
+}
+*/
+
+// Wrappers for the proc table.
+static bool_t add_proc(ast_node *ast, CSTR name) {
+  return symtab_add(procs, name, ast);
 }
 
 ast_node *find_proc(CSTR name) {
@@ -1232,6 +1241,11 @@ static ast_node *find_upgrade_proc(CSTR name) {
 
 static ast_node *find_ad_hoc_migrate(CSTR name) {
   symtab_entry *entry = symtab_find(ad_hoc_migrates, name);
+  return entry ? (ast_node*)(entry->val) : NULL;
+}
+
+static ast_node *find_arg_bundle(CSTR name) {
+  symtab_entry *entry = symtab_find(arg_bundles, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
@@ -1450,6 +1464,13 @@ cql_noexport void print_sem_type(sem_node *sem) {
      cql_output("<%s>", sem->object_type);
   }
 
+  if (sem->value) {
+    CHARBUF_OPEN(temp);
+    eval_format_number(sem->value, &temp);
+    cql_output(" = %s", temp.ptr);
+    CHARBUF_CLOSE(temp);
+  }
+
   CHARBUF_OPEN(temp);
   get_sem_flags(sem_type, &temp);
   cql_output("%s", temp.ptr);
@@ -1566,6 +1587,7 @@ static sem_node * new_sem(sem_t sem_type) {
   sem->used_symbols = NULL;
   sem->index_list = NULL;
   sem->region = NULL;
+  sem->value = NULL;
   return sem;
 }
 
@@ -14447,6 +14469,68 @@ static void sem_declare_select_func_stmt(ast_node *ast) {
   }
 }
 
+static void sem_declare_enum_stmt(ast_node *ast) {
+  Contract(is_ast_declare_enum_stmt(ast));
+  EXTRACT_NOTNULL(typed_name, ast->left);
+  EXTRACT_NOTNULL(enum_values, ast->right);
+  EXTRACT_ANY_NOTNULL(name_ast, typed_name->left);
+  EXTRACT_STRING(name, name_ast);
+  sem_data_type_column(typed_name->right);
+  typed_name->sem = typed_name->right->sem;
+  typed_name->sem->name = name;
+
+  if (!add_enum(ast, name)) {
+    report_error(name_ast, "CQLxxxx duplicate enum name", name);
+    record_error(ast);
+    return;
+  }
+
+  ast->sem = typed_name->sem;
+  symtab *names = symtab_new();
+  sem_t sem_type_enum = typed_name->sem->sem_type;
+
+  eval_node result = {};
+  result.int32_value = 0;
+  result.sem_type = SEM_TYPE_INTEGER;
+
+  while (enum_values) {
+     EXTRACT_NOTNULL(enum_value, enum_values->left);
+     EXTRACT_ANY_NOTNULL(enum_name_ast, enum_value->left);
+     EXTRACT_STRING(enum_name, enum_name_ast);
+     EXTRACT_ANY(expr, enum_value->right);
+
+     if (!symtab_add(names, enum_name, NULL)) {
+       report_error(enum_value, "CQLxxxx duplicate enum member", enum_name);
+       record_error(ast);
+       return;
+     }
+
+     if (expr) {
+       sem_root_expr(expr, SEM_EXPR_CONTEXT_NONE);
+       eval(expr, &result);
+
+       if (result.sem_type == SEM_TYPE_ERROR || result.sem_type == SEM_TYPE_NULL) {
+         report_error(enum_value, "CQLxxxx evaluation failed", enum_name);
+         record_error(ast);
+         return;
+       }
+     }
+     else {
+       eval_add_one(&result);
+     }
+
+     eval_cast_to(&result, ast->sem->sem_type);
+     enum_name_ast->sem = new_sem(sem_type_enum);
+     enum_name_ast->sem->value = _ast_pool_new(eval_node);
+     *enum_name_ast->sem->value = result;
+     
+     enum_values = enum_values->right;
+  }
+
+cleanup:
+   symtab_delete(names);
+}
+
 // There are three forms of this declaration:
 // 1.  a regular proc with no DML
 //    declare proc X(id integer);
@@ -17199,6 +17283,7 @@ cql_noexport void sem_main(ast_node *ast) {
   builtin_funcs = symtab_new();
   funcs = symtab_new();
   procs = symtab_new();
+  enums = symtab_new();
   triggers = symtab_new();
   upgrade_procs = symtab_new();
   ad_hoc_migrates = symtab_new();
@@ -17238,6 +17323,7 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(set_from_cursor);
   STMT_INIT(misc_attrs);
   STMT_INIT(create_proc_stmt);
+  STMT_INIT(declare_enum_stmt);
   STMT_INIT(declare_proc_stmt);
   STMT_INIT(declare_func_stmt);
   STMT_INIT(declare_select_func_stmt);
@@ -17470,6 +17556,7 @@ cql_noexport void sem_cleanup() {
   SYMTAB_CLEANUP(new_regions);
   SYMTAB_CLEANUP(non_sql_stmts);
   SYMTAB_CLEANUP(procs);
+  SYMTAB_CLEANUP(enums);
   SYMTAB_CLEANUP(schema_regions);
   SYMTAB_CLEANUP(savepoints);
   SYMTAB_CLEANUP(sql_stmts);

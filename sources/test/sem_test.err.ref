@@ -916,6 +916,9 @@ Error at test/sem_test.sql:XXXX : in proc_savepoint_stmt : CQL0351: statement sh
 Error at test/sem_test.sql:XXXX : in rollback_return_stmt : CQL0350: statement must appear inside of a PROC SAVEPOINT block
 Error at test/sem_test.sql:XXXX : in commit_return_stmt : CQL0350: statement must appear inside of a PROC SAVEPOINT block
 Error at test/sem_test.sql:XXXX : in return_stmt : CQL0352: use COMMIT RETURN or ROLLBACK RETURN in within a proc savepoint block
+Error at test/sem_test.sql:XXXX : in str : CQLxxxx duplicate enum name 'long_things'
+Error at test/sem_test.sql:XXXX : in enum_value : CQLxxxx duplicate enum member 'two'
+Error at test/sem_test.sql:XXXX : in enum_value : CQLxxxx evaluation failed 'boo'
 Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'sum'
 Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'sum'
 Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'sum'

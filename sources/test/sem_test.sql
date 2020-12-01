@@ -12683,6 +12683,75 @@ begin
    end;
 end;
 
+-- TEST: create an integer enum
+-- + {declare_enum_stmt}: integer_things: integer
+-- + {name pen}: integer = 1
+-- + {name paper}: integer = 7
+-- + {name pencil}: integer = 8
+declare enum integer_things integer (
+  pen,
+  paper = 7,
+  pencil
+);
+
+-- TEST: create an real enum
+-- + {declare_enum_stmt}: real_things: real
+-- + {name pen}: real = 1.000000e+00
+-- + {name paper}: real = 7.000000e+00
+-- + {name pencil}: real = 8.000000e+00
+declare enum real_things real (
+  pen,
+  paper = 7,
+  pencil
+);
+
+-- TEST: create a bool enum (it all casts to true false)
+-- + {declare_enum_stmt}: bool_things: bool
+-- + {name pen}: bool = 1
+-- + {name paper}: bool = 1
+-- + {name pencil}: bool = 0
+declare enum bool_things bool (
+  pen,
+  paper = 7,
+  pencil
+);
+
+-- TEST: create a long integer enum
+-- +  {declare_enum_stmt}: long_things: longint
+-- + {name pen}: longint = 1
+-- + {name paper}: longint = -7
+-- + {name pencil}: longint = -6
+declare enum long_things long_int (
+  pen,
+  paper = -7,
+  pencil
+);
+
+-- TEST: duplicate enum name
+-- + {declare_enum_stmt}: err
+-- + Error % duplicate enum name 'long_things'
+-- +1 Error
+declare enum long_things integer (
+  foo
+);
+
+-- TEST: duplicate enum member name
+-- + {declare_enum_stmt}: err
+-- + Error % duplicate enum member 'two'
+-- +1 Error
+declare enum duplicated_things integer (
+  two,
+  two
+);
+
+-- TEST: invalid enum member
+-- + {declare_enum_stmt}: err
+-- + Error % evaluation failed 'boo'
+-- +1 Error
+declare enum invalid_things integer (
+  boo = 1/0
+);
+
 create table SalesInfo(
   month integer,
   amount real
