@@ -3474,6 +3474,146 @@ select nullable(1);
 -- +1 Error
 select nullable(1, 2);
 
+-- try some const cases especially those with errors
+
+-- TEST: variables not allowed in constant expressions (duh)
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x);
+
+-- TEST: divide by zero yields error in all forms (integer)
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1/0);
+
+-- TEST: divide by zero yields error in all forms (real)
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1/0.0);
+
+-- TEST: divide by zero yields error in all forms (long)
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1/0L);
+
+-- TEST: divide by zero yields error in all forms (bool)
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1/not 1);
+
+-- TEST: divide by zero yields error in all forms (integer)
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1%0);
+
+
+-- TEST: divide by zero yields error in all forms (long)
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1%0L);
+
+-- TEST: divide by zero yields error in all forms (bool)
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1%not 1);
+
+-- TEST: variables not allowed in constant expressions (duh)
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(case x when 1 then 2 end);
+
+-- TEST: variables not allowed in constant expressions (duh)
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(case 1 when x then 2 end);
+
+-- TEST: variables not allowed in constant expressions (duh)
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(case 1 when 1 then x end);
+
+-- TEST: variables not allowed in constant expressions (duh)
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(case when x then 2 end);
+
+-- TEST: wrong number of arguments
+-- + Error % function got incorrect number of arguments 'const'
+-- +1 Error
+select const(1, 2);
+
+-- TEST: non integer arguments not allowed
+-- + {call}: err
+-- + Error % operands must be an integer type, not real '~'
+-- +1 Error
+select const(~1.3);
+
+-- TEST: forcing errors in binary operators to make them prop:  comparison type
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x == x);
+
+-- TEST: forcing errors in binary operators to make them prop:  is/is_not comparison type
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x is x);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x + x);
+
+-- TEST: forcing errors in binary operators to make them prop:  and error in first arg
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x and 0);
+
+-- TEST: forcing errors in binary operators to make them prop:  and error in second arg
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1 and x);
+
+-- TEST: forcing errors in binary operators to make them prop:  or: error in first arg
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x or 0);
+
+-- TEST: forcing errors in binary operators to make them prop:  or: force error in second arg
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(0 or x);
+
+-- TEST: forcing errors in binary operators to make them prop:  and: force error in 2nd arg
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1 and x);
+
+-- TEST: forcing errors in cast
+-- + {call}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(cast(x as real));
+
 -- TEST: use nullable in the wrong context
 -- + Error % function may not appear in this context 'nullable'
 -- +1 Error
@@ -11115,7 +11255,6 @@ begin
   call printf("%s\n", x.xyzzy);
 end;
 
-
 -- TEST try to pass some of my args along
 -- + CREATE PROC arg_shape_forwarder (args_arg1 INTEGER, args_arg2 TEXT, extra_args_id INTEGER, extra_args_name TEXT)
 -- + CALL proc2(args.arg1, args.arg2);
@@ -12422,7 +12561,7 @@ end;
 -- + ELSE 2
 -- + END;
 -- - Error
-select iif(an_int is null, 2, 3);
+select iif(an_int is null, 3, 2);
 
 -- TEST: test rewrite for IIF func with invalid argument count
 -- + {select_stmt}: err
@@ -12444,13 +12583,13 @@ select iif(an_int is null, 2, x'23');
 
 -- TEST: test rewrite for IIF func out of sql context
 -- + {assign}: an_int: integer variable
--- + SET an_int := CASE WHEN an_int IS NULL THEN CASE WHEN 1 THEN 3
--- + ELSE 2
+-- + SET an_int := CASE WHEN an_int IS NULL THEN CASE WHEN 4 THEN 5
+-- + ELSE 6
 -- + END
 -- + ELSE 2
 -- + END;
 -- - Error
-set an_int := iif(an_int is null, 2, iif(1, 2, 3));
+set an_int := iif(an_int is null, iif(4, 5, 6), 2);
 
 -- TEST: test rewrite for [UPDATE cursor USING ... ] grammar
 -- + {create_proc_stmt}: ok dml_proc

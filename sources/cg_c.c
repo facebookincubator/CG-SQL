@@ -764,6 +764,13 @@ static void cg_binary(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, 
   ast_node *r = ast->right;
 
   sem_t sem_type_result = ast->sem->sem_type;
+
+  if (sem_type_result == SEM_TYPE_NULL) {
+    bprintf(value, "0");
+    bprintf(is_null, "1");
+    return;
+  }
+
   sem_t sem_type_left = l->sem->sem_type;
   sem_t sem_type_right = r->sem->sem_type;
 

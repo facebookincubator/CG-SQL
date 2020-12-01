@@ -702,10 +702,6 @@ static void gen_case_list(ast_node *ast) {
   }
 }
 
-static bool_t has_hex_prefix(CSTR s) {
-  return s[0] == '0' && (s[1] == 'x' || s[1] == 'X');
-}
-
 static void gen_expr_num(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_num(ast));
   EXTRACT_NUM_VALUE(val, ast);

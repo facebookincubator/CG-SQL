@@ -2795,6 +2795,243 @@ BEGIN_TEST(exec_internal)
   EXPECT(cql_cursor_diff_val(C,D) is null);
 END_TEST(exec_internal)
 
+BEGIN_TEST(const_folding)
+  EXPECT(const(1 + 1) == 2);
+  EXPECT(const(1.0 + 1) == 2.0);
+  EXPECT(const(1 + 1L) == 2L);
+  EXPECT(const(1 + (1==1) ) == 2);
+  EXPECT(const(1.0 + 1L) == 2.0);
+  EXPECT(const(1.0 + (1 == 1)) == 2.0);
+  EXPECT(const((1==1) + 1L) == 2L);
+
+  EXPECT(2 == const(1 + 1));
+  EXPECT(2.0 == const(1.0 + 1));
+  EXPECT(2L == const(1 + 1L));
+  EXPECT(2 == const(1 + (1==1) ));
+
+  EXPECT(const(1 - 1) == 0);
+  EXPECT(const(1.0 - 1) == 0.0);
+  EXPECT(const(1 - 1L) == 0L);
+  EXPECT(const(1 - (1==1) ) == 0);
+
+  EXPECT(const(3 * 2) == 6);
+  EXPECT(const(3.0 * 2) == 6.0);
+  EXPECT(const(3 * 2L) == 6L);
+  EXPECT(const(3 * (1==1) ) == 3);
+
+  EXPECT(const(3 / 1) == 3);
+  EXPECT(const(3.0 / 1) == 3.0);
+  EXPECT(const(3 / 1L) == 3L);
+  EXPECT(const(3 / (1==1) ) == 3);
+
+  EXPECT(const(3 % 1) == 0);
+  EXPECT(const(3 % 1L) == 0L);
+  EXPECT(const(3 % (1==1) ) == 0);
+
+  EXPECT(const(8 | 1) == 9);
+  EXPECT(const(8 | 1L) == 9L);
+  EXPECT(const(8 | (1==1) ) == 9);
+
+  EXPECT(const(7 & 4) == 4);
+  EXPECT(const(7 & 4L) == 4L);
+  EXPECT(const(7 & (1==1) ) == 1);
+
+  EXPECT(const(16 << 1) == 32);
+  EXPECT(const(16 << 1L) == 32L);
+  EXPECT(const(16 << (1==1) ) == 32);
+
+  EXPECT(const(16 >> 1) == 8);
+  EXPECT(const(16 >> 1L) == 8L);
+  EXPECT(const(16 >> (1==1) ) == 8);
+
+  EXPECT(const(NULL) is null);
+
+  EXPECT(const( 1 or 1/0) == 1);
+  EXPECT(const( 0 or null) is null);
+  EXPECT(const( 0 or 0) == 0);
+  EXPECT(const( 0 or 1) == 1);
+  EXPECT(const( null or null) is null);
+  EXPECT(const( null or 0) is null);
+  EXPECT(const( null or 1) is 1);
+
+  EXPECT(const( 0 and 1/0) == 0);
+  EXPECT(const( 1 and null) is null);
+  EXPECT(const( 1 and 0) == 0);
+  EXPECT(const( 1 and 1) == 1);
+  EXPECT(const( null and null) is null);
+  EXPECT(const( null and 0) == 0);
+  EXPECT(const( null and 1) is null);
+
+  EXPECT(const(3 == 3));
+  EXPECT(const(3 == 3.0));
+  EXPECT(const(3 == 3L));
+  EXPECT(const((0 == 0) == (1 == 1)));
+
+  EXPECT(const(4 != 3));
+  EXPECT(const(4 != 3.0));
+  EXPECT(const(4 != 3L));
+  EXPECT(const((1 == 0) != (1 == 1)));
+
+  EXPECT(const(4 >= 3));
+  EXPECT(const(4 >= 3.0));
+  EXPECT(const(4 >= 3L));
+  EXPECT(const((1 == 1) >= (1 == 0)));
+
+  EXPECT(const(3 >= 3));
+  EXPECT(const(3 >= 3.0));
+  EXPECT(const(3 >= 3L));
+  EXPECT(const((1 == 1) >= (1 == 1)));
+
+  EXPECT(const(4 > 3));
+  EXPECT(const(4 > 3.0));
+  EXPECT(const(4 > 3L));
+  EXPECT(const((1 == 1) > (1 == 0)));
+
+  EXPECT(const(2 <= 3));
+  EXPECT(const(2 <= 3.0));
+  EXPECT(const(2 <= 3L));
+  EXPECT(const((1 == 0) <= (1 == 1)));
+
+  EXPECT(const(3 <= 3));
+  EXPECT(const(3 <= 3.0));
+  EXPECT(const(3 <= 3L));
+  EXPECT(const((1 == 1) <= (1 == 1)));
+
+  EXPECT(const(2 < 3));
+  EXPECT(const(2 < 3.0));
+  EXPECT(const(2 < 3L));
+  EXPECT(const((1 == 0) < (1 == 1)));
+
+  EXPECT((NULL == NULL) is NULL);
+  EXPECT((NULL + NULL) is NULL);
+  EXPECT((NULL - NULL) is NULL);
+  EXPECT((NULL * NULL) is NULL);
+  EXPECT((NULL / NULL) is NULL);
+  EXPECT((NULL % NULL) is NULL);
+  EXPECT((NULL | NULL) is NULL);
+  EXPECT((NULL & NULL) is NULL);
+  EXPECT((NULL << NULL) is NULL);
+  EXPECT((NULL >> NULL) is NULL);
+
+  EXPECT(const(NULL == NULL) is NULL);
+  EXPECT(const(NULL + NULL) is NULL);
+  EXPECT(const(NULL - NULL) is NULL);
+  EXPECT(const(NULL * NULL) is NULL);
+  EXPECT(const(NULL / NULL) is NULL);
+  EXPECT(const(NULL % NULL) is NULL);
+  EXPECT(const(NULL | NULL) is NULL);
+  EXPECT(const(NULL & NULL) is NULL);
+  EXPECT(const(NULL << NULL) is NULL);
+  EXPECT(const(NULL >> NULL) is NULL);
+
+  EXPECT(const((NULL == NULL) is NULL));
+  EXPECT(const((NULL + NULL) is NULL));
+  EXPECT(const((NULL - NULL) is NULL));
+  EXPECT(const((NULL * NULL) is NULL));
+  EXPECT(const((NULL / NULL) is NULL));
+  EXPECT(const((NULL % NULL) is NULL));
+  EXPECT(const((NULL | NULL) is NULL));
+  EXPECT(const((NULL & NULL) is NULL));
+  EXPECT(const((NULL << NULL) is NULL));
+  EXPECT(const((NULL >> NULL) is NULL));
+
+  EXPECT(const(NULL IS NOT NULL) == 0);
+  EXPECT(const(NULL IS NOT 1));
+  EXPECT(const(1 IS NOT NULL));
+
+  EXPECT(const(1 IS 1));
+  EXPECT(const(1L IS 1L));
+  EXPECT(const(1.0 IS 1.0));
+  EXPECT(const((1==1) is (2==2)));
+
+  EXPECT(const(cast(3.2 as integer) == 3));
+  EXPECT(const(cast(3.2 as long_int) == 3L));
+  EXPECT(const(cast(3.2 as bool) == 1));
+  EXPECT(const(cast(0.0 as bool) == 0));
+  EXPECT(const(cast(null+0 as bool) is null));
+  EXPECT(const(cast(3L as real) == 3.0));
+  EXPECT(const(cast(3L as integer) == 3));
+  EXPECT(const(cast(3L as bool) == 1));
+  EXPECT(const(cast(0L as bool) == 0));
+
+  EXPECT(const(not 0) == 1);
+  EXPECT(const(not 1) == 0);
+  EXPECT(const(not 2) == 0);
+  EXPECT(const(not 0L) == 1);
+  EXPECT(const(not 1L) == 0);
+  EXPECT(const(not 2L) == 0);
+  EXPECT(const(not 2.0) == 0);
+  EXPECT(const(not 0.0) == 1);
+  EXPECT(const(not not 2) == 1);
+  EXPECT(const(not NULL) is NULL);
+
+  EXPECT(const(~0) == -1);
+  EXPECT(const(~0L) == -1L);
+  EXPECT(const(~ ~0L) == 0L);
+  EXPECT(const(~NULL) is NULL);
+  EXPECT(const(~(0==0)) == -2);
+  EXPECT(const(~(0==1)) == -1);
+
+  EXPECT(const(-1) == -1);
+  EXPECT(const(-2) == -2);
+  EXPECT(const(-1.0) == -1.0);
+  EXPECT(const(-2.0) == -2.0);
+  EXPECT(const((0 + -2)) == -2);
+  EXPECT(const(-(1 + 1)) == -2);
+  EXPECT(const(-1L) == -1L);
+  EXPECT(const(- -1L) == 1L);
+  EXPECT(const(-NULL) is NULL);
+  EXPECT(const(-(0==0)) == -1);
+  EXPECT(const(-(0==1)) == 0);
+
+  -- IIF gets rewritten to case/when so we use that here for convenience
+  EXPECT(const(iif(1, 3, 5)) == 3);
+  EXPECT(const(iif(0, 3, 5)) == 5);
+  EXPECT(const(iif(1L, 3, 5)) == 3);
+  EXPECT(const(iif(0L, 3, 5)) == 5);
+  EXPECT(const(iif(1.0, 3, 5)) == 3);
+  EXPECT(const(iif(0.0, 3, 5)) == 5);
+  EXPECT(const(iif((1==1), 3, 5)) == 3);
+  EXPECT(const(iif((1==0), 3, 5)) == 5);
+
+  EXPECT(const(case 1 when 2 then 20 else 10 end) == 10);
+  EXPECT(const(case 2 when 2 then 20 else 10 end) == 20);
+  EXPECT(const(case 2 when 1 then 10 when 2 then 20 else 40 end) == 20);
+  EXPECT(const(case 1 when 1 then 10 when 2 then 20 else 40 end) == 10);
+  EXPECT(const(case 5 when 1 then 10 when 2 then 20 else 40 end) == 40);
+  EXPECT(const(case null when 1 then 10 when 2 then 20 else 40 end) == 40);
+
+  EXPECT(const(case 1.0 when 2 then 20 else 10 end) == 10);
+  EXPECT(const(case 2.0 when 2 then 20 else 10 end) == 20);
+  EXPECT(const(case 2.0 when 1 then 10 when 2 then 20 else 40 end) == 20);
+  EXPECT(const(case 1.0 when 1 then 10 when 2 then 20 else 40 end) == 10);
+  EXPECT(const(case 5.0 when 1 then 10 when 2 then 20 else 40 end) == 40);
+
+  EXPECT(const(case 1L when 2 then 20 else 10 end) == 10);
+  EXPECT(const(case 2L when 2 then 20 else 10 end) == 20);
+  EXPECT(const(case 2L when 1 then 10 when 2 then 20 else 40 end) == 20);
+  EXPECT(const(case 1L when 1 then 10 when 2 then 20 else 40 end) == 10);
+  EXPECT(const(case 5L when 1 then 10 when 2 then 20 else 40 end) == 40);
+
+  EXPECT(const(case (1==1) when (1==1) then 10 else 20 end) == 10);
+  EXPECT(const(case (1==0) when (1==1) then 10 else 20 end) == 20);
+  EXPECT(const(case (1==1) when (0==1) then 10 else 20 end) == 20);
+  EXPECT(const(case (1==0) when (0==1) then 10 else 20 end) == 10);
+  EXPECT(const(case (1==0) when null then 10 else 20 end) == 20);
+  EXPECT(const(case (1==0) when null then 10 end ) is null);
+
+  EXPECT(const(case 5L when 1 then 10 when 2 then 20 end) is NULL);
+  EXPECT(const(case when NULL then 1 else 2 end) == 2);
+
+  EXPECT(const(0x10) == 16);
+  EXPECT(const(0x10 + 0xf) == 31);
+  EXPECT(const(0x100100100) == 0x100100100);
+  EXPECT(const(0x100100100L) == 0x100100100);
+  EXPECT(const(0x100100100) == 0x100100100L);
+  EXPECT(const(0x100100100L) == 0x100100100L);
+
+END_TEST(const_folding)
+
 END_SUITE()
 
 -- manually force tracing on by redefining the macros
@@ -2812,7 +3049,9 @@ begin
      declare D cursor for select * from does_not_exist;
    end try;
    begin catch
-     -- this code would have been lost because there was a successful op
+     -- Without tracing this failure code can be seen, the cursor D
+     -- will be finalized as part of cleanup and THAT success will be
+     -- the sqlite3_errmsg() result.  Tracing lets you see the error as it happens.
      drop table if exists does_not_exist;
      -- now we save the code
      throw;
@@ -2821,3 +3060,4 @@ end;
 
 @echo c,"#undef cql_error_trace\n";
 @echo c,"#define cql_error_trace()\n";
+
