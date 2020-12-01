@@ -21084,6 +21084,48 @@ END;
 
 The statement ending at line XXXX
 
+CREATE PROC qualified_like (x_id INTEGER NOT NULL, x_name TEXT, x_rate LONG_INT, y_id INTEGER NOT NULL, y_name TEXT, y_rate LONG_INT)
+BEGIN
+END;
+
+  {create_proc_stmt}: ok
+  | {name qualified_like}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: x_id: integer notnull variable in
+      | | {param_detail}: x_id: integer notnull variable in
+      |   | {name x_id}: x_id: integer notnull variable in
+      |   | {notnull}: integer notnull
+      |     | {type_int}: integer
+      | {params}
+        | {param}: x_name: text variable in
+        | | {param_detail}: x_name: text variable in
+        |   | {name x_name}: x_name: text variable in
+        |   | {type_text}: text
+        | {params}
+          | {param}: x_rate: longint variable in
+          | | {param_detail}: x_rate: longint variable in
+          |   | {name x_rate}: x_rate: longint variable in
+          |   | {type_long}: longint
+          | {params}
+            | {param}: y_id: integer notnull variable in
+            | | {param_detail}: y_id: integer notnull variable in
+            |   | {name y_id}: y_id: integer notnull variable in
+            |   | {notnull}: integer notnull
+            |     | {type_int}: integer
+            | {params}
+              | {param}: y_name: text variable in
+              | | {param_detail}: y_name: text variable in
+              |   | {name y_name}: y_name: text variable in
+              |   | {type_text}: text
+              | {params}
+                | {param}: y_rate: longint variable in
+                  | {param_detail}: y_rate: longint variable in
+                    | {name y_rate}: y_rate: longint variable in
+                    | {type_long}: longint
+
+The statement ending at line XXXX
+
 CREATE PROC insert_bar (extra INTEGER, id_ INTEGER NOT NULL, name_ TEXT, rate_ LONG_INT)
 BEGIN
   INSERT INTO bar(id, name, rate) VALUES(id_, name_, rate_);
@@ -21578,8 +21620,9 @@ Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, tab
   | {proc_params_stmts}
     | {params}: err
     | | {param}: err
-    |   | {like}: err
-    |     | {name garbonzo}: err
+    |   | {param_detail}
+    |     | {like}: err
+    |       | {name garbonzo}: err
     | {stmt_list}
       | {declare_vars_type}
         | {name_list}
@@ -21949,8 +21992,9 @@ Error at test/sem_test.sql:XXXX : in like : CQL0178: proc has no result 'proc1'
   | {proc_params_stmts}
     | {params}: err
     | | {param}: err
-    |   | {like}: err
-    |     | {name proc1}: err
+    |   | {param_detail}
+    |     | {like}: err
+    |       | {name proc1}: err
     | {stmt_list}
       | {declare_vars_type}
         | {name_list}
@@ -45184,8 +45228,159 @@ Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, tab
   | | {int 3}
   | {proc_params_stmts}
     | {typed_names}: err
-      | {like}: err
-        | {name invalid_type_name}: err
+      | {typed_name}: err
+        | {like}: err
+          | {name invalid_type_name}: err
+
+The statement ending at line XXXX
+
+DECLARE PROC _stuff5 () (id INTEGER, name TEXT);
+
+  {declare_proc_stmt}: select: { id: integer, name: text } dml_proc
+  | {proc_name_type}
+  | | {name _stuff5}: select: { id: integer, name: text } dml_proc
+  | | {int 3}
+  | {proc_params_stmts}
+    | {typed_names}: select: { id: integer, name: text }
+      | {typed_name}: id: integer
+      | | {name id}
+      | | {type_int}: id: integer
+      | {typed_names}
+        | {typed_name}: name: text
+          | {name name}
+          | {type_text}: name: text
+
+The statement ending at line XXXX
+
+DECLARE PROC _stuff6 () (x_id INTEGER, x_name TEXT, y_id INTEGER, y_name TEXT);
+
+  {declare_proc_stmt}: select: { x_id: integer, x_name: text, y_id: integer, y_name: text } dml_proc
+  | {proc_name_type}
+  | | {name _stuff6}: select: { x_id: integer, x_name: text, y_id: integer, y_name: text } dml_proc
+  | | {int 3}
+  | {proc_params_stmts}
+    | {typed_names}: select: { x_id: integer, x_name: text, y_id: integer, y_name: text }
+      | {typed_name}: x_id: integer
+      | | {name x_id}
+      | | {type_int}: x_id: integer
+      | {typed_names}
+        | {typed_name}: x_name: text
+        | | {name x_name}
+        | | {type_text}: x_name: text
+        | {typed_names}
+          | {typed_name}: y_id: integer
+          | | {name y_id}
+          | | {type_int}: y_id: integer
+          | {typed_names}
+            | {typed_name}: y_name: text
+              | {name y_name}
+              | {type_text}: y_name: text
+
+The statement ending at line XXXX
+
+CREATE PROC using_like_shape (x_id INTEGER, x_name TEXT)
+BEGIN
+  CALL printf("%s\n", x.id);
+END;
+
+  {create_proc_stmt}: ok
+  | {name using_like_shape}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: x_id: integer variable in
+    | | | {param_detail}: x_id: integer variable in
+    | |   | {name x_id}: x_id: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: x_name: text variable in
+    |     | {param_detail}: x_name: text variable in
+    |       | {name x_name}: x_name: text variable in
+    |       | {type_text}: text
+    | {stmt_list}: ok
+      | {call_stmt}: ok
+        | {name printf}: ok
+        | {expr_list}: ok
+          | {strlit '%s
+'}: text notnull
+          | {expr_list}
+            | {dot}: x_id: integer variable
+              | {name x}
+              | {name id}
+
+The statement ending at line XXXX
+
+CREATE PROC using_like_shape_bad_name (x_id INTEGER, x_name TEXT)
+BEGIN
+  CALL printf("%s\n", x.xyzzy);
+END;
+
+Error at test/sem_test.sql:XXXX : in dot : CQL0068: field not found in shape 'xyzzy'
+
+  {create_proc_stmt}: err
+  | {name using_like_shape_bad_name}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: x_id: integer variable in
+    | | | {param_detail}: x_id: integer variable in
+    | |   | {name x_id}: x_id: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: x_name: text variable in
+    |     | {param_detail}: x_name: text variable in
+    |       | {name x_name}: x_name: text variable in
+    |       | {type_text}: text
+    | {stmt_list}: err
+      | {call_stmt}: err
+        | {name printf}
+        | {expr_list}: err
+          | {strlit '%s
+'}: text notnull
+          | {expr_list}
+            | {dot}: err
+              | {name x}
+              | {name xyzzy}
+
+The statement ending at line XXXX
+
+CREATE PROC arg_shape_forwarder (args_arg1 INTEGER, args_arg2 TEXT, extra_args_id INTEGER, extra_args_name TEXT)
+BEGIN
+  CALL proc2(args.arg1, args.arg2);
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name arg_shape_forwarder}: ok dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: args_arg1: integer variable in
+    | | | {param_detail}: args_arg1: integer variable in
+    | |   | {name args_arg1}: args_arg1: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: args_arg2: text variable in
+    |   | | {param_detail}: args_arg2: text variable in
+    |   |   | {name args_arg2}: args_arg2: text variable in
+    |   |   | {type_text}: text
+    |   | {params}
+    |     | {param}: extra_args_id: integer variable in
+    |     | | {param_detail}: extra_args_id: integer variable in
+    |     |   | {name extra_args_id}: extra_args_id: integer variable in
+    |     |   | {type_int}: integer
+    |     | {params}
+    |       | {param}: extra_args_name: text variable in
+    |         | {param_detail}: extra_args_name: text variable in
+    |           | {name extra_args_name}: extra_args_name: text variable in
+    |           | {type_text}: text
+    | {stmt_list}: ok
+      | {call_stmt}: ok dml_proc
+        | {name proc2}: ok dml_proc
+        | {expr_list}: ok
+          | {dot}: args_arg1: integer variable in
+          | | {name args}
+          | | {name arg1}
+          | {expr_list}
+            | {dot}: args_arg2: text variable in
+              | {name args}
+              | {name arg2}
 
 The statement ending at line XXXX
 
@@ -49769,9 +49964,10 @@ Error at test/sem_test.sql:XXXX : in like : CQL0069: name not found 'some_proc3'
   | {proc_params_stmts}
     | {params}: err
     | | {param}: err
-    |   | {like}: err
-    |     | {name some_proc3}: err
-    |     | {name some_proc3}: err
+    |   | {param_detail}
+    |     | {like}: err
+    |       | {name some_proc3}: err
+    |       | {name some_proc3}: err
     | {stmt_list}
       | {call_stmt}
         | {name some_proc}
@@ -49791,9 +49987,10 @@ Error at test/sem_test.sql:XXXX : in like : CQL0262: LIKE ... ARGUMENTS used on 
   | {proc_params_stmts}
     | {params}: err
       | {param}: err
-        | {like}: err
-          | {name proc1}: err
-          | {name proc1}: err
+        | {param_detail}
+          | {like}: err
+            | {name proc1}: err
+            | {name proc1}: err
 
 The statement ending at line XXXX
 

@@ -5876,6 +5876,12 @@ begin
   fetch curs from arguments like bar;
 end;
 
+-- TEST: scoped like arguments
+-- + CREATE PROC qualified_like (x_id INTEGER NOT NULL, x_name TEXT, x_rate LONG_INT, y_id INTEGER NOT NULL, y_name TEXT, y_rate LONG_INT)
+create proc qualified_like(x like bar, y like bar)
+begin
+end;
+
 -- TEST: use the arguments like "bar" even though there are other arguments
 -- AST rewritten, note "extra" does not appear
 -- + CREATE PROC insert_bar (extra INTEGER, id_ INTEGER NOT NULL, name_ TEXT, rate_ LONG_INT)
@@ -11083,6 +11089,41 @@ declare proc _stuff3() ( h2 integer, like _stuff2, t2 integer);
 -- + Error % must be a cursor, proc, table, or view 'invalid_type_name'
 -- +1 Error
 declare proc _stuff4() (like invalid_type_name);
+
+-- TEST: rewrite with formal name, formals all duplicated with no qualifier
+-- + DECLARE PROC _stuff5 () (id INTEGER, name TEXT);
+-- - Error
+declare proc _stuff5() (like _stuff1, like _stuff1);
+
+-- TEST: rewrite with formal name for each shape
+-- + DECLARE PROC _stuff6 () (x_id INTEGER, x_name TEXT, y_id INTEGER, y_name TEXT);
+-- - Error
+declare proc _stuff6() (x like _stuff1, y like _stuff1);
+
+-- TEST: access shape args using dot notation
+-- + {dot}: x_id: integer variable
+create proc using_like_shape(x like _stuff1)
+begin
+  call printf("%s\n", x.id);
+end;
+
+-- TEST: access invald shape args using dot notation
+-- + Error % field not found in shape 'xyzzy'
+-- +1 Error
+create proc using_like_shape_bad_name(x like _stuff1)
+begin
+  call printf("%s\n", x.xyzzy);
+end;
+
+
+-- TEST try to pass some of my args along
+-- + CREATE PROC arg_shape_forwarder (args_arg1 INTEGER, args_arg2 TEXT, extra_args_id INTEGER, extra_args_name TEXT)
+-- + CALL proc2(args.arg1, args.arg2);
+-- - Error
+create proc arg_shape_forwarder(args like proc2 arguments, extra_args like _stuff1)
+begin
+  call proc2(from args);
+end;
 
 -- create a table in the future
 -- - Error

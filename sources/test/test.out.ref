@@ -1281,6 +1281,10 @@ SET z := 1 BETWEEN -1 AND 3;
 
 SET z := 1 BETWEEN 'x' || 'y' AND 'z';
 
+CREATE PROC foo (x LIKE this, y LIKE that)
+BEGIN
+END;
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

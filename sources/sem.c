@@ -367,6 +367,7 @@ static symtab *extension_fragments;
 static symtab *assembly_fragments;
 static symtab *extensions_by_basename;
 static symtab *builtin_aggregated_funcs;
+static symtab *arg_bundles;
 
 static ast_node *current_table_ast;
 static CSTR current_table_name;
@@ -1211,6 +1212,11 @@ static ast_node *find_usable_trigger(CSTR name, ast_node *err_target, CSTR msg) 
 // Wrappers for the proc table.
 static bool_t add_proc(ast_node *ast, CSTR name) {
   return symtab_add(procs, name, ast);
+}
+
+static ast_node *find_arg_bundle(CSTR name) {
+  symtab_entry *entry = symtab_find(arg_bundles, name);
+  return entry ? (ast_node*)(entry->val) : NULL;
 }
 
 ast_node *find_proc(CSTR name) {
@@ -4214,6 +4220,38 @@ static bool_t try_resolve_auto_cursor(ast_node *ast, CSTR name, CSTR cursor) {
    return false;
 }
 
+// Returns if the scope name is a valid shape then try to look it up
+// as a shape arg auto-field (which might generate errors).  If it isn't a
+// shape then just report not found.
+static bool_t try_resolve_using_arg_bundle(ast_node *ast, CSTR name, CSTR shapename) {
+   Contract(shapename);
+   ast_node *shape = find_arg_bundle(shapename);
+   if (!shape) {
+     // try something else
+     return false;
+   }
+
+  // Find the name if it exists;  emit the canonical field name, which
+  // has the exact case from the declaration.  The user might have used
+  // something like C.VaLuE when the field is "value". The local has to match.
+
+  sem_struct *sptr = shape->sem->sptr;
+  Invariant(sptr->count > 0);
+
+  for (int32_t i = 0; i < sptr->count; i++) {
+     if (!Strcasecmp(sptr->names[i], name)) {
+        ast->sem = new_sem(sptr->semtypes[i] | SEM_TYPE_VARIABLE);
+        ast->sem->name = dup_printf("%s_%s", shapename, sptr->names[i]);
+        return true;
+     }
+  }
+
+  // if we get this far we're stopping the search
+  report_error(ast, "CQL0068: field not found in shape", name);
+  record_error(ast);
+  return true;
+}
+
 // Try to look up a [possibly] scoped name in one of the places:
 // 1. a column in the current joinscope if any (this must not conflict with #2)
 // 2. a local or global variable
@@ -4246,6 +4284,10 @@ static void sem_resolve_id(ast_node *ast, CSTR name, CSTR scope) {
   // a scope might refer to a cursor, since these are always scoped
   // there is no issue with confusion with locals.
   if (scope && try_resolve_auto_cursor(ast, name, scope)) {
+    return;
+  }
+
+  if (scope && try_resolve_using_arg_bundle(ast, name, scope)) {
     return;
   }
 
@@ -6226,7 +6268,7 @@ static void sem_expr_raise(ast_node *ast, CSTR cstr) {
 // We can't just return the error in the tree like we usually do because
 // arg_list might be null and we're trying to do all the helper logic here.
 static bool_t sem_rewrite_call_args_if_needed(ast_node *arg_list) {
- if (arg_list) {
+  if (arg_list) {
     // if there are any cursor forms in the arg list that need to be expanded, do that here.
     sem_rewrite_from_cursor_args(arg_list);
     if (is_error(arg_list)) {
@@ -12069,7 +12111,9 @@ static bool_t sem_rewrite_col_key_list(ast_node *head) {
 // * arg names get a _ suffix so they don't conflict with column names
 static void sem_rewrite_one_param(ast_node *param, symtab *param_names) {
   Contract(is_ast_param(param));
-  EXTRACT_NOTNULL(like, param->left);
+  EXTRACT_NOTNULL(param_detail, param->right);
+  EXTRACT_ANY(formal, param_detail->left);
+  EXTRACT_NOTNULL(like, param_detail->right);
   EXTRACT_STRING(like_name, like->left);
 
   ast_node *found_ast = sem_find_likeable_ast(like);
@@ -12086,17 +12130,33 @@ static void sem_rewrite_one_param(ast_node *param, symtab *param_names) {
   sem_struct *sptr = found_ast->sem->sptr;
   uint32_t count = sptr->count;
   bool_t first_rewrite = true;
+  CSTR formal_name = NULL;
+
+  if (formal) {
+    EXTRACT_STRING(fname, formal);
+    formal_name = fname;
+    ast_node *shape_ast = new_ast_str(formal_name);
+    shape_ast->sem = found_ast->sem;
+    sem_add_flags(shape_ast, 0); // force clone the semantic type
+    shape_ast->sem->name = formal_name;
+    symtab_add(arg_bundles, formal_name, shape_ast);
+  }
 
   for (int32_t i = 0; i < count; i++) {
     sem_t sem_type = sptr->semtypes[i];
     CSTR param_name = sptr->names[i];
 
-    // If the shape came from a procedure we keep the args unchanged
-    // If the shape came from a data type or cursor then we add _
-    // The idea here is that if it came from a procedure we want to keep the same signature
-    // exactly and if any _ needed to be added to avoid conflict with a column name then it already was.
-    if (!(sem_type & (SEM_TYPE_IN_PARAMETER | SEM_TYPE_OUT_PARAMETER))) {
-      param_name = dup_printf("%s_", sptr->names[i]);
+    if (formal_name) {
+      param_name = dup_printf("%s_%s", formal_name, param_name);
+    }
+    else {
+      // If the shape came from a procedure we keep the args unchanged
+      // If the shape came from a data type or cursor then we add _
+      // The idea here is that if it came from a procedure we want to keep the same signature
+      // exactly and if any _ needed to be added to avoid conflict with a column name then it already was.
+      if (!(sem_type & (SEM_TYPE_IN_PARAMETER | SEM_TYPE_OUT_PARAMETER))) {
+        param_name = dup_printf("%s_", param_name);
+      }
     }
 
     // skip any that we have already added or that are manually present
@@ -12106,7 +12166,7 @@ static void sem_rewrite_one_param(ast_node *param, symtab *param_names) {
 
     ast_node *type = sem_generate_data_type(sem_type);
     ast_node *name_ast = new_ast_str(param_name);
-    ast_node *param_detail = new_ast_param_detail(name_ast, type);
+    ast_node *param_detail_new = new_ast_param_detail(name_ast, type);
 
     ast_node *inout = NULL; // IN by default
     if (sem_type & SEM_TYPE_OUT_PARAMETER) {
@@ -12121,7 +12181,7 @@ static void sem_rewrite_one_param(ast_node *param, symtab *param_names) {
     if (!first_rewrite) {
       // for the 2nd and subsequent args make a new node
       ast_node *params = param->parent;
-      ast_node *new_param = new_ast_param(inout, param_detail);
+      ast_node *new_param = new_ast_param(inout, param_detail_new);
       ast_set_right(params, new_ast_params(new_param, params->right));
       param = new_param;
     }
@@ -12129,11 +12189,10 @@ static void sem_rewrite_one_param(ast_node *param, symtab *param_names) {
       // for the first arg, just replace the param details
       // recall that we are on a param node and it is the like entry
       Invariant(is_ast_param(param));
-      Invariant(is_ast_like(param->left));
 
       // replace the like entry with a real param detail
       // on the next iteration, we will insert to the right of ast
-      ast_set_right(param, param_detail);
+      ast_set_right(param, param_detail_new);
       ast_set_left(param, inout);
       first_rewrite = false;
     }
@@ -12292,8 +12351,9 @@ static void sem_rewrite_params(ast_node *head) {
   for (ast_node *ast = head; ast; ast = ast->right) {
     Contract(is_ast_params(ast));
     EXTRACT_NOTNULL(param, ast->left)
+    EXTRACT_NOTNULL(param_detail, param->right)
 
-    if (is_ast_like(param->left)) {
+    if (is_ast_like(param_detail->right)) {
       sem_rewrite_one_param(param, param_names);
       if (is_error(param)) {
         record_error(head);
@@ -12302,8 +12362,6 @@ static void sem_rewrite_params(ast_node *head) {
     }
     else {
       // Just extract the name and record that we used it -- no rewrite needed.
-      Contract(is_ast_param(param));
-      EXTRACT_NOTNULL(param_detail, param->right);
       EXTRACT_STRING(param_name, param_detail->left);
       symtab_add(param_names, param_name, NULL);
     }
@@ -12433,10 +12491,10 @@ static bool_t sem_autotest_dummy_test(
     // find table name
     if (!is_ast_misc_attr_value_list(dummy_test_list->left) || !is_ast_str(dummy_test_list->left->left)) {
       report_dummy_test_error(
-	dummy_test_list->left,
-	"CQL0273: autotest attribute has incorrect format (table name should be nested) in",
-	"dummy_test",
-	error);
+      dummy_test_list->left,
+        "CQL0273: autotest attribute has incorrect format (table name should be nested) in",
+        "dummy_test",
+        error);
       goto cleanup;
     }
 
@@ -12445,10 +12503,10 @@ static bool_t sem_autotest_dummy_test(
     ast_node *table = find_table_or_view_even_hidden(table_name);
     if (!table) {
       report_dummy_test_error(
-	table_list->left,
-	"CQL0274: autotest attribute 'dummy_test' has non existent table",
-	table_name,
-	error);
+        table_list->left,
+        "CQL0274: autotest attribute 'dummy_test' has non existent table",
+        table_name,
+        error);
       goto cleanup;
     }
 
@@ -12458,32 +12516,32 @@ static bool_t sem_autotest_dummy_test(
     ast_node *column_name_list = table_list->right;
     if (!is_ast_misc_attr_value_list(column_name_list->left)) {
       report_dummy_test_error(
-	table_list->left,
-	"CQL0273: autotest attribute has incorrect format (column name should be nested) in",
-	"dummy_test",
-	error);
+        table_list->left,
+        "CQL0273: autotest attribute has incorrect format (column name should be nested) in",
+        "dummy_test",
+        error);
       goto cleanup;
     }
 
     for (ast_node *list = column_name_list->left; list; list = list->right) {
       if (!is_ast_str(list->left)) {
-	report_dummy_test_error(
-	  table_list->left,
-	  "CQL0273: autotest attribute has incorrect format (column name should be nested) in",
-	  "dummy_test",
-	  error);
-	goto cleanup;
+        report_dummy_test_error(
+          table_list->left,
+          "CQL0273: autotest attribute has incorrect format (column name should be nested) in",
+          "dummy_test",
+          error);
+        goto cleanup;
       }
       ast_node *misc_attr_value = list->left;
       EXTRACT_STRING(column_name, misc_attr_value);
       sem_t col_type = find_column_type(table_name, column_name);
       if (!col_type) {
-	report_dummy_test_error(
-	  misc_attr_value,
-	  "CQL0275: autotest attribute 'dummy_test' has non existent column",
-	  column_name,
-	  error);
-	goto cleanup;
+        report_dummy_test_error(
+          misc_attr_value,
+          "CQL0275: autotest attribute 'dummy_test' has non existent column",
+          column_name,
+          error);
+        goto cleanup;
       }
       record_ok(misc_attr_value);
       sem_t *col_type_ptr = bytebuf_alloc(&column_types, sizeof(sem_t));
@@ -12496,92 +12554,92 @@ static bool_t sem_autotest_dummy_test(
     // find column values
     if (!is_ast_misc_attr_value_list(column_name_list->right)) {
       report_dummy_test_error(
-	table_list->left,
-	"CQL0273: autotest attribute has incorrect format (column value should be nested) in",
-	"dummy_test",
-	error);
+        table_list->left,
+        "CQL0273: autotest attribute has incorrect format (column value should be nested) in",
+        "dummy_test",
+        error);
       goto cleanup;
     }
 
     for (ast_node *column_values_list = column_name_list->right; column_values_list; column_values_list = column_values_list->right) {
       if (!is_ast_misc_attr_value_list(column_values_list->left)) {
-	report_dummy_test_error(
-	  table_list->left,
-	  "CQL0273: autotest attribute has incorrect format (column value should be nested) in",
-	  "dummy_test",
-	  error);
-	goto cleanup;
+        report_dummy_test_error(
+          table_list->left,
+          "CQL0273: autotest attribute has incorrect format (column value should be nested) in",
+          "dummy_test",
+          error);
+        goto cleanup;
       }
 
       int32_t column_value_count = 0;
       for (ast_node *list = column_values_list->left; list; list = list->right) {
 
-	if (column_value_count >= column_count) {
-	  report_dummy_test_error(
-	    table_list->left,
-	    "CQL0273: autotest attribute has incorrect format (too many column values) in",
-	    "dummy_test",
-	    error);
-	  goto cleanup;
-	}
+        if (column_value_count >= column_count) {
+          report_dummy_test_error(
+            table_list->left,
+            "CQL0273: autotest attribute has incorrect format (too many column values) in",
+            "dummy_test",
+            error);
+          goto cleanup;
+        }
 
-	ast_node *misc_attr_value = list->left;
-	sem_t col_type = ((sem_t *)column_types.ptr)[column_value_count];
-	sem_t core_type = core_type_of(col_type);
+        ast_node *misc_attr_value = list->left;
+        sem_t col_type = ((sem_t *)column_types.ptr)[column_value_count];
+        sem_t core_type = core_type_of(col_type);
 
-	if (is_ast_uminus(misc_attr_value)) {
-	  Contract(is_ast_num(misc_attr_value->left));
-	  misc_attr_value = misc_attr_value->left;
-	}
+        if (is_ast_uminus(misc_attr_value)) {
+          Contract(is_ast_num(misc_attr_value->left));
+          misc_attr_value = misc_attr_value->left;
+        }
 
-	bool_t ok = false;
+        bool_t ok = false;
 
-	if (is_ast_num(misc_attr_value)) {
-	   // an integer literal is good for any numeric type
-	   EXTRACT_NUM_TYPE(num_type, misc_attr_value);
+        if (is_ast_num(misc_attr_value)) {
+           // an integer literal is good for any numeric type
+           EXTRACT_NUM_TYPE(num_type, misc_attr_value);
 
-	   if (num_type == NUM_INT) {
-	     // an integer literal is good for any numeric type
-	     ok = is_numeric(core_type);
-	   }
-	   else if (num_type == NUM_LONG) {
-	     // NUM_LONG might not fit in REAL, compatible only with itself
-	     ok = core_type == SEM_TYPE_LONG_INTEGER;
-	   }
-	   else {
-	     Contract(num_type == NUM_REAL);
-	     // a real literal is only good for a real column
-	     ok = core_type == SEM_TYPE_REAL;
-	   }
-	}
-	else if (is_ast_strlit(misc_attr_value)) {
-	   // a string literal is ok for any text column
-	   ok = core_type == SEM_TYPE_TEXT;
-	}
-	else if (is_ast_null(misc_attr_value)) {
-	   // the null token is ok for any nullable column
-	   ok = is_nullable(col_type);
-	}
+           if (num_type == NUM_INT) {
+             // an integer literal is good for any numeric type
+             ok = is_numeric(core_type);
+           }
+           else if (num_type == NUM_LONG) {
+             // NUM_LONG might not fit in REAL, compatible only with itself
+             ok = core_type == SEM_TYPE_LONG_INTEGER;
+           }
+           else {
+             Contract(num_type == NUM_REAL);
+             // a real literal is only good for a real column
+             ok = core_type == SEM_TYPE_REAL;
+           }
+        }
+        else if (is_ast_strlit(misc_attr_value)) {
+           // a string literal is ok for any text column
+           ok = core_type == SEM_TYPE_TEXT;
+        }
+        else if (is_ast_null(misc_attr_value)) {
+           // the null token is ok for any nullable column
+           ok = is_nullable(col_type);
+        }
 
-	if (!ok) {
-	  report_dummy_test_error(
-	    misc_attr_value,
-	    "CQL0276: autotest attribute 'dummy_test' has invalid value type in",
-	    ((CSTR *) column_names.ptr)[column_value_count],
-	    error);
-	  goto cleanup;
-	}
-	record_ok(misc_attr_value);
-	column_value_count++;
+        if (!ok) {
+          report_dummy_test_error(
+            misc_attr_value,
+            "CQL0276: autotest attribute 'dummy_test' has invalid value type in",
+            ((CSTR *) column_names.ptr)[column_value_count],
+            error);
+          goto cleanup;
+        }
+        record_ok(misc_attr_value);
+        column_value_count++;
       }
 
       if (column_count != column_value_count) {
-	report_dummy_test_error(
-	  table_list->left,
-	  "CQL0273: autotest attribute has incorrect format (mismatch number of column and values) in",
-	  "dummy_test",
-	  error);
-	goto cleanup;
+        report_dummy_test_error(
+          table_list->left,
+          "CQL0273: autotest attribute has incorrect format (mismatch number of column and values) in",
+          "dummy_test",
+          error);
+        goto cleanup;
       }
     }
 
@@ -13731,6 +13789,7 @@ static void sem_inside_create_proc_stmt(ast_node *ast) {
   bool_t error = false;
   has_dml = 0;
   current_variables = locals = symtab_new();
+  arg_bundles = symtab_new();
   between_count = 0;
   in_proc_savepoint = false;
 
@@ -13767,7 +13826,9 @@ static void sem_inside_create_proc_stmt(ast_node *ast) {
 
 cleanup:
   symtab_delete(locals);
+  symtab_delete(arg_bundles);
   locals = NULL;
+  arg_bundles = NULL;
   current_variables = globals;
   between_count = saved_between_count;
 
@@ -14095,38 +14156,56 @@ static void sem_typed_name(ast_node *typed_name, symtab *names) {
 // * replace the "like T" slug with the first column of T
 // * for each additional column create a typed name node and link it in.
 // * emit any given name only once, (so you can do like T1, like T1 even if both have the same pk)
-static void sem_rewrite_one_typed_name(ast_node *like, symtab *used_names) {
-  Contract(is_ast_like(like));
+static void sem_rewrite_one_typed_name(ast_node *typed_name, symtab *used_names) {
+  Contract(is_ast_typed_name(typed_name));
+  EXTRACT_ANY(formal, typed_name->left);
+  EXTRACT_NOTNULL(like, typed_name->right);
   EXTRACT_STRING(like_name, like->left);
 
   ast_node *found_ast = sem_find_likeable_ast(like);
   if (!found_ast) {
-    record_error(like);
+    record_error(typed_name);
     return;
   }
 
   AST_REWRITE_INFO_SET(like->lineno, like->filename);
 
   // Nothing can go wrong from here on
-  record_ok(like);
+  record_ok(typed_name);
 
   sem_struct *sptr = found_ast->sem->sptr;
   uint32_t count = sptr->count;
   bool_t first_rewrite = true;
+  CSTR formal_name = NULL;
 
-  ast_node *insertion = like;
+  ast_node *insertion = typed_name;
+
+  if (formal) {
+    EXTRACT_STRING(fname, formal);
+    formal_name = fname;
+
+    // note that typed names are part of a procedure return type in a declaration
+    // they don't create a proc or a proc body and so we don't add to arg_bundles,
+    // indeed arg_bundles is null at this point
+    Invariant(!arg_bundles);
+  }
 
   for (int32_t i = 0; i < count; i++) {
     sem_t sem_type = sptr->semtypes[i];
     CSTR name = sptr->names[i];
+    CSTR combined_name = name;
+
+    if (formal_name) {
+      combined_name = dup_printf("%s_%s", formal_name, name);
+    }
 
     // skip any that we have already added or that are manually present
-    if (!symtab_add(used_names, name, NULL)) {
+    if (!symtab_add(used_names, combined_name, NULL)) {
       continue;
     }
 
+    ast_node *name_ast = new_ast_str(combined_name);
     ast_node *type = sem_generate_data_type(sem_type);
-    ast_node *name_ast = new_ast_str(name);
     ast_node *new_typed_name = new_ast_typed_name(name_ast, type);
     ast_node *typed_names = insertion->parent;
 
@@ -14146,7 +14225,7 @@ static void sem_rewrite_one_typed_name(ast_node *like, symtab *used_names) {
   if (first_rewrite) {
     // since this can only happen if there is 100% duplication, that means there is always a previous typed name
     // if this were the first node we would have expanded ... something
-    EXTRACT_NOTNULL(typed_names, like->parent);
+    EXTRACT_NOTNULL(typed_names, typed_name->parent);
     EXTRACT_NAMED_NOTNULL(prev, typed_names, typed_names->parent);
     ast_set_right(prev, typed_names->right);
   }
@@ -14161,18 +14240,17 @@ static void sem_rewrite_typed_names(ast_node *head) {
 
   for (ast_node *ast = head; ast; ast = ast->right) {
     Contract(is_ast_typed_names(ast));
-    EXTRACT_ANY_NOTNULL(item, ast->left)
+    EXTRACT_NOTNULL(typed_name, ast->left);
 
-    if (is_ast_like(item)) {
-      sem_rewrite_one_typed_name(item, used_names);
-      if (is_error(item)) {
+    if (is_ast_like(typed_name->right)) {
+      sem_rewrite_one_typed_name(typed_name, used_names);
+      if (is_error(typed_name)) {
         record_error(head);
         goto cleanup;
       }
     }
     else {
       // Just extract the name and record that we used it -- no rewrite needed.
-      EXTRACT_NOTNULL(typed_name, item);
       EXTRACT_STRING(name, typed_name->left);
       symtab_add(used_names, name, NULL);
     }
@@ -14265,11 +14343,14 @@ static void sem_declare_func_stmt(ast_node *ast) {
 
   if (params) {
     current_variables = locals = symtab_new();
+    arg_bundles = symtab_new();
 
     sem_params(params);
 
     symtab_delete(locals);
     locals = NULL;
+    symtab_delete(arg_bundles);
+    arg_bundles = NULL;
     current_variables = globals;
 
     if (is_error(params)) {
@@ -14907,6 +14988,20 @@ static void sem_cursor(ast_node *ast) {
   }
 }
 
+// Try to look up the indicated name as a named shape from the args
+// If so use the type of that shape
+static bool_t try_sem_arg_bundle(ast_node *ast) {
+  EXTRACT_STRING(name, ast);
+  ast_node *shape = find_arg_bundle(name);
+
+  if (shape) {
+    ast->sem = shape->sem;
+    return true;
+  }
+
+  return false;
+}
+
 // While semantic analysis is super simple.
 //  * the condition must be numeric
 //  * the statement list must be error-free
@@ -15162,13 +15257,15 @@ static void sem_rewrite_from_cursor_args(ast_node *head) {
     if (is_ast_from_cursor(arg)) {
       EXTRACT_ANY_NOTNULL(cursor, arg->left);
 
-      // Note if this is not an automatic cursor then we will fail later when we try to
-      // resolve the '.' expression.  That error message tells the story well enough
-      // so we don't need an extra check here.
-      sem_cursor(cursor);
-      if (is_error(cursor)) {
-        record_error(head);
-        return;
+      if (!try_sem_arg_bundle(cursor)) {
+        // Note if this is not an automatic cursor then we will fail later when we try to
+        // resolve the '.' expression.  That error message tells the story well enough
+        // so we don't need an extra check here.
+        sem_cursor(cursor);
+        if (is_error(cursor)) {
+          record_error(head);
+          return;
+        }
       }
 
       ast_node *like_ast = arg->right;
