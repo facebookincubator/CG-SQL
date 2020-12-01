@@ -40,6 +40,7 @@ UNBOUNDED                    { return UNBOUNDED; }
 PRECEDING                    { return PRECEDING; }
 FOLLOWING                    { return FOLLOWING; }
 RANGE                        { return RANGE; }
+ENUM                         { return ENUM; }
 ROWS                         { return ROWS; }
 GROUPS                       { return GROUPS; }
 PARTITION                    { return PARTITION; }

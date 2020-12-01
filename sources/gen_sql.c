@@ -2625,6 +2625,34 @@ static void gen_declare_value_cursor(ast_node *ast) {
   gen_one_stmt(stmt);
 }
 
+static void gen_declare_enum_stmt(ast_node *ast) {
+  Contract(is_ast_declare_enum_stmt(ast));
+  EXTRACT_NOTNULL(typed_name, ast->left);
+  EXTRACT_NOTNULL(enum_values, ast->right);
+  gen_printf("DECLARE ENUM ");
+  gen_typed_name(typed_name);
+  gen_printf(" (");
+
+  while (enum_values) {
+     EXTRACT_NOTNULL(enum_value, enum_values->left);
+     EXTRACT_STRING(enum_name, enum_value->left);
+     EXTRACT_ANY(expr, enum_value->right);
+
+     gen_printf("\n  %s", enum_name);
+     if (expr) {
+       gen_printf(" = ");
+       gen_root_expr(expr);
+     }
+
+     if (enum_values->right) {
+       gen_printf(",");
+     }
+
+     enum_values = enum_values->right;
+  }
+  gen_printf("\n)");
+}
+
 static void gen_set_from_cursor(ast_node *ast) {
   Contract(is_ast_set_from_cursor(ast));
   EXTRACT_STRING(var_name, ast->left);
@@ -3120,6 +3148,7 @@ cql_noexport void gen_init() {
   STMT_INIT(conflict_target);
   STMT_INIT(fetch_values_stmt);
   STMT_INIT(fetch_cursor_stmt);
+  STMT_INIT(declare_enum_stmt);
   STMT_INIT(declare_cursor);
   STMT_INIT(declare_cursor_like_name);
   STMT_INIT(declare_cursor_like_select);
