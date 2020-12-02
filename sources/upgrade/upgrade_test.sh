@@ -9,7 +9,7 @@ CQL_FILE="${OUT_DIR}/generated_upgrade_test.cql"
 GENERATED_DOWNGRADE_SOURCE="${OUT_DIR}/generated_downgrade_test"
 GENERATED_UPGRADE_SOURCE="${OUT_DIR}/generated_upgrade_test"
 SCHEMA_FILE="${OUT_DIR}/generated_upgrade_test_schema.sql"
-TEMP_FILE="/tmp/tmpfile"
+TEMP_FILE="${OUT_DIR}/upgrade_tmp_file"
 TEST_PREFIX="test"
 CQL="./${OUT_DIR}/cql"
 
