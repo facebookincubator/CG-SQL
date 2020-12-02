@@ -204,9 +204,11 @@ cql_string_literal(_literal_2_b_, "b");
 cql_string_literal(_literal_3_c_, "c");
 cql_string_literal(_literal_4_a_, "a");
 cql_string_literal(_literal_5_x_, "x");
-cql_string_literal(_literal_6_Testing_c_literal, "\"Testing\" \\''");
-cql_string_literal(_literal_7_bar_fetch_to_cursor_from_cursor, "bar");
-cql_string_literal(_literal_8_y_, "y");
+cql_string_literal(_literal_6_before_echo_echo_test, "before echo");
+cql_string_literal(_literal_7_after_echo_echo_test, "after echo");
+cql_string_literal(_literal_8_Testing_c_literal, "\"Testing\" \\''");
+cql_string_literal(_literal_9_bar_fetch_to_cursor_from_cursor, "bar");
+cql_string_literal(_literal_10_y_, "y");
 
 // The statement ending at line XXXX
 
@@ -2055,6 +2057,30 @@ int Garbonzo; // a chick pea
 // The statement ending at line XXXX
 
 /*
+CREATE PROC echo_test ()
+BEGIN
+  DECLARE s TEXT;
+  SET s := "before echo";
+  @ECHO c, "#define ECHO_TEST 1\n";
+  SET s := "after echo";
+END;
+*/
+
+#undef _PROC_
+#define _PROC_ "echo_test"
+void echo_test(void) {
+  cql_string_ref s = NULL;
+
+  cql_set_string_ref(&s, _literal_6_before_echo_echo_test);
+  #define ECHO_TEST 1
+  cql_set_string_ref(&s, _literal_7_after_echo_echo_test);
+
+  cql_string_release(s);
+}
+
+// The statement ending at line XXXX
+
+/*
 CREATE PROC insert_values (id_ INTEGER NOT NULL, type_ INTEGER)
 BEGIN
   INSERT INTO bar(id, type) VALUES(id_, type_);
@@ -2956,7 +2982,7 @@ END;
 #define _PROC_ "c_literal"
 void c_literal(cql_string_ref _Nullable *_Nonnull x) {
   *(void **)x = NULL; // set out arg to non-garbage
-  cql_set_string_ref(&*x, _literal_6_Testing_c_literal);
+  cql_set_string_ref(&*x, _literal_8_Testing_c_literal);
 
 }
 
@@ -3808,7 +3834,7 @@ void fetch_to_cursor_from_cursor(fetch_to_cursor_from_cursor_row *_Nonnull _resu
 
   C0_._has_row_ = 1;
   C0_.A = 2;
-  cql_set_string_ref(&C0_.B, _literal_7_bar_fetch_to_cursor_from_cursor);
+  cql_set_string_ref(&C0_.B, _literal_9_bar_fetch_to_cursor_from_cursor);
   C1_._has_row_ = C0_._has_row_;
   C1_.A = C0_.A;
   cql_set_string_ref(&C1_.B, C0_.B);
@@ -3974,7 +4000,7 @@ void is_test(void) {
 
   b = 1 == 1;
   b = cql_string_equal(_literal_5_x_, _literal_5_x_);
-  b = cql_string_equal(_literal_5_x_, _literal_8_y_);
+  b = cql_string_equal(_literal_5_x_, _literal_10_y_);
   b = !!(1 + (3 == 4));
   cql_set_notnull(i, 1);
   cql_set_notnull(j, 2);
@@ -4011,7 +4037,7 @@ void is_not_test(void) {
 
   b = 1 != 1;
   b = !cql_string_equal(_literal_5_x_, _literal_5_x_);
-  b = !cql_string_equal(_literal_5_x_, _literal_8_y_);
+  b = !cql_string_equal(_literal_5_x_, _literal_10_y_);
   b = !!(1 + (3 != 4));
   cql_set_notnull(i, 1);
   cql_set_notnull(j, 2);
@@ -5127,7 +5153,7 @@ void out_union_two_fetch_results(out_union_two_result_set_ref _Nullable *_Nonnul
   cql_profile_start(CRC_out_union_two, &out_union_two_perf_index);
   C_._has_row_ = 1;
   C_.x = 1;
-  cql_set_string_ref(&C_.y, _literal_8_y_);
+  cql_set_string_ref(&C_.y, _literal_10_y_);
   cql_retain_row(C_);
   if (C_._has_row_) cql_bytebuf_append(&_rows_, (const void *)&C_, sizeof(C_));
   cql_retain_row(C_);
@@ -8269,14 +8295,14 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   /*
   SET i2 := 'x' LIKE 'y';
   */
-  i2 = cql_string_like(_literal_5_x_, _literal_8_y_) == 0;
+  i2 = cql_string_like(_literal_5_x_, _literal_10_y_) == 0;
   
   // The statement ending at line XXXX
   
   /*
   SET i2 := 'x' NOT LIKE 'y';
   */
-  i2 = cql_string_like(_literal_5_x_, _literal_8_y_) != 0;
+  i2 = cql_string_like(_literal_5_x_, _literal_10_y_) != 0;
   
   // The statement ending at line XXXX
   

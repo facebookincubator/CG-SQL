@@ -1140,6 +1140,19 @@ end;
 -- + '%'
 @echo c, "//\/'\a\b\f\t\v'\r\n";
 
+-- TEST: echo inside a procedure
+-- + void echo_test(void) {
+-- + cql_set_string_ref(&s, _literal%before_echo_%);
+-- + #define ECHO_TEST 1
+-- + cql_set_string_ref(&s, _literal%after_echo_%);
+create proc echo_test()
+begin
+  declare s text;
+  SET s := "before echo";
+  @echo c, "#define ECHO_TEST 1\n";
+  SET s := "after echo";
+end;
+
 -- TEST: insert or replace form
 -- +  "INSERT OR REPLACE INTO bar(id, type) VALUES(1, 5)"
 insert or replace into bar(id, type) values (1,5);

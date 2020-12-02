@@ -4097,16 +4097,6 @@ set not_null_object := (select attest_notnull(1));
 -- - Error
 @echo c, 'foo\n';
 
--- TEST: echo statement not ok in a proc
--- + {create_proc_stmt}: err
--- + {echo_stmt}: err
--- + Error % literal output can only appear outside of procedures
--- +1 Error
-create procedure invalid_echo()
-begin
-  @echo c, 'foo\n';
-end;
-
 -- TEST: simple typed object declaration
 -- + declare_vars_type}: object<Foo>
 -- + {name_list}: foo_obj: object<Foo> variable

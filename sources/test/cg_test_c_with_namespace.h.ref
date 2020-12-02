@@ -704,6 +704,9 @@ extern void unused_temp(cql_nullable_int32 i, cql_int32 *_Nonnull o);
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
+extern void echo_test(void);
+
+// The statement ending at line XXXX
 
 // The statement ending at line XXXX
 

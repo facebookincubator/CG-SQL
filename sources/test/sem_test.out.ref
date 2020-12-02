@@ -15486,23 +15486,6 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-CREATE PROC invalid_echo ()
-BEGIN
-  @ECHO c, 'foo\n';
-END;
-
-Error at test/sem_test.sql:XXXX : in echo_stmt : CQL0224: literal output can only appear outside of procedures
-
-  {create_proc_stmt}: err
-  | {name invalid_echo}: err
-  | {proc_params_stmts}
-    | {stmt_list}: err
-      | {echo_stmt}: err
-        | {name c}
-        | {strlit 'foo\n'}
-
-The statement ending at line XXXX
-
 DECLARE foo_obj OBJECT<Foo>;
 
   {declare_vars_type}: object<Foo>

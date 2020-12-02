@@ -16067,16 +16067,10 @@ static void sem_out_union_stmt(ast_node *ast) {
   sem_out_any(ast);
 }
 
-// echo is valid in any top level context
+// echo is valid in any context
 static void sem_echo_stmt(ast_node *ast) {
   Contract(is_ast_echo_stmt(ast));
   EXTRACT_STRING(str, ast->right);
-
-  if (current_proc) {
-    report_error(ast, "CQL0224: literal output can only appear outside of procedures", NULL);
-    record_error(ast);
-    return;
-  }
 
   record_ok(ast);
 }

@@ -3869,7 +3869,11 @@ static void cg_echo_stmt(ast_node *ast) {
   // @ECHO [rt], [str]
 
   if (!Strcasecmp(rt_name, options.rt)) {
-    cg_decode_string_literal(str, cg_declarations_output);
+    if (current_proc) {
+      cg_decode_string_literal(str, cg_main_output);
+    } else {
+      cg_decode_string_literal(str, cg_declarations_output);
+    }
   }
 }
 
