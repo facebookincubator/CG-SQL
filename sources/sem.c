@@ -1213,16 +1213,13 @@ static ast_node *find_usable_trigger(CSTR name, ast_node *err_target, CSTR msg) 
 
 // Wrappers for the enum table.
 static bool_t add_enum(ast_node *ast, CSTR name) {
-  return symtab_add(procs, name, ast);
+  return symtab_add(enums, name, ast);
 }
-
-/* not used yet, saving this for now
 
 ast_node *find_enum(CSTR name) {
   symtab_entry *entry = symtab_find(enums, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
-*/
 
 // Wrappers for the proc table.
 static bool_t add_proc(ast_node *ast, CSTR name) {
@@ -4243,12 +4240,45 @@ static bool_t try_resolve_auto_cursor(ast_node *ast, CSTR name, CSTR cursor) {
    return false;
 }
 
+static bool_t try_resolve_using_enum(ast_node *ast, CSTR name, CSTR enum_name) {
+   Contract(enum_name);
+   ast_node *enum_stmt = find_enum(enum_name);
+   if (!enum_stmt) {
+     // try something else
+     return false;
+   }
+
+   Invariant(is_ast_declare_enum_stmt(enum_stmt));
+
+  // Find the name if it exists;  if it does then this becomes a rewrite
+
+  EXTRACT_NOTNULL(enum_values, enum_stmt->right);
+
+  while (enum_values) {
+     EXTRACT_NOTNULL(enum_value, enum_values->left);
+     EXTRACT_STRING(enum_member, enum_value->left);
+
+     if (!Strcasecmp(enum_member, name)) {
+        ast_node *ast_new = eval_set(ast, enum_value->left->sem->value);
+        sem_root_expr(ast_new, SEM_EXPR_CONTEXT_NONE);
+        ast->sem = ast_new->sem;
+        return true;
+     }
+     enum_values = enum_values->right;
+  }
+
+  // if we get this far we're stopping the search
+  report_error(ast, "CQL0068: field not found in enum", name);
+  record_error(ast);
+  return true;
+}
+
 // Returns if the scope name is a valid shape then try to look it up
 // as a shape arg auto-field (which might generate errors).  If it isn't a
 // shape then just report not found.
-static bool_t try_resolve_using_arg_bundle(ast_node *ast, CSTR name, CSTR shapename) {
-   Contract(shapename);
-   ast_node *shape = find_arg_bundle(shapename);
+static bool_t try_resolve_using_arg_bundle(ast_node *ast, CSTR name, CSTR bundle_name) {
+   Contract(bundle_name);
+   ast_node *shape = find_arg_bundle(bundle_name);
    if (!shape) {
      // try something else
      return false;
@@ -4264,7 +4294,7 @@ static bool_t try_resolve_using_arg_bundle(ast_node *ast, CSTR name, CSTR shapen
   for (int32_t i = 0; i < sptr->count; i++) {
      if (!Strcasecmp(sptr->names[i], name)) {
         ast->sem = new_sem(sptr->semtypes[i] | SEM_TYPE_VARIABLE);
-        ast->sem->name = dup_printf("%s_%s", shapename, sptr->names[i]);
+        ast->sem->name = dup_printf("%s_%s", shape->sem->name, sptr->names[i]);
         return true;
      }
   }
@@ -4301,6 +4331,12 @@ static void sem_resolve_id(ast_node *ast, CSTR name, CSTR scope) {
   // scoped names like T1.id can never be a variable/parameter
   // if no scope was provided then look for variables
   if (!scope && try_resolve_variable(ast, name)) {
+    return;
+  }
+
+  // The scope might be the name of an enum, if it is, then do
+  // the appropriate rewrite and proceed
+  if (scope && try_resolve_using_enum(ast, name, scope)) {
     return;
   }
 
@@ -14469,6 +14505,72 @@ static void sem_declare_select_func_stmt(ast_node *ast) {
   }
 }
 
+// If we are processing an enumeration you are allowed to use the previous
+// values of the enum in later values, so for instance you could do this
+//   declare enum foo (
+//     big = 100,
+//     medium = big/2,
+//     small = medium/2
+//  );
+// 
+// This code recursively walks enum tree and replaces names it can
+// with names from the enum that is currently being declared.
+// This is the only place unqualified enum names can appear.
+//
+// Note that qualified names are untouched and the current enum is not
+// yet in scope.
+static void sem_replace_seen_enum_values(ast_node *ast, symtab *names) {
+  Contract(ast);
+
+  // we're lookign only for unqualified names
+  if (is_ast_dot(ast) || is_ast_strlit(ast)) {
+     return;
+  }
+
+  if (!is_ast_str(ast)) {
+    if (ast_has_left(ast)) {
+       sem_replace_seen_enum_values(ast->left, names);
+    }
+    if (ast_has_right(ast)) {
+       sem_replace_seen_enum_values(ast->right, names);
+    }
+    return;
+  }
+
+  // this name might be one of the enums for the enum in flight
+  EXTRACT_STRING(name, ast);
+
+  symtab_entry *entry = symtab_find(names, name);
+  ast_node *enum_value = entry ? (ast_node*)(entry->val) : NULL;
+
+  // this is an evaluated enum, previously seen
+  if (enum_value) {
+    // it *must* have been evaluated
+    Invariant(enum_value->left);
+    Invariant(enum_value->left->sem);
+    Invariant(enum_value->left->sem->value);
+
+    ast_node *ast_new = eval_set(ast, enum_value->left->sem->value);
+    sem_root_expr(ast_new, SEM_EXPR_CONTEXT_NONE);
+    ast->sem = ast_new->sem;
+  }
+}
+
+// Enums are a way of declaring scoped numeric constants, the name
+// reference of the enum will be rewritten wherever it appears so that
+// neither the C compiler nor SQLite will ever see a enum name.  Which
+// is good because neither would know its meaning.
+// Declaration follows the usual rules.
+//   * the name must be unique or else the declaration must be identical
+//     to any we've seen before.
+//   * the enum member names must be unique
+//   * the values must be valid expressions that can be resolved, all
+//     the values will be cast to the type of the enum
+//   * if there is no value specified then the value is one greater than
+//     the last value seen, or 1 if it is the first value
+//   * the value expressions can include other enums (because those will
+//     become constants) and they can include names that were previously
+//     defined in this enum, those are replaced with constants in a pre-step.
 static void sem_declare_enum_stmt(ast_node *ast) {
   Contract(is_ast_declare_enum_stmt(ast));
   EXTRACT_NOTNULL(typed_name, ast->left);
@@ -14479,11 +14581,13 @@ static void sem_declare_enum_stmt(ast_node *ast) {
   typed_name->sem = typed_name->right->sem;
   typed_name->sem->name = name;
 
-  if (!add_enum(ast, name)) {
-    report_error(name_ast, "CQLxxxx duplicate enum name", name);
+  if (current_proc) {
+    report_error(name_ast, "CQL0191: declared enums must be top level", name);
     record_error(ast);
     return;
   }
+
+  ast_node *existing_enum = find_enum(name);
 
   ast->sem = typed_name->sem;
   symtab *names = symtab_new();
@@ -14499,20 +14603,21 @@ static void sem_declare_enum_stmt(ast_node *ast) {
      EXTRACT_STRING(enum_name, enum_name_ast);
      EXTRACT_ANY(expr, enum_value->right);
 
-     if (!symtab_add(names, enum_name, NULL)) {
+     if (!symtab_add(names, enum_name, enum_value)) {
        report_error(enum_value, "CQLxxxx duplicate enum member", enum_name);
        record_error(ast);
-       return;
+       goto cleanup;
      }
 
      if (expr) {
+       sem_replace_seen_enum_values(expr, names);
        sem_root_expr(expr, SEM_EXPR_CONTEXT_NONE);
        eval(expr, &result);
 
        if (result.sem_type == SEM_TYPE_ERROR || result.sem_type == SEM_TYPE_NULL) {
          report_error(enum_value, "CQLxxxx evaluation failed", enum_name);
          record_error(ast);
-         return;
+         goto cleanup;
        }
      }
      else {
@@ -14525,6 +14630,20 @@ static void sem_declare_enum_stmt(ast_node *ast) {
      *enum_name_ast->sem->value = result;
      
      enum_values = enum_values->right;
+  }
+
+  if (existing_enum) {
+    bool_t matching = sem_validate_identical_ddl(ast, existing_enum);
+    if (!matching) {
+      report_error(ast, "CQLxxxx enum definitions do not match", name);
+      record_error(ast);
+      goto cleanup;
+    }
+  }
+  else {
+    // this enum is now visible
+    bool_t added = add_enum(ast, name);
+    Invariant(added);
   }
 
 cleanup:

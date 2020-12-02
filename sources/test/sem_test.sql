@@ -12705,6 +12705,17 @@ declare enum real_things real (
   pencil
 );
 
+-- TEST: try to use an enum value, this is a rewrite
+-- + SELECT 8.000000e+00;
+select real_things.pencil;
+
+-- TEST: try to use an enum value, this is a rewrite
+-- + {select_stmt}: err
+-- + {dot}: err
+-- + Error % field not found in enum 'nope'
+-- +1 Error
+select real_things.nope;
+
 -- TEST: create a bool enum (it all casts to true false)
 -- + {declare_enum_stmt}: bool_things: bool
 -- + {name pen}: bool = 1
@@ -12729,8 +12740,9 @@ declare enum long_things long_int (
 
 -- TEST: duplicate enum name
 -- + {declare_enum_stmt}: err
--- + Error % duplicate enum name 'long_things'
--- +1 Error
+-- + Error % enum definitions do not match 'long_things'
+-- there will be three reports, 1 each for the two versions and one overall error
+-- +3 Error
 declare enum long_things integer (
   foo
 );
@@ -12751,6 +12763,47 @@ declare enum duplicated_things integer (
 declare enum invalid_things integer (
   boo = 1/0
 );
+
+-- TEST: refer to the enum from within itself
+-- + DECLARE ENUM sizes REAL (
+-- + big = 100,
+-- + medium = 1.000000e+02 / 2
+-- + small = 5.000000e+01 / 2
+-- + tiny = 2.500000e+01 / 2
+-- + {name big}: real = 1.000000e+02
+-- + {name medium}: real = 5.000000e+01
+-- + {name small}: real = 2.500000e+01
+-- + {name tiny}: real = 1.250000e+01
+-- - Error
+declare enum sizes real (
+  big = 100,
+  medium = big/2,
+  small = medium/2,
+  tiny = small/2
+);
+
+-- TEST: reference other enums in this enum
+-- + DECLARE ENUM misc REAL (
+-- +   one = 1.000000e+02 - 2.500000e+01,
+-- +   two = 7.500000e+01 - 1.250000e+01
+-- + );
+-- + {name one}: real = 7.500000e+01
+-- + {name two}: real = 6.250000e+01
+-- - Error
+declare enum misc real (
+  one = sizes.big - sizes.small,
+  two = one - sizes.tiny
+);
+
+-- TEST: enum declarations must be top level
+-- + {create_proc_stmt}: err
+-- + {declare_enum_stmt}: err
+-- + Error % declared enums must be top level 'bogus_inside_proc'
+-- +1 Error
+create proc enum_in_proc_bogus()
+begin
+  declare enum bogus_inside_proc integer (foo);
+end;
 
 create table SalesInfo(
   month integer,
