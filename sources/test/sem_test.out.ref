@@ -51393,7 +51393,7 @@ The statement ending at line XXXX
 
 SELECT real_things.nope;
 
-Error at test/sem_test.sql:XXXX : in dot : CQL0068: field not found in enum 'nope'
+Error at test/sem_test.sql:XXXX : in dot : CQL0357: enum does not contain 'nope'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -51475,7 +51475,7 @@ Error at test/sem_test.sql:XXXX : in declare_enum_stmt : DECLARE ENUM long_thing
   pencil
 )
 The above must be identical.
-Error at test/sem_test.sql:XXXX : in declare_enum_stmt : CQLxxxx enum definitions do not match 'long_things'
+Error at test/sem_test.sql:XXXX : in declare_enum_stmt : CQL0356: enum definitions do not match 'long_things'
 
   {declare_enum_stmt}: err
   | {typed_name}: long_things: integer
@@ -51492,7 +51492,7 @@ DECLARE ENUM duplicated_things INTEGER (
   two
 );
 
-Error at test/sem_test.sql:XXXX : in enum_value : CQLxxxx duplicate enum member 'two'
+Error at test/sem_test.sql:XXXX : in enum_value : CQL0354: duplicate enum member 'two'
 
   {declare_enum_stmt}: err
   | {typed_name}: duplicated_things: integer
@@ -51511,7 +51511,7 @@ DECLARE ENUM invalid_things INTEGER (
   boo = 1 / 0
 );
 
-Error at test/sem_test.sql:XXXX : in enum_value : CQLxxxx evaluation failed 'boo'
+Error at test/sem_test.sql:XXXX : in enum_value : CQL0355: evaluation failed 'boo'
 
   {declare_enum_stmt}: err
   | {typed_name}: invalid_things: integer
@@ -51593,7 +51593,7 @@ BEGIN
   );
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0191: declared enums must be top level 'bogus_inside_proc'
+Error at test/sem_test.sql:XXXX : in str : CQL0358: declared enums must be top level 'bogus_inside_proc'
 
   {create_proc_stmt}: err
   | {name enum_in_proc_bogus}: err

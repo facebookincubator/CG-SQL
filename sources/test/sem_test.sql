@@ -12712,7 +12712,7 @@ select real_things.pencil;
 -- TEST: try to use an enum value, invalid name
 -- + {select_stmt}: err
 -- + {dot}: err
--- + Error % field not found in enum 'nope'
+-- + Error % enum does not contain 'nope'
 -- +1 Error
 select real_things.nope;
 

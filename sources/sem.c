@@ -4268,7 +4268,7 @@ static bool_t try_resolve_using_enum(ast_node *ast, CSTR name, CSTR enum_name) {
   }
 
   // if we get this far we're stopping the search
-  report_error(ast, "CQL0068: field not found in enum", name);
+  report_error(ast, "CQL0357: enum does not contain", name);
   record_error(ast);
   return true;
 }
@@ -14582,7 +14582,7 @@ static void sem_declare_enum_stmt(ast_node *ast) {
   typed_name->sem->name = name;
 
   if (current_proc) {
-    report_error(name_ast, "CQL0191: declared enums must be top level", name);
+    report_error(name_ast, "CQL0358: declared enums must be top level", name);
     record_error(ast);
     return;
   }
@@ -14604,7 +14604,7 @@ static void sem_declare_enum_stmt(ast_node *ast) {
      EXTRACT_ANY(expr, enum_value->right);
 
      if (!symtab_add(names, enum_name, enum_value)) {
-       report_error(enum_value, "CQLxxxx duplicate enum member", enum_name);
+       report_error(enum_value, "CQL0354: duplicate enum member", enum_name);
        record_error(ast);
        goto cleanup;
      }
@@ -14615,7 +14615,7 @@ static void sem_declare_enum_stmt(ast_node *ast) {
        eval(expr, &result);
 
        if (result.sem_type == SEM_TYPE_ERROR || result.sem_type == SEM_TYPE_NULL) {
-         report_error(enum_value, "CQLxxxx evaluation failed", enum_name);
+         report_error(enum_value, "CQL0355: evaluation failed", enum_name);
          record_error(ast);
          goto cleanup;
        }
@@ -14635,7 +14635,7 @@ static void sem_declare_enum_stmt(ast_node *ast) {
   if (existing_enum) {
     bool_t matching = sem_validate_identical_ddl(ast, existing_enum);
     if (!matching) {
-      report_error(ast, "CQLxxxx enum definitions do not match", name);
+      report_error(ast, "CQL0356: enum definitions do not match", name);
       record_error(ast);
       goto cleanup;
     }
