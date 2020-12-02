@@ -12709,14 +12709,14 @@ declare enum real_things real (
 -- + SELECT 8.000000e+00;
 select real_things.pencil;
 
--- TEST: try to use an enum value, this is a rewrite
+-- TEST: try to use an enum value, invalid name
 -- + {select_stmt}: err
 -- + {dot}: err
 -- + Error % field not found in enum 'nope'
 -- +1 Error
 select real_things.nope;
 
--- TEST: create a bool enum (it all casts to true false)
+-- TEST: create a bool enum (it all becomes true/false)
 -- + {declare_enum_stmt}: bool_things: bool
 -- + {name pen}: bool = 1
 -- + {name paper}: bool = 1
