@@ -14692,11 +14692,14 @@ static void sem_declare_proc_stmt(ast_node *ast) {
 
   if (params) {
     current_variables = locals = symtab_new();
+    arg_bundles = symtab_new();
 
     sem_params(params);
 
     symtab_delete(locals);
     locals = NULL;
+    symtab_delete(arg_bundles);
+    arg_bundles = NULL;
     current_variables = globals;
 
     if (is_error(params)) {

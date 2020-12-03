@@ -11986,6 +11986,27 @@ DECLARE PROC decl3 (id INTEGER) (A INTEGER NOT NULL, B BOOL);
 
 The statement ending at line XXXX
 
+DECLARE PROC decl4 (x_A INTEGER NOT NULL, x_B BOOL);
+
+  {declare_proc_stmt}: ok
+  | {proc_name_type}
+  | | {name decl4}: ok
+  | | {int 0}
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: x_A: integer notnull variable in
+      | | {param_detail}: x_A: integer notnull variable in
+      |   | {name x_A}: x_A: integer notnull variable in
+      |   | {notnull}: integer notnull
+      |     | {type_int}: integer
+      | {params}
+        | {param}: x_B: bool variable in
+          | {param_detail}: x_B: bool variable in
+            | {name x_B}: x_B: bool variable in
+            | {type_bool}: bool
+
+The statement ending at line XXXX
+
 CREATE PROC bogus_nested_declare ()
 BEGIN
   DECLARE PROC yy ();
