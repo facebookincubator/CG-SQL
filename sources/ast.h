@@ -675,6 +675,7 @@ AST0(insert_or_abort);
 AST0(insert_or_fail);
 AST1(from_arguments);
 AST(from_cursor);
+AST(from_shape);
 AST(insert_dummy_spec);
 AST1(column_spec);
 AST0(star)

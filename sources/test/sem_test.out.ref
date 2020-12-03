@@ -47583,7 +47583,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0204: cursor not found 'not_a_curs
       | {call_stmt}: err
         | {name shape_consumer}
         | {expr_list}: err
-          | {from_cursor}
+          | {from_shape}
             | {name not_a_cursor}: err
 
 The statement ending at line XXXX
@@ -47722,7 +47722,7 @@ Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, tab
       | {call_stmt}: err
         | {name shape_y_only}
         | {expr_list}: err
-          | {from_cursor}
+          | {from_shape}
             | {name C}: C: select: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
             | {like}: err
               | {name not_a_real_shape}: err

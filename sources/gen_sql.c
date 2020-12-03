@@ -45,7 +45,7 @@ static void gen_query_parts(ast_node *ast);
 static void gen_select_stmt(ast_node *_Nonnull ast);
 static void gen_opt_where_without_new_line(ast_node *ast);
 static void gen_opt_orderby(ast_node *ast);
-static void gen_cursor_arg(ast_node *ast);
+static void gen_shape_arg(ast_node *ast);
 static void gen_insert_list(ast_node *_Nullable ast);
 static void gen_column_spec(ast_node *ast);
 static void gen_from_cursor(ast_node *ast);
@@ -616,8 +616,8 @@ static void gen_arg_expr(ast_node *ast) {
   else if (is_ast_from_arguments(ast)) {
     gen_from_arguments(ast);
   }
-  else if (is_ast_from_cursor(ast)) {
-    gen_cursor_arg(ast);
+  else if (is_ast_from_shape(ast)) {
+    gen_shape_arg(ast);
   }
   else {
     gen_root_expr(ast);
@@ -653,10 +653,10 @@ static void gen_expr_list(ast_node *ast) {
   }
 }
 
-static void gen_cursor_arg(ast_node *ast) {
-  Contract(is_ast_from_cursor(ast));
-  EXTRACT_STRING(cursor, ast->left);
-  gen_printf("FROM %s", cursor);
+static void gen_shape_arg(ast_node *ast) {
+  Contract(is_ast_from_shape(ast));
+  EXTRACT_STRING(shape, ast->left);
+  gen_printf("FROM %s", shape);
   if (ast->right) {
     gen_printf(" ");
     gen_shape_def(ast->right);
@@ -666,8 +666,8 @@ static void gen_cursor_arg(ast_node *ast) {
 static void gen_call_expr_list(ast_node *ast) {
   while (ast) {
     ast_node *left = ast->left;
-    if (is_ast_from_cursor(left)) {
-      gen_cursor_arg(left);
+    if (is_ast_from_shape(left)) {
+      gen_shape_arg(left);
     }
     else if (is_ast_from_arguments(left)) {
       gen_from_arguments(left);
