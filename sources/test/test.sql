@@ -630,6 +630,14 @@ declare proc decl3(id integer) out ( A integer not null, B bool);
 -- an out proc that uses the database
 declare proc decl4(id integer) out ( A integer not null, B bool) using transaction;
 
+-- an enumeration
+declare enum things integer (
+  foo,
+  bar,
+  baz = 3 + 1,
+  bing
+);
+
 -- make a compound select statement
 select 1, 2, 3
 union

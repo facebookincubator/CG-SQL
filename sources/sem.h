@@ -47,6 +47,7 @@ typedef struct sem_node {
   CSTR region;                      // the schema region, if applicable, null means unscoped (default)
   symtab *used_symbols;             // for select statements, we need to know which of the ids in the select list was used if any
   list_item *index_list;            // for tables we need the list of indices that use this table (so we can recreate them together if needed)
+  struct eval_node *value;          // for enum values we have to store the evaluated constant value of each member of the enum
 } sem_node;
 
 // for tables and views and the result of a select

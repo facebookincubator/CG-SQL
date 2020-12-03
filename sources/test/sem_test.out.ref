@@ -51309,6 +51309,312 @@ Error at test/sem_test.sql:XXXX : in return_stmt : CQL0352: use COMMIT RETURN or
 
 The statement ending at line XXXX
 
+DECLARE ENUM integer_things INTEGER (
+  pen,
+  paper = 7,
+  pencil
+);
+
+  {declare_enum_stmt}: integer_things: integer
+  | {typed_name}: integer_things: integer
+  | | {name integer_things}
+  | | {type_int}: integer_things: integer
+  | {enum_values}
+    | {enum_value}
+    | | {name pen}: integer = 1
+    | {enum_values}
+      | {enum_value}
+      | | {name paper}: integer = 7
+      | | {int 7}: integer notnull
+      | {enum_values}
+        | {enum_value}
+          | {name pencil}: integer = 8
+
+The statement ending at line XXXX
+
+DECLARE ENUM integer_things INTEGER (
+  pen,
+  paper = 7,
+  pencil
+);
+
+  {declare_enum_stmt}: integer_things: integer
+  | {typed_name}: integer_things: integer
+  | | {name integer_things}
+  | | {type_int}: integer_things: integer
+  | {enum_values}
+    | {enum_value}
+    | | {name pen}: integer = 1
+    | {enum_values}
+      | {enum_value}
+      | | {name paper}: integer = 7
+      | | {int 7}: integer notnull
+      | {enum_values}
+        | {enum_value}
+          | {name pencil}: integer = 8
+
+The statement ending at line XXXX
+
+DECLARE ENUM real_things REAL (
+  pen,
+  paper = 7,
+  pencil
+);
+
+  {declare_enum_stmt}: real_things: real
+  | {typed_name}: real_things: real
+  | | {name real_things}
+  | | {type_real}: real_things: real
+  | {enum_values}
+    | {enum_value}
+    | | {name pen}: real = 1.000000e+00
+    | {enum_values}
+      | {enum_value}
+      | | {name paper}: real = 7.000000e+00
+      | | {int 7}: integer notnull
+      | {enum_values}
+        | {enum_value}
+          | {name pencil}: real = 8.000000e+00
+
+The statement ending at line XXXX
+
+SELECT 8.000000e+00;
+
+  {select_stmt}: select: { _anon: real notnull }
+  | {select_core_list}: select: { _anon: real notnull }
+  | | {select_core}: select: { _anon: real notnull }
+  |   | {select_expr_list_con}: select: { _anon: real notnull }
+  |     | {select_expr_list}: select: { _anon: real notnull }
+  |     | | {select_expr}: real notnull
+  |     |   | {dbl 8.000000e+00}: real notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT real_things.nope;
+
+Error at test/sem_test.sql:XXXX : in dot : CQL0357: enum does not contain 'nope'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {dot}: err
+  |     |     | {name real_things}
+  |     |     | {name nope}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+DECLARE ENUM bool_things BOOL (
+  pen,
+  paper = 7,
+  pencil
+);
+
+  {declare_enum_stmt}: bool_things: bool
+  | {typed_name}: bool_things: bool
+  | | {name bool_things}
+  | | {type_bool}: bool_things: bool
+  | {enum_values}
+    | {enum_value}
+    | | {name pen}: bool = 1
+    | {enum_values}
+      | {enum_value}
+      | | {name paper}: bool = 1
+      | | {int 7}: integer notnull
+      | {enum_values}
+        | {enum_value}
+          | {name pencil}: bool = 0
+
+The statement ending at line XXXX
+
+DECLARE ENUM long_things LONG_INT (
+  pen,
+  paper = -7,
+  pencil
+);
+
+  {declare_enum_stmt}: long_things: longint
+  | {typed_name}: long_things: longint
+  | | {name long_things}
+  | | {type_long}: long_things: longint
+  | {enum_values}
+    | {enum_value}
+    | | {name pen}: longint = 1
+    | {enum_values}
+      | {enum_value}
+      | | {name paper}: longint = -7
+      | | {uminus}: integer notnull
+      |   | {int 7}: integer notnull
+      | {enum_values}
+        | {enum_value}
+          | {name pencil}: longint = -6
+
+The statement ending at line XXXX
+
+DECLARE ENUM long_things INTEGER (
+  foo
+);
+
+Incompatible declarations found
+Error at test/sem_test.sql:XXXX : in declare_enum_stmt : DECLARE ENUM long_things INTEGER (
+  foo
+)
+Error at test/sem_test.sql:XXXX : in declare_enum_stmt : DECLARE ENUM long_things LONG_INT (
+  pen,
+  paper = -7,
+  pencil
+)
+The above must be identical.
+Error at test/sem_test.sql:XXXX : in declare_enum_stmt : CQL0356: enum definitions do not match 'long_things'
+
+  {declare_enum_stmt}: err
+  | {typed_name}: long_things: integer
+  | | {name long_things}
+  | | {type_int}: long_things: integer
+  | {enum_values}
+    | {enum_value}
+      | {name foo}: integer = 1
+
+The statement ending at line XXXX
+
+DECLARE ENUM duplicated_things INTEGER (
+  two,
+  two
+);
+
+Error at test/sem_test.sql:XXXX : in enum_value : CQL0354: duplicate enum member 'two'
+
+  {declare_enum_stmt}: err
+  | {typed_name}: duplicated_things: integer
+  | | {name duplicated_things}
+  | | {type_int}: duplicated_things: integer
+  | {enum_values}
+    | {enum_value}
+    | | {name two}: integer = 1
+    | {enum_values}
+      | {enum_value}
+        | {name two}
+
+The statement ending at line XXXX
+
+DECLARE ENUM invalid_things INTEGER (
+  boo = 1 / 0
+);
+
+Error at test/sem_test.sql:XXXX : in enum_value : CQL0355: evaluation failed 'boo'
+
+  {declare_enum_stmt}: err
+  | {typed_name}: invalid_things: integer
+  | | {name invalid_things}
+  | | {type_int}: invalid_things: integer
+  | {enum_values}
+    | {enum_value}
+      | {name boo}
+      | {div}: integer notnull
+        | {int 1}: integer notnull
+        | {int 0}: integer notnull
+
+The statement ending at line XXXX
+
+DECLARE ENUM sizes REAL (
+  big = 100,
+  medium = 1.000000e+02 / 2,
+  small = 5.000000e+01 / 2,
+  tiny = 2.500000e+01 / 2
+);
+
+  {declare_enum_stmt}: sizes: real
+  | {typed_name}: sizes: real
+  | | {name sizes}
+  | | {type_real}: sizes: real
+  | {enum_values}
+    | {enum_value}
+    | | {name big}: real = 1.000000e+02
+    | | {int 100}: integer notnull
+    | {enum_values}
+      | {enum_value}
+      | | {name medium}: real = 5.000000e+01
+      | | {div}: real notnull
+      |   | {dbl 1.000000e+02}: real notnull
+      |   | {int 2}: integer notnull
+      | {enum_values}
+        | {enum_value}
+        | | {name small}: real = 2.500000e+01
+        | | {div}: real notnull
+        |   | {dbl 5.000000e+01}: real notnull
+        |   | {int 2}: integer notnull
+        | {enum_values}
+          | {enum_value}
+            | {name tiny}: real = 1.250000e+01
+            | {div}: real notnull
+              | {dbl 2.500000e+01}: real notnull
+              | {int 2}: integer notnull
+
+The statement ending at line XXXX
+
+DECLARE ENUM misc REAL (
+  one = 1.000000e+02 - 2.500000e+01,
+  two = 7.500000e+01 - 1.250000e+01
+);
+
+  {declare_enum_stmt}: misc: real
+  | {typed_name}: misc: real
+  | | {name misc}
+  | | {type_real}: misc: real
+  | {enum_values}
+    | {enum_value}
+    | | {name one}: real = 7.500000e+01
+    | | {sub}: real notnull
+    |   | {dbl 1.000000e+02}: real notnull
+    |   | {dbl 2.500000e+01}: real notnull
+    | {enum_values}
+      | {enum_value}
+        | {name two}: real = 6.250000e+01
+        | {sub}: real notnull
+          | {dbl 7.500000e+01}: real notnull
+          | {dbl 1.250000e+01}: real notnull
+
+The statement ending at line XXXX
+
+CREATE PROC enum_in_proc_bogus ()
+BEGIN
+  DECLARE ENUM bogus_inside_proc INTEGER (
+    foo
+  );
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0358: declared enums must be top level 'bogus_inside_proc'
+
+  {create_proc_stmt}: err
+  | {name enum_in_proc_bogus}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_enum_stmt}: err
+        | {typed_name}: bogus_inside_proc: integer
+        | | {name bogus_inside_proc}
+        | | {type_int}: bogus_inside_proc: integer
+        | {enum_values}
+          | {enum_value}
+            | {name foo}
+
+The statement ending at line XXXX
+
 CREATE TABLE SalesInfo(
   month INTEGER,
   amount REAL

@@ -5625,6 +5625,7 @@ static void cg_c_init(void) {
 
   NO_OP_STMT_INIT(enforce_normal_stmt);
   NO_OP_STMT_INIT(enforce_strict_stmt);
+  NO_OP_STMT_INIT(declare_enum_stmt);
   NO_OP_STMT_INIT(declare_schema_region_stmt);
   NO_OP_STMT_INIT(declare_deployable_region_stmt);
   NO_OP_STMT_INIT(begin_schema_region_stmt);

@@ -101,6 +101,7 @@ generated SignedSource<<deadbeef8badf00ddefec8edfacefeed>>
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+#include <float.h>
 
 #endif
 

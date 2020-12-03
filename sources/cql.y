@@ -152,7 +152,7 @@ static void cql_reset_globals(void);
 %token OUTER JOIN WHERE GROUP BY ORDER ASC
 %token DESC INNER FCOUNT AUTOINCREMENT DISTINCT
 %token LIMIT OFFSET TEMP TRIGGER IF ALL CROSS USING RIGHT
-%token UNIQUE HAVING SET TO DISTINCTROW
+%token UNIQUE HAVING SET TO DISTINCTROW ENUM
 %token FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR DECLARE FETCH LOOP LEAVE CONTINUE FOR
 %token OPEN CLOSE ELSE_IF WHILE CALL TRY CATCH THROW RETURN
 %token SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
@@ -203,7 +203,7 @@ static void cql_reset_globals(void);
 /* expressions and types */
 %type <aval> expr basic_expr math_expr expr_list typed_name typed_names case_list call_expr_list call_expr cursor_arguments
 %type <aval> name name_list opt_name_list opt_name
-%type <aval> data_type data_type_opt_notnull creation_type object_type
+%type <aval> data_type data_type_numeric data_type_opt_notnull creation_type object_type
 
 /* proc stuff */
 %type <aval> create_proc_stmt declare_func_stmt declare_proc_stmt
@@ -219,6 +219,7 @@ static void cql_reset_globals(void);
 %type <aval> commit_trans_stmt commit_return_stmt
 %type <aval> continue_stmt
 %type <aval> declare_stmt
+%type <aval> declare_enum_stmt enum_values enum_value
 %type <aval> echo_stmt
 %type <aval> fetch_stmt fetch_values_stmt fetch_call_stmt fetch_cursor_stmt from_cursor
 %type <aval> if_stmt elseif_item elseif_list opt_else opt_elseif_list proc_savepoint_stmt
@@ -309,6 +310,7 @@ any_stmt: select_stmt
   | declare_proc_stmt
   | declare_func_stmt
   | declare_stmt
+  | declare_enum_stmt
   | fetch_stmt
   | fetch_values_stmt
   | fetch_call_stmt
@@ -654,16 +656,19 @@ object_type:
     $object_type = new_ast_type_object(new_ast_str(type)); }
   ;
 
+data_type_numeric:
+  INT_  { $data_type_numeric = new_ast_type_int(); }
+  | INTEGER  { $data_type_numeric = new_ast_type_int(); }
+  | REAL  { $data_type_numeric = new_ast_type_real(); }
+  | LONG_  { $data_type_numeric = new_ast_type_long(); }
+  | BOOL_  { $data_type_numeric = new_ast_type_bool(); }
+  | LONG_ INTEGER  { $data_type_numeric = new_ast_type_long(); }
+  | LONG_ INT_  { $data_type_numeric = new_ast_type_long(); }
+  | LONG_INTEGER  { $data_type_numeric = new_ast_type_long(); }
+
 data_type:
-  INT_  { $data_type = new_ast_type_int(); }
-  | INTEGER  { $data_type = new_ast_type_int(); }
+  data_type_numeric { $data_type = $data_type_numeric; }
   | TEXT  { $data_type = new_ast_type_text();  }
-  | REAL  { $data_type = new_ast_type_real(); }
-  | LONG_  { $data_type = new_ast_type_long(); }
-  | BOOL_  { $data_type = new_ast_type_bool(); }
-  | LONG_ INTEGER  { $data_type = new_ast_type_long(); }
-  | LONG_ INT_  { $data_type = new_ast_type_long(); }
-  | LONG_INTEGER  { $data_type = new_ast_type_long(); }
   | BLOB  { $data_type = new_ast_type_blob(); }
   | object_type  { $data_type = $object_type; }
   ;
@@ -1376,6 +1381,22 @@ creation_type:
   ;
 
 function: FUNC | FUNCTION
+  ;
+
+declare_enum_stmt:
+  DECLARE ENUM name data_type_numeric '(' enum_values ')' { 
+     ast_node *typed_name = new_ast_typed_name($name, $data_type_numeric);
+     $declare_enum_stmt = new_ast_declare_enum_stmt(typed_name, $enum_values); }
+  ;
+
+enum_values[result]:  
+    enum_value { $result = new_ast_enum_values($enum_value, NULL); }
+  | enum_value ',' enum_values[next] { $result = new_ast_enum_values($enum_value, $next); }
+  ;
+
+enum_value:
+    name { $enum_value = new_ast_enum_value($name, NULL); }
+  | name '=' expr { $enum_value = new_ast_enum_value($name, $expr); }
   ;
 
 declare_func_stmt:

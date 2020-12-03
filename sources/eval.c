@@ -13,6 +13,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <limits.h>
+#include <float.h>
 #include "cg_common.h"
 #include "compat.h"
 #include "cql.h"
@@ -70,7 +71,7 @@ static void eval_num(ast_node *expr, eval_node *result) {
 // any of the numeric types.  There are twelve possible conversions
 // since a type never converts to itself.  This only works on
 // numeric types.  Any errors and null stuff must be pre-checked.
-static void eval_cast_to(eval_node *result, sem_t sem_type) {
+cql_noexport void eval_cast_to(eval_node *result, sem_t sem_type) {
   sem_t core_type_source = core_type_of(result->sem_type);
   sem_t core_type_target = core_type_of(sem_type);
 
@@ -140,6 +141,15 @@ static void eval_cast_to(eval_node *result, sem_t sem_type) {
   result->sem_type = core_type_target;
 }
 
+static void eval_format_real(double real, charbuf *output) {
+  CHARBUF_OPEN(tmp);
+  bprintf(&tmp, "%*e", DECIMAL_DIG, real);
+  CSTR p = tmp.ptr;
+  while (*p == ' ') p++;
+  bprintf(output, "%s", p);
+  CHARBUF_CLOSE(tmp);
+}
+
 // In order to use the eval logic to replace expression trees we
 // need to be able to make a new ast node that represents the result
 // of a calculation.  This function takes such a result and creates
@@ -170,8 +180,13 @@ cql_noexport ast_node *eval_set(ast_node *expr, eval_node *result) {
     break;
 
   case SEM_TYPE_REAL:
-    new_num = new_ast_num(NUM_REAL, dup_printf("%g", result->real_value));
+    {
+    CHARBUF_OPEN(tmp);
+    eval_format_real(result->real_value, &tmp);
+    new_num = new_ast_num(NUM_REAL, dup_printf("%s", tmp.ptr));
+    CHARBUF_CLOSE(tmp);
     break;
+    }
 
   case SEM_TYPE_NULL:
     new_num = new_ast_null();
@@ -878,6 +893,57 @@ static void eval_case_expr(ast_node *ast, eval_node *result) {
   else {
     result->sem_type = SEM_TYPE_NULL;
   }
+}
+
+cql_noexport void eval_add_one(eval_node *result) {
+  Contract(result->sem_type != SEM_TYPE_ERROR);
+  Contract(result->sem_type != SEM_TYPE_NULL);
+
+  switch (result->sem_type) {
+    case SEM_TYPE_INTEGER:
+      result->int32_value++;
+      break;
+
+    case SEM_TYPE_LONG_INTEGER:
+      result->int64_value++;
+      break;
+
+    case SEM_TYPE_REAL:
+      result->real_value++;
+      break;
+
+    case SEM_TYPE_BOOL:
+      result->bool_value = !result->bool_value;
+      break;
+  }
+}
+
+cql_noexport void eval_format_number(eval_node *result, charbuf *output) {
+  Contract(result->sem_type != SEM_TYPE_ERROR);
+  Contract(result->sem_type != SEM_TYPE_NULL);
+ 
+  uint32_t used = output->used;
+
+  switch (result->sem_type) {
+    case SEM_TYPE_INTEGER:
+      bprintf(output, "%d", result->int32_value);
+      break;
+
+    case SEM_TYPE_LONG_INTEGER:
+      bprintf(output, "%lld", (llint_t)result->int64_value);
+      break;
+
+    case SEM_TYPE_REAL:
+      eval_format_real(result->real_value, output);
+      break;
+
+    case SEM_TYPE_BOOL:
+      bprintf(output, "%d", !!result->bool_value);
+      break;
+  }
+
+  // verify we wrote something
+  Invariant(output->used > used);
 }
 
 static eval_node err_result = { .sem_type = SEM_TYPE_ERROR };
