@@ -1274,7 +1274,9 @@ from_cursor:
 
 from_arguments:
   FROM ARGUMENTS  { $from_arguments = new_ast_from_arguments(NULL, NULL); }
+  | FROM ARGUMENTS name { $from_arguments = new_ast_from_arguments($name, NULL); }
   | FROM ARGUMENTS shape_def  { $from_arguments = new_ast_from_arguments(NULL, $shape_def); }
+  | FROM ARGUMENTS name shape_def  { $from_arguments = new_ast_from_arguments($name, $shape_def); }
   ;
 
 insert_stmt:

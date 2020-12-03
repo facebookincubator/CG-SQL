@@ -1219,6 +1219,11 @@ create proc foo(x like this, y like that)
 begin
 end;
 
+insert into foo(x,y) from arguments;
+insert into foo(x,y) from arguments like b;
+insert into foo(x,y) from arguments a like b;
+insert into foo(x,y) from arguments a;
+
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 
 # 1 "long/path/I/do/not/like"

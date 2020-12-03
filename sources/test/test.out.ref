@@ -1292,6 +1292,14 @@ CREATE PROC foo (x LIKE this, y LIKE that)
 BEGIN
 END;
 
+INSERT INTO foo(x, y) FROM ARGUMENTS;
+
+INSERT INTO foo(x, y) FROM ARGUMENTS LIKE b;
+
+INSERT INTO foo(x, y) FROM ARGUMENTS a LIKE b;
+
+INSERT INTO foo(x, y) FROM ARGUMENTS a;
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';
