@@ -2166,7 +2166,11 @@ static void gen_from_arguments(ast_node *ast) {
   gen_printf("FROM ARGUMENTS");
   if (ast->left) {
     gen_printf(" ");
-    gen_shape_def(ast->left);
+    gen_name(ast->left);
+  }
+  if (ast->right) {
+    gen_printf(" ");
+    gen_shape_def(ast->right);
   }
 }
 

@@ -1273,8 +1273,8 @@ from_cursor:
   ;
 
 from_arguments:
-  FROM ARGUMENTS  { $from_arguments = new_ast_from_arguments(NULL); }
-  | FROM ARGUMENTS shape_def  { $from_arguments = new_ast_from_arguments($shape_def); }
+  FROM ARGUMENTS  { $from_arguments = new_ast_from_arguments(NULL, NULL); }
+  | FROM ARGUMENTS shape_def  { $from_arguments = new_ast_from_arguments(NULL, $shape_def); }
   ;
 
 insert_stmt:
