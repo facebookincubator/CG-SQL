@@ -9,7 +9,7 @@
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Fri Nov 13 00:54:32 PST 2020
+Snapshot as of Wed Dec  2 16:02:07 PST 2020
 ### Rules
 
 ```
@@ -28,7 +28,8 @@ json_schema: '{'
          '"deletes"' ':' '[' opt_deletes ']' ','
          '"general"' ':' '[' opt_generals ']' ','
          '"regions"' ':' '[' opt_regions ']' ','
-         '"adHocMigrationProcs"' ':' '[' opt_ad_hoc_migrations ']'
+         '"adHocMigrationProcs"' ':' '[' opt_ad_hoc_migrations ']' ','
+         '"enums"' ':'  '[' opt_enums ']'
          '}'
   ;
 
@@ -219,6 +220,12 @@ any_literal:  BOOL_LITERAL |
               LONG_LITERAL | '-' LONG_LITERAL |
               REAL_LITERAL | '-' REAL_LITERAL |
               STRING_LITERAL | NULL_LITERAL
+  ;
+
+num_literal:  BOOL_LITERAL |
+              INT_LITERAL | '-' INT_LITERAL |
+              LONG_LITERAL | '-' LONG_LITERAL |
+              REAL_LITERAL | '-' REAL_LITERAL
   ;
 
 opt_views: | views
@@ -487,6 +494,29 @@ complex_arg: '{'
   ;
 
 binding: | '"binding"' ':' '"inout"' ',' | '"binding"' ':' '"out"' ','
+  ;
+
+opt_enums: | enums
+  ;
+
+enums: enum | enum ',' enums
+  ;
+
+enum: '{'
+      '"name"' ':' STRING_LITERAL ','
+      '"type"' ':' STRING_LITERAL ','
+      '"isNotNull"' ':' '1' ','
+      '"values"' ':' '[' enum_values ']'
+      '}'
+  ;
+
+enum_values: enum_value | enum_value ',' enum_values
+  ;
+
+enum_value: '{'
+             '"name"' ':' STRING_LITERAL ','
+             '"value"' ':' num_literal
+            '}'
   ;
 
 opt_regions: | regions

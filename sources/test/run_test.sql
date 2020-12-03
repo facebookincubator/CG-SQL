@@ -13,6 +13,16 @@ declare function blob_from_string(str text) create blob not null;
 declare function string_from_blob(b blob) create text not null;
 declare procedure cql_init_extensions() using transaction;
 
+declare enum floats real (
+   one = 1.0,
+   two = 2.0
+);
+
+declare enum longs long_int (
+   one = 1,
+   big = 0x100000000
+);
+
 call cql_init_extensions();
 
 BEGIN_TEST(arithmetic)

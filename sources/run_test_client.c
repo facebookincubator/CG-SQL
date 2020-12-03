@@ -62,7 +62,13 @@ cql_code mockable_sqlite3_step(sqlite3_stmt *stmt) {
   return sqlite3_step(stmt);
 }
 
+
 cql_code run_client(sqlite3 *db) {
+
+  E(longs__one == 1L, "long_enum case 1");
+  E(longs__big == 0x100000000L, "long_enum case 2");
+  E(floats__one == 1.0, "float_enum case 1");
+  E(floats__two == 2.0, "float_enum case 2");
 
   E(fails_because_bogus_table(db) != SQLITE_OK, "procedure should have returned an error\n");
   E(trace_received == 1, "failure proc did not trigger a trace\n");

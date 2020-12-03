@@ -49,6 +49,11 @@ The above must be identical.
 Error at test/sem_test_prev.sql:XXXX : in col_def : CQL0128: table has a column that is different in the previous and current schema 'id'
 Error at test/sem_test_prev.sql:XXXX : in schema_ad_hoc_migration_stmt : CQL0286: ad hoc schema migration directive was removed; this is not allowed 'WhoopsItsGone'
 Error at test/sem_test_prev.sql:XXXX : in schema_ad_hoc_migration_stmt : CQL0285: ad hoc schema migration directive version number changed 'WhoopsItChanged'
+Incompatible declarations found
+Error at test/sem_test_prev.sql:XXXX : in col_def : x INTEGER CHECK(x = 1) 
+Error at test/sem_test_prev.sql:XXXX : in col_def : x INTEGER CHECK(x = 10) 
+The above must be identical.
+Error at test/sem_test_prev.sql:XXXX : in col_def : CQL0128: table has a column that is different in the previous and current schema 'x'
 Error at test/sem_test_prev.sql:XXXX : in create_table_stmt : CQL0309: new table must be added with @create(6) or later 't_new_table_no_annotation'
 Error at test/sem_test_prev.sql:XXXX : in create_table_stmt : CQL0309: new table must be added with @create(6) or later 't_new_table_stale_annotation'
 Error at test/sem_test_prev.sql:XXXX : in col_def : CQL0310: new column must be added with @create(6) or later 'id3'

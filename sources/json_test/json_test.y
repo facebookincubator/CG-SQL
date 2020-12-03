@@ -62,6 +62,7 @@ void yyset_lineno(int);
 %token USES_DATABASE HAS_SELECT_RESULT HAS_OUT_UNION_RESULT HAS_OUT_RESULT REGIONS GENERAL
 %token USING USING_PRIVATELY IS_DEPLOYABLE_ROOT AD_HOC_MIGRATION_PROCS VERSION
 %token BINDING_INOUT BINDING_OUT COLLATE CHECK_EXPR CHECK_EXPR_ARGS
+%token ENUMS
 
 %start json_schema
 
@@ -80,7 +81,8 @@ json_schema: '{'
          DELETES '[' opt_deletes ']' ','
          GENERAL '[' opt_generals ']' ','
          REGIONS '[' opt_regions ']' ','
-         AD_HOC_MIGRATION_PROCS '[' opt_ad_hoc_migrations ']'
+         AD_HOC_MIGRATION_PROCS '[' opt_ad_hoc_migrations ']' ','
+         ENUMS  '[' opt_enums ']'
          '}'
   ;
 
@@ -271,6 +273,12 @@ any_literal:  BOOL_LITERAL |
               LONG_LITERAL | '-' LONG_LITERAL |
               REAL_LITERAL | '-' REAL_LITERAL |
               STRING_LITERAL | NULL_LITERAL
+  ;
+
+num_literal:  BOOL_LITERAL |
+              INT_LITERAL | '-' INT_LITERAL |
+              LONG_LITERAL | '-' LONG_LITERAL |
+              REAL_LITERAL | '-' REAL_LITERAL
   ;
 
 opt_views: | views
@@ -539,6 +547,29 @@ complex_arg: '{'
   ;
 
 binding: | BINDING_INOUT ',' | BINDING_OUT ','
+  ;
+
+opt_enums: | enums
+  ;
+
+enums: enum | enum ',' enums
+  ;
+
+enum: '{'
+      NAME STRING_LITERAL ','
+      TYPE STRING_LITERAL ','
+      IS_NOT_NULL '1' ','
+      VALUES '[' enum_values ']'
+      '}'
+  ;
+
+enum_values: enum_value | enum_value ',' enum_values
+  ;
+
+enum_value: '{' 
+             NAME STRING_LITERAL ','
+             VALUE num_literal
+            '}'
   ;
 
 opt_regions: | regions

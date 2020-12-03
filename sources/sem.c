@@ -47,6 +47,7 @@ cql_data_defn( list_item *all_triggers_list );
 cql_data_defn( list_item *all_regions_list );
 cql_data_defn( list_item *all_ad_hoc_list );
 cql_data_defn( list_item *all_select_functions_list );
+cql_data_defn( list_item *all_enums_list );
 
 // Note: initialized statics are moot because in amalgam mode the code
 // will not be reloaded... you have to re-initialize all statics in the cleanup function
@@ -383,6 +384,7 @@ cql_data_defn( symtab *excluded_regions );
 // during previous schema validations when we hit the previous section we have to
 // save these, they the new schema for later comparison
 static symtab *new_regions;
+static symtab *new_enums;
 
 // for dispatching expression types
 typedef struct sem_expr_dispatch {
@@ -14641,9 +14643,26 @@ static void sem_declare_enum_stmt(ast_node *ast) {
     }
   }
   else {
-    // this enum is now visible
+    // note that enums  get a slightly different treatment when in previous schema
+    // validation mode.  Most entites are not added to the name tables at all
+    // we check it as we visit it and then move on;   We can't do that with enums
+    // because they are used by later things (e.g. default values) and the "new" enums
+    // (before the @previous_schema  marker) might be very different. We need the "old"
+    // enums to calculate the default values or whatever and make sure they haven't changed.
+    // So we can't just check them and move on like we do with other stuff.  
+    // At the end we'll have two symbol tables, the second of which we'll end up discarding.
+
+    bool_t suppress_validation = is_validation_suppressed();
+
+    // this enum is now visible, we still do this (even if previous schema mode)
     bool_t added = add_enum(ast, name);
-    Invariant(added);
+    Invariant(added); 
+
+    // when processing previous schema we don't add the enum to the all enums list
+    // so that it won't show up in JSON etc.
+    if (!suppress_validation) {
+      add_item_to_list(&all_enums_list, ast);
+    }
   }
 
 cleanup:
@@ -16309,9 +16328,11 @@ static void sem_previous_schema_stmt(ast_node *ast) {
   // are different than other entities.  This "duplicate" business is handled differently
   // for regions.
   new_regions = schema_regions;
+  new_enums = enums;
 
   // this is all it takes to start fresh...
   schema_regions = symtab_new();
+  enums = symtab_new();
 
   deployable_validations = _ast_pool_new(bytebuf);
   bytebuf_open(deployable_validations);
@@ -16949,7 +16970,7 @@ static void sem_declare_schema_region_stmt(ast_node *ast) {
     return;
   }
 
-  // But we don't do this.  So when emitting the schema we won't emit
+  // But we don't do this:  So when emitting the schema we won't emit
   // the previous regions.  Other entites do neither the above add
   // or the below add. This is the difference.
 
@@ -17602,7 +17623,7 @@ cql_noexport void sem_main(ast_node *ast) {
 
   Invariant(cte_cur == NULL);
 
-  // put tables/views into the natural order (the order declared)
+  // put tables/views/etc into the natural order (the order declared)
   reverse_list(&all_tables_list);
   reverse_list(&all_functions_list);
   reverse_list(&all_views_list);
@@ -17610,6 +17631,7 @@ cql_noexport void sem_main(ast_node *ast) {
   reverse_list(&all_triggers_list);
   reverse_list(&all_regions_list);
   reverse_list(&all_ad_hoc_list);
+  reverse_list(&all_enums_list);
   reverse_list(&all_select_functions_list);
 
   // the index list in any given table needs to be reversed to get the natural order
@@ -17637,7 +17659,11 @@ cql_noexport void sem_main(ast_node *ast) {
     // to the normal  one.
     symtab_delete(schema_regions);  // the regions during previous schema processing
     schema_regions = new_regions;   // the original regions
-    new_regions = NULL;      // nobody should be looking here anymore
+    new_regions = NULL;             // nobody should be looking here anymore
+
+    symtab_delete(enums);  // the enums during previous schema processing
+    enums = new_enums;     // the original enums
+    new_enums = NULL;      // nobody should be looking here anymore
   }
 
   AST_REWRITE_INFO_END();
@@ -17667,6 +17693,7 @@ cql_noexport void sem_cleanup() {
   SYMTAB_CLEANUP(locals);
   SYMTAB_CLEANUP(monitor_symtab );
   SYMTAB_CLEANUP(new_regions);
+  SYMTAB_CLEANUP(new_enums);
   SYMTAB_CLEANUP(non_sql_stmts);
   SYMTAB_CLEANUP(procs);
   SYMTAB_CLEANUP(enums);

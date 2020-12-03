@@ -235,6 +235,7 @@ cql_data_decl( struct list_item *all_triggers_list );
 cql_data_decl( struct list_item *all_regions_list );
 cql_data_decl( struct list_item *all_ad_hoc_list );
 cql_data_decl( struct list_item *all_select_functions_list );
+cql_data_decl( struct list_item *all_enums_list );
 cql_data_decl( symtab *schema_regions );
 cql_data_decl( ast_node *current_proc );
 cql_data_decl( charbuf *error_capture );
