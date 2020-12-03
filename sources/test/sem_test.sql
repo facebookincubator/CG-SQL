@@ -3342,6 +3342,12 @@ declare proc decl2(id integer) using transaction;
 -- + declare_proc_stmt}: select: { A: integer notnull, B: bool } dml_proc
 declare proc decl3(id integer) ( A integer not null, B bool );
 
+-- TEST: try an arg bundle inside of a declared proc
+-- make sure the rewrite was accurate
+-- + DECLARE PROC decl4 (x_A INTEGER NOT NULL, x_B BOOL);
+-- - Error
+declare proc decl4(x like decl3);
+
 -- TEST: declare inside of a proc
 -- + Error
 -- +1 Error

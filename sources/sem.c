@@ -128,7 +128,7 @@ static void sem_rewrite_insert_list_from_arguments(ast_node *ast, uint32_t count
 static void sem_rewrite_insert_list_from_cursor(ast_node *ast, ast_node *from_cursor, uint32_t count);
 static void sem_rewrite_like_column_spec_if_needed(ast_node *columns_values);
 static void sem_rewrite_from_cursor_if_needed(ast_node *ast_stmt, ast_node *columns_values);
-static void sem_rewrite_from_cursor_args(ast_node *head);
+static void sem_rewrite_from_shape_args(ast_node *head);
 static void sem_rewrite_from_arguments_in_call(ast_node *head);
 static bool_t sem_rewrite_col_key_list(ast_node *ast);
 static void enqueue_pending_region_validation(ast_node *prev, ast_node *cur, CSTR name);
@@ -6358,7 +6358,7 @@ static void sem_expr_raise(ast_node *ast, CSTR cstr) {
 static bool_t sem_rewrite_call_args_if_needed(ast_node *arg_list) {
   if (arg_list) {
     // if there are any cursor forms in the arg list that need to be expanded, do that here.
-    sem_rewrite_from_cursor_args(arg_list);
+    sem_rewrite_from_shape_args(arg_list);
     if (is_error(arg_list)) {
       return false;
     }
@@ -14711,11 +14711,14 @@ static void sem_declare_proc_stmt(ast_node *ast) {
 
   if (params) {
     current_variables = locals = symtab_new();
+    arg_bundles = symtab_new();
 
     sem_params(params);
 
     symtab_delete(locals);
     locals = NULL;
+    symtab_delete(arg_bundles);
+    arg_bundles = NULL;
     current_variables = globals;
 
     if (is_error(params)) {
@@ -15495,7 +15498,7 @@ static void sem_validate_args_vs_formals(ast_node *ast, CSTR name, ast_node *arg
 // FROM cursor_name [LIKE type ] entries we encounter.  We don't validate
 // the types here.  That happens after expansion.  It's possible that the
 // types don't match at all, but we don't care yet.
-static void sem_rewrite_from_cursor_args(ast_node *head) {
+static void sem_rewrite_from_shape_args(ast_node *head) {
   Contract(is_ast_expr_list(head) || is_ast_arg_list(head));
 
   // We might need to make arg_list nodes or expr_list nodes, they are the same really
@@ -15504,7 +15507,7 @@ static void sem_rewrite_from_cursor_args(ast_node *head) {
 
   for (ast_node *item = head ; item ; item = item->right) {
     EXTRACT_ANY_NOTNULL(arg, item->left);
-    if (is_ast_from_cursor(arg)) {
+    if (is_ast_from_shape(arg)) {
       EXTRACT_ANY_NOTNULL(cursor, arg->left);
 
       if (!try_sem_arg_bundle(cursor)) {

@@ -201,7 +201,7 @@ static void cql_reset_globals(void);
 %type <aval> begin_schema_region_stmt end_schema_region_stmt schema_ad_hoc_migration_stmt region_list region_spec from_arguments
 
 /* expressions and types */
-%type <aval> expr basic_expr math_expr expr_list typed_name typed_names case_list call_expr_list call_expr cursor_arguments
+%type <aval> expr basic_expr math_expr expr_list typed_name typed_names case_list call_expr_list call_expr shape_arguments
 %type <aval> name name_list opt_name_list opt_name
 %type <aval> data_type data_type_numeric data_type_opt_notnull creation_type object_type
 
@@ -801,7 +801,7 @@ case_list[result]:
 
 arg_expr: '*' { $arg_expr = new_ast_star(); }
   | expr { $arg_expr = $expr; }
-  | cursor_arguments { $arg_expr = $cursor_arguments; }
+  | shape_arguments { $arg_expr = $shape_arguments; }
   | from_arguments { $arg_expr = $from_arguments; }
   ;
 
@@ -816,14 +816,14 @@ expr_list[result]:
   | expr ',' expr_list[el]  { $result = new_ast_expr_list($expr, $el); }
   ;
 
-cursor_arguments:
-  FROM name  { $cursor_arguments = new_ast_from_cursor($name, NULL); }
-  | FROM name shape_def  { $cursor_arguments = new_ast_from_cursor($name, $shape_def); }
+shape_arguments:
+  FROM name  { $shape_arguments = new_ast_from_shape($name, NULL); }
+  | FROM name shape_def  { $shape_arguments = new_ast_from_shape($name, $shape_def); }
   ;
 
 call_expr:
   expr  { $call_expr = $expr; }
-  | cursor_arguments  { $call_expr = $cursor_arguments; }
+  | shape_arguments  { $call_expr = $shape_arguments; }
   | from_arguments  { $call_expr = $from_arguments; }
   ;
 

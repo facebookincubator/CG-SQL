@@ -11986,6 +11986,27 @@ DECLARE PROC decl3 (id INTEGER) (A INTEGER NOT NULL, B BOOL);
 
 The statement ending at line XXXX
 
+DECLARE PROC decl4 (x_A INTEGER NOT NULL, x_B BOOL);
+
+  {declare_proc_stmt}: ok
+  | {proc_name_type}
+  | | {name decl4}: ok
+  | | {int 0}
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: x_A: integer notnull variable in
+      | | {param_detail}: x_A: integer notnull variable in
+      |   | {name x_A}: x_A: integer notnull variable in
+      |   | {notnull}: integer notnull
+      |     | {type_int}: integer
+      | {params}
+        | {param}: x_B: bool variable in
+          | {param_detail}: x_B: bool variable in
+            | {name x_B}: x_B: bool variable in
+            | {type_bool}: bool
+
+The statement ending at line XXXX
+
 CREATE PROC bogus_nested_declare ()
 BEGIN
   DECLARE PROC yy ();
@@ -47562,7 +47583,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0204: cursor not found 'not_a_curs
       | {call_stmt}: err
         | {name shape_consumer}
         | {expr_list}: err
-          | {from_cursor}
+          | {from_shape}
             | {name not_a_cursor}: err
 
 The statement ending at line XXXX
@@ -47701,7 +47722,7 @@ Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, tab
       | {call_stmt}: err
         | {name shape_y_only}
         | {expr_list}: err
-          | {from_cursor}
+          | {from_shape}
             | {name C}: C: select: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
             | {like}: err
               | {name not_a_real_shape}: err
