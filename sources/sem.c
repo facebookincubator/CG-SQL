@@ -11275,12 +11275,12 @@ static void sem_rewrite_insert_list_from_arguments(ast_node *ast, uint32_t count
   }
 
   bool_t from_name = !!from_arguments->left;
-  ast_node *found_ast = NULL;
+  ast_node *found_shape = NULL;
 
   if (from_name) {
     // args like name
-    found_ast = sem_find_likeable_ast(from_arguments->left);
-    if (!found_ast) {
+    found_shape = sem_find_likeable_ast(from_arguments->left);
+    if (!found_shape) {
       record_error(ast);
       return;
     }
@@ -11297,8 +11297,8 @@ static void sem_rewrite_insert_list_from_arguments(ast_node *ast, uint32_t count
   bool_t missing_args = false;
 
   if (from_name) {
-    Invariant(found_ast);
-    sem_struct *sptr = found_ast->sem->sptr;
+    Invariant(found_shape);
+    sem_struct *sptr = found_shape->sem->sptr;
     Invariant(sptr);
     uint32_t cols = sptr->count;
     Invariant(cols >= 1);
@@ -11475,15 +11475,15 @@ void sem_rewrite_like_column_spec_if_needed(ast_node *columns_values) {
   EXTRACT_ANY(like, column_spec->left);
 
   if (is_ast_like(like)) {
-     ast_node *found_ast = sem_find_likeable_ast(like);
-     if (!found_ast) {
+     ast_node *found_shape = sem_find_likeable_ast(like);
+     if (!found_shape) {
        record_error(columns_values);
        return;
      }
 
      AST_REWRITE_INFO_SET(like->lineno, like->filename);
 
-     sem_struct *sptr = found_ast->sem->sptr;
+     sem_struct *sptr = found_shape->sem->sptr;
      ast_node *name_list = sem_generate_full_column_list(sptr);
      ast_set_left(column_spec, name_list);
 
@@ -12141,8 +12141,8 @@ static bool_t sem_rewrite_one_def(ast_node *head) {
   EXTRACT_STRING(like_name, like->left);
 
   // it's ok to use the LIKE construct on old tables
-  ast_node *found_ast = sem_find_likeable_ast(like);
-  if (!found_ast) {
+  ast_node *found_shape = sem_find_likeable_ast(like);
+  if (!found_shape) {
     record_error(head);
     return false;
   }
@@ -12152,7 +12152,7 @@ static bool_t sem_rewrite_one_def(ast_node *head) {
   // Store the remaining nodes while we reconstruct the AST
   EXTRACT_ANY(right_ast, head->right);
 
-  sem_struct *sptr = found_ast->sem->sptr;
+  sem_struct *sptr = found_shape->sem->sptr;
   uint32_t count = sptr->count;
 
   for (int32_t i = 0; i < count; i++) {
@@ -12228,8 +12228,8 @@ static void sem_rewrite_one_param(ast_node *param, symtab *param_names) {
   EXTRACT_NOTNULL(like, param_detail->right);
   EXTRACT_STRING(like_name, like->left);
 
-  ast_node *found_ast = sem_find_likeable_ast(like);
-  if (!found_ast) {
+  ast_node *found_shape = sem_find_likeable_ast(like);
+  if (!found_shape) {
     record_error(param);
     return;
   }
@@ -12239,7 +12239,7 @@ static void sem_rewrite_one_param(ast_node *param, symtab *param_names) {
   // Nothing can go wrong from here on
   record_ok(param);
 
-  sem_struct *sptr = found_ast->sem->sptr;
+  sem_struct *sptr = found_shape->sem->sptr;
   uint32_t count = sptr->count;
   bool_t first_rewrite = true;
   CSTR formal_name = NULL;
@@ -12248,7 +12248,7 @@ static void sem_rewrite_one_param(ast_node *param, symtab *param_names) {
     EXTRACT_STRING(fname, formal);
     formal_name = fname;
     ast_node *shape_ast = new_ast_str(formal_name);
-    shape_ast->sem = found_ast->sem;
+    shape_ast->sem = found_shape->sem;
     sem_add_flags(shape_ast, 0); // force clone the semantic type
     shape_ast->sem->name = formal_name;
     symtab_add(arg_bundles, formal_name, shape_ast);
@@ -12418,36 +12418,36 @@ static ast_node *sem_find_likeable_ast(ast_node *like_ast) {
   EXTRACT_ANY_NOTNULL(name_ast, like_ast->left);
   EXTRACT_STRING(like_name, name_ast);
 
-  ast_node *found_ast = find_local_or_global_variable(like_name);
-  if (found_ast) {
-    if (!is_cursor(found_ast->sem->sem_type)) {
+  ast_node *found_shape = find_local_or_global_variable(like_name);
+  if (found_shape) {
+    if (!is_cursor(found_shape->sem->sem_type)) {
       report_error(like_ast, "CQL0200: variable is not a cursor", like_name);
       goto error;
     }
   }
 
-  if (!found_ast) {
+  if (!found_shape) {
     // it's ok to use the LIKE construct on old tables
-    found_ast = find_table_or_view_even_hidden(like_name);
+    found_shape = find_table_or_view_even_hidden(like_name);
   }
 
-  if (!found_ast) {
-    found_ast = find_proc(like_name);
-    if (found_ast) {
-      if (!found_ast->sem->sptr) {
+  if (!found_shape) {
+    found_shape = find_proc(like_name);
+    if (found_shape) {
+      if (!found_shape->sem->sptr) {
         report_error(like_ast, "CQL0178: proc has no result", like_name);
         goto error;
       }
     }
   }
 
-  if (!found_ast || is_error(found_ast)) {
+  if (!found_shape || is_error(found_shape)) {
     report_error(like_ast, "CQL0202: must be a cursor, proc, table, or view", like_name);
     goto error;
   }
 
   record_ok(like_ast);
-  return found_ast;
+  return found_shape;
 
 error:
   record_error(like_ast);
@@ -14274,8 +14274,8 @@ static void sem_rewrite_one_typed_name(ast_node *typed_name, symtab *used_names)
   EXTRACT_NOTNULL(like, typed_name->right);
   EXTRACT_STRING(like_name, like->left);
 
-  ast_node *found_ast = sem_find_likeable_ast(like);
-  if (!found_ast) {
+  ast_node *found_shape = sem_find_likeable_ast(like);
+  if (!found_shape) {
     record_error(typed_name);
     return;
   }
@@ -14285,7 +14285,7 @@ static void sem_rewrite_one_typed_name(ast_node *typed_name, symtab *used_names)
   // Nothing can go wrong from here on
   record_ok(typed_name);
 
-  sem_struct *sptr = found_ast->sem->sptr;
+  sem_struct *sptr = found_shape->sem->sptr;
   uint32_t count = sptr->count;
   bool_t first_rewrite = true;
   CSTR formal_name = NULL;
@@ -15116,16 +15116,16 @@ static void sem_declare_cursor_like_name(ast_node *ast) {
   }
 
   // must be a valid shape
-  ast_node *found_ast = sem_find_likeable_ast(like_ast);
-  if (!found_ast) {
+  ast_node *found_shape = sem_find_likeable_ast(like_ast);
+  if (!found_shape) {
     record_error(ast);
     return;
   }
 
   // good to go, make our cursor, with storage.
-  name_ast->sem = like_ast->sem = found_ast->sem;
+  name_ast->sem = like_ast->sem = found_shape->sem;
   new_cursor_ast->sem = new_sem(SEM_TYPE_STRUCT | SEM_TYPE_VARIABLE | SEM_TYPE_VALUE_CURSOR | SEM_TYPE_AUTO_CURSOR);
-  new_cursor_ast->sem->sptr = found_ast->sem->sptr;
+  new_cursor_ast->sem->sptr = found_shape->sem->sptr;
   new_cursor_ast->sem->name = new_cursor_name;
   ast->sem = new_cursor_ast->sem;
 
@@ -15546,11 +15546,11 @@ static void sem_rewrite_from_shape_args(ast_node *head) {
       }
 
       ast_node *like_ast = arg->right;
-      ast_node *found_ast = NULL;
+      ast_node *found_shape = NULL;
 
       if (like_ast) {
-          found_ast = sem_find_likeable_ast(like_ast);
-          if (!found_ast) {
+          found_shape = sem_find_likeable_ast(like_ast);
+          if (!found_shape) {
             record_error(head);
             return;
           }
@@ -15560,7 +15560,7 @@ static void sem_rewrite_from_shape_args(ast_node *head) {
 
       // use the names from the LIKE clause if there is one, otherwise use
       // all the names in the cursor.
-      sem_struct *sptr = found_ast ? found_ast->sem->sptr : cursor->sem->sptr;
+      sem_struct *sptr = found_shape ? found_shape->sem->sptr : cursor->sem->sptr;
       uint32_t count = sptr->count;
 
       for (uint32_t i = 0; i < count; i++) {
@@ -15627,11 +15627,11 @@ static void sem_rewrite_from_arguments_in_call(ast_node *head) {
       // easy case, all the args, hard case, the ones that match the named type
 
       ast_node *like_ast = arg->left;
-      ast_node *found_ast = NULL;
+      ast_node *found_shape = NULL;
 
       if (like_ast) {
-          found_ast = sem_find_likeable_ast(like_ast);
-          if (!found_ast) {
+          found_shape = sem_find_likeable_ast(like_ast);
+          if (!found_shape) {
             record_error(head);
             return;
           }
@@ -15641,9 +15641,9 @@ static void sem_rewrite_from_arguments_in_call(ast_node *head) {
 
       bool_t missing_args = false;
 
-      if (found_ast) {
+      if (found_shape) {
         // we found a matching item, it must have a struct type
-        sem_struct *sptr = found_ast->sem->sptr;
+        sem_struct *sptr = found_shape->sem->sptr;
         Invariant(sptr);
         uint32_t cols = sptr->count;
         Invariant(cols >= 1);

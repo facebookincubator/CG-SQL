@@ -75,7 +75,7 @@ What's going on here?  There's just a few rules:
 * if you do specify a value it can be any constant expression and it will be cast to the type of the enumeration (even if thatis lossy)
 * the enumeration can refer to previous values in itself with no qualification `(big = 100.0, medium = big/2, small = medium/2)`
 * the enumeration can refer to previously defined enumerations as usual `(code = business_type.restaurant)`
-* Once the enumeration is defined you refer to its members in a fully qualfied fashion `enum_name.member_name` elsewhere
+* Once the enumeration is defined you refer to its members in a fully qualified fashion `enum_name.member_name` elsewhere
 
 Why is this better than macros?  Well for one thing the enum values can be checked at their declaration site, so if you
 have errors you will hear about them in a more reasonable place.  But additionally since the structure is known to the
