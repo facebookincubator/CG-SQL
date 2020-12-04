@@ -146,7 +146,7 @@ static void cql_reset_globals(void);
 %token EXCLUDE_GROUP EXCLUDE_CURRENT_ROW EXCLUDE_TIES EXCLUDE_NO_OTHERS CURRENT_ROW UNBOUNDED PRECEDING FOLLOWING
 %token CREATE DROP TABLE WITHOUT ROWID PRIMARY KEY NULL_ DEFAULT CHECK AT_DUMMY_SEED
 %token OBJECT TEXT BLOB LONG_ INT_ INTEGER LONG_INTEGER REAL ON UPDATE CASCADE ON_CONFLICT DO NOTHING
-%token DELETE INDEX FOREIGN REFERENCES CONSTRAINT UPSERT STATEMENT
+%token DELETE INDEX FOREIGN REFERENCES CONSTRAINT UPSERT STATEMENT CONST
 %token INSERT INTO VALUES VIEW SELECT QUERY_PLAN EXPLAIN OVER WINDOW FILTER PARTITION RANGE ROWS GROUPS
 %token AS CASE WHEN FROM THEN ELSE END LEFT
 %token OUTER JOIN WHERE GROUP BY ORDER ASC
@@ -171,7 +171,7 @@ static void cql_reset_globals(void);
 %type <aval> col_key_list col_key_def col_def col_name
 %type <aval> version_attrs opt_version_attrs version_attrs_opt_recreate opt_delete_version_attr
 %type <aval> misc_attr_key misc_attr misc_attrs misc_attr_value misc_attr_value_list
-%type <aval> col_attrs str_literal num_literal any_literal
+%type <aval> col_attrs str_literal num_literal any_literal const_expr
 %type <aval> pk_def fk_def unq_def fk_target_options
 
 %type <aval> alter_table_add_column_stmt
@@ -494,6 +494,7 @@ misc_attr_value_list[result]:
 misc_attr_value:
   name  { $misc_attr_value = $name; }
   | any_literal  { $misc_attr_value = $any_literal; }
+  | const_expr  { $misc_attr_value = $const_expr; }
   | '(' misc_attr_value_list ')'  { $misc_attr_value = $misc_attr_value_list; }
   | '-' num_literal  { $misc_attr_value = new_ast_uminus($num_literal);}
   ;
@@ -631,6 +632,7 @@ col_attrs[result]:
   | PRIMARY KEY AUTOINCREMENT col_attrs[ca]  { $result = new_ast_col_attrs_pk(new_ast_col_attrs_autoinc(), $ca);}
   | DEFAULT '-' num_literal col_attrs[ca]  { $result = new_ast_col_attrs_default(new_ast_uminus($num_literal), $ca);}
   | DEFAULT num_literal col_attrs[ca]  { $result = new_ast_col_attrs_default($num_literal, $ca);}
+  | DEFAULT const_expr col_attrs[ca]  { $result = new_ast_col_attrs_default($const_expr, $ca);}
   | DEFAULT str_literal col_attrs[ca]  { $result = new_ast_col_attrs_default($str_literal, $ca);}
   | COLLATE name col_attrs[ca]  { $result = new_ast_col_attrs_collate($name, $ca);}
   | CHECK '(' expr ')' col_attrs[ca]  { $result = new_ast_col_attrs_check($expr, $ca);}
@@ -692,6 +694,10 @@ num_literal:
   | REALLIT  { $num_literal = new_ast_num(NUM_REAL, $REALLIT); }
   ;
 
+const_expr:
+  CONST '(' expr ')' { $const_expr = new_ast_const($expr); }
+  ;
+
 any_literal:
   str_literal  { $any_literal = $str_literal; }
   | num_literal  { $any_literal = $num_literal; }
@@ -725,6 +731,7 @@ basic_expr:
   name  { $basic_expr = $name; }
   | name[lhs] '.' name[rhs]  { $basic_expr = new_ast_dot($lhs, $rhs); }
   | any_literal  { $basic_expr = $any_literal; }
+  | const_expr { $basic_expr = $const_expr; }
   | '(' expr ')'  { $basic_expr = $expr; }
   | call  { $basic_expr = $call; }
   | window_func_inv  { $basic_expr = $window_func_inv; }
@@ -1384,12 +1391,12 @@ function: FUNC | FUNCTION
   ;
 
 declare_enum_stmt:
-  DECLARE ENUM name data_type_numeric '(' enum_values ')' { 
+  DECLARE ENUM name data_type_numeric '(' enum_values ')' {
      ast_node *typed_name = new_ast_typed_name($name, $data_type_numeric);
      $declare_enum_stmt = new_ast_declare_enum_stmt(typed_name, $enum_values); }
   ;
 
-enum_values[result]:  
+enum_values[result]:
     enum_value { $result = new_ast_enum_values($enum_value, NULL); }
   | enum_value ',' enum_values[next] { $result = new_ast_enum_values($enum_value, $next); }
   ;

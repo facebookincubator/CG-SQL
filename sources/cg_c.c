@@ -1270,6 +1270,9 @@ static void cg_unary(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, i
   // UNARY is the highest... so we never need parens
   Invariant(pri_new >= pri);
 
+  // We always add a space to avoid creating "--" or "++"
+  // expr_value might be -1 or -x or some such.  This way we're
+  // always safe at the cost of a space.
   bprintf(&result, "%s %s", op, expr_value.ptr);
 
   if (is_not_nullable(sem_type_expr)) {

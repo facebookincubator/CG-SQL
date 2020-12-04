@@ -152,6 +152,7 @@ static void sem_validate_check_expr(ast_node *table, ast_node *expr);
 static void sem_numeric_expr(ast_node *expr, ast_node *context, CSTR subject, uint32_t expr_context);
 static void sem_rewrite_iif(ast_node *ast);
 static void sem_rewrite_expr_names_to_columns_values(ast_node* columns_values);
+static void sem_misc_attrs_basic(ast_node *ast);
 
 static void lazy_free_symtab(void *syms) {
   symtab_delete(syms);
@@ -519,6 +520,7 @@ typedef struct coldef_info {
   int32_t column_ordinal;            // column ordinal number (0 based, for this table)
   CSTR create_proc;                  // the name of the create migration proc if any
   CSTR delete_proc;                  // the name of the delete migration proc if any
+  ast_node *default_value;           // the default value expression if there is one
 } coldef_info;
 
 static void init_coldef_info(coldef_info *info, version_attrs_info *table_info) {
@@ -533,6 +535,7 @@ static void init_coldef_info(coldef_info *info, version_attrs_info *table_info) 
   info->column_ordinal = -1;
   info->create_proc = NULL;
   info->delete_proc = NULL;
+  info->default_value = NULL;
 }
 
 typedef struct name_check {
@@ -3085,8 +3088,15 @@ static sem_t sem_col_attrs(ast_node *def, ast_node *_Nullable head, coldef_info 
       new_flags = SEM_TYPE_SENSITIVE; // prevent two of the same
     }
     else if (is_ast_col_attrs_default(ast)) {
-      // We need this so that we can validate INSERT statements
-      // DEFAULT can be used here.
+      // We need this flag so that we can validate INSERT statements with missing columns
+      sem_expr(ast->left);
+      ast_node *expr = ast->left; // expr might have been rewritten so we fetch it now
+      if (is_error(expr)) {
+        record_error(head);
+        return false;
+      }
+      info->default_value = expr;
+
       new_flags = SEM_TYPE_HAS_DEFAULT;  // prevent two of the same
     }
     else if (is_ast_col_attrs_check(ast)) {
@@ -3211,6 +3221,7 @@ static void sem_col_def(ast_node *def, coldef_info *info) {
   EXTRACT_STRING(name, name_ast);
   EXTRACT_ANY_NOTNULL(data_type, col_def_name_type->right);
 
+  info->default_value = NULL;
   info->create_version = -1;
   info->delete_version = -1;
   info->column_ordinal++;
@@ -3229,6 +3240,23 @@ static void sem_col_def(ast_node *def, coldef_info *info) {
     if (is_error(attrs)) {
       record_error(def);
       return;
+    }
+
+    // check type compat of the default value if there is one now that flags are all processed
+
+    ast_node *expr = info->default_value;
+    if (expr) {
+      sem_root_expr(expr, SEM_EXPR_CONTEXT_NONE);
+
+     // there is a common pattern TEXT DEFAULT 0 which is ok because the 0 converts to text
+     // so we'll allow any literal to be used for text
+     if (!is_text(def->sem->sem_type)) {
+       // otherwise normal assignment rules
+       if (!sem_verify_assignment(expr, def->sem->sem_type, expr->sem->sem_type, "default value")) {
+         record_error(def);
+         return;
+       }
+     }
     }
   }
 
@@ -3563,6 +3591,29 @@ static void sem_binary_compare(ast_node *ast, CSTR op) {
   }
 
   ast->sem = new_sem(SEM_TYPE_BOOL | combined_flags);
+}
+
+static void sem_expr_const(ast_node *ast, CSTR op) {
+  Contract(is_ast_const(ast));
+
+  sem_root_expr(ast->left, SEM_EXPR_CONTEXT_NONE);
+  if (is_error(ast->left)) {
+    record_error(ast);
+    return;
+  }
+
+  eval_node result = {};
+  eval(ast->left, &result);
+
+  if (result.sem_type == SEM_TYPE_ERROR) {
+    report_error(ast, "CQL0353: evaluation of constant failed", NULL);
+    record_error(ast);
+    return;
+  }
+
+  ast_node *ast_new = eval_set(ast, &result);
+  sem_root_expr(ast_new, SEM_EXPR_CONTEXT_NONE);
+  ast->sem = ast_new->sem;
 }
 
 // The unary operators all have a similar prep to the binary.  We need
@@ -5077,33 +5128,6 @@ static void sem_aggr_func_avg(ast_node *ast, uint32_t arg_count) {
 
 static void sem_func_ifnull(ast_node *ast, uint32_t arg_count) {
   sem_coalesce(ast, 1);  // set "ifnull"
-}
-
-static void sem_func_const(ast_node *ast, uint32_t arg_count) {
-  Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
-  EXTRACT_STRING(name, name_ast);
-  EXTRACT_NOTNULL(call_arg_list, ast->right);
-  EXTRACT(arg_list, call_arg_list->right);
-
-  // only one argument
-  if (!sem_validate_arg_count(ast, arg_count, 1)) {
-    return;
-  }
-  ast_node *arg = first_arg(arg_list);
-
-  eval_node result = {};
-  eval(arg, &result);
-
-  if (result.sem_type == SEM_TYPE_ERROR) {
-    report_error(ast, "CQL0353: evaluation of constant failed", NULL);
-    record_error(ast);
-    return;
-  }
-
-  ast_node *ast_new = eval_set(ast, &result);
-  sem_root_expr(ast_new, SEM_EXPR_CONTEXT_NONE);
-  ast->sem = ast_new->sem;
 }
 
 static void sem_func_cql_get_blob_size(ast_node *ast, uint32_t arg_count) {
@@ -14514,7 +14538,7 @@ static void sem_declare_select_func_stmt(ast_node *ast) {
 //     medium = big/2,
 //     small = medium/2
 //  );
-// 
+//
 // This code recursively walks enum tree and replaces names it can
 // with names from the enum that is currently being declared.
 // This is the only place unqualified enum names can appear.
@@ -14630,7 +14654,7 @@ static void sem_declare_enum_stmt(ast_node *ast) {
      enum_name_ast->sem = new_sem(sem_type_enum);
      enum_name_ast->sem->value = _ast_pool_new(eval_node);
      *enum_name_ast->sem->value = result;
-     
+
      enum_values = enum_values->right;
   }
 
@@ -14649,14 +14673,14 @@ static void sem_declare_enum_stmt(ast_node *ast) {
     // because they are used by later things (e.g. default values) and the "new" enums
     // (before the @previous_schema  marker) might be very different. We need the "old"
     // enums to calculate the default values or whatever and make sure they haven't changed.
-    // So we can't just check them and move on like we do with other stuff.  
+    // So we can't just check them and move on like we do with other stuff.
     // At the end we'll have two symbol tables, the second of which we'll end up discarding.
 
     bool_t suppress_validation = is_validation_suppressed();
 
     // this enum is now visible, we still do this (even if previous schema mode)
     bool_t added = add_enum(ast, name);
-    Invariant(added); 
+    Invariant(added);
 
     // when processing previous schema we don't add the enum to the all enums list
     // so that it won't show up in JSON etc.
@@ -16430,15 +16454,25 @@ static void sem_one_stmt(ast_node *stmt) {
   bool_t error = false;
   // We need to validate attributions of a statement, such as cql:ok_table_scan
   // or cql:no_table_scan which can only appear on a specific type of stmt.
+  // We also need to do basic validation of the attributes, in case of const expressions.
   if (is_ast_stmt_and_attr(stmt->parent)) {
     stmt_and_attr = stmt->parent;
     EXTRACT_NOTNULL(misc_attrs, stmt_and_attr->left);
 
-    sem_misc_attrs(misc_attrs);
+    // first check for expression failures with no regard to the particular attribute
+    sem_misc_attrs_basic(misc_attrs);
     if (is_error(misc_attrs)) {
       record_error(stmt_and_attr);
       record_error(stmt);
       error = true;
+    }
+    else {
+      sem_misc_attrs(misc_attrs);
+      if (is_error(misc_attrs)) {
+        record_error(stmt_and_attr);
+        record_error(stmt);
+        error = true;
+      }
     }
   }
 
@@ -16472,6 +16506,59 @@ static void sem_one_stmt(ast_node *stmt) {
   }
 
   CHARBUF_CLOSE(errbuf);
+}
+
+// We're just going to walk the tree of attribute values here
+// looking for any CONST expressions.  If we find one, we evaluate
+// that.  Anything that's not a CONST express is known to be a literal
+// or just a name.
+static void sem_misc_attr_value(ast_node *ast) {
+  // nested attributes, we just recurse on those
+  if (is_ast_misc_attr_value_list(ast)) {
+    for (ast_node *item = ast; item; item = item->right) {
+      sem_misc_attr_value(item->left);
+      if (is_error(item->left)) {
+        record_error(item);
+        record_error(ast);
+        return;
+      }
+    }
+  }
+  else if (is_ast_const(ast)) {
+    // if the ast is bad the error will prop, this evaluates the const
+    sem_root_expr(ast, SEM_EXPR_CONTEXT_NONE);
+    if (is_error(ast)) {
+      // ast already marked with is_error
+      return;
+    }
+  }
+  record_ok(ast);
+}
+
+// This is the basic checking of misc attributes we always do.
+// The point of this is to find any constant expressions and replace
+// them with actual literals and reveal any errors in those expressions.
+// Most attributes don't need any processing because they are arbitary names
+// or regular literals.
+static void sem_misc_attrs_basic(ast_node *ast) {
+  Contract(is_ast_misc_attrs(ast));
+
+  ast_node *head = ast;
+
+  while (ast) {
+    EXTRACT(misc_attr, ast->left);
+    EXTRACT_ANY(misc_attr_value, misc_attr->right);
+
+    if (misc_attr_value) {
+      sem_misc_attr_value(misc_attr_value);
+      if (is_error(misc_attr_value)) {
+        record_error(head);
+        return;
+      }
+    }
+    ast = ast->right;
+  }
+  record_ok(head);
 }
 
 // This helper just walks the list and processes each statement.  If anything
@@ -17571,13 +17658,13 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(length);
 
   FUNC_INIT(cql_get_blob_size);
-  FUNC_INIT(const);
 
   EXPR_INIT(num, sem_expr_num, "NUM");
   EXPR_INIT(str, sem_expr_str, "STR");
   EXPR_INIT(blob, sem_expr_blob, "BLB");
   EXPR_INIT(null, sem_expr_null, "NULL");
   EXPR_INIT(dot, sem_expr_dot, "DOT");
+  EXPR_INIT(const, sem_expr_const, "CONST");
   EXPR_INIT(lshift, sem_binary_integer_math, "<<");
   EXPR_INIT(rshift, sem_binary_integer_math, "<<");
   EXPR_INIT(bin_and, sem_binary_integer_math, "&");

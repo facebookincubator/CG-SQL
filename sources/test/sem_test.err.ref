@@ -110,6 +110,11 @@ Error at test/sem_test.sql:XXXX : in str : CQL0150: expected numeric expression 
 Error at test/sem_test.sql:XXXX : in str : CQL0150: expected numeric expression in IF predicate
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in null : CQL0013: cannot assign/copy possibly null expression to not null target 'default value'
+Error at test/sem_test.sql:XXXX : in num : CQL0242: lossy conversion from type 'REAL' in 2.200000e+00
 Error at test/sem_test.sql:XXXX : in str : CQL0197: duplicate variable name in the same scope 'X'
 Error at test/sem_test.sql:XXXX : in str : CQL0198: global variable hides table/view name 'foo'
 Error at test/sem_test.sql:XXXX : in declare_cursor : CQL0197: duplicate variable name in the same scope 'my_cursor'
@@ -288,29 +293,28 @@ Error at test/sem_test.sql:XXXX : in select_core : CQL0058: if multiple selects,
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'nullable'
-Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
-Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
-Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
-Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
-Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
-Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
-Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
-Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
-Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
-Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
-Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
-Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
-Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'const'
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
 Error at test/sem_test.sql:XXXX : in tilde : CQL0001: operands must be an integer type, not real '~'
-Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
-Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
-Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
-Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
-Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
-Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
-Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
-Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
-Error at test/sem_test.sql:XXXX : in call : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
 Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'nullable'
 Error at test/sem_test.sql:XXXX : in str : CQL0206: duplicate name in list 'a'
 Error at test/sem_test.sql:XXXX : in cte_decl : CQL0100: duplicate common table name 'foo'

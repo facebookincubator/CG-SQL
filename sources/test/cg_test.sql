@@ -62,6 +62,7 @@ set t0_nullable := null;
 set t0_nullable := t2;
 
 -- TEST: simple unary operators
+-- + SET i2 := - -1;
 -- + i2 = - - 1;
 set i2 := - -1;
 

@@ -6784,7 +6784,7 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
   
   /*
-  SET i2 := --1;
+  SET i2 := - -1;
   */
   i2 = - - 1;
   

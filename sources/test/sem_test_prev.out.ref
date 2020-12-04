@@ -419,7 +419,7 @@ CREATE TABLE t_column_default_value_changed(
           | | {type_int}: integer
           | {col_attrs_not_null}: ok
             | {col_attrs_default}
-              | {int 2}
+              | {int 2}: integer notnull
 
 The statement ending at line XXXX
 
@@ -447,7 +447,7 @@ CREATE TABLE t_column_default_value_ok(
           | | {type_int}: integer
           | {col_attrs_not_null}: ok
             | {col_attrs_default}
-              | {int 1}
+              | {int 1}: integer notnull
 
 The statement ending at line XXXX
 
@@ -2301,7 +2301,7 @@ Error at test/sem_test_prev.sql:XXXX : in str : CQL0125: column current default 
           | | {type_int}: integer
           | {col_attrs_not_null}: ok
             | {col_attrs_default}
-              | {int 1}
+              | {int 1}: integer notnull
 
 The statement ending at line XXXX
 
@@ -2329,7 +2329,7 @@ CREATE TABLE t_column_default_value_ok(
           | | {type_int}: integer
           | {col_attrs_not_null}: ok
             | {col_attrs_default}
-              | {int 1}
+              | {int 1}: integer notnull
 
 The statement ending at line XXXX
 

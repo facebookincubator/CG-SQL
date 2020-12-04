@@ -1299,6 +1299,63 @@ create table booly (
   flag BOOL
 );
 
+declare enum ints integer (
+ negative_one = -1,
+ postive_one = 1
+);
+
+-- TEST: use const expr where normally literals go in default value
+-- + {col_attrs_default}: err
+-- + {const}: err
+-- + x INTEGER DEFAULT -1,
+-- + y INTEGER DEFAULT CONST(1 / 0)
+-- + Error % evaluation of constant failed
+create table bad_constants_table(
+  x integer default const(ints.negative_one),
+  y integer default const(1/0)
+);
+
+-- TEST: use const expr where literals go in attribute
+-- + {const}: err
+-- + @ATTRIBUTE(whatever=-1)
+-- + @ATTRIBUTE(whatever=CONST(1 / 0))
+-- + Error % evaluation of constant failed
+@attribute(whatever=const(ints.negative_one))
+@attribute(whatever=const(1/0))
+declare proc bad_constants_proc();
+
+-- TEST: use bad constant expr in nested context
+-- + {const}: err
+-- + @ATTRIBUTE(whatever=(1, CONST(1 / 0), 1))
+-- + Error % evaluation of constant failed
+@attribute(whatever=(1, const(1/0), 1))
+declare proc bad_constants_nested_proc();
+
+-- TEST: try to use a NULL default value on a non nullable column
+-- + {create_table_stmt}: err
+-- + {col_def}: err
+-- + Error % cannot assign/copy possibly null expression to not null target 'default value'
+-- +1 Error
+create table bad_conversions(
+  data integer not null default const(NULL)
+);
+
+-- TEST: try to use a lossy conversion in a const expr default value
+-- + {create_table_stmt}: err
+-- + {col_def}: err
+-- + Error % lossy conversion from type 'REAL' in 2.200000e+00
+-- +1 Error
+create table bad_conversions(
+  data integer not null default const(1+1.2)
+);
+
+-- TEST: allowable conversion, the constant becomes real
+-- + data REAL NOT NULL DEFAULT 1
+-- - Error
+create table good_conversions(
+  data real not null default const(1)
+);
+
 -- TEST: verify the correct types are extracted, also cover the final select option
 -- - Error
 -- + {select_stmt}: select: { id: integer, flag: bool }
@@ -3483,139 +3540,133 @@ select nullable(1, 2);
 -- try some const cases especially those with errors
 
 -- TEST: variables not allowed in constant expressions (duh)
--- + {call}: err
+-- + {const}: err
 -- + Error % evaluation of constant failed
 -- +1 Error
 select const(x);
 
 -- TEST: divide by zero yields error in all forms (integer)
--- + {call}: err
+-- + {const}: err
 -- + Error % evaluation of constant failed
 -- +1 Error
 select const(1/0);
 
 -- TEST: divide by zero yields error in all forms (real)
--- + {call}: err
+-- + {const}: err
 -- + Error % evaluation of constant failed
 -- +1 Error
 select const(1/0.0);
 
 -- TEST: divide by zero yields error in all forms (long)
--- + {call}: err
+-- + {const}: err
 -- + Error % evaluation of constant failed
 -- +1 Error
 select const(1/0L);
 
 -- TEST: divide by zero yields error in all forms (bool)
--- + {call}: err
+-- + {const}: err
 -- + Error % evaluation of constant failed
 -- +1 Error
 select const(1/not 1);
 
 -- TEST: divide by zero yields error in all forms (integer)
--- + {call}: err
+-- + {const}: err
 -- + Error % evaluation of constant failed
 -- +1 Error
 select const(1%0);
 
-
 -- TEST: divide by zero yields error in all forms (long)
--- + {call}: err
+-- + {const}: err
 -- + Error % evaluation of constant failed
 -- +1 Error
 select const(1%0L);
 
 -- TEST: divide by zero yields error in all forms (bool)
--- + {call}: err
+-- + {const}: err
 -- + Error % evaluation of constant failed
 -- +1 Error
 select const(1%not 1);
 
 -- TEST: variables not allowed in constant expressions (duh)
--- + {call}: err
+-- + {const}: err
 -- + Error % evaluation of constant failed
 -- +1 Error
 select const(case x when 1 then 2 end);
 
 -- TEST: variables not allowed in constant expressions (duh)
--- + {call}: err
+-- + {const}: err
 -- + Error % evaluation of constant failed
 -- +1 Error
 select const(case 1 when x then 2 end);
 
 -- TEST: variables not allowed in constant expressions (duh)
--- + {call}: err
+-- + {const}: err
 -- + Error % evaluation of constant failed
 -- +1 Error
 select const(case 1 when 1 then x end);
 
 -- TEST: variables not allowed in constant expressions (duh)
--- + {call}: err
+-- + {const}: err
 -- + Error % evaluation of constant failed
 -- +1 Error
 select const(case when x then 2 end);
 
--- TEST: wrong number of arguments
--- + Error % function got incorrect number of arguments 'const'
--- +1 Error
-select const(1, 2);
-
 -- TEST: non integer arguments not allowed
--- + {call}: err
+-- + {const}: err
 -- + Error % operands must be an integer type, not real '~'
 -- +1 Error
 select const(~1.3);
 
 -- TEST: forcing errors in binary operators to make them prop:  comparison type
--- + {call}: err
+-- + {const}: err
 -- + Error % evaluation of constant failed
 -- +1 Error
 select const(x == x);
 
 -- TEST: forcing errors in binary operators to make them prop:  is/is_not comparison type
--- + {call}: err
+-- + {const}: err
 -- + Error % evaluation of constant failed
 -- +1 Error
 select const(x is x);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
--- + {call}: err
+-- + {const}: err
 -- + Error % evaluation of constant failed
 -- +1 Error
 select const(x + x);
 
 -- TEST: forcing errors in binary operators to make them prop:  and error in first arg
--- + {call}: err
+-- + {const}: err
 -- + Error % evaluation of constant failed
 -- +1 Error
 select const(x and 0);
 
 -- TEST: forcing errors in binary operators to make them prop:  and error in second arg
--- + {call}: err
+-- + {const}: err
 -- + Error % evaluation of constant failed
 -- +1 Error
 select const(1 and x);
 
 -- TEST: forcing errors in binary operators to make them prop:  or: error in first arg
--- + {call}: err
+-- + {const}: err
 -- + Error % evaluation of constant failed
 -- +1 Error
 select const(x or 0);
 
 -- TEST: forcing errors in binary operators to make them prop:  or: force error in second arg
--- + {call}: err
+-- + {const}: err
 -- + Error % evaluation of constant failed
 -- +1 Error
 select const(0 or x);
 
 -- TEST: forcing errors in binary operators to make them prop:  and: force error in 2nd arg
--- + {call}: err
+-- + {const}: err
 -- + Error % evaluation of constant failed
 -- +1 Error
 select const(1 and x);
 
 -- TEST: forcing errors in cast
--- + {call}: err
+-- + {const}: err
 -- + Error % evaluation of constant failed
 -- +1 Error
 select const(cast(x as real));
