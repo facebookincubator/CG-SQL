@@ -36,7 +36,7 @@ sem_check() {
 
 errors_documented() {
   echo '--------------------------------- VERIFYING ALL ERRORS DOCUMENTED'
-  grep '"CQL[0-9][0-9][0-9][0-9]:' sem.c | sed -e 's/:.*//' -e "s/.*CQL/CQL/" | sort -u >"${OUT_DIR}/errs_used.txt"
+  grep '"CQL[0-9][0-9][0-9][0-9]:' sem.c rewrite.c | sed -e 's/[.]c://' -e 's/:.*//' -e "s/.*CQL/CQL/" | sort -u >"${OUT_DIR}/errs_used.txt"
   grep '### CQL[0-9][0-9][0-9][0-9]:' "${ERROR_DOC}" | sed -e 's/:.*//' -e "s/.*CQL/CQL/" | sort -u >"${OUT_DIR}/errs_documented.txt"
   echo "missing lines (usually red) need to be added to docs"
   echo "extras lines (usually green) need to be marked as available for re-use"
