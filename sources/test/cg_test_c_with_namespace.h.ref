@@ -1843,6 +1843,18 @@ extern cql_int32 x;
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
+enum some_ints {
+  some_ints__foo = 12,
+  some_ints__bar = 3
+};
+
+// The statement ending at line XXXX
+
+// enum some_reals (floating point values)
+#define some_reals__foo 1.200000e+01
+#define some_reals__bar 3.000000e+00
+
+// The statement ending at line XXXX
 extern void end_proc(void);
 
 // The statement ending at line XXXX

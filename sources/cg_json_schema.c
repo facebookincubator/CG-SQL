@@ -19,11 +19,13 @@
 #include "sem.h"
 #include "symtab.h"
 #include "encoders.h"
+#include "eval.h"
 
 static void cg_fragment_with_params(charbuf *output, CSTR frag, ast_node *ast, gen_func fn);
 static void cg_json_fk_target_options(charbuf *output, ast_node *ast);
 static void cg_json_emit_region_info(charbuf *output, ast_node *ast);
 static void cg_json_dependencies(charbuf *output, ast_node *ast);
+static void cg_json_data_type(charbuf *output, sem_t sem_type);
 
 // These little helpers are for handling comma seperated lists where you may or may
 // not need a comma in various places.  The local tracks if there is an item already
@@ -313,6 +315,71 @@ static void cg_json_ad_hoc_migration_procs(charbuf* output) {
     bprintf(output, "\"version\" : %d", version);
     END_INDENT(t);
     bprintf(output, "\n}");
+  }
+
+  END_LIST;
+  END_INDENT(list);
+  bprintf(output, "]");
+}
+
+static void cg_json_enum_values(ast_node *enum_values, charbuf *output) {
+  Contract(is_ast_enum_values(enum_values));
+
+  bprintf(output, "\"values\" : [\n");
+
+  BEGIN_INDENT(list, 2);
+  BEGIN_LIST;
+
+  while (enum_values) {
+     EXTRACT_NOTNULL(enum_value, enum_values->left);
+     EXTRACT_ANY_NOTNULL(enum_name_ast, enum_value->left);
+     EXTRACT_STRING(enum_name, enum_name_ast);
+
+     COMMA;
+     bprintf(output, "{\n");
+
+     bprintf(output, "  \"name\" : \"%s\",\n", enum_name);
+     bprintf(output, "  \"value\" : ");
+     eval_format_number(enum_name_ast->sem->value, output);
+     bprintf(output, "\n}");
+
+     enum_values = enum_values->right;
+  }
+
+  END_LIST;
+  END_INDENT(list);
+
+  bprintf(output, "]\n");
+}
+
+// Emits the JSON for all enumerations
+static void cg_json_enums(charbuf* output) {
+  bprintf(output, "\"enums\" : [\n");
+  BEGIN_INDENT(list, 2);
+  BEGIN_LIST;
+
+  for (list_item *item = all_enums_list; item; item = item->next) {
+    ast_node *ast = item->ast;
+    Invariant(is_ast_declare_enum_stmt(ast));
+    EXTRACT_NOTNULL(typed_name, ast->left);
+    EXTRACT_NOTNULL(enum_values, ast->right);
+    EXTRACT_ANY(name_ast, typed_name->left);
+    EXTRACT_STRING(name, name_ast);
+    EXTRACT_ANY_NOTNULL(type, typed_name->right);
+
+    cg_json_test_details(output, ast, NULL);
+
+    COMMA;
+    bprintf(output, "{\n");
+    BEGIN_INDENT(t, 2);
+    bprintf(output, "\"name\" : \"%s\",\n", name);
+    cg_json_data_type(output, type->sem->sem_type | SEM_TYPE_NOTNULL);
+    bprintf(output, ",\n");
+
+    cg_json_enum_values(enum_values, output);
+
+    END_INDENT(t);
+    bprintf(output, "}");
   }
 
   END_LIST;
@@ -1827,6 +1894,8 @@ cql_noexport void cg_json_schema_main(ast_node *head) {
   cg_json_regions(output);
   bprintf(output, ",\n");
   cg_json_ad_hoc_migration_procs(output);
+  bprintf(output, ",\n");
+  cg_json_enums(output);
 
   if (options.test) {
     bprintf(output, ",\n");

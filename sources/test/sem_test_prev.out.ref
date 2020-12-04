@@ -1808,6 +1808,48 @@ CREATE TABLE adding_with_migrators_ok(
 
 The statement ending at line XXXX
 
+DECLARE ENUM foo_enum INTEGER (
+  a = 1,
+  b = 2
+);
+
+  {declare_enum_stmt}: foo_enum: integer
+  | {typed_name}: foo_enum: integer
+  | | {name foo_enum}
+  | | {type_int}: foo_enum: integer
+  | {enum_values}
+    | {enum_value}
+    | | {name a}: integer = 1
+    | | {int 1}: integer notnull
+    | {enum_values}
+      | {enum_value}
+        | {name b}: integer = 2
+        | {int 2}: integer notnull
+
+The statement ending at line XXXX
+
+CREATE TABLE foo_with_check(
+  x INTEGER CHECK(x = 1) 
+);
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name foo_with_check}
+  | {col_key_list}
+    | {col_def}: x: integer has_check
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+        | | {name x}
+        | | {type_int}: integer
+        | {col_attrs_check}: ok
+          | {eq}: bool
+            | {name x}: x: integer has_check
+            | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
 @PREVIOUS_SCHEMA;
 
   {previous_schema_stmt}: ok
@@ -3640,4 +3682,52 @@ CREATE TABLE adding_with_migrators_ok(
           | {col_def_name_type}
             | {name id2}
             | {type_int}: integer
+
+The statement ending at line XXXX
+
+DECLARE ENUM foo_enum INTEGER (
+  a = 10,
+  b = 2
+);
+
+  {declare_enum_stmt}: foo_enum: integer
+  | {typed_name}: foo_enum: integer
+  | | {name foo_enum}
+  | | {type_int}: foo_enum: integer
+  | {enum_values}
+    | {enum_value}
+    | | {name a}: integer = 10
+    | | {int 10}: integer notnull
+    | {enum_values}
+      | {enum_value}
+        | {name b}: integer = 2
+        | {int 2}: integer notnull
+
+The statement ending at line XXXX
+
+CREATE TABLE foo_with_check(
+  x INTEGER CHECK(x = 10) 
+);
+
+Incompatible declarations found
+Error at test/sem_test_prev.sql:XXXX : in col_def : x INTEGER CHECK(x = 1) 
+Error at test/sem_test_prev.sql:XXXX : in col_def : x INTEGER CHECK(x = 10) 
+The above must be identical.
+Error at test/sem_test_prev.sql:XXXX : in col_def : CQL0128: table has a column that is different in the previous and current schema 'x'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name foo_with_check}
+  | {col_key_list}
+    | {col_def}: x: integer has_check
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+        | | {name x}
+        | | {type_int}: integer
+        | {col_attrs_check}: ok
+          | {eq}: bool
+            | {name x}: x: integer has_check
+            | {int 10}: integer notnull
 

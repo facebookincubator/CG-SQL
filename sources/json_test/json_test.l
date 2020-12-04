@@ -93,6 +93,7 @@ int fileno(FILE *);
 \"generalInserts\"[ \t]*:        { return GENERAL_INSERTS; }
 \"deletes\"[ \t]*:               { return DELETES; }
 \"updates\"[ \t]*:               { return UPDATES; }
+\"enums\"[ \t]*:                 { return ENUMS; }
 \"args\"[ \t]*:                  { return ARGS; }
 \"definedInFile\"[ \t]*:         { return DEFINED_IN_FILE; }
 \"statementType\"[ \t]*:         { return STATEMENT_TYPE; }
@@ -117,7 +118,7 @@ int fileno(FILE *);
 
 [01]                             { return yytext[0]; }
 [0-9]+L                          { return LONG_LITERAL; }
-[0-9]+"."[0-9]*|"."[0-9]+        { return REAL_LITERAL; }
+([0-9]+"."[0-9]*|"."[0-9]+)(E("+"|"-")?[0-9]+)? { return REAL_LITERAL; }
 [0-9]+                           { return INT_LITERAL; }
 \"(\\.|[^"\n])*\"                { return STRING_LITERAL; }
 null				 { return NULL_LITERAL; }

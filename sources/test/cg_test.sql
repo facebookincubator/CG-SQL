@@ -2996,6 +2996,18 @@ SELECT month, amount, AVG(amount) OVER
   (GROUPS CURRENT ROW)
 SalesMovingAverage FROM SalesInfo;
 
+-- TEST: make an integer enum
+declare enum some_ints integer (
+  foo = 12,
+  bar = 3
+);
+
+-- TEST: make a float enum
+declare enum some_reals real (
+  foo = 12,
+  bar = 3
+);
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------
