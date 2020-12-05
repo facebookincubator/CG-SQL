@@ -10,7 +10,7 @@
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed Nov 18 11:05:35 PST 2020
+Snapshot as of Fri Dec  4 08:46:18 PST 2020
 
 ### Operators and Literals
 
@@ -48,13 +48,13 @@ REALLIT /* floating point literal */
 EXCLUDE_GROUP EXCLUDE_CURRENT_ROW EXCLUDE_TIES EXCLUDE_NO_OTHERS CURRENT_ROW UNBOUNDED PRECEDING FOLLOWING
 CREATE DROP TABLE WITHOUT ROWID PRIMARY KEY NULL_ DEFAULT CHECK AT_DUMMY_SEED
 OBJECT TEXT BLOB LONG_ INT_ INTEGER LONG_INTEGER REAL ON UPDATE CASCADE ON_CONFLICT DO NOTHING
-DELETE INDEX FOREIGN REFERENCES CONSTRAINT UPSERT STATEMENT
+DELETE INDEX FOREIGN REFERENCES CONSTRAINT UPSERT STATEMENT CONST
 INSERT INTO VALUES VIEW SELECT QUERY_PLAN EXPLAIN OVER WINDOW FILTER PARTITION RANGE ROWS GROUPS
 AS CASE WHEN FROM THEN ELSE END LEFT
 OUTER JOIN WHERE GROUP BY ORDER ASC
 DESC INNER FCOUNT AUTOINCREMENT DISTINCT
 LIMIT OFFSET TEMP TRIGGER IF ALL CROSS USING RIGHT
-UNIQUE HAVING SET TO DISTINCTROW
+UNIQUE HAVING SET TO DISTINCTROW ENUM
 FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR DECLARE FETCH LOOP LEAVE CONTINUE FOR
 OPEN CLOSE ELSE_IF WHILE CALL TRY CATCH THROW RETURN
 SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
@@ -115,6 +115,7 @@ any_stmt: select_stmt
   | declare_proc_stmt
   | declare_func_stmt
   | declare_stmt
+  | declare_enum_stmt
   | fetch_stmt
   | fetch_values_stmt
   | fetch_call_stmt
@@ -289,6 +290,7 @@ misc_attr_value_list:
 misc_attr_value:
   name
   | any_literal
+  | const_expr
   | '(' misc_attr_value_list ')'
   | '-' num_literal
   ;
@@ -408,6 +410,7 @@ col_attrs:
   | "PRIMARY" "KEY" "AUTOINCREMENT" col_attrs
   | "DEFAULT" '-' num_literal col_attrs
   | "DEFAULT" num_literal col_attrs
+  | "DEFAULT" const_expr col_attrs
   | "DEFAULT" str_literal col_attrs
   | "COLLATE" name col_attrs
   | "CHECK" '(' expr ')' col_attrs
@@ -429,16 +432,19 @@ object_type:
   | "OBJECT" '<' name "CURSOR" '>'
   ;
 
-data_type:
+data_type_numeric:
   "INT"
   | "INTEGER"
-  | "TEXT"
   | "REAL"
   | "LONG"
   | "BOOL"
   | "LONG" "INTEGER"
   | "LONG" "INT"
   | "LONG_INT" | "LONG_INTEGER"
+
+data_type:
+  data_type_numeric
+  | "TEXT"
   | "BLOB"
   | object_type
   ;
@@ -460,6 +466,10 @@ num_literal:
   "integer-literal"
   | "long-literal"
   | "real-literal"
+  ;
+
+const_expr:
+  "CONST" '(' expr ')'
   ;
 
 any_literal:
@@ -487,6 +497,7 @@ basic_expr:
   name
   | name '.' name
   | any_literal
+  | const_expr
   | '(' expr ')'
   | call
   | window_func_inv
@@ -563,7 +574,7 @@ case_list:
 
 arg_expr: '*'
   | expr
-  | cursor_arguments
+  | shape_arguments
   | from_arguments
   ;
 
@@ -578,14 +589,14 @@ expr_list:
   | expr ',' expr_list
   ;
 
-cursor_arguments:
+shape_arguments:
   "FROM" name
   | "FROM" name shape_def
   ;
 
 call_expr:
   expr
-  | cursor_arguments
+  | shape_arguments
   | from_arguments
   ;
 
@@ -1028,6 +1039,20 @@ creation_type:
 function: "FUNC" | "FUNCTION"
   ;
 
+declare_enum_stmt:
+  "DECLARE" "ENUM" name data_type_numeric '(' enum_values ')'
+  ;
+
+enum_values:
+    enum_value
+  | enum_value ',' enum_values
+  ;
+
+enum_value:
+    name
+  | name '=' expr
+  ;
+
 declare_func_stmt:
   "DECLARE" function name '(' params ')' data_type_opt_notnull
   | "DECLARE" "SELECT" function name '(' params ')' data_type_opt_notnull
@@ -1052,9 +1077,8 @@ create_proc_stmt:
   "CREATE" procedure name '(' params ')' "BEGIN" opt_stmt_list "END"
   ;
 
-opt_inout:
-  /* nil */
-  | "IN"
+inout:
+  "IN"
   | "OUT"
   | "INOUT"
   ;
@@ -1062,6 +1086,7 @@ opt_inout:
 typed_name:
   name data_type_opt_notnull
   | shape_def
+  | name shape_def
   ;
 
 typed_names:
@@ -1070,8 +1095,10 @@ typed_names:
   ;
 
 param:
-  opt_inout name data_type_opt_notnull
+  name data_type_opt_notnull
+  | inout name data_type_opt_notnull
   | shape_def
+  | name shape_def
   ;
 
 params:

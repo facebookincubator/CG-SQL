@@ -16,6 +16,7 @@
 #include "gen_sql.h"
 #include "list.h"
 #include "sem.h"
+#include "eval.h"
 #include "symtab.h"
 #include "encoders.h"
 #include <stdio.h>
@@ -1269,6 +1270,9 @@ static void cg_unary(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, i
   // UNARY is the highest... so we never need parens
   Invariant(pri_new >= pri);
 
+  // We always add a space to avoid creating "--" or "++"
+  // expr_value might be -1 or -x or some such.  This way we're
+  // always safe at the cost of a space.
   bprintf(&result, "%s %s", op, expr_value.ptr);
 
   if (is_not_nullable(sem_type_expr)) {
@@ -3265,6 +3269,60 @@ static void cg_declare_auto_cursor(CSTR cursor_name, sem_struct *sptr) {
   CHARBUF_CLOSE(row_type);
 }
 
+// Declaring an enum only causes enum-ish declarations to go into the header file.
+// Those enum things are not even used in our codegen because the CQL codegen
+// simply resolves to constants.  However this will make it possible to use
+// the enum in callers.  The enum is "public" in this sense.  This is a lot
+// like the gen_sql code except it will be in C format.  Note C has no floating
+// point enums so we have to do those with macros.
+
+static void cg_declare_enum_stmt(ast_node *ast) {
+  Contract(is_ast_declare_enum_stmt(ast));
+  EXTRACT_NOTNULL(typed_name, ast->left);
+  EXTRACT_NOTNULL(enum_values, ast->right);
+  EXTRACT_ANY(name_ast, typed_name->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_ANY_NOTNULL(type, typed_name->right);
+
+  if (type->sem->sem_type != SEM_TYPE_REAL) {
+    bprintf(cg_header_output, "enum %s {", name);
+  
+    while (enum_values) {
+       EXTRACT_NOTNULL(enum_value, enum_values->left);
+       EXTRACT_ANY_NOTNULL(enum_name_ast, enum_value->left);
+       EXTRACT_STRING(enum_name, enum_name_ast);
+  
+       bprintf(cg_header_output, "\n  %s__%s = ", name, enum_name);
+       eval_format_number(enum_name_ast->sem->value, cg_header_output);
+
+       if (type->sem->sem_type == SEM_TYPE_LONG_INTEGER) {
+         bprintf(cg_header_output, "L");
+       }
+       
+       if (enum_values->right) {
+         bprintf(cg_header_output, ",");
+       }
+  
+       enum_values = enum_values->right;
+    }
+    bprintf(cg_header_output, "\n};\n");
+  }
+  else {  
+    bprintf(cg_header_output, "\n// enum %s (floating point values)\n", name);
+    while (enum_values) {
+       EXTRACT_NOTNULL(enum_value, enum_values->left);
+       EXTRACT_ANY_NOTNULL(enum_name_ast, enum_value->left);
+       EXTRACT_STRING(enum_name, enum_name_ast);
+  
+       bprintf(cg_header_output, "#define %s__%s ", name, enum_name);
+       eval_format_number(enum_name_ast->sem->value, cg_header_output);
+       bprintf(cg_header_output, "\n");
+       
+       enum_values = enum_values->right;
+    }
+  }
+}
+
 // Declaring a cursor causes us to do the following:
 //  * emit a local variable for the cursor in the declarations section
 //  * emit cleanup logic for that local in the cleanup section
@@ -4547,6 +4605,7 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
     bool_t skip_comment = false;
     skip_comment |= is_ast_declare_func_stmt(stmt);
     skip_comment |= is_ast_declare_select_func_stmt(stmt);
+    skip_comment |= is_ast_declare_enum_stmt(stmt);
     skip_comment |= (!options.test && is_ast_echo_stmt(stmt));
     skip_comment |= entry->val == cg_no_op;
 
@@ -5625,7 +5684,6 @@ static void cg_c_init(void) {
 
   NO_OP_STMT_INIT(enforce_normal_stmt);
   NO_OP_STMT_INIT(enforce_strict_stmt);
-  NO_OP_STMT_INIT(declare_enum_stmt);
   NO_OP_STMT_INIT(declare_schema_region_stmt);
   NO_OP_STMT_INIT(declare_deployable_region_stmt);
   NO_OP_STMT_INIT(begin_schema_region_stmt);
@@ -5666,6 +5724,7 @@ static void cg_c_init(void) {
   STMT_INIT(assign);
   STMT_INIT(set_from_cursor);
   STMT_INIT(create_proc_stmt);
+  STMT_INIT(declare_enum_stmt);
   STMT_INIT(declare_proc_stmt);
   STMT_INIT(declare_func_stmt);
   STMT_INIT(declare_select_func_stmt);

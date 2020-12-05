@@ -91,6 +91,7 @@ DO                           { return DO; }
 NOTHING                      { return NOTHING; }
 UPDATE                       { return UPDATE; }
 DELETE                       { return DELETE; }
+CONST                        { return CONST; }
 CONSTRAINT                   { return CONSTRAINT; }
 UNIQUE                       { return UNIQUE; }
 PRIVATE                      { return PRIVATE; }

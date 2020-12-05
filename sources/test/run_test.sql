@@ -13,6 +13,17 @@ declare function blob_from_string(str text) create blob not null;
 declare function string_from_blob(b blob) create text not null;
 declare procedure cql_init_extensions() using transaction;
 
+declare enum floats real (
+   one = 1.0,
+   two = 2.0
+);
+
+declare enum longs long_int (
+   one = 1,
+   big = 0x100000000,
+   neg = -1
+);
+
 call cql_init_extensions();
 
 BEGIN_TEST(arithmetic)
@@ -25,6 +36,9 @@ BEGIN_TEST(arithmetic)
   EXPECT(-(1+3) == -4);
   EXPECT(-1+3 == 2);
   EXPECT(1+-3 == -2);
+  EXPECT(longs.neg == -1);
+  EXPECT(-longs.neg == 1);
+  EXPECT(- -longs.neg == -1);
 END_TEST(arithmetic)
 
 declare side_effect_0_count integer not null;
@@ -462,6 +476,10 @@ BEGIN_TEST(nested_select_expressions)
   declare temp_2 real;
   set temp_2 := (select avg(id) from mixed);
   EXPECT(temp_2 == 1.5);
+
+  EXPECT((select longs.neg) == -1);
+  EXPECT((select -longs.neg) == 1);
+  EXPECT((select - -longs.neg) == -1);
 END_TEST(nested_select_expressions)
 
 -- complex delete pattern

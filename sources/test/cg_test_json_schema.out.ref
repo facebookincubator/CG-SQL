@@ -2500,6 +2500,59 @@
       "version" : 2
     }
   ],
+  "enums" : [
+    
+    The statement ending at line XXXX
+    
+    DECLARE ENUM some_reals REAL (
+      one = 1.0,
+      e = 2.718,
+      pi = 3.14
+    )
+    
+    {
+      "name" : "some_reals",
+      "type" : "real",
+      "isNotNull" : 1,
+      "values" : [
+        {
+          "name" : "one",
+          "value" : 1.000000e+00
+        },
+        {
+          "name" : "e",
+          "value" : 2.718000e+00
+        },
+        {
+          "name" : "pi",
+          "value" : 3.140000e+00
+        }
+      ]
+    }
+    The statement ending at line XXXX
+    
+    DECLARE ENUM some_longs LONG_INT (
+      neg = -1000,
+      pos = 0x100010001000L
+    )
+    
+    ,
+    {
+      "name" : "some_longs",
+      "type" : "long",
+      "isNotNull" : 1,
+      "values" : [
+        {
+          "name" : "neg",
+          "value" : -1000
+        },
+        {
+          "name" : "pos",
+          "value" : 17592454483968
+        }
+      ]
+    }
+  ],
   "tableUsers" : {
     "Foo" : [ "a_query", "bigger_query", "insert_proc", "delete_proc", "delete_with_values", "update_proc", "update_with_proc", "dummy_insert_proc", "joiner", "use_view", "null_attribute" ],
     "T3" : [ "insert_with_select", "insert_compound", "insert_multi_value", "upsert_proc", "with_upsert_proc", "with_insert_proc" ],

@@ -397,6 +397,15 @@ create table adding_with_migrators_ok(
   id3 integer @create(3, create_me)
 ) @create(2);
 
+declare enum foo_enum integer (
+ a = 1,
+ b = 2
+);
+
+create table foo_with_check(
+ x integer check (x == foo_enum.a)
+);
+
 ------------------------------------------------------------------------------------------------------------
 @previous_schema;
 ------------------------------------------------------------------------------------------------------------
@@ -864,3 +873,14 @@ create table adding_with_migrators_ok(
   id integer primary key,
   id2 integer
 ) @create(2);
+
+declare enum foo_enum integer (
+ a = 10,
+ b = 2
+);
+
+-- TEST: the value of 'a' has changed
+-- + Error % table has a column that is different in the previous and current schema 'x'
+create table foo_with_check(
+ x integer check (x == foo_enum.a)
+);

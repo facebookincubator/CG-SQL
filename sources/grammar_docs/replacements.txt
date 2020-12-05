@@ -56,6 +56,7 @@ s/[[:<:]]COLLATE[[:>:]]/"COLLATE"/g
 s/[[:<:]]COLUMN[[:>:]]/"COLUMN"/g
 s/[[:<:]]COMMIT[[:>:]]/"COMMIT"/g
 s/[[:<:]]CONCAT[[:>:]]/"CONCAT"/g
+s/[[:<:]]CONST[[:>:]]/"CONST"/g
 s/[[:<:]]CONSTRAINT[[:>:]]/"CONSTRAINT"/g
 s/[[:<:]]CONTINUE[[:>:]]/"CONTINUE"/g
 s/[[:<:]]CREATE[[:>:]]/"CREATE"/g
@@ -74,6 +75,7 @@ s/[[:<:]]DISTINCTROW[[:>:]]/"DISTINCTROW"/g
 s/[[:<:]]DO[[:>:]]/"DO"/g
 s/[[:<:]]DROP[[:>:]]/"DROP"/g
 s/[[:<:]]ELSE[[:>:]]/"ELSE"/g
+s/[[:<:]]ENUM[[:>:]]/"ENUM"/g
 s/[[:<:]]IF[[:>:]]/"IF"/g
 s/[[:<:]]ELSE_IF[[:>:]]/"ELSE IF"/g
 s/[[:<:]]END[[:>:]]/"END"/g

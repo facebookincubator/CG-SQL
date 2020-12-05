@@ -45,7 +45,7 @@ static void gen_query_parts(ast_node *ast);
 static void gen_select_stmt(ast_node *_Nonnull ast);
 static void gen_opt_where_without_new_line(ast_node *ast);
 static void gen_opt_orderby(ast_node *ast);
-static void gen_cursor_arg(ast_node *ast);
+static void gen_shape_arg(ast_node *ast);
 static void gen_insert_list(ast_node *_Nullable ast);
 static void gen_column_spec(ast_node *ast);
 static void gen_from_cursor(ast_node *ast);
@@ -599,6 +599,33 @@ static void gen_unary(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   if (pri_new < pri) gen_printf(")");
 }
 
+static void gen_expr_const(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+  gen_printf("CONST(");
+  gen_expr(ast->left, pri_new);
+  gen_printf(")");
+}
+
+static void gen_uminus(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+  if (pri_new < pri) gen_printf("(");
+  gen_printf("%s", op);
+
+  // we don't ever want -- in the output because that's a comment
+  CHARBUF_OPEN(tmp);
+  charbuf *saved = output;
+  output = &tmp;
+  gen_expr(ast->left, pri_new);
+  output = saved;
+
+  if (tmp.ptr[0] == '-') {
+    gen_printf(" ");
+  }
+
+  gen_printf("%s", tmp.ptr);
+  CHARBUF_CLOSE(tmp);
+
+  if (pri_new < pri) gen_printf(")");
+}
+
 static void gen_concat(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_concat(ast));
 
@@ -616,8 +643,8 @@ static void gen_arg_expr(ast_node *ast) {
   else if (is_ast_from_arguments(ast)) {
     gen_from_arguments(ast);
   }
-  else if (is_ast_from_cursor(ast)) {
-    gen_cursor_arg(ast);
+  else if (is_ast_from_shape(ast)) {
+    gen_shape_arg(ast);
   }
   else {
     gen_root_expr(ast);
@@ -653,10 +680,10 @@ static void gen_expr_list(ast_node *ast) {
   }
 }
 
-static void gen_cursor_arg(ast_node *ast) {
-  Contract(is_ast_from_cursor(ast));
-  EXTRACT_STRING(cursor, ast->left);
-  gen_printf("FROM %s", cursor);
+static void gen_shape_arg(ast_node *ast) {
+  Contract(is_ast_from_shape(ast));
+  EXTRACT_STRING(shape, ast->left);
+  gen_printf("FROM %s", shape);
   if (ast->right) {
     gen_printf(" ");
     gen_shape_def(ast->right);
@@ -666,8 +693,8 @@ static void gen_cursor_arg(ast_node *ast) {
 static void gen_call_expr_list(ast_node *ast) {
   while (ast) {
     ast_node *left = ast->left;
-    if (is_ast_from_cursor(left)) {
-      gen_cursor_arg(left);
+    if (is_ast_from_shape(left)) {
+      gen_shape_arg(left);
     }
     else if (is_ast_from_arguments(left)) {
       gen_from_arguments(left);
@@ -3187,6 +3214,7 @@ cql_noexport void gen_init() {
   EXPR_INIT(blob, gen_expr_blob, "BLB", EXPR_PRI_ROOT);
   EXPR_INIT(null, gen_expr_null, "NULL", EXPR_PRI_ROOT);
   EXPR_INIT(dot, gen_expr_dot, "DOT", EXPR_PRI_ROOT);
+  EXPR_INIT(const, gen_expr_const, "CONST", EXPR_PRI_ROOT);
   EXPR_INIT(bin_and, gen_binary, "&", EXPR_PRI_BINARY);
   EXPR_INIT(bin_or, gen_binary, "|", EXPR_PRI_BINARY);
   EXPR_INIT(lshift, gen_binary, "<<", EXPR_PRI_BINARY);
@@ -3199,7 +3227,7 @@ cql_noexport void gen_init() {
   EXPR_INIT(not, gen_unary, "NOT ", EXPR_PRI_NOT);
   EXPR_INIT(tilde, gen_unary, "~", EXPR_PRI_TILDE);
   EXPR_INIT(collate, gen_binary, "COLLATE", EXPR_PRI_TILDE);
-  EXPR_INIT(uminus, gen_unary, "-", EXPR_PRI_TILDE);
+  EXPR_INIT(uminus, gen_uminus, "-", EXPR_PRI_TILDE);
   EXPR_INIT(eq, gen_binary, "=", EXPR_PRI_EQUALITY);
   EXPR_INIT(lt, gen_binary, "<", EXPR_PRI_INEQUALITY);
   EXPR_INIT(gt, gen_binary, ">", EXPR_PRI_INEQUALITY);

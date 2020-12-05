@@ -675,6 +675,7 @@ AST0(insert_or_abort);
 AST0(insert_or_fail);
 AST1(from_arguments);
 AST(from_cursor);
+AST(from_shape);
 AST(insert_dummy_spec);
 AST1(column_spec);
 AST0(star)
@@ -693,6 +694,7 @@ AST(misc_attrs)
 AST(misc_attr_value_list)
 AST(update_list)
 AST(update_entry)
+AST1(const)
 AST0(type_int)
 AST0(type_text)
 AST1(type_object)
