@@ -504,9 +504,9 @@ Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed i
 Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expression 'B'
 Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'C0'
 Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'C1'
-Error at test/sem_test.sql:XXXX : in str : CQL0170: cursor must be a value cursor, not a statement cursor 'C1'
-Error at test/sem_test.sql:XXXX : in str : CQL0058: in multiple select statements, all column names must be identical so they have unambiguous names 'B'
-Error at test/sem_test.sql:XXXX : in str : CQL0169: cannot fetch from a cursor without fields 'C0'
+Error at test/sem_test.sql:XXXX : in str : CQL0165: fetch values is only for value cursors, not for sqlite cursors 'C1'
+Error at test/sem_test.sql:XXXX : in columns_values : CQL0299: cursor has too few fields 'C0'
+Error at test/sem_test.sql:XXXX : in str : CQL0298: cannot read from a cursor without fields 'C0'
 Error at test/sem_test.sql:XXXX : in like : CQL0200: variable is not a cursor 'C0'
 Error at test/sem_test.sql:XXXX : in declare_cursor_like_name : CQL0197: duplicate variable name in the same scope 'C0'
 Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, table, or view 'C0'
@@ -777,8 +777,8 @@ Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in 
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'nth_value'
 Error at test/sem_test.sql:XXXX : in call : CQL0303: The second argument must be an integer between 1 and max integer in function 'nth_value'
 Error at test/sem_test.sql:XXXX : in from_cursor : CQL0297: FROM CURSOR is redundant if column list is empty
-Error at test/sem_test.sql:XXXX : in str : CQL0298: cannot insert from a cursor without fields 'fetch_cursor'
-Error at test/sem_test.sql:XXXX : in columns_values : CQL0299: cursor has too few fields for this insert 'small_cursor'
+Error at test/sem_test.sql:XXXX : in str : CQL0298: cannot read from a cursor without fields 'fetch_cursor'
+Error at test/sem_test.sql:XXXX : in columns_values : CQL0299: cursor has too few fields 'small_cursor'
 Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'X'
 Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expression 'x'
 Error at test/sem_test.sql:XXXX : in update_cursor_stmt : CQL0157: count of columns differs from count of values

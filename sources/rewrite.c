@@ -221,7 +221,7 @@ cql_noexport void rewrite_insert_list_from_cursor(ast_node *ast, ast_node *from_
 
   // from_cursor must have the columns
   if (!(cursor->sem->sem_type & SEM_TYPE_AUTO_CURSOR)) {
-    report_error(cursor, "CQL0298: cannot insert from a cursor without fields", cursor->sem->name);
+    report_error(cursor, "CQL0298: cannot read from a cursor without fields", cursor->sem->name);
     record_error(cursor);
     record_error(ast);
     return;
@@ -236,7 +236,7 @@ cql_noexport void rewrite_insert_list_from_cursor(ast_node *ast, ast_node *from_
   }
 
   if (provided_count < count) {
-    report_error(ast, "CQL0299: cursor has too few fields for this insert", cursor->sem->name);
+    report_error(ast, "CQL0299: cursor has too few fields", cursor->sem->name);
     record_error(ast);
     return;
   }

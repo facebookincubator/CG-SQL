@@ -1759,7 +1759,7 @@ begin
 end;
 
 -- TEST: fetch to a cursor from another cursor
--- + C1_._has_row_ = C0_._has_row_;
+-- + C1_._has_row_ = 1;
 -- + C1_.A = C0_.A;
 -- + cql_set_string_ref(&C1_.B, C0_.B);
 create proc fetch_to_cursor_from_cursor()

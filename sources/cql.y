@@ -221,7 +221,7 @@ static void cql_reset_globals(void);
 %type <aval> declare_stmt
 %type <aval> declare_enum_stmt enum_values enum_value
 %type <aval> echo_stmt
-%type <aval> fetch_stmt fetch_values_stmt fetch_call_stmt fetch_cursor_stmt from_cursor
+%type <aval> fetch_stmt fetch_values_stmt fetch_call_stmt from_cursor
 %type <aval> if_stmt elseif_item elseif_list opt_else opt_elseif_list proc_savepoint_stmt
 %type <aval> leave_stmt return_stmt
 %type <aval> loop_stmt
@@ -314,7 +314,6 @@ any_stmt: select_stmt
   | fetch_stmt
   | fetch_values_stmt
   | fetch_call_stmt
-  | fetch_cursor_stmt
   | while_stmt
   | loop_stmt
   | leave_stmt
@@ -1277,6 +1276,7 @@ opt_column_spec:
 
 from_cursor:
   FROM CURSOR name opt_column_spec  { $from_cursor = new_ast_from_cursor($opt_column_spec, $name); }
+  | FROM name opt_column_spec  { $from_cursor = new_ast_from_cursor($opt_column_spec, $name); }
   ;
 
 from_arguments:
@@ -1567,12 +1567,6 @@ fetch_call_stmt:
   FETCH name opt_column_spec FROM call_stmt  {
     YY_ERROR_ON_COLUMNS($opt_column_spec);  // not really allowed, see macro for details.
     $fetch_call_stmt = new_ast_fetch_call_stmt($name, $call_stmt); }
-  ;
-
-fetch_cursor_stmt:
-  FETCH name[n1] opt_column_spec FROM name[n2]  {
-    YY_ERROR_ON_COLUMNS($opt_column_spec);  // not really allowed, see macro for details.
-    $fetch_cursor_stmt = new_ast_fetch_cursor_stmt($n1, $n2); }
   ;
 
 open_stmt:

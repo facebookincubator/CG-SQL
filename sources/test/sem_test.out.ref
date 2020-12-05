@@ -19695,7 +19695,7 @@ BEGIN
   DECLARE C0 CURSOR LIKE SELECT 1 AS A, 2 AS B;
   DECLARE C1 CURSOR LIKE C0;
   FETCH C0(A, B) FROM VALUES(1, 2);
-  FETCH C1 FROM C0;
+  FETCH C1(A, B) FROM VALUES(C0.A, C0.B);
   OUT C1;
 END;
 
@@ -19743,9 +19743,23 @@ END;
       |       | {int 1}: integer notnull
       |       | {insert_list}
       |         | {int 2}: integer notnull
-      | {fetch_cursor_stmt}: ok
-      | | {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+      | {fetch_values_stmt}: ok
+      | | {name_columns_values}
+      |   | {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+      |   | {columns_values}: ok
+      |     | {column_spec}
+      |     | | {name_list}
+      |     |   | {name A}: A: integer notnull
+      |     |   | {name_list}
+      |     |     | {name B}: B: integer notnull
+      |     | {insert_list}
+      |       | {dot}: C0_.A: integer notnull variable
+      |       | | {name C0}
+      |       | | {name A}
+      |       | {insert_list}
+      |         | {dot}: C0_.B: integer notnull variable
+      |           | {name C0}
+      |           | {name B}
       | {out_stmt}: C1: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
         | {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
 
@@ -19755,7 +19769,7 @@ CREATE PROC fetch_to_cursor_from_invalid_cursor ()
 BEGIN
   DECLARE C0 INTEGER;
   DECLARE C1 CURSOR LIKE SELECT 1 AS A, 2 AS B;
-  FETCH C1 FROM C0;
+  FETCH C1(A, B) FROM C0;
   OUT C1;
 END;
 
@@ -19792,9 +19806,17 @@ Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'C0
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_cursor_stmt}: err
-      | | {name C1}
-      | | {name C0}: err
+      | {fetch_values_stmt}: err
+      | | {name_columns_values}
+      |   | {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+      |   | {columns_values}: ok
+      |     | {column_spec}
+      |     | | {name_list}
+      |     |   | {name A}
+      |     |   | {name_list}
+      |     |     | {name B}
+      |     | {from_cursor}
+      |       | {name C0}: err
       | {out_stmt}: C1: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
         | {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
 
@@ -19854,9 +19876,12 @@ Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'C1
       |       | {int 1}: integer notnull
       |       | {insert_list}
       |         | {int 2}: integer notnull
-      | {fetch_cursor_stmt}: err
-        | {name C1}: err
-        | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+      | {fetch_values_stmt}: err
+        | {name_columns_values}
+          | {name C1}: err
+          | {columns_values}
+            | {from_cursor}
+              | {name C0}
 
 The statement ending at line XXXX
 
@@ -19868,7 +19893,7 @@ BEGIN
   FETCH C1 FROM C0;
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0170: cursor must be a value cursor, not a statement cursor 'C1'
+Error at test/sem_test.sql:XXXX : in str : CQL0165: fetch values is only for value cursors, not for sqlite cursors 'C1'
 
   {create_proc_stmt}: err
   | {name fetch_to_statement_cursor_from_cursor}: err
@@ -19933,21 +19958,24 @@ Error at test/sem_test.sql:XXXX : in str : CQL0170: cursor must be a value curso
       |       | {int 1}: integer notnull
       |       | {insert_list}
       |         | {int 2}: integer notnull
-      | {fetch_cursor_stmt}: err
-        | {name C1}: err
-        | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+      | {fetch_values_stmt}: err
+        | {name_columns_values}
+          | {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable
+          | {columns_values}
+            | {from_cursor}
+              | {name C0}
 
 The statement ending at line XXXX
 
 CREATE PROC fetch_to_cursor_from_cursor_with_different_columns ()
 BEGIN
   DECLARE C0 CURSOR LIKE SELECT 1 AS A, 2 AS B;
-  DECLARE C1 CURSOR LIKE SELECT 1 AS A, 2 AS C;
+  DECLARE C1 CURSOR LIKE SELECT 1 AS A, 2 AS B, 3 AS C;
   FETCH C0(A, B) FROM VALUES(1, 2);
-  FETCH C1 FROM C0;
+  FETCH C1(A, B, C) FROM C0(A, B);
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0058: in multiple select statements, all column names must be identical so they have unambiguous names 'B'
+Error at test/sem_test.sql:XXXX : in columns_values : CQL0299: cursor has too few fields 'C0'
 
   {create_proc_stmt}: err
   | {name fetch_to_cursor_from_cursor_with_different_columns}: err
@@ -19976,22 +20004,27 @@ Error at test/sem_test.sql:XXXX : in str : CQL0058: in multiple select statement
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {declare_cursor_like_select}: C1: select: { A: integer notnull, C: integer notnull } variable auto_cursor value_cursor
-      | | {name C1}: C1: select: { A: integer notnull, C: integer notnull } variable auto_cursor value_cursor
-      | | {select_stmt}: select: { A: integer notnull, C: integer notnull }
-      |   | {select_core_list}: select: { A: integer notnull, C: integer notnull }
-      |   | | {select_core}: select: { A: integer notnull, C: integer notnull }
-      |   |   | {select_expr_list_con}: select: { A: integer notnull, C: integer notnull }
-      |   |     | {select_expr_list}: select: { A: integer notnull, C: integer notnull }
+      | {declare_cursor_like_select}: C1: select: { A: integer notnull, B: integer notnull, C: integer notnull } variable auto_cursor value_cursor
+      | | {name C1}: C1: select: { A: integer notnull, B: integer notnull, C: integer notnull } variable auto_cursor value_cursor
+      | | {select_stmt}: select: { A: integer notnull, B: integer notnull, C: integer notnull }
+      |   | {select_core_list}: select: { A: integer notnull, B: integer notnull, C: integer notnull }
+      |   | | {select_core}: select: { A: integer notnull, B: integer notnull, C: integer notnull }
+      |   |   | {select_expr_list_con}: select: { A: integer notnull, B: integer notnull, C: integer notnull }
+      |   |     | {select_expr_list}: select: { A: integer notnull, B: integer notnull, C: integer notnull }
       |   |     | | {select_expr}: A: integer notnull
       |   |     | | | {int 1}: integer notnull
       |   |     | | | {opt_as_alias}
       |   |     | |   | {name A}
       |   |     | | {select_expr_list}
-      |   |     |   | {select_expr}: C: integer notnull
-      |   |     |     | {int 2}: integer notnull
-      |   |     |     | {opt_as_alias}
-      |   |     |       | {name C}
+      |   |     |   | {select_expr}: B: integer notnull
+      |   |     |   | | {int 2}: integer notnull
+      |   |     |   | | {opt_as_alias}
+      |   |     |   |   | {name B}
+      |   |     |   | {select_expr_list}
+      |   |     |     | {select_expr}: C: integer notnull
+      |   |     |       | {int 3}: integer notnull
+      |   |     |       | {opt_as_alias}
+      |   |     |         | {name C}
       |   |     | {select_from_etc}: ok
       |   |       | {select_where}
       |   |         | {select_groupby}
@@ -20012,9 +20045,24 @@ Error at test/sem_test.sql:XXXX : in str : CQL0058: in multiple select statement
       |       | {int 1}: integer notnull
       |       | {insert_list}
       |         | {int 2}: integer notnull
-      | {fetch_cursor_stmt}: err
-        | {name C1}: err
-        | {name C0}: err
+      | {fetch_values_stmt}: err
+        | {name_columns_values}
+          | {name C1}: C1: select: { A: integer notnull, B: integer notnull, C: integer notnull } variable auto_cursor value_cursor
+          | {columns_values}: err
+            | {column_spec}
+            | | {name_list}
+            |   | {name A}
+            |   | {name_list}
+            |     | {name B}
+            |     | {name_list}
+            |       | {name C}
+            | {from_cursor}: ok
+              | {column_spec}
+              | | {name_list}
+              |   | {name A}
+              |   | {name_list}
+              |     | {name B}
+              | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
 
 The statement ending at line XXXX
 
@@ -20025,10 +20073,10 @@ BEGIN
   DECLARE C0 CURSOR FOR SELECT 1 AS A, 2.5;
   DECLARE C1 CURSOR LIKE C0;
   FETCH C0 INTO X, Y;
-  FETCH C1 FROM C0;
+  FETCH C1(A, _anon) FROM C0(A, _anon);
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0169: cannot fetch from a cursor without fields 'C0'
+Error at test/sem_test.sql:XXXX : in str : CQL0298: cannot read from a cursor without fields 'C0'
 
   {create_proc_stmt}: err
   | {name fetch_to_cursor_from_cursor_without_fields}: err
@@ -20073,9 +20121,22 @@ Error at test/sem_test.sql:XXXX : in str : CQL0169: cannot fetch from a cursor w
       |   | {name X}: X: integer variable
       |   | {name_list}
       |     | {name Y}: Y: real variable
-      | {fetch_cursor_stmt}: err
-        | {name C1}
-        | {name C0}: err
+      | {fetch_values_stmt}: err
+        | {name_columns_values}
+          | {name C1}: C1: select: { A: integer notnull, _anon: real notnull } variable auto_cursor value_cursor
+          | {columns_values}: err
+            | {column_spec}
+            | | {name_list}
+            |   | {name A}
+            |   | {name_list}
+            |     | {name _anon}
+            | {from_cursor}: ok
+              | {column_spec}
+              | | {name_list}
+              |   | {name A}
+              |   | {name_list}
+              |     | {name _anon}
+              | {name C0}: err
 
 The statement ending at line XXXX
 
@@ -42948,7 +43009,7 @@ INSERT INTO referenceable(a, b, c, d, e) VALUES(c_bar.a, c_bar.b, c_bar.c, c_bar
 
 The statement ending at line XXXX
 
-INSERT INTO referenceable() FROM CURSOR c_bar;
+INSERT INTO referenceable() FROM c_bar;
 
 Error at test/sem_test.sql:XXXX : in from_cursor : CQL0297: FROM CURSOR is redundant if column list is empty
 
@@ -42963,9 +43024,9 @@ Error at test/sem_test.sql:XXXX : in from_cursor : CQL0297: FROM CURSOR is redun
 
 The statement ending at line XXXX
 
-INSERT INTO referenceable(a, b, c, d, e) FROM CURSOR fetch_cursor(_anon, _anon, _anon);
+INSERT INTO referenceable(a, b, c, d, e) FROM fetch_cursor(_anon, _anon, _anon);
 
-Error at test/sem_test.sql:XXXX : in str : CQL0298: cannot insert from a cursor without fields 'fetch_cursor'
+Error at test/sem_test.sql:XXXX : in str : CQL0298: cannot read from a cursor without fields 'fetch_cursor'
 
   {insert_stmt}: err
   | {insert_normal}
@@ -43018,9 +43079,9 @@ DECLARE small_cursor CURSOR LIKE SELECT 1 AS x;
 
 The statement ending at line XXXX
 
-INSERT INTO referenceable(a, b, c, d, e) FROM CURSOR small_cursor(x);
+INSERT INTO referenceable(a, b, c, d, e) FROM small_cursor(x);
 
-Error at test/sem_test.sql:XXXX : in columns_values : CQL0299: cursor has too few fields for this insert 'small_cursor'
+Error at test/sem_test.sql:XXXX : in columns_values : CQL0299: cursor has too few fields 'small_cursor'
 
   {insert_stmt}: err
   | {insert_normal}
@@ -43046,7 +43107,7 @@ Error at test/sem_test.sql:XXXX : in columns_values : CQL0299: cursor has too fe
 
 The statement ending at line XXXX
 
-INSERT INTO referenceable(a, b, c, d, e) FROM CURSOR X;
+INSERT INTO referenceable(a, b, c, d, e) FROM X;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'X'
 
@@ -43535,7 +43596,7 @@ UPDATE CURSOR nully_cursor(c1, c7) FROM VALUES(c1c7.c1, c1c7.c7);
 
 The statement ending at line XXXX
 
-UPDATE CURSOR nully_cursor(c1, c7) FROM CURSOR not_a_symbol;
+UPDATE CURSOR nully_cursor(c1, c7) FROM not_a_symbol;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0204: cursor not found 'not_a_symbol'
 
@@ -43660,7 +43721,7 @@ FETCH nully_cursor(c1, c7, c2, c3, c4, c5, c6, c8, c9, c10) FROM VALUES(c1c7.c1,
 
 The statement ending at line XXXX
 
-FETCH nully_cursor(c1, c7) FROM CURSOR not_a_symbol;
+FETCH nully_cursor(c1, c7) FROM not_a_symbol;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0204: cursor not found 'not_a_symbol'
 
@@ -43800,7 +43861,7 @@ FETCH c1c7(c1, c7) FROM VALUES(nully_cursor.c1, nully_cursor.c7);
 
 The statement ending at line XXXX
 
-FETCH c1c7(c1, c7) FROM CURSOR nully_cursor(LIKE not_a_symbol);
+FETCH c1c7(c1, c7) FROM nully_cursor(LIKE not_a_symbol);
 
 Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, table, or view 'not_a_symbol'
 

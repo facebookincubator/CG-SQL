@@ -2027,7 +2027,7 @@ static void gen_from_cursor(ast_node *ast) {
   Contract(is_ast_from_cursor(ast));
   EXTRACT_STRING(cursor_name, ast->right);
   EXTRACT_ANY(column_spec, ast->left);
-  gen_printf("FROM CURSOR %s", cursor_name);
+  gen_printf("FROM %s", cursor_name);
   gen_column_spec(column_spec);
 }
 
@@ -2700,14 +2700,6 @@ static void gen_fetch_stmt(ast_node *ast) {
   }
 }
 
-static void gen_fetch_cursor_stmt(ast_node *ast) {
-  Contract(is_ast_fetch_cursor_stmt(ast));
-  EXTRACT_STRING(to_cursor_name, ast->left);
-  EXTRACT_STRING(from_cursor_name, ast->right);
-
-  gen_printf("FETCH %s FROM %s", to_cursor_name, from_cursor_name);
-}
-
 static void gen_while_stmt(ast_node *ast) {
   Contract(is_ast_while_stmt(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
@@ -3174,7 +3166,6 @@ cql_noexport void gen_init() {
   STMT_INIT(upsert_update);
   STMT_INIT(conflict_target);
   STMT_INIT(fetch_values_stmt);
-  STMT_INIT(fetch_cursor_stmt);
   STMT_INIT(declare_enum_stmt);
   STMT_INIT(declare_cursor);
   STMT_INIT(declare_cursor_like_name);
