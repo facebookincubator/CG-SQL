@@ -776,7 +776,7 @@ Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in 
 Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'nth_value'
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'nth_value'
 Error at test/sem_test.sql:XXXX : in call : CQL0303: The second argument must be an integer between 1 and max integer in function 'nth_value'
-Error at test/sem_test.sql:XXXX : in from_cursor : CQL0297: FROM CURSOR is redundant if column list is empty
+Error at test/sem_test.sql:XXXX : in from_cursor : CQL0297: FROM [shape] is redundant if column list is empty
 Error at test/sem_test.sql:XXXX : in str : CQL0298: cannot read from a cursor without fields 'fetch_cursor'
 Error at test/sem_test.sql:XXXX : in columns_values : CQL0299: cursor has too few fields 'small_cursor'
 Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'X'
@@ -938,4 +938,7 @@ Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in 
 Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'sum'
 Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'sum'
 Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'sum'
+Error at test/sem_test.sql:XXXX : in dot : CQL0012: incompatible types in expression 'a'
+Error at test/sem_test.sql:XXXX : in dot : CQL0009: incompatible types in expression 'b'
+Error at test/sem_test.sql:XXXX : in dot : CQL0009: incompatible types in expression 'b'
 semantic errors present; no code gen.

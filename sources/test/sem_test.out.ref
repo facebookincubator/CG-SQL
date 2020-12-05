@@ -43011,7 +43011,7 @@ The statement ending at line XXXX
 
 INSERT INTO referenceable() FROM c_bar;
 
-Error at test/sem_test.sql:XXXX : in from_cursor : CQL0297: FROM CURSOR is redundant if column list is empty
+Error at test/sem_test.sql:XXXX : in from_cursor : CQL0297: FROM [shape] is redundant if column list is empty
 
   {insert_stmt}: err
   | {insert_normal}
@@ -52005,4 +52005,844 @@ Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in 
   | {select_orderby}
     | {select_limit}
       | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE TABLE AB(
+  a INTEGER,
+  b TEXT
+);
+
+  {create_table_stmt}: AB: { a: integer, b: text }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name AB}
+  | {col_key_list}
+    | {col_def}: a: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name a}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: b: text
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+            | {name b}
+            | {type_text}: text
+
+The statement ending at line XXXX
+
+CREATE TABLE CD(
+  c INTEGER,
+  d TEXT
+);
+
+  {create_table_stmt}: CD: { c: integer, d: text }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name CD}
+  | {col_key_list}
+    | {col_def}: c: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name c}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: d: text
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+            | {name d}
+            | {type_text}: text
+
+The statement ending at line XXXX
+
+CREATE TABLE BA(
+  b INTEGER,
+  a TEXT
+);
+
+  {create_table_stmt}: BA: { b: integer, a: text }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name BA}
+  | {col_key_list}
+    | {col_def}: b: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name b}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: a: text
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+            | {name a}
+            | {type_text}: text
+
+The statement ending at line XXXX
+
+DECLARE PROC use_c () (c INTEGER);
+
+  {declare_proc_stmt}: select: { c: integer } dml_proc
+  | {proc_name_type}
+  | | {name use_c}: select: { c: integer } dml_proc
+  | | {int 3}
+  | {proc_params_stmts}
+    | {typed_names}: select: { c: integer }
+      | {typed_name}: c: integer
+        | {name c}
+        | {type_int}: c: integer
+
+The statement ending at line XXXX
+
+CREATE PROC arg_bundle_1 (a1_a INTEGER, a1_b TEXT, a2_c INTEGER, a2_d TEXT)
+BEGIN
+  INSERT INTO AB(a) VALUES(a2.c);
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name arg_bundle_1}: ok dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a1_a: integer variable in
+    | | | {param_detail}: a1_a: integer variable in
+    | |   | {name a1_a}: a1_a: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: a1_b: text variable in
+    |   | | {param_detail}: a1_b: text variable in
+    |   |   | {name a1_b}: a1_b: text variable in
+    |   |   | {type_text}: text
+    |   | {params}
+    |     | {param}: a2_c: integer variable in
+    |     | | {param_detail}: a2_c: integer variable in
+    |     |   | {name a2_c}: a2_c: integer variable in
+    |     |   | {type_int}: integer
+    |     | {params}
+    |       | {param}: a2_d: text variable in
+    |         | {param_detail}: a2_d: text variable in
+    |           | {name a2_d}: a2_d: text variable in
+    |           | {type_text}: text
+    | {stmt_list}: ok
+      | {insert_stmt}: ok
+        | {insert_normal}
+        | {name_columns_values}
+          | {name AB}: AB: { a: integer, b: text }
+          | {columns_values}: ok
+            | {column_spec}
+            | | {name_list}
+            |   | {name a}: a: integer
+            | {insert_list}
+              | {dot}: a2_c: integer variable
+                | {name a2}
+                | {name c}
+
+The statement ending at line XXXX
+
+CREATE PROC arg_bundle_2 (a1_a INTEGER, a1_b TEXT, a2_c INTEGER, a2_d TEXT)
+BEGIN
+  INSERT INTO AB(a) VALUES(a2.c);
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name arg_bundle_2}: ok dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a1_a: integer variable in
+    | | | {param_detail}: a1_a: integer variable in
+    | |   | {name a1_a}: a1_a: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: a1_b: text variable in
+    |   | | {param_detail}: a1_b: text variable in
+    |   |   | {name a1_b}: a1_b: text variable in
+    |   |   | {type_text}: text
+    |   | {params}
+    |     | {param}: a2_c: integer variable in
+    |     | | {param_detail}: a2_c: integer variable in
+    |     |   | {name a2_c}: a2_c: integer variable in
+    |     |   | {type_int}: integer
+    |     | {params}
+    |       | {param}: a2_d: text variable in
+    |         | {param_detail}: a2_d: text variable in
+    |           | {name a2_d}: a2_d: text variable in
+    |           | {type_text}: text
+    | {stmt_list}: ok
+      | {insert_stmt}: ok
+        | {insert_normal}
+        | {name_columns_values}
+          | {name AB}: AB: { a: integer, b: text }
+          | {columns_values}: ok
+            | {column_spec}
+            | | {name_list}
+            |   | {name a}: a: integer
+            | {insert_list}
+              | {dot}: a2_c: integer variable
+                | {name a2}
+                | {name c}
+
+The statement ending at line XXXX
+
+CREATE PROC arg_bundle_3 (a1_a INTEGER, a1_b TEXT, a2_c INTEGER, a2_d TEXT)
+BEGIN
+  INSERT INTO AB(a) VALUES(a2.c);
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name arg_bundle_3}: ok dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a1_a: integer variable in
+    | | | {param_detail}: a1_a: integer variable in
+    | |   | {name a1_a}: a1_a: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: a1_b: text variable in
+    |   | | {param_detail}: a1_b: text variable in
+    |   |   | {name a1_b}: a1_b: text variable in
+    |   |   | {type_text}: text
+    |   | {params}
+    |     | {param}: a2_c: integer variable in
+    |     | | {param_detail}: a2_c: integer variable in
+    |     |   | {name a2_c}: a2_c: integer variable in
+    |     |   | {type_int}: integer
+    |     | {params}
+    |       | {param}: a2_d: text variable in
+    |         | {param_detail}: a2_d: text variable in
+    |           | {name a2_d}: a2_d: text variable in
+    |           | {type_text}: text
+    | {stmt_list}: ok
+      | {insert_stmt}: ok
+        | {insert_normal}
+        | {name_columns_values}
+          | {name AB}: AB: { a: integer, b: text }
+          | {columns_values}: ok
+            | {column_spec}
+            | | {name_list}
+            |   | {name a}: a: integer
+            | {insert_list}
+              | {dot}: a2_c: integer variable
+                | {name a2}
+                | {name c}
+
+The statement ending at line XXXX
+
+CREATE PROC arg_bundle_4 (a1_a INTEGER, a1_b TEXT, a2_c INTEGER, a2_d TEXT)
+BEGIN
+  INSERT INTO AB(a, b) VALUES(a1.a, a1.b);
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name arg_bundle_4}: ok dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a1_a: integer variable in
+    | | | {param_detail}: a1_a: integer variable in
+    | |   | {name a1_a}: a1_a: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: a1_b: text variable in
+    |   | | {param_detail}: a1_b: text variable in
+    |   |   | {name a1_b}: a1_b: text variable in
+    |   |   | {type_text}: text
+    |   | {params}
+    |     | {param}: a2_c: integer variable in
+    |     | | {param_detail}: a2_c: integer variable in
+    |     |   | {name a2_c}: a2_c: integer variable in
+    |     |   | {type_int}: integer
+    |     | {params}
+    |       | {param}: a2_d: text variable in
+    |         | {param_detail}: a2_d: text variable in
+    |           | {name a2_d}: a2_d: text variable in
+    |           | {type_text}: text
+    | {stmt_list}: ok
+      | {insert_stmt}: ok
+        | {insert_normal}
+        | {name_columns_values}
+          | {name AB}: AB: { a: integer, b: text }
+          | {columns_values}: ok
+            | {column_spec}
+            | | {name_list}
+            |   | {name a}: a: integer
+            |   | {name_list}
+            |     | {name b}: b: text
+            | {insert_list}
+              | {dot}: a1_a: integer variable
+              | | {name a1}
+              | | {name a}
+              | {insert_list}
+                | {dot}: a1_b: text variable
+                  | {name a1}
+                  | {name b}
+
+The statement ending at line XXXX
+
+CREATE PROC arg_bundle_5 (a1_a INTEGER, a1_b TEXT, a2_c INTEGER, a2_d TEXT)
+BEGIN
+  INSERT INTO AB(a, b) VALUES(a1.b, a1.a);
+END;
+
+Error at test/sem_test.sql:XXXX : in dot : CQL0012: incompatible types in expression 'a'
+
+  {create_proc_stmt}: err
+  | {name arg_bundle_5}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a1_a: integer variable in
+    | | | {param_detail}: a1_a: integer variable in
+    | |   | {name a1_a}: a1_a: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: a1_b: text variable in
+    |   | | {param_detail}: a1_b: text variable in
+    |   |   | {name a1_b}: a1_b: text variable in
+    |   |   | {type_text}: text
+    |   | {params}
+    |     | {param}: a2_c: integer variable in
+    |     | | {param_detail}: a2_c: integer variable in
+    |     |   | {name a2_c}: a2_c: integer variable in
+    |     |   | {type_int}: integer
+    |     | {params}
+    |       | {param}: a2_d: text variable in
+    |         | {param_detail}: a2_d: text variable in
+    |           | {name a2_d}: a2_d: text variable in
+    |           | {type_text}: text
+    | {stmt_list}: err
+      | {insert_stmt}: err
+        | {insert_normal}
+        | {name_columns_values}
+          | {name AB}: AB: { a: integer, b: text }
+          | {columns_values}: ok
+            | {column_spec}
+            | | {name_list}
+            |   | {name a}: a: integer
+            |   | {name_list}
+            |     | {name b}: b: text
+            | {insert_list}
+              | {dot}: err
+              | | {name a1}
+              | | {name b}
+              | {insert_list}
+                | {dot}
+                  | {name a1}
+                  | {name a}
+
+The statement ending at line XXXX
+
+CREATE PROC arg_bundle_6 (a1_a INTEGER, a1_b TEXT, a2_c INTEGER, a2_d TEXT)
+BEGIN
+  INSERT INTO AB(b, a) VALUES(a1.b, a1.a);
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name arg_bundle_6}: ok dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a1_a: integer variable in
+    | | | {param_detail}: a1_a: integer variable in
+    | |   | {name a1_a}: a1_a: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: a1_b: text variable in
+    |   | | {param_detail}: a1_b: text variable in
+    |   |   | {name a1_b}: a1_b: text variable in
+    |   |   | {type_text}: text
+    |   | {params}
+    |     | {param}: a2_c: integer variable in
+    |     | | {param_detail}: a2_c: integer variable in
+    |     |   | {name a2_c}: a2_c: integer variable in
+    |     |   | {type_int}: integer
+    |     | {params}
+    |       | {param}: a2_d: text variable in
+    |         | {param_detail}: a2_d: text variable in
+    |           | {name a2_d}: a2_d: text variable in
+    |           | {type_text}: text
+    | {stmt_list}: ok
+      | {insert_stmt}: ok
+        | {insert_normal}
+        | {name_columns_values}
+          | {name AB}: AB: { a: integer, b: text }
+          | {columns_values}: ok
+            | {column_spec}
+            | | {name_list}
+            |   | {name b}: b: text
+            |   | {name_list}
+            |     | {name a}: a: integer
+            | {insert_list}
+              | {dot}: a1_b: text variable
+              | | {name a1}
+              | | {name b}
+              | {insert_list}
+                | {dot}: a1_a: integer variable
+                  | {name a1}
+                  | {name a}
+
+The statement ending at line XXXX
+
+CREATE PROC arg_bundle_7 (a1_a INTEGER, a1_b TEXT, a2_c INTEGER, a2_d TEXT)
+BEGIN
+  INSERT INTO AB(a, b) VALUES(a2.c, a2.d);
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name arg_bundle_7}: ok dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a1_a: integer variable in
+    | | | {param_detail}: a1_a: integer variable in
+    | |   | {name a1_a}: a1_a: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: a1_b: text variable in
+    |   | | {param_detail}: a1_b: text variable in
+    |   |   | {name a1_b}: a1_b: text variable in
+    |   |   | {type_text}: text
+    |   | {params}
+    |     | {param}: a2_c: integer variable in
+    |     | | {param_detail}: a2_c: integer variable in
+    |     |   | {name a2_c}: a2_c: integer variable in
+    |     |   | {type_int}: integer
+    |     | {params}
+    |       | {param}: a2_d: text variable in
+    |         | {param_detail}: a2_d: text variable in
+    |           | {name a2_d}: a2_d: text variable in
+    |           | {type_text}: text
+    | {stmt_list}: ok
+      | {insert_stmt}: ok
+        | {insert_normal}
+        | {name_columns_values}
+          | {name AB}: AB: { a: integer, b: text }
+          | {columns_values}: ok
+            | {column_spec}
+            | | {name_list}
+            |   | {name a}: a: integer
+            |   | {name_list}
+            |     | {name b}: b: text
+            | {insert_list}
+              | {dot}: a2_c: integer variable
+              | | {name a2}
+              | | {name c}
+              | {insert_list}
+                | {dot}: a2_d: text variable
+                  | {name a2}
+                  | {name d}
+
+The statement ending at line XXXX
+
+CREATE PROC arg_bundle_8 (a1_a INTEGER, a1_b TEXT, a2_c INTEGER, a2_d TEXT)
+BEGIN
+  INSERT INTO AB(b, a) VALUES(a1.a, a1.b);
+END;
+
+Error at test/sem_test.sql:XXXX : in dot : CQL0009: incompatible types in expression 'b'
+
+  {create_proc_stmt}: err
+  | {name arg_bundle_8}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a1_a: integer variable in
+    | | | {param_detail}: a1_a: integer variable in
+    | |   | {name a1_a}: a1_a: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: a1_b: text variable in
+    |   | | {param_detail}: a1_b: text variable in
+    |   |   | {name a1_b}: a1_b: text variable in
+    |   |   | {type_text}: text
+    |   | {params}
+    |     | {param}: a2_c: integer variable in
+    |     | | {param_detail}: a2_c: integer variable in
+    |     |   | {name a2_c}: a2_c: integer variable in
+    |     |   | {type_int}: integer
+    |     | {params}
+    |       | {param}: a2_d: text variable in
+    |         | {param_detail}: a2_d: text variable in
+    |           | {name a2_d}: a2_d: text variable in
+    |           | {type_text}: text
+    | {stmt_list}: err
+      | {insert_stmt}: err
+        | {insert_normal}
+        | {name_columns_values}
+          | {name AB}: AB: { a: integer, b: text }
+          | {columns_values}: ok
+            | {column_spec}
+            | | {name_list}
+            |   | {name b}: b: text
+            |   | {name_list}
+            |     | {name a}: a: integer
+            | {insert_list}
+              | {dot}: err
+              | | {name a1}
+              | | {name a}
+              | {insert_list}
+                | {dot}
+                  | {name a1}
+                  | {name b}
+
+The statement ending at line XXXX
+
+CREATE PROC arg_bundle_9 (a1_a INTEGER, a1_b TEXT, a2_c INTEGER, a2_d TEXT)
+BEGIN
+  INSERT INTO AB(b, a) VALUES(a2.c, a2.d);
+END;
+
+Error at test/sem_test.sql:XXXX : in dot : CQL0009: incompatible types in expression 'b'
+
+  {create_proc_stmt}: err
+  | {name arg_bundle_9}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a1_a: integer variable in
+    | | | {param_detail}: a1_a: integer variable in
+    | |   | {name a1_a}: a1_a: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: a1_b: text variable in
+    |   | | {param_detail}: a1_b: text variable in
+    |   |   | {name a1_b}: a1_b: text variable in
+    |   |   | {type_text}: text
+    |   | {params}
+    |     | {param}: a2_c: integer variable in
+    |     | | {param_detail}: a2_c: integer variable in
+    |     |   | {name a2_c}: a2_c: integer variable in
+    |     |   | {type_int}: integer
+    |     | {params}
+    |       | {param}: a2_d: text variable in
+    |         | {param_detail}: a2_d: text variable in
+    |           | {name a2_d}: a2_d: text variable in
+    |           | {type_text}: text
+    | {stmt_list}: err
+      | {insert_stmt}: err
+        | {insert_normal}
+        | {name_columns_values}
+          | {name AB}: AB: { a: integer, b: text }
+          | {columns_values}: ok
+            | {column_spec}
+            | | {name_list}
+            |   | {name b}: b: text
+            |   | {name_list}
+            |     | {name a}: a: integer
+            | {insert_list}
+              | {dot}: err
+              | | {name a2}
+              | | {name c}
+              | {insert_list}
+                | {dot}
+                  | {name a2}
+                  | {name d}
+
+The statement ending at line XXXX
+
+CREATE PROC arg_bundle_10 (a1_a INTEGER, a1_b TEXT, a2_c INTEGER, a2_d TEXT)
+BEGIN
+  DECLARE C CURSOR LIKE AB;
+  FETCH C(a, b) FROM VALUES(a2.c, a2.d);
+END;
+
+  {create_proc_stmt}: ok
+  | {name arg_bundle_10}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a1_a: integer variable in
+    | | | {param_detail}: a1_a: integer variable in
+    | |   | {name a1_a}: a1_a: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: a1_b: text variable in
+    |   | | {param_detail}: a1_b: text variable in
+    |   |   | {name a1_b}: a1_b: text variable in
+    |   |   | {type_text}: text
+    |   | {params}
+    |     | {param}: a2_c: integer variable in
+    |     | | {param_detail}: a2_c: integer variable in
+    |     |   | {name a2_c}: a2_c: integer variable in
+    |     |   | {type_int}: integer
+    |     | {params}
+    |       | {param}: a2_d: text variable in
+    |         | {param_detail}: a2_d: text variable in
+    |           | {name a2_d}: a2_d: text variable in
+    |           | {type_text}: text
+    | {stmt_list}: ok
+      | {declare_cursor_like_name}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
+      | | {name C}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
+      | | {like}: AB: { a: integer, b: text }
+      |   | {name AB}: AB: { a: integer, b: text }
+      | {fetch_values_stmt}: ok
+        | {name_columns_values}
+          | {name C}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
+          | {columns_values}: ok
+            | {column_spec}
+            | | {name_list}
+            |   | {name a}: a: integer
+            |   | {name_list}
+            |     | {name b}: b: text
+            | {insert_list}
+              | {dot}: a2_c: integer variable
+              | | {name a2}
+              | | {name c}
+              | {insert_list}
+                | {dot}: a2_d: text variable
+                  | {name a2}
+                  | {name d}
+
+The statement ending at line XXXX
+
+CREATE PROC arg_bundle_11 (a1_a INTEGER, a1_b TEXT, a2_c INTEGER, a2_d TEXT)
+BEGIN
+  DECLARE C CURSOR LIKE AB;
+  FETCH C(a, b) FROM VALUES(a1.a, a1.b);
+END;
+
+  {create_proc_stmt}: ok
+  | {name arg_bundle_11}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a1_a: integer variable in
+    | | | {param_detail}: a1_a: integer variable in
+    | |   | {name a1_a}: a1_a: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: a1_b: text variable in
+    |   | | {param_detail}: a1_b: text variable in
+    |   |   | {name a1_b}: a1_b: text variable in
+    |   |   | {type_text}: text
+    |   | {params}
+    |     | {param}: a2_c: integer variable in
+    |     | | {param_detail}: a2_c: integer variable in
+    |     |   | {name a2_c}: a2_c: integer variable in
+    |     |   | {type_int}: integer
+    |     | {params}
+    |       | {param}: a2_d: text variable in
+    |         | {param_detail}: a2_d: text variable in
+    |           | {name a2_d}: a2_d: text variable in
+    |           | {type_text}: text
+    | {stmt_list}: ok
+      | {declare_cursor_like_name}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
+      | | {name C}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
+      | | {like}: AB: { a: integer, b: text }
+      |   | {name AB}: AB: { a: integer, b: text }
+      | {fetch_values_stmt}: ok
+        | {name_columns_values}
+          | {name C}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
+          | {columns_values}: ok
+            | {column_spec}
+            | | {name_list}
+            |   | {name a}: a: integer
+            |   | {name_list}
+            |     | {name b}: b: text
+            | {insert_list}
+              | {dot}: a1_a: integer variable
+              | | {name a1}
+              | | {name a}
+              | {insert_list}
+                | {dot}: a1_b: text variable
+                  | {name a1}
+                  | {name b}
+
+The statement ending at line XXXX
+
+CREATE PROC arg_bundle_12 (a1_a INTEGER, a1_b TEXT, a2_c INTEGER, a2_d TEXT)
+BEGIN
+  DECLARE C CURSOR LIKE AB;
+  FETCH C(a, b) FROM VALUES(a1.a, NULL);
+END;
+
+  {create_proc_stmt}: ok
+  | {name arg_bundle_12}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a1_a: integer variable in
+    | | | {param_detail}: a1_a: integer variable in
+    | |   | {name a1_a}: a1_a: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: a1_b: text variable in
+    |   | | {param_detail}: a1_b: text variable in
+    |   |   | {name a1_b}: a1_b: text variable in
+    |   |   | {type_text}: text
+    |   | {params}
+    |     | {param}: a2_c: integer variable in
+    |     | | {param_detail}: a2_c: integer variable in
+    |     |   | {name a2_c}: a2_c: integer variable in
+    |     |   | {type_int}: integer
+    |     | {params}
+    |       | {param}: a2_d: text variable in
+    |         | {param_detail}: a2_d: text variable in
+    |           | {name a2_d}: a2_d: text variable in
+    |           | {type_text}: text
+    | {stmt_list}: ok
+      | {declare_cursor_like_name}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
+      | | {name C}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
+      | | {like}: AB: { a: integer, b: text }
+      |   | {name AB}: AB: { a: integer, b: text }
+      | {fetch_values_stmt}: ok
+        | {name_columns_values}
+          | {name C}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
+          | {columns_values}: ok
+            | {column_spec}
+            | | {name_list}
+            |   | {name a}: a: integer
+            |   | {name_list}
+            |     | {name b}: b: text
+            | {insert_list}
+              | {dot}: a1_a: integer variable
+              | | {name a1}
+              | | {name a}
+              | {insert_list}
+                | {null}: null
+
+The statement ending at line XXXX
+
+CREATE PROC arg_bundle_13 (a1_a INTEGER, a1_b TEXT, a2_c INTEGER, a2_d TEXT)
+BEGIN
+  DECLARE C CURSOR LIKE AB;
+  UPDATE CURSOR C(a, b) FROM VALUES(a1.a, a1.b);
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name arg_bundle_13}: ok dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a1_a: integer variable in
+    | | | {param_detail}: a1_a: integer variable in
+    | |   | {name a1_a}: a1_a: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: a1_b: text variable in
+    |   | | {param_detail}: a1_b: text variable in
+    |   |   | {name a1_b}: a1_b: text variable in
+    |   |   | {type_text}: text
+    |   | {params}
+    |     | {param}: a2_c: integer variable in
+    |     | | {param_detail}: a2_c: integer variable in
+    |     |   | {name a2_c}: a2_c: integer variable in
+    |     |   | {type_int}: integer
+    |     | {params}
+    |       | {param}: a2_d: text variable in
+    |         | {param_detail}: a2_d: text variable in
+    |           | {name a2_d}: a2_d: text variable in
+    |           | {type_text}: text
+    | {stmt_list}: ok
+      | {declare_cursor_like_name}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
+      | | {name C}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
+      | | {like}: AB: { a: integer, b: text }
+      |   | {name AB}: AB: { a: integer, b: text }
+      | {update_cursor_stmt}: ok
+        | {name C}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
+        | {columns_values}: ok
+          | {column_spec}
+          | | {name_list}
+          |   | {name a}: a: integer
+          |   | {name_list}
+          |     | {name b}: b: text
+          | {insert_list}
+            | {dot}: a1_a: integer variable
+            | | {name a1}
+            | | {name a}
+            | {insert_list}
+              | {dot}: a1_b: text variable
+                | {name a1}
+                | {name b}
+
+The statement ending at line XXXX
+
+CREATE PROC arg_bundle_14 (a1_a INTEGER, a1_b TEXT, a2_c INTEGER, a2_d TEXT)
+BEGIN
+  DECLARE C CURSOR LIKE AB;
+  UPDATE CURSOR C(a) FROM VALUES(a2.c);
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name arg_bundle_14}: ok dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a1_a: integer variable in
+    | | | {param_detail}: a1_a: integer variable in
+    | |   | {name a1_a}: a1_a: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: a1_b: text variable in
+    |   | | {param_detail}: a1_b: text variable in
+    |   |   | {name a1_b}: a1_b: text variable in
+    |   |   | {type_text}: text
+    |   | {params}
+    |     | {param}: a2_c: integer variable in
+    |     | | {param_detail}: a2_c: integer variable in
+    |     |   | {name a2_c}: a2_c: integer variable in
+    |     |   | {type_int}: integer
+    |     | {params}
+    |       | {param}: a2_d: text variable in
+    |         | {param_detail}: a2_d: text variable in
+    |           | {name a2_d}: a2_d: text variable in
+    |           | {type_text}: text
+    | {stmt_list}: ok
+      | {declare_cursor_like_name}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
+      | | {name C}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
+      | | {like}: AB: { a: integer, b: text }
+      |   | {name AB}: AB: { a: integer, b: text }
+      | {update_cursor_stmt}: ok
+        | {name C}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
+        | {columns_values}: ok
+          | {column_spec}
+          | | {name_list}
+          |   | {name a}: a: integer
+          | {insert_list}
+            | {dot}: a2_c: integer variable
+              | {name a2}
+              | {name c}
+
+The statement ending at line XXXX
+
+CREATE PROC arg_bundle_15 (a1_a INTEGER, a1_b TEXT, a2_c INTEGER, a2_d TEXT)
+BEGIN
+  DECLARE C CURSOR LIKE AB;
+  UPDATE CURSOR C(a, b) FROM VALUES(a2.c, a2.d);
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name arg_bundle_15}: ok dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a1_a: integer variable in
+    | | | {param_detail}: a1_a: integer variable in
+    | |   | {name a1_a}: a1_a: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: a1_b: text variable in
+    |   | | {param_detail}: a1_b: text variable in
+    |   |   | {name a1_b}: a1_b: text variable in
+    |   |   | {type_text}: text
+    |   | {params}
+    |     | {param}: a2_c: integer variable in
+    |     | | {param_detail}: a2_c: integer variable in
+    |     |   | {name a2_c}: a2_c: integer variable in
+    |     |   | {type_int}: integer
+    |     | {params}
+    |       | {param}: a2_d: text variable in
+    |         | {param_detail}: a2_d: text variable in
+    |           | {name a2_d}: a2_d: text variable in
+    |           | {type_text}: text
+    | {stmt_list}: ok
+      | {declare_cursor_like_name}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
+      | | {name C}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
+      | | {like}: AB: { a: integer, b: text }
+      |   | {name AB}: AB: { a: integer, b: text }
+      | {update_cursor_stmt}: ok
+        | {name C}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
+        | {columns_values}: ok
+          | {column_spec}
+          | | {name_list}
+          |   | {name a}: a: integer
+          |   | {name_list}
+          |     | {name b}: b: text
+          | {insert_list}
+            | {dot}: a2_c: integer variable
+            | | {name a2}
+            | | {name c}
+            | {insert_list}
+              | {dot}: a2_d: text variable
+                | {name a2}
+                | {name d}
 

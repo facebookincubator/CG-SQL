@@ -10596,7 +10596,7 @@ insert into referenceable from cursor c_bar;
 
 -- TEST: try to use no columns from the cursor
 -- + {insert_stmt}: err
--- + Error % FROM CURSOR is redundant if column list is empty
+-- + Error % FROM [shape] is redundant if column list is empty
 -- +1 Error
 insert into referenceable() from cursor c_bar;
 
@@ -12893,3 +12893,149 @@ SalesMovingAverage FROM SalesInfo;
 SELECT month, amount, AVG(amount) FILTER(WHERE sum(month) = 1) OVER
   (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING EXCLUDE NO OTHERS)
 SalesMovingAverage FROM SalesInfo;
+
+create table AB(
+  a integer,
+  b text
+);
+
+create table CD(
+  c integer,
+  d text
+);
+
+create table BA(
+  b integer,
+  a text
+);
+
+declare proc use_c() (c integer);
+
+-- TEST: arg bundle with a specific column
+-- + INSERT INTO AB(a) VALUES(a2.c);
+-- - Error
+create proc arg_bundle_1(a1 like AB, a2 like CD)
+begin
+  insert into AB(a) from a2(c);
+end;
+
+-- TEST: arg bundle with a specific column using LIKE
+-- + INSERT INTO AB(a) VALUES(a2.c);
+-- - Error
+create proc arg_bundle_2(a1 like AB, a2 like CD)
+begin
+  insert into AB(a) from a2(like use_c);
+end;
+
+-- TEST: arg bundle one column, in order
+-- + INSERT INTO AB(a) VALUES(a2.c);
+-- - Error
+create proc arg_bundle_3(a1 like AB, a2 like CD)
+begin
+  insert into AB(a) from a2;
+end;
+
+-- TEST: arg bundle all columns
+-- + INSERT INTO AB(a, b) VALUES(a1.a, a1.b);
+-- - Error
+create proc arg_bundle_4(a1 like AB, a2 like CD)
+begin
+  insert into AB from a1;
+end;
+
+-- TEST: arg bundle reverse order using LIKE (arg mismatch)
+-- + INSERT INTO AB(a, b) VALUES(a1.b, a1.a);
+-- + incompatible types in expression 'a'
+-- +1 Error
+create proc arg_bundle_5(a1 like AB, a2 like CD)
+begin
+  insert into AB from a1(like BA);
+end;
+
+-- TEST: arg bundle reverse order using LIKE both reversed
+-- + INSERT INTO AB(b, a) VALUES(a1.b, a1.a);
+-- - Error
+create proc arg_bundle_6(a1 like AB, a2 like CD)
+begin
+  insert into AB(like BA) from a1(like BA);
+end;
+
+-- TEST: arg bundle non-name matching columns (this is ok, all in order)
+-- + INSERT INTO AB(a, b) VALUES(a2.c, a2.d);
+-- - Error
+create proc arg_bundle_7(a1 like AB, a2 like CD)
+begin
+  insert into AB from a2;
+end;
+
+-- TEST: arg bundle out of order, no autoexpand (types mismatch)
+-- + INSERT INTO AB(b, a) VALUES(a1.a, a1.b);
+-- + Error % incompatible types in expression 'b'
+-- +1 Error
+create proc arg_bundle_8(a1 like AB, a2 like CD)
+begin
+  insert into AB(b,a) from a1;
+end;
+
+-- TEST: arg bundle out of order, no autoexpand, loading from alternate names (types mismatch)
+-- + INSERT INTO AB(b, a) VALUES(a2.c, a2.d);
+-- + Error % incompatible types in expression 'b'
+-- +1 Error
+create proc arg_bundle_9(a1 like AB, a2 like CD)
+begin
+  insert into AB(b,a) from a2;
+end;
+
+-- TEST: arg bundle into cursor in order but field names different
+-- + FETCH C(a, b) FROM VALUES(a2.c, a2.d);
+-- - Error
+create proc arg_bundle_10(a1 like AB, a2 like CD)
+begin
+  declare C cursor like AB;
+  fetch C from a2;
+end;
+
+-- TEST: arg bundle into cursor in order field names same
+-- + FETCH C(a, b) FROM VALUES(a1.a, a1.b);
+-- - Error
+create proc arg_bundle_11(a1 like AB, a2 like CD)
+begin
+  declare C cursor like AB;
+  fetch C from a1;
+end;
+
+-- TEST: arg bundle into cursor in order, but not all fields
+-- + FETCH C(a, b) FROM VALUES(a1.a, NULL);
+-- - Error
+create proc arg_bundle_12(a1 like AB, a2 like CD)
+begin
+  declare C cursor like AB;
+  fetch C(a) from a1;
+end;
+
+-- TEST: arg bundle update cursor, all fields, autoexpand
+-- + UPDATE CURSOR C(a, b) FROM VALUES(a1.a, a1.b);
+-- - Error
+create proc arg_bundle_13(a1 like AB, a2 like CD)
+begin
+  declare C cursor like AB;
+  update cursor C from a1;
+end;
+
+-- TEST: arg bundle update cursor, one field, name doesn't match
+-- + UPDATE CURSOR C(a) FROM VALUES(a2.c);
+-- - Error
+create proc arg_bundle_14(a1 like AB, a2 like CD)
+begin
+  declare C cursor like AB;
+  update cursor C(a) from a2;
+end;
+
+-- TEST: arg bundle update cursor, all fields, names don't match
+-- + UPDATE CURSOR C(a, b) FROM VALUES(a2.c, a2.d);
+-- - Error
+create proc arg_bundle_15(a1 like AB, a2 like CD)
+begin
+  declare C cursor like AB;
+  update cursor C from a2;
+end;

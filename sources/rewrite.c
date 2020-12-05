@@ -33,20 +33,6 @@ static ast_node *rewrite_gen_cursor_printf(ast_node *variable);
 static ast_node *rewrite_gen_iif_case_expr(ast_node *expr, ast_node *val1, ast_node *val2);
 static ast_node *rewrite_gen_case_expr(ast_node *var1, ast_node *var2, bool_t report_column_name);
 
-// Try to look up the indicated name as a named shape from the args
-// If so use the type of that shape
-static bool_t try_sem_arg_bundle(ast_node *ast) {
-  EXTRACT_STRING(name, ast);
-  ast_node *shape = find_arg_bundle(name);
-
-  if (shape) {
-    ast->sem = shape->sem;
-    return true;
-  }
-
-  return false;
-}
-
 bool_t has_named_param(ast_node *params, CSTR name) {
   for (; params; params = params->right) {
     EXTRACT_NOTNULL(param, params->left);
@@ -337,7 +323,7 @@ cql_noexport void rewrite_from_cursor_if_needed(ast_node *ast_stmt, ast_node *co
   }
 
   if (count == 0) {
-    report_error(columns_values->right, "CQL0297: FROM CURSOR is redundant if column list is empty", NULL);
+    report_error(columns_values->right, "CQL0297: FROM [shape] is redundant if column list is empty", NULL);
     record_error(ast_stmt);
     return;
   }
@@ -345,7 +331,7 @@ cql_noexport void rewrite_from_cursor_if_needed(ast_node *ast_stmt, ast_node *co
   EXTRACT_NOTNULL(from_cursor, columns_values->right);
   EXTRACT_ANY_NOTNULL(cursor_ast, from_cursor->right);
 
-  sem_cursor(cursor_ast);
+  sem_any_shape(cursor_ast);
   if (is_error(cursor_ast)) {
     record_error(ast_stmt);
     return;
@@ -424,15 +410,13 @@ cql_noexport void rewrite_from_shape_args(ast_node *head) {
     if (is_ast_from_shape(arg)) {
       EXTRACT_ANY_NOTNULL(cursor, arg->left);
 
-      if (!try_sem_arg_bundle(cursor)) {
-        // Note if this is not an automatic cursor then we will fail later when we try to
-        // resolve the '.' expression.  That error message tells the story well enough
-        // so we don't need an extra check here.
-        sem_cursor(cursor);
-        if (is_error(cursor)) {
-          record_error(head);
-          return;
-        }
+      // Note if this is not an automatic cursor then we will fail later when we try to
+      // resolve the '.' expression.  That error message tells the story well enough
+      // so we don't need an extra check here.
+      sem_any_shape(cursor);
+      if (is_error(cursor)) {
+        record_error(head);
+        return;
       }
 
       ast_node *like_ast = arg->right;
@@ -731,7 +715,7 @@ cql_noexport void rewrite_one_param(ast_node *param, symtab *param_names) {
     formal_name = fname;
     ast_node *shape_ast = new_ast_str(formal_name);
     shape_ast->sem = found_shape->sem;
-    sem_add_flags(shape_ast, 0); // force clone the semantic type
+    sem_add_flags(shape_ast, SEM_TYPE_AUTO_CURSOR); // the arg bundle has storage!
     shape_ast->sem->name = formal_name;
     add_arg_bundle(shape_ast, formal_name);
   }
