@@ -3752,7 +3752,7 @@ BEGIN
   DECLARE C0 CURSOR LIKE SELECT 1 AS A, "foo" AS B;
   DECLARE C1 CURSOR LIKE C0;
   FETCH C0(A, B) FROM VALUES(2, "bar");
-  FETCH C1 FROM C0;
+  FETCH C1(A, B) FROM VALUES(C0.A, C0.B);
   OUT C1;
 END;
 */
@@ -3835,7 +3835,7 @@ void fetch_to_cursor_from_cursor(fetch_to_cursor_from_cursor_row *_Nonnull _resu
   C0_._has_row_ = 1;
   C0_.A = 2;
   cql_set_string_ref(&C0_.B, _literal_9_bar_fetch_to_cursor_from_cursor);
-  C1_._has_row_ = C0_._has_row_;
+  C1_._has_row_ = 1;
   C1_.A = C0_.A;
   cql_set_string_ref(&C1_.B, C0_.B);
   _result_->_has_row_ = C1_._has_row_;

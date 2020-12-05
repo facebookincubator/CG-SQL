@@ -3633,33 +3633,6 @@ static void cg_fetch_call_stmt(ast_node *ast) {
   cg_call_stmt_with_cursor(call_stmt, cursor_name);
 }
 
-// Fetching from a cursor to a cursor copies the last fetched row. Since both
-// cursors have identical columns, it doesn't matter which we struct we use for
-// names and types.
-static void cg_fetch_cursor_stmt(ast_node *ast) {
-  Contract(is_ast_fetch_cursor_stmt(ast));
-  EXTRACT_ANY_NOTNULL(to_cursor, ast->left);
-  EXTRACT_STRING(to_cursor_name, to_cursor);
-  EXTRACT_STRING(from_cursor_name, ast->right);
-
-  bprintf(cg_main_output, "%s_._has_row_ = %s_._has_row_;\n", to_cursor_name, from_cursor_name);
-
-  CHARBUF_OPEN(var);
-  CHARBUF_OPEN(value);
-
-  sem_struct *sptr = to_cursor->sem->sptr;
-  for (int32_t i = 0; i < sptr->count; i++) {
-    bclear(&var);
-    bprintf(&var, "%s_.%s", to_cursor_name, sptr->names[i]);
-    bclear(&value);
-    bprintf(&value, "%s_.%s", from_cursor_name, sptr->names[i]);
-    cg_copy(cg_main_output, var.ptr, sptr->semtypes[i], value.ptr);
-  }
-
-  CHARBUF_CLOSE(value);
-  CHARBUF_CLOSE(var);
-}
-
 // The update cursor statement differs from the more general fetch form in that
 // it is only to be used to tweak fields in an already loaded cursor.  The sematics
 // are that if you try to "update" a cursor with no row the update is ignored.
@@ -5742,7 +5715,6 @@ static void cg_c_init(void) {
   STMT_INIT(fetch_values_stmt);
   STMT_INIT(update_cursor_stmt);
   STMT_INIT(fetch_call_stmt);
-  STMT_INIT(fetch_cursor_stmt);
   STMT_INIT(open_stmt);
 
   STMT_INIT(close_stmt);

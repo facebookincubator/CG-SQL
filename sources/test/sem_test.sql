@@ -5489,9 +5489,10 @@ begin
 end;
 
 -- TEST: fetch to a cursor from another cursor
--- + FETCH C1 FROM C0;
+-- + FETCH C0(A, B) FROM VALUES(1, 2);
+-- + FETCH C1(A, B) FROM VALUES(C0.A, C0.B);
 -- + {create_proc_stmt}: C1: select: { A: integer notnull, B: integer notnull } variable auto_cursor uses_out
--- + {fetch_cursor_stmt}: ok
+-- + {fetch_values_stmt}: ok
 -- - Error
 create proc fetch_to_cursor_from_cursor()
 begin
@@ -5506,7 +5507,7 @@ end;
 -- + {create_proc_stmt}: err
 -- + {name fetch_to_cursor_from_invalid_cursor}: err
 -- + {stmt_list}: err
--- + {fetch_cursor_stmt}: err
+-- + {fetch_values_stmt}: err
 -- + {name C0}: err
 -- + Error % variable is not a cursor 'C0'
 -- +1 Error
@@ -5522,7 +5523,7 @@ end;
 -- + {create_proc_stmt}: err
 -- + {name fetch_to_invalid_cursor_from_cursor}: err
 -- + {stmt_list}: err
--- + {fetch_cursor_stmt}: err
+-- + {fetch_values_stmt}: err
 -- + {name C1}: err
 -- + Error % variable is not a cursor 'C1'
 -- +1 Error
@@ -5538,9 +5539,8 @@ end;
 -- + {create_proc_stmt}: err
 -- + {name fetch_to_statement_cursor_from_cursor}: err
 -- + {stmt_list}: err
--- + {fetch_cursor_stmt}: err
--- + {name C1}: err
--- + Error % cursor must be a value cursor, not a statement cursor 'C1'
+-- + {fetch_values_stmt}: err
+-- + Error % fetch values is only for value cursors, not for sqlite cursors 'C1'
 -- +1 Error
 create proc fetch_to_statement_cursor_from_cursor()
 begin
@@ -5554,15 +5554,13 @@ end;
 -- + {create_proc_stmt}: err
 -- + {name fetch_to_cursor_from_cursor_with_different_columns}: err
 -- + {stmt_list}: err
--- + {fetch_cursor_stmt}: err
--- + {name C1}: err
--- + {name C0}: err
--- + Error % in multiple select statements, all column names must be identical so they have unambiguous names 'B'
+-- + {fetch_values_stmt}: err
+-- + Error % cursor has too few fields 'C0'
 -- +1 Error
 create proc fetch_to_cursor_from_cursor_with_different_columns()
 begin
   declare C0 cursor like select 1 A, 2 B;
-  declare C1 cursor like select 1 A, 2 C;
+  declare C1 cursor like select 1 A, 2 B, 3 C;
   fetch C0 from values(1, 2);
   fetch C1 from C0;
 end;
@@ -5571,9 +5569,9 @@ end;
 -- + {create_proc_stmt}: err
 -- + {name fetch_to_cursor_from_cursor_without_fields}: err
 -- + {stmt_list}: err
--- + {fetch_cursor_stmt}: err
+-- + {fetch_values_stmt}: err
 -- + {name C0}: err
--- + Error % cannot fetch from a cursor without fields 'C0'
+-- + Error % cannot read from a cursor without fields 'C0'
 -- +1 Error
 create proc fetch_to_cursor_from_cursor_without_fields()
 begin
@@ -10604,7 +10602,7 @@ insert into referenceable() from cursor c_bar;
 
 -- TEST: try to use a cursor that has no storage (a non automatic cursor)
 -- + {insert_stmt}: err
--- + Error % cannot insert from a cursor without fields 'fetch_cursor'
+-- + Error % cannot read from a cursor without fields 'fetch_cursor'
 -- +1 Error
 insert into referenceable from cursor fetch_cursor;
 
@@ -10613,7 +10611,7 @@ declare small_cursor cursor like select 1 x;
 
 -- TEST: try to use a cursor that has not enough fields
 -- + {insert_stmt}: err
--- + Error % cursor has too few fields for this insert 'small_cursor'
+-- + Error % cursor has too few fields 'small_cursor'
 -- +1 Error
 insert into referenceable from cursor small_cursor;
 

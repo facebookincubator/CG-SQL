@@ -10807,60 +10807,6 @@ static void sem_fetch_values_stmt(ast_node *ast) {
   }
 }
 
-// Fetching from a cursor to a value cursor simply copies over the last row. As
-// such, we only need to verify that both the to- and from-cursors are actually
-// cursors, that the to-cursor is a value cursor, and that all columns match.  The
-// from cursor must be an auto-cursor [i.e. it has the storage for the row] so that is
-// it mush have been used like "fetch C into x, y" where C has no storage.  "Auto"
-// cursors patterns like "Fetch C" are the norm.
-static void sem_fetch_cursor_stmt(ast_node *ast) {
-  Contract(is_ast_fetch_cursor_stmt(ast));
-  Contract(!current_joinscope); // I don't belong inside a select(!)
-
-  EXTRACT_ANY_NOTNULL(to_cursor, ast->left);
-  EXTRACT_STRING(to_cursor_name, to_cursor);
-  EXTRACT_ANY_NOTNULL(from_cursor, ast->right);
-  EXTRACT_STRING(from_cursor_name, from_cursor);
-
-  // FETCH [to_cursor] FROM [from_cursor]
-
-  sem_cursor(from_cursor);
-  if (is_error(from_cursor)) {
-    record_error(ast);
-    return;
-  }
-
-  // from_cursor must have the columns
-  if (!(from_cursor->sem->sem_type & SEM_TYPE_AUTO_CURSOR)) {
-    report_error(from_cursor, "CQL0169: cannot fetch from a cursor without fields", from_cursor_name);
-    record_error(from_cursor);
-    record_error(ast);
-    return;
-  }
-
-  sem_cursor(to_cursor);
-  if (is_error(to_cursor)) {
-    record_error(ast);
-    return;
-  }
-
-  // to_cursor cannot have come from a statement
-  if (!(to_cursor->sem->sem_type & SEM_TYPE_VALUE_CURSOR)) {
-    report_error(to_cursor, "CQL0170: cursor must be a value cursor, not a statement cursor", to_cursor_name);
-    record_error(to_cursor);
-    record_error(ast);
-    return;
-  }
-
-  sem_verify_identical_columns(to_cursor, from_cursor, "in multiple select statements");
-  if (is_error(to_cursor)) {
-    record_error(ast);
-    return;
-  }
-
-  record_ok(ast);
-}
-
 // Here we just make sure that we can look up every name in this name list
 // in the indicated joinscope.  This is helpful if you want to ensure that
 // there are names present in a certain level of the tree.
@@ -16105,7 +16051,6 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(schema_upgrade_script_stmt);
   STMT_INIT(previous_schema_stmt);
   STMT_INIT(fetch_values_stmt);
-  STMT_INIT(fetch_cursor_stmt);
   STMT_INIT(declare_cursor_like_name);
   STMT_INIT(declare_cursor_like_select);
   STMT_INIT(declare_value_cursor);
