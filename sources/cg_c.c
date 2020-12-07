@@ -3284,6 +3284,9 @@ static void cg_declare_enum_stmt(ast_node *ast) {
   EXTRACT_STRING(name, name_ast);
   EXTRACT_ANY_NOTNULL(type, typed_name->right);
 
+  bprintf(cg_header_output, "#ifndef enum_%s_defined\n", name);
+  bprintf(cg_header_output, "#define enum_%s_defined\n\n", name);
+
   if (type->sem->sem_type != SEM_TYPE_REAL) {
     bprintf(cg_header_output, "enum %s {", name);
   
@@ -3321,6 +3324,7 @@ static void cg_declare_enum_stmt(ast_node *ast) {
        enum_values = enum_values->right;
     }
   }
+  bprintf(cg_header_output, "\n#endif\n", name);
 }
 
 // Declaring a cursor causes us to do the following:
