@@ -9,7 +9,7 @@
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Fri Dec  4 08:26:13 PST 2020
+Snapshot as of Tue Dec  8 11:58:10 PST 2020
 ### Rules
 
 ```
@@ -369,6 +369,7 @@ args: arg | arg ',' args
 
 arg: '{'
       '"name"' ':' STRING_LITERAL ','
+      '"argOrigin"' ':' STRING_LITERAL ','
       '"type"' ':' STRING_LITERAL ','
       opt_is_sensitive
       '"isNotNull"' ':' BOOL_LITERAL
@@ -487,6 +488,7 @@ complex_args: complex_arg | complex_arg ',' complex_args
 complex_arg: '{'
               binding
               '"name"' ':' STRING_LITERAL ','
+              '"argOrigin"' ':' STRING_LITERAL ','
               '"type"' ':' STRING_LITERAL ','
               opt_is_sensitive
               '"isNotNull"' ':' BOOL_LITERAL

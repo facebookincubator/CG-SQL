@@ -1,5 +1,6 @@
 s/[[:<:]]TABLES[[:>:]]/'"tables"' ':'/g
 s/[[:<:]]NAME[[:>:]]/'"name"' ':'/g
+s/[[:<:]]ARG_ORIGIN[[:>:]]/'"argOrigin"' ':'/g
 s/[[:<:]]ENUMS[[:>:]]/'"enums"' ':'/g
 s/[[:<:]]IS_TEMP[[:>:]]/'"isTemp"' ':'/g
 s/[[:<:]]IF_NOT_EXISTS[[:>:]]/'"ifNotExists"' ':'/g
