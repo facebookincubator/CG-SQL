@@ -12138,9 +12138,9 @@ The statement ending at line XXXX
 
 DECLARE PROC decl3 (id INTEGER) (A INTEGER NOT NULL, B BOOL);
 
-  {declare_proc_stmt}: select: { A: integer notnull, B: bool } dml_proc
+  {declare_proc_stmt}: decl3: { A: integer notnull, B: bool } dml_proc
   | {proc_name_type}
-  | | {name decl3}: select: { A: integer notnull, B: bool } dml_proc
+  | | {name decl3}: decl3: { A: integer notnull, B: bool } dml_proc
   | | {int 3}
   | {proc_params_stmts}
     | {params}: ok
@@ -12148,7 +12148,7 @@ DECLARE PROC decl3 (id INTEGER) (A INTEGER NOT NULL, B BOOL);
     |   | {param_detail}: id: integer variable in
     |     | {name id}: id: integer variable in
     |     | {type_int}: integer
-    | {typed_names}: select: { A: integer notnull, B: bool }
+    | {typed_names}: decl3: { A: integer notnull, B: bool }
       | {typed_name}: A: integer notnull
       | | {name A}
       | | {notnull}: A: integer notnull
@@ -18917,9 +18917,9 @@ The statement ending at line XXXX
 
 DECLARE PROC declared_proc (id INTEGER) OUT (t TEXT);
 
-  {declare_proc_stmt}: select: { t: text } uses_out
+  {declare_proc_stmt}: declared_proc: { t: text } uses_out
   | {proc_name_type}
-  | | {name declared_proc}: select: { t: text } uses_out
+  | | {name declared_proc}: declared_proc: { t: text } uses_out
   | | {int 5}
   | {proc_params_stmts}
     | {params}: ok
@@ -18927,7 +18927,7 @@ DECLARE PROC declared_proc (id INTEGER) OUT (t TEXT);
     |   | {param_detail}: id: integer variable in
     |     | {name id}: id: integer variable in
     |     | {type_int}: integer
-    | {typed_names}: select: { t: text }
+    | {typed_names}: declared_proc: { t: text }
       | {typed_name}: t: text
         | {name t}
         | {type_text}: t: text
@@ -20234,10 +20234,10 @@ END;
   | {name declare_cursor_like_proc}: ok
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_cursor_like_name}: C: select: { A: integer notnull, B: bool } variable auto_cursor value_cursor
-        | {name C}: C: select: { A: integer notnull, B: bool } variable auto_cursor value_cursor
-        | {like}: select: { A: integer notnull, B: bool } dml_proc
-          | {name decl3}: select: { A: integer notnull, B: bool } dml_proc
+      | {declare_cursor_like_name}: C: decl3: { A: integer notnull, B: bool } variable auto_cursor value_cursor
+        | {name C}: C: decl3: { A: integer notnull, B: bool } variable auto_cursor value_cursor
+        | {like}: decl3: { A: integer notnull, B: bool } dml_proc
+          | {name decl3}: decl3: { A: integer notnull, B: bool } dml_proc
 
 The statement ending at line XXXX
 
@@ -27062,12 +27062,12 @@ The statement ending at line XXXX
 
 DECLARE PROC out_cursor_proc () OUT (A INTEGER NOT NULL, B INTEGER NOT NULL) USING TRANSACTION;
 
-  {declare_proc_stmt}: select: { A: integer notnull, B: integer notnull } dml_proc uses_out
+  {declare_proc_stmt}: out_cursor_proc: { A: integer notnull, B: integer notnull } dml_proc uses_out
   | {proc_name_type}
-  | | {name out_cursor_proc}: select: { A: integer notnull, B: integer notnull } dml_proc uses_out
+  | | {name out_cursor_proc}: out_cursor_proc: { A: integer notnull, B: integer notnull } dml_proc uses_out
   | | {int 7}
   | {proc_params_stmts}
-    | {typed_names}: select: { A: integer notnull, B: integer notnull }
+    | {typed_names}: out_cursor_proc: { A: integer notnull, B: integer notnull }
       | {typed_name}: A: integer notnull
       | | {name A}
       | | {notnull}: A: integer notnull
@@ -40443,9 +40443,9 @@ The statement ending at line XXXX
 
 DECLARE PROC val_fetch (seed INTEGER NOT NULL) OUT (id TEXT);
 
-  {declare_proc_stmt}: select: { id: text } uses_out
+  {declare_proc_stmt}: val_fetch: { id: text } uses_out
   | {proc_name_type}
-  | | {name val_fetch}: select: { id: text } uses_out
+  | | {name val_fetch}: val_fetch: { id: text } uses_out
   | | {int 5}
   | {proc_params_stmts}
     | {params}: ok
@@ -40454,7 +40454,7 @@ DECLARE PROC val_fetch (seed INTEGER NOT NULL) OUT (id TEXT);
     |     | {name seed}: seed: integer notnull variable in
     |     | {notnull}: integer notnull
     |       | {type_int}: integer
-    | {typed_names}: select: { id: text }
+    | {typed_names}: val_fetch: { id: text }
       | {typed_name}: id: text
         | {name id}
         | {type_text}: id: text
@@ -40463,9 +40463,9 @@ The statement ending at line XXXX
 
 DECLARE PROC val_fetch_dml (seed INTEGER NOT NULL) OUT (id TEXT) USING TRANSACTION;
 
-  {declare_proc_stmt}: select: { id: text } dml_proc uses_out
+  {declare_proc_stmt}: val_fetch_dml: { id: text } dml_proc uses_out
   | {proc_name_type}
-  | | {name val_fetch_dml}: select: { id: text } dml_proc uses_out
+  | | {name val_fetch_dml}: val_fetch_dml: { id: text } dml_proc uses_out
   | | {int 7}
   | {proc_params_stmts}
     | {params}: ok
@@ -40474,7 +40474,7 @@ DECLARE PROC val_fetch_dml (seed INTEGER NOT NULL) OUT (id TEXT) USING TRANSACTI
     |     | {name seed}: seed: integer notnull variable in
     |     | {notnull}: integer notnull
     |       | {type_int}: integer
-    | {typed_names}: select: { id: text }
+    | {typed_names}: val_fetch_dml: { id: text }
       | {typed_name}: id: text
         | {name id}
         | {type_text}: id: text
@@ -43954,9 +43954,9 @@ The statement ending at line XXXX
 
 DECLARE PROC out_union_user (x INTEGER) OUT UNION (id INTEGER, x TEXT);
 
-  {declare_proc_stmt}: select: { id: integer, x: text } uses_out_union
+  {declare_proc_stmt}: out_union_user: { id: integer, x: text } uses_out_union
   | {proc_name_type}
-  | | {name out_union_user}: select: { id: integer, x: text } uses_out_union
+  | | {name out_union_user}: out_union_user: { id: integer, x: text } uses_out_union
   | | {int 9}
   | {proc_params_stmts}
     | {params}: ok
@@ -43964,7 +43964,7 @@ DECLARE PROC out_union_user (x INTEGER) OUT UNION (id INTEGER, x TEXT);
     |   | {param_detail}: x: integer variable in
     |     | {name x}: x: integer variable in
     |     | {type_int}: integer
-    | {typed_names}: select: { id: integer, x: text }
+    | {typed_names}: out_union_user: { id: integer, x: text }
       | {typed_name}: id: integer
       | | {name id}
       | | {type_int}: id: integer
@@ -43977,10 +43977,10 @@ The statement ending at line XXXX
 
 DECLARE out_union_cursor CURSOR FOR CALL out_union_user(2);
 
-  {declare_cursor}: out_union_cursor: select: { id: integer, x: text } variable uses_out_union
-  | {name out_union_cursor}: out_union_cursor: select: { id: integer, x: text } variable uses_out_union
-  | {call_stmt}: select: { id: integer, x: text } uses_out_union
-    | {name out_union_user}: select: { id: integer, x: text } uses_out_union
+  {declare_cursor}: out_union_cursor: out_union_user: { id: integer, x: text } variable uses_out_union
+  | {name out_union_cursor}: out_union_cursor: out_union_user: { id: integer, x: text } variable uses_out_union
+  | {call_stmt}: out_union_user: { id: integer, x: text } uses_out_union
+    | {name out_union_user}: out_union_user: { id: integer, x: text } uses_out_union
     | {expr_list}: ok
       | {int 2}: integer notnull
 
@@ -44007,12 +44007,12 @@ The statement ending at line XXXX
 
 DECLARE PROC sens_result_proc () (t TEXT @SENSITIVE);
 
-  {declare_proc_stmt}: select: { t: text sensitive } dml_proc
+  {declare_proc_stmt}: sens_result_proc: { t: text sensitive } dml_proc
   | {proc_name_type}
-  | | {name sens_result_proc}: select: { t: text sensitive } dml_proc
+  | | {name sens_result_proc}: sens_result_proc: { t: text sensitive } dml_proc
   | | {int 3}
   | {proc_params_stmts}
-    | {typed_names}: select: { t: text sensitive }
+    | {typed_names}: sens_result_proc: { t: text sensitive }
       | {typed_name}: t: text sensitive
         | {name t}
         | {sensitive_attr}: t: text sensitive
@@ -44060,12 +44060,12 @@ The statement ending at line XXXX
 
 DECLARE PROC incompatible_result_proc () (t TEXT);
 
-  {declare_proc_stmt}: select: { t: text } dml_proc
+  {declare_proc_stmt}: incompatible_result_proc: { t: text } dml_proc
   | {proc_name_type}
-  | | {name incompatible_result_proc}: select: { t: text } dml_proc
+  | | {name incompatible_result_proc}: incompatible_result_proc: { t: text } dml_proc
   | | {int 3}
   | {proc_params_stmts}
-    | {typed_names}: select: { t: text }
+    | {typed_names}: incompatible_result_proc: { t: text }
       | {typed_name}: t: text
         | {name t}
         | {type_text}: t: text
@@ -45979,12 +45979,12 @@ The statement ending at line XXXX
 
 DECLARE PROC _stuff () (id INTEGER, name TEXT);
 
-  {declare_proc_stmt}: select: { id: integer, name: text } dml_proc
+  {declare_proc_stmt}: _stuff: { id: integer, name: text } dml_proc
   | {proc_name_type}
-  | | {name _stuff}: select: { id: integer, name: text } dml_proc
+  | | {name _stuff}: _stuff: { id: integer, name: text } dml_proc
   | | {int 3}
   | {proc_params_stmts}
-    | {typed_names}: select: { id: integer, name: text }
+    | {typed_names}: _stuff: { id: integer, name: text }
       | {typed_name}: id: integer
       | | {name id}
       | | {type_int}: id: integer
@@ -45997,12 +45997,12 @@ The statement ending at line XXXX
 
 DECLARE PROC _stuff1 () (id INTEGER, name TEXT);
 
-  {declare_proc_stmt}: select: { id: integer, name: text } dml_proc
+  {declare_proc_stmt}: _stuff1: { id: integer, name: text } dml_proc
   | {proc_name_type}
-  | | {name _stuff1}: select: { id: integer, name: text } dml_proc
+  | | {name _stuff1}: _stuff1: { id: integer, name: text } dml_proc
   | | {int 3}
   | {proc_params_stmts}
-    | {typed_names}: select: { id: integer, name: text }
+    | {typed_names}: _stuff1: { id: integer, name: text }
       | {typed_name}: id: integer
       | | {name id}
       | | {type_int}: id: integer
@@ -46015,12 +46015,12 @@ The statement ending at line XXXX
 
 DECLARE PROC _stuff2 () (h1 INTEGER, id INTEGER, name TEXT, t1 INTEGER);
 
-  {declare_proc_stmt}: select: { h1: integer, id: integer, name: text, t1: integer } dml_proc
+  {declare_proc_stmt}: _stuff2: { h1: integer, id: integer, name: text, t1: integer } dml_proc
   | {proc_name_type}
-  | | {name _stuff2}: select: { h1: integer, id: integer, name: text, t1: integer } dml_proc
+  | | {name _stuff2}: _stuff2: { h1: integer, id: integer, name: text, t1: integer } dml_proc
   | | {int 3}
   | {proc_params_stmts}
-    | {typed_names}: select: { h1: integer, id: integer, name: text, t1: integer }
+    | {typed_names}: _stuff2: { h1: integer, id: integer, name: text, t1: integer }
       | {typed_name}: h1: integer
       | | {name h1}
       | | {type_int}: h1: integer
@@ -46041,12 +46041,12 @@ The statement ending at line XXXX
 
 DECLARE PROC _stuff3 () (h2 INTEGER, h1 INTEGER, id INTEGER, name TEXT, t1 INTEGER, t2 INTEGER);
 
-  {declare_proc_stmt}: select: { h2: integer, h1: integer, id: integer, name: text, t1: integer, t2: integer } dml_proc
+  {declare_proc_stmt}: _stuff3: { h2: integer, h1: integer, id: integer, name: text, t1: integer, t2: integer } dml_proc
   | {proc_name_type}
-  | | {name _stuff3}: select: { h2: integer, h1: integer, id: integer, name: text, t1: integer, t2: integer } dml_proc
+  | | {name _stuff3}: _stuff3: { h2: integer, h1: integer, id: integer, name: text, t1: integer, t2: integer } dml_proc
   | | {int 3}
   | {proc_params_stmts}
-    | {typed_names}: select: { h2: integer, h1: integer, id: integer, name: text, t1: integer, t2: integer }
+    | {typed_names}: _stuff3: { h2: integer, h1: integer, id: integer, name: text, t1: integer, t2: integer }
       | {typed_name}: h2: integer
       | | {name h2}
       | | {type_int}: h2: integer
@@ -46091,12 +46091,12 @@ The statement ending at line XXXX
 
 DECLARE PROC _stuff5 () (id INTEGER, name TEXT);
 
-  {declare_proc_stmt}: select: { id: integer, name: text } dml_proc
+  {declare_proc_stmt}: _stuff5: { id: integer, name: text } dml_proc
   | {proc_name_type}
-  | | {name _stuff5}: select: { id: integer, name: text } dml_proc
+  | | {name _stuff5}: _stuff5: { id: integer, name: text } dml_proc
   | | {int 3}
   | {proc_params_stmts}
-    | {typed_names}: select: { id: integer, name: text }
+    | {typed_names}: _stuff5: { id: integer, name: text }
       | {typed_name}: id: integer
       | | {name id}
       | | {type_int}: id: integer
@@ -46109,12 +46109,12 @@ The statement ending at line XXXX
 
 DECLARE PROC _stuff6 () (x_id INTEGER, x_name TEXT, y_id INTEGER, y_name TEXT);
 
-  {declare_proc_stmt}: select: { x_id: integer, x_name: text, y_id: integer, y_name: text } dml_proc
+  {declare_proc_stmt}: _stuff6: { x_id: integer, x_name: text, y_id: integer, y_name: text } dml_proc
   | {proc_name_type}
-  | | {name _stuff6}: select: { x_id: integer, x_name: text, y_id: integer, y_name: text } dml_proc
+  | | {name _stuff6}: _stuff6: { x_id: integer, x_name: text, y_id: integer, y_name: text } dml_proc
   | | {int 3}
   | {proc_params_stmts}
-    | {typed_names}: select: { x_id: integer, x_name: text, y_id: integer, y_name: text }
+    | {typed_names}: _stuff6: { x_id: integer, x_name: text, y_id: integer, y_name: text }
       | {typed_name}: x_id: integer
       | | {name x_id}
       | | {type_int}: x_id: integer
@@ -46329,12 +46329,12 @@ The statement ending at line XXXX
 
 DECLARE PROC basic_source () OUT UNION (id INTEGER, name TEXT);
 
-  {declare_proc_stmt}: select: { id: integer, name: text } uses_out_union
+  {declare_proc_stmt}: basic_source: { id: integer, name: text } uses_out_union
   | {proc_name_type}
-  | | {name basic_source}: select: { id: integer, name: text } uses_out_union
+  | | {name basic_source}: basic_source: { id: integer, name: text } uses_out_union
   | | {int 9}
   | {proc_params_stmts}
-    | {typed_names}: select: { id: integer, name: text }
+    | {typed_names}: basic_source: { id: integer, name: text }
       | {typed_name}: id: integer
       | | {name id}
       | | {type_int}: id: integer
@@ -46352,18 +46352,18 @@ BEGIN
   OUT C;
 END;
 
-  {create_proc_stmt}: C: select: { id: integer, name: text } variable dml_proc auto_cursor uses_out
-  | {name basic_wrapper_out}: C: select: { id: integer, name: text } variable dml_proc auto_cursor uses_out
+  {create_proc_stmt}: C: basic_source: { id: integer, name: text } variable dml_proc auto_cursor uses_out
+  | {name basic_wrapper_out}: C: basic_source: { id: integer, name: text } variable dml_proc auto_cursor uses_out
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_cursor}: C: select: { id: integer, name: text } variable uses_out_union
-      | | {name C}: C: select: { id: integer, name: text } variable auto_cursor uses_out_union
-      | | {call_stmt}: select: { id: integer, name: text } uses_out_union
-      |   | {name basic_source}: select: { id: integer, name: text } uses_out_union
-      | {fetch_stmt}: C: select: { id: integer, name: text } variable auto_cursor uses_out_union
-      | | {name C}: C: select: { id: integer, name: text } variable auto_cursor uses_out_union
-      | {out_stmt}: C: select: { id: integer, name: text } variable auto_cursor uses_out_union
-        | {name C}: C: select: { id: integer, name: text } variable auto_cursor uses_out_union
+      | {declare_cursor}: C: basic_source: { id: integer, name: text } variable uses_out_union
+      | | {name C}: C: basic_source: { id: integer, name: text } variable auto_cursor uses_out_union
+      | | {call_stmt}: basic_source: { id: integer, name: text } uses_out_union
+      |   | {name basic_source}: basic_source: { id: integer, name: text } uses_out_union
+      | {fetch_stmt}: C: basic_source: { id: integer, name: text } variable auto_cursor uses_out_union
+      | | {name C}: C: basic_source: { id: integer, name: text } variable auto_cursor uses_out_union
+      | {out_stmt}: C: basic_source: { id: integer, name: text } variable auto_cursor uses_out_union
+        | {name C}: C: basic_source: { id: integer, name: text } variable auto_cursor uses_out_union
 
 The statement ending at line XXXX
 
@@ -46374,18 +46374,18 @@ BEGIN
   OUT UNION C;
 END;
 
-  {create_proc_stmt}: C: select: { id: integer, name: text } variable dml_proc auto_cursor uses_out_union
-  | {name basic_wrapper_out_union}: C: select: { id: integer, name: text } variable dml_proc auto_cursor uses_out_union
+  {create_proc_stmt}: C: basic_source: { id: integer, name: text } variable dml_proc auto_cursor uses_out_union
+  | {name basic_wrapper_out_union}: C: basic_source: { id: integer, name: text } variable dml_proc auto_cursor uses_out_union
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_cursor}: C: select: { id: integer, name: text } variable uses_out_union
-      | | {name C}: C: select: { id: integer, name: text } variable auto_cursor uses_out_union
-      | | {call_stmt}: select: { id: integer, name: text } uses_out_union
-      |   | {name basic_source}: select: { id: integer, name: text } uses_out_union
-      | {fetch_stmt}: C: select: { id: integer, name: text } variable auto_cursor uses_out_union
-      | | {name C}: C: select: { id: integer, name: text } variable auto_cursor uses_out_union
-      | {out_union_stmt}: C: select: { id: integer, name: text } variable auto_cursor uses_out_union
-        | {name C}: C: select: { id: integer, name: text } variable auto_cursor uses_out_union
+      | {declare_cursor}: C: basic_source: { id: integer, name: text } variable uses_out_union
+      | | {name C}: C: basic_source: { id: integer, name: text } variable auto_cursor uses_out_union
+      | | {call_stmt}: basic_source: { id: integer, name: text } uses_out_union
+      |   | {name basic_source}: basic_source: { id: integer, name: text } uses_out_union
+      | {fetch_stmt}: C: basic_source: { id: integer, name: text } variable auto_cursor uses_out_union
+      | | {name C}: C: basic_source: { id: integer, name: text } variable auto_cursor uses_out_union
+      | {out_union_stmt}: C: basic_source: { id: integer, name: text } variable auto_cursor uses_out_union
+        | {name C}: C: basic_source: { id: integer, name: text } variable auto_cursor uses_out_union
 
 The statement ending at line XXXX
 
@@ -47662,12 +47662,12 @@ The statement ending at line XXXX
 
 DECLARE PROC shape () (x INTEGER NOT NULL, y TEXT NOT NULL);
 
-  {declare_proc_stmt}: select: { x: integer notnull, y: text notnull } dml_proc
+  {declare_proc_stmt}: shape: { x: integer notnull, y: text notnull } dml_proc
   | {proc_name_type}
-  | | {name shape}: select: { x: integer notnull, y: text notnull } dml_proc
+  | | {name shape}: shape: { x: integer notnull, y: text notnull } dml_proc
   | | {int 3}
   | {proc_params_stmts}
-    | {typed_names}: select: { x: integer notnull, y: text notnull }
+    | {typed_names}: shape: { x: integer notnull, y: text notnull }
       | {typed_name}: x: integer notnull
       | | {name x}
       | | {notnull}: x: integer notnull
@@ -47682,12 +47682,12 @@ The statement ending at line XXXX
 
 DECLARE PROC small_shape () (y TEXT NOT NULL);
 
-  {declare_proc_stmt}: select: { y: text notnull } dml_proc
+  {declare_proc_stmt}: small_shape: { y: text notnull } dml_proc
   | {proc_name_type}
-  | | {name small_shape}: select: { y: text notnull } dml_proc
+  | | {name small_shape}: small_shape: { y: text notnull } dml_proc
   | | {int 3}
   | {proc_params_stmts}
-    | {typed_names}: select: { y: text notnull }
+    | {typed_names}: small_shape: { y: text notnull }
       | {typed_name}: y: text notnull
         | {name y}
         | {notnull}: y: text notnull
@@ -47728,13 +47728,13 @@ END;
   | {name shape_all_columns}: ok
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_cursor_like_name}: C: select: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
-      | | {name C}: C: select: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
-      | | {like}: select: { x: integer notnull, y: text notnull } dml_proc
-      |   | {name shape}: select: { x: integer notnull, y: text notnull } dml_proc
+      | {declare_cursor_like_name}: C: shape: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
+      | | {name C}: C: shape: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
+      | | {like}: shape: { x: integer notnull, y: text notnull } dml_proc
+      |   | {name shape}: shape: { x: integer notnull, y: text notnull } dml_proc
       | {fetch_values_stmt}: ok
       | | {name_columns_values}
-      |   | {name C}: C: select: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
+      |   | {name C}: C: shape: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
       |   | {columns_values}: ok
       |     | {column_spec}
       |     | | {name_list}
@@ -47852,13 +47852,13 @@ END;
   | {name shape_some_columns}: ok
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_cursor_like_name}: C: select: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
-      | | {name C}: C: select: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
-      | | {like}: select: { x: integer notnull, y: text notnull } dml_proc
-      |   | {name shape}: select: { x: integer notnull, y: text notnull } dml_proc
+      | {declare_cursor_like_name}: C: shape: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
+      | | {name C}: C: shape: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
+      | | {like}: shape: { x: integer notnull, y: text notnull } dml_proc
+      |   | {name shape}: shape: { x: integer notnull, y: text notnull } dml_proc
       | {fetch_values_stmt}: ok
       | | {name_columns_values}
-      |   | {name C}: C: select: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
+      |   | {name C}: C: shape: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
       |   | {columns_values}: ok
       |     | {column_spec}
       |     | | {name_list}
@@ -47891,13 +47891,13 @@ Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, tab
   | {name shape_some_columns_bogus_name}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_cursor_like_name}: C: select: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
-      | | {name C}: C: select: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
-      | | {like}: select: { x: integer notnull, y: text notnull } dml_proc
-      |   | {name shape}: select: { x: integer notnull, y: text notnull } dml_proc
+      | {declare_cursor_like_name}: C: shape: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
+      | | {name C}: C: shape: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
+      | | {like}: shape: { x: integer notnull, y: text notnull } dml_proc
+      |   | {name shape}: shape: { x: integer notnull, y: text notnull } dml_proc
       | {fetch_values_stmt}: ok
       | | {name_columns_values}
-      |   | {name C}: C: select: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
+      |   | {name C}: C: shape: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
       |   | {columns_values}: ok
       |     | {column_spec}
       |     | | {name_list}
@@ -47912,7 +47912,7 @@ Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, tab
         | {name shape_y_only}
         | {expr_list}: err
           | {from_shape}
-            | {name C}: C: select: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
+            | {name C}: C: shape: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
             | {like}: err
               | {name not_a_real_shape}: err
 
@@ -50735,11 +50735,11 @@ The statement ending at line XXXX
 
 DECLARE Q CURSOR LIKE some_proc ARGUMENTS;
 
-  {declare_cursor_like_name}: Q: proc_args: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out } variable auto_cursor value_cursor
-  | {name Q}: Q: proc_args: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out } variable auto_cursor value_cursor
-  | {like}: proc_args: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out }
-    | {name some_proc}: proc_args: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out }
-    | {name some_proc}: proc_args: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out }
+  {declare_cursor_like_name}: Q: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out } variable auto_cursor value_cursor
+  | {name Q}: Q: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out } variable auto_cursor value_cursor
+  | {like}: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out }
+    | {name some_proc}: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out }
+    | {name some_proc}: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out }
 
 The statement ending at line XXXX
 
@@ -52256,12 +52256,12 @@ The statement ending at line XXXX
 
 DECLARE PROC use_c () (c INTEGER);
 
-  {declare_proc_stmt}: select: { c: integer } dml_proc
+  {declare_proc_stmt}: use_c: { c: integer } dml_proc
   | {proc_name_type}
-  | | {name use_c}: select: { c: integer } dml_proc
+  | | {name use_c}: use_c: { c: integer } dml_proc
   | | {int 3}
   | {proc_params_stmts}
-    | {typed_names}: select: { c: integer }
+    | {typed_names}: use_c: { c: integer }
       | {typed_name}: c: integer
         | {name c}
         | {type_int}: c: integer

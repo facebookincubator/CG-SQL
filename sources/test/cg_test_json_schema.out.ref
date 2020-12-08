@@ -1053,6 +1053,50 @@
     
     The statement ending at line XXXX
     
+    CREATE TABLE T1(
+      id INTEGER,
+      name TEXT
+    )
+    
+    {
+      "name" : "T1",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "columns" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "name",
+          "type" : "text",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ]
+    },
+    
+    The statement ending at line XXXX
+    
     CREATE TABLE with_collate_and_check(
       id TEXT COLLATE bar CHECK(id >= '_' AND id <= 'zzzzz') 
     )
@@ -1221,6 +1265,37 @@
         }
       ],
       "select" : "SELECT id, name FROM Foo",
+      "selectArgs" : [  ]
+    }
+    The statement ending at line XXXX
+    
+    CREATE VIEW my_view AS
+    SELECT 1 AS foo, T1.*
+      FROM T1
+    
+    ,
+    {
+      "name" : "my_view",
+      "isTemp" : 0,
+      "isDeleted" : 0,
+      "projection" : [
+        {
+          "name" : "foo",
+          "type" : "integer",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "name",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ],
+      "select" : "SELECT 1 AS foo, T1.id, T1.name FROM T1",
       "selectArgs" : [  ]
     }
   ],
@@ -1499,11 +1574,13 @@
       "args" : [
         {
           "name" : "pattern",
+          "argOrigin" : "pattern",
           "type" : "text",
           "isNotNull" : 1
         },
         {
           "name" : "reject",
+          "argOrigin" : "reject",
           "type" : "text",
           "isNotNull" : 0
         }
@@ -1541,11 +1618,13 @@
       "args" : [
         {
           "name" : "pattern",
+          "argOrigin" : "pattern",
           "type" : "text",
           "isNotNull" : 1
         },
         {
           "name" : "reject",
+          "argOrigin" : "reject",
           "type" : "text",
           "isNotNull" : 0
         }
@@ -1584,6 +1663,7 @@
       "args" : [
         {
           "name" : "id_",
+          "argOrigin" : "id_",
           "type" : "integer",
           "isNotNull" : 1
         }
@@ -1677,6 +1757,7 @@
       "args" : [
         {
           "name" : "anObject",
+          "argOrigin" : "anObject",
           "type" : "object",
           "isNotNull" : 0
         }
@@ -1860,11 +1941,13 @@
       "args" : [
         {
           "name" : "id_",
+          "argOrigin" : "id_",
           "type" : "integer",
           "isNotNull" : 1
         },
         {
           "name" : "name_",
+          "argOrigin" : "name_",
           "type" : "text",
           "isNotNull" : 0
         }
@@ -1901,6 +1984,7 @@
       "args" : [
         {
           "name" : "seed_",
+          "argOrigin" : "seed_",
           "type" : "integer",
           "isNotNull" : 1
         }
@@ -2059,6 +2143,7 @@
       "args" : [
         {
           "name" : "x",
+          "argOrigin" : "x",
           "type" : "integer",
           "isNotNull" : 1
         }
@@ -2091,11 +2176,13 @@
       "args" : [
         {
           "name" : "id_",
+          "argOrigin" : "id_",
           "type" : "integer",
           "isNotNull" : 1
         },
         {
           "name" : "name_",
+          "argOrigin" : "name_",
           "type" : "text",
           "isNotNull" : 0
         }
@@ -2125,11 +2212,13 @@
       "args" : [
         {
           "name" : "id_",
+          "argOrigin" : "id_",
           "type" : "integer",
           "isNotNull" : 1
         },
         {
           "name" : "name_",
+          "argOrigin" : "name_",
           "type" : "text",
           "isNotNull" : 0
         }
@@ -2156,6 +2245,7 @@
       "args" : [
         {
           "name" : "name_",
+          "argOrigin" : "name_",
           "type" : "text",
           "isNotNull" : 0
         }
@@ -2183,6 +2273,7 @@
       "args" : [
         {
           "name" : "name_",
+          "argOrigin" : "name_",
           "type" : "text",
           "isNotNull" : 0
         }
@@ -2210,12 +2301,14 @@
         {
           "binding" : "out",
           "name" : "pattern",
+          "argOrigin" : "pattern",
           "type" : "text",
           "isNotNull" : 1
         },
         {
           "binding" : "inout",
           "name" : "arg",
+          "argOrigin" : "arg",
           "type" : "real",
           "isNotNull" : 0
         }
@@ -2351,6 +2444,174 @@
     
     The statement ending at line XXXX
     
+    CREATE PROC proc_args_1 (arg1_x INTEGER, arg1_y INTEGER)
+    BEGIN
+    END
+    
+    {
+      "name" : "proc_args_1",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+        {
+          "name" : "arg1_x",
+          "argOrigin" : "arg1 result_proc x",
+          "type" : "integer",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "arg1_y",
+          "argOrigin" : "arg1 result_proc y",
+          "type" : "integer",
+          "isNotNull" : 0
+        }
+      ],
+      "usesTables" : [  ],
+      "usesDatabase" : 0
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE PROC proc_args_2 (id_ INTEGER, name_ TEXT)
+    BEGIN
+    END
+    
+    {
+      "name" : "proc_args_2",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+        {
+          "name" : "id_",
+          "argOrigin" : "T1 id",
+          "type" : "integer",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "name_",
+          "argOrigin" : "T1 name",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ],
+      "usesTables" : [  ],
+      "usesDatabase" : 0
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE PROC proc_args_3 (x_ INTEGER NOT NULL, y_ INTEGER NOT NULL)
+    BEGIN
+    END
+    
+    {
+      "name" : "proc_args_3",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+        {
+          "name" : "x_",
+          "argOrigin" : "a_cursor x",
+          "type" : "integer",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "y_",
+          "argOrigin" : "a_cursor y",
+          "type" : "integer",
+          "isNotNull" : 1
+        }
+      ],
+      "usesTables" : [  ],
+      "usesDatabase" : 0
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE PROC proc_args_4 (id_ INTEGER, name_ TEXT)
+    BEGIN
+    END
+    
+    {
+      "name" : "proc_args_4",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+        {
+          "name" : "id_",
+          "argOrigin" : "T1 id",
+          "type" : "integer",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "name_",
+          "argOrigin" : "T1 name",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ],
+      "usesTables" : [  ],
+      "usesDatabase" : 0
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE PROC proc_args_5 (arg1_x INTEGER, arg1_y INTEGER)
+    BEGIN
+    END
+    
+    {
+      "name" : "proc_args_5",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+        {
+          "name" : "arg1_x",
+          "argOrigin" : "proc_args_1[arguments] arg1_x",
+          "type" : "integer",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "arg1_y",
+          "argOrigin" : "proc_args_1[arguments] arg1_y",
+          "type" : "integer",
+          "isNotNull" : 0
+        }
+      ],
+      "usesTables" : [  ],
+      "usesDatabase" : 0
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE PROC proc_args_6 (foo_ INTEGER NOT NULL, id_ INTEGER, name_ TEXT)
+    BEGIN
+    END
+    
+    {
+      "name" : "proc_args_6",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+        {
+          "name" : "foo_",
+          "argOrigin" : "my_view foo",
+          "type" : "integer",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "id_",
+          "argOrigin" : "my_view id",
+          "type" : "integer",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "name_",
+          "argOrigin" : "my_view name",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ],
+      "usesTables" : [  ],
+      "usesDatabase" : 0
+    },
+    
+    The statement ending at line XXXX
+    
     CREATE PROC empty_proc ()
     BEGIN
     END
@@ -2421,6 +2682,7 @@
         {
           "binding" : "out",
           "name" : "x",
+          "argOrigin" : "x",
           "type" : "integer",
           "isNotNull" : 1
         }

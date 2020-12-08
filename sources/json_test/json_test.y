@@ -46,7 +46,7 @@ void yyset_lineno(int);
 %token LONG_LITERAL
 %token REAL_LITERAL
 %token TABLES
-%token NAME IS_TEMP IF_NOT_EXISTS WITHOUT_ROWID IS_ADDED IS_DELETED IS_RECREATED REGION DEPLOYED_IN_REGION
+%token NAME ARG_ORIGIN IS_TEMP IF_NOT_EXISTS WITHOUT_ROWID IS_ADDED IS_DELETED IS_RECREATED REGION DEPLOYED_IN_REGION
 %token ADDED_VERSION DELETED_VERSION ADDED_MIGRATION_PROC DELETED_MIGRATION_PROC RECREATE_GROUP_NAME
 %token COLUMNS
 %token TYPE IS_NOT_NULL IS_PRIMARY_KEY IS_UNIQUE_KEY IS_AUTO_INCREMENT IS_SENSITIVE
@@ -422,6 +422,7 @@ args: arg | arg ',' args
 
 arg: '{'
       NAME STRING_LITERAL ','
+      ARG_ORIGIN STRING_LITERAL ','
       TYPE STRING_LITERAL ','
       opt_is_sensitive
       IS_NOT_NULL BOOL_LITERAL
@@ -540,6 +541,7 @@ complex_args: complex_arg | complex_arg ',' complex_args
 complex_arg: '{'
               binding
               NAME STRING_LITERAL ','
+              ARG_ORIGIN STRING_LITERAL ','
               TYPE STRING_LITERAL ','
               opt_is_sensitive
               IS_NOT_NULL BOOL_LITERAL

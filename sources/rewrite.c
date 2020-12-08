@@ -374,6 +374,26 @@ cql_noexport bool_t rewrite_one_def(ast_node *head) {
   return true;
 }
 
+// Give the best name for the shape type given then AST
+// there are many casese, the best data is on the struct type unless
+// it's anonymous, in which case the item name is the best choice.
+CSTR static best_shape_type_name(ast_node *found_shape) {
+  Contract(found_shape->sem);
+  Contract(found_shape->sem->sptr);
+
+  CSTR struct_name = found_shape->sem->sptr->struct_name;
+  CSTR obj_name = found_shape->sem->name;
+
+  // "select" is the generic name used for structs that are otherwise unnamed.
+  // e.g.  "declare C cursor like select 1 x, 2 y"
+  if (struct_name && strcmp("select", struct_name)) {
+    return struct_name;
+  }
+  else {
+    // use "select" only as a last recourse, it means some anonymous shape
+    return obj_name ? obj_name : "select";
+  }
+}
 
 // Here we have found a "like T" name that needs to be rewritten with
 // the various columns of T.  We do this by:
@@ -404,7 +424,7 @@ static ast_node *rewrite_one_param(ast_node *param, symtab *param_names, bytebuf
   uint32_t count = sptr->count;
   bool_t first_rewrite = true;
   CSTR shape_name = "";
-  CSTR shape_type = found_shape->sem->name;
+  CSTR shape_type = best_shape_type_name(found_shape);
 
   if (shape_name_ast) {
     EXTRACT_STRING(sname, shape_name_ast);
@@ -423,7 +443,7 @@ static ast_node *rewrite_one_param(ast_node *param, symtab *param_names, bytebuf
 
     if (shape_name[0]) {
       // the orignal name in this form has to be compound to disambiguate
-      original_name = param_name = dup_printf("%s_%s", shape_name, param_name);
+      param_name = dup_printf("%s_%s", shape_name, param_name);
 
       // note we skip none of these, if the names conflict that is an error:
       // e.g. if you make an arg like x_y and you then have a shape named x

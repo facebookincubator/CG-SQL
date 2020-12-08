@@ -3396,7 +3396,7 @@ declare proc decl2(id integer) using transaction;
 
 -- TEST: declare procedure with select result set
 -- - Error
--- + declare_proc_stmt}: select: { A: integer notnull, B: bool } dml_proc
+-- + declare_proc_stmt}: decl3: { A: integer notnull, B: bool } dml_proc
 declare proc decl3(id integer) ( A integer not null, B bool );
 
 -- TEST: try an arg bundle inside of a declared proc
@@ -5207,7 +5207,7 @@ begin
 end;
 
 -- TEST: declare a fetch proc with a result set
--- + {declare_proc_stmt}: select: { t: text } uses_out
+-- + {declare_proc_stmt}: declared_proc: { t: text } uses_out
 -- - Error
 declare proc declared_proc(id integer) out (t text);
 
@@ -5639,8 +5639,8 @@ end;
 -- TEST: declare a cursor like a proc
 -- + {create_proc_stmt}: ok
 -- + {name declare_cursor_like_proc}: ok
--- + {declare_cursor_like_name}: C: select: { A: integer notnull, B: bool } variable auto_cursor value_cursor
--- + {name C}: C: select: { A: integer notnull, B: bool } variable auto_cursor value_cursor
+-- + {declare_cursor_like_name}: C: decl3: { A: integer notnull, B: bool } variable auto_cursor value_cursor
+-- + {name C}: C: decl3: { A: integer notnull, B: bool } variable auto_cursor value_cursor
 -- - ok dml_proc
 -- - Error
 create proc declare_cursor_like_proc()
@@ -7320,7 +7320,7 @@ end;
 
 -- TEST: match a proc that was previously created
 -- + DECLARE PROC out_cursor_proc () OUT (A INTEGER NOT NULL, B INTEGER NOT NULL) USING TRANSACTION;
--- + {declare_proc_stmt}: select: { A: integer notnull, B: integer notnull } dml_proc uses_out
+-- + {declare_proc_stmt}: out_cursor_proc: { A: integer notnull, B: integer notnull } dml_proc uses_out
 -- - Error
 declare proc out_cursor_proc() OUT (A int not null, B int not null) using transaction;
 
@@ -9785,14 +9785,14 @@ on conflict(id) do update set name = excluded.name, rate = id+1;
 insert into foo default values on conflict do nothing;
 
 -- TEST declare a value fetcher that doesn't use DML
--- + {declare_proc_stmt}: select: { id: text } uses_out
+-- + {declare_proc_stmt}: val_fetch: { id: text } uses_out
 -- - dml_proc
 -- + DECLARE PROC val_fetch (seed INTEGER NOT NULL) OUT (id TEXT);
 -- - USING TRANSACTION
 DECLARE PROC val_fetch (seed INTEGER NOT NULL) OUT (id TEXT);
 
 -- TEST declare a value fetcher that does use DML
--- + {declare_proc_stmt}: select: { id: text } dml_proc uses_out
+-- + {declare_proc_stmt}: val_fetch_dml: { id: text } dml_proc uses_out
 -- + DECLARE PROC val_fetch_dml (seed INTEGER NOT NULL) OUT (id TEXT) USING TRANSACTION;
 DECLARE PROC val_fetch_dml (seed INTEGER NOT NULL) OUT (id TEXT) USING TRANSACTION;
 
@@ -10791,12 +10791,12 @@ fetch c1c7 from cursor nully_cursor(like not_a_symbol);
 
 -- TEST: try to declare a procedure that uses out union
 -- + DECLARE PROC out_union_user (x INTEGER) OUT UNION (id INTEGER, x TEXT);
--- + {declare_proc_stmt}: select: { id: integer, x: text } uses_out_union
+-- + {declare_proc_stmt}: out_union_user: { id: integer, x: text } uses_out_union
 -- - Error
 declare proc out_union_user(x integer) out union (id integer, x text);
 
 -- TEST: make a cursor for an externally defined out union func
--- + {declare_cursor}: out_union_cursor: select: { id: integer, x: text } variable uses_out_union
+-- + {declare_cursor}: out_union_cursor: out_union_user: { id: integer, x: text } variable uses_out_union
 -- - Error
 declare out_union_cursor cursor for call out_union_user(2);
 
@@ -10804,7 +10804,7 @@ declare out_union_cursor cursor for call out_union_user(2);
 create table sens_table(t text @sensitive);
 
 -- TEST: introduce a declaration for the proc we are about to create, it has a sensitive result.
--- + {declare_proc_stmt}: select: { t: text sensitive } dml_proc
+-- + {declare_proc_stmt}: sens_result_proc: { t: text sensitive } dml_proc
 -- - Error
 declare proc sens_result_proc () (t text @sensitive);
 
@@ -11344,7 +11344,7 @@ create table in_the_future(
 declare proc basic_source() out union (id integer, name text);
 
 -- TEST: this proc should be OUT not OUT UNION
--- + {create_proc_stmt}: C: select: { id: integer, name: text } variable dml_proc auto_cursor uses_out
+-- + {create_proc_stmt}: C: basic_source: { id: integer, name: text } variable dml_proc auto_cursor uses_out
 -- - {create_proc_stmt}: % uses_out_union
 -- - Error
 create proc basic_wrapper_out()
@@ -11355,7 +11355,7 @@ begin
 end;
 
 -- TEST: this proc should be OUT not OUT UNION
--- + {create_proc_stmt}: C: select: { id: integer, name: text } variable dml_proc auto_cursor uses_out_union
+-- + {create_proc_stmt}: C: basic_source: { id: integer, name: text } variable dml_proc auto_cursor uses_out_union
 -- - {create_proc_stmt}: % uses_out %uses_out_union
 -- - {create_proc_stmt}: % uses_out_union %uses_out
 -- - Error
@@ -12448,7 +12448,7 @@ declare proc some_proc(id integer, t text, t1 text not null, b blob, out x integ
 
 -- TEST: make a cursor using the arguments of a procedure as the shape
 -- + DECLARE Q CURSOR LIKE some_proc ARGUMENTS;
--- + {declare_cursor_like_name}: Q: proc_args: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out } variable auto_cursor value_cursor
+-- + {declare_cursor_like_name}: Q: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out } variable auto_cursor value_cursor
 -- - Error
 declare Q cursor like some_proc arguments;
 

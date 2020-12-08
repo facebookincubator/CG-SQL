@@ -714,9 +714,71 @@ end;
 -- + "name" : "anObject",
 -- + "type" : "object",
 -- + "isNotNull" : 0
-CREATE proc object_proc(anObject OBJECT)
+create proc object_proc(anObject OBJECT)
 begin
   select 1 x; /* any body will do */
+end;
+
+
+-- some assets to use in the arg orgin tests
+declare proc result_proc(id integer, t text) (x integer, y integer);
+
+create table T1 (
+  id integer,
+  name text);
+
+declare a_cursor cursor like select 1 x, 2 y;
+
+declare b_cursor cursor like T1;
+
+create view my_view as select 1 foo, T1.* from T1;
+
+-- TEST: args like a proc result
+-- + "name" : "arg1_x",
+-- + "argOrigin" : "arg1 result_proc x"
+-- + "name" : "arg1_y",
+-- + "argOrigin" : "arg1 result_proc y"
+create proc proc_args_1(arg1 like result_proc)
+begin
+end;
+
+-- TEST: args like a table
+-- + "argOrigin" : "T1 id",
+-- + "argOrigin" : "T1 name",
+create proc proc_args_2(like T1)
+begin
+end;
+
+-- TEST: args like a cursor (ad hoc shape)
+-- The cursor makes its own struct shape that has no name
+-- so the cursor name is the best we can do.
+-- + "argOrigin" : "a_cursor x",
+-- + "argOrigin" : "a_cursor y",
+create proc proc_args_3(like a_cursor)
+begin
+end;
+
+-- TEST: args like a cursor (named shape)
+-- note the original type name is used
+-- + "argOrigin" : "T1 id",
+-- + "argOrigin" : "T1 name",
+create proc proc_args_4(like b_cursor)
+begin
+end;
+
+-- TEST: args like a procedures arguments 
+-- + "argOrigin" : "proc_args_1[arguments] arg1_x",
+-- + "argOrigin" : "proc_args_1[arguments] arg1_y",
+create proc proc_args_5(like proc_args_1 arguments)
+begin
+end;
+
+-- TEST: args like a view
+-- + "argOrigin" : "my_view foo",
+-- + "argOrigin" : "my_view id",
+-- + "argOrigin" : "my_view name",
+create proc proc_args_6(like my_view)
+begin
 end;
 
 -- TEST: declare a region with one dependency (generates dep list)

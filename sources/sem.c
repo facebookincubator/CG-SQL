@@ -1212,12 +1212,10 @@ cql_noexport ast_node *find_proc(CSTR name) {
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
-/* not needed yet, this will be used by the JSON output code
 cql_noexport bytebuf *find_proc_arg_info(CSTR name) {
   symtab_entry *entry = symtab_find(proc_arg_info, name);
   return entry ? (bytebuf *)(entry->val) : NULL;
 }
-*/
 
 static ast_node *find_upgrade_proc(CSTR name) {
   symtab_entry *entry = symtab_find(upgrade_procs, name);
@@ -6834,7 +6832,7 @@ static void sem_select_expr(ast_node *ast) {
 
 // This validates the select list, getting the type of each element.
 // If the select list is the special "*" select list, it must be the only
-// element (enforced earlier) and that is handled with a special helper.
+// element and that is handled with a special helper.
 // Otherwise, get each item and validate.  At this point we compute the
 // net result type of the select from the select list.
 static void sem_select_expr_list(ast_node *ast) {
@@ -11271,6 +11269,8 @@ static ast_node *sem_find_likeable_proc_args(ast_node *like_ast) {
     goto error;
   }
 
+  EXTRACT_STRING(proc_name, get_proc_name(proc));
+
   // we're goign to make a synthetic type node for the procedures arguments
   AST_REWRITE_INFO_SET(like_ast->lineno, like_ast->filename);
   ast_node *result = new_ast_str(like_name);
@@ -11287,7 +11287,9 @@ static ast_node *sem_find_likeable_proc_args(ast_node *like_ast) {
 
   for (; params; params = params->right, count++) ;
 
-  sem_struct *sptr = new_sem_struct("proc_args", count);
+  CSTR shape_name = dup_printf("%s[arguments]", proc_name);
+
+  sem_struct *sptr = new_sem_struct(shape_name, count);
 
   params = get_proc_params(proc);
 
@@ -11390,7 +11392,7 @@ static void sem_params(ast_node *head, bytebuf *args_info) {
     return;
   }
 
-  // we're only going to record the proc argument shape for 
+  // we're only going to record the proc argument shape for
   // create proc statements, we need this stuff for the JSON
   // output so we can emit where the arguments came from.
   // Since we have to do this anyway we're also going to make
@@ -11405,7 +11407,7 @@ static void sem_params(ast_node *head, bytebuf *args_info) {
   if (args_info) {
     uint32_t count = args_info->used / sizeof(CSTR) / 3;
     if (count) {
-      AST_REWRITE_INFO_SET(head->lineno, head->filename); 
+      AST_REWRITE_INFO_SET(head->lineno, head->filename);
       CSTR args = "ARGUMENTS";
 
       ast_node *ast_args = new_ast_str(args);
@@ -13586,6 +13588,7 @@ static void sem_declare_proc_stmt(ast_node *ast) {
     }
 
     ast->sem = typed_names->sem;
+    ast->sem->sptr->struct_name = name;
   }
   else {
     ast->sem = new_sem(SEM_TYPE_OK);

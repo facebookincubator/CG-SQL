@@ -1257,7 +1257,7 @@ static void cg_json_tables(charbuf *output) {
 // used as the legal arguments to the statement we are binding.  If any of
 // the parameters are of the 'out' flavor then this proc is "complex"
 // so we simply return false and let it fall into the general bucket.
-static bool_t cg_json_param(charbuf *output, ast_node *ast) {
+static bool_t cg_json_param(charbuf *output, ast_node *ast, CSTR *infos) {
   Contract(is_ast_param(ast));
   EXTRACT_ANY(opt_inout, ast->left);
   EXTRACT_NOTNULL(param_detail, ast->right);
@@ -1278,7 +1278,29 @@ static bool_t cg_json_param(charbuf *output, ast_node *ast) {
   }
 
   bprintf(output, "\"name\" : \"%s\",\n", name);
+
+  CSTR base_name = infos[0];
+  CSTR shape_name = infos[1];
+  CSTR shape_type = infos[2];
+
+  if (shape_name[0]) {
+    // this is an expansion of the form shape_name LIKE shape_type
+    // the formal arg will have a name like "shape_name_base_name" (underscore between the parts)
+    bprintf(output, "\"argOrigin\" : \"%s %s %s\",\n", shape_name, shape_type, base_name);
+  }
+  else if (shape_type[0]) {
+    // this is an expansion of the form LIKE shape_type
+    // the formal arg will have a name like "base_name_" (trailing underscore)
+    bprintf(output, "\"argOrigin\" : \"%s %s\",\n", shape_type, base_name);
+  }
+  else {
+    // this is a normal arg, it was not auto-expanded from anything
+    // the formal arg will have the name "base_name"
+    bprintf(output, "\"argOrigin\" : \"%s\",\n", base_name);
+  }
+
   cg_json_data_type(output, ast->sem->sem_type);
+
   END_INDENT(type);
 
   bprintf(output, "\n}");
@@ -1287,7 +1309,7 @@ static bool_t cg_json_param(charbuf *output, ast_node *ast) {
 
 // Here we walk all the parameters of a stored proc and process each in turn.
 // If any parameter is not valid, the entire proc becomes not valid.
-static bool_t cg_json_params(charbuf *output, ast_node *ast) {
+static bool_t cg_json_params(charbuf *output, ast_node *ast, CSTR *infos) {
   bool_t simple = 1;
 
   BEGIN_LIST;
@@ -1296,9 +1318,14 @@ static bool_t cg_json_params(charbuf *output, ast_node *ast) {
     EXTRACT_NOTNULL(param, ast->left);
 
     COMMA;
-    simple &= cg_json_param(output, param);
+
+    simple &= cg_json_param(output, param, infos);
 
     ast = ast->right;
+
+    // There are 3 strings per arg, one each for the shape name, shape type, and base name
+    // these desribe how automatically generated arguments were created.
+    infos += 3;
   }
   END_LIST;
 
@@ -1504,9 +1531,12 @@ static bool_t cg_parameters(charbuf *output, ast_node *ast) {
   EXTRACT(params, proc_params_stmts->left);
   bool_t simple = 1;
 
+  bytebuf *arg_info = find_proc_arg_info(name);
+  CSTR *infos = arg_info ? (CSTR *)arg_info->ptr : NULL;
+
   bprintf(output, "\"args\" : [\n");
   BEGIN_INDENT(parms, 2);
-  simple = cg_json_params(output, params);
+  simple = cg_json_params(output, params, infos);
   END_INDENT(parms);
   bprintf(output, "]");
 

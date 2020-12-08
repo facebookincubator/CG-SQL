@@ -30,6 +30,7 @@ int fileno(FILE *);
 
 \"tables\"[ \t]*:                { return TABLES; }
 \"name\"[ \t]*:                  { return NAME; }
+\"argOrigin\"[ \t]*:             { return ARG_ORIGIN; }
 \"isTemp\"[ \t]*:                { return IS_TEMP; }
 \"ifNotExists\"[ \t]*:           { return IF_NOT_EXISTS; }
 \"withoutRowid\"[ \t]*:          { return WITHOUT_ROWID; }
