@@ -260,3 +260,4 @@ cql_noexport ast_node *first_arg(ast_node *arg_list);
 cql_noexport ast_node *second_arg(ast_node *arg_list);
 cql_noexport ast_node *third_arg(ast_node *arg_list);
 cql_noexport void sem_verify_no_anon_no_null_columns(ast_node *ast);
+cql_noexport void sem_any_shape(ast_node *ast);

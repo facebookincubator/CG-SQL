@@ -9935,6 +9935,8 @@ static void sem_update_cursor_stmt(ast_node *ast) {
     Contract(is_ast_columns_values(columns_values));
   }
 
+  rewrite_empty_column_list(columns_values, cursor->sem->sptr);
+
   rewrite_like_column_spec_if_needed(columns_values);
   if (is_error(columns_values)) {
     record_error(ast);
@@ -13972,6 +13974,21 @@ static void sem_declare_value_cursor(ast_node *ast) {
   ast->sem = cursor->sem;
 
   symtab_add(current_variables, name, cursor);
+}
+
+// Try to analyze the name first as an arg bundle, and that fails, then try as a cursor
+// these are the two shapes that hold data.
+cql_noexport void sem_any_shape(ast_node *ast) {
+  EXTRACT_STRING(name, ast);
+  ast_node *shape = find_arg_bundle(name);
+
+  if (shape) {
+    ast->sem = shape->sem;
+    return;
+  }
+
+  // try it as a cursor (whatever error happens here will be the final answer)
+  sem_cursor(ast);
 }
 
 // Cursors appear in only a few places legally as an actual cursor;
