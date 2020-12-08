@@ -870,7 +870,7 @@ static void add_value_to_fk_table(
 
   // We want to avoid adding the same value to multiple rows in the same table.
   if (!is_column_value_exist(fk_column_values, column_type, column_value)) {
-    bytebuf_append(fk_column_values, &column_value, sizeof(&column_value));
+    bytebuf_append_var(fk_column_values, column_value);
   }
 }
 
@@ -908,9 +908,9 @@ static void collect_dummy_test_info(
 
         bytebuf *column_values = symtab_ensure_bytebuf(column_list, column_name);
         // cache the info
-        bytebuf_append(&column_values_cache, &column_values, sizeof(column_values));
-        bytebuf_append(&column_types_cache, &col_type, sizeof(col_type));
-        bytebuf_append(&column_names_cache, &column_name, sizeof(column_name));
+        bytebuf_append_var(&column_values_cache, column_values);
+        bytebuf_append_var(&column_types_cache, col_type);
+        bytebuf_append_var(&column_names_cache, column_name);
       }
 
       // collect column value from dummy_test info. We can have multiple rows of column value
@@ -924,7 +924,7 @@ static void collect_dummy_test_info(
           sem_t column_type = ((sem_t *) column_types_cache.ptr)[column_value_index];
           CSTR column_name = ((CSTR *) column_names_cache.ptr)[column_value_index];
 
-          bytebuf_append(column_values, &misc_attr_value, sizeof(misc_attr_value));
+          bytebuf_append_var(column_values, misc_attr_value);
           column_value_index++;
 
           // Let's handle a case where a column value is added to dummy_test info for a

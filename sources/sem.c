@@ -331,6 +331,7 @@ static bool_t validating_previous_schema;
 
 // These are the various symbol tables we need, they are stored super dumbly.
 static symtab *procs;
+static symtab *proc_arg_info;
 static symtab *triggers;
 static symtab *upgrade_procs;
 static symtab *ad_hoc_migrates;
@@ -1206,10 +1207,17 @@ static bool_t add_proc(ast_node *ast, CSTR name) {
   return symtab_add(procs, name, ast);
 }
 
-ast_node *find_proc(CSTR name) {
+cql_noexport ast_node *find_proc(CSTR name) {
   symtab_entry *entry = symtab_find(procs, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
+
+/* not needed yet, this will be used by the JSON output code
+cql_noexport bytebuf *find_proc_arg_info(CSTR name) {
+  symtab_entry *entry = symtab_find(proc_arg_info, name);
+  return entry ? (bytebuf *)(entry->val) : NULL;
+}
+*/
 
 static ast_node *find_upgrade_proc(CSTR name) {
   symtab_entry *entry = symtab_find(upgrade_procs, name);
@@ -11340,15 +11348,46 @@ error:
 
 // All we have to do here is walk the parameter list and use the helper above
 // for each parameter.
-static void sem_params(ast_node *head) {
+static void sem_params(ast_node *head, bytebuf *args_info) {
   Contract(is_ast_params(head));
 
-  rewrite_params(head);
+  rewrite_params(head, args_info);
   if (is_error(head)) {
     return;
   }
 
-  for (ast_node *ast = head; ast; ast = ast->right) {
+  // we're only going to record the proc argument shape for 
+  // create proc statements, we need this stuff for the JSON
+  // output so we can emit where the arguments came from.
+  // Since we have to do this anyway we're also going to make
+  // a fake arg bundle for all the arguments.  By doing this
+  // the "from arguments" forms all look exactly the same as
+  // any other "from shape" kind of thing so we don't need
+  // special code to walk the arguments.  It just looks like a shape.
+
+  CSTR *arg_names = NULL;
+  sem_struct *sptr = NULL;
+
+  if (args_info) {
+    uint32_t count = args_info->used / sizeof(CSTR) / 3;
+    if (count) {
+      AST_REWRITE_INFO_SET(head->lineno, head->filename); 
+      CSTR args = "ARGUMENTS";
+
+      ast_node *ast_args = new_ast_str(args);
+      ast_args->sem = new_sem(SEM_TYPE_STRUCT | SEM_TYPE_AUTO_CURSOR);
+      ast_args->sem->name = args;
+      sptr = new_sem_struct(args, count);
+      ast_args->sem->sptr = sptr;
+      add_arg_bundle(ast_args, args);
+      arg_names = (CSTR *)args_info->ptr;
+
+      AST_REWRITE_INFO_RESET();
+    }
+  }
+
+  uint32_t i = 0;
+  for (ast_node *ast = head; ast; ast = ast->right, i++) {
     Contract(is_ast_params(ast));
     EXTRACT_NOTNULL(param, ast->left);
 
@@ -11357,7 +11396,14 @@ static void sem_params(ast_node *head) {
       record_error(head);
       return;
     }
+
+    if (sptr) {
+      Invariant(i < sptr->count);
+      sptr->names[i] = arg_names[i*3];
+      sptr->semtypes[i] = param->sem->sem_type;
+    }
   }
+
   record_ok(head);
 }
 
@@ -12746,6 +12792,7 @@ static void sem_inside_create_proc_stmt(ast_node *ast) {
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT(params, proc_params_stmts->left);
   EXTRACT(stmt_list, proc_params_stmts->right);
+  EXTRACT_STRING(proc_name, current_proc->left);
 
   if (params) {
     Contract(is_ast_params(params));
@@ -12761,7 +12808,8 @@ static void sem_inside_create_proc_stmt(ast_node *ast) {
 
   // we process the parameter list even if there are no statements
   if (params) {
-    sem_params(params);
+    bytebuf *args_info = symtab_ensure_bytebuf(proc_arg_info, proc_name);
+    sem_params(params, args_info);
     error = is_error(params);
   }
 
@@ -13200,7 +13248,7 @@ static void sem_declare_func_stmt(ast_node *ast) {
     current_variables = locals = symtab_new();
     arg_bundles = symtab_new();
 
-    sem_params(params);
+    sem_params(params, NULL);
 
     symtab_delete(locals);
     locals = NULL;
@@ -13480,7 +13528,7 @@ static void sem_declare_proc_stmt(ast_node *ast) {
     current_variables = locals = symtab_new();
     arg_bundles = symtab_new();
 
-    sem_params(params);
+    sem_params(params, NULL);
 
     symtab_delete(locals);
     locals = NULL;
@@ -16019,6 +16067,7 @@ cql_noexport void sem_main(ast_node *ast) {
   builtin_funcs = symtab_new();
   funcs = symtab_new();
   procs = symtab_new();
+  proc_arg_info = symtab_new();
   enums = symtab_new();
   triggers = symtab_new();
   upgrade_procs = symtab_new();
@@ -16297,6 +16346,7 @@ cql_noexport void sem_cleanup() {
   SYMTAB_CLEANUP(new_enums);
   SYMTAB_CLEANUP(non_sql_stmts);
   SYMTAB_CLEANUP(procs);
+  SYMTAB_CLEANUP(proc_arg_info);
   SYMTAB_CLEANUP(enums);
   SYMTAB_CLEANUP(schema_regions);
   SYMTAB_CLEANUP(savepoints);

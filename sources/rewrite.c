@@ -32,6 +32,8 @@ static ast_node* rewrite_gen_printf_call(CSTR format, ast_node *arg_list);
 static ast_node *rewrite_gen_cursor_printf(ast_node *variable);
 static ast_node *rewrite_gen_iif_case_expr(ast_node *expr, ast_node *val1, ast_node *val2);
 static ast_node *rewrite_gen_case_expr(ast_node *var1, ast_node *var2, bool_t report_column_name);
+static bool_t rewrite_one_def(ast_node *head);
+static void rewrite_one_typed_name(ast_node *typed_name, symtab *used_names);
 
 bool_t has_named_param(ast_node *params, CSTR name) {
   for (; params; params = params->right) {
@@ -687,17 +689,17 @@ cql_noexport bool_t rewrite_one_def(ast_node *head) {
 // * for each additional column create a param node and link it in.
 // * emit any given name only once, (so you can do like T1, like T1 even if both have the same pk)
 // * arg names get a _ suffix so they don't conflict with column names
-cql_noexport void rewrite_one_param(ast_node *param, symtab *param_names) {
+static ast_node *rewrite_one_param(ast_node *param, symtab *param_names, bytebuf *args_info) {
   Contract(is_ast_param(param));
   EXTRACT_NOTNULL(param_detail, param->right);
-  EXTRACT_ANY(formal, param_detail->left);
+  EXTRACT_ANY(shape_name_ast, param_detail->left);
   EXTRACT_NOTNULL(like, param_detail->right);
   EXTRACT_STRING(like_name, like->left);
 
   ast_node *found_shape = sem_find_likeable_ast(like);
   if (!found_shape) {
     record_error(param);
-    return;
+    return param;
   }
 
   AST_REWRITE_INFO_SET(like->lineno, like->filename);
@@ -708,38 +710,54 @@ cql_noexport void rewrite_one_param(ast_node *param, symtab *param_names) {
   sem_struct *sptr = found_shape->sem->sptr;
   uint32_t count = sptr->count;
   bool_t first_rewrite = true;
-  CSTR formal_name = NULL;
+  CSTR shape_name = "";
+  CSTR shape_type = found_shape->sem->name;
 
-  if (formal) {
-    EXTRACT_STRING(fname, formal);
-    formal_name = fname;
-    ast_node *shape_ast = new_ast_str(formal_name);
+  if (shape_name_ast) {
+    EXTRACT_STRING(sname, shape_name_ast);
+    shape_name = sname;
+    ast_node *shape_ast = new_ast_str(shape_name);
     shape_ast->sem = found_shape->sem;
     sem_add_flags(shape_ast, SEM_TYPE_AUTO_CURSOR); // the arg bundle has storage!
-    shape_ast->sem->name = formal_name;
-    add_arg_bundle(shape_ast, formal_name);
+    shape_ast->sem->name = shape_name;
+    add_arg_bundle(shape_ast, shape_name);
   }
 
   for (int32_t i = 0; i < count; i++) {
     sem_t sem_type = sptr->semtypes[i];
     CSTR param_name = sptr->names[i];
+    CSTR original_name = param_name;
 
-    if (formal_name) {
-      param_name = dup_printf("%s_%s", formal_name, param_name);
+    if (shape_name[0]) {
+      // the orignal name in this form has to be compound to disambiguate
+      original_name = param_name = dup_printf("%s_%s", shape_name, param_name);
+
+      // note we skip none of these, if the names conflict that is an error:
+      // e.g. if you make an arg like x_y and you then have a shape named x
+      //      with a field y you'll get an error
+      symtab_add(param_names, param_name, NULL);
     }
     else {
       // If the shape came from a procedure we keep the args unchanged
       // If the shape came from a data type or cursor then we add _
       // The idea here is that if it came from a procedure we want to keep the same signature
       // exactly and if any _ needed to be added to avoid conflict with a column name then it already was.
+
       if (!(sem_type & (SEM_TYPE_IN_PARAMETER | SEM_TYPE_OUT_PARAMETER))) {
         param_name = dup_printf("%s_", param_name);
       }
+
+      // skip any that we have already added or that are manually present
+      if (!symtab_add(param_names, param_name, NULL)) {
+        continue;
+      }
     }
 
-    // skip any that we have already added or that are manually present
-    if (!symtab_add(param_names, param_name, NULL)) {
-      continue;
+    if (args_info) {
+      // args info uses the cleanest version of the name, no trailing _
+      bytebuf_append_var(args_info, original_name);
+      bytebuf_append_var(args_info, shape_name);
+      bytebuf_append_var(args_info, shape_type);
     }
 
     ast_node *type = rewrite_gen_data_type(sem_type);
@@ -774,6 +792,7 @@ cql_noexport void rewrite_one_param(ast_node *param, symtab *param_names) {
       ast_set_left(param, inout);
       first_rewrite = false;
     }
+    record_ok(param);
   }
 
   // There's a chance we did nothing.  If that happens we still have to remove the like node.
@@ -787,6 +806,9 @@ cql_noexport void rewrite_one_param(ast_node *param, symtab *param_names) {
   }
 
   AST_REWRITE_INFO_RESET();
+
+  // this is the last param that we modified
+  return param;
 }
 
 // The name @proc refers to the current procedure name, this can appear in various
@@ -1093,9 +1115,9 @@ cql_noexport void rewrite_cte_name_list_from_columns(ast_node *ast, ast_node *se
 // * replace the "like T" slug with the first column of T
 // * for each additional column create a typed name node and link it in.
 // * emit any given name only once, (so you can do like T1, like T1 even if both have the same pk)
-cql_noexport void rewrite_one_typed_name(ast_node *typed_name, symtab *used_names) {
+static void rewrite_one_typed_name(ast_node *typed_name, symtab *used_names) {
   Contract(is_ast_typed_name(typed_name));
-  EXTRACT_ANY(formal, typed_name->left);
+  EXTRACT_ANY(shape_name_ast, typed_name->left);
   EXTRACT_NOTNULL(like, typed_name->right);
   EXTRACT_STRING(like_name, like->left);
 
@@ -1113,13 +1135,13 @@ cql_noexport void rewrite_one_typed_name(ast_node *typed_name, symtab *used_name
   sem_struct *sptr = found_shape->sem->sptr;
   uint32_t count = sptr->count;
   bool_t first_rewrite = true;
-  CSTR formal_name = NULL;
+  CSTR shape_name = "";
 
   ast_node *insertion = typed_name;
 
-  if (formal) {
-    EXTRACT_STRING(fname, formal);
-    formal_name = fname;
+  if (shape_name_ast) {
+    EXTRACT_STRING(sname, shape_name_ast);
+    shape_name = sname;
 
     // note that typed names are part of a procedure return type in a declaration
     // they don't create a proc or a proc body and so we don't add to arg_bundles,
@@ -1131,8 +1153,8 @@ cql_noexport void rewrite_one_typed_name(ast_node *typed_name, symtab *used_name
     CSTR name = sptr->names[i];
     CSTR combined_name = name;
 
-    if (formal_name) {
-      combined_name = dup_printf("%s_%s", formal_name, name);
+    if (shape_name[0]) {
+      combined_name = dup_printf("%s_%s", shape_name, name);
     }
 
     // skip any that we have already added or that are manually present
@@ -1199,7 +1221,7 @@ cleanup:
 
 // Walk the param list looking for any of the "like T" forms
 // if any is found, replace that parameter with the table/shape columns
-cql_noexport void rewrite_params(ast_node *head) {
+cql_noexport void rewrite_params(ast_node *head, bytebuf *args_info) {
   symtab *param_names = symtab_new();
 
   for (ast_node *ast = head; ast; ast = ast->right) {
@@ -1208,18 +1230,29 @@ cql_noexport void rewrite_params(ast_node *head) {
     EXTRACT_NOTNULL(param_detail, param->right)
 
     if (is_ast_like(param_detail->right)) {
-      rewrite_one_param(param, param_names);
+      param = rewrite_one_param(param, param_names, args_info);
       if (is_error(param)) {
         record_error(head);
         goto cleanup;
       }
+      ast = param->parent;
+      Invariant(is_ast_params(ast));
     }
     else {
       // Just extract the name and record that we used it -- no rewrite needed.
       EXTRACT_STRING(param_name, param_detail->left);
+      CSTR shape_type = "";
+      CSTR shape_name = "";
+      if (args_info) {
+        bytebuf_append_var(args_info, param_name);
+        bytebuf_append_var(args_info, shape_name);
+        bytebuf_append_var(args_info, shape_type);
+      }
+
       symtab_add(param_names, param_name, NULL);
     }
   }
+
   record_ok(head);
 
 cleanup:

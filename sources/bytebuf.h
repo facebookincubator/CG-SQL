@@ -28,4 +28,8 @@ cql_noexport void bytebuf_append(bytebuf *_Nonnull buf, const void *_Nonnull byt
 // helper macro for new from a bufferß
 #define bytebuf_new(buf, T) ((T*)bytebuf_alloc(buf, sizeof(T)))
 
+// helper macro to append a normal variable
+#define bytebuf_append_var(buf, var) bytebuf_append(buf, &var, sizeof(var))
+
+// cleanup a non-null buffer
 #define BYTEBUF_CLEANUP(b) if (b) {bytebuf_close(b); b = NULL; }
