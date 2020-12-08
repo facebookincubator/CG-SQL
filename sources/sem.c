@@ -11354,7 +11354,12 @@ cql_noexport ast_node *sem_find_likeable_ast(ast_node *like_ast) {
   }
 
   if (!found_shape) {
-    // it's ok to use the LIKE construct on old tables
+    //look for an arg bundle match
+    found_shape = find_arg_bundle(like_name);
+  }
+
+  if (!found_shape) {
+    // note: it's ok to use the LIKE construct on deleted tables too, hence even_hidden
     found_shape = find_table_or_view_even_hidden(like_name);
   }
 

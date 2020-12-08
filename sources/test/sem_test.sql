@@ -13046,3 +13046,12 @@ begin
   declare C cursor like AB;
   update cursor C from a2;
 end;
+
+-- TEST: arg bundle update cursor, all fields, names don't match
+-- + UPDATE CURSOR C(a, b) FROM VALUES(a2.c, a2.d);
+-- - Error
+create proc arg_bundle_16(a1 like AB, a2 like CD)
+begin
+  declare C cursor like a1;
+  update cursor C from a2;
+end;

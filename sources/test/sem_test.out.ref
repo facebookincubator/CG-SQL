@@ -53017,3 +53017,56 @@ END;
                 | {name a2}
                 | {name d}
 
+The statement ending at line XXXX
+
+CREATE PROC arg_bundle_16 (a1_a INTEGER, a1_b TEXT, a2_c INTEGER, a2_d TEXT)
+BEGIN
+  DECLARE C CURSOR LIKE a1;
+  UPDATE CURSOR C(a, b) FROM VALUES(a2.c, a2.d);
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name arg_bundle_16}: ok dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a1_a: integer variable in
+    | | | {param_detail}: a1_a: integer variable in
+    | |   | {name a1_a}: a1_a: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: a1_b: text variable in
+    |   | | {param_detail}: a1_b: text variable in
+    |   |   | {name a1_b}: a1_b: text variable in
+    |   |   | {type_text}: text
+    |   | {params}
+    |     | {param}: a2_c: integer variable in
+    |     | | {param_detail}: a2_c: integer variable in
+    |     |   | {name a2_c}: a2_c: integer variable in
+    |     |   | {type_int}: integer
+    |     | {params}
+    |       | {param}: a2_d: text variable in
+    |         | {param_detail}: a2_d: text variable in
+    |           | {name a2_d}: a2_d: text variable in
+    |           | {type_text}: text
+    | {stmt_list}: ok
+      | {declare_cursor_like_name}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
+      | | {name C}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
+      | | {like}: a1: AB: { a: integer, b: text } shape_storage
+      |   | {name a1}: a1: AB: { a: integer, b: text } shape_storage
+      | {update_cursor_stmt}: ok
+        | {name C}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
+        | {columns_values}: ok
+          | {column_spec}
+          | | {name_list}
+          |   | {name a}: a: integer
+          |   | {name_list}
+          |     | {name b}: b: text
+          | {insert_list}
+            | {dot}: a2_c: integer variable
+            | | {name a2}
+            | | {name c}
+            | {insert_list}
+              | {dot}: a2_d: text variable
+                | {name a2}
+                | {name d}
+
