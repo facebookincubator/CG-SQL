@@ -2078,7 +2078,7 @@ end;
 
 -- TEST: the out statement will force the proc type to be recomputed, it must not lose the
 -- throw state when that happens.
--- + {create_proc_stmt}: C: select: { x: integer notnull } variable dml_proc auto_cursor uses_out uses_throw
+-- + {create_proc_stmt}: C: select: { x: integer notnull } variable dml_proc shape_storage uses_out uses_throw
 -- - Error
 create proc throw_before_out()
 begin
@@ -2751,33 +2751,33 @@ release savepoint garbonzo;
 -- + {rollback_trans_stmt}: err
 rollback transaction to savepoint another_garbonzo;
 
--- TEST: Test the shorthand syntax for cursors. The auto_cursor flag for the
+-- TEST: Test the shorthand syntax for cursors. The shape_storage flag for the
 -- cursor itself comes from the following fetch statement.
--- + {declare_cursor}: auto_cursor: select: { one: integer notnull, two: integer notnull } variable
--- + {name auto_cursor}: auto_cursor: select: { one: integer notnull, two: integer notnull } variable auto_cursor
+-- + {declare_cursor}: shape_storage: select: { one: integer notnull, two: integer notnull } variable
+-- + {name shape_storage}: shape_storage: select: { one: integer notnull, two: integer notnull } variable shape_storage
 -- - Error
-declare auto_cursor cursor for select 1 as one, 2 as two;
+declare shape_storage cursor for select 1 as one, 2 as two;
 
 -- TEST: Fetch the auto cursor
--- + {fetch_stmt}: auto_cursor: select: { one: integer notnull, two: integer notnull } variable
--- + {name auto_cursor}: auto_cursor: select: { one: integer notnull, two: integer notnull } variable auto_cursor
+-- + {fetch_stmt}: shape_storage: select: { one: integer notnull, two: integer notnull } variable
+-- + {name shape_storage}: shape_storage: select: { one: integer notnull, two: integer notnull } variable shape_storage
 -- - Error
-fetch auto_cursor;
+fetch shape_storage;
 
 -- TEST: Now access the cursor
--- + {select_stmt}: select: { auto_cursor_.one: integer notnull variable }
--- + {dot}: auto_cursor_.one: integer notnull variable
--- + {name auto_cursor}
+-- + {select_stmt}: select: { shape_storage_.one: integer notnull variable }
+-- + {dot}: shape_storage_.one: integer notnull variable
+-- + {name shape_storage}
 -- + {name one}
 -- -Error
-select auto_cursor.one;
+select shape_storage.one;
 
 -- TEST: a field that is not present
 -- + Error % field not found in cursor 'three'
 -- + {dot}: err
--- + {name auto_cursor}
+-- + {name shape_storage}
 -- + {name three}
-select auto_cursor.three;
+select shape_storage.three;
 
 -- TEST: a cursor that did not use the auto-cursor feature
 -- + Error % cursor was not used with 'fetch [cursor]' 'my_cursor'
@@ -5103,7 +5103,7 @@ end;
 -- + {out_stmt}: err
 -- + Error % the cursor was not fetched with the auto-fetch syntax 'fetch [cursor]' 'C'
 -- +1 Error
-create proc out_cursor_proc_not_auto_cursor()
+create proc out_cursor_proc_not_shape_storage()
 begin
   declare a, b integer not null;
   declare C cursor for select 1 A, 2 B;
@@ -5188,8 +5188,8 @@ out curs;
 
 -- TEST: read the result of a proc with an out cursor
 -- + {create_proc_stmt}: ok dml_proc
--- + {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
--- + {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
+-- + {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+-- + {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
 -- - Error
 create proc result_reader()
 begin
@@ -5230,7 +5230,7 @@ begin
 end;
 
 -- TEST: read the result of a proc with an out cursor, use same var twice
--- +1 {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+-- +1 {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
 -- +1 {declare_value_cursor}: err
 -- + Error % duplicate variable name in the same scope 'C'
 -- +1 Error
@@ -5304,7 +5304,7 @@ begin
 end;
 
 -- TEST: fetch cursor from values
--- + {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+-- + {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
 -- + {fetch_values_stmt}: ok
 create proc fetch_values()
 begin
@@ -5314,7 +5314,7 @@ end;
 
 -- TEST: fetch cursor from values with dummy values
 -- + FETCH C(A, B) FROM VALUES(_seed_, _seed_) @DUMMY_SEED(123) @DUMMY_NULLABLES;
--- + {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+-- + {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
 -- + {fetch_values_stmt}: ok
 -- +2 {name _seed_}: _seed_: integer notnull variable
 create proc fetch_values_dummy()
@@ -5326,9 +5326,9 @@ end;
 -- TEST: fetch cursor from call
 -- + FETCH C FROM CALL out_cursor_proc();
 -- + {fetch_call_stmt}: ok
--- + {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
--- + {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
--- + {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
+-- + {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+-- + {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+-- + {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
 -- - Error
 create proc fetch_from_call()
 begin
@@ -5429,7 +5429,7 @@ end;
 
 
 -- TEST: helper proc that returns a blob
--- + {create_proc_stmt}: C: select: { B: blob } variable dml_proc auto_cursor uses_out
+-- + {create_proc_stmt}: C: select: { B: blob } variable dml_proc shape_storage uses_out
 create proc blob_out()
 begin
   -- cheesy nullable blob
@@ -5491,7 +5491,7 @@ end;
 -- TEST: fetch to a cursor from another cursor
 -- + FETCH C0(A, B) FROM VALUES(1, 2);
 -- + FETCH C1(A, B) FROM VALUES(C0.A, C0.B);
--- + {create_proc_stmt}: C1: select: { A: integer notnull, B: integer notnull } variable auto_cursor uses_out
+-- + {create_proc_stmt}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage uses_out
 -- + {fetch_values_stmt}: ok
 -- - Error
 create proc fetch_to_cursor_from_cursor()
@@ -5586,8 +5586,8 @@ end;
 -- TEST: declare a cursor like an existing cursor
 -- + {create_proc_stmt}: ok dml_proc
 -- + {name declare_cursor_like_cursor}: ok dml_proc
--- + {declare_cursor_like_name}: C1: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
--- + {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+-- + {declare_cursor_like_name}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+-- + {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
 -- - Error
 create proc declare_cursor_like_cursor()
 begin
@@ -5639,8 +5639,8 @@ end;
 -- TEST: declare a cursor like a proc
 -- + {create_proc_stmt}: ok
 -- + {name declare_cursor_like_proc}: ok
--- + {declare_cursor_like_name}: C: decl3: { A: integer notnull, B: bool } variable auto_cursor value_cursor
--- + {name C}: C: decl3: { A: integer notnull, B: bool } variable auto_cursor value_cursor
+-- + {declare_cursor_like_name}: C: decl3: { A: integer notnull, B: bool } variable shape_storage value_cursor
+-- + {name C}: C: decl3: { A: integer notnull, B: bool } variable shape_storage value_cursor
 -- - ok dml_proc
 -- - Error
 create proc declare_cursor_like_proc()
@@ -5664,8 +5664,8 @@ end;
 -- TEST: declare a cursor like a table
 -- + {create_proc_stmt}: ok
 -- + {name declare_cursor_like_table}: ok
--- + {declare_cursor_like_name}: C: bar: { id: integer notnull, name: text, rate: longint } variable auto_cursor value_cursor
--- + {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable auto_cursor value_cursor
+-- + {declare_cursor_like_name}: C: bar: { id: integer notnull, name: text, rate: longint } variable shape_storage value_cursor
+-- + {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable shape_storage value_cursor
 -- - dml_proc
 -- - Error
 create proc declare_cursor_like_table()
@@ -5676,8 +5676,8 @@ end;
 -- TEST: declare a cursor like a view
 -- + {create_proc_stmt}: ok
 -- + {name declare_cursor_like_view}: ok
--- + {declare_cursor_like_name}: C: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull } variable auto_cursor value_cursor
--- + {name C}: C: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull } variable auto_cursor value_cursor
+-- + {declare_cursor_like_name}: C: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull } variable shape_storage value_cursor
+-- + {name C}: C: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull } variable shape_storage value_cursor
 -- - dml_proc
 -- - Error
 create proc declare_cursor_like_view()
@@ -5689,7 +5689,7 @@ end;
 -- + CREATE PROC declare_cursor_like_select ()
 -- + DECLARE C CURSOR LIKE SELECT 1 AS A, 2.5 AS B, 'x' AS C;
 -- + FETCH C(A, B, C) FROM VALUES(_seed_, _seed_, printf('C_%d', _seed_)) @DUMMY_SEED(123);
--- + {declare_cursor_like_select}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable auto_cursor value_cursor
+-- + {declare_cursor_like_select}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage value_cursor
 -- + {fetch_values_stmt}: ok
 -- - dml_proc
 -- - Error
@@ -5737,8 +5737,8 @@ select rowid from foo T1, foo T2;
 -- TEST: read the result of a non-dml proc;  we must not become a dml proc for doing so
 -- - dml_proc
 -- + {create_proc_stmt}: ok
--- + declare_value_cursor}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable auto_cursor value_cursor
--- + call_stmt}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable auto_cursor uses_out
+-- + declare_value_cursor}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage value_cursor
+-- + call_stmt}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage uses_out
 -- - Error
 create proc value_result_reader()
 begin
@@ -6028,7 +6028,7 @@ declare select func foo(x integer, x integer) integer;
 -- + FETCH curs(A, B, C) FROM VALUES(arg1, arg2, arg3);
 -- +  | {fetch_values_stmt}: ok
 -- +  | {name_columns_values}
--- +  | {name curs}: curs: select: { A: text notnull, B: integer notnull, C: real notnull } variable auto_cursor value_cursor
+-- +  | {name curs}: curs: select: { A: text notnull, B: integer notnull, C: real notnull } variable shape_storage value_cursor
 -- +  | {columns_values}: ok
 -- +  | {column_spec}
 -- +  | | {name_list}
@@ -6266,9 +6266,9 @@ end;
 create view MyBogusView as select 1, 2;
 
 -- TEST: make this proc accept args to fake the result of another proc
--- + {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor uses_out
--- + {declare_cursor_like_name}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
--- + {out_stmt}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+-- + {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage uses_out
+-- + {declare_cursor_like_name}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+-- + {out_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
 -- - Error
 create proc like_other_proc(like out_cursor_proc)
 begin
@@ -9848,8 +9848,8 @@ DECLARE PROC val_fetch_dml (seed INTEGER NOT NULL) OUT (id TEXT) USING TRANSACTI
 @declare_schema_region error_region using leaf1;
 
 -- TEST: this is a procedure that emits several rows "manually"
--- +  {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out_union value_cursor
--- +2 {out_union_stmt}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+-- +  {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union value_cursor
+-- +2 {out_union_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
 -- - Error
 create proc many_row_emitter()
 begin
@@ -9999,7 +9999,7 @@ declare c cursor for explain query plan select * from foo inner join bar;
 -- + {create_proc_stmt}: ok dml_proc
 -- + {name explain_query_with_cursor}: ok dml_proc
 -- + {declare_cursor}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable
--- + {name c}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable auto_cursor
+-- + {name c}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable shape_storage
 -- + {explain_stmt}: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull }
 -- + {int 2}
 -- - Error
@@ -10630,7 +10630,7 @@ insert into referenceable from cursor X;
 
 -- TEST -- simple use of update cursor statement
 -- + {update_cursor_stmt}: ok
--- + | {name small_cursor}: small_cursor: select: { x: integer notnull } variable auto_cursor value_cursor
+-- + | {name small_cursor}: small_cursor: select: { x: integer notnull } variable shape_storage value_cursor
 -- + | {columns_values}
 -- +   | {column_spec}
 -- +   | | {name_list}
@@ -11344,7 +11344,7 @@ create table in_the_future(
 declare proc basic_source() out union (id integer, name text);
 
 -- TEST: this proc should be OUT not OUT UNION
--- + {create_proc_stmt}: C: basic_source: { id: integer, name: text } variable dml_proc auto_cursor uses_out
+-- + {create_proc_stmt}: C: basic_source: { id: integer, name: text } variable dml_proc shape_storage uses_out
 -- - {create_proc_stmt}: % uses_out_union
 -- - Error
 create proc basic_wrapper_out()
@@ -11355,7 +11355,7 @@ begin
 end;
 
 -- TEST: this proc should be OUT not OUT UNION
--- + {create_proc_stmt}: C: basic_source: { id: integer, name: text } variable dml_proc auto_cursor uses_out_union
+-- + {create_proc_stmt}: C: basic_source: { id: integer, name: text } variable dml_proc shape_storage uses_out_union
 -- - {create_proc_stmt}: % uses_out %uses_out_union
 -- - {create_proc_stmt}: % uses_out_union %uses_out
 -- - Error
@@ -12077,7 +12077,7 @@ end;
 -- + WHEN c1.y IS NOT c2.y THEN 'y'
 -- + END;
 -- - Error
-create proc cql_cursor_diff_col_with_auto_cursor()
+create proc cql_cursor_diff_col_with_shape_storage()
 begin
   declare c1 cursor for select 1 x, 'y' y;
   declare c2 cursor for select 1 x, 'y' y;
@@ -12448,7 +12448,7 @@ declare proc some_proc(id integer, t text, t1 text not null, b blob, out x integ
 
 -- TEST: make a cursor using the arguments of a procedure as the shape
 -- + DECLARE Q CURSOR LIKE some_proc ARGUMENTS;
--- + {declare_cursor_like_name}: Q: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out } variable auto_cursor value_cursor
+-- + {declare_cursor_like_name}: Q: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out } variable shape_storage value_cursor
 -- - Error
 declare Q cursor like some_proc arguments;
 

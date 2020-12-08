@@ -1319,8 +1319,8 @@ static void get_sem_flags(sem_t sem_type, charbuf *out) {
   if (sem_type & SEM_TYPE_DML_PROC) {
     bprintf(out, " dml_proc");
   }
-  if (sem_type & SEM_TYPE_AUTO_CURSOR) {
-    bprintf(out, " auto_cursor");
+  if (sem_type & SEM_TYPE_HAS_SHAPE_STORAGE) {
+    bprintf(out, " shape_storage");
   }
   if (sem_type & SEM_TYPE_CREATE_FUNC) {
     bprintf(out, " create_func");
@@ -4095,7 +4095,7 @@ static bool_t try_resolve_variable(ast_node *ast, CSTR name) {
 
       CSTR vname = NULL;
 
-      if (sem_type & SEM_TYPE_AUTO_CURSOR) {
+      if (sem_type & SEM_TYPE_HAS_SHAPE_STORAGE) {
         vname = dup_printf("%s_._has_row_", variable->sem->name);
       }
       else {
@@ -4207,7 +4207,7 @@ static void resolve_cursor_field(ast_node *expr, ast_node *cursor, CSTR field) {
   CSTR scope = cursor->sem->name;
 
   // We don't do this if the cursor was not used with the auto syntax
-  if (!(sem_type & SEM_TYPE_AUTO_CURSOR)) {
+  if (!(sem_type & SEM_TYPE_HAS_SHAPE_STORAGE)) {
     report_error(expr, "CQL0067: cursor was not used with 'fetch [cursor]'", scope);
     record_error(expr);
     return;
@@ -5465,11 +5465,11 @@ static bool_t validate_cql_cursor_diff(ast_node *ast, uint32_t arg_count) {
     return false;
   }
 
-  if (!(arg1->sem->sem_type & SEM_TYPE_AUTO_CURSOR) ||
-      !(arg2->sem->sem_type & SEM_TYPE_AUTO_CURSOR)) {
+  if (!(arg1->sem->sem_type & SEM_TYPE_HAS_SHAPE_STORAGE) ||
+      !(arg2->sem->sem_type & SEM_TYPE_HAS_SHAPE_STORAGE)) {
     EXTRACT_STRING(arg1_name, arg1);
     EXTRACT_STRING(arg2_name, arg2);
-    CSTR cursor_name = !(arg1->sem->sem_type & SEM_TYPE_AUTO_CURSOR) ? arg1_name : arg2_name;
+    CSTR cursor_name = !(arg1->sem->sem_type & SEM_TYPE_HAS_SHAPE_STORAGE) ? arg1_name : arg2_name;
     report_error(arg1, "CQL0067: cursor was not used with 'fetch [cursor]'", cursor_name);
     record_error(arg1);
     record_error(ast);
@@ -6172,7 +6172,7 @@ static void sem_func_cql_cursor_format(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  if (!(arg->sem->sem_type & SEM_TYPE_AUTO_CURSOR)) {
+  if (!(arg->sem->sem_type & SEM_TYPE_HAS_SHAPE_STORAGE)) {
     EXTRACT_STRING(cursor_name, arg);
     report_error(arg, "CQL0067: cursor was not used with 'fetch [cursor]'", cursor_name);
     record_error(arg);
@@ -10005,7 +10005,7 @@ static void sem_update_cursor_stmt(ast_node *ast) {
   sem_t sem_type = cursor->sem->sem_type;
 
   // We can't do this if the cursor was not used with the auto syntax
-  if (!(sem_type & SEM_TYPE_AUTO_CURSOR)) {
+  if (!(sem_type & SEM_TYPE_HAS_SHAPE_STORAGE)) {
     report_error(cursor, "CQL0067: cursor was not used with 'fetch [cursor]'", name);
     record_error(cursor);
     record_error(ast);
@@ -11411,7 +11411,7 @@ static void sem_params(ast_node *head, bytebuf *args_info) {
       CSTR args = "ARGUMENTS";
 
       ast_node *ast_args = new_ast_str(args);
-      ast_args->sem = new_sem(SEM_TYPE_STRUCT | SEM_TYPE_AUTO_CURSOR);
+      ast_args->sem = new_sem(SEM_TYPE_STRUCT | SEM_TYPE_HAS_SHAPE_STORAGE);
       ast_args->sem->name = args;
       sptr = new_sem_struct(args, count);
       ast_args->sem->sptr = sptr;
@@ -13952,7 +13952,7 @@ static void sem_declare_cursor_like_name(ast_node *ast) {
 
   // good to go, make our cursor, with storage.
   name_ast->sem = like_ast->sem = found_shape->sem;
-  new_cursor_ast->sem = new_sem(SEM_TYPE_STRUCT | SEM_TYPE_VARIABLE | SEM_TYPE_VALUE_CURSOR | SEM_TYPE_AUTO_CURSOR);
+  new_cursor_ast->sem = new_sem(SEM_TYPE_STRUCT | SEM_TYPE_VARIABLE | SEM_TYPE_VALUE_CURSOR | SEM_TYPE_HAS_SHAPE_STORAGE);
   new_cursor_ast->sem->sptr = found_shape->sem->sptr;
   new_cursor_ast->sem->name = new_cursor_name;
   ast->sem = new_cursor_ast->sem;
@@ -14001,7 +14001,7 @@ static void sem_declare_cursor_like_select(ast_node *ast) {
   }
 
   // SEM_TYPE_STRUCT | SEM_TYPE_VARIABLE <=> it's a cursor
-  cursor->sem = new_sem(SEM_TYPE_STRUCT | SEM_TYPE_VARIABLE | SEM_TYPE_VALUE_CURSOR | SEM_TYPE_AUTO_CURSOR);
+  cursor->sem = new_sem(SEM_TYPE_STRUCT | SEM_TYPE_VARIABLE | SEM_TYPE_VALUE_CURSOR | SEM_TYPE_HAS_SHAPE_STORAGE);
   cursor->sem->sptr = ast->right->sem->sptr;
   cursor->sem->name = name;
   ast->sem = cursor->sem;
@@ -14053,7 +14053,7 @@ static void sem_declare_value_cursor(ast_node *ast) {
   }
 
   // SEM_TYPE_STRUCT | SEM_TYPE_VARIABLE <=> it's a cursor
-  cursor->sem = new_sem(SEM_TYPE_STRUCT | SEM_TYPE_VARIABLE | SEM_TYPE_VALUE_CURSOR | SEM_TYPE_AUTO_CURSOR);
+  cursor->sem = new_sem(SEM_TYPE_STRUCT | SEM_TYPE_VARIABLE | SEM_TYPE_VALUE_CURSOR | SEM_TYPE_HAS_SHAPE_STORAGE);
   cursor->sem->sptr = ast->right->sem->sptr;
   cursor->sem->name = name;
   ast->sem = cursor->sem;
@@ -14500,13 +14500,13 @@ static void sem_fetch_stmt(ast_node *ast) {
     ast_node *cursor_var = find_local_or_global_variable(cursor->sem->name);
     Invariant(cursor_var);
     Invariant(is_cursor(cursor_var->sem->sem_type));
-    sem_add_flags(cursor_var, SEM_TYPE_AUTO_CURSOR);
+    sem_add_flags(cursor_var, SEM_TYPE_HAS_SHAPE_STORAGE);
 
     // We also tag the cursor in `ast`, both for clarity (i.e. so we can see
     // that the cursor has the auto_cursor flag set in tests) and because
     // codegen will look for the flag on `ast` itself (which gets it from the
     // following assignment).
-    sem_add_flags(cursor, SEM_TYPE_AUTO_CURSOR);
+    sem_add_flags(cursor, SEM_TYPE_HAS_SHAPE_STORAGE);
     ast->sem = cursor->sem;
 
     return;
@@ -14906,7 +14906,7 @@ static void sem_out_any(ast_node *ast) {
     return;
   }
 
-  if (!(cursor->sem->sem_type & SEM_TYPE_AUTO_CURSOR)) {
+  if (!(cursor->sem->sem_type & SEM_TYPE_HAS_SHAPE_STORAGE)) {
     report_error(ast, "CQL0223: the cursor was not fetched with the auto-fetch syntax 'fetch [cursor]'", cursor->sem->name);
     record_error(ast);
     return;

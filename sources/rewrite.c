@@ -66,7 +66,7 @@ cql_noexport void rewrite_insert_list_from_cursor(ast_node *ast, ast_node *from_
   EXTRACT_ANY_NOTNULL(cursor, from_cursor->right);
 
   // from_cursor must have the columns
-  if (!(cursor->sem->sem_type & SEM_TYPE_AUTO_CURSOR)) {
+  if (!(cursor->sem->sem_type & SEM_TYPE_HAS_SHAPE_STORAGE)) {
     report_error(cursor, "CQL0298: cannot read from a cursor without fields", cursor->sem->name);
     record_error(cursor);
     record_error(ast);
@@ -431,7 +431,7 @@ static ast_node *rewrite_one_param(ast_node *param, symtab *param_names, bytebuf
     shape_name = sname;
     ast_node *shape_ast = new_ast_str(shape_name);
     shape_ast->sem = found_shape->sem;
-    sem_add_flags(shape_ast, SEM_TYPE_AUTO_CURSOR); // the arg bundle has storage!
+    sem_add_flags(shape_ast, SEM_TYPE_HAS_SHAPE_STORAGE); // the arg bundle has storage!
     shape_ast->sem->name = shape_name;
     add_arg_bundle(shape_ast, shape_name);
   }

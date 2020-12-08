@@ -6862,14 +6862,14 @@ BEGIN
   OUT C;
 END;
 
-  {create_proc_stmt}: C: select: { x: integer notnull } variable dml_proc auto_cursor uses_out uses_throw
-  | {name throw_before_out}: C: select: { x: integer notnull } variable dml_proc auto_cursor uses_out uses_throw
+  {create_proc_stmt}: C: select: { x: integer notnull } variable dml_proc shape_storage uses_out uses_throw
+  | {name throw_before_out}: C: select: { x: integer notnull } variable dml_proc shape_storage uses_out uses_throw
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {trycatch_stmt}: ok
       | | {stmt_list}: ok
       | | | {declare_cursor}: C: select: { x: integer notnull } variable
-      | | | | {name C}: C: select: { x: integer notnull } variable auto_cursor
+      | | | | {name C}: C: select: { x: integer notnull } variable shape_storage
       | | | | {select_stmt}: select: { x: integer notnull }
       | | |   | {select_core_list}: select: { x: integer notnull }
       | | |   | | {select_core}: select: { x: integer notnull }
@@ -6886,12 +6886,12 @@ END;
       | | |   | {select_orderby}
       | | |     | {select_limit}
       | | |       | {select_offset}
-      | | | {fetch_stmt}: C: select: { x: integer notnull } variable auto_cursor
-      | |   | {name C}: C: select: { x: integer notnull } variable auto_cursor
+      | | | {fetch_stmt}: C: select: { x: integer notnull } variable shape_storage
+      | |   | {name C}: C: select: { x: integer notnull } variable shape_storage
       | | {stmt_list}: ok
       |   | {throw_stmt}: ok
-      | {out_stmt}: C: select: { x: integer notnull } variable auto_cursor
-        | {name C}: C: select: { x: integer notnull } variable auto_cursor
+      | {out_stmt}: C: select: { x: integer notnull } variable shape_storage
+        | {name C}: C: select: { x: integer notnull } variable shape_storage
 
 The statement ending at line XXXX
 
@@ -9280,10 +9280,10 @@ Error at test/sem_test.sql:XXXX : in rollback_trans_stmt : CQL0220: savepoint ha
 
 The statement ending at line XXXX
 
-DECLARE auto_cursor CURSOR FOR SELECT 1 AS one, 2 AS two;
+DECLARE shape_storage CURSOR FOR SELECT 1 AS one, 2 AS two;
 
-  {declare_cursor}: auto_cursor: select: { one: integer notnull, two: integer notnull } variable
-  | {name auto_cursor}: auto_cursor: select: { one: integer notnull, two: integer notnull } variable auto_cursor
+  {declare_cursor}: shape_storage: select: { one: integer notnull, two: integer notnull } variable
+  | {name shape_storage}: shape_storage: select: { one: integer notnull, two: integer notnull } variable shape_storage
   | {select_stmt}: select: { one: integer notnull, two: integer notnull }
     | {select_core_list}: select: { one: integer notnull, two: integer notnull }
     | | {select_core}: select: { one: integer notnull, two: integer notnull }
@@ -9308,23 +9308,23 @@ DECLARE auto_cursor CURSOR FOR SELECT 1 AS one, 2 AS two;
 
 The statement ending at line XXXX
 
-FETCH auto_cursor;
+FETCH shape_storage;
 
-  {fetch_stmt}: auto_cursor: select: { one: integer notnull, two: integer notnull } variable auto_cursor
-  | {name auto_cursor}: auto_cursor: select: { one: integer notnull, two: integer notnull } variable auto_cursor
+  {fetch_stmt}: shape_storage: select: { one: integer notnull, two: integer notnull } variable shape_storage
+  | {name shape_storage}: shape_storage: select: { one: integer notnull, two: integer notnull } variable shape_storage
 
 The statement ending at line XXXX
 
-SELECT auto_cursor.one;
+SELECT shape_storage.one;
 
-  {select_stmt}: select: { auto_cursor_.one: integer notnull variable }
-  | {select_core_list}: select: { auto_cursor_.one: integer notnull variable }
-  | | {select_core}: select: { auto_cursor_.one: integer notnull variable }
-  |   | {select_expr_list_con}: select: { auto_cursor_.one: integer notnull variable }
-  |     | {select_expr_list}: select: { auto_cursor_.one: integer notnull variable }
-  |     | | {select_expr}: auto_cursor_.one: integer notnull variable
-  |     |   | {dot}: auto_cursor_.one: integer notnull variable
-  |     |     | {name auto_cursor}
+  {select_stmt}: select: { shape_storage_.one: integer notnull variable }
+  | {select_core_list}: select: { shape_storage_.one: integer notnull variable }
+  | | {select_core}: select: { shape_storage_.one: integer notnull variable }
+  |   | {select_expr_list_con}: select: { shape_storage_.one: integer notnull variable }
+  |     | {select_expr_list}: select: { shape_storage_.one: integer notnull variable }
+  |     | | {select_expr}: shape_storage_.one: integer notnull variable
+  |     |   | {dot}: shape_storage_.one: integer notnull variable
+  |     |     | {name shape_storage}
   |     |     | {name one}
   |     | {select_from_etc}: ok
   |       | {select_where}
@@ -9336,7 +9336,7 @@ SELECT auto_cursor.one;
 
 The statement ending at line XXXX
 
-SELECT auto_cursor.three;
+SELECT shape_storage.three;
 
 Error at test/sem_test.sql:XXXX : in dot : CQL0068: field not found in cursor 'three'
 
@@ -9347,7 +9347,7 @@ Error at test/sem_test.sql:XXXX : in dot : CQL0068: field not found in cursor 't
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {dot}: err
-  |     |     | {name auto_cursor}
+  |     |     | {name shape_storage}
   |     |     | {name three}
   |     | {select_from_etc}: ok
   |       | {select_where}
@@ -18459,12 +18459,12 @@ BEGIN
   OUT C;
 END;
 
-  {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
-  | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
+  {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+  | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_cursor}: C: select: { A: integer notnull, B: integer notnull } variable
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
       | | {select_stmt}: select: { A: integer notnull, B: integer notnull }
       |   | {select_core_list}: select: { A: integer notnull, B: integer notnull }
       |   | | {select_core}: select: { A: integer notnull, B: integer notnull }
@@ -18486,14 +18486,14 @@ END;
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor
-      | {out_stmt}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor
-        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor
+      | {fetch_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
+      | {out_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
+        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
 
 The statement ending at line XXXX
 
-CREATE PROC out_cursor_proc_not_auto_cursor ()
+CREATE PROC out_cursor_proc_not_shape_storage ()
 BEGIN
   DECLARE a, b INTEGER NOT NULL;
   DECLARE C CURSOR FOR SELECT 1 AS A, 2 AS B;
@@ -18504,7 +18504,7 @@ END;
 Error at test/sem_test.sql:XXXX : in out_stmt : CQL0223: the cursor was not fetched with the auto-fetch syntax 'fetch [cursor]' 'C'
 
   {create_proc_stmt}: err
-  | {name out_cursor_proc_not_auto_cursor}: err
+  | {name out_cursor_proc_not_shape_storage}: err
   | {proc_params_stmts}
     | {stmt_list}: err
       | {declare_vars_type}: integer notnull
@@ -18573,7 +18573,7 @@ Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0058: in multiple sel
       | | {notnull}: integer notnull
       |   | {type_int}: integer
       | {declare_cursor}: C: select: { A: integer notnull, B: integer notnull } variable
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
       | | {select_stmt}: select: { A: integer notnull, B: integer notnull }
       |   | {select_core_list}: select: { A: integer notnull, B: integer notnull }
       |   | | {select_core}: select: { A: integer notnull, B: integer notnull }
@@ -18596,7 +18596,7 @@ Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0058: in multiple sel
       |     | {select_limit}
       |       | {select_offset}
       | {declare_cursor}: D: select: { A: integer notnull, C: integer notnull } variable
-      | | {name D}: D: select: { A: integer notnull, C: integer notnull } variable auto_cursor
+      | | {name D}: D: select: { A: integer notnull, C: integer notnull } variable shape_storage
       | | {select_stmt}: select: { A: integer notnull, C: integer notnull }
       |   | {select_core_list}: select: { A: integer notnull, C: integer notnull }
       |   | | {select_core}: select: { A: integer notnull, C: integer notnull }
@@ -18618,14 +18618,14 @@ Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0058: in multiple sel
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor
-      | {fetch_stmt}: D: select: { A: integer notnull, C: integer notnull } variable auto_cursor
-      | | {name D}: D: select: { A: integer notnull, C: integer notnull } variable auto_cursor
-      | {out_stmt}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor
+      | {fetch_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
+      | {fetch_stmt}: D: select: { A: integer notnull, C: integer notnull } variable shape_storage
+      | | {name D}: D: select: { A: integer notnull, C: integer notnull } variable shape_storage
+      | {out_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
       | {out_stmt}: err
-        | {name D}: D: select: { A: integer notnull, C: integer notnull } variable auto_cursor
+        | {name D}: D: select: { A: integer notnull, C: integer notnull } variable shape_storage
 
 The statement ending at line XXXX
 
@@ -18652,7 +18652,7 @@ Error at test/sem_test.sql:XXXX : in select_stmt : CQL0063: can't mix and match 
       | | {notnull}: integer notnull
       |   | {type_int}: integer
       | {declare_cursor}: C: select: { A: integer notnull, B: integer notnull } variable
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
       | | {select_stmt}: select: { A: integer notnull, B: integer notnull }
       |   | {select_core_list}: select: { A: integer notnull, B: integer notnull }
       |   | | {select_core}: select: { A: integer notnull, B: integer notnull }
@@ -18674,10 +18674,10 @@ Error at test/sem_test.sql:XXXX : in select_stmt : CQL0063: can't mix and match 
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor
-      | {out_stmt}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor
+      | {fetch_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
+      | {out_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
       | {select_stmt}: err
         | {select_core_list}: select: { A: integer notnull, B: integer notnull }
         | | {select_core}: select: { A: integer notnull, B: integer notnull }
@@ -18725,7 +18725,7 @@ Error at test/sem_test.sql:XXXX : in out_stmt : CQL0063: can't mix and match out
       | | {notnull}: integer notnull
       |   | {type_int}: integer
       | {declare_cursor}: C: select: { A: integer notnull, B: integer notnull } variable
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
       | | {select_stmt}: select: { A: integer notnull, B: integer notnull }
       |   | {select_core_list}: select: { A: integer notnull, B: integer notnull }
       |   | | {select_core}: select: { A: integer notnull, B: integer notnull }
@@ -18747,8 +18747,8 @@ Error at test/sem_test.sql:XXXX : in out_stmt : CQL0063: can't mix and match out
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor
+      | {fetch_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
       | {select_stmt}: select: { A: integer notnull, B: integer notnull }
       | | {select_core_list}: select: { A: integer notnull, B: integer notnull }
       | | | {select_core}: select: { A: integer notnull, B: integer notnull }
@@ -18771,7 +18771,7 @@ Error at test/sem_test.sql:XXXX : in out_stmt : CQL0063: can't mix and match out
       |   | {select_limit}
       |     | {select_offset}
       | {out_stmt}: err
-        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor
+        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
 
 The statement ending at line XXXX
 
@@ -18798,7 +18798,7 @@ Error at test/sem_test.sql:XXXX : in out_union_stmt : CQL0063: can't mix and mat
       | | {notnull}: integer notnull
       |   | {type_int}: integer
       | {declare_cursor}: C: select: { A: integer notnull, B: integer notnull } variable
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
       | | {select_stmt}: select: { A: integer notnull, B: integer notnull }
       |   | {select_core_list}: select: { A: integer notnull, B: integer notnull }
       |   | | {select_core}: select: { A: integer notnull, B: integer notnull }
@@ -18820,8 +18820,8 @@ Error at test/sem_test.sql:XXXX : in out_union_stmt : CQL0063: can't mix and mat
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor
+      | {fetch_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
       | {select_stmt}: select: { A: integer notnull, B: integer notnull }
       | | {select_core_list}: select: { A: integer notnull, B: integer notnull }
       | | | {select_core}: select: { A: integer notnull, B: integer notnull }
@@ -18844,7 +18844,7 @@ Error at test/sem_test.sql:XXXX : in out_union_stmt : CQL0063: can't mix and mat
       |   | {select_limit}
       |     | {select_offset}
       | {out_union_stmt}: err
-        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor
+        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
 
 The statement ending at line XXXX
 
@@ -18887,10 +18887,10 @@ END;
   | {name result_reader}: ok dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-        | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
-          | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
+      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+        | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+          | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
 
 The statement ending at line XXXX
 
@@ -18906,12 +18906,12 @@ Error at test/sem_test.sql:XXXX : in str : CQL0215: value cursors are not used w
   | {name fails_result_reader}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
+      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {fetch_stmt}: err
-        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
 
 The statement ending at line XXXX
 
@@ -18985,14 +18985,14 @@ Error at test/sem_test.sql:XXXX : in declare_value_cursor : CQL0197: duplicate v
   | {name fails_result_reader_double_decl}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
+      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {declare_value_cursor}: err
         | {name C}: err
-        | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
-          | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
+        | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+          | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
 
 The statement ending at line XXXX
 
@@ -19202,13 +19202,13 @@ END;
   | {name fetch_values}: ok dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
+      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {fetch_values_stmt}: ok
         | {name_columns_values}
-          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
             | | {name_list}
@@ -19232,16 +19232,16 @@ END;
   | {name fetch_values_dummy}: ok dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
+      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {fetch_values_stmt}: ok
         | {insert_dummy_spec}: integer notnull
         | | {int 123}: integer notnull
         | | {int 2}
         | {name_columns_values}
-          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
             | | {name_list}
@@ -19262,20 +19262,20 @@ BEGIN
   OUT C;
 END;
 
-  {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out value_cursor
-  | {name fetch_from_call}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out value_cursor
+  {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out value_cursor
+  | {name fetch_from_call}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out value_cursor
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_cursor_like_name}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {like}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
+      | {declare_cursor_like_name}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {like}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {fetch_call_stmt}: ok
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
-      | {out_stmt}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      | {out_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
 
 The statement ending at line XXXX
 
@@ -19292,16 +19292,16 @@ Error at test/sem_test.sql:XXXX : in call_stmt : CQL0203: cursor requires a proc
   | {name fetch_from_call_to_proc_that_does_not_exist}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_cursor_like_name}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {like}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
+      | {declare_cursor_like_name}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {like}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {fetch_call_stmt}: err
       | | {name C}
       | | {call_stmt}: err
       |   | {name does_not_exist}: ok
-      | {out_stmt}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+      | {out_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
 
 The statement ending at line XXXX
 
@@ -19318,18 +19318,18 @@ Error at test/sem_test.sql:XXXX : in call_stmt : CQL0235: too many arguments pro
   | {name fetch_from_call_to_proc_with_invalid_arguments}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_cursor_like_name}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {like}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
+      | {declare_cursor_like_name}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {like}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {fetch_call_stmt}: err
       | | {name C}
       | | {call_stmt}: err
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
+      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       |   | {expr_list}: ok
       |     | {int 42}: integer notnull
-      | {out_stmt}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+      | {out_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
 
 The statement ending at line XXXX
 
@@ -19353,8 +19353,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'C'
       | | {type_text}: text
       | {fetch_call_stmt}: err
       | | {name C}: err
-      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
+      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {out_stmt}: err
         | {name C}: err
 
@@ -19373,8 +19373,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0058: in multiple select statement
   | {name fetch_from_call_to_proc_with_different_column_names}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_cursor_like_select}: C: select: { A: integer notnull, C: integer notnull } variable auto_cursor value_cursor
-      | | {name C}: C: select: { A: integer notnull, C: integer notnull } variable auto_cursor value_cursor
+      | {declare_cursor_like_select}: C: select: { A: integer notnull, C: integer notnull } variable shape_storage value_cursor
+      | | {name C}: C: select: { A: integer notnull, C: integer notnull } variable shape_storage value_cursor
       | | {select_stmt}: select: { A: integer notnull, C: integer notnull }
       |   | {select_core_list}: select: { A: integer notnull, C: integer notnull }
       |   | | {select_core}: select: { A: integer notnull, C: integer notnull }
@@ -19399,9 +19399,9 @@ Error at test/sem_test.sql:XXXX : in str : CQL0058: in multiple select statement
       | {fetch_call_stmt}: err
       | | {name C}: err
       | | {call_stmt}: err
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
-      | {out_stmt}: C: select: { A: integer notnull, C: integer notnull } variable auto_cursor value_cursor
-        | {name C}: C: select: { A: integer notnull, C: integer notnull } variable auto_cursor value_cursor
+      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      | {out_stmt}: C: select: { A: integer notnull, C: integer notnull } variable shape_storage value_cursor
+        | {name C}: C: select: { A: integer notnull, C: integer notnull } variable shape_storage value_cursor
 
 The statement ending at line XXXX
 
@@ -19451,17 +19451,17 @@ Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed i
   | {name fetch_values_bogus_seed_value}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
+      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {fetch_values_stmt}: err
         | {insert_dummy_spec}: err
         | | {not}: err
         | | | {strlit 'x'}: text notnull
         | | {int 0}
         | {name_columns_values}
-          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
 
@@ -19479,13 +19479,13 @@ Error at test/sem_test.sql:XXXX : in fetch_values_stmt : CQL0166: count of colum
   | {name fetch_values_missing_value}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
+      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {fetch_values_stmt}: err
         | {name_columns_values}
-          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
               | {name_list}
@@ -19504,12 +19504,12 @@ BEGIN
   OUT C;
 END;
 
-  {create_proc_stmt}: C: select: { B: blob } variable dml_proc auto_cursor uses_out
-  | {name blob_out}: C: select: { B: blob } variable dml_proc auto_cursor uses_out
+  {create_proc_stmt}: C: select: { B: blob } variable dml_proc shape_storage uses_out
+  | {name blob_out}: C: select: { B: blob } variable dml_proc shape_storage uses_out
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_cursor}: C: select: { B: blob } variable
-      | | {name C}: C: select: { B: blob } variable auto_cursor
+      | | {name C}: C: select: { B: blob } variable shape_storage
       | | {select_stmt}: select: { B: blob }
       |   | {select_core_list}: select: { B: blob }
       |   | | {select_core}: select: { B: blob }
@@ -19534,10 +19534,10 @@ END;
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: C: select: { B: blob } variable auto_cursor
-      | | {name C}: C: select: { B: blob } variable auto_cursor
-      | {out_stmt}: C: select: { B: blob } variable auto_cursor
-        | {name C}: C: select: { B: blob } variable auto_cursor
+      | {fetch_stmt}: C: select: { B: blob } variable shape_storage
+      | | {name C}: C: select: { B: blob } variable shape_storage
+      | {out_stmt}: C: select: { B: blob } variable shape_storage
+        | {name C}: C: select: { B: blob } variable shape_storage
 
 The statement ending at line XXXX
 
@@ -19553,16 +19553,16 @@ Error at test/sem_test.sql:XXXX : in fetch_values_stmt : CQL0168: there's no goo
   | {name fetch_values_blob_dummy}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_value_cursor}: C: select: { B: blob } variable auto_cursor value_cursor
-      | | {name C}: C: select: { B: blob } variable auto_cursor value_cursor
-      | | {call_stmt}: C: select: { B: blob } variable dml_proc auto_cursor uses_out
-      |   | {name blob_out}: C: select: { B: blob } variable dml_proc auto_cursor uses_out
+      | {declare_value_cursor}: C: select: { B: blob } variable shape_storage value_cursor
+      | | {name C}: C: select: { B: blob } variable shape_storage value_cursor
+      | | {call_stmt}: C: select: { B: blob } variable dml_proc shape_storage uses_out
+      |   | {name blob_out}: C: select: { B: blob } variable dml_proc shape_storage uses_out
       | {fetch_values_stmt}: err
         | {insert_dummy_spec}: integer notnull
         | | {int 123}: integer notnull
         | | {int 2}
         | {name_columns_values}
-          | {name C}: C: select: { B: blob } variable auto_cursor value_cursor
+          | {name C}: C: select: { B: blob } variable shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
 
@@ -19580,13 +19580,13 @@ Error at test/sem_test.sql:XXXX : in fetch_values_stmt : CQL0167: required colum
   | {name fetch_values_missing_columns}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
+      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {fetch_values_stmt}: err
         | {name_columns_values}
-          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
             | | {name_list}
@@ -19608,13 +19608,13 @@ Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed i
   | {name fetch_values_bogus_value}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
+      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {fetch_values_stmt}: err
         | {name_columns_values}
-          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
             | | {name_list}
@@ -19641,13 +19641,13 @@ Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expres
   | {name fetch_values_bogus_type}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
+      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {fetch_values_stmt}: err
         | {name_columns_values}
-          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
             | | {name_list}
@@ -19671,16 +19671,16 @@ END;
   | {name fetch_values_blob_dummy_with_null}: ok dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_value_cursor}: C: select: { B: blob } variable auto_cursor value_cursor
-      | | {name C}: C: select: { B: blob } variable auto_cursor value_cursor
-      | | {call_stmt}: C: select: { B: blob } variable dml_proc auto_cursor uses_out
-      |   | {name blob_out}: C: select: { B: blob } variable dml_proc auto_cursor uses_out
+      | {declare_value_cursor}: C: select: { B: blob } variable shape_storage value_cursor
+      | | {name C}: C: select: { B: blob } variable shape_storage value_cursor
+      | | {call_stmt}: C: select: { B: blob } variable dml_proc shape_storage uses_out
+      |   | {name blob_out}: C: select: { B: blob } variable dml_proc shape_storage uses_out
       | {fetch_values_stmt}: ok
         | {insert_dummy_spec}: integer notnull
         | | {int 123}: integer notnull
         | | {int 0}
         | {name_columns_values}
-          | {name C}: C: select: { B: blob } variable auto_cursor value_cursor
+          | {name C}: C: select: { B: blob } variable shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
             | | {name_list}
@@ -19699,12 +19699,12 @@ BEGIN
   OUT C1;
 END;
 
-  {create_proc_stmt}: C1: select: { A: integer notnull, B: integer notnull } variable auto_cursor uses_out value_cursor
-  | {name fetch_to_cursor_from_cursor}: C1: select: { A: integer notnull, B: integer notnull } variable auto_cursor uses_out value_cursor
+  {create_proc_stmt}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage uses_out value_cursor
+  | {name fetch_to_cursor_from_cursor}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage uses_out value_cursor
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_cursor_like_select}: C0: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+      | {declare_cursor_like_select}: C0: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
       | | {select_stmt}: select: { A: integer notnull, B: integer notnull }
       |   | {select_core_list}: select: { A: integer notnull, B: integer notnull }
       |   | | {select_core}: select: { A: integer notnull, B: integer notnull }
@@ -19726,13 +19726,13 @@ END;
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {declare_cursor_like_name}: C1: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {like}: C0: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      |   | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+      | {declare_cursor_like_name}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {like}: C0: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      |   | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
       | {fetch_values_stmt}: ok
       | | {name_columns_values}
-      |   | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+      |   | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
       |   | {columns_values}: ok
       |     | {column_spec}
       |     | | {name_list}
@@ -19745,7 +19745,7 @@ END;
       |         | {int 2}: integer notnull
       | {fetch_values_stmt}: ok
       | | {name_columns_values}
-      |   | {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+      |   | {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
       |   | {columns_values}: ok
       |     | {column_spec}
       |     | | {name_list}
@@ -19760,8 +19760,8 @@ END;
       |         | {dot}: C0_.B: integer notnull variable
       |           | {name C0}
       |           | {name B}
-      | {out_stmt}: C1: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-        | {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+      | {out_stmt}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+        | {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
 
 The statement ending at line XXXX
 
@@ -19783,8 +19783,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'C0
       | | {name_list}: C0: integer variable
       | | | {name C0}: C0: integer variable
       | | {type_int}: integer
-      | {declare_cursor_like_select}: C1: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+      | {declare_cursor_like_select}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
       | | {select_stmt}: select: { A: integer notnull, B: integer notnull }
       |   | {select_core_list}: select: { A: integer notnull, B: integer notnull }
       |   | | {select_core}: select: { A: integer notnull, B: integer notnull }
@@ -19808,7 +19808,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'C0
       |       | {select_offset}
       | {fetch_values_stmt}: err
       | | {name_columns_values}
-      |   | {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+      |   | {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
       |   | {columns_values}: ok
       |     | {column_spec}
       |     | | {name_list}
@@ -19817,8 +19817,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'C0
       |     |     | {name B}
       |     | {from_cursor}
       |       | {name C0}: err
-      | {out_stmt}: C1: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-        | {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+      | {out_stmt}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+        | {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
 
 The statement ending at line XXXX
 
@@ -19836,8 +19836,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'C1
   | {name fetch_to_invalid_cursor_from_cursor}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_cursor_like_select}: C0: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+      | {declare_cursor_like_select}: C0: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
       | | {select_stmt}: select: { A: integer notnull, B: integer notnull }
       |   | {select_core_list}: select: { A: integer notnull, B: integer notnull }
       |   | | {select_core}: select: { A: integer notnull, B: integer notnull }
@@ -19865,7 +19865,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'C1
       | | {type_int}: integer
       | {fetch_values_stmt}: ok
       | | {name_columns_values}
-      |   | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+      |   | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
       |   | {columns_values}: ok
       |     | {column_spec}
       |     | | {name_list}
@@ -19899,8 +19899,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0165: fetch values is only for val
   | {name fetch_to_statement_cursor_from_cursor}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_cursor_like_select}: C0: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+      | {declare_cursor_like_select}: C0: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
       | | {select_stmt}: select: { A: integer notnull, B: integer notnull }
       |   | {select_core_list}: select: { A: integer notnull, B: integer notnull }
       |   | | {select_core}: select: { A: integer notnull, B: integer notnull }
@@ -19947,7 +19947,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0165: fetch values is only for val
       |       | {select_offset}
       | {fetch_values_stmt}: ok
       | | {name_columns_values}
-      |   | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+      |   | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
       |   | {columns_values}: ok
       |     | {column_spec}
       |     | | {name_list}
@@ -19981,8 +19981,8 @@ Error at test/sem_test.sql:XXXX : in columns_values : CQL0299: [shape] has too f
   | {name fetch_to_cursor_from_cursor_with_different_columns}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_cursor_like_select}: C0: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+      | {declare_cursor_like_select}: C0: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
       | | {select_stmt}: select: { A: integer notnull, B: integer notnull }
       |   | {select_core_list}: select: { A: integer notnull, B: integer notnull }
       |   | | {select_core}: select: { A: integer notnull, B: integer notnull }
@@ -20004,8 +20004,8 @@ Error at test/sem_test.sql:XXXX : in columns_values : CQL0299: [shape] has too f
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {declare_cursor_like_select}: C1: select: { A: integer notnull, B: integer notnull, C: integer notnull } variable auto_cursor value_cursor
-      | | {name C1}: C1: select: { A: integer notnull, B: integer notnull, C: integer notnull } variable auto_cursor value_cursor
+      | {declare_cursor_like_select}: C1: select: { A: integer notnull, B: integer notnull, C: integer notnull } variable shape_storage value_cursor
+      | | {name C1}: C1: select: { A: integer notnull, B: integer notnull, C: integer notnull } variable shape_storage value_cursor
       | | {select_stmt}: select: { A: integer notnull, B: integer notnull, C: integer notnull }
       |   | {select_core_list}: select: { A: integer notnull, B: integer notnull, C: integer notnull }
       |   | | {select_core}: select: { A: integer notnull, B: integer notnull, C: integer notnull }
@@ -20034,7 +20034,7 @@ Error at test/sem_test.sql:XXXX : in columns_values : CQL0299: [shape] has too f
       |       | {select_offset}
       | {fetch_values_stmt}: ok
       | | {name_columns_values}
-      |   | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+      |   | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
       |   | {columns_values}: ok
       |     | {column_spec}
       |     | | {name_list}
@@ -20047,7 +20047,7 @@ Error at test/sem_test.sql:XXXX : in columns_values : CQL0299: [shape] has too f
       |         | {int 2}: integer notnull
       | {fetch_values_stmt}: err
         | {name_columns_values}
-          | {name C1}: C1: select: { A: integer notnull, B: integer notnull, C: integer notnull } variable auto_cursor value_cursor
+          | {name C1}: C1: select: { A: integer notnull, B: integer notnull, C: integer notnull } variable shape_storage value_cursor
           | {columns_values}: err
             | {column_spec}
             | | {name_list}
@@ -20062,7 +20062,7 @@ Error at test/sem_test.sql:XXXX : in columns_values : CQL0299: [shape] has too f
               |   | {name A}
               |   | {name_list}
               |     | {name B}
-              | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+              | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
 
 The statement ending at line XXXX
 
@@ -20111,8 +20111,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0298: cannot read from a cursor wi
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {declare_cursor_like_name}: C1: select: { A: integer notnull, _anon: real notnull } variable auto_cursor value_cursor
-      | | {name C1}: C1: select: { A: integer notnull, _anon: real notnull } variable auto_cursor value_cursor
+      | {declare_cursor_like_name}: C1: select: { A: integer notnull, _anon: real notnull } variable shape_storage value_cursor
+      | | {name C1}: C1: select: { A: integer notnull, _anon: real notnull } variable shape_storage value_cursor
       | | {like}: C0: select: { A: integer notnull, _anon: real notnull } variable
       |   | {name C0}: C0: select: { A: integer notnull, _anon: real notnull } variable
       | {fetch_stmt}: C0: select: { A: integer notnull, _anon: real notnull } variable
@@ -20123,7 +20123,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0298: cannot read from a cursor wi
       |     | {name Y}: Y: real variable
       | {fetch_values_stmt}: err
         | {name_columns_values}
-          | {name C1}: C1: select: { A: integer notnull, _anon: real notnull } variable auto_cursor value_cursor
+          | {name C1}: C1: select: { A: integer notnull, _anon: real notnull } variable shape_storage value_cursor
           | {columns_values}: err
             | {column_spec}
             | | {name_list}
@@ -20150,14 +20150,14 @@ END;
   | {name declare_cursor_like_cursor}: ok dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_value_cursor}: C0: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
-      | {declare_cursor_like_name}: C1: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-        | {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-        | {like}: C0: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-          | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+      | {declare_value_cursor}: C0: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      | {declare_cursor_like_name}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+        | {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+        | {like}: C0: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+          | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
 
 The statement ending at line XXXX
 
@@ -20196,10 +20196,10 @@ Error at test/sem_test.sql:XXXX : in declare_cursor_like_name : CQL0197: duplica
   | {name declare_cursor_like_cursor_with_same_name}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_value_cursor}: C0: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
+      | {declare_value_cursor}: C0: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {declare_cursor_like_name}: err
         | {name C0}: err
         | {like}
@@ -20234,8 +20234,8 @@ END;
   | {name declare_cursor_like_proc}: ok
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_cursor_like_name}: C: decl3: { A: integer notnull, B: bool } variable auto_cursor value_cursor
-        | {name C}: C: decl3: { A: integer notnull, B: bool } variable auto_cursor value_cursor
+      | {declare_cursor_like_name}: C: decl3: { A: integer notnull, B: bool } variable shape_storage value_cursor
+        | {name C}: C: decl3: { A: integer notnull, B: bool } variable shape_storage value_cursor
         | {like}: decl3: { A: integer notnull, B: bool } dml_proc
           | {name decl3}: decl3: { A: integer notnull, B: bool } dml_proc
 
@@ -20268,8 +20268,8 @@ END;
   | {name declare_cursor_like_table}: ok
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_cursor_like_name}: C: bar: { id: integer notnull, name: text, rate: longint } variable auto_cursor value_cursor
-        | {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable auto_cursor value_cursor
+      | {declare_cursor_like_name}: C: bar: { id: integer notnull, name: text, rate: longint } variable shape_storage value_cursor
+        | {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable shape_storage value_cursor
         | {like}: bar: { id: integer notnull, name: text, rate: longint }
           | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
 
@@ -20284,8 +20284,8 @@ END;
   | {name declare_cursor_like_view}: ok
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_cursor_like_name}: C: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull } variable auto_cursor value_cursor
-        | {name C}: C: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull } variable auto_cursor value_cursor
+      | {declare_cursor_like_name}: C: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull } variable shape_storage value_cursor
+        | {name C}: C: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull } variable shape_storage value_cursor
         | {like}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
           | {name MyView}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
 
@@ -20298,12 +20298,12 @@ BEGIN
   OUT C;
 END;
 
-  {create_proc_stmt}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable auto_cursor uses_out value_cursor
-  | {name declare_cursor_like_select}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable auto_cursor uses_out value_cursor
+  {create_proc_stmt}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage uses_out value_cursor
+  | {name declare_cursor_like_select}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage uses_out value_cursor
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_cursor_like_select}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable auto_cursor value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable auto_cursor value_cursor
+      | {declare_cursor_like_select}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage value_cursor
+      | | {name C}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage value_cursor
       | | {select_stmt}: select: { A: integer notnull, B: real notnull, C: text notnull }
       |   | {select_core_list}: select: { A: integer notnull, B: real notnull, C: text notnull }
       |   | | {select_core}: select: { A: integer notnull, B: real notnull, C: text notnull }
@@ -20335,7 +20335,7 @@ END;
       | | | {int 123}: integer notnull
       | | | {int 0}
       | | {name_columns_values}
-      |   | {name C}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable auto_cursor value_cursor
+      |   | {name C}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage value_cursor
       |   | {columns_values}: ok
       |     | {column_spec}
       |     | | {name_list}
@@ -20357,8 +20357,8 @@ END;
       |                 | {strlit 'C_%d'}: text notnull
       |                 | {arg_list}
       |                   | {name _seed_}: _seed_: integer notnull variable
-      | {out_stmt}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable auto_cursor value_cursor
-        | {name C}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable auto_cursor value_cursor
+      | {out_stmt}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage value_cursor
+        | {name C}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage value_cursor
 
 The statement ending at line XXXX
 
@@ -20566,10 +20566,10 @@ END;
   | {name value_result_reader}: ok
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_value_cursor}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable auto_cursor value_cursor
-        | {name C}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable auto_cursor value_cursor
-        | {call_stmt}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable auto_cursor uses_out value_cursor
-          | {name declare_cursor_like_select}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable auto_cursor uses_out value_cursor
+      | {declare_value_cursor}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage value_cursor
+        | {name C}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage value_cursor
+        | {call_stmt}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage uses_out value_cursor
+          | {name declare_cursor_like_select}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage uses_out value_cursor
 
 The statement ending at line XXXX
 
@@ -21766,8 +21766,8 @@ END;
     |         | {notnull}: real notnull
     |           | {type_real}: real
     | {stmt_list}: ok
-      | {declare_cursor_like_select}: curs: select: { A: text notnull, B: integer notnull, C: real notnull } variable auto_cursor value_cursor
-      | | {name curs}: curs: select: { A: text notnull, B: integer notnull, C: real notnull } variable auto_cursor value_cursor
+      | {declare_cursor_like_select}: curs: select: { A: text notnull, B: integer notnull, C: real notnull } variable shape_storage value_cursor
+      | | {name curs}: curs: select: { A: text notnull, B: integer notnull, C: real notnull } variable shape_storage value_cursor
       | | {select_stmt}: select: { A: text notnull, B: integer notnull, C: real notnull }
       |   | {select_core_list}: select: { A: text notnull, B: integer notnull, C: real notnull }
       |   | | {select_core}: select: { A: text notnull, B: integer notnull, C: real notnull }
@@ -21796,7 +21796,7 @@ END;
       |       | {select_offset}
       | {fetch_values_stmt}: ok
         | {name_columns_values}
-          | {name curs}: curs: select: { A: text notnull, B: integer notnull, C: real notnull } variable auto_cursor value_cursor
+          | {name curs}: curs: select: { A: text notnull, B: integer notnull, C: real notnull } variable shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
             | | {name_list}
@@ -21851,13 +21851,13 @@ END;
     |           | {name rate_}: rate_: longint variable in
     |           | {type_long}: longint
     | {stmt_list}: ok
-      | {declare_cursor_like_name}: curs: bar: { id: integer notnull, name: text, rate: longint } variable auto_cursor value_cursor
-      | | {name curs}: curs: bar: { id: integer notnull, name: text, rate: longint } variable auto_cursor value_cursor
+      | {declare_cursor_like_name}: curs: bar: { id: integer notnull, name: text, rate: longint } variable shape_storage value_cursor
+      | | {name curs}: curs: bar: { id: integer notnull, name: text, rate: longint } variable shape_storage value_cursor
       | | {like}: bar: { id: integer notnull, name: text, rate: longint }
       |   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
       | {fetch_values_stmt}: ok
         | {name_columns_values}
-          | {name curs}: curs: bar: { id: integer notnull, name: text, rate: longint } variable auto_cursor value_cursor
+          | {name curs}: curs: bar: { id: integer notnull, name: text, rate: longint } variable shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
             | | {name_list}
@@ -22134,14 +22134,14 @@ Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, tab
               | {column_spec}
               | | {like}: err
               |   | {name bogus_name_here}: err
-              | {name ARGUMENTS}: ARGUMENTS: ARGUMENTS: { extra: integer variable in, id: integer notnull variable in, name: text variable in, rate: longint variable in } auto_cursor
+              | {name ARGUMENTS}: ARGUMENTS: ARGUMENTS: { extra: integer variable in, id: integer notnull variable in, name: text variable in, rate: longint variable in } shape_storage
 
 The statement ending at line XXXX
 
 DECLARE val_cursor CURSOR LIKE my_cursor;
 
-  {declare_cursor_like_name}: val_cursor: select: { one: integer notnull, two: integer notnull } variable auto_cursor value_cursor
-  | {name val_cursor}: val_cursor: select: { one: integer notnull, two: integer notnull } variable auto_cursor value_cursor
+  {declare_cursor_like_name}: val_cursor: select: { one: integer notnull, two: integer notnull } variable shape_storage value_cursor
+  | {name val_cursor}: val_cursor: select: { one: integer notnull, two: integer notnull } variable shape_storage value_cursor
   | {like}: my_cursor: select: { one: integer notnull, two: integer notnull } variable
     | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable
 
@@ -22153,7 +22153,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0163: FROM ARGUMENTS construct is 
 
   {fetch_values_stmt}: err
   | {name_columns_values}
-    | {name val_cursor}: val_cursor: select: { one: integer notnull, two: integer notnull } variable auto_cursor value_cursor
+    | {name val_cursor}: val_cursor: select: { one: integer notnull, two: integer notnull } variable shape_storage value_cursor
     | {columns_values}: ok
       | {column_spec}
       | | {name_list}
@@ -22183,8 +22183,8 @@ Error at test/sem_test.sql:XXXX : in columns_values : CQL0299: [shape] has too f
     |     | {notnull}: text notnull
     |       | {type_text}: text
     | {stmt_list}: err
-      | {declare_cursor_like_select}: curs: select: { A: text notnull, B: integer notnull, C: real notnull } variable auto_cursor value_cursor
-      | | {name curs}: curs: select: { A: text notnull, B: integer notnull, C: real notnull } variable auto_cursor value_cursor
+      | {declare_cursor_like_select}: curs: select: { A: text notnull, B: integer notnull, C: real notnull } variable shape_storage value_cursor
+      | | {name curs}: curs: select: { A: text notnull, B: integer notnull, C: real notnull } variable shape_storage value_cursor
       | | {select_stmt}: select: { A: text notnull, B: integer notnull, C: real notnull }
       |   | {select_core_list}: select: { A: text notnull, B: integer notnull, C: real notnull }
       |   | | {select_core}: select: { A: text notnull, B: integer notnull, C: real notnull }
@@ -22213,7 +22213,7 @@ Error at test/sem_test.sql:XXXX : in columns_values : CQL0299: [shape] has too f
       |       | {select_offset}
       | {fetch_values_stmt}: err
         | {name_columns_values}
-          | {name curs}: curs: select: { A: text notnull, B: integer notnull, C: real notnull } variable auto_cursor value_cursor
+          | {name curs}: curs: select: { A: text notnull, B: integer notnull, C: real notnull } variable shape_storage value_cursor
           | {columns_values}: err
             | {column_spec}
             | | {name_list}
@@ -22226,7 +22226,7 @@ Error at test/sem_test.sql:XXXX : in columns_values : CQL0299: [shape] has too f
               | {column_spec}
               | | {name_list}
               |   | {name arg1}
-              | {name ARGUMENTS}: ARGUMENTS: ARGUMENTS: { arg1: text notnull variable in } auto_cursor
+              | {name ARGUMENTS}: ARGUMENTS: ARGUMENTS: { arg1: text notnull variable in } shape_storage
 
 The statement ending at line XXXX
 
@@ -22395,7 +22395,7 @@ Error at test/sem_test.sql:XXXX : in columns_values : CQL0299: [shape] has too f
               | {column_spec}
               | | {name_list}
               |   | {name id}
-              | {name ARGUMENTS}: ARGUMENTS: ARGUMENTS: { id: integer variable in } auto_cursor
+              | {name ARGUMENTS}: ARGUMENTS: ARGUMENTS: { id: integer variable in } shape_storage
 
 The statement ending at line XXXX
 
@@ -22785,8 +22785,8 @@ BEGIN
   OUT C;
 END;
 
-  {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor uses_out value_cursor
-  | {name like_other_proc}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor uses_out value_cursor
+  {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage uses_out value_cursor
+  | {name like_other_proc}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage uses_out value_cursor
   | {proc_params_stmts}
     | {params}: ok
     | | {param}: A_: integer notnull variable in
@@ -22801,13 +22801,13 @@ END;
     |       | {notnull}: integer notnull
     |         | {type_int}: integer
     | {stmt_list}: ok
-      | {declare_cursor_like_name}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {like}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
+      | {declare_cursor_like_name}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {like}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {fetch_values_stmt}: ok
       | | {name_columns_values}
-      |   | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+      |   | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
       |   | {columns_values}: ok
       |     | {column_spec}
       |     | | {name_list}
@@ -22822,8 +22822,8 @@ END;
       |         | {dot}: B_: integer notnull variable in
       |           | {name ARGUMENTS}
       |           | {name B}
-      | {out_stmt}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+      | {out_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
 
 The statement ending at line XXXX
 
@@ -28536,8 +28536,8 @@ Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0236: autodrop annotation c
     | {name autodrop_no_db}: err
     | {proc_params_stmts}
       | {stmt_list}: ok
-        | {declare_cursor_like_select}: C: select: { id: integer notnull } variable auto_cursor value_cursor
-        | | {name C}: C: select: { id: integer notnull } variable auto_cursor value_cursor
+        | {declare_cursor_like_select}: C: select: { id: integer notnull } variable shape_storage value_cursor
+        | | {name C}: C: select: { id: integer notnull } variable shape_storage value_cursor
         | | {select_stmt}: select: { id: integer notnull }
         |   | {select_core_list}: select: { id: integer notnull }
         |   | | {select_core}: select: { id: integer notnull }
@@ -28556,15 +28556,15 @@ Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0236: autodrop annotation c
         |       | {select_offset}
         | {fetch_values_stmt}: ok
         | | {name_columns_values}
-        |   | {name c}: C: select: { id: integer notnull } variable auto_cursor value_cursor
+        |   | {name c}: C: select: { id: integer notnull } variable shape_storage value_cursor
         |   | {columns_values}: ok
         |     | {column_spec}
         |     | | {name_list}
         |     |   | {name id}: id: integer notnull
         |     | {insert_list}
         |       | {int 1}: integer notnull
-        | {out_stmt}: C: select: { id: integer notnull } variable auto_cursor value_cursor
-          | {name c}: C: select: { id: integer notnull } variable auto_cursor value_cursor
+        | {out_stmt}: C: select: { id: integer notnull } variable shape_storage value_cursor
+          | {name c}: C: select: { id: integer notnull } variable shape_storage value_cursor
 
 The statement ending at line XXXX
 
@@ -38998,8 +38998,8 @@ Error at test/sem_test.sql:XXXX : in declare_cursor : CQL0270: use FETCH FROM fo
     | {stmt_list}: err
       | {declare_cursor}: err
         | {name C}
-        | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
-          | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
+        | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+          | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
 
 The statement ending at line XXXX
 
@@ -40578,22 +40578,22 @@ BEGIN
   OUT UNION C;
 END;
 
-  {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out_union value_cursor
-  | {name many_row_emitter}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out_union value_cursor
+  {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union value_cursor
+  | {name many_row_emitter}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union value_cursor
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_cursor_like_name}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {like}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
+      | {declare_cursor_like_name}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {like}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {fetch_call_stmt}: ok
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc auto_cursor uses_out
-      | {out_union_stmt}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-      | {out_union_stmt}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
-        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      | {out_union_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | {out_union_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
 
 The statement ending at line XXXX
 
@@ -41038,7 +41038,7 @@ END;
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_cursor}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable
-      | | {name c}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable auto_cursor
+      | | {name c}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable shape_storage
       | | {explain_stmt}: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull }
       |   | {int 2}
       |   | {select_stmt}: select: { _anon: integer notnull }
@@ -41055,8 +41055,8 @@ END;
       |     | {select_orderby}
       |       | {select_limit}
       |         | {select_offset}
-      | {fetch_stmt}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable auto_cursor
-        | {name c}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable auto_cursor
+      | {fetch_stmt}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable shape_storage
+        | {name c}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable shape_storage
 
 The statement ending at line XXXX
 
@@ -42931,8 +42931,8 @@ END;
     |       | {notnull}: real notnull
     |         | {type_real}: real
     | {stmt_list}: ok
-      | {declare_cursor_like_name}: C: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable auto_cursor value_cursor
-      | | {name C}: C: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable auto_cursor value_cursor
+      | {declare_cursor_like_name}: C: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable shape_storage value_cursor
+      | | {name C}: C: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable shape_storage value_cursor
       | | {like}: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint }
       |   | {name referenceable}: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint }
       | {fetch_values_stmt}: ok
@@ -42940,7 +42940,7 @@ END;
         | | {int 1}: integer notnull
         | | {int 2}
         | {name_columns_values}
-          | {name C}: C: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable auto_cursor value_cursor
+          | {name C}: C: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
             | | {name_list}
@@ -42991,17 +42991,17 @@ BEGIN
   OUT C;
 END;
 
-  {create_proc_stmt}: C: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable auto_cursor uses_out value_cursor
-  | {name fetch_from_empty_col_list}: C: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable auto_cursor uses_out value_cursor
+  {create_proc_stmt}: C: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable shape_storage uses_out value_cursor
+  | {name fetch_from_empty_col_list}: C: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable shape_storage uses_out value_cursor
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_cursor_like_name}: C: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable auto_cursor value_cursor
-      | | {name C}: C: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable auto_cursor value_cursor
+      | {declare_cursor_like_name}: C: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable shape_storage value_cursor
+      | | {name C}: C: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable shape_storage value_cursor
       | | {like}: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint }
       |   | {name referenceable}: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint }
       | {fetch_values_stmt}: ok
       | | {name_columns_values}
-      |   | {name C}: C: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable auto_cursor value_cursor
+      |   | {name C}: C: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable shape_storage value_cursor
       |   | {columns_values}: ok
       |     | {column_spec}
       |     | | {name_list}
@@ -43024,15 +43024,15 @@ END;
       |             | {strlit 'y'}: text notnull
       |             | {insert_list}
       |               | {int 5}: integer notnull
-      | {out_stmt}: C: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable auto_cursor value_cursor
-        | {name C}: C: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable auto_cursor value_cursor
+      | {out_stmt}: C: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable shape_storage value_cursor
+        | {name C}: C: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable shape_storage value_cursor
 
 The statement ending at line XXXX
 
 DECLARE c_bar CURSOR LIKE referenceable;
 
-  {declare_cursor_like_name}: c_bar: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable auto_cursor value_cursor
-  | {name c_bar}: c_bar: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable auto_cursor value_cursor
+  {declare_cursor_like_name}: c_bar: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable shape_storage value_cursor
+  | {name c_bar}: c_bar: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable shape_storage value_cursor
   | {like}: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint }
     | {name referenceable}: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint }
 
@@ -43128,8 +43128,8 @@ The statement ending at line XXXX
 
 DECLARE small_cursor CURSOR LIKE SELECT 1 AS x;
 
-  {declare_cursor_like_select}: small_cursor: select: { x: integer notnull } variable auto_cursor value_cursor
-  | {name small_cursor}: small_cursor: select: { x: integer notnull } variable auto_cursor value_cursor
+  {declare_cursor_like_select}: small_cursor: select: { x: integer notnull } variable shape_storage value_cursor
+  | {name small_cursor}: small_cursor: select: { x: integer notnull } variable shape_storage value_cursor
   | {select_stmt}: select: { x: integer notnull }
     | {select_core_list}: select: { x: integer notnull }
     | | {select_core}: select: { x: integer notnull }
@@ -43173,7 +43173,7 @@ Error at test/sem_test.sql:XXXX : in columns_values : CQL0299: [shape] has too f
         | {column_spec}
         | | {name_list}
         |   | {name x}
-        | {name small_cursor}: small_cursor: select: { x: integer notnull } variable auto_cursor value_cursor
+        | {name small_cursor}: small_cursor: select: { x: integer notnull } variable shape_storage value_cursor
 
 The statement ending at line XXXX
 
@@ -43205,7 +43205,7 @@ The statement ending at line XXXX
 UPDATE CURSOR small_cursor(x) FROM VALUES(2);
 
   {update_cursor_stmt}: ok
-  | {name small_cursor}: small_cursor: select: { x: integer notnull } variable auto_cursor value_cursor
+  | {name small_cursor}: small_cursor: select: { x: integer notnull } variable shape_storage value_cursor
   | {columns_values}: ok
     | {column_spec}
     | | {name_list}
@@ -43220,7 +43220,7 @@ UPDATE CURSOR small_cursor(x) FROM VALUES('x');
 Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expression 'x'
 
   {update_cursor_stmt}: err
-  | {name small_cursor}: small_cursor: select: { x: integer notnull } variable auto_cursor value_cursor
+  | {name small_cursor}: small_cursor: select: { x: integer notnull } variable shape_storage value_cursor
   | {columns_values}: ok
     | {column_spec}
     | | {name_list}
@@ -43235,7 +43235,7 @@ UPDATE CURSOR small_cursor(x) FROM VALUES(1, 2);
 Error at test/sem_test.sql:XXXX : in update_cursor_stmt : CQL0157: count of columns differs from count of values
 
   {update_cursor_stmt}: err
-  | {name small_cursor}: small_cursor: select: { x: integer notnull } variable auto_cursor value_cursor
+  | {name small_cursor}: small_cursor: select: { x: integer notnull } variable shape_storage value_cursor
   | {columns_values}: ok
     | {column_spec}
     | | {name_list}
@@ -43252,7 +43252,7 @@ UPDATE CURSOR small_cursor(w) FROM VALUES(1);
 Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'w'
 
   {update_cursor_stmt}: err
-  | {name small_cursor}: small_cursor: select: { x: integer notnull } variable auto_cursor value_cursor
+  | {name small_cursor}: small_cursor: select: { x: integer notnull } variable shape_storage value_cursor
   | {columns_values}: ok
     | {column_spec}
     | | {name_list}: err
@@ -43500,8 +43500,8 @@ The statement ending at line XXXX
 
 DECLARE nully_cursor CURSOR LIKE foo_data;
 
-  {declare_cursor_like_name}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable auto_cursor value_cursor
-  | {name nully_cursor}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable auto_cursor value_cursor
+  {declare_cursor_like_name}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable shape_storage value_cursor
+  | {name nully_cursor}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable shape_storage value_cursor
   | {like}: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real }
     | {name foo_data}: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real }
 
@@ -43511,7 +43511,7 @@ FETCH nully_cursor(c1, c2, c3, c4, c5, c6, c7, c8, c9, c10) FROM VALUES('x', NUL
 
   {fetch_values_stmt}: ok
   | {name_columns_values}
-    | {name nully_cursor}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable auto_cursor value_cursor
+    | {name nully_cursor}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable shape_storage value_cursor
     | {columns_values}: ok
       | {column_spec}
       | | {name_list}
@@ -43563,7 +43563,7 @@ Error at test/sem_test.sql:XXXX : in fetch_values_stmt : CQL0167: required colum
 
   {fetch_values_stmt}: err
   | {name_columns_values}
-    | {name nully_cursor}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable auto_cursor value_cursor
+    | {name nully_cursor}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable shape_storage value_cursor
     | {columns_values}: ok
       | {column_spec}
       | | {name_list}
@@ -43575,8 +43575,8 @@ The statement ending at line XXXX
 
 DECLARE c1c7 CURSOR LIKE SELECT 'x' AS c1, nullable(3.2) AS c7;
 
-  {declare_cursor_like_select}: c1c7: select: { c1: text notnull, c7: real } variable auto_cursor value_cursor
-  | {name c1c7}: c1c7: select: { c1: text notnull, c7: real } variable auto_cursor value_cursor
+  {declare_cursor_like_select}: c1c7: select: { c1: text notnull, c7: real } variable shape_storage value_cursor
+  | {name c1c7}: c1c7: select: { c1: text notnull, c7: real } variable shape_storage value_cursor
   | {select_stmt}: select: { c1: text notnull, c7: real }
     | {select_core_list}: select: { c1: text notnull, c7: real }
     | | {select_core}: select: { c1: text notnull, c7: real }
@@ -43610,7 +43610,7 @@ FETCH c1c7(c1, c7) FROM VALUES('x', 3.2);
 
   {fetch_values_stmt}: ok
   | {name_columns_values}
-    | {name c1c7}: c1c7: select: { c1: text notnull, c7: real } variable auto_cursor value_cursor
+    | {name c1c7}: c1c7: select: { c1: text notnull, c7: real } variable shape_storage value_cursor
     | {columns_values}: ok
       | {column_spec}
       | | {name_list}
@@ -43627,7 +43627,7 @@ The statement ending at line XXXX
 UPDATE CURSOR nully_cursor(c1, c7) FROM VALUES(c1c7.c1, c1c7.c7);
 
   {update_cursor_stmt}: ok
-  | {name nully_cursor}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable auto_cursor value_cursor
+  | {name nully_cursor}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable shape_storage value_cursor
   | {columns_values}: ok
     | {column_spec}
     | | {name_list}
@@ -43648,7 +43648,7 @@ The statement ending at line XXXX
 UPDATE CURSOR nully_cursor(c1, c7) FROM VALUES(c1c7.c1, c1c7.c7);
 
   {update_cursor_stmt}: ok
-  | {name nully_cursor}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable auto_cursor value_cursor
+  | {name nully_cursor}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable shape_storage value_cursor
   | {columns_values}: ok
     | {column_spec}
     | | {name_list}
@@ -43671,7 +43671,7 @@ UPDATE CURSOR nully_cursor(c1, c7) FROM not_a_symbol;
 Error at test/sem_test.sql:XXXX : in str : CQL0204: cursor not found 'not_a_symbol'
 
   {update_cursor_stmt}: err
-  | {name nully_cursor}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable auto_cursor value_cursor
+  | {name nully_cursor}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable shape_storage value_cursor
   | {columns_values}: ok
     | {column_spec}
     | | {name_list}
@@ -43687,7 +43687,7 @@ FETCH nully_cursor(c1, c7, c2, c3, c4, c5, c6, c8, c9, c10) FROM VALUES(c1c7.c1,
 
   {fetch_values_stmt}: ok
   | {name_columns_values}
-    | {name nully_cursor}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable auto_cursor value_cursor
+    | {name nully_cursor}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable shape_storage value_cursor
     | {columns_values}: ok
       | {column_spec}
       | | {name_list}
@@ -43741,7 +43741,7 @@ FETCH nully_cursor(c1, c7, c2, c3, c4, c5, c6, c8, c9, c10) FROM VALUES(c1c7.c1,
 
   {fetch_values_stmt}: ok
   | {name_columns_values}
-    | {name nully_cursor}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable auto_cursor value_cursor
+    | {name nully_cursor}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable shape_storage value_cursor
     | {columns_values}: ok
       | {column_spec}
       | | {name_list}
@@ -43797,7 +43797,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0204: cursor not found 'not_a_symb
 
   {fetch_values_stmt}: err
   | {name_columns_values}
-    | {name nully_cursor}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable auto_cursor value_cursor
+    | {name nully_cursor}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable shape_storage value_cursor
     | {columns_values}: ok
       | {column_spec}
       | | {name_list}
@@ -43815,7 +43815,7 @@ Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, tab
 
   {fetch_values_stmt}: err
   | {name_columns_values}
-    | {name nully_cursor}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable auto_cursor value_cursor
+    | {name nully_cursor}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable shape_storage value_cursor
     | {columns_values}: err
       | {column_spec}
       | | {like}: err
@@ -43829,8 +43829,8 @@ The statement ending at line XXXX
 
 DECLARE id_name_cursor CURSOR LIKE SELECT 1 AS id, 'x' AS name;
 
-  {declare_cursor_like_select}: id_name_cursor: select: { id: integer notnull, name: text notnull } variable auto_cursor value_cursor
-  | {name id_name_cursor}: id_name_cursor: select: { id: integer notnull, name: text notnull } variable auto_cursor value_cursor
+  {declare_cursor_like_select}: id_name_cursor: select: { id: integer notnull, name: text notnull } variable shape_storage value_cursor
+  | {name id_name_cursor}: id_name_cursor: select: { id: integer notnull, name: text notnull } variable shape_storage value_cursor
   | {select_stmt}: select: { id: integer notnull, name: text notnull }
     | {select_core_list}: select: { id: integer notnull, name: text notnull }
     | | {select_core}: select: { id: integer notnull, name: text notnull }
@@ -43913,7 +43913,7 @@ FETCH c1c7(c1, c7) FROM VALUES(nully_cursor.c1, nully_cursor.c7);
 
   {fetch_values_stmt}: ok
   | {name_columns_values}
-    | {name c1c7}: c1c7: select: { c1: text notnull, c7: real } variable auto_cursor value_cursor
+    | {name c1c7}: c1c7: select: { c1: text notnull, c7: real } variable shape_storage value_cursor
     | {columns_values}: ok
       | {column_spec}
       | | {name_list}
@@ -43937,7 +43937,7 @@ Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, tab
 
   {fetch_values_stmt}: err
   | {name_columns_values}
-    | {name c1c7}: c1c7: select: { c1: text notnull, c7: real } variable auto_cursor value_cursor
+    | {name c1c7}: c1c7: select: { c1: text notnull, c7: real } variable shape_storage value_cursor
     | {columns_values}: ok
       | {column_spec}
       | | {name_list}
@@ -43948,7 +43948,7 @@ Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, tab
         | {column_spec}
         | | {like}: err
         |   | {name not_a_symbol}: err
-        | {name nully_cursor}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable auto_cursor value_cursor
+        | {name nully_cursor}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable shape_storage value_cursor
 
 The statement ending at line XXXX
 
@@ -46352,18 +46352,18 @@ BEGIN
   OUT C;
 END;
 
-  {create_proc_stmt}: C: basic_source: { id: integer, name: text } variable dml_proc auto_cursor uses_out
-  | {name basic_wrapper_out}: C: basic_source: { id: integer, name: text } variable dml_proc auto_cursor uses_out
+  {create_proc_stmt}: C: basic_source: { id: integer, name: text } variable dml_proc shape_storage uses_out
+  | {name basic_wrapper_out}: C: basic_source: { id: integer, name: text } variable dml_proc shape_storage uses_out
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_cursor}: C: basic_source: { id: integer, name: text } variable uses_out_union
-      | | {name C}: C: basic_source: { id: integer, name: text } variable auto_cursor uses_out_union
+      | | {name C}: C: basic_source: { id: integer, name: text } variable shape_storage uses_out_union
       | | {call_stmt}: basic_source: { id: integer, name: text } uses_out_union
       |   | {name basic_source}: basic_source: { id: integer, name: text } uses_out_union
-      | {fetch_stmt}: C: basic_source: { id: integer, name: text } variable auto_cursor uses_out_union
-      | | {name C}: C: basic_source: { id: integer, name: text } variable auto_cursor uses_out_union
-      | {out_stmt}: C: basic_source: { id: integer, name: text } variable auto_cursor uses_out_union
-        | {name C}: C: basic_source: { id: integer, name: text } variable auto_cursor uses_out_union
+      | {fetch_stmt}: C: basic_source: { id: integer, name: text } variable shape_storage uses_out_union
+      | | {name C}: C: basic_source: { id: integer, name: text } variable shape_storage uses_out_union
+      | {out_stmt}: C: basic_source: { id: integer, name: text } variable shape_storage uses_out_union
+        | {name C}: C: basic_source: { id: integer, name: text } variable shape_storage uses_out_union
 
 The statement ending at line XXXX
 
@@ -46374,18 +46374,18 @@ BEGIN
   OUT UNION C;
 END;
 
-  {create_proc_stmt}: C: basic_source: { id: integer, name: text } variable dml_proc auto_cursor uses_out_union
-  | {name basic_wrapper_out_union}: C: basic_source: { id: integer, name: text } variable dml_proc auto_cursor uses_out_union
+  {create_proc_stmt}: C: basic_source: { id: integer, name: text } variable dml_proc shape_storage uses_out_union
+  | {name basic_wrapper_out_union}: C: basic_source: { id: integer, name: text } variable dml_proc shape_storage uses_out_union
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_cursor}: C: basic_source: { id: integer, name: text } variable uses_out_union
-      | | {name C}: C: basic_source: { id: integer, name: text } variable auto_cursor uses_out_union
+      | | {name C}: C: basic_source: { id: integer, name: text } variable shape_storage uses_out_union
       | | {call_stmt}: basic_source: { id: integer, name: text } uses_out_union
       |   | {name basic_source}: basic_source: { id: integer, name: text } uses_out_union
-      | {fetch_stmt}: C: basic_source: { id: integer, name: text } variable auto_cursor uses_out_union
-      | | {name C}: C: basic_source: { id: integer, name: text } variable auto_cursor uses_out_union
-      | {out_union_stmt}: C: basic_source: { id: integer, name: text } variable auto_cursor uses_out_union
-        | {name C}: C: basic_source: { id: integer, name: text } variable auto_cursor uses_out_union
+      | {fetch_stmt}: C: basic_source: { id: integer, name: text } variable shape_storage uses_out_union
+      | | {name C}: C: basic_source: { id: integer, name: text } variable shape_storage uses_out_union
+      | {out_union_stmt}: C: basic_source: { id: integer, name: text } variable shape_storage uses_out_union
+        | {name C}: C: basic_source: { id: integer, name: text } variable shape_storage uses_out_union
 
 The statement ending at line XXXX
 
@@ -47728,13 +47728,13 @@ END;
   | {name shape_all_columns}: ok
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_cursor_like_name}: C: shape: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
-      | | {name C}: C: shape: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
+      | {declare_cursor_like_name}: C: shape: { x: integer notnull, y: text notnull } variable shape_storage value_cursor
+      | | {name C}: C: shape: { x: integer notnull, y: text notnull } variable shape_storage value_cursor
       | | {like}: shape: { x: integer notnull, y: text notnull } dml_proc
       |   | {name shape}: shape: { x: integer notnull, y: text notnull } dml_proc
       | {fetch_values_stmt}: ok
       | | {name_columns_values}
-      |   | {name C}: C: shape: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
+      |   | {name C}: C: shape: { x: integer notnull, y: text notnull } variable shape_storage value_cursor
       |   | {columns_values}: ok
       |     | {column_spec}
       |     | | {name_list}
@@ -47852,13 +47852,13 @@ END;
   | {name shape_some_columns}: ok
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_cursor_like_name}: C: shape: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
-      | | {name C}: C: shape: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
+      | {declare_cursor_like_name}: C: shape: { x: integer notnull, y: text notnull } variable shape_storage value_cursor
+      | | {name C}: C: shape: { x: integer notnull, y: text notnull } variable shape_storage value_cursor
       | | {like}: shape: { x: integer notnull, y: text notnull } dml_proc
       |   | {name shape}: shape: { x: integer notnull, y: text notnull } dml_proc
       | {fetch_values_stmt}: ok
       | | {name_columns_values}
-      |   | {name C}: C: shape: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
+      |   | {name C}: C: shape: { x: integer notnull, y: text notnull } variable shape_storage value_cursor
       |   | {columns_values}: ok
       |     | {column_spec}
       |     | | {name_list}
@@ -47891,13 +47891,13 @@ Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, tab
   | {name shape_some_columns_bogus_name}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_cursor_like_name}: C: shape: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
-      | | {name C}: C: shape: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
+      | {declare_cursor_like_name}: C: shape: { x: integer notnull, y: text notnull } variable shape_storage value_cursor
+      | | {name C}: C: shape: { x: integer notnull, y: text notnull } variable shape_storage value_cursor
       | | {like}: shape: { x: integer notnull, y: text notnull } dml_proc
       |   | {name shape}: shape: { x: integer notnull, y: text notnull } dml_proc
       | {fetch_values_stmt}: ok
       | | {name_columns_values}
-      |   | {name C}: C: shape: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
+      |   | {name C}: C: shape: { x: integer notnull, y: text notnull } variable shape_storage value_cursor
       |   | {columns_values}: ok
       |     | {column_spec}
       |     | | {name_list}
@@ -47912,7 +47912,7 @@ Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, tab
         | {name shape_y_only}
         | {expr_list}: err
           | {from_shape}
-            | {name C}: C: shape: { x: integer notnull, y: text notnull } variable auto_cursor value_cursor
+            | {name C}: C: shape: { x: integer notnull, y: text notnull } variable shape_storage value_cursor
             | {like}: err
               | {name not_a_real_shape}: err
 
@@ -47966,8 +47966,8 @@ END;
   | {name shape_args_middle}: ok
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_cursor_like_select}: C: select: { x: integer notnull, y: integer notnull } variable auto_cursor value_cursor
-      | | {name C}: C: select: { x: integer notnull, y: integer notnull } variable auto_cursor value_cursor
+      | {declare_cursor_like_select}: C: select: { x: integer notnull, y: integer notnull } variable shape_storage value_cursor
+      | | {name C}: C: select: { x: integer notnull, y: integer notnull } variable shape_storage value_cursor
       | | {select_stmt}: select: { x: integer notnull, y: integer notnull }
       |   | {select_core_list}: select: { x: integer notnull, y: integer notnull }
       |   | | {select_core}: select: { x: integer notnull, y: integer notnull }
@@ -47991,7 +47991,7 @@ END;
       |       | {select_offset}
       | {fetch_values_stmt}: ok
       | | {name_columns_values}
-      |   | {name C}: C: select: { x: integer notnull, y: integer notnull } variable auto_cursor value_cursor
+      |   | {name C}: C: select: { x: integer notnull, y: integer notnull } variable shape_storage value_cursor
       |   | {columns_values}: ok
       |     | {column_spec}
       |     | | {name_list}
@@ -48523,7 +48523,7 @@ Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, tab
               | {int 3}
               | {expr_list}
                 | {from_shape}
-                  | {name ARGUMENTS}: ARGUMENTS: ARGUMENTS: { x: integer variable in } auto_cursor
+                  | {name ARGUMENTS}: ARGUMENTS: ARGUMENTS: { x: integer variable in } shape_storage
                   | {like}: err
                     | {name no_such_type_dude}: err
 
@@ -48641,7 +48641,7 @@ Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, tab
             | {call_filter_clause}
             | {arg_list}: err
               | {from_shape}
-                | {name ARGUMENTS}: ARGUMENTS: ARGUMENTS: { x: integer notnull variable in, y: text notnull variable in, z: integer notnull variable out } auto_cursor
+                | {name ARGUMENTS}: ARGUMENTS: ARGUMENTS: { x: integer notnull variable in, y: text notnull variable in, z: integer notnull variable out } shape_storage
                 | {like}: err
                   | {name not_a_shape}: err
 
@@ -48823,7 +48823,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0067: cursor was not used with 'fe
       |     | {select_limit}
       |       | {select_offset}
       | {declare_cursor}: c2: select: { x: integer notnull, y: text notnull } variable
-      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable shape_storage
       | | {select_stmt}: select: { x: integer notnull, y: text notnull }
       |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
       |   | | {select_core}: select: { x: integer notnull, y: text notnull }
@@ -48845,8 +48845,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0067: cursor was not used with 'fe
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: c2: select: { x: integer notnull, y: text notnull } variable auto_cursor
-      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | {fetch_stmt}: c2: select: { x: integer notnull, y: text notnull } variable shape_storage
+      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable shape_storage
       | {assign}: err
         | {name a_string}: a_string: text variable
         | {call}: err
@@ -48856,7 +48856,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0067: cursor was not used with 'fe
             | {arg_list}: ok
               | {name c1}: err
               | {arg_list}
-                | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable auto_cursor
+                | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable shape_storage
 
 The statement ending at line XXXX
 
@@ -48876,7 +48876,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0061: in cql_cursor_diff_col, all 
   | {proc_params_stmts}
     | {stmt_list}: err
       | {declare_cursor}: c1: select: { x: integer notnull } variable
-      | | {name c1}: c1: select: { x: integer notnull } variable auto_cursor
+      | | {name c1}: c1: select: { x: integer notnull } variable shape_storage
       | | {select_stmt}: select: { x: integer notnull }
       |   | {select_core_list}: select: { x: integer notnull }
       |   | | {select_core}: select: { x: integer notnull }
@@ -48894,7 +48894,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0061: in cql_cursor_diff_col, all 
       |     | {select_limit}
       |       | {select_offset}
       | {declare_cursor}: c2: select: { x: text notnull } variable
-      | | {name c2}: c2: select: { x: text notnull } variable auto_cursor
+      | | {name c2}: c2: select: { x: text notnull } variable shape_storage
       | | {select_stmt}: select: { x: text notnull }
       |   | {select_core_list}: select: { x: text notnull }
       |   | | {select_core}: select: { x: text notnull }
@@ -48911,10 +48911,10 @@ Error at test/sem_test.sql:XXXX : in str : CQL0061: in cql_cursor_diff_col, all 
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: c1: select: { x: integer notnull } variable auto_cursor
-      | | {name c1}: c1: select: { x: integer notnull } variable auto_cursor
-      | {fetch_stmt}: c2: select: { x: text notnull } variable auto_cursor
-      | | {name c2}: c2: select: { x: text notnull } variable auto_cursor
+      | {fetch_stmt}: c1: select: { x: integer notnull } variable shape_storage
+      | | {name c1}: c1: select: { x: integer notnull } variable shape_storage
+      | {fetch_stmt}: c2: select: { x: text notnull } variable shape_storage
+      | | {name c2}: c2: select: { x: text notnull } variable shape_storage
       | {assign}: err
         | {name a_string}: a_string: text variable
         | {call}: err
@@ -48944,7 +48944,7 @@ Error at test/sem_test.sql:XXXX : in call : CQL0342: the cursor arguments must h
   | {proc_params_stmts}
     | {stmt_list}: err
       | {declare_cursor}: c1: select: { x: integer notnull, z: text notnull } variable
-      | | {name c1}: c1: select: { x: integer notnull, z: text notnull } variable auto_cursor
+      | | {name c1}: c1: select: { x: integer notnull, z: text notnull } variable shape_storage
       | | {select_stmt}: select: { x: integer notnull, z: text notnull }
       |   | {select_core_list}: select: { x: integer notnull, z: text notnull }
       |   | | {select_core}: select: { x: integer notnull, z: text notnull }
@@ -48967,7 +48967,7 @@ Error at test/sem_test.sql:XXXX : in call : CQL0342: the cursor arguments must h
       |     | {select_limit}
       |       | {select_offset}
       | {declare_cursor}: c2: select: { x: integer notnull } variable
-      | | {name c2}: c2: select: { x: integer notnull } variable auto_cursor
+      | | {name c2}: c2: select: { x: integer notnull } variable shape_storage
       | | {select_stmt}: select: { x: integer notnull }
       |   | {select_core_list}: select: { x: integer notnull }
       |   | | {select_core}: select: { x: integer notnull }
@@ -48984,10 +48984,10 @@ Error at test/sem_test.sql:XXXX : in call : CQL0342: the cursor arguments must h
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: c1: select: { x: integer notnull, z: text notnull } variable auto_cursor
-      | | {name c1}: c1: select: { x: integer notnull, z: text notnull } variable auto_cursor
-      | {fetch_stmt}: c2: select: { x: integer notnull } variable auto_cursor
-      | | {name c2}: c2: select: { x: integer notnull } variable auto_cursor
+      | {fetch_stmt}: c1: select: { x: integer notnull, z: text notnull } variable shape_storage
+      | | {name c1}: c1: select: { x: integer notnull, z: text notnull } variable shape_storage
+      | {fetch_stmt}: c2: select: { x: integer notnull } variable shape_storage
+      | | {name c2}: c2: select: { x: integer notnull } variable shape_storage
       | {assign}: err
         | {name a_string}: a_string: text variable
         | {call}: err
@@ -48995,9 +48995,9 @@ Error at test/sem_test.sql:XXXX : in call : CQL0342: the cursor arguments must h
           | {call_arg_list}
             | {call_filter_clause}
             | {arg_list}: ok
-              | {name c1}: c1: select: { x: integer notnull, z: text notnull } variable auto_cursor
+              | {name c1}: c1: select: { x: integer notnull, z: text notnull } variable shape_storage
               | {arg_list}
-                | {name c2}: c2: select: { x: integer notnull } variable auto_cursor
+                | {name c2}: c2: select: { x: integer notnull } variable shape_storage
 
 The statement ending at line XXXX
 
@@ -49017,7 +49017,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0058: in cql_cursor_diff_col, all 
   | {proc_params_stmts}
     | {stmt_list}: err
       | {declare_cursor}: c1: select: { x: integer notnull, y: text notnull } variable
-      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable shape_storage
       | | {select_stmt}: select: { x: integer notnull, y: text notnull }
       |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
       |   | | {select_core}: select: { x: integer notnull, y: text notnull }
@@ -49040,7 +49040,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0058: in cql_cursor_diff_col, all 
       |     | {select_limit}
       |       | {select_offset}
       | {declare_cursor}: c2: select: { z: integer notnull, v: text notnull } variable
-      | | {name c2}: c2: select: { z: integer notnull, v: text notnull } variable auto_cursor
+      | | {name c2}: c2: select: { z: integer notnull, v: text notnull } variable shape_storage
       | | {select_stmt}: select: { z: integer notnull, v: text notnull }
       |   | {select_core_list}: select: { z: integer notnull, v: text notnull }
       |   | | {select_core}: select: { z: integer notnull, v: text notnull }
@@ -49062,10 +49062,10 @@ Error at test/sem_test.sql:XXXX : in str : CQL0058: in cql_cursor_diff_col, all 
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: c1: select: { x: integer notnull, y: text notnull } variable auto_cursor
-      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable auto_cursor
-      | {fetch_stmt}: c2: select: { z: integer notnull, v: text notnull } variable auto_cursor
-      | | {name c2}: c2: select: { z: integer notnull, v: text notnull } variable auto_cursor
+      | {fetch_stmt}: c1: select: { x: integer notnull, y: text notnull } variable shape_storage
+      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable shape_storage
+      | {fetch_stmt}: c2: select: { z: integer notnull, v: text notnull } variable shape_storage
+      | | {name c2}: c2: select: { z: integer notnull, v: text notnull } variable shape_storage
       | {assign}: err
         | {name a_string}: a_string: text variable
         | {call}: err
@@ -49079,7 +49079,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0058: in cql_cursor_diff_col, all 
 
 The statement ending at line XXXX
 
-CREATE PROC cql_cursor_diff_col_with_auto_cursor ()
+CREATE PROC cql_cursor_diff_col_with_shape_storage ()
 BEGIN
   DECLARE c1 CURSOR FOR SELECT 1 AS x, 'y' AS y;
   DECLARE c2 CURSOR FOR SELECT 1 AS x, 'y' AS y;
@@ -49091,11 +49091,11 @@ BEGIN
 END;
 
   {create_proc_stmt}: ok dml_proc
-  | {name cql_cursor_diff_col_with_auto_cursor}: ok dml_proc
+  | {name cql_cursor_diff_col_with_shape_storage}: ok dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_cursor}: c1: select: { x: integer notnull, y: text notnull } variable
-      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable shape_storage
       | | {select_stmt}: select: { x: integer notnull, y: text notnull }
       |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
       |   | | {select_core}: select: { x: integer notnull, y: text notnull }
@@ -49118,7 +49118,7 @@ END;
       |     | {select_limit}
       |       | {select_offset}
       | {declare_cursor}: c2: select: { x: integer notnull, y: text notnull } variable
-      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable shape_storage
       | | {select_stmt}: select: { x: integer notnull, y: text notnull }
       |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
       |   | | {select_core}: select: { x: integer notnull, y: text notnull }
@@ -49140,10 +49140,10 @@ END;
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: c1: select: { x: integer notnull, y: text notnull } variable auto_cursor
-      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable auto_cursor
-      | {fetch_stmt}: c2: select: { x: integer notnull, y: text notnull } variable auto_cursor
-      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | {fetch_stmt}: c1: select: { x: integer notnull, y: text notnull } variable shape_storage
+      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable shape_storage
+      | {fetch_stmt}: c2: select: { x: integer notnull, y: text notnull } variable shape_storage
+      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable shape_storage
       | {assign}: a_string: text variable
         | {name a_string}: a_string: text variable
         | {case_expr}: text
@@ -49187,7 +49187,7 @@ END;
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_cursor}: c1: select: { x: integer notnull, y: text notnull } variable
-      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable shape_storage
       | | {select_stmt}: select: { x: integer notnull, y: text notnull }
       |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
       |   | | {select_core}: select: { x: integer notnull, y: text notnull }
@@ -49210,7 +49210,7 @@ END;
       |     | {select_limit}
       |       | {select_offset}
       | {declare_cursor}: c2: select: { x: integer notnull, y: text notnull } variable
-      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable shape_storage
       | | {select_stmt}: select: { x: integer notnull, y: text notnull }
       |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
       |   | | {select_core}: select: { x: integer notnull, y: text notnull }
@@ -49232,10 +49232,10 @@ END;
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: c1: select: { x: integer notnull, y: text notnull } variable auto_cursor
-      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable auto_cursor
-      | {fetch_stmt}: c2: select: { x: integer notnull, y: text notnull } variable auto_cursor
-      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | {fetch_stmt}: c1: select: { x: integer notnull, y: text notnull } variable shape_storage
+      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable shape_storage
+      | {fetch_stmt}: c2: select: { x: integer notnull, y: text notnull } variable shape_storage
+      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable shape_storage
       | {call_stmt}: ok
         | {name printf}: ok
         | {expr_list}: ok
@@ -49288,7 +49288,7 @@ END;
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_cursor}: c1: select: { x: integer notnull, y: text notnull } variable
-      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable shape_storage
       | | {select_stmt}: select: { x: integer notnull, y: text notnull }
       |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
       |   | | {select_core}: select: { x: integer notnull, y: text notnull }
@@ -49311,7 +49311,7 @@ END;
       |     | {select_limit}
       |       | {select_offset}
       | {declare_cursor}: c2: select: { x: integer notnull, y: text notnull } variable
-      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable shape_storage
       | | {select_stmt}: select: { x: integer notnull, y: text notnull }
       |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
       |   | | {select_core}: select: { x: integer notnull, y: text notnull }
@@ -49333,10 +49333,10 @@ END;
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: c1: select: { x: integer notnull, y: text notnull } variable auto_cursor
-      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable auto_cursor
-      | {fetch_stmt}: c2: select: { x: integer notnull, y: text notnull } variable auto_cursor
-      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable auto_cursor
+      | {fetch_stmt}: c1: select: { x: integer notnull, y: text notnull } variable shape_storage
+      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable shape_storage
+      | {fetch_stmt}: c2: select: { x: integer notnull, y: text notnull } variable shape_storage
+      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable shape_storage
       | {call_stmt}: ok
         | {name printf}: ok
         | {expr_list}: ok
@@ -49796,7 +49796,7 @@ END;
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_cursor}: c1: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull } variable
-      | | {name c1}: c1: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull } variable auto_cursor
+      | | {name c1}: c1: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull } variable shape_storage
       | | {select_stmt}: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull }
       |   | {select_core_list}: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull }
       |   | | {select_core}: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull }
@@ -49842,8 +49842,8 @@ END;
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: c1: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull } variable auto_cursor
-      | | {name c1}: c1: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull } variable auto_cursor
+      | {fetch_stmt}: c1: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull } variable shape_storage
+      | | {name c1}: c1: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull } variable shape_storage
       | {assign}: a_string: text variable
         | {name a_string}: a_string: text variable
         | {call}: text notnull
@@ -50000,7 +50000,7 @@ Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in 
   | {proc_params_stmts}
     | {stmt_list}: err
       | {declare_cursor}: c1: select: { a: integer notnull } variable
-      | | {name c1}: c1: select: { a: integer notnull } variable auto_cursor
+      | | {name c1}: c1: select: { a: integer notnull } variable shape_storage
       | | {select_stmt}: select: { a: integer notnull }
       |   | {select_core_list}: select: { a: integer notnull }
       |   | | {select_core}: select: { a: integer notnull }
@@ -50017,8 +50017,8 @@ Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in 
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: c1: select: { a: integer notnull } variable auto_cursor
-      | | {name c1}: c1: select: { a: integer notnull } variable auto_cursor
+      | {fetch_stmt}: c1: select: { a: integer notnull } variable shape_storage
+      | | {name c1}: c1: select: { a: integer notnull } variable shape_storage
       | {select_stmt}: err
         | {select_core_list}: err
         | | {select_core}: err
@@ -50463,13 +50463,13 @@ Error at test/sem_test.sql:XXXX : in str : CQL0261: the cursor did not originate
     |     | {type_object}: object<bar CURSOR>
     |       | {name bar CURSOR}
     | {stmt_list}: err
-      | {declare_cursor_like_name}: C: bar: { id: integer notnull, name: text, rate: longint } variable auto_cursor value_cursor
-      | | {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable auto_cursor value_cursor
+      | {declare_cursor_like_name}: C: bar: { id: integer notnull, name: text, rate: longint } variable shape_storage value_cursor
+      | | {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable shape_storage value_cursor
       | | {like}: bar: { id: integer notnull, name: text, rate: longint }
       |   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
       | {set_from_cursor}: err
         | {name box}: box: object<bar CURSOR> variable out
-        | {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable auto_cursor value_cursor
+        | {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable shape_storage value_cursor
 
 The statement ending at line XXXX
 
@@ -50735,8 +50735,8 @@ The statement ending at line XXXX
 
 DECLARE Q CURSOR LIKE some_proc ARGUMENTS;
 
-  {declare_cursor_like_name}: Q: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out } variable auto_cursor value_cursor
-  | {name Q}: Q: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out } variable auto_cursor value_cursor
+  {declare_cursor_like_name}: Q: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out } variable shape_storage value_cursor
+  | {name Q}: Q: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out } variable shape_storage value_cursor
   | {like}: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out }
     | {name some_proc}: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out }
     | {name some_proc}: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out }
@@ -50972,13 +50972,13 @@ END;
   | {name test_fetch_using}: ok
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_cursor_like_name}: C: bar: { id: integer notnull, name: text, rate: longint } variable auto_cursor value_cursor
-      | | {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable auto_cursor value_cursor
+      | {declare_cursor_like_name}: C: bar: { id: integer notnull, name: text, rate: longint } variable shape_storage value_cursor
+      | | {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable shape_storage value_cursor
       | | {like}: bar: { id: integer notnull, name: text, rate: longint }
       |   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
       | {fetch_values_stmt}: ok
         | {name_columns_values}
-          | {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable auto_cursor value_cursor
+          | {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
             | | {name_list}
@@ -51006,8 +51006,8 @@ END;
   | {name test_fetch_using_with_dummy_seed}: ok
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_cursor_like_name}: C: bar: { id: integer notnull, name: text, rate: longint } variable auto_cursor value_cursor
-      | | {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable auto_cursor value_cursor
+      | {declare_cursor_like_name}: C: bar: { id: integer notnull, name: text, rate: longint } variable shape_storage value_cursor
+      | | {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable shape_storage value_cursor
       | | {like}: bar: { id: integer notnull, name: text, rate: longint }
       |   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
       | {fetch_values_stmt}: ok
@@ -51015,7 +51015,7 @@ END;
         | | {int 9}: integer notnull
         | | {int 3}
         | {name_columns_values}
-          | {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable auto_cursor value_cursor
+          | {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
             | | {name_list}
@@ -51459,7 +51459,7 @@ END;
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {update_cursor_stmt}: ok
-        | {name small_cursor}: small_cursor: select: { x: integer notnull } variable auto_cursor value_cursor
+        | {name small_cursor}: small_cursor: select: { x: integer notnull } variable shape_storage value_cursor
         | {columns_values}: ok
           | {column_spec}
           | | {name_list}
@@ -52736,13 +52736,13 @@ END;
     |           | {name a2_d}: a2_d: text variable in
     |           | {type_text}: text
     | {stmt_list}: ok
-      | {declare_cursor_like_name}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
-      | | {name C}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
+      | {declare_cursor_like_name}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
+      | | {name C}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
       | | {like}: AB: { a: integer, b: text }
       |   | {name AB}: AB: { a: integer, b: text }
       | {fetch_values_stmt}: ok
         | {name_columns_values}
-          | {name C}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
+          | {name C}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
             | | {name_list}
@@ -52790,13 +52790,13 @@ END;
     |           | {name a2_d}: a2_d: text variable in
     |           | {type_text}: text
     | {stmt_list}: ok
-      | {declare_cursor_like_name}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
-      | | {name C}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
+      | {declare_cursor_like_name}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
+      | | {name C}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
       | | {like}: AB: { a: integer, b: text }
       |   | {name AB}: AB: { a: integer, b: text }
       | {fetch_values_stmt}: ok
         | {name_columns_values}
-          | {name C}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
+          | {name C}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
             | | {name_list}
@@ -52844,13 +52844,13 @@ END;
     |           | {name a2_d}: a2_d: text variable in
     |           | {type_text}: text
     | {stmt_list}: ok
-      | {declare_cursor_like_name}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
-      | | {name C}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
+      | {declare_cursor_like_name}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
+      | | {name C}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
       | | {like}: AB: { a: integer, b: text }
       |   | {name AB}: AB: { a: integer, b: text }
       | {fetch_values_stmt}: ok
         | {name_columns_values}
-          | {name C}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
+          | {name C}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
             | | {name_list}
@@ -52896,12 +52896,12 @@ END;
     |           | {name a2_d}: a2_d: text variable in
     |           | {type_text}: text
     | {stmt_list}: ok
-      | {declare_cursor_like_name}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
-      | | {name C}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
+      | {declare_cursor_like_name}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
+      | | {name C}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
       | | {like}: AB: { a: integer, b: text }
       |   | {name AB}: AB: { a: integer, b: text }
       | {update_cursor_stmt}: ok
-        | {name C}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
+        | {name C}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
         | {columns_values}: ok
           | {column_spec}
           | | {name_list}
@@ -52949,12 +52949,12 @@ END;
     |           | {name a2_d}: a2_d: text variable in
     |           | {type_text}: text
     | {stmt_list}: ok
-      | {declare_cursor_like_name}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
-      | | {name C}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
+      | {declare_cursor_like_name}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
+      | | {name C}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
       | | {like}: AB: { a: integer, b: text }
       |   | {name AB}: AB: { a: integer, b: text }
       | {update_cursor_stmt}: ok
-        | {name C}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
+        | {name C}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
         | {columns_values}: ok
           | {column_spec}
           | | {name_list}
@@ -52996,12 +52996,12 @@ END;
     |           | {name a2_d}: a2_d: text variable in
     |           | {type_text}: text
     | {stmt_list}: ok
-      | {declare_cursor_like_name}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
-      | | {name C}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
+      | {declare_cursor_like_name}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
+      | | {name C}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
       | | {like}: AB: { a: integer, b: text }
       |   | {name AB}: AB: { a: integer, b: text }
       | {update_cursor_stmt}: ok
-        | {name C}: C: AB: { a: integer, b: text } variable auto_cursor value_cursor
+        | {name C}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
         | {columns_values}: ok
           | {column_spec}
           | | {name_list}

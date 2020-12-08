@@ -160,7 +160,7 @@ static void cg_error_on_not_sqlite_ok() {
 // are left to right associtive in SQL. Stronger child contexts never need parens because
 // the operator already binds tighter than its parent in the tree.
 static bool_t needs_paren(ast_node *ast, int32_t pri_new, int32_t pri) {
-  // if the priorities are different then parens are needed 
+  // if the priorities are different then parens are needed
   // if and only if the new priority (this node) is weaker than the
   // containing priority (the parent node)
 
@@ -3289,38 +3289,38 @@ static void cg_declare_enum_stmt(ast_node *ast) {
 
   if (type->sem->sem_type != SEM_TYPE_REAL) {
     bprintf(cg_header_output, "enum %s {", name);
-  
+
     while (enum_values) {
        EXTRACT_NOTNULL(enum_value, enum_values->left);
        EXTRACT_ANY_NOTNULL(enum_name_ast, enum_value->left);
        EXTRACT_STRING(enum_name, enum_name_ast);
-  
+
        bprintf(cg_header_output, "\n  %s__%s = ", name, enum_name);
        eval_format_number(enum_name_ast->sem->value, cg_header_output);
 
        if (type->sem->sem_type == SEM_TYPE_LONG_INTEGER) {
          bprintf(cg_header_output, "L");
        }
-       
+
        if (enum_values->right) {
          bprintf(cg_header_output, ",");
        }
-  
+
        enum_values = enum_values->right;
     }
     bprintf(cg_header_output, "\n};\n");
   }
-  else {  
+  else {
     bprintf(cg_header_output, "\n// enum %s (floating point values)\n", name);
     while (enum_values) {
        EXTRACT_NOTNULL(enum_value, enum_values->left);
        EXTRACT_ANY_NOTNULL(enum_name_ast, enum_value->left);
        EXTRACT_STRING(enum_name, enum_name_ast);
-  
+
        bprintf(cg_header_output, "#define %s__%s ", name, enum_name);
        eval_format_number(enum_name_ast->sem->value, cg_header_output);
        bprintf(cg_header_output, "\n");
-       
+
        enum_values = enum_values->right;
     }
   }
@@ -3438,7 +3438,7 @@ static void cg_declare_cursor(ast_node *ast) {
     CHARBUF_CLOSE(box_name);
   }
 
-  if (name_ast->sem->sem_type & SEM_TYPE_AUTO_CURSOR) {
+  if (name_ast->sem->sem_type & SEM_TYPE_HAS_SHAPE_STORAGE) {
     cg_declare_auto_cursor(cursor_name, name_ast->sem->sptr);
   }
   else {
@@ -3470,7 +3470,7 @@ static void cg_set_from_cursor(ast_node *ast) {
 static void cg_declare_cursor_like(ast_node *name_ast) {
   EXTRACT_STRING(cursor_name, name_ast);
 
-  Contract(name_ast->sem->sem_type & SEM_TYPE_AUTO_CURSOR);
+  Contract(name_ast->sem->sem_type & SEM_TYPE_HAS_SHAPE_STORAGE);
   cg_declare_auto_cursor(cursor_name, name_ast->sem->sptr);
 }
 
@@ -3577,7 +3577,7 @@ static void cg_fetch_stmt(ast_node *ast) {
     bprintf(&row_test, "_rc_ == SQLITE_ROW");
   }
 
-  if (ast->sem->sem_type & SEM_TYPE_AUTO_CURSOR) {
+  if (ast->sem->sem_type & SEM_TYPE_HAS_SHAPE_STORAGE) {
     bprintf(cg_main_output, "%s_._has_row_ = %s;\n", cursor_name, row_test.ptr);
   }
   else {
@@ -3742,7 +3742,7 @@ static void cg_loop_stmt(ast_node *ast) {
 
   cg_fetch_stmt(fetch_stmt);
 
-  if (fetch_stmt->left->sem->sem_type & SEM_TYPE_AUTO_CURSOR) {
+  if (fetch_stmt->left->sem->sem_type & SEM_TYPE_HAS_SHAPE_STORAGE) {
     bprintf(cg_main_output, "if (!%s_._has_row_) break;\n", cursor_name);
   }
   else {
@@ -4506,9 +4506,9 @@ static void cg_proc_savepoint_stmt(ast_node *ast) {
     ast_node *rollback  = new_ast_rollback_trans_stmt(new_ast_str(current_proc_name()));
     ast_node *try_extra_stmts = new_ast_stmt_list(release1, NULL);
     ast_node *throw_stmt = new_ast_throw_stmt();
-    ast_node *catch_stmts = 
-		new_ast_stmt_list(rollback, 
-                new_ast_stmt_list(release2, 
+    ast_node *catch_stmts =
+		new_ast_stmt_list(rollback,
+                new_ast_stmt_list(release2,
                 new_ast_stmt_list(throw_stmt, NULL)));
     AST_REWRITE_INFO_RESET();
     cg_bound_sql_statement(NULL, savepoint, CG_EXEC);

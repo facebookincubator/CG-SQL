@@ -127,7 +127,7 @@ cql_data_decl( bytebuf *recreate_annotations );
 #define SEM_TYPE_IN_PARAMETER     0x1000   // set for in parameters (can mix with below)
 #define SEM_TYPE_OUT_PARAMETER    0x2000   // set for out paramters (can mix with above)
 #define SEM_TYPE_DML_PROC         0x4000   // set for stored procs that have DML/DDL
-#define SEM_TYPE_AUTO_CURSOR      0x8000   // set for a cursor with simplified fetch syntax
+#define SEM_TYPE_HAS_SHAPE_STORAGE      0x8000   // set for a cursor with simplified fetch syntax
 #define SEM_TYPE_CREATE_FUNC     0x10000   // set for a function that returns a created object +1 ref
 #define SEM_TYPE_SELECT_FUNC     0x20000   // set for a sqlite UDF function declaration
 #define SEM_TYPE_HIDDEN          0x40000   // set for columns that are not visible in the current schema version
@@ -137,7 +137,7 @@ cql_data_decl( bytebuf *recreate_annotations );
 #define SEM_TYPE_PK             0x400000   // set if column is a primary key
 #define SEM_TYPE_FK             0x800000   // set if column is a foreign key
 #define SEM_TYPE_UK            0x1000000   // set if column is a unique key
-#define SEM_TYPE_VALUE_CURSOR  0x2000000   // set only if SEM_TYPE_AUTO_CURSOR is set and the cursor has no statement
+#define SEM_TYPE_VALUE_CURSOR  0x2000000   // set only if SEM_TYPE_HAS_SHAPE_STORAGE is set and the cursor has no statement
 #define SEM_TYPE_SENSITIVE     0x4000000   // set if the object is privacy sensitive
 #define SEM_TYPE_DEPLOYABLE    0x8000000   // set if the object is a deployable region
 #define SEM_TYPE_BOXED        0x10000000   // set if a cursor's lifetime is managed by a box object
