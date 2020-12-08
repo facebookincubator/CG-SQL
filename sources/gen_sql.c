@@ -51,7 +51,6 @@ static void gen_column_spec(ast_node *ast);
 static void gen_from_cursor(ast_node *ast);
 static void gen_opt_filter_clause(ast_node *ast);
 static void gen_if_not_exists(ast_node *ast, bool_t if_not_exist);
-static void gen_from_arguments(ast_node *ast);
 static void gen_shape_def(ast_node *ast);
 static void gen_expr_names(ast_node *ast);
 
@@ -640,9 +639,6 @@ static void gen_arg_expr(ast_node *ast) {
   if (is_ast_star(ast)) {
     gen_printf("*");
   }
-  else if (is_ast_from_arguments(ast)) {
-    gen_from_arguments(ast);
-  }
   else if (is_ast_from_shape(ast)) {
     gen_shape_arg(ast);
   }
@@ -695,9 +691,6 @@ static void gen_call_expr_list(ast_node *ast) {
     ast_node *left = ast->left;
     if (is_ast_from_shape(left)) {
       gen_shape_arg(left);
-    }
-    else if (is_ast_from_arguments(left)) {
-      gen_from_arguments(left);
     }
     else {
       gen_root_expr(left);
@@ -809,7 +802,14 @@ static void gen_expr_dot(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
 
   EXTRACT_STRING(left, ast->left);
   EXTRACT_STRING(right, ast->right);
-  gen_printf("%s.%s", left, right);
+
+  if (!strcmp("ARGUMENTS", left) && ast->sem && ast->sem->name) {
+    // special case for rewritten arguments, hide the "ARGUMENTS." stuff
+    gen_printf("%s", ast->sem->name);
+  }
+  else {
+    gen_printf("%s.%s", left, right);
+  }
 }
 
 static void gen_expr_in_pred(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
@@ -2188,15 +2188,6 @@ static void gen_column_spec(ast_node *ast) {
   }
 }
 
-static void gen_from_arguments(ast_node *ast) {
-  Contract(is_ast_from_arguments(ast));
-  gen_printf("FROM ARGUMENTS");
-  if (ast->left) {
-    gen_printf(" ");
-    gen_shape_def(ast->left);
-  }
-}
-
 static void gen_insert_stmt(ast_node *ast) {
   Contract(is_ast_insert_stmt(ast));
   EXTRACT_ANY_NOTNULL(insert_type, ast->left);
@@ -2220,9 +2211,6 @@ static void gen_insert_stmt(ast_node *ast) {
 
     if (is_select_stmt(insert_list)) {
       gen_select_stmt(insert_list);
-    }
-    else if (is_ast_from_arguments(insert_list)) {
-      gen_from_arguments(insert_list);
     }
     else if (is_ast_from_cursor(insert_list)) {
       gen_from_cursor(insert_list);
@@ -2288,10 +2276,7 @@ static void gen_fetch_values_stmt(ast_node *ast) {
     gen_column_spec(column_spec);
     gen_printf(" ");
 
-    if (is_ast_from_arguments(columns_values->right)) {
-      gen_from_arguments(columns_values->right);
-    }
-    else if (is_ast_from_cursor(columns_values->right)) {
+    if (is_ast_from_cursor(columns_values->right)) {
       gen_from_cursor(columns_values->right);
     }
     else {

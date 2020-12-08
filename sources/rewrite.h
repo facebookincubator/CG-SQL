@@ -15,14 +15,11 @@
 #include "sem.h"
 
 cql_noexport void rewrite_proclit(ast_node *ast);
-cql_noexport void rewrite_insert_list_from_arguments(ast_node *ast, uint32_t count);
 cql_noexport void rewrite_insert_list_from_cursor(ast_node *ast, ast_node *from_cursor, uint32_t count);
 cql_noexport void rewrite_like_column_spec_if_needed(ast_node *columns_values);
 cql_noexport void rewrite_from_cursor_if_needed(ast_node *ast_stmt, ast_node *columns_values);
 cql_noexport void rewrite_from_shape_args(ast_node *head);
-cql_noexport void rewrite_from_arguments_in_call(ast_node *head);
 cql_noexport bool_t rewrite_col_key_list(ast_node *ast);
-cql_noexport void rewrite_from_arguments_if_needed(ast_node *ast_stmt, ast_node *columns_values);
 cql_noexport CSTR process_proclit(ast_node *ast, CSTR name);
 cql_noexport ast_node *rewrite_gen_data_type(sem_t sem_type);
 cql_noexport ast_node *rewrite_gen_full_column_list(sem_struct *sptr);

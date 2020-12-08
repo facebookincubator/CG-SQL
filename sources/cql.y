@@ -198,7 +198,7 @@ static void cql_reset_globals(void);
 %type <aval> opt_join_cond opt_outer join_cond join_clause join_target join_target_list opt_inner_cross left_or_right
 %type <aval> basic_update_stmt with_update_stmt update_stmt update_cursor_stmt update_entry update_list upsert_stmt conflict_target
 %type <aval> declare_schema_region_stmt declare_deployable_region_stmt call with_upsert_stmt
-%type <aval> begin_schema_region_stmt end_schema_region_stmt schema_ad_hoc_migration_stmt region_list region_spec from_arguments
+%type <aval> begin_schema_region_stmt end_schema_region_stmt schema_ad_hoc_migration_stmt region_list region_spec
 
 /* expressions and types */
 %type <aval> expr basic_expr math_expr expr_list typed_name typed_names case_list call_expr_list call_expr shape_arguments
@@ -808,7 +808,6 @@ case_list[result]:
 arg_expr: '*' { $arg_expr = new_ast_star(); }
   | expr { $arg_expr = $expr; }
   | shape_arguments { $arg_expr = $shape_arguments; }
-  | from_arguments { $arg_expr = $from_arguments; }
   ;
 
 arg_list[result]:
@@ -825,12 +824,13 @@ expr_list[result]:
 shape_arguments:
   FROM name  { $shape_arguments = new_ast_from_shape($name, NULL); }
   | FROM name shape_def  { $shape_arguments = new_ast_from_shape($name, $shape_def); }
+  | FROM ARGUMENTS  { $shape_arguments = new_ast_from_shape(new_ast_str("ARGUMENTS"), NULL); }
+  | FROM ARGUMENTS shape_def  { $shape_arguments = new_ast_from_shape(new_ast_str("ARGUMENTS"), $shape_def); }
   ;
 
 call_expr:
   expr  { $call_expr = $expr; }
   | shape_arguments  { $call_expr = $shape_arguments; }
-  | from_arguments  { $call_expr = $from_arguments; }
   ;
 
 call_expr_list[result]:
@@ -1277,21 +1277,12 @@ opt_column_spec:
 from_cursor:
   FROM CURSOR name opt_column_spec  { $from_cursor = new_ast_from_cursor($opt_column_spec, $name); }
   | FROM name opt_column_spec  { $from_cursor = new_ast_from_cursor($opt_column_spec, $name); }
-  ;
-
-from_arguments:
-  FROM ARGUMENTS  { $from_arguments = new_ast_from_arguments(NULL); }
-  | FROM ARGUMENTS shape_def  { $from_arguments = new_ast_from_arguments($shape_def); }
+  | FROM ARGUMENTS opt_column_spec  { $from_cursor = new_ast_from_cursor($opt_column_spec, new_ast_str("ARGUMENTS")); }
   ;
 
 insert_stmt:
   insert_stmt_type name opt_column_spec select_stmt opt_insert_dummy_spec  {
     struct ast_node *columns_values = new_ast_columns_values($opt_column_spec, $select_stmt);
-    struct ast_node *name_columns_values = new_ast_name_columns_values($name, columns_values);
-    $insert_stmt_type->left = $opt_insert_dummy_spec;
-    $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values);  }
-  | insert_stmt_type name opt_column_spec from_arguments opt_insert_dummy_spec  {
-    struct ast_node *columns_values = new_ast_columns_values($opt_column_spec, $from_arguments);
     struct ast_node *name_columns_values = new_ast_name_columns_values($name, columns_values);
     $insert_stmt_type->left = $opt_insert_dummy_spec;
     $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values);  }
@@ -1540,10 +1531,6 @@ fetch_stmt:
 fetch_values_stmt:
   FETCH name opt_column_spec FROM VALUES '(' insert_list ')' opt_insert_dummy_spec  {
     struct ast_node *columns_values = new_ast_columns_values($opt_column_spec, $insert_list);
-    struct ast_node *name_columns_values = new_ast_name_columns_values($name, columns_values);
-    $fetch_values_stmt = new_ast_fetch_values_stmt($opt_insert_dummy_spec, name_columns_values); }
-  | FETCH name opt_column_spec from_arguments opt_insert_dummy_spec  {
-    struct ast_node *columns_values = new_ast_columns_values($opt_column_spec, $from_arguments);
     struct ast_node *name_columns_values = new_ast_name_columns_values($name, columns_values);
     $fetch_values_stmt = new_ast_fetch_values_stmt($opt_insert_dummy_spec, name_columns_values); }
   | FETCH name opt_column_spec from_cursor opt_insert_dummy_spec  {

@@ -19975,7 +19975,7 @@ BEGIN
   FETCH C1(A, B, C) FROM C0(A, B);
 END;
 
-Error at test/sem_test.sql:XXXX : in columns_values : CQL0299: cursor has too few fields 'C0'
+Error at test/sem_test.sql:XXXX : in columns_values : CQL0299: [shape] has too few fields 'C0'
 
   {create_proc_stmt}: err
   | {name fetch_to_cursor_from_cursor_with_different_columns}: err
@@ -21806,11 +21806,17 @@ END;
             |     | {name_list}
             |       | {name C}: C: real notnull
             | {insert_list}
-              | {name arg1}: arg1: text notnull variable in
+              | {dot}: arg1: text notnull variable in
+              | | {name ARGUMENTS}
+              | | {name arg1}
               | {insert_list}
-                | {name arg2}: arg2: integer notnull variable in
+                | {dot}: arg2: integer notnull variable in
+                | | {name ARGUMENTS}
+                | | {name arg2}
                 | {insert_list}
-                  | {name arg3}: arg3: real notnull variable in
+                  | {dot}: arg3: real notnull variable in
+                    | {name ARGUMENTS}
+                    | {name arg3}
 
 The statement ending at line XXXX
 
@@ -21861,11 +21867,17 @@ END;
             |     | {name_list}
             |       | {name rate}: rate: longint
             | {insert_list}
-              | {name id_}: id_: integer notnull variable in
+              | {dot}: id_: integer notnull variable in
+              | | {name ARGUMENTS}
+              | | {name id}
               | {insert_list}
-                | {name name_}: name_: text variable in
+                | {dot}: name_: text variable in
+                | | {name ARGUMENTS}
+                | | {name name}
                 | {insert_list}
-                  | {name rate_}: rate_: longint variable in
+                  | {dot}: rate_: longint variable in
+                    | {name ARGUMENTS}
+                    | {name rate}
 
 The statement ending at line XXXX
 
@@ -21954,11 +21966,17 @@ END;
             |     | {name_list}
             |       | {name rate}: rate: longint
             | {insert_list}
-              | {name id_}: id_: integer notnull variable in
+              | {dot}: id_: integer notnull variable in
+              | | {name ARGUMENTS}
+              | | {name id}
               | {insert_list}
-                | {name name_}: name_: text variable in
+                | {dot}: name_: text variable in
+                | | {name ARGUMENTS}
+                | | {name name}
                 | {insert_list}
-                  | {name rate_}: rate_: longint variable in
+                  | {dot}: rate_: longint variable in
+                    | {name ARGUMENTS}
+                    | {name rate}
 
 The statement ending at line XXXX
 
@@ -22005,21 +22023,26 @@ END;
             |     | {name_list}
             |       | {name rate}: rate: longint
             | {insert_list}
-              | {name id}: id: integer notnull variable in
+              | {dot}: id: integer notnull variable in
+              | | {name ARGUMENTS}
+              | | {name id}
               | {insert_list}
-                | {name name_}: name_: text variable in
+                | {dot}: name_: text variable in
+                | | {name ARGUMENTS}
+                | | {name name}
                 | {insert_list}
-                  | {name rate}: rate: longint variable in
+                  | {dot}: rate: longint variable in
+                    | {name ARGUMENTS}
+                    | {name rate}
 
 The statement ending at line XXXX
 
 CREATE PROC insert_bar_missing (extra INTEGER, id INTEGER NOT NULL)
 BEGIN
-  INSERT INTO bar(id, name, rate) FROM ARGUMENTS LIKE bar;
+  INSERT INTO bar(id, name, rate) VALUES(id, ARGUMENTS.name, ARGUMENTS.rate);
 END;
 
-Error at test/sem_test.sql:XXXX : in columns_values : CQL0201: expanding FROM ARGUMENTS, there is no argument matching 'name'
-Error at test/sem_test.sql:XXXX : in columns_values : CQL0201: expanding FROM ARGUMENTS, there is no argument matching 'rate'
+Error at test/sem_test.sql:XXXX : in dot : CQL0201: expanding FROM ARGUMENTS, there is no argument matching 'name'
 
   {create_proc_stmt}: err
   | {name insert_bar_missing}: err
@@ -22040,23 +22063,32 @@ Error at test/sem_test.sql:XXXX : in columns_values : CQL0201: expanding FROM AR
         | {insert_normal}
         | {name_columns_values}
           | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
-          | {columns_values}: err
+          | {columns_values}: ok
             | {column_spec}
             | | {name_list}
-            |   | {name id}
+            |   | {name id}: id: integer notnull
             |   | {name_list}
-            |     | {name name}
+            |     | {name name}: name: text
             |     | {name_list}
-            |       | {name rate}
-            | {from_arguments}
-              | {like}: ok
-                | {name bar}
+            |       | {name rate}: rate: longint
+            | {insert_list}
+              | {dot}: id: integer notnull variable in
+              | | {name ARGUMENTS}
+              | | {name id}
+              | {insert_list}
+                | {dot}: err
+                | | {name ARGUMENTS}
+                | | {name name}
+                | {insert_list}
+                  | {dot}
+                    | {name ARGUMENTS}
+                    | {name rate}
 
 The statement ending at line XXXX
 
 CREATE PROC insert_bar_from_bogus (extra INTEGER, id_ INTEGER NOT NULL, name_ TEXT, rate_ LONG_INT)
 BEGIN
-  INSERT INTO bar(id, name, rate) FROM ARGUMENTS LIKE bogus_name_here;
+  INSERT INTO bar(id, name, rate) FROM ARGUMENTS(LIKE bogus_name_here);
 END;
 
 Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, table, or view 'bogus_name_here'
@@ -22090,7 +22122,7 @@ Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, tab
         | {insert_normal}
         | {name_columns_values}
           | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
-          | {columns_values}: err
+          | {columns_values}: ok
             | {column_spec}
             | | {name_list}
             |   | {name id}
@@ -22098,9 +22130,11 @@ Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, tab
             |     | {name name}
             |     | {name_list}
             |       | {name rate}
-            | {from_arguments}
-              | {like}: err
-                | {name bogus_name_here}: err
+            | {from_cursor}: err
+              | {column_spec}
+              | | {like}: err
+              |   | {name bogus_name_here}: err
+              | {name ARGUMENTS}: ARGUMENTS: ARGUMENTS: { extra: integer variable in, id: integer notnull variable in, name: text variable in, rate: longint variable in } auto_cursor
 
 The statement ending at line XXXX
 
@@ -22115,28 +22149,29 @@ The statement ending at line XXXX
 
 FETCH val_cursor(one, two) FROM ARGUMENTS;
 
-Error at test/sem_test.sql:XXXX : in columns_values : CQL0163: FROM ARGUMENTS construct is only valid inside a procedure
+Error at test/sem_test.sql:XXXX : in str : CQL0163: FROM ARGUMENTS construct is only valid inside a procedure
 
   {fetch_values_stmt}: err
   | {name_columns_values}
     | {name val_cursor}: val_cursor: select: { one: integer notnull, two: integer notnull } variable auto_cursor value_cursor
-    | {columns_values}: err
+    | {columns_values}: ok
       | {column_spec}
       | | {name_list}
       |   | {name one}
       |   | {name_list}
       |     | {name two}
-      | {from_arguments}
+      | {from_cursor}
+        | {name ARGUMENTS}: err
 
 The statement ending at line XXXX
 
 CREATE PROC arg_fetcher_not_enough_args (arg1 TEXT NOT NULL)
 BEGIN
   DECLARE curs CURSOR LIKE SELECT 'x' AS A, 1 AS B, 3.5 AS C;
-  FETCH curs(A, B, C) FROM ARGUMENTS;
+  FETCH curs(A, B, C) FROM ARGUMENTS(arg1);
 END;
 
-Error at test/sem_test.sql:XXXX : in columns_values : CQL0164: too few arguments available
+Error at test/sem_test.sql:XXXX : in columns_values : CQL0299: [shape] has too few fields 'ARGUMENTS'
 
   {create_proc_stmt}: err
   | {name arg_fetcher_not_enough_args}: err
@@ -22187,7 +22222,11 @@ Error at test/sem_test.sql:XXXX : in columns_values : CQL0164: too few arguments
             |     | {name B}
             |     | {name_list}
             |       | {name C}
-            | {from_arguments}
+            | {from_cursor}: ok
+              | {column_spec}
+              | | {name_list}
+              |   | {name arg1}
+              | {name ARGUMENTS}: ARGUMENTS: ARGUMENTS: { arg1: text notnull variable in } auto_cursor
 
 The statement ending at line XXXX
 
@@ -22229,11 +22268,17 @@ END;
             |     | {name_list}
             |       | {name rate}: rate: longint
             | {insert_list}
-              | {name id}: id: integer notnull variable in
+              | {dot}: id: integer notnull variable in
+              | | {name ARGUMENTS}
+              | | {name id}
               | {insert_list}
-                | {name name}: name: text variable in
+                | {dot}: name: text variable in
+                | | {name ARGUMENTS}
+                | | {name name}
                 | {insert_list}
-                  | {name rate}: rate: longint variable in
+                  | {dot}: rate: longint variable in
+                    | {name ARGUMENTS}
+                    | {name rate}
 
 The statement ending at line XXXX
 
@@ -22271,7 +22316,9 @@ END;
             | | {name_list}
             |   | {name id}: id: integer notnull
             | {insert_list}
-              | {name id}: id: integer notnull variable in
+              | {dot}: id: integer notnull variable in
+                | {name ARGUMENTS}
+                | {name id}
 
 The statement ending at line XXXX
 
@@ -22280,7 +22327,7 @@ BEGIN
   INSERT INTO bar() FROM ARGUMENTS @DUMMY_SEED(1);
 END;
 
-Error at test/sem_test.sql:XXXX : in from_arguments : CQL0162: FROM ARGUMENTS is redundant if column list is empty
+Error at test/sem_test.sql:XXXX : in from_cursor : CQL0297: FROM [shape] is redundant if column list is empty
 
   {create_proc_stmt}: err
   | {name bar_auto_inserter_no_columns}: err
@@ -22311,16 +22358,17 @@ Error at test/sem_test.sql:XXXX : in from_arguments : CQL0162: FROM ARGUMENTS is
           | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
           | {columns_values}: ok
             | {column_spec}
-            | {from_arguments}
+            | {from_cursor}
+              | {name ARGUMENTS}
 
 The statement ending at line XXXX
 
 CREATE PROC bar_auto_inserter_missing_columns (id INTEGER)
 BEGIN
-  INSERT INTO bar(id, name, rate) FROM ARGUMENTS;
+  INSERT INTO bar(id, name, rate) FROM ARGUMENTS(id);
 END;
 
-Error at test/sem_test.sql:XXXX : in columns_values : CQL0164: too few arguments available
+Error at test/sem_test.sql:XXXX : in columns_values : CQL0299: [shape] has too few fields 'ARGUMENTS'
 
   {create_proc_stmt}: err
   | {name bar_auto_inserter_missing_columns}: err
@@ -22343,7 +22391,11 @@ Error at test/sem_test.sql:XXXX : in columns_values : CQL0164: too few arguments
             |     | {name name}
             |     | {name_list}
             |       | {name rate}
-            | {from_arguments}
+            | {from_cursor}: ok
+              | {column_spec}
+              | | {name_list}
+              |   | {name id}
+              | {name ARGUMENTS}: ARGUMENTS: ARGUMENTS: { id: integer variable in } auto_cursor
 
 The statement ending at line XXXX
 
@@ -22385,11 +22437,17 @@ END;
             |     | {name_list}
             |       | {name rate}: rate: longint
             | {insert_list}
-              | {name id_}: id_: integer notnull variable in
+              | {dot}: id_: integer notnull variable in
+              | | {name ARGUMENTS}
+              | | {name id}
               | {insert_list}
-                | {name name_}: name_: text variable in
+                | {dot}: name_: text variable in
+                | | {name ARGUMENTS}
+                | | {name name}
                 | {insert_list}
-                  | {name rate_}: rate_: longint variable in
+                  | {dot}: rate_: longint variable in
+                    | {name ARGUMENTS}
+                    | {name rate}
 
 The statement ending at line XXXX
 
@@ -22757,9 +22815,13 @@ END;
       |     |   | {name_list}
       |     |     | {name B}: B: integer notnull
       |     | {insert_list}
-      |       | {name A_}: A_: integer notnull variable in
+      |       | {dot}: A_: integer notnull variable in
+      |       | | {name ARGUMENTS}
+      |       | | {name A}
       |       | {insert_list}
-      |         | {name B_}: B_: integer notnull variable in
+      |         | {dot}: B_: integer notnull variable in
+      |           | {name ARGUMENTS}
+      |           | {name B}
       | {out_stmt}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
         | {name C}: C: select: { A: integer notnull, B: integer notnull } variable auto_cursor value_cursor
 
@@ -42817,9 +42879,13 @@ END;
             |         | {name_list}
             |           | {name e}: e: longint
             | {insert_list}
-              | {name x}: x: integer notnull variable in
+              | {dot}: x: integer notnull variable in
+              | | {name ARGUMENTS}
+              | | {name x}
               | {insert_list}
-                | {name y}: y: real notnull variable in
+                | {dot}: y: real notnull variable in
+                | | {name ARGUMENTS}
+                | | {name y}
                 | {insert_list}
                   | {call}: text notnull
                   | | {name printf}: text notnull
@@ -42888,9 +42954,13 @@ END;
             |         | {name_list}
             |           | {name e}: e: longint
             | {insert_list}
-              | {name x}: x: integer notnull variable in
+              | {dot}: x: integer notnull variable in
+              | | {name ARGUMENTS}
+              | | {name x}
               | {insert_list}
-                | {name y}: y: real notnull variable in
+                | {dot}: y: real notnull variable in
+                | | {name ARGUMENTS}
+                | | {name y}
                 | {insert_list}
                   | {call}: text notnull
                   | | {name printf}: text notnull
@@ -43081,7 +43151,7 @@ The statement ending at line XXXX
 
 INSERT INTO referenceable(a, b, c, d, e) FROM small_cursor(x);
 
-Error at test/sem_test.sql:XXXX : in columns_values : CQL0299: cursor has too few fields 'small_cursor'
+Error at test/sem_test.sql:XXXX : in columns_values : CQL0299: [shape] has too few fields 'small_cursor'
 
   {insert_stmt}: err
   | {insert_normal}
@@ -48022,9 +48092,13 @@ END;
       | {call_stmt}: ok
       | | {name lotsa_ints}: ok
       | | {expr_list}: ok
-      |   | {name x}: x: integer notnull variable in
+      |   | {dot}: x: integer notnull variable in
+      |   | | {name ARGUMENTS}
+      |   | | {name x}
       |   | {expr_list}
-      |     | {name y}: y: integer notnull variable in
+      |     | {dot}: y: integer notnull variable in
+      |     | | {name ARGUMENTS}
+      |     | | {name y}
       |     | {expr_list}
       |       | {int 1}: integer notnull
       |       | {expr_list}
@@ -48034,9 +48108,13 @@ END;
       | | {expr_list}: ok
       |   | {int 1}: integer notnull
       |   | {expr_list}
-      |     | {name x}: x: integer notnull variable in
+      |     | {dot}: x: integer notnull variable in
+      |     | | {name ARGUMENTS}
+      |     | | {name x}
       |     | {expr_list}
-      |       | {name y}: y: integer notnull variable in
+      |       | {dot}: y: integer notnull variable in
+      |       | | {name ARGUMENTS}
+      |       | | {name y}
       |       | {expr_list}
       |         | {int 2}: integer notnull
       | {call_stmt}: ok
@@ -48046,19 +48124,31 @@ END;
       |   | {expr_list}
       |     | {int 2}: integer notnull
       |     | {expr_list}
-      |       | {name x}: x: integer notnull variable in
+      |       | {dot}: x: integer notnull variable in
+      |       | | {name ARGUMENTS}
+      |       | | {name x}
       |       | {expr_list}
-      |         | {name y}: y: integer notnull variable in
+      |         | {dot}: y: integer notnull variable in
+      |           | {name ARGUMENTS}
+      |           | {name y}
       | {call_stmt}: ok
         | {name lotsa_ints}: ok
         | {expr_list}: ok
-          | {name x}: x: integer notnull variable in
+          | {dot}: x: integer notnull variable in
+          | | {name ARGUMENTS}
+          | | {name x}
           | {expr_list}
-            | {name y}: y: integer notnull variable in
+            | {dot}: y: integer notnull variable in
+            | | {name ARGUMENTS}
+            | | {name y}
             | {expr_list}
-              | {name x}: x: integer notnull variable in
+              | {dot}: x: integer notnull variable in
+              | | {name ARGUMENTS}
+              | | {name x}
               | {expr_list}
-                | {name y}: y: integer notnull variable in
+                | {dot}: y: integer notnull variable in
+                  | {name ARGUMENTS}
+                  | {name y}
 
 The statement ending at line XXXX
 
@@ -48067,7 +48157,7 @@ BEGIN
   CALL lotsa_ints(FROM ARGUMENTS, 1, 2);
 END;
 
-Error at test/sem_test.sql:XXXX : in expr_list : CQL0340: FROM ARGUMENTS used in a procedure with no arguments 'arg_rewrite_no_args'
+Error at test/sem_test.sql:XXXX : in str : CQL0340: FROM ARGUMENTS used in a procedure with no arguments 'arg_rewrite_no_args'
 
   {create_proc_stmt}: err
   | {name arg_rewrite_no_args}: err
@@ -48076,7 +48166,8 @@ Error at test/sem_test.sql:XXXX : in expr_list : CQL0340: FROM ARGUMENTS used in
       | {call_stmt}: err
         | {name lotsa_ints}
         | {expr_list}: err
-          | {from_arguments}
+          | {from_shape}
+          | | {name ARGUMENTS}: err
           | {expr_list}
             | {int 1}
             | {expr_list}
@@ -48086,12 +48177,13 @@ The statement ending at line XXXX
 
 CALL lotsa_ints(FROM ARGUMENTS, 1, 2);
 
-Error at test/sem_test.sql:XXXX : in expr_list : CQL0163: FROM ARGUMENTS construct is only valid inside a procedure
+Error at test/sem_test.sql:XXXX : in str : CQL0163: FROM ARGUMENTS construct is only valid inside a procedure
 
   {call_stmt}: err
   | {name lotsa_ints}
   | {expr_list}: err
-    | {from_arguments}
+    | {from_shape}
+    | | {name ARGUMENTS}: err
     | {expr_list}
       | {int 1}
       | {expr_list}
@@ -48127,7 +48219,9 @@ END;
       | {call_stmt}: ok
       | | {name lotsa_ints}: ok
       | | {expr_list}: ok
-      |   | {name y}: y: integer notnull variable in
+      |   | {dot}: y: integer notnull variable in
+      |   | | {name ARGUMENTS}
+      |   | | {name y}
       |   | {expr_list}
       |     | {int 1}: integer notnull
       |     | {expr_list}
@@ -48139,7 +48233,9 @@ END;
       | | {expr_list}: ok
       |   | {int 1}: integer notnull
       |   | {expr_list}
-      |     | {name y}: y: integer notnull variable in
+      |     | {dot}: y: integer notnull variable in
+      |     | | {name ARGUMENTS}
+      |     | | {name y}
       |     | {expr_list}
       |       | {int 2}: integer notnull
       |       | {expr_list}
@@ -48151,7 +48247,9 @@ END;
       |   | {expr_list}
       |     | {int 2}: integer notnull
       |     | {expr_list}
-      |       | {name y}: y: integer notnull variable in
+      |       | {dot}: y: integer notnull variable in
+      |       | | {name ARGUMENTS}
+      |       | | {name y}
       |       | {expr_list}
       |         | {int 3}: integer notnull
       | {call_stmt}: ok
@@ -48163,17 +48261,27 @@ END;
       |     | {expr_list}
       |       | {int 3}: integer notnull
       |       | {expr_list}
-      |         | {name y}: y: integer notnull variable in
+      |         | {dot}: y: integer notnull variable in
+      |           | {name ARGUMENTS}
+      |           | {name y}
       | {call_stmt}: ok
         | {name lotsa_ints}: ok
         | {expr_list}: ok
-          | {name y}: y: integer notnull variable in
+          | {dot}: y: integer notnull variable in
+          | | {name ARGUMENTS}
+          | | {name y}
           | {expr_list}
-            | {name y}: y: integer notnull variable in
+            | {dot}: y: integer notnull variable in
+            | | {name ARGUMENTS}
+            | | {name y}
             | {expr_list}
-              | {name y}: y: integer notnull variable in
+              | {dot}: y: integer notnull variable in
+              | | {name ARGUMENTS}
+              | | {name y}
               | {expr_list}
-                | {name y}: y: integer notnull variable in
+                | {dot}: y: integer notnull variable in
+                  | {name ARGUMENTS}
+                  | {name y}
 
 The statement ending at line XXXX
 
@@ -48205,7 +48313,9 @@ END;
       | {call_stmt}: ok
       | | {name lotsa_ints}: ok
       | | {expr_list}: ok
-      |   | {name y_}: y_: integer notnull variable in
+      |   | {dot}: y_: integer notnull variable in
+      |   | | {name ARGUMENTS}
+      |   | | {name y}
       |   | {expr_list}
       |     | {int 1}: integer notnull
       |     | {expr_list}
@@ -48217,7 +48327,9 @@ END;
       | | {expr_list}: ok
       |   | {int 1}: integer notnull
       |   | {expr_list}
-      |     | {name y_}: y_: integer notnull variable in
+      |     | {dot}: y_: integer notnull variable in
+      |     | | {name ARGUMENTS}
+      |     | | {name y}
       |     | {expr_list}
       |       | {int 2}: integer notnull
       |       | {expr_list}
@@ -48229,7 +48341,9 @@ END;
       |   | {expr_list}
       |     | {int 2}: integer notnull
       |     | {expr_list}
-      |       | {name y_}: y_: integer notnull variable in
+      |       | {dot}: y_: integer notnull variable in
+      |       | | {name ARGUMENTS}
+      |       | | {name y}
       |       | {expr_list}
       |         | {int 3}: integer notnull
       | {call_stmt}: ok
@@ -48241,17 +48355,27 @@ END;
       |     | {expr_list}
       |       | {int 3}: integer notnull
       |       | {expr_list}
-      |         | {name y_}: y_: integer notnull variable in
+      |         | {dot}: y_: integer notnull variable in
+      |           | {name ARGUMENTS}
+      |           | {name y}
       | {call_stmt}: ok
         | {name lotsa_ints}: ok
         | {expr_list}: ok
-          | {name y_}: y_: integer notnull variable in
+          | {dot}: y_: integer notnull variable in
+          | | {name ARGUMENTS}
+          | | {name y}
           | {expr_list}
-            | {name y_}: y_: integer notnull variable in
+            | {dot}: y_: integer notnull variable in
+            | | {name ARGUMENTS}
+            | | {name y}
             | {expr_list}
-              | {name y_}: y_: integer notnull variable in
+              | {dot}: y_: integer notnull variable in
+              | | {name ARGUMENTS}
+              | | {name y}
               | {expr_list}
-                | {name y_}: y_: integer notnull variable in
+                | {dot}: y_: integer notnull variable in
+                  | {name ARGUMENTS}
+                  | {name y}
 
 The statement ending at line XXXX
 
@@ -48282,9 +48406,13 @@ END;
       | {call_stmt}: ok
       | | {name lotsa_ints}: ok
       | | {expr_list}: ok
-      |   | {name x_}: x_: integer notnull variable in
+      |   | {dot}: x_: integer notnull variable in
+      |   | | {name ARGUMENTS}
+      |   | | {name x}
       |   | {expr_list}
-      |     | {name y_}: y_: integer notnull variable in
+      |     | {dot}: y_: integer notnull variable in
+      |     | | {name ARGUMENTS}
+      |     | | {name y}
       |     | {expr_list}
       |       | {int 1}: integer notnull
       |       | {expr_list}
@@ -48294,9 +48422,13 @@ END;
       | | {expr_list}: ok
       |   | {int 1}: integer notnull
       |   | {expr_list}
-      |     | {name x_}: x_: integer notnull variable in
+      |     | {dot}: x_: integer notnull variable in
+      |     | | {name ARGUMENTS}
+      |     | | {name x}
       |     | {expr_list}
-      |       | {name y_}: y_: integer notnull variable in
+      |       | {dot}: y_: integer notnull variable in
+      |       | | {name ARGUMENTS}
+      |       | | {name y}
       |       | {expr_list}
       |         | {int 2}: integer notnull
       | {call_stmt}: ok
@@ -48306,28 +48438,40 @@ END;
       |   | {expr_list}
       |     | {int 2}: integer notnull
       |     | {expr_list}
-      |       | {name x_}: x_: integer notnull variable in
+      |       | {dot}: x_: integer notnull variable in
+      |       | | {name ARGUMENTS}
+      |       | | {name x}
       |       | {expr_list}
-      |         | {name y_}: y_: integer notnull variable in
+      |         | {dot}: y_: integer notnull variable in
+      |           | {name ARGUMENTS}
+      |           | {name y}
       | {call_stmt}: ok
         | {name lotsa_ints}: ok
         | {expr_list}: ok
-          | {name x_}: x_: integer notnull variable in
+          | {dot}: x_: integer notnull variable in
+          | | {name ARGUMENTS}
+          | | {name x}
           | {expr_list}
-            | {name y_}: y_: integer notnull variable in
+            | {dot}: y_: integer notnull variable in
+            | | {name ARGUMENTS}
+            | | {name y}
             | {expr_list}
-              | {name x_}: x_: integer notnull variable in
+              | {dot}: x_: integer notnull variable in
+              | | {name ARGUMENTS}
+              | | {name x}
               | {expr_list}
-                | {name y_}: y_: integer notnull variable in
+                | {dot}: y_: integer notnull variable in
+                  | {name ARGUMENTS}
+                  | {name y}
 
 The statement ending at line XXXX
 
 CREATE PROC call_with_missing_type (x INTEGER)
 BEGIN
-  CALL lotsa_ints(1, 2, 3, FROM ARGUMENTS LIKE foo);
+  CALL lotsa_ints(1, 2, 3, ARGUMENTS.id);
 END;
 
-Error at test/sem_test.sql:XXXX : in expr_list : CQL0201: expanding FROM ARGUMENTS, there is no argument matching 'id'
+Error at test/sem_test.sql:XXXX : in dot : CQL0201: expanding FROM ARGUMENTS, there is no argument matching 'id'
 
   {create_proc_stmt}: err
   | {name call_with_missing_type}: err
@@ -48341,15 +48485,15 @@ Error at test/sem_test.sql:XXXX : in expr_list : CQL0201: expanding FROM ARGUMEN
       | {call_stmt}: err
         | {name lotsa_ints}
         | {expr_list}: err
-          | {int 1}
+          | {int 1}: integer notnull
           | {expr_list}
-            | {int 2}
+            | {int 2}: integer notnull
             | {expr_list}
-              | {int 3}
+              | {int 3}: integer notnull
               | {expr_list}
-                | {from_arguments}
-                  | {like}: ok
-                    | {name foo}
+                | {dot}: err
+                  | {name ARGUMENTS}
+                  | {name id}
 
 The statement ending at line XXXX
 
@@ -48378,7 +48522,8 @@ Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, tab
             | {expr_list}
               | {int 3}
               | {expr_list}
-                | {from_arguments}
+                | {from_shape}
+                  | {name ARGUMENTS}: ARGUMENTS: ARGUMENTS: { x: integer variable in } auto_cursor
                   | {like}: err
                     | {name no_such_type_dude}: err
 
@@ -48448,9 +48593,13 @@ END;
           | {call_arg_list}
             | {call_filter_clause}
             | {arg_list}: ok
-              | {name x_}: x_: integer notnull variable in
+              | {dot}: x_: integer notnull variable in
+              | | {name ARGUMENTS}
+              | | {name x}
               | {arg_list}
-                | {name y_}: y_: text notnull variable in
+                | {dot}: y_: text notnull variable in
+                  | {name ARGUMENTS}
+                  | {name y}
 
 The statement ending at line XXXX
 
@@ -48491,7 +48640,8 @@ Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, tab
           | {call_arg_list}
             | {call_filter_clause}
             | {arg_list}: err
-              | {from_arguments}
+              | {from_shape}
+                | {name ARGUMENTS}: ARGUMENTS: ARGUMENTS: { x: integer notnull variable in, y: text notnull variable in, z: integer notnull variable out } auto_cursor
                 | {like}: err
                   | {name not_a_shape}: err
 
@@ -50633,15 +50783,25 @@ END;
       | {call_stmt}: ok
         | {name some_proc}: ok
         | {expr_list}: ok
-          | {name id}: id: integer variable in
+          | {dot}: id: integer variable in
+          | | {name ARGUMENTS}
+          | | {name id}
           | {expr_list}
-            | {name t}: t: text variable in
+            | {dot}: t: text variable in
+            | | {name ARGUMENTS}
+            | | {name t}
             | {expr_list}
-              | {name t1}: t1: text notnull variable in
+              | {dot}: t1: text notnull variable in
+              | | {name ARGUMENTS}
+              | | {name t1}
               | {expr_list}
-                | {name b}: b: blob variable in
+                | {dot}: b: blob variable in
+                | | {name ARGUMENTS}
+                | | {name b}
                 | {expr_list}
-                  | {name x}: x: integer notnull variable out
+                  | {dot}: x: integer notnull variable out
+                    | {name ARGUMENTS}
+                    | {name x}
 
 The statement ending at line XXXX
 
@@ -50725,15 +50885,25 @@ END;
       | {call_stmt}: ok
         | {name some_proc}: ok
         | {expr_list}: ok
-          | {name id}: id: integer variable in out
+          | {dot}: id: integer variable in out
+          | | {name ARGUMENTS}
+          | | {name id}
           | {expr_list}
-            | {name t}: t: text variable in
+            | {dot}: t: text variable in
+            | | {name ARGUMENTS}
+            | | {name t}
             | {expr_list}
-              | {name t1}: t1: text notnull variable in
+              | {dot}: t1: text notnull variable in
+              | | {name ARGUMENTS}
+              | | {name t1}
               | {expr_list}
-                | {name b}: b: blob variable in
+                | {dot}: b: blob variable in
+                | | {name ARGUMENTS}
+                | | {name b}
                 | {expr_list}
-                  | {name x}: x: integer notnull variable out
+                  | {dot}: x: integer notnull variable out
+                    | {name ARGUMENTS}
+                    | {name x}
 
 The statement ending at line XXXX
 
@@ -50757,7 +50927,8 @@ Error at test/sem_test.sql:XXXX : in like : CQL0069: name not found 'some_proc3'
       | {call_stmt}
         | {name some_proc}
         | {expr_list}
-          | {from_arguments}
+          | {from_shape}
+            | {name ARGUMENTS}
 
 The statement ending at line XXXX
 

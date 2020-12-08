@@ -5555,7 +5555,7 @@ end;
 -- + {name fetch_to_cursor_from_cursor_with_different_columns}: err
 -- + {stmt_list}: err
 -- + {fetch_values_stmt}: err
--- + Error % cursor has too few fields 'C0'
+-- + Error % [shape] has too few fields 'C0'
 -- +1 Error
 create proc fetch_to_cursor_from_cursor_with_different_columns()
 begin
@@ -6058,7 +6058,7 @@ end;
 create proc fetch_bar(extra integer, like bar)
 begin
   declare curs cursor like bar;
-  fetch curs from arguments like bar;
+  fetch curs from arguments(like bar);
 end;
 
 -- TEST: scoped like arguments
@@ -6075,7 +6075,7 @@ end;
 -- - Error
 create proc insert_bar(extra integer, like bar)
 begin
-  insert into bar from arguments like bar;
+  insert into bar from arguments(like bar);
 end;
 
 -- TEST: use the arguments like "bar" some have trailing _ and some do not
@@ -6085,18 +6085,17 @@ end;
 -- - Error
 create proc insert_bar_explicit(extra integer, id integer not null, name_ text, rate long integer)
 begin
-  insert into bar from arguments like bar;
+  insert into bar from arguments(like bar);
 end;
 
 -- TEST: use the arguments like "bar" but some args are missing
 -- AST rewritten, note some have _ and some do not
 -- + {create_proc_stmt}: err
 -- + Error % expanding FROM ARGUMENTS, there is no argument matching 'name'
--- + Error % expanding FROM ARGUMENTS, there is no argument matching 'rate'
--- +2 Error
+-- +1 Error
 create proc insert_bar_missing(extra integer, id integer not null)
 begin
-  insert into bar from arguments like bar;
+  insert into bar from arguments(like bar);
 end;
 
 -- TEST: bogus name in the like part of from arguments
@@ -6106,7 +6105,7 @@ end;
 -- +1 Error
 create proc insert_bar_from_bogus(extra integer, like bar)
 begin
-  insert into bar from arguments like bogus_name_here;
+  insert into bar from arguments(like bogus_name_here);
 end;
 
 declare val_cursor cursor like my_cursor;
@@ -6119,7 +6118,7 @@ fetch val_cursor from arguments;
 
 -- TEST: try to fetch a cursor but not enough arguments
 -- + {fetch_values_stmt}: err
--- + Error % too few arguments available
+-- + Error % [shape] has too few fields 'ARGUMENTS'
 -- +1 Error
 create proc arg_fetcher_not_enough_args(arg1 text not null)
 begin
@@ -6132,9 +6131,9 @@ end;
 -- + {name bar}: bar: { id: integer notnull, name: text, rate: longint }
 -- + INSERT INTO bar(id, name, rate) VALUES(id, name, rate);
 -- These appear as a parameter AND in the insert list
--- +2 {name id}: id: integer notnull variable in
--- +2 {name name}: name: text variable in
--- +2 {name rate}: rate: longint variable in
+-- +1 {name id}: id: integer notnull variable in
+-- +1 {name name}: name: text variable in
+-- +1 {name rate}: rate: longint variable in
 -- - Error
 create proc bar_auto_inserter(id integer not null, name text, rate LONG INT)
 begin
@@ -6145,8 +6144,8 @@ end;
 -- + {insert_stmt}: ok
 -- + {name bar}: bar: { id: integer notnull, name: text, rate: longint }
 -- + INSERT INTO bar(id) VALUES(id);
--- These appear as a parameter but only the first one appears in the insert list too
--- +2 {name id}: id: integer notnull variable in
+-- These appear as a parameters
+-- +1 {name id}: id: integer notnull variable in
 -- +1 {name name}: name: text variable in
 -- +1 {name rate}: rate: longint variable in
 -- - Error
@@ -6158,7 +6157,7 @@ end;
 -- TEST: rewrite insert statement but no columns, bogus
 -- + {insert_stmt}: err
 -- + INSERT INTO bar() FROM ARGUMENTS
--- + Error % FROM ARGUMENTS is redundant if column list is empty
+-- + Error % FROM [shape] is redundant if column list is empty
 create proc bar_auto_inserter_no_columns(id integer not null, name text, rate LONG INT)
 begin
  insert into bar() from arguments @dummy_seed(1);
@@ -6166,8 +6165,8 @@ end;
 
 -- TEST: rewrite insert statement but not enough columns
 -- + {insert_stmt}: err
--- + INSERT INTO bar(id, name, rate) FROM ARGUMENTS;
--- + Error % too few arguments available
+-- + INSERT INTO bar(id, name, rate) FROM ARGUMENTS(id);
+-- + Error % [shape] has too few fields 'ARGUMENTS'
 create proc bar_auto_inserter_missing_columns(id integer)
 begin
  insert into bar from arguments;
@@ -6184,9 +6183,17 @@ end;
 -- + {name bar}: bar: { id: integer notnull, name: text, rate: longint }
 -- + {insert_stmt}: ok
 -- these appear as a parameter and also in the insert list
--- +2 {name id_}: id_: integer notnull variable in
--- +2 {name name_}: name_: text variable in
--- +2 {name rate_}: rate_: longint variable in
+-- +1 {name id_}: id_: integer notnull variable in
+-- +1 {name name_}: name_: text variable in
+-- +1 {name rate_}: rate_: longint variable in
+-- the clean name appears in the insert list and as a column
+-- +2 {name id}
+-- +2 {name name}
+-- +2 {name rate}
+-- the ARGUMENTS dot name resolves to the correct arg name
+-- +1 {dot}: id_: integer notnull variable in
+-- +1 {dot}: name_: text variable in
+-- +1 {dot}: rate_: longint variable in
 create proc rewritten_like_args(like bar)
 begin
   insert into bar from arguments;
@@ -10611,7 +10618,7 @@ declare small_cursor cursor like select 1 x;
 
 -- TEST: try to use a cursor that has not enough fields
 -- + {insert_stmt}: err
--- + Error % cursor has too few fields 'small_cursor'
+-- + Error % [shape] has too few fields 'small_cursor'
 -- +1 Error
 insert into referenceable from cursor small_cursor;
 
@@ -11928,7 +11935,7 @@ end;
 -- + {arg_list}: err
 -- + {name not_a_shape}: err
 -- from arguments not replaced because the rewrite failed
--- + {from_arguments}
+-- + {from_shape}
 create proc arg_caller_bogus_shape(like shape, out z integer not null)
 begin
    set z := funclike(from arguments like not_a_shape);

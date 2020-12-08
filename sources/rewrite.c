@@ -35,21 +35,6 @@ static ast_node *rewrite_gen_case_expr(ast_node *var1, ast_node *var2, bool_t re
 static bool_t rewrite_one_def(ast_node *head);
 static void rewrite_one_typed_name(ast_node *typed_name, symtab *used_names);
 
-bool_t has_named_param(ast_node *params, CSTR name) {
-  for (; params; params = params->right) {
-    EXTRACT_NOTNULL(param, params->left);
-
-    // args already evaluated and no errors
-    Invariant(param->sem);
-
-    if (!Strcasecmp(name, param->sem->name)) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 // @PROC can be used in place of an ID in various places
 // replace that name if appropriate
 cql_noexport void rewrite_proclit(ast_node *ast) {
@@ -61,133 +46,6 @@ cql_noexport void rewrite_proclit(ast_node *ast) {
   }
 }
 
-// To do this rewrite we only need to check a few things:
-//  * are we in a procedure?
-//  * does the procedure have enough arguments?
-//  * were any arguments requested?  [FETCH C() FROM ARGUMENTS is meaningless]
-//
-// If the above conditions are met then we're basically good to go.  We could be doing
-// this for a FETCH or an INSERT.  For each column specified e.g. FETCH C(a,b) has two
-// we will take another procure argument and add it an automatically created values list.  At the
-// end the AST will be transformed into
-//   FETCH C(a, b, etc.) FROM VALUES(arg1, arg2, etc.) (or the equivalent insert form)
-// and it can then be type checked as usual.
-cql_noexport void rewrite_insert_list_from_arguments(ast_node *ast, uint32_t count) {
-  Contract(is_ast_columns_values(ast));
-  Contract(count > 0);
-  EXTRACT_NOTNULL(from_arguments, ast->right);
-
-  if (!current_proc) {
-    report_error(ast, "CQL0163: FROM ARGUMENTS construct is only valid inside a procedure", NULL);
-    record_error(ast);
-    return;
-  }
-
-  bool_t from_name = !!from_arguments->left;
-  ast_node *found_shape = NULL;
-
-  if (from_name) {
-    // args like name
-    found_shape = sem_find_likeable_ast(from_arguments->left);
-    if (!found_shape) {
-      record_error(ast);
-      return;
-    }
-  }
-
-  AST_REWRITE_INFO_SET(from_arguments->lineno, from_arguments->filename);
-
-  ast_node *params = get_proc_params(current_proc);
-
-  ast_node *insert_list = NULL;
-  ast_node *insert_list_tail = NULL;
-
-  int32_t i = 0;
-  bool_t missing_args = false;
-
-  if (from_name) {
-    Invariant(found_shape);
-    sem_struct *sptr = found_shape->sem->sptr;
-    Invariant(sptr);
-    uint32_t cols = sptr->count;
-    Invariant(cols >= 1);
-
-    for (i = 0; i < cols && i < count; i++) {
-      CSTR name = NULL;
-      CSTR argname = sptr->names[i];
-      CSTR tmpname = dup_printf("%s_", argname);
-
-      if (has_named_param(params, tmpname)) {
-        name = tmpname;
-      }
-      else if (has_named_param(params, argname)) {
-        name = argname;
-      }
-      else {
-        report_error(ast, "CQL0201: expanding FROM ARGUMENTS, there is no argument matching", argname);
-        missing_args = true;
-      }
-
-      if (name) {
-        ast_node *ast_arg = new_ast_str(name);
-
-        // add name to the name list
-        ast_node *new_tail = new_ast_insert_list(ast_arg, NULL);
-
-        if (insert_list) {
-          ast_set_right(insert_list_tail, new_tail);
-        }
-        else {
-          insert_list = new_tail;
-        }
-
-        insert_list_tail = new_tail;
-      }
-    }
-  }
-  else {
-    for (; params && i < count; params = params->right, i++) {
-      EXTRACT_NOTNULL(param, params->left);
-
-      // args already evaluated and no errors
-      Invariant(param->sem);
-
-      ast_node *ast_arg = new_ast_str(param->sem->name);
-
-      // add name to the name list
-      ast_node *new_tail = new_ast_insert_list(ast_arg, NULL);
-
-      if (insert_list) {
-        ast_set_right(insert_list_tail, new_tail);
-      }
-      else {
-        insert_list = new_tail;
-      }
-
-      insert_list_tail = new_tail;
-    }
-  }
-
-  AST_REWRITE_INFO_RESET();
-
-  if (missing_args) {
-    // specific error already reported
-    record_error(ast);
-    return;
-  }
-
-  if (i != count) {
-    report_error(ast, "CQL0164: too few arguments available", NULL);
-    record_error(ast);
-    return;
-  }
-
-  // the tree is rewritten, semantic analysis can proceed
-  ast_set_right(ast, insert_list);
-
-  // temporarily mark the ast ok, there is more checking to do
-  record_ok(ast);
-}
 
 // To do this rewrite we only need to check a few things:
 //  * is the given name really a cursor
@@ -224,7 +82,7 @@ cql_noexport void rewrite_insert_list_from_cursor(ast_node *ast, ast_node *from_
   }
 
   if (provided_count < count) {
-    report_error(ast, "CQL0299: cursor has too few fields", cursor->sem->name);
+    report_error(ast, "CQL0299: [shape] has too few fields", cursor->sem->name);
     record_error(ast);
     return;
   }
@@ -307,7 +165,6 @@ cql_noexport void rewrite_like_column_spec_if_needed(ast_node *columns_values) {
 //  * Note: By this point column_spec has already  been rewritten so that it is for sure not
 //    null if it was absent.  It will be an empty name list.
 // All we're doing here is setting up the call to the worker using the appropriate AST args
-// If this looks a lot like the from_arguments case that's not a coincidence
 cql_noexport void rewrite_from_cursor_if_needed(ast_node *ast_stmt, ast_node *columns_values)
 {
   Contract(ast_stmt); // we can record the error on any statement
@@ -359,40 +216,6 @@ cql_noexport void rewrite_from_cursor_if_needed(ast_node *ast_stmt, ast_node *co
 
   // temporarily mark the ast ok, there is more checking to do
   // record_ok(ast_stmt);
-  record_ok(ast_stmt);
-}
-
-// FROM ARGUMENTS is a sugar feature, this is the place where we trigger rewriting of the AST
-// to replace FROM ARGUMENTS with normal values.
-//  * Note: By this point column_spec has already  been rewritten so that it is for sure not
-//    null if it was absent.  It will be an empty name list.
-// All we're doing here is setting up the call to the worker using the appropriate AST args
-cql_noexport void rewrite_from_arguments_if_needed(ast_node *ast_stmt, ast_node *columns_values)
-{
-  Contract(ast_stmt); // we can record the error on any statement
-  Contract(is_ast_columns_values(columns_values));
-  EXTRACT_NOTNULL(column_spec, columns_values->left);
-
-  if (is_ast_from_arguments(columns_values->right)) {
-    uint32_t count = 0;
-    for (ast_node *item = column_spec->left; item; item = item->right) {
-      count++;
-    }
-
-    if (count == 0) {
-      report_error(columns_values->right, "CQL0162: FROM ARGUMENTS is redundant if column list is empty", NULL);
-      record_error(ast_stmt);
-      return;
-    }
-
-    rewrite_insert_list_from_arguments(columns_values, count);
-    if (is_error(columns_values)) {
-      record_error(ast_stmt);
-      return;
-    }
-  }
-
-  // temporarily mark the ast ok, there is more checking to do
   record_ok(ast_stmt);
 }
 
@@ -467,136 +290,6 @@ cql_noexport void rewrite_from_shape_args(ast_node *head) {
   record_ok(head);
 }
 
-// Here we will rewrite the arguments in a call statement expanding any
-// FROM ARGUMENTS [LIKE type ] entries we encounter.  We don't validate
-// the types here.  That happens after expansion.  It's possible that the
-// types don't match at all, but we don't care yet.
-cql_noexport void rewrite_from_arguments_in_call(ast_node *head) {
-  Contract(is_ast_expr_list(head) || is_ast_arg_list(head));
-
-  // We might need to make arg_list nodes or expr_list nodes, they are the same really
-  // so we'll change the node type to what we need
-  CSTR node_type = head->type;
-
-  for (ast_node *item = head ; item ; item = item->right) {
-    EXTRACT_ANY_NOTNULL(arg, item->left);
-    if (is_ast_from_arguments(arg)) {
-
-      // We can't do these checks until we actually have found a from arguments that needs to be re-written.
-      if (!current_proc) {
-        report_error(head, "CQL0163: FROM ARGUMENTS construct is only valid inside a procedure", NULL);
-        record_error(head);
-        return;
-      }
-
-      // Can't do this until we know there is a current_proc, so this also has to be deferred.
-      ast_node *params = get_proc_params(current_proc);
-
-      if (!params) {
-        ast_node *name_ast = get_proc_name(current_proc);
-        EXTRACT_STRING(name, name_ast);
-        report_error(item, "CQL0340: FROM ARGUMENTS used in a procedure with no arguments", name);
-        record_error(head);
-        return;
-      }
-
-      // easy case, all the args, hard case, the ones that match the named type
-
-      ast_node *like_ast = arg->left;
-      ast_node *found_shape = NULL;
-
-      if (like_ast) {
-          found_shape = sem_find_likeable_ast(like_ast);
-          if (!found_shape) {
-            record_error(head);
-            return;
-          }
-      }
-
-      AST_REWRITE_INFO_SET(item->lineno, item->filename);
-
-      bool_t missing_args = false;
-
-      if (found_shape) {
-        // we found a matching item, it must have a struct type
-        sem_struct *sptr = found_shape->sem->sptr;
-        Invariant(sptr);
-        uint32_t cols = sptr->count;
-        Invariant(cols >= 1);
-
-        for (uint32_t i = 0; i < cols ; i++) {
-          CSTR name = NULL;
-          CSTR argname = sptr->names[i];
-          CSTR tmpname = dup_printf("%s_", argname);
-
-          if (has_named_param(params, tmpname)) {
-            name = tmpname;
-          }
-          else if (has_named_param(params, argname)) {
-            name = argname;
-          }
-          else {
-            report_error(item, "CQL0201: expanding FROM ARGUMENTS, there is no argument matching", argname);
-            record_error(head);
-            missing_args = true;
-            break;
-          }
-
-          Invariant(name);
-          ast_node *ast_arg = new_ast_str(name);
-
-          if (i == 0) {
-            // the first item just replaces the FROM ARGUMENTS node
-            ast_set_left(item, ast_arg);
-          }
-          else {
-            // subsequent items are threaded after our current position
-            // we leave arg_list pointed to the end of what we inserted
-            ast_node *right = item->right;
-            ast_node *new_item = new_ast_expr_list(ast_arg, right);
-            new_item->type = node_type;
-            ast_set_right(item, new_item);
-            item = new_item;
-          }
-        }
-      }
-      else {
-        // use all the formal parameters of this procedure
-        for (uint32_t i = 0; params ; params = params->right, i++) {
-          EXTRACT_NOTNULL(param, params->left);
-
-          // args already evaluated and no errors
-          Invariant(param->sem);
-
-          ast_node *ast_arg = new_ast_str(param->sem->name);
-
-          if (i == 0) {
-            // the first item just replaces the FROM ARGUMENTS node
-            ast_set_left(item, ast_arg);
-          }
-          else {
-            // subsequent items are threaded after our current position
-            // we leave arg_list pointed to the end of what we inserted
-            ast_node *right = item->right;
-            ast_node *new_item = new_ast_expr_list(ast_arg, right);
-            new_item->type = node_type;
-            ast_set_right(item, new_item);
-            item = new_item;
-          }
-        }
-      }
-
-      AST_REWRITE_INFO_RESET();
-
-      if (missing_args) {
-        return;
-      }
-    }
-  }
-
-  // at least provisionally ok
-  record_ok(head);
-}
 
 // Walk the list of column definitions looking for any of the
 // "LIKE table/proc/view". If any are found, replace that parameter with
@@ -964,12 +657,6 @@ cql_noexport bool_t rewrite_call_args_if_needed(ast_node *arg_list) {
   if (arg_list) {
     // if there are any cursor forms in the arg list that need to be expanded, do that here.
     rewrite_from_shape_args(arg_list);
-    if (is_error(arg_list)) {
-      return false;
-    }
-
-    // if there are any "from arguments" forms in the arg list that need to be expanded, do that here.
-    rewrite_from_arguments_in_call(arg_list);
     if (is_error(arg_list)) {
       return false;
     }

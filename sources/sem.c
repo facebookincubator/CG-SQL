@@ -4314,6 +4314,44 @@ static bool_t try_resolve_using_arg_bundle(ast_node *ast, CSTR name, CSTR bundle
   return true;
 }
 
+static ast_node *get_named_param(ast_node *params, CSTR name) {
+  for (; params; params = params->right) {
+    EXTRACT_NOTNULL(param, params->left);
+
+    // args already evaluated and no errors
+    Invariant(param->sem);
+
+    if (!Strcasecmp(name, param->sem->name)) {
+      return param;
+    }
+  }
+
+  return NULL;
+}
+
+static void resolve_using_arguments(ast_node *dot, CSTR name) {
+  Contract(current_proc);
+  ast_node *params = get_proc_params(current_proc);
+  Contract(params);
+
+  // these are always synthetically generated so they are 100% sure to match
+  ast_node *param = get_named_param(params, name);
+  if (!param) {
+    CHARBUF_OPEN(tmp);
+      bprintf(&tmp, "%s_", name);
+      param = get_named_param(params, tmp.ptr);
+    CHARBUF_CLOSE(tmp);
+  }
+
+  if (param) {
+    dot->sem = param->sem;
+  }
+  else {
+    report_error(dot, "CQL0201: expanding FROM ARGUMENTS, there is no argument matching", name);
+    record_error(dot);
+  }
+}
+
 // Try to look up a [possibly] scoped name in one of the places:
 // 1. a column in the current joinscope if any (this must not conflict with #2)
 // 2. a local or global variable
@@ -4321,7 +4359,13 @@ static bool_t try_resolve_using_arg_bundle(ast_node *ast, CSTR name, CSTR bundle
 // otherwise, name not found.
 static void sem_resolve_id(ast_node *ast, CSTR name, CSTR scope) {
 
-  // We check columns first
+  if (scope && !strcmp(scope, "ARGUMENTS")) {
+    // if it's the arguments scope this is the only choice
+    resolve_using_arguments(ast, name);
+    return;
+  }
+
+  // We check columns early, only after the special ARGUMENTS case
   if (try_resolve_column(ast, name, scope)) {
     // Checking columns first doesn't let them hide locals because
     // it is an error if a column hides a local/global.
@@ -10365,11 +10409,6 @@ static void sem_insert_stmt(ast_node *ast) {
       return;
     }
 
-    rewrite_from_arguments_if_needed(ast, columns_values);
-    if (is_error(ast)) {
-      return;
-    }
-
     rewrite_from_cursor_if_needed(ast, columns_values);
     if (is_error(ast)) {
       return;
@@ -10693,11 +10732,6 @@ static void sem_fetch_values_stmt(ast_node *ast) {
 
   EXTRACT_NOTNULL(column_spec, columns_values->left);
   EXTRACT(name_list, column_spec->left);
-
-  rewrite_from_arguments_if_needed(ast, columns_values);
-  if (is_error(ast)) {
-    return;
-  }
 
   rewrite_from_cursor_if_needed(ast, columns_values);
   if (is_error(ast)) {
@@ -14032,6 +14066,19 @@ cql_noexport void sem_any_shape(ast_node *ast) {
 
   if (shape) {
     ast->sem = shape->sem;
+    return;
+  }
+
+  // give better error messages if the shape is "ARGUMENTS"
+  if (!strcmp("ARGUMENTS", name)) {
+    if (current_proc) {
+      EXTRACT_STRING(proc_name, get_proc_name(current_proc));
+      report_error(ast, "CQL0340: FROM ARGUMENTS used in a procedure with no arguments", proc_name);
+    }
+    else {
+      report_error(ast, "CQL0163: FROM ARGUMENTS construct is only valid inside a procedure", NULL);
+    }
+    record_error(ast);
     return;
   }
 

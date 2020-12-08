@@ -895,7 +895,7 @@ declare select function foo(id integer) integer not null;
 
 fetch a_cursor from arguments;
 
-fetch a_cursor from arguments like some_table;
+fetch a_cursor from arguments(like some_table);
 
 fetch a_cursor(x) from arguments @dummy_seed(7) @dummy_defaults;
 
