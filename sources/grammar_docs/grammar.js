@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Fri Dec  4 08:46:18 2020
+// Snapshot as of Mon Dec  7 21:02:26 2020
 
 
 const PREC = {
@@ -27,7 +27,7 @@ module.exports = grammar({
     opt_stmt_list: $ => $.stmt_list,
     stmt_list: $ => repeat1(choice(seq($.stmt, ';'), $.comment, $.line_directive, $.macro)),
     stmt: $ => seq(optional($.misc_attrs), $.any_stmt),
-    any_stmt: $ => choice($.select_stmt, $.explain_stmt, $.create_trigger_stmt, $.create_table_stmt, $.create_index_stmt, $.create_view_stmt, $.alter_table_add_column_stmt, $.drop_table_stmt, $.drop_view_stmt, $.drop_index_stmt, $.drop_trigger_stmt, $.with_delete_stmt, $.delete_stmt, $.call_stmt, $.with_insert_stmt, $.insert_stmt, $.with_update_stmt, $.update_stmt, $.update_cursor_stmt, $.upsert_stmt, $.with_upsert_stmt, $.set_stmt, $.create_proc_stmt, $.declare_proc_stmt, $.declare_func_stmt, $.declare_stmt, $.declare_enum_stmt, $.fetch_stmt, $.fetch_values_stmt, $.fetch_call_stmt, $.fetch_cursor_stmt, $.while_stmt, $.loop_stmt, $.leave_stmt, $.return_stmt, $.rollback_return_stmt, $.commit_return_stmt, $.continue_stmt, $.if_stmt, $.open_stmt, $.close_stmt, $.out_stmt, $.out_union_stmt, $.throw_stmt, $.trycatch_stmt, $.begin_trans_stmt, $.rollback_trans_stmt, $.commit_trans_stmt, $.proc_savepoint_stmt, $.savepoint_stmt, $.release_savepoint_stmt, $.echo_stmt, $.schema_upgrade_version_stmt, $.schema_upgrade_script_stmt, $.previous_schema_stmt, $.enforce_strict_stmt, $.enforce_normal_stmt, $.declare_schema_region_stmt, $.declare_deployable_region_stmt, $.begin_schema_region_stmt, $.end_schema_region_stmt, $.schema_ad_hoc_migration_stmt),
+    any_stmt: $ => choice($.select_stmt, $.explain_stmt, $.create_trigger_stmt, $.create_table_stmt, $.create_index_stmt, $.create_view_stmt, $.alter_table_add_column_stmt, $.drop_table_stmt, $.drop_view_stmt, $.drop_index_stmt, $.drop_trigger_stmt, $.with_delete_stmt, $.delete_stmt, $.call_stmt, $.with_insert_stmt, $.insert_stmt, $.with_update_stmt, $.update_stmt, $.update_cursor_stmt, $.upsert_stmt, $.with_upsert_stmt, $.set_stmt, $.create_proc_stmt, $.declare_proc_stmt, $.declare_func_stmt, $.declare_stmt, $.declare_enum_stmt, $.fetch_stmt, $.fetch_values_stmt, $.fetch_call_stmt, $.while_stmt, $.loop_stmt, $.leave_stmt, $.return_stmt, $.rollback_return_stmt, $.commit_return_stmt, $.continue_stmt, $.if_stmt, $.open_stmt, $.close_stmt, $.out_stmt, $.out_union_stmt, $.throw_stmt, $.trycatch_stmt, $.begin_trans_stmt, $.rollback_trans_stmt, $.commit_trans_stmt, $.proc_savepoint_stmt, $.savepoint_stmt, $.release_savepoint_stmt, $.echo_stmt, $.schema_upgrade_version_stmt, $.schema_upgrade_script_stmt, $.previous_schema_stmt, $.enforce_strict_stmt, $.enforce_normal_stmt, $.declare_schema_region_stmt, $.declare_deployable_region_stmt, $.begin_schema_region_stmt, $.end_schema_region_stmt, $.schema_ad_hoc_migration_stmt),
     explain_stmt: $ => seq($.EXPLAIN, optional($.opt_query_plan), $.explain_target),
     QUERY_PLAN: $ => prec.left(1, seq(CI('query'), CI('plan'))),
     opt_query_plan: $ => $.QUERY_PLAN,
@@ -95,11 +95,11 @@ module.exports = grammar({
     IS_NOT: $ => prec.left(1, seq(CI('is'), CI('not'))),
     expr: $ => prec.left(choice($.basic_expr, seq($.expr, '&', $.expr), seq($.expr, '|', $.expr), seq($.expr, "<<", $.expr), seq($.expr, ">>", $.expr), seq($.expr, '+', $.expr), seq($.expr, '-', $.expr), seq($.expr, '*', $.expr), seq($.expr, '/', $.expr), seq($.expr, '%', $.expr), seq('-', $.expr), seq($.NOT, $.expr), seq('~', $.expr), seq($.expr, $.COLLATE, $.name), seq($.expr, $.AND, $.expr), seq($.expr, $.OR, $.expr), seq($.expr, '=', $.expr), seq($.expr, "==", $.expr), seq($.expr, '<', $.expr), seq($.expr, '>', $.expr), seq($.expr, "<>", $.expr), seq($.expr, "!=", $.expr), seq($.expr, ">=", $.expr), seq($.expr, "<=", $.expr), seq($.expr, $.NOT, $.IN, '(', $.expr_list, ')'), seq($.expr, $.NOT, $.IN, '(', $.select_stmt, ')'), seq($.expr, $.IN, '(', $.expr_list, ')'), seq($.expr, $.IN, '(', $.select_stmt, ')'), seq($.expr, $.LIKE, $.expr), seq($.expr, $.NOT_LIKE, $.expr), seq($.expr, $.MATCH, $.expr), seq($.expr, $.REGEXP, $.expr), seq($.expr, $.GLOB, $.expr), seq($.expr, $.NOT, $.BETWEEN, $.math_expr, $.AND, $.math_expr), seq($.expr, $.BETWEEN, $.math_expr, $.AND, $.math_expr), seq($.expr, $.IS_NOT, $.expr), seq($.expr, $.IS, $.expr), seq($.expr, "||", $.expr), seq($.CASE, $.expr, $.case_list, $.END), seq($.CASE, $.expr, $.case_list, $.ELSE, $.expr, $.END), seq($.CASE, $.case_list, $.END), seq($.CASE, $.case_list, $.ELSE, $.expr, $.END), seq($.CAST, '(', $.expr, $.AS, $.data_type, ')'))),
     case_list: $ => choice(seq($.WHEN, $.expr, $.THEN, $.expr), seq($.WHEN, $.expr, $.THEN, $.expr, $.case_list)),
-    arg_expr: $ => choice('*', $.expr, $.shape_arguments, $.from_arguments),
+    arg_expr: $ => choice('*', $.expr, $.shape_arguments),
     arg_list: $ => choice($.arg_expr, seq($.arg_expr, ',', optional($.arg_list))),
     expr_list: $ => choice($.expr, seq($.expr, ',', $.expr_list)),
-    shape_arguments: $ => choice(seq($.FROM, $.name), seq($.FROM, $.name, $.shape_def)),
-    call_expr: $ => choice($.expr, $.shape_arguments, $.from_arguments),
+    shape_arguments: $ => choice(seq($.FROM, $.name), seq($.FROM, $.name, $.shape_def), seq($.FROM, $.ARGUMENTS), seq($.FROM, $.ARGUMENTS, $.shape_def)),
+    call_expr: $ => choice($.expr, $.shape_arguments),
     call_expr_list: $ => choice($.call_expr, seq($.call_expr, ',', $.call_expr_list)),
     cte_tables: $ => choice($.cte_table, seq($.cte_table, ',', $.cte_tables)),
     cte_table: $ => seq($.cte_decl, $.AS, '(', $.select_stmt_no_with, ')'),
@@ -177,9 +177,8 @@ module.exports = grammar({
     insert_stmt_type: $ => choice(seq($.INSERT, $.INTO), seq($.INSERT, $.OR, $.REPLACE, $.INTO), seq($.INSERT, $.OR, $.IGNORE, $.INTO), seq($.INSERT, $.OR, $.ROLLBACK, $.INTO), seq($.INSERT, $.OR, $.ABORT, $.INTO), seq($.INSERT, $.OR, $.FAIL, $.INTO), seq($.REPLACE, $.INTO)),
     with_insert_stmt: $ => seq($.with_prefix, $.insert_stmt),
     opt_column_spec: $ => choice(seq('(', optional($.opt_name_list), ')'), seq('(', $.shape_def, ')')),
-    from_cursor: $ => seq($.FROM, $.CURSOR, $.name, optional($.opt_column_spec)),
-    from_arguments: $ => choice(seq($.FROM, $.ARGUMENTS), seq($.FROM, $.ARGUMENTS, $.shape_def)),
-    insert_stmt: $ => choice(seq($.insert_stmt_type, $.name, optional($.opt_column_spec), $.select_stmt, optional($.opt_insert_dummy_spec)), seq($.insert_stmt_type, $.name, optional($.opt_column_spec), $.from_arguments, optional($.opt_insert_dummy_spec)), seq($.insert_stmt_type, $.name, optional($.opt_column_spec), $.from_cursor, optional($.opt_insert_dummy_spec)), seq($.insert_stmt_type, $.name, $.DEFAULT, $.VALUES), seq($.insert_stmt_type, $.name, $.USING, $.expr_names, optional($.opt_insert_dummy_spec))),
+    from_cursor: $ => choice(seq($.FROM, $.CURSOR, $.name, optional($.opt_column_spec)), seq($.FROM, $.name, optional($.opt_column_spec)), seq($.FROM, $.ARGUMENTS, optional($.opt_column_spec))),
+    insert_stmt: $ => choice(seq($.insert_stmt_type, $.name, optional($.opt_column_spec), $.select_stmt, optional($.opt_insert_dummy_spec)), seq($.insert_stmt_type, $.name, optional($.opt_column_spec), $.from_cursor, optional($.opt_insert_dummy_spec)), seq($.insert_stmt_type, $.name, $.DEFAULT, $.VALUES), seq($.insert_stmt_type, $.name, $.USING, $.expr_names, optional($.opt_insert_dummy_spec))),
     insert_list: $ => choice($.expr, seq($.expr, ',', optional($.insert_list))),
     basic_update_stmt: $ => seq($.UPDATE, optional($.opt_name), $.SET, $.update_list, optional($.opt_where)),
     with_update_stmt: $ => seq($.with_prefix, $.update_stmt),
@@ -217,11 +216,10 @@ module.exports = grammar({
     trycatch_stmt: $ => seq($.BEGIN, $.TRY, optional($.opt_stmt_list), $.END, $.TRY, ';', $.BEGIN, $.CATCH, optional($.opt_stmt_list), $.END, $.CATCH),
     continue_stmt: $ => $.CONTINUE,
     fetch_stmt: $ => choice(seq($.FETCH, $.name, $.INTO, $.name_list), seq($.FETCH, $.name)),
-    fetch_values_stmt: $ => choice(seq($.FETCH, $.name, optional($.opt_column_spec), $.FROM, $.VALUES, '(', optional($.insert_list), ')', optional($.opt_insert_dummy_spec)), seq($.FETCH, $.name, optional($.opt_column_spec), $.from_arguments, optional($.opt_insert_dummy_spec)), seq($.FETCH, $.name, optional($.opt_column_spec), $.from_cursor, optional($.opt_insert_dummy_spec)), seq($.FETCH, $.name, $.USING, $.expr_names, optional($.opt_insert_dummy_spec))),
+    fetch_values_stmt: $ => choice(seq($.FETCH, $.name, optional($.opt_column_spec), $.FROM, $.VALUES, '(', optional($.insert_list), ')', optional($.opt_insert_dummy_spec)), seq($.FETCH, $.name, optional($.opt_column_spec), $.from_cursor, optional($.opt_insert_dummy_spec)), seq($.FETCH, $.name, $.USING, $.expr_names, optional($.opt_insert_dummy_spec))),
     expr_names: $ => choice($.expr_name, seq($.expr_name, ',', $.expr_names)),
     expr_name: $ => seq($.expr, $.as_alias),
     fetch_call_stmt: $ => seq($.FETCH, $.name, optional($.opt_column_spec), $.FROM, $.call_stmt),
-    fetch_cursor_stmt: $ => seq($.FETCH, $.name, optional($.opt_column_spec), $.FROM, $.name),
     open_stmt: $ => seq($.OPEN, $.name),
     close_stmt: $ => seq($.CLOSE, $.name),
     out_stmt: $ => seq($.OUT, $.name),

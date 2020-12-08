@@ -10,7 +10,7 @@
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Fri Dec  4 08:46:18 PST 2020
+Snapshot as of Mon Dec  7 21:02:26 PST 2020
 
 ### Operators and Literals
 
@@ -119,7 +119,6 @@ any_stmt: select_stmt
   | fetch_stmt
   | fetch_values_stmt
   | fetch_call_stmt
-  | fetch_cursor_stmt
   | while_stmt
   | loop_stmt
   | leave_stmt
@@ -575,7 +574,6 @@ case_list:
 arg_expr: '*'
   | expr
   | shape_arguments
-  | from_arguments
   ;
 
 arg_list:
@@ -592,12 +590,13 @@ expr_list:
 shape_arguments:
   "FROM" name
   | "FROM" name shape_def
+  | "FROM" "ARGUMENTS"
+  | "FROM" "ARGUMENTS" shape_def
   ;
 
 call_expr:
   expr
   | shape_arguments
-  | from_arguments
   ;
 
 call_expr_list:
@@ -965,16 +964,12 @@ opt_column_spec:
 
 from_cursor:
   "FROM" "CURSOR" name opt_column_spec
-  ;
-
-from_arguments:
-  "FROM" "ARGUMENTS"
-  | "FROM" "ARGUMENTS" shape_def
+  | "FROM" name opt_column_spec
+  | "FROM" "ARGUMENTS" opt_column_spec
   ;
 
 insert_stmt:
   insert_stmt_type name opt_column_spec select_stmt opt_insert_dummy_spec
-  | insert_stmt_type name opt_column_spec from_arguments opt_insert_dummy_spec
   | insert_stmt_type name opt_column_spec from_cursor opt_insert_dummy_spec
   | insert_stmt_type name "DEFAULT" "VALUES"
   | insert_stmt_type name "USING" expr_names opt_insert_dummy_spec
@@ -1166,7 +1161,6 @@ fetch_stmt:
 
 fetch_values_stmt:
   "FETCH" name opt_column_spec "FROM" "VALUES" '(' insert_list ')' opt_insert_dummy_spec
-  | "FETCH" name opt_column_spec from_arguments opt_insert_dummy_spec
   | "FETCH" name opt_column_spec from_cursor opt_insert_dummy_spec
   | "FETCH" name "USING" expr_names opt_insert_dummy_spec
   ;
@@ -1181,10 +1175,6 @@ expr_name: expr as_alias
 
 fetch_call_stmt:
   "FETCH" name opt_column_spec "FROM" call_stmt
-  ;
-
-fetch_cursor_stmt:
-  "FETCH" name opt_column_spec "FROM" name
   ;
 
 open_stmt:
