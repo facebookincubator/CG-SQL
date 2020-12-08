@@ -10,8 +10,9 @@ tags: [facebook, cg-sql, errors]
 
 There are many cases where stored procedures require complex arguments using data shapes well known
 to higher level languages or that come from the schema.  There is already some affordance for this
-sort of thing in the form of this kind of pattern (I'll continue to use this simple example as I
-discuss the generalization below).
+sort of thing in the form of this kind of pattern:
+
+(I'll continue to use this simple example as I discuss the generalization below)
 
 ```
 create table Person (
@@ -97,7 +98,7 @@ end;
 ```
 
 Or course the types don't have to be the same, you can create and name shapes of your choice.  The language allow
-you to use and argument bundle in all the places that you a cursor was previously a valid source.  So `insert`,
+you to use an argument bundle in all the places that a cursor was previously a valid source.  That includes `insert`,
 `fetch`, `update cursor`, and procedure calls.  You can refer to the arguments by their expanded name `p1_address`
 or alternatively `p1.address` means the same thing.
 
@@ -119,11 +120,13 @@ begin
 end;
 ```
 
-The above illustrates that you can use a bundle as the source of a shape elsewhere and you can
-use a bundle as a source of data to load a cursor.  After which you can do all the usual value cursor things.
+The above shows that you can use a bundle as the source of a shape elsewhere, and you can
+use a bundle as a source of data to load a cursor.  After which you can do all the usual value cursor things
+like `out` statements and so forth.
 
-In order to call these procedures more readily from other languages, the JSON output now includes additional
-information about where procedure arguments originated;  this is creatively called "argOrigin:" it has 3 forms.
+In order to call procedures with argument bundles more readily from other languages, the JSON output now includes additional
+information about where procedure arguments originated; The field with this information is creatively called "argOrigin:"
+and it has 3 forms.
 
 * "arg_name" -> the argument is not an expansion of anything
 * "T arg_name" -> the argument came from `like T`
@@ -143,21 +146,21 @@ None of this matters unless you're trying to make wrappers for a CQL procedure f
 and you'd like to have your wrapper deal with structs rather than all loose arguments.  the JSON
 basically tells you the structs.
 
-Interestingly argument bundles resulted in a significant reduction of code in the compiler.  The argument bundle
+Interestingly, argument bundles resulted in a significant reduction of code in the compiler.  The argument bundle
 name has to be usable in the contexts where a cursor was previously usable.  It is another source of shaped data.
-That proved to be super simple as they look almost identical to the compiler -- no coincidence there.  Very little
-code was required to make `from [cursor_name]` work with `from [any_shape_name]` in the half dozen or so places
+Getting that to work  proved to be super simple as the two forms look almost identical to the compiler -- no coincidence there.
+So very little code was required to make `from [cursor_name]` work with `from [any_shape_name]` in the half dozen or so places
 that this construct is allowed (e.g. procedure call arguments, insert statements, etc.).  However, there was as
 much code associated with `from arguments` as there was `from cursor_name`.  And the code was nearly identical..
 
 When argument bundles were introduced the natural thing to do was to create an artifical bundle called "arguments" which
-represents the bundle that is ALL the arguments.  With that done all the code for `from arguments` could be deleted
+represents the bundle that is ALL the arguments.  With that done, all the code for `from arguments` could be deleted
 because `arguments` itself was a valid shape name.  Hence `insert into T from arguments` "just works".  And so half
 the rewrites were deleted.  The only cost was that the form `from arguments like shape` became the cursor form
-`from arguments(like shape)` which only adds mandatory parens to a form that was largely unused anyway (there were 2
-cases in our entire codebase).  The cursor form is more general as you can do from `C(like A, like B)` to get the
-fields that match A then those that match B.  Arguments get this for free as well (well, at the cost of parens).
+`from arguments(like shape)` which only adds mandatory parens to a form that was largely unused anyway (there were two
+cases in our entire codebase).  The cursor form is more general as you can do `from C(like A, like B)` to get the
+fields that match `A` then those that match `B`.  Arguments get this for free as well (well, at the cost of parens).
 
-So overall, this feature was added and the compiler got smaller and cleaner.  Only the test suite had to grow.
+So overall, this feature was added, and the compiler got smaller and cleaner.  Only the test suite had to grow.
 
 Stay safe out there.

@@ -11354,7 +11354,7 @@ cql_noexport ast_node *sem_find_likeable_ast(ast_node *like_ast) {
   }
 
   if (!found_shape) {
-    //look for an arg bundle match
+    // look for an arg bundle match
     found_shape = find_arg_bundle(like_name);
   }
 
