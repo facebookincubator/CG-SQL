@@ -48,32 +48,32 @@ cql_noexport void rewrite_proclit(ast_node *ast) {
 
 
 // To do this rewrite we only need to check a few things:
-//  * is the given name really a cursor
-//  * does the cursor have storage (i.e. it must be an AUTO cursor)
+//  * is the given name really a shape
+//  * does the shape have storage (i.e. SEM_TYPE_HAS_SHAPE_STORAGE is set)
 //  * were enough fields specified?
-//  * were any fields requested?  [FETCH C() FROM CURSOR is meaningless]
+//  * were any fields requested?  [e.g. FETCH C() FROM CURSOR is meaningless]
 //
 // If the above conditions are met then we're basically good to go. For each column specified
-// e.g. FETCH C(a,b) has two; we will take the next cursor columns and add it an automatically
+// e.g. FETCH C(a,b) has two; we will take the next shape columns and add it an automatically
 // created values list.  At the end the AST will be transformed into
-//   FETCH C(a,b, etc.) FROM VALUES(C.col1, C.col2, etc.)
+//   FETCH C(a,b, etc.) FROM VALUES(D.col1, D.col2, etc.)
 // and it can then be type checked as usual.
 //
-cql_noexport void rewrite_insert_list_from_cursor(ast_node *ast, ast_node *from_cursor, uint32_t count) {
+cql_noexport void rewrite_insert_list_from_shape(ast_node *ast, ast_node *from_shape, uint32_t count) {
   Contract(is_ast_columns_values(ast));
-  Contract(is_ast_from_cursor(from_cursor));
+  Contract(is_ast_from_shape(from_shape));
   Contract(count > 0);
-  EXTRACT_ANY_NOTNULL(cursor, from_cursor->right);
+  EXTRACT_ANY_NOTNULL(shape, from_shape->right);
 
-  // from_cursor must have the columns
-  if (!(cursor->sem->sem_type & SEM_TYPE_HAS_SHAPE_STORAGE)) {
-    report_error(cursor, "CQL0298: cannot read from a cursor without fields", cursor->sem->name);
-    record_error(cursor);
+  // from_shape must have the columns
+  if (!(shape->sem->sem_type & SEM_TYPE_HAS_SHAPE_STORAGE)) {
+    report_error(shape, "CQL0298: cannot read from a cursor without fields", shape->sem->name);
+    record_error(shape);
     record_error(ast);
     return;
   }
 
-  EXTRACT_ANY_NOTNULL(column_spec, from_cursor->left);
+  EXTRACT_ANY_NOTNULL(column_spec, from_shape->left);
   EXTRACT_ANY(name_list, column_spec->left);
 
   uint32_t provided_count = 0;
@@ -82,12 +82,12 @@ cql_noexport void rewrite_insert_list_from_cursor(ast_node *ast, ast_node *from_
   }
 
   if (provided_count < count) {
-    report_error(ast, "CQL0299: [shape] has too few fields", cursor->sem->name);
+    report_error(ast, "CQL0299: [shape] has too few fields", shape->sem->name);
     record_error(ast);
     return;
   }
 
-  AST_REWRITE_INFO_SET(cursor->lineno, cursor->filename);
+  AST_REWRITE_INFO_SET(shape->lineno, shape->filename);
 
   ast_node *insert_list = NULL;
   ast_node *insert_list_tail = NULL;
@@ -96,7 +96,7 @@ cql_noexport void rewrite_insert_list_from_cursor(ast_node *ast, ast_node *from_
 
   for (int32_t i = 0; i < count; i++, item = item->right) {
     EXTRACT_STRING(item_name, item->left);
-    ast_node *cname = new_ast_str(cursor->sem->name);
+    ast_node *cname = new_ast_str(shape->sem->name);
     ast_node *col = new_ast_str(item_name);
     ast_node *dot = new_ast_dot(cname, col);
 
@@ -123,12 +123,12 @@ cql_noexport void rewrite_insert_list_from_cursor(ast_node *ast, ast_node *from_
 }
 
 // The form "LIKE x" can appear in most name lists instead of a list of names
-// the idea here is that if you want to use the columns of a cursor
+// the idea here is that if you want to use the columns of a shape
 // for the data you don't want to specify the columns manually, you'd like
-// to get them from the type information.  So for instance
+// to get them from the type information.  So for instance:
 // INSERT INTO T(like C) values(C.x, C.y) is better than
 // INSERT INTO T(x,y) values(C.x, C.y), but better still
-// INSERT INTO T(like C) from cursor C;
+// INSERT INTO T(like C) from C;
 //
 // This is sugar, so the code gen system never sees the like form.
 // The rewrite is semantically checked as usual so you get normal errors
@@ -137,7 +137,7 @@ cql_noexport void rewrite_insert_list_from_cursor(ast_node *ast, ast_node *from_
 // There are good helpers for creating the name list and for finding
 // the likeable object.  So we just use those for all the heavy lifting.
 cql_noexport void rewrite_like_column_spec_if_needed(ast_node *columns_values) {
-  Contract(is_ast_columns_values(columns_values) || is_ast_from_cursor(columns_values));
+  Contract(is_ast_columns_values(columns_values) || is_ast_from_shape(columns_values));
   EXTRACT_NOTNULL(column_spec, columns_values->left);
   EXTRACT_ANY(like, column_spec->left);
 
@@ -160,18 +160,18 @@ cql_noexport void rewrite_like_column_spec_if_needed(ast_node *columns_values) {
   record_ok(columns_values);
 }
 
-// FROM CURSOR is a sugar feature, this is the place where we trigger rewriting of the AST
-// to replace FROM CURSOR with normal values from the cursor
+// FROM [shape] is a sugar feature, this is the place where we trigger rewriting of the AST
+// to replace FROM [shape] with normal values from the shape
 //  * Note: By this point column_spec has already  been rewritten so that it is for sure not
 //    null if it was absent.  It will be an empty name list.
 // All we're doing here is setting up the call to the worker using the appropriate AST args
-cql_noexport void rewrite_from_cursor_if_needed(ast_node *ast_stmt, ast_node *columns_values)
+cql_noexport void rewrite_from_shape_if_needed(ast_node *ast_stmt, ast_node *columns_values)
 {
   Contract(ast_stmt); // we can record the error on any statement
   Contract(is_ast_columns_values(columns_values));
   EXTRACT_NOTNULL(column_spec, columns_values->left);
 
-  if (!is_ast_from_cursor(columns_values->right)) {
+  if (!is_ast_from_shape(columns_values->right)) {
     record_ok(ast_stmt);
     return;
   }
@@ -187,28 +187,28 @@ cql_noexport void rewrite_from_cursor_if_needed(ast_node *ast_stmt, ast_node *co
     return;
   }
 
-  EXTRACT_NOTNULL(from_cursor, columns_values->right);
-  EXTRACT_ANY_NOTNULL(cursor_ast, from_cursor->right);
+  EXTRACT_NOTNULL(from_shape, columns_values->right);
+  EXTRACT_ANY_NOTNULL(shape, from_shape->right);
 
-  sem_any_shape(cursor_ast);
-  if (is_error(cursor_ast)) {
+  sem_any_shape(shape);
+  if (is_error(shape)) {
     record_error(ast_stmt);
     return;
   }
 
-  // Now we're going to go a bit meta, the from cursor clause itself has a column
+  // Now we're going to go a bit meta, the from [shape] clause itself has a column
   // list we might need to rewrite THAT column list before we can proceed.
-  // The from cursor column list could be empty
-  sem_struct *sptr = cursor_ast->sem->sptr;
-  rewrite_empty_column_list(from_cursor, sptr);
+  // The from [shape] column list could be empty
+  sem_struct *sptr = shape->sem->sptr;
+  rewrite_empty_column_list(from_shape, sptr);
 
-  rewrite_like_column_spec_if_needed(from_cursor);
-  if (is_error(from_cursor)) {
+  rewrite_like_column_spec_if_needed(from_shape);
+  if (is_error(from_shape)) {
     record_error(ast_stmt);
     return;
   }
 
-  rewrite_insert_list_from_cursor(columns_values, from_cursor, count);
+  rewrite_insert_list_from_shape(columns_values, from_shape, count);
   if (is_error(columns_values)) {
     record_error(ast_stmt);
     return;
@@ -220,7 +220,7 @@ cql_noexport void rewrite_from_cursor_if_needed(ast_node *ast_stmt, ast_node *co
 }
 
 // Here we will rewrite the arguments in a call statement expanding any
-// FROM cursor_name [LIKE type ] entries we encounter.  We don't validate
+// FROM [shape] [LIKE type ] entries we encounter.  We don't validate
 // the types here.  That happens after expansion.  It's possible that the
 // types don't match at all, but we don't care yet.
 cql_noexport void rewrite_from_shape_args(ast_node *head) {
@@ -233,37 +233,37 @@ cql_noexport void rewrite_from_shape_args(ast_node *head) {
   for (ast_node *item = head ; item ; item = item->right) {
     EXTRACT_ANY_NOTNULL(arg, item->left);
     if (is_ast_from_shape(arg)) {
-      EXTRACT_ANY_NOTNULL(cursor, arg->left);
+      EXTRACT_ANY_NOTNULL(shape, arg->left);
 
-      // Note if this is not an automatic cursor then we will fail later when we try to
-      // resolve the '.' expression.  That error message tells the story well enough
+      // Note if this shape has no storage (e.g. non automatic cursor) then we will fail later
+      // when we try to resolve the '.' expression.  That error message tells the story well enough
       // so we don't need an extra check here.
-      sem_any_shape(cursor);
-      if (is_error(cursor)) {
+      sem_any_shape(shape);
+      if (is_error(shape)) {
         record_error(head);
         return;
       }
 
       ast_node *like_ast = arg->right;
-      ast_node *found_shape = NULL;
+      ast_node *likeable_shape = NULL;
 
       if (like_ast) {
-          found_shape = sem_find_likeable_ast(like_ast);
-          if (!found_shape) {
+          likeable_shape = sem_find_likeable_ast(like_ast);
+          if (!likeable_shape) {
             record_error(head);
             return;
           }
       }
 
-      AST_REWRITE_INFO_SET(cursor->lineno, cursor->filename);
+      AST_REWRITE_INFO_SET(shape->lineno, shape->filename);
 
       // use the names from the LIKE clause if there is one, otherwise use
-      // all the names in the cursor.
-      sem_struct *sptr = found_shape ? found_shape->sem->sptr : cursor->sem->sptr;
+      // all the names in the shape.
+      sem_struct *sptr = likeable_shape ? likeable_shape->sem->sptr : shape->sem->sptr;
       uint32_t count = sptr->count;
 
       for (uint32_t i = 0; i < count; i++) {
-        ast_node *cname = new_ast_str(cursor->sem->name);
+        ast_node *cname = new_ast_str(shape->sem->name);
         ast_node *col = new_ast_str(sptr->names[i]);
         ast_node *dot = new_ast_dot(cname, col);
 
@@ -320,8 +320,8 @@ cql_noexport bool_t rewrite_one_def(ast_node *head) {
   EXTRACT_STRING(like_name, like->left);
 
   // it's ok to use the LIKE construct on old tables
-  ast_node *found_shape = sem_find_likeable_ast(like);
-  if (!found_shape) {
+  ast_node *likeable_shape = sem_find_likeable_ast(like);
+  if (!likeable_shape) {
     record_error(head);
     return false;
   }
@@ -331,7 +331,7 @@ cql_noexport bool_t rewrite_one_def(ast_node *head) {
   // Store the remaining nodes while we reconstruct the AST
   EXTRACT_ANY(right_ast, head->right);
 
-  sem_struct *sptr = found_shape->sem->sptr;
+  sem_struct *sptr = likeable_shape->sem->sptr;
   uint32_t count = sptr->count;
 
   for (int32_t i = 0; i < count; i++) {
@@ -377,12 +377,12 @@ cql_noexport bool_t rewrite_one_def(ast_node *head) {
 // Give the best name for the shape type given then AST
 // there are many casese, the best data is on the struct type unless
 // it's anonymous, in which case the item name is the best choice.
-CSTR static best_shape_type_name(ast_node *found_shape) {
-  Contract(found_shape->sem);
-  Contract(found_shape->sem->sptr);
+CSTR static best_shape_type_name(ast_node *shape) {
+  Contract(shape->sem);
+  Contract(shape->sem->sptr);
 
-  CSTR struct_name = found_shape->sem->sptr->struct_name;
-  CSTR obj_name = found_shape->sem->name;
+  CSTR struct_name = shape->sem->sptr->struct_name;
+  CSTR obj_name = shape->sem->name;
 
   // "select" is the generic name used for structs that are otherwise unnamed.
   // e.g.  "declare C cursor like select 1 x, 2 y"
@@ -409,8 +409,8 @@ static ast_node *rewrite_one_param(ast_node *param, symtab *param_names, bytebuf
   EXTRACT_NOTNULL(like, param_detail->right);
   EXTRACT_STRING(like_name, like->left);
 
-  ast_node *found_shape = sem_find_likeable_ast(like);
-  if (!found_shape) {
+  ast_node *likeable_shape = sem_find_likeable_ast(like);
+  if (!likeable_shape) {
     record_error(param);
     return param;
   }
@@ -420,17 +420,17 @@ static ast_node *rewrite_one_param(ast_node *param, symtab *param_names, bytebuf
   // Nothing can go wrong from here on
   record_ok(param);
 
-  sem_struct *sptr = found_shape->sem->sptr;
+  sem_struct *sptr = likeable_shape->sem->sptr;
   uint32_t count = sptr->count;
   bool_t first_rewrite = true;
   CSTR shape_name = "";
-  CSTR shape_type = best_shape_type_name(found_shape);
+  CSTR shape_type = best_shape_type_name(likeable_shape);
 
   if (shape_name_ast) {
     EXTRACT_STRING(sname, shape_name_ast);
     shape_name = sname;
     ast_node *shape_ast = new_ast_str(shape_name);
-    shape_ast->sem = found_shape->sem;
+    shape_ast->sem = likeable_shape->sem;
     sem_add_flags(shape_ast, SEM_TYPE_HAS_SHAPE_STORAGE); // the arg bundle has storage!
     shape_ast->sem->name = shape_name;
     add_arg_bundle(shape_ast, shape_name);
@@ -656,7 +656,7 @@ cql_noexport void rewrite_expr_names_to_columns_values(ast_node* columns_values)
 // This is harder to explain than it is to code.
 cql_noexport void rewrite_empty_column_list(ast_node *columns_values, sem_struct *sptr)
 {
-  Invariant(is_ast_columns_values(columns_values) || is_ast_from_cursor(columns_values));
+  Invariant(is_ast_columns_values(columns_values) || is_ast_from_shape(columns_values));
   EXTRACT(column_spec, columns_values->left);
 
   AST_REWRITE_INFO_SET(columns_values->lineno, columns_values->filename);

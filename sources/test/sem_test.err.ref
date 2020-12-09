@@ -536,7 +536,7 @@ Error at test/sem_test.sql:XXXX : in dot : CQL0201: expanding FROM ARGUMENTS, th
 Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, table, or view 'bogus_name_here'
 Error at test/sem_test.sql:XXXX : in str : CQL0163: FROM ARGUMENTS construct is only valid inside a procedure
 Error at test/sem_test.sql:XXXX : in columns_values : CQL0299: [shape] has too few fields 'ARGUMENTS'
-Error at test/sem_test.sql:XXXX : in from_cursor : CQL0297: FROM [shape] is redundant if column list is empty
+Error at test/sem_test.sql:XXXX : in from_shape : CQL0297: FROM [shape] is redundant if column list is empty
 Error at test/sem_test.sql:XXXX : in columns_values : CQL0299: [shape] has too few fields 'ARGUMENTS'
 Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, table, or view 'garbonzo'
 Error at test/sem_test.sql:XXXX : in select_stmt : CQL0055: all columns in the select must have a name
@@ -775,7 +775,7 @@ Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in 
 Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'nth_value'
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'nth_value'
 Error at test/sem_test.sql:XXXX : in call : CQL0303: The second argument must be an integer between 1 and max integer in function 'nth_value'
-Error at test/sem_test.sql:XXXX : in from_cursor : CQL0297: FROM [shape] is redundant if column list is empty
+Error at test/sem_test.sql:XXXX : in from_shape : CQL0297: FROM [shape] is redundant if column list is empty
 Error at test/sem_test.sql:XXXX : in str : CQL0298: cannot read from a cursor without fields 'fetch_cursor'
 Error at test/sem_test.sql:XXXX : in columns_values : CQL0299: [shape] has too few fields 'small_cursor'
 Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'X'

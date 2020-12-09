@@ -673,7 +673,6 @@ AST0(insert_or_replace);
 AST0(insert_or_rollback);
 AST0(insert_or_abort);
 AST0(insert_or_fail);
-AST(from_cursor);
 AST(from_shape);
 AST(insert_dummy_spec);
 AST1(column_spec);

@@ -4351,10 +4351,14 @@ static void resolve_using_arguments(ast_node *dot, CSTR name) {
 }
 
 // Try to look up a [possibly] scoped name in one of the places:
-// 1. a column in the current joinscope if any (this must not conflict with #2)
-// 2. a local or global variable
-// 3. a field in an open cursor
-// otherwise, name not found.
+// 1. a reference to the special ARGUMENTS arg bundle
+// 2. a column in the current joinscope if any (this must not conflict with #2)
+// 3. a local or global variable
+// 4. a declared enum
+// 5. a field in an open cursor
+// 6. a field in an arg bundle
+//
+// ... otherwise, name not found.
 static void sem_resolve_id(ast_node *ast, CSTR name, CSTR scope) {
 
   if (scope && !strcmp(scope, "ARGUMENTS")) {
@@ -4397,6 +4401,7 @@ static void sem_resolve_id(ast_node *ast, CSTR name, CSTR scope) {
     return;
   }
 
+  // a scope might refer to an arg bungle, again these are always scoped
   if (scope && try_resolve_using_arg_bundle(ast, name, scope)) {
     return;
   }
@@ -5382,18 +5387,13 @@ static void sem_func_char(ast_node *ast, uint32_t arg_count) {
 // cql_cursor_diff_xxx(X,Y) arguments.
 static bool_t sem_validate_cursor_from_variable(ast_node *ast, CSTR target) {
   if (is_variable(ast->sem->sem_type)) {
-
     sem_cursor(ast);
-    if (is_error(ast)) {
-      return false;
-    }
-
-    return true;
-  } else {
-    report_error(ast, "CQL0341: argument must be a variable in function", target);
-    record_error(ast);
-    return false;
+    return !is_error(ast);
   }
+
+  report_error(ast, "CQL0341: argument must be a variable in function", target);
+  record_error(ast);
+  return false;
 }
 
 // notnull is a CQL builtin function that returns its input if not null
@@ -9993,7 +9993,7 @@ static void sem_update_cursor_stmt(ast_node *ast) {
     return;
   }
 
-  rewrite_from_cursor_if_needed(ast, columns_values);
+  rewrite_from_shape_if_needed(ast, columns_values);
   if (is_error(ast)) {
     return;
   }
@@ -10407,7 +10407,7 @@ static void sem_insert_stmt(ast_node *ast) {
       return;
     }
 
-    rewrite_from_cursor_if_needed(ast, columns_values);
+    rewrite_from_shape_if_needed(ast, columns_values);
     if (is_error(ast)) {
       return;
     }
@@ -10731,7 +10731,7 @@ static void sem_fetch_values_stmt(ast_node *ast) {
   EXTRACT_NOTNULL(column_spec, columns_values->left);
   EXTRACT(name_list, column_spec->left);
 
-  rewrite_from_cursor_if_needed(ast, columns_values);
+  rewrite_from_shape_if_needed(ast, columns_values);
   if (is_error(ast)) {
     return;
   }
@@ -11330,9 +11330,10 @@ error:
 //   * a proc that returns a result set (or any proc if using ARGUMENTS form)
 //   * a table
 //   * a view
+//   * an arg bundle (even "ARGUMENTS")
 // The source doesn't matter, we just need its shape.  In most cases
 // we only need the names, not even the types.  But we might need either.
-// (e.g. create cursor X like Y needs the type info)
+// (e.g. declare cursor X like Y needs the type info)
 //
 cql_noexport ast_node *sem_find_likeable_ast(ast_node *like_ast) {
   Contract(is_ast_like(like_ast));

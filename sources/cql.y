@@ -221,7 +221,7 @@ static void cql_reset_globals(void);
 %type <aval> declare_stmt
 %type <aval> declare_enum_stmt enum_values enum_value
 %type <aval> echo_stmt
-%type <aval> fetch_stmt fetch_values_stmt fetch_call_stmt from_cursor
+%type <aval> fetch_stmt fetch_values_stmt fetch_call_stmt from_shape
 %type <aval> if_stmt elseif_item elseif_list opt_else opt_elseif_list proc_savepoint_stmt
 %type <aval> leave_stmt return_stmt
 %type <aval> loop_stmt
@@ -1274,10 +1274,10 @@ opt_column_spec:
   | '(' shape_def ')'  { $opt_column_spec = new_ast_column_spec($shape_def); }
   ;
 
-from_cursor:
-  FROM CURSOR name opt_column_spec  { $from_cursor = new_ast_from_cursor($opt_column_spec, $name); }
-  | FROM name opt_column_spec  { $from_cursor = new_ast_from_cursor($opt_column_spec, $name); }
-  | FROM ARGUMENTS opt_column_spec  { $from_cursor = new_ast_from_cursor($opt_column_spec, new_ast_str("ARGUMENTS")); }
+from_shape:
+  FROM CURSOR name opt_column_spec  { $from_shape = new_ast_from_shape($opt_column_spec, $name); }
+  | FROM name opt_column_spec  { $from_shape = new_ast_from_shape($opt_column_spec, $name); }
+  | FROM ARGUMENTS opt_column_spec  { $from_shape = new_ast_from_shape($opt_column_spec, new_ast_str("ARGUMENTS")); }
   ;
 
 insert_stmt:
@@ -1286,8 +1286,8 @@ insert_stmt:
     struct ast_node *name_columns_values = new_ast_name_columns_values($name, columns_values);
     $insert_stmt_type->left = $opt_insert_dummy_spec;
     $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values);  }
-  | insert_stmt_type name opt_column_spec from_cursor opt_insert_dummy_spec  {
-    struct ast_node *columns_values = new_ast_columns_values($opt_column_spec, $from_cursor);
+  | insert_stmt_type name opt_column_spec from_shape opt_insert_dummy_spec  {
+    struct ast_node *columns_values = new_ast_columns_values($opt_column_spec, $from_shape);
     struct ast_node *name_columns_values = new_ast_name_columns_values($name, columns_values);
     $insert_stmt_type->left = $opt_insert_dummy_spec;
     $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values);  }
@@ -1355,8 +1355,8 @@ update_cursor_stmt:
   UPDATE CURSOR name opt_column_spec FROM VALUES '(' insert_list ')'  {
     struct ast_node *columns_values = new_ast_columns_values($opt_column_spec, $insert_list);
     $update_cursor_stmt = new_ast_update_cursor_stmt($name, columns_values); }
-  | UPDATE CURSOR name opt_column_spec from_cursor  {
-    struct ast_node *columns_values = new_ast_columns_values($opt_column_spec, $from_cursor);
+  | UPDATE CURSOR name opt_column_spec from_shape  {
+    struct ast_node *columns_values = new_ast_columns_values($opt_column_spec, $from_shape);
     $update_cursor_stmt = new_ast_update_cursor_stmt($name, columns_values); }
   | UPDATE CURSOR name USING expr_names {
     $update_cursor_stmt = new_ast_update_cursor_stmt($name, $expr_names); }
@@ -1533,8 +1533,8 @@ fetch_values_stmt:
     struct ast_node *columns_values = new_ast_columns_values($opt_column_spec, $insert_list);
     struct ast_node *name_columns_values = new_ast_name_columns_values($name, columns_values);
     $fetch_values_stmt = new_ast_fetch_values_stmt($opt_insert_dummy_spec, name_columns_values); }
-  | FETCH name opt_column_spec from_cursor opt_insert_dummy_spec  {
-    struct ast_node *columns_values = new_ast_columns_values($opt_column_spec, $from_cursor);
+  | FETCH name opt_column_spec from_shape opt_insert_dummy_spec  {
+    struct ast_node *columns_values = new_ast_columns_values($opt_column_spec, $from_shape);
     struct ast_node *name_columns_values = new_ast_name_columns_values($name, columns_values);
     $fetch_values_stmt = new_ast_fetch_values_stmt($opt_insert_dummy_spec, name_columns_values); }
   | FETCH name USING expr_names opt_insert_dummy_spec {

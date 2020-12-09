@@ -48,7 +48,7 @@ static void gen_opt_orderby(ast_node *ast);
 static void gen_shape_arg(ast_node *ast);
 static void gen_insert_list(ast_node *_Nullable ast);
 static void gen_column_spec(ast_node *ast);
-static void gen_from_cursor(ast_node *ast);
+static void gen_from_shape(ast_node *ast);
 static void gen_opt_filter_clause(ast_node *ast);
 static void gen_if_not_exists(ast_node *ast, bool_t if_not_exist);
 static void gen_shape_def(ast_node *ast);
@@ -2023,11 +2023,11 @@ static void gen_update_list(ast_node *ast) {
   }
 }
 
-static void gen_from_cursor(ast_node *ast) {
-  Contract(is_ast_from_cursor(ast));
-  EXTRACT_STRING(cursor_name, ast->right);
+static void gen_from_shape(ast_node *ast) {
+  Contract(is_ast_from_shape(ast));
+  EXTRACT_STRING(shape_name, ast->right);
   EXTRACT_ANY(column_spec, ast->left);
-  gen_printf("FROM %s", cursor_name);
+  gen_printf("FROM %s", shape_name);
   gen_column_spec(column_spec);
 }
 
@@ -2049,8 +2049,8 @@ static void gen_update_cursor_stmt(ast_node *ast) {
 
     gen_column_spec(column_spec);
     gen_printf(" ");
-    if (is_ast_from_cursor(insert_list)) {
-      gen_from_cursor(insert_list);
+    if (is_ast_from_shape(insert_list)) {
+      gen_from_shape(insert_list);
     }
     else {
       gen_printf("FROM VALUES(");
@@ -2212,8 +2212,8 @@ static void gen_insert_stmt(ast_node *ast) {
     if (is_select_stmt(insert_list)) {
       gen_select_stmt(insert_list);
     }
-    else if (is_ast_from_cursor(insert_list)) {
-      gen_from_cursor(insert_list);
+    else if (is_ast_from_shape(insert_list)) {
+      gen_from_shape(insert_list);
     }
     else {
       gen_printf("VALUES(");
@@ -2276,8 +2276,8 @@ static void gen_fetch_values_stmt(ast_node *ast) {
     gen_column_spec(column_spec);
     gen_printf(" ");
 
-    if (is_ast_from_cursor(columns_values->right)) {
-      gen_from_cursor(columns_values->right);
+    if (is_ast_from_shape(columns_values->right)) {
+      gen_from_shape(columns_values->right);
     }
     else {
       EXTRACT(insert_list, columns_values->right);

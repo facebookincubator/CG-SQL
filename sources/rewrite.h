@@ -15,9 +15,9 @@
 #include "sem.h"
 
 cql_noexport void rewrite_proclit(ast_node *ast);
-cql_noexport void rewrite_insert_list_from_cursor(ast_node *ast, ast_node *from_cursor, uint32_t count);
+cql_noexport void rewrite_insert_list_from_shape(ast_node *ast, ast_node *from_shape, uint32_t count);
 cql_noexport void rewrite_like_column_spec_if_needed(ast_node *columns_values);
-cql_noexport void rewrite_from_cursor_if_needed(ast_node *ast_stmt, ast_node *columns_values);
+cql_noexport void rewrite_from_shape_if_needed(ast_node *ast_stmt, ast_node *columns_values);
 cql_noexport void rewrite_from_shape_args(ast_node *head);
 cql_noexport bool_t rewrite_col_key_list(ast_node *ast);
 cql_noexport CSTR process_proclit(ast_node *ast, CSTR name);

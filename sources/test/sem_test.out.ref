@@ -19815,7 +19815,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'C0
       |     |   | {name A}
       |     |   | {name_list}
       |     |     | {name B}
-      |     | {from_cursor}
+      |     | {from_shape}
       |       | {name C0}: err
       | {out_stmt}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
         | {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
@@ -19880,7 +19880,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'C1
         | {name_columns_values}
           | {name C1}: err
           | {columns_values}
-            | {from_cursor}
+            | {from_shape}
               | {name C0}
 
 The statement ending at line XXXX
@@ -19962,7 +19962,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0165: fetch values is only for val
         | {name_columns_values}
           | {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable
           | {columns_values}
-            | {from_cursor}
+            | {from_shape}
               | {name C0}
 
 The statement ending at line XXXX
@@ -20056,7 +20056,7 @@ Error at test/sem_test.sql:XXXX : in columns_values : CQL0299: [shape] has too f
             |     | {name B}
             |     | {name_list}
             |       | {name C}
-            | {from_cursor}: ok
+            | {from_shape}: ok
               | {column_spec}
               | | {name_list}
               |   | {name A}
@@ -20130,7 +20130,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0298: cannot read from a cursor wi
             |   | {name A}
             |   | {name_list}
             |     | {name _anon}
-            | {from_cursor}: ok
+            | {from_shape}: ok
               | {column_spec}
               | | {name_list}
               |   | {name A}
@@ -22130,7 +22130,7 @@ Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, tab
             |     | {name name}
             |     | {name_list}
             |       | {name rate}
-            | {from_cursor}: err
+            | {from_shape}: err
               | {column_spec}
               | | {like}: err
               |   | {name bogus_name_here}: err
@@ -22160,7 +22160,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0163: FROM ARGUMENTS construct is 
       |   | {name one}
       |   | {name_list}
       |     | {name two}
-      | {from_cursor}
+      | {from_shape}
         | {name ARGUMENTS}: err
 
 The statement ending at line XXXX
@@ -22222,7 +22222,7 @@ Error at test/sem_test.sql:XXXX : in columns_values : CQL0299: [shape] has too f
             |     | {name B}
             |     | {name_list}
             |       | {name C}
-            | {from_cursor}: ok
+            | {from_shape}: ok
               | {column_spec}
               | | {name_list}
               |   | {name arg1}
@@ -22327,7 +22327,7 @@ BEGIN
   INSERT INTO bar() FROM ARGUMENTS @DUMMY_SEED(1);
 END;
 
-Error at test/sem_test.sql:XXXX : in from_cursor : CQL0297: FROM [shape] is redundant if column list is empty
+Error at test/sem_test.sql:XXXX : in from_shape : CQL0297: FROM [shape] is redundant if column list is empty
 
   {create_proc_stmt}: err
   | {name bar_auto_inserter_no_columns}: err
@@ -22358,7 +22358,7 @@ Error at test/sem_test.sql:XXXX : in from_cursor : CQL0297: FROM [shape] is redu
           | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
           | {columns_values}: ok
             | {column_spec}
-            | {from_cursor}
+            | {from_shape}
               | {name ARGUMENTS}
 
 The statement ending at line XXXX
@@ -22391,7 +22391,7 @@ Error at test/sem_test.sql:XXXX : in columns_values : CQL0299: [shape] has too f
             |     | {name name}
             |     | {name_list}
             |       | {name rate}
-            | {from_cursor}: ok
+            | {from_shape}: ok
               | {column_spec}
               | | {name_list}
               |   | {name id}
@@ -43081,7 +43081,7 @@ The statement ending at line XXXX
 
 INSERT INTO referenceable() FROM c_bar;
 
-Error at test/sem_test.sql:XXXX : in from_cursor : CQL0297: FROM [shape] is redundant if column list is empty
+Error at test/sem_test.sql:XXXX : in from_shape : CQL0297: FROM [shape] is redundant if column list is empty
 
   {insert_stmt}: err
   | {insert_normal}
@@ -43089,7 +43089,7 @@ Error at test/sem_test.sql:XXXX : in from_cursor : CQL0297: FROM [shape] is redu
     | {name referenceable}: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint }
     | {columns_values}: ok
       | {column_spec}
-      | {from_cursor}
+      | {from_shape}
         | {name c_bar}
 
 The statement ending at line XXXX
@@ -43114,7 +43114,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0298: cannot read from a cursor wi
       |         | {name d}
       |         | {name_list}
       |           | {name e}
-      | {from_cursor}: ok
+      | {from_shape}: ok
         | {column_spec}
         | | {name_list}
         |   | {name _anon}
@@ -43169,7 +43169,7 @@ Error at test/sem_test.sql:XXXX : in columns_values : CQL0299: [shape] has too f
       |         | {name d}
       |         | {name_list}
       |           | {name e}
-      | {from_cursor}: ok
+      | {from_shape}: ok
         | {column_spec}
         | | {name_list}
         |   | {name x}
@@ -43197,7 +43197,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'X'
       |         | {name d}
       |         | {name_list}
       |           | {name e}
-      | {from_cursor}
+      | {from_shape}
         | {name X}: err
 
 The statement ending at line XXXX
@@ -43678,7 +43678,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0204: cursor not found 'not_a_symb
     |   | {name c1}
     |   | {name_list}
     |     | {name c7}
-    | {from_cursor}
+    | {from_shape}
       | {name not_a_symbol}: err
 
 The statement ending at line XXXX
@@ -43804,7 +43804,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0204: cursor not found 'not_a_symb
       |   | {name c1}
       |   | {name_list}
       |     | {name c7}
-      | {from_cursor}
+      | {from_shape}
         | {name not_a_symbol}: err
 
 The statement ending at line XXXX
@@ -43944,7 +43944,7 @@ Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, tab
       |   | {name c1}
       |   | {name_list}
       |     | {name c7}
-      | {from_cursor}: err
+      | {from_shape}: err
         | {column_spec}
         | | {like}: err
         |   | {name not_a_symbol}: err
