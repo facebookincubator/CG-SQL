@@ -118,6 +118,85 @@ static symtab *text_fragments;
 // If the proc we are generating uses throw, we need to save the _rc_ in every catch block
 static bool_t proc_uses_throw = false;
 
+static int32_t find_best_line_recursive(ast_node *ast, CSTR filename) {
+  int32_t line = 0x7fffffff;
+  int32_t lleft = 0x7fffffff;
+  int32_t lright = 0x7fffffff;
+
+  if (ast->filename == filename || !strcmp(filename, ast->filename)) {
+   line = ast->lineno;
+  }
+
+  if (ast_has_left(ast)) {
+   lleft = find_best_line_recursive(ast->left, filename);
+  }
+
+  if (ast_has_right(ast)) {
+   lright = find_best_line_recursive(ast->right, filename);
+  }
+
+  if (lleft < line) line = lleft;
+  if (lright < line) line = lright;
+
+  return line;
+}
+
+static int32_t find_best_line(ast_node *ast) {
+  return find_best_line_recursive(ast, ast->filename);
+}
+
+static void insert_line_directives(charbuf *input, charbuf *output)
+{
+   CHARBUF_OPEN(tmp);
+
+   CSTR start = input->ptr;
+   bool_t new_directive = 1;
+   while (start[0]) {
+      CSTR end = strchr(start, '\n');
+      if (!end) { 
+        end = start + strlen(end);
+      }
+
+      CSTR trim = start;
+      while (*trim == ' ') trim++;
+
+      if (trim[0] == '#' && trim[1] == ' ') {
+        bclear(&tmp);
+        while (trim < end) {
+          bputc(&tmp, *trim++);
+        }
+        if (end[0] == '\n') {
+          trim++;
+        }
+        start = trim;
+        bprintf(output, "%s\n", tmp.ptr);
+
+        char *t = tmp.ptr + 2;
+        while (*t != ' ' && *t) t++;
+        *t = '\0';
+        new_directive = 1;
+        continue;
+      }
+
+      if (tmp.ptr[0] && !new_directive) {
+        bprintf(output, "%s\n", tmp.ptr);
+      }
+
+      new_directive = 0;
+
+      while (start < end) {
+        bputc(output, *start++);
+      }
+
+      bputc(output, '\n');
+      if (end[0] == '\n') {
+        start++;
+      }
+   }
+
+   CHARBUF_CLOSE(tmp);
+}
+
 // return the symbol name for the string literal if there is one
 static CSTR find_literal(CSTR str) {
   symtab_entry *entry = symtab_find(string_literals, str);
@@ -4545,6 +4624,7 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
         bprintf(cg_header_output, "\n// The statement ending at line %d\n", stmt->lineno);
         bprintf(cg_declarations_output, "\n// The statement ending at line %d\n", stmt->lineno);
       }
+
       return;
     }
 
@@ -4570,6 +4650,15 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
   // but they can declare schema during the semantic pass
   if (entry->val == cg_any_ddl_stmt && !in_proc) {
      return;
+  }
+
+  if (!options.test) {
+    int32_t line = find_best_line(stmt);
+    charbuf *line_out = cg_main_output;
+    if (stmt_nesting_level == 1) {
+      line_out = cg_declarations_output;
+    }
+    bprintf(line_out, "# %d \"%s\"\n", line, stmt->filename);
   }
 
   // Emit a helpful comment for top level statements.
@@ -5623,7 +5712,14 @@ cql_noexport void cg_c_main(ast_node *head) {
   CHARBUF_CLOSE(indent);
 
   cql_write_file(header_file_name, header_file.ptr);
-  cql_write_file(body_file_name, body_file.ptr);
+ 
+  CHARBUF_OPEN(line_directives);
+
+   insert_line_directives(&body_file, &line_directives);
+   cql_write_file(body_file_name, line_directives.ptr);
+   // cql_write_file(body_file_name, body_file.ptr);
+
+  CHARBUF_CLOSE(line_directives);
 
   if (exports_file_name) {
     cql_write_file(exports_file_name, exports_file.ptr);
