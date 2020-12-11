@@ -1618,6 +1618,8 @@ static void cg_case_list(ast_node *head, CSTR expr, CSTR result, sem_t sem_type_
     sem_t sem_type_case_expr = case_expr->sem->sem_type;
     sem_t sem_type_then_expr = then_expr->sem->sem_type;
 
+    cg_line_directive_min(case_expr, cg_main_output);
+
     CG_PUSH_EVAL(case_expr, C_EXPR_PRI_EQ_NE);
 
     if (expr) {
@@ -1649,6 +1651,7 @@ static void cg_case_list(ast_node *head, CSTR expr, CSTR result, sem_t sem_type_
         bprintf(cg_main_output, "if (%s) {\n", case_expr_value.ptr);
       }
     }
+    cg_line_directive_min(then_expr, cg_main_output);
 
     CG_PUSH_MAIN_INDENT(then, 2);
     CG_PUSH_EVAL(then_expr, C_EXPR_PRI_ROOT);
@@ -1718,6 +1721,8 @@ static void cg_expr_case(ast_node *case_expr, CSTR str, charbuf *is_null, charbu
 
   // if the form is case expr when ... then save the expr in a temporary
   if (expr) {
+    cg_line_directive_min(expr, cg_main_output);
+
     sem_t sem_type_expr = expr->sem->sem_type;
     CG_PUSH_TEMP(temp, sem_type_expr);
 
@@ -1754,6 +1759,8 @@ static void cg_expr_case(ast_node *case_expr, CSTR str, charbuf *is_null, charbu
   // Note that lack of an else is by-construction a nullable outcome because
   // the semantics of case say that if you miss all the cases you get null.
   if (else_expr) {
+    cg_line_directive_min(else_expr, cg_main_output);
+
     sem_t sem_type_else = else_expr->sem->sem_type;
 
     CG_PUSH_EVAL(else_expr, C_EXPR_PRI_ROOT);
