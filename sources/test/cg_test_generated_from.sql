@@ -19,3 +19,7 @@ create table bar(
 create procedure sample_proc()
 begin
 end;
+
+-- Testing @echo both with and without a newline ending
+@echo c, "/* A";
+@echo c, " comment */\n";
