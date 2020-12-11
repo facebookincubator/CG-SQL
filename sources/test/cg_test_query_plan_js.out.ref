@@ -4,7 +4,7 @@
   ],
   [
     {
-      "value": "TABLE SCAN VIOLATION:  T1, T2",
+      "value": "TABLE SCAN VIOLATION:  T1(2), T2(4)",
       "style": {
         "fontSize": 14,
         "color": "red",

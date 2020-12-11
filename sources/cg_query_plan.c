@@ -259,7 +259,7 @@ static void cg_qp_emit_create_schema_proc(charbuf *output) {
                   "    table_name TEXT NOT NULL PRIMARY KEY\n"
                   "  );\n"
                   "  CREATE TABLE alert(\n"
-                  "    table_name TEXT NOT NULL PRIMARY KEY\n"
+                  "    table_name TEXT NOT NULL\n"
                   "  );\n"
                   "  CREATE TABLE ok_table_scan(\n"
                   "    sql_id INT NOT NULL PRIMARY KEY,\n"
@@ -288,14 +288,15 @@ static void emit_print_sql_statement_proc(charbuf *output) {
 static void emit_populate_alert_table_proc(charbuf *output) {
   bprintf(output, "CREATE PROC populate_alert_table(table_ text not null)\n");
   bprintf(output, "BEGIN\n");
-  bprintf(output, "  INSERT OR IGNORE INTO alert SELECT upper(table_) as table_name FROM plan_temp\n");
+  bprintf(output, "  INSERT OR IGNORE INTO alert\n");
+  bprintf(output, "    SELECT upper(table_) || '(' || count(*) || ')' as table_name FROM plan_temp\n");
   bprintf(output, "    WHERE ( zdetail GLOB ('*[Ss][Cc][Aa][Nn]* ' || table_) OR \n");
   bprintf(output, "            zdetail GLOB ('*[Ss][Cc][Aa][Nn]* ' || table_ || ' *')\n");
   bprintf(output, "          )\n");
   bprintf(output, "    AND sql_id NOT IN (\n");
   bprintf(output, "      SELECT sql_id from ok_table_scan\n");
   bprintf(output, "        WHERE table_names GLOB ('*#' || table_ || '#*')\n");
-  bprintf(output, "    );\n");
+  bprintf(output, "    ) GROUP BY table_;\n");
   bprintf(output, "END;\n");
 }
 

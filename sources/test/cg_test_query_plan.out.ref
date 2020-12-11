@@ -67,7 +67,7 @@ BEGIN
     table_name TEXT NOT NULL PRIMARY KEY
   );
   CREATE TABLE alert(
-    table_name TEXT NOT NULL PRIMARY KEY
+    table_name TEXT NOT NULL
   );
   CREATE TABLE ok_table_scan(
     sql_id INT NOT NULL PRIMARY KEY,
@@ -348,14 +348,15 @@ END;
 
 CREATE PROC populate_alert_table(table_ text not null)
 BEGIN
-  INSERT OR IGNORE INTO alert SELECT upper(table_) as table_name FROM plan_temp
+  INSERT OR IGNORE INTO alert
+    SELECT upper(table_) || '(' || count(*) || ')' as table_name FROM plan_temp
     WHERE ( zdetail GLOB ('*[Ss][Cc][Aa][Nn]* ' || table_) OR 
             zdetail GLOB ('*[Ss][Cc][Aa][Nn]* ' || table_ || ' *')
           )
     AND sql_id NOT IN (
       SELECT sql_id from ok_table_scan
         WHERE table_names GLOB ('*#' || table_ || '#*')
-    );
+    ) GROUP BY table_;
 END;
 
 CREATE PROC print_table_scan_violation()
