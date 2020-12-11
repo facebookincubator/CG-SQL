@@ -203,6 +203,9 @@ test_helpers_test: $O/test_helpers_test.o $O/cqlrt.o $O/test_helpers.o
 cql-verify: tester/main.c cqlrt.c cqlrt.h tester/dbhelp.c tester/dbhelp.h $(SQLITE_OBJ)
 	$(CC) $(CFLAGS) -I. -o $O/cql-verify tester/main.c cqlrt.c tester/dbhelp.c $(SQLITE_LINK)
 
+cql-linetest: linetester/main.c cqlrt.c cqlrt.h linetester/linetest.c linetester/linetest.h $(SQLITE_OBJ)
+	$(CC) $(CFLAGS) -I. -o $O/cql-linetest linetester/main.c cqlrt.c linetester/linetest.c $(SQLITE_LINK)
+
 json-test: $O/json_test
 
 demo-binary: $(SQLITE_OBJ)

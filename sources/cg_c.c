@@ -1715,6 +1715,7 @@ static void cg_expr_case(ast_node *case_expr, CSTR str, charbuf *is_null, charbu
   // The answer will be stored in this scratch variable, any type is possible
   CG_SETUP_RESULT_VAR(case_expr, sem_type_result);
 
+  cg_line_directive_min(case_expr, cg_main_output);
   bprintf(cg_main_output, "do {\n");
 
   CG_PUSH_MAIN_INDENT(do, 2);
@@ -2029,6 +2030,7 @@ static void cg_func_coalesce(ast_node *call_ast, charbuf *is_null, charbuf *valu
   // the answer will be stored in this scratch variable
   CG_SETUP_RESULT_VAR(call_ast, sem_type_result);
 
+  cg_line_directive_min(call_ast, cg_main_output);
   bprintf(cg_main_output, "do {\n");
   CG_PUSH_MAIN_INDENT(do, 2);
   for (ast_node *ast = arg_list; ast; ast = ast->right) {
