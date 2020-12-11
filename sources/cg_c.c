@@ -121,7 +121,7 @@ static bool_t proc_uses_throw = false;
 // See cg_find_best_line for more details on why this is what it is.
 // All that's going on here is we recursively visit the tree and find the smallest
 // line number that matches the given file in that branch.
-static int32_t cg_find_best_line_recursive(ast_node *ast, CSTR filename) {
+static int32_t cg_find_first_line_recursive(ast_node *ast, CSTR filename) {
   int32_t line = INT32_MAX;
   int32_t lleft = INT32_MAX;
   int32_t lright = INT32_MAX;
@@ -132,12 +132,12 @@ static int32_t cg_find_best_line_recursive(ast_node *ast, CSTR filename) {
   }
 
   if (ast_has_left(ast)) {
-   lleft = cg_find_best_line_recursive(ast->left, filename);
+   lleft = cg_find_first_line_recursive(ast->left, filename);
    if (lleft < line) line = lleft;
   }
 
   if (ast_has_right(ast)) {
-   lright = cg_find_best_line_recursive(ast->right, filename);
+   lright = cg_find_first_line_recursive(ast->right, filename);
    if (lright < line) line = lright;
   }
 
@@ -152,8 +152,32 @@ static int32_t cg_find_best_line_recursive(ast_node *ast, CSTR filename) {
 // line number anywhere in the tree.  But, we must only use line numbers
 // from the same file as the one we ended on.  If (e.g.) a procedure spans files
 // this will cause jumping around but that's not really avoidable.
-static int32_t cg_find_best_line(ast_node *ast) {
-  return cg_find_best_line_recursive(ast, ast->filename);
+static int32_t cg_find_first_line(ast_node *ast) {
+  return cg_find_first_line_recursive(ast, ast->filename);
+}
+
+// emit the line directive, escape the file name using the C convention
+static void cg_line_directive(CSTR filename, int lineno, charbuf *output) {
+  if (options.test || options.nolines) {
+    return;
+  }
+
+  CHARBUF_OPEN(tmp);
+  cg_encode_c_string_literal(filename, &tmp);
+  bprintf(output, "# %d %s\n", lineno, tmp.ptr);
+  CHARBUF_CLOSE(tmp);
+}
+
+// use the recursive search to emit the smallest line number in this subtree
+static void cg_line_directive_min(ast_node *ast, charbuf *output) {
+  int32_t lineno = cg_find_first_line(ast);
+  cg_line_directive(ast->filename, lineno, output);
+}
+
+// The line number in the node is the last line number in the subtree because
+// that is when the REDUCE operation happened when building the AST.
+static void cg_line_directive_max(ast_node *ast, charbuf *output) {
+  cg_line_directive(ast->filename, ast->lineno, output);
 }
 
 // The situation in CQL is that most statements, even single line statements,
@@ -2249,6 +2273,8 @@ static void cg_cond_action(ast_node *ast) {
 
   sem_t sem_type_expr = expr->sem->sem_type;
 
+  cg_line_directive_max(expr, cg_main_output);
+
   CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
 
   if (is_ast_null(expr) || is_not_nullable(sem_type_expr)) {
@@ -2260,7 +2286,11 @@ static void cg_cond_action(ast_node *ast) {
 
   CG_POP_EVAL(expr);
 
-  cg_stmt_list(stmt_list);
+  if (stmt_list) {
+    cg_stmt_list(stmt_list);
+    cg_line_directive_max(stmt_list, cg_main_output);
+  }
+
   bprintf(cg_main_output, "}\n");
 }
 
@@ -2282,6 +2312,7 @@ static void cg_elseif_list(ast_node *ast, ast_node *elsenode) {
   else if (elsenode) {
     Contract(is_ast_else(elsenode));
     // ELSE [stmt_list]
+    cg_line_directive_min(elsenode, cg_main_output);
     EXTRACT(stmt_list, elsenode->left);
     bprintf(cg_main_output, "else {\n");
     cg_stmt_list(stmt_list);
@@ -2802,11 +2833,14 @@ static void cg_create_proc_stmt(ast_node *ast) {
 
   bprintf(cg_declarations_output, "%s", proc_body.ptr);
 
+  cg_line_directive_max(ast, cg_declarations_output);
+
   if (dml_proc) {
     bprintf(cg_declarations_output, "  _rc_ = SQLITE_OK;\n");
   }
 
   bool_t empty_statement_needed = false;
+
 
   if (error_target_used || return_used) {
     bprintf(cg_declarations_output, "\n%s:", error_target);
@@ -4723,17 +4757,8 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
      return;
   }
 
-  if (!options.test && !options.nolines) {
-    int32_t line = cg_find_best_line(stmt);
-    charbuf *line_out = cg_main_output;
-    if (stmt_nesting_level == 1) {
-      line_out = cg_declarations_output;
-    }
-    CHARBUF_OPEN(tmp);
-    cg_encode_c_string_literal(stmt->filename, &tmp);
-    bprintf(line_out, "# %d %s\n", line, tmp.ptr);
-    CHARBUF_CLOSE(tmp);
-  }
+  charbuf *line_out = (stmt_nesting_level == 1) ? cg_declarations_output : cg_main_output;
+  cg_line_directive_min(stmt, line_out);
 
   // Emit a helpful comment for top level statements.
   if (stmt_nesting_level == 1) {
