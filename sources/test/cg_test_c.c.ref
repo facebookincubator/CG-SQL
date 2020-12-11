@@ -305,7 +305,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "test"
 void test(cql_int32 i) {
   if (i) {
@@ -313,6 +312,7 @@ void test(cql_int32 i) {
   }
 
 }
+#undef _PROC_
 cql_int32 _between_0_ = 0;
 cql_nullable_int32 _between_1_;
 cql_nullable_int32 _between_2_;
@@ -330,13 +330,13 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "out_test"
 void out_test(cql_int32 *_Nonnull i, cql_nullable_int32 *_Nonnull ii) {
   *i = i2;
   cql_set_nullable(*ii, i0_nullable.is_null, i0_nullable.value);
 
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -390,7 +390,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "outparm_test"
 CQL_WARN_UNUSED cql_code outparm_test(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull foo) {
   cql_code _rc_ = SQLITE_OK;
@@ -411,6 +410,7 @@ cql_cleanup:
   cql_finalize_stmt(&_temp_stmt);
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -427,7 +427,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "throwing"
 CQL_WARN_UNUSED cql_code throwing(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -451,6 +450,7 @@ CQL_WARN_UNUSED cql_code throwing(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   return _rc_;
 }
+#undef _PROC_
 cql_string_ref _between_6_ = NULL;
 cql_string_ref _between_7_ = NULL;
 cql_string_ref _between_8_ = NULL;
@@ -470,7 +470,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "with_result_set"
 static int32_t with_result_set_perf_index;
 
@@ -578,6 +577,7 @@ cql_cleanup:
   if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -589,7 +589,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "select_from_view"
 static int32_t select_from_view_perf_index;
 
@@ -659,6 +658,7 @@ cql_cleanup:
   if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -670,7 +670,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "make_view"
 CQL_WARN_UNUSED cql_code make_view(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -683,6 +682,7 @@ CQL_WARN_UNUSED cql_code make_view(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -693,7 +693,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "make_index"
 CQL_WARN_UNUSED cql_code make_index(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -705,6 +704,7 @@ CQL_WARN_UNUSED cql_code make_index(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -717,7 +717,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "get_data"
 static int32_t get_data_perf_index;
 
@@ -829,6 +828,7 @@ cql_cleanup:
   if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -845,7 +845,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "easy_fetch"
 
 typedef struct easy_fetch_C_row {
@@ -899,6 +898,7 @@ cql_cleanup:
   cql_finalize_stmt(&C2);
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -909,12 +909,12 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "copy_int"
 void copy_int(cql_nullable_int32 a, cql_nullable_int32 *_Nonnull b) {
   cql_set_nullable(*b, a.is_null, a.value);
 
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -926,7 +926,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "insert_rowid_reader"
 CQL_WARN_UNUSED cql_code insert_rowid_reader(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -938,6 +937,7 @@ CQL_WARN_UNUSED cql_code insert_rowid_reader(sqlite3 *_Nonnull _db_) {
 
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -949,7 +949,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "changes_reader"
 CQL_WARN_UNUSED cql_code changes_reader(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -961,6 +960,7 @@ CQL_WARN_UNUSED cql_code changes_reader(sqlite3 *_Nonnull _db_) {
 
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -984,7 +984,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "xyzzy_test"
 CQL_WARN_UNUSED cql_code xyzzy_test(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -1002,6 +1001,7 @@ cql_cleanup:
   cql_finalize_stmt(&xyzzy_cursor);
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -1018,7 +1018,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "complex_return"
 static int32_t complex_return_perf_index;
 
@@ -1123,6 +1122,7 @@ cql_cleanup:
   if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -1141,7 +1141,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "hierarchical_query"
 static int32_t hierarchical_query_perf_index;
 
@@ -1209,6 +1208,7 @@ cql_cleanup:
   if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -1227,7 +1227,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "hierarchical_unmatched_query"
 static int32_t hierarchical_unmatched_query_perf_index;
 
@@ -1295,6 +1294,7 @@ cql_cleanup:
   if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -1307,7 +1307,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "union_select"
 static int32_t union_select_perf_index;
 
@@ -1365,6 +1364,7 @@ cql_cleanup:
   if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -1377,7 +1377,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "union_all_select"
 static int32_t union_all_select_perf_index;
 
@@ -1435,6 +1434,7 @@ cql_cleanup:
   if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -1448,7 +1448,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "union_all_with_nullable"
 static int32_t union_all_with_nullable_perf_index;
 
@@ -1511,6 +1510,7 @@ cql_cleanup:
   if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -1525,7 +1525,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "with_stmt_using_cursor"
 
 typedef struct with_stmt_using_cursor_C_row {
@@ -1560,6 +1559,7 @@ cql_cleanup:
   cql_finalize_stmt(&C);
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -1573,7 +1573,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "with_stmt"
 static int32_t with_stmt_perf_index;
 
@@ -1648,6 +1647,7 @@ cql_cleanup:
   if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -1663,7 +1663,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "with_recursive_stmt"
 static int32_t with_recursive_stmt_perf_index;
 
@@ -1740,6 +1739,7 @@ cql_cleanup:
   if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -1750,7 +1750,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "parent_proc"
 static int32_t parent_proc_perf_index;
 
@@ -1822,6 +1821,7 @@ cql_cleanup:
   if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -1832,7 +1832,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "parent_proc_child"
 static int32_t parent_proc_child_perf_index;
 
@@ -1904,6 +1903,7 @@ cql_cleanup:
   if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -1916,7 +1916,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "outint_nullable"
 CQL_WARN_UNUSED cql_code outint_nullable(sqlite3 *_Nonnull _db_, cql_nullable_int32 *_Nonnull output, cql_bool *_Nonnull result) {
   cql_code _rc_ = SQLITE_OK;
@@ -1938,6 +1937,7 @@ cql_cleanup:
   cql_finalize_stmt(&C);
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -1950,7 +1950,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "outint_notnull"
 CQL_WARN_UNUSED cql_code outint_notnull(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull output, cql_bool *_Nonnull result) {
   cql_code _rc_ = SQLITE_OK;
@@ -1972,6 +1971,7 @@ cql_cleanup:
   cql_finalize_stmt(&C);
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -2010,13 +2010,13 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "obj_proc"
 void obj_proc(cql_object_ref _Nullable *_Nonnull an_object) {
   *(void **)an_object = NULL; // set out arg to non-garbage
   cql_set_object_ref(an_object, NULL);
 
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -2027,7 +2027,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "unused_temp"
 void unused_temp(cql_nullable_int32 i, cql_int32 *_Nonnull o) {
   do {
@@ -2039,6 +2038,7 @@ void unused_temp(cql_nullable_int32 i, cql_int32 *_Nonnull o) {
   } while (0);
 
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -2066,7 +2066,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "echo_test"
 void echo_test(void) {
   cql_string_ref s = NULL;
@@ -2077,6 +2076,7 @@ void echo_test(void) {
 
   cql_string_release(s);
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -2087,7 +2087,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "insert_values"
 CQL_WARN_UNUSED cql_code insert_values(sqlite3 *_Nonnull _db_, cql_int32 id_, cql_nullable_int32 type_) {
   cql_code _rc_ = SQLITE_OK;
@@ -2108,6 +2107,7 @@ cql_cleanup:
   cql_finalize_stmt(&_temp_stmt);
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -2118,7 +2118,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "alter_table_test"
 CQL_WARN_UNUSED cql_code alter_table_test(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -2130,6 +2129,7 @@ CQL_WARN_UNUSED cql_code alter_table_test(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -2140,7 +2140,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "drop_table_test"
 CQL_WARN_UNUSED cql_code drop_table_test(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -2152,6 +2151,7 @@ CQL_WARN_UNUSED cql_code drop_table_test(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -2162,7 +2162,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "uses_proc_for_result"
 static int32_t uses_proc_for_result_perf_index;
 
@@ -2268,6 +2267,7 @@ cql_cleanup:
   if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
   return _rc_;
 }
+#undef _PROC_
 sqlite3_stmt *expanded_select = NULL;
 cql_bool _expanded_select_has_row_ = 0;
 sqlite3_stmt *table_expanded_select = NULL;
@@ -2282,7 +2282,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "index_dropper"
 CQL_WARN_UNUSED cql_code index_dropper(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -2294,6 +2293,7 @@ CQL_WARN_UNUSED cql_code index_dropper(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -2309,7 +2309,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "misc_dml_proc"
 CQL_WARN_UNUSED cql_code misc_dml_proc(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -2332,6 +2331,7 @@ CQL_WARN_UNUSED cql_code misc_dml_proc(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -2342,7 +2342,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "dummy_user"
 CQL_WARN_UNUSED cql_code dummy_user(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -2368,6 +2367,7 @@ cql_cleanup:
   cql_finalize_stmt(&_temp_stmt);
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -2378,13 +2378,13 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "proc_with_out_arg"
 void proc_with_out_arg(cql_string_ref _Nullable *_Nonnull foo) {
   *(void **)foo = NULL; // set out arg to non-garbage
   cql_set_string_ref(&*foo, _literal_5_x_);
 
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -2398,7 +2398,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "calls_out_proc"
 void calls_out_proc(cql_string_ref _Nullable *_Nonnull foo) {
   cql_string_ref bar = NULL;
@@ -2412,6 +2411,7 @@ void calls_out_proc(cql_string_ref _Nullable *_Nonnull foo) {
 
   cql_string_release(bar);
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -2436,13 +2436,13 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "blob_proc"
 void blob_proc(cql_blob_ref _Nullable *_Nonnull a_blob) {
   *(void **)a_blob = NULL; // set out arg to non-garbage
   cql_set_blob_ref(&*a_blob, NULL);
 
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -2461,7 +2461,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "blob_returner"
 static int32_t blob_returner_perf_index;
 
@@ -2538,6 +2537,7 @@ cql_cleanup:
   if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -2548,7 +2548,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "voidproc"
 void voidproc(void) {
   cql_nullable_int32 unused;
@@ -2556,6 +2555,7 @@ void voidproc(void) {
 
 
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -2569,7 +2569,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "out_cursor_proc"
 
 #define out_cursor_proc_refs_offset cql_offsetof(out_cursor_proc_row, name) // count = 3
@@ -2723,6 +2722,7 @@ cql_cleanup:
   cql_teardown_row(C_);
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -2733,7 +2733,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "read_cursor_proc"
 
 typedef struct read_cursor_proc_C_row {
@@ -2763,6 +2762,7 @@ cql_cleanup:
   cql_teardown_row(C_);
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -2774,7 +2774,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "declare_cursor_then_fetch_from_proc"
 
 typedef struct declare_cursor_then_fetch_from_proc_C_row {
@@ -2804,6 +2803,7 @@ cql_cleanup:
   cql_teardown_row(C_);
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -2838,7 +2838,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "dml_user"
 CQL_WARN_UNUSED cql_code dml_user(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull a_) {
   cql_code _rc_ = SQLITE_OK;
@@ -2849,6 +2848,7 @@ CQL_WARN_UNUSED cql_code dml_user(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull a_
 cql_cleanup:
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -2861,7 +2861,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "thread_theme_info_list"
 static int32_t thread_theme_info_list_perf_index;
 
@@ -2919,6 +2918,7 @@ cql_cleanup:
   if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -2931,7 +2931,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "fetch_values_dummy"
 
 typedef struct fetch_values_dummy_C_row {
@@ -2968,6 +2967,7 @@ void fetch_values_dummy(void) {
   cql_teardown_row(C_);
   cql_string_release(_tmp_text_0);
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -2978,13 +2978,13 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "c_literal"
 void c_literal(cql_string_ref _Nullable *_Nonnull x) {
   *(void **)x = NULL; // set out arg to non-garbage
   cql_set_string_ref(&*x, _literal_8_Testing_c_literal);
 
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -3001,7 +3001,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "no_cleanup_label_needed_proc"
 
 typedef struct no_cleanup_label_needed_proc_C_row {
@@ -3037,6 +3036,7 @@ CQL_WARN_UNUSED cql_code no_cleanup_label_needed_proc(sqlite3 *_Nonnull _db_) {
   cql_finalize_stmt(&C);
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -3054,7 +3054,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "no_code_after_catch"
 CQL_WARN_UNUSED cql_code no_code_after_catch(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -3074,6 +3073,7 @@ CQL_WARN_UNUSED cql_code no_code_after_catch(sqlite3 *_Nonnull _db_) {
 
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -3086,7 +3086,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "out_no_db"
 static int32_t out_no_db_perf_index;
 
@@ -3152,6 +3151,7 @@ void out_no_db(out_no_db_row *_Nonnull _result_) {
   _result_->B = C_.B;
 
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -3165,7 +3165,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "declare_cursor_like_cursor"
 static int32_t declare_cursor_like_cursor_perf_index;
 
@@ -3240,6 +3239,7 @@ void declare_cursor_like_cursor(declare_cursor_like_cursor_row *_Nonnull _result
   _result_->B = C1_.B;
 
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -3251,7 +3251,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "declare_cursor_like_proc"
 
 #define declare_cursor_like_proc_refs_offset cql_offsetof(declare_cursor_like_proc_row, b) // count = 1
@@ -3328,6 +3327,7 @@ void declare_cursor_like_proc(declare_cursor_like_proc_row *_Nonnull _result_) {
 
   cql_teardown_row(C_);
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -3339,7 +3339,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "declare_cursor_like_table"
 
 #define declare_cursor_like_table_refs_offset cql_offsetof(declare_cursor_like_table_row, name) // count = 1
@@ -3453,6 +3452,7 @@ void declare_cursor_like_table(declare_cursor_like_table_row *_Nonnull _result_)
 
   cql_teardown_row(C_);
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -3464,7 +3464,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "declare_cursor_like_view"
 static int32_t declare_cursor_like_view_perf_index;
 
@@ -3536,6 +3535,7 @@ void declare_cursor_like_view(declare_cursor_like_view_row *_Nonnull _result_) {
   _result_->f3 = C_.f3;
 
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -3549,7 +3549,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "weird_quoting"
 CQL_WARN_UNUSED cql_code weird_quoting(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -3570,6 +3569,7 @@ CQL_WARN_UNUSED cql_code weird_quoting(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -3583,7 +3583,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "long_auto_table_maker"
 CQL_WARN_UNUSED cql_code long_auto_table_maker(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -3598,6 +3597,7 @@ CQL_WARN_UNUSED cql_code long_auto_table_maker(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -3615,7 +3615,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "blob_call1"
 void blob_call1(void) {
   cql_blob_ref b = NULL;
@@ -3625,6 +3624,7 @@ void blob_call1(void) {
 
   cql_blob_release(b);
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -3636,7 +3636,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "blob_call2"
 void blob_call2(void) {
   cql_blob_ref b = NULL;
@@ -3646,6 +3645,7 @@ void blob_call2(void) {
 
   cql_blob_release(b);
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -3659,7 +3659,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "blob_no_else"
 void blob_no_else(void) {
   cql_blob_ref b = NULL;
@@ -3681,6 +3680,7 @@ void blob_no_else(void) {
   cql_blob_release(b1);
   cql_blob_release(_tmp_n_blob_1);
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -3694,7 +3694,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "with_inserter"
 CQL_WARN_UNUSED cql_code with_inserter(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -3709,6 +3708,7 @@ CQL_WARN_UNUSED cql_code with_inserter(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -3720,7 +3720,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "multi_rewrite"
 CQL_WARN_UNUSED cql_code multi_rewrite(sqlite3 *_Nonnull _db_, cql_int32 blob_id_, cql_blob_ref _Nonnull b_notnull_, cql_blob_ref _Nullable b_nullable_, cql_int32 id_, cql_string_ref _Nullable name_, cql_nullable_int64 rate_, cql_nullable_int32 type_, cql_nullable_double size_, cql_int32 *_Nonnull out_arg) {
   cql_code _rc_ = SQLITE_OK;
@@ -3743,6 +3742,7 @@ cql_cleanup:
   cql_finalize_stmt(&_temp_stmt);
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -3757,7 +3757,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "fetch_to_cursor_from_cursor"
 
 #define fetch_to_cursor_from_cursor_refs_offset cql_offsetof(fetch_to_cursor_from_cursor_row, B) // count = 1
@@ -3847,6 +3846,7 @@ void fetch_to_cursor_from_cursor(fetch_to_cursor_from_cursor_row *_Nonnull _resu
   cql_teardown_row(C0_);
   cql_teardown_row(C1_);
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -3861,7 +3861,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "loop_statement_cursor"
 
 typedef struct loop_statement_cursor_C_row {
@@ -3893,6 +3892,7 @@ cql_cleanup:
   cql_finalize_stmt(&C);
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -3908,7 +3908,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "loop_statement_not_auto_cursor"
 CQL_WARN_UNUSED cql_code loop_statement_not_auto_cursor(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -3934,6 +3933,7 @@ cql_cleanup:
   cql_finalize_stmt(&C);
   return _rc_;
 }
+#undef _PROC_
 sqlite3_stmt *global_cursor = NULL;
 global_cursor_row global_cursor_ = { 0 };
 
@@ -3952,7 +3952,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "make_trigger"
 CQL_WARN_UNUSED cql_code make_trigger(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -3970,6 +3969,7 @@ CQL_WARN_UNUSED cql_code make_trigger(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -3989,7 +3989,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "is_test"
 void is_test(void) {
   cql_bool b = 0;
@@ -4007,6 +4006,7 @@ void is_test(void) {
   b = ((i.is_null == j.is_null) && (j.is_null || i.value == j.value));
 
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -4026,7 +4026,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "is_not_test"
 void is_not_test(void) {
   cql_bool b = 0;
@@ -4044,6 +4043,7 @@ void is_not_test(void) {
   b = !((i.is_null == j.is_null) && (j.is_null || i.value == j.value));
 
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -4054,12 +4054,12 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "in_test"
 void in_test(cql_nullable_int32 x, cql_nullable_bool *_Nonnull b) {
   cql_set_null(*b);
 
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -4070,12 +4070,12 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "not_in_test"
 void not_in_test(cql_nullable_int32 x, cql_nullable_bool *_Nonnull b) {
   cql_set_null(*b);
 
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -4087,7 +4087,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "drop_trigger_test"
 CQL_WARN_UNUSED cql_code drop_trigger_test(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -4102,6 +4101,7 @@ CQL_WARN_UNUSED cql_code drop_trigger_test(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -4112,7 +4112,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "simple_identity"
 static int32_t simple_identity_perf_index;
 
@@ -4181,6 +4180,7 @@ cql_cleanup:
   if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -4191,7 +4191,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "complex_identity"
 static int32_t complex_identity_perf_index;
 
@@ -4269,6 +4268,7 @@ cql_cleanup:
   if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -4281,7 +4281,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "out_cursor_identity"
 static int32_t out_cursor_identity_perf_index;
 
@@ -4365,6 +4364,7 @@ cql_cleanup:
   cql_finalize_stmt(&C);
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -4376,7 +4376,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "radioactive_proc"
 static int32_t radioactive_proc_perf_index;
 
@@ -4445,6 +4444,7 @@ cql_cleanup:
   if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -4458,7 +4458,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "with_deleter"
 CQL_WARN_UNUSED cql_code with_deleter(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -4473,6 +4472,7 @@ CQL_WARN_UNUSED cql_code with_deleter(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -4488,7 +4488,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "with_updater"
 CQL_WARN_UNUSED cql_code with_updater(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -4505,6 +4504,7 @@ CQL_WARN_UNUSED cql_code with_updater(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -4515,7 +4515,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "autodropper"
 static int32_t autodropper_perf_index;
 
@@ -4580,6 +4579,7 @@ cql_cleanup:
   if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -4594,7 +4594,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "simple_cursor_proc"
 static int32_t simple_cursor_proc_perf_index;
 
@@ -4650,6 +4649,7 @@ void simple_cursor_proc(simple_cursor_proc_row *_Nonnull _result_) {
   _result_->id = A_CURSOR_.id;
 
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -4661,7 +4661,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "redundant_cast"
 static int32_t redundant_cast_perf_index;
 
@@ -4726,6 +4725,7 @@ cql_cleanup:
   if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -4738,7 +4738,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "view_creator"
 CQL_WARN_UNUSED cql_code view_creator(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -4752,6 +4751,7 @@ CQL_WARN_UNUSED cql_code view_creator(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -4767,7 +4767,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "settings_info"
 CQL_WARN_UNUSED cql_code settings_info(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -4788,6 +4787,7 @@ cql_cleanup:
   cql_finalize_stmt(&C);
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -4802,7 +4802,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "use_with_select"
 CQL_WARN_UNUSED cql_code use_with_select(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -4828,6 +4827,7 @@ cql_cleanup:
   cql_finalize_stmt(&_temp_stmt);
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -4839,7 +4839,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "rowset_object_reader"
 CQL_WARN_UNUSED cql_code rowset_object_reader(sqlite3 *_Nonnull _db_, cql_object_ref _Nullable rowset) {
   cql_code _rc_ = SQLITE_OK;
@@ -4858,6 +4857,7 @@ cql_cleanup:
   cql_finalize_stmt(&C);
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -4873,7 +4873,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "upsert_do_something"
 CQL_WARN_UNUSED cql_code upsert_do_something(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -4890,6 +4889,7 @@ CQL_WARN_UNUSED cql_code upsert_do_something(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -4907,7 +4907,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "with_upsert_form"
 CQL_WARN_UNUSED cql_code with_upsert_form(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -4926,6 +4925,7 @@ CQL_WARN_UNUSED cql_code with_upsert_form(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -4937,7 +4937,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "upsert_do_nothing"
 CQL_WARN_UNUSED cql_code upsert_do_nothing(sqlite3 *_Nonnull _db_, cql_int32 id_) {
   cql_code _rc_ = SQLITE_OK;
@@ -4958,6 +4957,7 @@ cql_cleanup:
   cql_finalize_stmt(&_temp_stmt);
   return _rc_;
 }
+#undef _PROC_
 cql_int32 _seed_ = 0;
 
 // The statement ending at line XXXX
@@ -4982,7 +4982,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "use_many_out_cursors"
 
 typedef struct use_many_out_cursors_c1_row {
@@ -5021,6 +5020,7 @@ cql_cleanup:
   cql_teardown_row(c2_);
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -5039,7 +5039,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "fetch_many_times"
 
 typedef struct fetch_many_times_C_row {
@@ -5079,6 +5078,7 @@ cql_cleanup:
   cql_teardown_row(C_);
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -5092,7 +5092,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "out_union_two_fetch_results"
 
 #define out_union_two_refs_offset cql_offsetof(out_union_two_row, y) // count = 1
@@ -5162,6 +5161,7 @@ void out_union_two_fetch_results(out_union_two_result_set_ref _Nullable *_Nonnul
   cql_results_from_data(SQLITE_OK, &_rows_, &out_union_two_info, (cql_result_set_ref *)_result_set_);
   cql_teardown_row(C_);
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -5176,7 +5176,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "out_union_reader"
 
 typedef struct out_union_reader_c_row {
@@ -5215,6 +5214,7 @@ CQL_WARN_UNUSED cql_code out_union_reader(sqlite3 *_Nonnull _db_) {
   cql_teardown_row(c_);
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -5228,7 +5228,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "out_union_from_select_fetch_results"
 
 #define out_union_from_select_refs_offset cql_offsetof(out_union_from_select_row, y) // count = 1
@@ -5310,6 +5309,7 @@ cql_cleanup:
   cql_teardown_row(C_);
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -5324,7 +5324,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "out_union_dml_reader"
 
 typedef struct out_union_dml_reader_c_row {
@@ -5365,6 +5364,7 @@ cql_cleanup:
   cql_teardown_row(c_);
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -5377,7 +5377,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "out_union_values_fetch_results"
 static int32_t out_union_values_perf_index;
 
@@ -5436,6 +5435,7 @@ void out_union_values_fetch_results(out_union_values_result_set_ref _Nullable *_
 
   cql_results_from_data(SQLITE_OK, &_rows_, &out_union_values_info, (cql_result_set_ref *)_result_set_);
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -5447,7 +5447,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "read_out_union_values"
 
 typedef struct read_out_union_values_C_row {
@@ -5477,6 +5476,7 @@ CQL_WARN_UNUSED cql_code read_out_union_values(sqlite3 *_Nonnull _db_, cql_int32
   cql_object_release(C_result_set_);
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -5492,7 +5492,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "compound_select_expr"
 CQL_WARN_UNUSED cql_code compound_select_expr(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -5519,6 +5518,7 @@ cql_cleanup:
   cql_finalize_stmt(&_temp_stmt);
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -5531,7 +5531,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "window_function_invocation"
 static int32_t window_function_invocation_perf_index;
 
@@ -5597,6 +5596,7 @@ cql_cleanup:
   if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -5608,7 +5608,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "update_cursor"
 
 typedef struct update_cursor_C_row {
@@ -5629,6 +5628,7 @@ CQL_WARN_UNUSED cql_code update_cursor(sqlite3 *_Nonnull _db_) {
 
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -5656,7 +5656,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "use_return"
 static int32_t use_return_perf_index;
 
@@ -5721,6 +5720,7 @@ cql_cleanup:
   if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -5733,7 +5733,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "use_return_no_error_flow"
 void use_return_no_error_flow(void) {
   if (1) {
@@ -5743,6 +5742,7 @@ void use_return_no_error_flow(void) {
 cql_cleanup:
   ; // label requires some statement
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -5752,13 +5752,13 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "empty_proc"
 void empty_proc(void) {
 
 cql_cleanup:
   ; // label requires some statement
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -5788,7 +5788,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "empty_blocks"
 
 typedef struct empty_blocks_c_row {
@@ -5843,6 +5842,7 @@ cql_cleanup:
   cql_finalize_stmt(&c);
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -5860,7 +5860,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "tail_catch"
 CQL_WARN_UNUSED cql_code tail_catch(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -5883,6 +5882,7 @@ CQL_WARN_UNUSED cql_code tail_catch(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -5893,7 +5893,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "pretty_print_with_quote"
 CQL_WARN_UNUSED cql_code pretty_print_with_quote(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -5905,6 +5904,7 @@ CQL_WARN_UNUSED cql_code pretty_print_with_quote(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -5915,7 +5915,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "hex_quote"
 CQL_WARN_UNUSED cql_code hex_quote(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -5927,6 +5926,7 @@ CQL_WARN_UNUSED cql_code hex_quote(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -5938,7 +5938,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "lotsa_columns_no_getters"
 static int32_t lotsa_columns_no_getters_perf_index;
 
@@ -6006,6 +6005,7 @@ cql_cleanup:
   if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -6017,7 +6017,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "lotsa_columns_no_result_set"
 CQL_WARN_UNUSED cql_code lotsa_columns_no_result_set(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_) {
   cql_code _rc_ = SQLITE_OK;
@@ -6032,6 +6031,7 @@ cql_cleanup:
   if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -6046,7 +6046,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "early_out_rc_cleared"
 
 typedef struct early_out_rc_cleared_C_row {
@@ -6078,6 +6077,7 @@ cql_cleanup:
   cql_finalize_stmt(&C);
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -6154,7 +6154,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "try_boxing"
 CQL_WARN_UNUSED cql_code try_boxing(sqlite3 *_Nonnull _db_, cql_object_ref _Nullable *_Nonnull result) {
   cql_code _rc_ = SQLITE_OK;
@@ -6177,6 +6176,7 @@ cql_cleanup:
   cql_object_release(C_object_);
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -6188,7 +6188,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "try_unboxing"
 
 typedef struct try_unboxing_C_row {
@@ -6227,6 +6226,7 @@ cql_cleanup:
   cql_teardown_row(C_);
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -6238,7 +6238,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "local_cast_int_notnull"
 void local_cast_int_notnull(void) {
   cql_int32 x = 0;
@@ -6248,6 +6247,7 @@ void local_cast_int_notnull(void) {
 cql_cleanup:
   ; // label requires some statement
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -6261,7 +6261,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "local_cast_int"
 void local_cast_int(void) {
   cql_nullable_int32 x;
@@ -6275,6 +6274,7 @@ void local_cast_int(void) {
 cql_cleanup:
   ; // label requires some statement
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -6286,7 +6286,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "local_cast_long_notnull"
 void local_cast_long_notnull(void) {
   cql_int64 x = 0;
@@ -6296,6 +6295,7 @@ void local_cast_long_notnull(void) {
 cql_cleanup:
   ; // label requires some statement
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -6309,7 +6309,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "local_cast_long"
 void local_cast_long(void) {
   cql_nullable_int64 x;
@@ -6323,6 +6322,7 @@ void local_cast_long(void) {
 cql_cleanup:
   ; // label requires some statement
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -6334,7 +6334,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "local_cast_real_notnull"
 void local_cast_real_notnull(void) {
   cql_double x = 0;
@@ -6344,6 +6343,7 @@ void local_cast_real_notnull(void) {
 cql_cleanup:
   ; // label requires some statement
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -6357,7 +6357,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "local_cast_real"
 void local_cast_real(void) {
   cql_nullable_double x;
@@ -6371,6 +6370,7 @@ void local_cast_real(void) {
 cql_cleanup:
   ; // label requires some statement
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -6382,7 +6382,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "local_cast_bool_notnull"
 void local_cast_bool_notnull(void) {
   cql_bool x = 0;
@@ -6392,6 +6391,7 @@ void local_cast_bool_notnull(void) {
 cql_cleanup:
   ; // label requires some statement
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -6405,7 +6405,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "local_cast_bool"
 void local_cast_bool(void) {
   cql_nullable_bool x;
@@ -6419,6 +6418,7 @@ void local_cast_bool(void) {
 cql_cleanup:
   ; // label requires some statement
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -6432,7 +6432,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "local_cast_from_bool_notnull"
 void local_cast_from_bool_notnull(void) {
   cql_bool b = 0;
@@ -6444,6 +6443,7 @@ void local_cast_from_bool_notnull(void) {
 cql_cleanup:
   ; // label requires some statement
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -6457,7 +6457,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "local_cast_from_bool"
 void local_cast_from_bool(void) {
   cql_nullable_bool b;
@@ -6471,6 +6470,7 @@ void local_cast_from_bool(void) {
 cql_cleanup:
   ; // label requires some statement
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -6484,7 +6484,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "local_cast_from_bool_no_op_notnull"
 void local_cast_from_bool_no_op_notnull(void) {
   cql_bool x = 0;
@@ -6496,6 +6495,7 @@ void local_cast_from_bool_no_op_notnull(void) {
 cql_cleanup:
   ; // label requires some statement
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -6509,7 +6509,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "local_cast_from_bool_no_op"
 void local_cast_from_bool_no_op(void) {
   cql_nullable_bool b;
@@ -6523,6 +6522,7 @@ void local_cast_from_bool_no_op(void) {
 cql_cleanup:
   ; // label requires some statement
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -6536,7 +6536,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "base_proc_savepoint"
 CQL_WARN_UNUSED cql_code base_proc_savepoint(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -6571,6 +6570,7 @@ CQL_WARN_UNUSED cql_code base_proc_savepoint(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -6586,7 +6586,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "base_proc_savepoint_commit_return"
 CQL_WARN_UNUSED cql_code base_proc_savepoint_commit_return(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -6625,6 +6624,7 @@ CQL_WARN_UNUSED cql_code base_proc_savepoint_commit_return(sqlite3 *_Nonnull _db
 cql_cleanup:
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -6640,7 +6640,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "base_proc_savepoint_rollback_return"
 CQL_WARN_UNUSED cql_code base_proc_savepoint_rollback_return(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -6682,6 +6681,7 @@ CQL_WARN_UNUSED cql_code base_proc_savepoint_rollback_return(sqlite3 *_Nonnull _
 cql_cleanup:
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -6699,7 +6699,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "end_proc"
 void end_proc(void) {
   cql_nullable_int32 x;
@@ -6709,6 +6708,7 @@ void end_proc(void) {
 cql_cleanup:
   ; // label requires some statement
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -6716,8 +6716,6 @@ cql_cleanup:
 DECLARE end_marker INTEGER;
 */
 cql_nullable_int32 end_marker;
-
-#undef _PROC_
 #define _PROC_ cql_startup
 
 cql_code cql_startup(sqlite3 *_Nonnull _db_) {
@@ -8916,3 +8914,5 @@ cql_cleanup:
   cql_finalize_stmt(&global_cursor);
   return _rc_;
 }
+
+#undef _PROC_

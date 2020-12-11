@@ -1827,6 +1827,8 @@ static void parse_cmd(int argc, char **argv) {
     char *arg = argv[a];
     if (strcmp(arg, "--print") == 0 || strcmp(arg, "-p") == 0) {
       options.print_ast = 1;
+    } else if (strcmp(arg, "--nolines") == 0) {
+      options.nolines = 1;
     } else if (strcmp(arg, "--dot") == 0) {
       options.print_dot = 1;
     } else if (strcmp(arg, "--sem") == 0) {

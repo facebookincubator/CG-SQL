@@ -17,7 +17,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "selector"
 static int32_t selector_perf_index;
 
@@ -106,6 +105,7 @@ cql_cleanup:
   if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
   return _rc_;
 }
+#undef _PROC_
 
 // The statement ending at line XXXX
 

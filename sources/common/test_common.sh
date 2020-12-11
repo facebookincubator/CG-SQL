@@ -922,6 +922,25 @@ misc_cases() {
     echo Generated from text did not appear in the implementation output.
     failed
   fi
+
+  if ! grep "^# " "${OUT_DIR}/cg_test_generated_from.c" >/dev/null
+  then
+    echo "# line directives not emitted. See" "${OUT_DIR}/cg_test_generated_from.c"
+    failed
+  fi
+
+  echo 'testing the suppression of # line directives'
+  if ! ${CQL} --nolines --cg "${OUT_DIR}/cg_test_generated_from.h" "${OUT_DIR}/cg_test_generated_from.c" "${OUT_DIR}/cg_test_generated_from.out" --in "${TEST_DIR}/cg_test_generated_from.sql" 2>"${OUT_DIR}/cg_test_generated_from.err"
+  then
+    echo 'ERROR: Compilation failed.'
+    failed
+  fi
+
+  if grep "^# " "${OUT_DIR}/cg_test_generated_from.c" >/dev/null
+  then
+    echo "# line directives were not correctly suppresed. See" "${OUT_DIR}/cg_test_generated_from.c"
+    failed
+  fi
 }
 
 json_schema_test() {

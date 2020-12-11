@@ -30,7 +30,6 @@ BEGIN
 END;
 */
 
-#undef _PROC_
 #define _PROC_ "assembly_core"
 static int32_t assembly_core_perf_index;
 
@@ -133,3 +132,4 @@ cql_cleanup:
   if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
   return _rc_;
 }
+#undef _PROC_

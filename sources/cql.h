@@ -79,6 +79,7 @@ typedef struct cmd_options {
   bool_t generate_exports;
   bool_t generate_copy;
   bool_t run_unit_tests;
+  bool_t nolines;
   char *rt;
   char **file_names;
   int32_t file_names_count;

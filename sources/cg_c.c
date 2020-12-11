@@ -118,6 +118,156 @@ static symtab *text_fragments;
 // If the proc we are generating uses throw, we need to save the _rc_ in every catch block
 static bool_t proc_uses_throw = false;
 
+// See cg_find_best_line for more details on why this is what it is.
+// All that's going on here is we recursively visit the tree and find the smallest
+// line number that matches the given file in that branch.
+static int32_t cg_find_best_line_recursive(ast_node *ast, CSTR filename) {
+  int32_t line = INT32_MAX;
+  int32_t lleft = INT32_MAX;
+  int32_t lright = INT32_MAX;
+
+  // file name is usually the same actual string but not always
+  if (ast->filename == filename || !strcmp(filename, ast->filename)) {
+   line = ast->lineno;
+  }
+
+  if (ast_has_left(ast)) {
+   lleft = cg_find_best_line_recursive(ast->left, filename);
+   if (lleft < line) line = lleft;
+  }
+
+  if (ast_has_right(ast)) {
+   lright = cg_find_best_line_recursive(ast->right, filename);
+   if (lright < line) line = lright;
+  }
+
+  return line;
+}
+
+// What's going on here is that the AST is generated on REDUCE operations.
+// that means the line number at the time any AST node was generated is
+// the largest line number anywhere in that AST.  But if we're looking for
+// the line number for a statement we want the line number where it started.
+// The way to get that is to recurse through the tree and choose the smallest
+// line number anywhere in the tree.  But, we must only use line numbers
+// from the same file as the one we ended on.  If (e.g.) a procedure spans files
+// this will cause jumping around but that's not really avoidable.
+static int32_t cg_find_best_line(ast_node *ast) {
+  return cg_find_best_line_recursive(ast, ast->filename);
+}
+
+// The situation in CQL is that most statements, even single line statements,
+// end up generating many lines of C.  So the normal situation is that you need
+// to emit additional # directives to stay on the same line you were already on.
+// In fact basically the situation is that you want to stay on your current line
+// until the next time you see an explicit switch.  So what we do here is this:
+//
+// * when we see a # line directive  (e.g. # 32 "foo") we remember that line
+// * if we are in a proc, emit the last such directive (just the line number) before each line
+// * when we find an actual #line directive, we don't also emit the last known directive too
+// * no additional outputs outside of procedures
+// * we use the #define _PROC_ and #undef _PROC_ markers to know if we are in a proc
+// 
+// Typical output:
+//
+// # 1 "foo.sql"
+// 
+// /*
+// CREATE PROC foo ()
+// BEGIN
+//   IF 1 THEN
+//     CALL printf("one");
+//   ELSE
+//     CALL printf("two");
+//   END IF;
+// END;
+// */
+//
+// #define _PROC_ "foo"
+// # 1
+// void foo(void) {
+// # 3 "x"
+//   if (1) {
+// # 4 "x"
+//     printf("one");
+// # 4
+//   }
+// # 4
+//   else {
+// # 6 "x"
+//     printf("two");
+// # 6
+//   }
+// # 6
+// 
+// # 6
+// }
+// #undef _PROC_
+//
+static void cg_insert_line_directives(CSTR input, charbuf *output)
+{
+   CHARBUF_OPEN(last_line_directive);
+   CHARBUF_OPEN(line);
+
+   CSTR start_proc = "#define _PROC_ "; // this marks the start of a proc
+   size_t start_proc_len = strlen(start_proc);
+
+   CSTR end_proc = "#undef _PROC_";  // this marks the end of a proc
+   size_t end_proc_len = strlen(end_proc);
+
+   // true between the markers above (i.e. in the text of a procedure)
+   bool_t now_in_proc = false;
+
+   // true immediately after we see something like # 32 "foo.sql" in the input
+   bool_t suppress_because_new_directive = false;  
+
+   while (breadline(&line, &input)) {
+      CSTR trim = line.ptr;
+      while (*trim == ' ') trim++;
+
+      if (!strncmp(trim, start_proc, start_proc_len)) {
+        // entering a procedure, we will start to emit additional line directives to stay on the same line
+        bprintf(output, "%s\n", line.ptr);
+        now_in_proc = true;
+        continue;
+      }
+      else if (!strncmp(trim, end_proc, end_proc_len)) {
+        // leaving a procedure, we will no longer emit additional line directives to stay on the same line
+        bprintf(output, "%s\n", line.ptr);
+        now_in_proc = false;
+        continue;
+      }
+      else  if (trim[0] == '#' && trim[1] == ' ') {
+        bclear(&last_line_directive);
+        bprintf(&last_line_directive, "%s", trim);
+        bprintf(output, "%s\n", last_line_directive.ptr);
+        char *next_space = strchr(last_line_directive.ptr + 2, ' ');
+        if (next_space) *next_space = '\0';
+
+        // this prevents us from emitting the sequence
+        // # 32 "foo.sql"
+        // # 32
+        // the second # 32 would be a waste...
+        suppress_because_new_directive = true;
+        continue;
+      }
+
+      if (last_line_directive.ptr[0] && !suppress_because_new_directive && now_in_proc) {
+        // this forces us to stay on the current line until we explicitly switch lines
+        // every line becomes
+        // # 32
+        // [whatever]
+        bprintf(output, "%s\n", last_line_directive.ptr);
+      }
+
+      suppress_because_new_directive = false;
+      bprintf(output, "%s\n", line.ptr);
+   }
+
+  CHARBUF_CLOSE(line);
+  CHARBUF_CLOSE(last_line_directive);
+}
+
 // return the symbol name for the string literal if there is one
 static CSTR find_literal(CSTR str) {
   symtab_entry *entry = symtab_find(string_literals, str);
@@ -2528,7 +2678,6 @@ static void cg_create_proc_stmt(ast_node *ast) {
   CG_CHARBUF_OPEN_SYM(proc_name_base, name);
   CG_CHARBUF_OPEN_SYM(proc_sym, name, suffix);
 
-  bprintf(cg_declarations_output, "#undef _PROC_\n");
   bprintf(cg_declarations_output, "#define _PROC_ \"%s\"\n", proc_sym.ptr);
 
   if (out_stmt_proc || out_union_proc) {
@@ -2689,6 +2838,7 @@ static void cg_create_proc_stmt(ast_node *ast) {
   }
 
   bprintf(cg_declarations_output, "}\n");
+  bprintf(cg_declarations_output, "#undef _PROC_\n");
 
   CHARBUF_CLOSE(proc_sym);
   CHARBUF_CLOSE(proc_name_base);
@@ -4545,6 +4695,7 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
         bprintf(cg_header_output, "\n// The statement ending at line %d\n", stmt->lineno);
         bprintf(cg_declarations_output, "\n// The statement ending at line %d\n", stmt->lineno);
       }
+
       return;
     }
 
@@ -4570,6 +4721,18 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
   // but they can declare schema during the semantic pass
   if (entry->val == cg_any_ddl_stmt && !in_proc) {
      return;
+  }
+
+  if (!options.test && !options.nolines) {
+    int32_t line = cg_find_best_line(stmt);
+    charbuf *line_out = cg_main_output;
+    if (stmt_nesting_level == 1) {
+      line_out = cg_declarations_output;
+    }
+    CHARBUF_OPEN(tmp);
+    cg_encode_c_string_literal(stmt->filename, &tmp);
+    bprintf(line_out, "# %d %s\n", line, tmp.ptr);
+    CHARBUF_CLOSE(tmp);
   }
 
   // Emit a helpful comment for top level statements.
@@ -5594,7 +5757,6 @@ cql_noexport void cg_c_main(ast_node *head) {
     exit_on_no_global_proc();
 
     proc_uses_throw = !!(global_proc_flags & SEM_TYPE_USES_THROW);
-    bprintf(&body_file, "\n#undef _PROC_\n");
     bprintf(&body_file, "#define _PROC_ %s\n", global_proc_name);
 
     bindent(&indent, cg_scratch_vars_output, 2);
@@ -5610,6 +5772,7 @@ cql_noexport void cg_c_main(ast_node *head) {
     bprintf(&body_file, "%s", cg_cleanup_output->ptr);
     bprintf(&body_file, "  return _rc_;\n");
     bprintf(&body_file, "}\n");
+    bprintf(&body_file, "\n#undef _PROC_\n");
   }
 
   bprintf(&body_file, "%s", rt->source_wrapper_end);
@@ -5623,7 +5786,18 @@ cql_noexport void cg_c_main(ast_node *head) {
   CHARBUF_CLOSE(indent);
 
   cql_write_file(header_file_name, header_file.ptr);
-  cql_write_file(body_file_name, body_file.ptr);
+
+  if (options.nolines || options.test) {
+    cql_write_file(body_file_name, body_file.ptr);
+  }
+  else {
+    CHARBUF_OPEN(body_with_line_directives);
+
+    cg_insert_line_directives(body_file.ptr, &body_with_line_directives);
+    cql_write_file(body_file_name, body_with_line_directives.ptr);
+
+    CHARBUF_CLOSE(body_with_line_directives);
+  }
 
   if (exports_file_name) {
     cql_write_file(exports_file_name, exports_file.ptr);

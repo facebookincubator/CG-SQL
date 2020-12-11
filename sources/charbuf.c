@@ -133,3 +133,31 @@ cql_noexport void bindent(charbuf *output, charbuf *input, int32_t indent) {
 
   CHARBUF_CLOSE(spaces);
 }
+
+// read a line from the incoming CSTR and move it forward to
+// the start of the next line.
+cql_noexport bool_t breadline(charbuf *output, CSTR *data) {
+  // clean buffer
+  bclear(output);
+
+  CSTR p = *data;
+
+  // no more lines
+  if (p[0] == '\0') {
+    return false;
+  }
+
+  // emit up to the next linefeed or end of the buffer, whichever comes first
+  for (; *p != '\n' && *p != '\0'; p++) {
+    bputc(output, *p);
+  }
+
+  // if we ended at a linefeed, skip over that
+  if (p[0] == '\n') {
+    p++;
+  }
+
+  *data = p;
+  return true;
+}
+
