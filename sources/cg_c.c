@@ -157,7 +157,7 @@ static int32_t cg_find_first_line(ast_node *ast) {
 }
 
 // emit the line directive, escape the file name using the C convention
-static void cg_line_directive(CSTR filename, int lineno, charbuf *output) {
+static void cg_line_directive(CSTR filename, int32_t lineno, charbuf *output) {
   if (options.test || options.nolines) {
     return;
   }
@@ -4766,8 +4766,13 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
      return;
   }
 
-  charbuf *line_out = (stmt_nesting_level == 1) ? cg_declarations_output : cg_main_output;
-  cg_line_directive_min(stmt, line_out);
+  // don't emit a # line directive for the echo statement because it will messed up
+  // if the echo doesn't end in a linefeed and that's legal.  And there is normally
+  // no visible code for these things anyway.
+  if (!is_ast_echo_stmt(stmt)) {
+    charbuf *line_out = (stmt_nesting_level == 1) ? cg_declarations_output : cg_main_output;
+    cg_line_directive_min(stmt, line_out);
+  }
 
   // Emit a helpful comment for top level statements.
   if (stmt_nesting_level == 1) {
