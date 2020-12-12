@@ -10,16 +10,151 @@ LINE TEST EXPECTED OUTPUT
 line numbers are relative to the line the #define _PROC_
 anything outside the #define and #undef for _PROC is ignored
 
-First test case and remember this is ignored in this file, it's just here for your viewing pleasure
-the source of truth is in test/linetest.sql
+The test cases and remember this outside stuff is ignored in this file,
+it's just here for your viewing pleasure.  The source of truth is in "test/linetest.sql"
+annotated source code from there included.
+
+------------------------ ------------------------ ------------------------
+
+TEST: simple statements
+----------------
+ 3: CREATE PROC based_statements ()
+ 4: BEGIN
+ 5:   DECLARE x INTEGER NOT NULL;      THIS IS FOR DISPLAY ONLY.
+ 6:   SET x := 1;                      THIS TEXT IS PROOF THAT THIS IS NOT PARSED.
+ 7:   SET x := 2;
+ 8:   SET x := 3;
+ 9:   @ECHO c, "/* hello ";
+10:   @ECHO c, "world \n";
+11:   SET x := 4;
+12:   SET x := 5;
+13: END;
+----------------
+
+Note that the proc started at line 3.  That's because there was a comment
+but the starting line is not relevant, everything will be normalized to
+a proc that starts at line 1 anyway.
+
+#define _PROC_ "based_statements"
+# 3
+void based_statements(void) {
+# 3
+  cql_int32 x = 0;
+# 3
+
+# 5 "x"
+# 6 "x"
+  x = 1;
+# 7 "x"
+  x = 2;
+# 8 "x"
+  x = 3;
+# 8
+  /* hello world 
+# 11 "x"
+  x = 4;
+# 12 "x"
+  x = 5;
+# 13 "x"
+
+# 13
+}
+#undef _PROC_
+------------------------ ------------------------ ------------------------
+
+TEST: assorted if combinations 
+
+------------------------
+ 1: create proc if_test()
+ 2: begin
+ 3:   declare x integer not null;          THIS IS FOR DISPLAY ONLY.
+ 4:   if x = 1 then                        THIS TEXT IS PROOF THAT THIS IS NOT PARSED.
+ 5:      set x := 10;
+ 6:   end if;
+ 7: 
+ 8:   if x = 2 then
+ 9:      set x := 21;
+10:   else
+11:      set x := 22;
+12:   end if;
+13: 
+14:   if x = 3 then
+15:      set x := 31;
+16:   else if x = 3  then
+17:      set x := 32;
+18:   else
+19:      set x := 32;
+20:   end if;
+21: end;
+------------------------
+
+#define _PROC_ "if_test"
+# 1
+void if_test(void) {
+# 1
+  cql_int32 x = 0;
+# 1
+
+# 3 "x"
+# 4 "x"
+# 4 "x"
+  if (x == 1) {
+# 5 "x"
+    x = 10;
+# 5 "x"
+  }
+# 8 "x"
+# 8 "x"
+  if (x == 2) {
+# 9 "x"
+    x = 21;
+# 9 "x"
+  }
+# 11 "x"
+  else {
+# 11 "x"
+    x = 22;
+# 11
+  }
+# 14 "x"
+# 14 "x"
+  if (x == 3) {
+# 15 "x"
+    x = 31;
+# 15 "x"
+  }
+# 15
+  else {
+# 16 "x"
+    if (x == 3) {
+# 17 "x"
+      x = 32;
+# 17 "x"
+    }
+# 19 "x"
+    else {
+# 19 "x"
+      x = 32;
+# 19
+    }
+# 19
+  }
+# 21 "x"
+
+# 21
+}
+#undef _PROC_
+
+------------------------ ------------------------ ------------------------
+TEST: some case, coalesce and if statements
 
 ----------------
- 1: create proc foo()
+ 1: create proc case_if()
  2: begin
  3:   if 1 then
  4:    call printf("one");
- 5:  else
- 6:    call printf("two");
+ 5:  else                          THIS IS FOR DISPLAY ONLY.
+ 6:    call printf("two");         THIS TEXT IS PROOF THAT THIS IS NOT PARSED.
  7:   end if;
  8:
  9:   declare x integer;
@@ -35,9 +170,9 @@ the source of truth is in test/linetest.sql
 19: end;
 ----------------
 
-#define _PROC_ "foo"
+#define _PROC_ "case_if"
 # 1
-void foo(void) {
+void case_if(void) {
 # 1
   cql_nullable_int32 x;
 # 1
@@ -109,3 +244,5 @@ void foo(void) {
 # 18
 }
 #undef _PROC_
+
+------------------------ ------------------------ ------------------------

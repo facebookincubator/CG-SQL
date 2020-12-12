@@ -5,7 +5,45 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-create proc foo()
+-- testing line numbers for simple statement boundaries, any statement will do
+-- something with no "interior" works best.
+create proc based_statements()
+begin
+  declare x integer not null;
+  set x := 1;
+  set x := 2;
+  set x := 3;
+  @echo c, "/* hello "; -- no line info for these!
+  @echo c, "world \n";  -- no line info for these!
+  set x := 4;
+  set x := 5;
+end;
+
+-- testing simple if statements in various forms
+create proc if_test()
+begin
+  declare x integer not null;
+  if x = 1 then
+     set x := 10;
+  end if;
+
+  if x = 2 then
+     set x := 21;
+  else
+     set x := 22;
+  end if;
+
+  if x = 3 then
+     set x := 31;
+  else if x = 3  then
+     set x := 32;
+  else
+     set x := 32;
+  end if;
+end;
+
+-- testing if and case together with a coalesce thrown in
+create proc case_if()
 begin
   if 1 then
     call printf("one");
