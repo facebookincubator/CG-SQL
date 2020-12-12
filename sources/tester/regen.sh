@@ -10,7 +10,7 @@ pushd ..
 make clean && make
 popd
 
-../out/cql --in dbhelp.sql --cg dbhelp.h dbhelp.c
+../out/cql --nolines --in dbhelp.sql --cg dbhelp.h dbhelp.c
 
 # We do all this so that we can normalize the generated helper.  We
 # want the same header shape with the OSS version of CQL and the

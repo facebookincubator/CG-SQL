@@ -10,7 +10,7 @@ pushd ..
 make clean && make
 popd
 
-../out/cql --in linetest.sql --cg linetest.h linetest.c
+../out/cql --nolines --in linetest.sql --cg linetest.h linetest.c
 
 # We do all this so that we can normalize the generated helper.  We
 # want the same header shape with the OSS version of CQL and the
