@@ -1041,7 +1041,7 @@ run_test() {
   then
     echo preprocessing failed.
     failed
-  elif ! ${CQL} --cg "${OUT_DIR}/run_test.h" "${OUT_DIR}/run_test.c" --in "${OUT_DIR}/run_test_cpp.out" --global_proc cql_startup --rt c --generate_copy
+  elif ! ${CQL} --nolines --cg "${OUT_DIR}/run_test.h" "${OUT_DIR}/run_test.c" --in "${OUT_DIR}/run_test_cpp.out" --global_proc cql_startup --rt c --generate_copy
   then
     echo codegen failed.
     failed

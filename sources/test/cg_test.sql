@@ -426,21 +426,21 @@ declare longint_var long integer;
 set longint_var := (l0_nullable + l1_nullable) * 5;
 
 -- TEST: make a cursor
--- + _rc_ = cql_prepare(_db_, &foo_cursor,
+-- + _rc_ = cql_prepare(_db_, &foo_cursor_stmt,
 -- + "SELECT id, ? "
 -- + "FROM foo "
 -- + "WHERE id = ?"
--- + cql_multibind(&_rc_, _db_, &foo_cursor, 2,
+-- + cql_multibind(&_rc_, _db_, &foo_cursor_stmt, 2,
 -- +               CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, i2,
 -- +               CQL_DATA_TYPE_INT32, &i0_nullable);
 -- + if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 declare foo_cursor cursor for select id, i2 from foo where id = i0_nullable;
 
 -- TEST: fetch a cursor
--- + _rc_ = sqlite3_step(foo_cursor);
--- + _rc_ = sqlite3_step(foo_cursor);
+-- + _rc_ = sqlite3_step(foo_cursor_stmt);
+-- + _rc_ = sqlite3_step(foo_cursor_stmt);
 -- + _foo_cursor_has_row_ = _rc_ == SQLITE_ROW;
--- + cql_multifetch(_rc_, foo_cursor, 2,
+-- + cql_multifetch(_rc_, foo_cursor_stmt, 2,
 -- +                CQL_DATA_TYPE_INT32, &i0_nullable,
 -- +                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &i2);
 -- + if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
@@ -449,14 +449,14 @@ fetch foo_cursor into i0_nullable, i2;
 -- TEST: test elementary cursor on select with no tables, still round trips through sqlite
 declare col1 integer;
 declare col2 real not null;
--- + _rc_ = cql_prepare(_db_, &basic_cursor,
+-- + _rc_ = cql_prepare(_db_, &basic_cursor_stmt,
 declare basic_cursor cursor for select 1, 2.5;
 open basic_cursor;
--- + cql_multifetch(_rc_, basic_cursor, 2,
+-- + cql_multifetch(_rc_, basic_cursor_stmt, 2,
 -- +                CQL_DATA_TYPE_INT32, &col1,
 -- +                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_DOUBLE, &col2);
 fetch basic_cursor into col1, col2;
--- + cql_finalize_stmt(&basic_cursor);
+-- + cql_finalize_stmt(&basic_cursor_stmt);
 close basic_cursor;
 
 -- TEST: the most expensive way to swap two variables ever :)
@@ -464,17 +464,17 @@ declare arg1 integer not null;
 declare arg2 integer not null;
 set arg1 := 7;
 set arg2 := 11;
--- + _rc_ = cql_prepare(_db_, &exchange_cursor,
--- + cql_multibind(&_rc_, _db_, &exchange_cursor, 2,
+-- + _rc_ = cql_prepare(_db_, &exchange_cursor_stmt,
+-- + cql_multibind(&_rc_, _db_, &exchange_cursor_stmt, 2,
 -- +               CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, arg2,
 -- +               CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, arg1);
 declare exchange_cursor cursor for select arg2, arg1;
 open exchange_cursor;
--- + cql_multifetch(_rc_, exchange_cursor, 2,
+-- + cql_multifetch(_rc_, exchange_cursor_stmt, 2,
 -- +                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &arg1,
 -- +                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &arg2);
 fetch exchange_cursor into arg1, arg2;
--- + cql_finalize_stmt(&exchange_cursor);
+-- + cql_finalize_stmt(&exchange_cursor_stmt);
 close exchange_cursor;
 
 -- TEST: simple nested select
@@ -723,7 +723,7 @@ set b0_nullable := 'b' not between null and 'c';
 
 -- TEST: this procedure will have a structured semantic type
 -- + cql_string_literal(with_result_set_stored_procedure_name, "with_result_set");
--- + cql_code with_result_set(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_) {
+-- + cql_code with_result_set(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
 -- + #define with_result_set_refs_offset cql_offsetof(with_result_set_row, name) // count = 1
 -- + cql_int32 with_result_set_get_id(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row) {
 -- + cql_string_ref _Nullable with_result_set_get_name(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row) {
@@ -732,14 +732,14 @@ set b0_nullable := 'b' not between null and 'c';
 -- + cql_int32 with_result_set_get_type_value(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row) {
 -- + cql_int32 with_result_set_result_count(with_result_set_result_set_ref _Nonnull result_set) {
 -- + CQL_WARN_UNUSED cql_code with_result_set_fetch_results(sqlite3 *_Nonnull _db_, with_result_set_result_set_ref _Nullable *_Nonnull result_set) {
--- + if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
+-- + if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = SQLITE_ERROR;
 create procedure with_result_set()
 begin
   select * from bar;
 end;
 
 -- TEST: grabs values from a view that is backed by a table
--- + cql_code select_from_view(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_) {
+-- + cql_code select_from_view(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
 -- - .refs_count = 0,
 -- - .refs_offset = 0,
 -- + cql_int32 select_from_view_get_id(select_from_view_result_set_ref _Nonnull result_set, cql_int32 row) {
@@ -768,7 +768,7 @@ begin
 end;
 
 -- TEST: create a proc with reader logic with more than one arg
--- + cql_code get_data(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_, cql_string_ref _Nonnull name_, cql_int32 id_) {
+-- + cql_code get_data(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_string_ref _Nonnull name_, cql_int32 id_) {
 create procedure get_data(name_ text not null, id_ integer not null)
 begin
   select * from bar where id = id_ and name = name_;
@@ -779,22 +779,22 @@ end;
 --       and also bind the _has_rows auto local as well
 -- validate auto variable management
 -- + #define easy_fetch_C_refs_offset cql_offsetof(easy_fetch_C_row, name) // count = 1
--- + easy_fetch_C_row C_ = { ._refs_count_ = 1, ._refs_offset_ = easy_fetch_C_refs_offset };
--- + sqlite3_stmt *C2 = NULL;
+-- + easy_fetch_C_row C = { ._refs_count_ = 1, ._refs_offset_ = easy_fetch_C_refs_offset };
+-- + sqlite3_stmt *C2_stmt = NULL;
 -- + cql_bool _C2_has_row_ = 0;
--- + C_._has_row_ = _rc_ == SQLITE_ROW;
--- + cql_multifetch(_rc_, C, 5,
--- +                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C_.id,
--- +                CQL_DATA_TYPE_STRING, &C_.name,
--- +                CQL_DATA_TYPE_INT64, &C_.rate,
--- +                CQL_DATA_TYPE_INT32, &C_.type,
--- +                CQL_DATA_TYPE_DOUBLE, &C_.size);
--- + cql_multibind(&_rc_, _db_, &C2, 2,
--- +               CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_BOOL, C_._has_row_,
--- +               CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, C_.id);
--- + cql_finalize_stmt(&C);
--- + cql_teardown_row(C_);
--- + cql_finalize_stmt(&C2);
+-- + C._has_row_ = _rc_ == SQLITE_ROW;
+-- + cql_multifetch(_rc_, C_stmt, 5,
+-- +                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.id,
+-- +                CQL_DATA_TYPE_STRING, &C.name,
+-- +                CQL_DATA_TYPE_INT64, &C.rate,
+-- +                CQL_DATA_TYPE_INT32, &C.type,
+-- +                CQL_DATA_TYPE_DOUBLE, &C.size);
+-- + cql_multibind(&_rc_, _db_, &C2_stmt, 2,
+-- +               CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_BOOL, C._has_row_,
+-- +               CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, C.id);
+-- + cql_finalize_stmt(&C_stmt);
+-- + cql_teardown_row(C);
+-- + cql_finalize_stmt(&C2_stmt);
 create proc easy_fetch()
 begin
   declare C cursor for select * from bar;
@@ -869,7 +869,7 @@ set S := 'x';
 -- + */
 declare proc xyzzy(id integer) ( A integer not null );
 
--- + _rc_ = xyzzy(_db_, &xyzzy_cursor, _tmp_n_int_%);
+-- + _rc_ = xyzzy(_db_, &xyzzy_cursor_stmt, _tmp_n_int_%);
 -- +  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 create proc xyzzy_test()
 begin
@@ -981,7 +981,7 @@ end;
 
 -- TEST: fetch nullable output parameter
 -- + _C_has_row_ = _rc_ == SQLITE_ROW;
--- + cql_multifetch(_rc_, C, 1,
+-- + cql_multifetch(_rc_, C_stmt, 1,
 -- +                CQL_DATA_TYPE_INT32, output);
 -- + if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
 -- + *result = _C_has_row_;
@@ -995,7 +995,7 @@ END;
 -- TEST: fetch not null output parameter
 -- + cql_bool _C_has_row_ = 0;
 -- + _C_has_row_ = _rc_ == SQLITE_ROW;
--- + cql_multifetch(_rc_, C, 1,
+-- + cql_multifetch(_rc_, C_stmt, 1,
 -- +                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, output);
 -- + if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
 -- + *result = _C_has_row_;
@@ -1189,9 +1189,9 @@ begin
 end;
 
 -- TEST: use a procedure to get a result set
--- + cql_code uses_proc_for_result(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_)
--- + *_result_ = NULL;
--- + _rc_ = with_result_set(_db_, &*_result_);
+-- + cql_code uses_proc_for_result(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt)
+-- + *_result_stmt = NULL;
+-- + _rc_ = with_result_set(_db_, &*_result_stmt);
 create procedure uses_proc_for_result()
 begin
   call with_result_set();
@@ -1206,7 +1206,7 @@ declare function voidfunc() integer;
 set b2 := (select exists(select * from bar));
 
 -- TEST: for expand of select * columns from whole result
--- + _rc_ = cql_prepare(_db_, &expanded_select,
+-- + _rc_ = cql_prepare(_db_, &expanded_select_stmt,
 -- + "SELECT id, name, rate, type, size "
 -- + "FROM bar"
 declare expanded_select cursor for select * from bar;
@@ -1398,15 +1398,15 @@ end;
 -- TEST: create an output struct proc
 -- + #define out_cursor_proc_C_refs_offset cql_offsetof(out_cursor_proc_C_row, name) // count = 3
 -- + memset(_result_, 0, sizeof(*_result_));
--- + out_cursor_proc_C_row C_ = { ._refs_count_ = 3, ._refs_offset_ = out_cursor_proc_C_refs_offset };
--- + _result_->_has_row_ = C_._has_row_;
--- + _result_->id = C_.id;
--- + cql_set_string_ref(&_result_->name, C_.name);
--- + _result_->rate = C_.rate;
--- + _result_->type = C_.type;
--- + _result_->size = C_.size;
--- + cql_set_string_ref(&_result_->extra1, C_.extra1);
--- + cql_set_string_ref(&_result_->extra2, C_.extra2);
+-- + out_cursor_proc_C_row C = { ._refs_count_ = 3, ._refs_offset_ = out_cursor_proc_C_refs_offset };
+-- + _result_->_has_row_ = C._has_row_;
+-- + _result_->id = C.id;
+-- + cql_set_string_ref(&_result_->name, C.name);
+-- + _result_->rate = C.rate;
+-- + _result_->type = C.type;
+-- + _result_->size = C.size;
+-- + cql_set_string_ref(&_result_->extra1, C.extra1);
+-- + cql_set_string_ref(&_result_->extra2, C.extra2);
 create proc out_cursor_proc()
 begin
   declare C cursor for select bar.*, 'xyzzy' extra1, 'plugh' extra2 from bar;
@@ -1416,9 +1416,9 @@ end;
 
 -- TEST: fetch from an output struct proc
 -- + #define read_cursor_proc_C_refs_offset cql_offsetof(read_cursor_proc_C_row, name) // count = 3
--- + read_cursor_proc_C_row C_ = { ._refs_count_ = 3, ._refs_offset_ = read_cursor_proc_C_refs_offset };
--- +2 cql_teardown_row(C_);
--- +1 _rc_ = out_cursor_proc(_db_, (out_cursor_proc_row *)&C_);
+-- + read_cursor_proc_C_row C = { ._refs_count_ = 3, ._refs_offset_ = read_cursor_proc_C_refs_offset };
+-- +2 cql_teardown_row(C);
+-- +1 _rc_ = out_cursor_proc(_db_, (out_cursor_proc_row *)&C);
 -- + if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 create proc read_cursor_proc()
 begin
@@ -1426,9 +1426,9 @@ begin
 end;
 
 -- TEST: declare a cursor and do a fetch as separate actions
--- +1  declare_cursor_then_fetch_from_proc_C_row C_ = { ._refs_count_ = 3, ._refs_offset_ = declare_cursor_then_fetch_from_proc_C_refs_offset };
--- +2  cql_teardown_row(C_);
--- +1  _rc_ = out_cursor_proc(_db_, (out_cursor_proc_row *)&C_);
+-- +1  declare_cursor_then_fetch_from_proc_C_row C = { ._refs_count_ = 3, ._refs_offset_ = declare_cursor_then_fetch_from_proc_C_refs_offset };
+-- +2  cql_teardown_row(C);
+-- +1  _rc_ = out_cursor_proc(_db_, (out_cursor_proc_row *)&C);
 create proc declare_cursor_then_fetch_from_proc()
 begin
   declare C cursor like out_cursor_proc;
@@ -1480,7 +1480,7 @@ create table threads (
 
 -- TEST: nested subquery in a proc
 -- this forces the msys_schema_utils to run over an atypical table_factor
--- + _rc_ = cql_prepare(_db_, _result_,
+-- + _rc_ = cql_prepare(_db_, _result_stmt,
 -- + "SELECT thread_key "
 -- + "FROM (SELECT thread_key "
 -- + "FROM threads) AS T"
@@ -1492,16 +1492,16 @@ end;
 
 -- TEST: value cursor fetch
 -- + _seed_ = 123;
--- + C_._has_row_ = 1;
--- + C_.id = _seed_;
+-- + C._has_row_ = 1;
+-- + C.id = _seed_;
 -- + char *_printf_result = sqlite3_mprintf("name_%d", _seed_);
 -- + cql_string_release(_tmp_text_0);
 -- + _tmp_text_0 = cql_string_ref_new(_printf_result);
 -- + sqlite3_free(_printf_result);
--- + cql_set_string_ref(&C_.name, _tmp_text_0);
--- + cql_set_notnull(C_.rate, _seed_);
--- + cql_set_notnull(C_.type, _seed_);
--- + cql_set_notnull(C_.size, _seed_);
+-- + cql_set_string_ref(&C.name, _tmp_text_0);
+-- + cql_set_notnull(C.rate, _seed_);
+-- + cql_set_notnull(C.type, _seed_);
+-- + cql_set_notnull(C.size, _seed_);
 -- This should not be a dml proc, it doesn't actually use the db
 -- + fetch_values_dummy(void)
 -- - _rc_
@@ -1552,13 +1552,13 @@ end;
 -- TEST: void cursor fetcher
 -- + void out_no_db(out_no_db_row *_Nonnull _result_) {
 -- + memset(_result_, 0, sizeof(*_result_));
--- + out_no_db_C_row C_ = { 0 };
--- + C_._has_row_ = 1;
--- + C_.A = 3;
--- + C_.B = 12;
--- + _result_->_has_row_ = C_._has_row_;
--- + _result_->A = C_.A;
--- + _result_->B = C_.B;
+-- + out_no_db_C_row C = { 0 };
+-- + C._has_row_ = 1;
+-- + C.A = 3;
+-- + C.B = 12;
+-- + _result_->_has_row_ = C._has_row_;
+-- + _result_->A = C.A;
+-- + _result_->B = C.B;
 create proc out_no_db()
 begin
   declare C cursor like select 1 A, 2.5 B;
@@ -1567,15 +1567,15 @@ begin
 end;
 
 -- TEST: declare cursor like cursor
--- + declare_cursor_like_cursor_C0_row C0_ = { 0 };
--- + declare_cursor_like_cursor_C1_row C1_ = { 0 };
+-- + declare_cursor_like_cursor_C0_row C0 = { 0 };
+-- + declare_cursor_like_cursor_C1_row C1 = { 0 };
 -- + memset(_result_, 0, sizeof(*_result_));
--- + _C1_._has_row_ = 1;
--- + C1_.A = 3;
--- + C1_.B = 12;
--- + _result_->_has_row_ = C1_._has_row_;
--- + _result_->A = C1_.A;
--- + _result_->B = C1_.B;
+-- + C1._has_row_ = 1;
+-- + C1.A = 3;
+-- + C1.B = 12;
+-- + _result_->_has_row_ = C1._has_row_;
+-- + _result_->A = C1.A;
+-- + _result_->B = C1.B;
 create proc declare_cursor_like_cursor()
 begin
   declare C0 cursor like select 1 A, 2.5 B;
@@ -1587,12 +1587,12 @@ end;
 -- TEST: declare cursor like proc
 -- + void declare_cursor_like_proc(declare_cursor_like_proc_row *_Nonnull _result_) {
 -- + memset(_result_, 0, sizeof(*_result_));
--- + _result_->_has_row_ = C_._has_row_;
+-- + _result_->_has_row_ = C._has_row_;
 -- + _result_->_refs_count_ = 1;
 -- + _result_->_refs_offset_ = declare_cursor_like_proc_refs_offset;
--- + _result_->a = C_.a;
--- + cql_set_string_ref(&_result_->b, C_.b);
--- + cql_teardown_row(C_);
+-- + _result_->a = C.a;
+-- + cql_set_string_ref(&_result_->b, C.b);
+-- + cql_teardown_row(C);
 -- - Error
 create proc declare_cursor_like_proc()
 begin
@@ -1602,16 +1602,16 @@ end;
 
 -- TEST: declare a cursor like a table
 -- + void declare_cursor_like_table(declare_cursor_like_table_row *_Nonnull _result_) {
--- + declare_cursor_like_table_C_row C_ = { ._refs_count_ = 1, ._refs_offset_ = declare_cursor_like_table_C_refs_offset };
+-- + declare_cursor_like_table_C_row C = { ._refs_count_ = 1, ._refs_offset_ = declare_cursor_like_table_C_refs_offset };
 -- + memset(_result_, 0, sizeof(*_result_));
--- + _result_->_has_row_ = C_._has_row_;
+-- + _result_->_has_row_ = C._has_row_;
 -- + _result_->_refs_offset_ = declare_cursor_like_table_refs_offset;
--- + _result_->id = C_.id;
--- + cql_set_string_ref(&_result_->name, C_.name);
--- + _result_->rate = C_.rate;
--- + _result_->type = C_.type;
--- + _result_->size = C_.size;
--- + cql_teardown_row(C_);
+-- + _result_->id = C.id;
+-- + cql_set_string_ref(&_result_->name, C.name);
+-- + _result_->rate = C.rate;
+-- + _result_->type = C.type;
+-- + _result_->size = C.size;
+-- + cql_teardown_row(C);
 -- - Error
 create proc declare_cursor_like_table()
 begin
@@ -1621,11 +1621,11 @@ end;
 
 -- TEST: declare a cursor like a view
 -- + void declare_cursor_like_view_fetch_results( declare_cursor_like_view_result_set_ref _Nullable *_Nonnull result_set) {
--- + declare_cursor_like_view_C_row C_ = { 0 };
--- + _result_->_has_row_ = C_._has_row_;
--- + _result_->f1 = C_.f1;
--- + _result_->f2 = C_.f2;
--- + _result_->f3 = C_.f3;
+-- + declare_cursor_like_view_C_row C = { 0 };
+-- + _result_->_has_row_ = C._has_row_;
+-- + _result_->f1 = C.f1;
+-- + _result_->f2 = C.f2;
+-- + _result_->f3 = C.f3;
 -- - Error
 create proc declare_cursor_like_view()
 begin
@@ -1759,9 +1759,9 @@ begin
 end;
 
 -- TEST: fetch to a cursor from another cursor
--- + C1_._has_row_ = 1;
--- + C1_.A = C0_.A;
--- + cql_set_string_ref(&C1_.B, C0_.B);
+-- + C1._has_row_ = 1;
+-- + C1.A = C0.A;
+-- + cql_set_string_ref(&C1.B, C0.B);
 create proc fetch_to_cursor_from_cursor()
 begin
   declare C0 cursor like select 1 A, "foo" B;
@@ -1772,12 +1772,12 @@ begin
 end;
 
 -- TEST loop statement cursor with autofetch
--- + sqlite3_stmt *C = NULL;
--- + loop_statement_cursor_C_row C_ = { 0 };
+-- + sqlite3_stmt *C_stmt = NULL;
+-- + loop_statement_cursor_C_row C = { 0 };
 -- + "SELECT 1"
--- + C_._has_row_ = _rc_ == SQLITE_ROW;
+-- + C._has_row_ = _rc_ == SQLITE_ROW;
 -- + if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
--- + if (!C_._has_row_) break
+-- + if (!C._has_row_) break
 create proc loop_statement_cursor()
 begin
   declare C cursor for select 1 A;
@@ -1788,7 +1788,7 @@ begin
 end;
 
 -- TEST loop statement cursor with autofetch
--- + sqlite3_stmt *C = NULL;
+-- + sqlite3_stmt *C_stmt = NULL;
 -- + cql_bool _C_has_row_ = 0;
 -- + cql_int32 A_ = 0;
 -- + "SELECT 1"
@@ -1806,13 +1806,13 @@ begin
 end;
 
 -- TEST: ensure cursors work outside of a proc
---  _rc_ = cql_prepare(_db_, &global_cursor,
+--  _rc_ = cql_prepare(_db_, &global_cursor_stmt,
 --    "SELECT 1 AS a, 2 AS b"
 declare global_cursor cursor for select 1 a, 2 b;
 
 -- TEST: fetch from global cursor
--- + _rc_ = sqlite3_step(global_cursor);
--- + global_cursor_._has_row_ = _rc_ == SQLITE_ROW;
+-- + _rc_ = sqlite3_step(global_cursor_stmt);
+-- + global_cursor._has_row_ = _rc_ == SQLITE_ROW;
 fetch global_cursor;
 
 -- TEST: use like in an expression
@@ -2051,11 +2051,11 @@ end;
 
 -- TEST: make sure that the name of the cursor is canonicalized
 -- There should be no references to the version with the wrong case
--- + simple_cursor_proc_A_CURSOR_row A_CURSOR_ = { 0 };
--- + A_CURSOR_._has_row_ = 1;
--- + A_CURSOR_.id = 1;
--- + _result_->_has_row_ = A_CURSOR_._has_row_;
--- + _result_->id = A_CURSOR_.id;
+-- + simple_cursor_proc_A_CURSOR_row A_CURSOR = { 0 };
+-- + A_CURSOR._has_row_ = 1;
+-- + A_CURSOR.id = 1;
+-- + _result_->_has_row_ = A_CURSOR._has_row_;
+-- + _result_->id = A_CURSOR.id;
 create procedure simple_cursor_proc()
 begin
   declare A_CURSOR cursor like select 1 id;
@@ -2140,7 +2140,7 @@ end;
 declare select function ReadFromRowset(rowset Object<rowset>) (id integer);
 
 -- TEST: use a table valued function that consumes an object
--- + cql_multibind(&_rc_, _db_, &C, 1,
+-- + cql_multibind(&_rc_, _db_, &C_stmt, 1,
 -- + CQL_DATA_TYPE_OBJECT, rowset);
 create proc rowset_object_reader(rowset Object<rowset>)
 begin
@@ -2217,12 +2217,12 @@ declare procedure p2() out (id integer not null, t text) using transaction;
 -- the idea is that it reveals any cases where a temporary pointer is
 -- stored into the symbol table as was the case with the temporary
 -- row data for each cursor.  The test is this:  is c2 properly emitted?
--- + use_many_out_cursors_c1_row c1_ = { ._refs_count_ = 1, ._refs_offset_ = use_many_out_cursors_c1_refs_offset };
--- + use_many_out_cursors_c2_row c2_ = { ._refs_count_ = 1, ._refs_offset_ = use_many_out_cursors_c2_refs_offset };
--- +1 p1((p1_row *)&c1_);
--- +1 _rc_ = p2(_db_, (p2_row *)&c2_);
--- +2 cql_teardown_row(c1_);
--- +2 cql_teardown_row(c2_);
+-- + use_many_out_cursors_c1_row c1 = { ._refs_count_ = 1, ._refs_offset_ = use_many_out_cursors_c1_refs_offset };
+-- + use_many_out_cursors_c2_row c2 = { ._refs_count_ = 1, ._refs_offset_ = use_many_out_cursors_c2_refs_offset };
+-- +1 p1((p1_row *)&c1);
+-- +1 _rc_ = p2(_db_, (p2_row *)&c2);
+-- +2 cql_teardown_row(c1);
+-- +2 cql_teardown_row(c2);
 create procedure use_many_out_cursors()
 begin
   declare c1 cursor fetch from call p1();
@@ -2233,10 +2233,10 @@ end;
 -- not already been declared.  In this case the third branch of the if
 -- must find that p1 and p2 row data are already declare and not duplicate
 -- the declarations.
--- +1 fetch_many_times_C_row C_ = { ._refs_count_ = 1, ._refs_offset_ = fetch_many_times_C_refs_offset };
--- +2 p1((p1_row *)&C_);
--- +2 _rc_ = p2(_db_, (p2_row *)&C_);
--- +5 cql_teardown_row(C_);
+-- +1 fetch_many_times_C_row C = { ._refs_count_ = 1, ._refs_offset_ = fetch_many_times_C_refs_offset };
+-- +2 p1((p1_row *)&C);
+-- +2 _rc_ = p2(_db_, (p2_row *)&C);
+-- +5 cql_teardown_row(C);
 create procedure fetch_many_times(arg bool not null)
 begin
   declare C cursor like p1;
@@ -2255,10 +2255,10 @@ end;
 -- + cql_profile_start(CRC_out_union_two, &out_union_two_perf_index);
 -- + cql_bytebuf _rows_;
 -- + cql_bytebuf_open(&_rows_);
--- +2 cql_retain_row(C_);
--- +2 if (C_._has_row_) cql_bytebuf_append(&_rows_, (const void *)&C_, sizeof(C_));
+-- +2 cql_retain_row(C);
+-- +2 if (C._has_row_) cql_bytebuf_append(&_rows_, (const void *)&C, sizeof(C));
 -- + cql_results_from_data(SQLITE_OK, &_rows_, &out_union_two_info, (cql_result_set_ref *)_result_set_);
--- + cql_teardown_row(C_);
+-- + cql_teardown_row(C);
 create proc out_union_two()
 begin
  declare C cursor like select 1 x, '2' y;
@@ -2272,22 +2272,22 @@ end;
 -- + out_union_two_result_set_ref c_result_set_ = NULL;
 -- + cql_int32 c_row_num_ = 0;
 -- + cql_int32 c_row_count_ = 0;
--- + out_union_reader_c_row c_ = { ._refs_count_ = 1, ._refs_offset_ = out_union_reader_c_refs_offset };
+-- + out_union_reader_c_row c = { ._refs_count_ = 1, ._refs_offset_ = out_union_reader_c_refs_offset };
 -- + out_union_two_fetch_results(&c_result_set_);
 -- + c_row_num_ = c_row_count_ = -1;
 -- + c_row_count_ = cql_result_set_get_count((cql_result_set_ref)c_result_set_);
 -- + for (;;) {
 -- +   C_row_num_++;
--- +   C_._has_row_ = C_row_num_ < C_row_count_;
+-- +   C._has_row_ = C_row_num_ < C_row_count_;
 -- +   cql_copyoutrow((cql_result_set_ref)C_result_set_, C_row_num_, 2,
--- +                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C_.x,
--- +                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C_.y);
+-- +                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.x,
+-- +                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C.y);
 -- NOT PRESENT !!
 -- -   if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
--- +   if (!C_._has_row_) break;
+-- +   if (!C._has_row_) break;
 -- + }
 -- + cql_object_release(c_result_set_);
--- + cql_teardown_row(c_);
+-- + cql_teardown_row(c);
 -- + return _rc_;
 create proc out_union_reader()
 begin
@@ -2301,10 +2301,10 @@ end;
 -- TEST: create a result set from selected rows
 -- + cql_bytebuf _rows_;
 -- + cql_bytebuf_open(&_rows_);
--- +2 cql_retain_row(C_);
--- +2 if (C_._has_row_) cql_bytebuf_append(&_rows_, (const void *)&C_, sizeof(C_));
+-- +2 cql_retain_row(C);
+-- +2 if (C._has_row_) cql_bytebuf_append(&_rows_, (const void *)&C, sizeof(C));
 -- + cql_results_from_data(_rc_, &_rows_, &out_union_from_select_info, (cql_result_set_ref *)_result_set_);
--- + cql_teardown_row(C_);
+-- + cql_teardown_row(C);
 create proc out_union_from_select()
 begin
  declare C cursor for select 1 x, '2' y;
@@ -2343,10 +2343,10 @@ end;
 -- + C_row_num_ = C_row_count_ = -1;
 -- + C_row_count_ = cql_result_set_get_count((cql_result_set_ref)C_result_set_);
 -- + C_row_num_++;
--- + C_._has_row_ = C_row_num_ < C_row_count_;
+-- + C._has_row_ = C_row_num_ < C_row_count_;
 -- + cql_copyoutrow((cql_result_set_ref)C_result_set_, C_row_num_, 2,
--- +   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C_.x,
--- +   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C_.y);
+-- +   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.x,
+-- +   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.y);
 create proc read_out_union_values(a integer not null, b integer not null)
 begin
   declare C cursor for call out_union_values(a,b);
@@ -2376,8 +2376,8 @@ begin
 end;
 
 -- TEST: update some of the cursor columns
--- + if (C_._has_row_) {
--- +   C_.x = 2;
+-- + if (C._has_row_) {
+-- +   C.x = 2;
 -- + }
 create proc update_cursor()
 begin
@@ -2599,11 +2599,11 @@ begin
 end;
 
 -- TEST: simple box operation
--- + sqlite3_stmt *C = NULL;
+-- + sqlite3_stmt *C_stmt = NULL;
 -- + cql_object_ref C_object_ = NULL;
 -- 1 for the boxing and 1 for the cleanup
 -- +2 cql_object_release(C_object_);
--- + C_object_ = cql_box_stmt(C);
+-- + C_object_ = cql_box_stmt(C_stmt);
 -- - cql_finalize_stmt(&C);
 create proc try_boxing(out result object<bar cursor>)
 begin
@@ -2612,9 +2612,9 @@ begin
 end;
 
 -- TEST: simple unbox
--- + C = cql_unbox_stmt(boxed_cursor);
+-- + C_stmt = cql_unbox_stmt(boxed_cursor);
 -- + cql_set_object_ref(&C_object_, boxed_cursor);
--- + _rc_ = sqlite3_step(C);
+-- + _rc_ = sqlite3_step(C_stmt);
 -- + cql_object_release(C_object_);
 -- - cql_finalize_stmt(&C);
 create proc try_unboxing(boxed_cursor object<bar cursor>)
