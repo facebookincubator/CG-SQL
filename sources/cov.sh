@@ -21,6 +21,8 @@ coverage() {
             -o ${OUT_DIR}/report.html \
             -e test \
             -e out \
+            -e linetester \
+            -e tester \
             -e cql.c \
             -e cql.y.c \
             -e json_test \
@@ -42,6 +44,8 @@ coverage() {
               -o ${OUT_DIR}/report.txt \
               -e test \
               -e json_test \
+              -e linetester \
+              -e tester \
               -e out \
               -e cql.c \
               -e cql.y.c \
