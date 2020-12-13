@@ -5,7 +5,7 @@
 #pragma clang diagnostic ignored "-Wshift-op-parentheses"
 #pragma clang diagnostic ignored "-Wlogical-not-parentheses"
 #pragma clang diagnostic ignored "-Wliteral-conversion"
-extern CQL_WARN_UNUSED cql_code selector(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_);
+extern CQL_WARN_UNUSED cql_code selector(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 
 // The statement ending at line XXXX
 
@@ -92,17 +92,17 @@ CQL_WARN_UNUSED cql_code selector_fetch_results(sqlite3 *_Nonnull _db_, selector
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-CQL_WARN_UNUSED cql_code selector(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_) {
+CQL_WARN_UNUSED cql_code selector(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
-  *_result_ = NULL;
-  _rc_ = cql_prepare(_db_, _result_,
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
     "SELECT f1, f2, f3, f4, f5, f6, g1, g2, g3, g4, g5, g6 "
       "FROM foo");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
-  if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = SQLITE_ERROR;
   return _rc_;
 }
 #undef _PROC_

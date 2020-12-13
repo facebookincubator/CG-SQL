@@ -2735,7 +2735,7 @@ static void cg_create_proc_stmt(ast_node *ast) {
   if (dml_proc) {
     bprintf(&proc_decl, "CQL_WARN_UNUSED %s %s(sqlite3 *_Nonnull _db_", rt->cql_code, proc_sym.ptr);
     if (result_set_proc) {
-      bprintf(&proc_decl, ", sqlite3_stmt *_Nullable *_Nonnull _result_");
+      bprintf(&proc_decl, ", sqlite3_stmt *_Nullable *_Nonnull _result_stmt");
     }
     need_comma = 1;
   }
@@ -2828,7 +2828,7 @@ static void cg_create_proc_stmt(ast_node *ast) {
   if (dml_proc) {
     cg_emit_rc_vars(cg_declarations_output);
     if (result_set_proc) {
-      bprintf(cg_declarations_output, "  *_result_ = NULL;\n");
+      bprintf(cg_declarations_output, "  *_result_stmt = NULL;\n");
     }
   }
 
@@ -2868,7 +2868,7 @@ static void cg_create_proc_stmt(ast_node *ast) {
     // Because of control flow it's possible that we never actually ran a select statement
     // even if there were no errors.  Or maybe we caught the error.  In any case we must
     // not return a success code if there is no output result. Downgrade success to error.
-    bprintf(cg_declarations_output, "  if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;\n");
+    bprintf(cg_declarations_output, "  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = SQLITE_ERROR;\n");
     empty_statement_needed = false;
   }
 
@@ -2977,7 +2977,7 @@ static void cg_declare_proc_stmt(ast_node *ast) {
       CHARBUF_CLOSE(result_set_ref);
     }
     else if (result_set_proc) {
-      bprintf(&proc_decl, ", sqlite3_stmt *_Nullable *_Nonnull _result_");
+      bprintf(&proc_decl, ", sqlite3_stmt *_Nullable *_Nonnull _result_stmt");
     }
     if (params) {
       bprintf(&proc_decl, ", ");
@@ -3342,7 +3342,7 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_fl
   list_item *vars = NULL;
   CSTR amp = "&";
 
-  if (stmt_name && !strcmp("_result_", stmt_name)) {
+  if (stmt_name && !strcmp("_result", stmt_name)) {
     // predefined out argument
     amp = "";
   }
@@ -3371,7 +3371,7 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_fl
 
   if (stmt_name == NULL && has_prepare_stmt) {
     ensure_temp_statement();
-    stmt_name = "_temp_stmt";
+    stmt_name = "_temp";
   }
 
   if (options.compress) {
@@ -3383,7 +3383,7 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_fl
       bprintf(cg_main_output, "_rc_ = cql_exec_frags(_db_,\n");
     }
     else {
-      bprintf(cg_main_output, "_rc_ = cql_prepare_frags(_db_, %s%s,\n  ", amp, stmt_name);
+      bprintf(cg_main_output, "_rc_ = cql_prepare_frags(_db_, %s%s_stmt,\n  ", amp, stmt_name);
     }
 
     bprintf(cg_main_output, "_fragments_, ");
@@ -3395,7 +3395,7 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_fl
       bprintf(cg_main_output, "_rc_ = cql_exec(_db_,\n  ");
     }
     else {
-      bprintf(cg_main_output, "_rc_ = cql_prepare(_db_, %s%s,\n  ", amp, stmt_name);
+      bprintf(cg_main_output, "_rc_ = cql_prepare(_db_, %s%s_stmt,\n  ", amp, stmt_name);
     }
     cg_pretty_quote_plaintext(temp.ptr, cg_main_output, PRETTY_QUOTE_C | PRETTY_QUOTE_MULTI_LINE);
     bprintf(cg_main_output, ");\n");
@@ -3406,7 +3406,7 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_fl
   reverse_list(&vars);
 
   if (count) {
-    bprintf(cg_main_output, "cql_multibind(&_rc_, _db_, %s%s, %d", amp, stmt_name, count);
+    bprintf(cg_main_output, "cql_multibind(&_rc_, _db_, %s%s_stmt, %d", amp, stmt_name, count);
 
     // Now emit the binding args for each variable
     for (list_item *item = vars; item; item = item->next)  {
@@ -3421,10 +3421,10 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_fl
   cg_error_on_not_sqlite_ok();
 
   if (exec_only && vars) {
-    bprintf(cg_main_output, "_rc_ = sqlite3_step(%s);\n", stmt_name);
+    bprintf(cg_main_output, "_rc_ = sqlite3_step(%s_stmt);\n", stmt_name);
     cg_error_on_rc_notequal("SQLITE_DONE");
 
-    bprintf(cg_main_output, "cql_finalize_stmt(&%s);\n", stmt_name);
+    bprintf(cg_main_output, "cql_finalize_stmt(&%s_stmt);\n", stmt_name);
   }
 
   // vars is pool allocated, so we don't need to free it
@@ -3451,13 +3451,14 @@ static void cg_declare_auto_cursor(CSTR cursor_name, sem_struct *sptr) {
 
   if (refs_count) {
     CG_CHARBUF_OPEN_SYM(refs_offset, scope, suffix, cursor_name, "_refs_offset");
-    bprintf(cg_declarations_output, "%s %s_ = { ._refs_count_ = %d, ._refs_offset_ = %s };\n", row_type.ptr, cursor_name, refs_count, refs_offset.ptr);
-    bprintf(cg_cleanup_output, "  cql_teardown_row(%s_);\n", cursor_name);
+    bprintf(cg_declarations_output, "%s %s = { ._refs_count_ = %d, ._refs_offset_ = %s };\n",
+      row_type.ptr, cursor_name, refs_count, refs_offset.ptr);
+    bprintf(cg_cleanup_output, "  cql_teardown_row(%s);\n", cursor_name);
     cg_struct_teardown_info(cg_fwd_ref_output, sptr, cursor_name);
     CHARBUF_CLOSE(refs_offset);
   }
   else {
-    bprintf(cg_declarations_output, "%s %s_ = { 0 };\n", row_type.ptr, cursor_name);
+    bprintf(cg_declarations_output, "%s %s = { 0 };\n", row_type.ptr, cursor_name);
   }
 
   CHARBUF_CLOSE(row_type);
@@ -3563,11 +3564,11 @@ static void cg_declare_cursor(ast_node *ast) {
     CHARBUF_CLOSE(result_ref);
   }
   else {
-    bprintf(cg_declarations_output, "sqlite3_stmt *%s = NULL;\n", cursor_name);
+    bprintf(cg_declarations_output, "sqlite3_stmt *%s_stmt = NULL;\n", cursor_name);
 
     if (!is_boxed) {
       // easy case, no boxing, just finalize on exit.
-      bprintf(cg_cleanup_output, "  cql_finalize_stmt(&%s);\n", cursor_name);
+      bprintf(cg_cleanup_output, "  cql_finalize_stmt(&%s_stmt);\n", cursor_name);
     }
   }
 
@@ -3580,7 +3581,7 @@ static void cg_declare_cursor(ast_node *ast) {
     if (is_boxed) {
       // The next prepare will finalize the statement, we don't want to do that
       // if the cursor is being handled by boxes. The box downcount will take care of it
-      bprintf(cg_main_output, "%s = NULL;\n", cursor_name);
+      bprintf(cg_main_output, "%s_stmt = NULL;\n", cursor_name);
     }
     cg_bound_sql_statement(cursor_name, select_stmt, CG_PREPARE|CG_MINIFY_ALIASES);
   }
@@ -3588,7 +3589,7 @@ static void cg_declare_cursor(ast_node *ast) {
     // DECLARE [name] CURSOR FOR [named_box_object]
 
     CHARBUF_OPEN(box_name);
-    bprintf(cg_main_output, "%s = cql_unbox_stmt(%s);\n", cursor_name, ast->right->sem->name);
+    bprintf(cg_main_output, "%s_stmt = cql_unbox_stmt(%s);\n", cursor_name, ast->right->sem->name);
     bprintf(&box_name, "%s_object_", cursor_name);
     cg_copy(cg_main_output, box_name.ptr, SEM_TYPE_OBJECT, ast->right->sem->name);
     CHARBUF_CLOSE(box_name);
@@ -3598,7 +3599,7 @@ static void cg_declare_cursor(ast_node *ast) {
     if (is_boxed) {
       // The next prepare will finalize the statement, we don't want to do that
       // if the cursor is being handled by boxes. The box downcount will take care of it
-      bprintf(cg_main_output, "%s = NULL;\n", cursor_name);
+      bprintf(cg_main_output, "%s_stmt = NULL;\n", cursor_name);
     }
     EXTRACT_NOTNULL(call_stmt, ast->right);
     cg_call_stmt_with_cursor(call_stmt, cursor_name);
@@ -3624,7 +3625,7 @@ static void cg_declare_cursor(ast_node *ast) {
       // This is a job for cg_copy_for_create!
 
       CHARBUF_OPEN(box_value);
-      bprintf(&box_value, "cql_box_stmt(%s)", cursor_name);
+      bprintf(&box_value, "cql_box_stmt(%s_stmt)", cursor_name);
       cg_copy_for_create(cg_main_output, box_name.ptr, SEM_TYPE_OBJECT, box_value.ptr);
       CHARBUF_CLOSE(box_value);
     }
@@ -3723,7 +3724,7 @@ static void cg_fetch_values_stmt(ast_node *ast) {
 
   ast_node *value = insert_list;
 
-  bprintf(cg_main_output, "%s_._has_row_ = 1;\n", cursor_name);
+  bprintf(cg_main_output, "%s._has_row_ = 1;\n", cursor_name);
 
   for (ast_node *item = name_list ; item; item = item->right, value = value->right) {
     EXTRACT_ANY_NOTNULL(expr, value->left);
@@ -3732,7 +3733,7 @@ static void cg_fetch_values_stmt(ast_node *ast) {
 
     CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
     CHARBUF_OPEN(temp);
-    bprintf(&temp, "%s_.%s", cursor_name, var);
+    bprintf(&temp, "%s.%s", cursor_name, var);
     cg_store(cg_main_output, temp.ptr, col->sem->sem_type, expr->sem->sem_type, expr_is_null.ptr, expr_value.ptr);
     CHARBUF_CLOSE(temp);
     CG_POP_EVAL(expr);
@@ -3767,12 +3768,12 @@ static void cg_fetch_stmt(ast_node *ast) {
     bprintf(&row_test, "%s_row_num_ < %s_row_count_", cursor_name, cursor_name);
   }
   else {
-    bprintf(cg_main_output, "_rc_ = sqlite3_step(%s);\n", cursor_name);
+    bprintf(cg_main_output, "_rc_ = sqlite3_step(%s_stmt);\n", cursor_name);
     bprintf(&row_test, "_rc_ == SQLITE_ROW");
   }
 
   if (ast->sem->sem_type & SEM_TYPE_HAS_SHAPE_STORAGE) {
-    bprintf(cg_main_output, "%s_._has_row_ = %s;\n", cursor_name, row_test.ptr);
+    bprintf(cg_main_output, "%s._has_row_ = %s;\n", cursor_name, row_test.ptr);
   }
   else {
     bprintf(cg_main_output, "_%s_has_row_ = %s;\n", cursor_name, row_test.ptr);
@@ -3791,7 +3792,7 @@ static void cg_fetch_stmt(ast_node *ast) {
       cursor_name, cursor_name, sptr->count);
   }
   else {
-    bprintf(cg_main_output, "cql_multifetch(_rc_, %s, %d", cursor_name, sptr->count);
+    bprintf(cg_main_output, "cql_multifetch(_rc_, %s_stmt, %d", cursor_name, sptr->count);
   }
 
 
@@ -3811,7 +3812,7 @@ static void cg_fetch_stmt(ast_node *ast) {
   else {
     for (int32_t i = 0; i < sptr->count; i++) {
       CHARBUF_OPEN(temp);
-      bprintf(&temp, "%s_.%s", cursor_name, sptr->names[i]);
+      bprintf(&temp, "%s.%s", cursor_name, sptr->names[i]);
       bprintf(cg_main_output, "%s", newline);
       cg_fetch_column(sptr->semtypes[i], temp.ptr);
       CHARBUF_CLOSE(temp);
@@ -3847,7 +3848,7 @@ static void cg_update_cursor_stmt(ast_node *ast) {
   EXTRACT_ANY_NOTNULL(name_list, column_spec->left);
   EXTRACT_ANY_NOTNULL(insert_list, columns_values->right);
 
-  bprintf(cg_main_output, "if (%s_._has_row_) {\n", name);
+  bprintf(cg_main_output, "if (%s._has_row_) {\n", name);
 
   CG_PUSH_MAIN_INDENT(stores, 2);
 
@@ -3860,7 +3861,7 @@ static void cg_update_cursor_stmt(ast_node *ast) {
 
     CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
     CHARBUF_OPEN(temp);
-    bprintf(&temp, "%s_.%s", name, name_ast->sem->name);
+    bprintf(&temp, "%s.%s", name, name_ast->sem->name);
     cg_store(cg_main_output, temp.ptr, name_ast->sem->sem_type, expr->sem->sem_type, expr_is_null.ptr, expr_value.ptr);
     CHARBUF_CLOSE(temp);
     CG_POP_EVAL(expr);
@@ -3937,7 +3938,7 @@ static void cg_loop_stmt(ast_node *ast) {
   cg_fetch_stmt(fetch_stmt);
 
   if (fetch_stmt->left->sem->sem_type & SEM_TYPE_HAS_SHAPE_STORAGE) {
-    bprintf(cg_main_output, "if (!%s_._has_row_) break;\n", cursor_name);
+    bprintf(cg_main_output, "if (!%s._has_row_) break;\n", cursor_name);
   }
   else {
     bprintf(cg_main_output, "if (!_%s_has_row_) break;\n", cursor_name);
@@ -4021,7 +4022,7 @@ static void cg_close_stmt(ast_node *ast) {
   EXTRACT_STRING(name, ast->left);
 
   // CLOSE [name]
-  bprintf(cg_main_output, "cql_finalize_stmt(&%s);\n", name);
+  bprintf(cg_main_output, "cql_finalize_stmt(&%s_stmt);\n", name);
 }
 
 // The OUT statement copies the current value of a cursor into an implicit
@@ -4049,7 +4050,7 @@ static void cg_out_stmt(ast_node *ast) {
   // We can just blindly copy out the values because FETCH puts something
   // intelligent there if there is no row available (e.g. null strings)
   bprintf(&var, "_result_->%s", "_has_row_");
-  bprintf(&value, "%s_._has_row_", cursor_name);
+  bprintf(&value, "%s._has_row_", cursor_name);
   cg_copy(cg_main_output, var.ptr, sem_type_has_row, value.ptr);
 
   CG_CHARBUF_OPEN_SYM(sym, proc_name, "_refs_offset");
@@ -4067,7 +4068,7 @@ static void cg_out_stmt(ast_node *ast) {
     bclear(&var);
     bclear(&value);
     bprintf(&var, "_result_->%s", sptr->names[i]);
-    bprintf(&value, "%s_.%s", cursor_name, sptr->names[i]);
+    bprintf(&value, "%s.%s", cursor_name, sptr->names[i]);
     cg_copy(cg_main_output, var.ptr, sptr->semtypes[i], value.ptr);
   }
 
@@ -4084,9 +4085,9 @@ static void cg_out_union_stmt(ast_node *ast) {
 
   // OUT UNION [cursor_name]
 
-  bprintf(cg_main_output, "cql_retain_row(%s_);\n", cursor_name);
-  bprintf(cg_main_output, "if (%s_._has_row_) ", cursor_name);
-  bprintf(cg_main_output, "cql_bytebuf_append(&_rows_, (const void *)&%s_, sizeof(%s_));\n", cursor_name, cursor_name);
+  bprintf(cg_main_output, "cql_retain_row(%s);\n", cursor_name);
+  bprintf(cg_main_output, "if (%s._has_row_) ", cursor_name);
+  bprintf(cg_main_output, "cql_bytebuf_append(&_rows_, (const void *)&%s, sizeof(%s));\n", cursor_name, cursor_name);
 }
 
 // emit the string literal into the otuput if the current runtime matches
@@ -4406,7 +4407,7 @@ static void cg_call_stmt(ast_node *ast) {
   // just like a loose select statement would be.  Note this can be
   // overrided by a later result which is totally ok.  Same as for select
   // statements.
-  return cg_call_stmt_with_cursor(ast, "*_result_");
+  return cg_call_stmt_with_cursor(ast, "*_result");
 }
 
 // This helper method walks all the args and all the formal paramaters at the same time
@@ -4478,7 +4479,7 @@ static void cg_call_stmt_with_cursor(ast_node *ast, CSTR cursor_name) {
     }
     else if (result_set_proc) {
       Invariant(cursor_name); // either specified or the default _result_ variable
-      bprintf(&invocation, ", &%s", cursor_name);
+      bprintf(&invocation, ", &%s_stmt", cursor_name);
     }
     if (expr_list) {
       bprintf(&invocation, ", ");
@@ -4506,8 +4507,8 @@ static void cg_call_stmt_with_cursor(ast_node *ast, CSTR cursor_name) {
     if (dml_proc || params) {
       bprintf(&invocation, ", ");
     }
-    bprintf(cg_main_output, "cql_teardown_row(%s_);\n", cursor_name);
-    bprintf(&invocation, "(%s *)&%s_", result_type.ptr, cursor_name);
+    bprintf(cg_main_output, "cql_teardown_row(%s);\n", cursor_name);
+    bprintf(&invocation, "(%s *)&%s", result_type.ptr, cursor_name);
     bprintf(&invocation, "); // %s identical to cursor type\n", result_type.ptr);
   }
   else {
@@ -4552,7 +4553,7 @@ static void cg_std_dml_exec_stmt(ast_node *ast) {
 //       this was previously added when the stored proc params were generated.
 static void cg_select_stmt(ast_node *ast) {
   Contract(is_select_stmt(ast));
-  cg_bound_sql_statement("_result_", ast, CG_PREPARE|CG_MINIFY_ALIASES);
+  cg_bound_sql_statement("_result", ast, CG_PREPARE|CG_MINIFY_ALIASES);
 }
 
 // DML with PREPARE.  The ast has the statement.

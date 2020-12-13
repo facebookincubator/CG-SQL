@@ -9317,13 +9317,13 @@ The statement ending at line XXXX
 
 SELECT shape_storage.one;
 
-  {select_stmt}: select: { shape_storage_.one: integer notnull variable }
-  | {select_core_list}: select: { shape_storage_.one: integer notnull variable }
-  | | {select_core}: select: { shape_storage_.one: integer notnull variable }
-  |   | {select_expr_list_con}: select: { shape_storage_.one: integer notnull variable }
-  |     | {select_expr_list}: select: { shape_storage_.one: integer notnull variable }
-  |     | | {select_expr}: shape_storage_.one: integer notnull variable
-  |     |   | {dot}: shape_storage_.one: integer notnull variable
+  {select_stmt}: select: { shape_storage.one: integer notnull variable }
+  | {select_core_list}: select: { shape_storage.one: integer notnull variable }
+  | | {select_core}: select: { shape_storage.one: integer notnull variable }
+  |   | {select_expr_list_con}: select: { shape_storage.one: integer notnull variable }
+  |     | {select_expr_list}: select: { shape_storage.one: integer notnull variable }
+  |     | | {select_expr}: shape_storage.one: integer notnull variable
+  |     |   | {dot}: shape_storage.one: integer notnull variable
   |     |     | {name shape_storage}
   |     |     | {name one}
   |     | {select_from_etc}: ok
@@ -19753,11 +19753,11 @@ END;
       |     |   | {name_list}
       |     |     | {name B}: B: integer notnull
       |     | {insert_list}
-      |       | {dot}: C0_.A: integer notnull variable
+      |       | {dot}: C0.A: integer notnull variable
       |       | | {name C0}
       |       | | {name A}
       |       | {insert_list}
-      |         | {dot}: C0_.B: integer notnull variable
+      |         | {dot}: C0.B: integer notnull variable
       |           | {name C0}
       |           | {name B}
       | {out_stmt}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
@@ -43057,23 +43057,23 @@ INSERT INTO referenceable(a, b, c, d, e) VALUES(c_bar.a, c_bar.b, c_bar.c, c_bar
       |         | {name_list}
       |           | {name e}: e: longint
       | {insert_list}
-        | {dot}: c_bar_.a: integer notnull variable primary_key
+        | {dot}: c_bar.a: integer notnull variable primary_key
         | | {name c_bar}
         | | {name a}
         | {insert_list}
-          | {dot}: c_bar_.b: real variable unique_key
+          | {dot}: c_bar.b: real variable unique_key
           | | {name c_bar}
           | | {name b}
           | {insert_list}
-            | {dot}: c_bar_.c: text variable
+            | {dot}: c_bar.c: text variable
             | | {name c_bar}
             | | {name c}
             | {insert_list}
-              | {dot}: c_bar_.d: text variable
+              | {dot}: c_bar.d: text variable
               | | {name c_bar}
               | | {name d}
               | {insert_list}
-                | {dot}: c_bar_.e: longint variable
+                | {dot}: c_bar.e: longint variable
                   | {name c_bar}
                   | {name e}
 
@@ -43635,11 +43635,11 @@ UPDATE CURSOR nully_cursor(c1, c7) FROM VALUES(c1c7.c1, c1c7.c7);
     |   | {name_list}
     |     | {name c7}: c7: real
     | {insert_list}
-      | {dot}: c1c7_.c1: text notnull variable
+      | {dot}: c1c7.c1: text notnull variable
       | | {name c1c7}
       | | {name c1}
       | {insert_list}
-        | {dot}: c1c7_.c7: real variable
+        | {dot}: c1c7.c7: real variable
           | {name c1c7}
           | {name c7}
 
@@ -43656,11 +43656,11 @@ UPDATE CURSOR nully_cursor(c1, c7) FROM VALUES(c1c7.c1, c1c7.c7);
     |   | {name_list}
     |     | {name c7}: c7: real
     | {insert_list}
-      | {dot}: c1c7_.c1: text notnull variable
+      | {dot}: c1c7.c1: text notnull variable
       | | {name c1c7}
       | | {name c1}
       | {insert_list}
-        | {dot}: c1c7_.c7: real variable
+        | {dot}: c1c7.c7: real variable
           | {name c1c7}
           | {name c7}
 
@@ -43711,11 +43711,11 @@ FETCH nully_cursor(c1, c7, c2, c3, c4, c5, c6, c8, c9, c10) FROM VALUES(c1c7.c1,
       |                   | {name_list}
       |                     | {name c10}: c10: real
       | {insert_list}
-        | {dot}: c1c7_.c1: text notnull variable
+        | {dot}: c1c7.c1: text notnull variable
         | | {name c1c7}
         | | {name c1}
         | {insert_list}
-          | {dot}: c1c7_.c7: real variable
+          | {dot}: c1c7.c7: real variable
           | | {name c1c7}
           | | {name c7}
           | {insert_list}
@@ -43765,11 +43765,11 @@ FETCH nully_cursor(c1, c7, c2, c3, c4, c5, c6, c8, c9, c10) FROM VALUES(c1c7.c1,
       |                   | {name_list}
       |                     | {name c10}: c10: real
       | {insert_list}
-        | {dot}: c1c7_.c1: text notnull variable
+        | {dot}: c1c7.c1: text notnull variable
         | | {name c1c7}
         | | {name c1}
         | {insert_list}
-          | {dot}: c1c7_.c7: real variable
+          | {dot}: c1c7.c7: real variable
           | | {name c1c7}
           | | {name c7}
           | {insert_list}
@@ -43921,11 +43921,11 @@ FETCH c1c7(c1, c7) FROM VALUES(nully_cursor.c1, nully_cursor.c7);
       |   | {name_list}
       |     | {name c7}: c7: real
       | {insert_list}
-        | {dot}: nully_cursor_.c1: text notnull variable
+        | {dot}: nully_cursor.c1: text notnull variable
         | | {name nully_cursor}
         | | {name c1}
         | {insert_list}
-          | {dot}: nully_cursor_.c7: real variable
+          | {dot}: nully_cursor.c7: real variable
             | {name nully_cursor}
             | {name c7}
 
@@ -47748,11 +47748,11 @@ END;
       | {call_stmt}: ok
         | {name shape_consumer}: ok
         | {expr_list}: ok
-          | {dot}: C_.x: integer notnull variable
+          | {dot}: C.x: integer notnull variable
           | | {name C}
           | | {name x}
           | {expr_list}
-            | {dot}: C_.y: text notnull variable
+            | {dot}: C.y: text notnull variable
               | {name C}
               | {name y}
 
@@ -47872,7 +47872,7 @@ END;
       | {call_stmt}: ok
         | {name shape_y_only}: ok
         | {expr_list}: ok
-          | {dot}: C_.y: text notnull variable
+          | {dot}: C.y: text notnull variable
             | {name C}
             | {name y}
 
@@ -48005,11 +48005,11 @@ END;
       | {call_stmt}: ok
       | | {name lotsa_ints}: ok
       | | {expr_list}: ok
-      |   | {dot}: C_.x: integer notnull variable
+      |   | {dot}: C.x: integer notnull variable
       |   | | {name C}
       |   | | {name x}
       |   | {expr_list}
-      |     | {dot}: C_.y: integer notnull variable
+      |     | {dot}: C.y: integer notnull variable
       |     | | {name C}
       |     | | {name y}
       |     | {expr_list}
@@ -48021,11 +48021,11 @@ END;
       | | {expr_list}: ok
       |   | {int 1}: integer notnull
       |   | {expr_list}
-      |     | {dot}: C_.x: integer notnull variable
+      |     | {dot}: C.x: integer notnull variable
       |     | | {name C}
       |     | | {name x}
       |     | {expr_list}
-      |       | {dot}: C_.y: integer notnull variable
+      |       | {dot}: C.y: integer notnull variable
       |       | | {name C}
       |       | | {name y}
       |       | {expr_list}
@@ -48037,29 +48037,29 @@ END;
       |   | {expr_list}
       |     | {int 2}: integer notnull
       |     | {expr_list}
-      |       | {dot}: C_.x: integer notnull variable
+      |       | {dot}: C.x: integer notnull variable
       |       | | {name C}
       |       | | {name x}
       |       | {expr_list}
-      |         | {dot}: C_.y: integer notnull variable
+      |         | {dot}: C.y: integer notnull variable
       |           | {name C}
       |           | {name y}
       | {call_stmt}: ok
         | {name lotsa_ints}: ok
         | {expr_list}: ok
-          | {dot}: C_.x: integer notnull variable
+          | {dot}: C.x: integer notnull variable
           | | {name C}
           | | {name x}
           | {expr_list}
-            | {dot}: C_.y: integer notnull variable
+            | {dot}: C.y: integer notnull variable
             | | {name C}
             | | {name y}
             | {expr_list}
-              | {dot}: C_.x: integer notnull variable
+              | {dot}: C.x: integer notnull variable
               | | {name C}
               | | {name x}
               | {expr_list}
-                | {dot}: C_.y: integer notnull variable
+                | {dot}: C.y: integer notnull variable
                   | {name C}
                   | {name y}
 
@@ -49151,20 +49151,20 @@ END;
             | {case_list}: text notnull
               | {when}: text notnull
               | | {is_not}: bool notnull
-              | | | {dot}: c1_.x: integer notnull variable
+              | | | {dot}: c1.x: integer notnull variable
               | | | | {name c1}
               | | | | {name x}
-              | | | {dot}: c2_.x: integer notnull variable
+              | | | {dot}: c2.x: integer notnull variable
               | |   | {name c2}
               | |   | {name x}
               | | {strlit 'x'}: text notnull
               | {case_list}: text notnull
                 | {when}: text notnull
                   | {is_not}: bool notnull
-                  | | {dot}: c1_.y: text notnull variable
+                  | | {dot}: c1.y: text notnull variable
                   | | | {name c1}
                   | | | {name y}
-                  | | {dot}: c2_.y: text notnull variable
+                  | | {dot}: c2.y: text notnull variable
                   |   | {name c2}
                   |   | {name y}
                   | {strlit 'y'}: text notnull
@@ -49244,20 +49244,20 @@ END;
               | {case_list}: text notnull
                 | {when}: text notnull
                 | | {is_not}: bool notnull
-                | | | {dot}: c1_.x: integer notnull variable
+                | | | {dot}: c1.x: integer notnull variable
                 | | | | {name c1}
                 | | | | {name x}
-                | | | {dot}: c2_.x: integer notnull variable
+                | | | {dot}: c2.x: integer notnull variable
                 | |   | {name c2}
                 | |   | {name x}
                 | | {strlit 'x'}: text notnull
                 | {case_list}: text notnull
                   | {when}: text notnull
                     | {is_not}: bool notnull
-                    | | {dot}: c1_.y: text notnull variable
+                    | | {dot}: c1.y: text notnull variable
                     | | | {name c1}
                     | | | {name y}
-                    | | {dot}: c2_.y: text notnull variable
+                    | | {dot}: c2.y: text notnull variable
                     |   | {name c2}
                     |   | {name y}
                     | {strlit 'y'}: text notnull
@@ -49345,10 +49345,10 @@ END;
               | {case_list}: text notnull
                 | {when}: text notnull
                 | | {is_not}: bool notnull
-                | | | {dot}: c1_.x: integer notnull variable
+                | | | {dot}: c1.x: integer notnull variable
                 | | | | {name c1}
                 | | | | {name x}
-                | | | {dot}: c2_.x: integer notnull variable
+                | | | {dot}: c2.x: integer notnull variable
                 | |   | {name c2}
                 | |   | {name x}
                 | | {call}: text notnull
@@ -49365,7 +49365,7 @@ END;
                 |           |   | {case_list}: text notnull
                 |           |   | | {when}: text notnull
                 |           |   |   | {is}: bool notnull
-                |           |   |   | | {dot}: c1_.x: integer notnull variable
+                |           |   |   | | {dot}: c1.x: integer notnull variable
                 |           |   |   | | | {name c1}
                 |           |   |   | | | {name x}
                 |           |   |   | | {null}: null
@@ -49377,7 +49377,7 @@ END;
                 |           |       | {arg_list}: ok
                 |           |         | {strlit '%d'}: text notnull
                 |           |         | {arg_list}
-                |           |           | {dot}: c1_.x: integer notnull variable
+                |           |           | {dot}: c1.x: integer notnull variable
                 |           |             | {name c1}
                 |           |             | {name x}
                 |           | {arg_list}
@@ -49386,7 +49386,7 @@ END;
                 |                 | {case_list}: text notnull
                 |                 | | {when}: text notnull
                 |                 |   | {is}: bool notnull
-                |                 |   | | {dot}: c2_.x: integer notnull variable
+                |                 |   | | {dot}: c2.x: integer notnull variable
                 |                 |   | | | {name c2}
                 |                 |   | | | {name x}
                 |                 |   | | {null}: null
@@ -49398,16 +49398,16 @@ END;
                 |                     | {arg_list}: ok
                 |                       | {strlit '%d'}: text notnull
                 |                       | {arg_list}
-                |                         | {dot}: c2_.x: integer notnull variable
+                |                         | {dot}: c2.x: integer notnull variable
                 |                           | {name c2}
                 |                           | {name x}
                 | {case_list}: text notnull
                   | {when}: text notnull
                     | {is_not}: bool notnull
-                    | | {dot}: c1_.y: text notnull variable
+                    | | {dot}: c1.y: text notnull variable
                     | | | {name c1}
                     | | | {name y}
-                    | | {dot}: c2_.y: text notnull variable
+                    | | {dot}: c2.y: text notnull variable
                     |   | {name c2}
                     |   | {name y}
                     | {call}: text notnull
@@ -49424,7 +49424,7 @@ END;
                               |   | {case_list}: text notnull
                               |   | | {when}: text notnull
                               |   |   | {is}: bool notnull
-                              |   |   | | {dot}: c1_.y: text notnull variable
+                              |   |   | | {dot}: c1.y: text notnull variable
                               |   |   | | | {name c1}
                               |   |   | | | {name y}
                               |   |   | | {null}: null
@@ -49436,7 +49436,7 @@ END;
                               |       | {arg_list}: ok
                               |         | {strlit '%s'}: text notnull
                               |         | {arg_list}
-                              |           | {dot}: c1_.y: text notnull variable
+                              |           | {dot}: c1.y: text notnull variable
                               |             | {name c1}
                               |             | {name y}
                               | {arg_list}
@@ -49445,7 +49445,7 @@ END;
                                     | {case_list}: text notnull
                                     | | {when}: text notnull
                                     |   | {is}: bool notnull
-                                    |   | | {dot}: c2_.y: text notnull variable
+                                    |   | | {dot}: c2.y: text notnull variable
                                     |   | | | {name c2}
                                     |   | | | {name y}
                                     |   | | {null}: null
@@ -49457,7 +49457,7 @@ END;
                                         | {arg_list}: ok
                                           | {strlit '%s'}: text notnull
                                           | {arg_list}
-                                            | {dot}: c2_.y: text notnull variable
+                                            | {dot}: c2.y: text notnull variable
                                               | {name c2}
                                               | {name y}
 
@@ -49858,7 +49858,7 @@ END;
                 |   | {case_list}: text notnull
                 |   | | {when}: text notnull
                 |   |   | {is}: bool notnull
-                |   |   | | {dot}: c1_.a: bool notnull variable
+                |   |   | | {dot}: c1.a: bool notnull variable
                 |   |   | | | {name c1}
                 |   |   | | | {name a}
                 |   |   | | {null}: null
@@ -49870,7 +49870,7 @@ END;
                 |       | {arg_list}: ok
                 |         | {strlit '%d'}: text notnull
                 |         | {arg_list}
-                |           | {dot}: c1_.a: bool notnull variable
+                |           | {dot}: c1.a: bool notnull variable
                 |             | {name c1}
                 |             | {name a}
                 | {arg_list}
@@ -49879,7 +49879,7 @@ END;
                   |   | {case_list}: text notnull
                   |   | | {when}: text notnull
                   |   |   | {is}: bool notnull
-                  |   |   | | {dot}: c1_.b: integer notnull variable
+                  |   |   | | {dot}: c1.b: integer notnull variable
                   |   |   | | | {name c1}
                   |   |   | | | {name b}
                   |   |   | | {null}: null
@@ -49891,7 +49891,7 @@ END;
                   |       | {arg_list}: ok
                   |         | {strlit '%d'}: text notnull
                   |         | {arg_list}
-                  |           | {dot}: c1_.b: integer notnull variable
+                  |           | {dot}: c1.b: integer notnull variable
                   |             | {name c1}
                   |             | {name b}
                   | {arg_list}
@@ -49900,7 +49900,7 @@ END;
                     |   | {case_list}: text notnull
                     |   | | {when}: text notnull
                     |   |   | {is}: bool notnull
-                    |   |   | | {dot}: c1_.c: longint notnull variable
+                    |   |   | | {dot}: c1.c: longint notnull variable
                     |   |   | | | {name c1}
                     |   |   | | | {name c}
                     |   |   | | {null}: null
@@ -49912,7 +49912,7 @@ END;
                     |       | {arg_list}: ok
                     |         | {strlit '%lld'}: text notnull
                     |         | {arg_list}
-                    |           | {dot}: c1_.c: longint notnull variable
+                    |           | {dot}: c1.c: longint notnull variable
                     |             | {name c1}
                     |             | {name c}
                     | {arg_list}
@@ -49921,7 +49921,7 @@ END;
                       |   | {case_list}: text notnull
                       |   | | {when}: text notnull
                       |   |   | {is}: bool notnull
-                      |   |   | | {dot}: c1_.d: text notnull variable
+                      |   |   | | {dot}: c1.d: text notnull variable
                       |   |   | | | {name c1}
                       |   |   | | | {name d}
                       |   |   | | {null}: null
@@ -49933,7 +49933,7 @@ END;
                       |       | {arg_list}: ok
                       |         | {strlit '%s'}: text notnull
                       |         | {arg_list}
-                      |           | {dot}: c1_.d: text notnull variable
+                      |           | {dot}: c1.d: text notnull variable
                       |             | {name c1}
                       |             | {name d}
                       | {arg_list}
@@ -49942,7 +49942,7 @@ END;
                         |   | {case_list}: text notnull
                         |   | | {when}: text notnull
                         |   |   | {is}: bool notnull
-                        |   |   | | {dot}: c1_.e: real notnull variable
+                        |   |   | | {dot}: c1.e: real notnull variable
                         |   |   | | | {name c1}
                         |   |   | | | {name e}
                         |   |   | | {null}: null
@@ -49954,7 +49954,7 @@ END;
                         |       | {arg_list}: ok
                         |         | {strlit '%f'}: text notnull
                         |         | {arg_list}
-                        |           | {dot}: c1_.e: real notnull variable
+                        |           | {dot}: c1.e: real notnull variable
                         |             | {name c1}
                         |             | {name e}
                         | {arg_list}
@@ -49963,7 +49963,7 @@ END;
                               | {case_list}: text notnull
                               | | {when}: text notnull
                               |   | {is}: bool notnull
-                              |   | | {dot}: c1_.f: blob notnull variable
+                              |   | | {dot}: c1.f: blob notnull variable
                               |   | | | {name c1}
                               |   | | | {name f}
                               |   | | {null}: null
@@ -49980,7 +49980,7 @@ END;
                                         | {call_arg_list}
                                           | {call_filter_clause}
                                           | {arg_list}: ok
-                                            | {dot}: c1_.f: blob notnull variable
+                                            | {dot}: c1.f: blob notnull variable
                                               | {name c1}
                                               | {name f}
 
@@ -50030,7 +50030,7 @@ Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in 
         |     |   | | {call_arg_list}
         |     |   |   | {call_filter_clause}
         |     |   |   | {arg_list}: ok
-        |     |   |     | {name c1}: c1_._has_row_: bool notnull variable
+        |     |   |     | {name c1}: c1._has_row_: bool notnull variable
         |     |   | {opt_as_alias}
         |     |     | {name p}
         |     | {select_from_etc}: ok

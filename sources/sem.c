@@ -4096,7 +4096,7 @@ static bool_t try_resolve_variable(ast_node *ast, CSTR name) {
       CSTR vname = NULL;
 
       if (sem_type & SEM_TYPE_HAS_SHAPE_STORAGE) {
-        vname = dup_printf("%s_._has_row_", variable->sem->name);
+        vname = dup_printf("%s._has_row_", variable->sem->name);
       }
       else {
         vname = dup_printf("_%s_has_row_", variable->sem->name);
@@ -4223,7 +4223,7 @@ static void resolve_cursor_field(ast_node *expr, ast_node *cursor, CSTR field) {
   for (int32_t i = 0; i < sptr->count; i++) {
      if (!Strcasecmp(sptr->names[i], field)) {
         expr->sem = new_sem(sptr->semtypes[i] | SEM_TYPE_VARIABLE);
-        expr->sem->name = dup_printf("%s_.%s", scope, sptr->names[i]);
+        expr->sem->name = dup_printf("%s.%s", scope, sptr->names[i]);
         return;
      }
   }

@@ -20,10 +20,12 @@ coverage() {
             --object-directory . \
             -o ${OUT_DIR}/report.html \
             -e test \
+            -e tester \
+            -e linetester \
+            -e json_test \
             -e out \
             -e cql.c \
             -e cql.y.c \
-            -e json_test \
             -e cqltest.c \
             -e result_set_extension.c \
             -e run_test_client.c \
@@ -41,6 +43,8 @@ coverage() {
               --object-directory . \
               -o ${OUT_DIR}/report.txt \
               -e test \
+              -e tester \
+              -e linetester \
               -e json_test \
               -e out \
               -e cql.c \

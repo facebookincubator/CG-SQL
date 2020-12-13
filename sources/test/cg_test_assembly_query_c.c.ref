@@ -5,7 +5,7 @@
 #pragma clang diagnostic ignored "-Wshift-op-parentheses"
 #pragma clang diagnostic ignored "-Wlogical-not-parentheses"
 #pragma clang diagnostic ignored "-Wliteral-conversion"
-extern CQL_WARN_UNUSED cql_code assembly_core(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_, cql_int32 id_, cql_string_ref _Nonnull name_);
+extern CQL_WARN_UNUSED cql_code assembly_core(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_int32 id_, cql_string_ref _Nonnull name_);
 
 // The statement ending at line XXXX
 
@@ -105,10 +105,10 @@ CQL_WARN_UNUSED cql_code assembly_core_fetch_results(sqlite3 *_Nonnull _db_, ass
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-CQL_WARN_UNUSED cql_code assembly_core(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_, cql_int32 id_, cql_string_ref _Nonnull name_) {
+CQL_WARN_UNUSED cql_code assembly_core(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_int32 id_, cql_string_ref _Nonnull name_) {
   cql_code _rc_ = SQLITE_OK;
-  *_result_ = NULL;
-  _rc_ = cql_prepare(_db_, _result_,
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
     "WITH "
     "assembly_core (x, y, z) AS (SELECT id, name, rate "
       "FROM bar "
@@ -122,14 +122,14 @@ CQL_WARN_UNUSED cql_code assembly_core(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nu
       "LEFT OUTER JOIN plugin_table ON plugin_table.name = plugin_one.y AND plugin_table.id = ?) "
     "SELECT x, y, z, flag "
       "FROM plugin_two");
-  cql_multibind(&_rc_, _db_, _result_, 2,
+  cql_multibind(&_rc_, _db_, _result_stmt, 2,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, id_,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, id_);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
-  if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = SQLITE_ERROR;
   return _rc_;
 }
 #undef _PROC_

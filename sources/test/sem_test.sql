@@ -2765,8 +2765,8 @@ declare shape_storage cursor for select 1 as one, 2 as two;
 fetch shape_storage;
 
 -- TEST: Now access the cursor
--- + {select_stmt}: select: { shape_storage_.one: integer notnull variable }
--- + {dot}: shape_storage_.one: integer notnull variable
+-- + {select_stmt}: select: { shape_storage.one: integer notnull variable }
+-- + {dot}: shape_storage.one: integer notnull variable
 -- + {name shape_storage}
 -- + {name one}
 -- -Error
