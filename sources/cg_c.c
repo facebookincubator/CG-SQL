@@ -1483,6 +1483,8 @@ static void cg_in_or_not_in_expr_list(ast_node *head, CSTR expr, CSTR result, se
       continue;
     }
 
+    cg_line_directive_min(in_expr, cg_main_output);
+
     CG_PUSH_EVAL(in_expr, C_EXPR_PRI_EQ_NE);
     sem_t sem_type_in_expr = in_expr->sem->sem_type;
 
@@ -1569,6 +1571,8 @@ static void cg_expr_in_pred_or_not_in(
 
   CG_PUSH_MAIN_INDENT(do, 2);
 
+  cg_line_directive_min(expr, cg_main_output);
+
   // Evaluate the expression and stow it in a temporary.
   CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
   CG_PUSH_TEMP(temp, sem_type_expr);
@@ -1593,6 +1597,7 @@ static void cg_expr_in_pred_or_not_in(
   CG_POP_MAIN_INDENT(do);
   CG_CLEANUP_RESULT_VAR();
 
+  cg_line_directive_max(ast, cg_main_output);
   bprintf(cg_main_output, "} while (0);\n");
 }
 
@@ -2184,12 +2189,14 @@ static void cg_expr_num(ast_node *expr, CSTR op, charbuf *is_null, charbuf *valu
   EXTRACT_NUM_TYPE(num_type, expr);
   EXTRACT_NUM_VALUE(lit, expr);
   // a numeric literal
-  bprintf(value, "%s", lit);
   bprintf(is_null, "0");
 
   if (num_type == NUM_LONG) {
     // add long suffix if needed
-    bputc(value, 'L');
+    bprintf(value, "_64(%s)", lit);
+  }
+  else {
+    bprintf(value, "%s", lit);
   }
 }
 

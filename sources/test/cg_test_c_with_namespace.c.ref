@@ -8007,14 +8007,14 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   /*
   SET l2 := 3147483647L;
   */
-  l2 = 3147483647L;
+  l2 = _64(3147483647);
   
   // The statement ending at line XXXX
   
   /*
   SET l2 := 3147483647L;
   */
-  l2 = 3147483647L;
+  l2 = _64(3147483647);
   
   // The statement ending at line XXXX
   

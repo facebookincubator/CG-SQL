@@ -23,7 +23,6 @@
 #endif // TARGET_OS_WIN32
 #endif // STACK_BYTES_ALLLOC
 
-
 // This code is used in the event of a THROW inside a stored proc.  When that happens
 // we want to keep the result code we have if there was a recent error. If we recently
 // got a success, then use SQLITE_ERROR as the thrown error instead.

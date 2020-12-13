@@ -3050,6 +3050,78 @@ BEGIN_TEST(const_folding)
 
 END_TEST(const_folding)
 
+BEGIN_TEST(long_literals)
+  declare x long not null;
+  declare z long;
+
+  set x := 1L;
+  EXPECT(x == 1);
+
+  set x := 10000000000;
+  EXPECT(x = 10000000000);
+  EXPECT(x != const(cast(10000000000L as integer)));
+  EXPECT(x > 0x7fffffff);
+
+  set x := 10000000000L;
+  EXPECT(x = 10000000000L);
+  EXPECT(x != const(cast(10000000000L as integer)));
+  EXPECT(x > 0x7fffffff);
+
+  set x := 0x1000000000L;
+  EXPECT(x = 0x1000000000L);
+  EXPECT(x != const(cast(0x10000000000L as integer)));
+  EXPECT(x > 0x7fffffff);
+
+  set x := 0x1000000000;
+  EXPECT(x = 0x1000000000L);
+  EXPECT(x != const(cast(0x10000000000L as integer)));
+  EXPECT(x > 0x7fffffff);
+
+  set x := const(0x1000000000);
+  EXPECT(x = 0x1000000000L);
+  EXPECT(x != const(cast(0x1000000000L as integer)));
+  EXPECT(x > 0x7fffffff);
+
+  set x := 1000L * 1000 * 1000 * 1000;
+  EXPECT(x = 1000000000000);
+  EXPECT(x != const(cast(1000000000000 as integer)));
+  set x := const(1000L * 1000 * 1000 * 1000);
+
+  set z := 1L;
+  EXPECT(z == 1);
+
+  set z := 10000000000;
+  EXPECT(z = 10000000000);
+  EXPECT(z != const(cast(10000000000L as integer)));
+  EXPECT(z > 0x7fffffff);
+
+  set z := 10000000000L;
+  EXPECT(z = 10000000000L);
+  EXPECT(z != const(cast(10000000000L as integer)));
+  EXPECT(z > 0x7fffffff);
+
+  set z := 0x1000000000L;
+  EXPECT(z = 0x1000000000L);
+  EXPECT(z != const(cast(0x1000000000L as integer)));
+  EXPECT(z > 0x7fffffff);
+
+  set z := 0x1000000000;
+  EXPECT(z = 0x1000000000L);
+  EXPECT(z != const(cast(0x1000000000L as integer)));
+  EXPECT(z > 0x7fffffff);
+
+  set z := const(0x1000000000);
+  EXPECT(z = 0x1000000000L);
+  EXPECT(z != const(cast(0x1000000000L as integer)));
+  EXPECT(z > 0x7fffffff);
+
+  set z := 1000L * 1000 * 1000 * 1000;
+  EXPECT(z = 1000000000000);
+  EXPECT(z != const(cast(1000000000000 as integer)));
+  set z := const(1000L * 1000 * 1000 * 1000);
+
+END_TEST(long_literals)
+
 END_SUITE()
 
 -- manually force tracing on by redefining the macros
@@ -3078,4 +3150,3 @@ end;
 
 @echo c,"#undef cql_error_trace\n";
 @echo c,"#define cql_error_trace()\n";
-

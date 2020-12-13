@@ -118,8 +118,10 @@ int main(int argc, char **argv) {
   E(compare_lines(db, &procs, &compares, &errors));
 
   printf("\n");
-  printf("EXPECTED INPUT FILE: %s\n", expected_name);
-  printf("  ACTUAL INPUT FILE: %s\n", actual_name);
+  if (errors) {
+    printf("EXPECTED INPUT FILE: %s\n", expected_name);
+    printf("  ACTUAL INPUT FILE: %s\n", actual_name);
+  }
 
   printf("Verification results: %d procedures matched %d patterns of which %d were errors.\n", procs, compares, errors);
 
