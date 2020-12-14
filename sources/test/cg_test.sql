@@ -1217,11 +1217,11 @@ declare expanded_select cursor for select * from bar;
 declare table_expanded_select cursor for select bar.* from bar;
 
 -- TEST: use a long literal
--- + l2 = 3147483647L;
+-- + l2 = _64(3147483647);
 set l2 := 3147483647L;
 
 -- TEST: use a long literal
--- + l2 = 3147483647L;
+-- + l2 = _64(3147483647);
 set l2 := 3147483647;
 
 -- TEST: use drop index in a proc

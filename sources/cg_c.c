@@ -2184,12 +2184,14 @@ static void cg_expr_num(ast_node *expr, CSTR op, charbuf *is_null, charbuf *valu
   EXTRACT_NUM_TYPE(num_type, expr);
   EXTRACT_NUM_VALUE(lit, expr);
   // a numeric literal
-  bprintf(value, "%s", lit);
   bprintf(is_null, "0");
 
   if (num_type == NUM_LONG) {
     // add long suffix if needed
-    bputc(value, 'L');
+    bprintf(value, "_64(%s)", lit);
+  }
+  else {
+    bprintf(value, "%s", lit);
   }
 }
 

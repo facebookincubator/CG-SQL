@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
+#include <limits.h>
 
 #ifdef __cplusplus
 #define CQL_EXTERN_C_BEGIN extern "C" {
@@ -21,6 +22,12 @@
 #define CQL_EXTERN_C_BEGIN
 #define CQL_EXTERN_C_END
 #endif // __cplusplus
+
+#if LONG_MAX > 0x7fffffff
+#define _64(x) x##L
+#else
+#define _64(x) x##LL
+#endif
 
 #define CQL_EXPORT extern __attribute__((visibility("default")))
 #define CQL_WARN_UNUSED __attribute__((warn_unused_result))
