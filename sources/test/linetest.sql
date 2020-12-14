@@ -61,3 +61,30 @@ begin
     end, 
     3000);
 end;
+
+-- testing the in predicate by itself
+create proc in_pred_lines(i integer not null, out b bool not null )
+begin
+  set b := i in (
+           1,
+           3,
+           7);
+end;
+
+-- testing in predicate mixed with case
+create proc in_pred_and_case(i integer not null, out b bool not null )
+begin
+  set b := case when
+    i > 8
+    then
+      i in (
+      10,
+      12,
+      14)
+    else
+      i in (
+      1,
+      3,
+      7)
+    end;
+end;

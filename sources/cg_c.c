@@ -1483,6 +1483,8 @@ static void cg_in_or_not_in_expr_list(ast_node *head, CSTR expr, CSTR result, se
       continue;
     }
 
+    cg_line_directive_min(in_expr, cg_main_output);
+
     CG_PUSH_EVAL(in_expr, C_EXPR_PRI_EQ_NE);
     sem_t sem_type_in_expr = in_expr->sem->sem_type;
 
@@ -1569,6 +1571,8 @@ static void cg_expr_in_pred_or_not_in(
 
   CG_PUSH_MAIN_INDENT(do, 2);
 
+  cg_line_directive_min(expr, cg_main_output);
+
   // Evaluate the expression and stow it in a temporary.
   CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
   CG_PUSH_TEMP(temp, sem_type_expr);
@@ -1593,6 +1597,7 @@ static void cg_expr_in_pred_or_not_in(
   CG_POP_MAIN_INDENT(do);
   CG_CLEANUP_RESULT_VAR();
 
+  cg_line_directive_max(ast, cg_main_output);
   bprintf(cg_main_output, "} while (0);\n");
 }
 
@@ -1766,6 +1771,7 @@ static void cg_expr_case(ast_node *case_expr, CSTR str, charbuf *is_null, charbu
 
     CG_PUSH_EVAL(else_expr, C_EXPR_PRI_ROOT);
 
+    cg_line_directive_max(case_expr, cg_main_output);
     cg_store(cg_main_output, result_var.ptr, sem_type_result, sem_type_else, else_expr_is_null.ptr, else_expr_value.ptr);
 
     CG_POP_EVAL(else_expr);
@@ -3453,8 +3459,7 @@ static void cg_declare_auto_cursor(CSTR cursor_name, sem_struct *sptr) {
 
   if (refs_count) {
     CG_CHARBUF_OPEN_SYM(refs_offset, scope, suffix, cursor_name, "_refs_offset");
-    bprintf(cg_declarations_output, "%s %s = { ._refs_count_ = %d, ._refs_offset_ = %s };\n",
-      row_type.ptr, cursor_name, refs_count, refs_offset.ptr);
+    bprintf(cg_declarations_output, "%s %s = { ._refs_count_ = %d, ._refs_offset_ = %s };\n", row_type.ptr, cursor_name, refs_count, refs_offset.ptr);
     bprintf(cg_cleanup_output, "  cql_teardown_row(%s);\n", cursor_name);
     cg_struct_teardown_info(cg_fwd_ref_output, sptr, cursor_name);
     CHARBUF_CLOSE(refs_offset);
