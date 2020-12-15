@@ -280,6 +280,7 @@ typedef struct table_callbacks {
   symtab *_Nullable visited_from;
   symtab *_Nullable visited_proc;
   find_ast_str_node_callback _Nullable callback_any_table;
+  find_ast_str_node_callback _Nullable callback_any_view;
   find_ast_str_node_callback _Nullable callback_inserts;
   find_ast_str_node_callback _Nullable callback_updates;
   find_ast_str_node_callback _Nullable callback_deletes;
@@ -289,4 +290,3 @@ typedef struct table_callbacks {
 } table_callbacks;
 
 cql_noexport void find_table_refs(table_callbacks *_Nonnull data, ast_node *_Nonnull node);
-

@@ -57,7 +57,7 @@ void yyset_lineno(int);
 %token INDICES SORT_ORDERS TABLE IS_UNIQUE
 %token TRIGGERS DELETE_TABLES FOR_EACH_ROW FROM_TABLES INSERT_TABLES
 %token IS_INSTEAD_OF_TRIGGER IS_BEFORE_TRIGGER IS_DELETE_TRIGGER IS_AFTER_TRIGGER IS_INSERT_TRIGGER IS_UPDATE_TRIGGER
-%token STATEMENT STATEMENT_ARGS TARGET UPDATE_TABLES USES_PROCEDURES USES_TABLES WHEN_EXPR WHEN_EXPR_ARGS
+%token STATEMENT STATEMENT_ARGS TARGET UPDATE_TABLES USES_PROCEDURES USES_VIEWS USES_TABLES WHEN_EXPR WHEN_EXPR_ARGS
 %token QUERIES ARGS DEFINED_IN_FILE VALUE_ARGS STATEMENT_TYPE INSERTS UPDATES DELETES GENERAL_INSERTS
 %token USES_DATABASE HAS_SELECT_RESULT HAS_OUT_UNION_RESULT HAS_OUT_RESULT REGIONS GENERAL
 %token USING USING_PRIVATELY IS_DEPLOYABLE_ROOT AD_HOC_MIGRATION_PROCS VERSION
@@ -153,6 +153,12 @@ opt_table_names: | table_names
   ;
 
 table_names: STRING_LITERAL | STRING_LITERAL ',' table_names
+  ;
+
+opt_view_names: | view_names
+  ;
+
+view_names: STRING_LITERAL | STRING_LITERAL ',' view_names
   ;
 
 opt_procedure_names: | procedure_names
@@ -379,7 +385,11 @@ dependencies: opt_insert_tables
             opt_delete_tables
             opt_from_tables
             opt_uses_procedures
+            opt_uses_views
             USES_TABLES '[' opt_table_names ']'
+  ;
+
+opt_uses_views: | USES_VIEWS '[' opt_view_names ']' ','
   ;
 
 opt_insert_tables: | INSERT_TABLES '[' opt_table_names ']' ','

@@ -86,6 +86,7 @@ int fileno(FILE *);
 \"updateTables\"[ \t]*:          { return UPDATE_TABLES; }
 \"usesProcedures\"[ \t]*:        { return USES_PROCEDURES; }
 \"usesTables\"[ \t]*:            { return USES_TABLES; }
+\"usesViews\"[ \t]*:             { return USES_VIEWS; }
 \"whenExpr\"[ \t]*:              { return WHEN_EXPR; }
 \"whenExprArgs\"[ \t]*:          { return WHEN_EXPR_ARGS; }
 \"triggers\"[ \t]*:              { return TRIGGERS; }

@@ -51,7 +51,8 @@ static symtab *tables_to_procs;
 typedef struct json_context {
   CSTR cookie;
   ast_node *proc_ast;
-  charbuf *all_used_tables;
+  charbuf *used_tables;
+  charbuf *used_views;
   charbuf *insert_tables;
   charbuf *update_tables;
   charbuf *delete_tables;
@@ -70,6 +71,20 @@ static void add_name_to_output(charbuf* output, CSTR table_name) {
   bprintf(output, "\"%s\"", table_name);
 }
 
+
+// This is the callback function that tells us a view name was found in the body
+// of the stored proc we are currently examining.  The void context information
+// is how we remember which proc we were processing.   For each table we have
+// a character buffer.  We look it up, create it if not present, and write into it.
+// We also write into the buffer for the current proc which came in with the context.
+static void cg_found_view(CSTR view_name, ast_node* table_ast, void* pvContext) {
+  json_context *context = (json_context *)pvContext;
+  Contract(context->cookie == cookie_str);  // sanity check
+  Contract(context->used_views);
+
+  add_name_to_output(context->used_views, view_name);
+}
+
 // This is the callback function that tells us a table name was found in the body
 // of the stored proc we are currently examining.  The void context information
 // is how we remember which proc we were processing.   For each table we have
@@ -78,7 +93,7 @@ static void add_name_to_output(charbuf* output, CSTR table_name) {
 static void cg_found_table(CSTR table_name, ast_node* table_ast, void* pvContext) {
   json_context *context = (json_context *)pvContext;
   Contract(context->cookie == cookie_str);  // sanity check
-  Contract(context->all_used_tables);
+  Contract(context->used_tables);
 
   ast_node *proc_ast = context->proc_ast;
 
@@ -93,7 +108,7 @@ static void cg_found_table(CSTR table_name, ast_node* table_ast, void* pvContext
     add_name_to_output(output, proc_name);
   }
 
-  add_name_to_output(context->all_used_tables, table_name);
+  add_name_to_output(context->used_tables, table_name);
 }
 
 static void cg_found_insert(CSTR table_name, ast_node *table_ast, void *pvContext)
@@ -1628,7 +1643,8 @@ static void cg_json_general_proc(ast_node *ast, ast_node *misc_attrs, CSTR param
 // procs the subject might call.  Of course no proc calls ever appear in triggers.
 static void cg_json_dependencies(charbuf *output, ast_node *ast) {
   json_context context;
-  CHARBUF_OPEN(dependencies);
+  CHARBUF_OPEN(used_tables);
+  CHARBUF_OPEN(used_views);
   CHARBUF_OPEN(insert_tables);
   CHARBUF_OPEN(update_tables);
   CHARBUF_OPEN(delete_tables);
@@ -1637,7 +1653,8 @@ static void cg_json_dependencies(charbuf *output, ast_node *ast) {
 
   context.cookie = cookie_str;
   context.proc_ast = ast;
-  context.all_used_tables = &dependencies;
+  context.used_tables = &used_tables;
+  context.used_views = &used_views;
   context.insert_tables = &insert_tables;
   context.delete_tables = &delete_tables;
   context.update_tables = &update_tables;
@@ -1646,6 +1663,7 @@ static void cg_json_dependencies(charbuf *output, ast_node *ast) {
 
   table_callbacks callbacks = {
       .callback_any_table = cg_found_table,
+      .callback_any_view = cg_found_view,
       .callback_inserts = cg_found_insert,
       .callback_updates = cg_found_update,
       .callback_deletes = cg_found_delete,
@@ -1670,15 +1688,19 @@ static void cg_json_dependencies(charbuf *output, ast_node *ast) {
   if (used_procs.used > 1) {
     bprintf(output, ",\n\"usesProcedures\" : [ %s ]", used_procs.ptr);
   }
+  if (used_views.used > 1) {
+    bprintf(output, ",\n\"usesViews\" : [ %s ]", used_views.ptr);
+  }
 
-  bprintf(output, ",\n\"usesTables\" : [ %s ]", dependencies.ptr);
+  bprintf(output, ",\n\"usesTables\" : [ %s ]", used_tables.ptr);
 
   CHARBUF_CLOSE(used_procs);
   CHARBUF_CLOSE(from_tables);
   CHARBUF_CLOSE(delete_tables);
   CHARBUF_CLOSE(update_tables);
   CHARBUF_CLOSE(insert_tables);
-  CHARBUF_CLOSE(dependencies);
+  CHARBUF_CLOSE(used_views);
+  CHARBUF_CLOSE(used_tables);
 }
 
 // If we find a procedure definition we crack its arguments and first statement

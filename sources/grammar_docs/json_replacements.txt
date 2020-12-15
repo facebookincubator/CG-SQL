@@ -57,6 +57,7 @@ s/[[:<:]]TARGET[[:>:]]/'"target"' ':'/g
 s/[[:<:]]UPDATE_TABLES[[:>:]]/'"updateTables"' ':'/g
 s/[[:<:]]USES_PROCEDURES[[:>:]]/'"usesProcedures"' ':'/g
 s/[[:<:]]USES_TABLES[[:>:]]/'"usesTables"' ':'/g
+s/[[:<:]]USES_VIEWS[[:>:]]/'"usesViews"' ':'/g
 s/[[:<:]]WHEN_EXPR[[:>:]]/'"whenExpr"' ':'/g
 s/[[:<:]]WHEN_EXPR_ARGS[[:>:]]/'"whenExprArgs"' ':'/g
 s/[[:<:]]TRIGGERS[[:>:]]/'"triggers"' ':'/g

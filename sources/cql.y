@@ -607,6 +607,7 @@ name:
   | TEXT  { $name = new_ast_str("text"); }
   | TRIGGER  { $name = new_ast_str("trigger"); }
   | ROWID  { $name = new_ast_str("rowid"); }
+  | KEY  { $name = new_ast_str("key"); }
   ;
 
 opt_name:

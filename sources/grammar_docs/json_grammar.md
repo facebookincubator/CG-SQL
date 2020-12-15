@@ -9,7 +9,7 @@
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue Dec  8 11:58:10 PST 2020
+Snapshot as of Mon Dec 14 11:44:13 PST 2020
 ### Rules
 
 ```
@@ -100,6 +100,12 @@ opt_table_names: | table_names
   ;
 
 table_names: STRING_LITERAL | STRING_LITERAL ',' table_names
+  ;
+
+opt_view_names: | view_names
+  ;
+
+view_names: STRING_LITERAL | STRING_LITERAL ',' view_names
   ;
 
 opt_procedure_names: | procedure_names
@@ -326,7 +332,11 @@ dependencies: opt_insert_tables
             opt_delete_tables
             opt_from_tables
             opt_uses_procedures
+            opt_uses_views
             '"usesTables"' ':' '[' opt_table_names ']'
+  ;
+
+opt_uses_views: | '"usesViews"' ':' '[' opt_view_names ']' ','
   ;
 
 opt_insert_tables: | '"insertTables"' ':' '[' opt_table_names ']' ','

@@ -327,8 +327,20 @@ static void find_table_node(table_callbacks *callbacks, ast_node *node) {
           alt_callback(canonical_name, table_or_view, callbacks->callback_context);
         }
       } else {
-        // Look through the view definition for tables. Just call through recursively.
-        find_table_node(callbacks, table_or_view);
+        Contract(is_ast_create_view_stmt(table_or_view));
+        EXTRACT_NOTNULL(view_and_attrs, table_or_view->right);
+        EXTRACT_NOTNULL(name_and_select, view_and_attrs->left);
+        EXTRACT_STRING(canonical_name, name_and_select->left);
+
+        if (symtab_add(callbacks->visited_any_table, canonical_name, table_or_view)) {
+          // Report the view itself
+          if (callbacks->callback_any_view) {
+            callbacks->callback_any_view(canonical_name, table_or_view, callbacks->callback_context);
+          }
+
+          // Look through the view definition for tables. Just call through recursively.
+          find_table_node(callbacks, table_or_view);
+        }
       }
     }
   }
@@ -349,7 +361,10 @@ cql_noexport void find_table_refs(table_callbacks *callbacks, ast_node *node) {
   // Each kind of callback needs its own symbol table because, for instance,
   // you might see a table as an insert and also as an update. If we use
   // a single visited table like we used to then the second kind of usage would
-  // not get fixed.
+  // not get recorded.
+
+  // Note: we don't need a seperate table for visiting views and visiting tables
+  // any given name can only be a view or a table, never both.
   callbacks->visited_any_table = symtab_new();
   callbacks->visited_insert = symtab_new();
   callbacks->visited_update = symtab_new();

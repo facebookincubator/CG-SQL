@@ -1871,6 +1871,7 @@
       "args" : [
       ],
       "fromTables" : [ "Foo" ],
+      "usesViews" : [ "MyView" ],
       "usesTables" : [ "Foo" ],
       "projection" : [
         {

@@ -1019,6 +1019,7 @@ end;
 
 -- TEST: make sure we can walk dependencies from a view to a table
 -- + "usesTables" : [ "Foo" ],
+-- + "usesViews" : [ "MyView" ],
 -- + "fromTables" : [ "Foo" ],
 create proc use_view()
 begin
