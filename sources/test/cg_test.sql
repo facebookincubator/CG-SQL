@@ -1231,7 +1231,7 @@ begin
   drop index index_1;
 end;
 
--- TEST: simple DML statements for schema_util cg
+-- TEST: simple DML statements for json_schema cg
 -- +2 "INSERT INTO foo(id) VALUES(NULL)"
 -- + "UPDATE bar "
 -- + "SET name = 'bar' "
@@ -1479,7 +1479,7 @@ create table threads (
 );
 
 -- TEST: nested subquery in a proc
--- this forces the msys_schema_utils to run over an atypical table_factor
+-- this forces the json_schema runtime to run over an atypical table_factor
 -- + _rc_ = cql_prepare(_db_, _result_stmt,
 -- + "SELECT thread_key "
 -- + "FROM (SELECT thread_key "
@@ -2961,7 +2961,7 @@ SELECT month, amount, AVG(amount) OVER
   (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND 12 FOLLOWING EXCLUDE TIES)
 SalesMovingAverage FROM SalesInfo;
 
--- TEST: GROUPS expr following and expr preceeding 
+-- TEST: GROUPS expr following and expr preceeding
 -- + AVG(amount) OVER (ORDER BY month GROUPS BETWEEN 13 FOLLOWING AND 14 PRECEDING) AS SalesMovingAverage
 SELECT month, amount, AVG(amount) OVER
   (ORDER BY month GROUPS BETWEEN 13 FOLLOWING AND 14 PRECEDING)
