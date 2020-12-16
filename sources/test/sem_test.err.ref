@@ -940,4 +940,8 @@ Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in 
 Error at test/sem_test.sql:XXXX : in dot : CQL0012: incompatible types in expression 'a'
 Error at test/sem_test.sql:XXXX : in dot : CQL0009: incompatible types in expression 'b'
 Error at test/sem_test.sql:XXXX : in dot : CQL0009: incompatible types in expression 'b'
+Error at test/sem_test.sql:XXXX : in str : CQL0142: duplicate column name 'id'
+Error at test/sem_test.sql:XXXX : in str : CQL0159: cannot add an index to a virtual table 'basic_virtual'
+Error at test/sem_test.sql:XXXX : in str : CQL0162: cannot add a trigger to a virtual table 'basic_virtual'
+Error at test/sem_test.sql:XXXX : in str : CQL0164: cannot use ALTER TABLE on a virtual table 'basic_virtual'
 semantic errors present; no code gen.

@@ -62,6 +62,12 @@ typedef long long int llint_t;
 #define u32_not(x) ((uint32_t)(~(x)))
 #define u64_not(x) ((uint64_t)(~(x)))
 
+#if LONG_MAX > 0x7fffffff
+#define _64(x) x##L
+#else
+#define _64(x) x##LL
+#endif
+
 // patternlint-disable-next-line prefer-sized-ints-in-msys
 int main(int argc, char **argv);
 

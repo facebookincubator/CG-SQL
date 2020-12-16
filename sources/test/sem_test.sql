@@ -13055,3 +13055,52 @@ begin
   declare C cursor like a1;
   update cursor C from a2;
 end;
+
+-- TEST: a simple virtual table form
+-- + {create_virtual_table_stmt}: basic_virtual: { id: integer, t: text } virtual @recreate
+-- the exact module name encodes this list so keeping the whole tree shape here
+-- misc attributes are tested elsewhere so there's no need to go crazy on arg varieties here
+-- +  | {module_info}
+-- +  | | {name module_name}
+-- +  | | {misc_attr_value_list}
+-- +  |   | {name this}
+-- +  |   | {misc_attr_value_list}
+-- +  |     | {name that}
+-- +  |     | {misc_attr_value_list}
+-- +  |       | {name the_other}
+create virtual table basic_virtual using module_name(this, that, the_other) as (
+  id integer,
+  t text
+);
+
+-- TEST: virtual table error case
+-- + {create_virtual_table_stmt}: err
+-- + {create_table_stmt}: err
+-- + Error % duplicate column name 'id'
+-- +1 Error
+create virtual table broken_virtual_table using module_name as (
+  id integer,
+  id integer
+);
+
+-- TEST: no indices on virtual tables
+-- + {create_index_stmt}: err
+-- + Error % cannot add an index to a virtual table 'basic_virtual'
+-- +1 Error
+create index some_index on basic_virtual(id);
+
+-- TEST: no triggers on virtual tables
+-- + {create_trigger_stmt}: err
+-- + Error % cannot add a trigger to a virtual table 'basic_virtual'
+-- +1 Error
+create trigger no_triggers_on_virtual
+  before delete on basic_virtual
+begin
+  delete from bar where rate > id;
+end;
+
+-- TEST: no alters on virtual tables
+-- + {alter_table_add_column_stmt}: err
+-- + Error % cannot use ALTER TABLE on a virtual table 'basic_virtual'
+-- +1 Error
+alter table basic_virtual add column xname text;

@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "cql.h"
 #include "ast.h"
 #include "bytebuf.h"
 #include "symtab.h"
@@ -29,6 +30,8 @@
 // all the time.  To make this easier that jptr is pre-populated as
 // an optimization.
 //
+
+// @lint-ignore-every LINEWRAP
 
 typedef uint64_t sem_t;
 #define sem_not(x) u64_not(x)
@@ -120,31 +123,32 @@ cql_data_decl( bytebuf *recreate_annotations );
 
 #define SEM_TYPE_MAX_UNITARY (SEM_TYPE_OBJECT+1) // the last unitary type
 
-#define SEM_TYPE_NOTNULL          0x0100   // set if and only if null is not possible
-#define SEM_TYPE_HAS_DEFAULT      0x0200   // set for table columns with a default
-#define SEM_TYPE_AUTOINCREMENT    0x0400   // set for table columns with autoinc
-#define SEM_TYPE_VARIABLE         0x0800   // set for variables and parameters
-#define SEM_TYPE_IN_PARAMETER     0x1000   // set for in parameters (can mix with below)
-#define SEM_TYPE_OUT_PARAMETER    0x2000   // set for out paramters (can mix with above)
-#define SEM_TYPE_DML_PROC         0x4000   // set for stored procs that have DML/DDL
-#define SEM_TYPE_HAS_SHAPE_STORAGE      0x8000   // set for a cursor with simplified fetch syntax
-#define SEM_TYPE_CREATE_FUNC     0x10000   // set for a function that returns a created object +1 ref
-#define SEM_TYPE_SELECT_FUNC     0x20000   // set for a sqlite UDF function declaration
-#define SEM_TYPE_HIDDEN          0x40000   // set for columns that are not visible in the current schema version
-#define SEM_TYPE_VALIDATED       0x80000   // set if item has already been validated against previous schema
-#define SEM_TYPE_USES_OUT       0x100000   // set if proc has a one rowresult using the OUT statement
-#define SEM_TYPE_USES_OUT_UNION 0x200000   // set if proc uses the OUT UNION form for multi row result
-#define SEM_TYPE_PK             0x400000   // set if column is a primary key
-#define SEM_TYPE_FK             0x800000   // set if column is a foreign key
-#define SEM_TYPE_UK            0x1000000   // set if column is a unique key
-#define SEM_TYPE_VALUE_CURSOR  0x2000000   // set only if SEM_TYPE_HAS_SHAPE_STORAGE is set and the cursor has no statement
-#define SEM_TYPE_SENSITIVE     0x4000000   // set if the object is privacy sensitive
-#define SEM_TYPE_DEPLOYABLE    0x8000000   // set if the object is a deployable region
-#define SEM_TYPE_BOXED        0x10000000   // set if a cursor's lifetime is managed by a box object
-#define SEM_TYPE_HAS_CHECK    0x20000000   // set for table column with a "check" clause
-#define SEM_TYPE_HAS_COLLATE  0x40000000   // set for table column with a "collate" clause
-#define SEM_TYPE_USES_THROW   0x80000000   // set for a procedure that has a throw in it
-#define SEM_TYPE_FLAGS        0xFFFFFF00   // all the flag bits we have so far
+#define SEM_TYPE_NOTNULL               _64(0x0100) // set if and only if null is not possible
+#define SEM_TYPE_HAS_DEFAULT           _64(0x0200) // set for table columns with a default
+#define SEM_TYPE_AUTOINCREMENT         _64(0x0400) // set for table columns with autoinc
+#define SEM_TYPE_VARIABLE              _64(0x0800) // set for variables and parameters
+#define SEM_TYPE_IN_PARAMETER          _64(0x1000) // set for in parameters (can mix with below)
+#define SEM_TYPE_OUT_PARAMETER         _64(0x2000) // set for out paramters (can mix with above)
+#define SEM_TYPE_DML_PROC              _64(0x4000) // set for stored procs that have DML/DDL
+#define SEM_TYPE_HAS_SHAPE_STORAGE     _64(0x8000) // set for a cursor with simplified fetch syntax
+#define SEM_TYPE_CREATE_FUNC          _64(0x10000) // set for a function that returns a created object +1 ref
+#define SEM_TYPE_SELECT_FUNC          _64(0x20000) // set for a sqlite UDF function declaration
+#define SEM_TYPE_HIDDEN               _64(0x40000) // set for columns that are not visible in the current schema version
+#define SEM_TYPE_VALIDATED            _64(0x80000) // set if item has already been validated against previous schema
+#define SEM_TYPE_USES_OUT            _64(0x100000) // set if proc has a one rowresult using the OUT statement
+#define SEM_TYPE_USES_OUT_UNION      _64(0x200000) // set if proc uses the OUT UNION form for multi row result
+#define SEM_TYPE_PK                  _64(0x400000) // set if column is a primary key
+#define SEM_TYPE_FK                  _64(0x800000) // set if column is a foreign key
+#define SEM_TYPE_UK                 _64(0x1000000) // set if column is a unique key
+#define SEM_TYPE_VALUE_CURSOR       _64(0x2000000) // set only if SEM_TYPE_HAS_SHAPE_STORAGE is set and the cursor has no statement
+#define SEM_TYPE_SENSITIVE          _64(0x4000000) // set if the object is privacy sensitive
+#define SEM_TYPE_DEPLOYABLE         _64(0x8000000) // set if the object is a deployable region
+#define SEM_TYPE_BOXED             _64(0x10000000) // set if a cursor's lifetime is managed by a box object
+#define SEM_TYPE_HAS_CHECK         _64(0x20000000) // set for table column with a "check" clause
+#define SEM_TYPE_HAS_COLLATE       _64(0x40000000) // set for table column with a "collate" clause
+#define SEM_TYPE_USES_THROW        _64(0x80000000) // set for a procedure that has a throw in it
+#define SEM_TYPE_VIRTUAL          _64(0x100000000) // set if and only if this is a virtual table
+#define SEM_TYPE_FLAGS            _64(0x1FFFFFF00) // all the flag bits we have so far
 
 #define SEM_EXPR_CONTEXT_NONE           0x001
 #define SEM_EXPR_CONTEXT_SELECT_LIST    0x002
@@ -168,6 +172,7 @@ cql_noexport sem_t core_type_of(sem_t sem_type);
 cql_noexport sem_t sensitive_flag(sem_t sem_type);
 cql_noexport CSTR coretype_string(sem_t sem_type);
 
+cql_noexport bool_t is_virtual_ast(ast_node *ast);
 cql_noexport bool_t is_bool(sem_t sem_type);
 cql_noexport bool_t is_string_compat(sem_t sem_type);
 cql_noexport bool_t is_blob_compat(sem_t sem_type);

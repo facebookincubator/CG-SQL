@@ -5876,6 +5876,7 @@ static void cg_c_init(void) {
   DDL_STMT_INIT(drop_index_stmt);
   DDL_STMT_INIT(drop_trigger_stmt);
   DDL_STMT_INIT(create_table_stmt);
+  DDL_STMT_INIT(create_virtual_table_stmt);
   DDL_STMT_INIT(create_trigger_stmt);
   DDL_STMT_INIT(create_index_stmt);
   DDL_STMT_INIT(create_view_stmt);

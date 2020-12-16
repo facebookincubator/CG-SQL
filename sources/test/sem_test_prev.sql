@@ -406,6 +406,36 @@ create table foo_with_check(
  x integer check (x == foo_enum.a)
 );
 
+-- TEST: no change case
+-- - Error
+create virtual table unchanged_virtual using my_virtual(goo) as (
+  id integer
+);
+
+-- TEST: legal delete case
+-- - Error
+create virtual table deleted_virtual using my_virtual(goo) as (
+  id integer
+) @delete(3);
+
+-- TEST: zombie comes back to life (invalid)
+create virtual table undead_virtual using my_virtual(goo) as (
+  id integer
+);
+
+-- TEST it's ok at add things to a virtual table and change args
+-- - Error
+create virtual table changing_virtual using my_virtual(goo, goo) as (
+  id integer,
+  t text
+);
+
+-- TEST: changing the delete version is bad
+-- - Error
+create virtual table delete_change_virtual using my_virtual(goo) as (
+  id integer
+) @delete(1);
+
 ------------------------------------------------------------------------------------------------------------
 @previous_schema;
 ------------------------------------------------------------------------------------------------------------
@@ -884,3 +914,34 @@ declare enum foo_enum integer (
 create table foo_with_check(
  x integer check (x == foo_enum.a)
 );
+
+-- TEST: no change
+-- - Error
+create virtual table unchanged_virtual using my_virtual(goo) as (
+  id integer
+);
+
+-- TEST: normal delete
+-- - Error
+create virtual table deleted_virtual using my_virtual(goo) as (
+  id integer
+);
+
+-- + Error % current schema can't go back to @recreate semantics for 'undead_virtual'
+-- +1 Error
+create virtual table undead_virtual using my_virtual(goo) as (
+  id integer
+) @delete(3);
+
+-- TEST: it's ok at add things to a virtual table and change args
+-- - Error
+create virtual table changing_virtual using my_virtual(goo) as (
+  id integer
+);
+
+-- TEST: changing the delete version is bad
+-- + Error % current delete version not equal to previous delete version for 'delete_change_virtual'
+-- +1 Error
+create virtual table delete_change_virtual using my_virtual(goo) as (
+  id integer
+) @delete(3);

@@ -472,19 +472,21 @@ static void sem_validate_check_expr(ast_node *table, ast_node *expr) {
   Contract(is_ast_create_table_stmt(table));
   Contract(expr);
 
-  sem_join *jptr;
-  sem_struct *sptr = table->sem->sptr;
+  if (!is_error(table)) {
+    sem_join *jptr;
+    sem_struct *sptr = table->sem->sptr;
 
-  jptr = new_sem_join(1);
-  jptr->names[0] = "$$"; // there is no scope name for this make something that is an invalidate identifier
-  jptr->tables[0] = sptr;
+    jptr = new_sem_join(1);
+    jptr->names[0] = "$$"; // there is no scope name for this make something that is an invalidate identifier
+    jptr->tables[0] = sptr;
 
-  PUSH_JOIN(expr_scope, jptr);
-  sem_numeric_expr(expr, NULL, "CHECK", SEM_EXPR_CONTEXT_WHERE);
-  POP_JOIN();
+    PUSH_JOIN(expr_scope, jptr);
+    sem_numeric_expr(expr, NULL, "CHECK", SEM_EXPR_CONTEXT_WHERE);
+    POP_JOIN();
 
-  // expr is already marked with an error by the above, no further record_error needed
-  // jptr is freed by the mini allocator
+    // expr is already marked with an error by the above, no further record_error needed
+    // jptr is freed by the mini allocator
+  }
 }
 
 // data needed for processing a column defintion
@@ -795,6 +797,10 @@ cql_noexport bool_t is_nullable(sem_t sem_type) {
 
 static bool_t is_unique_key(sem_t sem_type) {
   return !!(sem_type & SEM_TYPE_UK);
+}
+
+cql_noexport bool_t is_virtual_ast(ast_node *ast) {
+  return ast->sem && (ast->sem->sem_type & SEM_TYPE_VIRTUAL);
 }
 
 cql_noexport bool_t is_primary_key(sem_t sem_type) {
@@ -1366,6 +1372,9 @@ static void get_sem_flags(sem_t sem_type, charbuf *out) {
   }
   if (sem_type & SEM_TYPE_USES_THROW) {
     bprintf(out, " uses_throw");
+  }
+  if (sem_type & SEM_TYPE_VIRTUAL) {
+    bprintf(out, " virtual");
   }
 }
 
@@ -2275,6 +2284,12 @@ static void sem_create_index_stmt(ast_node *ast) {
     table_name_ast,
     "CQL0019: create index table name not found");
   if (!table_ast) {
+    record_error(ast);
+    return;
+  }
+
+  if (is_virtual_ast(table_ast)) {
+    report_error(table_name_ast, "CQL0159: cannot add an index to a virtual table", table_name);
     record_error(ast);
     return;
   }
@@ -9138,6 +9153,12 @@ static void sem_create_trigger_stmt(ast_node *ast) {
     return;
   }
 
+  if (is_virtual_ast(target)) {
+    report_error(table_name_ast, "CQL0162: cannot add a trigger to a virtual table", table_name);
+    record_error(ast);
+    return;
+  }
+
   table_name_ast->sem = target->sem;
 
   if (!is_ast_create_table_stmt(target) && !(flags & TRIGGER_INSTEAD_OF)) {
@@ -9444,7 +9465,15 @@ static void sem_create_table_stmt(ast_node *ast) {
 
   if (!is_error(ast)) {
     if (prev_defn) {
-      if (!sem_validate_identical_ddl(prev_defn, ast)) {
+
+      // Use the virtual table definition for comparison if there is one -- it's the parent node.
+      // If only one of the tables is virtual then the text can't possibly match so we don't
+      // need any special case logic for mix and match of virtual/non-virtual. And the error
+      // message will include the text of both so it should be obvious what has happened.
+      ast_node *prev_cmp = is_virtual_ast(prev_defn) ? prev_defn->parent : prev_defn;
+      ast_node *cur_cmp = is_virtual_ast(ast) ? ast->parent : ast;
+          
+      if (!sem_validate_identical_ddl(prev_cmp, cur_cmp)) {
         report_error(name_ast, "CQL0103: duplicate table/view name", name);
         record_error(name_ast);
         record_error(ast);
@@ -9470,6 +9499,36 @@ static void sem_create_table_stmt(ast_node *ast) {
 cleanup:
   current_table_name = NULL;
   current_table_ast = NULL;
+}
+
+// Semantic analysis for virtual tables is odd. The "virtual" part of the
+// create virtual table is competely uninteresting to CQL. It is a module
+// invocation to a module that CQL has no visibility into.  The arguments
+// can be anything; in the SQLite language they can be literally a letter
+// to gramma -- the only requirement is that the parens match.  CQL limits
+// the args to the forms allowed in a misc attribute list. This is general
+// enough to represent an arbitrary LISP program but not totally arbitrary,
+// but it requires no validation beyond syntax!  So we're left with the
+// part that tells us the table shape.
+void sem_create_virtual_table_stmt(ast_node *ast) {
+  Contract(is_ast_create_virtual_table_stmt(ast));
+
+  Contract(is_ast_create_virtual_table_stmt(ast));
+  EXTRACT_NOTNULL(create_table_stmt, ast->right);
+
+  sem_create_table_stmt(create_table_stmt);
+  if (is_error(create_table_stmt)) {
+    record_error(ast);
+    return;
+  }
+
+  // nothing else can go wrong, any module name is legal and any args are legal
+  // the args are not checked against anything as they are only meaningful to
+  // the module code that interprets them. In a very real sense CQL only
+  // cares about the 'AS' part of the create table statement
+
+  create_table_stmt->sem->sem_type |= SEM_TYPE_VIRTUAL;
+  ast->sem = create_table_stmt->sem;
 }
 
 // Validate alter table add column
@@ -9499,6 +9558,12 @@ static void sem_alter_table_add_column_stmt(ast_node *ast) {
 
   if (!is_ast_create_table_stmt(table_ast)) {
     report_error(name_ast, "CQL0144: cannot alter a view", name);
+    record_error(ast);
+    return;
+  }
+
+  if (is_virtual_ast(table_ast)) {
+    report_error(name_ast, "CQL0164: cannot use ALTER TABLE on a virtual table", name);
     record_error(ast);
     return;
   }
@@ -16185,6 +16250,7 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(trycatch_stmt);
   STMT_INIT(throw_stmt);
   STMT_INIT(create_table_stmt);
+  STMT_INIT(create_virtual_table_stmt);
   STMT_INIT(create_trigger_stmt);
   STMT_INIT(drop_table_stmt);
   STMT_INIT(drop_view_stmt);

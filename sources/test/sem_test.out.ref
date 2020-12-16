@@ -53070,3 +53070,133 @@ END;
                 | {name a2}
                 | {name d}
 
+The statement ending at line XXXX
+
+CREATE VIRTUAL TABLE basic_virtual USING module_name (this, that, the_other) AS (
+  id INTEGER,
+  t TEXT
+);
+
+  {create_virtual_table_stmt}: basic_virtual: { id: integer, t: text } virtual @recreate
+  | {module_info}
+  | | {name module_name}
+  | | {misc_attr_value_list}
+  |   | {name this}
+  |   | {misc_attr_value_list}
+  |     | {name that}
+  |     | {misc_attr_value_list}
+  |       | {name the_other}
+  | {create_table_stmt}: basic_virtual: { id: integer, t: text } virtual @recreate
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | | {recreate_attr}
+    | | {name basic_virtual}
+    | {col_key_list}
+      | {col_def}: id: integer
+      | | {col_def_type_attrs}
+      |   | {col_def_name_type}
+      |     | {name id}
+      |     | {type_int}: integer
+      | {col_key_list}
+        | {col_def}: t: text
+          | {col_def_type_attrs}
+            | {col_def_name_type}
+              | {name t}
+              | {type_text}: text
+
+The statement ending at line XXXX
+
+CREATE VIRTUAL TABLE broken_virtual_table USING module_name AS (
+  id INTEGER,
+  id INTEGER
+);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0142: duplicate column name 'id'
+
+  {create_virtual_table_stmt}: err
+  | {module_info}
+  | | {name module_name}
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | | {recreate_attr}
+    | | {name broken_virtual_table}
+    | {col_key_list}
+      | {col_def}: id: integer
+      | | {col_def_type_attrs}
+      |   | {col_def_name_type}
+      |     | {name id}
+      |     | {type_int}: integer
+      | {col_key_list}
+        | {col_def}: id: integer
+          | {col_def_type_attrs}
+            | {col_def_name_type}
+              | {name id}
+              | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE INDEX some_index ON basic_virtual (id);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0159: cannot add an index to a virtual table 'basic_virtual'
+
+  {create_index_stmt}: err
+  | {create_index_on_list}
+  | | {name some_index}
+  | | {name basic_virtual}
+  | {flags_names_attrs}
+    | {int 0}
+    | {index_names_and_attrs}
+      | {indexed_columns}
+        | {indexed_column}
+          | {name id}
+
+The statement ending at line XXXX
+
+CREATE TRIGGER no_triggers_on_virtual
+  BEFORE DELETE ON basic_virtual
+BEGIN
+  DELETE FROM bar WHERE rate > id;
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0162: cannot add a trigger to a virtual table 'basic_virtual'
+
+  {create_trigger_stmt}: err
+  | {int 0}
+  | {trigger_body_vers}
+    | {trigger_def}
+      | {name no_triggers_on_virtual}
+      | {trigger_condition}
+        | {int 4}
+        | {trigger_op_target}
+          | {trigger_operation}
+          | | {int 64}
+          | {trigger_target_action}
+            | {name basic_virtual}
+            | {trigger_action}
+              | {int 0}
+              | {trigger_when_stmts}
+                | {stmt_list}
+                  | {delete_stmt}
+                    | {name bar}
+                    | {opt_where}
+                      | {gt}
+                        | {name rate}
+                        | {name id}
+
+The statement ending at line XXXX
+
+ALTER TABLE basic_virtual ADD COLUMN xname TEXT;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0164: cannot use ALTER TABLE on a virtual table 'basic_virtual'
+
+  {alter_table_add_column_stmt}: err
+  | {name basic_virtual}: basic_virtual: { id: integer, t: text } virtual @recreate
+  | {col_def}
+    | {col_def_type_attrs}
+      | {col_def_name_type}
+        | {name xname}
+        | {type_text}
+

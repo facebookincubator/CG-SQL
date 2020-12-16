@@ -1850,6 +1850,139 @@ CREATE TABLE foo_with_check(
 
 The statement ending at line XXXX
 
+CREATE VIRTUAL TABLE unchanged_virtual USING my_virtual (goo) AS (
+  id INTEGER
+);
+
+  {create_virtual_table_stmt}: unchanged_virtual: { id: integer } virtual @recreate
+  | {module_info}
+  | | {name my_virtual}
+  | | {misc_attr_value_list}
+  |   | {name goo}
+  | {create_table_stmt}: unchanged_virtual: { id: integer } validated virtual @recreate
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | | {recreate_attr}
+    | | {name unchanged_virtual}
+    | {col_key_list}
+      | {col_def}: id: integer
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+            | {name id}
+            | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE VIRTUAL TABLE deleted_virtual USING my_virtual (goo) AS (
+  id INTEGER
+) @DELETE(3);
+
+  {create_virtual_table_stmt}: deleted_virtual: { id: integer } hidden virtual @delete(3)
+  | {module_info}
+  | | {name my_virtual}
+  | | {misc_attr_value_list}
+  |   | {name goo}
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | | {delete_attr}
+    | |   | {version_annotation}
+    | |     | {int 3}
+    | | {name deleted_virtual}
+    | {col_key_list}
+      | {col_def}: id: integer
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+            | {name id}
+            | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE VIRTUAL TABLE undead_virtual USING my_virtual (goo) AS (
+  id INTEGER
+);
+
+  {create_virtual_table_stmt}: undead_virtual: { id: integer } virtual @recreate
+  | {module_info}
+  | | {name my_virtual}
+  | | {misc_attr_value_list}
+  |   | {name goo}
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | | {recreate_attr}
+    | | {name undead_virtual}
+    | {col_key_list}
+      | {col_def}: id: integer
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+            | {name id}
+            | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE VIRTUAL TABLE changing_virtual USING my_virtual (goo, goo) AS (
+  id INTEGER,
+  t TEXT
+);
+
+  {create_virtual_table_stmt}: changing_virtual: { id: integer, t: text } virtual @recreate
+  | {module_info}
+  | | {name my_virtual}
+  | | {misc_attr_value_list}
+  |   | {name goo}
+  |   | {misc_attr_value_list}
+  |     | {name goo}
+  | {create_table_stmt}: changing_virtual: { id: integer, t: text } validated virtual @recreate
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | | {recreate_attr}
+    | | {name changing_virtual}
+    | {col_key_list}
+      | {col_def}: id: integer
+      | | {col_def_type_attrs}
+      |   | {col_def_name_type}
+      |     | {name id}
+      |     | {type_int}: integer
+      | {col_key_list}
+        | {col_def}: t: text
+          | {col_def_type_attrs}
+            | {col_def_name_type}
+              | {name t}
+              | {type_text}: text
+
+The statement ending at line XXXX
+
+CREATE VIRTUAL TABLE delete_change_virtual USING my_virtual (goo) AS (
+  id INTEGER
+) @DELETE(1);
+
+  {create_virtual_table_stmt}: delete_change_virtual: { id: integer } hidden virtual @delete(1)
+  | {module_info}
+  | | {name my_virtual}
+  | | {misc_attr_value_list}
+  |   | {name goo}
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | | {delete_attr}
+    | |   | {version_annotation}
+    | |     | {int 1}
+    | | {name delete_change_virtual}
+    | {col_key_list}
+      | {col_def}: id: integer
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+            | {name id}
+            | {type_int}: integer
+
+The statement ending at line XXXX
+
 @PREVIOUS_SCHEMA;
 
   {previous_schema_stmt}: ok
@@ -3730,4 +3863,132 @@ Error at test/sem_test_prev.sql:XXXX : in col_def : CQL0128: table has a column 
           | {eq}: bool
             | {name x}: x: integer has_check
             | {int 10}: integer notnull
+
+The statement ending at line XXXX
+
+CREATE VIRTUAL TABLE unchanged_virtual USING my_virtual (goo) AS (
+  id INTEGER
+);
+
+  {create_virtual_table_stmt}: unchanged_virtual: { id: integer } virtual @recreate
+  | {module_info}
+  | | {name my_virtual}
+  | | {misc_attr_value_list}
+  |   | {name goo}
+  | {create_table_stmt}: unchanged_virtual: { id: integer } virtual @recreate
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | | {recreate_attr}
+    | | {name unchanged_virtual}
+    | {col_key_list}
+      | {col_def}: id: integer
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+            | {name id}
+            | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE VIRTUAL TABLE deleted_virtual USING my_virtual (goo) AS (
+  id INTEGER
+);
+
+  {create_virtual_table_stmt}: deleted_virtual: { id: integer } virtual @recreate
+  | {module_info}
+  | | {name my_virtual}
+  | | {misc_attr_value_list}
+  |   | {name goo}
+  | {create_table_stmt}: deleted_virtual: { id: integer } virtual @recreate
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | | {recreate_attr}
+    | | {name deleted_virtual}
+    | {col_key_list}
+      | {col_def}: id: integer
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+            | {name id}
+            | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE VIRTUAL TABLE undead_virtual USING my_virtual (goo) AS (
+  id INTEGER
+) @DELETE(3);
+
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0114: current schema can't go back to @recreate semantics for 'undead_virtual'
+
+  {create_virtual_table_stmt}: err
+  | {module_info}
+  | | {name my_virtual}
+  | | {misc_attr_value_list}
+  |   | {name goo}
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | | {delete_attr}
+    | |   | {version_annotation}
+    | |     | {int 3}
+    | | {name undead_virtual}
+    | {col_key_list}
+      | {col_def}: id: integer
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+            | {name id}
+            | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE VIRTUAL TABLE changing_virtual USING my_virtual (goo) AS (
+  id INTEGER
+);
+
+  {create_virtual_table_stmt}: changing_virtual: { id: integer } virtual @recreate
+  | {module_info}
+  | | {name my_virtual}
+  | | {misc_attr_value_list}
+  |   | {name goo}
+  | {create_table_stmt}: changing_virtual: { id: integer } virtual @recreate
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | | {recreate_attr}
+    | | {name changing_virtual}
+    | {col_key_list}
+      | {col_def}: id: integer
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+            | {name id}
+            | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE VIRTUAL TABLE delete_change_virtual USING my_virtual (goo) AS (
+  id INTEGER
+) @DELETE(3);
+
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0116: current delete version not equal to previous delete version for 'delete_change_virtual'
+
+  {create_virtual_table_stmt}: err
+  | {module_info}
+  | | {name my_virtual}
+  | | {misc_attr_value_list}
+  |   | {name goo}
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | | {delete_attr}
+    | |   | {version_annotation}
+    | |     | {int 3}
+    | | {name delete_change_virtual}
+    | {col_key_list}
+      | {col_def}: id: integer
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+            | {name id}
+            | {type_int}: integer
 
