@@ -1,3 +1,4 @@
+s/[[:<:]]VIRTUAL_TABLES[[:>:]]/'"virtualTables"' ':'/g
 s/[[:<:]]TABLES[[:>:]]/'"tables"' ':'/g
 s/[[:<:]]NAME[[:>:]]/'"name"' ':'/g
 s/[[:<:]]ARG_ORIGIN[[:>:]]/'"argOrigin"' ':'/g
@@ -22,6 +23,7 @@ s/[[:<:]]IS_SENSITIVE[[:>:]]/'"isSensitive"' ':'/g
 s/[[:<:]]IS_PRIMARY_KEY[[:>:]]/'"isPrimaryKey"' ':'/g
 s/[[:<:]]IS_UNIQUE_KEY[[:>:]]/'"isUniqueKey"' ':'/g
 s/[[:<:]]IS_AUTO_INCREMENT[[:>:]]/'"isAutoIncrement"' ':'/g
+s/[[:<:]]IS_VIRTUAL[[:>:]]/'"isVirtual"' ':'/g
 s/[[:<:]]PRIMARY_KEY[[:>:]]/'"primaryKey"' ':'/g
 s/[[:<:]]FOREIGN_KEYS[[:>:]]/'"foreignKeys"' ':'/g
 s/[[:<:]]UNIQUE_KEYS[[:>:]]/'"uniqueKeys"' ':'/g
@@ -87,4 +89,6 @@ s/[[:<:]]VERSION[[:>:]]/'"version"' ':'/g
 s/[[:<:]]COLLATE[[:>:]]/'"collate"' ':'/g
 s/[[:<:]]CHECK_EXPR[[:>:]]/'"checkExpr"' ':'/g
 s/[[:<:]]CHECK_EXPR_ARGS[[:>:]]/'"checkExprArgs"' ':'/g
+s/[[:<:]]MODULE[[:>:]]/'"module"' ':'/g
+s/[[:<:]]MODULE_ARGS[[:>:]]/'"moduleArgs"' ':'/g
 s/[ ][ ]*$//

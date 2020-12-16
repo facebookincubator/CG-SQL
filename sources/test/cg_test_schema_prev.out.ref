@@ -96,6 +96,11 @@ CREATE VIRTUAL TABLE complex_virtual_table USING a_module (ARGUMENTS FOLLOWING) 
   t TEXT
 );
 
+CREATE VIRTUAL TABLE deleted_virtual_table USING a_module (ARGUMENTS FOLLOWING) AS (
+  id INTEGER @SENSITIVE,
+  t TEXT
+) @DELETE(4);
+
 @begin_schema_region shared;
 CREATE VIEW shared_view AS
 SELECT *

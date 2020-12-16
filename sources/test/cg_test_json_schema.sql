@@ -1069,3 +1069,55 @@ declare enum some_longs long (
   neg = -1000,
   pos = 0x100010001000
 );
+
+-- TEST: generate a virtual table
+-- + "name" : "a_virtual_table",
+-- + "ifNotExists" : 0,
+-- + "isRecreated": 1,
+-- + "isVirtual" : 1,
+-- + "module" : "a_module",
+-- + "moduleArgs" : "this, that, the_other",
+create virtual table a_virtual_table using a_module ( this, that, the_other ) as (
+  id integer,
+  t text
+);
+
+-- TEST: generate a virtual table with no module args
+-- + "name" : "a_second_virtual_table",
+-- + "ifNotExists" : 0,
+-- + "isRecreated": 1,
+-- + "isVirtual" : 1,
+-- + "module" : "a_module",
+-- - "moduleArgs"
+create virtual table a_second_virtual_table using a_module as (
+  id integer @sensitive,
+  t text
+);
+
+-- TEST: generate a virtual table using the schema as the arguments
+-- + "name" : "a_third_virtual_table",
+-- + "ifNotExists" : 0,
+-- + "isRecreated": 1,
+-- + "isVirtual" : 1,
+-- + "module" : "a_module",
+-- + "moduleArgs" : "  id INTEGER,\n  t TEXT,\n  q REAL",
+create virtual table a_third_virtual_table using a_module (arguments following) as (
+  id integer @sensitive,
+  t text,
+  q real
+);
+
+-- TEST: delete a virtual table
+-- + "ifNotExists" : 0,
+-- + "isVirtual" : 1,
+-- + "isDeleted" : 1,
+-- + "deletedVersion" : 2,
+-- + "isRecreated": 0,
+-- + "isVirtual" : 1,
+-- + "module" : "a_module",
+-- + "moduleArgs" : "  id INTEGER,\n  t TEXT,\n  q REAL",
+create virtual table a_deleted_virtual_table using a_module (arguments following) as (
+  id integer @sensitive,
+  t text,
+  q real
+) @delete(2);

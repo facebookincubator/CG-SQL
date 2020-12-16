@@ -268,7 +268,7 @@ static void cg_json_misc_attr(charbuf *output, ast_node *ast) {
 
 // Emit a list of attributes for the current entity, it could be any kind of entity.
 // Whatever it is we spit out the attributes here in array format.
-static void cg_json_misc_attrs(charbuf *output, ast_node *_Nullable list) {
+static void cg_json_misc_attrs(charbuf *output, ast_node *_Nonnull list) {
   Contract(is_ast_misc_attrs(list));
   bprintf(output, "\"attributes\" : [\n");
   BEGIN_INDENT(attr, 2);
@@ -1231,6 +1231,36 @@ static void cg_json_table(charbuf *output, ast_node *ast) {
     cg_json_emit_region_info(output, ast);
   }
 
+  if (is_virtual_ast(ast)) {
+    bprintf(output, ",\n\"isVirtual\" : 1");
+    EXTRACT_NOTNULL(create_virtual_table_stmt, ast->parent);
+    EXTRACT_NOTNULL(module_info, create_virtual_table_stmt->left);
+    EXTRACT_STRING(module_name, module_info->left);
+    EXTRACT_ANY(module_args, module_info->right);
+    bprintf(output, ",\n\"module\" : \"%s\"", module_name);
+    if (module_args) {
+      bprintf(output, ",\n\"moduleArgs\" : ");
+      if (is_ast_following(module_args)) {
+        CHARBUF_OPEN(sql);
+          gen_set_output_buffer(&sql);
+          gen_sql_callbacks callbacks;
+          init_gen_sql_callbacks(&callbacks);
+          gen_with_callbacks(col_key_list, gen_col_key_list, &callbacks);
+          cg_encode_json_string_literal(sql.ptr, output);
+        CHARBUF_CLOSE(sql);
+      }
+      else {
+        CHARBUF_OPEN(sql);
+          gen_set_output_buffer(&sql);
+          gen_sql_callbacks callbacks;
+          init_gen_sql_callbacks(&callbacks);
+          gen_with_callbacks(module_args, gen_misc_attr_value_list, &callbacks);
+          cg_encode_json_string_literal(sql.ptr, output);
+        CHARBUF_CLOSE(sql);
+      }
+    }
+  }
+
   CONTINUE_LIST;
 
   if (ast->sem->index_list) {
@@ -1259,6 +1289,29 @@ static void cg_json_tables(charbuf *output) {
 
   for (list_item *item = all_tables_list; item; item = item->next) {
     ast_node *ast = item->ast;
+    if (is_virtual_ast(ast)) {
+      continue;
+    }
+    COMMA;
+    cg_json_table(output, ast);
+  }
+
+  END_INDENT(tables);
+  END_LIST;
+  bprintf(output, "]");
+}
+
+// The tables section is simply an array of table entries under the tables key
+static void cg_json_virtual_tables(charbuf *output) {
+  bprintf(output, "\"virtualTables\" : [\n");
+  BEGIN_INDENT(tables, 2);
+  BEGIN_LIST;
+
+  for (list_item *item = all_tables_list; item; item = item->next) {
+    ast_node *ast = item->ast;
+    if (!is_virtual_ast(ast)) {
+      continue;
+    }
     COMMA;
     cg_json_table(output, ast);
   }
@@ -1934,6 +1987,8 @@ cql_noexport void cg_json_schema_main(ast_node *head) {
   bprintf(output, "\n{\n");
   BEGIN_INDENT(defs, 2);
   cg_json_tables(output);
+  bprintf(output, ",\n");
+  cg_json_virtual_tables(output);
   bprintf(output, ",\n");
   cg_json_views(output);
   bprintf(output, ",\n");

@@ -28,9 +28,12 @@ cql_noexport void gen_params(ast_node *_Nonnull ast);
 cql_noexport void gen_declare_proc_from_create_or_decl(ast_node *_Nonnull ast);
 cql_noexport void gen_one_stmt(ast_node *_Nonnull stmt);
 cql_noexport void gen_misc_attrs(ast_node *_Nonnull ast);
+cql_noexport void gen_misc_attr_value(ast_node *_Nonnull ast);
+cql_noexport void gen_misc_attr_value_list(ast_node *_Nonnull ast);
 cql_noexport void gen_fk_action(int32_t action);
 cql_noexport void gen_insert_type(ast_node *_Nonnull ast);
 cql_noexport void gen_declare_proc_from_create_proc(ast_node *_Nonnull ast);
+cql_noexport void gen_col_key_list(ast_node *_Nonnull list);
 
 // automatically sets the output buffer and printf's the results of the above
 cql_noexport void gen_to_stdout(ast_node *_Nullable ast, gen_func fn);

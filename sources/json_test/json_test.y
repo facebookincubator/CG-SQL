@@ -17,7 +17,6 @@
 #include <string.h>
 #include <stdio.h>
 
-
 // The stack needed is modest (32k) and this prevents leaks in error cases because
 // it's just a stack alloc.
 #define YYSTACK_USE_ALLOCA 1
@@ -45,8 +44,8 @@ void yyset_lineno(int);
 %token INT_LITERAL
 %token LONG_LITERAL
 %token REAL_LITERAL
-%token TABLES
-%token NAME ARG_ORIGIN IS_TEMP IF_NOT_EXISTS WITHOUT_ROWID IS_ADDED IS_DELETED IS_RECREATED REGION DEPLOYED_IN_REGION
+%token TABLES VIRTUAL_TABLES MODULE MODULE_ARGS
+%token NAME ARG_ORIGIN IS_TEMP IS_VIRTUAL IF_NOT_EXISTS WITHOUT_ROWID IS_ADDED IS_DELETED IS_RECREATED REGION DEPLOYED_IN_REGION
 %token ADDED_VERSION DELETED_VERSION ADDED_MIGRATION_PROC DELETED_MIGRATION_PROC RECREATE_GROUP_NAME
 %token COLUMNS
 %token TYPE IS_NOT_NULL IS_PRIMARY_KEY IS_UNIQUE_KEY IS_AUTO_INCREMENT IS_SENSITIVE
@@ -70,6 +69,7 @@ void yyset_lineno(int);
 
 json_schema: '{'
          TABLES '[' opt_tables ']' ','
+         VIRTUAL_TABLES '[' opt_virtual_tables ']' ','
          VIEWS '[' opt_views ']' ','
          INDICES '[' opt_indices ']' ','
          TRIGGERS '[' opt_triggers ']' ','
@@ -114,6 +114,37 @@ table: '{'
        FOREIGN_KEYS '[' opt_foreign_keys ']' ','
        UNIQUE_KEYS '[' opt_unique_keys ']'
        '}'
+  ;
+
+opt_virtual_tables: | virtual_tables
+  ;
+
+virtual_tables: virtual_table | virtual_table ',' virtual_tables
+  ;
+
+virtual_table: '{'
+       NAME STRING_LITERAL ','
+       IS_TEMP '0' ','
+       IF_NOT_EXISTS BOOL_LITERAL ','
+       WITHOUT_ROWID '0' ','
+       IS_ADDED BOOL_LITERAL ','
+       opt_added_version
+       IS_DELETED BOOL_LITERAL ','
+       opt_deleted_version
+       IS_RECREATED BOOL_LITERAL ','
+       opt_region_info
+       IS_VIRTUAL '1' ','
+       MODULE STRING_LITERAL ','
+       opt_module_args
+       opt_attributes
+       COLUMNS '[' columns ']' ','
+       PRIMARY_KEY '[' opt_column_names ']' ','
+       FOREIGN_KEYS '[' opt_foreign_keys ']' ','
+       UNIQUE_KEYS '[' opt_unique_keys ']'
+       '}'
+  ;
+
+opt_module_args: | MODULE_ARGS  STRING_LITERAL ','
   ;
 
 opt_added_version: | ADDED_VERSION any_integer ',' opt_added_migration_proc

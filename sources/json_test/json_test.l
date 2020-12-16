@@ -29,7 +29,10 @@ int fileno(FILE *);
 %%
 
 \"tables\"[ \t]*:                { return TABLES; }
+\"virtualTables\"[ \t]*:         { return VIRTUAL_TABLES; }
 \"name\"[ \t]*:                  { return NAME; }
+\"module\"[ \t]*:                { return MODULE; }
+\"moduleArgs\"[ \t]*:            { return MODULE_ARGS; }
 \"argOrigin\"[ \t]*:             { return ARG_ORIGIN; }
 \"isTemp\"[ \t]*:                { return IS_TEMP; }
 \"ifNotExists\"[ \t]*:           { return IF_NOT_EXISTS; }
@@ -51,6 +54,7 @@ int fileno(FILE *);
 \"isPrimaryKey\"[ \t]*:          { return IS_PRIMARY_KEY; }
 \"isUniqueKey\"[ \t]*:           { return IS_UNIQUE_KEY; }
 \"isAutoIncrement\"[ \t]*:       { return IS_AUTO_INCREMENT; }
+\"isVirtual\"[ \t]*:             { return IS_VIRTUAL; }
 \"primaryKey\"[ \t]*:            { return PRIMARY_KEY; }
 \"foreignKeys\"[ \t]*:           { return FOREIGN_KEYS; }
 \"uniqueKeys\"[ \t]*:            { return UNIQUE_KEYS; }

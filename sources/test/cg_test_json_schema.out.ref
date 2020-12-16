@@ -1131,6 +1131,221 @@
       ]
     }
   ],
+  "virtualTables" : [
+    
+    The statement ending at line XXXX
+    
+    CREATE TABLE a_virtual_table(
+      id INTEGER,
+      t TEXT
+    ) @RECREATE
+    
+    {
+      "name" : "a_virtual_table",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 1,
+      "isVirtual" : 1,
+      "module" : "a_module",
+      "moduleArgs" : "this, that, the_other",
+      "columns" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "t",
+          "type" : "text",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ]
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE TABLE a_second_virtual_table(
+      id INTEGER @SENSITIVE,
+      t TEXT
+    ) @RECREATE
+    
+    {
+      "name" : "a_second_virtual_table",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 1,
+      "isVirtual" : 1,
+      "module" : "a_module",
+      "columns" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isSensitive" : 1,
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "t",
+          "type" : "text",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ]
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE TABLE a_third_virtual_table(
+      id INTEGER @SENSITIVE,
+      t TEXT,
+      q REAL
+    ) @RECREATE
+    
+    {
+      "name" : "a_third_virtual_table",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 1,
+      "isVirtual" : 1,
+      "module" : "a_module",
+      "moduleArgs" : "  id INTEGER,\n  t TEXT,\n  q REAL",
+      "columns" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isSensitive" : 1,
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "t",
+          "type" : "text",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "q",
+          "type" : "real",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ]
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE TABLE a_deleted_virtual_table(
+      id INTEGER @SENSITIVE,
+      t TEXT,
+      q REAL
+    ) @DELETE(2)
+    
+    {
+      "name" : "a_deleted_virtual_table",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 1,
+      "deletedVersion" : 2,
+      "isRecreated": 0,
+      "isVirtual" : 1,
+      "module" : "a_module",
+      "moduleArgs" : "  id INTEGER,\n  t TEXT,\n  q REAL",
+      "columns" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isSensitive" : 1,
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "t",
+          "type" : "text",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "q",
+          "type" : "real",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ]
+    }
+  ],
   "views" : [
     
     The statement ending at line XXXX

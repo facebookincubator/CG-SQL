@@ -9,7 +9,7 @@
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Mon Dec 14 11:44:13 PST 2020
+Snapshot as of Wed Dec 16 10:52:39 PST 2020
 ### Rules
 
 ```
@@ -17,6 +17,7 @@ Snapshot as of Mon Dec 14 11:44:13 PST 2020
 
 json_schema: '{'
          '"tables"' ':' '[' opt_tables ']' ','
+         '"virtualTables"' ':' '[' opt_virtual_tables ']' ','
          '"views"' ':' '[' opt_views ']' ','
          '"indices"' ':' '[' opt_indices ']' ','
          '"triggers"' ':' '[' opt_triggers ']' ','
@@ -61,6 +62,37 @@ table: '{'
        '"foreignKeys"' ':' '[' opt_foreign_keys ']' ','
        '"uniqueKeys"' ':' '[' opt_unique_keys ']'
        '}'
+  ;
+
+opt_virtual_tables: | virtual_tables
+  ;
+
+virtual_tables: virtual_table | virtual_table ',' virtual_tables
+  ;
+
+virtual_table: '{'
+       '"name"' ':' STRING_LITERAL ','
+       '"isTemp"' ':' '0' ','
+       '"ifNotExists"' ':' BOOL_LITERAL ','
+       '"withoutRowid"' ':' '0' ','
+       '"isAdded"' ':' BOOL_LITERAL ','
+       opt_added_version
+       '"isDeleted"' ':' BOOL_LITERAL ','
+       opt_deleted_version
+       '"isRecreated"' ':' BOOL_LITERAL ','
+       opt_region_info
+       '"isVirtual"' ':' '1' ','
+       '"module"' ':' STRING_LITERAL ','
+       opt_module_args
+       opt_attributes
+       '"columns"' ':' '[' columns ']' ','
+       '"primaryKey"' ':' '[' opt_column_names ']' ','
+       '"foreignKeys"' ':' '[' opt_foreign_keys ']' ','
+       '"uniqueKeys"' ':' '[' opt_unique_keys ']'
+       '}'
+  ;
+
+opt_module_args: | '"moduleArgs"' ':'  STRING_LITERAL ','
   ;
 
 opt_added_version: | '"addedVersion"' ':' any_integer ',' opt_added_migration_proc

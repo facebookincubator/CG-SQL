@@ -121,15 +121,20 @@ static void gen_name_list(ast_node *list) {
   }
 }
 
-static void gen_misc_attr_value(ast_node *ast) {
+cql_noexport void gen_misc_attr_value_list(ast_node *ast) {
+  Contract(is_ast_misc_attr_value_list(ast));
+  for (ast_node *item = ast; item; item = item->right) {
+    gen_misc_attr_value(item->left);
+    if (item->right) {
+      gen_printf(", ");
+    }
+  }
+}
+
+cql_noexport void gen_misc_attr_value(ast_node *ast) {
   if (is_ast_misc_attr_value_list(ast)) {
     gen_printf("(");
-    for (ast_node *item = ast; item; item = item->right) {
-      gen_misc_attr_value(item->left);
-      if (item->right) {
-        gen_printf(", ");
-      }
-    }
+    gen_misc_attr_value_list(ast);
     gen_printf(")");
   }
   else {
@@ -532,7 +537,7 @@ cql_noexport void gen_col_or_key(ast_node *def) {
   }
 }
 
-static void gen_col_key_list(ast_node *list) {
+cql_noexport void gen_col_key_list(ast_node *list) {
   Contract(is_ast_col_key_list(list));
   bool_t need_comma = 0;
 
