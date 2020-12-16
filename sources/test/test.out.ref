@@ -1288,9 +1288,33 @@ SET z := 1 BETWEEN -1 AND 3;
 
 SET z := 1 BETWEEN 'x' || 'y' AND 'z';
 
+SET key := 3;
+
+SET virtual := 3;
+
 CREATE PROC foo (x LIKE this, y LIKE that)
 BEGIN
 END;
+
+CREATE VIRTUAL TABLE foo USING bar (this, that, the_other) AS (
+  id INTEGER,
+  t TEXT
+);
+
+CREATE VIRTUAL TABLE foo USING bar AS (
+  id INTEGER,
+  t TEXT
+);
+
+CREATE VIRTUAL TABLE foo USING bar (ARGUMENTS FOLLOWING) AS (
+  id INTEGER,
+  t TEXT
+);
+
+CREATE VIRTUAL TABLE foo USING bar (ARGUMENTS FOLLOWING) AS (
+  id INTEGER,
+  t TEXT
+) @DELETE(5);
 
 SET file := 'path/I/do/not/like';
 

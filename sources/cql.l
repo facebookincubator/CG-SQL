@@ -75,6 +75,7 @@ LONG_INT                     { return LONG_INTEGER; }
 INT                          { return INT_; }
 INTEGER                      { return INTEGER; }
 TEXT                         { return TEXT; }
+VIRTUAL                      { return VIRTUAL; }
 WITH                         { return WITH; }
 RECURSIVE                    { return RECURSIVE; }
 WITHOUT                      { return WITHOUT; }

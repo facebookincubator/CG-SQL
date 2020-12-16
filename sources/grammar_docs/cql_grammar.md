@@ -10,7 +10,7 @@
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Mon Dec  7 21:02:26 PST 2020
+Snapshot as of Wed Dec 16 10:54:03 PST 2020
 
 ### Operators and Literals
 
@@ -46,7 +46,7 @@ REALLIT /* floating point literal */
 ### Statement/Type Keywords
 ```
 EXCLUDE_GROUP EXCLUDE_CURRENT_ROW EXCLUDE_TIES EXCLUDE_NO_OTHERS CURRENT_ROW UNBOUNDED PRECEDING FOLLOWING
-CREATE DROP TABLE WITHOUT ROWID PRIMARY KEY NULL_ DEFAULT CHECK AT_DUMMY_SEED
+CREATE DROP TABLE WITHOUT ROWID PRIMARY KEY NULL_ DEFAULT CHECK AT_DUMMY_SEED VIRTUAL
 OBJECT TEXT BLOB LONG_ INT_ INTEGER LONG_INTEGER REAL ON UPDATE CASCADE ON_CONFLICT DO NOTHING
 DELETE INDEX FOREIGN REFERENCES CONSTRAINT UPSERT STATEMENT CONST
 INSERT INTO VALUES VIEW SELECT QUERY_PLAN EXPLAIN OVER WINDOW FILTER PARTITION RANGE ROWS GROUPS
@@ -93,6 +93,7 @@ any_stmt: select_stmt
   | explain_stmt
   | create_trigger_stmt
   | create_table_stmt
+  | create_virtual_table_stmt
   | create_index_stmt
   | create_view_stmt
   | alter_table_add_column_stmt
@@ -233,6 +234,15 @@ drop_index_stmt:
 drop_trigger_stmt:
   "DROP" "TRIGGER" "IF" "EXISTS" name
   | "DROP" "TRIGGER" name
+  ;
+
+create_virtual_table_stmt: "CREATE" VIRTUAL "TABLE" opt_if_not_exists name
+                           "USING" name opt_module_args
+                           "AS" '(' col_key_list ')' opt_delete_version_attr ;
+
+opt_module_args: /* nil */
+  | '(' misc_attr_value_list ')'
+  | '(' "ARGUMENTS" "FOLLOWING" ')'
   ;
 
 create_table_stmt:
@@ -385,6 +395,8 @@ name:
   | "TEXT"
   | "TRIGGER"
   | "ROWID"
+  | "KEY"
+  | VIRTUAL
   ;
 
 opt_name:
@@ -962,7 +974,7 @@ opt_column_spec:
   | '(' shape_def ')'
   ;
 
-from_cursor:
+from_shape:
   "FROM" "CURSOR" name opt_column_spec
   | "FROM" name opt_column_spec
   | "FROM" "ARGUMENTS" opt_column_spec
@@ -970,7 +982,7 @@ from_cursor:
 
 insert_stmt:
   insert_stmt_type name opt_column_spec select_stmt opt_insert_dummy_spec
-  | insert_stmt_type name opt_column_spec from_cursor opt_insert_dummy_spec
+  | insert_stmt_type name opt_column_spec from_shape opt_insert_dummy_spec
   | insert_stmt_type name "DEFAULT" "VALUES"
   | insert_stmt_type name "USING" expr_names opt_insert_dummy_spec
   ;
@@ -1013,7 +1025,7 @@ upsert_stmt:
 
 update_cursor_stmt:
   "UPDATE" "CURSOR" name opt_column_spec "FROM" "VALUES" '(' insert_list ')'
-  | "UPDATE" "CURSOR" name opt_column_spec from_cursor
+  | "UPDATE" "CURSOR" name opt_column_spec from_shape
   | "UPDATE" "CURSOR" name "USING" expr_names
   ;
 
@@ -1161,7 +1173,7 @@ fetch_stmt:
 
 fetch_values_stmt:
   "FETCH" name opt_column_spec "FROM" "VALUES" '(' insert_list ')' opt_insert_dummy_spec
-  | "FETCH" name opt_column_spec from_cursor opt_insert_dummy_spec
+  | "FETCH" name opt_column_spec from_shape opt_insert_dummy_spec
   | "FETCH" name "USING" expr_names opt_insert_dummy_spec
   ;
 

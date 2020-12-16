@@ -1120,11 +1120,13 @@ set X from cursor C;
 
 declare C cursor like P2 arguments;
 
+-- check column constraint
 create table foo
 (
  id integer collate bar check (id = 3 and goo = 5)
 );
 
+-- proc savepoint forms
 create proc foo()
 begin
   proc savepoint
@@ -1197,7 +1199,7 @@ SELECT month, amount, AVG(amount) OVER
   (GROUPS CURRENT ROW)
 SalesMovingAverage FROM SalesInfo;
 
-/* test trigger is a valid name */
+-- trigger is a valid name
 set trigger := 1;
 
 declare x integer not null @sensitive;
@@ -1215,9 +1217,38 @@ set z := 1 between 1 % 2 and 3;
 set z := 1 between -1 and 3;
 set z := 1 between 'x' || 'y' and 'z';
 
+-- key is a valid name
+set key := 3;
+
+-- virtual is a valid name
+set virtual := 3;
+
+
+-- arg bundle shapes
 create proc foo(x like this, y like that)
 begin
 end;
+
+-- a simple virtual table form
+create virtual table foo using bar(this, that, the_other) as (
+  id integer,
+  t text
+);
+
+create virtual table foo using bar as (
+  id integer,
+  t text
+);
+
+create virtual table foo using bar(arguments following) as (
+  id integer,
+  t text
+);
+
+create virtual table foo using bar(arguments following) as (
+  id integer,
+  t text
+) @delete(5);
 
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 

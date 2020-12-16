@@ -1877,6 +1877,53 @@ static void gen_create_table_stmt(ast_node *ast) {
   gen_version_attrs(table_attrs);
 }
 
+static void gen_create_virtual_table_stmt(ast_node *ast) {
+  Contract(is_ast_create_virtual_table_stmt(ast));
+  EXTRACT_NOTNULL(module_info, ast->left);
+  EXTRACT_NOTNULL(create_table_stmt, ast->right);
+  EXTRACT(create_table_name_flags, create_table_stmt->left);
+  EXTRACT(table_flags_attrs, create_table_name_flags->left);
+  EXTRACT_OPTION(flags, table_flags_attrs->left);
+  EXTRACT_ANY(table_attrs, table_flags_attrs->right);
+  EXTRACT_STRING(name, create_table_name_flags->right);
+  EXTRACT_NOTNULL(col_key_list, create_table_stmt->right);
+  EXTRACT_STRING(module_name, module_info->left);
+  EXTRACT_ANY(module_args, module_info->right);
+
+  bool_t if_not_exist = !!(flags & TABLE_IF_NOT_EXISTS);
+
+  gen_printf("CREATE VIRTUAL TABLE ");
+  gen_if_not_exists(ast, if_not_exist);
+  gen_printf("%s USING %s ", name, module_name);
+  if (is_ast_following(module_args)) {
+    gen_printf("(ARGUMENTS FOLLOWING) ");
+  }
+  else if (module_args) {
+    gen_misc_attr_value(module_args);
+    gen_printf(" ");
+  }
+
+  // When emitting to SQLite we do not include the column declaration part
+  // just whatever the args were because SQLite doesn't parse that part of the CQL syntax.
+  // Note that CQL does not support general args because that's not parseable with this parser
+  // tech but this is pretty general.  The declaration part is present here so that 
+  // CQL knows the type info of the net table we are creating.
+  // Note also that virtual tables are always on the recreate plan, it isn't an option
+  // and this will mean that you can't make a foreign key to a virtual table which is probably
+  // a wise thing.
+  bool_t for_sqlite = gen_callbacks && gen_callbacks->for_sqlite;
+  if (!for_sqlite) {
+    gen_printf("AS (\n");
+    gen_col_key_list(col_key_list);
+    gen_printf("\n)");
+  }
+
+  if( !is_ast_recreate_attr(table_attrs)) {
+    Invariant(is_ast_delete_attr(table_attrs));
+    gen_delete_attr(table_attrs);
+  }
+}
+
 static void gen_drop_view_stmt(ast_node *ast) {
   Contract(is_ast_drop_view_stmt(ast));
   EXTRACT_ANY(if_exists, ast->left);
@@ -3130,6 +3177,7 @@ cql_noexport void gen_init() {
   STMT_INIT(throw_stmt);
   STMT_INIT(create_trigger_stmt);
   STMT_INIT(create_table_stmt);
+  STMT_INIT(create_virtual_table_stmt);
   STMT_INIT(drop_table_stmt);
   STMT_INIT(drop_view_stmt);
   STMT_INIT(drop_index_stmt);

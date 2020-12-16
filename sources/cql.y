@@ -144,7 +144,7 @@ static void cql_reset_globals(void);
 %left CONCAT
 
 %token EXCLUDE_GROUP EXCLUDE_CURRENT_ROW EXCLUDE_TIES EXCLUDE_NO_OTHERS CURRENT_ROW UNBOUNDED PRECEDING FOLLOWING
-%token CREATE DROP TABLE WITHOUT ROWID PRIMARY KEY NULL_ DEFAULT CHECK AT_DUMMY_SEED
+%token CREATE DROP TABLE WITHOUT ROWID PRIMARY KEY NULL_ DEFAULT CHECK AT_DUMMY_SEED VIRTUAL
 %token OBJECT TEXT BLOB LONG_ INT_ INTEGER LONG_INTEGER REAL ON UPDATE CASCADE ON_CONFLICT DO NOTHING
 %token DELETE INDEX FOREIGN REFERENCES CONSTRAINT UPSERT STATEMENT CONST
 %token INSERT INTO VALUES VIEW SELECT QUERY_PLAN EXPLAIN OVER WINDOW FILTER PARTITION RANGE ROWS GROUPS
@@ -172,10 +172,10 @@ static void cql_reset_globals(void);
 %type <aval> version_attrs opt_version_attrs version_attrs_opt_recreate opt_delete_version_attr
 %type <aval> misc_attr_key misc_attr misc_attrs misc_attr_value misc_attr_value_list
 %type <aval> col_attrs str_literal num_literal any_literal const_expr
-%type <aval> pk_def fk_def unq_def fk_target_options
+%type <aval> pk_def fk_def unq_def fk_target_options opt_module_args
 
 %type <aval> alter_table_add_column_stmt
-%type <aval> create_index_stmt create_table_stmt create_view_stmt
+%type <aval> create_index_stmt create_table_stmt create_view_stmt create_virtual_table_stmt
 %type <aval> indexed_column indexed_columns
 %type <aval> drop_index_stmt drop_table_stmt drop_view_stmt drop_trigger_stmt
 
@@ -288,6 +288,7 @@ any_stmt: select_stmt
   | explain_stmt
   | create_trigger_stmt
   | create_table_stmt
+  | create_virtual_table_stmt
   | create_index_stmt
   | create_view_stmt
   | alter_table_add_column_stmt
@@ -429,6 +430,26 @@ drop_index_stmt:
 drop_trigger_stmt:
   DROP TRIGGER IF EXISTS name  { $drop_trigger_stmt = new_ast_drop_trigger_stmt(new_ast_opt(1), $name);  }
   | DROP TRIGGER name  { $drop_trigger_stmt = new_ast_drop_trigger_stmt(NULL, $name);  }
+  ;
+
+create_virtual_table_stmt: CREATE VIRTUAL TABLE opt_if_not_exists name[table_name]
+                           USING name[module_name] opt_module_args
+                           AS '(' col_key_list ')' opt_delete_version_attr {
+    int flags = $opt_if_not_exists;
+    struct ast_node *flags_node = new_ast_opt(flags);
+    struct ast_node *name = $table_name;
+    struct ast_node *col_key_list = $col_key_list;
+    struct ast_node *version_info = $opt_delete_version_attr ? $opt_delete_version_attr : new_ast_recreate_attr(NULL);
+    struct ast_node *table_flags_attrs = new_ast_table_flags_attrs(flags_node, version_info);
+    struct ast_node *table_name_flags = new_ast_create_table_name_flags(table_flags_attrs, name);
+    struct ast_node *create_table_stmt =  new_ast_create_table_stmt(table_name_flags, col_key_list);
+    struct ast_node *module_info = new_ast_module_info($module_name, $opt_module_args);
+    $create_virtual_table_stmt = new_ast_create_virtual_table_stmt(module_info, create_table_stmt);
+  };
+
+opt_module_args: /* nil */ { $opt_module_args = NULL; }
+  | '(' misc_attr_value_list ')' { $opt_module_args = $misc_attr_value_list; }
+  | '(' ARGUMENTS FOLLOWING ')' { $opt_module_args = new_ast_following(); }
   ;
 
 create_table_stmt:
@@ -608,6 +629,7 @@ name:
   | TRIGGER  { $name = new_ast_str("trigger"); }
   | ROWID  { $name = new_ast_str("rowid"); }
   | KEY  { $name = new_ast_str("key"); }
+  | VIRTUAL  { $name = new_ast_str("virtual"); }
   ;
 
 opt_name:
