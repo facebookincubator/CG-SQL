@@ -125,4 +125,5 @@ DECLARE PROC local_cast_from_bool_no_op ();
 DECLARE PROC base_proc_savepoint () USING TRANSACTION;
 DECLARE PROC base_proc_savepoint_commit_return () USING TRANSACTION;
 DECLARE PROC base_proc_savepoint_rollback_return () USING TRANSACTION;
+DECLARE PROC virtual_table_creator () USING TRANSACTION;
 DECLARE PROC end_proc ();

@@ -6693,6 +6693,33 @@ cql_int32 x = 0;
 // The statement ending at line XXXX
 
 /*
+CREATE PROC virtual_table_creator ()
+BEGIN
+  CREATE VIRTUAL TABLE virt_table USING virt_module (ARGUMENTS FOLLOWING) AS (
+    id INTEGER,
+    t TEXT
+  );
+END;
+*/
+
+#define _PROC_ "virtual_table_creator"
+CQL_WARN_UNUSED cql_code virtual_table_creator(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  _rc_ = cql_exec(_db_,
+    "CREATE VIRTUAL TABLE virt_table USING virt_module ( "
+      "id INTEGER, "
+      "t TEXT)");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
 CREATE PROC end_proc ()
 BEGIN
   DECLARE x INTEGER;

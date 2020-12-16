@@ -3009,6 +3009,19 @@ declare enum some_reals real (
   bar = 3
 );
 
+-- TEST: resolve a virtual table, note that the arguments become the declaration
+-- + "CREATE VIRTUAL TABLE virt_table USING virt_module ( "
+-- +   "id INTEGER, "
+-- +   "t TEXT)");
+create proc virtual_table_creator()
+begin
+  -- this will be rewritten
+  create virtual table virt_table using virt_module (arguments following) as (
+    id integer,
+    t text
+  );
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

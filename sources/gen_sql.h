@@ -57,9 +57,15 @@ typedef struct gen_sql_callbacks {
   bool_t convert_hex;
   bool_t minify_casts;
   bool_t minify_aliases;
+
   // output is going to SQLite so any CQL extensions (e.g. attributes)
-  // must be suppressed
-  bool_t for_sqlite;
+  // must be suppressed, this also causes the AS part of virtual table to be suppressed
+  bool_t for_sqlite;  
+
+  // output for schema upgrades doesn't want attributes on the DDL (e.g. recreate) but does
+  // otherwise want the full body so this is a subset of the for_sqlite suppression
+  bool_t suppress_attributes;
+
   // If CQL finds a column such as this
   // create table foo(x long int primary key autoincrement)
   //

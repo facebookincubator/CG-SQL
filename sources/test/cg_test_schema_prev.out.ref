@@ -86,6 +86,16 @@ CREATE TABLE t6(
   FOREIGN KEY (id) REFERENCES t5 (id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
+CREATE VIRTUAL TABLE a_virtual_table USING a_module (this, that, the_other) AS (
+  id INTEGER @SENSITIVE,
+  t TEXT
+);
+
+CREATE VIRTUAL TABLE complex_virtual_table USING a_module (ARGUMENTS FOLLOWING) AS (
+  id INTEGER @SENSITIVE,
+  t TEXT
+);
+
 @begin_schema_region shared;
 CREATE VIEW shared_view AS
 SELECT *

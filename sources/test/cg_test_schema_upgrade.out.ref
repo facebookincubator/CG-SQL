@@ -3,7 +3,7 @@
 -- DDL in procs will not count as declarations
 @SCHEMA_UPGRADE_SCRIPT;
 
--- schema crc -5843418114172149250
+-- schema crc 5969428477865480946
 
 -- declare sqlite_master -- 
 CREATE TABLE sqlite_master (
@@ -101,6 +101,21 @@ CREATE TABLE t6(
   id LONG_INT PRIMARY KEY,
   FOREIGN KEY (id) REFERENCES t5 (id) ON UPDATE CASCADE ON DELETE CASCADE
 );
+
+CREATE VIRTUAL TABLE a_virtual_table USING a_module (this, that, the_other) AS (
+  id INTEGER @SENSITIVE,
+  t TEXT
+);
+
+CREATE VIRTUAL TABLE complex_virtual_table USING a_module (ARGUMENTS FOLLOWING) AS (
+  id INTEGER @SENSITIVE,
+  t TEXT
+);
+
+CREATE VIRTUAL TABLE deleted_virtual_table USING a_module (ARGUMENTS FOLLOWING) AS (
+  id INTEGER @SENSITIVE,
+  t TEXT
+) @DELETE(4);
 
 @begin_schema_region shared;
 CREATE VIEW shared_view AS
@@ -413,6 +428,24 @@ END;
 CREATE PROCEDURE test_cql_recreate_tables()
 BEGIN
   DECLARE table_crc LONG INTEGER NOT NULL;
+  CALL test_cql_get_facet_version('complex_virtual_table_table_crc', table_crc);
+  IF table_crc <> 5892669275896520096 THEN
+    DROP TABLE IF EXISTS complex_virtual_table;
+    CREATE VIRTUAL TABLE complex_virtual_table USING a_module (ARGUMENTS FOLLOWING) AS (
+      id INTEGER @SENSITIVE,
+      t TEXT
+    );
+    CALL test_cql_set_facet_version('complex_virtual_table_table_crc', 5892669275896520096);
+  END IF;
+  CALL test_cql_get_facet_version('a_virtual_table_table_crc', table_crc);
+  IF table_crc <> -4813907186176555661 THEN
+    DROP TABLE IF EXISTS a_virtual_table;
+    CREATE VIRTUAL TABLE a_virtual_table USING a_module (this, that, the_other) AS (
+      id INTEGER @SENSITIVE,
+      t TEXT
+    );
+    CALL test_cql_set_facet_version('a_virtual_table_table_crc', -4813907186176555661);
+  END IF;
   CALL test_cql_get_facet_version('table_to_recreate_table_crc', table_crc);
   IF table_crc <> 3137661388576624799 THEN
     DROP TABLE IF EXISTS table_to_recreate;
@@ -583,7 +616,7 @@ BEGIN
     ---- upgrade to schema version 4 ----
 
     CALL test_cql_get_version_crc(4, schema_version);
-    IF schema_version != 2834173113521169614 THEN
+    IF schema_version != -3248746700223362445 THEN
       -- altering table added_table to add column name2 TEXT;
 
       CALL test_check_column_exists('added_table', '*[( ]name2 TEXT*', column_exists);
@@ -600,6 +633,10 @@ BEGIN
 
       -- logical delete of column rate_2 from foo; -- no ddl
 
+      -- dropping table deleted_virtual_table
+
+      DROP TABLE IF EXISTS deleted_virtual_table;
+
       -- data migration procedures
       CALL test_cql_get_facet_version('CreateId2Proc', facet_version);
       IF facet_version = -1 THEN
@@ -612,7 +649,7 @@ BEGIN
         CALL test_cql_set_facet_version('DeleteRate2Proc', 4);
       END IF;
 
-      CALL test_cql_set_version_crc(4, 2834173113521169614);
+      CALL test_cql_set_version_crc(4, -3248746700223362445);
     END IF;
 
     ---- upgrade to schema version 5 ----
@@ -663,7 +700,7 @@ BEGIN
     CALL test_cql_create_all_indices();
     CALL test_cql_create_all_triggers();
     CALL test_cql_set_facet_version('cql_schema_version', 6);
-    CALL test_cql_set_facet_version('cql_schema_crc', -5843418114172149250);
+    CALL test_cql_set_facet_version('cql_schema_crc', 5969428477865480946);
 
     -- finally produce the list of differences
     SELECT T1.facet FROM
@@ -684,7 +721,7 @@ BEGIN
   -- fetch the last known schema crc, if it's different do the upgrade --
   CALL test_cql_get_facet_version('cql_schema_crc', schema_crc);
 
-  IF schema_crc <> -5843418114172149250 THEN
+  IF schema_crc <> 5969428477865480946 THEN
     -- save the current facets so we can diff them later --
     CALL test_perform_needed_upgrades();
   ELSE

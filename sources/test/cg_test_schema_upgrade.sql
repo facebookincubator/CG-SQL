@@ -171,3 +171,21 @@ create table t6(
   id long int primary key,
   foreign key (id) references t5 (id) on update cascade on delete cascade
 );
+
+create virtual table a_virtual_table using a_module ( this, that, the_other )
+as (
+  id integer @sensitive,
+  t text
+);
+
+create virtual table complex_virtual_table using a_module(arguments following)
+as (
+  id integer @sensitive,
+  t text
+);
+
+create virtual table deleted_virtual_table using a_module(arguments following)
+as (
+  id integer @sensitive,
+  t text
+) @delete(4);

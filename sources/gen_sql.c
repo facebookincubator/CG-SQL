@@ -66,6 +66,14 @@ cql_noexport void gen_to_stdout(ast_node *ast, gen_func fn) {
   output = gen_saved;
 }
 
+static bool_t suppress_attributes() {
+  return gen_callbacks && (gen_callbacks->for_sqlite || gen_callbacks->suppress_attributes);
+}
+
+static bool_t for_sqlite() {
+  return gen_callbacks && gen_callbacks->for_sqlite;
+}
+
 cql_noexport void gen_stmt_list_to_stdout(ast_node *ast) {
   gen_to_stdout(ast, gen_stmt_list);
 }
@@ -151,8 +159,7 @@ cql_noexport void gen_misc_attrs(ast_node *list) {
   Contract(is_ast_misc_attrs(list));
 
   // misc attributes don't go into the output if we are writing for Sqlite
-  bool_t for_sqlite = gen_callbacks && gen_callbacks->for_sqlite;
-  if (for_sqlite) {
+  if (suppress_attributes()) {
     return;
   }
 
@@ -172,8 +179,7 @@ static void gen_data_type(ast_node *ast) {
   }
   else if (is_ast_sensitive_attr(ast)) {
     gen_data_type(ast->left);
-    bool_t for_sqlite = gen_callbacks && gen_callbacks->for_sqlite;
-    if (!for_sqlite) {
+    if (!for_sqlite()) {
       gen_printf(" @SENSITIVE");
     }
   }
@@ -372,8 +378,7 @@ static void gen_version_and_proc(ast_node *version_annotation)
 
 static void gen_recreate_attr(ast_node *attr) {
   Contract (is_ast_recreate_attr(attr));
-  bool_t for_sqlite = gen_callbacks && gen_callbacks->for_sqlite;
-  if (!for_sqlite) {
+  if (!suppress_attributes()) {
     // attributes do not appear when writing out commands for Sqlite
     gen_printf(" @RECREATE");
     if (attr->left) {
@@ -385,8 +390,7 @@ static void gen_recreate_attr(ast_node *attr) {
 
 static void gen_create_attr(ast_node *attr) {
   Contract (is_ast_create_attr(attr));
-  bool_t for_sqlite = gen_callbacks && gen_callbacks->for_sqlite;
-  if (!for_sqlite) {
+  if (!suppress_attributes()) {
     // attributes do not appear when writing out commands for Sqlite
     gen_printf(" @CREATE(");
     gen_version_and_proc(attr->left);
@@ -396,8 +400,7 @@ static void gen_create_attr(ast_node *attr) {
 
 static void gen_delete_attr(ast_node *attr) {
   Contract (is_ast_delete_attr(attr));
-  bool_t for_sqlite = gen_callbacks && gen_callbacks->for_sqlite;
-  if (!for_sqlite) {
+  if (!suppress_attributes()) {
     // attributes do not appear when writing out commands for Sqlite
     gen_printf(" @DELETE(");
     gen_version_and_proc(attr->left);
@@ -407,8 +410,7 @@ static void gen_delete_attr(ast_node *attr) {
 
 static void gen_sensitive_attr(ast_node *attr) {
   Contract (is_ast_sensitive_attr(attr));
-  bool_t for_sqlite = gen_callbacks && gen_callbacks->for_sqlite;
-  if (!for_sqlite) {
+  if (!for_sqlite()) {
     // attributes do not appear when writing out commands for Sqlite
     gen_printf(" @SENSITIVE");
   }
@@ -735,8 +737,7 @@ static void gen_expr_num(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
     gen_printf("%s", val);
   }
 
-  bool_t for_sqlite = gen_callbacks && gen_callbacks->for_sqlite;
-  if (for_sqlite) {
+  if (for_sqlite()) {
     return;
   }
 
@@ -760,8 +761,7 @@ static void gen_expr_str(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
 
   if (is_ast_strlit(ast)) {
     str_ast_node *asts = (str_ast_node *)ast;
-    bool_t for_sqlite = gen_callbacks && gen_callbacks->for_sqlite;
-    if (!asts->cstr_literal || for_sqlite) {
+    if (!asts->cstr_literal || for_sqlite()) {
       // Note: str is the lexeme, so it is either still quoted and escaped
       // or if it was a c string literal it was already normalized to SQL form.
       // In both cases we can just print.
@@ -858,20 +858,20 @@ static void gen_expr_call(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) 
   EXTRACT(opt_filter_clause, call_filter_clause->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  // The nullable function has no actual sql for it, it's just type info
-  // don't echo nullable if we're doing codegen (callback present)
-  bool_t for_sqlite = gen_callbacks && gen_callbacks->for_sqlite;
+  if (for_sqlite()) {
+    // The nullable function has no actual sql for it, it's just type info
+    // don't echo nullable if we're doing codegen (callback present)
+    if (!Strcasecmp("nullable", name)) {
+      gen_arg_list(arg_list);
+      return;
+    }
 
-  if (for_sqlite && !Strcasecmp("nullable", name)) {
-    gen_arg_list(arg_list);
-    return;
-  }
-
-  // the ptr function has no actual sql for it, it's just type info
-  // don't echo ptr if we're doing codegen (callback present)
-  if (for_sqlite && !Strcasecmp("ptr", name)) {
-    gen_arg_list(arg_list);
-    return;
+    // the ptr function has no actual sql for it, it's just type info
+    // don't echo ptr if we're doing codegen (callback present)
+    if (!Strcasecmp("ptr", name)) {
+      gen_arg_list(arg_list);
+      return;
+    }
   }
 
   gen_printf("%s(", name);
@@ -1895,32 +1895,43 @@ static void gen_create_virtual_table_stmt(ast_node *ast) {
   gen_printf("CREATE VIRTUAL TABLE ");
   gen_if_not_exists(ast, if_not_exist);
   gen_printf("%s USING %s ", name, module_name);
-  if (is_ast_following(module_args)) {
-    gen_printf("(ARGUMENTS FOLLOWING) ");
-  }
-  else if (module_args) {
-    gen_misc_attr_value(module_args);
-    gen_printf(" ");
-  }
 
-  // When emitting to SQLite we do not include the column declaration part
-  // just whatever the args were because SQLite doesn't parse that part of the CQL syntax.
-  // Note that CQL does not support general args because that's not parseable with this parser
-  // tech but this is pretty general.  The declaration part is present here so that 
-  // CQL knows the type info of the net table we are creating.
-  // Note also that virtual tables are always on the recreate plan, it isn't an option
-  // and this will mean that you can't make a foreign key to a virtual table which is probably
-  // a wise thing.
-  bool_t for_sqlite = gen_callbacks && gen_callbacks->for_sqlite;
-  if (!for_sqlite) {
+  if (!for_sqlite()) {
+    if (is_ast_following(module_args)) {
+      gen_printf("(ARGUMENTS FOLLOWING) ");
+    }
+    else if (module_args) {
+      gen_misc_attr_value(module_args);
+      gen_printf(" ");
+    }
+
+    // When emitting to SQLite we do not include the column declaration part
+    // just whatever the args were because SQLite doesn't parse that part of the CQL syntax.
+    // Note that CQL does not support general args because that's not parseable with this parser
+    // tech but this is pretty general.  The declaration part is present here so that 
+    // CQL knows the type info of the net table we are creating.
+    // Note also that virtual tables are always on the recreate plan, it isn't an option
+    // and this will mean that you can't make a foreign key to a virtual table which is probably
+    // a wise thing.
+
     gen_printf("AS (\n");
     gen_col_key_list(col_key_list);
     gen_printf("\n)");
-  }
 
-  if( !is_ast_recreate_attr(table_attrs)) {
-    Invariant(is_ast_delete_attr(table_attrs));
-    gen_delete_attr(table_attrs);
+    // delete attribute is the only option (recreate by default)
+    if (!is_ast_recreate_attr(table_attrs)) {
+      Invariant(is_ast_delete_attr(table_attrs));
+      gen_delete_attr(table_attrs);
+    }
+  }
+  else {
+    if (is_ast_following(module_args)) {
+      gen_printf("(\n");
+      gen_col_key_list(col_key_list);
+      gen_printf(")");
+    } else if (module_args) {
+      gen_misc_attr_value(module_args);
+    }
   }
 }
 
@@ -2189,8 +2200,7 @@ static void gen_insert_dummy_spec(ast_node *ast) {
   EXTRACT_ANY_NOTNULL(seed_expr, ast->left);
   EXTRACT_OPTION(flags, ast->right);
 
-  bool_t for_sqlite = gen_callbacks && gen_callbacks->for_sqlite;
-  if (for_sqlite) {
+  if (for_sqlite()) {
     return;
   }
 

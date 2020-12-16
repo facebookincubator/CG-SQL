@@ -1865,6 +1865,9 @@ enum some_ints {
 #endif
 
 // The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code virtual_table_creator(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
 extern void end_proc(void);
 
 // The statement ending at line XXXX
