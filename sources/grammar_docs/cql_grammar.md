@@ -10,7 +10,7 @@
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed Dec 16 10:54:03 PST 2020
+Snapshot as of Thu Dec 17 15:26:26 PST 2020
 
 ### Operators and Literals
 
@@ -46,7 +46,7 @@ REALLIT /* floating point literal */
 ### Statement/Type Keywords
 ```
 EXCLUDE_GROUP EXCLUDE_CURRENT_ROW EXCLUDE_TIES EXCLUDE_NO_OTHERS CURRENT_ROW UNBOUNDED PRECEDING FOLLOWING
-CREATE DROP TABLE WITHOUT ROWID PRIMARY KEY NULL_ DEFAULT CHECK AT_DUMMY_SEED VIRTUAL
+CREATE DROP TABLE WITHOUT ROWID PRIMARY KEY NULL_ DEFAULT CHECK AT_DUMMY_SEED VIRTUAL AT_EMIT_ENUMS
 OBJECT TEXT BLOB LONG_ INT_ INTEGER LONG_INTEGER REAL ON UPDATE CASCADE ON_CONFLICT DO NOTHING
 DELETE INDEX FOREIGN REFERENCES CONSTRAINT UPSERT STATEMENT CONST
 INSERT INTO VALUES VIEW SELECT QUERY_PLAN EXPLAIN OVER WINDOW FILTER PARTITION RANGE ROWS GROUPS
@@ -151,6 +151,7 @@ any_stmt: select_stmt
   | begin_schema_region_stmt
   | end_schema_region_stmt
   | schema_ad_hoc_migration_stmt
+  | emit_enums_stmt
   ;
 
 explain_stmt:
@@ -650,11 +651,7 @@ select_stmt_no_with:
 
 select_core_list:
   select_core
-  | select_core select_core_compound
-  ;
-
-select_core_compound:
-  compound_operator select_core_list
+  | select_core compound_operator select_core_list
   ;
 
 values:
@@ -788,6 +785,10 @@ end_schema_region_stmt:
 
 schema_ad_hoc_migration_stmt:
   "@SCHEMA_AD_HOC_MIGRATION" version_annotation
+  ;
+
+emit_enums_stmt:
+  AT_EMIT_ENUMS opt_name_list
   ;
 
 opt_from_query_parts:

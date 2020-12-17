@@ -189,7 +189,7 @@ static void cql_reset_globals(void);
 %type <aval> insert_stmt with_insert_stmt insert_list insert_stmt_type opt_column_spec opt_insert_dummy_spec expr_names expr_name
 %type <aval> with_prefix with_select_stmt cte_decl cte_table cte_tables
 %type <aval> select_expr select_expr_list select_opts select_stmt select_core values explain_stmt explain_target
-%type <aval> select_stmt_no_with select_core_compound select_core_list
+%type <aval> select_stmt_no_with select_core_list
 %type <aval> window_func_inv opt_filter_clause window_name_or_defn window_defn opt_select_window
 %type <aval> opt_partition_by opt_frame_spec frame_boundary_opts frame_boundary_start frame_boundary_end frame_boundary
 %type <aval> opt_where opt_groupby opt_having opt_orderby opt_limit opt_offset opt_as_alias as_alias window_clause
@@ -899,14 +899,11 @@ select_stmt_no_with:
   }
   ;
 
-select_core_list:
-  select_core  { $select_core_list = new_ast_select_core_list($select_core, NULL); }
-  | select_core select_core_compound  { $select_core_list = new_ast_select_core_list($select_core, $select_core_compound); }
-  ;
-
-select_core_compound:
-  compound_operator select_core_list  {
-    $select_core_compound = new_ast_select_core_compound(new_ast_opt($compound_operator), $select_core_list);
+select_core_list[result]:
+  select_core { $result = new_ast_select_core_list($select_core, NULL); }
+  | select_core compound_operator select_core_list[list] {
+     ast_node *select_core_compound = new_ast_select_core_compound(new_ast_opt($compound_operator), $list);
+     $result = new_ast_select_core_list($select_core, select_core_compound); 
   }
   ;
 
