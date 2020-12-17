@@ -1077,6 +1077,8 @@ declare enum some_longs long (
 -- + "isVirtual" : 1,
 -- + "module" : "a_module",
 -- + "moduleArgs" : "this, that, the_other",
+-- + "name" : "banana",
+@attribute(banana)
 create virtual table a_virtual_table using a_module ( this, that, the_other ) as (
   id integer,
   t text

@@ -1193,8 +1193,14 @@ static void cg_json_table(charbuf *output, ast_node *ast) {
 
   ast_node *misc_attrs = NULL;
 
-  if (is_ast_stmt_and_attr(ast->parent)) {
-    EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc, ast->parent->parent);
+  ast_node *attr_target = ast->parent;
+  if (is_virtual_ast(ast)) {
+    // for virtual tables, we have to go up past the virtual table node to get the attributes
+    attr_target = attr_target->parent;
+  }
+
+  if (is_ast_stmt_and_attr(attr_target)) {
+    EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc, attr_target->parent);
     misc_attrs = misc;
   }
 

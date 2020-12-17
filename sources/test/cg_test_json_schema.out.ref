@@ -1135,6 +1135,7 @@
     
     The statement ending at line XXXX
     
+    @ATTRIBUTE(banana)
     CREATE TABLE a_virtual_table(
       id INTEGER,
       t TEXT
@@ -1151,6 +1152,12 @@
       "isVirtual" : 1,
       "module" : "a_module",
       "moduleArgs" : "this, that, the_other",
+      "attributes" : [
+        {
+          "name" : "banana",
+          "value" : 1
+        }
+      ],
       "columns" : [
         {
           "name" : "id",
