@@ -547,14 +547,19 @@ static void destroy_name_check(name_check *check) {
 static bool_t sem_name_check(name_check *check);
 static bool_t sem_verify_no_duplicate_names(ast_node *name_list);
 
-// Check if two name_list node have the same list of string.
+// Check if two name list nodes have the same members (in any order)
 static bool_t is_name_list_equal(ast_node *name_list1, ast_node *name_list2) {
   symtab *cache = symtab_new();
+
+  int32_t count1 = 0;
 
   for (ast_node *name_list = name_list1; name_list; name_list = name_list->right) {
     EXTRACT_STRING_FROM_NAME_LIST(name, name_list);
     symtab_add(cache, name, NULL);
+    count1++;
   }
+
+  int32_t count2 = 0;
 
   for (ast_node *name_list = name_list2; name_list; name_list = name_list->right) {
     EXTRACT_STRING_FROM_NAME_LIST(name, name_list);
@@ -562,18 +567,14 @@ static bool_t is_name_list_equal(ast_node *name_list1, ast_node *name_list2) {
       symtab_delete(cache);
       return false;
     }
-  }
-
-  while (name_list1 && name_list2) {
-    name_list1 = name_list1->right;
-    name_list2 = name_list2->right;
+    count2++;
   }
 
   symtab_delete(cache);
-  return name_list1 == name_list2;
+  return count1 == count2;
 }
 
-// Check if one of the name_list is included in the other
+// Check if one of the name_list is a subset of the other
 // e.g: name_list2(a, b)
 //
 // name_list1(a, b, c) return true
@@ -585,22 +586,24 @@ static bool_t is_name_list_equal(ast_node *name_list1, ast_node *name_list2) {
 // name_list1(d) return false
 // name_list1(b, d) return false
 //
-static bool_t is_name_list_included(ast_node *name_list1, ast_node *name_list2) {
+static bool_t is_either_list_a_subset(ast_node *name_list1, ast_node *name_list2) {
   ast_node *a1 = name_list1;
   ast_node *a2 = name_list2;
   while (a1 && a2) {
     a1 = a1->right;
     a2 = a2->right;
   }
-  // we want to make sure the small list is in name_list1 and bigger list in name_list2
-  // like that we can just check if small list is in bigger list.
+
+  // First make sure the small list is name_list1 and bigger list is name_list2
+  // so we can just check if small list is in bigger list.
   if (!a2 && a1) {
+    // exchange if is a2 is smaller
     ast_node *temp = name_list1;
     name_list1 = name_list2;
     name_list2 = temp;
   }
 
-  bool_t included = 1;
+  bool_t included = true;
   symtab *cache = symtab_new();
   for (ast_node *names = name_list2; names; names = names->right) {
     EXTRACT_STRING(name, names->left);
@@ -610,7 +613,7 @@ static bool_t is_name_list_included(ast_node *name_list1, ast_node *name_list2) 
   for (ast_node *names = name_list1; names; names = names->right) {
     EXTRACT_STRING(name, names->left);
     if (!symtab_find(cache, name)) {
-      included = 0;
+      included = false;
       break;
     }
   }
@@ -649,7 +652,7 @@ static ast_node *find_next_unique_key(ast_node *unq_def) {
   return result;
 }
 
-// Check if a unique key ('uk') is valid. It'll only look at at all the unique key
+// Check if a unique key ('uk') is valid. We only look at at all the unique keys
 // preceding 'uk' because they have passed all validation already.
 // e.g.
 // create table simple_ak_table_4 (
@@ -660,17 +663,25 @@ static ast_node *find_next_unique_key(ast_node *unq_def) {
 // );
 //
 // case 1:
-// uk a,b
-// uk a,b,c  INVALID  (a,b already unique)
-// uk b,a  INVALID
-// uk c, d, b, a  INVALID
-// uk a  INVALID (because b,a is already unique)
+// uk a,b  OK so far!
+// uk a,b,c  INVALID:  (a,b) already unique
+// uk b,a  INVALID: same as (a,b)
+// uk c, d, b, a  INVALID: contains (a,b) which is already unique
+// uk a  INVALID: because then (b,a) would be bogus because it contains (a)
 //
 // case 2:
-// uk a, b
-// uk a, c  OK!
-// uk d OK!
-// uk b, d OK!
+// uk a, b  OK!
+// uk a, c  OK! Because it has c, not found in (a, b)
+// uk d  OK! Because d not in any of the above
+// uk b, d  INVALID: because d already unique by itself above
+// uk b, c  OK! because no one key already has (b, c) in it
+//
+// As you can see from the examples the general rule here is that if
+// the columns of the new key are a superset of any previous key then
+// it's kind of a goofy unique key because something smaller is already
+// unique.  And likewise if this key is completely contained in any
+// previous key then that previous key is goofy because this smaller
+// key is already unique.
 static bool_t is_unique_key_valid(ast_node *table_ast, ast_node *uk) {
   Contract(is_ast_create_table_stmt(table_ast) && is_ast_unq_def(uk));
   EXTRACT_NAMED_NOTNULL(name_list1, name_list, uk->right);
@@ -680,15 +691,15 @@ static bool_t is_unique_key_valid(ast_node *table_ast, ast_node *uk) {
     }
 
     EXTRACT_NAMED_NOTNULL(name_list2, name_list, unq_def->right);
-    if (is_name_list_included(name_list1, name_list2)) {
+    if (is_either_list_a_subset(name_list1, name_list2)) {
       return false;
     }
   }
   return true;
 }
 
-// make sure the given number is an integer in range
-// note: this probably needs to be a runtime check always, look into that.
+// Make sure the given number is an integer, and is in range.
+// Note: this probably needs to be a runtime check always, look into that.
 static bool_t is_num_int_in_range(ast_node *ast, int64_t lower, int64_t upper) {
    bool_t result = false;
    if (is_ast_num(ast)) {
@@ -980,13 +991,17 @@ cql_noexport bool_t is_autotest_dummy_test(CSTR name) {
   return !Strcasecmp(name, "dummy_test");
 }
 
-// This refers specifically to uniqueness validation and adding of the item
-// to the list of valid items.  The view/table/whatever "doesn't count" as
-// a declared whatever under these circumstances.  Note that if validating previous
-// schema we still use the thing to check against the presently declared version
-// but it doesn't create a new thing to validate (that would never end.)
-static bool_t is_validation_suppressed() {
-  return (schema_upgrade_script && current_proc) || validating_previous_schema;
+// This tells us if we're actually going to try to add the entity we are working on
+// to our tables and so forth.  The idea here is that a view/table/whatever might
+// not "count" in terms of checking for uniqueness and adding to the all_whatevers
+// tables if we are processing in certain contexts.  Specifically if we are
+// validating previous schema then the previous version "doesn't count" and
+// if we are doing a schema upgrade then any DDL we find also doesn't count because
+// those versions might be different than the "final" version after all the upgrades
+// are applied.  So, for instance, checking that they are the same as the declared
+// version would be counter-productive.
+static bool_t will_add_current_entity() {
+  return !(validating_previous_schema) && !(schema_upgrade_script && current_proc);
 }
 
 CSTR coretype_string(sem_t sem_type) {
@@ -2274,10 +2289,10 @@ static void sem_create_index_stmt(ast_node *ast) {
     return;
   }
 
-  bool_t suppress_validation = is_validation_suppressed();
+  bool_t adding_current_entity = will_add_current_entity();
 
   // if there is an existing index, save it here so we can check for duplicates later.
-  ast_node *prev_defn = suppress_validation ? NULL : find_index(index_name);
+  ast_node *existing_defn = adding_current_entity ? find_index(index_name) : NULL;
 
   ast_node *table_ast = find_usable_and_unhidden_table_or_view(
     table_name,
@@ -2295,9 +2310,9 @@ static void sem_create_index_stmt(ast_node *ast) {
   }
 
   // It's only interesting to check for this error in the main schema declarations, not in previous schema
-  // and not in schema upgrade scripts (which are driven by correct regions).  "!suppress_validation"
+  // and not in schema upgrade scripts (which are driven by correct regions).  "adding_current_entity"
   // is for exactly those cases.
-  if (table_ast->sem->recreate && !suppress_validation) {
+  if (table_ast->sem->recreate && adding_current_entity) {
     CSTR table_region = table_ast->sem->region;
     if (table_region != current_region) {
       // The only valid cases are both null or both the current not-null region string.
@@ -2328,8 +2343,8 @@ static void sem_create_index_stmt(ast_node *ast) {
   ast->sem->delete_version = vers_info.delete_version;
   ast->sem->region = current_region;
 
-  if (prev_defn) {
-    if (!sem_validate_identical_ddl(prev_defn, ast)) {
+  if (existing_defn) {
+    if (!sem_validate_identical_ddl(existing_defn, ast)) {
       report_error(index_name_ast, "CQL0018: duplicate index name", index_name);
       record_error(index_name_ast);
       record_error(ast);
@@ -2337,7 +2352,7 @@ static void sem_create_index_stmt(ast_node *ast) {
     return;
   }
 
-  if (!suppress_validation) {
+  if (adding_current_entity) {
     // hidden or no it goes in the main list
     add_item_to_list(&all_indices_list, ast);
 
@@ -2602,7 +2617,6 @@ static bool_t find_referenceable_columns(
   return false;
 }
 
-
 // Check whether or not a column in a table is referenceable by other table in
 // foreign key statement.
 // This is used in autotest(dummy_test) to figure out which columns needs to have
@@ -2616,18 +2630,16 @@ static bool_t find_referenceable_columns(
 //  - listed in a CREATE UNIQUE INDEX statement e.g: create index unique on t(a)
 cql_noexport bool_t is_referenceable_by_foreign_key(ast_node *ref_table_ast, CSTR column_name)
 {
-  if (is_column_unique_key(ref_table_ast, column_name)) {
-    return true;
-  }
-
-  return find_referenceable_columns(ref_table_ast,
-                                    validate_referenceable_column_callback,
-                                    (void *)column_name);
+  return is_column_unique_key(ref_table_ast, column_name)
+    || find_referenceable_columns(
+      ref_table_ast,
+      validate_referenceable_column_callback,
+      (void *)column_name);
 }
 
-// find_referenceable_columns's callback. It return true if both name_list are
-// identical. This is used to figure out a list of columns in a foreign key
-// statement are referenceable.
+// find_referenceable_columns's callback. It return true if both name lists are
+// have the same items (in any order). This is used to figure out a list of columns
+// in a foreign key clause are referenceable.
 static bool_t validate_referenceable_fk_def_callback(ast_node *name_list, void *_Nullable context) {
   Contract(is_ast_name_list(context) || is_ast_indexed_columns(context));
   return is_name_list_equal(name_list, (ast_node *)context);
@@ -2660,9 +2672,11 @@ static sem_t sem_validate_referenceable_fk_def(ast_node *ref_table_ast, ast_node
   // - a unique key (UNIQUE (...) OR UNIQUE CONSTRAINT (...))
   // - unique index (CREATE UNIQUE INDEX ...)
   // - a group of primary key (PRIMARY KEY (a,b,...)).
-  bool_t valid = find_referenceable_columns(ref_table_ast,
-                                            validate_referenceable_fk_def_callback,
-                                            name_list);
+  bool_t valid = find_referenceable_columns(
+    ref_table_ast,
+    validate_referenceable_fk_def_callback,
+    name_list);
+
   if (!valid) {
     EXTRACT_STRING(name, name_list->left);
     report_error(name_list, "CQL0272: the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table", ref_table_name);
@@ -3023,7 +3037,7 @@ static sem_t sem_col_attrs(ast_node *def, ast_node *_Nullable head, coldef_info 
   Contract(head);
   Contract(info);
 
-  bool_t suppress_validation = is_validation_suppressed();
+  bool_t adding_current_entity = will_add_current_entity();
 
   sem_t flags = 0;
   // For semantic analysis we only care about a subset of the attributes
@@ -3034,7 +3048,7 @@ static sem_t sem_col_attrs(ast_node *def, ast_node *_Nullable head, coldef_info 
         record_error(head);
         return false;
       }
-      if (!suppress_validation) {
+      if (adding_current_entity) {
         record_schema_annotation(info->create_version, info->table_info->target_ast, info->table_info->name,
                                  SCHEMA_ANNOTATION_CREATE_COLUMN, def, ast->left, info->column_ordinal);
       }
@@ -3044,7 +3058,7 @@ static sem_t sem_col_attrs(ast_node *def, ast_node *_Nullable head, coldef_info 
         record_error(head);
         return false;
       }
-      if (!suppress_validation) {
+      if (adding_current_entity) {
         record_schema_annotation(info->delete_version, info->table_info->target_ast, info->table_info->name,
                                  SCHEMA_ANNOTATION_DELETE_COLUMN, def, ast->left, info->column_ordinal);
       }
@@ -8289,10 +8303,10 @@ static void sem_create_view_stmt(ast_node *ast) {
     return;
   }
 
-  bool_t suppress_validation = is_validation_suppressed();
+  bool_t adding_current_entity = will_add_current_entity();
 
   // if there is an existing view, save it here so we can check for duplicates later.
-  ast_node *prev_defn = suppress_validation ? NULL : find_table_or_view_even_hidden(name);
+  ast_node *existing_defn = adding_current_entity ? find_table_or_view_even_hidden(name) : NULL;
 
   // View declarations (i.e. outside of any proc) are totally ignored
   // in the context of a schema migration script.  This prevents us from
@@ -8341,8 +8355,8 @@ static void sem_create_view_stmt(ast_node *ast) {
   ast->sem->delete_version = vers_info.delete_version;
   ast->sem->region = current_region;
 
-  if (prev_defn) {
-    if (!sem_validate_identical_ddl(prev_defn, ast)) {
+  if (existing_defn) {
+    if (!sem_validate_identical_ddl(existing_defn, ast)) {
       report_error(name_ast, "CQL0103: duplicate table/view name", name);
       record_error(name_ast);
       record_error(ast);
@@ -8350,7 +8364,7 @@ static void sem_create_view_stmt(ast_node *ast) {
     return;
   }
 
-  if (!suppress_validation) {
+  if (adding_current_entity) {
     // hidden or no it goes in the main list
     add_item_to_list(&all_views_list, ast);
 
@@ -9120,10 +9134,10 @@ static void sem_create_trigger_stmt(ast_node *ast) {
     return;
   }
 
-  bool_t suppress_validation = is_validation_suppressed();
+  bool_t adding_current_entity = will_add_current_entity();
 
   // if there is an existing trigger, save it here so we can check for duplicates later.
-  ast_node *prev_defn = suppress_validation ? NULL : find_trigger(trigger_name);
+  ast_node *existing_defn = adding_current_entity ? find_trigger(trigger_name) : NULL;
 
   // Trigger declarations (i.e. outside of any proc) are totally ignored
   // in the context of a schema migration script.  This prevents us from
@@ -9231,8 +9245,8 @@ static void sem_create_trigger_stmt(ast_node *ast) {
   ast->sem->delete_version = vers_info.delete_version;
   ast->sem->region = current_region;
 
-  if (prev_defn) {
-    if (!sem_validate_identical_ddl(prev_defn, ast)) {
+  if (existing_defn) {
+    if (!sem_validate_identical_ddl(existing_defn, ast)) {
       report_error(trigger_name_ast, "CQL0136: trigger already exists", trigger_name);
       record_error(trigger_name_ast);
       record_error(ast);
@@ -9240,7 +9254,7 @@ static void sem_create_trigger_stmt(ast_node *ast) {
     return;
   }
 
-  if (!suppress_validation) {
+  if (adding_current_entity) {
     add_trigger(ast, trigger_name);
     add_item_to_list(&all_triggers_list, ast);
 
@@ -9301,10 +9315,10 @@ static void sem_create_table_stmt(ast_node *ast) {
     goto cleanup;
   }
 
-  bool_t suppress_validation = is_validation_suppressed();
+  bool_t adding_current_entity = will_add_current_entity();
 
   // if there is an existing table, save it here so we can check for duplicates later.
-  ast_node *prev_defn = suppress_validation ? NULL : find_table_or_view_even_hidden(name);
+  ast_node *existing_defn = adding_current_entity ? find_table_or_view_even_hidden(name) : NULL;
 
   coldef_info col_info;
   init_coldef_info(&col_info, &table_vers_info);
@@ -9464,16 +9478,16 @@ static void sem_create_table_stmt(ast_node *ast) {
   run_pending_table_validations();
 
   if (!is_error(ast)) {
-    if (prev_defn) {
+    if (existing_defn) {
 
       // Use the virtual table definition for comparison if there is one -- it's the parent node.
       // If only one of the tables is virtual then the text can't possibly match so we don't
       // need any special case logic for mix and match of virtual/non-virtual. And the error
       // message will include the text of both so it should be obvious what has happened.
-      ast_node *prev_cmp = is_virtual_ast(prev_defn) ? prev_defn->parent : prev_defn;
-      ast_node *cur_cmp = is_virtual_ast(ast) ? ast->parent : ast;
-          
-      if (!sem_validate_identical_ddl(prev_cmp, cur_cmp)) {
+      ast_node *existing_cmp = is_virtual_ast(existing_defn) ? existing_defn->parent : existing_defn;
+      ast_node *current_cmp = is_virtual_ast(ast) ? ast->parent : ast;
+
+      if (!sem_validate_identical_ddl(existing_cmp, current_cmp)) {
         report_error(name_ast, "CQL0103: duplicate table/view name", name);
         record_error(name_ast);
         record_error(ast);
@@ -9484,7 +9498,7 @@ static void sem_create_table_stmt(ast_node *ast) {
     if (validating_previous_schema) {
       sem_validate_previous_table(ast);
     }
-    else if (!suppress_validation) {
+    else if (adding_current_entity) {
       // hidden or no it goes in the main list
       add_item_to_list(&all_tables_list, ast);
 
@@ -13387,7 +13401,7 @@ static void sem_declare_func_stmt(ast_node *ast) {
     }
   }
 
-  if (!is_validation_suppressed()) {
+  if (will_add_current_entity()) {
     add_item_to_list(&all_functions_list, ast);
   }
 }
@@ -13422,9 +13436,9 @@ static void sem_declare_select_func_stmt(ast_node *ast) {
 
   sem_add_flags(ast, SEM_TYPE_SELECT_FUNC);
 
-  bool_t suppress_validation = is_validation_suppressed();
+  bool_t adding_current_entity = will_add_current_entity();
 
-  if (!suppress_validation) {
+  if (adding_current_entity) {
     add_item_to_list(&all_select_functions_list, ast);
   }
 }
@@ -13574,7 +13588,7 @@ static void sem_declare_enum_stmt(ast_node *ast) {
     // So we can't just check them and move on like we do with other stuff.
     // At the end we'll have two symbol tables, the second of which we'll end up discarding.
 
-    bool_t suppress_validation = is_validation_suppressed();
+    bool_t adding_current_entity = will_add_current_entity();
 
     // this enum is now visible, we still do this (even if previous schema mode)
     bool_t added = add_enum(ast, name);
@@ -13582,7 +13596,7 @@ static void sem_declare_enum_stmt(ast_node *ast) {
 
     // when processing previous schema we don't add the enum to the all enums list
     // so that it won't show up in JSON etc.
-    if (!suppress_validation) {
+    if (adding_current_entity) {
       add_item_to_list(&all_enums_list, ast);
     }
   }
@@ -15731,7 +15745,7 @@ static void sem_declare_schema_region_stmt(ast_node *ast) {
   // check them and move on like we do with other stuff.  At the end we'll have
   // two symbol tables
 
-  bool_t suppress_validation = is_validation_suppressed();
+  bool_t adding_current_entity = will_add_current_entity();
 
   // So, per the above we still do this (even if previous schema mode)
 
@@ -15745,7 +15759,7 @@ static void sem_declare_schema_region_stmt(ast_node *ast) {
   // the previous regions.  Other entites do neither the above add
   // or the below add. This is the difference.
 
-  if (!suppress_validation) {
+  if (adding_current_entity) {
     add_item_to_list(&all_regions_list, ast);
   }
 
@@ -16055,7 +16069,7 @@ static void sem_schema_ad_hoc_migration_stmt(ast_node *ast) {
     return;
   }
 
-  bool_t suppress_validation = is_validation_suppressed();
+  bool_t adding_current_entity = will_add_current_entity();
 
   ast->sem = new_sem(SEM_TYPE_OK);
   ast->sem->region = current_region;
@@ -16064,7 +16078,7 @@ static void sem_schema_ad_hoc_migration_stmt(ast_node *ast) {
   if (validating_previous_schema) {
     sem_validate_previous_ad_hoc(ast, name, version);
   }
-  else if (!suppress_validation) {
+  else if (adding_current_entity) {
     add_item_to_list(&all_ad_hoc_list, ast);
     symtab_add(ad_hoc_migrates, name, ast);
     record_schema_annotation(version, ast, name, SCHEMA_ANNOTATION_AD_HOC, NULL, version_annotation, 0);
