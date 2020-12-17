@@ -1843,6 +1843,10 @@ extern cql_int32 x;
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
 #ifndef enum_some_ints_defined
 #define enum_some_ints_defined
 
@@ -1854,6 +1858,15 @@ enum some_ints {
 #endif
 
 // The statement ending at line XXXX
+#ifndef enum_some_ints_defined
+#define enum_some_ints_defined
+
+enum some_ints {
+  some_ints__foo = 12,
+  some_ints__bar = 3
+};
+
+#endif
 #ifndef enum_some_reals_defined
 #define enum_some_reals_defined
 

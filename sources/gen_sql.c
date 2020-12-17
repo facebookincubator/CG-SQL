@@ -3060,6 +3060,17 @@ static void gen_schema_ad_hoc_migration_stmt(ast_node *ast) {
   gen_printf(")");
 }
 
+static void gen_emit_enums_stmt(ast_node *ast) {
+  Contract(is_ast_emit_enums_stmt(ast));
+  EXTRACT(name_list, ast->left);
+
+  gen_printf("@EMIT_ENUMS");
+  if (name_list) {
+    gen_printf(" ");
+    gen_name_list(name_list);
+  }
+}
+
 static void gen_conflict_target(ast_node *ast) {
   Contract(is_ast_conflict_target(ast));
   EXTRACT(indexed_columns, ast->left);
@@ -3247,6 +3258,7 @@ cql_noexport void gen_init() {
   STMT_INIT(end_schema_region_stmt);
   STMT_INIT(schema_ad_hoc_migration_stmt);
   STMT_INIT(explain_stmt);
+  STMT_INIT(emit_enums_stmt);
 
   EXPR_INIT(num, gen_expr_num, "NUM", EXPR_PRI_ROOT);
   EXPR_INIT(str, gen_expr_str, "STR", EXPR_PRI_ROOT);

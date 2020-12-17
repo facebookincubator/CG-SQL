@@ -3150,3 +3150,5 @@ end;
 
 @echo c,"#undef cql_error_trace\n";
 @echo c,"#define cql_error_trace()\n";
+
+@emit_enums;

@@ -13104,3 +13104,14 @@ end;
 -- + Error % cannot use ALTER TABLE on a virtual table 'basic_virtual'
 -- +1 Error
 alter table basic_virtual add column xname text;
+
+-- TEST: emit an enum
+-- + {emit_enums_stmt}: ok
+-- - Error
+@emit_enums ints;
+
+-- TEST: emit an enum (failed case)
+-- + {emit_enums_stmt}: err
+-- + Error % enum not found 'bogus_enum_name'
+-- +1 Error
+@emit_enums bogus_enum_name;

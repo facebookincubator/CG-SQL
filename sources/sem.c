@@ -16164,6 +16164,26 @@ static void sem_validate_all_deployable_regions(ast_node *root) {
   }
 }
 
+static void sem_emit_enums_stmt(ast_node *ast) {
+  Contract(is_ast_emit_enums_stmt(ast));
+  EXTRACT(name_list, ast->left);
+
+  while (name_list) {
+    EXTRACT_ANY_NOTNULL(name_ast, name_list->left);
+    EXTRACT_STRING(name, name_ast);
+
+    if (!find_enum(name)) {
+      report_error(name_ast, "CQL0169: enum not found", name);
+      record_error(ast);
+      return;
+    }
+
+    name_list = name_list->right;
+  }
+
+  record_ok(ast);
+}
+
 // Most codegen types are not compatible with previous schema generation because it adds stuff to the AST
 // and that stuff isn't even fully type evaluated.  So the best thing to do is punt on codegen if we
 // did that sort of validation.
@@ -16303,6 +16323,7 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(end_schema_region_stmt);
   STMT_INIT(schema_ad_hoc_migration_stmt);
   STMT_INIT(proc_savepoint_stmt);
+  STMT_INIT(emit_enums_stmt);
 
   AGGR_FUNC_INIT(count);
   AGGR_FUNC_INIT(max);

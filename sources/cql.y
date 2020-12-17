@@ -144,7 +144,7 @@ static void cql_reset_globals(void);
 %left CONCAT
 
 %token EXCLUDE_GROUP EXCLUDE_CURRENT_ROW EXCLUDE_TIES EXCLUDE_NO_OTHERS CURRENT_ROW UNBOUNDED PRECEDING FOLLOWING
-%token CREATE DROP TABLE WITHOUT ROWID PRIMARY KEY NULL_ DEFAULT CHECK AT_DUMMY_SEED VIRTUAL
+%token CREATE DROP TABLE WITHOUT ROWID PRIMARY KEY NULL_ DEFAULT CHECK AT_DUMMY_SEED VIRTUAL AT_EMIT_ENUMS
 %token OBJECT TEXT BLOB LONG_ INT_ INTEGER LONG_INTEGER REAL ON UPDATE CASCADE ON_CONFLICT DO NOTHING
 %token DELETE INDEX FOREIGN REFERENCES CONSTRAINT UPSERT STATEMENT CONST
 %token INSERT INTO VALUES VIEW SELECT QUERY_PLAN EXPLAIN OVER WINDOW FILTER PARTITION RANGE ROWS GROUPS
@@ -219,7 +219,7 @@ static void cql_reset_globals(void);
 %type <aval> commit_trans_stmt commit_return_stmt
 %type <aval> continue_stmt
 %type <aval> declare_stmt
-%type <aval> declare_enum_stmt enum_values enum_value
+%type <aval> declare_enum_stmt enum_values enum_value emit_enums_stmt
 %type <aval> echo_stmt
 %type <aval> fetch_stmt fetch_values_stmt fetch_call_stmt from_shape
 %type <aval> if_stmt elseif_item elseif_list opt_else opt_elseif_list proc_savepoint_stmt
@@ -346,6 +346,7 @@ any_stmt: select_stmt
   | begin_schema_region_stmt
   | end_schema_region_stmt
   | schema_ad_hoc_migration_stmt
+  | emit_enums_stmt
   ;
 
 explain_stmt:
@@ -1074,6 +1075,10 @@ end_schema_region_stmt:
 
 schema_ad_hoc_migration_stmt:
   AT_SCHEMA_AD_HOC_MIGRATION version_annotation  { $schema_ad_hoc_migration_stmt = new_ast_schema_ad_hoc_migration_stmt($version_annotation); }
+  ;
+
+emit_enums_stmt:
+  AT_EMIT_ENUMS opt_name_list { $emit_enums_stmt = new_ast_emit_enums_stmt($opt_name_list); }
   ;
 
 opt_from_query_parts:

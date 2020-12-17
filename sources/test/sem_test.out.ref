@@ -53200,3 +53200,21 @@ Error at test/sem_test.sql:XXXX : in str : CQL0164: cannot use ALTER TABLE on a 
         | {name xname}
         | {type_text}
 
+The statement ending at line XXXX
+
+@EMIT_ENUMS ints;
+
+  {emit_enums_stmt}: ok
+  | {name_list}
+    | {name ints}
+
+The statement ending at line XXXX
+
+@EMIT_ENUMS bogus_enum_name;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0169: enum not found 'bogus_enum_name'
+
+  {emit_enums_stmt}: err
+  | {name_list}
+    | {name bogus_enum_name}
+

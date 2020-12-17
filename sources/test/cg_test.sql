@@ -3009,6 +3009,10 @@ declare enum some_reals real (
   bar = 3
 );
 
+-- TEST: force these into the .h file, there will be two copies of some_ints
+@emit_enums some_ints;
+@emit_enums;
+
 -- TEST: resolve a virtual table, note that the arguments become the declaration
 -- + "CREATE VIRTUAL TABLE virt_table USING virt_module ( "
 -- +   "id INTEGER, "

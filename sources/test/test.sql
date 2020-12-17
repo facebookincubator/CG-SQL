@@ -1250,6 +1250,10 @@ create virtual table foo using bar(arguments following) as (
   t text
 ) @delete(5);
 
+@emit_enums;
+@emit_enums foo;
+@emit_enums foo, bar;
+
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 
 # 1 "long/path/I/do/not/like"

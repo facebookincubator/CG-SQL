@@ -1316,6 +1316,12 @@ CREATE VIRTUAL TABLE foo USING bar (ARGUMENTS FOLLOWING) AS (
   t TEXT
 ) @DELETE(5);
 
+@EMIT_ENUMS;
+
+@EMIT_ENUMS foo;
+
+@EMIT_ENUMS foo, bar;
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

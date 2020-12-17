@@ -3471,14 +3471,14 @@ static void cg_declare_auto_cursor(CSTR cursor_name, sem_struct *sptr) {
   CHARBUF_CLOSE(row_type);
 }
 
-// Declaring an enum only causes enum-ish declarations to go into the header file.
+// This causes enum-ish declarations to go into the header file.
 // Those enum things are not even used in our codegen because the CQL codegen
 // simply resolves to constants.  However this will make it possible to use
 // the enum in callers.  The enum is "public" in this sense.  This is a lot
 // like the gen_sql code except it will be in C format.  Note C has no floating
 // point enums so we have to do those with macros.
 
-static void cg_declare_enum_stmt(ast_node *ast) {
+static void cg_emit_one_enum(ast_node *ast) {
   Contract(is_ast_declare_enum_stmt(ast));
   EXTRACT_NOTNULL(typed_name, ast->left);
   EXTRACT_NOTNULL(enum_values, ast->right);
@@ -3497,11 +3497,17 @@ static void cg_declare_enum_stmt(ast_node *ast) {
        EXTRACT_ANY_NOTNULL(enum_name_ast, enum_value->left);
        EXTRACT_STRING(enum_name, enum_name_ast);
 
+       bool_t is_long = type->sem->sem_type == SEM_TYPE_LONG_INTEGER;
+
        bprintf(cg_header_output, "\n  %s__%s = ", name, enum_name);
+
+       if (is_long) {
+         bprintf(cg_header_output, "_64(");
+       }
        eval_format_number(enum_name_ast->sem->value, cg_header_output);
 
-       if (type->sem->sem_type == SEM_TYPE_LONG_INTEGER) {
-         bprintf(cg_header_output, "L");
+       if (is_long) {
+         bprintf(cg_header_output, ")");
        }
 
        if (enum_values->right) {
@@ -3527,6 +3533,29 @@ static void cg_declare_enum_stmt(ast_node *ast) {
     }
   }
   bprintf(cg_header_output, "\n#endif\n", name);
+}
+
+static void cg_emit_enums_stmt(ast_node *ast) {
+  Contract(is_ast_emit_enums_stmt(ast));
+  EXTRACT(name_list, ast->left);
+
+  if (name_list) {
+    // names specified: emit those
+    while (name_list) {
+      // names previously checked, we assert they are good here
+      EXTRACT_STRING(name, name_list->left);
+      EXTRACT_NOTNULL(declare_enum_stmt, find_enum(name));
+      cg_emit_one_enum(declare_enum_stmt);
+      name_list = name_list->right;
+    }
+  }
+  else {
+    // none specified: emit all
+    for (list_item *item = all_enums_list; item; item = item->next) {
+      EXTRACT_NOTNULL(declare_enum_stmt, item->ast);
+      cg_emit_one_enum(declare_enum_stmt);
+    }
+  }
 }
 
 // Declaring a cursor causes us to do the following:
@@ -4793,7 +4822,7 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
     bool_t skip_comment = false;
     skip_comment |= is_ast_declare_func_stmt(stmt);
     skip_comment |= is_ast_declare_select_func_stmt(stmt);
-    skip_comment |= is_ast_declare_enum_stmt(stmt);
+    skip_comment |= is_ast_emit_enums_stmt(stmt);
     skip_comment |= (!options.test && is_ast_echo_stmt(stmt));
     skip_comment |= entry->val == cg_no_op;
 
@@ -5891,6 +5920,7 @@ static void cg_c_init(void) {
   NO_OP_STMT_INIT(schema_upgrade_version_stmt);
   NO_OP_STMT_INIT(schema_upgrade_script_stmt);
   NO_OP_STMT_INIT(schema_ad_hoc_migration_stmt);
+  NO_OP_STMT_INIT(declare_enum_stmt);
 
   STD_DML_STMT_INIT(begin_trans_stmt);
   STD_DML_STMT_INIT(commit_trans_stmt);
@@ -5924,7 +5954,7 @@ static void cg_c_init(void) {
   STMT_INIT(assign);
   STMT_INIT(set_from_cursor);
   STMT_INIT(create_proc_stmt);
-  STMT_INIT(declare_enum_stmt);
+  STMT_INIT(emit_enums_stmt);
   STMT_INIT(declare_proc_stmt);
   STMT_INIT(declare_func_stmt);
   STMT_INIT(declare_select_func_stmt);
