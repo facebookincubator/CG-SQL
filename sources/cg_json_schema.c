@@ -249,7 +249,7 @@ static void cg_json_misc_attr(charbuf *output, ast_node *ast) {
   bprintf(output, "\"name\" : \"");
   if (is_ast_dot(ast->left)) {
     cg_json_name(output, ast->left->left);
-    bprintf(output, "_");
+    bprintf(output, ":");
     cg_json_name(output, ast->left->right);
   }
   else {

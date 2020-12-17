@@ -266,7 +266,7 @@
       "isRecreated": 0,
       "attributes" : [
         {
-          "name" : "this_that",
+          "name" : "this:that",
           "value" : 1
         }
       ],
@@ -2122,7 +2122,7 @@
       "usesTables" : [ "Foo" ],
       "attributes" : [
         {
-          "name" : "cql_autotest",
+          "name" : "cql:autotest",
           "value" : [["dummy_test", ["Foo", ["id", "name"], [1, null], [2, "hi"]]]]
         }
       ],
