@@ -121,6 +121,7 @@ int fileno(FILE *);
 \"collate\"[ \t]*:               { return COLLATE; }
 \"checkExpr\"[ \t]*:             { return CHECK_EXPR; }
 \"checkExprArgs\"[ \t]*:         { return CHECK_EXPR_ARGS; }
+\"checkExpressions\"[ \t]*:      { return CHECK_EXPRESSIONS; }
 
 [01]                             { return yytext[0]; }
 [0-9]+L                          { return LONG_LITERAL; }

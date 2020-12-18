@@ -10,7 +10,7 @@
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu Dec 17 15:26:26 PST 2020
+Snapshot as of Thu Dec 17 19:23:01 PST 2020
 
 ### Operators and Literals
 
@@ -275,7 +275,13 @@ col_key_def:
   | pk_def
   | fk_def
   | unq_def
+  | check_def
   | shape_def
+  ;
+
+check_def:
+  "CONSTRAINT" name "CHECK" '(' expr ')'
+  | "CHECK" '(' expr ')'
   ;
 
 shape_def:
@@ -895,25 +901,17 @@ table_or_subquery:
   | '(' query_parts ')'
   ;
 
-join_target:
-  opt_inner_cross "JOIN" table_or_subquery opt_join_cond
-  | left_or_right opt_outer "JOIN" table_or_subquery opt_join_cond
-  ;
-
-opt_inner_cross:
-  /* nil */
+join_type:
+  /*nil */
+  | "LEFT"
+  | "RIGHT"
+  | "LEFT" "OUTER"
+  | "RIGHT" "OUTER"
   | "INNER"
   | "CROSS"
   ;
 
-opt_outer:
-  /* nil */
-  | "OUTER"
-  ;
-
-left_or_right:
-  "LEFT"
-  | "RIGHT"
+join_target: join_type "JOIN" table_or_subquery opt_join_cond
   ;
 
 opt_join_cond:

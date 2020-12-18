@@ -89,6 +89,7 @@ s/[[:<:]]VERSION[[:>:]]/'"version"' ':'/g
 s/[[:<:]]COLLATE[[:>:]]/'"collate"' ':'/g
 s/[[:<:]]CHECK_EXPR[[:>:]]/'"checkExpr"' ':'/g
 s/[[:<:]]CHECK_EXPR_ARGS[[:>:]]/'"checkExprArgs"' ':'/g
+s/[[:<:]]CHECK_EXPRESSIONS[[:>:]]/'"checkExpressions"' ':'/g
 s/[[:<:]]MODULE[[:>:]]/'"module"' ':'/g
 s/[[:<:]]MODULE_ARGS[[:>:]]/'"moduleArgs"' ':'/g
 s/[ ][ ]*$//

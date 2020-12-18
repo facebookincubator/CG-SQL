@@ -476,6 +476,12 @@ static void sem_validate_check_expr(ast_node *table, ast_node *expr) {
     sem_join *jptr;
     sem_struct *sptr = table->sem->sptr;
 
+    symtab *saved_locals = locals;
+    symtab *saved_globals = globals;
+
+    // hide variables for this expression, no variables on left of :=
+    locals = globals = NULL;
+
     jptr = new_sem_join(1);
     jptr->names[0] = "$$"; // there is no scope name for this make something that is an invalidate identifier
     jptr->tables[0] = sptr;
@@ -483,6 +489,9 @@ static void sem_validate_check_expr(ast_node *table, ast_node *expr) {
     PUSH_JOIN(expr_scope, jptr);
     sem_numeric_expr(expr, NULL, "CHECK", SEM_EXPR_CONTEXT_WHERE);
     POP_JOIN();
+
+    locals = saved_locals;
+    globals = saved_globals;
 
     // expr is already marked with an error by the above, no further record_error needed
     // jptr is freed by the mini allocator
@@ -859,10 +868,6 @@ cql_noexport bool_t has_result_set(ast_node *ast) {
   sem_t sem_type = ast->sem->sem_type;
   sem_t any_out = sem_type & (SEM_TYPE_USES_OUT | SEM_TYPE_USES_OUT_UNION); // non-zero if either
   return !any_out && is_struct(ast->sem->sem_type);
-}
-
-cql_noexport bool_t is_in_only(sem_t sem_type) {
-  return is_in_parameter(sem_type) && !is_out_parameter(sem_type);
 }
 
 cql_noexport bool_t is_create_func(sem_t sem_type) {
@@ -3330,6 +3335,21 @@ static void sem_col_def(ast_node *def, coldef_info *info) {
   def->sem->delete_version = info->delete_version;
 }
 
+// Queue a pending check valiation, this is just like the columns case
+// we could do this right away because constraints come after columns
+// but we may as well just do the checks all the same.
+static void sem_check_def(ast_node *table_ast, ast_node *def) {
+  EXTRACT_ANY_NOTNULL(expr, def->right)
+  pending_table_validation pending = {
+      .table_ast = table_ast,
+      .def = def,
+      .check = expr,
+   };
+
+  enqueue_pending_table_validation(&pending);
+  record_ok(def);
+}
+
 // Dispatch the correct constraint type.  Release the saved table items
 // (used to find duplicates) when done.  This is always clean on entry
 // because this can't nest.
@@ -3355,11 +3375,12 @@ static void sem_constraints(ast_node *table_ast, ast_node *col_key_list, coldef_
       info->primary_keys++;
     } else if (is_ast_fk_def(def)) {
       sem_fk_def(table_ast, def, info->table_info);
+    } else if (is_ast_check_def(def)) {
+      sem_check_def(table_ast, def);
     } else {
       Contract(is_ast_unq_def(def));
       sem_unq_def(table_ast, def);
     }
-
   }
 
   symtab_delete(table_items);

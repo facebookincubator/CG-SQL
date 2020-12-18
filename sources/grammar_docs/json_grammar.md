@@ -9,7 +9,7 @@
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Wed Dec 16 10:52:39 PST 2020
+Snapshot as of Thu Dec 17 19:30:40 PST 2020
 ### Rules
 
 ```
@@ -60,7 +60,8 @@ table: '{'
        '"columns"' ':' '[' columns ']' ','
        '"primaryKey"' ':' '[' opt_column_names ']' ','
        '"foreignKeys"' ':' '[' opt_foreign_keys ']' ','
-       '"uniqueKeys"' ':' '[' opt_unique_keys ']'
+       '"uniqueKeys"' ':' '[' opt_unique_keys ']' ','
+       '"checkExpressions"' ':' '[' opt_check_expressions ']'
        '}'
   ;
 
@@ -88,7 +89,8 @@ virtual_table: '{'
        '"columns"' ':' '[' columns ']' ','
        '"primaryKey"' ':' '[' opt_column_names ']' ','
        '"foreignKeys"' ':' '[' opt_foreign_keys ']' ','
-       '"uniqueKeys"' ':' '[' opt_unique_keys ']'
+       '"uniqueKeys"' ':' '[' opt_unique_keys ']' ','
+       '"checkExpressions"' ':' '[' opt_check_expressions ']'
        '}'
   ;
 
@@ -209,6 +211,19 @@ unique_key:  '{'
               opt_name
               '"columns"' ':' '[' column_names ']'
              '}'
+  ;
+
+opt_check_expressions: | check_expressions
+  ;
+
+check_expressions: check_expression | check_expression ',' check_expressions
+  ;
+
+check_expression: '{'
+                   opt_name
+                   '"checkExpr"' ':' STRING_LITERAL ','
+                   '"checkExprArgs"' ':' '[' ']'
+                  '}'
   ;
 
 opt_name: | '"name"' ':' STRING_LITERAL ','

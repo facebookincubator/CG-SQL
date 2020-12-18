@@ -1123,3 +1123,27 @@ create virtual table a_deleted_virtual_table using a_module (arguments following
   t text,
   q real
 ) @delete(2);
+
+
+-- TEST: table level check expression
+-- + "checkExpressions" : [
+-- + "name" : "x",
+-- + "checkExpr" : "v > 5",
+-- + "checkExprArgs" : [  ]
+-- 3 names (one for the constraint)
+-- +3 "name"
+create table with_check_constraints(
+  v integer,
+  constraint x check(v > 5)
+);
+
+-- TEST: table level check expression
+-- + "checkExpressions" : [
+-- + "checkExpr" : "w > 5",
+-- + "checkExprArgs" : [  ]
+-- only 2 names (one for the constraint removed)
+-- +2 "name"
+create table with_unnamed_check_constraints(
+  w integer,
+  check(w > 5)
+);

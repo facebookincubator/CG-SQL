@@ -60,7 +60,7 @@ void yyset_lineno(int);
 %token QUERIES ARGS DEFINED_IN_FILE VALUE_ARGS STATEMENT_TYPE INSERTS UPDATES DELETES GENERAL_INSERTS
 %token USES_DATABASE HAS_SELECT_RESULT HAS_OUT_UNION_RESULT HAS_OUT_RESULT REGIONS GENERAL
 %token USING USING_PRIVATELY IS_DEPLOYABLE_ROOT AD_HOC_MIGRATION_PROCS VERSION
-%token BINDING_INOUT BINDING_OUT COLLATE CHECK_EXPR CHECK_EXPR_ARGS
+%token BINDING_INOUT BINDING_OUT COLLATE CHECK_EXPR CHECK_EXPR_ARGS CHECK_EXPRESSIONS
 %token ENUMS
 
 %start json_schema
@@ -112,7 +112,8 @@ table: '{'
        COLUMNS '[' columns ']' ','
        PRIMARY_KEY '[' opt_column_names ']' ','
        FOREIGN_KEYS '[' opt_foreign_keys ']' ','
-       UNIQUE_KEYS '[' opt_unique_keys ']'
+       UNIQUE_KEYS '[' opt_unique_keys ']' ','
+       CHECK_EXPRESSIONS '[' opt_check_expressions ']'
        '}'
   ;
 
@@ -140,7 +141,8 @@ virtual_table: '{'
        COLUMNS '[' columns ']' ','
        PRIMARY_KEY '[' opt_column_names ']' ','
        FOREIGN_KEYS '[' opt_foreign_keys ']' ','
-       UNIQUE_KEYS '[' opt_unique_keys ']'
+       UNIQUE_KEYS '[' opt_unique_keys ']' ','
+       CHECK_EXPRESSIONS '[' opt_check_expressions ']'
        '}'
   ;
 
@@ -261,6 +263,19 @@ unique_key:  '{'
               opt_name
               COLUMNS '[' column_names ']'
              '}'
+  ;
+
+opt_check_expressions: | check_expressions
+  ;
+
+check_expressions: check_expression | check_expression ',' check_expressions
+  ;
+
+check_expression: '{'
+                   opt_name
+                   CHECK_EXPR STRING_LITERAL ','
+                   CHECK_EXPR_ARGS '[' ']'
+                  '}'
   ;
 
 opt_name: | NAME STRING_LITERAL ','
@@ -609,7 +624,7 @@ enum: '{'
 enum_values: enum_value | enum_value ',' enum_values
   ;
 
-enum_value: '{' 
+enum_value: '{'
              NAME STRING_LITERAL ','
              VALUE num_literal
             '}'
@@ -672,4 +687,3 @@ int main(int argc, char **argv) {
    }
    return 0;
 }
-

@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Thu Dec 17 15:26:27 2020
+// Snapshot as of Thu Dec 17 19:23:01 2020
 
 
 const PREC = {
@@ -51,7 +51,8 @@ module.exports = grammar({
     opt_if_not_exists: $ => seq($.IF, $.NOT, $.EXISTS),
     opt_no_rowid: $ => seq($.WITHOUT, $.ROWID),
     col_key_list: $ => choice($.col_key_def, seq($.col_key_def, ',', $.col_key_list)),
-    col_key_def: $ => choice($.col_def, $.pk_def, $.fk_def, $.unq_def, $.shape_def),
+    col_key_def: $ => choice($.col_def, $.pk_def, $.fk_def, $.unq_def, $.check_def, $.shape_def),
+    check_def: $ => choice(seq($.CONSTRAINT, $.name, $.CHECK, '(', $.expr, ')'), seq($.CHECK, '(', $.expr, ')')),
     shape_def: $ => choice(seq($.LIKE, $.name), seq($.LIKE, $.name, $.ARGUMENTS)),
     col_name: $ => $.name,
     misc_attr_key: $ => choice($.name, seq($.name, ':', $.name)),
@@ -164,10 +165,8 @@ module.exports = grammar({
     join_clause: $ => seq($.table_or_subquery, $.join_target_list),
     join_target_list: $ => choice($.join_target, seq($.join_target, $.join_target_list)),
     table_or_subquery: $ => choice(seq($.name, optional($.opt_as_alias)), seq('(', $.select_stmt, ')', optional($.opt_as_alias)), seq($.table_function, optional($.opt_as_alias)), seq('(', $.query_parts, ')')),
-    join_target: $ => prec.left(choice(seq(optional($.opt_inner_cross), $.JOIN, $.table_or_subquery, optional($.opt_join_cond)), seq($.left_or_right, optional($.opt_outer), $.JOIN, $.table_or_subquery, optional($.opt_join_cond)))),
-    opt_inner_cross: $ => choice($.INNER, $.CROSS),
-    opt_outer: $ => $.OUTER,
-    left_or_right: $ => choice($.LEFT, $.RIGHT),
+    join_type: $ => choice($.LEFT, $.RIGHT, seq($.LEFT, $.OUTER), seq($.RIGHT, $.OUTER), $.INNER, $.CROSS),
+    join_target: $ => prec.left(seq(optional($.join_type), $.JOIN, $.table_or_subquery, optional($.opt_join_cond))),
     opt_join_cond: $ => $.join_cond,
     join_cond: $ => choice(seq($.ON, $.expr), seq($.USING, '(', $.name_list, ')')),
     table_function: $ => seq($.name, '(', optional($.arg_list), ')'),
@@ -305,6 +304,8 @@ module.exports = grammar({
     NOT: $ => CI('not'),
     WITHOUT: $ => CI('without'),
     ROWID: $ => CI('rowid'),
+    CONSTRAINT: $ => CI('constraint'),
+    CHECK: $ => CI('check'),
     LIKE: $ => CI('like'),
     AT_ATTRIBUTE: $ => CI('@attribute'),
     PRIMARY: $ => CI('primary'),
@@ -324,12 +325,10 @@ module.exports = grammar({
     IMMEDIATE: $ => CI('immediate'),
     FOREIGN: $ => CI('foreign'),
     REFERENCES: $ => CI('references'),
-    CONSTRAINT: $ => CI('constraint'),
     UNIQUE: $ => CI('unique'),
     TEXT: $ => CI('text'),
     AUTOINCREMENT: $ => CI('autoincrement'),
     COLLATE: $ => CI('collate'),
-    CHECK: $ => CI('check'),
     AT_SENSITIVE: $ => CI('@sensitive'),
     OBJECT: $ => CI('object'),
     INT: $ => CI('int'),
@@ -396,12 +395,12 @@ module.exports = grammar({
     OFFSET: $ => CI('offset'),
     ALL: $ => CI('all'),
     DISTINCTROW: $ => CI('distinctrow'),
-    JOIN: $ => CI('join'),
-    INNER: $ => CI('inner'),
-    CROSS: $ => CI('cross'),
-    OUTER: $ => CI('outer'),
     LEFT: $ => CI('left'),
     RIGHT: $ => CI('right'),
+    OUTER: $ => CI('outer'),
+    INNER: $ => CI('inner'),
+    CROSS: $ => CI('cross'),
+    JOIN: $ => CI('join'),
     AT_DUMMY_SEED: $ => CI('@dummy_seed'),
     AT_DUMMY_NULLABLES: $ => CI('@dummy_nullables'),
     AT_DUMMY_DEFAULTS: $ => CI('@dummy_defaults'),

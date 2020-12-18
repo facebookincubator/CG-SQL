@@ -22,6 +22,7 @@
 #include "eval.h"
 
 static void cg_fragment_with_params(charbuf *output, CSTR frag, ast_node *ast, gen_func fn);
+static void cg_fragment_with_params_raw(charbuf *output, CSTR frag, ast_node *ast, gen_func fn);
 static void cg_json_fk_target_options(charbuf *output, ast_node *ast);
 static void cg_json_emit_region_info(charbuf *output, ast_node *ast);
 static void cg_json_dependencies(charbuf *output, ast_node *ast);
@@ -718,6 +719,22 @@ static void cg_json_unq_def(charbuf *output, ast_node *def) {
   bprintf(output, "\n}");
 }
 
+// A check constraint is just an expression, possibly named
+static void cg_json_check_def(charbuf *output, ast_node *def) {
+  Contract(is_ast_check_def(def));
+  EXTRACT_ANY_NOTNULL(expr, def->right);
+
+  bprintf(output, "{\n");
+  BEGIN_INDENT(chk, 2);
+  if (def->left) {
+    EXTRACT_STRING(name, def->left);
+    bprintf(output, "\"name\" : \"%s\",\n", name);
+  }
+  cg_fragment_with_params_raw(output, "checkExpr", expr, gen_root_expr);
+  END_INDENT(chk);
+  bprintf(output, "\n}");
+}
+
 // This is the list of "columns and keys" that form a table. In order to
 // organize these we make several passes on the column list. We loop once
 // for the columns then again for the PKs, then the FK, and finally UK.
@@ -813,6 +830,22 @@ static void cg_json_col_key_list(charbuf *output, ast_node *list) {
     }
     END_LIST;
     END_INDENT(uk);
+    bprintf(output, "],\n");
+  }
+
+  {
+    bprintf(output, "\"checkExpressions\" : [\n");
+    BEGIN_INDENT(chk, 2);
+    BEGIN_LIST;
+    for (ast_node *item = list; item; item = item->right) {
+      EXTRACT_ANY_NOTNULL(def, item->left);
+      if (is_ast_check_def(def)) {
+        COMMA;
+        cg_json_check_def(output, def);
+      }
+    }
+    END_LIST;
+    END_INDENT(chk);
     bprintf(output, "]");
   }
 

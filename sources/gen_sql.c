@@ -270,6 +270,19 @@ static void gen_unq_def(ast_node *def) {
   gen_printf(")");
 }
 
+static void gen_check_def(ast_node *def) {
+  Contract(is_ast_check_def(def));
+  if (def->left) {
+    EXTRACT_STRING(name, def->left);
+    gen_printf("CONSTRAINT %s ", name);
+  }
+
+  EXTRACT_ANY_NOTNULL(expr, def->right);
+  gen_printf("CHECK (");
+  gen_root_expr(expr);
+  gen_printf(")");
+}
+
 cql_noexport void gen_fk_action(int32_t action) {
   switch (action) {
     case FK_SET_NULL:
@@ -531,6 +544,8 @@ cql_noexport void gen_col_or_key(ast_node *def) {
     gen_fk_def(def);
   } else if (is_ast_like(def)) {
     gen_shape_def(def);
+  } else if (is_ast_check_def(def)) {
+    gen_check_def(def);
   } else {
     Contract(is_ast_unq_def(def));
     gen_unq_def(def);

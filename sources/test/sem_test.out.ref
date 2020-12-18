@@ -53190,3 +53190,53 @@ Error at test/sem_test.sql:XXXX : in str : CQL0169: enum not found 'bogus_enum_n
   | {name_list}
     | {name bogus_enum_name}
 
+The statement ending at line XXXX
+
+CREATE TABLE with_check_expr(
+  v INTEGER,
+  CHECK (v > 5)
+);
+
+  {create_table_stmt}: with_check_expr: { v: integer }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name with_check_expr}
+  | {col_key_list}
+    | {col_def}: v: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name v}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {check_def}: ok
+        | {gt}: bool
+          | {name v}: v: integer
+          | {int 5}: integer notnull
+
+The statement ending at line XXXX
+
+CREATE TABLE with_bogus_check_expr(
+  v INTEGER,
+  CHECK (q > 5)
+);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'q'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name with_bogus_check_expr}
+  | {col_key_list}
+    | {col_def}: v: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name v}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {check_def}: err
+        | {gt}: err
+          | {name q}: err
+          | {int 5}: integer notnull
+

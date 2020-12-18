@@ -1250,6 +1250,13 @@ create virtual table foo using bar(arguments following) as (
   t text
 ) @delete(5);
 
+create table foo (
+  id integer,
+  v integer,
+  check (v > 5),
+  constraint goo check (v < 20)
+);
+
 @emit_enums;
 @emit_enums foo;
 @emit_enums foo, bar;

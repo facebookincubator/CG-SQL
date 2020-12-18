@@ -46,6 +46,8 @@
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
       ]
     },
     
@@ -79,6 +81,8 @@
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
       ]
     },
     
@@ -116,6 +120,8 @@
           "name" : "id_uk",
           "columns" : [ "id" ]
         }
+      ],
+      "checkExpressions" : [
       ]
     },
     
@@ -173,6 +179,8 @@
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
       ]
     },
     
@@ -246,6 +254,8 @@
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
       ]
     },
     
@@ -286,6 +296,8 @@
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
       ]
     },
     
@@ -321,6 +333,8 @@
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
       ]
     },
     
@@ -358,6 +372,8 @@
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
       ]
     },
     
@@ -393,6 +409,8 @@
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
       ]
     },
     
@@ -430,6 +448,8 @@
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
       ]
     },
     
@@ -544,6 +564,8 @@
           "name" : "uk1",
           "columns" : [ "id2", "id3" ]
         }
+      ],
+      "checkExpressions" : [
       ]
     },
     
@@ -637,6 +659,8 @@
         {
           "columns" : [ "id3", "id4" ]
         }
+      ],
+      "checkExpressions" : [
       ]
     },
     
@@ -710,6 +734,8 @@
         }
       ],
       "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
       ]
     },
     
@@ -783,6 +809,8 @@
         }
       ],
       "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
       ]
     },
     
@@ -847,6 +875,8 @@
         }
       ],
       "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
       ]
     },
     
@@ -900,6 +930,8 @@
         }
       ],
       "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
       ]
     },
     
@@ -969,6 +1001,8 @@
         }
       ],
       "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
       ]
     },
     
@@ -1003,6 +1037,8 @@
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
       ]
     },
     
@@ -1048,6 +1084,8 @@
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
       ]
     },
     
@@ -1092,6 +1130,8 @@
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
       ]
     },
     
@@ -1128,6 +1168,89 @@
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
+      ]
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE TABLE with_check_constraints(
+      v INTEGER,
+      CONSTRAINT x CHECK (v > 5)
+    )
+    
+    {
+      "name" : "with_check_constraints",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "columns" : [
+        {
+          "name" : "v",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
+        {
+          "name" : "x",
+          "checkExpr" : "v > 5",
+          "checkExprArgs" : [  ]
+        }
+      ]
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE TABLE with_unnamed_check_constraints(
+      w INTEGER,
+      CHECK (w > 5)
+    )
+    
+    {
+      "name" : "with_unnamed_check_constraints",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "columns" : [
+        {
+          "name" : "w",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
+        {
+          "checkExpr" : "w > 5",
+          "checkExprArgs" : [  ]
+        }
       ]
     }
   ],
@@ -1184,6 +1307,8 @@
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
       ]
     },
     
@@ -1231,6 +1356,8 @@
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
       ]
     },
     
@@ -1290,6 +1417,8 @@
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
       ]
     },
     
@@ -1350,6 +1479,8 @@
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
       ]
     }
   ],

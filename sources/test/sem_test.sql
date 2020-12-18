@@ -13105,3 +13105,26 @@ alter table basic_virtual add column xname text;
 -- + Error % enum not found 'bogus_enum_name'
 -- +1 Error
 @emit_enums bogus_enum_name;
+
+-- TEST: try a check expression
+-- + {create_table_stmt}: with_check_expr: { v: integer }
+-- + {check_def}: ok
+-- + {gt}: bool
+-- + {name v}: v: integer
+-- + {int 5}: integer notnull
+-- + CHECK (v > 5)
+-- - Error
+create table with_check_expr(
+  v integer,
+  check (v > 5)
+);
+
+-- TEST: check expression error
+-- + {create_table_stmt}: err
+-- + {check_def}: err
+-- + Error % name not found 'q'
+-- +1 Error
+create table with_bogus_check_expr(
+  v integer,
+  check (q > 5)
+);

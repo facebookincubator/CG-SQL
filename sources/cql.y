@@ -172,7 +172,7 @@ static void cql_reset_globals(void);
 %type <aval> version_attrs opt_version_attrs version_attrs_opt_recreate opt_delete_version_attr
 %type <aval> misc_attr_key misc_attr misc_attrs misc_attr_value misc_attr_value_list
 %type <aval> col_attrs str_literal num_literal any_literal const_expr
-%type <aval> pk_def fk_def unq_def fk_target_options opt_module_args
+%type <aval> pk_def fk_def unq_def check_def fk_target_options opt_module_args
 
 %type <aval> alter_table_add_column_stmt
 %type <aval> create_index_stmt create_table_stmt create_view_stmt create_virtual_table_stmt
@@ -490,7 +490,13 @@ col_key_def:
   | pk_def
   | fk_def
   | unq_def
+  | check_def
   | shape_def
+  ;
+
+check_def:
+  CONSTRAINT name CHECK '(' expr ')' { $check_def = new_ast_check_def($name, $expr); }
+  | CHECK '(' expr ')'  { $check_def = new_ast_check_def(NULL, $expr); }
   ;
 
 shape_def:
