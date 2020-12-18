@@ -2259,16 +2259,6 @@ call proc_with_output(1, X, 3);
 -- + {name Y}: Y: integer variable
 call proc_with_output(1, X, Y);
 
--- TEST: try to use an in arg in an out slot -> error
--- + Error % proc out parameter: formal cannot be fulfilled by in-only variable 'arg1'
--- + {param_detail}: arg1: integer variable in
--- + {call_stmt}: err
--- + {name arg1}: arg1: integer variable in
-create procedure test_proc1(in arg1 integer)
-begin
-  call proc_with_output(1, X, arg1);
-end;
-
 -- TEST: try to use an in/out arg in an out slot -> ok
 -- - Error
 -- + {create_proc_stmt}: ok
@@ -12448,7 +12438,7 @@ declare proc some_proc(id integer, t text, t1 text not null, b blob, out x integ
 
 -- TEST: make a cursor using the arguments of a procedure as the shape
 -- + DECLARE Q CURSOR LIKE some_proc ARGUMENTS;
--- + {declare_cursor_like_name}: Q: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out } variable shape_storage value_cursor
+-- + {declare_cursor_like_name}: Q: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull in } variable shape_storage value_cursor
 -- - Error
 declare Q cursor like some_proc arguments;
 

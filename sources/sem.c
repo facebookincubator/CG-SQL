@@ -11336,7 +11336,7 @@ static void sem_param(ast_node *ast) {
 //     * for now punt on that, as the non-object cases are very valuable
 //  With all that done we just make a fake ast node that has the type we need in it
 //  and return that.  The type is the usual struct_type
-static ast_node *sem_find_likeable_proc_args(ast_node *like_ast) {
+static ast_node *sem_find_likeable_proc_args(ast_node *like_ast, int32_t likeable_for) {
   Contract(is_ast_like(like_ast));
 
   EXTRACT_ANY_NOTNULL(name_ast, like_ast->left);
@@ -11379,6 +11379,14 @@ static ast_node *sem_find_likeable_proc_args(ast_node *like_ast) {
     Invariant(param->sem);
     sem_t sem_type_param = param->sem->sem_type;
 
+    if (likeable_for == LIKEABLE_FOR_VALUES) {
+      // strip VARIABLE and OUT, add IN
+      // the cursor field will not be the out arg pointer version but the data version
+      // and it's no longer a standalone variable
+      sem_type_param &= sem_not(SEM_TYPE_OUT_PARAMETER);
+      sem_type_param |= SEM_TYPE_IN_PARAMETER;
+    }
+
     sem_t core_type = core_type_of(sem_type_param);
     if (core_type == SEM_TYPE_OBJECT) {
       report_error(like_ast, "CQL0335: the procedure has an object argument, this is not yet supported", like_name);
@@ -11414,12 +11422,12 @@ error:
 // we only need the names, not even the types.  But we might need either.
 // (e.g. declare cursor X like Y needs the type info)
 //
-cql_noexport ast_node *sem_find_likeable_ast(ast_node *like_ast) {
+cql_noexport ast_node *sem_find_likeable_ast(ast_node *like_ast, int32_t likeable_for) {
   Contract(is_ast_like(like_ast));
 
   if (like_ast->right) {
     // from arguments form, only proc names allowed
-    return sem_find_likeable_proc_args(like_ast);
+    return sem_find_likeable_proc_args(like_ast, likeable_for);
   }
 
   EXTRACT_ANY_NOTNULL(name_ast, like_ast->left);
@@ -13926,7 +13934,7 @@ cql_noexport ast_node *sem_find_likeable_from_var_type(ast_node *var) {
   CHARBUF_CLOSE(tmp);
 
   // the indicated type must be a valid shape name (one we could use in LIKE T)
-  ast_node *like_target = sem_find_likeable_ast(like_node);
+  ast_node *like_target = sem_find_likeable_ast(like_node, LIKEABLE_FOR_VALUES);
   if (!like_target) {
     record_error(var);
     return NULL;
@@ -14029,7 +14037,7 @@ static void sem_declare_cursor_like_name(ast_node *ast) {
   }
 
   // must be a valid shape
-  ast_node *found_shape = sem_find_likeable_ast(like_ast);
+  ast_node *found_shape = sem_find_likeable_ast(like_ast, LIKEABLE_FOR_VALUES);
   if (!found_shape) {
     record_error(ast);
     return;
@@ -14375,12 +14383,6 @@ static void sem_validate_args_vs_formals(ast_node *ast, CSTR name, ast_node *arg
     if (is_out_parameter(sem_type_param)) {
       if (!is_variable(sem_type_arg)) {
         report_error(arg, "CQL0207: proc out parameter: formal cannot be fulfilled by non-variable", param->sem->name);
-        record_error(ast);
-        return;
-      }
-
-      if (is_in_only(sem_type_arg)) {
-        report_error(arg, "CQL0208: proc out parameter: formal cannot be fulfilled by in-only variable", arg->sem->name);
         record_error(ast);
         return;
       }

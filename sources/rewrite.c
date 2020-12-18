@@ -142,7 +142,7 @@ cql_noexport void rewrite_like_column_spec_if_needed(ast_node *columns_values) {
   EXTRACT_ANY(like, column_spec->left);
 
   if (is_ast_like(like)) {
-     ast_node *found_shape = sem_find_likeable_ast(like);
+     ast_node *found_shape = sem_find_likeable_ast(like, LIKEABLE_FOR_VALUES);
      if (!found_shape) {
        record_error(columns_values);
        return;
@@ -248,7 +248,7 @@ cql_noexport void rewrite_from_shape_args(ast_node *head) {
       ast_node *likeable_shape = NULL;
 
       if (like_ast) {
-          likeable_shape = sem_find_likeable_ast(like_ast);
+          likeable_shape = sem_find_likeable_ast(like_ast, LIKEABLE_FOR_VALUES);
           if (!likeable_shape) {
             record_error(head);
             return;
@@ -320,7 +320,7 @@ cql_noexport bool_t rewrite_one_def(ast_node *head) {
   EXTRACT_STRING(like_name, like->left);
 
   // it's ok to use the LIKE construct on old tables
-  ast_node *likeable_shape = sem_find_likeable_ast(like);
+  ast_node *likeable_shape = sem_find_likeable_ast(like, LIKEABLE_FOR_VALUES);
   if (!likeable_shape) {
     record_error(head);
     return false;
@@ -409,7 +409,7 @@ static ast_node *rewrite_one_param(ast_node *param, symtab *param_names, bytebuf
   EXTRACT_NOTNULL(like, param_detail->right);
   EXTRACT_STRING(like_name, like->left);
 
-  ast_node *likeable_shape = sem_find_likeable_ast(like);
+  ast_node *likeable_shape = sem_find_likeable_ast(like, LIKEABLE_FOR_ARGS);
   if (!likeable_shape) {
     record_error(param);
     return param;
@@ -828,7 +828,7 @@ static void rewrite_one_typed_name(ast_node *typed_name, symtab *used_names) {
   EXTRACT_NOTNULL(like, typed_name->right);
   EXTRACT_STRING(like_name, like->left);
 
-  ast_node *found_shape = sem_find_likeable_ast(like);
+  ast_node *found_shape = sem_find_likeable_ast(like, LIKEABLE_FOR_VALUES);
   if (!found_shape) {
     record_error(typed_name);
     return;

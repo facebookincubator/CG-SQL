@@ -252,14 +252,18 @@ cql_data_decl( symtab *included_regions );
 cql_data_decl( symtab *excluded_regions );
 cql_data_decl( sem_t global_proc_flags );
 
+#define LIKEABLE_FOR_ARGS   1
+#define LIKEABLE_FOR_VALUES 2
+
+cql_noexport ast_node *sem_find_likeable_ast(ast_node *like_ast, int32_t likeable_for);
+cql_noexport ast_node *sem_find_likeable_from_var_type(ast_node *var);
+
 cql_noexport void record_error(ast_node *ast);
 cql_noexport void record_ok(ast_node *ast);
 cql_noexport void report_error(ast_node *ast, CSTR msg, CSTR subject);
 cql_noexport void sem_root_expr(ast_node *node, uint32_t expr_context);
 cql_noexport void sem_expr(ast_node *node);
 cql_noexport void sem_cursor(ast_node *ast);
-cql_noexport ast_node *sem_find_likeable_ast(ast_node *like_ast);
-cql_noexport ast_node *sem_find_likeable_from_var_type(ast_node *var);
 cql_noexport ast_node *find_arg_bundle(CSTR name);
 cql_noexport bool_t add_arg_bundle(ast_node *ast, CSTR name);
 cql_noexport void sem_add_flags(ast_node *ast, sem_t flags);

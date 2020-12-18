@@ -6720,6 +6720,39 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
+CREATE PROC out_arg_cursor (x INTEGER NOT NULL, OUT y INTEGER NOT NULL)
+BEGIN
+  DECLARE C CURSOR LIKE out_arg_cursor ARGUMENTS;
+  FETCH C(x, y) FROM VALUES(1, 1);
+  CALL out_arg_cursor(C.x, C.y);
+END;
+*/
+
+#define _PROC_ "out_arg_cursor"
+
+typedef struct out_arg_cursor_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 x;
+  cql_int32 y;
+} out_arg_cursor_C_row;
+void out_arg_cursor(cql_int32 x, cql_int32 *_Nonnull y) {
+  out_arg_cursor_C_row C = { 0 };
+
+  C._has_row_ = 1;
+  C.x = 1;
+  C.y = 1;
+  out_arg_cursor(C.x, &C.y);
+
+cql_cleanup:
+  ; // label requires some statement
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
 CREATE PROC end_proc ()
 BEGIN
   DECLARE x INTEGER;

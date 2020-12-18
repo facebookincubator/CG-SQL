@@ -3026,6 +3026,17 @@ begin
   );
 end;
 
+-- TEST: the cursor here should not have the out arg form of y
+-- + C.x = 1;
+-- + C.y = 1;
+-- + out_arg_cursor(C.x, &C.y);
+create proc out_arg_cursor(x integer not null, out y integer not null)
+begin
+  declare C cursor like out_arg_cursor arguments;
+  fetch C from values(1,1);
+  call out_arg_cursor(from C);
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

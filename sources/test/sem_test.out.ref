@@ -7353,34 +7353,6 @@ CALL proc_with_output(1, X, Y);
 
 The statement ending at line XXXX
 
-CREATE PROC test_proc1 (IN arg1 INTEGER)
-BEGIN
-  CALL proc_with_output(1, X, arg1);
-END;
-
-Error at test/sem_test.sql:XXXX : in str : CQL0208: proc out parameter: formal cannot be fulfilled by in-only variable 'arg1'
-
-  {create_proc_stmt}: err
-  | {name test_proc1}: err
-  | {proc_params_stmts}
-    | {params}: ok
-    | | {param}: arg1: integer variable in
-    |   | {in}
-    |   | {param_detail}: arg1: integer variable in
-    |     | {name arg1}: arg1: integer variable in
-    |     | {type_int}: integer
-    | {stmt_list}: err
-      | {call_stmt}: err
-        | {name proc_with_output}: ok
-        | {expr_list}: ok
-          | {int 1}: integer notnull
-          | {expr_list}
-            | {name X}: X: integer variable
-            | {expr_list}
-              | {name arg1}: arg1: integer variable in
-
-The statement ending at line XXXX
-
 CREATE PROC test_proc2 (INOUT arg1 INTEGER)
 BEGIN
   CALL proc_with_output(1, X, arg1);
@@ -50735,11 +50707,11 @@ The statement ending at line XXXX
 
 DECLARE Q CURSOR LIKE some_proc ARGUMENTS;
 
-  {declare_cursor_like_name}: Q: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out } variable shape_storage value_cursor
-  | {name Q}: Q: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out } variable shape_storage value_cursor
-  | {like}: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out }
-    | {name some_proc}: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out }
-    | {name some_proc}: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull out }
+  {declare_cursor_like_name}: Q: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull in } variable shape_storage value_cursor
+  | {name Q}: Q: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull in } variable shape_storage value_cursor
+  | {like}: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull in }
+    | {name some_proc}: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull in }
+    | {name some_proc}: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull in }
 
 The statement ending at line XXXX
 
