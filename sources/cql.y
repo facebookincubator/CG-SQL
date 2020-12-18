@@ -166,7 +166,7 @@ static void cql_reset_globals(void);
 /* ddl stuff */
 %type <ival> opt_temp opt_if_not_exists opt_unique opt_no_rowid dummy_modifier compound_operator opt_query_plan
 %type <ival> opt_fk_options fk_options fk_on_options fk_action fk_initial_state fk_deferred_options
-%type <ival> frame_type frame_exclude
+%type <ival> frame_type frame_exclude join_type
 
 %type <aval> col_key_list col_key_def col_def col_name
 %type <aval> version_attrs opt_version_attrs version_attrs_opt_recreate opt_delete_version_attr
@@ -195,7 +195,7 @@ static void cql_reset_globals(void);
 %type <aval> opt_where opt_groupby opt_having opt_orderby opt_limit opt_offset opt_as_alias as_alias window_clause
 %type <aval> groupby_item groupby_list opt_asc_desc window_name_defn window_name_defn_list
 %type <aval> table_or_subquery table_or_subquery_list query_parts table_function opt_from_query_parts
-%type <aval> opt_join_cond opt_outer join_cond join_clause join_target join_target_list opt_inner_cross left_or_right
+%type <aval> opt_join_cond join_cond join_clause join_target join_target_list
 %type <aval> basic_update_stmt with_update_stmt update_stmt update_cursor_stmt update_entry update_list upsert_stmt conflict_target
 %type <aval> declare_schema_region_stmt declare_deployable_region_stmt call with_upsert_stmt
 %type <aval> begin_schema_region_stmt end_schema_region_stmt schema_ad_hoc_migration_stmt region_list region_spec
@@ -1182,56 +1182,20 @@ table_or_subquery:
   | '(' query_parts ')'  { $table_or_subquery = new_ast_table_or_subquery($query_parts, NULL); }
   ;
 
-join_target:
-  opt_inner_cross JOIN table_or_subquery opt_join_cond  {
-      int join_type = JOIN_INNER;
-      if (is_ast_cross($opt_inner_cross)) {
-        join_type = JOIN_CROSS;
-      }
+join_type:  
+  /*nil */       { $join_type = JOIN_INNER; }
+  | LEFT         { $join_type = JOIN_LEFT; }
+  | RIGHT        { $join_type = JOIN_RIGHT; }
+  | LEFT OUTER   { $join_type = JOIN_LEFT_OUTER; }
+  | RIGHT OUTER  { $join_type = JOIN_RIGHT_OUTER; }
+  | INNER        { $join_type = JOIN_INNER; }
+  | CROSS        { $join_type = JOIN_CROSS; }
+  ;
 
-      struct ast_node *asti_join_type = new_ast_opt(join_type);
+join_target: join_type JOIN table_or_subquery opt_join_cond  {
+      struct ast_node *asti_join_type = new_ast_opt($join_type);
       struct ast_node *table_join = new_ast_table_join($table_or_subquery, $opt_join_cond);
-      $join_target = new_ast_join_target(asti_join_type, table_join);
-    }
-  | left_or_right opt_outer JOIN table_or_subquery opt_join_cond  {
-      int join_type = 0;
-      if ($opt_outer) {
-        if (is_ast_left($left_or_right)) {
-          join_type = JOIN_LEFT_OUTER;
-        }
-        else {
-          join_type = JOIN_RIGHT_OUTER;
-        }
-      }
-      else {
-        if (is_ast_left($left_or_right)) {
-          join_type = JOIN_LEFT;
-        }
-        else {
-          join_type = JOIN_RIGHT;
-        }
-      }
-
-      struct ast_node *asti_join_type = new_ast_opt(join_type);
-      struct ast_node *table_join = new_ast_table_join($table_or_subquery, $opt_join_cond);
-      $join_target = new_ast_join_target(asti_join_type, table_join);
-    }
-  ;
-
-opt_inner_cross:
-  /* nil */  { $opt_inner_cross = NULL; }
-  | INNER  { $opt_inner_cross = new_ast_inner(); }
-  | CROSS  { $opt_inner_cross = new_ast_cross(); }
-  ;
-
-opt_outer:
-  /* nil */  { $opt_outer = NULL; }
-  | OUTER  { $opt_outer = new_ast_outer(); }
-  ;
-
-left_or_right:
-  LEFT  { $left_or_right = new_ast_left(); }
-  | RIGHT  { $left_or_right = new_ast_right(); }
+      $join_target = new_ast_join_target(asti_join_type, table_join); }
   ;
 
 opt_join_cond:
