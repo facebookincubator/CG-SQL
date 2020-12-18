@@ -1884,6 +1884,9 @@ extern CQL_WARN_UNUSED cql_code virtual_table_creator(sqlite3 *_Nonnull _db_);
 extern void out_arg_cursor(cql_int32 x, cql_int32 *_Nonnull y);
 
 // The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code make_virt_table(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
 extern void end_proc(void);
 
 // The statement ending at line XXXX

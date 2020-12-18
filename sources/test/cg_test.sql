@@ -3037,6 +3037,18 @@ begin
   call out_arg_cursor(from C);
 end;
 
+-- TEST: create virtual table
+-- + "CREATE VIRTUAL TABLE v1 USING m1");
+-- + "CREATE VIRTUAL TABLE v2 USING m2 (x)");
+-- + "CREATE VIRTUAL TABLE v3 USING m2 ( "
+-- +   "id INTEGER)");
+create proc make_virt_table()
+begin
+  create virtual table v1 using m1 as (id integer);
+  create virtual table v2 using m2(x) as (id integer);
+  create virtual table v3 using m2(arguments following) as (id integer);
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

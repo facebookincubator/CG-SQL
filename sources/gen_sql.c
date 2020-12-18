@@ -1914,14 +1914,18 @@ static void gen_create_virtual_table_stmt(ast_node *ast) {
 
   gen_printf("CREATE VIRTUAL TABLE ");
   gen_if_not_exists(ast, if_not_exist);
-  gen_printf("%s USING %s ", name, module_name);
+  gen_printf("%s USING %s", name, module_name);
 
   if (!for_sqlite()) {
     if (is_ast_following(module_args)) {
-      gen_printf("(ARGUMENTS FOLLOWING) ");
+      gen_printf(" (ARGUMENTS FOLLOWING) ");
     }
     else if (module_args) {
+      gen_printf(" ");
       gen_misc_attr_value(module_args);
+      gen_printf(" ");
+    }
+    else {
       gen_printf(" ");
     }
 
@@ -1946,10 +1950,11 @@ static void gen_create_virtual_table_stmt(ast_node *ast) {
   }
   else {
     if (is_ast_following(module_args)) {
-      gen_printf("(\n");
+      gen_printf(" (\n");
       gen_col_key_list(col_key_list);
       gen_printf(")");
     } else if (module_args) {
+      gen_printf(" ");
       gen_misc_attr_value(module_args);
     }
   }

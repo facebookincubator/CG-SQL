@@ -6753,6 +6753,43 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
+CREATE PROC make_virt_table ()
+BEGIN
+  CREATE VIRTUAL TABLE v1 USING m1 AS (
+    id INTEGER
+  );
+  CREATE VIRTUAL TABLE v2 USING m2 (x) AS (
+    id INTEGER
+  );
+  CREATE VIRTUAL TABLE v3 USING m2 (ARGUMENTS FOLLOWING) AS (
+    id INTEGER
+  );
+END;
+*/
+
+#define _PROC_ "make_virt_table"
+CQL_WARN_UNUSED cql_code make_virt_table(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  _rc_ = cql_exec(_db_,
+    "CREATE VIRTUAL TABLE v1 USING m1");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = cql_exec(_db_,
+    "CREATE VIRTUAL TABLE v2 USING m2 (x)");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = cql_exec(_db_,
+    "CREATE VIRTUAL TABLE v3 USING m2 ( "
+      "id INTEGER)");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
 CREATE PROC end_proc ()
 BEGIN
   DECLARE x INTEGER;
