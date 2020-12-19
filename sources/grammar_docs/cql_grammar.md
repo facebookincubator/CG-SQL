@@ -10,7 +10,7 @@
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu Dec 17 19:23:01 PST 2020
+Snapshot as of Fri Dec 18 11:31:01 PST 2020
 
 ### Operators and Literals
 
@@ -237,7 +237,7 @@ drop_trigger_stmt:
   | "DROP" "TRIGGER" name
   ;
 
-create_virtual_table_stmt: "CREATE" VIRTUAL "TABLE" opt_if_not_exists name
+create_virtual_table_stmt: "CREATE" "VIRTUAL" "TABLE" opt_if_not_exists name
                            "USING" name opt_module_args
                            "AS" '(' col_key_list ')' opt_delete_version_attr ;
 
@@ -403,7 +403,7 @@ name:
   | "TRIGGER"
   | "ROWID"
   | "KEY"
-  | VIRTUAL
+  | "VIRTUAL"
   ;
 
 opt_name:
@@ -794,7 +794,7 @@ schema_ad_hoc_migration_stmt:
   ;
 
 emit_enums_stmt:
-  AT_EMIT_ENUMS opt_name_list
+  "@EMIT_ENUMS" opt_name_list
   ;
 
 opt_from_query_parts:

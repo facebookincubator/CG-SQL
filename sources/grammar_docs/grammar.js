@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Thu Dec 17 19:23:01 2020
+// Snapshot as of Fri Dec 18 11:31:01 2020
 
 
 const PREC = {
@@ -296,6 +296,7 @@ module.exports = grammar({
     INDEX: $ => CI('index'),
     TRIGGER: $ => CI('trigger'),
     CREATE: $ => CI('create'),
+    VIRTUAL: $ => CI('virtual'),
     USING: $ => CI('using'),
     AS: $ => CI('as'),
     ARGUMENTS: $ => CI('arguments'),
@@ -385,6 +386,7 @@ module.exports = grammar({
     AT_BEGIN_SCHEMA_REGION: $ => CI('@begin_schema_region'),
     AT_END_SCHEMA_REGION: $ => CI('@end_schema_region'),
     AT_SCHEMA_AD_HOC_MIGRATION: $ => CI('@schema_ad_hoc_migration'),
+    AT_EMIT_ENUMS: $ => CI('@emit_enums'),
     WHERE: $ => CI('where'),
     GROUP: $ => CI('group'),
     ASC: $ => CI('asc'),

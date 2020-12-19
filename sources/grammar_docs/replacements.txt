@@ -34,6 +34,7 @@ s/[[:<:]]AT_ENFORCE_STRICT[[:>:]]/"@ENFORCE_STRICT"/g
 s/[[:<:]]AT_FILE[[:>:]]/"@FILE"/g
 s/[[:<:]]AT_PREVIOUS_SCHEMA[[:>:]]/"@PREVIOUS_SCHEMA"/g
 s/[[:<:]]AT_RECREATE[[:>:]]/"@RECREATE"/g
+s/[[:<:]]AT_EMIT_ENUMS[[:>:]]/"@EMIT_ENUMS"/g
 s/[[:<:]]AT_SCHEMA_AD_HOC_MIGRATION[[:>:]]/"@SCHEMA_AD_HOC_MIGRATION"/g
 s/[[:<:]]AT_SCHEMA_UPGRADE_SCRIPT[[:>:]]/"@SCHEMA_UPGRADE_SCRIPT"/g
 s/[[:<:]]AT_SCHEMA_UPGRADE_VERSION[[:>:]]/"@SCHEMA_UPGRADE_VERSION"/g
@@ -201,4 +202,5 @@ s/[[:<:]]AT_DELETE[[:>:]]/"@DELETE"/g
 s/[[:<:]]CHECK[[:>:]]/"CHECK"/g
 s/[[:<:]]FOR[[:>:]]/"FOR"/g
 s/[[:<:]]FOR_EACH_ROW[[:>:]]/"FOR" "EACH" "ROW"/g
+s/[[:<:]]VIRTUAL[[:>:]]/"VIRTUAL"/g
 s/[ ][ ]*$//
