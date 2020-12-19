@@ -33,7 +33,7 @@ static void cg_var_decl(charbuf *output, sem_t sem_type, CSTR base_name, bool_t 
 static void cg_emit_external_arglist(ast_node *expr_list, charbuf *prep, charbuf *invocation, charbuf *cleanup);
 static void cg_call_named_external(CSTR name, ast_node *expr_list);
 static void cg_user_func(ast_node *ast, charbuf *is_null, charbuf *value);
-static void cg_c_init(void);
+cql_noexport void cg_c_init(void);
 static void cg_copy(charbuf *output, CSTR var, sem_t sem_type_var, CSTR value);
 static void cg_insert_dummy_spec(ast_node *ast);
 static void cg_release_out_arg_before_call(sem_t sem_type_arg, sem_t sem_type_param, CSTR name);
@@ -61,8 +61,9 @@ static int32_t stack_level = 0;
 // Every string literal in a compiland gets a unique number.  This is it.
 static int32_t string_literals_count = 0;
 
-// Every output string fragment gets unique id
-static int32_t fragment_count = 0;
+// Every output string fragment gets unique number, the offset of the string in the frag buffer
+// this tracks the biggest number we've seen so far.
+static int32_t fragment_last_offset = 0;
 
 // Case statements might need to generate a unique label for their "else" code
 // We count the statements to make an easy label
@@ -191,11 +192,11 @@ static void cg_line_directive_max(ast_node *ast, charbuf *output) {
 // * when we find an actual #line directive, we don't also emit the last known directive too
 // * no additional outputs outside of procedures
 // * we use the #define _PROC_ and #undef _PROC_ markers to know if we are in a proc
-// 
+//
 // Typical output:
 //
 // # 1 "foo.sql"
-// 
+//
 // /*
 // CREATE PROC foo ()
 // BEGIN
@@ -223,7 +224,7 @@ static void cg_line_directive_max(ast_node *ast, charbuf *output) {
 // # 6
 //   }
 // # 6
-// 
+//
 // # 6
 // }
 // #undef _PROC_
@@ -243,7 +244,7 @@ static void cg_insert_line_directives(CSTR input, charbuf *output)
    bool_t now_in_proc = false;
 
    // true immediately after we see something like # 32 "foo.sql" in the input
-   bool_t suppress_because_new_directive = false;  
+   bool_t suppress_because_new_directive = false;
 
    while (breadline(&line, &input)) {
       CSTR trim = line.ptr;
@@ -3224,9 +3225,9 @@ static int32_t cg_intern_fragment(CSTR str, int32_t len) {
     return (int32_t)(int64_t)(entry->val);
   }
 
-  int32_t result = fragment_count;
-  symtab_add(text_fragments, Strdup(str), fragment_count + (char *)NULL);
-  fragment_count += len + 1;  // include space for the nil
+  int32_t result = fragment_last_offset;
+  symtab_add(text_fragments, Strdup(str), fragment_last_offset + (char *)NULL);
+  fragment_last_offset += len + 1;  // include space for the nil
   bprintf(cg_fragments_output, "  \"%s\\0\"\n", str);
   return result;
 }
@@ -3236,21 +3237,21 @@ static int32_t cg_intern_fragment(CSTR str, int32_t len) {
 // So the one-byte encoding is just the simple integer as one byte.
 static void cg_varinteger(int32_t val, charbuf *output) {
   do {
+    // strip 7 bits
     uint32_t byte = val & 0x7f;
     if (val > 0x7f) {
-      byte |= 0x80;
+      byte |= 0x80; // variable length encoding, if the high bit is set, then read another byte
     }
-    val >>= 7;
-    val &= 0x01ffffff;
-    bprintf(output, "\\x%02x", byte);
+    val >>= 7;  // peel off another 7 bits
+    val &= 0x01ffffff; // mask off the any sign extension
+    bprintf(output, "\\x%02x", byte); // this is the byte in hex form for a C string
   } while (val);
 }
 
 // We found a shareable fragment, encode it for emission into the literal.
-// Importantly these ids are 32 bits but we store them in an array of uint16_t
-// so we really want to use a smarter encoding before that becomes a problem.
-// We don't just want to use 32 bits everywhere because that eats the savings
-static void cg_flush_fragment(bool_t first, CSTR start, CSTR cur, charbuf *output) {
+// Importantly these ids are 32 bits but we store them in a variable length
+// encoding because 32 bits everywhere eats the savings
+static void cg_flush_fragment(CSTR start, CSTR cur, charbuf *output) {
   CHARBUF_OPEN(temp);
   int32_t len = (int32_t)(cur - start);
 
@@ -3263,7 +3264,6 @@ static void cg_flush_fragment(bool_t first, CSTR start, CSTR cur, charbuf *outpu
   CHARBUF_CLOSE(temp);
 
   cg_varinteger(offset + 1, output);
-
 }
 
 // Break the input string into pieces that are likely to be shared, assign each
@@ -3272,7 +3272,7 @@ static void cg_flush_fragment(bool_t first, CSTR start, CSTR cur, charbuf *outpu
 // SQL (e.g. the words SELECT, DROP, EXISTS appear a lot) and we can encode this
 // much more economically.  Note also column names like system_function_name are
 // broken because the system_ part is often shared.
-static uint32_t cg_statement_fragments(CSTR in, charbuf *output) {
+cql_noexport uint32_t cg_statement_fragments(CSTR in, charbuf *output) {
   Contract(in);
   int32_t len = (int32_t)strlen(in);
   Contract(len);
@@ -3280,7 +3280,6 @@ static uint32_t cg_statement_fragments(CSTR in, charbuf *output) {
 
   CSTR start = in;
   CSTR cur = in;
-  bool_t first = 1;
 
   int32_t prev_state = 0;
   int32_t cur_state = 0;
@@ -3291,41 +3290,56 @@ static uint32_t cg_statement_fragments(CSTR in, charbuf *output) {
   for (; *cur ; cur++, prev_state = cur_state) {
     char ch = *cur;
     if (ch == ' ' || ch == '\n') {
-      cur_state = 0;
+      cur_state = 0;  // state 0 is a run of whitespace
     }
     else if ((ch >= 'a' && ch <= 'z') || (ch >= '@' && ch <= 'Z') || (ch >= '0' && ch <= '9')) {
-      cur_state = 1;
+      cur_state = 1; // state 1 is a run of alpha-ish charcters
     }
     else {
-      cur_state = 2;
+      cur_state = 2; // state 2 is a run of misc characters like operators or whatever
     }
 
     if (prev_state == cur_state) {
-      continue;
+      continue;  // keep going as long as we're on the same kind of run
     }
 
     if (cur - start <= 4 && cur_state == 0) {
-      continue;
+      continue;  // if we found whitespace keep going if we haven't seen at least 4 characters
     }
 
-    if (ch == ' ' || ch == '_') {
-      cur++;
-      ch = *cur;
+    // Ok we have something worthy of flushing:
+    // one last chance to grow it some. We dont want single spaces to go into the output
+    // by themselves because it's costly.  Include this space in the token.  Note that
+    // this is already normalized output so multiple spaces are not a possibility.
+    // Space and then newline is also shunned (it'll work but it doesn't happen because
+    // gen_sql never creates that stuff).
+
+    if (cur_state == 0) {
+      cur++;  // use the space/newline
+      ch = *cur; // put ourselves into the correct state, here we let _ start an alpha-ish sttate after a break
       if ((ch >= 'a' && ch <= 'z') || (ch >= '@' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '_') {
-        cur_state = 1;
+        cur_state = 1;  // back to run of alpha
       }
+      // note cur has been advanced now and it might be null (!)
     }
 
+    // if we've anything to flush at this point the run is over, flush it.
     if (start < cur) {
-      cg_flush_fragment(first, start, cur, output);
-      first = 0;
+      cg_flush_fragment(start, cur, output);
       start = cur;
       count++;
+
+      // if we advanced off the end above when we skipped over the space, we can exit now
+      // we don't want to advance again off the end of the string.
+      if (!*cur) {
+        break;
+      }
     }
   }
 
+  // if there's anything left pending when we hit the end, flush it.
   if (start < cur) {
-    cg_flush_fragment(first, start, cur, output);
+    cg_flush_fragment(start, cur, output);
     count++;
   }
 
@@ -5887,7 +5901,7 @@ cql_noexport void cg_c_main(ast_node *head) {
   cg_c_cleanup();
 }
 
-static void cg_c_init(void) {
+cql_noexport void cg_c_init(void) {
   cg_c_cleanup(); // reset globals/statics
   cg_common_init();
 
@@ -6044,7 +6058,7 @@ cql_noexport void cg_c_cleanup() {
   error_target = CQL_CLEANUP_DEFAULT_LABEL;
   error_target_used = false;
   return_used = false;
-  fragment_count = 0;
+  fragment_last_offset = 0;
   seed_declared = false;
   stack_level = 0;
   string_literals_count = 0;

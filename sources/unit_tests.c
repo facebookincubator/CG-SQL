@@ -19,6 +19,23 @@
 #define TEST_ASSERT assert
 #define STR_EQ(s1, s2) strcmp(s1, s2) == 0
 
+cql_noexport void cg_c_init(void);
+cql_noexport void cg_c_cleanup(void);
+cql_noexport uint32_t cg_statement_fragments(CSTR in, charbuf *output);
+
+static bool test_frag_tricky_case() {
+  options.compress = 1;
+  CHARBUF_OPEN(tmp);
+  cg_c_init();
+  // get into a state with a single trailing space
+  uint32_t count = cg_statement_fragments("atest btest ", &tmp);
+  cg_c_cleanup();
+  CHARBUF_CLOSE(tmp);
+  
+  // two tokens, no going off the end and making extra tokens!
+  return count == 2;
+}
+
 static bool test_Strdup__empty_string() {
   char* str_copy = Strdup("");
   bool result = STR_EQ(str_copy, "");
@@ -146,4 +163,5 @@ cql_noexport void run_unit_tests() {
   TEST_ASSERT(test_Strncasecmp__long_strings__shorter_than_length_cmp_size__result_is_less_than());
   TEST_ASSERT(test_Strncasecmp__long_strings__shorter_than_length_cmp_size__result_is_greater_than());
   TEST_ASSERT(test_Strncasecmp__long_strings__shorter_than_length_cmp_size__result_is_equals());
+  TEST_ASSERT(test_frag_tricky_case());
 }
