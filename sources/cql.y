@@ -187,7 +187,7 @@ static void cql_reset_globals(void);
 /* dml stuff */
 %type <aval> with_delete_stmt delete_stmt
 %type <aval> insert_stmt with_insert_stmt insert_list insert_stmt_type opt_column_spec opt_insert_dummy_spec expr_names expr_name
-%type <aval> with_prefix with_select_stmt cte_decl cte_table cte_tables
+%type <aval> with_prefix with_select_stmt cte_table cte_tables
 %type <aval> select_expr select_expr_list select_opts select_stmt select_core values explain_stmt explain_target
 %type <aval> select_stmt_no_with select_core_list
 %type <aval> window_func_inv opt_filter_clause window_name_or_defn window_defn opt_select_window
@@ -874,12 +874,12 @@ cte_tables[result]:
   ;
 
 cte_table:
-  cte_decl AS '(' select_stmt_no_with ')'  { $cte_table = new_ast_cte_table($cte_decl, $select_stmt_no_with); }
-  ;
-
-cte_decl:
-  name '(' name_list ')'  { $cte_decl = new_ast_cte_decl($name, $name_list); }
-  | name '(' '*' ')'  { $cte_decl = new_ast_cte_decl($name, new_ast_star()); }
+    name '(' name_list ')' AS '(' select_stmt_no_with ')'  { 
+      ast_node *cte_decl = new_ast_cte_decl($name, $name_list);
+      $cte_table = new_ast_cte_table(cte_decl, $select_stmt_no_with); }
+  | name '(' '*' ')' AS '(' select_stmt_no_with ')' {
+      ast_node *cte_decl = new_ast_cte_decl($name, new_ast_star());
+      $cte_table = new_ast_cte_table(cte_decl, $select_stmt_no_with); }
   ;
 
 with_prefix:
@@ -1959,7 +1959,7 @@ static void parse_cmd(int argc, char **argv) {
 
 #ifndef CQL_IS_NOT_MAIN
   // Normally CQL is the main entry point.  If you are using CQL in an embedded fashion
-  // then you want to invoke it's main at some other time.  If you define CQL_IS_NOT_MAIN
+  // then you want to invoke its main at some other time. If you define CQL_IS_NOT_MAIN
   // then cql_main is not renamed to main.  You call cql_main when you want.
   #define cql_main main
 #endif
