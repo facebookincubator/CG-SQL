@@ -199,6 +199,7 @@ s/[[:<:]]WITH[[:>:]]/"WITH"/g
 s/[[:<:]]WITHOUT[[:>:]]/"WITHOUT"/g
 s/[[:<:]]AT_CREATE[[:>:]]/"@CREATE"/g
 s/[[:<:]]AT_DELETE[[:>:]]/"@DELETE"/g
+s/[[:<:]]AT_EMIT_ENUMS[[:>:]]/"@EMIT_ENUMS"/g
 s/[[:<:]]CHECK[[:>:]]/"CHECK"/g
 s/[[:<:]]FOR[[:>:]]/"FOR"/g
 s/[[:<:]]FOR_EACH_ROW[[:>:]]/"FOR" "EACH" "ROW"/g

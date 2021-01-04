@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Fri Dec 18 11:31:01 2020
+// Snapshot as of Sat Dec 26 17:51:23 2020
 
 
 const PREC = {
@@ -105,8 +105,7 @@ module.exports = grammar({
     call_expr: $ => choice($.expr, $.shape_arguments),
     call_expr_list: $ => choice($.call_expr, seq($.call_expr, ',', $.call_expr_list)),
     cte_tables: $ => choice($.cte_table, seq($.cte_table, ',', $.cte_tables)),
-    cte_table: $ => seq($.cte_decl, $.AS, '(', $.select_stmt_no_with, ')'),
-    cte_decl: $ => choice(seq($.name, '(', $.name_list, ')'), seq($.name, '(', '*', ')')),
+    cte_table: $ => choice(seq($.name, '(', $.name_list, ')', $.AS, '(', $.select_stmt_no_with, ')'), seq($.name, '(', '*', ')', $.AS, '(', $.select_stmt_no_with, ')')),
     with_prefix: $ => choice(seq($.WITH, $.cte_tables), seq($.WITH, $.RECURSIVE, $.cte_tables)),
     with_select_stmt: $ => seq($.with_prefix, $.select_stmt_no_with),
     select_stmt: $ => choice($.with_select_stmt, $.select_stmt_no_with),

@@ -9,7 +9,7 @@
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Fri Dec 18 11:31:29 PST 2020
+Snapshot as of Sat Dec 26 17:51:24 PST 2020
 ### Rules
 
 ```

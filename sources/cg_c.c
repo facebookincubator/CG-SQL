@@ -33,12 +33,12 @@ static void cg_var_decl(charbuf *output, sem_t sem_type, CSTR base_name, bool_t 
 static void cg_emit_external_arglist(ast_node *expr_list, charbuf *prep, charbuf *invocation, charbuf *cleanup);
 static void cg_call_named_external(CSTR name, ast_node *expr_list);
 static void cg_user_func(ast_node *ast, charbuf *is_null, charbuf *value);
-cql_noexport void cg_c_init(void);
 static void cg_copy(charbuf *output, CSTR var, sem_t sem_type_var, CSTR value);
 static void cg_insert_dummy_spec(ast_node *ast);
 static void cg_release_out_arg_before_call(sem_t sem_type_arg, sem_t sem_type_param, CSTR name);
 static void cg_refs_offset(charbuf *output, sem_struct *sptr, CSTR offset_sym_name, CSTR struct_name);
 static void cg_col_offsets(charbuf *output, sem_struct *sptr, CSTR sym_name, CSTR struct_name);
+cql_noexport void cg_c_init(void);
 
 // Emits a sql statement with bound args.
 static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_exec);
@@ -405,6 +405,13 @@ static void cg_result_set_type_decl(charbuf *output, CSTR sym, CSTR ref) {
 #define CG_VAR_DECL_PROTO 0
 #define CG_VAR_DECL_LOCAL 1
 
+// Reference types and non-null locals begin at a zero value.  References are especially
+// crucial because if they started at something other than null then we would try to
+// release that pointer on exit which would be bad.  Note that this means that even
+// a non-null text variable (for instance) begins at null when it is initialized.  This is
+// much like the _Nonnull clang option which can't prevent a global variable from starting
+// at null.  It's a bit weird but there isn't really a viable alternative short of some
+// non-null BS value which seems worse.
 static void cg_emit_local_init(charbuf *output, sem_t sem_type)
 {
   sem_t core_type = core_type_of(sem_type);
@@ -448,6 +455,8 @@ static void cg_emit_local_init(charbuf *output, sem_t sem_type)
    }
 }
 
+// The nullable primtives get the cql_set_null macro treatment instead of an assigment.
+// So all nullables begin at null.
 static void cg_emit_local_nullable_init(charbuf *output, CSTR name, sem_t sem_type) {
   sem_t core_type = core_type_of(sem_type);
   switch (core_type) {
@@ -583,6 +592,21 @@ static void cg_var_decl(charbuf *output, sem_t sem_type, CSTR base_name, bool_t 
   CHARBUF_CLOSE(name);
 }
 
+// Sometimes when we need a scratch variable to store an intermediate result
+// we can avoid the scratch variable entirely and use the target of the assignment
+// in flight for the storage.  For instance:
+//   declare x, y integer;
+//   set y := 1;
+//   set x := y + 3;
+// generates:
+//   cql_set_notnull(y, 1);
+//   cql_set_nullable(x, y.is_null, y.value + 3);
+// 
+// A scratch variable is not used to hold the result of the RHS of the set because
+// the target of the assignment is known and compatible.
+// The target must match the exact type including nullability.  Note bogus 
+// sensitive assignments or incompatible assignments were already ruled out
+// in semantic analysis.
 static bool_t is_assignment_target_reusable(ast_node *ast, sem_t sem_type) {
   if (ast && ast->parent && is_ast_assign(ast->parent)) {
     EXTRACT_ANY_NOTNULL(name_ast, ast->parent->left);
@@ -609,6 +633,7 @@ static void cg_scratch_var(ast_node *ast, sem_t sem_type, charbuf *var, charbuf 
 
   Contract(stack_level < CQL_MAX_STACK);
 
+  // try to avoid creating a scratch variable if we can use the target of an assignment in flight.
   if (is_assignment_target_reusable(ast, sem_type)) {
     Invariant(ast && ast->parent && ast->parent->left);
     EXTRACT_ANY_NOTNULL(name_ast, ast->parent->left);
@@ -621,6 +646,14 @@ static void cg_scratch_var(ast_node *ast, sem_t sem_type, charbuf *var, charbuf 
     }
   }
   else {
+    // Generate a scratch variable name of the correct type.  We don't generate
+    // the declaration of any given scratch variable more than once.  We use the
+    // current stack level to make the name.  This means that have to burn a stack level
+    // if you want more than one scratch.  Stacklevel is normally increased by
+    // the CG_PUSH_EVAL macro which does the recursion but it can also be manually
+    // increased if temporaries are needed for some other reason.  Any level of
+    // recursion is expected to fix all that.
+
     CSTR prefix;
 
     cg_type_masks *pmask;
@@ -676,8 +709,11 @@ static void cg_scratch_var(ast_node *ast, sem_t sem_type, charbuf *var, charbuf 
     }
   }
 
+  // If the is_null and value expressions are desired, generate them here.
   if (is_null && value) {
     if (is_ref_type(sem_type)) {
+      // note that because reference types begin initialized to null we have to check their
+      // value even though they are "non-null" so the is_null expression can't be 0 for these ever.
       bprintf(is_null, "!%s", var->ptr);
       bprintf(value, "%s", var->ptr);
     }
@@ -823,11 +859,18 @@ static void cg_store(charbuf *output, CSTR var, sem_t sem_type_var, sem_t sem_ty
 
   bool_t handled = 0;
 
+  // Check to see if we are trying to store a variable back on itself.
+  // This happens when is_assignment_target_reusable let us use the target
+  // of the assignment as the scratch variable.  When it comes time to
+  // do the assignment we find there is now nothing to do.
   if (!is_nullable(sem_type_var) || is_ref_type(sem_type_var)) {
     // dead store -- source = target
     handled = !strcmp(var, value);
   }
   else {
+    // In the nullable case the comparison is a bit trickier, we have to be
+    // storing from var.value and var.is_null right back into var.value
+    // and var.isnull.  
     CHARBUF_OPEN(val);
     CHARBUF_OPEN(nul);
     bprintf(&val, "%s.value", var);
@@ -838,7 +881,7 @@ static void cg_store(charbuf *output, CSTR var, sem_t sem_type_var, sem_t sem_ty
   }
 
   if (handled) {
-    // nothing left to do
+    // nothing left to do, assignment already happened
   }
   else if (is_ref_type(sem_type_var) || !is_nullable(sem_type_var)) {
     cg_copy(output, var, sem_type_var, value);
@@ -1094,6 +1137,7 @@ static void cg_expr_is(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value,
   CG_POP_EVAL(r);
   CG_POP_EVAL(l);
 }
+
 // This is the general IS NOT pattern, there are several case:
 //  * if the right hand side is NULL then use the special helper for IS NOT NULL
 //    * that helper makes better code for this special case (the 99% case)
@@ -4030,6 +4074,10 @@ static void cg_return_stmt(ast_node *ast) {
   return_used = true;
 }
 
+// Rollback the current procedure savepoint, then perform a return.
+// Note that to rollback a savepoint you have to do the rollback AND the release
+// and then you're unwound to the savepoint state.  The transaction in flight is
+// still in flight if there is one.
 static void cg_rollback_return_stmt(ast_node *ast) {
   Contract(is_ast_rollback_return_stmt(ast));
 
@@ -4043,6 +4091,10 @@ static void cg_rollback_return_stmt(ast_node *ast) {
   cg_return_stmt(ast);
 }
 
+// Commits the current procedure savepoint, then perform a return.
+// Note savepoint semantics are just "release" is sort of like commit
+// in that it doesn't rollback and becomes part of the current transaction
+// which may or may not commit but that's what we mean by commit.
 static void cg_commit_return_stmt(ast_node *ast) {
   Contract(is_ast_commit_return_stmt(ast));
 
@@ -4056,6 +4108,11 @@ static void cg_commit_return_stmt(ast_node *ast) {
 
 
 // This is a no-op in sqlite.
+// The whole rationale for this open statement statement is kind of dubious
+// it was originally added because some TSQL languages have it and we thought
+// it should be there for symmetric but it has no purpose in SQLite.  And
+// idiomatic CQL doesn't have it... We could probably just nix this at this point
+// but here it is.
 static void cg_open_stmt(ast_node *ast) {
   Contract(is_ast_open_stmt(ast));
   EXTRACT_STRING(name, ast->left);
@@ -6041,6 +6098,10 @@ cql_noexport void cg_c_init(void) {
   EXPR_INIT(cast_expr, cg_expr_cast, "CAST", C_EXPR_PRI_ROOT);
 }
 
+// To make sure we start at a zero state.  This is really necessary stuff
+// because of the amalgam.  In the context of the amalgam the compiler
+// might be run more than once without the process exiting. Hence we have
+// to reset the globals and empty the symbol tables.
 cql_noexport void cg_c_cleanup() {
   cg_common_cleanup();
 

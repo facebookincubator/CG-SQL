@@ -498,7 +498,7 @@ static void sem_validate_check_expr(ast_node *table, ast_node *expr) {
   }
 }
 
-// data needed for processing a column defintion
+// data needed for processing a column definition
 typedef struct coldef_info {
   version_attrs_info *table_info;    // the various table version info items from the containing table
   sem_t col_sem_type;                // the semantic type of the created_columns
@@ -514,6 +514,12 @@ typedef struct coldef_info {
   ast_node *default_value;           // the default value expression if there is one
 } coldef_info;
 
+// We collect these as we process the column definitions.
+// tracking this information helps us to report on duplicates 
+// (like you can't say primary key 2 times)
+// and otherwise get the results on a silver platter when processing is done.
+// This also gives us access to the pending table info which can be used
+// for validation and error messages.
 static void init_coldef_info(coldef_info *info, version_attrs_info *table_info) {
   info->table_info = table_info;
   info->col_sem_type = SEM_TYPE_PENDING;
@@ -539,6 +545,9 @@ typedef struct name_check {
   uint32_t count;            // the count of names
 } name_check;
 
+// This is the setup for looking for a list of names in a particular join scope.  This is useful for
+// making sure names are from (e.g.) the names in the select list, or the names of the
+// columns of a table (one sptr in the jptr will do that job) or other such contexts.
 static void init_name_check(name_check *check, ast_node *name_list, sem_join *jptr) {
   check->names = symtab_new();
   check->name_list_tail = NULL;
@@ -547,6 +556,7 @@ static void init_name_check(name_check *check, ast_node *name_list, sem_join *jp
   check->name_list = name_list;
 }
 
+// Releases the temp info.
 static void destroy_name_check(name_check *check) {
   symtab_delete(check->names);
   check->name_list_tail = NULL;
@@ -594,7 +604,6 @@ static bool_t is_name_list_equal(ast_node *name_list1, ast_node *name_list2) {
 // name_list1(a, c) return false
 // name_list1(d) return false
 // name_list1(b, d) return false
-//
 static bool_t is_either_list_a_subset(ast_node *name_list1, ast_node *name_list2) {
   ast_node *a1 = name_list1;
   ast_node *a2 = name_list2;
@@ -804,6 +813,10 @@ static sem_t any_sensitive(sem_struct *sptr) {
   return sem_sensitive;
 }
 
+// The normal combination for semantic flags, just the flags:
+// * if either is nullable the result is nullable
+// * if either is sensitive the result is sensitive
+// nullable is weird because the flag is "NOTNULL" so everything is inverted
 static sem_t combine_flags(sem_t sem_type_1, sem_t sem_type_2) {
   return both_notnull_flag(sem_type_1, sem_type_2) |
          sensitive_flag(sem_type_1) |
@@ -2891,6 +2904,9 @@ static bool_t sem_validate_version(ast_node *ast, int32_t *version, CSTR *out_pr
   return true;
 }
 
+// When we find @create, @delete or @recreate we have to record that we found such an annotation.
+// Later, if/when we generate schema we will be able to walk through these in a suitable sort order
+// and then emit the appropriate migrations.
 static void record_schema_annotation(int32_t vers, ast_node *target_ast, CSTR target_name, uint32_t type, ast_node *def, ast_node *ast, int32_t ordinal) {
   Contract(target_ast);
   Contract(target_name);
@@ -2918,6 +2934,8 @@ static void record_schema_annotation(int32_t vers, ast_node *target_ast, CSTR ta
 
 static int32_t recreates;
 
+// Recreate annotations get stored in a different stream, they are processed in order as well but
+// they don't merge in with the others.  So we're building up two buffers.
 static void record_recreate_annotation(ast_node *target_ast, CSTR target_name, CSTR group_name, ast_node *annotation) {
   recreate_annotation *note = bytebuf_alloc(recreate_annotations, sizeof(*note));
 
@@ -2928,6 +2946,8 @@ static void record_recreate_annotation(ast_node *target_ast, CSTR target_name, C
   note->ordinal = recreates++;
 }
 
+// This applies the validation for a FK in the context of a column, so that
+// single column is the FK to the outside reference.
 static void sem_col_attrs_fk(ast_node *fk, ast_node *def, coldef_info *info) {
   Contract(is_ast_col_attrs_fk(fk));
   Contract(is_ast_col_def(def));
@@ -2945,6 +2965,12 @@ static void sem_col_attrs_fk(ast_node *fk, ast_node *def, coldef_info *info) {
   // getting errors because the latest version of the table refers to tables or
   // columns that are not yet in existence in the version we are migrating.
   // FKs in tables created by your migration script are honored.
+  // NOTE: schema migration script here means a migration proc is being defined here.
+  // This is not the normal schema upgrader.  But migration procs by definition work
+  // on past versions of the schema.  Sometimes the "--rt schema_upgrade" thing is
+  // called the schema migration script but this is not that.  This is where
+  // @SCHEMA_UPGRADE_VERSION has been specified so that we should pretend to be
+  // at an older schema version because we are upgrading that version.
   if (schema_upgrade_version > 0 && !current_proc) {
     record_ok(fk);
     return;
@@ -2954,7 +2980,7 @@ static void sem_col_attrs_fk(ast_node *fk, ast_node *def, coldef_info *info) {
   // The previous schema may have different regions and/or @recreate groups and this will
   // just lead to spurious errors.  The current schema was already checked for consistency
   // all we have to do is validate that the text of the columns didn't change and that
-  // happens later.  Visibiliity rules are moot.
+  // happens later.  Visibiliity of the referenced table in the previous schema is moot.
   if (validating_previous_schema) {
     record_ok(fk);
     return;
