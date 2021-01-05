@@ -1,3 +1,8 @@
+---
+id: x5
+title: "Appendix 5: JSON Schema Grammar"
+sidebar_label: "Appendix 5: JSON Schema Grammar"
+---
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
 --
@@ -5,11 +10,10 @@
 -- LICENSE file in the root directory of this source tree.
 -->
 
-## Appendix 5: JSON Schema Grammar
-
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Sat Dec 26 17:51:24 PST 2020
+Snapshot as of Tue Jan  5 14:53:54 PST 2021
+
 ### Rules
 
 ```

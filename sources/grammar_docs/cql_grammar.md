@@ -1,3 +1,8 @@
+---
+id: x2
+title: "Appendix 2: CQL Grammar"
+sidebar_label: "Appendix 2: CQL Grammar"
+---
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
 --
@@ -5,12 +10,10 @@
 -- LICENSE file in the root directory of this source tree.
 -->
 
-## Appendix 2: CQL Grammar
-
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Mon Jan  4 11:42:05 PST 2021
+Snapshot as of Tue Jan  5 14:53:53 PST 2021
 
 ### Operators and Literals
 

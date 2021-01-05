@@ -68,6 +68,7 @@ A very simple CQL main might look like this:
 
 ```C
 #include <stdlib.h>
+#include "hello.h"
 int main(int argc, char **argv)
 {
    hello();
@@ -781,6 +782,114 @@ There are no boolean literals other than the integers `0` and `1`.
 The C pre-processor is often combined with CQL in which case the `_FILE_` and `_LINE_` directives may be used to create literals; they will be preprocessed into normal literals.
 
 The use of `_FILE_` can give surprising results in the presence of build systems, hence the existence of `@FILE(...)`.
+
+
+### Const and Enumerations
+
+It's possible to use named constants in CQL with nothing more than the C pre-processor featuers that have already appeared,
+however use of #define in such a way is not entirely satisfactory.  For one thing, CQL will not know these constants
+exist in any way as they will be replaced before it ever sees them.  This means CQL can't provide their values for you
+in the JSON output for instance.
+
+To help with this probvlem, CQL includes constants, note, this is not the same as enumerated types as we'll
+see later.  You can now write something like this:
+
+```
+declare enum business_type integer (
+  restuarant,
+  laundromat,
+  corner_store = 11+3  /* math added for demo purposes only */
+);
+```
+
+After this:
+
+```
+select business_type.corner_store;
+```
+is the same as
+
+```
+select 14;
+```
+
+And that is exactly what SQLite will see, the literal `14`.
+
+Enumerations follow these rules:
+
+* the enumeration can be any numeric type (bool, integer, long integer, real)
+* the values of the enumeration start at 1 (i.e. if there is no `= expression` the first item will be `1`, not `0`)
+* if you don't specify a value, the next value is the previous value plus one
+* if you do specify a value it can be any constant expression and it will be cast to the type of the enumeration (even if that is lossy)
+* the enumeration can refer to previous values in itself with no qualification `(big = 100.0, medium = big/2, small = medium/2)`
+* the enumeration can refer to previously defined enumerations as usual `(code = business_type.restaurant)`
+* Once the enumeration is defined you refer to its members in a fully qualified fashion `enum_name.member_name` elsewhere
+
+With these forms you get some additional useful output:
+* the JSON includes the enumerations and their values in their own section
+* you can use the `@emit_enums` directive to put declarations like this into the `.h` file that corresponds to the ccurrent compiland
+
+```
+enum business_type {
+  business_type__restaurant = 1,
+  business_type__laundromat = 2,
+  business_type__corner_store = 14
+};
+```
+
+Note that C does not allow for floating point enumartions, so in case of floating point values such as:
+
+```
+declare enum floating real (
+  one = 1.0,
+  two = 2.0,
+  e = 2.71828,
+  pi = 3.14159
+);
+```
+
+You get:
+
+```
+// enum floating (floating point values)
+#define floating__one 1.000000e+00
+#define floating__two 2.000000e+00
+#define floating__e 2.718280e+00
+#define floating__pi 3.141590e+00
+```
+
+In order to get useful expressions in enumeration values, constant folding and general evaluation was added to the compiler;
+these expressions work on any numeric type and the literal null.  The supported operations include:
+
+`+`, `-`, `*`, `/`, `%`, `|`, `&`, `<<`, `>>`, `~`, `and`, `or`, `not`, `==`, `<=`, `>=`, `!=`, `<`, `>`, the `cast` operator
+and the `case` forms (including the `iif` function).  These are enough to make a lot of very interesting expressions, all of
+which are envaluated at compile time.
+
+Constant folding was added to allow for rich `enum` expressions, but there is also the `const()` primitive in the
+language which can appear anywhere a literal could appear.  This allows you do things like:
+
+```
+create table something(
+  x integer default const((1<<16)|0xf) /*  again the math is just for illustration */
+);
+```
+
+The `const` form is also very useful in macros:
+
+```
+#define SOMETHING const(12+3)
+```
+This form ensures that the constant will be evaluated at compile time. The `const` psuedo-function can also also nest
+so you can build these kinds of macros from other macros or you can build enum values this way.
+Anywhere you might need literals, you can use `const`.
+
+Importantly, no enumerated data types were added to the language to do any of this.  The following
+is an error:
+
+```
+declare enum my_enum integer (a, b);
+declare x my_enum;    /* my_enum is not a valid type: use integer, real, etc. */
+```
 
 ### Nullability Rules
 
@@ -3143,6 +3252,29 @@ Along the way we validate a bunch of stuff like:
 * no duplicate column names
 * recursive correctness of constraints (see constraints discussion below)
 
+##### The `UNIQUE KEY` Clause
+Similar to other constraints, we don't actually do anything with this
+other than offer some validation.  Again we use the usual helpers
+for name lookup within the context of the table that contains the constraint.
+
+##### The `FOREIGN KEY` Clause
+Similar to other constraints, we don't actually do anything with this
+other than offer some validation.  Again we use the usual helpers
+for name lookup within the context of the table with the foreign key.
+ Note that the foreign has to be validated against two tables to fully validate it.
+
+##### The `PRIMARY KEY` Clause
+Similar to other constraints, we don't actually do anything with this
+other than offer some validation.  Again we use the usual helpers
+for name lookup within the context of the table with the primary key.
+
+##### The `CHECK` Clause
+Similar to other constraints, we don't actually do anything with this
+other than offer some validation.  The `CHECK` clause is validated
+after the entire table has been processed so that even if it appears
+early in the table, the clause can use any columns defined later in the
+table.
+
 #### The `CREATE INDEX` Statement
 CQL doesn't really do anything with indices but we do validate that they make sense (so we lookup all the names of all the columns and so forth).
 
@@ -3185,22 +3317,6 @@ This is the basic checking for the drop index statement:
 This is the basic checking for the drop trigger statement
 * the trigger  must exist in some version
 * it could be deleted now, that's ok, but the name has to be valid
-
-#### The `UNIQUE KEY` Clause
-Similar to other constraints, we don't actually do anything with this
-other than offer some validation.  Again we use the usual helpers
-for name lookup within the context of the table that contains the constraint.
-
-#### The `FOREIGN KEY` Clause
-Similar to other constraints, we don't actually do anything with this
-other than offer some validation.  Again we use the usual helpers
-for name lookup within the context of the table with the foreign key.
- Note that the foreign has to be validated against two tables to fully validate it.
-
-#### The `PRIMARY KEY` Clause
-Similar to other constraints, we don't actually do anything with this
-other than offer some validation.  Again we use the usual helpers
-for name lookup within the context of the table with the primary key.
 
 #### The `RAISE` Statement
 CQL validates that `RAISE` is being used in the context of a trigger and that
@@ -3274,6 +3390,175 @@ Release savepoint can go anywhere but we must have
 seen that name in a previous `savepoint` statement or it's an error.
 
 The sqlite documentation can be helpful (CQL syntax is a subset). https://www.sqlite.org/lang_savepoint.html
+
+#### The `PROCEDURE SAVEPOINT` Statement
+A common pattern is to have a savepoint associated with a particular procedure, the savepoint's scope is the same
+as the procedure.  More precisely
+
+```sql
+create procedure foo()
+begin
+  proc savepoint
+  begin
+   -- your code
+  end;
+end;
+```
+
+Becomes:
+
+```sql
+create procedure foo()
+begin
+  savepoint @proc;  -- @proc is always the name of the current procedure
+  begin try
+    -- your code
+    release savepoint @proc;
+  end try;
+  begin catch
+    rollback transaction to savepoint @proc;
+    release savepoint @proc;
+    throw;
+  end catch;
+end;
+```
+
+This form is not quite syntatic sugar because there are some interesting rules:
+
+* the `proc savepoint` form must be used at the top level of the procedure hence no `leave` or `continue` may escape it
+* within `begin`/`end` the `return` form may not be used, you must use `rollback return` or `commit return` (see below)
+* `throw` may be used to return an error as usual
+* `proc savepoint` may be used again, at the top level, in the same procedure, if there are for instance several sequential stages
+* a procedure using `proc savepoint` could call other such procedure, or a procedure that manipulates savepoints in some other way.
+
+#### The `ROLLBACK RETURN` Statement
+
+This form may be used only inside of  a `proc savepoint` block.  It indicates that the savepoint should be rolled back and then the procedure
+should return.  It is exactly equivalent to:
+
+```sql
+  rollback transaction to savepoint @proc;
+  release savepoint @proc;
+  return; -- wouldn't actually be allowed inside of proc savepoint, see note below
+```
+
+Note: to avoid errors, the loose `return` above is not actually allowed inside of `proc savepoint` you must use `rollback return` or `commit return`.
+
+#### The `COMMIT RETURN` Statement
+
+This form may be used only inside of  a `proc savepoint` block.  It indicates that the savepoint should be released and then the procedure
+should return.  It is exactly equivalent to:
+
+```sql
+  release savepoint @proc;
+  return; -- wouldn't actually be allowed inside of proc savepoint, see note below
+```
+
+Of course this isn't exactly a commit, in that there might be an outer savepoint or outer transaction that might
+still be rolled back but it is commited at its level of nesting if you will.  Or, equivalently, you can think of
+it as merging the savepoint into the transaction in flight.
+
+Note: to avoid errors, the loose `return` above is not actually allowed inside of `proc savepoint` you must use `rollback return` or `commit return`.
+
+#### The `CREATE VIRTUAL TABLE` Statement
+
+The SQLite `CREATE VIRTUAL TABLE` form (https://sqlite.org/lang_createvtab.html) is problematic from CQL because:
+
+* not parseable, because the module arguments can be literally anything (or nothing), even a letter to your gramma.
+* the arguments do not necessarily say anything about the table's schema at all
+
+So the CQL form departs from the standard syntax to this form:
+
+```sql
+create virtual table virt_table using my_module [(module arguments)]  as (
+  id integer not null,
+  name text
+);
+```
+
+The part after the `AS` is used by CQL as a table declaration for the virtual table.  The grammar for that
+is exactly the same as a normal `CREATE TABLE` statement.  However that part is not transmitted to
+SQLite; when the table is created, SQLite sees only the part it cares about, the part before the `AS`.
+
+In order to have strict parsing rules, the module arguments follow one of these forms:
+
+1. no arguments at all
+2. a list of identifiers, constants, and parenthesized sublists just like in the `@attribute` form
+3. the words `arguments following`
+
+
+##### Case 1 Example
+
+```sql
+create virtual table virt_table using my_module as (
+  id integer not null,
+  name text
+);
+```
+
+becomes (to SQLite)
+
+```sql
+CREATE VIRTUAL TABLE virt_table USING my_module;
+```
+
+Note: empty arguments `USING my_module()` are not allowed in the SQLite docs but do seem to work in SQLite.
+We take the position that no args should be done with no parens, at least for now.
+
+##### Case 2 Example
+
+```
+create virtual table virt_table using my_module(foo, 'goo', (1.5, (bar, baz))) as (
+  id integer not null,
+  name text
+);
+```
+
+```
+CREATE VIRTUAL TABLE virt_table USING my_module(foo, "goo", (1.5, (bar, baz)));
+```
+
+This form allows for very flexible arguments but not totally arbitary arguments, so it can still be
+parsed and validated.
+
+##### Case 3 Example
+
+This case recognizes the popular choice that the arguments are often the actual schema declaration
+for the table in question. So:
+
+```
+create virtual table virt_table using my_module(arguments following) as (
+  id integer not null,
+  name text
+);
+```
+
+becomes
+
+```
+CREATE VIRTUAL TABLE virt_table USING my_module(
+  id INTEGER NOT NULL,
+  name TEXT
+);
+```
+
+The normalized text (keywords capitalized, whitespace normalized) of the table declaration in the `as` clause is used as the arguments.
+
+##### Other details
+
+Virtual tables go into their own section in the JSON and they include the `module` and `moduleArgs` entries, they are additionally
+marked `isVirtual` in case you want to use the same processing code for virtual tables as normal tables.  The JSON format is otherwise
+the same, although some things can't happen in virtual tables (e.g. there is no `TEMP` option so `"isTemp"` must be false in the JSON.
+
+For purposes of schema processing, virtual tables are on the `@recreate` plan, just like indices, triggers, etc.  This is the only option since
+the `alter table` form is not allowed on a virtual table.
+
+Semantic validation enforces "no alter statements on virtual tables" as well as other things like, no indices, and no triggers, since SQLite
+does not support any of those things.
+
+Finally, because virtual tables are on the `@recreate` plan, you may not have foreign keys that reference virtual tables. Such keys seem
+like a bad idea in any case.
+
 
 ### The Primary Procedure Statements
 
@@ -3476,6 +3761,18 @@ and that there isn't already a schema region.
 #### The `@END_SCHEMA_REGION` Statement
 Leaving a schema region puts you back in the default region.
 Here we check that we are in a schema region.
+
+#### The `@EMIT_ENUMS` Statement
+Declared enumarations can be voluminous and it is undesirable for every
+emitted `.h` file to contain every enumaration.  To avoid this problem
+you can emit enumaration values of your choice using `@emit_enums x, y, z`
+which places the named enumarations into the `.h` file associated with
+the current translation unit. If no enumarations are listed, all enums
+are emitted.
+
+Note: generated enum defintions are protected by `#ifndef X ... #endif` so multiple
+definitions are harmless and hence you can afford to use `@emit_enums`
+for the same enum in several translations units, if desired.
 
 ### Important Program Fragments
 
@@ -6847,6 +7144,7 @@ And finally the section for procedures that were encountered that are not one of
 Some additional properties not mentioned above that are worth noting:
 
 * where `usesTables` appears there will also be more detailed information about how the tables were used
+  * the `usesViews` key will give you an array of the views that were used (these lead to more views/tables also included)
   * the `insertTables` key will give you an array of the tables that were used as the target of an `insert` statement
   * the `updateTables` key will give you an array of the tables that were used as the target of an `update` statement
   * the `deleteTables` key will give you an array of the tables that were used as the target of an `delete` statement
@@ -7325,10 +7623,11 @@ These are the various outputs the compiler can produce.
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Fri Oct  9 13:41:39 PDT 2020
+Snapshot as of Tue Jan  5 14:53:53 PST 2021
 
 ### Operators and Literals
 
@@ -7364,21 +7663,21 @@ REALLIT /* floating point literal */
 ### Statement/Type Keywords
 ```
 EXCLUDE_GROUP EXCLUDE_CURRENT_ROW EXCLUDE_TIES EXCLUDE_NO_OTHERS CURRENT_ROW UNBOUNDED PRECEDING FOLLOWING
-CREATE DROP TABLE WITHOUT ROWID PRIMARY KEY NULL_ DEFAULT AT_DUMMY_SEED
+CREATE DROP TABLE WITHOUT ROWID PRIMARY KEY NULL_ DEFAULT CHECK AT_DUMMY_SEED VIRTUAL AT_EMIT_ENUMS
 OBJECT TEXT BLOB LONG_ INT_ INTEGER LONG_INTEGER REAL ON UPDATE CASCADE ON_CONFLICT DO NOTHING
-DELETE INDEX FOREIGN REFERENCES CONSTRAINT UPSERT STATEMENT
+DELETE INDEX FOREIGN REFERENCES CONSTRAINT UPSERT STATEMENT CONST
 INSERT INTO VALUES VIEW SELECT QUERY_PLAN EXPLAIN OVER WINDOW FILTER PARTITION RANGE ROWS GROUPS
 AS CASE WHEN FROM THEN ELSE END LEFT
 OUTER JOIN WHERE GROUP BY ORDER ASC
 DESC INNER FCOUNT AUTOINCREMENT DISTINCT
 LIMIT OFFSET TEMP TRIGGER IF ALL CROSS USING RIGHT
-UNIQUE HAVING SET TO DISTINCTROW
-FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR CURSOR_FOR DECLARE FETCH LOOP LEAVE CONTINUE
+UNIQUE HAVING SET TO DISTINCTROW ENUM
+FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR DECLARE FETCH LOOP LEAVE CONTINUE FOR
 OPEN CLOSE ELSE_IF WHILE CALL TRY CATCH THROW RETURN
 SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
 CAST WITH RECURSIVE REPLACE IGNORE ADD COLUMN RENAME ALTER
 AT_ECHO AT_CREATE AT_RECREATE AT_DELETE AT_SCHEMA_UPGRADE_VERSION AT_PREVIOUS_SCHEMA AT_SCHEMA_UPGRADE_SCRIPT
-AT_FILE AT_ATTRIBUTE AT_SENSITIVE DEFERRED NOT_DEFERRABLE DEFERRABLE IMMEDIATE RESTRICT ACTION INITIALLY NO
+AT_PROC AT_FILE AT_ATTRIBUTE AT_SENSITIVE DEFERRED NOT_DEFERRABLE DEFERRABLE IMMEDIATE RESTRICT ACTION INITIALLY NO
 BEFORE AFTER INSTEAD OF FOR_EACH_ROW EXISTS RAISE FAIL ABORT AT_ENFORCE_STRICT AT_ENFORCE_NORMAL
 AT_BEGIN_SCHEMA_REGION AT_END_SCHEMA_REGION
 AT_DECLARE_SCHEMA_REGION AT_DECLARE_DEPLOYABLE_REGION AT_SCHEMA_AD_HOC_MIGRATION PRIVATE
@@ -7389,22 +7688,29 @@ Note that in many cases the grammar is more generous than the overall language a
 ```
 
 
-program: opt_stmt_list
+program:
+  opt_stmt_list
   ;
 
-opt_stmt_list: /*nil*/
+opt_stmt_list:
+  /*nil*/
   | stmt_list
+  ;
 
-stmt_list: stmt ';'
+stmt_list:
+  stmt ';'
   | stmt ';' stmt_list
   ;
 
-stmt: misc_attrs any_stmt
+stmt:
+  misc_attrs any_stmt
+  ;
 
 any_stmt: select_stmt
   | explain_stmt
   | create_trigger_stmt
   | create_table_stmt
+  | create_virtual_table_stmt
   | create_index_stmt
   | create_view_stmt
   | alter_table_add_column_stmt
@@ -7427,994 +7733,1234 @@ any_stmt: select_stmt
   | declare_proc_stmt
   | declare_func_stmt
   | declare_stmt
+  | declare_enum_stmt
   | fetch_stmt
   | fetch_values_stmt
   | fetch_call_stmt
-  | fetch_cursor_stmt
   | while_stmt
   | loop_stmt
   | leave_stmt
   | return_stmt
+  | rollback_return_stmt
+  | commit_return_stmt
   | continue_stmt
   | if_stmt
   | open_stmt
-  | close_stmt 
-  | out_stmt 
-  | out_union_stmt 
-  | throw_stmt 
-  | trycatch_stmt 
-  | begin_trans_stmt 
-  | rollback_trans_stmt 
-  | commit_trans_stmt 
-  | savepoint_stmt 
-  | release_savepoint_stmt 
-  | echo_stmt 
-  | schema_upgrade_version_stmt 
-  | schema_upgrade_script_stmt 
-  | previous_schema_stmt 
-  | enforce_strict_stmt 
-  | enforce_normal_stmt 
-  | declare_schema_region_stmt 
-  | declare_deployable_region_stmt 
-  | begin_schema_region_stmt 
-  | end_schema_region_stmt 
-  | schema_ad_hoc_migration_stmt 
-  ; 
- 
-explain_stmt: "EXPLAIN" opt_query_plan explain_target  
-  ; 
- 
-opt_query_plan: /* nil */  
-  | "QUERY PLAN"  
-  ; 
- 
-explain_target: select_stmt 
-  | update_stmt 
-  | delete_stmt 
-  | with_delete_stmt 
-  | with_insert_stmt 
-  | insert_stmt 
-  | upsert_stmt 
-  | drop_table_stmt 
-  | drop_view_stmt 
-  | drop_index_stmt 
-  | drop_trigger_stmt 
-  | begin_trans_stmt 
-  | commit_trans_stmt 
-  ; 
- 
-previous_schema_stmt: "@PREVIOUS_SCHEMA"  
-  ; 
- 
-schema_upgrade_script_stmt: "@SCHEMA_UPGRADE_SCRIPT"  
-  ; 
- 
-schema_upgrade_version_stmt: "@SCHEMA_UPGRADE_VERSION" '(' "integer-literal" ')'  
-  ; 
- 
-set_stmt: "SET" name ":=" expr    
-  ; 
- 
-version_attrs_opt_recreate: /* nil */  
-  | "@RECREATE"  
-  | "@RECREATE" '(' name ')'   
-  | version_attrs  
-  ; 
- 
-opt_version_attrs: /* nil */  
-  | version_attrs  
-  ; 
- 
-version_attrs: "@CREATE" version_annotation opt_version_attrs  
-  | "@DELETE" version_annotation opt_version_attrs  
-  ; 
- 
-opt_delete_version_attr: /* nil */  
-  | "@DELETE" version_annotation  
-  ; 
- 
-drop_table_stmt: "DROP" "TABLE" "IF" "EXISTS" name  
-  | "DROP" "TABLE" name  
-  ; 
- 
-drop_view_stmt: "DROP" "VIEW" "IF" "EXISTS" name  
-  | "DROP" "VIEW" name  
-  ; 
- 
-drop_index_stmt: "DROP" "INDEX" "IF" "EXISTS" name  
-  | "DROP" "INDEX" name  
-  ; 
- 
-drop_trigger_stmt: "DROP" "TRIGGER" "IF" "EXISTS" name  
-  | "DROP" "TRIGGER" name  
-  ; 
- 
-create_table_stmt: "CREATE" opt_temp "TABLE" opt_if_not_exists name '(' col_key_list ')' opt_no_rowid version_attrs_opt_recreate  
-  ; 
- 
-opt_temp: /* nil */  
-  | "TEMP"  
-  ; 
- 
-opt_if_not_exists: /* nil */  
-  | "IF" "NOT" "EXISTS"  
-  ; 
- 
-opt_no_rowid: /* nil */  
-  | "WITHOUT" "ROWID"  
-  ; 
- 
-col_key_list: col_key_def  
-  | col_key_def ',' col_key_list   
-  ; 
- 
-col_key_def: col_def 
-  | pk_def 
-  | fk_def 
-  | unq_def 
-  | "LIKE" name  
-  ; 
- 
-col_name: name  
-  ; 
- 
-misc_attr_key: name  
-  | name ':' name  
-  ; 
- 
-misc_attr_value_list: misc_attr_value  
-  | misc_attr_value ',' misc_attr_value_list  
-  ; 
- 
-misc_attr_value: name  
-  | any_literal  
-  | '(' misc_attr_value_list ')'  
-  | '-' num_literal  
-  ; 
- 
-misc_attr:  "@ATTRIBUTE" '(' misc_attr_key ')'  
-  | "@ATTRIBUTE" '(' misc_attr_key '=' misc_attr_value ')'  
-  ; 
- 
-misc_attrs: /* nil */  
-  | misc_attr misc_attrs  
-  ; 
- 
-col_def: misc_attrs col_name data_type col_attrs  
-  ; 
- 
-pk_def: "PRIMARY" "KEY" '(' name_list ')'   
-  ; 
- 
-opt_fk_options: /* nil */  
-  | fk_options  
-  ; 
- 
-fk_options: fk_on_options  
-  | fk_deferred_options  
-  | fk_on_options fk_deferred_options   
-  ; 
- 
-fk_on_options: 
-    "ON" "DELETE" fk_action  
-  | "ON" "UPDATE" fk_action  
-  | "ON" "UPDATE" fk_action "ON" "DELETE" fk_action  
-  | "ON" "DELETE" fk_action "ON" "UPDATE" fk_action  
-  ; 
- 
-fk_action: 
-    "SET" "NULL"  
-  | "SET" "DEFAULT"  
-  | "CASCADE"  
-  | "RESTRICT"  
-  | "NO" "ACTION"  
-  ; 
- 
-fk_deferred_options: 
-    "DEFERRABLE" fk_initial_state  
-  | "NOT DEFERRABLE" fk_initial_state  
-  ; 
- 
-fk_initial_state: /* nil */  
-  | "INITIALLY" "DEFERRED"  
-  | "INITIALLY" "IMMEDIATE"  
-  ; 
- 
-fk_def: "FOREIGN" "KEY" '(' name_list ')' fk_target_options  
-  ; 
- 
-fk_target_options : "REFERENCES" name '(' name_list ')' opt_fk_options  
-  ; 
- 
-unq_def: "CONSTRAINT" name "UNIQUE" '(' name_list ')'  
-  | "UNIQUE" '(' name_list ')'  
-  ; 
- 
-opt_unique: /* nil */  
-  | "UNIQUE"  
-  ; 
- 
-indexed_column: name opt_asc_desc  
-  ; 
- 
-indexed_columns: indexed_column  
-  | indexed_column ',' indexed_columns  
-  ; 
- 
-create_index_stmt: "CREATE" opt_unique "INDEX" opt_if_not_exists name "ON" name '(' indexed_columns ')' opt_delete_version_attr  
-  ; 
- 
-name: "ID"  
-  | "TEXT"  
-  | "TRIGGER"  
-  | "ROWID"  
-  ; 
- 
-opt_name: /* nil */  
-  | name  
-  ; 
- 
-name_list: name  
-  |  name ',' name_list   
-  ; 
- 
-opt_name_list: /* nil */  
-  | name_list  
-  ; 
- 
-col_attrs: /* nil */  
-  | "NOT" "NULL" col_attrs  
-  | "PRIMARY" "KEY" col_attrs  
-  | "PRIMARY" "KEY" "AUTOINCREMENT" col_attrs  
-  | "DEFAULT" '-' num_literal col_attrs  
-  | "DEFAULT" num_literal col_attrs  
-  | "DEFAULT" str_literal col_attrs  
-  | "UNIQUE" col_attrs  
-  | "@SENSITIVE" col_attrs  
-  | "@CREATE" version_annotation col_attrs  
-  | "@DELETE" version_annotation col_attrs  
-  | fk_target_options col_attrs  
-  ; 
- 
-version_annotation: '(' "integer-literal" ',' name ')'  
-  | '(' "integer-literal" ')'  
-  ; 
- 
-object_type: 
-    "OBJECT"  
-  | "OBJECT" '<' name '>'  
-  ; 
- 
-data_type: 
-    "INT"  
-  | "INTEGER"  
-  | "TEXT"  
-  | "REAL"  
-  | "LONG"  
-  | "BOOL"  
-  | "LONG" "INTEGER"  
-  | "LONG" "INT"  
-  | "LONG_INT" | "LONG_INTEGER"  
-  | "BLOB"  
-  | object_type  
-  ; 
- 
-data_type_opt_notnull: data_type  
-  | data_type "NOT" "NULL"  
-  | data_type "@SENSITIVE"  
-  | data_type "@SENSITIVE" "NOT" "NULL"  
-  | data_type "NOT" "NULL" "@SENSITIVE"   
-  ; 
- 
-str_literal: "sql-string-literal"  
-  | "c-string-literal"  
-  ; 
- 
-num_literal:  "integer-literal"  
-  | "long-literal"  
-  | "real-literal"  
-  ; 
- 
-any_literal: str_literal  
-  | num_literal  
-  | "NULL"  
-  | "@FILE" '(' str_literal ')'  
-  | "sql-blob-literal"  
-  ; 
- 
-raise_expr: 
-    "RAISE" '(' "IGNORE" ')'   
-  | "RAISE" '(' "ROLLBACK" ','  expr ')'  
-  | "RAISE" '(' "ABORT" ','  expr ')'  
-  | "RAISE" '(' "FAIL" ','  expr ')'  
-  ; 
- 
-call: 
-    name '(' arg_list ')' opt_filter_clause  
-  | name '(' "DISTINCT" arg_list ')' opt_filter_clause  
-  ; 
- 
-basic_expr: name  
-  | name '.' name  
-  | any_literal  
-  | '(' expr ')'  
-  | call  
-  | window_func_inv  
-  | raise_expr  
-  | '(' select_stmt ')'  
-  | "EXISTS" '(' select_stmt ')'  
-  ; 
- 
-math_expr: basic_expr  
-  | math_expr '&' math_expr  
-  | math_expr '|' math_expr  
-  | math_expr "<<" math_expr  
-  | math_expr ">>"  math_expr  
-  | math_expr '+' math_expr  
-  | math_expr '-' math_expr  
-  | math_expr '*' math_expr  
-  | math_expr '/' math_expr  
-  | math_expr '%' math_expr  
-  | '-' math_expr   
-  | math_expr "||" math_expr  
-  ; 
- 
-expr: basic_expr  
-  | expr '&' expr  
-  | expr '|' expr  
-  | expr "<<" expr  
-  | expr ">>" expr  
-  | expr '+' expr  
-  | expr '-' expr  
-  | expr '*' expr  
-  | expr '/' expr  
-  | expr '%' expr  
-  | '-' expr   
-  | "NOT" expr  
-  | '~' expr  
-  | expr "COLLATE" name  
-  | expr "AND" expr  
-  | expr "OR" expr  
-  | expr '=' expr  
-  | expr "==" expr  
-  | expr '<' expr  
-  | expr '>' expr  
-  | expr "<>" expr  
-  | expr "!=" expr  
-  | expr ">=" expr  
-  | expr "<=" expr  
-  | expr "NOT" "IN" '(' expr_list ')'  
-  | expr "NOT" "IN" '(' select_stmt ')'  
-  | expr "IN" '(' expr_list ')'  
-  | expr "IN" '(' select_stmt ')'  
-  | expr "LIKE" expr  
-  | expr "NOT LIKE" expr  
-  | expr "MATCH" expr  
-  | expr "REGEXP" expr  
-  | expr "GLOB" expr  
-  | expr "NOT" "BETWEEN" math_expr "AND" math_expr   
-  | expr "BETWEEN" math_expr "AND" math_expr   
-  | expr "IS NOT" expr  
-  | expr "IS" expr  
-  | expr "||" expr  
-  | "CASE" expr case_list "END"  
-  | "CASE" expr case_list "ELSE" expr "END"  
-  | "CASE" case_list "END"  
-  | "CASE" case_list "ELSE" expr "END"  
-  | "CAST" '(' expr "AS" data_type ')'  
-  ; 
- 
-case_list: "WHEN" expr "THEN" expr  
-  | "WHEN" expr "THEN" expr case_list  
-  ; 
- 
-arg_expr: '*'  
-  | expr  
-  | cursor_arguments  
-  | from_arguments  
-  ; 
- 
-arg_list: /* nil */  
-  | arg_expr  
-  | arg_expr ',' arg_list  
-  ; 
- 
-expr_list: expr  
-  | expr ',' expr_list  
-  ; 
- 
-cursor_arguments : "FROM" name  
-  | "FROM" name "LIKE" name  
-  ; 
- 
-call_expr: expr  
-  | cursor_arguments  
-  | from_arguments  
-  ; 
- 
-call_expr_list: call_expr  
-  | call_expr ',' call_expr_list  
-  ; 
- 
-cte_tables:  cte_table  
-  | cte_table ',' cte_tables  
-  ; 
- 
-cte_table: cte_decl "AS" '(' select_stmt_no_with ')'  
-  ; 
- 
-cte_decl: name '(' name_list ')'  
-  | name '(' '*' ')'  
-  ; 
- 
-with_prefix: "WITH" cte_tables  
-  | "WITH" "RECURSIVE" cte_tables  
-  ; 
- 
-with_select_stmt: with_prefix select_stmt_no_with  
-  ; 
- 
-select_stmt: with_select_stmt  
-  | select_stmt_no_with  
-  ; 
- 
-select_stmt_no_with: select_core_list opt_orderby opt_limit opt_offset  
-  ; 
- 
-select_core_list: select_core  
-  | select_core select_core_compound  
-  ; 
- 
-select_core_compound: compound_operator select_core_list  
-  ; 
- 
- 
-values: '(' insert_list ')'  
-  | '(' insert_list ')' ',' values  
-  ; 
- 
-select_core: "SELECT" select_opts select_expr_list opt_from_query_parts opt_where opt_groupby opt_having opt_select_window  
-  | "VALUES" values  
-  ; 
- 
-compound_operator: 
-    "UNION"  
-  | "UNION ALL"  
-  | "INTERSECT"  
-  | "EXCEPT"  
-  ; 
- 
-window_func_inv: name '(' arg_list ')' opt_filter_clause "OVER" window_name_or_defn  
-  ; 
- 
-opt_filter_clause: /* nil */  
-  | "FILTER" '(' opt_where ')'  
-  ; 
- 
-window_name_or_defn: window_defn 
-  | name 
-  ; 
- 
-window_defn: '(' opt_partition_by opt_orderby opt_frame_spec ')'  
-  ; 
- 
-opt_frame_spec: /* nil */  
-  | frame_type frame_boundary_opts frame_exclude  
-  ; 
- 
-frame_type: "RANGE"  
-  | "ROWS"  
-  | "GROUPS"  
-  ; 
- 
-frame_exclude: /* nil */  
-  | "EXCLUDE NO OTHERS"  
-  | "EXCLUDE CURRENT ROW"  
-  | "EXCLUDE GROUP"  
-  | "EXCLUDE TIES"  
-  ; 
- 
-frame_boundary_opts: frame_boundary  
-  | "BETWEEN" frame_boundary_start "AND" frame_boundary_end  
-  ; 
- 
-frame_boundary_start: "UNBOUNDED" "PRECEDING"  
-  | expr "PRECEDING"  
-  | "CURRENT ROW"  
-  | expr "FOLLOWING"  
-  ; 
- 
-frame_boundary_end: expr "PRECEDING"  
-  | "CURRENT ROW"  
-  | expr "FOLLOWING"  
-  | "UNBOUNDED" "FOLLOWING"  
-  ; 
- 
-frame_boundary: "UNBOUNDED" "PRECEDING"  
-  | expr "PRECEDING"  
-  | "CURRENT ROW"  
-  ; 
- 
-opt_partition_by: /* nil */  
-  | "PARTITION" "BY" expr_list  
-  ; 
- 
-opt_select_window: /* nil */  
-  | window_clause  
-  ; 
- 
-window_clause: "WINDOW" window_name_defn_list  
-  ; 
- 
-window_name_defn_list: window_name_defn  
-  | window_name_defn ',' window_name_defn_list  
-  ; 
- 
-window_name_defn: name "AS" window_defn  
- 
-region_spec: 
-    name   
-  | name "PRIVATE"  
-  ; 
- 
-region_list : 
-    region_spec ',' region_list  
-  | region_spec  
-  ; 
- 
-declare_schema_region_stmt: 
-  "@DECLARE_SCHEMA_REGION" name  
-  | "@DECLARE_SCHEMA_REGION" name "USING" region_list  
-  ; 
- 
-declare_deployable_region_stmt: 
-  "@DECLARE_DEPLOYABLE_REGION"  name  
-  | "@DECLARE_DEPLOYABLE_REGION" name "USING" region_list  
-  ; 
- 
-begin_schema_region_stmt: "@BEGIN_SCHEMA_REGION" name  
-  ; 
- 
-end_schema_region_stmt: "@END_SCHEMA_REGION"  
-  ; 
- 
-schema_ad_hoc_migration_stmt: "@SCHEMA_AD_HOC_MIGRATION" version_annotation  
-  ; 
- 
-opt_from_query_parts: /* nil */  
-  | "FROM" query_parts  
-  ; 
- 
-opt_where: /* nil */  
-  | "WHERE" expr  
-  ; 
- 
-opt_groupby: /* nil */  
-  | "GROUP" "BY" groupby_list  
-  ; 
- 
-groupby_list: groupby_item  
-  | groupby_item ',' groupby_list  
-  ; 
- 
-groupby_item: expr opt_asc_desc  
-  ; 
- 
-opt_asc_desc: /* nil */  
-  | "ASC"  
-  | "DESC"  
-  ; 
- 
-opt_having: /* nil */  
-  | "HAVING" expr  
-  ; 
- 
-opt_orderby: /* nil */  
-  | "ORDER" "BY" groupby_list  
-  ; 
- 
-opt_limit: /* nil */  
-  | "LIMIT" expr  
-  ; 
- 
-opt_offset: /* nil */  
-  | "OFFSET" expr  
-  ; 
- 
-select_opts: /* nil */  
-  | "ALL"   
-  | "DISTINCT"  
-  | "DISTINCTROW"  
-  ; 
- 
-select_expr_list: select_expr  
-  | select_expr ',' select_expr_list  
-  | '*'  
-  ; 
- 
-select_expr: expr opt_as_alias  
-  |  name '.' '*'  
-  ; 
- 
-opt_as_alias: /* nil */  
-  | "AS" name  
-  | name  
-  ; 
- 
-query_parts: table_or_subquery_list  
-  | join_clause  
-  ; 
- 
-table_or_subquery_list: table_or_subquery  
-  | table_or_subquery ',' table_or_subquery_list  
-  ; 
- 
-join_clause: table_or_subquery join_target_list  
-  ; 
- 
-join_target_list: join_target  
-  | join_target join_target_list  
-  ; 
- 
-table_or_subquery: name opt_as_alias  
-  | '(' select_stmt ')' opt_as_alias  
-  | table_function opt_as_alias  
-  | '(' query_parts ')'  
-  ; 
- 
-join_target: opt_inner_cross "JOIN" table_or_subquery opt_join_cond  
-  | left_or_right opt_outer "JOIN" table_or_subquery opt_join_cond  
-  ; 
- 
-opt_inner_cross: /* nil */  
-  | "INNER"  
-  | "CROSS"  
-  ; 
- 
-opt_outer: /* nil */  
-  | "OUTER"  
-  ; 
- 
-left_or_right: "LEFT"  
-  | "RIGHT"  
-  ; 
- 
-opt_join_cond: /* nil */  
-  | join_cond 
-  ; 
- 
-join_cond: "ON" expr  
-  | "USING" '(' name_list ')'  
-  ; 
- 
-table_function: name '(' arg_list ')'  
-  ; 
- 
-create_view_stmt: "CREATE" opt_temp "VIEW" opt_if_not_exists name "AS" select_stmt opt_delete_version_attr  
-  ; 
- 
-with_delete_stmt: with_prefix delete_stmt  
-  ; 
- 
-delete_stmt: "DELETE" "FROM" name opt_where  
-  ; 
- 
-opt_insert_dummy_spec : /*nil*/   
-  | "@DUMMY_SEED" '(' expr ')' dummy_modifier  
-  ; 
- 
-dummy_modifier: /* nil */  
-  | "@DUMMY_NULLABLES"  
-  | "@DUMMY_DEFAULTS"   
-  | "@DUMMY_NULLABLES" "@DUMMY_DEFAULTS"   
-  | "@DUMMY_DEFAULTS" "@DUMMY_NULLABLES"   
-  ; 
- 
-insert_stmt_type : "INSERT" "INTO"  
-  | "INSERT" "OR" "REPLACE" "INTO"  
-  | "INSERT" "OR" "IGNORE" "INTO"  
-  | "INSERT" "OR" "ROLLBACK" "INTO"  
-  | "INSERT" "OR" "ABORT" "INTO"  
-  | "INSERT" "OR" "FAIL" "INTO"  
-  | "REPLACE" "INTO"  
-  ; 
- 
-with_insert_stmt: with_prefix insert_stmt  
-  ; 
- 
-opt_column_spec: /* nil */  
-  | '(' opt_name_list ')'  
-  | '(' "LIKE" name ')'  
-  ; 
- 
-from_cursor:  "FROM" "CURSOR" name opt_column_spec  
-  ; 
- 
-from_arguments: "FROM" "ARGUMENTS"  
-  | "FROM" "ARGUMENTS" "LIKE" name  
-  ; 
- 
-insert_stmt: insert_stmt_type name opt_column_spec select_stmt opt_insert_dummy_spec  
-  | insert_stmt_type name opt_column_spec from_arguments opt_insert_dummy_spec  
-  | insert_stmt_type name opt_column_spec from_cursor opt_insert_dummy_spec  
-  | insert_stmt_type name "DEFAULT" "VALUES"  
-  ; 
- 
-insert_list:  
-  | expr  
-  | expr ',' insert_list  
-  ; 
- 
-basic_update_stmt: "UPDATE" opt_name "SET" update_list opt_where  
-  ; 
- 
-with_update_stmt: with_prefix update_stmt  
-  ; 
- 
-update_stmt: "UPDATE" name "SET" update_list opt_where opt_orderby opt_limit  
-  ; 
- 
-update_entry: name '=' expr  
-  ; 
- 
-update_list: update_entry  
-  | update_entry ',' update_list  
-  ; 
- 
-with_upsert_stmt: with_prefix upsert_stmt  
-  ; 
- 
-upsert_stmt: insert_stmt "ON CONFLICT" conflict_target "DO" "NOTHING"  
-  | insert_stmt "ON CONFLICT" conflict_target "DO" basic_update_stmt  
-  ; 
- 
-update_cursor_stmt: 
-    "UPDATE" "CURSOR" name opt_column_spec "FROM" "VALUES" '(' insert_list ')'   
-  | "UPDATE" "CURSOR" name opt_column_spec from_cursor  
-  ; 
- 
-conflict_target:  /* nil */  
-  | '(' indexed_columns ')' opt_where  
-  ; 
- 
-creation_type: object_type  
-  | object_type "NOT" "NULL"  
-  | "TEXT"  
-  | "TEXT" "NOT" "NULL"  
-  | "BLOB"  
-  | "BLOB" "NOT" "NULL"  
-  ; 
- 
-function: "FUNC" | "FUNCTION" 
-  ; 
- 
-declare_func_stmt: "DECLARE" function name '(' params ')' data_type_opt_notnull  
-  | "DECLARE" "SELECT" function name '(' params ')' data_type_opt_notnull  
-  | "DECLARE" function name '(' params ')' "CREATE" creation_type  
-  | "DECLARE" "SELECT" function name '(' params ')' '(' typed_names ')'  
-  ; 
- 
-procedure: "PROC" | "PROCEDURE" 
-  ; 
- 
-declare_proc_stmt: "DECLARE" procedure name '(' params ')'  
-  | "DECLARE" procedure name '(' params ')' '(' typed_names ')'  
-  | "DECLARE" procedure name '(' params ')' "USING" "TRANSACTION"  
-  | "DECLARE" procedure name '(' params ')' "OUT" '(' typed_names ')'  
-  | "DECLARE" procedure name '(' params ')' "OUT" '(' typed_names ')' "USING" "TRANSACTION"  
-  | "DECLARE" procedure name '(' params ')' "OUT" "UNION" '(' typed_names ')'  
-  | "DECLARE" procedure name '(' params ')' "OUT" "UNION" '(' typed_names ')' "USING" "TRANSACTION"  
-  ; 
- 
-create_proc_stmt: "CREATE" procedure name '(' params ')' "BEGIN" opt_stmt_list "END"  
-  ; 
- 
-opt_inout: /* nil */  
-  | "IN"  
-  | "OUT"  
-  | "INOUT"  
-  ; 
- 
-typed_name: name data_type_opt_notnull  
-  | "LIKE" name  
-  ; 
- 
-typed_names: typed_name   
-  | typed_name ',' typed_names  
-  ; 
- 
-param: opt_inout name data_type_opt_notnull  
-  | "LIKE" name  
-  ; 
- 
-params: /* nil */  
-  | param  
-  |  param ',' params   
-  ; 
- 
-declare_stmt: "DECLARE" name_list data_type_opt_notnull  
-  | "DECLARE" name "CURSOR FOR" select_stmt  
-  | "DECLARE" name "CURSOR FOR" explain_stmt  
-  | "DECLARE" name "CURSOR FOR" call_stmt   
-  | "DECLARE" name "CURSOR" "FETCH" "FROM" call_stmt  
-  | "DECLARE" name "CURSOR" "LIKE" name  
-  | "DECLARE" name "CURSOR" "LIKE" select_stmt  
-  ; 
- 
-call_stmt: "CALL" name '(' ')'  
-  | "CALL" name '(' call_expr_list ')'  
-  ; 
- 
-while_stmt: "WHILE" expr "BEGIN" opt_stmt_list "END"  
-  ; 
- 
-loop_stmt: "LOOP" fetch_stmt "BEGIN" opt_stmt_list "END"  
-  ; 
- 
-leave_stmt: "LEAVE"  
-  ; 
- 
-return_stmt: "RETURN"  
-  ; 
- 
-throw_stmt: "THROW"  
-  ; 
- 
-trycatch_stmt: "BEGIN" "TRY" opt_stmt_list "END" "TRY" ';' "BEGIN" "CATCH" opt_stmt_list "END" "CATCH"  
-  ; 
- 
-continue_stmt: "CONTINUE"  
-  ; 
- 
-fetch_stmt: "FETCH" name "INTO" name_list  
-  | "FETCH" name  
-  ; 
- 
-fetch_values_stmt: 
-    "FETCH" name opt_column_spec "FROM" "VALUES" '(' insert_list ')' opt_insert_dummy_spec  
-  | "FETCH" name opt_column_spec from_arguments opt_insert_dummy_spec  
-  | "FETCH" name opt_column_spec from_cursor opt_insert_dummy_spec  
-  ; 
- 
-fetch_call_stmt: "FETCH" name opt_column_spec "FROM" call_stmt  
-  ; 
- 
-fetch_cursor_stmt: "FETCH" name opt_column_spec "FROM" name  
-  ; 
- 
-open_stmt: "OPEN" name  
-  ; 
- 
-close_stmt: "CLOSE" name   
-  ; 
- 
-out_stmt: "OUT" name   
-  ; 
- 
-out_union_stmt: "OUT" "UNION" name   
-  ; 
- 
-if_stmt: "IF" expr "THEN" opt_stmt_list opt_elseif_list opt_else "END" "IF"  
-  ; 
- 
-opt_else: /* nil */  
-  | "ELSE" opt_stmt_list  
-  ; 
- 
-elseif_item: "ELSE IF" expr "THEN" opt_stmt_list  
-  ; 
- 
-elseif_list: elseif_item  
-  | elseif_item elseif_list  
-  ; 
- 
-opt_elseif_list: /* nil */  
-  | elseif_list  
-  ; 
- 
-begin_trans_stmt: "BEGIN" "TRANSACTION"  
-  ; 
- 
-rollback_trans_stmt: "ROLLBACK" "TRANSACTION"  
-  | "ROLLBACK" "TRANSACTION" "TO" "SAVEPOINT" name  
-  ; 
- 
-commit_trans_stmt: "COMMIT" "TRANSACTION"  
-  ; 
- 
-savepoint_stmt: "SAVEPOINT" name  
-  ; 
- 
-release_savepoint_stmt: "RELEASE" "SAVEPOINT" name  
-  ; 
- 
-echo_stmt: "@ECHO" name ',' str_literal  
-  ; 
- 
-alter_table_add_column_stmt: "ALTER" "TABLE" name "ADD" "COLUMN" col_def  
-  ; 
- 
-create_trigger_stmt:  "CREATE" opt_temp "TRIGGER" opt_if_not_exists trigger_def opt_delete_version_attr  
-  ; 
- 
-trigger_def: name trigger_condition trigger_operation "ON" name trigger_action  
-  ; 
- 
-trigger_condition: 
-   /* nil */   
- | "BEFORE"      
- | "AFTER"       
- | "INSTEAD" "OF"  
- ; 
- 
-trigger_operation: 
-    "DELETE"   
-  | "INSERT"   
-  | "UPDATE" opt_of  
-  ; 
- 
-opt_of: 
-    /* nil */  
-  | "OF" name_list  
-  ; 
- 
-trigger_action:  opt_foreachrow opt_when_expr "BEGIN" trigger_stmts "END"  
-  ; 
- 
-opt_foreachrow: 
-    /* nil */  
-  | "FOR EACH ROW"   
-  ; 
- 
-opt_when_expr: 
-    /* nil */  
-  | "WHEN" expr  
-  ; 
- 
-trigger_stmts: 
-    trigger_stmt   
-  | trigger_stmt  trigger_stmts  
-  ; 
- 
-/* These forms are slightly different than the normal statements, not all variations are allowed. 
- * This section clearly states the mapping.  It could be done more tersely but this costs us nothing. 
- */ 
- 
-trigger_stmt: 
-    trigger_update_stmt ';'  
-  | trigger_insert_stmt ';'  
-  | trigger_delete_stmt ';'  
-  | trigger_select_stmt ';'  
-  ; 
- 
-trigger_select_stmt : select_stmt_no_with  
-  ; 
- 
-trigger_insert_stmt : insert_stmt  
-  ; 
- 
-trigger_delete_stmt : delete_stmt  
-  ; 
- 
-trigger_update_stmt : basic_update_stmt  
-  ; 
- 
-enforcement_options: 
-    "FOREIGN" "KEY" "ON" "UPDATE"  
-  | "FOREIGN" "KEY" "ON" "DELETE"  
-  | "JOIN"  
-  | "UPSERT" "STATEMENT"  
-  | "WINDOW" function  
-  | procedure  
-  | "WITHOUT" "ROWID"  
-  ; 
- 
-enforce_strict_stmt: "@ENFORCE_STRICT" enforcement_options  
-  ; 
- 
-enforce_normal_stmt: "@ENFORCE_NORMAL" enforcement_options  
-  ; 
- 
+  | close_stmt
+  | out_stmt
+  | out_union_stmt
+  | throw_stmt
+  | trycatch_stmt
+  | begin_trans_stmt
+  | rollback_trans_stmt
+  | commit_trans_stmt
+  | proc_savepoint_stmt
+  | savepoint_stmt
+  | release_savepoint_stmt
+  | echo_stmt
+  | schema_upgrade_version_stmt
+  | schema_upgrade_script_stmt
+  | previous_schema_stmt
+  | enforce_strict_stmt
+  | enforce_normal_stmt
+  | declare_schema_region_stmt
+  | declare_deployable_region_stmt
+  | begin_schema_region_stmt
+  | end_schema_region_stmt
+  | schema_ad_hoc_migration_stmt
+  | emit_enums_stmt
+  ;
+
+explain_stmt:
+  "EXPLAIN" opt_query_plan explain_target
+  ;
+
+opt_query_plan:
+  /* nil */
+  | "QUERY PLAN"
+  ;
+
+explain_target: select_stmt
+  | update_stmt
+  | delete_stmt
+  | with_delete_stmt
+  | with_insert_stmt
+  | insert_stmt
+  | upsert_stmt
+  | drop_table_stmt
+  | drop_view_stmt
+  | drop_index_stmt
+  | drop_trigger_stmt
+  | begin_trans_stmt
+  | commit_trans_stmt
+  ;
+
+previous_schema_stmt:
+  "@PREVIOUS_SCHEMA"
+  ;
+
+schema_upgrade_script_stmt:
+  "@SCHEMA_UPGRADE_SCRIPT"
+  ;
+
+schema_upgrade_version_stmt:
+  "@SCHEMA_UPGRADE_VERSION" '(' "integer-literal" ')'
+  ;
+
+set_stmt:
+  "SET" name ":=" expr
+  | "SET" name "FROM" "CURSOR" name
+  ;
+
+version_attrs_opt_recreate:
+  /* nil */
+  | "@RECREATE"
+  | "@RECREATE" '(' name ')'
+  | version_attrs
+  ;
+
+opt_version_attrs:
+  /* nil */
+  | version_attrs
+  ;
+
+version_attrs:
+  "@CREATE" version_annotation opt_version_attrs
+  | "@DELETE" version_annotation opt_version_attrs
+  ;
+
+opt_delete_version_attr:
+  /* nil */
+  | "@DELETE" version_annotation
+  ;
+
+drop_table_stmt:
+  "DROP" "TABLE" "IF" "EXISTS" name
+  | "DROP" "TABLE" name
+  ;
+
+drop_view_stmt:
+  "DROP" "VIEW" "IF" "EXISTS" name
+  | "DROP" "VIEW" name
+  ;
+
+drop_index_stmt:
+  "DROP" "INDEX" "IF" "EXISTS" name
+  | "DROP" "INDEX" name
+  ;
+
+drop_trigger_stmt:
+  "DROP" "TRIGGER" "IF" "EXISTS" name
+  | "DROP" "TRIGGER" name
+  ;
+
+create_virtual_table_stmt: "CREATE" "VIRTUAL" "TABLE" opt_if_not_exists name
+                           "USING" name opt_module_args
+                           "AS" '(' col_key_list ')' opt_delete_version_attr ;
+
+opt_module_args: /* nil */
+  | '(' misc_attr_value_list ')'
+  | '(' "ARGUMENTS" "FOLLOWING" ')'
+  ;
+
+create_table_stmt:
+  "CREATE" opt_temp "TABLE" opt_if_not_exists name '(' col_key_list ')' opt_no_rowid version_attrs_opt_recreate
+  ;
+
+opt_temp:
+  /* nil */
+  | "TEMP"
+  ;
+
+opt_if_not_exists:
+  /* nil */
+  | "IF" "NOT" "EXISTS"
+  ;
+
+opt_no_rowid:
+  /* nil */
+  | "WITHOUT" "ROWID"
+  ;
+
+col_key_list:
+  col_key_def
+  | col_key_def ',' col_key_list
+  ;
+
+col_key_def:
+  col_def
+  | pk_def
+  | fk_def
+  | unq_def
+  | check_def
+  | shape_def
+  ;
+
+check_def:
+  "CONSTRAINT" name "CHECK" '(' expr ')'
+  | "CHECK" '(' expr ')'
+  ;
+
+shape_def:
+    "LIKE" name
+  | "LIKE" name "ARGUMENTS"
+  ;
+
+col_name:
+  name
+  ;
+
+misc_attr_key:
+  name
+  | name ':' name
+  ;
+
+misc_attr_value_list:
+  misc_attr_value
+  | misc_attr_value ',' misc_attr_value_list
+  ;
+
+misc_attr_value:
+  name
+  | any_literal
+  | const_expr
+  | '(' misc_attr_value_list ')'
+  | '-' num_literal
+  ;
+
+misc_attr:
+  "@ATTRIBUTE" '(' misc_attr_key ')'
+  | "@ATTRIBUTE" '(' misc_attr_key '=' misc_attr_value ')'
+  ;
+
+misc_attrs:
+  /* nil */
+  | misc_attr misc_attrs
+  ;
+
+col_def:
+  misc_attrs col_name data_type col_attrs
+  ;
+
+pk_def:
+  "PRIMARY" "KEY" '(' name_list ')'
+  ;
+
+opt_fk_options:
+  /* nil */
+  | fk_options
+  ;
+
+fk_options:
+  fk_on_options
+  | fk_deferred_options
+  | fk_on_options fk_deferred_options
+  ;
+
+fk_on_options:
+  "ON" "DELETE" fk_action
+  | "ON" "UPDATE" fk_action
+  | "ON" "UPDATE" fk_action "ON" "DELETE" fk_action
+  | "ON" "DELETE" fk_action "ON" "UPDATE" fk_action
+  ;
+
+fk_action:
+  "SET" "NULL"
+  | "SET" "DEFAULT"
+  | "CASCADE"
+  | "RESTRICT"
+  | "NO" "ACTION"
+  ;
+
+fk_deferred_options:
+  "DEFERRABLE" fk_initial_state
+  | "NOT DEFERRABLE" fk_initial_state
+  ;
+
+fk_initial_state:
+  /* nil */
+  | "INITIALLY" "DEFERRED"
+  | "INITIALLY" "IMMEDIATE"
+  ;
+
+fk_def:
+  "FOREIGN" "KEY" '(' name_list ')' fk_target_options
+  ;
+
+fk_target_options:
+  "REFERENCES" name '(' name_list ')' opt_fk_options
+  ;
+
+unq_def:
+  "CONSTRAINT" name "UNIQUE" '(' name_list ')'
+  | "UNIQUE" '(' name_list ')'
+  ;
+
+opt_unique:
+  /* nil */
+  | "UNIQUE"
+  ;
+
+indexed_column:
+  name opt_asc_desc
+  ;
+
+indexed_columns:
+  indexed_column
+  | indexed_column ',' indexed_columns
+  ;
+
+create_index_stmt:
+  "CREATE" opt_unique "INDEX" opt_if_not_exists name "ON" name '(' indexed_columns ')' opt_delete_version_attr
+  ;
+
+name:
+  "ID"
+  | "TEXT"
+  | "TRIGGER"
+  | "ROWID"
+  | "KEY"
+  | "VIRTUAL"
+  ;
+
+opt_name:
+  /* nil */
+  | name
+  ;
+
+name_list:
+  name
+  |  name ',' name_list
+  ;
+
+opt_name_list:
+  /* nil */
+  | name_list
+  ;
+
+col_attrs:
+  /* nil */
+  | "NOT" "NULL" col_attrs
+  | "PRIMARY" "KEY" col_attrs
+  | "PRIMARY" "KEY" "AUTOINCREMENT" col_attrs
+  | "DEFAULT" '-' num_literal col_attrs
+  | "DEFAULT" num_literal col_attrs
+  | "DEFAULT" const_expr col_attrs
+  | "DEFAULT" str_literal col_attrs
+  | "COLLATE" name col_attrs
+  | "CHECK" '(' expr ')' col_attrs
+  | "UNIQUE" col_attrs
+  | "@SENSITIVE" col_attrs
+  | "@CREATE" version_annotation col_attrs
+  | "@DELETE" version_annotation col_attrs
+  | fk_target_options col_attrs
+  ;
+
+version_annotation:
+  '(' "integer-literal" ',' name ')'
+  | '(' "integer-literal" ')'
+  ;
+
+object_type:
+  "OBJECT"
+  | "OBJECT" '<' name '>'
+  | "OBJECT" '<' name "CURSOR" '>'
+  ;
+
+data_type_numeric:
+  "INT"
+  | "INTEGER"
+  | "REAL"
+  | "LONG"
+  | "BOOL"
+  | "LONG" "INTEGER"
+  | "LONG" "INT"
+  | "LONG_INT" | "LONG_INTEGER"
+
+data_type:
+  data_type_numeric
+  | "TEXT"
+  | "BLOB"
+  | object_type
+  ;
+
+data_type_opt_notnull:
+  data_type
+  | data_type "NOT" "NULL"
+  | data_type "@SENSITIVE"
+  | data_type "@SENSITIVE" "NOT" "NULL"
+  | data_type "NOT" "NULL" "@SENSITIVE"
+  ;
+
+str_literal:
+  "sql-string-literal"
+  | "c-string-literal"
+  ;
+
+num_literal:
+  "integer-literal"
+  | "long-literal"
+  | "real-literal"
+  ;
+
+const_expr:
+  "CONST" '(' expr ')'
+  ;
+
+any_literal:
+  str_literal
+  | num_literal
+  | "NULL"
+  | "@FILE" '(' str_literal ')'
+  | "@PROC"
+  | "sql-blob-literal"
+  ;
+
+raise_expr:
+  "RAISE" '(' "IGNORE" ')'
+  | "RAISE" '(' "ROLLBACK" ','  expr ')'
+  | "RAISE" '(' "ABORT" ','  expr ')'
+  | "RAISE" '(' "FAIL" ','  expr ')'
+  ;
+
+call:
+  name '(' arg_list ')' opt_filter_clause
+  | name '(' "DISTINCT" arg_list ')' opt_filter_clause
+  ;
+
+basic_expr:
+  name
+  | name '.' name
+  | any_literal
+  | const_expr
+  | '(' expr ')'
+  | call
+  | window_func_inv
+  | raise_expr
+  | '(' select_stmt ')'
+  | "EXISTS" '(' select_stmt ')'
+  ;
+
+math_expr:
+  basic_expr
+  | math_expr '&' math_expr
+  | math_expr '|' math_expr
+  | math_expr "<<" math_expr
+  | math_expr ">>"  math_expr
+  | math_expr '+' math_expr
+  | math_expr '-' math_expr
+  | math_expr '*' math_expr
+  | math_expr '/' math_expr
+  | math_expr '%' math_expr
+  | '-' math_expr
+  | math_expr "||" math_expr
+  ;
+
+expr:
+  basic_expr
+  | expr '&' expr
+  | expr '|' expr
+  | expr "<<" expr
+  | expr ">>" expr
+  | expr '+' expr
+  | expr '-' expr
+  | expr '*' expr
+  | expr '/' expr
+  | expr '%' expr
+  | '-' expr
+  | "NOT" expr
+  | '~' expr
+  | expr "COLLATE" name
+  | expr "AND" expr
+  | expr "OR" expr
+  | expr '=' expr
+  | expr "==" expr
+  | expr '<' expr
+  | expr '>' expr
+  | expr "<>" expr
+  | expr "!=" expr
+  | expr ">=" expr
+  | expr "<=" expr
+  | expr "NOT" "IN" '(' expr_list ')'
+  | expr "NOT" "IN" '(' select_stmt ')'
+  | expr "IN" '(' expr_list ')'
+  | expr "IN" '(' select_stmt ')'
+  | expr "LIKE" expr
+  | expr "NOT LIKE" expr
+  | expr "MATCH" expr
+  | expr "REGEXP" expr
+  | expr "GLOB" expr
+  | expr "NOT" "BETWEEN" math_expr "AND" math_expr
+  | expr "BETWEEN" math_expr "AND" math_expr
+  | expr "IS NOT" expr
+  | expr "IS" expr
+  | expr "||" expr
+  | "CASE" expr case_list "END"
+  | "CASE" expr case_list "ELSE" expr "END"
+  | "CASE" case_list "END"
+  | "CASE" case_list "ELSE" expr "END"
+  | "CAST" '(' expr "AS" data_type ')'
+  ;
+
+case_list:
+  "WHEN" expr "THEN" expr
+  | "WHEN" expr "THEN" expr case_list
+  ;
+
+arg_expr: '*'
+  | expr
+  | shape_arguments
+  ;
+
+arg_list:
+  /* nil */
+  | arg_expr
+  | arg_expr ',' arg_list
+  ;
+
+expr_list:
+  expr
+  | expr ',' expr_list
+  ;
+
+shape_arguments:
+  "FROM" name
+  | "FROM" name shape_def
+  | "FROM" "ARGUMENTS"
+  | "FROM" "ARGUMENTS" shape_def
+  ;
+
+call_expr:
+  expr
+  | shape_arguments
+  ;
+
+call_expr_list:
+  call_expr
+  | call_expr ',' call_expr_list
+  ;
+
+cte_tables:
+  cte_table
+  | cte_table ',' cte_tables
+  ;
+
+cte_table:
+    name '(' name_list ')' "AS" '(' select_stmt_no_with ')'
+  | name '(' '*' ')' "AS" '(' select_stmt_no_with ')'
+  ;
+
+with_prefix:
+  "WITH" cte_tables
+  | "WITH" "RECURSIVE" cte_tables
+  ;
+
+with_select_stmt:
+  with_prefix select_stmt_no_with
+  ;
+
+select_stmt:
+  with_select_stmt
+  | select_stmt_no_with
+  ;
+
+select_stmt_no_with:
+  select_core_list opt_orderby opt_limit opt_offset
+  ;
+
+select_core_list:
+  select_core
+  | select_core compound_operator select_core_list
+  ;
+
+values:
+  '(' insert_list ')'
+  | '(' insert_list ')' ',' values
+  ;
+
+select_core:
+  "SELECT" select_opts select_expr_list opt_from_query_parts opt_where opt_groupby opt_having opt_select_window
+  | "VALUES" values
+  ;
+
+compound_operator:
+  "UNION"
+  | "UNION ALL"
+  | "INTERSECT"
+  | "EXCEPT"
+  ;
+
+window_func_inv:
+  name '(' arg_list ')' opt_filter_clause "OVER" window_name_or_defn
+  ;
+
+opt_filter_clause:
+  /* nil */
+  | "FILTER" '(' opt_where ')'
+  ;
+
+window_name_or_defn: window_defn
+  | name
+  ;
+
+window_defn:
+  '(' opt_partition_by opt_orderby opt_frame_spec ')'
+  ;
+
+opt_frame_spec:
+  /* nil */
+  | frame_type frame_boundary_opts frame_exclude
+  ;
+
+frame_type:
+  "RANGE"
+  | "ROWS"
+  | "GROUPS"
+  ;
+
+frame_exclude:
+  /* nil */
+  | "EXCLUDE NO OTHERS"
+  | "EXCLUDE CURRENT ROW"
+  | "EXCLUDE GROUP"
+  | "EXCLUDE TIES"
+  ;
+
+frame_boundary_opts:
+  frame_boundary
+  | "BETWEEN" frame_boundary_start "AND" frame_boundary_end
+  ;
+
+frame_boundary_start:
+  "UNBOUNDED" "PRECEDING"
+  | expr "PRECEDING"
+  | "CURRENT ROW"
+  | expr "FOLLOWING"
+  ;
+
+frame_boundary_end:
+  expr "PRECEDING"
+  | "CURRENT ROW"
+  | expr "FOLLOWING"
+  | "UNBOUNDED" "FOLLOWING"
+  ;
+
+frame_boundary:
+  "UNBOUNDED" "PRECEDING"
+  | expr "PRECEDING"
+  | "CURRENT ROW"
+  ;
+
+opt_partition_by:
+  /* nil */
+  | "PARTITION" "BY" expr_list
+  ;
+
+opt_select_window:
+  /* nil */
+  | window_clause
+  ;
+
+window_clause:
+  "WINDOW" window_name_defn_list
+  ;
+
+window_name_defn_list:
+  window_name_defn
+  | window_name_defn ',' window_name_defn_list
+  ;
+
+window_name_defn:
+  name "AS" window_defn
+  ;
+
+region_spec:
+    name
+  | name "PRIVATE"
+  ;
+
+region_list:
+  region_spec ',' region_list
+  | region_spec
+  ;
+
+declare_schema_region_stmt:
+  "@DECLARE_SCHEMA_REGION" name
+  | "@DECLARE_SCHEMA_REGION" name "USING" region_list
+  ;
+
+declare_deployable_region_stmt:
+  "@DECLARE_DEPLOYABLE_REGION"  name
+  | "@DECLARE_DEPLOYABLE_REGION" name "USING" region_list
+  ;
+
+begin_schema_region_stmt:
+  "@BEGIN_SCHEMA_REGION" name
+  ;
+
+end_schema_region_stmt:
+  "@END_SCHEMA_REGION"
+  ;
+
+schema_ad_hoc_migration_stmt:
+  "@SCHEMA_AD_HOC_MIGRATION" version_annotation
+  ;
+
+emit_enums_stmt:
+  "@EMIT_ENUMS" opt_name_list
+  ;
+
+opt_from_query_parts:
+  /* nil */
+  | "FROM" query_parts
+  ;
+
+opt_where:
+  /* nil */
+  | "WHERE" expr
+  ;
+
+opt_groupby:
+  /* nil */
+  | "GROUP" "BY" groupby_list
+  ;
+
+groupby_list:
+  groupby_item
+  | groupby_item ',' groupby_list
+  ;
+
+groupby_item:
+  expr opt_asc_desc
+  ;
+
+opt_asc_desc:
+  /* nil */
+  | "ASC"
+  | "DESC"
+  ;
+
+opt_having:
+  /* nil */
+  | "HAVING" expr
+  ;
+
+opt_orderby:
+  /* nil */
+  | "ORDER" "BY" groupby_list
+  ;
+
+opt_limit:
+  /* nil */
+  | "LIMIT" expr
+  ;
+
+opt_offset:
+  /* nil */
+  | "OFFSET" expr
+  ;
+
+select_opts:
+  /* nil */
+  | "ALL"
+  | "DISTINCT"
+  | "DISTINCTROW"
+  ;
+
+select_expr_list:
+  select_expr
+  | select_expr ',' select_expr_list
+  | '*'
+  ;
+
+select_expr:
+  expr opt_as_alias
+  |  name '.' '*'
+  ;
+
+opt_as_alias:
+  /* nil */
+  | as_alias
+  ;
+
+as_alias:
+  "AS" name
+  | name
+  ;
+
+query_parts:
+  table_or_subquery_list
+  | join_clause
+  ;
+
+table_or_subquery_list:
+  table_or_subquery
+  | table_or_subquery ',' table_or_subquery_list
+  ;
+
+join_clause:
+  table_or_subquery join_target_list
+  ;
+
+join_target_list:
+  join_target
+  | join_target join_target_list
+  ;
+
+table_or_subquery:
+  name opt_as_alias
+  | '(' select_stmt ')' opt_as_alias
+  | table_function opt_as_alias
+  | '(' query_parts ')'
+  ;
+
+join_type:
+  /*nil */
+  | "LEFT"
+  | "RIGHT"
+  | "LEFT" "OUTER"
+  | "RIGHT" "OUTER"
+  | "INNER"
+  | "CROSS"
+  ;
+
+join_target: join_type "JOIN" table_or_subquery opt_join_cond
+  ;
+
+opt_join_cond:
+  /* nil */
+  | join_cond
+  ;
+
+join_cond:
+  "ON" expr
+  | "USING" '(' name_list ')'
+  ;
+
+table_function:
+  name '(' arg_list ')'
+  ;
+
+create_view_stmt:
+  "CREATE" opt_temp "VIEW" opt_if_not_exists name "AS" select_stmt opt_delete_version_attr
+  ;
+
+with_delete_stmt:
+  with_prefix delete_stmt
+  ;
+
+delete_stmt:
+  "DELETE" "FROM" name opt_where
+  ;
+
+opt_insert_dummy_spec:
+  /*nil*/
+  | "@DUMMY_SEED" '(' expr ')' dummy_modifier
+  ;
+
+dummy_modifier:
+  /* nil */
+  | "@DUMMY_NULLABLES"
+  | "@DUMMY_DEFAULTS"
+  | "@DUMMY_NULLABLES" "@DUMMY_DEFAULTS"
+  | "@DUMMY_DEFAULTS" "@DUMMY_NULLABLES"
+  ;
+
+insert_stmt_type:
+  "INSERT" "INTO"
+  | "INSERT" "OR" "REPLACE" "INTO"
+  | "INSERT" "OR" "IGNORE" "INTO"
+  | "INSERT" "OR" "ROLLBACK" "INTO"
+  | "INSERT" "OR" "ABORT" "INTO"
+  | "INSERT" "OR" "FAIL" "INTO"
+  | "REPLACE" "INTO"
+  ;
+
+with_insert_stmt:
+  with_prefix insert_stmt
+  ;
+
+opt_column_spec:
+  /* nil */
+  | '(' opt_name_list ')'
+  | '(' shape_def ')'
+  ;
+
+from_shape:
+  "FROM" "CURSOR" name opt_column_spec
+  | "FROM" name opt_column_spec
+  | "FROM" "ARGUMENTS" opt_column_spec
+  ;
+
+insert_stmt:
+  insert_stmt_type name opt_column_spec select_stmt opt_insert_dummy_spec
+  | insert_stmt_type name opt_column_spec from_shape opt_insert_dummy_spec
+  | insert_stmt_type name "DEFAULT" "VALUES"
+  | insert_stmt_type name "USING" expr_names opt_insert_dummy_spec
+  ;
+
+insert_list:
+  /* nil */
+  | expr
+  | expr ',' insert_list
+  ;
+
+basic_update_stmt:
+  "UPDATE" opt_name "SET" update_list opt_where
+  ;
+
+with_update_stmt:
+  with_prefix update_stmt
+  ;
+
+update_stmt:
+  "UPDATE" name "SET" update_list opt_where opt_orderby opt_limit
+  ;
+
+update_entry:
+  name '=' expr
+  ;
+
+update_list:
+  update_entry
+  | update_entry ',' update_list
+  ;
+
+with_upsert_stmt:
+  with_prefix upsert_stmt
+  ;
+
+upsert_stmt:
+  insert_stmt "ON CONFLICT" conflict_target "DO" "NOTHING"
+  | insert_stmt "ON CONFLICT" conflict_target "DO" basic_update_stmt
+  ;
+
+update_cursor_stmt:
+  "UPDATE" "CURSOR" name opt_column_spec "FROM" "VALUES" '(' insert_list ')'
+  | "UPDATE" "CURSOR" name opt_column_spec from_shape
+  | "UPDATE" "CURSOR" name "USING" expr_names
+  ;
+
+conflict_target:
+  /* nil */
+  | '(' indexed_columns ')' opt_where
+  ;
+
+creation_type:
+  object_type
+  | object_type "NOT" "NULL"
+  | "TEXT"
+  | "TEXT" "NOT" "NULL"
+  | "BLOB"
+  | "BLOB" "NOT" "NULL"
+  ;
+
+function: "FUNC" | "FUNCTION"
+  ;
+
+declare_enum_stmt:
+  "DECLARE" "ENUM" name data_type_numeric '(' enum_values ')'
+  ;
+
+enum_values:
+    enum_value
+  | enum_value ',' enum_values
+  ;
+
+enum_value:
+    name
+  | name '=' expr
+  ;
+
+declare_func_stmt:
+  "DECLARE" function name '(' params ')' data_type_opt_notnull
+  | "DECLARE" "SELECT" function name '(' params ')' data_type_opt_notnull
+  | "DECLARE" function name '(' params ')' "CREATE" creation_type
+  | "DECLARE" "SELECT" function name '(' params ')' '(' typed_names ')'
+  ;
+
+procedure: "PROC" | "PROCEDURE"
+  ;
+
+declare_proc_stmt:
+  "DECLARE" procedure name '(' params ')'
+  | "DECLARE" procedure name '(' params ')' '(' typed_names ')'
+  | "DECLARE" procedure name '(' params ')' "USING" "TRANSACTION"
+  | "DECLARE" procedure name '(' params ')' "OUT" '(' typed_names ')'
+  | "DECLARE" procedure name '(' params ')' "OUT" '(' typed_names ')' "USING" "TRANSACTION"
+  | "DECLARE" procedure name '(' params ')' "OUT" "UNION" '(' typed_names ')'
+  | "DECLARE" procedure name '(' params ')' "OUT" "UNION" '(' typed_names ')' "USING" "TRANSACTION"
+  ;
+
+create_proc_stmt:
+  "CREATE" procedure name '(' params ')' "BEGIN" opt_stmt_list "END"
+  ;
+
+inout:
+  "IN"
+  | "OUT"
+  | "INOUT"
+  ;
+
+typed_name:
+  name data_type_opt_notnull
+  | shape_def
+  | name shape_def
+  ;
+
+typed_names:
+  typed_name
+  | typed_name ',' typed_names
+  ;
+
+param:
+  name data_type_opt_notnull
+  | inout name data_type_opt_notnull
+  | shape_def
+  | name shape_def
+  ;
+
+params:
+  /* nil */
+  | param
+  |  param ',' params
+  ;
+
+declare_stmt:
+  "DECLARE" name_list data_type_opt_notnull
+  | "DECLARE" name "CURSOR" "FOR" select_stmt
+  | "DECLARE" name "CURSOR" "FOR" explain_stmt
+  | "DECLARE" name "CURSOR" "FOR" call_stmt
+  | "DECLARE" name "CURSOR" "FETCH" "FROM" call_stmt
+  | "DECLARE" name "CURSOR" shape_def
+  | "DECLARE" name "CURSOR" "LIKE" select_stmt
+  | "DECLARE" name "CURSOR" "FOR" name
+  ;
+
+call_stmt:
+  "CALL" name '(' ')'
+  | "CALL" name '(' call_expr_list ')'
+  ;
+
+while_stmt:
+  "WHILE" expr "BEGIN" opt_stmt_list "END"
+  ;
+
+loop_stmt:
+  "LOOP" fetch_stmt "BEGIN" opt_stmt_list "END"
+  ;
+
+leave_stmt:
+  "LEAVE"
+  ;
+
+return_stmt:
+  "RETURN"
+  ;
+
+rollback_return_stmt:
+  "ROLLBACK" "RETURN"
+  ;
+
+commit_return_stmt:
+  "COMMIT" "RETURN"
+  ;
+
+throw_stmt:
+  "THROW"
+  ;
+
+trycatch_stmt:
+  "BEGIN" "TRY" opt_stmt_list "END" "TRY" ';' "BEGIN" "CATCH" opt_stmt_list "END" "CATCH"
+  ;
+
+continue_stmt:
+  "CONTINUE"
+  ;
+
+fetch_stmt:
+  "FETCH" name "INTO" name_list
+  | "FETCH" name
+  ;
+
+fetch_values_stmt:
+  "FETCH" name opt_column_spec "FROM" "VALUES" '(' insert_list ')' opt_insert_dummy_spec
+  | "FETCH" name opt_column_spec from_shape opt_insert_dummy_spec
+  | "FETCH" name "USING" expr_names opt_insert_dummy_spec
+  ;
+
+expr_names:
+  expr_name
+  |  expr_name ',' expr_names
+  ;
+
+expr_name: expr as_alias
+  ;
+
+fetch_call_stmt:
+  "FETCH" name opt_column_spec "FROM" call_stmt
+  ;
+
+open_stmt:
+  "OPEN" name
+  ;
+
+close_stmt:
+  "CLOSE" name
+  ;
+
+out_stmt:
+  "OUT" name
+  ;
+
+out_union_stmt:
+  "OUT" "UNION" name
+  ;
+
+if_stmt:
+  "IF" expr "THEN" opt_stmt_list opt_elseif_list opt_else "END" "IF"
+  ;
+
+opt_else:
+  /* nil */
+  | "ELSE" opt_stmt_list
+  ;
+
+elseif_item:
+  "ELSE IF" expr "THEN" opt_stmt_list
+  ;
+
+elseif_list:
+  elseif_item
+  | elseif_item elseif_list
+  ;
+
+opt_elseif_list:
+  /* nil */
+  | elseif_list
+  ;
+
+begin_trans_stmt:
+  "BEGIN" "TRANSACTION"
+  ;
+
+rollback_trans_stmt:
+  "ROLLBACK" "TRANSACTION"
+  | "ROLLBACK" "TRANSACTION" "TO" "SAVEPOINT" name
+  | "ROLLBACK" "TRANSACTION" "TO" "SAVEPOINT" "@PROC"
+  ;
+
+commit_trans_stmt:
+  "COMMIT" "TRANSACTION"
+  ;
+
+proc_savepoint_stmt:  procedure "SAVEPOINT" "BEGIN" opt_stmt_list "END"
+  ;
+
+savepoint_stmt:
+  "SAVEPOINT" name
+  | "SAVEPOINT" "@PROC"
+  ;
+
+release_savepoint_stmt:
+  "RELEASE" "SAVEPOINT" name
+  | "RELEASE" "SAVEPOINT" "@PROC"
+  ;
+
+echo_stmt:
+  "@ECHO" name ',' str_literal
+  ;
+
+alter_table_add_column_stmt:
+  "ALTER" "TABLE" name "ADD" "COLUMN" col_def
+  ;
+
+create_trigger_stmt:
+  "CREATE" opt_temp "TRIGGER" opt_if_not_exists trigger_def opt_delete_version_attr
+  ;
+
+trigger_def:
+  name trigger_condition trigger_operation "ON" name trigger_action
+  ;
+
+trigger_condition:
+  /* nil */
+  | "BEFORE"
+  | "AFTER"
+  | "INSTEAD" "OF"
+ ;
+
+trigger_operation:
+  "DELETE"
+  | "INSERT"
+  | "UPDATE" opt_of
+  ;
+
+opt_of:
+  /* nil */
+  | "OF" name_list
+  ;
+
+trigger_action:
+  opt_foreachrow opt_when_expr "BEGIN" trigger_stmts "END"
+  ;
+
+opt_foreachrow:
+  /* nil */
+  | "FOR" "EACH" "ROW"
+  ;
+
+opt_when_expr:
+  /* nil */
+  | "WHEN" expr
+  ;
+
+trigger_stmts:
+  trigger_stmt
+  | trigger_stmt  trigger_stmts
+  ;
+
+trigger_stmt:
+  trigger_update_stmt ';'
+  | trigger_insert_stmt ';'
+  | trigger_delete_stmt ';'
+  | trigger_select_stmt ';'
+  ;
+
+trigger_select_stmt:
+  select_stmt_no_with
+  ;
+
+trigger_insert_stmt:
+  insert_stmt
+  ;
+
+trigger_delete_stmt:
+  delete_stmt
+  ;
+
+trigger_update_stmt:
+  basic_update_stmt
+  ;
+
+enforcement_options:
+  "FOREIGN" "KEY" "ON" "UPDATE"
+  | "FOREIGN" "KEY" "ON" "DELETE"
+  | "JOIN"
+  | "UPSERT" "STATEMENT"
+  | "WINDOW" function
+  | procedure
+  | "WITHOUT" "ROWID"
+  ;
+
+enforce_strict_stmt:
+  "@ENFORCE_STRICT" enforcement_options
+  ;
+
+enforce_normal_stmt:
+  "@ENFORCE_NORMAL" enforcement_options
+  ;
+
 ```
 
 
@@ -8727,6 +9273,13 @@ If the table is using the `@recreate` plan then you can add and remove columns (
 This error prevents the build up of useless annotations.
 
 -----
+### CQL0034: create/delete version numbers can only be applied to columns that are nullable or have a default value 'column'
+
+Any new column added to a schema must have a default value or be nullable so that its initial state is clear
+and so that all existing insert statements do not have to be updated to include it.  Either make the column
+nullable or give it a default value.
+
+-----
 
 ### CQL0035: column delete version can't be <= column create version", 'column'
 
@@ -8737,6 +9290,12 @@ You can't `@delete` a column in a version before it was even created.  Probably 
 ### CQL0036: column delete version can't be <= the table create version 'column'
 
 The indicated column is being deleted in a version that is before the table it is found in was even created.  Probably there is a typo in the delete version.
+
+-----
+
+### CQL0037: column delete version can't be >= the table delete version
+
+The indicated column is being deleted in a version that is after the table has already been deleted.  This would be redundant.  Probably one or both have a typo in their delete version.
 
 -----
 
@@ -9061,6 +9620,22 @@ end if;
 The indicated name could not be resolved in the scope in which it appears.
 Probably there is a typo.  But maybe the name you need isn't available in
 the scope you are trying to use it in.
+
+----
+
+### CQL0070: incompatible object type 'incompatible_type'
+
+Two expressions of type object are holding a different object type e.g.
+
+```
+declare x object<Foo>;
+declare y object<Bar>;
+set x := y;
+```
+
+Here the message would report that 'Bar' is incompatible. The message generally
+refers to the 2nd object type as the first one was ok by default then the
+second one caused the problem.
 
 -----
 
@@ -9678,9 +10253,11 @@ In an `INSERT` statement such as `INSERT INTO foo(a,b,c) VALUES(x,yz)` this erro
 
 -----
 
-### CQL0159: there's no good way to generate dummy blobs; not supported for now
+### CQL0159: cannot add an index to a virtual table 'table_name'
 
-The dummy data feature does not support blobs.  You can make your own blob with the CAST operator and a numeric if need be.
+Adding an index to a virtual table isn't possible, the virtual table includes whatever indexing its module provides, no further indexing is possible.
+
+From the SQLite documentation: "One cannot create additional indices on a virtual table. (Virtual tables can have indices but that must be built into the virtual table implementation. Indices cannot be added separately using CREATE INDEX statements.)"
 
 -----
 
@@ -9697,21 +10274,25 @@ In an `INSERT` statement attempting to insert into the indicated name is not pos
 
 -----
 
-### CQL0162: FROM ARGUMENTS is redundant if insert column list is empty
+### CQL0162: cannot add a trigger to a virtual table 'table_name'
 
-The `INSERT` statement supports the sugar format  `INSERT INTO foo(a,b,c) FROM ARGUMENTS` which causes the arguments of the current procedure to be used as the values.  This error is complaining that no columns were specified, that is, you have written `INSERT INTO foo() FROM ARGUMENTS`.   With no specified columns the arguments would be redundant.  To fix this error there are two choices.   Perhaps the column names were omitted, in which case add `a,b,c` or something like that in the parenthesis.  Or else remove them entirely `INSERT INTO foo FROM ARGUMENTS` means insert ALL the columns of foo from the arguments.
+Adding a trigger to a virtual table isn't possible.
+
+From the SQLite documentation: "One cannot create a trigger on a virtual table."
 
 -----
 
 ### CQL0163: FROM ARGUMENTS construct is only valid inside a procedure
 
-The `INSERT` statement supports the sugar format  `INSERT INTO foo(a,b,c) FROM ARGUMENTS` which causes the arguments of the current procedure to be used as the values.  This error is complaining that you have used this form of insert but the statement does not occur inside of a procedure so there can be no arguments.  This form does not make sense outside of any procedure.
+Several statements support the `FROM ARGUMENTS` sugar format like `INSERT INTO foo(a,b,c) FROM ARGUMENTS` which causes the arguments of the current procedure to be used as the values.  This error is complaining that you have used this form but the statement does not occur inside of a procedure so there can be no arguments.  This form does not make sense outside of any procedure.
 
 -----
 
-### CQL0164: too few arguments available
+### CQL0164: cannot use ALTER TABLE on a virtual table 'table_name'
 
-The `INSERT` statement supports the sugar format  `INSERT INTO foo(a,b,c) FROM ARGUMENTS` which causes the arguments of the current procedure to be used as the values.  This error is complaining that you have used this form of insert but you have specified more columns (a,b,c) than there are arguments.  Either add arguments or remove columns to fix this error.
+This is not supported by SQLite.
+
+From the SQLite documentation: "One cannot run ALTER TABLE ... ADD COLUMN commands against a virtual table."
 
 -----
 
@@ -9770,54 +10351,15 @@ In a value cursor with dummy data specified, one of the columns in the cursor is
 
 -----
 
-### CQL0169: cannot fetch from a cursor without fields 'cursor_name'
+### CQL0169: enum not found 'enum_name'
 
-This error corresponds to a pretty specific instance.  First there are two cursors and we're processing a statement that looks something like this.
+The indicated name was used in a context where an enumerated type name was expected but there is no such type.
 
-```sql
-fetch C from D;
-```
-`C` and `D` are both cursor variables.  However, D does not have any storage associated with it so it isn't a valid source.
-
-How does that happen?  More specifically this situation has happened almost certainly.
-
-```sql
-declare D cursor for select * from foo;
-fetch D into a, b, c;
-```
-Here we did fetch from the cursor but we used local variables to hold the results, the cursor has no storage.
-
-Had we done this instead:
-
-```sql
-fetch D;
-```
-then you use `D.a`, `D.b`, and `D.c` for the fetched values: the cursor has storage.  So if you use the second form (the easier one really) then the cursor can be used as a source of data.
-
-If you have done the above and got this error you can always do something like this instead:
-
-```sql
-fetch C from values(a,b,c);
-```
-
-Which is where the cursor was stored.
+Perhaps the enum was not included (missing a #include) or else there is a typo.
 
 -----
 
-### CQL0170: cursor must be a value cursor, not a statement cursor 'cursor_name'
-
-This error corresponds to a pretty specific instance.  First there are two cursors and we're processing a statement that looks something like this.
-
-```sql
-fetch C from D;
-```
-`C` and `D` are both cursor variables.  However, `C` is a statement cursor, it was declared something like this:
-
-```sql
-declare C cursor for select * from foo;
-```
-
-This kind of cursor is associated with a SQLite statement for its values.  It should not be used like a value cursor (which has no statement).  You may need to declare a different cursor to hold the result of the copy.
+### CQL0170 available for re-use
 
 -----
 
@@ -9851,15 +10393,11 @@ In a parameter list for a function or a procedure, the named parameter appears m
 
 -----
 
-### CQL0176: proc has no result 'proc_name'
-
-In a table definition, the `LIKE` construct was used to create columns that are the same as the return type of the named procedure.  However the named procedure does not produce a result set and therefore has no columns to mimic.  Probably the name is wrong.
+### CQL0176 available for re-use
 
 -----
 
-### CQL0177: table/view/proc not found 'name'
-
-In a table definition, the `LIKE` construct was used to create columns that are the same shape as the named object.  However the indicated name is not the name of a table, view, or stored procedure at all.
+### CQL0177 available for re-use
 
 -----
 
@@ -9869,9 +10407,7 @@ In an argument list, the `LIKE` construct was used to create arguments that are 
 
 -----
 
-### CQL0179: table/view/proc not found 'like_name'
-
-In an argument list the `LIKE` construct was used to create arguments that are the same shape as the named object.  However the indicated name is not the name of a table, view, or stored procedure at all.
+### CQL0179 available for re-use
 
 -----
 
@@ -10011,9 +10547,9 @@ In a `DECLARE` statement that declares a `CURSOR LIKE` another cursor, the indic
 
 ### CQL0201: expanding FROM ARGUMENTS, there is no argument matching 'required_arg'
 
-In an `insert` or `fetch` statment using the form `from arguments like [name]` the named entity
-had columns that did not appear in as arguments to the current procedure.  Maybe arguments
-are missing or maybe the name in the `like` part is the wrong name.
+In an `INSERT` or `FETCH` statment using the form `FROM ARGUMENTS(LIKE [name])`
+The shape `[name]` had columns that did not appear in as arguments to the current procedure.
+Maybe arguments are missing or maybe the name in the `like` part is the wrong name.
 
 -----
 
@@ -10077,22 +10613,7 @@ call foo(1); '
 ```
 -----
 
-### CQL0208: proc out parameter: formal cannot be fulfilled by in-only variable 'variable_name'
-
-In a procedure call, the indicated parameter of the procedure is an OUT or INOUT parameter but the call site has an 'in' argument in that position.  While this is doable it's probably a mistake.
-
-Example
-
-```sql
-declare proc foo(out x integer);
-
-create proc bar(y integer) -- note 'in' is the default
-begin
-  call foo(y); -- clobbering our 'in' variable
-end;
-```
-
-You should use a scratch local to capture the result.
+### CQL0208 available for re-use
 
 -----
 
@@ -10281,9 +10802,7 @@ out C;
 
 -----
 
-### CQL0224: literal output can only appear outside of procedures
-
-The `@echo` construct cannot appear inside of procedures, this would be far to fragile.  It's indented to let you insert C style declarations into the output stream if necessary.
+### CQL0224 available for re-use
 
 -----
 
@@ -10625,7 +11144,7 @@ You can return the cursor values with `OUT` instead.
 
 ### CQL0262: LIKE ... ARGUMENTS used on a procedure with no arguments 'procedure_name'
 
-The LIKE [procedure] ARGUMENTS form creates a shape for use in a cursor or procedure arguments.  
+The LIKE [procedure] ARGUMENTS form creates a shape for use in a cursor or procedure arguments.
 
 The indicated name is a procedure with no arguments so it cannot be used to make a shape.
 
@@ -10946,17 +11465,17 @@ Window name defined in the window clause of a select statement should always be 
 
 ------
 
-### CQL0297: FROM CURSOR is redundant if column list is empty
+### CQL0297: FROM [shape] is redundant if column list is empty
 
-This form:
+In this form:
 
-`insert into YourTable() FROM CURSOR your_cursor;`
+`insert into YourTable() FROM your_cursor;`
 
-The `()` means no columns are being specified, the cursor will never be used.  The only source of columns is maybe dummy data (if it was specified) or the default values or null.  In no case will the cursor be used.  If you really want this use `FROM VALUES()` and don't implicate a cursor.
+The `()` means no columns are being specified, the cursor will never be used.  The only source of columns is maybe dummy data (if it was specified) or the default values or null.  In no case will the cursor be used.  If you really want this use `FROM VALUES()` and don't implicate a cursor or an argument bundle.
 
 ------
 
-### CQL0298: cannot insert from a cursor without fields 'cursor_name'
+### CQL0298: cannot read from a cursor without fields 'cursor_name'
 
 The cursor in question has no storage associated with it.  It was loaded with something like:
 
@@ -10972,11 +11491,13 @@ If you fetched the cursor into variables then you have to use the variables for 
 
 ------
 
-### CQL0299: cursor has too few fields for this insert, 'cursor_name'
+### CQL0299: [cursor] has too few fields, 'shape_name'
 
-The cursor was used in a fetch statement but the number of columns fetched is smaller than the number required by the insert statement we are processing.
+The named shape was used in a fetch statement but the number of columns fetched is smaller than the number required by the statement we are processing.
 
 If you need to use the cursor plus some other data then you can't use this form, you'll have to use each field individually like `from values(C.x, C.y, C.z, other_stuff)`.
+
+The shape with too few fields might be the source or the target of the statement.
 
 ------
 
@@ -11352,7 +11873,13 @@ The most likely cause is that the function call in question is vestigial and you
 
 -----
 
-### CQL0345: the variable must be of type `object<T cursor>` where T is a valid shape name 'variable'
+### CQL0345: the arguments must be of type blob 'function_name'
+
+The indicated function accepts only a single argument of type blob.
+
+-----
+
+### CQL0346: the variable must be of type `object<T cursor>` where T is a valid shape name 'variable'
 
 It's possible to take the statement associated with a statement cursor and store it in an object variable. Using the form:
 
@@ -11382,6 +11909,100 @@ See Chapter 5 of the CQL Programming Language.
 
 -----
 
+### CQL0347: select function may not return type OBJECT 'function_name'
+
+The indicated function was declared with `DECLARE SELECT FUNCTION` meaning it is to be used in the
+context of SQLite statements. However, SQLite doesn't understand functions that return type object
+at all.  Therefore declaration is illegal.
+
+When working with pointer type through SQLite it is often possibly to encode the object as an long integer assuming
+it can pass through unchanged with no retain/release semantics or any such thing.  If that is practical
+you can move objects around by returning long integers.
+
+----
+
+### CQL0348: collate applied to a non-text column 'column_name'
+
+Collation order really only makes sense on text fields.  Possibly blob fields but we're taking a stand on blob
+for now.  This can be relaxed later if that proves to be a mistake.  For now, only text
+
+----
+
+### CQL0349: column definitions may not come after constraints 'column_name'
+
+In a CREATE TABLE statement, the indicated column name came after a constraint.  SQLite expects all the column definitions
+to come before any constraint defintions.  You must move the offending column defintion above the constraints.
+
+----
+
+### CQL0350: statement must appear inside of a PROC SAVEPOINT block
+
+The `ROLLBACK RETURN` and `COMMIT RETURN` forms are only usable inside of a `PROC SAVEPOINT` block
+because they rollback or commit the savepoint that was created at the top level.
+
+----
+
+### CQL0351: statement should be in a procedure and at the top level
+
+The indicated statement may only appear inside procedure and not nested.  The classic example
+of this is the `PROC SAVEPOINT` form which can only be used at the top level of procedures.
+
+----
+
+### CQL0352: use COMMIT RETURN or ROLLBACK RETURN in within a proc savepoint block
+
+The normal `RETURN` statement cannot be used inside of `PROC SAVEPOINT` block, you have to
+indicate if you want to commit or rollback the savepoint when you return.  This makes
+it impossible to forget to do so which is in some sense the whole point of `PROC SAVEPOINT`.
+
+----
+
+### CQL0353: evaluation of constant failed
+
+The constant expression could not be evaluated.  This is most likely because it includes an operator that is
+not supported or a function call which is not support.  Very few functions can be used in constant expressions
+The supported functions include `iif`, which is rewritten; `abs`; `ifnull`, `nullif`, and `coalesce`.
+
+----
+
+### CQL0354: duplicate enum member 'enum_name'
+
+While processing a `declare enum` statement the indicated member of the enum appeared twice.
+
+This is almost certainly a copy/paste of the same enum member twice.
+
+----
+
+### CQL0355: evaluation failed 'enum_name'
+
+While processing a `declare enum` statement the indicated member of the enum could not be evaluated as a constant expression.
+
+There could be a non-constant in the expression or there could be a divide-by-zero error.
+
+----
+
+### CQL0356: enum definitions do not match 'name'
+
+The two described `declare enum` statements have the same name but they are not identical.
+
+The error output contains the full text of both declarations to compare.
+
+----
+
+### CQL0357: enum does not contain 'enum_name'
+
+The indicated member is not part of the enumeration.
+
+----
+
+### CQL0358: declared enums must be top level 'enum'
+
+A `DECLARE ENUM` statement for the named enum is happening inside of a procedure.  This is not legal.
+
+To correct this move the declaration outside of the procedure.
+
+----
+
 
 
 ## Appendix 5: JSON Schema Grammar
@@ -11391,511 +12012,618 @@ See Chapter 5 of the CQL Programming Language.
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue Sep  8 13:06:45 PDT 2020
+Snapshot as of Tue Jan  5 14:53:54 PST 2021
+
 ### Rules
 
 ```
- 
- 
-json_schema: '{' 
-         '"tables"' ':' '[' opt_tables ']' ',' 
-         '"views"' ':' '[' opt_views ']' ',' 
-         '"indices"' ':' '[' opt_indices ']' ',' 
-         '"triggers"' ':' '[' opt_triggers ']' ',' 
-         '"attributes"' ':' '[' opt_attribute_list ']' ',' 
-         '"queries"' ':' '[' opt_queries ']' ',' 
-         '"inserts"' ':' '[' opt_inserts ']' ',' 
-         '"updates"' ':' '[' opt_updates ']' ',' 
-         '"deletes"' ':' '[' opt_deletes ']' ',' 
-         '"general"' ':' '[' opt_generals ']' ',' 
-         '"regions"' ':' '[' opt_regions ']' ',' 
-         '"adHocMigrationProcs"' ':' '[' opt_ad_hoc_migrations ']' 
-         '}' 
-  ; 
- 
-BOOL_LITERAL: '0' | '1' 
-  ; 
- 
-opt_tables: | tables 
-  ; 
- 
-tables: table | table ',' tables 
-  ; 
- 
-table: '{' 
-       '"name"' ':' STRING_LITERAL ',' 
-       '"isTemp"' ':' BOOL_LITERAL ',' 
-       '"ifNotExists"' ':' BOOL_LITERAL ',' 
-       '"withoutRowid"' ':' BOOL_LITERAL ',' 
-       '"isAdded"' ':' BOOL_LITERAL ',' 
-       opt_added_version 
-       '"isDeleted"' ':' BOOL_LITERAL ',' 
-       opt_deleted_version 
-       '"isRecreated"' ':' BOOL_LITERAL ',' 
-       opt_recreate_group_name 
-       opt_region_info 
-       opt_table_indices 
-       opt_attributes 
-       '"columns"' ':' '[' columns ']' ',' 
-       '"primaryKey"' ':' '[' opt_column_names ']' ',' 
-       '"foreignKeys"' ':' '[' opt_foreign_keys ']' ',' 
-       '"uniqueKeys"' ':' '[' opt_unique_keys ']' 
-       '}' 
-  ; 
- 
-opt_added_version: | '"addedVersion"' ':' any_integer ',' opt_added_migration_proc 
-  ; 
- 
-opt_added_migration_proc: | '"addedMigrationProc"' ':' STRING_LITERAL ',' 
-  ; 
- 
-opt_deleted_version: | '"deletedVersion"' ':' any_integer ',' opt_deleted_migration_proc 
-  ; 
- 
-opt_deleted_migration_proc: | '"deletedMigrationProc"' ':' STRING_LITERAL ',' 
-  ; 
- 
-opt_recreate_group_name: | '"recreateGroupName"' ':' STRING_LITERAL ',' 
-  ; 
- 
-opt_index_names: | index_names 
-  ; 
- 
-index_names: STRING_LITERAL | STRING_LITERAL ',' index_names 
-  ; 
- 
-opt_arg_names: | arg_names 
-  ; 
- 
-arg_names: STRING_LITERAL | STRING_LITERAL ',' arg_names 
-  ; 
- 
-opt_column_names: | column_names 
-  ; 
- 
-column_names: STRING_LITERAL | STRING_LITERAL ',' column_names 
-  ; 
- 
-opt_table_names: | table_names 
-  ; 
- 
-table_names: STRING_LITERAL | STRING_LITERAL ',' table_names 
-  ; 
- 
-opt_procedure_names: | procedure_names 
-  ; 
- 
-procedure_names: STRING_LITERAL | STRING_LITERAL ',' procedure_names 
-  ; 
- 
-sort_order_names: STRING_LITERAL | STRING_LITERAL ',' sort_order_names 
-  ; 
- 
-columns: column | column ',' columns 
-  ; 
- 
-column: '{' 
-        '"name"' ':' STRING_LITERAL ',' 
-        opt_attributes 
-        '"type"' ':' STRING_LITERAL ',' 
-        opt_is_sensitive 
-        '"isNotNull"' ':' BOOL_LITERAL ',' 
-        '"isAdded"' ':' BOOL_LITERAL ',' 
-        opt_added_version 
-        '"isDeleted"' ':' BOOL_LITERAL ',' 
-        opt_deleted_version 
-        '"isPrimaryKey"' ':' BOOL_LITERAL ',' 
-        '"isUniqueKey"' ':' BOOL_LITERAL ',' 
-        '"isAutoIncrement"' ':' BOOL_LITERAL 
-        opt_default_value 
-        '}' 
-  ; 
- 
-opt_default_value: | ',' '"defaultValue"' ':' any_literal 
-  ; 
- 
-opt_foreign_keys : | foreign_keys 
-  ; 
- 
-opt_is_sensitive: | '"isSensitive"' ':' '1' ',' 
-  ; 
- 
-foreign_keys :  foreign_key | foreign_key ',' foreign_keys 
-  ; 
- 
-foreign_key : '{' 
-               '"columns"' ':' '[' column_names ']' ',' 
-               '"referenceTable"' ':' STRING_LITERAL ',' 
-               '"referenceColumns"' ':' '[' column_names ']' ',' 
-               '"onUpdate"' ':' STRING_LITERAL ',' 
-               '"onDelete"' ':' STRING_LITERAL ',' 
-               '"isDeferred"' ':' BOOL_LITERAL 
-              '}' 
-  ; 
- 
-opt_unique_keys :  | unique_keys 
-  ; 
- 
-unique_keys : unique_key | unique_key ',' unique_keys 
-  ; 
- 
-unique_key:  '{' 
-              opt_name 
-              '"columns"' ':' '[' column_names ']' 
-             '}' 
-  ; 
- 
-opt_name: | '"name"' ':' STRING_LITERAL ',' 
-  ; 
- 
-opt_table_indices: | table_indices 
-  ; 
- 
-table_indices: '"indices"' ':' '[' opt_index_names ']' ',' 
-  ; 
- 
-opt_attributes:  | attributes 
-  ; 
- 
-attributes: '"attributes"' ':' '[' attribute_list ']' ',' 
-  ; 
- 
-opt_attribute_list: | attribute_list 
-  ; 
- 
-attribute_list: attribute | attribute ',' attribute_list 
-  ; 
- 
-attribute:  '{' 
-             '"name"' ':' STRING_LITERAL ',' 
-             '"value"' ':' attribute_value 
-            '}' 
-  ; 
- 
-attribute_array: '[' opt_attribute_value_list ']' 
-  ; 
- 
-opt_attribute_value_list: | attribute_value_list 
-  ; 
- 
-attribute_value_list: attribute_value | attribute_value ',' attribute_value_list 
-  ; 
- 
-attribute_value: any_literal | attribute_array 
-  ; 
- 
-any_integer: BOOL_LITERAL | INT_LITERAL 
-  ; 
- 
-any_literal:  BOOL_LITERAL | 
-              INT_LITERAL | '-' INT_LITERAL | 
-              LONG_LITERAL | '-' LONG_LITERAL | 
-              REAL_LITERAL | '-' REAL_LITERAL | 
-              STRING_LITERAL | NULL_LITERAL 
-  ; 
- 
-opt_views: | views 
-  ; 
- 
-views: view | view ',' views 
-  ; 
- 
-view:  '{' 
-       '"name"' ':' STRING_LITERAL ',' 
-       '"isTemp"' ':' BOOL_LITERAL ',' 
-       '"isDeleted"' ':' BOOL_LITERAL ',' 
-       opt_deleted_version 
-       opt_region_info 
-       projection 
-       '"select"' ':' STRING_LITERAL ',' 
-       '"selectArgs"' ':' '[' ']' 
-       '}' 
-  ; 
- 
-opt_region_info: | '"region"' ':' STRING_LITERAL ',' |  '"region"' ':' STRING_LITERAL ',' '"deployedInRegion"' ':' STRING_LITERAL ',' 
-  ; 
- 
-opt_projection: | projection 
-  ; 
- 
-projection: '"projection"' ':' '[' projected_columns ']' ',' 
-  ; 
- 
-projected_columns: projected_column | projected_column ',' projected_columns 
-  ; 
- 
-projected_column: '{' 
-                   '"name"' ':' STRING_LITERAL ',' 
-                   '"type"' ':' STRING_LITERAL ',' 
-                   opt_is_sensitive 
-                   '"isNotNull"' ':' BOOL_LITERAL 
-                  '}' 
-  ; 
- 
-opt_indices:  | indices 
-  ; 
- 
-indices: index  | index ',' indices 
-  ; 
- 
-index: '{' 
-        '"name"' ':' STRING_LITERAL ',' 
-        '"table"' ':' STRING_LITERAL ',' 
-        '"isUnique"' ':' BOOL_LITERAL ',' 
-        '"ifNotExists"' ':' BOOL_LITERAL ',' 
-        '"isDeleted"' ':' BOOL_LITERAL ',' 
-        opt_deleted_version 
-        opt_region_info 
-        '"columns"' ':' '[' column_names ']' ',' 
-        '"sortOrders"' ':' '[' sort_order_names ']' 
-       '}' 
-  ; 
- 
-opt_triggers: | triggers 
-  ; 
- 
-triggers: trigger | trigger ',' triggers 
-  ; 
- 
-trigger: '{' 
-          '"name"' ':' STRING_LITERAL ',' 
-          '"target"' ':' STRING_LITERAL ',' 
-          '"isTemp"' ':' BOOL_LITERAL ',' 
-          '"ifNotExists"' ':' BOOL_LITERAL ',' 
-          '"isDeleted"' ':' BOOL_LITERAL ',' 
-          opt_deleted_version 
-          before_after_instead ',' 
-          delete_insert_update ',' 
-          opt_for_each_row 
-          opt_when_expr 
-          '"statement"' ':' STRING_LITERAL ',' 
-          '"statementArgs"' ':' '[' opt_arg_names ']' ',' 
-          opt_region_info 
-          dependencies 
-         '}' 
-  ; 
- 
-before_after_instead: '"isBeforeTrigger"' ':' '1' | '"isAfterTrigger"' ':' '1'  | '"isInsteadOfTrigger"' ':' '1' 
-  ; 
- 
-delete_insert_update: '"isDeleteTrigger"' ':' '1' | '"isInsertTrigger"' ':' '1' | '"isUpdateTrigger"' ':' '1' 
-  ; 
- 
-opt_for_each_row: | '"forEachRow"' ':' BOOL_LITERAL ',' 
-  ; 
- 
-opt_when_expr: | '"whenExpr"' ':' STRING_LITERAL ',' '"whenExprArgs"' ':' '[' opt_arg_names ']' ',' 
-  ; 
- 
-dependencies: opt_insert_tables 
-            opt_update_tables 
-            opt_delete_tables 
-            opt_from_tables 
-            opt_uses_procedures 
-            '"usesTables"' ':' '[' opt_table_names ']' 
-  ; 
- 
-opt_insert_tables: | '"insertTables"' ':' '[' opt_table_names ']' ',' 
-  ; 
- 
-opt_update_tables: | '"updateTables"' ':' '[' opt_table_names ']' ',' 
-  ; 
- 
-opt_delete_tables: | '"deleteTables"' ':' '[' opt_table_names ']' ',' 
-  ; 
- 
-opt_from_tables: | '"fromTables"' ':' '[' opt_table_names ']' ',' 
-  ; 
- 
-opt_uses_procedures : | '"usesProcedures"' ':' '[' opt_procedure_names ']' ',' 
-  ; 
- 
-opt_queries: | queries ; 
- 
-queries: query | query ',' queries ; 
- 
-query: '{' 
-       '"name"' ':' STRING_LITERAL ',' 
-       '"definedInFile"' ':' STRING_LITERAL ',' 
-       '"args"' ':' '[' opt_args ']' ',' 
-       dependencies ',' 
-       opt_region_info 
-       opt_attributes 
-       projection 
-       '"statement"' ':' STRING_LITERAL ',' 
-       '"statementArgs"' ':' '[' opt_arg_names ']' 
-       '}' 
-  ; 
- 
-opt_args: | args 
-  ; 
- 
-args: arg | arg ',' args 
-  ; 
- 
-arg: '{' 
-      '"name"' ':' STRING_LITERAL ',' 
-      '"type"' ':' STRING_LITERAL ',' 
-      opt_is_sensitive 
-      '"isNotNull"' ':' BOOL_LITERAL 
-      '}' 
-  ; 
- 
-opt_inserts: | inserts 
-  ; 
- 
-inserts: insert | insert ',' inserts 
-  ; 
- 
-insert : '{' 
-         '"name"' ':' STRING_LITERAL ',' 
-         '"definedInFile"' ':' STRING_LITERAL ',' 
-         '"args"' ':' '[' opt_args ']' ',' 
-         dependencies ',' 
-         opt_region_info 
-         opt_attributes 
-         '"table"' ':' STRING_LITERAL ',' 
-         '"statement"' ':' STRING_LITERAL ',' 
-         '"statementArgs"' ':' '[' opt_arg_names ']' ',' 
-         '"statementType"' ':' STRING_LITERAL ',' 
-         '"columns"' ':' '[' column_names ']' ',' 
-         '"values"' ':' '[' opt_values ']' 
-         '}' 
-  ; 
- 
-opt_values: | values 
-  ; 
- 
-values: value | value ',' values 
-  ; 
- 
-value:  '{' 
-         '"value"' ':' STRING_LITERAL ',' 
-         '"valueArgs"' ':' '[' opt_arg_names ']' 
-        '}' 
-  ; 
- 
-opt_updates: | updates 
-  ; 
- 
-updates: update | update ',' updates 
-  ; 
- 
-update : '{' 
-         '"name"' ':' STRING_LITERAL ',' 
-         '"definedInFile"' ':' STRING_LITERAL ',' 
-         '"args"' ':' '[' opt_args ']' ',' 
-         dependencies ',' 
-         opt_region_info 
-         opt_attributes 
-         '"table"' ':' STRING_LITERAL ',' 
-         '"statement"' ':' STRING_LITERAL ',' 
-         '"statementArgs"' ':' '[' opt_arg_names ']' 
-         '}' 
-  ; 
- 
-opt_deletes: | deletes 
-  ; 
- 
-deletes: delete | delete ',' deletes 
-  ; 
- 
-delete : '{' 
-         '"name"' ':' STRING_LITERAL ',' 
-         '"definedInFile"' ':' STRING_LITERAL ',' 
-         '"args"' ':' '[' opt_args ']' ',' 
-         dependencies ',' 
-         opt_region_info 
-         opt_attributes 
-         '"table"' ':' STRING_LITERAL ',' 
-         '"statement"' ':' STRING_LITERAL ',' 
-         '"statementArgs"' ':' '[' opt_arg_names ']' 
-         '}' 
-  ; 
- 
-opt_generals: | generals 
-  ; 
- 
-generals: general | general ',' generals 
-  ; 
- 
-general: '{' 
-          '"name"' ':' STRING_LITERAL ',' 
-          '"definedInFile"' ':' STRING_LITERAL ',' 
-          '"args"' ':' '[' opt_complex_args ']' ',' 
-          dependencies ',' 
-          opt_regions 
-          opt_attributes 
-          '"hasStructResult"' ':' BOOL_LITERAL ',' 
-          '"hasRowsetResult"' ':' BOOL_LITERAL ',' 
-          opt_projection 
-          opt_result_contract 
-          '"usesDatabase"' ':' BOOL_LITERAL 
-         '}' 
-  ; 
- 
-opt_result_contract: | '"hasSelectResult"' ':' '1' ',' | '"hasOutResult"' ':' '1' ',' | '"hasOutUnionResult"' ':''1' ',' 
-  ; 
- 
-opt_complex_args: | complex_args 
-  ; 
- 
-complex_args: complex_arg | complex_arg ',' complex_args 
-  ; 
- 
-complex_arg: '{' 
-              opt_binding 
-              '"name"' ':' STRING_LITERAL ',' 
-              '"type"' ':' STRING_LITERAL ',' 
-              opt_is_sensitive 
-              '"isNotNull"' ':' BOOL_LITERAL 
-             '}' 
-  ; 
- 
-opt_binding: | '"binding"' ':' STRING_LITERAL ',' 
-  ; 
- 
-opt_regions: | regions 
-  ; 
- 
-regions: region | region ',' regions 
-  ; 
- 
-region:  '{' 
-          '"name"' ':' STRING_LITERAL ',' 
-          '"isDeployableRoot"' ':' BOOL_LITERAL ',' 
-          '"deployedInRegion"' ':' STRING_LITERAL ',' 
-          '"using"' ':' '[' opt_region_names ']' ',' 
-          '"usingPrivately"' ':' '[' opt_bool_list ']' 
-         '}' 
-  ; 
- 
-opt_region_names: | region_names 
-  ; 
- 
-region_names: STRING_LITERAL | STRING_LITERAL ',' region_names 
-  ; 
- 
-opt_bool_list: | bool_list 
-  ; 
- 
-bool_list: BOOL_LITERAL | BOOL_LITERAL ',' bool_list 
-  ; 
- 
-opt_ad_hoc_migrations: | ad_hoc_migrations 
-  ; 
- 
-ad_hoc_migrations: ad_hoc_migration | ad_hoc_migrations ',' ad_hoc_migrations 
-  ; 
- 
-ad_hoc_migration: '{' 
-                  '"name"' ':' STRING_LITERAL ',' 
-                  '"version"' ':' any_integer 
-                  '}' 
-  ; 
- 
+
+
+json_schema: '{'
+         '"tables"' ':' '[' opt_tables ']' ','
+         '"virtualTables"' ':' '[' opt_virtual_tables ']' ','
+         '"views"' ':' '[' opt_views ']' ','
+         '"indices"' ':' '[' opt_indices ']' ','
+         '"triggers"' ':' '[' opt_triggers ']' ','
+         '"attributes"' ':' '[' opt_attribute_list ']' ','
+         '"queries"' ':' '[' opt_queries ']' ','
+         '"inserts"' ':' '[' opt_inserts ']' ','
+         '"generalInserts"' ':' '[' opt_inserts_general ']' ','
+         '"updates"' ':' '[' opt_updates ']' ','
+         '"deletes"' ':' '[' opt_deletes ']' ','
+         '"general"' ':' '[' opt_generals ']' ','
+         '"regions"' ':' '[' opt_regions ']' ','
+         '"adHocMigrationProcs"' ':' '[' opt_ad_hoc_migrations ']' ','
+         '"enums"' ':'  '[' opt_enums ']'
+         '}'
+  ;
+
+BOOL_LITERAL: '0' | '1'
+  ;
+
+opt_tables: | tables
+  ;
+
+tables: table | table ',' tables
+  ;
+
+table: '{'
+       '"name"' ':' STRING_LITERAL ','
+       '"isTemp"' ':' BOOL_LITERAL ','
+       '"ifNotExists"' ':' BOOL_LITERAL ','
+       '"withoutRowid"' ':' BOOL_LITERAL ','
+       '"isAdded"' ':' BOOL_LITERAL ','
+       opt_added_version
+       '"isDeleted"' ':' BOOL_LITERAL ','
+       opt_deleted_version
+       '"isRecreated"' ':' BOOL_LITERAL ','
+       opt_recreate_group_name
+       opt_region_info
+       opt_table_indices
+       opt_attributes
+       '"columns"' ':' '[' columns ']' ','
+       '"primaryKey"' ':' '[' opt_column_names ']' ','
+       '"foreignKeys"' ':' '[' opt_foreign_keys ']' ','
+       '"uniqueKeys"' ':' '[' opt_unique_keys ']' ','
+       '"checkExpressions"' ':' '[' opt_check_expressions ']'
+       '}'
+  ;
+
+opt_virtual_tables: | virtual_tables
+  ;
+
+virtual_tables: virtual_table | virtual_table ',' virtual_tables
+  ;
+
+virtual_table: '{'
+       '"name"' ':' STRING_LITERAL ','
+       '"isTemp"' ':' '0' ','
+       '"ifNotExists"' ':' BOOL_LITERAL ','
+       '"withoutRowid"' ':' '0' ','
+       '"isAdded"' ':' BOOL_LITERAL ','
+       opt_added_version
+       '"isDeleted"' ':' BOOL_LITERAL ','
+       opt_deleted_version
+       '"isRecreated"' ':' BOOL_LITERAL ','
+       opt_region_info
+       '"isVirtual"' ':' '1' ','
+       '"module"' ':' STRING_LITERAL ','
+       opt_module_args
+       opt_attributes
+       '"columns"' ':' '[' columns ']' ','
+       '"primaryKey"' ':' '[' opt_column_names ']' ','
+       '"foreignKeys"' ':' '[' opt_foreign_keys ']' ','
+       '"uniqueKeys"' ':' '[' opt_unique_keys ']' ','
+       '"checkExpressions"' ':' '[' opt_check_expressions ']'
+       '}'
+  ;
+
+opt_module_args: | '"moduleArgs"' ':'  STRING_LITERAL ','
+  ;
+
+opt_added_version: | '"addedVersion"' ':' any_integer ',' opt_added_migration_proc
+  ;
+
+opt_added_migration_proc: | '"addedMigrationProc"' ':' STRING_LITERAL ','
+  ;
+
+opt_deleted_version: | '"deletedVersion"' ':' any_integer ',' opt_deleted_migration_proc
+  ;
+
+opt_deleted_migration_proc: | '"deletedMigrationProc"' ':' STRING_LITERAL ','
+  ;
+
+opt_recreate_group_name: | '"recreateGroupName"' ':' STRING_LITERAL ','
+  ;
+
+opt_index_names: | index_names
+  ;
+
+index_names: STRING_LITERAL | STRING_LITERAL ',' index_names
+  ;
+
+opt_arg_names: | arg_names
+  ;
+
+arg_names: STRING_LITERAL | STRING_LITERAL ',' arg_names
+  ;
+
+opt_column_names: | column_names
+  ;
+
+column_names: STRING_LITERAL | STRING_LITERAL ',' column_names
+  ;
+
+opt_table_names: | table_names
+  ;
+
+table_names: STRING_LITERAL | STRING_LITERAL ',' table_names
+  ;
+
+opt_view_names: | view_names
+  ;
+
+view_names: STRING_LITERAL | STRING_LITERAL ',' view_names
+  ;
+
+opt_procedure_names: | procedure_names
+  ;
+
+procedure_names: STRING_LITERAL | STRING_LITERAL ',' procedure_names
+  ;
+
+sort_order_names: STRING_LITERAL | STRING_LITERAL ',' sort_order_names
+  ;
+
+columns: column | column ',' columns
+  ;
+
+column: '{'
+        '"name"' ':' STRING_LITERAL ','
+        opt_attributes
+        '"type"' ':' STRING_LITERAL ','
+        opt_is_sensitive
+        '"isNotNull"' ':' BOOL_LITERAL ','
+        '"isAdded"' ':' BOOL_LITERAL ','
+        opt_added_version
+        '"isDeleted"' ':' BOOL_LITERAL ','
+        opt_deleted_version
+        opt_default_value
+        opt_collate
+        opt_check_expr
+        '"isPrimaryKey"' ':' BOOL_LITERAL ','
+        '"isUniqueKey"' ':' BOOL_LITERAL ','
+        '"isAutoIncrement"' ':' BOOL_LITERAL
+        '}'
+  ;
+
+opt_collate : | '"collate"' ':' STRING_LITERAL ','
+  ;
+
+opt_check_expr: | '"checkExpr"' ':' STRING_LITERAL ',' '"checkExprArgs"' ':' '[' opt_arg_names ']' ','
+  ;
+
+opt_default_value: | '"defaultValue"' ':' any_literal ','
+  ;
+
+opt_foreign_keys : | foreign_keys
+  ;
+
+opt_is_sensitive: | '"isSensitive"' ':' '1' ','
+  ;
+
+foreign_keys :  foreign_key | foreign_key ',' foreign_keys
+  ;
+
+foreign_key : '{'
+               '"columns"' ':' '[' column_names ']' ','
+               '"referenceTable"' ':' STRING_LITERAL ','
+               '"referenceColumns"' ':' '[' column_names ']' ','
+               '"onUpdate"' ':' STRING_LITERAL ','
+               '"onDelete"' ':' STRING_LITERAL ','
+               '"isDeferred"' ':' BOOL_LITERAL
+              '}'
+  ;
+
+opt_unique_keys :  | unique_keys
+  ;
+
+unique_keys : unique_key | unique_key ',' unique_keys
+  ;
+
+unique_key:  '{'
+              opt_name
+              '"columns"' ':' '[' column_names ']'
+             '}'
+  ;
+
+opt_check_expressions: | check_expressions
+  ;
+
+check_expressions: check_expression | check_expression ',' check_expressions
+  ;
+
+check_expression: '{'
+                   opt_name
+                   '"checkExpr"' ':' STRING_LITERAL ','
+                   '"checkExprArgs"' ':' '[' ']'
+                  '}'
+  ;
+
+opt_name: | '"name"' ':' STRING_LITERAL ','
+  ;
+
+opt_table_indices: | table_indices
+  ;
+
+table_indices: '"indices"' ':' '[' opt_index_names ']' ','
+  ;
+
+opt_attributes:  | attributes
+  ;
+
+attributes: '"attributes"' ':' '[' attribute_list ']' ','
+  ;
+
+opt_attribute_list: | attribute_list
+  ;
+
+attribute_list: attribute | attribute ',' attribute_list
+  ;
+
+attribute:  '{'
+             '"name"' ':' STRING_LITERAL ','
+             '"value"' ':' attribute_value
+            '}'
+  ;
+
+attribute_array: '[' opt_attribute_value_list ']'
+  ;
+
+opt_attribute_value_list: | attribute_value_list
+  ;
+
+attribute_value_list: attribute_value | attribute_value ',' attribute_value_list
+  ;
+
+attribute_value: any_literal | attribute_array
+  ;
+
+any_integer: BOOL_LITERAL | INT_LITERAL
+  ;
+
+any_literal:  BOOL_LITERAL |
+              INT_LITERAL | '-' INT_LITERAL |
+              LONG_LITERAL | '-' LONG_LITERAL |
+              REAL_LITERAL | '-' REAL_LITERAL |
+              STRING_LITERAL | NULL_LITERAL
+  ;
+
+num_literal:  BOOL_LITERAL |
+              INT_LITERAL | '-' INT_LITERAL |
+              LONG_LITERAL | '-' LONG_LITERAL |
+              REAL_LITERAL | '-' REAL_LITERAL
+  ;
+
+opt_views: | views
+  ;
+
+views: view | view ',' views
+  ;
+
+view:  '{'
+       '"name"' ':' STRING_LITERAL ','
+       '"isTemp"' ':' BOOL_LITERAL ','
+       '"isDeleted"' ':' BOOL_LITERAL ','
+       opt_deleted_version
+       opt_region_info
+       projection
+       '"select"' ':' STRING_LITERAL ','
+       '"selectArgs"' ':' '[' ']'
+       '}'
+  ;
+
+opt_region_info: | '"region"' ':' STRING_LITERAL ',' |  '"region"' ':' STRING_LITERAL ',' '"deployedInRegion"' ':' STRING_LITERAL ','
+  ;
+
+opt_projection: | projection
+  ;
+
+projection: '"projection"' ':' '[' projected_columns ']' ','
+  ;
+
+projected_columns: projected_column | projected_column ',' projected_columns
+  ;
+
+projected_column: '{'
+                   '"name"' ':' STRING_LITERAL ','
+                   '"type"' ':' STRING_LITERAL ','
+                   opt_is_sensitive
+                   '"isNotNull"' ':' BOOL_LITERAL
+                  '}'
+  ;
+
+opt_indices:  | indices
+  ;
+
+indices: index  | index ',' indices
+  ;
+
+index: '{'
+        '"name"' ':' STRING_LITERAL ','
+        '"table"' ':' STRING_LITERAL ','
+        '"isUnique"' ':' BOOL_LITERAL ','
+        '"ifNotExists"' ':' BOOL_LITERAL ','
+        '"isDeleted"' ':' BOOL_LITERAL ','
+        opt_deleted_version
+        opt_region_info
+        '"columns"' ':' '[' column_names ']' ','
+        '"sortOrders"' ':' '[' sort_order_names ']'
+       '}'
+  ;
+
+opt_triggers: | triggers
+  ;
+
+triggers: trigger | trigger ',' triggers
+  ;
+
+trigger: '{'
+          '"name"' ':' STRING_LITERAL ','
+          '"target"' ':' STRING_LITERAL ','
+          '"isTemp"' ':' BOOL_LITERAL ','
+          '"ifNotExists"' ':' BOOL_LITERAL ','
+          '"isDeleted"' ':' BOOL_LITERAL ','
+          opt_deleted_version
+          before_after_instead ','
+          delete_insert_update ','
+          opt_for_each_row
+          opt_when_expr
+          '"statement"' ':' STRING_LITERAL ','
+          '"statementArgs"' ':' '[' opt_arg_names ']' ','
+          opt_region_info
+          dependencies
+         '}'
+  ;
+
+before_after_instead: '"isBeforeTrigger"' ':' '1' | '"isAfterTrigger"' ':' '1'  | '"isInsteadOfTrigger"' ':' '1'
+  ;
+
+delete_insert_update: '"isDeleteTrigger"' ':' '1' | '"isInsertTrigger"' ':' '1' | '"isUpdateTrigger"' ':' '1'
+  ;
+
+opt_for_each_row: | '"forEachRow"' ':' BOOL_LITERAL ','
+  ;
+
+opt_when_expr: | '"whenExpr"' ':' STRING_LITERAL ',' '"whenExprArgs"' ':' '[' opt_arg_names ']' ','
+  ;
+
+dependencies: opt_insert_tables
+            opt_update_tables
+            opt_delete_tables
+            opt_from_tables
+            opt_uses_procedures
+            opt_uses_views
+            '"usesTables"' ':' '[' opt_table_names ']'
+  ;
+
+opt_uses_views: | '"usesViews"' ':' '[' opt_view_names ']' ','
+  ;
+
+opt_insert_tables: | '"insertTables"' ':' '[' opt_table_names ']' ','
+  ;
+
+opt_update_tables: | '"updateTables"' ':' '[' opt_table_names ']' ','
+  ;
+
+opt_delete_tables: | '"deleteTables"' ':' '[' opt_table_names ']' ','
+  ;
+
+opt_from_tables: | '"fromTables"' ':' '[' opt_table_names ']' ','
+  ;
+
+opt_uses_procedures : | '"usesProcedures"' ':' '[' opt_procedure_names ']' ','
+  ;
+
+opt_queries: | queries ;
+
+queries: query | query ',' queries ;
+
+query: '{'
+       '"name"' ':' STRING_LITERAL ','
+       '"definedInFile"' ':' STRING_LITERAL ','
+       '"args"' ':' '[' opt_args ']' ','
+       dependencies ','
+       opt_region_info
+       opt_attributes
+       projection
+       '"statement"' ':' STRING_LITERAL ','
+       '"statementArgs"' ':' '[' opt_arg_names ']'
+       '}'
+  ;
+
+opt_args: | args
+  ;
+
+args: arg | arg ',' args
+  ;
+
+arg: '{'
+      '"name"' ':' STRING_LITERAL ','
+      '"argOrigin"' ':' STRING_LITERAL ','
+      '"type"' ':' STRING_LITERAL ','
+      opt_is_sensitive
+      '"isNotNull"' ':' BOOL_LITERAL
+      '}'
+  ;
+
+opt_inserts: | inserts
+  ;
+
+inserts: insert | insert ',' inserts
+  ;
+
+insert : '{' insert_details ',' '"values"' ':' '[' opt_values ']' '}'
+  ;
+
+opt_inserts_general: | inserts_general
+  ;
+
+inserts_general: insert_general | insert_general ',' inserts_general
+  ;
+
+insert_details:
+         '"name"' ':' STRING_LITERAL ','
+         '"definedInFile"' ':' STRING_LITERAL ','
+         '"args"' ':' '[' opt_args ']' ','
+         dependencies ','
+         opt_region_info
+         opt_attributes
+         '"table"' ':' STRING_LITERAL ','
+         '"statement"' ':' STRING_LITERAL ','
+         '"statementArgs"' ':' '[' opt_arg_names ']' ','
+         '"statementType"' ':' STRING_LITERAL ','
+         '"columns"' ':' '[' column_names ']'
+
+insert_general : '{' insert_details '}'
+  ;
+
+opt_values: | values
+  ;
+
+values: value | value ',' values
+  ;
+
+value:  '{'
+         '"value"' ':' STRING_LITERAL ','
+         '"valueArgs"' ':' '[' opt_arg_names ']'
+        '}'
+  ;
+
+opt_updates: | updates
+  ;
+
+updates: update | update ',' updates
+  ;
+
+update : '{'
+         '"name"' ':' STRING_LITERAL ','
+         '"definedInFile"' ':' STRING_LITERAL ','
+         '"args"' ':' '[' opt_args ']' ','
+         dependencies ','
+         opt_region_info
+         opt_attributes
+         '"table"' ':' STRING_LITERAL ','
+         '"statement"' ':' STRING_LITERAL ','
+         '"statementArgs"' ':' '[' opt_arg_names ']'
+         '}'
+  ;
+
+opt_deletes: | deletes
+  ;
+
+deletes: delete | delete ',' deletes
+  ;
+
+delete : '{'
+         '"name"' ':' STRING_LITERAL ','
+         '"definedInFile"' ':' STRING_LITERAL ','
+         '"args"' ':' '[' opt_args ']' ','
+         dependencies ','
+         opt_region_info
+         opt_attributes
+         '"table"' ':' STRING_LITERAL ','
+         '"statement"' ':' STRING_LITERAL ','
+         '"statementArgs"' ':' '[' opt_arg_names ']'
+         '}'
+  ;
+
+opt_generals: | generals
+  ;
+
+generals: general | general ',' generals
+  ;
+
+general: '{'
+          '"name"' ':' STRING_LITERAL ','
+          '"definedInFile"' ':' STRING_LITERAL ','
+          '"args"' ':' '[' opt_complex_args ']' ','
+          dependencies ','
+          opt_regions
+          opt_attributes
+          opt_projection
+          opt_result_contract
+          '"usesDatabase"' ':' BOOL_LITERAL
+         '}'
+  ;
+
+opt_result_contract: | '"hasSelectResult"' ':' '1' ',' | '"hasOutResult"' ':' '1' ',' | '"hasOutUnionResult"' ':''1' ','
+  ;
+
+opt_complex_args: | complex_args
+  ;
+
+complex_args: complex_arg | complex_arg ',' complex_args
+  ;
+
+complex_arg: '{'
+              binding
+              '"name"' ':' STRING_LITERAL ','
+              '"argOrigin"' ':' STRING_LITERAL ','
+              '"type"' ':' STRING_LITERAL ','
+              opt_is_sensitive
+              '"isNotNull"' ':' BOOL_LITERAL
+             '}'
+  ;
+
+binding: | '"binding"' ':' '"inout"' ',' | '"binding"' ':' '"out"' ','
+  ;
+
+opt_enums: | enums
+  ;
+
+enums: enum | enum ',' enums
+  ;
+
+enum: '{'
+      '"name"' ':' STRING_LITERAL ','
+      '"type"' ':' STRING_LITERAL ','
+      '"isNotNull"' ':' '1' ','
+      '"values"' ':' '[' enum_values ']'
+      '}'
+  ;
+
+enum_values: enum_value | enum_value ',' enum_values
+  ;
+
+enum_value: '{'
+             '"name"' ':' STRING_LITERAL ','
+             '"value"' ':' num_literal
+            '}'
+  ;
+
+opt_regions: | regions
+  ;
+
+regions: region | region ',' regions
+  ;
+
+region:  '{'
+          '"name"' ':' STRING_LITERAL ','
+          '"isDeployableRoot"' ':' BOOL_LITERAL ','
+          '"deployedInRegion"' ':' STRING_LITERAL ','
+          '"using"' ':' '[' opt_region_names ']' ','
+          '"usingPrivately"' ':' '[' opt_bool_list ']'
+         '}'
+  ;
+
+opt_region_names: | region_names
+  ;
+
+region_names: STRING_LITERAL | STRING_LITERAL ',' region_names
+  ;
+
+opt_bool_list: | bool_list
+  ;
+
+bool_list: BOOL_LITERAL | BOOL_LITERAL ',' bool_list
+  ;
+
+opt_ad_hoc_migrations: | ad_hoc_migrations
+  ;
+
+ad_hoc_migrations: ad_hoc_migration | ad_hoc_migration ',' ad_hoc_migrations
+  ;
+
+ad_hoc_migration: '{'
+                  '"name"' ':' STRING_LITERAL ','
+                  '"version"' ':' any_integer
+                  '}'
+  ;
+
 ```
 
 
