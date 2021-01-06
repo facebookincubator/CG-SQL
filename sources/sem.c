@@ -132,6 +132,7 @@ static sem_join * new_sem_join(uint32_t count);
 static void sem_validate_check_expr(ast_node *table, ast_node *expr);
 static void sem_numeric_expr(ast_node *expr, ast_node *context, CSTR subject, uint32_t expr_context);
 static void sem_misc_attrs_basic(ast_node *ast);
+static void sem_data_type_var(ast_node *ast);
 
 static void lazy_free_symtab(void *syms) {
   symtab_delete(syms);
@@ -352,6 +353,8 @@ static symtab *assembly_fragments;
 static symtab *extensions_by_basename;
 static symtab *builtin_aggregated_funcs;
 static symtab *arg_bundles;
+static symtab *global_types;
+static symtab *local_types;
 
 static ast_node *current_table_ast;
 static CSTR current_table_name;
@@ -1272,6 +1275,21 @@ ast_node *find_region(CSTR name) {
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
+// Find the declare_name_type node of a named type.
+cql_noexport ast_node *find_declare_named_type(CSTR name) {
+  symtab_entry *entry = NULL;
+  // We first try to find it in local storage because it has
+  // higher priority otherwise we look into the global storage
+  if (local_types) {
+    entry = symtab_find(local_types, name);
+  }
+  if (!entry) {
+    entry = symtab_find(global_types, name);
+  }
+
+  return entry ? (ast_node*)(entry->val) : NULL;
+}
+
 static ast_node *find_cur_region(CSTR name) {
   // during previous schema validation the current regions is the previous ones
   symtab_entry *entry = symtab_find(new_regions, name);
@@ -2137,6 +2155,14 @@ static void sem_add_flags_to_join(sem_join *jptr, sem_t flags) {
 
 // Given a column ast type convert it to the appropriate sem_type.
 static void sem_data_type_column(ast_node *ast) {
+  // The data_type could be a declare named type, therefore
+  // we should rewrite the node to the real type
+  rewrite_data_type_if_needed(ast);
+  if (is_error(ast)) {
+    record_error(ast);
+    return;
+  }
+
   if (is_ast_type_int(ast)) {
     ast->sem = new_sem(SEM_TYPE_INTEGER);
   } else if (is_ast_type_text(ast)) {
@@ -2159,9 +2185,17 @@ static void sem_data_type_column(ast_node *ast) {
   }
 }
 
-// Create the semantic type for a variable, it might be wrapped
+// Create the semantic type, it might be wrapped
 // in a not_null node, extract that.
 static void sem_data_type_var(ast_node *ast) {
+  // The data_type could be a declare named type, therefore
+  // we should rewrite the node to the real type
+  rewrite_data_type_if_needed(ast);
+  if (is_error(ast)) {
+    record_error(ast);
+    return;
+  }
+
   if (is_ast_create(ast)) {
     EXTRACT_ANY_NOTNULL(data_type, ast->left);
     sem_data_type_var(data_type);
@@ -3242,6 +3276,10 @@ static void sem_col_def(ast_node *def, coldef_info *info) {
 
   // column name:  [name]
   sem_data_type_column(data_type);
+  if (is_error(data_type)) {
+    record_error(def);
+    return;
+  }
 
   def->sem = new_sem(data_type->sem->sem_type);
   def->sem->name = name;
@@ -4767,6 +4805,10 @@ static void sem_expr_cast(ast_node *ast, CSTR cstr) {
   }
 
   sem_data_type_column(data_type);
+  if (is_error(data_type)) {
+    record_error(ast);
+    return;
+  }
 
   // We allow conversion between numeric types without going to SQLite, the text conversions
   // are crazy complex and basically impossible to clone so you have to do (select cast(...))
@@ -11363,6 +11405,10 @@ static void sem_param(ast_node *ast) {
 
   sem_t param_flags = sem_opt_inout(opt_inout) | SEM_TYPE_VARIABLE;
   sem_data_type_var(data_type);
+  if (is_error(data_type)) {
+    record_error(ast);
+    return;
+  }
   ast->sem = param_detail->sem = name_ast->sem = new_sem(data_type->sem->sem_type | param_flags);
 
   // [name]
@@ -13159,6 +13205,10 @@ static void sem_create_proc_stmt(ast_node *ast) {
   }
 
   Invariant(!locals);
+  Invariant(!local_types);
+
+  // create local storage for named type defined in the proc
+  local_types = symtab_new();
 
   // CREATE PROC [name] ( [params] )
 
@@ -13319,6 +13369,7 @@ cleanup:
   ast->sem->region = current_region;
   name_ast->sem = ast->sem;
   current_proc = NULL;
+  SYMTAB_CLEANUP(local_types);
 }
 
 // Validate the name is unique in the given name list and attach the type
@@ -13443,6 +13494,10 @@ static void sem_declare_func_stmt(ast_node *ast) {
   }
   else {
     sem_data_type_var(ret_data_type);
+    if (is_error(ret_data_type)) {
+      record_error(ast);
+      return;
+    }
   }
 
   // this also promotes errors up from the return type
@@ -13791,6 +13846,10 @@ static void sem_declare_vars_type(ast_node *declare_vars_type) {
 
   // DECLARE [name_list] [data_type]
   sem_data_type_var(data_type);
+  if (is_error(data_type)) {
+    record_error(declare_vars_type);
+    return;
+  }
   sem_t sem_type = data_type->sem->sem_type;
   Invariant(is_unitary(sem_type));
 
@@ -13819,6 +13878,45 @@ static void sem_declare_vars_type(ast_node *declare_vars_type) {
   else {
     declare_vars_type->sem = new_sem(sem_type);
     declare_vars_type->sem->object_type = data_type->sem->object_type;
+  }
+}
+
+// This declare a new local or global name for a type. It validate
+// the data type and store the name declared. The name can be use
+// in any places in the cql syntax where data type are.
+static void sem_declare_named_type(ast_node *ast) {
+  Contract(is_ast_declare_named_type(ast));
+  EXTRACT_ANY(name_ast, ast->left);
+  EXTRACT_ANY_NOTNULL(data_type, ast->right);
+  EXTRACT_STRING(name, name_ast);
+
+  // DECLARE TYPE [name] [data_type]
+  sem_data_type_var(data_type);
+  if (is_error(data_type)) {
+    record_error(ast);
+    return;
+  }
+
+  // this also promotes errors up from the data type
+  name_ast->sem = ast->sem = data_type->sem;
+
+  // store the declare named type in a symbol tab. local named type are
+  // store in a local storage while the global one are store globally.
+  // If applicable the local storage is always search first to find named
+  // type otherwise the global storage is usd.
+  if (!is_error(ast)) {
+    symtab *tab;
+    if (current_proc) {
+      tab = local_types;
+    } else {
+      tab = global_types;
+    }
+    if (symtab_find(tab, name)) {
+      report_error(ast, "CQL0359: duplicate type declaration", name);
+      record_error(ast);
+      return;
+    }
+    symtab_add(tab, name, ast);
   }
 }
 
@@ -16289,6 +16387,7 @@ cql_noexport void sem_main(ast_node *ast) {
   assembly_fragments = symtab_new();
   extensions_by_basename = symtab_new();
   builtin_aggregated_funcs = symtab_new();
+  global_types = symtab_new();
 
   schema_annotations = _ast_pool_new(bytebuf);
   recreate_annotations = _ast_pool_new(bytebuf);
@@ -16325,6 +16424,7 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(declare_cursor_like_select);
   STMT_INIT(declare_value_cursor);
   STMT_INIT(declare_cursor);
+  STMT_INIT(declare_named_type);
   STMT_INIT(out_stmt);
   STMT_INIT(out_union_stmt);
 
@@ -16564,6 +16664,7 @@ cql_noexport void sem_cleanup() {
   SYMTAB_CLEANUP(builtin_aggregated_funcs);
   SYMTAB_CLEANUP(included_regions);
   SYMTAB_CLEANUP(excluded_regions);
+  SYMTAB_CLEANUP(global_types);
 
   // these are getting zeroed so that leaksanitizer will not count those objects as reachable from a global root.
 
@@ -16603,4 +16704,5 @@ cql_noexport void sem_cleanup() {
   pending_table_validations_head = NULL;
   current_table_name = NULL;
   current_table_ast = NULL;
+  local_types = NULL;
 }

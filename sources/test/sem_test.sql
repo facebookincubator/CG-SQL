@@ -13128,3 +13128,113 @@ create table with_bogus_check_expr(
   v integer,
   check (q > 5)
 );
+
+-- TEST: declare type definition
+-- + {declare_named_type}: text sensitive
+-- + {name my_type}: text sensitive
+-- + {sensitive_attr}: text sensitive
+-- + {type_text}: text
+-- - Error
+declare my_type type text @sensitive;
+
+-- TEST: declare type using another declared type
+-- + DECLARE my_type_1 TYPE TEXT @SENSITIVE;
+-- - Error
+declare my_type_1 type my_type;
+
+-- TEST: declare type using another declared type
+-- + DECLARE my_type_2 TYPE TEXT @SENSITIVE;
+-- - Error
+declare my_type_2 type my_type_1;
+
+-- TEST: declare type using another declared type
+-- + {declare_named_type}: err
+-- + Error % unknown type 'bogus_type'
+-- +1 Error
+declare my_type type bogus_type;
+
+-- TEST: duplicate declare type definition
+-- + {declare_named_type}: err
+-- + Error % duplicate type declaration 'my_type'
+-- +1 Error
+declare my_type type integer;
+
+-- TEST: use declared type in variable declaration
+-- + DECLARE my_var TEXT @SENSITIVE;
+-- + {declare_vars_type}: text sensitive
+-- - Error
+declare my_var my_type;
+
+-- TEST: use bogus declared type in variable declaration
+-- + {declare_vars_type}: err
+-- + {name bogus_type}: err
+-- + Error % unknown type 'bogus_type'
+-- +1 Error
+declare my_var bogus_type;
+
+-- TEST: create local named type with same name. the local type have priority
+-- + {create_proc_stmt}: ok
+-- + DECLARE my_type TYPE INTEGER;
+-- + DECLARE my_var INTEGER;
+create proc named_type ()
+begin
+  declare my_type type integer;
+  declare my_var my_type;
+end;
+
+-- TEST: declared type in column definition
+-- + id TEXT
+-- + {create_table_stmt}: t: { id: text }
+-- - Error
+create table t(id my_type_2);
+
+-- TEST: declared type in column definition with error
+-- + {create_table_stmt}: err
+-- + {name bogus_type}: err
+-- + Error % unknown type 'bogus_type'
+-- +1 Error
+create table t(id bogus_type);
+
+-- TEST: declared type in cast expr
+-- + SELECT CAST(1 AS TEXT);
+-- + {select_stmt}: select: { _anon: text notnull }
+-- - Error
+select cast(1 as my_type);
+
+-- TEST: declared type in cast expr with error
+-- + SELECT CAST(1 AS bogus_type);
+-- + {name bogus_type}: err
+-- + Error % unknown type 'bogus_type'
+-- +1 Error
+select cast(1 as bogus_type);
+
+-- TEST: declared type in param
+-- + CREATE PROC decl_type (label TEXT @SENSITIVE)
+-- + {create_proc_stmt}: ok
+-- - Error
+create proc decl_type(label my_type)
+begin
+end;
+
+-- TEST: declared type in param with error
+-- + {create_proc_stmt}: err
+-- + {name bogus_type}: err
+-- + Error % unknown type 'bogus_type'
+-- +1 Error
+create proc decl_type_err(label bogus_type)
+begin
+end;
+
+-- TEST: declared type in declare function
+-- + DECLARE FUNC decl_type_func (arg1 INTEGER) TEXT @SENSITIVE;
+-- + {declare_func_stmt}: text sensitive
+-- - Error
+declare func decl_type_func (arg1 integer) my_type;
+
+-- TEST: declared type in declare function with err
+-- + DECLARE FUNC decl_type_func_err (arg1 INTEGER) bogus_type;
+-- + {declare_func_stmt}: err
+-- + {name bogus_type}: err
+-- + Error % unknown type 'bogus_type'
+-- +1 Error
+declare func decl_type_func_err (arg1 integer) bogus_type;

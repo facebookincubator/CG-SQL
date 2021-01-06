@@ -256,6 +256,7 @@ cql_data_decl( sem_t global_proc_flags );
 
 cql_noexport ast_node *sem_find_likeable_ast(ast_node *like_ast, int32_t likeable_for);
 cql_noexport ast_node *sem_find_likeable_from_var_type(ast_node *var);
+cql_noexport ast_node *find_declare_named_type(CSTR name);
 
 cql_noexport void record_error(ast_node *ast);
 cql_noexport void record_ok(ast_node *ast);

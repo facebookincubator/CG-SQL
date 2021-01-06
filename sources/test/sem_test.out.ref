@@ -53240,3 +53240,237 @@ Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'q'
           | {name q}: err
           | {int 5}: integer notnull
 
+The statement ending at line XXXX
+
+DECLARE my_type TYPE TEXT @SENSITIVE;
+
+  {declare_named_type}: text sensitive
+  | {name my_type}: text sensitive
+  | {sensitive_attr}: text sensitive
+    | {type_text}: text
+
+The statement ending at line XXXX
+
+DECLARE my_type_1 TYPE TEXT @SENSITIVE;
+
+  {declare_named_type}: text sensitive
+  | {name my_type_1}: text sensitive
+  | {sensitive_attr}: text sensitive
+    | {type_text}: text
+
+The statement ending at line XXXX
+
+DECLARE my_type_2 TYPE TEXT @SENSITIVE;
+
+  {declare_named_type}: text sensitive
+  | {name my_type_2}: text sensitive
+  | {sensitive_attr}: text sensitive
+    | {type_text}: text
+
+The statement ending at line XXXX
+
+DECLARE my_type TYPE bogus_type;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0360: unknown type 'bogus_type'
+
+  {declare_named_type}: err
+  | {name my_type}
+  | {name bogus_type}: err
+
+The statement ending at line XXXX
+
+DECLARE my_type TYPE INTEGER;
+
+Error at test/sem_test.sql:XXXX : in declare_named_type : CQL0359: duplicate type declaration 'my_type'
+
+  {declare_named_type}: err
+  | {name my_type}: integer
+  | {type_int}: integer
+
+The statement ending at line XXXX
+
+DECLARE my_var TEXT @SENSITIVE;
+
+  {declare_vars_type}: text sensitive
+  | {name_list}: my_var: text variable sensitive
+  | | {name my_var}: my_var: text variable sensitive
+  | {sensitive_attr}: text sensitive
+    | {type_text}: text
+
+The statement ending at line XXXX
+
+DECLARE my_var bogus_type;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0360: unknown type 'bogus_type'
+
+  {declare_vars_type}: err
+  | {name_list}
+  | | {name my_var}
+  | {name bogus_type}: err
+
+The statement ending at line XXXX
+
+CREATE PROC named_type ()
+BEGIN
+  DECLARE my_type TYPE INTEGER;
+  DECLARE my_var INTEGER;
+END;
+
+  {create_proc_stmt}: ok
+  | {name named_type}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_named_type}: integer
+      | | {name my_type}: integer
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+        | {name_list}: my_var: integer variable
+        | | {name my_var}: my_var: integer variable
+        | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE t(
+  id TEXT
+);
+
+  {create_table_stmt}: t: { id: text }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t}
+  | {col_key_list}
+    | {col_def}: id: text
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_text}: text
+
+The statement ending at line XXXX
+
+CREATE TABLE t(
+  id bogus_type
+);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0360: unknown type 'bogus_type'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name t}
+  | {col_key_list}
+    | {col_def}: err
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {name bogus_type}: err
+
+The statement ending at line XXXX
+
+SELECT CAST(1 AS TEXT);
+
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {cast_expr}: text notnull
+  |     |     | {int 1}: integer notnull
+  |     |     | {type_text}: text
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CAST(1 AS bogus_type);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0360: unknown type 'bogus_type'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {cast_expr}: err
+  |     |     | {int 1}: integer notnull
+  |     |     | {name bogus_type}: err
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC decl_type (label TEXT @SENSITIVE)
+BEGIN
+END;
+
+  {create_proc_stmt}: ok
+  | {name decl_type}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: label: text variable in sensitive
+        | {param_detail}: label: text variable in sensitive
+          | {name label}: label: text variable in sensitive
+          | {sensitive_attr}: text sensitive
+            | {type_text}: text
+
+The statement ending at line XXXX
+
+CREATE PROC decl_type_err (label bogus_type)
+BEGIN
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0360: unknown type 'bogus_type'
+
+  {create_proc_stmt}: err
+  | {name decl_type_err}: err
+  | {proc_params_stmts}
+    | {params}: err
+      | {param}: err
+        | {param_detail}
+          | {name label}
+          | {name bogus_type}: err
+
+The statement ending at line XXXX
+
+DECLARE FUNC decl_type_func (arg1 INTEGER) TEXT @SENSITIVE;
+
+  {declare_func_stmt}: text sensitive
+  | {name decl_type_func}: text sensitive
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: arg1: integer variable in
+    |   | {param_detail}: arg1: integer variable in
+    |     | {name arg1}: arg1: integer variable in
+    |     | {type_int}: integer
+    | {sensitive_attr}: text sensitive
+      | {type_text}: text
+
+The statement ending at line XXXX
+
+DECLARE FUNC decl_type_func_err (arg1 INTEGER) bogus_type;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0360: unknown type 'bogus_type'
+
+  {declare_func_stmt}: err
+  | {name decl_type_func_err}
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: arg1: integer variable in
+    |   | {param_detail}: arg1: integer variable in
+    |     | {name arg1}: arg1: integer variable in
+    |     | {type_int}: integer
+    | {name bogus_type}: err
+

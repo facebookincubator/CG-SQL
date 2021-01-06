@@ -35,3 +35,4 @@ cql_noexport void rewrite_iif(ast_node *ast);
 cql_noexport void rewrite_cte_name_list_from_columns(ast_node *ast, ast_node *select_core);
 cql_noexport void rewrite_params(ast_node *head, bytebuf *args_info);
 cql_noexport void rewrite_typed_names(ast_node *head);
+cql_noexport void rewrite_data_type_if_needed(ast_node *ast);

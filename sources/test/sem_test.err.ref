@@ -945,4 +945,11 @@ Error at test/sem_test.sql:XXXX : in str : CQL0162: cannot add a trigger to a vi
 Error at test/sem_test.sql:XXXX : in str : CQL0164: cannot use ALTER TABLE on a virtual table 'basic_virtual'
 Error at test/sem_test.sql:XXXX : in str : CQL0169: enum not found 'bogus_enum_name'
 Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'q'
+Error at test/sem_test.sql:XXXX : in str : CQL0360: unknown type 'bogus_type'
+Error at test/sem_test.sql:XXXX : in declare_named_type : CQL0359: duplicate type declaration 'my_type'
+Error at test/sem_test.sql:XXXX : in str : CQL0360: unknown type 'bogus_type'
+Error at test/sem_test.sql:XXXX : in str : CQL0360: unknown type 'bogus_type'
+Error at test/sem_test.sql:XXXX : in str : CQL0360: unknown type 'bogus_type'
+Error at test/sem_test.sql:XXXX : in str : CQL0360: unknown type 'bogus_type'
+Error at test/sem_test.sql:XXXX : in str : CQL0360: unknown type 'bogus_type'
 semantic errors present; no code gen.

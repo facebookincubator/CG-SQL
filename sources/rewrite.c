@@ -1188,3 +1188,38 @@ static ast_node *rewrite_gen_case_expr(ast_node *var1, ast_node *var2, bool_t re
 
   return case_expr;
 }
+
+// Rewrite a data type represented as a string node to the
+// actual type if the string name is a declared type.
+cql_noexport void rewrite_data_type_if_needed(ast_node *ast) {
+  if(is_ast_str(ast)) {
+    // A string node can only be a declare type's name. If so
+    // we rewrite it to the data type of declare_named_type node
+    EXTRACT_STRING(name, ast);
+    ast_node *declare_named_type = find_declare_named_type(name);
+    if (!declare_named_type) {
+      report_error(ast, "CQL0360: unknown type", name);
+      record_error(ast);
+      return;
+    }
+    EXTRACT_ANY_NOTNULL(data_type, declare_named_type->right);
+
+    // If we only want just the type of the data type node then we need to extract
+    // the type node. The data type node does not just contain the type node
+    // but also notnull, sensitive nodes. We need to just extract the type node.
+    bool_t only_primitive_type = ast->parent &&
+        (is_ast_col_def_name_type(ast->parent) || is_ast_cast_expr(ast->parent));
+    if (only_primitive_type) {
+      while(is_ast_notnull(data_type) || is_ast_sensitive_attr(data_type)) {
+        data_type = data_type->left;
+      }
+    }
+    Invariant(!is_ast_str(data_type));
+    ast_set_left(ast, data_type->left);
+    ast_set_right(ast, data_type->right);
+    ast->sem = data_type->sem;
+    ast->type = data_type->type;
+  }
+
+  record_ok(ast);
+}
