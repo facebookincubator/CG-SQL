@@ -61,7 +61,7 @@ $O/cql: $O/bison_tested $(OBJECTS) $(SQLITE_OBJ)
 	${CC} -DSQLITE_DEBUG ${CFLAGS} -o $O/cql $(OBJECTS)
 
 $O/cql.y.c $O/cql.y.h: cql.y encoders.h charbuf.h
-	${YACC} -vd cql.y -o $O/cql.y.c
+	${YACC} -Werror -vd cql.y -o $O/cql.y.c
 
 $O/cql.c: cql.l
 	${LEX} -o $*.c $<
@@ -213,7 +213,7 @@ demo-binary: $(SQLITE_OBJ)
 	$(CC) $(CFLAGS) -o $O/demo $O/demo.c cqlrt.c demo/demo_client.c $(SQLITE_LINK)
 
 $O/json_test: json_test/json_test.y json_test/json_test.l
-	${YACC} -vd json_test/json_test.y -o $O/json_test.y.c
+	${YACC} -Werror -vd json_test/json_test.y -o $O/json_test.y.c
 	${LEX} -o $O/json_test.c json_test/json_test.l
 	$(CC) -c $(CFLAGS) -o $O/json_test.o $O/json_test.c
 	$(CC) -c $(CFLAGS) -o $O/json_test.y.o $O/json_test.y.c

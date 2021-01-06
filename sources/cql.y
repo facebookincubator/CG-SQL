@@ -1605,6 +1605,7 @@ opt_elseif_list:
 
 begin_trans_stmt:
   BEGIN_ TRANSACTION  { $begin_trans_stmt = new_ast_begin_trans_stmt(); }
+  | BEGIN_ { $begin_trans_stmt = new_ast_begin_trans_stmt(); }
   ;
 
 rollback_trans_stmt:
@@ -1624,6 +1625,7 @@ rollback_trans_stmt:
 
 commit_trans_stmt:
   COMMIT TRANSACTION  { $commit_trans_stmt = new_ast_commit_trans_stmt(); }
+  | COMMIT { $commit_trans_stmt = new_ast_commit_trans_stmt(); }
   ;
 
 proc_savepoint_stmt:  procedure SAVEPOINT BEGIN_ opt_stmt_list END {

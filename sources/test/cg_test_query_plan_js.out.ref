@@ -230,7 +230,7 @@
         "\n?\n|...CO-ROUTINE 1\n    |...SCAN CONSTANT ROW\n|...SCAN SUBQUERY 1"
       ],
       [
-        "BEGIN TRANSACTION",
+        "BEGIN",
         [
           [],
           []
@@ -246,7 +246,7 @@
         "\n?"
       ],
       [
-        "COMMIT TRANSACTION",
+        "COMMIT",
         [
           [],
           []

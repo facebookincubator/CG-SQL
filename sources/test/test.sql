@@ -582,7 +582,9 @@ end;
 
 -- control statements
 begin transaction;
+begin;
 commit transaction;
+commit;
 savepoint foo;
 release savepoint foo;
 release foo;

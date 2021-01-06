@@ -2880,13 +2880,13 @@ static void gen_throw_stmt(ast_node *ast) {
 static void gen_begin_trans_stmt(ast_node *ast) {
   Contract(is_ast_begin_trans_stmt(ast));
 
-  gen_printf("BEGIN TRANSACTION");
+  gen_printf("BEGIN");
 }
 
 static void gen_commit_trans_stmt(ast_node *ast) {
   Contract(is_ast_commit_trans_stmt(ast));
 
-  gen_printf("COMMIT TRANSACTION");
+  gen_printf("COMMIT");
 }
 
 static void gen_rollback_trans_stmt(ast_node *ast) {
