@@ -11957,8 +11957,8 @@ rollback transaction to savepoint @proc;
 -- TEST: @proc rewrites
 -- + SET p := 'savepoint_proc_stuff';
 -- + SAVEPOINT savepoint_proc_stuff;
--- + ROLLBACK TRANSACTION TO SAVEPOINT savepoint_proc_stuff;
--- + RELEASE SAVEPOINT savepoint_proc_stuff;
+-- + ROLLBACK TO savepoint_proc_stuff;
+-- + RELEASE savepoint_proc_stuff;
 -- - Error
 create proc savepoint_proc_stuff()
 begin

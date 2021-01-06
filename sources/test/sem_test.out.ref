@@ -9234,7 +9234,7 @@ Error at test/sem_test.sql:XXXX : in exists_expr : CQL0080: function may not app
 
 The statement ending at line XXXX
 
-RELEASE SAVEPOINT garbonzo;
+RELEASE garbonzo;
 
 Error at test/sem_test.sql:XXXX : in release_savepoint_stmt : CQL0221: savepoint has not been mentioned yet, probably wrong 'garbonzo'
 
@@ -9243,7 +9243,7 @@ Error at test/sem_test.sql:XXXX : in release_savepoint_stmt : CQL0221: savepoint
 
 The statement ending at line XXXX
 
-ROLLBACK TRANSACTION TO SAVEPOINT another_garbonzo;
+ROLLBACK TO another_garbonzo;
 
 Error at test/sem_test.sql:XXXX : in rollback_trans_stmt : CQL0220: savepoint has not been mentioned yet, probably wrong 'another_garbonzo'
 
@@ -48638,7 +48638,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0252: @PROC literal can only appea
 
 The statement ending at line XXXX
 
-RELEASE SAVEPOINT @PROC;
+RELEASE @PROC;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0252: @PROC literal can only appear inside of procedures
 
@@ -48647,7 +48647,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0252: @PROC literal can only appea
 
 The statement ending at line XXXX
 
-ROLLBACK TRANSACTION TO SAVEPOINT @PROC;
+ROLLBACK TO @PROC;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0252: @PROC literal can only appear inside of procedures
 
@@ -48661,8 +48661,8 @@ BEGIN
   DECLARE p TEXT;
   SET p := 'savepoint_proc_stuff';
   SAVEPOINT savepoint_proc_stuff;
-  ROLLBACK TRANSACTION TO SAVEPOINT savepoint_proc_stuff;
-  RELEASE SAVEPOINT savepoint_proc_stuff;
+  ROLLBACK TO savepoint_proc_stuff;
+  RELEASE savepoint_proc_stuff;
 END;
 
   {create_proc_stmt}: ok dml_proc

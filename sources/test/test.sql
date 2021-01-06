@@ -585,11 +585,16 @@ begin transaction;
 commit transaction;
 savepoint foo;
 release savepoint foo;
+release foo;
 rollback transaction;
-rollback transaction
-to
-savepoint
-xx;
+rollback transaction to savepoint foo;
+rollback to savepoint foo;
+rollback transaction to foo;
+rollback to foo;
+rollback transaction to savepoint @proc;
+rollback to savepoint @proc;
+rollback transaction to @proc;
+rollback to @proc;
 
 -- new cursor construct
 declare test cursor for call foo(1,2);
@@ -1265,6 +1270,7 @@ create table foo (
 declare fbid type text @sensitive;
 
 declare my_fbid fbid;
+
 
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 

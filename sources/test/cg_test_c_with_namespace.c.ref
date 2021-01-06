@@ -6549,17 +6549,17 @@ CQL_WARN_UNUSED cql_code base_proc_savepoint(sqlite3 *_Nonnull _db_) {
   // try
   {
     _rc_ = cql_exec(_db_,
-      "RELEASE SAVEPOINT base_proc_savepoint");
+      "RELEASE base_proc_savepoint");
     if (_rc_ != SQLITE_OK) { cql_error_trace(); goto catch_start_8; }
     goto catch_end_8;
   }
   catch_start_8: {
     _rc_thrown_ = _rc_;
     _rc_ = cql_exec(_db_,
-      "ROLLBACK TRANSACTION TO SAVEPOINT base_proc_savepoint");
+      "ROLLBACK TO base_proc_savepoint");
     if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
     _rc_ = cql_exec(_db_,
-      "RELEASE SAVEPOINT base_proc_savepoint");
+      "RELEASE base_proc_savepoint");
     if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
     _rc_ = cql_best_error(_rc_thrown_);
     goto cql_cleanup;
@@ -6597,23 +6597,23 @@ CQL_WARN_UNUSED cql_code base_proc_savepoint_commit_return(sqlite3 *_Nonnull _db
   {
     if (1) {
       _rc_ = cql_exec(_db_,
-        "RELEASE SAVEPOINT base_proc_savepoint_commit_return");
+        "RELEASE base_proc_savepoint_commit_return");
       if (_rc_ != SQLITE_OK) { cql_error_trace(); goto catch_start_9; }
       _rc_ = SQLITE_OK; // clean up any SQLITE_ROW value or other non-error
       goto cql_cleanup; // return
     }
     _rc_ = cql_exec(_db_,
-      "RELEASE SAVEPOINT base_proc_savepoint_commit_return");
+      "RELEASE base_proc_savepoint_commit_return");
     if (_rc_ != SQLITE_OK) { cql_error_trace(); goto catch_start_9; }
     goto catch_end_9;
   }
   catch_start_9: {
     _rc_thrown_ = _rc_;
     _rc_ = cql_exec(_db_,
-      "ROLLBACK TRANSACTION TO SAVEPOINT base_proc_savepoint_commit_return");
+      "ROLLBACK TO base_proc_savepoint_commit_return");
     if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
     _rc_ = cql_exec(_db_,
-      "RELEASE SAVEPOINT base_proc_savepoint_commit_return");
+      "RELEASE base_proc_savepoint_commit_return");
     if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
     _rc_ = cql_best_error(_rc_thrown_);
     goto cql_cleanup;
@@ -6651,26 +6651,26 @@ CQL_WARN_UNUSED cql_code base_proc_savepoint_rollback_return(sqlite3 *_Nonnull _
   {
     if (1) {
       _rc_ = cql_exec(_db_,
-        "ROLLBACK TRANSACTION TO SAVEPOINT base_proc_savepoint_rollback_return");
+        "ROLLBACK TO base_proc_savepoint_rollback_return");
       if (_rc_ != SQLITE_OK) { cql_error_trace(); goto catch_start_10; }
       _rc_ = cql_exec(_db_,
-        "RELEASE SAVEPOINT base_proc_savepoint_rollback_return");
+        "RELEASE base_proc_savepoint_rollback_return");
       if (_rc_ != SQLITE_OK) { cql_error_trace(); goto catch_start_10; }
       _rc_ = SQLITE_OK; // clean up any SQLITE_ROW value or other non-error
       goto cql_cleanup; // return
     }
     _rc_ = cql_exec(_db_,
-      "RELEASE SAVEPOINT base_proc_savepoint_rollback_return");
+      "RELEASE base_proc_savepoint_rollback_return");
     if (_rc_ != SQLITE_OK) { cql_error_trace(); goto catch_start_10; }
     goto catch_end_10;
   }
   catch_start_10: {
     _rc_thrown_ = _rc_;
     _rc_ = cql_exec(_db_,
-      "ROLLBACK TRANSACTION TO SAVEPOINT base_proc_savepoint_rollback_return");
+      "ROLLBACK TO base_proc_savepoint_rollback_return");
     if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
     _rc_ = cql_exec(_db_,
-      "RELEASE SAVEPOINT base_proc_savepoint_rollback_return");
+      "RELEASE base_proc_savepoint_rollback_return");
     if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
     _rc_ = cql_best_error(_rc_thrown_);
     goto cql_cleanup;

@@ -2892,11 +2892,11 @@ static void gen_commit_trans_stmt(ast_node *ast) {
 static void gen_rollback_trans_stmt(ast_node *ast) {
   Contract(is_ast_rollback_trans_stmt(ast));
 
-  gen_printf("ROLLBACK TRANSACTION");
+  gen_printf("ROLLBACK");
 
   if (ast->left) {
     EXTRACT_STRING(name, ast->left);
-    gen_printf(" TO SAVEPOINT %s", name);
+    gen_printf(" TO %s", name);
   }
 }
 
@@ -2911,7 +2911,7 @@ static void gen_release_savepoint_stmt(ast_node *ast) {
   Contract(is_ast_release_savepoint_stmt(ast));
   EXTRACT_STRING(name, ast->left);
 
-  gen_printf("RELEASE SAVEPOINT %s", name);
+  gen_printf("RELEASE %s", name);
 }
 
 static void gen_trycatch_stmt(ast_node *ast) {

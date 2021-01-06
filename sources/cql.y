@@ -229,7 +229,7 @@ static void cql_reset_globals(void);
 %type <aval> out_stmt out_union_stmt
 %type <aval> previous_schema_stmt
 %type <aval> release_savepoint_stmt
-%type <aval> rollback_trans_stmt rollback_return_stmt
+%type <aval> rollback_trans_stmt rollback_return_stmt savepoint_name
 %type <aval> savepoint_stmt
 %type <aval> schema_upgrade_script_stmt
 %type <aval> schema_upgrade_version_stmt
@@ -881,7 +881,7 @@ cte_tables[result]:
   ;
 
 cte_table:
-    name '(' name_list ')' AS '(' select_stmt_no_with ')'  { 
+    name '(' name_list ')' AS '(' select_stmt_no_with ')'  {
       ast_node *cte_decl = new_ast_cte_decl($name, $name_list);
       $cte_table = new_ast_cte_table(cte_decl, $select_stmt_no_with); }
   | name '(' '*' ')' AS '(' select_stmt_no_with ')' {
@@ -1608,12 +1608,18 @@ begin_trans_stmt:
   ;
 
 rollback_trans_stmt:
-  ROLLBACK TRANSACTION  {
+  ROLLBACK  {
       $rollback_trans_stmt = new_ast_rollback_trans_stmt(NULL); }
-  | ROLLBACK TRANSACTION TO SAVEPOINT name  {
-      $rollback_trans_stmt = new_ast_rollback_trans_stmt($name); }
-  | ROLLBACK TRANSACTION TO SAVEPOINT AT_PROC  {
-      $rollback_trans_stmt = new_ast_rollback_trans_stmt(new_ast_str("@PROC")); }
+  | ROLLBACK TRANSACTION  {
+      $rollback_trans_stmt = new_ast_rollback_trans_stmt(NULL); }
+  | ROLLBACK TO savepoint_name  {
+      $rollback_trans_stmt = new_ast_rollback_trans_stmt($savepoint_name); }
+  | ROLLBACK TRANSACTION TO savepoint_name  {
+      $rollback_trans_stmt = new_ast_rollback_trans_stmt($savepoint_name); }
+  | ROLLBACK TO SAVEPOINT savepoint_name  {
+      $rollback_trans_stmt = new_ast_rollback_trans_stmt($savepoint_name); }
+  | ROLLBACK TRANSACTION TO SAVEPOINT savepoint_name  {
+      $rollback_trans_stmt = new_ast_rollback_trans_stmt($savepoint_name); }
   ;
 
 commit_trans_stmt:
@@ -1625,18 +1631,21 @@ proc_savepoint_stmt:  procedure SAVEPOINT BEGIN_ opt_stmt_list END {
   }
   ;
 
+savepoint_name:
+  AT_PROC { $savepoint_name = new_ast_str("@PROC"); }
+  | name { $savepoint_name = $name; }
+  ;
+
 savepoint_stmt:
-  SAVEPOINT name  {
-    $savepoint_stmt = new_ast_savepoint_stmt($name); }
-  | SAVEPOINT AT_PROC {
-    $savepoint_stmt = new_ast_savepoint_stmt(new_ast_str("@PROC")); }
+  SAVEPOINT savepoint_name  {
+    $savepoint_stmt = new_ast_savepoint_stmt($savepoint_name); }
   ;
 
 release_savepoint_stmt:
-  RELEASE SAVEPOINT name  {
-    $release_savepoint_stmt = new_ast_release_savepoint_stmt($name); }
-  | RELEASE SAVEPOINT AT_PROC {
-    $release_savepoint_stmt = new_ast_release_savepoint_stmt(new_ast_str("@PROC")); }
+  RELEASE savepoint_name  {
+    $release_savepoint_stmt = new_ast_release_savepoint_stmt($savepoint_name); }
+  | RELEASE SAVEPOINT savepoint_name  {
+    $release_savepoint_stmt = new_ast_release_savepoint_stmt($savepoint_name); }
   ;
 
 echo_stmt:
