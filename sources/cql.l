@@ -217,6 +217,7 @@ DEFERRED                     { return DEFERRED; }
 DEFERRABLE                   { return DEFERRABLE; }
 NOT[ \t\n]DEFERRABLE         { return NOT_DEFERRABLE; }
 IMMEDIATE                    { return IMMEDIATE; }
+EXCLUSIVE                    { return EXCLUSIVE; }
 RESTRICT                     { return RESTRICT; }
 ACTION                       { return ACTION; }
 INITIALLY                    { return INITIALLY; }

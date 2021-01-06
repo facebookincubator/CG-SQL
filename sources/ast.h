@@ -61,6 +61,10 @@
 #define FK_INITIALLY_DEFERRED  0x200
 #define FK_INITIALLY_IMMEDIATE 0x100
 
+#define TRANS_DEFERRED 1
+#define TRANS_IMMEDIATE 2
+#define TRANS_EXCLUSIVE 3
+
 #define ENFORCE_FK_ON_UPDATE 1
 #define ENFORCE_FK_ON_DELETE 2
 #define ENFORCE_STRICT_JOIN 3
@@ -758,7 +762,7 @@ AST1(out_stmt)
 AST1(out_union_stmt)
 AST1(notnull);
 AST1(create);
-AST0(begin_trans_stmt);
+AST1(begin_trans_stmt);
 AST0(commit_trans_stmt);
 AST1(rollback_trans_stmt);
 AST1(savepoint_stmt);

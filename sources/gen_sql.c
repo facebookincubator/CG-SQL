@@ -2879,8 +2879,20 @@ static void gen_throw_stmt(ast_node *ast) {
 
 static void gen_begin_trans_stmt(ast_node *ast) {
   Contract(is_ast_begin_trans_stmt(ast));
+  EXTRACT_OPTION(mode, ast->left);
 
   gen_printf("BEGIN");
+
+  if (mode == TRANS_IMMEDIATE) {
+    gen_printf(" IMMEDIATE");
+  }
+  else if (mode == TRANS_EXCLUSIVE) {
+    gen_printf(" EXCLUSIVE");
+  }
+  else {
+    // this is the default, and only remaining case, no additional output needed
+    Contract(mode == TRANS_DEFERRED);
+  }
 }
 
 static void gen_commit_trans_stmt(ast_node *ast) {

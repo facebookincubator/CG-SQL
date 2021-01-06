@@ -158,14 +158,14 @@ static void cql_reset_globals(void);
 %token SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
 %token CAST WITH RECURSIVE REPLACE IGNORE ADD COLUMN RENAME ALTER
 %token AT_ECHO AT_CREATE AT_RECREATE AT_DELETE AT_SCHEMA_UPGRADE_VERSION AT_PREVIOUS_SCHEMA AT_SCHEMA_UPGRADE_SCRIPT
-%token AT_PROC AT_FILE AT_ATTRIBUTE AT_SENSITIVE DEFERRED NOT_DEFERRABLE DEFERRABLE IMMEDIATE RESTRICT ACTION INITIALLY NO
+%token AT_PROC AT_FILE AT_ATTRIBUTE AT_SENSITIVE DEFERRED NOT_DEFERRABLE DEFERRABLE IMMEDIATE EXCLUSIVE RESTRICT ACTION INITIALLY NO
 %token BEFORE AFTER INSTEAD OF FOR_EACH_ROW EXISTS RAISE FAIL ABORT AT_ENFORCE_STRICT AT_ENFORCE_NORMAL
 %token AT_BEGIN_SCHEMA_REGION AT_END_SCHEMA_REGION
 %token AT_DECLARE_SCHEMA_REGION AT_DECLARE_DEPLOYABLE_REGION AT_SCHEMA_AD_HOC_MIGRATION PRIVATE
 
 /* ddl stuff */
 %type <ival> opt_temp opt_if_not_exists opt_unique opt_no_rowid dummy_modifier compound_operator opt_query_plan
-%type <ival> opt_fk_options fk_options fk_on_options fk_action fk_initial_state fk_deferred_options
+%type <ival> opt_fk_options fk_options fk_on_options fk_action fk_initial_state fk_deferred_options transaction_mode
 %type <ival> frame_type frame_exclude join_type
 
 %type <aval> col_key_list col_key_def col_def col_name
@@ -1603,9 +1603,16 @@ opt_elseif_list:
   | elseif_list  { $opt_elseif_list = $elseif_list; }
   ;
 
+transaction_mode:
+  /* nil */ { $transaction_mode = TRANS_DEFERRED; }
+  | DEFERRED { $transaction_mode = TRANS_DEFERRED; }
+  | IMMEDIATE { $transaction_mode = TRANS_IMMEDIATE; }
+  | EXCLUSIVE { $transaction_mode = TRANS_EXCLUSIVE; }
+  ;
+
 begin_trans_stmt:
-  BEGIN_ TRANSACTION  { $begin_trans_stmt = new_ast_begin_trans_stmt(); }
-  | BEGIN_ { $begin_trans_stmt = new_ast_begin_trans_stmt(); }
+  BEGIN_ transaction_mode TRANSACTION  { $begin_trans_stmt = new_ast_begin_trans_stmt(new_ast_opt($transaction_mode)); }
+  | BEGIN_ transaction_mode { $begin_trans_stmt = new_ast_begin_trans_stmt(new_ast_opt($transaction_mode)); }
   ;
 
 rollback_trans_stmt:

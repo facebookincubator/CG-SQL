@@ -575,6 +575,8 @@
 <li><a href="#cql0356-enum-definitions-do-not-match-name">CQL0356: enum definitions do not match ‘name’</a></li>
 <li><a href="#cql0357-enum-does-not-contain-enum_name">CQL0357: enum does not contain ‘enum_name’</a></li>
 <li><a href="#cql0358-declared-enums-must-be-top-level-enum">CQL0358: declared enums must be top level ‘enum’</a></li>
+<li><a href="#cql0359-duplicate-type-declaration-type_name">CQL0359: duplicate type declaration ‘type_name’</a></li>
+<li><a href="#cql0360-unknown-type-type_name">CQL0360: unknown type ‘type_name’</a></li>
 </ul></li>
 <li><a href="#appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</a>
 <ul>
@@ -5900,7 +5902,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Tue Jan 5 14:53:53 PST 2021</p>
+<p>Snapshot as of Wed Jan 6 10:05:44 PST 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -5936,12 +5938,12 @@ OUTER JOIN WHERE GROUP BY ORDER ASC
 DESC INNER FCOUNT AUTOINCREMENT DISTINCT
 LIMIT OFFSET TEMP TRIGGER IF ALL CROSS USING RIGHT
 UNIQUE HAVING SET TO DISTINCTROW ENUM
-FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR DECLARE FETCH LOOP LEAVE CONTINUE FOR
+FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR DECLARE TYPE FETCH LOOP LEAVE CONTINUE FOR
 OPEN CLOSE ELSE_IF WHILE CALL TRY CATCH THROW RETURN
 SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
 CAST WITH RECURSIVE REPLACE IGNORE ADD COLUMN RENAME ALTER
 AT_ECHO AT_CREATE AT_RECREATE AT_DELETE AT_SCHEMA_UPGRADE_VERSION AT_PREVIOUS_SCHEMA AT_SCHEMA_UPGRADE_SCRIPT
-AT_PROC AT_FILE AT_ATTRIBUTE AT_SENSITIVE DEFERRED NOT_DEFERRABLE DEFERRABLE IMMEDIATE RESTRICT ACTION INITIALLY NO
+AT_PROC AT_FILE AT_ATTRIBUTE AT_SENSITIVE DEFERRED NOT_DEFERRABLE DEFERRABLE IMMEDIATE EXCLUSIVE RESTRICT ACTION INITIALLY NO
 BEFORE AFTER INSTEAD OF FOR_EACH_ROW EXISTS RAISE FAIL ABORT AT_ENFORCE_STRICT AT_ENFORCE_NORMAL
 AT_BEGIN_SCHEMA_REGION AT_END_SCHEMA_REGION
 AT_DECLARE_SCHEMA_REGION AT_DECLARE_DEPLOYABLE_REGION AT_SCHEMA_AD_HOC_MIGRATION PRIVATE</code></pre>
@@ -6200,7 +6202,7 @@ misc_attrs:
   ;
 
 col_def:
-  misc_attrs col_name data_type col_attrs
+  misc_attrs col_name data_type_or_type_name col_attrs
   ;
 
 pk_def:
@@ -6282,6 +6284,7 @@ name:
   | &quot;ROWID&quot;
   | &quot;KEY&quot;
   | &quot;VIRTUAL&quot;
+  | TYPE
   ;
 
 opt_name:
@@ -6345,12 +6348,18 @@ data_type:
   | object_type
   ;
 
+data_type_or_type_name:
+  data_type
+  | &quot;ID&quot;
+  ;
+
 data_type_opt_notnull:
   data_type
   | data_type &quot;NOT&quot; &quot;NULL&quot;
   | data_type &quot;@SENSITIVE&quot;
   | data_type &quot;@SENSITIVE&quot; &quot;NOT&quot; &quot;NULL&quot;
   | data_type &quot;NOT&quot; &quot;NULL&quot; &quot;@SENSITIVE&quot;
+  | &quot;ID&quot;
   ;
 
 str_literal:
@@ -6460,7 +6469,7 @@ expr:
   | &quot;CASE&quot; expr case_list &quot;ELSE&quot; expr &quot;END&quot;
   | &quot;CASE&quot; case_list &quot;END&quot;
   | &quot;CASE&quot; case_list &quot;ELSE&quot; expr &quot;END&quot;
-  | &quot;CAST&quot; &#39;(&#39; expr &quot;AS&quot; data_type &#39;)&#39;
+  | &quot;CAST&quot; &#39;(&#39; expr &quot;AS&quot; data_type_or_type_name &#39;)&#39;
   ;
 
 case_list:
@@ -6996,6 +7005,7 @@ declare_stmt:
   | &quot;DECLARE&quot; name &quot;CURSOR&quot; shape_def
   | &quot;DECLARE&quot; name &quot;CURSOR&quot; &quot;LIKE&quot; select_stmt
   | &quot;DECLARE&quot; name &quot;CURSOR&quot; &quot;FOR&quot; name
+  | &quot;DECLARE&quot; name TYPE data_type_opt_notnull
   ;
 
 call_stmt:
@@ -7101,31 +7111,47 @@ opt_elseif_list:
   | elseif_list
   ;
 
+transaction_mode:
+  /* nil */
+  | &quot;DEFERRED&quot;
+  | &quot;IMMEDIATE&quot;
+  | &quot;EXCLUSIVE&quot;
+  ;
+
 begin_trans_stmt:
-  &quot;BEGIN&quot; &quot;TRANSACTION&quot;
+  &quot;BEGIN&quot; transaction_mode &quot;TRANSACTION&quot;
+  | &quot;BEGIN&quot; transaction_mode
   ;
 
 rollback_trans_stmt:
-  &quot;ROLLBACK&quot; &quot;TRANSACTION&quot;
-  | &quot;ROLLBACK&quot; &quot;TRANSACTION&quot; &quot;TO&quot; &quot;SAVEPOINT&quot; name
-  | &quot;ROLLBACK&quot; &quot;TRANSACTION&quot; &quot;TO&quot; &quot;SAVEPOINT&quot; &quot;@PROC&quot;
+  &quot;ROLLBACK&quot;
+  | &quot;ROLLBACK&quot; &quot;TRANSACTION&quot;
+  | &quot;ROLLBACK&quot; &quot;TO&quot; savepoint_name
+  | &quot;ROLLBACK&quot; &quot;TRANSACTION&quot; &quot;TO&quot; savepoint_name
+  | &quot;ROLLBACK&quot; &quot;TO&quot; &quot;SAVEPOINT&quot; savepoint_name
+  | &quot;ROLLBACK&quot; &quot;TRANSACTION&quot; &quot;TO&quot; &quot;SAVEPOINT&quot; savepoint_name
   ;
 
 commit_trans_stmt:
   &quot;COMMIT&quot; &quot;TRANSACTION&quot;
+  | &quot;COMMIT&quot;
   ;
 
 proc_savepoint_stmt:  procedure &quot;SAVEPOINT&quot; &quot;BEGIN&quot; opt_stmt_list &quot;END&quot;
   ;
 
+savepoint_name:
+  &quot;@PROC&quot;
+  | name
+  ;
+
 savepoint_stmt:
-  &quot;SAVEPOINT&quot; name
-  | &quot;SAVEPOINT&quot; &quot;@PROC&quot;
+  &quot;SAVEPOINT&quot; savepoint_name
   ;
 
 release_savepoint_stmt:
-  &quot;RELEASE&quot; &quot;SAVEPOINT&quot; name
-  | &quot;RELEASE&quot; &quot;SAVEPOINT&quot; &quot;@PROC&quot;
+  &quot;RELEASE&quot; savepoint_name
+  | &quot;RELEASE&quot; &quot;SAVEPOINT&quot; savepoint_name
   ;
 
 echo_stmt:
@@ -8767,6 +8793,11 @@ set x := y;</code></pre>
 <p>A <code>DECLARE ENUM</code> statement for the named enum is happening inside of a procedure. This is not legal.</p>
 <p>To correct this move the declaration outside of the procedure.</p>
 <hr />
+<h3 id="cql0359-duplicate-type-declaration-type_name">CQL0359: duplicate type declaration ‘type_name’</h3>
+<p>The name of a declared type should always be unique.</p>
+<hr />
+<h3 id="cql0360-unknown-type-type_name">CQL0360: unknown type ‘type_name’</h3>
+<p>The name of a declared type is unknown.</p>
 <h2 id="appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</h2>
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
@@ -8775,7 +8806,7 @@ set x := y;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Tue Jan 5 14:53:54 PST 2021</p>
+<p>Snapshot as of Wed Jan 6 10:05:45 PST 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

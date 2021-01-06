@@ -582,6 +582,12 @@ end;
 
 -- control statements
 begin transaction;
+begin deferred transaction;
+begin immediate  transaction;
+begin exclusive  transaction;
+begin deferred;
+begin immediate;
+begin exclusive;
 begin;
 commit transaction;
 commit;

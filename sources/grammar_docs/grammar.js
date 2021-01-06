@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Tue Jan  5 14:53:53 2021
+// Snapshot as of Wed Jan  6 10:05:44 2021
 
 
 const PREC = {
@@ -60,7 +60,7 @@ module.exports = grammar({
     misc_attr_value: $ => choice($.name, $.any_literal, $.const_expr, seq('(', $.misc_attr_value_list, ')'), seq('-', $.num_literal)),
     misc_attr: $ => choice(seq($.AT_ATTRIBUTE, '(', $.misc_attr_key, ')'), seq($.AT_ATTRIBUTE, '(', $.misc_attr_key, '=', $.misc_attr_value, ')')),
     misc_attrs: $ => seq($.misc_attr, optional($.misc_attrs)),
-    col_def: $ => seq(optional($.misc_attrs), $.col_name, $.data_type, optional($.col_attrs)),
+    col_def: $ => seq(optional($.misc_attrs), $.col_name, $.data_type_or_type_name, optional($.col_attrs)),
     pk_def: $ => seq($.PRIMARY, $.KEY, '(', $.name_list, ')'),
     opt_fk_options: $ => $.fk_options,
     fk_options: $ => choice($.fk_on_options, $.fk_deferred_options, seq($.fk_on_options, $.fk_deferred_options)),
@@ -76,7 +76,7 @@ module.exports = grammar({
     indexed_column: $ => seq($.name, optional($.opt_asc_desc)),
     indexed_columns: $ => choice($.indexed_column, seq($.indexed_column, ',', $.indexed_columns)),
     create_index_stmt: $ => seq($.CREATE, optional($.opt_unique), $.INDEX, optional($.opt_if_not_exists), $.name, $.ON, $.name, '(', $.indexed_columns, ')', optional($.opt_delete_version_attr)),
-    name: $ => choice($.ID, $.TEXT, $.TRIGGER, $.ROWID, $.KEY, $.VIRTUAL),
+    name: $ => choice($.ID, $.TEXT, $.TRIGGER, $.ROWID, $.KEY, $.VIRTUAL, $.TYPE),
     opt_name: $ => $.name,
     name_list: $ => choice($.name, seq($.name, ',', $.name_list)),
     opt_name_list: $ => $.name_list,
@@ -85,7 +85,8 @@ module.exports = grammar({
     object_type: $ => choice($.OBJECT, seq($.OBJECT, '<', $.name, '>'), seq($.OBJECT, '<', $.name, $.CURSOR, '>')),
     data_type_numeric: $ => choice($.INT, $.INTEGER, $.REAL, $.LONG, $.BOOL, seq($.LONG, $.INTEGER), seq($.LONG, $.INT), $.LONG_INT, $.LONG_INTEGER),
     data_type: $ => choice($.data_type_numeric, $.TEXT, $.BLOB, $.object_type),
-    data_type_opt_notnull: $ => choice($.data_type, seq($.data_type, $.NOT, $.NULL), seq($.data_type, $.AT_SENSITIVE), seq($.data_type, $.AT_SENSITIVE, $.NOT, $.NULL), seq($.data_type, $.NOT, $.NULL, $.AT_SENSITIVE)),
+    data_type_or_type_name: $ => choice($.data_type, $.ID),
+    data_type_opt_notnull: $ => choice($.data_type, seq($.data_type, $.NOT, $.NULL), seq($.data_type, $.AT_SENSITIVE), seq($.data_type, $.AT_SENSITIVE, $.NOT, $.NULL), seq($.data_type, $.NOT, $.NULL, $.AT_SENSITIVE), $.ID),
     str_literal: $ => choice($.STR_LIT, $.C_STR_LIT),
     num_literal: $ => choice($.INT_LIT, $.LONG_LIT, $.REAL_LIT),
     const_expr: $ => seq($.CONST, '(', $.expr, ')'),
@@ -96,7 +97,7 @@ module.exports = grammar({
     math_expr: $ => prec.left(choice($.basic_expr, seq($.math_expr, '&', $.math_expr), seq($.math_expr, '|', $.math_expr), seq($.math_expr, "<<", $.math_expr), seq($.math_expr, ">>", $.math_expr), seq($.math_expr, '+', $.math_expr), seq($.math_expr, '-', $.math_expr), seq($.math_expr, '*', $.math_expr), seq($.math_expr, '/', $.math_expr), seq($.math_expr, '%', $.math_expr), seq('-', $.math_expr), seq($.math_expr, "||", $.math_expr))),
     NOT_LIKE: $ => prec.left(1, seq(CI('not'), CI('like'))),
     IS_NOT: $ => prec.left(1, seq(CI('is'), CI('not'))),
-    expr: $ => prec.left(choice($.basic_expr, seq($.expr, '&', $.expr), seq($.expr, '|', $.expr), seq($.expr, "<<", $.expr), seq($.expr, ">>", $.expr), seq($.expr, '+', $.expr), seq($.expr, '-', $.expr), seq($.expr, '*', $.expr), seq($.expr, '/', $.expr), seq($.expr, '%', $.expr), seq('-', $.expr), seq($.NOT, $.expr), seq('~', $.expr), seq($.expr, $.COLLATE, $.name), seq($.expr, $.AND, $.expr), seq($.expr, $.OR, $.expr), seq($.expr, '=', $.expr), seq($.expr, "==", $.expr), seq($.expr, '<', $.expr), seq($.expr, '>', $.expr), seq($.expr, "<>", $.expr), seq($.expr, "!=", $.expr), seq($.expr, ">=", $.expr), seq($.expr, "<=", $.expr), seq($.expr, $.NOT, $.IN, '(', $.expr_list, ')'), seq($.expr, $.NOT, $.IN, '(', $.select_stmt, ')'), seq($.expr, $.IN, '(', $.expr_list, ')'), seq($.expr, $.IN, '(', $.select_stmt, ')'), seq($.expr, $.LIKE, $.expr), seq($.expr, $.NOT_LIKE, $.expr), seq($.expr, $.MATCH, $.expr), seq($.expr, $.REGEXP, $.expr), seq($.expr, $.GLOB, $.expr), seq($.expr, $.NOT, $.BETWEEN, $.math_expr, $.AND, $.math_expr), seq($.expr, $.BETWEEN, $.math_expr, $.AND, $.math_expr), seq($.expr, $.IS_NOT, $.expr), seq($.expr, $.IS, $.expr), seq($.expr, "||", $.expr), seq($.CASE, $.expr, $.case_list, $.END), seq($.CASE, $.expr, $.case_list, $.ELSE, $.expr, $.END), seq($.CASE, $.case_list, $.END), seq($.CASE, $.case_list, $.ELSE, $.expr, $.END), seq($.CAST, '(', $.expr, $.AS, $.data_type, ')'))),
+    expr: $ => prec.left(choice($.basic_expr, seq($.expr, '&', $.expr), seq($.expr, '|', $.expr), seq($.expr, "<<", $.expr), seq($.expr, ">>", $.expr), seq($.expr, '+', $.expr), seq($.expr, '-', $.expr), seq($.expr, '*', $.expr), seq($.expr, '/', $.expr), seq($.expr, '%', $.expr), seq('-', $.expr), seq($.NOT, $.expr), seq('~', $.expr), seq($.expr, $.COLLATE, $.name), seq($.expr, $.AND, $.expr), seq($.expr, $.OR, $.expr), seq($.expr, '=', $.expr), seq($.expr, "==", $.expr), seq($.expr, '<', $.expr), seq($.expr, '>', $.expr), seq($.expr, "<>", $.expr), seq($.expr, "!=", $.expr), seq($.expr, ">=", $.expr), seq($.expr, "<=", $.expr), seq($.expr, $.NOT, $.IN, '(', $.expr_list, ')'), seq($.expr, $.NOT, $.IN, '(', $.select_stmt, ')'), seq($.expr, $.IN, '(', $.expr_list, ')'), seq($.expr, $.IN, '(', $.select_stmt, ')'), seq($.expr, $.LIKE, $.expr), seq($.expr, $.NOT_LIKE, $.expr), seq($.expr, $.MATCH, $.expr), seq($.expr, $.REGEXP, $.expr), seq($.expr, $.GLOB, $.expr), seq($.expr, $.NOT, $.BETWEEN, $.math_expr, $.AND, $.math_expr), seq($.expr, $.BETWEEN, $.math_expr, $.AND, $.math_expr), seq($.expr, $.IS_NOT, $.expr), seq($.expr, $.IS, $.expr), seq($.expr, "||", $.expr), seq($.CASE, $.expr, $.case_list, $.END), seq($.CASE, $.expr, $.case_list, $.ELSE, $.expr, $.END), seq($.CASE, $.case_list, $.END), seq($.CASE, $.case_list, $.ELSE, $.expr, $.END), seq($.CAST, '(', $.expr, $.AS, $.data_type_or_type_name, ')'))),
     case_list: $ => choice(seq($.WHEN, $.expr, $.THEN, $.expr), seq($.WHEN, $.expr, $.THEN, $.expr, $.case_list)),
     arg_expr: $ => choice('*', $.expr, $.shape_arguments),
     arg_list: $ => choice($.arg_expr, seq($.arg_expr, ',', optional($.arg_list))),
@@ -204,7 +205,7 @@ module.exports = grammar({
     typed_names: $ => choice($.typed_name, seq($.typed_name, ',', $.typed_names)),
     param: $ => choice(seq($.name, $.data_type_opt_notnull), seq($.inout, $.name, $.data_type_opt_notnull), $.shape_def, seq($.name, $.shape_def)),
     params: $ => choice($.param, seq($.param, ',', optional($.params))),
-    declare_stmt: $ => choice(seq($.DECLARE, $.name_list, $.data_type_opt_notnull), seq($.DECLARE, $.name, $.CURSOR, $.FOR, $.select_stmt), seq($.DECLARE, $.name, $.CURSOR, $.FOR, $.explain_stmt), seq($.DECLARE, $.name, $.CURSOR, $.FOR, $.call_stmt), seq($.DECLARE, $.name, $.CURSOR, $.FETCH, $.FROM, $.call_stmt), seq($.DECLARE, $.name, $.CURSOR, $.shape_def), seq($.DECLARE, $.name, $.CURSOR, $.LIKE, $.select_stmt), seq($.DECLARE, $.name, $.CURSOR, $.FOR, $.name)),
+    declare_stmt: $ => choice(seq($.DECLARE, $.name_list, $.data_type_opt_notnull), seq($.DECLARE, $.name, $.CURSOR, $.FOR, $.select_stmt), seq($.DECLARE, $.name, $.CURSOR, $.FOR, $.explain_stmt), seq($.DECLARE, $.name, $.CURSOR, $.FOR, $.call_stmt), seq($.DECLARE, $.name, $.CURSOR, $.FETCH, $.FROM, $.call_stmt), seq($.DECLARE, $.name, $.CURSOR, $.shape_def), seq($.DECLARE, $.name, $.CURSOR, $.LIKE, $.select_stmt), seq($.DECLARE, $.name, $.CURSOR, $.FOR, $.name), seq($.DECLARE, $.name, $.TYPE, $.data_type_opt_notnull)),
     call_stmt: $ => choice(seq($.CALL, $.name, '(', ')'), seq($.CALL, $.name, '(', $.call_expr_list, ')')),
     while_stmt: $ => seq($.WHILE, $.expr, $.BEGIN, optional($.opt_stmt_list), $.END),
     loop_stmt: $ => seq($.LOOP, $.fetch_stmt, $.BEGIN, optional($.opt_stmt_list), $.END),
@@ -230,12 +231,14 @@ module.exports = grammar({
     elseif_item: $ => seq($.ELSE_IF, $.expr, $.THEN, optional($.opt_stmt_list)),
     elseif_list: $ => prec.left(choice($.elseif_item, seq($.elseif_item, $.elseif_list))),
     opt_elseif_list: $ => $.elseif_list,
-    begin_trans_stmt: $ => seq($.BEGIN, $.TRANSACTION),
-    rollback_trans_stmt: $ => choice(seq($.ROLLBACK, $.TRANSACTION), seq($.ROLLBACK, $.TRANSACTION, $.TO, $.SAVEPOINT, $.name), seq($.ROLLBACK, $.TRANSACTION, $.TO, $.SAVEPOINT, $.AT_PROC)),
-    commit_trans_stmt: $ => seq($.COMMIT, $.TRANSACTION),
+    transaction_mode: $ => choice($.DEFERRED, $.IMMEDIATE, $.EXCLUSIVE),
+    begin_trans_stmt: $ => choice(seq($.BEGIN, optional($.transaction_mode), $.TRANSACTION), seq($.BEGIN, optional($.transaction_mode))),
+    rollback_trans_stmt: $ => choice($.ROLLBACK, seq($.ROLLBACK, $.TRANSACTION), seq($.ROLLBACK, $.TO, $.savepoint_name), seq($.ROLLBACK, $.TRANSACTION, $.TO, $.savepoint_name), seq($.ROLLBACK, $.TO, $.SAVEPOINT, $.savepoint_name), seq($.ROLLBACK, $.TRANSACTION, $.TO, $.SAVEPOINT, $.savepoint_name)),
+    commit_trans_stmt: $ => choice(seq($.COMMIT, $.TRANSACTION), $.COMMIT),
     proc_savepoint_stmt: $ => seq($.procedure, $.SAVEPOINT, $.BEGIN, optional($.opt_stmt_list), $.END),
-    savepoint_stmt: $ => choice(seq($.SAVEPOINT, $.name), seq($.SAVEPOINT, $.AT_PROC)),
-    release_savepoint_stmt: $ => choice(seq($.RELEASE, $.SAVEPOINT, $.name), seq($.RELEASE, $.SAVEPOINT, $.AT_PROC)),
+    savepoint_name: $ => choice($.AT_PROC, $.name),
+    savepoint_stmt: $ => seq($.SAVEPOINT, $.savepoint_name),
+    release_savepoint_stmt: $ => choice(seq($.RELEASE, $.savepoint_name), seq($.RELEASE, $.SAVEPOINT, $.savepoint_name)),
     echo_stmt: $ => seq($.AT_ECHO, $.name, ',', $.str_literal),
     alter_table_add_column_stmt: $ => seq($.ALTER, $.TABLE, $.name, $.ADD, $.COLUMN, $.col_def),
     create_trigger_stmt: $ => seq($.CREATE, optional($.opt_temp), $.TRIGGER, optional($.opt_if_not_exists), $.trigger_def, optional($.opt_delete_version_attr)),
@@ -434,6 +437,7 @@ module.exports = grammar({
     CONTINUE: $ => CI('continue'),
     OPEN: $ => CI('open'),
     CLOSE: $ => CI('close'),
+    EXCLUSIVE: $ => CI('exclusive'),
     TO: $ => CI('to'),
     SAVEPOINT: $ => CI('savepoint'),
     RELEASE: $ => CI('release'),

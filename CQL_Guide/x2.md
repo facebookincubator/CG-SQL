@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Jan  5 14:53:53 PST 2021
+Snapshot as of Wed Jan  6 10:05:44 PST 2021
 
 ### Operators and Literals
 
@@ -58,12 +58,12 @@ OUTER JOIN WHERE GROUP BY ORDER ASC
 DESC INNER FCOUNT AUTOINCREMENT DISTINCT
 LIMIT OFFSET TEMP TRIGGER IF ALL CROSS USING RIGHT
 UNIQUE HAVING SET TO DISTINCTROW ENUM
-FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR DECLARE FETCH LOOP LEAVE CONTINUE FOR
+FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR DECLARE TYPE FETCH LOOP LEAVE CONTINUE FOR
 OPEN CLOSE ELSE_IF WHILE CALL TRY CATCH THROW RETURN
 SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
 CAST WITH RECURSIVE REPLACE IGNORE ADD COLUMN RENAME ALTER
 AT_ECHO AT_CREATE AT_RECREATE AT_DELETE AT_SCHEMA_UPGRADE_VERSION AT_PREVIOUS_SCHEMA AT_SCHEMA_UPGRADE_SCRIPT
-AT_PROC AT_FILE AT_ATTRIBUTE AT_SENSITIVE DEFERRED NOT_DEFERRABLE DEFERRABLE IMMEDIATE RESTRICT ACTION INITIALLY NO
+AT_PROC AT_FILE AT_ATTRIBUTE AT_SENSITIVE DEFERRED NOT_DEFERRABLE DEFERRABLE IMMEDIATE EXCLUSIVE RESTRICT ACTION INITIALLY NO
 BEFORE AFTER INSTEAD OF FOR_EACH_ROW EXISTS RAISE FAIL ABORT AT_ENFORCE_STRICT AT_ENFORCE_NORMAL
 AT_BEGIN_SCHEMA_REGION AT_END_SCHEMA_REGION
 AT_DECLARE_SCHEMA_REGION AT_DECLARE_DEPLOYABLE_REGION AT_SCHEMA_AD_HOC_MIGRATION PRIVATE
@@ -325,7 +325,7 @@ misc_attrs:
   ;
 
 col_def:
-  misc_attrs col_name data_type col_attrs
+  misc_attrs col_name data_type_or_type_name col_attrs
   ;
 
 pk_def:
@@ -407,6 +407,7 @@ name:
   | "ROWID"
   | "KEY"
   | "VIRTUAL"
+  | TYPE
   ;
 
 opt_name:
@@ -470,12 +471,18 @@ data_type:
   | object_type
   ;
 
+data_type_or_type_name:
+  data_type
+  | "ID"
+  ;
+
 data_type_opt_notnull:
   data_type
   | data_type "NOT" "NULL"
   | data_type "@SENSITIVE"
   | data_type "@SENSITIVE" "NOT" "NULL"
   | data_type "NOT" "NULL" "@SENSITIVE"
+  | "ID"
   ;
 
 str_literal:
@@ -585,7 +592,7 @@ expr:
   | "CASE" expr case_list "ELSE" expr "END"
   | "CASE" case_list "END"
   | "CASE" case_list "ELSE" expr "END"
-  | "CAST" '(' expr "AS" data_type ')'
+  | "CAST" '(' expr "AS" data_type_or_type_name ')'
   ;
 
 case_list:
@@ -1121,6 +1128,7 @@ declare_stmt:
   | "DECLARE" name "CURSOR" shape_def
   | "DECLARE" name "CURSOR" "LIKE" select_stmt
   | "DECLARE" name "CURSOR" "FOR" name
+  | "DECLARE" name TYPE data_type_opt_notnull
   ;
 
 call_stmt:
@@ -1226,31 +1234,47 @@ opt_elseif_list:
   | elseif_list
   ;
 
+transaction_mode:
+  /* nil */
+  | "DEFERRED"
+  | "IMMEDIATE"
+  | "EXCLUSIVE"
+  ;
+
 begin_trans_stmt:
-  "BEGIN" "TRANSACTION"
+  "BEGIN" transaction_mode "TRANSACTION"
+  | "BEGIN" transaction_mode
   ;
 
 rollback_trans_stmt:
-  "ROLLBACK" "TRANSACTION"
-  | "ROLLBACK" "TRANSACTION" "TO" "SAVEPOINT" name
-  | "ROLLBACK" "TRANSACTION" "TO" "SAVEPOINT" "@PROC"
+  "ROLLBACK"
+  | "ROLLBACK" "TRANSACTION"
+  | "ROLLBACK" "TO" savepoint_name
+  | "ROLLBACK" "TRANSACTION" "TO" savepoint_name
+  | "ROLLBACK" "TO" "SAVEPOINT" savepoint_name
+  | "ROLLBACK" "TRANSACTION" "TO" "SAVEPOINT" savepoint_name
   ;
 
 commit_trans_stmt:
   "COMMIT" "TRANSACTION"
+  | "COMMIT"
   ;
 
 proc_savepoint_stmt:  procedure "SAVEPOINT" "BEGIN" opt_stmt_list "END"
   ;
 
+savepoint_name:
+  "@PROC"
+  | name
+  ;
+
 savepoint_stmt:
-  "SAVEPOINT" name
-  | "SAVEPOINT" "@PROC"
+  "SAVEPOINT" savepoint_name
   ;
 
 release_savepoint_stmt:
-  "RELEASE" "SAVEPOINT" name
-  | "RELEASE" "SAVEPOINT" "@PROC"
+  "RELEASE" savepoint_name
+  | "RELEASE" "SAVEPOINT" savepoint_name
   ;
 
 echo_stmt:
