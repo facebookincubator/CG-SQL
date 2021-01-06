@@ -185,6 +185,7 @@ OBJECT                       { return OBJECT; }
 BLOB                         { return BLOB; }
 UPSERT                       { return UPSERT; }
 STATEMENT                    { return STATEMENT; }
+TYPE                         { return TYPE; }
 @ENFORCE_STRICT              { return AT_ENFORCE_STRICT; }
 @ENFORCE_NORMAL              { return AT_ENFORCE_NORMAL; }
 @SENSITIVE                   { return AT_SENSITIVE; }

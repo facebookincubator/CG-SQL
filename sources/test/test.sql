@@ -1261,6 +1261,11 @@ create table foo (
 @emit_enums foo;
 @emit_enums foo, bar;
 
+-- simple named type declaration
+declare fbid type text @sensitive;
+
+declare my_fbid fbid;
+
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 
 # 1 "long/path/I/do/not/like"

@@ -205,9 +205,12 @@ static void gen_data_type(ast_node *ast) {
     gen_printf("LONG_INT");
   } else if (is_ast_type_real(ast)) {
     gen_printf("REAL");
-  } else {
-    Contract(is_ast_type_bool(ast));
+  } else if (is_ast_type_bool(ast)) {
     gen_printf("BOOL");
+  } else {
+    Contract(is_ast_str(ast));
+    EXTRACT_STRING(name, ast);
+    gen_printf("%s", name);
   }
 }
 
@@ -1932,7 +1935,7 @@ static void gen_create_virtual_table_stmt(ast_node *ast) {
     // When emitting to SQLite we do not include the column declaration part
     // just whatever the args were because SQLite doesn't parse that part of the CQL syntax.
     // Note that CQL does not support general args because that's not parseable with this parser
-    // tech but this is pretty general.  The declaration part is present here so that 
+    // tech but this is pretty general.  The declaration part is present here so that
     // CQL knows the type info of the net table we are creating.
     // Note also that virtual tables are always on the recreate plan, it isn't an option
     // and this will mean that you can't make a foreign key to a virtual table which is probably
@@ -2710,6 +2713,15 @@ static void gen_declare_cursor_like_select(ast_node *ast) {
   gen_one_stmt(stmt);
 }
 
+static void gen_declare_named_type(ast_node *ast) {
+  Contract(is_ast_declare_named_type(ast));
+  EXTRACT_STRING(name, ast->left);
+  EXTRACT_ANY_NOTNULL(data_type, ast->right);
+
+  gen_printf("DECLARE %s TYPE ", name);
+  gen_data_type(data_type);
+}
+
 static void gen_declare_value_cursor(ast_node *ast) {
   Contract(is_ast_declare_value_cursor(ast));
   EXTRACT_STRING(name, ast->left);
@@ -3249,6 +3261,7 @@ cql_noexport void gen_init() {
   STMT_INIT(declare_cursor);
   STMT_INIT(declare_cursor_like_name);
   STMT_INIT(declare_cursor_like_select);
+  STMT_INIT(declare_named_type);
   STMT_INIT(declare_value_cursor);
   STMT_INIT(declare_proc_stmt);
   STMT_INIT(declare_func_stmt);

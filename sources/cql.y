@@ -153,7 +153,7 @@ static void cql_reset_globals(void);
 %token DESC INNER FCOUNT AUTOINCREMENT DISTINCT
 %token LIMIT OFFSET TEMP TRIGGER IF ALL CROSS USING RIGHT
 %token UNIQUE HAVING SET TO DISTINCTROW ENUM
-%token FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR DECLARE FETCH LOOP LEAVE CONTINUE FOR
+%token FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR DECLARE TYPE FETCH LOOP LEAVE CONTINUE FOR
 %token OPEN CLOSE ELSE_IF WHILE CALL TRY CATCH THROW RETURN
 %token SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
 %token CAST WITH RECURSIVE REPLACE IGNORE ADD COLUMN RENAME ALTER
@@ -203,7 +203,7 @@ static void cql_reset_globals(void);
 /* expressions and types */
 %type <aval> expr basic_expr math_expr expr_list typed_name typed_names case_list call_expr_list call_expr shape_arguments
 %type <aval> name name_list opt_name_list opt_name
-%type <aval> data_type data_type_numeric data_type_opt_notnull creation_type object_type
+%type <aval> data_type data_type_or_type_name data_type_numeric data_type_opt_notnull creation_type object_type
 
 /* proc stuff */
 %type <aval> create_proc_stmt declare_func_stmt declare_proc_stmt
@@ -537,12 +537,12 @@ misc_attrs[result]:
   ;
 
 col_def:
-  misc_attrs col_name data_type col_attrs  {
+  misc_attrs col_name data_type_or_type_name col_attrs  {
   struct ast_node *misc_attrs = $misc_attrs;
   struct ast_node *col_name = $col_name;
-  struct ast_node *data_type = $data_type;
+  struct ast_node *data_type_or_type_name = $data_type_or_type_name;
   struct ast_node *col_attrs= $col_attrs;
-  struct ast_node *name_type = new_ast_col_def_name_type(col_name, data_type);
+  struct ast_node *name_type = new_ast_col_def_name_type(col_name, data_type_or_type_name);
   struct ast_node *col_def_type_attrs = new_ast_col_def_type_attrs(name_type, col_attrs);
   $col_def = new_ast_col_def(col_def_type_attrs, misc_attrs);
   }
@@ -637,6 +637,7 @@ name:
   | ROWID  { $name = new_ast_str("rowid"); }
   | KEY  { $name = new_ast_str("key"); }
   | VIRTUAL  { $name = new_ast_str("virtual"); }
+  | TYPE { $name = new_ast_str("type"); }
   ;
 
 opt_name:
@@ -704,12 +705,18 @@ data_type:
   | object_type  { $data_type = $object_type; }
   ;
 
+data_type_or_type_name:
+  data_type { $data_type_or_type_name = $data_type; }
+  | ID { $data_type_or_type_name = new_ast_str($ID); }
+  ;
+
 data_type_opt_notnull:
   data_type  { $data_type_opt_notnull = $data_type; }
   | data_type NOT NULL_  { $data_type_opt_notnull = new_ast_notnull($data_type); }
   | data_type AT_SENSITIVE  { $data_type_opt_notnull = new_ast_sensitive_attr($data_type, NULL); }
   | data_type AT_SENSITIVE NOT NULL_  { $data_type_opt_notnull = new_ast_sensitive_attr(new_ast_notnull($data_type), NULL); }
   | data_type NOT NULL_ AT_SENSITIVE  { $data_type_opt_notnull = new_ast_sensitive_attr(new_ast_notnull($data_type), NULL); }
+  | ID { $data_type_opt_notnull = new_ast_str($ID); }
   ;
 
 str_literal:
@@ -827,7 +834,7 @@ expr[result]:
   | CASE expr[cond1] case_list ELSE expr[cond2] END  { $result = new_ast_case_expr($cond1, new_ast_connector($case_list, $cond2));}
   | CASE case_list END  { $result = new_ast_case_expr(NULL, new_ast_connector($case_list, NULL));}
   | CASE case_list ELSE expr[cond] END  { $result = new_ast_case_expr(NULL, new_ast_connector($case_list, $cond));}
-  | CAST '(' expr[sexp] AS data_type ')'  { $result = new_ast_cast_expr($sexp, $data_type); }
+  | CAST '(' expr[sexp] AS data_type_or_type_name ')'  { $result = new_ast_cast_expr($sexp, $data_type_or_type_name); }
   ;
 
 case_list[result]:
@@ -909,7 +916,7 @@ select_core_list[result]:
   select_core { $result = new_ast_select_core_list($select_core, NULL); }
   | select_core compound_operator select_core_list[list] {
      ast_node *select_core_compound = new_ast_select_core_compound(new_ast_opt($compound_operator), $list);
-     $result = new_ast_select_core_list($select_core, select_core_compound); 
+     $result = new_ast_select_core_list($select_core, select_core_compound);
   }
   ;
 
@@ -1188,7 +1195,7 @@ table_or_subquery:
   | '(' query_parts ')'  { $table_or_subquery = new_ast_table_or_subquery($query_parts, NULL); }
   ;
 
-join_type:  
+join_type:
   /*nil */       { $join_type = JOIN_INNER; }
   | LEFT         { $join_type = JOIN_LEFT; }
   | RIGHT        { $join_type = JOIN_RIGHT; }
@@ -1475,6 +1482,7 @@ declare_stmt:
   | DECLARE name CURSOR shape_def  { $declare_stmt = new_ast_declare_cursor_like_name($name, $shape_def); }
   | DECLARE name CURSOR LIKE select_stmt  { $declare_stmt = new_ast_declare_cursor_like_select($name, $select_stmt); }
   | DECLARE name[id] CURSOR FOR name[obj] { $declare_stmt = new_ast_declare_cursor($id, $obj); }
+  | DECLARE name TYPE data_type_opt_notnull { $declare_stmt = new_ast_declare_named_type($name, $data_type_opt_notnull); }
   ;
 
 call_stmt:

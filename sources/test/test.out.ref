@@ -1329,6 +1329,10 @@ CREATE TABLE foo(
 
 @EMIT_ENUMS foo, bar;
 
+DECLARE fbid TYPE TEXT @SENSITIVE;
+
+DECLARE my_fbid fbid;
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';
