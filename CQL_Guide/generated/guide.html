@@ -5902,7 +5902,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Wed Jan 6 10:05:44 PST 2021</p>
+<p>Snapshot as of Wed Jan 6 16:11:08 PST 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -6284,7 +6284,7 @@ name:
   | &quot;ROWID&quot;
   | &quot;KEY&quot;
   | &quot;VIRTUAL&quot;
-  | TYPE
+  | &quot;TYPE&quot;
   ;
 
 opt_name:
@@ -7005,7 +7005,7 @@ declare_stmt:
   | &quot;DECLARE&quot; name &quot;CURSOR&quot; shape_def
   | &quot;DECLARE&quot; name &quot;CURSOR&quot; &quot;LIKE&quot; select_stmt
   | &quot;DECLARE&quot; name &quot;CURSOR&quot; &quot;FOR&quot; name
-  | &quot;DECLARE&quot; name TYPE data_type_opt_notnull
+  | &quot;DECLARE&quot; name &quot;TYPE&quot; data_type_opt_notnull
   ;
 
 call_stmt:
@@ -8806,7 +8806,7 @@ set x := y;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Wed Jan 6 10:05:45 PST 2021</p>
+<p>Snapshot as of Wed Jan 6 16:11:08 PST 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

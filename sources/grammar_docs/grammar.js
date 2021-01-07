@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Wed Jan  6 10:05:44 2021
+// Snapshot as of Wed Jan  6 16:11:08 2021
 
 
 const PREC = {
@@ -330,6 +330,7 @@ module.exports = grammar({
     REFERENCES: $ => CI('references'),
     UNIQUE: $ => CI('unique'),
     TEXT: $ => CI('text'),
+    TYPE: $ => CI('type'),
     AUTOINCREMENT: $ => CI('autoincrement'),
     COLLATE: $ => CI('collate'),
     AT_SENSITIVE: $ => CI('@sensitive'),

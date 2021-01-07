@@ -7627,7 +7627,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed Jan  6 10:05:44 PST 2021
+Snapshot as of Wed Jan  6 16:11:08 PST 2021
 
 ### Operators and Literals
 
@@ -8021,7 +8021,7 @@ name:
   | "ROWID"
   | "KEY"
   | "VIRTUAL"
-  | TYPE
+  | "TYPE"
   ;
 
 opt_name:
@@ -8742,7 +8742,7 @@ declare_stmt:
   | "DECLARE" name "CURSOR" shape_def
   | "DECLARE" name "CURSOR" "LIKE" select_stmt
   | "DECLARE" name "CURSOR" "FOR" name
-  | "DECLARE" name TYPE data_type_opt_notnull
+  | "DECLARE" name "TYPE" data_type_opt_notnull
   ;
 
 call_stmt:
@@ -12049,7 +12049,7 @@ The name of a declared type is unknown.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Wed Jan  6 10:05:45 PST 2021
+Snapshot as of Wed Jan  6 16:11:08 PST 2021
 
 ### Rules
 

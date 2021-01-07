@@ -3219,10 +3219,11 @@
          <text class="terminal" x="59" y="197">KEY</text>
          <rect x="51" y="223" width="80" height="32" rx="10"></rect>
          <rect x="49" y="221" width="80" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="59" y="241">VIRTUAL</text><a href="#TYPE" title="TYPE">
-            <rect x="51" y="267" width="50" height="32"></rect>
-            <rect x="49" y="265" width="50" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="285">TYPE</text></a><path class="line" d="m17 17 h2 m20 0 h10 m36 0 h10 m0 0 h44 m-120 0 h20 m100 0 h20 m-140 0 q10 0 10 10 m120 0 q0 -10 10 -10 m-130 10 v24 m120 0 v-24 m-120 24 q0 10 10 10 m100 0 q10 0 10 -10 m-110 10 h10 m54 0 h10 m0 0 h26 m-110 -10 v20 m120 0 v-20 m-120 20 v24 m120 0 v-24 m-120 24 q0 10 10 10 m100 0 q10 0 10 -10 m-110 10 h10 m80 0 h10 m-110 -10 v20 m120 0 v-20 m-120 20 v24 m120 0 v-24 m-120 24 q0 10 10 10 m100 0 q10 0 10 -10 m-110 10 h10 m70 0 h10 m0 0 h10 m-110 -10 v20 m120 0 v-20 m-120 20 v24 m120 0 v-24 m-120 24 q0 10 10 10 m100 0 q10 0 10 -10 m-110 10 h10 m46 0 h10 m0 0 h34 m-110 -10 v20 m120 0 v-20 m-120 20 v24 m120 0 v-24 m-120 24 q0 10 10 10 m100 0 q10 0 10 -10 m-110 10 h10 m80 0 h10 m-110 -10 v20 m120 0 v-20 m-120 20 v24 m120 0 v-24 m-120 24 q0 10 10 10 m100 0 q10 0 10 -10 m-110 10 h10 m50 0 h10 m0 0 h30 m23 -264 h-3"></path>
+         <text class="terminal" x="59" y="241">VIRTUAL</text>
+         <rect x="51" y="267" width="54" height="32" rx="10"></rect>
+         <rect x="49" y="265" width="54" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="59" y="285">TYPE</text>
+         <path class="line" d="m17 17 h2 m20 0 h10 m36 0 h10 m0 0 h44 m-120 0 h20 m100 0 h20 m-140 0 q10 0 10 10 m120 0 q0 -10 10 -10 m-130 10 v24 m120 0 v-24 m-120 24 q0 10 10 10 m100 0 q10 0 10 -10 m-110 10 h10 m54 0 h10 m0 0 h26 m-110 -10 v20 m120 0 v-20 m-120 20 v24 m120 0 v-24 m-120 24 q0 10 10 10 m100 0 q10 0 10 -10 m-110 10 h10 m80 0 h10 m-110 -10 v20 m120 0 v-20 m-120 20 v24 m120 0 v-24 m-120 24 q0 10 10 10 m100 0 q10 0 10 -10 m-110 10 h10 m70 0 h10 m0 0 h10 m-110 -10 v20 m120 0 v-20 m-120 20 v24 m120 0 v-24 m-120 24 q0 10 10 10 m100 0 q10 0 10 -10 m-110 10 h10 m46 0 h10 m0 0 h34 m-110 -10 v20 m120 0 v-20 m-120 20 v24 m120 0 v-24 m-120 24 q0 10 10 10 m100 0 q10 0 10 -10 m-110 10 h10 m80 0 h10 m-110 -10 v20 m120 0 v-20 m-120 20 v24 m120 0 v-24 m-120 24 q0 10 10 10 m100 0 q10 0 10 -10 m-110 10 h10 m54 0 h10 m0 0 h26 m23 -264 h-3"></path>
          <polygon points="169 17 177 13 177 21"></polygon>
          <polygon points="169 17 161 13 161 21"></polygon></svg><p>
          <div class="ebnf"><code>
@@ -3232,7 +3233,7 @@
                <div>           | 'ROWID'</div>
                <div>           | 'KEY'</div>
                <div>           | 'VIRTUAL'</div>
-               <div>           | <a href="#TYPE" title="TYPE">TYPE</a></div></code></div>
+               <div>           | 'TYPE'</div></code></div>
       </p>
       <p>referenced by:
          <ul>
@@ -9617,18 +9618,17 @@
          <text class="terminal" x="375" y="329">LIKE</text><a href="#select_stmt" title="select_stmt">
             <rect x="439" y="311" width="94" height="32"></rect>
             <rect x="437" y="309" width="94" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="447" y="329">select_stmt</text></a><a href="#TYPE" title="TYPE">
-            <rect x="249" y="355" width="50" height="32"></rect>
-            <rect x="247" y="353" width="50" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="257" y="373">TYPE</text></a><a href="#data_type_opt_notnull" title="data_type_opt_notnull">
-            <rect x="319" y="355" width="166" height="32"></rect>
-            <rect x="317" y="353" width="166" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="327" y="373">data_type_opt_notnull</text></a><path class="line" d="m17 17 h2 m0 0 h10 m82 0 h10 m20 0 h10 m82 0 h10 m0 0 h10 m166 0 h10 m0 0 h224 m-532 0 h20 m512 0 h20 m-552 0 q10 0 10 10 m532 0 q0 -10 10 -10 m-542 10 v24 m532 0 v-24 m-532 24 q0 10 10 10 m512 0 q10 0 10 -10 m-522 10 h10 m56 0 h10 m20 0 h10 m78 0 h10 m20 0 h10 m48 0 h10 m20 0 h10 m94 0 h10 m0 0 h8 m-142 0 h20 m122 0 h20 m-162 0 q10 0 10 10 m142 0 q0 -10 10 -10 m-152 10 v24 m142 0 v-24 m-142 24 q0 10 10 10 m122 0 q10 0 10 -10 m-132 10 h10 m102 0 h10 m-132 -10 v20 m142 0 v-20 m-142 20 v24 m142 0 v-24 m-142 24 q0 10 10 10 m122 0 q10 0 10 -10 m-132 10 h10 m76 0 h10 m0 0 h26 m-132 -10 v20 m142 0 v-20 m-142 20 v24 m142 0 v-24 m-142 24 q0 10 10 10 m122 0 q10 0 10 -10 m-132 10 h10 m56 0 h10 m0 0 h46 m20 -132 h28 m-278 0 h20 m258 0 h20 m-298 0 q10 0 10 10 m278 0 q0 -10 10 -10 m-288 10 v156 m278 0 v-156 m-278 156 q0 10 10 10 m258 0 q10 0 10 -10 m-268 10 h10 m62 0 h10 m0 0 h10 m60 0 h10 m0 0 h10 m76 0 h10 m-268 -10 v20 m278 0 v-20 m-278 20 v24 m278 0 v-24 m-278 24 q0 10 10 10 m258 0 q10 0 10 -10 m-268 10 h10 m86 0 h10 m0 0 h152 m-268 -10 v20 m278 0 v-20 m-278 20 v24 m278 0 v-24 m-278 24 q0 10 10 10 m258 0 q10 0 10 -10 m-268 10 h10 m52 0 h10 m0 0 h10 m94 0 h10 m0 0 h72 m-396 -264 h20 m396 0 h20 m-436 0 q10 0 10 10 m416 0 q0 -10 10 -10 m-426 10 v288 m416 0 v-288 m-416 288 q0 10 10 10 m396 0 q10 0 10 -10 m-406 10 h10 m50 0 h10 m0 0 h10 m166 0 h10 m0 0 h140 m43 -352 h-3"></path>
+            <text class="nonterminal" x="447" y="329">select_stmt</text></a><rect x="249" y="355" width="54" height="32" rx="10"></rect>
+         <rect x="247" y="353" width="54" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="257" y="373">TYPE</text><a href="#data_type_opt_notnull" title="data_type_opt_notnull">
+            <rect x="323" y="355" width="166" height="32"></rect>
+            <rect x="321" y="353" width="166" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="331" y="373">data_type_opt_notnull</text></a><path class="line" d="m17 17 h2 m0 0 h10 m82 0 h10 m20 0 h10 m82 0 h10 m0 0 h10 m166 0 h10 m0 0 h224 m-532 0 h20 m512 0 h20 m-552 0 q10 0 10 10 m532 0 q0 -10 10 -10 m-542 10 v24 m532 0 v-24 m-532 24 q0 10 10 10 m512 0 q10 0 10 -10 m-522 10 h10 m56 0 h10 m20 0 h10 m78 0 h10 m20 0 h10 m48 0 h10 m20 0 h10 m94 0 h10 m0 0 h8 m-142 0 h20 m122 0 h20 m-162 0 q10 0 10 10 m142 0 q0 -10 10 -10 m-152 10 v24 m142 0 v-24 m-142 24 q0 10 10 10 m122 0 q10 0 10 -10 m-132 10 h10 m102 0 h10 m-132 -10 v20 m142 0 v-20 m-142 20 v24 m142 0 v-24 m-142 24 q0 10 10 10 m122 0 q10 0 10 -10 m-132 10 h10 m76 0 h10 m0 0 h26 m-132 -10 v20 m142 0 v-20 m-142 20 v24 m142 0 v-24 m-142 24 q0 10 10 10 m122 0 q10 0 10 -10 m-132 10 h10 m56 0 h10 m0 0 h46 m20 -132 h28 m-278 0 h20 m258 0 h20 m-298 0 q10 0 10 10 m278 0 q0 -10 10 -10 m-288 10 v156 m278 0 v-156 m-278 156 q0 10 10 10 m258 0 q10 0 10 -10 m-268 10 h10 m62 0 h10 m0 0 h10 m60 0 h10 m0 0 h10 m76 0 h10 m-268 -10 v20 m278 0 v-20 m-278 20 v24 m278 0 v-24 m-278 24 q0 10 10 10 m258 0 q10 0 10 -10 m-268 10 h10 m86 0 h10 m0 0 h152 m-268 -10 v20 m278 0 v-20 m-278 20 v24 m278 0 v-24 m-278 24 q0 10 10 10 m258 0 q10 0 10 -10 m-268 10 h10 m52 0 h10 m0 0 h10 m94 0 h10 m0 0 h72 m-396 -264 h20 m396 0 h20 m-436 0 q10 0 10 10 m416 0 q0 -10 10 -10 m-426 10 v288 m416 0 v-288 m-416 288 q0 10 10 10 m396 0 q10 0 10 -10 m-406 10 h10 m54 0 h10 m0 0 h10 m166 0 h10 m0 0 h136 m43 -352 h-3"></path>
          <polygon points="683 17 691 13 691 21"></polygon>
          <polygon points="683 17 675 13 675 21"></polygon></svg><p>
          <div class="ebnf"><code>
                <div><a href="#declare_stmt" title="declare_stmt">declare_stmt</a></div>
-               <div>         ::= 'DECLARE' ( <a href="#name_list" title="name_list">name_list</a> <a href="#data_type_opt_notnull" title="data_type_opt_notnull">data_type_opt_notnull</a> | <a href="#name" title="name">name</a> ( 'CURSOR' ( 'FOR' ( <a href="#select_stmt" title="select_stmt">select_stmt</a> | <a href="#explain_stmt" title="explain_stmt">explain_stmt</a> | <a href="#call_stmt" title="call_stmt">call_stmt</a> | <a href="#name" title="name">name</a> ) | 'FETCH' 'FROM' <a href="#call_stmt" title="call_stmt">call_stmt</a> | <a href="#shape_def" title="shape_def">shape_def</a> | 'LIKE' <a href="#select_stmt" title="select_stmt">select_stmt</a> ) | <a href="#TYPE" title="TYPE">TYPE</a> <a href="#data_type_opt_notnull" title="data_type_opt_notnull">data_type_opt_notnull</a> ) )</div></code></div>
+               <div>         ::= 'DECLARE' ( <a href="#name_list" title="name_list">name_list</a> <a href="#data_type_opt_notnull" title="data_type_opt_notnull">data_type_opt_notnull</a> | <a href="#name" title="name">name</a> ( 'CURSOR' ( 'FOR' ( <a href="#select_stmt" title="select_stmt">select_stmt</a> | <a href="#explain_stmt" title="explain_stmt">explain_stmt</a> | <a href="#call_stmt" title="call_stmt">call_stmt</a> | <a href="#name" title="name">name</a> ) | 'FETCH' 'FROM' <a href="#call_stmt" title="call_stmt">call_stmt</a> | <a href="#shape_def" title="shape_def">shape_def</a> | 'LIKE' <a href="#select_stmt" title="select_stmt">select_stmt</a> ) | 'TYPE' <a href="#data_type_opt_notnull" title="data_type_opt_notnull">data_type_opt_notnull</a> ) )</div></code></div>
       </p>
       <p>referenced by:
          <ul>

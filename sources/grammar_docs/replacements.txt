@@ -182,6 +182,7 @@ s/[[:<:]]TO[[:>:]]/"TO"/g
 s/[[:<:]]TRANSACTION[[:>:]]/"TRANSACTION"/g
 s/[[:<:]]TRIGGER[[:>:]]/"TRIGGER"/g
 s/[[:<:]]TRY[[:>:]]/"TRY"/g
+s/[[:<:]]TYPE[[:>:]]/"TYPE"/g
 s/[[:<:]]UMINUS[[:>:]]/"UMINUS"/g
 s/[[:<:]]UNBOUNDED[[:>:]]/"UNBOUNDED"/g
 s/[[:<:]]UNION[[:>:]]/"UNION"/g

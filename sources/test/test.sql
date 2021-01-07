@@ -594,6 +594,7 @@ commit;
 savepoint foo;
 release savepoint foo;
 release foo;
+rollback;
 rollback transaction;
 rollback transaction to savepoint foo;
 rollback to savepoint foo;
