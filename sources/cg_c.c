@@ -2857,6 +2857,14 @@ static void cg_create_proc_stmt(ast_node *ast) {
     bprintf(exports_output, ";\n");
   }
 
+  if (options.test) {
+    // echo the export where it can be sanity checked
+    bprintf(cg_declarations_output, "// export: ");
+    gen_set_output_buffer(cg_declarations_output);
+    gen_declare_proc_from_create_proc(ast);
+    bprintf(cg_declarations_output, ";\n");
+  }
+
   cg_fwd_ref_output = &proc_fwd_ref;
   cg_main_output = &proc_body;
   cg_declarations_output = &proc_locals;

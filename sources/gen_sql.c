@@ -2517,8 +2517,8 @@ cql_noexport void gen_declare_proc_from_create_proc(ast_node *ast) {
       }
       gen_printf(")");
 
-      if (has_out_stmt_result(ast) && is_dml_proc(ast->sem->sem_type)) {
-        // out can be DML or not, so we have to specify
+      if ((has_out_stmt_result(ast) || has_out_union_stmt_result(ast)) && is_dml_proc(ast->sem->sem_type)) {
+        // out [union] can be DML or not, so we have to specify
         gen_printf(" USING TRANSACTION");
       }
     }
