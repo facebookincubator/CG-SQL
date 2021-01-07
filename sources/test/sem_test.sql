@@ -13238,3 +13238,43 @@ declare func decl_type_func (arg1 integer) my_type;
 -- + Error % unknown type 'bogus_type'
 -- +1 Error
 declare func decl_type_func_err (arg1 integer) bogus_type;
+
+create table to_copy(
+  f1 integer,
+  f2 integer not null,
+  f3 integer not null @sensitive,
+  f4 integer @sensitive
+);
+
+-- TEST: ensure all attributes correctly copied
+-- + CREATE TABLE the_copy(
+-- + f1 INTEGER,
+-- + f2 INTEGER NOT NULL,
+-- + f3 INTEGER @SENSITIVE NOT NULL,
+-- + f4 INTEGER @SENSITIVE
+-- - Error
+create table the_copy(
+   like to_copy
+);
+
+-- TEST: ensure proc arguments are rewritten correctly
+-- + CREATE PROC uses_complex_table_attrs (f1_ INTEGER, f2_ INTEGER NOT NULL, f3_ INTEGER NOT NULL @SENSITIVE, f4_ INTEGER @SENSITIVE)
+-- - Error
+create proc uses_complex_table_attrs(like to_copy)
+begin
+end;
+
+-- TEST: ensure proc arguments are rewritten correctly
+-- + DECLARE PROC uses_complex_table_attrs (f1_ INTEGER, f2_ INTEGER NOT NULL, f3_ INTEGER NOT NULL @SENSITIVE, f4_ INTEGER @SENSITIVE)
+-- - Error
+declare proc uses_complex_table_attrs(like to_copy);
+
+-- TEST: ensure func arguments are rewritten correctly
+-- + DECLARE FUNC function_uses_complex_table_attrs (f1_ INTEGER, f2_ INTEGER NOT NULL, f3_ INTEGER NOT NULL @SENSITIVE, f4_ INTEGER @SENSITIVE) INTEGER;
+-- - Error
+declare function function_uses_complex_table_attrs(like to_copy) integer;
+
+-- TEST: ensure cursor includes not-null and sensitive
+-- + {declare_cursor_like_name}: complex_attr_cursor: to_copy: { f1: integer, f2: integer notnull, f3: integer notnull sensitive, f4: integer sensitive } variable shape_storage value_cursor
+-- - Error
+declare complex_attr_cursor cursor like to_copy;

@@ -343,10 +343,17 @@ cql_noexport bool_t rewrite_one_def(ast_node *head) {
     ast_node *name_ast = new_ast_str(col_name);
     ast_node *name_type = new_ast_col_def_name_type(name_ast, data_type);
 
-    // If column is non null, add attr node
+    // In the case of columns the ast has col attributes to represent
+    // not null and sensitive so we add those after we've already
+    // added the basic data type above
     ast_node *attrs = NULL;
     if (is_not_nullable(sem_type)) {
       attrs = new_ast_col_attrs_not_null(NULL, NULL);
+    }
+
+    if (sensitive_flag(sem_type)) {
+      // link it in, in case not null was also in play
+      attrs = new_ast_sensitive_attr(NULL, attrs);
     }
 
     ast_node *col_def_type_attrs = new_ast_col_def_type_attrs(name_type, attrs);
@@ -556,15 +563,19 @@ cql_noexport ast_node *rewrite_gen_data_type(sem_t sem_type) {
   }
 
   // all cases covered above [except SEM_TYPE_OBJECT which can't happen]
+  // we may need this case in the future but for now it's unused and this is enforced here
   Invariant(ast);
 
   if (is_not_nullable(sem_type)) {
     ast = new_ast_notnull(ast);
   }
 
+  if (sensitive_flag(sem_type)) {
+    ast = new_ast_sensitive_attr(ast, NULL);
+  }
+
   return ast;
 }
-
 
 // If no name list then fake a name list so that both paths are the same
 // no name list is the same as all the names

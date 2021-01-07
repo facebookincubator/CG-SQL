@@ -53474,3 +53474,199 @@ Error at test/sem_test.sql:XXXX : in str : CQL0360: unknown type 'bogus_type'
     |     | {type_int}: integer
     | {name bogus_type}: err
 
+The statement ending at line XXXX
+
+CREATE TABLE to_copy(
+  f1 INTEGER,
+  f2 INTEGER NOT NULL,
+  f3 INTEGER NOT NULL @SENSITIVE,
+  f4 INTEGER @SENSITIVE
+);
+
+  {create_table_stmt}: to_copy: { f1: integer, f2: integer notnull, f3: integer notnull sensitive, f4: integer sensitive }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name to_copy}
+  | {col_key_list}
+    | {col_def}: f1: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name f1}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: f2: integer notnull
+      | | {col_def_type_attrs}
+      |   | {col_def_name_type}
+      |   | | {name f2}
+      |   | | {type_int}: integer
+      |   | {col_attrs_not_null}: ok
+      | {col_key_list}
+        | {col_def}: f3: integer notnull sensitive
+        | | {col_def_type_attrs}
+        |   | {col_def_name_type}
+        |   | | {name f3}
+        |   | | {type_int}: integer
+        |   | {col_attrs_not_null}: ok
+        |     | {sensitive_attr}
+        | {col_key_list}
+          | {col_def}: f4: integer sensitive
+            | {col_def_type_attrs}
+              | {col_def_name_type}
+              | | {name f4}
+              | | {type_int}: integer
+              | {sensitive_attr}: ok
+
+The statement ending at line XXXX
+
+CREATE TABLE the_copy(
+  f1 INTEGER,
+  f2 INTEGER NOT NULL,
+  f3 INTEGER @SENSITIVE NOT NULL,
+  f4 INTEGER @SENSITIVE
+);
+
+  {create_table_stmt}: the_copy: { f1: integer, f2: integer notnull, f3: integer notnull sensitive, f4: integer sensitive }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name the_copy}
+  | {col_key_list}
+    | {col_def}: f1: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name f1}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: f2: integer notnull
+      | | {col_def_type_attrs}
+      |   | {col_def_name_type}
+      |   | | {name f2}
+      |   | | {type_int}: integer
+      |   | {col_attrs_not_null}: ok
+      | {col_key_list}
+        | {col_def}: f3: integer notnull sensitive
+        | | {col_def_type_attrs}
+        |   | {col_def_name_type}
+        |   | | {name f3}
+        |   | | {type_int}: integer
+        |   | {sensitive_attr}: ok
+        |     | {col_attrs_not_null}
+        | {col_key_list}
+          | {col_def}: f4: integer sensitive
+            | {col_def_type_attrs}
+              | {col_def_name_type}
+              | | {name f4}
+              | | {type_int}: integer
+              | {sensitive_attr}: ok
+
+The statement ending at line XXXX
+
+CREATE PROC uses_complex_table_attrs (f1_ INTEGER, f2_ INTEGER NOT NULL, f3_ INTEGER NOT NULL @SENSITIVE, f4_ INTEGER @SENSITIVE)
+BEGIN
+END;
+
+  {create_proc_stmt}: ok
+  | {name uses_complex_table_attrs}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: f1_: integer variable in
+      | | {param_detail}: f1_: integer variable in
+      |   | {name f1_}: f1_: integer variable in
+      |   | {type_int}: integer
+      | {params}
+        | {param}: f2_: integer notnull variable in
+        | | {param_detail}: f2_: integer notnull variable in
+        |   | {name f2_}: f2_: integer notnull variable in
+        |   | {notnull}: integer notnull
+        |     | {type_int}: integer
+        | {params}
+          | {param}: f3_: integer notnull variable in sensitive
+          | | {param_detail}: f3_: integer notnull variable in sensitive
+          |   | {name f3_}: f3_: integer notnull variable in sensitive
+          |   | {sensitive_attr}: integer notnull sensitive
+          |     | {notnull}: integer notnull
+          |       | {type_int}: integer
+          | {params}
+            | {param}: f4_: integer variable in sensitive
+              | {param_detail}: f4_: integer variable in sensitive
+                | {name f4_}: f4_: integer variable in sensitive
+                | {sensitive_attr}: integer sensitive
+                  | {type_int}: integer
+
+The statement ending at line XXXX
+
+DECLARE PROC uses_complex_table_attrs (f1_ INTEGER, f2_ INTEGER NOT NULL, f3_ INTEGER NOT NULL @SENSITIVE, f4_ INTEGER @SENSITIVE);
+
+  {declare_proc_stmt}: ok
+  | {proc_name_type}
+  | | {name uses_complex_table_attrs}: ok
+  | | {int 0}
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: f1_: integer variable in
+      | | {param_detail}: f1_: integer variable in
+      |   | {name f1_}: f1_: integer variable in
+      |   | {type_int}: integer
+      | {params}
+        | {param}: f2_: integer notnull variable in
+        | | {param_detail}: f2_: integer notnull variable in
+        |   | {name f2_}: f2_: integer notnull variable in
+        |   | {notnull}: integer notnull
+        |     | {type_int}: integer
+        | {params}
+          | {param}: f3_: integer notnull variable in sensitive
+          | | {param_detail}: f3_: integer notnull variable in sensitive
+          |   | {name f3_}: f3_: integer notnull variable in sensitive
+          |   | {sensitive_attr}: integer notnull sensitive
+          |     | {notnull}: integer notnull
+          |       | {type_int}: integer
+          | {params}
+            | {param}: f4_: integer variable in sensitive
+              | {param_detail}: f4_: integer variable in sensitive
+                | {name f4_}: f4_: integer variable in sensitive
+                | {sensitive_attr}: integer sensitive
+                  | {type_int}: integer
+
+The statement ending at line XXXX
+
+DECLARE FUNC function_uses_complex_table_attrs (f1_ INTEGER, f2_ INTEGER NOT NULL, f3_ INTEGER NOT NULL @SENSITIVE, f4_ INTEGER @SENSITIVE) INTEGER;
+
+  {declare_func_stmt}: integer
+  | {name function_uses_complex_table_attrs}: integer
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: f1_: integer variable in
+    | | | {param_detail}: f1_: integer variable in
+    | |   | {name f1_}: f1_: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: f2_: integer notnull variable in
+    |   | | {param_detail}: f2_: integer notnull variable in
+    |   |   | {name f2_}: f2_: integer notnull variable in
+    |   |   | {notnull}: integer notnull
+    |   |     | {type_int}: integer
+    |   | {params}
+    |     | {param}: f3_: integer notnull variable in sensitive
+    |     | | {param_detail}: f3_: integer notnull variable in sensitive
+    |     |   | {name f3_}: f3_: integer notnull variable in sensitive
+    |     |   | {sensitive_attr}: integer notnull sensitive
+    |     |     | {notnull}: integer notnull
+    |     |       | {type_int}: integer
+    |     | {params}
+    |       | {param}: f4_: integer variable in sensitive
+    |         | {param_detail}: f4_: integer variable in sensitive
+    |           | {name f4_}: f4_: integer variable in sensitive
+    |           | {sensitive_attr}: integer sensitive
+    |             | {type_int}: integer
+    | {type_int}: integer
+
+The statement ending at line XXXX
+
+DECLARE complex_attr_cursor CURSOR LIKE to_copy;
+
+  {declare_cursor_like_name}: complex_attr_cursor: to_copy: { f1: integer, f2: integer notnull, f3: integer notnull sensitive, f4: integer sensitive } variable shape_storage value_cursor
+  | {name complex_attr_cursor}: complex_attr_cursor: to_copy: { f1: integer, f2: integer notnull, f3: integer notnull sensitive, f4: integer sensitive } variable shape_storage value_cursor
+  | {like}: to_copy: { f1: integer, f2: integer notnull, f3: integer notnull sensitive, f4: integer sensitive }
+    | {name to_copy}: to_copy: { f1: integer, f2: integer notnull, f3: integer notnull sensitive, f4: integer sensitive }
+
