@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Wed Jan  6 16:11:08 2021
+// Snapshot as of Fri Jan  8 10:41:47 2021
 
 
 const PREC = {
@@ -61,7 +61,7 @@ module.exports = grammar({
     misc_attr: $ => choice(seq($.AT_ATTRIBUTE, '(', $.misc_attr_key, ')'), seq($.AT_ATTRIBUTE, '(', $.misc_attr_key, '=', $.misc_attr_value, ')')),
     misc_attrs: $ => seq($.misc_attr, optional($.misc_attrs)),
     col_def: $ => seq(optional($.misc_attrs), $.col_name, $.data_type_or_type_name, optional($.col_attrs)),
-    pk_def: $ => seq($.PRIMARY, $.KEY, '(', $.name_list, ')'),
+    pk_def: $ => choice(seq($.CONSTRAINT, $.name, $.PRIMARY, $.KEY, '(', $.name_list, ')'), seq($.PRIMARY, $.KEY, '(', $.name_list, ')')),
     opt_fk_options: $ => $.fk_options,
     fk_options: $ => choice($.fk_on_options, $.fk_deferred_options, seq($.fk_on_options, $.fk_deferred_options)),
     fk_on_options: $ => choice(seq($.ON, $.DELETE, $.fk_action), seq($.ON, $.UPDATE, $.fk_action), seq($.ON, $.UPDATE, $.fk_action, $.ON, $.DELETE, $.fk_action), seq($.ON, $.DELETE, $.fk_action, $.ON, $.UPDATE, $.fk_action)),
@@ -69,7 +69,7 @@ module.exports = grammar({
     NOT_DEFERRABLE: $ => prec.left(1, seq(CI('not'), CI('deferrable'))),
     fk_deferred_options: $ => choice(seq($.DEFERRABLE, optional($.fk_initial_state)), seq($.NOT_DEFERRABLE, optional($.fk_initial_state))),
     fk_initial_state: $ => choice(seq($.INITIALLY, $.DEFERRED), seq($.INITIALLY, $.IMMEDIATE)),
-    fk_def: $ => seq($.FOREIGN, $.KEY, '(', $.name_list, ')', $.fk_target_options),
+    fk_def: $ => choice(seq($.CONSTRAINT, $.name, $.FOREIGN, $.KEY, '(', $.name_list, ')', $.fk_target_options), seq($.FOREIGN, $.KEY, '(', $.name_list, ')', $.fk_target_options)),
     fk_target_options: $ => prec.left(seq($.REFERENCES, $.name, '(', $.name_list, ')', optional($.opt_fk_options))),
     unq_def: $ => choice(seq($.CONSTRAINT, $.name, $.UNIQUE, '(', $.name_list, ')'), seq($.UNIQUE, '(', $.name_list, ')')),
     opt_unique: $ => $.UNIQUE,

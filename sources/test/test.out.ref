@@ -73,8 +73,23 @@ CREATE TABLE foo(
   id INTEGER NOT NULL,
   name TEXT,
   rate LONG_INT,
+  CONSTRAINT pk1 PRIMARY KEY (id, name)
+);
+
+CREATE TABLE foo(
+  id INTEGER NOT NULL,
+  name TEXT,
+  rate LONG_INT,
   PRIMARY KEY (id, name),
   FOREIGN KEY (id, name) REFERENCES baz (id, name2)
+);
+
+CREATE TABLE foo(
+  id INTEGER NOT NULL,
+  name TEXT,
+  rate LONG_INT,
+  PRIMARY KEY (id, name),
+  CONSTRAINT garbonzo FOREIGN KEY (id, name) REFERENCES baz (id, name2)
 );
 
 CREATE TABLE foo(

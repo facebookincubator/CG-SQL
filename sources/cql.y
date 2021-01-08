@@ -549,7 +549,8 @@ col_def:
   ;
 
 pk_def:
-  PRIMARY KEY '(' name_list ')'  { $pk_def = new_ast_pk_def($name_list);}
+  CONSTRAINT name PRIMARY KEY '(' name_list ')'  { $pk_def = new_ast_pk_def($name, $name_list);}
+  | PRIMARY KEY '(' name_list ')'  { $pk_def = new_ast_pk_def(NULL, $name_list);}
   ;
 
 opt_fk_options:
@@ -590,7 +591,12 @@ fk_initial_state:
   ;
 
 fk_def:
-  FOREIGN KEY '(' name_list ')' fk_target_options  { $fk_def = new_ast_fk_def($name_list, $fk_target_options); }
+  CONSTRAINT name FOREIGN KEY '(' name_list ')' fk_target_options  {
+    ast_node *fk_info = new_ast_fk_info($name_list, $fk_target_options);
+    $fk_def = new_ast_fk_def($name, fk_info); }
+  | FOREIGN KEY '(' name_list ')' fk_target_options  {
+    ast_node *fk_info = new_ast_fk_info($name_list, $fk_target_options);
+    $fk_def = new_ast_fk_def(NULL, fk_info); }
   ;
 
 fk_target_options:

@@ -231,7 +231,9 @@ create table T9 (
 
 -- TEST: create an fk
 -- + "name" : "T10"
+-- + "primaryKeyName" : "pk1",
 -- + "columns" : [ "id1", "id2" ],
+-- + "name" : "fk1"
 -- + "referenceTable" : "T9",
 -- + "referenceColumns" : [ "id2", "id3" ]
 -- + "name" : "uk1"
@@ -251,8 +253,8 @@ create table T10 (
   id2 integer,
   id3 integer,
   id4 integer unique,
-  primary key (id1, id2),
-  foreign key (id1, id2) references T9 (id2, id3),
+  constraint pk1 primary key (id1, id2),
+  constraint fk1 foreign key (id1, id2) references T9 (id2, id3),
   constraint uk1 unique ( id2, id3 ),
   unique ( id3, id4 )
 );

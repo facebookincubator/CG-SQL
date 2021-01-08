@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed Jan  6 16:11:08 PST 2021
+Snapshot as of Fri Jan  8 10:41:47 PST 2021
 
 ### Operators and Literals
 
@@ -329,7 +329,8 @@ col_def:
   ;
 
 pk_def:
-  "PRIMARY" "KEY" '(' name_list ')'
+  "CONSTRAINT" name "PRIMARY" "KEY" '(' name_list ')'
+  | "PRIMARY" "KEY" '(' name_list ')'
   ;
 
 opt_fk_options:
@@ -370,7 +371,8 @@ fk_initial_state:
   ;
 
 fk_def:
-  "FOREIGN" "KEY" '(' name_list ')' fk_target_options
+  "CONSTRAINT" name "FOREIGN" "KEY" '(' name_list ')' fk_target_options
+  | "FOREIGN" "KEY" '(' name_list ')' fk_target_options
   ;
 
 fk_target_options:

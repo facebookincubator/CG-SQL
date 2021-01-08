@@ -576,8 +576,8 @@
       id2 INTEGER,
       id3 INTEGER,
       id4 INTEGER UNIQUE,
-      PRIMARY KEY (id1, id2),
-      FOREIGN KEY (id1, id2) REFERENCES T9 (id2, id3),
+      CONSTRAINT pk1 PRIMARY KEY (id1, id2),
+      CONSTRAINT fk1 FOREIGN KEY (id1, id2) REFERENCES T9 (id2, id3),
       CONSTRAINT uk1 UNIQUE (id2, id3),
       UNIQUE (id3, id4)
     )
@@ -633,8 +633,10 @@
         }
       ],
       "primaryKey" : [ "id1", "id2" ],
+      "primaryKeyName" : "pk1",
       "foreignKeys" : [
         {
+          "name" : "fk1",
           "columns" : [ "id1", "id2" ],
           "referenceTable" : "T9",
           "referenceColumns" : [ "id2", "id3" ],

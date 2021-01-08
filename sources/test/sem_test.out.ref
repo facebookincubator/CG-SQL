@@ -4135,19 +4135,19 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this un
 
 The statement ending at line XXXX
 
-CREATE TABLE baz(
+CREATE TABLE baz_dup_uk(
   id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
   CONSTRAINT ak1 UNIQUE (id),
   CONSTRAINT ak1 UNIQUE (id)
 );
 
-Error at test/sem_test.sql:XXXX : in unq_def : CQL0020: duplicate unique key in table 'ak1'
+Error at test/sem_test.sql:XXXX : in unq_def : CQL0020: duplicate constraint name in table 'ak1'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
-  | | {name baz}
+  | | {name baz_dup_uk}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key autoinc
     | | {col_def_type_attrs}
@@ -4165,6 +4165,39 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0020: duplicate unique key in 
       | {col_key_list}
         | {unq_def}
           | {name ak1}
+          | {name_list}
+            | {name id}
+
+The statement ending at line XXXX
+
+CREATE TABLE baz_dup_pk(
+  id INTEGER NOT NULL,
+  CONSTRAINT pk1 PRIMARY KEY (id),
+  CONSTRAINT pk1 PRIMARY KEY (id)
+);
+
+Error at test/sem_test.sql:XXXX : in pk_def : CQL0020: duplicate constraint name in table 'pk1'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name baz_dup_pk}
+  | {col_key_list}
+    | {col_def}: id: integer notnull
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |   | | {name id}
+    |   | | {type_int}: integer
+    |   | {col_attrs_not_null}: ok
+    | {col_key_list}
+      | {pk_def}
+      | | {name pk1}
+      | | {name_list}
+      |   | {name id}
+      | {col_key_list}
+        | {pk_def}
+          | {name pk1}
           | {name_list}
             | {name id}
 
@@ -4289,14 +4322,61 @@ CREATE TABLE fk_table(
     |     | {type_int}: integer
     | {col_key_list}
       | {fk_def}: ok
-        | {name_list}
-        | | {name id}: id: integer
-        | {fk_target_options}
-          | {fk_target}
-          | | {name foo}
-          | | {name_list}
-          |   | {name id}: id: integer notnull
-          | {int 0}
+        | {fk_info}
+          | {name_list}
+          | | {name id}: id: integer
+          | {fk_target_options}
+            | {fk_target}
+            | | {name foo}
+            | | {name_list}
+            |   | {name id}: id: integer notnull
+            | {int 0}
+
+The statement ending at line XXXX
+
+CREATE TABLE fk_table_dup(
+  id INTEGER,
+  CONSTRAINT x FOREIGN KEY (id) REFERENCES foo (id),
+  CONSTRAINT x FOREIGN KEY (id) REFERENCES foo (id)
+);
+
+Error at test/sem_test.sql:XXXX : in fk_def : CQL0020: duplicate constraint name in table 'x'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name fk_table_dup}
+  | {col_key_list}
+    | {col_def}: id: integer
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {fk_def}: ok
+      | | {name x}
+      | | {fk_info}
+      |   | {name_list}
+      |   | | {name id}: id: integer
+      |   | {fk_target_options}
+      |     | {fk_target}
+      |     | | {name foo}
+      |     | | {name_list}
+      |     |   | {name id}: id: integer notnull
+      |     | {int 0}
+      | {col_key_list}
+        | {fk_def}
+          | {name x}
+          | {fk_info}
+            | {name_list}
+            | | {name id}
+            | {fk_target_options}
+              | {fk_target}
+              | | {name foo}
+              | | {name_list}
+              |   | {name id}
+              | {int 0}
 
 The statement ending at line XXXX
 
@@ -4320,14 +4400,15 @@ Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'bogus'
     |     | {type_int}: integer
     | {col_key_list}
       | {fk_def}
-        | {name_list}: err
-        | | {name bogus}: err
-        | {fk_target_options}
-          | {fk_target}
-          | | {name foo}
-          | | {name_list}
-          |   | {name id}
-          | {int 0}
+        | {fk_info}
+          | {name_list}: err
+          | | {name bogus}: err
+          | {fk_target_options}
+            | {fk_target}
+            | | {name foo}
+            | | {name_list}
+            |   | {name id}
+            | {int 0}
 
 The statement ending at line XXXX
 
@@ -4351,14 +4432,15 @@ Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'bogus'
     |     | {type_int}: integer
     | {col_key_list}
       | {fk_def}
-        | {name_list}
-        | | {name id}: id: integer
-        | {fk_target_options}
-          | {fk_target}
-          | | {name foo}
-          | | {name_list}: err
-          |   | {name bogus}: err
-          | {int 0}
+        | {fk_info}
+          | {name_list}
+          | | {name id}: id: integer
+          | {fk_target_options}
+            | {fk_target}
+            | | {name foo}
+            | | {name_list}: err
+            |   | {name bogus}: err
+            | {int 0}
 
 The statement ending at line XXXX
 
@@ -4382,14 +4464,15 @@ Error at test/sem_test.sql:XXXX : in fk_def : CQL0021: foreign key refers to non
     |     | {type_int}: integer
     | {col_key_list}
       | {fk_def}
-        | {name_list}
-        | | {name id}: id: integer
-        | {fk_target_options}
-          | {fk_target}
-          | | {name bogus}
-          | | {name_list}
-          |   | {name id}
-          | {int 0}
+        | {fk_info}
+          | {name_list}
+          | | {name id}: id: integer
+          | {fk_target_options}
+            | {fk_target}
+            | | {name bogus}
+            | | {name_list}
+            |   | {name id}
+            | {int 0}
 
 The statement ending at line XXXX
 
@@ -6372,16 +6455,17 @@ Error at test/sem_test.sql:XXXX : in str : CQL0172: name list has duplicate name
     |     | {type_int}: integer
     | {col_key_list}
       | {fk_def}
-        | {name_list}: err
-        | | {name col_id}: col_id: integer
-        | | {name_list}
-        |   | {name col_id}: err
-        | {fk_target_options}
-          | {fk_target}
-          | | {name foo}
+        | {fk_info}
+          | {name_list}: err
+          | | {name col_id}: col_id: integer
           | | {name_list}
-          |   | {name id}
-          | {int 0}
+          |   | {name col_id}: err
+          | {fk_target_options}
+            | {fk_target}
+            | | {name foo}
+            | | {name_list}
+            |   | {name id}
+            | {int 0}
 
 The statement ending at line XXXX
 
@@ -6437,18 +6521,19 @@ Error at test/sem_test.sql:XXXX : in str : CQL0172: name list has duplicate name
       |     | {type_int}: integer
       | {col_key_list}
         | {fk_def}
-          | {name_list}
-          | | {name id1}: id1: integer
-          | | {name_list}
-          |   | {name id2}: id2: integer
-          | {fk_target_options}
-            | {fk_target}
-            | | {name ref_target}
-            | | {name_list}: err
-            |   | {name ref_id1}: ref_id1: integer
-            |   | {name_list}
-            |     | {name ref_id1}: err
-            | {int 0}
+          | {fk_info}
+            | {name_list}
+            | | {name id1}: id1: integer
+            | | {name_list}
+            |   | {name id2}: id2: integer
+            | {fk_target_options}
+              | {fk_target}
+              | | {name ref_target}
+              | | {name_list}: err
+              |   | {name ref_id1}: ref_id1: integer
+              |   | {name_list}
+              |     | {name ref_id1}: err
+              | {int 0}
 
 The statement ending at line XXXX
 
@@ -10052,16 +10137,17 @@ Error at test/sem_test.sql:XXXX : in fk_def : CQL0023: The number of columns on 
       |     | {type_int}: integer
       | {col_key_list}
         | {fk_def}: err
-          | {name_list}
-          | | {name id1}: id1: integer
-          | | {name_list}
-          |   | {name id2}: id2: integer
-          | {fk_target_options}
-            | {fk_target}
-            | | {name foo}
+          | {fk_info}
+            | {name_list}
+            | | {name id1}: id1: integer
             | | {name_list}
-            |   | {name id}: id: integer notnull
-            | {int 0}
+            |   | {name id2}: id2: integer
+            | {fk_target_options}
+              | {fk_target}
+              | | {name foo}
+              | | {name_list}
+              |   | {name id}: id: integer notnull
+              | {int 0}
 
 The statement ending at line XXXX
 
@@ -10085,14 +10171,15 @@ Error at test/sem_test.sql:XXXX : in str : CQL0022: the exact type of both sides
     |     | {type_real}: real
     | {col_key_list}
       | {fk_def}: err
-        | {name_list}
-        | | {name id}: id: real
-        | {fk_target_options}
-          | {fk_target}
-          | | {name foo}
-          | | {name_list}
-          |   | {name id}: id: integer notnull
-          | {int 0}
+        | {fk_info}
+          | {name_list}
+          | | {name id}: id: real
+          | {fk_target_options}
+            | {fk_target}
+            | | {name foo}
+            | | {name_list}
+            |   | {name id}: id: integer notnull
+            | {int 0}
 
 The statement ending at line XXXX
 
@@ -16783,14 +16870,15 @@ Error at test/sem_test.sql:XXXX : in fk_def : CQL0021: foreign key refers to non
     |     | {type_int}: integer
     | {col_key_list}
       | {fk_def}
-        | {name_list}
-        | | {name id}: id: integer
-        | {fk_target_options}
-          | {fk_target}
-          | | {name versioned_table}
-          | | {name_list}
-          |   | {name id}
-          | {int 0}
+        | {fk_info}
+          | {name_list}
+          | | {name id}: id: integer
+          | {fk_target_options}
+            | {fk_target}
+            | | {name versioned_table}
+            | | {name_list}
+            |   | {name id}
+            | {int 0}
 
 The statement ending at line XXXX
 
@@ -28656,14 +28744,15 @@ CREATE TABLE reference_pk(
     |     | {type_int}: integer
     | {col_key_list}
       | {fk_def}: ok
-        | {name_list}
-        | | {name id}: id: integer
-        | {fk_target_options}
-          | {fk_target}
-          | | {name referenceable}
-          | | {name_list}
-          |   | {name a}: a: integer notnull
-          | {int 0}
+        | {fk_info}
+          | {name_list}
+          | | {name id}: id: integer
+          | {fk_target_options}
+            | {fk_target}
+            | | {name referenceable}
+            | | {name_list}
+            |   | {name a}: a: integer notnull
+            | {int 0}
 
 The statement ending at line XXXX
 
@@ -28692,18 +28781,19 @@ CREATE TABLE reference_2_pk(
       |     | {type_real}: real
       | {col_key_list}
         | {fk_def}: ok
-          | {name_list}
-          | | {name id}: id: integer
-          | | {name_list}
-          |   | {name size}: size: real
-          | {fk_target_options}
-            | {fk_target}
-            | | {name referenceable_2}
+          | {fk_info}
+            | {name_list}
+            | | {name id}: id: integer
             | | {name_list}
-            |   | {name a}: a: integer notnull
-            |   | {name_list}
-            |     | {name b}: b: real notnull
-            | {int 0}
+            |   | {name size}: size: real
+            | {fk_target_options}
+              | {fk_target}
+              | | {name referenceable_2}
+              | | {name_list}
+              |   | {name a}: a: integer notnull
+              |   | {name_list}
+              |     | {name b}: b: real notnull
+              | {int 0}
 
 The statement ending at line XXXX
 
@@ -28732,18 +28822,19 @@ CREATE TABLE reference_2_wrong_order_pk(
       |     | {type_real}: real
       | {col_key_list}
         | {fk_def}: ok
-          | {name_list}
-          | | {name size}: size: real
-          | | {name_list}
-          |   | {name id}: id: integer
-          | {fk_target_options}
-            | {fk_target}
-            | | {name referenceable_2}
+          | {fk_info}
+            | {name_list}
+            | | {name size}: size: real
             | | {name_list}
-            |   | {name b}: b: real notnull
-            |   | {name_list}
-            |     | {name a}: a: integer notnull
-            | {int 0}
+            |   | {name id}: id: integer
+            | {fk_target_options}
+              | {fk_target}
+              | | {name referenceable_2}
+              | | {name_list}
+              |   | {name b}: b: real notnull
+              |   | {name_list}
+              |     | {name a}: a: integer notnull
+              | {int 0}
 
 The statement ending at line XXXX
 
@@ -28765,14 +28856,15 @@ CREATE TABLE reference_uk(
     |     | {type_real}: real
     | {col_key_list}
       | {fk_def}: ok
-        | {name_list}
-        | | {name id}: id: real
-        | {fk_target_options}
-          | {fk_target}
-          | | {name referenceable}
-          | | {name_list}
-          |   | {name b}: b: real
-          | {int 0}
+        | {fk_info}
+          | {name_list}
+          | | {name id}: id: real
+          | {fk_target_options}
+            | {fk_target}
+            | | {name referenceable}
+            | | {name_list}
+            |   | {name b}: b: real
+            | {int 0}
 
 The statement ending at line XXXX
 
@@ -28803,18 +28895,19 @@ Error at test/sem_test.sql:XXXX : in name_list : CQL0272: the set of columns ref
       |     | {type_real}: real
       | {col_key_list}
         | {fk_def}: err
-          | {name_list}
-          | | {name id1}: id1: integer
-          | | {name_list}
-          |   | {name id2}: id2: real
-          | {fk_target_options}
-            | {fk_target}
-            | | {name referenceable}
+          | {fk_info}
+            | {name_list}
+            | | {name id1}: id1: integer
             | | {name_list}
-            |   | {name a}: a: integer notnull
-            |   | {name_list}
-            |     | {name b}: b: real
-            | {int 0}
+            |   | {name id2}: id2: real
+            | {fk_target_options}
+              | {fk_target}
+              | | {name referenceable}
+              | | {name_list}
+              |   | {name a}: a: integer notnull
+              |   | {name_list}
+              |     | {name b}: b: real
+              | {int 0}
 
 The statement ending at line XXXX
 
@@ -28843,18 +28936,19 @@ CREATE TABLE referenceable_unique_index(
       |     | {type_text}: text
       | {col_key_list}
         | {fk_def}: ok
-          | {name_list}
-          | | {name id}: id: text
-          | | {name_list}
-          |   | {name label}: label: text
-          | {fk_target_options}
-            | {fk_target}
-            | | {name referenceable}
+          | {fk_info}
+            | {name_list}
+            | | {name id}: id: text
             | | {name_list}
-            |   | {name c}: c: text
-            |   | {name_list}
-            |     | {name d}: d: text
-            | {int 0}
+            |   | {name label}: label: text
+            | {fk_target_options}
+              | {fk_target}
+              | | {name referenceable}
+              | | {name_list}
+              |   | {name c}: c: text
+              |   | {name_list}
+              |     | {name d}: d: text
+              | {int 0}
 
 The statement ending at line XXXX
 
@@ -28885,18 +28979,19 @@ Error at test/sem_test.sql:XXXX : in name_list : CQL0272: the set of columns ref
       |     | {type_text}: text
       | {col_key_list}
         | {fk_def}: err
-          | {name_list}
-          | | {name id1}: id1: integer
-          | | {name_list}
-          |   | {name id2}: id2: text
-          | {fk_target_options}
-            | {fk_target}
-            | | {name referenceable}
+          | {fk_info}
+            | {name_list}
+            | | {name id1}: id1: integer
             | | {name_list}
-            |   | {name a}: a: integer notnull
-            |   | {name_list}
-            |     | {name c}: c: text
-            | {int 0}
+            |   | {name id2}: id2: text
+            | {fk_target_options}
+              | {fk_target}
+              | | {name referenceable}
+              | | {name_list}
+              |   | {name a}: a: integer notnull
+              |   | {name_list}
+              |     | {name c}: c: text
+              | {int 0}
 
 The statement ending at line XXXX
 
@@ -28934,22 +29029,23 @@ Error at test/sem_test.sql:XXXX : in name_list : CQL0272: the set of columns ref
         |     | {type_text}: text
         | {col_key_list}
           | {fk_def}: err
-            | {name_list}
-            | | {name id1}: id1: real
-            | | {name_list}
-            |   | {name id2}: id2: text
-            |   | {name_list}
-            |     | {name id3}: id3: text
-            | {fk_target_options}
-              | {fk_target}
-              | | {name referenceable}
+            | {fk_info}
+              | {name_list}
+              | | {name id1}: id1: real
               | | {name_list}
-              |   | {name b}: b: real
+              |   | {name id2}: id2: text
               |   | {name_list}
-              |     | {name c}: c: text
-              |     | {name_list}
-              |       | {name d}: d: text
-              | {int 0}
+              |     | {name id3}: id3: text
+              | {fk_target_options}
+                | {fk_target}
+                | | {name referenceable}
+                | | {name_list}
+                |   | {name b}: b: real
+                |   | {name_list}
+                |     | {name c}: c: text
+                |     | {name_list}
+                |       | {name d}: d: text
+                | {int 0}
 
 The statement ending at line XXXX
 
@@ -28974,14 +29070,15 @@ Error at test/sem_test.sql:XXXX : in name_list : CQL0272: the set of columns ref
     |   | {col_attrs_pk}: ok
     | {col_key_list}
       | {fk_def}: err
-        | {name_list}
-        | | {name id}: id: longint notnull
-        | {fk_target_options}
-          | {fk_target}
-          | | {name referenceable}
-          | | {name_list}
-          |   | {name e}: e: longint
-          | {int 0}
+        | {fk_info}
+          | {name_list}
+          | | {name id}: id: longint notnull
+          | {fk_target_options}
+            | {fk_target}
+            | | {name referenceable}
+            | | {name_list}
+            |   | {name e}: e: longint
+            | {int 0}
 
 The statement ending at line XXXX
 
@@ -29020,22 +29117,23 @@ Error at test/sem_test.sql:XXXX : in name_list : CQL0272: the set of columns ref
         |     | {type_text}: text
         | {col_key_list}
           | {fk_def}: err
-            | {name_list}
-            | | {name id1}: id1: text notnull
-            | | {name_list}
-            |   | {name id2}: id2: text
-            |   | {name_list}
-            |     | {name id3}: id3: text
-            | {fk_target_options}
-              | {fk_target}
-              | | {name referenceable}
+            | {fk_info}
+              | {name_list}
+              | | {name id1}: id1: text notnull
               | | {name_list}
-              |   | {name c}: c: text
+              |   | {name id2}: id2: text
               |   | {name_list}
-              |     | {name d}: d: text
-              |     | {name_list}
-              |       | {name e}: e: longint
-              | {int 0}
+              |     | {name id3}: id3: text
+              | {fk_target_options}
+                | {fk_target}
+                | | {name referenceable}
+                | | {name_list}
+                |   | {name c}: c: text
+                |   | {name_list}
+                |     | {name d}: d: text
+                |     | {name_list}
+                |       | {name e}: e: longint
+                | {int 0}
 
 The statement ending at line XXXX
 
@@ -29059,14 +29157,15 @@ Error at test/sem_test.sql:XXXX : in name_list : CQL0272: the set of columns ref
     |     | {type_text}: text
     | {col_key_list}
       | {fk_def}: err
-        | {name_list}
-        | | {name id}: id: text
-        | {fk_target_options}
-          | {fk_target}
-          | | {name referenceable}
-          | | {name_list}
-          |   | {name c}: c: text
-          | {int 0}
+        | {fk_info}
+          | {name_list}
+          | | {name id}: id: text
+          | {fk_target_options}
+            | {fk_target}
+            | | {name referenceable}
+            | | {name_list}
+            |   | {name c}: c: text
+            | {int 0}
 
 The statement ending at line XXXX
 
@@ -29211,14 +29310,15 @@ Error at test/sem_test.sql:XXXX : in fk_def : CQL0238: strict FK validation requ
     |     | {type_int}: integer
     | {col_key_list}
       | {fk_def}: err
-        | {name_list}
-        | | {name id}: id: integer
-        | {fk_target_options}
-          | {fk_target}
-          | | {name foo}
-          | | {name_list}
-          |   | {name id}: id: integer notnull
-          | {int 80}
+        | {fk_info}
+          | {name_list}
+          | | {name id}: id: integer
+          | {fk_target_options}
+            | {fk_target}
+            | | {name foo}
+            | | {name_list}
+            |   | {name id}: id: integer notnull
+            | {int 80}
 
 The statement ending at line XXXX
 
@@ -29242,14 +29342,15 @@ Error at test/sem_test.sql:XXXX : in fk_def : CQL0237: strict FK validation requ
     |     | {type_int}: integer
     | {col_key_list}
       | {fk_def}: err
-        | {name_list}
-        | | {name id}: id: integer
-        | {fk_target_options}
-          | {fk_target}
-          | | {name foo}
-          | | {name_list}
-          |   | {name id}: id: integer notnull
-          | {int 0}
+        | {fk_info}
+          | {name_list}
+          | | {name id}: id: integer
+          | {fk_target_options}
+            | {fk_target}
+            | | {name foo}
+            | | {name_list}
+            |   | {name id}: id: integer notnull
+            | {int 0}
 
 The statement ending at line XXXX
 
@@ -29271,14 +29372,15 @@ CREATE TABLE fk_strict_success_loose(
     |     | {type_int}: integer
     | {col_key_list}
       | {fk_def}: ok
-        | {name_list}
-        | | {name id}: id: integer
-        | {fk_target_options}
-          | {fk_target}
-          | | {name foo}
-          | | {name_list}
-          |   | {name id}: id: integer notnull
-          | {int 53}
+        | {fk_info}
+          | {name_list}
+          | | {name id}: id: integer
+          | {fk_target_options}
+            | {fk_target}
+            | | {name foo}
+            | | {name_list}
+            |   | {name id}: id: integer notnull
+            | {int 53}
 
 The statement ending at line XXXX
 
@@ -38865,14 +38967,15 @@ Error at test/sem_test.sql:XXXX : in fk_def : CQL0021: foreign key refers to non
       |   | {col_attrs_not_null}: ok
       | {col_key_list}
         | {fk_def}
-        | | {name_list}
-        | | | {name query}: query: text notnull
-        | | {fk_target_options}
-        |   | {fk_target}
-        |   | | {name table_not_found}
-        |   | | {name_list}
-        |   |   | {name q}
-        |   | {int 0}
+        | | {fk_info}
+        |   | {name_list}
+        |   | | {name query}: query: text notnull
+        |   | {fk_target_options}
+        |     | {fk_target}
+        |     | | {name table_not_found}
+        |     | | {name_list}
+        |     |   | {name q}
+        |     | {int 0}
         | {col_key_list}
           | {pk_def}
             | {name_list}
@@ -45908,14 +46011,15 @@ Error at test/sem_test.sql:XXXX : in fk_def : CQL0021: foreign key refers to non
       |     | {type_int}: integer
       | {col_key_list}
         | {fk_def}
-          | {name_list}
-          | | {name col2}: col2: integer
-          | {fk_target_options}
-            | {fk_target}
-            | | {name this_table_does_not_exist}
-            | | {name_list}
-            |   | {name col1}
-            | {int 51}
+          | {fk_info}
+            | {name_list}
+            | | {name col2}: col2: integer
+            | {fk_target_options}
+              | {fk_target}
+              | | {name this_table_does_not_exist}
+              | | {name_list}
+              |   | {name col1}
+              | {int 51}
 
 The statement ending at line XXXX
 
@@ -46256,14 +46360,15 @@ Error at test/sem_test.sql:XXXX : in fk_def : CQL0324: referenced table was crea
     |     | {type_text}: text
     | {col_key_list}
       | {fk_def}: err
-        | {name_list}
-        | | {name col1}: col1: text
-        | {fk_target_options}
-          | {fk_target}
-          | | {name from_the_future}
-          | | {name_list}
-          |   | {name col1}
-          | {int 0}
+        | {fk_info}
+          | {name_list}
+          | | {name col1}: col1: text
+          | {fk_target_options}
+            | {fk_target}
+            | | {name from_the_future}
+            | | {name_list}
+            |   | {name col1}
+            | {int 0}
 
 The statement ending at line XXXX
 
@@ -46288,14 +46393,15 @@ CREATE TABLE in_the_future(
     |     | {type_text}: text
     | {col_key_list}
       | {fk_def}: ok
-        | {name_list}
-        | | {name col1}: col1: text
-        | {fk_target_options}
-          | {fk_target}
-          | | {name from_the_future}
-          | | {name_list}
-          |   | {name col1}: col1: text notnull
-          | {int 0}
+        | {fk_info}
+          | {name_list}
+          | | {name col1}: col1: text
+          | {fk_target_options}
+            | {fk_target}
+            | | {name from_the_future}
+            | | {name_list}
+            |   | {name col1}: col1: text notnull
+            | {int 0}
 
 The statement ending at line XXXX
 
@@ -46420,14 +46526,15 @@ CREATE TABLE self_ref2(
       |     | {type_int}: integer
       | {col_key_list}
         | {fk_def}: ok
-          | {name_list}
-          | | {name id2}: id2: integer
-          | {fk_target_options}
-            | {fk_target}
-            | | {name self_ref2}
-            | | {name_list}
-            |   | {name id}: id: integer notnull
-            | {int 0}
+          | {fk_info}
+            | {name_list}
+            | | {name id2}: id2: integer
+            | {fk_target_options}
+              | {fk_target}
+              | | {name self_ref2}
+              | | {name_list}
+              |   | {name id}: id: integer notnull
+              | {int 0}
 
 The statement ending at line XXXX
 
@@ -46494,14 +46601,15 @@ Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'idx'
       |     | {type_int}: integer
       | {col_key_list}
         | {fk_def}
-          | {name_list}
-          | | {name id2}: id2: integer
-          | {fk_target_options}
-            | {fk_target}
-            | | {name self_ref4}
-            | | {name_list}: err
-            |   | {name idx}: err
-            | {int 0}
+          | {fk_info}
+            | {name_list}
+            | | {name id2}: id2: integer
+            | {fk_target_options}
+              | {fk_target}
+              | | {name self_ref4}
+              | | {name_list}: err
+              |   | {name idx}: err
+              | {int 0}
 
 The statement ending at line XXXX
 
@@ -46533,14 +46641,15 @@ Error at test/sem_test.sql:XXXX : in name_list : CQL0272: the set of columns ref
       |     | {type_int}: integer
       | {col_key_list}
         | {fk_def}: err
-          | {name_list}
-          | | {name id2}: id2: integer
-          | {fk_target_options}
-            | {fk_target}
-            | | {name self_ref5}
-            | | {name_list}
-            |   | {name id2}: id2: integer
-            | {int 0}
+          | {fk_info}
+            | {name_list}
+            | | {name id2}: id2: integer
+            | {fk_target_options}
+              | {fk_target}
+              | | {name self_ref5}
+              | | {name_list}
+              |   | {name id2}: id2: integer
+              | {int 0}
 
 The statement ending at line XXXX
 

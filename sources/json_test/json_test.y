@@ -49,7 +49,7 @@ void yyset_lineno(int);
 %token ADDED_VERSION DELETED_VERSION ADDED_MIGRATION_PROC DELETED_MIGRATION_PROC RECREATE_GROUP_NAME
 %token COLUMNS
 %token TYPE IS_NOT_NULL IS_PRIMARY_KEY IS_UNIQUE_KEY IS_AUTO_INCREMENT IS_SENSITIVE
-%token PRIMARY_KEY FOREIGN_KEYS UNIQUE_KEYS
+%token PRIMARY_KEY PRIMARY_KEY_NAME FOREIGN_KEYS UNIQUE_KEYS
 %token REFERENCE_TABLE REFERENCE_COLUMNS ON_UPDATE ON_DELETE IS_DEFERRED
 %token ATTRIBUTES VALUE DEFAULT_VALUE VALUES
 %token VIEWS PROJECTION SELECT SELECT_ARGS
@@ -111,10 +111,14 @@ table: '{'
        opt_attributes
        COLUMNS '[' columns ']' ','
        PRIMARY_KEY '[' opt_column_names ']' ','
+       opt_primary_key_name
        FOREIGN_KEYS '[' opt_foreign_keys ']' ','
        UNIQUE_KEYS '[' opt_unique_keys ']' ','
        CHECK_EXPRESSIONS '[' opt_check_expressions ']'
        '}'
+  ;
+
+opt_primary_key_name:  | PRIMARY_KEY_NAME STRING_LITERAL ','
   ;
 
 opt_virtual_tables: | virtual_tables
@@ -244,6 +248,7 @@ foreign_keys :  foreign_key | foreign_key ',' foreign_keys
   ;
 
 foreign_key : '{'
+               opt_name
                COLUMNS '[' column_names ']' ','
                REFERENCE_TABLE STRING_LITERAL ','
                REFERENCE_COLUMNS '[' column_names ']' ','

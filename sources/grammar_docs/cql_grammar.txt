@@ -36,14 +36,14 @@ misc_attr_value ::= name | any_literal | const_expr | '(' misc_attr_value_list '
 misc_attr ::= "@ATTRIBUTE" '(' misc_attr_key ')' | "@ATTRIBUTE" '(' misc_attr_key '=' misc_attr_value ')'
 misc_attrs ::= /* nil */ | misc_attr misc_attrs
 col_def ::= misc_attrs col_name data_type_or_type_name col_attrs
-pk_def ::= "PRIMARY" "KEY" '(' name_list ')'
+pk_def ::= "CONSTRAINT" name "PRIMARY" "KEY" '(' name_list ')' | "PRIMARY" "KEY" '(' name_list ')'
 opt_fk_options ::= /* nil */ | fk_options
 fk_options ::= fk_on_options | fk_deferred_options | fk_on_options fk_deferred_options
 fk_on_options ::= "ON" "DELETE" fk_action | "ON" "UPDATE" fk_action | "ON" "UPDATE" fk_action "ON" "DELETE" fk_action | "ON" "DELETE" fk_action "ON" "UPDATE" fk_action
 fk_action ::= "SET" "NULL" | "SET" "DEFAULT" | "CASCADE" | "RESTRICT" | "NO" "ACTION"
 fk_deferred_options ::= "DEFERRABLE" fk_initial_state | "NOT DEFERRABLE" fk_initial_state
 fk_initial_state ::= /* nil */ | "INITIALLY" "DEFERRED" | "INITIALLY" "IMMEDIATE"
-fk_def ::= "FOREIGN" "KEY" '(' name_list ')' fk_target_options
+fk_def ::= "CONSTRAINT" name "FOREIGN" "KEY" '(' name_list ')' fk_target_options | "FOREIGN" "KEY" '(' name_list ')' fk_target_options
 fk_target_options ::= "REFERENCES" name '(' name_list ')' opt_fk_options
 unq_def ::= "CONSTRAINT" name "UNIQUE" '(' name_list ')' | "UNIQUE" '(' name_list ')'
 opt_unique ::= /* nil */ | "UNIQUE"

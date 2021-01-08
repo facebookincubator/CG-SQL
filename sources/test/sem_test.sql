@@ -1096,13 +1096,23 @@ create table simple_ak_table_7 (
 );
 
 -- TEST: validate duplicate unique key
--- + Error % duplicate unique key in table 'ak1'
+-- + Error % duplicate constraint name in table 'ak1'
 -- +1 Error
 -- + {create_table_stmt}: err
-create table baz (
+create table baz_dup_uk (
   id integer PRIMARY KEY AUTOINCREMENT not null,
   CONSTRAINT ak1 UNIQUE (id),
   CONSTRAINT ak1 UNIQUE (id)
+);
+
+-- TEST: validate duplicate primary unique key
+-- + Error % duplicate constraint name in table 'pk1'
+-- +1 Error
+-- + {create_table_stmt}: err
+create table baz_dup_pk (
+  id integer not null,
+  CONSTRAINT pk1 PRIMARY KEY (id),
+  CONSTRAINT pk1 PRIMARY KEY (id)
 );
 
 -- TEST: validate duplicate in group of unique key
@@ -1144,6 +1154,14 @@ create table baz_3 (
 create table fk_table (
   id integer,
   FOREIGN KEY (id) REFERENCES foo(id)
+);
+
+-- TEST: make a valid FK
+-- + Error % duplicate constraint name in table 'x'
+create table fk_table_dup (
+  id integer,
+  constraint x foreign key (id) references foo(id),
+  constraint x foreign key (id) references foo(id)
 );
 
 -- TEST: make an FK that refers to a bogus column in the current table

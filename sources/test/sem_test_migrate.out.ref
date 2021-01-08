@@ -133,14 +133,15 @@ CREATE TABLE fk_not_there_yet(
         |     | {type_text}: text
         | {col_key_list}
           | {fk_def}: ok
-            | {name_list}
-            | | {name text2}
-            | {fk_target_options}
-              | {fk_target}
-              | | {name foo}
-              | | {name_list}
-              |   | {name name_2}
-              | {int 0}
+            | {fk_info}
+              | {name_list}
+              | | {name text2}
+              | {fk_target_options}
+                | {fk_target}
+                | | {name foo}
+                | | {name_list}
+                |   | {name name_2}
+                | {int 0}
 
 The statement ending at line XXXX
 

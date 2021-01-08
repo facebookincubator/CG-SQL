@@ -626,7 +626,7 @@ static void cg_json_indexed_columns(charbuf *cols, charbuf *orders, ast_node *li
 // The primary key def is emitted just as an ordinary name list
 static void cg_json_pk_def(charbuf *output, ast_node *def) {
   Contract(is_ast_pk_def(def));
-  EXTRACT(name_list, def->left);
+  EXTRACT(name_list, def->right);
 
   cg_json_name_list(output, name_list);
 }
@@ -690,8 +690,14 @@ static void cg_json_fk_target_options(charbuf *output, ast_node *ast) {
 // to the above for the target (the target is used in other cases too)
 static void cg_json_fk_def(charbuf *output, ast_node *def) {
   Contract(is_ast_fk_def(def));
-  EXTRACT_NAMED_NOTNULL(src_list, name_list, def->left);
-  EXTRACT_NOTNULL(fk_target_options, def->right);
+  EXTRACT_NOTNULL(fk_info, def->right);
+  EXTRACT_NAMED_NOTNULL(src_list, name_list, fk_info->left);
+  EXTRACT_NOTNULL(fk_target_options, fk_info->right);
+
+  if (def->left) {
+    EXTRACT_STRING(name, def->left);
+    bprintf(output, "\"name\" : \"%s\",\n", name);
+  }
 
   bprintf(output, "\"columns\" : [ ");
   cg_json_name_list(output, src_list);
@@ -773,6 +779,8 @@ static void cg_json_col_key_list(charbuf *output, ast_node *list) {
     bprintf(output, "],\n");
   }
 
+  ast_node *pk_def = NULL;
+
   {
     bprintf(output, "\"primaryKey\" : [ ");
     if (col_pk.used > 1) {
@@ -783,10 +791,16 @@ static void cg_json_col_key_list(charbuf *output, ast_node *list) {
         EXTRACT_ANY_NOTNULL(def, item->left);
         if (is_ast_pk_def(def)) {
           cg_json_pk_def(output, def);
+          pk_def = def;
         }
       }
     }
     bprintf(output, " ],\n");
+  }
+
+  if (pk_def && pk_def->left) {
+    EXTRACT_STRING(pk_name, pk_def->left);
+    bprintf(output, "\"primaryKeyName\" : \"%s\",\n", pk_name);
   }
 
   {

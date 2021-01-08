@@ -95,10 +95,12 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this un
 Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this unique key is redundant with previous unique keys
 Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this unique key is redundant with previous unique keys
 Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this unique key is redundant with previous unique keys
-Error at test/sem_test.sql:XXXX : in unq_def : CQL0020: duplicate unique key in table 'ak1'
+Error at test/sem_test.sql:XXXX : in unq_def : CQL0020: duplicate constraint name in table 'ak1'
+Error at test/sem_test.sql:XXXX : in pk_def : CQL0020: duplicate constraint name in table 'pk1'
 Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this unique key is redundant with previous unique keys
 Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'ak_col_not_exist'
 Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'ak_col_not_exist'
+Error at test/sem_test.sql:XXXX : in fk_def : CQL0020: duplicate constraint name in table 'x'
 Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'bogus'
 Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'bogus'
 Error at test/sem_test.sql:XXXX : in fk_def : CQL0021: foreign key refers to non-existent table 'bogus'

@@ -1006,14 +1006,15 @@ CREATE TABLE fk_facet(
     |     | {type_int}: integer
     | {col_key_list}
       | {fk_def}: ok
-        | {name_list}
-        | | {name id}: id: integer
-        | {fk_target_options}
-          | {fk_target}
-          | | {name create_column_migrate_test}
-          | | {name_list}
-          |   | {name id}: id: integer
-          | {int 3}
+        | {fk_info}
+          | {name_list}
+          | | {name id}: id: integer
+          | {fk_target_options}
+            | {fk_target}
+            | | {name create_column_migrate_test}
+            | | {name_list}
+            |   | {name id}: id: integer
+            | {int 3}
 
 The statement ending at line XXXX
 
@@ -1753,14 +1754,15 @@ Error at test/sem_test_prev.sql:XXXX : in create_table_stmt : table must leave @
       |     | {type_int}: integer
       | {col_key_list}
         | {fk_def}: ok
-          | {name_list}
-          | | {name col2}: col2: integer
-          | {fk_target_options}
-            | {fk_target}
-            | | {name table_staying}
-            | | {name_list}
-            |   | {name col1}: col1: integer notnull
-            | {int 51}
+          | {fk_info}
+            | {name_list}
+            | | {name col2}: col2: integer
+            | {fk_target_options}
+              | {fk_target}
+              | | {name table_staying}
+              | | {name_list}
+              |   | {name col1}: col1: integer notnull
+              | {int 51}
 
 The statement ending at line XXXX
 
@@ -2988,14 +2990,15 @@ Error at test/sem_test_prev.sql:XXXX : in fk_def : CQL0132: table has a facet th
     |     | {type_int}: integer
     | {col_key_list}
       | {fk_def}: ok
-        | {name_list}
-        | | {name id}
-        | {fk_target_options}
-          | {fk_target}
-          | | {name create_column_migrate_test}
-          | | {name_list}
-          |   | {name id}
-          | {int 48}
+        | {fk_info}
+          | {name_list}
+          | | {name id}
+          | {fk_target_options}
+            | {fk_target}
+            | | {name create_column_migrate_test}
+            | | {name_list}
+            |   | {name id}
+            | {int 48}
 
 The statement ending at line XXXX
 
@@ -3778,14 +3781,15 @@ CREATE TABLE table_going(
       |     | {type_int}: integer
       | {col_key_list}
         | {fk_def}: ok
-          | {name_list}
-          | | {name col2}
-          | {fk_target_options}
-            | {fk_target}
-            | | {name table_staying}
-            | | {name_list}
-            |   | {name col1}
-            | {int 51}
+          | {fk_info}
+            | {name_list}
+            | | {name col2}
+            | {fk_target_options}
+              | {fk_target}
+              | | {name table_staying}
+              | | {name_list}
+              |   | {name col1}
+              | {int 51}
 
 The statement ending at line XXXX
 

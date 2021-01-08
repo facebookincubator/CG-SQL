@@ -2431,7 +2431,7 @@ static void sem_unq_def(ast_node *table_ast, ast_node *def) {
   if (def->left) {
     EXTRACT_STRING(name, def->left);
     if (symtab_find(table_items, name)) {
-      report_error(def, "CQL0020: duplicate unique key in table", name);
+      report_error(def, "CQL0020: duplicate constraint name in table", name);
       record_error(table_ast);
       return;
     }
@@ -2626,7 +2626,7 @@ static bool_t find_referenceable_columns(
     EXTRACT_ANY_NOTNULL(col_def, col_key_list->left);
     // check if all column are in PRIMARY KEY ([name_list]) statement
     if (is_ast_pk_def(col_def)) {
-      EXTRACT_NAMED_NOTNULL(name_list2, name_list, col_def->left);
+      EXTRACT_NAMED_NOTNULL(name_list2, name_list, col_def->right);
       if (callback(name_list2, context)) {
         return true;
       }
@@ -2744,8 +2744,9 @@ static void sem_fk_def(ast_node *table_ast, ast_node *def, version_attrs_info *t
   Contract(!current_joinscope);  // I don't belong inside a select(!)
   Contract(is_ast_create_table_stmt(table_ast));
   Contract(is_ast_fk_def(def));
-  EXTRACT_NAMED_NOTNULL(src_list, name_list, def->left);
-  EXTRACT_NOTNULL(fk_target_options, def->right);
+  EXTRACT_NOTNULL(fk_info, def->right);
+  EXTRACT_NAMED_NOTNULL(src_list, name_list, fk_info->left);
+  EXTRACT_NOTNULL(fk_target_options, fk_info->right);
   EXTRACT_NOTNULL(fk_target, fk_target_options->left);
   EXTRACT_OPTION(flags, fk_target_options->right);
   EXTRACT_STRING(table_name, fk_target->left);
@@ -2774,6 +2775,16 @@ static void sem_fk_def(ast_node *table_ast, ast_node *def, version_attrs_info *t
   }
 
   // FOREIGN KEY ( [src_list] ) REFERENCES [table_name] ([ref_list])
+
+  if (def->left) {
+    EXTRACT_STRING(name, def->left);
+    if (symtab_find(table_items, name)) {
+      report_error(def, "CQL0020: duplicate constraint name in table", name);
+      record_error(table_ast);
+      return;
+    }
+    symtab_add(table_items, name, def);
+  }
 
   if (!sem_validate_name_list(src_list, table_ast->sem->jptr)) {
     record_error(table_ast);
@@ -2842,9 +2853,19 @@ static void sem_pk_def(ast_node *table_ast, ast_node *def) {
   Contract(!current_joinscope);  // I don't belong inside a select(!)
   Contract(is_ast_create_table_stmt(table_ast));
   Contract(is_ast_pk_def(def));
-  EXTRACT(name_list, def->left);
+  EXTRACT(name_list, def->right);
 
   // PRIMARY KEY [name_list]
+
+  if (def->left) {
+    EXTRACT_STRING(name, def->left);
+    if (symtab_find(table_items, name)) {
+      report_error(def, "CQL0020: duplicate constraint name in table", name);
+      record_error(table_ast);
+      return;
+    }
+    symtab_add(table_items, name, def);
+  }
 
   sem_struct *sptr = table_ast->sem->sptr;
 

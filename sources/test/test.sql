@@ -59,8 +59,14 @@ create table foo(id bool);
 -- create table with primary key as it's own row
 create table foo(id int not null, name text, rate long int, primary key (id, name));
 
+-- create table with named primary key as it's own row
+create table foo(id int not null, name text, rate long int, constraint pk1 primary key (id, name));
+
 -- create table with foreign key
 create table foo(id int not null, name text, rate long int, primary key (id, name), foreign key (id, name) references baz(id, name2) );
+
+-- create table with named foreign key
+create table foo(id int not null, name text, rate long int, primary key (id, name), constraint garbonzo foreign key (id, name) references baz(id, name2) );
 
 -- create table with fk attributes
 create table foo(id int, foreign key (name) references baz(name2) on update cascade);

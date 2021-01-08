@@ -368,8 +368,14 @@ static void gen_fk_target_options(ast_node *ast) {
 
 static void gen_fk_def(ast_node *def) {
   Contract(is_ast_fk_def(def));
-  EXTRACT_NAMED_NOTNULL(src_list, name_list, def->left);
-  EXTRACT_NOTNULL(fk_target_options, def->right);
+  EXTRACT(fk_info, def->right);
+  EXTRACT_NAMED_NOTNULL(src_list, name_list, fk_info->left);
+  EXTRACT_NOTNULL(fk_target_options, fk_info->right);
+
+  if (def->left) {
+    EXTRACT_STRING(name, def->left);
+    gen_printf("CONSTRAINT %s ", name);
+  }
 
   gen_printf("FOREIGN KEY (");
   gen_name_list(src_list);
@@ -379,7 +385,12 @@ static void gen_fk_def(ast_node *def) {
 
 static void gen_pk_def(ast_node *def) {
   Contract(is_ast_pk_def(def));
-  EXTRACT(name_list, def->left);
+  EXTRACT(name_list, def->right);
+
+  if (def->left) {
+    EXTRACT_STRING(name, def->left);
+    gen_printf("CONSTRAINT %s ", name);
+  }
 
   gen_printf("PRIMARY KEY (");
   gen_name_list(name_list);

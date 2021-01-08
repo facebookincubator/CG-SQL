@@ -7627,7 +7627,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed Jan  6 16:11:08 PST 2021
+Snapshot as of Fri Jan  8 10:41:47 PST 2021
 
 ### Operators and Literals
 
@@ -7943,7 +7943,8 @@ col_def:
   ;
 
 pk_def:
-  "PRIMARY" "KEY" '(' name_list ')'
+  "CONSTRAINT" name "PRIMARY" "KEY" '(' name_list ')'
+  | "PRIMARY" "KEY" '(' name_list ')'
   ;
 
 opt_fk_options:
@@ -7984,7 +7985,8 @@ fk_initial_state:
   ;
 
 fk_def:
-  "FOREIGN" "KEY" '(' name_list ')' fk_target_options
+  "CONSTRAINT" name "FOREIGN" "KEY" '(' name_list ')' fk_target_options
+  | "FOREIGN" "KEY" '(' name_list ')' fk_target_options
   ;
 
 fk_target_options:
@@ -9201,9 +9203,9 @@ The table part of a CREATE INDEX statement was not a valid table name.
 
 ------
 
-### CQL0020: duplicate unique key in table 'key_name'
+### CQL0020: duplicate constraint name in table 'constraint_name'
 
-A table contains two unique keys with the same name.
+A table contains two contraints with the same name.
 
 ------
 
@@ -12049,7 +12051,7 @@ The name of a declared type is unknown.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Wed Jan  6 16:11:08 PST 2021
+Snapshot as of Fri Jan  8 10:41:48 PST 2021
 
 ### Rules
 
@@ -12100,10 +12102,14 @@ table: '{'
        opt_attributes
        '"columns"' ':' '[' columns ']' ','
        '"primaryKey"' ':' '[' opt_column_names ']' ','
+       opt_primary_key_name
        '"foreignKeys"' ':' '[' opt_foreign_keys ']' ','
        '"uniqueKeys"' ':' '[' opt_unique_keys ']' ','
        '"checkExpressions"' ':' '[' opt_check_expressions ']'
        '}'
+  ;
+
+opt_primary_key_name:  | '"primaryKeyName"' ':' STRING_LITERAL ','
   ;
 
 opt_virtual_tables: | virtual_tables
@@ -12233,6 +12239,7 @@ foreign_keys :  foreign_key | foreign_key ',' foreign_keys
   ;
 
 foreign_key : '{'
+               opt_name
                '"columns"' ':' '[' column_names ']' ','
                '"referenceTable"' ':' STRING_LITERAL ','
                '"referenceColumns"' ':' '[' column_names ']' ','

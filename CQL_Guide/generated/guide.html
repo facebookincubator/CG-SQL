@@ -236,7 +236,7 @@
 <li><a href="#cql0017-index-was-present-but-now-it-does-not-exist-use-delete-instead-index">CQL0017: index was present but now it does not exist (use <code>@delete</code> instead) ‘index’</a></li>
 <li><a href="#cql0018-duplicate-index-name-index">CQL0018: duplicate index name ‘index’</a></li>
 <li><a href="#cql0019-create-index-table-name-not-found-table_name">CQL0019: create index table name not found ‘table_name’</a></li>
-<li><a href="#cql0020-duplicate-unique-key-in-table-key_name">CQL0020: duplicate unique key in table ‘key_name’</a></li>
+<li><a href="#cql0020-duplicate-constraint-name-in-table-constraint_name">CQL0020: duplicate constraint name in table ‘constraint_name’</a></li>
 <li><a href="#cql0021-foreign-key-refers-to-non-existent-table-table_name">CQL0021: foreign key refers to non-existent table ‘table_name’</a></li>
 <li><a href="#cql0022-the-exact-type-of-both-sides-of-a-foreign-key-must-match-expected-expected_type-found-actual_type-key_name">CQL0022: the exact type of both sides of a foreign key must match (expected expected_type; found actual_type) ‘key_name’</a></li>
 <li><a href="#cql0023-the-number-of-columns-on-both-sides-of-a-foreign-key-must-match">CQL0023: The number of columns on both sides of a foreign key must match</a></li>
@@ -5902,7 +5902,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Wed Jan 6 16:11:08 PST 2021</p>
+<p>Snapshot as of Fri Jan 8 10:41:47 PST 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -6206,7 +6206,8 @@ col_def:
   ;
 
 pk_def:
-  &quot;PRIMARY&quot; &quot;KEY&quot; &#39;(&#39; name_list &#39;)&#39;
+  &quot;CONSTRAINT&quot; name &quot;PRIMARY&quot; &quot;KEY&quot; &#39;(&#39; name_list &#39;)&#39;
+  | &quot;PRIMARY&quot; &quot;KEY&quot; &#39;(&#39; name_list &#39;)&#39;
   ;
 
 opt_fk_options:
@@ -6247,7 +6248,8 @@ fk_initial_state:
   ;
 
 fk_def:
-  &quot;FOREIGN&quot; &quot;KEY&quot; &#39;(&#39; name_list &#39;)&#39; fk_target_options
+  &quot;CONSTRAINT&quot; name &quot;FOREIGN&quot; &quot;KEY&quot; &#39;(&#39; name_list &#39;)&#39; fk_target_options
+  | &quot;FOREIGN&quot; &quot;KEY&quot; &#39;(&#39; name_list &#39;)&#39; fk_target_options
   ;
 
 fk_target_options:
@@ -7357,8 +7359,8 @@ enforce_normal_stmt:
 <h3 id="cql0019-create-index-table-name-not-found-table_name">CQL0019: create index table name not found ‘table_name’</h3>
 <p>The table part of a CREATE INDEX statement was not a valid table name.</p>
 <hr />
-<h3 id="cql0020-duplicate-unique-key-in-table-key_name">CQL0020: duplicate unique key in table ‘key_name’</h3>
-<p>A table contains two unique keys with the same name.</p>
+<h3 id="cql0020-duplicate-constraint-name-in-table-constraint_name">CQL0020: duplicate constraint name in table ‘constraint_name’</h3>
+<p>A table contains two contraints with the same name.</p>
 <hr />
 <h3 id="cql0021-foreign-key-refers-to-non-existent-table-table_name">CQL0021: foreign key refers to non-existent table ‘table_name’</h3>
 <p>The table in a foreign key REFERENCES clause is not a valid table.</p>
@@ -8806,7 +8808,7 @@ set x := y;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Wed Jan 6 16:11:08 PST 2021</p>
+<p>Snapshot as of Fri Jan 8 10:41:48 PST 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 
@@ -8854,10 +8856,14 @@ table: &#39;{&#39;
        opt_attributes
        &#39;&quot;columns&quot;&#39; &#39;:&#39; &#39;[&#39; columns &#39;]&#39; &#39;,&#39;
        &#39;&quot;primaryKey&quot;&#39; &#39;:&#39; &#39;[&#39; opt_column_names &#39;]&#39; &#39;,&#39;
+       opt_primary_key_name
        &#39;&quot;foreignKeys&quot;&#39; &#39;:&#39; &#39;[&#39; opt_foreign_keys &#39;]&#39; &#39;,&#39;
        &#39;&quot;uniqueKeys&quot;&#39; &#39;:&#39; &#39;[&#39; opt_unique_keys &#39;]&#39; &#39;,&#39;
        &#39;&quot;checkExpressions&quot;&#39; &#39;:&#39; &#39;[&#39; opt_check_expressions &#39;]&#39;
        &#39;}&#39;
+  ;
+
+opt_primary_key_name:  | &#39;&quot;primaryKeyName&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
   ;
 
 opt_virtual_tables: | virtual_tables
@@ -8987,6 +8993,7 @@ foreign_keys :  foreign_key | foreign_key &#39;,&#39; foreign_keys
   ;
 
 foreign_key : &#39;{&#39;
+               opt_name
                &#39;&quot;columns&quot;&#39; &#39;:&#39; &#39;[&#39; column_names &#39;]&#39; &#39;,&#39;
                &#39;&quot;referenceTable&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
                &#39;&quot;referenceColumns&quot;&#39; &#39;:&#39; &#39;[&#39; column_names &#39;]&#39; &#39;,&#39;

@@ -12,7 +12,7 @@ sidebar_label: "Appendix 5: JSON Schema Grammar"
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Wed Jan  6 16:11:08 PST 2021
+Snapshot as of Fri Jan  8 10:41:48 PST 2021
 
 ### Rules
 
@@ -63,10 +63,14 @@ table: '{'
        opt_attributes
        '"columns"' ':' '[' columns ']' ','
        '"primaryKey"' ':' '[' opt_column_names ']' ','
+       opt_primary_key_name
        '"foreignKeys"' ':' '[' opt_foreign_keys ']' ','
        '"uniqueKeys"' ':' '[' opt_unique_keys ']' ','
        '"checkExpressions"' ':' '[' opt_check_expressions ']'
        '}'
+  ;
+
+opt_primary_key_name:  | '"primaryKeyName"' ':' STRING_LITERAL ','
   ;
 
 opt_virtual_tables: | virtual_tables
@@ -196,6 +200,7 @@ foreign_keys :  foreign_key | foreign_key ',' foreign_keys
   ;
 
 foreign_key : '{'
+               opt_name
                '"columns"' ':' '[' column_names ']' ','
                '"referenceTable"' ':' STRING_LITERAL ','
                '"referenceColumns"' ':' '[' column_names ']' ','
