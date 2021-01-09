@@ -113,7 +113,7 @@ static void gen_name(ast_node *ast) {
 static void gen_name_list(ast_node *list) {
   Contract(is_ast_name_list(list));
 
-  for(ast_node *item = list; item; item = item->right) {
+  for (ast_node *item = list; item; item = item->right) {
     gen_name(item->left);
     if (item->right) {
       gen_printf(", ");
@@ -168,7 +168,7 @@ cql_noexport void gen_misc_attrs(ast_node *list) {
     return;
   }
 
-  for(ast_node *item = list; item; item = item->right) {
+  for (ast_node *item = list; item; item = item->right) {
     gen_misc_attr(item->left);
   }
 }
@@ -2348,7 +2348,7 @@ static void gen_expr_names(ast_node *ast) {
     gen_expr(expr, EXPR_PRI_ROOT);
     gen_as_alias(opt_as_alias);
 
-    if(list->right) {
+    if (list->right) {
       gen_printf(", ");
     }
   }

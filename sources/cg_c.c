@@ -3096,7 +3096,7 @@ static void cg_declare_vars_type(ast_node *declare_vars_type) {
 
   // DECLARE [name_list] [data_type]
 
-  for(ast_node *ast = name_list; ast; ast = ast->right) {
+  for (ast_node *ast = name_list; ast; ast = ast->right) {
     EXTRACT_ANY_NOTNULL(name_ast, ast->left);
     EXTRACT_STRING(name, name_ast);
 

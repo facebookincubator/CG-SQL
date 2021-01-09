@@ -275,7 +275,7 @@ static void cg_json_misc_attrs(charbuf *output, ast_node *_Nonnull list) {
   BEGIN_INDENT(attr, 2);
   BEGIN_LIST;
 
-  for(ast_node *item = list; item; item = item->right) {
+  for (ast_node *item = list; item; item = item->right) {
     COMMA;
     cg_json_misc_attr(output, item->left);
   }
@@ -584,7 +584,7 @@ static void cg_json_col_def(charbuf *output, col_info *info) {
 static void cg_json_name_list(charbuf *output, ast_node *list) {
   Contract(is_ast_name_list(list));
 
-  for(ast_node *item = list; item; item = item->right) {
+  for (ast_node *item = list; item; item = item->right) {
     bprintf(output, "\"");
     cg_json_name(output, item->left);
     bprintf(output, "\"");

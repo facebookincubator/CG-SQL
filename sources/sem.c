@@ -5510,7 +5510,7 @@ static void sem_func_char(ast_node *ast, uint32_t arg_count) {
       return;
     }
     sensitive |= sensitive_flag(sem_type);
-  } while((arg_list = arg_list->right));
+  } while ((arg_list = arg_list->right));
 
   // char() will always return a string, sensitivity param is preserved.
   // char return null if params doesn't have a character representation

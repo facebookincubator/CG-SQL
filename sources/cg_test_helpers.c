@@ -551,7 +551,7 @@ static void init_all_trigger_per_table() {
   Contract(all_tables_with_triggers == NULL);
   all_tables_with_triggers = symtab_new();
 
-  for(list_item *item = all_triggers_list; item; item = item->next) {
+  for (list_item *item = all_triggers_list; item; item = item->next) {
     EXTRACT_NOTNULL(create_trigger_stmt, item->ast);
     EXTRACT_NOTNULL(trigger_body_vers, create_trigger_stmt->right);
     EXTRACT_NOTNULL(trigger_def, trigger_body_vers->left);

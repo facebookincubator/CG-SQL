@@ -761,7 +761,7 @@ cql_noexport void rewrite_cql_cursor_diff(ast_node *ast, bool_t report_column_na
 }
 
 // This helper function rewrite iif ast to case_expr ast.
-// e.g: if(X, Y, Z) => CASE WHEN X THEN Y ELSE Z END;
+// e.g: iif(X, Y, Z) => CASE WHEN X THEN Y ELSE Z END;
 cql_noexport void rewrite_iif(ast_node *ast) {
   Contract(is_ast_call(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
@@ -1203,7 +1203,7 @@ static ast_node *rewrite_gen_case_expr(ast_node *var1, ast_node *var2, bool_t re
 // Rewrite a data type represented as a string node to the
 // actual type if the string name is a declared type.
 cql_noexport void rewrite_data_type_if_needed(ast_node *ast) {
-  if(is_ast_str(ast)) {
+  if (is_ast_str(ast)) {
     // A string node can only be a declare type's name. If so
     // we rewrite it to the data type of declare_named_type node
     EXTRACT_STRING(name, ast);
@@ -1221,7 +1221,7 @@ cql_noexport void rewrite_data_type_if_needed(ast_node *ast) {
     bool_t only_primitive_type = ast->parent &&
         (is_ast_col_def_name_type(ast->parent) || is_ast_cast_expr(ast->parent));
     if (only_primitive_type) {
-      while(is_ast_notnull(data_type) || is_ast_sensitive_attr(data_type)) {
+      while (is_ast_notnull(data_type) || is_ast_sensitive_attr(data_type)) {
         data_type = data_type->left;
       }
     }
