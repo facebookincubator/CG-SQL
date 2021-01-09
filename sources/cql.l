@@ -236,8 +236,8 @@ FOR[ \t\n]EACH[ \t\n]ROW     { return FOR_EACH_ROW; }
 
 ([0-9]+"."[0-9]*|"."[0-9]+)(E("+"|"-")?[0-9]+)? { yylval.sval = Strdup(yytext); return REALLIT; }
 
-\"(\\.|[^"\n])*\"            { yylval.sval = Strdup(yytext); return CSTRLIT; }
-'(\\.|''|[^'\n])*'           { yylval.sval = Strdup(yytext); return STRLIT; }
+\"(\\.|[^\\"\n])*\"          { yylval.sval = Strdup(yytext); return CSTRLIT; }
+'(''|[^'\n])*'               { yylval.sval = Strdup(yytext); return STRLIT; }
 X'([0-9a-fA-F][0-9a-fA-F])*' { yylval.sval = Strdup(yytext); return BLOBLIT; }
 [-+&~|^/%*(),.;!<>:=]        { return yytext[0]; }
 [_A-Za-z][A-Za-z0-9_]*       { yylval.sval = Strdup(yytext); return ID; }
