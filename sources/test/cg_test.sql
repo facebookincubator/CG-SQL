@@ -3055,6 +3055,9 @@ begin
   create virtual table v3 using m2(arguments following) as (id integer);
 end;
 
+-- TEST: declaration of a named type
+declare my_name_type type text not null;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

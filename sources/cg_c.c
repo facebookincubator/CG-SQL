@@ -4876,6 +4876,7 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
   }
 
   symtab_entry *entry = symtab_find(cg_stmts, stmt->type);
+  Contract(entry);
 
   // DDL operations not in a procedure are ignored
   // but they can declare schema during the semantic pass
@@ -6000,6 +6001,7 @@ cql_noexport void cg_c_init(void) {
   NO_OP_STMT_INIT(schema_upgrade_script_stmt);
   NO_OP_STMT_INIT(schema_ad_hoc_migration_stmt);
   NO_OP_STMT_INIT(declare_enum_stmt);
+  NO_OP_STMT_INIT(declare_named_type);
 
   STD_DML_STMT_INIT(begin_trans_stmt);
   STD_DML_STMT_INIT(commit_trans_stmt);
