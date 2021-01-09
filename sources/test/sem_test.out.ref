@@ -15502,7 +15502,7 @@ DECLARE FUNC creater_func () CREATE OBJECT NOT NULL;
   {declare_func_stmt}: object notnull create_func
   | {name creater_func}: object notnull create_func
   | {func_params_return}
-    | {create}: object notnull create_func
+    | {create_data_type}: object notnull create_func
       | {notnull}: object notnull
         | {type_object}: object
 
@@ -15513,7 +15513,7 @@ DECLARE FUNC maybe_create_func () CREATE OBJECT;
   {declare_func_stmt}: object create_func
   | {name maybe_create_func}: object create_func
   | {func_params_return}
-    | {create}: object create_func
+    | {create_data_type}: object create_func
       | {type_object}: object
 
 The statement ending at line XXXX
@@ -53778,4 +53778,74 @@ DECLARE complex_attr_cursor CURSOR LIKE to_copy;
   | {name complex_attr_cursor}: complex_attr_cursor: to_copy: { f1: integer, f2: integer notnull, f3: integer notnull sensitive, f4: integer sensitive } variable shape_storage value_cursor
   | {like}: to_copy: { f1: integer, f2: integer notnull, f3: integer notnull sensitive, f4: integer sensitive }
     | {name to_copy}: to_copy: { f1: integer, f2: integer notnull, f3: integer notnull sensitive, f4: integer sensitive }
+
+The statement ending at line XXXX
+
+DECLARE FUNC maybe_create_func_sensitive () CREATE OBJECT @SENSITIVE;
+
+  {declare_func_stmt}: object create_func sensitive
+  | {name maybe_create_func_sensitive}: object create_func sensitive
+  | {func_params_return}
+    | {create_data_type}: object create_func sensitive
+      | {sensitive_attr}: object sensitive
+        | {type_object}: object
+
+The statement ending at line XXXX
+
+DECLARE FUNC maybe_create_func_blob () CREATE BLOB NOT NULL;
+
+  {declare_func_stmt}: blob notnull create_func
+  | {name maybe_create_func_blob}: blob notnull create_func
+  | {func_params_return}
+    | {create_data_type}: blob notnull create_func
+      | {notnull}: blob notnull
+        | {type_blob}: blob
+
+The statement ending at line XXXX
+
+DECLARE FUNC maybe_create_func_text () CREATE TEXT;
+
+  {declare_func_stmt}: text create_func
+  | {name maybe_create_func_text}: text create_func
+  | {func_params_return}
+    | {create_data_type}: text create_func
+      | {type_text}: text
+
+The statement ending at line XXXX
+
+DECLARE FUNC maybe_create_func_int () CREATE INTEGER;
+
+Error at test/sem_test.sql:XXXX : in create_data_type : CQL0361: Return data type in a create function declaration can only be text, blob or object
+
+  {declare_func_stmt}: err
+  | {name maybe_create_func_int}
+  | {func_params_return}
+    | {create_data_type}: err
+      | {type_int}
+
+The statement ending at line XXXX
+
+DECLARE FUNC maybe_create_func_bool () CREATE BOOL;
+
+Error at test/sem_test.sql:XXXX : in create_data_type : CQL0361: Return data type in a create function declaration can only be text, blob or object
+
+  {declare_func_stmt}: err
+  | {name maybe_create_func_bool}
+  | {func_params_return}
+    | {create_data_type}: err
+      | {type_bool}
+
+The statement ending at line XXXX
+
+DECLARE FUNC maybe_create_func_long () CREATE LONG_INT NOT NULL @SENSITIVE;
+
+Error at test/sem_test.sql:XXXX : in create_data_type : CQL0361: Return data type in a create function declaration can only be text, blob or object
+
+  {declare_func_stmt}: err
+  | {name maybe_create_func_long}
+  | {func_params_return}
+    | {create_data_type}: err
+      | {sensitive_attr}
+        | {notnull}
+          | {type_long}
 

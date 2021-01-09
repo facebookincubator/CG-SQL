@@ -174,7 +174,7 @@ cql_noexport void gen_misc_attrs(ast_node *list) {
 }
 
 static void gen_data_type(ast_node *ast) {
-  if (is_ast_create(ast)) {
+  if (is_ast_create_data_type(ast)) {
     gen_printf("CREATE ");
     gen_data_type(ast->left);
   }

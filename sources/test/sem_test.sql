@@ -13296,3 +13296,47 @@ declare function function_uses_complex_table_attrs(like to_copy) integer;
 -- + {declare_cursor_like_name}: complex_attr_cursor: to_copy: { f1: integer, f2: integer notnull, f3: integer notnull sensitive, f4: integer sensitive } variable shape_storage value_cursor
 -- - Error
 declare complex_attr_cursor cursor like to_copy;
+
+-- TEST: make a function that creates sensitive
+-- + {declare_func_stmt}: object create_func sensitive
+-- + {create_data_type}: object create_func sensitive
+-- + {sensitive_attr}: object sensitive
+-- + {type_object}: object
+-- - Error
+declare function maybe_create_func_sensitive() create object @sensitive;
+
+-- TEST: make a function that creates blob
+-- + {declare_func_stmt}: blob notnull create_func
+-- + {create_data_type}: blob notnull create_func
+-- + {notnull}: blob notnull
+-- + {type_blob}: blob
+-- - Error
+declare function maybe_create_func_blob() create blob not null;
+
+-- TEST: make a function that creates text
+-- + {declare_func_stmt}: text create_func
+-- + {create_data_type}: text create_func
+-- + {type_text}: text
+-- - Error
+declare function maybe_create_func_text() create text;
+
+-- TEST: make a function that creates int
+-- + {declare_func_stmt}: err
+-- + {create_data_type}: err
+-- + Error % Return data type in a create function declaration can only be Text, Blob or Object
+-- +1 Error
+declare function maybe_create_func_int() create int;
+
+-- TEST: make a function that creates bool
+-- + {declare_func_stmt}: err
+-- + {create_data_type}: err
+-- + Error % Return data type in a create function declaration can only be Text, Blob or Object
+-- +1 Error
+declare function maybe_create_func_bool() create bool;
+
+-- TEST: make a function that creates long
+-- + {declare_func_stmt}: err
+-- + {create_data_type}: err
+-- + Error % Return data type in a create function declaration can only be Text, Blob or Object
+-- +1 Error
+declare function maybe_create_func_long() create long not null @sensitive;

@@ -762,7 +762,7 @@ AST1(close_stmt)
 AST1(out_stmt)
 AST1(out_union_stmt)
 AST1(notnull);
-AST1(create);
+AST1(create_data_type);
 AST1(begin_trans_stmt);
 AST0(commit_trans_stmt);
 AST1(rollback_trans_stmt);

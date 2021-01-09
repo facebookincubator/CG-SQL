@@ -203,7 +203,7 @@ static void cql_reset_globals(void);
 /* expressions and types */
 %type <aval> expr basic_expr math_expr expr_list typed_name typed_names case_list call_expr_list call_expr shape_arguments
 %type <aval> name name_list opt_name_list opt_name
-%type <aval> data_type data_type_or_type_name data_type_numeric data_type_opt_notnull creation_type object_type
+%type <aval> data_type data_type_or_type_name data_type_numeric data_type_opt_notnull object_type
 
 /* proc stuff */
 %type <aval> create_proc_stmt declare_func_stmt declare_proc_stmt
@@ -1377,15 +1377,6 @@ conflict_target:
   }
   ;
 
-creation_type:
-  object_type  { $creation_type = $object_type; }
-  | object_type NOT NULL_  { $creation_type = new_ast_notnull($object_type); }
-  | TEXT  { $creation_type = new_ast_type_text(); }
-  | TEXT NOT NULL_  { $creation_type = new_ast_notnull(new_ast_type_text()); }
-  | BLOB  { $creation_type = new_ast_type_blob(); }
-  | BLOB NOT NULL_  { $creation_type = new_ast_notnull(new_ast_type_blob()); }
-  ;
-
 function: FUNC | FUNCTION
   ;
 
@@ -1410,9 +1401,9 @@ declare_func_stmt:
       $declare_func_stmt = new_ast_declare_func_stmt($name, new_ast_func_params_return($params, $data_type_opt_notnull)); }
   | DECLARE SELECT function name '(' params ')' data_type_opt_notnull  {
       $declare_func_stmt = new_ast_declare_select_func_stmt($name, new_ast_func_params_return($params, $data_type_opt_notnull)); }
-  | DECLARE function name '(' params ')' CREATE creation_type  {
-      ast_node *type = new_ast_create($creation_type);
-      $declare_func_stmt = new_ast_declare_func_stmt($name, new_ast_func_params_return($params, type)); }
+  | DECLARE function name '(' params ')' CREATE data_type_opt_notnull  {
+      ast_node *create_data_type = new_ast_create_data_type($data_type_opt_notnull);
+      $declare_func_stmt = new_ast_declare_func_stmt($name, new_ast_func_params_return($params, create_data_type)); }
   | DECLARE SELECT function name '(' params ')' '(' typed_names ')'  {
       $declare_func_stmt = new_ast_declare_select_func_stmt($name, new_ast_func_params_return($params, $typed_names)); }
   ;

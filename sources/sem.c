@@ -518,7 +518,7 @@ typedef struct coldef_info {
 } coldef_info;
 
 // We collect these as we process the column definitions.
-// tracking this information helps us to report on duplicates 
+// tracking this information helps us to report on duplicates
 // (like you can't say primary key 2 times)
 // and otherwise get the results on a silver platter when processing is done.
 // This also gives us access to the pending table info which can be used
@@ -2196,8 +2196,24 @@ static void sem_data_type_var(ast_node *ast) {
     return;
   }
 
-  if (is_ast_create(ast)) {
-    EXTRACT_ANY_NOTNULL(data_type, ast->left);
+  if (is_ast_create_data_type(ast)) {
+    ast_node *data_type = ast->left;
+
+    // find the real type of the data type to validate it.
+    ast_node *real_data_type = data_type;
+    while(is_ast_notnull(real_data_type) || is_ast_sensitive_attr(real_data_type)) {
+      real_data_type = real_data_type->left;
+    }
+
+    // The create data type is restricted to text, blob, object only.
+    if (!is_ast_type_text(real_data_type) &&
+        !is_ast_type_blob(real_data_type) &&
+        !is_ast_type_object(real_data_type)) {
+      report_error(ast, "CQL0361: Return data type in a create function declaration can only be text, blob or object", NULL);
+      record_error(ast);
+      return;
+    }
+
     sem_data_type_var(data_type);
 
     // Create a node for me using my child's type but adding func create.
