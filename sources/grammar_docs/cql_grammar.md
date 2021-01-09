@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Fri Jan  8 10:41:47 PST 2021
+Snapshot as of Fri Jan  8 15:27:03 PST 2021
 
 ### Operators and Literals
 
@@ -1041,15 +1041,6 @@ conflict_target:
   | '(' indexed_columns ')' opt_where
   ;
 
-creation_type:
-  object_type
-  | object_type "NOT" "NULL"
-  | "TEXT"
-  | "TEXT" "NOT" "NULL"
-  | "BLOB"
-  | "BLOB" "NOT" "NULL"
-  ;
-
 function: "FUNC" | "FUNCTION"
   ;
 
@@ -1070,7 +1061,7 @@ enum_value:
 declare_func_stmt:
   "DECLARE" function name '(' params ')' data_type_opt_notnull
   | "DECLARE" "SELECT" function name '(' params ')' data_type_opt_notnull
-  | "DECLARE" function name '(' params ')' "CREATE" creation_type
+  | "DECLARE" function name '(' params ')' "CREATE" data_type_opt_notnull
   | "DECLARE" "SELECT" function name '(' params ')' '(' typed_names ')'
   ;
 

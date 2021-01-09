@@ -13,7 +13,7 @@ CREATE TABLE foo(
   | | {name foo}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key autoinc
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id}
         | | {type_int}: integer
@@ -33,7 +33,7 @@ CREATE TABLE foo(
   | | {name foo}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key autoinc
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id}
         | | {type_int}: integer
@@ -55,14 +55,14 @@ CREATE TABLE bar(
   | | {name bar}
   | {col_key_list}
     | {col_def}: id: integer notnull
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
       | {col_def}: name: text @create(2)
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |   | | {name name}
       |   | | {type_text}: text
@@ -71,7 +71,7 @@ CREATE TABLE bar(
       |       | {int 2}
       | {col_key_list}
         | {col_def}: rate: longint @create(2)
-          | {col_def_type_attrs}
+          | {col_def_type_attrs}: ok
             | {col_def_name_type}
             | | {name rate}
             | | {type_long}: longint
@@ -102,7 +102,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0103: duplicate table/view name 'f
   | | {name foo}: err
   | {col_key_list}
     | {col_def}: id: integer
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
           | {name id}
           | {type_int}: integer
@@ -123,13 +123,13 @@ Error at test/sem_test.sql:XXXX : in str : CQL0142: duplicate column name 'id'
   | | {name baz}
   | {col_key_list}
     | {col_def}: id: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id}
     |     | {type_int}: integer
     | {col_key_list}
       | {col_def}: id: integer
-        | {col_def_type_attrs}
+        | {col_def_type_attrs}: ok
           | {col_def_name_type}
             | {name id}
             | {type_int}: integer
@@ -1472,13 +1472,13 @@ CREATE TABLE big(
   | | {name big}
   | {col_key_list}
     | {col_def}: l: longint
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name l}
     |     | {type_long}: longint
     | {col_key_list}
       | {col_def}: r: real
-        | {col_def_type_attrs}
+        | {col_def_type_attrs}: ok
           | {col_def_name_type}
             | {name r}
             | {type_real}: real
@@ -3707,7 +3707,7 @@ CREATE TABLE simple_pk_table(
   | | {name simple_pk_table}
   | {col_key_list}
     | {col_def}: id: integer notnull
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
@@ -3733,7 +3733,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0024: table does not have pk colum
   | | {name baz}
   | {col_key_list}
     | {col_def}: id: integer notnull
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
@@ -3760,7 +3760,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0143: more than one primary key in
   | | {name baz}
   | {col_key_list}
     | {col_def}: id: integer notnull
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
@@ -3788,7 +3788,7 @@ CREATE TABLE simple_ak_table(
   | | {name simple_ak_table}
   | {col_key_list}
     | {col_def}: id: integer notnull
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
@@ -3818,26 +3818,26 @@ CREATE TABLE simple_ak_table_2(
   | | {name simple_ak_table_2}
   | {col_key_list}
     | {col_def}: a: integer notnull
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name a}
     |   | | {type_int}: integer
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
       | {col_def}: b: text
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |     | {name b}
       |     | {type_text}: text
       | {col_key_list}
         | {col_def}: c: real
-        | | {col_def_type_attrs}
+        | | {col_def_type_attrs}: ok
         |   | {col_def_name_type}
         |     | {name c}
         |     | {type_real}: real
         | {col_key_list}
           | {col_def}: d: longint
-          | | {col_def_type_attrs}
+          | | {col_def_type_attrs}: ok
           |   | {col_def_name_type}
           |     | {name d}
           |     | {type_long}: longint
@@ -3876,26 +3876,26 @@ CREATE TABLE simple_ak_table_3(
   | | {name simple_ak_table_3}
   | {col_key_list}
     | {col_def}: a: integer notnull
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name a}
     |   | | {type_int}: integer
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
       | {col_def}: b: text
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |     | {name b}
       |     | {type_text}: text
       | {col_key_list}
         | {col_def}: c: real
-        | | {col_def_type_attrs}
+        | | {col_def_type_attrs}: ok
         |   | {col_def_name_type}
         |     | {name c}
         |     | {type_real}: real
         | {col_key_list}
           | {col_def}: d: longint
-          | | {col_def_type_attrs}
+          | | {col_def_type_attrs}: ok
           |   | {col_def_name_type}
           |     | {name d}
           |     | {type_long}: longint
@@ -3931,20 +3931,20 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this un
   | | {name simple_ak_table_4}
   | {col_key_list}
     | {col_def}: a: integer notnull
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name a}
     |   | | {type_int}: integer
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
       | {col_def}: b: text
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |     | {name b}
       |     | {type_text}: text
       | {col_key_list}
         | {col_def}: c: real
-        | | {col_def_type_attrs}
+        | | {col_def_type_attrs}: ok
         |   | {col_def_name_type}
         |     | {name c}
         |     | {type_real}: real
@@ -3983,26 +3983,26 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this un
   | | {name simple_ak_table_5}
   | {col_key_list}
     | {col_def}: a: integer notnull
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name a}
     |   | | {type_int}: integer
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
       | {col_def}: b: text
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |     | {name b}
       |     | {type_text}: text
       | {col_key_list}
         | {col_def}: c: real
-        | | {col_def_type_attrs}
+        | | {col_def_type_attrs}: ok
         |   | {col_def_name_type}
         |     | {name c}
         |     | {type_real}: real
         | {col_key_list}
           | {col_def}: d: longint
-          | | {col_def_type_attrs}
+          | | {col_def_type_attrs}: ok
           |   | {col_def_name_type}
           |     | {name d}
           |     | {type_long}: longint
@@ -4039,26 +4039,26 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this un
   | | {name simple_ak_table_6}
   | {col_key_list}
     | {col_def}: a: integer notnull
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name a}
     |   | | {type_int}: integer
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
       | {col_def}: b: text
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |     | {name b}
       |     | {type_text}: text
       | {col_key_list}
         | {col_def}: c: real
-        | | {col_def_type_attrs}
+        | | {col_def_type_attrs}: ok
         |   | {col_def_name_type}
         |     | {name c}
         |     | {type_real}: real
         | {col_key_list}
           | {col_def}: d: longint
-          | | {col_def_type_attrs}
+          | | {col_def_type_attrs}: ok
           |   | {col_def_name_type}
           |     | {name d}
           |     | {type_long}: longint
@@ -4099,26 +4099,26 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this un
   | | {name simple_ak_table_7}
   | {col_key_list}
     | {col_def}: a: integer notnull
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name a}
     |   | | {type_int}: integer
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
       | {col_def}: b: text
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |     | {name b}
       |     | {type_text}: text
       | {col_key_list}
         | {col_def}: c: real
-        | | {col_def_type_attrs}
+        | | {col_def_type_attrs}: ok
         |   | {col_def_name_type}
         |     | {name c}
         |     | {type_real}: real
         | {col_key_list}
           | {col_def}: d: longint
-          | | {col_def_type_attrs}
+          | | {col_def_type_attrs}: ok
           |   | {col_def_name_type}
           |     | {name d}
           |     | {type_long}: longint
@@ -4150,7 +4150,7 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0020: duplicate constraint nam
   | | {name baz_dup_uk}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key autoinc
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
@@ -4185,7 +4185,7 @@ Error at test/sem_test.sql:XXXX : in pk_def : CQL0020: duplicate constraint name
   | | {name baz_dup_pk}
   | {col_key_list}
     | {col_def}: id: integer notnull
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
@@ -4219,7 +4219,7 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this un
   | | {name baz_2}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key autoinc
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
@@ -4228,7 +4228,7 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this un
     |     | {col_attrs_not_null}
     | {col_key_list}
       | {col_def}: name: text
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |     | {name name}
       |     | {type_text}: text
@@ -4261,7 +4261,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'ak_col_not_e
   | | {name baz}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key autoinc
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
@@ -4290,7 +4290,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'ak_col_not_e
   | | {name baz_3}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key autoinc
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
@@ -4316,7 +4316,7 @@ CREATE TABLE fk_table(
   | | {name fk_table}
   | {col_key_list}
     | {col_def}: id: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id}
     |     | {type_int}: integer
@@ -4349,7 +4349,7 @@ Error at test/sem_test.sql:XXXX : in fk_def : CQL0020: duplicate constraint name
   | | {name fk_table_dup}
   | {col_key_list}
     | {col_def}: id: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id}
     |     | {type_int}: integer
@@ -4394,7 +4394,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'bogus'
   | | {name baz}
   | {col_key_list}
     | {col_def}: id: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id}
     |     | {type_int}: integer
@@ -4426,7 +4426,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'bogus'
   | | {name baz}
   | {col_key_list}
     | {col_def}: id: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id}
     |     | {type_int}: integer
@@ -4458,7 +4458,7 @@ Error at test/sem_test.sql:XXXX : in fk_def : CQL0021: foreign key refers to non
   | | {name baz}
   | {col_key_list}
     | {col_def}: id: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id}
     |     | {type_int}: integer
@@ -4951,7 +4951,7 @@ CREATE TABLE booly(
   | | {name booly}
   | {col_key_list}
     | {col_def}: id: integer has_default
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
@@ -4959,7 +4959,7 @@ CREATE TABLE booly(
     |     | {int 8675309}: integer notnull
     | {col_key_list}
       | {col_def}: flag: bool
-        | {col_def_type_attrs}
+        | {col_def_type_attrs}: ok
           | {col_def_name_type}
             | {name flag}
             | {type_bool}: bool
@@ -4971,18 +4971,18 @@ DECLARE ENUM ints INTEGER (
   postive_one = 1
 );
 
-  {declare_enum_stmt}: ints: integer
-  | {typed_name}: ints: integer
+  {declare_enum_stmt}: ints: integer notnull
+  | {typed_name}: ints: integer notnull
   | | {name ints}
-  | | {type_int}: ints: integer
+  | | {type_int}: ints: integer notnull
   | {enum_values}
     | {enum_value}
-    | | {name negative_one}: integer = -1
+    | | {name negative_one}: integer = -1 notnull
     | | {uminus}: integer notnull
     |   | {int 1}: integer notnull
     | {enum_values}
       | {enum_value}
-        | {name postive_one}: integer = 1
+        | {name postive_one}: integer = 1 notnull
         | {int 1}: integer notnull
 
 The statement ending at line XXXX
@@ -5001,7 +5001,7 @@ Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant fai
   | | {name bad_constants_table}
   | {col_key_list}
     | {col_def}: x: integer has_default
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name x}
     |   | | {type_int}: integer
@@ -5009,7 +5009,7 @@ Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant fai
     |     | {int -1}: integer notnull
     | {col_key_list}
       | {col_def}: err
-        | {col_def_type_attrs}
+        | {col_def_type_attrs}: ok
           | {col_def_name_type}
           | | {name y}
           | | {type_int}: integer
@@ -5086,7 +5086,7 @@ Error at test/sem_test.sql:XXXX : in null : CQL0013: cannot assign/copy possibly
   | | {name bad_conversions}
   | {col_key_list}
     | {col_def}: err
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name data}
         | | {type_int}: integer
@@ -5109,7 +5109,7 @@ Error at test/sem_test.sql:XXXX : in num : CQL0242: lossy conversion from type '
   | | {name bad_conversions}
   | {col_key_list}
     | {col_def}: err
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name data}
         | | {type_int}: integer
@@ -5130,7 +5130,7 @@ CREATE TABLE good_conversions(
   | | {name good_conversions}
   | {col_key_list}
     | {col_def}: data: real notnull has_default
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name data}
         | | {type_real}: real
@@ -6089,7 +6089,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0040: table can only have one auto
   | | {name two_autoincs_is_bad}
   | {col_key_list}
     | {col_def}: id1: integer notnull primary_key autoinc
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id1}
     |   | | {type_int}: integer
@@ -6098,7 +6098,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0040: table can only have one auto
     |     | {col_attrs_not_null}
     | {col_key_list}
       | {col_def}: err
-        | {col_def_type_attrs}
+        | {col_def_type_attrs}: ok
           | {col_def_name_type}
           | | {name id2}
           | | {type_int}: integer
@@ -6388,7 +6388,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0172: name list has duplicate name
   | | {name bad_table}
   | {col_key_list}
     | {col_def}: key_id: integer notnull primary_key autoinc
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name key_id}
     |   | | {type_int}: integer
@@ -6419,7 +6419,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0172: name list has duplicate name
   | | {name bad_table_2}
   | {col_key_list}
     | {col_def}: key_id: integer notnull primary_key autoinc
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name key_id}
     |   | | {type_int}: integer
@@ -6449,7 +6449,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0172: name list has duplicate name
   | | {name bad_table}
   | {col_key_list}
     | {col_def}: col_id: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name col_id}
     |     | {type_int}: integer
@@ -6481,13 +6481,13 @@ CREATE TABLE ref_target(
   | | {name ref_target}
   | {col_key_list}
     | {col_def}: ref_id1: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name ref_id1}
     |     | {type_int}: integer
     | {col_key_list}
       | {col_def}: ref_id2: integer
-        | {col_def_type_attrs}
+        | {col_def_type_attrs}: ok
           | {col_def_name_type}
             | {name ref_id2}
             | {type_int}: integer
@@ -6509,13 +6509,13 @@ Error at test/sem_test.sql:XXXX : in str : CQL0172: name list has duplicate name
   | | {name bad_table}
   | {col_key_list}
     | {col_def}: id1: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id1}
     |     | {type_int}: integer
     | {col_key_list}
       | {col_def}: id2: integer
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |     | {name id2}
       |     | {type_int}: integer
@@ -9611,14 +9611,14 @@ CREATE TABLE payload1(
   | | {name payload1}
   | {col_key_list}
     | {col_def}: id: integer notnull
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
       | {col_def}: data1: integer notnull
-        | {col_def_type_attrs}
+        | {col_def_type_attrs}: ok
           | {col_def_name_type}
           | | {name data1}
           | | {type_int}: integer
@@ -9638,14 +9638,14 @@ CREATE TABLE payload2(
   | | {name payload2}
   | {col_key_list}
     | {col_def}: id: integer notnull
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
       | {col_def}: data2: integer notnull
-        | {col_def_type_attrs}
+        | {col_def_type_attrs}: ok
           | {col_def_name_type}
           | | {name data2}
           | | {type_int}: integer
@@ -10125,13 +10125,13 @@ Error at test/sem_test.sql:XXXX : in fk_def : CQL0023: The number of columns on 
   | | {name fk_table_2}
   | {col_key_list}
     | {col_def}: id1: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id1}
     |     | {type_int}: integer
     | {col_key_list}
       | {col_def}: id2: integer
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |     | {name id2}
       |     | {type_int}: integer
@@ -10165,7 +10165,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0022: the exact type of both sides
   | | {name fk_table_2}
   | {col_key_list}
     | {col_def}: id: real
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id}
     |     | {type_real}: real
@@ -10194,7 +10194,7 @@ CREATE TABLE join_clause_1(
   | | {name join_clause_1}
   | {col_key_list}
     | {col_def}: id: real
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
           | {name id}
           | {type_real}: real
@@ -10212,7 +10212,7 @@ CREATE TABLE join_clause_2(
   | | {name join_clause_2}
   | {col_key_list}
     | {col_def}: id: integer
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
           | {name id}
           | {type_int}: integer
@@ -10712,7 +10712,7 @@ CREATE TABLE A1(
   | | {name A1}
   | {col_key_list}
     | {col_def}: foo: integer
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
           | {name foo}
           | {type_int}: integer
@@ -10730,7 +10730,7 @@ CREATE TABLE B1(
   | | {name B1}
   | {col_key_list}
     | {col_def}: foo: integer
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
           | {name foo}
           | {type_int}: integer
@@ -10748,7 +10748,7 @@ CREATE TABLE C1(
   | | {name C1}
   | {col_key_list}
     | {col_def}: foo: integer
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
           | {name foo}
           | {type_int}: integer
@@ -12027,7 +12027,7 @@ CREATE TABLE pk_test(
   | | {name pk_test}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id}
         | | {type_int}: integer
@@ -12047,7 +12047,7 @@ CREATE TABLE pk_test_2(
   | | {name pk_test_2}
   | {col_key_list}
     | {col_def}: id: integer notnull
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id}
     |     | {type_int}: integer
@@ -12069,7 +12069,7 @@ CREATE TABLE AA1(
   | | {name AA1}
   | {col_key_list}
     | {col_def}: id1: integer notnull
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id1}
         | | {type_int}: integer
@@ -12088,7 +12088,7 @@ CREATE TABLE BB2(
   | | {name BB2}
   | {col_key_list}
     | {col_def}: id2: integer notnull
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id2}
         | | {type_int}: integer
@@ -12107,7 +12107,7 @@ CREATE TABLE CC3(
   | | {name CC3}
   | {col_key_list}
     | {col_def}: id3: integer notnull
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id3}
         | | {type_int}: integer
@@ -15276,7 +15276,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0041: tables cannot have object co
   | | {name object_table_test}
   | {col_key_list}
     | {col_def}: err
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
           | {name obj}
           | {type_object}: object
@@ -16194,7 +16194,7 @@ ALTER TABLE bar ADD COLUMN name TEXT;
   {alter_table_add_column_stmt}: ok
   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
   | {col_def}: name: text
-    | {col_def_type_attrs}
+    | {col_def_type_attrs}: ok
       | {col_def_name_type}
         | {name name}
         | {type_text}: text
@@ -16208,7 +16208,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0147: adding a not nullable co
   {alter_table_add_column_stmt}: err
   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
   | {col_def}: name: text notnull
-    | {col_def_type_attrs}
+    | {col_def_type_attrs}: ok
       | {col_def_name_type}
       | | {name name}
       | | {type_text}: text
@@ -16223,7 +16223,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0149: added column must be an 
   {alter_table_add_column_stmt}: err
   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
   | {col_def}: name: integer
-    | {col_def_type_attrs}
+    | {col_def_type_attrs}: ok
       | {col_def_name_type}
         | {name name}
         | {type_int}: integer
@@ -16237,7 +16237,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0148: added column must alread
   {alter_table_add_column_stmt}: err
   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
   | {col_def}: goo: integer
-    | {col_def_type_attrs}
+    | {col_def_type_attrs}: ok
       | {col_def_name_type}
         | {name goo}
         | {type_int}: integer
@@ -16251,7 +16251,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0148: added column must alread
   {alter_table_add_column_stmt}: err
   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
   | {col_def}: NAME: text
-    | {col_def_type_attrs}
+    | {col_def_type_attrs}: ok
       | {col_def_name_type}
         | {name NAME}
         | {type_text}: text
@@ -16265,7 +16265,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0041: tables cannot have object co
   {alter_table_add_column_stmt}: err
   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
   | {col_def}: err
-    | {col_def_type_attrs}
+    | {col_def_type_attrs}: ok
       | {col_def_name_type}
         | {name foo}
         | {type_object}: object
@@ -16279,7 +16279,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0146: adding an auto increment
   {alter_table_add_column_stmt}: err
   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
   | {col_def}: id: integer notnull primary_key autoinc
-    | {col_def_type_attrs}
+    | {col_def_type_attrs}: ok
       | {col_def_name_type}
       | | {name id}
       | | {type_int}: integer
@@ -16361,7 +16361,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0145: version annotations not 
   {alter_table_add_column_stmt}: err
   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
   | {col_def}: name: text @create(1)
-    | {col_def_type_attrs}
+    | {col_def_type_attrs}: ok
       | {col_def_name_type}
       | | {name name}
       | | {type_text}: text
@@ -16379,7 +16379,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0145: version annotations not 
   {alter_table_add_column_stmt}: err
   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
   | {col_def}: name: text hidden @delete(1)
-    | {col_def_type_attrs}
+    | {col_def_type_attrs}: ok
       | {col_def_name_type}
       | | {name name}
       | | {type_text}: text
@@ -16396,7 +16396,7 @@ Error at test/sem_test.sql:XXXX : in delete_attr : CQL0026: duplicate version an
   {alter_table_add_column_stmt}: err
   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
   | {col_def}: err
-    | {col_def_type_attrs}
+    | {col_def_type_attrs}: ok
       | {col_def_name_type}
       | | {name name}
       | | {type_text}: text
@@ -16416,7 +16416,7 @@ Error at test/sem_test.sql:XXXX : in create_attr : CQL0026: duplicate version an
   {alter_table_add_column_stmt}: err
   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
   | {col_def}: err
-    | {col_def_type_attrs}
+    | {col_def_type_attrs}: ok
       | {col_def_name_type}
       | | {name name}
       | | {type_text}: text
@@ -16436,7 +16436,7 @@ Error at test/sem_test.sql:XXXX : in create_attr : CQL0025: version number in an
   {alter_table_add_column_stmt}: err
   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
   | {col_def}: err
-    | {col_def_type_attrs}
+    | {col_def_type_attrs}: ok
       | {col_def_name_type}
       | | {name name}
       | | {type_text}: text
@@ -16458,7 +16458,7 @@ CREATE TABLE hides_id_not_name(
   | | {name hides_id_not_name}
   | {col_key_list}
     | {col_def}: id: integer hidden @delete(2)
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
@@ -16467,7 +16467,7 @@ CREATE TABLE hides_id_not_name(
     |       | {int 2}
     | {col_key_list}
       | {col_def}: name: text @create(3)
-        | {col_def_type_attrs}
+        | {col_def_type_attrs}: ok
           | {col_def_name_type}
           | | {name name}
           | | {type_text}: text
@@ -16540,14 +16540,14 @@ Error at test/sem_test.sql:XXXX : in str : CQL0027: a procedure can appear in on
   | | {name migrate_test}
   | {col_key_list}
     | {col_def}: id: integer notnull
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
       | {col_def}: id2: integer @create(4)
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |   | | {name id2}
       |   | | {type_int}: integer
@@ -16557,7 +16557,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0027: a procedure can appear in on
       |       | {name creator}
       | {col_key_list}
         | {col_def}: err
-          | {col_def_type_attrs}
+          | {col_def_type_attrs}: ok
             | {col_def_name_type}
             | | {name id3}
             | | {type_int}: integer
@@ -16611,13 +16611,13 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0032: created columns must be 
   | | {name migrate_annotions_broken}
   | {col_key_list}
     | {col_def}: col1: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name col1}
     |     | {type_int}: integer
     | {col_key_list}
       | {col_def}: col2: integer @create(3)
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |   | | {name col2}
       |   | | {type_int}: integer
@@ -16626,7 +16626,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0032: created columns must be 
       |       | {int 3}
       | {col_key_list}
         | {col_def}: err
-          | {col_def_type_attrs}
+          | {col_def_type_attrs}: ok
             | {col_def_name_type}
               | {name col3}
               | {type_int}: integer
@@ -16647,13 +16647,13 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0034: create/delete version nu
   | | {name migrate_annotions_broken_not_null_create}
   | {col_key_list}
     | {col_def}: col1: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name col1}
     |     | {type_int}: integer
     | {col_key_list}
       | {col_def}: err
-        | {col_def_type_attrs}
+        | {col_def_type_attrs}: ok
           | {col_def_name_type}
           | | {name col2}
           | | {type_int}: integer
@@ -16678,13 +16678,13 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0034: create/delete version nu
   | | {name migrate_annotions_broken_not_null_delete}
   | {col_key_list}
     | {col_def}: col1: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name col1}
     |     | {type_int}: integer
     | {col_key_list}
       | {col_def}: err
-        | {col_def_type_attrs}
+        | {col_def_type_attrs}: ok
           | {col_def_name_type}
           | | {name col2}
           | | {type_int}: integer
@@ -16709,13 +16709,13 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0035: column delete version ca
   | | {name migrate_annotions_delete_out_of_order}
   | {col_key_list}
     | {col_def}: col1: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name col1}
     |     | {type_int}: integer
     | {col_key_list}
       | {col_def}: err
-        | {col_def_type_attrs}
+        | {col_def_type_attrs}: ok
           | {col_def_name_type}
           | | {name col2}
           | | {type_int}: integer
@@ -16747,7 +16747,7 @@ CREATE TABLE versioned_table(
   | | {name versioned_table}
   | {col_key_list}
     | {col_def}: id: integer @create(2)
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id}
         | | {type_int}: integer
@@ -16864,7 +16864,7 @@ Error at test/sem_test.sql:XXXX : in fk_def : CQL0021: foreign key refers to non
   | | {name baz}
   | {col_key_list}
     | {col_def}: id: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id}
     |     | {type_int}: integer
@@ -16911,7 +16911,7 @@ ALTER TABLE versioned_table ADD COLUMN id INTEGER;
   {alter_table_add_column_stmt}: ok
   | {name versioned_table}: versioned_table: { id: integer } hidden @create(1) @delete(3)
   | {col_def}: id: integer
-    | {col_def_type_attrs}
+    | {col_def_type_attrs}: ok
       | {col_def_name_type}
         | {name id}
         | {type_int}: integer
@@ -17042,7 +17042,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0103: duplicate table/view name 'v
   | | {name versioned_table}: err
   | {col_key_list}
     | {col_def}: id2: integer
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
           | {name id2}
           | {type_int}: integer
@@ -17105,7 +17105,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0036: column delete version ca
   | | {name t_col_early_delete}
   | {col_key_list}
     | {col_def}: err
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id}
         | | {type_int}: integer
@@ -17131,7 +17131,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0038: column create version ca
   | | {name t_col_early_delete}
   | {col_key_list}
     | {col_def}: err
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id}
         | | {type_int}: integer
@@ -17157,7 +17157,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0037: column delete version ca
   | | {name t_col_early_delete}
   | {col_key_list}
     | {col_def}: err
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id}
         | | {type_int}: integer
@@ -17183,7 +17183,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0039: column create version ca
   | | {name t_col_early_delete}
   | {col_key_list}
     | {col_def}: err
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id}
         | | {type_int}: integer
@@ -17204,7 +17204,7 @@ CREATE TABLE t_col_delete_notnull(
   | | {name t_col_delete_notnull}
   | {col_key_list}
     | {col_def}: id: integer notnull has_default hidden @delete(2)
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id}
         | | {type_int}: integer
@@ -17228,7 +17228,7 @@ CREATE TABLE neg_default(
   | | {name neg_default}
   | {col_key_list}
     | {col_def}: id: integer notnull has_default @create(2)
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id}
         | | {type_int}: integer
@@ -17247,7 +17247,7 @@ ALTER TABLE neg_default ADD COLUMN id INTEGER NOT NULL DEFAULT -1;
   {alter_table_add_column_stmt}: ok
   | {name neg_default}: neg_default: { id: integer notnull has_default }
   | {col_def}: id: integer notnull has_default
-    | {col_def_type_attrs}
+    | {col_def_type_attrs}: ok
       | {col_def_name_type}
       | | {name id}
       | | {type_int}: integer
@@ -17392,13 +17392,13 @@ CREATE TABLE table_with_text_as_name(
   | | {name table_with_text_as_name}
   | {col_key_list}
     | {col_def}: text: text
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name text}
     |     | {type_text}: text
     | {col_key_list}
       | {col_def}: text2: text
-        | {col_def_type_attrs}
+        | {col_def_type_attrs}: ok
           | {col_def_name_type}
             | {name text2}
             | {type_text}: text
@@ -17521,13 +17521,13 @@ CREATE TABLE trickier_alter_target(
   | | {name trickier_alter_target}
   | {col_key_list}
     | {col_def}: id: integer notnull
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id}
     |     | {type_int}: integer
     | {col_key_list}
       | {col_def}: something_deleted: text hidden @create(1) @delete(2)
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |   | | {name something_deleted}
       |   | | {type_text}: text
@@ -17539,7 +17539,7 @@ CREATE TABLE trickier_alter_target(
       |         | {int 2}
       | {col_key_list}
         | {col_def}: added: text @create(2)
-        | | {col_def_type_attrs}
+        | | {col_def_type_attrs}: ok
         |   | {col_def_name_type}
         |   | | {name added}
         |   | | {type_text}: text
@@ -17560,7 +17560,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0148: added column must alread
   {alter_table_add_column_stmt}: err
   | {name trickier_alter_target}: trickier_alter_target: { id: integer notnull, added: text }
   | {col_def}: id: integer
-    | {col_def_type_attrs}
+    | {col_def_type_attrs}: ok
       | {col_def_name_type}
         | {name id}
         | {type_int}: integer
@@ -17574,7 +17574,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0148: added column must alread
   {alter_table_add_column_stmt}: err
   | {name trickier_alter_target}: trickier_alter_target: { id: integer notnull, added: text }
   | {col_def}: something_deleted: text
-    | {col_def_type_attrs}
+    | {col_def_type_attrs}: ok
       | {col_def_name_type}
         | {name something_deleted}
         | {type_text}: text
@@ -17586,7 +17586,7 @@ ALTER TABLE trickier_alter_target ADD COLUMN added TEXT;
   {alter_table_add_column_stmt}: ok
   | {name trickier_alter_target}: trickier_alter_target: { id: integer notnull, added: text }
   | {col_def}: added: text
-    | {col_def_type_attrs}
+    | {col_def_type_attrs}: ok
       | {col_def_name_type}
         | {name added}
         | {type_text}: text
@@ -17738,7 +17738,7 @@ Error at test/sem_test.sql:XXXX : in col_attrs_not_null : CQL0030: a column attr
   | | {name two_not_null}
   | {col_key_list}
     | {col_def}: err
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id}
         | | {type_int}: integer
@@ -17761,7 +17761,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0031: column can't be primary 
   | | {name mixed_pk_uk}
   | {col_key_list}
     | {col_def}: err
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id}
         | | {type_int}: integer
@@ -17781,7 +17781,7 @@ CREATE TABLE table_with_uk(
   | | {name table_with_uk}
   | {col_key_list}
     | {col_def}: id: integer unique_key
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id}
         | | {type_int}: integer
@@ -17803,7 +17803,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0143: more than one primary key in
   | | {name baz}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key autoinc
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
@@ -18141,7 +18141,7 @@ CREATE TABLE blob_table_test(
   | | {name blob_table_test}
   | {col_key_list}
     | {col_def}: b: blob
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
           | {name b}
           | {type_blob}: blob
@@ -20660,7 +20660,7 @@ CREATE TABLE misc_attr_table(
     | | {name misc_attr_table}
     | {col_key_list}
       | {col_def}: id: integer notnull
-        | {col_def_type_attrs}
+        | {col_def_type_attrs}: ok
         | | {col_def_name_type}
         | | | {name id}
         | | | {type_int}: integer
@@ -20723,7 +20723,7 @@ CREATE TABLE fk_on_col(
   | | {name fk_on_col}
   | {col_key_list}
     | {col_def}: fk_src: integer foreign_key
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name fk_src}
         | | {type_int}: integer
@@ -20750,7 +20750,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0028: the FK reference must be
   | | {name bogus_fk_on_col_1}
   | {col_key_list}
     | {col_def}: err
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name fk_src}
         | | {type_int}: integer
@@ -20779,7 +20779,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0028: the FK reference must be
   | | {name bogus_fk_on_col_1}
   | {col_key_list}
     | {col_def}: err
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name fk_src}
         | | {type_int}: integer
@@ -20806,7 +20806,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0021: foreign key refers to no
   | | {name bogus_fk_on_col_1}
   | {col_key_list}
     | {col_def}: err
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name fk_src}
         | | {type_int}: integer
@@ -20833,7 +20833,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'no_such_colu
   | | {name bogus_fk_on_col_1}
   | {col_key_list}
     | {col_def}: err
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name fk_src}
         | | {type_int}: integer
@@ -20860,7 +20860,7 @@ Error at test/sem_test.sql:XXXX : in col_attrs_autoinc : CQL0029: autoincrement 
   | | {name bogus_autoinc_type}
   | {col_key_list}
     | {col_def}: err
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id}
         | | {type_bool}: bool
@@ -20882,7 +20882,7 @@ Error at test/sem_test.sql:XXXX : in create_table_stmt : CQL0141: table has an A
   | | {name bogus_without_rowid}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key autoinc
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id}
         | | {type_int}: integer
@@ -20904,14 +20904,14 @@ CREATE TABLE recreatable(
   | | {name recreatable}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
     | {col_key_list}
       | {col_def}: name: text
-        | {col_def_type_attrs}
+        | {col_def_type_attrs}: ok
           | {col_def_name_type}
             | {name name}
             | {type_text}: text
@@ -20933,7 +20933,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0033: columns in a table marke
   | | {name column_marked_delete_on_recreate_table}
   | {col_key_list}
     | {col_def}: err
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
@@ -22547,20 +22547,20 @@ CREATE TABLE args1(
   | | {name args1}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
     | {col_key_list}
       | {col_def}: name: text
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |     | {name name}
       |     | {type_text}: text
       | {col_key_list}
         | {col_def}: data: blob
-          | {col_def_type_attrs}
+          | {col_def_type_attrs}: ok
             | {col_def_name_type}
               | {name data}
               | {type_blob}: blob
@@ -22580,7 +22580,7 @@ CREATE TABLE args2(
   | | {name args2}
   | {col_key_list}
     | {col_def}: id: integer foreign_key
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
@@ -22593,13 +22593,13 @@ CREATE TABLE args2(
     |       | {int 0}
     | {col_key_list}
       | {col_def}: name2: text
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |     | {name name2}
       |     | {type_text}: text
       | {col_key_list}
         | {col_def}: rate: real
-          | {col_def_type_attrs}
+          | {col_def_type_attrs}: ok
             | {col_def_name_type}
               | {name rate}
               | {type_real}: real
@@ -22921,7 +22921,7 @@ CREATE TEMP TABLE nontemp_table_like_table(
   | | {name nontemp_table_like_table}
   | {col_key_list}
     | {col_def}: id: integer notnull
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id}
         | | {type_int}: integer
@@ -22940,7 +22940,7 @@ CREATE TEMP TABLE table_like_table(
   | | {name table_like_table}
   | {col_key_list}
     | {col_def}: id: integer notnull
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id}
         | | {type_int}: integer
@@ -22961,21 +22961,21 @@ CREATE TEMP TABLE table_like_view(
   | | {name table_like_view}
   | {col_key_list}
     | {col_def}: f1: integer notnull
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name f1}
     |   | | {type_int}: integer
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
       | {col_def}: f2: integer notnull
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |   | | {name f2}
       |   | | {type_int}: integer
       |   | {col_attrs_not_null}: ok
       | {col_key_list}
         | {col_def}: f3: integer notnull
-          | {col_def_type_attrs}
+          | {col_def_type_attrs}: ok
             | {col_def_name_type}
             | | {name f3}
             | | {type_int}: integer
@@ -22996,20 +22996,20 @@ CREATE TEMP TABLE table_like_proc(
   | | {name table_like_proc}
   | {col_key_list}
     | {col_def}: id: integer notnull
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
       | {col_def}: name: text
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |     | {name name}
       |     | {type_text}: text
       | {col_key_list}
         | {col_def}: rate: longint
-          | {col_def_type_attrs}
+          | {col_def_type_attrs}: ok
             | {col_def_name_type}
               | {name rate}
               | {type_long}: longint
@@ -23066,41 +23066,41 @@ CREATE TEMP TABLE table_multiple_like(
   | | {name table_multiple_like}
   | {col_key_list}
     | {col_def}: f1: integer notnull
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name f1}
     |   | | {type_int}: integer
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
       | {col_def}: f2: integer notnull
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |   | | {name f2}
       |   | | {type_int}: integer
       |   | {col_attrs_not_null}: ok
       | {col_key_list}
         | {col_def}: f3: integer notnull
-        | | {col_def_type_attrs}
+        | | {col_def_type_attrs}: ok
         |   | {col_def_name_type}
         |   | | {name f3}
         |   | | {type_int}: integer
         |   | {col_attrs_not_null}: ok
         | {col_key_list}
           | {col_def}: id: integer notnull
-          | | {col_def_type_attrs}
+          | | {col_def_type_attrs}: ok
           |   | {col_def_name_type}
           |   | | {name id}
           |   | | {type_int}: integer
           |   | {col_attrs_not_null}: ok
           | {col_key_list}
             | {col_def}: name: text
-            | | {col_def_type_attrs}
+            | | {col_def_type_attrs}: ok
             |   | {col_def_name_type}
             |     | {name name}
             |     | {type_text}: text
             | {col_key_list}
               | {col_def}: rate: longint
-                | {col_def_type_attrs}
+                | {col_def_type_attrs}: ok
                   | {col_def_name_type}
                     | {name rate}
                     | {type_long}: longint
@@ -23122,34 +23122,34 @@ CREATE TEMP TABLE table_like_mixed(
   | | {name table_like_mixed}
   | {col_key_list}
     | {col_def}: garbage: text
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name garbage}
     |     | {type_text}: text
     | {col_key_list}
       | {col_def}: f1: integer notnull
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |   | | {name f1}
       |   | | {type_int}: integer
       |   | {col_attrs_not_null}: ok
       | {col_key_list}
         | {col_def}: f2: integer notnull
-        | | {col_def_type_attrs}
+        | | {col_def_type_attrs}: ok
         |   | {col_def_name_type}
         |   | | {name f2}
         |   | | {type_int}: integer
         |   | {col_attrs_not_null}: ok
         | {col_key_list}
           | {col_def}: f3: integer notnull
-          | | {col_def_type_attrs}
+          | | {col_def_type_attrs}: ok
           |   | {col_def_name_type}
           |   | | {name f3}
           |   | | {type_int}: integer
           |   | {col_attrs_not_null}: ok
           | {col_key_list}
             | {col_def}: happy: integer
-              | {col_def_type_attrs}
+              | {col_def_type_attrs}: ok
                 | {col_def_name_type}
                   | {name happy}
                   | {type_int}: integer
@@ -23172,27 +23172,27 @@ Error at test/sem_test.sql:XXXX : in str : CQL0142: duplicate column name 'f1'
   | | {name table_with_dup_col}
   | {col_key_list}
     | {col_def}: f1: text
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name f1}
     |     | {type_text}: text
     | {col_key_list}
       | {col_def}: f1: integer notnull
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |   | | {name f1}
       |   | | {type_int}: integer
       |   | {col_attrs_not_null}: ok
       | {col_key_list}
         | {col_def}: f2: integer notnull
-        | | {col_def_type_attrs}
+        | | {col_def_type_attrs}: ok
         |   | {col_def_name_type}
         |   | | {name f2}
         |   | | {type_int}: integer
         |   | {col_attrs_not_null}: ok
         | {col_key_list}
           | {col_def}: f3: integer notnull
-            | {col_def_type_attrs}
+            | {col_def_type_attrs}: ok
               | {col_def_name_type}
               | | {name f3}
               | | {type_int}: integer
@@ -23280,7 +23280,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0140: columns in a temp table 
   | | {name bogus_temp_with_versioning_in_column}
   | {col_key_list}
     | {col_def}: id: integer @create(2)
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id}
         | | {type_int}: integer
@@ -23608,7 +23608,7 @@ CREATE TABLE stories(
   | | {name stories}
   | {col_key_list}
     | {col_def}: media_id: longint
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
           | {name media_id}
           | {type_long}: longint
@@ -24869,20 +24869,20 @@ CREATE TABLE with_sensitive(
   | | {name with_sensitive}
   | {col_key_list}
     | {col_def}: id: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id}
     |     | {type_int}: integer
     | {col_key_list}
       | {col_def}: name: text sensitive
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |   | | {name name}
       |   | | {type_text}: text
       |   | {sensitive_attr}: ok
       | {col_key_list}
         | {col_def}: info: integer sensitive
-          | {col_def_type_attrs}
+          | {col_def_type_attrs}: ok
             | {col_def_name_type}
             | | {name info}
             | | {type_int}: integer
@@ -24901,7 +24901,7 @@ CREATE TABLE without_sensitive(
   | | {name without_sensitive}
   | {col_key_list}
     | {col_def}: name: text
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
           | {name name}
           | {type_text}: text
@@ -25902,7 +25902,7 @@ CREATE TABLE a(
   | | {name a}
   | {col_key_list}
     | {col_def}: key_: integer notnull primary_key
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name key_}
     |   | | {type_int}: integer
@@ -25910,7 +25910,7 @@ CREATE TABLE a(
     |     | {col_attrs_pk}
     | {col_key_list}
       | {col_def}: sort_key: integer notnull
-        | {col_def_type_attrs}
+        | {col_def_type_attrs}: ok
           | {col_def_name_type}
           | | {name sort_key}
           | | {type_int}: integer
@@ -25931,7 +25931,7 @@ CREATE TABLE b(
   | | {name b}
   | {col_key_list}
     | {col_def}: key_: integer notnull primary_key
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name key_}
     |   | | {type_int}: integer
@@ -25939,14 +25939,14 @@ CREATE TABLE b(
     |     | {col_attrs_pk}
     | {col_key_list}
       | {col_def}: a_key_: integer notnull
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |   | | {name a_key_}
       |   | | {type_int}: integer
       |   | {col_attrs_not_null}: ok
       | {col_key_list}
         | {col_def}: sort_key: integer notnull
-          | {col_def_type_attrs}
+          | {col_def_type_attrs}: ok
             | {col_def_name_type}
             | | {name sort_key}
             | | {type_int}: integer
@@ -28340,7 +28340,7 @@ CREATE TEMP TABLE table1(
   | | {name table1}
   | {col_key_list}
     | {col_def}: id: integer
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
           | {name id}
           | {type_int}: integer
@@ -28358,7 +28358,7 @@ CREATE TEMP TABLE table2(
   | | {name table2}
   | {col_key_list}
     | {col_def}: id: integer
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
           | {name id}
           | {type_int}: integer
@@ -28376,7 +28376,7 @@ CREATE TABLE not_a_temp_table(
   | | {name not_a_temp_table}
   | {col_key_list}
     | {col_def}: id: integer
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
           | {name id}
           | {type_int}: integer
@@ -28643,33 +28643,33 @@ CREATE TABLE referenceable(
   | | {name referenceable}
   | {col_key_list}
     | {col_def}: a: integer notnull primary_key
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name a}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
     | {col_key_list}
       | {col_def}: b: real unique_key
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |   | | {name b}
       |   | | {type_real}: real
       |   | {col_attrs_unique}: ok
       | {col_key_list}
         | {col_def}: c: text
-        | | {col_def_type_attrs}
+        | | {col_def_type_attrs}: ok
         |   | {col_def_name_type}
         |     | {name c}
         |     | {type_text}: text
         | {col_key_list}
           | {col_def}: d: text
-          | | {col_def_type_attrs}
+          | | {col_def_type_attrs}: ok
           |   | {col_def_name_type}
           |     | {name d}
           |     | {type_text}: text
           | {col_key_list}
             | {col_def}: e: longint
-              | {col_def_type_attrs}
+              | {col_def_type_attrs}: ok
                 | {col_def_name_type}
                   | {name e}
                   | {type_long}: longint
@@ -28689,13 +28689,13 @@ CREATE TABLE referenceable_2(
   | | {name referenceable_2}
   | {col_key_list}
     | {col_def}: a: integer notnull
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name a}
     |     | {type_int}: integer
     | {col_key_list}
       | {col_def}: b: real notnull
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |     | {name b}
       |     | {type_real}: real
@@ -28738,7 +28738,7 @@ CREATE TABLE reference_pk(
   | | {name reference_pk}
   | {col_key_list}
     | {col_def}: id: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id}
     |     | {type_int}: integer
@@ -28769,13 +28769,13 @@ CREATE TABLE reference_2_pk(
   | | {name reference_2_pk}
   | {col_key_list}
     | {col_def}: id: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id}
     |     | {type_int}: integer
     | {col_key_list}
       | {col_def}: size: real
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |     | {name size}
       |     | {type_real}: real
@@ -28810,13 +28810,13 @@ CREATE TABLE reference_2_wrong_order_pk(
   | | {name reference_2_wrong_order_pk}
   | {col_key_list}
     | {col_def}: id: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id}
     |     | {type_int}: integer
     | {col_key_list}
       | {col_def}: size: real
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |     | {name size}
       |     | {type_real}: real
@@ -28850,7 +28850,7 @@ CREATE TABLE reference_uk(
   | | {name reference_uk}
   | {col_key_list}
     | {col_def}: id: real
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id}
     |     | {type_real}: real
@@ -28883,13 +28883,13 @@ Error at test/sem_test.sql:XXXX : in name_list : CQL0272: the set of columns ref
   | | {name reference_pk_and_uk}
   | {col_key_list}
     | {col_def}: id1: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id1}
     |     | {type_int}: integer
     | {col_key_list}
       | {col_def}: id2: real
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |     | {name id2}
       |     | {type_real}: real
@@ -28924,13 +28924,13 @@ CREATE TABLE referenceable_unique_index(
   | | {name referenceable_unique_index}
   | {col_key_list}
     | {col_def}: id: text
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id}
     |     | {type_text}: text
     | {col_key_list}
       | {col_def}: label: text
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |     | {name label}
       |     | {type_text}: text
@@ -28967,13 +28967,13 @@ Error at test/sem_test.sql:XXXX : in name_list : CQL0272: the set of columns ref
   | | {name reference_pk_and_unique_index}
   | {col_key_list}
     | {col_def}: id1: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id1}
     |     | {type_int}: integer
     | {col_key_list}
       | {col_def}: id2: text
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |     | {name id2}
       |     | {type_text}: text
@@ -29011,19 +29011,19 @@ Error at test/sem_test.sql:XXXX : in name_list : CQL0272: the set of columns ref
   | | {name reference_uk_and_unique_index}
   | {col_key_list}
     | {col_def}: id1: real
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id1}
     |     | {type_real}: real
     | {col_key_list}
       | {col_def}: id2: text
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |     | {name id2}
       |     | {type_text}: text
       | {col_key_list}
         | {col_def}: id3: text
-        | | {col_def_type_attrs}
+        | | {col_def_type_attrs}: ok
         |   | {col_def_name_type}
         |     | {name id3}
         |     | {type_text}: text
@@ -29063,7 +29063,7 @@ Error at test/sem_test.sql:XXXX : in name_list : CQL0272: the set of columns ref
   | | {name reference_not_referenceable_column}
   | {col_key_list}
     | {col_def}: id: longint notnull primary_key
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_long}: longint
@@ -29098,20 +29098,20 @@ Error at test/sem_test.sql:XXXX : in name_list : CQL0272: the set of columns ref
   | | {name reference_not_referenceable_columns}
   | {col_key_list}
     | {col_def}: id1: text notnull primary_key
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id1}
     |   | | {type_text}: text
     |   | {col_attrs_pk}: ok
     | {col_key_list}
       | {col_def}: id2: text
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |     | {name id2}
       |     | {type_text}: text
       | {col_key_list}
         | {col_def}: id3: text
-        | | {col_def_type_attrs}
+        | | {col_def_type_attrs}: ok
         |   | {col_def_name_type}
         |     | {name id3}
         |     | {type_text}: text
@@ -29151,7 +29151,7 @@ Error at test/sem_test.sql:XXXX : in name_list : CQL0272: the set of columns ref
   | | {name reference_not_referenceable_column}
   | {col_key_list}
     | {col_def}: id: text
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id}
     |     | {type_text}: text
@@ -29222,7 +29222,7 @@ CREATE TABLE fk_strict_ok(
   | | {name fk_strict_ok}
   | {col_key_list}
     | {col_def}: id: integer foreign_key
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id}
         | | {type_int}: integer
@@ -29249,7 +29249,7 @@ Error at test/sem_test.sql:XXXX : in col_attrs_fk : CQL0237: strict FK validatio
   | | {name fk_strict_failure_update}
   | {col_key_list}
     | {col_def}: err
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id}
         | | {type_int}: integer
@@ -29276,7 +29276,7 @@ Error at test/sem_test.sql:XXXX : in col_attrs_fk : CQL0238: strict FK validatio
   | | {name fk_strict_failure_delete}
   | {col_key_list}
     | {col_def}: err
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id}
         | | {type_int}: integer
@@ -29304,7 +29304,7 @@ Error at test/sem_test.sql:XXXX : in fk_def : CQL0238: strict FK validation requ
   | | {name fk_strict_failure_delete_loose}
   | {col_key_list}
     | {col_def}: id: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id}
     |     | {type_int}: integer
@@ -29336,7 +29336,7 @@ Error at test/sem_test.sql:XXXX : in fk_def : CQL0237: strict FK validation requ
   | | {name fk_strict_failure_update_loose}
   | {col_key_list}
     | {col_def}: id: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id}
     |     | {type_int}: integer
@@ -29366,7 +29366,7 @@ CREATE TABLE fk_strict_success_loose(
   | | {name fk_strict_success_loose}
   | {col_key_list}
     | {col_def}: id: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id}
     |     | {type_int}: integer
@@ -30360,20 +30360,20 @@ CREATE TABLE plugin_table(
   | | {name plugin_table}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
     | {col_key_list}
       | {col_def}: name: text
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |     | {name name}
       |     | {type_text}: text
       | {col_key_list}
         | {col_def}: flag: bool
-          | {col_def_type_attrs}
+          | {col_def_type_attrs}: ok
             | {col_def_name_type}
               | {name flag}
               | {type_bool}: bool
@@ -37335,7 +37335,7 @@ CREATE TABLE a_table_in_root_region(
   | | {name a_table_in_root_region}
   | {col_key_list}
     | {col_def}: id: integer
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
           | {name id}
           | {type_int}: integer
@@ -37412,7 +37412,7 @@ CREATE TABLE a_table_in_dep_region(
   | | {name a_table_in_dep_region}
   | {col_key_list}
     | {col_def}: id: integer
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
           | {name id}
           | {type_int}: integer
@@ -37521,7 +37521,7 @@ CREATE TABLE a_table_like_table_in_dep_region(
   | | {name a_table_like_table_in_dep_region}
   | {col_key_list}
     | {col_def}: id: integer notnull
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id}
         | | {type_int}: integer
@@ -37541,13 +37541,13 @@ CREATE TABLE a_table_like_table_in_dep_region_2(
   | | {name a_table_like_table_in_dep_region_2}
   | {col_key_list}
     | {col_def}: id1: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id1}
     |     | {type_int}: integer
     | {col_key_list}
       | {col_def}: id2: integer
-        | {col_def_type_attrs}
+        | {col_def_type_attrs}: ok
           | {col_def_name_type}
             | {name id2}
             | {type_int}: integer
@@ -37567,21 +37567,21 @@ CREATE TABLE a_table_like_view_in_dep_region(
   | | {name a_table_like_view_in_dep_region}
   | {col_key_list}
     | {col_def}: f1: integer notnull
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name f1}
     |   | | {type_int}: integer
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
       | {col_def}: f2: integer notnull
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |   | | {name f2}
       |   | | {type_int}: integer
       |   | {col_attrs_not_null}: ok
       | {col_key_list}
         | {col_def}: f3: integer notnull
-          | {col_def_type_attrs}
+          | {col_def_type_attrs}: ok
             | {col_def_name_type}
             | | {name f3}
             | | {type_int}: integer
@@ -37602,20 +37602,20 @@ CREATE TABLE a_table_like_proc_in_dep_region(
   | | {name a_table_like_proc_in_dep_region}
   | {col_key_list}
     | {col_def}: id: integer notnull
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
       | {col_def}: name: text
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |     | {name name}
       |     | {type_text}: text
       | {col_key_list}
         | {col_def}: rate: longint
-          | {col_def_type_attrs}
+          | {col_def_type_attrs}: ok
             | {col_def_name_type}
               | {name rate}
               | {type_long}: longint
@@ -37811,7 +37811,7 @@ CREATE TABLE diamond_region_table(
   | | {name diamond_region_table}
   | {col_key_list}
     | {col_def}: id: integer
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
           | {name id}
           | {type_int}: integer
@@ -38743,7 +38743,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0060: referenced table can be 
   | | {name recreatable_reference_1}
   | {col_key_list}
     | {col_def}: err
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
@@ -38779,7 +38779,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0060: referenced table can be 
   | | {name recreatable_reference_2}
   | {col_key_list}
     | {col_def}: err
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
@@ -38814,14 +38814,14 @@ CREATE TABLE in_group_test(
   | | {name in_group_test}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
     | {col_key_list}
       | {col_def}: name: text
-        | {col_def_type_attrs}
+        | {col_def_type_attrs}: ok
           | {col_def_name_type}
             | {name name}
             | {type_text}: text
@@ -38843,7 +38843,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0060: referenced table can be 
   | | {name recreatable_reference_3}
   | {col_key_list}
     | {col_def}: err
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
@@ -38880,7 +38880,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0060: referenced table can be 
   | | {name recreatable_reference_4}
   | {col_key_list}
     | {col_def}: err
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
@@ -38915,7 +38915,7 @@ CREATE TABLE recreatable_reference_5(
   | | {name recreatable_reference_5}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key foreign_key
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
@@ -38929,7 +38929,7 @@ CREATE TABLE recreatable_reference_5(
     |         | {int 51}
     | {col_key_list}
       | {col_def}: name: text
-        | {col_def_type_attrs}
+        | {col_def_type_attrs}: ok
           | {col_def_name_type}
             | {name name}
             | {type_text}: text
@@ -38953,14 +38953,14 @@ Error at test/sem_test.sql:XXXX : in fk_def : CQL0021: foreign key refers to non
   | | {name early_out_on_errs}
   | {col_key_list}
     | {col_def}: result_index: integer notnull
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name result_index}
     |   | | {type_int}: integer
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
       | {col_def}: query: text notnull
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |   | | {name query}
       |   | | {type_text}: text
@@ -39004,7 +39004,7 @@ END;
         | | {name recreatable_reference_6}
         | {col_key_list}
           | {col_def}: id: integer notnull primary_key foreign_key
-          | | {col_def_type_attrs}
+          | | {col_def_type_attrs}: ok
           |   | {col_def_name_type}
           |   | | {name id}
           |   | | {type_int}: integer
@@ -39018,7 +39018,7 @@ END;
           |         | {int 51}
           | {col_key_list}
             | {col_def}: name: text
-              | {col_def_type_attrs}
+              | {col_def_type_attrs}: ok
                 | {col_def_name_type}
                   | {name name}
                   | {type_text}: text
@@ -40428,20 +40428,20 @@ CREATE TABLE upsert_test(
   | | {name upsert_test}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
     | {col_key_list}
       | {col_def}: name: text
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |     | {name name}
       |     | {type_text}: text
       | {col_key_list}
         | {col_def}: rate: real
-          | {col_def_type_attrs}
+          | {col_def_type_attrs}: ok
             | {col_def_name_type}
               | {name rate}
               | {type_real}: real
@@ -40808,7 +40808,7 @@ CREATE TABLE private_region_table(
   | | {name private_region_table}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id}
         | | {type_int}: integer
@@ -40840,7 +40840,7 @@ CREATE TABLE containing_region_table(
   | | {name containing_region_table}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key foreign_key
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id}
         | | {type_int}: integer
@@ -40881,7 +40881,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0021: foreign key refers to no
   | | {name client_region_table_1}
   | {col_key_list}
     | {col_def}: err
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id}
         | | {type_int}: integer
@@ -40907,7 +40907,7 @@ CREATE TABLE client_region_table_2(
   | | {name client_region_table_2}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key foreign_key
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id}
         | | {type_int}: integer
@@ -43511,62 +43511,62 @@ CREATE TEMP TABLE foo_data(
   | | {name foo_data}
   | {col_key_list}
     | {col_def}: c1: text notnull
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name c1}
     |   | | {type_text}: text
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
       | {col_def}: c2: integer
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |     | {name c2}
       |     | {type_int}: integer
       | {col_key_list}
         | {col_def}: c3: real
-        | | {col_def_type_attrs}
+        | | {col_def_type_attrs}: ok
         |   | {col_def_name_type}
         |     | {name c3}
         |     | {type_real}: real
         | {col_key_list}
           | {col_def}: c4: real
-          | | {col_def_type_attrs}
+          | | {col_def_type_attrs}: ok
           |   | {col_def_name_type}
           |     | {name c4}
           |     | {type_real}: real
           | {col_key_list}
             | {col_def}: c5: real
-            | | {col_def_type_attrs}
+            | | {col_def_type_attrs}: ok
             |   | {col_def_name_type}
             |     | {name c5}
             |     | {type_real}: real
             | {col_key_list}
               | {col_def}: c6: real
-              | | {col_def_type_attrs}
+              | | {col_def_type_attrs}: ok
               |   | {col_def_name_type}
               |     | {name c6}
               |     | {type_real}: real
               | {col_key_list}
                 | {col_def}: c7: real
-                | | {col_def_type_attrs}
+                | | {col_def_type_attrs}: ok
                 |   | {col_def_name_type}
                 |     | {name c7}
                 |     | {type_real}: real
                 | {col_key_list}
                   | {col_def}: c8: real
-                  | | {col_def_type_attrs}
+                  | | {col_def_type_attrs}: ok
                   |   | {col_def_name_type}
                   |     | {name c8}
                   |     | {type_real}: real
                   | {col_key_list}
                     | {col_def}: c9: real
-                    | | {col_def_type_attrs}
+                    | | {col_def_type_attrs}: ok
                     |   | {col_def_name_type}
                     |     | {name c9}
                     |     | {type_real}: real
                     | {col_key_list}
                       | {col_def}: c10: real
-                        | {col_def_type_attrs}
+                        | {col_def_type_attrs}: ok
                           | {col_def_name_type}
                             | {name c10}
                             | {type_real}: real
@@ -44072,7 +44072,7 @@ CREATE TABLE sens_table(
   | | {name sens_table}
   | {col_key_list}
     | {col_def}: t: text sensitive
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name t}
         | | {type_text}: text
@@ -44266,7 +44266,7 @@ CREATE TABLE IF NOT EXISTS foo(
   | | {name foo}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key autoinc
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id}
         | | {type_int}: integer
@@ -45999,13 +45999,13 @@ Error at test/sem_test.sql:XXXX : in fk_def : CQL0021: foreign key refers to non
   | | {name bogus_reference_in_fk}
   | {col_key_list}
     | {col_def}: col1: text
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name col1}
     |     | {type_text}: text
     | {col_key_list}
       | {col_def}: col2: integer
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |     | {name col2}
       |     | {type_int}: integer
@@ -46329,7 +46329,7 @@ CREATE TABLE from_the_future(
   | | {name from_the_future}
   | {col_key_list}
     | {col_def}: col1: text notnull primary_key
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name col1}
         | | {type_text}: text
@@ -46354,7 +46354,7 @@ Error at test/sem_test.sql:XXXX : in fk_def : CQL0324: referenced table was crea
   | | {name in_the_past}
   | {col_key_list}
     | {col_def}: col1: text
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name col1}
     |     | {type_text}: text
@@ -46387,7 +46387,7 @@ CREATE TABLE in_the_future(
   | | {name in_the_future}
   | {col_key_list}
     | {col_def}: col1: text
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name col1}
     |     | {type_text}: text
@@ -46479,14 +46479,14 @@ CREATE TABLE self_ref1(
   | | {name self_ref1}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
     | {col_key_list}
       | {col_def}: id2: integer foreign_key
-        | {col_def_type_attrs}
+        | {col_def_type_attrs}: ok
           | {col_def_name_type}
           | | {name id2}
           | | {type_int}: integer
@@ -46513,14 +46513,14 @@ CREATE TABLE self_ref2(
   | | {name self_ref2}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
     | {col_key_list}
       | {col_def}: id2: integer
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |     | {name id2}
       |     | {type_int}: integer
@@ -46552,14 +46552,14 @@ Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'idx'
   | | {name self_ref3}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
     | {col_key_list}
       | {col_def}: err
-        | {col_def_type_attrs}
+        | {col_def_type_attrs}: ok
           | {col_def_name_type}
           | | {name id2}
           | | {type_int}: integer
@@ -46588,14 +46588,14 @@ Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'idx'
   | | {name self_ref4}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
     | {col_key_list}
       | {col_def}: id2: integer
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |     | {name id2}
       |     | {type_int}: integer
@@ -46628,14 +46628,14 @@ Error at test/sem_test.sql:XXXX : in name_list : CQL0272: the set of columns ref
   | | {name self_ref5}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
     | {col_key_list}
       | {col_def}: id2: integer
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |     | {name id2}
       |     | {type_int}: integer
@@ -46666,7 +46666,7 @@ Error at test/sem_test.sql:XXXX : in name_list : CQL0272: the set of columns ref
   | | {name fk_to_non_key}
   | {col_key_list}
     | {col_def}: err
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id}
         | | {type_int}: integer
@@ -46981,7 +46981,7 @@ CREATE TABLE no_table_scan(
     | | {name no_table_scan}
     | {col_key_list}
       | {col_def}: id: text
-        | {col_def_type_attrs}
+        | {col_def_type_attrs}: ok
           | {col_def_name_type}
             | {name id}
             | {type_text}: text
@@ -47530,7 +47530,7 @@ CREATE TABLE values_table(
   | | {name values_table}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key autoinc
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
@@ -47538,7 +47538,7 @@ CREATE TABLE values_table(
     |     | {col_attrs_autoinc}
     | {col_key_list}
       | {col_def}: name: text
-        | {col_def_type_attrs}
+        | {col_def_type_attrs}: ok
           | {col_def_name_type}
             | {name name}
             | {type_text}: text
@@ -47592,7 +47592,7 @@ Error at test/sem_test.sql:XXXX : in create_table_stmt : CQL0339: WITHOUT ROWID 
   | | {name table_with_invalid_without_rowid_mode}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id}
         | | {type_int}: integer
@@ -47618,7 +47618,7 @@ CREATE TABLE table_with_valid_without_rowid_mode(
   | | {name table_with_valid_without_rowid_mode}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id}
         | | {type_int}: integer
@@ -51145,13 +51145,13 @@ CREATE TABLE with_check(
   | | {name with_check}
   | {col_key_list}
     | {col_def}: id: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id}
     |     | {type_int}: integer
     | {col_key_list}
       | {col_def}: lo: integer has_check
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |   | | {name lo}
       |   | | {type_int}: integer
@@ -51161,7 +51161,7 @@ CREATE TABLE with_check(
       |       | {name hi}: hi: integer
       | {col_key_list}
         | {col_def}: hi: integer
-          | {col_def_type_attrs}
+          | {col_def_type_attrs}: ok
             | {col_def_name_type}
               | {name hi}
               | {type_int}: integer
@@ -51183,13 +51183,13 @@ Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'hip'
   | | {name with_check_bogus_column}
   | {col_key_list}
     | {col_def}: id: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id}
     |     | {type_int}: integer
     | {col_key_list}
       | {col_def}: lo: integer has_check
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |   | | {name lo}
       |   | | {type_int}: integer
@@ -51199,7 +51199,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'hip'
       |       | {name hip}: err
       | {col_key_list}
         | {col_def}: hi: integer
-          | {col_def_type_attrs}
+          | {col_def_type_attrs}: ok
             | {col_def_name_type}
               | {name hi}
               | {type_int}: integer
@@ -51218,13 +51218,13 @@ CREATE TABLE with_collate(
   | | {name with_collate}
   | {col_key_list}
     | {col_def}: id: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id}
     |     | {type_int}: integer
     | {col_key_list}
       | {col_def}: t: text has_collate
-        | {col_def_type_attrs}
+        | {col_def_type_attrs}: ok
           | {col_def_name_type}
           | | {name t}
           | | {type_text}: text
@@ -51247,13 +51247,13 @@ Error at test/sem_test.sql:XXXX : in str : CQL0348: collate applied to a non-tex
   | | {name with_collate}
   | {col_key_list}
     | {col_def}: id: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id}
     |     | {type_int}: integer
     | {col_key_list}
       | {col_def}: err
-        | {col_def_type_attrs}
+        | {col_def_type_attrs}: ok
           | {col_def_name_type}
           | | {name i}
           | | {type_real}: real
@@ -51277,7 +51277,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0349: column definitions may n
   | | {name bad_order}
   | {col_key_list}
     | {col_def}: id: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id}
     |     | {type_int}: integer
@@ -51707,20 +51707,20 @@ DECLARE ENUM integer_things INTEGER (
   pencil
 );
 
-  {declare_enum_stmt}: integer_things: integer
-  | {typed_name}: integer_things: integer
+  {declare_enum_stmt}: integer_things: integer notnull
+  | {typed_name}: integer_things: integer notnull
   | | {name integer_things}
-  | | {type_int}: integer_things: integer
+  | | {type_int}: integer_things: integer notnull
   | {enum_values}
     | {enum_value}
-    | | {name pen}: integer = 1
+    | | {name pen}: integer = 1 notnull
     | {enum_values}
       | {enum_value}
-      | | {name paper}: integer = 7
+      | | {name paper}: integer = 7 notnull
       | | {int 7}: integer notnull
       | {enum_values}
         | {enum_value}
-          | {name pencil}: integer = 8
+          | {name pencil}: integer = 8 notnull
 
 The statement ending at line XXXX
 
@@ -51730,20 +51730,20 @@ DECLARE ENUM integer_things INTEGER (
   pencil
 );
 
-  {declare_enum_stmt}: integer_things: integer
-  | {typed_name}: integer_things: integer
+  {declare_enum_stmt}: integer_things: integer notnull
+  | {typed_name}: integer_things: integer notnull
   | | {name integer_things}
-  | | {type_int}: integer_things: integer
+  | | {type_int}: integer_things: integer notnull
   | {enum_values}
     | {enum_value}
-    | | {name pen}: integer = 1
+    | | {name pen}: integer = 1 notnull
     | {enum_values}
       | {enum_value}
-      | | {name paper}: integer = 7
+      | | {name paper}: integer = 7 notnull
       | | {int 7}: integer notnull
       | {enum_values}
         | {enum_value}
-          | {name pencil}: integer = 8
+          | {name pencil}: integer = 8 notnull
 
 The statement ending at line XXXX
 
@@ -51753,20 +51753,20 @@ DECLARE ENUM real_things REAL (
   pencil
 );
 
-  {declare_enum_stmt}: real_things: real
-  | {typed_name}: real_things: real
+  {declare_enum_stmt}: real_things: real notnull
+  | {typed_name}: real_things: real notnull
   | | {name real_things}
-  | | {type_real}: real_things: real
+  | | {type_real}: real_things: real notnull
   | {enum_values}
     | {enum_value}
-    | | {name pen}: real = 1.000000e+00
+    | | {name pen}: real = 1.000000e+00 notnull
     | {enum_values}
       | {enum_value}
-      | | {name paper}: real = 7.000000e+00
+      | | {name paper}: real = 7.000000e+00 notnull
       | | {int 7}: integer notnull
       | {enum_values}
         | {enum_value}
-          | {name pencil}: real = 8.000000e+00
+          | {name pencil}: real = 8.000000e+00 notnull
 
 The statement ending at line XXXX
 
@@ -51818,20 +51818,20 @@ DECLARE ENUM bool_things BOOL (
   pencil
 );
 
-  {declare_enum_stmt}: bool_things: bool
-  | {typed_name}: bool_things: bool
+  {declare_enum_stmt}: bool_things: bool notnull
+  | {typed_name}: bool_things: bool notnull
   | | {name bool_things}
-  | | {type_bool}: bool_things: bool
+  | | {type_bool}: bool_things: bool notnull
   | {enum_values}
     | {enum_value}
-    | | {name pen}: bool = 1
+    | | {name pen}: bool = 1 notnull
     | {enum_values}
       | {enum_value}
-      | | {name paper}: bool = 1
+      | | {name paper}: bool = 1 notnull
       | | {int 7}: integer notnull
       | {enum_values}
         | {enum_value}
-          | {name pencil}: bool = 0
+          | {name pencil}: bool = 0 notnull
 
 The statement ending at line XXXX
 
@@ -51841,21 +51841,21 @@ DECLARE ENUM long_things LONG_INT (
   pencil
 );
 
-  {declare_enum_stmt}: long_things: longint
-  | {typed_name}: long_things: longint
+  {declare_enum_stmt}: long_things: longint notnull
+  | {typed_name}: long_things: longint notnull
   | | {name long_things}
-  | | {type_long}: long_things: longint
+  | | {type_long}: long_things: longint notnull
   | {enum_values}
     | {enum_value}
-    | | {name pen}: longint = 1
+    | | {name pen}: longint = 1 notnull
     | {enum_values}
       | {enum_value}
-      | | {name paper}: longint = -7
+      | | {name paper}: longint = -7 notnull
       | | {uminus}: integer notnull
       |   | {int 7}: integer notnull
       | {enum_values}
         | {enum_value}
-          | {name pencil}: longint = -6
+          | {name pencil}: longint = -6 notnull
 
 The statement ending at line XXXX
 
@@ -51876,12 +51876,12 @@ The above must be identical.
 Error at test/sem_test.sql:XXXX : in declare_enum_stmt : CQL0356: enum definitions do not match 'long_things'
 
   {declare_enum_stmt}: err
-  | {typed_name}: long_things: integer
+  | {typed_name}: long_things: integer notnull
   | | {name long_things}
-  | | {type_int}: long_things: integer
+  | | {type_int}: long_things: integer notnull
   | {enum_values}
     | {enum_value}
-      | {name foo}: integer = 1
+      | {name foo}: integer = 1 notnull
 
 The statement ending at line XXXX
 
@@ -51893,12 +51893,12 @@ DECLARE ENUM duplicated_things INTEGER (
 Error at test/sem_test.sql:XXXX : in enum_value : CQL0354: duplicate enum member 'two'
 
   {declare_enum_stmt}: err
-  | {typed_name}: duplicated_things: integer
+  | {typed_name}: duplicated_things: integer notnull
   | | {name duplicated_things}
-  | | {type_int}: duplicated_things: integer
+  | | {type_int}: duplicated_things: integer notnull
   | {enum_values}
     | {enum_value}
-    | | {name two}: integer = 1
+    | | {name two}: integer = 1 notnull
     | {enum_values}
       | {enum_value}
         | {name two}
@@ -51912,9 +51912,9 @@ DECLARE ENUM invalid_things INTEGER (
 Error at test/sem_test.sql:XXXX : in enum_value : CQL0355: evaluation failed 'boo'
 
   {declare_enum_stmt}: err
-  | {typed_name}: invalid_things: integer
+  | {typed_name}: invalid_things: integer notnull
   | | {name invalid_things}
-  | | {type_int}: invalid_things: integer
+  | | {type_int}: invalid_things: integer notnull
   | {enum_values}
     | {enum_value}
       | {name boo}
@@ -51931,29 +51931,29 @@ DECLARE ENUM sizes REAL (
   tiny = 2.500000e+01 / 2
 );
 
-  {declare_enum_stmt}: sizes: real
-  | {typed_name}: sizes: real
+  {declare_enum_stmt}: sizes: real notnull
+  | {typed_name}: sizes: real notnull
   | | {name sizes}
-  | | {type_real}: sizes: real
+  | | {type_real}: sizes: real notnull
   | {enum_values}
     | {enum_value}
-    | | {name big}: real = 1.000000e+02
+    | | {name big}: real = 1.000000e+02 notnull
     | | {int 100}: integer notnull
     | {enum_values}
       | {enum_value}
-      | | {name medium}: real = 5.000000e+01
+      | | {name medium}: real = 5.000000e+01 notnull
       | | {div}: real notnull
       |   | {dbl 1.000000e+02}: real notnull
       |   | {int 2}: integer notnull
       | {enum_values}
         | {enum_value}
-        | | {name small}: real = 2.500000e+01
+        | | {name small}: real = 2.500000e+01 notnull
         | | {div}: real notnull
         |   | {dbl 5.000000e+01}: real notnull
         |   | {int 2}: integer notnull
         | {enum_values}
           | {enum_value}
-            | {name tiny}: real = 1.250000e+01
+            | {name tiny}: real = 1.250000e+01 notnull
             | {div}: real notnull
               | {dbl 2.500000e+01}: real notnull
               | {int 2}: integer notnull
@@ -51965,19 +51965,19 @@ DECLARE ENUM misc REAL (
   two = 7.500000e+01 - 1.250000e+01
 );
 
-  {declare_enum_stmt}: misc: real
-  | {typed_name}: misc: real
+  {declare_enum_stmt}: misc: real notnull
+  | {typed_name}: misc: real notnull
   | | {name misc}
-  | | {type_real}: misc: real
+  | | {type_real}: misc: real notnull
   | {enum_values}
     | {enum_value}
-    | | {name one}: real = 7.500000e+01
+    | | {name one}: real = 7.500000e+01 notnull
     | | {sub}: real notnull
     |   | {dbl 1.000000e+02}: real notnull
     |   | {dbl 2.500000e+01}: real notnull
     | {enum_values}
       | {enum_value}
-        | {name two}: real = 6.250000e+01
+        | {name two}: real = 6.250000e+01 notnull
         | {sub}: real notnull
           | {dbl 7.500000e+01}: real notnull
           | {dbl 1.250000e+01}: real notnull
@@ -51998,9 +51998,9 @@ Error at test/sem_test.sql:XXXX : in str : CQL0358: declared enums must be top l
   | {proc_params_stmts}
     | {stmt_list}: err
       | {declare_enum_stmt}: err
-        | {typed_name}: bogus_inside_proc: integer
+        | {typed_name}: bogus_inside_proc: integer notnull
         | | {name bogus_inside_proc}
-        | | {type_int}: bogus_inside_proc: integer
+        | | {type_int}: bogus_inside_proc: integer notnull
         | {enum_values}
           | {enum_value}
             | {name foo}
@@ -52019,13 +52019,13 @@ CREATE TABLE SalesInfo(
   | | {name SalesInfo}
   | {col_key_list}
     | {col_def}: month: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name month}
     |     | {type_int}: integer
     | {col_key_list}
       | {col_def}: amount: real
-        | {col_def_type_attrs}
+        | {col_def_type_attrs}: ok
           | {col_def_name_type}
             | {name amount}
             | {type_real}: real
@@ -52272,13 +52272,13 @@ CREATE TABLE AB(
   | | {name AB}
   | {col_key_list}
     | {col_def}: a: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name a}
     |     | {type_int}: integer
     | {col_key_list}
       | {col_def}: b: text
-        | {col_def_type_attrs}
+        | {col_def_type_attrs}: ok
           | {col_def_name_type}
             | {name b}
             | {type_text}: text
@@ -52297,13 +52297,13 @@ CREATE TABLE CD(
   | | {name CD}
   | {col_key_list}
     | {col_def}: c: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name c}
     |     | {type_int}: integer
     | {col_key_list}
       | {col_def}: d: text
-        | {col_def_type_attrs}
+        | {col_def_type_attrs}: ok
           | {col_def_name_type}
             | {name d}
             | {type_text}: text
@@ -52322,13 +52322,13 @@ CREATE TABLE BA(
   | | {name BA}
   | {col_key_list}
     | {col_def}: b: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name b}
     |     | {type_int}: integer
     | {col_key_list}
       | {col_def}: a: text
-        | {col_def_type_attrs}
+        | {col_def_type_attrs}: ok
           | {col_def_name_type}
             | {name a}
             | {type_text}: text
@@ -53175,13 +53175,13 @@ CREATE VIRTUAL TABLE basic_virtual USING module_name (this, that, the_other) AS 
     | | {name basic_virtual}
     | {col_key_list}
       | {col_def}: id: integer
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |     | {name id}
       |     | {type_int}: integer
       | {col_key_list}
         | {col_def}: t: text
-          | {col_def_type_attrs}
+          | {col_def_type_attrs}: ok
             | {col_def_name_type}
               | {name t}
               | {type_text}: text
@@ -53206,13 +53206,13 @@ Error at test/sem_test.sql:XXXX : in str : CQL0142: duplicate column name 'id'
     | | {name broken_virtual_table}
     | {col_key_list}
       | {col_def}: id: integer
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |     | {name id}
       |     | {type_int}: integer
       | {col_key_list}
         | {col_def}: id: integer
-          | {col_def_type_attrs}
+          | {col_def_type_attrs}: ok
             | {col_def_name_type}
               | {name id}
               | {type_int}: integer
@@ -53313,7 +53313,7 @@ CREATE TABLE with_check_expr(
   | | {name with_check_expr}
   | {col_key_list}
     | {col_def}: v: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name v}
     |     | {type_int}: integer
@@ -53339,7 +53339,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'q'
   | | {name with_bogus_check_expr}
   | {col_key_list}
     | {col_def}: v: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name v}
     |     | {type_int}: integer
@@ -53439,21 +53439,33 @@ END;
 
 The statement ending at line XXXX
 
+DECLARE my_type_sens_not TYPE TEXT NOT NULL @SENSITIVE;
+
+  {declare_named_type}: text notnull sensitive
+  | {name my_type_sens_not}: text notnull sensitive
+  | {sensitive_attr}: text notnull sensitive
+    | {notnull}: text notnull
+      | {type_text}: text
+
+The statement ending at line XXXX
+
 CREATE TABLE t(
-  id TEXT
+  id TEXT @SENSITIVE NOT NULL
 );
 
-  {create_table_stmt}: t: { id: text }
+  {create_table_stmt}: t: { id: text notnull sensitive }
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
   | | {name t}
   | {col_key_list}
-    | {col_def}: id: text
-      | {col_def_type_attrs}
+    | {col_def}: id: text notnull sensitive
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
-          | {name id}
-          | {type_text}: text
+        | | {name id}
+        | | {type_text}: text
+        | {sensitive_attr}: ok
+          | {col_attrs_not_null}
 
 The statement ending at line XXXX
 
@@ -53461,7 +53473,7 @@ CREATE TABLE t(
   id bogus_type
 );
 
-Error at test/sem_test.sql:XXXX : in str : CQL0360: unknown type 'bogus_type'
+Error at test/sem_test.sql:XXXX : in col_def_type_attrs : CQL0360: unknown type 'bogus_type'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -53470,10 +53482,10 @@ Error at test/sem_test.sql:XXXX : in str : CQL0360: unknown type 'bogus_type'
   | | {name t}
   | {col_key_list}
     | {col_def}: err
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: err
         | {col_def_name_type}
           | {name id}
-          | {name bogus_type}: err
+          | {name bogus_type}
 
 The statement ending at line XXXX
 
@@ -53599,20 +53611,20 @@ CREATE TABLE to_copy(
   | | {name to_copy}
   | {col_key_list}
     | {col_def}: f1: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name f1}
     |     | {type_int}: integer
     | {col_key_list}
       | {col_def}: f2: integer notnull
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |   | | {name f2}
       |   | | {type_int}: integer
       |   | {col_attrs_not_null}: ok
       | {col_key_list}
         | {col_def}: f3: integer notnull sensitive
-        | | {col_def_type_attrs}
+        | | {col_def_type_attrs}: ok
         |   | {col_def_name_type}
         |   | | {name f3}
         |   | | {type_int}: integer
@@ -53620,7 +53632,7 @@ CREATE TABLE to_copy(
         |     | {sensitive_attr}
         | {col_key_list}
           | {col_def}: f4: integer sensitive
-            | {col_def_type_attrs}
+            | {col_def_type_attrs}: ok
               | {col_def_name_type}
               | | {name f4}
               | | {type_int}: integer
@@ -53642,20 +53654,20 @@ CREATE TABLE the_copy(
   | | {name the_copy}
   | {col_key_list}
     | {col_def}: f1: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name f1}
     |     | {type_int}: integer
     | {col_key_list}
       | {col_def}: f2: integer notnull
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |   | | {name f2}
       |   | | {type_int}: integer
       |   | {col_attrs_not_null}: ok
       | {col_key_list}
         | {col_def}: f3: integer notnull sensitive
-        | | {col_def_type_attrs}
+        | | {col_def_type_attrs}: ok
         |   | {col_def_name_type}
         |   | | {name f3}
         |   | | {type_int}: integer
@@ -53663,7 +53675,7 @@ CREATE TABLE the_copy(
         |     | {col_attrs_not_null}
         | {col_key_list}
           | {col_def}: f4: integer sensitive
-            | {col_def_type_attrs}
+            | {col_def_type_attrs}: ok
               | {col_def_name_type}
               | | {name f4}
               | | {type_int}: integer
@@ -53853,10 +53865,10 @@ The statement ending at line XXXX
 
 DECLARE type_obj_foo TYPE OBJECT<Foo> NOT NULL @SENSITIVE;
 
-  {declare_named_type}: object notnull sensitive
-  | {name type_obj_foo}: object notnull sensitive
-  | {sensitive_attr}: object notnull sensitive
-    | {notnull}: object notnull
+  {declare_named_type}: object<Foo> notnull sensitive
+  | {name type_obj_foo}: object<Foo> notnull sensitive
+  | {sensitive_attr}: object<Foo> notnull sensitive
+    | {notnull}: object<Foo> notnull
       | {type_object}: object<Foo>
         | {name Foo}
 
@@ -53864,12 +53876,12 @@ The statement ending at line XXXX
 
 DECLARE FUNC type_func_return_create_obj () CREATE OBJECT<Foo> NOT NULL @SENSITIVE;
 
-  {declare_func_stmt}: object notnull create_func sensitive
-  | {name type_func_return_create_obj}: object notnull create_func sensitive
+  {declare_func_stmt}: object<Foo> notnull create_func sensitive
+  | {name type_func_return_create_obj}: object<Foo> notnull create_func sensitive
   | {func_params_return}
-    | {create_data_type}: object notnull create_func sensitive
-      | {sensitive_attr}: object notnull sensitive
-        | {notnull}: object notnull
+    | {create_data_type}: object<Foo> notnull create_func sensitive
+      | {sensitive_attr}: object<Foo> notnull sensitive
+        | {notnull}: object<Foo> notnull
           | {type_object}: object<Foo>
             | {name Foo}
 
@@ -53877,23 +53889,55 @@ The statement ending at line XXXX
 
 DECLARE FUNC type_func_return_create_bogus_obj () CREATE bogus_type;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0360: unknown type 'bogus_type'
+Error at test/sem_test.sql:XXXX : in create_data_type : CQL0360: unknown type 'bogus_type'
 
   {declare_func_stmt}: err
   | {name type_func_return_create_bogus_obj}
   | {func_params_return}
     | {create_data_type}: err
-      | {name bogus_type}: err
+      | {name bogus_type}
 
 The statement ending at line XXXX
 
 DECLARE FUNC type_func_return_obj () OBJECT<Foo> NOT NULL @SENSITIVE;
 
-  {declare_func_stmt}: object notnull sensitive
-  | {name type_func_return_obj}: object notnull sensitive
+  {declare_func_stmt}: object<Foo> notnull sensitive
+  | {name type_func_return_obj}: object<Foo> notnull sensitive
   | {func_params_return}
-    | {sensitive_attr}: object notnull sensitive
-      | {notnull}: object notnull
+    | {sensitive_attr}: object<Foo> notnull sensitive
+      | {notnull}: object<Foo> notnull
         | {type_object}: object<Foo>
           | {name Foo}
+
+The statement ending at line XXXX
+
+DECLARE my_enum_type TYPE INTEGER NOT NULL;
+
+  {declare_named_type}: integer notnull
+  | {name my_enum_type}: integer notnull
+  | {notnull}: integer notnull
+    | {type_int}: integer
+
+The statement ending at line XXXX
+
+DECLARE ENUM my_type INTEGER (
+  negative_one = -1,
+  postive_one = 1
+);
+
+Error at test/sem_test.sql:XXXX : in declare_enum_stmt : CQL0359: duplicate type declaration 'my_type'
+
+  {declare_enum_stmt}: err
+  | {typed_name}: my_type: integer notnull
+  | | {name my_type}
+  | | {type_int}: my_type: integer notnull
+  | {enum_values}
+    | {enum_value}
+    | | {name negative_one}: integer = -1 notnull
+    | | {uminus}: integer notnull
+    |   | {int 1}: integer notnull
+    | {enum_values}
+      | {enum_value}
+        | {name postive_one}: integer = 1 notnull
+        | {int 1}: integer notnull
 

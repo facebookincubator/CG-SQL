@@ -601,10 +601,10 @@ static void cg_var_decl(charbuf *output, sem_t sem_type, CSTR base_name, bool_t 
 // generates:
 //   cql_set_notnull(y, 1);
 //   cql_set_nullable(x, y.is_null, y.value + 3);
-// 
+//
 // A scratch variable is not used to hold the result of the RHS of the set because
 // the target of the assignment is known and compatible.
-// The target must match the exact type including nullability.  Note bogus 
+// The target must match the exact type including nullability.  Note bogus
 // sensitive assignments or incompatible assignments were already ruled out
 // in semantic analysis.
 static bool_t is_assignment_target_reusable(ast_node *ast, sem_t sem_type) {
@@ -870,7 +870,7 @@ static void cg_store(charbuf *output, CSTR var, sem_t sem_type_var, sem_t sem_ty
   else {
     // In the nullable case the comparison is a bit trickier, we have to be
     // storing from var.value and var.is_null right back into var.value
-    // and var.isnull.  
+    // and var.isnull.
     CHARBUF_OPEN(val);
     CHARBUF_OPEN(nul);
     bprintf(&val, "%s.value", var);
@@ -3555,7 +3555,7 @@ static void cg_emit_one_enum(ast_node *ast) {
   bprintf(cg_header_output, "#ifndef enum_%s_defined\n", name);
   bprintf(cg_header_output, "#define enum_%s_defined\n\n", name);
 
-  if (type->sem->sem_type != SEM_TYPE_REAL) {
+  if (core_type_of(type->sem->sem_type) != SEM_TYPE_REAL) {
     bprintf(cg_header_output, "enum %s {", name);
 
     while (enum_values) {

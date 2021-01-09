@@ -25,14 +25,14 @@ CREATE TABLE foo(
   | | {name foo}
   | {col_key_list}
     | {col_def}: id: integer notnull
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
       | {col_def}: rate: longint @delete(5)
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |   | | {name rate}
       |   | | {type_long}: longint
@@ -42,7 +42,7 @@ CREATE TABLE foo(
       |       | {name deletor}
       | {col_key_list}
         | {col_def}: rate_2: longint hidden @delete(4)
-        | | {col_def_type_attrs}
+        | | {col_def_type_attrs}: ok
         |   | {col_def_name_type}
         |   | | {name rate_2}
         |   | | {type_long}: longint
@@ -51,7 +51,7 @@ CREATE TABLE foo(
         |       | {int 4}
         | {col_key_list}
           | {col_def}: id2: integer @create(4)
-          | | {col_def_type_attrs}
+          | | {col_def_type_attrs}: ok
           |   | {col_def_name_type}
           |   | | {name id2}
           |   | | {type_int}: integer
@@ -60,7 +60,7 @@ CREATE TABLE foo(
           |       | {int 4}
           | {col_key_list}
             | {col_def}: name: text @create(5)
-            | | {col_def_type_attrs}
+            | | {col_def_type_attrs}: ok
             |   | {col_def_name_type}
             |   | | {name name}
             |   | | {type_text}: text
@@ -69,7 +69,7 @@ CREATE TABLE foo(
             |       | {int 5}
             | {col_key_list}
               | {col_def}: name_2: text hidden @create(6)
-                | {col_def_type_attrs}
+                | {col_def_type_attrs}: ok
                   | {col_def_name_type}
                   | | {name name_2}
                   | | {type_text}: text
@@ -108,13 +108,13 @@ CREATE TABLE fk_not_there_yet(
   | | {name fk_not_there_yet}
   | {col_key_list}
     | {col_def}: id: integer
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id}
     |     | {type_int}: integer
     | {col_key_list}
       | {col_def}: text1: text foreign_key
-      | | {col_def_type_attrs}
+      | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |   | | {name text1}
       |   | | {type_text}: text
@@ -127,7 +127,7 @@ CREATE TABLE fk_not_there_yet(
       |       | {int 0}
       | {col_key_list}
         | {col_def}: text2: text
-        | | {col_def_type_attrs}
+        | | {col_def_type_attrs}: ok
         |   | {col_def_name_type}
         |     | {name text2}
         |     | {type_text}: text
@@ -200,14 +200,14 @@ CREATE TABLE bar(
   | | {name bar}
   | {col_key_list}
     | {col_def}: id: integer notnull
-    | | {col_def_type_attrs}
+    | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
       | {col_def}: name: text @create(5)
-        | {col_def_type_attrs}
+        | {col_def_type_attrs}: ok
           | {col_def_name_type}
           | | {name name}
           | | {type_text}: text
@@ -267,7 +267,7 @@ CREATE TABLE t1(
   | | {name t1}
   | {col_key_list}
     | {col_def}: id: integer
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
           | {name id}
           | {type_int}: integer
@@ -288,7 +288,7 @@ CREATE TABLE t2(
   | | {name t2}
   | {col_key_list}
     | {col_def}: id: integer
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
           | {name id}
           | {type_int}: integer
@@ -309,7 +309,7 @@ CREATE TABLE t3(
   | | {name t3}
   | {col_key_list}
     | {col_def}: id: integer
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
           | {name id}
           | {type_int}: integer
@@ -330,7 +330,7 @@ CREATE TABLE t4(
   | | {name t4}
   | {col_key_list}
     | {col_def}: id: integer
-      | {col_def_type_attrs}
+      | {col_def_type_attrs}: ok
         | {col_def_name_type}
           | {name id}
           | {type_int}: integer

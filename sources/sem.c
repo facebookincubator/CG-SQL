@@ -1275,8 +1275,27 @@ ast_node *find_region(CSTR name) {
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
+// Helper to store the declare named type in a symbol tab. local named
+// type are store in a local storage while the global one are store globally.
+// If applicable the local storage is always search first to find named type
+// otherwise the global storage is used.
+static bool_t add_declared_named_type(CSTR name, ast_node *ast) {
+  symtab *tab;
+  if (current_proc) {
+    tab = local_types;
+  } else {
+    tab = global_types;
+  }
+  if (!symtab_add(tab, name, ast)) {
+    report_error(ast, "CQL0359: duplicate type declaration", name);
+    record_error(ast);
+    return false;
+  }
+  return true;
+}
+
 // Find the declare_name_type node of a named type.
-cql_noexport ast_node *find_declare_named_type(CSTR name) {
+ast_node *_Nullable find_declare_named_type(CSTR name) {
   symtab_entry *entry = NULL;
   // We first try to find it in local storage because it has
   // higher priority otherwise we look into the global storage
@@ -1288,6 +1307,23 @@ cql_noexport ast_node *find_declare_named_type(CSTR name) {
   }
 
   return entry ? (ast_node*)(entry->val) : NULL;
+}
+
+// Find the data type of a name by looking into all enum type and
+// declared named type.
+ast_node *_Nullable find_data_type_of_declared_named_type(CSTR name) {
+  ast_node *named_type = find_declare_named_type(name);
+  if (!named_type) {
+    return NULL;
+  }
+
+  if (is_ast_declare_enum_stmt(named_type)) {
+    EXTRACT_NOTNULL(declare_enum_stmt, named_type);
+    EXTRACT_NOTNULL(typed_name, declare_enum_stmt->left);
+    named_type = typed_name;
+  }
+  ast_node *data_type = named_type->right;
+  return data_type;
 }
 
 static ast_node *find_cur_region(CSTR name) {
@@ -2218,6 +2254,9 @@ static void sem_data_type_var(ast_node *ast) {
 
     // Create a node for me using my child's type but adding func create.
     ast->sem = new_sem(SEM_TYPE_CREATE_FUNC | data_type->sem->sem_type);
+    // copy object type to the sem if applicable. It's used to rewrite
+    // named type ast.
+    ast->sem->object_type = data_type->sem->object_type;
   }
   else if (is_ast_notnull(ast)) {
     EXTRACT_ANY_NOTNULL(data_type, ast->left);
@@ -2225,6 +2264,9 @@ static void sem_data_type_var(ast_node *ast) {
 
     // Create a node for me using my child's type but adding not null.
     ast->sem = new_sem(SEM_TYPE_NOTNULL | data_type->sem->sem_type);
+    // copy object type to the sem if applicable. It's used to rewrite
+    // named type ast.
+    ast->sem->object_type = data_type->sem->object_type;
   }
   else if (is_ast_sensitive_attr(ast)) {
     EXTRACT_ANY_NOTNULL(data_type, ast->left);
@@ -2232,6 +2274,9 @@ static void sem_data_type_var(ast_node *ast) {
 
     // Create a node for me using my child's type but adding not null.
     ast->sem = new_sem(SEM_TYPE_SENSITIVE | data_type->sem->sem_type);
+    // copy object type to the sem if applicable. It's used to rewrite
+    // named type ast.
+    ast->sem->object_type = data_type->sem->object_type;
   }
   else {
     sem_data_type_column(ast);
@@ -3300,6 +3345,15 @@ static sem_t sem_col_attrs(ast_node *def, ast_node *_Nullable head, coldef_info 
 static void sem_col_def(ast_node *def, coldef_info *info) {
   Contract(is_ast_col_def(def));
   EXTRACT_NOTNULL(col_def_type_attrs, def->left);
+
+  // We rewrite col_def_type_attrs node before reading the subtree
+  // to make sure we read a rewrite subtree.
+  rewrite_right_col_def_type_attrs_if_needed(col_def_type_attrs);
+  if (is_error(col_def_type_attrs)) {
+    record_error(def);
+    return;
+  }
+
   EXTRACT_ANY(attrs, col_def_type_attrs->right);
   EXTRACT_NOTNULL(col_def_name_type, col_def_type_attrs->left);
   EXTRACT_ANY_NOTNULL(name_ast, col_def_name_type->left);
@@ -3313,10 +3367,6 @@ static void sem_col_def(ast_node *def, coldef_info *info) {
 
   // column name:  [name]
   sem_data_type_column(data_type);
-  if (is_error(data_type)) {
-    record_error(def);
-    return;
-  }
 
   def->sem = new_sem(data_type->sem->sem_type);
   def->sem->name = name;
@@ -13664,6 +13714,7 @@ static void sem_declare_enum_stmt(ast_node *ast) {
   EXTRACT_STRING(name, name_ast);
   sem_data_type_column(typed_name->right);
   typed_name->sem = typed_name->right->sem;
+  typed_name->sem->sem_type |= SEM_TYPE_NOTNULL;
   typed_name->sem->name = name;
 
   if (current_proc) {
@@ -13745,6 +13796,12 @@ static void sem_declare_enum_stmt(ast_node *ast) {
     // so that it won't show up in JSON etc.
     if (adding_current_entity) {
       add_item_to_list(&all_enums_list, ast);
+
+      // Add this enum to the list of global types like that enums and declare name types
+      // can be search from a single storage.
+      if (!add_declared_named_type(name, ast)) {
+        goto cleanup;
+      }
     }
   }
 
@@ -13937,23 +13994,10 @@ static void sem_declare_named_type(ast_node *ast) {
   // this also promotes errors up from the data type
   name_ast->sem = ast->sem = data_type->sem;
 
-  // store the declare named type in a symbol tab. local named type are
-  // store in a local storage while the global one are store globally.
-  // If applicable the local storage is always search first to find named
-  // type otherwise the global storage is usd.
   if (!is_error(ast)) {
-    symtab *tab;
-    if (current_proc) {
-      tab = local_types;
-    } else {
-      tab = global_types;
-    }
-    if (symtab_find(tab, name)) {
-      report_error(ast, "CQL0359: duplicate type declaration", name);
-      record_error(ast);
+    if (!add_declared_named_type(name, ast)) {
       return;
     }
-    symtab_add(tab, name, ast);
   }
 }
 

@@ -339,7 +339,7 @@ cql_noexport bool_t rewrite_one_def(ast_node *head) {
     CSTR col_name = sptr->names[i];
 
     // Construct a col_def using name and core semantic type
-    ast_node *data_type = rewrite_gen_data_type(core_type_of(sem_type));
+    ast_node *data_type = rewrite_gen_data_type(core_type_of(sem_type), NULL);
     ast_node *name_ast = new_ast_str(col_name);
     ast_node *name_type = new_ast_col_def_name_type(name_ast, data_type);
 
@@ -480,7 +480,7 @@ static ast_node *rewrite_one_param(ast_node *param, symtab *param_names, bytebuf
       bytebuf_append_var(args_info, shape_type);
     }
 
-    ast_node *type = rewrite_gen_data_type(sem_type);
+    ast_node *type = rewrite_gen_data_type(sem_type, NULL);
     ast_node *name_ast = new_ast_str(param_name);
     ast_node *param_detail_new = new_ast_param_detail(name_ast, type);
 
@@ -550,7 +550,7 @@ cql_noexport CSTR process_proclit(ast_node *ast, CSTR name) {
   return name;
 }
 
-cql_noexport ast_node *rewrite_gen_data_type(sem_t sem_type) {
+cql_noexport ast_node *rewrite_gen_data_type(sem_t sem_type, CSTR _Nullable object_type) {
   ast_node *ast = NULL;
 
   switch (core_type_of(sem_type)) {
@@ -560,10 +560,15 @@ cql_noexport ast_node *rewrite_gen_data_type(sem_t sem_type) {
     case SEM_TYPE_REAL:         ast = new_ast_type_real(); break;
     case SEM_TYPE_BOOL:         ast = new_ast_type_bool(); break;
     case SEM_TYPE_BLOB:         ast = new_ast_type_blob(); break;
+    case SEM_TYPE_OBJECT: {
+      ast_node *node = NULL;
+      if (object_type) {
+        node = new_ast_str(object_type);
+      }
+      ast = new_ast_type_object(node);
+      break;
+    }
   }
-
-  // all cases covered above [except SEM_TYPE_OBJECT which can't happen]
-  // we may need this case in the future but for now it's unused and this is enforced here
   Invariant(ast);
 
   if (is_not_nullable(sem_type)) {
@@ -881,7 +886,7 @@ static void rewrite_one_typed_name(ast_node *typed_name, symtab *used_names) {
     }
 
     ast_node *name_ast = new_ast_str(combined_name);
-    ast_node *type = rewrite_gen_data_type(sem_type);
+    ast_node *type = rewrite_gen_data_type(sem_type, NULL);
     ast_node *new_typed_name = new_ast_typed_name(name_ast, type);
     ast_node *typed_names = insertion->parent;
 
@@ -1200,6 +1205,42 @@ static ast_node *rewrite_gen_case_expr(ast_node *var1, ast_node *var2, bool_t re
   return case_expr;
 }
 
+// This helper rewrites col_def_type_attrs->right nodes to include notnull and sensitive
+// flag from the data type of a column in create table statement. This is only applicable
+// if column data type of the column is the name of an emum type or a declared named type.
+cql_noexport void rewrite_right_col_def_type_attrs_if_needed(ast_node *ast) {
+  Contract(is_ast_col_def_type_attrs(ast));
+  EXTRACT_NOTNULL(col_def_name_type, ast->left);
+  EXTRACT_ANY_NOTNULL(data_type, col_def_name_type->right);
+  EXTRACT_ANY(col_attrs, ast->right);
+
+  if (is_ast_str(data_type)) {
+    EXTRACT_STRING(name, data_type);
+    ast_node *found_data_type = find_data_type_of_declared_named_type(name);
+    if (!found_data_type) {
+      report_error(ast, "CQL0360: unknown type", name);
+      record_error(ast);
+      return;
+    }
+
+    AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
+
+    sem_t found_sem_type = found_data_type->sem->sem_type;
+    if (!is_nullable(found_sem_type)) {
+      col_attrs = new_ast_col_attrs_not_null(NULL, col_attrs);
+    }
+    if (sensitive_flag(found_sem_type)) {
+      col_attrs = new_ast_sensitive_attr(NULL, col_attrs);
+    }
+
+    ast_set_right(ast, col_attrs);
+
+    AST_REWRITE_INFO_RESET();
+  }
+
+  record_ok(ast);
+}
+
 // Rewrite a data type represented as a string node to the
 // actual type if the string name is a declared type.
 cql_noexport void rewrite_data_type_if_needed(ast_node *ast) {
@@ -1211,33 +1252,33 @@ cql_noexport void rewrite_data_type_if_needed(ast_node *ast) {
   }
 
   if (is_ast_str(data_type)) {
-    // A string node can only be a declare type's name. If so
-    // we rewrite it to the data type of declare_named_type node
     EXTRACT_STRING(name, data_type);
-    ast_node *declare_named_type = find_declare_named_type(name);
-    if (!declare_named_type) {
-      report_error(data_type, "CQL0360: unknown type", name);
-      record_error(data_type);
+    ast_node *real_data_type = find_data_type_of_declared_named_type(name);
+    if (!real_data_type) {
+      report_error(ast, "CQL0360: unknown type", name);
       record_error(ast);
       return;
     }
-    EXTRACT_ANY_NOTNULL(real_data_type, declare_named_type->right);
 
-    // If we only want just the type of the data type node then we need to extract
-    // the type node. The data type node does not just contain the type node
-    // but also notnull, sensitive nodes. We need to just extract the type node.
+    sem_t sem_type = real_data_type->sem->sem_type;
+    // cast_expr node and col_def_name_type nodes only take the real type and
+    // does not support notnull or sensitive_attr node as a subtree. Therefore
+    // we need to extract the real data type from ast node.
     bool_t only_primitive_type = ast->parent &&
         (is_ast_col_def_name_type(ast->parent) || is_ast_cast_expr(ast->parent));
     if (only_primitive_type) {
-      while (is_ast_notnull(real_data_type) || is_ast_sensitive_attr(real_data_type)) {
-        real_data_type = real_data_type->left;
-      }
+      sem_type = core_type_of(sem_type);
     }
     Invariant(!is_ast_str(real_data_type));
-    ast_set_left(data_type, real_data_type->left);
-    ast_set_right(data_type, real_data_type->right);
-    data_type->sem = real_data_type->sem;
-    data_type->type = real_data_type->type;
+
+    AST_REWRITE_INFO_SET(data_type->lineno, data_type->filename);
+    ast_node *node = rewrite_gen_data_type(sem_type, real_data_type->sem->object_type);
+    AST_REWRITE_INFO_RESET();
+
+    ast_set_left(data_type, node->left);
+    ast_set_right(data_type, node->right);
+    data_type->sem = node->sem;
+    data_type->type = node->type;
   }
 
   record_ok(ast);

@@ -950,12 +950,13 @@ Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'q'
 Error at test/sem_test.sql:XXXX : in str : CQL0360: unknown type 'bogus_type'
 Error at test/sem_test.sql:XXXX : in declare_named_type : CQL0359: duplicate type declaration 'my_type'
 Error at test/sem_test.sql:XXXX : in str : CQL0360: unknown type 'bogus_type'
-Error at test/sem_test.sql:XXXX : in str : CQL0360: unknown type 'bogus_type'
+Error at test/sem_test.sql:XXXX : in col_def_type_attrs : CQL0360: unknown type 'bogus_type'
 Error at test/sem_test.sql:XXXX : in str : CQL0360: unknown type 'bogus_type'
 Error at test/sem_test.sql:XXXX : in str : CQL0360: unknown type 'bogus_type'
 Error at test/sem_test.sql:XXXX : in str : CQL0360: unknown type 'bogus_type'
 Error at test/sem_test.sql:XXXX : in create_data_type : CQL0361: Return data type in a create function declaration can only be text, blob or object
 Error at test/sem_test.sql:XXXX : in create_data_type : CQL0361: Return data type in a create function declaration can only be text, blob or object
 Error at test/sem_test.sql:XXXX : in create_data_type : CQL0361: Return data type in a create function declaration can only be text, blob or object
-Error at test/sem_test.sql:XXXX : in str : CQL0360: unknown type 'bogus_type'
+Error at test/sem_test.sql:XXXX : in create_data_type : CQL0360: unknown type 'bogus_type'
+Error at test/sem_test.sql:XXXX : in declare_enum_stmt : CQL0359: duplicate type declaration 'my_type'
 semantic errors present; no code gen.

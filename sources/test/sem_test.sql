@@ -13200,15 +13200,28 @@ begin
   declare my_var my_type;
 end;
 
--- TEST: declared type in column definition
--- + id TEXT
--- + {create_table_stmt}: t: { id: text }
+-- TEST declare a sensitive and not null type
+-- + DECLARE my_type_sens_not TYPE TEXT NOT NULL @SENSITIVE;
 -- - Error
-create table t(id my_type_2);
+declare my_type_sens_not type text not null @sensitive;
+
+-- TEST: declared type in column definition
+-- + id TEXT @SENSITIVE NOT NULL
+-- + {create_table_stmt}: t: { id: text notnull sensitive }
+-- + {col_def}: id: text notnull sensitive
+-- + {col_def_type_attrs}: ok
+-- + {name id}
+-- + {type_text}: text
+-- + {sensitive_attr}: ok
+-- + {col_attrs_not_null}
+-- - Error
+create table t(id my_type_sens_not);
 
 -- TEST: declared type in column definition with error
 -- + {create_table_stmt}: err
--- + {name bogus_type}: err
+-- + {col_def}: err
+-- + {col_def_type_attrs}: err
+-- + {name bogus_type}
 -- + Error % unknown type 'bogus_type'
 -- +1 Error
 create table t(id bogus_type);
@@ -13342,9 +13355,9 @@ declare function maybe_create_func_bool() create bool;
 declare function maybe_create_func_long() create long not null @sensitive;
 
 -- TEST: declare a named type for object Foo
--- + {declare_named_type}: object notnull sensitive
--- + {sensitive_attr}: object notnull sensitive
--- + {notnull}: object notnull
+-- + {declare_named_type}: object<Foo> notnull sensitive
+-- + {sensitive_attr}: object<Foo> notnull sensitive
+-- + {notnull}: object<Foo> notnull
 -- + {type_object}: object<Foo>
 -- + {name Foo}
 -- - Error
@@ -13352,20 +13365,35 @@ declare type_obj_foo type object<Foo> not null @sensitive;
 
 -- TEST: declared function that return create object
 -- + DECLARE FUNC type_func_return_create_obj () CREATE OBJECT<Foo> NOT NULL @SENSITIVE;
--- + {declare_func_stmt}: object notnull create_func sensitive
+-- + {declare_func_stmt}: object<Foo> notnull create_func sensitive
 -- - Error
 declare function type_func_return_create_obj() create type_obj_foo;
 
 -- TEST: declared function that return create bogus object
 -- + {declare_func_stmt}: err
 -- + {create_data_type}: err
--- + {name bogus_type}: err
 -- + Error % unknown type 'bogus_type'
 -- +1 Error
 declare function type_func_return_create_bogus_obj() create bogus_type;
 
 -- TEST: declared function that return object
 -- + DECLARE FUNC type_func_return_obj () OBJECT<Foo> NOT NULL @SENSITIVE;
--- + {declare_func_stmt}: object notnull sensitive
+-- + {declare_func_stmt}: object<Foo> notnull sensitive
 -- - Error
 declare function type_func_return_obj() type_obj_foo;
+
+-- TEST: declare type as enum name
+-- + DECLARE my_enum_type TYPE INTEGER NOT NULL;
+-- + {declare_named_type}: integer notnull
+-- + {notnull}: integer notnull
+-- - Error
+declare my_enum_type type ints;
+
+-- TEST: used a named type's name to declare an enum
+-- + {declare_enum_stmt}: err
+-- + Error % duplicate type declaration 'my_type'
+-- +1 Error
+declare enum my_type integer (
+ negative_one = -1,
+ postive_one = 1
+);

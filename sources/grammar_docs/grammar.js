@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Fri Jan  8 10:41:47 2021
+// Snapshot as of Fri Jan  8 15:27:04 2021
 
 
 const PREC = {
@@ -191,12 +191,11 @@ module.exports = grammar({
     upsert_stmt: $ => choice(seq($.insert_stmt, $.ON_CONFLICT, optional($.conflict_target), $.DO, $.NOTHING), seq($.insert_stmt, $.ON_CONFLICT, optional($.conflict_target), $.DO, $.basic_update_stmt)),
     update_cursor_stmt: $ => choice(seq($.UPDATE, $.CURSOR, $.name, optional($.opt_column_spec), $.FROM, $.VALUES, '(', optional($.insert_list), ')'), seq($.UPDATE, $.CURSOR, $.name, optional($.opt_column_spec), $.from_shape), seq($.UPDATE, $.CURSOR, $.name, $.USING, $.expr_names)),
     conflict_target: $ => seq('(', $.indexed_columns, ')', optional($.opt_where)),
-    creation_type: $ => choice($.object_type, seq($.object_type, $.NOT, $.NULL), $.TEXT, seq($.TEXT, $.NOT, $.NULL), $.BLOB, seq($.BLOB, $.NOT, $.NULL)),
     function: $ => choice($.FUNC, $.FUNCTION),
     declare_enum_stmt: $ => seq($.DECLARE, $.ENUM, $.name, $.data_type_numeric, '(', $.enum_values, ')'),
     enum_values: $ => choice($.enum_value, seq($.enum_value, ',', $.enum_values)),
     enum_value: $ => choice($.name, seq($.name, '=', $.expr)),
-    declare_func_stmt: $ => choice(seq($.DECLARE, $.function, $.name, '(', optional($.params), ')', $.data_type_opt_notnull), seq($.DECLARE, $.SELECT, $.function, $.name, '(', optional($.params), ')', $.data_type_opt_notnull), seq($.DECLARE, $.function, $.name, '(', optional($.params), ')', $.CREATE, $.creation_type), seq($.DECLARE, $.SELECT, $.function, $.name, '(', optional($.params), ')', '(', $.typed_names, ')')),
+    declare_func_stmt: $ => choice(seq($.DECLARE, $.function, $.name, '(', optional($.params), ')', $.data_type_opt_notnull), seq($.DECLARE, $.SELECT, $.function, $.name, '(', optional($.params), ')', $.data_type_opt_notnull), seq($.DECLARE, $.function, $.name, '(', optional($.params), ')', $.CREATE, $.data_type_opt_notnull), seq($.DECLARE, $.SELECT, $.function, $.name, '(', optional($.params), ')', '(', $.typed_names, ')')),
     procedure: $ => choice($.PROC, $.PROCEDURE),
     declare_proc_stmt: $ => choice(seq($.DECLARE, $.procedure, $.name, '(', optional($.params), ')'), seq($.DECLARE, $.procedure, $.name, '(', optional($.params), ')', '(', $.typed_names, ')'), seq($.DECLARE, $.procedure, $.name, '(', optional($.params), ')', $.USING, $.TRANSACTION), seq($.DECLARE, $.procedure, $.name, '(', optional($.params), ')', $.OUT, '(', $.typed_names, ')'), seq($.DECLARE, $.procedure, $.name, '(', optional($.params), ')', $.OUT, '(', $.typed_names, ')', $.USING, $.TRANSACTION), seq($.DECLARE, $.procedure, $.name, '(', optional($.params), ')', $.OUT, $.UNION, '(', $.typed_names, ')'), seq($.DECLARE, $.procedure, $.name, '(', optional($.params), ')', $.OUT, $.UNION, '(', $.typed_names, ')', $.USING, $.TRANSACTION)),
     create_proc_stmt: $ => seq($.CREATE, $.procedure, $.name, '(', optional($.params), ')', $.BEGIN, optional($.opt_stmt_list), $.END),

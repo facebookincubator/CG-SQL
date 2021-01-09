@@ -156,12 +156,11 @@ with_upsert_stmt ::= with_prefix upsert_stmt
 upsert_stmt ::= insert_stmt "ON CONFLICT" conflict_target "DO" "NOTHING" | insert_stmt "ON CONFLICT" conflict_target "DO" basic_update_stmt
 update_cursor_stmt ::= "UPDATE" "CURSOR" name opt_column_spec "FROM" "VALUES" '(' insert_list ')' | "UPDATE" "CURSOR" name opt_column_spec from_shape | "UPDATE" "CURSOR" name "USING" expr_names
 conflict_target ::= /* nil */ | '(' indexed_columns ')' opt_where
-creation_type ::= object_type | object_type "NOT" "NULL" | "TEXT" | "TEXT" "NOT" "NULL" | "BLOB" | "BLOB" "NOT" "NULL"
 function ::= "FUNC" | "FUNCTION"
 declare_enum_stmt ::= "DECLARE" "ENUM" name data_type_numeric '(' enum_values ')'
 enum_values ::= enum_value | enum_value ',' enum_values
 enum_value ::= name | name '=' expr
-declare_func_stmt ::= "DECLARE" function name '(' params ')' data_type_opt_notnull | "DECLARE" "SELECT" function name '(' params ')' data_type_opt_notnull | "DECLARE" function name '(' params ')' "CREATE" creation_type | "DECLARE" "SELECT" function name '(' params ')' '(' typed_names ')'
+declare_func_stmt ::= "DECLARE" function name '(' params ')' data_type_opt_notnull | "DECLARE" "SELECT" function name '(' params ')' data_type_opt_notnull | "DECLARE" function name '(' params ')' "CREATE" data_type_opt_notnull | "DECLARE" "SELECT" function name '(' params ')' '(' typed_names ')'
 procedure ::= "PROC" | "PROCEDURE"
 declare_proc_stmt ::= "DECLARE" procedure name '(' params ')' | "DECLARE" procedure name '(' params ')' '(' typed_names ')' | "DECLARE" procedure name '(' params ')' "USING" "TRANSACTION" | "DECLARE" procedure name '(' params ')' "OUT" '(' typed_names ')' | "DECLARE" procedure name '(' params ')' "OUT" '(' typed_names ')' "USING" "TRANSACTION" | "DECLARE" procedure name '(' params ')' "OUT" "UNION" '(' typed_names ')' | "DECLARE" procedure name '(' params ')' "OUT" "UNION" '(' typed_names ')' "USING" "TRANSACTION"
 create_proc_stmt ::= "CREATE" procedure name '(' params ')' "BEGIN" opt_stmt_list "END"
