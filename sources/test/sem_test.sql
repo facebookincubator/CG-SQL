@@ -13340,3 +13340,32 @@ declare function maybe_create_func_bool() create bool;
 -- + Error % Return data type in a create function declaration can only be Text, Blob or Object
 -- +1 Error
 declare function maybe_create_func_long() create long not null @sensitive;
+
+-- TEST: declare a named type for object Foo
+-- + {declare_named_type}: object notnull sensitive
+-- + {sensitive_attr}: object notnull sensitive
+-- + {notnull}: object notnull
+-- + {type_object}: object<Foo>
+-- + {name Foo}
+-- - Error
+declare type_obj_foo type object<Foo> not null @sensitive;
+
+-- TEST: declared function that return create object
+-- + DECLARE FUNC type_func_return_create_obj () CREATE OBJECT<Foo> NOT NULL @SENSITIVE;
+-- + {declare_func_stmt}: object notnull create_func sensitive
+-- - Error
+declare function type_func_return_create_obj() create type_obj_foo;
+
+-- TEST: declared function that return create bogus object
+-- + {declare_func_stmt}: err
+-- + {create_data_type}: err
+-- + {name bogus_type}: err
+-- + Error % unknown type 'bogus_type'
+-- +1 Error
+declare function type_func_return_create_bogus_obj() create bogus_type;
+
+-- TEST: declared function that return object
+-- + DECLARE FUNC type_func_return_obj () OBJECT<Foo> NOT NULL @SENSITIVE;
+-- + {declare_func_stmt}: object notnull sensitive
+-- - Error
+declare function type_func_return_obj() type_obj_foo;

@@ -957,4 +957,5 @@ Error at test/sem_test.sql:XXXX : in str : CQL0360: unknown type 'bogus_type'
 Error at test/sem_test.sql:XXXX : in create_data_type : CQL0361: Return data type in a create function declaration can only be text, blob or object
 Error at test/sem_test.sql:XXXX : in create_data_type : CQL0361: Return data type in a create function declaration can only be text, blob or object
 Error at test/sem_test.sql:XXXX : in create_data_type : CQL0361: Return data type in a create function declaration can only be text, blob or object
+Error at test/sem_test.sql:XXXX : in str : CQL0360: unknown type 'bogus_type'
 semantic errors present; no code gen.

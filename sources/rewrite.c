@@ -1203,17 +1203,25 @@ static ast_node *rewrite_gen_case_expr(ast_node *var1, ast_node *var2, bool_t re
 // Rewrite a data type represented as a string node to the
 // actual type if the string name is a declared type.
 cql_noexport void rewrite_data_type_if_needed(ast_node *ast) {
-  if (is_ast_str(ast)) {
+  ast_node *data_type = NULL;
+  if (is_ast_create_data_type(ast)) {
+    data_type = ast->left;
+  } else {
+    data_type = ast;
+  }
+
+  if (is_ast_str(data_type)) {
     // A string node can only be a declare type's name. If so
     // we rewrite it to the data type of declare_named_type node
-    EXTRACT_STRING(name, ast);
+    EXTRACT_STRING(name, data_type);
     ast_node *declare_named_type = find_declare_named_type(name);
     if (!declare_named_type) {
-      report_error(ast, "CQL0360: unknown type", name);
+      report_error(data_type, "CQL0360: unknown type", name);
+      record_error(data_type);
       record_error(ast);
       return;
     }
-    EXTRACT_ANY_NOTNULL(data_type, declare_named_type->right);
+    EXTRACT_ANY_NOTNULL(real_data_type, declare_named_type->right);
 
     // If we only want just the type of the data type node then we need to extract
     // the type node. The data type node does not just contain the type node
@@ -1221,15 +1229,15 @@ cql_noexport void rewrite_data_type_if_needed(ast_node *ast) {
     bool_t only_primitive_type = ast->parent &&
         (is_ast_col_def_name_type(ast->parent) || is_ast_cast_expr(ast->parent));
     if (only_primitive_type) {
-      while (is_ast_notnull(data_type) || is_ast_sensitive_attr(data_type)) {
-        data_type = data_type->left;
+      while (is_ast_notnull(real_data_type) || is_ast_sensitive_attr(real_data_type)) {
+        real_data_type = real_data_type->left;
       }
     }
-    Invariant(!is_ast_str(data_type));
-    ast_set_left(ast, data_type->left);
-    ast_set_right(ast, data_type->right);
-    ast->sem = data_type->sem;
-    ast->type = data_type->type;
+    Invariant(!is_ast_str(real_data_type));
+    ast_set_left(data_type, real_data_type->left);
+    ast_set_right(data_type, real_data_type->right);
+    data_type->sem = real_data_type->sem;
+    data_type->type = real_data_type->type;
   }
 
   record_ok(ast);

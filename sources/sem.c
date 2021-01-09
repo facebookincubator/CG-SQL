@@ -2201,7 +2201,7 @@ static void sem_data_type_var(ast_node *ast) {
 
     // find the real type of the data type to validate it.
     ast_node *real_data_type = data_type;
-    while(is_ast_notnull(real_data_type) || is_ast_sensitive_attr(real_data_type)) {
+    while (is_ast_notnull(real_data_type) || is_ast_sensitive_attr(real_data_type)) {
       real_data_type = real_data_type->left;
     }
 

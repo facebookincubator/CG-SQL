@@ -53849,3 +53849,51 @@ Error at test/sem_test.sql:XXXX : in create_data_type : CQL0361: Return data typ
         | {notnull}
           | {type_long}
 
+The statement ending at line XXXX
+
+DECLARE type_obj_foo TYPE OBJECT<Foo> NOT NULL @SENSITIVE;
+
+  {declare_named_type}: object notnull sensitive
+  | {name type_obj_foo}: object notnull sensitive
+  | {sensitive_attr}: object notnull sensitive
+    | {notnull}: object notnull
+      | {type_object}: object<Foo>
+        | {name Foo}
+
+The statement ending at line XXXX
+
+DECLARE FUNC type_func_return_create_obj () CREATE OBJECT<Foo> NOT NULL @SENSITIVE;
+
+  {declare_func_stmt}: object notnull create_func sensitive
+  | {name type_func_return_create_obj}: object notnull create_func sensitive
+  | {func_params_return}
+    | {create_data_type}: object notnull create_func sensitive
+      | {sensitive_attr}: object notnull sensitive
+        | {notnull}: object notnull
+          | {type_object}: object<Foo>
+            | {name Foo}
+
+The statement ending at line XXXX
+
+DECLARE FUNC type_func_return_create_bogus_obj () CREATE bogus_type;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0360: unknown type 'bogus_type'
+
+  {declare_func_stmt}: err
+  | {name type_func_return_create_bogus_obj}
+  | {func_params_return}
+    | {create_data_type}: err
+      | {name bogus_type}: err
+
+The statement ending at line XXXX
+
+DECLARE FUNC type_func_return_obj () OBJECT<Foo> NOT NULL @SENSITIVE;
+
+  {declare_func_stmt}: object notnull sensitive
+  | {name type_func_return_obj}: object notnull sensitive
+  | {func_params_return}
+    | {sensitive_attr}: object notnull sensitive
+      | {notnull}: object notnull
+        | {type_object}: object<Foo>
+          | {name Foo}
+
