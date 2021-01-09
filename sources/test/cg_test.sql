@@ -3015,9 +3015,18 @@ declare enum some_reals real (
   bar = 3
 );
 
+-- TEST: make a long enum
+declare enum some_longs long (
+  foo = 87363537363847643647937,
+  bar = 3
+);
+
 -- TEST: force these into the .h file, there will be two copies of some_ints
 @emit_enums some_ints;
 @emit_enums;
+
+-- TEST: force these into the .h file, there will be two copies of some_longs
+@emit_enums some_longs;
 
 -- TEST: resolve a virtual table, note that the arguments become the declaration
 -- + "CREATE VIRTUAL TABLE virt_table USING virt_module ( "

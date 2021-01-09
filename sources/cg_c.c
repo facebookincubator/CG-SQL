@@ -3563,7 +3563,7 @@ static void cg_emit_one_enum(ast_node *ast) {
        EXTRACT_ANY_NOTNULL(enum_name_ast, enum_value->left);
        EXTRACT_STRING(enum_name, enum_name_ast);
 
-       bool_t is_long = type->sem->sem_type == SEM_TYPE_LONG_INTEGER;
+       bool_t is_long = core_type_of(type->sem->sem_type) == SEM_TYPE_LONG_INTEGER;
 
        bprintf(cg_header_output, "\n  %s__%s = ", name, enum_name);
 
