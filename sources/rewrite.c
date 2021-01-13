@@ -1033,7 +1033,7 @@ static ast_node* rewrite_gen_printf_call(CSTR format, ast_node *arg_list) {
 // Generate a 'call' node for printf function from a cursor variable.
 // This is used to rewrite cql_cursor_format(X) when called from a
 // sql context.
-// e.g:
+// e.g.:
 // select cql_cursor_format(C) as p; ===> select printf("x:%d|y:%s", C.x, C.y) as p;
 static ast_node *rewrite_gen_cursor_printf(ast_node *variable) {
   Contract(is_variable(variable->sem->sem_type));

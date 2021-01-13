@@ -597,7 +597,7 @@ static bool_t is_name_list_equal(ast_node *name_list1, ast_node *name_list2) {
 }
 
 // Check if one of the name_list is a subset of the other
-// e.g: name_list2(a, b)
+// e.g. name_list2(a, b)
 //
 // name_list1(a, b, c) return true
 // name_list1(b, a) return true
@@ -2721,11 +2721,11 @@ static bool_t find_referenceable_columns(
 // explicite value in INSERT statement to avoid sql foreign key violations.
 //
 // A column is considered referenceable if column is :
-//  - a primary e.g: create table t (a text primary key)
-//  - unique key e.g: create table t (a text unique)
-//  - a group of primary key e.g: create table t (a text, b text, primary key (a, b))
-//  - listed in CONSTRAINT UNIQUE statement e.g: create table t (a text, constraint unique (a))
-//  - listed in a CREATE UNIQUE INDEX statement e.g: create index unique on t(a)
+//  - a primary e.g. create table t (a text primary key)
+//  - unique key e.g. create table t (a text unique)
+//  - a group of primary key e.g. create table t (a text, b text, primary key (a, b))
+//  - listed in CONSTRAINT UNIQUE statement e.g. create table t (a text, constraint unique (a))
+//  - listed in a CREATE UNIQUE INDEX statement e.g. create index unique on t(a)
 cql_noexport bool_t is_referenceable_by_foreign_key(ast_node *ref_table_ast, CSTR column_name)
 {
   return is_column_unique_key(ref_table_ast, column_name)
@@ -2746,11 +2746,11 @@ static bool_t validate_referenceable_fk_def_callback(ast_node *name_list, void *
 // Validate whether or not the columns referenced in the foreign key statement
 // are referenceable.
 // A set of columns are considered referenceable if they are :
-//  - a primary e.g: create table t (a text primary key)
-//  - unique key e.g: create table t (a text unique)
-//  - a group of primary key e.g: create table t (a text, b text, primary key (a, b))
-//  - listed in CONSTRAINT UNIQUE statement e.g: create table t (a text, constraint unique (a))
-//  - listed in a CREATE UNIQUE INDEX statement e.g: create index unique on t(a)
+//  - a primary e.g. create table t (a text primary key)
+//  - unique key e.g. create table t (a text unique)
+//  - a group of primary key e.g. create table t (a text, b text, primary key (a, b))
+//  - listed in CONSTRAINT UNIQUE statement e.g. create table t (a text, constraint unique (a))
+//  - listed in a CREATE UNIQUE INDEX statement e.g. create index unique on t(a)
 static sem_t sem_validate_referenceable_fk_def(ast_node *ref_table_ast, ast_node *name_list) {
   Contract(is_ast_name_list(name_list));
 
@@ -5566,7 +5566,7 @@ static void sem_func_char(ast_node *ast, uint32_t arg_count) {
   // char() will always return a string, sensitivity param is preserved.
   // char return null if params doesn't have a character representation
   // of the unicode code point values of integers table
-  // e.g: select char(1) -> NULL; select char(67); -> "C"
+  // e.g. select char(1) -> NULL; select char(67); -> "C"
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_TEXT | sensitive);
 
   // grab the name from our first arg, if it has one, we want it.
@@ -6029,7 +6029,7 @@ static void sem_func_lag(ast_node *ast, uint32_t arg_count) {
     combined_flags |= not_nullable_flag(arg3->sem->sem_type) | sensitive_flag(arg3->sem->sem_type);
   }
 
-  // we only copy core type to strip extra flag like not nullable. e.g: even though arg1 may
+  // we only copy core type to strip extra flag like not nullable. e.g. even though arg1 may
   // not be nullable, lag() should still be nullable unless the third argument is not.
   sem_t type = core_type_of(arg1->sem->sem_type);
 
@@ -6094,7 +6094,7 @@ static void sem_func_nth_value(ast_node *ast, uint32_t arg_count) {
   }
 
   sem_t sem_type = arg1->sem->sem_type;
-  // we only copy core type to strip extra flag like not null. e.g: even though arg1 may
+  // we only copy core type to strip extra flag like not null. e.g. even though arg1 may
   // not be nullable, nth_value() should still be nullable.
   ast->sem->sem_type = core_type_of(sem_type) | sensitive_flag(sem_type);
 
@@ -6669,7 +6669,7 @@ cleanup:
   if (!call_aggr_or_user_def_func) {
     if (distinct) {
       // Only aggregated functions and user defined functions that take one parameter
-      // can use DISTINCT keyword e.g: SELECT COUNT(DISTINCT X)
+      // can use DISTINCT keyword e.g. SELECT COUNT(DISTINCT X)
       report_error(ast, "CQL0305: DISTINCT may only be used in function that are aggregated or user defined", name);
       record_error(ast);
       return;
@@ -7975,7 +7975,7 @@ static void sem_select_no_with(ast_node *ast) {
       // For compounded select statement, the [select_orderby] can only reference the columns
       // listed in [select_expr_list] therefore we should not push into the JOIN stack
       // the columns from the table ([select_from_etc]).
-      // e.g: SELECT col1, col2 from t1 UNION SELECT col1, col2 FROM t2 ORDER BY t1.col3;
+      // e.g. SELECT col1, col2 from t1 UNION SELECT col1, col2 FROM t2 ORDER BY t1.col3;
       // You can not reference in ORDER BY statement a column from t1 table that is not
       // listed in the [select_expr_list]. Below is a comand line execution to explain
       // the above
@@ -8041,7 +8041,7 @@ static void sem_select_core_list(ast_node *ast) {
 
   // This means the select statement only have one select_core node. which mean
   // select_core_list node is in a non compound select statement
-  // e.g: SELECT * FROM table
+  // e.g. SELECT * FROM table
   if (select_core_compound == NULL) {
     ast->sem = select_core->sem;
     return;
@@ -8049,7 +8049,7 @@ static void sem_select_core_list(ast_node *ast) {
 
   // This means we have more than one select_core node. Which means select_core_list node
   // is in a compounded select statement
-  // e.g: SELECT ... UNION SELECT ...
+  // e.g. SELECT ... UNION SELECT ...
   EXTRACT_NOTNULL(select_core_list, select_core_compound->right);
   sem_select_core_list(select_core_list);
   if (is_error(select_core_list)) {
@@ -8097,7 +8097,7 @@ static void sem_select_stmt(ast_node *stmt) {
 }
 
 // Any explain in any context (used when a explain appears within another statement)
-// e.g: declare c cursor for explain query plan ...
+// e.g. declare c cursor for explain query plan ...
 static void sem_explain(ast_node *stmt) {
   Contract(is_ast_explain_stmt(stmt) && current_explain_stmt == NULL);
   EXTRACT_OPTION(query_plan, stmt->left);
@@ -11289,7 +11289,7 @@ static bool_t sem_validate_compatable_table_cols_select(ast_node *table_ast, ast
     // expressions in VALUES clauses against the name_list. In case of errors found,
     // we tag the error into the expression node in the values clause instead of
     // the name_list. This provides a better error location for the user.
-    // e.g: insert into foo select 1 union all values ('x') union all values (3) ...
+    // e.g. insert into foo select 1 union all values ('x') union all values (3) ...
     // The 'x' is incorrect and the error should refer to that rather than some
     // generic error about the select statment being badly formed.
     EXTRACT_NOTNULL(select_core_list, select_stmt->left);
