@@ -113,7 +113,7 @@ static void gen_name(ast_node *ast) {
 static void gen_name_list(ast_node *list) {
   Contract(is_ast_name_list(list));
 
-  for(ast_node *item = list; item; item = item->right) {
+  for (ast_node *item = list; item; item = item->right) {
     gen_name(item->left);
     if (item->right) {
       gen_printf(", ");
@@ -168,13 +168,13 @@ cql_noexport void gen_misc_attrs(ast_node *list) {
     return;
   }
 
-  for(ast_node *item = list; item; item = item->right) {
+  for (ast_node *item = list; item; item = item->right) {
     gen_misc_attr(item->left);
   }
 }
 
 static void gen_data_type(ast_node *ast) {
-  if (is_ast_create(ast)) {
+  if (is_ast_create_data_type(ast)) {
     gen_printf("CREATE ");
     gen_data_type(ast->left);
   }
@@ -205,9 +205,12 @@ static void gen_data_type(ast_node *ast) {
     gen_printf("LONG_INT");
   } else if (is_ast_type_real(ast)) {
     gen_printf("REAL");
-  } else {
-    Contract(is_ast_type_bool(ast));
+  } else if (is_ast_type_bool(ast)) {
     gen_printf("BOOL");
+  } else {
+    Contract(is_ast_str(ast));
+    EXTRACT_STRING(name, ast);
+    gen_printf("%s", name);
   }
 }
 
@@ -365,8 +368,14 @@ static void gen_fk_target_options(ast_node *ast) {
 
 static void gen_fk_def(ast_node *def) {
   Contract(is_ast_fk_def(def));
-  EXTRACT_NAMED_NOTNULL(src_list, name_list, def->left);
-  EXTRACT_NOTNULL(fk_target_options, def->right);
+  EXTRACT(fk_info, def->right);
+  EXTRACT_NAMED_NOTNULL(src_list, name_list, fk_info->left);
+  EXTRACT_NOTNULL(fk_target_options, fk_info->right);
+
+  if (def->left) {
+    EXTRACT_STRING(name, def->left);
+    gen_printf("CONSTRAINT %s ", name);
+  }
 
   gen_printf("FOREIGN KEY (");
   gen_name_list(src_list);
@@ -376,7 +385,12 @@ static void gen_fk_def(ast_node *def) {
 
 static void gen_pk_def(ast_node *def) {
   Contract(is_ast_pk_def(def));
-  EXTRACT(name_list, def->left);
+  EXTRACT(name_list, def->right);
+
+  if (def->left) {
+    EXTRACT_STRING(name, def->left);
+    gen_printf("CONSTRAINT %s ", name);
+  }
 
   gen_printf("PRIMARY KEY (");
   gen_name_list(name_list);
@@ -1932,7 +1946,7 @@ static void gen_create_virtual_table_stmt(ast_node *ast) {
     // When emitting to SQLite we do not include the column declaration part
     // just whatever the args were because SQLite doesn't parse that part of the CQL syntax.
     // Note that CQL does not support general args because that's not parseable with this parser
-    // tech but this is pretty general.  The declaration part is present here so that 
+    // tech but this is pretty general.  The declaration part is present here so that
     // CQL knows the type info of the net table we are creating.
     // Note also that virtual tables are always on the recreate plan, it isn't an option
     // and this will mean that you can't make a foreign key to a virtual table which is probably
@@ -2334,7 +2348,7 @@ static void gen_expr_names(ast_node *ast) {
     gen_expr(expr, EXPR_PRI_ROOT);
     gen_as_alias(opt_as_alias);
 
-    if(list->right) {
+    if (list->right) {
       gen_printf(", ");
     }
   }
@@ -2514,8 +2528,8 @@ cql_noexport void gen_declare_proc_from_create_proc(ast_node *ast) {
       }
       gen_printf(")");
 
-      if (has_out_stmt_result(ast) && is_dml_proc(ast->sem->sem_type)) {
-        // out can be DML or not, so we have to specify
+      if ((has_out_stmt_result(ast) || has_out_union_stmt_result(ast)) && is_dml_proc(ast->sem->sem_type)) {
+        // out [union] can be DML or not, so we have to specify
         gen_printf(" USING TRANSACTION");
       }
     }
@@ -2710,6 +2724,15 @@ static void gen_declare_cursor_like_select(ast_node *ast) {
   gen_one_stmt(stmt);
 }
 
+static void gen_declare_named_type(ast_node *ast) {
+  Contract(is_ast_declare_named_type(ast));
+  EXTRACT_STRING(name, ast->left);
+  EXTRACT_ANY_NOTNULL(data_type, ast->right);
+
+  gen_printf("DECLARE %s TYPE ", name);
+  gen_data_type(data_type);
+}
+
 static void gen_declare_value_cursor(ast_node *ast) {
   Contract(is_ast_declare_value_cursor(ast));
   EXTRACT_STRING(name, ast->left);
@@ -2867,24 +2890,36 @@ static void gen_throw_stmt(ast_node *ast) {
 
 static void gen_begin_trans_stmt(ast_node *ast) {
   Contract(is_ast_begin_trans_stmt(ast));
+  EXTRACT_OPTION(mode, ast->left);
 
-  gen_printf("BEGIN TRANSACTION");
+  gen_printf("BEGIN");
+
+  if (mode == TRANS_IMMEDIATE) {
+    gen_printf(" IMMEDIATE");
+  }
+  else if (mode == TRANS_EXCLUSIVE) {
+    gen_printf(" EXCLUSIVE");
+  }
+  else {
+    // this is the default, and only remaining case, no additional output needed
+    Contract(mode == TRANS_DEFERRED);
+  }
 }
 
 static void gen_commit_trans_stmt(ast_node *ast) {
   Contract(is_ast_commit_trans_stmt(ast));
 
-  gen_printf("COMMIT TRANSACTION");
+  gen_printf("COMMIT");
 }
 
 static void gen_rollback_trans_stmt(ast_node *ast) {
   Contract(is_ast_rollback_trans_stmt(ast));
 
-  gen_printf("ROLLBACK TRANSACTION");
+  gen_printf("ROLLBACK");
 
   if (ast->left) {
     EXTRACT_STRING(name, ast->left);
-    gen_printf(" TO SAVEPOINT %s", name);
+    gen_printf(" TO %s", name);
   }
 }
 
@@ -2899,7 +2934,7 @@ static void gen_release_savepoint_stmt(ast_node *ast) {
   Contract(is_ast_release_savepoint_stmt(ast));
   EXTRACT_STRING(name, ast->left);
 
-  gen_printf("RELEASE SAVEPOINT %s", name);
+  gen_printf("RELEASE %s", name);
 }
 
 static void gen_trycatch_stmt(ast_node *ast) {
@@ -3249,6 +3284,7 @@ cql_noexport void gen_init() {
   STMT_INIT(declare_cursor);
   STMT_INIT(declare_cursor_like_name);
   STMT_INIT(declare_cursor_like_select);
+  STMT_INIT(declare_named_type);
   STMT_INIT(declare_value_cursor);
   STMT_INIT(declare_proc_stmt);
   STMT_INIT(declare_func_stmt);

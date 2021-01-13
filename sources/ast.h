@@ -61,6 +61,10 @@
 #define FK_INITIALLY_DEFERRED  0x200
 #define FK_INITIALLY_IMMEDIATE 0x100
 
+#define TRANS_DEFERRED 1
+#define TRANS_IMMEDIATE 2
+#define TRANS_EXCLUSIVE 3
+
 #define ENFORCE_FK_ON_UPDATE 1
 #define ENFORCE_FK_ON_DELETE 2
 #define ENFORCE_STRICT_JOIN 3
@@ -565,8 +569,9 @@ AST(col_def_name_type)
 AST(col_def)
 AST(col_def_type_attrs)
 AST(col_key_list)
-AST1(pk_def)
+AST(pk_def)
 AST(fk_def)
+AST(fk_info)
 AST(unq_def)
 AST(check_def)
 AST(fk_target)
@@ -743,6 +748,7 @@ AST(declare_vars_type)
 AST(declare_cursor)
 AST(declare_cursor_like_name)
 AST(declare_cursor_like_select)
+AST(declare_named_type)
 AST(declare_value_cursor)
 AST(set_from_cursor)
 AST(param_detail)
@@ -756,8 +762,8 @@ AST1(close_stmt)
 AST1(out_stmt)
 AST1(out_union_stmt)
 AST1(notnull);
-AST1(create);
-AST0(begin_trans_stmt);
+AST1(create_data_type);
+AST1(begin_trans_stmt);
 AST0(commit_trans_stmt);
 AST1(rollback_trans_stmt);
 AST1(savepoint_stmt);

@@ -56,6 +56,7 @@ int fileno(FILE *);
 \"isAutoIncrement\"[ \t]*:       { return IS_AUTO_INCREMENT; }
 \"isVirtual\"[ \t]*:             { return IS_VIRTUAL; }
 \"primaryKey\"[ \t]*:            { return PRIMARY_KEY; }
+\"primaryKeyName\"[ \t]*:        { return PRIMARY_KEY_NAME; }
 \"foreignKeys\"[ \t]*:           { return FOREIGN_KEYS; }
 \"uniqueKeys\"[ \t]*:            { return UNIQUE_KEYS; }
 \"referenceTable\"[ \t]*:        { return REFERENCE_TABLE; }

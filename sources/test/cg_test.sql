@@ -1407,6 +1407,7 @@ end;
 -- + _result_->size = C.size;
 -- + cql_set_string_ref(&_result_->extra1, C.extra1);
 -- + cql_set_string_ref(&_result_->extra2, C.extra2);
+-- + // export: DECLARE PROC out_cursor_proc () OUT (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL, extra1 TEXT NOT NULL, extra2 TEXT NOT NULL) USING TRANSACTION;
 create proc out_cursor_proc()
 begin
   declare C cursor for select bar.*, 'xyzzy' extra1, 'plugh' extra2 from bar;
@@ -1559,6 +1560,7 @@ end;
 -- + _result_->_has_row_ = C._has_row_;
 -- + _result_->A = C.A;
 -- + _result_->B = C.B;
+-- + // export: DECLARE PROC out_no_db () OUT (A INTEGER NOT NULL, B REAL NOT NULL);
 create proc out_no_db()
 begin
   declare C cursor like select 1 A, 2.5 B;
@@ -1950,6 +1952,7 @@ end;
 
 -- TEST: null on lhs of NOT IN
 -- + cql_set_null(*b);
+-- + // export: DECLARE PROC not_in_test (x INTEGER, OUT b BOOL);
 create proc not_in_test(x integer, out b bool)
 begin
   set b := NULL NOT IN (1);
@@ -1966,6 +1969,7 @@ end;
 
 -- TEST: create proc with a single-column identity attribute
 -- + static cql_uint16 simple_identity_identity_columns[] = { 1,
+-- + // export: DECLARE PROC simple_identity () (id INTEGER NOT NULL, data INTEGER NOT NULL);
 @attribute(cql:identity=(id))
 create proc simple_identity()
 begin
@@ -2251,6 +2255,7 @@ begin
 end;
 
 -- TEST: create a result set from rows values
+-- + // export: DECLARE PROC out_union_two () OUT UNION (x INTEGER NOT NULL, y TEXT NOT NULL);
 -- + void out_union_two_fetch_results(out_union_two_result_set_ref _Nullable *_Nonnull _result_set_) {
 -- + cql_profile_start(CRC_out_union_two, &out_union_two_perf_index);
 -- + cql_bytebuf _rows_;
@@ -2299,6 +2304,7 @@ begin
 end;
 
 -- TEST: create a result set from selected rows
+-- + // export: DECLARE PROC out_union_from_select () OUT UNION (x INTEGER NOT NULL, y TEXT NOT NULL) USING TRANSACTION;
 -- + cql_bytebuf _rows_;
 -- + cql_bytebuf_open(&_rows_);
 -- +2 cql_retain_row(C);
@@ -2746,9 +2752,9 @@ set l2 := cql_get_blob_size(blob_var2);
 -- TEST: test basic proc savepoint structure
 -- + "SAVEPOINT base_proc_savepoint");
 -- + // try
--- + "RELEASE SAVEPOINT base_proc_savepoint");
+-- + "RELEASE base_proc_savepoint");
 -- + catch_start% {
--- + "ROLLBACK TRANSACTION TO SAVEPOINT base_proc_savepoint");
+-- + "ROLLBACK TO base_proc_savepoint");
 -- + _rc_ = cql_best_error(_rc_thrown_);
 -- + catch_end%:;
 create proc base_proc_savepoint()
@@ -2761,8 +2767,8 @@ end;
 
 -- TEST: commit returns will have two commit  paths
 -- +1 "SAVEPOINT base_proc_savepoint_commit_return"
--- +3 "RELEASE SAVEPOINT base_proc_savepoint_commit_return"
--- +1 "ROLLBACK TRANSACTION TO SAVEPOINT base_proc_savepoint_commit_return"
+-- +3 "RELEASE base_proc_savepoint_commit_return"
+-- +1 "ROLLBACK TO base_proc_savepoint_commit_return"
 create proc base_proc_savepoint_commit_return()
 begin
   proc savepoint
@@ -2775,8 +2781,8 @@ end;
 
 -- TEST: rollback returns will have two rollback paths
 -- +1 "SAVEPOINT base_proc_savepoint_rollback_return"
--- +2 "ROLLBACK TRANSACTION TO SAVEPOINT base_proc_savepoint_rollback_return"
--- +3 "RELEASE SAVEPOINT base_proc_savepoint_rollback_return"
+-- +2 "ROLLBACK TO base_proc_savepoint_rollback_return"
+-- +3 "RELEASE base_proc_savepoint_rollback_return"
 create proc base_proc_savepoint_rollback_return()
 begin
   proc savepoint
@@ -3009,9 +3015,18 @@ declare enum some_reals real (
   bar = 3
 );
 
+-- TEST: make a long enum
+declare enum some_longs long (
+  foo = 87363537363847643647937,
+  bar = 3
+);
+
 -- TEST: force these into the .h file, there will be two copies of some_ints
 @emit_enums some_ints;
 @emit_enums;
+
+-- TEST: force these into the .h file, there will be two copies of some_longs
+@emit_enums some_longs;
 
 -- TEST: resolve a virtual table, note that the arguments become the declaration
 -- + "CREATE VIRTUAL TABLE virt_table USING virt_module ( "
@@ -3048,6 +3063,9 @@ begin
   create virtual table v2 using m2(x) as (id integer);
   create virtual table v3 using m2(arguments following) as (id integer);
 end;
+
+-- TEST: declaration of a named type
+declare my_name_type type text not null;
 
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------

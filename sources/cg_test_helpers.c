@@ -364,7 +364,8 @@ static void find_parent_column(
       // and the corresponding referenced column.
 
       EXTRACT_NOTNULL(fk_def, col_keys->left);
-      EXTRACT_NOTNULL(name_list, fk_def->left);
+      EXTRACT_NOTNULL(fk_info, fk_def->right);
+      EXTRACT_NOTNULL(name_list, fk_info->left);
       int32_t column_index = 0;
       bool_t found = 0;
       for (ast_node *list = name_list; list; list = list->right) {
@@ -381,7 +382,7 @@ static void find_parent_column(
         // and skip to the column_index entry to get the corresponding
         // referenced name.  The table name is sitting there for us
         // on a silver platter.
-        EXTRACT_NOTNULL(fk_target_options, fk_def->right);
+        EXTRACT_NOTNULL(fk_target_options, fk_info->right);
         EXTRACT_NOTNULL(fk_target, fk_target_options->left);
         EXTRACT_STRING(fk_table, fk_target->left);
         EXTRACT_ANY_NOTNULL(fk_name_list, fk_target->right);
@@ -550,7 +551,7 @@ static void init_all_trigger_per_table() {
   Contract(all_tables_with_triggers == NULL);
   all_tables_with_triggers = symtab_new();
 
-  for(list_item *item = all_triggers_list; item; item = item->next) {
+  for (list_item *item = all_triggers_list; item; item = item->next) {
     EXTRACT_NOTNULL(create_trigger_stmt, item->ast);
     EXTRACT_NOTNULL(trigger_body_vers, create_trigger_stmt->right);
     EXTRACT_NOTNULL(trigger_def, trigger_body_vers->left);

@@ -103,6 +103,7 @@ s/[[:<:]]HAVING[[:>:]]/"HAVING"/g
 s/[[:<:]]ID[[:>:]]/"ID"/g
 s/[[:<:]]IGNORE[[:>:]]/"IGNORE"/g
 s/[[:<:]]IMMEDIATE[[:>:]]/"IMMEDIATE"/g
+s/[[:<:]]EXCLUSIVE[[:>:]]/"EXCLUSIVE"/g
 s/[[:<:]]IN[[:>:]]/"IN"/g
 s/[[:<:]]INDEX[[:>:]]/"INDEX"/g
 s/[[:<:]]INITIALLY[[:>:]]/"INITIALLY"/g
@@ -181,6 +182,7 @@ s/[[:<:]]TO[[:>:]]/"TO"/g
 s/[[:<:]]TRANSACTION[[:>:]]/"TRANSACTION"/g
 s/[[:<:]]TRIGGER[[:>:]]/"TRIGGER"/g
 s/[[:<:]]TRY[[:>:]]/"TRY"/g
+s/[[:<:]]TYPE[[:>:]]/"TYPE"/g
 s/[[:<:]]UMINUS[[:>:]]/"UMINUS"/g
 s/[[:<:]]UNBOUNDED[[:>:]]/"UNBOUNDED"/g
 s/[[:<:]]UNION[[:>:]]/"UNION"/g

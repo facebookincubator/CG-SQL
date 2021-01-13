@@ -153,19 +153,19 @@ static void cql_reset_globals(void);
 %token DESC INNER FCOUNT AUTOINCREMENT DISTINCT
 %token LIMIT OFFSET TEMP TRIGGER IF ALL CROSS USING RIGHT
 %token UNIQUE HAVING SET TO DISTINCTROW ENUM
-%token FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR DECLARE FETCH LOOP LEAVE CONTINUE FOR
+%token FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR DECLARE TYPE FETCH LOOP LEAVE CONTINUE FOR
 %token OPEN CLOSE ELSE_IF WHILE CALL TRY CATCH THROW RETURN
 %token SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
 %token CAST WITH RECURSIVE REPLACE IGNORE ADD COLUMN RENAME ALTER
 %token AT_ECHO AT_CREATE AT_RECREATE AT_DELETE AT_SCHEMA_UPGRADE_VERSION AT_PREVIOUS_SCHEMA AT_SCHEMA_UPGRADE_SCRIPT
-%token AT_PROC AT_FILE AT_ATTRIBUTE AT_SENSITIVE DEFERRED NOT_DEFERRABLE DEFERRABLE IMMEDIATE RESTRICT ACTION INITIALLY NO
+%token AT_PROC AT_FILE AT_ATTRIBUTE AT_SENSITIVE DEFERRED NOT_DEFERRABLE DEFERRABLE IMMEDIATE EXCLUSIVE RESTRICT ACTION INITIALLY NO
 %token BEFORE AFTER INSTEAD OF FOR_EACH_ROW EXISTS RAISE FAIL ABORT AT_ENFORCE_STRICT AT_ENFORCE_NORMAL
 %token AT_BEGIN_SCHEMA_REGION AT_END_SCHEMA_REGION
 %token AT_DECLARE_SCHEMA_REGION AT_DECLARE_DEPLOYABLE_REGION AT_SCHEMA_AD_HOC_MIGRATION PRIVATE
 
 /* ddl stuff */
 %type <ival> opt_temp opt_if_not_exists opt_unique opt_no_rowid dummy_modifier compound_operator opt_query_plan
-%type <ival> opt_fk_options fk_options fk_on_options fk_action fk_initial_state fk_deferred_options
+%type <ival> opt_fk_options fk_options fk_on_options fk_action fk_initial_state fk_deferred_options transaction_mode
 %type <ival> frame_type frame_exclude join_type
 
 %type <aval> col_key_list col_key_def col_def col_name
@@ -187,7 +187,7 @@ static void cql_reset_globals(void);
 /* dml stuff */
 %type <aval> with_delete_stmt delete_stmt
 %type <aval> insert_stmt with_insert_stmt insert_list insert_stmt_type opt_column_spec opt_insert_dummy_spec expr_names expr_name
-%type <aval> with_prefix with_select_stmt cte_decl cte_table cte_tables
+%type <aval> with_prefix with_select_stmt cte_table cte_tables
 %type <aval> select_expr select_expr_list select_opts select_stmt select_core values explain_stmt explain_target
 %type <aval> select_stmt_no_with select_core_list
 %type <aval> window_func_inv opt_filter_clause window_name_or_defn window_defn opt_select_window
@@ -203,7 +203,7 @@ static void cql_reset_globals(void);
 /* expressions and types */
 %type <aval> expr basic_expr math_expr expr_list typed_name typed_names case_list call_expr_list call_expr shape_arguments
 %type <aval> name name_list opt_name_list opt_name
-%type <aval> data_type data_type_numeric data_type_opt_notnull creation_type object_type
+%type <aval> data_type data_type_or_type_name data_type_numeric data_type_opt_notnull object_type
 
 /* proc stuff */
 %type <aval> create_proc_stmt declare_func_stmt declare_proc_stmt
@@ -229,7 +229,7 @@ static void cql_reset_globals(void);
 %type <aval> out_stmt out_union_stmt
 %type <aval> previous_schema_stmt
 %type <aval> release_savepoint_stmt
-%type <aval> rollback_trans_stmt rollback_return_stmt
+%type <aval> rollback_trans_stmt rollback_return_stmt savepoint_name
 %type <aval> savepoint_stmt
 %type <aval> schema_upgrade_script_stmt
 %type <aval> schema_upgrade_version_stmt
@@ -537,19 +537,20 @@ misc_attrs[result]:
   ;
 
 col_def:
-  misc_attrs col_name data_type col_attrs  {
+  misc_attrs col_name data_type_or_type_name col_attrs  {
   struct ast_node *misc_attrs = $misc_attrs;
   struct ast_node *col_name = $col_name;
-  struct ast_node *data_type = $data_type;
+  struct ast_node *data_type_or_type_name = $data_type_or_type_name;
   struct ast_node *col_attrs= $col_attrs;
-  struct ast_node *name_type = new_ast_col_def_name_type(col_name, data_type);
+  struct ast_node *name_type = new_ast_col_def_name_type(col_name, data_type_or_type_name);
   struct ast_node *col_def_type_attrs = new_ast_col_def_type_attrs(name_type, col_attrs);
   $col_def = new_ast_col_def(col_def_type_attrs, misc_attrs);
   }
   ;
 
 pk_def:
-  PRIMARY KEY '(' name_list ')'  { $pk_def = new_ast_pk_def($name_list);}
+  CONSTRAINT name PRIMARY KEY '(' name_list ')'  { $pk_def = new_ast_pk_def($name, $name_list);}
+  | PRIMARY KEY '(' name_list ')'  { $pk_def = new_ast_pk_def(NULL, $name_list);}
   ;
 
 opt_fk_options:
@@ -590,7 +591,12 @@ fk_initial_state:
   ;
 
 fk_def:
-  FOREIGN KEY '(' name_list ')' fk_target_options  { $fk_def = new_ast_fk_def($name_list, $fk_target_options); }
+  CONSTRAINT name FOREIGN KEY '(' name_list ')' fk_target_options  {
+    ast_node *fk_info = new_ast_fk_info($name_list, $fk_target_options);
+    $fk_def = new_ast_fk_def($name, fk_info); }
+  | FOREIGN KEY '(' name_list ')' fk_target_options  {
+    ast_node *fk_info = new_ast_fk_info($name_list, $fk_target_options);
+    $fk_def = new_ast_fk_def(NULL, fk_info); }
   ;
 
 fk_target_options:
@@ -637,6 +643,7 @@ name:
   | ROWID  { $name = new_ast_str("rowid"); }
   | KEY  { $name = new_ast_str("key"); }
   | VIRTUAL  { $name = new_ast_str("virtual"); }
+  | TYPE { $name = new_ast_str("type"); }
   ;
 
 opt_name:
@@ -704,12 +711,18 @@ data_type:
   | object_type  { $data_type = $object_type; }
   ;
 
+data_type_or_type_name:
+  data_type { $data_type_or_type_name = $data_type; }
+  | ID { $data_type_or_type_name = new_ast_str($ID); }
+  ;
+
 data_type_opt_notnull:
   data_type  { $data_type_opt_notnull = $data_type; }
   | data_type NOT NULL_  { $data_type_opt_notnull = new_ast_notnull($data_type); }
   | data_type AT_SENSITIVE  { $data_type_opt_notnull = new_ast_sensitive_attr($data_type, NULL); }
   | data_type AT_SENSITIVE NOT NULL_  { $data_type_opt_notnull = new_ast_sensitive_attr(new_ast_notnull($data_type), NULL); }
   | data_type NOT NULL_ AT_SENSITIVE  { $data_type_opt_notnull = new_ast_sensitive_attr(new_ast_notnull($data_type), NULL); }
+  | ID { $data_type_opt_notnull = new_ast_str($ID); }
   ;
 
 str_literal:
@@ -827,7 +840,7 @@ expr[result]:
   | CASE expr[cond1] case_list ELSE expr[cond2] END  { $result = new_ast_case_expr($cond1, new_ast_connector($case_list, $cond2));}
   | CASE case_list END  { $result = new_ast_case_expr(NULL, new_ast_connector($case_list, NULL));}
   | CASE case_list ELSE expr[cond] END  { $result = new_ast_case_expr(NULL, new_ast_connector($case_list, $cond));}
-  | CAST '(' expr[sexp] AS data_type ')'  { $result = new_ast_cast_expr($sexp, $data_type); }
+  | CAST '(' expr[sexp] AS data_type_or_type_name ')'  { $result = new_ast_cast_expr($sexp, $data_type_or_type_name); }
   ;
 
 case_list[result]:
@@ -874,12 +887,12 @@ cte_tables[result]:
   ;
 
 cte_table:
-  cte_decl AS '(' select_stmt_no_with ')'  { $cte_table = new_ast_cte_table($cte_decl, $select_stmt_no_with); }
-  ;
-
-cte_decl:
-  name '(' name_list ')'  { $cte_decl = new_ast_cte_decl($name, $name_list); }
-  | name '(' '*' ')'  { $cte_decl = new_ast_cte_decl($name, new_ast_star()); }
+    name '(' name_list ')' AS '(' select_stmt_no_with ')'  {
+      ast_node *cte_decl = new_ast_cte_decl($name, $name_list);
+      $cte_table = new_ast_cte_table(cte_decl, $select_stmt_no_with); }
+  | name '(' '*' ')' AS '(' select_stmt_no_with ')' {
+      ast_node *cte_decl = new_ast_cte_decl($name, new_ast_star());
+      $cte_table = new_ast_cte_table(cte_decl, $select_stmt_no_with); }
   ;
 
 with_prefix:
@@ -909,7 +922,7 @@ select_core_list[result]:
   select_core { $result = new_ast_select_core_list($select_core, NULL); }
   | select_core compound_operator select_core_list[list] {
      ast_node *select_core_compound = new_ast_select_core_compound(new_ast_opt($compound_operator), $list);
-     $result = new_ast_select_core_list($select_core, select_core_compound); 
+     $result = new_ast_select_core_list($select_core, select_core_compound);
   }
   ;
 
@@ -1188,7 +1201,7 @@ table_or_subquery:
   | '(' query_parts ')'  { $table_or_subquery = new_ast_table_or_subquery($query_parts, NULL); }
   ;
 
-join_type:  
+join_type:
   /*nil */       { $join_type = JOIN_INNER; }
   | LEFT         { $join_type = JOIN_LEFT; }
   | RIGHT        { $join_type = JOIN_RIGHT; }
@@ -1364,15 +1377,6 @@ conflict_target:
   }
   ;
 
-creation_type:
-  object_type  { $creation_type = $object_type; }
-  | object_type NOT NULL_  { $creation_type = new_ast_notnull($object_type); }
-  | TEXT  { $creation_type = new_ast_type_text(); }
-  | TEXT NOT NULL_  { $creation_type = new_ast_notnull(new_ast_type_text()); }
-  | BLOB  { $creation_type = new_ast_type_blob(); }
-  | BLOB NOT NULL_  { $creation_type = new_ast_notnull(new_ast_type_blob()); }
-  ;
-
 function: FUNC | FUNCTION
   ;
 
@@ -1397,9 +1401,9 @@ declare_func_stmt:
       $declare_func_stmt = new_ast_declare_func_stmt($name, new_ast_func_params_return($params, $data_type_opt_notnull)); }
   | DECLARE SELECT function name '(' params ')' data_type_opt_notnull  {
       $declare_func_stmt = new_ast_declare_select_func_stmt($name, new_ast_func_params_return($params, $data_type_opt_notnull)); }
-  | DECLARE function name '(' params ')' CREATE creation_type  {
-      ast_node *type = new_ast_create($creation_type);
-      $declare_func_stmt = new_ast_declare_func_stmt($name, new_ast_func_params_return($params, type)); }
+  | DECLARE function name '(' params ')' CREATE data_type_opt_notnull  {
+      ast_node *create_data_type = new_ast_create_data_type($data_type_opt_notnull);
+      $declare_func_stmt = new_ast_declare_func_stmt($name, new_ast_func_params_return($params, create_data_type)); }
   | DECLARE SELECT function name '(' params ')' '(' typed_names ')'  {
       $declare_func_stmt = new_ast_declare_select_func_stmt($name, new_ast_func_params_return($params, $typed_names)); }
   ;
@@ -1475,6 +1479,7 @@ declare_stmt:
   | DECLARE name CURSOR shape_def  { $declare_stmt = new_ast_declare_cursor_like_name($name, $shape_def); }
   | DECLARE name CURSOR LIKE select_stmt  { $declare_stmt = new_ast_declare_cursor_like_select($name, $select_stmt); }
   | DECLARE name[id] CURSOR FOR name[obj] { $declare_stmt = new_ast_declare_cursor($id, $obj); }
+  | DECLARE name TYPE data_type_opt_notnull { $declare_stmt = new_ast_declare_named_type($name, $data_type_opt_notnull); }
   ;
 
 call_stmt:
@@ -1595,21 +1600,36 @@ opt_elseif_list:
   | elseif_list  { $opt_elseif_list = $elseif_list; }
   ;
 
+transaction_mode:
+  /* nil */ { $transaction_mode = TRANS_DEFERRED; }
+  | DEFERRED { $transaction_mode = TRANS_DEFERRED; }
+  | IMMEDIATE { $transaction_mode = TRANS_IMMEDIATE; }
+  | EXCLUSIVE { $transaction_mode = TRANS_EXCLUSIVE; }
+  ;
+
 begin_trans_stmt:
-  BEGIN_ TRANSACTION  { $begin_trans_stmt = new_ast_begin_trans_stmt(); }
+  BEGIN_ transaction_mode TRANSACTION  { $begin_trans_stmt = new_ast_begin_trans_stmt(new_ast_opt($transaction_mode)); }
+  | BEGIN_ transaction_mode { $begin_trans_stmt = new_ast_begin_trans_stmt(new_ast_opt($transaction_mode)); }
   ;
 
 rollback_trans_stmt:
-  ROLLBACK TRANSACTION  {
+  ROLLBACK  {
       $rollback_trans_stmt = new_ast_rollback_trans_stmt(NULL); }
-  | ROLLBACK TRANSACTION TO SAVEPOINT name  {
-      $rollback_trans_stmt = new_ast_rollback_trans_stmt($name); }
-  | ROLLBACK TRANSACTION TO SAVEPOINT AT_PROC  {
-      $rollback_trans_stmt = new_ast_rollback_trans_stmt(new_ast_str("@PROC")); }
+  | ROLLBACK TRANSACTION  {
+      $rollback_trans_stmt = new_ast_rollback_trans_stmt(NULL); }
+  | ROLLBACK TO savepoint_name  {
+      $rollback_trans_stmt = new_ast_rollback_trans_stmt($savepoint_name); }
+  | ROLLBACK TRANSACTION TO savepoint_name  {
+      $rollback_trans_stmt = new_ast_rollback_trans_stmt($savepoint_name); }
+  | ROLLBACK TO SAVEPOINT savepoint_name  {
+      $rollback_trans_stmt = new_ast_rollback_trans_stmt($savepoint_name); }
+  | ROLLBACK TRANSACTION TO SAVEPOINT savepoint_name  {
+      $rollback_trans_stmt = new_ast_rollback_trans_stmt($savepoint_name); }
   ;
 
 commit_trans_stmt:
   COMMIT TRANSACTION  { $commit_trans_stmt = new_ast_commit_trans_stmt(); }
+  | COMMIT { $commit_trans_stmt = new_ast_commit_trans_stmt(); }
   ;
 
 proc_savepoint_stmt:  procedure SAVEPOINT BEGIN_ opt_stmt_list END {
@@ -1617,18 +1637,21 @@ proc_savepoint_stmt:  procedure SAVEPOINT BEGIN_ opt_stmt_list END {
   }
   ;
 
+savepoint_name:
+  AT_PROC { $savepoint_name = new_ast_str("@PROC"); }
+  | name { $savepoint_name = $name; }
+  ;
+
 savepoint_stmt:
-  SAVEPOINT name  {
-    $savepoint_stmt = new_ast_savepoint_stmt($name); }
-  | SAVEPOINT AT_PROC {
-    $savepoint_stmt = new_ast_savepoint_stmt(new_ast_str("@PROC")); }
+  SAVEPOINT savepoint_name  {
+    $savepoint_stmt = new_ast_savepoint_stmt($savepoint_name); }
   ;
 
 release_savepoint_stmt:
-  RELEASE SAVEPOINT name  {
-    $release_savepoint_stmt = new_ast_release_savepoint_stmt($name); }
-  | RELEASE SAVEPOINT AT_PROC {
-    $release_savepoint_stmt = new_ast_release_savepoint_stmt(new_ast_str("@PROC")); }
+  RELEASE savepoint_name  {
+    $release_savepoint_stmt = new_ast_release_savepoint_stmt($savepoint_name); }
+  | RELEASE SAVEPOINT savepoint_name  {
+    $release_savepoint_stmt = new_ast_release_savepoint_stmt($savepoint_name); }
   ;
 
 echo_stmt:
@@ -1959,7 +1982,7 @@ static void parse_cmd(int argc, char **argv) {
 
 #ifndef CQL_IS_NOT_MAIN
   // Normally CQL is the main entry point.  If you are using CQL in an embedded fashion
-  // then you want to invoke it's main at some other time.  If you define CQL_IS_NOT_MAIN
+  // then you want to invoke its main at some other time. If you define CQL_IS_NOT_MAIN
   // then cql_main is not renamed to main.  You call cql_main when you want.
   #define cql_main main
 #endif

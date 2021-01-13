@@ -39,6 +39,7 @@
     }
     body
     {
+      font: normal 12px Verdana, sans-serif;
       color: #0F0C00;
       background: #FFFCF0;
     }
@@ -182,7 +183,7 @@
       border-bottom: 1px solid #050400;
       border-left: 1px solid #050400;
     }
-    p,li { font: normal 12px Verdana, sans-serif; } a.palette
+    a.palette
     {
       padding: 2px 3px 2px 10px;
       text-decoration: none;
@@ -1372,7 +1373,7 @@
             <li><a href="#any_stmt" title="any_stmt">any_stmt</a></li>
             <li><a href="#explain_target" title="explain_target">explain_target</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="create_virtual_table_stmt">create_virtual_table_stmt:</a></p><svg width="941" height="103">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="create_virtual_table_stmt">create_virtual_table_stmt:</a></p><svg width="949" height="103">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -1406,44 +1407,45 @@
          <polygon points="17 17 9 13 9 21"></polygon>
          <rect x="31" y="3" width="72" height="32" rx="10"></rect>
          <rect x="29" y="1" width="72" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="39" y="21">CREATE</text><a href="#VIRTUAL" title="VIRTUAL">
-            <rect x="123" y="3" width="72" height="32"></rect>
-            <rect x="121" y="1" width="72" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="131" y="21">VIRTUAL</text></a><rect x="215" y="3" width="62" height="32" rx="10"></rect>
-         <rect x="213" y="1" width="62" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="223" y="21">TABLE</text><a href="#opt_if_not_exists" title="opt_if_not_exists">
-            <rect x="297" y="3" width="130" height="32"></rect>
-            <rect x="295" y="1" width="130" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="305" y="21">opt_if_not_exists</text></a><a href="#name" title="name">
-            <rect x="447" y="3" width="56" height="32"></rect>
-            <rect x="445" y="1" width="56" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="455" y="21">name</text></a><rect x="523" y="3" width="64" height="32" rx="10"></rect>
-         <rect x="521" y="1" width="64" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="531" y="21">USING</text><a href="#name" title="name">
-            <rect x="607" y="3" width="56" height="32"></rect>
-            <rect x="605" y="1" width="56" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="615" y="21">name</text></a><a href="#opt_module_args" title="opt_module_args">
-            <rect x="683" y="3" width="132" height="32"></rect>
-            <rect x="681" y="1" width="132" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="691" y="21">opt_module_args</text></a><rect x="835" y="3" width="38" height="32" rx="10"></rect>
-         <rect x="833" y="1" width="38" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="843" y="21">AS</text>
-         <rect x="893" y="3" width="26" height="32" rx="10"></rect>
-         <rect x="891" y="1" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="901" y="21">(</text><a href="#col_key_list" title="col_key_list">
-            <rect x="579" y="69" width="94" height="32"></rect>
-            <rect x="577" y="67" width="94" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="587" y="87">col_key_list</text></a><rect x="693" y="69" width="26" height="32" rx="10"></rect>
-         <rect x="691" y="67" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="701" y="87">)</text><a href="#opt_delete_version_attr" title="opt_delete_version_attr">
-            <rect x="739" y="69" width="174" height="32"></rect>
-            <rect x="737" y="67" width="174" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="747" y="87">opt_delete_version_attr</text></a><path class="line" d="m17 17 h2 m0 0 h10 m72 0 h10 m0 0 h10 m72 0 h10 m0 0 h10 m62 0 h10 m0 0 h10 m130 0 h10 m0 0 h10 m56 0 h10 m0 0 h10 m64 0 h10 m0 0 h10 m56 0 h10 m0 0 h10 m132 0 h10 m0 0 h10 m38 0 h10 m0 0 h10 m26 0 h10 m2 0 l2 0 m2 0 l2 0 m2 0 l2 0 m-384 66 l2 0 m2 0 l2 0 m2 0 l2 0 m2 0 h10 m94 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m174 0 h10 m3 0 h-3"></path>
-         <polygon points="931 83 939 79 939 87"></polygon>
-         <polygon points="931 83 923 79 923 87"></polygon></svg><p>
+         <text class="terminal" x="39" y="21">CREATE</text>
+         <rect x="123" y="3" width="80" height="32" rx="10"></rect>
+         <rect x="121" y="1" width="80" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="131" y="21">VIRTUAL</text>
+         <rect x="223" y="3" width="62" height="32" rx="10"></rect>
+         <rect x="221" y="1" width="62" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="231" y="21">TABLE</text><a href="#opt_if_not_exists" title="opt_if_not_exists">
+            <rect x="305" y="3" width="130" height="32"></rect>
+            <rect x="303" y="1" width="130" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="313" y="21">opt_if_not_exists</text></a><a href="#name" title="name">
+            <rect x="455" y="3" width="56" height="32"></rect>
+            <rect x="453" y="1" width="56" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="463" y="21">name</text></a><rect x="531" y="3" width="64" height="32" rx="10"></rect>
+         <rect x="529" y="1" width="64" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="539" y="21">USING</text><a href="#name" title="name">
+            <rect x="615" y="3" width="56" height="32"></rect>
+            <rect x="613" y="1" width="56" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="623" y="21">name</text></a><a href="#opt_module_args" title="opt_module_args">
+            <rect x="691" y="3" width="132" height="32"></rect>
+            <rect x="689" y="1" width="132" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="699" y="21">opt_module_args</text></a><rect x="843" y="3" width="38" height="32" rx="10"></rect>
+         <rect x="841" y="1" width="38" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="851" y="21">AS</text>
+         <rect x="901" y="3" width="26" height="32" rx="10"></rect>
+         <rect x="899" y="1" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="909" y="21">(</text><a href="#col_key_list" title="col_key_list">
+            <rect x="587" y="69" width="94" height="32"></rect>
+            <rect x="585" y="67" width="94" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="595" y="87">col_key_list</text></a><rect x="701" y="69" width="26" height="32" rx="10"></rect>
+         <rect x="699" y="67" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="709" y="87">)</text><a href="#opt_delete_version_attr" title="opt_delete_version_attr">
+            <rect x="747" y="69" width="174" height="32"></rect>
+            <rect x="745" y="67" width="174" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="755" y="87">opt_delete_version_attr</text></a><path class="line" d="m17 17 h2 m0 0 h10 m72 0 h10 m0 0 h10 m80 0 h10 m0 0 h10 m62 0 h10 m0 0 h10 m130 0 h10 m0 0 h10 m56 0 h10 m0 0 h10 m64 0 h10 m0 0 h10 m56 0 h10 m0 0 h10 m132 0 h10 m0 0 h10 m38 0 h10 m0 0 h10 m26 0 h10 m2 0 l2 0 m2 0 l2 0 m2 0 l2 0 m-384 66 l2 0 m2 0 l2 0 m2 0 l2 0 m2 0 h10 m94 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m174 0 h10 m3 0 h-3"></path>
+         <polygon points="939 83 947 79 947 87"></polygon>
+         <polygon points="939 83 931 79 931 87"></polygon></svg><p>
          <div class="ebnf"><code>
                <div><a href="#create_virtual_table_stmt" title="create_virtual_table_stmt">create_virtual_table_stmt</a></div>
-               <div>         ::= 'CREATE' <a href="#VIRTUAL" title="VIRTUAL">VIRTUAL</a> 'TABLE' <a href="#opt_if_not_exists" title="opt_if_not_exists">opt_if_not_exists</a> <a href="#name" title="name">name</a> 'USING' <a href="#name" title="name">name</a> <a href="#opt_module_args" title="opt_module_args">opt_module_args</a> 'AS' '(' <a href="#col_key_list" title="col_key_list">col_key_list</a> ')' <a href="#opt_delete_version_attr" title="opt_delete_version_attr">opt_delete_version_attr</a></div></code></div>
+               <div>         ::= 'CREATE' 'VIRTUAL' 'TABLE' <a href="#opt_if_not_exists" title="opt_if_not_exists">opt_if_not_exists</a> <a href="#name" title="name">name</a> 'USING' <a href="#name" title="name">name</a> <a href="#opt_module_args" title="opt_module_args">opt_module_args</a> 'AS' '(' <a href="#col_key_list" title="col_key_list">col_key_list</a> ')' <a href="#opt_delete_version_attr" title="opt_delete_version_attr">opt_delete_version_attr</a></div></code></div>
       </p>
       <p>referenced by:
          <ul>
@@ -1776,7 +1778,7 @@
             <li><a href="#create_table_stmt" title="create_table_stmt">create_table_stmt</a></li>
             <li><a href="#create_virtual_table_stmt" title="create_virtual_table_stmt">create_virtual_table_stmt</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="col_key_def">col_key_def:</a></p><svg width="185" height="213">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="col_key_def">col_key_def:</a></p><svg width="185" height="257">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -1819,10 +1821,13 @@
             <text class="nonterminal" x="59" y="109">fk_def</text></a><a href="#unq_def" title="unq_def">
             <rect x="51" y="135" width="72" height="32"></rect>
             <rect x="49" y="133" width="72" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="153">unq_def</text></a><a href="#shape_def" title="shape_def">
-            <rect x="51" y="179" width="86" height="32"></rect>
-            <rect x="49" y="177" width="86" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="197">shape_def</text></a><path class="line" d="m17 17 h2 m20 0 h10 m66 0 h10 m0 0 h20 m-126 0 h20 m106 0 h20 m-146 0 q10 0 10 10 m126 0 q0 -10 10 -10 m-136 10 v24 m126 0 v-24 m-126 24 q0 10 10 10 m106 0 q10 0 10 -10 m-116 10 h10 m62 0 h10 m0 0 h24 m-116 -10 v20 m126 0 v-20 m-126 20 v24 m126 0 v-24 m-126 24 q0 10 10 10 m106 0 q10 0 10 -10 m-116 10 h10 m60 0 h10 m0 0 h26 m-116 -10 v20 m126 0 v-20 m-126 20 v24 m126 0 v-24 m-126 24 q0 10 10 10 m106 0 q10 0 10 -10 m-116 10 h10 m72 0 h10 m0 0 h14 m-116 -10 v20 m126 0 v-20 m-126 20 v24 m126 0 v-24 m-126 24 q0 10 10 10 m106 0 q10 0 10 -10 m-116 10 h10 m86 0 h10 m23 -176 h-3"></path>
+            <text class="nonterminal" x="59" y="153">unq_def</text></a><a href="#check_def" title="check_def">
+            <rect x="51" y="179" width="84" height="32"></rect>
+            <rect x="49" y="177" width="84" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="197">check_def</text></a><a href="#shape_def" title="shape_def">
+            <rect x="51" y="223" width="86" height="32"></rect>
+            <rect x="49" y="221" width="86" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="241">shape_def</text></a><path class="line" d="m17 17 h2 m20 0 h10 m66 0 h10 m0 0 h20 m-126 0 h20 m106 0 h20 m-146 0 q10 0 10 10 m126 0 q0 -10 10 -10 m-136 10 v24 m126 0 v-24 m-126 24 q0 10 10 10 m106 0 q10 0 10 -10 m-116 10 h10 m62 0 h10 m0 0 h24 m-116 -10 v20 m126 0 v-20 m-126 20 v24 m126 0 v-24 m-126 24 q0 10 10 10 m106 0 q10 0 10 -10 m-116 10 h10 m60 0 h10 m0 0 h26 m-116 -10 v20 m126 0 v-20 m-126 20 v24 m126 0 v-24 m-126 24 q0 10 10 10 m106 0 q10 0 10 -10 m-116 10 h10 m72 0 h10 m0 0 h14 m-116 -10 v20 m126 0 v-20 m-126 20 v24 m126 0 v-24 m-126 24 q0 10 10 10 m106 0 q10 0 10 -10 m-116 10 h10 m84 0 h10 m0 0 h2 m-116 -10 v20 m126 0 v-20 m-126 20 v24 m126 0 v-24 m-126 24 q0 10 10 10 m106 0 q10 0 10 -10 m-116 10 h10 m86 0 h10 m23 -220 h-3"></path>
          <polygon points="175 17 183 13 183 21"></polygon>
          <polygon points="175 17 167 13 167 21"></polygon></svg><p>
          <div class="ebnf"><code>
@@ -1831,11 +1836,71 @@
                <div>           | <a href="#pk_def" title="pk_def">pk_def</a></div>
                <div>           | <a href="#fk_def" title="fk_def">fk_def</a></div>
                <div>           | <a href="#unq_def" title="unq_def">unq_def</a></div>
+               <div>           | <a href="#check_def" title="check_def">check_def</a></div>
                <div>           | <a href="#shape_def" title="shape_def">shape_def</a></div></code></div>
       </p>
       <p>referenced by:
          <ul>
             <li><a href="#col_key_list" title="col_key_list">col_key_list</a></li>
+         </ul>
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="check_def">check_def:</a></p><svg width="529" height="69">
+         <defs>
+            <style type="text/css">
+    @namespace "http://www.w3.org/2000/svg";
+    .line                 {fill: none; stroke: #332900; stroke-width: 1;}
+    .bold-line            {stroke: #141000; shape-rendering: crispEdges; stroke-width: 2;}
+    .thin-line            {stroke: #1F1800; shape-rendering: crispEdges}
+    .filled               {fill: #332900; stroke: none;}
+    text.terminal         {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #141000;
+                            font-weight: bold;
+                          }
+    text.nonterminal      {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #1A1400;
+                            font-weight: normal;
+                          }
+    text.regexp           {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #1F1800;
+                            font-weight: normal;
+                          }
+    rect, circle, polygon {fill: #332900; stroke: #332900;}
+    rect.terminal         {fill: #FFDB4D; stroke: #332900; stroke-width: 1;}
+    rect.nonterminal      {fill: #FFEC9E; stroke: #332900; stroke-width: 1;}
+    rect.text             {fill: none; stroke: none;}
+    polygon.regexp        {fill: #FFF4C7; stroke: #332900; stroke-width: 1;}
+  </style>
+         </defs>
+         <polygon points="9 17 1 13 1 21"></polygon>
+         <polygon points="17 17 9 13 9 21"></polygon>
+         <rect x="51" y="35" width="110" height="32" rx="10"></rect>
+         <rect x="49" y="33" width="110" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="59" y="53">CONSTRAINT</text><a href="#name" title="name">
+            <rect x="181" y="35" width="56" height="32"></rect>
+            <rect x="179" y="33" width="56" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="189" y="53">name</text></a><rect x="277" y="3" width="64" height="32" rx="10"></rect>
+         <rect x="275" y="1" width="64" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="285" y="21">CHECK</text>
+         <rect x="361" y="3" width="26" height="32" rx="10"></rect>
+         <rect x="359" y="1" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="369" y="21">(</text><a href="#expr" title="expr">
+            <rect x="407" y="3" width="48" height="32"></rect>
+            <rect x="405" y="1" width="48" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="415" y="21">expr</text></a><rect x="475" y="3" width="26" height="32" rx="10"></rect>
+         <rect x="473" y="1" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="483" y="21">)</text>
+         <path class="line" d="m17 17 h2 m20 0 h10 m0 0 h196 m-226 0 h20 m206 0 h20 m-246 0 q10 0 10 10 m226 0 q0 -10 10 -10 m-236 10 v12 m226 0 v-12 m-226 12 q0 10 10 10 m206 0 q10 0 10 -10 m-216 10 h10 m110 0 h10 m0 0 h10 m56 0 h10 m20 -32 h10 m64 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m48 0 h10 m0 0 h10 m26 0 h10 m3 0 h-3"></path>
+         <polygon points="519 17 527 13 527 21"></polygon>
+         <polygon points="519 17 511 13 511 21"></polygon></svg><p>
+         <div class="ebnf"><code>
+               <div><a href="#check_def" title="check_def">check_def</a></div>
+               <div>         ::= ( 'CONSTRAINT' <a href="#name" title="name">name</a> )? 'CHECK' '(' <a href="#expr" title="expr">expr</a> ')'</div></code></div>
+      </p>
+      <p>referenced by:
+         <ul>
+            <li><a href="#col_key_def" title="col_key_def">col_key_def</a></li>
          </ul>
       </p><br /><p style="font-size: 14px; font-weight:bold"><a name="shape_def">shape_def:</a></p><svg width="351" height="69">
          <defs>
@@ -2210,7 +2275,7 @@
             <li><a href="#col_def" title="col_def">col_def</a></li>
             <li><a href="#stmt" title="stmt">stmt</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="col_def">col_def:</a></p><svg width="837" height="617">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="col_def">col_def:</a></p><svg width="939" height="617">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -2247,83 +2312,83 @@
             <text class="nonterminal" x="39" y="37">misc_attrs</text></a><a href="#col_name" title="col_name">
             <rect x="137" y="19" width="80" height="32"></rect>
             <rect x="135" y="17" width="80" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="145" y="37">col_name</text></a><a href="#data_type" title="data_type">
-            <rect x="237" y="19" width="84" height="32"></rect>
-            <rect x="235" y="17" width="84" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="245" y="37">data_type</text></a><rect x="401" y="19" width="48" height="32" rx="10"></rect>
-         <rect x="399" y="17" width="48" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="409" y="37">NOT</text>
-         <rect x="469" y="19" width="56" height="32" rx="10"></rect>
-         <rect x="467" y="17" width="56" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="477" y="37">NULL</text>
-         <rect x="401" y="63" width="84" height="32" rx="10"></rect>
-         <rect x="399" y="61" width="84" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="409" y="81">PRIMARY</text>
-         <rect x="505" y="63" width="46" height="32" rx="10"></rect>
-         <rect x="503" y="61" width="46" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="513" y="81">KEY</text>
-         <rect x="591" y="95" width="138" height="32" rx="10"></rect>
-         <rect x="589" y="93" width="138" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="599" y="113">AUTOINCREMENT</text>
-         <rect x="401" y="139" width="80" height="32" rx="10"></rect>
-         <rect x="399" y="137" width="80" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="409" y="157">DEFAULT</text>
-         <rect x="541" y="171" width="26" height="32" rx="10"></rect>
-         <rect x="539" y="169" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="549" y="189">-</text><a href="#num_literal" title="num_literal">
-            <rect x="607" y="139" width="92" height="32"></rect>
-            <rect x="605" y="137" width="92" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="615" y="157">num_literal</text></a><a href="#const_expr" title="const_expr">
-            <rect x="521" y="215" width="90" height="32"></rect>
-            <rect x="519" y="213" width="90" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="529" y="233">const_expr</text></a><a href="#str_literal" title="str_literal">
-            <rect x="521" y="259" width="80" height="32"></rect>
-            <rect x="519" y="257" width="80" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="529" y="277">str_literal</text></a><rect x="401" y="303" width="82" height="32" rx="10"></rect>
-         <rect x="399" y="301" width="82" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="409" y="321">COLLATE</text><a href="#name" title="name">
-            <rect x="503" y="303" width="56" height="32"></rect>
-            <rect x="501" y="301" width="56" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="511" y="321">name</text></a><rect x="401" y="347" width="64" height="32" rx="10"></rect>
-         <rect x="399" y="345" width="64" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="409" y="365">CHECK</text>
-         <rect x="485" y="347" width="26" height="32" rx="10"></rect>
-         <rect x="483" y="345" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="493" y="365">(</text><a href="#expr" title="expr">
-            <rect x="531" y="347" width="48" height="32"></rect>
-            <rect x="529" y="345" width="48" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="539" y="365">expr</text></a><rect x="599" y="347" width="26" height="32" rx="10"></rect>
-         <rect x="597" y="345" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="607" y="365">)</text>
-         <rect x="401" y="391" width="74" height="32" rx="10"></rect>
-         <rect x="399" y="389" width="74" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="409" y="409">UNIQUE</text>
-         <rect x="401" y="435" width="106" height="32" rx="10"></rect>
-         <rect x="399" y="433" width="106" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="409" y="453">@SENSITIVE</text>
-         <rect x="421" y="479" width="84" height="32" rx="10"></rect>
-         <rect x="419" y="477" width="84" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="429" y="497">@CREATE</text>
-         <rect x="421" y="523" width="82" height="32" rx="10"></rect>
-         <rect x="419" y="521" width="82" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="429" y="541">@DELETE</text><a href="#version_annotation" title="version_annotation">
-            <rect x="545" y="479" width="144" height="32"></rect>
-            <rect x="543" y="477" width="144" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="553" y="497">version_annotation</text></a><a href="#fk_target_options" title="fk_target_options">
-            <rect x="401" y="567" width="134" height="32"></rect>
-            <rect x="399" y="565" width="134" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="409" y="585">fk_target_options</text></a><path class="line" d="m17 33 h2 m0 0 h10 m86 0 h10 m0 0 h10 m80 0 h10 m0 0 h10 m84 0 h10 m60 0 h10 m48 0 h10 m0 0 h10 m56 0 h10 m0 0 h224 m-388 0 h20 m368 0 h20 m-408 0 q10 0 10 10 m388 0 q0 -10 10 -10 m-398 10 v24 m388 0 v-24 m-388 24 q0 10 10 10 m368 0 q10 0 10 -10 m-378 10 h10 m84 0 h10 m0 0 h10 m46 0 h10 m20 0 h10 m0 0 h148 m-178 0 h20 m158 0 h20 m-198 0 q10 0 10 10 m178 0 q0 -10 10 -10 m-188 10 v12 m178 0 v-12 m-178 12 q0 10 10 10 m158 0 q10 0 10 -10 m-168 10 h10 m138 0 h10 m-358 -42 v20 m388 0 v-20 m-388 20 v56 m388 0 v-56 m-388 56 q0 10 10 10 m368 0 q10 0 10 -10 m-378 10 h10 m80 0 h10 m40 0 h10 m0 0 h36 m-66 0 h20 m46 0 h20 m-86 0 q10 0 10 10 m66 0 q0 -10 10 -10 m-76 10 v12 m66 0 v-12 m-66 12 q0 10 10 10 m46 0 q10 0 10 -10 m-56 10 h10 m26 0 h10 m20 -32 h10 m92 0 h10 m-218 0 h20 m198 0 h20 m-238 0 q10 0 10 10 m218 0 q0 -10 10 -10 m-228 10 v56 m218 0 v-56 m-218 56 q0 10 10 10 m198 0 q10 0 10 -10 m-208 10 h10 m90 0 h10 m0 0 h88 m-208 -10 v20 m218 0 v-20 m-218 20 v24 m218 0 v-24 m-218 24 q0 10 10 10 m198 0 q10 0 10 -10 m-208 10 h10 m80 0 h10 m0 0 h98 m20 -120 h30 m-378 -10 v20 m388 0 v-20 m-388 20 v144 m388 0 v-144 m-388 144 q0 10 10 10 m368 0 q10 0 10 -10 m-378 10 h10 m82 0 h10 m0 0 h10 m56 0 h10 m0 0 h190 m-378 -10 v20 m388 0 v-20 m-388 20 v24 m388 0 v-24 m-388 24 q0 10 10 10 m368 0 q10 0 10 -10 m-378 10 h10 m64 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m48 0 h10 m0 0 h10 m26 0 h10 m0 0 h124 m-378 -10 v20 m388 0 v-20 m-388 20 v24 m388 0 v-24 m-388 24 q0 10 10 10 m368 0 q10 0 10 -10 m-378 10 h10 m74 0 h10 m0 0 h274 m-378 -10 v20 m388 0 v-20 m-388 20 v24 m388 0 v-24 m-388 24 q0 10 10 10 m368 0 q10 0 10 -10 m-378 10 h10 m106 0 h10 m0 0 h242 m-378 -10 v20 m388 0 v-20 m-388 20 v24 m388 0 v-24 m-388 24 q0 10 10 10 m368 0 q10 0 10 -10 m-358 10 h10 m84 0 h10 m-124 0 h20 m104 0 h20 m-144 0 q10 0 10 10 m124 0 q0 -10 10 -10 m-134 10 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m82 0 h10 m0 0 h2 m20 -44 h10 m144 0 h10 m0 0 h60 m-378 -10 v20 m388 0 v-20 m-388 20 v68 m388 0 v-68 m-388 68 q0 10 10 10 m368 0 q10 0 10 -10 m-378 10 h10 m134 0 h10 m0 0 h214 m-408 -548 l20 0 m-1 0 q-9 0 -9 -10 l0 -12 q0 -10 10 -10 m408 32 l20 0 m-20 0 q10 0 10 -10 l0 -12 q0 -10 -10 -10 m-408 0 h10 m0 0 h398 m-448 32 h20 m448 0 h20 m-488 0 q10 0 10 10 m468 0 q0 -10 10 -10 m-478 10 v562 m468 0 v-562 m-468 562 q0 10 10 10 m448 0 q10 0 10 -10 m-458 10 h10 m0 0 h438 m23 -582 h-3"></path>
-         <polygon points="827 33 835 29 835 37"></polygon>
-         <polygon points="827 33 819 29 819 37"></polygon></svg><p>
+            <text class="nonterminal" x="145" y="37">col_name</text></a><a href="#data_type_or_type_name" title="data_type_or_type_name">
+            <rect x="237" y="19" width="186" height="32"></rect>
+            <rect x="235" y="17" width="186" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="245" y="37">data_type_or_type_name</text></a><rect x="503" y="19" width="48" height="32" rx="10"></rect>
+         <rect x="501" y="17" width="48" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="511" y="37">NOT</text>
+         <rect x="571" y="19" width="56" height="32" rx="10"></rect>
+         <rect x="569" y="17" width="56" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="579" y="37">NULL</text>
+         <rect x="503" y="63" width="84" height="32" rx="10"></rect>
+         <rect x="501" y="61" width="84" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="511" y="81">PRIMARY</text>
+         <rect x="607" y="63" width="46" height="32" rx="10"></rect>
+         <rect x="605" y="61" width="46" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="615" y="81">KEY</text>
+         <rect x="693" y="95" width="138" height="32" rx="10"></rect>
+         <rect x="691" y="93" width="138" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="701" y="113">AUTOINCREMENT</text>
+         <rect x="503" y="139" width="80" height="32" rx="10"></rect>
+         <rect x="501" y="137" width="80" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="511" y="157">DEFAULT</text>
+         <rect x="643" y="171" width="26" height="32" rx="10"></rect>
+         <rect x="641" y="169" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="651" y="189">-</text><a href="#num_literal" title="num_literal">
+            <rect x="709" y="139" width="92" height="32"></rect>
+            <rect x="707" y="137" width="92" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="717" y="157">num_literal</text></a><a href="#const_expr" title="const_expr">
+            <rect x="623" y="215" width="90" height="32"></rect>
+            <rect x="621" y="213" width="90" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="631" y="233">const_expr</text></a><a href="#str_literal" title="str_literal">
+            <rect x="623" y="259" width="80" height="32"></rect>
+            <rect x="621" y="257" width="80" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="631" y="277">str_literal</text></a><rect x="503" y="303" width="82" height="32" rx="10"></rect>
+         <rect x="501" y="301" width="82" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="511" y="321">COLLATE</text><a href="#name" title="name">
+            <rect x="605" y="303" width="56" height="32"></rect>
+            <rect x="603" y="301" width="56" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="613" y="321">name</text></a><rect x="503" y="347" width="64" height="32" rx="10"></rect>
+         <rect x="501" y="345" width="64" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="511" y="365">CHECK</text>
+         <rect x="587" y="347" width="26" height="32" rx="10"></rect>
+         <rect x="585" y="345" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="595" y="365">(</text><a href="#expr" title="expr">
+            <rect x="633" y="347" width="48" height="32"></rect>
+            <rect x="631" y="345" width="48" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="641" y="365">expr</text></a><rect x="701" y="347" width="26" height="32" rx="10"></rect>
+         <rect x="699" y="345" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="709" y="365">)</text>
+         <rect x="503" y="391" width="74" height="32" rx="10"></rect>
+         <rect x="501" y="389" width="74" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="511" y="409">UNIQUE</text>
+         <rect x="503" y="435" width="106" height="32" rx="10"></rect>
+         <rect x="501" y="433" width="106" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="511" y="453">@SENSITIVE</text>
+         <rect x="523" y="479" width="84" height="32" rx="10"></rect>
+         <rect x="521" y="477" width="84" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="531" y="497">@CREATE</text>
+         <rect x="523" y="523" width="82" height="32" rx="10"></rect>
+         <rect x="521" y="521" width="82" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="531" y="541">@DELETE</text><a href="#version_annotation" title="version_annotation">
+            <rect x="647" y="479" width="144" height="32"></rect>
+            <rect x="645" y="477" width="144" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="655" y="497">version_annotation</text></a><a href="#fk_target_options" title="fk_target_options">
+            <rect x="503" y="567" width="134" height="32"></rect>
+            <rect x="501" y="565" width="134" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="511" y="585">fk_target_options</text></a><path class="line" d="m17 33 h2 m0 0 h10 m86 0 h10 m0 0 h10 m80 0 h10 m0 0 h10 m186 0 h10 m60 0 h10 m48 0 h10 m0 0 h10 m56 0 h10 m0 0 h224 m-388 0 h20 m368 0 h20 m-408 0 q10 0 10 10 m388 0 q0 -10 10 -10 m-398 10 v24 m388 0 v-24 m-388 24 q0 10 10 10 m368 0 q10 0 10 -10 m-378 10 h10 m84 0 h10 m0 0 h10 m46 0 h10 m20 0 h10 m0 0 h148 m-178 0 h20 m158 0 h20 m-198 0 q10 0 10 10 m178 0 q0 -10 10 -10 m-188 10 v12 m178 0 v-12 m-178 12 q0 10 10 10 m158 0 q10 0 10 -10 m-168 10 h10 m138 0 h10 m-358 -42 v20 m388 0 v-20 m-388 20 v56 m388 0 v-56 m-388 56 q0 10 10 10 m368 0 q10 0 10 -10 m-378 10 h10 m80 0 h10 m40 0 h10 m0 0 h36 m-66 0 h20 m46 0 h20 m-86 0 q10 0 10 10 m66 0 q0 -10 10 -10 m-76 10 v12 m66 0 v-12 m-66 12 q0 10 10 10 m46 0 q10 0 10 -10 m-56 10 h10 m26 0 h10 m20 -32 h10 m92 0 h10 m-218 0 h20 m198 0 h20 m-238 0 q10 0 10 10 m218 0 q0 -10 10 -10 m-228 10 v56 m218 0 v-56 m-218 56 q0 10 10 10 m198 0 q10 0 10 -10 m-208 10 h10 m90 0 h10 m0 0 h88 m-208 -10 v20 m218 0 v-20 m-218 20 v24 m218 0 v-24 m-218 24 q0 10 10 10 m198 0 q10 0 10 -10 m-208 10 h10 m80 0 h10 m0 0 h98 m20 -120 h30 m-378 -10 v20 m388 0 v-20 m-388 20 v144 m388 0 v-144 m-388 144 q0 10 10 10 m368 0 q10 0 10 -10 m-378 10 h10 m82 0 h10 m0 0 h10 m56 0 h10 m0 0 h190 m-378 -10 v20 m388 0 v-20 m-388 20 v24 m388 0 v-24 m-388 24 q0 10 10 10 m368 0 q10 0 10 -10 m-378 10 h10 m64 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m48 0 h10 m0 0 h10 m26 0 h10 m0 0 h124 m-378 -10 v20 m388 0 v-20 m-388 20 v24 m388 0 v-24 m-388 24 q0 10 10 10 m368 0 q10 0 10 -10 m-378 10 h10 m74 0 h10 m0 0 h274 m-378 -10 v20 m388 0 v-20 m-388 20 v24 m388 0 v-24 m-388 24 q0 10 10 10 m368 0 q10 0 10 -10 m-378 10 h10 m106 0 h10 m0 0 h242 m-378 -10 v20 m388 0 v-20 m-388 20 v24 m388 0 v-24 m-388 24 q0 10 10 10 m368 0 q10 0 10 -10 m-358 10 h10 m84 0 h10 m-124 0 h20 m104 0 h20 m-144 0 q10 0 10 10 m124 0 q0 -10 10 -10 m-134 10 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m82 0 h10 m0 0 h2 m20 -44 h10 m144 0 h10 m0 0 h60 m-378 -10 v20 m388 0 v-20 m-388 20 v68 m388 0 v-68 m-388 68 q0 10 10 10 m368 0 q10 0 10 -10 m-378 10 h10 m134 0 h10 m0 0 h214 m-408 -548 l20 0 m-1 0 q-9 0 -9 -10 l0 -12 q0 -10 10 -10 m408 32 l20 0 m-20 0 q10 0 10 -10 l0 -12 q0 -10 -10 -10 m-408 0 h10 m0 0 h398 m-448 32 h20 m448 0 h20 m-488 0 q10 0 10 10 m468 0 q0 -10 10 -10 m-478 10 v562 m468 0 v-562 m-468 562 q0 10 10 10 m448 0 q10 0 10 -10 m-458 10 h10 m0 0 h438 m23 -582 h-3"></path>
+         <polygon points="929 33 937 29 937 37"></polygon>
+         <polygon points="929 33 921 29 921 37"></polygon></svg><p>
          <div class="ebnf"><code>
-               <div><a href="#col_def" title="col_def">col_def</a>  ::= <a href="#misc_attrs" title="misc_attrs">misc_attrs</a> <a href="#col_name" title="col_name">col_name</a> <a href="#data_type" title="data_type">data_type</a> ( 'NOT' 'NULL' | 'PRIMARY' 'KEY' 'AUTOINCREMENT'? | 'DEFAULT' ( '-'? <a href="#num_literal" title="num_literal">num_literal</a> | <a href="#const_expr" title="const_expr">const_expr</a> | <a href="#str_literal" title="str_literal">str_literal</a> ) | 'COLLATE' <a href="#name" title="name">name</a> | 'CHECK' '(' <a href="#expr" title="expr">expr</a> ')' | 'UNIQUE' | '@SENSITIVE' | ( '@CREATE' | '@DELETE' ) <a href="#version_annotation" title="version_annotation">version_annotation</a> | <a href="#fk_target_options" title="fk_target_options">fk_target_options</a> )*</div></code></div>
+               <div><a href="#col_def" title="col_def">col_def</a>  ::= <a href="#misc_attrs" title="misc_attrs">misc_attrs</a> <a href="#col_name" title="col_name">col_name</a> <a href="#data_type_or_type_name" title="data_type_or_type_name">data_type_or_type_name</a> ( 'NOT' 'NULL' | 'PRIMARY' 'KEY' 'AUTOINCREMENT'? | 'DEFAULT' ( '-'? <a href="#num_literal" title="num_literal">num_literal</a> | <a href="#const_expr" title="const_expr">const_expr</a> | <a href="#str_literal" title="str_literal">str_literal</a> ) | 'COLLATE' <a href="#name" title="name">name</a> | 'CHECK' '(' <a href="#expr" title="expr">expr</a> ')' | 'UNIQUE' | '@SENSITIVE' | ( '@CREATE' | '@DELETE' ) <a href="#version_annotation" title="version_annotation">version_annotation</a> | <a href="#fk_target_options" title="fk_target_options">fk_target_options</a> )*</div></code></div>
       </p>
       <p>referenced by:
          <ul>
             <li><a href="#alter_table_add_column_stmt" title="alter_table_add_column_stmt">alter_table_add_column_stmt</a></li>
             <li><a href="#col_key_def" title="col_key_def">col_key_def</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="pk_def">pk_def:</a></p><svg width="403" height="37">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="pk_def">pk_def:</a></p><svg width="649" height="69">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -2355,25 +2420,30 @@
          </defs>
          <polygon points="9 17 1 13 1 21"></polygon>
          <polygon points="17 17 9 13 9 21"></polygon>
-         <rect x="31" y="3" width="84" height="32" rx="10"></rect>
-         <rect x="29" y="1" width="84" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="39" y="21">PRIMARY</text>
-         <rect x="135" y="3" width="46" height="32" rx="10"></rect>
-         <rect x="133" y="1" width="46" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="143" y="21">KEY</text>
-         <rect x="201" y="3" width="26" height="32" rx="10"></rect>
-         <rect x="199" y="1" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="209" y="21">(</text><a href="#name_list" title="name_list">
-            <rect x="247" y="3" width="82" height="32"></rect>
-            <rect x="245" y="1" width="82" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="255" y="21">name_list</text></a><rect x="349" y="3" width="26" height="32" rx="10"></rect>
-         <rect x="347" y="1" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="357" y="21">)</text>
-         <path class="line" d="m17 17 h2 m0 0 h10 m84 0 h10 m0 0 h10 m46 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m82 0 h10 m0 0 h10 m26 0 h10 m3 0 h-3"></path>
-         <polygon points="393 17 401 13 401 21"></polygon>
-         <polygon points="393 17 385 13 385 21"></polygon></svg><p>
+         <rect x="51" y="35" width="110" height="32" rx="10"></rect>
+         <rect x="49" y="33" width="110" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="59" y="53">CONSTRAINT</text><a href="#name" title="name">
+            <rect x="181" y="35" width="56" height="32"></rect>
+            <rect x="179" y="33" width="56" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="189" y="53">name</text></a><rect x="277" y="3" width="84" height="32" rx="10"></rect>
+         <rect x="275" y="1" width="84" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="285" y="21">PRIMARY</text>
+         <rect x="381" y="3" width="46" height="32" rx="10"></rect>
+         <rect x="379" y="1" width="46" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="389" y="21">KEY</text>
+         <rect x="447" y="3" width="26" height="32" rx="10"></rect>
+         <rect x="445" y="1" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="455" y="21">(</text><a href="#name_list" title="name_list">
+            <rect x="493" y="3" width="82" height="32"></rect>
+            <rect x="491" y="1" width="82" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="501" y="21">name_list</text></a><rect x="595" y="3" width="26" height="32" rx="10"></rect>
+         <rect x="593" y="1" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="603" y="21">)</text>
+         <path class="line" d="m17 17 h2 m20 0 h10 m0 0 h196 m-226 0 h20 m206 0 h20 m-246 0 q10 0 10 10 m226 0 q0 -10 10 -10 m-236 10 v12 m226 0 v-12 m-226 12 q0 10 10 10 m206 0 q10 0 10 -10 m-216 10 h10 m110 0 h10 m0 0 h10 m56 0 h10 m20 -32 h10 m84 0 h10 m0 0 h10 m46 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m82 0 h10 m0 0 h10 m26 0 h10 m3 0 h-3"></path>
+         <polygon points="639 17 647 13 647 21"></polygon>
+         <polygon points="639 17 631 13 631 21"></polygon></svg><p>
          <div class="ebnf"><code>
-               <div><a href="#pk_def" title="pk_def">pk_def</a>   ::= 'PRIMARY' 'KEY' '(' <a href="#name_list" title="name_list">name_list</a> ')'</div></code></div>
+               <div><a href="#pk_def" title="pk_def">pk_def</a>   ::= ( 'CONSTRAINT' <a href="#name" title="name">name</a> )? 'PRIMARY' 'KEY' '(' <a href="#name_list" title="name_list">name_list</a> ')'</div></code></div>
       </p>
       <p>referenced by:
          <ul>
@@ -2716,7 +2786,7 @@
          <ul>
             <li><a href="#fk_deferred_options" title="fk_deferred_options">fk_deferred_options</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="fk_def">fk_def:</a></p><svg width="555" height="37">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="fk_def">fk_def:</a></p><svg width="801" height="69">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -2748,27 +2818,32 @@
          </defs>
          <polygon points="9 17 1 13 1 21"></polygon>
          <polygon points="17 17 9 13 9 21"></polygon>
-         <rect x="31" y="3" width="82" height="32" rx="10"></rect>
-         <rect x="29" y="1" width="82" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="39" y="21">FOREIGN</text>
-         <rect x="133" y="3" width="46" height="32" rx="10"></rect>
-         <rect x="131" y="1" width="46" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="141" y="21">KEY</text>
-         <rect x="199" y="3" width="26" height="32" rx="10"></rect>
-         <rect x="197" y="1" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="207" y="21">(</text><a href="#name_list" title="name_list">
-            <rect x="245" y="3" width="82" height="32"></rect>
-            <rect x="243" y="1" width="82" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="253" y="21">name_list</text></a><rect x="347" y="3" width="26" height="32" rx="10"></rect>
-         <rect x="345" y="1" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="355" y="21">)</text><a href="#fk_target_options" title="fk_target_options">
-            <rect x="393" y="3" width="134" height="32"></rect>
-            <rect x="391" y="1" width="134" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="401" y="21">fk_target_options</text></a><path class="line" d="m17 17 h2 m0 0 h10 m82 0 h10 m0 0 h10 m46 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m82 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m134 0 h10 m3 0 h-3"></path>
-         <polygon points="545 17 553 13 553 21"></polygon>
-         <polygon points="545 17 537 13 537 21"></polygon></svg><p>
+         <rect x="51" y="35" width="110" height="32" rx="10"></rect>
+         <rect x="49" y="33" width="110" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="59" y="53">CONSTRAINT</text><a href="#name" title="name">
+            <rect x="181" y="35" width="56" height="32"></rect>
+            <rect x="179" y="33" width="56" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="189" y="53">name</text></a><rect x="277" y="3" width="82" height="32" rx="10"></rect>
+         <rect x="275" y="1" width="82" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="285" y="21">FOREIGN</text>
+         <rect x="379" y="3" width="46" height="32" rx="10"></rect>
+         <rect x="377" y="1" width="46" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="387" y="21">KEY</text>
+         <rect x="445" y="3" width="26" height="32" rx="10"></rect>
+         <rect x="443" y="1" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="453" y="21">(</text><a href="#name_list" title="name_list">
+            <rect x="491" y="3" width="82" height="32"></rect>
+            <rect x="489" y="1" width="82" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="499" y="21">name_list</text></a><rect x="593" y="3" width="26" height="32" rx="10"></rect>
+         <rect x="591" y="1" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="601" y="21">)</text><a href="#fk_target_options" title="fk_target_options">
+            <rect x="639" y="3" width="134" height="32"></rect>
+            <rect x="637" y="1" width="134" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="647" y="21">fk_target_options</text></a><path class="line" d="m17 17 h2 m20 0 h10 m0 0 h196 m-226 0 h20 m206 0 h20 m-246 0 q10 0 10 10 m226 0 q0 -10 10 -10 m-236 10 v12 m226 0 v-12 m-226 12 q0 10 10 10 m206 0 q10 0 10 -10 m-216 10 h10 m110 0 h10 m0 0 h10 m56 0 h10 m20 -32 h10 m82 0 h10 m0 0 h10 m46 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m82 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m134 0 h10 m3 0 h-3"></path>
+         <polygon points="791 17 799 13 799 21"></polygon>
+         <polygon points="791 17 783 13 783 21"></polygon></svg><p>
          <div class="ebnf"><code>
-               <div><a href="#fk_def" title="fk_def">fk_def</a>   ::= 'FOREIGN' 'KEY' '(' <a href="#name_list" title="name_list">name_list</a> ')' <a href="#fk_target_options" title="fk_target_options">fk_target_options</a></div></code></div>
+               <div><a href="#fk_def" title="fk_def">fk_def</a>   ::= ( 'CONSTRAINT' <a href="#name" title="name">name</a> )? 'FOREIGN' 'KEY' '(' <a href="#name_list" title="name_list">name_list</a> ')' <a href="#fk_target_options" title="fk_target_options">fk_target_options</a></div></code></div>
       </p>
       <p>referenced by:
          <ul>
@@ -3105,7 +3180,7 @@
          <ul>
             <li><a href="#any_stmt" title="any_stmt">any_stmt</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="name">name:</a></p><svg width="179" height="257">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="name">name:</a></p><svg width="179" height="301">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -3151,10 +3226,14 @@
          <text class="terminal" x="59" y="153">ROWID</text>
          <rect x="51" y="179" width="46" height="32" rx="10"></rect>
          <rect x="49" y="177" width="46" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="59" y="197">KEY</text><a href="#VIRTUAL" title="VIRTUAL">
-            <rect x="51" y="223" width="72" height="32"></rect>
-            <rect x="49" y="221" width="72" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="241">VIRTUAL</text></a><path class="line" d="m17 17 h2 m20 0 h10 m36 0 h10 m0 0 h44 m-120 0 h20 m100 0 h20 m-140 0 q10 0 10 10 m120 0 q0 -10 10 -10 m-130 10 v24 m120 0 v-24 m-120 24 q0 10 10 10 m100 0 q10 0 10 -10 m-110 10 h10 m54 0 h10 m0 0 h26 m-110 -10 v20 m120 0 v-20 m-120 20 v24 m120 0 v-24 m-120 24 q0 10 10 10 m100 0 q10 0 10 -10 m-110 10 h10 m80 0 h10 m-110 -10 v20 m120 0 v-20 m-120 20 v24 m120 0 v-24 m-120 24 q0 10 10 10 m100 0 q10 0 10 -10 m-110 10 h10 m70 0 h10 m0 0 h10 m-110 -10 v20 m120 0 v-20 m-120 20 v24 m120 0 v-24 m-120 24 q0 10 10 10 m100 0 q10 0 10 -10 m-110 10 h10 m46 0 h10 m0 0 h34 m-110 -10 v20 m120 0 v-20 m-120 20 v24 m120 0 v-24 m-120 24 q0 10 10 10 m100 0 q10 0 10 -10 m-110 10 h10 m72 0 h10 m0 0 h8 m23 -220 h-3"></path>
+         <text class="terminal" x="59" y="197">KEY</text>
+         <rect x="51" y="223" width="80" height="32" rx="10"></rect>
+         <rect x="49" y="221" width="80" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="59" y="241">VIRTUAL</text>
+         <rect x="51" y="267" width="54" height="32" rx="10"></rect>
+         <rect x="49" y="265" width="54" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="59" y="285">TYPE</text>
+         <path class="line" d="m17 17 h2 m20 0 h10 m36 0 h10 m0 0 h44 m-120 0 h20 m100 0 h20 m-140 0 q10 0 10 10 m120 0 q0 -10 10 -10 m-130 10 v24 m120 0 v-24 m-120 24 q0 10 10 10 m100 0 q10 0 10 -10 m-110 10 h10 m54 0 h10 m0 0 h26 m-110 -10 v20 m120 0 v-20 m-120 20 v24 m120 0 v-24 m-120 24 q0 10 10 10 m100 0 q10 0 10 -10 m-110 10 h10 m80 0 h10 m-110 -10 v20 m120 0 v-20 m-120 20 v24 m120 0 v-24 m-120 24 q0 10 10 10 m100 0 q10 0 10 -10 m-110 10 h10 m70 0 h10 m0 0 h10 m-110 -10 v20 m120 0 v-20 m-120 20 v24 m120 0 v-24 m-120 24 q0 10 10 10 m100 0 q10 0 10 -10 m-110 10 h10 m46 0 h10 m0 0 h34 m-110 -10 v20 m120 0 v-20 m-120 20 v24 m120 0 v-24 m-120 24 q0 10 10 10 m100 0 q10 0 10 -10 m-110 10 h10 m80 0 h10 m-110 -10 v20 m120 0 v-20 m-120 20 v24 m120 0 v-24 m-120 24 q0 10 10 10 m100 0 q10 0 10 -10 m-110 10 h10 m54 0 h10 m0 0 h26 m23 -264 h-3"></path>
          <polygon points="169 17 177 13 177 21"></polygon>
          <polygon points="169 17 161 13 161 21"></polygon></svg><p>
          <div class="ebnf"><code>
@@ -3163,7 +3242,8 @@
                <div>           | 'TRIGGER'</div>
                <div>           | 'ROWID'</div>
                <div>           | 'KEY'</div>
-               <div>           | <a href="#VIRTUAL" title="VIRTUAL">VIRTUAL</a></div></code></div>
+               <div>           | 'VIRTUAL'</div>
+               <div>           | 'TYPE'</div></code></div>
       </p>
       <p>referenced by:
          <ul>
@@ -3173,6 +3253,7 @@
             <li><a href="#begin_schema_region_stmt" title="begin_schema_region_stmt">begin_schema_region_stmt</a></li>
             <li><a href="#call" title="call">call</a></li>
             <li><a href="#call_stmt" title="call_stmt">call_stmt</a></li>
+            <li><a href="#check_def" title="check_def">check_def</a></li>
             <li><a href="#close_stmt" title="close_stmt">close_stmt</a></li>
             <li><a href="#col_def" title="col_def">col_def</a></li>
             <li><a href="#col_name" title="col_name">col_name</a></li>
@@ -3181,7 +3262,7 @@
             <li><a href="#create_table_stmt" title="create_table_stmt">create_table_stmt</a></li>
             <li><a href="#create_view_stmt" title="create_view_stmt">create_view_stmt</a></li>
             <li><a href="#create_virtual_table_stmt" title="create_virtual_table_stmt">create_virtual_table_stmt</a></li>
-            <li><a href="#cte_decl" title="cte_decl">cte_decl</a></li>
+            <li><a href="#cte_table" title="cte_table">cte_table</a></li>
             <li><a href="#declare_deployable_region_stmt" title="declare_deployable_region_stmt">declare_deployable_region_stmt</a></li>
             <li><a href="#declare_enum_stmt" title="declare_enum_stmt">declare_enum_stmt</a></li>
             <li><a href="#declare_func_stmt" title="declare_func_stmt">declare_func_stmt</a></li>
@@ -3199,6 +3280,7 @@
             <li><a href="#fetch_call_stmt" title="fetch_call_stmt">fetch_call_stmt</a></li>
             <li><a href="#fetch_stmt" title="fetch_stmt">fetch_stmt</a></li>
             <li><a href="#fetch_values_stmt" title="fetch_values_stmt">fetch_values_stmt</a></li>
+            <li><a href="#fk_def" title="fk_def">fk_def</a></li>
             <li><a href="#fk_target_options" title="fk_target_options">fk_target_options</a></li>
             <li><a href="#from_shape" title="from_shape">from_shape</a></li>
             <li><a href="#indexed_column" title="indexed_column">indexed_column</a></li>
@@ -3212,10 +3294,9 @@
             <li><a href="#out_stmt" title="out_stmt">out_stmt</a></li>
             <li><a href="#out_union_stmt" title="out_union_stmt">out_union_stmt</a></li>
             <li><a href="#param" title="param">param</a></li>
+            <li><a href="#pk_def" title="pk_def">pk_def</a></li>
             <li><a href="#region_spec" title="region_spec">region_spec</a></li>
-            <li><a href="#release_savepoint_stmt" title="release_savepoint_stmt">release_savepoint_stmt</a></li>
-            <li><a href="#rollback_trans_stmt" title="rollback_trans_stmt">rollback_trans_stmt</a></li>
-            <li><a href="#savepoint_stmt" title="savepoint_stmt">savepoint_stmt</a></li>
+            <li><a href="#savepoint_name" title="savepoint_name">savepoint_name</a></li>
             <li><a href="#select_expr" title="select_expr">select_expr</a></li>
             <li><a href="#set_stmt" title="set_stmt">set_stmt</a></li>
             <li><a href="#shape_arguments" title="shape_arguments">shape_arguments</a></li>
@@ -3324,7 +3405,7 @@
       </p>
       <p>referenced by:
          <ul>
-            <li><a href="#cte_decl" title="cte_decl">cte_decl</a></li>
+            <li><a href="#cte_table" title="cte_table">cte_table</a></li>
             <li><a href="#declare_stmt" title="declare_stmt">declare_stmt</a></li>
             <li><a href="#fetch_stmt" title="fetch_stmt">fetch_stmt</a></li>
             <li><a href="#fk_def" title="fk_def">fk_def</a></li>
@@ -3630,11 +3711,10 @@
       </p>
       <p>referenced by:
          <ul>
-            <li><a href="#col_def" title="col_def">col_def</a></li>
             <li><a href="#data_type_opt_notnull" title="data_type_opt_notnull">data_type_opt_notnull</a></li>
-            <li><a href="#expr" title="expr">expr</a></li>
+            <li><a href="#data_type_or_type_name" title="data_type_or_type_name">data_type_or_type_name</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="data_type_opt_notnull">data_type_opt_notnull:</a></p><svg width="493" height="177">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="data_type_or_type_name">data_type_or_type_name:</a></p><svg width="183" height="81">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -3666,32 +3746,86 @@
          </defs>
          <polygon points="9 17 1 13 1 21"></polygon>
          <polygon points="17 17 9 13 9 21"></polygon><a href="#data_type" title="data_type">
-            <rect x="31" y="3" width="84" height="32"></rect>
-            <rect x="29" y="1" width="84" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="39" y="21">data_type</text></a><rect x="155" y="35" width="48" height="32" rx="10"></rect>
-         <rect x="153" y="33" width="48" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="163" y="53">NOT</text>
-         <rect x="223" y="35" width="56" height="32" rx="10"></rect>
-         <rect x="221" y="33" width="56" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="231" y="53">NULL</text>
-         <rect x="319" y="67" width="106" height="32" rx="10"></rect>
-         <rect x="317" y="65" width="106" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="327" y="85">@SENSITIVE</text>
-         <rect x="155" y="111" width="106" height="32" rx="10"></rect>
-         <rect x="153" y="109" width="106" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="163" y="129">@SENSITIVE</text>
-         <rect x="301" y="143" width="48" height="32" rx="10"></rect>
-         <rect x="299" y="141" width="48" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="309" y="161">NOT</text>
-         <rect x="369" y="143" width="56" height="32" rx="10"></rect>
-         <rect x="367" y="141" width="56" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="377" y="161">NULL</text>
-         <path class="line" d="m17 17 h2 m0 0 h10 m84 0 h10 m20 0 h10 m0 0 h300 m-330 0 h20 m310 0 h20 m-350 0 q10 0 10 10 m330 0 q0 -10 10 -10 m-340 10 v12 m330 0 v-12 m-330 12 q0 10 10 10 m310 0 q10 0 10 -10 m-320 10 h10 m48 0 h10 m0 0 h10 m56 0 h10 m20 0 h10 m0 0 h116 m-146 0 h20 m126 0 h20 m-166 0 q10 0 10 10 m146 0 q0 -10 10 -10 m-156 10 v12 m146 0 v-12 m-146 12 q0 10 10 10 m126 0 q10 0 10 -10 m-136 10 h10 m106 0 h10 m-300 -42 v20 m330 0 v-20 m-330 20 v56 m330 0 v-56 m-330 56 q0 10 10 10 m310 0 q10 0 10 -10 m-320 10 h10 m106 0 h10 m20 0 h10 m0 0 h134 m-164 0 h20 m144 0 h20 m-184 0 q10 0 10 10 m164 0 q0 -10 10 -10 m-174 10 v12 m164 0 v-12 m-164 12 q0 10 10 10 m144 0 q10 0 10 -10 m-154 10 h10 m48 0 h10 m0 0 h10 m56 0 h10 m43 -140 h-3"></path>
-         <polygon points="483 17 491 13 491 21"></polygon>
-         <polygon points="483 17 475 13 475 21"></polygon></svg><p>
+            <rect x="51" y="3" width="84" height="32"></rect>
+            <rect x="49" y="1" width="84" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="21">data_type</text></a><rect x="51" y="47" width="36" height="32" rx="10"></rect>
+         <rect x="49" y="45" width="36" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="59" y="65">ID</text>
+         <path class="line" d="m17 17 h2 m20 0 h10 m84 0 h10 m-124 0 h20 m104 0 h20 m-144 0 q10 0 10 10 m124 0 q0 -10 10 -10 m-134 10 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m36 0 h10 m0 0 h48 m23 -44 h-3"></path>
+         <polygon points="173 17 181 13 181 21"></polygon>
+         <polygon points="173 17 165 13 165 21"></polygon></svg><p>
+         <div class="ebnf"><code>
+               <div><a href="#data_type_or_type_name" title="data_type_or_type_name">data_type_or_type_name</a></div>
+               <div>         ::= <a href="#data_type" title="data_type">data_type</a></div>
+               <div>           | 'ID'</div></code></div>
+      </p>
+      <p>referenced by:
+         <ul>
+            <li><a href="#col_def" title="col_def">col_def</a></li>
+            <li><a href="#expr" title="expr">expr</a></li>
+         </ul>
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="data_type_opt_notnull">data_type_opt_notnull:</a></p><svg width="533" height="221">
+         <defs>
+            <style type="text/css">
+    @namespace "http://www.w3.org/2000/svg";
+    .line                 {fill: none; stroke: #332900; stroke-width: 1;}
+    .bold-line            {stroke: #141000; shape-rendering: crispEdges; stroke-width: 2;}
+    .thin-line            {stroke: #1F1800; shape-rendering: crispEdges}
+    .filled               {fill: #332900; stroke: none;}
+    text.terminal         {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #141000;
+                            font-weight: bold;
+                          }
+    text.nonterminal      {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #1A1400;
+                            font-weight: normal;
+                          }
+    text.regexp           {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #1F1800;
+                            font-weight: normal;
+                          }
+    rect, circle, polygon {fill: #332900; stroke: #332900;}
+    rect.terminal         {fill: #FFDB4D; stroke: #332900; stroke-width: 1;}
+    rect.nonterminal      {fill: #FFEC9E; stroke: #332900; stroke-width: 1;}
+    rect.text             {fill: none; stroke: none;}
+    polygon.regexp        {fill: #FFF4C7; stroke: #332900; stroke-width: 1;}
+  </style>
+         </defs>
+         <polygon points="9 17 1 13 1 21"></polygon>
+         <polygon points="17 17 9 13 9 21"></polygon><a href="#data_type" title="data_type">
+            <rect x="51" y="3" width="84" height="32"></rect>
+            <rect x="49" y="1" width="84" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="21">data_type</text></a><rect x="175" y="35" width="48" height="32" rx="10"></rect>
+         <rect x="173" y="33" width="48" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="183" y="53">NOT</text>
+         <rect x="243" y="35" width="56" height="32" rx="10"></rect>
+         <rect x="241" y="33" width="56" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="251" y="53">NULL</text>
+         <rect x="339" y="67" width="106" height="32" rx="10"></rect>
+         <rect x="337" y="65" width="106" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="347" y="85">@SENSITIVE</text>
+         <rect x="175" y="111" width="106" height="32" rx="10"></rect>
+         <rect x="173" y="109" width="106" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="183" y="129">@SENSITIVE</text>
+         <rect x="321" y="143" width="48" height="32" rx="10"></rect>
+         <rect x="319" y="141" width="48" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="329" y="161">NOT</text>
+         <rect x="389" y="143" width="56" height="32" rx="10"></rect>
+         <rect x="387" y="141" width="56" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="397" y="161">NULL</text>
+         <rect x="51" y="187" width="36" height="32" rx="10"></rect>
+         <rect x="49" y="185" width="36" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="59" y="205">ID</text>
+         <path class="line" d="m17 17 h2 m20 0 h10 m84 0 h10 m20 0 h10 m0 0 h300 m-330 0 h20 m310 0 h20 m-350 0 q10 0 10 10 m330 0 q0 -10 10 -10 m-340 10 v12 m330 0 v-12 m-330 12 q0 10 10 10 m310 0 q10 0 10 -10 m-320 10 h10 m48 0 h10 m0 0 h10 m56 0 h10 m20 0 h10 m0 0 h116 m-146 0 h20 m126 0 h20 m-166 0 q10 0 10 10 m146 0 q0 -10 10 -10 m-156 10 v12 m146 0 v-12 m-146 12 q0 10 10 10 m126 0 q10 0 10 -10 m-136 10 h10 m106 0 h10 m-300 -42 v20 m330 0 v-20 m-330 20 v56 m330 0 v-56 m-330 56 q0 10 10 10 m310 0 q10 0 10 -10 m-320 10 h10 m106 0 h10 m20 0 h10 m0 0 h134 m-164 0 h20 m144 0 h20 m-184 0 q10 0 10 10 m164 0 q0 -10 10 -10 m-174 10 v12 m164 0 v-12 m-164 12 q0 10 10 10 m144 0 q10 0 10 -10 m-154 10 h10 m48 0 h10 m0 0 h10 m56 0 h10 m-434 -140 h20 m454 0 h20 m-494 0 q10 0 10 10 m474 0 q0 -10 10 -10 m-484 10 v164 m474 0 v-164 m-474 164 q0 10 10 10 m454 0 q10 0 10 -10 m-464 10 h10 m36 0 h10 m0 0 h398 m23 -184 h-3"></path>
+         <polygon points="523 17 531 13 531 21"></polygon>
+         <polygon points="523 17 515 13 515 21"></polygon></svg><p>
          <div class="ebnf"><code>
                <div><a href="#data_type_opt_notnull" title="data_type_opt_notnull">data_type_opt_notnull</a></div>
-               <div>         ::= <a href="#data_type" title="data_type">data_type</a> ( 'NOT' 'NULL' '@SENSITIVE'? | '@SENSITIVE' ( 'NOT' 'NULL' )? )?</div></code></div>
+               <div>         ::= <a href="#data_type" title="data_type">data_type</a> ( 'NOT' 'NULL' '@SENSITIVE'? | '@SENSITIVE' ( 'NOT' 'NULL' )? )?</div>
+               <div>           | 'ID'</div></code></div>
       </p>
       <p>referenced by:
          <ul>
@@ -4435,13 +4569,13 @@
             <rect x="171" y="1639" width="48" height="32" class="nonterminal"></rect>
             <text class="nonterminal" x="181" y="1659">expr</text></a><rect x="241" y="1641" width="38" height="32" rx="10"></rect>
          <rect x="239" y="1639" width="38" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="249" y="1659">AS</text><a href="#data_type" title="data_type">
-            <rect x="299" y="1641" width="84" height="32"></rect>
-            <rect x="297" y="1639" width="84" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="307" y="1659">data_type</text></a><rect x="403" y="1641" width="26" height="32" rx="10"></rect>
-         <rect x="401" y="1639" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="411" y="1659">)</text>
-         <path class="line" d="m17 17 h2 m20 0 h10 m88 0 h10 m0 0 h658 m-786 0 h20 m766 0 h20 m-806 0 q10 0 10 10 m786 0 q0 -10 10 -10 m-796 10 v24 m786 0 v-24 m-786 24 q0 10 10 10 m766 0 q10 0 10 -10 m-776 10 h10 m48 0 h10 m40 0 h10 m30 0 h10 m0 0 h54 m-124 0 h20 m104 0 h20 m-144 0 q10 0 10 10 m124 0 q0 -10 10 -10 m-134 10 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m26 0 h10 m0 0 h58 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m40 0 h10 m0 0 h44 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m40 0 h10 m0 0 h44 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m30 0 h10 m0 0 h54 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m26 0 h10 m0 0 h58 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m28 0 h10 m0 0 h56 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m28 0 h10 m0 0 h56 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m34 0 h10 m0 0 h50 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m48 0 h10 m0 0 h36 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m40 0 h10 m0 0 h44 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m30 0 h10 m0 0 h54 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m40 0 h10 m0 0 h44 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m30 0 h10 m0 0 h54 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m30 0 h10 m0 0 h54 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m40 0 h10 m0 0 h44 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m34 0 h10 m0 0 h50 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m40 0 h10 m0 0 h44 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m40 0 h10 m0 0 h44 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m52 0 h10 m0 0 h32 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m84 0 h10 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m68 0 h10 m0 0 h16 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m74 0 h10 m0 0 h10 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m58 0 h10 m0 0 h26 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m68 0 h10 m0 0 h16 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m36 0 h10 m0 0 h48 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m32 0 h10 m0 0 h52 m20 -1144 h10 m48 0 h10 m0 0 h326 m-558 0 h20 m538 0 h20 m-578 0 q10 0 10 10 m558 0 q0 -10 10 -10 m-568 10 v1168 m558 0 v-1168 m-558 1168 q0 10 10 10 m538 0 q10 0 10 -10 m-548 10 h10 m82 0 h10 m0 0 h10 m56 0 h10 m0 0 h360 m-548 -10 v20 m558 0 v-20 m-558 20 v24 m558 0 v-24 m-558 24 q0 10 10 10 m538 0 q10 0 10 -10 m-528 10 h10 m0 0 h58 m-88 0 h20 m68 0 h20 m-108 0 q10 0 10 10 m88 0 q0 -10 10 -10 m-98 10 v12 m88 0 v-12 m-88 12 q0 10 10 10 m68 0 q10 0 10 -10 m-78 10 h10 m48 0 h10 m40 -32 h10 m36 0 h10 m0 0 h10 m26 0 h10 m20 0 h10 m74 0 h10 m0 0 h20 m-134 0 h20 m114 0 h20 m-154 0 q10 0 10 10 m134 0 q0 -10 10 -10 m-144 10 v24 m134 0 v-24 m-134 24 q0 10 10 10 m114 0 q10 0 10 -10 m-124 10 h10 m94 0 h10 m20 -44 h10 m26 0 h10 m0 0 h88 m-410 0 h20 m390 0 h20 m-430 0 q10 0 10 10 m410 0 q0 -10 10 -10 m-420 10 v68 m410 0 v-68 m-410 68 q0 10 10 10 m390 0 q10 0 10 -10 m-400 10 h10 m86 0 h10 m0 0 h10 m88 0 h10 m0 0 h10 m48 0 h10 m0 0 h10 m88 0 h10 m40 -1320 h120 m-776 -10 v20 m786 0 v-20 m-786 20 v1344 m786 0 v-1344 m-786 1344 q0 10 10 10 m766 0 q10 0 10 -10 m-756 10 h10 m26 0 h10 m0 0 h22 m-88 0 h20 m68 0 h20 m-108 0 q10 0 10 10 m88 0 q0 -10 10 -10 m-98 10 v24 m88 0 v-24 m-88 24 q0 10 10 10 m68 0 q10 0 10 -10 m-78 10 h10 m48 0 h10 m-78 -10 v20 m88 0 v-20 m-88 20 v24 m88 0 v-24 m-88 24 q0 10 10 10 m68 0 q10 0 10 -10 m-78 10 h10 m30 0 h10 m0 0 h18 m20 -88 h10 m48 0 h10 m0 0 h590 m-776 -10 v20 m786 0 v-20 m-786 20 v134 m786 0 v-134 m-786 134 q0 10 10 10 m766 0 q10 0 10 -10 m-776 10 h10 m56 0 h10 m20 0 h10 m0 0 h58 m-88 0 h20 m68 0 h20 m-108 0 q10 0 10 10 m88 0 q0 -10 10 -10 m-98 10 v12 m88 0 v-12 m-88 12 q0 10 10 10 m68 0 q10 0 10 -10 m-78 10 h10 m48 0 h10 m40 -32 h10 m62 0 h10 m0 0 h10 m48 0 h10 m0 0 h10 m56 0 h10 m0 0 h10 m48 0 h10 m-314 0 l20 0 m-1 0 q-9 0 -9 -10 l0 -12 q0 -10 10 -10 m294 32 l20 0 m-20 0 q10 0 10 -10 l0 -12 q0 -10 -10 -10 m-294 0 h10 m0 0 h284 m40 32 h10 m0 0 h130 m-160 0 h20 m140 0 h20 m-180 0 q10 0 10 10 m160 0 q0 -10 10 -10 m-170 10 v12 m160 0 v-12 m-160 12 q0 10 10 10 m140 0 q10 0 10 -10 m-150 10 h10 m52 0 h10 m0 0 h10 m48 0 h10 m20 -32 h10 m48 0 h10 m-776 -10 v20 m786 0 v-20 m-786 20 v56 m786 0 v-56 m-786 56 q0 10 10 10 m766 0 q10 0 10 -10 m-776 10 h10 m56 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m48 0 h10 m0 0 h10 m38 0 h10 m0 0 h10 m84 0 h10 m0 0 h10 m26 0 h10 m0 0 h368 m23 -1638 h-3"></path>
+         <text class="terminal" x="249" y="1659">AS</text><a href="#data_type_or_type_name" title="data_type_or_type_name">
+            <rect x="299" y="1641" width="186" height="32"></rect>
+            <rect x="297" y="1639" width="186" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="307" y="1659">data_type_or_type_name</text></a><rect x="505" y="1641" width="26" height="32" rx="10"></rect>
+         <rect x="503" y="1639" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="513" y="1659">)</text>
+         <path class="line" d="m17 17 h2 m20 0 h10 m88 0 h10 m0 0 h658 m-786 0 h20 m766 0 h20 m-806 0 q10 0 10 10 m786 0 q0 -10 10 -10 m-796 10 v24 m786 0 v-24 m-786 24 q0 10 10 10 m766 0 q10 0 10 -10 m-776 10 h10 m48 0 h10 m40 0 h10 m30 0 h10 m0 0 h54 m-124 0 h20 m104 0 h20 m-144 0 q10 0 10 10 m124 0 q0 -10 10 -10 m-134 10 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m26 0 h10 m0 0 h58 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m40 0 h10 m0 0 h44 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m40 0 h10 m0 0 h44 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m30 0 h10 m0 0 h54 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m26 0 h10 m0 0 h58 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m28 0 h10 m0 0 h56 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m28 0 h10 m0 0 h56 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m34 0 h10 m0 0 h50 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m48 0 h10 m0 0 h36 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m40 0 h10 m0 0 h44 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m30 0 h10 m0 0 h54 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m40 0 h10 m0 0 h44 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m30 0 h10 m0 0 h54 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m30 0 h10 m0 0 h54 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m40 0 h10 m0 0 h44 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m34 0 h10 m0 0 h50 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m40 0 h10 m0 0 h44 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m40 0 h10 m0 0 h44 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m52 0 h10 m0 0 h32 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m84 0 h10 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m68 0 h10 m0 0 h16 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m74 0 h10 m0 0 h10 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m58 0 h10 m0 0 h26 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m68 0 h10 m0 0 h16 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m36 0 h10 m0 0 h48 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m32 0 h10 m0 0 h52 m20 -1144 h10 m48 0 h10 m0 0 h326 m-558 0 h20 m538 0 h20 m-578 0 q10 0 10 10 m558 0 q0 -10 10 -10 m-568 10 v1168 m558 0 v-1168 m-558 1168 q0 10 10 10 m538 0 q10 0 10 -10 m-548 10 h10 m82 0 h10 m0 0 h10 m56 0 h10 m0 0 h360 m-548 -10 v20 m558 0 v-20 m-558 20 v24 m558 0 v-24 m-558 24 q0 10 10 10 m538 0 q10 0 10 -10 m-528 10 h10 m0 0 h58 m-88 0 h20 m68 0 h20 m-108 0 q10 0 10 10 m88 0 q0 -10 10 -10 m-98 10 v12 m88 0 v-12 m-88 12 q0 10 10 10 m68 0 q10 0 10 -10 m-78 10 h10 m48 0 h10 m40 -32 h10 m36 0 h10 m0 0 h10 m26 0 h10 m20 0 h10 m74 0 h10 m0 0 h20 m-134 0 h20 m114 0 h20 m-154 0 q10 0 10 10 m134 0 q0 -10 10 -10 m-144 10 v24 m134 0 v-24 m-134 24 q0 10 10 10 m114 0 q10 0 10 -10 m-124 10 h10 m94 0 h10 m20 -44 h10 m26 0 h10 m0 0 h88 m-410 0 h20 m390 0 h20 m-430 0 q10 0 10 10 m410 0 q0 -10 10 -10 m-420 10 v68 m410 0 v-68 m-410 68 q0 10 10 10 m390 0 q10 0 10 -10 m-400 10 h10 m86 0 h10 m0 0 h10 m88 0 h10 m0 0 h10 m48 0 h10 m0 0 h10 m88 0 h10 m40 -1320 h120 m-776 -10 v20 m786 0 v-20 m-786 20 v1344 m786 0 v-1344 m-786 1344 q0 10 10 10 m766 0 q10 0 10 -10 m-756 10 h10 m26 0 h10 m0 0 h22 m-88 0 h20 m68 0 h20 m-108 0 q10 0 10 10 m88 0 q0 -10 10 -10 m-98 10 v24 m88 0 v-24 m-88 24 q0 10 10 10 m68 0 q10 0 10 -10 m-78 10 h10 m48 0 h10 m-78 -10 v20 m88 0 v-20 m-88 20 v24 m88 0 v-24 m-88 24 q0 10 10 10 m68 0 q10 0 10 -10 m-78 10 h10 m30 0 h10 m0 0 h18 m20 -88 h10 m48 0 h10 m0 0 h590 m-776 -10 v20 m786 0 v-20 m-786 20 v134 m786 0 v-134 m-786 134 q0 10 10 10 m766 0 q10 0 10 -10 m-776 10 h10 m56 0 h10 m20 0 h10 m0 0 h58 m-88 0 h20 m68 0 h20 m-108 0 q10 0 10 10 m88 0 q0 -10 10 -10 m-98 10 v12 m88 0 v-12 m-88 12 q0 10 10 10 m68 0 q10 0 10 -10 m-78 10 h10 m48 0 h10 m40 -32 h10 m62 0 h10 m0 0 h10 m48 0 h10 m0 0 h10 m56 0 h10 m0 0 h10 m48 0 h10 m-314 0 l20 0 m-1 0 q-9 0 -9 -10 l0 -12 q0 -10 10 -10 m294 32 l20 0 m-20 0 q10 0 10 -10 l0 -12 q0 -10 -10 -10 m-294 0 h10 m0 0 h284 m40 32 h10 m0 0 h130 m-160 0 h20 m140 0 h20 m-180 0 q10 0 10 10 m160 0 q0 -10 10 -10 m-170 10 v12 m160 0 v-12 m-160 12 q0 10 10 10 m140 0 q10 0 10 -10 m-150 10 h10 m52 0 h10 m0 0 h10 m48 0 h10 m20 -32 h10 m48 0 h10 m-776 -10 v20 m786 0 v-20 m-786 20 v56 m786 0 v-56 m-786 56 q0 10 10 10 m766 0 q10 0 10 -10 m-776 10 h10 m56 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m48 0 h10 m0 0 h10 m38 0 h10 m0 0 h10 m186 0 h10 m0 0 h10 m26 0 h10 m0 0 h266 m23 -1638 h-3"></path>
          <polygon points="835 17 843 13 843 21"></polygon>
          <polygon points="835 17 827 13 827 21"></polygon></svg><p>
          <div class="ebnf"><code>
@@ -4451,13 +4585,14 @@
                   | 'GLOB' | 'IS NOT' | 'IS' | '||' ) <a href="#expr" title="expr">expr</a> | 'COLLATE' <a href="#name" title="name">name</a> | 'NOT'? ( 'IN' '(' ( <a href="#expr_list" title="expr_list">expr_list</a> | <a href="#select_stmt" title="select_stmt">select_stmt</a> ) ')' | 'BETWEEN' <a href="#math_expr" title="math_expr">math_expr</a> 'AND' <a href="#math_expr" title="math_expr">math_expr</a> ) )</div>
                <div>           | ( '-' | 'NOT' | '~' ) <a href="#expr" title="expr">expr</a></div>
                <div>           | 'CASE' <a href="#expr" title="expr">expr</a>? ( 'WHEN' <a href="#expr" title="expr">expr</a> 'THEN' <a href="#expr" title="expr">expr</a> )+ ( 'ELSE' <a href="#expr" title="expr">expr</a> )? 'END'</div>
-               <div>           | 'CAST' '(' <a href="#expr" title="expr">expr</a> 'AS' <a href="#data_type" title="data_type">data_type</a> ')'</div></code></div>
+               <div>           | 'CAST' '(' <a href="#expr" title="expr">expr</a> 'AS' <a href="#data_type_or_type_name" title="data_type_or_type_name">data_type_or_type_name</a> ')'</div></code></div>
       </p>
       <p>referenced by:
          <ul>
             <li><a href="#arg_expr" title="arg_expr">arg_expr</a></li>
             <li><a href="#basic_expr" title="basic_expr">basic_expr</a></li>
             <li><a href="#call_expr" title="call_expr">call_expr</a></li>
+            <li><a href="#check_def" title="check_def">check_def</a></li>
             <li><a href="#col_def" title="col_def">col_def</a></li>
             <li><a href="#const_expr" title="const_expr">const_expr</a></li>
             <li><a href="#elseif_item" title="elseif_item">elseif_item</a></li>
@@ -4739,63 +4874,7 @@
          <ul>
             <li><a href="#call_stmt" title="call_stmt">call_stmt</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="cte_table">cte_table:</a></p><svg width="453" height="37">
-         <defs>
-            <style type="text/css">
-    @namespace "http://www.w3.org/2000/svg";
-    .line                 {fill: none; stroke: #332900; stroke-width: 1;}
-    .bold-line            {stroke: #141000; shape-rendering: crispEdges; stroke-width: 2;}
-    .thin-line            {stroke: #1F1800; shape-rendering: crispEdges}
-    .filled               {fill: #332900; stroke: none;}
-    text.terminal         {font-family: Verdana, Sans-serif;
-                            font-size: 12px;
-                            fill: #141000;
-                            font-weight: bold;
-                          }
-    text.nonterminal      {font-family: Verdana, Sans-serif;
-                            font-size: 12px;
-                            fill: #1A1400;
-                            font-weight: normal;
-                          }
-    text.regexp           {font-family: Verdana, Sans-serif;
-                            font-size: 12px;
-                            fill: #1F1800;
-                            font-weight: normal;
-                          }
-    rect, circle, polygon {fill: #332900; stroke: #332900;}
-    rect.terminal         {fill: #FFDB4D; stroke: #332900; stroke-width: 1;}
-    rect.nonterminal      {fill: #FFEC9E; stroke: #332900; stroke-width: 1;}
-    rect.text             {fill: none; stroke: none;}
-    polygon.regexp        {fill: #FFF4C7; stroke: #332900; stroke-width: 1;}
-  </style>
-         </defs>
-         <polygon points="9 17 1 13 1 21"></polygon>
-         <polygon points="17 17 9 13 9 21"></polygon><a href="#cte_decl" title="cte_decl">
-            <rect x="31" y="3" width="72" height="32"></rect>
-            <rect x="29" y="1" width="72" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="39" y="21">cte_decl</text></a><rect x="123" y="3" width="38" height="32" rx="10"></rect>
-         <rect x="121" y="1" width="38" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="131" y="21">AS</text>
-         <rect x="181" y="3" width="26" height="32" rx="10"></rect>
-         <rect x="179" y="1" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="189" y="21">(</text><a href="#select_stmt_no_with" title="select_stmt_no_with">
-            <rect x="227" y="3" width="152" height="32"></rect>
-            <rect x="225" y="1" width="152" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="235" y="21">select_stmt_no_with</text></a><rect x="399" y="3" width="26" height="32" rx="10"></rect>
-         <rect x="397" y="1" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="407" y="21">)</text>
-         <path class="line" d="m17 17 h2 m0 0 h10 m72 0 h10 m0 0 h10 m38 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m152 0 h10 m0 0 h10 m26 0 h10 m3 0 h-3"></path>
-         <polygon points="443 17 451 13 451 21"></polygon>
-         <polygon points="443 17 435 13 435 21"></polygon></svg><p>
-         <div class="ebnf"><code>
-               <div><a href="#cte_table" title="cte_table">cte_table</a></div>
-               <div>         ::= <a href="#cte_decl" title="cte_decl">cte_decl</a> 'AS' '(' <a href="#select_stmt_no_with" title="select_stmt_no_with">select_stmt_no_with</a> ')'</div></code></div>
-      </p>
-      <p>referenced by:
-         <ul>
-            <li><a href="#with_prefix" title="with_prefix">with_prefix</a></li>
-         </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="cte_decl">cte_decl:</a></p><svg width="349" height="81">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="cte_table">cte_table:</a></p><svg width="671" height="81">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -4840,15 +4919,27 @@
          <rect x="295" y="3" width="26" height="32" rx="10"></rect>
          <rect x="293" y="1" width="26" height="32" class="terminal" rx="10"></rect>
          <text class="terminal" x="303" y="21">)</text>
-         <path class="line" d="m17 17 h2 m0 0 h10 m56 0 h10 m0 0 h10 m26 0 h10 m20 0 h10 m82 0 h10 m-122 0 h20 m102 0 h20 m-142 0 q10 0 10 10 m122 0 q0 -10 10 -10 m-132 10 v24 m122 0 v-24 m-122 24 q0 10 10 10 m102 0 q10 0 10 -10 m-112 10 h10 m28 0 h10 m0 0 h54 m20 -44 h10 m26 0 h10 m3 0 h-3"></path>
-         <polygon points="339 17 347 13 347 21"></polygon>
-         <polygon points="339 17 331 13 331 21"></polygon></svg><p>
+         <rect x="341" y="3" width="38" height="32" rx="10"></rect>
+         <rect x="339" y="1" width="38" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="349" y="21">AS</text>
+         <rect x="399" y="3" width="26" height="32" rx="10"></rect>
+         <rect x="397" y="1" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="407" y="21">(</text><a href="#select_stmt_no_with" title="select_stmt_no_with">
+            <rect x="445" y="3" width="152" height="32"></rect>
+            <rect x="443" y="1" width="152" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="453" y="21">select_stmt_no_with</text></a><rect x="617" y="3" width="26" height="32" rx="10"></rect>
+         <rect x="615" y="1" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="625" y="21">)</text>
+         <path class="line" d="m17 17 h2 m0 0 h10 m56 0 h10 m0 0 h10 m26 0 h10 m20 0 h10 m82 0 h10 m-122 0 h20 m102 0 h20 m-142 0 q10 0 10 10 m122 0 q0 -10 10 -10 m-132 10 v24 m122 0 v-24 m-122 24 q0 10 10 10 m102 0 q10 0 10 -10 m-112 10 h10 m28 0 h10 m0 0 h54 m20 -44 h10 m26 0 h10 m0 0 h10 m38 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m152 0 h10 m0 0 h10 m26 0 h10 m3 0 h-3"></path>
+         <polygon points="661 17 669 13 669 21"></polygon>
+         <polygon points="661 17 653 13 653 21"></polygon></svg><p>
          <div class="ebnf"><code>
-               <div><a href="#cte_decl" title="cte_decl">cte_decl</a> ::= <a href="#name" title="name">name</a> '(' ( <a href="#name_list" title="name_list">name_list</a> | '*' ) ')'</div></code></div>
+               <div><a href="#cte_table" title="cte_table">cte_table</a></div>
+               <div>         ::= <a href="#name" title="name">name</a> '(' ( <a href="#name_list" title="name_list">name_list</a> | '*' ) ')' 'AS' '(' <a href="#select_stmt_no_with" title="select_stmt_no_with">select_stmt_no_with</a> ')'</div></code></div>
       </p>
       <p>referenced by:
          <ul>
-            <li><a href="#cte_table" title="cte_table">cte_table</a></li>
+            <li><a href="#with_prefix" title="with_prefix">with_prefix</a></li>
          </ul>
       </p><br /><p style="font-size: 14px; font-weight:bold"><a name="with_prefix">with_prefix:</a></p><svg width="415" height="113">
          <defs>
@@ -6332,7 +6423,7 @@
          <ul>
             <li><a href="#any_stmt" title="any_stmt">any_stmt</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="emit_enums_stmt">emit_enums_stmt:</a></p><svg width="315" height="37">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="emit_enums_stmt">emit_enums_stmt:</a></p><svg width="313" height="37">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -6363,18 +6454,18 @@
   </style>
          </defs>
          <polygon points="9 17 1 13 1 21"></polygon>
-         <polygon points="17 17 9 13 9 21"></polygon><a href="#AT_EMIT_ENUMS" title="AT_EMIT_ENUMS">
-            <rect x="31" y="3" width="126" height="32"></rect>
-            <rect x="29" y="1" width="126" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="39" y="21">AT_EMIT_ENUMS</text></a><a href="#opt_name_list" title="opt_name_list">
-            <rect x="177" y="3" width="110" height="32"></rect>
-            <rect x="175" y="1" width="110" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="185" y="21">opt_name_list</text></a><path class="line" d="m17 17 h2 m0 0 h10 m126 0 h10 m0 0 h10 m110 0 h10 m3 0 h-3"></path>
-         <polygon points="305 17 313 13 313 21"></polygon>
-         <polygon points="305 17 297 13 297 21"></polygon></svg><p>
+         <polygon points="17 17 9 13 9 21"></polygon>
+         <rect x="31" y="3" width="124" height="32" rx="10"></rect>
+         <rect x="29" y="1" width="124" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="39" y="21">@EMIT_ENUMS</text><a href="#opt_name_list" title="opt_name_list">
+            <rect x="175" y="3" width="110" height="32"></rect>
+            <rect x="173" y="1" width="110" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="183" y="21">opt_name_list</text></a><path class="line" d="m17 17 h2 m0 0 h10 m124 0 h10 m0 0 h10 m110 0 h10 m3 0 h-3"></path>
+         <polygon points="303 17 311 13 311 21"></polygon>
+         <polygon points="303 17 295 13 295 21"></polygon></svg><p>
          <div class="ebnf"><code>
                <div><a href="#emit_enums_stmt" title="emit_enums_stmt">emit_enums_stmt</a></div>
-               <div>         ::= <a href="#AT_EMIT_ENUMS" title="AT_EMIT_ENUMS">AT_EMIT_ENUMS</a> <a href="#opt_name_list" title="opt_name_list">opt_name_list</a></div></code></div>
+               <div>         ::= '@EMIT_ENUMS' <a href="#opt_name_list" title="opt_name_list">opt_name_list</a></div></code></div>
       </p>
       <p>referenced by:
          <ul>
@@ -7251,7 +7342,65 @@
             <li><a href="#join_target" title="join_target">join_target</a></li>
             <li><a href="#query_parts" title="query_parts">query_parts</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="join_target">join_target:</a></p><svg width="663" height="81">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="join_type">join_type:</a></p><svg width="329" height="189">
+         <defs>
+            <style type="text/css">
+    @namespace "http://www.w3.org/2000/svg";
+    .line                 {fill: none; stroke: #332900; stroke-width: 1;}
+    .bold-line            {stroke: #141000; shape-rendering: crispEdges; stroke-width: 2;}
+    .thin-line            {stroke: #1F1800; shape-rendering: crispEdges}
+    .filled               {fill: #332900; stroke: none;}
+    text.terminal         {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #141000;
+                            font-weight: bold;
+                          }
+    text.nonterminal      {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #1A1400;
+                            font-weight: normal;
+                          }
+    text.regexp           {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #1F1800;
+                            font-weight: normal;
+                          }
+    rect, circle, polygon {fill: #332900; stroke: #332900;}
+    rect.terminal         {fill: #FFDB4D; stroke: #332900; stroke-width: 1;}
+    rect.nonterminal      {fill: #FFEC9E; stroke: #332900; stroke-width: 1;}
+    rect.text             {fill: none; stroke: none;}
+    polygon.regexp        {fill: #FFF4C7; stroke: #332900; stroke-width: 1;}
+  </style>
+         </defs>
+         <polygon points="9 5 1 1 1 9"></polygon>
+         <polygon points="17 5 9 1 9 9"></polygon>
+         <rect x="71" y="23" width="52" height="32" rx="10"></rect>
+         <rect x="69" y="21" width="52" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="79" y="41">LEFT</text>
+         <rect x="71" y="67" width="64" height="32" rx="10"></rect>
+         <rect x="69" y="65" width="64" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="79" y="85">RIGHT</text>
+         <rect x="195" y="55" width="66" height="32" rx="10"></rect>
+         <rect x="193" y="53" width="66" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="203" y="73">OUTER</text>
+         <rect x="51" y="111" width="64" height="32" rx="10"></rect>
+         <rect x="49" y="109" width="64" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="59" y="129">INNER</text>
+         <rect x="51" y="155" width="66" height="32" rx="10"></rect>
+         <rect x="49" y="153" width="66" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="59" y="173">CROSS</text>
+         <path class="line" d="m17 5 h2 m20 0 h10 m0 0 h240 m-270 0 h20 m250 0 h20 m-290 0 q10 0 10 10 m270 0 q0 -10 10 -10 m-280 10 v12 m270 0 v-12 m-270 12 q0 10 10 10 m250 0 q10 0 10 -10 m-240 10 h10 m52 0 h10 m0 0 h12 m-104 0 h20 m84 0 h20 m-124 0 q10 0 10 10 m104 0 q0 -10 10 -10 m-114 10 v24 m104 0 v-24 m-104 24 q0 10 10 10 m84 0 q10 0 10 -10 m-94 10 h10 m64 0 h10 m40 -44 h10 m0 0 h76 m-106 0 h20 m86 0 h20 m-126 0 q10 0 10 10 m106 0 q0 -10 10 -10 m-116 10 v12 m106 0 v-12 m-106 12 q0 10 10 10 m86 0 q10 0 10 -10 m-96 10 h10 m66 0 h10 m-240 -42 v20 m270 0 v-20 m-270 20 v68 m270 0 v-68 m-270 68 q0 10 10 10 m250 0 q10 0 10 -10 m-260 10 h10 m64 0 h10 m0 0 h166 m-260 -10 v20 m270 0 v-20 m-270 20 v24 m270 0 v-24 m-270 24 q0 10 10 10 m250 0 q10 0 10 -10 m-260 10 h10 m66 0 h10 m0 0 h164 m23 -164 h-3"></path>
+         <polygon points="319 5 327 1 327 9"></polygon>
+         <polygon points="319 5 311 1 311 9"></polygon></svg><p>
+         <div class="ebnf"><code>
+               <div><a href="#join_type" title="join_type">join_type</a></div>
+               <div>         ::= ( ( 'LEFT' | 'RIGHT' ) 'OUTER'? | 'INNER' | 'CROSS' )?</div></code></div>
+      </p>
+      <p>referenced by:
+         <ul>
+            <li><a href="#join_target" title="join_target">join_target</a></li>
+         </ul>
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="join_target">join_target:</a></p><svg width="503" height="37">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -7282,178 +7431,27 @@
   </style>
          </defs>
          <polygon points="9 17 1 13 1 21"></polygon>
-         <polygon points="17 17 9 13 9 21"></polygon><a href="#opt_inner_cross" title="opt_inner_cross">
-            <rect x="51" y="3" width="122" height="32"></rect>
-            <rect x="49" y="1" width="122" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="21">opt_inner_cross</text></a><a href="#left_or_right" title="left_or_right">
-            <rect x="51" y="47" width="98" height="32"></rect>
-            <rect x="49" y="45" width="98" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="65">left_or_right</text></a><a href="#opt_outer" title="opt_outer">
-            <rect x="169" y="47" width="82" height="32"></rect>
-            <rect x="167" y="45" width="82" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="177" y="65">opt_outer</text></a><rect x="291" y="3" width="54" height="32" rx="10"></rect>
-         <rect x="289" y="1" width="54" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="299" y="21">JOIN</text><a href="#table_or_subquery" title="table_or_subquery">
-            <rect x="365" y="3" width="140" height="32"></rect>
-            <rect x="363" y="1" width="140" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="373" y="21">table_or_subquery</text></a><a href="#opt_join_cond" title="opt_join_cond">
-            <rect x="525" y="3" width="110" height="32"></rect>
-            <rect x="523" y="1" width="110" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="533" y="21">opt_join_cond</text></a><path class="line" d="m17 17 h2 m20 0 h10 m122 0 h10 m0 0 h78 m-240 0 h20 m220 0 h20 m-260 0 q10 0 10 10 m240 0 q0 -10 10 -10 m-250 10 v24 m240 0 v-24 m-240 24 q0 10 10 10 m220 0 q10 0 10 -10 m-230 10 h10 m98 0 h10 m0 0 h10 m82 0 h10 m20 -44 h10 m54 0 h10 m0 0 h10 m140 0 h10 m0 0 h10 m110 0 h10 m3 0 h-3"></path>
-         <polygon points="653 17 661 13 661 21"></polygon>
-         <polygon points="653 17 645 13 645 21"></polygon></svg><p>
+         <polygon points="17 17 9 13 9 21"></polygon><a href="#join_type" title="join_type">
+            <rect x="31" y="3" width="80" height="32"></rect>
+            <rect x="29" y="1" width="80" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="39" y="21">join_type</text></a><rect x="131" y="3" width="54" height="32" rx="10"></rect>
+         <rect x="129" y="1" width="54" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="139" y="21">JOIN</text><a href="#table_or_subquery" title="table_or_subquery">
+            <rect x="205" y="3" width="140" height="32"></rect>
+            <rect x="203" y="1" width="140" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="213" y="21">table_or_subquery</text></a><a href="#opt_join_cond" title="opt_join_cond">
+            <rect x="365" y="3" width="110" height="32"></rect>
+            <rect x="363" y="1" width="110" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="373" y="21">opt_join_cond</text></a><path class="line" d="m17 17 h2 m0 0 h10 m80 0 h10 m0 0 h10 m54 0 h10 m0 0 h10 m140 0 h10 m0 0 h10 m110 0 h10 m3 0 h-3"></path>
+         <polygon points="493 17 501 13 501 21"></polygon>
+         <polygon points="493 17 485 13 485 21"></polygon></svg><p>
          <div class="ebnf"><code>
                <div><a href="#join_target" title="join_target">join_target</a></div>
-               <div>         ::= ( <a href="#opt_inner_cross" title="opt_inner_cross">opt_inner_cross</a> | <a href="#left_or_right" title="left_or_right">left_or_right</a> <a href="#opt_outer" title="opt_outer">opt_outer</a> ) 'JOIN' <a href="#table_or_subquery" title="table_or_subquery">table_or_subquery</a> <a href="#opt_join_cond" title="opt_join_cond">opt_join_cond</a></div></code></div>
+               <div>         ::= <a href="#join_type" title="join_type">join_type</a> 'JOIN' <a href="#table_or_subquery" title="table_or_subquery">table_or_subquery</a> <a href="#opt_join_cond" title="opt_join_cond">opt_join_cond</a></div></code></div>
       </p>
       <p>referenced by:
          <ul>
             <li><a href="#join_clause" title="join_clause">join_clause</a></li>
-         </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="opt_inner_cross">opt_inner_cross:</a></p><svg width="165" height="101">
-         <defs>
-            <style type="text/css">
-    @namespace "http://www.w3.org/2000/svg";
-    .line                 {fill: none; stroke: #332900; stroke-width: 1;}
-    .bold-line            {stroke: #141000; shape-rendering: crispEdges; stroke-width: 2;}
-    .thin-line            {stroke: #1F1800; shape-rendering: crispEdges}
-    .filled               {fill: #332900; stroke: none;}
-    text.terminal         {font-family: Verdana, Sans-serif;
-                            font-size: 12px;
-                            fill: #141000;
-                            font-weight: bold;
-                          }
-    text.nonterminal      {font-family: Verdana, Sans-serif;
-                            font-size: 12px;
-                            fill: #1A1400;
-                            font-weight: normal;
-                          }
-    text.regexp           {font-family: Verdana, Sans-serif;
-                            font-size: 12px;
-                            fill: #1F1800;
-                            font-weight: normal;
-                          }
-    rect, circle, polygon {fill: #332900; stroke: #332900;}
-    rect.terminal         {fill: #FFDB4D; stroke: #332900; stroke-width: 1;}
-    rect.nonterminal      {fill: #FFEC9E; stroke: #332900; stroke-width: 1;}
-    rect.text             {fill: none; stroke: none;}
-    polygon.regexp        {fill: #FFF4C7; stroke: #332900; stroke-width: 1;}
-  </style>
-         </defs>
-         <polygon points="9 5 1 1 1 9"></polygon>
-         <polygon points="17 5 9 1 9 9"></polygon>
-         <rect x="51" y="23" width="64" height="32" rx="10"></rect>
-         <rect x="49" y="21" width="64" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="59" y="41">INNER</text>
-         <rect x="51" y="67" width="66" height="32" rx="10"></rect>
-         <rect x="49" y="65" width="66" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="59" y="85">CROSS</text>
-         <path class="line" d="m17 5 h2 m20 0 h10 m0 0 h76 m-106 0 h20 m86 0 h20 m-126 0 q10 0 10 10 m106 0 q0 -10 10 -10 m-116 10 v12 m106 0 v-12 m-106 12 q0 10 10 10 m86 0 q10 0 10 -10 m-96 10 h10 m64 0 h10 m0 0 h2 m-96 -10 v20 m106 0 v-20 m-106 20 v24 m106 0 v-24 m-106 24 q0 10 10 10 m86 0 q10 0 10 -10 m-96 10 h10 m66 0 h10 m23 -76 h-3"></path>
-         <polygon points="155 5 163 1 163 9"></polygon>
-         <polygon points="155 5 147 1 147 9"></polygon></svg><p>
-         <div class="ebnf"><code>
-               <div><a href="#opt_inner_cross" title="opt_inner_cross">opt_inner_cross</a></div>
-               <div>         ::= ( 'INNER' | 'CROSS' )?</div></code></div>
-      </p>
-      <p>referenced by:
-         <ul>
-            <li><a href="#join_target" title="join_target">join_target</a></li>
-         </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="opt_outer">opt_outer:</a></p><svg width="165" height="57">
-         <defs>
-            <style type="text/css">
-    @namespace "http://www.w3.org/2000/svg";
-    .line                 {fill: none; stroke: #332900; stroke-width: 1;}
-    .bold-line            {stroke: #141000; shape-rendering: crispEdges; stroke-width: 2;}
-    .thin-line            {stroke: #1F1800; shape-rendering: crispEdges}
-    .filled               {fill: #332900; stroke: none;}
-    text.terminal         {font-family: Verdana, Sans-serif;
-                            font-size: 12px;
-                            fill: #141000;
-                            font-weight: bold;
-                          }
-    text.nonterminal      {font-family: Verdana, Sans-serif;
-                            font-size: 12px;
-                            fill: #1A1400;
-                            font-weight: normal;
-                          }
-    text.regexp           {font-family: Verdana, Sans-serif;
-                            font-size: 12px;
-                            fill: #1F1800;
-                            font-weight: normal;
-                          }
-    rect, circle, polygon {fill: #332900; stroke: #332900;}
-    rect.terminal         {fill: #FFDB4D; stroke: #332900; stroke-width: 1;}
-    rect.nonterminal      {fill: #FFEC9E; stroke: #332900; stroke-width: 1;}
-    rect.text             {fill: none; stroke: none;}
-    polygon.regexp        {fill: #FFF4C7; stroke: #332900; stroke-width: 1;}
-  </style>
-         </defs>
-         <polygon points="9 5 1 1 1 9"></polygon>
-         <polygon points="17 5 9 1 9 9"></polygon>
-         <rect x="51" y="23" width="66" height="32" rx="10"></rect>
-         <rect x="49" y="21" width="66" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="59" y="41">OUTER</text>
-         <path class="line" d="m17 5 h2 m20 0 h10 m0 0 h76 m-106 0 h20 m86 0 h20 m-126 0 q10 0 10 10 m106 0 q0 -10 10 -10 m-116 10 v12 m106 0 v-12 m-106 12 q0 10 10 10 m86 0 q10 0 10 -10 m-96 10 h10 m66 0 h10 m23 -32 h-3"></path>
-         <polygon points="155 5 163 1 163 9"></polygon>
-         <polygon points="155 5 147 1 147 9"></polygon></svg><p>
-         <div class="ebnf"><code>
-               <div><a href="#opt_outer" title="opt_outer">opt_outer</a></div>
-               <div>         ::= 'OUTER'?</div></code></div>
-      </p>
-      <p>referenced by:
-         <ul>
-            <li><a href="#join_target" title="join_target">join_target</a></li>
-         </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="left_or_right">left_or_right:</a></p><svg width="163" height="81">
-         <defs>
-            <style type="text/css">
-    @namespace "http://www.w3.org/2000/svg";
-    .line                 {fill: none; stroke: #332900; stroke-width: 1;}
-    .bold-line            {stroke: #141000; shape-rendering: crispEdges; stroke-width: 2;}
-    .thin-line            {stroke: #1F1800; shape-rendering: crispEdges}
-    .filled               {fill: #332900; stroke: none;}
-    text.terminal         {font-family: Verdana, Sans-serif;
-                            font-size: 12px;
-                            fill: #141000;
-                            font-weight: bold;
-                          }
-    text.nonterminal      {font-family: Verdana, Sans-serif;
-                            font-size: 12px;
-                            fill: #1A1400;
-                            font-weight: normal;
-                          }
-    text.regexp           {font-family: Verdana, Sans-serif;
-                            font-size: 12px;
-                            fill: #1F1800;
-                            font-weight: normal;
-                          }
-    rect, circle, polygon {fill: #332900; stroke: #332900;}
-    rect.terminal         {fill: #FFDB4D; stroke: #332900; stroke-width: 1;}
-    rect.nonterminal      {fill: #FFEC9E; stroke: #332900; stroke-width: 1;}
-    rect.text             {fill: none; stroke: none;}
-    polygon.regexp        {fill: #FFF4C7; stroke: #332900; stroke-width: 1;}
-  </style>
-         </defs>
-         <polygon points="9 17 1 13 1 21"></polygon>
-         <polygon points="17 17 9 13 9 21"></polygon>
-         <rect x="51" y="3" width="52" height="32" rx="10"></rect>
-         <rect x="49" y="1" width="52" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="59" y="21">LEFT</text>
-         <rect x="51" y="47" width="64" height="32" rx="10"></rect>
-         <rect x="49" y="45" width="64" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="59" y="65">RIGHT</text>
-         <path class="line" d="m17 17 h2 m20 0 h10 m52 0 h10 m0 0 h12 m-104 0 h20 m84 0 h20 m-124 0 q10 0 10 10 m104 0 q0 -10 10 -10 m-114 10 v24 m104 0 v-24 m-104 24 q0 10 10 10 m84 0 q10 0 10 -10 m-94 10 h10 m64 0 h10 m23 -44 h-3"></path>
-         <polygon points="153 17 161 13 161 21"></polygon>
-         <polygon points="153 17 145 13 145 21"></polygon></svg><p>
-         <div class="ebnf"><code>
-               <div><a href="#left_or_right" title="left_or_right">left_or_right</a></div>
-               <div>         ::= 'LEFT'</div>
-               <div>           | 'RIGHT'</div></code></div>
-      </p>
-      <p>referenced by:
-         <ul>
-            <li><a href="#join_target" title="join_target">join_target</a></li>
          </ul>
       </p><br /><p style="font-size: 14px; font-weight:bold"><a name="opt_join_cond">opt_join_cond:</a></p><svg width="181" height="57">
          <defs>
@@ -9556,7 +9554,7 @@
             <li><a href="#declare_func_stmt" title="declare_func_stmt">declare_func_stmt</a></li>
             <li><a href="#declare_proc_stmt" title="declare_proc_stmt">declare_proc_stmt</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="declare_stmt">declare_stmt:</a></p><svg width="653" height="345">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="declare_stmt">declare_stmt:</a></p><svg width="693" height="389">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -9599,45 +9597,50 @@
             <text class="nonterminal" x="263" y="21">data_type_opt_notnull</text></a><a href="#name" title="name">
             <rect x="153" y="47" width="56" height="32"></rect>
             <rect x="151" y="45" width="56" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="161" y="65">name</text></a><rect x="229" y="47" width="78" height="32" rx="10"></rect>
-         <rect x="227" y="45" width="78" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="237" y="65">CURSOR</text>
-         <rect x="347" y="47" width="48" height="32" rx="10"></rect>
-         <rect x="345" y="45" width="48" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="355" y="65">FOR</text><a href="#select_stmt" title="select_stmt">
-            <rect x="435" y="47" width="94" height="32"></rect>
-            <rect x="433" y="45" width="94" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="443" y="65">select_stmt</text></a><a href="#explain_stmt" title="explain_stmt">
-            <rect x="435" y="91" width="102" height="32"></rect>
-            <rect x="433" y="89" width="102" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="443" y="109">explain_stmt</text></a><a href="#call_stmt" title="call_stmt">
-            <rect x="435" y="135" width="76" height="32"></rect>
-            <rect x="433" y="133" width="76" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="443" y="153">call_stmt</text></a><a href="#name" title="name">
-            <rect x="435" y="179" width="56" height="32"></rect>
-            <rect x="433" y="177" width="56" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="443" y="197">name</text></a><rect x="347" y="223" width="62" height="32" rx="10"></rect>
-         <rect x="345" y="221" width="62" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="355" y="241">FETCH</text>
-         <rect x="429" y="223" width="60" height="32" rx="10"></rect>
-         <rect x="427" y="221" width="60" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="437" y="241">FROM</text><a href="#call_stmt" title="call_stmt">
-            <rect x="509" y="223" width="76" height="32"></rect>
-            <rect x="507" y="221" width="76" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="517" y="241">call_stmt</text></a><a href="#shape_def" title="shape_def">
-            <rect x="347" y="267" width="86" height="32"></rect>
-            <rect x="345" y="265" width="86" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="355" y="285">shape_def</text></a><rect x="347" y="311" width="52" height="32" rx="10"></rect>
-         <rect x="345" y="309" width="52" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="355" y="329">LIKE</text><a href="#select_stmt" title="select_stmt">
-            <rect x="419" y="311" width="94" height="32"></rect>
-            <rect x="417" y="309" width="94" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="427" y="329">select_stmt</text></a><path class="line" d="m17 17 h2 m0 0 h10 m82 0 h10 m20 0 h10 m82 0 h10 m0 0 h10 m166 0 h10 m0 0 h184 m-492 0 h20 m472 0 h20 m-512 0 q10 0 10 10 m492 0 q0 -10 10 -10 m-502 10 v24 m492 0 v-24 m-492 24 q0 10 10 10 m472 0 q10 0 10 -10 m-482 10 h10 m56 0 h10 m0 0 h10 m78 0 h10 m20 0 h10 m48 0 h10 m20 0 h10 m94 0 h10 m0 0 h8 m-142 0 h20 m122 0 h20 m-162 0 q10 0 10 10 m142 0 q0 -10 10 -10 m-152 10 v24 m142 0 v-24 m-142 24 q0 10 10 10 m122 0 q10 0 10 -10 m-132 10 h10 m102 0 h10 m-132 -10 v20 m142 0 v-20 m-142 20 v24 m142 0 v-24 m-142 24 q0 10 10 10 m122 0 q10 0 10 -10 m-132 10 h10 m76 0 h10 m0 0 h26 m-132 -10 v20 m142 0 v-20 m-142 20 v24 m142 0 v-24 m-142 24 q0 10 10 10 m122 0 q10 0 10 -10 m-132 10 h10 m56 0 h10 m0 0 h46 m20 -132 h28 m-278 0 h20 m258 0 h20 m-298 0 q10 0 10 10 m278 0 q0 -10 10 -10 m-288 10 v156 m278 0 v-156 m-278 156 q0 10 10 10 m258 0 q10 0 10 -10 m-268 10 h10 m62 0 h10 m0 0 h10 m60 0 h10 m0 0 h10 m76 0 h10 m-268 -10 v20 m278 0 v-20 m-278 20 v24 m278 0 v-24 m-278 24 q0 10 10 10 m258 0 q10 0 10 -10 m-268 10 h10 m86 0 h10 m0 0 h152 m-268 -10 v20 m278 0 v-20 m-278 20 v24 m278 0 v-24 m-278 24 q0 10 10 10 m258 0 q10 0 10 -10 m-268 10 h10 m52 0 h10 m0 0 h10 m94 0 h10 m0 0 h72 m43 -308 h-3"></path>
-         <polygon points="643 17 651 13 651 21"></polygon>
-         <polygon points="643 17 635 13 635 21"></polygon></svg><p>
+            <text class="nonterminal" x="161" y="65">name</text></a><rect x="249" y="47" width="78" height="32" rx="10"></rect>
+         <rect x="247" y="45" width="78" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="257" y="65">CURSOR</text>
+         <rect x="367" y="47" width="48" height="32" rx="10"></rect>
+         <rect x="365" y="45" width="48" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="375" y="65">FOR</text><a href="#select_stmt" title="select_stmt">
+            <rect x="455" y="47" width="94" height="32"></rect>
+            <rect x="453" y="45" width="94" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="463" y="65">select_stmt</text></a><a href="#explain_stmt" title="explain_stmt">
+            <rect x="455" y="91" width="102" height="32"></rect>
+            <rect x="453" y="89" width="102" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="463" y="109">explain_stmt</text></a><a href="#call_stmt" title="call_stmt">
+            <rect x="455" y="135" width="76" height="32"></rect>
+            <rect x="453" y="133" width="76" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="463" y="153">call_stmt</text></a><a href="#name" title="name">
+            <rect x="455" y="179" width="56" height="32"></rect>
+            <rect x="453" y="177" width="56" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="463" y="197">name</text></a><rect x="367" y="223" width="62" height="32" rx="10"></rect>
+         <rect x="365" y="221" width="62" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="375" y="241">FETCH</text>
+         <rect x="449" y="223" width="60" height="32" rx="10"></rect>
+         <rect x="447" y="221" width="60" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="457" y="241">FROM</text><a href="#call_stmt" title="call_stmt">
+            <rect x="529" y="223" width="76" height="32"></rect>
+            <rect x="527" y="221" width="76" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="537" y="241">call_stmt</text></a><a href="#shape_def" title="shape_def">
+            <rect x="367" y="267" width="86" height="32"></rect>
+            <rect x="365" y="265" width="86" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="375" y="285">shape_def</text></a><rect x="367" y="311" width="52" height="32" rx="10"></rect>
+         <rect x="365" y="309" width="52" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="375" y="329">LIKE</text><a href="#select_stmt" title="select_stmt">
+            <rect x="439" y="311" width="94" height="32"></rect>
+            <rect x="437" y="309" width="94" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="447" y="329">select_stmt</text></a><rect x="249" y="355" width="54" height="32" rx="10"></rect>
+         <rect x="247" y="353" width="54" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="257" y="373">TYPE</text><a href="#data_type_opt_notnull" title="data_type_opt_notnull">
+            <rect x="323" y="355" width="166" height="32"></rect>
+            <rect x="321" y="353" width="166" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="331" y="373">data_type_opt_notnull</text></a><path class="line" d="m17 17 h2 m0 0 h10 m82 0 h10 m20 0 h10 m82 0 h10 m0 0 h10 m166 0 h10 m0 0 h224 m-532 0 h20 m512 0 h20 m-552 0 q10 0 10 10 m532 0 q0 -10 10 -10 m-542 10 v24 m532 0 v-24 m-532 24 q0 10 10 10 m512 0 q10 0 10 -10 m-522 10 h10 m56 0 h10 m20 0 h10 m78 0 h10 m20 0 h10 m48 0 h10 m20 0 h10 m94 0 h10 m0 0 h8 m-142 0 h20 m122 0 h20 m-162 0 q10 0 10 10 m142 0 q0 -10 10 -10 m-152 10 v24 m142 0 v-24 m-142 24 q0 10 10 10 m122 0 q10 0 10 -10 m-132 10 h10 m102 0 h10 m-132 -10 v20 m142 0 v-20 m-142 20 v24 m142 0 v-24 m-142 24 q0 10 10 10 m122 0 q10 0 10 -10 m-132 10 h10 m76 0 h10 m0 0 h26 m-132 -10 v20 m142 0 v-20 m-142 20 v24 m142 0 v-24 m-142 24 q0 10 10 10 m122 0 q10 0 10 -10 m-132 10 h10 m56 0 h10 m0 0 h46 m20 -132 h28 m-278 0 h20 m258 0 h20 m-298 0 q10 0 10 10 m278 0 q0 -10 10 -10 m-288 10 v156 m278 0 v-156 m-278 156 q0 10 10 10 m258 0 q10 0 10 -10 m-268 10 h10 m62 0 h10 m0 0 h10 m60 0 h10 m0 0 h10 m76 0 h10 m-268 -10 v20 m278 0 v-20 m-278 20 v24 m278 0 v-24 m-278 24 q0 10 10 10 m258 0 q10 0 10 -10 m-268 10 h10 m86 0 h10 m0 0 h152 m-268 -10 v20 m278 0 v-20 m-278 20 v24 m278 0 v-24 m-278 24 q0 10 10 10 m258 0 q10 0 10 -10 m-268 10 h10 m52 0 h10 m0 0 h10 m94 0 h10 m0 0 h72 m-396 -264 h20 m396 0 h20 m-436 0 q10 0 10 10 m416 0 q0 -10 10 -10 m-426 10 v288 m416 0 v-288 m-416 288 q0 10 10 10 m396 0 q10 0 10 -10 m-406 10 h10 m54 0 h10 m0 0 h10 m166 0 h10 m0 0 h136 m43 -352 h-3"></path>
+         <polygon points="683 17 691 13 691 21"></polygon>
+         <polygon points="683 17 675 13 675 21"></polygon></svg><p>
          <div class="ebnf"><code>
                <div><a href="#declare_stmt" title="declare_stmt">declare_stmt</a></div>
-               <div>         ::= 'DECLARE' ( <a href="#name_list" title="name_list">name_list</a> <a href="#data_type_opt_notnull" title="data_type_opt_notnull">data_type_opt_notnull</a> | <a href="#name" title="name">name</a> 'CURSOR' ( 'FOR' ( <a href="#select_stmt" title="select_stmt">select_stmt</a> | <a href="#explain_stmt" title="explain_stmt">explain_stmt</a> | <a href="#call_stmt" title="call_stmt">call_stmt</a> | <a href="#name" title="name">name</a> ) | 'FETCH' 'FROM' <a href="#call_stmt" title="call_stmt">call_stmt</a> | <a href="#shape_def" title="shape_def">shape_def</a> | 'LIKE' <a href="#select_stmt" title="select_stmt">select_stmt</a> ) )</div></code></div>
+               <div>         ::= 'DECLARE' ( <a href="#name_list" title="name_list">name_list</a> <a href="#data_type_opt_notnull" title="data_type_opt_notnull">data_type_opt_notnull</a> | <a href="#name" title="name">name</a> ( 'CURSOR' ( 'FOR' ( <a href="#select_stmt" title="select_stmt">select_stmt</a> | <a href="#explain_stmt" title="explain_stmt">explain_stmt</a> | <a href="#call_stmt" title="call_stmt">call_stmt</a> | <a href="#name" title="name">name</a> ) | 'FETCH' 'FROM' <a href="#call_stmt" title="call_stmt">call_stmt</a> | <a href="#shape_def" title="shape_def">shape_def</a> | 'LIKE' <a href="#select_stmt" title="select_stmt">select_stmt</a> ) | 'TYPE' <a href="#data_type_opt_notnull" title="data_type_opt_notnull">data_type_opt_notnull</a> ) )</div></code></div>
       </p>
       <p>referenced by:
          <ul>
@@ -10674,7 +10677,59 @@
          <ul>
             <li><a href="#if_stmt" title="if_stmt">if_stmt</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="begin_trans_stmt">begin_trans_stmt:</a></p><svg width="263" height="37">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="transaction_mode">transaction_mode:</a></p><svg width="199" height="145">
+         <defs>
+            <style type="text/css">
+    @namespace "http://www.w3.org/2000/svg";
+    .line                 {fill: none; stroke: #332900; stroke-width: 1;}
+    .bold-line            {stroke: #141000; shape-rendering: crispEdges; stroke-width: 2;}
+    .thin-line            {stroke: #1F1800; shape-rendering: crispEdges}
+    .filled               {fill: #332900; stroke: none;}
+    text.terminal         {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #141000;
+                            font-weight: bold;
+                          }
+    text.nonterminal      {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #1A1400;
+                            font-weight: normal;
+                          }
+    text.regexp           {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #1F1800;
+                            font-weight: normal;
+                          }
+    rect, circle, polygon {fill: #332900; stroke: #332900;}
+    rect.terminal         {fill: #FFDB4D; stroke: #332900; stroke-width: 1;}
+    rect.nonterminal      {fill: #FFEC9E; stroke: #332900; stroke-width: 1;}
+    rect.text             {fill: none; stroke: none;}
+    polygon.regexp        {fill: #FFF4C7; stroke: #332900; stroke-width: 1;}
+  </style>
+         </defs>
+         <polygon points="9 5 1 1 1 9"></polygon>
+         <polygon points="17 5 9 1 9 9"></polygon>
+         <rect x="51" y="23" width="90" height="32" rx="10"></rect>
+         <rect x="49" y="21" width="90" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="59" y="41">DEFERRED</text>
+         <rect x="51" y="67" width="100" height="32" rx="10"></rect>
+         <rect x="49" y="65" width="100" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="59" y="85">IMMEDIATE</text>
+         <rect x="51" y="111" width="96" height="32" rx="10"></rect>
+         <rect x="49" y="109" width="96" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="59" y="129">EXCLUSIVE</text>
+         <path class="line" d="m17 5 h2 m20 0 h10 m0 0 h110 m-140 0 h20 m120 0 h20 m-160 0 q10 0 10 10 m140 0 q0 -10 10 -10 m-150 10 v12 m140 0 v-12 m-140 12 q0 10 10 10 m120 0 q10 0 10 -10 m-130 10 h10 m90 0 h10 m0 0 h10 m-130 -10 v20 m140 0 v-20 m-140 20 v24 m140 0 v-24 m-140 24 q0 10 10 10 m120 0 q10 0 10 -10 m-130 10 h10 m100 0 h10 m-130 -10 v20 m140 0 v-20 m-140 20 v24 m140 0 v-24 m-140 24 q0 10 10 10 m120 0 q10 0 10 -10 m-130 10 h10 m96 0 h10 m0 0 h4 m23 -120 h-3"></path>
+         <polygon points="189 5 197 1 197 9"></polygon>
+         <polygon points="189 5 181 1 181 9"></polygon></svg><p>
+         <div class="ebnf"><code>
+               <div><a href="#transaction_mode" title="transaction_mode">transaction_mode</a></div>
+               <div>         ::= ( 'DEFERRED' | 'IMMEDIATE' | 'EXCLUSIVE' )?</div></code></div>
+      </p>
+      <p>referenced by:
+         <ul>
+            <li><a href="#begin_trans_stmt" title="begin_trans_stmt">begin_trans_stmt</a></li>
+         </ul>
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="begin_trans_stmt">begin_trans_stmt:</a></p><svg width="457" height="69">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -10708,23 +10763,25 @@
          <polygon points="17 17 9 13 9 21"></polygon>
          <rect x="31" y="3" width="64" height="32" rx="10"></rect>
          <rect x="29" y="1" width="64" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="39" y="21">BEGIN</text>
-         <rect x="115" y="3" width="120" height="32" rx="10"></rect>
-         <rect x="113" y="1" width="120" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="123" y="21">TRANSACTION</text>
-         <path class="line" d="m17 17 h2 m0 0 h10 m64 0 h10 m0 0 h10 m120 0 h10 m3 0 h-3"></path>
-         <polygon points="253 17 261 13 261 21"></polygon>
-         <polygon points="253 17 245 13 245 21"></polygon></svg><p>
+         <text class="terminal" x="39" y="21">BEGIN</text><a href="#transaction_mode" title="transaction_mode">
+            <rect x="115" y="3" width="134" height="32"></rect>
+            <rect x="113" y="1" width="134" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="123" y="21">transaction_mode</text></a><rect x="289" y="35" width="120" height="32" rx="10"></rect>
+         <rect x="287" y="33" width="120" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="297" y="53">TRANSACTION</text>
+         <path class="line" d="m17 17 h2 m0 0 h10 m64 0 h10 m0 0 h10 m134 0 h10 m20 0 h10 m0 0 h130 m-160 0 h20 m140 0 h20 m-180 0 q10 0 10 10 m160 0 q0 -10 10 -10 m-170 10 v12 m160 0 v-12 m-160 12 q0 10 10 10 m140 0 q10 0 10 -10 m-150 10 h10 m120 0 h10 m23 -32 h-3"></path>
+         <polygon points="447 17 455 13 455 21"></polygon>
+         <polygon points="447 17 439 13 439 21"></polygon></svg><p>
          <div class="ebnf"><code>
                <div><a href="#begin_trans_stmt" title="begin_trans_stmt">begin_trans_stmt</a></div>
-               <div>         ::= 'BEGIN' 'TRANSACTION'</div></code></div>
+               <div>         ::= 'BEGIN' <a href="#transaction_mode" title="transaction_mode">transaction_mode</a> 'TRANSACTION'?</div></code></div>
       </p>
       <p>referenced by:
          <ul>
             <li><a href="#any_stmt" title="any_stmt">any_stmt</a></li>
             <li><a href="#explain_target" title="explain_target">explain_target</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="rollback_trans_stmt">rollback_trans_stmt:</a></p><svg width="639" height="113">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="rollback_trans_stmt">rollback_trans_stmt:</a></p><svg width="735" height="101">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -10759,32 +10816,29 @@
          <rect x="31" y="3" width="92" height="32" rx="10"></rect>
          <rect x="29" y="1" width="92" height="32" class="terminal" rx="10"></rect>
          <text class="terminal" x="39" y="21">ROLLBACK</text>
-         <rect x="143" y="3" width="120" height="32" rx="10"></rect>
-         <rect x="141" y="1" width="120" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="151" y="21">TRANSACTION</text>
-         <rect x="303" y="35" width="38" height="32" rx="10"></rect>
-         <rect x="301" y="33" width="38" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="311" y="53">TO</text>
-         <rect x="361" y="35" width="100" height="32" rx="10"></rect>
-         <rect x="359" y="33" width="100" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="369" y="53">SAVEPOINT</text><a href="#name" title="name">
-            <rect x="501" y="35" width="56" height="32"></rect>
-            <rect x="499" y="33" width="56" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="509" y="53">name</text></a><rect x="501" y="79" width="70" height="32" rx="10"></rect>
-         <rect x="499" y="77" width="70" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="509" y="97">@PROC</text>
-         <path class="line" d="m17 17 h2 m0 0 h10 m92 0 h10 m0 0 h10 m120 0 h10 m20 0 h10 m0 0 h298 m-328 0 h20 m308 0 h20 m-348 0 q10 0 10 10 m328 0 q0 -10 10 -10 m-338 10 v12 m328 0 v-12 m-328 12 q0 10 10 10 m308 0 q10 0 10 -10 m-318 10 h10 m38 0 h10 m0 0 h10 m100 0 h10 m20 0 h10 m56 0 h10 m0 0 h14 m-110 0 h20 m90 0 h20 m-130 0 q10 0 10 10 m110 0 q0 -10 10 -10 m-120 10 v24 m110 0 v-24 m-110 24 q0 10 10 10 m90 0 q10 0 10 -10 m-100 10 h10 m70 0 h10 m43 -76 h-3"></path>
-         <polygon points="629 17 637 13 637 21"></polygon>
-         <polygon points="629 17 621 13 621 21"></polygon></svg><p>
+         <rect x="163" y="35" width="120" height="32" rx="10"></rect>
+         <rect x="161" y="33" width="120" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="171" y="53">TRANSACTION</text>
+         <rect x="343" y="35" width="38" height="32" rx="10"></rect>
+         <rect x="341" y="33" width="38" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="351" y="53">TO</text>
+         <rect x="421" y="67" width="100" height="32" rx="10"></rect>
+         <rect x="419" y="65" width="100" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="429" y="85">SAVEPOINT</text><a href="#savepoint_name" title="savepoint_name">
+            <rect x="561" y="35" width="126" height="32"></rect>
+            <rect x="559" y="33" width="126" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="569" y="53">savepoint_name</text></a><path class="line" d="m17 17 h2 m0 0 h10 m92 0 h10 m20 0 h10 m0 0 h130 m-160 0 h20 m140 0 h20 m-180 0 q10 0 10 10 m160 0 q0 -10 10 -10 m-170 10 v12 m160 0 v-12 m-160 12 q0 10 10 10 m140 0 q10 0 10 -10 m-150 10 h10 m120 0 h10 m40 -32 h10 m0 0 h354 m-384 0 h20 m364 0 h20 m-404 0 q10 0 10 10 m384 0 q0 -10 10 -10 m-394 10 v12 m384 0 v-12 m-384 12 q0 10 10 10 m364 0 q10 0 10 -10 m-374 10 h10 m38 0 h10 m20 0 h10 m0 0 h110 m-140 0 h20 m120 0 h20 m-160 0 q10 0 10 10 m140 0 q0 -10 10 -10 m-150 10 v12 m140 0 v-12 m-140 12 q0 10 10 10 m120 0 q10 0 10 -10 m-130 10 h10 m100 0 h10 m20 -32 h10 m126 0 h10 m23 -32 h-3"></path>
+         <polygon points="725 17 733 13 733 21"></polygon>
+         <polygon points="725 17 717 13 717 21"></polygon></svg><p>
          <div class="ebnf"><code>
                <div><a href="#rollback_trans_stmt" title="rollback_trans_stmt">rollback_trans_stmt</a></div>
-               <div>         ::= 'ROLLBACK' 'TRANSACTION' ( 'TO' 'SAVEPOINT' ( <a href="#name" title="name">name</a> | '@PROC' ) )?</div></code></div>
+               <div>         ::= 'ROLLBACK' 'TRANSACTION'? ( 'TO' 'SAVEPOINT'? <a href="#savepoint_name" title="savepoint_name">savepoint_name</a> )?</div></code></div>
       </p>
       <p>referenced by:
          <ul>
             <li><a href="#any_stmt" title="any_stmt">any_stmt</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="commit_trans_stmt">commit_trans_stmt:</a></p><svg width="277" height="37">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="commit_trans_stmt">commit_trans_stmt:</a></p><svg width="317" height="69">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -10819,15 +10873,15 @@
          <rect x="31" y="3" width="78" height="32" rx="10"></rect>
          <rect x="29" y="1" width="78" height="32" class="terminal" rx="10"></rect>
          <text class="terminal" x="39" y="21">COMMIT</text>
-         <rect x="129" y="3" width="120" height="32" rx="10"></rect>
-         <rect x="127" y="1" width="120" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="137" y="21">TRANSACTION</text>
-         <path class="line" d="m17 17 h2 m0 0 h10 m78 0 h10 m0 0 h10 m120 0 h10 m3 0 h-3"></path>
-         <polygon points="267 17 275 13 275 21"></polygon>
-         <polygon points="267 17 259 13 259 21"></polygon></svg><p>
+         <rect x="149" y="35" width="120" height="32" rx="10"></rect>
+         <rect x="147" y="33" width="120" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="157" y="53">TRANSACTION</text>
+         <path class="line" d="m17 17 h2 m0 0 h10 m78 0 h10 m20 0 h10 m0 0 h130 m-160 0 h20 m140 0 h20 m-180 0 q10 0 10 10 m160 0 q0 -10 10 -10 m-170 10 v12 m160 0 v-12 m-160 12 q0 10 10 10 m140 0 q10 0 10 -10 m-150 10 h10 m120 0 h10 m23 -32 h-3"></path>
+         <polygon points="307 17 315 13 315 21"></polygon>
+         <polygon points="307 17 299 13 299 21"></polygon></svg><p>
          <div class="ebnf"><code>
                <div><a href="#commit_trans_stmt" title="commit_trans_stmt">commit_trans_stmt</a></div>
-               <div>         ::= 'COMMIT' 'TRANSACTION'</div></code></div>
+               <div>         ::= 'COMMIT' 'TRANSACTION'?</div></code></div>
       </p>
       <p>referenced by:
          <ul>
@@ -10890,7 +10944,58 @@
          <ul>
             <li><a href="#any_stmt" title="any_stmt">any_stmt</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="savepoint_stmt">savepoint_stmt:</a></p><svg width="289" height="81">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="savepoint_name">savepoint_name:</a></p><svg width="169" height="81">
+         <defs>
+            <style type="text/css">
+    @namespace "http://www.w3.org/2000/svg";
+    .line                 {fill: none; stroke: #332900; stroke-width: 1;}
+    .bold-line            {stroke: #141000; shape-rendering: crispEdges; stroke-width: 2;}
+    .thin-line            {stroke: #1F1800; shape-rendering: crispEdges}
+    .filled               {fill: #332900; stroke: none;}
+    text.terminal         {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #141000;
+                            font-weight: bold;
+                          }
+    text.nonterminal      {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #1A1400;
+                            font-weight: normal;
+                          }
+    text.regexp           {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #1F1800;
+                            font-weight: normal;
+                          }
+    rect, circle, polygon {fill: #332900; stroke: #332900;}
+    rect.terminal         {fill: #FFDB4D; stroke: #332900; stroke-width: 1;}
+    rect.nonterminal      {fill: #FFEC9E; stroke: #332900; stroke-width: 1;}
+    rect.text             {fill: none; stroke: none;}
+    polygon.regexp        {fill: #FFF4C7; stroke: #332900; stroke-width: 1;}
+  </style>
+         </defs>
+         <polygon points="9 17 1 13 1 21"></polygon>
+         <polygon points="17 17 9 13 9 21"></polygon>
+         <rect x="51" y="3" width="70" height="32" rx="10"></rect>
+         <rect x="49" y="1" width="70" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="59" y="21">@PROC</text><a href="#name" title="name">
+            <rect x="51" y="47" width="56" height="32"></rect>
+            <rect x="49" y="45" width="56" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="65">name</text></a><path class="line" d="m17 17 h2 m20 0 h10 m70 0 h10 m-110 0 h20 m90 0 h20 m-130 0 q10 0 10 10 m110 0 q0 -10 10 -10 m-120 10 v24 m110 0 v-24 m-110 24 q0 10 10 10 m90 0 q10 0 10 -10 m-100 10 h10 m56 0 h10 m0 0 h14 m23 -44 h-3"></path>
+         <polygon points="159 17 167 13 167 21"></polygon>
+         <polygon points="159 17 151 13 151 21"></polygon></svg><p>
+         <div class="ebnf"><code>
+               <div><a href="#savepoint_name" title="savepoint_name">savepoint_name</a></div>
+               <div>         ::= '@PROC'</div>
+               <div>           | <a href="#name" title="name">name</a></div></code></div>
+      </p>
+      <p>referenced by:
+         <ul>
+            <li><a href="#release_savepoint_stmt" title="release_savepoint_stmt">release_savepoint_stmt</a></li>
+            <li><a href="#rollback_trans_stmt" title="rollback_trans_stmt">rollback_trans_stmt</a></li>
+            <li><a href="#savepoint_stmt" title="savepoint_stmt">savepoint_stmt</a></li>
+         </ul>
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="savepoint_stmt">savepoint_stmt:</a></p><svg width="305" height="37">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -10924,24 +11029,21 @@
          <polygon points="17 17 9 13 9 21"></polygon>
          <rect x="31" y="3" width="100" height="32" rx="10"></rect>
          <rect x="29" y="1" width="100" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="39" y="21">SAVEPOINT</text><a href="#name" title="name">
-            <rect x="171" y="3" width="56" height="32"></rect>
-            <rect x="169" y="1" width="56" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="179" y="21">name</text></a><rect x="171" y="47" width="70" height="32" rx="10"></rect>
-         <rect x="169" y="45" width="70" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="179" y="65">@PROC</text>
-         <path class="line" d="m17 17 h2 m0 0 h10 m100 0 h10 m20 0 h10 m56 0 h10 m0 0 h14 m-110 0 h20 m90 0 h20 m-130 0 q10 0 10 10 m110 0 q0 -10 10 -10 m-120 10 v24 m110 0 v-24 m-110 24 q0 10 10 10 m90 0 q10 0 10 -10 m-100 10 h10 m70 0 h10 m23 -44 h-3"></path>
-         <polygon points="279 17 287 13 287 21"></polygon>
-         <polygon points="279 17 271 13 271 21"></polygon></svg><p>
+         <text class="terminal" x="39" y="21">SAVEPOINT</text><a href="#savepoint_name" title="savepoint_name">
+            <rect x="151" y="3" width="126" height="32"></rect>
+            <rect x="149" y="1" width="126" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="159" y="21">savepoint_name</text></a><path class="line" d="m17 17 h2 m0 0 h10 m100 0 h10 m0 0 h10 m126 0 h10 m3 0 h-3"></path>
+         <polygon points="295 17 303 13 303 21"></polygon>
+         <polygon points="295 17 287 13 287 21"></polygon></svg><p>
          <div class="ebnf"><code>
                <div><a href="#savepoint_stmt" title="savepoint_stmt">savepoint_stmt</a></div>
-               <div>         ::= 'SAVEPOINT' ( <a href="#name" title="name">name</a> | '@PROC' )</div></code></div>
+               <div>         ::= 'SAVEPOINT' <a href="#savepoint_name" title="savepoint_name">savepoint_name</a></div></code></div>
       </p>
       <p>referenced by:
          <ul>
             <li><a href="#any_stmt" title="any_stmt">any_stmt</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="release_savepoint_stmt">release_savepoint_stmt:</a></p><svg width="389" height="81">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="release_savepoint_stmt">release_savepoint_stmt:</a></p><svg width="445" height="69">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -10976,20 +11078,17 @@
          <rect x="31" y="3" width="80" height="32" rx="10"></rect>
          <rect x="29" y="1" width="80" height="32" class="terminal" rx="10"></rect>
          <text class="terminal" x="39" y="21">RELEASE</text>
-         <rect x="131" y="3" width="100" height="32" rx="10"></rect>
-         <rect x="129" y="1" width="100" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="139" y="21">SAVEPOINT</text><a href="#name" title="name">
-            <rect x="271" y="3" width="56" height="32"></rect>
-            <rect x="269" y="1" width="56" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="279" y="21">name</text></a><rect x="271" y="47" width="70" height="32" rx="10"></rect>
-         <rect x="269" y="45" width="70" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="279" y="65">@PROC</text>
-         <path class="line" d="m17 17 h2 m0 0 h10 m80 0 h10 m0 0 h10 m100 0 h10 m20 0 h10 m56 0 h10 m0 0 h14 m-110 0 h20 m90 0 h20 m-130 0 q10 0 10 10 m110 0 q0 -10 10 -10 m-120 10 v24 m110 0 v-24 m-110 24 q0 10 10 10 m90 0 q10 0 10 -10 m-100 10 h10 m70 0 h10 m23 -44 h-3"></path>
-         <polygon points="379 17 387 13 387 21"></polygon>
-         <polygon points="379 17 371 13 371 21"></polygon></svg><p>
+         <rect x="151" y="35" width="100" height="32" rx="10"></rect>
+         <rect x="149" y="33" width="100" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="159" y="53">SAVEPOINT</text><a href="#savepoint_name" title="savepoint_name">
+            <rect x="291" y="3" width="126" height="32"></rect>
+            <rect x="289" y="1" width="126" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="299" y="21">savepoint_name</text></a><path class="line" d="m17 17 h2 m0 0 h10 m80 0 h10 m20 0 h10 m0 0 h110 m-140 0 h20 m120 0 h20 m-160 0 q10 0 10 10 m140 0 q0 -10 10 -10 m-150 10 v12 m140 0 v-12 m-140 12 q0 10 10 10 m120 0 q10 0 10 -10 m-130 10 h10 m100 0 h10 m20 -32 h10 m126 0 h10 m3 0 h-3"></path>
+         <polygon points="435 17 443 13 443 21"></polygon>
+         <polygon points="435 17 427 13 427 21"></polygon></svg><p>
          <div class="ebnf"><code>
                <div><a href="#release_savepoint_stmt" title="release_savepoint_stmt">release_savepoint_stmt</a></div>
-               <div>         ::= 'RELEASE' 'SAVEPOINT' ( <a href="#name" title="name">name</a> | '@PROC' )</div></code></div>
+               <div>         ::= 'RELEASE' 'SAVEPOINT'? <a href="#savepoint_name" title="savepoint_name">savepoint_name</a></div></code></div>
       </p>
       <p>referenced by:
          <ul>

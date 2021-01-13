@@ -185,6 +185,7 @@ OBJECT                       { return OBJECT; }
 BLOB                         { return BLOB; }
 UPSERT                       { return UPSERT; }
 STATEMENT                    { return STATEMENT; }
+TYPE                         { return TYPE; }
 @ENFORCE_STRICT              { return AT_ENFORCE_STRICT; }
 @ENFORCE_NORMAL              { return AT_ENFORCE_NORMAL; }
 @SENSITIVE                   { return AT_SENSITIVE; }
@@ -216,6 +217,7 @@ DEFERRED                     { return DEFERRED; }
 DEFERRABLE                   { return DEFERRABLE; }
 NOT[ \t\n]DEFERRABLE         { return NOT_DEFERRABLE; }
 IMMEDIATE                    { return IMMEDIATE; }
+EXCLUSIVE                    { return EXCLUSIVE; }
 RESTRICT                     { return RESTRICT; }
 ACTION                       { return ACTION; }
 INITIALLY                    { return INITIALLY; }
@@ -234,8 +236,8 @@ FOR[ \t\n]EACH[ \t\n]ROW     { return FOR_EACH_ROW; }
 
 ([0-9]+"."[0-9]*|"."[0-9]+)(E("+"|"-")?[0-9]+)? { yylval.sval = Strdup(yytext); return REALLIT; }
 
-\"(\\.|[^"\n])*\"            { yylval.sval = Strdup(yytext); return CSTRLIT; }
-'(\\.|''|[^'\n])*'           { yylval.sval = Strdup(yytext); return STRLIT; }
+\"(\\.|[^\\"\n])*\"          { yylval.sval = Strdup(yytext); return CSTRLIT; }
+'(''|[^'\n])*'               { yylval.sval = Strdup(yytext); return STRLIT; }
 X'([0-9a-fA-F][0-9a-fA-F])*' { yylval.sval = Strdup(yytext); return BLOBLIT; }
 [-+&~|^/%*(),.;!<>:=]        { return yytext[0]; }
 [_A-Za-z][A-Za-z0-9_]*       { yylval.sval = Strdup(yytext); return ID; }

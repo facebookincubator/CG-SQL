@@ -59,8 +59,14 @@ create table foo(id bool);
 -- create table with primary key as it's own row
 create table foo(id int not null, name text, rate long int, primary key (id, name));
 
+-- create table with named primary key as it's own row
+create table foo(id int not null, name text, rate long int, constraint pk1 primary key (id, name));
+
 -- create table with foreign key
 create table foo(id int not null, name text, rate long int, primary key (id, name), foreign key (id, name) references baz(id, name2) );
+
+-- create table with named foreign key
+create table foo(id int not null, name text, rate long int, primary key (id, name), constraint garbonzo foreign key (id, name) references baz(id, name2) );
 
 -- create table with fk attributes
 create table foo(id int, foreign key (name) references baz(name2) on update cascade);
@@ -582,14 +588,28 @@ end;
 
 -- control statements
 begin transaction;
+begin deferred transaction;
+begin immediate  transaction;
+begin exclusive  transaction;
+begin deferred;
+begin immediate;
+begin exclusive;
+begin;
 commit transaction;
+commit;
 savepoint foo;
 release savepoint foo;
+release foo;
+rollback;
 rollback transaction;
-rollback transaction
-to
-savepoint
-xx;
+rollback transaction to savepoint foo;
+rollback to savepoint foo;
+rollback transaction to foo;
+rollback to foo;
+rollback transaction to savepoint @proc;
+rollback to savepoint @proc;
+rollback transaction to @proc;
+rollback to @proc;
 
 -- new cursor construct
 declare test cursor for call foo(1,2);
@@ -1260,6 +1280,12 @@ create table foo (
 @emit_enums;
 @emit_enums foo;
 @emit_enums foo, bar;
+
+-- simple named type declaration
+declare fbid type text @sensitive;
+
+declare my_fbid fbid;
+
 
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 

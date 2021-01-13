@@ -19,14 +19,17 @@ echo formatting for railroad tool
 echo "railroad diagram format in cql_grammar.txt (paste into https://www.bottlecaps.de/rr/ui)"
 
 cat <<EOF >cql_grammar.md
+---
+id: x2
+title: "Appendix 2: CQL Grammar"
+sidebar_label: "Appendix 2: CQL Grammar"
+---
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-
-## Appendix 2: CQL Grammar
 
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).

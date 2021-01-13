@@ -1096,13 +1096,23 @@ create table simple_ak_table_7 (
 );
 
 -- TEST: validate duplicate unique key
--- + Error % duplicate unique key in table 'ak1'
+-- + Error % duplicate constraint name in table 'ak1'
 -- +1 Error
 -- + {create_table_stmt}: err
-create table baz (
+create table baz_dup_uk (
   id integer PRIMARY KEY AUTOINCREMENT not null,
   CONSTRAINT ak1 UNIQUE (id),
   CONSTRAINT ak1 UNIQUE (id)
+);
+
+-- TEST: validate duplicate primary unique key
+-- + Error % duplicate constraint name in table 'pk1'
+-- +1 Error
+-- + {create_table_stmt}: err
+create table baz_dup_pk (
+  id integer not null,
+  CONSTRAINT pk1 PRIMARY KEY (id),
+  CONSTRAINT pk1 PRIMARY KEY (id)
 );
 
 -- TEST: validate duplicate in group of unique key
@@ -1144,6 +1154,14 @@ create table baz_3 (
 create table fk_table (
   id integer,
   FOREIGN KEY (id) REFERENCES foo(id)
+);
+
+-- TEST: make a valid FK
+-- + Error % duplicate constraint name in table 'x'
+create table fk_table_dup (
+  id integer,
+  constraint x foreign key (id) references foo(id),
+  constraint x foreign key (id) references foo(id)
 );
 
 -- TEST: make an FK that refers to a bogus column in the current table
@@ -11957,8 +11975,8 @@ rollback transaction to savepoint @proc;
 -- TEST: @proc rewrites
 -- + SET p := 'savepoint_proc_stuff';
 -- + SAVEPOINT savepoint_proc_stuff;
--- + ROLLBACK TRANSACTION TO SAVEPOINT savepoint_proc_stuff;
--- + RELEASE SAVEPOINT savepoint_proc_stuff;
+-- + ROLLBACK TO savepoint_proc_stuff;
+-- + RELEASE savepoint_proc_stuff;
 -- - Error
 create proc savepoint_proc_stuff()
 begin
@@ -13127,4 +13145,255 @@ create table with_check_expr(
 create table with_bogus_check_expr(
   v integer,
   check (q > 5)
+);
+
+-- TEST: declare type definition
+-- + {declare_named_type}: text sensitive
+-- + {name my_type}: text sensitive
+-- + {sensitive_attr}: text sensitive
+-- + {type_text}: text
+-- - Error
+declare my_type type text @sensitive;
+
+-- TEST: declare type using another declared type
+-- + DECLARE my_type_1 TYPE TEXT @SENSITIVE;
+-- - Error
+declare my_type_1 type my_type;
+
+-- TEST: declare type using another declared type
+-- + DECLARE my_type_2 TYPE TEXT @SENSITIVE;
+-- - Error
+declare my_type_2 type my_type_1;
+
+-- TEST: declare type using another declared type
+-- + {declare_named_type}: err
+-- + Error % unknown type 'bogus_type'
+-- +1 Error
+declare my_type type bogus_type;
+
+-- TEST: duplicate declare type definition
+-- + {declare_named_type}: err
+-- + Error % duplicate type declaration 'my_type'
+-- +1 Error
+declare my_type type integer;
+
+-- TEST: use declared type in variable declaration
+-- + DECLARE my_var TEXT @SENSITIVE;
+-- + {declare_vars_type}: text sensitive
+-- - Error
+declare my_var my_type;
+
+-- TEST: use bogus declared type in variable declaration
+-- + {declare_vars_type}: err
+-- + {name bogus_type}: err
+-- + Error % unknown type 'bogus_type'
+-- +1 Error
+declare my_var bogus_type;
+
+-- TEST: create local named type with same name. the local type have priority
+-- + {create_proc_stmt}: ok
+-- + DECLARE my_type TYPE INTEGER;
+-- + DECLARE my_var INTEGER;
+create proc named_type ()
+begin
+  declare my_type type integer;
+  declare my_var my_type;
+end;
+
+-- TEST declare a sensitive and not null type
+-- + DECLARE my_type_sens_not TYPE TEXT NOT NULL @SENSITIVE;
+-- - Error
+declare my_type_sens_not type text not null @sensitive;
+
+-- TEST: declared type in column definition
+-- + id TEXT @SENSITIVE NOT NULL
+-- + {create_table_stmt}: t: { id: text notnull sensitive }
+-- + {col_def}: id: text notnull sensitive
+-- + {col_def_type_attrs}: ok
+-- + {name id}
+-- + {type_text}: text
+-- + {sensitive_attr}: ok
+-- + {col_attrs_not_null}
+-- - Error
+create table t(id my_type_sens_not);
+
+-- TEST: declared type in column definition with error
+-- + {create_table_stmt}: err
+-- + {col_def}: err
+-- + {col_def_type_attrs}: err
+-- + {name bogus_type}
+-- + Error % unknown type 'bogus_type'
+-- +1 Error
+create table t(id bogus_type);
+
+-- TEST: declared type in cast expr
+-- + SELECT CAST(1 AS TEXT);
+-- + {select_stmt}: select: { _anon: text notnull }
+-- - Error
+select cast(1 as my_type);
+
+-- TEST: declared type in cast expr with error
+-- + SELECT CAST(1 AS bogus_type);
+-- + {name bogus_type}: err
+-- + Error % unknown type 'bogus_type'
+-- +1 Error
+select cast(1 as bogus_type);
+
+-- TEST: declared type in param
+-- + CREATE PROC decl_type (label TEXT @SENSITIVE)
+-- + {create_proc_stmt}: ok
+-- - Error
+create proc decl_type(label my_type)
+begin
+end;
+
+-- TEST: declared type in param with error
+-- + {create_proc_stmt}: err
+-- + {name bogus_type}: err
+-- + Error % unknown type 'bogus_type'
+-- +1 Error
+create proc decl_type_err(label bogus_type)
+begin
+end;
+
+-- TEST: declared type in declare function
+-- + DECLARE FUNC decl_type_func (arg1 INTEGER) TEXT @SENSITIVE;
+-- + {declare_func_stmt}: text sensitive
+-- - Error
+declare func decl_type_func (arg1 integer) my_type;
+
+-- TEST: declared type in declare function with err
+-- + DECLARE FUNC decl_type_func_err (arg1 INTEGER) bogus_type;
+-- + {declare_func_stmt}: err
+-- + {name bogus_type}: err
+-- + Error % unknown type 'bogus_type'
+-- +1 Error
+declare func decl_type_func_err (arg1 integer) bogus_type;
+
+create table to_copy(
+  f1 integer,
+  f2 integer not null,
+  f3 integer not null @sensitive,
+  f4 integer @sensitive
+);
+
+-- TEST: ensure all attributes correctly copied
+-- + CREATE TABLE the_copy(
+-- + f1 INTEGER,
+-- + f2 INTEGER NOT NULL,
+-- + f3 INTEGER @SENSITIVE NOT NULL,
+-- + f4 INTEGER @SENSITIVE
+-- - Error
+create table the_copy(
+   like to_copy
+);
+
+-- TEST: ensure proc arguments are rewritten correctly
+-- + CREATE PROC uses_complex_table_attrs (f1_ INTEGER, f2_ INTEGER NOT NULL, f3_ INTEGER NOT NULL @SENSITIVE, f4_ INTEGER @SENSITIVE)
+-- - Error
+create proc uses_complex_table_attrs(like to_copy)
+begin
+end;
+
+-- TEST: ensure proc arguments are rewritten correctly
+-- + DECLARE PROC uses_complex_table_attrs (f1_ INTEGER, f2_ INTEGER NOT NULL, f3_ INTEGER NOT NULL @SENSITIVE, f4_ INTEGER @SENSITIVE)
+-- - Error
+declare proc uses_complex_table_attrs(like to_copy);
+
+-- TEST: ensure func arguments are rewritten correctly
+-- + DECLARE FUNC function_uses_complex_table_attrs (f1_ INTEGER, f2_ INTEGER NOT NULL, f3_ INTEGER NOT NULL @SENSITIVE, f4_ INTEGER @SENSITIVE) INTEGER;
+-- - Error
+declare function function_uses_complex_table_attrs(like to_copy) integer;
+
+-- TEST: ensure cursor includes not-null and sensitive
+-- + {declare_cursor_like_name}: complex_attr_cursor: to_copy: { f1: integer, f2: integer notnull, f3: integer notnull sensitive, f4: integer sensitive } variable shape_storage value_cursor
+-- - Error
+declare complex_attr_cursor cursor like to_copy;
+
+-- TEST: make a function that creates sensitive
+-- + {declare_func_stmt}: object create_func sensitive
+-- + {create_data_type}: object create_func sensitive
+-- + {sensitive_attr}: object sensitive
+-- + {type_object}: object
+-- - Error
+declare function maybe_create_func_sensitive() create object @sensitive;
+
+-- TEST: make a function that creates blob
+-- + {declare_func_stmt}: blob notnull create_func
+-- + {create_data_type}: blob notnull create_func
+-- + {notnull}: blob notnull
+-- + {type_blob}: blob
+-- - Error
+declare function maybe_create_func_blob() create blob not null;
+
+-- TEST: make a function that creates text
+-- + {declare_func_stmt}: text create_func
+-- + {create_data_type}: text create_func
+-- + {type_text}: text
+-- - Error
+declare function maybe_create_func_text() create text;
+
+-- TEST: make a function that creates int
+-- + {declare_func_stmt}: err
+-- + {create_data_type}: err
+-- + Error % Return data type in a create function declaration can only be Text, Blob or Object
+-- +1 Error
+declare function maybe_create_func_int() create int;
+
+-- TEST: make a function that creates bool
+-- + {declare_func_stmt}: err
+-- + {create_data_type}: err
+-- + Error % Return data type in a create function declaration can only be Text, Blob or Object
+-- +1 Error
+declare function maybe_create_func_bool() create bool;
+
+-- TEST: make a function that creates long
+-- + {declare_func_stmt}: err
+-- + {create_data_type}: err
+-- + Error % Return data type in a create function declaration can only be Text, Blob or Object
+-- +1 Error
+declare function maybe_create_func_long() create long not null @sensitive;
+
+-- TEST: declare a named type for object Foo
+-- + {declare_named_type}: object<Foo> notnull sensitive
+-- + {sensitive_attr}: object<Foo> notnull sensitive
+-- + {notnull}: object<Foo> notnull
+-- + {type_object}: object<Foo>
+-- + {name Foo}
+-- - Error
+declare type_obj_foo type object<Foo> not null @sensitive;
+
+-- TEST: declared function that return create object
+-- + DECLARE FUNC type_func_return_create_obj () CREATE OBJECT<Foo> NOT NULL @SENSITIVE;
+-- + {declare_func_stmt}: object<Foo> notnull create_func sensitive
+-- - Error
+declare function type_func_return_create_obj() create type_obj_foo;
+
+-- TEST: declared function that return create bogus object
+-- + {declare_func_stmt}: err
+-- + {create_data_type}: err
+-- + Error % unknown type 'bogus_type'
+-- +1 Error
+declare function type_func_return_create_bogus_obj() create bogus_type;
+
+-- TEST: declared function that return object
+-- + DECLARE FUNC type_func_return_obj () OBJECT<Foo> NOT NULL @SENSITIVE;
+-- + {declare_func_stmt}: object<Foo> notnull sensitive
+-- - Error
+declare function type_func_return_obj() type_obj_foo;
+
+-- TEST: declare type as enum name
+-- + DECLARE my_enum_type TYPE INTEGER NOT NULL;
+-- + {declare_named_type}: integer notnull
+-- + {notnull}: integer notnull
+-- - Error
+declare my_enum_type type ints;
+
+-- TEST: used a named type's name to declare an enum
+-- + {declare_enum_stmt}: err
+-- + Error % duplicate type declaration 'my_type'
+-- +1 Error
+declare enum my_type integer (
+ negative_one = -1,
+ postive_one = 1
 );

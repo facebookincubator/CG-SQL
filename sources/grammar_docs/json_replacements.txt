@@ -25,6 +25,7 @@ s/[[:<:]]IS_UNIQUE_KEY[[:>:]]/'"isUniqueKey"' ':'/g
 s/[[:<:]]IS_AUTO_INCREMENT[[:>:]]/'"isAutoIncrement"' ':'/g
 s/[[:<:]]IS_VIRTUAL[[:>:]]/'"isVirtual"' ':'/g
 s/[[:<:]]PRIMARY_KEY[[:>:]]/'"primaryKey"' ':'/g
+s/[[:<:]]PRIMARY_KEY_NAME[[:>:]]/'"primaryKeyName"' ':'/g
 s/[[:<:]]FOREIGN_KEYS[[:>:]]/'"foreignKeys"' ':'/g
 s/[[:<:]]UNIQUE_KEYS[[:>:]]/'"uniqueKeys"' ':'/g
 s/[[:<:]]REFERENCE_TABLE[[:>:]]/'"referenceTable"' ':'/g

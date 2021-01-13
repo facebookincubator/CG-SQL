@@ -132,6 +132,7 @@ static sem_join * new_sem_join(uint32_t count);
 static void sem_validate_check_expr(ast_node *table, ast_node *expr);
 static void sem_numeric_expr(ast_node *expr, ast_node *context, CSTR subject, uint32_t expr_context);
 static void sem_misc_attrs_basic(ast_node *ast);
+static void sem_data_type_var(ast_node *ast);
 
 static void lazy_free_symtab(void *syms) {
   symtab_delete(syms);
@@ -352,6 +353,8 @@ static symtab *assembly_fragments;
 static symtab *extensions_by_basename;
 static symtab *builtin_aggregated_funcs;
 static symtab *arg_bundles;
+static symtab *global_types;
+static symtab *local_types;
 
 static ast_node *current_table_ast;
 static CSTR current_table_name;
@@ -498,7 +501,7 @@ static void sem_validate_check_expr(ast_node *table, ast_node *expr) {
   }
 }
 
-// data needed for processing a column defintion
+// data needed for processing a column definition
 typedef struct coldef_info {
   version_attrs_info *table_info;    // the various table version info items from the containing table
   sem_t col_sem_type;                // the semantic type of the created_columns
@@ -514,6 +517,12 @@ typedef struct coldef_info {
   ast_node *default_value;           // the default value expression if there is one
 } coldef_info;
 
+// We collect these as we process the column definitions.
+// tracking this information helps us to report on duplicates
+// (like you can't say primary key 2 times)
+// and otherwise get the results on a silver platter when processing is done.
+// This also gives us access to the pending table info which can be used
+// for validation and error messages.
 static void init_coldef_info(coldef_info *info, version_attrs_info *table_info) {
   info->table_info = table_info;
   info->col_sem_type = SEM_TYPE_PENDING;
@@ -539,6 +548,9 @@ typedef struct name_check {
   uint32_t count;            // the count of names
 } name_check;
 
+// This is the setup for looking for a list of names in a particular join scope.  This is useful for
+// making sure names are from (e.g.) the names in the select list, or the names of the
+// columns of a table (one sptr in the jptr will do that job) or other such contexts.
 static void init_name_check(name_check *check, ast_node *name_list, sem_join *jptr) {
   check->names = symtab_new();
   check->name_list_tail = NULL;
@@ -547,6 +559,7 @@ static void init_name_check(name_check *check, ast_node *name_list, sem_join *jp
   check->name_list = name_list;
 }
 
+// Releases the temp info.
 static void destroy_name_check(name_check *check) {
   symtab_delete(check->names);
   check->name_list_tail = NULL;
@@ -594,7 +607,6 @@ static bool_t is_name_list_equal(ast_node *name_list1, ast_node *name_list2) {
 // name_list1(a, c) return false
 // name_list1(d) return false
 // name_list1(b, d) return false
-//
 static bool_t is_either_list_a_subset(ast_node *name_list1, ast_node *name_list2) {
   ast_node *a1 = name_list1;
   ast_node *a2 = name_list2;
@@ -804,6 +816,10 @@ static sem_t any_sensitive(sem_struct *sptr) {
   return sem_sensitive;
 }
 
+// The normal combination for semantic flags, just the flags:
+// * if either is nullable the result is nullable
+// * if either is sensitive the result is sensitive
+// nullable is weird because the flag is "NOTNULL" so everything is inverted
 static sem_t combine_flags(sem_t sem_type_1, sem_t sem_type_2) {
   return both_notnull_flag(sem_type_1, sem_type_2) |
          sensitive_flag(sem_type_1) |
@@ -1257,6 +1273,57 @@ static ast_node *find_ad_hoc_migrate(CSTR name) {
 ast_node *find_region(CSTR name) {
   symtab_entry *entry = symtab_find(schema_regions, name);
   return entry ? (ast_node*)(entry->val) : NULL;
+}
+
+// Helper to store the declare named type in a symbol tab. local named
+// type are store in a local storage while the global one are store globally.
+// If applicable the local storage is always search first to find named type
+// otherwise the global storage is used.
+static bool_t add_declared_named_type(CSTR name, ast_node *ast) {
+  symtab *tab;
+  if (current_proc) {
+    tab = local_types;
+  } else {
+    tab = global_types;
+  }
+  if (!symtab_add(tab, name, ast)) {
+    report_error(ast, "CQL0359: duplicate type declaration", name);
+    record_error(ast);
+    return false;
+  }
+  return true;
+}
+
+// Find the declare_name_type node of a named type.
+ast_node *_Nullable find_declare_named_type(CSTR name) {
+  symtab_entry *entry = NULL;
+  // We first try to find it in local storage because it has
+  // higher priority otherwise we look into the global storage
+  if (local_types) {
+    entry = symtab_find(local_types, name);
+  }
+  if (!entry) {
+    entry = symtab_find(global_types, name);
+  }
+
+  return entry ? (ast_node*)(entry->val) : NULL;
+}
+
+// Find the data type of a name by looking into all enum type and
+// declared named type.
+ast_node *_Nullable find_data_type_of_declared_named_type(CSTR name) {
+  ast_node *named_type = find_declare_named_type(name);
+  if (!named_type) {
+    return NULL;
+  }
+
+  if (is_ast_declare_enum_stmt(named_type)) {
+    EXTRACT_NOTNULL(declare_enum_stmt, named_type);
+    EXTRACT_NOTNULL(typed_name, declare_enum_stmt->left);
+    named_type = typed_name;
+  }
+  ast_node *data_type = named_type->right;
+  return data_type;
 }
 
 static ast_node *find_cur_region(CSTR name) {
@@ -2124,6 +2191,14 @@ static void sem_add_flags_to_join(sem_join *jptr, sem_t flags) {
 
 // Given a column ast type convert it to the appropriate sem_type.
 static void sem_data_type_column(ast_node *ast) {
+  // The data_type could be a declare named type, therefore
+  // we should rewrite the node to the real type
+  rewrite_data_type_if_needed(ast);
+  if (is_error(ast)) {
+    record_error(ast);
+    return;
+  }
+
   if (is_ast_type_int(ast)) {
     ast->sem = new_sem(SEM_TYPE_INTEGER);
   } else if (is_ast_type_text(ast)) {
@@ -2146,15 +2221,42 @@ static void sem_data_type_column(ast_node *ast) {
   }
 }
 
-// Create the semantic type for a variable, it might be wrapped
+// Create the semantic type, it might be wrapped
 // in a not_null node, extract that.
 static void sem_data_type_var(ast_node *ast) {
-  if (is_ast_create(ast)) {
-    EXTRACT_ANY_NOTNULL(data_type, ast->left);
+  // The data_type could be a declare named type, therefore
+  // we should rewrite the node to the real type
+  rewrite_data_type_if_needed(ast);
+  if (is_error(ast)) {
+    record_error(ast);
+    return;
+  }
+
+  if (is_ast_create_data_type(ast)) {
+    ast_node *data_type = ast->left;
+
+    // find the real type of the data type to validate it.
+    ast_node *real_data_type = data_type;
+    while (is_ast_notnull(real_data_type) || is_ast_sensitive_attr(real_data_type)) {
+      real_data_type = real_data_type->left;
+    }
+
+    // The create data type is restricted to text, blob, object only.
+    if (!is_ast_type_text(real_data_type) &&
+        !is_ast_type_blob(real_data_type) &&
+        !is_ast_type_object(real_data_type)) {
+      report_error(ast, "CQL0361: Return data type in a create function declaration can only be text, blob or object", NULL);
+      record_error(ast);
+      return;
+    }
+
     sem_data_type_var(data_type);
 
     // Create a node for me using my child's type but adding func create.
     ast->sem = new_sem(SEM_TYPE_CREATE_FUNC | data_type->sem->sem_type);
+    // copy object type to the sem if applicable. It's used to rewrite
+    // named type ast.
+    ast->sem->object_type = data_type->sem->object_type;
   }
   else if (is_ast_notnull(ast)) {
     EXTRACT_ANY_NOTNULL(data_type, ast->left);
@@ -2162,6 +2264,9 @@ static void sem_data_type_var(ast_node *ast) {
 
     // Create a node for me using my child's type but adding not null.
     ast->sem = new_sem(SEM_TYPE_NOTNULL | data_type->sem->sem_type);
+    // copy object type to the sem if applicable. It's used to rewrite
+    // named type ast.
+    ast->sem->object_type = data_type->sem->object_type;
   }
   else if (is_ast_sensitive_attr(ast)) {
     EXTRACT_ANY_NOTNULL(data_type, ast->left);
@@ -2169,6 +2274,9 @@ static void sem_data_type_var(ast_node *ast) {
 
     // Create a node for me using my child's type but adding not null.
     ast->sem = new_sem(SEM_TYPE_SENSITIVE | data_type->sem->sem_type);
+    // copy object type to the sem if applicable. It's used to rewrite
+    // named type ast.
+    ast->sem->object_type = data_type->sem->object_type;
   }
   else {
     sem_data_type_column(ast);
@@ -2384,7 +2492,7 @@ static void sem_unq_def(ast_node *table_ast, ast_node *def) {
   if (def->left) {
     EXTRACT_STRING(name, def->left);
     if (symtab_find(table_items, name)) {
-      report_error(def, "CQL0020: duplicate unique key in table", name);
+      report_error(def, "CQL0020: duplicate constraint name in table", name);
       record_error(table_ast);
       return;
     }
@@ -2579,7 +2687,7 @@ static bool_t find_referenceable_columns(
     EXTRACT_ANY_NOTNULL(col_def, col_key_list->left);
     // check if all column are in PRIMARY KEY ([name_list]) statement
     if (is_ast_pk_def(col_def)) {
-      EXTRACT_NAMED_NOTNULL(name_list2, name_list, col_def->left);
+      EXTRACT_NAMED_NOTNULL(name_list2, name_list, col_def->right);
       if (callback(name_list2, context)) {
         return true;
       }
@@ -2697,8 +2805,9 @@ static void sem_fk_def(ast_node *table_ast, ast_node *def, version_attrs_info *t
   Contract(!current_joinscope);  // I don't belong inside a select(!)
   Contract(is_ast_create_table_stmt(table_ast));
   Contract(is_ast_fk_def(def));
-  EXTRACT_NAMED_NOTNULL(src_list, name_list, def->left);
-  EXTRACT_NOTNULL(fk_target_options, def->right);
+  EXTRACT_NOTNULL(fk_info, def->right);
+  EXTRACT_NAMED_NOTNULL(src_list, name_list, fk_info->left);
+  EXTRACT_NOTNULL(fk_target_options, fk_info->right);
   EXTRACT_NOTNULL(fk_target, fk_target_options->left);
   EXTRACT_OPTION(flags, fk_target_options->right);
   EXTRACT_STRING(table_name, fk_target->left);
@@ -2727,6 +2836,16 @@ static void sem_fk_def(ast_node *table_ast, ast_node *def, version_attrs_info *t
   }
 
   // FOREIGN KEY ( [src_list] ) REFERENCES [table_name] ([ref_list])
+
+  if (def->left) {
+    EXTRACT_STRING(name, def->left);
+    if (symtab_find(table_items, name)) {
+      report_error(def, "CQL0020: duplicate constraint name in table", name);
+      record_error(table_ast);
+      return;
+    }
+    symtab_add(table_items, name, def);
+  }
 
   if (!sem_validate_name_list(src_list, table_ast->sem->jptr)) {
     record_error(table_ast);
@@ -2795,9 +2914,19 @@ static void sem_pk_def(ast_node *table_ast, ast_node *def) {
   Contract(!current_joinscope);  // I don't belong inside a select(!)
   Contract(is_ast_create_table_stmt(table_ast));
   Contract(is_ast_pk_def(def));
-  EXTRACT(name_list, def->left);
+  EXTRACT(name_list, def->right);
 
   // PRIMARY KEY [name_list]
+
+  if (def->left) {
+    EXTRACT_STRING(name, def->left);
+    if (symtab_find(table_items, name)) {
+      report_error(def, "CQL0020: duplicate constraint name in table", name);
+      record_error(table_ast);
+      return;
+    }
+    symtab_add(table_items, name, def);
+  }
 
   sem_struct *sptr = table_ast->sem->sptr;
 
@@ -2891,6 +3020,9 @@ static bool_t sem_validate_version(ast_node *ast, int32_t *version, CSTR *out_pr
   return true;
 }
 
+// When we find @create, @delete or @recreate we have to record that we found such an annotation.
+// Later, if/when we generate schema we will be able to walk through these in a suitable sort order
+// and then emit the appropriate migrations.
 static void record_schema_annotation(int32_t vers, ast_node *target_ast, CSTR target_name, uint32_t type, ast_node *def, ast_node *ast, int32_t ordinal) {
   Contract(target_ast);
   Contract(target_name);
@@ -2918,6 +3050,8 @@ static void record_schema_annotation(int32_t vers, ast_node *target_ast, CSTR ta
 
 static int32_t recreates;
 
+// Recreate annotations get stored in a different stream, they are processed in order as well but
+// they don't merge in with the others.  So we're building up two buffers.
 static void record_recreate_annotation(ast_node *target_ast, CSTR target_name, CSTR group_name, ast_node *annotation) {
   recreate_annotation *note = bytebuf_alloc(recreate_annotations, sizeof(*note));
 
@@ -2928,6 +3062,8 @@ static void record_recreate_annotation(ast_node *target_ast, CSTR target_name, C
   note->ordinal = recreates++;
 }
 
+// This applies the validation for a FK in the context of a column, so that
+// single column is the FK to the outside reference.
 static void sem_col_attrs_fk(ast_node *fk, ast_node *def, coldef_info *info) {
   Contract(is_ast_col_attrs_fk(fk));
   Contract(is_ast_col_def(def));
@@ -2945,6 +3081,12 @@ static void sem_col_attrs_fk(ast_node *fk, ast_node *def, coldef_info *info) {
   // getting errors because the latest version of the table refers to tables or
   // columns that are not yet in existence in the version we are migrating.
   // FKs in tables created by your migration script are honored.
+  // NOTE: schema migration script here means a migration proc is being defined here.
+  // This is not the normal schema upgrader.  But migration procs by definition work
+  // on past versions of the schema.  Sometimes the "--rt schema_upgrade" thing is
+  // called the schema migration script but this is not that.  This is where
+  // @SCHEMA_UPGRADE_VERSION has been specified so that we should pretend to be
+  // at an older schema version because we are upgrading that version.
   if (schema_upgrade_version > 0 && !current_proc) {
     record_ok(fk);
     return;
@@ -2954,7 +3096,7 @@ static void sem_col_attrs_fk(ast_node *fk, ast_node *def, coldef_info *info) {
   // The previous schema may have different regions and/or @recreate groups and this will
   // just lead to spurious errors.  The current schema was already checked for consistency
   // all we have to do is validate that the text of the columns didn't change and that
-  // happens later.  Visibiliity rules are moot.
+  // happens later.  Visibiliity of the referenced table in the previous schema is moot.
   if (validating_previous_schema) {
     record_ok(fk);
     return;
@@ -3203,6 +3345,15 @@ static sem_t sem_col_attrs(ast_node *def, ast_node *_Nullable head, coldef_info 
 static void sem_col_def(ast_node *def, coldef_info *info) {
   Contract(is_ast_col_def(def));
   EXTRACT_NOTNULL(col_def_type_attrs, def->left);
+
+  // We rewrite col_def_type_attrs node before reading the subtree
+  // to make sure we read a rewrite subtree.
+  rewrite_right_col_def_type_attrs_if_needed(col_def_type_attrs);
+  if (is_error(col_def_type_attrs)) {
+    record_error(def);
+    return;
+  }
+
   EXTRACT_ANY(attrs, col_def_type_attrs->right);
   EXTRACT_NOTNULL(col_def_name_type, col_def_type_attrs->left);
   EXTRACT_ANY_NOTNULL(name_ast, col_def_name_type->left);
@@ -4741,6 +4892,10 @@ static void sem_expr_cast(ast_node *ast, CSTR cstr) {
   }
 
   sem_data_type_column(data_type);
+  if (is_error(data_type)) {
+    record_error(ast);
+    return;
+  }
 
   // We allow conversion between numeric types without going to SQLite, the text conversions
   // are crazy complex and basically impossible to clone so you have to do (select cast(...))
@@ -5421,7 +5576,7 @@ static void sem_func_char(ast_node *ast, uint32_t arg_count) {
       return;
     }
     sensitive |= sensitive_flag(sem_type);
-  } while((arg_list = arg_list->right));
+  } while ((arg_list = arg_list->right));
 
   // char() will always return a string, sensitivity param is preserved.
   // char return null if params doesn't have a character representation
@@ -11337,6 +11492,10 @@ static void sem_param(ast_node *ast) {
 
   sem_t param_flags = sem_opt_inout(opt_inout) | SEM_TYPE_VARIABLE;
   sem_data_type_var(data_type);
+  if (is_error(data_type)) {
+    record_error(ast);
+    return;
+  }
   ast->sem = param_detail->sem = name_ast->sem = new_sem(data_type->sem->sem_type | param_flags);
 
   // [name]
@@ -13133,6 +13292,10 @@ static void sem_create_proc_stmt(ast_node *ast) {
   }
 
   Invariant(!locals);
+  Invariant(!local_types);
+
+  // create local storage for named type defined in the proc
+  local_types = symtab_new();
 
   // CREATE PROC [name] ( [params] )
 
@@ -13293,6 +13456,7 @@ cleanup:
   ast->sem->region = current_region;
   name_ast->sem = ast->sem;
   current_proc = NULL;
+  SYMTAB_CLEANUP(local_types);
 }
 
 // Validate the name is unique in the given name list and attach the type
@@ -13417,6 +13581,10 @@ static void sem_declare_func_stmt(ast_node *ast) {
   }
   else {
     sem_data_type_var(ret_data_type);
+    if (is_error(ret_data_type)) {
+      record_error(ast);
+      return;
+    }
   }
 
   // this also promotes errors up from the return type
@@ -13546,6 +13714,7 @@ static void sem_declare_enum_stmt(ast_node *ast) {
   EXTRACT_STRING(name, name_ast);
   sem_data_type_column(typed_name->right);
   typed_name->sem = typed_name->right->sem;
+  typed_name->sem->sem_type |= SEM_TYPE_NOTNULL;
   typed_name->sem->name = name;
 
   if (current_proc) {
@@ -13627,6 +13796,12 @@ static void sem_declare_enum_stmt(ast_node *ast) {
     // so that it won't show up in JSON etc.
     if (adding_current_entity) {
       add_item_to_list(&all_enums_list, ast);
+
+      // Add this enum to the list of global types like that enums and declare name types
+      // can be search from a single storage.
+      if (!add_declared_named_type(name, ast)) {
+        goto cleanup;
+      }
     }
   }
 
@@ -13765,6 +13940,10 @@ static void sem_declare_vars_type(ast_node *declare_vars_type) {
 
   // DECLARE [name_list] [data_type]
   sem_data_type_var(data_type);
+  if (is_error(data_type)) {
+    record_error(declare_vars_type);
+    return;
+  }
   sem_t sem_type = data_type->sem->sem_type;
   Invariant(is_unitary(sem_type));
 
@@ -13793,6 +13972,32 @@ static void sem_declare_vars_type(ast_node *declare_vars_type) {
   else {
     declare_vars_type->sem = new_sem(sem_type);
     declare_vars_type->sem->object_type = data_type->sem->object_type;
+  }
+}
+
+// This declare a new local or global name for a type. It validate
+// the data type and store the name declared. The name can be use
+// in any places in the cql syntax where data type are.
+static void sem_declare_named_type(ast_node *ast) {
+  Contract(is_ast_declare_named_type(ast));
+  EXTRACT_ANY(name_ast, ast->left);
+  EXTRACT_ANY_NOTNULL(data_type, ast->right);
+  EXTRACT_STRING(name, name_ast);
+
+  // DECLARE TYPE [name] [data_type]
+  sem_data_type_var(data_type);
+  if (is_error(data_type)) {
+    record_error(ast);
+    return;
+  }
+
+  // this also promotes errors up from the data type
+  name_ast->sem = ast->sem = data_type->sem;
+
+  if (!is_error(ast)) {
+    if (!add_declared_named_type(name, ast)) {
+      return;
+    }
   }
 }
 
@@ -16263,6 +16468,7 @@ cql_noexport void sem_main(ast_node *ast) {
   assembly_fragments = symtab_new();
   extensions_by_basename = symtab_new();
   builtin_aggregated_funcs = symtab_new();
+  global_types = symtab_new();
 
   schema_annotations = _ast_pool_new(bytebuf);
   recreate_annotations = _ast_pool_new(bytebuf);
@@ -16299,6 +16505,7 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(declare_cursor_like_select);
   STMT_INIT(declare_value_cursor);
   STMT_INIT(declare_cursor);
+  STMT_INIT(declare_named_type);
   STMT_INIT(out_stmt);
   STMT_INIT(out_union_stmt);
 
@@ -16538,6 +16745,7 @@ cql_noexport void sem_cleanup() {
   SYMTAB_CLEANUP(builtin_aggregated_funcs);
   SYMTAB_CLEANUP(included_regions);
   SYMTAB_CLEANUP(excluded_regions);
+  SYMTAB_CLEANUP(global_types);
 
   // these are getting zeroed so that leaksanitizer will not count those objects as reachable from a global root.
 
@@ -16577,4 +16785,5 @@ cql_noexport void sem_cleanup() {
   pending_table_validations_head = NULL;
   current_table_name = NULL;
   current_table_ast = NULL;
+  local_types = NULL;
 }

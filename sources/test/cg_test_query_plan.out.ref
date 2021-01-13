@@ -206,10 +206,10 @@ END;
 CREATE PROC populate_query_plan_8()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "BEGIN TRANSACTION";
+  SET stmt := "BEGIN";
   INSERT INTO sql_temp(id, sql) VALUES(8, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  BEGIN TRANSACTION;
+  BEGIN;
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(8, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -234,10 +234,10 @@ END;
 CREATE PROC populate_query_plan_10()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "COMMIT TRANSACTION";
+  SET stmt := "COMMIT";
   INSERT INTO sql_temp(id, sql) VALUES(10, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  COMMIT TRANSACTION;
+  COMMIT;
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(10, C.iselectid, C.iorder, C.ifrom, C.zdetail);

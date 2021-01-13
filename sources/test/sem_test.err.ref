@@ -95,10 +95,12 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this un
 Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this unique key is redundant with previous unique keys
 Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this unique key is redundant with previous unique keys
 Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this unique key is redundant with previous unique keys
-Error at test/sem_test.sql:XXXX : in unq_def : CQL0020: duplicate unique key in table 'ak1'
+Error at test/sem_test.sql:XXXX : in unq_def : CQL0020: duplicate constraint name in table 'ak1'
+Error at test/sem_test.sql:XXXX : in pk_def : CQL0020: duplicate constraint name in table 'pk1'
 Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this unique key is redundant with previous unique keys
 Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'ak_col_not_exist'
 Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'ak_col_not_exist'
+Error at test/sem_test.sql:XXXX : in fk_def : CQL0020: duplicate constraint name in table 'x'
 Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'bogus'
 Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'bogus'
 Error at test/sem_test.sql:XXXX : in fk_def : CQL0021: foreign key refers to non-existent table 'bogus'
@@ -945,4 +947,16 @@ Error at test/sem_test.sql:XXXX : in str : CQL0162: cannot add a trigger to a vi
 Error at test/sem_test.sql:XXXX : in str : CQL0164: cannot use ALTER TABLE on a virtual table 'basic_virtual'
 Error at test/sem_test.sql:XXXX : in str : CQL0169: enum not found 'bogus_enum_name'
 Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'q'
+Error at test/sem_test.sql:XXXX : in str : CQL0360: unknown type 'bogus_type'
+Error at test/sem_test.sql:XXXX : in declare_named_type : CQL0359: duplicate type declaration 'my_type'
+Error at test/sem_test.sql:XXXX : in str : CQL0360: unknown type 'bogus_type'
+Error at test/sem_test.sql:XXXX : in col_def_type_attrs : CQL0360: unknown type 'bogus_type'
+Error at test/sem_test.sql:XXXX : in str : CQL0360: unknown type 'bogus_type'
+Error at test/sem_test.sql:XXXX : in str : CQL0360: unknown type 'bogus_type'
+Error at test/sem_test.sql:XXXX : in str : CQL0360: unknown type 'bogus_type'
+Error at test/sem_test.sql:XXXX : in create_data_type : CQL0361: Return data type in a create function declaration can only be text, blob or object
+Error at test/sem_test.sql:XXXX : in create_data_type : CQL0361: Return data type in a create function declaration can only be text, blob or object
+Error at test/sem_test.sql:XXXX : in create_data_type : CQL0361: Return data type in a create function declaration can only be text, blob or object
+Error at test/sem_test.sql:XXXX : in create_data_type : CQL0360: unknown type 'bogus_type'
+Error at test/sem_test.sql:XXXX : in declare_enum_stmt : CQL0359: duplicate type declaration 'my_type'
 semantic errors present; no code gen.

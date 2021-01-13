@@ -45,6 +45,33 @@ errors_documented() {
   __on_diff_exit "${OUT_DIR}/errs_used.txt" "${OUT_DIR}/errs_documented.txt"
 }
 
+some_lints() {
+  echo '--------------------------------- VERIFYING A FEW CODE LINTS'
+  if grep ' for(' ./*.c ./*.h
+  then
+     echo "anti pattern 'for(' found, use 'for ('"
+     failed
+  fi
+
+  if grep ' if(' ./*.c ./*.h
+  then
+     echo "anti pattern 'if(' found, use 'if ('"
+     failed
+  fi
+
+  if grep ' while(' ./*.c ./*.h
+  then
+     echo "anti pattern 'while(' found, use 'while ('"
+     failed
+  fi
+
+  if grep ' switch(' ./*.c ./*.h
+  then
+     echo "anti pattern 'switch(' found, use 'switch ('"
+     failed
+  fi
+}
+
 building() {
   echo '--------------------------------- STAGE 1 -- make clean, then make'
   echo building new cql
@@ -97,6 +124,7 @@ building() {
   fi
 
   errors_documented
+  some_lints
 }
 
 create_unwritable_file() {

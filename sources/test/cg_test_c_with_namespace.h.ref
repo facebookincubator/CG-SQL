@@ -1847,6 +1847,8 @@ extern cql_int32 x;
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
+
+// The statement ending at line XXXX
 #ifndef enum_some_ints_defined
 #define enum_some_ints_defined
 
@@ -1876,6 +1878,26 @@ enum some_ints {
 #define some_reals__bar 3.000000e+00
 
 #endif
+#ifndef enum_some_longs_defined
+#define enum_some_longs_defined
+
+enum some_longs {
+  some_longs__foo = _64(9223372036854775807),
+  some_longs__bar = _64(3)
+};
+
+#endif
+
+// The statement ending at line XXXX
+#ifndef enum_some_longs_defined
+#define enum_some_longs_defined
+
+enum some_longs {
+  some_longs__foo = _64(9223372036854775807),
+  some_longs__bar = _64(3)
+};
+
+#endif
 
 // The statement ending at line XXXX
 extern CQL_WARN_UNUSED cql_code virtual_table_creator(sqlite3 *_Nonnull _db_);
@@ -1885,6 +1907,8 @@ extern void out_arg_cursor(cql_int32 x, cql_int32 *_Nonnull y);
 
 // The statement ending at line XXXX
 extern CQL_WARN_UNUSED cql_code make_virt_table(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
 
 // The statement ending at line XXXX
 extern void end_proc(void);

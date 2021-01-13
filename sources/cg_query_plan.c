@@ -198,7 +198,7 @@ static void cg_qp_stmt_list(ast_node *head) {
 static void emit_populate_no_table_scan_proc(charbuf *output) {
   CHARBUF_OPEN(no_scan_tables_buf);
 
-  for(list_item *item = all_tables_list; item; item = item->next) {
+  for (list_item *item = all_tables_list; item; item = item->next) {
     if (is_ast_create_table_stmt(item->ast)) {
       EXTRACT_MISC_ATTRS(item->ast, misc_attrs);
       if (misc_attrs != NULL) {
