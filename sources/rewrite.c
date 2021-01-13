@@ -1216,8 +1216,8 @@ cql_noexport void rewrite_right_col_def_type_attrs_if_needed(ast_node *ast) {
 
   if (is_ast_str(data_type)) {
     EXTRACT_STRING(name, data_type);
-    ast_node *found_data_type = find_data_type_of_declared_named_type(name);
-    if (!found_data_type) {
+    ast_node *named_type = find_named_type(name);
+    if (!named_type) {
       report_error(ast, "CQL0360: unknown type", name);
       record_error(ast);
       return;
@@ -1225,7 +1225,7 @@ cql_noexport void rewrite_right_col_def_type_attrs_if_needed(ast_node *ast) {
 
     AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
 
-    sem_t found_sem_type = found_data_type->sem->sem_type;
+    sem_t found_sem_type = named_type->sem->sem_type;
     if (!is_nullable(found_sem_type)) {
       col_attrs = new_ast_col_attrs_not_null(NULL, col_attrs);
     }
@@ -1253,32 +1253,40 @@ cql_noexport void rewrite_data_type_if_needed(ast_node *ast) {
 
   if (is_ast_str(data_type)) {
     EXTRACT_STRING(name, data_type);
-    ast_node *real_data_type = find_data_type_of_declared_named_type(name);
-    if (!real_data_type) {
+    ast_node *named_type = find_named_type(name);
+    if (!named_type) {
       report_error(ast, "CQL0360: unknown type", name);
       record_error(ast);
       return;
     }
 
-    sem_t sem_type = real_data_type->sem->sem_type;
-    // cast_expr node and col_def_name_type nodes only take the real type and
-    // does not support notnull or sensitive_attr node as a subtree. Therefore
-    // we need to extract the real data type from ast node.
-    bool_t only_primitive_type = ast->parent &&
+    sem_t sem_type = named_type->sem->sem_type;
+
+    // * The cast_expr node doesn't need attributes, it only casts to the
+    //   target type.  When casting, both nullability and sensitivity are
+    //   perserved. So in that case we remove the extra attributes.  They
+    //   are not expected/required in the rewrite.
+    //
+    // * Columns are a little different; nullability and sensitivity are
+    //   encoded differently in columns than in variables.  
+    //   So in that case we again only produce the base type here.
+    //   The caller will do the rest. This work is done in 
+    //   rewrite_right_col_def_type_attrs_if_needed(ast_node 
+    bool_t only_core_type = ast->parent &&
         (is_ast_col_def_name_type(ast->parent) || is_ast_cast_expr(ast->parent));
-    if (only_primitive_type) {
+
+    if (only_core_type) {
       sem_type = core_type_of(sem_type);
     }
-    Invariant(!is_ast_str(real_data_type));
 
     AST_REWRITE_INFO_SET(data_type->lineno, data_type->filename);
-    ast_node *node = rewrite_gen_data_type(sem_type, real_data_type->sem->object_type);
+    ast_node *node = rewrite_gen_data_type(sem_type, named_type->sem->object_type);
     AST_REWRITE_INFO_RESET();
 
     ast_set_left(data_type, node->left);
     ast_set_right(data_type, node->right);
     data_type->sem = node->sem;
-    data_type->type = node->type;
+    data_type->type = node->type;  // note this is ast type, not semantic type
   }
 
   record_ok(ast);

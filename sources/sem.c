@@ -1275,17 +1275,18 @@ ast_node *find_region(CSTR name) {
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
-// Helper to store the declare named type in a symbol tab. local named
-// type are store in a local storage while the global one are store globally.
-// If applicable the local storage is always search first to find named type
+// Helper to store the named type in a symbol table. As with local variables,
+// types declared in a procedure are local to that procedure and stored in their
+// own symbol table. The local symbol table is always searched first to find named type
 // otherwise the global storage is used.
-static bool_t add_declared_named_type(CSTR name, ast_node *ast) {
+static bool_t add_named_type(CSTR name, ast_node *ast) {
   symtab *tab;
   if (current_proc) {
     tab = local_types;
   } else {
     tab = global_types;
   }
+
   if (!symtab_add(tab, name, ast)) {
     report_error(ast, "CQL0359: duplicate type declaration", name);
     record_error(ast);
@@ -1294,8 +1295,9 @@ static bool_t add_declared_named_type(CSTR name, ast_node *ast) {
   return true;
 }
 
-// Find the declare_name_type node of a named type.
-ast_node *_Nullable find_declare_named_type(CSTR name) {
+// Look up the named type node from the relevant symbol tables.
+// Recall that local named types are in their own table.
+cql_noexport ast_node *_Nullable find_named_type(CSTR name) {
   symtab_entry *entry = NULL;
   // We first try to find it in local storage because it has
   // higher priority otherwise we look into the global storage
@@ -1307,23 +1309,6 @@ ast_node *_Nullable find_declare_named_type(CSTR name) {
   }
 
   return entry ? (ast_node*)(entry->val) : NULL;
-}
-
-// Find the data type of a name by looking into all enum type and
-// declared named type.
-ast_node *_Nullable find_data_type_of_declared_named_type(CSTR name) {
-  ast_node *named_type = find_declare_named_type(name);
-  if (!named_type) {
-    return NULL;
-  }
-
-  if (is_ast_declare_enum_stmt(named_type)) {
-    EXTRACT_NOTNULL(declare_enum_stmt, named_type);
-    EXTRACT_NOTNULL(typed_name, declare_enum_stmt->left);
-    named_type = typed_name;
-  }
-  ast_node *data_type = named_type->right;
-  return data_type;
 }
 
 static ast_node *find_cur_region(CSTR name) {
@@ -13799,7 +13784,7 @@ static void sem_declare_enum_stmt(ast_node *ast) {
 
       // Add this enum to the list of global types like that enums and declare name types
       // can be search from a single storage.
-      if (!add_declared_named_type(name, ast)) {
+      if (!add_named_type(name, ast)) {
         goto cleanup;
       }
     }
@@ -13995,7 +13980,7 @@ static void sem_declare_named_type(ast_node *ast) {
   name_ast->sem = ast->sem = data_type->sem;
 
   if (!is_error(ast)) {
-    if (!add_declared_named_type(name, ast)) {
+    if (!add_named_type(name, ast)) {
       return;
     }
   }
