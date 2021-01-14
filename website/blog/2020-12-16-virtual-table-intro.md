@@ -1,6 +1,6 @@
 ---
 slug: virtual-table-into
-title: Introducing  Virtual Tables
+title: Introducing Virtual Tables
 author: CG/SQL Team
 author_title: Maintainer of CG/SQL
 author_url: https://github.com/facebookincubator

@@ -7627,7 +7627,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Fri Jan  8 10:41:47 PST 2021
+Snapshot as of Thu Jan 14 13:07:50 PST 2021
 
 ### Operators and Literals
 
@@ -8655,15 +8655,6 @@ conflict_target:
   | '(' indexed_columns ')' opt_where
   ;
 
-creation_type:
-  object_type
-  | object_type "NOT" "NULL"
-  | "TEXT"
-  | "TEXT" "NOT" "NULL"
-  | "BLOB"
-  | "BLOB" "NOT" "NULL"
-  ;
-
 function: "FUNC" | "FUNCTION"
   ;
 
@@ -8684,7 +8675,7 @@ enum_value:
 declare_func_stmt:
   "DECLARE" function name '(' params ')' data_type_opt_notnull
   | "DECLARE" "SELECT" function name '(' params ')' data_type_opt_notnull
-  | "DECLARE" function name '(' params ')' "CREATE" creation_type
+  | "DECLARE" function name '(' params ')' "CREATE" data_type_opt_notnull
   | "DECLARE" "SELECT" function name '(' params ')' '(' typed_names ')'
   ;
 
@@ -12039,6 +12030,14 @@ The name of a declared type should always be unique.
 
 The name of a declared type is unknown.
 
+----
+
+### CQL0361: Return data type in a create function declaration can only be Text, Blob or Object
+
+Return data type in a create function definition can only be TEXT, BLOB or OBJECT.
+
+These are the only reference types and so CREATE makes sense only with those types.  An integer, for instance, can't start with a +1 reference count.
+
 
 
 ## Appendix 5: JSON Schema Grammar
@@ -12051,7 +12050,7 @@ The name of a declared type is unknown.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Fri Jan  8 10:41:48 PST 2021
+Snapshot as of Thu Jan 14 13:07:51 PST 2021
 
 ### Rules
 

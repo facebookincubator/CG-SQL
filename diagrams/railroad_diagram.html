@@ -3577,7 +3577,6 @@
       </p>
       <p>referenced by:
          <ul>
-            <li><a href="#creation_type" title="creation_type">creation_type</a></li>
             <li><a href="#data_type" title="data_type">data_type</a></li>
          </ul>
       </p><br /><p style="font-size: 14px; font-weight:bold"><a name="data_type_numeric">data_type_numeric:</a></p><svg width="297" height="377">
@@ -8761,63 +8760,6 @@
          <ul>
             <li><a href="#upsert_stmt" title="upsert_stmt">upsert_stmt</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="creation_type">creation_type:</a></p><svg width="377" height="125">
-         <defs>
-            <style type="text/css">
-    @namespace "http://www.w3.org/2000/svg";
-    .line                 {fill: none; stroke: #332900; stroke-width: 1;}
-    .bold-line            {stroke: #141000; shape-rendering: crispEdges; stroke-width: 2;}
-    .thin-line            {stroke: #1F1800; shape-rendering: crispEdges}
-    .filled               {fill: #332900; stroke: none;}
-    text.terminal         {font-family: Verdana, Sans-serif;
-                            font-size: 12px;
-                            fill: #141000;
-                            font-weight: bold;
-                          }
-    text.nonterminal      {font-family: Verdana, Sans-serif;
-                            font-size: 12px;
-                            fill: #1A1400;
-                            font-weight: normal;
-                          }
-    text.regexp           {font-family: Verdana, Sans-serif;
-                            font-size: 12px;
-                            fill: #1F1800;
-                            font-weight: normal;
-                          }
-    rect, circle, polygon {fill: #332900; stroke: #332900;}
-    rect.terminal         {fill: #FFDB4D; stroke: #332900; stroke-width: 1;}
-    rect.nonterminal      {fill: #FFEC9E; stroke: #332900; stroke-width: 1;}
-    rect.text             {fill: none; stroke: none;}
-    polygon.regexp        {fill: #FFF4C7; stroke: #332900; stroke-width: 1;}
-  </style>
-         </defs>
-         <polygon points="9 17 1 13 1 21"></polygon>
-         <polygon points="17 17 9 13 9 21"></polygon><a href="#object_type" title="object_type">
-            <rect x="51" y="3" width="94" height="32"></rect>
-            <rect x="49" y="1" width="94" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="21">object_type</text></a><rect x="51" y="47" width="54" height="32" rx="10"></rect>
-         <rect x="49" y="45" width="54" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="59" y="65">TEXT</text>
-         <rect x="51" y="91" width="56" height="32" rx="10"></rect>
-         <rect x="49" y="89" width="56" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="59" y="109">BLOB</text>
-         <rect x="205" y="35" width="48" height="32" rx="10"></rect>
-         <rect x="203" y="33" width="48" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="213" y="53">NOT</text>
-         <rect x="273" y="35" width="56" height="32" rx="10"></rect>
-         <rect x="271" y="33" width="56" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="281" y="53">NULL</text>
-         <path class="line" d="m17 17 h2 m20 0 h10 m94 0 h10 m-134 0 h20 m114 0 h20 m-154 0 q10 0 10 10 m134 0 q0 -10 10 -10 m-144 10 v24 m134 0 v-24 m-134 24 q0 10 10 10 m114 0 q10 0 10 -10 m-124 10 h10 m54 0 h10 m0 0 h40 m-124 -10 v20 m134 0 v-20 m-134 20 v24 m134 0 v-24 m-134 24 q0 10 10 10 m114 0 q10 0 10 -10 m-124 10 h10 m56 0 h10 m0 0 h38 m40 -88 h10 m0 0 h134 m-164 0 h20 m144 0 h20 m-184 0 q10 0 10 10 m164 0 q0 -10 10 -10 m-174 10 v12 m164 0 v-12 m-164 12 q0 10 10 10 m144 0 q10 0 10 -10 m-154 10 h10 m48 0 h10 m0 0 h10 m56 0 h10 m23 -32 h-3"></path>
-         <polygon points="367 17 375 13 375 21"></polygon>
-         <polygon points="367 17 359 13 359 21"></polygon></svg><p>
-         <div class="ebnf"><code>
-               <div><a href="#creation_type" title="creation_type">creation_type</a></div>
-               <div>         ::= ( <a href="#object_type" title="object_type">object_type</a> | 'TEXT' | 'BLOB' ) ( 'NOT' 'NULL' )?</div></code></div>
-      </p>
-      <p>referenced by:
-         <ul>
-            <li><a href="#declare_func_stmt" title="declare_func_stmt">declare_func_stmt</a></li>
-         </ul>
       </p><br /><p style="font-size: 14px; font-weight:bold"><a name="function">function:</a></p><svg width="191" height="81">
          <defs>
             <style type="text/css">
@@ -8983,7 +8925,7 @@
          <ul>
             <li><a href="#declare_enum_stmt" title="declare_enum_stmt">declare_enum_stmt</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="declare_func_stmt">declare_func_stmt:</a></p><svg width="875" height="169">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="declare_func_stmt">declare_func_stmt:</a></p><svg width="875" height="157">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -9030,46 +8972,44 @@
             <rect x="363" y="1" width="68" height="32" class="nonterminal"></rect>
             <text class="nonterminal" x="373" y="21">params</text></a><rect x="453" y="3" width="26" height="32" rx="10"></rect>
          <rect x="451" y="1" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="461" y="21">)</text><a href="#data_type_opt_notnull" title="data_type_opt_notnull">
-            <rect x="519" y="3" width="166" height="32"></rect>
-            <rect x="517" y="1" width="166" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="527" y="21">data_type_opt_notnull</text></a><rect x="519" y="47" width="72" height="32" rx="10"></rect>
-         <rect x="517" y="45" width="72" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="527" y="65">CREATE</text><a href="#creation_type" title="creation_type">
-            <rect x="611" y="47" width="108" height="32"></rect>
-            <rect x="609" y="45" width="108" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="619" y="65">creation_type</text></a><rect x="153" y="91" width="70" height="32" rx="10"></rect>
-         <rect x="151" y="89" width="70" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="161" y="109">SELECT</text><a href="#function" title="function">
-            <rect x="243" y="91" width="70" height="32"></rect>
-            <rect x="241" y="89" width="70" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="251" y="109">function</text></a><a href="#name" title="name">
-            <rect x="333" y="91" width="56" height="32"></rect>
-            <rect x="331" y="89" width="56" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="341" y="109">name</text></a><rect x="409" y="91" width="26" height="32" rx="10"></rect>
-         <rect x="407" y="89" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="417" y="109">(</text><a href="#params" title="params">
-            <rect x="455" y="91" width="68" height="32"></rect>
-            <rect x="453" y="89" width="68" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="463" y="109">params</text></a><rect x="543" y="91" width="26" height="32" rx="10"></rect>
-         <rect x="541" y="89" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="551" y="109">)</text><a href="#data_type_opt_notnull" title="data_type_opt_notnull">
-            <rect x="609" y="91" width="166" height="32"></rect>
-            <rect x="607" y="89" width="166" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="617" y="109">data_type_opt_notnull</text></a><rect x="609" y="135" width="26" height="32" rx="10"></rect>
-         <rect x="607" y="133" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="617" y="153">(</text><a href="#typed_names" title="typed_names">
-            <rect x="655" y="135" width="106" height="32"></rect>
-            <rect x="653" y="133" width="106" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="663" y="153">typed_names</text></a><rect x="781" y="135" width="26" height="32" rx="10"></rect>
-         <rect x="779" y="133" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="789" y="153">)</text>
-         <path class="line" d="m17 17 h2 m0 0 h10 m82 0 h10 m20 0 h10 m70 0 h10 m0 0 h10 m56 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m68 0 h10 m0 0 h10 m26 0 h10 m20 0 h10 m166 0 h10 m0 0 h34 m-240 0 h20 m220 0 h20 m-260 0 q10 0 10 10 m240 0 q0 -10 10 -10 m-250 10 v24 m240 0 v-24 m-240 24 q0 10 10 10 m220 0 q10 0 10 -10 m-230 10 h10 m72 0 h10 m0 0 h10 m108 0 h10 m20 -44 h88 m-714 0 h20 m694 0 h20 m-734 0 q10 0 10 10 m714 0 q0 -10 10 -10 m-724 10 v68 m714 0 v-68 m-714 68 q0 10 10 10 m694 0 q10 0 10 -10 m-704 10 h10 m70 0 h10 m0 0 h10 m70 0 h10 m0 0 h10 m56 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m68 0 h10 m0 0 h10 m26 0 h10 m20 0 h10 m166 0 h10 m0 0 h32 m-238 0 h20 m218 0 h20 m-258 0 q10 0 10 10 m238 0 q0 -10 10 -10 m-248 10 v24 m238 0 v-24 m-238 24 q0 10 10 10 m218 0 q10 0 10 -10 m-228 10 h10 m26 0 h10 m0 0 h10 m106 0 h10 m0 0 h10 m26 0 h10 m43 -132 h-3"></path>
+         <text class="terminal" x="461" y="21">)</text>
+         <rect x="519" y="35" width="72" height="32" rx="10"></rect>
+         <rect x="517" y="33" width="72" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="527" y="53">CREATE</text><a href="#data_type_opt_notnull" title="data_type_opt_notnull">
+            <rect x="631" y="3" width="166" height="32"></rect>
+            <rect x="629" y="1" width="166" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="639" y="21">data_type_opt_notnull</text></a><rect x="153" y="79" width="70" height="32" rx="10"></rect>
+         <rect x="151" y="77" width="70" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="161" y="97">SELECT</text><a href="#function" title="function">
+            <rect x="243" y="79" width="70" height="32"></rect>
+            <rect x="241" y="77" width="70" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="251" y="97">function</text></a><a href="#name" title="name">
+            <rect x="333" y="79" width="56" height="32"></rect>
+            <rect x="331" y="77" width="56" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="341" y="97">name</text></a><rect x="409" y="79" width="26" height="32" rx="10"></rect>
+         <rect x="407" y="77" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="417" y="97">(</text><a href="#params" title="params">
+            <rect x="455" y="79" width="68" height="32"></rect>
+            <rect x="453" y="77" width="68" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="463" y="97">params</text></a><rect x="543" y="79" width="26" height="32" rx="10"></rect>
+         <rect x="541" y="77" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="551" y="97">)</text><a href="#data_type_opt_notnull" title="data_type_opt_notnull">
+            <rect x="609" y="79" width="166" height="32"></rect>
+            <rect x="607" y="77" width="166" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="617" y="97">data_type_opt_notnull</text></a><rect x="609" y="123" width="26" height="32" rx="10"></rect>
+         <rect x="607" y="121" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="617" y="141">(</text><a href="#typed_names" title="typed_names">
+            <rect x="655" y="123" width="106" height="32"></rect>
+            <rect x="653" y="121" width="106" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="663" y="141">typed_names</text></a><rect x="781" y="123" width="26" height="32" rx="10"></rect>
+         <rect x="779" y="121" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="789" y="141">)</text>
+         <path class="line" d="m17 17 h2 m0 0 h10 m82 0 h10 m20 0 h10 m70 0 h10 m0 0 h10 m56 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m68 0 h10 m0 0 h10 m26 0 h10 m20 0 h10 m0 0 h82 m-112 0 h20 m92 0 h20 m-132 0 q10 0 10 10 m112 0 q0 -10 10 -10 m-122 10 v12 m112 0 v-12 m-112 12 q0 10 10 10 m92 0 q10 0 10 -10 m-102 10 h10 m72 0 h10 m20 -32 h10 m166 0 h10 m0 0 h30 m-714 0 h20 m694 0 h20 m-734 0 q10 0 10 10 m714 0 q0 -10 10 -10 m-724 10 v56 m714 0 v-56 m-714 56 q0 10 10 10 m694 0 q10 0 10 -10 m-704 10 h10 m70 0 h10 m0 0 h10 m70 0 h10 m0 0 h10 m56 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m68 0 h10 m0 0 h10 m26 0 h10 m20 0 h10 m166 0 h10 m0 0 h32 m-238 0 h20 m218 0 h20 m-258 0 q10 0 10 10 m238 0 q0 -10 10 -10 m-248 10 v24 m238 0 v-24 m-238 24 q0 10 10 10 m218 0 q10 0 10 -10 m-228 10 h10 m26 0 h10 m0 0 h10 m106 0 h10 m0 0 h10 m26 0 h10 m43 -120 h-3"></path>
          <polygon points="865 17 873 13 873 21"></polygon>
          <polygon points="865 17 857 13 857 21"></polygon></svg><p>
          <div class="ebnf"><code>
                <div><a href="#declare_func_stmt" title="declare_func_stmt">declare_func_stmt</a></div>
-               <div>         ::= 'DECLARE' ( <a href="#function" title="function">function</a> <a href="#name" title="name">name</a> '(' <a href="#params" title="params">params</a> ')' ( <a href="#data_type_opt_notnull" title="data_type_opt_notnull">data_type_opt_notnull</a> | 'CREATE' <a href="#creation_type" title="creation_type">creation_type</a> ) | 'SELECT' <a href="#function" title="function">function</a> <a href="#name" title="name">name</a> '(' <a href="#params" title="params">params</a> ')' ( <a href="#data_type_opt_notnull" title="data_type_opt_notnull">data_type_opt_notnull</a> | '(' <a href="#typed_names" title="typed_names">typed_names</a> ')' ) )</div></code></div>
+               <div>         ::= 'DECLARE' ( <a href="#function" title="function">function</a> <a href="#name" title="name">name</a> '(' <a href="#params" title="params">params</a> ')' 'CREATE'? <a href="#data_type_opt_notnull" title="data_type_opt_notnull">data_type_opt_notnull</a> | 'SELECT' <a href="#function" title="function">function</a> <a href="#name" title="name">name</a> '(' <a href="#params" title="params">params</a> ')' ( <a href="#data_type_opt_notnull" title="data_type_opt_notnull">data_type_opt_notnull</a> | '(' <a href="#typed_names" title="typed_names">typed_names</a> ')' ) )</div></code></div>
       </p>
       <p>referenced by:
          <ul>

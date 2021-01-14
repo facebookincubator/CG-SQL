@@ -577,6 +577,7 @@
 <li><a href="#cql0358-declared-enums-must-be-top-level-enum">CQL0358: declared enums must be top level ‘enum’</a></li>
 <li><a href="#cql0359-duplicate-type-declaration-type_name">CQL0359: duplicate type declaration ‘type_name’</a></li>
 <li><a href="#cql0360-unknown-type-type_name">CQL0360: unknown type ‘type_name’</a></li>
+<li><a href="#cql0361-return-data-type-in-a-create-function-declaration-can-only-be-text-blob-or-object">CQL0361: Return data type in a create function declaration can only be Text, Blob or Object</a></li>
 </ul></li>
 <li><a href="#appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</a>
 <ul>
@@ -5902,7 +5903,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Fri Jan 8 10:41:47 PST 2021</p>
+<p>Snapshot as of Thu Jan 14 13:07:50 PST 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -6918,15 +6919,6 @@ conflict_target:
   | &#39;(&#39; indexed_columns &#39;)&#39; opt_where
   ;
 
-creation_type:
-  object_type
-  | object_type &quot;NOT&quot; &quot;NULL&quot;
-  | &quot;TEXT&quot;
-  | &quot;TEXT&quot; &quot;NOT&quot; &quot;NULL&quot;
-  | &quot;BLOB&quot;
-  | &quot;BLOB&quot; &quot;NOT&quot; &quot;NULL&quot;
-  ;
-
 function: &quot;FUNC&quot; | &quot;FUNCTION&quot;
   ;
 
@@ -6947,7 +6939,7 @@ enum_value:
 declare_func_stmt:
   &quot;DECLARE&quot; function name &#39;(&#39; params &#39;)&#39; data_type_opt_notnull
   | &quot;DECLARE&quot; &quot;SELECT&quot; function name &#39;(&#39; params &#39;)&#39; data_type_opt_notnull
-  | &quot;DECLARE&quot; function name &#39;(&#39; params &#39;)&#39; &quot;CREATE&quot; creation_type
+  | &quot;DECLARE&quot; function name &#39;(&#39; params &#39;)&#39; &quot;CREATE&quot; data_type_opt_notnull
   | &quot;DECLARE&quot; &quot;SELECT&quot; function name &#39;(&#39; params &#39;)&#39; &#39;(&#39; typed_names &#39;)&#39;
   ;
 
@@ -8800,6 +8792,10 @@ set x := y;</code></pre>
 <hr />
 <h3 id="cql0360-unknown-type-type_name">CQL0360: unknown type ‘type_name’</h3>
 <p>The name of a declared type is unknown.</p>
+<hr />
+<h3 id="cql0361-return-data-type-in-a-create-function-declaration-can-only-be-text-blob-or-object">CQL0361: Return data type in a create function declaration can only be Text, Blob or Object</h3>
+<p>Return data type in a create function definition can only be TEXT, BLOB or OBJECT.</p>
+<p>These are the only reference types and so CREATE makes sense only with those types. An integer, for instance, can’t start with a +1 reference count.</p>
 <h2 id="appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</h2>
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
@@ -8808,7 +8804,7 @@ set x := y;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Fri Jan 8 10:41:48 PST 2021</p>
+<p>Snapshot as of Thu Jan 14 13:07:51 PST 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 
