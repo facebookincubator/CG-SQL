@@ -203,7 +203,7 @@ static void cql_reset_globals(void);
 /* expressions and types */
 %type <aval> expr basic_expr math_expr expr_list typed_name typed_names case_list call_expr_list call_expr shape_arguments
 %type <aval> name name_list opt_name_list opt_name
-%type <aval> data_type data_type_or_type_name data_type_numeric data_type_opt_notnull object_type
+%type <aval> data_type_any data_type_no_options data_type_numeric data_type_with_options
 
 /* proc stuff */
 %type <aval> create_proc_stmt declare_func_stmt declare_proc_stmt
@@ -537,12 +537,12 @@ misc_attrs[result]:
   ;
 
 col_def:
-  misc_attrs col_name data_type_or_type_name col_attrs  {
+  misc_attrs col_name data_type_no_options col_attrs  {
   struct ast_node *misc_attrs = $misc_attrs;
   struct ast_node *col_name = $col_name;
-  struct ast_node *data_type_or_type_name = $data_type_or_type_name;
+  struct ast_node *data_type_no_options = $data_type_no_options;
   struct ast_node *col_attrs= $col_attrs;
-  struct ast_node *name_type = new_ast_col_def_name_type(col_name, data_type_or_type_name);
+  struct ast_node *name_type = new_ast_col_def_name_type(col_name, data_type_no_options);
   struct ast_node *col_def_type_attrs = new_ast_col_def_type_attrs(name_type, col_attrs);
   $col_def = new_ast_col_def(col_def_type_attrs, misc_attrs);
   }
@@ -686,14 +686,6 @@ version_annotation:
     $version_annotation = new_ast_version_annotation(new_ast_opt(atoi($INTLIT)), NULL); }
   ;
 
-object_type:
-  OBJECT  { $object_type = new_ast_type_object(NULL); }
-  | OBJECT '<' name '>'  { $object_type = new_ast_type_object($name); }
-  | OBJECT '<' name CURSOR '>' {
-    CSTR type = dup_printf("%s CURSOR", AST_STR($name));
-    $object_type = new_ast_type_object(new_ast_str(type)); }
-  ;
-
 data_type_numeric:
   INT_  { $data_type_numeric = new_ast_type_int(); }
   | INTEGER  { $data_type_numeric = new_ast_type_int(); }
@@ -703,26 +695,31 @@ data_type_numeric:
   | LONG_ INTEGER  { $data_type_numeric = new_ast_type_long(); }
   | LONG_ INT_  { $data_type_numeric = new_ast_type_long(); }
   | LONG_INTEGER  { $data_type_numeric = new_ast_type_long(); }
-
-data_type:
-  data_type_numeric { $data_type = $data_type_numeric; }
-  | TEXT  { $data_type = new_ast_type_text();  }
-  | BLOB  { $data_type = new_ast_type_blob(); }
-  | object_type  { $data_type = $object_type; }
   ;
 
-data_type_or_type_name:
-  data_type { $data_type_or_type_name = $data_type; }
-  | ID { $data_type_or_type_name = new_ast_str($ID); }
+data_type_any:
+  data_type_numeric { $data_type_any = $data_type_numeric; }
+  | TEXT  { $data_type_any = new_ast_type_text();  }
+  | BLOB  { $data_type_any = new_ast_type_blob(); }
+  | OBJECT { $data_type_any = new_ast_type_object(NULL); }
+  | OBJECT '<' name '>' { $data_type_any = new_ast_type_object($name); }
+  | OBJECT '<' name CURSOR '>' {
+    CSTR type = dup_printf("%s CURSOR", AST_STR($name));
+    $data_type_any = new_ast_type_object(new_ast_str(type)); }
   ;
 
-data_type_opt_notnull:
-  data_type  { $data_type_opt_notnull = $data_type; }
-  | data_type NOT NULL_  { $data_type_opt_notnull = new_ast_notnull($data_type); }
-  | data_type AT_SENSITIVE  { $data_type_opt_notnull = new_ast_sensitive_attr($data_type, NULL); }
-  | data_type AT_SENSITIVE NOT NULL_  { $data_type_opt_notnull = new_ast_sensitive_attr(new_ast_notnull($data_type), NULL); }
-  | data_type NOT NULL_ AT_SENSITIVE  { $data_type_opt_notnull = new_ast_sensitive_attr(new_ast_notnull($data_type), NULL); }
-  | ID { $data_type_opt_notnull = new_ast_str($ID); }
+data_type_no_options:
+  data_type_any { $data_type_no_options = $data_type_any; }
+  | ID { $data_type_no_options = new_ast_str($ID); }
+  ;
+
+data_type_with_options:
+  data_type_any  { $data_type_with_options = $data_type_any; }
+  | data_type_any NOT NULL_  { $data_type_with_options = new_ast_notnull($data_type_any); }
+  | data_type_any AT_SENSITIVE  { $data_type_with_options = new_ast_sensitive_attr($data_type_any, NULL); }
+  | data_type_any AT_SENSITIVE NOT NULL_  { $data_type_with_options = new_ast_sensitive_attr(new_ast_notnull($data_type_any), NULL); }
+  | data_type_any NOT NULL_ AT_SENSITIVE  { $data_type_with_options = new_ast_sensitive_attr(new_ast_notnull($data_type_any), NULL); }
+  | ID { $data_type_with_options = new_ast_str($ID); }
   ;
 
 str_literal:
@@ -840,7 +837,7 @@ expr[result]:
   | CASE expr[cond1] case_list ELSE expr[cond2] END  { $result = new_ast_case_expr($cond1, new_ast_connector($case_list, $cond2));}
   | CASE case_list END  { $result = new_ast_case_expr(NULL, new_ast_connector($case_list, NULL));}
   | CASE case_list ELSE expr[cond] END  { $result = new_ast_case_expr(NULL, new_ast_connector($case_list, $cond));}
-  | CAST '(' expr[sexp] AS data_type_or_type_name ')'  { $result = new_ast_cast_expr($sexp, $data_type_or_type_name); }
+  | CAST '(' expr[sexp] AS data_type_no_options ')'  { $result = new_ast_cast_expr($sexp, $data_type_no_options); }
   ;
 
 case_list[result]:
@@ -1397,12 +1394,12 @@ enum_value:
   ;
 
 declare_func_stmt:
-  DECLARE function name '(' params ')' data_type_opt_notnull  {
-      $declare_func_stmt = new_ast_declare_func_stmt($name, new_ast_func_params_return($params, $data_type_opt_notnull)); }
-  | DECLARE SELECT function name '(' params ')' data_type_opt_notnull  {
-      $declare_func_stmt = new_ast_declare_select_func_stmt($name, new_ast_func_params_return($params, $data_type_opt_notnull)); }
-  | DECLARE function name '(' params ')' CREATE data_type_opt_notnull  {
-      ast_node *create_data_type = new_ast_create_data_type($data_type_opt_notnull);
+  DECLARE function name '(' params ')' data_type_with_options  {
+      $declare_func_stmt = new_ast_declare_func_stmt($name, new_ast_func_params_return($params, $data_type_with_options)); }
+  | DECLARE SELECT function name '(' params ')' data_type_with_options  {
+      $declare_func_stmt = new_ast_declare_select_func_stmt($name, new_ast_func_params_return($params, $data_type_with_options)); }
+  | DECLARE function name '(' params ')' CREATE data_type_with_options  {
+      ast_node *create_data_type = new_ast_create_data_type($data_type_with_options);
       $declare_func_stmt = new_ast_declare_func_stmt($name, new_ast_func_params_return($params, create_data_type)); }
   | DECLARE SELECT function name '(' params ')' '(' typed_names ')'  {
       $declare_func_stmt = new_ast_declare_select_func_stmt($name, new_ast_func_params_return($params, $typed_names)); }
@@ -1447,7 +1444,7 @@ inout:
   ;
 
 typed_name:
-  name data_type_opt_notnull  { $typed_name = new_ast_typed_name($name, $data_type_opt_notnull); }
+  name data_type_with_options  { $typed_name = new_ast_typed_name($name, $data_type_with_options); }
   | shape_def  { $typed_name = new_ast_typed_name(NULL, $shape_def); }
   | name shape_def  { $typed_name = new_ast_typed_name($name, $shape_def); }
   ;
@@ -1458,8 +1455,8 @@ typed_names[result]:
   ;
 
 param:
-  name data_type_opt_notnull  { $param = new_ast_param(NULL, new_ast_param_detail($name, $data_type_opt_notnull)); }
-  | inout name data_type_opt_notnull  { $param = new_ast_param($inout, new_ast_param_detail($name, $data_type_opt_notnull)); }
+  name data_type_with_options  { $param = new_ast_param(NULL, new_ast_param_detail($name, $data_type_with_options)); }
+  | inout name data_type_with_options  { $param = new_ast_param($inout, new_ast_param_detail($name, $data_type_with_options)); }
   | shape_def  { $param = new_ast_param(NULL, new_ast_param_detail(NULL, $shape_def)); }
   | name shape_def  { $param = new_ast_param(NULL, new_ast_param_detail($name, $shape_def)); }
   ;
@@ -1471,7 +1468,7 @@ params[result]:
   ;
 
 declare_stmt:
-  DECLARE name_list data_type_opt_notnull  { $declare_stmt = new_ast_declare_vars_type($name_list, $data_type_opt_notnull); }
+  DECLARE name_list data_type_with_options  { $declare_stmt = new_ast_declare_vars_type($name_list, $data_type_with_options); }
   | DECLARE name CURSOR FOR select_stmt  { $declare_stmt = new_ast_declare_cursor($name, $select_stmt); }
   | DECLARE name CURSOR FOR explain_stmt  { $declare_stmt = new_ast_declare_cursor($name, $explain_stmt); }
   | DECLARE name CURSOR FOR call_stmt  { $declare_stmt = new_ast_declare_cursor($name, $call_stmt); }
@@ -1479,7 +1476,7 @@ declare_stmt:
   | DECLARE name CURSOR shape_def  { $declare_stmt = new_ast_declare_cursor_like_name($name, $shape_def); }
   | DECLARE name CURSOR LIKE select_stmt  { $declare_stmt = new_ast_declare_cursor_like_select($name, $select_stmt); }
   | DECLARE name[id] CURSOR FOR name[obj] { $declare_stmt = new_ast_declare_cursor($id, $obj); }
-  | DECLARE name TYPE data_type_opt_notnull { $declare_stmt = new_ast_declare_named_type($name, $data_type_opt_notnull); }
+  | DECLARE name TYPE data_type_with_options { $declare_stmt = new_ast_declare_named_type($name, $data_type_with_options); }
   ;
 
 call_stmt:

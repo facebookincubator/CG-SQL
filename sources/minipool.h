@@ -35,12 +35,8 @@ cql_noexport void run_lazy_frees(void);
 #define _pool_new(p, x) ((x*)minipool_alloc(p, (int32_t)sizeof(x)))
 #define _pool_new_array(p, x, c) ((x*)minipool_alloc(p, c*(int32_t)sizeof(x)))
 
-#define _dasm_pool_new(x) _pool_new(dasm_pool, x)
-#define _dasm_pool_new_array(x, c) _pool_new_array(dasm_pool, x, c)
-
 #define _ast_pool_new(x) _pool_new(ast_pool, x)
 #define _ast_pool_new_array(x, c) _pool_new_array(ast_pool, x, c)
 
 cql_data_decl( minipool *_Nullable ast_pool );
 cql_data_decl( minipool *_Nullable str_pool );
-cql_data_decl( minipool *_Nullable dasm_pool );

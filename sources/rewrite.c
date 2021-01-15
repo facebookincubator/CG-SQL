@@ -290,7 +290,6 @@ cql_noexport void rewrite_from_shape_args(ast_node *head) {
   record_ok(head);
 }
 
-
 // Walk the list of column definitions looking for any of the
 // "LIKE table/proc/view". If any are found, replace that parameter with
 // the table/prov/view columns
@@ -585,6 +584,7 @@ cql_noexport ast_node *rewrite_gen_data_type(sem_t sem_type, CSTR _Nullable obje
 // If no name list then fake a name list so that both paths are the same
 // no name list is the same as all the names
 cql_noexport ast_node *rewrite_gen_full_column_list(sem_struct *sptr) {
+  Contract(sptr);
   ast_node *name_list = NULL;
   ast_node *name_list_tail = NULL;
 

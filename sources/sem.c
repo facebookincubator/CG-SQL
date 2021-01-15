@@ -3733,6 +3733,8 @@ static void sem_binary_compare(ast_node *ast, CSTR op) {
   ast->sem = new_sem(SEM_TYPE_BOOL | combined_flags);
 }
 
+// Any const node is evaluated at compile time.  The kinds of sub-expressions
+// that are allowed are limited.  See the "eval" function for more on this.
 static void sem_expr_const(ast_node *ast, CSTR op) {
   Contract(is_ast_const(ast));
 
