@@ -19,6 +19,18 @@ create table foo(
   id integer PRIMARY KEY AUTOINCREMENT
 );
 
+-- TEST: create a table using type discrimation: kinds
+-- + {create_table_stmt}: with_kind: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> }
+-- + {col_def}: id: integer<some_key>
+-- + {col_def}: cost: real<dollars>
+-- + {col_def}: value: real<dollars>
+-- - Error
+create table with_kind(
+  id integer<some_key>,
+  cost real<dollars>,
+  value real<dollars>
+);
+
 -- TEST: second test table with combination of fields
 -- + {create_table_stmt}: bar: { id: integer notnull, name: text, rate: longint }
 -- - Error
@@ -47,6 +59,11 @@ create table baz(
 -- + select: { id: integer notnull }
 -- - Error
 select ID from foo;
+
+-- TEST: make sure the type includes the kinds
+-- + {select_stmt}: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> }
+-- - Error
+select * from with_kind;
 
 -- TEST: classic join
 -- + select: { id: integer notnull, name: text }
@@ -1416,6 +1433,17 @@ select X;
 -- - Error
 -- + {declare_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable
 declare my_cursor cursor for select 1 as one, 2 as two;
+
+-- TEST: create a cursor with primitive kinds
+-- + {declare_cursor}: kind_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable
+-- - Error
+declare kind_cursor cursor for select * from with_kind;
+
+
+-- TEST: make a value cursor of the same shape
+-- + {declare_cursor_like_name}: kind_value_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable shape_storage value_cursor
+-- - Error
+declare kind_value_cursor cursor like kind_cursor;
 
 -- TEST: try to create a duplicate cursor
 -- + Error % duplicate variable name in the same scope 'my_cursor'
@@ -13489,3 +13517,80 @@ declare x2 _x;
 -- + {name x2}: x2: integer<x_coord> variable
 -- - Error
 set x1 := x2;
+
+-- TEST: make a table that has mixed kinds
+-- + {create_table_stmt}: xy: { x: integer<x_coord>, y: integer<y_coord> }
+-- + {col_def}: x: integer<x_coord>
+-- + {col_def}: y: integer<y_coord>
+create table xy(
+  x _x,
+  y _y
+);
+
+-- TEST: valid insert the kinds match
+-- + {insert_stmt}: ok
+-- + {name xy}: xy: { x: integer<x_coord>, y: integer<y_coord> }
+-- - Error
+insert into xy using x1 x, y1 y;
+
+-- TEST: invalid insert the kinds don't match (y1 is not an xcoord)
+-- + {insert_stmt}: err
+-- + Error % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
+-- +1 Error
+insert into xy using y1 x, x1 y;
+
+-- TEST: insert into the table with matching coordinates
+-- + {insert_stmt}: ok
+-- + {name xy}: xy: { x: integer<x_coord>, y: integer<y_coord> }
+insert into xy select xy.x, xy.y from xy where xy.x = 1;
+
+-- TEST: insert into the table with coordinates reversed (error)
+-- + {insert_stmt}: err
+-- + Error % expressions of different kinds can't be mixed: 'y_coord' vs. 'x_coord'
+-- +1 Error
+insert into xy select xy.y, xy.x from xy where xy.x = 1;
+
+-- TEST: compound select with matching object kinds (use as to make the names match)
+-- +  {select_stmt}: UNION ALL: { x: integer<x_coord>, y: integer<y_coord> }
+-- - Error
+select x1 as x, y1 as y
+union all
+select x1 as x, y1 as y;
+ 
+-- TEST: compound select with not matching object kinds (as makes the name match)
+-- but the kind is wrong so you still get an error (!)
+-- + {select_stmt}: err
+-- + Error % expressions of different kinds can't be mixed: 'y_coord' vs. 'x_coord'
+-- +1 Error
+select x1 as x, y1 as y
+union all
+select y1 as x, x1 as y;
+
+-- TEST: insert into xy with values, kinds are ok
+-- + {insert_stmt}: ok
+-- - Error
+insert into xy values (x1, y1), (x1, y1);
+
+-- TEST: insert into xy with values, kinds are ok
+-- + {insert_stmt}: err
+-- + Error % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
+-- +1 Error
+insert into xy values 
+  (x1, y1), 
+  (y1, x1),
+  (x1, y1);
+
+-- TEST: cursor should have the correct shape including kinds
+-- + {declare_cursor_like_name}: xy_curs: xy: { x: integer<x_coord>, y: integer<y_coord> } variable shape_storage value_cursor
+declare xy_curs cursor like xy;
+
+-- TEST: fetch cursor, ok, kinds match
+-- + {fetch_values_stmt}: ok
+-- + {name xy_curs}: xy_curs: xy: { x: integer<x_coord>, y: integer<y_coord> } variable shape_storage value_cursor
+-- - Error
+fetch xy_curs from values(x1, y1);
+
+-- TEST: fetch cursor but kinds do not match
+-- + Error % expressions of different kinds can't be mixed: 'y_coord' vs. 'x_coord'
+-- +1 Error
+fetch xy_curs from values(y1, x1);

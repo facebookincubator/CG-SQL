@@ -133,6 +133,7 @@ static void sem_validate_check_expr(ast_node *table, ast_node *expr);
 static void sem_numeric_expr(ast_node *expr, ast_node *context, CSTR subject, uint32_t expr_context);
 static void sem_misc_attrs_basic(ast_node *ast);
 static void sem_data_type_var(ast_node *ast);
+static CSTR sem_combine_kinds_general(ast_node *ast, CSTR kleft, CSTR kright);
 static CSTR sem_combine_kinds(ast_node *ast, CSTR current_kind);
 
 static void lazy_free_symtab(void *syms) {
@@ -1460,6 +1461,9 @@ static void print_sem_struct(sem_struct *sptr) {
     }
     CHARBUF_OPEN(temp);
     get_sem_core(sptr->semtypes[i], &temp);
+    if (sptr->kinds[i]) {
+     bprintf(&temp, "<%s>", sptr->kinds[i]);
+    }
     get_sem_flags(sptr->semtypes[i], &temp);
     cql_output("%s: %s", sptr->names[i], temp.ptr);
     CHARBUF_CLOSE(temp);
@@ -1728,11 +1732,13 @@ static sem_struct * new_sem_struct(CSTR name, uint32_t count) {
   sptr->struct_name = name;
   sptr->count = count;
   sptr->names = _ast_pool_new_array(CSTR, count);
+  sptr->kinds = _ast_pool_new_array(CSTR, count);
   sptr->semtypes = _ast_pool_new_array(sem_t, count);
 
   for (int32_t i = 0; i < count; i++) {
     sptr->names[i] = NULL;
     sptr->semtypes[i] = SEM_TYPE_ERROR;
+    sptr->kinds[i] = NULL;
   }
 
   return sptr;
@@ -1766,6 +1772,7 @@ static sem_struct *sem_clone_struct_strip_flags(sem_struct *sptr, sem_t strip) {
   sem_struct *result = new_sem_struct(sptr->struct_name, sptr->count);
   for (int32_t i = 0; i < sptr->count; i++) {
     result->names[i] = sptr->names[i];
+    result->kinds[i] = sptr->kinds[i];
     result->semtypes[i] = sptr->semtypes[i] & sem_not(strip);
   }
   return result;
@@ -3357,6 +3364,7 @@ static void sem_col_def(ast_node *def, coldef_info *info) {
 
   def->sem = new_sem(data_type->sem->sem_type);
   def->sem->name = name;
+  def->sem->kind = data_type->sem->kind;
 
   info->col_sem_type = def->sem->sem_type;
   info->col_name = name;
@@ -3991,6 +3999,7 @@ static void sem_select_star(ast_node *ast) {
     for (int32_t j = 0; j < table->count; j++, field++) {
       sptr->names[field] = table->names[j];
       sptr->semtypes[field] = table->semtypes[j];
+      sptr->kinds[field] = table->kinds[j];
     }
   }
 
@@ -4046,6 +4055,7 @@ static int32_t sem_select_table_star_add(ast_node *ast, sem_struct *sptr, int32_
   for (int32_t j = 0; j < table->count; j++) {
     sptr->names[index] = table->names[j];
     sptr->semtypes[index] = table->semtypes[j];
+    sptr->kinds[index] = table->kinds[j];
     index++;
   }
 
@@ -4116,8 +4126,19 @@ static sem_struct *sem_unify_compatible_columns(ast_node *left, ast_node *right)
       return NULL;
     }
 
+    CSTR kind_1 = sptr_left->kinds[i];
+    CSTR kind_2 = sptr_right->kinds[i];
+
+    CSTR kind = sem_combine_kinds_general(left, kind_1, kind_2);
+    if (is_error(left)) {
+      record_error(left);
+      record_error(right);
+      return NULL;
+    }
+
     sptr->semtypes[i] = sem_combine_types(sem_type_1, sem_type_2);
     sptr->names[i] = sptr_left->names[i];
+    sptr->kinds[i] = kind;
   }
 
   return sptr;
@@ -4344,6 +4365,7 @@ static bool_t try_resolve_variable(ast_node *ast, CSTR name) {
 static bool_t try_resolve_column(ast_node *ast, CSTR name, CSTR scope) {
   sem_t sem_type = 0;
   CSTR col = NULL;
+  CSTR kind = NULL;
   sem_join *found_jptr = NULL;
 
   // We walk the chain of scopes until we find a stop frame or else we run out
@@ -4363,6 +4385,7 @@ static bool_t try_resolve_column(ast_node *ast, CSTR name, CSTR scope) {
             }
             sem_type = table->semtypes[j];
             col = table->names[j];
+            kind = table->kinds[j];
             found_jptr = jptr;
           }
         }
@@ -4386,6 +4409,7 @@ static bool_t try_resolve_column(ast_node *ast, CSTR name, CSTR scope) {
         for (int32_t i = 0; i < jptr->count; i++) {
           if (!Strcasecmp(scope, jptr->names[i])) {
             col = name;
+            kind = NULL;
             sem_type = SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL;
             break;
           }
@@ -4402,6 +4426,7 @@ static bool_t try_resolve_column(ast_node *ast, CSTR name, CSTR scope) {
   if (col) {
     ast->sem = new_sem(sem_type);
     ast->sem->name = col; // be sure to use the canonical name
+    ast->sem->kind = kind; // use the kind if there is one
 
     if (found_jptr && found_jptr == monitor_jptr) {
       symtab_add(monitor_symtab, col, NULL);
@@ -4627,20 +4652,25 @@ static void sem_resolve_id(ast_node *ast, CSTR name, CSTR scope) {
 // If there is a current object type, then the next item must match
 // If there is no such type, then an object type that arrives becomes the required type
 // if they ever don't match record an error
-static CSTR sem_combine_kinds(ast_node *ast, CSTR current_kind) {
-  CSTR target_kind = ast->sem->kind;
-  if (target_kind) {
-    if (current_kind) {
-      if (strcmp(current_kind, ast->sem->kind)) {
-        CSTR errmsg = dup_printf("CQL0070: expressions of different kinds can't be mixed: '%s' vs. '%s'", current_kind, target_kind);
+static CSTR sem_combine_kinds_general(ast_node *ast, CSTR kleft, CSTR kright) {
+  if (kright) {
+    if (kleft) {
+      if (strcmp(kleft, kright)) {
+        CSTR errmsg = dup_printf("CQL0070: expressions of different kinds can't be mixed: '%s' vs. '%s'", kright, kleft);
         report_error(ast, errmsg, NULL);
         record_error(ast);
       }
     }
-    return target_kind;
+    return kright;
   }
 
-  return current_kind;
+  return kleft;
+}
+
+// helper to crack the ast nodes first and then call the normal comparisons
+static CSTR sem_combine_kinds(ast_node *ast, CSTR kright) {
+  CSTR kleft = ast->sem->kind;
+  return sem_combine_kinds_general(ast, kleft, kright);
 }
 
 // Here we validate the contents of the case list of a case expression.
@@ -7042,6 +7072,7 @@ static void sem_select_expr(ast_node *ast) {
   Invariant(is_unitary(expr->sem->sem_type));
   ast->sem = new_sem(expr->sem->sem_type);
   ast->sem->name = expr->sem->name;
+  ast->sem->kind = expr->sem->kind;
 
   if (opt_as_alias) {
     sem_as_alias(opt_as_alias, &ast->sem->name);
@@ -7109,6 +7140,9 @@ static void sem_select_expr_list(ast_node *ast) {
         // If you do "select 1" it has no name.
         sptr->names[i] = "_anon";
       }
+
+      // get the kind if there is one (null is ok) as that means the type has no kind
+      sptr->kinds[i] = select_expr->sem->kind;
 
       sptr->semtypes[i] = select_expr->sem->sem_type;
       i++;
@@ -7908,6 +7942,7 @@ static void sem_values(ast_node *ast) {
 
       sptr->semtypes[values_count] = sem_type;
       sptr->names[values_count] = sem_name;
+      sptr->kinds[values_count] = NULL;
       values_count++;
     }
 
@@ -8244,6 +8279,9 @@ static void sem_cte_decl(ast_node *ast, ast_node *select_core)  {
     // use the names from the CTE decl rather than the select
     EXTRACT_STRING(col_name, item->left);
     sptr->names[i] = col_name;
+
+    // PENDING: CTE's are not preserving KING right now
+    // sptr->kinds[i] = item->left->sem->kind;  this is not the correct source of the kind
 
     item = item->right;
   }
@@ -9606,6 +9644,7 @@ static void sem_create_table_stmt(ast_node *ast) {
 
       sptr->names[col] = def->sem->name;
       sptr->semtypes[col] = def->sem->sem_type;
+      sptr->kinds[col] = def->sem->kind;
       col++;
     }
   }
@@ -10817,6 +10856,7 @@ static void sem_upsert_stmt(ast_node *stmt) {
   for (int32_t i = 0; i < names_count; i++, ast = ast->right) {
     sptr->semtypes[i] = ast->left->sem->sem_type;
     sptr->names[i] = ast->left->sem->name;
+    sptr->kinds[i] = ast->left->sem->kind;
   }
 
   // We'll store the resultant type in the AST as well on the conflict target
@@ -11289,6 +11329,12 @@ static bool_t sem_validate_compatable_table_cols_vals(ast_node *table_ast, ast_n
       continue;
     }
 
+    // if the column and expression kinds are not compatible we have to bail (e.g. <dollars> used where <euros> expected)
+    sem_combine_kinds(expr, col->sem->kind);
+    if (is_error(expr)) {
+      return false;
+    }
+
     // otherwise the columns have to be assignment compatable
     if (!sem_verify_assignment(expr, col->sem->sem_type, expr->sem->sem_type, col->sem->name)) {
       return false;
@@ -11346,8 +11392,20 @@ static bool_t sem_validate_compatable_table_cols_select(ast_node *table_ast, ast
               continue;
             }
 
+            // NOTE: kind mismatch can be an issue here but only if the values clause has some expressions in it, 
+            // which is atypical but it can happen.  The normal thing is that values are all constants.
+            sem_combine_kinds(expr, col->sem->kind);
+            if (is_error(expr)) {
+              // to do, is this error recording actually needed?  looks redundant.
+              record_error(insert_list);
+              record_error(select_stmt);
+              record_error(select_stmt->parent);
+              return false;
+            }
+
             // in case of semantic error the expr is tagged to the expr node in values clause.
             if (!sem_verify_assignment(expr, col->sem->sem_type, expr->sem->sem_type, col->sem->name)) {
+              // to do, is this error recording actually needed?  looks redundant.
               record_error(insert_list);
               record_error(select_stmt);
               record_error(select_stmt->parent);
@@ -11384,6 +11442,11 @@ static bool_t sem_validate_compatable_table_cols_select(ast_node *table_ast, ast
       continue;
     }
 
+    sem_combine_kinds(col, sptr_select->kinds[icol_select]);
+    if (is_error(col)) {
+      return false;
+    }
+
     // otherwise the columns have to be assignment compatable
     if (!sem_verify_assignment(col, col->sem->sem_type, sptr_select->semtypes[icol_select], col->sem->name)) {
       return false;
@@ -11403,6 +11466,11 @@ static bool_t sem_validate_compatable_cols_vals(ast_node *name_list, ast_node *v
     EXTRACT_ANY_NOTNULL(col, item->left);
     sem_expr(expr);
     if (is_error(expr)) {
+      return false;
+    }
+
+    sem_combine_kinds(col, expr->sem->kind);
+    if (is_error(col)) {
       return false;
     }
 
@@ -11590,6 +11658,7 @@ static ast_node *sem_find_likeable_proc_args(ast_node *like_ast, int32_t likeabl
 
     sptr->semtypes[i] = sem_type_param;
     sptr->names[i] = param->sem->name;
+    sptr->kinds[i] = param->sem->kind;
   }
 
   result->sem = new_sem(SEM_TYPE_STRUCT);
@@ -11723,6 +11792,7 @@ static void sem_params(ast_node *head, bytebuf *args_info) {
       Invariant(i < sptr->count);
       sptr->names[i] = arg_names[i*3];
       sptr->semtypes[i] = param->sem->sem_type;
+      sptr->kinds[i] = param->sem->kind;
     }
   }
 
@@ -13531,6 +13601,7 @@ static void sem_typed_names(ast_node *head) {
     EXTRACT(typed_name, ast->left);
     sptr->names[i] = typed_name->sem->name;
     sptr->semtypes[i] = typed_name->sem->sem_type;
+    sptr->kinds[i] = typed_name->sem->kind;
   }
 
   Invariant(i == count);
