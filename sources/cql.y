@@ -203,7 +203,7 @@ static void cql_reset_globals(void);
 /* expressions and types */
 %type <aval> expr basic_expr math_expr expr_list typed_name typed_names case_list call_expr_list call_expr shape_arguments
 %type <aval> name name_list opt_name_list opt_name
-%type <aval> data_type_any data_type_no_options data_type_numeric data_type_with_options
+%type <aval> data_type_any data_type_no_options data_type_numeric data_type_with_options opt_kind
 
 /* proc stuff */
 %type <aval> create_proc_stmt declare_func_stmt declare_proc_stmt
@@ -686,24 +686,28 @@ version_annotation:
     $version_annotation = new_ast_version_annotation(new_ast_opt(atoi($INTLIT)), NULL); }
   ;
 
+opt_kind:
+  /* nil */ { $opt_kind = NULL; }
+  | '<' name '>' {$opt_kind = $name; }
+  ;
+
 data_type_numeric:
-  INT_  { $data_type_numeric = new_ast_type_int(); }
-  | INTEGER  { $data_type_numeric = new_ast_type_int(); }
-  | REAL  { $data_type_numeric = new_ast_type_real(); }
-  | LONG_  { $data_type_numeric = new_ast_type_long(); }
-  | BOOL_  { $data_type_numeric = new_ast_type_bool(); }
-  | LONG_ INTEGER  { $data_type_numeric = new_ast_type_long(); }
-  | LONG_ INT_  { $data_type_numeric = new_ast_type_long(); }
-  | LONG_INTEGER  { $data_type_numeric = new_ast_type_long(); }
+  INT_ opt_kind { $data_type_numeric = new_ast_type_int($opt_kind); }
+  | INTEGER opt_kind { $data_type_numeric = new_ast_type_int($opt_kind); }
+  | REAL opt_kind { $data_type_numeric = new_ast_type_real($opt_kind); }
+  | LONG_ opt_kind { $data_type_numeric = new_ast_type_long($opt_kind); }
+  | BOOL_ opt_kind { $data_type_numeric = new_ast_type_bool($opt_kind); }
+  | LONG_ INTEGER opt_kind { $data_type_numeric = new_ast_type_long($opt_kind); }
+  | LONG_ INT_ opt_kind { $data_type_numeric = new_ast_type_long($opt_kind); }
+  | LONG_INTEGER opt_kind { $data_type_numeric = new_ast_type_long($opt_kind); }
   ;
 
 data_type_any:
   data_type_numeric { $data_type_any = $data_type_numeric; }
-  | TEXT  { $data_type_any = new_ast_type_text();  }
-  | BLOB  { $data_type_any = new_ast_type_blob(); }
-  | OBJECT { $data_type_any = new_ast_type_object(NULL); }
-  | OBJECT '<' name '>' { $data_type_any = new_ast_type_object($name); }
-  | OBJECT '<' name CURSOR '>' {
+  | TEXT  opt_kind { $data_type_any = new_ast_type_text($opt_kind);  }
+  | BLOB  opt_kind { $data_type_any = new_ast_type_blob($opt_kind); }
+  | OBJECT opt_kind { $data_type_any = new_ast_type_object($opt_kind); }
+  | OBJECT '<' name CURSOR '>' { /* special case for boxed cursor */
     CSTR type = dup_printf("%s CURSOR", AST_STR($name));
     $data_type_any = new_ast_type_object(new_ast_str(type)); }
   ;

@@ -177,16 +177,19 @@ static void gen_data_type(ast_node *ast) {
   if (is_ast_create_data_type(ast)) {
     gen_printf("CREATE ");
     gen_data_type(ast->left);
+    return;
   }
   else if (is_ast_notnull(ast)) {
     gen_data_type(ast->left);
     gen_printf(" NOT NULL");
+    return;
   }
   else if (is_ast_sensitive_attr(ast)) {
     gen_data_type(ast->left);
     if (!for_sqlite()) {
       gen_printf(" @SENSITIVE");
     }
+    return;
   }
   else if (is_ast_type_int(ast)) {
     gen_printf("INTEGER");
@@ -196,11 +199,6 @@ static void gen_data_type(ast_node *ast) {
     gen_printf("BLOB");
   } else if (is_ast_type_object(ast)) {
     gen_printf("OBJECT");
-    if (ast->left) {
-      gen_printf("<");
-      gen_name(ast->left);
-      gen_printf(">");
-    }
   } else if (is_ast_type_long(ast)) {
     gen_printf("LONG_INT");
   } else if (is_ast_type_real(ast)) {
@@ -211,6 +209,15 @@ static void gen_data_type(ast_node *ast) {
     Contract(is_ast_str(ast));
     EXTRACT_STRING(name, ast);
     gen_printf("%s", name);
+    return;
+  }
+
+  if (!for_sqlite()) {
+    if (ast->left) {
+      gen_printf("<");
+      gen_name(ast->left);
+      gen_printf(">");
+    }
   }
 }
 

@@ -1382,6 +1382,24 @@ DECLARE fbid TYPE TEXT @SENSITIVE;
 
 DECLARE my_fbid fbid;
 
+DECLARE x INTEGER<special>;
+
+DECLARE y REAL<special>;
+
+SET x := 1;
+
+DECLARE PROC p (x INTEGER<special>);
+
+DECLARE FUNC f (x INTEGER<special>) REAL<not_so_special>;
+
+DECLARE PROC p2 () (x INTEGER<special>, y INTEGER<also_special>);
+
+CREATE TABLE special(
+  id INTEGER<special>,
+  id2 INTEGER<less_special>,
+  id3 INTEGER
+);
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

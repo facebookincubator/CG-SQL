@@ -1286,6 +1286,23 @@ declare fbid type text @sensitive;
 
 declare my_fbid fbid;
 
+-- primitives with a 'kind'
+
+declare x integer<special>;
+declare y real<special>;
+set x := 1;
+
+declare proc p(x integer<special>);
+declare func f(x integer<special>) real<not_so_special>;
+
+declare proc p2() (x integer<special>,  y integer<also_special>);
+
+create table special(
+ id integer<special>,
+ id2 integer<less_special>,
+ id3 integer 
+);
+
 
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 

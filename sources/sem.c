@@ -11220,7 +11220,7 @@ static void sem_synthesize_dummy_value(dummy_info *info) {
   }
   else if (is_blob(info->sem_type_col)) {
     ast_node *inner = printf_col_for_dummy(info->name, seed_name);
-    expr = new_ast_cast_expr(inner, new_ast_type_blob());
+    expr = new_ast_cast_expr(inner, new_ast_type_blob(NULL));
   }
   else {
     // strings are column_name_{seed} -- using printf

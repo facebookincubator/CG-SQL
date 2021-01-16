@@ -549,25 +549,20 @@ cql_noexport CSTR process_proclit(ast_node *ast, CSTR name) {
   return name;
 }
 
-cql_noexport ast_node *rewrite_gen_data_type(sem_t sem_type, CSTR _Nullable object_type) {
+cql_noexport ast_node *rewrite_gen_data_type(sem_t sem_type, CSTR kind) {
   ast_node *ast = NULL;
+  ast_node *kind_ast = kind ? new_ast_str(kind) : NULL;
 
   switch (core_type_of(sem_type)) {
-    case SEM_TYPE_INTEGER:      ast = new_ast_type_int(); break;
-    case SEM_TYPE_TEXT:         ast = new_ast_type_text(); break;
-    case SEM_TYPE_LONG_INTEGER: ast = new_ast_type_long(); break;
-    case SEM_TYPE_REAL:         ast = new_ast_type_real(); break;
-    case SEM_TYPE_BOOL:         ast = new_ast_type_bool(); break;
-    case SEM_TYPE_BLOB:         ast = new_ast_type_blob(); break;
-    case SEM_TYPE_OBJECT: {
-      ast_node *node = NULL;
-      if (object_type) {
-        node = new_ast_str(object_type);
-      }
-      ast = new_ast_type_object(node);
-      break;
-    }
+    case SEM_TYPE_INTEGER:      ast = new_ast_type_int(kind_ast); break;
+    case SEM_TYPE_TEXT:         ast = new_ast_type_text(kind_ast); break;
+    case SEM_TYPE_LONG_INTEGER: ast = new_ast_type_long(kind_ast); break;
+    case SEM_TYPE_REAL:         ast = new_ast_type_real(kind_ast); break;
+    case SEM_TYPE_BOOL:         ast = new_ast_type_bool(kind_ast); break;
+    case SEM_TYPE_BLOB:         ast = new_ast_type_blob(kind_ast); break;
+    case SEM_TYPE_OBJECT:       ast = new_ast_type_object(kind_ast); break;
   }
+
   Invariant(ast);
 
   if (is_not_nullable(sem_type)) {
