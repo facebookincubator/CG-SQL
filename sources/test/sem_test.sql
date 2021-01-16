@@ -4197,12 +4197,12 @@ set foo_obj := foo_func();
 declare bar_obj object<Bar>;
 
 -- TEST: assign Bar to a Foo
--- + Error % incompatible object type 'Foo'
+-- + Error % expressions of different kinds can't be mixed: 'Bar' vs. 'Foo'
 -- +1 Error
 set bar_obj := foo_obj;
 
 -- TEST: case statement must have uniform return type
--- + Error % incompatible object type 'Foo'
+-- + Error % expressions of different kinds can't be mixed: 'Bar' vs. 'Foo'
 -- +1 Error
 set bar_obj := case 1 when 1 then bar_obj when 2 then foo_obj end;
 
@@ -4212,7 +4212,7 @@ set bar_obj := case 1 when 1 then bar_obj when 2 then foo_obj end;
 set bar_obj := case 1 when 1 then bar_object when 2 then foo_obj end;
 
 -- TEST: case statement must have uniform return type
--- + Error % incompatible object type 'Foo'
+-- + Error % expressions of different kinds can't be mixed: 'Bar' vs. 'Foo'
 -- +1 Error
 set bar_obj := case 1 when 1 then bar_obj else foo_obj end;
 
@@ -4291,7 +4291,7 @@ declare function goo_func(goo object<Goo>) text;
 
 -- TEST: function with mismatched arg type
 -- + {assign}: err
--- + Error % incompatible object type 'Bar'
+-- + Error % expressions of different kinds can't be mixed: 'Goo' vs. 'Bar'
 -- +1 Error
 set a_string := goo_func(bar_obj);
 
@@ -13397,3 +13397,95 @@ declare enum my_type integer (
  negative_one = -1,
  postive_one = 1
 );
+
+-- TEST: make x coordinate for use later, validate that it has a kind
+-- + {type_int}: integer<x_coord>
+-- - Error
+declare x1 integer<x_coord>;
+
+-- TEST: make x coordinate for use later, validate that it has a kind
+-- + {type_int}: integer<y_coord>
+-- - Error
+declare y1 integer<y_coord>;
+
+-- TEST: try to assign an x to a y
+-- + Error % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
+-- +1 Error
+set x1 := y1;
+
+-- TEST: try to assign an x to a y
+-- + Error % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
+-- +1 Error
+set x1 := y1;
+
+-- TEST: try to add and x and a y
+-- + {add}: err
+-- + {name x1}: x1: integer<x_coord> variable
+-- + {name y1}: err
+-- + Error % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
+-- +1 Error
+set x1 := x1 + y1;
+
+-- TEST: this is ok, it's still an x
+-- + {mul}: integer<x_coord>
+-- - Error
+set x1 := x1 * 2;
+
+-- TEST: this is ok, it's still an x
+-- + {add}: integer<x_coord>
+-- - Error
+set x1 := x1 + x1;
+
+declare bb bool;
+
+-- TEST: this is ok, comparison of same types (equality)
+-- + {eq}: bool
+-- - Error
+set bb := x1 = x1;
+
+-- TEST: this is ok, comparison of same types (inequality)
+-- + {lt}: bool
+-- - Error
+set bb := x1 < x1;
+
+-- TEST: comparison of two incompatible types (equality)
+-- + {eq}: err
+-- + Error % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
+-- +1 Error
+set bb := x1 = y1;
+
+-- TEST: comparison of two incompatible types (inequality)
+-- + {lt}: err
+-- + Error % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
+-- +1 Error
+set bb := x1 < y1;
+
+-- TEST: make an alias for an integer with kind (x)
+-- + {declare_named_type}: integer<x_coord>
+-- + {name _x}: integer<x_coord>
+-- + {type_int}: integer<x_coord>
+-- + {name x_coord}
+-- - Error
+declare _x type integer<x_coord>;
+
+-- TEST: make an alias for an integer with kind (y)
+-- + {name y_coord}
+-- - Error
+declare _y type integer<y_coord>;
+
+-- TEST: delare an integer with the type alias
+-- + DECLARE x2 INTEGER<x_coord>;
+-- + {declare_vars_type}: integer<x_coord>
+-- + {name_list}: x2: integer<x_coord> variable
+-- + {name x2}: x2: integer<x_coord> variable
+-- + {type_int}: integer<x_coord>
+-- + {name x_coord}
+-- - Error
+declare x2 _x;
+
+-- TEST: use the named type version, should be the same
+-- + {assign}: x1: integer<x_coord> variable
+-- + {name x1}: x1: integer<x_coord> variable
+-- + {name x2}: x2: integer<x_coord> variable
+-- - Error
+set x1 := x2;

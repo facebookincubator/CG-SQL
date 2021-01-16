@@ -1275,7 +1275,7 @@ cql_noexport void rewrite_data_type_if_needed(ast_node *ast) {
     }
 
     AST_REWRITE_INFO_SET(data_type->lineno, data_type->filename);
-    ast_node *node = rewrite_gen_data_type(sem_type, named_type->sem->object_type);
+    ast_node *node = rewrite_gen_data_type(sem_type, named_type->sem->kind);
     AST_REWRITE_INFO_RESET();
 
     ast_set_left(data_type, node->left);

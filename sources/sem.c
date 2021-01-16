@@ -133,6 +133,7 @@ static void sem_validate_check_expr(ast_node *table, ast_node *expr);
 static void sem_numeric_expr(ast_node *expr, ast_node *context, CSTR subject, uint32_t expr_context);
 static void sem_misc_attrs_basic(ast_node *ast);
 static void sem_data_type_var(ast_node *ast);
+static CSTR sem_combine_kinds(ast_node *ast, CSTR current_kind);
 
 static void lazy_free_symtab(void *syms) {
   symtab_delete(syms);
@@ -1519,8 +1520,8 @@ cql_noexport void print_sem_type(sem_node *sem) {
     CHARBUF_CLOSE(temp);
   }
 
-  if (sem->object_type) {
-     cql_output("<%s>", sem->object_type);
+  if (sem->kind) {
+     cql_output("<%s>", sem->kind);
   }
 
   if (sem->value) {
@@ -1636,7 +1637,7 @@ static sem_node * new_sem(sem_t sem_type) {
   sem->sem_type = sem_type;
   sem->name = NULL;
   sem->error = NULL;
-  sem->object_type = NULL;
+  sem->kind = NULL;
   sem->sptr = NULL;
   sem->jptr = NULL;
   sem->create_version = -1;
@@ -1787,7 +1788,7 @@ static sem_join *sem_join_from_sem_struct(sem_struct *sptr) {
 }
 
 // If either of the types is an object then produce an error on the ast.
-static bool_t error_any_object_types(ast_node *ast, sem_t core_type_left, sem_t core_type_right, CSTR op) {
+static bool_t error_any_kind(ast_node *ast, sem_t core_type_left, sem_t core_type_right, CSTR op) {
   if (is_object(core_type_left)) {
     report_error(ast->left, "CQL0002: left operand cannot be an object in", op);
     record_error(ast);
@@ -2192,10 +2193,6 @@ static void sem_data_type_column(ast_node *ast) {
     ast->sem = new_sem(SEM_TYPE_BLOB);
   } else if (is_ast_type_object(ast)) {
     ast->sem = new_sem(SEM_TYPE_OBJECT);
-    if (ast->left) {
-      EXTRACT_STRING(name, ast->left);
-      ast->sem->object_type = name;
-    }
   } else if (is_ast_type_long(ast)) {
     ast->sem = new_sem(SEM_TYPE_LONG_INTEGER);
   } else if (is_ast_type_real(ast)) {
@@ -2203,6 +2200,11 @@ static void sem_data_type_column(ast_node *ast) {
   } else {
     Contract(is_ast_type_bool(ast));
     ast->sem = new_sem(SEM_TYPE_BOOL);
+  }
+
+  if (ast->left) {
+    EXTRACT_STRING(name, ast->left);
+    ast->sem->kind = name;
   }
 }
 
@@ -2241,7 +2243,7 @@ static void sem_data_type_var(ast_node *ast) {
     ast->sem = new_sem(SEM_TYPE_CREATE_FUNC | data_type->sem->sem_type);
     // copy object type to the sem if applicable. It's used to rewrite
     // named type ast.
-    ast->sem->object_type = data_type->sem->object_type;
+    ast->sem->kind = data_type->sem->kind;
   }
   else if (is_ast_notnull(ast)) {
     EXTRACT_ANY_NOTNULL(data_type, ast->left);
@@ -2251,7 +2253,7 @@ static void sem_data_type_var(ast_node *ast) {
     ast->sem = new_sem(SEM_TYPE_NOTNULL | data_type->sem->sem_type);
     // copy object type to the sem if applicable. It's used to rewrite
     // named type ast.
-    ast->sem->object_type = data_type->sem->object_type;
+    ast->sem->kind = data_type->sem->kind;
   }
   else if (is_ast_sensitive_attr(ast)) {
     EXTRACT_ANY_NOTNULL(data_type, ast->left);
@@ -2261,7 +2263,7 @@ static void sem_data_type_var(ast_node *ast) {
     ast->sem = new_sem(SEM_TYPE_SENSITIVE | data_type->sem->sem_type);
     // copy object type to the sem if applicable. It's used to rewrite
     // named type ast.
-    ast->sem->object_type = data_type->sem->object_type;
+    ast->sem->kind = data_type->sem->kind;
   }
   else {
     sem_data_type_column(ast);
@@ -3657,7 +3659,7 @@ static void sem_binary_math(ast_node *ast, CSTR op) {
     return;
   }
 
-  if (error_any_object_types(ast, core_type_left, core_type_right, op)) {
+  if (error_any_kind(ast, core_type_left, core_type_right, op)) {
     return;
   }
 
@@ -3671,7 +3673,14 @@ static void sem_binary_math(ast_node *ast, CSTR op) {
 
   sem_t core_type = sem_combine_types(core_type_left, core_type_right);
 
+  CSTR kind = sem_combine_kinds(ast->right, ast->left->sem->kind);
+  if (is_error(ast->right)) {
+    record_error(ast);
+    return;
+  }
+
   ast->sem = new_sem(core_type | combined_flags);
+  ast->sem->kind = kind;
 }
 
 // For all math operations, we combine the types and yield the type that
@@ -3707,7 +3716,14 @@ static void sem_binary_eq_or_ne(ast_node *ast, CSTR op) {
     return;
   }
 
+  sem_combine_kinds(ast->right, ast->left->sem->kind);
+  if (is_error(ast->right)) {
+    record_error(ast);
+    return;
+  }
+
   ast->sem = new_sem(SEM_TYPE_BOOL | combined_flags);
+  // the result is a normal bool, not a bool of any particular kind
 }
 
 // The comparison types always return a boolean and can accept anything
@@ -3718,7 +3734,7 @@ static void sem_binary_compare(ast_node *ast, CSTR op) {
     return;
   }
 
-  if (error_any_object_types(ast, core_type_left, core_type_right, op)) {
+  if (error_any_kind(ast, core_type_left, core_type_right, op)) {
     return;
   }
 
@@ -3730,7 +3746,15 @@ static void sem_binary_compare(ast_node *ast, CSTR op) {
     return;
   }
 
+  sem_combine_kinds(ast->right, ast->left->sem->kind);
+  if (is_error(ast->right)) {
+    record_error(ast);
+    return;
+  }
+
+
   ast->sem = new_sem(SEM_TYPE_BOOL | combined_flags);
+  // the result is a normal bool, not a bool of any particular kind
 }
 
 // Any const node is evaluated at compile time.  The kinds of sub-expressions
@@ -4299,7 +4323,7 @@ static bool_t try_resolve_variable(ast_node *ast, CSTR name) {
 
       ast->sem = new_sem(sem_type);
       ast->sem->name = variable->sem->name;
-      ast->sem->object_type = variable->sem->object_type;
+      ast->sem->kind = variable->sem->kind;
 
       if (is_object(sem_type) &&
           CURRENT_EXPR_CONTEXT_IS_NOT(SEM_EXPR_CONTEXT_NONE | SEM_EXPR_CONTEXT_TABLE_FUNC)) {
@@ -4599,22 +4623,24 @@ static void sem_resolve_id(ast_node *ast, CSTR name, CSTR scope) {
   return;
 }
 
-// Here we check that object<Foo> only combines with object<Foo> or object.
+// Here we check that type<Foo> only combines with type<Foo> or type.
 // If there is a current object type, then the next item must match
 // If there is no such type, then an object type that arrives becomes the required type
 // if they ever don't match record an error
-static CSTR sem_combine_object_types(ast_node *ast, CSTR current_object_type) {
-  if (ast->sem->object_type) {
-    if (current_object_type) {
-      if (strcmp(current_object_type, ast->sem->object_type)) {
-        report_error(ast, "CQL0070: incompatible object type", ast->sem->object_type);
+static CSTR sem_combine_kinds(ast_node *ast, CSTR current_kind) {
+  CSTR target_kind = ast->sem->kind;
+  if (target_kind) {
+    if (current_kind) {
+      if (strcmp(current_kind, ast->sem->kind)) {
+        CSTR errmsg = dup_printf("CQL0070: expressions of different kinds can't be mixed: '%s' vs. '%s'", current_kind, target_kind);
+        report_error(ast, errmsg, NULL);
         record_error(ast);
       }
     }
-    return ast->sem->object_type;
+    return target_kind;
   }
 
-  return current_object_type;
+  return current_kind;
 }
 
 // Here we validate the contents of the case list of a case expression.
@@ -4630,7 +4656,7 @@ static CSTR sem_combine_object_types(ast_node *ast, CSTR current_object_type) {
 static void sem_case_list(ast_node *head, sem_t sem_type_required_for_when) {
   Contract(is_ast_case_list(head));
   sem_t sem_type_result = SEM_TYPE_PENDING;
-  CSTR then_object_type = NULL;
+  CSTR then_kind = NULL;
 
   sem_t sem_sensitive  = 0;
 
@@ -4660,7 +4686,7 @@ static void sem_case_list(ast_node *head, sem_t sem_type_required_for_when) {
 
     if (sem_type_result == SEM_TYPE_PENDING) {
       sem_type_result = then_expr->sem->sem_type;
-      then_object_type = then_expr->sem->object_type;
+      then_kind = then_expr->sem->kind;
     }
     else {
       sem_t sem_type_current = then_expr->sem->sem_type;
@@ -4671,7 +4697,7 @@ static void sem_case_list(ast_node *head, sem_t sem_type_required_for_when) {
         return;
       }
 
-      then_object_type = sem_combine_object_types(then_expr, then_object_type);
+      then_kind = sem_combine_kinds(then_expr, then_kind);
       if (is_error(then_expr)) {
         record_error(ast);
         record_error(head);
@@ -4687,7 +4713,7 @@ static void sem_case_list(ast_node *head, sem_t sem_type_required_for_when) {
   }
 
   head->sem = new_sem(sem_type_result | sem_sensitive);
-  head->sem->object_type = then_object_type;
+  head->sem->kind = then_kind;
 }
 
 // Here we handle the case expression, the case list is handled above
@@ -4739,7 +4765,7 @@ static void sem_expr_case(ast_node *ast, CSTR cstr) {
       return;
     }
 
-    CSTR else_object_type = sem_combine_object_types(else_expr, ast->sem->object_type);
+    CSTR else_kind = sem_combine_kinds(else_expr, ast->sem->kind);
     if (is_error(else_expr)) {
       record_error(ast);
       return;
@@ -4747,7 +4773,7 @@ static void sem_expr_case(ast_node *ast, CSTR cstr) {
 
     sem_type_result = sem_combine_types(sem_type_result, sem_type_else);
     ast->sem = new_sem(sem_type_result | sem_sensitive);
-    ast->sem->object_type = else_object_type;
+    ast->sem->kind = else_kind;
   }
   else {
     // If there is no else clause then you get null if you miss all the cases
@@ -11433,7 +11459,7 @@ static void sem_assign(ast_node *ast) {
     record_error(ast);
   }
 
-  sem_combine_object_types(expr, variable->sem->object_type);
+  sem_combine_kinds(expr, variable->sem->kind);
   if (is_error(expr)) {
     record_error(ast);
   }
@@ -11487,7 +11513,7 @@ static void sem_param(ast_node *ast) {
 
   // [name]
   ast->sem->name = name;
-  ast->sem->object_type = data_type->sem->object_type;
+  ast->sem->kind = data_type->sem->kind;
 
   symtab_add(locals, name, ast);
 }
@@ -13949,7 +13975,7 @@ static void sem_declare_vars_type(ast_node *declare_vars_type) {
 
     variable->sem = ast->sem = new_sem(sem_type | SEM_TYPE_VARIABLE);
     variable->sem->name = name;
-    variable->sem->object_type = data_type->sem->object_type;
+    variable->sem->kind = data_type->sem->kind;
     symtab_add(current_variables, name, variable);
   }
 
@@ -13958,7 +13984,7 @@ static void sem_declare_vars_type(ast_node *declare_vars_type) {
   }
   else {
     declare_vars_type->sem = new_sem(sem_type);
-    declare_vars_type->sem->object_type = data_type->sem->object_type;
+    declare_vars_type->sem->kind = data_type->sem->kind;
   }
 }
 
@@ -14116,17 +14142,17 @@ cql_noexport ast_node *sem_find_likeable_from_var_type(ast_node *var) {
   CSTR var_name = var->sem->name;
 
   // it has to be a typed object variable
-  if (!is_object(var->sem->sem_type) || !var->sem->object_type) {
+  if (!is_object(var->sem->sem_type) || !var->sem->kind) {
     report_error(var, "CQL0346: the variable must be of type object<T cursor> where T is a valid shape name", var_name);
     return NULL;
   }
 
-  CSTR object_type = var->sem->object_type;
+  CSTR kind = var->sem->kind;
 
-  size_t len = strlen(object_type);
+  size_t len = strlen(kind);
   CSTR tail = " CURSOR";
   size_t len_tail = strlen(tail);
-  if (len < len_tail + 1 || strcmp(tail, object_type + len - len_tail)) {
+  if (len < len_tail + 1 || strcmp(tail, kind + len - len_tail)) {
     report_error(var, "CQL0343: the variable must be of type object<T cursor> where T is a valid shape name", var_name);
     return NULL;
   }
@@ -14134,7 +14160,7 @@ cql_noexport ast_node *sem_find_likeable_from_var_type(ast_node *var) {
   // now we extract just the type name having ignored the " CURSOR" part.
   CHARBUF_OPEN(tmp);
   for (int32_t i = 0; i < len - len_tail; i++) {
-    bputc(&tmp, object_type[i]);
+    bputc(&tmp, kind[i]);
   }
 
   // We make a like node for the object type (which is itself not in AST here)
@@ -14585,7 +14611,7 @@ static void sem_validate_args_vs_formals(ast_node *ast, CSTR name, ast_node *arg
     }
 
     // the formal and the argument must match object types as well (if present)
-    sem_combine_object_types(arg, param->sem->object_type);
+    sem_combine_kinds(arg, param->sem->kind);
     if (is_error(arg)) {
       record_error(ast);
       return;

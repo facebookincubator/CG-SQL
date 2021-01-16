@@ -15675,7 +15675,7 @@ The statement ending at line XXXX
 
 SET bar_obj := foo_obj;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0070: incompatible object type 'Foo'
+Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kinds can't be mixed: 'Bar' vs. 'Foo'
 
   {assign}: err
   | {name bar_obj}: bar_obj: object<Bar> variable
@@ -15687,7 +15687,7 @@ SET bar_obj := CASE 1 WHEN 1 THEN bar_obj
 WHEN 2 THEN foo_obj
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0070: incompatible object type 'Foo'
+Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kinds can't be mixed: 'Bar' vs. 'Foo'
 
   {assign}: err
   | {name bar_obj}: bar_obj: object<Bar> variable
@@ -15731,7 +15731,7 @@ SET bar_obj := CASE 1 WHEN 1 THEN bar_obj
 ELSE foo_obj
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0070: incompatible object type 'Foo'
+Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kinds can't be mixed: 'Bar' vs. 'Foo'
 
   {assign}: err
   | {name bar_obj}: bar_obj: object<Bar> variable
@@ -16027,7 +16027,7 @@ The statement ending at line XXXX
 
 SET a_string := goo_func(bar_obj);
 
-Error at test/sem_test.sql:XXXX : in str : CQL0070: incompatible object type 'Bar'
+Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kinds can't be mixed: 'Goo' vs. 'Bar'
 
   {assign}: err
   | {name a_string}: a_string: text variable
@@ -53940,4 +53940,165 @@ Error at test/sem_test.sql:XXXX : in declare_enum_stmt : CQL0359: duplicate type
       | {enum_value}
         | {name postive_one}: integer = 1 notnull
         | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+DECLARE x1 INTEGER<x_coord>;
+
+  {declare_vars_type}: integer<x_coord>
+  | {name_list}: x1: integer<x_coord> variable
+  | | {name x1}: x1: integer<x_coord> variable
+  | {type_int}: integer<x_coord>
+    | {name x_coord}
+
+The statement ending at line XXXX
+
+DECLARE y1 INTEGER<y_coord>;
+
+  {declare_vars_type}: integer<y_coord>
+  | {name_list}: y1: integer<y_coord> variable
+  | | {name y1}: y1: integer<y_coord> variable
+  | {type_int}: integer<y_coord>
+    | {name y_coord}
+
+The statement ending at line XXXX
+
+SET x1 := y1;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
+
+  {assign}: err
+  | {name x1}: x1: integer<x_coord> variable
+  | {name y1}: err
+
+The statement ending at line XXXX
+
+SET x1 := y1;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
+
+  {assign}: err
+  | {name x1}: x1: integer<x_coord> variable
+  | {name y1}: err
+
+The statement ending at line XXXX
+
+SET x1 := x1 + y1;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
+
+  {assign}: err
+  | {name x1}: x1: integer<x_coord> variable
+  | {add}: err
+    | {name x1}: x1: integer<x_coord> variable
+    | {name y1}: err
+
+The statement ending at line XXXX
+
+SET x1 := x1 * 2;
+
+  {assign}: x1: integer<x_coord> variable
+  | {name x1}: x1: integer<x_coord> variable
+  | {mul}: integer<x_coord>
+    | {name x1}: x1: integer<x_coord> variable
+    | {int 2}: integer notnull
+
+The statement ending at line XXXX
+
+SET x1 := x1 + x1;
+
+  {assign}: x1: integer<x_coord> variable
+  | {name x1}: x1: integer<x_coord> variable
+  | {add}: integer<x_coord>
+    | {name x1}: x1: integer<x_coord> variable
+    | {name x1}: x1: integer<x_coord> variable
+
+The statement ending at line XXXX
+
+DECLARE bb BOOL;
+
+  {declare_vars_type}: bool
+  | {name_list}: bb: bool variable
+  | | {name bb}: bb: bool variable
+  | {type_bool}: bool
+
+The statement ending at line XXXX
+
+SET bb := x1 = x1;
+
+  {assign}: bb: bool variable
+  | {name bb}: bb: bool variable
+  | {eq}: bool
+    | {name x1}: x1: integer<x_coord> variable
+    | {name x1}: x1: integer<x_coord> variable
+
+The statement ending at line XXXX
+
+SET bb := x1 < x1;
+
+  {assign}: bb: bool variable
+  | {name bb}: bb: bool variable
+  | {lt}: bool
+    | {name x1}: x1: integer<x_coord> variable
+    | {name x1}: x1: integer<x_coord> variable
+
+The statement ending at line XXXX
+
+SET bb := x1 = y1;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
+
+  {assign}: err
+  | {name bb}: bb: bool variable
+  | {eq}: err
+    | {name x1}: x1: integer<x_coord> variable
+    | {name y1}: err
+
+The statement ending at line XXXX
+
+SET bb := x1 < y1;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
+
+  {assign}: err
+  | {name bb}: bb: bool variable
+  | {lt}: err
+    | {name x1}: x1: integer<x_coord> variable
+    | {name y1}: err
+
+The statement ending at line XXXX
+
+DECLARE _x TYPE INTEGER<x_coord>;
+
+  {declare_named_type}: integer<x_coord>
+  | {name _x}: integer<x_coord>
+  | {type_int}: integer<x_coord>
+    | {name x_coord}
+
+The statement ending at line XXXX
+
+DECLARE _y TYPE INTEGER<y_coord>;
+
+  {declare_named_type}: integer<y_coord>
+  | {name _y}: integer<y_coord>
+  | {type_int}: integer<y_coord>
+    | {name y_coord}
+
+The statement ending at line XXXX
+
+DECLARE x2 INTEGER<x_coord>;
+
+  {declare_vars_type}: integer<x_coord>
+  | {name_list}: x2: integer<x_coord> variable
+  | | {name x2}: x2: integer<x_coord> variable
+  | {type_int}: integer<x_coord>
+    | {name x_coord}
+
+The statement ending at line XXXX
+
+SET x1 := x2;
+
+  {assign}: x1: integer<x_coord> variable
+  | {name x1}: x1: integer<x_coord> variable
+  | {name x2}: x2: integer<x_coord> variable
 
