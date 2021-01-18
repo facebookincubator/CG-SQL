@@ -722,19 +722,28 @@ static bool_t is_unique_key_valid(ast_node *table_ast, ast_node *uk) {
 }
 
 // Make sure the given number is an integer, and is in range.
-// Note: this probably needs to be a runtime check always, look into that.
+// We can only check the range if the integer evalautes to a constant which is
+// common enough that we try to do this here.  If it's a not something we recognize
+// is a constant then all bets are off.
 static bool_t is_num_int_in_range(ast_node *ast, int64_t lower, int64_t upper) {
-   bool_t result = false;
-   if (is_ast_num(ast)) {
-      EXTRACT_NUM_TYPE(num_type, ast);
-      if (num_type == NUM_INT) {
-        EXTRACT_NUM_VALUE(val, ast);
-        int64_t v = atol(val);
-        result = v >= lower && v <= upper;
-      }
-   }
+  // any non-integer type is out;  can't be "real" or "null" in particular which are
+  // usually considered numeric compat but not here.  This is an index.
+  if (!is_integer(ast->sem->sem_type)) {
+    return false;
+  }
 
-   return result;
+  eval_node result = {};
+  eval(ast, &result);
+
+  if (result.sem_type == SEM_TYPE_ERROR) {
+    // not a constant, can't verify it now, this will have to be a run time error
+    return true;  
+  }
+
+  // put the result in the long integer fields
+  eval_cast_to(&result, SEM_TYPE_LONG_INTEGER);
+
+  return result.int64_value >= lower && result.int64_value <= upper;
 }
 
 // Wrappers for the func table.
@@ -7006,7 +7015,7 @@ static void sem_window_name(ast_node *ast) {
   }
 
   if (!valid) {
-    report_error(ast, "CQL0295: Window name is not defined", window_name);
+    report_error(ast, "CQL0295: window name is not defined", window_name);
     record_error(ast);
     return;
   }
