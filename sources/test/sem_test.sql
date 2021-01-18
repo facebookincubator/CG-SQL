@@ -10440,7 +10440,7 @@ select id, lag(id, 1.3, 0) over () from foo;
 select id, lag(id, X, 0) over () from foo;
 
 -- TEST: test lag() window function with lag() nullable even though id is not nullable
--- + {select_stmt}: select: { id: integer notnull, id: integer notnull }
+-- + {select_stmt}: select: { id: integer notnull, id: integer }
 -- + {select_expr}: id: integer
 -- + {window_func_inv}: id: integer
 -- + {call}: id: integer

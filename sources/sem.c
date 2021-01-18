@@ -6131,7 +6131,6 @@ static void sem_func_lag(ast_node *ast, uint32_t arg_count) {
   // all args have already had their own semantic check done in sem_expr_call, we don't do it again.
   // we're only going to check how the args relate to each other and compute the final semantic type.
   ast_node *arg1 = first_arg(arg_list);
-  combined_flags = sensitive_flag(arg1->sem->sem_type) | not_nullable_flag(arg1->sem->sem_type);
 
   if (arg_count > 1) {
     ast_node *arg2 = second_arg(arg_list);
@@ -6157,7 +6156,7 @@ static void sem_func_lag(ast_node *ast, uint32_t arg_count) {
 
     if (ok) {
       sem_combine_kinds(arg3, arg1->sem->kind);
-      ok = is_error(arg3);
+      ok = !is_error(arg3);
     }
 
     if (!ok) {
@@ -6167,9 +6166,15 @@ static void sem_func_lag(ast_node *ast, uint32_t arg_count) {
       return;
     }
 
-    // we want to merge extra flag. if arg3 is not nullable then lag() will always be not nullable because
-    // arg3 is the default value for lag(). But If arg3 is not provide then lag() is always nullable.
-    combined_flags |= not_nullable_flag(arg3->sem->sem_type) | sensitive_flag(arg3->sem->sem_type);
+    // sensitivity and nullability combine as usual.  Note that if arg1 is nullable and arg3 is not nullable
+    // even though it is the default value for arg1 it is NOT USED usless arg1 and offset is outside the window
+    // so normal nulls in the window can stay.  As a result this is no coalesce or anything like that. This is
+    // just a normal nullability and sensitivity combo.
+    combined_flags = combine_flags(arg1->sem->sem_type, arg3->sem->sem_type);
+  }
+  else {
+    // with no default value, we might get nulls if we are out of the window, so notnull is stripped!
+    combined_flags = sensitive_flag(arg1->sem->sem_type);
   }
 
   // we only copy core type to strip extra flag like not nullable. e.g: even though arg1 may

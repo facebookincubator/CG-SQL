@@ -42536,18 +42536,18 @@ SELECT id,
   lag(id, 1) OVER ()
   FROM foo;
 
-  {select_stmt}: select: { id: integer notnull, id: integer notnull }
-  | {select_core_list}: select: { id: integer notnull, id: integer notnull }
-  | | {select_core}: select: { id: integer notnull, id: integer notnull }
-  |   | {select_expr_list_con}: select: { id: integer notnull, id: integer notnull }
-  |     | {select_expr_list}: select: { id: integer notnull, id: integer notnull }
+  {select_stmt}: select: { id: integer notnull, id: integer }
+  | {select_core_list}: select: { id: integer notnull, id: integer }
+  | | {select_core}: select: { id: integer notnull, id: integer }
+  |   | {select_expr_list_con}: select: { id: integer notnull, id: integer }
+  |     | {select_expr_list}: select: { id: integer notnull, id: integer }
   |     | | {select_expr}: id: integer notnull
   |     | | | {name id}: id: integer notnull
   |     | | {select_expr_list}
-  |     |   | {select_expr}: id: integer notnull
-  |     |     | {window_func_inv}: id: integer notnull
-  |     |       | {call}: id: integer notnull
-  |     |       | | {name lag}: id: integer notnull
+  |     |   | {select_expr}: id: integer
+  |     |     | {window_func_inv}: id: integer
+  |     |       | {call}: id: integer
+  |     |       | | {name lag}: id: integer
   |     |       | | {call_arg_list}
   |     |       |   | {call_filter_clause}
   |     |       |   | {arg_list}: ok
