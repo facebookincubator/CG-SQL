@@ -114,9 +114,9 @@ static void sem_validate_args(ast_node *ast, ast_node *arg_list);
 static void sem_validate_args_vs_formals(ast_node *ast, CSTR name, ast_node *arg_list, ast_node *params, bool_t proc_as_func);
 static void sem_validate_old_object_or_marked_create(ast_node *root, ast_node *ast, CSTR err_msg, CSTR name);
 static void sem_validate_marked_create_or_delete(ast_node *root, ast_node *ast, CSTR err_msg, CSTR name);
-static bool_t sem_validate_compatable_table_cols_vals(ast_node *table_ast, ast_node *name_list, ast_node *insert_list);
-static bool_t sem_validate_compatable_table_cols_select(ast_node *table_ast, ast_node *name_list, ast_node *select_stmt);
-static bool_t sem_validate_compatable_cols_vals(ast_node *name_list, ast_node *values);
+static bool_t sem_validate_compatible_table_cols_vals(ast_node *table_ast, ast_node *name_list, ast_node *insert_list);
+static bool_t sem_validate_compatible_table_cols_select(ast_node *table_ast, ast_node *name_list, ast_node *select_stmt);
+static bool_t sem_validate_compatible_cols_vals(ast_node *name_list, ast_node *values);
 static void enqueue_pending_region_validation(ast_node *prev, ast_node *cur, CSTR name);
 static void sem_validate_previous_deployable_region(ast_node *root, deployable_validation *v);
 static void sem_opt_where(ast_node *ast);
@@ -6128,10 +6128,10 @@ static void sem_func_lag(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  // all argument are already symentically analys by sem_expr_call(...) reason
-  // we don't do it again.
+  // all args have already had their own semantic check done in sem_expr_call, we don't do it again.
+  // we're only going to check how the args relate to each other and compute the final semantic type.
   ast_node *arg1 = first_arg(arg_list);
-  combined_flags = sensitive_flag(arg1->sem->sem_type);
+  combined_flags = sensitive_flag(arg1->sem->sem_type) | not_nullable_flag(arg1->sem->sem_type);
 
   if (arg_count > 1) {
     ast_node *arg2 = second_arg(arg_list);
@@ -6145,8 +6145,23 @@ static void sem_func_lag(ast_node *ast, uint32_t arg_count) {
 
   if (arg_count > 2) {
     ast_node *arg3 = third_arg(arg_list);
-    if (core_type_of(arg1->sem->sem_type) != core_type_of(arg3->sem->sem_type)) {
-      report_error(ast, "CQL0302: The first and third arguments must be of the same type in function", name);
+
+    // if arg3 is senstive the result will become sensitive, there is no assignment clash here
+    // and arg3 is not used at all if arg2 is not null, so no error for nullable arg3 with not null arg2
+    // these overrides effectively suppress errors if arg3 is senstive and arg1 isn't or if arg3 is nullable
+    // and arg1 isn't.  Leaving us with type and kind checks and lossy conversions.
+    sem_t arg1_effective = arg1->sem->sem_type | SEM_TYPE_SENSITIVE;  
+    sem_t arg3_effective = arg3->sem->sem_type | SEM_TYPE_NOTNULL;
+
+    bool_t ok = sem_verify_assignment(arg3, arg1_effective, arg3_effective, "arg3 used as default value for arg1");
+
+    if (ok) {
+      sem_combine_kinds(arg3, arg1->sem->kind);
+      ok = is_error(arg3);
+    }
+
+    if (!ok) {
+      report_error(ast, "CQL0302: The first and third arguments must be compatible in function", name);
       record_error(ast);
       record_error(arg_list);
       return;
@@ -6163,8 +6178,9 @@ static void sem_func_lag(ast_node *ast, uint32_t arg_count) {
 
   ast->sem->sem_type = type | combined_flags;
 
-  // grab the name from our first arg, if it has one, we want it.
+  // grab the name from our first arg, if it has one, we want it.  Same with 'kind'
   ast->sem->name = arg1->sem->name;
+  ast->sem->kind = arg1->sem->kind;
 }
 
 // Validation of the builtin window function lead(...). It takes three parameters
@@ -10412,7 +10428,7 @@ static void sem_update_cursor_stmt(ast_node *ast) {
   }
 
   if (valid) {
-    valid = sem_validate_compatable_cols_vals(name_list, insert_list);
+    valid = sem_validate_compatible_cols_vals(name_list, insert_list);
   }
 
   destroy_name_check(&check);
@@ -10697,10 +10713,10 @@ static void sem_column_spec_and_values(ast_node *ast, ast_node *table_ast) {
 
   if (valid) {
     if (select_stmt) {
-      valid = sem_validate_compatable_table_cols_select(table_ast, name_list, select_stmt);
+      valid = sem_validate_compatible_table_cols_select(table_ast, name_list, select_stmt);
     }
     else {
-      valid = sem_validate_compatable_table_cols_vals(table_ast, name_list, insert_list);
+      valid = sem_validate_compatible_table_cols_vals(table_ast, name_list, insert_list);
     }
   }
 
@@ -11214,7 +11230,7 @@ static void sem_fetch_values_stmt(ast_node *ast) {
   }
 
   if (valid) {
-    valid = sem_validate_compatable_cols_vals(name_list, insert_list);
+    valid = sem_validate_compatible_cols_vals(name_list, insert_list);
   }
 
   destroy_name_check(&check);
@@ -11376,7 +11392,7 @@ static void sem_synthesize_dummy_value(dummy_info *info) {
 
 // Ensure that the values are valid and the types of the values are compatible
 // with the types of the columns.
-static bool_t sem_validate_compatable_table_cols_vals(ast_node *table_ast, ast_node *name_list, ast_node *insert_list) {
+static bool_t sem_validate_compatible_table_cols_vals(ast_node *table_ast, ast_node *name_list, ast_node *insert_list) {
   Contract(is_ast_create_table_stmt(table_ast));
 
   ast_node *value = insert_list;
@@ -11405,7 +11421,7 @@ static bool_t sem_validate_compatable_table_cols_vals(ast_node *table_ast, ast_n
       return false;
     }
 
-    // otherwise the columns have to be assignment compatable
+    // otherwise the columns have to be assignment compatible
     if (!sem_verify_assignment(expr, col->sem->sem_type, expr->sem->sem_type, col->sem->name)) {
       return false;
     }
@@ -11415,7 +11431,7 @@ static bool_t sem_validate_compatable_table_cols_vals(ast_node *table_ast, ast_n
 }
 
 // Ensure that the columns of the select are compatible with the columns of the table in the order specified
-static bool_t sem_validate_compatable_table_cols_select(ast_node *table_ast, ast_node *name_list, ast_node *select_stmt) {
+static bool_t sem_validate_compatible_table_cols_select(ast_node *table_ast, ast_node *name_list, ast_node *select_stmt) {
   Contract(is_ast_create_table_stmt(table_ast));
 
   sem_struct *sptr_select = select_stmt->sem->sptr;
@@ -11509,7 +11525,7 @@ static bool_t sem_validate_compatable_table_cols_select(ast_node *table_ast, ast
       return false;
     }
 
-    // otherwise the columns have to be assignment compatable
+    // otherwise the columns have to be assignment compatible
     if (!sem_verify_assignment(col, col->sem->sem_type, sptr_select->semtypes[icol_select], col->sem->name)) {
       return false;
     }
@@ -11520,7 +11536,7 @@ static bool_t sem_validate_compatable_table_cols_select(ast_node *table_ast, ast
 
 // Check that the indicated columns are compatible with the corresponding expressions
 // Note the count has already been verified.
-static bool_t sem_validate_compatable_cols_vals(ast_node *name_list, ast_node *values) {
+static bool_t sem_validate_compatible_cols_vals(ast_node *name_list, ast_node *values) {
   ast_node *value = values;
 
   for (ast_node *item = name_list ; item; item = item->right, value = value->right) {
@@ -14719,7 +14735,7 @@ static bool_t sem_verify_no_duplicate_regions(ast_node *region_list) {
 //    * the call has to have the correct number of arguments
 //    * if the formal is an out parameter the argument must be a variable
 //      * the type of the variable must be an exact type match for the formal
-//    * non-out parameters must be type-compatable, but exact match is not required
+//    * non-out parameters must be type-compatible, but exact match is not required
 static void sem_validate_args_vs_formals(ast_node *ast, CSTR name, ast_node *arg_list, ast_node *params, bool_t proc_as_func) {
   ast_node *item = arg_list;
 
@@ -14846,7 +14862,7 @@ static void sem_validate_args_vs_formals(ast_node *ast, CSTR name, ast_node *arg
 //    * the call has to have the correct number of arguments
 //    * if the formal is an out parameter the argument must be a variable
 //      * the type of the variable must be an exact type match for the formal
-//    * non-out parameters must be type-compatable, but exact match is not required
+//    * non-out parameters must be type-compatible, but exact match is not required
 static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name) {
   Contract(is_ast_call_stmt(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
@@ -14913,7 +14929,7 @@ static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name) {
 //   * fetch C into var1, var2, var3 etc.
 //   * fetch C;
 // The second form is called the auto_cursor.
-// In the first form the variables of the cursor must be assignment compatable
+// In the first form the variables of the cursor must be assignment compatible
 // with declared structure type of the cursor and the count must be correct.
 // In the second form, the codegen will implicitly create local variables that
 // are exactly the correct type, but that's later.  Since no semantic error is

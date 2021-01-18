@@ -3674,14 +3674,14 @@ Semantic rules:
    * the call has to have the correct number of arguments
    * if the formal is an out parameter the argument must be a variable
      * the type of the variable must be an exact type match for the formal
-   * non-out parameters must be type-compatable, but exact match is not required
+   * non-out parameters must be type-compatible, but exact match is not required
 
 #### The `FETCH` Statement
 The fetch statement has two forms:
   * fetch C into var1, var2, var3 etc.
   * fetch C;
 The second form is called the auto_cursor.
-In the first form the variables of the cursor must be assignment compatable
+In the first form the variables of the cursor must be assignment compatible
 with declared structure type of the cursor and the count must be correct.
 In the second form, the codegen will implicitly create local variables that
 are exactly the correct type, but that's later.  Since no semantic error is
@@ -11530,7 +11530,7 @@ The second argument of the function should be an integer between 0 and INTEGER_M
 
 ------
 
-### CQL0302: The first and third arguments must be of the same type in function 'function_name'
+### CQL0302: The first and third arguments must be compatible in function 'function_name'
 
 The first and third arguments of the function have to be of the same type because the third argument provide a default value in cause the first argument is NULL.
 

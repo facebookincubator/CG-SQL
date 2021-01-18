@@ -518,7 +518,7 @@
 <li><a href="#cql0299-cursor-has-too-few-fields-shape_name">CQL0299: [cursor] has too few fields, ‘shape_name’</a></li>
 <li><a href="#cql0300-argument-must-be-an-integer-between-1-and-max-integer-in-function-function_name">CQL0300: Argument must be an integer (between 1 and max integer) in function ‘function_name’</a></li>
 <li><a href="#cql0301-the-second-argument-must-be-an-integer-between-0-and-max-integer-in-function-function_name">CQL0301: The second argument must be an integer (between 0 and max integer) in function ‘function_name’</a></li>
-<li><a href="#cql0302-the-first-and-third-arguments-must-be-of-the-same-type-in-function-function_name">CQL0302: The first and third arguments must be of the same type in function ‘function_name’</a></li>
+<li><a href="#cql0302-the-first-and-third-arguments-must-be-of-the-same-type-in-function-function_name">CQL0302: The first and third arguments must be compatible in function ‘function_name’</a></li>
 <li><a href="#cql0303-the-second-argument-must-be-an-integer-between-1-and-max-integer-in-function-function_name">CQL0303: The second argument must be an integer between 1 and max integer in function ‘function_name’</a></li>
 <li><a href="#cql0304-distinct-may-only-be-used-with-one-explicit-argument-in-an-aggregate-function">CQL0304: DISTINCT may only be used with one explicit argument in an aggregate function</a></li>
 <li><a href="#cql0305-distinct-may-only-be-used-in-function-that-are-aggregated-or-user-defined">CQL0305: DISTINCT may only be used in function that are aggregated or user defined</a></li>
@@ -2877,9 +2877,9 @@ if (C_._has_row_) cql_bytebuf_append(&amp;_rows_, (const void *)&amp;C_, sizeof(
 <p>There are three ways that a call can happen: * signatures of procedures that we know in full: * call foo(); * declare cursor for call foo(); * some external call to some outside function we don’t known * e.g. call printf(‘hello, world’);</p>
 <p>The cursor form can be used if and only if the procedure has a loose select or a call to a procedure with a loose select. In that case the procedure will have a structure type, rather than just “ok” (the normal signature for a proc). If the user is attempting to do the second case, cursor_name will be set and the appropriate verification happens here.</p>
 <p>Note: Recursively calling fetch cursor is not really doable in general because at the point of the call we might not yet know that the method does in fact return a select. You could make it work if you put the select before the recursive call.</p>
-<p>Semantic rules: * for all cases each argument must be error-free (no internal type conflicts) * for known procs * the call has to have the correct number of arguments * if the formal is an out parameter the argument must be a variable * the type of the variable must be an exact type match for the formal * non-out parameters must be type-compatable, but exact match is not required</p>
+<p>Semantic rules: * for all cases each argument must be error-free (no internal type conflicts) * for known procs * the call has to have the correct number of arguments * if the formal is an out parameter the argument must be a variable * the type of the variable must be an exact type match for the formal * non-out parameters must be type-compatible, but exact match is not required</p>
 <h4 id="the-fetch-statement">The <code>FETCH</code> Statement</h4>
-<p>The fetch statement has two forms: * fetch C into var1, var2, var3 etc. * fetch C; The second form is called the auto_cursor. In the first form the variables of the cursor must be assignment compatable with declared structure type of the cursor and the count must be correct. In the second form, the codegen will implicitly create local variables that are exactly the correct type, but that’s later. Since no semantic error is possible in that case we simply record that this is an auto_cursor and then later we will allow the use of C.field during analysis. Of course “C” must be a valid cursor.</p>
+<p>The fetch statement has two forms: * fetch C into var1, var2, var3 etc. * fetch C; The second form is called the auto_cursor. In the first form the variables of the cursor must be assignment compatible with declared structure type of the cursor and the count must be correct. In the second form, the codegen will implicitly create local variables that are exactly the correct type, but that’s later. Since no semantic error is possible in that case we simply record that this is an auto_cursor and then later we will allow the use of C.field during analysis. Of course “C” must be a valid cursor.</p>
 <h4 id="the-continue-statement">The <code>CONTINUE</code> Statement</h4>
 <p>We just need to ensure that continue is inside a loop.</p>
 <h4 id="the-leave-statement">The <code>LEAVE</code> Statement</h4>
@@ -8561,7 +8561,7 @@ set x := y;</code></pre>
 <h3 id="cql0301-the-second-argument-must-be-an-integer-between-0-and-max-integer-in-function-function_name">CQL0301: The second argument must be an integer (between 0 and max integer) in function ‘function_name’</h3>
 <p>The second argument of the function should be an integer between 0 and INTEGER_MAX.</p>
 <hr />
-<h3 id="cql0302-the-first-and-third-arguments-must-be-of-the-same-type-in-function-function_name">CQL0302: The first and third arguments must be of the same type in function ‘function_name’</h3>
+<h3 id="cql0302-the-first-and-third-arguments-must-be-of-the-same-type-in-function-function_name">CQL0302: The first and third arguments must be compatible in function ‘function_name’</h3>
 <p>The first and third arguments of the function have to be of the same type because the third argument provide a default value in cause the first argument is NULL.</p>
 <hr />
 <h3 id="cql0303-the-second-argument-must-be-an-integer-between-1-and-max-integer-in-function-function_name">CQL0303: The second argument must be an integer between 1 and max integer in function ‘function_name’</h3>
