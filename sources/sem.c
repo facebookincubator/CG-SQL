@@ -3849,6 +3849,12 @@ static void sem_unary_math(ast_node *ast, CSTR op) {
       (core_type | combined_flags));
 
   ast->sem = new_sem(sem_type_result);
+  ast->sem->kind = ast->left->sem->kind;
+
+  // note ast->sem->name is NOT propogated because SQLite doesn't let you refer to 
+  // the column 'x' in 'select -x' -- the column name is actually '-x' which is useless
+  // so we have no name once you apply unary math (unless you use 'as')
+  // hence ast->sem->name = ast->left->sem->name is WRONG here and it is not missing on accident
 }
 
 static void sem_unary_integer_math(ast_node *ast, CSTR op) {
@@ -4866,15 +4872,42 @@ static void sem_expr_between_or_not_between(ast_node *ast, CSTR cstr) {
     return;
   }
 
+  // the min can't be compared with the item
   if (!sem_verify_compat(ast, sem_type_item, sem_type_min, operation)) {
     return;
   }
 
+  // the max can't be compared with the item
   if (!sem_verify_compat(ast, sem_type_item, sem_type_max, operation)) {
     return;
   }
 
+  // the right and left aren't compatible with each other even though they are both compatible with the main operand
+  // e.g. null between 1 and 'x'
   if (!sem_verify_compat(ast, sem_type_min, sem_type_max, operation_or_and)) {
+    return;
+  }
+
+  // check for compatible kinds between item and the min
+  sem_combine_kinds(range->left, ast->left->sem->kind);
+  if (is_error(range->left)) {
+    record_error(ast);
+    return;
+  }
+
+  // check for compatible kinds between item and the max
+  sem_combine_kinds(range->right, ast->left->sem->kind);
+  if (is_error(range->right)) {
+    record_error(ast);
+    return;
+  }
+
+  // check for compatible kinds between min and max
+  // this can fail if the item is generic and the left and right have kind
+  // e.g.   12 between min_dollars and max_euros
+  sem_combine_kinds(range->right, range->left->sem->kind);
+  if (is_error(range->right)) {
+    record_error(ast);
     return;
   }
 

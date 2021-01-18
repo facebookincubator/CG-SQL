@@ -54781,3 +54781,83 @@ Error at test/sem_test.sql:XXXX : in select_stmt : CQL0070: expressions of diffe
       | {select_limit}
         | {select_offset}
 
+The statement ending at line XXXX
+
+SET b0 := BETWEEN REWRITE _between_0_ := x1 CHECK (_between_0_ >= x2 AND _between_0_ <= x3);
+
+  {assign}: b0: bool variable
+  | {name b0}: b0: bool variable
+  | {between_rewrite}: bool
+    | {name x1}: x1: integer<x_coord> variable
+    | {range}
+      | {name _between_0_}: _between_0_: integer variable
+      | {and}: bool
+        | {ge}: bool
+        | | {name _between_0_}: _between_0_: integer variable
+        | | {name x2}: x2: integer<x_coord> variable
+        | {le}: bool
+          | {name _between_0_}: _between_0_: integer variable
+          | {name x3}: x3: integer<x_coord> variable
+
+The statement ending at line XXXX
+
+SET b0 := x1 BETWEEN y2 AND 12;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
+
+  {assign}: err
+  | {name b0}: b0: bool variable
+  | {between}: err
+    | {name x1}: x1: integer<x_coord> variable
+    | {range}
+      | {name y2}: err
+      | {int 12}: integer notnull
+
+The statement ending at line XXXX
+
+SET b0 := x1 BETWEEN 34 AND y3;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
+
+  {assign}: err
+  | {name b0}: b0: bool variable
+  | {between}: err
+    | {name x1}: x1: integer<x_coord> variable
+    | {range}
+      | {int 34}: integer notnull
+      | {name y3}: err
+
+The statement ending at line XXXX
+
+SET b0 := 56 BETWEEN x2 AND y3;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
+
+  {assign}: err
+  | {name b0}: b0: bool variable
+  | {between}: err
+    | {int 56}: integer notnull
+    | {range}
+      | {name x2}: x2: integer<x_coord> variable
+      | {name y3}: err
+
+The statement ending at line XXXX
+
+SET x1 := -x2;
+
+  {assign}: x1: integer<x_coord> variable
+  | {name x1}: x1: integer<x_coord> variable
+  | {uminus}: integer<x_coord>
+    | {name x2}: x2: integer<x_coord> variable
+
+The statement ending at line XXXX
+
+SET x1 := -y1;
+
+Error at test/sem_test.sql:XXXX : in uminus : CQL0070: expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
+
+  {assign}: err
+  | {name x1}: x1: integer<x_coord> variable
+  | {uminus}: err
+    | {name y1}: y1: integer<y_coord> variable
+

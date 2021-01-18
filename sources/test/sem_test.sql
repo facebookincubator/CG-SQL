@@ -13666,3 +13666,43 @@ set b0 := (select x1 in (select x2));
 -- + Error % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- +1 Error
 set b0 := (select x1 in (select y1));
+
+-- TEST: between with kinds, all matching
+-- + {assign}: b0: bool variable
+-- + {between_rewrite}: bool
+-- - Error
+set b0 := x1 between x2 and x3;
+
+-- TEST: left between operand is of the wrong kind
+-- + {assign}: err
+-- + {between}: err
+-- + Error % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
+-- +1 Error
+set b0 := x1 between y2 and 12;
+
+-- TEST: right between operand is of the wrong kind
+-- + {assign}: err
+-- + {between}: err
+-- + Error % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
+-- +1 Error
+set b0 := x1 between 34 and y3;
+
+-- TEST: left and right could be used but they don't match each other
+-- + {assign}: err
+-- + {between}: err
+-- + Error % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
+-- +1 Error
+set b0 := 56 between x2 and y3;
+
+-- TEST: negation preserves the kind, kind ok so this works
+-- +  {assign}: x1: integer<x_coord> variable
+-- +  | {name x1}: x1: integer<x_coord> variable
+-- +  | {uminus}: integer<x_coord>
+set x1 := -x2;
+
+-- TEST: negation preserves the kind, hence we get an error
+-- + {assign}: err
+-- + {uminus}: err
+-- + Error % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
+-- +1 Error
+set x1 := -y1;
