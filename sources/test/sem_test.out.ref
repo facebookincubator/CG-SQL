@@ -42,6 +42,41 @@ CREATE TABLE foo(
 
 The statement ending at line XXXX
 
+CREATE TABLE with_kind(
+  id INTEGER<some_key>,
+  cost REAL<dollars>,
+  value REAL<dollars>
+);
+
+  {create_table_stmt}: with_kind: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name with_kind}
+  | {col_key_list}
+    | {col_def}: id: integer<some_key>
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer<some_key>
+    |       | {name some_key}
+    | {col_key_list}
+      | {col_def}: cost: real<dollars>
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |     | {name cost}
+      |     | {type_real}: real<dollars>
+      |       | {name dollars}
+      | {col_key_list}
+        | {col_def}: value: real<dollars>
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name value}
+              | {type_real}: real<dollars>
+                | {name dollars}
+
+The statement ending at line XXXX
+
 CREATE TABLE bar(
   id INTEGER NOT NULL,
   name TEXT @CREATE(2),
@@ -150,6 +185,28 @@ SELECT ID
   |       | {table_or_subquery_list}: TABLE { foo: foo }
   |       | | {table_or_subquery}: TABLE { foo: foo }
   |       |   | {name foo}: TABLE { foo: foo }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT *
+  FROM with_kind;
+
+  {select_stmt}: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> }
+  | {select_core_list}: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> }
+  | | {select_core}: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> }
+  |   | {select_expr_list_con}: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> }
+  |     | {select_expr_list}: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> }
+  |     | | {star}: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> }
+  |     | {select_from_etc}: TABLE { with_kind: with_kind }
+  |       | {table_or_subquery_list}: TABLE { with_kind: with_kind }
+  |       | | {table_or_subquery}: TABLE { with_kind: with_kind }
+  |       |   | {name with_kind}: TABLE { with_kind: with_kind }
   |       | {select_where}
   |         | {select_groupby}
   |           | {select_having}
@@ -5255,6 +5312,39 @@ DECLARE my_cursor CURSOR FOR SELECT 1 AS one, 2 AS two;
     | {select_orderby}
       | {select_limit}
         | {select_offset}
+
+The statement ending at line XXXX
+
+DECLARE kind_cursor CURSOR FOR SELECT *
+  FROM with_kind;
+
+  {declare_cursor}: kind_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable
+  | {name kind_cursor}: kind_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable
+  | {select_stmt}: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> }
+    | {select_core_list}: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> }
+    | | {select_core}: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> }
+    |   | {select_expr_list_con}: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> }
+    |     | {select_expr_list}: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> }
+    |     | | {star}: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> }
+    |     | {select_from_etc}: TABLE { with_kind: with_kind }
+    |       | {table_or_subquery_list}: TABLE { with_kind: with_kind }
+    |       | | {table_or_subquery}: TABLE { with_kind: with_kind }
+    |       |   | {name with_kind}: TABLE { with_kind: with_kind }
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+DECLARE kind_value_cursor CURSOR LIKE kind_cursor;
+
+  {declare_cursor_like_name}: kind_value_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable shape_storage value_cursor
+  | {name kind_value_cursor}: kind_value_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable shape_storage value_cursor
+  | {like}: kind_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable
+    | {name kind_cursor}: kind_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable
 
 The statement ending at line XXXX
 
@@ -54101,4 +54191,381 @@ SET x1 := x2;
   {assign}: x1: integer<x_coord> variable
   | {name x1}: x1: integer<x_coord> variable
   | {name x2}: x2: integer<x_coord> variable
+
+The statement ending at line XXXX
+
+CREATE TABLE xy(
+  x INTEGER<x_coord>,
+  y INTEGER<y_coord>
+);
+
+  {create_table_stmt}: xy: { x: integer<x_coord>, y: integer<y_coord> }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name xy}
+  | {col_key_list}
+    | {col_def}: x: integer<x_coord>
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |     | {name x}
+    |     | {type_int}: integer<x_coord>
+    |       | {name x_coord}
+    | {col_key_list}
+      | {col_def}: y: integer<y_coord>
+        | {col_def_type_attrs}: ok
+          | {col_def_name_type}
+            | {name y}
+            | {type_int}: integer<y_coord>
+              | {name y_coord}
+
+The statement ending at line XXXX
+
+INSERT INTO xy(x, y) VALUES(x1, y1);
+
+  {insert_stmt}: ok
+  | {insert_normal}
+  | {name_columns_values}
+    | {name xy}: xy: { x: integer<x_coord>, y: integer<y_coord> }
+    | {columns_values}: ok
+      | {column_spec}
+      | | {name_list}
+      |   | {name x}: x: integer<x_coord>
+      |   | {name_list}
+      |     | {name y}: y: integer<y_coord>
+      | {insert_list}
+        | {name x1}: x1: integer<x_coord> variable
+        | {insert_list}
+          | {name y1}: y1: integer<y_coord> variable
+
+The statement ending at line XXXX
+
+INSERT INTO xy(x, y) VALUES(y1, x1);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
+
+  {insert_stmt}: err
+  | {insert_normal}
+  | {name_columns_values}
+    | {name xy}: xy: { x: integer<x_coord>, y: integer<y_coord> }
+    | {columns_values}: ok
+      | {column_spec}
+      | | {name_list}
+      |   | {name x}: x: integer<x_coord>
+      |   | {name_list}
+      |     | {name y}: y: integer<y_coord>
+      | {insert_list}
+        | {name y1}: err
+        | {insert_list}
+          | {name x1}
+
+The statement ending at line XXXX
+
+INSERT INTO xy(x, y) SELECT xy.x, xy.y
+  FROM xy
+  WHERE xy.x = 1;
+
+  {insert_stmt}: ok
+  | {insert_normal}
+  | {name_columns_values}
+    | {name xy}: xy: { x: integer<x_coord>, y: integer<y_coord> }
+    | {columns_values}: ok
+      | {column_spec}
+      | | {name_list}
+      |   | {name x}: x: integer<x_coord>
+      |   | {name_list}
+      |     | {name y}: y: integer<y_coord>
+      | {select_stmt}: select: { x: integer<x_coord>, y: integer<y_coord> }
+        | {select_core_list}: select: { x: integer<x_coord>, y: integer<y_coord> }
+        | | {select_core}: select: { x: integer<x_coord>, y: integer<y_coord> }
+        |   | {select_expr_list_con}: select: { x: integer<x_coord>, y: integer<y_coord> }
+        |     | {select_expr_list}: select: { x: integer<x_coord>, y: integer<y_coord> }
+        |     | | {select_expr}: x: integer<x_coord>
+        |     | | | {dot}: x: integer<x_coord>
+        |     | |   | {name xy}
+        |     | |   | {name x}
+        |     | | {select_expr_list}
+        |     |   | {select_expr}: y: integer<y_coord>
+        |     |     | {dot}: y: integer<y_coord>
+        |     |       | {name xy}
+        |     |       | {name y}
+        |     | {select_from_etc}: TABLE { xy: xy }
+        |       | {table_or_subquery_list}: TABLE { xy: xy }
+        |       | | {table_or_subquery}: TABLE { xy: xy }
+        |       |   | {name xy}: TABLE { xy: xy }
+        |       | {select_where}
+        |         | {opt_where}: bool
+        |         | | {eq}: bool
+        |         |   | {dot}: x: integer<x_coord>
+        |         |   | | {name xy}
+        |         |   | | {name x}
+        |         |   | {int 1}: integer notnull
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+INSERT INTO xy(x, y) SELECT xy.y, xy.x
+  FROM xy
+  WHERE xy.x = 1;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kinds can't be mixed: 'y_coord' vs. 'x_coord'
+
+  {insert_stmt}: err
+  | {insert_normal}
+  | {name_columns_values}
+    | {name xy}: xy: { x: integer<x_coord>, y: integer<y_coord> }
+    | {columns_values}: ok
+      | {column_spec}
+      | | {name_list}
+      |   | {name x}: err
+      |   | {name_list}
+      |     | {name y}: y: integer<y_coord>
+      | {select_stmt}: select: { y: integer<y_coord>, x: integer<x_coord> }
+        | {select_core_list}: select: { y: integer<y_coord>, x: integer<x_coord> }
+        | | {select_core}: select: { y: integer<y_coord>, x: integer<x_coord> }
+        |   | {select_expr_list_con}: select: { y: integer<y_coord>, x: integer<x_coord> }
+        |     | {select_expr_list}: select: { y: integer<y_coord>, x: integer<x_coord> }
+        |     | | {select_expr}: y: integer<y_coord>
+        |     | | | {dot}: y: integer<y_coord>
+        |     | |   | {name xy}
+        |     | |   | {name y}
+        |     | | {select_expr_list}
+        |     |   | {select_expr}: x: integer<x_coord>
+        |     |     | {dot}: x: integer<x_coord>
+        |     |       | {name xy}
+        |     |       | {name x}
+        |     | {select_from_etc}: TABLE { xy: xy }
+        |       | {table_or_subquery_list}: TABLE { xy: xy }
+        |       | | {table_or_subquery}: TABLE { xy: xy }
+        |       |   | {name xy}: TABLE { xy: xy }
+        |       | {select_where}
+        |         | {opt_where}: bool
+        |         | | {eq}: bool
+        |         |   | {dot}: x: integer<x_coord>
+        |         |   | | {name xy}
+        |         |   | | {name x}
+        |         |   | {int 1}: integer notnull
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT x1 AS x, y1 AS y
+UNION ALL
+SELECT x1 AS x, y1 AS y;
+
+  {select_stmt}: UNION ALL: { x: integer<x_coord>, y: integer<y_coord> }
+  | {select_core_list}: UNION ALL: { x: integer<x_coord>, y: integer<y_coord> }
+  | | {select_core}: select: { x: integer<x_coord> variable, y: integer<y_coord> variable }
+  | | | {select_expr_list_con}: select: { x: integer<x_coord> variable, y: integer<y_coord> variable }
+  | |   | {select_expr_list}: select: { x: integer<x_coord> variable, y: integer<y_coord> variable }
+  | |   | | {select_expr}: x: integer<x_coord> variable
+  | |   | | | {name x1}: x1: integer<x_coord> variable
+  | |   | | | {opt_as_alias}
+  | |   | |   | {name x}
+  | |   | | {select_expr_list}
+  | |   |   | {select_expr}: y: integer<y_coord> variable
+  | |   |     | {name y1}: y1: integer<y_coord> variable
+  | |   |     | {opt_as_alias}
+  | |   |       | {name y}
+  | |   | {select_from_etc}: ok
+  | |     | {select_where}
+  | |       | {select_groupby}
+  | |         | {select_having}
+  | | {select_core_compound}
+  |   | {int 2}
+  |   | {select_core_list}: select: { x: integer<x_coord> variable, y: integer<y_coord> variable }
+  |     | {select_core}: select: { x: integer<x_coord> variable, y: integer<y_coord> variable }
+  |       | {select_expr_list_con}: select: { x: integer<x_coord> variable, y: integer<y_coord> variable }
+  |         | {select_expr_list}: select: { x: integer<x_coord> variable, y: integer<y_coord> variable }
+  |         | | {select_expr}: x: integer<x_coord> variable
+  |         | | | {name x1}: x1: integer<x_coord> variable
+  |         | | | {opt_as_alias}
+  |         | |   | {name x}
+  |         | | {select_expr_list}
+  |         |   | {select_expr}: y: integer<y_coord> variable
+  |         |     | {name y1}: y1: integer<y_coord> variable
+  |         |     | {opt_as_alias}
+  |         |       | {name y}
+  |         | {select_from_etc}: ok
+  |           | {select_where}
+  |             | {select_groupby}
+  |               | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT x1 AS x, y1 AS y
+UNION ALL
+SELECT y1 AS x, x1 AS y;
+
+Error at test/sem_test.sql:XXXX : in select_core : CQL0070: expressions of different kinds can't be mixed: 'y_coord' vs. 'x_coord'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  | | | {select_expr_list_con}: select: { x: integer<x_coord> variable, y: integer<y_coord> variable }
+  | |   | {select_expr_list}: select: { x: integer<x_coord> variable, y: integer<y_coord> variable }
+  | |   | | {select_expr}: x: integer<x_coord> variable
+  | |   | | | {name x1}: x1: integer<x_coord> variable
+  | |   | | | {opt_as_alias}
+  | |   | |   | {name x}
+  | |   | | {select_expr_list}
+  | |   |   | {select_expr}: y: integer<y_coord> variable
+  | |   |     | {name y1}: y1: integer<y_coord> variable
+  | |   |     | {opt_as_alias}
+  | |   |       | {name y}
+  | |   | {select_from_etc}: ok
+  | |     | {select_where}
+  | |       | {select_groupby}
+  | |         | {select_having}
+  | | {select_core_compound}
+  |   | {int 2}
+  |   | {select_core_list}: err
+  |     | {select_core}: select: { x: integer<y_coord> variable, y: integer<x_coord> variable }
+  |       | {select_expr_list_con}: select: { x: integer<y_coord> variable, y: integer<x_coord> variable }
+  |         | {select_expr_list}: select: { x: integer<y_coord> variable, y: integer<x_coord> variable }
+  |         | | {select_expr}: x: integer<y_coord> variable
+  |         | | | {name y1}: y1: integer<y_coord> variable
+  |         | | | {opt_as_alias}
+  |         | |   | {name x}
+  |         | | {select_expr_list}
+  |         |   | {select_expr}: y: integer<x_coord> variable
+  |         |     | {name x1}: x1: integer<x_coord> variable
+  |         |     | {opt_as_alias}
+  |         |       | {name y}
+  |         | {select_from_etc}: ok
+  |           | {select_where}
+  |             | {select_groupby}
+  |               | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+INSERT INTO xy(x, y) VALUES(x1, y1), (x1, y1);
+
+  {insert_stmt}: ok
+  | {insert_normal}
+  | {name_columns_values}
+    | {name xy}: xy: { x: integer<x_coord>, y: integer<y_coord> }
+    | {columns_values}: ok
+      | {column_spec}
+      | | {name_list}
+      |   | {name x}: x: integer<x_coord>
+      |   | {name_list}
+      |     | {name y}: y: integer<y_coord>
+      | {select_stmt}: values: { column1: integer, column2: integer }
+        | {select_core_list}: values: { column1: integer, column2: integer }
+        | | {select_core}: values: { column1: integer, column2: integer }
+        |   | {select_values}
+        |   | {values}: values: { column1: integer, column2: integer }
+        |     | {insert_list}
+        |     | | {name x1}: x1: integer<x_coord> variable
+        |     | | {insert_list}
+        |     |   | {name y1}: y1: integer<y_coord> variable
+        |     | {values}
+        |       | {insert_list}
+        |         | {name x1}: x1: integer<x_coord> variable
+        |         | {insert_list}
+        |           | {name y1}: y1: integer<y_coord> variable
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+INSERT INTO xy(x, y) VALUES(x1, y1), (y1, x1), (x1, y1);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
+
+  {insert_stmt}: err
+  | {insert_normal}
+  | {name_columns_values}
+    | {name xy}: xy: { x: integer<x_coord>, y: integer<y_coord> }
+    | {columns_values}: err
+      | {column_spec}
+      | | {name_list}
+      |   | {name x}: x: integer<x_coord>
+      |   | {name_list}
+      |     | {name y}: y: integer<y_coord>
+      | {select_stmt}: err
+        | {select_core_list}: values: { column1: integer, column2: integer }
+        | | {select_core}: values: { column1: integer, column2: integer }
+        |   | {select_values}
+        |   | {values}: values: { column1: integer, column2: integer }
+        |     | {insert_list}
+        |     | | {name x1}: x1: integer<x_coord> variable
+        |     | | {insert_list}
+        |     |   | {name y1}: y1: integer<y_coord> variable
+        |     | {values}
+        |       | {insert_list}: err
+        |       | | {name y1}: err
+        |       | | {insert_list}
+        |       |   | {name x1}: x1: integer<x_coord> variable
+        |       | {values}
+        |         | {insert_list}
+        |           | {name x1}: x1: integer<x_coord> variable
+        |           | {insert_list}
+        |             | {name y1}: y1: integer<y_coord> variable
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+DECLARE xy_curs CURSOR LIKE xy;
+
+  {declare_cursor_like_name}: xy_curs: xy: { x: integer<x_coord>, y: integer<y_coord> } variable shape_storage value_cursor
+  | {name xy_curs}: xy_curs: xy: { x: integer<x_coord>, y: integer<y_coord> } variable shape_storage value_cursor
+  | {like}: xy: { x: integer<x_coord>, y: integer<y_coord> }
+    | {name xy}: xy: { x: integer<x_coord>, y: integer<y_coord> }
+
+The statement ending at line XXXX
+
+FETCH xy_curs(x, y) FROM VALUES(x1, y1);
+
+  {fetch_values_stmt}: ok
+  | {name_columns_values}
+    | {name xy_curs}: xy_curs: xy: { x: integer<x_coord>, y: integer<y_coord> } variable shape_storage value_cursor
+    | {columns_values}: ok
+      | {column_spec}
+      | | {name_list}
+      |   | {name x}: x: integer<x_coord>
+      |   | {name_list}
+      |     | {name y}: y: integer<y_coord>
+      | {insert_list}
+        | {name x1}: x1: integer<x_coord> variable
+        | {insert_list}
+          | {name y1}: y1: integer<y_coord> variable
+
+The statement ending at line XXXX
+
+FETCH xy_curs(x, y) FROM VALUES(y1, x1);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kinds can't be mixed: 'y_coord' vs. 'x_coord'
+
+  {fetch_values_stmt}: err
+  | {name_columns_values}
+    | {name xy_curs}: xy_curs: xy: { x: integer<x_coord>, y: integer<y_coord> } variable shape_storage value_cursor
+    | {columns_values}: ok
+      | {column_spec}
+      | | {name_list}
+      |   | {name x}: err
+      |   | {name_list}
+      |     | {name y}: y: integer<y_coord>
+      | {insert_list}
+        | {name y1}: y1: integer<y_coord> variable
+        | {insert_list}
+          | {name x1}
 

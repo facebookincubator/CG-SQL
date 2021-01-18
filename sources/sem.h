@@ -59,6 +59,7 @@ typedef struct sem_struct {
   CSTR struct_name;               // struct name
   uint32_t count;                 // count of fields
   CSTR *names;                    // field names
+  CSTR *kinds;                    // the "kind" text of each column, if any, e.g. integer<foo> foo is the kind
   sem_t *semtypes;                // typecode for each field
 } sem_struct;
 
