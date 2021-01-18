@@ -969,4 +969,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kin
 Error at test/sem_test.sql:XXXX : in select_core : CQL0070: expressions of different kinds can't be mixed: 'y_coord' vs. 'x_coord'
 Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kinds can't be mixed: 'y_coord' vs. 'x_coord'
+Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
+Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
+Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0070: expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 semantic errors present; no code gen.

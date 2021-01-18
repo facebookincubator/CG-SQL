@@ -13429,12 +13429,12 @@ declare enum my_type integer (
 -- TEST: make x coordinate for use later, validate that it has a kind
 -- + {type_int}: integer<x_coord>
 -- - Error
-declare x1 integer<x_coord>;
+declare x1, x2, x3 integer<x_coord>;
 
 -- TEST: make x coordinate for use later, validate that it has a kind
 -- + {type_int}: integer<y_coord>
 -- - Error
-declare y1 integer<y_coord>;
+declare y1, y2, y3 integer<y_coord>;
 
 -- TEST: try to assign an x to a y
 -- + Error % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
@@ -13462,19 +13462,19 @@ set x1 := x1 * 2;
 -- TEST: this is ok, it's still an x
 -- + {add}: integer<x_coord>
 -- - Error
-set x1 := x1 + x1;
+set x1 := x1 + x2;
 
 declare bb bool;
 
 -- TEST: this is ok, comparison of same types (equality)
 -- + {eq}: bool
 -- - Error
-set bb := x1 = x1;
+set bb := x1 = x2;
 
 -- TEST: this is ok, comparison of same types (inequality)
 -- + {lt}: bool
 -- - Error
-set bb := x1 < x1;
+set bb := x1 < x2;
 
 -- TEST: comparison of two incompatible types (equality)
 -- + {eq}: err
@@ -13501,22 +13501,22 @@ declare _x type integer<x_coord>;
 -- - Error
 declare _y type integer<y_coord>;
 
--- TEST: delare an integer with the type alias
--- + DECLARE x2 INTEGER<x_coord>;
+-- TEST: declare an integer with the type alias
+-- + DECLARE x4 INTEGER<x_coord>;
 -- + {declare_vars_type}: integer<x_coord>
--- + {name_list}: x2: integer<x_coord> variable
--- + {name x2}: x2: integer<x_coord> variable
+-- + {name_list}: x4: integer<x_coord> variable
+-- + {name x4}: x4: integer<x_coord> variable
 -- + {type_int}: integer<x_coord>
 -- + {name x_coord}
 -- - Error
-declare x2 _x;
+declare x4 _x;
 
 -- TEST: use the named type version, should be the same
 -- + {assign}: x1: integer<x_coord> variable
 -- + {name x1}: x1: integer<x_coord> variable
--- + {name x2}: x2: integer<x_coord> variable
+-- + {name x4}: x4: integer<x_coord> variable
 -- - Error
-set x1 := x2;
+set x1 := x4;
 
 -- TEST: make a table that has mixed kinds
 -- + {create_table_stmt}: xy: { x: integer<x_coord>, y: integer<y_coord> }
@@ -13555,7 +13555,7 @@ insert into xy select xy.y, xy.x from xy where xy.x = 1;
 -- - Error
 select x1 as x, y1 as y
 union all
-select x1 as x, y1 as y;
+select x2 as x, y2 as y;
  
 -- TEST: compound select with not matching object kinds (as makes the name match)
 -- but the kind is wrong so you still get an error (!)
@@ -13564,12 +13564,12 @@ select x1 as x, y1 as y;
 -- +1 Error
 select x1 as x, y1 as y
 union all
-select y1 as x, x1 as y;
+select y2 as x, x2 as y;
 
 -- TEST: insert into xy with values, kinds are ok
 -- + {insert_stmt}: ok
 -- - Error
-insert into xy values (x1, y1), (x1, y1);
+insert into xy values (x1, y1), (x2, y2);
 
 -- TEST: insert into xy with values, kinds are ok
 -- + {insert_stmt}: err
@@ -13577,8 +13577,8 @@ insert into xy values (x1, y1), (x1, y1);
 -- +1 Error
 insert into xy values 
   (x1, y1), 
-  (y1, x1),
-  (x1, y1);
+  (y2, x2),
+  (x3, y3);
 
 -- TEST: cursor should have the correct shape including kinds
 -- + {declare_cursor_like_name}: xy_curs: xy: { x: integer<x_coord>, y: integer<y_coord> } variable shape_storage value_cursor
@@ -13594,3 +13594,75 @@ fetch xy_curs from values(x1, y1);
 -- + Error % expressions of different kinds can't be mixed: 'y_coord' vs. 'x_coord'
 -- +1 Error
 fetch xy_curs from values(y1, x1);
+
+-- some variables of a different type
+-- - Error
+declare v1, v2, v3 integer<v>;
+
+-- TEST: when with matching variable kinds this is ok, it's x1 or x1
+-- + {assign}: x1: integer<x_coord> variable
+-- + {name x1}: x1: integer<x_coord> variable
+-- + {case_expr}: integer<x_coord>
+-- - Error
+set x1 := case when 1 then x1 else x1 end;
+
+-- TEST: when with non-matching variable x and y mixed
+-- + {case_expr}: err
+-- + Error % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
+-- +1 Error
+set x1 := case when 1 then x1 else y1 end;
+
+-- TEST: case expressions match (x and x), this is ok
+-- + {assign}: v1: integer<v> variable
+-- + {name v1}: v1: integer<v> variable
+-- - Error
+set v1 := case x1 when x2 then v1 else v2 end;
+
+-- TEST: invalid mixing of x and y in the when expression
+-- note extra line breaks to ensure any reported errors are on different lines for help with diagnosis
+-- + {case_expr}: err
+-- + Error % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
+-- +1 Error
+set v1 := case x1
+               when x2
+               then v1
+               when y1
+               then v2
+               else v3
+               end;
+
+-- TEST: need a bool for the subsequent stuff
+-- - Error
+declare b0 bool;
+
+-- TEST: in expression has valid kinds, no problem here
+-- + {assign}: b0: bool variable
+-- + {in_pred}: bool
+-- + {name x1}: x1: integer<x_coord> variable
+-- + {expr_list}: x1: integer<x_coord> variable
+-- + {expr_list}: x2: integer<x_coord> variable
+-- + {expr_list}: x3: integer<x_coord> variable
+-- - Error
+set b0 := x1 in (x1, x2, x3);
+
+-- TEST: in expression has mixed kinds
+-- + {assign}: err
+-- + {in_pred}: err
+-- + Error % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
+-- +1 Error
+set b0 := x1 in (x1, y2, x3);
+
+-- TEST: in expression using select
+-- + {assign}: b0: bool variable
+-- + {in_pred}: bool
+-- + {select_stmt}: x2: integer<x_coord> variable
+set b0 := (select x1 in (select x2));
+
+-- TEST: in expression using select, but select result is the wrong kind
+-- + {assign}: err
+-- + {in_pred}: err
+-- + {select_stmt}: err
+-- + {select_core_list}: select: { y1: integer<y_coord> variable }
+-- + Error % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
+-- +1 Error
+set b0 := (select x1 in (select y1));

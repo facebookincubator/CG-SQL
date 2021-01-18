@@ -4683,7 +4683,7 @@ static CSTR sem_combine_kinds(ast_node *ast, CSTR kright) {
 // If we started with case expr then each when expression must be comparable
 // to the case expression.  If we started with case when xx then yy;  then
 // each case expression must be numeric (typically boolean).
-static void sem_case_list(ast_node *head, sem_t sem_type_required_for_when) {
+static void sem_case_list(ast_node *head, sem_t sem_type_required_for_when, CSTR kind_required_for_when) {
   Contract(is_ast_case_list(head));
   sem_t sem_type_result = SEM_TYPE_PENDING;
   CSTR then_kind = NULL;
@@ -4706,6 +4706,13 @@ static void sem_case_list(ast_node *head, sem_t sem_type_required_for_when) {
     }
 
     if (!sem_verify_compat(case_expr, sem_type_required_for_when, case_expr->sem->sem_type, "when")) {
+      record_error(ast);
+      record_error(head);
+      return;
+    }
+
+    sem_combine_kinds(case_expr, kind_required_for_when);
+    if (is_error(case_expr)) {
       record_error(ast);
       record_error(head);
       return;
@@ -4761,6 +4768,7 @@ static void sem_expr_case(ast_node *ast, CSTR cstr) {
 
   sem_t sem_type_required_for_when = SEM_TYPE_BOOL;
   sem_t sem_sensitive = 0;
+  CSTR kind_required_for_when = NULL;
 
   if (expr) {
     // case can have expression or just when clauses
@@ -4769,14 +4777,19 @@ static void sem_expr_case(ast_node *ast, CSTR cstr) {
       record_error(ast);
       return;
     }
+    kind_required_for_when = expr->sem->kind;
     sem_type_required_for_when = core_type_of(expr->sem->sem_type);
     sem_sensitive |= sensitive_flag(expr->sem->sem_type);
   }
 
-  sem_case_list(case_list, sem_type_required_for_when);
+  sem_case_list(case_list, sem_type_required_for_when, kind_required_for_when);
 
   ast->sem = case_list->sem;
   sem_sensitive |= sensitive_flag(case_list->sem->sem_type);
+
+  if (is_error(ast)) {
+    return;
+  }
 
   if (else_expr) {
     sem_expr(else_expr);
@@ -5044,15 +5057,18 @@ static void sem_coalesce(ast_node *call_ast, bool_t is_ifnull) {
 // Note that null in (null) is null, not true.
 static void sem_expr_in_pred_or_not_in(ast_node *ast, CSTR cstr) {
   Contract(is_ast_in_pred(ast) || is_ast_not_in(ast));
+  EXTRACT_ANY_NOTNULL(needle, ast->left);
 
-  // [ast->left] [NOT] IN ( [expr_list | select_stmt] )
-  sem_expr(ast->left);
-  if (is_error(ast->left)) {
+  // [needle] [NOT] IN ( [expr_list | select_stmt] )
+
+  sem_expr(needle);
+  if (is_error(needle)) {
     record_error(ast);
     return;
   }
 
-  sem_t sem_type_needed = ast->left->sem->sem_type;
+  sem_t sem_type_needed = needle->sem->sem_type;
+  CSTR kind_needed = needle->sem->kind;
   sem_t combined_flags = not_nullable_flag(sem_type_needed) | sensitive_flag(sem_type_needed);
 
   if (is_ast_expr_list(ast->right)) {
@@ -5072,6 +5088,12 @@ static void sem_expr_in_pred_or_not_in(ast_node *ast, CSTR cstr) {
 
       sem_t sem_type_current = expr->sem->sem_type;
       if (!sem_verify_compat(ast, sem_type_needed, sem_type_current, is_ast_in_pred(ast) ? "IN" : "NOT IN")) {
+        return;
+      }
+
+      sem_combine_kinds(expr, kind_needed);
+      if (is_error(expr)) {
+        record_error(ast);
         return;
       }
 
@@ -5103,6 +5125,12 @@ static void sem_expr_in_pred_or_not_in(ast_node *ast, CSTR cstr) {
 
     // make sure the select statement is of some comparable type
     if (!sem_verify_compat(ast, sem_type_needed, select_stmt->sem->sem_type, is_ast_in_pred(ast) ? "IN" : "NOT IN")) {
+      return;
+    }
+
+    sem_combine_kinds(select_stmt, kind_needed);
+    if (is_error(select_stmt)) {
+      record_error(ast);
       return;
     }
 
@@ -11396,19 +11424,11 @@ static bool_t sem_validate_compatable_table_cols_select(ast_node *table_ast, ast
             // which is atypical but it can happen.  The normal thing is that values are all constants.
             sem_combine_kinds(expr, col->sem->kind);
             if (is_error(expr)) {
-              // to do, is this error recording actually needed?  looks redundant.
-              record_error(insert_list);
-              record_error(select_stmt);
-              record_error(select_stmt->parent);
               return false;
             }
 
             // in case of semantic error the expr is tagged to the expr node in values clause.
             if (!sem_verify_assignment(expr, col->sem->sem_type, expr->sem->sem_type, col->sem->name)) {
-              // to do, is this error recording actually needed?  looks redundant.
-              record_error(insert_list);
-              record_error(select_stmt);
-              record_error(select_stmt->parent);
               return false;
             }
           }
@@ -15740,6 +15760,7 @@ static void sem_expr_select(ast_node *ast, CSTR cstr) {
 
   ast->sem = new_sem(sem_type);
   ast->sem->name = sptr->names[0];
+  ast->sem->kind = sptr->kinds[0];
 }
 
 // At this point all processing of input is complete.  So now we walk all the tables
