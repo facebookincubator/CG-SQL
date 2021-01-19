@@ -42413,6 +42413,45 @@ SELECT id,
 
 The statement ending at line XXXX
 
+SELECT 
+  lag(cost, 1, id) OVER ()
+  FROM with_kind;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kinds can't be mixed: 'dollars' vs. 'some_key'
+Error at test/sem_test.sql:XXXX : in call : CQL0302: The first and third arguments must be compatible in function 'lag'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {window_func_inv}: err
+  |     |     | {call}: err
+  |     |     | | {name lag}: ok
+  |     |     | | {call_arg_list}
+  |     |     |   | {call_filter_clause}
+  |     |     |   | {arg_list}: err
+  |     |     |     | {name cost}: cost: real<dollars>
+  |     |     |     | {arg_list}
+  |     |     |       | {int 1}: integer notnull
+  |     |     |       | {arg_list}
+  |     |     |         | {name id}: err
+  |     |     | {window_defn}: ok
+  |     |       | {window_defn_orderby}
+  |     | {select_from_etc}: TABLE { with_kind: with_kind }
+  |       | {table_or_subquery_list}: TABLE { with_kind: with_kind }
+  |       | | {table_or_subquery}: TABLE { with_kind: with_kind }
+  |       |   | {name with_kind}: TABLE { with_kind: with_kind }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
 SELECT id, 
   lag(id, 1.3, 0) OVER ()
   FROM foo;
@@ -42691,7 +42730,8 @@ SELECT id,
   lag(id, 0, 0.7) OVER ()
   FROM foo;
 
-Error at test/sem_test.sql:XXXX : in call : CQL0302: The first and third arguments must be of the same type in function 'lag'
+Error at test/sem_test.sql:XXXX : in num : CQL0242: lossy conversion from type 'REAL' in 0.7
+Error at test/sem_test.sql:XXXX : in call : CQL0302: The first and third arguments must be compatible in function 'lag'
 
   {select_stmt}: err
   | {select_core_list}: err

@@ -10420,6 +10420,13 @@ select id from foo where ntile(7);
 -- - Error
 select id, lag(id, 1, 0) over () from foo;
 
+-- TEST: kind not compatible in lag between arg3 and arg1
+-- + {select_stmt}: err
+-- + Error % expressions of different kinds can't be mixed: 'dollars' vs. 'some_key'
+-- + Error % The first and third arguments must be compatible in function 'lag'
+-- +2 Error
+select lag(cost, 1, id) over () from with_kind;
+
 -- TEST lag with non integer offset
 -- + {select_stmt}: err
 -- + Error % The second argument must be an integer (between 0 and max integer) in function 'lag'
@@ -10496,8 +10503,8 @@ select id, lag(id | " ") over () from foo;
 -- + {call}: err
 -- + {name lag}
 -- + {arg_list}: err
--- + Error % The first and third arguments must be of the same type in function 'lag'
--- +1 Error
+-- + Error % The first and third arguments must be compatible in function 'lag'
+-- +2 Error
 select id, lag(id, 0, 0.7) over () from foo;
 
 -- TEST: test lag() window function with no param
