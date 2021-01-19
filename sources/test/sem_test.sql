@@ -10420,6 +10420,17 @@ select id from foo where ntile(7);
 -- - Error
 select id, lag(id, 1, 0) over () from foo;
 
+-- TEST lag with non integer offset
+-- + {select_stmt}: err
+-- + Error % The second argument must be an integer (between 0 and max integer) in function 'lag'
+-- +1 Error
+select id, lag(id, 1.3, 0) over () from foo;
+
+-- TEST: test lag() window function with non constant index (this is ok)
+-- + {select_stmt}: select: { id: integer notnull, id: integer notnull }
+-- - Error
+select id, lag(id, X, 0) over () from foo;
+
 -- TEST: test lag() window function with lag() nullable even though id is not nullable
 -- + {select_stmt}: select: { id: integer notnull, id: integer }
 -- + {select_expr}: id: integer

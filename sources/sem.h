@@ -179,6 +179,7 @@ cql_noexport bool_t is_string_compat(sem_t sem_type);
 cql_noexport bool_t is_blob_compat(sem_t sem_type);
 cql_noexport bool_t is_object_compat(sem_t sem_type);
 cql_noexport bool_t is_create_func(sem_t sem_type);
+cql_noexport bool_t is_integer(sem_t sem_type);
 cql_noexport bool_t is_numeric(sem_t sem_type);
 cql_noexport bool_t is_numeric_compat(sem_t sem_type);
 cql_noexport bool_t is_numeric_expr(ast_node *expr);
