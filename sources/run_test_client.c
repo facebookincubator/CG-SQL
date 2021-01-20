@@ -277,7 +277,7 @@ cql_code test_rowset_same(sqlite3 *db) {
                      updated_name,
                      get_nullable_code(result_set, 0),
                      get_mixed_get_bl(result_set, 0)));
-        
+
 
   // Update row 1 with just a new code, so only 1 of the identity columns should not match the previous result set
   SQL_E(update_mixed(db,
@@ -576,7 +576,7 @@ cql_code test_c_one_row_result(sqlite3 *db) {
 
   SQL_E(get_one_from_mixed_fetch_results(db, &result_set, 1));
   E(get_one_from_mixed_result_count(result_set) == 1, "expected 1 rows from mixed\n");
-
+  
   cql_bool b_is_null;
   cql_bool b;
   cql_bool code_is_null;
@@ -662,6 +662,13 @@ cql_code test_all_column_fetchers(sqlite3 *db) {
   E(cql_result_set_get_meta(result_set)->columnCount == 12, "expected 12 columns from result table\n");
   cql_result_set_ref rs = (cql_result_set_ref)result_set;
 
+  for (int32_t row = 0; row <= 1; row++) {
+    for (int32_t col = 0; col < 12; col++) {
+      cql_bool is_sensitive = cql_result_set_get_is_sensitive_col(rs, col);
+      cql_bool is_sensitive_expected = col < 6;
+      E(is_sensitive == is_sensitive_expected, "expected is_sensitive did not match seed data, col %d\n", col);
+    }
+  }
   for (int32_t row = 0; row <= 1; row++) {
     for (int32_t col = 0; col < 12; col++) {
       cql_bool is_null = cql_result_set_get_is_null_col(rs, row, col);

@@ -4473,7 +4473,7 @@ cql_string_ref _Nullable radioactive_proc_get_data(radioactive_proc_result_set_r
 
 uint8_t radioactive_proc_data_types[radioactive_proc_data_types_count] = {
   CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
-  CQL_DATA_TYPE_STRING, // data
+  CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_SENSITIVE, // data
 };
 
 #define radioactive_proc_refs_offset cql_offsetof(radioactive_proc_row, data) // count = 1

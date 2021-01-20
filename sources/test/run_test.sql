@@ -9,8 +9,8 @@
 
 BEGIN_SUITE()
 
-declare function blob_from_string(str text) create blob not null;
-declare function string_from_blob(b blob) create text not null;
+declare function blob_from_string(str text @sensitive) create blob not null;
+declare function string_from_blob(b blob @sensitive) create text not null;
 declare procedure cql_init_extensions() using transaction;
 
 declare enum floats real (
@@ -2393,12 +2393,12 @@ END_TEST(nullable_test)
 create procedure load_all_types_table()
 begin
   create table all_types_table(
-    b0 bool,
-    i0 integer,
-    l0 long,
-    d0 real,
-    s0 text,
-    bl0 blob,
+    b0 bool @sensitive,
+    i0 integer @sensitive,
+    l0 long @sensitive,
+    d0 real @sensitive,
+    s0 text @sensitive,
+    bl0 blob @sensitive,
 
     b1 bool not null,
     i1 integer not null,

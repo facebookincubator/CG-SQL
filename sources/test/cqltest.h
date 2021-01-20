@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-declare tests integer not null; 
+declare tests integer not null;
 declare tests_passed integer not null;
 declare fails integer not null;
 declare expectations integer not null;
@@ -48,7 +48,7 @@ if start_refs != end_refs then \
   set fails := fails + 1; \
 end if;
 
-create procedure errcheck(passed bool, message text, line integer not null)
+create procedure errcheck(passed bool @sensitive, message text, line integer not null)
 begin
   set expectations := expectations + 1;
   if not coalesce(passed, 0) then
@@ -57,9 +57,9 @@ begin
   end if;
 end;
 
-create procedure end_suite() 
+create procedure end_suite()
 begin
-  call printf("%d tests executed. %d passed, %d failed.  %d expectations failed of %d.\n", 
-    tests, tests_passed, tests - tests_passed, fails, expectations); 
+  call printf("%d tests executed. %d passed, %d failed.  %d expectations failed of %d.\n",
+    tests, tests_passed, tests - tests_passed, fails, expectations);
   call exit(fails);
 end;

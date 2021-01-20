@@ -3182,6 +3182,9 @@ static void cg_cql_datatype(sem_t sem_type, charbuf *output) {
   if (!is_nullable(sem_type)) {
     bprintf(output, "CQL_DATA_TYPE_NOT_NULL | ");
   }
+  if (sensitive_flag(sem_type)) {
+    bprintf(output, "CQL_DATA_TYPE_SENSITIVE | ");
+  }
 
   switch (core_type_of(sem_type)) {
     case SEM_TYPE_BOOL:
@@ -4995,6 +4998,9 @@ static void cg_data_type(charbuf *buffer, sem_t sem_type) {
   }
   if (is_not_nullable(sem_type)) {
     bprintf(buffer, " | CQL_DATA_TYPE_NOT_NULL");
+  }
+  if (sensitive_flag(sem_type)) {
+    bprintf(buffer, " | CQL_DATA_TYPE_SENSITIVE");
   }
 }
 

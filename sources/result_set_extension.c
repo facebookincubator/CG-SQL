@@ -27,7 +27,7 @@ void rsColFunc(
   int32_t null_out = row < 0 || row >= rs->count || col < 0 || col >= rs->meta.columnCount;
 
   if (!null_out) {
-    char dataType = rs->meta.dataTypes[col] & ~CQL_DATA_TYPE_NOT_NULL;
+    char dataType = CQL_CORE_DATA_TYPE_OF(rs->meta.dataTypes[col]);
     null_out = cql_result_set_get_is_null_col(rs, row, col);
 
     if (!null_out) {

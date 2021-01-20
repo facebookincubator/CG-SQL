@@ -362,6 +362,7 @@ typedef struct rtdata {
   //                    cql_int32 row,
   //                    cql_int32 col)
   //   getIsNull:   Boolean (*_Nullable)(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col)
+  //   getIsSensitive: Boolean (*_Nullable)(cql_result_set_ref _Nonnull result_set, cql_int32 col)
   const char *cql_result_set_meta_struct;
 
   // The name of the method that will give the metadata struct back as provided to the construction above
@@ -462,6 +463,15 @@ typedef struct rtdata {
   // @return cql_true if the value is null, otherwise cql_false.
   // cql_bool cql_result_set_get_is_null(cql_result_set_ref result_set, int32_t row, int32_t col)
   const char *cql_result_set_get_is_null;
+
+  // Generic is_sensitive value getter on base result set object.
+  // NOTE: This is only used when generate_type_getters is true.  This function should call through to the
+  // inline type getters that are passed into the ctor for the result set.
+  // @param result_set The cql result_set object.
+  // @param col The column to fetch the value for.
+  // @return cql_true if the value is sensitive, otherwise cql_false.
+  // cql_bool cql_result_set_get_is_sensitive(cql_result_set_ref result_set, int32_t col)
+  const char *cql_result_set_get_is_sensitive;
 
   // The java type for a nullable boolean value.
   const char *cql_bool_nullable;

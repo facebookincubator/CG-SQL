@@ -393,10 +393,10 @@ int cql_compat_sqlite3_strlike(const char *_Nonnull zGlob, const char *_Nonnull 
 static void cql_multinull(cql_int32 count, va_list args) {
   for (cql_int32 column = 0; column < count; column++) {
     cql_int32 type = va_arg(args, cql_int32);
+    cql_int32 core_data_type = CQL_CORE_DATA_TYPE_OF(type);
 
     if (type & CQL_DATA_TYPE_NOT_NULL) {
-      type &= CQL_DATA_TYPE_CORE;
-      switch (type) {
+      switch (core_data_type) {
         case CQL_DATA_TYPE_INT32: {
           cql_int32 *int32_data = va_arg(args, cql_int32 *);
           *int32_data = 0;
@@ -430,7 +430,7 @@ static void cql_multinull(cql_int32 count, va_list args) {
       }
     }
     else {
-      switch (type) {
+      switch (core_data_type) {
         case CQL_DATA_TYPE_INT32: {
           cql_nullable_int32 *_Nonnull int32p = va_arg(args, cql_nullable_int32 *_Nonnull);
           cql_set_null(*int32p);
@@ -483,10 +483,10 @@ void cql_multifetch_meta(char *_Nonnull data, cql_fetch_info *_Nonnull info) {
   for (cql_int32 column = 0; column < count; column++) {
     uint8_t type = data_types[column];
     char *field = data + col_offsets[column];
+    cql_int32 core_data_type = CQL_CORE_DATA_TYPE_OF(type);
 
     if (type & CQL_DATA_TYPE_NOT_NULL) {
-      type &= CQL_DATA_TYPE_CORE;
-      switch (type) {
+      switch (core_data_type) {
         case CQL_DATA_TYPE_INT32: {
           cql_int32 *int32_data = (cql_int32 *)field;
           *int32_data = sqlite3_column_int(stmt, column);
@@ -520,7 +520,7 @@ void cql_multifetch_meta(char *_Nonnull data, cql_fetch_info *_Nonnull info) {
       }
     }
     else {
-      switch (type) {
+      switch (core_data_type) {
         case CQL_DATA_TYPE_INT32: {
           cql_nullable_int32 *_Nonnull int32p = (cql_nullable_int32 *_Nonnull)field;
           cql_column_nullable_int32(stmt, column, int32p);
@@ -574,10 +574,10 @@ void cql_multifetch(cql_code rc, sqlite3_stmt *_Nullable stmt, cql_int32 count, 
 
   for (cql_int32 column = 0; column < count; column++) {
     cql_int32 type = va_arg(args, cql_int32);
+    cql_int32 core_data_type = CQL_CORE_DATA_TYPE_OF(type);
 
     if (type & CQL_DATA_TYPE_NOT_NULL) {
-      type &= CQL_DATA_TYPE_CORE;
-      switch (type) {
+      switch (core_data_type) {
         case CQL_DATA_TYPE_INT32: {
           cql_int32 *int32_data = va_arg(args, cql_int32 *);
           *int32_data = sqlite3_column_int(stmt, column);
@@ -611,7 +611,7 @@ void cql_multifetch(cql_code rc, sqlite3_stmt *_Nullable stmt, cql_int32 count, 
       }
     }
     else {
-      switch (type) {
+      switch (core_data_type) {
         case CQL_DATA_TYPE_INT32: {
           cql_nullable_int32 *_Nonnull int32p = va_arg(args, cql_nullable_int32 *_Nonnull);
           cql_column_nullable_int32(stmt, column, int32p);
@@ -669,10 +669,10 @@ void cql_copyoutrow(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_i
 
   for (cql_int32 column = 0; column < count; column++) {
     cql_int32 type = va_arg(args, cql_int32);
+    cql_int32 core_data_type = CQL_CORE_DATA_TYPE_OF(type);
 
     if (type & CQL_DATA_TYPE_NOT_NULL) {
-      type &= CQL_DATA_TYPE_CORE;
-      switch (type) {
+      switch (core_data_type) {
         case CQL_DATA_TYPE_INT32: {
           cql_int32 *int32_data = va_arg(args, cql_int32 *);
           *int32_data = cql_result_set_get_int32_col(result_set, row, column);
@@ -706,7 +706,7 @@ void cql_copyoutrow(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_i
       }
     }
     else {
-      switch (type) {
+      switch (core_data_type) {
         case CQL_DATA_TYPE_INT32: {
           cql_nullable_int32 *_Nonnull int32p = va_arg(args, cql_nullable_int32 *_Nonnull);
           if (cql_result_set_get_is_null_col(result_set, row, column)) {
@@ -775,10 +775,10 @@ void cql_multibind(cql_code *_Nonnull prc, sqlite3 *_Nonnull db, sqlite3_stmt *_
   for (cql_int32 column = 1; *prc == SQLITE_OK && column <= count; column++) {
     cql_contract(pstmt && *pstmt);
     cql_int32 type = va_arg(args, cql_int32);
+    cql_int32 core_data_type = CQL_CORE_DATA_TYPE_OF(type);
 
     if (type & CQL_DATA_TYPE_NOT_NULL) {
-      type &= CQL_DATA_TYPE_CORE;
-      switch (type) {
+      switch (core_data_type) {
         case CQL_DATA_TYPE_INT32: {
           cql_int32 int32_data = va_arg(args, cql_int32);
           *prc = sqlite3_bind_int(*pstmt, column, int32_data);
@@ -821,7 +821,7 @@ void cql_multibind(cql_code *_Nonnull prc, sqlite3 *_Nonnull db, sqlite3_stmt *_
       }
     }
     else {
-      switch (type) {
+      switch (core_data_type) {
         case CQL_DATA_TYPE_INT32: {
           const cql_nullable_int32 *_Nonnull int32p = va_arg(args, const cql_nullable_int32 *_Nonnull);
           *prc = int32p->is_null ? sqlite3_bind_null(*pstmt, column) :
@@ -1347,6 +1347,19 @@ cql_bool cql_result_set_get_is_null_col(cql_result_set_ref _Nonnull result_set, 
   return is_null;
 }
 
+// This is the helper method that determines if a column is sensitive
+// return TRUE if the data type value has the flag CQL_DATA_TYPE_SENSITIVE
+cql_bool cql_result_set_get_is_sensitive_col(cql_result_set_ref _Nonnull result_set, cql_int32 col) {
+  cql_result_set_meta *meta = cql_result_set_get_meta(result_set);
+
+  // Check to make sure the requested column is a valid column
+  // See cql_address_of_col for reasons why this might fail.
+  int32_t columnCount = meta->columnCount;
+  cql_contract(col < columnCount);
+
+  return !!(meta->dataTypes[col] & CQL_DATA_TYPE_SENSITIVE);
+}
+
 // Tables contains a list of tables we need to drop.  The format is
 // table1\0table2\0table3\0\0
 // We try to drop all those tables.
@@ -1427,6 +1440,7 @@ void cql_initialize_meta(cql_result_set_meta *_Nonnull meta, cql_fetch_info *_No
       meta->getString = cql_result_set_get_string_col;
       meta->getBlob = cql_result_set_get_blob_col;
       meta->getIsNull = cql_result_set_get_is_null_col;
+      meta->getIsSensitive = cql_result_set_get_is_sensitive_col;
   #endif
 }
 

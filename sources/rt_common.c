@@ -91,6 +91,7 @@ static rtdata rt_c = {
   .cql_result_set_get_string = "cql_result_set_get_string_col",
   .cql_result_set_get_blob = "cql_result_set_get_blob_col",
   .cql_result_set_get_is_null = "cql_result_set_get_is_null_col",
+  .cql_result_set_get_is_sensitive = "cql_result_set_get_is_sensitive_col",
 };
 
 static rtdata rt_objc = {
