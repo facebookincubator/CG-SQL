@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu Jan 14 13:07:50 PST 2021
+Snapshot as of Fri Jan 15 14:50:38 PST 2021
 
 ### Operators and Literals
 
@@ -325,7 +325,7 @@ misc_attrs:
   ;
 
 col_def:
-  misc_attrs col_name data_type_or_type_name col_attrs
+  misc_attrs col_name data_type_no_options col_attrs
   ;
 
 pk_def:
@@ -450,12 +450,6 @@ version_annotation:
   | '(' "integer-literal" ')'
   ;
 
-object_type:
-  "OBJECT"
-  | "OBJECT" '<' name '>'
-  | "OBJECT" '<' name "CURSOR" '>'
-  ;
-
 data_type_numeric:
   "INT"
   | "INTEGER"
@@ -465,25 +459,28 @@ data_type_numeric:
   | "LONG" "INTEGER"
   | "LONG" "INT"
   | "LONG_INT" | "LONG_INTEGER"
+  ;
 
-data_type:
+data_type_any:
   data_type_numeric
   | "TEXT"
   | "BLOB"
-  | object_type
+  | "OBJECT"
+  | "OBJECT" '<' name '>'
+  | "OBJECT" '<' name "CURSOR" '>'
   ;
 
-data_type_or_type_name:
-  data_type
+data_type_no_options:
+  data_type_any
   | "ID"
   ;
 
-data_type_opt_notnull:
-  data_type
-  | data_type "NOT" "NULL"
-  | data_type "@SENSITIVE"
-  | data_type "@SENSITIVE" "NOT" "NULL"
-  | data_type "NOT" "NULL" "@SENSITIVE"
+data_type_with_options:
+  data_type_any
+  | data_type_any "NOT" "NULL"
+  | data_type_any "@SENSITIVE"
+  | data_type_any "@SENSITIVE" "NOT" "NULL"
+  | data_type_any "NOT" "NULL" "@SENSITIVE"
   | "ID"
   ;
 
@@ -594,7 +591,7 @@ expr:
   | "CASE" expr case_list "ELSE" expr "END"
   | "CASE" case_list "END"
   | "CASE" case_list "ELSE" expr "END"
-  | "CAST" '(' expr "AS" data_type_or_type_name ')'
+  | "CAST" '(' expr "AS" data_type_no_options ')'
   ;
 
 case_list:
@@ -1059,9 +1056,9 @@ enum_value:
   ;
 
 declare_func_stmt:
-  "DECLARE" function name '(' params ')' data_type_opt_notnull
-  | "DECLARE" "SELECT" function name '(' params ')' data_type_opt_notnull
-  | "DECLARE" function name '(' params ')' "CREATE" data_type_opt_notnull
+  "DECLARE" function name '(' params ')' data_type_with_options
+  | "DECLARE" "SELECT" function name '(' params ')' data_type_with_options
+  | "DECLARE" function name '(' params ')' "CREATE" data_type_with_options
   | "DECLARE" "SELECT" function name '(' params ')' '(' typed_names ')'
   ;
 
@@ -1089,7 +1086,7 @@ inout:
   ;
 
 typed_name:
-  name data_type_opt_notnull
+  name data_type_with_options
   | shape_def
   | name shape_def
   ;
@@ -1100,8 +1097,8 @@ typed_names:
   ;
 
 param:
-  name data_type_opt_notnull
-  | inout name data_type_opt_notnull
+  name data_type_with_options
+  | inout name data_type_with_options
   | shape_def
   | name shape_def
   ;
@@ -1113,7 +1110,7 @@ params:
   ;
 
 declare_stmt:
-  "DECLARE" name_list data_type_opt_notnull
+  "DECLARE" name_list data_type_with_options
   | "DECLARE" name "CURSOR" "FOR" select_stmt
   | "DECLARE" name "CURSOR" "FOR" explain_stmt
   | "DECLARE" name "CURSOR" "FOR" call_stmt
@@ -1121,7 +1118,7 @@ declare_stmt:
   | "DECLARE" name "CURSOR" shape_def
   | "DECLARE" name "CURSOR" "LIKE" select_stmt
   | "DECLARE" name "CURSOR" "FOR" name
-  | "DECLARE" name "TYPE" data_type_opt_notnull
+  | "DECLARE" name "TYPE" data_type_with_options
   ;
 
 call_stmt:
