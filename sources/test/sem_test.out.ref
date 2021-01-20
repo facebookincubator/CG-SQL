@@ -77,6 +77,26 @@ CREATE TABLE with_kind(
 
 The statement ending at line XXXX
 
+DECLARE price_d REAL<dollars>;
+
+  {declare_vars_type}: real<dollars>
+  | {name_list}: price_d: real<dollars> variable
+  | | {name price_d}: price_d: real<dollars> variable
+  | {type_real}: real<dollars>
+    | {name dollars}
+
+The statement ending at line XXXX
+
+DECLARE price_e REAL<euros>;
+
+  {declare_vars_type}: real<euros>
+  | {name_list}: price_e: real<euros> variable
+  | | {name price_e}: price_e: real<euros> variable
+  | {type_real}: real<euros>
+    | {name euros}
+
+The statement ending at line XXXX
+
 CREATE TABLE bar(
   id INTEGER NOT NULL,
   name TEXT @CREATE(2),
@@ -45012,6 +45032,60 @@ SELECT nullif(id, 1)
 
 The statement ending at line XXXX
 
+SELECT nullif(price_d, price_d);
+
+  {select_stmt}: select: { price_d: real<dollars> variable }
+  | {select_core_list}: select: { price_d: real<dollars> variable }
+  | | {select_core}: select: { price_d: real<dollars> variable }
+  |   | {select_expr_list_con}: select: { price_d: real<dollars> variable }
+  |     | {select_expr_list}: select: { price_d: real<dollars> variable }
+  |     | | {select_expr}: price_d: real<dollars> variable
+  |     |   | {call}: price_d: real<dollars> variable
+  |     |     | {name nullif}: price_d: real<dollars> variable
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {name price_d}: price_d: real<dollars> variable
+  |     |         | {arg_list}
+  |     |           | {name price_d}: price_d: real<dollars> variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT nullif(price_d, price_e);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name nullif}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {name price_d}: price_d: real<dollars> variable
+  |     |         | {arg_list}
+  |     |           | {name price_e}: err
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
 SELECT id, nullif(name, 1)
   FROM bar;
 
@@ -45349,6 +45423,32 @@ SELECT abs(info)
   | {select_orderby}
     | {select_limit}
       | {select_offset}
+
+The statement ending at line XXXX
+
+SET price_d := ( SELECT abs(price_d) );
+
+  {assign}: price_d: real<dollars> variable
+  | {name price_d}: price_d: real<dollars> variable
+  | {select_stmt}: price_d: real<dollars> variable
+    | {select_core_list}: select: { price_d: real<dollars> variable }
+    | | {select_core}: select: { price_d: real<dollars> variable }
+    |   | {select_expr_list_con}: select: { price_d: real<dollars> variable }
+    |     | {select_expr_list}: select: { price_d: real<dollars> variable }
+    |     | | {select_expr}: price_d: real<dollars> variable
+    |     |   | {call}: price_d: real<dollars> variable
+    |     |     | {name abs}: price_d: real<dollars> variable
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {name price_d}: price_d: real<dollars> variable
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
 
 The statement ending at line XXXX
 
@@ -49798,6 +49898,42 @@ SET a_string := ( SELECT trim("x") );
     |     |       | {call_filter_clause}
     |     |       | {arg_list}: ok
     |     |         | {strlit 'x'}: text notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+DECLARE kind_string TEXT<surname>;
+
+  {declare_vars_type}: text<surname>
+  | {name_list}: kind_string: text<surname> variable
+  | | {name kind_string}: kind_string: text<surname> variable
+  | {type_text}: text<surname>
+    | {name surname}
+
+The statement ending at line XXXX
+
+SET kind_string := ( SELECT trim(kind_string) );
+
+  {assign}: kind_string: text<surname> variable
+  | {name kind_string}: kind_string: text<surname> variable
+  | {select_stmt}: _anon: text<surname>
+    | {select_core_list}: select: { _anon: text<surname> }
+    | | {select_core}: select: { _anon: text<surname> }
+    |   | {select_expr_list_con}: select: { _anon: text<surname> }
+    |     | {select_expr_list}: select: { _anon: text<surname> }
+    |     | | {select_expr}: text<surname>
+    |     |   | {call}: text<surname>
+    |     |     | {name trim}: text<surname>
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {name kind_string}: kind_string: text<surname> variable
     |     | {select_from_etc}: ok
     |       | {select_where}
     |         | {select_groupby}

@@ -31,6 +31,10 @@ create table with_kind(
   value real<dollars>
 );
 
+-- useful in later tests
+declare price_d real<dollars>;
+declare price_e real<euros>;
+
 -- TEST: second test table with combination of fields
 -- + {create_table_stmt}: bar: { id: integer notnull, name: text, rate: longint }
 -- - Error
@@ -1438,7 +1442,6 @@ declare my_cursor cursor for select 1 as one, 2 as two;
 -- + {declare_cursor}: kind_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable
 -- - Error
 declare kind_cursor cursor for select * from with_kind;
-
 
 -- TEST: make a value cursor of the same shape
 -- + {declare_cursor_like_name}: kind_value_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable shape_storage value_cursor
@@ -11016,6 +11019,18 @@ select nullif(id) from bar;
 -- - Error
 select nullif(id, 1) from bar;
 
+-- TEST: kind preserved and matches
+-- + {select_stmt}: select: { price_d: real<dollars> variable }
+-- + {call}: price_d: real<dollars> variable
+-- - Error
+select nullif(price_d, price_d);
+
+-- TEST: kind preserved and doesn't match -> error
+-- + {select_stmt}: err
+-- + Error % expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
+-- +1 Error
+select nullif(price_d, price_e);
+
 -- TEST: test nullif with incompatble type
 -- + {select_stmt}: err
 -- + Error % incompatible types in expression 'NULLIF'
@@ -11109,6 +11124,12 @@ set a_string := char(1);
 -- + {name info}: info: integer sensitive
 -- - Error
 select abs(info) from with_sensitive;
+
+-- TEST: abs should preserve kind
+-- + {assign}: price_d: real<dollars> variable
+-- + {call}: price_d: real<dollars> variable
+-- - Error
+set price_d := (select abs(price_d));
 
 -- TEST: test abs with incompatible param count
 -- + {select_stmt}: err
@@ -12193,6 +12214,13 @@ set a_string := (select trim("x", "y"));
 -- - sensitive
 -- - Error
 set a_string := (select trim("x"));
+
+declare kind_string text<surname>;
+
+-- TEST: verify that kind is preserved
+-- + {select_stmt}: _anon: text<surname>
+-- - Error
+set kind_string := (select trim(kind_string));
 
 -- TEST: simple ltrim call
 -- + {call}: text notnull

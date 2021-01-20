@@ -5552,6 +5552,9 @@ static void sem_func_trim(ast_node *ast, uint32_t arg_count) {
   sem_type |= arg2 ? (arg2->sem->sem_type & SEM_TYPE_SENSITIVE) : 0;
 
   name_ast->sem = ast->sem = new_sem(sem_type);
+
+  // preserve the string kind of the main arg, otherwise no kind checks needed for trim
+  name_ast->sem->kind = arg1->sem->kind;
 }
 
 // ltrim has the same semantics as trim
@@ -5587,12 +5590,19 @@ static void sem_func_nullif(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
+  sem_combine_kinds(arg2, arg1->sem->kind);
+  if (is_error(arg2)) {
+    record_error(ast);
+    return;
+  }
+
   // nullif will be the same type as arg1, sensitivity preserved; nullability
   // added because nullif() can (obviously) return NULL
   name_ast->sem = ast->sem = new_sem(arg1->sem->sem_type & sem_not(SEM_TYPE_NOTNULL));
 
   // grab the name from our first arg, if it has one, we want it.
   name_ast->sem->name = arg1->sem->name;
+  name_ast->sem->kind = arg1->sem->kind;
 }
 
 static void sem_func_instr(ast_node *ast, uint32_t arg_count) {
@@ -5626,6 +5636,8 @@ static void sem_func_instr(ast_node *ast, uint32_t arg_count) {
 
   // grab the name from our first arg, if it has one, we want it.
   name_ast->sem->name = arg1->sem->name;
+
+  // the kind of instr is generic, the integer returned has no kind even if the strings do
 }
 
 static void sem_func_abs(ast_node *ast, uint32_t arg_count) {
@@ -5657,6 +5669,9 @@ static void sem_func_abs(ast_node *ast, uint32_t arg_count) {
 
   // grab the name from our first arg, if it has one, we want it.
   name_ast->sem->name = arg->sem->name;
+
+  // preserve the kind of the arg
+  name_ast->sem->kind = arg->sem->kind;
 }
 
 static void sem_func_char(ast_node *ast, uint32_t arg_count) {
@@ -5699,6 +5714,8 @@ static void sem_func_char(ast_node *ast, uint32_t arg_count) {
 
   // grab the name from our first arg, if it has one, we want it.
   name_ast->sem->name = first_arg_name;
+
+  // the result has no 'kind'
 }
 
 // Validate the variable argument is a auto cursor. This is called to validate

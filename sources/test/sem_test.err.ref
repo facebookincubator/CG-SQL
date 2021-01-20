@@ -806,6 +806,7 @@ Error at test/sem_test.sql:XXXX : in collate : CQL0241: COLLATE may only appear 
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
 Error at test/sem_test.sql:XXXX : in blb : CQL0313: blob literals may only appear in the context of a SQL statement
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'nullif'
+Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
 Error at test/sem_test.sql:XXXX : in str : CQL0009: incompatible types in expression 'NULLIF'
 Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'nullif'
 Error at test/sem_test.sql:XXXX : in str : CQL0314: select function does not require a declaration, it is a CQL built-in 'nullif'
