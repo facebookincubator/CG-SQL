@@ -10544,6 +10544,24 @@ select id, lead(id, 1, id * 3) over () from foo;
 -- - Error
 select id, first_value(id) over () from foo;
 
+-- TEST: ensure the kind of the first_value is preserved
+-- + {select_stmt}: select: { id: integer<some_key> }
+-- + {window_func_inv}: id: integer<some_key>
+-- - Error
+select first_value(id) over () from with_kind;
+
+-- TEST: ensure the kind of the first_value is preserved
+-- + {select_stmt}: select: { id: integer<some_key> }
+-- + {window_func_inv}: id: integer<some_key>
+-- - Error
+select last_value(id) over () from with_kind;
+
+-- TEST: ensure the kind of the nth_value is preserved
+-- + {select_stmt}: select: { id: integer<some_key> }
+-- + {window_func_inv}: id: integer<some_key>
+-- - Error
+select nth_value(id, 5) over () from with_kind;
+
 -- TEST: test first_value() window function outside window context
 -- + {select_stmt}: err
 -- + {select_where}

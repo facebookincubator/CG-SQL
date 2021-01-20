@@ -6243,6 +6243,7 @@ static void sem_func_first_value(ast_node *ast, uint32_t arg_count) {
 
   // grab the name from our first arg, if it has one, we want it.
   ast->sem->name = arg->sem->name;
+  ast->sem->kind = arg->sem->kind;
 }
 
 // Validation of the builtin window function last_value(...). It takes one expression parameter
@@ -6279,6 +6280,7 @@ static void sem_func_nth_value(ast_node *ast, uint32_t arg_count) {
 
   // grab the name from our first arg, if it has one, we want it.
   name_ast->sem->name = arg1->sem->name;
+  name_ast->sem->kind = arg1->sem->kind;
 }
 
 // The group_concat function has an optional seperator, otherwise

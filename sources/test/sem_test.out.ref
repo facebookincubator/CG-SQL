@@ -42899,6 +42899,104 @@ SELECT id,
 
 The statement ending at line XXXX
 
+SELECT 
+  first_value(id) OVER ()
+  FROM with_kind;
+
+  {select_stmt}: select: { id: integer<some_key> }
+  | {select_core_list}: select: { id: integer<some_key> }
+  | | {select_core}: select: { id: integer<some_key> }
+  |   | {select_expr_list_con}: select: { id: integer<some_key> }
+  |     | {select_expr_list}: select: { id: integer<some_key> }
+  |     | | {select_expr}: id: integer<some_key>
+  |     |   | {window_func_inv}: id: integer<some_key>
+  |     |     | {call}: id: integer<some_key>
+  |     |     | | {name first_value}: id: integer<some_key>
+  |     |     | | {call_arg_list}
+  |     |     |   | {call_filter_clause}
+  |     |     |   | {arg_list}: ok
+  |     |     |     | {name id}: id: integer<some_key>
+  |     |     | {window_defn}: ok
+  |     |       | {window_defn_orderby}
+  |     | {select_from_etc}: TABLE { with_kind: with_kind }
+  |       | {table_or_subquery_list}: TABLE { with_kind: with_kind }
+  |       | | {table_or_subquery}: TABLE { with_kind: with_kind }
+  |       |   | {name with_kind}: TABLE { with_kind: with_kind }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 
+  last_value(id) OVER ()
+  FROM with_kind;
+
+  {select_stmt}: select: { id: integer<some_key> }
+  | {select_core_list}: select: { id: integer<some_key> }
+  | | {select_core}: select: { id: integer<some_key> }
+  |   | {select_expr_list_con}: select: { id: integer<some_key> }
+  |     | {select_expr_list}: select: { id: integer<some_key> }
+  |     | | {select_expr}: id: integer<some_key>
+  |     |   | {window_func_inv}: id: integer<some_key>
+  |     |     | {call}: id: integer<some_key>
+  |     |     | | {name last_value}: id: integer<some_key>
+  |     |     | | {call_arg_list}
+  |     |     |   | {call_filter_clause}
+  |     |     |   | {arg_list}: ok
+  |     |     |     | {name id}: id: integer<some_key>
+  |     |     | {window_defn}: ok
+  |     |       | {window_defn_orderby}
+  |     | {select_from_etc}: TABLE { with_kind: with_kind }
+  |       | {table_or_subquery_list}: TABLE { with_kind: with_kind }
+  |       | | {table_or_subquery}: TABLE { with_kind: with_kind }
+  |       |   | {name with_kind}: TABLE { with_kind: with_kind }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 
+  nth_value(id, 5) OVER ()
+  FROM with_kind;
+
+  {select_stmt}: select: { id: integer<some_key> }
+  | {select_core_list}: select: { id: integer<some_key> }
+  | | {select_core}: select: { id: integer<some_key> }
+  |   | {select_expr_list_con}: select: { id: integer<some_key> }
+  |     | {select_expr_list}: select: { id: integer<some_key> }
+  |     | | {select_expr}: id: integer<some_key>
+  |     |   | {window_func_inv}: id: integer<some_key>
+  |     |     | {call}: id: integer<some_key>
+  |     |     | | {name nth_value}: id: integer<some_key>
+  |     |     | | {call_arg_list}
+  |     |     |   | {call_filter_clause}
+  |     |     |   | {arg_list}: ok
+  |     |     |     | {name id}: id: integer<some_key>
+  |     |     |     | {arg_list}
+  |     |     |       | {int 5}: integer notnull
+  |     |     | {window_defn}: ok
+  |     |       | {window_defn_orderby}
+  |     | {select_from_etc}: TABLE { with_kind: with_kind }
+  |       | {table_or_subquery_list}: TABLE { with_kind: with_kind }
+  |       | | {table_or_subquery}: TABLE { with_kind: with_kind }
+  |       |   | {name with_kind}: TABLE { with_kind: with_kind }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
 SELECT id
   FROM foo
   WHERE first_value(7);
