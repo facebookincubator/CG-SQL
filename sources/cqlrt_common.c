@@ -1440,7 +1440,6 @@ void cql_initialize_meta(cql_result_set_meta *_Nonnull meta, cql_fetch_info *_No
       meta->getString = cql_result_set_get_string_col;
       meta->getBlob = cql_result_set_get_blob_col;
       meta->getIsNull = cql_result_set_get_is_null_col;
-      meta->getIsSensitive = cql_result_set_get_is_sensitive_col;
   #endif
 }
 

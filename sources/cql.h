@@ -363,7 +363,6 @@ typedef struct rtdata {
   //                    cql_int32 row,
   //                    cql_int32 col)
   //   getIsNull:   Boolean (*_Nullable)(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col)
-  //   getIsSensitive: Boolean (*_Nullable)(cql_result_set_ref _Nonnull result_set, cql_int32 col)
   const char *cql_result_set_meta_struct;
 
   // The name of the method that will give the metadata struct back as provided to the construction above
