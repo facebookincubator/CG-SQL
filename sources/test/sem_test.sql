@@ -9715,7 +9715,6 @@ set X := max(1,2);
 -- + Error % function may not appear in this context 'substr'
 set a_string := substr('x', 1, 2);
 
-
 -- TEST: simple success -- substr not nullable string
 -- + {create_proc_stmt}: select: { t: text notnull } dml_proc
 -- + {name substr}: text notnull
@@ -12269,18 +12268,27 @@ set a_string := (select trim("x"));
 
 declare kind_string text<surname>;
 
+-- TEST: substr preserves kind
+-- + {select_stmt}: _anon: text<surname>
+-- + {name kind_string}: kind_string: text<surname> variable
+-- - Error
+set a_string := (select substr(kind_string, 2, 3));
+
 -- TEST: verify that kind is preserved
 -- + {select_stmt}: _anon: text<surname>
+-- + {name kind_string}: kind_string: text<surname> variable
 -- - Error
 set kind_string := (select trim(kind_string));
 
 -- TEST: verify that kind is preserved
 -- + {select_stmt}: _anon: text<surname>
+-- + {name kind_string}: kind_string: text<surname> variable
 -- - Error
 set kind_string := (select upper(kind_string));
 
 -- TEST: verify that kind is preserved
 -- + {select_stmt}: _anon: text<surname>
+-- + {name kind_string}: kind_string: text<surname> variable
 -- - Error
 set kind_string := (select lower(kind_string));
 
@@ -13814,3 +13822,16 @@ set x1 := -x2;
 -- + Error % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- +1 Error
 set x1 := -y1;
+
+-- TEST: coalesce compatible kinds (should preserve kind)
+-- + {assign}: x1: integer<x_coord> variable
+-- + {call}: integer<x_coord>
+-- - Error
+set x1 := coalesce(x1, x2, x3);
+
+-- TEST: coalesce incompatible kinds (should preserve kind)
+-- + {assign}: err
+-- + {call}: err
+-- + Error % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
+-- +1 Error
+set x1 := coalesce(x1, y2, x3);

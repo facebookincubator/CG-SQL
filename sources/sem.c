@@ -5053,6 +5053,7 @@ static void sem_coalesce(ast_node *call_ast, bool_t is_ifnull) {
   }
 
   sem_t sem_type_result = SEM_TYPE_PENDING;
+  CSTR kind_result = NULL;
 
   for (ast_node *ast = arg_list; ast; ast = ast->right) {
     ast_node *expr = ast->left;
@@ -5097,9 +5098,16 @@ static void sem_coalesce(ast_node *call_ast, bool_t is_ifnull) {
         }
       }
     }
+
+    kind_result = sem_combine_kinds(expr, kind_result);
+    if (is_error(expr)) {
+      record_error(call_ast);
+      return;
+    }
   }
 
   call_ast->sem = new_sem(sem_type_result | sem_sensitive);
+  call_ast->sem->kind = kind_result;
 }
 
 // The in predicate is like many of the other multi-argument operators.  All the
@@ -6066,6 +6074,9 @@ static void sem_func_substr(ast_node *ast, uint32_t arg_count) {
   sem_t flags = sem_type & (SEM_TYPE_NOTNULL | SEM_TYPE_SENSITIVE);
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_TEXT | flags);
   // applying substr loses the name, SQlite doesn't recognize substr(foo, ..) as foo
+
+  // preserve the string 'kind' even though it's a substring (that seems the most sensible)
+  ast->sem->kind = arg1->sem->kind;
 }
 
 // generic function to do basic validation for builtin window functions.
