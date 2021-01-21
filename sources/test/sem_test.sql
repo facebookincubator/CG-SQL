@@ -12920,6 +12920,26 @@ declare enum real_things real (
   pencil
 );
 
+-- TEST: x is declared with correct type and kind (real and <real_things>
+-- + {declare_vars_type}: real<real_things> notnull
+-- + {name rt}: rt: real<real_things> notnull variable
+-- - Error
+declare rt real_things;
+
+-- TEST: ok to assign a pen to a x becasue it's a real_thing
+-- + {assign}: rt: real<real_things> notnull variable
+-- + {name rt}: rt: real<real_things> notnull variable
+-- + {dbl 1.000000e+00}: real<real_things> notnull
+set rt := real_things.pen;
+
+-- TEST: not ok to assign integer_things.pen because it's the wrong kind
+-- + {assign}: err
+-- + {name rt}: rt: real<real_things> notnull variable
+-- + {int 1}: integer<integer_things> notnull
+-- + Error % expressions of different kinds can't be mixed: 'real_things' vs. 'integer_things'
+-- +1 Error
+set rt := integer_things.pen;
+
 -- TEST: try to use an enum value, this is a rewrite
 -- + SELECT 8.000000e+00;
 select real_things.pencil;
@@ -13527,9 +13547,9 @@ declare function type_func_return_create_bogus_obj() create bogus_type;
 declare function type_func_return_obj() type_obj_foo;
 
 -- TEST: declare type as enum name
--- + DECLARE my_enum_type TYPE INTEGER NOT NULL;
--- + {declare_named_type}: integer notnull
--- + {notnull}: integer notnull
+-- + DECLARE my_enum_type TYPE INTEGER<ints> NOT NULL;
+-- + {declare_named_type}: integer<ints> notnull
+-- + {notnull}: integer<ints> notnull
 -- - Error
 declare my_enum_type type ints;
 
@@ -13865,4 +13885,3 @@ set x1 := cast(y1 as integer);
 -- + Error % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- +1 Error
 set x1 := cast(x1 as integer<y_coord>);
-

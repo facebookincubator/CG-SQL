@@ -5048,10 +5048,10 @@ DECLARE ENUM ints INTEGER (
   postive_one = 1
 );
 
-  {declare_enum_stmt}: ints: integer notnull
-  | {typed_name}: ints: integer notnull
+  {declare_enum_stmt}: ints: integer<ints> notnull
+  | {typed_name}: ints: integer<ints> notnull
   | | {name ints}
-  | | {type_int}: ints: integer notnull
+  | | {type_int}: ints: integer<ints> notnull
   | {enum_values}
     | {enum_value}
     | | {name negative_one}: integer = -1 notnull
@@ -52356,10 +52356,10 @@ DECLARE ENUM integer_things INTEGER (
   pencil
 );
 
-  {declare_enum_stmt}: integer_things: integer notnull
-  | {typed_name}: integer_things: integer notnull
+  {declare_enum_stmt}: integer_things: integer<integer_things> notnull
+  | {typed_name}: integer_things: integer<integer_things> notnull
   | | {name integer_things}
-  | | {type_int}: integer_things: integer notnull
+  | | {type_int}: integer_things: integer<integer_things> notnull
   | {enum_values}
     | {enum_value}
     | | {name pen}: integer = 1 notnull
@@ -52379,10 +52379,10 @@ DECLARE ENUM integer_things INTEGER (
   pencil
 );
 
-  {declare_enum_stmt}: integer_things: integer notnull
-  | {typed_name}: integer_things: integer notnull
+  {declare_enum_stmt}: integer_things: integer<integer_things> notnull
+  | {typed_name}: integer_things: integer<integer_things> notnull
   | | {name integer_things}
-  | | {type_int}: integer_things: integer notnull
+  | | {type_int}: integer_things: integer<integer_things> notnull
   | {enum_values}
     | {enum_value}
     | | {name pen}: integer = 1 notnull
@@ -52402,10 +52402,10 @@ DECLARE ENUM real_things REAL (
   pencil
 );
 
-  {declare_enum_stmt}: real_things: real notnull
-  | {typed_name}: real_things: real notnull
+  {declare_enum_stmt}: real_things: real<real_things> notnull
+  | {typed_name}: real_things: real<real_things> notnull
   | | {name real_things}
-  | | {type_real}: real_things: real notnull
+  | | {type_real}: real_things: real<real_things> notnull
   | {enum_values}
     | {enum_value}
     | | {name pen}: real = 1.000000e+00 notnull
@@ -52419,15 +52419,44 @@ DECLARE ENUM real_things REAL (
 
 The statement ending at line XXXX
 
+DECLARE rt REAL<real_things> NOT NULL;
+
+  {declare_vars_type}: real<real_things> notnull
+  | {name_list}: rt: real<real_things> notnull variable
+  | | {name rt}: rt: real<real_things> notnull variable
+  | {notnull}: real<real_things> notnull
+    | {type_real}: real<real_things>
+      | {name real_things}
+
+The statement ending at line XXXX
+
+SET rt := 1.000000e+00;
+
+  {assign}: rt: real<real_things> notnull variable
+  | {name rt}: rt: real<real_things> notnull variable
+  | {dbl 1.000000e+00}: real<real_things> notnull
+
+The statement ending at line XXXX
+
+SET rt := 1;
+
+Error at test/sem_test.sql:XXXX : in dot : CQL0070: expressions of different kinds can't be mixed: 'real_things' vs. 'integer_things'
+
+  {assign}: err
+  | {name rt}: rt: real<real_things> notnull variable
+  | {int 1}: integer<integer_things> notnull
+
+The statement ending at line XXXX
+
 SELECT 8.000000e+00;
 
-  {select_stmt}: select: { _anon: real notnull }
-  | {select_core_list}: select: { _anon: real notnull }
-  | | {select_core}: select: { _anon: real notnull }
-  |   | {select_expr_list_con}: select: { _anon: real notnull }
-  |     | {select_expr_list}: select: { _anon: real notnull }
-  |     | | {select_expr}: real notnull
-  |     |   | {dbl 8.000000e+00}: real notnull
+  {select_stmt}: select: { _anon: real<real_things> notnull }
+  | {select_core_list}: select: { _anon: real<real_things> notnull }
+  | | {select_core}: select: { _anon: real<real_things> notnull }
+  |   | {select_expr_list_con}: select: { _anon: real<real_things> notnull }
+  |     | {select_expr_list}: select: { _anon: real<real_things> notnull }
+  |     | | {select_expr}: real<real_things> notnull
+  |     |   | {dbl 8.000000e+00}: real<real_things> notnull
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -52467,10 +52496,10 @@ DECLARE ENUM bool_things BOOL (
   pencil
 );
 
-  {declare_enum_stmt}: bool_things: bool notnull
-  | {typed_name}: bool_things: bool notnull
+  {declare_enum_stmt}: bool_things: bool<bool_things> notnull
+  | {typed_name}: bool_things: bool<bool_things> notnull
   | | {name bool_things}
-  | | {type_bool}: bool_things: bool notnull
+  | | {type_bool}: bool_things: bool<bool_things> notnull
   | {enum_values}
     | {enum_value}
     | | {name pen}: bool = 1 notnull
@@ -52490,10 +52519,10 @@ DECLARE ENUM long_things LONG_INT (
   pencil
 );
 
-  {declare_enum_stmt}: long_things: longint notnull
-  | {typed_name}: long_things: longint notnull
+  {declare_enum_stmt}: long_things: longint<long_things> notnull
+  | {typed_name}: long_things: longint<long_things> notnull
   | | {name long_things}
-  | | {type_long}: long_things: longint notnull
+  | | {type_long}: long_things: longint<long_things> notnull
   | {enum_values}
     | {enum_value}
     | | {name pen}: longint = 1 notnull
@@ -52525,9 +52554,9 @@ The above must be identical.
 Error at test/sem_test.sql:XXXX : in declare_enum_stmt : CQL0356: enum definitions do not match 'long_things'
 
   {declare_enum_stmt}: err
-  | {typed_name}: long_things: integer notnull
+  | {typed_name}: long_things: integer<long_things> notnull
   | | {name long_things}
-  | | {type_int}: long_things: integer notnull
+  | | {type_int}: long_things: integer<long_things> notnull
   | {enum_values}
     | {enum_value}
       | {name foo}: integer = 1 notnull
@@ -52542,9 +52571,9 @@ DECLARE ENUM duplicated_things INTEGER (
 Error at test/sem_test.sql:XXXX : in enum_value : CQL0354: duplicate enum member 'two'
 
   {declare_enum_stmt}: err
-  | {typed_name}: duplicated_things: integer notnull
+  | {typed_name}: duplicated_things: integer<duplicated_things> notnull
   | | {name duplicated_things}
-  | | {type_int}: duplicated_things: integer notnull
+  | | {type_int}: duplicated_things: integer<duplicated_things> notnull
   | {enum_values}
     | {enum_value}
     | | {name two}: integer = 1 notnull
@@ -52561,9 +52590,9 @@ DECLARE ENUM invalid_things INTEGER (
 Error at test/sem_test.sql:XXXX : in enum_value : CQL0355: evaluation failed 'boo'
 
   {declare_enum_stmt}: err
-  | {typed_name}: invalid_things: integer notnull
+  | {typed_name}: invalid_things: integer<invalid_things> notnull
   | | {name invalid_things}
-  | | {type_int}: invalid_things: integer notnull
+  | | {type_int}: invalid_things: integer<invalid_things> notnull
   | {enum_values}
     | {enum_value}
       | {name boo}
@@ -52580,10 +52609,10 @@ DECLARE ENUM sizes REAL (
   tiny = 2.500000e+01 / 2
 );
 
-  {declare_enum_stmt}: sizes: real notnull
-  | {typed_name}: sizes: real notnull
+  {declare_enum_stmt}: sizes: real<sizes> notnull
+  | {typed_name}: sizes: real<sizes> notnull
   | | {name sizes}
-  | | {type_real}: sizes: real notnull
+  | | {type_real}: sizes: real<sizes> notnull
   | {enum_values}
     | {enum_value}
     | | {name big}: real = 1.000000e+02 notnull
@@ -52614,22 +52643,22 @@ DECLARE ENUM misc REAL (
   two = 7.500000e+01 - 1.250000e+01
 );
 
-  {declare_enum_stmt}: misc: real notnull
-  | {typed_name}: misc: real notnull
+  {declare_enum_stmt}: misc: real<misc> notnull
+  | {typed_name}: misc: real<misc> notnull
   | | {name misc}
-  | | {type_real}: misc: real notnull
+  | | {type_real}: misc: real<misc> notnull
   | {enum_values}
     | {enum_value}
     | | {name one}: real = 7.500000e+01 notnull
-    | | {sub}: real notnull
-    |   | {dbl 1.000000e+02}: real notnull
-    |   | {dbl 2.500000e+01}: real notnull
+    | | {sub}: real<sizes> notnull
+    |   | {dbl 1.000000e+02}: real<sizes> notnull
+    |   | {dbl 2.500000e+01}: real<sizes> notnull
     | {enum_values}
       | {enum_value}
         | {name two}: real = 6.250000e+01 notnull
-        | {sub}: real notnull
+        | {sub}: real<sizes> notnull
           | {dbl 7.500000e+01}: real notnull
-          | {dbl 1.250000e+01}: real notnull
+          | {dbl 1.250000e+01}: real<sizes> notnull
 
 The statement ending at line XXXX
 
@@ -52647,9 +52676,9 @@ Error at test/sem_test.sql:XXXX : in str : CQL0358: declared enums must be top l
   | {proc_params_stmts}
     | {stmt_list}: err
       | {declare_enum_stmt}: err
-        | {typed_name}: bogus_inside_proc: integer notnull
+        | {typed_name}: bogus_inside_proc: integer<bogus_inside_proc> notnull
         | | {name bogus_inside_proc}
-        | | {type_int}: bogus_inside_proc: integer notnull
+        | | {type_int}: bogus_inside_proc: integer<bogus_inside_proc> notnull
         | {enum_values}
           | {enum_value}
             | {name foo}
@@ -54560,12 +54589,13 @@ DECLARE FUNC type_func_return_obj () OBJECT<Foo> NOT NULL @SENSITIVE;
 
 The statement ending at line XXXX
 
-DECLARE my_enum_type TYPE INTEGER NOT NULL;
+DECLARE my_enum_type TYPE INTEGER<ints> NOT NULL;
 
-  {declare_named_type}: integer notnull
-  | {name my_enum_type}: integer notnull
-  | {notnull}: integer notnull
-    | {type_int}: integer
+  {declare_named_type}: integer<ints> notnull
+  | {name my_enum_type}: integer<ints> notnull
+  | {notnull}: integer<ints> notnull
+    | {type_int}: integer<ints>
+      | {name ints}
 
 The statement ending at line XXXX
 
@@ -54577,9 +54607,9 @@ DECLARE ENUM my_type INTEGER (
 Error at test/sem_test.sql:XXXX : in declare_enum_stmt : CQL0359: duplicate type declaration 'my_type'
 
   {declare_enum_stmt}: err
-  | {typed_name}: my_type: integer notnull
+  | {typed_name}: my_type: integer<my_type> notnull
   | | {name my_type}
-  | | {type_int}: my_type: integer notnull
+  | | {type_int}: my_type: integer<my_type> notnull
   | {enum_values}
     | {enum_value}
     | | {name negative_one}: integer = -1 notnull

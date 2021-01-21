@@ -4509,14 +4509,14 @@ static bool_t try_resolve_auto_cursor(ast_node *ast, CSTR name, CSTR cursor) {
 }
 
 static bool_t try_resolve_using_enum(ast_node *ast, CSTR name, CSTR enum_name) {
-   Contract(enum_name);
-   ast_node *enum_stmt = find_enum(enum_name);
-   if (!enum_stmt) {
-     // try something else
-     return false;
-   }
+  Contract(enum_name);
+  ast_node *enum_stmt = find_enum(enum_name);
+  if (!enum_stmt) {
+    // try something else
+    return false;
+  }
 
-   Invariant(is_ast_declare_enum_stmt(enum_stmt));
+  Invariant(is_ast_declare_enum_stmt(enum_stmt));
 
   // Find the name if it exists;  if it does then this becomes a rewrite
 
@@ -4530,6 +4530,7 @@ static bool_t try_resolve_using_enum(ast_node *ast, CSTR name, CSTR enum_name) {
         ast_node *ast_new = eval_set(ast, enum_value->left->sem->value);
         sem_root_expr(ast_new, SEM_EXPR_CONTEXT_NONE);
         ast->sem = ast_new->sem;
+        ast->sem->kind = enum_stmt->sem->kind;
         return true;
      }
      enum_values = enum_values->right;
@@ -13940,6 +13941,7 @@ static void sem_declare_enum_stmt(ast_node *ast) {
   typed_name->sem = typed_name->right->sem;
   typed_name->sem->sem_type |= SEM_TYPE_NOTNULL;
   typed_name->sem->name = name;
+  typed_name->sem->kind = name;
 
   if (current_proc) {
     report_error(name_ast, "CQL0358: declared enums must be top level", name);

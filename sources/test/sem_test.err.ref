@@ -926,6 +926,7 @@ Error at test/sem_test.sql:XXXX : in proc_savepoint_stmt : CQL0351: statement sh
 Error at test/sem_test.sql:XXXX : in rollback_return_stmt : CQL0350: statement must appear inside of a PROC SAVEPOINT block
 Error at test/sem_test.sql:XXXX : in commit_return_stmt : CQL0350: statement must appear inside of a PROC SAVEPOINT block
 Error at test/sem_test.sql:XXXX : in return_stmt : CQL0352: use COMMIT RETURN or ROLLBACK RETURN in within a proc savepoint block
+Error at test/sem_test.sql:XXXX : in dot : CQL0070: expressions of different kinds can't be mixed: 'real_things' vs. 'integer_things'
 Error at test/sem_test.sql:XXXX : in dot : CQL0357: enum does not contain 'nope'
 Incompatible declarations found
 Error at test/sem_test.sql:XXXX : in declare_enum_stmt : DECLARE ENUM long_things INTEGER (

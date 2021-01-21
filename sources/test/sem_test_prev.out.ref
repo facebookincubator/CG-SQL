@@ -1815,10 +1815,10 @@ DECLARE ENUM foo_enum INTEGER (
   b = 2
 );
 
-  {declare_enum_stmt}: foo_enum: integer notnull
-  | {typed_name}: foo_enum: integer notnull
+  {declare_enum_stmt}: foo_enum: integer<foo_enum> notnull
+  | {typed_name}: foo_enum: integer<foo_enum> notnull
   | | {name foo_enum}
-  | | {type_int}: foo_enum: integer notnull
+  | | {type_int}: foo_enum: integer<foo_enum> notnull
   | {enum_values}
     | {enum_value}
     | | {name a}: integer = 1 notnull
@@ -1848,7 +1848,7 @@ CREATE TABLE foo_with_check(
         | {col_attrs_check}: ok
           | {eq}: bool
             | {name x}: x: integer has_check
-            | {int 1}: integer notnull
+            | {int 1}: integer<foo_enum> notnull
 
 The statement ending at line XXXX
 
@@ -3827,10 +3827,10 @@ DECLARE ENUM foo_enum INTEGER (
   b = 2
 );
 
-  {declare_enum_stmt}: foo_enum: integer notnull
-  | {typed_name}: foo_enum: integer notnull
+  {declare_enum_stmt}: foo_enum: integer<foo_enum> notnull
+  | {typed_name}: foo_enum: integer<foo_enum> notnull
   | | {name foo_enum}
-  | | {type_int}: foo_enum: integer notnull
+  | | {type_int}: foo_enum: integer<foo_enum> notnull
   | {enum_values}
     | {enum_value}
     | | {name a}: integer = 10 notnull
@@ -3866,7 +3866,7 @@ Error at test/sem_test_prev.sql:XXXX : in col_def : CQL0128: table has a column 
         | {col_attrs_check}: ok
           | {eq}: bool
             | {name x}: x: integer has_check
-            | {int 10}: integer notnull
+            | {int 10}: integer<foo_enum> notnull
 
 The statement ending at line XXXX
 
