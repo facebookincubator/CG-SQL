@@ -9718,38 +9718,38 @@ set a_string := substr('x', 1, 2);
 
 -- TEST: simple success -- substr not nullable string
 -- + {create_proc_stmt}: select: { t: text notnull } dml_proc
--- + {name substr}: t: text notnull
+-- + {name substr}: text notnull
 -- - Error
 create proc substr_test_notnull(t text not null)
 begin
-  select substr(t, 1, 2);
+  select substr(t, 1, 2) as t ;
 end;
 
 -- TEST: simple success -- substr not nullable string one arg
 -- + {create_proc_stmt}: select: { t: text notnull } dml_proc
--- + {name substr}: t: text notnull
+-- + {name substr}: text notnull
 -- - Error
 create proc substr_test_onearg(t text not null)
 begin
-  select substr(t, 1);
+  select substr(t, 1) as t ;
 end;
 
 -- TEST: simple success -- substr nullable string
 -- + {create_proc_stmt}: select: { t: text } dml_proc
--- + {name substr}: t: text
+-- + {name substr}: text
 -- - Error
 create proc substr_test_nullable(t text)
 begin
-  select substr(t, 1, 2);
+  select substr(t, 1, 2) as t;
 end;
 
 -- TEST: simple success -- substr sensitive string
 -- + {create_proc_stmt}: select: { t: text sensitive } dml_proc
--- + {name substr}: t: text sensitive
+-- + {name substr}: text sensitive
 -- - Error
 create proc substr_test_sensitive(t text @sensitive)
 begin
-  select substr(t, 1, 2);
+  select substr(t, 1, 2) as t;
 end;
 
 -- TEST: substr error -- arg1 is not a string
@@ -11110,9 +11110,9 @@ select nullif(name, 'a') from with_sensitive;
 declare select function nullif(value INT, defaultValue int not null) int;
 
 -- TEST: test upper with sensitive value
--- + {select_stmt}: select: { name: text sensitive }
--- + {call}: name: text sensitive
--- + {name upper}: name: text sensitive
+-- + {select_stmt}: select: { _anon: text sensitive }
+-- + {call}: text sensitive
+-- + {name upper}: text sensitive
 -- + {name name}: name: text sensitive
 -- - Error
 select upper(name) from with_sensitive;
@@ -12273,6 +12273,16 @@ declare kind_string text<surname>;
 -- + {select_stmt}: _anon: text<surname>
 -- - Error
 set kind_string := (select trim(kind_string));
+
+-- TEST: verify that kind is preserved
+-- + {select_stmt}: _anon: text<surname>
+-- - Error
+set kind_string := (select upper(kind_string));
+
+-- TEST: verify that kind is preserved
+-- + {select_stmt}: _anon: text<surname>
+-- - Error
+set kind_string := (select lower(kind_string));
 
 -- TEST: simple ltrim call
 -- + {call}: text notnull

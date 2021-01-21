@@ -40257,7 +40257,7 @@ The statement ending at line XXXX
 
 CREATE PROC substr_test_notnull (t TEXT NOT NULL)
 BEGIN
-  SELECT substr(t, 1, 2);
+  SELECT substr(t, 1, 2) AS t;
 END;
 
   {create_proc_stmt}: select: { t: text notnull } dml_proc
@@ -40276,16 +40276,18 @@ END;
         |   | {select_expr_list_con}: select: { t: text notnull }
         |     | {select_expr_list}: select: { t: text notnull }
         |     | | {select_expr}: t: text notnull
-        |     |   | {call}: t: text notnull
-        |     |     | {name substr}: t: text notnull
-        |     |     | {call_arg_list}
-        |     |       | {call_filter_clause}
-        |     |       | {arg_list}: ok
-        |     |         | {name t}: t: text notnull variable in
-        |     |         | {arg_list}
-        |     |           | {int 1}: integer notnull
-        |     |           | {arg_list}
-        |     |             | {int 2}: integer notnull
+        |     |   | {call}: text notnull
+        |     |   | | {name substr}: text notnull
+        |     |   | | {call_arg_list}
+        |     |   |   | {call_filter_clause}
+        |     |   |   | {arg_list}: ok
+        |     |   |     | {name t}: t: text notnull variable in
+        |     |   |     | {arg_list}
+        |     |   |       | {int 1}: integer notnull
+        |     |   |       | {arg_list}
+        |     |   |         | {int 2}: integer notnull
+        |     |   | {opt_as_alias}
+        |     |     | {name t}
         |     | {select_from_etc}: ok
         |       | {select_where}
         |         | {select_groupby}
@@ -40298,7 +40300,7 @@ The statement ending at line XXXX
 
 CREATE PROC substr_test_onearg (t TEXT NOT NULL)
 BEGIN
-  SELECT substr(t, 1);
+  SELECT substr(t, 1) AS t;
 END;
 
   {create_proc_stmt}: select: { t: text notnull } dml_proc
@@ -40317,14 +40319,16 @@ END;
         |   | {select_expr_list_con}: select: { t: text notnull }
         |     | {select_expr_list}: select: { t: text notnull }
         |     | | {select_expr}: t: text notnull
-        |     |   | {call}: t: text notnull
-        |     |     | {name substr}: t: text notnull
-        |     |     | {call_arg_list}
-        |     |       | {call_filter_clause}
-        |     |       | {arg_list}: ok
-        |     |         | {name t}: t: text notnull variable in
-        |     |         | {arg_list}
-        |     |           | {int 1}: integer notnull
+        |     |   | {call}: text notnull
+        |     |   | | {name substr}: text notnull
+        |     |   | | {call_arg_list}
+        |     |   |   | {call_filter_clause}
+        |     |   |   | {arg_list}: ok
+        |     |   |     | {name t}: t: text notnull variable in
+        |     |   |     | {arg_list}
+        |     |   |       | {int 1}: integer notnull
+        |     |   | {opt_as_alias}
+        |     |     | {name t}
         |     | {select_from_etc}: ok
         |       | {select_where}
         |         | {select_groupby}
@@ -40337,7 +40341,7 @@ The statement ending at line XXXX
 
 CREATE PROC substr_test_nullable (t TEXT)
 BEGIN
-  SELECT substr(t, 1, 2);
+  SELECT substr(t, 1, 2) AS t;
 END;
 
   {create_proc_stmt}: select: { t: text } dml_proc
@@ -40355,16 +40359,18 @@ END;
         |   | {select_expr_list_con}: select: { t: text }
         |     | {select_expr_list}: select: { t: text }
         |     | | {select_expr}: t: text
-        |     |   | {call}: t: text
-        |     |     | {name substr}: t: text
-        |     |     | {call_arg_list}
-        |     |       | {call_filter_clause}
-        |     |       | {arg_list}: ok
-        |     |         | {name t}: t: text variable in
-        |     |         | {arg_list}
-        |     |           | {int 1}: integer notnull
-        |     |           | {arg_list}
-        |     |             | {int 2}: integer notnull
+        |     |   | {call}: text
+        |     |   | | {name substr}: text
+        |     |   | | {call_arg_list}
+        |     |   |   | {call_filter_clause}
+        |     |   |   | {arg_list}: ok
+        |     |   |     | {name t}: t: text variable in
+        |     |   |     | {arg_list}
+        |     |   |       | {int 1}: integer notnull
+        |     |   |       | {arg_list}
+        |     |   |         | {int 2}: integer notnull
+        |     |   | {opt_as_alias}
+        |     |     | {name t}
         |     | {select_from_etc}: ok
         |       | {select_where}
         |         | {select_groupby}
@@ -40377,7 +40383,7 @@ The statement ending at line XXXX
 
 CREATE PROC substr_test_sensitive (t TEXT @SENSITIVE)
 BEGIN
-  SELECT substr(t, 1, 2);
+  SELECT substr(t, 1, 2) AS t;
 END;
 
   {create_proc_stmt}: select: { t: text sensitive } dml_proc
@@ -40396,16 +40402,18 @@ END;
         |   | {select_expr_list_con}: select: { t: text sensitive }
         |     | {select_expr_list}: select: { t: text sensitive }
         |     | | {select_expr}: t: text sensitive
-        |     |   | {call}: t: text sensitive
-        |     |     | {name substr}: t: text sensitive
-        |     |     | {call_arg_list}
-        |     |       | {call_filter_clause}
-        |     |       | {arg_list}: ok
-        |     |         | {name t}: t: text variable in sensitive
-        |     |         | {arg_list}
-        |     |           | {int 1}: integer notnull
-        |     |           | {arg_list}
-        |     |             | {int 2}: integer notnull
+        |     |   | {call}: text sensitive
+        |     |   | | {name substr}: text sensitive
+        |     |   | | {call_arg_list}
+        |     |   |   | {call_filter_clause}
+        |     |   |   | {arg_list}: ok
+        |     |   |     | {name t}: t: text variable in sensitive
+        |     |   |     | {arg_list}
+        |     |   |       | {int 1}: integer notnull
+        |     |   |       | {arg_list}
+        |     |   |         | {int 2}: integer notnull
+        |     |   | {opt_as_alias}
+        |     |     | {name t}
         |     | {select_from_etc}: ok
         |       | {select_where}
         |         | {select_groupby}
@@ -45406,14 +45414,14 @@ The statement ending at line XXXX
 SELECT upper(name)
   FROM with_sensitive;
 
-  {select_stmt}: select: { name: text sensitive }
-  | {select_core_list}: select: { name: text sensitive }
-  | | {select_core}: select: { name: text sensitive }
-  |   | {select_expr_list_con}: select: { name: text sensitive }
-  |     | {select_expr_list}: select: { name: text sensitive }
-  |     | | {select_expr}: name: text sensitive
-  |     |   | {call}: name: text sensitive
-  |     |     | {name upper}: name: text sensitive
+  {select_stmt}: select: { _anon: text sensitive }
+  | {select_core_list}: select: { _anon: text sensitive }
+  | | {select_core}: select: { _anon: text sensitive }
+  |   | {select_expr_list_con}: select: { _anon: text sensitive }
+  |     | {select_expr_list}: select: { _anon: text sensitive }
+  |     | | {select_expr}: text sensitive
+  |     |   | {call}: text sensitive
+  |     |     | {name upper}: text sensitive
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
@@ -50143,6 +50151,58 @@ SET kind_string := ( SELECT trim(kind_string) );
     |     | | {select_expr}: text<surname>
     |     |   | {call}: text<surname>
     |     |     | {name trim}: text<surname>
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {name kind_string}: kind_string: text<surname> variable
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET kind_string := ( SELECT upper(kind_string) );
+
+  {assign}: kind_string: text<surname> variable
+  | {name kind_string}: kind_string: text<surname> variable
+  | {select_stmt}: _anon: text<surname> variable
+    | {select_core_list}: select: { _anon: text<surname> variable }
+    | | {select_core}: select: { _anon: text<surname> variable }
+    |   | {select_expr_list_con}: select: { _anon: text<surname> variable }
+    |     | {select_expr_list}: select: { _anon: text<surname> variable }
+    |     | | {select_expr}: text<surname> variable
+    |     |   | {call}: text<surname> variable
+    |     |     | {name upper}: text<surname> variable
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {name kind_string}: kind_string: text<surname> variable
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET kind_string := ( SELECT lower(kind_string) );
+
+  {assign}: kind_string: text<surname> variable
+  | {name kind_string}: kind_string: text<surname> variable
+  | {select_stmt}: _anon: text<surname> variable
+    | {select_core_list}: select: { _anon: text<surname> variable }
+    | | {select_core}: select: { _anon: text<surname> variable }
+    |   | {select_expr_list_con}: select: { _anon: text<surname> variable }
+    |     | {select_expr_list}: select: { _anon: text<surname> variable }
+    |     | | {select_expr}: text<surname> variable
+    |     |   | {call}: text<surname> variable
+    |     |     | {name lower}: text<surname> variable
     |     |     | {call_arg_list}
     |     |       | {call_filter_clause}
     |     |       | {arg_list}: ok

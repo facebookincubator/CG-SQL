@@ -5910,11 +5910,16 @@ static void sem_func_upper(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  // upper() will be the same type as arg, sensitivity, nullability preserved;
-  name_ast->sem = ast->sem = arg->sem;
+  // upper() will be the same type as arg, sensitivity, nullability, and kind preserved;
+  ast->sem = arg->sem;
+  sem_add_flags(ast, 0);    // no flags added this is a clone
+  name_ast->sem = ast->sem;
+  ast->sem->name = NULL;    // applying upper/lower loses the name, SQlite doesn't recognize lower(foo) as foo
+}
 
-  // grab the name from our first arg, if it has one, we want it.
-  name_ast->sem->name = arg->sem->name;
+// lower has the same rules as upper
+static void sem_func_lower(ast_node *ast, uint32_t arg_count) {
+  return sem_func_upper(ast, arg_count);
 }
 
 static void sem_func_coalesce(ast_node *ast, uint32_t arg_count) {
@@ -6060,9 +6065,7 @@ static void sem_func_substr(ast_node *ast, uint32_t arg_count) {
   // This will give us the same type nullability and sensitivity as the original string
   sem_t flags = sem_type & (SEM_TYPE_NOTNULL | SEM_TYPE_SENSITIVE);
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_TEXT | flags);
-
-  // grab the name from our first arg, if it has one, we want it.
-  name_ast->sem->name = arg1->sem->name;
+  // applying substr loses the name, SQlite doesn't recognize substr(foo, ..) as foo
 }
 
 // generic function to do basic validation for builtin window functions.
@@ -16777,6 +16780,7 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(ifnull);
   FUNC_INIT(nullif);
   FUNC_INIT(upper);
+  FUNC_INIT(lower);
   FUNC_INIT(cql_cursor_diff_col);
   FUNC_INIT(cql_cursor_diff_val);
   FUNC_INIT(cql_cursor_format);
