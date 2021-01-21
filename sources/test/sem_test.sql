@@ -3571,6 +3571,28 @@ select 3 as A, 4 as B;
 -- - Error
 select nullable(1);
 
+-- helper variable
+declare sens_notnull text not null @sensitive;
+
+-- TEST: ensure nullable() doesn't strip the sensitive bit
+-- notnull is gone, sensitive stays
+-- + {select_stmt}: select: { sens_notnull: text variable sensitive }
+-- + {name sens_notnull}: sens_notnull: text notnull variable sensitive
+-- - Error
+select nullable(sens_notnull);
+
+-- TEST: ensure kind is preserved in nullable
+-- + {select_stmt}: select: { price_e: real<euros> variable }
+-- + {name nullable}: price_e: real<euros> variable
+-- - Error
+select nullable(price_e);
+
+-- TEST: affirmative error generated after nullable with kind
+-- + {assign}: err
+-- + Error % expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
+-- +1 Error
+set price_d := (select nullable(price_e));
+
 -- TEST: use nullable in a select with wrong args
 -- + Error % function got incorrect number of arguments 'nullable'
 -- +1 Error
@@ -4161,6 +4183,18 @@ declare not_null_object object not null;
 -- + {name not_null_object}: not_null_object: object notnull variable
 -- - Error
 set not_null_object := attest_notnull(obj_var);
+
+-- TEST: attest with matching kind, ok to go
+-- + {assign}: price_d: real<dollars> variable
+-- + {name price_d}: price_d: real<dollars> variable
+-- + {call}: price_d: real<dollars> notnull variable
+set price_d := attest_notnull(price_d);
+
+-- TEST: attest should copy the semantic info including kind, hence can produce errors
+-- + {assign}: err
+-- + Error % expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
+-- +1 Error
+set price_d := attest_notnull(price_e);
 
 -- TEST: convert to not null -- fails already not null
 -- + {call}: err

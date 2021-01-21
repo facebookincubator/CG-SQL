@@ -293,6 +293,7 @@ Error at test/sem_test.sql:XXXX : in not_in : CQL0012: incompatible types in exp
 Error at test/sem_test.sql:XXXX : in select_core : CQL0058: if multiple selects, all column names must be identical so they have unambiguous names 'B'
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0070: expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'nullable'
 Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
 Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
@@ -358,6 +359,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0072: first operand cannot be an o
 Error at test/sem_test.sql:XXXX : in not_between : CQL0012: incompatible types in expression 'NOT BETWEEN'
 Error at test/sem_test.sql:XXXX : in not_between : CQL0012: incompatible types in expression 'NOT BETWEEN'
 Error at test/sem_test.sql:XXXX : in call : CQL0087: no object/blob types are allowed in arguments for function 'printf'
+Error at test/sem_test.sql:XXXX : in call : CQL0070: expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
 Error at test/sem_test.sql:XXXX : in str : CQL0344: argument must be a nullable type (but not constant NULL) in 'attest_notnull'
 Error at test/sem_test.sql:XXXX : in null : CQL0344: argument must be a nullable type (but not constant NULL) in 'attest_notnull'
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'attest_notnull'

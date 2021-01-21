@@ -1673,6 +1673,15 @@ cql_noexport void sem_add_flags(ast_node *ast, sem_t flags) {
   ast->sem = sem;
 }
 
+// Removes specified flags for `ast->sem->sem_type` without mutating other
+// copies of `ast->sem`.
+cql_noexport void sem_remove_flags(ast_node *ast, sem_t flags) {
+  sem_node *sem = _ast_pool_new(sem_node);
+  memcpy(sem, ast->sem, sizeof(sem_node));
+  sem->sem_type &= sem_not(flags);
+  ast->sem = sem;
+}
+
 // Like `add_sem_flags`, but completely replaces the flags instead of adding
 // additional flags.
 static void sem_replace_flags(ast_node *ast, sem_t flags) {
@@ -5763,6 +5772,7 @@ static void sem_func_attest_notnull(ast_node *ast, uint32_t arg_count) {
 
   ast->sem = arg1->sem;
   sem_add_flags(ast, SEM_TYPE_NOTNULL); // note this makes a copy
+  name_ast->sem = ast->sem;
 }
 
 // validate expression with cql_cursor_diff_xxx func is semantically correct.
@@ -6211,11 +6221,9 @@ static void sem_func_lag(ast_node *ast, uint32_t arg_count) {
   // not be nullable, lag() should still be nullable unless the third argument is not.
   sem_t type = core_type_of(arg1->sem->sem_type);
 
-  ast->sem->sem_type = type | combined_flags;
-
-  // grab the name from our first arg, if it has one, we want it.  Same with 'kind'
-  ast->sem->name = arg1->sem->name;
-  ast->sem->kind = arg1->sem->kind;
+  ast->sem = arg1->sem;
+  sem_replace_flags(ast, type | combined_flags);
+  name_ast->sem = ast->sem;
 }
 
 // Validation of the builtin window function lead(...). It takes three parameters
@@ -6460,8 +6468,10 @@ static void sem_func_nullable(ast_node *ast, uint32_t arg_count) {
 
   ast_node *arg = first_arg(arg_list);
 
-  // strip away not null if present, keep only the core type
-  name_ast->sem = ast->sem = new_sem(core_type_of(arg->sem->sem_type));
+  // strip away not null if present, keep other flags (like sensitive)
+  ast->sem = arg->sem;
+  sem_remove_flags(ast, SEM_TYPE_NOTNULL); // note this makes a copy
+  name_ast->sem = ast->sem;
 }
 
 // This is a helper method that performs validation for builtin functions that have no arguments

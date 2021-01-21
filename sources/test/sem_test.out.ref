@@ -13075,6 +13075,93 @@ SELECT nullable(1);
 
 The statement ending at line XXXX
 
+DECLARE sens_notnull TEXT NOT NULL @SENSITIVE;
+
+  {declare_vars_type}: text notnull sensitive
+  | {name_list}: sens_notnull: text notnull variable sensitive
+  | | {name sens_notnull}: sens_notnull: text notnull variable sensitive
+  | {sensitive_attr}: text notnull sensitive
+    | {notnull}: text notnull
+      | {type_text}: text
+
+The statement ending at line XXXX
+
+SELECT nullable(sens_notnull);
+
+  {select_stmt}: select: { sens_notnull: text variable sensitive }
+  | {select_core_list}: select: { sens_notnull: text variable sensitive }
+  | | {select_core}: select: { sens_notnull: text variable sensitive }
+  |   | {select_expr_list_con}: select: { sens_notnull: text variable sensitive }
+  |     | {select_expr_list}: select: { sens_notnull: text variable sensitive }
+  |     | | {select_expr}: sens_notnull: text variable sensitive
+  |     |   | {call}: sens_notnull: text variable sensitive
+  |     |     | {name nullable}: sens_notnull: text variable sensitive
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {name sens_notnull}: sens_notnull: text notnull variable sensitive
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT nullable(price_e);
+
+  {select_stmt}: select: { price_e: real<euros> variable }
+  | {select_core_list}: select: { price_e: real<euros> variable }
+  | | {select_core}: select: { price_e: real<euros> variable }
+  |   | {select_expr_list_con}: select: { price_e: real<euros> variable }
+  |     | {select_expr_list}: select: { price_e: real<euros> variable }
+  |     | | {select_expr}: price_e: real<euros> variable
+  |     |   | {call}: price_e: real<euros> variable
+  |     |     | {name nullable}: price_e: real<euros> variable
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {name price_e}: price_e: real<euros> variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SET price_d := ( SELECT nullable(price_e) );
+
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0070: expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
+
+  {assign}: err
+  | {name price_d}: price_d: real<dollars> variable
+  | {select_stmt}: err
+    | {select_core_list}: select: { price_e: real<euros> variable }
+    | | {select_core}: select: { price_e: real<euros> variable }
+    |   | {select_expr_list_con}: select: { price_e: real<euros> variable }
+    |     | {select_expr_list}: select: { price_e: real<euros> variable }
+    |     | | {select_expr}: price_e: real<euros> variable
+    |     |   | {call}: price_e: real<euros> variable
+    |     |     | {name nullable}: price_e: real<euros> variable
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {name price_e}: price_e: real<euros> variable
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
 SELECT nullable(1, 2);
 
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'nullable'
@@ -15643,11 +15730,39 @@ SET not_null_object := attest_notnull(obj_var);
   {assign}: not_null_object: object notnull variable
   | {name not_null_object}: not_null_object: object notnull variable
   | {call}: obj_var: object notnull variable
-    | {name attest_notnull}
+    | {name attest_notnull}: obj_var: object notnull variable
     | {call_arg_list}
       | {call_filter_clause}
       | {arg_list}: ok
         | {name obj_var}: obj_var: object variable
+
+The statement ending at line XXXX
+
+SET price_d := attest_notnull(price_d);
+
+  {assign}: price_d: real<dollars> variable
+  | {name price_d}: price_d: real<dollars> variable
+  | {call}: price_d: real<dollars> notnull variable
+    | {name attest_notnull}: price_d: real<dollars> notnull variable
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {name price_d}: price_d: real<dollars> variable
+
+The statement ending at line XXXX
+
+SET price_d := attest_notnull(price_e);
+
+Error at test/sem_test.sql:XXXX : in call : CQL0070: expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
+
+  {assign}: err
+  | {name price_d}: price_d: real<dollars> variable
+  | {call}: err
+    | {name attest_notnull}: price_e: real<euros> notnull variable
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {name price_e}: price_e: real<euros> variable
 
 The statement ending at line XXXX
 
