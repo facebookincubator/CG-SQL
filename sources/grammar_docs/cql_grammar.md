@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Fri Jan 15 14:50:38 PST 2021
+Snapshot as of Wed Jan 20 11:08:03 PST 2021
 
 ### Operators and Literals
 
@@ -50,7 +50,7 @@ REALLIT /* floating point literal */
 ```
 EXCLUDE_GROUP EXCLUDE_CURRENT_ROW EXCLUDE_TIES EXCLUDE_NO_OTHERS CURRENT_ROW UNBOUNDED PRECEDING FOLLOWING
 CREATE DROP TABLE WITHOUT ROWID PRIMARY KEY NULL_ DEFAULT CHECK AT_DUMMY_SEED VIRTUAL AT_EMIT_ENUMS
-OBJECT TEXT BLOB LONG_ INT_ INTEGER LONG_INTEGER REAL ON UPDATE CASCADE ON_CONFLICT DO NOTHING
+OBJECT TEXT BLOB LONG_ INT_ INTEGER LONG_INT LONG_INTEGER REAL ON UPDATE CASCADE ON_CONFLICT DO NOTHING
 DELETE INDEX FOREIGN REFERENCES CONSTRAINT UPSERT STATEMENT CONST
 INSERT INTO VALUES VIEW SELECT QUERY_PLAN EXPLAIN OVER WINDOW FILTER PARTITION RANGE ROWS GROUPS
 AS CASE WHEN FROM THEN ELSE END LEFT
@@ -450,23 +450,28 @@ version_annotation:
   | '(' "integer-literal" ')'
   ;
 
+opt_kind:
+  /* nil */
+  | '<' name '>'
+  ;
+
 data_type_numeric:
-  "INT"
-  | "INTEGER"
-  | "REAL"
-  | "LONG"
-  | "BOOL"
-  | "LONG" "INTEGER"
-  | "LONG" "INT"
-  | "LONG_INT" | "LONG_INTEGER"
+  "INT" opt_kind
+  | "INTEGER" opt_kind
+  | "REAL" opt_kind
+  | "LONG" opt_kind
+  | "BOOL" opt_kind
+  | "LONG" "INTEGER" opt_kind
+  | "LONG" "INT" opt_kind
+  | "LONG_INT" opt_kind
+  | "LONG_INTEGER" opt_kind
   ;
 
 data_type_any:
   data_type_numeric
-  | "TEXT"
-  | "BLOB"
-  | "OBJECT"
-  | "OBJECT" '<' name '>'
+  | "TEXT"  opt_kind
+  | "BLOB"  opt_kind
+  | "OBJECT" opt_kind
   | "OBJECT" '<' name "CURSOR" '>'
   ;
 

@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Fri Jan 15 14:50:38 2021
+// Snapshot as of Wed Jan 20 11:08:03 2021
 
 
 const PREC = {
@@ -82,8 +82,9 @@ module.exports = grammar({
     opt_name_list: $ => $.name_list,
     col_attrs: $ => choice(seq($.NOT, $.NULL, optional($.col_attrs)), seq($.PRIMARY, $.KEY, optional($.col_attrs)), seq($.PRIMARY, $.KEY, $.AUTOINCREMENT, optional($.col_attrs)), seq($.DEFAULT, '-', $.num_literal, optional($.col_attrs)), seq($.DEFAULT, $.num_literal, optional($.col_attrs)), seq($.DEFAULT, $.const_expr, optional($.col_attrs)), seq($.DEFAULT, $.str_literal, optional($.col_attrs)), seq($.COLLATE, $.name, optional($.col_attrs)), seq($.CHECK, '(', $.expr, ')', optional($.col_attrs)), seq($.UNIQUE, optional($.col_attrs)), seq($.AT_SENSITIVE, optional($.col_attrs)), seq($.AT_CREATE, $.version_annotation, optional($.col_attrs)), seq($.AT_DELETE, $.version_annotation, optional($.col_attrs)), seq($.fk_target_options, optional($.col_attrs))),
     version_annotation: $ => choice(seq('(', $.INT_LIT, ',', $.name, ')'), seq('(', $.INT_LIT, ')')),
-    data_type_numeric: $ => choice($.INT, $.INTEGER, $.REAL, $.LONG, $.BOOL, seq($.LONG, $.INTEGER), seq($.LONG, $.INT), $.LONG_INT, $.LONG_INTEGER),
-    data_type_any: $ => choice($.data_type_numeric, $.TEXT, $.BLOB, $.OBJECT, seq($.OBJECT, '<', $.name, '>'), seq($.OBJECT, '<', $.name, $.CURSOR, '>')),
+    opt_kind: $ => seq('<', $.name, '>'),
+    data_type_numeric: $ => choice(seq($.INT, optional($.opt_kind)), seq($.INTEGER, optional($.opt_kind)), seq($.REAL, optional($.opt_kind)), seq($.LONG, optional($.opt_kind)), seq($.BOOL, optional($.opt_kind)), seq($.LONG, $.INTEGER, optional($.opt_kind)), seq($.LONG, $.INT, optional($.opt_kind)), seq($.LONG_INT, optional($.opt_kind)), seq($.LONG_INTEGER, optional($.opt_kind))),
+    data_type_any: $ => choice($.data_type_numeric, seq($.TEXT, optional($.opt_kind)), seq($.BLOB, optional($.opt_kind)), seq($.OBJECT, optional($.opt_kind)), seq($.OBJECT, '<', $.name, $.CURSOR, '>')),
     data_type_no_options: $ => choice($.data_type_any, $.ID),
     data_type_with_options: $ => choice($.data_type_any, seq($.data_type_any, $.NOT, $.NULL), seq($.data_type_any, $.AT_SENSITIVE), seq($.data_type_any, $.AT_SENSITIVE, $.NOT, $.NULL), seq($.data_type_any, $.NOT, $.NULL, $.AT_SENSITIVE), $.ID),
     str_literal: $ => choice($.STR_LIT, $.C_STR_LIT),

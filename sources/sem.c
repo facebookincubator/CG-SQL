@@ -5019,6 +5019,7 @@ static void sem_expr_cast(ast_node *ast, CSTR cstr) {
   sem_t combined_flags = not_nullable_flag(expr->sem->sem_type) | sensitive_flag(expr->sem->sem_type);
 
   ast->sem = new_sem(data_type->sem->sem_type | combined_flags);
+  ast->sem->kind = data_type->sem->kind;
 }
 
 // Coalesce requires type compatability between all of its arguments.  The result

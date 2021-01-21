@@ -2038,7 +2038,7 @@ In fact originally the above was the only way to load a value cursor, before
 the calculus was generalized. The original form still works, and does both
 things in one step:
 ```sql
-declare C fetch from call get_a_row(id);
+declare C cursor fetch from call get_a_row(id);
 ```
 
 The `OUT` statement lets you return a single row economically and
@@ -2268,8 +2268,8 @@ Many of the examples used the `FETCH` statement in a sort of demonstrative way t
 
 A cursor declared in one of these forms:
 
-* `declare C for select * from foo;`
-* `declare C for call foo();`  (foo might end with a `select` or use `out union`)
+* `declare C cursor for select * from foo;`
+* `declare C cursor for call foo();`  (foo might end with a `select` or use `out union`)
 
 Is either a statement cursor or a result set cursor.  In either case it moves through the results.  You load the next row with
 
@@ -7670,7 +7670,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu Jan 14 13:07:50 PST 2021
+Snapshot as of Wed Jan 20 11:08:03 PST 2021
 
 ### Operators and Literals
 
@@ -7707,7 +7707,7 @@ REALLIT /* floating point literal */
 ```
 EXCLUDE_GROUP EXCLUDE_CURRENT_ROW EXCLUDE_TIES EXCLUDE_NO_OTHERS CURRENT_ROW UNBOUNDED PRECEDING FOLLOWING
 CREATE DROP TABLE WITHOUT ROWID PRIMARY KEY NULL_ DEFAULT CHECK AT_DUMMY_SEED VIRTUAL AT_EMIT_ENUMS
-OBJECT TEXT BLOB LONG_ INT_ INTEGER LONG_INTEGER REAL ON UPDATE CASCADE ON_CONFLICT DO NOTHING
+OBJECT TEXT BLOB LONG_ INT_ INTEGER LONG_INT LONG_INTEGER REAL ON UPDATE CASCADE ON_CONFLICT DO NOTHING
 DELETE INDEX FOREIGN REFERENCES CONSTRAINT UPSERT STATEMENT CONST
 INSERT INTO VALUES VIEW SELECT QUERY_PLAN EXPLAIN OVER WINDOW FILTER PARTITION RANGE ROWS GROUPS
 AS CASE WHEN FROM THEN ELSE END LEFT
@@ -7982,7 +7982,7 @@ misc_attrs:
   ;
 
 col_def:
-  misc_attrs col_name data_type_or_type_name col_attrs
+  misc_attrs col_name data_type_no_options col_attrs
   ;
 
 pk_def:
@@ -8107,40 +8107,42 @@ version_annotation:
   | '(' "integer-literal" ')'
   ;
 
-object_type:
-  "OBJECT"
-  | "OBJECT" '<' name '>'
-  | "OBJECT" '<' name "CURSOR" '>'
+opt_kind:
+  /* nil */
+  | '<' name '>'
   ;
 
 data_type_numeric:
-  "INT"
-  | "INTEGER"
-  | "REAL"
-  | "LONG"
-  | "BOOL"
-  | "LONG" "INTEGER"
-  | "LONG" "INT"
-  | "LONG_INT" | "LONG_INTEGER"
-
-data_type:
-  data_type_numeric
-  | "TEXT"
-  | "BLOB"
-  | object_type
+  "INT" opt_kind
+  | "INTEGER" opt_kind
+  | "REAL" opt_kind
+  | "LONG" opt_kind
+  | "BOOL" opt_kind
+  | "LONG" "INTEGER" opt_kind
+  | "LONG" "INT" opt_kind
+  | "LONG_INT" opt_kind
+  | "LONG_INTEGER" opt_kind
   ;
 
-data_type_or_type_name:
-  data_type
+data_type_any:
+  data_type_numeric
+  | "TEXT"  opt_kind
+  | "BLOB"  opt_kind
+  | "OBJECT" opt_kind
+  | "OBJECT" '<' name "CURSOR" '>'
+  ;
+
+data_type_no_options:
+  data_type_any
   | "ID"
   ;
 
-data_type_opt_notnull:
-  data_type
-  | data_type "NOT" "NULL"
-  | data_type "@SENSITIVE"
-  | data_type "@SENSITIVE" "NOT" "NULL"
-  | data_type "NOT" "NULL" "@SENSITIVE"
+data_type_with_options:
+  data_type_any
+  | data_type_any "NOT" "NULL"
+  | data_type_any "@SENSITIVE"
+  | data_type_any "@SENSITIVE" "NOT" "NULL"
+  | data_type_any "NOT" "NULL" "@SENSITIVE"
   | "ID"
   ;
 
@@ -8251,7 +8253,7 @@ expr:
   | "CASE" expr case_list "ELSE" expr "END"
   | "CASE" case_list "END"
   | "CASE" case_list "ELSE" expr "END"
-  | "CAST" '(' expr "AS" data_type_or_type_name ')'
+  | "CAST" '(' expr "AS" data_type_no_options ')'
   ;
 
 case_list:
@@ -8716,9 +8718,9 @@ enum_value:
   ;
 
 declare_func_stmt:
-  "DECLARE" function name '(' params ')' data_type_opt_notnull
-  | "DECLARE" "SELECT" function name '(' params ')' data_type_opt_notnull
-  | "DECLARE" function name '(' params ')' "CREATE" data_type_opt_notnull
+  "DECLARE" function name '(' params ')' data_type_with_options
+  | "DECLARE" "SELECT" function name '(' params ')' data_type_with_options
+  | "DECLARE" function name '(' params ')' "CREATE" data_type_with_options
   | "DECLARE" "SELECT" function name '(' params ')' '(' typed_names ')'
   ;
 
@@ -8746,7 +8748,7 @@ inout:
   ;
 
 typed_name:
-  name data_type_opt_notnull
+  name data_type_with_options
   | shape_def
   | name shape_def
   ;
@@ -8757,8 +8759,8 @@ typed_names:
   ;
 
 param:
-  name data_type_opt_notnull
-  | inout name data_type_opt_notnull
+  name data_type_with_options
+  | inout name data_type_with_options
   | shape_def
   | name shape_def
   ;
@@ -8770,7 +8772,7 @@ params:
   ;
 
 declare_stmt:
-  "DECLARE" name_list data_type_opt_notnull
+  "DECLARE" name_list data_type_with_options
   | "DECLARE" name "CURSOR" "FOR" select_stmt
   | "DECLARE" name "CURSOR" "FOR" explain_stmt
   | "DECLARE" name "CURSOR" "FOR" call_stmt
@@ -8778,7 +8780,7 @@ declare_stmt:
   | "DECLARE" name "CURSOR" shape_def
   | "DECLARE" name "CURSOR" "LIKE" select_stmt
   | "DECLARE" name "CURSOR" "FOR" name
-  | "DECLARE" name "TYPE" data_type_opt_notnull
+  | "DECLARE" name "TYPE" data_type_with_options
   ;
 
 call_stmt:
@@ -12093,7 +12095,7 @@ These are the only reference types and so CREATE makes sense only with those typ
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Thu Jan 14 13:07:51 PST 2021
+Snapshot as of Wed Jan 20 11:08:03 PST 2021
 
 ### Rules
 

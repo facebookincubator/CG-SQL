@@ -126,7 +126,8 @@ s/[[:<:]]LIKE[[:>:]]/"LIKE"/g
 s/[[:<:]]LIMIT[[:>:]]/"LIMIT"/g
 s/[[:<:]]LONGLIT[[:>:]]/"long-literal"/g
 s/[[:<:]]LONG_[[:>:]]/"LONG"/g
-s/[[:<:]]LONG_INTEGER[[:>:]]/"LONG_INT" | "LONG_INTEGER"/g
+s/[[:<:]]LONG_INTEGER[[:>:]]/"LONG_INTEGER"/g
+s/[[:<:]]LONG_INT[[:>:]]/"LONG_INT"/g
 s/[[:<:]]LOOP[[:>:]]/"LOOP"/g
 s/[[:<:]]MATCH[[:>:]]/"MATCH"/g
 s/[[:<:]]NOTHING[[:>:]]/"NOTHING"/g

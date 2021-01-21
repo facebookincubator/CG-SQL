@@ -71,7 +71,7 @@ DEFAULT                      { return DEFAULT; }
 CHECK                        { return CHECK; }
 LONG                         { return LONG_; }
 LONG_INTEGER                 { return LONG_INTEGER; }
-LONG_INT                     { return LONG_INTEGER; }
+LONG_INT                     { return LONG_INT; }
 INT                          { return INT_; }
 INTEGER                      { return INTEGER; }
 TEXT                         { return TEXT; }

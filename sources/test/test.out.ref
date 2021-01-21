@@ -1400,6 +1400,14 @@ CREATE TABLE special(
   id3 INTEGER
 );
 
+DECLARE l1 LONG_INT<one>;
+
+DECLARE l1 LONG_INT<two>;
+
+DECLARE l1 LONG_INT<three>;
+
+DECLARE l1 LONG_INT<four>;
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

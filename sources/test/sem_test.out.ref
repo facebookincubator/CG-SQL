@@ -55456,3 +55456,48 @@ Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kin
           | {arg_list}
             | {name x3}: x3: integer<x_coord> variable
 
+The statement ending at line XXXX
+
+SET x1 := CAST(y1 AS INTEGER<x_coord>);
+
+  {assign}: x1: integer<x_coord> variable
+  | {name x1}: x1: integer<x_coord> variable
+  | {cast_expr}: integer<x_coord>
+    | {name y1}: y1: integer<y_coord> variable
+    | {type_int}: integer<x_coord>
+      | {name x_coord}
+
+The statement ending at line XXXX
+
+SET x1 := CAST(y1 AS INTEGER<x_coord>);
+
+  {assign}: x1: integer<x_coord> variable
+  | {name x1}: x1: integer<x_coord> variable
+  | {cast_expr}: integer<x_coord>
+    | {name y1}: y1: integer<y_coord> variable
+    | {type_int}: integer<x_coord>
+      | {name x_coord}
+
+The statement ending at line XXXX
+
+SET x1 := CAST(y1 AS INTEGER);
+
+  {assign}: x1: integer<x_coord> variable
+  | {name x1}: x1: integer<x_coord> variable
+  | {cast_expr}: integer
+    | {name y1}: y1: integer<y_coord> variable
+    | {type_int}: integer
+
+The statement ending at line XXXX
+
+SET x1 := CAST(x1 AS INTEGER<y_coord>);
+
+Error at test/sem_test.sql:XXXX : in cast_expr : CQL0070: expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
+
+  {assign}: err
+  | {name x1}: x1: integer<x_coord> variable
+  | {cast_expr}: err
+    | {name x1}: x1: integer<x_coord> variable
+    | {type_int}: integer<y_coord>
+      | {name y_coord}
+

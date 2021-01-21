@@ -13835,3 +13835,34 @@ set x1 := coalesce(x1, x2, x3);
 -- + Error % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- +1 Error
 set x1 := coalesce(x1, y2, x3);
+
+-- TEST: cast ok direct conversion
+-- + {assign}: x1: integer<x_coord> variable
+-- + {name x1}: x1: integer<x_coord> variable
+-- + {cast_expr}: integer<x_coord>
+-- - Error
+set x1 := cast(y1 as integer<x_coord>);
+
+-- TEST: cast ok direct conversion (using type name) (check for rewrite too)
+-- + SET x1 := CAST(y1 AS INTEGER<x_coord>);
+-- + {assign}: x1: integer<x_coord> variable
+-- + {name x1}: x1: integer<x_coord> variable
+-- + {cast_expr}: integer<x_coord>
+-- - Error
+set x1 := cast(y1 as _x);
+
+-- TEST: cast ok, strip kind explicitly
+-- + {assign}: x1: integer<x_coord> variable
+-- + {name x1}: x1: integer<x_coord> variable
+-- + {cast_expr}: integer
+-- + {name y1}: y1: integer<y_coord> variable
+-- - Error
+set x1 := cast(y1 as integer);
+
+-- TEST: cast bad, kinds don't match now
+-- + {assign}: err
+-- + {name x1}: x1: integer<x_coord> variable
+-- + Error % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
+-- +1 Error
+set x1 := cast(x1 as integer<y_coord>);
+

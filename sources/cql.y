@@ -145,7 +145,7 @@ static void cql_reset_globals(void);
 
 %token EXCLUDE_GROUP EXCLUDE_CURRENT_ROW EXCLUDE_TIES EXCLUDE_NO_OTHERS CURRENT_ROW UNBOUNDED PRECEDING FOLLOWING
 %token CREATE DROP TABLE WITHOUT ROWID PRIMARY KEY NULL_ DEFAULT CHECK AT_DUMMY_SEED VIRTUAL AT_EMIT_ENUMS
-%token OBJECT TEXT BLOB LONG_ INT_ INTEGER LONG_INTEGER REAL ON UPDATE CASCADE ON_CONFLICT DO NOTHING
+%token OBJECT TEXT BLOB LONG_ INT_ INTEGER LONG_INT LONG_INTEGER REAL ON UPDATE CASCADE ON_CONFLICT DO NOTHING
 %token DELETE INDEX FOREIGN REFERENCES CONSTRAINT UPSERT STATEMENT CONST
 %token INSERT INTO VALUES VIEW SELECT QUERY_PLAN EXPLAIN OVER WINDOW FILTER PARTITION RANGE ROWS GROUPS
 %token AS CASE WHEN FROM THEN ELSE END LEFT
@@ -699,6 +699,7 @@ data_type_numeric:
   | BOOL_ opt_kind { $data_type_numeric = new_ast_type_bool($opt_kind); }
   | LONG_ INTEGER opt_kind { $data_type_numeric = new_ast_type_long($opt_kind); }
   | LONG_ INT_ opt_kind { $data_type_numeric = new_ast_type_long($opt_kind); }
+  | LONG_INT opt_kind { $data_type_numeric = new_ast_type_long($opt_kind); }
   | LONG_INTEGER opt_kind { $data_type_numeric = new_ast_type_long($opt_kind); }
   ;
 
