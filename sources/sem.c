@@ -88,6 +88,15 @@ typedef struct deployable_validation {
   CSTR name;            // the name of the entity (whatever type it may be)
 } deployable_validation;
 
+// Define the signature of the callback registered in MISC_ATTRS_INT(...) to validate attributes
+// on any statement.
+typedef void (*sem_misc_attribute_callback)(
+    CSTR misc_attr_prefix,
+    CSTR misc_attr_name,
+    ast_node *ast_misc_attr_values,
+    ast_node *misc_attrs,
+    ast_node *any_stmt);
+
 static bytebuf *deployable_validations;
 
 // forward references for mutual recursion cases
@@ -204,10 +213,11 @@ static void sem_record_annotation_from_vers_info(version_attrs_info *vers_info);
 
 // Validate whether or not an object is usable with a schema region. The object
 // can only be a table, view, trigger or index.
-static bool_t sem_validate_object_ast_in_current_region(CSTR name,
-                                                 ast_node* table_ast,
-                                                 ast_node *err_target,
-                                                 CSTR msg);
+static bool_t sem_validate_object_ast_in_current_region(
+    CSTR name,
+    ast_node *table_ast,
+    ast_node *err_target,
+    CSTR msg);
 
 // The current join can have a parent if it is a nested select so we have to capture a stack
 // of joins as the current joinscope.
@@ -357,6 +367,7 @@ static symtab *builtin_aggregated_funcs;
 static symtab *arg_bundles;
 static symtab *global_types;
 static symtab *local_types;
+static symtab *misc_attributes;
 
 static ast_node *current_table_ast;
 static CSTR current_table_name;
@@ -737,7 +748,7 @@ static bool_t is_num_int_in_range(ast_node *ast, int64_t lower, int64_t upper) {
 
   if (result.sem_type == SEM_TYPE_ERROR) {
     // not a constant, can't verify it now, this will have to be a run time error
-    return true;  
+    return true;
   }
 
   // put the result in the int64 fields
@@ -1094,7 +1105,7 @@ static void add_table_or_view(ast_node *ast) {
 // Validate whether or not an object is usable with a schema region. The object
 // can only be a table, view, trigger or index.
 static bool_t sem_validate_object_ast_in_current_region(CSTR name,
-                                             ast_node* table_ast,
+                                             ast_node *table_ast,
                                              ast_node *err_target,
                                              CSTR msg) {
   // We're in a non-region therefore no validation needed because non-region stmt
@@ -1624,7 +1635,7 @@ static void report_and_capture_error(ast_node *root, ast_node *ast, CSTR err_msg
 static void report_sem_type_mismatch(
     sem_t sem_expected_type,
     sem_t sem_actual_type,
-    ast_node* node,
+    ast_node *node,
     CSTR prepend_error_message,
     CSTR sem_name) {
   CHARBUF_OPEN(temp);
@@ -3869,7 +3880,7 @@ static void sem_unary_math(ast_node *ast, CSTR op) {
   ast->sem = new_sem(sem_type_result);
   ast->sem->kind = ast->left->sem->kind;
 
-  // note ast->sem->name is NOT propogated because SQLite doesn't let you refer to 
+  // note ast->sem->name is NOT propogated because SQLite doesn't let you refer to
   // the column 'x' in 'select -x' -- the column name is actually '-x' which is useless
   // so we have no name once you apply unary math (unless you use 'as')
   // hence ast->sem->name = ast->left->sem->name is WRONG here and it is not missing on accident
@@ -6188,7 +6199,7 @@ static void sem_func_lag(ast_node *ast, uint32_t arg_count) {
   if (arg_count > 2) {
     ast_node *arg3 = third_arg(arg_list);
 
-    // Note arg3 is a default value for arg1, to be used if the offset in arg2 results in us going off the 
+    // Note arg3 is a default value for arg1, to be used if the offset in arg2 results in us going off the
     // end of the partition, so arg1 can't be evaluated.  This means we aren't truly doing an assignment
     // assignment here,  But we are trying to keep the save result type though because if arg3 caused the
     // result type to get bigger (e.g. arg3 is real and arg1 is an integer) that's probably just wrong.
@@ -6203,12 +6214,12 @@ static void sem_func_lag(ast_node *ast, uint32_t arg_count) {
     // and lossy conversions and such.  Note that if arg1 is a real, then arg3 can be an integer, that's fine!
     // Exact type match isn't required and that's what this logic is all about.
 
-    sem_t arg1_effective = arg1->sem->sem_type | SEM_TYPE_SENSITIVE;  
+    sem_t arg1_effective = arg1->sem->sem_type | SEM_TYPE_SENSITIVE;
     sem_t arg3_effective = arg3->sem->sem_type | SEM_TYPE_NOTNULL;
 
     bool_t ok = sem_verify_assignment(arg3, arg1_effective, arg3_effective, "arg3 used as default value for arg1");
 
-    // now check the type<kind> 
+    // now check the type<kind>
 
     if (ok) {
       sem_combine_kinds(arg3, arg1->sem->kind);
@@ -8020,7 +8031,7 @@ static void sem_values(ast_node *ast) {
   EXTRACT(insert_list, ast->left);
 
   uint32_t total_count = 0;
-  ast_node* items = insert_list;
+  ast_node *items = insert_list;
   while (items) {
     total_count++;
     items = items->right;
@@ -11547,7 +11558,7 @@ static bool_t sem_validate_compatible_table_cols_select(ast_node *table_ast, ast
               continue;
             }
 
-            // NOTE: kind mismatch can be an issue here but only if the values clause has some expressions in it, 
+            // NOTE: kind mismatch can be an issue here but only if the values clause has some expressions in it,
             // which is atypical but it can happen.  The normal thing is that values are all constants.
             sem_combine_kinds(expr, col->sem->kind);
             if (is_error(expr)) {
@@ -12388,8 +12399,10 @@ static bool_t sem_fragment_CTE_name_check(
 // it's WAY easier to just generate the text from the tree (which will be trivial in normal cases)
 // and then Strcmp it.  This code used to be full of all manner of special cases for which we
 // still even have tests but all that goes away with a simple string check.
-static void sem_fragment_select_everything_check(ast_node* _Nonnull select_stmt, CSTR _Nonnull name)
+static void sem_fragment_select_everything_check(ast_node* select_stmt, CSTR name)
 {
+  Contract(select_stmt);
+  Contract(name);
   CHARBUF_OPEN(reqd_sql);
   CHARBUF_OPEN(cur_sql);
 
@@ -12431,8 +12444,9 @@ static void sem_fragment_select_everything_check(ast_node* _Nonnull select_stmt,
 // (This code is nearly identical to the above, it's duplicated for clarity and so that the error
 // message can be different without adding lots of conditionals everywhere. If it was any bigger
 // it could be refactored but it has hardly any body to it)
-static void sem_fragment_union_shape(ast_node* _Nonnull select_core, CSTR _Nonnull name)
+static void sem_fragment_union_shape(ast_node *select_core, CSTR name)
 {
+  Contract(name);
   Contract(is_ast_select_core(select_core));
   CHARBUF_OPEN(reqd_sql);
   CHARBUF_OPEN(cur_sql);
@@ -13408,29 +13422,20 @@ static void sem_validate_ok_table_scan_value(ast_node *misc_attrs, ast_node *ast
   record_ok(ast_misc_attr_value);
 }
 
-// Semantic anlysis of ok_table_scan and no_table_scan attribution.
-// ok_table_scan: can only be assigned to a create proc statement and
-// the value can only be table names.
-// no_table_scan: can only be assigned to a create table statement and
-// has not value.
-static void sem_misc_attrs_callback(
-  CSTR _Nullable misc_attr_prefix,
-  CSTR _Nonnull misc_attr_name,
-  ast_node *_Nullable ast_misc_attr_values,
-  void *_Nullable context) {
-  EXTRACT_NOTNULL(misc_attrs, context);
-
-  if (!misc_attr_prefix) {
-    return;
-  }
-
-  // We can stop as soon as any misc_attr has an error.
-  if (is_error(misc_attrs)) {
-    return;
-  }
-
-  EXTRACT_NOTNULL(stmt_and_attr, misc_attrs->parent);
-  EXTRACT_ANY_NOTNULL(any_stmt, stmt_and_attr->right);
+// This function validates the semantics of the ok_table_scan attribute.
+// It can only be assigned to a create proc statement and takes table
+// names as value.
+// It's used by the test helpers runtime to know on which tables it's are ok to
+// have allow table scan in a stored proc.
+static void sem_misc_attrs_ok_table_scan(
+    CSTR misc_attr_prefix,
+    CSTR misc_attr_name,
+    ast_node *ast_misc_attr_values,
+    ast_node *misc_attrs,
+    ast_node *any_stmt) {
+  Contract(misc_attr_name);
+  Contract(any_stmt);
+  Contract(misc_attrs);
 
   if (!Strcasecmp(misc_attr_prefix, "cql") &&
       !Strcasecmp(misc_attr_name, "ok_table_scan")) {
@@ -13459,24 +13464,103 @@ static void sem_misc_attrs_callback(
       }
     }
   }
+}
 
-  if (!Strcasecmp(misc_attr_prefix, "cql") &&
-      !Strcasecmp(misc_attr_name, "no_table_scan")) {
-    if (ast_misc_attr_values != NULL) {
-      report_error(ast_misc_attr_values, "CQL0327: a value should not be assigned to no_table_scan attribute", NULL);
-      record_error(ast_misc_attr_values);
+// This function validates the semantics of the no_table_scan attribute.
+// The attribute does not take a value and can only be use on create table
+// statement.
+// It's used by the test helpers runtime to know on which tables it's forbidden
+// to have table scan.
+static void sem_misc_attrs_no_table_scan(
+    CSTR misc_attr_prefix,
+    CSTR misc_attr_name,
+    ast_node *ast_misc_attr_values,
+    ast_node *misc_attrs,
+    ast_node *any_stmt) {
+  Contract(misc_attr_name);
+  Contract(any_stmt);
+  Contract(misc_attrs);
+
+  if (ast_misc_attr_values != NULL) {
+    report_error(ast_misc_attr_values, "CQL0327: a value should not be assigned to no_table_scan attribute", NULL);
+    record_error(ast_misc_attr_values);
+    record_error(misc_attrs);
+    return;
+  }
+
+  if (is_ast_stmt_and_attr(misc_attrs->parent)) {
+    ast_node *stmt = misc_attrs->parent->right;
+    if (!is_ast_create_table_stmt(stmt)) {
+      report_error(misc_attrs, "CQL0328: no_table_scan attribute may only be added to a create table statement", NULL);
       record_error(misc_attrs);
       return;
     }
+  }
+}
 
-    if (is_ast_stmt_and_attr(misc_attrs->parent)) {
-      ast_node *stmt = misc_attrs->parent->right;
-      if (!is_ast_create_table_stmt(stmt)) {
-        report_error(misc_attrs, "CQL0328: no_table_scan attribute may only be added to a create table statement", NULL);
-        record_error(misc_attrs);
-        return;
-      }
+// This function validate the semantic of vault_sensitive attribute. The attribute does not take a value
+// and can only be used in create proc statement.
+static void sem_misc_attrs_vault_sensitive(
+    CSTR misc_attr_prefix,
+    CSTR misc_attr_name,
+    ast_node *ast_misc_attr_values,
+    ast_node *misc_attrs,
+    ast_node *any_stmt) {
+  Contract(misc_attr_name);
+  Contract(any_stmt);
+  Contract(misc_attrs);
+
+  if (ast_misc_attr_values != NULL) {
+    report_error(ast_misc_attr_values, "CQL0327: a value should not be assigned to vault_sensitive attribute", NULL);
+    record_error(ast_misc_attr_values);
+    record_error(misc_attrs);
+    return;
+  }
+
+  if (is_ast_stmt_and_attr(misc_attrs->parent)) {
+    ast_node *stmt = misc_attrs->parent->right;
+    if (!is_ast_create_proc_stmt(stmt)) {
+      report_error(misc_attrs, "CQL0328: vault_sensitive attribute may only be added to a create procedure statement", NULL);
+      record_error(misc_attrs);
+      return;
     }
+  }
+}
+
+// Semantic anlysis of ok_table_scan and no_table_scan attribution.
+// ok_table_scan: can only be assigned to a create proc statement and
+// the value can only be table names.
+// no_table_scan: can only be assigned to a create table statement and
+// has not value.
+static void sem_misc_attrs_callback(
+  CSTR misc_attr_prefix,
+  CSTR misc_attr_name,
+  ast_node *ast_misc_attr_values,
+  void *context) {
+  Contract(misc_attr_name);
+  Contract(context);
+  EXTRACT_NOTNULL(misc_attrs, context);
+
+  if (!misc_attr_prefix) {
+    return;
+  }
+
+  // We can stop as soon as any misc_attr has an error.
+  if (is_error(misc_attrs)) {
+    return;
+  }
+
+  EXTRACT_NOTNULL(stmt_and_attr, misc_attrs->parent);
+  EXTRACT_ANY_NOTNULL(any_stmt, stmt_and_attr->right);
+
+  symtab_entry *entry = symtab_find(misc_attributes, misc_attr_name);
+  if (entry) {
+    ((sem_misc_attribute_callback)entry->val)(
+        misc_attr_prefix,
+        misc_attr_name,
+        ast_misc_attr_values,
+        misc_attrs,
+        any_stmt);
   }
 }
 
@@ -16669,6 +16753,9 @@ cql_noexport void exit_on_validating_schema() {
   static sem_expr_dispatch expr_disp_ ## x = { func, str }; \
   symtab_add(exprs, k_ast_ ## x, (void *)&expr_disp_ ## x);
 
+#undef MISC_ATTR_INIT
+#define MISC_ATTR_INIT(x) symtab_add(misc_attributes, #x, (void *)sem_misc_attrs_ ## x)
+
 // This method loads up the global symbol tables in either empty state or
 // with the appropriate tokens ready to go.  Using our own symbol tables for
 // dispatch saves us a lot of if/else string comparison verbosity.
@@ -16702,6 +16789,7 @@ cql_noexport void sem_main(ast_node *ast) {
   extensions_by_basename = symtab_new();
   builtin_aggregated_funcs = symtab_new();
   global_types = symtab_new();
+  misc_attributes = symtab_new();
 
   schema_annotations = _ast_pool_new(bytebuf);
   recreate_annotations = _ast_pool_new(bytebuf);
@@ -16888,6 +16976,10 @@ cql_noexport void sem_main(ast_node *ast) {
   EXPR_INIT(case_expr, sem_expr_case, "CASE");
   EXPR_INIT(concat, sem_concat, "||");
 
+  MISC_ATTR_INIT(ok_table_scan);
+  MISC_ATTR_INIT(no_table_scan);
+  MISC_ATTR_INIT(vault_sensitive);
+
   if (ast) {
     sem_stmt_list(ast);
   }
@@ -16980,6 +17072,7 @@ cql_noexport void sem_cleanup() {
   SYMTAB_CLEANUP(included_regions);
   SYMTAB_CLEANUP(excluded_regions);
   SYMTAB_CLEANUP(global_types);
+  SYMTAB_CLEANUP(misc_attributes);
 
   // these are getting zeroed so that leaksanitizer will not count those objects as reachable from a global root.
 

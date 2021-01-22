@@ -13704,7 +13704,7 @@ insert into xy select xy.y, xy.x from xy where xy.x = 1;
 select x1 as x, y1 as y
 union all
 select x2 as x, y2 as y;
- 
+
 -- TEST: compound select with not matching object kinds (as makes the name match)
 -- but the kind is wrong so you still get an error (!)
 -- + {select_stmt}: err
@@ -13723,8 +13723,8 @@ insert into xy values (x1, y1), (x2, y2);
 -- + {insert_stmt}: err
 -- + Error % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- +1 Error
-insert into xy values 
-  (x1, y1), 
+insert into xy values
+  (x1, y1),
   (y2, x2),
   (x3, y3);
 
@@ -13897,3 +13897,32 @@ set x1 := cast(y1 as integer);
 -- + Error % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- +1 Error
 set x1 := cast(x1 as integer<y_coord>);
+
+-- TEST: no_scan_table attribution is not supported on select table node
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- + {select_stmt}: err
+-- Error % vault_sensitive attribute may only be added to a create procedure statement
+-- +1 Error
+@attribute(cql:vault_sensitive)
+select * from foo;
+
+-- TEST: no_scan_table attribution does not take value
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- + {create_proc_stmt}: err
+-- Error % a value should not be assigned to vault_sensitive attribute
+-- +1 Error
+@attribute(cql:vault_sensitive=1)
+create proc vault_sensitive_proc_val()
+begin
+end;
+
+-- TEST: no_scan_table attribution on create proc node
+-- + {stmt_and_attr}: ok
+-- + {misc_attrs}: ok
+-- - Error
+@attribute(cql:vault_sensitive)
+create proc vault_sensitive_proc()
+begin
+end;

@@ -55563,3 +55563,71 @@ Error at test/sem_test.sql:XXXX : in cast_expr : CQL0070: expressions of differe
     | {type_int}: integer<y_coord>
       | {name y_coord}
 
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:vault_sensitive)
+SELECT *
+  FROM foo;
+
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0328: vault_sensitive attribute may only be added to a create procedure statement
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name vault_sensitive}
+  | {select_stmt}: err
+    | {select_core_list}
+    | | {select_core}
+    |   | {select_expr_list_con}
+    |     | {select_expr_list}
+    |     | | {star}
+    |     | {select_from_etc}
+    |       | {table_or_subquery_list}
+    |       | | {table_or_subquery}
+    |       |   | {name foo}
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:vault_sensitive=1)
+CREATE PROC vault_sensitive_proc_val ()
+BEGIN
+END;
+
+Error at test/sem_test.sql:XXXX : in num : CQL0327: a value should not be assigned to vault_sensitive attribute
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name vault_sensitive}
+  |   | {int 1}: err
+  | {create_proc_stmt}: err
+    | {name vault_sensitive_proc_val}
+    | {proc_params_stmts}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:vault_sensitive)
+CREATE PROC vault_sensitive_proc ()
+BEGIN
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name vault_sensitive}
+  | {create_proc_stmt}: ok
+    | {name vault_sensitive_proc}: ok
+    | {proc_params_stmts}
+
