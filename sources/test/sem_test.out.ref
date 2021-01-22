@@ -6675,6 +6675,38 @@ SET id = 1
 
 The statement ending at line XXXX
 
+UPDATE with_kind
+SET cost = price_d;
+
+  {update_stmt}: with_kind: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> }
+  | {name with_kind}: with_kind: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> }
+  | {update_set}
+    | {update_list}: ok
+    | | {update_entry}: cost: real<dollars>
+    |   | {name cost}: cost: real<dollars>
+    |   | {name price_d}: price_d: real<dollars> variable
+    | {update_where}
+      | {update_orderby}
+
+The statement ending at line XXXX
+
+UPDATE with_kind
+SET cost = price_e;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
+
+  {update_stmt}: err
+  | {name with_kind}: with_kind: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> }
+  | {update_set}
+    | {update_list}: err
+    | | {update_entry}: err
+    |   | {name cost}: cost: real<dollars>
+    |   | {name price_e}: err
+    | {update_where}
+      | {update_orderby}
+
+The statement ending at line XXXX
+
 UPDATE myView
 SET id = 1;
 

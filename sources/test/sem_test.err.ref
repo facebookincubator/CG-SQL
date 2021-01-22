@@ -163,6 +163,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0172: name list has duplicate name
 Error at test/sem_test.sql:XXXX : in str : CQL0172: name list has duplicate name 'key_id'
 Error at test/sem_test.sql:XXXX : in str : CQL0172: name list has duplicate name 'col_id'
 Error at test/sem_test.sql:XXXX : in str : CQL0172: name list has duplicate name 'ref_id1'
+Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
 Error at test/sem_test.sql:XXXX : in str : CQL0155: cannot update a view 'myView'
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
 Error at test/sem_test.sql:XXXX : in opt_limit : CQL0015: expected numeric expression 'LIMIT'

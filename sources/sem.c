@@ -10288,6 +10288,12 @@ static void sem_update_entry(ast_node *ast, symtab *update_columns) {
     return;
   }
 
+  sem_combine_kinds(right, left->sem->kind);
+  if (is_error(right)) {
+    record_error(ast);
+    return;
+  }
+
   ast->sem = left->sem;
 }
 

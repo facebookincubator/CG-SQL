@@ -1964,6 +1964,18 @@ set X := my_cursor;
 -- + {int 2}: integer notnull
 update foo set id = 1 where id = 2;
 
+-- TEST: update with kind matching, ok to update
+-- + {update_stmt}: with_kind: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> }
+-- + {update_list}: ok
+-- - Error
+update with_kind set cost = price_d;
+
+-- TEST: update kind does not match, error
+-- + {update_stmt}: err
+-- + Error % expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
+-- +1 Error
+update with_kind set cost = price_e;
+
 -- TEST: update with view
 -- + Error % cannot update a view 'myView'
 -- +1 Error
