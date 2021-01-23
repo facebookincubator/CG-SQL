@@ -2417,6 +2417,14 @@ begin
   select * from all_types_encoded_table;
 end;
 
+@attribute(cql:vault_sensitive)
+create procedure load_encoded_cursor()
+begin
+  declare C cursor for select * from all_types_encoded_table;
+  fetch C;
+  out C;
+end;
+
 create procedure load_all_types_table()
 begin
   create table all_types_table(

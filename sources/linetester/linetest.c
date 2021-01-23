@@ -142,37 +142,37 @@ typedef struct linetest_dump_C_row {
 #define linetest_dump_C_refs_offset cql_offsetof(linetest_dump_C_row, source) // count = 3
 CQL_WARN_UNUSED cql_code linetest_dump(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
-  sqlite3_stmt *C = NULL;
-  linetest_dump_C_row C_ = { ._refs_count_ = 3, ._refs_offset_ = linetest_dump_C_refs_offset };
+  sqlite3_stmt *C_stmt = NULL;
+  linetest_dump_C_row C = { ._refs_count_ = 3, ._refs_offset_ = linetest_dump_C_refs_offset };
 
-  _rc_ = cql_prepare(_db_, &C,
+  _rc_ = cql_prepare(_db_, &C_stmt,
     "SELECT source, procname, line, data, physical_line "
       "FROM linedata");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   for (;;) {
-    _rc_ = sqlite3_step(C);
-    C_._has_row_ = _rc_ == SQLITE_ROW;
-    cql_multifetch(_rc_, C, 5,
-                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C_.source,
-                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C_.procname,
-                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C_.line,
-                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C_.data,
-                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C_.physical_line);
+    _rc_ = sqlite3_step(C_stmt);
+    C._has_row_ = _rc_ == SQLITE_ROW;
+    cql_multifetch(_rc_, C_stmt, 5,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C.source,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C.procname,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.line,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C.data,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.physical_line);
     if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
-    if (!C_._has_row_) break;
-    cql_alloc_cstr(_cstr_1, C_.source);
-    cql_alloc_cstr(_cstr_2, C_.procname);
-    cql_alloc_cstr(_cstr_3, C_.data);
-    printf("%s %s %4d %3d %s\n", _cstr_1, _cstr_2, C_.physical_line, C_.line, _cstr_3);
-    cql_free_cstr(_cstr_1, C_.source);
-    cql_free_cstr(_cstr_2, C_.procname);
-    cql_free_cstr(_cstr_3, C_.data);
+    if (!C._has_row_) break;
+    cql_alloc_cstr(_cstr_1, C.source);
+    cql_alloc_cstr(_cstr_2, C.procname);
+    cql_alloc_cstr(_cstr_3, C.data);
+    printf("%s %s %4d %3d %s\n", _cstr_1, _cstr_2, C.physical_line, C.line, _cstr_3);
+    cql_free_cstr(_cstr_1, C.source);
+    cql_free_cstr(_cstr_2, C.procname);
+    cql_free_cstr(_cstr_3, C.data);
   }
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
-  cql_finalize_stmt(&C);
-  cql_teardown_row(C_);
+  cql_finalize_stmt(&C_stmt);
+  cql_teardown_row(C);
   return _rc_;
 }
 #undef _PROC_
@@ -208,37 +208,37 @@ typedef struct dump_proc_records_C_row {
 #define dump_proc_records_C_refs_offset cql_offsetof(dump_proc_records_C_row, source) // count = 3
 CQL_WARN_UNUSED cql_code dump_proc_records(sqlite3 *_Nonnull _db_, cql_string_ref _Nonnull source_, cql_string_ref _Nonnull procname_) {
   cql_code _rc_ = SQLITE_OK;
-  sqlite3_stmt *C = NULL;
-  dump_proc_records_C_row C_ = { ._refs_count_ = 3, ._refs_offset_ = dump_proc_records_C_refs_offset };
+  sqlite3_stmt *C_stmt = NULL;
+  dump_proc_records_C_row C = { ._refs_count_ = 3, ._refs_offset_ = dump_proc_records_C_refs_offset };
 
-  _rc_ = cql_prepare(_db_, &C,
+  _rc_ = cql_prepare(_db_, &C_stmt,
     "SELECT source, procname, line, data, physical_line "
       "FROM linedata "
       "WHERE procname = ? AND source = ?");
-  cql_multibind(&_rc_, _db_, &C, 2,
+  cql_multibind(&_rc_, _db_, &C_stmt, 2,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, procname_,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, source_);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   for (;;) {
-    _rc_ = sqlite3_step(C);
-    C_._has_row_ = _rc_ == SQLITE_ROW;
-    cql_multifetch(_rc_, C, 5,
-                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C_.source,
-                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C_.procname,
-                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C_.line,
-                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C_.data,
-                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C_.physical_line);
+    _rc_ = sqlite3_step(C_stmt);
+    C._has_row_ = _rc_ == SQLITE_ROW;
+    cql_multifetch(_rc_, C_stmt, 5,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C.source,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C.procname,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.line,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C.data,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.physical_line);
     if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
-    if (!C_._has_row_) break;
-    cql_alloc_cstr(_cstr_4, C_.data);
-    printf("%5d %s\n", C_.line, _cstr_4);
-    cql_free_cstr(_cstr_4, C_.data);
+    if (!C._has_row_) break;
+    cql_alloc_cstr(_cstr_4, C.data);
+    printf("%5d %s\n", C.line, _cstr_4);
+    cql_free_cstr(_cstr_4, C.data);
   }
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
-  cql_finalize_stmt(&C);
-  cql_teardown_row(C_);
+  cql_finalize_stmt(&C_stmt);
+  cql_teardown_row(C);
   return _rc_;
 }
 #undef _PROC_
@@ -370,111 +370,111 @@ typedef struct compare_lines_expected_row {
 #define compare_lines_expected_refs_offset cql_offsetof(compare_lines_expected_row, source) // count = 3
 CQL_WARN_UNUSED cql_code compare_lines(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull procs, cql_int32 *_Nonnull compares, cql_int32 *_Nonnull errors) {
   cql_code _rc_ = SQLITE_OK;
-  sqlite3_stmt *p = NULL;
-  compare_lines_p_row p_ = { ._refs_count_ = 1, ._refs_offset_ = compare_lines_p_refs_offset };
-  sqlite3_stmt *actual = NULL;
-  compare_lines_actual_row actual_ = { ._refs_count_ = 3, ._refs_offset_ = compare_lines_actual_refs_offset };
-  sqlite3_stmt *expected = NULL;
-  compare_lines_expected_row expected_ = { ._refs_count_ = 3, ._refs_offset_ = compare_lines_expected_refs_offset };
+  sqlite3_stmt *p_stmt = NULL;
+  compare_lines_p_row p = { ._refs_count_ = 1, ._refs_offset_ = compare_lines_p_refs_offset };
+  sqlite3_stmt *actual_stmt = NULL;
+  compare_lines_actual_row actual = { ._refs_count_ = 3, ._refs_offset_ = compare_lines_actual_refs_offset };
+  sqlite3_stmt *expected_stmt = NULL;
+  compare_lines_expected_row expected = { ._refs_count_ = 3, ._refs_offset_ = compare_lines_expected_refs_offset };
 
   *compares = 0;
   *errors = 0;
   *procs = 0;
-  _rc_ = cql_prepare(_db_, &p,
+  _rc_ = cql_prepare(_db_, &p_stmt,
     "SELECT procname "
       "FROM procs");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   for (;;) {
-    _rc_ = sqlite3_step(p);
-    p_._has_row_ = _rc_ == SQLITE_ROW;
-    cql_multifetch(_rc_, p, 1,
-                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &p_.procname);
+    _rc_ = sqlite3_step(p_stmt);
+    p._has_row_ = _rc_ == SQLITE_ROW;
+    cql_multifetch(_rc_, p_stmt, 1,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &p.procname);
     if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
-    if (!p_._has_row_) break;
+    if (!p._has_row_) break;
     *procs = (*procs) + 1;
-    _rc_ = cql_prepare(_db_, &actual,
+    _rc_ = cql_prepare(_db_, &actual_stmt,
       "SELECT source, procname, line, data, physical_line "
         "FROM linedata "
         "WHERE source = 'act' AND procname = ?");
-    cql_multibind(&_rc_, _db_, &actual, 1,
-                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, p_.procname);
+    cql_multibind(&_rc_, _db_, &actual_stmt, 1,
+                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, p.procname);
     if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-    _rc_ = cql_prepare(_db_, &expected,
+    _rc_ = cql_prepare(_db_, &expected_stmt,
       "SELECT source, procname, line, data, physical_line "
         "FROM linedata "
         "WHERE source = 'exp' AND procname = ?");
-    cql_multibind(&_rc_, _db_, &expected, 1,
-                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, p_.procname);
+    cql_multibind(&_rc_, _db_, &expected_stmt, 1,
+                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, p.procname);
     if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-    _rc_ = sqlite3_step(actual);
-    actual_._has_row_ = _rc_ == SQLITE_ROW;
-    cql_multifetch(_rc_, actual, 5,
-                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &actual_.source,
-                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &actual_.procname,
-                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &actual_.line,
-                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &actual_.data,
-                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &actual_.physical_line);
+    _rc_ = sqlite3_step(actual_stmt);
+    actual._has_row_ = _rc_ == SQLITE_ROW;
+    cql_multifetch(_rc_, actual_stmt, 5,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &actual.source,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &actual.procname,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &actual.line,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &actual.data,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &actual.physical_line);
     if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
-    _rc_ = sqlite3_step(expected);
-    expected_._has_row_ = _rc_ == SQLITE_ROW;
-    cql_multifetch(_rc_, expected, 5,
-                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &expected_.source,
-                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &expected_.procname,
-                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &expected_.line,
-                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &expected_.data,
-                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &expected_.physical_line);
+    _rc_ = sqlite3_step(expected_stmt);
+    expected._has_row_ = _rc_ == SQLITE_ROW;
+    cql_multifetch(_rc_, expected_stmt, 5,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &expected.source,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &expected.procname,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &expected.line,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &expected.data,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &expected.physical_line);
     if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
     for (;;) {
-    if (!(actual_._has_row_ && expected_._has_row_)) break;
+    if (!(actual._has_row_ && expected._has_row_)) break;
       *compares = (*compares) + 1;
-      if (actual_.line != expected_.line || cql_string_compare(actual_.data, expected_.data) != 0) {
-        _rc_ = dump(_db_, p_.procname);
+      if (actual.line != expected.line || cql_string_compare(actual.data, expected.data) != 0) {
+        _rc_ = dump(_db_, p.procname);
         if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
         printf("\nFirst difference:\n");
-        cql_alloc_cstr(_cstr_6, expected_.data);
-        printf("expected: %5d %s\n", expected_.line, _cstr_6);
-        cql_free_cstr(_cstr_6, expected_.data);
-        cql_alloc_cstr(_cstr_7, actual_.data);
-        printf("  actual: %5d %s\n", actual_.line, _cstr_7);
-        cql_free_cstr(_cstr_7, actual_.data);
-        printf("\nDifferences at:\n line %d in expected\n line %d in actual", expected_.physical_line, actual_.physical_line);
+        cql_alloc_cstr(_cstr_6, expected.data);
+        printf("expected: %5d %s\n", expected.line, _cstr_6);
+        cql_free_cstr(_cstr_6, expected.data);
+        cql_alloc_cstr(_cstr_7, actual.data);
+        printf("  actual: %5d %s\n", actual.line, _cstr_7);
+        cql_free_cstr(_cstr_7, actual.data);
+        printf("\nDifferences at:\n line %d in expected\n line %d in actual", expected.physical_line, actual.physical_line);
         printf("\n");
         *errors = (*errors) + 1;
         break;
       }
-      _rc_ = sqlite3_step(actual);
-      actual_._has_row_ = _rc_ == SQLITE_ROW;
-      cql_multifetch(_rc_, actual, 5,
-                     CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &actual_.source,
-                     CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &actual_.procname,
-                     CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &actual_.line,
-                     CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &actual_.data,
-                     CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &actual_.physical_line);
+      _rc_ = sqlite3_step(actual_stmt);
+      actual._has_row_ = _rc_ == SQLITE_ROW;
+      cql_multifetch(_rc_, actual_stmt, 5,
+                     CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &actual.source,
+                     CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &actual.procname,
+                     CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &actual.line,
+                     CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &actual.data,
+                     CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &actual.physical_line);
       if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
-      _rc_ = sqlite3_step(expected);
-      expected_._has_row_ = _rc_ == SQLITE_ROW;
-      cql_multifetch(_rc_, expected, 5,
-                     CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &expected_.source,
-                     CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &expected_.procname,
-                     CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &expected_.line,
-                     CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &expected_.data,
-                     CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &expected_.physical_line);
+      _rc_ = sqlite3_step(expected_stmt);
+      expected._has_row_ = _rc_ == SQLITE_ROW;
+      cql_multifetch(_rc_, expected_stmt, 5,
+                     CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &expected.source,
+                     CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &expected.procname,
+                     CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &expected.line,
+                     CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &expected.data,
+                     CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &expected.physical_line);
       if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
     }
-    if (actual_._has_row_ != expected_._has_row_) {
-      if (! actual_._has_row_) {
-        _rc_ = dump(_db_, p_.procname);
+    if (actual._has_row_ != expected._has_row_) {
+      if (! actual._has_row_) {
+        _rc_ = dump(_db_, p.procname);
         if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
         printf("\nRan out of lines in actual:\n");
-        printf("\nDifferences at:\n line %d in expected\n", expected_.physical_line);
+        printf("\nDifferences at:\n line %d in expected\n", expected.physical_line);
         printf("\n");
         *errors = (*errors) + 1;
       }
-      if (! expected_._has_row_) {
-        _rc_ = dump(_db_, p_.procname);
+      if (! expected._has_row_) {
+        _rc_ = dump(_db_, p.procname);
         if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
         printf("\nRan out of lines in expected:\n");
-        printf("\nDifferences at:\n line %d in actual\n", actual_.physical_line);
+        printf("\nDifferences at:\n line %d in actual\n", actual.physical_line);
         printf("\n");
         *errors = (*errors) + 1;
       }
@@ -483,12 +483,12 @@ CQL_WARN_UNUSED cql_code compare_lines(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnu
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
-  cql_finalize_stmt(&p);
-  cql_teardown_row(p_);
-  cql_finalize_stmt(&actual);
-  cql_teardown_row(actual_);
-  cql_finalize_stmt(&expected);
-  cql_teardown_row(expected_);
+  cql_finalize_stmt(&p_stmt);
+  cql_teardown_row(p);
+  cql_finalize_stmt(&actual_stmt);
+  cql_teardown_row(actual);
+  cql_finalize_stmt(&expected_stmt);
+  cql_teardown_row(expected);
   return _rc_;
 }
 #undef _PROC_

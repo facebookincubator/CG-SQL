@@ -72,7 +72,7 @@ typedef struct cql_nullable_bool {
 #define CQL_DATA_TYPE_BLOB      6
 #define CQL_DATA_TYPE_OBJECT    7
 #define CQL_DATA_TYPE_CORE      0x3f    // bit mask for core types
-#define CQL_DATA_TYPE_SENSITIVE 0x40    // set if and only if sensitive
+#define CQL_DATA_TYPE_ENCODED   0x40    // set if and only if encode
 #define CQL_DATA_TYPE_NOT_NULL  0x80    // set if and only if null is not possible
 #define CQL_CORE_DATA_TYPE_OF(type) ((type) & CQL_DATA_TYPE_CORE)
 
@@ -96,7 +96,6 @@ typedef struct cql_fetch_info {
   const char *_Nullable autodrop_tables;
   int64_t crc;
   int32_t *_Nullable perf_index;
-  cql_bool use_vault;
 } cql_fetch_info;
 
 CQL_EXPORT void cql_multifetch_meta(char *_Nonnull data, cql_fetch_info *_Nonnull info);
@@ -209,7 +208,7 @@ CQL_EXPORT cql_double cql_result_set_get_double_col(cql_result_set_ref _Nonnull 
 CQL_EXPORT cql_string_ref _Nullable cql_result_set_get_string_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col);
 CQL_EXPORT cql_blob_ref _Nullable cql_result_set_get_blob_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col);
 CQL_EXPORT cql_bool cql_result_set_get_is_null_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col);
-CQL_EXPORT cql_bool cql_result_set_get_is_sensitive_col(cql_result_set_ref _Nonnull result_set, cql_int32 col);
+CQL_EXPORT cql_bool cql_result_set_get_is_encoded_col(cql_result_set_ref _Nonnull result_set, cql_int32 col);
 
 // result set metadata management
 CQL_EXPORT void cql_initialize_meta(cql_result_set_meta *_Nonnull meta, cql_fetch_info *_Nonnull info);

@@ -464,14 +464,14 @@ typedef struct rtdata {
   // cql_bool cql_result_set_get_is_null(cql_result_set_ref result_set, int32_t row, int32_t col)
   const char *cql_result_set_get_is_null;
 
-  // Generic is_sensitive value getter on base result set object.
+  // Generic is_encoded value getter on base result set object.
   // NOTE: This is only used when generate_type_getters is true.  This function should call through to the
   // inline type getters that are passed into the ctor for the result set.
   // @param result_set The cql result_set object.
   // @param col The column to fetch the value for.
   // @return cql_true if the value is sensitive, otherwise cql_false.
-  // cql_bool cql_result_set_get_is_sensitive(cql_result_set_ref result_set, int32_t col)
-  const char *cql_result_set_get_is_sensitive;
+  // cql_bool cql_result_set_get_is_encoded(cql_result_set_ref result_set, int32_t col)
+  const char *cql_result_set_get_is_encoded;
 
   // The java type for a nullable boolean value.
   const char *cql_bool_nullable;

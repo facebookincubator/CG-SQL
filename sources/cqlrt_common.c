@@ -466,18 +466,139 @@ static void cql_multinull(cql_int32 count, va_list args) {
   }
 }
 
+// This helper fetch a column value from sqlite and store it in the holder.
+// CQL encode column value with flag CQL_DATA_TYPE_ENCODED as soon as they're
+// read from db like that only encoded value is accessible. This means the
+// proc creating result_set should decode explicitely sensitive column value
+// to get the real value.
+static void cql_fetch_field(
+    cql_int32 type,
+    cql_int32 column,
+    sqlite3 *_Nonnull db,
+    sqlite3_stmt *_Nullable stmt,
+    char *_Nonnull field) {
+
+  cql_bool is_encoded = type & CQL_DATA_TYPE_ENCODED;
+  cql_int32 core_data_type_and_not_null = type & ~CQL_DATA_TYPE_ENCODED;
+
+  switch (core_data_type_and_not_null) {
+    case CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL: {
+      cql_int32 *int32_data = (cql_int32 *)field;
+      *int32_data = sqlite3_column_int(stmt, column);
+      if (is_encoded) {
+        *int32_data = cql_encode_int32(db, *int32_data);
+      }
+      break;
+    }
+    case CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_NOT_NULL: {
+      cql_int64 *int64_data = (cql_int64 *)field;
+      *int64_data = sqlite3_column_int64(stmt, column);
+      if (is_encoded) {
+        *int64_data = cql_encode_int64(db, *int64_data);
+      }
+      break;
+    }
+    case CQL_DATA_TYPE_DOUBLE | CQL_DATA_TYPE_NOT_NULL: {
+      cql_double *double_data = (cql_double *)field;
+      *double_data = sqlite3_column_double(stmt, column);
+      if (is_encoded) {
+        *double_data = cql_encode_double(db, *double_data);
+      }
+      break;
+    }
+    case CQL_DATA_TYPE_BOOL | CQL_DATA_TYPE_NOT_NULL: {
+      cql_bool *bool_data = (cql_bool *)field;
+      *bool_data = !!sqlite3_column_int(stmt, column);
+      if (is_encoded) {
+        *bool_data = cql_encode_bool(db, *bool_data);
+      }
+      break;
+    }
+    case CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_NOT_NULL: {
+      cql_string_ref *str_ref = (cql_string_ref *)field;
+      cql_column_string_ref(stmt, column, str_ref);
+      if (is_encoded) {
+        cql_string_ref new_str_ref = cql_encode_string_ref_new(db, *str_ref);
+        cql_set_string_ref(str_ref, new_str_ref);
+        cql_string_release(new_str_ref);
+      }
+      break;
+    }
+    case CQL_DATA_TYPE_BLOB | CQL_DATA_TYPE_NOT_NULL: {
+      cql_blob_ref *blob_ref = (cql_blob_ref *)field;
+      cql_column_blob_ref(stmt, column, blob_ref);
+      if (is_encoded) {
+        cql_blob_ref new_blob_ref = cql_encode_blob_ref_new(db, *blob_ref);
+        cql_set_blob_ref(blob_ref, new_blob_ref);
+        cql_blob_release(new_blob_ref);
+      }
+      break;
+    }
+    case CQL_DATA_TYPE_INT32: {
+      cql_nullable_int32 *_Nonnull int32p = (cql_nullable_int32 *)field;
+      cql_column_nullable_int32(stmt, column, int32p);
+      if (is_encoded && !int32p->is_null) {
+          int32p->value = cql_encode_int32(db, int32p->value);
+      }
+      break;
+    }
+    case CQL_DATA_TYPE_INT64: {
+      cql_nullable_int64 *_Nonnull int64p = (cql_nullable_int64 *)field;
+      cql_column_nullable_int64(stmt, column, int64p);
+      if (is_encoded && !int64p->is_null) {
+        int64p->value = cql_encode_int64(db, int64p->value);
+      }
+      break;
+    }
+    case CQL_DATA_TYPE_DOUBLE: {
+      cql_nullable_double *_Nonnull doublep = (cql_nullable_double *)field;
+      cql_column_nullable_double(stmt, column, doublep);
+      if (is_encoded && !doublep->is_null) {
+        doublep->value = cql_encode_double(db, doublep->value);
+      }
+      break;
+    }
+    case CQL_DATA_TYPE_BOOL: {
+      cql_nullable_bool *_Nonnull boolp = (cql_nullable_bool *)field;
+      cql_column_nullable_bool(stmt, column, boolp);
+      if (is_encoded && !boolp->is_null) {
+        boolp->value = cql_encode_bool(db, boolp->value);
+      }
+      break;
+    }
+    case CQL_DATA_TYPE_STRING: {
+      cql_string_ref *str_ref = (cql_string_ref *)field;
+      cql_column_nullable_string_ref(stmt, column, str_ref);
+      if (is_encoded && *str_ref) {
+        cql_string_ref new_str_ref = cql_encode_string_ref_new(db, *str_ref);
+        cql_set_string_ref(str_ref, new_str_ref);
+        cql_string_release(new_str_ref);
+      }
+      break;
+    }
+    case CQL_DATA_TYPE_BLOB: {
+      cql_blob_ref *blob_ref = (cql_blob_ref *)field;
+      cql_column_nullable_blob_ref(stmt, column, blob_ref);
+      if (is_encoded && *blob_ref) {
+        cql_blob_ref new_blob_ref = cql_encode_blob_ref_new(db, *blob_ref);
+        cql_set_blob_ref(blob_ref, new_blob_ref);
+        cql_blob_release(new_blob_ref);
+      }
+      break;
+    }
+  }
+}
+
 // This method lets us get lots of columns out of a statement with one call
 // in the generated code saving us a lot of error management and reducing the
 // generated code cost to just the offsets and types.  This version does
 // the fetch based on the "fetch info" which includes, among other things
 // an array of types and an array of offsets.
-// CQL encode sensitive column value if use_vault is TRUE as soon as they're
-// read from db like that only encoded value is accessible. This means the
-// proc creating result_set should decode explicitely sensitive column value
-// to get the real value.
 void cql_multifetch_meta(char *_Nonnull data, cql_fetch_info *_Nonnull info) {
   cql_contract(info->stmt);
+  cql_contract(info->db);
   sqlite3_stmt *stmt = info->stmt;
+  sqlite3 *db = info->db;
   uint8_t *_Nonnull data_types = info->data_types;
   uint16_t *_Nonnull col_offsets = info->col_offsets;
 
@@ -487,121 +608,7 @@ void cql_multifetch_meta(char *_Nonnull data, cql_fetch_info *_Nonnull info) {
   for (cql_int32 column = 0; column < count; column++) {
     uint8_t type = data_types[column];
     char *field = data + col_offsets[column];
-    cql_int32 core_data_type = CQL_CORE_DATA_TYPE_OF(type);
-    cql_bool is_sensitive = type & CQL_DATA_TYPE_SENSITIVE;
-
-    if (type & CQL_DATA_TYPE_NOT_NULL) {
-      switch (core_data_type) {
-        case CQL_DATA_TYPE_INT32: {
-          cql_int32 *int32_data = (cql_int32 *)field;
-          *int32_data = sqlite3_column_int(stmt, column);
-          if (info->use_vault && is_sensitive) {
-            *int32_data = cql_encode_int32(info->db, *int32_data);
-          }
-          break;
-        }
-        case CQL_DATA_TYPE_INT64: {
-          cql_int64 *int64_data = (cql_int64 *)field;
-          *int64_data = sqlite3_column_int64(stmt, column);
-          if (info->use_vault && is_sensitive) {
-            *int64_data = cql_encode_int64(info->db, *int64_data);
-          }
-          break;
-        }
-        case CQL_DATA_TYPE_DOUBLE: {
-          cql_double *double_data = (cql_double *)field;
-          *double_data = sqlite3_column_double(stmt, column);
-          if (info->use_vault && is_sensitive) {
-            *double_data = cql_encode_double(info->db, *double_data);
-          }
-          break;
-        }
-        case CQL_DATA_TYPE_BOOL: {
-          cql_bool *bool_data = (cql_bool *)(field);
-          *bool_data = !!sqlite3_column_int(stmt, column);
-          if (info->use_vault && is_sensitive) {
-            *bool_data = cql_encode_bool(info->db, *bool_data);
-          }
-          break;
-        }
-        case CQL_DATA_TYPE_STRING: {
-          cql_string_ref *str_ref = (cql_string_ref *)field;
-          cql_column_string_ref(stmt, column, str_ref);
-          if (info->use_vault && is_sensitive) {
-            cql_string_ref new_str_ref = cql_encode_string_ref_new(info->db, *str_ref);
-            cql_set_string_ref(str_ref, new_str_ref);
-            cql_string_release(new_str_ref);
-          }
-          break;
-        }
-        case CQL_DATA_TYPE_BLOB: {
-          cql_blob_ref *blob_ref = (cql_blob_ref *)field;
-          cql_column_blob_ref(stmt, column, blob_ref);
-          if (info->use_vault && is_sensitive) {
-            cql_blob_ref new_blob_ref = cql_encode_blob_ref_new(info->db, *blob_ref);
-            cql_set_blob_ref(blob_ref, new_blob_ref);
-            cql_blob_release(new_blob_ref);
-          }
-          break;
-        }
-      }
-    }
-    else {
-      switch (core_data_type) {
-        case CQL_DATA_TYPE_INT32: {
-          cql_nullable_int32 *_Nonnull int32p = (cql_nullable_int32 *_Nonnull)field;
-          cql_column_nullable_int32(stmt, column, int32p);
-          if (info->use_vault && is_sensitive && !int32p->is_null) {
-              int32p->value = cql_encode_int32(info->db, int32p->value);
-          }
-          break;
-        }
-        case CQL_DATA_TYPE_INT64: {
-          cql_nullable_int64 *_Nonnull int64p = (cql_nullable_int64 *_Nonnull)field;
-          cql_column_nullable_int64(stmt, column, int64p);
-          if (info->use_vault && is_sensitive && !int64p->is_null) {
-            int64p->value = cql_encode_int64(info->db, int64p->value);
-          }
-          break;
-        }
-        case CQL_DATA_TYPE_DOUBLE: {
-          cql_nullable_double *_Nonnull doublep = (cql_nullable_double *_Nonnull)field;
-          cql_column_nullable_double(stmt, column, doublep);
-          if (info->use_vault && is_sensitive && !doublep->is_null) {
-            doublep->value = cql_encode_double(info->db, doublep->value);
-          }
-          break;
-        }
-        case CQL_DATA_TYPE_BOOL: {
-          cql_nullable_bool *_Nonnull boolp = (cql_nullable_bool *_Nonnull)field;
-          cql_column_nullable_bool(stmt, column, boolp);
-          if (info->use_vault && is_sensitive && !boolp->is_null) {
-            boolp->value = cql_encode_bool(info->db, boolp->value);
-          }
-          break;
-        }
-        case CQL_DATA_TYPE_STRING: {
-          cql_string_ref *str_ref = (cql_string_ref *)field;
-          cql_column_nullable_string_ref(stmt, column, str_ref);
-          if (info->use_vault && is_sensitive && *str_ref) {
-            cql_string_ref new_str_ref = cql_encode_string_ref_new(info->db, *str_ref);
-            cql_set_string_ref(str_ref, new_str_ref);
-            cql_string_release(new_str_ref);
-          }
-          break;
-        }
-        case CQL_DATA_TYPE_BLOB: {
-          cql_blob_ref *blob_ref = (cql_blob_ref *)field;
-          cql_column_nullable_blob_ref(stmt, column, blob_ref);
-          if (info->use_vault && is_sensitive && *blob_ref) {
-            cql_blob_ref new_blob_ref = cql_encode_blob_ref_new(info->db, *blob_ref);
-            cql_set_blob_ref(blob_ref, new_blob_ref);
-            cql_blob_release(new_blob_ref);
-          }
-          break;
-        }
-      }
-    }
+    cql_fetch_field(type, column, db, stmt, field);
   }
 }
 
@@ -620,79 +627,12 @@ void cql_multifetch(cql_code rc, sqlite3_stmt *_Nullable stmt, cql_int32 count, 
   }
 
   cql_contract(stmt);
+  sqlite3 *db = sqlite3_db_handle(stmt);
 
   for (cql_int32 column = 0; column < count; column++) {
     cql_int32 type = va_arg(args, cql_int32);
-    cql_int32 core_data_type = CQL_CORE_DATA_TYPE_OF(type);
-
-    if (type & CQL_DATA_TYPE_NOT_NULL) {
-      switch (core_data_type) {
-        case CQL_DATA_TYPE_INT32: {
-          cql_int32 *int32_data = va_arg(args, cql_int32 *);
-          *int32_data = sqlite3_column_int(stmt, column);
-          break;
-        }
-        case CQL_DATA_TYPE_INT64: {
-          cql_int64 *int64_data = va_arg(args, cql_int64 *);
-          *int64_data = sqlite3_column_int64(stmt, column);
-          break;
-        }
-        case CQL_DATA_TYPE_DOUBLE: {
-          cql_double *double_data = va_arg(args, cql_double *);
-          *double_data = sqlite3_column_double(stmt, column);
-          break;
-        }
-        case CQL_DATA_TYPE_BOOL: {
-          cql_bool *bool_data = va_arg(args, cql_bool *);
-          *bool_data = !!sqlite3_column_int(stmt, column);
-          break;
-        }
-        case CQL_DATA_TYPE_STRING: {
-          cql_string_ref *str_ref = va_arg(args, cql_string_ref *);
-          cql_column_string_ref(stmt, column, str_ref);
-          break;
-        }
-        case CQL_DATA_TYPE_BLOB: {
-          cql_blob_ref *blob_ref = va_arg(args, cql_blob_ref *);
-          cql_column_blob_ref(stmt, column, blob_ref);
-          break;
-        }
-      }
-    }
-    else {
-      switch (core_data_type) {
-        case CQL_DATA_TYPE_INT32: {
-          cql_nullable_int32 *_Nonnull int32p = va_arg(args, cql_nullable_int32 *_Nonnull);
-          cql_column_nullable_int32(stmt, column, int32p);
-          break;
-        }
-        case CQL_DATA_TYPE_INT64: {
-          cql_nullable_int64 *_Nonnull int64p = va_arg(args, cql_nullable_int64 *_Nonnull);
-          cql_column_nullable_int64(stmt, column, int64p);
-          break;
-        }
-        case CQL_DATA_TYPE_DOUBLE: {
-          cql_nullable_double *_Nonnull doublep = va_arg(args, cql_nullable_double *_Nonnull);
-          cql_column_nullable_double(stmt, column, doublep);
-          break;
-        }
-        case CQL_DATA_TYPE_BOOL: {
-          cql_nullable_bool *_Nonnull boolp = va_arg(args, cql_nullable_bool *_Nonnull);
-          cql_column_nullable_bool(stmt, column, boolp);
-          break;
-        }
-        case CQL_DATA_TYPE_STRING: {
-          cql_string_ref *str_ref = va_arg(args, cql_string_ref *);
-          cql_column_nullable_string_ref(stmt, column, str_ref);
-          break;
-        }
-        case CQL_DATA_TYPE_BLOB: {
-          cql_blob_ref *blob_ref = va_arg(args, cql_blob_ref *);
-          cql_column_nullable_blob_ref(stmt, column, blob_ref);
-          break;
-        }
-      }
-    }
+    void *field = va_arg(args, void *);
+    cql_fetch_field(type, column, db, stmt, field);
   }
 
   va_end(args);
@@ -1396,9 +1336,9 @@ cql_bool cql_result_set_get_is_null_col(cql_result_set_ref _Nonnull result_set, 
   return is_null;
 }
 
-// This is the helper method that determines if a column is sensitive
-// return TRUE if the data type value has the flag CQL_DATA_TYPE_SENSITIVE
-cql_bool cql_result_set_get_is_sensitive_col(cql_result_set_ref _Nonnull result_set, cql_int32 col) {
+// This is the helper method that determines if a column is encoded
+// return TRUE if the data type value has the flag CQL_DATA_TYPE_ENCODED
+cql_bool cql_result_set_get_is_encoded_col(cql_result_set_ref _Nonnull result_set, cql_int32 col) {
   cql_result_set_meta *meta = cql_result_set_get_meta(result_set);
 
   // Check to make sure the requested column is a valid column
@@ -1406,7 +1346,7 @@ cql_bool cql_result_set_get_is_sensitive_col(cql_result_set_ref _Nonnull result_
   int32_t columnCount = meta->columnCount;
   cql_contract(col < columnCount);
 
-  return !!(meta->dataTypes[col] & CQL_DATA_TYPE_SENSITIVE);
+  return !!(meta->dataTypes[col] & CQL_DATA_TYPE_ENCODED);
 }
 
 // Tables contains a list of tables we need to drop.  The format is

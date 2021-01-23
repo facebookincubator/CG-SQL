@@ -218,7 +218,7 @@ CQL_WARN_UNUSED cql_code dbhelp_dump_line(sqlite3 *_Nonnull _db_, cql_int32 line
   for (;;) {
     _rc_ = sqlite3_step(C);
     C_._has_row_ = _rc_ == SQLITE_ROW;
-    cql_multifetch(_rc_, C, 2,
+    cql_multifetch(false, _db_, _rc_, C, 2,
                    CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C_.line,
                    CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C_.data);
     if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
@@ -330,7 +330,7 @@ CQL_WARN_UNUSED cql_code dbhelp_dump_source(sqlite3 *_Nonnull _db_, cql_int32 li
   for (;;) {
     _rc_ = sqlite3_step(C);
     C_._has_row_ = _rc_ == SQLITE_ROW;
-    cql_multifetch(_rc_, C, 2,
+    cql_multifetch(false, _db_, _rc_, C, 2,
                    CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C_.line,
                    CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C_.data);
     if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }

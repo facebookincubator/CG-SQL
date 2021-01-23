@@ -48,6 +48,10 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_ex
 // True if we are presently emitting a stored proc
 static bool_t in_proc = 0;
 
+// True if we are presently emitting a vault stored proc.
+// A stored proc with attribution vault_sensitive is a vault stored proc
+static bool_t use_vault = 0;
+
 // Keep record of the assembly query fragment for result set type reference if
 // we are presently emitting an extension fragment stored proc
 static CSTR parent_fragment_name;
@@ -2748,6 +2752,7 @@ static void cg_create_proc_stmt(ast_node *ast) {
   charbuf *saved_fwd_ref = cg_fwd_ref_output;
   cg_scratch_masks *saved_masks = cg_current_masks;
 
+  Invariant(!use_vault);
   Invariant(named_temporaries == NULL);
   named_temporaries = symtab_new();
 
@@ -2756,6 +2761,7 @@ static void cg_create_proc_stmt(ast_node *ast) {
   cg_zero_masks(cg_current_masks);
   temp_statement_emitted = 0;
   in_proc = 1;
+  use_vault = misc_attrs && exists_attribute_str(misc_attrs, "vault_sensitive");;
   current_proc = ast;
   seed_declared = 0;
 
@@ -2954,6 +2960,7 @@ static void cg_create_proc_stmt(ast_node *ast) {
   CHARBUF_CLOSE(proc_fwd_ref);
 
   in_proc = 0;
+  use_vault = 0;
   current_proc = NULL;
   parent_fragment_name = NULL;
 
@@ -3182,8 +3189,8 @@ static void cg_cql_datatype(sem_t sem_type, charbuf *output) {
   if (!is_nullable(sem_type)) {
     bprintf(output, "CQL_DATA_TYPE_NOT_NULL | ");
   }
-  if (sensitive_flag(sem_type)) {
-    bprintf(output, "CQL_DATA_TYPE_SENSITIVE | ");
+  if (sensitive_flag(sem_type) && use_vault) {
+    bprintf(output, "CQL_DATA_TYPE_ENCODED | ");
   }
 
   switch (core_type_of(sem_type)) {
@@ -4999,8 +5006,8 @@ static void cg_data_type(charbuf *buffer, sem_t sem_type) {
   if (is_not_nullable(sem_type)) {
     bprintf(buffer, " | CQL_DATA_TYPE_NOT_NULL");
   }
-  if (sensitive_flag(sem_type)) {
-    bprintf(buffer, " | CQL_DATA_TYPE_SENSITIVE");
+  if (sensitive_flag(sem_type) && use_vault) {
+    bprintf(buffer, " | CQL_DATA_TYPE_ENCODED");
   }
 }
 
@@ -5283,7 +5290,6 @@ typedef struct fetch_result_info {
   bool_t use_stmt;
   int32_t indent;
   CSTR prefix;
-  bool_t use_vault;
 } fetch_result_info;
 
 // This generates the cql_fetch_info structure for the various output flavors
@@ -5331,9 +5337,6 @@ static void cg_fetch_info(fetch_result_info *info, charbuf *output)
     bprintf(&tmp, "  .rowsize = sizeof(%s),\n", info->row_sym);
     bprintf(&tmp, "  .crc = CRC_%s,\n", info->proc_sym);
     bprintf(&tmp, "  .perf_index = &%s,\n", info->perf_index);
-    if (info->use_vault) {
-      bprintf(&tmp, "  .use_vault = %d,\n", info->use_vault);
-    }
 
     cg_autodrops(info->misc_attrs, &tmp);
 
@@ -5366,8 +5369,6 @@ static void cg_proc_result_set(ast_node *ast) {
   if (suppress_result_set) {
     return;
   }
-
-  bool_t use_vault = misc_attrs && exists_attribute_str(misc_attrs, "vault_sensitive");
 
   bool_t uses_out = has_out_stmt_result(ast);
   bool_t uses_out_union = has_out_union_stmt_result(ast);
@@ -5662,7 +5663,6 @@ static void cg_proc_result_set(ast_node *ast) {
           .proc_sym = proc_sym.ptr,
           .perf_index = perf_index.ptr,
           .misc_attrs = misc_attrs,
-          .use_vault = use_vault,
           .indent = 2,
       };
 
@@ -5725,7 +5725,6 @@ static void cg_proc_result_set(ast_node *ast) {
           .proc_sym = proc_sym.ptr,
           .perf_index = perf_index.ptr,
           .misc_attrs = misc_attrs,
-          .use_vault = use_vault,
           .indent = 2,
       };
 
@@ -5752,7 +5751,6 @@ static void cg_proc_result_set(ast_node *ast) {
           .misc_attrs = misc_attrs,
           .indent = 0,
           .prefix = proc_sym.ptr,
-          .use_vault = use_vault,
       };
 
       cg_fetch_info(&info, d);
