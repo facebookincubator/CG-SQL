@@ -96,6 +96,7 @@ typedef struct cql_fetch_info {
   const char *_Nullable autodrop_tables;
   int64_t crc;
   int32_t *_Nullable perf_index;
+  cql_bool use_vault;
 } cql_fetch_info;
 
 CQL_EXPORT void cql_multifetch_meta(char *_Nonnull data, cql_fetch_info *_Nonnull info);

@@ -196,6 +196,23 @@ SQLITE_API cql_code mockable_sqlite3_step(sqlite3_stmt *_Nonnull);
 #define cql_profile_start(crc, index) (void)crc; (void)index;
 #define cql_profile_stop(crc, index)  (void)crc; (void)index;
 
+// implementation of encoding values. All sensitive values read from sqlite db will
+// be encoded at the source. CQL never decode encoded sensitive string unless the
+// user call explicitly decode function from code.
+cql_bool cql_encode_bool(sqlite3 *_Nonnull db, cql_bool value);
+cql_int32 cql_encode_int32(sqlite3 *_Nonnull db, cql_int32 value);
+cql_int64 cql_encode_int64(sqlite3 *_Nonnull db, cql_int64 value);
+cql_double cql_encode_double(sqlite3 *_Nonnull db, cql_double value);
+cql_string_ref _Nonnull cql_encode_string_ref_new(sqlite3 *_Nonnull db, cql_string_ref _Nonnull value);
+cql_blob_ref _Nonnull cql_encode_blob_ref_new(sqlite3 *_Nonnull db, cql_blob_ref _Nonnull value);
+
+cql_bool cql_decode_bool(sqlite3 *_Nonnull db, cql_bool value);
+cql_int32 cql_decode_int32(sqlite3 *_Nonnull db, cql_int32 value);
+cql_int64 cql_decode_int64(sqlite3 *_Nonnull db, cql_int64 value);
+cql_double cql_decode_double(sqlite3 *_Nonnull db, cql_double value);
+cql_string_ref _Nonnull cql_decode_string_ref_new(sqlite3 *_Nonnull db, cql_string_ref _Nonnull value);
+cql_blob_ref _Nonnull cql_decode_blob_ref_new(sqlite3 *_Nonnull db, cql_blob_ref _Nonnull value);
+
 // the basic version doesn't use column getters
 #define CQL_NO_GETTERS 1
 

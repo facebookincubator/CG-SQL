@@ -5283,6 +5283,7 @@ typedef struct fetch_result_info {
   bool_t use_stmt;
   int32_t indent;
   CSTR prefix;
+  bool_t use_vault;
 } fetch_result_info;
 
 // This generates the cql_fetch_info structure for the various output flavors
@@ -5330,6 +5331,9 @@ static void cg_fetch_info(fetch_result_info *info, charbuf *output)
     bprintf(&tmp, "  .rowsize = sizeof(%s),\n", info->row_sym);
     bprintf(&tmp, "  .crc = CRC_%s,\n", info->proc_sym);
     bprintf(&tmp, "  .perf_index = &%s,\n", info->perf_index);
+    if (info->use_vault) {
+      bprintf(&tmp, "  .use_vault = %d,\n", info->use_vault);
+    }
 
     cg_autodrops(info->misc_attrs, &tmp);
 
@@ -5362,6 +5366,8 @@ static void cg_proc_result_set(ast_node *ast) {
   if (suppress_result_set) {
     return;
   }
+
+  bool_t use_vault = misc_attrs && exists_attribute_str(misc_attrs, "vault_sensitive");
 
   bool_t uses_out = has_out_stmt_result(ast);
   bool_t uses_out_union = has_out_union_stmt_result(ast);
@@ -5656,6 +5662,7 @@ static void cg_proc_result_set(ast_node *ast) {
           .proc_sym = proc_sym.ptr,
           .perf_index = perf_index.ptr,
           .misc_attrs = misc_attrs,
+          .use_vault = use_vault,
           .indent = 2,
       };
 
@@ -5718,6 +5725,7 @@ static void cg_proc_result_set(ast_node *ast) {
           .proc_sym = proc_sym.ptr,
           .perf_index = perf_index.ptr,
           .misc_attrs = misc_attrs,
+          .use_vault = use_vault,
           .indent = 2,
       };
 
@@ -5744,6 +5752,7 @@ static void cg_proc_result_set(ast_node *ast) {
           .misc_attrs = misc_attrs,
           .indent = 0,
           .prefix = proc_sym.ptr,
+          .use_vault = use_vault,
       };
 
       cg_fetch_info(&info, d);

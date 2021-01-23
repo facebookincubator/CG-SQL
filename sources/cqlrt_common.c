@@ -471,6 +471,10 @@ static void cql_multinull(cql_int32 count, va_list args) {
 // generated code cost to just the offsets and types.  This version does
 // the fetch based on the "fetch info" which includes, among other things
 // an array of types and an array of offsets.
+// CQL encode sensitive column value if use_vault is TRUE as soon as they're
+// read from db like that only encoded value is accessible. This means the
+// proc creating result_set should decode explicitely sensitive column value
+// to get the real value.
 void cql_multifetch_meta(char *_Nonnull data, cql_fetch_info *_Nonnull info) {
   cql_contract(info->stmt);
   sqlite3_stmt *stmt = info->stmt;
@@ -484,37 +488,60 @@ void cql_multifetch_meta(char *_Nonnull data, cql_fetch_info *_Nonnull info) {
     uint8_t type = data_types[column];
     char *field = data + col_offsets[column];
     cql_int32 core_data_type = CQL_CORE_DATA_TYPE_OF(type);
+    cql_bool is_sensitive = type & CQL_DATA_TYPE_SENSITIVE;
 
     if (type & CQL_DATA_TYPE_NOT_NULL) {
       switch (core_data_type) {
         case CQL_DATA_TYPE_INT32: {
           cql_int32 *int32_data = (cql_int32 *)field;
           *int32_data = sqlite3_column_int(stmt, column);
+          if (info->use_vault && is_sensitive) {
+            *int32_data = cql_encode_int32(info->db, *int32_data);
+          }
           break;
         }
         case CQL_DATA_TYPE_INT64: {
           cql_int64 *int64_data = (cql_int64 *)field;
           *int64_data = sqlite3_column_int64(stmt, column);
+          if (info->use_vault && is_sensitive) {
+            *int64_data = cql_encode_int64(info->db, *int64_data);
+          }
           break;
         }
         case CQL_DATA_TYPE_DOUBLE: {
           cql_double *double_data = (cql_double *)field;
           *double_data = sqlite3_column_double(stmt, column);
+          if (info->use_vault && is_sensitive) {
+            *double_data = cql_encode_double(info->db, *double_data);
+          }
           break;
         }
         case CQL_DATA_TYPE_BOOL: {
           cql_bool *bool_data = (cql_bool *)(field);
           *bool_data = !!sqlite3_column_int(stmt, column);
+          if (info->use_vault && is_sensitive) {
+            *bool_data = cql_encode_bool(info->db, *bool_data);
+          }
           break;
         }
         case CQL_DATA_TYPE_STRING: {
           cql_string_ref *str_ref = (cql_string_ref *)field;
           cql_column_string_ref(stmt, column, str_ref);
+          if (info->use_vault && is_sensitive) {
+            cql_string_ref new_str_ref = cql_encode_string_ref_new(info->db, *str_ref);
+            cql_set_string_ref(str_ref, new_str_ref);
+            cql_string_release(new_str_ref);
+          }
           break;
         }
         case CQL_DATA_TYPE_BLOB: {
           cql_blob_ref *blob_ref = (cql_blob_ref *)field;
           cql_column_blob_ref(stmt, column, blob_ref);
+          if (info->use_vault && is_sensitive) {
+            cql_blob_ref new_blob_ref = cql_encode_blob_ref_new(info->db, *blob_ref);
+            cql_set_blob_ref(blob_ref, new_blob_ref);
+            cql_blob_release(new_blob_ref);
+          }
           break;
         }
       }
@@ -524,31 +551,53 @@ void cql_multifetch_meta(char *_Nonnull data, cql_fetch_info *_Nonnull info) {
         case CQL_DATA_TYPE_INT32: {
           cql_nullable_int32 *_Nonnull int32p = (cql_nullable_int32 *_Nonnull)field;
           cql_column_nullable_int32(stmt, column, int32p);
+          if (info->use_vault && is_sensitive && !int32p->is_null) {
+              int32p->value = cql_encode_int32(info->db, int32p->value);
+          }
           break;
         }
         case CQL_DATA_TYPE_INT64: {
           cql_nullable_int64 *_Nonnull int64p = (cql_nullable_int64 *_Nonnull)field;
           cql_column_nullable_int64(stmt, column, int64p);
+          if (info->use_vault && is_sensitive && !int64p->is_null) {
+            int64p->value = cql_encode_int64(info->db, int64p->value);
+          }
           break;
         }
         case CQL_DATA_TYPE_DOUBLE: {
           cql_nullable_double *_Nonnull doublep = (cql_nullable_double *_Nonnull)field;
           cql_column_nullable_double(stmt, column, doublep);
+          if (info->use_vault && is_sensitive && !doublep->is_null) {
+            doublep->value = cql_encode_double(info->db, doublep->value);
+          }
           break;
         }
         case CQL_DATA_TYPE_BOOL: {
           cql_nullable_bool *_Nonnull boolp = (cql_nullable_bool *_Nonnull)field;
           cql_column_nullable_bool(stmt, column, boolp);
+          if (info->use_vault && is_sensitive && !boolp->is_null) {
+            boolp->value = cql_encode_bool(info->db, boolp->value);
+          }
           break;
         }
         case CQL_DATA_TYPE_STRING: {
           cql_string_ref *str_ref = (cql_string_ref *)field;
           cql_column_nullable_string_ref(stmt, column, str_ref);
+          if (info->use_vault && is_sensitive && *str_ref) {
+            cql_string_ref new_str_ref = cql_encode_string_ref_new(info->db, *str_ref);
+            cql_set_string_ref(str_ref, new_str_ref);
+            cql_string_release(new_str_ref);
+          }
           break;
         }
         case CQL_DATA_TYPE_BLOB: {
           cql_blob_ref *blob_ref = (cql_blob_ref *)field;
           cql_column_nullable_blob_ref(stmt, column, blob_ref);
+          if (info->use_vault && is_sensitive && *blob_ref) {
+            cql_blob_ref new_blob_ref = cql_encode_blob_ref_new(info->db, *blob_ref);
+            cql_set_blob_ref(blob_ref, new_blob_ref);
+            cql_blob_release(new_blob_ref);
+          }
           break;
         }
       }

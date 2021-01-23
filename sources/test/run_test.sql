@@ -2390,6 +2390,33 @@ BEGIN_TEST(nullable_test)
 
 END_TEST(nullable_test)
 
+@attribute(cql:vault_sensitive)
+create procedure load_encoded_table()
+begin
+  create table all_types_encoded_table(
+    b0 bool @sensitive,
+    i0 integer @sensitive,
+    l0 long @sensitive,
+    d0 real @sensitive,
+    s0 text @sensitive,
+    bl0 blob @sensitive,
+
+    b1 bool not null @sensitive,
+    i1 integer not null @sensitive,
+    l1 long not null @sensitive,
+    d1 real not null @sensitive,
+    s1 text not null @sensitive,
+    bl1 blob not null @sensitive
+  );
+
+  insert into all_types_encoded_table values (
+    cast(0 as bool), 0, 0, 0.0, "0", cast("0" as blob),
+    cast(1 as bool), 1, 1, 1.1, "1", cast("1" as blob)
+  );
+
+  select * from all_types_encoded_table;
+end;
+
 create procedure load_all_types_table()
 begin
   create table all_types_table(
