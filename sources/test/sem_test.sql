@@ -2351,21 +2351,21 @@ select count(*) from foo;
 
 -- TEST: try count distinct function
 -- - Error
--- + {select_stmt}: select: { id: integer notnull }
--- + {name count}: id: integer notnull
+-- + {select_stmt}: select: { c: integer notnull }
+-- + {name count}: integer notnull
 -- + {distinct}
 -- + {arg_list}: ok
 -- + {name id}: id: integer notnull
-select count(distinct id) from foo;
+select count(distinct id) c from foo;
 
 -- TEST: try count distinct function with filter clause
 -- - Error
--- + {select_stmt}: select: { id: integer notnull }
--- + {name count}: id: integer notnull
+-- + {select_stmt}: select: { c: integer notnull }
+-- + {name count}: integer notnull
 -- + {distinct}
 -- + {arg_list}: ok
 -- + {name id}: id: integer notnull
-select count(distinct id) filter (where id = 0) from foo;
+select count(distinct id) filter (where id = 0) as c from foo;
 
 -- TEST: try count distinct function with star
 -- + {select_stmt}: err
@@ -2377,15 +2377,15 @@ select count(distinct *) from foo;
 
 -- TEST: try sum functions
 -- - Error
--- + {select_stmt}: select: { id: integer }
--- + {name sum}: id: integer
-select sum(id) from foo;
+-- + {select_stmt}: select: { s: integer }
+-- + {name sum}: integer
+select sum(id) s from foo;
 
 -- TEST: try total functions
 -- - Error
--- + {select_stmt}: select: { id: real notnull }
--- + {name total}: id: real notnull
-select total(id) from foo;
+-- + {select_stmt}: select: { t: real notnull }
+-- + {name total}: real notnull
+select total(id) t from foo;
 
 -- TEST: try sum functions with too many param
 -- + Error % function got incorrect number of arguments 'total'
@@ -2403,16 +2403,16 @@ select total(id, rate) from bar;
 select sum(*) from foo;
 
 -- TEST: try average, this should give a real
--- + {select_stmt}: select: { id: real }
--- + {name avg}: id: real
+-- + {select_stmt}: select: { a: real }
+-- + {name avg}: real
 -- - Error
-select avg(id) from foo;
+select avg(id) a from foo;
 
 -- TEST: try min, this should give an integer
--- + {select_stmt}: select: { id: integer }
--- + {name min}: id: integer
+-- + {select_stmt}: select: { m: integer }
+-- + {name min}: integer
 -- - Error
-select min(id) from foo;
+select min(id) m from foo;
 
 -- TEST: bogus number of arguments in count
 -- + Error % function got incorrect number of arguments 'count'
@@ -3129,15 +3129,15 @@ left outer join C1 as T3 on T2.foo = t3.foo;
 
 -- TEST: group_concat basic correct case
 -- - Error
--- + {select_stmt}: select: { id: integer notnull, name: text }
--- +  {name group_concat}: name: text
-select id, group_concat(name) from bar group by id;
+-- + {select_stmt}: select: { id: integer notnull, grp: text }
+-- +  {name group_concat}: text
+select id, group_concat(name) grp from bar group by id;
 
 -- TEST: group_concat with second arg
 -- - Error
--- + {select_stmt}: select: { id: integer notnull, name: text }
--- +  {name group_concat}: name: text
-select id, group_concat(name, 'x') from bar group by id;
+-- + {select_stmt}: select: { id: integer notnull, grp: text }
+-- +  {name group_concat}: text
+select id, group_concat(name, 'x') grp from bar group by id;
 
 -- TEST: group_concat with bogus second arg
 -- + Error % second argument must be a string in function 'group_concat'
@@ -7042,53 +7042,53 @@ set _sens := case 0 when 1 then 2 else _sens end;
 set _sens := (select cast(_sens as INT));
 
 -- TEST: make sure AVG preserves
--- + {name AVG}: info: real sensitive
+-- + {name AVG}: real sensitive
 -- - Error
 select AVG(T1.info) from with_sensitive T1;
 
 -- TEST: make sure MIN preserves
--- + {name MIN}: info: integer sensitive
+-- + {name MIN}: integer sensitive
 -- - Error
 select MIN(T1.info) from with_sensitive T1;
 
 -- TEST: make sure MAX preserves
--- + {name MAX}: info: integer sensitive
+-- + {name MAX}: integer sensitive
 -- - Error
 select MAX(T1.info) from with_sensitive T1;
 
 -- TEST: make sure SUM preserves
--- + {name SUM}: info: integer sensitive
+-- + {name SUM}: integer sensitive
 -- - Error
 select SUM(T1.info) from with_sensitive T1;
 
 -- TEST: make sure COUNT preserves
--- + {name COUNT}: info: integer notnull sensitive
+-- + {name COUNT}: integer notnull sensitive
 -- - Error
 select COUNT(T1.info) from with_sensitive T1;
 
 -- TEST: control  AVG
 -- - {name AVG}: id: % sensitive
--- + {name AVG}: id: real
+-- + {name AVG}: real
 -- - Error
 select AVG(T1.id) from with_sensitive T1;
 
 -- TEST: control  MAX
 -- - {name MAX}: id: % sensitive
--- + {name MAX}: id: integer
+-- + {name MAX}: integer
 -- - Error
 select MAX(T1.id) from with_sensitive T1;
 
 -- TEST: control  SUM
 -- - {name SUM}: id: % sensitive
--- + {name SUM}: id: integer
+-- + {name SUM}: integer
 -- - Error
-select SUM(T1.id) from with_sensitive T1;
+select SUM(T1.id) as s  from with_sensitive T1;
 
 -- TEST: control  COUNT
 -- - {name COUNT}: id: % sensitive
--- + {name COUNT}: id: integer notnull
+-- + {name COUNT}: integer notnull
 -- - Error
-select COUNT(T1.id) from with_sensitive T1;
+select COUNT(T1.id) c from with_sensitive T1;
 
 -- TEST: coalesce
 -- + {call}: integer notnull sensitive
@@ -10231,9 +10231,9 @@ select id
 -- TEST: test filter clause in window function invocation
 -- + {select_stmt}: select: { id: integer notnull, row_num: text }
 -- + {select_expr}: row_num: text
--- + {window_func_inv}: id: text
--- + {call}: id: text
--- + {name group_concat}: id: text
+-- + {window_func_inv}: text
+-- + {call}: text
+-- + {name group_concat}: text
 -- + {arg_list}: ok
 -- + {name id}: id: integer notnull
 -- + {arg_list}
@@ -10315,7 +10315,7 @@ select id, row_number() over (order by bogus asc) from foo;
 -- + {select_expr}: id: integer notnull
 -- + {select_expr}: avg: real
 -- + {select_expr}: integer notnull
--- + {window_func_inv}: id: real
+-- + {window_func_inv}: real
 -- +2 {opt_frame_spec}: ok
 -- + {int 131084}
 -- +2 {expr_list}
@@ -10579,33 +10579,33 @@ select id, lag() over () from foo;
 select id, lead(id, 1, id * 3) over () from foo;
 
 -- TEST: test first_value() window function
--- + {select_stmt}: select: { id: integer notnull, id: integer notnull }
+-- + {select_stmt}: select: { id: integer notnull, first: integer notnull }
 -- + {select_expr}: id: integer notnull
--- + {window_func_inv}: id: integer notnull
--- + {call}: id: integer notnull
--- + {name first_value}: id: integer notnull
+-- + {window_func_inv}: integer notnull
+-- + {call}: integer notnull
+-- + {name first_value}: integer notnull
 -- + {arg_list}: ok
 -- + {name id}: id: integer notnull
 -- - Error
-select id, first_value(id) over () from foo;
+select id, first_value(id) over () as first from foo;
 
 -- TEST: ensure the kind of the first_value is preserved
--- + {select_stmt}: select: { id: integer<some_key> }
--- + {window_func_inv}: id: integer<some_key>
+-- + {select_stmt}: select: { first: integer<some_key> }
+-- + {window_func_inv}: integer<some_key>
 -- - Error
-select first_value(id) over () from with_kind;
+select first_value(id) over () as first from with_kind;
 
 -- TEST: ensure the kind of the first_value is preserved
--- + {select_stmt}: select: { id: integer<some_key> }
--- + {window_func_inv}: id: integer<some_key>
+-- + {select_stmt}: select: { last: integer<some_key> }
+-- + {window_func_inv}: integer<some_key>
 -- - Error
-select last_value(id) over () from with_kind;
+select last_value(id) over () as last from with_kind;
 
 -- TEST: ensure the kind of the nth_value is preserved
--- + {select_stmt}: select: { id: integer<some_key> }
--- + {window_func_inv}: id: integer<some_key>
+-- + {select_stmt}: select: { nth: integer<some_key> }
+-- + {window_func_inv}: integer<some_key>
 -- - Error
-select nth_value(id, 5) over () from with_kind;
+select nth_value(id, 5) over () as nth from with_kind;
 
 -- TEST: test first_value() window function outside window context
 -- + {select_stmt}: err
@@ -10619,26 +10619,26 @@ select nth_value(id, 5) over () from with_kind;
 select id from foo where first_value(7);
 
 -- TEST: test last_value() window function
--- + {select_stmt}: select: { id: integer notnull, id: integer notnull }
+-- + {select_stmt}: select: { id: integer notnull, last: integer notnull }
 -- + {select_expr}: id: integer notnull
--- + {window_func_inv}: id: integer notnull
--- + {call}: id: integer notnull
--- + {name last_value}: id: integer notnull
+-- + {window_func_inv}: integer notnull
+-- + {call}: integer notnull
+-- + {name last_value}: integer notnull
 -- + {arg_list}: ok
 -- + {name id}: id: integer notnull
 -- - Error
-select id, last_value(id) over () from foo;
+select id, last_value(id) over () as last from foo;
 
 -- TEST: test nth_value() window function
--- + {select_stmt}: select: { id: integer notnull, id: integer }
+-- + {select_stmt}: select: { id: integer notnull, nth: integer }
 -- + {select_expr}: id: integer
--- + {window_func_inv}: id: integer
--- + {call}: id: integer
--- + {name nth_value}: id: integer
+-- + {window_func_inv}: integer
+-- + {call}: integer
+-- + {name nth_value}: integer
 -- + {arg_list}: ok
 -- + {name id}: id: integer notnull
 -- - Error
-select id, nth_value(id, 1) over () from foo;
+select id, nth_value(id, 1) over () as nth from foo;
 
 -- TEST: test nth_value() window function outside window context
 -- + {select_stmt}: err
@@ -10671,14 +10671,14 @@ select id, nth_value(id) over () from foo;
 -- + {int 0}: integer notnull
 -- + Error % The second argument must be an integer between 1 and max integer in function 'nth_value'
 -- +1 Error
-select id, nth_value(id, 0) over () from foo;
+select id, nth_value(id, 0) over () as nth from foo;
 
 -- TEST: try total functions with sensitive param
--- + {select_stmt}: select: { info: real notnull sensitive }
--- + {name total}: info: real notnull sensitive
+-- + {select_stmt}: select: { t: real notnull sensitive }
+-- + {name total}: real notnull sensitive
 -- + {name info}: info: integer sensitive
 -- - Error
-select total(info) from with_sensitive;
+select total(info) as t from with_sensitive;
 
 -- TEST: combine dummy data and FROM arguments in INSERT
 -- This is all sugar
@@ -11075,18 +11075,18 @@ end;
 select nullif(id) from bar;
 
 -- TEST: test nullif with non null integer column table
--- + {select_stmt}: select: { id: integer }
--- + {call}: id: integer
--- + {name nullif}: id: integer
+-- + {select_stmt}: select: { n: integer }
+-- + {call}: integer
+-- + {name nullif}: integer
 -- + {name id}: id: integer notnull
 -- - Error
-select nullif(id, 1) from bar;
+select nullif(id, 1) as n from bar;
 
 -- TEST: kind preserved and matches
--- + {select_stmt}: select: { price_d: real<dollars> variable }
--- + {call}: price_d: real<dollars> variable
+-- + {select_stmt}: select: { p: real<dollars> variable }
+-- + {call}: real<dollars> variable
 -- - Error
-select nullif(price_d, price_d);
+select nullif(price_d, price_d) as p;
 
 -- TEST: kind preserved and doesn't match -> error
 -- + {select_stmt}: err
@@ -11107,12 +11107,12 @@ select id, nullif(name, 1) from bar;
 set a_string := nullif('x', 1);
 
 -- TEST: test nullif with sensitive value
--- + {select_stmt}: select: { name: text sensitive }
--- + {call}: name: text sensitive
--- + {name nullif}: name: text sensitive
+-- + {select_stmt}: select: { n: text sensitive }
+-- + {call}: text sensitive
+-- + {name nullif}: text sensitive
 -- + {name name}: name: text sensitive
 -- - Error
-select nullif(name, 'a') from with_sensitive;
+select nullif(name, 'a') as n from with_sensitive;
 
 -- TEST: declare a select function with name match SQLite function.
 -- + {declare_select_func_stmt}: err
@@ -11151,13 +11151,13 @@ select upper(name, 1) from bar;
 set a_string := upper('x');
 
 -- TEST: test char with sensitive value
--- + {select_stmt}: select: { id: text sensitive }
--- + {call}: id: text sensitive
--- + {name char}: id: text sensitive
+-- + {select_stmt}: select: { c: text sensitive }
+-- + {call}: text sensitive
+-- + {name char}: text sensitive
 -- + {name id}: id: integer
 -- + {name info}: info: integer sensitive
 -- - Error
-select char(id, info) from with_sensitive;
+select char(id, info) as c from with_sensitive;
 
 -- TEST: test char with incompatible param type
 -- + {select_stmt}: err
@@ -11236,11 +11236,11 @@ set an_int := instr(1);
 select instr();
 
 -- TEST: test instr with sensitive value
--- + {select_stmt}: select: { name: integer sensitive }
--- + {call}: name: integer sensitive
+-- + {select_stmt}: select: { x: integer sensitive }
+-- + {call}: integer sensitive
 -- + {name name}: name: text sensitive
 -- - Error
-select instr(name, 'a') from with_sensitive;
+select instr(name, 'a') as x from with_sensitive;
 
 -- TEST: test instr with all param not null
 -- + {select_stmt}: select: { _anon: integer notnull }

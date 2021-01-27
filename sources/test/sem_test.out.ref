@@ -7660,22 +7660,24 @@ SELECT count(*)
 
 The statement ending at line XXXX
 
-SELECT count(DISTINCT id)
+SELECT count(DISTINCT id) AS c
   FROM foo;
 
-  {select_stmt}: select: { id: integer notnull }
-  | {select_core_list}: select: { id: integer notnull }
-  | | {select_core}: select: { id: integer notnull }
-  |   | {select_expr_list_con}: select: { id: integer notnull }
-  |     | {select_expr_list}: select: { id: integer notnull }
-  |     | | {select_expr}: id: integer notnull
-  |     |   | {call}: id: integer notnull
-  |     |     | {name count}: id: integer notnull
-  |     |     | {call_arg_list}
-  |     |       | {call_filter_clause}
-  |     |       | | {distinct}
-  |     |       | {arg_list}: ok
-  |     |         | {name id}: id: integer notnull
+  {select_stmt}: select: { c: integer notnull }
+  | {select_core_list}: select: { c: integer notnull }
+  | | {select_core}: select: { c: integer notnull }
+  |   | {select_expr_list_con}: select: { c: integer notnull }
+  |     | {select_expr_list}: select: { c: integer notnull }
+  |     | | {select_expr}: c: integer notnull
+  |     |   | {call}: integer notnull
+  |     |   | | {name count}: integer notnull
+  |     |   | | {call_arg_list}
+  |     |   |   | {call_filter_clause}
+  |     |   |   | | {distinct}
+  |     |   |   | {arg_list}: ok
+  |     |   |     | {name id}: id: integer notnull
+  |     |   | {opt_as_alias}
+  |     |     | {name c}
   |     | {select_from_etc}: TABLE { foo: foo }
   |       | {table_or_subquery_list}: TABLE { foo: foo }
   |       | | {table_or_subquery}: TABLE { foo: foo }
@@ -7689,27 +7691,29 @@ SELECT count(DISTINCT id)
 
 The statement ending at line XXXX
 
-SELECT count(DISTINCT id) FILTER (WHERE id = 0)
+SELECT count(DISTINCT id) FILTER (WHERE id = 0) AS c
   FROM foo;
 
-  {select_stmt}: select: { id: integer notnull }
-  | {select_core_list}: select: { id: integer notnull }
-  | | {select_core}: select: { id: integer notnull }
-  |   | {select_expr_list_con}: select: { id: integer notnull }
-  |     | {select_expr_list}: select: { id: integer notnull }
-  |     | | {select_expr}: id: integer notnull
-  |     |   | {call}: id: integer notnull
-  |     |     | {name count}: id: integer notnull
-  |     |     | {call_arg_list}
-  |     |       | {call_filter_clause}
-  |     |       | | {distinct}
-  |     |       | | {opt_filter_clause}: bool notnull
-  |     |       |   | {opt_where}: bool notnull
-  |     |       |     | {eq}: bool notnull
-  |     |       |       | {name id}: id: integer notnull
-  |     |       |       | {int 0}: integer notnull
-  |     |       | {arg_list}: ok
-  |     |         | {name id}: id: integer notnull
+  {select_stmt}: select: { c: integer notnull }
+  | {select_core_list}: select: { c: integer notnull }
+  | | {select_core}: select: { c: integer notnull }
+  |   | {select_expr_list_con}: select: { c: integer notnull }
+  |     | {select_expr_list}: select: { c: integer notnull }
+  |     | | {select_expr}: c: integer notnull
+  |     |   | {call}: integer notnull
+  |     |   | | {name count}: integer notnull
+  |     |   | | {call_arg_list}
+  |     |   |   | {call_filter_clause}
+  |     |   |   | | {distinct}
+  |     |   |   | | {opt_filter_clause}: bool notnull
+  |     |   |   |   | {opt_where}: bool notnull
+  |     |   |   |     | {eq}: bool notnull
+  |     |   |   |       | {name id}: id: integer notnull
+  |     |   |   |       | {int 0}: integer notnull
+  |     |   |   | {arg_list}: ok
+  |     |   |     | {name id}: id: integer notnull
+  |     |   | {opt_as_alias}
+  |     |     | {name c}
   |     | {select_from_etc}: TABLE { foo: foo }
   |       | {table_or_subquery_list}: TABLE { foo: foo }
   |       | | {table_or_subquery}: TABLE { foo: foo }
@@ -7754,21 +7758,23 @@ Error at test/sem_test.sql:XXXX : in call : CQL0304: DISTINCT may only be used w
 
 The statement ending at line XXXX
 
-SELECT sum(id)
+SELECT sum(id) AS s
   FROM foo;
 
-  {select_stmt}: select: { id: integer }
-  | {select_core_list}: select: { id: integer }
-  | | {select_core}: select: { id: integer }
-  |   | {select_expr_list_con}: select: { id: integer }
-  |     | {select_expr_list}: select: { id: integer }
-  |     | | {select_expr}: id: integer
-  |     |   | {call}: id: integer
-  |     |     | {name sum}: id: integer
-  |     |     | {call_arg_list}
-  |     |       | {call_filter_clause}
-  |     |       | {arg_list}: ok
-  |     |         | {name id}: id: integer notnull
+  {select_stmt}: select: { s: integer }
+  | {select_core_list}: select: { s: integer }
+  | | {select_core}: select: { s: integer }
+  |   | {select_expr_list_con}: select: { s: integer }
+  |     | {select_expr_list}: select: { s: integer }
+  |     | | {select_expr}: s: integer
+  |     |   | {call}: integer
+  |     |   | | {name sum}: integer
+  |     |   | | {call_arg_list}
+  |     |   |   | {call_filter_clause}
+  |     |   |   | {arg_list}: ok
+  |     |   |     | {name id}: id: integer notnull
+  |     |   | {opt_as_alias}
+  |     |     | {name s}
   |     | {select_from_etc}: TABLE { foo: foo }
   |       | {table_or_subquery_list}: TABLE { foo: foo }
   |       | | {table_or_subquery}: TABLE { foo: foo }
@@ -7782,21 +7788,23 @@ SELECT sum(id)
 
 The statement ending at line XXXX
 
-SELECT total(id)
+SELECT total(id) AS t
   FROM foo;
 
-  {select_stmt}: select: { id: real notnull }
-  | {select_core_list}: select: { id: real notnull }
-  | | {select_core}: select: { id: real notnull }
-  |   | {select_expr_list_con}: select: { id: real notnull }
-  |     | {select_expr_list}: select: { id: real notnull }
-  |     | | {select_expr}: id: real notnull
-  |     |   | {call}: id: real notnull
-  |     |     | {name total}: id: real notnull
-  |     |     | {call_arg_list}
-  |     |       | {call_filter_clause}
-  |     |       | {arg_list}: ok
-  |     |         | {name id}: id: integer notnull
+  {select_stmt}: select: { t: real notnull }
+  | {select_core_list}: select: { t: real notnull }
+  | | {select_core}: select: { t: real notnull }
+  |   | {select_expr_list_con}: select: { t: real notnull }
+  |     | {select_expr_list}: select: { t: real notnull }
+  |     | | {select_expr}: t: real notnull
+  |     |   | {call}: real notnull
+  |     |   | | {name total}: real notnull
+  |     |   | | {call_arg_list}
+  |     |   |   | {call_filter_clause}
+  |     |   |   | {arg_list}: ok
+  |     |   |     | {name id}: id: integer notnull
+  |     |   | {opt_as_alias}
+  |     |     | {name t}
   |     | {select_from_etc}: TABLE { foo: foo }
   |       | {table_or_subquery_list}: TABLE { foo: foo }
   |       | | {table_or_subquery}: TABLE { foo: foo }
@@ -7872,21 +7880,23 @@ Error at test/sem_test.sql:XXXX : in star : CQL0051: argument can only be used i
 
 The statement ending at line XXXX
 
-SELECT avg(id)
+SELECT avg(id) AS a
   FROM foo;
 
-  {select_stmt}: select: { id: real }
-  | {select_core_list}: select: { id: real }
-  | | {select_core}: select: { id: real }
-  |   | {select_expr_list_con}: select: { id: real }
-  |     | {select_expr_list}: select: { id: real }
-  |     | | {select_expr}: id: real
-  |     |   | {call}: id: real
-  |     |     | {name avg}: id: real
-  |     |     | {call_arg_list}
-  |     |       | {call_filter_clause}
-  |     |       | {arg_list}: ok
-  |     |         | {name id}: id: integer notnull
+  {select_stmt}: select: { a: real }
+  | {select_core_list}: select: { a: real }
+  | | {select_core}: select: { a: real }
+  |   | {select_expr_list_con}: select: { a: real }
+  |     | {select_expr_list}: select: { a: real }
+  |     | | {select_expr}: a: real
+  |     |   | {call}: real
+  |     |   | | {name avg}: real
+  |     |   | | {call_arg_list}
+  |     |   |   | {call_filter_clause}
+  |     |   |   | {arg_list}: ok
+  |     |   |     | {name id}: id: integer notnull
+  |     |   | {opt_as_alias}
+  |     |     | {name a}
   |     | {select_from_etc}: TABLE { foo: foo }
   |       | {table_or_subquery_list}: TABLE { foo: foo }
   |       | | {table_or_subquery}: TABLE { foo: foo }
@@ -7900,21 +7910,23 @@ SELECT avg(id)
 
 The statement ending at line XXXX
 
-SELECT min(id)
+SELECT min(id) AS m
   FROM foo;
 
-  {select_stmt}: select: { id: integer }
-  | {select_core_list}: select: { id: integer }
-  | | {select_core}: select: { id: integer }
-  |   | {select_expr_list_con}: select: { id: integer }
-  |     | {select_expr_list}: select: { id: integer }
-  |     | | {select_expr}: id: integer
-  |     |   | {call}: id: integer
-  |     |     | {name min}: id: integer
-  |     |     | {call_arg_list}
-  |     |       | {call_filter_clause}
-  |     |       | {arg_list}: ok
-  |     |         | {name id}: id: integer notnull
+  {select_stmt}: select: { m: integer }
+  | {select_core_list}: select: { m: integer }
+  | | {select_core}: select: { m: integer }
+  |   | {select_expr_list_con}: select: { m: integer }
+  |     | {select_expr_list}: select: { m: integer }
+  |     | | {select_expr}: m: integer
+  |     |   | {call}: integer
+  |     |   | | {name min}: integer
+  |     |   | | {call_arg_list}
+  |     |   |   | {call_filter_clause}
+  |     |   |   | {arg_list}: ok
+  |     |   |     | {name id}: id: integer notnull
+  |     |   | {opt_as_alias}
+  |     |     | {name m}
   |     | {select_from_etc}: TABLE { foo: foo }
   |       | {table_or_subquery_list}: TABLE { foo: foo }
   |       | | {table_or_subquery}: TABLE { foo: foo }
@@ -10957,25 +10969,27 @@ SELECT *
 
 The statement ending at line XXXX
 
-SELECT id, group_concat(name)
+SELECT id, group_concat(name) AS grp
   FROM bar
   GROUP BY id;
 
-  {select_stmt}: select: { id: integer notnull, name: text }
-  | {select_core_list}: select: { id: integer notnull, name: text }
-  | | {select_core}: select: { id: integer notnull, name: text }
-  |   | {select_expr_list_con}: select: { id: integer notnull, name: text }
-  |     | {select_expr_list}: select: { id: integer notnull, name: text }
+  {select_stmt}: select: { id: integer notnull, grp: text }
+  | {select_core_list}: select: { id: integer notnull, grp: text }
+  | | {select_core}: select: { id: integer notnull, grp: text }
+  |   | {select_expr_list_con}: select: { id: integer notnull, grp: text }
+  |     | {select_expr_list}: select: { id: integer notnull, grp: text }
   |     | | {select_expr}: id: integer notnull
   |     | | | {name id}: id: integer notnull
   |     | | {select_expr_list}
-  |     |   | {select_expr}: name: text
-  |     |     | {call}: name: text
-  |     |       | {name group_concat}: name: text
-  |     |       | {call_arg_list}
-  |     |         | {call_filter_clause}
-  |     |         | {arg_list}: ok
-  |     |           | {name name}: name: text
+  |     |   | {select_expr}: grp: text
+  |     |     | {call}: text
+  |     |     | | {name group_concat}: text
+  |     |     | | {call_arg_list}
+  |     |     |   | {call_filter_clause}
+  |     |     |   | {arg_list}: ok
+  |     |     |     | {name name}: name: text
+  |     |     | {opt_as_alias}
+  |     |       | {name grp}
   |     | {select_from_etc}: TABLE { bar: bar }
   |       | {table_or_subquery_list}: TABLE { bar: bar }
   |       | | {table_or_subquery}: TABLE { bar: bar }
@@ -10993,27 +11007,29 @@ SELECT id, group_concat(name)
 
 The statement ending at line XXXX
 
-SELECT id, group_concat(name, 'x')
+SELECT id, group_concat(name, 'x') AS grp
   FROM bar
   GROUP BY id;
 
-  {select_stmt}: select: { id: integer notnull, name: text }
-  | {select_core_list}: select: { id: integer notnull, name: text }
-  | | {select_core}: select: { id: integer notnull, name: text }
-  |   | {select_expr_list_con}: select: { id: integer notnull, name: text }
-  |     | {select_expr_list}: select: { id: integer notnull, name: text }
+  {select_stmt}: select: { id: integer notnull, grp: text }
+  | {select_core_list}: select: { id: integer notnull, grp: text }
+  | | {select_core}: select: { id: integer notnull, grp: text }
+  |   | {select_expr_list_con}: select: { id: integer notnull, grp: text }
+  |     | {select_expr_list}: select: { id: integer notnull, grp: text }
   |     | | {select_expr}: id: integer notnull
   |     | | | {name id}: id: integer notnull
   |     | | {select_expr_list}
-  |     |   | {select_expr}: name: text
-  |     |     | {call}: name: text
-  |     |       | {name group_concat}: name: text
-  |     |       | {call_arg_list}
-  |     |         | {call_filter_clause}
-  |     |         | {arg_list}: ok
-  |     |           | {name name}: name: text
-  |     |           | {arg_list}
-  |     |             | {strlit 'x'}: text notnull
+  |     |   | {select_expr}: grp: text
+  |     |     | {call}: text
+  |     |     | | {name group_concat}: text
+  |     |     | | {call_arg_list}
+  |     |     |   | {call_filter_clause}
+  |     |     |   | {arg_list}: ok
+  |     |     |     | {name name}: name: text
+  |     |     |     | {arg_list}
+  |     |     |       | {strlit 'x'}: text notnull
+  |     |     | {opt_as_alias}
+  |     |       | {name grp}
   |     | {select_from_etc}: TABLE { bar: bar }
   |       | {table_or_subquery_list}: TABLE { bar: bar }
   |       | | {table_or_subquery}: TABLE { bar: bar }
@@ -25528,14 +25544,14 @@ The statement ending at line XXXX
 SELECT AVG(T1.info)
   FROM with_sensitive AS T1;
 
-  {select_stmt}: select: { info: real sensitive }
-  | {select_core_list}: select: { info: real sensitive }
-  | | {select_core}: select: { info: real sensitive }
-  |   | {select_expr_list_con}: select: { info: real sensitive }
-  |     | {select_expr_list}: select: { info: real sensitive }
-  |     | | {select_expr}: info: real sensitive
-  |     |   | {call}: info: real sensitive
-  |     |     | {name AVG}: info: real sensitive
+  {select_stmt}: select: { _anon: real sensitive }
+  | {select_core_list}: select: { _anon: real sensitive }
+  | | {select_core}: select: { _anon: real sensitive }
+  |   | {select_expr_list_con}: select: { _anon: real sensitive }
+  |     | {select_expr_list}: select: { _anon: real sensitive }
+  |     | | {select_expr}: real sensitive
+  |     |   | {call}: real sensitive
+  |     |     | {name AVG}: real sensitive
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
@@ -25560,14 +25576,14 @@ The statement ending at line XXXX
 SELECT MIN(T1.info)
   FROM with_sensitive AS T1;
 
-  {select_stmt}: select: { info: integer sensitive }
-  | {select_core_list}: select: { info: integer sensitive }
-  | | {select_core}: select: { info: integer sensitive }
-  |   | {select_expr_list_con}: select: { info: integer sensitive }
-  |     | {select_expr_list}: select: { info: integer sensitive }
-  |     | | {select_expr}: info: integer sensitive
-  |     |   | {call}: info: integer sensitive
-  |     |     | {name MIN}: info: integer sensitive
+  {select_stmt}: select: { _anon: integer sensitive }
+  | {select_core_list}: select: { _anon: integer sensitive }
+  | | {select_core}: select: { _anon: integer sensitive }
+  |   | {select_expr_list_con}: select: { _anon: integer sensitive }
+  |     | {select_expr_list}: select: { _anon: integer sensitive }
+  |     | | {select_expr}: integer sensitive
+  |     |   | {call}: integer sensitive
+  |     |     | {name MIN}: integer sensitive
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
@@ -25592,14 +25608,14 @@ The statement ending at line XXXX
 SELECT MAX(T1.info)
   FROM with_sensitive AS T1;
 
-  {select_stmt}: select: { info: integer sensitive }
-  | {select_core_list}: select: { info: integer sensitive }
-  | | {select_core}: select: { info: integer sensitive }
-  |   | {select_expr_list_con}: select: { info: integer sensitive }
-  |     | {select_expr_list}: select: { info: integer sensitive }
-  |     | | {select_expr}: info: integer sensitive
-  |     |   | {call}: info: integer sensitive
-  |     |     | {name MAX}: info: integer sensitive
+  {select_stmt}: select: { _anon: integer sensitive }
+  | {select_core_list}: select: { _anon: integer sensitive }
+  | | {select_core}: select: { _anon: integer sensitive }
+  |   | {select_expr_list_con}: select: { _anon: integer sensitive }
+  |     | {select_expr_list}: select: { _anon: integer sensitive }
+  |     | | {select_expr}: integer sensitive
+  |     |   | {call}: integer sensitive
+  |     |     | {name MAX}: integer sensitive
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
@@ -25624,14 +25640,14 @@ The statement ending at line XXXX
 SELECT SUM(T1.info)
   FROM with_sensitive AS T1;
 
-  {select_stmt}: select: { info: integer sensitive }
-  | {select_core_list}: select: { info: integer sensitive }
-  | | {select_core}: select: { info: integer sensitive }
-  |   | {select_expr_list_con}: select: { info: integer sensitive }
-  |     | {select_expr_list}: select: { info: integer sensitive }
-  |     | | {select_expr}: info: integer sensitive
-  |     |   | {call}: info: integer sensitive
-  |     |     | {name SUM}: info: integer sensitive
+  {select_stmt}: select: { _anon: integer sensitive }
+  | {select_core_list}: select: { _anon: integer sensitive }
+  | | {select_core}: select: { _anon: integer sensitive }
+  |   | {select_expr_list_con}: select: { _anon: integer sensitive }
+  |     | {select_expr_list}: select: { _anon: integer sensitive }
+  |     | | {select_expr}: integer sensitive
+  |     |   | {call}: integer sensitive
+  |     |     | {name SUM}: integer sensitive
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
@@ -25656,14 +25672,14 @@ The statement ending at line XXXX
 SELECT COUNT(T1.info)
   FROM with_sensitive AS T1;
 
-  {select_stmt}: select: { info: integer notnull sensitive }
-  | {select_core_list}: select: { info: integer notnull sensitive }
-  | | {select_core}: select: { info: integer notnull sensitive }
-  |   | {select_expr_list_con}: select: { info: integer notnull sensitive }
-  |     | {select_expr_list}: select: { info: integer notnull sensitive }
-  |     | | {select_expr}: info: integer notnull sensitive
-  |     |   | {call}: info: integer notnull sensitive
-  |     |     | {name COUNT}: info: integer notnull sensitive
+  {select_stmt}: select: { _anon: integer notnull sensitive }
+  | {select_core_list}: select: { _anon: integer notnull sensitive }
+  | | {select_core}: select: { _anon: integer notnull sensitive }
+  |   | {select_expr_list_con}: select: { _anon: integer notnull sensitive }
+  |     | {select_expr_list}: select: { _anon: integer notnull sensitive }
+  |     | | {select_expr}: integer notnull sensitive
+  |     |   | {call}: integer notnull sensitive
+  |     |     | {name COUNT}: integer notnull sensitive
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
@@ -25688,14 +25704,14 @@ The statement ending at line XXXX
 SELECT AVG(T1.id)
   FROM with_sensitive AS T1;
 
-  {select_stmt}: select: { id: real }
-  | {select_core_list}: select: { id: real }
-  | | {select_core}: select: { id: real }
-  |   | {select_expr_list_con}: select: { id: real }
-  |     | {select_expr_list}: select: { id: real }
-  |     | | {select_expr}: id: real
-  |     |   | {call}: id: real
-  |     |     | {name AVG}: id: real
+  {select_stmt}: select: { _anon: real }
+  | {select_core_list}: select: { _anon: real }
+  | | {select_core}: select: { _anon: real }
+  |   | {select_expr_list_con}: select: { _anon: real }
+  |     | {select_expr_list}: select: { _anon: real }
+  |     | | {select_expr}: real
+  |     |   | {call}: real
+  |     |     | {name AVG}: real
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
@@ -25720,14 +25736,14 @@ The statement ending at line XXXX
 SELECT MAX(T1.id)
   FROM with_sensitive AS T1;
 
-  {select_stmt}: select: { id: integer }
-  | {select_core_list}: select: { id: integer }
-  | | {select_core}: select: { id: integer }
-  |   | {select_expr_list_con}: select: { id: integer }
-  |     | {select_expr_list}: select: { id: integer }
-  |     | | {select_expr}: id: integer
-  |     |   | {call}: id: integer
-  |     |     | {name MAX}: id: integer
+  {select_stmt}: select: { _anon: integer }
+  | {select_core_list}: select: { _anon: integer }
+  | | {select_core}: select: { _anon: integer }
+  |   | {select_expr_list_con}: select: { _anon: integer }
+  |     | {select_expr_list}: select: { _anon: integer }
+  |     | | {select_expr}: integer
+  |     |   | {call}: integer
+  |     |     | {name MAX}: integer
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
@@ -25749,23 +25765,25 @@ SELECT MAX(T1.id)
 
 The statement ending at line XXXX
 
-SELECT SUM(T1.id)
+SELECT SUM(T1.id) AS s
   FROM with_sensitive AS T1;
 
-  {select_stmt}: select: { id: integer }
-  | {select_core_list}: select: { id: integer }
-  | | {select_core}: select: { id: integer }
-  |   | {select_expr_list_con}: select: { id: integer }
-  |     | {select_expr_list}: select: { id: integer }
-  |     | | {select_expr}: id: integer
-  |     |   | {call}: id: integer
-  |     |     | {name SUM}: id: integer
-  |     |     | {call_arg_list}
-  |     |       | {call_filter_clause}
-  |     |       | {arg_list}: ok
-  |     |         | {dot}: id: integer
-  |     |           | {name T1}
-  |     |           | {name id}
+  {select_stmt}: select: { s: integer }
+  | {select_core_list}: select: { s: integer }
+  | | {select_core}: select: { s: integer }
+  |   | {select_expr_list_con}: select: { s: integer }
+  |     | {select_expr_list}: select: { s: integer }
+  |     | | {select_expr}: s: integer
+  |     |   | {call}: integer
+  |     |   | | {name SUM}: integer
+  |     |   | | {call_arg_list}
+  |     |   |   | {call_filter_clause}
+  |     |   |   | {arg_list}: ok
+  |     |   |     | {dot}: id: integer
+  |     |   |       | {name T1}
+  |     |   |       | {name id}
+  |     |   | {opt_as_alias}
+  |     |     | {name s}
   |     | {select_from_etc}: TABLE { T1: with_sensitive }
   |       | {table_or_subquery_list}: TABLE { T1: with_sensitive }
   |       | | {table_or_subquery}: TABLE { T1: with_sensitive }
@@ -25781,23 +25799,25 @@ SELECT SUM(T1.id)
 
 The statement ending at line XXXX
 
-SELECT COUNT(T1.id)
+SELECT COUNT(T1.id) AS c
   FROM with_sensitive AS T1;
 
-  {select_stmt}: select: { id: integer notnull }
-  | {select_core_list}: select: { id: integer notnull }
-  | | {select_core}: select: { id: integer notnull }
-  |   | {select_expr_list_con}: select: { id: integer notnull }
-  |     | {select_expr_list}: select: { id: integer notnull }
-  |     | | {select_expr}: id: integer notnull
-  |     |   | {call}: id: integer notnull
-  |     |     | {name COUNT}: id: integer notnull
-  |     |     | {call_arg_list}
-  |     |       | {call_filter_clause}
-  |     |       | {arg_list}: ok
-  |     |         | {dot}: id: integer
-  |     |           | {name T1}
-  |     |           | {name id}
+  {select_stmt}: select: { c: integer notnull }
+  | {select_core_list}: select: { c: integer notnull }
+  | | {select_core}: select: { c: integer notnull }
+  |   | {select_expr_list_con}: select: { c: integer notnull }
+  |     | {select_expr_list}: select: { c: integer notnull }
+  |     | | {select_expr}: c: integer notnull
+  |     |   | {call}: integer notnull
+  |     |   | | {name COUNT}: integer notnull
+  |     |   | | {call_arg_list}
+  |     |   |   | {call_filter_clause}
+  |     |   |   | {arg_list}: ok
+  |     |   |     | {dot}: id: integer
+  |     |   |       | {name T1}
+  |     |   |       | {name id}
+  |     |   | {opt_as_alias}
+  |     |     | {name c}
   |     | {select_from_etc}: TABLE { T1: with_sensitive }
   |       | {table_or_subquery_list}: TABLE { T1: with_sensitive }
   |       | | {table_or_subquery}: TABLE { T1: with_sensitive }
@@ -38611,8 +38631,8 @@ SELECT group_concat(name) AS gc
   |   | {select_expr_list_con}: select: { gc: text sensitive }
   |     | {select_expr_list}: select: { gc: text sensitive }
   |     | | {select_expr}: gc: text sensitive
-  |     |   | {call}: name: text sensitive
-  |     |   | | {name group_concat}: name: text sensitive
+  |     |   | {call}: text sensitive
+  |     |   | | {name group_concat}: text sensitive
   |     |   | | {call_arg_list}
   |     |   |   | {call_filter_clause}
   |     |   |   | {arg_list}: ok
@@ -41832,9 +41852,9 @@ SELECT id,
   |     | | | {name id}: id: integer notnull
   |     | | {select_expr_list}
   |     |   | {select_expr}: row_num: text
-  |     |     | {window_func_inv}: id: text
-  |     |     | | {call}: id: text
-  |     |     | | | {name group_concat}: id: text
+  |     |     | {window_func_inv}: text
+  |     |     | | {call}: text
+  |     |     | | | {name group_concat}: text
   |     |     | | | {call_arg_list}
   |     |     | |   | {call_filter_clause}
   |     |     | |   | | {opt_filter_clause}: bool notnull
@@ -42070,9 +42090,9 @@ SELECT id,
   |     | | | {name id}: id: integer notnull
   |     | | {select_expr_list}
   |     |   | {select_expr}: avg: real
-  |     |   | | {window_func_inv}: id: real
-  |     |   | | | {call}: id: real
-  |     |   | | | | {name avg}: id: real
+  |     |   | | {window_func_inv}: real
+  |     |   | | | {call}: real
+  |     |   | | | | {name avg}: real
   |     |   | | | | {call_arg_list}
   |     |   | | |   | {call_filter_clause}
   |     |   | | |   | | {opt_filter_clause}: bool notnull
@@ -43020,27 +43040,29 @@ SELECT id,
 The statement ending at line XXXX
 
 SELECT id, 
-  first_value(id) OVER ()
+  first_value(id) OVER () AS first
   FROM foo;
 
-  {select_stmt}: select: { id: integer notnull, id: integer notnull }
-  | {select_core_list}: select: { id: integer notnull, id: integer notnull }
-  | | {select_core}: select: { id: integer notnull, id: integer notnull }
-  |   | {select_expr_list_con}: select: { id: integer notnull, id: integer notnull }
-  |     | {select_expr_list}: select: { id: integer notnull, id: integer notnull }
+  {select_stmt}: select: { id: integer notnull, first: integer notnull }
+  | {select_core_list}: select: { id: integer notnull, first: integer notnull }
+  | | {select_core}: select: { id: integer notnull, first: integer notnull }
+  |   | {select_expr_list_con}: select: { id: integer notnull, first: integer notnull }
+  |     | {select_expr_list}: select: { id: integer notnull, first: integer notnull }
   |     | | {select_expr}: id: integer notnull
   |     | | | {name id}: id: integer notnull
   |     | | {select_expr_list}
-  |     |   | {select_expr}: id: integer notnull
-  |     |     | {window_func_inv}: id: integer notnull
-  |     |       | {call}: id: integer notnull
-  |     |       | | {name first_value}: id: integer notnull
-  |     |       | | {call_arg_list}
-  |     |       |   | {call_filter_clause}
-  |     |       |   | {arg_list}: ok
-  |     |       |     | {name id}: id: integer notnull
-  |     |       | {window_defn}: ok
-  |     |         | {window_defn_orderby}
+  |     |   | {select_expr}: first: integer notnull
+  |     |     | {window_func_inv}: integer notnull
+  |     |     | | {call}: integer notnull
+  |     |     | | | {name first_value}: integer notnull
+  |     |     | | | {call_arg_list}
+  |     |     | |   | {call_filter_clause}
+  |     |     | |   | {arg_list}: ok
+  |     |     | |     | {name id}: id: integer notnull
+  |     |     | | {window_defn}: ok
+  |     |     |   | {window_defn_orderby}
+  |     |     | {opt_as_alias}
+  |     |       | {name first}
   |     | {select_from_etc}: TABLE { foo: foo }
   |       | {table_or_subquery_list}: TABLE { foo: foo }
   |       | | {table_or_subquery}: TABLE { foo: foo }
@@ -43055,24 +43077,26 @@ SELECT id,
 The statement ending at line XXXX
 
 SELECT 
-  first_value(id) OVER ()
+  first_value(id) OVER () AS first
   FROM with_kind;
 
-  {select_stmt}: select: { id: integer<some_key> }
-  | {select_core_list}: select: { id: integer<some_key> }
-  | | {select_core}: select: { id: integer<some_key> }
-  |   | {select_expr_list_con}: select: { id: integer<some_key> }
-  |     | {select_expr_list}: select: { id: integer<some_key> }
-  |     | | {select_expr}: id: integer<some_key>
-  |     |   | {window_func_inv}: id: integer<some_key>
-  |     |     | {call}: id: integer<some_key>
-  |     |     | | {name first_value}: id: integer<some_key>
-  |     |     | | {call_arg_list}
-  |     |     |   | {call_filter_clause}
-  |     |     |   | {arg_list}: ok
-  |     |     |     | {name id}: id: integer<some_key>
-  |     |     | {window_defn}: ok
-  |     |       | {window_defn_orderby}
+  {select_stmt}: select: { first: integer<some_key> }
+  | {select_core_list}: select: { first: integer<some_key> }
+  | | {select_core}: select: { first: integer<some_key> }
+  |   | {select_expr_list_con}: select: { first: integer<some_key> }
+  |     | {select_expr_list}: select: { first: integer<some_key> }
+  |     | | {select_expr}: first: integer<some_key>
+  |     |   | {window_func_inv}: integer<some_key>
+  |     |   | | {call}: integer<some_key>
+  |     |   | | | {name first_value}: integer<some_key>
+  |     |   | | | {call_arg_list}
+  |     |   | |   | {call_filter_clause}
+  |     |   | |   | {arg_list}: ok
+  |     |   | |     | {name id}: id: integer<some_key>
+  |     |   | | {window_defn}: ok
+  |     |   |   | {window_defn_orderby}
+  |     |   | {opt_as_alias}
+  |     |     | {name first}
   |     | {select_from_etc}: TABLE { with_kind: with_kind }
   |       | {table_or_subquery_list}: TABLE { with_kind: with_kind }
   |       | | {table_or_subquery}: TABLE { with_kind: with_kind }
@@ -43087,24 +43111,26 @@ SELECT
 The statement ending at line XXXX
 
 SELECT 
-  last_value(id) OVER ()
+  last_value(id) OVER () AS last
   FROM with_kind;
 
-  {select_stmt}: select: { id: integer<some_key> }
-  | {select_core_list}: select: { id: integer<some_key> }
-  | | {select_core}: select: { id: integer<some_key> }
-  |   | {select_expr_list_con}: select: { id: integer<some_key> }
-  |     | {select_expr_list}: select: { id: integer<some_key> }
-  |     | | {select_expr}: id: integer<some_key>
-  |     |   | {window_func_inv}: id: integer<some_key>
-  |     |     | {call}: id: integer<some_key>
-  |     |     | | {name last_value}: id: integer<some_key>
-  |     |     | | {call_arg_list}
-  |     |     |   | {call_filter_clause}
-  |     |     |   | {arg_list}: ok
-  |     |     |     | {name id}: id: integer<some_key>
-  |     |     | {window_defn}: ok
-  |     |       | {window_defn_orderby}
+  {select_stmt}: select: { last: integer<some_key> }
+  | {select_core_list}: select: { last: integer<some_key> }
+  | | {select_core}: select: { last: integer<some_key> }
+  |   | {select_expr_list_con}: select: { last: integer<some_key> }
+  |     | {select_expr_list}: select: { last: integer<some_key> }
+  |     | | {select_expr}: last: integer<some_key>
+  |     |   | {window_func_inv}: integer<some_key>
+  |     |   | | {call}: integer<some_key>
+  |     |   | | | {name last_value}: integer<some_key>
+  |     |   | | | {call_arg_list}
+  |     |   | |   | {call_filter_clause}
+  |     |   | |   | {arg_list}: ok
+  |     |   | |     | {name id}: id: integer<some_key>
+  |     |   | | {window_defn}: ok
+  |     |   |   | {window_defn_orderby}
+  |     |   | {opt_as_alias}
+  |     |     | {name last}
   |     | {select_from_etc}: TABLE { with_kind: with_kind }
   |       | {table_or_subquery_list}: TABLE { with_kind: with_kind }
   |       | | {table_or_subquery}: TABLE { with_kind: with_kind }
@@ -43119,26 +43145,28 @@ SELECT
 The statement ending at line XXXX
 
 SELECT 
-  nth_value(id, 5) OVER ()
+  nth_value(id, 5) OVER () AS nth
   FROM with_kind;
 
-  {select_stmt}: select: { id: integer<some_key> }
-  | {select_core_list}: select: { id: integer<some_key> }
-  | | {select_core}: select: { id: integer<some_key> }
-  |   | {select_expr_list_con}: select: { id: integer<some_key> }
-  |     | {select_expr_list}: select: { id: integer<some_key> }
-  |     | | {select_expr}: id: integer<some_key>
-  |     |   | {window_func_inv}: id: integer<some_key>
-  |     |     | {call}: id: integer<some_key>
-  |     |     | | {name nth_value}: id: integer<some_key>
-  |     |     | | {call_arg_list}
-  |     |     |   | {call_filter_clause}
-  |     |     |   | {arg_list}: ok
-  |     |     |     | {name id}: id: integer<some_key>
-  |     |     |     | {arg_list}
-  |     |     |       | {int 5}: integer notnull
-  |     |     | {window_defn}: ok
-  |     |       | {window_defn_orderby}
+  {select_stmt}: select: { nth: integer<some_key> }
+  | {select_core_list}: select: { nth: integer<some_key> }
+  | | {select_core}: select: { nth: integer<some_key> }
+  |   | {select_expr_list_con}: select: { nth: integer<some_key> }
+  |     | {select_expr_list}: select: { nth: integer<some_key> }
+  |     | | {select_expr}: nth: integer<some_key>
+  |     |   | {window_func_inv}: integer<some_key>
+  |     |   | | {call}: integer<some_key>
+  |     |   | | | {name nth_value}: integer<some_key>
+  |     |   | | | {call_arg_list}
+  |     |   | |   | {call_filter_clause}
+  |     |   | |   | {arg_list}: ok
+  |     |   | |     | {name id}: id: integer<some_key>
+  |     |   | |     | {arg_list}
+  |     |   | |       | {int 5}: integer notnull
+  |     |   | | {window_defn}: ok
+  |     |   |   | {window_defn_orderby}
+  |     |   | {opt_as_alias}
+  |     |     | {name nth}
   |     | {select_from_etc}: TABLE { with_kind: with_kind }
   |       | {table_or_subquery_list}: TABLE { with_kind: with_kind }
   |       | | {table_or_subquery}: TABLE { with_kind: with_kind }
@@ -43186,27 +43214,29 @@ Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in 
 The statement ending at line XXXX
 
 SELECT id, 
-  last_value(id) OVER ()
+  last_value(id) OVER () AS last
   FROM foo;
 
-  {select_stmt}: select: { id: integer notnull, id: integer notnull }
-  | {select_core_list}: select: { id: integer notnull, id: integer notnull }
-  | | {select_core}: select: { id: integer notnull, id: integer notnull }
-  |   | {select_expr_list_con}: select: { id: integer notnull, id: integer notnull }
-  |     | {select_expr_list}: select: { id: integer notnull, id: integer notnull }
+  {select_stmt}: select: { id: integer notnull, last: integer notnull }
+  | {select_core_list}: select: { id: integer notnull, last: integer notnull }
+  | | {select_core}: select: { id: integer notnull, last: integer notnull }
+  |   | {select_expr_list_con}: select: { id: integer notnull, last: integer notnull }
+  |     | {select_expr_list}: select: { id: integer notnull, last: integer notnull }
   |     | | {select_expr}: id: integer notnull
   |     | | | {name id}: id: integer notnull
   |     | | {select_expr_list}
-  |     |   | {select_expr}: id: integer notnull
-  |     |     | {window_func_inv}: id: integer notnull
-  |     |       | {call}: id: integer notnull
-  |     |       | | {name last_value}: id: integer notnull
-  |     |       | | {call_arg_list}
-  |     |       |   | {call_filter_clause}
-  |     |       |   | {arg_list}: ok
-  |     |       |     | {name id}: id: integer notnull
-  |     |       | {window_defn}: ok
-  |     |         | {window_defn_orderby}
+  |     |   | {select_expr}: last: integer notnull
+  |     |     | {window_func_inv}: integer notnull
+  |     |     | | {call}: integer notnull
+  |     |     | | | {name last_value}: integer notnull
+  |     |     | | | {call_arg_list}
+  |     |     | |   | {call_filter_clause}
+  |     |     | |   | {arg_list}: ok
+  |     |     | |     | {name id}: id: integer notnull
+  |     |     | | {window_defn}: ok
+  |     |     |   | {window_defn_orderby}
+  |     |     | {opt_as_alias}
+  |     |       | {name last}
   |     | {select_from_etc}: TABLE { foo: foo }
   |       | {table_or_subquery_list}: TABLE { foo: foo }
   |       | | {table_or_subquery}: TABLE { foo: foo }
@@ -43221,29 +43251,31 @@ SELECT id,
 The statement ending at line XXXX
 
 SELECT id, 
-  nth_value(id, 1) OVER ()
+  nth_value(id, 1) OVER () AS nth
   FROM foo;
 
-  {select_stmt}: select: { id: integer notnull, id: integer }
-  | {select_core_list}: select: { id: integer notnull, id: integer }
-  | | {select_core}: select: { id: integer notnull, id: integer }
-  |   | {select_expr_list_con}: select: { id: integer notnull, id: integer }
-  |     | {select_expr_list}: select: { id: integer notnull, id: integer }
+  {select_stmt}: select: { id: integer notnull, nth: integer }
+  | {select_core_list}: select: { id: integer notnull, nth: integer }
+  | | {select_core}: select: { id: integer notnull, nth: integer }
+  |   | {select_expr_list_con}: select: { id: integer notnull, nth: integer }
+  |     | {select_expr_list}: select: { id: integer notnull, nth: integer }
   |     | | {select_expr}: id: integer notnull
   |     | | | {name id}: id: integer notnull
   |     | | {select_expr_list}
-  |     |   | {select_expr}: id: integer
-  |     |     | {window_func_inv}: id: integer
-  |     |       | {call}: id: integer
-  |     |       | | {name nth_value}: id: integer
-  |     |       | | {call_arg_list}
-  |     |       |   | {call_filter_clause}
-  |     |       |   | {arg_list}: ok
-  |     |       |     | {name id}: id: integer notnull
-  |     |       |     | {arg_list}
-  |     |       |       | {int 1}: integer notnull
-  |     |       | {window_defn}: ok
-  |     |         | {window_defn_orderby}
+  |     |   | {select_expr}: nth: integer
+  |     |     | {window_func_inv}: integer
+  |     |     | | {call}: integer
+  |     |     | | | {name nth_value}: integer
+  |     |     | | | {call_arg_list}
+  |     |     | |   | {call_filter_clause}
+  |     |     | |   | {arg_list}: ok
+  |     |     | |     | {name id}: id: integer notnull
+  |     |     | |     | {arg_list}
+  |     |     | |       | {int 1}: integer notnull
+  |     |     | | {window_defn}: ok
+  |     |     |   | {window_defn_orderby}
+  |     |     | {opt_as_alias}
+  |     |       | {name nth}
   |     | {select_from_etc}: TABLE { foo: foo }
   |       | {table_or_subquery_list}: TABLE { foo: foo }
   |       | | {table_or_subquery}: TABLE { foo: foo }
@@ -43330,7 +43362,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect numbe
 The statement ending at line XXXX
 
 SELECT id, 
-  nth_value(id, 0) OVER ()
+  nth_value(id, 0) OVER () AS nth
   FROM foo;
 
 Error at test/sem_test.sql:XXXX : in call : CQL0303: The second argument must be an integer between 1 and max integer in function 'nth_value'
@@ -43345,16 +43377,18 @@ Error at test/sem_test.sql:XXXX : in call : CQL0303: The second argument must be
   |     | | {select_expr_list}
   |     |   | {select_expr}: err
   |     |     | {window_func_inv}: err
-  |     |       | {call}: err
-  |     |       | | {name nth_value}: ok
-  |     |       | | {call_arg_list}
-  |     |       |   | {call_filter_clause}
-  |     |       |   | {arg_list}: err
-  |     |       |     | {name id}: id: integer notnull
-  |     |       |     | {arg_list}
-  |     |       |       | {int 0}: integer notnull
-  |     |       | {window_defn}: ok
-  |     |         | {window_defn_orderby}
+  |     |     | | {call}: err
+  |     |     | | | {name nth_value}: ok
+  |     |     | | | {call_arg_list}
+  |     |     | |   | {call_filter_clause}
+  |     |     | |   | {arg_list}: err
+  |     |     | |     | {name id}: id: integer notnull
+  |     |     | |     | {arg_list}
+  |     |     | |       | {int 0}: integer notnull
+  |     |     | | {window_defn}: ok
+  |     |     |   | {window_defn_orderby}
+  |     |     | {opt_as_alias}
+  |     |       | {name nth}
   |     | {select_from_etc}: TABLE { foo: foo }
   |       | {table_or_subquery_list}: TABLE { foo: foo }
   |       | | {table_or_subquery}: TABLE { foo: foo }
@@ -43368,21 +43402,23 @@ Error at test/sem_test.sql:XXXX : in call : CQL0303: The second argument must be
 
 The statement ending at line XXXX
 
-SELECT total(info)
+SELECT total(info) AS t
   FROM with_sensitive;
 
-  {select_stmt}: select: { info: real notnull sensitive }
-  | {select_core_list}: select: { info: real notnull sensitive }
-  | | {select_core}: select: { info: real notnull sensitive }
-  |   | {select_expr_list_con}: select: { info: real notnull sensitive }
-  |     | {select_expr_list}: select: { info: real notnull sensitive }
-  |     | | {select_expr}: info: real notnull sensitive
-  |     |   | {call}: info: real notnull sensitive
-  |     |     | {name total}: info: real notnull sensitive
-  |     |     | {call_arg_list}
-  |     |       | {call_filter_clause}
-  |     |       | {arg_list}: ok
-  |     |         | {name info}: info: integer sensitive
+  {select_stmt}: select: { t: real notnull sensitive }
+  | {select_core_list}: select: { t: real notnull sensitive }
+  | | {select_core}: select: { t: real notnull sensitive }
+  |   | {select_expr_list_con}: select: { t: real notnull sensitive }
+  |     | {select_expr_list}: select: { t: real notnull sensitive }
+  |     | | {select_expr}: t: real notnull sensitive
+  |     |   | {call}: real notnull sensitive
+  |     |   | | {name total}: real notnull sensitive
+  |     |   | | {call_arg_list}
+  |     |   |   | {call_filter_clause}
+  |     |   |   | {arg_list}: ok
+  |     |   |     | {name info}: info: integer sensitive
+  |     |   | {opt_as_alias}
+  |     |     | {name t}
   |     | {select_from_etc}: TABLE { with_sensitive: with_sensitive }
   |       | {table_or_subquery_list}: TABLE { with_sensitive: with_sensitive }
   |       | | {table_or_subquery}: TABLE { with_sensitive: with_sensitive }
@@ -45255,23 +45291,25 @@ Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect numbe
 
 The statement ending at line XXXX
 
-SELECT nullif(id, 1)
+SELECT nullif(id, 1) AS n
   FROM bar;
 
-  {select_stmt}: select: { id: integer }
-  | {select_core_list}: select: { id: integer }
-  | | {select_core}: select: { id: integer }
-  |   | {select_expr_list_con}: select: { id: integer }
-  |     | {select_expr_list}: select: { id: integer }
-  |     | | {select_expr}: id: integer
-  |     |   | {call}: id: integer
-  |     |     | {name nullif}: id: integer
-  |     |     | {call_arg_list}
-  |     |       | {call_filter_clause}
-  |     |       | {arg_list}: ok
-  |     |         | {name id}: id: integer notnull
-  |     |         | {arg_list}
-  |     |           | {int 1}: integer notnull
+  {select_stmt}: select: { n: integer }
+  | {select_core_list}: select: { n: integer }
+  | | {select_core}: select: { n: integer }
+  |   | {select_expr_list_con}: select: { n: integer }
+  |     | {select_expr_list}: select: { n: integer }
+  |     | | {select_expr}: n: integer
+  |     |   | {call}: integer
+  |     |   | | {name nullif}: integer
+  |     |   | | {call_arg_list}
+  |     |   |   | {call_filter_clause}
+  |     |   |   | {arg_list}: ok
+  |     |   |     | {name id}: id: integer notnull
+  |     |   |     | {arg_list}
+  |     |   |       | {int 1}: integer notnull
+  |     |   | {opt_as_alias}
+  |     |     | {name n}
   |     | {select_from_etc}: TABLE { bar: bar }
   |       | {table_or_subquery_list}: TABLE { bar: bar }
   |       | | {table_or_subquery}: TABLE { bar: bar }
@@ -45285,22 +45323,24 @@ SELECT nullif(id, 1)
 
 The statement ending at line XXXX
 
-SELECT nullif(price_d, price_d);
+SELECT nullif(price_d, price_d) AS p;
 
-  {select_stmt}: select: { price_d: real<dollars> variable }
-  | {select_core_list}: select: { price_d: real<dollars> variable }
-  | | {select_core}: select: { price_d: real<dollars> variable }
-  |   | {select_expr_list_con}: select: { price_d: real<dollars> variable }
-  |     | {select_expr_list}: select: { price_d: real<dollars> variable }
-  |     | | {select_expr}: price_d: real<dollars> variable
-  |     |   | {call}: price_d: real<dollars> variable
-  |     |     | {name nullif}: price_d: real<dollars> variable
-  |     |     | {call_arg_list}
-  |     |       | {call_filter_clause}
-  |     |       | {arg_list}: ok
-  |     |         | {name price_d}: price_d: real<dollars> variable
-  |     |         | {arg_list}
-  |     |           | {name price_d}: price_d: real<dollars> variable
+  {select_stmt}: select: { p: real<dollars> variable }
+  | {select_core_list}: select: { p: real<dollars> variable }
+  | | {select_core}: select: { p: real<dollars> variable }
+  |   | {select_expr_list_con}: select: { p: real<dollars> variable }
+  |     | {select_expr_list}: select: { p: real<dollars> variable }
+  |     | | {select_expr}: p: real<dollars> variable
+  |     |   | {call}: real<dollars> variable
+  |     |   | | {name nullif}: real<dollars> variable
+  |     |   | | {call_arg_list}
+  |     |   |   | {call_filter_clause}
+  |     |   |   | {arg_list}: ok
+  |     |   |     | {name price_d}: price_d: real<dollars> variable
+  |     |   |     | {arg_list}
+  |     |   |       | {name price_d}: price_d: real<dollars> variable
+  |     |   | {opt_as_alias}
+  |     |     | {name p}
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -45391,23 +45431,25 @@ Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in 
 
 The statement ending at line XXXX
 
-SELECT nullif(name, 'a')
+SELECT nullif(name, 'a') AS n
   FROM with_sensitive;
 
-  {select_stmt}: select: { name: text sensitive }
-  | {select_core_list}: select: { name: text sensitive }
-  | | {select_core}: select: { name: text sensitive }
-  |   | {select_expr_list_con}: select: { name: text sensitive }
-  |     | {select_expr_list}: select: { name: text sensitive }
-  |     | | {select_expr}: name: text sensitive
-  |     |   | {call}: name: text sensitive
-  |     |     | {name nullif}: name: text sensitive
-  |     |     | {call_arg_list}
-  |     |       | {call_filter_clause}
-  |     |       | {arg_list}: ok
-  |     |         | {name name}: name: text sensitive
-  |     |         | {arg_list}
-  |     |           | {strlit 'a'}: text notnull
+  {select_stmt}: select: { n: text sensitive }
+  | {select_core_list}: select: { n: text sensitive }
+  | | {select_core}: select: { n: text sensitive }
+  |   | {select_expr_list_con}: select: { n: text sensitive }
+  |     | {select_expr_list}: select: { n: text sensitive }
+  |     | | {select_expr}: n: text sensitive
+  |     |   | {call}: text sensitive
+  |     |   | | {name nullif}: text sensitive
+  |     |   | | {call_arg_list}
+  |     |   |   | {call_filter_clause}
+  |     |   |   | {arg_list}: ok
+  |     |   |     | {name name}: name: text sensitive
+  |     |   |     | {arg_list}
+  |     |   |       | {strlit 'a'}: text notnull
+  |     |   | {opt_as_alias}
+  |     |     | {name n}
   |     | {select_from_etc}: TABLE { with_sensitive: with_sensitive }
   |       | {table_or_subquery_list}: TABLE { with_sensitive: with_sensitive }
   |       | | {table_or_subquery}: TABLE { with_sensitive: with_sensitive }
@@ -45548,23 +45590,25 @@ Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in 
 
 The statement ending at line XXXX
 
-SELECT char(id, info)
+SELECT char(id, info) AS c
   FROM with_sensitive;
 
-  {select_stmt}: select: { id: text sensitive }
-  | {select_core_list}: select: { id: text sensitive }
-  | | {select_core}: select: { id: text sensitive }
-  |   | {select_expr_list_con}: select: { id: text sensitive }
-  |     | {select_expr_list}: select: { id: text sensitive }
-  |     | | {select_expr}: id: text sensitive
-  |     |   | {call}: id: text sensitive
-  |     |     | {name char}: id: text sensitive
-  |     |     | {call_arg_list}
-  |     |       | {call_filter_clause}
-  |     |       | {arg_list}: ok
-  |     |         | {name id}: id: integer
-  |     |         | {arg_list}
-  |     |           | {name info}: info: integer sensitive
+  {select_stmt}: select: { c: text sensitive }
+  | {select_core_list}: select: { c: text sensitive }
+  | | {select_core}: select: { c: text sensitive }
+  |   | {select_expr_list_con}: select: { c: text sensitive }
+  |     | {select_expr_list}: select: { c: text sensitive }
+  |     | | {select_expr}: c: text sensitive
+  |     |   | {call}: text sensitive
+  |     |   | | {name char}: text sensitive
+  |     |   | | {call_arg_list}
+  |     |   |   | {call_filter_clause}
+  |     |   |   | {arg_list}: ok
+  |     |   |     | {name id}: id: integer
+  |     |   |     | {arg_list}
+  |     |   |       | {name info}: info: integer sensitive
+  |     |   | {opt_as_alias}
+  |     |     | {name c}
   |     | {select_from_etc}: TABLE { with_sensitive: with_sensitive }
   |       | {table_or_subquery_list}: TABLE { with_sensitive: with_sensitive }
   |       | | {table_or_subquery}: TABLE { with_sensitive: with_sensitive }
@@ -45837,23 +45881,25 @@ Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect numbe
 
 The statement ending at line XXXX
 
-SELECT instr(name, 'a')
+SELECT instr(name, 'a') AS x
   FROM with_sensitive;
 
-  {select_stmt}: select: { name: integer sensitive }
-  | {select_core_list}: select: { name: integer sensitive }
-  | | {select_core}: select: { name: integer sensitive }
-  |   | {select_expr_list_con}: select: { name: integer sensitive }
-  |     | {select_expr_list}: select: { name: integer sensitive }
-  |     | | {select_expr}: name: integer sensitive
-  |     |   | {call}: name: integer sensitive
-  |     |     | {name instr}: name: integer sensitive
-  |     |     | {call_arg_list}
-  |     |       | {call_filter_clause}
-  |     |       | {arg_list}: ok
-  |     |         | {name name}: name: text sensitive
-  |     |         | {arg_list}
-  |     |           | {strlit 'a'}: text notnull
+  {select_stmt}: select: { x: integer sensitive }
+  | {select_core_list}: select: { x: integer sensitive }
+  | | {select_core}: select: { x: integer sensitive }
+  |   | {select_expr_list_con}: select: { x: integer sensitive }
+  |     | {select_expr_list}: select: { x: integer sensitive }
+  |     | | {select_expr}: x: integer sensitive
+  |     |   | {call}: integer sensitive
+  |     |   | | {name instr}: integer sensitive
+  |     |   | | {call_arg_list}
+  |     |   |   | {call_filter_clause}
+  |     |   |   | {arg_list}: ok
+  |     |   |     | {name name}: name: text sensitive
+  |     |   |     | {arg_list}
+  |     |   |       | {strlit 'a'}: text notnull
+  |     |   | {opt_as_alias}
+  |     |     | {name x}
   |     | {select_from_etc}: TABLE { with_sensitive: with_sensitive }
   |       | {table_or_subquery_list}: TABLE { with_sensitive: with_sensitive }
   |       | | {table_or_subquery}: TABLE { with_sensitive: with_sensitive }
@@ -52761,8 +52807,8 @@ Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in 
   |     |   | {select_expr_list}
   |     |     | {select_expr}: err
   |     |       | {window_func_inv}: err
-  |     |       | | {call}: amount: real
-  |     |       | | | {name AVG}: amount: real
+  |     |       | | {call}: real
+  |     |       | | | {name AVG}: real
   |     |       | | | {call_arg_list}
   |     |       | |   | {call_filter_clause}
   |     |       | |   | {arg_list}: ok
@@ -52817,8 +52863,8 @@ Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in 
   |     |   | {select_expr_list}
   |     |     | {select_expr}: err
   |     |       | {window_func_inv}: err
-  |     |       | | {call}: amount: real
-  |     |       | | | {name AVG}: amount: real
+  |     |       | | {call}: real
+  |     |       | | | {name AVG}: real
   |     |       | | | {call_arg_list}
   |     |       | |   | {call_filter_clause}
   |     |       | |   | {arg_list}: ok
@@ -52872,8 +52918,8 @@ Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in 
   |     |   | {select_expr_list}
   |     |     | {select_expr}: err
   |     |       | {window_func_inv}: err
-  |     |       | | {call}: amount: real
-  |     |       | | | {name AVG}: amount: real
+  |     |       | | {call}: real
+  |     |       | | | {name AVG}: real
   |     |       | | | {call_arg_list}
   |     |       | |   | {call_filter_clause}
   |     |       | |   | {arg_list}: ok

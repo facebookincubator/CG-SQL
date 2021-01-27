@@ -5348,8 +5348,7 @@ static void sem_aggr_func_count(ast_node *ast, uint32_t arg_count) {
   sem_node *sem = first_arg(arg_list)->sem;
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_INTEGER | SEM_TYPE_NOTNULL | sensitive_flag(sem->sem_type));
 
-  // preserve column name if there is one.
-  name_ast->sem->name = sem->name;
+  // ast->sem->name is not set here because e.g. sum(x) is not named "x"
 }
 
 // You can min/max numerics and strings, you get what you started with.
@@ -5385,8 +5384,7 @@ static void sem_aggr_func_min_or_max(ast_node *ast, uint32_t arg_count) {
     // select max(1) from sqlite_master where 0;  ->  NULL not zero rows
     name_ast->sem = ast->sem = new_sem(core_type | sensitive_flag(sem->sem_type));
 
-    // grab the name from our arg, if it has one, we want it.
-    name_ast->sem->name = sem->name;
+    // ast->sem->name is not set here because e.g. min(x) is not named "x"
 
     return;
   }
@@ -5468,8 +5466,7 @@ static void sem_aggr_func_average(ast_node *ast, uint32_t arg_count) {
   sem_t combined_flags = sensitive_flag(arg->sem->sem_type);
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_REAL | combined_flags);
 
-  // grab the name from our arg, if it has one, we want it.
-  name_ast->sem->name = arg->sem->name;
+  // ast->sem->name is not set here because e.g. avg(x) is not named "x"
 }
 
 // just an alias
@@ -5584,7 +5581,7 @@ static void sem_func_trim(ast_node *ast, uint32_t arg_count) {
   name_ast->sem = ast->sem = new_sem(sem_type);
 
   // preserve the string kind of the main arg, otherwise no kind checks needed for trim
-  name_ast->sem->kind = arg1->sem->kind;
+  ast->sem->kind = arg1->sem->kind;
 }
 
 // ltrim has the same semantics as trim
@@ -5629,10 +5626,9 @@ static void sem_func_nullif(ast_node *ast, uint32_t arg_count) {
   // nullif will be the same type as arg1, sensitivity preserved; nullability
   // added because nullif() can (obviously) return NULL
   name_ast->sem = ast->sem = new_sem(arg1->sem->sem_type & sem_not(SEM_TYPE_NOTNULL));
+  ast->sem->kind = arg1->sem->kind;
 
-  // grab the name from our first arg, if it has one, we want it.
-  name_ast->sem->name = arg1->sem->name;
-  name_ast->sem->kind = arg1->sem->kind;
+  // ast->sem->name is not set here because e.g. nullif(x) is not named "x"
 }
 
 static void sem_func_instr(ast_node *ast, uint32_t arg_count) {
@@ -5664,9 +5660,7 @@ static void sem_func_instr(ast_node *ast, uint32_t arg_count) {
   sem_t combine = combine_flags(arg1->sem->sem_type, arg2->sem->sem_type);
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_INTEGER | combine);
 
-  // grab the name from our first arg, if it has one, we want it.
-  name_ast->sem->name = arg1->sem->name;
-
+  // ast->sem->name is not set here because e.g. instr(x) is not named "x"
   // the kind of instr is generic, the integer returned has no kind even if the strings do
 }
 
@@ -5697,11 +5691,10 @@ static void sem_func_abs(ast_node *ast, uint32_t arg_count) {
   // abs() will be the same type as arg, sensitivity, nullability preserved;
   name_ast->sem = ast->sem = arg->sem;
 
-  // grab the name from our first arg, if it has one, we want it.
-  name_ast->sem->name = arg->sem->name;
+  // ast->sem->name is not set here because e.g. abs(x) is not named "x"
 
   // preserve the kind of the arg
-  name_ast->sem->kind = arg->sem->kind;
+  ast->sem->kind = arg->sem->kind;
 }
 
 static void sem_func_char(ast_node *ast, uint32_t arg_count) {
@@ -5721,7 +5714,6 @@ static void sem_func_char(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  CSTR first_arg_name = first_arg(arg_list)->sem->name;
   sem_t sensitive = SEM_TYPE_NULL;
   ast_node *arg;
   do {
@@ -5742,9 +5734,7 @@ static void sem_func_char(ast_node *ast, uint32_t arg_count) {
   // e.g: select char(1) -> NULL; select char(67); -> "C"
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_TEXT | sensitive);
 
-  // grab the name from our first arg, if it has one, we want it.
-  name_ast->sem->name = first_arg_name;
-
+  // ast->sem->name is not set here because e.g. char(x) is not named "x"
   // the result has no 'kind'
 }
 
@@ -5794,6 +5784,8 @@ static void sem_func_attest_notnull(ast_node *ast, uint32_t arg_count) {
   ast->sem = arg1->sem;
   sem_add_flags(ast, SEM_TYPE_NOTNULL); // note this makes a copy
   name_ast->sem = ast->sem;
+  // attest not null compiles to nothing so we do preserve the name in this case
+  // Sqlite would never see the attest if it ever went through
 }
 
 // validate expression with cql_cursor_diff_xxx func is semantically correct.
@@ -5853,8 +5845,7 @@ static bool_t validate_cql_cursor_diff(ast_node *ast, uint32_t arg_count) {
 
   // the function always return a string which is the name of the first column in the
   // cursors that are different otherwise null.
-  name_ast->sem = new_sem(SEM_TYPE_TEXT);
-  ast->sem = name_ast->sem;
+  name_ast->sem = ast->sem = new_sem(SEM_TYPE_TEXT);
 
   return true;
 }
@@ -5935,6 +5926,7 @@ static void sem_func_upper(ast_node *ast, uint32_t arg_count) {
   ast->sem = arg->sem;
   sem_add_flags(ast, 0);    // no flags added this is a clone
   name_ast->sem = ast->sem;
+
   ast->sem->name = NULL;    // applying upper/lower loses the name, SQlite doesn't recognize lower(foo) as foo
 }
 
@@ -6006,8 +5998,7 @@ static void sem_aggr_func_sum(ast_node *ast, uint32_t arg_count) {
   // set the result type accordingly
   name_ast->sem = ast->sem = new_sem(result);
 
-  // grab the name from our first arg, if it has one, we want it.
-  name_ast->sem->name = arg->sem->name;
+  // ast->sem->name is not set here because e.g. sum(x) is not named "x"
 }
 
 // Total validation -> any numeric is ok
@@ -6033,8 +6024,7 @@ static void sem_aggr_func_total(ast_node *ast, uint32_t arg_count) {
   // set the result type accordingly
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_REAL | SEM_TYPE_NOTNULL | sensitive_flag(arg->sem->sem_type));
 
-  // grab the name from our first arg, if it has one, we want it.
-  name_ast->sem->name = arg->sem->name;
+  // ast->sem->name is not set here because e.g. total(x) is not named "x"
 }
 
 // Substr validation -> 2 or 3 args, first arg is a string, the others are integers
@@ -6163,8 +6153,7 @@ static void sem_func_ntile(ast_node *ast, uint32_t arg_count) {
 
   ast->sem->sem_type |= sensitive_flag(arg->sem->sem_type);
 
-  // grab the name from our first arg, if it has one, we want it.
-  ast->sem->name = arg->sem->name;
+  // ast->sem->name is not set here because e.g. ntile(x) is not named "x"
 }
 
 // Validation of the builtin window function lag(...). It takes three parameters
@@ -6276,9 +6265,8 @@ static void sem_func_first_value(ast_node *ast, uint32_t arg_count) {
   ast_node *arg = first_arg(arg_list);
   ast->sem->sem_type = arg->sem->sem_type;
 
-  // grab the name from our first arg, if it has one, we want it.
-  ast->sem->name = arg->sem->name;
   ast->sem->kind = arg->sem->kind;
+  // ast->sem->name is not set here because e.g. first_value(x) is not named "x"
 }
 
 // Validation of the builtin window function last_value(...). It takes one expression parameter
@@ -6313,9 +6301,8 @@ static void sem_func_nth_value(ast_node *ast, uint32_t arg_count) {
   // not be nullable, nth_value() should still be nullable.
   ast->sem->sem_type = core_type_of(sem_type) | sensitive_flag(sem_type);
 
-  // grab the name from our first arg, if it has one, we want it.
-  name_ast->sem->name = arg1->sem->name;
   name_ast->sem->kind = arg1->sem->kind;
+  // ast->sem->name is not set here because e.g. nth_value(x) is not named "x"
 }
 
 // The group_concat function has an optional seperator, otherwise
@@ -6360,8 +6347,8 @@ static void sem_aggr_func_group_concat(ast_node *ast, uint32_t arg_count) {
 
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_TEXT | combined_flags);
 
-  // grab the name from our first arg, if it has one, we want it.
-  name_ast->sem->name = arg1->sem->name;
+  // ast->sem->name is not set here because e.g. group_concat(x) is not named "x"
+  // group_concat has no kind, leave that null too
 }
 
 // All of the date formats are strings until converted to something else.
