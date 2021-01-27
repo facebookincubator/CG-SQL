@@ -671,6 +671,8 @@ cql_code test_all_column_encoded_fetchers(sqlite3 *db) {
   load_encoded_table_result_set_ref rs = (load_encoded_table_result_set_ref)result_set;
 
   cql_bool b0 = load_encoded_table_get_b0_value(rs, 0);
+  cql_bool b0_encoded = cql_result_set_get_is_encoded_col(rs, 0);
+  E(b0_encoded == 1, "expected b0 is encoded %\n", b0_encoded);
   cql_bool b0_exp = cql_decode_bool(db, b0);
   E(b0_exp == 0, "expected b0 is 0, value %d\n", b0_exp);
 
