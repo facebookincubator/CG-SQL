@@ -170,7 +170,7 @@ LEAVE                        { return LEAVE; }
 CONTINUE                     { return CONTINUE; }
 OPEN                         { return OPEN; }
 CLOSE                        { return CLOSE; }
-ELSE[ \t\n]IF                { return ELSE_IF; }
+ELSE[ \t]+IF/[^A-Z_0-9]      { return ELSE_IF; }
 SAVEPOINT                    { return SAVEPOINT; }
 ROLLBACK                     { return ROLLBACK; }
 RAISE                        { return RAISE; }

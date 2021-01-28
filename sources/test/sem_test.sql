@@ -13926,3 +13926,12 @@ end;
 create proc vault_sensitive_proc()
 begin
 end;
+
+-- TEST: ensure that ifnull parses properly after else, it's not "else if"
+-- + SELECT CASE WHEN 1 THEN 2
+-- + ELSE ifnull(x, y)
+-- + END;
+-- + {call}: integer
+-- + {name ifnull}
+-- - Error
+select case when 1 then 2 else ifnull(x, y) end;

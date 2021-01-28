@@ -1308,6 +1308,7 @@ declare l1 long_integer<two>;
 declare l1 long int<three>;
 declare l1 long_int<four>;
 
+select case when 1 then 2 else ifnull(x, y) end;
 
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 

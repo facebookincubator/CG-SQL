@@ -1408,6 +1408,10 @@ DECLARE l1 LONG_INT<three>;
 
 DECLARE l1 LONG_INT<four>;
 
+SELECT CASE WHEN 1 THEN 2
+ELSE ifnull(x, y)
+END;
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

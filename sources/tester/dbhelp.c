@@ -11,7 +11,7 @@
 #pragma clang diagnostic ignored "-Wshift-op-parentheses"
 #pragma clang diagnostic ignored "-Wlogical-not-parentheses"
 #pragma clang diagnostic ignored "-Wliteral-conversion"
-extern CQL_WARN_UNUSED cql_code dbhelp_source(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_);
+extern CQL_WARN_UNUSED cql_code dbhelp_source(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 
 
 //
@@ -205,33 +205,33 @@ typedef struct dbhelp_dump_line_C_row {
 #define dbhelp_dump_line_C_refs_offset cql_offsetof(dbhelp_dump_line_C_row, data) // count = 1
 CQL_WARN_UNUSED cql_code dbhelp_dump_line(sqlite3 *_Nonnull _db_, cql_int32 line_) {
   cql_code _rc_ = SQLITE_OK;
-  sqlite3_stmt *C = NULL;
-  dbhelp_dump_line_C_row C_ = { ._refs_count_ = 1, ._refs_offset_ = dbhelp_dump_line_C_refs_offset };
+  sqlite3_stmt *C_stmt = NULL;
+  dbhelp_dump_line_C_row C = { ._refs_count_ = 1, ._refs_offset_ = dbhelp_dump_line_C_refs_offset };
 
-  _rc_ = cql_prepare(_db_, &C,
+  _rc_ = cql_prepare(_db_, &C_stmt,
     "SELECT line, data "
       "FROM test_output "
       "WHERE line = ?");
-  cql_multibind(&_rc_, _db_, &C, 1,
+  cql_multibind(&_rc_, _db_, &C_stmt, 1,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, line_);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   for (;;) {
-    _rc_ = sqlite3_step(C);
-    C_._has_row_ = _rc_ == SQLITE_ROW;
-    cql_multifetch(false, _db_, _rc_, C, 2,
-                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C_.line,
-                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C_.data);
+    _rc_ = sqlite3_step(C_stmt);
+    C._has_row_ = _rc_ == SQLITE_ROW;
+    cql_multifetch(_rc_, C_stmt, 2,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.line,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C.data);
     if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
-    if (!C_._has_row_) break;
-    cql_alloc_cstr(_cstr_1, C_.data);
+    if (!C._has_row_) break;
+    cql_alloc_cstr(_cstr_1, C.data);
     printf("%s", _cstr_1);
-    cql_free_cstr(_cstr_1, C_.data);
+    cql_free_cstr(_cstr_1, C.data);
   }
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
-  cql_finalize_stmt(&C);
-  cql_teardown_row(C_);
+  cql_finalize_stmt(&C_stmt);
+  cql_teardown_row(C);
   return _rc_;
 }
 #undef _PROC_
@@ -316,34 +316,34 @@ typedef struct dbhelp_dump_source_C_row {
 #define dbhelp_dump_source_C_refs_offset cql_offsetof(dbhelp_dump_source_C_row, data) // count = 1
 CQL_WARN_UNUSED cql_code dbhelp_dump_source(sqlite3 *_Nonnull _db_, cql_int32 line1, cql_int32 line2) {
   cql_code _rc_ = SQLITE_OK;
-  sqlite3_stmt *C = NULL;
-  dbhelp_dump_source_C_row C_ = { ._refs_count_ = 1, ._refs_offset_ = dbhelp_dump_source_C_refs_offset };
+  sqlite3_stmt *C_stmt = NULL;
+  dbhelp_dump_source_C_row C = { ._refs_count_ = 1, ._refs_offset_ = dbhelp_dump_source_C_refs_offset };
 
-  _rc_ = cql_prepare(_db_, &C,
+  _rc_ = cql_prepare(_db_, &C_stmt,
     "SELECT line, data "
       "FROM source_input "
       "WHERE line > ? AND line <= ?");
-  cql_multibind(&_rc_, _db_, &C, 2,
+  cql_multibind(&_rc_, _db_, &C_stmt, 2,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, line1,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, line2);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   for (;;) {
-    _rc_ = sqlite3_step(C);
-    C_._has_row_ = _rc_ == SQLITE_ROW;
-    cql_multifetch(false, _db_, _rc_, C, 2,
-                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C_.line,
-                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C_.data);
+    _rc_ = sqlite3_step(C_stmt);
+    C._has_row_ = _rc_ == SQLITE_ROW;
+    cql_multifetch(_rc_, C_stmt, 2,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.line,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C.data);
     if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
-    if (!C_._has_row_) break;
-    cql_alloc_cstr(_cstr_2, C_.data);
+    if (!C._has_row_) break;
+    cql_alloc_cstr(_cstr_2, C.data);
     printf("%s", _cstr_2);
-    cql_free_cstr(_cstr_2, C_.data);
+    cql_free_cstr(_cstr_2, C.data);
   }
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
-  cql_finalize_stmt(&C);
-  cql_teardown_row(C_);
+  cql_finalize_stmt(&C_stmt);
+  cql_teardown_row(C);
   return _rc_;
 }
 #undef _PROC_
@@ -413,17 +413,17 @@ CQL_WARN_UNUSED cql_code dbhelp_source_fetch_results(sqlite3 *_Nonnull _db_, dbh
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-CQL_WARN_UNUSED cql_code dbhelp_source(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_) {
+CQL_WARN_UNUSED cql_code dbhelp_source(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
-  *_result_ = NULL;
-  _rc_ = cql_prepare(_db_, _result_,
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
     "SELECT line, data "
       "FROM source_input");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
-  if (_rc_ == SQLITE_OK && !*_result_) _rc_ = SQLITE_ERROR;
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = SQLITE_ERROR;
   return _rc_;
 }
 #undef _PROC_

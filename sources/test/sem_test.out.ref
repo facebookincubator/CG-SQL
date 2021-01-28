@@ -55677,3 +55677,37 @@ END;
     | {name vault_sensitive_proc}: ok
     | {proc_params_stmts}
 
+The statement ending at line XXXX
+
+SELECT CASE WHEN 1 THEN 2
+ELSE ifnull(x, y)
+END;
+
+  {select_stmt}: select: { _anon: integer }
+  | {select_core_list}: select: { _anon: integer }
+  | | {select_core}: select: { _anon: integer }
+  |   | {select_expr_list_con}: select: { _anon: integer }
+  |     | {select_expr_list}: select: { _anon: integer }
+  |     | | {select_expr}: integer
+  |     |   | {case_expr}: integer
+  |     |     | {connector}: integer
+  |     |       | {case_list}: integer notnull
+  |     |       | | {when}: integer notnull
+  |     |       |   | {int 1}: integer notnull
+  |     |       |   | {int 2}: integer notnull
+  |     |       | {call}: integer
+  |     |         | {name ifnull}
+  |     |         | {call_arg_list}
+  |     |           | {call_filter_clause}
+  |     |           | {arg_list}: ok
+  |     |             | {name x}: X: integer variable
+  |     |             | {arg_list}
+  |     |               | {name y}: Y: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
