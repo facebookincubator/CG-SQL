@@ -41,7 +41,7 @@ CREATE TABLE foo(
       |       | {int 5}
       |       | {name deletor}
       | {col_key_list}
-        | {col_def}: rate_2: longint hidden @delete(4)
+        | {col_def}: rate_2: longint deleted @delete(4)
         | | {col_def_type_attrs}: ok
         |   | {col_def_name_type}
         |   | | {name rate_2}
@@ -68,7 +68,7 @@ CREATE TABLE foo(
             |     | {version_annotation}
             |       | {int 5}
             | {col_key_list}
-              | {col_def}: name_2: text hidden @create(6)
+              | {col_def}: name_2: text deleted @create(6)
                 | {col_def_type_attrs}: ok
                   | {col_def_name_type}
                   | | {name name_2}
@@ -257,7 +257,7 @@ CREATE TABLE t1(
   id INTEGER
 ) @CREATE(7);
 
-  {create_table_stmt}: t1: { id: integer } hidden @create(7)
+  {create_table_stmt}: t1: { id: integer } deleted @create(7)
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
@@ -299,7 +299,7 @@ CREATE TABLE t3(
   id INTEGER
 ) @DELETE(4);
 
-  {create_table_stmt}: t3: { id: integer } hidden @delete(4)
+  {create_table_stmt}: t3: { id: integer } deleted @delete(4)
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}

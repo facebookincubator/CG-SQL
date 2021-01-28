@@ -55,6 +55,7 @@ DROP                         { return DROP; }
 TABLE                        { return TABLE; }
 TEMP                         { return TEMP; }
 COLLATE                      { return COLLATE; }
+HIDDEN                       { return HIDDEN; }
 PRIMARY                      { return PRIMARY; }
 KEY                          { return KEY; }
 IF                           { return IF; }

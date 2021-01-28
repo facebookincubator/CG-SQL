@@ -45,7 +45,7 @@ CREATE TABLE foo(
     |   | | {type_int}: integer
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
-      | {col_def}: rate: longint hidden @delete(5)
+      | {col_def}: rate: longint deleted @delete(5)
       | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |   | | {name rate}
@@ -55,7 +55,7 @@ CREATE TABLE foo(
       |       | {int 5}
       |       | {name deletor}
       | {col_key_list}
-        | {col_def}: rate_2: longint hidden @delete(4)
+        | {col_def}: rate_2: longint deleted @delete(4)
         | | {col_def_type_attrs}: ok
         |   | {col_def_name_type}
         |   | | {name rate_2}
@@ -110,7 +110,7 @@ CREATE TABLE column_deleted_in_this_table(
     |     | {name id}
     |     | {type_int}: integer
     | {col_key_list}
-      | {col_def}: being_deleted: text hidden @delete(6)
+      | {col_def}: being_deleted: text deleted @delete(6)
         | {col_def_type_attrs}: ok
           | {col_def_name_type}
           | | {name being_deleted}
@@ -267,7 +267,7 @@ CREATE TABLE t_was_correctly_deleted(
   id INTEGER
 ) @DELETE(1);
 
-  {create_table_stmt}: t_was_correctly_deleted: { id: integer } hidden validated @delete(1)
+  {create_table_stmt}: t_was_correctly_deleted: { id: integer } deleted validated @delete(1)
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
@@ -356,7 +356,7 @@ CREATE TABLE t_column_delete_version_changed(
     |     | {name id}
     |     | {type_int}: integer
     | {col_key_list}
-      | {col_def}: id2: integer hidden @delete(1)
+      | {col_def}: id2: integer deleted @delete(1)
         | {col_def_type_attrs}: ok
           | {col_def_name_type}
           | | {name id2}
@@ -755,7 +755,7 @@ CREATE TABLE t_new_table_create_and_delete(
     |   | | {type_int}: integer
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
-      | {col_def}: b: integer hidden @create(6) @delete(7)
+      | {col_def}: b: integer deleted @create(6) @delete(7)
         | {col_def_type_attrs}: ok
           | {col_def_name_type}
           | | {name b}
@@ -976,7 +976,7 @@ CREATE TABLE delete_column_migrate_test(
     |     | {name id}
     |     | {type_int}: integer
     | {col_key_list}
-      | {col_def}: id2: integer hidden @delete(2)
+      | {col_def}: id2: integer deleted @delete(2)
         | {col_def_type_attrs}: ok
           | {col_def_name_type}
           | | {name id2}
@@ -1041,7 +1041,7 @@ CREATE TABLE ok_to_delete_recreate_table(
   id INTEGER
 ) @DELETE(6);
 
-  {create_table_stmt}: ok_to_delete_recreate_table: { id: integer } hidden validated @delete(6)
+  {create_table_stmt}: ok_to_delete_recreate_table: { id: integer } deleted validated @delete(6)
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
@@ -1788,7 +1788,7 @@ CREATE TABLE adding_with_migrators_ok(
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
     | {col_key_list}
-      | {col_def}: id2: integer hidden @delete(3)
+      | {col_def}: id2: integer deleted @delete(3)
       | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |   | | {name id2}
@@ -1880,7 +1880,7 @@ CREATE VIRTUAL TABLE deleted_virtual USING my_virtual (goo) AS (
   id INTEGER
 ) @DELETE(3);
 
-  {create_virtual_table_stmt}: deleted_virtual: { id: integer } hidden virtual @delete(3)
+  {create_virtual_table_stmt}: deleted_virtual: { id: integer } deleted virtual @delete(3)
   | {module_info}
   | | {name my_virtual}
   | | {misc_attr_value_list}
@@ -1963,7 +1963,7 @@ CREATE VIRTUAL TABLE delete_change_virtual USING my_virtual (goo) AS (
   id INTEGER
 ) @DELETE(1);
 
-  {create_virtual_table_stmt}: delete_change_virtual: { id: integer } hidden virtual @delete(1)
+  {create_virtual_table_stmt}: delete_change_virtual: { id: integer } deleted virtual @delete(1)
   | {module_info}
   | | {name my_virtual}
   | | {misc_attr_value_list}
@@ -2034,7 +2034,7 @@ CREATE TABLE foo(
     |   | | {type_int}: integer
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
-      | {col_def}: rate: longint hidden @delete(5)
+      | {col_def}: rate: longint deleted @delete(5)
       | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |   | | {name rate}
@@ -2044,7 +2044,7 @@ CREATE TABLE foo(
       |       | {int 5}
       |       | {name deletor}
       | {col_key_list}
-        | {col_def}: rate_2: longint hidden @delete(4)
+        | {col_def}: rate_2: longint deleted @delete(4)
         | | {col_def_type_attrs}: ok
         |   | {col_def_name_type}
         |   | | {name rate_2}

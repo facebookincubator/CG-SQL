@@ -557,6 +557,7 @@ AST(col_attrs_check)
 AST(col_attrs_collate)
 AST0(col_attrs_autoinc)
 AST(col_attrs_unique)
+AST(col_attrs_hidden)
 AST(sensitive_attr);
 AST(col_attrs_fk)
 AST1(recreate_attr)

@@ -472,6 +472,8 @@ static void gen_col_attrs(ast_node *_Nullable attrs) {
       }
     } else if (is_ast_col_attrs_unique(attr)) {
       gen_printf(" UNIQUE");
+    } else if (is_ast_col_attrs_hidden(attr)) {
+      gen_printf(" HIDDEN");
     } else if (is_ast_col_attrs_fk(attr)) {
       gen_printf(" ");
       gen_fk_target_options(attr->left);

@@ -727,7 +727,7 @@ static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *c
     // If this index is attached to a table marked @recreate then we recreate the index with the table
     // as a unit so there is nothing to do here.  The index will be in the same @recreate group as
     // the table if it has one.
-    ast_node *table_ast = find_table_or_view_even_hidden(table_name);
+    ast_node *table_ast = find_table_or_view_even_deleted(table_name);
 
     Invariant(table_ast);
     Invariant(table_ast->sem);

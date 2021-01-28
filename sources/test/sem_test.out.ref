@@ -16651,7 +16651,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0145: version annotations not 
 
   {alter_table_add_column_stmt}: err
   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
-  | {col_def}: name: text hidden @delete(1)
+  | {col_def}: name: text deleted @delete(1)
     | {col_def_type_attrs}: ok
       | {col_def_name_type}
       | | {name name}
@@ -16730,7 +16730,7 @@ CREATE TABLE hides_id_not_name(
   | | | {int 0}
   | | {name hides_id_not_name}
   | {col_key_list}
-    | {col_def}: id: integer hidden @delete(2)
+    | {col_def}: id: integer deleted @delete(2)
     | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
@@ -17005,7 +17005,7 @@ CREATE TABLE versioned_table(
   id INTEGER @CREATE(2)
 ) @CREATE(1, table_create_proc) @DELETE(3, table_delete_proc);
 
-  {create_table_stmt}: versioned_table: { id: integer } hidden @create(1) @delete(3)
+  {create_table_stmt}: versioned_table: { id: integer } deleted @create(1) @delete(3)
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
@@ -17182,7 +17182,7 @@ The statement ending at line XXXX
 ALTER TABLE versioned_table ADD COLUMN id INTEGER;
 
   {alter_table_add_column_stmt}: ok
-  | {name versioned_table}: versioned_table: { id: integer } hidden @create(1) @delete(3)
+  | {name versioned_table}: versioned_table: { id: integer } deleted @create(1) @delete(3)
   | {col_def}: id: integer
     | {col_def_type_attrs}: ok
       | {col_def_name_type}
@@ -17326,7 +17326,7 @@ DROP TABLE IF EXISTS versioned_table;
 
   {drop_table_stmt}: ok
   | {int 1}
-  | {name versioned_table}: versioned_table: { id: integer } hidden @create(1) @delete(3)
+  | {name versioned_table}: versioned_table: { id: integer } deleted @create(1) @delete(3)
 
 The statement ending at line XXXX
 
@@ -17476,7 +17476,7 @@ CREATE TABLE t_col_delete_notnull(
   | | | {int 0}
   | | {name t_col_delete_notnull}
   | {col_key_list}
-    | {col_def}: id: integer notnull has_default hidden @delete(2)
+    | {col_def}: id: integer notnull has_default deleted @delete(2)
       | {col_def_type_attrs}: ok
         | {col_def_name_type}
         | | {name id}
@@ -17799,7 +17799,7 @@ CREATE TABLE trickier_alter_target(
     |     | {name id}
     |     | {type_int}: integer
     | {col_key_list}
-      | {col_def}: something_deleted: text hidden @create(1) @delete(2)
+      | {col_def}: something_deleted: text deleted @create(1) @delete(2)
       | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |   | | {name something_deleted}
@@ -17910,7 +17910,7 @@ CREATE VIEW view_with_version AS
 SELECT *
   FROM bar @DELETE(2);
 
-  {create_view_stmt}: view_with_version: { id: integer notnull, name: text, rate: longint } hidden @delete(2)
+  {create_view_stmt}: view_with_version: { id: integer notnull, name: text, rate: longint } deleted @delete(2)
   | {int 0}
   | {view_and_attrs}
     | {name_and_select}

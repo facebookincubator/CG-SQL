@@ -134,7 +134,7 @@ cql_data_decl( bytebuf *recreate_annotations );
 #define SEM_TYPE_HAS_SHAPE_STORAGE     _64(0x8000) // set for a cursor with simplified fetch syntax
 #define SEM_TYPE_CREATE_FUNC          _64(0x10000) // set for a function that returns a created object +1 ref
 #define SEM_TYPE_SELECT_FUNC          _64(0x20000) // set for a sqlite UDF function declaration
-#define SEM_TYPE_HIDDEN               _64(0x40000) // set for columns that are not visible in the current schema version
+#define SEM_TYPE_DELETED              _64(0x40000) // set for columns that are not visible in the current schema version
 #define SEM_TYPE_VALIDATED            _64(0x80000) // set if item has already been validated against previous schema
 #define SEM_TYPE_USES_OUT            _64(0x100000) // set if proc has a one rowresult using the OUT statement
 #define SEM_TYPE_USES_OUT_UNION      _64(0x200000) // set if proc uses the OUT UNION form for multi row result
@@ -227,7 +227,7 @@ cql_noexport ast_node *find_proc(CSTR name);
 cql_noexport bytebuf *find_proc_arg_info(CSTR name);
 cql_noexport ast_node *find_region(CSTR name);
 cql_noexport ast_node *find_func(CSTR name);
-cql_noexport ast_node *find_table_or_view_even_hidden(CSTR name);
+cql_noexport ast_node *find_table_or_view_even_deleted(CSTR name);
 cql_noexport ast_node *find_enum(CSTR name);
 cql_noexport ast_node *find_base_fragment(CSTR name);
 cql_noexport ast_node *sem_get_col_default_value(ast_node *attrs);

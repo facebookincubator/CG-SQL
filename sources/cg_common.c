@@ -309,7 +309,7 @@ static void find_table_node(table_callbacks *callbacks, ast_node *node) {
   if (table_or_view_name_ast) {
     // Find the definition and see if we have a create_table_stmt.
     EXTRACT_STRING(table_or_view_name, table_or_view_name_ast);
-    ast_node *table_or_view = find_table_or_view_even_hidden(table_or_view_name);
+    ast_node *table_or_view = find_table_or_view_even_deleted(table_or_view_name);
 
     // Make sure we don't process a table or view that we've already processed.
     if (table_or_view) {

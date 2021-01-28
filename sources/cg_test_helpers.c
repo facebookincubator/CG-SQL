@@ -252,7 +252,7 @@ static void find_all_table_node(dummy_test_info *info, ast_node *node) {
 
   if (table_or_view_name_ast) {
     EXTRACT_STRING(table_or_view_name, table_or_view_name_ast);
-    ast_node *table_or_view = find_table_or_view_even_hidden(table_or_view_name);
+    ast_node *table_or_view = find_table_or_view_even_deleted(table_or_view_name);
 
     if (table_or_view) {
       // This part prevents us from any cycles, the only possible cycle is T references T in an FK
@@ -320,7 +320,7 @@ static void find_parent_column(
   CSTR table_name,
   CSTR column_name)
 {
-  ast_node *table_ast = find_table_or_view_even_hidden(table_name);
+  ast_node *table_ast = find_table_or_view_even_deleted(table_name);
   Contract(is_ast_create_table_stmt(table_ast));
   EXTRACT_NOTNULL(col_key_list, table_ast->right);
   *fk_table_out = NULL;
@@ -350,7 +350,7 @@ static void find_parent_column(
             EXTRACT_STRING(ref_col_name, ref_list->left);
             Contract(!ref_list->right); // it must be a list of one because its attribute form
 
-            *fk_table_out = find_table_or_view_even_hidden(ref_table_name);
+            *fk_table_out = find_table_or_view_even_deleted(ref_table_name);
             *fk_column_name_out = ref_col_name;
             return;
           }
@@ -393,7 +393,7 @@ static void find_parent_column(
         }
         Invariant(fk_name_list);
         EXTRACT_STRING(fk_col_name, fk_name_list->left);
-        *fk_table_out = find_table_or_view_even_hidden(fk_table);
+        *fk_table_out = find_table_or_view_even_deleted(fk_table);
         *fk_column_name_out = fk_col_name;
         return;
       }

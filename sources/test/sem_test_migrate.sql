@@ -9,17 +9,17 @@
 -- pick a number we can easily go over or under for validation
 @schema_upgrade_version (5);
 
--- TEST: mondo table with assorted thingies that should be hidden
+-- TEST: mondo table with assorted thingies that should be deleted
 -- See below for the fields and why
 -- + {create_table_stmt}: foo: { id: integer notnull, rate: longint, id2: integer, name: text }
 -- - Error
 create table foo(
-  id integer not null,               -- not hidden
-  rate long int @delete(5, deletor), -- not hidden
-  rate_2 long int @delete(4),        -- hidden (deleted previously)
-  id2 integer @create(4),            -- not hidden
-  name text @create(5),              -- not hidden
-  name_2 text @create(6)             -- hidden (appears later)
+  id integer not null,               -- not deleted
+  rate long int @delete(5, deletor), -- not deleted
+  rate_2 long int @delete(4),        -- deleted (deleted previously)
+  id2 integer @create(4),            -- not deleted
+  name text @create(5),              -- not deleted
+  name_2 text @create(6)             -- deleted (appears later)
 );
 
 -- TEST: try to create an index on a column that's been not created yet
@@ -70,7 +70,7 @@ begin
 end;
 
 -- TEST: create a table that is not yet visible in this schema version
--- + {create_table_stmt}: t1: { id: integer } hidden
+-- + {create_table_stmt}: t1: { id: integer } deleted
 -- - Error
 create table t1(
  id integer
@@ -78,14 +78,14 @@ create table t1(
 
 -- TEST: create a table that is visible in this schema version
 -- + {create_table_stmt}: t2: { id: integer }
--- - hidden
+-- - deleted
 -- - Error
 create table t2(
  id integer
 ) @create(5);
 
 -- TEST: create a table that is deleted in this schema version
--- + {create_table_stmt}: t3: { id: integer } hidden
+-- + {create_table_stmt}: t3: { id: integer } deleted
 -- - Error
 create table t3(
  id integer
@@ -93,7 +93,7 @@ create table t3(
 
 -- TEST: create a table that is not yet deleted in this schema version
 -- + {create_table_stmt}: t4: { id: integer }
--- - hidden
+-- - deleted
 -- - Error
 create table t4(
  id integer

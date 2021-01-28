@@ -194,7 +194,7 @@ typedef struct version_attrs_info {
   int32_t delete_version;             // the delete version or -1
   ast_node *delete_version_ast;       // the @delete version ast
   CSTR delete_proc;                   // the delete migration proc if any
-  sem_t flags;                        // SEM_FLAGS_HIDDEN or  0
+  sem_t flags;                        // SEM_FLAGS_DELETED or  0
   uint32_t create_code;               // @create annotation code (computed from ast type)
   uint32_t delete_code;               // @delete annotation code (computed from ast type)
   bool_t recreate;                    // true if table is on the @recreate plan
@@ -912,8 +912,8 @@ cql_noexport bool_t is_create_func(sem_t sem_type) {
   return !!(sem_type & SEM_TYPE_CREATE_FUNC);
 }
 
-static bool_t is_hidden(sem_t sem_type) {
-  return !!(sem_type & SEM_TYPE_HIDDEN);
+static bool_t is_deleted(sem_t sem_type) {
+  return !!(sem_type & SEM_TYPE_DELETED);
 }
 
 static bool_t is_validated(sem_t sem_type) {
@@ -1142,15 +1142,15 @@ static bool_t sem_validate_object_ast_in_current_region(CSTR name,
   return true;
 }
 
-// only clients that want to ensure no conflict of names (hidden or no) use this version
-ast_node *find_table_or_view_even_hidden(CSTR name) {
+// only clients that want to ensure no conflict of names (deleted or no) use this version
+ast_node *find_table_or_view_even_deleted(CSTR name) {
   symtab_entry *entry = symtab_find(tables, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
 // returns the node only if it exists and is not restricted by the schema region.
-static ast_node *find_usable_table_or_view_even_hidden(CSTR name, ast_node *err_target, CSTR msg) {
-  ast_node *table_ast = find_table_or_view_even_hidden(name);
+static ast_node *find_usable_table_or_view_even_deleted(CSTR name, ast_node *err_target, CSTR msg) {
+  ast_node *table_ast = find_table_or_view_even_deleted(name);
   if (!table_ast) {
     report_error(err_target, msg, name);
     return NULL;
@@ -1163,9 +1163,9 @@ static ast_node *find_usable_table_or_view_even_hidden(CSTR name, ast_node *err_
   return table_ast;
 }
 
-// returns the node only if the table is not hidden, most clients use this
-static ast_node *find_usable_and_unhidden_table_or_view(CSTR name, ast_node *err_target, CSTR msg) {
-  ast_node *table_ast = find_usable_table_or_view_even_hidden(name, err_target, msg);
+// returns the node only if the table is not deleted, most clients use this
+static ast_node *find_usable_and_not_deleted_table_or_view(CSTR name, ast_node *err_target, CSTR msg) {
+  ast_node *table_ast = find_usable_table_or_view_even_deleted(name, err_target, msg);
 
   if (!table_ast) {
     return NULL;
@@ -1182,7 +1182,7 @@ static ast_node *find_usable_and_unhidden_table_or_view(CSTR name, ast_node *err
     return NULL;
   }
 
-  if (is_hidden(table_ast->sem->sem_type)) {
+  if (is_deleted(table_ast->sem->sem_type)) {
     CHARBUF_OPEN(err_msg);
 
     if (schema_upgrade_version > 0) {
@@ -1428,8 +1428,8 @@ static void get_sem_flags(sem_t sem_type, charbuf *out) {
   if (sem_type & SEM_TYPE_SELECT_FUNC) {
     bprintf(out, " select_func");
   }
-  if (sem_type & SEM_TYPE_HIDDEN) {
-    bprintf(out, " hidden");
+  if (sem_type & SEM_TYPE_DELETED) {
+    bprintf(out, " deleted");
   }
   if (sem_type & SEM_TYPE_VALIDATED) {
     bprintf(out, " validated");
@@ -2343,7 +2343,7 @@ static void sem_validate_previous_index(ast_node *prev_index) {
     // valid.  There's no need for the tombstone anyway because when the
     // table is deleted all its indices will also be deleted.
     EXTRACT_STRING(prev_table_name, prev_create_index_on_list->right);
-    ast = find_table_or_view_even_hidden(prev_table_name);
+    ast = find_table_or_view_even_deleted(prev_table_name);
 
     if (!ast || ast->sem->delete_version < 0) {
       report_error(prev_index, "CQL0017: index was present but now it does not exist (use @delete instead)", name);
@@ -2430,7 +2430,7 @@ static void sem_create_index_stmt(ast_node *ast) {
   // if there is an existing index, save it here so we can check for duplicates later.
   ast_node *existing_defn = adding_current_entity ? find_index(index_name) : NULL;
 
-  ast_node *table_ast = find_usable_and_unhidden_table_or_view(
+  ast_node *table_ast = find_usable_and_not_deleted_table_or_view(
     table_name,
     table_name_ast,
     "CQL0019: create index table name not found");
@@ -2489,7 +2489,7 @@ static void sem_create_index_stmt(ast_node *ast) {
   }
 
   if (adding_current_entity) {
-    // hidden or no it goes in the main list
+    // deleted or no it goes in the main list
     add_item_to_list(&all_indices_list, ast);
 
     // and consume the name
@@ -2592,7 +2592,7 @@ static ast_node *find_and_validate_referenced_table(CSTR table_name, ast_node *e
     return current_table_ast;
   }
 
-  ast_node *ref_table_ast = find_usable_and_unhidden_table_or_view(
+  ast_node *ref_table_ast = find_usable_and_not_deleted_table_or_view(
     table_name,
     err_target,
     "CQL0021: foreign key refers to non-existent table");
@@ -3333,11 +3333,11 @@ static sem_t sem_col_attrs(ast_node *def, ast_node *_Nullable head, coldef_info 
   Invariant(schema_upgrade_version != 0);  // -1 or positive
 
   if (schema_upgrade_script) {
-    // no hidden columns processing, keep it all..
+    // no deleted columns processing, keep it all..
   }
   else if (schema_upgrade_version < 0) {
     if (info->delete_version > 0) {
-      flags |= SEM_TYPE_HIDDEN;
+      flags |= SEM_TYPE_DELETED;
     }
   }
   else {
@@ -3346,14 +3346,14 @@ static sem_t sem_col_attrs(ast_node *def, ast_node *_Nullable head, coldef_info 
     // if were on that version (in a migration context) then you're allowed
     // to look at that column so that you can zero it or some such.
     if (info->delete_version > 0 && schema_upgrade_version > info->delete_version) {
-      flags |= SEM_TYPE_HIDDEN;
+      flags |= SEM_TYPE_DELETED;
     }
 
     // The create version ist he version that the column was created in.
     // If we are migrating to a schema before the column was created then we
     // cannot see it yet.
     if (info->create_version > 0 && schema_upgrade_version < info->create_version) {
-      flags |= SEM_TYPE_HIDDEN;
+      flags |= SEM_TYPE_DELETED;
     }
   }
 
@@ -4348,7 +4348,7 @@ static ast_node *find_local_or_global_variable(CSTR name) {
 // Given an ast that is a name try to find its semantic info in the
 // declared variables table.  Note that there are special rules for cursors
 // that are applied here.
-// A cursor name C in an expression context refers to the hidden "_C_has_row_"
+// A cursor name C in an expression context refers to the deleted "_C_has_row_"
 // boolean. This lets you say "if C then stuff; end if;"
 // True if we found something.
 static bool_t try_resolve_variable(ast_node *ast, CSTR name) {
@@ -7316,7 +7316,7 @@ static void sem_table_or_subquery(ast_node *ast) {
     EXTRACT_STRING(name, factor);
     ast_node *table_ast = find_cte(name);
     if (!table_ast) {
-      table_ast = find_usable_and_unhidden_table_or_view(
+      table_ast = find_usable_and_not_deleted_table_or_view(
         name,
         ast,
         "CQL0095: table/view not defined");
@@ -8591,7 +8591,7 @@ static void sem_validate_previous_view(ast_node *prev_view) {
   EXTRACT_ANY_NOTNULL(prev_name_ast, prev_name_and_select->left);
   EXTRACT_STRING(name, prev_name_ast);
 
-  ast_node *ast = find_table_or_view_even_hidden(name);
+  ast_node *ast = find_table_or_view_even_deleted(name);
   if (!ast) {
     report_error(prev_view, "CQL0104: view was present but now it does not exist (use @delete instead)", name);
     record_error(prev_view);
@@ -8639,7 +8639,7 @@ static void sem_validate_previous_trigger(ast_node *prev_trigger) {
     EXTRACT_NAMED_NOTNULL(prev_trigger_op_target, trigger_op_target, prev_trigger_condition->right);
     EXTRACT_NAMED_NOTNULL(prev_trigger_target_action, trigger_target_action, prev_trigger_op_target->right);
     EXTRACT_STRING(prev_table_name, prev_trigger_target_action->left);
-    ast = find_table_or_view_even_hidden(prev_table_name);
+    ast = find_table_or_view_even_deleted(prev_table_name);
 
     if (!ast || ast->sem->delete_version < 0) {
       report_error(prev_trigger, "CQL0106: trigger was present but now it does not exist (use @delete instead)", name);
@@ -8680,7 +8680,7 @@ static void sem_create_view_stmt(ast_node *ast) {
   bool_t adding_current_entity = will_add_current_entity();
 
   // if there is an existing view, save it here so we can check for duplicates later.
-  ast_node *existing_defn = adding_current_entity ? find_table_or_view_even_hidden(name) : NULL;
+  ast_node *existing_defn = adding_current_entity ? find_table_or_view_even_deleted(name) : NULL;
 
   // View declarations (i.e. outside of any proc) are totally ignored
   // in the context of a schema migration script.  This prevents us from
@@ -8739,11 +8739,11 @@ static void sem_create_view_stmt(ast_node *ast) {
   }
 
   if (adding_current_entity) {
-    // hidden or no it goes in the main list
+    // deleted or no it goes in the main list
     add_item_to_list(&all_views_list, ast);
 
-    // The name is consumed, some clients will use find_usable_and_unhidden_table_or_view
-    // to not see hidden views (e.g. select) others don't (e.g. drop)
+    // The name is consumed, some clients will use find_usable_and_not_deleted_table_or_view
+    // to not see deleted views (e.g. select) others don't (e.g. drop)
     add_table_or_view(ast);
 
     // and record the annotation
@@ -8796,7 +8796,7 @@ static bool_t sem_validate_version_attrs(version_attrs_info *vers_info) {
 
   if (schema_upgrade_version == -1) {
     if (vers_info->delete_version > 0) {
-      vers_info->flags |= SEM_TYPE_HIDDEN;
+      vers_info->flags |= SEM_TYPE_DELETED;
     }
   }
   else {
@@ -8805,14 +8805,14 @@ static bool_t sem_validate_version_attrs(version_attrs_info *vers_info) {
     // if were on that version (in a migration context) then you're allowed
     // to look at that column so that you can zero it or some such.
     if (vers_info->delete_version != -1 && schema_upgrade_version > vers_info->delete_version) {
-      vers_info->flags |= SEM_TYPE_HIDDEN;
+      vers_info->flags |= SEM_TYPE_DELETED;
     }
 
     // The create version is the version that the column was created in.
     // If we are migrating to a schema before the column was created then we
     // cannot see it yet.
     if (vers_info->create_version != -1 && schema_upgrade_version < vers_info->create_version) {
-      vers_info->flags |= SEM_TYPE_HIDDEN;
+      vers_info->flags |= SEM_TYPE_DELETED;
     }
   }
 
@@ -8828,7 +8828,7 @@ static void sem_drop_table_stmt(ast_node *ast) {
   EXTRACT_STRING(name, name_ast);
 
   // we might be making the dropped table a reality so it's ok to try to drop @deleted tables
-  ast_node *table_ast = find_usable_table_or_view_even_hidden(name, name_ast, "CQL0108: table in drop statement does not exist");
+  ast_node *table_ast = find_usable_table_or_view_even_deleted(name, name_ast, "CQL0108: table in drop statement does not exist");
   if (!table_ast) {
     record_error(ast);
     return;
@@ -8854,7 +8854,7 @@ static void sem_drop_view_stmt(ast_node *ast) {
   EXTRACT_STRING(name, name_ast);
 
   // we might be making the dropped view a reality so it's ok to try to drop @deleted views
-  ast_node *view_ast = find_usable_table_or_view_even_hidden(name, name_ast, "CQL0110: view in drop statement does not exist");
+  ast_node *view_ast = find_usable_table_or_view_even_deleted(name, name_ast, "CQL0110: view in drop statement does not exist");
   if (!view_ast) {
     record_error(ast);
     return;
@@ -9053,8 +9053,8 @@ static void sem_validate_col_def_prev_cur(ast_node *def, ast_node *prev_def, ver
   }
 
   // It's ok for the column types to differ in sensitivity; this results in no represenation differences.
-  sem_t cur_type = def->sem->sem_type & sem_not(SEM_TYPE_SENSITIVE | SEM_TYPE_HIDDEN);
-  sem_t prev_type = prev_def->sem->sem_type & sem_not(SEM_TYPE_SENSITIVE | SEM_TYPE_HIDDEN);
+  sem_t cur_type = def->sem->sem_type & sem_not(SEM_TYPE_SENSITIVE | SEM_TYPE_DELETED);
+  sem_t prev_type = prev_def->sem->sem_type & sem_not(SEM_TYPE_SENSITIVE | SEM_TYPE_DELETED);
 
   if (cur_type != prev_type) {
     report_error(name_ast, "CQL0120: column type is different between previous and current schema", name);
@@ -9233,8 +9233,8 @@ static void sem_validate_previous_table(ast_node *prev_table) {
   EXTRACT_STRING(name, prev_name_ast);
   EXTRACT_ANY_NOTNULL(prev_col_key_list, prev_table->right);
 
-  // validation of @deleted tables is a thing, so we need hidden tables, too
-  ast_node *ast = find_table_or_view_even_hidden(name);
+  // validation of @deleted tables is a thing, so we need deleted tables, too
+  ast_node *ast = find_table_or_view_even_deleted(name);
   if (!ast) {
     report_error(prev_table, "CQL0126: table was present but now it does not exist (use @delete instead)", name);
     record_error(prev_table);
@@ -9532,7 +9532,7 @@ static void sem_create_trigger_stmt(ast_node *ast) {
     return;
   }
 
-  ast_node *target = find_usable_and_unhidden_table_or_view(
+  ast_node *target = find_usable_and_not_deleted_table_or_view(
     table_name,
     table_name_ast,
     "CQL0137: table/view not found");
@@ -9692,7 +9692,7 @@ static void sem_create_table_stmt(ast_node *ast) {
   bool_t adding_current_entity = will_add_current_entity();
 
   // if there is an existing table, save it here so we can check for duplicates later.
-  ast_node *existing_defn = adding_current_entity ? find_table_or_view_even_hidden(name) : NULL;
+  ast_node *existing_defn = adding_current_entity ? find_table_or_view_even_deleted(name) : NULL;
 
   coldef_info col_info;
   init_coldef_info(&col_info, &table_vers_info);
@@ -9730,7 +9730,7 @@ static void sem_create_table_stmt(ast_node *ast) {
         goto cleanup;;
       }
 
-      if (is_hidden(def->sem->sem_type)) {
+      if (is_deleted(def->sem->sem_type)) {
         continue;
       }
 
@@ -9769,9 +9769,9 @@ static void sem_create_table_stmt(ast_node *ast) {
 
     if (is_ast_col_def(def)) {
       Invariant(def->sem->name);
-      Invariant(col <= cols);  // it's possible that the rest are hidden and we're at the end.
+      Invariant(col <= cols);  // it's possible that the rest are deleted and we're at the end.
 
-      // columns must be unique, including hidden columns
+      // columns must be unique, including deleted columns
       if (!symtab_add(columns, def->sem->name, NULL)) {
         EXTRACT_NOTNULL(col_def_type_attrs, def->left);
         EXTRACT_NOTNULL(col_def_name_type, col_def_type_attrs->left);
@@ -9783,7 +9783,7 @@ static void sem_create_table_stmt(ast_node *ast) {
         goto cleanup;;
       }
 
-      if (is_hidden(def->sem->sem_type)) {
+      if (is_deleted(def->sem->sem_type)) {
         continue;
       }
 
@@ -9829,7 +9829,7 @@ static void sem_create_table_stmt(ast_node *ast) {
     EXTRACT_ANY_NOTNULL(def, item->left);
 
     if (is_ast_col_def(def)) {
-      if (is_hidden(def->sem->sem_type)) {
+      if (is_deleted(def->sem->sem_type)) {
         continue;
       }
 
@@ -9874,11 +9874,11 @@ static void sem_create_table_stmt(ast_node *ast) {
       sem_validate_previous_table(ast);
     }
     else if (adding_current_entity) {
-      // hidden or no it goes in the main list
+      // deleted or no it goes in the main list
       add_item_to_list(&all_tables_list, ast);
 
-      // The name is consumed, some clients will use find_usable_and_unhidden_table_or_view
-      // to not see hidden views (e.g. select) others don't (e.g. drop)
+      // The name is consumed, some clients will use find_usable_and_not_deleted_table_or_view
+      // to not see deleted views (e.g. select) others don't (e.g. drop)
       add_table_or_view(ast);
 
       sem_record_annotation_from_vers_info(&table_vers_info);
@@ -9937,7 +9937,7 @@ static void sem_alter_table_add_column_stmt(ast_node *ast) {
   EXTRACT(col_def, ast->right);
 
   // ALTER statements can be operating in the past, so we might be working on a table that is now deleted
-  ast_node *table_ast = find_usable_table_or_view_even_hidden(name, name_ast, "CQL0144: table in alter statement does not exist");
+  ast_node *table_ast = find_usable_table_or_view_even_deleted(name, name_ast, "CQL0144: table in alter statement does not exist");
   if (!table_ast) {
     record_error(ast);
     return;
@@ -10013,8 +10013,8 @@ static void sem_alter_table_add_column_stmt(ast_node *ast) {
       continue;
     }
 
-    // if the column is logically hidden, it doesn't count
-    if (is_hidden(def->sem->sem_type)) {
+    // if the column is logically deleted, it doesn't count
+    if (is_deleted(def->sem->sem_type)) {
       continue;
     }
 
@@ -10161,7 +10161,7 @@ static void sem_delete_stmt(ast_node *ast) {
 
   // DELETE FROM [name]
 
-  ast_node *table_ast = find_usable_and_unhidden_table_or_view(
+  ast_node *table_ast = find_usable_and_not_deleted_table_or_view(
     name,
     name_ast,
     "CQL0151: table in delete statement does not exist");
@@ -10340,7 +10340,7 @@ static void sem_update_stmt(ast_node *ast) {
   if (name_ast) {
     EXTRACT_STRING(name, name_ast);
 
-    table_ast = find_usable_and_unhidden_table_or_view(
+    table_ast = find_usable_and_not_deleted_table_or_view(
       name,
       name_ast,
       "CQL0154: table in update statement does not exist");
@@ -10814,7 +10814,7 @@ static void sem_insert_stmt(ast_node *ast) {
   // INSERT [conflict resolution] INTO name [( name_list )] SELECT ...
   // INSERT [conflict resolution] INTO name [( name_list )] FROM ARGUMENTS
 
-  ast_node *table_ast = find_usable_and_unhidden_table_or_view(
+  ast_node *table_ast = find_usable_and_not_deleted_table_or_view(
     name,
     name_ast,
     "CQL0160: table in insert statement does not exist");
@@ -11854,8 +11854,8 @@ cql_noexport ast_node *sem_find_likeable_ast(ast_node *like_ast, int32_t likeabl
   }
 
   if (!found_shape) {
-    // note: it's ok to use the LIKE construct on deleted tables too, hence even_hidden
-    found_shape = find_table_or_view_even_hidden(like_name);
+    // note: it's ok to use the LIKE construct on deleted tables too, hence even_deleted
+    found_shape = find_table_or_view_even_deleted(like_name);
   }
 
   if (!found_shape) {
@@ -11994,7 +11994,7 @@ static void sem_one_identity_column(CSTR _Nonnull name, ast_node *_Nonnull misc_
 
 // Find the column type of a column in a table. Return 0 if not found
 sem_t find_column_type(CSTR table_name, CSTR column_name) {
-  ast_node *table_ast = find_table_or_view_even_hidden(table_name);
+  ast_node *table_ast = find_table_or_view_even_deleted(table_name);
   if (table_ast) {
     for (int32_t i = 0; i < table_ast->sem->sptr->count; i++) {
       if (!Strcasecmp(column_name, table_ast->sem->sptr->names[i])) {
@@ -12049,7 +12049,7 @@ static bool_t sem_autotest_dummy_test(
 
     ast_node *table_list = dummy_test_list->left;
     EXTRACT_STRING(table_name, table_list->left);
-    ast_node *table = find_table_or_view_even_hidden(table_name);
+    ast_node *table = find_table_or_view_even_deleted(table_name);
     if (!table) {
       report_dummy_test_error(
         table_list->left,
@@ -12324,8 +12324,8 @@ static uint32_t sem_identity_columns(ast_node *misc_attrs) {
 static void sem_one_autodrop(CSTR _Nonnull name, ast_node *misc_attr_value, void *_Nullable context) {
   EXTRACT_NOTNULL(misc_attrs, (ast_node *)context);
 
-  // temp tables are never @deleted, look only for unhidden tables
-  ast_node *temp_table = find_usable_and_unhidden_table_or_view(
+  // temp tables are never @deleted, look only for not_deleted tables
+  ast_node *temp_table = find_usable_and_not_deleted_table_or_view(
     name,
     misc_attr_value->parent,
     "CQL0181: autodrop temp table does not exist");
@@ -13401,7 +13401,7 @@ static void sem_validate_ok_table_scan_value(ast_node *misc_attrs, ast_node *ast
   }
 
   EXTRACT_STRING(table_name, ast_misc_attr_value);
-  if (!find_usable_table_or_view_even_hidden(table_name, misc_attrs, "CQL0326: the table name in ok_table_scan does not exist")) {
+  if (!find_usable_table_or_view_even_deleted(table_name, misc_attrs, "CQL0326: the table name in ok_table_scan does not exist")) {
     record_error(ast_misc_attr_value);
     return;
   }
@@ -14220,8 +14220,8 @@ static bool_t sem_verify_legal_variable_name(ast_node *variable, CSTR name) {
     return false;
   }
 
-  // global variables can't conflict with table names, not even hidden table names
-  if (current_variables == globals && find_table_or_view_even_hidden(name)) {
+  // global variables can't conflict with table names, not even deleted table names
+  if (current_variables == globals && find_table_or_view_even_deleted(name)) {
     report_error(variable, "CQL0198: global variable hides table/view name", name);
     return false;
   }
@@ -15597,7 +15597,7 @@ static void sem_previous_schema_stmt(ast_node *ast) {
 // for the original version of the schema.  These create statements conflict
 // with the current version of the schema.  This attribute tells CQL to
 // 1) ignore DDL in stored procs for declaration purposes; only DDL outside of a proc counts
-// 2) do not make any columns "hidden" thereby allowing all annotations to be present
+// 2) do not make any columns "deleted" thereby allowing all annotations to be present
 //    so they can be used to validate other aspects of the migration script.
 static void sem_schema_upgrade_script_stmt(ast_node *ast) {
   Contract(is_ast_schema_upgrade_script_stmt(ast));
@@ -15620,7 +15620,7 @@ static void sem_schema_upgrade_script_stmt(ast_node *ast) {
 
 // For sql stored procs that are supposed to update previous schema versions
 // you can use this attribute to put CQL into that mindset.  This will make
-// the columns hidden for the version in question rather than the current version.
+// the columns deleted for the version in question rather than the current version.
 // This is important because older schema migration procs might still refer to
 // old columns.  Those columns truly exist at that schema version.
 static void sem_schema_upgrade_version_stmt(ast_node *ast) {

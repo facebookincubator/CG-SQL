@@ -152,7 +152,7 @@ static void cql_reset_globals(void);
 %token OUTER JOIN WHERE GROUP BY ORDER ASC
 %token DESC INNER FCOUNT AUTOINCREMENT DISTINCT
 %token LIMIT OFFSET TEMP TRIGGER IF ALL CROSS USING RIGHT
-%token UNIQUE HAVING SET TO DISTINCTROW ENUM
+%token HIDDEN UNIQUE HAVING SET TO DISTINCTROW ENUM
 %token FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR DECLARE TYPE FETCH LOOP LEAVE CONTINUE FOR
 %token OPEN CLOSE ELSE_IF WHILE CALL TRY CATCH THROW RETURN
 %token SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
@@ -644,6 +644,7 @@ name:
   | KEY  { $name = new_ast_str("key"); }
   | VIRTUAL  { $name = new_ast_str("virtual"); }
   | TYPE { $name = new_ast_str("type"); }
+  | HIDDEN { $name = new_ast_str("hidden"); }
   ;
 
 opt_name:
@@ -673,6 +674,7 @@ col_attrs[result]:
   | COLLATE name col_attrs[ca]  { $result = new_ast_col_attrs_collate($name, $ca);}
   | CHECK '(' expr ')' col_attrs[ca]  { $result = new_ast_col_attrs_check($expr, $ca);}
   | UNIQUE col_attrs[ca]  { $result = new_ast_col_attrs_unique(NULL, $ca);}
+  | HIDDEN col_attrs[ca]  { $result = new_ast_col_attrs_hidden(NULL, $ca);}
   | AT_SENSITIVE col_attrs[ca]  { $result = new_ast_sensitive_attr(NULL, $ca); }
   | AT_CREATE version_annotation col_attrs[ca]  { $result = new_ast_create_attr($version_annotation, $ca);}
   | AT_DELETE version_annotation col_attrs[ca]  { $result = new_ast_delete_attr($version_annotation, $ca);}

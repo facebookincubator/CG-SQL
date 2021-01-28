@@ -1243,6 +1243,8 @@ set key := 3;
 -- virtual is a valid name
 set virtual := 3;
 
+-- hidden is a valid name
+set hidden := 2;
 
 -- arg bundle shapes
 create proc foo(x like this, y like that)
@@ -1309,6 +1311,10 @@ declare l1 long int<three>;
 declare l1 long_int<four>;
 
 select case when 1 then 2 else ifnull(x, y) end;
+
+create table foo(
+ x integer hidden
+);
 
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 

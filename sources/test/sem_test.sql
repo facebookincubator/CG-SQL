@@ -4503,9 +4503,9 @@ alter table bar add column name text @create(1) @create(1);
 -- +1 Error
 alter table bar add column name text @create(0);
 
--- TEST: declare a table with a deleted column (should be hidden)
+-- TEST: declare a table with a deleted column (should be deleted)
 -- + {create_table_stmt}: hides_id_not_name: { name: text }
--- + {col_def}: id: integer hidden
+-- + {col_def}: id: integer deleted
 -- + {col_def}: name: text
 create table hides_id_not_name(
   id int @delete(2),
@@ -4584,7 +4584,7 @@ create table migrate_annotions_delete_out_of_order(
 -- + {delete_attr}
 -- + {int 2}
 -- + {name table_delete_proc}
--- + hidden
+-- + deleted
 -- - Error
 create table versioned_table(
    id integer @create(2)
@@ -4651,27 +4651,27 @@ insert into versioned_table values(1);
 insert into versioned_table(id) values(1);
 
 -- TEST: try to create a view with the same name as the versioned table
--- note: the name is found even though the table is hidden
+-- note: the name is found even though the table is deleted
 -- + {create_view_stmt}: err
 -- + Error % duplicate table/view name 'versioned_table'
 create view versioned_table as select 1 x;
 
 -- TEST: try to create a global variable with the same name as the versioned table
--- note: the name is found even though the table is hidden
+-- note: the name is found even though the table is deleted
 -- + {declare_vars_type}: err
 -- + Error % global variable hides table/view name 'versioned_table'
 -- +1 Error
 declare versioned_table integer;
 
 -- TEST: try to create a table with the same name as the versioned table
--- note: the name is found even though the table is hidden
+-- note: the name is found even though the table is deleted
 -- + {create_table_stmt}: err
 -- + Error % duplicate table/view name 'versioned_table'
 create table versioned_table(id2 integer);
 
 -- TEST: drop the table (note that DDL works on any version)
 -- + {drop_table_stmt}: ok
--- + {name versioned_table}: versioned_table: { id: integer } hidden
+-- + {name versioned_table}: versioned_table: { id: integer } deleted
 -- - Error
 drop table if exists versioned_table;
 
@@ -4723,7 +4723,7 @@ create table t_col_early_delete (
 ) @delete(1);
 
 -- TEST: table deleted not null column with default
--- + {col_def}: id: integer notnull has_default hidden @delete(2)
+-- + {col_def}: id: integer notnull has_default deleted @delete(2)
 -- - Error
 create table t_col_delete_notnull (
   id integer not null DEFAULT 8675309 @delete(2)
@@ -4813,8 +4813,8 @@ begin
   @schema_upgrade_script;
 end;
 
--- TEST: try to use the non-column insert syntax on a table with hidden columns
--- we should get a fully formed insert on the non hidden column
+-- TEST: try to use the non-column insert syntax on a table with deleted columns
+-- we should get a fully formed insert on the non deleted column
 -- + INSERT INTO hides_id_not_name(name) VALUES('x');
 -- + {name hides_id_not_name}: hides_id_not_name: { name: text }
 insert into hides_id_not_name values('x');
