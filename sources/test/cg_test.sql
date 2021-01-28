@@ -3069,6 +3069,35 @@ end;
 -- TEST: declaration of a named type
 declare my_name_type type text not null;
 
+-- make a virtual table with a hidden column for use in the next tests
+create virtual table virtual_with_hidden using module_name as (
+  vx integer hidden not null,
+  vy integer
+);
+
+-- TEST: hidden applied on virtual tables
+-- + "SELECT vy "
+-- + "FROM virtual_with_hidden");
+select * from virtual_with_hidden;
+
+-- TEST: hidden columns may be used by name
+-- +  _rc_ = cql_prepare(_db_, _result_stmt,
+-- + "SELECT vx, vy "
+-- + "FROM virtual_with_hidden "
+-- + "WHERE vx = 2");
+select vx, vy from virtual_with_hidden where vx = 2;
+
+-- TEST: insert into the table, verify autoexpand is correct there, too
+-- only "y" should be inserted here
+-- + _rc_ = cql_exec(_db_,
+-- + "INSERT INTO virtual_with_hidden(vy) VALUES(1)");
+insert into virtual_with_hidden values(1);
+
+-- TEST: you can use the hidden column if you do it by name
+-- + _rc_ = cql_exec(_db_,
+-- + "INSERT INTO virtual_with_hidden(vx, vy) VALUES(1, 2)");
+insert into virtual_with_hidden(vx, vy) values(1,2);
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

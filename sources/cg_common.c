@@ -216,10 +216,14 @@ bool_t cg_expand_star(ast_node *_Nonnull ast, void *_Nullable context, charbuf *
     sem_struct *sptr = ast->sem->sptr;
     uint32_t count = sptr->count;
 
+    bool_t first = true;
     for (uint32_t i = 0; i < count; i++) {
-      bprintf(buffer, "%s", sptr->names[i]);
-      if (i < count -1) {
+      if (!first) {
         bprintf(buffer, ", ");
+      }
+      if (!(sptr->semtypes[i] & SEM_TYPE_HIDDEN_COL)) {
+        first = false;
+        bprintf(buffer, "%s", sptr->names[i]);
       }
     }
   }
@@ -228,10 +232,14 @@ bool_t cg_expand_star(ast_node *_Nonnull ast, void *_Nullable context, charbuf *
     sem_struct *sptr = ast->sem->sptr;
     uint32_t count = sptr->count;
 
+    bool_t first = true;
     for (uint32_t i = 0; i < count; i++) {
-      bprintf(buffer, "%s.%s", ast->sem->name, sptr->names[i]);
-      if (i < count -1) {
+      if (!first) {
         bprintf(buffer, ", ");
+      }
+      if (!(sptr->semtypes[i] & SEM_TYPE_HIDDEN_COL)) {
+        first = false;
+        bprintf(buffer, "%s.%s", ast->sem->name, sptr->names[i]);
       }
     }
   }

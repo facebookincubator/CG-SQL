@@ -1431,6 +1431,9 @@ static void get_sem_flags(sem_t sem_type, charbuf *out) {
   if (sem_type & SEM_TYPE_DELETED) {
     bprintf(out, " deleted");
   }
+  if (sem_type & SEM_TYPE_HIDDEN_COL) {
+    bprintf(out, " hidden_col");
+  }
   if (sem_type & SEM_TYPE_VALIDATED) {
     bprintf(out, " validated");
   }
@@ -1811,7 +1814,7 @@ static sem_struct *sem_clone_struct_strip_flags(sem_struct *sptr, sem_t strip) {
 // to get rid of other table-ish flags like HAS_DEFAULT and AUTOINCREMENT
 // they don't contribute to anything and they make the tree ugly.
 static sem_struct *new_sem_struct_strip_table_flags(sem_struct *sptr) {
-  return sem_clone_struct_strip_flags(sptr, sem_not(SEM_TYPE_CORE | SEM_TYPE_NOTNULL | SEM_TYPE_SENSITIVE));
+  return sem_clone_struct_strip_flags(sptr, sem_not(SEM_TYPE_CORE | SEM_TYPE_NOTNULL | SEM_TYPE_SENSITIVE | SEM_TYPE_HIDDEN_COL));
 }
 
 // Create a base join type from a single struct.
@@ -3307,6 +3310,20 @@ static sem_t sem_col_attrs(ast_node *def, ast_node *_Nullable head, coldef_info 
         return false;
       }
       new_flags = SEM_TYPE_FK; // prevent two of the same
+    }
+    else if (is_ast_col_attrs_hidden(ast)) {
+      // NOTE: SEM_TYPE_VIRTUAL is not yet computed so we can't use that here, later this is easier
+
+      ast_node *table_ast = info->table_info->target_ast;
+      bool_t is_virtual_table = table_ast->parent && is_ast_create_virtual_table_stmt(table_ast->parent);
+     
+      // ignored for non-virtual tables SQLite does the same e.g:
+      // > create table foo(x integer hidden, y integer); insert into foo(x,y) values(1,2); select * from foo;
+      // 1|2
+
+      if (is_virtual_table) {
+        new_flags = SEM_TYPE_HIDDEN_COL;
+      }
     }
     else {
       // this is all that's left
@@ -10734,6 +10751,10 @@ static void sem_column_spec_and_values(ast_node *ast, ast_node *table_ast) {
       }
 
       if (is_nullable(sem_type_col) && !(dummy_flags & INSERT_DUMMY_NULLABLES)) {
+        continue;
+      }
+
+      if (sem_type_col & SEM_TYPE_HIDDEN_COL) {
         continue;
       }
 

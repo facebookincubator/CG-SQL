@@ -584,6 +584,10 @@ cql_noexport ast_node *rewrite_gen_full_column_list(sem_struct *sptr) {
   ast_node *name_list_tail = NULL;
 
   for (int32_t i = 0; i < sptr->count; i++) {
+    if (sptr->semtypes[i] & SEM_TYPE_HIDDEN_COL) {
+      continue;
+    }
+
     ast_node *ast_col = new_ast_str(sptr->names[i]);
 
     // add name to the name list

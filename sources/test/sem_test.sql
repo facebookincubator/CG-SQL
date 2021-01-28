@@ -13935,3 +13935,20 @@ end;
 -- + {name ifnull}
 -- - Error
 select case when 1 then 2 else ifnull(x, y) end;
+
+
+-- TEST: hidden ignored on non-virtual tables
+-- + {create_table_stmt}: hidden_ignored_on_normal_tables: { x: integer notnull, y: integer }
+-- - Error
+create table hidden_ignored_on_normal_tables(
+  x integer hidden not null,
+  y integer
+);
+
+-- TEST: hidden applied on virtual tables
+-- + {create_table_stmt}: virtual_with_hidden: { x: integer notnull hidden_col, y: integer } virtual @recreate
+-- - Error
+create virtual table virtual_with_hidden using module_name as (
+  x integer hidden not null,
+  y integer
+);

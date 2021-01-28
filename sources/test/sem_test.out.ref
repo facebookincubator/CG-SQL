@@ -55711,3 +55711,61 @@ END;
     | {select_limit}
       | {select_offset}
 
+The statement ending at line XXXX
+
+CREATE TABLE hidden_ignored_on_normal_tables(
+  x INTEGER HIDDEN NOT NULL,
+  y INTEGER
+);
+
+  {create_table_stmt}: hidden_ignored_on_normal_tables: { x: integer notnull, y: integer }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name hidden_ignored_on_normal_tables}
+  | {col_key_list}
+    | {col_def}: x: integer notnull
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |   | | {name x}
+    |   | | {type_int}: integer
+    |   | {col_attrs_hidden}: ok
+    |     | {col_attrs_not_null}
+    | {col_key_list}
+      | {col_def}: y: integer
+        | {col_def_type_attrs}: ok
+          | {col_def_name_type}
+            | {name y}
+            | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE VIRTUAL TABLE virtual_with_hidden USING module_name AS (
+  x INTEGER HIDDEN NOT NULL,
+  y INTEGER
+);
+
+  {create_virtual_table_stmt}: virtual_with_hidden: { x: integer notnull hidden_col, y: integer } virtual @recreate
+  | {module_info}
+  | | {name module_name}
+  | {create_table_stmt}: virtual_with_hidden: { x: integer notnull hidden_col, y: integer } virtual @recreate
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | | {recreate_attr}
+    | | {name virtual_with_hidden}
+    | {col_key_list}
+      | {col_def}: x: integer notnull hidden_col
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name x}
+      |   | | {type_int}: integer
+      |   | {col_attrs_hidden}: ok
+      |     | {col_attrs_not_null}
+      | {col_key_list}
+        | {col_def}: y: integer
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name y}
+              | {type_int}: integer
+

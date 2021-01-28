@@ -9104,6 +9104,48 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
       "AVG(amount) OVER (GROUPS CURRENT ROW) "
       "FROM SalesInfo");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SELECT *
+    FROM virtual_with_hidden;
+  */
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT vy "
+      "FROM virtual_with_hidden");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SELECT vx, vy
+    FROM virtual_with_hidden
+    WHERE vx = 2;
+  */
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT vx, vy "
+      "FROM virtual_with_hidden "
+      "WHERE vx = 2");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  
+  // The statement ending at line XXXX
+  
+  /*
+  INSERT INTO virtual_with_hidden(vy) VALUES(1);
+  */
+  _rc_ = cql_exec(_db_,
+    "INSERT INTO virtual_with_hidden(vy) VALUES(1)");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  
+  // The statement ending at line XXXX
+  
+  /*
+  INSERT INTO virtual_with_hidden(vx, vy) VALUES(1, 2);
+  */
+  _rc_ = cql_exec(_db_,
+    "INSERT INTO virtual_with_hidden(vx, vy) VALUES(1, 2)");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 
 cql_cleanup:
   cql_string_release(t0_nullable);

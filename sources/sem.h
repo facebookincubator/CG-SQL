@@ -149,7 +149,8 @@ cql_data_decl( bytebuf *recreate_annotations );
 #define SEM_TYPE_HAS_COLLATE       _64(0x40000000) // set for table column with a "collate" clause
 #define SEM_TYPE_USES_THROW        _64(0x80000000) // set for a procedure that has a throw in it
 #define SEM_TYPE_VIRTUAL          _64(0x100000000) // set if and only if this is a virtual table
-#define SEM_TYPE_FLAGS            _64(0x1FFFFFF00) // all the flag bits we have so far
+#define SEM_TYPE_HIDDEN_COL       _64(0x200000000) // set if and only if hidden column on a virtual table
+#define SEM_TYPE_FLAGS            _64(0x3FFFFFF00) // all the flag bits we have so far
 
 #define SEM_EXPR_CONTEXT_NONE           0x001
 #define SEM_EXPR_CONTEXT_SELECT_LIST    0x002
