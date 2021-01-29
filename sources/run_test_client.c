@@ -699,7 +699,7 @@ cql_code test_all_column_encoded_fetchers(sqlite3 *db) {
   cql_blob_ref bl0 = load_encoded_table_get_bl0(rs, 0);
   cql_blob_ref bl0_decode = cql_decode_blob_ref_new(db, bl0);
   cql_blob_ref bl0_exp = cql_blob_ref_new("0", 1);
-  E(cql_blob_equal(bl0_decode, bl0_exp), "expected bl0 is \"0\", value %s\n", bl0_decode->ptr);
+  E(cql_blob_equal(bl0_decode, bl0_exp), "expected bl0 is \"0\", value %s\n", (char*)bl0_decode->ptr);
   cql_blob_release(bl0_decode);
   cql_blob_release(bl0_exp);
 
@@ -729,7 +729,7 @@ cql_code test_all_column_encoded_fetchers(sqlite3 *db) {
   cql_blob_ref bl1 = load_encoded_table_get_bl1(rs, 0);
   cql_blob_ref bl1_decode = cql_decode_blob_ref_new(db, bl1);
   cql_blob_ref bl1_exp = cql_blob_ref_new("1", 1);
-  E(cql_blob_equal(bl1_decode, bl1_exp), "expected bl1 is \"1\", value %s\n", bl1_decode->ptr);
+  E(cql_blob_equal(bl1_decode, bl1_exp), "expected bl1 is \"1\", value %s\n", (char*)bl1_decode->ptr);
   cql_blob_release(bl1_decode);
   cql_blob_release(bl1_exp);
 
@@ -776,7 +776,7 @@ cql_code test_all_column_encoded_cursor(sqlite3 *db) {
   cql_blob_ref bl0 = load_encoded_cursor_get_bl0(rs);
   cql_blob_ref bl0_decode = cql_decode_blob_ref_new(db, bl0);
   cql_blob_ref bl0_exp = cql_blob_ref_new("0", 1);
-  E(cql_blob_equal(bl0_decode, bl0_exp), "expected bl0 is \"0\", value %s\n", bl0_decode->ptr);
+  E(cql_blob_equal(bl0_decode, bl0_exp), "expected bl0 is \"0\", value %s\n", (char*)bl0_decode->ptr);
   cql_blob_release(bl0_decode);
   cql_blob_release(bl0_exp);
 
@@ -806,7 +806,7 @@ cql_code test_all_column_encoded_cursor(sqlite3 *db) {
   cql_blob_ref bl1 = load_encoded_cursor_get_bl1(rs);
   cql_blob_ref bl1_decode = cql_decode_blob_ref_new(db, bl1);
   cql_blob_ref bl1_exp = cql_blob_ref_new("1", 1);
-  E(cql_blob_equal(bl1_decode, bl1_exp), "expected bl1 is \"1\", value %s\n", bl1_decode->ptr);
+  E(cql_blob_equal(bl1_decode, bl1_exp), "expected bl1 is \"1\", value %s\n", (char*)bl1_decode->ptr);
   cql_blob_release(bl1_decode);
   cql_blob_release(bl1_exp);
 
