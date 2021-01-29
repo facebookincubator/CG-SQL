@@ -13952,3 +13952,11 @@ create virtual table virtual_with_hidden using module_name as (
   x integer hidden not null,
   y integer
 );
+
+-- TEST: hidden applied on virtual tables
+-- + Error % the HIDDEN column attribute must be the first attribute if present
+-- +1 Error
+create virtual table virtual_with_hidden_wrong using module_name as (
+  x integer not null hidden,
+  y integer
+);

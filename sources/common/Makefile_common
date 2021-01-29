@@ -24,6 +24,7 @@ SQLITE_LINK+=-pthread -ldl
 CFLAGS+=-I$(CQL_DIR)
 CFLAGS+=-I$O
 CFLAGS+=-g
+CFLAGS+=-Werror
 
 ifdef CGSQL_GCC
 CFLAGS += -std=c99

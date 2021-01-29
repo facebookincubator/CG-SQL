@@ -55769,3 +55769,36 @@ CREATE VIRTUAL TABLE virtual_with_hidden USING module_name AS (
               | {name y}
               | {type_int}: integer
 
+The statement ending at line XXXX
+
+CREATE VIRTUAL TABLE virtual_with_hidden_wrong USING module_name AS (
+  x INTEGER NOT NULL HIDDEN,
+  y INTEGER
+);
+
+Error at test/sem_test.sql:XXXX : in col_attrs_hidden : CQL0362: The HIDDEN column attribute must be the first attribute if present
+
+  {create_virtual_table_stmt}: err
+  | {module_info}
+  | | {name module_name}
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | | {recreate_attr}
+    | | {name virtual_with_hidden_wrong}
+    | {col_key_list}
+      | {col_def}: err
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name x}
+      |   | | {type_int}: integer
+      |   | {col_attrs_not_null}: err
+      |     | {col_attrs_hidden}
+      | {col_key_list}
+        | {col_def}
+          | {col_def_type_attrs}
+            | {col_def_name_type}
+              | {name y}
+              | {type_int}
+

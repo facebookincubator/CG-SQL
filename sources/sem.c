@@ -3321,6 +3321,12 @@ static sem_t sem_col_attrs(ast_node *def, ast_node *_Nullable head, coldef_info 
       // > create table foo(x integer hidden, y integer); insert into foo(x,y) values(1,2); select * from foo;
       // 1|2
 
+      if (flags) {
+        report_error(ast, "CQL0362: The HIDDEN column attribute must be the first attribute if present", NULL);
+        record_error(head);
+        return false;
+      }
+
       if (is_virtual_table) {
         new_flags = SEM_TYPE_HIDDEN_COL;
       }

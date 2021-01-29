@@ -22,7 +22,7 @@
 #define YYSTACK_USE_ALLOCA 1
 
 int yylex();
-void yyerror(char *s, ...);
+void yyerror(const char *s, ...);
 void yyset_in(FILE *);
 void yyset_lineno(int);
 
@@ -676,7 +676,7 @@ ad_hoc_migration: '{'
 
 %%
 
-void yyerror(char *s, ...) {
+void yyerror(const char *s, ...) {
   extern int yylineno;
   va_list args;
   va_start(args, s);
