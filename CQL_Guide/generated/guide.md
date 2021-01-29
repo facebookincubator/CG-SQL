@@ -7670,7 +7670,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed Jan 20 11:08:03 PST 2021
+Snapshot as of Thu Jan 28 17:31:06 PST 2021
 
 ### Operators and Literals
 
@@ -7714,7 +7714,7 @@ AS CASE WHEN FROM THEN ELSE END LEFT
 OUTER JOIN WHERE GROUP BY ORDER ASC
 DESC INNER FCOUNT AUTOINCREMENT DISTINCT
 LIMIT OFFSET TEMP TRIGGER IF ALL CROSS USING RIGHT
-UNIQUE HAVING SET TO DISTINCTROW ENUM
+HIDDEN UNIQUE HAVING SET TO DISTINCTROW ENUM
 FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR DECLARE TYPE FETCH LOOP LEAVE CONTINUE FOR
 OPEN CLOSE ELSE_IF WHILE CALL TRY CATCH THROW RETURN
 SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
@@ -8067,6 +8067,7 @@ name:
   | "KEY"
   | "VIRTUAL"
   | "TYPE"
+  | "HIDDEN"
   ;
 
 opt_name:
@@ -8096,6 +8097,7 @@ col_attrs:
   | "COLLATE" name col_attrs
   | "CHECK" '(' expr ')' col_attrs
   | "UNIQUE" col_attrs
+  | "HIDDEN" col_attrs
   | "@SENSITIVE" col_attrs
   | "@CREATE" version_annotation col_attrs
   | "@DELETE" version_annotation col_attrs
@@ -11801,20 +11803,20 @@ to be corrected.
 
 -----
 
-### CQL0327: a value should not be assigned to no_table_scan attribute
+### CQL0327: a value should not be assigned to 'attribute_name' attribute
 
-The attribute `no_table_scan` doesn't take a value.
+The attribute `attribute_name` doesn't take a value.
 
-When marking a table with `@attribute(cql:no_table_scan)` there is no need
+When marking a statement with `@attribute(cql:<attribute_name>)` there is no need
 for an attribute value.
 
 -----
 
-### CQL0328: no_table_scan attribute may only be added to a create table statement
+### CQL0328: 'attribute_name' attribute may only be added to a 'statement_name'
 
-The `no_table_scan` attrubute can only be assigned to a create table statement.
+The `attribute_name` attribute can only be assigned to specific statements.
 
-The marking `@attribute(cql:no_table_scan)` only makes sense on tables.  It's likely
+The marking `@attribute(cql:<attribute_name>)` only makes sense on specific statement. It's likely
 been put somewhere strange, If it isn't obviously on the wrong thing, look into
 possibly how the source is after macro expansion.
 
@@ -12073,7 +12075,7 @@ The name of a declared type should always be unique.
 
 ### CQL0360: unknown type 'type_name'
 
-The name of a declared type is unknown.
+The indicated name is not a valid type name.
 
 ----
 
@@ -12082,6 +12084,18 @@ The name of a declared type is unknown.
 Return data type in a create function definition can only be TEXT, BLOB or OBJECT.
 
 These are the only reference types and so CREATE makes sense only with those types.  An integer, for instance, can't start with a +1 reference count.
+
+----
+
+### CQL0362: The HIDDEN column attribute must be the first attribute if present
+
+In order to ensure that SQLite will parse HIDDEN as part of the type it has to come before any other attributes like NOT NULL.
+
+This limitation is due to the fact that CQL and SQLite use slightly different parsing approaches for attributes and in SQLite
+HIDDEN isn't actually an attribute.  The safest place to put the attribute is right after the type name and before any other
+attributes as it is totally unambiguous there so CQL enforces this.
+
+----
 
 
 
@@ -12095,7 +12109,7 @@ These are the only reference types and so CREATE makes sense only with those typ
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Wed Jan 20 11:08:03 PST 2021
+Snapshot as of Thu Jan 28 17:31:07 PST 2021
 
 ### Rules
 

@@ -100,6 +100,7 @@ s/[[:<:]]FUNCTION[[:>:]]/"FUNCTION"/g
 s/[[:<:]]GLOB[[:>:]]/"GLOB"/g
 s/[[:<:]]GROUPS[[:>:]]/"GROUPS"/g
 s/[[:<:]]HAVING[[:>:]]/"HAVING"/g
+s/[[:<:]]HIDDEN[[:>:]]/"HIDDEN"/g
 s/[[:<:]]ID[[:>:]]/"ID"/g
 s/[[:<:]]IGNORE[[:>:]]/"IGNORE"/g
 s/[[:<:]]IMMEDIATE[[:>:]]/"IMMEDIATE"/g

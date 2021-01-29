@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Wed Jan 20 11:08:03 2021
+// Snapshot as of Thu Jan 28 17:31:06 2021
 
 
 const PREC = {
@@ -76,11 +76,11 @@ module.exports = grammar({
     indexed_column: $ => seq($.name, optional($.opt_asc_desc)),
     indexed_columns: $ => choice($.indexed_column, seq($.indexed_column, ',', $.indexed_columns)),
     create_index_stmt: $ => seq($.CREATE, optional($.opt_unique), $.INDEX, optional($.opt_if_not_exists), $.name, $.ON, $.name, '(', $.indexed_columns, ')', optional($.opt_delete_version_attr)),
-    name: $ => choice($.ID, $.TEXT, $.TRIGGER, $.ROWID, $.KEY, $.VIRTUAL, $.TYPE),
+    name: $ => choice($.ID, $.TEXT, $.TRIGGER, $.ROWID, $.KEY, $.VIRTUAL, $.TYPE, $.HIDDEN),
     opt_name: $ => $.name,
     name_list: $ => choice($.name, seq($.name, ',', $.name_list)),
     opt_name_list: $ => $.name_list,
-    col_attrs: $ => choice(seq($.NOT, $.NULL, optional($.col_attrs)), seq($.PRIMARY, $.KEY, optional($.col_attrs)), seq($.PRIMARY, $.KEY, $.AUTOINCREMENT, optional($.col_attrs)), seq($.DEFAULT, '-', $.num_literal, optional($.col_attrs)), seq($.DEFAULT, $.num_literal, optional($.col_attrs)), seq($.DEFAULT, $.const_expr, optional($.col_attrs)), seq($.DEFAULT, $.str_literal, optional($.col_attrs)), seq($.COLLATE, $.name, optional($.col_attrs)), seq($.CHECK, '(', $.expr, ')', optional($.col_attrs)), seq($.UNIQUE, optional($.col_attrs)), seq($.AT_SENSITIVE, optional($.col_attrs)), seq($.AT_CREATE, $.version_annotation, optional($.col_attrs)), seq($.AT_DELETE, $.version_annotation, optional($.col_attrs)), seq($.fk_target_options, optional($.col_attrs))),
+    col_attrs: $ => choice(seq($.NOT, $.NULL, optional($.col_attrs)), seq($.PRIMARY, $.KEY, optional($.col_attrs)), seq($.PRIMARY, $.KEY, $.AUTOINCREMENT, optional($.col_attrs)), seq($.DEFAULT, '-', $.num_literal, optional($.col_attrs)), seq($.DEFAULT, $.num_literal, optional($.col_attrs)), seq($.DEFAULT, $.const_expr, optional($.col_attrs)), seq($.DEFAULT, $.str_literal, optional($.col_attrs)), seq($.COLLATE, $.name, optional($.col_attrs)), seq($.CHECK, '(', $.expr, ')', optional($.col_attrs)), seq($.UNIQUE, optional($.col_attrs)), seq($.HIDDEN, optional($.col_attrs)), seq($.AT_SENSITIVE, optional($.col_attrs)), seq($.AT_CREATE, $.version_annotation, optional($.col_attrs)), seq($.AT_DELETE, $.version_annotation, optional($.col_attrs)), seq($.fk_target_options, optional($.col_attrs))),
     version_annotation: $ => choice(seq('(', $.INT_LIT, ',', $.name, ')'), seq('(', $.INT_LIT, ')')),
     opt_kind: $ => seq('<', $.name, '>'),
     data_type_numeric: $ => choice(seq($.INT, optional($.opt_kind)), seq($.INTEGER, optional($.opt_kind)), seq($.REAL, optional($.opt_kind)), seq($.LONG, optional($.opt_kind)), seq($.BOOL, optional($.opt_kind)), seq($.LONG, $.INTEGER, optional($.opt_kind)), seq($.LONG, $.INT, optional($.opt_kind)), seq($.LONG_INT, optional($.opt_kind)), seq($.LONG_INTEGER, optional($.opt_kind))),
@@ -330,6 +330,7 @@ module.exports = grammar({
     UNIQUE: $ => CI('unique'),
     TEXT: $ => CI('text'),
     TYPE: $ => CI('type'),
+    HIDDEN: $ => CI('hidden'),
     AUTOINCREMENT: $ => CI('autoincrement'),
     COLLATE: $ => CI('collate'),
     AT_SENSITIVE: $ => CI('@sensitive'),

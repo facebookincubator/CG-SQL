@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed Jan 20 11:08:03 PST 2021
+Snapshot as of Thu Jan 28 17:31:06 PST 2021
 
 ### Operators and Literals
 
@@ -57,7 +57,7 @@ AS CASE WHEN FROM THEN ELSE END LEFT
 OUTER JOIN WHERE GROUP BY ORDER ASC
 DESC INNER FCOUNT AUTOINCREMENT DISTINCT
 LIMIT OFFSET TEMP TRIGGER IF ALL CROSS USING RIGHT
-UNIQUE HAVING SET TO DISTINCTROW ENUM
+HIDDEN UNIQUE HAVING SET TO DISTINCTROW ENUM
 FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR DECLARE TYPE FETCH LOOP LEAVE CONTINUE FOR
 OPEN CLOSE ELSE_IF WHILE CALL TRY CATCH THROW RETURN
 SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
@@ -410,6 +410,7 @@ name:
   | "KEY"
   | "VIRTUAL"
   | "TYPE"
+  | "HIDDEN"
   ;
 
 opt_name:
@@ -439,6 +440,7 @@ col_attrs:
   | "COLLATE" name col_attrs
   | "CHECK" '(' expr ')' col_attrs
   | "UNIQUE" col_attrs
+  | "HIDDEN" col_attrs
   | "@SENSITIVE" col_attrs
   | "@CREATE" version_annotation col_attrs
   | "@DELETE" version_annotation col_attrs

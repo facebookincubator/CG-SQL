@@ -544,8 +544,8 @@
 <li><a href="#cql0324-referenced-table-was-created-in-a-later-version-so-it-cannot-be-used-in-a-foreign-key-referenced_table">CQL0324: referenced table was created in a later version so it cannot be used in a foreign key ‘referenced_table’</a></li>
 <li><a href="#cql0325-ok_table_scan-attribute-must-be-a-name">CQL0325: ok_table_scan attribute must be a name</a></li>
 <li><a href="#cql0326-the-table-name-in-ok_table_scan-does-not-exist-table_name">CQL0326: the table name in ok_table_scan does not exist ‘table_name’</a></li>
-<li><a href="#cql0327-a-value-should-not-be-assigned-to-no_table_scan-attribute">CQL0327: a value should not be assigned to no_table_scan attribute</a></li>
-<li><a href="#cql0328-no_table_scan-attribute-may-only-be-added-to-a-create-table-statement">CQL0328: no_table_scan attribute may only be added to a create table statement</a></li>
+<li><a href="#cql0327-a-value-should-not-be-assigned-to-attribute_name-attribute">CQL0327: a value should not be assigned to ‘attribute_name’ attribute</a></li>
+<li><a href="#cql0328-attribute_name-attribute-may-only-be-added-to-a-statement_name">CQL0328: ‘attribute_name’ attribute may only be added to a ‘statement_name’</a></li>
 <li><a href="#cql0329-ok_table_scan-attribute-can-only-be-used-in-a-create-procedure-statement">CQL0329: ok_table_scan attribute can only be used in a create procedure statement</a></li>
 <li><a href="#cql0330-fragment-must-start-with-exactly-select-from-cte">CQL0330: fragment must start with exactly ‘SELECT * FROM CTE’</a></li>
 <li><a href="#cql0331-extension-fragment-cte-must-have-not-have-order-by-or-limit-clauses-frag_name">CQL0331: extension fragment CTE must have not have ORDER BY or LIMIT clauses ‘frag_name’</a></li>
@@ -579,6 +579,7 @@
 <li><a href="#cql0359-duplicate-type-declaration-type_name">CQL0359: duplicate type declaration ‘type_name’</a></li>
 <li><a href="#cql0360-unknown-type-type_name">CQL0360: unknown type ‘type_name’</a></li>
 <li><a href="#cql0361-return-data-type-in-a-create-function-declaration-can-only-be-text-blob-or-object">CQL0361: Return data type in a create function declaration can only be Text, Blob or Object</a></li>
+<li><a href="#cql0362-the-hidden-column-attribute-must-be-the-first-attribute-if-present">CQL0362: The HIDDEN column attribute must be the first attribute if present</a></li>
 </ul></li>
 <li><a href="#appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</a>
 <ul>
@@ -5931,7 +5932,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Wed Jan 20 11:08:03 PST 2021</p>
+<p>Snapshot as of Thu Jan 28 17:31:06 PST 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -5966,7 +5967,7 @@ AS CASE WHEN FROM THEN ELSE END LEFT
 OUTER JOIN WHERE GROUP BY ORDER ASC
 DESC INNER FCOUNT AUTOINCREMENT DISTINCT
 LIMIT OFFSET TEMP TRIGGER IF ALL CROSS USING RIGHT
-UNIQUE HAVING SET TO DISTINCTROW ENUM
+HIDDEN UNIQUE HAVING SET TO DISTINCTROW ENUM
 FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR DECLARE TYPE FETCH LOOP LEAVE CONTINUE FOR
 OPEN CLOSE ELSE_IF WHILE CALL TRY CATCH THROW RETURN
 SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
@@ -6316,6 +6317,7 @@ name:
   | &quot;KEY&quot;
   | &quot;VIRTUAL&quot;
   | &quot;TYPE&quot;
+  | &quot;HIDDEN&quot;
   ;
 
 opt_name:
@@ -6345,6 +6347,7 @@ col_attrs:
   | &quot;COLLATE&quot; name col_attrs
   | &quot;CHECK&quot; &#39;(&#39; expr &#39;)&#39; col_attrs
   | &quot;UNIQUE&quot; col_attrs
+  | &quot;HIDDEN&quot; col_attrs
   | &quot;@SENSITIVE&quot; col_attrs
   | &quot;@CREATE&quot; version_annotation col_attrs
   | &quot;@DELETE&quot; version_annotation col_attrs
@@ -8702,13 +8705,13 @@ set x := y;</code></pre>
 <p>The names provided to <code>ok_table_scan</code> attribute should be names of existing tables.</p>
 <p>The attribute indicates tables that are ok to scan in this procedure even though they are typically not ok to scan due to ‘no_table_scan’. Therefore the attribute must refer to an existing table. There is likely a typo in the the table name that needs to be corrected.</p>
 <hr />
-<h3 id="cql0327-a-value-should-not-be-assigned-to-no_table_scan-attribute">CQL0327: a value should not be assigned to no_table_scan attribute</h3>
-<p>The attribute <code>no_table_scan</code> doesn’t take a value.</p>
-<p>When marking a table with <code>@attribute(cql:no_table_scan)</code> there is no need for an attribute value.</p>
+<h3 id="cql0327-a-value-should-not-be-assigned-to-attribute_name-attribute">CQL0327: a value should not be assigned to ‘attribute_name’ attribute</h3>
+<p>The attribute <code>attribute_name</code> doesn’t take a value.</p>
+<p>When marking a statement with <code>@attribute(cql:&lt;attribute_name&gt;)</code> there is no need for an attribute value.</p>
 <hr />
-<h3 id="cql0328-no_table_scan-attribute-may-only-be-added-to-a-create-table-statement">CQL0328: no_table_scan attribute may only be added to a create table statement</h3>
-<p>The <code>no_table_scan</code> attrubute can only be assigned to a create table statement.</p>
-<p>The marking <code>@attribute(cql:no_table_scan)</code> only makes sense on tables. It’s likely been put somewhere strange, If it isn’t obviously on the wrong thing, look into possibly how the source is after macro expansion.</p>
+<h3 id="cql0328-attribute_name-attribute-may-only-be-added-to-a-statement_name">CQL0328: ‘attribute_name’ attribute may only be added to a ‘statement_name’</h3>
+<p>The <code>attribute_name</code> attribute can only be assigned to specific statements.</p>
+<p>The marking <code>@attribute(cql:&lt;attribute_name&gt;)</code> only makes sense on specific statement. It’s likely been put somewhere strange, If it isn’t obviously on the wrong thing, look into possibly how the source is after macro expansion.</p>
 <hr />
 <h3 id="cql0329-ok_table_scan-attribute-can-only-be-used-in-a-create-procedure-statement">CQL0329: ok_table_scan attribute can only be used in a create procedure statement</h3>
 <p>The <code>ok_table_scan</code> can only be placed on a create procedure statement.</p>
@@ -8821,11 +8824,16 @@ set x := y;</code></pre>
 <p>The name of a declared type should always be unique.</p>
 <hr />
 <h3 id="cql0360-unknown-type-type_name">CQL0360: unknown type ‘type_name’</h3>
-<p>The name of a declared type is unknown.</p>
+<p>The indicated name is not a valid type name.</p>
 <hr />
 <h3 id="cql0361-return-data-type-in-a-create-function-declaration-can-only-be-text-blob-or-object">CQL0361: Return data type in a create function declaration can only be Text, Blob or Object</h3>
 <p>Return data type in a create function definition can only be TEXT, BLOB or OBJECT.</p>
 <p>These are the only reference types and so CREATE makes sense only with those types. An integer, for instance, can’t start with a +1 reference count.</p>
+<hr />
+<h3 id="cql0362-the-hidden-column-attribute-must-be-the-first-attribute-if-present">CQL0362: The HIDDEN column attribute must be the first attribute if present</h3>
+<p>In order to ensure that SQLite will parse HIDDEN as part of the type it has to come before any other attributes like NOT NULL.</p>
+<p>This limitation is due to the fact that CQL and SQLite use slightly different parsing approaches for attributes and in SQLite HIDDEN isn’t actually an attribute. The safest place to put the attribute is right after the type name and before any other attributes as it is totally unambiguous there so CQL enforces this.</p>
+<hr />
 <h2 id="appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</h2>
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
@@ -8834,7 +8842,7 @@ set x := y;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Wed Jan 20 11:08:03 PST 2021</p>
+<p>Snapshot as of Thu Jan 28 17:31:07 PST 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 
