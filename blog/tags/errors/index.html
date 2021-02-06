@@ -6,17 +6,17 @@
 <meta name="generator" content="Docusaurus v2.0.0-alpha.65">
 <title data-react-helmet="true">Posts tagged &quot;errors&quot; | CG/SQL</title><meta data-react-helmet="true" property="og:title" content="Posts tagged &quot;errors&quot; | CG/SQL"><meta data-react-helmet="true" name="description" content="Blog | Tagged &quot;errors&quot;"><meta data-react-helmet="true" property="og:description" content="Blog | Tagged &quot;errors&quot;"><meta data-react-helmet="true" name="twitter:card" content="summary_large_image"><link data-react-helmet="true" rel="shortcut icon" href="/img/favicon.ico"><link rel="stylesheet" href="/styles.92b9332c.css">
 <link rel="preload" href="/styles.8cec46ec.js" as="script">
-<link rel="preload" href="/runtime~main.e778a290.js" as="script">
-<link rel="preload" href="/main.5326bba4.js" as="script">
+<link rel="preload" href="/runtime~main.c6690858.js" as="script">
+<link rel="preload" href="/main.f9d91e19.js" as="script">
 <link rel="preload" href="/1.0432f8b7.js" as="script">
 <link rel="preload" href="/2.9174d755.js" as="script">
 <link rel="preload" href="/3.837feb64.js" as="script">
 <link rel="preload" href="/6875c492.7abc63a4.js" as="script">
-<link rel="preload" href="/3e3a85bc.f1b40b90.js" as="script">
-<link rel="preload" href="/80400c32.b28f4509.js" as="script">
-<link rel="preload" href="/fc3479db.128ba859.js" as="script">
-<link rel="preload" href="/c3370886.7771a043.js" as="script">
-<link rel="preload" href="/517fa2ac.518e8f0e.js" as="script">
+<link rel="preload" href="/3e3a85bc.688e398d.js" as="script">
+<link rel="preload" href="/80400c32.c904f8df.js" as="script">
+<link rel="preload" href="/fc3479db.80ac85ae.js" as="script">
+<link rel="preload" href="/c3370886.10eb22ba.js" as="script">
+<link rel="preload" href="/517fa2ac.c3ff17c6.js" as="script">
 <link rel="preload" href="/7e9fb3d2.53bf27e0.js" as="script">
 </head>
 <body>
@@ -133,17 +133,17 @@ body now begins with:</p><div class="mdxCodeBlock_1XEh"><div class="codeBlockCon
 very expensive indeed because this happens a lot and even the string literals needed are a significant cost. So generally
 this should be off for production builds and enabled as needed for debug builds.</p><p>The default implementation is just an empty block</p><div class="mdxCodeBlock_1XEh"><div class="codeBlockContent_1u-d"><button type="button" aria-label="Copy code to clipboard" class="copyButton_10dd">Copy</button><div tabindex="0" class="prism-code language-undefined codeBlock_3iAC"><div class="codeBlockLines_b7E3" style="color:#bfc7d5;background-color:#292d3e"><div class="token-line" style="color:#bfc7d5"><span class="token plain">#define cql_error_trace()</span></div></div></div></div></div><p>But the hook is enough to light up whatever logging you might need, and you can use <code>sqlite3_errmsg()</code> before that message is gone.</p><p>Good hunting.</p></section><footer class="row margin-vert--lg"><div class="col"><strong>Tags:</strong><a class="margin-horiz--sm" href="/blog/tags/facebook">facebook</a><a class="margin-horiz--sm" href="/blog/tags/cg-sql">cg-sql</a><a class="margin-horiz--sm" href="/blog/tags/errors">errors</a></div><div class="col text--right"><a aria-label="Read more about Introducing General Purpose Error Tracing" href="/blog/error-tracing-intro"><strong>Read More</strong></a></div></footer></article></div></main></div></div></div><footer class="footer footer--dark"><div class="container"><div class="row footer__links"><div class="col footer__col"><h4 class="footer__title">Learn</h4><ul class="footer__items"><li class="footer__item"><a class="footer__link-item" href="/docs/introduction">Getting Started</a></li></ul></div><div class="col footer__col"><h4 class="footer__title">Community</h4><ul class="footer__items"><li class="footer__item"><a href="https://www.youtube.com/channel/UC2lTapw2Um90sZpGQVaynEg" target="_blank" rel="noopener noreferrer" class="footer__link-item">Youtube</a></li><li class="footer__item"><a href="https://twitter.com/fbOpenSource" target="_blank" rel="noopener noreferrer" class="footer__link-item">Twitter</a></li></ul></div><div class="col footer__col"><h4 class="footer__title">More</h4><ul class="footer__items"><li class="footer__item"><a class="footer__link-item" href="/blog">Blog</a></li><li class="footer__item"><a href="https://github.com/facebookincubator/CG-SQL" target="_blank" rel="noopener noreferrer" class="footer__link-item">GitHub</a></li></ul></div><div class="col footer__col"><h4 class="footer__title">Legal</h4><ul class="footer__items"><li class="footer__item"><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noopener noreferrer" class="footer__link-item">Privacy</a></li><li class="footer__item"><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noopener noreferrer" class="footer__link-item">Terms</a></li></ul></div></div><div class="text--center"><div class="margin-bottom--sm"><a href="https://opensource.facebook.com" target="_blank" rel="noopener noreferrer" class="footerLogoLink_1zJy"><img class="footer__logo" alt="Facebook Open Source Logo" src="/img/oss_logo.png"></a></div><div>Copyright © 2021 Facebook, Inc. Built with Docusaurus.</div></div></div></footer></div>
 <script src="/styles.8cec46ec.js"></script>
-<script src="/runtime~main.e778a290.js"></script>
-<script src="/main.5326bba4.js"></script>
+<script src="/runtime~main.c6690858.js"></script>
+<script src="/main.f9d91e19.js"></script>
 <script src="/1.0432f8b7.js"></script>
 <script src="/2.9174d755.js"></script>
 <script src="/3.837feb64.js"></script>
 <script src="/6875c492.7abc63a4.js"></script>
-<script src="/3e3a85bc.f1b40b90.js"></script>
-<script src="/80400c32.b28f4509.js"></script>
-<script src="/fc3479db.128ba859.js"></script>
-<script src="/c3370886.7771a043.js"></script>
-<script src="/517fa2ac.518e8f0e.js"></script>
+<script src="/3e3a85bc.688e398d.js"></script>
+<script src="/80400c32.c904f8df.js"></script>
+<script src="/fc3479db.80ac85ae.js"></script>
+<script src="/c3370886.10eb22ba.js"></script>
+<script src="/517fa2ac.c3ff17c6.js"></script>
 <script src="/7e9fb3d2.53bf27e0.js"></script>
 </body>
 </html>
