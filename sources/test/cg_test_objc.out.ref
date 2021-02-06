@@ -1822,4 +1822,240 @@ static inline BOOL CGCUseReturnRowEqual(CGCUseReturn *resultSet1, int32_t row1, 
   return CGCUseReturnRowEqual(CGCUseReturnFromCGCUseReturn(resultSet1), row1, CGCUseReturnFromCGCUseReturn(resultSet2), row2);
 }
 
+@class CGCVaultSensitiveWithValuesProc;
+
+static inline CGCVaultSensitiveWithValuesProc *CGCVaultSensitiveWithValuesProcFromCGCVaultSensitiveWithValuesProc(CGCVaultSensitiveWithValuesProcResultSetRef resultSet)
+{
+  return (__bridge CGCVaultSensitiveWithValuesProc *)resultSet;
+}
+
+static inline CGCVaultSensitiveWithValuesProcResultSetRef CGCVaultSensitiveWithValuesProcFromCGCVaultSensitiveWithValuesProc(CGCVaultSensitiveWithValuesProc *resultSet)
+{
+  return (__bridge CGCVaultSensitiveWithValuesProcResultSetRef)resultSet;
+}
+
+static inline int32_t CGCVaultSensitiveWithValuesProcGetId(CGCVaultSensitiveWithValuesProc *resultSet, int32_t row)
+{
+  CGCVaultSensitiveWithValuesProcResultSetRef cResultSet = CGCVaultSensitiveWithValuesProcFromCGCVaultSensitiveWithValuesProc(resultSet);
+  return CGCVaultSensitiveWithValuesProcGetId(cResultSet, row);
+}
+
+static inline NSString *_Nullable CGCVaultSensitiveWithValuesProcGetName(CGCVaultSensitiveWithValuesProc *resultSet, int32_t row)
+{
+  CGCVaultSensitiveWithValuesProcResultSetRef cResultSet = CGCVaultSensitiveWithValuesProcFromCGCVaultSensitiveWithValuesProc(resultSet);
+  return (__bridge NSString *)CGCVaultSensitiveWithValuesProcGetName(cResultSet, row);
+}
+
+static inline NSNumber *_Nullable CGCVaultSensitiveWithValuesProcGetType(CGCVaultSensitiveWithValuesProc *resultSet, int32_t row)
+{
+  CGCVaultSensitiveWithValuesProcResultSetRef cResultSet = CGCVaultSensitiveWithValuesProcFromCGCVaultSensitiveWithValuesProc(resultSet);
+  return CGCVaultSensitiveWithValuesProcGetTypeIsNull(cResultSet, row) ? nil : @(CGCVaultSensitiveWithValuesProcGetTypeValue(cResultSet, row));
+}
+
+static inline int32_t CGCVaultSensitiveWithValuesProcResultCount(CGCVaultSensitiveWithValuesProc *resultSet)
+{
+  return CGCVaultSensitiveWithValuesProcResultCount(CGCVaultSensitiveWithValuesProcFromCGCVaultSensitiveWithValuesProc(resultSet));
+}
+
+static inline CGCVaultSensitiveWithValuesProc *CGCVaultSensitiveWithValuesProcCopy(CGCVaultSensitiveWithValuesProc *resultSet, int32_t from, int32_t count)
+{
+  CGCVaultSensitiveWithValuesProcResultSetRef copy;
+  CGCVaultSensitiveWithValuesProcCopy(CGCVaultSensitiveWithValuesProcFromCGCVaultSensitiveWithValuesProc(resultSet), &copy, from, count);
+  return (__bridge_transfer CGCVaultSensitiveWithValuesProc *)copy;
+}
+
+static inline NSUInteger CGCVaultSensitiveWithValuesProcRowHash(CGCVaultSensitiveWithValuesProc *resultSet, int32_t row)
+{
+  return CGCVaultSensitiveWithValuesProcRowHash(CGCVaultSensitiveWithValuesProcFromCGCVaultSensitiveWithValuesProc(resultSet), row);
+}
+
+static inline BOOL CGCVaultSensitiveWithValuesProcRowEqual(CGCVaultSensitiveWithValuesProc *resultSet1, int32_t row1, CGCVaultSensitiveWithValuesProc *resultSet2, int32_t row2)
+{
+  return CGCVaultSensitiveWithValuesProcRowEqual(CGCVaultSensitiveWithValuesProcFromCGCVaultSensitiveWithValuesProc(resultSet1), row1, CGCVaultSensitiveWithValuesProcFromCGCVaultSensitiveWithValuesProc(resultSet2), row2);
+}
+
+@class CGCVaultSensitiveWithNoValuesProc;
+
+static inline CGCVaultSensitiveWithNoValuesProc *CGCVaultSensitiveWithNoValuesProcFromCGCVaultSensitiveWithNoValuesProc(CGCVaultSensitiveWithNoValuesProcResultSetRef resultSet)
+{
+  return (__bridge CGCVaultSensitiveWithNoValuesProc *)resultSet;
+}
+
+static inline CGCVaultSensitiveWithNoValuesProcResultSetRef CGCVaultSensitiveWithNoValuesProcFromCGCVaultSensitiveWithNoValuesProc(CGCVaultSensitiveWithNoValuesProc *resultSet)
+{
+  return (__bridge CGCVaultSensitiveWithNoValuesProcResultSetRef)resultSet;
+}
+
+static inline int32_t CGCVaultSensitiveWithNoValuesProcGetId(CGCVaultSensitiveWithNoValuesProc *resultSet, int32_t row)
+{
+  CGCVaultSensitiveWithNoValuesProcResultSetRef cResultSet = CGCVaultSensitiveWithNoValuesProcFromCGCVaultSensitiveWithNoValuesProc(resultSet);
+  return CGCVaultSensitiveWithNoValuesProcGetId(cResultSet, row);
+}
+
+static inline NSString *_Nullable CGCVaultSensitiveWithNoValuesProcGetName(CGCVaultSensitiveWithNoValuesProc *resultSet, int32_t row)
+{
+  CGCVaultSensitiveWithNoValuesProcResultSetRef cResultSet = CGCVaultSensitiveWithNoValuesProcFromCGCVaultSensitiveWithNoValuesProc(resultSet);
+  return (__bridge NSString *)CGCVaultSensitiveWithNoValuesProcGetName(cResultSet, row);
+}
+
+static inline NSNumber *_Nullable CGCVaultSensitiveWithNoValuesProcGetType(CGCVaultSensitiveWithNoValuesProc *resultSet, int32_t row)
+{
+  CGCVaultSensitiveWithNoValuesProcResultSetRef cResultSet = CGCVaultSensitiveWithNoValuesProcFromCGCVaultSensitiveWithNoValuesProc(resultSet);
+  return CGCVaultSensitiveWithNoValuesProcGetTypeIsNull(cResultSet, row) ? nil : @(CGCVaultSensitiveWithNoValuesProcGetTypeValue(cResultSet, row));
+}
+
+static inline int32_t CGCVaultSensitiveWithNoValuesProcResultCount(CGCVaultSensitiveWithNoValuesProc *resultSet)
+{
+  return CGCVaultSensitiveWithNoValuesProcResultCount(CGCVaultSensitiveWithNoValuesProcFromCGCVaultSensitiveWithNoValuesProc(resultSet));
+}
+
+static inline CGCVaultSensitiveWithNoValuesProc *CGCVaultSensitiveWithNoValuesProcCopy(CGCVaultSensitiveWithNoValuesProc *resultSet, int32_t from, int32_t count)
+{
+  CGCVaultSensitiveWithNoValuesProcResultSetRef copy;
+  CGCVaultSensitiveWithNoValuesProcCopy(CGCVaultSensitiveWithNoValuesProcFromCGCVaultSensitiveWithNoValuesProc(resultSet), &copy, from, count);
+  return (__bridge_transfer CGCVaultSensitiveWithNoValuesProc *)copy;
+}
+
+static inline NSUInteger CGCVaultSensitiveWithNoValuesProcRowHash(CGCVaultSensitiveWithNoValuesProc *resultSet, int32_t row)
+{
+  return CGCVaultSensitiveWithNoValuesProcRowHash(CGCVaultSensitiveWithNoValuesProcFromCGCVaultSensitiveWithNoValuesProc(resultSet), row);
+}
+
+static inline BOOL CGCVaultSensitiveWithNoValuesProcRowEqual(CGCVaultSensitiveWithNoValuesProc *resultSet1, int32_t row1, CGCVaultSensitiveWithNoValuesProc *resultSet2, int32_t row2)
+{
+  return CGCVaultSensitiveWithNoValuesProcRowEqual(CGCVaultSensitiveWithNoValuesProcFromCGCVaultSensitiveWithNoValuesProc(resultSet1), row1, CGCVaultSensitiveWithNoValuesProcFromCGCVaultSensitiveWithNoValuesProc(resultSet2), row2);
+}
+
+@class CGCVaultUnionAllTableProc;
+
+static inline CGCVaultUnionAllTableProc *CGCVaultUnionAllTableProcFromCGCVaultUnionAllTableProc(CGCVaultUnionAllTableProcResultSetRef resultSet)
+{
+  return (__bridge CGCVaultUnionAllTableProc *)resultSet;
+}
+
+static inline CGCVaultUnionAllTableProcResultSetRef CGCVaultUnionAllTableProcFromCGCVaultUnionAllTableProc(CGCVaultUnionAllTableProc *resultSet)
+{
+  return (__bridge CGCVaultUnionAllTableProcResultSetRef)resultSet;
+}
+
+static inline int32_t CGCVaultUnionAllTableProcGetId(CGCVaultUnionAllTableProc *resultSet, int32_t row)
+{
+  CGCVaultUnionAllTableProcResultSetRef cResultSet = CGCVaultUnionAllTableProcFromCGCVaultUnionAllTableProc(resultSet);
+  return CGCVaultUnionAllTableProcGetId(cResultSet, row);
+}
+
+static inline NSString *_Nullable CGCVaultUnionAllTableProcGetName(CGCVaultUnionAllTableProc *resultSet, int32_t row)
+{
+  CGCVaultUnionAllTableProcResultSetRef cResultSet = CGCVaultUnionAllTableProcFromCGCVaultUnionAllTableProc(resultSet);
+  return (__bridge NSString *)CGCVaultUnionAllTableProcGetName(cResultSet, row);
+}
+
+static inline NSNumber *_Nullable CGCVaultUnionAllTableProcGetType(CGCVaultUnionAllTableProc *resultSet, int32_t row)
+{
+  CGCVaultUnionAllTableProcResultSetRef cResultSet = CGCVaultUnionAllTableProcFromCGCVaultUnionAllTableProc(resultSet);
+  return CGCVaultUnionAllTableProcGetTypeIsNull(cResultSet, row) ? nil : @(CGCVaultUnionAllTableProcGetTypeValue(cResultSet, row));
+}
+
+static inline int32_t CGCVaultUnionAllTableProcResultCount(CGCVaultUnionAllTableProc *resultSet)
+{
+  return CGCVaultUnionAllTableProcResultCount(CGCVaultUnionAllTableProcFromCGCVaultUnionAllTableProc(resultSet));
+}
+
+static inline CGCVaultUnionAllTableProc *CGCVaultUnionAllTableProcCopy(CGCVaultUnionAllTableProc *resultSet, int32_t from, int32_t count)
+{
+  CGCVaultUnionAllTableProcResultSetRef copy;
+  CGCVaultUnionAllTableProcCopy(CGCVaultUnionAllTableProcFromCGCVaultUnionAllTableProc(resultSet), &copy, from, count);
+  return (__bridge_transfer CGCVaultUnionAllTableProc *)copy;
+}
+
+static inline NSUInteger CGCVaultUnionAllTableProcRowHash(CGCVaultUnionAllTableProc *resultSet, int32_t row)
+{
+  return CGCVaultUnionAllTableProcRowHash(CGCVaultUnionAllTableProcFromCGCVaultUnionAllTableProc(resultSet), row);
+}
+
+static inline BOOL CGCVaultUnionAllTableProcRowEqual(CGCVaultUnionAllTableProc *resultSet1, int32_t row1, CGCVaultUnionAllTableProc *resultSet2, int32_t row2)
+{
+  return CGCVaultUnionAllTableProcRowEqual(CGCVaultUnionAllTableProcFromCGCVaultUnionAllTableProc(resultSet1), row1, CGCVaultUnionAllTableProcFromCGCVaultUnionAllTableProc(resultSet2), row2);
+}
+
+@class CGCVaultAliasColumnProc;
+
+static inline CGCVaultAliasColumnProc *CGCVaultAliasColumnProcFromCGCVaultAliasColumnProc(CGCVaultAliasColumnProcResultSetRef resultSet)
+{
+  return (__bridge CGCVaultAliasColumnProc *)resultSet;
+}
+
+static inline CGCVaultAliasColumnProcResultSetRef CGCVaultAliasColumnProcFromCGCVaultAliasColumnProc(CGCVaultAliasColumnProc *resultSet)
+{
+  return (__bridge CGCVaultAliasColumnProcResultSetRef)resultSet;
+}
+
+static inline NSString *_Nullable CGCVaultAliasColumnProcGetAliasName(CGCVaultAliasColumnProc *resultSet, int32_t row)
+{
+  CGCVaultAliasColumnProcResultSetRef cResultSet = CGCVaultAliasColumnProcFromCGCVaultAliasColumnProc(resultSet);
+  return (__bridge NSString *)CGCVaultAliasColumnProcGetAliasName(cResultSet, row);
+}
+
+static inline int32_t CGCVaultAliasColumnProcResultCount(CGCVaultAliasColumnProc *resultSet)
+{
+  return CGCVaultAliasColumnProcResultCount(CGCVaultAliasColumnProcFromCGCVaultAliasColumnProc(resultSet));
+}
+
+static inline CGCVaultAliasColumnProc *CGCVaultAliasColumnProcCopy(CGCVaultAliasColumnProc *resultSet, int32_t from, int32_t count)
+{
+  CGCVaultAliasColumnProcResultSetRef copy;
+  CGCVaultAliasColumnProcCopy(CGCVaultAliasColumnProcFromCGCVaultAliasColumnProc(resultSet), &copy, from, count);
+  return (__bridge_transfer CGCVaultAliasColumnProc *)copy;
+}
+
+static inline NSUInteger CGCVaultAliasColumnProcRowHash(CGCVaultAliasColumnProc *resultSet, int32_t row)
+{
+  return CGCVaultAliasColumnProcRowHash(CGCVaultAliasColumnProcFromCGCVaultAliasColumnProc(resultSet), row);
+}
+
+static inline BOOL CGCVaultAliasColumnProcRowEqual(CGCVaultAliasColumnProc *resultSet1, int32_t row1, CGCVaultAliasColumnProc *resultSet2, int32_t row2)
+{
+  return CGCVaultAliasColumnProcRowEqual(CGCVaultAliasColumnProcFromCGCVaultAliasColumnProc(resultSet1), row1, CGCVaultAliasColumnProcFromCGCVaultAliasColumnProc(resultSet2), row2);
+}
+
+@class CGCVaultAliasColumnNameProc;
+
+static inline CGCVaultAliasColumnNameProc *CGCVaultAliasColumnNameProcFromCGCVaultAliasColumnNameProc(CGCVaultAliasColumnNameProcResultSetRef resultSet)
+{
+  return (__bridge CGCVaultAliasColumnNameProc *)resultSet;
+}
+
+static inline CGCVaultAliasColumnNameProcResultSetRef CGCVaultAliasColumnNameProcFromCGCVaultAliasColumnNameProc(CGCVaultAliasColumnNameProc *resultSet)
+{
+  return (__bridge CGCVaultAliasColumnNameProcResultSetRef)resultSet;
+}
+
+static inline NSString *_Nullable CGCVaultAliasColumnNameProcGetAliasName(CGCVaultAliasColumnNameProc *resultSet, int32_t row)
+{
+  CGCVaultAliasColumnNameProcResultSetRef cResultSet = CGCVaultAliasColumnNameProcFromCGCVaultAliasColumnNameProc(resultSet);
+  return (__bridge NSString *)CGCVaultAliasColumnNameProcGetAliasName(cResultSet, row);
+}
+
+static inline int32_t CGCVaultAliasColumnNameProcResultCount(CGCVaultAliasColumnNameProc *resultSet)
+{
+  return CGCVaultAliasColumnNameProcResultCount(CGCVaultAliasColumnNameProcFromCGCVaultAliasColumnNameProc(resultSet));
+}
+
+static inline CGCVaultAliasColumnNameProc *CGCVaultAliasColumnNameProcCopy(CGCVaultAliasColumnNameProc *resultSet, int32_t from, int32_t count)
+{
+  CGCVaultAliasColumnNameProcResultSetRef copy;
+  CGCVaultAliasColumnNameProcCopy(CGCVaultAliasColumnNameProcFromCGCVaultAliasColumnNameProc(resultSet), &copy, from, count);
+  return (__bridge_transfer CGCVaultAliasColumnNameProc *)copy;
+}
+
+static inline NSUInteger CGCVaultAliasColumnNameProcRowHash(CGCVaultAliasColumnNameProc *resultSet, int32_t row)
+{
+  return CGCVaultAliasColumnNameProcRowHash(CGCVaultAliasColumnNameProcFromCGCVaultAliasColumnNameProc(resultSet), row);
+}
+
+static inline BOOL CGCVaultAliasColumnNameProcRowEqual(CGCVaultAliasColumnNameProc *resultSet1, int32_t row1, CGCVaultAliasColumnNameProc *resultSet2, int32_t row2)
+{
+  return CGCVaultAliasColumnNameProcRowEqual(CGCVaultAliasColumnNameProcFromCGCVaultAliasColumnNameProc(resultSet1), row1, CGCVaultAliasColumnNameProcFromCGCVaultAliasColumnNameProc(resultSet2), row2);
+}
+
 NS_ASSUME_NONNULL_END

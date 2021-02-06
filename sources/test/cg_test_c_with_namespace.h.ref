@@ -1672,6 +1672,143 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
 extern CQL_WARN_UNUSED cql_code early_out_rc_cleared(sqlite3 *_Nonnull _db_, cql_nullable_int32 *_Nonnull x);
 
 // The statement ending at line XXXX
+#define CRC_vault_sensitive_with_values_proc -1494789765547780687L
+
+extern cql_string_ref _Nonnull vault_sensitive_with_values_proc_stored_procedure_name;
+
+#define vault_sensitive_with_values_proc_data_types_count 3
+
+cql_result_set_type_decl(vault_sensitive_with_values_proc_result_set, vault_sensitive_with_values_proc_result_set_ref);
+extern cql_int32 vault_sensitive_with_values_proc_get_id(vault_sensitive_with_values_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_string_ref _Nullable vault_sensitive_with_values_proc_get_name(vault_sensitive_with_values_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool vault_sensitive_with_values_proc_get_type_is_null(vault_sensitive_with_values_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int64 vault_sensitive_with_values_proc_get_type_value(vault_sensitive_with_values_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 vault_sensitive_with_values_proc_result_count(vault_sensitive_with_values_proc_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code vault_sensitive_with_values_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_sensitive_with_values_proc_result_set_ref _Nullable *_Nonnull result_set);
+#define vault_sensitive_with_values_proc_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define vault_sensitive_with_values_proc_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define vault_sensitive_with_values_proc_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+#define CRC_vault_sensitive_with_no_values_proc -2359302084369840114L
+
+extern cql_string_ref _Nonnull vault_sensitive_with_no_values_proc_stored_procedure_name;
+
+#define vault_sensitive_with_no_values_proc_data_types_count 3
+
+cql_result_set_type_decl(vault_sensitive_with_no_values_proc_result_set, vault_sensitive_with_no_values_proc_result_set_ref);
+extern cql_int32 vault_sensitive_with_no_values_proc_get_id(vault_sensitive_with_no_values_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_string_ref _Nullable vault_sensitive_with_no_values_proc_get_name(vault_sensitive_with_no_values_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool vault_sensitive_with_no_values_proc_get_type_is_null(vault_sensitive_with_no_values_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int64 vault_sensitive_with_no_values_proc_get_type_value(vault_sensitive_with_no_values_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 vault_sensitive_with_no_values_proc_result_count(vault_sensitive_with_no_values_proc_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code vault_sensitive_with_no_values_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_sensitive_with_no_values_proc_result_set_ref _Nullable *_Nonnull result_set);
+#define vault_sensitive_with_no_values_proc_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define vault_sensitive_with_no_values_proc_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define vault_sensitive_with_no_values_proc_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+#define CRC_vault_union_all_table_proc 1792652619972807135L
+
+extern cql_string_ref _Nonnull vault_union_all_table_proc_stored_procedure_name;
+
+#define vault_union_all_table_proc_data_types_count 3
+
+cql_result_set_type_decl(vault_union_all_table_proc_result_set, vault_union_all_table_proc_result_set_ref);
+extern cql_int32 vault_union_all_table_proc_get_id(vault_union_all_table_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_string_ref _Nullable vault_union_all_table_proc_get_name(vault_union_all_table_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool vault_union_all_table_proc_get_type_is_null(vault_union_all_table_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int64 vault_union_all_table_proc_get_type_value(vault_union_all_table_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 vault_union_all_table_proc_result_count(vault_union_all_table_proc_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code vault_union_all_table_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_union_all_table_proc_result_set_ref _Nullable *_Nonnull result_set);
+#define vault_union_all_table_proc_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define vault_union_all_table_proc_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define vault_union_all_table_proc_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+#define CRC_vault_alias_column_proc -8580291323805756L
+
+extern cql_string_ref _Nonnull vault_alias_column_proc_stored_procedure_name;
+
+#define vault_alias_column_proc_data_types_count 1
+
+cql_result_set_type_decl(vault_alias_column_proc_result_set, vault_alias_column_proc_result_set_ref);
+extern cql_string_ref _Nullable vault_alias_column_proc_get_alias_name(vault_alias_column_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 vault_alias_column_proc_result_count(vault_alias_column_proc_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code vault_alias_column_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_alias_column_proc_result_set_ref _Nullable *_Nonnull result_set);
+#define vault_alias_column_proc_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define vault_alias_column_proc_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define vault_alias_column_proc_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+#define CRC_vault_alias_column_name_proc 798196861874471198L
+
+extern cql_string_ref _Nonnull vault_alias_column_name_proc_stored_procedure_name;
+
+#define vault_alias_column_name_proc_data_types_count 1
+
+cql_result_set_type_decl(vault_alias_column_name_proc_result_set, vault_alias_column_name_proc_result_set_ref);
+extern cql_string_ref _Nullable vault_alias_column_name_proc_get_alias_name(vault_alias_column_name_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 vault_alias_column_name_proc_result_count(vault_alias_column_name_proc_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code vault_alias_column_name_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_alias_column_name_proc_result_set_ref _Nullable *_Nonnull result_set);
+#define vault_alias_column_name_proc_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define vault_alias_column_name_proc_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define vault_alias_column_name_proc_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code vault_cursor_proc(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
 
 // The statement ending at line XXXX
 #define CRC_ext 8280780522605848147L

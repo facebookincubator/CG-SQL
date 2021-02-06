@@ -10987,9 +10987,13 @@ The named procedure has the `autodrop` annotation (to automatically drop a tempo
 
 -----
 
-### CQL0239: procedure identity column does not exist in result set 'column_name'
+### CQL0239: 'annotation' column does not exist in result set 'column_name'
 
-The `@attribute(cql:identity=(col1, col2,...))` form has been used to list the identity columns of a stored procedures result set.  These columns must exist in the result set and they must be unique.  The indicated column name is not part of the result of the procedure that is being annotated.
+The `@attribute(cql:identity=(col1, col2, ...))` form has been used to list the identity columns of a stored procedures result set.  These columns must exist in the result set and they must be unique.  The indicated column name is not part of the result of the procedure that is being annotated.
+
+The `@attribute(cql:vault_sensitive=(col1, col2, ...)` form has been used to list the columns of a stored procedures
+result set. These columns must exist in the result set. The indicated column name will be encoded if they are sensitive
+and the cursor that produced the result_set is a DML.
 
 -----
 
@@ -12096,6 +12100,10 @@ HIDDEN isn't actually an attribute.  The safest place to put the attribute is ri
 attributes as it is totally unambiguous there so CQL enforces this.
 
 ----
+
+### CQL0363: all arguments must be names 'vault_sensitive'
+
+vault_sensitive attribution only allow names. Integer, string literal, c string or blob are not allowed, only IDs should be provided.
 
 
 

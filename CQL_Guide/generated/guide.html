@@ -457,7 +457,7 @@
 <li><a href="#cql0236-autodrop-annotation-can-only-go-on-a-procedure-that-uses-the-database-name">CQL0236: autodrop annotation can only go on a procedure that uses the database ‘name’</a></li>
 <li><a href="#cql0237-strict-fk-validation-requires-that-some-on-update-option-be-selected-for-every-foreign-key">CQL0237: strict FK validation requires that some ON UPDATE option be selected for every foreign key</a></li>
 <li><a href="#cql0238-strict-fk-validation-requires-that-some-on-delete-option-be-selected-for-every-foreign-key">CQL0238: strict FK validation requires that some ON DELETE option be selected for every foreign key</a></li>
-<li><a href="#cql0239-procedure-identity-column-does-not-exist-in-result-set-column_name">CQL0239: procedure identity column does not exist in result set ‘column_name’</a></li>
+<li><a href="#cql0239-annotation-column-does-not-exist-in-result-set-column_name">CQL0239: ‘annotation’ column does not exist in result set ‘column_name’</a></li>
 <li><a href="#cql0240-identity-annotation-can-only-go-on-a-procedure-that-returns-a-result-set-proc_name">CQL0240: identity annotation can only go on a procedure that returns a result set ‘proc_name’</a></li>
 <li><a href="#cql0241-concat-may-only-appear-in-the-context-of-sql-statement">CQL0241: CONCAT may only appear in the context of SQL statement</a></li>
 <li><a href="#cql0242-lossy-conversion-from-type-type">CQL0242: lossy conversion from type ‘type’</a></li>
@@ -581,6 +581,7 @@
 <li><a href="#cql0360-unknown-type-type_name">CQL0360: unknown type ‘type_name’</a></li>
 <li><a href="#cql0361-return-data-type-in-a-create-function-declaration-can-only-be-text-blob-or-object">CQL0361: Return data type in a create function declaration can only be Text, Blob or Object</a></li>
 <li><a href="#cql0362-the-hidden-column-attribute-must-be-the-first-attribute-if-present">CQL0362: The HIDDEN column attribute must be the first attribute if present</a></li>
+<li><a href="#cql0363-all-arguments-must-be-names-vault_sensitive">CQL0363: all arguments must be names ‘vault_sensitive’</a></li>
 </ul></li>
 <li><a href="#appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</a>
 <ul>
@@ -8291,8 +8292,9 @@ set x := y;</code></pre>
 <h3 id="cql0238-strict-fk-validation-requires-that-some-on-delete-option-be-selected-for-every-foreign-key">CQL0238: strict FK validation requires that some ON DELETE option be selected for every foreign key</h3>
 <p><code>@enforce_strict</code> has been use to enable strict foreign key enforcement. When enabled every foreign key must have an action for the <code>ON DELETE</code> rule. You can specify <code>NO ACTION</code> but you can’t simply leave the action blank.</p>
 <hr />
-<h3 id="cql0239-procedure-identity-column-does-not-exist-in-result-set-column_name">CQL0239: procedure identity column does not exist in result set ‘column_name’</h3>
-<p>The <code>@attribute(cql:identity=(col1, col2,...))</code> form has been used to list the identity columns of a stored procedures result set. These columns must exist in the result set and they must be unique. The indicated column name is not part of the result of the procedure that is being annotated.</p>
+<h3 id="cql0239-annotation-column-does-not-exist-in-result-set-column_name">CQL0239: ‘annotation’ column does not exist in result set ‘column_name’</h3>
+<p>The <code>@attribute(cql:identity=(col1, col2, ...))</code> form has been used to list the identity columns of a stored procedures result set. These columns must exist in the result set and they must be unique. The indicated column name is not part of the result of the procedure that is being annotated.</p>
+<p>The <code>@attribute(cql:vault_sensitive=(col1, col2, ...)</code> form has been used to list the columns of a stored procedures result set. These columns must exist in the result set. The indicated column name will be encoded if they are sensitive and the cursor that produced the result_set is a DML.</p>
 <hr />
 <h3 id="cql0240-identity-annotation-can-only-go-on-a-procedure-that-returns-a-result-set-proc_name">CQL0240: identity annotation can only go on a procedure that returns a result set ‘proc_name’</h3>
 <p>The <code>@attribute(cql:identity=(col1, col2,...))</code> form has been used to list the identity columns of a stored procedures result set. These columns must exist in the result set and they must be unique. In this case, the named procedure doesn’t even return a result set. Probably there is a copy/pasta going on. The identity attribute can likely be removed.</p>
@@ -8835,6 +8837,8 @@ set x := y;</code></pre>
 <p>In order to ensure that SQLite will parse HIDDEN as part of the type it has to come before any other attributes like NOT NULL.</p>
 <p>This limitation is due to the fact that CQL and SQLite use slightly different parsing approaches for attributes and in SQLite HIDDEN isn’t actually an attribute. The safest place to put the attribute is right after the type name and before any other attributes as it is totally unambiguous there so CQL enforces this.</p>
 <hr />
+<h3 id="cql0363-all-arguments-must-be-names-vault_sensitive">CQL0363: all arguments must be names ‘vault_sensitive’</h3>
+<p>vault_sensitive attribution only allow names. Integer, string literal, c string or blob are not allowed, only IDs should be provided.</p>
 <h2 id="appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</h2>
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.

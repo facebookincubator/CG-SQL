@@ -13898,7 +13898,7 @@ set x1 := cast(y1 as integer);
 -- +1 Error
 set x1 := cast(x1 as integer<y_coord>);
 
--- TEST: no_scan_table attribution is not supported on select table node
+-- TEST: vault_sensitive attribution is not supported on select table node
 -- + {stmt_and_attr}: err
 -- + {misc_attrs}: err
 -- + {select_stmt}: err
@@ -13907,14 +13907,59 @@ set x1 := cast(x1 as integer<y_coord>);
 @attribute(cql:vault_sensitive)
 select * from foo;
 
--- TEST: no_scan_table attribution does not take value
+-- TEST: vault_sensitive attribution with invalid value
+-- + {stmt_and_attr}: err
+-- + Error % vault_sensitive column does not exist in result set 'bogus'
+-- + Error % vault_sensitive column does not exist in result set 'nan'
+-- +2 Error
+@attribute(cql:vault_sensitive=(bogus, nan))
+create proc vault_sensitive_with_invalid_values()
+begin
+  select * from bar;
+end;
+
+-- TEST: vault_sensitive attribution with valid value
+-- + {stmt_and_attr}: ok
+-- - Error
+@attribute(cql:vault_sensitive=(name, rate))
+create proc vault_sensitive_with_valid_values()
+begin
+  select * from bar;
+end;
+
+-- TEST: vault_sensitive attribution with an not string value
 -- + {stmt_and_attr}: err
 -- + {misc_attrs}: err
 -- + {create_proc_stmt}: err
--- Error % a value should not be assigned to vault_sensitive attribute
+-- + {int 1}: err
+-- Error % all arguments must be names 'vault_sensitive'
 -- +1 Error
 @attribute(cql:vault_sensitive=1)
-create proc vault_sensitive_proc_val()
+create proc vault_sensitive_with_not_string_value_proc_val()
+begin
+end;
+
+-- TEST: vault_sensitive attribution with an not string value
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- + {create_proc_stmt}: err
+-- + {int 1}: err
+-- Error % all arguments must be names 'vault_sensitive'
+-- +1 Error
+@attribute(cql:vault_sensitive=(name, 1, 'lol'))
+create proc vault_sensitive_with_not_strings_value_proc_val()
+begin
+end;
+
+-- TEST: vault_sensitive attribution with literal string
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- + {create_proc_stmt}: err
+-- + {strlit 'lol'}: err
+-- + Error % all arguments must be names 'vault_sensitive'
+-- +1 Error
+@attribute(cql:vault_sensitive='lol')
+create proc vault_sensitive_with_lit_string_value_proc_val()
 begin
 end;
 

@@ -2563,6 +2563,24 @@ BEGIN_TEST(encoded_null_values)
   EXPECT(C.bl0 IS null);
 END_TEST(encoded_null_values)
 
+@attribute(cql:vault_sensitive=(y))
+create procedure load_some_encoded_field()
+begin
+  create table some_encoded_field_table(x integer, y text @sensitive);
+  insert into some_encoded_field_table using 66 x, 'bogus' y;
+
+  declare C cursor for select * from some_encoded_field_table;
+  fetch C;
+  out C;
+end;
+
+BEGIN_TEST(read_partially_vault_cursor)
+ declare C cursor fetch from call load_some_encoded_field();
+
+ EXPECT(C.x IS 66);
+ EXPECT(C.y IS 'bogus');
+END_TEST(read_partially_vault_cursor)
+
 create procedure load_all_types_table()
 begin
   create table all_types_table(

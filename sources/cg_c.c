@@ -52,6 +52,9 @@ static bool_t in_proc = 0;
 // A stored proc with attribution vault_sensitive is a vault stored proc
 static bool_t use_vault = 0;
 
+// List of column names reference in a stored proc that we should vault
+static symtab *vault_columns = NULL;
+
 // Keep record of the assembly query fragment for result set type reference if
 // we are presently emitting an extension fragment stored proc
 static CSTR parent_fragment_name;
@@ -2702,6 +2705,17 @@ void cg_emit_rc_vars(charbuf *output) {
   }
 }
 
+// It's a callback to find_vault_columns(...). It record into a symtab all
+// the string values from a vault_sensitive attribute. These string value
+// are used later on to decided whether or not to encode a sensitive column
+// value fetched from db or result set.
+static void find_vault_columns_callback(CSTR _Nonnull name, ast_node *_Nonnull found_ast, void *_Nullable context) {
+  Invariant(current_proc);
+  Invariant(context);
+  symtab *output = (symtab*)context;
+  symtab_add(output, name, NULL);
+}
+
 // Emitting a stored proc is mostly setup.  We have a bunch of housekeeping to do:
 //  * create new scratch buffers for the body and the locals and the cleanup section
 //  * save the current output globals
@@ -2753,6 +2767,7 @@ static void cg_create_proc_stmt(ast_node *ast) {
   cg_scratch_masks *saved_masks = cg_current_masks;
 
   Invariant(!use_vault);
+  Invariant(!vault_columns);
   Invariant(named_temporaries == NULL);
   named_temporaries = symtab_new();
 
@@ -2761,7 +2776,8 @@ static void cg_create_proc_stmt(ast_node *ast) {
   cg_zero_masks(cg_current_masks);
   temp_statement_emitted = 0;
   in_proc = 1;
-  use_vault = misc_attrs && exists_attribute_str(misc_attrs, "vault_sensitive");;
+  use_vault = misc_attrs && exists_attribute_str(misc_attrs, "vault_sensitive");
+  vault_columns = symtab_new();
   current_proc = ast;
   seed_declared = 0;
 
@@ -2769,6 +2785,9 @@ static void cg_create_proc_stmt(ast_node *ast) {
   bool_t result_set_proc = has_result_set(ast);
   bool_t out_stmt_proc = has_out_stmt_result(ast);
   bool_t out_union_proc = has_out_union_stmt_result(ast);
+  if (use_vault) {
+    find_vault_columns(misc_attrs, find_vault_columns_callback, vault_columns);
+  }
 
   bprintf(cg_declarations_output, "\n");
 
@@ -2967,6 +2986,7 @@ static void cg_create_proc_stmt(ast_node *ast) {
 
   in_proc = 0;
   use_vault = 0;
+  vault_columns = NULL;
   current_proc = NULL;
   parent_fragment_name = NULL;
 
@@ -3191,11 +3211,29 @@ static void cg_get_column(sem_t sem_type, CSTR cursor, int32_t index, CSTR var, 
   }
 }
 
-static void cg_cql_datatype(sem_t sem_type, charbuf *output) {
+// The helper checks whether or not a column should be encoded. A column
+// is encoded if and only if it's marked and is also sensitive.
+// The eligibility infos are extract from vault_sensitive attribution
+// on create_proc_stmt node and stored in vault_columns symtab.
+// Eligible columns are encoded if they are sensitive as soon as they're
+// fetched from db (see cql_multifetch(...)).
+static bool_t cg_should_vault_col(CSTR col, sem_t sem_type) {
+  bool_t is_col_eligible = false;
+  if (vault_columns && vault_columns->count > 0 ) {
+    is_col_eligible = symtab_find(vault_columns, col) != NULL;
+  } else {
+    // otherwise all column are always eligible if use_vault is TRUE.
+    is_col_eligible = use_vault;
+  }
+  return is_col_eligible && sensitive_flag(sem_type);
+}
+
+static void cg_cql_datatype(sem_t sem_type, bool_t encode, charbuf *output) {
   if (!is_nullable(sem_type)) {
     bprintf(output, "CQL_DATA_TYPE_NOT_NULL | ");
   }
-  if (sensitive_flag(sem_type) && use_vault) {
+
+  if (encode) {
     bprintf(output, "CQL_DATA_TYPE_ENCODED | ");
   }
 
@@ -3230,7 +3268,7 @@ static void cg_cql_datatype(sem_t sem_type, charbuf *output) {
 // This helper generates the correct CQL_DATA_TYPE_* data info and emits the
 // correct argument.
 static void cg_fetch_column(sem_t sem_type, CSTR var) {
-  cg_cql_datatype(sem_type, cg_main_output);
+  cg_cql_datatype(sem_type, false, cg_main_output);
 
   bprintf(cg_main_output, ", ");
 
@@ -3246,7 +3284,7 @@ static void cg_fetch_column(sem_t sem_type, CSTR var) {
 // arg in the expected format (pointers for nullable primitives) the value
 // for all ref types plus all non nullables.
 static void cg_bind_column(sem_t sem_type, CSTR var) {
-  cg_cql_datatype(sem_type, cg_main_output);
+  cg_cql_datatype(sem_type, false, cg_main_output);
 
   bprintf(cg_main_output, ", ");
 
@@ -4993,7 +5031,7 @@ static void cg_stmt_list(ast_node *head) {
 // not a storage class) and certainly nothing that is
 // a struct or sentinel type.  Likewise objects cannot
 // be the result of a select, so that's out too.
-static void cg_data_type(charbuf *buffer, sem_t sem_type) {
+static void cg_data_type(charbuf *buffer, bool_t encode, sem_t sem_type) {
   Contract(is_unitary(sem_type));
   Contract(!is_null_type(sem_type));
   Contract(!is_object(sem_type));
@@ -5023,7 +5061,7 @@ static void cg_data_type(charbuf *buffer, sem_t sem_type) {
   if (is_not_nullable(sem_type)) {
     bprintf(buffer, " | CQL_DATA_TYPE_NOT_NULL");
   }
-  if (sensitive_flag(sem_type) && use_vault) {
+  if (encode) {
     bprintf(buffer, " | CQL_DATA_TYPE_ENCODED");
   }
 }
@@ -5483,7 +5521,8 @@ static void cg_proc_result_set(ast_node *ast) {
     // contains same info for all properly indexed rows
     if (!is_ext_fragment) {
       bprintf(&data_types, "  ");
-      cg_data_type(&data_types, sem_type);
+      bool_t encode = cg_should_vault_col(col, sem_type);
+      cg_data_type(&data_types, encode, sem_type);
       bprintf(&data_types, ", // %s\n", col);
     }
 

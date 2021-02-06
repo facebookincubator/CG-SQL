@@ -289,6 +289,9 @@ static uint32_t current_expr_context;
 // If we have started validating previous schema this will be true
 static bool_t validating_previous_schema;
 
+// The curernt annonation target in create proc statement
+static CSTR annotation_target;
+
 // Push a context that stops us from searching further up.
 #define PUSH_JOIN_BLOCK() \
   sem_joinscope blocker;\
@@ -1032,6 +1035,14 @@ cql_noexport bool_t is_autotest_dummy_result_set(CSTR name) {
 
 cql_noexport bool_t is_autotest_dummy_test(CSTR name) {
   return !Strcasecmp(name, "dummy_test");
+}
+
+cql_noexport bool_t sem_is_str_name(ast_node *ast) {
+  if (is_ast_str(ast)) {
+    EXTRACT_STRING(name, ast);
+    return name[0] != '\'' && name[0] != '\"';
+  }
+  return false;
 }
 
 // This tells us if we're actually going to try to add the entity we are working on
@@ -12000,7 +12011,7 @@ static void sem_validate_unique_names_struct_type(ast_node *ast) {
 }
 
 // Check the identity columns: make sure they are part of the proc return struct
-static void sem_one_identity_column(CSTR _Nonnull name, ast_node *_Nonnull misc_attr_value, void *_Nullable context) {
+static void sem_column_name_annotation_callback(CSTR _Nonnull name, ast_node *_Nonnull misc_attr_value, void *_Nullable context) {
   EXTRACT_NOTNULL(misc_attrs, (ast_node *)context);
   Contract(current_proc);
 
@@ -12010,8 +12021,11 @@ static void sem_one_identity_column(CSTR _Nonnull name, ast_node *_Nonnull misc_
   if (sptr) {
     int32_t icol = sem_column_index(sptr, name);
     if (icol < 0) {
-      report_error(misc_attrs, "CQL0239: procedure identity column does not exist in result set", name);
+      CHARBUF_OPEN(msg);
+      bprintf(&msg, "CQL0239: %s column does not exist in result set", annotation_target);
+      report_error(misc_attrs, msg.ptr, name);
       record_error(misc_attrs);
+      CHARBUF_CLOSE(msg);
       return;
     }
   }
@@ -12338,13 +12352,16 @@ static void sem_autotests(ast_node *misc_attrs) {
   record_ok(misc_attrs);
 }
 
-// If a stored proc is marked with the identity annotation then we generate the
-// "sameness" helper method that checks those columns.  The attributes should look like this:
-// @attribute(cql:identity=(col1, col2, ,...))
-static uint32_t sem_identity_columns(ast_node *misc_attrs) {
+// Check wheter or not the values of the attribution are valid names of columns in the current proc's result_set
+static uint32_t sem_column_name_annotation(ast_node *misc_attrs, find_annotation_values find, CSTR target) {
   Contract(is_ast_misc_attrs(misc_attrs));
+  Contract(annotation_target == NULL);
   record_ok(misc_attrs);
-  return find_identity_columns(misc_attrs, sem_one_identity_column, misc_attrs);
+
+  annotation_target = target;
+  uint32_t result = find(misc_attrs, sem_column_name_annotation_callback, misc_attrs);
+  annotation_target = NULL;
+  return result;
 }
 
 // Check the autodrop to make sure it is conformant, it has to be a valid temp table.
@@ -13524,17 +13541,30 @@ static void sem_misc_attrs_vault_sensitive(
   Contract(any_stmt);
   Contract(misc_attrs);
 
-  if (ast_misc_attr_values != NULL) {
-    report_error(ast_misc_attr_values, "CQL0327: a value should not be assigned to vault_sensitive attribute", NULL);
-    record_error(ast_misc_attr_values);
-    record_error(misc_attrs);
-    return;
-  }
-
   if (is_ast_stmt_and_attr(misc_attrs->parent)) {
     ast_node *stmt = misc_attrs->parent->right;
     if (!is_ast_create_proc_stmt(stmt)) {
       report_error(misc_attrs, "CQL0328: vault_sensitive attribute may only be added to a create procedure statement", NULL);
+      record_error(misc_attrs);
+      return;
+    }
+  }
+
+  if (ast_misc_attr_values != NULL) {
+    if (is_ast_misc_attr_value_list(ast_misc_attr_values)) {
+      for (ast_node *value = ast_misc_attr_values; value; value = value->right) {
+        if (!sem_is_str_name(value->left)) {
+          report_error(value->left, "CQL0363: all arguments must be names", "vault_sensitive");
+          record_error(value->left);
+          record_error(value);
+          record_error(misc_attrs);
+          return;
+        }
+      }
+    }
+    else if (!sem_is_str_name(ast_misc_attr_values)) {
+      report_error(ast_misc_attr_values, "CQL0363: all arguments must be names", "vault_sensitive");
+      record_error(ast_misc_attr_values);
       record_error(misc_attrs);
       return;
     }
@@ -13706,7 +13736,18 @@ static void sem_create_proc_stmt(ast_node *ast) {
     bool_t out_stmt_proc = has_out_stmt_result(ast);
     bool_t out_union_proc = has_out_union_stmt_result(current_proc);
 
-    uint32_t identity_count = sem_identity_columns(misc_attrs);
+    // If a stored proc is marked with the vault_sensitive annotation then we generate the
+    // "sameness" helper method that checks those columns.  The attributes should look like this:
+    // @attribute(cql:vault_sensitve=(col1, col2, ,...))
+    sem_column_name_annotation(misc_attrs, find_vault_columns, "vault_sensitive");
+    if (is_error(misc_attrs)) {
+      goto cleanup;
+    }
+
+    // If a stored proc is marked with the identity annotation then we generate the
+    // "sameness" helper method that checks those columns.  The attributes should look like this:
+    // @attribute(cql:identity=(col1, col2, ,...))
+    uint32_t identity_count = sem_column_name_annotation(misc_attrs, find_identity_columns, "procedure identity");
     if (is_error(misc_attrs)) {
       goto cleanup;
     }

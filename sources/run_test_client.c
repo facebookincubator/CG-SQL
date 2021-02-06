@@ -28,6 +28,7 @@ cql_code test_all_column_encoded_fetchers(sqlite3 *db);
 cql_code test_all_column_encoded_cursor(sqlite3 *db);
 cql_code test_all_column_encoded_out_union(sqlite3 *db);
 cql_code test_all_column_encoded_multi_out_union(sqlite3 *db);
+cql_code test_all_column_some_encoded_field(sqlite3 *db);
 
 static int32_t steps_until_fail = 0;
 static int32_t trace_received = 0;
@@ -116,6 +117,9 @@ cql_code run_client(sqlite3 *db) {
 
   SQL_E(test_all_column_encoded_multi_out_union(db));
   E(!cql_outstanding_refs, "outstanding refs in test_all_column_encoded_multi_out_union: %d\n", cql_outstanding_refs);
+
+  SQL_E(test_all_column_some_encoded_field(db));
+  E(!cql_outstanding_refs, "outstanding refs in test_all_column_some_encoded_field: %d\n", cql_outstanding_refs);
 
   SQL_E(test_error_case_rowset(db));
   E(!cql_outstanding_refs, "outstanding refs in test_error_case_rowset: %d\n", cql_outstanding_refs);
@@ -969,6 +973,34 @@ cql_code test_all_column_encoded_multi_out_union(sqlite3 *db) {
   E(cql_blob_equal(bl1_decode, bl1_exp), "expected bl1 is \"1\", value \"%s\"\n", bl1_decode->ptr);
   cql_blob_release(bl1_decode);
   cql_blob_release(bl1_exp);
+
+  cql_result_set_release(result_set);
+
+  tests_passed++;
+  return SQLITE_OK;
+}
+
+cql_code test_all_column_some_encoded_field(sqlite3 *db) {
+  printf("Running column some encoded field fetchers test\n");
+  tests++;
+
+  load_some_encoded_field_result_set_ref result_set;
+  SQL_E(load_some_encoded_field_fetch_results(db, &result_set));
+  E(load_some_encoded_field_result_count(result_set) == 1, "expected 1 rows from result table\n");
+  E(cql_result_set_get_meta(result_set)->columnCount == 2, "expected 2 columns from result table\n");
+  load_some_encoded_field_result_set_ref rs = (load_some_encoded_field_result_set_ref)result_set;
+
+  cql_int32 x = load_some_encoded_field_get_x_value(rs);
+  E(!cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 0), "expected x is not encoded\n");
+  E(x == 66, "expected x is 66, value %d\n", x);
+
+  cql_string_ref y = load_some_encoded_field_get_y(rs);
+  E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 1), "expected y is encoded\n");
+  cql_string_ref y_decode = cql_decode_string_ref_new(db, y);
+  cql_string_ref y_exp = cql_string_ref_new("bogus");
+  E(cql_string_equal(y_decode, y_exp), "expected y is \"bogus\", value %s\n", y_decode->ptr);
+  cql_string_release(y_decode);
+  cql_string_release(y_exp);
 
   cql_result_set_release(result_set);
 

@@ -55642,12 +55642,95 @@ Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0328: vault_sensitive attri
 
 The statement ending at line XXXX
 
+@ATTRIBUTE(cql:vault_sensitive=(bogus, nan))
+CREATE PROC vault_sensitive_with_invalid_values ()
+BEGIN
+  SELECT *
+    FROM bar;
+END;
+
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0239: vault_sensitive column does not exist in result set 'bogus'
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0239: vault_sensitive column does not exist in result set 'nan'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name vault_sensitive}
+  |   | {misc_attr_value_list}: ok
+  |     | {name bogus}: ok
+  |     | {misc_attr_value_list}
+  |       | {name nan}: ok
+  | {create_proc_stmt}: err
+    | {name vault_sensitive_with_invalid_values}: err
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
+          | {select_core_list}: select: { id: integer notnull, name: text, rate: longint }
+          | | {select_core}: select: { id: integer notnull, name: text, rate: longint }
+          |   | {select_expr_list_con}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_expr_list}: select: { id: integer notnull, name: text, rate: longint }
+          |     | | {star}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_from_etc}: TABLE { bar: bar }
+          |       | {table_or_subquery_list}: TABLE { bar: bar }
+          |       | | {table_or_subquery}: TABLE { bar: bar }
+          |       |   | {name bar}: TABLE { bar: bar }
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:vault_sensitive=(name, rate))
+CREATE PROC vault_sensitive_with_valid_values ()
+BEGIN
+  SELECT *
+    FROM bar;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name vault_sensitive}
+  |   | {misc_attr_value_list}: ok
+  |     | {name name}: ok
+  |     | {misc_attr_value_list}
+  |       | {name rate}: ok
+  | {create_proc_stmt}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+    | {name vault_sensitive_with_valid_values}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
+          | {select_core_list}: select: { id: integer notnull, name: text, rate: longint }
+          | | {select_core}: select: { id: integer notnull, name: text, rate: longint }
+          |   | {select_expr_list_con}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_expr_list}: select: { id: integer notnull, name: text, rate: longint }
+          |     | | {star}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_from_etc}: TABLE { bar: bar }
+          |       | {table_or_subquery_list}: TABLE { bar: bar }
+          |       | | {table_or_subquery}: TABLE { bar: bar }
+          |       |   | {name bar}: TABLE { bar: bar }
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
 @ATTRIBUTE(cql:vault_sensitive=1)
-CREATE PROC vault_sensitive_proc_val ()
+CREATE PROC vault_sensitive_with_not_string_value_proc_val ()
 BEGIN
 END;
 
-Error at test/sem_test.sql:XXXX : in num : CQL0327: a value should not be assigned to vault_sensitive attribute
+Error at test/sem_test.sql:XXXX : in num : CQL0363: all arguments must be names 'vault_sensitive'
 
   {stmt_and_attr}: err
   | {misc_attrs}: err
@@ -55657,7 +55740,52 @@ Error at test/sem_test.sql:XXXX : in num : CQL0327: a value should not be assign
   |   | | {name vault_sensitive}
   |   | {int 1}: err
   | {create_proc_stmt}: err
-    | {name vault_sensitive_proc_val}
+    | {name vault_sensitive_with_not_string_value_proc_val}
+    | {proc_params_stmts}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:vault_sensitive=(name, 1, 'lol'))
+CREATE PROC vault_sensitive_with_not_strings_value_proc_val ()
+BEGIN
+END;
+
+Error at test/sem_test.sql:XXXX : in num : CQL0363: all arguments must be names 'vault_sensitive'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name vault_sensitive}
+  |   | {misc_attr_value_list}: ok
+  |     | {name name}: ok
+  |     | {misc_attr_value_list}: err
+  |       | {int 1}: err
+  |       | {misc_attr_value_list}
+  |         | {strlit 'lol'}: ok
+  | {create_proc_stmt}: err
+    | {name vault_sensitive_with_not_strings_value_proc_val}
+    | {proc_params_stmts}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:vault_sensitive='lol')
+CREATE PROC vault_sensitive_with_lit_string_value_proc_val ()
+BEGIN
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0363: all arguments must be names 'vault_sensitive'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name vault_sensitive}
+  |   | {strlit 'lol'}: err
+  | {create_proc_stmt}: err
+    | {name vault_sensitive_with_lit_string_value_proc_val}
     | {proc_params_stmts}
 
 The statement ending at line XXXX

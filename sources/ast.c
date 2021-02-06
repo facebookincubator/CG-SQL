@@ -498,6 +498,16 @@ cql_noexport uint32_t find_identity_columns(
   return find_attribute_str(misc_attr_list, callback, context, "identity");
 }
 
+// Helper function to extract the vault columns (if any) from the misc attributes
+// provided, and invoke the callback function
+cql_noexport uint32_t find_vault_columns(
+  ast_node *_Nullable misc_attr_list,
+  find_ast_str_node_callback _Nonnull callback,
+  void *_Nullable context)
+{
+  return find_attribute_str(misc_attr_list, callback, context, "vault_sensitive");
+}
+
 // Helper function to extract the base fragment node (if any) from the misc attributes
 // provided, and invoke the callback function.
 cql_noexport uint32_t find_base_fragment_attr(

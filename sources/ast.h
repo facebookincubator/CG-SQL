@@ -398,6 +398,12 @@ sqlite> select ~(1*3);
 // For searching proc dependencies/attributes
 typedef void (*find_ast_str_node_callback)(CSTR _Nonnull found_name, ast_node *_Nonnull str_ast, void *_Nullable context);
 
+// Signature of function finding annotation values
+typedef uint32_t (*find_annotation_values)(
+    ast_node *_Nullable misc_attr_list,
+    find_ast_str_node_callback _Nonnull callback,
+    void *_Nullable callback_context);
+
 cql_noexport uint32_t find_ok_table_scan(
    ast_node *_Nonnull list,
    find_ast_str_node_callback _Nonnull callback,
@@ -409,6 +415,11 @@ cql_noexport uint32_t find_autodrops(
    void *_Nullable context);
 
 cql_noexport uint32_t find_identity_columns(
+  ast_node *_Nullable misc_attr_list,
+  find_ast_str_node_callback _Nonnull callback,
+  void *_Nullable callback_context);
+
+cql_noexport uint32_t find_vault_columns(
   ast_node *_Nullable misc_attr_list,
   find_ast_str_node_callback _Nonnull callback,
   void *_Nullable callback_context);

@@ -989,6 +989,10 @@ Error at test/sem_test.sql:XXXX : in uminus : CQL0070: expressions of different 
 Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 Error at test/sem_test.sql:XXXX : in cast_expr : CQL0070: expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0328: vault_sensitive attribute may only be added to a create procedure statement
-Error at test/sem_test.sql:XXXX : in num : CQL0327: a value should not be assigned to vault_sensitive attribute
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0239: vault_sensitive column does not exist in result set 'bogus'
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0239: vault_sensitive column does not exist in result set 'nan'
+Error at test/sem_test.sql:XXXX : in num : CQL0363: all arguments must be names 'vault_sensitive'
+Error at test/sem_test.sql:XXXX : in num : CQL0363: all arguments must be names 'vault_sensitive'
+Error at test/sem_test.sql:XXXX : in str : CQL0363: all arguments must be names 'vault_sensitive'
 Error at test/sem_test.sql:XXXX : in col_attrs_hidden : CQL0362: The HIDDEN column attribute must be the first attribute if present
 semantic errors present; no code gen.

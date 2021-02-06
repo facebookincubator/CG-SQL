@@ -2377,7 +2377,7 @@ end;
 -- TEST: we need to make sure the a notnull db pointer is pass to cql_copyoutrow(...)
 -- + cql_copyoutrow(_db_, (cql_result_set_ref)C_result_set_, C_row_num_, 2,
 -- +                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.id,
--- +                CQL_DATA_TYPE_ENCODED | CQL_DATA_TYPE_STRING, &C.data);
+-- +                CQL_DATA_TYPE_STRING, &C.data);
 @attribute(cql:vault_sensitive)
 create proc out_union_dml_for_call()
 begin
@@ -2580,6 +2580,78 @@ begin
   if C then
     return;
   end if;
+end;
+
+-- TEST: helper table
+create table vault_mixed_sensitive(
+  id int not null primary key,
+  name text @sensitive,
+  type long @sensitive
+);
+
+-- TEST: helper table
+create table vault_non_sensitive(
+  id int not null primary key,
+  name text,
+  type long
+);
+
+-- TEST: vault_sensitive attribute includes sensitive column (name) and non sensitive column (id)
+-- + CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
+-- + CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // name
+-- + CQL_DATA_TYPE_INT64, // type
+@attribute(cql:vault_sensitive=(id, name))
+create proc vault_sensitive_with_values_proc()
+begin
+ select * from vault_mixed_sensitive;
+end;
+
+-- TEST: vault_sensitive attribute includes sensitive column (data) and non sensitive column (id)
+-- + CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
+-- + CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // name
+-- + CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_ENCODED, // type
+@attribute(cql:vault_sensitive)
+create proc vault_sensitive_with_no_values_proc()
+begin
+ select * from vault_mixed_sensitive;
+end;
+
+-- TEST: vault union all a sensitive and non sensitive table
+-- + CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
+-- + CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // name
+-- + CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_ENCODED, // type
+@attribute(cql:vault_sensitive)
+create proc vault_union_all_table_proc()
+begin
+ select * from vault_mixed_sensitive
+ union all
+ select * from vault_non_sensitive;
+end;
+
+-- TEST: vault on alias column name
+-- + CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // alias_name
+@attribute(cql:vault_sensitive=alias_name)
+create proc vault_alias_column_proc()
+begin
+ select name as alias_name from vault_mixed_sensitive;
+end;
+
+-- TEST: vault on alias column name
+-- + CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // alias_name
+@attribute(cql:vault_sensitive=alias_name)
+create proc vault_alias_column_name_proc()
+begin
+ select name as alias_name from vault_mixed_sensitive;
+end;
+
+-- TEST: vault a column in cursor result
+-- + cql_multifetch(_rc_, C_stmt, 1,
+-- +                CQL_DATA_TYPE_STRING, &C.name);
+@attribute(cql:vault_sensitive)
+create proc vault_cursor_proc()
+begin
+  declare C cursor for select name from vault_mixed_sensitive;
+  fetch c;
 end;
 
 create table ext_test_table (
