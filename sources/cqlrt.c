@@ -207,47 +207,56 @@ cql_bool cql_ref_equal(cql_type_ref typeref1, cql_type_ref typeref2) {
 
 // naive implementation of encode for cql_bool. It flip the boolean value
 cql_bool cql_encode_bool(sqlite3 *_Nonnull db, cql_bool value) {
+  cql_contract(db);
   return !value;
 }
 
 // naive implementation of decode for cql_bool. It flip the boolean value
 cql_bool cql_decode_bool(sqlite3 *_Nonnull db, cql_bool value) {
+  cql_contract(db);
   return !value;
 }
 
 // naive implementation of encode for cql_int32.
 cql_int32 cql_encode_int32(sqlite3 *_Nonnull db, cql_int32 value) {
+  cql_contract(db);
   return (value >> 16) | (value << 16);
 }
 
 // naive implementation of decode for cql_int32.
 cql_int32 cql_decode_int32(sqlite3 *_Nonnull db, cql_int32 value) {
+  cql_contract(db);
   return (value << 16) | (value >> 16);
 }
 
 // naive implementation of encode for cql_int64.
 cql_int64 cql_encode_int64(sqlite3 *_Nonnull db, cql_int64 value) {
+  cql_contract(db);
   return (value >> 32) | (value << 32);
 }
 
 // naive implementation of decode for cql_int64.
 cql_int64 cql_decode_int64(sqlite3 *_Nonnull db, cql_int64 value) {
+  cql_contract(db);
   return (value << 32) | (value >> 32);
 }
 
 // naive implementation of encode for double.
 cql_double cql_encode_double(sqlite3 *_Nonnull db, cql_double value) {
+  cql_contract(db);
   return -value;
 }
 
 // naive implementation of decode for double.
 cql_double cql_decode_double(sqlite3 *_Nonnull db, cql_double value) {
+  cql_contract(db);
   return -value;
 }
 
 // naive implementation of encode for string. It appends a character to the
 // string
 cql_string_ref cql_encode_string_ref_new(sqlite3 *_Nonnull db, cql_string_ref _Nonnull value) {
+  cql_contract(db);
   size_t cstrlen = strlen(value->ptr);
   char *tmp = malloc(cstrlen + 2);
   memcpy(tmp, value->ptr, cstrlen);
@@ -261,6 +270,7 @@ cql_string_ref cql_encode_string_ref_new(sqlite3 *_Nonnull db, cql_string_ref _N
 // naive implementation of decode for string. It remove the last character
 // in the string
 cql_string_ref cql_decode_string_ref_new(sqlite3 *_Nonnull db, cql_string_ref _Nonnull value) {
+  cql_contract(db);
   size_t cstrlen = strlen(value->ptr);
   char *tmp = malloc(cstrlen);
   memcpy(tmp, value->ptr, cstrlen - 1);
@@ -273,6 +283,7 @@ cql_string_ref cql_decode_string_ref_new(sqlite3 *_Nonnull db, cql_string_ref _N
 // naive implementation of encode for blob. It appends a byte to the
 // blob
 cql_blob_ref cql_encode_blob_ref_new(sqlite3 *_Nonnull db, cql_blob_ref _Nonnull value) {
+  cql_contract(db);
   cql_uint32 size = value->size + 1;
   char *tmp = malloc(size);
   memcpy(tmp, value->ptr, size - 1);
@@ -285,6 +296,7 @@ cql_blob_ref cql_encode_blob_ref_new(sqlite3 *_Nonnull db, cql_blob_ref _Nonnull
 // naive implementation of decode for blob. It removes the last byte
 // in the blob.
 cql_blob_ref cql_decode_blob_ref_new(sqlite3 *_Nonnull db, cql_blob_ref _Nonnull value) {
+  cql_contract(db);
   cql_uint32 size = value->size - 1;
   void *tmp = malloc(size);
   memcpy(tmp, value->ptr, size);

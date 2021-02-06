@@ -1690,6 +1690,52 @@ static inline BOOL CGCOutUnionValuesRowEqual(CGCOutUnionValues *resultSet1, int3
   return CGCOutUnionValuesRowEqual(CGCOutUnionValuesFromCGCOutUnionValues(resultSet1), row1, CGCOutUnionValuesFromCGCOutUnionValues(resultSet2), row2);
 }
 
+@class CGCOutUnionDml;
+
+static inline CGCOutUnionDml *CGCOutUnionDmlFromCGCOutUnionDml(CGCOutUnionDmlResultSetRef resultSet)
+{
+  return (__bridge CGCOutUnionDml *)resultSet;
+}
+
+static inline CGCOutUnionDmlResultSetRef CGCOutUnionDmlFromCGCOutUnionDml(CGCOutUnionDml *resultSet)
+{
+  return (__bridge CGCOutUnionDmlResultSetRef)resultSet;
+}
+
+static inline int32_t CGCOutUnionDmlGetId(CGCOutUnionDml *resultSet, int32_t row)
+{
+  CGCOutUnionDmlResultSetRef cResultSet = CGCOutUnionDmlFromCGCOutUnionDml(resultSet);
+  return CGCOutUnionDmlGetId(cResultSet, row);
+}
+
+static inline NSString *_Nullable CGCOutUnionDmlGetData(CGCOutUnionDml *resultSet, int32_t row)
+{
+  CGCOutUnionDmlResultSetRef cResultSet = CGCOutUnionDmlFromCGCOutUnionDml(resultSet);
+  return (__bridge NSString *)CGCOutUnionDmlGetData(cResultSet, row);
+}
+
+static inline int32_t CGCOutUnionDmlResultCount(CGCOutUnionDml *resultSet)
+{
+  return CGCOutUnionDmlResultCount(CGCOutUnionDmlFromCGCOutUnionDml(resultSet));
+}
+
+static inline CGCOutUnionDml *CGCOutUnionDmlCopy(CGCOutUnionDml *resultSet, int32_t from, int32_t count)
+{
+  CGCOutUnionDmlResultSetRef copy;
+  CGCOutUnionDmlCopy(CGCOutUnionDmlFromCGCOutUnionDml(resultSet), &copy, from, count);
+  return (__bridge_transfer CGCOutUnionDml *)copy;
+}
+
+static inline NSUInteger CGCOutUnionDmlRowHash(CGCOutUnionDml *resultSet, int32_t row)
+{
+  return CGCOutUnionDmlRowHash(CGCOutUnionDmlFromCGCOutUnionDml(resultSet), row);
+}
+
+static inline BOOL CGCOutUnionDmlRowEqual(CGCOutUnionDml *resultSet1, int32_t row1, CGCOutUnionDml *resultSet2, int32_t row2)
+{
+  return CGCOutUnionDmlRowEqual(CGCOutUnionDmlFromCGCOutUnionDml(resultSet1), row1, CGCOutUnionDmlFromCGCOutUnionDml(resultSet2), row2);
+}
+
 @class CGCWindowFunctionInvocation;
 
 static inline CGCWindowFunctionInvocation *CGCWindowFunctionInvocationFromCGCWindowFunctionInvocation(CGCWindowFunctionInvocationResultSetRef resultSet)

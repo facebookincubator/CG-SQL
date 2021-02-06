@@ -1535,6 +1535,35 @@ extern void out_union_values_fetch_results(out_union_values_result_set_ref _Null
 extern CQL_WARN_UNUSED cql_code read_out_union_values(sqlite3 *_Nonnull _db_, cql_int32 a, cql_int32 b);
 
 // The statement ending at line XXXX
+#define CRC_out_union_dml -1250369399704506439L
+
+extern cql_string_ref _Nonnull out_union_dml_stored_procedure_name;
+
+#define out_union_dml_data_types_count 2
+
+cql_result_set_type_decl(out_union_dml_result_set, out_union_dml_result_set_ref);
+extern cql_int32 out_union_dml_get_id(out_union_dml_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_string_ref _Nullable out_union_dml_get_data(out_union_dml_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 out_union_dml_result_count(out_union_dml_result_set_ref _Nonnull result_set);
+#define out_union_dml_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define out_union_dml_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define out_union_dml_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+extern CQL_WARN_UNUSED cql_code out_union_dml_fetch_results(sqlite3 *_Nonnull _db_, out_union_dml_result_set_ref _Nullable *_Nonnull _result_set_);
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code out_union_dml_for_call(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
 extern CQL_WARN_UNUSED cql_code compound_select_expr(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX

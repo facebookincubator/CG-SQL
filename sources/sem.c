@@ -3316,7 +3316,7 @@ static sem_t sem_col_attrs(ast_node *def, ast_node *_Nullable head, coldef_info 
 
       ast_node *table_ast = info->table_info->target_ast;
       bool_t is_virtual_table = table_ast->parent && is_ast_create_virtual_table_stmt(table_ast->parent);
-     
+
       // ignored for non-virtual tables SQLite does the same e.g:
       // > create table foo(x integer hidden, y integer); insert into foo(x,y) values(1,2); select * from foo;
       // 1|2
@@ -14347,7 +14347,7 @@ static void sem_declare_cursor(ast_node *ast) {
   EXTRACT_ANY_NOTNULL(cursor, ast->left);
   EXTRACT_STRING(name, cursor);
 
-  sem_t out_union = 0;
+  sem_t out_union_and_dml = 0;
 
   if (is_ast_str(ast->right)) {
     sem_declare_cursor_for_name(ast);
@@ -14364,6 +14364,11 @@ static void sem_declare_cursor(ast_node *ast) {
       record_error(ast);
       return;
     }
+
+    // We need to know whether or not the cursor source of data is a DML.
+    // A DML source require a not null db pointer. This info is used to
+    // decided whether we can do encoding/decoding of result_set's fields.
+    out_union_and_dml = SEM_TYPE_DML_PROC;
   }
   else {
     EXTRACT_NOTNULL(call_stmt, ast->right);
@@ -14387,7 +14392,11 @@ static void sem_declare_cursor(ast_node *ast) {
       return;
     }
 
-    out_union = has_out_union_stmt_result(call_stmt) ? SEM_TYPE_USES_OUT_UNION : 0;
+    out_union_and_dml = has_out_union_stmt_result(call_stmt) ? SEM_TYPE_USES_OUT_UNION : 0;
+    // We need to know whether or not the cursor source of data is a DML.
+    // A DML source require a not null db pointer. This info is used to
+    // decided whether we can do encoding/decoding of result_set's fields.
+    out_union_and_dml |= call_stmt->sem->sem_type & SEM_TYPE_DML_PROC;
   }
 
   if (!sem_verify_legal_variable_name(ast, name)) {
@@ -14397,7 +14406,7 @@ static void sem_declare_cursor(ast_node *ast) {
   }
 
   // SEM_TYPE_STRUCT | SEM_TYPE_VARIABLE <=> it's a cursor
-  cursor->sem = new_sem(SEM_TYPE_STRUCT | SEM_TYPE_VARIABLE | out_union);
+  cursor->sem = new_sem(SEM_TYPE_STRUCT | SEM_TYPE_VARIABLE | out_union_and_dml);
   cursor->sem->sptr = ast->right->sem->sptr;
   cursor->sem->name = name;
   ast->sem = cursor->sem;
@@ -14705,6 +14714,7 @@ static void sem_declare_value_cursor(ast_node *ast) {
   cursor->sem = new_sem(SEM_TYPE_STRUCT | SEM_TYPE_VARIABLE | SEM_TYPE_VALUE_CURSOR | SEM_TYPE_HAS_SHAPE_STORAGE);
   cursor->sem->sptr = ast->right->sem->sptr;
   cursor->sem->name = name;
+  cursor->sem->sem_type |= call_stmt->sem->sem_type & SEM_TYPE_DML_PROC;
   ast->sem = cursor->sem;
 
   symtab_add(current_variables, name, cursor);

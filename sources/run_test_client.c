@@ -26,6 +26,8 @@ cql_code test_cql_bytebuf_alloc_within_bytebuf_exp_growth_cap(sqlite3 *db);
 cql_code test_cql_bytebuf_alloc_over_bytebuf_exp_growth_cap(sqlite3 *db);
 cql_code test_all_column_encoded_fetchers(sqlite3 *db);
 cql_code test_all_column_encoded_cursor(sqlite3 *db);
+cql_code test_all_column_encoded_out_union(sqlite3 *db);
+cql_code test_all_column_encoded_multi_out_union(sqlite3 *db);
 
 static int32_t steps_until_fail = 0;
 static int32_t trace_received = 0;
@@ -108,6 +110,12 @@ cql_code run_client(sqlite3 *db) {
 
   SQL_E(test_all_column_encoded_cursor(db));
   E(!cql_outstanding_refs, "outstanding refs in test_all_column_encoded_cursor: %d\n", cql_outstanding_refs);
+
+  SQL_E(test_all_column_encoded_out_union(db));
+  E(!cql_outstanding_refs, "outstanding refs in test_all_column_encoded_out_union: %d\n", cql_outstanding_refs);
+
+  SQL_E(test_all_column_encoded_multi_out_union(db));
+  E(!cql_outstanding_refs, "outstanding refs in test_all_column_encoded_multi_out_union: %d\n", cql_outstanding_refs);
 
   SQL_E(test_error_case_rowset(db));
   E(!cql_outstanding_refs, "outstanding refs in test_error_case_rowset: %d\n", cql_outstanding_refs);
@@ -807,6 +815,158 @@ cql_code test_all_column_encoded_cursor(sqlite3 *db) {
   cql_blob_ref bl1_decode = cql_decode_blob_ref_new(db, bl1);
   cql_blob_ref bl1_exp = cql_blob_ref_new("1", 1);
   E(cql_blob_equal(bl1_decode, bl1_exp), "expected bl1 is \"1\", value %s\n", (char*)bl1_decode->ptr);
+  cql_blob_release(bl1_decode);
+  cql_blob_release(bl1_exp);
+
+  cql_result_set_release(result_set);
+
+  tests_passed++;
+  return SQLITE_OK;
+}
+
+cql_code test_all_column_encoded_out_union(sqlite3 *db) {
+  printf("Running column encoded out union fetchers test\n");
+  tests++;
+
+  load_decoded_out_union_result_set_ref result_set;
+  SQL_E(load_decoded_out_union_fetch_results(db, &result_set));
+  E(load_decoded_out_union_result_count(result_set) == 1, "expected 1 row from result table\n");
+  E(cql_result_set_get_meta(result_set)->columnCount == 12, "expected 12 columns from result table\n");
+  load_decoded_out_union_result_set_ref rs = (load_decoded_out_union_result_set_ref)result_set;
+
+  cql_bool b0 = load_decoded_out_union_get_b0_value(rs);
+  cql_bool b0_exp = cql_decode_bool(db, b0);
+  E(b0_exp == 0, "expected b0 is 0, value %d\n", b0_exp);
+
+  cql_int32 i0 = load_decoded_out_union_get_i0_value(rs);
+  cql_int32 i0_exp = cql_decode_int32(db, i0);
+  E(i0_exp == 0, "expected i0 is 0, value %d\n", i0_exp);
+
+  cql_int64 l0 = load_decoded_out_union_get_l0_value(rs);
+  cql_int64 l0_exp = cql_decode_int64(db, l0);
+  E(l0_exp == 0, "expected l0 is 0, value %lld\n", l0_exp);
+
+  cql_double d0 = load_decoded_out_union_get_d0_value(rs);
+  cql_double d0_exp = cql_decode_double(db, d0);
+  E(d0_exp == 0.0, "expected d0 is 0.0, value %lf\n", d0_exp);
+
+  cql_string_ref s0 = load_decoded_out_union_get_s0(rs);
+  cql_string_ref s0_decode = cql_decode_string_ref_new(db, s0);
+  cql_string_ref s0_exp = cql_string_ref_new("0");
+  E(cql_string_equal(s0_decode, s0_exp), "expected s0 is 0, value %s\n", s0_decode->ptr);
+  cql_string_release(s0_decode);
+  cql_string_release(s0_exp);
+
+  cql_blob_ref bl0 = load_decoded_out_union_get_bl0(rs);
+  cql_blob_ref bl0_decode = cql_decode_blob_ref_new(db, bl0);
+  cql_blob_ref bl0_exp = cql_blob_ref_new("0", 1);
+  E(cql_blob_equal(bl0_decode, bl0_exp), "expected bl0 is \"0\", value %s\n", bl0_decode->ptr);
+  cql_blob_release(bl0_decode);
+  cql_blob_release(bl0_exp);
+
+  cql_bool b1 = load_decoded_out_union_get_b1(rs);
+  cql_bool b1_exp = cql_decode_bool(db, b1);
+  E(b1_exp == 1, "expected b1 is 1, value %d\n", b1_exp);
+
+  cql_int32 i1 = load_decoded_out_union_get_i1(rs);
+  cql_int32 i1_exp = cql_decode_int32(db, i1);
+  E(i1_exp == 1, "expected i1 is 1, value %d\n", i1_exp);
+
+  cql_int64 l1 = load_decoded_out_union_get_l1(rs);
+  cql_int64 l1_exp = cql_decode_int64(db, l1);
+  E(l1_exp == 1, "expected l1 is 1, value %lld\n", l1_exp);
+
+  cql_double d1 = load_decoded_out_union_get_d1(rs);
+  cql_double d1_exp = cql_decode_double(db, d1);
+  E(d1_exp == 1.1, "expected d1 is 1.1, value %lf\n", d1_exp);
+
+  cql_string_ref s1 = load_decoded_out_union_get_s1(rs);
+  cql_string_ref s1_decode = cql_decode_string_ref_new(db, s1);
+  cql_string_ref s1_exp = cql_string_ref_new("1");
+  E(cql_string_equal(s1_decode, s1_exp), "expected s1 is 1, value %s\n", s1_decode->ptr);
+  cql_string_release(s1_decode);
+  cql_string_release(s1_exp);
+
+  cql_blob_ref bl1 = load_decoded_out_union_get_bl1(rs);
+  cql_blob_ref bl1_decode = cql_decode_blob_ref_new(db, bl1);
+  cql_blob_ref bl1_exp = cql_blob_ref_new("1", 1);
+  E(cql_blob_equal(bl1_decode, bl1_exp), "expected bl1 is \"1\", value %s\n", bl1_decode->ptr);
+  cql_blob_release(bl1_decode);
+  cql_blob_release(bl1_exp);
+
+  cql_result_set_release(result_set);
+
+  tests_passed++;
+  return SQLITE_OK;
+}
+
+cql_code test_all_column_encoded_multi_out_union(sqlite3 *db) {
+  printf("Running column encoded multi out union fetchers test\n");
+  tests++;
+
+  load_decoded_multi_out_union_result_set_ref result_set;
+  SQL_E(load_decoded_multi_out_union_fetch_results(db, &result_set));
+  E(load_decoded_multi_out_union_result_count(result_set) == 2, "expected 2 rows from result table\n");
+  E(cql_result_set_get_meta(result_set)->columnCount == 12, "expected 12 columns from result table\n");
+  load_decoded_multi_out_union_result_set_ref rs = (load_decoded_multi_out_union_result_set_ref)result_set;
+
+  cql_bool b0 = load_decoded_multi_out_union_get_b0_value(rs, 1);
+  cql_bool b0_exp = cql_decode_bool(db, b0);
+  E(b0_exp == 0, "expected b0 is 0, value %d\n", b0_exp);
+
+  cql_int32 i0 = load_decoded_multi_out_union_get_i0_value(rs, 1);
+  cql_int32 i0_exp = cql_decode_int32(db, i0);
+  E(i0_exp == 0, "expected i0 is 0, value %d\n", i0_exp);
+
+  cql_int64 l0 = load_decoded_multi_out_union_get_l0_value(rs, 1);
+  cql_int64 l0_exp = cql_decode_int64(db, l0);
+  E(l0_exp == 0, "expected l0 is 0, value %lld\n", l0_exp);
+
+  cql_double d0 = load_decoded_multi_out_union_get_d0_value(rs, 1);
+  cql_double d0_exp = cql_decode_double(db, d0);
+  E(d0_exp == 0.0, "expected d0 is 0.0, value %lf\n", d0_exp);
+
+  cql_string_ref s0 = load_decoded_multi_out_union_get_s0(rs, 1);
+  cql_string_ref s0_decode = cql_decode_string_ref_new(db, s0);
+  cql_string_ref s0_exp = cql_string_ref_new("0");
+  E(cql_string_equal(s0_decode, s0_exp), "expected s0 is 0, value %s\n", s0_decode->ptr);
+  cql_string_release(s0_decode);
+  cql_string_release(s0_exp);
+
+  cql_blob_ref bl0 = load_decoded_multi_out_union_get_bl0(rs, 1);
+  cql_blob_ref bl0_decode = cql_decode_blob_ref_new(db, bl0);
+  cql_blob_ref bl0_exp = cql_blob_ref_new("0", 2);
+  E(cql_blob_equal(bl0_decode, bl0_exp), "expected bl0 is \"0\", value \"%s\"\n", bl0_decode->ptr);
+  cql_blob_release(bl0_decode);
+  cql_blob_release(bl0_exp);
+
+  cql_bool b1 = load_decoded_multi_out_union_get_b1(rs, 1);
+  cql_bool b1_exp = cql_decode_bool(db, b1);
+  E(b1_exp == 1, "expected b1 is 1, value %d\n", b1_exp);
+
+  cql_int32 i1 = load_decoded_multi_out_union_get_i1(rs, 1);
+  cql_int32 i1_exp = cql_decode_int32(db, i1);
+  E(i1_exp == 1, "expected i1 is 1, value %d\n", i1_exp);
+
+  cql_int64 l1 = load_decoded_multi_out_union_get_l1(rs, 1);
+  cql_int64 l1_exp = cql_decode_int64(db, l1);
+  E(l1_exp == 1, "expected l1 is 1, value %lld\n", l1_exp);
+
+  cql_double d1 = load_decoded_multi_out_union_get_d1(rs, 1);
+  cql_double d1_exp = cql_decode_double(db, d1);
+  E(d1_exp == 1.1, "expected d1 is 1.1, value %lf\n", d1_exp);
+
+  cql_string_ref s1 = load_decoded_multi_out_union_get_s1(rs, 1);
+  cql_string_ref s1_decode = cql_decode_string_ref_new(db, s1);
+  cql_string_ref s1_exp = cql_string_ref_new("1");
+  E(cql_string_equal(s1_decode, s1_exp), "expected s1 is 1, value %s\n", s1_decode->ptr);
+  cql_string_release(s1_decode);
+  cql_string_release(s1_exp);
+
+  cql_blob_ref bl1 = load_decoded_multi_out_union_get_bl1(rs, 1);
+  cql_blob_ref bl1_decode = cql_decode_blob_ref_new(db, bl1);
+  cql_blob_ref bl1_exp = cql_blob_ref_new("1", 2);
+  E(cql_blob_equal(bl1_decode, bl1_exp), "expected bl1 is \"1\", value \"%s\"\n", bl1_decode->ptr);
   cql_blob_release(bl1_decode);
   cql_blob_release(bl1_exp);
 

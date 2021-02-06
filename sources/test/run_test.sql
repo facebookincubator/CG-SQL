@@ -2425,6 +2425,144 @@ begin
   out C;
 end;
 
+@attribute(cql:vault_sensitive)
+create proc out_union_dml()
+begin
+  declare x cursor for select * from all_types_encoded_table;
+  fetch x;
+  out union x;
+end;
+
+@attribute(cql:vault_sensitive)
+create proc out_union_not_dml()
+begin
+  declare x cursor like all_types_encoded_table;
+  fetch x using
+    0 b0,
+    0 i0,
+    0 l0,
+    0.0 d0,
+    "0" s0,
+    blob_from_string("0") bl0,
+    1 b1,
+    1 i1,
+    1 l1,
+    1.1 d1,
+    "1" s1,
+    blob_from_string("1") bl1;
+
+  out union x;
+end;
+
+@attribute(cql:vault_sensitive)
+create proc load_decoded_out_union()
+begin
+  declare C cursor for call out_union_dml();
+  fetch C;
+  out C;
+end;
+
+@attribute(cql:vault_sensitive)
+create proc load_decoded_multi_out_union()
+begin
+  declare C cursor for call out_union_dml();
+  fetch C;
+  out union C;
+
+  declare C1 cursor for call out_union_not_dml();
+  fetch C1;
+  out union C1;
+end;
+
+BEGIN_TEST(encoded_values)
+  declare C cursor for call load_encoded_table();
+  fetch C;
+  EXPECT(C.b0 IS 0);
+  EXPECT(C.i0 IS 0);
+  EXPECT(C.l0 IS 0);
+  EXPECT(C.d0 IS 0.0);
+  EXPECT(C.s0 IS "0");
+  EXPECT(string_from_blob(C.bl0) IS "0");
+  EXPECT(C.b1 IS 1);
+  EXPECT(C.i1 IS 1);
+  EXPECT(C.l1 IS 1);
+  EXPECT(C.d1 IS 1.1);
+  EXPECT(C.s1 IS "1");
+  EXPECT(string_from_blob(C.bl1) IS "1");
+
+  declare C1 cursor for call out_union_dml();
+  fetch C1;
+  EXPECT(C1.b0 IS 0);
+  EXPECT(C1.i0 IS 0);
+  EXPECT(C1.l0 IS 0);
+  EXPECT(C1.d0 IS 0.0);
+  EXPECT(C1.s0 IS "0");
+  EXPECT(string_from_blob(C1.bl0) IS "0");
+  EXPECT(C1.b1 IS 1);
+  EXPECT(C1.i1 IS 1);
+  EXPECT(C1.l1 IS 1);
+  EXPECT(C1.d1 IS 1.1);
+  EXPECT(C1.s1 IS "1");
+  EXPECT(string_from_blob(C1.bl1) IS "1");
+
+  declare C2 cursor for call out_union_not_dml();
+  fetch C2;
+  EXPECT(C2.b0 IS 0);
+  EXPECT(C2.i0 IS 0);
+  EXPECT(C2.l0 IS 0);
+  EXPECT(C2.d0 IS 0.0);
+  EXPECT(C2.s0 IS "0");
+  EXPECT(string_from_blob(C2.bl0) IS "0");
+  EXPECT(C2.b1 IS 1);
+  EXPECT(C2.i1 IS 1);
+  EXPECT(C2.l1 IS 1);
+  EXPECT(C2.d1 IS 1.1);
+  EXPECT(C2.s1 IS "1");
+  EXPECT(string_from_blob(C2.bl1) IS "1");
+
+  declare C3 cursor fetch from call load_decoded_out_union();
+  EXPECT(C3.b0 IS 0);
+  EXPECT(C3.i0 IS 0);
+  EXPECT(C3.l0 IS 0);
+  EXPECT(C3.d0 IS 0.0);
+  EXPECT(C3.s0 IS "0");
+  EXPECT(string_from_blob(C3.bl0) IS "0");
+  EXPECT(C3.b1 IS 1);
+  EXPECT(C3.i1 IS 1);
+  EXPECT(C3.l1 IS 1);
+  EXPECT(C3.d1 IS 1.1);
+  EXPECT(C3.s1 IS "1");
+  EXPECT(string_from_blob(C3.bl1) IS "1");
+END_TEST(encoded_values)
+
+BEGIN_TEST(encoded_null_values)
+  create table encode_null_table(
+      b0 bool @sensitive,
+      i0 integer @sensitive,
+      l0 long @sensitive,
+      d0 real @sensitive,
+      s0 text @sensitive,
+      bl0 blob @sensitive
+  );
+  insert into encode_null_table using
+    null b0,
+    null i0,
+    null l0,
+    null d0,
+    null s0,
+    null bl0;
+
+  declare C cursor for select * from encode_null_table;
+  fetch C;
+
+  EXPECT(C.b0 IS null);
+  EXPECT(C.i0 IS null);
+  EXPECT(C.l0 IS null);
+  EXPECT(C.d0 IS null);
+  EXPECT(C.s0 IS null);
+  EXPECT(C.bl0 IS null);
+END_TEST(encoded_null_values)
+
 create procedure load_all_types_table()
 begin
   create table all_types_table(

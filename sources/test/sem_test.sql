@@ -2804,14 +2804,14 @@ rollback transaction to savepoint another_garbonzo;
 
 -- TEST: Test the shorthand syntax for cursors. The shape_storage flag for the
 -- cursor itself comes from the following fetch statement.
--- + {declare_cursor}: shape_storage: select: { one: integer notnull, two: integer notnull } variable
--- + {name shape_storage}: shape_storage: select: { one: integer notnull, two: integer notnull } variable shape_storage
+-- + {declare_cursor}: shape_storage: select: { one: integer notnull, two: integer notnull } variable dml_proc
+-- + {name shape_storage}: shape_storage: select: { one: integer notnull, two: integer notnull } variable dml_proc shape_storage
 -- - Error
 declare shape_storage cursor for select 1 as one, 2 as two;
 
 -- TEST: Fetch the auto cursor
--- + {fetch_stmt}: shape_storage: select: { one: integer notnull, two: integer notnull } variable
--- + {name shape_storage}: shape_storage: select: { one: integer notnull, two: integer notnull } variable shape_storage
+-- + {fetch_stmt}: shape_storage: select: { one: integer notnull, two: integer notnull } variable dml_proc
+-- + {name shape_storage}: shape_storage: select: { one: integer notnull, two: integer notnull } variable dml_proc shape_storage
 -- - Error
 fetch shape_storage;
 
@@ -5273,7 +5273,7 @@ out curs;
 
 -- TEST: read the result of a proc with an out cursor
 -- + {create_proc_stmt}: ok dml_proc
--- + {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+-- + {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
 -- + {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
 -- - Error
 create proc result_reader()
@@ -5315,7 +5315,7 @@ begin
 end;
 
 -- TEST: read the result of a proc with an out cursor, use same var twice
--- +1 {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+-- +1 {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
 -- +1 {declare_value_cursor}: err
 -- + Error % duplicate variable name in the same scope 'C'
 -- +1 Error
@@ -5389,7 +5389,7 @@ begin
 end;
 
 -- TEST: fetch cursor from values
--- + {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+-- + {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
 -- + {fetch_values_stmt}: ok
 create proc fetch_values()
 begin
@@ -5399,7 +5399,7 @@ end;
 
 -- TEST: fetch cursor from values with dummy values
 -- + FETCH C(A, B) FROM VALUES(_seed_, _seed_) @DUMMY_SEED(123) @DUMMY_NULLABLES;
--- + {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+-- + {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
 -- + {fetch_values_stmt}: ok
 -- +2 {name _seed_}: _seed_: integer notnull variable
 create proc fetch_values_dummy()
@@ -10082,8 +10082,8 @@ declare c cursor for explain query plan select * from foo inner join bar;
 -- TEST: explain query plan cursor in proc
 -- + {create_proc_stmt}: ok dml_proc
 -- + {name explain_query_with_cursor}: ok dml_proc
--- + {declare_cursor}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable
--- + {name c}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable shape_storage
+-- + {declare_cursor}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable dml_proc
+-- + {name c}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable dml_proc shape_storage
 -- + {explain_stmt}: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull }
 -- + {int 2}
 -- - Error
@@ -12475,8 +12475,8 @@ set _sens := (select length(name) from with_sensitive);
 set an_int := (select length("x"));
 
 -- TEST: box a cursor (success path)
--- + {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable
--- + {set_from_cursor}: C: select: { id: integer notnull, name: text, rate: longint } variable boxed
+-- + {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable dml_proc
+-- + {set_from_cursor}: C: select: { id: integer notnull, name: text, rate: longint } variable dml_proc boxed
 -- - Error
 create proc cursor_box(out B object<bar cursor>)
 begin

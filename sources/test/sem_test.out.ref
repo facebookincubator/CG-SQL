@@ -5309,8 +5309,8 @@ The statement ending at line XXXX
 
 DECLARE my_cursor CURSOR FOR SELECT 1 AS one, 2 AS two;
 
-  {declare_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable
-  | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable
+  {declare_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
+  | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
   | {select_stmt}: select: { one: integer notnull, two: integer notnull }
     | {select_core_list}: select: { one: integer notnull, two: integer notnull }
     | | {select_core}: select: { one: integer notnull, two: integer notnull }
@@ -5338,8 +5338,8 @@ The statement ending at line XXXX
 DECLARE kind_cursor CURSOR FOR SELECT *
   FROM with_kind;
 
-  {declare_cursor}: kind_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable
-  | {name kind_cursor}: kind_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable
+  {declare_cursor}: kind_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable dml_proc
+  | {name kind_cursor}: kind_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable dml_proc
   | {select_stmt}: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> }
     | {select_core_list}: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> }
     | | {select_core}: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> }
@@ -5363,8 +5363,8 @@ DECLARE kind_value_cursor CURSOR LIKE kind_cursor;
 
   {declare_cursor_like_name}: kind_value_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable shape_storage value_cursor
   | {name kind_value_cursor}: kind_value_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable shape_storage value_cursor
-  | {like}: kind_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable
-    | {name kind_cursor}: kind_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable
+  | {like}: kind_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable dml_proc
+    | {name kind_cursor}: kind_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable dml_proc
 
 The statement ending at line XXXX
 
@@ -5421,8 +5421,8 @@ BEGIN
 END;
 
   {loop_stmt}: ok
-  | {fetch_stmt}: my_cursor: select: { one: integer notnull, two: integer notnull } variable
-  | | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable
+  | {fetch_stmt}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
+  | | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
   | | {name_list}
   |   | {name X}: X: integer variable
   |   | {name_list}
@@ -5470,8 +5470,8 @@ BEGIN
 END;
 
   {loop_stmt}: ok
-  | {fetch_stmt}: my_cursor: select: { one: integer notnull, two: integer notnull } variable
-  | | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable
+  | {fetch_stmt}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
+  | | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
   | | {name_list}
   |   | {name X}: X: integer variable
   |   | {name_list}
@@ -5660,8 +5660,8 @@ END;
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
 
   {loop_stmt}: err
-  | {fetch_stmt}: my_cursor: select: { one: integer notnull, two: integer notnull } variable
-  | | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable
+  | {fetch_stmt}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
+  | | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
   | | {name_list}
   |   | {name X}: X: integer variable
   |   | {name_list}
@@ -5687,15 +5687,15 @@ The statement ending at line XXXX
 
 OPEN my_cursor;
 
-  {open_stmt}: my_cursor: select: { one: integer notnull, two: integer notnull } variable
-  | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable
+  {open_stmt}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
+  | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
 
 The statement ending at line XXXX
 
 CLOSE my_cursor;
 
-  {close_stmt}: my_cursor: select: { one: integer notnull, two: integer notnull } variable
-  | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable
+  {close_stmt}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
+  | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
 
 The statement ending at line XXXX
 
@@ -6241,7 +6241,7 @@ SET my_cursor := 1;
 Error at test/sem_test.sql:XXXX : in assign : CQL0174: cannot set a cursor 'my_cursor'
 
   {assign}: err
-  | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable
+  | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
   | {int 1}
 
 The statement ending at line XXXX
@@ -6277,8 +6277,8 @@ The statement ending at line XXXX
 
 DECLARE fetch_cursor CURSOR FOR SELECT 1, 'foo', NULL;
 
-  {declare_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable
-  | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable
+  {declare_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc
+  | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc
   | {select_stmt}: select: { _anon: integer notnull, _anon: text notnull, _anon: null }
     | {select_core_list}: select: { _anon: integer notnull, _anon: text notnull, _anon: null }
     | | {select_core}: select: { _anon: integer notnull, _anon: text notnull, _anon: null }
@@ -6358,8 +6358,8 @@ The statement ending at line XXXX
 
 FETCH fetch_cursor INTO an_int, a_string, a_nullable;
 
-  {fetch_stmt}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable
-  | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable
+  {fetch_stmt}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc
+  | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc
   | {name_list}
     | {name an_int}: an_int: integer variable
     | {name_list}
@@ -6374,7 +6374,7 @@ FETCH fetch_cursor INTO an_int, a_string;
 Error at test/sem_test.sql:XXXX : in fetch_stmt : CQL0217: number of variables did not match count of columns in cursor 'fetch_cursor'
 
   {fetch_stmt}: err
-  | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable
+  | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc
   | {name_list}
     | {name an_int}: an_int: integer variable
     | {name_list}
@@ -6387,7 +6387,7 @@ FETCH fetch_cursor INTO an_int, a_string, a_nullable, a_string2;
 Error at test/sem_test.sql:XXXX : in fetch_stmt : CQL0217: number of variables did not match count of columns in cursor 'fetch_cursor'
 
   {fetch_stmt}: err
-  | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable
+  | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc
   | {name_list}
     | {name an_int}: an_int: integer variable
     | {name_list}
@@ -6404,7 +6404,7 @@ FETCH fetch_cursor INTO a_string2, a_string, a_nullable;
 Error at test/sem_test.sql:XXXX : in str : CQL0009: incompatible types in expression 'a_string2'
 
   {fetch_stmt}: err
-  | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable
+  | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc
   | {name_list}
     | {name a_string2}: err
     | {name_list}
@@ -6419,7 +6419,7 @@ FETCH fetch_cursor INTO an_int, an_int2, a_nullable;
 Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expression 'an_int2'
 
   {fetch_stmt}: err
-  | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable
+  | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc
   | {name_list}
     | {name an_int}: an_int: integer variable
     | {name_list}
@@ -6445,7 +6445,7 @@ FETCH fetch_cursor INTO non_existent_variable;
 Error at test/sem_test.sql:XXXX : in str : CQL0216: FETCH variable not found 'non_existent_variable'
 
   {fetch_stmt}: err
-  | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable
+  | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc
   | {name_list}
     | {name non_existent_variable}
 
@@ -6456,7 +6456,7 @@ FETCH fetch_cursor INTO var_id, var_id;
 Error at test/sem_test.sql:XXXX : in str : CQL0206: duplicate name in list 'var_id'
 
   {fetch_stmt}: err
-  | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable
+  | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc
   | {name_list}
     | {name var_id}
     | {name_list}
@@ -7095,8 +7095,8 @@ END;
     | {stmt_list}: ok
       | {trycatch_stmt}: ok
       | | {stmt_list}: ok
-      | | | {declare_cursor}: C: select: { x: integer notnull } variable
-      | | | | {name C}: C: select: { x: integer notnull } variable shape_storage
+      | | | {declare_cursor}: C: select: { x: integer notnull } variable dml_proc
+      | | | | {name C}: C: select: { x: integer notnull } variable dml_proc shape_storage
       | | | | {select_stmt}: select: { x: integer notnull }
       | | |   | {select_core_list}: select: { x: integer notnull }
       | | |   | | {select_core}: select: { x: integer notnull }
@@ -7113,12 +7113,12 @@ END;
       | | |   | {select_orderby}
       | | |     | {select_limit}
       | | |       | {select_offset}
-      | | | {fetch_stmt}: C: select: { x: integer notnull } variable shape_storage
-      | |   | {name C}: C: select: { x: integer notnull } variable shape_storage
+      | | | {fetch_stmt}: C: select: { x: integer notnull } variable dml_proc shape_storage
+      | |   | {name C}: C: select: { x: integer notnull } variable dml_proc shape_storage
       | | {stmt_list}: ok
       |   | {throw_stmt}: ok
-      | {out_stmt}: C: select: { x: integer notnull } variable shape_storage
-        | {name C}: C: select: { x: integer notnull } variable shape_storage
+      | {out_stmt}: C: select: { x: integer notnull } variable dml_proc shape_storage
+        | {name C}: C: select: { x: integer notnull } variable dml_proc shape_storage
 
 The statement ending at line XXXX
 
@@ -8864,8 +8864,8 @@ The statement ending at line XXXX
 
 DECLARE curs CURSOR FOR CALL with_result_set();
 
-  {declare_cursor}: curs: select: { id: integer notnull, name: text, rate: longint } variable
-  | {name curs}: curs: select: { id: integer notnull, name: text, rate: longint } variable
+  {declare_cursor}: curs: select: { id: integer notnull, name: text, rate: longint } variable dml_proc
+  | {name curs}: curs: select: { id: integer notnull, name: text, rate: longint } variable dml_proc
   | {call_stmt}: select: { id: integer notnull, name: text, rate: longint } dml_proc
     | {name with_result_set}: select: { id: integer notnull, name: text, rate: longint } dml_proc
 
@@ -9493,8 +9493,8 @@ The statement ending at line XXXX
 
 DECLARE shape_storage CURSOR FOR SELECT 1 AS one, 2 AS two;
 
-  {declare_cursor}: shape_storage: select: { one: integer notnull, two: integer notnull } variable
-  | {name shape_storage}: shape_storage: select: { one: integer notnull, two: integer notnull } variable shape_storage
+  {declare_cursor}: shape_storage: select: { one: integer notnull, two: integer notnull } variable dml_proc
+  | {name shape_storage}: shape_storage: select: { one: integer notnull, two: integer notnull } variable dml_proc shape_storage
   | {select_stmt}: select: { one: integer notnull, two: integer notnull }
     | {select_core_list}: select: { one: integer notnull, two: integer notnull }
     | | {select_core}: select: { one: integer notnull, two: integer notnull }
@@ -9521,8 +9521,8 @@ The statement ending at line XXXX
 
 FETCH shape_storage;
 
-  {fetch_stmt}: shape_storage: select: { one: integer notnull, two: integer notnull } variable shape_storage
-  | {name shape_storage}: shape_storage: select: { one: integer notnull, two: integer notnull } variable shape_storage
+  {fetch_stmt}: shape_storage: select: { one: integer notnull, two: integer notnull } variable dml_proc shape_storage
+  | {name shape_storage}: shape_storage: select: { one: integer notnull, two: integer notnull } variable dml_proc shape_storage
 
 The statement ending at line XXXX
 
@@ -17560,8 +17560,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0180: duplicate column name in res
   | {name bogus_fetch}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_cursor}: C: select: { id: integer notnull, id: integer notnull } variable
-      | | {name C}: C: select: { id: integer notnull, id: integer notnull } variable
+      | {declare_cursor}: C: select: { id: integer notnull, id: integer notnull } variable dml_proc
+      | | {name C}: C: select: { id: integer notnull, id: integer notnull } variable dml_proc
       | | {select_stmt}: select: { id: integer notnull, id: integer notnull }
       |   | {select_core_list}: select: { id: integer notnull, id: integer notnull }
       |   | | {select_core}: select: { id: integer notnull, id: integer notnull }
@@ -18655,8 +18655,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0010: incompatible types in expres
       | |   | {name_list}: o3: object variable
       | |     | {name o3}: o3: object variable
       | | {type_object}: object
-      | {declare_cursor}: C: select: { id: integer notnull, name: text, rate: longint } variable
-      | | {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable
+      | {declare_cursor}: C: select: { id: integer notnull, name: text, rate: longint } variable dml_proc
+      | | {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable dml_proc
       | | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
       |   | {select_core_list}: select: { id: integer notnull, name: text, rate: longint }
       |   | | {select_core}: select: { id: integer notnull, name: text, rate: longint }
@@ -18674,7 +18674,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0010: incompatible types in expres
       |     | {select_limit}
       |       | {select_offset}
       | {fetch_stmt}: err
-        | {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable
+        | {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable dml_proc
         | {name_list}
           | {name o1}: err
           | {name_list}
@@ -18796,8 +18796,8 @@ END;
   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_cursor}: C: select: { A: integer notnull, B: integer notnull } variable
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
+      | {declare_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
       | | {select_stmt}: select: { A: integer notnull, B: integer notnull }
       |   | {select_core_list}: select: { A: integer notnull, B: integer notnull }
       |   | | {select_core}: select: { A: integer notnull, B: integer notnull }
@@ -18819,10 +18819,10 @@ END;
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
-      | {out_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
-        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
+      | {fetch_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
+      | {out_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
+        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
 
 The statement ending at line XXXX
 
@@ -18847,8 +18847,8 @@ Error at test/sem_test.sql:XXXX : in out_stmt : CQL0223: the cursor was not fetc
       | |   | {name b}: b: integer notnull variable
       | | {notnull}: integer notnull
       |   | {type_int}: integer
-      | {declare_cursor}: C: select: { A: integer notnull, B: integer notnull } variable
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable
+      | {declare_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc
       | | {select_stmt}: select: { A: integer notnull, B: integer notnull }
       |   | {select_core_list}: select: { A: integer notnull, B: integer notnull }
       |   | | {select_core}: select: { A: integer notnull, B: integer notnull }
@@ -18870,14 +18870,14 @@ Error at test/sem_test.sql:XXXX : in out_stmt : CQL0223: the cursor was not fetc
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: C: select: { A: integer notnull, B: integer notnull } variable
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable
+      | {fetch_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc
       | | {name_list}
       |   | {name a}: a: integer notnull variable
       |   | {name_list}
       |     | {name b}: b: integer notnull variable
       | {out_stmt}: err
-        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable
+        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc
 
 The statement ending at line XXXX
 
@@ -18905,8 +18905,8 @@ Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0058: in multiple sel
       | |   | {name b}: b: integer notnull variable
       | | {notnull}: integer notnull
       |   | {type_int}: integer
-      | {declare_cursor}: C: select: { A: integer notnull, B: integer notnull } variable
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
+      | {declare_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
       | | {select_stmt}: select: { A: integer notnull, B: integer notnull }
       |   | {select_core_list}: select: { A: integer notnull, B: integer notnull }
       |   | | {select_core}: select: { A: integer notnull, B: integer notnull }
@@ -18928,8 +18928,8 @@ Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0058: in multiple sel
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {declare_cursor}: D: select: { A: integer notnull, C: integer notnull } variable
-      | | {name D}: D: select: { A: integer notnull, C: integer notnull } variable shape_storage
+      | {declare_cursor}: D: select: { A: integer notnull, C: integer notnull } variable dml_proc
+      | | {name D}: D: select: { A: integer notnull, C: integer notnull } variable dml_proc shape_storage
       | | {select_stmt}: select: { A: integer notnull, C: integer notnull }
       |   | {select_core_list}: select: { A: integer notnull, C: integer notnull }
       |   | | {select_core}: select: { A: integer notnull, C: integer notnull }
@@ -18951,14 +18951,14 @@ Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0058: in multiple sel
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
-      | {fetch_stmt}: D: select: { A: integer notnull, C: integer notnull } variable shape_storage
-      | | {name D}: D: select: { A: integer notnull, C: integer notnull } variable shape_storage
-      | {out_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
+      | {fetch_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
+      | {fetch_stmt}: D: select: { A: integer notnull, C: integer notnull } variable dml_proc shape_storage
+      | | {name D}: D: select: { A: integer notnull, C: integer notnull } variable dml_proc shape_storage
+      | {out_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
       | {out_stmt}: err
-        | {name D}: D: select: { A: integer notnull, C: integer notnull } variable shape_storage
+        | {name D}: D: select: { A: integer notnull, C: integer notnull } variable dml_proc shape_storage
 
 The statement ending at line XXXX
 
@@ -18984,8 +18984,8 @@ Error at test/sem_test.sql:XXXX : in select_stmt : CQL0063: can't mix and match 
       | |   | {name b}: b: integer notnull variable
       | | {notnull}: integer notnull
       |   | {type_int}: integer
-      | {declare_cursor}: C: select: { A: integer notnull, B: integer notnull } variable
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
+      | {declare_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
       | | {select_stmt}: select: { A: integer notnull, B: integer notnull }
       |   | {select_core_list}: select: { A: integer notnull, B: integer notnull }
       |   | | {select_core}: select: { A: integer notnull, B: integer notnull }
@@ -19007,10 +19007,10 @@ Error at test/sem_test.sql:XXXX : in select_stmt : CQL0063: can't mix and match 
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
-      | {out_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
+      | {fetch_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
+      | {out_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
       | {select_stmt}: err
         | {select_core_list}: select: { A: integer notnull, B: integer notnull }
         | | {select_core}: select: { A: integer notnull, B: integer notnull }
@@ -19057,8 +19057,8 @@ Error at test/sem_test.sql:XXXX : in out_stmt : CQL0063: can't mix and match out
       | |   | {name b}: b: integer notnull variable
       | | {notnull}: integer notnull
       |   | {type_int}: integer
-      | {declare_cursor}: C: select: { A: integer notnull, B: integer notnull } variable
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
+      | {declare_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
       | | {select_stmt}: select: { A: integer notnull, B: integer notnull }
       |   | {select_core_list}: select: { A: integer notnull, B: integer notnull }
       |   | | {select_core}: select: { A: integer notnull, B: integer notnull }
@@ -19080,8 +19080,8 @@ Error at test/sem_test.sql:XXXX : in out_stmt : CQL0063: can't mix and match out
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
+      | {fetch_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
       | {select_stmt}: select: { A: integer notnull, B: integer notnull }
       | | {select_core_list}: select: { A: integer notnull, B: integer notnull }
       | | | {select_core}: select: { A: integer notnull, B: integer notnull }
@@ -19104,7 +19104,7 @@ Error at test/sem_test.sql:XXXX : in out_stmt : CQL0063: can't mix and match out
       |   | {select_limit}
       |     | {select_offset}
       | {out_stmt}: err
-        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
+        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
 
 The statement ending at line XXXX
 
@@ -19130,8 +19130,8 @@ Error at test/sem_test.sql:XXXX : in out_union_stmt : CQL0063: can't mix and mat
       | |   | {name b}: b: integer notnull variable
       | | {notnull}: integer notnull
       |   | {type_int}: integer
-      | {declare_cursor}: C: select: { A: integer notnull, B: integer notnull } variable
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
+      | {declare_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
       | | {select_stmt}: select: { A: integer notnull, B: integer notnull }
       |   | {select_core_list}: select: { A: integer notnull, B: integer notnull }
       |   | | {select_core}: select: { A: integer notnull, B: integer notnull }
@@ -19153,8 +19153,8 @@ Error at test/sem_test.sql:XXXX : in out_union_stmt : CQL0063: can't mix and mat
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
+      | {fetch_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
       | {select_stmt}: select: { A: integer notnull, B: integer notnull }
       | | {select_core_list}: select: { A: integer notnull, B: integer notnull }
       | | | {select_core}: select: { A: integer notnull, B: integer notnull }
@@ -19177,7 +19177,7 @@ Error at test/sem_test.sql:XXXX : in out_union_stmt : CQL0063: can't mix and mat
       |   | {select_limit}
       |     | {select_offset}
       | {out_union_stmt}: err
-        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage
+        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
 
 The statement ending at line XXXX
 
@@ -19220,8 +19220,8 @@ END;
   | {name result_reader}: ok dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
         | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
           | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
 
@@ -19239,12 +19239,12 @@ Error at test/sem_test.sql:XXXX : in str : CQL0215: value cursors are not used w
   | {name fails_result_reader}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
       | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {fetch_stmt}: err
-        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
 
 The statement ending at line XXXX
 
@@ -19318,8 +19318,8 @@ Error at test/sem_test.sql:XXXX : in declare_value_cursor : CQL0197: duplicate v
   | {name fails_result_reader_double_decl}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
       | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {declare_value_cursor}: err
@@ -19535,13 +19535,13 @@ END;
   | {name fetch_values}: ok dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
       | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {fetch_values_stmt}: ok
         | {name_columns_values}
-          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
             | | {name_list}
@@ -19565,8 +19565,8 @@ END;
   | {name fetch_values_dummy}: ok dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
       | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {fetch_values_stmt}: ok
@@ -19574,7 +19574,7 @@ END;
         | | {int 123}: integer notnull
         | | {int 2}
         | {name_columns_values}
-          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
             | | {name_list}
@@ -19761,7 +19761,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0165: fetch values is only for val
 
   {fetch_values_stmt}: err
   | {name_columns_values}
-    | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable
+    | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
     | {columns_values}
       | {insert_list}
         | {int 1}
@@ -19784,8 +19784,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed i
   | {name fetch_values_bogus_seed_value}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
       | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {fetch_values_stmt}: err
@@ -19794,7 +19794,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed i
         | | | {strlit 'x'}: text notnull
         | | {int 0}
         | {name_columns_values}
-          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
 
@@ -19812,13 +19812,13 @@ Error at test/sem_test.sql:XXXX : in fetch_values_stmt : CQL0166: count of colum
   | {name fetch_values_missing_value}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
       | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {fetch_values_stmt}: err
         | {name_columns_values}
-          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
               | {name_list}
@@ -19841,8 +19841,8 @@ END;
   | {name blob_out}: C: select: { B: blob } variable dml_proc shape_storage uses_out
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_cursor}: C: select: { B: blob } variable
-      | | {name C}: C: select: { B: blob } variable shape_storage
+      | {declare_cursor}: C: select: { B: blob } variable dml_proc
+      | | {name C}: C: select: { B: blob } variable dml_proc shape_storage
       | | {select_stmt}: select: { B: blob }
       |   | {select_core_list}: select: { B: blob }
       |   | | {select_core}: select: { B: blob }
@@ -19867,10 +19867,10 @@ END;
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: C: select: { B: blob } variable shape_storage
-      | | {name C}: C: select: { B: blob } variable shape_storage
-      | {out_stmt}: C: select: { B: blob } variable shape_storage
-        | {name C}: C: select: { B: blob } variable shape_storage
+      | {fetch_stmt}: C: select: { B: blob } variable dml_proc shape_storage
+      | | {name C}: C: select: { B: blob } variable dml_proc shape_storage
+      | {out_stmt}: C: select: { B: blob } variable dml_proc shape_storage
+        | {name C}: C: select: { B: blob } variable dml_proc shape_storage
 
 The statement ending at line XXXX
 
@@ -19886,8 +19886,8 @@ Error at test/sem_test.sql:XXXX : in fetch_values_stmt : CQL0168: there's no goo
   | {name fetch_values_blob_dummy}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_value_cursor}: C: select: { B: blob } variable shape_storage value_cursor
-      | | {name C}: C: select: { B: blob } variable shape_storage value_cursor
+      | {declare_value_cursor}: C: select: { B: blob } variable dml_proc shape_storage value_cursor
+      | | {name C}: C: select: { B: blob } variable dml_proc shape_storage value_cursor
       | | {call_stmt}: C: select: { B: blob } variable dml_proc shape_storage uses_out
       |   | {name blob_out}: C: select: { B: blob } variable dml_proc shape_storage uses_out
       | {fetch_values_stmt}: err
@@ -19895,7 +19895,7 @@ Error at test/sem_test.sql:XXXX : in fetch_values_stmt : CQL0168: there's no goo
         | | {int 123}: integer notnull
         | | {int 2}
         | {name_columns_values}
-          | {name C}: C: select: { B: blob } variable shape_storage value_cursor
+          | {name C}: C: select: { B: blob } variable dml_proc shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
 
@@ -19913,13 +19913,13 @@ Error at test/sem_test.sql:XXXX : in fetch_values_stmt : CQL0167: required colum
   | {name fetch_values_missing_columns}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
       | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {fetch_values_stmt}: err
         | {name_columns_values}
-          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
             | | {name_list}
@@ -19941,13 +19941,13 @@ Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed i
   | {name fetch_values_bogus_value}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
       | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {fetch_values_stmt}: err
         | {name_columns_values}
-          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
             | | {name_list}
@@ -19974,13 +19974,13 @@ Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expres
   | {name fetch_values_bogus_type}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
       | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {fetch_values_stmt}: err
         | {name_columns_values}
-          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
             | | {name_list}
@@ -20004,8 +20004,8 @@ END;
   | {name fetch_values_blob_dummy_with_null}: ok dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_value_cursor}: C: select: { B: blob } variable shape_storage value_cursor
-      | | {name C}: C: select: { B: blob } variable shape_storage value_cursor
+      | {declare_value_cursor}: C: select: { B: blob } variable dml_proc shape_storage value_cursor
+      | | {name C}: C: select: { B: blob } variable dml_proc shape_storage value_cursor
       | | {call_stmt}: C: select: { B: blob } variable dml_proc shape_storage uses_out
       |   | {name blob_out}: C: select: { B: blob } variable dml_proc shape_storage uses_out
       | {fetch_values_stmt}: ok
@@ -20013,7 +20013,7 @@ END;
         | | {int 123}: integer notnull
         | | {int 0}
         | {name_columns_values}
-          | {name C}: C: select: { B: blob } variable shape_storage value_cursor
+          | {name C}: C: select: { B: blob } variable dml_proc shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
             | | {name_list}
@@ -20255,8 +20255,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0165: fetch values is only for val
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {declare_cursor}: C1: select: { A: integer notnull, B: integer notnull } variable
-      | | {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable
+      | {declare_cursor}: C1: select: { A: integer notnull, B: integer notnull } variable dml_proc
+      | | {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable dml_proc
       | | {select_stmt}: select: { A: integer notnull, B: integer notnull }
       |   | {select_core_list}: select: { A: integer notnull, B: integer notnull }
       |   | | {select_core}: select: { A: integer notnull, B: integer notnull }
@@ -20293,7 +20293,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0165: fetch values is only for val
       |         | {int 2}: integer notnull
       | {fetch_values_stmt}: err
         | {name_columns_values}
-          | {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable
+          | {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable dml_proc
           | {columns_values}
             | {from_shape}
               | {name C0}
@@ -20423,8 +20423,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0298: cannot read from a cursor wi
       | | {name_list}: Y: real variable
       | | | {name Y}: Y: real variable
       | | {type_real}: real
-      | {declare_cursor}: C0: select: { A: integer notnull, _anon: real notnull } variable
-      | | {name C0}: C0: select: { A: integer notnull, _anon: real notnull } variable
+      | {declare_cursor}: C0: select: { A: integer notnull, _anon: real notnull } variable dml_proc
+      | | {name C0}: C0: select: { A: integer notnull, _anon: real notnull } variable dml_proc
       | | {select_stmt}: select: { A: integer notnull, _anon: real notnull }
       |   | {select_core_list}: select: { A: integer notnull, _anon: real notnull }
       |   | | {select_core}: select: { A: integer notnull, _anon: real notnull }
@@ -20446,10 +20446,10 @@ Error at test/sem_test.sql:XXXX : in str : CQL0298: cannot read from a cursor wi
       |       | {select_offset}
       | {declare_cursor_like_name}: C1: select: { A: integer notnull, _anon: real notnull } variable shape_storage value_cursor
       | | {name C1}: C1: select: { A: integer notnull, _anon: real notnull } variable shape_storage value_cursor
-      | | {like}: C0: select: { A: integer notnull, _anon: real notnull } variable
-      |   | {name C0}: C0: select: { A: integer notnull, _anon: real notnull } variable
-      | {fetch_stmt}: C0: select: { A: integer notnull, _anon: real notnull } variable
-      | | {name C0}: C0: select: { A: integer notnull, _anon: real notnull } variable
+      | | {like}: C0: select: { A: integer notnull, _anon: real notnull } variable dml_proc
+      |   | {name C0}: C0: select: { A: integer notnull, _anon: real notnull } variable dml_proc
+      | {fetch_stmt}: C0: select: { A: integer notnull, _anon: real notnull } variable dml_proc
+      | | {name C0}: C0: select: { A: integer notnull, _anon: real notnull } variable dml_proc
       | | {name_list}
       |   | {name X}: X: integer variable
       |   | {name_list}
@@ -20483,14 +20483,14 @@ END;
   | {name declare_cursor_like_cursor}: ok dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_value_cursor}: C0: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-      | | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | {declare_value_cursor}: C0: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
       | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {declare_cursor_like_name}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
         | {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-        | {like}: C0: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-          | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+        | {like}: C0: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+          | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
 
 The statement ending at line XXXX
 
@@ -20529,8 +20529,8 @@ Error at test/sem_test.sql:XXXX : in declare_cursor_like_name : CQL0197: duplica
   | {name declare_cursor_like_cursor_with_same_name}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_value_cursor}: C0: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-      | | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | {declare_value_cursor}: C0: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
       | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {declare_cursor_like_name}: err
@@ -22475,8 +22475,8 @@ DECLARE val_cursor CURSOR LIKE my_cursor;
 
   {declare_cursor_like_name}: val_cursor: select: { one: integer notnull, two: integer notnull } variable shape_storage value_cursor
   | {name val_cursor}: val_cursor: select: { one: integer notnull, two: integer notnull } variable shape_storage value_cursor
-  | {like}: my_cursor: select: { one: integer notnull, two: integer notnull } variable
-    | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable
+  | {like}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
+    | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
 
 The statement ending at line XXXX
 
@@ -25106,8 +25106,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0056: NULL column did not specify 
   | {name fetch_null_column}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_cursor}: C: select: { n: null } variable
-      | | {name C}: C: select: { n: null } variable
+      | {declare_cursor}: C: select: { n: null } variable dml_proc
+      | | {name C}: C: select: { n: null } variable dml_proc
       | | {select_stmt}: select: { n: null }
       |   | {select_core_list}: select: { n: null }
       |   | | {select_core}: select: { n: null }
@@ -41357,8 +41357,8 @@ SELECT *
   FROM foo
   INNER JOIN bar;
 
-  {declare_cursor}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable
-  | {name c}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable
+  {declare_cursor}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable dml_proc
+  | {name c}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable dml_proc
   | {explain_stmt}: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull }
     | {int 2}
     | {select_stmt}: select: { id: integer notnull, id: integer notnull, name: text, rate: longint }
@@ -41397,8 +41397,8 @@ END;
   | {name explain_query_with_cursor}: ok dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_cursor}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable
-      | | {name c}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable shape_storage
+      | {declare_cursor}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable dml_proc
+      | | {name c}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable dml_proc shape_storage
       | | {explain_stmt}: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull }
       |   | {int 2}
       |   | {select_stmt}: select: { _anon: integer notnull }
@@ -41415,8 +41415,8 @@ END;
       |     | {select_orderby}
       |       | {select_limit}
       |         | {select_offset}
-      | {fetch_stmt}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable shape_storage
-        | {name c}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable shape_storage
+      | {fetch_stmt}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable dml_proc shape_storage
+        | {name c}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable dml_proc shape_storage
 
 The statement ending at line XXXX
 
@@ -43876,7 +43876,7 @@ UPDATE CURSOR my_cursor(LIKE not_a_symbol) FROM VALUES(1);
 Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, table, or view 'not_a_symbol'
 
   {update_cursor_stmt}: err
-  | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable
+  | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
   | {columns_values}: err
     | {column_spec}
     | | {like}: err
@@ -48479,8 +48479,8 @@ Error at test/sem_test.sql:XXXX : in dot : CQL0067: cursor was not used with 'fe
   | {name shape_some_columns_statement_cursor}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_cursor}: C: select: { x: integer notnull, y: text notnull } variable
-      | | {name C}: C: select: { x: integer notnull, y: text notnull } variable
+      | {declare_cursor}: C: select: { x: integer notnull, y: text notnull } variable dml_proc
+      | | {name C}: C: select: { x: integer notnull, y: text notnull } variable dml_proc
       | | {select_stmt}: select: { x: integer notnull, y: text notnull }
       |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
       |   | | {select_core}: select: { x: integer notnull, y: text notnull }
@@ -49489,8 +49489,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0067: cursor was not used with 'fe
   | {name cql_cursor_diff_col_without_cursor_arg}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_cursor}: c1: select: { x: integer notnull, y: text notnull } variable
-      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable
+      | {declare_cursor}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc
+      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc
       | | {select_stmt}: select: { x: integer notnull, y: text notnull }
       |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
       |   | | {select_core}: select: { x: integer notnull, y: text notnull }
@@ -49512,8 +49512,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0067: cursor was not used with 'fe
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {declare_cursor}: c2: select: { x: integer notnull, y: text notnull } variable
-      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable shape_storage
+      | {declare_cursor}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc
+      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
       | | {select_stmt}: select: { x: integer notnull, y: text notnull }
       |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
       |   | | {select_core}: select: { x: integer notnull, y: text notnull }
@@ -49535,8 +49535,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0067: cursor was not used with 'fe
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: c2: select: { x: integer notnull, y: text notnull } variable shape_storage
-      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable shape_storage
+      | {fetch_stmt}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
+      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
       | {assign}: err
         | {name a_string}: a_string: text variable
         | {call}: err
@@ -49546,7 +49546,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0067: cursor was not used with 'fe
             | {arg_list}: ok
               | {name c1}: err
               | {arg_list}
-                | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable shape_storage
+                | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
 
 The statement ending at line XXXX
 
@@ -49565,8 +49565,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0061: in cql_cursor_diff_col, all 
   | {name cql_cursor_diff_col_wrong_cursor_type}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_cursor}: c1: select: { x: integer notnull } variable
-      | | {name c1}: c1: select: { x: integer notnull } variable shape_storage
+      | {declare_cursor}: c1: select: { x: integer notnull } variable dml_proc
+      | | {name c1}: c1: select: { x: integer notnull } variable dml_proc shape_storage
       | | {select_stmt}: select: { x: integer notnull }
       |   | {select_core_list}: select: { x: integer notnull }
       |   | | {select_core}: select: { x: integer notnull }
@@ -49583,8 +49583,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0061: in cql_cursor_diff_col, all 
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {declare_cursor}: c2: select: { x: text notnull } variable
-      | | {name c2}: c2: select: { x: text notnull } variable shape_storage
+      | {declare_cursor}: c2: select: { x: text notnull } variable dml_proc
+      | | {name c2}: c2: select: { x: text notnull } variable dml_proc shape_storage
       | | {select_stmt}: select: { x: text notnull }
       |   | {select_core_list}: select: { x: text notnull }
       |   | | {select_core}: select: { x: text notnull }
@@ -49601,10 +49601,10 @@ Error at test/sem_test.sql:XXXX : in str : CQL0061: in cql_cursor_diff_col, all 
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: c1: select: { x: integer notnull } variable shape_storage
-      | | {name c1}: c1: select: { x: integer notnull } variable shape_storage
-      | {fetch_stmt}: c2: select: { x: text notnull } variable shape_storage
-      | | {name c2}: c2: select: { x: text notnull } variable shape_storage
+      | {fetch_stmt}: c1: select: { x: integer notnull } variable dml_proc shape_storage
+      | | {name c1}: c1: select: { x: integer notnull } variable dml_proc shape_storage
+      | {fetch_stmt}: c2: select: { x: text notnull } variable dml_proc shape_storage
+      | | {name c2}: c2: select: { x: text notnull } variable dml_proc shape_storage
       | {assign}: err
         | {name a_string}: a_string: text variable
         | {call}: err
@@ -49633,8 +49633,8 @@ Error at test/sem_test.sql:XXXX : in call : CQL0342: the cursor arguments must h
   | {name cql_cursor_diff_col_with_wrong_col_count_arg}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_cursor}: c1: select: { x: integer notnull, z: text notnull } variable
-      | | {name c1}: c1: select: { x: integer notnull, z: text notnull } variable shape_storage
+      | {declare_cursor}: c1: select: { x: integer notnull, z: text notnull } variable dml_proc
+      | | {name c1}: c1: select: { x: integer notnull, z: text notnull } variable dml_proc shape_storage
       | | {select_stmt}: select: { x: integer notnull, z: text notnull }
       |   | {select_core_list}: select: { x: integer notnull, z: text notnull }
       |   | | {select_core}: select: { x: integer notnull, z: text notnull }
@@ -49656,8 +49656,8 @@ Error at test/sem_test.sql:XXXX : in call : CQL0342: the cursor arguments must h
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {declare_cursor}: c2: select: { x: integer notnull } variable
-      | | {name c2}: c2: select: { x: integer notnull } variable shape_storage
+      | {declare_cursor}: c2: select: { x: integer notnull } variable dml_proc
+      | | {name c2}: c2: select: { x: integer notnull } variable dml_proc shape_storage
       | | {select_stmt}: select: { x: integer notnull }
       |   | {select_core_list}: select: { x: integer notnull }
       |   | | {select_core}: select: { x: integer notnull }
@@ -49674,10 +49674,10 @@ Error at test/sem_test.sql:XXXX : in call : CQL0342: the cursor arguments must h
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: c1: select: { x: integer notnull, z: text notnull } variable shape_storage
-      | | {name c1}: c1: select: { x: integer notnull, z: text notnull } variable shape_storage
-      | {fetch_stmt}: c2: select: { x: integer notnull } variable shape_storage
-      | | {name c2}: c2: select: { x: integer notnull } variable shape_storage
+      | {fetch_stmt}: c1: select: { x: integer notnull, z: text notnull } variable dml_proc shape_storage
+      | | {name c1}: c1: select: { x: integer notnull, z: text notnull } variable dml_proc shape_storage
+      | {fetch_stmt}: c2: select: { x: integer notnull } variable dml_proc shape_storage
+      | | {name c2}: c2: select: { x: integer notnull } variable dml_proc shape_storage
       | {assign}: err
         | {name a_string}: a_string: text variable
         | {call}: err
@@ -49685,9 +49685,9 @@ Error at test/sem_test.sql:XXXX : in call : CQL0342: the cursor arguments must h
           | {call_arg_list}
             | {call_filter_clause}
             | {arg_list}: ok
-              | {name c1}: c1: select: { x: integer notnull, z: text notnull } variable shape_storage
+              | {name c1}: c1: select: { x: integer notnull, z: text notnull } variable dml_proc shape_storage
               | {arg_list}
-                | {name c2}: c2: select: { x: integer notnull } variable shape_storage
+                | {name c2}: c2: select: { x: integer notnull } variable dml_proc shape_storage
 
 The statement ending at line XXXX
 
@@ -49706,8 +49706,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0058: in cql_cursor_diff_col, all 
   | {name cql_cursor_diff_col_compatible_cursor_with_diff_col_name}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_cursor}: c1: select: { x: integer notnull, y: text notnull } variable
-      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable shape_storage
+      | {declare_cursor}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc
+      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
       | | {select_stmt}: select: { x: integer notnull, y: text notnull }
       |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
       |   | | {select_core}: select: { x: integer notnull, y: text notnull }
@@ -49729,8 +49729,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0058: in cql_cursor_diff_col, all 
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {declare_cursor}: c2: select: { z: integer notnull, v: text notnull } variable
-      | | {name c2}: c2: select: { z: integer notnull, v: text notnull } variable shape_storage
+      | {declare_cursor}: c2: select: { z: integer notnull, v: text notnull } variable dml_proc
+      | | {name c2}: c2: select: { z: integer notnull, v: text notnull } variable dml_proc shape_storage
       | | {select_stmt}: select: { z: integer notnull, v: text notnull }
       |   | {select_core_list}: select: { z: integer notnull, v: text notnull }
       |   | | {select_core}: select: { z: integer notnull, v: text notnull }
@@ -49752,10 +49752,10 @@ Error at test/sem_test.sql:XXXX : in str : CQL0058: in cql_cursor_diff_col, all 
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: c1: select: { x: integer notnull, y: text notnull } variable shape_storage
-      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable shape_storage
-      | {fetch_stmt}: c2: select: { z: integer notnull, v: text notnull } variable shape_storage
-      | | {name c2}: c2: select: { z: integer notnull, v: text notnull } variable shape_storage
+      | {fetch_stmt}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
+      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
+      | {fetch_stmt}: c2: select: { z: integer notnull, v: text notnull } variable dml_proc shape_storage
+      | | {name c2}: c2: select: { z: integer notnull, v: text notnull } variable dml_proc shape_storage
       | {assign}: err
         | {name a_string}: a_string: text variable
         | {call}: err
@@ -49784,8 +49784,8 @@ END;
   | {name cql_cursor_diff_col_with_shape_storage}: ok dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_cursor}: c1: select: { x: integer notnull, y: text notnull } variable
-      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable shape_storage
+      | {declare_cursor}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc
+      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
       | | {select_stmt}: select: { x: integer notnull, y: text notnull }
       |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
       |   | | {select_core}: select: { x: integer notnull, y: text notnull }
@@ -49807,8 +49807,8 @@ END;
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {declare_cursor}: c2: select: { x: integer notnull, y: text notnull } variable
-      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable shape_storage
+      | {declare_cursor}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc
+      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
       | | {select_stmt}: select: { x: integer notnull, y: text notnull }
       |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
       |   | | {select_core}: select: { x: integer notnull, y: text notnull }
@@ -49830,10 +49830,10 @@ END;
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: c1: select: { x: integer notnull, y: text notnull } variable shape_storage
-      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable shape_storage
-      | {fetch_stmt}: c2: select: { x: integer notnull, y: text notnull } variable shape_storage
-      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable shape_storage
+      | {fetch_stmt}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
+      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
+      | {fetch_stmt}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
+      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
       | {assign}: a_string: text variable
         | {name a_string}: a_string: text variable
         | {case_expr}: text
@@ -49876,8 +49876,8 @@ END;
   | {name print_call_cql_cursor_diff_col}: ok dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_cursor}: c1: select: { x: integer notnull, y: text notnull } variable
-      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable shape_storage
+      | {declare_cursor}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc
+      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
       | | {select_stmt}: select: { x: integer notnull, y: text notnull }
       |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
       |   | | {select_core}: select: { x: integer notnull, y: text notnull }
@@ -49899,8 +49899,8 @@ END;
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {declare_cursor}: c2: select: { x: integer notnull, y: text notnull } variable
-      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable shape_storage
+      | {declare_cursor}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc
+      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
       | | {select_stmt}: select: { x: integer notnull, y: text notnull }
       |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
       |   | | {select_core}: select: { x: integer notnull, y: text notnull }
@@ -49922,10 +49922,10 @@ END;
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: c1: select: { x: integer notnull, y: text notnull } variable shape_storage
-      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable shape_storage
-      | {fetch_stmt}: c2: select: { x: integer notnull, y: text notnull } variable shape_storage
-      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable shape_storage
+      | {fetch_stmt}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
+      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
+      | {fetch_stmt}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
+      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
       | {call_stmt}: ok
         | {name printf}: ok
         | {expr_list}: ok
@@ -49977,8 +49977,8 @@ END;
   | {name print_call_cql_cursor_diff_val}: ok dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_cursor}: c1: select: { x: integer notnull, y: text notnull } variable
-      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable shape_storage
+      | {declare_cursor}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc
+      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
       | | {select_stmt}: select: { x: integer notnull, y: text notnull }
       |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
       |   | | {select_core}: select: { x: integer notnull, y: text notnull }
@@ -50000,8 +50000,8 @@ END;
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {declare_cursor}: c2: select: { x: integer notnull, y: text notnull } variable
-      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable shape_storage
+      | {declare_cursor}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc
+      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
       | | {select_stmt}: select: { x: integer notnull, y: text notnull }
       |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
       |   | | {select_core}: select: { x: integer notnull, y: text notnull }
@@ -50023,10 +50023,10 @@ END;
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: c1: select: { x: integer notnull, y: text notnull } variable shape_storage
-      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable shape_storage
-      | {fetch_stmt}: c2: select: { x: integer notnull, y: text notnull } variable shape_storage
-      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable shape_storage
+      | {fetch_stmt}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
+      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
+      | {fetch_stmt}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
+      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
       | {call_stmt}: ok
         | {name printf}: ok
         | {expr_list}: ok
@@ -50603,8 +50603,8 @@ END;
   | {name print_call_cql_cursor_format}: ok dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_cursor}: c1: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull } variable
-      | | {name c1}: c1: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull } variable shape_storage
+      | {declare_cursor}: c1: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull } variable dml_proc
+      | | {name c1}: c1: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull } variable dml_proc shape_storage
       | | {select_stmt}: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull }
       |   | {select_core_list}: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull }
       |   | | {select_core}: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull }
@@ -50650,8 +50650,8 @@ END;
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: c1: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull } variable shape_storage
-      | | {name c1}: c1: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull } variable shape_storage
+      | {fetch_stmt}: c1: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull } variable dml_proc shape_storage
+      | | {name c1}: c1: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull } variable dml_proc shape_storage
       | {assign}: a_string: text variable
         | {name a_string}: a_string: text variable
         | {call}: text notnull
@@ -50807,8 +50807,8 @@ Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in 
   | {name select_cql_cursor_format}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_cursor}: c1: select: { a: integer notnull } variable
-      | | {name c1}: c1: select: { a: integer notnull } variable shape_storage
+      | {declare_cursor}: c1: select: { a: integer notnull } variable dml_proc
+      | | {name c1}: c1: select: { a: integer notnull } variable dml_proc shape_storage
       | | {select_stmt}: select: { a: integer notnull }
       |   | {select_core_list}: select: { a: integer notnull }
       |   | | {select_core}: select: { a: integer notnull }
@@ -50825,8 +50825,8 @@ Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in 
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: c1: select: { a: integer notnull } variable shape_storage
-      | | {name c1}: c1: select: { a: integer notnull } variable shape_storage
+      | {fetch_stmt}: c1: select: { a: integer notnull } variable dml_proc shape_storage
+      | | {name c1}: c1: select: { a: integer notnull } variable dml_proc shape_storage
       | {select_stmt}: err
         | {select_core_list}: err
         | | {select_core}: err
@@ -50863,8 +50863,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0067: cursor was not used with 'fe
   | {name print_call_cql_not_fetch_cursor_format}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_cursor}: c: select: { _anon: integer notnull } variable
-      | | {name c}: c: select: { _anon: integer notnull } variable
+      | {declare_cursor}: c: select: { _anon: integer notnull } variable dml_proc
+      | | {name c}: c: select: { _anon: integer notnull } variable dml_proc
       | | {select_stmt}: select: { _anon: integer notnull }
       |   | {select_core_list}: select: { _anon: integer notnull }
       |   | | {select_core}: select: { _anon: integer notnull }
@@ -51095,8 +51095,8 @@ END;
     |     | {type_object}: object<bar CURSOR>
     |       | {name bar CURSOR}
     | {stmt_list}: ok
-      | {declare_cursor}: C: select: { id: integer notnull, name: text, rate: longint } variable
-      | | {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable boxed
+      | {declare_cursor}: C: select: { id: integer notnull, name: text, rate: longint } variable dml_proc
+      | | {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable dml_proc boxed
       | | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
       |   | {select_core_list}: select: { id: integer notnull, name: text, rate: longint }
       |   | | {select_core}: select: { id: integer notnull, name: text, rate: longint }
@@ -51113,9 +51113,9 @@ END;
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {set_from_cursor}: C: select: { id: integer notnull, name: text, rate: longint } variable boxed
+      | {set_from_cursor}: C: select: { id: integer notnull, name: text, rate: longint } variable dml_proc boxed
         | {name B}: B: object<bar CURSOR> variable out
-        | {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable
+        | {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable dml_proc
 
 The statement ending at line XXXX
 
@@ -51301,8 +51301,8 @@ Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, tab
     |     | {type_object}: object<barf CURSOR>
     |       | {name barf CURSOR}
     | {stmt_list}: err
-      | {declare_cursor}: C: select: { id: integer notnull, name: text, rate: longint } variable
-      | | {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable
+      | {declare_cursor}: C: select: { id: integer notnull, name: text, rate: longint } variable dml_proc
+      | | {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable dml_proc
       | | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
       |   | {select_core_list}: select: { id: integer notnull, name: text, rate: longint }
       |   | | {select_core}: select: { id: integer notnull, name: text, rate: longint }
@@ -51321,7 +51321,7 @@ Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, tab
       |       | {select_offset}
       | {set_from_cursor}: err
         | {name box}: box: object<barf CURSOR> variable out
-        | {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable
+        | {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable dml_proc
 
 The statement ending at line XXXX
 
@@ -51345,8 +51345,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0057: in the cursor and the variab
     |     | {type_object}: object<foo CURSOR>
     |       | {name foo CURSOR}
     | {stmt_list}: err
-      | {declare_cursor}: C: select: { id: integer notnull, name: text, rate: longint } variable
-      | | {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable
+      | {declare_cursor}: C: select: { id: integer notnull, name: text, rate: longint } variable dml_proc
+      | | {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable dml_proc
       | | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
       |   | {select_core_list}: select: { id: integer notnull, name: text, rate: longint }
       |   | | {select_core}: select: { id: integer notnull, name: text, rate: longint }
@@ -51406,8 +51406,8 @@ Error at test/sem_test.sql:XXXX : in set_from_cursor : CQL0173: variable not fou
   | {name cursor_box_var_not_found}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_cursor}: C: select: { id: integer notnull, name: text, rate: longint } variable
-      | | {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable
+      | {declare_cursor}: C: select: { id: integer notnull, name: text, rate: longint } variable dml_proc
+      | | {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable dml_proc
       | | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
       |   | {select_core_list}: select: { id: integer notnull, name: text, rate: longint }
       |   | | {select_core}: select: { id: integer notnull, name: text, rate: longint }
@@ -51426,7 +51426,7 @@ Error at test/sem_test.sql:XXXX : in set_from_cursor : CQL0173: variable not fou
       |       | {select_offset}
       | {set_from_cursor}: err
         | {name box}
-        | {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable
+        | {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable dml_proc
 
 The statement ending at line XXXX
 

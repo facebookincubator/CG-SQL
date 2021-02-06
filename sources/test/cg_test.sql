@@ -2001,7 +2001,8 @@ create table radioactive(
 );
 
 -- TEST: create a proc that reducts some sensitive data
--- + CREATE PROC radioactive_proc ()
+-- + CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
+-- + CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // data
 @attribute(cql:vault_sensitive)
 create proc radioactive_proc()
 begin
@@ -2286,7 +2287,7 @@ end;
 -- + for (;;) {
 -- +   C_row_num_++;
 -- +   C._has_row_ = C_row_num_ < C_row_count_;
--- +   cql_copyoutrow((cql_result_set_ref)C_result_set_, C_row_num_, 2,
+-- +   cql_copyoutrow(NULL, (cql_result_set_ref)C_result_set_, C_row_num_, 2,
 -- +                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.x,
 -- +                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C.y);
 -- NOT PRESENT !!
@@ -2311,6 +2312,7 @@ end;
 -- + cql_bytebuf_open(&_rows_);
 -- +2 cql_retain_row(C);
 -- +2 if (C._has_row_) cql_bytebuf_append(&_rows_, (const void *)&C, sizeof(C));
+-- + out_union_from_select_info.db = _db_;
 -- + cql_results_from_data(_rc_, &_rows_, &out_union_from_select_info, (cql_result_set_ref *)_result_set_);
 -- + cql_teardown_row(C);
 create proc out_union_from_select()
@@ -2352,12 +2354,34 @@ end;
 -- + C_row_count_ = cql_result_set_get_count((cql_result_set_ref)C_result_set_);
 -- + C_row_num_++;
 -- + C._has_row_ = C_row_num_ < C_row_count_;
--- + cql_copyoutrow((cql_result_set_ref)C_result_set_, C_row_num_, 2,
+-- + cql_copyoutrow(NULL, (cql_result_set_ref)C_result_set_, C_row_num_, 2,
 -- +   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.x,
 -- +   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.y);
 create proc read_out_union_values(a integer not null, b integer not null)
 begin
   declare C cursor for call out_union_values(a,b);
+  fetch C;
+end;
+
+-- This just sets up a call to a procedure that proceduce a dml out union result set
+-- + out_union_dml_info.db = _db_;
+-- + cql_results_from_data(_rc_, &_rows_, &out_union_dml_info, (cql_result_set_ref *)_result_set_);
+@attribute(cql:vault_sensitive)
+create proc out_union_dml()
+begin
+  declare x cursor for select * from radioactive;
+  fetch x;
+  out union x;
+end;
+
+-- TEST: we need to make sure the a notnull db pointer is pass to cql_copyoutrow(...)
+-- + cql_copyoutrow(_db_, (cql_result_set_ref)C_result_set_, C_row_num_, 2,
+-- +                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.id,
+-- +                CQL_DATA_TYPE_ENCODED | CQL_DATA_TYPE_STRING, &C.data);
+@attribute(cql:vault_sensitive)
+create proc out_union_dml_for_call()
+begin
+  declare C cursor for call out_union_dml();
   fetch C;
 end;
 

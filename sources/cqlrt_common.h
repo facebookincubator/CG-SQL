@@ -78,14 +78,14 @@ typedef struct cql_nullable_bool {
 
 CQL_EXPORT int cql_outstanding_refs;
 
-CQL_EXPORT void cql_copyoutrow(cql_result_set_ref _Nonnull rs, cql_int32 row, cql_int32 count, ...);
+CQL_EXPORT void cql_copyoutrow(sqlite3 *_Nullable db, cql_result_set_ref _Nonnull rs, cql_int32 row, cql_int32 count, ...);
 CQL_EXPORT void cql_multifetch(cql_code rc, sqlite3_stmt *_Nullable stmt, cql_int32 count, ...);
 CQL_EXPORT void cql_multibind(cql_code *_Nonnull rc, sqlite3 *_Nonnull db, sqlite3_stmt *_Nullable *_Nonnull pstmt, cql_int32 count, ...);
 CQL_EXPORT cql_code cql_best_error(cql_code rc);
 
 typedef struct cql_fetch_info {
   cql_code rc;
-  sqlite3 *_Nonnull db;
+  sqlite3 *_Nullable db;
   sqlite3_stmt *_Nullable stmt;
   uint8_t *_Nonnull data_types;
   uint16_t *_Nonnull col_offsets;

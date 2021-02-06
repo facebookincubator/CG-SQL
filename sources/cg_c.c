@@ -2816,9 +2816,15 @@ static void cg_create_proc_stmt(ast_node *ast) {
     need_comma = 1;
 
     CSTR rc = dml_proc ? "_rc_" : "SQLITE_OK";
+    if (dml_proc) {
+      bprintf(&proc_cleanup, "  %s_info.db = _db_;\n", proc_name_base.ptr);
+    }
     bprintf(&proc_cleanup, "  cql_results_from_data(%s, &_rows_, &%s_info, (cql_result_set_ref *)_result_set_);\n",
       rc,
       proc_name_base.ptr);
+    if (dml_proc) {
+      bprintf(&proc_cleanup, "  %s_info.db = NULL;\n", proc_name_base.ptr);
+    }
 
     CG_CHARBUF_OPEN_SYM(perf_index, name, "_perf_index");
       // emit profiling start signal
@@ -3898,10 +3904,21 @@ static void cg_fetch_stmt(ast_node *ast) {
   // auto-generated cursor variables.  Either way we get each column.
 
   sem_struct *sptr = ast->left->sem->sptr;
-
   if (uses_out_union) {
-    bprintf(cg_main_output, "cql_copyoutrow((cql_result_set_ref)%s_result_set_, %s_row_num_, %d",
-      cursor_name, cursor_name, sptr->count);
+    bool_t dml_proc = is_dml_proc(ast->sem->sem_type);
+    CSTR db_sym = "NULL";
+    if (dml_proc) {
+      // The db pointer passed to cql_copyoutrow(...) is used only to decode any
+      // encoded columns.
+      // We provide the db pointer only if the result_set to copy were created
+      // by a DML proc. The idea being that if it wasn't a DML proc that made
+      // the result set then it could not have encoded anything since it also,
+      // did not have the db pointer to do the encoding. So our decode call will
+      // match what the proc could have done.
+      db_sym = "_db_";
+    }
+    bprintf(cg_main_output, "cql_copyoutrow(%s, (cql_result_set_ref)%s_result_set_, %s_row_num_, %d",
+      db_sym, cursor_name, cursor_name, sptr->count);
   }
   else {
     bprintf(cg_main_output, "cql_multifetch(_rc_, %s_stmt, %d", cursor_name, sptr->count);
