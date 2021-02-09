@@ -754,10 +754,11 @@ There are a number of literal objects that may be expressed in CQL.  These are a
 #### Numeric Literals
 
 * All numeric literals are considered to be positive; negative numbers are actually a positive literal combined with unary minus (the negation operator)
-* Only base 10 literals are supported
+* Base 10 and hexadecimal literals are supported
 * Literals with a decimal point are of type `REAL` and stored as the C type `double`
 * Literals that can fit in a signed integer without loss, and do not end in the letter `L` are integer literals
 * Larger literals, or those ending with the letter `L` are long integer literals.
+* Literals that begin with 0x are interpreted as hex
 
 Examples:
 
@@ -766,6 +767,8 @@ Examples:
   2L             -- long
   123456789123   -- long
   123            -- integer
+  0x10           -- hex integer
+  0x10L          -- hex long integer
 ```
 
 #### The NULL literal
@@ -802,18 +805,36 @@ declare enum business_type integer (
 );
 ```
 
-After this:
+After this enum is declared, this:
 
 ```
 select business_type.corner_store;
 ```
-is the same as
+is the same as this:
 
 ```
 select 14;
 ```
 
 And that is exactly what SQLite will see, the literal `14`.
+
+You can also use the enum to define column types:
+```
+CREATE TABLE businesses (
+name  TEXT,
+type  business_type
+);
+```
+
+CQL will then enforce you use the correct enum to access those columns. For example, this is valid:
+```
+SELECT * FROM businesses WHERE type = business_type.laundromat;
+```
+
+While this does not type check:
+```
+SELECT * FROM businesses WHERE type = business_corp_state.delaware;
+```
 
 Enumerations follow these rules:
 
@@ -932,16 +953,19 @@ declare enum thing integer (
 declare thing_type type thing;
 ```
 
-Enumerations always get "not null" in addition to their base type.
+Enumerations always get "not null" in addition to their base type.  Enumerations also have a unique "kind" associated,
+specfically the above enum has type `integer<thing> not null`.  The rules for type kind are described below.
 
 ### Nullability Rules
 
 #### General Rule
 
-Except as noted in the exceptions below, the result of an operator is nullable if and only if any of its operands
-are nullable. This applies no matter the number of operands the operator requires.
+Except as noted in the exceptions below, the result of an operator is a nullable type if and only if any of its operands
+are of nullable type. This applies no matter the number of operands the operator requires.
 
-Note: CQL does not do constant folding or other inferencing, it only uses the types of the values
+Note: CQL does not do constant folding or other inferencing except in `const()`, it only uses the types of the values so
+even an expression such as `NULL or 1` is of nullable type even though plainly it must evaluate to `1`.  This may change
+in time but presently no attempt is made to compute values to improve type information except in `const()` expressions.
 
 #### Identifiers and Literals
 
@@ -953,9 +977,12 @@ These operators always return a non-null boolean.
 
 #### IN and NOT IN
 
-In an expression like `needle IN (haystack)` the result is always a boolean. The boolean is nullable if and only if `needle` is nullable. The presence of nulls in the the haystack is irrelevant.
+In an expression like `needle IN (haystack)` the result is always a boolean. The boolean is nullable if and only if `needle` is nullable. 
+The presence of nulls in the the haystack is irrelevant.
 
-NOTE: SQLite has slightly different nullability rules for `IN` and `NOT IN` q.v.
+The `IN` operator behaves like a series of equality tests (i.e. `==` tests not `IS` tests).  `NOT IN` behaves symmetrically.
+
+NOTE: SQLite has slightly different nullability rules for `IN` and `NOT IN` q.v.  This is only place where CQL has different evaluation rules by design.
 
 #### CASE ..WHEN ..THEN.. ELSE.. END
 
@@ -965,21 +992,37 @@ The following rules apply when considering nullability of a `CASE` expression.
 * if any of the output values (i.e. any `THEN` or `ELSE` values) are nullable, the result is nullable
 * otherwise the result is not nullable
 
-The SQL `CASE` construct is quite powerful and unlike the C `switch` statement it is actually an expression.  So it's rather more like a highly generalized ternary `a ? b : c` operator rather than the switch statement.   There can be
-arbitrarily many conditions specified each with their own result and the conditions need not be constants and
-typically are not.
+The SQL `CASE` construct is quite powerful and unlike the C `switch` statement it is actually an expression.  
+So this operator is rather more like a highly generalized ternary `a ? b : c` operator rather than the C switch statement.   
+There can be arbitrarily many conditions specified each with their own result and the conditions need not be constants, and typically are not.
 
 #### The IFNULL and COALESCE Functions
 
 These functions are nullable or non-nullable based on their arguments. If the `IFNULL` or `COALESCE` call has
 at least one non-nullable argument then the result is non-nullable.
 
+#### The cql_attest_notnull function
+
+Sometimes `ifnull` is not possible, e.g. if the operand is an object or blob type.  The `attest` form gives you a type conversion
+to not null with a runtime check.  It cannot be used in SQLite contexts because the function is not known to SQLite.  But in loose 
+expressions you can write this important pattern:
+
+```sql
+create proc foo(x object)
+begin
+  if x is not null then
+     declare xo object not null;
+     set xo := cql_attest_notnull(x);
+     -- use xo where a non-null object is needed
+  end;
+end;
+
 #### LEFT and RIGHT OUTER JOINS
 In most join operations the nullability of each column participating in the join is preserved.  However in a
 `LEFT OUTER` join the columns on the right side of the join are always considered nullable and in a
 `RIGHT OUTER` join the columns on the left side of the join are considered nullable.
 
-NOTE: CQL does not use constraints in the `WHERE`, `ON`, or `HAVING` clause to infer non-null status even where this would be possible.  CQL does no data-flow at all.
+NOTE: CQL does not use constraints in the `WHERE`, `ON`, or `HAVING` clause to infer non-null status even where this would be possible.  CQL does no data-flow at all.  e.g. `select foo where foo is not null` does not change the type of the column.  You can only do this with expression forms that strip the nullability (e.g. `IFNULL`).
 
 ### Expression Types
 
@@ -1139,7 +1182,6 @@ x & (1 << 7)   -- probably what you intended
 ```
 
 Note that these operators only work on integer and long integer data.  If any operand is `NULL` the result is `NULL.
-
 
 #### Addition and Subtraction +, -
 These operators do the typical math.  Note that there are no unsigned numerics so it's always signed math that is happening here.
@@ -1426,15 +1468,15 @@ As a result if you store the returned value in a local variable it will be relea
 
 CQL tries to adhere to normal SQL comparison rules but with a C twist.
 
-### `BLOB` and `OBJECT`
+### `OBJECT`
 
-These types have no value based comparison, so there is no `<`, `>` and so forth.
+The object type has no value based comparison, so there is no `<`, `>` and so forth.
 
-The following table is useful.  Let's suppose there are exactly two objects 'X' and 'Y'
+The following table is useful.  Let's suppose there are exactly two distinct objects 'X' and 'Y'
 
-true expressions: `X = X`   `X <> Y` `Y = Y`   `Y <> X`
+true expressions: `X = X`   `X <> Y` `Y = Y`   `Y <> X`  `X IN (X, Y)`  `X NOT IN (Y)`
 
-false expressions: `X = Y`  `X <> X` `Y = X`  `Y <> Y`
+false expressions: `X = Y`  `X <> X` `Y = X`  `Y <> Y`  `X NOT IN (X, Y)`
 
 null expressions: `null = null`  ` X <> null`   `x = null` `null <> null`  `Y <> null`   `y = null`
 
@@ -1456,6 +1498,17 @@ The `IS` and `IS NOT` operators behave similarly to equality and inequality, but
 
 true:  `null is null` `X is X` `X is not null` `null is not X`
 false: `null is not null` `X is not X` `X is null` `null  is X`
+
+The `IN` and `NOT IN` operators also work for text using the same value comparisons as above.  Additionally there are special text comparison
+operators such as `LIKE`, `MATCH` and `GLOB`.  These comparisons are defined by SQLite.
+
+### `BLOB`
+
+Blobs are compared by value (equivalent to `memcmp`) but have no well-defined ordering. The `memcmp` order is deemed not helpful as blobs 
+usually have internal structure hence the valid comparisons are only equality and inequality.  
+You can use user defined functions to do better comparisons of your particular blobs if needed.
+
+The net comparison behavior is otherwise just like strings.
 
 ### Sample Code
 
@@ -7670,7 +7723,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Mon Feb  8 16:55:57 PST 2021
+Snapshot as of Tue Feb  9 11:37:46 PST 2021
 
 ### Operators and Literals
 
@@ -12123,7 +12176,7 @@ The named procedure has the `vault_sensitive` annotation to automatically encode
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Mon Feb  8 16:55:57 PST 2021
+Snapshot as of Tue Feb  9 11:37:47 PST 2021
 
 ### Rules
 
