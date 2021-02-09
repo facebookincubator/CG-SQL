@@ -12105,6 +12105,12 @@ attributes as it is totally unambiguous there so CQL enforces this.
 
 vault_sensitive attribution only allow names. Integer, string literal, c string or blob are not allowed, only IDs should be provided.
 
+----
+
+### CQL0364: vault_sensitive annotation can only go on a procedure that uses the database
+
+The named procedure has the `vault_sensitive` annotation to automatically encode sensitive value in the result set. Encoding value require the database, but the procedure in question doesn't even use the database at all.  This annotation is therefore useless.
+
 
 
 ## Appendix 5: JSON Schema Grammar

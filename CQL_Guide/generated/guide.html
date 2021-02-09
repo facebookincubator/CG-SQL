@@ -582,6 +582,7 @@
 <li><a href="#cql0361-return-data-type-in-a-create-function-declaration-can-only-be-text-blob-or-object">CQL0361: Return data type in a create function declaration can only be Text, Blob or Object</a></li>
 <li><a href="#cql0362-the-hidden-column-attribute-must-be-the-first-attribute-if-present">CQL0362: The HIDDEN column attribute must be the first attribute if present</a></li>
 <li><a href="#cql0363-all-arguments-must-be-names-vault_sensitive">CQL0363: all arguments must be names ‘vault_sensitive’</a></li>
+<li><a href="#cql0364-vault_sensitive-annotation-can-only-go-on-a-procedure-that-uses-the-database">CQL0364: vault_sensitive annotation can only go on a procedure that uses the database</a></li>
 </ul></li>
 <li><a href="#appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</a>
 <ul>
@@ -8839,6 +8840,9 @@ set x := y;</code></pre>
 <hr />
 <h3 id="cql0363-all-arguments-must-be-names-vault_sensitive">CQL0363: all arguments must be names ‘vault_sensitive’</h3>
 <p>vault_sensitive attribution only allow names. Integer, string literal, c string or blob are not allowed, only IDs should be provided.</p>
+<hr />
+<h3 id="cql0364-vault_sensitive-annotation-can-only-go-on-a-procedure-that-uses-the-database">CQL0364: vault_sensitive annotation can only go on a procedure that uses the database</h3>
+<p>The named procedure has the <code>vault_sensitive</code> annotation to automatically encode sensitive value in the result set. Encoding value require the database, but the procedure in question doesn’t even use the database at all. This annotation is therefore useless.</p>
 <h2 id="appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</h2>
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.

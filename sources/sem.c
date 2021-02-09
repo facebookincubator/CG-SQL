@@ -13729,7 +13729,7 @@ static void sem_create_proc_stmt(ast_node *ast) {
     }
   }
 
-  // Check for valid autodrops, identity column or fragment annotations
+  // Check for valid autodrops, identity column, vault_sensitive or fragment annotations
   // Note: these attribute are ignored on empty procs because they are meaningless.
   if (misc_attrs && stmt_list) {
     bool_t result_set_proc = has_result_set(ast);
@@ -13741,6 +13741,15 @@ static void sem_create_proc_stmt(ast_node *ast) {
     // @attribute(cql:vault_sensitve=(col1, col2, ,...))
     sem_column_name_annotation(misc_attrs, find_vault_columns, "vault_sensitive");
     if (is_error(misc_attrs)) {
+      goto cleanup;
+    }
+
+    // Vault required db pointer to encode/decode column values. Because of that the proc with vault
+    // attribution should have access to the db pointer. Only dml proc has a db pointer, therefore
+    // vault annotation can only be available to dml proc.
+    if (exists_attribute_str(misc_attrs, "vault_sensitive") && !has_dml) {
+      report_error(misc_attrs, "CQL0364: vault_sensitive annotation can only go on a procedure that uses the database", NULL);
+      record_error(misc_attrs);
       goto cleanup;
     }
 

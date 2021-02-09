@@ -2436,6 +2436,8 @@ end;
 @attribute(cql:vault_sensitive)
 create proc out_union_not_dml()
 begin
+  declare bogus cursor for select 1; -- just to make the proc dml to test a non dml cursor x with vault.
+
   declare x cursor like all_types_encoded_table;
   fetch x using
     0 b0,

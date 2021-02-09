@@ -55807,6 +55807,31 @@ END;
 
 The statement ending at line XXXX
 
+@ATTRIBUTE(cql:vault_sensitive)
+CREATE PROC vault_sensitive_proc_dml ()
+BEGIN
+  DECLARE y TEXT;
+END;
+
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0364: vault_sensitive annotation can only go on a procedure that uses the database
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name vault_sensitive}
+  | {create_proc_stmt}: err
+    | {name vault_sensitive_proc_dml}: err
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {declare_vars_type}: text
+          | {name_list}: y: text variable
+          | | {name y}: y: text variable
+          | {type_text}: text
+
+The statement ending at line XXXX
+
 SELECT CASE WHEN 1 THEN 2
 ELSE ifnull(x, y)
 END;

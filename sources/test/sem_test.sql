@@ -13972,6 +13972,17 @@ create proc vault_sensitive_proc()
 begin
 end;
 
+-- TEST: validate vault_sensitive annotation only use with dml proc
+-- + {stmt_and_attr}: err
+-- + {create_proc_stmt}: err
+-- Error % vault_sensitive annotation can only go on a procedure that uses the database
+-- +1 Error
+@attribute(cql:vault_sensitive)
+create proc vault_sensitive_proc_dml()
+begin
+  declare y text;
+end;
+
 -- TEST: ensure that ifnull parses properly after else, it's not "else if"
 -- + SELECT CASE WHEN 1 THEN 2
 -- + ELSE ifnull(x, y)
