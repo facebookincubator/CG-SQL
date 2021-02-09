@@ -26,7 +26,7 @@ static void cg_fragment_with_params_raw(charbuf *output, CSTR frag, ast_node *as
 static void cg_json_fk_target_options(charbuf *output, ast_node *ast);
 static void cg_json_emit_region_info(charbuf *output, ast_node *ast);
 static void cg_json_dependencies(charbuf *output, ast_node *ast);
-static void cg_json_data_type(charbuf *output, sem_t sem_type);
+static void cg_json_data_type(charbuf *output, sem_t sem_type, CSTR kind);
 
 // These little helpers are for handling comma seperated lists where you may or may
 // not need a comma in various places.  The local tracks if there is an item already
@@ -389,7 +389,7 @@ static void cg_json_enums(charbuf* output) {
     bprintf(output, "{\n");
     BEGIN_INDENT(t, 2);
     bprintf(output, "\"name\" : \"%s\",\n", name);
-    cg_json_data_type(output, type->sem->sem_type | SEM_TYPE_NOTNULL);
+    cg_json_data_type(output, type->sem->sem_type | SEM_TYPE_NOTNULL, NULL);
     bprintf(output, ",\n");
 
     cg_json_enum_values(enum_values, output);
@@ -519,7 +519,7 @@ static void cg_json_col_attrs(charbuf *output, col_info *info) {
 }
 
 // Starting from a semantic type, emit the appropriate JSON type
-static void cg_json_data_type(charbuf *output, sem_t sem_type) {
+static void cg_json_data_type(charbuf *output, sem_t sem_type, CSTR kind) {
   sem_t core_type = core_type_of(sem_type);
 
   BEGIN_LIST;
@@ -536,6 +536,11 @@ static void cg_json_data_type(charbuf *output, sem_t sem_type) {
     case SEM_TYPE_OBJECT:       bprintf(output, "object"); break;
   }
   bprintf(output, "\"");
+
+  if (kind) {
+    COMMA;
+    bprintf(output, "\"kind\" : \"%s\"", kind);
+  }
 
   bool_t sensitive = !!sensitive_flag(sem_type);
 
@@ -571,7 +576,7 @@ static void cg_json_col_def(charbuf *output, col_info *info) {
     cg_json_misc_attrs(output, misc_attrs);
     bprintf(output, ",\n");
   }
-  cg_json_data_type(output, def->sem->sem_type);
+  cg_json_data_type(output, def->sem->sem_type, def->sem->kind);
 
   info->attrs = attrs;
   cg_json_col_attrs(output, info);
@@ -1135,7 +1140,7 @@ static void cg_json_projection(charbuf *output, ast_node *ast) {
     bprintf(output, "{\n");
     BEGIN_INDENT(type, 2);
     bprintf(output, "\"name\" : \"%s\",\n", sptr->names[i]);
-    cg_json_data_type(output, sptr->semtypes[i]);
+    cg_json_data_type(output, sptr->semtypes[i], sptr->kinds[i]);
     END_INDENT(type);
     bprintf(output, "\n}");
   }
@@ -1420,7 +1425,7 @@ static bool_t cg_json_param(charbuf *output, ast_node *ast, CSTR *infos) {
     bprintf(output, "\"argOrigin\" : \"%s\",\n", base_name);
   }
 
-  cg_json_data_type(output, ast->sem->sem_type);
+  cg_json_data_type(output, ast->sem->sem_type, ast->sem->kind);
 
   END_INDENT(type);
 

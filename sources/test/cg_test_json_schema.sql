@@ -32,6 +32,7 @@
 -- + "columns" : [
 -- + "name" : "id"
 -- + "type" : "integer",
+-- + "kind" : "ident",
 -- +1 "isNotNull" : 1
 -- + "name" : "name"
 -- +1 "type" : "text"
@@ -42,7 +43,7 @@
 -- + "region" : "region0",
 create table Foo
 (
-  id int not null,
+  id int<ident> not null,
   name text
 );
 
@@ -349,6 +350,7 @@ end;
 -- + "projection" : [
 -- + "name" : "id"
 -- + "type" : "integer",
+-- + "kind" : "ident",
 -- + "name" : "name",
 -- + "statement" : "SELECT DISTINCT id, name FROM Foo WHERE name LIKE ? AND name <> ? GROUP BY name HAVING name > ? ORDER BY ? LIMIT 1 OFFSET 3",
 -- + "statementArgs" : [ "pattern", "reject", "reject", "pattern" ]
@@ -504,6 +506,7 @@ create index YetAnotherIndex on Foo(id) @delete(1);
 -- + "select" : "SELECT id, name FROM Foo",
 -- + "name" : "id",
 -- + "type" : "integer",
+-- + "kind" : "ident",
 -- + "isNotNull" : 1
 -- + "name" : "name",
 -- + "type" : "text",
@@ -1145,7 +1148,22 @@ create table with_check_constraints(
 -- + "checkExprArgs" : [  ]
 -- only 2 names (one for the constraint removed)
 -- +2 "name"
+-- + "name" : "w",
+-- + "type" : "integer",
+-- + "kind" : "meters",
 create table with_unnamed_check_constraints(
-  w integer,
+  w integer<meters>,
   check(w > 5)
 );
+
+-- TEST: verify type kinds appearing in procs
+-- + "name" : "list",
+-- + "type" : "object",
+-- + "kind" : "list",
+-- + "name" : "s",
+-- + "type" : "integer",
+-- + "kind" : "seconds",
+create proc using_kinds(list object<list>, s integer<seconds>)
+begin
+  set s := s + 1;
+end;

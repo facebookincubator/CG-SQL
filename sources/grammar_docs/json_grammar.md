@@ -12,7 +12,7 @@ sidebar_label: "Appendix 5: JSON Schema Grammar"
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Thu Jan 28 17:31:07 PST 2021
+Snapshot as of Mon Feb  8 16:55:57 PST 2021
 
 ### Rules
 
@@ -166,6 +166,7 @@ column: '{'
         '"name"' ':' STRING_LITERAL ','
         opt_attributes
         '"type"' ':' STRING_LITERAL ','
+        opt_kind
         opt_is_sensitive
         '"isNotNull"' ':' BOOL_LITERAL ','
         '"isAdded"' ':' BOOL_LITERAL ','
@@ -191,6 +192,9 @@ opt_default_value: | '"defaultValue"' ':' any_literal ','
   ;
 
 opt_foreign_keys : | foreign_keys
+  ;
+
+opt_kind: | '"kind"' ':' STRING_LITERAL ','
   ;
 
 opt_is_sensitive: | '"isSensitive"' ':' '1' ','
@@ -323,6 +327,7 @@ projected_columns: projected_column | projected_column ',' projected_columns
 projected_column: '{'
                    '"name"' ':' STRING_LITERAL ','
                    '"type"' ':' STRING_LITERAL ','
+                   opt_kind
                    opt_is_sensitive
                    '"isNotNull"' ':' BOOL_LITERAL
                   '}'
@@ -437,6 +442,7 @@ arg: '{'
       '"name"' ':' STRING_LITERAL ','
       '"argOrigin"' ':' STRING_LITERAL ','
       '"type"' ':' STRING_LITERAL ','
+      opt_kind
       opt_is_sensitive
       '"isNotNull"' ':' BOOL_LITERAL
       '}'
@@ -556,6 +562,7 @@ complex_arg: '{'
               '"name"' ':' STRING_LITERAL ','
               '"argOrigin"' ':' STRING_LITERAL ','
               '"type"' ':' STRING_LITERAL ','
+              opt_kind
               opt_is_sensitive
               '"isNotNull"' ':' BOOL_LITERAL
              '}'

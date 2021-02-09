@@ -18,6 +18,7 @@ s/[[:<:]]REGION[[:>:]]/'"region"' ':'/g
 s/[[:<:]]DEPLOYED_IN_REGION[[:>:]]/'"deployedInRegion"' ':'/g
 s/[[:<:]]COLUMNS[[:>:]]/'"columns"' ':'/g
 s/[[:<:]]TYPE[[:>:]]/'"type"' ':'/g
+s/[[:<:]]KIND[[:>:]]/'"kind"' ':'/g
 s/[[:<:]]IS_NOT_NULL[[:>:]]/'"isNotNull"' ':'/g
 s/[[:<:]]IS_SENSITIVE[[:>:]]/'"isSensitive"' ':'/g
 s/[[:<:]]IS_PRIMARY_KEY[[:>:]]/'"isPrimaryKey"' ':'/g

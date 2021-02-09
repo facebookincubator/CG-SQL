@@ -5,7 +5,7 @@
     The statement ending at line XXXX
     
     CREATE TABLE Foo(
-      id INTEGER NOT NULL,
+      id INTEGER<ident> NOT NULL,
       name TEXT
     )
     
@@ -24,6 +24,7 @@
         {
           "name" : "id",
           "type" : "integer",
+          "kind" : "ident",
           "isNotNull" : 1,
           "isAdded" : 0,
           "isDeleted" : 0,
@@ -1219,7 +1220,7 @@
     The statement ending at line XXXX
     
     CREATE TABLE with_unnamed_check_constraints(
-      w INTEGER,
+      w INTEGER<meters>,
       CHECK (w > 5)
     )
     
@@ -1235,6 +1236,7 @@
         {
           "name" : "w",
           "type" : "integer",
+          "kind" : "meters",
           "isNotNull" : 0,
           "isAdded" : 0,
           "isDeleted" : 0,
@@ -1504,6 +1506,7 @@
         {
           "name" : "id",
           "type" : "integer",
+          "kind" : "ident",
           "isNotNull" : 1
         },
         {
@@ -1530,6 +1533,7 @@
         {
           "name" : "id",
           "type" : "integer",
+          "kind" : "ident",
           "isNotNull" : 1
         },
         {
@@ -1556,6 +1560,7 @@
         {
           "name" : "id",
           "type" : "integer",
+          "kind" : "ident",
           "isNotNull" : 1
         },
         {
@@ -1583,6 +1588,7 @@
         {
           "name" : "id",
           "type" : "integer",
+          "kind" : "ident",
           "isNotNull" : 1
         },
         {
@@ -1611,6 +1617,7 @@
         {
           "name" : "id",
           "type" : "integer",
+          "kind" : "ident",
           "isNotNull" : 1
         },
         {
@@ -1946,6 +1953,7 @@
         {
           "name" : "id",
           "type" : "integer",
+          "kind" : "ident",
           "isNotNull" : 1
         }
       ],
@@ -1990,6 +1998,7 @@
         {
           "name" : "id",
           "type" : "integer",
+          "kind" : "ident",
           "isNotNull" : 1
         },
         {
@@ -2035,6 +2044,7 @@
         {
           "name" : "id",
           "type" : "integer",
+          "kind" : "ident",
           "isNotNull" : 1
         },
         {
@@ -2232,6 +2242,7 @@
         {
           "name" : "id",
           "type" : "integer",
+          "kind" : "ident",
           "isNotNull" : 1
         },
         {
@@ -2270,6 +2281,7 @@
         {
           "name" : "id",
           "type" : "integer",
+          "kind" : "ident",
           "isNotNull" : 1
         },
         {
@@ -3044,6 +3056,36 @@
         }
       ],
       "usesProcedures" : [ "other_proc", "proc_as_func" ],
+      "usesTables" : [  ],
+      "usesDatabase" : 0
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE PROC using_kinds (list OBJECT<list>, s INTEGER<seconds>)
+    BEGIN
+    SET s := s + 1;
+    END
+    
+    {
+      "name" : "using_kinds",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+        {
+          "name" : "list",
+          "argOrigin" : "list",
+          "type" : "object",
+          "kind" : "list",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "s",
+          "argOrigin" : "s",
+          "type" : "integer",
+          "kind" : "seconds",
+          "isNotNull" : 0
+        }
+      ],
       "usesTables" : [  ],
       "usesDatabase" : 0
     }

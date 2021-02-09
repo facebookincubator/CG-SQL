@@ -48,7 +48,7 @@ void yyset_lineno(int);
 %token NAME ARG_ORIGIN IS_TEMP IS_VIRTUAL IF_NOT_EXISTS WITHOUT_ROWID IS_ADDED IS_DELETED IS_RECREATED REGION DEPLOYED_IN_REGION
 %token ADDED_VERSION DELETED_VERSION ADDED_MIGRATION_PROC DELETED_MIGRATION_PROC RECREATE_GROUP_NAME
 %token COLUMNS
-%token TYPE IS_NOT_NULL IS_PRIMARY_KEY IS_UNIQUE_KEY IS_AUTO_INCREMENT IS_SENSITIVE
+%token TYPE KIND IS_NOT_NULL IS_PRIMARY_KEY IS_UNIQUE_KEY IS_AUTO_INCREMENT IS_SENSITIVE
 %token PRIMARY_KEY PRIMARY_KEY_NAME FOREIGN_KEYS UNIQUE_KEYS
 %token REFERENCE_TABLE REFERENCE_COLUMNS ON_UPDATE ON_DELETE IS_DEFERRED
 %token ATTRIBUTES VALUE DEFAULT_VALUE VALUES
@@ -214,6 +214,7 @@ column: '{'
         NAME STRING_LITERAL ','
         opt_attributes
         TYPE STRING_LITERAL ','
+        opt_kind
         opt_is_sensitive
         IS_NOT_NULL BOOL_LITERAL ','
         IS_ADDED BOOL_LITERAL ','
@@ -239,6 +240,9 @@ opt_default_value: | DEFAULT_VALUE any_literal ','
   ;
 
 opt_foreign_keys : | foreign_keys
+  ;
+
+opt_kind: | KIND STRING_LITERAL ','
   ;
 
 opt_is_sensitive: | IS_SENSITIVE '1' ','
@@ -371,6 +375,7 @@ projected_columns: projected_column | projected_column ',' projected_columns
 projected_column: '{'
                    NAME STRING_LITERAL ','
                    TYPE STRING_LITERAL ','
+                   opt_kind
                    opt_is_sensitive
                    IS_NOT_NULL BOOL_LITERAL
                   '}'
@@ -485,6 +490,7 @@ arg: '{'
       NAME STRING_LITERAL ','
       ARG_ORIGIN STRING_LITERAL ','
       TYPE STRING_LITERAL ','
+      opt_kind
       opt_is_sensitive
       IS_NOT_NULL BOOL_LITERAL
       '}'
@@ -604,6 +610,7 @@ complex_arg: '{'
               NAME STRING_LITERAL ','
               ARG_ORIGIN STRING_LITERAL ','
               TYPE STRING_LITERAL ','
+              opt_kind
               opt_is_sensitive
               IS_NOT_NULL BOOL_LITERAL
              '}'

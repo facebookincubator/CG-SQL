@@ -49,6 +49,7 @@ int fileno(FILE *);
 \"deployedInRegion\"[ \t]*:      { return DEPLOYED_IN_REGION; }
 \"columns\"[ \t]*:               { return COLUMNS; }
 \"type\"[ \t]*:                  { return TYPE; }
+\"kind\"[ \t]*:                  { return KIND; }
 \"isNotNull\"[ \t]*:             { return IS_NOT_NULL; }
 \"isSensitive\"[ \t]*:           { return IS_SENSITIVE; }
 \"isPrimaryKey\"[ \t]*:          { return IS_PRIMARY_KEY; }
