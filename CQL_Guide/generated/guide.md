@@ -956,6 +956,57 @@ declare thing_type type thing;
 Enumerations always get "not null" in addition to their base type.  Enumerations also have a unique "kind" associated,
 specfically the above enum has type `integer<thing> not null`.  The rules for type kind are described below.
 
+### Type Kinds
+
+Any CQL type can be tagged with a "kind" for instance `real` can become `real<meters>`, `integer` can become `integer<job_id>`.  The idea here is that the additional tag, the "kind" can help prevent type mistakes
+in arguments and in columns and procedure calls.  For instance:
+
+```sql
+create table things(
+  size real<meters>,
+  duration real<seconds>
+);
+
+create proc do_something(size_ real<meters>, duration_ real<seconds>)
+begin
+  insert into things(size, duration) values(size_, duration_);
+end;
+```
+
+In this situation you couldn't accidentally switch the columns in `do_something` even though both
+are `real`, and indeed SQLite will only see the type `real` for both.  If you have your own variables
+typed `real<size>` and `read<duration>` you can't accidentally do:
+
+```sql
+  call do_something(duration, size);
+```
+
+Even though both are real.  The type kind won't match.
+
+Importantly, an expression with no type kind is compatible with any type kind (or none).  Hence all of
+the below are legal.
+
+```sql
+declare generic real;
+set generic := size;        -- no kind may accept <meters>
+set generic := duration;    -- no kind may accept <seconds>
+set duration := generic;    -- no kind may be stored in <seconds>
+```
+
+Only mixing types where both have a kind, and the kind is different generates errors.  This choice allows you to
+write procedures that (for instance) log any `integer` or any `real`, or that return an `integer` out of a collection
+or some such.
+
+These rules are applied to comparisons, assignments, column updates, everywhere types are checked for compatibility.
+
+To get the most value out of these constructs, the authors recommend that type kinds be used universally except
+when the extra compatibility described above is needed (like low level helper functions).
+
+Importantly type kind can be applied to object types as well, allowing `object<dict>` to be distinct from `object<list>`.
+
+At run time the kind information is lost. But it does find its way into the JSON output so external tools
+also get to see the kinds.
+
 ### Nullability Rules
 
 #### General Rule
@@ -977,7 +1028,7 @@ These operators always return a non-null boolean.
 
 #### IN and NOT IN
 
-In an expression like `needle IN (haystack)` the result is always a boolean. The boolean is nullable if and only if `needle` is nullable. 
+In an expression like `needle IN (haystack)` the result is always a boolean. The boolean is nullable if and only if `needle` is nullable.
 The presence of nulls in the the haystack is irrelevant.
 
 The `IN` operator behaves like a series of equality tests (i.e. `==` tests not `IS` tests).  `NOT IN` behaves symmetrically.
@@ -992,8 +1043,8 @@ The following rules apply when considering nullability of a `CASE` expression.
 * if any of the output values (i.e. any `THEN` or `ELSE` values) are nullable, the result is nullable
 * otherwise the result is not nullable
 
-The SQL `CASE` construct is quite powerful and unlike the C `switch` statement it is actually an expression.  
-So this operator is rather more like a highly generalized ternary `a ? b : c` operator rather than the C switch statement.   
+The SQL `CASE` construct is quite powerful and unlike the C `switch` statement it is actually an expression.
+So this operator is rather more like a highly generalized ternary `a ? b : c` operator rather than the C switch statement.
 There can be arbitrarily many conditions specified each with their own result and the conditions need not be constants, and typically are not.
 
 #### The IFNULL and COALESCE Functions
@@ -1004,7 +1055,7 @@ at least one non-nullable argument then the result is non-nullable.
 #### The cql_attest_notnull function
 
 Sometimes `ifnull` is not possible, e.g. if the operand is an object or blob type.  The `attest` form gives you a type conversion
-to not null with a runtime check.  It cannot be used in SQLite contexts because the function is not known to SQLite.  But in loose 
+to not null with a runtime check.  It cannot be used in SQLite contexts because the function is not known to SQLite.  But in loose
 expressions you can write this important pattern:
 
 ```sql
@@ -1504,8 +1555,8 @@ operators such as `LIKE`, `MATCH` and `GLOB`.  These comparisons are defined by 
 
 ### `BLOB`
 
-Blobs are compared by value (equivalent to `memcmp`) but have no well-defined ordering. The `memcmp` order is deemed not helpful as blobs 
-usually have internal structure hence the valid comparisons are only equality and inequality.  
+Blobs are compared by value (equivalent to `memcmp`) but have no well-defined ordering. The `memcmp` order is deemed not helpful as blobs
+usually have internal structure hence the valid comparisons are only equality and inequality.
 You can use user defined functions to do better comparisons of your particular blobs if needed.
 
 The net comparison behavior is otherwise just like strings.
@@ -7723,7 +7774,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Feb  9 11:37:46 PST 2021
+Snapshot as of Tue Feb  9 15:12:54 PST 2021
 
 ### Operators and Literals
 
@@ -12176,7 +12227,7 @@ The named procedure has the `vault_sensitive` annotation to automatically encode
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue Feb  9 11:37:47 PST 2021
+Snapshot as of Tue Feb  9 15:12:55 PST 2021
 
 ### Rules
 
