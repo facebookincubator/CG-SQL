@@ -738,11 +738,12 @@ There are a number of literal objects that may be expressed in CQL.  These are a
 #### String Literals
 
 * A double quoted string is a C style string literal
-  * the usual simple C escape sequences are supported, however
-  * the \xNN form is not supported, nor is the \0NNN octal form supported
-    * these are actually invaluable and likely to be supported in the near future
+  * the usual simple C escape sequences are supported
+  * the \xNN form for embedded hex characters is supported, however
+  * the \0NNN octal form is not supported, and 
+  * embedded nulls in string literals (\0 or \0x00) are not supported (you must use blobs such cases)
 * a single quoted string is a SQL style string literal
-  * No escape sequences are supported other than `''` to indicate a single quote character
+  * No escape sequences are supported other than `''` to indicate a single quote character (this is just like normal SQLite)
 * The sequence @FILE("some_string") is a special string literal
   * the value of this literal is the path of the current compiland starting at the letters in `some_string`, or
   * the entire path of the current compiland if `some_string` does not occur in the path
@@ -7774,7 +7775,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Feb  9 15:12:54 PST 2021
+Snapshot as of Tue Feb  9 16:16:37 PST 2021
 
 ### Operators and Literals
 
@@ -12227,7 +12228,7 @@ The named procedure has the `vault_sensitive` annotation to automatically encode
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue Feb  9 15:12:55 PST 2021
+Snapshot as of Tue Feb  9 16:16:37 PST 2021
 
 ### Rules
 
