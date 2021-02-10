@@ -52,6 +52,12 @@ cql_code cql_prepare(sqlite3 *_Nonnull db, sqlite3_stmt *_Nullable *_Nonnull pst
   return cql_sqlite3_prepare_v2(db, sql, -1, pstmt, NULL);
 }
 
+// This statement for sure has no rows in it
+cql_code cql_no_rows_stmt(sqlite3 *_Nonnull db, sqlite3_stmt *_Nullable *_Nonnull pstmt) {
+  cql_finalize_stmt(pstmt);
+  return cql_sqlite3_prepare_v2(db, "select 0 where 0", -1, pstmt, NULL);
+}
+
 // This is a simple wrapper for the sqlite3_exec method with the usual extra arguments.
 // This code is here just to reduce the code size of exec calls in the generated code.
 // There are a lot of such calls.

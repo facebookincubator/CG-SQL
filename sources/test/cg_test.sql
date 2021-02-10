@@ -732,7 +732,7 @@ set b0_nullable := 'b' not between null and 'c';
 -- + cql_int32 with_result_set_get_type_value(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row) {
 -- + cql_int32 with_result_set_result_count(with_result_set_result_set_ref _Nonnull result_set) {
 -- + CQL_WARN_UNUSED cql_code with_result_set_fetch_results(sqlite3 *_Nonnull _db_, with_result_set_result_set_ref _Nullable *_Nonnull result_set) {
--- + if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = SQLITE_ERROR;
+-- + if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
 create procedure with_result_set()
 begin
   select * from bar;

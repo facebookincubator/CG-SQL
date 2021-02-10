@@ -130,7 +130,7 @@ CQL_WARN_UNUSED cql_code assembly_core(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nu
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
-  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = SQLITE_ERROR;
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
   return _rc_;
 }
 #undef _PROC_

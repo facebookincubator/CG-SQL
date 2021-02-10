@@ -3315,6 +3315,25 @@ BEGIN_TEST(long_literals)
 
 END_TEST(long_literals)
 
+create proc no_statement_really(x integer)
+begin
+  if x then
+    select 1 x;
+  end if;
+end;
+
+BEGIN_TEST(null_statement)
+  declare C cursor for call no_statement_really(0);
+  declare x integer;
+  set x := 0;
+  loop fetch C
+  begin
+     set x := x + 1;
+  end;
+  EXPECT(x == 0);
+END_TEST(null_statement)
+
+
 END_SUITE()
 
 -- manually force tracing on by redefining the macros

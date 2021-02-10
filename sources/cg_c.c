@@ -2958,9 +2958,9 @@ static void cg_create_proc_stmt(ast_node *ast) {
 
   if (result_set_proc) {
     // Because of control flow it's possible that we never actually ran a select statement
-    // even if there were no errors.  Or maybe we caught the error.  In any case we must
-    // not return a success code if there is no output result. Downgrade success to error.
-    bprintf(cg_declarations_output, "  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = SQLITE_ERROR;\n");
+    // even if there were no errors.  Or maybe we caught the error.  In any case if we 
+    // are not producing an error then we have to produce an empty result set to go with it.
+    bprintf(cg_declarations_output, "  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);\n");
     empty_statement_needed = false;
   }
 
@@ -3228,13 +3228,9 @@ static bool_t cg_should_vault_col(CSTR col, sem_t sem_type) {
   return is_col_eligible && sensitive_flag(sem_type);
 }
 
-static void cg_cql_datatype(sem_t sem_type, bool_t encode, charbuf *output) {
+static void cg_cql_datatype(sem_t sem_type, charbuf *output) {
   if (!is_nullable(sem_type)) {
     bprintf(output, "CQL_DATA_TYPE_NOT_NULL | ");
-  }
-
-  if (encode) {
-    bprintf(output, "CQL_DATA_TYPE_ENCODED | ");
   }
 
   switch (core_type_of(sem_type)) {
@@ -3268,7 +3264,7 @@ static void cg_cql_datatype(sem_t sem_type, bool_t encode, charbuf *output) {
 // This helper generates the correct CQL_DATA_TYPE_* data info and emits the
 // correct argument.
 static void cg_fetch_column(sem_t sem_type, CSTR var) {
-  cg_cql_datatype(sem_type, false, cg_main_output);
+  cg_cql_datatype(sem_type, cg_main_output);
 
   bprintf(cg_main_output, ", ");
 
@@ -3284,7 +3280,7 @@ static void cg_fetch_column(sem_t sem_type, CSTR var) {
 // arg in the expected format (pointers for nullable primitives) the value
 // for all ref types plus all non nullables.
 static void cg_bind_column(sem_t sem_type, CSTR var) {
-  cg_cql_datatype(sem_type, false, cg_main_output);
+  cg_cql_datatype(sem_type, cg_main_output);
 
   bprintf(cg_main_output, ", ");
 
