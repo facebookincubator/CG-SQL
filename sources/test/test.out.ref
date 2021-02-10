@@ -1418,6 +1418,10 @@ CREATE TABLE foo(
   x INTEGER HIDDEN
 );
 
+@ENFORCE_PUSH;
+
+@ENFORCE_POP;
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

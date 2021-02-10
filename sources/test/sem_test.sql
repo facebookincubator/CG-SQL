@@ -14016,3 +14016,39 @@ create virtual table virtual_with_hidden_wrong using module_name as (
   x integer not null hidden,
   y integer
 );
+
+-- get to a known state
+@enforce_normal foreign key on update;
+@enforce_normal foreign key on delete;
+
+-- TEST: save the current state
+-- + {enforce_push_stmt}: ok
+-- - Error
+@enforce_push;
+
+@enforce_strict foreign key on update;
+
+-- TEST enforcement should be on
+-- + Error % strict FK validation requires that some ON UPDATE option be selected for every foreign key
+-- +1 Error
+create table fk_strict_err_1 (
+  id integer REFERENCES foo(id)
+);
+
+-- TEST: restore the previous state
+-- + {enforce_pop_stmt}: ok
+-- - Error
+@enforce_pop;
+
+-- TEST enforcement should be off
+-- + {create_table_stmt}: fk_strict_err_2: { id: integer foreign_key }
+-- - Error
+create table fk_strict_err_2 (
+  id integer REFERENCES foo(id)
+);
+
+-- TEST: pop too many enforcement options off the stack
+-- + {enforce_pop_stmt}: err
+-- + Error % @enforce_pop used but there is nothing to pop
+-- +1 Error
+@enforce_pop;

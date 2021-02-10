@@ -801,6 +801,8 @@ AST(trigger_when_stmts);
 AST(trigger_body_vers);
 AST1(enforce_strict_stmt);
 AST1(enforce_normal_stmt);
+AST0(enforce_push_stmt);
+AST0(enforce_pop_stmt);
 AST(concat);
 AST(declare_deployable_region_stmt);
 AST(declare_schema_region_stmt);

@@ -55955,3 +55955,96 @@ Error at test/sem_test.sql:XXXX : in col_attrs_hidden : CQL0362: The HIDDEN colu
               | {name y}
               | {type_int}
 
+The statement ending at line XXXX
+
+@ENFORCE_NORMAL FOREIGN KEY ON UPDATE;
+
+  {enforce_normal_stmt}: ok
+  | {int 1}
+
+The statement ending at line XXXX
+
+@ENFORCE_NORMAL FOREIGN KEY ON DELETE;
+
+  {enforce_normal_stmt}: ok
+  | {int 2}
+
+The statement ending at line XXXX
+
+@ENFORCE_PUSH;
+
+  {enforce_push_stmt}: ok
+
+The statement ending at line XXXX
+
+@ENFORCE_STRICT FOREIGN KEY ON UPDATE;
+
+  {enforce_strict_stmt}: ok
+  | {int 1}
+
+The statement ending at line XXXX
+
+CREATE TABLE fk_strict_err_1(
+  id INTEGER REFERENCES foo (id)
+);
+
+Error at test/sem_test.sql:XXXX : in col_attrs_fk : CQL0237: strict FK validation requires that some ON UPDATE option be selected for every foreign key
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name fk_strict_err_1}
+  | {col_key_list}
+    | {col_def}: err
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+        | | {name id}
+        | | {type_int}: integer
+        | {col_attrs_fk}: err
+          | {fk_target_options}
+            | {fk_target}
+            | | {name foo}
+            | | {name_list}
+            |   | {name id}: id: integer notnull
+            | {int 0}
+
+The statement ending at line XXXX
+
+@ENFORCE_POP;
+
+  {enforce_pop_stmt}: ok
+
+The statement ending at line XXXX
+
+CREATE TABLE fk_strict_err_2(
+  id INTEGER REFERENCES foo (id)
+);
+
+  {create_table_stmt}: fk_strict_err_2: { id: integer foreign_key }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name fk_strict_err_2}
+  | {col_key_list}
+    | {col_def}: id: integer foreign_key
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+        | | {name id}
+        | | {type_int}: integer
+        | {col_attrs_fk}: ok
+          | {fk_target_options}
+            | {fk_target}
+            | | {name foo}
+            | | {name_list}
+            |   | {name id}: id: integer notnull
+            | {int 0}
+
+The statement ending at line XXXX
+
+@ENFORCE_POP;
+
+Error at test/sem_test.sql:XXXX : in enforce_pop_stmt : CQL0365: @enforce_pop used but there is nothing to pop
+
+  {enforce_pop_stmt}: err
+
