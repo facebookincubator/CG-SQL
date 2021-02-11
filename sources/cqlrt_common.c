@@ -9,14 +9,14 @@
 
 #include <stdlib.h>
 
-#if TARGET_OS_LINUX
+#if defined(TARGET_OS_LINUX) && TARGET_OS_LINUX
 #include <alloca.h>
 #endif // TARGET_OS_LINUX
 
 #ifndef STACK_BYTES_ALLOC
-#if TARGET_OS_WIN32
+#if defined(TARGET_OS_WIN32) && TARGET_OS_WIN32
 #define STACK_BYTES_ALLOC(N, C) char *N = (char *)_alloca(C)
-#elif TARGET_OS_LINUX
+#elif defined(TARGET_OS_LINUX) && TARGET_OS_LINUX
 #define STACK_BYTES_ALLOC(N, C) char *N = (char *)alloca(C)
 #else // TARGET_OS_WIN32
 #define STACK_BYTES_ALLOC(N, C) char N[C]
