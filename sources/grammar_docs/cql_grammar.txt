@@ -35,7 +35,7 @@ misc_attr_value_list ::= misc_attr_value | misc_attr_value ',' misc_attr_value_l
 misc_attr_value ::= name | any_literal | const_expr | '(' misc_attr_value_list ')' | '-' num_literal
 misc_attr ::= "@ATTRIBUTE" '(' misc_attr_key ')' | "@ATTRIBUTE" '(' misc_attr_key '=' misc_attr_value ')'
 misc_attrs ::= /* nil */ | misc_attr misc_attrs
-col_def ::= misc_attrs col_name data_type_no_options col_attrs
+col_def ::= misc_attrs col_name data_type_any col_attrs
 pk_def ::= "CONSTRAINT" name "PRIMARY" "KEY" '(' name_list ')' | "PRIMARY" "KEY" '(' name_list ')'
 opt_fk_options ::= /* nil */ | fk_options
 fk_options ::= fk_on_options | fk_deferred_options | fk_on_options fk_deferred_options
@@ -58,9 +58,8 @@ col_attrs ::= /* nil */ | "NOT" "NULL" col_attrs | "PRIMARY" "KEY" col_attrs | "
 version_annotation ::= '(' "integer-literal" ',' name ')' | '(' "integer-literal" ')'
 opt_kind ::= /* nil */ | '<' name '>'
 data_type_numeric ::= "INT" opt_kind | "INTEGER" opt_kind | "REAL" opt_kind | "LONG" opt_kind | "BOOL" opt_kind | "LONG" "INTEGER" opt_kind | "LONG" "INT" opt_kind | "LONG_INT" opt_kind | "LONG_INTEGER" opt_kind
-data_type_any ::= data_type_numeric | "TEXT" opt_kind | "BLOB" opt_kind | "OBJECT" opt_kind | "OBJECT" '<' name "CURSOR" '>'
-data_type_no_options ::= data_type_any | "ID"
-data_type_with_options ::= data_type_any | data_type_any "NOT" "NULL" | data_type_any "@SENSITIVE" | data_type_any "@SENSITIVE" "NOT" "NULL" | data_type_any "NOT" "NULL" "@SENSITIVE" | "ID"
+data_type_any ::= data_type_numeric | "TEXT" opt_kind | "BLOB" opt_kind | "OBJECT" opt_kind | "OBJECT" '<' name "CURSOR" '>' | "ID"
+data_type_with_options ::= data_type_any | data_type_any "NOT" "NULL" | data_type_any "@SENSITIVE" | data_type_any "@SENSITIVE" "NOT" "NULL" | data_type_any "NOT" "NULL" "@SENSITIVE"
 str_literal ::= "sql-string-literal" | "c-string-literal"
 num_literal ::= "integer-literal" | "long-literal" | "real-literal"
 const_expr ::= "CONST" '(' expr ')'
@@ -69,7 +68,7 @@ raise_expr ::= "RAISE" '(' "IGNORE" ')' | "RAISE" '(' "ROLLBACK" ',' expr ')' | 
 call ::= name '(' arg_list ')' opt_filter_clause | name '(' "DISTINCT" arg_list ')' opt_filter_clause
 basic_expr ::= name | name '.' name | any_literal | const_expr | '(' expr ')' | call | window_func_inv | raise_expr | '(' select_stmt ')' | "EXISTS" '(' select_stmt ')'
 math_expr ::= basic_expr | math_expr '&' math_expr | math_expr '|' math_expr | math_expr "<<" math_expr | math_expr ">>" math_expr | math_expr '+' math_expr | math_expr '-' math_expr | math_expr '*' math_expr | math_expr '/' math_expr | math_expr '%' math_expr | '-' math_expr  | math_expr "||" math_expr
-expr ::= basic_expr | expr '&' expr | expr '|' expr | expr "<<" expr | expr ">>" expr | expr '+' expr | expr '-' expr | expr '*' expr | expr '/' expr | expr '%' expr | '-' expr  | "NOT" expr | '~' expr | expr "COLLATE" name | expr "AND" expr | expr "OR" expr | expr '=' expr | expr "==" expr | expr '<' expr | expr '>' expr | expr "<>" expr | expr "!=" expr | expr ">=" expr | expr "<=" expr | expr "NOT" "IN" '(' expr_list ')' | expr "NOT" "IN" '(' select_stmt ')' | expr "IN" '(' expr_list ')' | expr "IN" '(' select_stmt ')' | expr "LIKE" expr | expr "NOT LIKE" expr | expr "MATCH" expr | expr "REGEXP" expr | expr "GLOB" expr | expr "NOT" "BETWEEN" math_expr "AND" math_expr | expr "BETWEEN" math_expr "AND" math_expr | expr "IS NOT" expr | expr "IS" expr | expr "||" expr | "CASE" expr case_list "END" | "CASE" expr case_list "ELSE" expr "END" | "CASE" case_list "END" | "CASE" case_list "ELSE" expr "END" | "CAST" '(' expr "AS" data_type_no_options ')'
+expr ::= basic_expr | expr '&' expr | expr '|' expr | expr "<<" expr | expr ">>" expr | expr '+' expr | expr '-' expr | expr '*' expr | expr '/' expr | expr '%' expr | '-' expr  | "NOT" expr | '~' expr | expr "COLLATE" name | expr "AND" expr | expr "OR" expr | expr '=' expr | expr "==" expr | expr '<' expr | expr '>' expr | expr "<>" expr | expr "!=" expr | expr ">=" expr | expr "<=" expr | expr "NOT" "IN" '(' expr_list ')' | expr "NOT" "IN" '(' select_stmt ')' | expr "IN" '(' expr_list ')' | expr "IN" '(' select_stmt ')' | expr "LIKE" expr | expr "NOT LIKE" expr | expr "MATCH" expr | expr "REGEXP" expr | expr "GLOB" expr | expr "NOT" "BETWEEN" math_expr "AND" math_expr | expr "BETWEEN" math_expr "AND" math_expr | expr "IS NOT" expr | expr "IS" expr | expr "||" expr | "CASE" expr case_list "END" | "CASE" expr case_list "ELSE" expr "END" | "CASE" case_list "END" | "CASE" case_list "ELSE" expr "END" | "CAST" '(' expr "AS" data_type_any ')'
 case_list ::= "WHEN" expr "THEN" expr | "WHEN" expr "THEN" expr case_list
 arg_expr ::= '*' | expr | shape_arguments
 arg_list ::= /* nil */ | arg_expr | arg_expr ',' arg_list

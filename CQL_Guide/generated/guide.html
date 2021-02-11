@@ -585,6 +585,7 @@
 <li><a href="#cql0364-vault_sensitive-annotation-can-only-go-on-a-procedure-that-uses-the-database">CQL0364: vault_sensitive annotation can only go on a procedure that uses the database</a></li>
 <li><a href="#cql0365-enforce_pop-used-but-there-is-nothing-to-pop">CQL0365: <span class="citation" data-cites="enforce_pop">@enforce_pop</span> used but there is nothing to pop</a></li>
 <li><a href="#cql0366-transaction-operations-disallowed-while-strict-transaction-enforcement-is-on">CQL0366: transaction operations disallowed while STRICT TRANSACTION enforcement is on</a></li>
+<li><a href="#cql0367-an-attribute-was-specified-twice-attribute_name">CQL0367: an attribute was specified twice ‘attribute_name’</a></li>
 </ul></li>
 <li><a href="#appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</a>
 <ul>
@@ -6015,7 +6016,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Wed Feb 10 13:36:41 PST 2021</p>
+<p>Snapshot as of Thu Feb 11 09:27:14 PST 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -6318,7 +6319,7 @@ misc_attrs:
   ;
 
 col_def:
-  misc_attrs col_name data_type_no_options col_attrs
+  misc_attrs col_name data_type_any col_attrs
   ;
 
 pk_def:
@@ -6468,10 +6469,6 @@ data_type_any:
   | &quot;BLOB&quot;  opt_kind
   | &quot;OBJECT&quot; opt_kind
   | &quot;OBJECT&quot; &#39;&lt;&#39; name &quot;CURSOR&quot; &#39;&gt;&#39;
-  ;
-
-data_type_no_options:
-  data_type_any
   | &quot;ID&quot;
   ;
 
@@ -6481,7 +6478,6 @@ data_type_with_options:
   | data_type_any &quot;@SENSITIVE&quot;
   | data_type_any &quot;@SENSITIVE&quot; &quot;NOT&quot; &quot;NULL&quot;
   | data_type_any &quot;NOT&quot; &quot;NULL&quot; &quot;@SENSITIVE&quot;
-  | &quot;ID&quot;
   ;
 
 str_literal:
@@ -6591,7 +6587,7 @@ expr:
   | &quot;CASE&quot; expr case_list &quot;ELSE&quot; expr &quot;END&quot;
   | &quot;CASE&quot; case_list &quot;END&quot;
   | &quot;CASE&quot; case_list &quot;ELSE&quot; expr &quot;END&quot;
-  | &quot;CAST&quot; &#39;(&#39; expr &quot;AS&quot; data_type_no_options &#39;)&#39;
+  | &quot;CAST&quot; &#39;(&#39; expr &quot;AS&quot; data_type_any &#39;)&#39;
   ;
 
 case_list:
@@ -8946,6 +8942,9 @@ set x := y;</code></pre>
 <h3 id="cql0366-transaction-operations-disallowed-while-strict-transaction-enforcement-is-on">CQL0366: transaction operations disallowed while STRICT TRANSACTION enforcement is on</h3>
 <p><code>@enforce_strict transaction</code> has been used, while active no transaction operations are allowed. Savepoints may be used. This is typically done to prevent transactions from being used in any ad hoc way because they don’t nest and typically need to be used with some “master plan” in mind.</p>
 <hr />
+<h3 id="cql0367-an-attribute-was-specified-twice-attribute_name">CQL0367: an attribute was specified twice ‘attribute_name’</h3>
+<p>In the indicated type declaration, the indicated attribute was specified twice. This is almost certainly happening because the line in question looks like this <code>declare x type_name not null;</code> but <code>type_name</code> is already <code>not null</code>.</p>
+<hr />
 <h2 id="appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</h2>
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
@@ -8954,7 +8953,7 @@ set x := y;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Wed Feb 10 13:36:41 PST 2021</p>
+<p>Snapshot as of Thu Feb 11 09:27:15 PST 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

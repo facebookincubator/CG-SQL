@@ -203,7 +203,7 @@ static void cql_reset_globals(void);
 /* expressions and types */
 %type <aval> expr basic_expr math_expr expr_list typed_name typed_names case_list call_expr_list call_expr shape_arguments
 %type <aval> name name_list opt_name_list opt_name
-%type <aval> data_type_any data_type_no_options data_type_numeric data_type_with_options opt_kind
+%type <aval> data_type_any data_type_numeric data_type_with_options opt_kind
 
 /* proc stuff */
 %type <aval> create_proc_stmt declare_func_stmt declare_proc_stmt
@@ -541,14 +541,10 @@ misc_attrs[result]:
   ;
 
 col_def:
-  misc_attrs col_name data_type_no_options col_attrs  {
-  struct ast_node *misc_attrs = $misc_attrs;
-  struct ast_node *col_name = $col_name;
-  struct ast_node *data_type_no_options = $data_type_no_options;
-  struct ast_node *col_attrs= $col_attrs;
-  struct ast_node *name_type = new_ast_col_def_name_type(col_name, data_type_no_options);
-  struct ast_node *col_def_type_attrs = new_ast_col_def_type_attrs(name_type, col_attrs);
-  $col_def = new_ast_col_def(col_def_type_attrs, misc_attrs);
+  misc_attrs col_name data_type_any col_attrs  {
+  struct ast_node *name_type = new_ast_col_def_name_type($col_name, $data_type_any);
+  struct ast_node *col_def_type_attrs = new_ast_col_def_type_attrs(name_type, $col_attrs);
+  $col_def = new_ast_col_def(col_def_type_attrs, $misc_attrs);
   }
   ;
 
@@ -717,20 +713,15 @@ data_type_any:
   | OBJECT '<' name CURSOR '>' { /* special case for boxed cursor */
     CSTR type = dup_printf("%s CURSOR", AST_STR($name));
     $data_type_any = new_ast_type_object(new_ast_str(type)); }
-  ;
-
-data_type_no_options:
-  data_type_any { $data_type_no_options = $data_type_any; }
-  | ID { $data_type_no_options = new_ast_str($ID); }
+  | ID { $data_type_any = new_ast_str($ID); }
   ;
 
 data_type_with_options:
-  data_type_any  { $data_type_with_options = $data_type_any; }
-  | data_type_any NOT NULL_  { $data_type_with_options = new_ast_notnull($data_type_any); }
-  | data_type_any AT_SENSITIVE  { $data_type_with_options = new_ast_sensitive_attr($data_type_any, NULL); }
-  | data_type_any AT_SENSITIVE NOT NULL_  { $data_type_with_options = new_ast_sensitive_attr(new_ast_notnull($data_type_any), NULL); }
-  | data_type_any NOT NULL_ AT_SENSITIVE  { $data_type_with_options = new_ast_sensitive_attr(new_ast_notnull($data_type_any), NULL); }
-  | ID { $data_type_with_options = new_ast_str($ID); }
+  data_type_any { $data_type_with_options = $data_type_any; }
+  | data_type_any NOT NULL_ { $data_type_with_options = new_ast_notnull($data_type_any); }
+  | data_type_any AT_SENSITIVE { $data_type_with_options = new_ast_sensitive_attr($data_type_any, NULL); }
+  | data_type_any AT_SENSITIVE NOT NULL_ { $data_type_with_options = new_ast_sensitive_attr(new_ast_notnull($data_type_any), NULL); }
+  | data_type_any NOT NULL_ AT_SENSITIVE { $data_type_with_options = new_ast_sensitive_attr(new_ast_notnull($data_type_any), NULL); }
   ;
 
 str_literal:
@@ -848,7 +839,7 @@ expr[result]:
   | CASE expr[cond1] case_list ELSE expr[cond2] END  { $result = new_ast_case_expr($cond1, new_ast_connector($case_list, $cond2));}
   | CASE case_list END  { $result = new_ast_case_expr(NULL, new_ast_connector($case_list, NULL));}
   | CASE case_list ELSE expr[cond] END  { $result = new_ast_case_expr(NULL, new_ast_connector($case_list, $cond));}
-  | CAST '(' expr[sexp] AS data_type_no_options ')'  { $result = new_ast_cast_expr($sexp, $data_type_no_options); }
+  | CAST '(' expr[sexp] AS data_type_any ')'  { $result = new_ast_cast_expr($sexp, $data_type_any); }
   ;
 
 case_list[result]:

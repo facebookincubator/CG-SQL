@@ -7795,7 +7795,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed Feb 10 13:36:41 PST 2021
+Snapshot as of Thu Feb 11 09:27:14 PST 2021
 
 ### Operators and Literals
 
@@ -8110,7 +8110,7 @@ misc_attrs:
   ;
 
 col_def:
-  misc_attrs col_name data_type_no_options col_attrs
+  misc_attrs col_name data_type_any col_attrs
   ;
 
 pk_def:
@@ -8260,10 +8260,6 @@ data_type_any:
   | "BLOB"  opt_kind
   | "OBJECT" opt_kind
   | "OBJECT" '<' name "CURSOR" '>'
-  ;
-
-data_type_no_options:
-  data_type_any
   | "ID"
   ;
 
@@ -8273,7 +8269,6 @@ data_type_with_options:
   | data_type_any "@SENSITIVE"
   | data_type_any "@SENSITIVE" "NOT" "NULL"
   | data_type_any "NOT" "NULL" "@SENSITIVE"
-  | "ID"
   ;
 
 str_literal:
@@ -8383,7 +8378,7 @@ expr:
   | "CASE" expr case_list "ELSE" expr "END"
   | "CASE" case_list "END"
   | "CASE" case_list "ELSE" expr "END"
-  | "CAST" '(' expr "AS" data_type_no_options ')'
+  | "CAST" '(' expr "AS" data_type_any ')'
   ;
 
 case_list:
@@ -12268,6 +12263,13 @@ with some "master plan" in mind.
 
 ----
 
+### CQL0367: an attribute was specified twice 'attribute_name'
+
+In the indicated type declaration, the indicated attribute was specified twice.  This is almost certainly happening because the line in question looks like this
+`declare x type_name not null;` but `type_name` is already `not null`.
+
+----
+
 
 
 ## Appendix 5: JSON Schema Grammar
@@ -12280,7 +12282,7 @@ with some "master plan" in mind.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Wed Feb 10 13:36:41 PST 2021
+Snapshot as of Thu Feb 11 09:27:15 PST 2021
 
 ### Rules
 
