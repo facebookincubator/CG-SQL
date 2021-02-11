@@ -998,4 +998,5 @@ Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0364: vault_sensitive annot
 Error at test/sem_test.sql:XXXX : in col_attrs_hidden : CQL0362: The HIDDEN column attribute must be the first attribute if present
 Error at test/sem_test.sql:XXXX : in col_attrs_fk : CQL0237: strict FK validation requires that some ON UPDATE option be selected for every foreign key
 Error at test/sem_test.sql:XXXX : in enforce_pop_stmt : CQL0365: @enforce_pop used but there is nothing to pop
+Error at test/sem_test.sql:XXXX : in begin_trans_stmt : CQL0366: transaction operations disallowed while STRICT TRANSACTION enforcement is on.
 semantic errors present; no code gen.

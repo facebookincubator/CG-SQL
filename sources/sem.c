@@ -164,6 +164,7 @@ struct enforcement_options {
   bool_t strict_window_func;    // no window functions may be used
   bool_t strict_procedure;      // no calls to undeclared procedures (like printf)
   bool_t strict_without_rowid;  // no WITHOUT ROWID may be used.
+  bool_t strict_transaction;    // no transactions may be started, commited, aborted etc.
 };
 
 static struct enforcement_options  enforcement;
@@ -15490,18 +15491,26 @@ static void sem_throw_stmt(ast_node *ast) {
   sem_last_statement_in_block(ast);
 }
 
+static void sem_verify_transaction_ok(ast_node *ast) {
+  if (enforcement.strict_transaction) {
+    report_error(ast, "CQL0366: transaction operations disallowed while STRICT TRANSACTION enforcement is on.", NULL);
+    record_error(ast);
+    return;
+  }
+
+  record_ok(ast);
+}
+
 // Begin trans can go anywhere, it's ok.
 static void sem_begin_trans_stmt(ast_node *ast) {
   Contract(is_ast_begin_trans_stmt(ast));
-
-  record_ok(ast);
+  sem_verify_transaction_ok(ast);
 }
 
 // Commit trans can go anywhere, it's ok.
 static void sem_commit_trans_stmt(ast_node *ast) {
   Contract(is_ast_commit_trans_stmt(ast));
-
-  record_ok(ast);
+  sem_verify_transaction_ok(ast);
 }
 
 // Rollback trans can go anywhere but if you're using the format
@@ -15510,19 +15519,24 @@ static void sem_commit_trans_stmt(ast_node *ast) {
 static void sem_rollback_trans_stmt(ast_node *ast) {
   Contract(is_ast_rollback_trans_stmt(ast));
 
-  if (ast->left) {
-    rewrite_proclit(ast->left);
-    if (is_error(ast->left)) {
-      record_error(ast);
-      return;
-    }
-    EXTRACT_STRING(name, ast->left);
-    if (!symtab_find(savepoints, name)) {
-      report_error(ast, "CQL0220: savepoint has not been mentioned yet, probably wrong", name);
-      record_error(ast);
-      return;
-    }
+  if (!ast->left) {
+    sem_verify_transaction_ok(ast);
+    return;
   }
+
+  rewrite_proclit(ast->left);
+  if (is_error(ast->left)) {
+    record_error(ast);
+    return;
+  }
+
+  EXTRACT_STRING(name, ast->left);
+  if (!symtab_find(savepoints, name)) {
+    report_error(ast, "CQL0220: savepoint has not been mentioned yet, probably wrong", name);
+    record_error(ast);
+    return;
+  }
+
   record_ok(ast);
 }
 
@@ -16222,6 +16236,10 @@ static void sem_enforcement_options(ast_node *ast, bool_t strict) {
 
     case ENFORCE_WITHOUT_ROWID:
       enforcement.strict_without_rowid = strict;
+      break;
+
+    case ENFORCE_TRANSACTION:
+      enforcement.strict_transaction = strict;
       break;
 
     default:

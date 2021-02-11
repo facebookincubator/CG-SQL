@@ -56048,3 +56048,33 @@ Error at test/sem_test.sql:XXXX : in enforce_pop_stmt : CQL0365: @enforce_pop us
 
   {enforce_pop_stmt}: err
 
+The statement ending at line XXXX
+
+@ENFORCE_STRICT TRANSACTION;
+
+  {enforce_strict_stmt}: ok
+  | {int 8}
+
+The statement ending at line XXXX
+
+BEGIN;
+
+Error at test/sem_test.sql:XXXX : in begin_trans_stmt : CQL0366: transaction operations disallowed while STRICT TRANSACTION enforcement is on.
+
+  {begin_trans_stmt}: err
+  | {int 1}
+
+The statement ending at line XXXX
+
+@ENFORCE_NORMAL TRANSACTION;
+
+  {enforce_normal_stmt}: ok
+  | {int 8}
+
+The statement ending at line XXXX
+
+BEGIN;
+
+  {begin_trans_stmt}: ok
+  | {int 1}
+

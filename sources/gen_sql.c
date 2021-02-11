@@ -3042,6 +3042,10 @@ static void gen_enforcement_options(ast_node *ast) {
       gen_printf("WITHOUT ROWID");
       break;
 
+    case ENFORCE_TRANSACTION:
+      gen_printf("TRANSACTION");
+      break;
+
     default:
       // this is all that's left
       Contract(option == ENFORCE_FK_ON_DELETE);

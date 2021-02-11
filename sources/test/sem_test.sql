@@ -14052,3 +14052,24 @@ create table fk_strict_err_2 (
 -- + Error % @enforce_pop used but there is nothing to pop
 -- +1 Error
 @enforce_pop;
+
+
+-- TEST verify strict mode
+-- + {enforce_strict_stmt}: ok
+-- - Error
+@enforce_strict transaction;
+
+-- + Error % transaction operations disallowed while STRICT TRANSACTION enforcement is on.
+-- +1 Error
+-- + {begin_trans_stmt}: err
+begin transaction;
+
+-- TEST verify back to normal mode
+-- + {enforce_normal_stmt}: ok
+-- - Error
+@enforce_normal transaction;
+
+-- TEST transactions ok again
+-- + {begin_trans_stmt}: ok
+-- - Error
+begin transaction;
