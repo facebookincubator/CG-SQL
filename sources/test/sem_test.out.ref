@@ -54116,6 +54116,78 @@ DECLARE my_type TYPE TEXT @SENSITIVE;
 
 The statement ending at line XXXX
 
+DECLARE redundant_sensitive TEXT @SENSITIVE @SENSITIVE;
+
+Error at test/sem_test.sql:XXXX : in sensitive_attr : CQL0367: an attribute was specified twice '@sensitive'
+
+  {declare_vars_type}: err
+  | {name_list}
+  | | {name redundant_sensitive}
+  | {sensitive_attr}: err
+    | {sensitive_attr}: text sensitive
+      | {type_text}: text
+
+The statement ending at line XXXX
+
+DECLARE adding_notnull TEXT @SENSITIVE NOT NULL;
+
+  {declare_vars_type}: text notnull sensitive
+  | {name_list}: adding_notnull: text notnull variable sensitive
+  | | {name adding_notnull}: adding_notnull: text notnull variable sensitive
+  | {notnull}: text notnull sensitive
+    | {sensitive_attr}: text sensitive
+      | {type_text}: text
+
+The statement ending at line XXXX
+
+DECLARE FUNC adding_attr_to_func_redundant () CREATE TEXT @SENSITIVE @SENSITIVE;
+
+Error at test/sem_test.sql:XXXX : in sensitive_attr : CQL0367: an attribute was specified twice '@sensitive'
+
+  {declare_func_stmt}: err
+  | {name adding_attr_to_func_redundant}
+  | {func_params_return}
+    | {create_data_type}: err
+      | {sensitive_attr}: err
+        | {sensitive_attr}: text sensitive
+          | {type_text}: text
+
+The statement ending at line XXXX
+
+DECLARE text_nn TYPE TEXT NOT NULL;
+
+  {declare_named_type}: text notnull
+  | {name text_nn}: text notnull
+  | {notnull}: text notnull
+    | {type_text}: text
+
+The statement ending at line XXXX
+
+DECLARE nn_var_redundant TEXT NOT NULL NOT NULL @SENSITIVE;
+
+Error at test/sem_test.sql:XXXX : in notnull : CQL0367: an attribute was specified twice 'not null'
+
+  {declare_vars_type}: err
+  | {name_list}
+  | | {name nn_var_redundant}
+  | {sensitive_attr}: err
+    | {notnull}: err
+      | {notnull}: text notnull
+        | {type_text}: text
+
+The statement ending at line XXXX
+
+DECLARE nn_var_sens TEXT NOT NULL @SENSITIVE;
+
+  {declare_vars_type}: text notnull sensitive
+  | {name_list}: nn_var_sens: text notnull variable sensitive
+  | | {name nn_var_sens}: nn_var_sens: text notnull variable sensitive
+  | {sensitive_attr}: text notnull sensitive
+    | {notnull}: text notnull
+      | {type_text}: text
+
+The statement ending at line XXXX
+
 DECLARE my_type_1 TYPE TEXT @SENSITIVE;
 
   {declare_named_type}: text sensitive
@@ -54589,7 +54661,7 @@ Error at test/sem_test.sql:XXXX : in create_data_type : CQL0361: Return data typ
   | {name maybe_create_func_int}
   | {func_params_return}
     | {create_data_type}: err
-      | {type_int}
+      | {type_int}: integer
 
 The statement ending at line XXXX
 
@@ -54601,7 +54673,7 @@ Error at test/sem_test.sql:XXXX : in create_data_type : CQL0361: Return data typ
   | {name maybe_create_func_bool}
   | {func_params_return}
     | {create_data_type}: err
-      | {type_bool}
+      | {type_bool}: bool
 
 The statement ending at line XXXX
 
@@ -54613,9 +54685,9 @@ Error at test/sem_test.sql:XXXX : in create_data_type : CQL0361: Return data typ
   | {name maybe_create_func_long}
   | {func_params_return}
     | {create_data_type}: err
-      | {sensitive_attr}
-        | {notnull}
-          | {type_long}
+      | {sensitive_attr}: longint notnull sensitive
+        | {notnull}: longint notnull
+          | {type_long}: longint
 
 The statement ending at line XXXX
 

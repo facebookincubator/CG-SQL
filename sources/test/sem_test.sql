@@ -13331,6 +13331,44 @@ create table with_bogus_check_expr(
 -- - Error
 declare my_type type text @sensitive;
 
+-- TEST: can't add sensitive again
+-- + Error % an attribute was specified twice '@sensitive'
+-- +1 Error
+declare redundant_sensitive my_type @sensitive;
+
+-- TEST: ok to add not null, it's not there already
+-- verify the rewrite and also the type info
+-- + DECLARE adding_notnull TEXT @SENSITIVE NOT NULL;
+-- + {declare_vars_type}: text notnull sensitive
+-- + {name_list}: adding_notnull: text notnull variable sensitive
+-- - Error
+declare adding_notnull my_type not null;
+
+-- TEST: verify the check in the context of func create
+-- + {declare_func_stmt}: err
+-- + Error % an attribute was specified twice '@sensitive'
+-- +1 Error
+declare function adding_attr_to_func_redundant() create my_type @sensitive;
+
+
+-- TEST: just verify this is correct
+-- + {declare_named_type}: text notnull
+-- + {name text_nn}: text notnull
+-- - Error
+declare text_nn type text not null;
+
+-- TEST: try to add not null more than once, force the error inside of sensitive ast
+-- + {declare_vars_type}: err
+-- + Error % an attribute was specified twice 'not null'
+-- +1 Error
+declare nn_var_redundant text_nn not null @sensitive;
+
+-- TEST: ok to add @sensitive
+-- + {declare_vars_type}: text notnull sensitive
+-- + {name_list}: nn_var_sens: text notnull variable sensitive
+-- - Error
+declare nn_var_sens text_nn @sensitive;
+
 -- TEST: declare type using another declared type
 -- + DECLARE my_type_1 TYPE TEXT @SENSITIVE;
 -- - Error

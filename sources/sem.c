@@ -2279,22 +2279,20 @@ static void sem_data_type_var(ast_node *ast) {
   if (is_ast_create_data_type(ast)) {
     ast_node *data_type = ast->left;
 
-    // find the real type of the data type to validate it.
-    ast_node *real_data_type = data_type;
-    while (is_ast_notnull(real_data_type) || is_ast_sensitive_attr(real_data_type)) {
-      real_data_type = real_data_type->left;
-    }
-
-    // The create data type is restricted to text, blob, object only.
-    if (!is_ast_type_text(real_data_type) &&
-        !is_ast_type_blob(real_data_type) &&
-        !is_ast_type_object(real_data_type)) {
-      report_error(ast, "CQL0361: Return data type in a create function declaration can only be text, blob or object", NULL);
+    sem_data_type_var(data_type);
+    if (is_error(data_type)) {
       record_error(ast);
       return;
     }
 
-    sem_data_type_var(data_type);
+    sem_t core_type = core_type_of(data_type->sem->sem_type);
+
+    // The create data type is restricted to text, blob, object only.
+    if (core_type != SEM_TYPE_TEXT && core_type != SEM_TYPE_BLOB && core_type != SEM_TYPE_OBJECT) {
+      report_error(ast, "CQL0361: Return data type in a create function declaration can only be text, blob or object", NULL);
+      record_error(ast);
+      return;
+    }
 
     // Create a node for me using my child's type but adding func create.
     ast->sem = new_sem(SEM_TYPE_CREATE_FUNC | data_type->sem->sem_type);
@@ -2306,6 +2304,13 @@ static void sem_data_type_var(ast_node *ast) {
     EXTRACT_ANY_NOTNULL(data_type, ast->left);
     sem_data_type_var(data_type);
 
+    // rico
+    if (data_type->sem->sem_type & SEM_TYPE_NOTNULL) {
+      report_error(ast, "CQL0367: an attribute was specified twice", "not null");
+      record_error(ast);
+      return;
+    }
+
     // Create a node for me using my child's type but adding not null.
     ast->sem = new_sem(SEM_TYPE_NOTNULL | data_type->sem->sem_type);
     // copy object type to the sem if applicable. It's used to rewrite
@@ -2315,6 +2320,16 @@ static void sem_data_type_var(ast_node *ast) {
   else if (is_ast_sensitive_attr(ast)) {
     EXTRACT_ANY_NOTNULL(data_type, ast->left);
     sem_data_type_var(data_type);
+    if (is_error(data_type)) {
+      record_error(ast);
+      return;
+    }
+
+    if (data_type->sem->sem_type & SEM_TYPE_SENSITIVE) {
+      report_error(ast, "CQL0367: an attribute was specified twice", "@sensitive");
+      record_error(ast);
+      return;
+    }
 
     // Create a node for me using my child's type but adding not null.
     ast->sem = new_sem(SEM_TYPE_SENSITIVE | data_type->sem->sem_type);
