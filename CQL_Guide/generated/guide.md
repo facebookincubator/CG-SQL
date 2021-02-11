@@ -740,7 +740,7 @@ There are a number of literal objects that may be expressed in CQL.  These are a
 * A double quoted string is a C style string literal
   * the usual simple C escape sequences are supported
   * the \xNN form for embedded hex characters is supported, however
-  * the \0NNN octal form is not supported, and 
+  * the \0NNN octal form is not supported, and
   * embedded nulls in string literals (\0 or \0x00) are not supported (you must use blobs such cases)
 * a single quoted string is a SQL style string literal
   * No escape sequences are supported other than `''` to indicate a single quote character (this is just like normal SQLite)
@@ -7775,7 +7775,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Feb  9 16:16:37 PST 2021
+Snapshot as of Wed Feb 10 13:12:56 PST 2021
 
 ### Operators and Literals
 
@@ -7826,7 +7826,7 @@ SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
 CAST WITH RECURSIVE REPLACE IGNORE ADD COLUMN RENAME ALTER
 AT_ECHO AT_CREATE AT_RECREATE AT_DELETE AT_SCHEMA_UPGRADE_VERSION AT_PREVIOUS_SCHEMA AT_SCHEMA_UPGRADE_SCRIPT
 AT_PROC AT_FILE AT_ATTRIBUTE AT_SENSITIVE DEFERRED NOT_DEFERRABLE DEFERRABLE IMMEDIATE EXCLUSIVE RESTRICT ACTION INITIALLY NO
-BEFORE AFTER INSTEAD OF FOR_EACH_ROW EXISTS RAISE FAIL ABORT AT_ENFORCE_STRICT AT_ENFORCE_NORMAL
+BEFORE AFTER INSTEAD OF FOR_EACH_ROW EXISTS RAISE FAIL ABORT AT_ENFORCE_STRICT AT_ENFORCE_NORMAL AT_ENFORCE_RESET AT_ENFORCE_PUSH AT_ENFORCE_POP
 AT_BEGIN_SCHEMA_REGION AT_END_SCHEMA_REGION
 AT_DECLARE_SCHEMA_REGION AT_DECLARE_DEPLOYABLE_REGION AT_SCHEMA_AD_HOC_MIGRATION PRIVATE
 ```
@@ -7911,6 +7911,9 @@ any_stmt: select_stmt
   | previous_schema_stmt
   | enforce_strict_stmt
   | enforce_normal_stmt
+  | enforce_reset_stmt
+  | enforce_push_stmt
+  | enforce_pop_stmt
   | declare_schema_region_stmt
   | declare_deployable_region_stmt
   | begin_schema_region_stmt
@@ -9120,6 +9123,7 @@ enforcement_options:
   | "WINDOW" function
   | procedure
   | "WITHOUT" "ROWID"
+  | "TRANSACTION"
   ;
 
 enforce_strict_stmt:
@@ -9128,6 +9132,18 @@ enforce_strict_stmt:
 
 enforce_normal_stmt:
   "@ENFORCE_NORMAL" enforcement_options
+  ;
+
+enforce_reset_stmt:
+  "@ENFORCE_RESET"
+  ;
+
+enforce_push_stmt:
+  "@ENFORCE_PUSH"
+  ;
+
+enforce_pop_stmt:
+  "@ENFORCE_POP"
   ;
 
 ```
@@ -12216,6 +12232,22 @@ vault_sensitive attribution only allow names. Integer, string literal, c string 
 
 The named procedure has the `vault_sensitive` annotation to automatically encode sensitive value in the result set. Encoding value require the database, but the procedure in question doesn't even use the database at all.  This annotation is therefore useless.
 
+----
+
+### CQL0365: @enforce_pop used but there is nothing to pop
+
+Each `@enforce_pop` should match an `@enforce_push`, but there is nothing to pop on the stack now.
+
+----
+
+### CQL0366: transaction operations disallowed while STRICT TRANSACTION enforcement is on
+
+`@enforce_strict transaction` has been used, while active no transaction operations are allowed.  Savepoints may be used.  This is
+typically done to prevent transactions from being used in any ad hoc way because they don't nest and typically need to be used
+with some "master plan" in mind.
+
+----
+
 
 
 ## Appendix 5: JSON Schema Grammar
@@ -12228,7 +12260,7 @@ The named procedure has the `vault_sensitive` annotation to automatically encode
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue Feb  9 16:16:37 PST 2021
+Snapshot as of Wed Feb 10 13:12:57 PST 2021
 
 ### Rules
 

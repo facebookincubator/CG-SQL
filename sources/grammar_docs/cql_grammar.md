@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Feb  9 16:16:37 PST 2021
+Snapshot as of Wed Feb 10 13:12:56 PST 2021
 
 ### Operators and Literals
 
@@ -64,7 +64,7 @@ SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
 CAST WITH RECURSIVE REPLACE IGNORE ADD COLUMN RENAME ALTER
 AT_ECHO AT_CREATE AT_RECREATE AT_DELETE AT_SCHEMA_UPGRADE_VERSION AT_PREVIOUS_SCHEMA AT_SCHEMA_UPGRADE_SCRIPT
 AT_PROC AT_FILE AT_ATTRIBUTE AT_SENSITIVE DEFERRED NOT_DEFERRABLE DEFERRABLE IMMEDIATE EXCLUSIVE RESTRICT ACTION INITIALLY NO
-BEFORE AFTER INSTEAD OF FOR_EACH_ROW EXISTS RAISE FAIL ABORT AT_ENFORCE_STRICT AT_ENFORCE_NORMAL
+BEFORE AFTER INSTEAD OF FOR_EACH_ROW EXISTS RAISE FAIL ABORT AT_ENFORCE_STRICT AT_ENFORCE_NORMAL AT_ENFORCE_RESET AT_ENFORCE_PUSH AT_ENFORCE_POP
 AT_BEGIN_SCHEMA_REGION AT_END_SCHEMA_REGION
 AT_DECLARE_SCHEMA_REGION AT_DECLARE_DEPLOYABLE_REGION AT_SCHEMA_AD_HOC_MIGRATION PRIVATE
 ```
@@ -149,6 +149,9 @@ any_stmt: select_stmt
   | previous_schema_stmt
   | enforce_strict_stmt
   | enforce_normal_stmt
+  | enforce_reset_stmt
+  | enforce_push_stmt
+  | enforce_pop_stmt
   | declare_schema_region_stmt
   | declare_deployable_region_stmt
   | begin_schema_region_stmt
@@ -1358,6 +1361,7 @@ enforcement_options:
   | "WINDOW" function
   | procedure
   | "WITHOUT" "ROWID"
+  | "TRANSACTION"
   ;
 
 enforce_strict_stmt:
@@ -1366,6 +1370,18 @@ enforce_strict_stmt:
 
 enforce_normal_stmt:
   "@ENFORCE_NORMAL" enforcement_options
+  ;
+
+enforce_reset_stmt:
+  "@ENFORCE_RESET"
+  ;
+
+enforce_push_stmt:
+  "@ENFORCE_PUSH"
+  ;
+
+enforce_pop_stmt:
+  "@ENFORCE_POP"
   ;
 
 ```

@@ -29,6 +29,9 @@ s/[[:<:]]AT_DUMMY_NULLABLES[[:>:]]/"@DUMMY_NULLABLES"/g
 s/[[:<:]]AT_DUMMY_SEED[[:>:]]/"@DUMMY_SEED"/g
 s/[[:<:]]AT_ECHO[[:>:]]/"@ECHO"/g
 s/[[:<:]]AT_END_SCHEMA_REGION[[:>:]]/"@END_SCHEMA_REGION"/g
+s/[[:<:]]AT_ENFORCE_RESET[[:>:]]/"@ENFORCE_RESET"/g
+s/[[:<:]]AT_ENFORCE_PUSH[[:>:]]/"@ENFORCE_PUSH"/g
+s/[[:<:]]AT_ENFORCE_POP[[:>:]]/"@ENFORCE_POP"/g
 s/[[:<:]]AT_ENFORCE_NORMAL[[:>:]]/"@ENFORCE_NORMAL"/g
 s/[[:<:]]AT_ENFORCE_STRICT[[:>:]]/"@ENFORCE_STRICT"/g
 s/[[:<:]]AT_FILE[[:>:]]/"@FILE"/g

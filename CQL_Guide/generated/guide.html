@@ -583,6 +583,8 @@
 <li><a href="#cql0362-the-hidden-column-attribute-must-be-the-first-attribute-if-present">CQL0362: The HIDDEN column attribute must be the first attribute if present</a></li>
 <li><a href="#cql0363-all-arguments-must-be-names-vault_sensitive">CQL0363: all arguments must be names ‘vault_sensitive’</a></li>
 <li><a href="#cql0364-vault_sensitive-annotation-can-only-go-on-a-procedure-that-uses-the-database">CQL0364: vault_sensitive annotation can only go on a procedure that uses the database</a></li>
+<li><a href="#cql0365-enforce_pop-used-but-there-is-nothing-to-pop">CQL0365: <span class="citation" data-cites="enforce_pop">@enforce_pop</span> used but there is nothing to pop</a></li>
+<li><a href="#cql0366-transaction-operations-disallowed-while-strict-transaction-enforcement-is-on">CQL0366: transaction operations disallowed while STRICT TRANSACTION enforcement is on</a></li>
 </ul></li>
 <li><a href="#appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</a>
 <ul>
@@ -5996,7 +5998,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Tue Feb 9 16:16:37 PST 2021</p>
+<p>Snapshot as of Wed Feb 10 13:12:56 PST 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -6038,7 +6040,7 @@ SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
 CAST WITH RECURSIVE REPLACE IGNORE ADD COLUMN RENAME ALTER
 AT_ECHO AT_CREATE AT_RECREATE AT_DELETE AT_SCHEMA_UPGRADE_VERSION AT_PREVIOUS_SCHEMA AT_SCHEMA_UPGRADE_SCRIPT
 AT_PROC AT_FILE AT_ATTRIBUTE AT_SENSITIVE DEFERRED NOT_DEFERRABLE DEFERRABLE IMMEDIATE EXCLUSIVE RESTRICT ACTION INITIALLY NO
-BEFORE AFTER INSTEAD OF FOR_EACH_ROW EXISTS RAISE FAIL ABORT AT_ENFORCE_STRICT AT_ENFORCE_NORMAL
+BEFORE AFTER INSTEAD OF FOR_EACH_ROW EXISTS RAISE FAIL ABORT AT_ENFORCE_STRICT AT_ENFORCE_NORMAL AT_ENFORCE_RESET AT_ENFORCE_PUSH AT_ENFORCE_POP
 AT_BEGIN_SCHEMA_REGION AT_END_SCHEMA_REGION
 AT_DECLARE_SCHEMA_REGION AT_DECLARE_DEPLOYABLE_REGION AT_SCHEMA_AD_HOC_MIGRATION PRIVATE</code></pre>
 <h3 id="rules">Rules</h3>
@@ -6120,6 +6122,9 @@ any_stmt: select_stmt
   | previous_schema_stmt
   | enforce_strict_stmt
   | enforce_normal_stmt
+  | enforce_reset_stmt
+  | enforce_push_stmt
+  | enforce_pop_stmt
   | declare_schema_region_stmt
   | declare_deployable_region_stmt
   | begin_schema_region_stmt
@@ -7329,6 +7334,7 @@ enforcement_options:
   | &quot;WINDOW&quot; function
   | procedure
   | &quot;WITHOUT&quot; &quot;ROWID&quot;
+  | &quot;TRANSACTION&quot;
   ;
 
 enforce_strict_stmt:
@@ -7337,6 +7343,18 @@ enforce_strict_stmt:
 
 enforce_normal_stmt:
   &quot;@ENFORCE_NORMAL&quot; enforcement_options
+  ;
+
+enforce_reset_stmt:
+  &quot;@ENFORCE_RESET&quot;
+  ;
+
+enforce_push_stmt:
+  &quot;@ENFORCE_PUSH&quot;
+  ;
+
+enforce_pop_stmt:
+  &quot;@ENFORCE_POP&quot;
   ;
 </code></pre>
 <h2 id="appendix-3-control-directives">Appendix 3: Control Directives</h2>
@@ -8904,6 +8922,13 @@ set x := y;</code></pre>
 <hr />
 <h3 id="cql0364-vault_sensitive-annotation-can-only-go-on-a-procedure-that-uses-the-database">CQL0364: vault_sensitive annotation can only go on a procedure that uses the database</h3>
 <p>The named procedure has the <code>vault_sensitive</code> annotation to automatically encode sensitive value in the result set. Encoding value require the database, but the procedure in question doesn’t even use the database at all. This annotation is therefore useless.</p>
+<hr />
+<h3 id="cql0365-enforce_pop-used-but-there-is-nothing-to-pop">CQL0365: <span class="citation" data-cites="enforce_pop">@enforce_pop</span> used but there is nothing to pop</h3>
+<p>Each <code>@enforce_pop</code> should match an <code>@enforce_push</code>, but there is nothing to pop on the stack now.</p>
+<hr />
+<h3 id="cql0366-transaction-operations-disallowed-while-strict-transaction-enforcement-is-on">CQL0366: transaction operations disallowed while STRICT TRANSACTION enforcement is on</h3>
+<p><code>@enforce_strict transaction</code> has been used, while active no transaction operations are allowed. Savepoints may be used. This is typically done to prevent transactions from being used in any ad hoc way because they don’t nest and typically need to be used with some “master plan” in mind.</p>
+<hr />
 <h2 id="appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</h2>
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
@@ -8912,7 +8937,7 @@ set x := y;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Tue Feb 9 16:16:37 PST 2021</p>
+<p>Snapshot as of Wed Feb 10 13:12:57 PST 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 
