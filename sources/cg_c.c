@@ -2958,7 +2958,7 @@ static void cg_create_proc_stmt(ast_node *ast) {
 
   if (result_set_proc) {
     // Because of control flow it's possible that we never actually ran a select statement
-    // even if there were no errors.  Or maybe we caught the error.  In any case if we 
+    // even if there were no errors.  Or maybe we caught the error.  In any case if we
     // are not producing an error then we have to produce an empty result set to go with it.
     bprintf(cg_declarations_output, "  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);\n");
     empty_statement_needed = false;
@@ -4953,6 +4953,36 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
     cg_line_directive_min(stmt, line_out);
   }
 
+  CHARBUF_OPEN(tmp_header);
+  CHARBUF_OPEN(tmp_declarations);
+  CHARBUF_OPEN(tmp_main);
+  CHARBUF_OPEN(tmp_scratch);
+
+  charbuf *header_saved = cg_header_output;
+  charbuf *declarations_saved = cg_declarations_output;
+  charbuf *main_saved = cg_main_output;
+  charbuf *scratch_saved = cg_scratch_vars_output;
+
+  // Redirect all output to the temporary buffers so we can see how big it is
+  // The comments need to go before this, so we save the output then check it
+  // then emit the generated code.
+
+  cg_main_output = &tmp_main;
+  cg_declarations_output = &tmp_declarations;
+  cg_header_output = &tmp_header;
+  cg_scratch_vars_output = &tmp_scratch;
+
+  // These are all the statements there are, we have to find it in this table
+  // or else someone added a new statement and it isn't supported yet.
+  Invariant(entry);
+  ((void (*)(ast_node*))entry->val)(stmt);
+
+  // safe to put it back now
+  cg_main_output = main_saved;
+  cg_header_output = header_saved;
+  cg_declarations_output = declarations_saved;
+  cg_scratch_vars_output = scratch_saved;
+
   // Emit a helpful comment for top level statements.
   if (stmt_nesting_level == 1) {
     charbuf *out = cg_main_output;
@@ -4961,11 +4991,15 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
     }
 
     bool_t skip_comment = false;
-    skip_comment |= is_ast_declare_func_stmt(stmt);
-    skip_comment |= is_ast_declare_select_func_stmt(stmt);
-    skip_comment |= is_ast_emit_enums_stmt(stmt);
+
+    // don't contaminate echo output with comments except in test, where we need it for verification
     skip_comment |= (!options.test && is_ast_echo_stmt(stmt));
-    skip_comment |= entry->val == cg_no_op;
+
+    // If no code gen in the main buffer, don't add a comment, that will force a global proc
+    // We used to have all kinds of special cases to detect the statements that don't generate code
+    // and that was a bug farm.  So now instead we just look to see if it made code.  If it didn't make
+    // code we will not force the global proc to exist because of the stupid comment...
+    skip_comment |= (out == cg_main_output && tmp_main.used == 1);
 
     // put a line marker in the header file in case we want a test suite that verifies that
     if (options.test) {
@@ -4990,10 +5024,16 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
     }
   }
 
-  // These are all the statements there are, we have to find it in this table
-  // or else someone added a new statement and it isn't supported yet.
-  Invariant(entry);
-  ((void (*)(ast_node*))entry->val)(stmt);
+  // and finally write what we saved
+  bprintf(cg_main_output, "%s", tmp_main.ptr);
+  bprintf(cg_header_output, "%s", tmp_header.ptr);
+  bprintf(cg_scratch_vars_output, "%s", tmp_scratch.ptr);
+  bprintf(cg_declarations_output, "%s", tmp_declarations.ptr);
+
+  CHARBUF_CLOSE(tmp_scratch);
+  CHARBUF_CLOSE(tmp_main);
+  CHARBUF_CLOSE(tmp_declarations);
+  CHARBUF_CLOSE(tmp_header);
 }
 
 // Emit the nested statements with one more level of indenting.

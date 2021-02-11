@@ -1014,9 +1014,9 @@ END;
 // export: DECLARE PROC xyzzy_test () USING TRANSACTION;
 CQL_WARN_UNUSED cql_code xyzzy_test(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
-  sqlite3_stmt *xyzzy_cursor_stmt = NULL;
   cql_nullable_int32 _tmp_n_int_1;
   cql_set_null(_tmp_n_int_1);
+  sqlite3_stmt *xyzzy_cursor_stmt = NULL;
   cql_bool _xyzzy_cursor_has_row_ = 0;
 
   cql_set_notnull(_tmp_n_int_1, 1);
@@ -3008,8 +3008,8 @@ typedef struct fetch_values_dummy_C_row {
 #define fetch_values_dummy_C_refs_offset cql_offsetof(fetch_values_dummy_C_row, name) // count = 1
 void fetch_values_dummy(void) {
   fetch_values_dummy_C_row C = { ._refs_count_ = 1, ._refs_offset_ = fetch_values_dummy_C_refs_offset };
-  cql_int32 _seed_ = 0;
   cql_string_ref _tmp_text_0 = NULL;
+  cql_int32 _seed_ = 0;
 
   _seed_ = 123;
   C._has_row_ = 1;
@@ -8216,12 +8216,6 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
   
   /*
-  OPEN basic_cursor;
-  */
-  
-  // The statement ending at line XXXX
-  
-  /*
   FETCH basic_cursor INTO col1, col2;
   */
   _rc_ = sqlite3_step(basic_cursor_stmt);
@@ -8263,12 +8257,6 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, arg2,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, arg1);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
-  // The statement ending at line XXXX
-  
-  /*
-  OPEN exchange_cursor;
-  */
   
   // The statement ending at line XXXX
   
