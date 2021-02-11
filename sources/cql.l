@@ -187,6 +187,8 @@ BLOB                         { return BLOB; }
 UPSERT                       { return UPSERT; }
 STATEMENT                    { return STATEMENT; }
 TYPE                         { return TYPE; }
+@ENFORCE_PUSH                { return AT_ENFORCE_PUSH; }
+@ENFORCE_POP                 { return AT_ENFORCE_POP; }
 @ENFORCE_STRICT              { return AT_ENFORCE_STRICT; }
 @ENFORCE_NORMAL              { return AT_ENFORCE_NORMAL; }
 @SENSITIVE                   { return AT_SENSITIVE; }
