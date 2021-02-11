@@ -3884,10 +3884,30 @@ This is important because older schema migration procedures might still refer to
 old columns.  Those columns truly exist at that schema version.
 
 #### The `@ENFORCE_STRICT` Statement
-Switch to strict mode.  Presently this is only supported for `FOREIGN KEY` verification.  In strict mode every foreign key must have some delete/update policy such as `ON DELETE CASCADE`.  Any policy suffices.
+Switch to strict mode for the indicated item, the choices are
+
+  * "FOREIGN KEY ON UPDATE" indicates there must be some "ON UPDATE" action in every FK
+  * "FOREIGN KEY ON DELETE" indicates there must be some "ON DELETE" action in every FK
+  * "JOIN" indicates only ANSI style joins may be used, "from A,B" is rejected
+  * "UPSERT" indicates no upsert statement may be used (probably targeting downlevel SQLite)
+  * "WINDOW FUNCTION" incdicates no window functions may be used (probably targeting downlevel SQLite)
+  * "PROCEDURE" indicates no calls to undeclared procedures (like loose printf calls)
+  * "WITHOUT ROWID" inciates WITHOUT ROWID may not be used
+  * "TRANSACTION" indicates no transactions may be started, committed, or aborted
+
+See the grammar details for exact syntax.
 
 #### The `@ENFORCE_NORMAL` Statement
-Turn off strict enforcement (currently only affects `FOREIGN KEY` clauses).
+Turn off strict enforcement for the indicated item.
+
+#### The `@ENFORCE_PUSH` Statement
+Push the current strict settings onto the enforcement stack.  This does not change the current settings.
+
+#### The `@ENFORCE_POP` Statement
+Pop the previous current strict settings from the enforcement stack.
+
+#### The `@ENFORCE_RESET` Statement
+Turns off all the strict modes.  Best used immediately after `@ENFORCE_PUSH`.
 
 #### The `@DECLARE_SCHEMA_REGION` Statement
 A schema region is an partitioning of the schema such that it
@@ -7775,7 +7795,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed Feb 10 13:12:56 PST 2021
+Snapshot as of Wed Feb 10 13:36:41 PST 2021
 
 ### Operators and Literals
 
@@ -12260,7 +12280,7 @@ with some "master plan" in mind.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Wed Feb 10 13:12:57 PST 2021
+Snapshot as of Wed Feb 10 13:36:41 PST 2021
 
 ### Rules
 

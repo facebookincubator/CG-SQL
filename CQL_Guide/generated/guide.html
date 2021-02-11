@@ -2998,9 +2998,26 @@ if (C_._has_row_) cql_bytebuf_append(&amp;_rows_, (const void *)&amp;C_, sizeof(
 <h4 id="the-schema_upgrade_version-statement">The <code>@SCHEMA_UPGRADE_VERSION</code> Statement</h4>
 <p>For sql stored procedures that are supposed to update previous schema versions you can use this attribute to put CQL into that mindset. This will make the columns hidden for the version in question rather than the current version. This is important because older schema migration procedures might still refer to old columns. Those columns truly exist at that schema version.</p>
 <h4 id="the-enforce_strict-statement">The <code>@ENFORCE_STRICT</code> Statement</h4>
-<p>Switch to strict mode. Presently this is only supported for <code>FOREIGN KEY</code> verification. In strict mode every foreign key must have some delete/update policy such as <code>ON DELETE CASCADE</code>. Any policy suffices.</p>
+<p>Switch to strict mode for the indicated item, the choices are</p>
+<ul>
+<li>“FOREIGN KEY ON UPDATE” indicates there must be some “ON UPDATE” action in every FK</li>
+<li>“FOREIGN KEY ON DELETE” indicates there must be some “ON DELETE” action in every FK</li>
+<li>“JOIN” indicates only ANSI style joins may be used, “from A,B” is rejected</li>
+<li>“UPSERT” indicates no upsert statement may be used (probably targeting downlevel SQLite)</li>
+<li>“WINDOW FUNCTION” incdicates no window functions may be used (probably targeting downlevel SQLite)</li>
+<li>“PROCEDURE” indicates no calls to undeclared procedures (like loose printf calls)</li>
+<li>“WITHOUT ROWID” inciates WITHOUT ROWID may not be used</li>
+<li>“TRANSACTION” indicates no transactions may be started, committed, or aborted</li>
+</ul>
+<p>See the grammar details for exact syntax.</p>
 <h4 id="the-enforce_normal-statement">The <code>@ENFORCE_NORMAL</code> Statement</h4>
-<p>Turn off strict enforcement (currently only affects <code>FOREIGN KEY</code> clauses).</p>
+<p>Turn off strict enforcement for the indicated item.</p>
+<h4 id="the-enforce_push-statement">The <code>@ENFORCE_PUSH</code> Statement</h4>
+<p>Push the current strict settings onto the enforcement stack. This does not change the current settings.</p>
+<h4 id="the-enforce_pop-statement">The <code>@ENFORCE_POP</code> Statement</h4>
+<p>Pop the previous current strict settings from the enforcement stack.</p>
+<h4 id="the-enforce_reset-statement">The <code>@ENFORCE_RESET</code> Statement</h4>
+<p>Turns off all the strict modes. Best used immediately after <code>@ENFORCE_PUSH</code>.</p>
 <h4 id="the-declare_schema_region-statement">The <code>@DECLARE_SCHEMA_REGION</code> Statement</h4>
 <p>A schema region is an partitioning of the schema such that it only uses objects in the same partition or one of its declared dependencies. One schema region may be upgraded independently from any others (assuming they happen such that dependents are done first). Here we validate: * the region name is unique * the dependencies (if any) are unique and exist * the directive is not inside a procedure</p>
 <h4 id="the-begin_schema_region-statement">The <code>@BEGIN_SCHEMA_REGION</code> Statement</h4>
@@ -5998,7 +6015,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Wed Feb 10 13:12:56 PST 2021</p>
+<p>Snapshot as of Wed Feb 10 13:36:41 PST 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -8937,7 +8954,7 @@ set x := y;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Wed Feb 10 13:12:57 PST 2021</p>
+<p>Snapshot as of Wed Feb 10 13:36:41 PST 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 
