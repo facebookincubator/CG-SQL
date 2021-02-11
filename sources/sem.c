@@ -168,6 +168,13 @@ struct enforcement_options {
 
 static struct enforcement_options  enforcement;
 
+typedef struct enforcement_stack_record {
+  struct enforcement_stack_record *next;
+  struct enforcement_options options;
+} enforcement_stack_record;
+
+static struct enforcement_stack_record *enforcement_stack;
+
 typedef struct dummy_info {
   CSTR name;                    // the column name
   sem_t sem_type_col;           // its type
@@ -16263,6 +16270,33 @@ static void sem_enforce_normal_stmt(ast_node * ast) {
   record_ok(ast);
 }
 
+// save current enforcement options
+static void sem_enforce_push_stmt(ast_node *ast) {
+  Contract(is_ast_enforce_push_stmt(ast));
+  // this item will be freed with the pool
+  enforcement_stack_record *item = _ast_pool_new(enforcement_stack_record);
+  item->options = enforcement;
+  item->next = enforcement_stack;
+  enforcement_stack = item;
+  record_ok(ast);
+}
+
+// restore previous options
+static void sem_enforce_pop_stmt(ast_node *ast) {
+  Contract(is_ast_enforce_pop_stmt(ast));
+  enforcement_stack_record *item = enforcement_stack;
+
+  if (!item) {
+    report_error(ast, "CQL0365: @enforce_pop used but there is nothing to pop", NULL);
+    record_error(ast);
+    return;
+  }
+
+  enforcement = item->options;
+  enforcement_stack = item->next;
+  record_ok(ast);
+}
+
 // Ensure that the schema directives are not inside of a procedure
 static bool_t verify_schema_region_out_of_proc(ast_node *ast) {
   if (current_proc) {
@@ -16942,6 +16976,8 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(close_stmt);
   STMT_INIT(enforce_normal_stmt);
   STMT_INIT(enforce_strict_stmt);
+  STMT_INIT(enforce_push_stmt);
+  STMT_INIT(enforce_pop_stmt);
   STMT_INIT(declare_schema_region_stmt);
   STMT_INIT(declare_deployable_region_stmt);
   STMT_INIT(begin_schema_region_stmt);
@@ -17174,6 +17210,7 @@ cql_noexport void sem_cleanup() {
   in_proc_savepoint = false;
   max_previous_schema_version = -1;
   memset(&enforcement, 0, sizeof(enforcement));
+  enforcement_stack = NULL; // all the stack entries are in the ast pool, nothing to free
   monitor_jptr = NULL;
   recreates = 0;
   schema_upgrade_script = false;
