@@ -16288,6 +16288,13 @@ static void sem_enforce_normal_stmt(ast_node * ast) {
   record_ok(ast);
 }
 
+// reset all to normal mode
+static void sem_enforce_reset_stmt(ast_node * ast) {
+  Contract(is_ast_enforce_reset_stmt(ast));
+  memset(&enforcement, 0, sizeof(enforcement));
+  record_ok(ast);
+}
+
 // save current enforcement options
 static void sem_enforce_push_stmt(ast_node *ast) {
   Contract(is_ast_enforce_push_stmt(ast));
@@ -16994,6 +17001,7 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(close_stmt);
   STMT_INIT(enforce_normal_stmt);
   STMT_INIT(enforce_strict_stmt);
+  STMT_INIT(enforce_reset_stmt);
   STMT_INIT(enforce_push_stmt);
   STMT_INIT(enforce_pop_stmt);
   STMT_INIT(declare_schema_region_stmt);

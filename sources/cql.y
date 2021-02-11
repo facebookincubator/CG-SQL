@@ -159,7 +159,7 @@ static void cql_reset_globals(void);
 %token CAST WITH RECURSIVE REPLACE IGNORE ADD COLUMN RENAME ALTER
 %token AT_ECHO AT_CREATE AT_RECREATE AT_DELETE AT_SCHEMA_UPGRADE_VERSION AT_PREVIOUS_SCHEMA AT_SCHEMA_UPGRADE_SCRIPT
 %token AT_PROC AT_FILE AT_ATTRIBUTE AT_SENSITIVE DEFERRED NOT_DEFERRABLE DEFERRABLE IMMEDIATE EXCLUSIVE RESTRICT ACTION INITIALLY NO
-%token BEFORE AFTER INSTEAD OF FOR_EACH_ROW EXISTS RAISE FAIL ABORT AT_ENFORCE_STRICT AT_ENFORCE_NORMAL AT_ENFORCE_PUSH AT_ENFORCE_POP
+%token BEFORE AFTER INSTEAD OF FOR_EACH_ROW EXISTS RAISE FAIL ABORT AT_ENFORCE_STRICT AT_ENFORCE_NORMAL AT_ENFORCE_RESET AT_ENFORCE_PUSH AT_ENFORCE_POP
 %token AT_BEGIN_SCHEMA_REGION AT_END_SCHEMA_REGION
 %token AT_DECLARE_SCHEMA_REGION AT_DECLARE_DEPLOYABLE_REGION AT_SCHEMA_AD_HOC_MIGRATION PRIVATE
 
@@ -238,7 +238,8 @@ static void cql_reset_globals(void);
 %type <aval> trycatch_stmt
 %type <aval> version_annotation
 %type <aval> while_stmt
-%type <aval> enforce_strict_stmt enforce_normal_stmt enforce_push_stmt enforce_pop_stmt enforcement_options shape_def
+%type <aval> enforce_strict_stmt enforce_normal_stmt enforce_reset_stmt enforce_push_stmt enforce_pop_stmt
+%type <aval> enforcement_options shape_def
 
 %start program
 
@@ -341,6 +342,7 @@ any_stmt: select_stmt
   | previous_schema_stmt
   | enforce_strict_stmt
   | enforce_normal_stmt
+  | enforce_reset_stmt
   | enforce_push_stmt
   | enforce_pop_stmt
   | declare_schema_region_stmt
@@ -1770,6 +1772,10 @@ enforce_strict_stmt:
 
 enforce_normal_stmt:
   AT_ENFORCE_NORMAL enforcement_options  { $enforce_normal_stmt = new_ast_enforce_normal_stmt($enforcement_options); }
+  ;
+
+enforce_reset_stmt:
+  AT_ENFORCE_RESET { $enforce_reset_stmt = new_ast_enforce_reset_stmt(); }
   ;
 
 enforce_push_stmt:

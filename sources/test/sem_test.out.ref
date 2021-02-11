@@ -55957,17 +55957,41 @@ Error at test/sem_test.sql:XXXX : in col_attrs_hidden : CQL0362: The HIDDEN colu
 
 The statement ending at line XXXX
 
-@ENFORCE_NORMAL FOREIGN KEY ON UPDATE;
+@ENFORCE_STRICT FOREIGN KEY ON UPDATE;
 
-  {enforce_normal_stmt}: ok
+  {enforce_strict_stmt}: ok
   | {int 1}
 
 The statement ending at line XXXX
 
-@ENFORCE_NORMAL FOREIGN KEY ON DELETE;
+@ENFORCE_RESET;
 
-  {enforce_normal_stmt}: ok
-  | {int 2}
+  {enforce_reset_stmt}: ok
+
+The statement ending at line XXXX
+
+CREATE TABLE fk_strict_err_0(
+  id INTEGER REFERENCES foo (id)
+);
+
+  {create_table_stmt}: fk_strict_err_0: { id: integer foreign_key }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name fk_strict_err_0}
+  | {col_key_list}
+    | {col_def}: id: integer foreign_key
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+        | | {name id}
+        | | {type_int}: integer
+        | {col_attrs_fk}: ok
+          | {fk_target_options}
+            | {fk_target}
+            | | {name foo}
+            | | {name_list}
+            |   | {name id}: id: integer notnull
+            | {int 0}
 
 The statement ending at line XXXX
 

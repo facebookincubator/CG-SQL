@@ -14017,9 +14017,20 @@ create virtual table virtual_with_hidden_wrong using module_name as (
   y integer
 );
 
+-- force this on so we can verify that it is turned off
+@enforce_strict foreign key on update;
+
 -- get to a known state
-@enforce_normal foreign key on update;
-@enforce_normal foreign key on delete;
+-- + {enforce_reset_stmt}: ok
+-- - Error
+@enforce_reset;
+
+-- TEST fk enforcement should be off
+-- + {create_table_stmt}: fk_strict_err_0: { id: integer foreign_key }
+-- - Error
+create table fk_strict_err_0 (
+  id integer REFERENCES foo(id)
+);
 
 -- TEST: save the current state
 -- + {enforce_push_stmt}: ok
@@ -14052,7 +14063,6 @@ create table fk_strict_err_2 (
 -- + Error % @enforce_pop used but there is nothing to pop
 -- +1 Error
 @enforce_pop;
-
 
 -- TEST verify strict mode
 -- + {enforce_strict_stmt}: ok

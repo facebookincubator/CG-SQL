@@ -3066,6 +3066,11 @@ static void gen_enforce_normal_stmt(ast_node * ast) {
   gen_enforcement_options(ast->left);
 }
 
+static void gen_enforce_reset_stmt(ast_node * ast) {
+  Contract(is_ast_enforce_reset_stmt(ast));
+  gen_printf("@ENFORCE_RESET");
+}
+
 static void gen_enforce_push_stmt(ast_node * ast) {
   Contract(is_ast_enforce_push_stmt(ast));
   gen_printf("@ENFORCE_PUSH");
@@ -3331,6 +3336,7 @@ cql_noexport void gen_init() {
   STMT_INIT(previous_schema_stmt);
   STMT_INIT(enforce_strict_stmt);
   STMT_INIT(enforce_normal_stmt);
+  STMT_INIT(enforce_reset_stmt);
   STMT_INIT(enforce_push_stmt);
   STMT_INIT(enforce_pop_stmt);
   STMT_INIT(declare_schema_region_stmt);
