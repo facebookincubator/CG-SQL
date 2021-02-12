@@ -2509,47 +2509,14 @@ BEGIN_TEST(encoded_values)
 
   declare C1 cursor for call out_union_dml();
   fetch C1;
-  EXPECT(C1.b0 IS 0);
-  EXPECT(C1.i0 IS 0);
-  EXPECT(C1.l0 IS 0);
-  EXPECT(C1.d0 IS 0.0);
-  EXPECT(C1.s0 IS "0");
-  EXPECT(string_from_blob(C1.bl0) IS "0");
-  EXPECT(C1.b1 IS 1);
-  EXPECT(C1.i1 IS 1);
-  EXPECT(C1.l1 IS 1);
-  EXPECT(C1.d1 IS 1.1);
-  EXPECT(C1.s1 IS "1");
-  EXPECT(string_from_blob(C1.bl1) IS "1");
+  EXPECT(cql_cursor_diff_val(C, C1) IS NULL);
 
   declare C2 cursor for call out_union_not_dml();
   fetch C2;
-  EXPECT(C2.b0 IS 0);
-  EXPECT(C2.i0 IS 0);
-  EXPECT(C2.l0 IS 0);
-  EXPECT(C2.d0 IS 0.0);
-  EXPECT(C2.s0 IS "0");
-  EXPECT(string_from_blob(C2.bl0) IS "0");
-  EXPECT(C2.b1 IS 1);
-  EXPECT(C2.i1 IS 1);
-  EXPECT(C2.l1 IS 1);
-  EXPECT(C2.d1 IS 1.1);
-  EXPECT(C2.s1 IS "1");
-  EXPECT(string_from_blob(C2.bl1) IS "1");
+  EXPECT(cql_cursor_diff_val(C, C2) IS NULL);
 
   declare C3 cursor fetch from call load_decoded_out_union();
-  EXPECT(C3.b0 IS 0);
-  EXPECT(C3.i0 IS 0);
-  EXPECT(C3.l0 IS 0);
-  EXPECT(C3.d0 IS 0.0);
-  EXPECT(C3.s0 IS "0");
-  EXPECT(string_from_blob(C3.bl0) IS "0");
-  EXPECT(C3.b1 IS 1);
-  EXPECT(C3.i1 IS 1);
-  EXPECT(C3.l1 IS 1);
-  EXPECT(C3.d1 IS 1.1);
-  EXPECT(C3.s1 IS "1");
-  EXPECT(string_from_blob(C3.bl1) IS "1");
+  EXPECT(cql_cursor_diff_val(C, C3) IS NULL);
 END_TEST(encoded_values)
 
 BEGIN_TEST(encoded_null_values)
