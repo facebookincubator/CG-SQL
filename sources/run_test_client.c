@@ -474,7 +474,7 @@ int get_outstanding_refs()
 cql_blob_ref _Nonnull blob_from_string(cql_string_ref str)
 {
   if (str) {
-    return cql_blob_ref_new(str->ptr, 1 + strlen(str->ptr));
+    return cql_blob_ref_new(str->ptr, strlen(str->ptr));
   }
   else {
     return cql_blob_ref_new("", 1);
@@ -522,11 +522,27 @@ cql_code test_blob_rowsets(sqlite3 *db) {
     sprintf(buf1, "nullable blob %d", i);
     sprintf(buf2, "not nullable blob %d", i);
 
-    E(strcmp(buf1, b1->ptr) == 0, "nullable blob %d did not match %s\n", i, buf1);
-    E(strcmp(buf2, b2->ptr) == 0, "nullable blob %d did not match %s\n", i, buf2);
+    cql_string_ref b1_ref = string_from_blob(b1);
+    cql_string_ref b2_ref = string_from_blob(b2);
+    E(strcmp(buf1, b1_ref->ptr) == 0, "nullable blob %d did not match %s\n", i, buf1);
+    E(strcmp(buf2, b2_ref->ptr) == 0, "nullable blob %d did not match %s\n", i, buf2);
+    cql_string_release(b1_ref);
+    cql_string_release(b2_ref);
   }
 
   cql_result_set_release(result_set);
+
+  cql_string_ref str_ref = cql_string_ref_new("123");
+  cql_blob_ref blob_ref = blob_from_string(str_ref);
+  cql_string_ref str_ref_1 = string_from_blob(blob_ref);
+  cql_blob_ref blob_ref_1 = blob_from_string(str_ref_1);
+  E(cql_string_equal(str_ref, str_ref_1), "string \"%s\" should equal to \"%s\"", str_ref->ptr, str_ref_1->ptr);
+  E(cql_blob_equal(blob_ref, blob_ref_1), "blob \"%d\" should be equal to \"%d\"", blob_ref->size, blob_ref_1->size);
+
+  cql_string_release(str_ref);
+  cql_string_release(str_ref_1);
+  cql_blob_release(blob_ref);
+  cql_blob_release(blob_ref_1);
 
   tests_passed++;
   return SQLITE_OK;
@@ -567,13 +583,18 @@ cql_code test_sparse_blob_rowsets(sqlite3 *db) {
     sprintf(buf1, "nullable blob %d", i);
     sprintf(buf2, "not nullable blob %d", i);
 
+    cql_string_ref b1_ref = string_from_blob(b1);
     if (i % 2 == 0) {
-      E(strcmp(buf1, b1->ptr) == 0, "nullable blob %d did not match %s\n", i, buf1);
+      E(strcmp(buf1, b1_ref->ptr) == 0, "nullable blob %d did not match %s\n", i, buf1);
     } else {
       E(!b1, "nullable blob %d should have been null\n", i);
     }
 
-    E(strcmp(buf2, b2->ptr) == 0, "nullable blob %d did not match %s\n", i, buf2);
+    cql_string_ref b2_ref = string_from_blob(b2);
+    E(strcmp(buf2, b2_ref->ptr) == 0, "nullable blob %d did not match %s\n", i, buf2);
+
+    cql_string_release(b1_ref);
+    cql_string_release(b2_ref);
   }
 
   cql_result_set_release(result_set);
@@ -979,7 +1000,7 @@ cql_code test_all_column_encoded_multi_out_union(sqlite3 *db) {
   cql_blob_ref bl0 = load_decoded_multi_out_union_get_bl0(rs, 1);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 5), "expected bl0 is encoded\n");
   cql_blob_ref bl0_decode = cql_decode_blob_ref_new(db, bl0);
-  cql_blob_ref bl0_exp = cql_blob_ref_new("0", 2);
+  cql_blob_ref bl0_exp = cql_blob_ref_new("0", 1);
   E(cql_blob_equal(bl0_decode, bl0_exp), "expected bl0 is \"0\", value \"%s\"\n", (const char *)bl0_decode->ptr);
   cql_blob_release(bl0_decode);
   cql_blob_release(bl0_exp);
@@ -1015,7 +1036,7 @@ cql_code test_all_column_encoded_multi_out_union(sqlite3 *db) {
   cql_blob_ref bl1 = load_decoded_multi_out_union_get_bl1(rs, 1);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 11), "expected bl1 is encoded\n");
   cql_blob_ref bl1_decode = cql_decode_blob_ref_new(db, bl1);
-  cql_blob_ref bl1_exp = cql_blob_ref_new("1", 2);
+  cql_blob_ref bl1_exp = cql_blob_ref_new("1", 1);
   E(cql_blob_equal(bl1_decode, bl1_exp), "expected bl1 is \"1\", value \"%s\"\n", (const char *)bl1_decode->ptr);
   cql_blob_release(bl1_decode);
   cql_blob_release(bl1_exp);
