@@ -1002,4 +1002,8 @@ Error at test/sem_test.sql:XXXX : in col_attrs_hidden : CQL0362: The HIDDEN colu
 Error at test/sem_test.sql:XXXX : in col_attrs_fk : CQL0237: strict FK validation requires that some ON UPDATE option be selected for every foreign key
 Error at test/sem_test.sql:XXXX : in enforce_pop_stmt : CQL0365: @enforce_pop used but there is nothing to pop
 Error at test/sem_test.sql:XXXX : in begin_trans_stmt : CQL0366: transaction operations disallowed while STRICT TRANSACTION enforcement is on.
+Error at test/sem_test.sql:XXXX : in select_else_expr : CQL0070: expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
+Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
+Error at test/sem_test.sql:XXXX : in select_else_expr : CQL0009: incompatible types in expression 'ELSE'
+Error at test/sem_test.sql:XXXX : in str : CQL0003: right operand cannot be an object in 'SELECT...ELSE'
 semantic errors present; no code gen.

@@ -14121,3 +14121,55 @@ begin transaction;
 -- + {begin_trans_stmt}: ok
 -- - Error
 begin transaction;
+
+-- TEST: simple select with else
+-- + {assign}: price_d: real<dollars> variable
+-- + {select_else_expr}: real notnull
+-- + {select_stmt}: _anon: integer notnull
+-- + {dbl 2.0}: real notnull
+-- - Error
+set price_d := (select 1 else 2.0);
+
+-- TEST: simple select with else (upgrade from the left)
+-- + {assign}: price_d: real<dollars> variable
+-- + {select_else_expr}: real notnull
+-- + {select_stmt}: _anon: real notnull
+-- + {int 4}: integer notnull
+-- - Error
+set price_d := (select 3.0 else 4);
+
+-- TEST: simple select with else (upgrade from the left)
+-- + {assign}: err
+-- + {select_else_expr}: err
+-- + {select_stmt}: _anon: real notnull
+-- + {name price_e}: price_e: real<euros> variable
+-- + Error % expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
+-- +1 Error
+set price_d := (select 3.0 else price_e);
+
+-- TEST: simple select with else (upgrade from the left)
+-- + {assign}: err
+-- + {select_else_expr}: err
+-- + {select_stmt}: price_d: real<dollars> variable
+-- + {name price_e}: err
+-- + Error % expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
+-- +1 Error
+set my_real := (select price_d else price_e);
+
+-- TEST: simple select with else (upgrade from the left)
+-- + {assign}: err
+-- + {select_else_expr}: err
+-- + {select_stmt}: _anon: text notnull
+-- + {name price_e}: price_e: real<euros> variable
+-- + Error % incompatible types in expression 'ELSE'
+-- +1 Error
+set price_d := (select "x" else price_e);
+
+-- TEST: simple select with else (upgrade from the left)
+-- + {assign}: err
+-- + {select_else_expr}: err
+-- + {select_stmt}: _anon: text notnull
+-- + {name obj_var}: obj_var: object variable
+-- + Error % right operand cannot be an object in 'SELECT...ELSE'
+-- +1 Error
+set price_d := (select "x" else obj_var);

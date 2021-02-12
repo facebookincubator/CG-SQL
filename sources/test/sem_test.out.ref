@@ -56174,3 +56174,149 @@ BEGIN;
   {begin_trans_stmt}: ok
   | {int 1}
 
+The statement ending at line XXXX
+
+SET price_d := ( SELECT 1 ELSE 2.0 );
+
+  {assign}: price_d: real<dollars> variable
+  | {name price_d}: price_d: real<dollars> variable
+  | {select_else_expr}: real notnull
+    | {select_stmt}: _anon: integer notnull
+    | | {select_core_list}: select: { _anon: integer notnull }
+    | | | {select_core}: select: { _anon: integer notnull }
+    | |   | {select_expr_list_con}: select: { _anon: integer notnull }
+    | |     | {select_expr_list}: select: { _anon: integer notnull }
+    | |     | | {select_expr}: integer notnull
+    | |     |   | {int 1}: integer notnull
+    | |     | {select_from_etc}: ok
+    | |       | {select_where}
+    | |         | {select_groupby}
+    | |           | {select_having}
+    | | {select_orderby}
+    |   | {select_limit}
+    |     | {select_offset}
+    | {dbl 2.0}: real notnull
+
+The statement ending at line XXXX
+
+SET price_d := ( SELECT 3.0 ELSE 4 );
+
+  {assign}: price_d: real<dollars> variable
+  | {name price_d}: price_d: real<dollars> variable
+  | {select_else_expr}: real notnull
+    | {select_stmt}: _anon: real notnull
+    | | {select_core_list}: select: { _anon: real notnull }
+    | | | {select_core}: select: { _anon: real notnull }
+    | |   | {select_expr_list_con}: select: { _anon: real notnull }
+    | |     | {select_expr_list}: select: { _anon: real notnull }
+    | |     | | {select_expr}: real notnull
+    | |     |   | {dbl 3.0}: real notnull
+    | |     | {select_from_etc}: ok
+    | |       | {select_where}
+    | |         | {select_groupby}
+    | |           | {select_having}
+    | | {select_orderby}
+    |   | {select_limit}
+    |     | {select_offset}
+    | {int 4}: integer notnull
+
+The statement ending at line XXXX
+
+SET price_d := ( SELECT 3.0 ELSE price_e );
+
+Error at test/sem_test.sql:XXXX : in select_else_expr : CQL0070: expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
+
+  {assign}: err
+  | {name price_d}: price_d: real<dollars> variable
+  | {select_else_expr}: err
+    | {select_stmt}: _anon: real notnull
+    | | {select_core_list}: select: { _anon: real notnull }
+    | | | {select_core}: select: { _anon: real notnull }
+    | |   | {select_expr_list_con}: select: { _anon: real notnull }
+    | |     | {select_expr_list}: select: { _anon: real notnull }
+    | |     | | {select_expr}: real notnull
+    | |     |   | {dbl 3.0}: real notnull
+    | |     | {select_from_etc}: ok
+    | |       | {select_where}
+    | |         | {select_groupby}
+    | |           | {select_having}
+    | | {select_orderby}
+    |   | {select_limit}
+    |     | {select_offset}
+    | {name price_e}: price_e: real<euros> variable
+
+The statement ending at line XXXX
+
+SET my_real := ( SELECT price_d ELSE price_e );
+
+Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
+
+  {assign}: err
+  | {name my_real}: my_real: real variable
+  | {select_else_expr}: err
+    | {select_stmt}: price_d: real<dollars> variable
+    | | {select_core_list}: select: { price_d: real<dollars> variable }
+    | | | {select_core}: select: { price_d: real<dollars> variable }
+    | |   | {select_expr_list_con}: select: { price_d: real<dollars> variable }
+    | |     | {select_expr_list}: select: { price_d: real<dollars> variable }
+    | |     | | {select_expr}: price_d: real<dollars> variable
+    | |     |   | {name price_d}: price_d: real<dollars> variable
+    | |     | {select_from_etc}: ok
+    | |       | {select_where}
+    | |         | {select_groupby}
+    | |           | {select_having}
+    | | {select_orderby}
+    |   | {select_limit}
+    |     | {select_offset}
+    | {name price_e}: err
+
+The statement ending at line XXXX
+
+SET price_d := ( SELECT "x" ELSE price_e );
+
+Error at test/sem_test.sql:XXXX : in select_else_expr : CQL0009: incompatible types in expression 'ELSE'
+
+  {assign}: err
+  | {name price_d}: price_d: real<dollars> variable
+  | {select_else_expr}: err
+    | {select_stmt}: _anon: text notnull
+    | | {select_core_list}: select: { _anon: text notnull }
+    | | | {select_core}: select: { _anon: text notnull }
+    | |   | {select_expr_list_con}: select: { _anon: text notnull }
+    | |     | {select_expr_list}: select: { _anon: text notnull }
+    | |     | | {select_expr}: text notnull
+    | |     |   | {strlit 'x'}: text notnull
+    | |     | {select_from_etc}: ok
+    | |       | {select_where}
+    | |         | {select_groupby}
+    | |           | {select_having}
+    | | {select_orderby}
+    |   | {select_limit}
+    |     | {select_offset}
+    | {name price_e}: price_e: real<euros> variable
+
+The statement ending at line XXXX
+
+SET price_d := ( SELECT "x" ELSE obj_var );
+
+Error at test/sem_test.sql:XXXX : in str : CQL0003: right operand cannot be an object in 'SELECT...ELSE'
+
+  {assign}: err
+  | {name price_d}: price_d: real<dollars> variable
+  | {select_else_expr}: err
+    | {select_stmt}: _anon: text notnull
+    | | {select_core_list}: select: { _anon: text notnull }
+    | | | {select_core}: select: { _anon: text notnull }
+    | |   | {select_expr_list_con}: select: { _anon: text notnull }
+    | |     | {select_expr_list}: select: { _anon: text notnull }
+    | |     | | {select_expr}: text notnull
+    | |     |   | {strlit 'x'}: text notnull
+    | |     | {select_from_etc}: ok
+    | |       | {select_where}
+    | |         | {select_groupby}
+    | |           | {select_having}
+    | | {select_orderby}
+    |   | {select_limit}
+    |     | {select_offset}
+    | {name obj_var}: obj_var: object variable
+

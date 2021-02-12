@@ -1846,7 +1846,7 @@ static sem_join *sem_join_from_sem_struct(sem_struct *sptr) {
 }
 
 // If either of the types is an object then produce an error on the ast.
-static bool_t error_any_kind(ast_node *ast, sem_t core_type_left, sem_t core_type_right, CSTR op) {
+static bool_t error_any_object(ast_node *ast, sem_t core_type_left, sem_t core_type_right, CSTR op) {
   if (is_object(core_type_left)) {
     report_error(ast->left, "CQL0002: left operand cannot be an object in", op);
     record_error(ast);
@@ -3752,7 +3752,7 @@ static void sem_binary_math(ast_node *ast, CSTR op) {
     return;
   }
 
-  if (error_any_kind(ast, core_type_left, core_type_right, op)) {
+  if (error_any_object(ast, core_type_left, core_type_right, op)) {
     return;
   }
 
@@ -3827,7 +3827,7 @@ static void sem_binary_compare(ast_node *ast, CSTR op) {
     return;
   }
 
-  if (error_any_kind(ast, core_type_left, core_type_right, op)) {
+  if (error_any_object(ast, core_type_left, core_type_right, op)) {
     return;
   }
 
@@ -3844,7 +3844,6 @@ static void sem_binary_compare(ast_node *ast, CSTR op) {
     record_error(ast);
     return;
   }
-
 
   ast->sem = new_sem(SEM_TYPE_BOOL | combined_flags);
   // the result is a normal bool, not a bool of any particular kind
@@ -16084,6 +16083,34 @@ static void sem_expr_select(ast_node *ast, CSTR cstr) {
   ast->sem->kind = sptr->kinds[0];
 }
 
+static void sem_expr_select_else(ast_node *ast, CSTR op) {
+  Contract(is_ast_select_else_expr(ast));
+
+  sem_t core_type_left, core_type_right, combined_flags;
+  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags)) { 
+    return;
+  }
+
+  if (error_any_object(ast, core_type_left, core_type_right, op)) {
+    return;
+  }
+
+  if (!sem_verify_compat(ast, ast->left->sem->sem_type, ast->right->sem->sem_type, "ELSE")) {
+    return;
+  }
+
+  sem_t core_type = sem_combine_types(core_type_left, core_type_right);
+
+  CSTR kind = sem_combine_kinds(ast->right, ast->left->sem->kind);
+  if (is_error(ast->right)) {
+    record_error(ast);
+    return;
+  }
+
+  ast->sem = new_sem(core_type | combined_flags);
+  ast->sem->kind = kind;
+}
+
 // At this point all processing of input is complete.  So now we walk all the tables
 // that we ever saw and visit any that have not already been validated.  This is
 // the set of tables not present in the previous schema.  All of these must be
@@ -17112,6 +17139,7 @@ cql_noexport void sem_main(ast_node *ast) {
   EXPR_INIT(and, sem_binary_logical, "AND");
   EXPR_INIT(or, sem_binary_logical, "OR");
   EXPR_INIT(select_stmt, sem_expr_select, "SELECT");
+  EXPR_INIT(select_else_expr, sem_expr_select_else, "SELECT...ELSE");
   EXPR_INIT(with_select_stmt, sem_expr_select, "WITH...SELECT");
   EXPR_INIT(is, sem_binary_is_or_is_not, "IS");
   EXPR_INIT(is_not, sem_binary_is_or_is_not, "IS NOT");
