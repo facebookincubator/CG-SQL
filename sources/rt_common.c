@@ -60,6 +60,7 @@ static rtdata rt_c = {
   .cql_blob_ref = "cql_blob_ref",
   .cql_blob_retain = "cql_blob_retain",
   .cql_blob_release = "cql_blob_release",
+  .cql_blob_equal = "cql_blob_equal",
   .cql_object_ref = "cql_object_ref",
   .cql_object_retain = "cql_object_retain",
   .cql_object_release = "cql_object_release",

@@ -1302,26 +1302,62 @@ set blob_var := null;
 -- + cql_set_blob_ref(&blob_var, blob_var2);
 set blob_var := blob_var2;
 
--- TEST: blob comparison
--- + cql_combine_nullables(b0_nullable, !blob_var, !blob_var, blob_var == blob_var);
+-- TEST: blob comparison "=="
+-- + cql_combine_nullables(b0_nullable, !blob_var, !blob_var, cql_blob_equal(blob_var, blob_var));
 set b0_nullable := blob_var == blob_var;
 
+-- TEST: blob comparison "==" NULL
+-- + cql_set_null(b0_nullable);
+set b0_nullable := blob_var == null;
+
+-- TEST: blob comparison "IS" NULL
+-- + cql_set_notnull(b0_nullable, !blob_var);
+set b0_nullable := blob_var IS null;
+
+-- TEST: blob comparison "!="
+-- + cql_combine_nullables(b0_nullable, !blob_var, !blob_var, !cql_blob_equal(blob_var, blob_var));
+set b0_nullable := blob_var != blob_var;
+
+-- TEST: blob comparison "!=" NULL
+-- + cql_set_null(b0_nullable);
+set b0_nullable := blob_var != null;
+
+-- TEST: blob comparison "<>"
+-- + cql_combine_nullables(b0_nullable, !blob_var, !blob_var, !cql_blob_equal(blob_var, blob_var));
+set b0_nullable := blob_var <> blob_var;
+
+-- TEST: blob comparison "IS"
+-- + cql_set_notnull(b0_nullable, cql_blob_equal(blob_var, blob_var));
+set b0_nullable := blob_var IS blob_var;
+
+-- TEST: blob comparison "IS NOT"
+-- + cql_set_notnull(b0_nullable, !cql_blob_equal(blob_var, blob_var));
+set b0_nullable := blob_var IS NOT blob_var;
+
 -- TEST: blob variable in IN clause
--- + if (cql_is_nullable_true(!blob_var, _tmp_n_blob_% == blob_var)) break;
--- + if (cql_is_nullable_true(!blob_var, _tmp_n_blob_% == blob_var)) break;
+-- + cql_set_notnull(_tmp_n_bool_0, 1);
+-- + if (cql_blob_equal(_tmp_n_blob_2, blob_var)) break;
+-- + if (cql_blob_equal(_tmp_n_blob_2, blob_var)) break;
+-- + cql_set_notnull(_tmp_n_bool_0, 0);
 set b0_nullable := blob_var in (blob_var, blob_var);
 
 -- TEST: blob variable in IN clause
--- + if (_tmp_blob_2 == blob_var2) break;
+-- + _tmp_bool_0 = 1;
+-- + if (cql_blob_equal(_tmp_blob_2, blob_var)) break;
+-- + if (cql_blob_equal(_tmp_blob_2, blob_var2)) break;
+-- + _tmp_bool_0 = 0;
 set b2 := blob_var2 in (blob_var, blob_var2);
 
 -- TEST: blob variable in NOT IN clause
--- + if (cql_is_nullable_true(!blob_var, _tmp_n_blob_% == blob_var)) break;
--- + if (cql_is_nullable_true(!blob_var, _tmp_n_blob_% == blob_var)) break;
+-- + cql_set_notnull(_tmp_n_bool_0, 0);
+-- + if (cql_blob_equal(_tmp_n_blob_2, blob_var)) break;
+-- + if (cql_blob_equal(_tmp_n_blob_2, blob_var)) break;
+-- + cql_set_notnull(_tmp_n_bool_0, 1);
 set b0_nullable := blob_var not in (blob_var, blob_var);
 
 -- TEST: blob variable in NOT IN clause
--- + if (_tmp_blob_2 == blob_var2) break;
+-- + if (cql_blob_equal(_tmp_blob_2, blob_var)) break;
+-- + if (cql_blob_equal(_tmp_blob_2, blob_var2)) break;
 set b2 := blob_var2 not in (blob_var, blob_var2);
 
 -- TEST: proc with blob args
@@ -1918,6 +1954,18 @@ begin
   set j := 2;
 
   set b := i is j;
+end;
+
+-- TEST: blob comparaison
+-- + b = cql_blob_equal(bl1, bl2);
+-- + b = !cql_blob_equal(bl1, bl2);
+create proc is_blob()
+begin
+  declare bl1 blob;
+  declare bl2 blob;
+  declare b bool not null;
+  set b := bl1 is bl2;
+  set b := bl1 is not bl2;
 end;
 
 -- TEST: IS NOT patterns

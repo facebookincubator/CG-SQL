@@ -65,7 +65,14 @@ cql_hash_code cql_blob_hash(cql_blob_ref _Nullable blob) {
   return hash;
 }
 
-cql_bool cql_blob_equal(cql_blob_ref _Nonnull blob1, cql_blob_ref _Nonnull blob2) {
+cql_bool cql_blob_equal(cql_blob_ref _Nullable blob1, cql_blob_ref _Nullable blob2) {
+  if (blob1 == blob2) {
+    return cql_true;
+  }
+  if (!blob1 || !blob2) {
+    return cql_false;
+  }
+
   const unsigned char *bytes1 = blob1->ptr;
   cql_uint32 size1 = blob1->size;
   const unsigned char *bytes2 = blob2->ptr;

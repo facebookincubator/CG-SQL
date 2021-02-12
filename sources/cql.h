@@ -286,6 +286,14 @@ typedef struct rtdata {
   // cql_hash_code cql_blob_hash(cql_string_ref _Nullable str);
   const char *cql_blob_hash;
 
+  // Checks if two blob objects are equal.
+  // NOTE: If both objects are NULL, they are equal; if only 1 is NULL, they are not equal.
+  // @param str1 The first blob to compare.
+  // @param str2 The second blob to compare.
+  // @return cql_true if they are equal, otherwise cql_false.
+  // cql_bool cql_blob_equal(cql_blob_ref _Nullable bl1, cql_blob_ref _Nullable bl2);
+  const char *cql_blob_equal;
+
   // Compares two string objects.
   // @param str1 The first string to compare.
   // @param str2 The second string to compare.

@@ -800,6 +800,20 @@ extern cql_blob_ref _Nonnull blob_var2;
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
 extern void blob_proc(cql_blob_ref _Nullable *_Nonnull a_blob);
 
 // The statement ending at line XXXX
@@ -1179,6 +1193,9 @@ extern CQL_WARN_UNUSED cql_code make_trigger(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX
 extern void is_test(void);
+
+// The statement ending at line XXXX
+extern void is_blob(void);
 
 // The statement ending at line XXXX
 extern void is_not_test(void);

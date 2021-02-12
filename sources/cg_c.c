@@ -922,13 +922,22 @@ static void cg_binary_compare(ast_node *ast, CSTR op, charbuf *is_null, charbuf 
   sem_t sem_type_left = ast->left->sem->sem_type;
   sem_t sem_type_right = ast->right->sem->sem_type;
 
-  if (!is_text(sem_type_left) && !is_text(sem_type_right)) {
+  bool_t is_text_op = is_text(sem_type_left) && is_text(sem_type_right);
+  bool_t is_blob_op = is_blob(sem_type_left) && is_blob(sem_type_right);
+
+  if (is_blob_op) {
+    // we want to make sure blob is only supported for certain operation
+    // even though we already have the semantic analysis for this.
+    Invariant(is_ast_eq(ast) || is_ast_ne(ast));
+  }
+
+  if (!is_text_op && !is_blob_op) {
    // for numeric, the usual binary processing works
    cg_binary(ast, op, is_null, value, pri, pri_new);
    return;
   }
 
-  // Both sides are text or null; already verified compatible in semantic phase.
+  // Both sides are text/blob or null; already verified compatible in semantic phase.
 
   CHARBUF_OPEN(comparison);
 
@@ -944,12 +953,24 @@ static void cg_binary_compare(ast_node *ast, CSTR op, charbuf *is_null, charbuf 
   CG_PUSH_EVAL(r, pri_new);
 
   if (is_ast_like(ast)) {
+    // like not allowed semantically for blob type
+    Invariant(!is_blob_op);
     bprintf(&comparison, "%s(%s, %s) == 0", rt->cql_string_like, l_value.ptr, r_value.ptr);
   }
   else if (is_ast_not_like(ast)) {
+    // like not allowed semantically for blob type
+    Invariant(!is_blob_op);
     bprintf(&comparison, "%s(%s, %s) != 0", rt->cql_string_like, l_value.ptr, r_value.ptr);
   }
+  else if (is_blob_op) {
+    bool_t logical_not = is_ast_ne(ast) || is_ast_is_not(ast);
+    if (logical_not) {
+      bprintf(&comparison, "%s", "!");
+    }
+    bprintf(&comparison, "%s(%s, %s)", rt->cql_blob_equal, l_value.ptr, r_value.ptr);
+  }
   else {
+    // otherwise other string comparisons
     bprintf(&comparison, "%s(%s, %s) %s 0", rt->cql_string_compare, l_value.ptr, r_value.ptr, op);
   }
 
@@ -1105,16 +1126,19 @@ static void cg_expr_is(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value,
   sem_t sem_type_left = l->sem->sem_type;
   sem_t sem_type_right = r->sem->sem_type;
 
-  // the resut of IS, will not be null, no cases.
+  // the result of IS, will not be null, no cases.
   bprintf(is_null, "0");
 
-  if (is_text(sem_type_left) || is_text(sem_type_right)) {
+  bool_t is_text_op = is_text(sem_type_left) || is_text(sem_type_right);
+  bool_t is_blob_op = is_blob(sem_type_left) || is_blob(sem_type_right);
+  if (is_text_op || is_blob_op) {
     // Both sides are text already verified compatible in semantic phase.
 
     CG_PUSH_EVAL(l, pri_new);
     CG_PUSH_EVAL(r, pri_new);
 
-    bprintf(value, "%s(%s, %s)", rt->cql_string_equal, l_value.ptr, r_value.ptr, op);
+    CSTR equal_func = is_text_op ? rt->cql_string_equal : rt->cql_blob_equal;
+    bprintf(value, "%s(%s, %s)", equal_func, l_value.ptr, r_value.ptr, op);
 
     CG_POP_EVAL(r);
     CG_POP_EVAL(l);
@@ -1172,13 +1196,16 @@ static void cg_expr_is_not(ast_node *ast, CSTR op, charbuf *is_null, charbuf *va
   // the resut of IS NOT, will not be null, no cases.
   bprintf(is_null, "0");
 
-  if (is_text(sem_type_left) || is_text(sem_type_right)) {
+  bool_t is_text_exp = is_text(sem_type_left) || is_text(sem_type_right);
+  bool_t is_blob_exp = is_blob(sem_type_left) || is_blob(sem_type_right);
+  if (is_text_exp || is_blob_exp) {
     // Both sides are text already verified compatible in semantic phase.
 
     CG_PUSH_EVAL(l, pri_new);
     CG_PUSH_EVAL(r, pri_new);
 
-    bprintf(value, "!%s(%s, %s)", rt->cql_string_equal, l_value.ptr, r_value.ptr, op);
+    CSTR equal_func = is_text_exp ? rt->cql_string_equal : rt->cql_blob_equal;
+    bprintf(value, "!%s(%s, %s)", equal_func, l_value.ptr, r_value.ptr, op);
 
     CG_POP_EVAL(r);
     CG_POP_EVAL(l);
@@ -1542,6 +1569,9 @@ static void cg_in_or_not_in_expr_list(ast_node *head, CSTR expr, CSTR result, se
 
     if (is_text(sem_type_in_expr)) {
       bprintf(cg_main_output, "if (%s(%s, %s) == 0)", rt->cql_string_compare, expr, in_expr_value.ptr);
+    }
+    else if (is_blob(sem_type_in_expr)) {
+      bprintf(cg_main_output, "if (%s(%s, %s))", rt->cql_blob_equal, expr, in_expr_value.ptr);
     }
     else if (is_nullable(sem_type_in_expr)) {
       bprintf(cg_main_output,

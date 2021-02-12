@@ -1414,6 +1414,21 @@ BEGIN_TEST(blob_basics)
   declare s2 text not null;
   set s2 := string_from_blob(b);
   EXPECT(s == s2); -- blob conversion failed
+  EXPECT(b == blob_from_string("a string"));
+  EXPECT(b IS blob_from_string("a string"));
+  EXPECT(b <> blob_from_string("a strings"));
+  EXPECT(b IS NOT blob_from_string("a strings"));
+
+  declare b_null blob;
+  set b_null := null;
+  declare s_null text;
+  set s_null := null;
+  EXPECT(b_null IS b_null);
+  EXPECT(s_null IS s_null);
+  EXPECT(b_null IS NOT b);
+  EXPECT(s_null IS NOT s);
+  EXPECT(b_null IS NULL);
+  EXPECT(s_null IS NULL);
 END_TEST(blob_basics)
 
 create proc blob_table_maker()
@@ -2760,7 +2775,7 @@ BEGIN_TEST(read_all_types_rowset)
   EXPECT(C.l1 IS 0);
   EXPECT(C.d1 IS 0);
   EXPECT(C.s1 == "s1_0");
-  EXPECT(string_from_blob(C.bl1) == "bl1_0");
+  EXPECT(C.bl1 == blob_from_string("bl1_0"));
 
   fetch C;
   EXPECT(C);
@@ -2770,13 +2785,13 @@ BEGIN_TEST(read_all_types_rowset)
   EXPECT(C.l0 IS 1);
   EXPECT(C.d0 IS 1);
   EXPECT(C.s0 IS "s0_1");
-  EXPECT(string_from_blob(C.bl0) == "bl0_1");
+  EXPECT(C.bl0 IS blob_from_string("bl0_1"));
   EXPECT(C.b1 IS 1);
   EXPECT(C.i1 IS 1);
   EXPECT(C.l1 IS 1);
   EXPECT(C.d1 IS 1);
   EXPECT(C.s1 == "s1_1");
-  EXPECT(string_from_blob(C.bl1) == "bl1_1");
+  EXPECT(C.bl1 IS blob_from_string("bl1_1"));
 
   fetch C;
   EXPECT(not C);
@@ -2990,19 +3005,23 @@ BEGIN_TEST(cursor_args)
 END_TEST(cursor_args)
 
 DECLARE PROCEDURE cql_exec_internal(sql TEXT NOT NULL) USING TRANSACTION;
-create table xyzzy(id integer, name text);
+create table xyzzy(id integer, name text, data blob);
 
 BEGIN_TEST(exec_internal)
-  call cql_exec_internal("create table xyzzy(id integer, name text);");
-  insert into xyzzy using 1 id, 'x' name;
-  insert into xyzzy using 2 id, 'y' name;
+  call cql_exec_internal("create table xyzzy(id integer, name text, data blob);");
+  declare bl1 blob;
+  set bl1 := blob_from_string('z');
+  declare bl2 blob;
+  set bl2 := blob_from_string('w');
+  insert into xyzzy using 1 id, 'x' name, bl1 data;
+  insert into xyzzy using 2 id, 'y' name, bl2 data;
   declare C cursor for select * from xyzzy;
   declare D cursor like C;
   fetch C;
-  fetch D using 1 id, 'x' name;
+  fetch D using 1 id, 'x' name, bl1 data;
   EXPECT(cql_cursor_diff_val(C,D) is null);
   fetch C;
-  fetch D using 2 id, 'y' name;
+  fetch D using 2 id, 'y' name, bl2 data;
   EXPECT(cql_cursor_diff_val(C,D) is null);
 END_TEST(exec_internal)
 

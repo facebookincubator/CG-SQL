@@ -112,7 +112,7 @@ int cql_string_like(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2);
 #define cql_alloc_cstr(cstr, str) const char *_Nonnull cstr = (str)->ptr
 #define cql_free_cstr(cstr, str) 0
 
-cql_bool cql_blob_equal(cql_blob_ref _Nonnull blob1, cql_blob_ref _Nonnull blob2);
+cql_bool cql_blob_equal(cql_blob_ref _Nullable blob1, cql_blob_ref _Nullable blob2);
 cql_hash_code cql_ref_hash(cql_type_ref _Nonnull typeref);
 cql_bool cql_ref_equal(cql_type_ref _Nullable typeref1, cql_type_ref _Nullable typeref2);
 

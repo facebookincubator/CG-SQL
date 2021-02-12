@@ -67,6 +67,7 @@ DECLARE PROC loop_statement_cursor () USING TRANSACTION;
 DECLARE PROC loop_statement_not_auto_cursor () USING TRANSACTION;
 DECLARE PROC make_trigger () USING TRANSACTION;
 DECLARE PROC is_test ();
+DECLARE PROC is_blob ();
 DECLARE PROC is_not_test ();
 DECLARE PROC in_test (x INTEGER, OUT b BOOL);
 DECLARE PROC not_in_test (x INTEGER, OUT b BOOL);
