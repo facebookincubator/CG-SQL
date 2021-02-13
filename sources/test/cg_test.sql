@@ -3243,6 +3243,52 @@ insert into virtual_with_hidden values(1);
 -- + "INSERT INTO virtual_with_hidden(vx, vy) VALUES(1, 2)");
 insert into virtual_with_hidden(vx, vy) values(1,2);
 
+-- TEST: get row from the bar table or else -1
+-- + if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+-- + if (_rc_ == SQLITE_ROW) {
+-- +   cql_column_nullable_int32(_temp_stmt, 0, &_tmp_n_int_1);
+-- +   cql_set_nullable(i0_nullable, _tmp_n_int_1.is_null, _tmp_n_int_1.value);
+-- + }
+-- + else {
+-- +   cql_set_notnull(i0_nullable, - 1);
+-- + }
+set i0_nullable := (select type from bar if nothing -1);
+
+-- TEST: get row from bar if no row or null -1 
+-- + if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+-- + if (_rc_ == SQLITE_ROW) {
+-- +   cql_column_nullable_int32(_temp_stmt, 0, &_tmp_n_int_1);
+-- + }
+-- + if (_rc_ == SQLITE_DONE || _tmp_n_int_1.is_null) {
+-- +   i2 = - 1;
+-- + } else { 
+-- +   i2 = _tmp_n_int_1.value;
+-- + }
+set i2 := (select type from bar if nothing or null -1);
+
+-- TEST: get row from the bar table or else ""
+-- + if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+-- + if (_rc_ == SQLITE_ROW) {
+-- +   cql_column_nullable_string_ref(_temp_stmt, 0, &_tmp_n_text_1);
+-- +   cql_set_string_ref(&t0_nullable, _tmp_n_text_1);
+-- + }
+-- + else {
+-- +   cql_set_string_ref(&t0_nullable, _literal_11_);
+-- + }
+set t0_nullable := (select name from bar if nothing "");
+
+-- TEST: get row from the bar table or else "garbonzo"
+-- + if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+-- + if (_rc_ == SQLITE_ROW) {
+-- +   cql_column_nullable_string_ref(_temp_stmt, 0, &_tmp_n_text_1);
+-- + }
+-- + if (_rc_ == SQLITE_DONE || !_tmp_n_text_1) {
+-- +   cql_set_string_ref(&t2, _literal_12_garbonzo_);
+-- + } else { 
+-- +   cql_set_string_ref(&t2, _tmp_n_text_1);
+-- + }
+set t2 := (select name from bar if nothing or null "garbonzo");
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

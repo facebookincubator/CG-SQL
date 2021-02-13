@@ -1214,7 +1214,7 @@ static void gen_expr_select(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new
 
 static void gen_expr_select_if_nothing(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_select_if_nothing_expr(ast) || is_ast_select_if_nothing_or_null_expr(ast));
-  EXTRACT_NOTNULL(select_stmt, ast->left);
+  EXTRACT_ANY_NOTNULL(select_stmt, ast->left);
   EXTRACT_ANY_NOTNULL(else_expr, ast->right);
 
   gen_printf("( ");

@@ -3319,6 +3319,36 @@ BEGIN_TEST(null_statement)
   EXPECT(x == 0);
 END_TEST(null_statement)
 
+BEGIN_TEST(if_nothing_forms)
+  create table tdata (
+    id integer,
+    v integer,
+    t text);
+
+  declare t1 text;
+  set t1 := (select t from tdata if nothing "nothing");
+  EXPECT(t1 == "nothing");
+
+  declare v1 integer;
+  set v1 := (select v from tdata if nothing -1);
+  EXPECT(v1 == -1);
+
+  insert into tdata values(1, 2, null);
+  set t1 := (select t from tdata if nothing "nothing");
+  EXPECT(t1 is null);
+
+  set v1 := (select v from tdata if nothing -1);
+  EXPECT(v1 == 2);
+
+  set t1 := (select t from tdata if nothing or null "still nothing");
+  EXPECT(t1 == "still nothing");
+
+  insert into tdata values(2, null, "x");
+  set v1 := (select v from tdata where id == 2 if nothing or null -1);
+  EXPECT(v1 == -1);
+
+END_TEST(if_nothing_forms)
+
 
 END_SUITE()
 
