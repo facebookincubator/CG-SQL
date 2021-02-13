@@ -2051,6 +2051,7 @@ create table radioactive(
 -- TEST: create a proc that reducts some sensitive data
 -- + CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
 -- + CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // data
+-- + void radioactive_proc_set_encoding(cql_int32 col, cql_bool encode) {
 @attribute(cql:vault_sensitive)
 create proc radioactive_proc()
 begin

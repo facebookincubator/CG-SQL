@@ -33,6 +33,17 @@ cql_code cql_best_error(cql_code rc) {
   return rc;
 }
 
+// This code overrides the CQL_DATA_TYPE_ENCODED bit in a result_set's data_type. It's used
+// indirectly by app at runtime to control the encoding and decoding of the column value.
+void cql_set_encoding(uint8_t *_Nonnull data_types, cql_int32 count, cql_int32 col, cql_bool encode) {
+  cql_contract(col < count);
+  if (encode) {
+    data_types[col] |= CQL_DATA_TYPE_ENCODED;
+  } else {
+    data_types[col] &= ~CQL_DATA_TYPE_ENCODED;
+  }
+}
+
 // The indicated statement should be immediately finalized out latest result was not SQLITE_OK
 // This code is used during binding (which is now always done with multibind)
 // in order to ensure that the statement exits finalized in the event of any binding failure.

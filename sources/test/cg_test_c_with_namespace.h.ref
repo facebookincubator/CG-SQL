@@ -1332,6 +1332,8 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   (cql_result_set_ref)(rs2), \
   row2)
 
+extern void radioactive_proc_set_encoding(cql_int32 col, cql_bool encode);
+
 // The statement ending at line XXXX
 extern CQL_WARN_UNUSED cql_code with_deleter(sqlite3 *_Nonnull _db_);
 
@@ -1575,6 +1577,8 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   row1, \
   (cql_result_set_ref)(rs2), \
   row2)
+
+extern void out_union_dml_set_encoding(cql_int32 col, cql_bool encode);
 extern CQL_WARN_UNUSED cql_code out_union_dml_fetch_results(sqlite3 *_Nonnull _db_, out_union_dml_result_set_ref _Nullable *_Nonnull _result_set_);
 
 // The statement ending at line XXXX
@@ -1716,6 +1720,8 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   (cql_result_set_ref)(rs2), \
   row2)
 
+extern void vault_sensitive_with_values_proc_set_encoding(cql_int32 col, cql_bool encode);
+
 // The statement ending at line XXXX
 #define CRC_vault_sensitive_with_no_values_proc -2359302084369840114L
 
@@ -1743,6 +1749,8 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   row1, \
   (cql_result_set_ref)(rs2), \
   row2)
+
+extern void vault_sensitive_with_no_values_proc_set_encoding(cql_int32 col, cql_bool encode);
 
 // The statement ending at line XXXX
 #define CRC_vault_union_all_table_proc 1792652619972807135L
@@ -1772,6 +1780,8 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   (cql_result_set_ref)(rs2), \
   row2)
 
+extern void vault_union_all_table_proc_set_encoding(cql_int32 col, cql_bool encode);
+
 // The statement ending at line XXXX
 #define CRC_vault_alias_column_proc -8580291323805756L
 
@@ -1797,6 +1807,8 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   (cql_result_set_ref)(rs2), \
   row2)
 
+extern void vault_alias_column_proc_set_encoding(cql_int32 col, cql_bool encode);
+
 // The statement ending at line XXXX
 #define CRC_vault_alias_column_name_proc 798196861874471198L
 
@@ -1821,6 +1833,8 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   row1, \
   (cql_result_set_ref)(rs2), \
   row2)
+
+extern void vault_alias_column_name_proc_set_encoding(cql_int32 col, cql_bool encode);
 
 // The statement ending at line XXXX
 extern CQL_WARN_UNUSED cql_code vault_cursor_proc(sqlite3 *_Nonnull _db_);

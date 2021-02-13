@@ -5533,6 +5533,7 @@ static void cg_proc_result_set(ast_node *ast) {
   CG_CHARBUF_OPEN_SYM(fetch_results_sym, name, "_fetch_results");
   CG_CHARBUF_OPEN_SYM(copy_sym, name, "_copy");
   CG_CHARBUF_OPEN_SYM(perf_index, name, "_perf_index");
+  CG_CHARBUF_OPEN_SYM(set_encoding_sym, name, "_set_encoding");
 
   sem_struct *sptr = ast->sem->sptr;
   uint32_t count = sptr->count;
@@ -5941,6 +5942,17 @@ static void cg_proc_result_set(ast_node *ast) {
     }
   }
 
+  // Add a helper function that overrides CQL_DATA_TYPE_ENCODED bit of a resultset.
+  // It's a debugging function that allow you to turn ON/OFF encoding/decoding when
+  // your app is running.
+  if (use_vault) {
+    bprintf(h, "\nextern void %s(cql_int32 col, cql_bool encode);\n", set_encoding_sym.ptr);
+    bprintf(d, "\nvoid %s(cql_int32 col, cql_bool encode) {\n", set_encoding_sym.ptr);
+    bprintf(d, "  return cql_set_encoding(%s, %s, col, encode);\n", data_types_sym.ptr, data_types_count_sym.ptr);
+    bprintf(d, "}\n");
+  }
+
+  CHARBUF_CLOSE(set_encoding_sym);
   CHARBUF_CLOSE(perf_index);
   CHARBUF_CLOSE(copy_sym);
   CHARBUF_CLOSE(fetch_results_sym);

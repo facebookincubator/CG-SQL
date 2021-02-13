@@ -29,6 +29,7 @@ cql_code test_all_column_encoded_cursor(sqlite3 *db);
 cql_code test_all_column_encoded_out_union(sqlite3 *db);
 cql_code test_all_column_encoded_multi_out_union(sqlite3 *db);
 cql_code test_all_column_some_encoded_field(sqlite3 *db);
+cql_code test_all_column_encoded_runtime_turn_on_off(sqlite3 *db);
 
 static int32_t steps_until_fail = 0;
 static int32_t trace_received = 0;
@@ -117,6 +118,9 @@ cql_code run_client(sqlite3 *db) {
 
   SQL_E(test_all_column_encoded_multi_out_union(db));
   E(!cql_outstanding_refs, "outstanding refs in test_all_column_encoded_multi_out_union: %d\n", cql_outstanding_refs);
+
+  SQL_E(test_all_column_encoded_runtime_turn_on_off(db));
+  E(!cql_outstanding_refs, "outstanding refs in test_all_column_encoded_runtime_turn_on_off: %d\n", cql_outstanding_refs);
 
   SQL_E(test_all_column_some_encoded_field(db));
   E(!cql_outstanding_refs, "outstanding refs in test_all_column_some_encoded_field: %d\n", cql_outstanding_refs);
@@ -953,6 +957,47 @@ cql_code test_all_column_encoded_out_union(sqlite3 *db) {
   cql_blob_release(bl1_decode);
   cql_blob_release(bl1_exp);
 
+  cql_result_set_release(result_set);
+
+  tests_passed++;
+  return SQLITE_OK;
+}
+
+cql_code test_all_column_encoded_runtime_turn_on_off(sqlite3 *db) {
+  printf("Running column encoded turn off fetchers test\n");
+  tests++;
+
+  load_decoded_multi_out_union_result_set_ref result_set;
+  SQL_E(load_decoded_multi_out_union_fetch_results(db, &result_set));
+  E(load_decoded_multi_out_union_result_count(result_set) == 2, "expected 2 rows from result table\n");
+  E(cql_result_set_get_meta(result_set)->columnCount == 12, "expected 12 columns from result table\n");
+  load_decoded_multi_out_union_result_set_ref rs = (load_decoded_multi_out_union_result_set_ref)result_set;
+
+  cql_bool b0 = load_decoded_multi_out_union_get_b0_value(rs, 1);
+  E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 0), "expected b0 is encoded\n");
+  cql_bool b0_exp = cql_decode_bool(db, b0);
+  E(b0_exp == 0, "expected b0 is 0, value %d\n", b0_exp);
+  cql_result_set_release(result_set);
+
+
+  load_decoded_multi_out_union_set_encoding(0, false);
+  SQL_E(load_decoded_multi_out_union_fetch_results(db, &result_set));
+  rs = (load_decoded_multi_out_union_result_set_ref)result_set;
+
+  b0 = load_decoded_multi_out_union_get_b0_value(rs, 1);
+  E(!cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 0), "expected b0 is encoded\n");
+  E(b0 == 0, "expected b0 is 0, value %d\n", b0);
+  cql_result_set_release(result_set);
+
+
+  load_decoded_multi_out_union_set_encoding(0, true);
+  SQL_E(load_decoded_multi_out_union_fetch_results(db, &result_set));
+  rs = (load_decoded_multi_out_union_result_set_ref)result_set;
+
+  b0 = load_decoded_multi_out_union_get_b0_value(rs, 1);
+  E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 0), "expected b0 is encoded\n");
+  b0_exp = cql_decode_bool(db, b0);
+  E(b0_exp == 0, "expected b0 is 0, value %d\n", b0_exp);
   cql_result_set_release(result_set);
 
   tests_passed++;
