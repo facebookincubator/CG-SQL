@@ -307,8 +307,7 @@ static void cg_generate_baseline_tables(charbuf *output) {
   init_gen_sql_callbacks(&callbacks);
   callbacks.col_def_callback = cg_suppress_new_col_def;
   callbacks.if_not_exists_callback = cg_schema_force_if_not_exists;
-  callbacks.for_sqlite = false;
-  callbacks.suppress_attributes = true;
+  callbacks.mode = gen_mode_no_annotations;
 
   for (list_item *item = all_tables_list; item; item = item->next) {
     ast_node *ast = item->ast;
@@ -565,8 +564,7 @@ static void cg_schema_manage_triggers(charbuf *output, int32_t *drops, int32_t *
   // non-null-callbacks will generate SQL for Sqlite (no attributes)
   gen_sql_callbacks callbacks;
   init_gen_sql_callbacks(&callbacks);
-  callbacks.for_sqlite = false;
-  callbacks.suppress_attributes = true;
+  callbacks.mode = gen_mode_no_annotations;
 
   *creates = 0;
   *drops = 1;  // for now we have at least one for the legacy drops
@@ -631,8 +629,7 @@ static void cg_schema_manage_views(charbuf *output, int32_t *drops, int32_t *cre
   // non-null-callbacks will generate SQL for Sqlite (no attributes)
   gen_sql_callbacks callbacks;
   init_gen_sql_callbacks(&callbacks);
-  callbacks.for_sqlite = false;
-  callbacks.suppress_attributes = true;
+  callbacks.mode = gen_mode_no_annotations;
 
   *drops = *creates = 0;
 
@@ -695,8 +692,7 @@ static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *c
   // non-null-callbacks will generate SQL for Sqlite (no attributes)
   gen_sql_callbacks callbacks;
   init_gen_sql_callbacks(&callbacks);
-  callbacks.for_sqlite = false;
-  callbacks.suppress_attributes = true;
+  callbacks.mode = gen_mode_no_annotations;
 
   *drops = *creates = 0;
 
@@ -800,8 +796,7 @@ static void cg_schema_manage_recreate_tables(charbuf *output, recreate_annotatio
   // non-null-callbacks will generate SQL for Sqlite (no attributes)
   gen_sql_callbacks callbacks;
   init_gen_sql_callbacks(&callbacks);
-  callbacks.for_sqlite = false;
-  callbacks.suppress_attributes = true;
+  callbacks.mode = gen_mode_no_annotations;
 
   crc_t table_crc = 0;
 
@@ -1054,8 +1049,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
         CSTR col_type = coretype_string(def->sem->sem_type);
         gen_sql_callbacks callbacks;
         init_gen_sql_callbacks(&callbacks);
-        callbacks.for_sqlite = false;
-        callbacks.suppress_attributes = true;
+        callbacks.mode = gen_mode_no_annotations;
 
         CHARBUF_OPEN(sql_out);
         gen_set_output_buffer(&sql_out);
@@ -1094,8 +1088,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
         init_gen_sql_callbacks(&callbacks);
         callbacks.col_def_callback = cg_suppress_new_col_def;
         callbacks.if_not_exists_callback = cg_schema_force_if_not_exists;
-        callbacks.for_sqlite = false;
-        callbacks.suppress_attributes = true;
+        callbacks.mode = gen_mode_no_annotations;
 
         CHARBUF_OPEN(sql_out);
         gen_set_output_buffer(&sql_out);

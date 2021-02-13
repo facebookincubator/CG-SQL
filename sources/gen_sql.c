@@ -67,11 +67,11 @@ cql_noexport void gen_to_stdout(ast_node *ast, gen_func fn) {
 }
 
 static bool_t suppress_attributes() {
-  return gen_callbacks && (gen_callbacks->for_sqlite || gen_callbacks->suppress_attributes);
+  return gen_callbacks && (gen_callbacks->mode == gen_mode_sql || gen_callbacks->mode == gen_mode_no_annotations);
 }
 
 static bool_t for_sqlite() {
-  return gen_callbacks && gen_callbacks->for_sqlite;
+  return gen_callbacks && gen_callbacks->mode == gen_mode_sql;
 }
 
 cql_noexport void gen_stmt_list_to_stdout(ast_node *ast) {
@@ -144,6 +144,10 @@ cql_noexport void gen_misc_attr_value(ast_node *ast) {
 
 static void gen_misc_attr(ast_node *ast) {
   Contract(is_ast_misc_attr(ast));
+  if (suppress_attributes()) {
+    return;
+  }
+
   gen_printf("@ATTRIBUTE(");
   if (is_ast_dot(ast->left)) {
     gen_name(ast->left->left);
@@ -1617,7 +1621,7 @@ cql_noexport void init_gen_sql_callbacks(gen_sql_callbacks *cb)
   memset((void *)cb, 0, sizeof(*gen_callbacks));
   // with callbacks is for SQLite be default, the normal raw output
   // case is done with callbacks == NULL
-  cb->for_sqlite = true;
+  cb->mode = gen_mode_sql;
 }
 
 static void gen_select_statement_type(ast_node *ast) {
@@ -2260,7 +2264,7 @@ static void gen_insert_dummy_spec(ast_node *ast) {
   EXTRACT_ANY_NOTNULL(seed_expr, ast->left);
   EXTRACT_OPTION(flags, ast->right);
 
-  if (for_sqlite()) {
+  if (suppress_attributes()) {
     return;
   }
 
@@ -2539,7 +2543,7 @@ cql_noexport void gen_declare_proc_from_create_proc(ast_node *ast) {
           gen_printf(" NOT NULL");
         }
 
-        if (sensitive_flag(sem_type)) {
+        if (sensitive_flag(sem_type) && !for_sqlite()) {
           gen_printf(" @SENSITIVE");
         }
 

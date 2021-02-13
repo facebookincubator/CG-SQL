@@ -666,6 +666,7 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
   gen_sql_callbacks callbacks;
   init_gen_sql_callbacks(&callbacks);
   callbacks.if_not_exists_callback = cg_test_helpers_force_if_not_exists;
+  callbacks.mode = gen_mode_no_annotations;
 
   CHARBUF_OPEN(gen_create_tables);
   CHARBUF_OPEN(gen_drop_tables);
@@ -690,22 +691,28 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
   for (list_item *item = info.sorted_tables_ast; item; item = item->next) {
     EXTRACT_ANY_NOTNULL(table_or_view, item->ast);
 
+    ast_node *table_or_view_or_virtual_table = table_or_view;
+    bool_t is_virtual_table = table_or_view->parent && is_ast_create_virtual_table_stmt(table_or_view->parent);
+    if (is_virtual_table) {
+      table_or_view_or_virtual_table = table_or_view->parent;
+    }
+
     gen_set_output_buffer(&gen_create_tables);
-    gen_statement_with_callbacks(table_or_view, &callbacks);
+    gen_statement_with_callbacks(table_or_view_or_virtual_table, &callbacks);
     bprintf(&gen_create_tables, ";\n");
 
     CSTR table_name = get_table_or_view_name(table_or_view);
 
     cg_emit_index_stmt(table_name, &gen_create_tables, &gen_drop_indexes, &callbacks);
 
-    if (is_ast_create_table_stmt(table_or_view)) {
+    if (is_ast_create_table_stmt(table_or_view) && !is_virtual_table) {
       cg_dummy_test_populate(&gen_populate_tables, table_or_view, &value_seed);
     }
 
     bprintf(&gen_read_tables, "\n");
     bprintf(&gen_read_tables, "CREATE PROC test_%s_read_%s()\n", proc_name, table_name);
     bprintf(&gen_read_tables, "BEGIN\n");
-    bprintf(&gen_read_tables, " SELECT * FROM %s;\n", table_name);
+    bprintf(&gen_read_tables, "  SELECT * FROM %s;\n", table_name);
     bprintf(&gen_read_tables, "END;\n");
   }
 
@@ -751,11 +758,13 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
   }
 
   // populate tables proc
-  bprintf(cg_th_procs, "\n");
-  bprintf(cg_th_procs, "CREATE PROC test_%s_populate_tables()\n", proc_name);
-  bprintf(cg_th_procs, "BEGIN\n");
-  bindent(cg_th_procs, &gen_populate_tables, 2);
-  bprintf(cg_th_procs, "END;\n");
+  if (gen_populate_tables.used > 1) {
+    bprintf(cg_th_procs, "\n");
+    bprintf(cg_th_procs, "CREATE PROC test_%s_populate_tables()\n", proc_name);
+    bprintf(cg_th_procs, "BEGIN\n");
+    bindent(cg_th_procs, &gen_populate_tables, 2);
+    bprintf(cg_th_procs, "END;\n");
+  }
 
   // drop tables proc
   bprintf(cg_th_procs, "\n");

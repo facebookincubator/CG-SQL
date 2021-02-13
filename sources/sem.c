@@ -2007,7 +2007,7 @@ error:
   // append the text of the offensive expression
   gen_sql_callbacks callbacks;
   init_gen_sql_callbacks(&callbacks);
-  callbacks.for_sqlite = false; // we want all the text, unexpanded, so NOT for sqlite output (this is raw echo)
+  callbacks.mode = gen_mode_echo; // we want all the text, unexpanded, so NOT for sqlite output (this is raw echo)
   gen_set_output_buffer(&tmp);
   gen_with_callbacks(ast, gen_root_expr, &callbacks);
   report_error(ast, tmp.ptr, NULL);
@@ -9199,7 +9199,7 @@ static bool_t force_no_if_not_exists(ast_node *ast, void *context, charbuf *outp
 static bool_t sem_validate_identical_ddl(ast_node *cur, ast_node *prev) {
   gen_sql_callbacks callbacks;
   init_gen_sql_callbacks(&callbacks);
-  callbacks.for_sqlite = false; // we want all the options to count, so NOT for sqlite output
+  callbacks.mode = gen_mode_echo; // we want all the options to count, so NOT for sqlite output
   callbacks.if_not_exists_callback = force_no_if_not_exists; // we'll strip IF NOT EXISTS if it's there
   return sem_validate_identical_text(cur, prev, gen_one_stmt, &callbacks);
 }
@@ -12463,7 +12463,7 @@ static void sem_fragment_select_everything_check(ast_node* select_stmt, CSTR nam
 
   gen_sql_callbacks callbacks;
   init_gen_sql_callbacks(&callbacks);
-  callbacks.for_sqlite = false; // we want all the text, unexpanded, so NOT for sqlite output (this is raw echo)
+  callbacks.mode = gen_mode_echo; // we want all the text, unexpanded, so NOT for sqlite output (this is raw echo)
   gen_set_output_buffer(&cur_sql);
   gen_with_callbacks(select_stmt, gen_one_stmt, &callbacks);
 
@@ -12508,7 +12508,7 @@ static void sem_fragment_union_shape(ast_node *select_core, CSTR name)
 
   gen_sql_callbacks callbacks;
   init_gen_sql_callbacks(&callbacks);
-  callbacks.for_sqlite = false; // we want all the text, unexpanded, so NOT for sqlite output (this is raw echo)
+  callbacks.mode = gen_mode_echo; // we want all the text, unexpanded, so NOT for sqlite output (this is raw echo)
   gen_set_output_buffer(&cur_sql);
   gen_with_callbacks(select_core, gen_select_core, &callbacks);
 

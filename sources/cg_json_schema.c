@@ -234,7 +234,7 @@ static void cg_json_attr_value(charbuf *output, ast_node *ast) {
     gen_set_output_buffer(output);
     gen_sql_callbacks callbacks;
     init_gen_sql_callbacks(&callbacks);
-    callbacks.for_sqlite = true;
+    callbacks.mode = gen_mode_sql;
     callbacks.convert_hex = true;  // json doesn't support hex numbers
     gen_with_callbacks(ast, gen_root_expr, &callbacks);
   }

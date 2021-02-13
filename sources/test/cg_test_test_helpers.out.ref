@@ -239,27 +239,27 @@ END;
 
 CREATE PROC test_sample_proc7_read_Baa()
 BEGIN
- SELECT * FROM Baa;
+  SELECT * FROM Baa;
 END;
 
 CREATE PROC test_sample_proc7_read_Aaa()
 BEGIN
- SELECT * FROM Aaa;
+  SELECT * FROM Aaa;
 END;
 
 CREATE PROC test_sample_proc7_read_dbl_table()
 BEGIN
- SELECT * FROM dbl_table;
+  SELECT * FROM dbl_table;
 END;
 
 CREATE PROC test_sample_proc7_read_Caa()
 BEGIN
- SELECT * FROM Caa;
+  SELECT * FROM Caa;
 END;
 
 CREATE PROC test_sample_proc7_read_Foo()
 BEGIN
- SELECT * FROM Foo;
+  SELECT * FROM Foo;
 END;
 
 CREATE PROC test_sample_proc7_drop_indexes()
@@ -371,27 +371,27 @@ END;
 
 CREATE PROC test_sample_proc13_read_Baa()
 BEGIN
- SELECT * FROM Baa;
+  SELECT * FROM Baa;
 END;
 
 CREATE PROC test_sample_proc13_read_Aaa()
 BEGIN
- SELECT * FROM Aaa;
+  SELECT * FROM Aaa;
 END;
 
 CREATE PROC test_sample_proc13_read_dbl_table()
 BEGIN
- SELECT * FROM dbl_table;
+  SELECT * FROM dbl_table;
 END;
 
 CREATE PROC test_sample_proc13_read_Caa()
 BEGIN
- SELECT * FROM Caa;
+  SELECT * FROM Caa;
 END;
 
 CREATE PROC test_sample_proc13_read_Foo()
 BEGIN
- SELECT * FROM Foo;
+  SELECT * FROM Foo;
 END;
 
 CREATE PROC test_sample_proc13_drop_indexes()
@@ -506,27 +506,27 @@ END;
 
 CREATE PROC test_sample_proc14_read_Baa()
 BEGIN
- SELECT * FROM Baa;
+  SELECT * FROM Baa;
 END;
 
 CREATE PROC test_sample_proc14_read_Aaa()
 BEGIN
- SELECT * FROM Aaa;
+  SELECT * FROM Aaa;
 END;
 
 CREATE PROC test_sample_proc14_read_dbl_table()
 BEGIN
- SELECT * FROM dbl_table;
+  SELECT * FROM dbl_table;
 END;
 
 CREATE PROC test_sample_proc14_read_Caa()
 BEGIN
- SELECT * FROM Caa;
+  SELECT * FROM Caa;
 END;
 
 CREATE PROC test_sample_proc14_read_Foo()
 BEGIN
- SELECT * FROM Foo;
+  SELECT * FROM Foo;
 END;
 
 CREATE PROC test_sample_proc14_drop_indexes()
@@ -624,32 +624,32 @@ END;
 
 CREATE PROC test_sample_proc15_read_primary_as_column()
 BEGIN
- SELECT * FROM primary_as_column;
+  SELECT * FROM primary_as_column;
 END;
 
 CREATE PROC test_sample_proc15_read_Baa()
 BEGIN
- SELECT * FROM Baa;
+  SELECT * FROM Baa;
 END;
 
 CREATE PROC test_sample_proc15_read_Aaa()
 BEGIN
- SELECT * FROM Aaa;
+  SELECT * FROM Aaa;
 END;
 
 CREATE PROC test_sample_proc15_read_dbl_table()
 BEGIN
- SELECT * FROM dbl_table;
+  SELECT * FROM dbl_table;
 END;
 
 CREATE PROC test_sample_proc15_read_Caa()
 BEGIN
- SELECT * FROM Caa;
+  SELECT * FROM Caa;
 END;
 
 CREATE PROC test_sample_proc15_read_Foo()
 BEGIN
- SELECT * FROM Foo;
+  SELECT * FROM Foo;
 END;
 
 CREATE PROC test_sample_proc15_drop_indexes()
@@ -734,22 +734,22 @@ END;
 
 CREATE PROC test_sample_proc16_read_Baa()
 BEGIN
- SELECT * FROM Baa;
+  SELECT * FROM Baa;
 END;
 
 CREATE PROC test_sample_proc16_read_Aaa()
 BEGIN
- SELECT * FROM Aaa;
+  SELECT * FROM Aaa;
 END;
 
 CREATE PROC test_sample_proc16_read_dbl_table()
 BEGIN
- SELECT * FROM dbl_table;
+  SELECT * FROM dbl_table;
 END;
 
 CREATE PROC test_sample_proc16_read_Caa()
 BEGIN
- SELECT * FROM Caa;
+  SELECT * FROM Caa;
 END;
 
 CREATE PROC test_sample_proc16_drop_indexes()
@@ -847,32 +847,32 @@ END;
 
 CREATE PROC test_sample_proc17_read_Baa()
 BEGIN
- SELECT * FROM Baa;
+  SELECT * FROM Baa;
 END;
 
 CREATE PROC test_sample_proc17_read_Aaa()
 BEGIN
- SELECT * FROM Aaa;
+  SELECT * FROM Aaa;
 END;
 
 CREATE PROC test_sample_proc17_read_dbl_table()
 BEGIN
- SELECT * FROM dbl_table;
+  SELECT * FROM dbl_table;
 END;
 
 CREATE PROC test_sample_proc17_read_Caa()
 BEGIN
- SELECT * FROM Caa;
+  SELECT * FROM Caa;
 END;
 
 CREATE PROC test_sample_proc17_read_Foo()
 BEGIN
- SELECT * FROM Foo;
+  SELECT * FROM Foo;
 END;
 
 CREATE PROC test_sample_proc17_read_primary_as_column()
 BEGIN
- SELECT * FROM primary_as_column;
+  SELECT * FROM primary_as_column;
 END;
 
 CREATE PROC test_sample_proc17_drop_indexes()
@@ -957,22 +957,22 @@ END;
 
 CREATE PROC test_sample_proc18_read_Baa()
 BEGIN
- SELECT * FROM Baa;
+  SELECT * FROM Baa;
 END;
 
 CREATE PROC test_sample_proc18_read_Aaa()
 BEGIN
- SELECT * FROM Aaa;
+  SELECT * FROM Aaa;
 END;
 
 CREATE PROC test_sample_proc18_read_dbl_table()
 BEGIN
- SELECT * FROM dbl_table;
+  SELECT * FROM dbl_table;
 END;
 
 CREATE PROC test_sample_proc18_read_Caa()
 BEGIN
- SELECT * FROM Caa;
+  SELECT * FROM Caa;
 END;
 
 CREATE PROC test_sample_proc18_drop_indexes()
@@ -1006,7 +1006,7 @@ END;
 
 CREATE PROC test_sample_proc19_read_Baa()
 BEGIN
- SELECT * FROM Baa;
+  SELECT * FROM Baa;
 END;
 
 CREATE PROC test_sample_proc19_drop_indexes()
@@ -1090,22 +1090,22 @@ END;
 
 CREATE PROC test_sample_proc20_read_Baa()
 BEGIN
- SELECT * FROM Baa;
+  SELECT * FROM Baa;
 END;
 
 CREATE PROC test_sample_proc20_read_Aaa()
 BEGIN
- SELECT * FROM Aaa;
+  SELECT * FROM Aaa;
 END;
 
 CREATE PROC test_sample_proc20_read_dbl_table()
 BEGIN
- SELECT * FROM dbl_table;
+  SELECT * FROM dbl_table;
 END;
 
 CREATE PROC test_sample_proc20_read_Caa()
 BEGIN
- SELECT * FROM Caa;
+  SELECT * FROM Caa;
 END;
 
 CREATE PROC test_sample_proc20_drop_indexes()
@@ -1206,32 +1206,32 @@ END;
 
 CREATE PROC test_sample_proc21_read_Baa()
 BEGIN
- SELECT * FROM Baa;
+  SELECT * FROM Baa;
 END;
 
 CREATE PROC test_sample_proc21_read_Aaa()
 BEGIN
- SELECT * FROM Aaa;
+  SELECT * FROM Aaa;
 END;
 
 CREATE PROC test_sample_proc21_read_dbl_table()
 BEGIN
- SELECT * FROM dbl_table;
+  SELECT * FROM dbl_table;
 END;
 
 CREATE PROC test_sample_proc21_read_Caa()
 BEGIN
- SELECT * FROM Caa;
+  SELECT * FROM Caa;
 END;
 
 CREATE PROC test_sample_proc21_read_primary_as_column()
 BEGIN
- SELECT * FROM primary_as_column;
+  SELECT * FROM primary_as_column;
 END;
 
 CREATE PROC test_sample_proc21_read_Complex_view()
 BEGIN
- SELECT * FROM Complex_view;
+  SELECT * FROM Complex_view;
 END;
 
 CREATE PROC test_sample_proc21_drop_indexes()
@@ -1342,32 +1342,32 @@ END;
 
 CREATE PROC test_sample_proc22_read_Baa()
 BEGIN
- SELECT * FROM Baa;
+  SELECT * FROM Baa;
 END;
 
 CREATE PROC test_sample_proc22_read_Aaa()
 BEGIN
- SELECT * FROM Aaa;
+  SELECT * FROM Aaa;
 END;
 
 CREATE PROC test_sample_proc22_read_dbl_table()
 BEGIN
- SELECT * FROM dbl_table;
+  SELECT * FROM dbl_table;
 END;
 
 CREATE PROC test_sample_proc22_read_Caa()
 BEGIN
- SELECT * FROM Caa;
+  SELECT * FROM Caa;
 END;
 
 CREATE PROC test_sample_proc22_read_primary_as_column()
 BEGIN
- SELECT * FROM primary_as_column;
+  SELECT * FROM primary_as_column;
 END;
 
 CREATE PROC test_sample_proc22_read_Complex_view()
 BEGIN
- SELECT * FROM Complex_view;
+  SELECT * FROM Complex_view;
 END;
 
 CREATE PROC test_sample_proc22_drop_indexes()
@@ -1478,32 +1478,32 @@ END;
 
 CREATE PROC test_sample_proc23_read_Baa()
 BEGIN
- SELECT * FROM Baa;
+  SELECT * FROM Baa;
 END;
 
 CREATE PROC test_sample_proc23_read_Aaa()
 BEGIN
- SELECT * FROM Aaa;
+  SELECT * FROM Aaa;
 END;
 
 CREATE PROC test_sample_proc23_read_dbl_table()
 BEGIN
- SELECT * FROM dbl_table;
+  SELECT * FROM dbl_table;
 END;
 
 CREATE PROC test_sample_proc23_read_Caa()
 BEGIN
- SELECT * FROM Caa;
+  SELECT * FROM Caa;
 END;
 
 CREATE PROC test_sample_proc23_read_primary_as_column()
 BEGIN
- SELECT * FROM primary_as_column;
+  SELECT * FROM primary_as_column;
 END;
 
 CREATE PROC test_sample_proc23_read_Complex_view()
 BEGIN
- SELECT * FROM Complex_view;
+  SELECT * FROM Complex_view;
 END;
 
 CREATE PROC test_sample_proc23_drop_indexes()
@@ -1588,22 +1588,22 @@ END;
 
 CREATE PROC test_sample_proc24_read_Baa()
 BEGIN
- SELECT * FROM Baa;
+  SELECT * FROM Baa;
 END;
 
 CREATE PROC test_sample_proc24_read_Aaa()
 BEGIN
- SELECT * FROM Aaa;
+  SELECT * FROM Aaa;
 END;
 
 CREATE PROC test_sample_proc24_read_dbl_table()
 BEGIN
- SELECT * FROM dbl_table;
+  SELECT * FROM dbl_table;
 END;
 
 CREATE PROC test_sample_proc24_read_Caa()
 BEGIN
- SELECT * FROM Caa;
+  SELECT * FROM Caa;
 END;
 
 CREATE PROC test_sample_proc24_drop_indexes()
@@ -1697,22 +1697,22 @@ END;
 
 CREATE PROC test_sample_proc25_read_Baa()
 BEGIN
- SELECT * FROM Baa;
+  SELECT * FROM Baa;
 END;
 
 CREATE PROC test_sample_proc25_read_Aaa()
 BEGIN
- SELECT * FROM Aaa;
+  SELECT * FROM Aaa;
 END;
 
 CREATE PROC test_sample_proc25_read_dbl_table()
 BEGIN
- SELECT * FROM dbl_table;
+  SELECT * FROM dbl_table;
 END;
 
 CREATE PROC test_sample_proc25_read_Caa()
 BEGIN
- SELECT * FROM Caa;
+  SELECT * FROM Caa;
 END;
 
 CREATE PROC test_sample_proc25_drop_indexes()
@@ -1756,7 +1756,7 @@ END;
 
 CREATE PROC test_sample_proc26_read_dbl_table()
 BEGIN
- SELECT * FROM dbl_table;
+  SELECT * FROM dbl_table;
 END;
 
 -- The statement ending at line XXXX
@@ -1787,7 +1787,7 @@ END;
 
 CREATE PROC test_sample_proc27_read_experiment_value()
 BEGIN
- SELECT * FROM experiment_value;
+  SELECT * FROM experiment_value;
 END;
 
 -- The statement ending at line XXXX
@@ -1843,12 +1843,12 @@ END;
 
 CREATE PROC test_sample_proc28_read_Aaa()
 BEGIN
- SELECT * FROM Aaa;
+  SELECT * FROM Aaa;
 END;
 
 CREATE PROC test_sample_proc28_read_dbl_table()
 BEGIN
- SELECT * FROM dbl_table;
+  SELECT * FROM dbl_table;
 END;
 
 -- The statement ending at line XXXX
@@ -1877,7 +1877,7 @@ END;
 
 CREATE PROC test_sample_proc29_read_dbl_table()
 BEGIN
- SELECT * FROM dbl_table;
+  SELECT * FROM dbl_table;
 END;
 
 -- The statement ending at line XXXX
@@ -1933,12 +1933,12 @@ END;
 
 CREATE PROC test_sample_proc30_read_Aaa()
 BEGIN
- SELECT * FROM Aaa;
+  SELECT * FROM Aaa;
 END;
 
 CREATE PROC test_sample_proc30_read_dbl_table()
 BEGIN
- SELECT * FROM dbl_table;
+  SELECT * FROM dbl_table;
 END;
 
 -- The statement ending at line XXXX
@@ -2003,22 +2003,22 @@ END;
 
 CREATE PROC test_sample_proc31_read_T1()
 BEGIN
- SELECT * FROM T1;
+  SELECT * FROM T1;
 END;
 
 CREATE PROC test_sample_proc31_read_T2()
 BEGIN
- SELECT * FROM T2;
+  SELECT * FROM T2;
 END;
 
 CREATE PROC test_sample_proc31_read_T4()
 BEGIN
- SELECT * FROM T4;
+  SELECT * FROM T4;
 END;
 
 CREATE PROC test_sample_proc31_read_T3()
 BEGIN
- SELECT * FROM T3;
+  SELECT * FROM T3;
 END;
 
 -- The statement ending at line XXXX
@@ -2097,22 +2097,22 @@ END;
 
 CREATE PROC test_sample_proc311_read_Baa()
 BEGIN
- SELECT * FROM Baa;
+  SELECT * FROM Baa;
 END;
 
 CREATE PROC test_sample_proc311_read_Aaa()
 BEGIN
- SELECT * FROM Aaa;
+  SELECT * FROM Aaa;
 END;
 
 CREATE PROC test_sample_proc311_read_dbl_table()
 BEGIN
- SELECT * FROM dbl_table;
+  SELECT * FROM dbl_table;
 END;
 
 CREATE PROC test_sample_proc311_read_Caa()
 BEGIN
- SELECT * FROM Caa;
+  SELECT * FROM Caa;
 END;
 
 CREATE PROC test_sample_proc311_drop_indexes()
@@ -2151,12 +2151,12 @@ END;
 
 CREATE PROC test_no_long_to_conversion_read_t5()
 BEGIN
- SELECT * FROM t5;
+  SELECT * FROM t5;
 END;
 
 CREATE PROC test_no_long_to_conversion_read_t6()
 BEGIN
- SELECT * FROM t6;
+  SELECT * FROM t6;
 END;
 
 -- The statement ending at line XXXX
@@ -2184,7 +2184,7 @@ CREATE PROC test_self_ref_proc_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS self_ref_table(
     id INTEGER PRIMARY KEY,
-    id2 INTEGER,
+    id2 INTEGER @SENSITIVE,
     name TEXT,
     FOREIGN KEY (id2) REFERENCES self_ref_table (id)
   );
@@ -2203,7 +2203,7 @@ END;
 
 CREATE PROC test_self_ref_proc_read_self_ref_table()
 BEGIN
- SELECT * FROM self_ref_table;
+  SELECT * FROM self_ref_table;
 END;
 
 -- The statement ending at line XXXX
@@ -2213,7 +2213,7 @@ CREATE PROC test_self_ref_proc_no_data_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS self_ref_table(
     id INTEGER PRIMARY KEY,
-    id2 INTEGER,
+    id2 INTEGER @SENSITIVE,
     name TEXT,
     FOREIGN KEY (id2) REFERENCES self_ref_table (id)
   );
@@ -2232,7 +2232,7 @@ END;
 
 CREATE PROC test_self_ref_proc_no_data_read_self_ref_table()
 BEGIN
- SELECT * FROM self_ref_table;
+  SELECT * FROM self_ref_table;
 END;
 
 -- The statement ending at line XXXX
@@ -2260,7 +2260,7 @@ END;
 
 CREATE PROC test_self_ref_proc2_read_self_ref_table2()
 BEGIN
- SELECT * FROM self_ref_table2;
+  SELECT * FROM self_ref_table2;
 END;
 
 -- The statement ending at line XXXX
@@ -2288,7 +2288,7 @@ END;
 
 CREATE PROC test_self_ref_proc2_no_data_read_self_ref_table2()
 BEGIN
- SELECT * FROM self_ref_table2;
+  SELECT * FROM self_ref_table2;
 END;
 
 -- The statement ending at line XXXX
@@ -2324,12 +2324,12 @@ END;
 
 CREATE PROC test_test_too_many_row_in_child_table_read_test1()
 BEGIN
- SELECT * FROM test1;
+  SELECT * FROM test1;
 END;
 
 CREATE PROC test_test_too_many_row_in_child_table_read_test2()
 BEGIN
- SELECT * FROM test2;
+  SELECT * FROM test2;
 END;
 
 -- The statement ending at line XXXX
@@ -2367,10 +2367,31 @@ END;
 
 CREATE PROC test_test_too_many_row_in_child_table_2_read_test1()
 BEGIN
- SELECT * FROM test1;
+  SELECT * FROM test1;
 END;
 
 CREATE PROC test_test_too_many_row_in_child_table_2_read_test2()
 BEGIN
- SELECT * FROM test2;
+  SELECT * FROM test2;
+END;
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_test_virtual_table_proc_create_tables()
+BEGIN
+  CREATE VIRTUAL TABLE IF NOT EXISTS basic_virtual USING module_name (this, that, the_other) AS (
+    id INTEGER,
+    t TEXT
+  );
+END;
+
+CREATE PROC test_test_virtual_table_proc_drop_tables()
+BEGIN
+  DROP TABLE IF EXISTS basic_virtual;
+END;
+
+CREATE PROC test_test_virtual_table_proc_read_basic_virtual()
+BEGIN
+  SELECT * FROM basic_virtual;
 END;

@@ -130,6 +130,11 @@ begin
   delete from T3 where id = OLD.id;
 end;
 
+create virtual table basic_virtual using module_name(this, that, the_other) as (
+  id integer,
+  t text
+);
+
 -- TEST: dummy_table only
 -- + %DECLARE PROC sample_proc1 () (id INTEGER NOT NULL, dl REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);%
 -- + %CREATE TEMP TABLE test_sample_proc1(LIKE sample_proc1);%
@@ -814,4 +819,19 @@ end;
 create proc test_too_many_row_in_child_table_2()
 begin
   select * from test2;
+end;
+
+-- TEST: test virtual table in dummy_test helper
+-- + CREATE VIRTUAL TABLE IF NOT EXISTS basic_virtual USING module_name (this, that, the_other) AS (
+-- +   id INTEGER,
+-- +   t TEXT
+-- + );
+-- + CREATE PROC test_test_virtual_table_proc_drop_tables()
+-- +   DROP TABLE IF EXISTS basic_virtual;
+-- + CREATE PROC test_test_virtual_table_proc_read_basic_virtual()
+-- +   SELECT * FROM basic_virtual;
+@attribute(cql:autotest=(dummy_test))
+create proc test_virtual_table_proc()
+begin
+  select * from basic_virtual;
 end;

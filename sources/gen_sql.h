@@ -43,6 +43,15 @@ cql_noexport void gen_to_stdout(ast_node *_Nullable ast, gen_func fn);
 // in any case the output you provide is emitted
 typedef bool_t (*_Nullable gen_sql_callback)(struct ast_node *_Nonnull ast, void *_Nullable context, charbuf *_Nonnull output);
 
+// The three mode to alter the generated cql slightly.
+enum gen_sql_mode {
+  gen_mode_echo,            // Print everything in the sql statement
+  gen_mode_sql,             // Print only statement valid to sqlite. e.g: annotation is not valid to sqlite
+  gen_mode_no_annotations   // Equivalent to gen_mode_echo without all the CQL annotations except:
+                            //   - sensentive_attr node
+                            //   - note: statements that start with @ are not annotations. like @ECHO @SCHEMA_UPGRADE_SCRIPT, ...
+};
+
 // Callbacks allow you to alter the generated sql slightly
 // this in particular lets you suppress some columns and record the use of variables
 // so that SQL can be changed to include '?' for variables and columns added
@@ -61,13 +70,9 @@ typedef struct gen_sql_callbacks {
   bool_t minify_casts;
   bool_t minify_aliases;
 
-  // output is going to SQLite so any CQL extensions (e.g. attributes)
-  // must be suppressed, this also causes the AS part of virtual table to be suppressed
-  bool_t for_sqlite;  
-
-  // output for schema upgrades doesn't want attributes on the DDL (e.g. recreate) but does
-  // otherwise want the full body so this is a subset of the for_sqlite suppression
-  bool_t suppress_attributes;
+  // mode to print cql statement: gen_mode_echo, gen_mode_sql, gen_mode_no_annotations.
+  // gen_mode_sql mode causes the AS part of virtual table to be suppressed
+  enum gen_sql_mode mode;
 
   // If CQL finds a column such as this
   // create table foo(x long int primary key autoincrement)
