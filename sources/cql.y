@@ -778,6 +778,8 @@ basic_expr:
   | window_func_inv  { $basic_expr = $window_func_inv; }
   | raise_expr  { $basic_expr = $raise_expr; }
   | '(' select_stmt ')'  { $basic_expr = $select_stmt; }
+  | '(' select_stmt IF NOTHING expr ')'  { $basic_expr = new_ast_select_if_nothing_expr($select_stmt, $expr); }
+  | '(' select_stmt IF NOTHING OR NULL_ expr ')'  { $basic_expr = new_ast_select_if_nothing_or_null_expr($select_stmt, $expr); }
   | EXISTS '(' select_stmt ')'  { $basic_expr = new_ast_exists_expr($select_stmt); }
   ;
 

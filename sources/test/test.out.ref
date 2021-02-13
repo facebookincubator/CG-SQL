@@ -1428,6 +1428,12 @@ CREATE TABLE foo(
 
 @ENFORCE_POP;
 
+SET x := ( SELECT x
+  FROM y IF NOTHING 3 );
+
+SET x := ( SELECT x
+  FROM y IF NOTHING OR NULL 3 );
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

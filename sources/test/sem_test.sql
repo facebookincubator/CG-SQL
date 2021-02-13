@@ -14121,3 +14121,79 @@ begin transaction;
 -- + {begin_trans_stmt}: ok
 -- - Error
 begin transaction;
+
+-- TEST: simple select with else
+-- + {assign}: price_d: real<dollars> variable
+-- + {select_if_nothing_expr}: real notnull
+-- + {select_stmt}: _anon: integer notnull
+-- + {dbl 2.0}: real notnull
+-- - Error
+set price_d := (select 1 if nothing 2.0);
+
+-- TEST: simple select with else (upgrade from the left)
+-- + {assign}: price_d: real<dollars> variable
+-- + {select_if_nothing_expr}: real notnull
+-- + {select_stmt}: _anon: real notnull
+-- + {int 4}: integer notnull
+-- - Error
+set price_d := (select 3.0 if nothing 4);
+
+-- TEST: simple select with else (upgrade from the left)
+-- + {assign}: err
+-- + {select_if_nothing_expr}: err
+-- + {select_stmt}: _anon: real notnull
+-- + {name price_e}: price_e: real<euros> variable
+-- + Error % expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
+-- +1 Error
+set price_d := (select 3.0 if nothing price_e);
+
+-- TEST: simple select with else (upgrade from the left)
+-- + {assign}: err
+-- + {select_if_nothing_expr}: err
+-- + {select_stmt}: price_d: real<dollars> variable
+-- + {name price_e}: err
+-- + Error % expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
+-- +1 Error
+set my_real := (select price_d if nothing price_e);
+
+-- TEST: simple select with else (upgrade from the left)
+-- + {assign}: err
+-- + {select_if_nothing_or_null_expr}: err
+-- + {select_stmt}: _anon: text notnull
+-- + {name price_e}: price_e: real<euros> variable
+-- + Error % incompatible types in expression 'IF NOTHING OR NULL'
+-- +1 Error
+set price_d := (select "x" if nothing or null price_e);
+
+-- TEST: simple select with else (upgrade from the left)
+-- + {assign}: err
+-- + {select_if_nothing_or_null_expr}: err
+-- + {select_stmt}: _anon: text notnull
+-- + {name obj_var}: obj_var: object variable
+-- + Error % right operand cannot be an object in 'IF NOTHING OR NULL'
+-- +1 Error
+set price_d := (select "x" if nothing or null obj_var);
+
+-- - Error
+declare real_nn real not null;
+
+-- TEST: if nothing or null gets not null result if right side is not null
+-- +  {assign}: real_nn: real notnull variable
+-- + {select_if_nothing_or_null_expr}: real notnull
+-- + {select_stmt}: my_real: real variable
+-- + {dbl 1.0}: real notnull
+-- - Error
+set real_nn := (select my_real if nothing or null 1.0);
+
+-- TEST: if nothing does NOT get not null result if only right side is not null
+-- + {assign}: err
+-- + Error % cannot assign/copy possibly null expression to not null target 'real_nn'
+-- +1 Error
+set real_nn := (select my_real if nothing 1.0);
+
+-- TEST: error inside the operator should prop out
+-- + {assign}: err
+-- + {select_if_nothing_expr}: err
+-- + Error % string operand not allowed in 'NOT'
+-- +1 Error
+set real_nn := (select not 'x' if nothing 1.0);
