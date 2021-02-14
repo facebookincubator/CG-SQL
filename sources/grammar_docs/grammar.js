@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Thu Feb 11 09:27:14 2021
+// Snapshot as of Sun Feb 14 10:05:14 2021
 
 
 const PREC = {
@@ -92,7 +92,7 @@ module.exports = grammar({
     any_literal: $ => choice($.str_literal, $.num_literal, $.NULL, seq($.AT_FILE, '(', $.str_literal, ')'), $.AT_PROC, $.BLOB_LIT),
     raise_expr: $ => choice(seq($.RAISE, '(', $.IGNORE, ')'), seq($.RAISE, '(', $.ROLLBACK, ',', $.expr, ')'), seq($.RAISE, '(', $.ABORT, ',', $.expr, ')'), seq($.RAISE, '(', $.FAIL, ',', $.expr, ')')),
     call: $ => choice(seq($.name, '(', optional($.arg_list), ')', optional($.opt_filter_clause)), seq($.name, '(', $.DISTINCT, optional($.arg_list), ')', optional($.opt_filter_clause))),
-    basic_expr: $ => choice($.name, seq($.name, '.', $.name), $.any_literal, $.const_expr, seq('(', $.expr, ')'), $.call, $.window_func_inv, $.raise_expr, seq('(', $.select_stmt, ')'), seq($.EXISTS, '(', $.select_stmt, ')')),
+    basic_expr: $ => choice($.name, seq($.name, '.', $.name), $.any_literal, $.const_expr, seq('(', $.expr, ')'), $.call, $.window_func_inv, $.raise_expr, seq('(', $.select_stmt, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.expr, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.OR, $.NULL, $.expr, ')'), seq($.EXISTS, '(', $.select_stmt, ')')),
     math_expr: $ => prec.left(choice($.basic_expr, seq($.math_expr, '&', $.math_expr), seq($.math_expr, '|', $.math_expr), seq($.math_expr, "<<", $.math_expr), seq($.math_expr, ">>", $.math_expr), seq($.math_expr, '+', $.math_expr), seq($.math_expr, '-', $.math_expr), seq($.math_expr, '*', $.math_expr), seq($.math_expr, '/', $.math_expr), seq($.math_expr, '%', $.math_expr), seq('-', $.math_expr), seq($.math_expr, "||", $.math_expr))),
     NOT_LIKE: $ => prec.left(1, seq(CI('not'), CI('like'))),
     IS_NOT: $ => prec.left(1, seq(CI('is'), CI('not'))),
@@ -354,8 +354,9 @@ module.exports = grammar({
     ABORT: $ => CI('abort'),
     FAIL: $ => CI('fail'),
     DISTINCT: $ => CI('distinct'),
-    AND: $ => CI('and'),
+    NOTHING: $ => CI('nothing'),
     OR: $ => CI('or'),
+    AND: $ => CI('and'),
     IN: $ => CI('in'),
     MATCH: $ => CI('match'),
     REGEXP: $ => CI('regexp'),
@@ -415,7 +416,6 @@ module.exports = grammar({
     INTO: $ => CI('into'),
     REPLACE: $ => CI('replace'),
     DO: $ => CI('do'),
-    NOTHING: $ => CI('nothing'),
     FUNC: $ => CI('func'),
     FUNCTION: $ => CI('function'),
     DECLARE: $ => CI('declare'),

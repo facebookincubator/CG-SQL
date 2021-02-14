@@ -1289,6 +1289,62 @@ The second form, where there is no value before the first `when` keyword, each `
 
 The result types must be compatible and the best type to hold the answer is selected with the usual promotion rules.
 
+#### SELECT expressions
+
+Single values can be extracted from SQLite using an inline `select` expression.  For instance:
+
+```sql
+set x_ := (select x from somewhere where id = 1);
+```
+
+The select statement in question must extract exactly one column and the type of the expression becomes the type of the column.  This form can appear
+anywhere an expression can be appear, though it is most commonly used in assignments.  Something like this is also valid:
+
+```sql
+if (select x from somewhere where id = 1) == 3 then
+  ...
+end if;
+```
+
+The select statement can be arbitrarly complex.
+
+Note, if the select statement returns no rows this will result in the normal error flow.  The error code will be SQLITE_DONE as this value is not expected
+in this context (SQLITE_ROW is expected as a result of the select).  This can be quite unexpected.  To avoid this mistake, CQL also supports these more tolerant forms:
+
+```sql
+set x_ := (select x from somewhere where id = 1 if nothing -1);
+```
+
+And even more generally if the schema allows for null vales and those are not desired
+
+```sql
+set x_ := (select x from somewhere where id = 1 if nothing or null -1);
+```
+
+Both of these are much safer to use as only genuine errors (e.g. the table was dropped and no longer exists) will result in the error control flow.
+
+Again note that:
+
+```sql
+set x_ := (select ifnull(x,-1) from somewhere where id = 1);
+```
+
+Would not avoid the error, because no rows returned is not at all the same as a null value returned.
+
+The `if nothing or null` form above is equivalent to this, but it is more economical, and probably clearer.
+
+```sql
+set x_ := (select ifnull(x,-1) from somewhere where id = 1 if nothing -1);
+```
+
+To compute the type of the overall expression, the rules are almost the same as normal binary operators.  In particular:
+* if the default expression is present it must be type compatible with the select result
+  * the result type is the smallest type that holds both the select value and the default expression (see normal promotion rules above)
+* object types are not allowed (SQLite cannot return an object)
+* in `(select ...)` the result type is not null if and only if the select result type is not null (see select statement, many cases)
+* in `(select ... if nothing)` the result type is not null if and only if both the select result and the default expression types are not null (normal binary rules)
+* in `(select ... if nothing or null)` the result type is not null if and only if the default expression type is not null
+
 ### Marking Data as Sensitive
 
 CQL supports the notion of 'sensitive' data in a first class way.  You can think of it as very much like nullability;  It largely begins by tagging data columns with `@sensitive`
@@ -1327,7 +1383,7 @@ So looking at that procedure we can see that it's reading sensitive data, the re
  * -sens is sensitive, that's more math
  * and the between expression is also sensitive
 
-Generally sensitivity is "radioactive" anything it touches becomes sensitive.  This is very important because even a simple looking boolean expression like `is_gay IS NOT NULL` must lead to a sensitive result or the whole process would be largely useless.  It has to be basically impossible to wash away sensitivity.
+Generally sensitivity is "radioactive" anything it touches becomes sensitive.  This is very important because even a simple looking expression like `lgbtqia IS NOT NULL` must lead to a sensitive result or the whole process would be largely useless.  It has to be basically impossible to wash away sensitivity.
 
 These rules apply to normal expressions as well as expressions in the context of SQL.  Accordingly:
 
@@ -7795,7 +7851,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu Feb 11 09:27:14 PST 2021
+Snapshot as of Sun Feb 14 10:05:14 PST 2021
 
 ### Operators and Literals
 
@@ -8317,6 +8373,8 @@ basic_expr:
   | window_func_inv
   | raise_expr
   | '(' select_stmt ')'
+  | '(' select_stmt "IF" "NOTHING" expr ')'
+  | '(' select_stmt "IF" "NOTHING" "OR" "NULL" expr ')'
   | "EXISTS" '(' select_stmt ')'
   ;
 
@@ -12282,7 +12340,7 @@ In the indicated type declaration, the indicated attribute was specified twice. 
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Thu Feb 11 09:27:15 PST 2021
+Snapshot as of Sun Feb 14 10:05:15 PST 2021
 
 ### Rules
 

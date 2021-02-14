@@ -1,6 +1,6 @@
 ---
-slug: type-kinds-intro
-title: Introducing Type "Kinds"
+slug: free-empty-results
+title: Change in No-Result Semantics
 author: CG/SQL Team
 author_title: Maintainer of CG/SQL
 author_url: https://github.com/facebookincubator
