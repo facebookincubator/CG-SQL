@@ -3898,11 +3898,6 @@ static void cg_declare_cursor(ast_node *ast) {
   else {
     bprintf(cg_declarations_output, "sqlite3_stmt *%s_stmt = NULL;\n", cursor_name);
 
-    if (in_loop) {
-      // tricky case, the call might iterate so we have to clean up the cursor before we do the call
-      bprintf(cg_main_output, "cql_finalize_stmt(&%s_stmt);\n", cursor_name);
-    }
-
     if (!is_boxed) {
       // easy case, no boxing, just finalize on exit.
       bprintf(cg_cleanup_output, "  cql_finalize_stmt(&%s_stmt);\n", cursor_name);
@@ -3938,6 +3933,11 @@ static void cg_declare_cursor(ast_node *ast) {
       // if the cursor is being handled by boxes. The box downcount will take care of it
       bprintf(cg_main_output, "%s_stmt = NULL;\n", cursor_name);
     }
+    else if (in_loop) {
+      // tricky case, the call might iterate so we have to clean up the cursor before we do the call
+      bprintf(cg_main_output, "cql_finalize_stmt(&%s_stmt);\n", cursor_name);
+    }
+
     EXTRACT_NOTNULL(call_stmt, ast->right);
     cg_call_stmt_with_cursor(call_stmt, cursor_name);
   }
