@@ -4549,10 +4549,10 @@ CQL_WARN_UNUSED cql_code radioactive_proc_fetch_results(sqlite3 *_Nonnull _db_, 
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-
 void radioactive_proc_set_encoding(cql_int32 col, cql_bool encode) {
   return cql_set_encoding(radioactive_proc_data_types, radioactive_proc_data_types_count, col, encode);
 }
+
 // export: DECLARE PROC radioactive_proc () (id INTEGER NOT NULL, data TEXT @SENSITIVE);
 CQL_WARN_UNUSED cql_code radioactive_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
@@ -5677,10 +5677,10 @@ cql_fetch_info out_union_dml_info = {
   .crc = CRC_out_union_dml,
   .perf_index = &out_union_dml_perf_index,
 };
-
 void out_union_dml_set_encoding(cql_int32 col, cql_bool encode) {
   return cql_set_encoding(out_union_dml_data_types, out_union_dml_data_types_count, col, encode);
 }
+
 // export: DECLARE PROC out_union_dml () OUT UNION (id INTEGER NOT NULL, data TEXT @SENSITIVE) USING TRANSACTION;
 
 typedef struct out_union_dml_x_row {
@@ -6463,10 +6463,10 @@ CQL_WARN_UNUSED cql_code vault_sensitive_with_values_proc_fetch_results(sqlite3 
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-
 void vault_sensitive_with_values_proc_set_encoding(cql_int32 col, cql_bool encode) {
   return cql_set_encoding(vault_sensitive_with_values_proc_data_types, vault_sensitive_with_values_proc_data_types_count, col, encode);
 }
+
 // export: DECLARE PROC vault_sensitive_with_values_proc () (id INTEGER NOT NULL, name TEXT @SENSITIVE, type LONG_INT @SENSITIVE);
 CQL_WARN_UNUSED cql_code vault_sensitive_with_values_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
@@ -6561,10 +6561,10 @@ CQL_WARN_UNUSED cql_code vault_sensitive_with_no_values_proc_fetch_results(sqlit
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-
 void vault_sensitive_with_no_values_proc_set_encoding(cql_int32 col, cql_bool encode) {
   return cql_set_encoding(vault_sensitive_with_no_values_proc_data_types, vault_sensitive_with_no_values_proc_data_types_count, col, encode);
 }
+
 // export: DECLARE PROC vault_sensitive_with_no_values_proc () (id INTEGER NOT NULL, name TEXT @SENSITIVE, type LONG_INT @SENSITIVE);
 CQL_WARN_UNUSED cql_code vault_sensitive_with_no_values_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
@@ -6662,10 +6662,10 @@ CQL_WARN_UNUSED cql_code vault_union_all_table_proc_fetch_results(sqlite3 *_Nonn
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-
 void vault_union_all_table_proc_set_encoding(cql_int32 col, cql_bool encode) {
   return cql_set_encoding(vault_union_all_table_proc_data_types, vault_union_all_table_proc_data_types_count, col, encode);
 }
+
 // export: DECLARE PROC vault_union_all_table_proc () (id INTEGER NOT NULL, name TEXT @SENSITIVE, type LONG_INT @SENSITIVE);
 CQL_WARN_UNUSED cql_code vault_union_all_table_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
@@ -6742,10 +6742,10 @@ CQL_WARN_UNUSED cql_code vault_alias_column_proc_fetch_results(sqlite3 *_Nonnull
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-
 void vault_alias_column_proc_set_encoding(cql_int32 col, cql_bool encode) {
   return cql_set_encoding(vault_alias_column_proc_data_types, vault_alias_column_proc_data_types_count, col, encode);
 }
+
 // export: DECLARE PROC vault_alias_column_proc () (alias_name TEXT @SENSITIVE);
 CQL_WARN_UNUSED cql_code vault_alias_column_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
@@ -6819,10 +6819,10 @@ CQL_WARN_UNUSED cql_code vault_alias_column_name_proc_fetch_results(sqlite3 *_No
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-
 void vault_alias_column_name_proc_set_encoding(cql_int32 col, cql_bool encode) {
   return cql_set_encoding(vault_alias_column_name_proc_data_types, vault_alias_column_name_proc_data_types_count, col, encode);
 }
+
 // export: DECLARE PROC vault_alias_column_name_proc () (alias_name TEXT @SENSITIVE);
 CQL_WARN_UNUSED cql_code vault_alias_column_name_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;

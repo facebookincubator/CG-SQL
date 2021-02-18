@@ -6088,10 +6088,10 @@ static void cg_proc_result_set(ast_node *ast) {
   // It's a debugging function that allow you to turn ON/OFF encoding/decoding when
   // your app is running.
   if (use_vault) {
-    bprintf(h, "\nextern void %s(cql_int32 col, cql_bool encode);\n", set_encoding_sym.ptr);
-    bprintf(d, "\nvoid %s(cql_int32 col, cql_bool encode) {\n", set_encoding_sym.ptr);
+    bprintf(h, "\nextern void %s(%s col, %s encode);\n", set_encoding_sym.ptr, rt->cql_int32, rt->cql_bool);
+    bprintf(d, "void %s(%s col, %s encode) {\n", set_encoding_sym.ptr, rt->cql_int32, rt->cql_bool);
     bprintf(d, "  return cql_set_encoding(%s, %s, col, encode);\n", data_types_sym.ptr, data_types_count_sym.ptr);
-    bprintf(d, "}\n");
+    bprintf(d, "}\n\n");
   }
 
   CHARBUF_CLOSE(set_encoding_sym);
