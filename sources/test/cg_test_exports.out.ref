@@ -65,6 +65,11 @@ DECLARE PROC multi_rewrite (blob_id_ INTEGER NOT NULL, b_notnull_ BLOB NOT NULL,
 DECLARE PROC fetch_to_cursor_from_cursor () OUT (A INTEGER NOT NULL, B TEXT NOT NULL);
 DECLARE PROC loop_statement_cursor () USING TRANSACTION;
 DECLARE PROC loop_statement_not_auto_cursor () USING TRANSACTION;
+DECLARE PROC simple_select () (x INTEGER NOT NULL);
+DECLARE PROC call_in_loop () USING TRANSACTION;
+DECLARE PROC call_in_loop_boxed () USING TRANSACTION;
+DECLARE PROC out_union_helper () OUT UNION (x INTEGER NOT NULL);
+DECLARE PROC call_out_union_in_loop () USING TRANSACTION;
 DECLARE PROC make_trigger () USING TRANSACTION;
 DECLARE PROC is_test ();
 DECLARE PROC is_blob ();

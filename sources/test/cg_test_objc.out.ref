@@ -1230,6 +1230,46 @@ static inline BOOL CGCFetchToCursorFromCursorEqual(CGCFetchToCursorFromCursor *r
   return CGCFetchToCursorFromCursorEqual(CGCFetchToCursorFromCursorFromCGCFetchToCursorFromCursor(resultSet1), CGCFetchToCursorFromCursorFromCGCFetchToCursorFromCursor(resultSet2));
 }
 
+@class CGCOutUnionHelper;
+
+static inline CGCOutUnionHelper *CGCOutUnionHelperFromCGCOutUnionHelper(CGCOutUnionHelperResultSetRef resultSet)
+{
+  return (__bridge CGCOutUnionHelper *)resultSet;
+}
+
+static inline CGCOutUnionHelperResultSetRef CGCOutUnionHelperFromCGCOutUnionHelper(CGCOutUnionHelper *resultSet)
+{
+  return (__bridge CGCOutUnionHelperResultSetRef)resultSet;
+}
+
+static inline int32_t CGCOutUnionHelperGetX(CGCOutUnionHelper *resultSet, int32_t row)
+{
+  CGCOutUnionHelperResultSetRef cResultSet = CGCOutUnionHelperFromCGCOutUnionHelper(resultSet);
+  return CGCOutUnionHelperGetX(cResultSet, row);
+}
+
+static inline int32_t CGCOutUnionHelperResultCount(CGCOutUnionHelper *resultSet)
+{
+  return CGCOutUnionHelperResultCount(CGCOutUnionHelperFromCGCOutUnionHelper(resultSet));
+}
+
+static inline CGCOutUnionHelper *CGCOutUnionHelperCopy(CGCOutUnionHelper *resultSet, int32_t from, int32_t count)
+{
+  CGCOutUnionHelperResultSetRef copy;
+  CGCOutUnionHelperCopy(CGCOutUnionHelperFromCGCOutUnionHelper(resultSet), &copy, from, count);
+  return (__bridge_transfer CGCOutUnionHelper *)copy;
+}
+
+static inline NSUInteger CGCOutUnionHelperRowHash(CGCOutUnionHelper *resultSet, int32_t row)
+{
+  return CGCOutUnionHelperRowHash(CGCOutUnionHelperFromCGCOutUnionHelper(resultSet), row);
+}
+
+static inline BOOL CGCOutUnionHelperRowEqual(CGCOutUnionHelper *resultSet1, int32_t row1, CGCOutUnionHelper *resultSet2, int32_t row2)
+{
+  return CGCOutUnionHelperRowEqual(CGCOutUnionHelperFromCGCOutUnionHelper(resultSet1), row1, CGCOutUnionHelperFromCGCOutUnionHelper(resultSet2), row2);
+}
+
 @class CGCSimpleIdentity;
 
 static inline CGCSimpleIdentity *CGCSimpleIdentityFromCGCSimpleIdentity(CGCSimpleIdentityResultSetRef resultSet)

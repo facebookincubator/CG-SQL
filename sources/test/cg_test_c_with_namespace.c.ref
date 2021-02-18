@@ -115,6 +115,14 @@ typedef struct fetch_to_cursor_from_cursor_row {
   cql_string_ref _Nonnull B;
 } fetch_to_cursor_from_cursor_row;
 extern void fetch_to_cursor_from_cursor(fetch_to_cursor_from_cursor_row *_Nonnull _result_);
+extern CQL_WARN_UNUSED cql_code simple_select(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+
+typedef struct out_union_helper_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 x;
+} out_union_helper_row;
 
 typedef struct global_cursor_row {
   cql_bool _has_row_;
@@ -4012,6 +4020,278 @@ CQL_WARN_UNUSED cql_code loop_statement_not_auto_cursor(sqlite3 *_Nonnull _db_) 
 
 cql_cleanup:
   cql_finalize_stmt(&C_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC simple_select ()
+BEGIN
+  SELECT 1 AS x;
+END;
+*/
+
+#define _PROC_ "simple_select"
+// export: DECLARE PROC simple_select () (x INTEGER NOT NULL);
+CQL_WARN_UNUSED cql_code simple_select(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT 1");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC call_in_loop ()
+BEGIN
+  DECLARE i INTEGER;
+  SET i := 0;
+  WHILE i < 5
+  BEGIN
+    SET i := i + 1;
+    DECLARE C CURSOR FOR CALL simple_select();
+    FETCH C;
+  END;
+END;
+*/
+
+#define _PROC_ "call_in_loop"
+// export: DECLARE PROC call_in_loop () USING TRANSACTION;
+
+typedef struct call_in_loop_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 x;
+} call_in_loop_C_row;
+CQL_WARN_UNUSED cql_code call_in_loop(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_nullable_int32 i;
+  cql_set_null(i);
+  cql_nullable_bool _tmp_n_bool_0;
+  cql_set_null(_tmp_n_bool_0);
+  sqlite3_stmt *C_stmt = NULL;
+  call_in_loop_C_row C = { 0 };
+
+  cql_set_notnull(i, 0);
+  for (;;) {
+  cql_set_nullable(_tmp_n_bool_0, i.is_null, i.value < 5);
+  if (!cql_is_nullable_true(_tmp_n_bool_0.is_null, _tmp_n_bool_0.value)) break;
+    cql_set_nullable(i, i.is_null, i.value + 1);
+    cql_finalize_stmt(&C_stmt);
+    _rc_ = simple_select(_db_, &C_stmt);
+    if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+    _rc_ = sqlite3_step(C_stmt);
+    C._has_row_ = _rc_ == SQLITE_ROW;
+    cql_multifetch(_rc_, C_stmt, 1,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.x);
+    if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+  }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_finalize_stmt(&C_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC call_in_loop_boxed ()
+BEGIN
+  DECLARE i INTEGER;
+  SET i := 0;
+  WHILE i < 5
+  BEGIN
+    SET i := i + 1;
+    DECLARE C CURSOR FOR CALL simple_select();
+    DECLARE box OBJECT<C CURSOR>;
+    SET box FROM CURSOR C;
+    DECLARE D CURSOR FOR box;
+    FETCH D;
+  END;
+END;
+*/
+
+#define _PROC_ "call_in_loop_boxed"
+// export: DECLARE PROC call_in_loop_boxed () USING TRANSACTION;
+
+typedef struct call_in_loop_boxed_D_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 x;
+} call_in_loop_boxed_D_row;
+CQL_WARN_UNUSED cql_code call_in_loop_boxed(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_nullable_int32 i;
+  cql_set_null(i);
+  cql_nullable_bool _tmp_n_bool_0;
+  cql_set_null(_tmp_n_bool_0);
+  sqlite3_stmt *C_stmt = NULL;
+  cql_object_ref C_object_ = NULL;
+  cql_bool _C_has_row_ = 0;
+  cql_object_ref box = NULL;
+  sqlite3_stmt *D_stmt = NULL;
+  cql_object_ref D_object_ = NULL;
+  call_in_loop_boxed_D_row D = { 0 };
+
+  cql_set_notnull(i, 0);
+  for (;;) {
+  cql_set_nullable(_tmp_n_bool_0, i.is_null, i.value < 5);
+  if (!cql_is_nullable_true(_tmp_n_bool_0.is_null, _tmp_n_bool_0.value)) break;
+    cql_set_nullable(i, i.is_null, i.value + 1);
+    C_stmt = NULL;
+    _rc_ = simple_select(_db_, &C_stmt);
+    if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+    cql_object_release(C_object_);
+    C_object_ = cql_box_stmt(C_stmt);
+    cql_set_object_ref(&box, C_object_);
+    D_stmt = cql_unbox_stmt(box);
+    cql_set_object_ref(&D_object_, box);
+    _rc_ = sqlite3_step(D_stmt);
+    D._has_row_ = _rc_ == SQLITE_ROW;
+    cql_multifetch(_rc_, D_stmt, 1,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &D.x);
+    if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+  }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_object_release(C_object_);
+  cql_object_release(box);
+  cql_object_release(D_object_);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC out_union_helper ()
+BEGIN
+  DECLARE C CURSOR LIKE SELECT 1 AS x;
+  FETCH C(x) FROM VALUES(1);
+  OUT UNION C;
+END;
+*/
+
+#define _PROC_ "out_union_helper_fetch_results"
+static int32_t out_union_helper_perf_index;
+
+cql_string_literal(out_union_helper_stored_procedure_name, "out_union_helper");
+
+cql_int32 out_union_helper_get_x(out_union_helper_result_set_ref _Nonnull result_set, cql_int32 row) {
+  out_union_helper_row *data = (out_union_helper_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].x;
+}
+
+uint8_t out_union_helper_data_types[out_union_helper_data_types_count] = {
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // x
+};
+
+static cql_uint16 out_union_helper_col_offsets[] = { 1,
+  cql_offsetof(out_union_helper_row, x)
+};
+
+cql_int32 out_union_helper_result_count(out_union_helper_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+cql_fetch_info out_union_helper_info = {
+  .rc = SQLITE_OK,
+  .data_types = out_union_helper_data_types,
+  .col_offsets = out_union_helper_col_offsets,
+  .rowsize = sizeof(out_union_helper_row),
+  .crc = CRC_out_union_helper,
+  .perf_index = &out_union_helper_perf_index,
+};
+// export: DECLARE PROC out_union_helper () OUT UNION (x INTEGER NOT NULL);
+
+typedef struct out_union_helper_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 x;
+} out_union_helper_C_row;
+void out_union_helper_fetch_results(out_union_helper_result_set_ref _Nullable *_Nonnull _result_set_) {
+  cql_bytebuf _rows_;
+  cql_bytebuf_open(&_rows_);
+  out_union_helper_C_row C = { 0 };
+
+  cql_profile_start(CRC_out_union_helper, &out_union_helper_perf_index);
+  C._has_row_ = 1;
+  C.x = 1;
+  cql_retain_row(C);
+  if (C._has_row_) cql_bytebuf_append(&_rows_, (const void *)&C, sizeof(C));
+
+  cql_results_from_data(SQLITE_OK, &_rows_, &out_union_helper_info, (cql_result_set_ref *)_result_set_);
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC call_out_union_in_loop ()
+BEGIN
+  DECLARE i INTEGER;
+  SET i := 0;
+  WHILE i < 5
+  BEGIN
+    SET i := i + 1;
+    DECLARE C CURSOR FOR CALL out_union_helper();
+    FETCH C;
+  END;
+END;
+*/
+
+#define _PROC_ "call_out_union_in_loop"
+// export: DECLARE PROC call_out_union_in_loop () USING TRANSACTION;
+
+typedef struct call_out_union_in_loop_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 x;
+} call_out_union_in_loop_C_row;
+CQL_WARN_UNUSED cql_code call_out_union_in_loop(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_nullable_int32 i;
+  cql_set_null(i);
+  cql_nullable_bool _tmp_n_bool_0;
+  cql_set_null(_tmp_n_bool_0);
+  out_union_helper_result_set_ref C_result_set_ = NULL;
+  cql_int32 C_row_num_ = 0;
+  cql_int32 C_row_count_ = 0;
+  call_out_union_in_loop_C_row C = { 0 };
+
+  cql_set_notnull(i, 0);
+  for (;;) {
+  cql_set_nullable(_tmp_n_bool_0, i.is_null, i.value < 5);
+  if (!cql_is_nullable_true(_tmp_n_bool_0.is_null, _tmp_n_bool_0.value)) break;
+    cql_set_nullable(i, i.is_null, i.value + 1);
+    cql_object_release(C_result_set_);
+    out_union_helper_fetch_results(&C_result_set_);
+    C_row_num_ = C_row_count_ = -1;
+    C_row_count_ = cql_result_set_get_count((cql_result_set_ref)C_result_set_);
+    C_row_num_++;
+    C._has_row_ = C_row_num_ < C_row_count_;
+    cql_copyoutrow(NULL, (cql_result_set_ref)C_result_set_, C_row_num_, 1,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.x);
+  }
+  _rc_ = SQLITE_OK;
+
+  cql_object_release(C_result_set_);
   return _rc_;
 }
 #undef _PROC_

@@ -48,6 +48,9 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_ex
 // True if we are presently emitting a stored proc
 static bool_t in_proc = 0;
 
+// True if we are in a loop (hence the statment might run again)
+static bool_t cg_in_loop = 0;
+
 // True if we are presently emitting a vault stored proc.
 // A stored proc with attribution vault_sensitive is a vault stored proc
 static bool_t use_vault = 0;
@@ -3885,6 +3888,11 @@ static void cg_declare_cursor(ast_node *ast) {
     bprintf(cg_declarations_output, "%s %s_row_count_ = 0;\n", rt->cql_int32, cursor_name);
     bprintf(cg_cleanup_output, "  cql_object_release(%s_result_set_);\n", cursor_name);
 
+    if (cg_in_loop) {
+      // tricky case, the call might iterate so we have to clean up the cursor before we do the call
+      bprintf(cg_main_output, "cql_object_release(%s_result_set_);\n", cursor_name);
+    }
+
     CHARBUF_CLOSE(result_ref);
   }
   else {
@@ -3893,6 +3901,11 @@ static void cg_declare_cursor(ast_node *ast) {
     if (!is_boxed) {
       // easy case, no boxing, just finalize on exit.
       bprintf(cg_cleanup_output, "  cql_finalize_stmt(&%s_stmt);\n", cursor_name);
+
+      if (cg_in_loop) {
+        // tricky case, the call might iterate so we have to clean up the cursor before we do the call
+        bprintf(cg_main_output, "cql_finalize_stmt(&%s_stmt);\n", cursor_name);
+      }
     }
   }
 
@@ -3925,6 +3938,7 @@ static void cg_declare_cursor(ast_node *ast) {
       // if the cursor is being handled by boxes. The box downcount will take care of it
       bprintf(cg_main_output, "%s_stmt = NULL;\n", cursor_name);
     }
+
     EXTRACT_NOTNULL(call_stmt, ast->right);
     cg_call_stmt_with_cursor(call_stmt, cursor_name);
   }
@@ -4241,11 +4255,16 @@ static void cg_while_stmt(ast_node *ast) {
     bprintf(cg_main_output, "if (!(%s)) break;\n", expr_value.ptr);
   }
 
+  bool_t loop_saved = cg_in_loop;
+  cg_in_loop = true;
+
   CG_POP_EVAL(expr);
 
   cg_stmt_list(stmt_list);
 
   bprintf(cg_main_output, "}\n");
+
+  cg_in_loop = loop_saved;
 }
 
 // The general pattern for this is very simple:
@@ -4279,11 +4298,16 @@ static void cg_loop_stmt(ast_node *ast) {
     bprintf(cg_main_output, "if (!_%s_has_row_) break;\n", cursor_name);
   }
 
+  bool_t loop_saved = cg_in_loop;
+  cg_in_loop = true;
+
   CG_POP_MAIN_INDENT(loop);
 
   cg_stmt_list(stmt_list);
 
   bprintf(cg_main_output, "}\n");
+
+  cg_in_loop = loop_saved;
 }
 
 // Only SQL loops are allowed to use C loops, so "continue" is perfect
@@ -6418,6 +6442,7 @@ cql_noexport void cg_c_cleanup() {
   error_target = NULL;
   cg_current_masks = NULL;
 
+  cg_in_loop = 0;
   case_statement_count = 0;
   catch_block_count = 0;
   error_target = CQL_CLEANUP_DEFAULT_LABEL;

@@ -3349,6 +3349,56 @@ BEGIN_TEST(if_nothing_forms)
 
 END_TEST(if_nothing_forms)
 
+create proc simple_select()
+begin
+  select 1 x;
+end;
+
+BEGIN_TEST(call_in_loop)
+  declare i integer;
+  set i := 0;
+  while i < 5
+  begin
+     set i := i + 1;
+     declare C cursor for call simple_select();
+     fetch C;
+     EXPECT(C.x == 1);
+  end;
+END_TEST(call_in_loop)
+
+BEGIN_TEST(call_in_loop_boxed)
+  declare i integer;
+  set i := 0;
+  while i < 5
+  begin
+     set i := i + 1;
+     declare C cursor for call simple_select();
+     declare box object<C cursor>;
+     set box from cursor C;
+     declare D cursor for box;
+     fetch D;
+     EXPECT(D.x == 1);
+  end;
+END_TEST(call_in_loop_boxed)
+
+create proc out_union_helper()
+begin
+  declare C cursor like select 1 x;
+  fetch C using 1 x;
+  out union C;
+end;
+
+BEGIN_TEST(call_out_union_in_loop)
+  declare i integer;
+  set i := 0;
+  while i < 5
+  begin
+     set i := i + 1;
+     declare C cursor for call out_union_helper();
+     fetch C;
+     EXPECT(C.x == 1);
+  end;
+END_TEST(call_out_union_in_loop)
 
 END_SUITE()
 

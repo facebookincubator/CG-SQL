@@ -1844,6 +1844,81 @@ begin
   end;
 end;
 
+@attribute(cql:suppress_result_set)
+create proc simple_select()
+begin
+  select 1 x;
+end;
+
+-- TEST: call for cursor in loop
+-- one release in cleanup; one in the loop
+-- +2 cql_finalize_stmt(&C_stmt);
+-- + _rc_ = simple_select(_db_, &C_stmt);
+create proc call_in_loop()
+begin
+  declare i integer;
+  set i := 0;
+  while i < 5
+  begin
+     set i := i + 1;
+     declare C cursor for call simple_select();
+     fetch C;
+  end;
+end;
+
+-- TEST: call in loop with boxing
+-- one release in cleanup, one before the fetch
+-- +2 cql_object_release(C_object_);
+-- one release in cleanup
+-- +1 cql_object_release(D_object_);
+-- +1 cql_object_release(box);
+-- + C_object_ = cql_box_stmt(C_stmt);
+-- + cql_set_object_ref(&box, C_object_);
+-- + D_stmt = cql_unbox_stmt(box);
+-- + C_object_ = cql_box_stmt(C_stmt);
+create proc call_in_loop_boxed()
+begin
+  declare i integer;
+  set i := 0;
+  while i < 5
+  begin
+     set i := i + 1;
+     declare C cursor for call simple_select();
+     declare box object<C cursor>;
+     set box from cursor C;
+     declare D cursor for box;
+     fetch D;
+  end;
+end;
+
+create proc out_union_helper()
+begin
+  declare C cursor like select 1 x;
+  fetch C using 1 x;
+  out union C;
+end;
+
+-- TEST: call out union in a loop
+-- two instances, one for the call and one at cleanup
+-- +2 cql_object_release(C_result_set_);
+-- + out_union_helper_fetch_results(&C_result_set_);
+-- + C_row_num_ = C_row_count_ = -1;
+-- + C_row_count_ = cql_result_set_get_count((cql_result_set_ref)C_result_set_);
+-- + C_row_num_++;
+-- + C._has_row_ = C_row_num_ < C_row_count_;
+-- + cql_copyoutrow(NULL, (cql_result_set_ref)C_result_set_, C_row_num_, 1,
+create proc call_out_union_in_loop()
+begin
+  declare i integer;
+  set i := 0;
+  while i < 5
+  begin
+     set i := i + 1;
+     declare C cursor for call out_union_helper();
+     fetch C;
+  end;
+end;
+
 -- TEST: ensure cursors work outside of a proc
 --  _rc_ = cql_prepare(_db_, &global_cursor_stmt,
 --    "SELECT 1 AS a, 2 AS b"
@@ -3254,14 +3329,14 @@ insert into virtual_with_hidden(vx, vy) values(1,2);
 -- + }
 set i0_nullable := (select type from bar if nothing -1);
 
--- TEST: get row from bar if no row or null -1 
+-- TEST: get row from bar if no row or null -1
 -- + if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
 -- + if (_rc_ == SQLITE_ROW) {
 -- +   cql_column_nullable_int32(_temp_stmt, 0, &_tmp_n_int_1);
 -- + }
 -- + if (_rc_ == SQLITE_DONE || _tmp_n_int_1.is_null) {
 -- +   i2 = - 1;
--- + } else { 
+-- + } else {
 -- +   i2 = _tmp_n_int_1.value;
 -- + }
 set i2 := (select type from bar if nothing or null -1);
@@ -3284,7 +3359,7 @@ set t0_nullable := (select name from bar if nothing "");
 -- + }
 -- + if (_rc_ == SQLITE_DONE || !_tmp_n_text_1) {
 -- +   cql_set_string_ref(&t2, _literal_12_garbonzo_);
--- + } else { 
+-- + } else {
 -- +   cql_set_string_ref(&t2, _tmp_n_text_1);
 -- + }
 set t2 := (select name from bar if nothing or null "garbonzo");
