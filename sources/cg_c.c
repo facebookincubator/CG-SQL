@@ -5901,7 +5901,7 @@ static void cg_proc_result_set(ast_node *ast) {
   CHARBUF_OPEN(is_null_getter);
 
   // Check whether we need to generate a copy function.
-  bool_t generate_copy = (options.generate_copy ||
+  bool_t generate_copy = (options.generate_copy || is_base_fragment ||
                          (rt->proc_should_generate_copy && rt->proc_should_generate_copy(name)));
 
   int32_t refs_count = refs_count_sptr(sptr);

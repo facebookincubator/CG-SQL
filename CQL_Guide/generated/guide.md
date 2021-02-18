@@ -1298,7 +1298,7 @@ set x_ := (select x from somewhere where id = 1);
 ```
 
 The select statement in question must extract exactly one column and the type of the expression becomes the type of the column.  This form can appear
-anywhere an expression can be appear, though it is most commonly used in assignments.  Something like this is also valid:
+anywhere an expression can be appear, though it is most commonly used in assignments.  Something like this would also be valid:
 
 ```sql
 if (select x from somewhere where id = 1) == 3 then
@@ -1306,16 +1306,18 @@ if (select x from somewhere where id = 1) == 3 then
 end if;
 ```
 
-The select statement can be arbitrarly complex.
+The select statement can of course be arbitrarily complex.
 
-Note, if the select statement returns no rows this will result in the normal error flow.  The error code will be SQLITE_DONE as this value is not expected
-in this context (SQLITE_ROW is expected as a result of the select).  This can be quite unexpected.  To avoid this mistake, CQL also supports these more tolerant forms:
+Note, if the select statement returns no rows this will result in the normal error flow.  In that case, the error code will be SQLITE_DONE, which is treated like an
+error because in this context SQLITE_ROW is expected as a result of the select.  This is not a typical error code can be quite surprising to callers.  If you're
+seeing this failure mode it usually means the code had no affordance for the case where there were no rows and probably that situation should have been handled.
+This is an easy mistake to make, so to avoid it, CQL also supports these more tolerant forms:
 
 ```sql
 set x_ := (select x from somewhere where id = 1 if nothing -1);
 ```
 
-And even more generally if the schema allows for null vales and those are not desired
+And even more generally if the schema allows for null vales and those are not desired:
 
 ```sql
 set x_ := (select x from somewhere where id = 1 if nothing or null -1);
@@ -1329,9 +1331,9 @@ Again note that:
 set x_ := (select ifnull(x,-1) from somewhere where id = 1);
 ```
 
-Would not avoid the error, because no rows returned is not at all the same as a null value returned.
+Would not avoid the SQLITE_DONE error code, because no rows returned is not at all the same as a null value returned.
 
-The `if nothing or null` form above is equivalent to this, but it is more economical, and probably clearer.
+The `if nothing or null` form above is equivalent to the following, but it is more economical, and probably clearer:
 
 ```sql
 set x_ := (select ifnull(x,-1) from somewhere where id = 1 if nothing -1);
@@ -2293,7 +2295,6 @@ to build arbitrary result sets.  Note that either of `C` or `D` above could have
 normalized, etc. with any kind of computation.  Even entirely synthetic rows can be computed
 and inserted into the output as we saw in `foo`.
 
-
 ### Result Set Cursors
 
 So `OUT UNION` makes it possible to create arbitrary result sets using a mix of sources and filtering.  Unfortunately this result type is not a simple row, nor is it a SQLite statement and so while it can produce ordinary result sets for CQL callers, CQL could not itself consume that result type.
@@ -2377,7 +2378,6 @@ Now let's briefly discuss what is above.  The two essential parts are:
 and
 
 `update cursor result(like alt_row) from cursor alt_row;`
-
 
 In the first case what we're saying is that we want to load the columns of `result` from `main_row`
 but we only want to take the columns that are actually present in `result`.  So this is a narrowing
@@ -2701,6 +2701,121 @@ insert into my_table(a, b, c, m, n, x, y) values(7, 1000, 1000, 1000, 1000, 1000
 ```
 
 The sugar features on `fetch`, `insert`, and `update cursor` are as symmetric as possible, but again, dummy data is generally only interesting in test code. Dummy  data will continue to give you valid test rows even if columns are added or removed from the tables in question.
+
+### Generalized Cursor Lifetimes aka Cursor "Boxing"
+
+Generalized Cursor Lifetime refers to capturing a Statement Cursor in an object so that it can used more flexibly.  Wrapping something
+in an object is often called "boxing".  Since Generalized Cursor Lifetime is a mouthful we'll refer to it as "boxing"
+from here forward. The symmetric operation "unboxing" refers to converting the boxed object back into a cursor.
+
+The normal cursor usage pattern is by far the most common, a cursor is created directly with something like
+these forms:
+
+```sql
+declare C cursor for select * from shape_source;
+
+declare D cursor for call proc_that_returns_a_shape();
+```
+
+At this point the cursor can be used normally as follows:
+
+```sql
+loop fetch C
+begin
+  -- do stuff with C
+end;
+```
+
+Those are the usual patterns and they allow statement cursors to be consumed sort of "up" the call chain from where the cursor was created.
+But what if you want some worker procedures that consume a cursor? There is no way to pass your cursor down again with these normal patterns alone.
+
+To generalize the patterns, allowing, for instance, a cursor to be returned as an out parameter or accepted as
+an in parameter you first need to declare an object variable that can hold the cursor and has a type indicating
+the shape of the cursor.
+
+To make an object that can hold a cursor:
+
+```sql
+declare obj object<T cursor>;
+```
+
+Where `T` is the name of a shape. It can be a table name, or a view name, or it can be the name of the canonical procedure that returns the result.
+T should be some kind of global name, something that could be accessed with `#include` in various places.
+Referring to the examples above, choices for `T` might be `shape_source` the table or `proc_that_returns_a_shape` the procedure.
+
+Note: it's always possible make a fake procedure that returns a result to sort of "typedef" a shape name.  e.g.
+
+```sql
+declare proc my_shape() (id integer not null, name text);
+```
+
+The procedure here `my_shape` doesn’t have to actually ever be created, in fact it’s better if it isn't.  It won’t ever be called,
+its hypothetical result is just being as a shape.  This can be useful if you have several procedures like `proc_that_returns_a_shape`
+that all return results with the columns of `my_shape`.
+
+To create the boxed cursor, first declare the object variable that will hold it and then set object from the cursor.
+Note that in the following example the cursor `C` must have the shape defined by `my_shape` or an error is produced.
+The type of the object is crucial because, as we'll see, during unboxing, during unboxing that type defines the shape
+of the unboxed cursor.
+
+
+```sql
+-- recap: declare the box that holds the cursor (T changed to my_shape for this example)
+declare box_obj object<my_shape cursor>;
+
+-- box the cursor into the object (the cursor shape must match the box shape)
+set box_obj from cursor C;
+```
+
+The variable `box_obj` can now be passed around as usual.  It could be stored in a suitable `out` variable
+or it could be passed to a procedure as an `in` parameter.  Then, later, you can "unbox" `box_obj` to get a
+cursor back. Like so
+
+```sql
+-- unboxing a cursor from an object, the type of box_obj defines the type of the created cursor
+declare D cursor for box_obj;
+```
+
+These primitives will allow cursors to be passed around with general purpose lifetime.
+
+Example:
+
+```sql
+-- consumes a cursor
+create proc cursor_user(box_obj object<my_shape cursor>)
+begin
+   declare C cursor for box_obj;  -- the cursors shape will be my_shape matching box
+   loop fetch C
+   begin
+      -- do something with C
+   end;
+end;
+
+-- captures a cursor and passes it on
+create proc cursor_boxer()
+begin
+   declare C cursor for select * from something_like_my_shape;
+   declare box_obj object<my_shape cursor>
+   set box from cursor C; -- produces error if shape doesn't match
+   call cursor_user(box_obj);
+end;
+```
+
+Importantly, once you box a cursor the underlying SQLite statement’s lifetime is managed by the box object with normal
+retain/release semantics.  The box and underlying statement can be released simply by setting all references to it to null
+as usual.
+
+With this pattern it's possible to, for instance, create a cursor, box it, consume some of the rows in one procedure, do some other stuff,
+and then consume the rest of the rows in another different procedure.
+
+Important Notes:
+
+* the underlying SQLite statement is shared by all references to it.  Unboxing does not reset the cursor's position.  It is possible, even desirable, to have different procedures advancing the same cursor
+* there is no operation for "peeking" at a cursor without advancing it; if your code requires that you inspect the row and then delegate it, you can do this simply by passing the cursor data as a value rather than the cursor statement.  Boxing and unboxing are for cases where you need to stream data out of the cursor in helper procedures
+* durably storing a boxed cursor (e.g. in a global) could lead to all manner of problems -- it is *exactly* like holding on to a `sqlite3_stmt *` for a long time with all the same problems because that is exactly is happening
+
+Summarizing, the main reason for using the boxing patterns is to allow for standard helper procedures that can get a cursor from a variety of places and process it.
+Boxing isn’t the usual pattern at all and returning cursors in a box, while possible, should be avoided in favor of the simpler patterns, if only because then then lifetime management is very simple in all those cases.
 
 
 ## Chapter 6: Calling Procedures Defined Elsewhere
@@ -7851,7 +7966,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Sun Feb 14 10:05:14 PST 2021
+Snapshot as of Thu Feb 18 13:16:38 PST 2021
 
 ### Operators and Literals
 
@@ -12340,7 +12455,7 @@ In the indicated type declaration, the indicated attribute was specified twice. 
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Sun Feb 14 10:05:15 PST 2021
+Snapshot as of Thu Feb 18 13:16:39 PST 2021
 
 ### Rules
 
