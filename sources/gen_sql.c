@@ -144,9 +144,6 @@ cql_noexport void gen_misc_attr_value(ast_node *ast) {
 
 static void gen_misc_attr(ast_node *ast) {
   Contract(is_ast_misc_attr(ast));
-  if (suppress_attributes()) {
-    return;
-  }
 
   gen_printf("@ATTRIBUTE(");
   if (is_ast_dot(ast->left)) {
