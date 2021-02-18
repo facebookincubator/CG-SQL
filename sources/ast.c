@@ -538,13 +538,32 @@ cql_noexport uint32_t find_assembly_query_attr(
   return find_attribute_str(misc_attr_list, callback, context, "assembly_fragment");
 }
 
+// Keep record of the assembly query fragment for result set type reference if
+// we are presently emitting an extension fragment stored proc
+cql_data_defn ( CSTR base_fragment_name );
+
+// The name of the base fragment is used as part of the field getters names
+// we get it from the attribute associated with whichever fragment we're looking at
+// semantic rules ensure these are consistent.  The base fragment name basically
+// let's us tie together extensions so we know which ones are part of which query
+// and then we put those together.  This function is the callback used to harvest
+// the base fragment name from whereever we found it.  Each fragment has it.
+static void cg_set_base_fragment_name(CSTR _Nonnull name, ast_node *_Nonnull _misc_attr, void *_Nullable _context) {
+  base_fragment_name = name;
+}
+
 // Look for the assembly fragment annotations, return the type or MIXED if
 // there is no unique type. This is used to find cases where the same attribute
 // is present more than once or different/incompatible attributes are present
 cql_noexport uint32_t find_fragment_attr_type(ast_node *_Nullable misc_attr_list) {
-  uint32_t base = find_base_fragment_attr(misc_attr_list, NULL, NULL);
-  uint32_t extension = find_extension_fragment_attr(misc_attr_list, NULL, NULL);
-  uint32_t assembly = find_assembly_query_attr(misc_attr_list, NULL, NULL);
+  if (!misc_attr_list) {
+    base_fragment_name = NULL;
+    return FRAG_TYPE_NONE;
+  }
+
+  uint32_t base = find_base_fragment_attr(misc_attr_list, cg_set_base_fragment_name, NULL);
+  uint32_t extension = find_extension_fragment_attr(misc_attr_list, cg_set_base_fragment_name, NULL);
+  uint32_t assembly = find_assembly_query_attr(misc_attr_list, cg_set_base_fragment_name, NULL);
 
   if (base + extension + assembly > 1) {
     return FRAG_TYPE_MIXED;
