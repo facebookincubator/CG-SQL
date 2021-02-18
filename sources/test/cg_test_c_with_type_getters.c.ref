@@ -110,9 +110,21 @@ cql_cleanup:
 
 // The statement ending at line XXXX
 
+/*
+@ATTRIBUTE(cql:base_fragment=frag_test)
+CREATE PROC baseline ()
+BEGIN
+  WITH
+  frag_test (id) AS (SELECT 1 AS id)
+  SELECT *
+    FROM frag_test;
+END;
+*/
+
 // The statement ending at line XXXX
 
 /*
+@ATTRIBUTE(cql:extension_fragment=frag_test)
 CREATE PROC ext ()
 BEGIN
   WITH
@@ -132,6 +144,7 @@ cql_int32 ext_result_count(frag_test_result_set_ref _Nonnull result_set) {
 // The statement ending at line XXXX
 
 /*
+@ATTRIBUTE(cql:extension_fragment=frag_test)
 CREATE PROC ext2 ()
 BEGIN
   WITH

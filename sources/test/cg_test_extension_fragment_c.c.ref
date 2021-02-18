@@ -8,9 +8,23 @@
 
 // The statement ending at line XXXX
 
+/*
+@ATTRIBUTE(cql:base_fragment=assembly_core)
+CREATE PROC base_fragment (id_ INTEGER NOT NULL, name_ TEXT NOT NULL)
+BEGIN
+  WITH
+  assembly_core (x, y, z) AS (SELECT id, name, rate
+    FROM bar
+    WHERE id = id_)
+  SELECT *
+    FROM assembly_core;
+END;
+*/
+
 // The statement ending at line XXXX
 
 /*
+@ATTRIBUTE(cql:extension_fragment=assembly_core)
 CREATE PROC extension_fragment_one (id_ INTEGER NOT NULL, name_ TEXT NOT NULL)
 BEGIN
   WITH
@@ -30,9 +44,23 @@ cql_int32 extension_fragment_one_result_count(assembly_core_result_set_ref _Nonn
 
 // The statement ending at line XXXX
 
+/*
+@ATTRIBUTE(cql:base_fragment=assembly_non_core)
+CREATE PROC second_base_fragment (name_ TEXT NOT NULL)
+BEGIN
+  WITH
+  assembly_non_core (a, b, c) AS (SELECT id, name, col
+    FROM foo
+    WHERE name = name_)
+  SELECT *
+    FROM assembly_non_core;
+END;
+*/
+
 // The statement ending at line XXXX
 
 /*
+@ATTRIBUTE(cql:extension_fragment=assembly_core)
 CREATE PROC extension_fragment_two (id_ INTEGER NOT NULL, name_ TEXT NOT NULL)
 BEGIN
   WITH
@@ -52,6 +80,7 @@ cql_int32 extension_fragment_two_result_count(assembly_core_result_set_ref _Nonn
 // The statement ending at line XXXX
 
 /*
+@ATTRIBUTE(cql:extension_fragment=assembly_non_core)
 CREATE PROC extension_fragment_three (name_ TEXT NOT NULL)
 BEGIN
   WITH

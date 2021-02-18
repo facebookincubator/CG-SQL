@@ -32,8 +32,7 @@ create table plugin_table(
 );
 
 -- TEST: base fragment attribute
--- - base_fragment
--- - Error
+-- - cql_cleanup
 @attribute(cql:base_fragment=assembly_core)
 create proc base_fragment(id_ integer not null, name_ text not null)
 begin
@@ -43,8 +42,7 @@ select * from assembly_core;
 end;
 
 -- TEST: extension fragment one on assembly core
--- + extension_fragment_one
--- - Error
+-- - cql_cleanup
 @attribute(cql:extension_fragment=assembly_core)
 create proc extension_fragment_one(id_ INTEGER NOT NULL, name_ text not null)
 begin
@@ -58,8 +56,7 @@ begin
 end;
 
 -- TEST: second base fragment attribute
--- - second_base_fragment
--- - Error
+-- - cql_cleanup
 @attribute(cql:base_fragment=assembly_non_core)
 create proc second_base_fragment(name_ TEXT not null)
 begin

@@ -2171,7 +2171,9 @@ begin
 end;
 
 -- TEST: base fragment attribute
--- - base_fragment
+-- there should be no proc codegen
+-- - cql_code % base_fragment
+-- - cleanup
 @attribute(cql:base_fragment=core)
 create proc base_fragment(id_ integer not null)
 begin

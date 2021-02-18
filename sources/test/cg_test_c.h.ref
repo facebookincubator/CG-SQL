@@ -233,7 +233,10 @@ extern cql_string_ref _Nonnull with_result_set_stored_procedure_name;
 
 #define with_result_set_data_types_count 5
 
+#ifndef result_set_type_decl_with_result_set_result_set
+#define result_set_type_decl_with_result_set_result_set 1
 cql_result_set_type_decl(with_result_set_result_set, with_result_set_result_set_ref);
+#endif
 extern cql_int32 with_result_set_get_id(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_string_ref _Nullable with_result_set_get_name(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_bool with_result_set_get_rate_is_null(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row);
@@ -265,7 +268,10 @@ extern cql_string_ref _Nonnull select_from_view_stored_procedure_name;
 
 #define select_from_view_data_types_count 2
 
+#ifndef result_set_type_decl_select_from_view_result_set
+#define result_set_type_decl_select_from_view_result_set 1
 cql_result_set_type_decl(select_from_view_result_set, select_from_view_result_set_ref);
+#endif
 extern cql_int32 select_from_view_get_id(select_from_view_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_bool select_from_view_get_type_is_null(select_from_view_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 select_from_view_get_type_value(select_from_view_result_set_ref _Nonnull result_set, cql_int32 row);
@@ -298,7 +304,10 @@ extern cql_string_ref _Nonnull get_data_stored_procedure_name;
 
 #define get_data_data_types_count 5
 
+#ifndef result_set_type_decl_get_data_result_set
+#define result_set_type_decl_get_data_result_set 1
 cql_result_set_type_decl(get_data_result_set, get_data_result_set_ref);
+#endif
 extern cql_int32 get_data_get_id(get_data_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_string_ref _Nullable get_data_get_name(get_data_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_bool get_data_get_rate_is_null(get_data_result_set_ref _Nonnull result_set, cql_int32 row);
@@ -364,7 +373,10 @@ extern cql_string_ref _Nonnull complex_return_stored_procedure_name;
 
 #define complex_return_data_types_count 6
 
+#ifndef result_set_type_decl_complex_return_result_set
+#define result_set_type_decl_complex_return_result_set 1
 cql_result_set_type_decl(complex_return_result_set, complex_return_result_set_ref);
+#endif
 extern cql_bool complex_return_get__bool(complex_return_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 complex_return_get__integer(complex_return_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int64 complex_return_get__longint(complex_return_result_set_ref _Nonnull result_set, cql_int32 row);
@@ -395,7 +407,10 @@ extern cql_string_ref _Nonnull hierarchical_query_stored_procedure_name;
 
 #define hierarchical_query_data_types_count 1
 
+#ifndef result_set_type_decl_hierarchical_query_result_set
+#define result_set_type_decl_hierarchical_query_result_set 1
 cql_result_set_type_decl(hierarchical_query_result_set, hierarchical_query_result_set_ref);
+#endif
 extern cql_int32 hierarchical_query_get_id(hierarchical_query_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 hierarchical_query_result_count(hierarchical_query_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code hierarchical_query_fetch_results(sqlite3 *_Nonnull _db_, hierarchical_query_result_set_ref _Nullable *_Nonnull result_set, cql_int64 rate_, cql_int32 limit_, cql_int32 offset_);
@@ -420,7 +435,10 @@ extern cql_string_ref _Nonnull hierarchical_unmatched_query_stored_procedure_nam
 
 #define hierarchical_unmatched_query_data_types_count 1
 
+#ifndef result_set_type_decl_hierarchical_unmatched_query_result_set
+#define result_set_type_decl_hierarchical_unmatched_query_result_set 1
 cql_result_set_type_decl(hierarchical_unmatched_query_result_set, hierarchical_unmatched_query_result_set_ref);
+#endif
 extern cql_int32 hierarchical_unmatched_query_get_id(hierarchical_unmatched_query_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 hierarchical_unmatched_query_result_count(hierarchical_unmatched_query_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code hierarchical_unmatched_query_fetch_results(sqlite3 *_Nonnull _db_, hierarchical_unmatched_query_result_set_ref _Nullable *_Nonnull result_set, cql_int64 rate_, cql_int32 limit_, cql_int32 offset_);
@@ -445,7 +463,10 @@ extern cql_string_ref _Nonnull union_select_stored_procedure_name;
 
 #define union_select_data_types_count 1
 
+#ifndef result_set_type_decl_union_select_result_set
+#define result_set_type_decl_union_select_result_set 1
 cql_result_set_type_decl(union_select_result_set, union_select_result_set_ref);
+#endif
 extern cql_int32 union_select_get_A(union_select_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 union_select_result_count(union_select_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code union_select_fetch_results(sqlite3 *_Nonnull _db_, union_select_result_set_ref _Nullable *_Nonnull result_set);
@@ -470,7 +491,10 @@ extern cql_string_ref _Nonnull union_all_select_stored_procedure_name;
 
 #define union_all_select_data_types_count 1
 
+#ifndef result_set_type_decl_union_all_select_result_set
+#define result_set_type_decl_union_all_select_result_set 1
 cql_result_set_type_decl(union_all_select_result_set, union_all_select_result_set_ref);
+#endif
 extern cql_int32 union_all_select_get_A(union_all_select_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 union_all_select_result_count(union_all_select_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code union_all_select_fetch_results(sqlite3 *_Nonnull _db_, union_all_select_result_set_ref _Nullable *_Nonnull result_set);
@@ -495,7 +519,10 @@ extern cql_string_ref _Nonnull union_all_with_nullable_stored_procedure_name;
 
 #define union_all_with_nullable_data_types_count 1
 
+#ifndef result_set_type_decl_union_all_with_nullable_result_set
+#define result_set_type_decl_union_all_with_nullable_result_set 1
 cql_result_set_type_decl(union_all_with_nullable_result_set, union_all_with_nullable_result_set_ref);
+#endif
 extern cql_string_ref _Nullable union_all_with_nullable_get_name(union_all_with_nullable_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 union_all_with_nullable_result_count(union_all_with_nullable_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code union_all_with_nullable_fetch_results(sqlite3 *_Nonnull _db_, union_all_with_nullable_result_set_ref _Nullable *_Nonnull result_set);
@@ -523,7 +550,10 @@ extern cql_string_ref _Nonnull with_stmt_stored_procedure_name;
 
 #define with_stmt_data_types_count 3
 
+#ifndef result_set_type_decl_with_stmt_result_set
+#define result_set_type_decl_with_stmt_result_set 1
 cql_result_set_type_decl(with_stmt_result_set, with_stmt_result_set_ref);
+#endif
 extern cql_int32 with_stmt_get_a(with_stmt_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 with_stmt_get_b(with_stmt_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 with_stmt_get_c(with_stmt_result_set_ref _Nonnull result_set, cql_int32 row);
@@ -550,7 +580,10 @@ extern cql_string_ref _Nonnull with_recursive_stmt_stored_procedure_name;
 
 #define with_recursive_stmt_data_types_count 3
 
+#ifndef result_set_type_decl_with_recursive_stmt_result_set
+#define result_set_type_decl_with_recursive_stmt_result_set 1
 cql_result_set_type_decl(with_recursive_stmt_result_set, with_recursive_stmt_result_set_ref);
+#endif
 extern cql_int32 with_recursive_stmt_get_a(with_recursive_stmt_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 with_recursive_stmt_get_b(with_recursive_stmt_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 with_recursive_stmt_get_c(with_recursive_stmt_result_set_ref _Nonnull result_set, cql_int32 row);
@@ -577,7 +610,10 @@ extern cql_string_ref _Nonnull parent_proc_stored_procedure_name;
 
 #define parent_proc_data_types_count 3
 
+#ifndef result_set_type_decl_parent_proc_result_set
+#define result_set_type_decl_parent_proc_result_set 1
 cql_result_set_type_decl(parent_proc_result_set, parent_proc_result_set_ref);
+#endif
 extern cql_int32 parent_proc_get_one(parent_proc_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 parent_proc_get_two(parent_proc_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 parent_proc_get_three(parent_proc_result_set_ref _Nonnull result_set, cql_int32 row);
@@ -604,7 +640,10 @@ extern cql_string_ref _Nonnull parent_proc_child_stored_procedure_name;
 
 #define parent_proc_child_data_types_count 3
 
+#ifndef result_set_type_decl_parent_proc_child_result_set
+#define result_set_type_decl_parent_proc_child_result_set 1
 cql_result_set_type_decl(parent_proc_child_result_set, parent_proc_child_result_set_ref);
+#endif
 extern cql_int32 parent_proc_child_get_four(parent_proc_child_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 parent_proc_child_get_five(parent_proc_child_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 parent_proc_child_get_six(parent_proc_child_result_set_ref _Nonnull result_set, cql_int32 row);
@@ -726,7 +765,10 @@ extern cql_string_ref _Nonnull uses_proc_for_result_stored_procedure_name;
 
 #define uses_proc_for_result_data_types_count 5
 
+#ifndef result_set_type_decl_uses_proc_for_result_result_set
+#define result_set_type_decl_uses_proc_for_result_result_set 1
 cql_result_set_type_decl(uses_proc_for_result_result_set, uses_proc_for_result_result_set_ref);
+#endif
 extern cql_int32 uses_proc_for_result_get_id(uses_proc_for_result_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_string_ref _Nullable uses_proc_for_result_get_name(uses_proc_for_result_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_bool uses_proc_for_result_get_rate_is_null(uses_proc_for_result_result_set_ref _Nonnull result_set, cql_int32 row);
@@ -846,7 +888,10 @@ extern cql_string_ref _Nonnull blob_returner_stored_procedure_name;
 
 #define blob_returner_data_types_count 3
 
+#ifndef result_set_type_decl_blob_returner_result_set
+#define result_set_type_decl_blob_returner_result_set 1
 cql_result_set_type_decl(blob_returner_result_set, blob_returner_result_set_ref);
+#endif
 extern cql_int32 blob_returner_get_blob_id(blob_returner_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_blob_ref _Nonnull blob_returner_get_b_notnull(blob_returner_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_blob_ref _Nullable blob_returner_get_b_nullable(blob_returner_result_set_ref _Nonnull result_set, cql_int32 row);
@@ -878,7 +923,10 @@ extern cql_string_ref _Nonnull out_cursor_proc_stored_procedure_name;
 
 #define out_cursor_proc_data_types_count 7
 
+#ifndef result_set_type_decl_out_cursor_proc_result_set
+#define result_set_type_decl_out_cursor_proc_result_set 1
 cql_result_set_type_decl(out_cursor_proc_result_set, out_cursor_proc_result_set_ref);
+#endif
 extern cql_int32 out_cursor_proc_get_id(out_cursor_proc_result_set_ref _Nonnull result_set);
 extern cql_string_ref _Nullable out_cursor_proc_get_name(out_cursor_proc_result_set_ref _Nonnull result_set);
 extern cql_bool out_cursor_proc_get_rate_is_null(out_cursor_proc_result_set_ref _Nonnull result_set);
@@ -935,7 +983,10 @@ extern cql_string_ref _Nonnull thread_theme_info_list_stored_procedure_name;
 
 #define thread_theme_info_list_data_types_count 1
 
+#ifndef result_set_type_decl_thread_theme_info_list_result_set
+#define result_set_type_decl_thread_theme_info_list_result_set 1
 cql_result_set_type_decl(thread_theme_info_list_result_set, thread_theme_info_list_result_set_ref);
+#endif
 extern cql_int64 thread_theme_info_list_get_thread_key(thread_theme_info_list_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 thread_theme_info_list_result_count(thread_theme_info_list_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code thread_theme_info_list_fetch_results(sqlite3 *_Nonnull _db_, thread_theme_info_list_result_set_ref _Nullable *_Nonnull result_set, cql_int64 thread_key_);
@@ -972,7 +1023,10 @@ extern cql_string_ref _Nonnull out_no_db_stored_procedure_name;
 
 #define out_no_db_data_types_count 2
 
+#ifndef result_set_type_decl_out_no_db_result_set
+#define result_set_type_decl_out_no_db_result_set 1
 cql_result_set_type_decl(out_no_db_result_set, out_no_db_result_set_ref);
+#endif
 extern cql_int32 out_no_db_get_A(out_no_db_result_set_ref _Nonnull result_set);
 extern cql_double out_no_db_get_B(out_no_db_result_set_ref _Nonnull result_set);
 extern cql_int32 out_no_db_result_count(out_no_db_result_set_ref _Nonnull result_set);
@@ -998,7 +1052,10 @@ extern cql_string_ref _Nonnull declare_cursor_like_cursor_stored_procedure_name;
 
 #define declare_cursor_like_cursor_data_types_count 2
 
+#ifndef result_set_type_decl_declare_cursor_like_cursor_result_set
+#define result_set_type_decl_declare_cursor_like_cursor_result_set 1
 cql_result_set_type_decl(declare_cursor_like_cursor_result_set, declare_cursor_like_cursor_result_set_ref);
+#endif
 extern cql_int32 declare_cursor_like_cursor_get_A(declare_cursor_like_cursor_result_set_ref _Nonnull result_set);
 extern cql_double declare_cursor_like_cursor_get_B(declare_cursor_like_cursor_result_set_ref _Nonnull result_set);
 extern cql_int32 declare_cursor_like_cursor_result_count(declare_cursor_like_cursor_result_set_ref _Nonnull result_set);
@@ -1024,7 +1081,10 @@ extern cql_string_ref _Nonnull declare_cursor_like_proc_stored_procedure_name;
 
 #define declare_cursor_like_proc_data_types_count 2
 
+#ifndef result_set_type_decl_declare_cursor_like_proc_result_set
+#define result_set_type_decl_declare_cursor_like_proc_result_set 1
 cql_result_set_type_decl(declare_cursor_like_proc_result_set, declare_cursor_like_proc_result_set_ref);
+#endif
 extern cql_bool declare_cursor_like_proc_get_a_is_null(declare_cursor_like_proc_result_set_ref _Nonnull result_set);
 extern cql_int32 declare_cursor_like_proc_get_a_value(declare_cursor_like_proc_result_set_ref _Nonnull result_set);
 extern cql_string_ref _Nullable declare_cursor_like_proc_get_b(declare_cursor_like_proc_result_set_ref _Nonnull result_set);
@@ -1051,7 +1111,10 @@ extern cql_string_ref _Nonnull declare_cursor_like_table_stored_procedure_name;
 
 #define declare_cursor_like_table_data_types_count 5
 
+#ifndef result_set_type_decl_declare_cursor_like_table_result_set
+#define result_set_type_decl_declare_cursor_like_table_result_set 1
 cql_result_set_type_decl(declare_cursor_like_table_result_set, declare_cursor_like_table_result_set_ref);
+#endif
 extern cql_int32 declare_cursor_like_table_get_id(declare_cursor_like_table_result_set_ref _Nonnull result_set);
 extern cql_string_ref _Nullable declare_cursor_like_table_get_name(declare_cursor_like_table_result_set_ref _Nonnull result_set);
 extern cql_bool declare_cursor_like_table_get_rate_is_null(declare_cursor_like_table_result_set_ref _Nonnull result_set);
@@ -1083,7 +1146,10 @@ extern cql_string_ref _Nonnull declare_cursor_like_view_stored_procedure_name;
 
 #define declare_cursor_like_view_data_types_count 3
 
+#ifndef result_set_type_decl_declare_cursor_like_view_result_set
+#define result_set_type_decl_declare_cursor_like_view_result_set 1
 cql_result_set_type_decl(declare_cursor_like_view_result_set, declare_cursor_like_view_result_set_ref);
+#endif
 extern cql_int32 declare_cursor_like_view_get_f1(declare_cursor_like_view_result_set_ref _Nonnull result_set);
 extern cql_int32 declare_cursor_like_view_get_f2(declare_cursor_like_view_result_set_ref _Nonnull result_set);
 extern cql_int32 declare_cursor_like_view_get_f3(declare_cursor_like_view_result_set_ref _Nonnull result_set);
@@ -1139,7 +1205,10 @@ extern cql_string_ref _Nonnull fetch_to_cursor_from_cursor_stored_procedure_name
 
 #define fetch_to_cursor_from_cursor_data_types_count 2
 
+#ifndef result_set_type_decl_fetch_to_cursor_from_cursor_result_set
+#define result_set_type_decl_fetch_to_cursor_from_cursor_result_set 1
 cql_result_set_type_decl(fetch_to_cursor_from_cursor_result_set, fetch_to_cursor_from_cursor_result_set_ref);
+#endif
 extern cql_int32 fetch_to_cursor_from_cursor_get_A(fetch_to_cursor_from_cursor_result_set_ref _Nonnull result_set);
 extern cql_string_ref _Nonnull fetch_to_cursor_from_cursor_get_B(fetch_to_cursor_from_cursor_result_set_ref _Nonnull result_set);
 extern cql_int32 fetch_to_cursor_from_cursor_result_count(fetch_to_cursor_from_cursor_result_set_ref _Nonnull result_set);
@@ -1179,7 +1248,10 @@ extern cql_string_ref _Nonnull out_union_helper_stored_procedure_name;
 
 #define out_union_helper_data_types_count 1
 
+#ifndef result_set_type_decl_out_union_helper_result_set
+#define result_set_type_decl_out_union_helper_result_set 1
 cql_result_set_type_decl(out_union_helper_result_set, out_union_helper_result_set_ref);
+#endif
 extern cql_int32 out_union_helper_get_x(out_union_helper_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 out_union_helper_result_count(out_union_helper_result_set_ref _Nonnull result_set);
 #define out_union_helper_copy(result_set, result_set_to, from, count) \
@@ -1252,7 +1324,10 @@ extern cql_string_ref _Nonnull simple_identity_stored_procedure_name;
 
 #define simple_identity_data_types_count 2
 
+#ifndef result_set_type_decl_simple_identity_result_set
+#define result_set_type_decl_simple_identity_result_set 1
 cql_result_set_type_decl(simple_identity_result_set, simple_identity_result_set_ref);
+#endif
 extern cql_int32 simple_identity_get_id(simple_identity_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 simple_identity_get_data(simple_identity_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 simple_identity_result_count(simple_identity_result_set_ref _Nonnull result_set);
@@ -1284,7 +1359,10 @@ extern cql_string_ref _Nonnull complex_identity_stored_procedure_name;
 
 #define complex_identity_data_types_count 3
 
+#ifndef result_set_type_decl_complex_identity_result_set
+#define result_set_type_decl_complex_identity_result_set 1
 cql_result_set_type_decl(complex_identity_result_set, complex_identity_result_set_ref);
+#endif
 extern cql_int32 complex_identity_get_col1(complex_identity_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 complex_identity_get_col2(complex_identity_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 complex_identity_get_data(complex_identity_result_set_ref _Nonnull result_set, cql_int32 row);
@@ -1317,7 +1395,10 @@ extern cql_string_ref _Nonnull out_cursor_identity_stored_procedure_name;
 
 #define out_cursor_identity_data_types_count 2
 
+#ifndef result_set_type_decl_out_cursor_identity_result_set
+#define result_set_type_decl_out_cursor_identity_result_set 1
 cql_result_set_type_decl(out_cursor_identity_result_set, out_cursor_identity_result_set_ref);
+#endif
 extern cql_int32 out_cursor_identity_get_id(out_cursor_identity_result_set_ref _Nonnull result_set);
 extern cql_int32 out_cursor_identity_get_data(out_cursor_identity_result_set_ref _Nonnull result_set);
 extern cql_int32 out_cursor_identity_result_count(out_cursor_identity_result_set_ref _Nonnull result_set);
@@ -1349,7 +1430,10 @@ extern cql_string_ref _Nonnull radioactive_proc_stored_procedure_name;
 
 #define radioactive_proc_data_types_count 2
 
+#ifndef result_set_type_decl_radioactive_proc_result_set
+#define result_set_type_decl_radioactive_proc_result_set 1
 cql_result_set_type_decl(radioactive_proc_result_set, radioactive_proc_result_set_ref);
+#endif
 extern cql_int32 radioactive_proc_get_id(radioactive_proc_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_string_ref _Nullable radioactive_proc_get_data(radioactive_proc_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 radioactive_proc_result_count(radioactive_proc_result_set_ref _Nonnull result_set);
@@ -1383,7 +1467,10 @@ extern cql_string_ref _Nonnull autodropper_stored_procedure_name;
 
 #define autodropper_data_types_count 2
 
+#ifndef result_set_type_decl_autodropper_result_set
+#define result_set_type_decl_autodropper_result_set 1
 cql_result_set_type_decl(autodropper_result_set, autodropper_result_set_ref);
+#endif
 extern cql_int32 autodropper_get_a(autodropper_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 autodropper_get_b(autodropper_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 autodropper_result_count(autodropper_result_set_ref _Nonnull result_set);
@@ -1404,6 +1491,29 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
 
 // The statement ending at line XXXX
 
+#ifndef result_set_type_decl_core_result_set
+#define result_set_type_decl_core_result_set 1
+cql_result_set_type_decl(core_result_set, core_result_set_ref);
+#endif
+extern cql_int32 core_get_x(core_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_string_ref _Nullable core_get_y(core_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool core_get_z_is_null(core_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int64 core_get_z_value(core_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 core_result_count(core_result_set_ref _Nonnull result_set);
+#define core_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define core_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define core_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
 // The statement ending at line XXXX
 #define CRC_simple_cursor_proc -6717012445748654937L
 
@@ -1411,7 +1521,10 @@ extern cql_string_ref _Nonnull simple_cursor_proc_stored_procedure_name;
 
 #define simple_cursor_proc_data_types_count 1
 
+#ifndef result_set_type_decl_simple_cursor_proc_result_set
+#define result_set_type_decl_simple_cursor_proc_result_set 1
 cql_result_set_type_decl(simple_cursor_proc_result_set, simple_cursor_proc_result_set_ref);
+#endif
 extern cql_int32 simple_cursor_proc_get_id(simple_cursor_proc_result_set_ref _Nonnull result_set);
 extern cql_int32 simple_cursor_proc_result_count(simple_cursor_proc_result_set_ref _Nonnull result_set);
 extern void simple_cursor_proc_fetch_results( simple_cursor_proc_result_set_ref _Nullable *_Nonnull result_set);
@@ -1446,7 +1559,10 @@ extern cql_string_ref _Nonnull redundant_cast_stored_procedure_name;
 
 #define redundant_cast_data_types_count 2
 
+#ifndef result_set_type_decl_redundant_cast_result_set
+#define result_set_type_decl_redundant_cast_result_set 1
 cql_result_set_type_decl(redundant_cast_result_set, redundant_cast_result_set_ref);
+#endif
 extern cql_int32 redundant_cast_get_plugh(redundant_cast_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 redundant_cast_get_five(redundant_cast_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 redundant_cast_result_count(redundant_cast_result_set_ref _Nonnull result_set);
@@ -1509,7 +1625,10 @@ extern cql_string_ref _Nonnull out_union_two_stored_procedure_name;
 
 #define out_union_two_data_types_count 2
 
+#ifndef result_set_type_decl_out_union_two_result_set
+#define result_set_type_decl_out_union_two_result_set 1
 cql_result_set_type_decl(out_union_two_result_set, out_union_two_result_set_ref);
+#endif
 extern cql_int32 out_union_two_get_x(out_union_two_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_string_ref _Nonnull out_union_two_get_y(out_union_two_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 out_union_two_result_count(out_union_two_result_set_ref _Nonnull result_set);
@@ -1538,7 +1657,10 @@ extern cql_string_ref _Nonnull out_union_from_select_stored_procedure_name;
 
 #define out_union_from_select_data_types_count 2
 
+#ifndef result_set_type_decl_out_union_from_select_result_set
+#define result_set_type_decl_out_union_from_select_result_set 1
 cql_result_set_type_decl(out_union_from_select_result_set, out_union_from_select_result_set_ref);
+#endif
 extern cql_int32 out_union_from_select_get_x(out_union_from_select_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_string_ref _Nonnull out_union_from_select_get_y(out_union_from_select_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 out_union_from_select_result_count(out_union_from_select_result_set_ref _Nonnull result_set);
@@ -1567,7 +1689,10 @@ extern cql_string_ref _Nonnull out_union_values_stored_procedure_name;
 
 #define out_union_values_data_types_count 2
 
+#ifndef result_set_type_decl_out_union_values_result_set
+#define result_set_type_decl_out_union_values_result_set 1
 cql_result_set_type_decl(out_union_values_result_set, out_union_values_result_set_ref);
+#endif
 extern cql_int32 out_union_values_get_x(out_union_values_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 out_union_values_get_y(out_union_values_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 out_union_values_result_count(out_union_values_result_set_ref _Nonnull result_set);
@@ -1596,7 +1721,10 @@ extern cql_string_ref _Nonnull out_union_dml_stored_procedure_name;
 
 #define out_union_dml_data_types_count 2
 
+#ifndef result_set_type_decl_out_union_dml_result_set
+#define result_set_type_decl_out_union_dml_result_set 1
 cql_result_set_type_decl(out_union_dml_result_set, out_union_dml_result_set_ref);
+#endif
 extern cql_int32 out_union_dml_get_id(out_union_dml_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_string_ref _Nullable out_union_dml_get_data(out_union_dml_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 out_union_dml_result_count(out_union_dml_result_set_ref _Nonnull result_set);
@@ -1630,7 +1758,10 @@ extern cql_string_ref _Nonnull window_function_invocation_stored_procedure_name;
 
 #define window_function_invocation_data_types_count 2
 
+#ifndef result_set_type_decl_window_function_invocation_result_set
+#define result_set_type_decl_window_function_invocation_result_set 1
 cql_result_set_type_decl(window_function_invocation_result_set, window_function_invocation_result_set_ref);
+#endif
 extern cql_int32 window_function_invocation_get_id(window_function_invocation_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 window_function_invocation_get_row_num(window_function_invocation_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 window_function_invocation_result_count(window_function_invocation_result_set_ref _Nonnull result_set);
@@ -1663,7 +1794,10 @@ extern cql_string_ref _Nonnull use_return_stored_procedure_name;
 
 #define use_return_data_types_count 1
 
+#ifndef result_set_type_decl_use_return_result_set
+#define result_set_type_decl_use_return_result_set 1
 cql_result_set_type_decl(use_return_result_set, use_return_result_set_ref);
+#endif
 extern cql_int32 use_return_get_x(use_return_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 use_return_result_count(use_return_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code use_return_fetch_results(sqlite3 *_Nonnull _db_, use_return_result_set_ref _Nullable *_Nonnull result_set);
@@ -1706,7 +1840,10 @@ extern cql_string_ref _Nonnull lotsa_columns_no_getters_stored_procedure_name;
 
 #define lotsa_columns_no_getters_data_types_count 5
 
+#ifndef result_set_type_decl_lotsa_columns_no_getters_result_set
+#define result_set_type_decl_lotsa_columns_no_getters_result_set 1
 cql_result_set_type_decl(lotsa_columns_no_getters_result_set, lotsa_columns_no_getters_result_set_ref);
+#endif
 extern cql_int32 lotsa_columns_no_getters_result_count(lotsa_columns_no_getters_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code lotsa_columns_no_getters_fetch_results(sqlite3 *_Nonnull _db_, lotsa_columns_no_getters_result_set_ref _Nullable *_Nonnull result_set);
 #define lotsa_columns_no_getters_copy(result_set, result_set_to, from, count) \
@@ -1735,7 +1872,10 @@ extern cql_string_ref _Nonnull vault_sensitive_with_values_proc_stored_procedure
 
 #define vault_sensitive_with_values_proc_data_types_count 3
 
+#ifndef result_set_type_decl_vault_sensitive_with_values_proc_result_set
+#define result_set_type_decl_vault_sensitive_with_values_proc_result_set 1
 cql_result_set_type_decl(vault_sensitive_with_values_proc_result_set, vault_sensitive_with_values_proc_result_set_ref);
+#endif
 extern cql_int32 vault_sensitive_with_values_proc_get_id(vault_sensitive_with_values_proc_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_string_ref _Nullable vault_sensitive_with_values_proc_get_name(vault_sensitive_with_values_proc_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_bool vault_sensitive_with_values_proc_get_type_is_null(vault_sensitive_with_values_proc_result_set_ref _Nonnull result_set, cql_int32 row);
@@ -1765,7 +1905,10 @@ extern cql_string_ref _Nonnull vault_sensitive_with_no_values_proc_stored_proced
 
 #define vault_sensitive_with_no_values_proc_data_types_count 3
 
+#ifndef result_set_type_decl_vault_sensitive_with_no_values_proc_result_set
+#define result_set_type_decl_vault_sensitive_with_no_values_proc_result_set 1
 cql_result_set_type_decl(vault_sensitive_with_no_values_proc_result_set, vault_sensitive_with_no_values_proc_result_set_ref);
+#endif
 extern cql_int32 vault_sensitive_with_no_values_proc_get_id(vault_sensitive_with_no_values_proc_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_string_ref _Nullable vault_sensitive_with_no_values_proc_get_name(vault_sensitive_with_no_values_proc_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_bool vault_sensitive_with_no_values_proc_get_type_is_null(vault_sensitive_with_no_values_proc_result_set_ref _Nonnull result_set, cql_int32 row);
@@ -1795,7 +1938,10 @@ extern cql_string_ref _Nonnull vault_union_all_table_proc_stored_procedure_name;
 
 #define vault_union_all_table_proc_data_types_count 3
 
+#ifndef result_set_type_decl_vault_union_all_table_proc_result_set
+#define result_set_type_decl_vault_union_all_table_proc_result_set 1
 cql_result_set_type_decl(vault_union_all_table_proc_result_set, vault_union_all_table_proc_result_set_ref);
+#endif
 extern cql_int32 vault_union_all_table_proc_get_id(vault_union_all_table_proc_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_string_ref _Nullable vault_union_all_table_proc_get_name(vault_union_all_table_proc_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_bool vault_union_all_table_proc_get_type_is_null(vault_union_all_table_proc_result_set_ref _Nonnull result_set, cql_int32 row);
@@ -1825,7 +1971,10 @@ extern cql_string_ref _Nonnull vault_alias_column_proc_stored_procedure_name;
 
 #define vault_alias_column_proc_data_types_count 1
 
+#ifndef result_set_type_decl_vault_alias_column_proc_result_set
+#define result_set_type_decl_vault_alias_column_proc_result_set 1
 cql_result_set_type_decl(vault_alias_column_proc_result_set, vault_alias_column_proc_result_set_ref);
+#endif
 extern cql_string_ref _Nullable vault_alias_column_proc_get_alias_name(vault_alias_column_proc_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 vault_alias_column_proc_result_count(vault_alias_column_proc_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code vault_alias_column_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_alias_column_proc_result_set_ref _Nullable *_Nonnull result_set);
@@ -1852,7 +2001,10 @@ extern cql_string_ref _Nonnull vault_alias_column_name_proc_stored_procedure_nam
 
 #define vault_alias_column_name_proc_data_types_count 1
 
+#ifndef result_set_type_decl_vault_alias_column_name_proc_result_set
+#define result_set_type_decl_vault_alias_column_name_proc_result_set 1
 cql_result_set_type_decl(vault_alias_column_name_proc_result_set, vault_alias_column_name_proc_result_set_ref);
+#endif
 extern cql_string_ref _Nullable vault_alias_column_name_proc_get_alias_name(vault_alias_column_name_proc_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 vault_alias_column_name_proc_result_count(vault_alias_column_name_proc_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code vault_alias_column_name_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_alias_column_name_proc_result_set_ref _Nullable *_Nonnull result_set);
@@ -1877,10 +2029,28 @@ extern CQL_WARN_UNUSED cql_code vault_cursor_proc(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX
 
-// The statement ending at line XXXX
-#define CRC_ext 8280780522605848147L
-
+#ifndef result_set_type_decl_frag_test_result_set
+#define result_set_type_decl_frag_test_result_set 1
 cql_result_set_type_decl(frag_test_result_set, frag_test_result_set_ref);
+#endif
+extern cql_int32 frag_test_get_id(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 frag_test_result_count(frag_test_result_set_ref _Nonnull result_set);
+#define frag_test_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define frag_test_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define frag_test_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+
 extern cql_int32 ext_get_id(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 frag_test_get_id(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
 
@@ -1899,9 +2069,7 @@ cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
   count)
 
 // The statement ending at line XXXX
-#define CRC_ext2 -8626991334703178005L
 
-cql_result_set_type_decl(frag_test_result_set, frag_test_result_set_ref);
 extern cql_int32 ext2_get_id(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 frag_test_get_id(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
 

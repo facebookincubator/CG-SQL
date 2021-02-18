@@ -9,9 +9,23 @@ extern CQL_WARN_UNUSED cql_code assembly_core(sqlite3 *_Nonnull _db_, sqlite3_st
 
 // The statement ending at line XXXX
 
+/*
+@ATTRIBUTE(cql:base_fragment=assembly_core)
+CREATE PROC base_fragment (id_ INTEGER NOT NULL, name_ TEXT NOT NULL)
+BEGIN
+  WITH
+  assembly_core (x, y, z) AS (SELECT id, name, rate
+    FROM bar
+    WHERE id = id_)
+  SELECT *
+    FROM assembly_core;
+END;
+*/
+
 // The statement ending at line XXXX
 
 /*
+@ATTRIBUTE(cql:assembly_fragment=assembly_core)
 CREATE PROC assembly_core (id_ INTEGER NOT NULL, name_ TEXT NOT NULL)
 BEGIN
   WITH

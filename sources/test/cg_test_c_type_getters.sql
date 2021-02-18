@@ -76,13 +76,9 @@ begin
   select * from foo;
 end;
 
--- TEST: define a base fragment, no output for this
--- there should be nothing at really, this catches any of the usual patterns
--- - get
--- - set
--- - cql
--- - return
--- - void
+-- TEST: define a base fragment, no C output for this, only header stuff
+-- there should be nothing at really, this pattern ensures the main proc is absent
+-- - cql_cleanup
 @attribute(cql:base_fragment=frag_test)
 create proc baseline()
 begin

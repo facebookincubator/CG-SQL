@@ -24,7 +24,7 @@ create table plugin_table(
 );
 
 -- TEST: base fragment attribute
--- - base_fragment
+-- - cql_cleanup
 @attribute(cql:base_fragment=assembly_core)
 create proc base_fragment(id_ integer not null, name_ text not null)
 begin
