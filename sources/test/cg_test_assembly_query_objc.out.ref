@@ -6,62 +6,62 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class CGCAssemblyCore;
+@class CGBAssemblyCore;
 
-static inline CGCAssemblyCore *CGCAssemblyCoreFromCGCAssemblyCore(CGCAssemblyCoreResultSetRef resultSet)
+static inline CGBAssemblyCore *CGBAssemblyCoreFromCGCAssemblyCore(CGCAssemblyCoreResultSetRef resultSet)
 {
-  return (__bridge CGCAssemblyCore *)resultSet;
+  return (__bridge CGBAssemblyCore *)resultSet;
 }
 
-static inline CGCAssemblyCoreResultSetRef CGCAssemblyCoreFromCGCAssemblyCore(CGCAssemblyCore *resultSet)
+static inline CGCAssemblyCoreResultSetRef CGCAssemblyCoreFromCGBAssemblyCore(CGBAssemblyCore *resultSet)
 {
   return (__bridge CGCAssemblyCoreResultSetRef)resultSet;
 }
 
-static inline int32_t CGCAssemblyCoreGetX(CGCAssemblyCore *resultSet, int32_t row)
+static inline int32_t CGBAssemblyCoreGetX(CGBAssemblyCore *resultSet, int32_t row)
 {
-  CGCAssemblyCoreResultSetRef cResultSet = CGCAssemblyCoreFromCGCAssemblyCore(resultSet);
+  CGCAssemblyCoreResultSetRef cResultSet = CGCAssemblyCoreFromCGBAssemblyCore(resultSet);
   return CGCAssemblyCoreGetX(cResultSet, row);
 }
 
-static inline NSString *_Nullable CGCAssemblyCoreGetY(CGCAssemblyCore *resultSet, int32_t row)
+static inline NSString *_Nullable CGBAssemblyCoreGetY(CGBAssemblyCore *resultSet, int32_t row)
 {
-  CGCAssemblyCoreResultSetRef cResultSet = CGCAssemblyCoreFromCGCAssemblyCore(resultSet);
+  CGCAssemblyCoreResultSetRef cResultSet = CGCAssemblyCoreFromCGBAssemblyCore(resultSet);
   return (__bridge NSString *)CGCAssemblyCoreGetY(cResultSet, row);
 }
 
-static inline NSNumber *_Nullable CGCAssemblyCoreGetZ(CGCAssemblyCore *resultSet, int32_t row)
+static inline NSNumber *_Nullable CGBAssemblyCoreGetZ(CGBAssemblyCore *resultSet, int32_t row)
 {
-  CGCAssemblyCoreResultSetRef cResultSet = CGCAssemblyCoreFromCGCAssemblyCore(resultSet);
+  CGCAssemblyCoreResultSetRef cResultSet = CGCAssemblyCoreFromCGBAssemblyCore(resultSet);
   return CGCAssemblyCoreGetZIsNull(cResultSet, row) ? nil : @(CGCAssemblyCoreGetZValue(cResultSet, row));
 }
 
-static inline NSNumber *_Nullable __PRIVATE__CGCAssemblyCoreGetFlag(CGCAssemblyCore *resultSet, int32_t row)
+static inline NSNumber *_Nullable __PRIVATE__CGBAssemblyCoreGetFlag(CGBAssemblyCore *resultSet, int32_t row)
 {
-  CGCAssemblyCoreResultSetRef cResultSet = CGCAssemblyCoreFromCGCAssemblyCore(resultSet);
+  CGCAssemblyCoreResultSetRef cResultSet = CGCAssemblyCoreFromCGBAssemblyCore(resultSet);
   return __PRIVATE__CGCAssemblyCoreGetFlagIsNull(cResultSet, row) ? nil : @(__PRIVATE__CGCAssemblyCoreGetFlagValue(cResultSet, row));
 }
 
-static inline int32_t CGCAssemblyCoreResultCount(CGCAssemblyCore *resultSet)
+static inline int32_t CGBAssemblyCoreResultCount(CGBAssemblyCore *resultSet)
 {
-  return CGCAssemblyCoreResultCount(CGCAssemblyCoreFromCGCAssemblyCore(resultSet));
+  return CGCAssemblyCoreResultCount(CGCAssemblyCoreFromCGBAssemblyCore(resultSet));
 }
 
-static inline CGCAssemblyCore *CGCAssemblyCoreCopy(CGCAssemblyCore *resultSet, int32_t from, int32_t count)
+static inline CGBAssemblyCore *CGBAssemblyCoreCopy(CGBAssemblyCore *resultSet, int32_t from, int32_t count)
 {
   CGCAssemblyCoreResultSetRef copy;
-  CGCAssemblyCoreCopy(CGCAssemblyCoreFromCGCAssemblyCore(resultSet), &copy, from, count);
-  return (__bridge_transfer CGCAssemblyCore *)copy;
+  CGCAssemblyCoreCopy(CGCAssemblyCoreFromCGBAssemblyCore(resultSet), &copy, from, count);
+  return (__bridge_transfer CGBAssemblyCore *)copy;
 }
 
-static inline NSUInteger CGCAssemblyCoreRowHash(CGCAssemblyCore *resultSet, int32_t row)
+static inline NSUInteger CGBAssemblyCoreRowHash(CGBAssemblyCore *resultSet, int32_t row)
 {
-  return CGCAssemblyCoreRowHash(CGCAssemblyCoreFromCGCAssemblyCore(resultSet), row);
+  return CGCAssemblyCoreRowHash(CGCAssemblyCoreFromCGBAssemblyCore(resultSet), row);
 }
 
-static inline BOOL CGCAssemblyCoreRowEqual(CGCAssemblyCore *resultSet1, int32_t row1, CGCAssemblyCore *resultSet2, int32_t row2)
+static inline BOOL CGBAssemblyCoreRowEqual(CGBAssemblyCore *resultSet1, int32_t row1, CGBAssemblyCore *resultSet2, int32_t row2)
 {
-  return CGCAssemblyCoreRowEqual(CGCAssemblyCoreFromCGCAssemblyCore(resultSet1), row1, CGCAssemblyCoreFromCGCAssemblyCore(resultSet2), row2);
+  return CGCAssemblyCoreRowEqual(CGCAssemblyCoreFromCGBAssemblyCore(resultSet1), row1, CGCAssemblyCoreFromCGBAssemblyCore(resultSet2), row2);
 }
 
 NS_ASSUME_NONNULL_END
