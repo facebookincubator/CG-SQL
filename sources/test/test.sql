@@ -1030,6 +1030,10 @@ update foo set xyzzy = 7 where foo.id in (select * from x);
 
 @enforce_normal transaction;
 
+@enforce_strict select if nothing;
+
+@enforce_normal select if nothing;
+
 @enforce_reset;
 
 @declare_schema_region foo;

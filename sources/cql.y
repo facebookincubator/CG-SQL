@@ -1757,6 +1757,7 @@ enforcement_options:
   | procedure  { $enforcement_options = new_ast_opt(ENFORCE_PROCEDURE); }
   | WITHOUT ROWID  { $enforcement_options = new_ast_opt(ENFORCE_WITHOUT_ROWID); }
   | TRANSACTION { $enforcement_options = new_ast_opt(ENFORCE_TRANSACTION); }
+  | SELECT IF NOTHING { $enforcement_options = new_ast_opt(ENFORCE_SELECT_IF_NOTHING); }
   ;
 
 enforce_strict_stmt:

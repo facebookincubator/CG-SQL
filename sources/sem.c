@@ -165,6 +165,7 @@ struct enforcement_options {
   bool_t strict_procedure;      // no calls to undeclared procedures (like printf)
   bool_t strict_without_rowid;  // no WITHOUT ROWID may be used.
   bool_t strict_transaction;    // no transactions may be started, commited, aborted etc.
+  bool_t strict_if_nothing;     // (select ..) expressions must include the if nothing form
 };
 
 static struct enforcement_options  enforcement;
@@ -16026,6 +16027,20 @@ static void sem_expr_dot(ast_node *ast, CSTR cstr) {
 // Expression type for nested select expression
 static void sem_expr_select(ast_node *ast, CSTR cstr) {
   Contract(is_select_stmt(ast));
+  EXTRACT_ANY_NOTNULL(parent, ast->parent);
+
+  // this tells us if we might be the left side of a select if nothing
+  bool_t in_select_if_nothing = is_ast_select_if_nothing_expr(parent) || is_ast_select_if_nothing_or_null_expr(parent);
+
+  // only the left side, the right side is an arbitary expression
+  in_select_if_nothing &= parent->left == ast;
+
+  if (!in_select_if_nothing && enforcement.strict_if_nothing) {
+    report_error(ast, "CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'", NULL);
+    record_error(ast);
+    return;
+  }
+
   // (select ...)
   sem_select(ast);
   if (is_error(ast)) {
@@ -16294,6 +16309,10 @@ static void sem_enforcement_options(ast_node *ast, bool_t strict) {
 
     case ENFORCE_TRANSACTION:
       enforcement.strict_transaction = strict;
+      break;
+
+    case ENFORCE_SELECT_IF_NOTHING:
+      enforcement.strict_if_nothing = strict;
       break;
 
     default:

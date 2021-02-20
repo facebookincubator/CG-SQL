@@ -3059,6 +3059,10 @@ static void gen_enforcement_options(ast_node *ast) {
       gen_printf("TRANSACTION");
       break;
 
+    case ENFORCE_SELECT_IF_NOTHING:
+      gen_printf("SELECT IF NOTHING");
+      break;
+
     default:
       // this is all that's left
       Contract(option == ENFORCE_FK_ON_DELETE);

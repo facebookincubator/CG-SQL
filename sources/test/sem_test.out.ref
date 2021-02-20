@@ -56176,6 +56176,129 @@ BEGIN;
 
 The statement ending at line XXXX
 
+@ENFORCE_STRICT SELECT IF NOTHING;
+
+  {enforce_strict_stmt}: ok
+  | {int 9}
+
+The statement ending at line XXXX
+
+SET price_d := ( SELECT 1 );
+
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
+
+  {assign}: err
+  | {name price_d}: price_d: real<dollars> variable
+  | {select_stmt}: err
+    | {select_core_list}
+    | | {select_core}
+    |   | {select_expr_list_con}
+    |     | {select_expr_list}
+    |     | | {select_expr}
+    |     |   | {int 1}
+    |     | {select_from_etc}
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET price_d := ( SELECT 1 IF NOTHING -1 );
+
+  {assign}: price_d: real<dollars> variable
+  | {name price_d}: price_d: real<dollars> variable
+  | {select_if_nothing_expr}: integer notnull
+    | {select_stmt}: _anon: integer notnull
+    | | {select_core_list}: select: { _anon: integer notnull }
+    | | | {select_core}: select: { _anon: integer notnull }
+    | |   | {select_expr_list_con}: select: { _anon: integer notnull }
+    | |     | {select_expr_list}: select: { _anon: integer notnull }
+    | |     | | {select_expr}: integer notnull
+    | |     |   | {int 1}: integer notnull
+    | |     | {select_from_etc}: ok
+    | |       | {select_where}
+    | |         | {select_groupby}
+    | |           | {select_having}
+    | | {select_orderby}
+    |   | {select_limit}
+    |     | {select_offset}
+    | {uminus}: integer notnull
+      | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+SET price_d := ( SELECT 1 IF NOTHING OR NULL -1 );
+
+  {assign}: price_d: real<dollars> variable
+  | {name price_d}: price_d: real<dollars> variable
+  | {select_if_nothing_or_null_expr}: integer notnull
+    | {select_stmt}: _anon: integer notnull
+    | | {select_core_list}: select: { _anon: integer notnull }
+    | | | {select_core}: select: { _anon: integer notnull }
+    | |   | {select_expr_list_con}: select: { _anon: integer notnull }
+    | |     | {select_expr_list}: select: { _anon: integer notnull }
+    | |     | | {select_expr}: integer notnull
+    | |     |   | {int 1}: integer notnull
+    | |     | {select_from_etc}: ok
+    | |       | {select_where}
+    | |         | {select_groupby}
+    | |           | {select_having}
+    | | {select_orderby}
+    |   | {select_limit}
+    |     | {select_offset}
+    | {uminus}: integer notnull
+      | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+SET price_d := ( SELECT 1 IF NOTHING ( SELECT 1 ) );
+
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
+
+  {assign}: err
+  | {name price_d}: price_d: real<dollars> variable
+  | {select_if_nothing_expr}: err
+    | {select_stmt}: _anon: integer notnull
+    | | {select_core_list}: select: { _anon: integer notnull }
+    | | | {select_core}: select: { _anon: integer notnull }
+    | |   | {select_expr_list_con}: select: { _anon: integer notnull }
+    | |     | {select_expr_list}: select: { _anon: integer notnull }
+    | |     | | {select_expr}: integer notnull
+    | |     |   | {int 1}: integer notnull
+    | |     | {select_from_etc}: ok
+    | |       | {select_where}
+    | |         | {select_groupby}
+    | |           | {select_having}
+    | | {select_orderby}
+    |   | {select_limit}
+    |     | {select_offset}
+    | {select_stmt}: err
+      | {select_core_list}
+      | | {select_core}
+      |   | {select_expr_list_con}
+      |     | {select_expr_list}
+      |     | | {select_expr}
+      |     |   | {int 1}
+      |     | {select_from_etc}
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+@ENFORCE_NORMAL SELECT IF NOTHING;
+
+  {enforce_normal_stmt}: ok
+  | {int 9}
+
+The statement ending at line XXXX
+
 SET price_d := ( SELECT 1 IF NOTHING 2.0 );
 
   {assign}: price_d: real<dollars> variable

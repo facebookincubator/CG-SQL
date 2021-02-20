@@ -14122,6 +14122,38 @@ begin transaction;
 -- - Error
 begin transaction;
 
+-- TEST: strict if nothing
+-- + {enforce_strict_stmt}: ok
+-- - Error;
+@enforce_strict select if nothing;
+
+-- TEST: normal select is disallowed
+-- + {assign}: err
+-- + {select_stmt}: err
+-- + Error % strict select if nothing requires that all (select ...) expressions include 'if nothing'
+-- +1 Error
+set price_d := (select 1);
+
+-- TEST: select if nothing is allowed
+-- - Error
+set price_d := (select 1 if nothing -1);
+
+-- TEST: select if nothing or null is allowed
+-- - Error
+set price_d := (select 1 if nothing or null -1);
+
+-- TEST: nested select is not allowed either
+-- + {assign}: err
+-- + {select_stmt}: err
+-- + Error % strict select if nothing requires that all (select ...) expressions include 'if nothing'
+-- +1 Error
+set price_d := (select 1 if nothing (select 1));
+
+-- TEST: normal if nothing
+-- + {enforce_normal_stmt}: ok
+-- - Error;
+@enforce_normal select if nothing;
+
 -- TEST: simple select with else
 -- + {assign}: price_d: real<dollars> variable
 -- + {select_if_nothing_expr}: real notnull
