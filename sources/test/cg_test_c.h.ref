@@ -2244,6 +2244,9 @@ extern cql_int32 x;
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code emit_rc(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull result_code);
+
+// The statement ending at line XXXX
 
 // The statement ending at line XXXX
 

@@ -7844,6 +7844,27 @@ cql_int32 x = 0;
 // The statement ending at line XXXX
 
 /*
+CREATE PROC emit_rc (OUT result_code INTEGER NOT NULL)
+BEGIN
+  SET result_code := @RC;
+END;
+*/
+
+#define _PROC_ "emit_rc"
+// export: DECLARE PROC emit_rc (OUT result_code INTEGER NOT NULL) USING TRANSACTION;
+CQL_WARN_UNUSED cql_code emit_rc(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull result_code) {
+  cql_code _rc_ = SQLITE_OK;
+  *result_code = _rc_;
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
 CREATE PROC virtual_table_creator ()
 BEGIN
   CREATE VIRTUAL TABLE virt_table USING virt_module (ARGUMENTS FOLLOWING) AS (

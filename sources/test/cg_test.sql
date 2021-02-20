@@ -3227,6 +3227,16 @@ SELECT month, amount, AVG(amount) OVER
   (GROUPS CURRENT ROW)
 SalesMovingAverage FROM SalesInfo;
 
+-- TEST: use result code in a procedure
+-- + export: DECLARE PROC emit_rc (OUT result_code INTEGER NOT NULL) USING TRANSACTION;
+-- + CQL_WARN_UNUSED cql_code emit_rc(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull result_code)
+-- + cql_code _rc_ = SQLITE_OK;
+-- + *result_code = _rc_;
+create proc emit_rc(out result_code integer not null)
+begin
+  set result_code := @rc;
+end;
+
 -- TEST: make an integer enum
 declare enum some_ints integer (
   foo = 12,

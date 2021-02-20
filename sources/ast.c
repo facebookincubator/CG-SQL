@@ -66,6 +66,10 @@ cql_noexport bool_t is_ast_blob(ast_node *node) {
   return node && (node->type == k_ast_blob);
 }
 
+cql_noexport bool_t is_ast_at_rc(ast_node *node) {
+  return is_ast_str(node) && !Strcasecmp("@RC", ((str_ast_node*)node)->value);
+}
+
 cql_noexport bool_t is_ast_proclit(ast_node *node) {
   return is_ast_str(node) && !Strcasecmp("@proc", ((str_ast_node*)node)->value);
 }

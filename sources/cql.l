@@ -145,6 +145,7 @@ LIMIT                        { return LIMIT; }
 OFFSET                       { return OFFSET; }
 PROC                         { return PROC; }
 @PROC                        { return AT_PROC; }
+@RC                          { return AT_RC; }
 PROCEDURE                    { return PROCEDURE; }
 FUNCTION                     { return FUNCTION; }
 FUNC                         { return FUNC; }

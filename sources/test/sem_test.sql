@@ -1420,6 +1420,13 @@ declare X_not_null integer not null;
 -- + {name X}: err
 declare X integer;
 
+-- TEST: use the result code helper
+-- + SET X := @RC;
+-- + {assign}: X: integer variable
+-- + {name @RC}: _rc_: integer notnull variable
+-- - Error
+set X := @RC;
+
 -- TEST: try to declare a variable that hides a table
 -- + Error % global variable hides table/view name 'foo'
 -- +1 Error
@@ -1542,6 +1549,17 @@ begin
     @attribute(goo)
     return;
   end if;
+end;
+
+-- TEST: proc uses @rc and becomes a dml proc
+-- note this is now a dml_proc (!)
+-- + {create_proc_stmt}: ok dml_proc
+-- + {assign}: result_code: integer notnull variable out
+-- + {name @RC}: _rc_: integer notnull variable
+-- - Error
+create proc using_rc(out result_code integer not null)
+begin
+  set result_code := @rc;
 end;
 
 -- TEST: legal return, no attribute on the return this time

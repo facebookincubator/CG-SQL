@@ -1036,6 +1036,8 @@ update foo set xyzzy = 7 where foo.id in (select * from x);
 
 @enforce_reset;
 
+set rc := @rc;
+
 @declare_schema_region foo;
 @declare_schema_region bar using foo;
 @declare_schema_region baz using foo, bar;

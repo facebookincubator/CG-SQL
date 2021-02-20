@@ -15957,6 +15957,21 @@ static void sem_expr_proclit(ast_node *ast) {
   ast->sem = new_sem(SEM_TYPE_TEXT | SEM_TYPE_NOTNULL);
 }
 
+// @rc is like a builtin variable, it refers to the _rc_ state
+// note, use of @rc forces you to become a dml proc which isn't
+// very onerous becasue rc makes no sense if it isn't a dml proc.
+// We do it this way because it's possible that you're using @rc
+// in a loop or some such and you haven't run any DML yet so we don't
+// yet know that you are a DML proc.  Generating an error would be annoying.
+// This also has the useful property that you can force a proc to be dml
+// with "if @rc then endif;" which is useful when you are trying to create mocks.
+static void sem_expr_at_rc(ast_node *ast) {
+  Contract(is_ast_str(ast));
+  ast->sem = new_sem(SEM_TYPE_INTEGER | SEM_TYPE_NOTNULL| SEM_TYPE_VARIABLE);
+  ast->sem->name = "_rc_";
+  has_dml = 1; // use of result code implies DML proc
+}
+
 // Expression type for numeric primitives
 static void sem_expr_num(ast_node *ast, CSTR cstr) {
   Contract(is_ast_num(ast));
@@ -16002,6 +16017,9 @@ static void sem_expr_str(ast_node *ast, CSTR cstr) {
   }
   else if (is_ast_proclit(ast)) {
     sem_expr_proclit(ast);
+  }
+  else if (is_ast_at_rc(ast)) {
+    sem_expr_at_rc(ast);
   }
   else {
     // identifier

@@ -5277,6 +5277,14 @@ Error at test/sem_test.sql:XXXX : in str : CQL0197: duplicate variable name in t
 
 The statement ending at line XXXX
 
+SET X := @RC;
+
+  {assign}: X: integer variable
+  | {name X}: X: integer variable
+  | {name @RC}: _rc_: integer notnull variable
+
+The statement ending at line XXXX
+
 DECLARE foo INTEGER;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0198: global variable hides table/view name 'foo'
@@ -5553,6 +5561,28 @@ END;
         |     |   | {name goo}
         |     | {return_stmt}: ok
         | {if_alt}: ok
+
+The statement ending at line XXXX
+
+CREATE PROC using_rc (OUT result_code INTEGER NOT NULL)
+BEGIN
+  SET result_code := @RC;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name using_rc}: ok dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: result_code: integer notnull variable out
+    |   | {out}
+    |   | {param_detail}: result_code: integer notnull variable out
+    |     | {name result_code}: result_code: integer notnull variable out
+    |     | {notnull}: integer notnull
+    |       | {type_int}: integer
+    | {stmt_list}: ok
+      | {assign}: result_code: integer notnull variable out
+        | {name result_code}: result_code: integer notnull variable out
+        | {name @RC}: _rc_: integer notnull variable
 
 The statement ending at line XXXX
 
