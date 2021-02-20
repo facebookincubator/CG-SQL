@@ -204,6 +204,9 @@ static void cg_schema_helpers(charbuf *decls) {
   bprintf(decls, "  INSERT OR REPLACE INTO %s_cql_schema_facets (facet, version) VALUES(_facet, _version);\n", global_proc_name);
   bprintf(decls, "END;\n\n");
 
+  // note do not try to convert this proc to the (select .. if nothing) pattern; that isn't going to work
+  // because it has to handle the case where the table doesn't exist yet for retro-version validation
+
   bprintf(decls, "-- helper proc for getting the schema version of a facet\n");
   bprintf(decls, "CREATE PROCEDURE %s_cql_get_facet_version(_facet TEXT NOT NULL, out _version LONG INTEGER NOT NULL)\n", global_proc_name);
   bprintf(decls, "BEGIN\n");
@@ -214,6 +217,9 @@ static void cg_schema_helpers(charbuf *decls) {
   bprintf(decls, "    SET _version := -1;\n");
   bprintf(decls, "  END CATCH;\n");
   bprintf(decls, "END;\n\n");
+
+  // note do not try to convert this proc to the (select .. if nothing) pattern; that isn't going to work
+  // because it has to handle the case where the table doesn't exist yet for retro-version validation
 
   bprintf(decls, "-- helper proc for getting the schema version CRC for a version index\n");
   bprintf(decls, "CREATE PROCEDURE %s_cql_get_version_crc(_v INTEGER NOT NULL, out _crc LONG INTEGER NOT NULL)\n", global_proc_name);
