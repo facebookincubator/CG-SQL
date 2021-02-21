@@ -1,6 +1,6 @@
 ---
 slug: result-variable
-title: Introducing `@RC` builtin variable
+title: Introducing @RC builtin variable
 author: CG/SQL Team
 author_title: Maintainer of CG/SQL
 author_url: https://github.com/facebookincubator
