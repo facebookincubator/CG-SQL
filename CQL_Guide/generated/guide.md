@@ -701,12 +701,15 @@ CONCAT:        ||
 
 NOTE: the above is NOT the C binding order (!!!)  The Sqlite binding order is used in the language and parens are added in the C output as needed to force that order.   CQL's rewriting emits minimal parens in all outputs.  Different parens are often needed for SQL output.
 
-### Nullability
+### Variables, Columns, Basic Types and Nullability
 
-Just as in SQL the absence of `NOT NULL` implies that `NULL` is a legal value. Consider this example:
+CQL needs type information for both variables in the code and columns in the database.
+Like SQL, CQL allows variables to hold a NULL value and just as in SQL the absence
+of `NOT NULL` implies that `NULL` is a legal value. Consider these examples:
 
 ```sql
-create table mixed_nulls(
+-- real code should use better names than this :)
+create table all_the_nullables(
   i1 integer,
   b1 bool,
   l1 long,
@@ -723,13 +726,23 @@ declare t2 text;
 declare bl2 blob;
 ```
 
-ALL of `i1`, `i2`, `b1`, `b2`, `l1`, `l2`, `r1`, `r2`, `t1`, `t2`, and `bl1`, `bl2` are nullable. In some sense variables and columns declared nullable
-(by virtual of the missing `NOT NULL`) are the root sources of nullability in the SQL language.  That and the `NULL` literal.  Though there are other sources
-as we will see.
+ALL of `i1`, `i2`, `b1`, `b2`, `l1`, `l2`, `r1`, `r2`, `t1`, `t2`, and `bl1`, `bl2` are nullable. 
+In some sense variables and columns declared nullable (by virtual of the missing `NOT NULL`) are the
+root sources of nullability in the SQL language.  That and the `NULL` literal.  Though there are other
+sources as we will see.
+
+`NOT NULL` could be added to any of these, e.g.
+
+```sql
+-- real code should use better names than this :)
+declare i_nn integer not null; 
+```
 
 In the context of computing the types of expressions, CQL is statically typed and so it must make a decision about the type of any expression based on the type information at hand at compile time.  As a result it handles the static type of an expression conservatively.  If the result might be null then the expression is of a nullable type and the compiled code will include an affordance for the possibility of a null value at runtime.
 
 The generated code for nullable types is considerably less efficient and so it should be avoided if that is reasonably possible.
+
+CQL also has the special built-in variable `@RC` which refers to the most recent result code returned by a SQLite operation, e.g. 0 == `SQLITE_OK`, 1 == `SQLITE_ERROR`.   `@RC` is of type `integer not null`.  Note: there are many hidden SQLite operations such as statement finalization so `@RC` might change where there is no visible SQL operation.  The most common use of `@RC` is to capture the error code in the first statement of a `catch` block.
 
 ### Types of Literals
 
@@ -7966,7 +7979,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu Feb 18 13:16:38 PST 2021
+Snapshot as of Sun Feb 21 10:10:48 PST 2021
 
 ### Operators and Literals
 
@@ -8016,7 +8029,7 @@ OPEN CLOSE ELSE_IF WHILE CALL TRY CATCH THROW RETURN
 SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
 CAST WITH RECURSIVE REPLACE IGNORE ADD COLUMN RENAME ALTER
 AT_ECHO AT_CREATE AT_RECREATE AT_DELETE AT_SCHEMA_UPGRADE_VERSION AT_PREVIOUS_SCHEMA AT_SCHEMA_UPGRADE_SCRIPT
-AT_PROC AT_FILE AT_ATTRIBUTE AT_SENSITIVE DEFERRED NOT_DEFERRABLE DEFERRABLE IMMEDIATE EXCLUSIVE RESTRICT ACTION INITIALLY NO
+AT_RC AT_PROC AT_FILE AT_ATTRIBUTE AT_SENSITIVE DEFERRED NOT_DEFERRABLE DEFERRABLE IMMEDIATE EXCLUSIVE RESTRICT ACTION INITIALLY NO
 BEFORE AFTER INSTEAD OF FOR_EACH_ROW EXISTS RAISE FAIL ABORT AT_ENFORCE_STRICT AT_ENFORCE_NORMAL AT_ENFORCE_RESET AT_ENFORCE_PUSH AT_ENFORCE_POP
 AT_BEGIN_SCHEMA_REGION AT_END_SCHEMA_REGION
 AT_DECLARE_SCHEMA_REGION AT_DECLARE_DEPLOYABLE_REGION AT_SCHEMA_AD_HOC_MIGRATION PRIVATE
@@ -8480,6 +8493,7 @@ call:
 
 basic_expr:
   name
+  | "@RC"
   | name '.' name
   | any_literal
   | const_expr
@@ -9312,6 +9326,7 @@ enforcement_options:
   | procedure
   | "WITHOUT" "ROWID"
   | "TRANSACTION"
+  | "SELECT" "IF" "NOTHING"
   ;
 
 enforce_strict_stmt:
@@ -12443,6 +12458,14 @@ In the indicated type declaration, the indicated attribute was specified twice. 
 
 ----
 
+### CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
+
+`@enforce_strict select if nothing` has been enabled.  This means that select expressions must include
+`if nothing` or `if nothing or null`.  This options exists because commonly the case where a row
+does not exist is not handled correctly when `(select ...)` is used without the `if nothing` options.
+
+----
+
 
 
 ## Appendix 5: JSON Schema Grammar
@@ -12455,7 +12478,7 @@ In the indicated type declaration, the indicated attribute was specified twice. 
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Thu Feb 18 13:16:39 PST 2021
+Snapshot as of Sun Feb 21 10:10:48 PST 2021
 
 ### Rules
 

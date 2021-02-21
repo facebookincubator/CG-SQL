@@ -66,7 +66,7 @@ const_expr ::= "CONST" '(' expr ')'
 any_literal ::= str_literal | num_literal | "NULL" | "@FILE" '(' str_literal ')' | "@PROC" | "sql-blob-literal"
 raise_expr ::= "RAISE" '(' "IGNORE" ')' | "RAISE" '(' "ROLLBACK" ',' expr ')' | "RAISE" '(' "ABORT" ',' expr ')' | "RAISE" '(' "FAIL" ',' expr ')'
 call ::= name '(' arg_list ')' opt_filter_clause | name '(' "DISTINCT" arg_list ')' opt_filter_clause
-basic_expr ::= name | name '.' name | any_literal | const_expr | '(' expr ')' | call | window_func_inv | raise_expr | '(' select_stmt ')' | '(' select_stmt "IF" "NOTHING" expr ')' | '(' select_stmt "IF" "NOTHING" "OR" "NULL" expr ')' | "EXISTS" '(' select_stmt ')'
+basic_expr ::= name | "@RC" | name '.' name | any_literal | const_expr | '(' expr ')' | call | window_func_inv | raise_expr | '(' select_stmt ')' | '(' select_stmt "IF" "NOTHING" expr ')' | '(' select_stmt "IF" "NOTHING" "OR" "NULL" expr ')' | "EXISTS" '(' select_stmt ')'
 math_expr ::= basic_expr | math_expr '&' math_expr | math_expr '|' math_expr | math_expr "<<" math_expr | math_expr ">>" math_expr | math_expr '+' math_expr | math_expr '-' math_expr | math_expr '*' math_expr | math_expr '/' math_expr | math_expr '%' math_expr | '-' math_expr  | math_expr "||" math_expr
 expr ::= basic_expr | expr '&' expr | expr '|' expr | expr "<<" expr | expr ">>" expr | expr '+' expr | expr '-' expr | expr '*' expr | expr '/' expr | expr '%' expr | '-' expr  | "NOT" expr | '~' expr | expr "COLLATE" name | expr "AND" expr | expr "OR" expr | expr '=' expr | expr "==" expr | expr '<' expr | expr '>' expr | expr "<>" expr | expr "!=" expr | expr ">=" expr | expr "<=" expr | expr "NOT" "IN" '(' expr_list ')' | expr "NOT" "IN" '(' select_stmt ')' | expr "IN" '(' expr_list ')' | expr "IN" '(' select_stmt ')' | expr "LIKE" expr | expr "NOT LIKE" expr | expr "MATCH" expr | expr "REGEXP" expr | expr "GLOB" expr | expr "NOT" "BETWEEN" math_expr "AND" math_expr | expr "BETWEEN" math_expr "AND" math_expr | expr "IS NOT" expr | expr "IS" expr | expr "||" expr | "CASE" expr case_list "END" | "CASE" expr case_list "ELSE" expr "END" | "CASE" case_list "END" | "CASE" case_list "ELSE" expr "END" | "CAST" '(' expr "AS" data_type_any ')'
 case_list ::= "WHEN" expr "THEN" expr | "WHEN" expr "THEN" expr case_list
@@ -217,7 +217,7 @@ trigger_select_stmt ::= select_stmt_no_with
 trigger_insert_stmt ::= insert_stmt
 trigger_delete_stmt ::= delete_stmt
 trigger_update_stmt ::= basic_update_stmt
-enforcement_options ::= "FOREIGN" "KEY" "ON" "UPDATE" | "FOREIGN" "KEY" "ON" "DELETE" | "JOIN" | "UPSERT" "STATEMENT" | "WINDOW" function | procedure | "WITHOUT" "ROWID" | "TRANSACTION"
+enforcement_options ::= "FOREIGN" "KEY" "ON" "UPDATE" | "FOREIGN" "KEY" "ON" "DELETE" | "JOIN" | "UPSERT" "STATEMENT" | "WINDOW" function | procedure | "WITHOUT" "ROWID" | "TRANSACTION" | "SELECT" "IF" "NOTHING"
 enforce_strict_stmt ::= "@ENFORCE_STRICT" enforcement_options
 enforce_normal_stmt ::= "@ENFORCE_NORMAL" enforcement_options
 enforce_reset_stmt ::= "@ENFORCE_RESET"
