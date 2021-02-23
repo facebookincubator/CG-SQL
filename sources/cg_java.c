@@ -195,9 +195,11 @@ static void cg_java_proc_result_set(ast_node *ast) {
 
   // if getters are suppressed the entire class is moot
   // if result set is suppressed the entire class is moot
-  bool_t suppressed = 
+  // private implies result set suppressed so also moot
+  bool_t suppressed =
     exists_attribute_str(misc_attrs, "suppress_getters") ||
-    exists_attribute_str(misc_attrs, "suppress_result_set");
+    exists_attribute_str(misc_attrs, "suppress_result_set") ||
+    exists_attribute_str(misc_attrs, "private");
 
   if (suppressed) {
     return;

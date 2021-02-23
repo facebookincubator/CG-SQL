@@ -645,6 +645,7 @@ name:
   | VIRTUAL  { $name = new_ast_str("virtual"); }
   | TYPE { $name = new_ast_str("type"); }
   | HIDDEN { $name = new_ast_str("hidden"); }
+  | PRIVATE { $name = new_ast_str("private"); }
   ;
 
 opt_name:

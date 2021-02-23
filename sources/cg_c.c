@@ -2960,6 +2960,7 @@ static void cg_create_proc_stmt(ast_node *ast) {
   current_proc = ast;
   seed_declared = 0;
 
+  bool_t private_proc = misc_attrs && exists_attribute_str(misc_attrs, "private");
   bool_t dml_proc = is_dml_proc(ast->sem->sem_type);
   bool_t result_set_proc = has_result_set(ast);
   bool_t out_stmt_proc = has_out_stmt_result(ast);
@@ -2986,6 +2987,10 @@ static void cg_create_proc_stmt(ast_node *ast) {
 
   if (out_stmt_proc || out_union_proc || result_set_proc) {
     cg_proc_result_set(ast);
+  }
+
+  if (private_proc) {
+    bprintf(&proc_decl, "static ");
   }
 
   bool_t need_comma = 0;
@@ -3059,9 +3064,15 @@ static void cg_create_proc_stmt(ast_node *ast) {
   // We don't make it "static" so that CQL-based tests can access it.  However
   // you would have to import it yourself to get access to the symbol (--generate_exports)
   charbuf *decl = (result_set_proc || out_stmt_proc) ? cg_fwd_ref_output : cg_header_output;
-  bprintf(decl, "%s%s);\n", rt->symbol_visibility, proc_decl.ptr);
 
-  if (options.generate_exports) {
+  if (private_proc)  {
+    bprintf(decl, "// %s);\n", proc_decl.ptr);
+  }
+  else {
+    bprintf(decl, "%s%s);\n", rt->symbol_visibility, proc_decl.ptr);
+  }
+
+  if (options.generate_exports && !private_proc) {
     gen_set_output_buffer(exports_output);
     gen_declare_proc_from_create_proc(ast);
     bprintf(exports_output, ";\n");
@@ -3069,7 +3080,13 @@ static void cg_create_proc_stmt(ast_node *ast) {
 
   if (options.test) {
     // echo the export where it can be sanity checked
-    bprintf(cg_declarations_output, "// export: ");
+    if (private_proc) {
+      bprintf(cg_declarations_output, "// private: ");
+    }
+    else {
+      bprintf(cg_declarations_output, "// export: ");
+    }
+
     gen_set_output_buffer(cg_declarations_output);
     gen_declare_proc_from_create_proc(ast);
     bprintf(cg_declarations_output, ";\n");
@@ -3223,11 +3240,13 @@ static void cg_declare_proc_stmt(ast_node *ast) {
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT(params, proc_params_stmts->left);
+  EXTRACT_MISC_ATTRS(ast, misc_attrs);
 
   Contract(!current_proc);
 
   current_proc = ast;
 
+  bool_t private_proc = misc_attrs && exists_attribute_str(misc_attrs, "private");
   bool_t dml_proc = is_dml_proc(ast->sem->sem_type);
   bool_t result_set_proc = has_result_set(ast);
   bool_t out_stmt_proc = has_out_stmt_result(ast);
@@ -3291,7 +3310,12 @@ static void cg_declare_proc_stmt(ast_node *ast) {
     bprintf(&proc_decl, "void");  // make foo(void) rather than foo()
   }
 
-  bprintf(cg_fwd_ref_output, "%s%s);\n\n", rt->symbol_visibility, proc_decl.ptr);
+  if (private_proc) {
+    bprintf(cg_declarations_output, "static %s);\n\n", proc_decl.ptr);
+  }
+  else {
+    bprintf(cg_fwd_ref_output, "%s%s);\n\n", rt->symbol_visibility, proc_decl.ptr);
+  }
 
   current_proc = NULL;
 
@@ -5674,7 +5698,9 @@ static void cg_proc_result_set(ast_node *ast) {
   EXTRACT_MISC_ATTRS(ast, misc_attrs);
 
   bool_t suppress_result_set = misc_attrs && exists_attribute_str(misc_attrs, "suppress_result_set");
-  if (suppress_result_set) {
+  bool_t is_private = misc_attrs && exists_attribute_str(misc_attrs, "private");
+
+  if (suppress_result_set || is_private) {
     return;
   }
 

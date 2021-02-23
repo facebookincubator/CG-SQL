@@ -399,7 +399,7 @@ code_gen_objc_test() {
   echo "  check that the objc_c_include_path argument was not used"
   if grep "<Test/TestFile.h>" "${OUT_DIR}/cg_test_objc.out"
   then
-    echo error etc.
+    echo "${OUT_DIR}/cg_test_objc.out" contains "<Test/TestFile.h>" unexpected
     failed
   fi
 

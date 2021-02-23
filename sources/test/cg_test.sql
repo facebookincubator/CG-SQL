@@ -3376,6 +3376,31 @@ set t0_nullable := (select name from bar if nothing "");
 -- + }
 set t2 := (select name from bar if nothing or null "garbonzo");
 
+
+-- TEST: verify private exports and binding
+-- + // private: DECLARE PROC private_proc (OUT x INTEGER);
+-- + static void private_proc(cql_nullable_int32 *_Nonnull x)
+@attribute(cql:private)
+create proc private_proc(out x integer)
+begin
+  set x := 1;
+end;
+
+-- TEST: verify private exports and binding for result set case
+-- + // private: DECLARE PROC private_result (OUT x INTEGER) (x INTEGER NOT NULL);
+-- + static CQL_WARN_UNUSED cql_code private_result(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_nullable_int32 *_Nonnull x) {
+-- -- cql_code private_result_fetch_results
+@attribute(cql:private)
+create proc private_result(out x integer)
+begin
+  select 1 x;
+end;
+
+-- TEST: private proc forward ref results in static prototype
+-- + static void private_fwd_ref(cql_int32 x);
+@attribute(cql:private)
+declare proc private_fwd_ref(x integer not null);
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

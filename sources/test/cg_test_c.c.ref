@@ -226,6 +226,7 @@ extern CQL_WARN_UNUSED cql_code vault_sensitive_with_no_values_proc(sqlite3 *_No
 extern CQL_WARN_UNUSED cql_code vault_union_all_table_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code vault_alias_column_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code vault_alias_column_name_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+// static CQL_WARN_UNUSED cql_code private_result(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_nullable_int32 *_Nonnull x);
 cql_string_literal(_literal_1_This_is_a_test_, "This is a \" \\ test '' \n \" ");
 cql_string_literal(_literal_2_b_, "b");
 cql_string_literal(_literal_3_c_, "c");
@@ -7961,6 +7962,61 @@ cql_cleanup:
   return _rc_;
 }
 #undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:private)
+CREATE PROC private_proc (OUT x INTEGER)
+BEGIN
+  SET x := 1;
+END;
+*/
+
+#define _PROC_ "private_proc"
+// private: DECLARE PROC private_proc (OUT x INTEGER);
+static void private_proc(cql_nullable_int32 *_Nonnull x) {
+  cql_set_notnull(*x, 1);
+
+cql_cleanup:
+  ; // label requires some statement
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:private)
+CREATE PROC private_result (OUT x INTEGER)
+BEGIN
+  SELECT 1 AS x;
+END;
+*/
+
+#define _PROC_ "private_result"
+// private: DECLARE PROC private_result (OUT x INTEGER) (x INTEGER NOT NULL);
+static CQL_WARN_UNUSED cql_code private_result(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_nullable_int32 *_Nonnull x) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT 1");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:private)
+DECLARE PROC private_fwd_ref (x INTEGER NOT NULL);
+*/
+static void private_fwd_ref(cql_int32 x);
+
 
 // The statement ending at line XXXX
 
