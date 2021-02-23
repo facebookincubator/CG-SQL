@@ -2364,6 +2364,15 @@ static void cg_expr_select(ast_node *ast, CSTR op, charbuf *is_null, charbuf *va
   Invariant(stack_level == stack_level_saved);
 }
 
+// select if nothing is exactly the same codegen as regular select
+// the throwing which is done by default was make explcit.  The normal
+// codegen already does the "throw" (i.e. goto the current error target).
+static void cg_expr_select_if_nothing_throw(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
+  Contract(is_ast_select_if_nothing_throw_expr(ast));
+  EXTRACT_ANY_NOTNULL(select_expr, ast->left);
+  cg_expr_select(select_expr, op, is_null, value, pri, pri_new);
+}
+
 // This helper does the evaluation of the select statement portion of the
 // (SELECT ... IF NOTHING ...) forms.  Importantly the result type of the
 // select might not exactly match the result type of expression because
@@ -2401,7 +2410,7 @@ static void cg_expr_select_frag(ast_node *ast, charbuf *is_null, charbuf *value)
 //    which is of exactly the right type
 //  * use that variable as the result.
 //  * if there is no row, we use the default expression
-// The helper methods take care of sqlite error management.
+// The helper methods takes care of sqlite error management.
 static void cg_expr_select_if_nothing(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_select_if_nothing_expr(ast));
   int32_t stack_level_saved = stack_level;
@@ -6486,6 +6495,7 @@ cql_noexport void cg_c_init(void) {
   EXPR_INIT(or, cg_expr_or, "OR", C_EXPR_PRI_LOR);
   EXPR_INIT(select_stmt, cg_expr_select, "SELECT", C_EXPR_PRI_ROOT);
   EXPR_INIT(select_if_nothing_expr, cg_expr_select_if_nothing, "SELECT", C_EXPR_PRI_ROOT);
+  EXPR_INIT(select_if_nothing_throw_expr, cg_expr_select_if_nothing_throw, "SELECT", C_EXPR_PRI_ROOT);
   EXPR_INIT(select_if_nothing_or_null_expr, cg_expr_select_if_nothing_or_null, "SELECT", C_EXPR_PRI_ROOT);
   EXPR_INIT(with_select_stmt, cg_expr_select, "WITH...SELECT", C_EXPR_PRI_ROOT);
   EXPR_INIT(is, cg_expr_is, "IS NULL", C_EXPR_PRI_EQ_NE);

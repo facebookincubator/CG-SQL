@@ -10311,6 +10311,22 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
   
   /*
+  SET i0_nullable := ( SELECT type
+    FROM bar IF NOTHING THROW );
+  */
+  _rc_ = cql_prepare(_db_, &_temp_stmt,
+    "SELECT type "
+      "FROM bar");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = sqlite3_step(_temp_stmt);
+  if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
+    cql_column_nullable_int32(_temp_stmt, 0, &_tmp_n_int_0);
+  cql_finalize_stmt(&_temp_stmt);
+  cql_set_nullable(i0_nullable, _tmp_n_int_0.is_null, _tmp_n_int_0.value);
+  
+  // The statement ending at line XXXX
+  
+  /*
   SET i2 := ( SELECT type
     FROM bar IF NOTHING OR NULL -1 );
   */

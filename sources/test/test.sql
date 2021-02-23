@@ -1336,6 +1336,8 @@ set x := (select x from y if nothing 3);
 
 set x := (select x from y if nothing or null 3);
 
+set x := (select x from y if nothing throw);
+
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 
 # 1 "long/path/I/do/not/like"

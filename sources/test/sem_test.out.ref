@@ -56366,6 +56366,32 @@ SET price_d := ( SELECT 1 IF NOTHING ( SELECT 1 ) );
 
 The statement ending at line XXXX
 
+SET price_d := ( SELECT id
+  FROM foo IF NOTHING THROW );
+
+  {assign}: price_d: real<dollars> variable
+  | {name price_d}: price_d: real<dollars> variable
+  | {select_if_nothing_throw_expr}: id: integer notnull
+    | {select_stmt}: id: integer notnull
+      | {select_core_list}: select: { id: integer notnull }
+      | | {select_core}: select: { id: integer notnull }
+      |   | {select_expr_list_con}: select: { id: integer notnull }
+      |     | {select_expr_list}: select: { id: integer notnull }
+      |     | | {select_expr}: id: integer notnull
+      |     |   | {name id}: id: integer notnull
+      |     | {select_from_etc}: TABLE { foo: foo }
+      |       | {table_or_subquery_list}: TABLE { foo: foo }
+      |       | | {table_or_subquery}: TABLE { foo: foo }
+      |       |   | {name foo}: TABLE { foo: foo }
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
 @ENFORCE_NORMAL SELECT IF NOTHING;
 
   {enforce_normal_stmt}: ok

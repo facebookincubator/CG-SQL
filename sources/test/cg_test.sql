@@ -3341,6 +3341,17 @@ insert into virtual_with_hidden(vx, vy) values(1,2);
 -- + }
 set i0_nullable := (select type from bar if nothing -1);
 
+-- TEST: normal code gen for if nothing throw
+-- + SET i0_nullable := ( SELECT type
+-- + FROM bar IF NOTHING THROW );
+-- + _rc_ = cql_prepare(_db_, &_temp_stmt,
+-- +   "SELECT type "
+-- +     "FROM bar");
+-- + if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+-- + _rc_ = sqlite3_step(_temp_stmt);
+-- + if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
+set i0_nullable := (select type from bar if nothing throw);
+
 -- TEST: get row from bar if no row or null -1
 -- + if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
 -- + if (_rc_ == SQLITE_ROW) {

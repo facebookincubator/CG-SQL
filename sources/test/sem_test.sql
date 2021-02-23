@@ -14171,6 +14171,11 @@ set price_d := (select 1 if nothing (select id from foo));
 -- - Error
 set price_d := (select 1 if nothing (select 1));
 
+-- TEST: explicit if nothing throw is ok
+-- + {select_if_nothing_throw_expr}: id: integer notnull
+-- - Error
+set price_d := (select id from foo if nothing throw);
+
 -- TEST: normal if nothing
 -- + {enforce_normal_stmt}: ok
 -- - Error;

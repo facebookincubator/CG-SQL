@@ -16067,14 +16067,16 @@ static bool_t sem_select_contains_from_etc(ast_node *ast) {
   return detected;
 }
 
-
 // Expression type for nested select expression
 static void sem_expr_select(ast_node *ast, CSTR cstr) {
   Contract(is_select_stmt(ast));
   EXTRACT_ANY_NOTNULL(parent, ast->parent);
 
   // this tells us if we might be the left side of a select if nothing
-  bool_t in_select_if_nothing = is_ast_select_if_nothing_expr(parent) || is_ast_select_if_nothing_or_null_expr(parent);
+  bool_t in_select_if_nothing = 
+     is_ast_select_if_nothing_throw_expr(parent) || 
+     is_ast_select_if_nothing_expr(parent) || 
+     is_ast_select_if_nothing_or_null_expr(parent);
 
   // only the left side, the right side is an arbitary expression
   in_select_if_nothing &= parent->left == ast;
@@ -16141,6 +16143,17 @@ static void sem_expr_select(ast_node *ast, CSTR cstr) {
   ast->sem = new_sem(sem_type);
   ast->sem->name = sptr->names[0];
   ast->sem->kind = sptr->kinds[0];
+}
+
+// If nothing throw is exactly the same as a normal select expr
+// the only difference is that it is legal inside of strict select if nothing
+// because the user has made the throw explicit so they're saying they
+// know it's gonna throw and that's ok.
+static void sem_expr_select_if_nothing_throw(ast_node *ast, CSTR op) {
+  Contract(is_ast_select_if_nothing_throw_expr(ast));
+  EXTRACT_ANY_NOTNULL(select_expr, ast->left);
+  sem_expr_select(select_expr, op);
+  ast->sem = select_expr->sem;
 }
 
 // Despite the unusual nature of SELECT .. IF NOTHING ... the net semantic rules
@@ -17216,6 +17229,7 @@ cql_noexport void sem_main(ast_node *ast) {
   EXPR_INIT(and, sem_binary_logical, "AND");
   EXPR_INIT(or, sem_binary_logical, "OR");
   EXPR_INIT(select_stmt, sem_expr_select, "SELECT");
+  EXPR_INIT(select_if_nothing_throw_expr, sem_expr_select_if_nothing_throw, "IF NOTHING THROW");
   EXPR_INIT(select_if_nothing_expr, sem_expr_select_if_nothing, "IF NOTHING");
   EXPR_INIT(select_if_nothing_or_null_expr, sem_expr_select_if_nothing, "IF NOTHING OR NULL");
   EXPR_INIT(with_select_stmt, sem_expr_select, "WITH...SELECT");

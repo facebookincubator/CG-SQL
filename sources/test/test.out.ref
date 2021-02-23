@@ -1440,6 +1440,9 @@ SET x := ( SELECT x
 SET x := ( SELECT x
   FROM y IF NOTHING OR NULL 3 );
 
+SET x := ( SELECT x
+  FROM y IF NOTHING THROW );
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

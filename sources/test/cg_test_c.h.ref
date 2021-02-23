@@ -2331,6 +2331,8 @@ extern CQL_WARN_UNUSED cql_code make_virt_table(sqlite3 *_Nonnull _db_);
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
+
+// The statement ending at line XXXX
 // static void private_proc(cql_nullable_int32 *_Nonnull x);
 
 // The statement ending at line XXXX
