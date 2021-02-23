@@ -14150,7 +14150,7 @@ begin transaction;
 -- + {select_stmt}: err
 -- + Error % strict select if nothing requires that all (select ...) expressions include 'if nothing'
 -- +1 Error
-set price_d := (select 1);
+set price_d := (select id from foo);
 
 -- TEST: select if nothing is allowed
 -- - Error
@@ -14165,6 +14165,10 @@ set price_d := (select 1 if nothing or null -1);
 -- + {select_stmt}: err
 -- + Error % strict select if nothing requires that all (select ...) expressions include 'if nothing'
 -- +1 Error
+set price_d := (select 1 if nothing (select id from foo));
+
+-- TEST: nested select is ok if it has no from clause
+-- - Error
 set price_d := (select 1 if nothing (select 1));
 
 -- TEST: normal if nothing

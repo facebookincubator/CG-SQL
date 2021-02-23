@@ -66,6 +66,8 @@ typedef struct gen_sql_callbacks {
   void *_Nullable star_context;
   gen_sql_callback _Nullable if_not_exists_callback;
   void *_Nullable if_not_exists_context;
+  gen_sql_callback _Nullable from_etc_callback;
+  void *_Nullable from_etc_context;
   bool_t convert_hex;
   bool_t minify_casts;
   bool_t minify_aliases;

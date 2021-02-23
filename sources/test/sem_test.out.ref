@@ -56213,7 +56213,8 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-SET price_d := ( SELECT 1 );
+SET price_d := ( SELECT id
+  FROM foo );
 
 Error at test/sem_test.sql:XXXX : in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
 
@@ -56225,8 +56226,11 @@ Error at test/sem_test.sql:XXXX : in select_stmt : CQL0368: strict select if not
     |   | {select_expr_list_con}
     |     | {select_expr_list}
     |     | | {select_expr}
-    |     |   | {int 1}
+    |     |   | {name id}
     |     | {select_from_etc}
+    |       | {table_or_subquery_list}
+    |       | | {table_or_subquery}
+    |       |   | {name foo}
     |       | {select_where}
     |         | {select_groupby}
     |           | {select_having}
@@ -56284,7 +56288,8 @@ SET price_d := ( SELECT 1 IF NOTHING OR NULL -1 );
 
 The statement ending at line XXXX
 
-SET price_d := ( SELECT 1 IF NOTHING ( SELECT 1 ) );
+SET price_d := ( SELECT 1 IF NOTHING ( SELECT id
+  FROM foo ) );
 
 Error at test/sem_test.sql:XXXX : in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
 
@@ -56311,8 +56316,47 @@ Error at test/sem_test.sql:XXXX : in select_stmt : CQL0368: strict select if not
       |   | {select_expr_list_con}
       |     | {select_expr_list}
       |     | | {select_expr}
-      |     |   | {int 1}
+      |     |   | {name id}
       |     | {select_from_etc}
+      |       | {table_or_subquery_list}
+      |       | | {table_or_subquery}
+      |       |   | {name foo}
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+SET price_d := ( SELECT 1 IF NOTHING ( SELECT 1 ) );
+
+  {assign}: price_d: real<dollars> variable
+  | {name price_d}: price_d: real<dollars> variable
+  | {select_if_nothing_expr}: integer notnull
+    | {select_stmt}: _anon: integer notnull
+    | | {select_core_list}: select: { _anon: integer notnull }
+    | | | {select_core}: select: { _anon: integer notnull }
+    | |   | {select_expr_list_con}: select: { _anon: integer notnull }
+    | |     | {select_expr_list}: select: { _anon: integer notnull }
+    | |     | | {select_expr}: integer notnull
+    | |     |   | {int 1}: integer notnull
+    | |     | {select_from_etc}: ok
+    | |       | {select_where}
+    | |         | {select_groupby}
+    | |           | {select_having}
+    | | {select_orderby}
+    |   | {select_limit}
+    |     | {select_offset}
+    | {select_stmt}: _anon: integer notnull
+      | {select_core_list}: select: { _anon: integer notnull }
+      | | {select_core}: select: { _anon: integer notnull }
+      |   | {select_expr_list_con}: select: { _anon: integer notnull }
+      |     | {select_expr_list}: select: { _anon: integer notnull }
+      |     | | {select_expr}: integer notnull
+      |     |   | {int 1}: integer notnull
+      |     | {select_from_etc}: ok
       |       | {select_where}
       |         | {select_groupby}
       |           | {select_having}

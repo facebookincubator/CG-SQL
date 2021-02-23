@@ -13789,7 +13789,6 @@ static void sem_create_proc_stmt(ast_node *ast) {
       goto cleanup;
     }
 
-
     uint32_t frag_type = find_fragment_attr_type(misc_attrs);
 
     if (frag_type == FRAG_TYPE_MIXED) {
@@ -16042,6 +16041,33 @@ static void sem_expr_dot(ast_node *ast, CSTR cstr) {
   sem_resolve_id(ast, name, scope);
 }
 
+
+// we just record that we saw the query part, that's what the callback is for
+static bool_t sem_note_query_parts(ast_node *ast, void *context, charbuf *buffer) {
+  Contract(context);
+  *((bool_t *)context) = true;
+  return true;
+}
+
+// We have this guy use the SQL generator to avoid writing another (tricky) tree walker
+// to find if we have a FROM clause.
+static bool_t sem_select_contains_from_etc(ast_node *ast) {
+  bool_t detected = false;
+
+  gen_sql_callbacks callbacks;
+  init_gen_sql_callbacks(&callbacks);
+  callbacks.from_etc_callback = sem_note_query_parts;
+  callbacks.from_etc_context = (void *)&detected;
+  callbacks.mode = gen_mode_echo; // mode doesn't matter, we're not using the output
+  CHARBUF_OPEN(scratch);
+  gen_set_output_buffer(&scratch);
+  gen_with_callbacks(ast, gen_root_expr, &callbacks);
+  CHARBUF_CLOSE(scratch);
+
+  return detected;
+}
+
+
 // Expression type for nested select expression
 static void sem_expr_select(ast_node *ast, CSTR cstr) {
   Contract(is_select_stmt(ast));
@@ -16053,7 +16079,8 @@ static void sem_expr_select(ast_node *ast, CSTR cstr) {
   // only the left side, the right side is an arbitary expression
   in_select_if_nothing &= parent->left == ast;
 
-  if (!in_select_if_nothing && enforcement.strict_if_nothing) {
+  // we only check select statements that have a from clause,  the forms (select 1) are always ok!
+  if (!in_select_if_nothing && enforcement.strict_if_nothing && sem_select_contains_from_etc(ast)) {
     report_error(ast, "CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'", NULL);
     record_error(ast);
     return;
@@ -16128,7 +16155,7 @@ static void sem_expr_select_if_nothing(ast_node *ast, CSTR op) {
   Contract(is_ast_select_if_nothing_expr(ast) || is_ast_select_if_nothing_or_null_expr(ast));
 
   sem_t core_type_left, core_type_right, combined_flags;
-  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags)) { 
+  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags)) {
     return;
   }
 
