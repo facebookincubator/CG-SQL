@@ -144,6 +144,9 @@ typedef struct cql_result_set_meta {
                                  cql_result_set_ref _Nonnull rs2,
                                  cql_int32 row2);
 
+  // check whether the column value is encoded
+  cql_bool(*_Nullable getIsEncoded)(cql_result_set_ref _Nonnull result_set, cql_int32 col);
+
   // count of references and offset to the first
   uint16_t refsCount;
   uint16_t refsOffset;
