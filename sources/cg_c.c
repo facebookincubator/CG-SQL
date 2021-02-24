@@ -5894,7 +5894,7 @@ static void cg_proc_result_set(ast_node *ast) {
       info.value_suffix = ".is_null";
       cg_proc_result_set_getter(&info);
 
-      info.ret_type = core_type_of(sem_type) | SEM_TYPE_NOTNULL,
+      info.ret_type = core_type | SEM_TYPE_NOTNULL,
       info.sym_suffix = "_value";
       info.value_suffix = ".value";
       cg_proc_result_set_getter(&info);
@@ -5904,6 +5904,26 @@ static void cg_proc_result_set(ast_node *ast) {
       info.sym_suffix = NULL;
       info.value_suffix = NULL;
       cg_proc_result_set_getter(&info);
+    }
+
+    if (use_vault && sensitive_flag(sem_type)) {
+      CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
+        col_getter_sym,
+        rt->symbol_prefix,
+        info.name,
+        "_get_",
+        info.col,
+        "_is_encoded");
+
+      bprintf(
+          info.headers,
+          "\n#define %s(rs) \\\n"
+          "  %s((%s)rs, %d)\n",
+          col_getter_sym.ptr,
+          rt->cql_result_set_get_is_encoded,
+          rt->cql_result_set_ref,
+          i);
+      CHARBUF_CLOSE(col_getter_sym);
     }
   }
 

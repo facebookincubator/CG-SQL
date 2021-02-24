@@ -1016,6 +1016,7 @@ cql_code test_all_column_encoded_multi_out_union(sqlite3 *db) {
 
   cql_bool b0 = load_decoded_multi_out_union_get_b0_value(rs, 1);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 0), "expected b0 is encoded\n");
+  E(load_decoded_multi_out_union_get_b0_is_encoded(rs), "expected b0 is encoded\n");
   cql_bool b0_exp = cql_decode_bool(db, b0);
   E(b0_exp == 0, "expected b0 is 0, value %d\n", b0_exp);
 

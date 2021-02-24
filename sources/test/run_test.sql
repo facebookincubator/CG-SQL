@@ -2594,7 +2594,7 @@ end;
 -- this proc will make the tables and also this serves as the table declarations
 create procedure init_temp_tables()
 begin
-  create temp table temp_table_one(id integer not null);
+  create temp table temp_table_one(id integer not null @sensitive);
   create temp table temp_table_two(id integer not null);
   create temp table temp_table_three(id integer not null);
 
