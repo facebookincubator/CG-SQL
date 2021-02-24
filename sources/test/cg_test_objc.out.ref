@@ -16,6 +16,11 @@ static inline NSNumber *_Nullable CGBExtGetF2(CGBFragTest *resultSet, int32_t ro
   return __PRIVATE__CGBFragTestGetF2(resultSet, row);
 }
 
+static inline BOOL CGBExtGetF2IsEncoded(CGBFragTest *resultSet)
+{
+  return CGBFragTestGetF2IsEncoded(resultSet);
+}
+
 static inline int32_t CGBExtResultCount(CGBFragTest *resultSet)
 {
   return CGBFragTestResultCount(resultSet);
@@ -1438,6 +1443,11 @@ static inline NSString *_Nullable CGBRadioactiveProcGetData(CGBRadioactiveProc *
   return (__bridge NSString *)CGCRadioactiveProcGetData(cResultSet, row);
 }
 
+static inline BOOL CGBRadioactiveProcGetDataIsEncoded(CGBRadioactiveProc *resultSet)
+{
+  return CGCRadioactiveProcGetDataIsEncoded(CGCRadioactiveProcFromCGBRadioactiveProc(resultSet));
+}
+
 static inline int32_t CGBRadioactiveProcResultCount(CGBRadioactiveProc *resultSet)
 {
   return CGCRadioactiveProcResultCount(CGCRadioactiveProcFromCGBRadioactiveProc(resultSet));
@@ -1754,6 +1764,11 @@ static inline NSString *_Nullable CGBOutUnionDmlGetData(CGBOutUnionDml *resultSe
   return (__bridge NSString *)CGCOutUnionDmlGetData(cResultSet, row);
 }
 
+static inline BOOL CGBOutUnionDmlGetDataIsEncoded(CGBOutUnionDml *resultSet)
+{
+  return CGCOutUnionDmlGetDataIsEncoded(CGCOutUnionDmlFromCGBOutUnionDml(resultSet));
+}
+
 static inline int32_t CGBOutUnionDmlResultCount(CGBOutUnionDml *resultSet)
 {
   return CGCOutUnionDmlResultCount(CGCOutUnionDmlFromCGBOutUnionDml(resultSet));
@@ -1892,6 +1907,16 @@ static inline NSNumber *_Nullable CGBVaultSensitiveWithValuesProcGetType(CGBVaul
   return CGCVaultSensitiveWithValuesProcGetTypeIsNull(cResultSet, row) ? nil : @(CGCVaultSensitiveWithValuesProcGetTypeValue(cResultSet, row));
 }
 
+static inline BOOL CGBVaultSensitiveWithValuesProcGetNameIsEncoded(CGBVaultSensitiveWithValuesProc *resultSet)
+{
+  return CGCVaultSensitiveWithValuesProcGetNameIsEncoded(CGCVaultSensitiveWithValuesProcFromCGBVaultSensitiveWithValuesProc(resultSet));
+}
+
+static inline BOOL CGBVaultSensitiveWithValuesProcGetTypeIsEncoded(CGBVaultSensitiveWithValuesProc *resultSet)
+{
+  return CGCVaultSensitiveWithValuesProcGetTypeIsEncoded(CGCVaultSensitiveWithValuesProcFromCGBVaultSensitiveWithValuesProc(resultSet));
+}
+
 static inline int32_t CGBVaultSensitiveWithValuesProcResultCount(CGBVaultSensitiveWithValuesProc *resultSet)
 {
   return CGCVaultSensitiveWithValuesProcResultCount(CGCVaultSensitiveWithValuesProcFromCGBVaultSensitiveWithValuesProc(resultSet));
@@ -1942,6 +1967,16 @@ static inline NSNumber *_Nullable CGBVaultSensitiveWithNoValuesProcGetType(CGBVa
 {
   CGCVaultSensitiveWithNoValuesProcResultSetRef cResultSet = CGCVaultSensitiveWithNoValuesProcFromCGBVaultSensitiveWithNoValuesProc(resultSet);
   return CGCVaultSensitiveWithNoValuesProcGetTypeIsNull(cResultSet, row) ? nil : @(CGCVaultSensitiveWithNoValuesProcGetTypeValue(cResultSet, row));
+}
+
+static inline BOOL CGBVaultSensitiveWithNoValuesProcGetNameIsEncoded(CGBVaultSensitiveWithNoValuesProc *resultSet)
+{
+  return CGCVaultSensitiveWithNoValuesProcGetNameIsEncoded(CGCVaultSensitiveWithNoValuesProcFromCGBVaultSensitiveWithNoValuesProc(resultSet));
+}
+
+static inline BOOL CGBVaultSensitiveWithNoValuesProcGetTypeIsEncoded(CGBVaultSensitiveWithNoValuesProc *resultSet)
+{
+  return CGCVaultSensitiveWithNoValuesProcGetTypeIsEncoded(CGCVaultSensitiveWithNoValuesProcFromCGBVaultSensitiveWithNoValuesProc(resultSet));
 }
 
 static inline int32_t CGBVaultSensitiveWithNoValuesProcResultCount(CGBVaultSensitiveWithNoValuesProc *resultSet)
@@ -1996,6 +2031,16 @@ static inline NSNumber *_Nullable CGBVaultUnionAllTableProcGetType(CGBVaultUnion
   return CGCVaultUnionAllTableProcGetTypeIsNull(cResultSet, row) ? nil : @(CGCVaultUnionAllTableProcGetTypeValue(cResultSet, row));
 }
 
+static inline BOOL CGBVaultUnionAllTableProcGetNameIsEncoded(CGBVaultUnionAllTableProc *resultSet)
+{
+  return CGCVaultUnionAllTableProcGetNameIsEncoded(CGCVaultUnionAllTableProcFromCGBVaultUnionAllTableProc(resultSet));
+}
+
+static inline BOOL CGBVaultUnionAllTableProcGetTypeIsEncoded(CGBVaultUnionAllTableProc *resultSet)
+{
+  return CGCVaultUnionAllTableProcGetTypeIsEncoded(CGCVaultUnionAllTableProcFromCGBVaultUnionAllTableProc(resultSet));
+}
+
 static inline int32_t CGBVaultUnionAllTableProcResultCount(CGBVaultUnionAllTableProc *resultSet)
 {
   return CGCVaultUnionAllTableProcResultCount(CGCVaultUnionAllTableProcFromCGBVaultUnionAllTableProc(resultSet));
@@ -2036,6 +2081,11 @@ static inline NSString *_Nullable CGBVaultAliasColumnProcGetAliasName(CGBVaultAl
   return (__bridge NSString *)CGCVaultAliasColumnProcGetAliasName(cResultSet, row);
 }
 
+static inline BOOL CGBVaultAliasColumnProcGetAliasNameIsEncoded(CGBVaultAliasColumnProc *resultSet)
+{
+  return CGCVaultAliasColumnProcGetAliasNameIsEncoded(CGCVaultAliasColumnProcFromCGBVaultAliasColumnProc(resultSet));
+}
+
 static inline int32_t CGBVaultAliasColumnProcResultCount(CGBVaultAliasColumnProc *resultSet)
 {
   return CGCVaultAliasColumnProcResultCount(CGCVaultAliasColumnProcFromCGBVaultAliasColumnProc(resultSet));
@@ -2074,6 +2124,11 @@ static inline NSString *_Nullable CGBVaultAliasColumnNameProcGetAliasName(CGBVau
 {
   CGCVaultAliasColumnNameProcResultSetRef cResultSet = CGCVaultAliasColumnNameProcFromCGBVaultAliasColumnNameProc(resultSet);
   return (__bridge NSString *)CGCVaultAliasColumnNameProcGetAliasName(cResultSet, row);
+}
+
+static inline BOOL CGBVaultAliasColumnNameProcGetAliasNameIsEncoded(CGBVaultAliasColumnNameProc *resultSet)
+{
+  return CGCVaultAliasColumnNameProcGetAliasNameIsEncoded(CGCVaultAliasColumnNameProcFromCGBVaultAliasColumnNameProc(resultSet));
 }
 
 static inline int32_t CGBVaultAliasColumnNameProcResultCount(CGBVaultAliasColumnNameProc *resultSet)

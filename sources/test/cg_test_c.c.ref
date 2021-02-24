@@ -7218,6 +7218,7 @@ END;
 
 /*
 @ATTRIBUTE(cql:extension_fragment=frag_test)
+@ATTRIBUTE(cql:vault_sensitive)
 CREATE PROC ext ()
 BEGIN
   WITH

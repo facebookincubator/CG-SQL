@@ -258,7 +258,7 @@ static void cg_objc_proc_result_set(ast_node *ast) {
   // if getters are suppressed the entire class is moot
   // if result set is suppressed the entire class is moot
   // private implies result set suppressed so also moot
-  bool_t suppressed = 
+  bool_t suppressed =
     exists_attribute_str(misc_attrs, "suppress_getters") ||
     exists_attribute_str(misc_attrs, "suppress_result_set") ||
     exists_attribute_str(misc_attrs, "private");
@@ -326,6 +326,39 @@ static void cg_objc_proc_result_set(ast_node *ast) {
       i,
       sem_type,
       h);
+  }
+
+  if (exists_attribute_str(misc_attrs, "vault_sensitive")) {
+    for (uint32_t i = 0; i < count; i++) {
+      if (sensitive_flag(sptr->semtypes[i])) {
+        CSTR col = sptr->names[i];
+        CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
+            objc_getter, objc_name.ptr, "_get_", col, "_is_encoded");
+        CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
+            c_getter, c_name.ptr, "_get_", col, "_is_encoded");
+
+        bprintf(h,
+            "\nstatic inline %s %s(%s *resultSet)\n",
+            rt->cql_bool,
+            objc_getter.ptr,
+            objc_result_set_name.ptr);
+        bprintf(h, "{\n");
+        if (is_extension_fragment) {
+          CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
+            objc_result_set_name_getter, objc_result_set_name.ptr, "_get_", col, "_is_encoded");
+          bprintf(
+              h, "  return %s(resultSet);\n", objc_result_set_name_getter.ptr);
+          CHARBUF_CLOSE(objc_result_set_name_getter);
+        }
+        else {
+          bprintf(h, "  return %s(%s(resultSet));\n", c_getter.ptr, c_convert.ptr);
+        }
+        bprintf(h, "}\n");
+
+        CHARBUF_CLOSE(c_getter);
+        CHARBUF_CLOSE(objc_getter);
+      }
+    }
   }
 
   bprintf(h,

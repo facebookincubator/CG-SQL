@@ -2782,7 +2782,7 @@ end;
 
 create table ext_test_table (
   f1 integer not null,
-  f2 integer not null,
+  f2 integer not null @sensitive,
   f3 integer not null
 );
 
@@ -2809,6 +2809,7 @@ end;
 -- + cql_int32 ext_result_count(frag_test_result_set_ref _Nonnull result_set) {
 -- +   return cql_result_set_get_count((cql_result_set_ref)result_set);
 @attribute(cql:extension_fragment=frag_test)
+@attribute(cql:vault_sensitive)
 create proc ext()
 begin
   with
