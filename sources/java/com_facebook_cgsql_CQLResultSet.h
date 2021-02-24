@@ -118,6 +118,14 @@ JNIEXPORT jboolean JNICALL Java_com_facebook_cgsql_CQLResultSet_rowsSame
 JNIEXPORT jlong JNICALL Java_com_facebook_cgsql_CQLResultSet_copy
   (JNIEnv *, jobject, jlong, jint, jint);
 
+/*
+ * Class:     com_facebook_cgsql_CQLResultSet
+ * Method:    getIsEncoded
+ * Signature: (JI)Z
+ */
+JNIEXPORT jboolean JNICALL Java_com_facebook_cgsql_CQLResultSet_getIsEncoded
+  (JNIEnv *, jobject, jlong, jint);
+
 #ifdef __cplusplus
 }
 #endif

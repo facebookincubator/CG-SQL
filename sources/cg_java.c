@@ -87,7 +87,8 @@ static void cg_java_proc_result_set_getter(bool_t fetch_proc,
                                       CSTR col_name,
                                       int32_t col,
                                       charbuf *java,
-                                      sem_t sem_type) {
+                                      sem_t sem_type,
+                                      bool_t is_vault) {
   Contract(is_unitary(sem_type));
   sem_t core_type = core_type_of(sem_type);
   Contract(core_type != SEM_TYPE_NULL);
@@ -181,6 +182,12 @@ static void cg_java_proc_result_set_getter(bool_t fetch_proc,
           fetch_proc ? "0" : "row",
           col_index.ptr);
 
+  if (is_vault && sensitive_flag(sem_type)) {
+    bprintf(java, "public %s %sIsEncoded() {\n", rt->cql_bool, col_name_camel.ptr);
+    bprintf(java, "  return mResultSet.getIsEncoded(%s);\n", col_index.ptr);
+    bprintf(java, "}\n\n");
+  }
+
   CHARBUF_CLOSE(col_index);
   CHARBUF_CLOSE(method_name);
   CHARBUF_CLOSE(col_name_camel);
@@ -205,6 +212,7 @@ static void cg_java_proc_result_set(ast_node *ast) {
     return;
   }
 
+  bool_t is_vault = !!exists_attribute_str(misc_attrs, "vault_sensitive");
   is_extension_fragment = misc_attrs && find_extension_fragment_attr(misc_attrs, NULL, NULL);
   is_assembly_query = misc_attrs && find_assembly_query_attr(misc_attrs, NULL, NULL);
   if (generated_java_sp_count == 1 && !is_assembly_query && !is_extension_fragment) {
@@ -314,7 +322,7 @@ static void cg_java_proc_result_set(ast_node *ast) {
   for (int32_t i = 0; i < count; i++) {
     sem_t sem_type = sptr->semtypes[i];
     CSTR col = sptr->names[i];
-    cg_java_proc_result_set_getter(out_stmt_proc, name, col, i, &body, sem_type);
+    cg_java_proc_result_set_getter(out_stmt_proc, name, col, i, &body, sem_type, is_vault);
   }
 
   bprintf(&body, "%s", rt->cql_result_set_get_count);

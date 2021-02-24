@@ -17,6 +17,10 @@ public final class cg_test_java_not_nullable_proc extends CQLViewModel {
     return mResultSet.getInteger(row, 0);
   }
   
+  public boolean getIntcolIsEncoded() {
+    return mResultSet.getIsEncoded(0);
+  }
+  
   public long getLongcol(int row) {
     return mResultSet.getLong(row, 1);
   }
@@ -35,6 +39,10 @@ public final class cg_test_java_not_nullable_proc extends CQLViewModel {
   
   public byte[] getBlobcol(int row) {
     return mResultSet.getBlob(row, 5);
+  }
+  
+  public boolean getBlobcolIsEncoded() {
+    return mResultSet.getIsEncoded(5);
   }
   
   public int getCount() {

@@ -109,6 +109,10 @@ public final class CQLResultSet {
     return new CQLResultSet(copy(result_set_ref, row, count));
   }
 
+  public boolean getIsEncoded(int column) {
+    return getIsEncoded(result_set_ref, column);
+  }
+
   // native calls
   public native void close(long result_set_ref);
 
@@ -135,4 +139,6 @@ public final class CQLResultSet {
   public native boolean rowsSame(long result_set_ref, int row1, long rs2, int row2);
 
   public native long copy(long result_set_ref, int row, int count);
+
+  public native boolean getIsEncoded(long result_set_ref, int column);
 }

@@ -9,15 +9,16 @@
 -- types
 
 create table bar(
-  intcol INTEGER,
+  intcol INTEGER @sensitive,
   longcol LONG INT,
   realcol REAL,
   boolcol BOOL,
   textcol TEXT,
-  blobcol BLOB
+  blobcol BLOB @sensitive
 );
 
 @attribute(cql:identity=(boolcol))
+@attribute(cql:vault_sensitive)
 create proc non_empty_proc()
 begin
   select * from bar;

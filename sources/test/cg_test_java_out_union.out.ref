@@ -17,6 +17,10 @@ public final class cg_test_java_out_union extends CQLViewModel {
     return mResultSet.getInteger(0, 0);
   }
   
+  public boolean getXIsEncoded() {
+    return mResultSet.getIsEncoded(0);
+  }
+  
   public int getCount() {
     return mResultSet.getCount();
   }

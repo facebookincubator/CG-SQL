@@ -36,7 +36,13 @@ public class CGSQLMain {
       String s = new String(bytes, StandardCharsets.UTF_8);
       System.out.println(
           String.format(
-              "Row %d: %s %s %d %f", i, data.getName(i), s, data.getAge(i), data.getThing(i)));
+              "Row %d: %s %s %d(encoded = %s) %f",
+              i,
+              data.getName(i),
+              s,
+              data.getAge(i),
+              Boolean.toString(data.getAgeIsEncoded()),
+              data.getThing(i)));
     }
   }
 }

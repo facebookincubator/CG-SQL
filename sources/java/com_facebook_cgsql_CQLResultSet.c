@@ -14,7 +14,7 @@
  * Signature: (J)V
  */
 JNIEXPORT void JNICALL Java_com_facebook_cgsql_CQLResultSet_close
-  (JNIEnv *env, jobject thiz, jlong rs) { 
+  (JNIEnv *env, jobject thiz, jlong rs) {
   cql_result_set_ref ref = (cql_result_set_ref)(rs);
   cql_result_set_release(ref);
 }
@@ -176,4 +176,15 @@ JNIEXPORT jlong JNICALL Java_com_facebook_cgsql_CQLResultSet_copy
   cql_result_set_ref refNew = NULL;
   cql_rowset_copy(ref, &refNew, row, count);
   return (jlong)refNew;
+}
+
+/*
+ * Class:     com_facebook_cgsql_CQLResultSet
+ * Method:    getIsEncoded
+ * Signature: (JI)Z
+ */
+JNIEXPORT jboolean JNICALL Java_com_facebook_cgsql_CQLResultSet_getIsEncoded
+  (JNIEnv *env, jobject thiz, jlong rs, jint col) {
+  cql_result_set_ref ref = (cql_result_set_ref)(rs);
+  return cql_result_set_get_is_encoded_col(ref, col);
 }

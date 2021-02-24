@@ -5,9 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+@attribute(cql:vault_sensitive)
 create proc out_union_proc()
 begin
-  declare C cursor for select 1 x;
+  declare x integer not null @sensitive;
+  set x := 1;
+  declare C cursor for select x;
   fetch c;
   out c;
 end;

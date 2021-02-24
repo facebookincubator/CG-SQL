@@ -8,10 +8,10 @@
 -- test base table with combination of fields
 @attribute(bar_is_good=1)
 create table bar(
-  id INTEGER NOT NULL,
+  id INTEGER NOT NULL @sensitive,
   @attribute(collossal_cave='xyzzy')
-  name TEXT,
-  rate LONG INT,
+  name TEXT @sensitive,
+  rate LONG INT @sensitive,
   type INTEGER,
   size REAL @create(2)
 );
@@ -20,6 +20,7 @@ create table bar(
 -- - base_fragment
 -- - Error
 @attribute(cql:base_fragment=assembly_core)
+@attribute(cql:vault_sensitive)
 create proc base_fragment(id_ integer not null, name_ text not null)
 begin
 with
@@ -31,6 +32,7 @@ end;
 -- + extension_fragment_one
 -- - Error
 @attribute(cql:extension_fragment=assembly_core)
+@attribute(cql:vault_sensitive)
 create proc extension_fragment_one(id_ INTEGER NOT NULL, name_ text not null)
 begin
   with
