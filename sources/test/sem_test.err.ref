@@ -1010,4 +1010,6 @@ Error at test/sem_test.sql:XXXX : in select_if_nothing_or_null_expr : CQL0009: i
 Error at test/sem_test.sql:XXXX : in str : CQL0003: right operand cannot be an object in 'IF NOTHING OR NULL'
 Error at test/sem_test.sql:XXXX : in select_if_nothing_expr : CQL0013: cannot assign/copy possibly null expression to not null target 'real_nn'
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in select_if_nothing_expr : CQL0369: The (select ... if nothing) construct is for use in top level expressions, not inside of other DML
+Error at test/sem_test.sql:XXXX : in select_if_nothing_expr : CQL0369: The (select ... if nothing) construct is for use in top level expressions, not inside of other DML
 semantic errors present; no code gen.

@@ -16078,7 +16078,19 @@ static void sem_expr_select(ast_node *ast, CSTR cstr) {
      is_ast_select_if_nothing_expr(parent) || 
      is_ast_select_if_nothing_or_null_expr(parent);
 
-  // only the left side, the right side is an arbitary expression
+  if (in_select_if_nothing && current_expr_context != SEM_EXPR_CONTEXT_NONE) {
+    report_error(parent, "CQL0369: The (select ... if nothing) construct is for use in top level expressions, not inside of other DML", NULL);
+    record_error(ast);
+    return;
+  }
+
+  // For purposes of testing "strict if nothing", a select on the left side of the if nothing
+  // operator is in an if nothing context  but the right side is not in an if nothing context.
+  //  e.g.
+  // in (select foo from bar if nothing (select baz)) the (select baz) is not in an
+  // if nothing context and hence would generate an error if "strict if nothing" is on.
+
+  // left side is in if nothing context, right isn't
   in_select_if_nothing &= parent->left == ast;
 
   // we only check select statements that have a from clause,  the forms (select 1) are always ok!

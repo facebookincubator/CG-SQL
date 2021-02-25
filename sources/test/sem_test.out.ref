@@ -56627,3 +56627,68 @@ Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed i
     |     | {select_offset}
     | {dbl 1.0}: real notnull
 
+The statement ending at line XXXX
+
+SELECT ( SELECT 0 IF NOTHING -1 );
+
+Error at test/sem_test.sql:XXXX : in select_if_nothing_expr : CQL0369: The (select ... if nothing) construct is for use in top level expressions, not inside of other DML
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {select_if_nothing_expr}: err
+  |     |     | {select_stmt}: err
+  |     |     | | {select_core_list}
+  |     |     | | | {select_core}
+  |     |     | |   | {select_expr_list_con}
+  |     |     | |     | {select_expr_list}
+  |     |     | |     | | {select_expr}
+  |     |     | |     |   | {int 0}
+  |     |     | |     | {select_from_etc}
+  |     |     | |       | {select_where}
+  |     |     | |         | {select_groupby}
+  |     |     | |           | {select_having}
+  |     |     | | {select_orderby}
+  |     |     |   | {select_limit}
+  |     |     |     | {select_offset}
+  |     |     | {uminus}: integer notnull
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+DELETE FROM foo WHERE id = ( SELECT 33 IF NOTHING 0 );
+
+Error at test/sem_test.sql:XXXX : in select_if_nothing_expr : CQL0369: The (select ... if nothing) construct is for use in top level expressions, not inside of other DML
+
+  {delete_stmt}: err
+  | {name foo}: foo: { id: integer notnull primary_key autoinc }
+  | {opt_where}: err
+    | {eq}: err
+      | {name id}: id: integer notnull
+      | {select_if_nothing_expr}: err
+        | {select_stmt}: err
+        | | {select_core_list}
+        | | | {select_core}
+        | |   | {select_expr_list_con}
+        | |     | {select_expr_list}
+        | |     | | {select_expr}
+        | |     |   | {int 33}
+        | |     | {select_from_etc}
+        | |       | {select_where}
+        | |         | {select_groupby}
+        | |           | {select_having}
+        | | {select_orderby}
+        |   | {select_limit}
+        |     | {select_offset}
+        | {int 0}: integer notnull
+

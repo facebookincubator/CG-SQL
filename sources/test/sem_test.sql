@@ -14256,3 +14256,15 @@ set real_nn := (select my_real if nothing 1.0);
 -- + Error % string operand not allowed in 'NOT'
 -- +1 Error
 set real_nn := (select not 'x' if nothing 1.0);
+
+-- TEST: error inside of any other DML
+-- + {select_stmt}: err
+-- + Error % CQL0369: The (select ... if nothing) construct is for use in top level expressions, not inside of other DML
+-- +1 Error
+select (select 0 if nothing -1);
+
+-- TEST: error inside of any other DML
+-- + {delete_stmt}: err
+-- + Error % CQL0369: The (select ... if nothing) construct is for use in top level expressions, not inside of other DML
+-- +1 Error
+delete from foo where id = (select 33 if nothing 0);
