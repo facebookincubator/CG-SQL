@@ -4246,7 +4246,7 @@ set not_null_object := attest_notnull(1, 7);
 
 -- TEST: convert to not null -- fails in SQL context
 -- + {call}: err
--- + Error % operator may only appear in the context of a SQL statement 'attest_notnull'
+-- + Error % function may not appear in this context 'attest_notnull'
 -- +1 Error
 set not_null_object := (select attest_notnull(1));
 
@@ -14151,6 +14151,13 @@ begin transaction;
 -- + Error % strict select if nothing requires that all (select ...) expressions include 'if nothing'
 -- +1 Error
 set price_d := (select id from foo);
+
+
+-- TEST: nested select in SQL (e.g. correlated subquery) is ok even in strict select if nothing mode
+-- + SELECT ( SELECT 1 );
+-- + {select_stmt}: select: { _anon: integer notnull }
+-- - Error
+select (select 1);
 
 -- TEST: select if nothing is allowed
 -- - Error

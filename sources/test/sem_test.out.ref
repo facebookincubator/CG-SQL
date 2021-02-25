@@ -15893,7 +15893,7 @@ The statement ending at line XXXX
 
 SET not_null_object := ( SELECT attest_notnull(1) );
 
-Error at test/sem_test.sql:XXXX : in call : CQL0044: operator may only appear in the context of a SQL statement 'attest_notnull'
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'attest_notnull'
 
   {assign}: err
   | {name not_null_object}: not_null_object: object notnull variable
@@ -56237,6 +56237,38 @@ Error at test/sem_test.sql:XXXX : in select_stmt : CQL0368: strict select if not
     | {select_orderby}
       | {select_limit}
         | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT ( SELECT 1 );
+
+  {select_stmt}: select: { _anon: integer notnull }
+  | {select_core_list}: select: { _anon: integer notnull }
+  | | {select_core}: select: { _anon: integer notnull }
+  |   | {select_expr_list_con}: select: { _anon: integer notnull }
+  |     | {select_expr_list}: select: { _anon: integer notnull }
+  |     | | {select_expr}: _anon: integer notnull
+  |     |   | {select_stmt}: _anon: integer notnull
+  |     |     | {select_core_list}: select: { _anon: integer notnull }
+  |     |     | | {select_core}: select: { _anon: integer notnull }
+  |     |     |   | {select_expr_list_con}: select: { _anon: integer notnull }
+  |     |     |     | {select_expr_list}: select: { _anon: integer notnull }
+  |     |     |     | | {select_expr}: integer notnull
+  |     |     |     |   | {int 1}: integer notnull
+  |     |     |     | {select_from_etc}: ok
+  |     |     |       | {select_where}
+  |     |     |         | {select_groupby}
+  |     |     |           | {select_having}
+  |     |     | {select_orderby}
+  |     |       | {select_limit}
+  |     |         | {select_offset}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
 
 The statement ending at line XXXX
 

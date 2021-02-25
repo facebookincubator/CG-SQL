@@ -5855,7 +5855,7 @@ static void sem_func_attest_notnull(ast_node *ast, uint32_t arg_count) {
   EXTRACT(arg_list, call_arg_list->right);
 
   if (CURRENT_EXPR_CONTEXT_IS_NOT(SEM_EXPR_CONTEXT_NONE)) {
-    report_error(ast, "CQL0044: operator may only appear in the context of a SQL statement", name);
+    report_error(ast, "CQL0080: function may not appear in this context", name);
     record_error(ast);
     return;
   }

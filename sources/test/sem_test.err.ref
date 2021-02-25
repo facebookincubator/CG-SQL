@@ -364,7 +364,7 @@ Error at test/sem_test.sql:XXXX : in call : CQL0070: expressions of different ki
 Error at test/sem_test.sql:XXXX : in str : CQL0344: argument must be a nullable type (but not constant NULL) in 'attest_notnull'
 Error at test/sem_test.sql:XXXX : in null : CQL0344: argument must be a nullable type (but not constant NULL) in 'attest_notnull'
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'attest_notnull'
-Error at test/sem_test.sql:XXXX : in call : CQL0044: operator may only appear in the context of a SQL statement 'attest_notnull'
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'attest_notnull'
 Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kinds can't be mixed: 'Bar' vs. 'Foo'
 Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kinds can't be mixed: 'Bar' vs. 'Foo'
 Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'bar_object'
