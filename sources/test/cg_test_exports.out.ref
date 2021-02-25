@@ -143,4 +143,7 @@ DECLARE PROC emit_rc (OUT result_code INTEGER NOT NULL) USING TRANSACTION;
 DECLARE PROC virtual_table_creator () USING TRANSACTION;
 DECLARE PROC out_arg_cursor (x INTEGER NOT NULL, OUT y INTEGER NOT NULL);
 DECLARE PROC make_virt_table () USING TRANSACTION;
+DECLARE PROC set_out_arg_ref_test (OUT x TEXT);
+DECLARE PROC set_out_arg_null_test (OUT x INTEGER);
+DECLARE PROC set_out_arg_notnull_test (OUT x INTEGER NOT NULL);
 DECLARE PROC end_proc ();

@@ -2656,6 +2656,12 @@ static void cg_param(ast_node *ast, charbuf *decls, charbuf *body) {
     if (is_ref_type(sem_type)) {
       bprintf(body, "  *(void **)%s = NULL; // set out arg to non-garbage\n", name);
     }
+    else if (is_nullable(sem_type)) {
+      bprintf(body, "  cql_set_null(*%s); // set out arg to non-garbage\n", name);
+    }
+    else {
+      bprintf(body, "  *%s = 0; // set out arg to non-garbage\n", name);
+    }
   }
 }
 

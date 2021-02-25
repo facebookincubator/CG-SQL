@@ -3413,6 +3413,27 @@ end;
 @attribute(cql:private)
 declare proc private_fwd_ref(x integer not null);
 
+-- TEST: ensure out args set to null for ref types
+-- + void set_out_arg_ref_test(cql_string_ref _Nullable *_Nonnull x) {
+-- + *(void **)x = NULL; // set out arg to non-garbage
+create proc set_out_arg_ref_test(out x text)
+begin
+end;
+
+-- TEST: ensure out args set to null for nullable types
+-- + void set_out_arg_null_test(cql_nullable_int32 *_Nonnull x) {
+-- + cql_set_null(*x); // set out arg to non-garbage
+create proc set_out_arg_null_test(out x integer)
+begin
+end;
+
+-- TEST: ensure out args set to null for non-null types
+-- + void set_out_arg_notnull_test(cql_int32 *_Nonnull x) {
+-- + *x = 0; // set out arg to non-garbage
+create proc set_out_arg_notnull_test(out x integer not null)
+begin
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

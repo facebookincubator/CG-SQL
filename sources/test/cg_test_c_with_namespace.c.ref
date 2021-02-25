@@ -364,6 +364,8 @@ END;
 #define _PROC_ "out_test"
 // export: DECLARE PROC out_test (OUT i INTEGER NOT NULL, OUT ii INTEGER);
 void out_test(cql_int32 *_Nonnull i, cql_nullable_int32 *_Nonnull ii) {
+  *i = 0; // set out arg to non-garbage
+  cql_set_null(*ii); // set out arg to non-garbage
   *i = i2;
   cql_set_nullable(*ii, i0_nullable.is_null, i0_nullable.value);
 
@@ -428,6 +430,7 @@ CQL_WARN_UNUSED cql_code outparm_test(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnul
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *_temp_stmt = NULL;
 
+  *foo = 0; // set out arg to non-garbage
   *foo = 1;
   _rc_ = cql_prepare(_db_, &_temp_stmt,
     "DELETE FROM bar WHERE id = ?");
@@ -953,6 +956,7 @@ END;
 #define _PROC_ "copy_int"
 // export: DECLARE PROC copy_int (a INTEGER, OUT b INTEGER);
 void copy_int(cql_nullable_int32 a, cql_nullable_int32 *_Nonnull b) {
+  cql_set_null(*b); // set out arg to non-garbage
   cql_set_nullable(*b, a.is_null, a.value);
 
 }
@@ -1979,6 +1983,8 @@ CQL_WARN_UNUSED cql_code outint_nullable(sqlite3 *_Nonnull _db_, cql_nullable_in
   sqlite3_stmt *C_stmt = NULL;
   cql_bool _C_has_row_ = 0;
 
+  cql_set_null(*output); // set out arg to non-garbage
+  *result = 0; // set out arg to non-garbage
   _rc_ = cql_prepare(_db_, &C_stmt,
     "SELECT 1");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -2014,6 +2020,8 @@ CQL_WARN_UNUSED cql_code outint_notnull(sqlite3 *_Nonnull _db_, cql_int32 *_Nonn
   sqlite3_stmt *C_stmt = NULL;
   cql_bool _C_has_row_ = 0;
 
+  *output = 0; // set out arg to non-garbage
+  *result = 0; // set out arg to non-garbage
   _rc_ = cql_prepare(_db_, &C_stmt,
     "SELECT 1");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -2089,6 +2097,7 @@ END;
 #define _PROC_ "unused_temp"
 // export: DECLARE PROC unused_temp (i INTEGER, OUT o INTEGER NOT NULL);
 void unused_temp(cql_nullable_int32 i, cql_int32 *_Nonnull o) {
+  *o = 0; // set out arg to non-garbage
   do {
     if (!i.is_null) {
       *o = i.value;
@@ -2918,6 +2927,7 @@ END;
 // export: DECLARE PROC dml_user (OUT a_ INTEGER NOT NULL) USING TRANSACTION;
 CQL_WARN_UNUSED cql_code dml_user(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull a_) {
   cql_code _rc_ = SQLITE_OK;
+  *a_ = 0; // set out arg to non-garbage
   _rc_ = dml_compute(_db_, 1, &*a_);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -3819,6 +3829,7 @@ CQL_WARN_UNUSED cql_code multi_rewrite(sqlite3 *_Nonnull _db_, cql_int32 blob_id
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *_temp_stmt = NULL;
 
+  *out_arg = 0; // set out arg to non-garbage
   _rc_ = cql_prepare(_db_, &_temp_stmt,
     "INSERT INTO blob_table(blob_id, b_notnull, b_nullable) VALUES(?, ?, ?)");
   cql_multibind(&_rc_, _db_, &_temp_stmt, 3,
@@ -4458,6 +4469,7 @@ END;
 #define _PROC_ "in_test"
 // export: DECLARE PROC in_test (x INTEGER, OUT b BOOL);
 void in_test(cql_nullable_int32 x, cql_nullable_bool *_Nonnull b) {
+  cql_set_null(*b); // set out arg to non-garbage
   cql_set_null(*b);
 
 }
@@ -4475,6 +4487,7 @@ END;
 #define _PROC_ "not_in_test"
 // export: DECLARE PROC not_in_test (x INTEGER, OUT b BOOL);
 void not_in_test(cql_nullable_int32 x, cql_nullable_bool *_Nonnull b) {
+  cql_set_null(*b); // set out arg to non-garbage
   cql_set_null(*b);
 
 }
@@ -6676,6 +6689,7 @@ CQL_WARN_UNUSED cql_code early_out_rc_cleared(sqlite3 *_Nonnull _db_, cql_nullab
   sqlite3_stmt *C_stmt = NULL;
   early_out_rc_cleared_C_row C = { 0 };
 
+  cql_set_null(*x); // set out arg to non-garbage
   _rc_ = cql_prepare(_db_, &C_stmt,
     "SELECT 1");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -7856,6 +7870,7 @@ END;
 // export: DECLARE PROC emit_rc (OUT result_code INTEGER NOT NULL) USING TRANSACTION;
 CQL_WARN_UNUSED cql_code emit_rc(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull result_code) {
   cql_code _rc_ = SQLITE_OK;
+  *result_code = 0; // set out arg to non-garbage
   *result_code = _rc_;
   _rc_ = SQLITE_OK;
 
@@ -7916,6 +7931,7 @@ typedef struct out_arg_cursor_C_row {
 void out_arg_cursor(cql_int32 x, cql_int32 *_Nonnull y) {
   out_arg_cursor_C_row C = { 0 };
 
+  *y = 0; // set out arg to non-garbage
   C._has_row_ = 1;
   C.x = 1;
   C.y = 1;
@@ -7977,6 +7993,7 @@ END;
 #define _PROC_ "private_proc"
 // private: DECLARE PROC private_proc (OUT x INTEGER);
 static void private_proc(cql_nullable_int32 *_Nonnull x) {
+  cql_set_null(*x); // set out arg to non-garbage
   cql_set_notnull(*x, 1);
 
 cql_cleanup:
@@ -7999,6 +8016,7 @@ END;
 static CQL_WARN_UNUSED cql_code private_result(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_nullable_int32 *_Nonnull x) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
+  cql_set_null(*x); // set out arg to non-garbage
   _rc_ = cql_prepare(_db_, _result_stmt,
     "SELECT 1");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -8018,6 +8036,60 @@ DECLARE PROC private_fwd_ref (x INTEGER NOT NULL);
 */
 static void private_fwd_ref(cql_int32 x);
 
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC set_out_arg_ref_test (OUT x TEXT)
+BEGIN
+END;
+*/
+
+#define _PROC_ "set_out_arg_ref_test"
+// export: DECLARE PROC set_out_arg_ref_test (OUT x TEXT);
+void set_out_arg_ref_test(cql_string_ref _Nullable *_Nonnull x) {
+  *(void **)x = NULL; // set out arg to non-garbage
+
+cql_cleanup:
+  ; // label requires some statement
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC set_out_arg_null_test (OUT x INTEGER)
+BEGIN
+END;
+*/
+
+#define _PROC_ "set_out_arg_null_test"
+// export: DECLARE PROC set_out_arg_null_test (OUT x INTEGER);
+void set_out_arg_null_test(cql_nullable_int32 *_Nonnull x) {
+  cql_set_null(*x); // set out arg to non-garbage
+
+cql_cleanup:
+  ; // label requires some statement
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC set_out_arg_notnull_test (OUT x INTEGER NOT NULL)
+BEGIN
+END;
+*/
+
+#define _PROC_ "set_out_arg_notnull_test"
+// export: DECLARE PROC set_out_arg_notnull_test (OUT x INTEGER NOT NULL);
+void set_out_arg_notnull_test(cql_int32 *_Nonnull x) {
+  *x = 0; // set out arg to non-garbage
+
+cql_cleanup:
+  ; // label requires some statement
+}
+#undef _PROC_
 
 // The statement ending at line XXXX
 

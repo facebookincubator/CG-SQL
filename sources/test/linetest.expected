@@ -268,6 +268,8 @@ void in_pred_lines(cql_int32 i, cql_bool *_Nonnull b) {
   cql_int32 _tmp_int_2 = 0;
 # 1
 
+# 1
+  *b = 0; // set out arg to non-garbage
 # 3 "x"
   do {
 # 3 "x"
@@ -324,6 +326,8 @@ void in_pred_and_case(cql_int32 i, cql_bool *_Nonnull b) {
   cql_int32 _tmp_int_3 = 0;
 # 1
 
+# 1
+  *b = 0; // set out arg to non-garbage
 # 3 "x"
 # 4 "x"
   do {
