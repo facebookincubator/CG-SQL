@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Sun Feb 21 10:10:48 2021
+// Snapshot as of Tue Feb 23 12:52:45 2021
 
 
 const PREC = {
@@ -76,7 +76,7 @@ module.exports = grammar({
     indexed_column: $ => seq($.name, optional($.opt_asc_desc)),
     indexed_columns: $ => choice($.indexed_column, seq($.indexed_column, ',', $.indexed_columns)),
     create_index_stmt: $ => seq($.CREATE, optional($.opt_unique), $.INDEX, optional($.opt_if_not_exists), $.name, $.ON, $.name, '(', $.indexed_columns, ')', optional($.opt_delete_version_attr)),
-    name: $ => choice($.ID, $.TEXT, $.TRIGGER, $.ROWID, $.KEY, $.VIRTUAL, $.TYPE, $.HIDDEN),
+    name: $ => choice($.ID, $.TEXT, $.TRIGGER, $.ROWID, $.KEY, $.VIRTUAL, $.TYPE, $.HIDDEN, $.PRIVATE),
     opt_name: $ => $.name,
     name_list: $ => choice($.name, seq($.name, ',', $.name_list)),
     opt_name_list: $ => $.name_list,
@@ -92,7 +92,7 @@ module.exports = grammar({
     any_literal: $ => choice($.str_literal, $.num_literal, $.NULL, seq($.AT_FILE, '(', $.str_literal, ')'), $.AT_PROC, $.BLOB_LIT),
     raise_expr: $ => choice(seq($.RAISE, '(', $.IGNORE, ')'), seq($.RAISE, '(', $.ROLLBACK, ',', $.expr, ')'), seq($.RAISE, '(', $.ABORT, ',', $.expr, ')'), seq($.RAISE, '(', $.FAIL, ',', $.expr, ')')),
     call: $ => choice(seq($.name, '(', optional($.arg_list), ')', optional($.opt_filter_clause)), seq($.name, '(', $.DISTINCT, optional($.arg_list), ')', optional($.opt_filter_clause))),
-    basic_expr: $ => choice($.name, $.AT_RC, seq($.name, '.', $.name), $.any_literal, $.const_expr, seq('(', $.expr, ')'), $.call, $.window_func_inv, $.raise_expr, seq('(', $.select_stmt, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.expr, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.OR, $.NULL, $.expr, ')'), seq($.EXISTS, '(', $.select_stmt, ')')),
+    basic_expr: $ => choice($.name, $.AT_RC, seq($.name, '.', $.name), $.any_literal, $.const_expr, seq('(', $.expr, ')'), $.call, $.window_func_inv, $.raise_expr, seq('(', $.select_stmt, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.expr, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.OR, $.NULL, $.expr, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.THROW, ')'), seq($.EXISTS, '(', $.select_stmt, ')')),
     math_expr: $ => prec.left(choice($.basic_expr, seq($.math_expr, '&', $.math_expr), seq($.math_expr, '|', $.math_expr), seq($.math_expr, "<<", $.math_expr), seq($.math_expr, ">>", $.math_expr), seq($.math_expr, '+', $.math_expr), seq($.math_expr, '-', $.math_expr), seq($.math_expr, '*', $.math_expr), seq($.math_expr, '/', $.math_expr), seq($.math_expr, '%', $.math_expr), seq('-', $.math_expr), seq($.math_expr, "||", $.math_expr))),
     NOT_LIKE: $ => prec.left(1, seq(CI('not'), CI('like'))),
     IS_NOT: $ => prec.left(1, seq(CI('is'), CI('not'))),
@@ -333,6 +333,7 @@ module.exports = grammar({
     TEXT: $ => CI('text'),
     TYPE: $ => CI('type'),
     HIDDEN: $ => CI('hidden'),
+    PRIVATE: $ => CI('private'),
     AUTOINCREMENT: $ => CI('autoincrement'),
     COLLATE: $ => CI('collate'),
     AT_SENSITIVE: $ => CI('@sensitive'),
@@ -357,6 +358,7 @@ module.exports = grammar({
     AT_RC: $ => CI('@rc'),
     NOTHING: $ => CI('nothing'),
     OR: $ => CI('or'),
+    THROW: $ => CI('throw'),
     AND: $ => CI('and'),
     IN: $ => CI('in'),
     MATCH: $ => CI('match'),
@@ -387,7 +389,6 @@ module.exports = grammar({
     PARTITION: $ => CI('partition'),
     BY: $ => CI('by'),
     WINDOW: $ => CI('window'),
-    PRIVATE: $ => CI('private'),
     AT_DECLARE_SCHEMA_REGION: $ => CI('@declare_schema_region'),
     AT_DECLARE_DEPLOYABLE_REGION: $ => CI('@declare_deployable_region'),
     AT_BEGIN_SCHEMA_REGION: $ => CI('@begin_schema_region'),
@@ -435,7 +436,6 @@ module.exports = grammar({
     LEAVE: $ => CI('leave'),
     RETURN: $ => CI('return'),
     COMMIT: $ => CI('commit'),
-    THROW: $ => CI('throw'),
     TRY: $ => CI('try'),
     CATCH: $ => CI('catch'),
     CONTINUE: $ => CI('continue'),

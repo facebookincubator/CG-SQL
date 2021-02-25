@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Sun Feb 21 10:10:48 PST 2021
+Snapshot as of Tue Feb 23 12:52:45 PST 2021
 
 ### Operators and Literals
 
@@ -414,6 +414,7 @@ name:
   | "VIRTUAL"
   | "TYPE"
   | "HIDDEN"
+  | "PRIVATE"
   ;
 
 opt_name:
@@ -538,6 +539,7 @@ basic_expr:
   | '(' select_stmt ')'
   | '(' select_stmt "IF" "NOTHING" expr ')'
   | '(' select_stmt "IF" "NOTHING" "OR" "NULL" expr ')'
+  | '(' select_stmt "IF" "NOTHING" "THROW"')'
   | "EXISTS" '(' select_stmt ')'
   ;
 

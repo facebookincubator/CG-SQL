@@ -726,7 +726,7 @@ declare t2 text;
 declare bl2 blob;
 ```
 
-ALL of `i1`, `i2`, `b1`, `b2`, `l1`, `l2`, `r1`, `r2`, `t1`, `t2`, and `bl1`, `bl2` are nullable. 
+ALL of `i1`, `i2`, `b1`, `b2`, `l1`, `l2`, `r1`, `r2`, `t1`, `t2`, and `bl1`, `bl2` are nullable.
 In some sense variables and columns declared nullable (by virtual of the missing `NOT NULL`) are the
 root sources of nullability in the SQL language.  That and the `NULL` literal.  Though there are other
 sources as we will see.
@@ -735,7 +735,7 @@ sources as we will see.
 
 ```sql
 -- real code should use better names than this :)
-declare i_nn integer not null; 
+declare i_nn integer not null;
 ```
 
 In the context of computing the types of expressions, CQL is statically typed and so it must make a decision about the type of any expression based on the type information at hand at compile time.  As a result it handles the static type of an expression conservatively.  If the result might be null then the expression is of a nullable type and the compiled code will include an affordance for the possibility of a null value at runtime.
@@ -1359,6 +1359,10 @@ To compute the type of the overall expression, the rules are almost the same as 
 * in `(select ...)` the result type is not null if and only if the select result type is not null (see select statement, many cases)
 * in `(select ... if nothing)` the result type is not null if and only if both the select result and the default expression types are not null (normal binary rules)
 * in `(select ... if nothing or null)` the result type is not null if and only if the default expression type is not null
+
+Finally, the form  `(select ... if nothing throw)` is allowed; this form is exactly the same as normal
+`(select ...)` but makes the explicit that the error control flow will happen if there is no row.  Consequently
+this form is allowed even if `@enforce_strict select if nothing` is in force.
 
 ### Marking Data as Sensitive
 
@@ -4078,6 +4082,7 @@ Switch to strict mode for the indicated item, the choices are
   * "PROCEDURE" indicates no calls to undeclared procedures (like loose printf calls)
   * "WITHOUT ROWID" inciates WITHOUT ROWID may not be used
   * "TRANSACTION" indicates no transactions may be started, committed, or aborted
+  * "SELECT IF NOTHING" indicates `(select ...)` expressions must include an `IF NOTHING` clause if they have a `FROM` part
 
 See the grammar details for exact syntax.
 
@@ -7979,7 +7984,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Sun Feb 21 10:10:48 PST 2021
+Snapshot as of Tue Feb 23 12:52:45 PST 2021
 
 ### Operators and Literals
 
@@ -8380,6 +8385,7 @@ name:
   | "VIRTUAL"
   | "TYPE"
   | "HIDDEN"
+  | "PRIVATE"
   ;
 
 opt_name:
@@ -8504,6 +8510,7 @@ basic_expr:
   | '(' select_stmt ')'
   | '(' select_stmt "IF" "NOTHING" expr ')'
   | '(' select_stmt "IF" "NOTHING" "OR" "NULL" expr ')'
+  | '(' select_stmt "IF" "NOTHING" "THROW"')'
   | "EXISTS" '(' select_stmt ')'
   ;
 
@@ -12478,7 +12485,7 @@ does not exist is not handled correctly when `(select ...)` is used without the 
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Sun Feb 21 10:10:48 PST 2021
+Snapshot as of Tue Feb 23 12:52:46 PST 2021
 
 ### Rules
 

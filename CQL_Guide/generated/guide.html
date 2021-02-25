@@ -1049,7 +1049,7 @@ CONCAT:        ||</code></pre>
 <p>ALL of <code>i1</code>, <code>i2</code>, <code>b1</code>, <code>b2</code>, <code>l1</code>, <code>l2</code>, <code>r1</code>, <code>r2</code>, <code>t1</code>, <code>t2</code>, and <code>bl1</code>, <code>bl2</code> are nullable. In some sense variables and columns declared nullable (by virtual of the missing <code>NOT NULL</code>) are the root sources of nullability in the SQL language. That and the <code>NULL</code> literal. Though there are other sources as we will see.</p>
 <p><code>NOT NULL</code> could be added to any of these, e.g.</p>
 <div class="sourceCode" id="cb38"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb38-1"><a href="#cb38-1"></a><span class="co">-- real code should use better names than this :)</span></span>
-<span id="cb38-2"><a href="#cb38-2"></a><span class="kw">declare</span> i_nn <span class="dt">integer</span> <span class="kw">not</span> <span class="kw">null</span>; </span></code></pre></div>
+<span id="cb38-2"><a href="#cb38-2"></a><span class="kw">declare</span> i_nn <span class="dt">integer</span> <span class="kw">not</span> <span class="kw">null</span>;</span></code></pre></div>
 <p>In the context of computing the types of expressions, CQL is statically typed and so it must make a decision about the type of any expression based on the type information at hand at compile time. As a result it handles the static type of an expression conservatively. If the result might be null then the expression is of a nullable type and the compiled code will include an affordance for the possibility of a null value at runtime.</p>
 <p>The generated code for nullable types is considerably less efficient and so it should be avoided if that is reasonably possible.</p>
 <p>CQL also has the special built-in variable <code>@RC</code> which refers to the most recent result code returned by a SQLite operation, e.g. 0 == <code>SQLITE_OK</code>, 1 == <code>SQLITE_ERROR</code>. <code>@RC</code> is of type <code>integer not null</code>. Note: there are many hidden SQLite operations such as statement finalization so <code>@RC</code> might change where there is no visible SQL operation. The most common use of <code>@RC</code> is to capture the error code in the first statement of a <code>catch</code> block.</p>
@@ -1518,6 +1518,7 @@ declare thing_type type thing;</code></pre>
 <p>The <code>if nothing or null</code> form above is equivalent to the following, but it is more economical, and probably clearer:</p>
 <div class="sourceCode" id="cb71"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb71-1"><a href="#cb71-1"></a><span class="kw">set</span> x_ <span class="op">:=</span> (<span class="kw">select</span> ifnull(x,<span class="op">-</span><span class="dv">1</span>) <span class="kw">from</span> somewhere <span class="kw">where</span> <span class="kw">id</span> <span class="op">=</span> <span class="dv">1</span> <span class="cf">if</span> <span class="kw">nothing</span> <span class="op">-</span><span class="dv">1</span>);</span></code></pre></div>
 <p>To compute the type of the overall expression, the rules are almost the same as normal binary operators. In particular: * if the default expression is present it must be type compatible with the select result * the result type is the smallest type that holds both the select value and the default expression (see normal promotion rules above) * object types are not allowed (SQLite cannot return an object) * in <code>(select ...)</code> the result type is not null if and only if the select result type is not null (see select statement, many cases) * in <code>(select ... if nothing)</code> the result type is not null if and only if both the select result and the default expression types are not null (normal binary rules) * in <code>(select ... if nothing or null)</code> the result type is not null if and only if the default expression type is not null</p>
+<p>Finally, the form <code>(select ... if nothing throw)</code> is allowed; this form is exactly the same as normal <code>(select ...)</code> but makes the explicit that the error control flow will happen if there is no row. Consequently this form is allowed even if <code>@enforce_strict select if nothing</code> is in force.</p>
 <h3 id="marking-data-as-sensitive">Marking Data as Sensitive</h3>
 <p>CQL supports the notion of ‘sensitive’ data in a first class way. You can think of it as very much like nullability; It largely begins by tagging data columns with <code>@sensitive</code></p>
 <p>Rather than go through the whole calculus, it’s easier to understand by a series of examples. So let’s start with a table with some sensitive data.</p>
@@ -3092,6 +3093,7 @@ if (C_._has_row_) cql_bytebuf_append(&amp;_rows_, (const void *)&amp;C_, sizeof(
 <li>“PROCEDURE” indicates no calls to undeclared procedures (like loose printf calls)</li>
 <li>“WITHOUT ROWID” inciates WITHOUT ROWID may not be used</li>
 <li>“TRANSACTION” indicates no transactions may be started, committed, or aborted</li>
+<li>“SELECT IF NOTHING” indicates <code>(select ...)</code> expressions must include an <code>IF NOTHING</code> clause if they have a <code>FROM</code> part</li>
 </ul>
 <p>See the grammar details for exact syntax.</p>
 <h4 id="the-enforce_normal-statement">The <code>@ENFORCE_NORMAL</code> Statement</h4>
@@ -6099,7 +6101,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Sun Feb 21 10:10:48 PST 2021</p>
+<p>Snapshot as of Tue Feb 23 12:52:45 PST 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -6488,6 +6490,7 @@ name:
   | &quot;VIRTUAL&quot;
   | &quot;TYPE&quot;
   | &quot;HIDDEN&quot;
+  | &quot;PRIVATE&quot;
   ;
 
 opt_name:
@@ -6612,6 +6615,7 @@ basic_expr:
   | &#39;(&#39; select_stmt &#39;)&#39;
   | &#39;(&#39; select_stmt &quot;IF&quot; &quot;NOTHING&quot; expr &#39;)&#39;
   | &#39;(&#39; select_stmt &quot;IF&quot; &quot;NOTHING&quot; &quot;OR&quot; &quot;NULL&quot; expr &#39;)&#39;
+  | &#39;(&#39; select_stmt &quot;IF&quot; &quot;NOTHING&quot; &quot;THROW&quot;&#39;)&#39;
   | &quot;EXISTS&quot; &#39;(&#39; select_stmt &#39;)&#39;
   ;
 
@@ -9043,7 +9047,7 @@ set x := y;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Sun Feb 21 10:10:48 PST 2021</p>
+<p>Snapshot as of Tue Feb 23 12:52:46 PST 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 
