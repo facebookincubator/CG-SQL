@@ -16089,12 +16089,16 @@ static void sem_expr_select(ast_node *ast, CSTR cstr) {
   //  e.g.
   // in (select foo from bar if nothing (select baz)) the (select baz) is not in an
   // if nothing context and hence would generate an error if "strict if nothing" is on.
+  // Inside of SQL is ok in all cases
+  // Trivial selects (e.g. (select <expr>)) are always ok
 
-  // left side is in if nothing context, right isn't
-  in_select_if_nothing &= parent->left == ast;
+  bool_t invalid_select  =
+    enforcement.strict_if_nothing &&
+    current_expr_context == SEM_EXPR_CONTEXT_NONE &&
+    !(in_select_if_nothing && parent->left == ast) && 
+    sem_select_contains_from_etc(ast); 
 
-  // we only check select statements that have a from clause,  the forms (select 1) are always ok!
-  if (!in_select_if_nothing && enforcement.strict_if_nothing && sem_select_contains_from_etc(ast)) {
+  if (invalid_select) {
     report_error(ast, "CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'", NULL);
     record_error(ast);
     return;
