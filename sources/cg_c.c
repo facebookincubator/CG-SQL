@@ -51,13 +51,6 @@ static bool_t in_proc = 0;
 // True if we are in a loop (hence the statment might run again)
 static bool_t cg_in_loop = 0;
 
-// True if we are presently emitting a vault stored proc.
-// A stored proc with attribution vault_sensitive is a vault stored proc
-static bool_t use_vault = 0;
-
-// List of column names reference in a stored proc that we should vault
-static symtab *vault_columns = NULL;
-
 // exports file if we are outputing exports
 static charbuf *exports_output = NULL;
 
@@ -2895,17 +2888,6 @@ void cg_emit_rc_vars(charbuf *output) {
   }
 }
 
-// It's a callback to find_vault_columns(...). It record into a symtab all
-// the string values from a vault_sensitive attribute. These string value
-// are used later on to decided whether or not to encode a sensitive column
-// value fetched from db or result set.
-static void find_vault_columns_callback(CSTR _Nonnull name, ast_node *_Nonnull found_ast, void *_Nullable context) {
-  Invariant(current_proc);
-  Invariant(context);
-  symtab *output = (symtab*)context;
-  symtab_add(output, name, NULL);
-}
-
 // Emitting a stored proc is mostly setup.  We have a bunch of housekeeping to do:
 //  * create new scratch buffers for the body and the locals and the cleanup section
 //  * save the current output globals
@@ -2962,6 +2944,7 @@ static void cg_create_proc_stmt(ast_node *ast) {
 
   Invariant(!use_vault);
   Invariant(!vault_columns);
+  vault_columns = symtab_new();
   Invariant(named_temporaries == NULL);
   named_temporaries = symtab_new();
 
@@ -2970,8 +2953,6 @@ static void cg_create_proc_stmt(ast_node *ast) {
   cg_zero_masks(cg_current_masks);
   temp_statement_emitted = 0;
   in_proc = 1;
-  use_vault = misc_attrs && exists_attribute_str(misc_attrs, "vault_sensitive");
-  vault_columns = symtab_new();
   current_proc = ast;
   seed_declared = 0;
 
@@ -2980,9 +2961,8 @@ static void cg_create_proc_stmt(ast_node *ast) {
   bool_t result_set_proc = has_result_set(ast);
   bool_t out_stmt_proc = has_out_stmt_result(ast);
   bool_t out_union_proc = has_out_union_stmt_result(ast);
-  if (use_vault) {
-    find_vault_columns(misc_attrs, find_vault_columns_callback, vault_columns);
-  }
+
+  init_vault_info(misc_attrs, &use_vault, vault_columns);
 
   bprintf(cg_declarations_output, "\n");
 
@@ -3427,23 +3407,6 @@ static void cg_get_column(sem_t sem_type, CSTR cursor, int32_t index, CSTR var, 
         break;
     }
   }
-}
-
-// The helper checks whether or not a column should be encoded. A column
-// is encoded if and only if it's marked and is also sensitive.
-// The eligibility infos are extract from vault_sensitive attribution
-// on create_proc_stmt node and stored in vault_columns symtab.
-// Eligible columns are encoded if they are sensitive as soon as they're
-// fetched from db (see cql_multifetch(...)).
-static bool_t cg_should_vault_col(CSTR col, sem_t sem_type) {
-  bool_t is_col_eligible = false;
-  if (vault_columns && vault_columns->count > 0 ) {
-    is_col_eligible = symtab_find(vault_columns, col) != NULL;
-  } else {
-    // otherwise all column are always eligible if use_vault is TRUE.
-    is_col_eligible = use_vault;
-  }
-  return is_col_eligible && sensitive_flag(sem_type);
 }
 
 static void cg_cql_datatype(sem_t sem_type, charbuf *output) {
@@ -5835,7 +5798,7 @@ static void cg_proc_result_set(ast_node *ast) {
     // the assembly fragement does that, all columns will be known at that time.
     if (frag_type != FRAG_TYPE_EXTENSION && frag_type != FRAG_TYPE_BASE) {
       bprintf(&data_types, "  ");
-      bool_t encode = cg_should_vault_col(col, sem_type);
+      bool_t encode = should_vault_col(col, sem_type, use_vault, vault_columns);
       cg_data_type(&data_types, encode, sem_type);
       bprintf(&data_types, ", // %s\n", col);
     }

@@ -17,10 +17,6 @@ public final class cg_test_java_not_nullable_proc extends CQLViewModel {
     return mResultSet.getInteger(row, 0);
   }
   
-  public boolean getIntcolIsEncoded() {
-    return mResultSet.getIsEncoded(0);
-  }
-  
   public long getLongcol(int row) {
     return mResultSet.getLong(row, 1);
   }

@@ -267,6 +267,11 @@ static void cg_objc_proc_result_set(ast_node *ast) {
     return;
   }
 
+  Invariant(!use_vault);
+  Invariant(!vault_columns);
+  vault_columns = symtab_new();
+  init_vault_info(misc_attrs, &use_vault, vault_columns);
+
   is_extension_fragment = misc_attrs &&
       find_extension_fragment_attr(misc_attrs, cg_objc_set_parent_fragment_name, NULL);
   is_assembly_query = misc_attrs && find_assembly_query_attr(misc_attrs, NULL, NULL);
@@ -328,10 +333,12 @@ static void cg_objc_proc_result_set(ast_node *ast) {
       h);
   }
 
-  if (exists_attribute_str(misc_attrs, "vault_sensitive")) {
+  if (use_vault) {
     for (uint32_t i = 0; i < count; i++) {
-      if (sensitive_flag(sptr->semtypes[i])) {
-        CSTR col = sptr->names[i];
+      CSTR col = sptr->names[i];
+      sem_t sem_type = sptr->semtypes[i];
+      bool_t encode = should_vault_col(col, sem_type, use_vault, vault_columns);
+      if (encode) {
         CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
             objc_getter, objc_name.ptr, "_get_", col, "_is_encoded");
         CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
@@ -454,6 +461,9 @@ static void cg_objc_proc_result_set(ast_node *ast) {
   CHARBUF_CLOSE(c_name);
   CHARBUF_CLOSE(objc_result_set_name);
   CHARBUF_CLOSE(objc_name);
+
+  use_vault = 0;
+  vault_columns = NULL;
 }
 
 static void cg_objc_create_proc_stmt(ast_node *ast) {

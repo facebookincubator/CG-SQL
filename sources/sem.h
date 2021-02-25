@@ -236,6 +236,8 @@ cql_noexport ast_node *sem_get_col_default_value(ast_node *attrs);
 cql_noexport void sem_accumulate_full_region_image(symtab *regions, CSTR name);
 cql_noexport void sem_accumulate_public_region_image(symtab *regions, CSTR name);
 cql_noexport sem_t find_column_type(CSTR table_name, CSTR column_name);
+cql_noexport void init_vault_info(ast_node *misc_attrs, bool_t *use_vault_arg, symtab *vault_columns_arg);
+cql_noexport bool_t should_vault_col(CSTR col, sem_t sem_type, bool_t use_vault_arg, symtab *vault_columns_arg);
 
 cql_data_decl( struct list_item *all_tables_list );
 cql_data_decl( struct list_item *all_functions_list );
@@ -249,6 +251,11 @@ cql_data_decl( struct list_item *all_enums_list );
 cql_data_decl( symtab *schema_regions );
 cql_data_decl( ast_node *current_proc );
 cql_data_decl( charbuf *error_capture );
+// True if we are presently emitting a vault stored proc.
+// A stored proc with attribution vault_sensitive is a vault stored proc
+cql_data_decl( bool_t use_vault );
+// List of column names reference in a stored proc that we should vault
+cql_data_decl( symtab *vault_columns );
 
 // These are the symbol tables with the accumulated included/excluded regions
 cql_data_decl( symtab *included_regions );

@@ -18,7 +18,7 @@ create table bar(
 );
 
 @attribute(cql:identity=(intcol, longcol))
-@attribute(cql:vault_sensitive)
+@attribute(cql:vault_sensitive=(blobcol))
 create proc non_empty_proc()
 begin
   select * from bar;

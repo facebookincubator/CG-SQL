@@ -83,12 +83,12 @@ static void generateExtensionColOffsetsInAssembly(charbuf *body) {
 }
 
 static void cg_java_proc_result_set_getter(bool_t fetch_proc,
-                                      CSTR name,
-                                      CSTR col_name,
-                                      int32_t col,
-                                      charbuf *java,
-                                      sem_t sem_type,
-                                      bool_t is_vault) {
+                                           CSTR name,
+                                           CSTR col_name,
+                                           int32_t col,
+                                           charbuf *java,
+                                           sem_t sem_type,
+                                           bool_t encode) {
   Contract(is_unitary(sem_type));
   sem_t core_type = core_type_of(sem_type);
   Contract(core_type != SEM_TYPE_NULL);
@@ -182,7 +182,7 @@ static void cg_java_proc_result_set_getter(bool_t fetch_proc,
           fetch_proc ? "0" : "row",
           col_index.ptr);
 
-  if (is_vault && sensitive_flag(sem_type)) {
+  if (encode) {
     bprintf(java, "public %s %sIsEncoded() {\n", rt->cql_bool, col_name_camel.ptr);
     bprintf(java, "  return mResultSet.getIsEncoded(%s);\n", col_index.ptr);
     bprintf(java, "}\n\n");
@@ -212,7 +212,11 @@ static void cg_java_proc_result_set(ast_node *ast) {
     return;
   }
 
-  bool_t is_vault = !!exists_attribute_str(misc_attrs, "vault_sensitive");
+  Invariant(!use_vault);
+  Invariant(!vault_columns);
+  vault_columns = symtab_new();
+  init_vault_info(misc_attrs, &use_vault, vault_columns);
+
   is_extension_fragment = misc_attrs && find_extension_fragment_attr(misc_attrs, NULL, NULL);
   is_assembly_query = misc_attrs && find_assembly_query_attr(misc_attrs, NULL, NULL);
   if (generated_java_sp_count == 1 && !is_assembly_query && !is_extension_fragment) {
@@ -237,7 +241,7 @@ static void cg_java_proc_result_set(ast_node *ast) {
   if (misc_attrs && find_base_fragment_attr(misc_attrs, NULL, NULL)) {
       // record number of core columns only
       col_count_for_core = count;
-      return;
+      goto cleanup;
   }
 
   // We store number of columns for all extension fragments and use that to derive column offset for each of them
@@ -322,7 +326,8 @@ static void cg_java_proc_result_set(ast_node *ast) {
   for (int32_t i = 0; i < count; i++) {
     sem_t sem_type = sptr->semtypes[i];
     CSTR col = sptr->names[i];
-    cg_java_proc_result_set_getter(out_stmt_proc, name, col, i, &body, sem_type, is_vault);
+    bool_t encode = should_vault_col(col, sem_type, use_vault, vault_columns);
+    cg_java_proc_result_set_getter(out_stmt_proc, name, col, i, &body, sem_type, encode);
   }
 
   bprintf(&body, "%s", rt->cql_result_set_get_count);
@@ -341,6 +346,10 @@ static void cg_java_proc_result_set(ast_node *ast) {
   CHARBUF_CLOSE(cg_java_output);
 
   generated_java_sp_count++;
+
+cleanup:
+  use_vault = 0;
+  vault_columns = NULL;
 }
 
 static void cg_java_create_proc_stmt(ast_node *ast) {

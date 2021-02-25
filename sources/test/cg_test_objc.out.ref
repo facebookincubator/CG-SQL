@@ -1912,11 +1912,6 @@ static inline BOOL CGBVaultSensitiveWithValuesProcGetNameIsEncoded(CGBVaultSensi
   return CGCVaultSensitiveWithValuesProcGetNameIsEncoded(CGCVaultSensitiveWithValuesProcFromCGBVaultSensitiveWithValuesProc(resultSet));
 }
 
-static inline BOOL CGBVaultSensitiveWithValuesProcGetTypeIsEncoded(CGBVaultSensitiveWithValuesProc *resultSet)
-{
-  return CGCVaultSensitiveWithValuesProcGetTypeIsEncoded(CGCVaultSensitiveWithValuesProcFromCGBVaultSensitiveWithValuesProc(resultSet));
-}
-
 static inline int32_t CGBVaultSensitiveWithValuesProcResultCount(CGBVaultSensitiveWithValuesProc *resultSet)
 {
   return CGCVaultSensitiveWithValuesProcResultCount(CGCVaultSensitiveWithValuesProcFromCGBVaultSensitiveWithValuesProc(resultSet));

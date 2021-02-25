@@ -49,6 +49,8 @@ cql_data_defn( list_item *all_regions_list );
 cql_data_defn( list_item *all_ad_hoc_list );
 cql_data_defn( list_item *all_select_functions_list );
 cql_data_defn( list_item *all_enums_list );
+cql_data_defn( bool_t use_vault );
+cql_data_defn( symtab *vault_columns );
 
 // Note: initialized statics are moot because in amalgam mode the code
 // will not be reloaded... you have to re-initialize all statics in the cleanup function
@@ -1052,6 +1054,40 @@ cql_noexport bool_t sem_is_str_name(ast_node *ast) {
     return name[0] != '\'' && name[0] != '\"';
   }
   return false;
+}
+
+// The helper checks whether or not a column should be encoded. A column
+// is encoded if and only if it's marked and is also sensitive.
+// The eligibility infos are extract from vault_sensitive attribution
+// on create_proc_stmt node and stored in vault_columns symtab.
+// Eligible columns are encoded if they are sensitive as soon as they're
+// fetched from db (see cql_multifetch(...)).
+bool_t should_vault_col(CSTR col, sem_t sem_type, bool_t use_vault_arg, symtab *vault_columns_arg) {
+  bool_t is_col_eligible = false;
+  if (vault_columns_arg && vault_columns_arg->count > 0 ) {
+    is_col_eligible = symtab_find(vault_columns_arg, col) != NULL;
+  } else {
+    // otherwise all column are always eligible if use_vault is TRUE.
+    is_col_eligible = use_vault_arg;
+  }
+  return is_col_eligible && sensitive_flag(sem_type);
+}
+
+// It's a callback to find_vault_columns(...). It record into a symtab all
+// the string values from a vault_sensitive attribute. These string value
+// are used later on to decided whether or not to encode a sensitive column
+// value fetched from db or result set.
+static void find_vault_columns_callback(CSTR _Nonnull name, ast_node *_Nonnull found_ast, void *_Nullable context) {
+  Invariant(context);
+  symtab *output = (symtab*)context;
+  symtab_add(output, name, NULL);
+}
+
+void init_vault_info(ast_node *misc_attrs, bool_t *use_vault_arg, symtab *vault_columns_arg) {
+  *use_vault_arg = misc_attrs && exists_attribute_str(misc_attrs, "vault_sensitive");
+  if (*use_vault_arg) {
+    find_vault_columns(misc_attrs, find_vault_columns_callback, vault_columns_arg);
+  }
 }
 
 // This tells us if we're actually going to try to add the entity we are working on
@@ -16073,9 +16109,9 @@ static void sem_expr_select(ast_node *ast, CSTR cstr) {
   EXTRACT_ANY_NOTNULL(parent, ast->parent);
 
   // this tells us if we might be the left side of a select if nothing
-  bool_t in_select_if_nothing = 
-     is_ast_select_if_nothing_throw_expr(parent) || 
-     is_ast_select_if_nothing_expr(parent) || 
+  bool_t in_select_if_nothing =
+     is_ast_select_if_nothing_throw_expr(parent) ||
+     is_ast_select_if_nothing_expr(parent) ||
      is_ast_select_if_nothing_or_null_expr(parent);
 
   if (in_select_if_nothing && current_expr_context != SEM_EXPR_CONTEXT_NONE) {
