@@ -7984,7 +7984,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Feb 23 12:52:45 PST 2021
+Snapshot as of Sun Feb 28 11:07:10 PST 2021
 
 ### Operators and Literals
 
@@ -9444,7 +9444,7 @@ The complete list (as of this writing) is:
 
 
 
-## Chapter 4: CQL Error Codes
+## Appendix 4: CQL Error Codes
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
 --
@@ -12473,6 +12473,32 @@ does not exist is not handled correctly when `(select ...)` is used without the 
 
 ----
 
+### CQL0369: The (select ... if nothing) construct is for use in top level expressions, not inside of other DML
+
+This form allows for error control of (select...) expressions.  But SQLite does not
+understand the form at all, so it can only appear at the top level of expressions where
+CQL can strip it out. Here are some examples:
+
+good:
+
+```sql
+  set x := (select foo from bar where baz if nothing 0);
+  if (select foo from bar where baz if nothing 1) then ... end if;
+```
+
+bad:
+
+```sql
+  select foo from bar where (select something from somewhere if nothing null);
+  delete from foo where (select something from somewhere if nothing 1);
+```
+
+Basically if you are already in a SQL context, the form isn't usable because SQLite
+simply doesn't understand if nothing at all. This error makes it so that you'll
+get a build time failure from CQL rather than a run time failure from SQLite.
+
+----
+
 
 
 ## Appendix 5: JSON Schema Grammar
@@ -12485,7 +12511,7 @@ does not exist is not handled correctly when `(select ...)` is used without the 
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue Feb 23 12:52:46 PST 2021
+Snapshot as of Sun Feb 28 11:07:11 PST 2021
 
 ### Rules
 

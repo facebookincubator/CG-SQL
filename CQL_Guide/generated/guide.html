@@ -219,7 +219,7 @@
 <li><a href="#rules">Rules</a></li>
 </ul></li>
 <li><a href="#appendix-3-control-directives">Appendix 3: Control Directives</a></li>
-<li><a href="#chapter-4-cql-error-codes">Chapter 4: CQL Error Codes</a>
+<li><a href="#appendix-4-cql-error-codes">Appendix 4: CQL Error Codes</a>
 <ul>
 <li><a href="#cql0001-operands-must-be-an-integer-type-not-real">CQL0001: operands must be an integer type, not real</a></li>
 <li><a href="#cql0002-left-operand-cannot-be-an-object-in-operator">CQL0002: left operand cannot be an object in ‘operator’</a></li>
@@ -588,6 +588,7 @@
 <li><a href="#cql0366-transaction-operations-disallowed-while-strict-transaction-enforcement-is-on">CQL0366: transaction operations disallowed while STRICT TRANSACTION enforcement is on</a></li>
 <li><a href="#cql0367-an-attribute-was-specified-twice-attribute_name">CQL0367: an attribute was specified twice ‘attribute_name’</a></li>
 <li><a href="#cql0368-strict-select-if-nothing-requires-that-all-select-expressions-include-if-nothing">CQL0368: strict select if nothing requires that all (select …) expressions include ‘if nothing’</a></li>
+<li><a href="#cql0369-the-select-if-nothing-construct-is-for-use-in-top-level-expressions-not-inside-of-other-dml">CQL0369: The (select … if nothing) construct is for use in top level expressions, not inside of other DML</a></li>
 </ul></li>
 <li><a href="#appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</a>
 <ul>
@@ -6101,7 +6102,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Tue Feb 23 12:52:45 PST 2021</p>
+<p>Snapshot as of Sun Feb 28 11:07:10 PST 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -7506,7 +7507,7 @@ enforce_pop_stmt:
 <li><code>cql:no_table_scan</code> for query plan processing, indicates that the table in question should never be table scanned in any plan (for better diagnostics)</li>
 <li><code>cql:autotest=([many forms])</code> declares various autotest features (See Chapter 12)</li>
 </ul>
-<h2 id="chapter-4-cql-error-codes">Chapter 4: CQL Error Codes</h2>
+<h2 id="appendix-4-cql-error-codes">Appendix 4: CQL Error Codes</h2>
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
 --
@@ -9039,6 +9040,16 @@ set x := y;</code></pre>
 <h3 id="cql0368-strict-select-if-nothing-requires-that-all-select-expressions-include-if-nothing">CQL0368: strict select if nothing requires that all (select …) expressions include ‘if nothing’</h3>
 <p><code>@enforce_strict select if nothing</code> has been enabled. This means that select expressions must include <code>if nothing</code> or <code>if nothing or null</code>. This options exists because commonly the case where a row does not exist is not handled correctly when <code>(select ...)</code> is used without the <code>if nothing</code> options.</p>
 <hr />
+<h3 id="cql0369-the-select-if-nothing-construct-is-for-use-in-top-level-expressions-not-inside-of-other-dml">CQL0369: The (select … if nothing) construct is for use in top level expressions, not inside of other DML</h3>
+<p>This form allows for error control of (select…) expressions. But SQLite does not understand the form at all, so it can only appear at the top level of expressions where CQL can strip it out. Here are some examples:</p>
+<p>good:</p>
+<div class="sourceCode" id="cb416"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb416-1"><a href="#cb416-1"></a>  <span class="kw">set</span> x <span class="op">:=</span> (<span class="kw">select</span> foo <span class="kw">from</span> bar <span class="kw">where</span> baz <span class="cf">if</span> <span class="kw">nothing</span> <span class="dv">0</span>);</span>
+<span id="cb416-2"><a href="#cb416-2"></a>  <span class="cf">if</span> (<span class="kw">select</span> foo <span class="kw">from</span> bar <span class="kw">where</span> baz <span class="cf">if</span> <span class="kw">nothing</span> <span class="dv">1</span>) <span class="cf">then</span> <span class="op">..</span>. <span class="cf">end</span> <span class="cf">if</span>;</span></code></pre></div>
+<p>bad:</p>
+<div class="sourceCode" id="cb417"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb417-1"><a href="#cb417-1"></a>  <span class="kw">select</span> foo <span class="kw">from</span> bar <span class="kw">where</span> (<span class="kw">select</span> something <span class="kw">from</span> somewhere <span class="cf">if</span> <span class="kw">nothing</span> <span class="kw">null</span>);</span>
+<span id="cb417-2"><a href="#cb417-2"></a>  <span class="kw">delete</span> <span class="kw">from</span> foo <span class="kw">where</span> (<span class="kw">select</span> something <span class="kw">from</span> somewhere <span class="cf">if</span> <span class="kw">nothing</span> <span class="dv">1</span>);</span></code></pre></div>
+<p>Basically if you are already in a SQL context, the form isn’t usable because SQLite simply doesn’t understand if nothing at all. This error makes it so that you’ll get a build time failure from CQL rather than a run time failure from SQLite.</p>
+<hr />
 <h2 id="appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</h2>
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
@@ -9047,7 +9058,7 @@ set x := y;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Tue Feb 23 12:52:46 PST 2021</p>
+<p>Snapshot as of Sun Feb 28 11:07:11 PST 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 
