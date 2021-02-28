@@ -1571,13 +1571,6 @@ static void gen_select_from_etc(ast_node *ast) {
   EXTRACT(opt_having, select_having->left);
   EXTRACT(opt_select_window, select_having->right);
 
-  if (query_parts || opt_where || opt_groupby || opt_having || opt_select_window) {
-    if (gen_callbacks && gen_callbacks->from_etc_callback) {
-      // notify of discovered FROM clause (this avoids having a custom walker that looks for this)
-      gen_callbacks->from_etc_callback(ast, gen_callbacks->from_etc_context, output);
-    }
-  }
-
   if (query_parts) {
     gen_printf ("\n  FROM ");
     gen_query_parts(query_parts);

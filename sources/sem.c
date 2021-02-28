@@ -16077,30 +16077,78 @@ static void sem_expr_dot(ast_node *ast, CSTR cstr) {
   sem_resolve_id(ast, name, scope);
 }
 
+// only for use in (select expr ...) so there is known to be exactly one item in the
+// select list.  This tells us if there is some way we can know that there will be
+// a row for sure in such an expression.  There are assorted special cases that are
+// helpful to handle such as:
+//   there is no FROM and no WHERE  e.g. (select 1)
+//   the select list is only COUNT or TOTAL e.g. (select count(*) from somewhere)
+// anything that looks complicated -> we assume it might not return rows
+static bool_t sem_select_expr_must_return_a_row(ast_node *ast) {
+  // we only handle simple select forms, WITH etc. are assumed to be complex
+  // and might return null or whatever...
 
-// we just record that we saw the query part, that's what the callback is for
-static bool_t sem_note_query_parts(ast_node *ast, void *context, charbuf *buffer) {
-  Contract(context);
-  *((bool_t *)context) = true;
-  return true;
-}
+  // a with_select or query plan or some such... not simple
+  if (!is_ast_select_stmt(ast)) {
+    return false;
+  }
 
-// We have this guy use the SQL generator to avoid writing another (tricky) tree walker
-// to find if we have a FROM clause.
-static bool_t sem_select_contains_from_etc(ast_node *ast) {
-  bool_t detected = false;
+  // In a simple select statement (not compound or otherwise weird, like (select 1)
+  // the lack of a from clause means we can't be in the zero row case so no need
+  // to remove nullability there either.
+  EXTRACT_NOTNULL(select_core_list, ast->left);
+  EXTRACT_NOTNULL(select_core, select_core_list->left);
+  EXTRACT_NOTNULL(select_expr_list_con, select_core->right);
+  EXTRACT_NOTNULL(select_from_etc, select_expr_list_con->right);
+  EXTRACT_ANY(query_parts, select_from_etc->left);
+  EXTRACT_NOTNULL(select_where, select_from_etc->right);
+  EXTRACT(opt_where, select_where->left);
 
-  gen_sql_callbacks callbacks;
-  init_gen_sql_callbacks(&callbacks);
-  callbacks.from_etc_callback = sem_note_query_parts;
-  callbacks.from_etc_context = (void *)&detected;
-  callbacks.mode = gen_mode_echo; // mode doesn't matter, we're not using the output
-  CHARBUF_OPEN(scratch);
-  gen_set_output_buffer(&scratch);
-  gen_with_callbacks(ast, gen_root_expr, &callbacks);
-  CHARBUF_CLOSE(scratch);
+  // compound query is not simple (it could have INTERSECT or some such)
+  if (select_core_list->right) {
+    return false;
+  }
 
-  return detected;
+  // No query_parts and opt_where means there is no FROM/WHERE clause, so the
+  // result can't be nullable due to zero rows.  It might be nullable for other
+  // reasons already computed so the flag bit just stays
+
+  // note (SELECT EXISTS(whatever)) will fall into this form because there is
+  // no top level from or where clause.  Also exists isn't a proc call so it's not the next case
+
+  if (!query_parts && !opt_where) {
+    return true;
+  }
+
+  // One last chance, a simple select list with just COUNT or EXISTS is also for sure
+  // going to return a row, we can handle that.
+
+  EXTRACT_ANY_NOTNULL(select_expr_list, select_expr_list_con->left);
+
+  // might be select * or T.* or some such, has to be a simple expression.
+  if (!is_ast_select_expr(select_expr_list->left)) {
+    return false;
+  }
+
+  // ok it's not *, so we have a shot at this, it could be one of the safe ones
+  EXTRACT_NOTNULL(select_expr, select_expr_list->left);
+
+  // remember only 1 arg cases are allowed in this func, this is the (select expr..) node
+  Contract(select_expr_list->right == NULL);
+  EXTRACT_ANY_NOTNULL(expr, select_expr->left);
+
+  // the special cases are calls, if it's not a call we're done
+  if (!is_ast_call(expr)) {
+    return false;
+  }
+
+  // we could generalize into more functions that for sure return a result, but these are the big ones
+  EXTRACT_STRING(name, expr->left);
+  if (!Strcasecmp("count", name) || !Strcasecmp("total", name)) {
+    return true;
+  }
+
+  return false;
 }
 
 // Expression type for nested select expression
@@ -16131,8 +16179,8 @@ static void sem_expr_select(ast_node *ast, CSTR cstr) {
   bool_t invalid_select  =
     enforcement.strict_if_nothing &&
     current_expr_context == SEM_EXPR_CONTEXT_NONE &&
-    !(in_select_if_nothing && parent->left == ast) && 
-    sem_select_contains_from_etc(ast); 
+    !(in_select_if_nothing && parent->left == ast) &&
+    !sem_select_expr_must_return_a_row(ast);
 
   if (invalid_select) {
     report_error(ast, "CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'", NULL);
@@ -16165,24 +16213,13 @@ static void sem_expr_select(ast_node *ast, CSTR cstr) {
     // So no need to remove nullability there.
     remove_notnull = 0;
   }
-  else if (is_ast_select_stmt(ast)) {
-    // In a simple select statement (not compound or otherwise weird, like (select 1)
-    // the lack of a from clause means we can't be in the zero row case so no need
-    // to remove nullability there either.
-    EXTRACT_NOTNULL(select_core_list, ast->left);
-    EXTRACT_NOTNULL(select_core, select_core_list->left);
-    EXTRACT_NOTNULL(select_expr_list_con, select_core->right);
-    EXTRACT_NOTNULL(select_from_etc, select_expr_list_con->right);
-    EXTRACT_ANY(query_parts, select_from_etc->left);
-    EXTRACT_NOTNULL(select_where, select_from_etc->right);
-    EXTRACT(opt_where, select_where->left);
-
-    // No query_parts and opt_where means there is no FROM/WHERE clause, so the
-    // result can't be nullable due to zero rows.  It might be nullable for other
-    // reasons already computed so the flag bit just stays
-    if (!query_parts && !opt_where) {
-      remove_notnull = 0;
-    }
+  else if (sem_select_expr_must_return_a_row(ast)) {
+    // any of the forms that are known to return a row such as
+    //  * no where clause
+    //  * no from clause
+    //  * select list uses only exists or count
+    // in those cases zero rows isn't an option so we don't have to concern ourselves removing nullability
+    remove_notnull = 0;
   }
 
   sem_t sem_type = sptr->semtypes[0];

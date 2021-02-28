@@ -14275,3 +14275,33 @@ select (select 0 if nothing -1);
 -- + Error % CQL0369: The (select ... if nothing) construct is for use in top level expressions, not inside of other DML
 -- +1 Error
 delete from foo where id = (select 33 if nothing 0);
+
+-- TEST: nested select with count will be not null because count must return a row
+-- + {select_stmt}: select: { _anon: integer notnull }
+-- - Error
+select (select count(*) from foo where 0);
+
+-- TEST: nested select with select * is not examined for not nullness, but no crashes or anything
+-- +  {select_stmt}: select: { x: integer }
+-- - Error
+select (select * from (select 1 x) T);
+
+-- TEST: sum can return null, that's not a special case (sum(id) is weird but whatever)
+-- + {select_stmt}: select: { _anon: integer }
+-- - Error
+select (select sum(id) from foo where 0);
+
+-- TEST: any non aggregate with a where clause might be null
+-- + {select_stmt}: select: { _anon: integer }
+-- - Error
+select (select 1+3 where 0);
+
+-- TEST: with form is not simple, it doesn't get the treatment
+-- + {select_stmt}: select: { x: integer }
+-- - Error
+select (with y(*) as (select 1 x) select * from y);
+
+-- TEST: compound form is not simple, it doesn't get the treatment
+-- + {select_stmt}: select: { x: integer }
+-- - Error
+select (select 1 union all select 2) as x;
