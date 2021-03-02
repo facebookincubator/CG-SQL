@@ -6294,6 +6294,7 @@ cql_noexport void cg_c_main(ast_node *head) {
   bprintf(&body_file, "#pragma clang diagnostic ignored \"-Wbitwise-op-parentheses\"\n");
   bprintf(&body_file, "#pragma clang diagnostic ignored \"-Wshift-op-parentheses\"\n");
   bprintf(&body_file, "#pragma clang diagnostic ignored \"-Wlogical-not-parentheses\"\n");
+  bprintf(&body_file, "#pragma clang diagnostic ignored \"-Wlogical-op-parentheses\"\n");
   bprintf(&body_file, "#pragma clang diagnostic ignored \"-Wliteral-conversion\"\n");
 
   bprintf(&body_file, "%s", cg_fwd_ref_output->ptr);
