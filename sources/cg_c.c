@@ -4397,10 +4397,25 @@ static void cg_open_stmt(ast_node *ast) {
 // might also do this. That's fine.
 static void cg_close_stmt(ast_node *ast) {
   Contract(is_ast_close_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
+  EXTRACT_ANY_NOTNULL(cursor_ast, ast->left);
+  EXTRACT_STRING(name, cursor_ast);
 
   // CLOSE [name]
-  bprintf(cg_main_output, "cql_finalize_stmt(&%s_stmt);\n", name);
+
+  sem_t sem_type = cursor_ast->sem->sem_type;
+ 
+  if (!(sem_type & SEM_TYPE_VALUE_CURSOR)) {
+    bprintf(cg_main_output, "cql_finalize_stmt(&%s_stmt);\n", name);
+  }
+
+  if (sem_type & SEM_TYPE_HAS_SHAPE_STORAGE) {
+    sem_struct *sptr = cursor_ast->sem->sptr;
+    int32_t refs_count = refs_count_sptr(sptr);
+
+    if (refs_count) {
+      bprintf(cg_main_output, "cql_teardown_row(%s);\n", name);
+    }
+  }
 }
 
 // The OUT statement copies the current value of a cursor into an implicit

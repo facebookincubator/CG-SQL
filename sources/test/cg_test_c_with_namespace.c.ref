@@ -227,6 +227,15 @@ extern CQL_WARN_UNUSED cql_code vault_union_all_table_proc(sqlite3 *_Nonnull _db
 extern CQL_WARN_UNUSED cql_code vault_alias_column_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code vault_alias_column_name_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 // static CQL_WARN_UNUSED cql_code private_result(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_nullable_int32 *_Nonnull x);
+
+typedef struct global_cursor2_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_string_ref _Nonnull x;
+} global_cursor2_row;
+
+#define global_cursor2_refs_offset cql_offsetof(global_cursor2_row, x) // count = 1
 cql_string_literal(_literal_1_This_is_a_test_, "This is a \" \\ test '' \n \" ");
 cql_string_literal(_literal_2_b_, "b");
 cql_string_literal(_literal_3_c_, "c");
@@ -8090,6 +8099,30 @@ cql_cleanup:
   ; // label requires some statement
 }
 #undef _PROC_
+global_cursor2_row global_cursor2 = { ._refs_count_ = 1, ._refs_offset_ = global_cursor2_refs_offset };
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC early_close_cursor ()
+BEGIN
+  CLOSE global_cursor;
+  CLOSE global_cursor2;
+END;
+*/
+
+#define _PROC_ "early_close_cursor"
+// export: DECLARE PROC early_close_cursor () USING TRANSACTION;
+CQL_WARN_UNUSED cql_code early_close_cursor(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_finalize_stmt(&global_cursor_stmt);
+  cql_teardown_row(global_cursor2);
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  return _rc_;
+}
+#undef _PROC_
 
 // The statement ending at line XXXX
 
@@ -10497,6 +10530,7 @@ cql_cleanup:
   cql_blob_release(blob_var_notnull);
   cql_finalize_stmt(&global_cursor_stmt);
   cql_string_release(_tmp_n_text_1);
+  cql_teardown_row(global_cursor2);
   return _rc_;
 }
 

@@ -3434,6 +3434,18 @@ create proc set_out_arg_notnull_test(out x integer not null)
 begin
 end;
 
+declare global_cursor2 cursor like select "x" x;
+
+-- TEST: closing a cursor should finalize its statement if it has one and values if it has them
+-- + CQL_WARN_UNUSED cql_code early_close_cursor(sqlite3 *_Nonnull _db_) {
+-- + cql_finalize_stmt(&global_cursor_stmt);
+-- + cql_teardown_row(global_cursor2);
+create proc early_close_cursor()
+begin
+  close global_cursor;
+  close global_cursor2;
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------
