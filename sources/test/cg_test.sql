@@ -1104,13 +1104,22 @@ declare function text_func_create() create text;
 -- _tmp_n_text_0 = text_func_create();
 set text_result := text_func_create();
 
--- TEST: assign nullable to object with helper (not create)
+-- TEST: assign nullable to object with helper or crash
 -- + cql_set_object_ref(&_tmp_n_object_0, obj_func());
 -- + cql_invariant(!!_tmp_n_object_0);
 -- + cql_set_object_ref(&obj_var2, _tmp_n_object_0);
 set obj_var2 := attest_notnull(obj_func());
 
--- TEST: assign nullable to object with helper (with create)
+-- TEST: assign nullable to object with helper or throw
+-- + cql_set_object_ref(&_tmp_n_object_0, obj_func());
+-- + if (!_tmp_n_object_0) {
+-- +   _rc_ = SQLITE_ERROR;
+-- +   goto cql_cleanup;
+-- + }
+-- + cql_set_object_ref(&obj_var2, _tmp_n_object_0);
+set obj_var2 := ifnull_throw(obj_func());
+
+-- TEST: assign nullable to object with helper or crash
 -- + cql_object_release(_tmp_n_object_0);
 -- + _tmp_n_object_0 = obj_func_create();
 -- + cql_invariant(!!_tmp_n_object_0);
@@ -1121,6 +1130,14 @@ set obj_var2 := attest_notnull(obj_func_create());
 -- + cql_invariant(!i0_nullable.is_null);
 -- + i2 = i0_nullable.value
 set i2 := attest_notnull(i0_nullable);
+
+-- TEST: assign nullable int to an integer or throw
+-- + if (i0_nullable.is_null) {
+-- +   _rc_ = SQLITE_ERROR;
+-- +   goto cql_cleanup;
+-- + }
+-- + i2 = i0_nullable.value;
+set i2 := ifnull_throw(i0_nullable);
 
 -- TEST: unused temp in unary not emitted
 -- - cql_int32 _tmp_int_0 = 0;

@@ -5843,7 +5843,7 @@ static bool_t sem_validate_cursor_from_variable(ast_node *ast, CSTR target) {
   return false;
 }
 
-// notnull is a CQL builtin function that returns its input if not null
+// attest_notnull is a CQL builtin function that returns its input if not null
 // or failfast if null.  The notion here is you already checked that the expression
 // is notnull and you want to tell the type system this. The runtime check is
 // only a failsafe.
@@ -5878,6 +5878,11 @@ static void sem_func_attest_notnull(ast_node *ast, uint32_t arg_count) {
   name_ast->sem = ast->sem;
   // attest not null compiles to nothing so we do preserve the name in this case
   // Sqlite would never see the attest if it ever went through
+}
+
+// just like attest_notnull semantically
+static void sem_func_ifnull_throw(ast_node *ast, uint32_t arg_count) {
+  sem_func_attest_notnull(ast, arg_count);
 }
 
 // validate expression with cql_cursor_diff_xxx func is semantically correct.
@@ -17262,6 +17267,7 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(datetime);
   FUNC_INIT(julianday);
   FUNC_INIT(attest_notnull);
+  FUNC_INIT(ifnull_throw);
   FUNC_INIT(nullable);
   FUNC_INIT(ptr);
   FUNC_INIT(substr);

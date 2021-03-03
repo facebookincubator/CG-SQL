@@ -9357,6 +9357,18 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
   
   /*
+  SET obj_var2 := ifnull_throw(obj_func());
+  */
+  cql_set_object_ref(&_tmp_n_object_0, obj_func());
+  if (!_tmp_n_object_0) {
+    _rc_ = SQLITE_ERROR;
+    goto cql_cleanup;
+  }
+  cql_set_object_ref(&obj_var2, _tmp_n_object_0);
+  
+  // The statement ending at line XXXX
+  
+  /*
   SET obj_var2 := attest_notnull(obj_func_create());
   */
   cql_object_release(_tmp_n_object_0);
@@ -9370,6 +9382,17 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   SET i2 := attest_notnull(i0_nullable);
   */
   cql_invariant(!i0_nullable.is_null);
+  i2 = i0_nullable.value;
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SET i2 := ifnull_throw(i0_nullable);
+  */
+  if (i0_nullable.is_null) {
+    _rc_ = SQLITE_ERROR;
+    goto cql_cleanup;
+  }
   i2 = i0_nullable.value;
   
   // The statement ending at line XXXX
