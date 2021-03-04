@@ -4214,6 +4214,12 @@ declare not_null_object object not null;
 -- - Error
 set not_null_object := attest_notnull(obj_var);
 
+-- TEST: convert object to not null -- ifnull_crash form
+-- + {assign}: not_null_object: object notnull variable
+-- + {name not_null_object}: not_null_object: object notnull variable
+-- - Error
+set not_null_object := ifnull_crash(obj_var);
+
 -- TEST: convert object to not null (throw semantic) -- same code path as above
 -- + {assign}: not_null_object: object notnull variable
 -- + {name not_null_object}: not_null_object: object notnull variable

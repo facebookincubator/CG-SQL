@@ -2207,6 +2207,11 @@ static void cg_func_attest_notnull(ast_node *call_ast, charbuf *is_null, charbuf
   CG_POP_EVAL(expr);
 }
 
+// synonym for attest_notnull -- we'll be getting rid of the other one soon
+static void cg_func_ifnull_crash(ast_node *call_ast, charbuf *is_null, charbuf *value) {
+  cg_func_attest_notnull(call_ast, is_null, value);
+}
+
 // There's a helper for this method, just call it.  Super easy.
 static void cg_func_changes(ast_node *ast, charbuf *is_null, charbuf *value) {
   bprintf(is_null, "0");
@@ -6492,6 +6497,7 @@ cql_noexport void cg_c_init(void) {
 
   FUNC_INIT(attest_notnull);
   FUNC_INIT(ifnull_throw);
+  FUNC_INIT(ifnull_crash);
   FUNC_INIT(ifnull);
   FUNC_INIT(coalesce);
   FUNC_INIT(last_insert_rowid);

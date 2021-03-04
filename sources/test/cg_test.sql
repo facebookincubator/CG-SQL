@@ -1110,6 +1110,12 @@ set text_result := text_func_create();
 -- + cql_set_object_ref(&obj_var2, _tmp_n_object_0);
 set obj_var2 := attest_notnull(obj_func());
 
+-- TEST: assign nullable to object with helper or crash (ifnull_crash synonym)
+-- + cql_set_object_ref(&_tmp_n_object_0, obj_func());
+-- + cql_invariant(!!_tmp_n_object_0);
+-- + cql_set_object_ref(&obj_var2, _tmp_n_object_0);
+set obj_var2 := ifnull_crash(obj_func());
+
 -- TEST: assign nullable to object with helper or throw
 -- + cql_set_object_ref(&_tmp_n_object_0, obj_func());
 -- + if (!_tmp_n_object_0) {

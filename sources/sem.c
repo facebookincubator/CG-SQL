@@ -5885,6 +5885,11 @@ static void sem_func_ifnull_throw(ast_node *ast, uint32_t arg_count) {
   sem_func_attest_notnull(ast, arg_count);
 }
 
+// just like attest_notnull semantically
+static void sem_func_ifnull_crash(ast_node *ast, uint32_t arg_count) {
+  sem_func_attest_notnull(ast, arg_count);
+}
+
 // validate expression with cql_cursor_diff_xxx func is semantically correct.
 // cql_cursor_diff_xxx is a CQL builtin function that compare the values of a
 // row between two cursors.
@@ -17267,6 +17272,7 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(datetime);
   FUNC_INIT(julianday);
   FUNC_INIT(attest_notnull);
+  FUNC_INIT(ifnull_crash);
   FUNC_INIT(ifnull_throw);
   FUNC_INIT(nullable);
   FUNC_INIT(ptr);
