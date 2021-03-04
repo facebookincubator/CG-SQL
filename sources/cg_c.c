@@ -3761,7 +3761,7 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_fl
   if (exec_only && vars) {
     bprintf(cg_main_output, "_rc_ = sqlite3_step(%s_stmt);\n", stmt_name);
     cg_error_on_rc_notequal("SQLITE_DONE");
-
+    bprintf(cg_main_output, "_rc_ = SQLITE_OK;\n");
     bprintf(cg_main_output, "cql_finalize_stmt(&%s_stmt);\n", stmt_name);
   }
 

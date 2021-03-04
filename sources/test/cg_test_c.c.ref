@@ -449,6 +449,7 @@ CQL_WARN_UNUSED cql_code outparm_test(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnul
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = sqlite3_step(_temp_stmt);
   if (_rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
   cql_finalize_stmt(&_temp_stmt);
   _rc_ = SQLITE_OK;
 
@@ -2181,6 +2182,7 @@ CQL_WARN_UNUSED cql_code insert_values(sqlite3 *_Nonnull _db_, cql_int32 id_, cq
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = sqlite3_step(_temp_stmt);
   if (_rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
   cql_finalize_stmt(&_temp_stmt);
   _rc_ = SQLITE_OK;
 
@@ -2447,6 +2449,7 @@ CQL_WARN_UNUSED cql_code dummy_user(sqlite3 *_Nonnull _db_) {
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = sqlite3_step(_temp_stmt);
   if (_rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
   cql_finalize_stmt(&_temp_stmt);
   _rc_ = SQLITE_OK;
 
@@ -3849,6 +3852,7 @@ CQL_WARN_UNUSED cql_code multi_rewrite(sqlite3 *_Nonnull _db_, cql_int32 blob_id
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = sqlite3_step(_temp_stmt);
   if (_rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
   cql_finalize_stmt(&_temp_stmt);
   *out_arg = 1;
   _rc_ = SQLITE_OK;
@@ -5415,6 +5419,7 @@ CQL_WARN_UNUSED cql_code upsert_do_nothing(sqlite3 *_Nonnull _db_, cql_int32 id_
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = sqlite3_step(_temp_stmt);
   if (_rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
   cql_finalize_stmt(&_temp_stmt);
   _rc_ = SQLITE_OK;
 
@@ -9704,6 +9709,7 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = sqlite3_step(_temp_stmt);
   if (_rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
   cql_finalize_stmt(&_temp_stmt);
   
   // The statement ending at line XXXX
