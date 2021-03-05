@@ -396,10 +396,11 @@ code_gen_objc_test() {
   fi
 
   echo validating codegen
-  echo "  check that the objc_c_include_path argument was not used"
-  if grep "<Test/TestFile.h>" "${OUT_DIR}/cg_test_objc.out"
+  echo "  check that the objc_c_include_path argument was is used"
+  if ! grep "<Test/TestFile.h>" "${OUT_DIR}/cg_test_objc.out"
   then
-    echo "${OUT_DIR}/cg_test_objc.out" contains "<Test/TestFile.h>" unexpected
+    echo "<Test/TestFile.h>" should appear in the output
+    echo check "${OUT_DIR}/cg_test_objc.out" for this pattern and root cause.
     failed
   fi
 
