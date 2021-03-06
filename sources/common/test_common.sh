@@ -895,15 +895,6 @@ misc_cases() {
 
   on_diff_exit global_proc_needed.err
 
-  echo running assembly query namespace not provided for extension fragment test
-  if ${CQL} --test --cg "${OUT_DIR}/cg_test_extension_fragment_objc.out" --objc_c_include_path Test/TestFile.h --in "${TEST_DIR}/cg_test_extension_fragment.sql" --rt objc 2>"${OUT_DIR}/asm_query_ns_needed.err"
-  then
-    echo assembly query namespace is required for extension fragment
-    failed
-  fi
-
-  on_diff_exit asm_query_ns_needed.err
-
   echo running assembly query namespace provided empty for extension fragment test
   if ${CQL} --test --cg "${OUT_DIR}/cg_test_extension_fragment_objc.out" --objc_c_include_path Test/TestFile.h --in "${TEST_DIR}/cg_test_extension_fragment.sql" --rt objc --objc_assembly_query_namespace 2>"${OUT_DIR}/asm_query_ns_nonempty.err"
   then

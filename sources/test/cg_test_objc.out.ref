@@ -4,8 +4,6 @@
 
 #import <Test/TestFile.h>
 
-#import <CGBFragTest.h>
-
 NS_ASSUME_NONNULL_BEGIN
 
 @class CGBWithResultSet;
@@ -2105,14 +2103,23 @@ static inline BOOL CGBVaultAliasColumnNameProcRowEqual(CGBVaultAliasColumnNamePr
   return CGCVaultAliasColumnNameProcRowEqual(CGCVaultAliasColumnNameProcFromCGBVaultAliasColumnNameProc(resultSet1), row1, CGCVaultAliasColumnNameProcFromCGBVaultAliasColumnNameProc(resultSet2), row2);
 }
 
+@class CGBFragTest;
+
+static inline CGCFragTestResultSetRef CGCExtFromCGBExt(CGBFragTest *resultSet)
+{
+  return (__bridge CGCFragTestResultSetRef)resultSet;
+}
+
 static inline int32_t CGBExtGetId(CGBFragTest *resultSet, int32_t row)
 {
-  return CGBFragTestGetId(resultSet, row);
+  CGCFragTestResultSetRef cResultSet = CGCExtFromCGBExt(resultSet);
+  return CGCExtGetId(cResultSet, row);
 }
 
 static inline NSNumber *_Nullable CGBExtGetF2(CGBFragTest *resultSet, int32_t row)
 {
-  return __PRIVATE__CGBFragTestGetF2(resultSet, row);
+  CGCFragTestResultSetRef cResultSet = CGCExtFromCGBExt(resultSet);
+  return CGCExtGetF2IsNull(cResultSet, row) ? nil : @(CGCExtGetF2Value(cResultSet, row));
 }
 
 static inline BOOL CGBExtGetF2IsEncoded(CGBFragTest *resultSet)
@@ -2122,32 +2129,45 @@ static inline BOOL CGBExtGetF2IsEncoded(CGBFragTest *resultSet)
 
 static inline int32_t CGBExtResultCount(CGBFragTest *resultSet)
 {
-  return CGBFragTestResultCount(resultSet);
+  return CGCExtResultCount(CGCExtFromCGBExt(resultSet));
 }
 
 static inline CGBFragTest *CGBExtCopy(CGBFragTest *resultSet, int32_t from, int32_t count)
 {
-  return CGBFragTestCopy(resultSet, from, count);
+  CGCFragTestResultSetRef copy;
+  CGCExtCopy(CGCExtFromCGBExt(resultSet), &copy, from, count);
+  return (__bridge_transfer CGBFragTest *)copy;
+}
+
+@class CGBFragTest;
+
+static inline CGCFragTestResultSetRef CGCExt2FromCGBExt2(CGBFragTest *resultSet)
+{
+  return (__bridge CGCFragTestResultSetRef)resultSet;
 }
 
 static inline int32_t CGBExt2GetId(CGBFragTest *resultSet, int32_t row)
 {
-  return CGBFragTestGetId(resultSet, row);
+  CGCFragTestResultSetRef cResultSet = CGCExt2FromCGBExt2(resultSet);
+  return CGCExt2GetId(cResultSet, row);
 }
 
 static inline NSNumber *_Nullable CGBExt2GetF3(CGBFragTest *resultSet, int32_t row)
 {
-  return __PRIVATE__CGBFragTestGetF3(resultSet, row);
+  CGCFragTestResultSetRef cResultSet = CGCExt2FromCGBExt2(resultSet);
+  return CGCExt2GetF3IsNull(cResultSet, row) ? nil : @(CGCExt2GetF3Value(cResultSet, row));
 }
 
 static inline int32_t CGBExt2ResultCount(CGBFragTest *resultSet)
 {
-  return CGBFragTestResultCount(resultSet);
+  return CGCExt2ResultCount(CGCExt2FromCGBExt2(resultSet));
 }
 
 static inline CGBFragTest *CGBExt2Copy(CGBFragTest *resultSet, int32_t from, int32_t count)
 {
-  return CGBFragTestCopy(resultSet, from, count);
+  CGCFragTestResultSetRef copy;
+  CGCExt2Copy(CGCExt2FromCGBExt2(resultSet), &copy, from, count);
+  return (__bridge_transfer CGBFragTest *)copy;
 }
 
 NS_ASSUME_NONNULL_END
