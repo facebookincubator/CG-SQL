@@ -2383,6 +2383,7 @@ static void cg_expr_select(ast_node *ast, CSTR op, charbuf *is_null, charbuf *va
   bprintf(cg_main_output, "_rc_ = sqlite3_step(_temp_stmt);\n");
   cg_error_on_rc_notequal("SQLITE_ROW");
   cg_get_column(sem_type_result, "_temp_stmt", 0, result_var.ptr, cg_main_output);
+  bprintf(cg_main_output, "_rc_ = SQLITE_OK;\n");
   bprintf(cg_main_output, "cql_finalize_stmt(&_temp_stmt);\n");
 
   CG_CLEANUP_RESULT_VAR();
@@ -2476,6 +2477,7 @@ static void cg_expr_select_if_nothing(ast_node *ast, CSTR op, charbuf *is_null, 
   CG_POP_EVAL(expr);
 
   bprintf(cg_main_output, "}\n");
+  bprintf(cg_main_output, "_rc_ = SQLITE_OK;\n");
   bprintf(cg_main_output, "cql_finalize_stmt(&_temp_stmt);\n");
 
   CHARBUF_CLOSE(select_value);
@@ -2531,6 +2533,7 @@ static void cg_expr_select_if_nothing_or_null(ast_node *ast, CSTR op, charbuf *i
   // note this may change the type but only in a compatible way
   cg_store(cg_main_output, result_var.ptr, sem_type_result, sem_type_select, select_is_null.ptr, select_value.ptr);
   bprintf(cg_main_output, "}\n");
+  bprintf(cg_main_output, "_rc_ = SQLITE_OK;\n");
   bprintf(cg_main_output, "cql_finalize_stmt(&_temp_stmt);\n");
 
   CHARBUF_CLOSE(select_value);
@@ -4436,7 +4439,7 @@ static void cg_close_stmt(ast_node *ast) {
   // CLOSE [name]
 
   sem_t sem_type = cursor_ast->sem->sem_type;
- 
+
   if (!(sem_type & SEM_TYPE_VALUE_CURSOR)) {
     bprintf(cg_main_output, "cql_finalize_stmt(&%s_stmt);\n", name);
   }

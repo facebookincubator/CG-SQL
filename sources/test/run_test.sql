@@ -3400,6 +3400,49 @@ BEGIN_TEST(call_out_union_in_loop)
   end;
 END_TEST(call_out_union_in_loop)
 
+create table simple_rc_table(id integer, foo text);
+create proc simple_insert()
+begin
+  insert into simple_rc_table(id, foo) values(1, "foo");
+end;
+
+create proc select_if_nothing(id_ integer not null)
+begin
+  declare bar text;
+  set bar := (select foo from simple_rc_table where id == id_ if nothing "bar");
+end;
+
+create proc select_if_nothing_throw(id_ integer not null)
+begin
+  declare bar text;
+  set bar := (select foo from simple_rc_table where id == id_ if nothing throw);
+end;
+
+BEGIN_TEST(rc_simple_select)
+  declare C cursor for call simple_select();
+  EXPECT(@rc == 0);
+END_TEST(rc_simple_select)
+
+BEGIN_TEST(rc_simple_insert_and_select)
+  create table simple_rc_table(id integer, foo text);
+
+  call simple_insert();
+  EXPECT(@rc == 0);
+
+  call select_if_nothing(1);
+  EXPECT(@rc == 0);
+
+  call select_if_nothing(2);
+  EXPECT(@rc == 0);
+
+  begin try
+    call select_if_nothing_throw(2);
+  end try;
+  begin catch
+    EXPECT(@rc != 0);
+  end catch;
+END_TEST(rc_simple_insert_and_select)
+
 END_SUITE()
 
 -- manually force tracing on by redefining the macros
