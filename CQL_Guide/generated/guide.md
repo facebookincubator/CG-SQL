@@ -7989,7 +7989,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu Mar  4 12:45:11 PST 2021
+Snapshot as of Sun Mar  7 16:09:34 PST 2021
 
 ### Operators and Literals
 
@@ -12473,8 +12473,9 @@ In the indicated type declaration, the indicated attribute was specified twice. 
 ### CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
 
 `@enforce_strict select if nothing` has been enabled.  This means that select expressions must include
-`if nothing` or `if nothing or null`.  This options exists because commonly the case where a row
-does not exist is not handled correctly when `(select ...)` is used without the `if nothing` options.
+`if nothing throw` (the old default) `if nothing [value]` or `if nothing or null [value]`.  This options exists
+because commonly the case where a row does not exist is not handled correctly when `(select ...)` is used
+without the `if nothing` options.
 
 ----
 
@@ -12516,7 +12517,7 @@ get a build time failure from CQL rather than a run time failure from SQLite.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Thu Mar  4 12:45:11 PST 2021
+Snapshot as of Sun Mar  7 16:09:35 PST 2021
 
 ### Rules
 

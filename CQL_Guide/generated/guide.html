@@ -6104,7 +6104,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Thu Mar 4 12:45:11 PST 2021</p>
+<p>Snapshot as of Sun Mar 7 16:09:34 PST 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -9040,7 +9040,7 @@ set x := y;</code></pre>
 <p>In the indicated type declaration, the indicated attribute was specified twice. This is almost certainly happening because the line in question looks like this <code>declare x type_name not null;</code> but <code>type_name</code> is already <code>not null</code>.</p>
 <hr />
 <h3 id="cql0368-strict-select-if-nothing-requires-that-all-select-expressions-include-if-nothing">CQL0368: strict select if nothing requires that all (select …) expressions include ‘if nothing’</h3>
-<p><code>@enforce_strict select if nothing</code> has been enabled. This means that select expressions must include <code>if nothing</code> or <code>if nothing or null</code>. This options exists because commonly the case where a row does not exist is not handled correctly when <code>(select ...)</code> is used without the <code>if nothing</code> options.</p>
+<p><code>@enforce_strict select if nothing</code> has been enabled. This means that select expressions must include <code>if nothing throw</code> (the old default) <code>if nothing [value]</code> or <code>if nothing or null [value]</code>. This options exists because commonly the case where a row does not exist is not handled correctly when <code>(select ...)</code> is used without the <code>if nothing</code> options.</p>
 <hr />
 <h3 id="cql0369-the-select-if-nothing-construct-is-for-use-in-top-level-expressions-not-inside-of-other-dml">CQL0369: The (select … if nothing) construct is for use in top level expressions, not inside of other DML</h3>
 <p>This form allows for error control of (select…) expressions. But SQLite does not understand the form at all, so it can only appear at the top level of expressions where CQL can strip it out. Here are some examples:</p>
@@ -9060,7 +9060,7 @@ set x := y;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Thu Mar 4 12:45:11 PST 2021</p>
+<p>Snapshot as of Sun Mar 7 16:09:35 PST 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 
