@@ -1066,21 +1066,43 @@ There can be arbitrarily many conditions specified each with their own result an
 These functions are nullable or non-nullable based on their arguments. If the `IFNULL` or `COALESCE` call has
 at least one non-nullable argument then the result is non-nullable.
 
-#### The cql_attest_notnull function
+#### The ifnull_crash and ifnull_throw functions
 
-Sometimes `ifnull` is not possible, e.g. if the operand is an object or blob type.  The `attest` form gives you a type conversion
-to not null with a runtime check.  It cannot be used in SQLite contexts because the function is not known to SQLite.  But in loose
-expressions you can write this important pattern:
+Sometimes `ifnull` is not possible, e.g. if the operand is an object or blob type.  Other times it's just not convenient.
+The "attesting" forms gives you a type conversion to not null with a runtime check.  They cannot be used in SQLite contexts
+because the functions are not known to SQLite.  But in loose expressions you can write this important pattern:
 
 ```sql
 create proc foo(x object)
 begin
   if x is not null then
      declare xo object not null;
-     set xo := cql_attest_notnull(x);
+     set xo := ifnull_crash(x); -- this is like an assert
      -- use xo where a non-null object is needed
   end;
 end;
+```
+
+If you can't assert that the object is not null but rather you want to test it
+then you can use `ifnull_throw`.  This form is shown below:
+
+```sql
+create proc foo(x object)
+begin
+  declare xo object not null;
+  set xo := ifnull_throw(x);
+  -- use xo where a non-null object is needed
+  end;
+end;
+```
+
+It is equivalent to adding this inline in the expression
+
+```
+  if x is null then throw end if;
+```
+
+The compiler then considers 'x' to be not null having tested it at run time.
 
 #### LEFT and RIGHT OUTER JOINS
 In most join operations the nullability of each column participating in the join is preserved.  However in a
@@ -7989,7 +8011,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Sun Mar  7 16:09:34 PST 2021
+Snapshot as of Wed Mar 10 15:13:54 PST 2021
 
 ### Operators and Literals
 
@@ -12517,7 +12539,7 @@ get a build time failure from CQL rather than a run time failure from SQLite.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Sun Mar  7 16:09:35 PST 2021
+Snapshot as of Wed Mar 10 15:13:55 PST 2021
 
 ### Rules
 
