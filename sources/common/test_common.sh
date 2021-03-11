@@ -388,7 +388,7 @@ code_gen_java_test() {
 code_gen_objc_test() {
   echo '--------------------------------- STAGE 7 -- OBJ-C CODE GEN TEST'
   echo running codegen test
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_objc.out" --objc_c_include_path Test/TestFile.h --in "${TEST_DIR}/cg_test.sql" --rt objc --objc_assembly_query_namespace . 2>"${OUT_DIR}/cg_test_objc.err"
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_objc.out" --objc_c_include_path Test/TestFile.h --in "${TEST_DIR}/cg_test.sql" --rt objc 2>"${OUT_DIR}/cg_test_objc.err"
   then
     echo "ERROR:"
     cat "${OUT_DIR}/cg_test_objc.err"
@@ -405,7 +405,7 @@ code_gen_objc_test() {
   fi
 
   echo running objc codegen test for extension query fragment
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_extension_fragment_objc.out" --objc_c_include_path Test/TestFile.h --in "${TEST_DIR}/cg_test_extension_fragment.sql" --rt objc --objc_assembly_query_namespace . 2>"${OUT_DIR}/cg_test_objc.err"
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_extension_fragment_objc.out" --objc_c_include_path Test/TestFile.h --in "${TEST_DIR}/cg_test_extension_fragment.sql" --rt objc 2>"${OUT_DIR}/cg_test_objc.err"
   then
     echo "ERROR:"
     cat "${OUT_DIR}/cg_test_objc.err"
@@ -413,7 +413,7 @@ code_gen_objc_test() {
   fi
 
   echo running objc codegen test for extension query fragment with core base
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_extension_fragment_with_core_base_test_objc.out" --objc_c_include_path Test/TestFile.h --in "${TEST_DIR}/cg_test_extension_fragment.sql" --rt objc --objc_assembly_query_namespace MessengerBridgeQueries 2>"${OUT_DIR}/cg_test_objc.err"
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_extension_fragment_with_core_base_test_objc.out" --objc_c_include_path Test/TestFile.h --in "${TEST_DIR}/cg_test_extension_fragment.sql" --rt objc 2>"${OUT_DIR}/cg_test_objc.err"
   then
     echo "ERROR:"
     cat "${OUT_DIR}/cg_test_objc.err"
@@ -894,15 +894,6 @@ misc_cases() {
   fi
 
   on_diff_exit global_proc_needed.err
-
-  echo running assembly query namespace provided empty for extension fragment test
-  if ${CQL} --test --cg "${OUT_DIR}/cg_test_extension_fragment_objc.out" --objc_c_include_path Test/TestFile.h --in "${TEST_DIR}/cg_test_extension_fragment.sql" --rt objc --objc_assembly_query_namespace 2>"${OUT_DIR}/asm_query_ns_nonempty.err"
-  then
-    echo assembly query namespace is required to be non-empty for extension fragment
-    failed
-  fi
-
-  on_diff_exit asm_query_ns_nonempty.err
 
   echo running test where output file cannot be written
   create_unwritable_file "${OUT_DIR}/unwritable.h.out"
