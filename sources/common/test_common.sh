@@ -388,7 +388,7 @@ code_gen_java_test() {
 code_gen_objc_test() {
   echo '--------------------------------- STAGE 7 -- OBJ-C CODE GEN TEST'
   echo running codegen test
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_objc.out" --objc_c_include_path Test/TestFile.h --in "${TEST_DIR}/cg_test.sql" --rt objc --objc_assembly_query_namespace . 2>"${OUT_DIR}/cg_test_objc.err"
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_objc.out" --objc_c_include_path Test/TestFile.h --in "${TEST_DIR}/cg_test.sql" --rt objc 2>"${OUT_DIR}/cg_test_objc.err"
   then
     echo "ERROR:"
     cat "${OUT_DIR}/cg_test_objc.err"
@@ -396,15 +396,16 @@ code_gen_objc_test() {
   fi
 
   echo validating codegen
-  echo "  check that the objc_c_include_path argument was not used"
-  if grep "<Test/TestFile.h>" "${OUT_DIR}/cg_test_objc.out"
+  echo "  check that the objc_c_include_path argument was is used"
+  if ! grep "<Test/TestFile.h>" "${OUT_DIR}/cg_test_objc.out"
   then
-    echo "${OUT_DIR}/cg_test_objc.out" contains "<Test/TestFile.h>" unexpected
+    echo "<Test/TestFile.h>" should appear in the output
+    echo check "${OUT_DIR}/cg_test_objc.out" for this pattern and root cause.
     failed
   fi
 
   echo running objc codegen test for extension query fragment
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_extension_fragment_objc.out" --objc_c_include_path Test/TestFile.h --in "${TEST_DIR}/cg_test_extension_fragment.sql" --rt objc --objc_assembly_query_namespace . 2>"${OUT_DIR}/cg_test_objc.err"
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_extension_fragment_objc.out" --objc_c_include_path Test/TestFile.h --in "${TEST_DIR}/cg_test_extension_fragment.sql" --rt objc 2>"${OUT_DIR}/cg_test_objc.err"
   then
     echo "ERROR:"
     cat "${OUT_DIR}/cg_test_objc.err"
@@ -412,7 +413,7 @@ code_gen_objc_test() {
   fi
 
   echo running objc codegen test for extension query fragment with core base
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_extension_fragment_with_core_base_test_objc.out" --objc_c_include_path Test/TestFile.h --in "${TEST_DIR}/cg_test_extension_fragment.sql" --rt objc --objc_assembly_query_namespace MessengerBridgeQueries 2>"${OUT_DIR}/cg_test_objc.err"
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_extension_fragment_with_core_base_test_objc.out" --objc_c_include_path Test/TestFile.h --in "${TEST_DIR}/cg_test_extension_fragment.sql" --rt objc 2>"${OUT_DIR}/cg_test_objc.err"
   then
     echo "ERROR:"
     cat "${OUT_DIR}/cg_test_objc.err"
@@ -463,7 +464,7 @@ assorted_errors_test() {
 
 # wrong number of args specified in --cg (for objc)
 
-  if ${CQL} --cg __temp __temp2 --in "${TEST_DIR}/cg_test.sql" --rt objc 2>"${OUT_DIR}/cg_1_2.err"
+  if ${CQL} --cg "${OUT_DIR}/__temp" "${OUT_DIR}/__temp2" --in "${TEST_DIR}/cg_test.sql" --rt objc 2>"${OUT_DIR}/cg_1_2.err"
   then
     echo "objc rt should require 1 files for the cg param but two were passed, should have failed"
     failed
@@ -473,7 +474,7 @@ assorted_errors_test() {
 
   on_diff_exit cg_1_2.err
 
-  if ${CQL} --cg __temp /xx/yy/zz --in "${TEST_DIR}/semantic_error.sql" 2>"${OUT_DIR}/sem_abort.err"
+  if ${CQL} --cg "${OUT_DIR}/__temp" /xx/yy/zz --in "${TEST_DIR}/semantic_error.sql" 2>"${OUT_DIR}/sem_abort.err"
   then
     echo "simple semantic error to abort output -- failed"
     failed
@@ -483,7 +484,7 @@ assorted_errors_test() {
 
 # no result sets in the input for objc should result in empty output, not errors
 
-  if ! ${CQL} --cg __temp --in "${TEST_DIR}/noresult.sql" --objc_c_include_path dummy --rt objc 2>"${OUT_DIR}/objc_no_results.err"
+  if ! ${CQL} --cg "${OUT_DIR}/__temp" --in "${TEST_DIR}/noresult.sql" --objc_c_include_path dummy --rt objc 2>"${OUT_DIR}/objc_no_results.err"
   then
     echo "no result sets in output objc case, should not fail"
     failed
@@ -893,24 +894,6 @@ misc_cases() {
   fi
 
   on_diff_exit global_proc_needed.err
-
-  echo running assembly query namespace not provided for extension fragment test
-  if ${CQL} --test --cg "${OUT_DIR}/cg_test_extension_fragment_objc.out" --objc_c_include_path Test/TestFile.h --in "${TEST_DIR}/cg_test_extension_fragment.sql" --rt objc 2>"${OUT_DIR}/asm_query_ns_needed.err"
-  then
-    echo assembly query namespace is required for extension fragment
-    failed
-  fi
-
-  on_diff_exit asm_query_ns_needed.err
-
-  echo running assembly query namespace provided empty for extension fragment test
-  if ${CQL} --test --cg "${OUT_DIR}/cg_test_extension_fragment_objc.out" --objc_c_include_path Test/TestFile.h --in "${TEST_DIR}/cg_test_extension_fragment.sql" --rt objc --objc_assembly_query_namespace 2>"${OUT_DIR}/asm_query_ns_nonempty.err"
-  then
-    echo assembly query namespace is required to be non-empty for extension fragment
-    failed
-  fi
-
-  on_diff_exit asm_query_ns_nonempty.err
 
   echo running test where output file cannot be written
   create_unwritable_file "${OUT_DIR}/unwritable.h.out"
