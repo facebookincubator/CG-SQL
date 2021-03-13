@@ -1945,14 +1945,6 @@ static void parse_cmd(int argc, char **argv) {
         cql_error("--objc_c_include_path requires an additional include path for a C header\n");
         cql_cleanup_and_exit(1);
       }
-    } else if (strcmp(arg, "--objc_assembly_query_namespace") == 0) {
-      if (a + 1 < argc) {
-        a++;
-        options.objc_assembly_query_namespace = argv[a];
-      } else {
-        cql_error("--objc_assembly_query_namespace requires an additional namespace for the assembly query Objective-C header\n");
-        cql_cleanup_and_exit(1);
-      }
     } else if (strcmp(arg, "--c_include_namespace") == 0) {
       if (a + 1 < argc) {
         a++;

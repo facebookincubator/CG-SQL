@@ -18,12 +18,6 @@
 #include "sem.h"
 #include "symtab.h"
 
-// Keep current and all records of the assembly query names for importing result set type
-// if we are presently emitting for an extension fragment stored proc
-static CSTR current_parent_query_name;
-
-static symtab *assembly_query_names;
-
 // Set up the buffer for extension header outputs if we are emitting for an extension
 // or assembly query since we will make decision on including it into codegen output
 // if we are emitting for extension only that needs different reference calls to assembly
@@ -31,8 +25,7 @@ static symtab *assembly_query_names;
 // Otherwise this additional output will be abandoned at program exit anyway.
 static charbuf *objc_extension_header = NULL;
 
-// keep track of how many rows belong to the base query
-static uint32_t col_count_for_base_objc = 0;
+static uint32_t objc_frag_type;
 
 static void cg_objc_proc_result_set_c_getter(
   bool_t fetch_proc,
@@ -83,8 +76,24 @@ static void cg_objc_proc_result_set_getter(
   CSTR value_convert_begin = "";
   CSTR value_convert_end = "";
   CSTR c_getter_suffix = "";
-  bool_t is_private = col >= col_count_for_base_objc && col_count_for_base_objc > 0
-    && (is_extension_fragment || is_assembly_query);
+
+  uint32_t col_count_for_base = 0;
+
+  bool_t is_ext = objc_frag_type == FRAG_TYPE_EXTENSION;
+  bool_t is_asm_frag = objc_frag_type == FRAG_TYPE_ASSEMBLY;
+
+  if (objc_frag_type != FRAG_TYPE_NONE) {
+    // we already know the base compiled with no errors
+    ast_node *base_proc = find_base_fragment(base_fragment_name);
+    Invariant(base_proc);
+    Invariant(base_proc->sem);
+    Invariant(base_proc->sem->sptr);
+
+    col_count_for_base = base_proc->sem->sptr->count;
+  }
+
+  bool_t is_private = col >= col_count_for_base && col_count_for_base > 0
+    && is_asm_frag;
 
   CHARBUF_OPEN(value);
 
@@ -96,15 +105,11 @@ static void cg_objc_proc_result_set_getter(
       case SEM_TYPE_BOOL:
         return_type = "NSNumber *_Nullable";
         return_type_separator = " ";
-        // Since the conversion is already done by the parent assembly query, we can just return the parent value
-        // directly and no need to convert again here for fragment
-        if (!is_extension_fragment) {
-          value_convert_begin = "@(";
-          value_convert_end = ")";
-          c_getter_suffix = "_value";
-          cg_objc_proc_result_set_c_getter(fetch_proc, &value, name, col_name, "_is_null", is_private);
-          bprintf(&value, " ? nil : ");
-        }
+        value_convert_begin = "@(";
+        value_convert_end = ")";
+        c_getter_suffix = "_value";
+        cg_objc_proc_result_set_c_getter(fetch_proc, &value, name, col_name, "_is_null", is_private);
+        bprintf(&value, " ? nil : ");
         break;
       case SEM_TYPE_BLOB:
         return_type = "NSData *_Nullable";
@@ -160,7 +165,7 @@ static void cg_objc_proc_result_set_getter(
   CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
     objc_getter,
     // only prefix with __PRIVATE__ the private assembly methods
-    is_extension_fragment ? rt->symbol_prefix : symbol_prefix.ptr,
+    is_ext ? rt->symbol_prefix : symbol_prefix.ptr,
     name,
     "_get_",
     col_name);
@@ -178,18 +183,6 @@ static void cg_objc_proc_result_set_getter(
             c_getter.ptr,
             value_convert_end);
   }
-  else if (is_extension_fragment) {
-    // extension fragment always calls parent fragment 's getter for getting column from resultSet
-    CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
-      objc_parent_getter,
-      symbol_prefix.ptr,
-      current_parent_query_name ?: "",
-      "_get_",
-      col_name);
-    bprintf(&value, "%s(resultSet, row)",
-            objc_parent_getter.ptr);
-    CHARBUF_CLOSE(objc_parent_getter);
-  }
   else {
     bprintf(&value, "%s%s(cResultSet, row)%s",
             value_convert_begin,
@@ -197,10 +190,10 @@ static void cg_objc_proc_result_set_getter(
             value_convert_end);
   }
 
-  if (is_extension_fragment) {
+  if (is_ext) {
     // Since the parent assembly query has already fetched the aggregated resultSet, we just emit
     // a call to the parent for extension fragment rather than doing a regular getter call.
-    CG_CHARBUF_OPEN_SYM(objc_parent_name, current_parent_query_name);
+    CG_CHARBUF_OPEN_SYM(objc_parent_name, base_fragment_name);
     bprintf(output,
             "\nstatic inline %s%s%s(%s *resultSet, %s row)\n",
             return_type,
@@ -230,8 +223,8 @@ static void cg_objc_proc_result_set_getter(
               rt->cql_int32);
     }
     bprintf(output, "{\n");
-    bprintf(output, "  %s cResultSet = %s(resultSet);\n", c_result_set_ref, c_convert);
   }
+  bprintf(output, "  %s cResultSet = %s(resultSet);\n", c_result_set_ref, c_convert);
   bprintf(output, "  return %s;\n", value.ptr);
   bprintf(output, "}\n");
 
@@ -240,11 +233,6 @@ static void cg_objc_proc_result_set_getter(
   CHARBUF_CLOSE(symbol_prefix);
   CHARBUF_CLOSE(impl_symbol_prefix);
   CHARBUF_CLOSE(value);
-}
-
-static void cg_objc_set_parent_fragment_name(CSTR _Nonnull name, ast_node *_Nonnull _misc_attr, void *_Nullable _context) {
-  current_parent_query_name = name;
-  symtab_add(assembly_query_names, name, NULL);
 }
 
 static void cg_objc_proc_result_set(ast_node *ast) {
@@ -272,15 +260,13 @@ static void cg_objc_proc_result_set(ast_node *ast) {
   vault_columns = symtab_new();
   init_vault_info(misc_attrs, &use_vault, vault_columns);
 
-  is_extension_fragment = misc_attrs &&
-      find_extension_fragment_attr(misc_attrs, cg_objc_set_parent_fragment_name, NULL);
-  is_assembly_query = misc_attrs && find_assembly_query_attr(misc_attrs, NULL, NULL);
-  if (is_extension_fragment) {
-    Contract(current_parent_query_name);
+  bool_t is_ext = objc_frag_type == FRAG_TYPE_EXTENSION;
+  if (is_ext) {
+    Contract(base_fragment_name);
   }
 
-  CSTR c_result_set_name = is_extension_fragment ? current_parent_query_name : name;
-  charbuf *h = is_extension_fragment ? objc_extension_header : cg_header_output;
+  CSTR c_result_set_name = is_ext ? base_fragment_name : name;
+  charbuf *h = is_ext ? objc_extension_header : cg_header_output;
 
   CG_CHARBUF_OPEN_SYM(objc_name, name);
   CG_CHARBUF_OPEN_SYM(objc_result_set_name, c_result_set_name);
@@ -291,28 +277,36 @@ static void cg_objc_proc_result_set(ast_node *ast) {
     c_result_set_ref, rt->impl_symbol_prefix, c_result_set_name, "_result_set_ref");
   CG_CHARBUF_OPEN_SYM_WITH_PREFIX(c_convert, "", c_name.ptr, "_from_", objc_name.ptr);
 
+  CG_CHARBUF_OPEN_SYM(objc_class_name, c_result_set_name);
+  // if extension we emit the base class name
+  bprintf(h, "\n@class %s;\n", is_ext ? objc_class_name.ptr : objc_name.ptr);
+
   // Since the parent assembly query has already fetched the aggregated resultSet, we call to use that directly and
   // skip setting up objc and c bridging for extension fragment specific result unless otherwise
-  if (!is_extension_fragment) {
+  if (!is_ext) {
     CG_CHARBUF_OPEN_SYM_WITH_PREFIX(objc_convert, "", objc_name.ptr, "_from_", c_name.ptr);
 
-    bprintf(h, "\n@class %s;\n", objc_name.ptr);
     bprintf(h, "\nstatic inline %s *%s(%s resultSet)\n", objc_name.ptr, objc_convert.ptr, c_result_set_ref.ptr);
     bprintf(h, "{\n");
     bprintf(h, "  return (__bridge %s *)resultSet;\n", objc_name.ptr);
     bprintf(h, "}\n");
 
-    bprintf(h, "\nstatic inline %s %s(%s *resultSet)\n", c_result_set_ref.ptr, c_convert.ptr, objc_name.ptr);
-    bprintf(h, "{\n");
-    bprintf(h, "  return (__bridge %s)resultSet;\n", c_result_set_ref.ptr);
-    bprintf(h, "}\n");
-
     CHARBUF_CLOSE(objc_convert);
   }
 
+  bprintf(
+    h,
+    "\nstatic inline %s %s(%s *resultSet)\n",
+    c_result_set_ref.ptr,
+    c_convert.ptr,
+    is_ext ? objc_class_name.ptr : objc_name.ptr);
+  bprintf(h, "{\n");
+  bprintf(h, "  return (__bridge %s)resultSet;\n", c_result_set_ref.ptr);
+  bprintf(h, "}\n");
+
   bool_t out_stmt_proc = has_out_stmt_result(ast);
   // extension fragments use SELECT and are incompatible with the single row result set form using OUT
-  if (is_extension_fragment) {
+  if (is_ext) {
     Invariant(!out_stmt_proc);
   }
 
@@ -350,7 +344,7 @@ static void cg_objc_proc_result_set(ast_node *ast) {
             objc_getter.ptr,
             objc_result_set_name.ptr);
         bprintf(h, "{\n");
-        if (is_extension_fragment) {
+        if (is_ext) {
           CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
             objc_result_set_name_getter, objc_result_set_name.ptr, "_get_", col, "_is_encoded");
           bprintf(
@@ -374,14 +368,7 @@ static void cg_objc_proc_result_set(ast_node *ast) {
           objc_name.ptr,
           objc_result_set_name.ptr);
   bprintf(h, "{\n");
-  if (is_extension_fragment) {
-    bprintf(h,
-            "  return %sResultCount(resultSet);\n",
-            objc_result_set_name.ptr);
-  }
-  else {
-    bprintf(h, "  return %sResultCount(%s(resultSet));\n", c_name.ptr, c_convert.ptr);
-  }
+  bprintf(h, "  return %sResultCount(%s(resultSet));\n", c_name.ptr, c_convert.ptr);
   bprintf(h, "}\n");
 
   bprintf(h,
@@ -397,21 +384,16 @@ static void cg_objc_proc_result_set(ast_node *ast) {
   }
   bprintf(h, ")\n");
   bprintf(h, "{\n");
-  if (is_extension_fragment) {
-    bprintf(h, "  return %sCopy(resultSet, from, count);\n", objc_result_set_name.ptr);
-  }
-  else {
-    bprintf(h, "  %s copy;\n", c_result_set_ref.ptr);
-    bprintf(h,
-            "  %sCopy(%s(resultSet), &copy%s);\n",
-            c_name.ptr,
-            c_convert.ptr,
-            out_stmt_proc ? "" : ", from, count");
-    bprintf(h, "  return (__bridge_transfer %s *)copy;\n", objc_name.ptr);
-  }
+  bprintf(h, "  %s copy;\n", c_result_set_ref.ptr);
+  bprintf(h,
+          "  %sCopy(%s(resultSet), &copy%s);\n",
+          c_name.ptr,
+          c_convert.ptr,
+          out_stmt_proc ? "" : ", from, count");
+  bprintf(h, "  return (__bridge_transfer %s *)copy;\n", is_ext ? objc_class_name.ptr : objc_name.ptr);
   bprintf(h, "}\n");
 
-  if (!is_extension_fragment) {
+  if (!is_ext) {
     bprintf(h,
             "\nstatic inline NSUInteger %s%sHash(%s *resultSet",
             objc_name.ptr,
@@ -455,6 +437,7 @@ static void cg_objc_proc_result_set(ast_node *ast) {
     bprintf(h, "}\n");
   }
 
+  CHARBUF_CLOSE(objc_class_name);
   CHARBUF_CLOSE(c_convert);
   CHARBUF_CLOSE(c_result_set_ref);
   CHARBUF_CLOSE(c_result_set);
@@ -489,17 +472,34 @@ static void cg_objc_one_stmt(ast_node *stmt) {
 }
 
 static void cg_objc_stmt_list(ast_node *head) {
+  bool_t containsAssembly = false;
+  symtab *assembly_query_names = symtab_new();
   for (ast_node *ast = head; ast; ast = ast->right) {
     EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc_attrs, ast);
-    // skip codegen here for attribute-annotated base query fragment since codegen only for included assembled fragment
-    if (misc_attrs && find_base_fragment_attr(misc_attrs, NULL, NULL)) {
-      sem_struct *sptr = stmt->sem->sptr;
-      // record number of base columns to track base rows vs extension rows
-      col_count_for_base_objc = sptr->count;
+    // skiping the base fragment getters since generating in each extension
+    // will cause colisions including two fragments headers
+    objc_frag_type = find_fragment_attr_type(misc_attrs);
+    if (objc_frag_type == FRAG_TYPE_BASE) {
       continue;
+    }
+    if (!containsAssembly) {
+      // record if an assembly is present
+      containsAssembly = objc_frag_type == FRAG_TYPE_ASSEMBLY;
+    }
+    if (objc_frag_type == FRAG_TYPE_EXTENSION) {
+      // record the extension base name to build the imports
+      symtab_add(assembly_query_names, base_fragment_name, NULL);
     }
     cg_objc_one_stmt(stmt);
   }
+
+  // Include header outputs in extension buffer into final generation if this is for
+  // extension only and disgard if this is for parent assembly query
+  if (!containsAssembly) {
+    bprintf(cg_header_output, "%s", objc_extension_header->ptr);
+  }
+
+  SYMTAB_CLEANUP(assembly_query_names);
 }
 
 
@@ -515,66 +515,19 @@ cql_noexport void cg_objc_main(ast_node *head) {
   exit_on_validating_schema();
   cg_objc_init();
 
-  int32_t error = 0;
   CHARBUF_OPEN(extension_header);
   CHARBUF_OPEN(header_file);
+  CHARBUF_OPEN(imports);
 
   objc_extension_header = &extension_header;
-  assembly_query_names = symtab_new();
-  current_parent_query_name = NULL;
-  col_count_for_base_objc = 0;
+
+  bprintf(&header_file, "%s", rt->header_prefix);
+  bprintf(&header_file, "\n#import <%s>\n", options.objc_c_include_path);
 
   // gen objc code ....
   cg_objc_stmt_list(head);
 
-  // The procedure has no result set
-  if (cg_header_output->used == 1 && objc_extension_header->used == 1) {
-    goto cleanup;
-  }
-
-  bprintf(&header_file, "%s", rt->header_prefix);
-  // if it is an extension fragment we don't need to include the C header,
-  // extension will rely only on assembly header to access data
-  if (!is_extension_fragment) {
-    bprintf(&header_file, "\n#import <%s>\n", options.objc_c_include_path);
-  }
-  if (is_extension_fragment && !is_assembly_query) {
-    CSTR assembly_query_namespace_val = options.objc_assembly_query_namespace;
-    // if we are currently emitting for extension fragment, it has to import and use row getters from parent
-    // assembly query generated header file, with parent namespace supplied through codegen
-    if (!assembly_query_namespace_val) {
-      cql_error("assembly query namespace not provided for extension fragment; no code gen.\n");
-      error = 1;
-      goto cleanup;
-    }
-
-    symtab_entry *parent_query_names = symtab_copy_sorted_payload(assembly_query_names, default_symtab_comparator);
-    for (uint32_t i = 0; i < assembly_query_names->count; i++) {
-      CG_CHARBUF_OPEN_SYM(objc_parent_name, parent_query_names[i].sym);
-      CHARBUF_OPEN(assembly_query_namespace);
-      if (strcmp(".", assembly_query_namespace_val) == 0) {
-        bprintf(&assembly_query_namespace, "");
-      }
-      else {
-        bprintf(&assembly_query_namespace, "%s/", assembly_query_namespace_val);
-      }
-      bprintf(&header_file,
-              "\n#import <%s%s.h>\n",
-              assembly_query_namespace.ptr,
-              objc_parent_name.ptr);
-      CHARBUF_CLOSE(assembly_query_namespace);
-      CHARBUF_CLOSE(objc_parent_name);
-    }
-    free(parent_query_names);
-  }
-
   bprintf(&header_file, "%s", rt->header_wrapper_begin);
-
-  // Include header outputs in extension buffer into final generation if this is for
-  // extension only and disgard if this is for parent assembly query
-  if (!is_assembly_query) {
-    bprintf(&header_file, "%s", extension_header.ptr);
-  }
 
   bprintf(&header_file, "%s", cg_header_output->ptr);
   bprintf(&header_file, "%s", rt->header_wrapper_end);
@@ -582,17 +535,10 @@ cql_noexport void cg_objc_main(ast_node *head) {
   CSTR header_file_name = options.file_names[0];
   cql_write_file(header_file_name, header_file.ptr);
 
-cleanup:
+  CHARBUF_CLOSE(imports);
   CHARBUF_CLOSE(header_file);
   CHARBUF_CLOSE(extension_header);
-  SYMTAB_CLEANUP(assembly_query_names);
 
   // reset globals so they don't interfere with leaksan
   objc_extension_header = NULL;
-  current_parent_query_name = NULL;
-  col_count_for_base_objc = 0;
-
-  if (error) {
-    cql_cleanup_and_exit(error);
-  }
 }

@@ -14934,7 +14934,7 @@ SELECT 3) AS A;
   |     | | {select_expr}: A: bool notnull
   |     |   | {in_pred}: bool notnull
   |     |   | | {int 1}: integer notnull
-  |     |   | | {select_stmt}: _anon: integer notnull
+  |     |   | | {select_stmt}: _anon: integer
   |     |   |   | {select_core_list}: UNION ALL: { _anon: integer notnull }
   |     |   |   | | {select_core}: select: { _anon: integer notnull }
   |     |   |   | | | {select_expr_list_con}: select: { _anon: integer notnull }
@@ -15809,6 +15809,32 @@ SET not_null_object := attest_notnull(obj_var);
   | {name not_null_object}: not_null_object: object notnull variable
   | {call}: obj_var: object notnull variable
     | {name attest_notnull}: obj_var: object notnull variable
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {name obj_var}: obj_var: object variable
+
+The statement ending at line XXXX
+
+SET not_null_object := ifnull_crash(obj_var);
+
+  {assign}: not_null_object: object notnull variable
+  | {name not_null_object}: not_null_object: object notnull variable
+  | {call}: obj_var: object notnull variable
+    | {name ifnull_crash}: obj_var: object notnull variable
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {name obj_var}: obj_var: object variable
+
+The statement ending at line XXXX
+
+SET not_null_object := ifnull_throw(obj_var);
+
+  {assign}: not_null_object: object notnull variable
+  | {name not_null_object}: not_null_object: object notnull variable
+  | {call}: obj_var: object notnull variable
+    | {name ifnull_throw}: obj_var: object notnull variable
     | {call_arg_list}
       | {call_filter_clause}
       | {arg_list}: ok
@@ -56723,4 +56749,290 @@ Error at test/sem_test.sql:XXXX : in select_if_nothing_expr : CQL0369: The (sele
         |   | {select_limit}
         |     | {select_offset}
         | {int 0}: integer notnull
+
+The statement ending at line XXXX
+
+SELECT ( SELECT count(*)
+  FROM foo
+  WHERE 0 );
+
+  {select_stmt}: select: { _anon: integer notnull }
+  | {select_core_list}: select: { _anon: integer notnull }
+  | | {select_core}: select: { _anon: integer notnull }
+  |   | {select_expr_list_con}: select: { _anon: integer notnull }
+  |     | {select_expr_list}: select: { _anon: integer notnull }
+  |     | | {select_expr}: _anon: integer notnull
+  |     |   | {select_stmt}: _anon: integer notnull
+  |     |     | {select_core_list}: select: { _anon: integer notnull }
+  |     |     | | {select_core}: select: { _anon: integer notnull }
+  |     |     |   | {select_expr_list_con}: select: { _anon: integer notnull }
+  |     |     |     | {select_expr_list}: select: { _anon: integer notnull }
+  |     |     |     | | {select_expr}: integer notnull
+  |     |     |     |   | {call}: integer notnull
+  |     |     |     |     | {name count}: integer notnull
+  |     |     |     |     | {call_arg_list}
+  |     |     |     |       | {call_filter_clause}
+  |     |     |     |       | {arg_list}: ok
+  |     |     |     |         | {star}: integer
+  |     |     |     | {select_from_etc}: TABLE { foo: foo }
+  |     |     |       | {table_or_subquery_list}: TABLE { foo: foo }
+  |     |     |       | | {table_or_subquery}: TABLE { foo: foo }
+  |     |     |       |   | {name foo}: TABLE { foo: foo }
+  |     |     |       | {select_where}
+  |     |     |         | {opt_where}: integer notnull
+  |     |     |         | | {int 0}: integer notnull
+  |     |     |         | {select_groupby}
+  |     |     |           | {select_having}
+  |     |     | {select_orderby}
+  |     |       | {select_limit}
+  |     |         | {select_offset}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT ( SELECT *
+  FROM (SELECT 1 AS x) AS T );
+
+  {select_stmt}: select: { x: integer }
+  | {select_core_list}: select: { x: integer }
+  | | {select_core}: select: { x: integer }
+  |   | {select_expr_list_con}: select: { x: integer }
+  |     | {select_expr_list}: select: { x: integer }
+  |     | | {select_expr}: x: integer
+  |     |   | {select_stmt}: x: integer
+  |     |     | {select_core_list}: select: { x: integer notnull }
+  |     |     | | {select_core}: select: { x: integer notnull }
+  |     |     |   | {select_expr_list_con}: select: { x: integer notnull }
+  |     |     |     | {select_expr_list}: select: { x: integer notnull }
+  |     |     |     | | {star}: select: { x: integer notnull }
+  |     |     |     | {select_from_etc}: TABLE { T: select }
+  |     |     |       | {table_or_subquery_list}: TABLE { T: select }
+  |     |     |       | | {table_or_subquery}: TABLE { T: select }
+  |     |     |       |   | {select_stmt}: select: { x: integer notnull }
+  |     |     |       |   | | {select_core_list}: select: { x: integer notnull }
+  |     |     |       |   | | | {select_core}: select: { x: integer notnull }
+  |     |     |       |   | |   | {select_expr_list_con}: select: { x: integer notnull }
+  |     |     |       |   | |     | {select_expr_list}: select: { x: integer notnull }
+  |     |     |       |   | |     | | {select_expr}: x: integer notnull
+  |     |     |       |   | |     |   | {int 1}: integer notnull
+  |     |     |       |   | |     |   | {opt_as_alias}
+  |     |     |       |   | |     |     | {name x}
+  |     |     |       |   | |     | {select_from_etc}: ok
+  |     |     |       |   | |       | {select_where}
+  |     |     |       |   | |         | {select_groupby}
+  |     |     |       |   | |           | {select_having}
+  |     |     |       |   | | {select_orderby}
+  |     |     |       |   |   | {select_limit}
+  |     |     |       |   |     | {select_offset}
+  |     |     |       |   | {opt_as_alias}
+  |     |     |       |     | {name T}
+  |     |     |       | {select_where}
+  |     |     |         | {select_groupby}
+  |     |     |           | {select_having}
+  |     |     | {select_orderby}
+  |     |       | {select_limit}
+  |     |         | {select_offset}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT ( SELECT sum(id)
+  FROM foo
+  WHERE 0 );
+
+  {select_stmt}: select: { _anon: integer }
+  | {select_core_list}: select: { _anon: integer }
+  | | {select_core}: select: { _anon: integer }
+  |   | {select_expr_list_con}: select: { _anon: integer }
+  |     | {select_expr_list}: select: { _anon: integer }
+  |     | | {select_expr}: _anon: integer
+  |     |   | {select_stmt}: _anon: integer
+  |     |     | {select_core_list}: select: { _anon: integer }
+  |     |     | | {select_core}: select: { _anon: integer }
+  |     |     |   | {select_expr_list_con}: select: { _anon: integer }
+  |     |     |     | {select_expr_list}: select: { _anon: integer }
+  |     |     |     | | {select_expr}: integer
+  |     |     |     |   | {call}: integer
+  |     |     |     |     | {name sum}: integer
+  |     |     |     |     | {call_arg_list}
+  |     |     |     |       | {call_filter_clause}
+  |     |     |     |       | {arg_list}: ok
+  |     |     |     |         | {name id}: id: integer notnull
+  |     |     |     | {select_from_etc}: TABLE { foo: foo }
+  |     |     |       | {table_or_subquery_list}: TABLE { foo: foo }
+  |     |     |       | | {table_or_subquery}: TABLE { foo: foo }
+  |     |     |       |   | {name foo}: TABLE { foo: foo }
+  |     |     |       | {select_where}
+  |     |     |         | {opt_where}: integer notnull
+  |     |     |         | | {int 0}: integer notnull
+  |     |     |         | {select_groupby}
+  |     |     |           | {select_having}
+  |     |     | {select_orderby}
+  |     |       | {select_limit}
+  |     |         | {select_offset}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT ( SELECT 1 + 3
+  WHERE 0 );
+
+  {select_stmt}: select: { _anon: integer }
+  | {select_core_list}: select: { _anon: integer }
+  | | {select_core}: select: { _anon: integer }
+  |   | {select_expr_list_con}: select: { _anon: integer }
+  |     | {select_expr_list}: select: { _anon: integer }
+  |     | | {select_expr}: _anon: integer
+  |     |   | {select_stmt}: _anon: integer
+  |     |     | {select_core_list}: select: { _anon: integer notnull }
+  |     |     | | {select_core}: select: { _anon: integer notnull }
+  |     |     |   | {select_expr_list_con}: select: { _anon: integer notnull }
+  |     |     |     | {select_expr_list}: select: { _anon: integer notnull }
+  |     |     |     | | {select_expr}: integer notnull
+  |     |     |     |   | {add}: integer notnull
+  |     |     |     |     | {int 1}: integer notnull
+  |     |     |     |     | {int 3}: integer notnull
+  |     |     |     | {select_from_etc}: ok
+  |     |     |       | {select_where}
+  |     |     |         | {opt_where}: integer notnull
+  |     |     |         | | {int 0}: integer notnull
+  |     |     |         | {select_groupby}
+  |     |     |           | {select_having}
+  |     |     | {select_orderby}
+  |     |       | {select_limit}
+  |     |         | {select_offset}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT ( WITH
+y (x) AS (SELECT 1 AS x)
+SELECT *
+  FROM y );
+
+  {select_stmt}: select: { x: integer }
+  | {select_core_list}: select: { x: integer }
+  | | {select_core}: select: { x: integer }
+  |   | {select_expr_list_con}: select: { x: integer }
+  |     | {select_expr_list}: select: { x: integer }
+  |     | | {select_expr}: x: integer
+  |     |   | {with_select_stmt}: x: integer
+  |     |     | {with}
+  |     |     | | {cte_tables}: ok
+  |     |     |   | {cte_table}: y: { x: integer notnull }
+  |     |     |     | {cte_decl}: y: { x: integer notnull }
+  |     |     |     | | {name y}
+  |     |     |     | | {name_list}
+  |     |     |     |   | {name x}
+  |     |     |     | {select_stmt}: select: { x: integer notnull }
+  |     |     |       | {select_core_list}: select: { x: integer notnull }
+  |     |     |       | | {select_core}: select: { x: integer notnull }
+  |     |     |       |   | {select_expr_list_con}: select: { x: integer notnull }
+  |     |     |       |     | {select_expr_list}: select: { x: integer notnull }
+  |     |     |       |     | | {select_expr}: x: integer notnull
+  |     |     |       |     |   | {int 1}: integer notnull
+  |     |     |       |     |   | {opt_as_alias}
+  |     |     |       |     |     | {name x}
+  |     |     |       |     | {select_from_etc}: ok
+  |     |     |       |       | {select_where}
+  |     |     |       |         | {select_groupby}
+  |     |     |       |           | {select_having}
+  |     |     |       | {select_orderby}
+  |     |     |         | {select_limit}
+  |     |     |           | {select_offset}
+  |     |     | {select_stmt}: select: { x: integer notnull }
+  |     |       | {select_core_list}: select: { x: integer notnull }
+  |     |       | | {select_core}: select: { x: integer notnull }
+  |     |       |   | {select_expr_list_con}: select: { x: integer notnull }
+  |     |       |     | {select_expr_list}: select: { x: integer notnull }
+  |     |       |     | | {star}: select: { x: integer notnull }
+  |     |       |     | {select_from_etc}: TABLE { y: y }
+  |     |       |       | {table_or_subquery_list}: TABLE { y: y }
+  |     |       |       | | {table_or_subquery}: TABLE { y: y }
+  |     |       |       |   | {name y}: TABLE { y: y }
+  |     |       |       | {select_where}
+  |     |       |         | {select_groupby}
+  |     |       |           | {select_having}
+  |     |       | {select_orderby}
+  |     |         | {select_limit}
+  |     |           | {select_offset}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT ( SELECT 1
+UNION ALL
+SELECT 2 ) AS x;
+
+  {select_stmt}: select: { x: integer }
+  | {select_core_list}: select: { x: integer }
+  | | {select_core}: select: { x: integer }
+  |   | {select_expr_list_con}: select: { x: integer }
+  |     | {select_expr_list}: select: { x: integer }
+  |     | | {select_expr}: x: integer
+  |     |   | {select_stmt}: _anon: integer
+  |     |   | | {select_core_list}: UNION ALL: { _anon: integer notnull }
+  |     |   | | | {select_core}: select: { _anon: integer notnull }
+  |     |   | | | | {select_expr_list_con}: select: { _anon: integer notnull }
+  |     |   | | |   | {select_expr_list}: select: { _anon: integer notnull }
+  |     |   | | |   | | {select_expr}: integer notnull
+  |     |   | | |   |   | {int 1}: integer notnull
+  |     |   | | |   | {select_from_etc}: ok
+  |     |   | | |     | {select_where}
+  |     |   | | |       | {select_groupby}
+  |     |   | | |         | {select_having}
+  |     |   | | | {select_core_compound}
+  |     |   | |   | {int 2}
+  |     |   | |   | {select_core_list}: select: { _anon: integer notnull }
+  |     |   | |     | {select_core}: select: { _anon: integer notnull }
+  |     |   | |       | {select_expr_list_con}: select: { _anon: integer notnull }
+  |     |   | |         | {select_expr_list}: select: { _anon: integer notnull }
+  |     |   | |         | | {select_expr}: integer notnull
+  |     |   | |         |   | {int 2}: integer notnull
+  |     |   | |         | {select_from_etc}: ok
+  |     |   | |           | {select_where}
+  |     |   | |             | {select_groupby}
+  |     |   | |               | {select_having}
+  |     |   | | {select_orderby}
+  |     |   |   | {select_limit}
+  |     |   |     | {select_offset}
+  |     |   | {opt_as_alias}
+  |     |     | {name x}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
 

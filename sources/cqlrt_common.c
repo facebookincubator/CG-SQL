@@ -958,6 +958,7 @@ void cql_release_offsets(void *_Nonnull pv, cql_uint16 refs_count, cql_uint16 re
     // each entry then tells us the offset of an embedded pointer
     for (cql_int32 i = 0; i < refs_count; i++) {
       cql_release(*(cql_type_ref *)(base + refs_offset));
+      *(cql_type_ref *)(base + refs_offset) = NULL;
       refs_offset += sizeof(cql_type_ref);
     }
   }

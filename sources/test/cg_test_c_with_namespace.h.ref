@@ -736,6 +736,12 @@ extern cql_string_ref _Nullable text_func_create(void);
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
 extern void unused_temp(cql_nullable_int32 i, cql_int32 *_Nonnull o);
 
 // The statement ending at line XXXX
@@ -2377,6 +2383,11 @@ extern void set_out_arg_null_test(cql_nullable_int32 *_Nonnull x);
 
 // The statement ending at line XXXX
 extern void set_out_arg_notnull_test(cql_int32 *_Nonnull x);
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code early_close_cursor(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX
 extern void end_proc(void);

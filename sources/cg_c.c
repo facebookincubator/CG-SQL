@@ -2156,6 +2156,34 @@ static void cg_func_ifnull(ast_node *call_ast, charbuf *is_null, charbuf *value)
   cg_func_coalesce(call_ast, is_null, value);
 }
 
+static void cg_func_ifnull_throw(ast_node *call_ast, charbuf *is_null, charbuf *value) {
+  Contract(is_ast_call(call_ast));
+  EXTRACT_ANY_NOTNULL(name_ast, call_ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, call_ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  // notnull ( a_nullable_expression )
+
+  EXTRACT_ANY_NOTNULL(expr, arg_list->left);
+
+  // result known to be not null so easy codegen
+
+  sem_t sem_type_expr = expr->sem->sem_type;
+  Invariant(is_nullable(sem_type_expr));  // expression must already be in a temp
+
+  CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
+    bprintf(cg_main_output, "if (%s) {\n", expr_is_null.ptr);
+    bprintf(cg_main_output, "  _rc_ = SQLITE_ERROR;\n");
+    bprintf(cg_main_output, "  goto %s;\n", error_target);
+    bprintf(cg_main_output, "}\n");
+    error_target_used = 1;
+
+    bprintf(is_null, "0");
+    bprintf(value, "%s", expr_value.ptr);
+  CG_POP_EVAL(expr);
+}
+
 static void cg_func_attest_notnull(ast_node *call_ast, charbuf *is_null, charbuf *value) {
   Contract(is_ast_call(call_ast));
   EXTRACT_ANY_NOTNULL(name_ast, call_ast->left);
@@ -2177,6 +2205,11 @@ static void cg_func_attest_notnull(ast_node *call_ast, charbuf *is_null, charbuf
     bprintf(is_null, "0");
     bprintf(value, "%s", expr_value.ptr);
   CG_POP_EVAL(expr);
+}
+
+// synonym for attest_notnull -- we'll be getting rid of the other one soon
+static void cg_func_ifnull_crash(ast_node *call_ast, charbuf *is_null, charbuf *value) {
+  cg_func_attest_notnull(call_ast, is_null, value);
 }
 
 // There's a helper for this method, just call it.  Super easy.
@@ -2350,6 +2383,7 @@ static void cg_expr_select(ast_node *ast, CSTR op, charbuf *is_null, charbuf *va
   bprintf(cg_main_output, "_rc_ = sqlite3_step(_temp_stmt);\n");
   cg_error_on_rc_notequal("SQLITE_ROW");
   cg_get_column(sem_type_result, "_temp_stmt", 0, result_var.ptr, cg_main_output);
+  bprintf(cg_main_output, "_rc_ = SQLITE_OK;\n");
   bprintf(cg_main_output, "cql_finalize_stmt(&_temp_stmt);\n");
 
   CG_CLEANUP_RESULT_VAR();
@@ -2443,6 +2477,7 @@ static void cg_expr_select_if_nothing(ast_node *ast, CSTR op, charbuf *is_null, 
   CG_POP_EVAL(expr);
 
   bprintf(cg_main_output, "}\n");
+  bprintf(cg_main_output, "_rc_ = SQLITE_OK;\n");
   bprintf(cg_main_output, "cql_finalize_stmt(&_temp_stmt);\n");
 
   CHARBUF_CLOSE(select_value);
@@ -2498,6 +2533,7 @@ static void cg_expr_select_if_nothing_or_null(ast_node *ast, CSTR op, charbuf *i
   // note this may change the type but only in a compatible way
   cg_store(cg_main_output, result_var.ptr, sem_type_result, sem_type_select, select_is_null.ptr, select_value.ptr);
   bprintf(cg_main_output, "}\n");
+  bprintf(cg_main_output, "_rc_ = SQLITE_OK;\n");
   bprintf(cg_main_output, "cql_finalize_stmt(&_temp_stmt);\n");
 
   CHARBUF_CLOSE(select_value);
@@ -3728,7 +3764,7 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_fl
   if (exec_only && vars) {
     bprintf(cg_main_output, "_rc_ = sqlite3_step(%s_stmt);\n", stmt_name);
     cg_error_on_rc_notequal("SQLITE_DONE");
-
+    bprintf(cg_main_output, "_rc_ = SQLITE_OK;\n");
     bprintf(cg_main_output, "cql_finalize_stmt(&%s_stmt);\n", stmt_name);
   }
 
@@ -4397,10 +4433,25 @@ static void cg_open_stmt(ast_node *ast) {
 // might also do this. That's fine.
 static void cg_close_stmt(ast_node *ast) {
   Contract(is_ast_close_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
+  EXTRACT_ANY_NOTNULL(cursor_ast, ast->left);
+  EXTRACT_STRING(name, cursor_ast);
 
   // CLOSE [name]
-  bprintf(cg_main_output, "cql_finalize_stmt(&%s_stmt);\n", name);
+
+  sem_t sem_type = cursor_ast->sem->sem_type;
+
+  if (!(sem_type & SEM_TYPE_VALUE_CURSOR)) {
+    bprintf(cg_main_output, "cql_finalize_stmt(&%s_stmt);\n", name);
+  }
+
+  if (sem_type & SEM_TYPE_HAS_SHAPE_STORAGE) {
+    sem_struct *sptr = cursor_ast->sem->sptr;
+    int32_t refs_count = refs_count_sptr(sptr);
+
+    if (refs_count) {
+      bprintf(cg_main_output, "cql_teardown_row(%s);\n", name);
+    }
+  }
 }
 
 // The OUT statement copies the current value of a cursor into an implicit
@@ -6279,6 +6330,7 @@ cql_noexport void cg_c_main(ast_node *head) {
   bprintf(&body_file, "#pragma clang diagnostic ignored \"-Wbitwise-op-parentheses\"\n");
   bprintf(&body_file, "#pragma clang diagnostic ignored \"-Wshift-op-parentheses\"\n");
   bprintf(&body_file, "#pragma clang diagnostic ignored \"-Wlogical-not-parentheses\"\n");
+  bprintf(&body_file, "#pragma clang diagnostic ignored \"-Wlogical-op-parentheses\"\n");
   bprintf(&body_file, "#pragma clang diagnostic ignored \"-Wliteral-conversion\"\n");
 
   bprintf(&body_file, "%s", cg_fwd_ref_output->ptr);
@@ -6447,6 +6499,8 @@ cql_noexport void cg_c_init(void) {
   STMT_INIT(echo_stmt);
 
   FUNC_INIT(attest_notnull);
+  FUNC_INIT(ifnull_throw);
+  FUNC_INIT(ifnull_crash);
   FUNC_INIT(ifnull);
   FUNC_INIT(coalesce);
   FUNC_INIT(last_insert_rowid);

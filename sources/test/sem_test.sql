@@ -4214,6 +4214,18 @@ declare not_null_object object not null;
 -- - Error
 set not_null_object := attest_notnull(obj_var);
 
+-- TEST: convert object to not null -- ifnull_crash form
+-- + {assign}: not_null_object: object notnull variable
+-- + {name not_null_object}: not_null_object: object notnull variable
+-- - Error
+set not_null_object := ifnull_crash(obj_var);
+
+-- TEST: convert object to not null (throw semantic) -- same code path as above
+-- + {assign}: not_null_object: object notnull variable
+-- + {name not_null_object}: not_null_object: object notnull variable
+-- - Error
+set not_null_object := ifnull_throw(obj_var);
+
 -- TEST: attest with matching kind, ok to go
 -- + {assign}: price_d: real<dollars> variable
 -- + {name price_d}: price_d: real<dollars> variable
@@ -14275,3 +14287,33 @@ select (select 0 if nothing -1);
 -- + Error % CQL0369: The (select ... if nothing) construct is for use in top level expressions, not inside of other DML
 -- +1 Error
 delete from foo where id = (select 33 if nothing 0);
+
+-- TEST: nested select with count will be not null because count must return a row
+-- + {select_stmt}: select: { _anon: integer notnull }
+-- - Error
+select (select count(*) from foo where 0);
+
+-- TEST: nested select with select * is not examined for not nullness, but no crashes or anything
+-- +  {select_stmt}: select: { x: integer }
+-- - Error
+select (select * from (select 1 x) T);
+
+-- TEST: sum can return null, that's not a special case (sum(id) is weird but whatever)
+-- + {select_stmt}: select: { _anon: integer }
+-- - Error
+select (select sum(id) from foo where 0);
+
+-- TEST: any non aggregate with a where clause might be null
+-- + {select_stmt}: select: { _anon: integer }
+-- - Error
+select (select 1+3 where 0);
+
+-- TEST: with form is not simple, it doesn't get the treatment
+-- + {select_stmt}: select: { x: integer }
+-- - Error
+select (with y(*) as (select 1 x) select * from y);
+
+-- TEST: compound form is not simple, it doesn't get the treatment
+-- + {select_stmt}: select: { x: integer }
+-- - Error
+select (select 1 union all select 2) as x;

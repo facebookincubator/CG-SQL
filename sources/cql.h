@@ -95,7 +95,6 @@ typedef struct cmd_options {
   char **exclude_regions;
   int32_t exclude_regions_count;
   char *objc_c_include_path;
-  char *objc_assembly_query_namespace;
   char *c_include_namespace;
   char *java_class_under_test;
   char *java_package_name;
