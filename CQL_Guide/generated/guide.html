@@ -997,7 +997,7 @@
 </ul>
 <p>Returning now to our code as written, we see something very familiar:</p>
 <div class="sourceCode" id="cb23"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">call</span> printf(<span class="st">&#39;%s&#39;</span>, t);</span></code></pre></div>
-<p>Note we’ve used the single quote syntax here for no good reason other than illustration. There are no escape sequences here so either form would the job. Importantly, the string literal will not create a string object as before but the text variable <code>t</code> is of course a string reference. Before it can be used in a call to an un-declared function it must be converted into a temporary C string. This might require allocation in general, that allocation is automatically managed. Note that by default CQL assumes that calls to unknown C functions should be emitted as written. In this way you can use <code>printf</code> even though CQL knows nothing about it.</p>
+<p>Note we’ve used the single quote syntax here for no good reason other than illustration. There are no escape sequences here so either form would do the job. Importantly, the string literal will not create a string object as before but the text variable <code>t</code> is of course a string reference. Before it can be used in a call to an un-declared function it must be converted into a temporary C string. This might require allocation in general, that allocation is automatically managed. Note that by default CQL assumes that calls to unknown C functions should be emitted as written. In this way you can use <code>printf</code> even though CQL knows nothing about it.</p>
 <p>Lastly we have:</p>
 <div class="sourceCode" id="cb24"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">drop</span> <span class="kw">table</span> my_data;</span></code></pre></div>
 <p>This is not strictly necessary because the database is in memory anyway and the program is about to exit but there it is for illustration.</p>
@@ -1041,7 +1041,7 @@
 <span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">begin</span></span>
 <span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>   <span class="op">..</span>.</span>
 <span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end</span>;</span></code></pre></div>
-<p>This loop will run until there are no results left (it might not run at all if there are zero rows, that is not an error). The <code>FETCH</code> construct allows you to specify target variables, but if you do not do so, then a synethetic structure is automatically created to capture the projection of the <code>select</code>. In this case the columns are <code>pos</code> and <code>txt</code>. The automatically created storage exactly matches the type of the columns in the select list which could itself be tricky to calculate if the <code>select</code> is complex. In this case the <code>select</code> is quite simple and the columns of the result directly match the schema for <code>my_data</code>. An integer and a string reference. Both not null.</p>
+<p>This loop will run until there are no results left (it might not run at all if there are zero rows, that is not an error). The <code>FETCH</code> construct allows you to specify target variables, but if you do not do so, then a synthetic structure is automatically created to capture the projection of the <code>select</code>. In this case the columns are <code>pos</code> and <code>txt</code>. The automatically created storage exactly matches the type of the columns in the select list which could itself be tricky to calculate if the <code>select</code> is complex. In this case the <code>select</code> is quite simple and the columns of the result directly match the schema for <code>my_data</code>. An integer and a string reference. Both not null.</p>
 <div class="sourceCode" id="cb30"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">call</span> printf(<span class="ot">&quot;%d: %s\n&quot;</span>, C.pos, C.txt);</span></code></pre></div>
 <p>The storage for the cursor is given the same names as the columns of the projection of the select, in this case the columns were not renamed so <code>pos</code> and <code>txt</code> are the fields in the cursor. Double quotes were used in the format string to get the newline in there easily.</p>
 <div class="sourceCode" id="cb31"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">close</span> C;</span></code></pre></div>
@@ -1148,7 +1148,7 @@
 7 &amp; 3 == 2 | 1
 1 &lt;&lt; 2 == 4</code></pre>
 <p>However, before going any further it’s important to note that CQL is inherently a two-headed beast. Expressions are either evaluated by transpiling to C (like the predicate of an IF statement, or a variable assignment) or by sending them to SQLIte for evaluation (like expressions inside a <code>SELECT</code> statement or the <code>WHERE</code> part of a <code>DELETE</code>).</p>
-<p>CQL evaluation rules are designed to be as similar as possible but some variance is inevitable because evaluation is done in two fundamentally different way.</p>
+<p>CQL evaluation rules are designed to be as similar as possible but some variance is inevitable because evaluation is done in two fundamentally different ways.</p>
 <h3 id="order-of-evaluation">Order of Evaluation</h3>
 <pre><code>ASSIGNMENT:    :=
 LOGICAL_OR:    OR
@@ -1181,7 +1181,7 @@ CONCAT:        ||</code></pre>
 <span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span> r2 <span class="dt">real</span>;</span>
 <span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span> t2 text;</span>
 <span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span> bl2 <span class="dt">blob</span>;</span></code></pre></div>
-<p>ALL of <code>i1</code>, <code>i2</code>, <code>b1</code>, <code>b2</code>, <code>l1</code>, <code>l2</code>, <code>r1</code>, <code>r2</code>, <code>t1</code>, <code>t2</code>, and <code>bl1</code>, <code>bl2</code> are nullable. In some sense variables and columns declared nullable (by virtual of the missing <code>NOT NULL</code>) are the root sources of nullability in the SQL language. That and the <code>NULL</code> literal. Though there are other sources as we will see.</p>
+<p>ALL of <code>i1</code>, <code>i2</code>, <code>b1</code>, <code>b2</code>, <code>l1</code>, <code>l2</code>, <code>r1</code>, <code>r2</code>, <code>t1</code>, <code>t2</code>, and <code>bl1</code>, <code>bl2</code> are nullable. In some sense variables and columns declared nullable (by virtue of the missing <code>NOT NULL</code>) are the root sources of nullability in the SQL language. That and the <code>NULL</code> literal. Though there are other sources as we will see.</p>
 <p><code>NOT NULL</code> could be added to any of these, e.g.</p>
 <div class="sourceCode" id="cb38"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- real code should use better names than this :)</span></span>
 <span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span> i_nn <span class="dt">integer</span> <span class="kw">not</span> <span class="kw">null</span>;</span></code></pre></div>
@@ -1197,7 +1197,7 @@ CONCAT:        ||</code></pre>
 <li>the usual simple C escape sequences are supported</li>
 <li>the form for embedded hex characters is supported, however</li>
 <li>the \0NNN octal form is not supported, and</li>
-<li>embedded nulls in string literals (\0 or \0x00) are not supported (you must use blobs such cases)</li>
+<li>embedded nulls in string literals (\0 or \0x00) are not supported (you must use blobs in such cases)</li>
 </ul></li>
 <li>a single quoted string is a SQL style string literal
 <ul>
@@ -1238,8 +1238,8 @@ CONCAT:        ||</code></pre>
 <p>The C pre-processor is often combined with CQL in which case the <code>_FILE_</code> and <code>_LINE_</code> directives may be used to create literals; they will be preprocessed into normal literals.</p>
 <p>The use of <code>_FILE_</code> can give surprising results in the presence of build systems, hence the existence of <code>@FILE(...)</code>.</p>
 <h3 id="const-and-enumerations">Const and Enumerations</h3>
-<p>It’s possible to use named constants in CQL with nothing more than the C pre-processor featuers that have already appeared, however use of #define in such a way is not entirely satisfactory. For one thing, CQL will not know these constants exist in any way as they will be replaced before it ever sees them. This means CQL can’t provide their values for you in the JSON output for instance.</p>
-<p>To help with this probvlem, CQL includes constants, note, this is not the same as enumerated types as we’ll see later. You can now write something like this:</p>
+<p>It’s possible to use named constants in CQL with nothing more than the C pre-processor features that have already appeared, however use of #define in such a way is not entirely satisfactory. For one thing, CQL will not know these constants exist in any way as they will be replaced before it ever sees them. This means CQL can’t provide their values for you in the JSON output for instance.</p>
+<p>To help with this problem, CQL includes constants, note, this is not the same as enumerated types as we’ll see later. You can now write something like this:</p>
 <pre><code>declare enum business_type integer (
   restuarant,
   laundromat,
@@ -1269,13 +1269,13 @@ type  business_type
 <li>the enumeration can refer to previously defined enumerations as usual <code>(code = business_type.restaurant)</code></li>
 <li>Once the enumeration is defined you refer to its members in a fully qualified fashion <code>enum_name.member_name</code> elsewhere</li>
 </ul>
-<p>With these forms you get some additional useful output: * the JSON includes the enumerations and their values in their own section * you can use the <code>@emit_enums</code> directive to put declarations like this into the <code>.h</code> file that corresponds to the ccurrent compiland</p>
+<p>With these forms you get some additional useful output: * the JSON includes the enumerations and their values in their own section * you can use the <code>@emit_enums</code> directive to put declarations like this into the <code>.h</code> file that corresponds to the current compiland</p>
 <pre><code>enum business_type {
   business_type__restaurant = 1,
   business_type__laundromat = 2,
   business_type__corner_store = 14
 };</code></pre>
-<p>Note that C does not allow for floating point enumartions, so in case of floating point values such as:</p>
+<p>Note that C does not allow for floating point enumertions, so in case of floating point values such as:</p>
 <pre><code>declare enum floating real (
   one = 1.0,
   two = 2.0,
@@ -1289,7 +1289,7 @@ type  business_type
 #define floating__e 2.718280e+00
 #define floating__pi 3.141590e+00</code></pre>
 <p>In order to get useful expressions in enumeration values, constant folding and general evaluation was added to the compiler; these expressions work on any numeric type and the literal null. The supported operations include:</p>
-<p><code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>%</code>, <code>|</code>, <code>&amp;</code>, <code>&lt;&lt;</code>, <code>&gt;&gt;</code>, <code>~</code>, <code>and</code>, <code>or</code>, <code>not</code>, <code>==</code>, <code>&lt;=</code>, <code>&gt;=</code>, <code>!=</code>, <code>&lt;</code>, <code>&gt;</code>, the <code>cast</code> operator and the <code>case</code> forms (including the <code>iif</code> function). These are enough to make a lot of very interesting expressions, all of which are envaluated at compile time.</p>
+<p><code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>%</code>, <code>|</code>, <code>&amp;</code>, <code>&lt;&lt;</code>, <code>&gt;&gt;</code>, <code>~</code>, <code>and</code>, <code>or</code>, <code>not</code>, <code>==</code>, <code>&lt;=</code>, <code>&gt;=</code>, <code>!=</code>, <code>&lt;</code>, <code>&gt;</code>, the <code>cast</code> operator and the <code>case</code> forms (including the <code>iif</code> function). These are enough to make a lot of very interesting expressions, all of which are evaluated at compile time.</p>
 <p>Constant folding was added to allow for rich <code>enum</code> expressions, but there is also the <code>const()</code> primitive in the language which can appear anywhere a literal could appear. This allows you do things like:</p>
 <pre><code>create table something(
   x integer default const((1&lt;&lt;16)|0xf) /*  again the math is just for illustration */
@@ -1771,7 +1771,7 @@ set not_sens := sens;</code></pre>
 <li>OBJECT</li>
 <li>BLOB</li>
 </ul>
-<p>Each of these has their own macro for <code>retain</code> and <code>release</code> though all three actually turn into the exact same code in all the cu rrent CQL runtime implementations. In all cases the object is expected to be promptly freed when the reference count falls to zero.</p>
+<p>Each of these has their own macro for <code>retain</code> and <code>release</code> though all three actually turn into the exact same code in all the current CQL runtime implementations. In all cases the object is expected to be promptly freed when the reference count falls to zero.</p>
 <h3 id="reference-semantics">Reference Semantics</h3>
 <h4 id="stored-procedure-arguments">Stored Procedure Arguments</h4>
 <ul>
@@ -1889,12 +1889,12 @@ cql_cleanup:
 <h3 id="out-parameters">Out Parameters</h3>
 <p>Consider this procedure:</p>
 <div class="sourceCode" id="cb93"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a><span class="kw">create</span> <span class="kw">procedure</span> echo (<span class="kw">in</span> arg1 <span class="dt">integer</span> <span class="kw">not</span> <span class="kw">null</span>, <span class="kw">out</span> arg2 <span class="dt">integer</span> <span class="kw">not</span> <span class="kw">null</span>)</span>
-<span id="cb93-2"><a href="#cb93-2" aria-hidden="true" tabindex="-1"></a><span class="cf">begin</span> </span>
-<span id="cb93-3"><a href="#cb93-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">set</span> arg2 <span class="op">:=</span> arg1; </span>
+<span id="cb93-2"><a href="#cb93-2" aria-hidden="true" tabindex="-1"></a><span class="cf">begin</span></span>
+<span id="cb93-3"><a href="#cb93-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">set</span> arg2 <span class="op">:=</span> arg1;</span>
 <span id="cb93-4"><a href="#cb93-4" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span>;</span></code></pre></div>
 <p>Here <code>arg2</code> has been declared <code>out</code>. CQL out parameters are very similar to “by reference” arguments in other langauges and indeed they compile into a simple pointer reference in the generated C code. One notable difference is that, in CQL, <code>out</code> parameters for reference types and nullable types are always set to NULL by default. This is another way that an otherwise non-null reference variable can end up with a null in it.</p>
 <p>Looking at the one line in the body of this procedure:</p>
-<div class="sourceCode" id="cb94"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">set</span> arg2 <span class="op">:=</span> arg1; </span></code></pre></div>
+<div class="sourceCode" id="cb94"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">set</span> arg2 <span class="op">:=</span> arg1;</span></code></pre></div>
 <p>The input argument <code>arg1</code> is unconditionally stored in the output. Note that the <code>in</code> keyword is entirely optional and does nothing other than perhaps add some clarity. CQL also supports <code>inout</code> arguments which are expected to contain non-garbage values on entry. If the procedure is called from CQL, the compiler will arrange for this to be true.</p>
 <ul>
 <li><code>in</code> arguments contain a valid value</li>
@@ -1908,11 +1908,11 @@ cql_cleanup:
 <li><code>inout</code> reference arguments are assumed valid at entry</li>
 </ul>
 <p>If CQL changes an <code>out</code> or <code>inout</code> value it first releases the existing value and then retains the new value. In all cases the caller will ultimately release any non-null out reference either because it was borrowed (<code>in</code>) or the caller now/still owns it (<code>inout</code> or <code>in</code>).</p>
-<p>Aggressively putting <code>NULL</code> into <code>out</code> argumetns normalizes pointer handling for all <code>out</code> types.</p>
+<p>Aggressively putting <code>NULL</code> into <code>out</code> arguments normalizes pointer handling for all <code>out</code> types.</p>
 <h3 id="procedure-calls">Procedure Calls</h3>
 <p>The usual <code>call</code> syntax is used to invoke a procedure. It returns no value but it can have any number of <code>out</code> arguments.</p>
-<pre><code>  declare scratch integer not null; 
-  call echo(12, scratch); 
+<pre><code>  declare scratch integer not null;
+  call echo(12, scratch);
   scratch == 12; -- true</code></pre>
 <p>The let’s go over the most essential bits of control flow.</p>
 <h3 id="the-if-statement">The IF statement</h3>
@@ -1922,7 +1922,7 @@ cql_cleanup:
 <span id="cb96-3"><a href="#cb96-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> foo <span class="op">=</span> <span class="dv">1</span> <span class="cf">then</span></span>
 <span id="cb96-4"><a href="#cb96-4" aria-hidden="true" tabindex="-1"></a>   <span class="kw">set</span> result <span class="op">:=</span> <span class="dv">1</span>;</span>
 <span id="cb96-5"><a href="#cb96-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span> <span class="cf">if</span> foo <span class="op">=</span> <span class="dv">2</span> <span class="cf">then</span></span>
-<span id="cb96-6"><a href="#cb96-6" aria-hidden="true" tabindex="-1"></a>   <span class="kw">set</span> result <span class="op">:=</span> <span class="dv">3</span>; </span>
+<span id="cb96-6"><a href="#cb96-6" aria-hidden="true" tabindex="-1"></a>   <span class="kw">set</span> result <span class="op">:=</span> <span class="dv">3</span>;</span>
 <span id="cb96-7"><a href="#cb96-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span></span>
 <span id="cb96-8"><a href="#cb96-8" aria-hidden="true" tabindex="-1"></a>   <span class="kw">set</span> result <span class="op">:=</span> <span class="dv">5</span>;</span>
 <span id="cb96-9"><a href="#cb96-9" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end</span> <span class="cf">if</span>;</span>
@@ -1960,7 +1960,7 @@ cql_cleanup:
 <p>This is an immediate sign that there will be an unusual exit condition. The loop will never end without one because <code>1</code> will never be false.</p>
 <div class="sourceCode" id="cb100"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb100-1"><a href="#cb100-1" aria-hidden="true" tabindex="-1"></a>   <span class="cf">if</span> x <span class="op">&lt;</span> <span class="dv">0</span> <span class="cf">then</span></span>
 <span id="cb100-2"><a href="#cb100-2" aria-hidden="true" tabindex="-1"></a>     leave;</span></code></pre></div>
-<p>Now here we’ve encoded our exit condition a bit strangely we might have done the equivalent job with a normal conditionn in the predicate part of the <code>while</code> statement but for illustration anyway, when x becomes negative <code>leave</code> will cause us to exit the loop. This is like <code>break</code> in C.</p>
+<p>Now here we’ve encoded our exit condition a bit strangely we might have done the equivalent job with a normal condition in the predicate part of the <code>while</code> statement but for illustration anyway, when x becomes negative <code>leave</code> will cause us to exit the loop. This is like <code>break</code> in C.</p>
 <div class="sourceCode" id="cb101"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb101-1"><a href="#cb101-1" aria-hidden="true" tabindex="-1"></a>   <span class="cf">else</span> <span class="cf">if</span> x % <span class="dv">100</span> <span class="op">=</span> <span class="dv">0</span> <span class="cf">then</span></span>
 <span id="cb101-2"><a href="#cb101-2" aria-hidden="true" tabindex="-1"></a>     <span class="kw">continue</span>;</span></code></pre></div>
 <p>This bit says that on every 100th iteration we go back to the start of the loop. So the next bit will not run, which is the printing.</p>
@@ -1969,14 +1969,13 @@ cql_cleanup:
 <span id="cb102-3"><a href="#cb102-3" aria-hidden="true" tabindex="-1"></a>   <span class="cf">end</span> <span class="cf">if</span>;</span></code></pre></div>
 <p>Finishing up the control flow, on every 10th iteration we print the value of the loop variable.</p>
 <h3 id="the-try-catch-and-throw-statements">The TRY, CATCH, and THROW Statements</h3>
-<p>This example illustrates catching an error from some DML, and recovering rather than letting the error cascade up.<br />
-This is the common “upsert” pattern (insert or update)</p>
+<p>This example illustrates catching an error from some DML, and recovering rather than letting the error cascade up. This is the common “upsert” pattern (insert or update)</p>
 <div class="sourceCode" id="cb103"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb103-1"><a href="#cb103-1" aria-hidden="true" tabindex="-1"></a><span class="kw">create</span> <span class="kw">procedure</span> upsert_foo(id_ <span class="dt">integer</span>, t_ text)</span>
 <span id="cb103-2"><a href="#cb103-2" aria-hidden="true" tabindex="-1"></a><span class="cf">begin</span></span>
 <span id="cb103-3"><a href="#cb103-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">begin</span> try</span>
 <span id="cb103-4"><a href="#cb103-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">insert</span> <span class="kw">into</span> foo(<span class="kw">id</span>, t) <span class="kw">values</span>(id_, t_)</span>
-<span id="cb103-5"><a href="#cb103-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end</span> try; </span>
-<span id="cb103-6"><a href="#cb103-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">begin</span> catch </span>
+<span id="cb103-5"><a href="#cb103-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end</span> try;</span>
+<span id="cb103-6"><a href="#cb103-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">begin</span> catch</span>
 <span id="cb103-7"><a href="#cb103-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">begin</span> try</span>
 <span id="cb103-8"><a href="#cb103-8" aria-hidden="true" tabindex="-1"></a>      <span class="kw">update</span> foo <span class="kw">set</span> t <span class="op">=</span> t_ <span class="kw">where</span> <span class="kw">id</span> <span class="op">=</span> id_;</span>
 <span id="cb103-9"><a href="#cb103-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">end</span> try;</span>
@@ -1984,14 +1983,14 @@ This is the common “upsert” pattern (insert or update)</p>
 <span id="cb103-11"><a href="#cb103-11" aria-hidden="true" tabindex="-1"></a>      printf(<span class="ot">&quot;Error!\n&quot;</span>);</span>
 <span id="cb103-12"><a href="#cb103-12" aria-hidden="true" tabindex="-1"></a>      throw;</span>
 <span id="cb103-13"><a href="#cb103-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">end</span> catch;</span>
-<span id="cb103-14"><a href="#cb103-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end</span> catch; </span>
+<span id="cb103-14"><a href="#cb103-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end</span> catch;</span>
 <span id="cb103-15"><a href="#cb103-15" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span>;</span></code></pre></div>
 <p>Once again, let’s go over this section by section:</p>
 <div class="sourceCode" id="cb104"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb104-1"><a href="#cb104-1" aria-hidden="true" tabindex="-1"></a>  <span class="cf">begin</span> try</span>
 <span id="cb104-2"><a href="#cb104-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">insert</span> <span class="kw">into</span> foo(<span class="kw">id</span>, t) <span class="kw">values</span>(id_, t_)</span>
-<span id="cb104-3"><a href="#cb104-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end</span> try; </span></code></pre></div>
+<span id="cb104-3"><a href="#cb104-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end</span> try;</span></code></pre></div>
 <p>Normally if the <code>insert</code> statement fails, the procedure will exit with a failure result code. Here, instead, we prepare to catch that error.</p>
-<div class="sourceCode" id="cb105"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb105-1"><a href="#cb105-1" aria-hidden="true" tabindex="-1"></a>  <span class="cf">begin</span> catch </span>
+<div class="sourceCode" id="cb105"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb105-1"><a href="#cb105-1" aria-hidden="true" tabindex="-1"></a>  <span class="cf">begin</span> catch</span>
 <span id="cb105-2"><a href="#cb105-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">begin</span> try</span>
 <span id="cb105-3"><a href="#cb105-3" aria-hidden="true" tabindex="-1"></a>      <span class="kw">update</span> foo <span class="kw">set</span> t <span class="op">=</span> t_ <span class="kw">where</span> <span class="kw">id</span> <span class="op">=</span> id_;</span>
 <span id="cb105-4"><a href="#cb105-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">end</span> try;</span></code></pre></div>
@@ -2002,44 +2001,41 @@ This is the common “upsert” pattern (insert or update)</p>
 <span id="cb106-4"><a href="#cb106-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">end</span> catch;</span></code></pre></div>
 <p>Here we print a diagnostic message and then use the <code>throw</code> keyword to rethrow the previous failure. Throw will create a failure in the current block using the most recent result code from SQLite if it is an error, or else the general <code>SQLITE_ERROR</code> result code if there is no such error. In this case the failure code for the <code>update</code> statement will become the result code of the current procedure.</p>
 <p>This leaves only the closing markers:</p>
-<div class="sourceCode" id="cb107"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb107-1"><a href="#cb107-1" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end</span> catch; </span>
+<div class="sourceCode" id="cb107"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb107-1"><a href="#cb107-1" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end</span> catch;</span>
 <span id="cb107-2"><a href="#cb107-2" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span>;</span></code></pre></div>
 <p>If control flow reaches the normal end of the procedure it will return <code>SQLITE_OK</code>.</p>
 <h3 id="procedures-as-functions-motivation-and-example">Procedures as Functions: Motivation and Example</h3>
-<p>The calling convention for CQL stored procedures often (usually) requires that the procedure returns a result code from SQLite.<br />
-This makes it impossible to write a procedure that returns a result like a function, the result position is already used for the error code. You can get around this problem by using <code>out</code> arguments as your return codes. So for instance, this version of the Fibonacci function is possible.</p>
+<p>The calling convention for CQL stored procedures often (usually) requires that the procedure returns a result code from SQLite. This makes it impossible to write a procedure that returns a result like a function, the result position is already used for the error code. You can get around this problem by using <code>out</code> arguments as your return codes. So for instance, this version of the Fibonacci function is possible.</p>
 <div class="sourceCode" id="cb108"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb108-1"><a href="#cb108-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- this works, but it is awkward</span></span>
-<span id="cb108-2"><a href="#cb108-2" aria-hidden="true" tabindex="-1"></a><span class="kw">create</span> <span class="kw">procedure</span> fib (<span class="kw">in</span> arg <span class="dt">integer</span> <span class="kw">not</span> <span class="kw">null</span>, <span class="kw">out</span> result <span class="dt">integer</span> <span class="kw">not</span> <span class="kw">null</span>) </span>
+<span id="cb108-2"><a href="#cb108-2" aria-hidden="true" tabindex="-1"></a><span class="kw">create</span> <span class="kw">procedure</span> fib (<span class="kw">in</span> arg <span class="dt">integer</span> <span class="kw">not</span> <span class="kw">null</span>, <span class="kw">out</span> result <span class="dt">integer</span> <span class="kw">not</span> <span class="kw">null</span>)</span>
 <span id="cb108-3"><a href="#cb108-3" aria-hidden="true" tabindex="-1"></a><span class="cf">begin</span></span>
 <span id="cb108-4"><a href="#cb108-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (arg <span class="op">&lt;=</span> <span class="dv">2</span>) <span class="cf">then</span></span>
 <span id="cb108-5"><a href="#cb108-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">set</span> result <span class="op">:=</span> <span class="dv">1</span>;</span>
-<span id="cb108-6"><a href="#cb108-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span> </span>
-<span id="cb108-7"><a href="#cb108-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">declare</span> t <span class="dt">integer</span> <span class="kw">not</span> <span class="kw">null</span>; </span>
-<span id="cb108-8"><a href="#cb108-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">call</span> fib(arg <span class="op">-</span> <span class="dv">1</span>,  result); </span>
-<span id="cb108-9"><a href="#cb108-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">call</span> fib(arg <span class="op">-</span> <span class="dv">2</span>,  t); </span>
+<span id="cb108-6"><a href="#cb108-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span></span>
+<span id="cb108-7"><a href="#cb108-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">declare</span> t <span class="dt">integer</span> <span class="kw">not</span> <span class="kw">null</span>;</span>
+<span id="cb108-8"><a href="#cb108-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">call</span> fib(arg <span class="op">-</span> <span class="dv">1</span>,  result);</span>
+<span id="cb108-9"><a href="#cb108-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">call</span> fib(arg <span class="op">-</span> <span class="dv">2</span>,  t);</span>
 <span id="cb108-10"><a href="#cb108-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">set</span> result <span class="op">:=</span> t <span class="op">+</span> result;</span>
-<span id="cb108-11"><a href="#cb108-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end</span> <span class="cf">if</span>; </span>
+<span id="cb108-11"><a href="#cb108-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end</span> <span class="cf">if</span>;</span>
 <span id="cb108-12"><a href="#cb108-12" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span>;</span></code></pre></div>
 <p>The above works, but the notation is very awkward.</p>
 <p>CQL has a “procedures as functions” feature that tries to make this more pleasant by making it possible to use function call notation on a procedure whose last argument is an <code>out</code> variable. You simply call the procedure like it was a function and omit the last argument in the call. A temporary variable is automatically created to hold the result and that temporary becomes the logical return of the function. For semantic analysis, the result type of the function becomes the type of the <code>out</code> argument.</p>
 <div class="sourceCode" id="cb109"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb109-1"><a href="#cb109-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- rewritten with function call syntax</span></span>
-<span id="cb109-2"><a href="#cb109-2" aria-hidden="true" tabindex="-1"></a><span class="kw">create</span> <span class="kw">procedure</span> fib (<span class="kw">in</span> arg <span class="dt">integer</span> <span class="kw">not</span> <span class="kw">null</span>, <span class="kw">out</span> result <span class="dt">integer</span> <span class="kw">not</span> <span class="kw">null</span>) </span>
+<span id="cb109-2"><a href="#cb109-2" aria-hidden="true" tabindex="-1"></a><span class="kw">create</span> <span class="kw">procedure</span> fib (<span class="kw">in</span> arg <span class="dt">integer</span> <span class="kw">not</span> <span class="kw">null</span>, <span class="kw">out</span> result <span class="dt">integer</span> <span class="kw">not</span> <span class="kw">null</span>)</span>
 <span id="cb109-3"><a href="#cb109-3" aria-hidden="true" tabindex="-1"></a><span class="cf">begin</span></span>
 <span id="cb109-4"><a href="#cb109-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (arg <span class="op">&lt;=</span> <span class="dv">2</span>) <span class="cf">then</span></span>
 <span id="cb109-5"><a href="#cb109-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">set</span> result <span class="op">:=</span> <span class="dv">1</span>;</span>
-<span id="cb109-6"><a href="#cb109-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span> </span>
+<span id="cb109-6"><a href="#cb109-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span></span>
 <span id="cb109-7"><a href="#cb109-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">set</span> result <span class="op">:=</span> fib(arg <span class="op">-</span> <span class="dv">1</span>) <span class="op">+</span> fib(arg <span class="op">-</span> <span class="dv">2</span>);</span>
-<span id="cb109-8"><a href="#cb109-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end</span> <span class="cf">if</span>; </span>
+<span id="cb109-8"><a href="#cb109-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end</span> <span class="cf">if</span>;</span>
 <span id="cb109-9"><a href="#cb109-9" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span>;</span></code></pre></div>
 <p>This form is allowed when:</p>
 <ul>
 <li>all but the last argument of the procedure was specified</li>
 <li>the formal parameter for that last argument was marked with <code>out</code> (neither <code>in</code> nor <code>inout</code> are acceptable)</li>
-<li>the procedure did not also be returning a result set using a <code>select</code> statement or <code>out</code> statement (more on these later)</li>
+<li>the procedure does not return a result set using a <code>select</code> statement or <code>out</code> statement (more on these later)</li>
 </ul>
-<p>If the procedure in question uses SQLite, or calls something that uses SQLite, then it might fail.<br />
-If that happens the result code will propagate just like it would have with a the usual <code>call</code> form.<br />
-Any failures can be caught with <code>try/catch</code> as usual. This feature is really only syntatic sugar for the “awkward” form above, but it does allow for slightly better generated C code.</p>
+<p>If the procedure in question uses SQLite, or calls something that uses SQLite, then it might fail. If that happens the result code will propagate just like it would have with a the usual <code>call</code> form. Any failures can be caught with <code>try/catch</code> as usual. This feature is really only syntatic sugar for the “awkward” form above, but it does allow for slightly better generated C code.</p>
 <h2 id="chapter-5-types-of-cursors-out-and-out-union-and-fetch-flavors">Chapter 5: Types of Cursors, OUT and OUT UNION, and FETCH flavors</h2>
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
@@ -2286,7 +2282,7 @@ Any failures can be caught with <code>try/catch</code> as usual. This feature is
 <p>and</p>
 <p><code>update cursor result(like alt_row) from cursor alt_row;</code></p>
 <p>In the first case what we’re saying is that we want to load the columns of <code>result</code> from <code>main_row</code> but we only want to take the columns that are actually present in <code>result</code>. So this is a narrowing of a wide row into a smaller row. In this case the smaller row, <code>result</code> is what we want to emit. We needed the other columns to compute <code>alt_row</code>.</p>
-<p>The second case, what we’re saying is that we want update <code>result</code> by replacing the columns found in <code>alt_row</code> with the values in <code>alt_row</code>. So in this case we’re writing a smaller cursor into part of a wider cursor. Note that we used the <code>update</code> form here becuase it preserves all other columns. If we used <code>fetch</code> we would be rewriting the entire row contents, using <code>NULL</code> if necessary, not desired here.</p>
+<p>The second case, what we’re saying is that we want update <code>result</code> by replacing the columns found in <code>alt_row</code> with the values in <code>alt_row</code>. So in this case we’re writing a smaller cursor into part of a wider cursor. Note that we used the <code>update</code> form here because it preserves all other columns. If we used <code>fetch</code> we would be rewriting the entire row contents, using <code>NULL</code> if necessary, not desired here.</p>
 <p>Here is the rewritten version of the above procedure; this is what ultimately gets compiled into C.</p>
 <div class="sourceCode" id="cb133"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb133-1"><a href="#cb133-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> PROC foo (id_ <span class="dt">INTEGER</span> <span class="kw">NOT</span> <span class="kw">NULL</span>)</span>
 <span id="cb133-2"><a href="#cb133-2" aria-hidden="true" tabindex="-1"></a><span class="cf">BEGIN</span></span>
@@ -2309,7 +2305,7 @@ Any failures can be caught with <code>try/catch</code> as usual. This feature is
 <div class="sourceCode" id="cb134"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb134-1"><a href="#cb134-1" aria-hidden="true" tabindex="-1"></a>    <span class="kw">update</span> <span class="kw">cursor</span> C(<span class="kw">like</span> X) <span class="kw">from</span> <span class="kw">cursor</span> D(<span class="kw">like</span> X);</span></code></pre></div>
 <p>The above would mean, “move the columns that are found in <code>X</code> from cursor <code>D</code> to cursor <code>C</code>”, presumably <code>X</code> has columns common to both.</p>
 <h3 id="fetch-statement-specifics">Fetch Statement Specifics</h3>
-<p>Many of the examples used the <code>FETCH</code> statement in a sort of demonstrative way that is hopefully self-evident but the statement has many forms and so it’s wroth going over them specifically. Below we’ll use the letters <code>C</code> and <code>D</code> for the names of cursors. Usually <code>C</code>;</p>
+<p>Many of the examples used the <code>FETCH</code> statement in a sort of demonstrative way that is hopefully self-evident but the statement has many forms and so it’s worth going over them specifically. Below we’ll use the letters <code>C</code> and <code>D</code> for the names of cursors. Usually <code>C</code>;</p>
 <h4 id="for-statement-or-result-set-cursors">For Statement or Result Set Cursors</h4>
 <p>A cursor declared in one of these forms:</p>
 <ul>
@@ -2378,7 +2374,7 @@ Any failures can be caught with <code>try/catch</code> as usual. This feature is
 <li><code>fetch C from arguments like C</code>
 <ul>
 <li>the arguments to the procedure in which this statement appears are used, by name, as the values</li>
-<li>the order in which the arguments appeared no longer matters, the names that match the columsn of C are used if present</li>
+<li>the order in which the arguments appeared no longer matters, the names that match the columns of C are used if present</li>
 <li>the formal parameter name may have a single trailing underscore (this is what <code>like C</code> would generate)</li>
 <li>e.g. if <code>C</code> has columns <code>a</code> and <code>b</code> then there must exist formals named <code>a</code> or <code>a_</code> and <code>b</code> or <code>b_</code> in any position</li>
 </ul></li>
@@ -2431,7 +2427,7 @@ Any failures can be caught with <code>try/catch</code> as usual. This feature is
 </ul></li>
 </ul>
 <h3 id="calling-procedures-with-bulk-arguments">Calling Procedures with Bulk Arguments</h3>
-<p>It’s often desireable to treat bundles of arguments as a unit, or cursors as a unit, especially calling other procedures. The patterns above are very helpful for moving data between cursors, arguments, and the database. These can be rounded out with similar constructs for procedure calls as follows.</p>
+<p>It’s often desirable to treat bundles of arguments as a unit, or cursors as a unit, especially calling other procedures. The patterns above are very helpful for moving data between cursors, arguments, and the database. These can be rounded out with similar constructs for procedure calls as follows.</p>
 <p>First we’ll define some shapes to use in the examples. Note that we made <code>U</code> using <code>T</code>.</p>
 <div class="sourceCode" id="cb137"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb137-1"><a href="#cb137-1" aria-hidden="true" tabindex="-1"></a><span class="kw">create</span> <span class="kw">table</span> T(x <span class="dt">integer</span> <span class="kw">not</span> <span class="kw">null</span>, y <span class="dt">integer</span> <span class="kw">not</span> <span class="kw">null</span>,  z <span class="dt">integer</span> <span class="kw">not</span> <span class="kw">null</span>);</span>
 <span id="cb137-2"><a href="#cb137-2" aria-hidden="true" tabindex="-1"></a><span class="kw">create</span> <span class="kw">table</span> U(<span class="kw">like</span> T, a <span class="dt">integer</span> <span class="kw">not</span> <span class="kw">null</span>, b <span class="dt">integer</span> <span class="kw">not</span> <span class="kw">null</span>);</span></code></pre></div>
@@ -2499,7 +2495,7 @@ Any failures can be caught with <code>try/catch</code> as usual. This feature is
 <span id="cb145-8"><a href="#cb145-8" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span>;</span></code></pre></div>
 <p>Now in this example we don’t need to know anything about <code>my_table</code> other than that it has a column named <code>id</code>. As the example shows several things. * we got the shape of the cursor from the table we were inserting into * you can do your own computation for some of the columns (those named) and leave the unnamed values to be defaulted * the rewrites mentioned above work for the <code>insert</code> statement as well as <code>fetch</code> * in fact <code>insert into my_table(id) values(i+10000) @dummy_seed(i)</code> would have worked too with no cursor at all * bonus, dummy blob data does work in insert statements because SQLite can do the string conversion easily * the dummy value for a blob is a blob that holds the text of the column name and the text of the seed just like a string column</p>
 <p>The <code>@dummy_seed</code> form can be modified with <code>@dummy_nullables</code>, this indicates that rather than using NULL for any nullable value that is missing, CQL should use the seed value. This overrides the default behavior of using NULL where columns are needed. Note the NULL filling works a little differently on insert statements. Since SQLite will provide a NULL if one is legal the column doesn’t have to be added to the list with a NULL value during rewriting, it can simply be omitted, making the statement smaller.</p>
-<p>Finally for <code>insert</code> statement only, SQLite will normally use the default value of a column if it has one, so there is no need to add missing columsn with default values to the insert statement. However if you specify <code>@dummy_defaults</code> then columns with a default value will instead be rewritten and they will get <code>_seed_</code> as their value.</p>
+<p>Finally for <code>insert</code> statement only, SQLite will normally use the default value of a column if it has one, so there is no need to add missing columns with default values to the insert statement. However if you specify <code>@dummy_defaults</code> then columns with a default value will instead be rewritten and they will get <code>_seed_</code> as their value.</p>
 <p>Some examples. Suppose columns a, b, c are not null; m, n are nullable; and x, y have defaults.</p>
 <pre><code>-- as written
 insert into my_table(a) values(7) @dummy_seed(1000)
