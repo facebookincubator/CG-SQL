@@ -1012,4 +1012,6 @@ Error at test/sem_test.sql:XXXX : in select_if_nothing_expr : CQL0013: cannot as
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
 Error at test/sem_test.sql:XXXX : in select_if_nothing_expr : CQL0369: The (select ... if nothing) construct is for use in top level expressions, not inside of other DML
 Error at test/sem_test.sql:XXXX : in select_if_nothing_expr : CQL0369: The (select ... if nothing) construct is for use in top level expressions, not inside of other DML
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0370: due to a memory leak bug in old SQLite versions, the select part of an insert must not have a top level join or compound operator. Use WITH and a CTE, or a nested select to work around this.
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0370: due to a memory leak bug in old SQLite versions, the select part of an insert must not have a top level join or compound operator. Use WITH and a CTE, or a nested select to work around this.
 semantic errors present; no code gen.

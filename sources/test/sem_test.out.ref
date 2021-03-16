@@ -57036,3 +57036,240 @@ SELECT 2 ) AS x;
     | {select_limit}
       | {select_offset}
 
+The statement ending at line XXXX
+
+@ENFORCE_STRICT INSERT SELECT;
+
+  {enforce_strict_stmt}: ok
+  | {int 10}
+
+The statement ending at line XXXX
+
+INSERT INTO foo(id) SELECT 1;
+
+  {insert_stmt}: ok
+  | {insert_normal}
+  | {name_columns_values}
+    | {name foo}: foo: { id: integer notnull primary_key autoinc }
+    | {columns_values}: ok
+      | {column_spec}
+      | | {name_list}
+      |   | {name id}: id: integer notnull
+      | {select_stmt}: select: { _anon: integer notnull }
+        | {select_core_list}: select: { _anon: integer notnull }
+        | | {select_core}: select: { _anon: integer notnull }
+        |   | {select_expr_list_con}: select: { _anon: integer notnull }
+        |     | {select_expr_list}: select: { _anon: integer notnull }
+        |     | | {select_expr}: integer notnull
+        |     |   | {int 1}: integer notnull
+        |     | {select_from_etc}: ok
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+INSERT INTO foo(id) SELECT 1
+UNION ALL
+SELECT 1;
+
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0370: due to a memory leak bug in old SQLite versions, the select part of an insert must not have a top level join or compound operator. Use WITH and a CTE, or a nested select to work around this.
+
+  {insert_stmt}: err
+  | {insert_normal}
+  | {name_columns_values}
+    | {name foo}: foo: { id: integer notnull primary_key autoinc }
+    | {columns_values}: ok
+      | {column_spec}
+      | | {name_list}
+      |   | {name id}
+      | {select_stmt}: err
+        | {select_core_list}: UNION ALL: { _anon: integer notnull }
+        | | {select_core}: select: { _anon: integer notnull }
+        | | | {select_expr_list_con}: select: { _anon: integer notnull }
+        | |   | {select_expr_list}: select: { _anon: integer notnull }
+        | |   | | {select_expr}: integer notnull
+        | |   |   | {int 1}: integer notnull
+        | |   | {select_from_etc}: ok
+        | |     | {select_where}
+        | |       | {select_groupby}
+        | |         | {select_having}
+        | | {select_core_compound}
+        |   | {int 2}
+        |   | {select_core_list}: select: { _anon: integer notnull }
+        |     | {select_core}: select: { _anon: integer notnull }
+        |       | {select_expr_list_con}: select: { _anon: integer notnull }
+        |         | {select_expr_list}: select: { _anon: integer notnull }
+        |         | | {select_expr}: integer notnull
+        |         |   | {int 1}: integer notnull
+        |         | {select_from_etc}: ok
+        |           | {select_where}
+        |             | {select_groupby}
+        |               | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+INSERT INTO foo(id) SELECT 1
+  FROM (SELECT 1) AS T1
+  INNER JOIN (SELECT 2) AS T2;
+
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0370: due to a memory leak bug in old SQLite versions, the select part of an insert must not have a top level join or compound operator. Use WITH and a CTE, or a nested select to work around this.
+
+  {insert_stmt}: err
+  | {insert_normal}
+  | {name_columns_values}
+    | {name foo}: foo: { id: integer notnull primary_key autoinc }
+    | {columns_values}: ok
+      | {column_spec}
+      | | {name_list}
+      |   | {name id}
+      | {select_stmt}: err
+        | {select_core_list}: select: { _anon: integer notnull }
+        | | {select_core}: select: { _anon: integer notnull }
+        |   | {select_expr_list_con}: select: { _anon: integer notnull }
+        |     | {select_expr_list}: select: { _anon: integer notnull }
+        |     | | {select_expr}: integer notnull
+        |     |   | {int 1}: integer notnull
+        |     | {select_from_etc}: JOIN { T1: select, T2: select }
+        |       | {join_clause}: JOIN { T1: select, T2: select }
+        |       | | {table_or_subquery}: TABLE { T1: select }
+        |       | | | {select_stmt}: select: { _anon: integer notnull }
+        |       | | | | {select_core_list}: select: { _anon: integer notnull }
+        |       | | | | | {select_core}: select: { _anon: integer notnull }
+        |       | | | |   | {select_expr_list_con}: select: { _anon: integer notnull }
+        |       | | | |     | {select_expr_list}: select: { _anon: integer notnull }
+        |       | | | |     | | {select_expr}: integer notnull
+        |       | | | |     |   | {int 1}: integer notnull
+        |       | | | |     | {select_from_etc}: ok
+        |       | | | |       | {select_where}
+        |       | | | |         | {select_groupby}
+        |       | | | |           | {select_having}
+        |       | | | | {select_orderby}
+        |       | | |   | {select_limit}
+        |       | | |     | {select_offset}
+        |       | | | {opt_as_alias}
+        |       | |   | {name T1}
+        |       | | {join_target_list}
+        |       |   | {join_target}: JOIN { T1: select, T2: select }
+        |       |     | {int 1}
+        |       |     | {table_join}
+        |       |       | {table_or_subquery}: TABLE { T2: select }
+        |       |         | {select_stmt}: select: { _anon: integer notnull }
+        |       |         | | {select_core_list}: select: { _anon: integer notnull }
+        |       |         | | | {select_core}: select: { _anon: integer notnull }
+        |       |         | |   | {select_expr_list_con}: select: { _anon: integer notnull }
+        |       |         | |     | {select_expr_list}: select: { _anon: integer notnull }
+        |       |         | |     | | {select_expr}: integer notnull
+        |       |         | |     |   | {int 2}: integer notnull
+        |       |         | |     | {select_from_etc}: ok
+        |       |         | |       | {select_where}
+        |       |         | |         | {select_groupby}
+        |       |         | |           | {select_having}
+        |       |         | | {select_orderby}
+        |       |         |   | {select_limit}
+        |       |         |     | {select_offset}
+        |       |         | {opt_as_alias}
+        |       |           | {name T2}
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+INSERT INTO foo(id) WITH
+cte (id) AS (SELECT 1)
+SELECT *
+  FROM cte;
+
+  {insert_stmt}: ok
+  | {insert_normal}
+  | {name_columns_values}
+    | {name foo}: foo: { id: integer notnull primary_key autoinc }
+    | {columns_values}: ok
+      | {column_spec}
+      | | {name_list}
+      |   | {name id}: id: integer notnull
+      | {with_select_stmt}: select: { id: integer notnull }
+        | {with}
+        | | {cte_tables}: ok
+        |   | {cte_table}: cte: { id: integer notnull }
+        |     | {cte_decl}: cte: { id: integer notnull }
+        |     | | {name cte}
+        |     | | {name_list}
+        |     |   | {name id}
+        |     | {select_stmt}: select: { _anon: integer notnull }
+        |       | {select_core_list}: select: { _anon: integer notnull }
+        |       | | {select_core}: select: { _anon: integer notnull }
+        |       |   | {select_expr_list_con}: select: { _anon: integer notnull }
+        |       |     | {select_expr_list}: select: { _anon: integer notnull }
+        |       |     | | {select_expr}: integer notnull
+        |       |     |   | {int 1}: integer notnull
+        |       |     | {select_from_etc}: ok
+        |       |       | {select_where}
+        |       |         | {select_groupby}
+        |       |           | {select_having}
+        |       | {select_orderby}
+        |         | {select_limit}
+        |           | {select_offset}
+        | {select_stmt}: select: { id: integer notnull }
+          | {select_core_list}: select: { id: integer notnull }
+          | | {select_core}: select: { id: integer notnull }
+          |   | {select_expr_list_con}: select: { id: integer notnull }
+          |     | {select_expr_list}: select: { id: integer notnull }
+          |     | | {star}: select: { id: integer notnull }
+          |     | {select_from_etc}: TABLE { cte: cte }
+          |       | {table_or_subquery_list}: TABLE { cte: cte }
+          |       | | {table_or_subquery}: TABLE { cte: cte }
+          |       |   | {name cte}: TABLE { cte: cte }
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+INSERT INTO foo(id) VALUES(1), (2), (3);
+
+  {insert_stmt}: ok
+  | {insert_normal}
+  | {name_columns_values}
+    | {name foo}: foo: { id: integer notnull primary_key autoinc }
+    | {columns_values}: ok
+      | {column_spec}
+      | | {name_list}
+      |   | {name id}: id: integer notnull
+      | {select_stmt}: values: { column1: integer notnull }
+        | {select_core_list}: values: { column1: integer notnull }
+        | | {select_core}: values: { column1: integer notnull }
+        |   | {select_values}
+        |   | {values}: values: { column1: integer notnull }
+        |     | {insert_list}
+        |     | | {int 1}: integer notnull
+        |     | {values}
+        |       | {insert_list}
+        |       | | {int 2}: integer notnull
+        |       | {values}
+        |         | {insert_list}
+        |           | {int 3}: integer notnull
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+@ENFORCE_NORMAL INSERT SELECT;
+
+  {enforce_normal_stmt}: ok
+  | {int 10}
+
