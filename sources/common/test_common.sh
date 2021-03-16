@@ -464,7 +464,7 @@ assorted_errors_test() {
 
 # wrong number of args specified in --cg (for objc)
 
-  if ${CQL} --cg __temp __temp2 --in "${TEST_DIR}/cg_test.sql" --rt objc 2>"${OUT_DIR}/cg_1_2.err"
+  if ${CQL} --cg "${OUT_DIR}/__temp" "${OUT_DIR}/__temp2" --in "${TEST_DIR}/cg_test.sql" --rt objc 2>"${OUT_DIR}/cg_1_2.err"
   then
     echo "objc rt should require 1 files for the cg param but two were passed, should have failed"
     failed
@@ -474,7 +474,7 @@ assorted_errors_test() {
 
   on_diff_exit cg_1_2.err
 
-  if ${CQL} --cg __temp /xx/yy/zz --in "${TEST_DIR}/semantic_error.sql" 2>"${OUT_DIR}/sem_abort.err"
+  if ${CQL} --cg "${OUT_DIR}/__temp" /xx/yy/zz --in "${TEST_DIR}/semantic_error.sql" 2>"${OUT_DIR}/sem_abort.err"
   then
     echo "simple semantic error to abort output -- failed"
     failed
@@ -484,7 +484,7 @@ assorted_errors_test() {
 
 # no result sets in the input for objc should result in empty output, not errors
 
-  if ! ${CQL} --cg __temp --in "${TEST_DIR}/noresult.sql" --objc_c_include_path dummy --rt objc 2>"${OUT_DIR}/objc_no_results.err"
+  if ! ${CQL} --cg "${OUT_DIR}/__temp" --in "${TEST_DIR}/noresult.sql" --objc_c_include_path dummy --rt objc 2>"${OUT_DIR}/objc_no_results.err"
   then
     echo "no result sets in output objc case, should not fail"
     failed
