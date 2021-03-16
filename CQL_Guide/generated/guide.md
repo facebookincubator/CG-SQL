@@ -1582,7 +1582,7 @@ Each of these has their own macro for `retain` and `release` though all three ac
 
 #### Assigning to an `out` parameter or a global variable
 
-* `out,`inout`parameters, and global variables work just like local variables except that CQL does not call`release` at the end of the procedure
+* `out`, `inout` parameters, and global variables work just like local variables except that CQL does not call `release` at the end of the procedure
 
 ### Function Return Values
 
@@ -2501,13 +2501,13 @@ end;
 ```
  Automatic cursors are so much easier to use than explicit storage that explicit storage is rarely seen.  Storing to `out` parameters is a case where explicit is ok, the `out` parameters have to be declared anyway.
 
- #### For Value Cursors
+#### For Value Cursors
 
  A cursor declared in one of these forms:
 
  * `declare C cursor fetch from call foo(args)`
    * `foo` must be a procedure that returns one row with `OUT`
- * `declare C cursor like select 1 id, "x" name;
+ * `declare C cursor like select 1 id, "x" name;`
  * `declare C cursor like X;`
    * where X is the name of a table, a view, another cursor, or a procedure that returns a structured result
 
@@ -2546,7 +2546,7 @@ With this form, any possible valid cursor values could be set, but many forms of
 
 * `fetch C(a,b) from cursor D(a,b)`
   * the named columns of D are used as the values
-  * in this case it becomes: `fetch C(a,b) from values(D.a, D.b);
+  * in this case it becomes: `fetch C(a,b) from values(D.a, D.b);`
 
 That most recent form does seem like it saves much but recall the first rewrite:
 
@@ -2575,7 +2575,7 @@ Like can be used in both places, for instance suppose `E` is a cursor that has a
 
  As is mentioned above, the `fetch` form means to load an entire row into the cursor.  This is important because "half loaded" cursors would be semantically problematic.  However there are many cases where you might like to amend the values of an already loaded cursor.  You can do this with the `update` form.
 
- * `update cursor C(a,b,..) from values(1,2,..);
+ * `update cursor C(a,b,..) from values(1,2,..);`
    * the update form is a no-op if the cursor is not already loaded with values (!!)
    * the columns and values are type checked so a valid row is ensured (or no row)
    * all the re-writes above are legal so `update cursor C(like D) from D` is possible, it is in fact the use-case for which this was designed.
