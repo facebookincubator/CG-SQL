@@ -448,7 +448,7 @@ Returning now to our code as written, we see something very familiar:
 ```
 
 Note we've used the single quote syntax here for no good reason other than illustration. There are no escape
-sequences here so either form would the job. Importantly, the string literal will not create a string object as before
+sequences here so either form would do the job. Importantly, the string literal will not create a string object as before
 but the text variable `t` is of course a string reference.  Before it can be used in a call to an un-declared function it
 must be converted into a temporary C string.  This might require allocation in general, that allocation is automatically
 managed.  Note that by default CQL assumes that calls to unknown C functions should be emitted as written.  In this way you can use `printf` even though CQL knows nothing about it.
@@ -529,7 +529,7 @@ We've created a non-scalar variable `C`, a cursor over the indicated result set.
   end;
 ```
 
-This loop will run until there are no results left (it might not run at all if there are zero rows, that is not an error).  The `FETCH` construct allows you to specify target variables, but if you do not do so, then a synethetic structure is
+This loop will run until there are no results left (it might not run at all if there are zero rows, that is not an error).  The `FETCH` construct allows you to specify target variables, but if you do not do so, then a synthetic structure is
 automatically created to capture the projection of the `select`.  In this case the columns are `pos` and `txt`.
 The automatically created storage exactly matches the type of the columns in the select list which could itself be tricky to calculate if the `select` is complex.  In this case the `select` is quite simple and the columns of the result directly match the schema for `my_data`.  An integer and a string reference.  Both not null.
 
@@ -680,7 +680,7 @@ Example expressions (these are all true)
 ```
 However, before going any further it's important to note that CQL is inherently a two-headed beast.  Expressions are either evaluated by transpiling to C (like the predicate of an IF statement, or a variable assignment) or by sending them to SQLIte for evaluation (like expressions inside a `SELECT` statement or the `WHERE` part of a `DELETE`).
 
-CQL evaluation rules are designed to be as similar as possible but some variance is inevitable because evaluation is done in two fundamentally different way.
+CQL evaluation rules are designed to be as similar as possible but some variance is inevitable because evaluation is done in two fundamentally different ways.
 
 ### Order of Evaluation
 
@@ -727,7 +727,7 @@ declare bl2 blob;
 ```
 
 ALL of `i1`, `i2`, `b1`, `b2`, `l1`, `l2`, `r1`, `r2`, `t1`, `t2`, and `bl1`, `bl2` are nullable.
-In some sense variables and columns declared nullable (by virtual of the missing `NOT NULL`) are the
+In some sense variables and columns declared nullable (by virtue of the missing `NOT NULL`) are the
 root sources of nullability in the SQL language.  That and the `NULL` literal.  Though there are other
 sources as we will see.
 
@@ -754,7 +754,7 @@ There are a number of literal objects that may be expressed in CQL.  These are a
   * the usual simple C escape sequences are supported
   * the \xNN form for embedded hex characters is supported, however
   * the \0NNN octal form is not supported, and
-  * embedded nulls in string literals (\0 or \0x00) are not supported (you must use blobs such cases)
+  * embedded nulls in string literals (\0 or \0x00) are not supported (you must use blobs in such cases)
 * a single quoted string is a SQL style string literal
   * No escape sequences are supported other than `''` to indicate a single quote character (this is just like normal SQLite)
 * The sequence @FILE("some_string") is a special string literal
@@ -803,12 +803,12 @@ The use of `_FILE_` can give surprising results in the presence of build systems
 
 ### Const and Enumerations
 
-It's possible to use named constants in CQL with nothing more than the C pre-processor featuers that have already appeared,
+It's possible to use named constants in CQL with nothing more than the C pre-processor features that have already appeared,
 however use of #define in such a way is not entirely satisfactory.  For one thing, CQL will not know these constants
 exist in any way as they will be replaced before it ever sees them.  This means CQL can't provide their values for you
 in the JSON output for instance.
 
-To help with this probvlem, CQL includes constants, note, this is not the same as enumerated types as we'll
+To help with this problem, CQL includes constants, note, this is not the same as enumerated types as we'll
 see later.  You can now write something like this:
 
 ```
@@ -862,7 +862,7 @@ Enumerations follow these rules:
 
 With these forms you get some additional useful output:
 * the JSON includes the enumerations and their values in their own section
-* you can use the `@emit_enums` directive to put declarations like this into the `.h` file that corresponds to the ccurrent compiland
+* you can use the `@emit_enums` directive to put declarations like this into the `.h` file that corresponds to the current compiland
 
 ```
 enum business_type {
@@ -872,7 +872,7 @@ enum business_type {
 };
 ```
 
-Note that C does not allow for floating point enumartions, so in case of floating point values such as:
+Note that C does not allow for floating point enumertions, so in case of floating point values such as:
 
 ```
 declare enum floating real (
@@ -898,7 +898,7 @@ these expressions work on any numeric type and the literal null.  The supported 
 
 `+`, `-`, `*`, `/`, `%`, `|`, `&`, `<<`, `>>`, `~`, `and`, `or`, `not`, `==`, `<=`, `>=`, `!=`, `<`, `>`, the `cast` operator
 and the `case` forms (including the `iif` function).  These are enough to make a lot of very interesting expressions, all of
-which are envaluated at compile time.
+which are evaluated at compile time.
 
 Constant folding was added to allow for rich `enum` expressions, but there is also the `const()` primitive in the
 language which can appear anywhere a literal could appear.  This allows you do things like:
@@ -1563,7 +1563,7 @@ The three reference types are:
 * OBJECT
 * BLOB
 
-Each of these has their own macro for `retain` and `release` though all three actually turn into the exact same code in all the cu rrent CQL runtime implementations.  In all cases the object is expected to be promptly freed when the reference count falls to zero.
+Each of these has their own macro for `retain` and `release` though all three actually turn into the exact same code in all the current CQL runtime implementations.  In all cases the object is expected to be promptly freed when the reference count falls to zero.
 
 ### Reference Semantics
 
@@ -1733,7 +1733,7 @@ cql_cleanup:
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-All kinds of control flow happens in the context of some procedure, though we've already introduced examples of procedures let's 
+All kinds of control flow happens in the context of some procedure, though we've already introduced examples of procedures let's
 now go over some of the additional aspects we have not yet illustrated.
 
 ### Out Parameters
@@ -1742,8 +1742,8 @@ Consider this procedure:
 
 ```sql
 create procedure echo (in arg1 integer not null, out arg2 integer not null)
-begin 
-  set arg2 := arg1; 
+begin
+  set arg2 := arg1;
 end;
 ```
 
@@ -1755,7 +1755,7 @@ variable can end up with a null in it.
 Looking at the one line in the body of this procedure:
 
 ```sql
-  set arg2 := arg1; 
+  set arg2 := arg1;
 ```
 
 The input argument `arg1` is unconditionally stored in the output.  Note that the `in` keyword is entirely optional and does
@@ -1774,10 +1774,10 @@ These invariants are very important when considering how reference types are han
 * `inout` reference arguments are assumed valid at entry
 
 If CQL changes an `out` or `inout` value it first releases the existing value and then retains the new value.
-In all cases the caller will ultimately release any non-null out reference either because it was borrowed (`in`) or 
-the caller now/still owns it (`inout` or `in`).  
+In all cases the caller will ultimately release any non-null out reference either because it was borrowed (`in`) or
+the caller now/still owns it (`inout` or `in`).
 
-Aggressively putting `NULL` into `out` argumetns normalizes pointer handling for all `out` types.
+Aggressively putting `NULL` into `out` arguments normalizes pointer handling for all `out` types.
 
 
 ### Procedure Calls
@@ -1785,8 +1785,8 @@ Aggressively putting `NULL` into `out` argumetns normalizes pointer handling for
 The usual `call` syntax is used to invoke a procedure.  It returns no value but it can have any number of `out` arguments.
 
 ```
-  declare scratch integer not null; 
-  call echo(12, scratch); 
+  declare scratch integer not null;
+  call echo(12, scratch);
   scratch == 12; -- true
 ```
 
@@ -1794,7 +1794,7 @@ The let's go over the most essential bits of control flow.
 
 ### The IF statement
 
-The CQL `IF` statement has no syntatic ambiguities at the expense of being somewhat more verbose than many other languages. 
+The CQL `IF` statement has no syntatic ambiguities at the expense of being somewhat more verbose than many other languages.
 In CQL the `ELSE IF` portion is baked into the `IF` statement, so what you see below is logically a single statement.
 
 ```sql
@@ -1803,7 +1803,7 @@ begin
   if foo = 1 then
    set result := 1;
   else if foo = 2 then
-   set result := 3; 
+   set result := 3;
   else
    set result := 5;
   end if;
@@ -1860,8 +1860,8 @@ This is an immediate sign that there will be an unusual exit condition.  The loo
    if x < 0 then
      leave;
 ```
-Now here we've encoded our exit condition a bit strangely we might have done the equivalent job with a normal conditionn in the predicate
-part of the `while` statement but for illustration anyway, when x becomes negative `leave` will cause us to exit the loop.  This is like 
+Now here we've encoded our exit condition a bit strangely we might have done the equivalent job with a normal condition in the predicate
+part of the `while` statement but for illustration anyway, when x becomes negative `leave` will cause us to exit the loop.  This is like
 `break` in C.
 
 ```sql
@@ -1882,7 +1882,7 @@ Finishing up the control flow, on every 10th iteration we print the value of the
 
 ### The TRY, CATCH, and THROW Statements
 
-This example illustrates catching an error from some DML, and recovering rather than letting the error cascade up.  
+This example illustrates catching an error from some DML, and recovering rather than letting the error cascade up.
 This is the common "upsert" pattern (insert or update)
 
 ```sql
@@ -1890,8 +1890,8 @@ create procedure upsert_foo(id_ integer, t_ text)
 begin
   begin try
     insert into foo(id, t) values(id_, t_)
-  end try; 
-  begin catch 
+  end try;
+  begin catch
     begin try
       update foo set t = t_ where id = id_;
     end try;
@@ -1899,7 +1899,7 @@ begin
       printf("Error!\n");
       throw;
     end catch;
-  end catch; 
+  end catch;
 end;
 ```
 
@@ -1908,14 +1908,14 @@ Once again, let's go over this section by section:
 ```sql
   begin try
     insert into foo(id, t) values(id_, t_)
-  end try; 
+  end try;
 ```
 
 Normally if the `insert` statement fails, the procedure will exit with a failure result code.  Here, instead,
 we prepare to catch that error.
 
 ```sql
-  begin catch 
+  begin catch
     begin try
       update foo set t = t_ where id = id_;
     end try;
@@ -1931,23 +1931,23 @@ that row instead.  However that might also fail, so we  wrap it in another try. 
     end catch;
 ```
 
-Here we print a diagnostic message and then use the `throw` keyword to rethrow the previous failure.  Throw will create a failure in 
+Here we print a diagnostic message and then use the `throw` keyword to rethrow the previous failure.  Throw will create a failure in
 the current block using the most recent result code from SQLite if it is an error, or else the general `SQLITE_ERROR` result code
 if there is no such error.  In this case the failure code for the `update` statement will become the result code of the current procedure.
 
 This leaves only the closing markers:
 
 ```sql
-  end catch; 
+  end catch;
 end;
 ```
 
-If control flow reaches the normal end of the procedure it will return `SQLITE_OK`.  
+If control flow reaches the normal end of the procedure it will return `SQLITE_OK`.
 
 ### Procedures as Functions: Motivation and Example
 
 
-The calling convention for CQL stored procedures often (usually) requires that the procedure returns a result code from SQLite.  
+The calling convention for CQL stored procedures often (usually) requires that the procedure returns a result code from SQLite.
 This makes it impossible to write a procedure that returns a result like a function, the result position is already used for
 the error code.  You can get around this problem by using `out` arguments as your return codes.  So for instance, this version
 of the Fibonacci function is possible.
@@ -1955,36 +1955,36 @@ of the Fibonacci function is possible.
 
 ```sql
 -- this works, but it is awkward
-create procedure fib (in arg integer not null, out result integer not null) 
+create procedure fib (in arg integer not null, out result integer not null)
 begin
   if (arg <= 2) then
     set result := 1;
-  else 
-    declare t integer not null; 
-    call fib(arg - 1,  result); 
-    call fib(arg - 2,  t); 
+  else
+    declare t integer not null;
+    call fib(arg - 1,  result);
+    call fib(arg - 2,  t);
     set result := t + result;
-  end if; 
+  end if;
 end;
 ```
 
 The above works, but the notation is very awkward.
 
 
-CQL has a "procedures as functions" feature that tries to make this more pleasant by making it possible to use function call notation 
+CQL has a "procedures as functions" feature that tries to make this more pleasant by making it possible to use function call notation
 on a procedure whose last argument is an `out` variable.  You simply call the procedure like it was a function and omit the last argument in the call.
-A temporary variable is automatically created to hold the result and that temporary becomes the logical return of the function. 
+A temporary variable is automatically created to hold the result and that temporary becomes the logical return of the function.
 For semantic analysis, the result type of the function becomes the type of the `out` argument.
 
 ```sql
 -- rewritten with function call syntax
-create procedure fib (in arg integer not null, out result integer not null) 
+create procedure fib (in arg integer not null, out result integer not null)
 begin
   if (arg <= 2) then
     set result := 1;
-  else 
+  else
     set result := fib(arg - 1) + fib(arg - 2);
-  end if; 
+  end if;
 end;
 ```
 
@@ -1992,10 +1992,10 @@ This form is allowed when:
 
 * all but the last argument of the procedure was specified
 * the formal parameter for that last argument was marked with `out` (neither `in` nor `inout` are acceptable)
-* the procedure did not also be returning a result set using a `select` statement or `out` statement (more on these later)
+* the procedure does not return a result set using a `select` statement or `out` statement (more on these later)
 
-If the procedure in question uses SQLite, or calls something that uses SQLite, then it might fail.  
-If that happens the result code will propagate just like it would have with a the usual `call` form.  
+If the procedure in question uses SQLite, or calls something that uses SQLite, then it might fail.
+If that happens the result code will propagate just like it would have with a the usual `call` form.
 Any failures can be caught with `try/catch` as usual.
 This feature is really only syntatic sugar for the "awkward" form above, but it does allow for slightly better generated C code.
 
@@ -2425,7 +2425,7 @@ We needed the other columns to compute `alt_row`.
 
 The second case, what we're saying is that we want update `result` by replacing the columns
 found in `alt_row` with the values in `alt_row`.   So in this case we're writing a smaller cursor
-into part of a wider cursor.  Note that we used the `update` form here becuase it preserves
+into part of a wider cursor.  Note that we used the `update` form here because it preserves
 all other columns.  If we used `fetch` we would be rewriting the entire row contents, using `NULL`
 if necessary, not desired here.
 
@@ -2462,7 +2462,7 @@ The above would mean, "move the columns that are found in `X` from cursor `D` to
 
 ### Fetch Statement Specifics
 
-Many of the examples used the `FETCH` statement in a sort of demonstrative way that is hopefully self-evident but the statement has many forms and so it's wroth going over them specifically.  Below we'll use the letters `C` and `D` for the names of cursors.  Usually `C`;
+Many of the examples used the `FETCH` statement in a sort of demonstrative way that is hopefully self-evident but the statement has many forms and so it's worth going over them specifically.  Below we'll use the letters `C` and `D` for the names of cursors.  Usually `C`;
 
 #### For Statement or Result Set Cursors
 
@@ -2540,7 +2540,7 @@ With this form, any possible valid cursor values could be set, but many forms of
 
 * `fetch C from arguments like C`
   * the arguments to the procedure in which this statement appears are used, by name, as the values
-  * the order in which the arguments appeared no longer matters, the names that match the columsn of C are used if present
+  * the order in which the arguments appeared no longer matters, the names that match the columns of C are used if present
   * the formal parameter name may have a single trailing underscore (this is what `like C` would generate)
   * e.g. if `C` has columns `a` and `b` then there must exist formals named `a` or `a_` and `b` or `b_` in any position
 
@@ -2582,7 +2582,7 @@ Like can be used in both places, for instance suppose `E` is a cursor that has a
 
 ### Calling Procedures with Bulk Arguments
 
-It's often desireable to treat bundles of arguments as a unit, or cursors as a unit, especially calling other procedures.  The patterns above
+It's often desirable to treat bundles of arguments as a unit, or cursors as a unit, especially calling other procedures.  The patterns above
 are very helpful for moving data between cursors, arguments, and the database.  These can be rounded out with similar constructs for
 procedure calls as follows.
 
@@ -2714,7 +2714,7 @@ Now in this example we don't need to know anything about `my_table` other than t
 
 The `@dummy_seed` form can be modified with `@dummy_nullables`, this indicates that rather than using NULL for any nullable value that is missing, CQL should use the seed value.  This overrides the default behavior of using NULL where columns are needed.  Note the NULL filling works a little differently on insert statements.  Since SQLite will provide a NULL if one is legal the column doesn't have to be added to the list with a NULL value during rewriting, it can simply be omitted, making the statement smaller.
 
-Finally for `insert` statement only, SQLite will normally use the default value of a column if it has one, so there is no need to add missing columsn with default values to the insert statement.  However if you specify `@dummy_defaults` then columns with a default value will instead be rewritten and they will get `_seed_` as their value.
+Finally for `insert` statement only, SQLite will normally use the default value of a column if it has one, so there is no need to add missing columns with default values to the insert statement.  However if you specify `@dummy_defaults` then columns with a default value will instead be rewritten and they will get `_seed_` as their value.
 
 Some examples.  Suppose columns a, b, c are not null;  m, n are nullable; and x, y have defaults.
 
