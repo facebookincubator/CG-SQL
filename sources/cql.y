@@ -1306,8 +1306,7 @@ insert_stmt:
   | insert_stmt_type name DEFAULT VALUES  {
     struct ast_node *default_columns_values = new_ast_default_columns_values();
     struct ast_node *name_columns_values = new_ast_name_columns_values($name, default_columns_values);
-    $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values);
-  }
+    $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values); }
   | insert_stmt_type name USING expr_names opt_insert_dummy_spec {
     struct ast_node *name_columns_values = new_ast_name_columns_values($name, $expr_names);
     $insert_stmt_type->left = $opt_insert_dummy_spec;
@@ -1761,6 +1760,7 @@ enforcement_options:
   | WITHOUT ROWID  { $enforcement_options = new_ast_opt(ENFORCE_WITHOUT_ROWID); }
   | TRANSACTION { $enforcement_options = new_ast_opt(ENFORCE_TRANSACTION); }
   | SELECT IF NOTHING { $enforcement_options = new_ast_opt(ENFORCE_SELECT_IF_NOTHING); }
+  | INSERT SELECT { $enforcement_options = new_ast_opt(ENFORCE_INSERT_SELECT); }
   ;
 
 enforce_strict_stmt:

@@ -146,6 +146,7 @@ static void sem_misc_attrs_basic(ast_node *ast);
 static void sem_data_type_var(ast_node *ast);
 static CSTR sem_combine_kinds_general(ast_node *ast, CSTR kleft, CSTR kright);
 static CSTR sem_combine_kinds(ast_node *ast, CSTR current_kind);
+static bool_t sem_select_stmt_is_mixed_results(ast_node *ast);
 
 static void lazy_free_symtab(void *syms) {
   symtab_delete(syms);
@@ -168,6 +169,7 @@ struct enforcement_options {
   bool_t strict_without_rowid;  // no WITHOUT ROWID may be used.
   bool_t strict_transaction;    // no transactions may be started, commited, aborted etc.
   bool_t strict_if_nothing;     // (select ..) expressions must include the if nothing form
+  bool_t strict_insert_select;  // insert with select may not include joins
 };
 
 static struct enforcement_options  enforcement;
@@ -10787,6 +10789,15 @@ static void sem_column_spec_and_values(ast_node *ast, ast_node *table_ast) {
       record_error(ast);
       return;
     }
+
+    if (enforcement.strict_insert_select && sem_select_stmt_is_mixed_results(select_stmt)) {
+      report_error(select_stmt, "CQL0370: due to a memory leak bug in old SQLite versions, "
+                                "the select part of an insert must not have a top level join or compound operator. "
+                                "Use WITH and a CTE, or a nested select to work around this.", NULL);
+      record_error(select_stmt);
+      record_error(ast);
+      return;
+    }
   }
 
   bool_t valid = 1;
@@ -16087,7 +16098,87 @@ static void sem_expr_dot(ast_node *ast, CSTR cstr) {
   sem_resolve_id(ast, name, scope);
 }
 
-// only for use in (select expr ...) so there is known to be exactly one item in the
+// This function is used to detect the pattern that leaks memory on SQLite.
+// The context is an INSERT statement that is using a SELECT for its data
+// the patterns detected that might leak are:
+//   insert X
+//     select * from X join Y
+//
+//   insert X
+//     select * from X
+//     union all
+//     select * from Y
+//
+// The error tells you to replace these with something like
+//
+//   with cte(*) as (select * from X join Y)
+//     insert X select * from cte;
+//
+// The idea is that the select that forms the insert cannot have a top level operand
+// like join or union.  But you can nest one without problem.
+//
+// Also ok:
+//
+//   insert X
+//     select * from (select * from X join Y)
+//
+// So here we look at the various select forms:
+//   * explain form -> can't happen
+//   * with form : look at the inner select and verify that
+//   * select form:
+//     * if compound report error
+//     * if VALUES -> ok
+//     * if not compound, report error if top node is a join
+static bool_t sem_select_stmt_is_mixed_results(ast_node *ast) {
+  Contract(is_select_stmt(ast));
+  Contract(!is_ast_explain_stmt(ast));  // disallowed by grammar
+
+  ast_node *select_stmt;
+
+  // first extract the select stmt out of the WITH form if needed
+  if (is_ast_select_stmt(ast)) {
+    select_stmt = ast;
+  }
+  else {
+    Contract(is_ast_with_select_stmt(ast));
+    EXTRACT_ANY_NOTNULL(with_prefix, ast->left)
+    EXTRACT(cte_tables, with_prefix->left);
+    // extract the main select out of the with, this is where we will look for the
+    // top level join
+    select_stmt = ast->right;
+  }
+
+  // Get the select_core, there must be one
+  Invariant(is_ast_select_stmt(select_stmt));
+  EXTRACT_NOTNULL(select_core_list, select_stmt->left);
+  EXTRACT_NOTNULL(select_core, select_core_list->left);
+
+  // if compound, this is the error case
+  if (select_core_list->right) {
+    return true;
+  }
+
+  EXTRACT_ANY(any_select_opts, select_core->left);
+  EXTRACT_ANY_NOTNULL(select_core_right, select_core->right);
+
+  // the core might be VALUES -> that's ok
+  if (is_ast_select_values(any_select_opts)) {
+    // VALUES [values]
+    Contract(is_ast_values(select_core_right));
+    return false;
+  }
+
+  // ok to traverse to query parts now
+  Contract(is_ast_select_expr_list_con(select_core_right));
+  EXTRACT_NOTNULL(select_expr_list_con, select_core->right);
+  EXTRACT_NOTNULL(select_from_etc, select_expr_list_con->right);
+  EXTRACT_ANY(query_parts, select_from_etc->left);
+
+  // if top query part is a join -> this is the bad case
+  return is_ast_join_clause(query_parts);
+}
+
+// Only for use in (select expr ...) so there is known to be exactly one item in the
 // select list.  This tells us if there is some way we can know that there will be
 // a row for sure in such an expression.  There are assorted special cases that are
 // helpful to handle such as:
@@ -16470,6 +16561,10 @@ static void sem_enforcement_options(ast_node *ast, bool_t strict) {
 
     case ENFORCE_SELECT_IF_NOTHING:
       enforcement.strict_if_nothing = strict;
+      break;
+
+    case ENFORCE_INSERT_SELECT:
+      enforcement.strict_insert_select = strict;
       break;
 
     default:

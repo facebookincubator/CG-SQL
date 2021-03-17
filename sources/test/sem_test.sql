@@ -14317,3 +14317,42 @@ select (with y(*) as (select 1 x) select * from y);
 -- + {select_stmt}: select: { x: integer }
 -- - Error
 select (select 1 union all select 2) as x;
+
+@enforce_strict insert select;
+
+-- TEST: ok to insert with a simple select
+-- + {insert_stmt}: ok
+-- - Error
+insert into foo(id)
+  select 1;
+
+-- TEST: top level compound select not ok
+-- + {insert_stmt}: err
+-- + Error % CQL0370: due to a memory leak bug in old SQLite versions,
+-- +1 Error
+insert into foo(id)
+  select 1 union all select 1;
+
+-- TEST: top level join not ok
+-- + {insert_stmt}: err
+-- + Error % CQL0370: due to a memory leak bug in old SQLite versions,
+-- +1 Error
+insert into foo(id)
+  select 1 from
+    (select 1) as T1 inner join (select 2) as T2;
+
+-- TEST: WITH inside the insert is ok too if it has no join
+-- + {insert_stmt}: ok
+-- - Error
+insert into foo(id)
+  with cte(id) as ( select 1)
+    select * from cte;
+
+-- TEST: values are ok
+-- + {insert_stmt}: ok
+-- - Error
+insert into foo(id)
+  values (1), (2), (3);
+
+@enforce_normal insert select;
+
