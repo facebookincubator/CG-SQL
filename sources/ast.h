@@ -319,6 +319,7 @@ sqlite> select ~(1*3);
 #define C_EXPR_PRI_ADD 8
 #define C_EXPR_PRI_MUL 9
 #define C_EXPR_PRI_UNARY 10
+#define C_EXPR_PRI_HIGHEST 999
 
 #define JOIN_INNER 1
 #define JOIN_CROSS 2
@@ -774,6 +775,7 @@ AST(declare_named_type)
 AST(declare_value_cursor)
 AST(set_from_cursor)
 AST(param_detail)
+AST(let_stmt)
 AST(if_stmt)
 AST(if_alt)
 AST1(else)

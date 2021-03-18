@@ -152,7 +152,7 @@ static void cql_reset_globals(void);
 %token OUTER JOIN WHERE GROUP BY ORDER ASC
 %token DESC INNER FCOUNT AUTOINCREMENT DISTINCT
 %token LIMIT OFFSET TEMP TRIGGER IF ALL CROSS USING RIGHT
-%token HIDDEN UNIQUE HAVING SET TO DISTINCTROW ENUM
+%token HIDDEN UNIQUE HAVING SET LET TO DISTINCTROW ENUM
 %token FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR DECLARE TYPE FETCH LOOP LEAVE CONTINUE FOR
 %token OPEN CLOSE ELSE_IF WHILE CALL TRY CATCH THROW RETURN
 %token SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
@@ -233,7 +233,7 @@ static void cql_reset_globals(void);
 %type <aval> savepoint_stmt
 %type <aval> schema_upgrade_script_stmt
 %type <aval> schema_upgrade_version_stmt
-%type <aval> set_stmt
+%type <aval> set_stmt let_stmt
 %type <aval> throw_stmt
 %type <aval> trycatch_stmt
 %type <aval> version_annotation
@@ -307,6 +307,7 @@ any_stmt: select_stmt
   | update_cursor_stmt
   | upsert_stmt
   | with_upsert_stmt
+  | let_stmt
   | set_stmt
   | create_proc_stmt
   | declare_proc_stmt
@@ -393,6 +394,10 @@ schema_upgrade_version_stmt:
 set_stmt:
   SET name ASSIGN expr  { $set_stmt = new_ast_assign($name, $expr); }
   | SET name[id] FROM CURSOR name[cursor] { $set_stmt = new_ast_set_from_cursor($id, $cursor); }
+  ;
+
+let_stmt:
+  LET name ASSIGN expr  { $let_stmt = new_ast_let_stmt($name, $expr); }
   ;
 
 version_attrs_opt_recreate:

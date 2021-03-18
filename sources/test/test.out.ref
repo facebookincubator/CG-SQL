@@ -1443,6 +1443,8 @@ SET x := ( SELECT x
 SET x := ( SELECT x
   FROM y IF NOTHING THROW );
 
+LET z := 1 + 2;
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

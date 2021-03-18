@@ -38,6 +38,7 @@ static void cg_insert_dummy_spec(ast_node *ast);
 static void cg_release_out_arg_before_call(sem_t sem_type_arg, sem_t sem_type_param, CSTR name);
 static void cg_refs_offset(charbuf *output, sem_struct *sptr, CSTR offset_sym_name, CSTR struct_name);
 static void cg_col_offsets(charbuf *output, sem_struct *sptr, CSTR sym_name, CSTR struct_name);
+static void cg_declare_simple_var(sem_t sem_type, CSTR name);
 cql_noexport void cg_c_init(void);
 
 // Emits a sql statement with bound args.
@@ -611,7 +612,7 @@ static void cg_var_decl(charbuf *output, sem_t sem_type, CSTR base_name, bool_t 
 // sensitive assignments or incompatible assignments were already ruled out
 // in semantic analysis.
 static bool_t is_assignment_target_reusable(ast_node *ast, sem_t sem_type) {
-  if (ast && ast->parent && is_ast_assign(ast->parent)) {
+  if (ast && ast->parent && (is_ast_assign(ast->parent) || is_ast_let_stmt(ast->parent))) {
     EXTRACT_ANY_NOTNULL(name_ast, ast->parent->left);
     sem_t sem_type_target = name_ast->sem->sem_type;
     sem_type_target &= (SEM_TYPE_CORE | SEM_TYPE_NOTNULL);
@@ -799,7 +800,7 @@ static void cg_set_null(charbuf *output, CSTR name, sem_t sem_type) {
   }
 }
 
-// Once we've don't any type conversions for the basic types we can do pretty simple assignments
+// Once we've done any type conversions for the basic types we can do pretty simple assignments
 // The nullable non-reference types typically need of the helper macros unless it's an exact-type copy
 // operation.  This function is used by cg_store near the finish line.
 static void cg_copy(charbuf *output, CSTR var, sem_t sem_type_var, CSTR value) {
@@ -1516,13 +1517,15 @@ static void cg_unary(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, i
   CG_RESERVE_RESULT_VAR(ast, sem_type_result);
   CG_PUSH_EVAL(expr, pri_new)
 
-  // UNARY is the highest... so we never need parens
-  Invariant(pri_new >= pri);
-
-  // We always add a space to avoid creating "--" or "++"
-  // expr_value might be -1 or -x or some such.  This way we're
-  // always safe at the cost of a space.
-  bprintf(&result, "%s %s", op, expr_value.ptr);
+  if (needs_paren(ast, pri_new, pri)) {
+    bprintf(&result, "(%s%s)", op, expr_value.ptr);
+  }
+  else {
+    // We always add a space to avoid creating "--" or "++"
+    // expr_value might be -1 or -x or some such.  This way we're
+    // always safe at the cost of a space.
+    bprintf(&result, "%s %s", op, expr_value.ptr);
+  }
 
   if (is_not_nullable(sem_type_expr)) {
     bprintf(is_null, "0");
@@ -2156,6 +2159,23 @@ static void cg_func_ifnull(ast_node *call_ast, charbuf *is_null, charbuf *value)
   cg_func_coalesce(call_ast, is_null, value);
 }
 
+static void cg_func_nullable(ast_node *call_ast, charbuf *is_null, charbuf *value) {
+  Contract(is_ast_call(call_ast));
+  EXTRACT_ANY_NOTNULL(name_ast, call_ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, call_ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  // nullable ( any expression ) -- at run time this function is a no-op
+  EXTRACT_ANY_NOTNULL(expr, arg_list->left);
+
+  // we just evaluate the inner expression
+  // we have to fake a high binding strength so that it will for sure emit parens
+  // as the nullable() construct looks like has parens and we don't know our context
+  // oh well, extra parens is better than the temporaries of doing this with PUSH_EVAL etc.
+  cg_expr(expr, is_null, value, C_EXPR_PRI_HIGHEST);
+}
+
 static void cg_func_ifnull_throw(ast_node *call_ast, charbuf *is_null, charbuf *value) {
   Contract(is_ast_call(call_ast));
   EXTRACT_ANY_NOTNULL(name_ast, call_ast->left);
@@ -2645,7 +2665,7 @@ static void cg_if_stmt(ast_node *ast) {
 // is used all over the place for assigning to scratch variables.  All
 // we have to do here is pull the name and types out of the ast.
 static void cg_assign(ast_node *ast) {
-  Contract(is_ast_assign(ast));
+  Contract(is_ast_assign(ast) || is_ast_let_stmt(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
   EXTRACT_ANY_NOTNULL(expr, ast->right);
 
@@ -2661,6 +2681,17 @@ static void cg_assign(ast_node *ast) {
   CG_PUSH_EVAL(expr, C_EXPR_PRI_ASSIGN);
   cg_store(cg_main_output, name, sem_type_var, sem_type_expr, expr_is_null.ptr, expr_value.ptr);
   CG_POP_EVAL(expr);
+}
+
+// In the LET statement, we declare the variable based on type, emit that
+// then do the usual SET codegen.
+static void cg_let_stmt(ast_node *ast) {
+  Contract(is_ast_let_stmt(ast));
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+
+  cg_declare_simple_var(name_ast->sem->sem_type, name);
+  cg_assign(ast);
 }
 
 // This is the processing for a single parameter in a stored proc declaration.
@@ -3354,6 +3385,15 @@ static void cg_declare_proc_stmt(ast_node *ast) {
   CHARBUF_CLOSE(proc_decl);
 }
 
+static void cg_declare_simple_var(sem_t sem_type, CSTR name) {
+  cg_var_decl(cg_declarations_output, sem_type, name, CG_VAR_DECL_LOCAL);
+  if (!in_proc) {
+    bprintf(cg_header_output, "%s", rt->symbol_visibility);
+    cg_var_decl(cg_header_output, sem_type, name, CG_VAR_DECL_PROTO);
+    bprintf(cg_header_output, ";\n");
+  }
+}
+
 // Emit a bunch of variable declarations for normal variables.
 // cg_var_decl does exactly this job for us.  Add any global variables to
 // the header file output.
@@ -3367,12 +3407,7 @@ static void cg_declare_vars_type(ast_node *declare_vars_type) {
     EXTRACT_ANY_NOTNULL(name_ast, ast->left);
     EXTRACT_STRING(name, name_ast);
 
-    cg_var_decl(cg_declarations_output, name_ast->sem->sem_type, name, CG_VAR_DECL_LOCAL);
-    if (!in_proc) {
-      bprintf(cg_header_output, "%s", rt->symbol_visibility);
-      cg_var_decl(cg_header_output, name_ast->sem->sem_type, name, CG_VAR_DECL_PROTO);
-      bprintf(cg_header_output, ";\n");
-    }
+    cg_declare_simple_var(name_ast->sem->sem_type, name);
   }
 }
 
@@ -6471,6 +6506,7 @@ cql_noexport void cg_c_init(void) {
   STMT_INIT(call_stmt);
   STMT_INIT(declare_vars_type);
   STMT_INIT(assign);
+  STMT_INIT(let_stmt);
   STMT_INIT(set_from_cursor);
   STMT_INIT(create_proc_stmt);
   STMT_INIT(emit_enums_stmt);
@@ -6499,6 +6535,7 @@ cql_noexport void cg_c_init(void) {
   STMT_INIT(echo_stmt);
 
   FUNC_INIT(attest_notnull);
+  FUNC_INIT(nullable);
   FUNC_INIT(ifnull_throw);
   FUNC_INIT(ifnull_crash);
   FUNC_INIT(ifnull);

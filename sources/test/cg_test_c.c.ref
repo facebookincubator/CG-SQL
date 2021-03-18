@@ -249,6 +249,8 @@ cql_string_literal(_literal_9_bar_fetch_to_cursor_from_cursor, "bar");
 cql_string_literal(_literal_10_y_, "y");
 cql_string_literal(_literal_11_, "");
 cql_string_literal(_literal_12_garbonzo_, "garbonzo");
+cql_string_literal(_literal_13_T_various_lets, "T");
+cql_string_literal(_literal_14_NT_various_lets, "NT");
 
 // The statement ending at line XXXX
 
@@ -2049,12 +2051,6 @@ cql_cleanup:
   return _rc_;
 }
 #undef _PROC_
-
-// The statement ending at line XXXX
-
-/*
-DECLARE result INTEGER;
-*/
 cql_nullable_int32 result;
 
 // The statement ending at line XXXX
@@ -8135,6 +8131,52 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
+CREATE PROC various_lets ()
+BEGIN
+  LET r := 1.0;
+  LET i := 1;
+  LET l := 1L;
+  LET t := "T";
+  LET nl := nullable(~2L);
+  LET ni := nullable(2 + 2);
+  LET nr := nullable(2.0);
+  LET nt := nullable("NT");
+END;
+*/
+
+#define _PROC_ "various_lets"
+// export: DECLARE PROC various_lets ();
+void various_lets(void) {
+  cql_double r = 0;
+  cql_int32 i = 0;
+  cql_int64 l = 0;
+  cql_string_ref t = NULL;
+  cql_nullable_int64 nl;
+  cql_set_null(nl);
+  cql_nullable_int32 ni;
+  cql_set_null(ni);
+  cql_nullable_double nr;
+  cql_set_null(nr);
+  cql_string_ref nt = NULL;
+
+  r = 1.0;
+  i = 1;
+  l = _64(1);
+  cql_set_string_ref(&t, _literal_13_T_various_lets);
+  cql_set_notnull(nl, (~_64(2)));
+  cql_set_notnull(ni, (2 + 2));
+  cql_set_notnull(nr, 2.0);
+  cql_set_string_ref(&nt, _literal_14_NT_various_lets);
+
+cql_cleanup:
+  cql_string_release(t);
+  cql_string_release(nt);
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
 CREATE PROC end_proc ()
 BEGIN
   DECLARE x INTEGER;
@@ -9189,7 +9231,7 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
   
   /*
-  SET result := simple_func(2);
+  LET result := simple_func(2);
   */
   cql_set_notnull(_tmp_n_int_2, 2);
   result = simple_func(_tmp_n_int_2);

@@ -13814,41 +13814,6 @@ Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant fai
 
 The statement ending at line XXXX
 
-SELECT 1
-  FROM bar
-  WHERE nullable(1) = 1;
-
-Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'nullable'
-
-  {select_stmt}: err
-  | {select_core_list}: err
-  | | {select_core}: err
-  |   | {select_expr_list_con}: err
-  |     | {select_expr_list}: err
-  |     | | {select_expr}: integer notnull
-  |     |   | {int 1}: integer notnull
-  |     | {select_from_etc}: err
-  |       | {table_or_subquery_list}: TABLE { bar: bar }
-  |       | | {table_or_subquery}: TABLE { bar: bar }
-  |       |   | {name bar}: TABLE { bar: bar }
-  |       | {select_where}
-  |         | {opt_where}: err
-  |         | | {eq}: err
-  |         |   | {call}: err
-  |         |   | | {name nullable}
-  |         |   | | {call_arg_list}
-  |         |   |   | {call_filter_clause}
-  |         |   |   | {arg_list}: ok
-  |         |   |     | {int 1}: integer notnull
-  |         |   | {int 1}: integer notnull
-  |         | {select_groupby}
-  |           | {select_having}
-  | {select_orderby}
-    | {select_limit}
-      | {select_offset}
-
-The statement ending at line XXXX
-
 WITH
 foo (a, a) AS (SELECT 1, 2)
 SELECT 1;
@@ -25125,7 +25090,7 @@ BEGIN
   SELECT NULL AS n;
 END;
 
-Error at test/sem_test.sql:XXXX : in select_stmt : CQL0056: NULL column did not specify a type 'n'
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0056: NULL expression has no type to imply the type of the select result 'n'
 
   {create_proc_stmt}: err
   | {name returns_bogus_null}: err
@@ -25156,7 +25121,7 @@ BEGIN
   FETCH C;
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0056: NULL column did not specify a type 'n'
+Error at test/sem_test.sql:XXXX : in str : CQL0056: NULL expression has no type to imply the type of the select result 'n'
 
   {create_proc_stmt}: err
   | {name fetch_null_column}: err
@@ -57501,4 +57466,88 @@ The statement ending at line XXXX
 
   {enforce_normal_stmt}: ok
   | {int 11}
+
+The statement ending at line XXXX
+
+LET int_var := 1;
+
+  {let_stmt}: int_var: integer notnull variable
+  | {name int_var}: int_var: integer notnull variable
+  | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+LET long_var := 1L;
+
+  {let_stmt}: long_var: longint notnull variable
+  | {name long_var}: long_var: longint notnull variable
+  | {longint 1}: longint notnull
+
+The statement ending at line XXXX
+
+LET price_dd := price_d;
+
+  {let_stmt}: price_dd: real<dollars> variable
+  | {name price_dd}: price_dd: real<dollars> variable
+  | {name price_d}: price_d: real<dollars> variable
+
+The statement ending at line XXXX
+
+LET bool_var := 1 = 1;
+
+  {let_stmt}: bool_var: bool notnull variable
+  | {name bool_var}: bool_var: bool notnull variable
+  | {eq}: bool notnull
+    | {int 1}: integer notnull
+    | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+LET pen_var := 1.000000e+00;
+
+  {let_stmt}: pen_var: real<real_things> notnull variable
+  | {name pen_var}: pen_var: real<real_things> notnull variable
+  | {dbl 1.000000e+00}: real<real_things> notnull
+
+The statement ending at line XXXX
+
+LET created_obj := creater_func();
+
+  {let_stmt}: created_obj: object notnull variable
+  | {name created_obj}: created_obj: object notnull variable
+  | {call}: object notnull create_func
+    | {name creater_func}
+    | {call_arg_list}
+      | {call_filter_clause}
+
+The statement ending at line XXXX
+
+LET null_is_no_good := NULL;
+
+Error at test/sem_test.sql:XXXX : in let_stmt : CQL0056: NULL expression has no type to imply the declaration of variable 'null_is_no_good'
+
+  {let_stmt}: err
+  | {name null_is_no_good}
+  | {null}: null
+
+The statement ending at line XXXX
+
+LET bad_result := NOT 'x';
+
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+
+  {let_stmt}: err
+  | {name bad_result}
+  | {not}: err
+    | {strlit 'x'}: text notnull
+
+The statement ending at line XXXX
+
+LET created_obj := 1;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0197: duplicate variable name in the same scope 'created_obj'
+
+  {let_stmt}: err
+  | {name created_obj}
+  | {int 1}
 

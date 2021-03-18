@@ -318,7 +318,6 @@ Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant fai
 Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
 Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
 Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
-Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'nullable'
 Error at test/sem_test.sql:XXXX : in str : CQL0206: duplicate name in list 'a'
 Error at test/sem_test.sql:XXXX : in cte_decl : CQL0100: duplicate common table name 'foo'
 Error at test/sem_test.sql:XXXX : in cte_decl : CQL0101: too few column names specified in common table expression 'foo'
@@ -591,8 +590,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed i
 Error at test/sem_test.sql:XXXX : in create_trigger_stmt : CQL0321: migration proc not allowed on object 'trigger8'
 Error at test/sem_test.sql:XXXX : in select_core : CQL0057: if multiple selects, all must have the same column count
 Error at test/sem_test.sql:XXXX : in select_core : CQL0012: incompatible types in expression 'A'
-Error at test/sem_test.sql:XXXX : in select_stmt : CQL0056: NULL column did not specify a type 'n'
-Error at test/sem_test.sql:XXXX : in str : CQL0056: NULL column did not specify a type 'n'
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0056: NULL expression has no type to imply the type of the select result 'n'
+Error at test/sem_test.sql:XXXX : in str : CQL0056: NULL expression has no type to imply the type of the select result 'n'
 Error at test/sem_test.sql:XXXX : in str : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'name'
 Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'a_key_'
 Error at test/sem_test.sql:XXXX : in dot : CQL0069: name not found 'a_key_'
@@ -1018,4 +1017,7 @@ Error at test/sem_test.sql:XXXX : in join_target : CQL0371: table valued functio
 Error at test/sem_test.sql:XXXX : in join_target : CQL0371: table valued function used in a left/right/cross context; this would hit a SQLite bug.  Wrap it in a CTE instead.
 Error at test/sem_test.sql:XXXX : in join_target : CQL0371: table valued function used in a left/right/cross context; this would hit a SQLite bug.  Wrap it in a CTE instead.
 Error at test/sem_test.sql:XXXX : in join_target : CQL0371: table valued function used in a left/right/cross context; this would hit a SQLite bug.  Wrap it in a CTE instead.
+Error at test/sem_test.sql:XXXX : in let_stmt : CQL0056: NULL expression has no type to imply the declaration of variable 'null_is_no_good'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0197: duplicate variable name in the same scope 'created_obj'
 semantic errors present; no code gen.

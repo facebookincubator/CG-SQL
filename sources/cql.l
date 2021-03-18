@@ -70,6 +70,7 @@ NOT                          { return NOT; }
 NULL                         { return NULL_; }
 DEFAULT                      { return DEFAULT; }
 CHECK                        { return CHECK; }
+LET                          { return LET; }
 LONG                         { return LONG_; }
 LONG_INTEGER                 { return LONG_INTEGER; }
 LONG_INT                     { return LONG_INT; }

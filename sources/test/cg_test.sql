@@ -1008,12 +1008,11 @@ begin
 END;
 
 declare function simple_func(int1 integer) integer;
-declare result integer;
 
 -- TEST: call external function
 -- + cql_set_notnull(_tmp_n_int_2, 2);
 -- + result = simple_func(_tmp_n_int_2);
-set result := simple_func(2);
+let result := simple_func(2);
 
 -- TEST: call external function
 -- + cql_set_notnull(_tmp_n_int_3, 1);
@@ -3467,6 +3466,36 @@ create proc early_close_cursor()
 begin
   close global_cursor;
   close global_cursor2;
+end;
+
+-- TEST: construct a lot of variables of various types
+-- + cql_double r = 0;
+-- + cql_int32 i = 0;
+-- + cql_int64 l = 0;
+-- + cql_string_ref t = NULL;
+-- + cql_nullable_int64 nl;
+-- + cql_nullable_int32 ni;
+-- + cql_nullable_double nr;
+-- + cql_string_ref nt = NULL;
+-- + r = 1.0;
+-- + i = 1;
+-- + l = _64(1);
+-- + cql_set_string_ref(&t, _literal_13_T_various_lets);
+-- + cql_set_notnull(nl, (~_64(2)));
+-- + cql_set_notnull(ni, (2 + 2));
+-- + cql_set_notnull(nr, 2.0);
+-- + cql_set_string_ref(&nt, _literal_14_NT_various_lets);
+-- - Error
+create proc various_lets()
+begin
+  let r := 1.0;
+  let i := 1;
+  let l := 1L;
+  let t := "T";
+  let nl := nullable(~2L);
+  let ni := nullable(2+2);
+  let nr := nullable(2.0);
+  let nt := nullable("NT");
 end;
 
 --------------------------------------------------------------------

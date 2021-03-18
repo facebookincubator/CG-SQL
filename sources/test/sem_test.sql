@@ -3762,11 +3762,6 @@ select const(1 and x);
 -- +1 Error
 select const(cast(x as real));
 
--- TEST: use nullable in the wrong context
--- + Error % function may not appear in this context 'nullable'
--- +1 Error
-select 1 from bar where nullable(1) = 1;
-
 -- TEST: with expression, duplicate columnms
 -- + Error % duplicate name in list 'a'
 -- +1 Error
@@ -6905,7 +6900,7 @@ select 1 as A, 2 as B;
 
 -- TEST: try to return untyped NULL
 -- + {create_proc_stmt}: err
--- + Error % NULL column did not specify a type 'n'
+-- + Error % NULL expression has no type to imply the type of the select result 'n'
 -- +1 Error
 create proc returns_bogus_null()
 begin
@@ -6914,7 +6909,7 @@ end;
 
 -- TEST: try to declare cursor for untyped NULL
 -- + {create_proc_stmt}: err
--- + Error % NULL column did not specify a type 'n'
+-- + Error % NULL expression has no type to imply the type of the select result 'n'
 -- +1 Error
 create proc fetch_null_column()
 begin
@@ -14405,3 +14400,59 @@ select * from foo T1 cross join foo T2;
 
 @enforce_normal table function;
 
+-- TEST: LET stmt, int
+-- + {let_stmt}: int_var: integer notnull variable
+-- + {name int_var}: int_var: integer notnull variable
+-- - Error
+LET int_var := 1;
+
+-- TEST: LET stmt, long
+-- + {let_stmt}: long_var: longint notnull variable
+-- + {name long_var}: long_var: longint notnull variable
+-- - Error
+LET long_var := 1L;
+
+-- TEST: LET stmt, real with kind
+-- + {let_stmt}: price_dd: real<dollars> variable
+-- + {name price_dd}: price_dd: real<dollars> variable
+-- - Error
+LET price_dd := price_d;
+
+-- TEST: LET stmt, bool
+-- + {let_stmt}: bool_var: bool notnull variable
+-- + {name bool_var}: bool_var: bool notnull variable
+-- - Error
+LET bool_var := 1=1;
+
+-- TEST: LET stmt, bool
+-- + {let_stmt}: pen_var: real<real_things> notnull variable
+-- + {name pen_var}: pen_var: real<real_things> notnull variable
+-- - Error
+LET pen_var := real_things.pen;
+
+-- TEST: create function -> extra bits should be stripped
+-- - {let_stmt}: created_obj: object notnull variable create_func
+-- - {name created_obj}: created_obj: object notnull variable create_func
+-- + {let_stmt}: created_obj: object notnull variable
+-- + {name created_obj}: created_obj: object notnull variable
+-- + {call}: object notnull create_func
+-- - Error
+LET created_obj := creater_func();
+
+-- TEST: LET stmt, NULL (null has no type)
+-- + {let_stmt}: err
+-- + Error % NULL expression has no type to imply the declaration of variable 'null_is_no_good'
+-- +1 Error
+LET null_is_no_good := NULL;
+
+-- TEST: LET error cases: bad expression
+-- + {let_stmt}: err
+-- + Error % string operand not allowed in 'NOT'
+-- +1 Error
+LET bad_result := NOT 'x';
+
+-- TEST: LET error cases: duplicate variable
+-- + {let_stmt}: err
+-- + Error % duplicate variable name in the same scope 'created_obj'
+-- +1 Error
+LET created_obj := 1;

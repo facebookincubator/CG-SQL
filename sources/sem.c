@@ -147,6 +147,7 @@ static void sem_data_type_var(ast_node *ast);
 static CSTR sem_combine_kinds_general(ast_node *ast, CSTR kleft, CSTR kright);
 static CSTR sem_combine_kinds(ast_node *ast, CSTR current_kind);
 static bool_t sem_select_stmt_is_mixed_results(ast_node *ast);
+static bool_t sem_verify_legal_variable_name(ast_node *variable, CSTR name);
 
 static void lazy_free_symtab(void *syms) {
   symtab_delete(syms);
@@ -4235,7 +4236,7 @@ cql_noexport void sem_verify_no_anon_no_null_columns(ast_node *ast) {
     }
 
     if (is_null_type(sptr->semtypes[i])) {
-      report_error(ast, "CQL0056: NULL column did not specify a type", sptr->names[i]);
+      report_error(ast, "CQL0056: NULL expression has no type to imply the type of the select result", sptr->names[i]);
       record_error(ast);
     }
   }
@@ -6605,11 +6606,6 @@ static void sem_func_nullable(ast_node *ast, uint32_t arg_count) {
   EXTRACT(arg_list, call_arg_list->right);
 
   if (!sem_validate_arg_count(ast, arg_count, 1)) {
-    return;
-  }
-
-  // this method is really only interesting for forcing type compatability in the select list
-  if (!sem_validate_function_context(ast, SEM_EXPR_CONTEXT_SELECT_LIST)) {
     return;
   }
 
@@ -11786,6 +11782,7 @@ static void sem_assign(ast_node *ast) {
   EXTRACT_ANY_NOTNULL(expr, ast->right);
 
   // SET [name] := [expr]
+  // LET [name] := [expr]
   ast_node *variable = find_local_or_global_variable(name);
 
   if (!variable) {
@@ -11822,6 +11819,45 @@ static void sem_assign(ast_node *ast) {
   if (is_error(expr)) {
     record_error(ast);
   }
+}
+
+static void sem_let_stmt(ast_node *ast) {
+  Contract(is_ast_let_stmt(ast));
+
+  EXTRACT_ANY_NOTNULL(variable, ast->left)
+  EXTRACT_STRING(name, variable);
+  EXTRACT_ANY_NOTNULL(expr, ast->right);
+
+  // LET [name] := [expr]
+  if (!sem_verify_legal_variable_name(variable, name)) {
+    record_error(ast);
+    return;
+  }
+
+  Invariant(!current_joinscope);
+  sem_root_expr(expr, SEM_EXPR_CONTEXT_NONE);
+
+  if (is_error(expr)) {
+    record_error(ast);
+    return;
+  }
+
+  if (is_null_type(expr->sem->sem_type)) {
+    report_error(ast, "CQL0056: NULL expression has no type to imply the declaration of variable", name);
+    record_error(ast);
+    return;
+  }
+
+  // the variable is now the exact type of the expression
+
+  sem_t sem_type_var = expr->sem->sem_type;
+  sem_type_var &= (SEM_TYPE_NOTNULL | SEM_TYPE_SENSITIVE | SEM_TYPE_CORE);
+  sem_type_var |= SEM_TYPE_VARIABLE;
+
+  variable->sem = ast->sem = new_sem(sem_type_var);
+  variable->sem->name = name;
+  variable->sem->kind = expr->sem->kind;
+  symtab_add(current_variables, name, variable);
 }
 
 // In/out processing for a procedure just decodes the AST into the sem_type
@@ -17305,6 +17341,7 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(commit_return_stmt);
   STMT_INIT(call_stmt);
   STMT_INIT(declare_vars_type);
+  STMT_INIT(let_stmt);
   STMT_INIT(assign);
   STMT_INIT(set_from_cursor);
   STMT_INIT(misc_attrs);

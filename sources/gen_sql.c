@@ -2427,6 +2427,15 @@ static void gen_assign(ast_node *ast) {
   gen_root_expr(expr);
 }
 
+static void gen_let_stmt(ast_node *ast) {
+  Contract(is_ast_let_stmt(ast));
+  EXTRACT_STRING(name, ast->left);
+  EXTRACT_ANY_NOTNULL(expr, ast->right);
+
+  gen_printf("LET %s := ", name);
+  gen_root_expr(expr);
+}
+
 static void gen_opt_inout(ast_node *ast) {
   if (is_ast_in(ast)) {
     gen_printf("IN ");
@@ -3312,6 +3321,7 @@ cql_noexport void gen_init() {
   STMT_INIT(commit_return_stmt);
   STMT_INIT(call_stmt);
   STMT_INIT(declare_vars_type);
+  STMT_INIT(let_stmt);
   STMT_INIT(assign);
   STMT_INIT(set_from_cursor);
   STMT_INIT(create_proc_stmt);

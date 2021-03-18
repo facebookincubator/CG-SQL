@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed Mar 10 15:13:54 PST 2021
+Snapshot as of Thu Mar 18 11:13:16 PDT 2021
 
 ### Operators and Literals
 
@@ -57,7 +57,7 @@ AS CASE WHEN FROM THEN ELSE END LEFT
 OUTER JOIN WHERE GROUP BY ORDER ASC
 DESC INNER FCOUNT AUTOINCREMENT DISTINCT
 LIMIT OFFSET TEMP TRIGGER IF ALL CROSS USING RIGHT
-HIDDEN UNIQUE HAVING SET TO DISTINCTROW ENUM
+HIDDEN UNIQUE HAVING SET LET TO DISTINCTROW ENUM
 FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR DECLARE TYPE FETCH LOOP LEAVE CONTINUE FOR
 OPEN CLOSE ELSE_IF WHILE CALL TRY CATCH THROW RETURN
 SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
@@ -114,6 +114,7 @@ any_stmt: select_stmt
   | update_cursor_stmt
   | upsert_stmt
   | with_upsert_stmt
+  | let_stmt
   | set_stmt
   | create_proc_stmt
   | declare_proc_stmt
@@ -199,6 +200,10 @@ schema_upgrade_version_stmt:
 set_stmt:
   "SET" name ":=" expr
   | "SET" name "FROM" "CURSOR" name
+  ;
+
+let_stmt:
+  LET name ":=" expr
   ;
 
 version_attrs_opt_recreate:
@@ -1363,6 +1368,8 @@ enforcement_options:
   | "WITHOUT" "ROWID"
   | "TRANSACTION"
   | "SELECT" "IF" "NOTHING"
+  | "INSERT" "SELECT"
+  | "TABLE" "FUNCTION"
   ;
 
 enforce_strict_stmt:
