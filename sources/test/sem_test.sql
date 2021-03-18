@@ -12681,9 +12681,20 @@ begin
 end;
 
 -- TEST: object arguments are not yet supported (this requires cursor generalizations)
--- + Error % the procedure has an object argument, this is not yet supported 'obj_proc'
+-- + {declare_cursor_like_name}: cursor_with_object: obj_proc[arguments]: { an_obj: object in } variable shape_storage value_cursor
+-- + {like}: obj_proc[arguments]: { an_obj: object in }
+-- - Error
+declare cursor_with_object cursor like obj_proc arguments;
+
+-- TEST: try to make a proc that emits a cursor with an object in it
+-- + {create_proc_stmt}: err
+-- + {out_stmt}: err
+-- + Error % out cursors with object columns are not yet supported 'cursor_with_object'
 -- +1 Error
-declare invalid_object_cursor cursor like obj_proc arguments;
+create proc try_to_emit_object()
+begin
+  out cursor_with_object; -- boom
+end;
 
 -- TEST: test rewrite for [FETCH [c] USING ... ] grammar
 -- + {create_proc_stmt}: ok

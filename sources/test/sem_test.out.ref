@@ -51814,15 +51814,29 @@ Error at test/sem_test.sql:XXXX : in like : CQL0262: LIKE ... ARGUMENTS used on 
 
 The statement ending at line XXXX
 
-DECLARE invalid_object_cursor CURSOR LIKE obj_proc ARGUMENTS;
+DECLARE cursor_with_object CURSOR LIKE obj_proc ARGUMENTS;
 
-Error at test/sem_test.sql:XXXX : in like : CQL0335: the procedure has an object argument, this is not yet supported 'obj_proc'
+  {declare_cursor_like_name}: cursor_with_object: obj_proc[arguments]: { an_obj: object in } variable shape_storage value_cursor
+  | {name cursor_with_object}: cursor_with_object: obj_proc[arguments]: { an_obj: object in } variable shape_storage value_cursor
+  | {like}: obj_proc[arguments]: { an_obj: object in }
+    | {name obj_proc}: obj_proc[arguments]: { an_obj: object in }
+    | {name obj_proc}: obj_proc[arguments]: { an_obj: object in }
 
-  {declare_cursor_like_name}: err
-  | {name invalid_object_cursor}
-  | {like}: err
-    | {name obj_proc}: err
-    | {name obj_proc}: err
+The statement ending at line XXXX
+
+CREATE PROC try_to_emit_object ()
+BEGIN
+  OUT cursor_with_object;
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0335: out cursors with object columns are not yet supported 'cursor_with_object'
+
+  {create_proc_stmt}: err
+  | {name try_to_emit_object}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {out_stmt}: err
+        | {name cursor_with_object}: cursor_with_object: obj_proc[arguments]: { an_obj: object in } variable shape_storage value_cursor
 
 The statement ending at line XXXX
 

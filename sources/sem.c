@@ -11910,12 +11910,6 @@ static ast_node *sem_find_likeable_proc_args(ast_node *like_ast, int32_t likeabl
       sem_type_param |= SEM_TYPE_IN_PARAMETER;
     }
 
-    sem_t core_type = core_type_of(sem_type_param);
-    if (core_type == SEM_TYPE_OBJECT) {
-      report_error(like_ast, "CQL0335: the procedure has an object argument, this is not yet supported", like_name);
-      goto error;
-    }
-
     sem_type_param &= sem_not(SEM_TYPE_VARIABLE);
 
     sptr->semtypes[i] = sem_type_param;
@@ -15698,6 +15692,17 @@ static void sem_out_any(ast_node *ast) {
   if (is_error(cursor)) {
     record_error(ast);
     return;
+  }
+
+  sem_struct *sptr = cursor->sem->sptr;
+
+  for (int32_t i = 0; i < sptr->count; i++) {
+    sem_t core_type = core_type_of(sptr->semtypes[i]);
+    if (core_type == SEM_TYPE_OBJECT) {
+      report_error(cursor, "CQL0335: out cursors with object columns are not yet supported", cursor->sem->name);
+      record_error(ast);
+      return;
+    }
   }
 
   if (!(cursor->sem->sem_type & SEM_TYPE_HAS_SHAPE_STORAGE)) {
