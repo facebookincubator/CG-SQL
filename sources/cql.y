@@ -1761,6 +1761,7 @@ enforcement_options:
   | TRANSACTION { $enforcement_options = new_ast_opt(ENFORCE_TRANSACTION); }
   | SELECT IF NOTHING { $enforcement_options = new_ast_opt(ENFORCE_SELECT_IF_NOTHING); }
   | INSERT SELECT { $enforcement_options = new_ast_opt(ENFORCE_INSERT_SELECT); }
+  | TABLE FUNCTION { $enforcement_options = new_ast_opt(ENFORCE_TABLE_FUNCTION); }
   ;
 
 enforce_strict_stmt:

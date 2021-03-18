@@ -170,6 +170,7 @@ struct enforcement_options {
   bool_t strict_transaction;    // no transactions may be started, commited, aborted etc.
   bool_t strict_if_nothing;     // (select ..) expressions must include the if nothing form
   bool_t strict_insert_select;  // insert with select may not include joins
+  bool_t strict_table_function; // table valued functions cannot be used on left/right joins (avoiding SQLite bug)
 };
 
 static struct enforcement_options  enforcement;
@@ -1492,6 +1493,9 @@ static void get_sem_flags(sem_t sem_type, charbuf *out) {
   if (sem_type & SEM_TYPE_HIDDEN_COL) {
     bprintf(out, " hidden_col");
   }
+  if (sem_type & SEM_TYPE_TVF) {
+    bprintf(out, " table_valued_function");
+  }
   if (sem_type & SEM_TYPE_VALIDATED) {
     bprintf(out, " validated");
   }
@@ -2199,6 +2203,31 @@ static void join_tables(ast_node *t1, ast_node *t2, ast_node *result, int32_t jo
     return;
   }
 
+  if (enforcement.strict_table_function) {
+     bool_t t1_tvf = !!(t1->sem->sem_type & SEM_TYPE_TVF);
+     bool_t t2_tvf = !!(t2->sem->sem_type & SEM_TYPE_TVF);
+     bool_t error = false;
+     switch (join_type) {
+       case JOIN_CROSS:
+         error = t1_tvf || t2_tvf;
+         break;
+       case JOIN_LEFT_OUTER:
+       case JOIN_LEFT:
+         error = t2_tvf;
+         break;
+       case JOIN_RIGHT_OUTER:
+       case JOIN_RIGHT:
+         error = t1_tvf;
+         break;
+     }
+
+     if (error) {
+       report_error(result, "CQL0371: table valued function used in a left/right/cross context; this would hit a SQLite bug.  Wrap it in a CTE instead.", NULL);
+       record_error(result);
+       return;
+     }
+  }
+
   sem_join *j1 = t1->sem->jptr;
   sem_join *j2 = t2->sem->jptr;
   Invariant(j1);
@@ -2238,8 +2267,8 @@ static void join_tables(ast_node *t1, ast_node *t2, ast_node *result, int32_t jo
       strip_left = 0;
       strip_right = SEM_TYPE_NOTNULL;
       break;
-    case JOIN_RIGHT_OUTER: /* RIGHT OUTER JOIN */
-    case JOIN_RIGHT: /* RIGHT JOIN */
+    case JOIN_RIGHT_OUTER:
+    case JOIN_RIGHT:
       strip_left = SEM_TYPE_NOTNULL;
       strip_right = 0;
        break;
@@ -7776,7 +7805,7 @@ static void sem_table_function(ast_node *ast) {
     return;
   }
 
-  sem_node *sem = new_sem(SEM_TYPE_JOIN);
+  sem_node *sem = new_sem(SEM_TYPE_JOIN|SEM_TYPE_TVF);
   sem->jptr = sem_join_from_sem_struct(user_func->sem->sptr);
   sem->jptr->names[0] = name;
   ast->sem = name_ast->sem = sem;
@@ -16570,6 +16599,10 @@ static void sem_enforcement_options(ast_node *ast, bool_t strict) {
 
     case ENFORCE_INSERT_SELECT:
       enforcement.strict_insert_select = strict;
+      break;
+
+    case ENFORCE_TABLE_FUNCTION:
+      enforcement.strict_table_function = strict;
       break;
 
     default:

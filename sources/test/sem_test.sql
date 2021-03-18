@@ -14367,3 +14367,41 @@ insert into foo(id)
 
 @enforce_normal insert select;
 
+@enforce_strict table function;
+
+-- TEST: TVF in inner join is ok
+-- + {select_stmt}: select: { id: integer notnull, foo: text }
+-- - Error
+select * from foo inner join tvf(1);
+
+-- TEST: TVF on right of left join is an error
+-- + {select_stmt}: err
+-- + Error % table valued function used in a left/right/cross context; this would hit a SQLite bug.  Wrap it in a CTE instead.
+-- +1 Error
+select * from foo left join tvf(1);
+
+-- TEST: TVF on left of right join is an error
+-- + {select_stmt}: err
+-- + Error % table valued function used in a left/right/cross context; this would hit a SQLite bug.  Wrap it in a CTE instead.
+-- +1 Error
+select * from tvf(1) right join foo;
+
+-- TEST: TVF on left of cross join is an error
+-- + {select_stmt}: err
+-- + Error % table valued function used in a left/right/cross context; this would hit a SQLite bug.  Wrap it in a CTE instead.
+-- +1 Error
+select * from tvf(1) cross join foo;
+
+-- TEST: TVF on right of cross join is an error
+-- + {select_stmt}: err
+-- + Error % table valued function used in a left/right/cross context; this would hit a SQLite bug.  Wrap it in a CTE instead.
+-- +1 Error
+select * from foo cross join tvf(1);
+
+-- TEST: non TVF cross join is ok
+-- + {select_stmt}: select: { id: integer, id: integer }
+-- - Error
+select * from foo T1 cross join foo T2;
+
+@enforce_normal table function;
+

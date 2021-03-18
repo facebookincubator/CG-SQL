@@ -38263,11 +38263,11 @@ END;
         |   | {select_expr_list_con}: select: { foo: text }
         |     | {select_expr_list}: select: { foo: text }
         |     | | {star}: select: { foo: text }
-        |     | {select_from_etc}: TABLE { tvf: select }
-        |       | {table_or_subquery_list}: TABLE { tvf: select }
-        |       | | {table_or_subquery}: TABLE { tvf: select }
-        |       |   | {table_function}: TABLE { tvf: select }
-        |       |     | {name tvf}: TABLE { tvf: select }
+        |     | {select_from_etc}: TABLE { tvf: select } table_valued_function
+        |       | {table_or_subquery_list}: TABLE { tvf: select } table_valued_function
+        |       | | {table_or_subquery}: TABLE { tvf: select } table_valued_function
+        |       |   | {table_function}: TABLE { tvf: select } table_valued_function
+        |       |     | {name tvf}: TABLE { tvf: select } table_valued_function
         |       |     | {arg_list}: ok
         |       |       | {int 1}: integer notnull
         |       | {select_where}
@@ -38365,11 +38365,11 @@ END;
         |   | {select_expr_list_con}: select: { foo: text }
         |     | {select_expr_list}: select: { foo: text }
         |     | | {star}: select: { foo: text }
-        |     | {select_from_etc}: TABLE { tvf: select }
-        |       | {table_or_subquery_list}: TABLE { tvf: select }
-        |       | | {table_or_subquery}: TABLE { tvf: select }
-        |       |   | {table_function}: TABLE { tvf: select }
-        |       |     | {name tvf}: TABLE { tvf: select }
+        |     | {select_from_etc}: TABLE { tvf: select } table_valued_function
+        |       | {table_or_subquery_list}: TABLE { tvf: select } table_valued_function
+        |       | | {table_or_subquery}: TABLE { tvf: select } table_valued_function
+        |       |   | {table_function}: TABLE { tvf: select } table_valued_function
+        |       |     | {name tvf}: TABLE { tvf: select } table_valued_function
         |       |     | {arg_list}: ok
         |       |       | {int 1}: integer notnull
         |       | {select_where}
@@ -38404,11 +38404,11 @@ END;
         |   | {select_expr_list_con}: select: { foo: text }
         |     | {select_expr_list}: select: { foo: text }
         |     | | {star}: select: { foo: text }
-        |     | {select_from_etc}: TABLE { T1: select }
-        |       | {table_or_subquery_list}: TABLE { T1: select }
-        |       | | {table_or_subquery}: TABLE { T1: select }
-        |       |   | {table_function}: TABLE { T1: select }
-        |       |   | | {name tvf}: TABLE { T1: select }
+        |     | {select_from_etc}: TABLE { T1: select } table_valued_function
+        |       | {table_or_subquery_list}: TABLE { T1: select } table_valued_function
+        |       | | {table_or_subquery}: TABLE { T1: select } table_valued_function
+        |       |   | {table_function}: TABLE { T1: select } table_valued_function
+        |       |   | | {name tvf}: TABLE { T1: select } table_valued_function
         |       |   | | {arg_list}: ok
         |       |   |   | {int 1}: integer notnull
         |       |   | {opt_as_alias}
@@ -38536,11 +38536,11 @@ END;
         |   | {select_expr_list_con}: select: { id: integer }
         |     | {select_expr_list}: select: { id: integer }
         |     | | {star}: select: { id: integer }
-        |     | {select_from_etc}: TABLE { ReadFromRowset: select }
-        |       | {table_or_subquery_list}: TABLE { ReadFromRowset: select }
-        |       | | {table_or_subquery}: TABLE { ReadFromRowset: select }
-        |       |   | {table_function}: TABLE { ReadFromRowset: select }
-        |       |     | {name ReadFromRowset}: TABLE { ReadFromRowset: select }
+        |     | {select_from_etc}: TABLE { ReadFromRowset: select } table_valued_function
+        |       | {table_or_subquery_list}: TABLE { ReadFromRowset: select } table_valued_function
+        |       | | {table_or_subquery}: TABLE { ReadFromRowset: select } table_valued_function
+        |       |   | {table_function}: TABLE { ReadFromRowset: select } table_valued_function
+        |       |     | {name ReadFromRowset}: TABLE { ReadFromRowset: select } table_valued_function
         |       |     | {arg_list}: ok
         |       |       | {name rowset}: rowset: object<rowset> variable in
         |       | {select_where}
@@ -57286,4 +57286,219 @@ The statement ending at line XXXX
 
   {enforce_normal_stmt}: ok
   | {int 10}
+
+The statement ending at line XXXX
+
+@ENFORCE_STRICT TABLE FUNCTION;
+
+  {enforce_strict_stmt}: ok
+  | {int 11}
+
+The statement ending at line XXXX
+
+SELECT *
+  FROM foo
+  INNER JOIN tvf(1);
+
+  {select_stmt}: select: { id: integer notnull, foo: text }
+  | {select_core_list}: select: { id: integer notnull, foo: text }
+  | | {select_core}: select: { id: integer notnull, foo: text }
+  |   | {select_expr_list_con}: select: { id: integer notnull, foo: text }
+  |     | {select_expr_list}: select: { id: integer notnull, foo: text }
+  |     | | {star}: select: { id: integer notnull, foo: text }
+  |     | {select_from_etc}: JOIN { foo: foo, tvf: select }
+  |       | {join_clause}: JOIN { foo: foo, tvf: select }
+  |       | | {table_or_subquery}: TABLE { foo: foo }
+  |       | | | {name foo}: TABLE { foo: foo }
+  |       | | {join_target_list}
+  |       |   | {join_target}: JOIN { foo: foo, tvf: select }
+  |       |     | {int 1}
+  |       |     | {table_join}
+  |       |       | {table_or_subquery}: TABLE { tvf: select } table_valued_function
+  |       |         | {table_function}: TABLE { tvf: select } table_valued_function
+  |       |           | {name tvf}: TABLE { tvf: select } table_valued_function
+  |       |           | {arg_list}: ok
+  |       |             | {int 1}: integer notnull
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT *
+  FROM foo
+  LEFT JOIN tvf(1);
+
+Error at test/sem_test.sql:XXXX : in join_target : CQL0371: table valued function used in a left/right/cross context; this would hit a SQLite bug.  Wrap it in a CTE instead.
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {star}
+  |     | {select_from_etc}: err
+  |       | {join_clause}: err
+  |       | | {table_or_subquery}: TABLE { foo: foo }
+  |       | | | {name foo}: TABLE { foo: foo }
+  |       | | {join_target_list}
+  |       |   | {join_target}: err
+  |       |     | {int 5}
+  |       |     | {table_join}
+  |       |       | {table_or_subquery}: TABLE { tvf: select } table_valued_function
+  |       |         | {table_function}: TABLE { tvf: select } table_valued_function
+  |       |           | {name tvf}: TABLE { tvf: select } table_valued_function
+  |       |           | {arg_list}: ok
+  |       |             | {int 1}: integer notnull
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT *
+  FROM tvf(1)
+  RIGHT JOIN foo;
+
+Error at test/sem_test.sql:XXXX : in join_target : CQL0371: table valued function used in a left/right/cross context; this would hit a SQLite bug.  Wrap it in a CTE instead.
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {star}
+  |     | {select_from_etc}: err
+  |       | {join_clause}: err
+  |       | | {table_or_subquery}: TABLE { tvf: select } table_valued_function
+  |       | | | {table_function}: TABLE { tvf: select } table_valued_function
+  |       | |   | {name tvf}: TABLE { tvf: select } table_valued_function
+  |       | |   | {arg_list}: ok
+  |       | |     | {int 1}: integer notnull
+  |       | | {join_target_list}
+  |       |   | {join_target}: err
+  |       |     | {int 6}
+  |       |     | {table_join}
+  |       |       | {table_or_subquery}: TABLE { foo: foo }
+  |       |         | {name foo}: TABLE { foo: foo }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT *
+  FROM tvf(1)
+  CROSS JOIN foo;
+
+Error at test/sem_test.sql:XXXX : in join_target : CQL0371: table valued function used in a left/right/cross context; this would hit a SQLite bug.  Wrap it in a CTE instead.
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {star}
+  |     | {select_from_etc}: err
+  |       | {join_clause}: err
+  |       | | {table_or_subquery}: TABLE { tvf: select } table_valued_function
+  |       | | | {table_function}: TABLE { tvf: select } table_valued_function
+  |       | |   | {name tvf}: TABLE { tvf: select } table_valued_function
+  |       | |   | {arg_list}: ok
+  |       | |     | {int 1}: integer notnull
+  |       | | {join_target_list}
+  |       |   | {join_target}: err
+  |       |     | {int 2}
+  |       |     | {table_join}
+  |       |       | {table_or_subquery}: TABLE { foo: foo }
+  |       |         | {name foo}: TABLE { foo: foo }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT *
+  FROM foo
+  CROSS JOIN tvf(1);
+
+Error at test/sem_test.sql:XXXX : in join_target : CQL0371: table valued function used in a left/right/cross context; this would hit a SQLite bug.  Wrap it in a CTE instead.
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {star}
+  |     | {select_from_etc}: err
+  |       | {join_clause}: err
+  |       | | {table_or_subquery}: TABLE { foo: foo }
+  |       | | | {name foo}: TABLE { foo: foo }
+  |       | | {join_target_list}
+  |       |   | {join_target}: err
+  |       |     | {int 2}
+  |       |     | {table_join}
+  |       |       | {table_or_subquery}: TABLE { tvf: select } table_valued_function
+  |       |         | {table_function}: TABLE { tvf: select } table_valued_function
+  |       |           | {name tvf}: TABLE { tvf: select } table_valued_function
+  |       |           | {arg_list}: ok
+  |       |             | {int 1}: integer notnull
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT *
+  FROM foo AS T1
+  CROSS JOIN foo AS T2;
+
+  {select_stmt}: select: { id: integer, id: integer }
+  | {select_core_list}: select: { id: integer, id: integer }
+  | | {select_core}: select: { id: integer, id: integer }
+  |   | {select_expr_list_con}: select: { id: integer, id: integer }
+  |     | {select_expr_list}: select: { id: integer, id: integer }
+  |     | | {star}: select: { id: integer, id: integer }
+  |     | {select_from_etc}: JOIN { T1: foo, T2: foo }
+  |       | {join_clause}: JOIN { T1: foo, T2: foo }
+  |       | | {table_or_subquery}: TABLE { T1: foo }
+  |       | | | {name foo}: TABLE { T1: foo }
+  |       | | | {opt_as_alias}
+  |       | |   | {name T1}
+  |       | | {join_target_list}
+  |       |   | {join_target}: JOIN { T1: foo, T2: foo }
+  |       |     | {int 2}
+  |       |     | {table_join}
+  |       |       | {table_or_subquery}: TABLE { T2: foo }
+  |       |         | {name foo}: TABLE { T2: foo }
+  |       |         | {opt_as_alias}
+  |       |           | {name T2}
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+@ENFORCE_NORMAL TABLE FUNCTION;
+
+  {enforce_normal_stmt}: ok
+  | {int 11}
 
