@@ -8011,7 +8011,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu Mar 18 11:13:16 PDT 2021
+Snapshot as of Thu Mar 18 11:16:08 PDT 2021
 
 ### Operators and Literals
 
@@ -8201,7 +8201,7 @@ set_stmt:
   ;
 
 let_stmt:
-  LET name ":=" expr
+  "LET" name ":=" expr
   ;
 
 version_attrs_opt_recreate:
@@ -12625,7 +12625,7 @@ select * from foo left join (select * from some_tvf(1));
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Thu Mar 18 11:13:16 PDT 2021
+Snapshot as of Thu Mar 18 11:16:09 PDT 2021
 
 ### Rules
 

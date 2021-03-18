@@ -127,6 +127,7 @@ s/[[:<:]]JOIN[[:>:]]/"JOIN"/g
 s/[[:<:]]KEY[[:>:]]/"KEY"/g
 s/[[:<:]]LEAVE[[:>:]]/"LEAVE"/g
 s/[[:<:]]LEFT[[:>:]]/"LEFT"/g
+s/[[:<:]]LET[[:>:]]/"LET"/g
 s/[[:<:]]LIKE[[:>:]]/"LIKE"/g
 s/[[:<:]]LIMIT[[:>:]]/"LIMIT"/g
 s/[[:<:]]LONGLIT[[:>:]]/"long-literal"/g

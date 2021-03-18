@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Thu Mar 18 11:13:16 2021
+// Snapshot as of Thu Mar 18 11:16:08 2021
 
 
 const PREC = {
@@ -289,6 +289,7 @@ module.exports = grammar({
     SET: $ => CI('set'),
     FROM: $ => CI('from'),
     CURSOR: $ => CI('cursor'),
+    LET: $ => CI('let'),
     AT_RECREATE: $ => CI('@recreate'),
     AT_CREATE: $ => CI('@create'),
     AT_DELETE: $ => CI('@delete'),
