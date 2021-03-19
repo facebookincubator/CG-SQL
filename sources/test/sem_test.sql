@@ -14194,6 +14194,18 @@ set price_d := (select 1 if nothing -1);
 -- - Error
 set price_d := (select 1 if nothing or null -1);
 
+-- TEST: select nothing or null null is redundant
+-- + {assign}: err
+-- + {select_if_nothing_or_null_expr}: err
+-- + Error % SELECT ... IF NOTHING OR NULL NULL is redundant; use SELECT ... IF NOTHING NULL instead
+-- +1 Error
+set price_d := (select 1 if nothing or null null);
+
+-- TEST: select nothing or null some_nullable is okay
+-- + {select_if_nothing_or_null_expr}: integer
+-- - Error
+set price_d := (select 1 if nothing or null (select null or 1));
+
 -- TEST: nested select is not allowed either
 -- + {assign}: err
 -- + {select_stmt}: err

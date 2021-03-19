@@ -56370,6 +56370,69 @@ SET price_d := ( SELECT 1 IF NOTHING OR NULL -1 );
 
 The statement ending at line XXXX
 
+SET price_d := ( SELECT 1 IF NOTHING OR NULL NULL );
+
+Error at test/sem_test.sql:XXXX : in select_if_nothing_or_null_expr : CQL0372: SELECT ... IF NOTHING OR NULL NULL is redundant; use SELECT ... IF NOTHING NULL instead
+
+  {assign}: err
+  | {name price_d}: price_d: real<dollars> variable
+  | {select_if_nothing_or_null_expr}: err
+    | {select_stmt}: _anon: integer notnull
+    | | {select_core_list}: select: { _anon: integer notnull }
+    | | | {select_core}: select: { _anon: integer notnull }
+    | |   | {select_expr_list_con}: select: { _anon: integer notnull }
+    | |     | {select_expr_list}: select: { _anon: integer notnull }
+    | |     | | {select_expr}: integer notnull
+    | |     |   | {int 1}: integer notnull
+    | |     | {select_from_etc}: ok
+    | |       | {select_where}
+    | |         | {select_groupby}
+    | |           | {select_having}
+    | | {select_orderby}
+    |   | {select_limit}
+    |     | {select_offset}
+    | {null}: null
+
+The statement ending at line XXXX
+
+SET price_d := ( SELECT 1 IF NOTHING OR NULL ( SELECT NULL OR 1 ) );
+
+  {assign}: price_d: real<dollars> variable
+  | {name price_d}: price_d: real<dollars> variable
+  | {select_if_nothing_or_null_expr}: integer
+    | {select_stmt}: _anon: integer notnull
+    | | {select_core_list}: select: { _anon: integer notnull }
+    | | | {select_core}: select: { _anon: integer notnull }
+    | |   | {select_expr_list_con}: select: { _anon: integer notnull }
+    | |     | {select_expr_list}: select: { _anon: integer notnull }
+    | |     | | {select_expr}: integer notnull
+    | |     |   | {int 1}: integer notnull
+    | |     | {select_from_etc}: ok
+    | |       | {select_where}
+    | |         | {select_groupby}
+    | |           | {select_having}
+    | | {select_orderby}
+    |   | {select_limit}
+    |     | {select_offset}
+    | {select_stmt}: _anon: bool
+      | {select_core_list}: select: { _anon: bool }
+      | | {select_core}: select: { _anon: bool }
+      |   | {select_expr_list_con}: select: { _anon: bool }
+      |     | {select_expr_list}: select: { _anon: bool }
+      |     | | {select_expr}: bool
+      |     |   | {or}: bool
+      |     |     | {null}: null
+      |     |     | {int 1}: integer notnull
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
 SET price_d := ( SELECT 1 IF NOTHING ( SELECT id
   FROM foo ) );
 

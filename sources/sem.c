@@ -16474,9 +16474,17 @@ static void sem_expr_select_if_nothing(ast_node *ast, CSTR op) {
     return;
   }
 
-  if (is_ast_select_if_nothing_or_null_expr(ast) && is_not_nullable(ast->right->sem->sem_type)) {
-    // if the right arg is not null then the expression is not null because it's like a builtin ifnull
-    combined_flags |= SEM_TYPE_NOTNULL;
+  if (is_ast_select_if_nothing_or_null_expr(ast)) {
+    if (is_nullable(ast->right->sem->sem_type)) {
+      if (is_ast_null(ast->right)) {
+        report_error(ast, "CQL0372: SELECT ... IF NOTHING OR NULL NULL is redundant; use SELECT ... IF NOTHING NULL instead", NULL);
+        record_error(ast);
+        return;
+      }
+    } else {
+      // if the right arg is not null then the expression is not null because it's like a builtin ifnull
+      combined_flags |= SEM_TYPE_NOTNULL;
+    }
   }
 
   ast->sem = new_sem(core_type | combined_flags);
