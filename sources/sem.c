@@ -148,6 +148,7 @@ static CSTR sem_combine_kinds_general(ast_node *ast, CSTR kleft, CSTR kright);
 static CSTR sem_combine_kinds(ast_node *ast, CSTR current_kind);
 static bool_t sem_select_stmt_is_mixed_results(ast_node *ast);
 static bool_t sem_verify_legal_variable_name(ast_node *variable, CSTR name);
+static void sem_verify_no_anon_columns(ast_node *ast);
 
 static void lazy_free_symtab(void *syms) {
   symtab_delete(syms);
@@ -4166,6 +4167,9 @@ static void sem_select_star(ast_node *ast) {
 
   ast->sem = new_sem(SEM_TYPE_STRUCT);
   ast->sem->sptr = sptr;
+
+  // If the result has any un-named columns we can't use it.
+  sem_verify_no_anon_columns(ast);
 }
 
 static uint32_t sem_select_table_star_count(ast_node *ast) {
@@ -4221,8 +4225,8 @@ static int32_t sem_select_table_star_add(ast_node *ast, sem_struct *sptr, int32_
   return index;
 }
 
-cql_noexport void sem_verify_no_anon_no_null_columns(ast_node *ast) {
-  // Sanity check our arguments, it is for sure a struct type.
+static void sem_verify_no_anon_columns(ast_node *ast) {
+   // Sanity check our arguments, it is for sure a struct type.
   Invariant(is_struct(ast->sem->sem_type));
   sem_struct *sptr = ast->sem->sptr;
   uint32_t count = ast->sem->sptr->count;
@@ -4234,12 +4238,34 @@ cql_noexport void sem_verify_no_anon_no_null_columns(ast_node *ast) {
       record_error(ast);
       return;
     }
+  }
+}
 
+// ensure none of the columns have null type
+static void sem_verify_no_null_columns(ast_node *ast) {
+   // Sanity check our arguments, it is for sure a struct type.
+  Invariant(is_struct(ast->sem->sem_type));
+  sem_struct *sptr = ast->sem->sptr;
+  uint32_t count = ast->sem->sptr->count;
+
+  for (int32_t i = 0; i < count; i++) {
     if (is_null_type(sptr->semtypes[i])) {
       report_error(ast, "CQL0056: NULL expression has no type to imply the type of the select result", sptr->names[i]);
       record_error(ast);
     }
   }
+}
+
+// In various contexts we have to verify that the result of a select statement
+// is well formed for re-use.  That means every column must have a name and a type
+// This is so that we know, for instance, the name and type of every column in
+// a result set from the select statement.
+cql_noexport void sem_verify_no_anon_no_null_columns(ast_node *ast) {
+  sem_verify_no_anon_columns(ast);
+  if (!is_error(ast)) {
+    sem_verify_no_null_columns(ast);
+  }
+  // if there is an error it will be on the ast on exit as is normal
 }
 
 static sem_struct *sem_unify_compatible_columns(ast_node *left, ast_node *right) {

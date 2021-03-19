@@ -378,6 +378,15 @@ select 1 as one, 2 as two;
 -- + {star}: err
 select *;
 
+-- TEST: anonymous columns produce an error
+-- + {insert_stmt}: err
+-- + Error % all columns in the select must have a name
+-- +1 Error
+insert into foo(id) 
+   select * from (
+     select 1
+   );
+
 -- TEST: select where statement
 -- + {select_stmt}: select: { T: integer notnull }
 -- + {select_core}: select: { T: integer notnull }
