@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu Mar 18 16:47:45 PDT 2021
+Snapshot as of Sat Mar 20 12:16:34 PDT 2021
 
 ### Operators and Literals
 
@@ -53,7 +53,7 @@ CREATE DROP TABLE WITHOUT ROWID PRIMARY KEY NULL_ DEFAULT CHECK AT_DUMMY_SEED VI
 OBJECT TEXT BLOB LONG_ INT_ INTEGER LONG_INT LONG_INTEGER REAL ON UPDATE CASCADE ON_CONFLICT DO NOTHING
 DELETE INDEX FOREIGN REFERENCES CONSTRAINT UPSERT STATEMENT CONST
 INSERT INTO VALUES VIEW SELECT QUERY_PLAN EXPLAIN OVER WINDOW FILTER PARTITION RANGE ROWS GROUPS
-AS CASE WHEN FROM THEN ELSE END LEFT
+AS CASE WHEN FROM THEN ELSE END LEFT SWITCH
 OUTER JOIN WHERE GROUP BY ORDER ASC
 DESC INNER FCOUNT AUTOINCREMENT DISTINCT
 LIMIT OFFSET TEMP TRIGGER IF ALL CROSS USING RIGHT
@@ -93,72 +93,73 @@ stmt:
   ;
 
 any_stmt: select_stmt
-  | explain_stmt
-  | create_trigger_stmt
-  | create_table_stmt
-  | create_virtual_table_stmt
-  | create_index_stmt
-  | create_view_stmt
   | alter_table_add_column_stmt
-  | drop_table_stmt
-  | drop_view_stmt
-  | drop_index_stmt
-  | drop_trigger_stmt
-  | with_delete_stmt
-  | delete_stmt
+  | begin_schema_region_stmt
+  | begin_trans_stmt
   | call_stmt
-  | with_insert_stmt
-  | insert_stmt
-  | with_update_stmt
-  | update_stmt
-  | update_cursor_stmt
-  | upsert_stmt
-  | with_upsert_stmt
-  | let_stmt
-  | set_stmt
+  | close_stmt
+  | commit_return_stmt
+  | commit_trans_stmt
+  | continue_stmt
+  | create_index_stmt
   | create_proc_stmt
-  | declare_proc_stmt
-  | declare_func_stmt
-  | declare_stmt
+  | create_table_stmt
+  | create_trigger_stmt
+  | create_view_stmt
+  | create_virtual_table_stmt
+  | declare_deployable_region_stmt
   | declare_enum_stmt
+  | declare_func_stmt
+  | declare_proc_stmt
+  | declare_schema_region_stmt
+  | declare_stmt
+  | delete_stmt
+  | drop_index_stmt
+  | drop_table_stmt
+  | drop_trigger_stmt
+  | drop_view_stmt
+  | echo_stmt
+  | emit_enums_stmt
+  | end_schema_region_stmt
+  | enforce_normal_stmt
+  | enforce_pop_stmt
+  | enforce_push_stmt
+  | enforce_reset_stmt
+  | enforce_strict_stmt
+  | explain_stmt
+  | fetch_call_stmt
   | fetch_stmt
   | fetch_values_stmt
-  | fetch_call_stmt
-  | while_stmt
-  | loop_stmt
-  | leave_stmt
-  | return_stmt
-  | rollback_return_stmt
-  | commit_return_stmt
-  | continue_stmt
   | if_stmt
+  | insert_stmt
+  | leave_stmt
+  | let_stmt
+  | loop_stmt
   | open_stmt
-  | close_stmt
   | out_stmt
   | out_union_stmt
+  | previous_schema_stmt
+  | proc_savepoint_stmt
+  | release_savepoint_stmt
+  | return_stmt
+  | rollback_return_stmt
+  | rollback_trans_stmt
+  | savepoint_stmt
+  | schema_ad_hoc_migration_stmt
+  | schema_upgrade_script_stmt
+  | schema_upgrade_version_stmt
+  | set_stmt
+  | switch_stmt
   | throw_stmt
   | trycatch_stmt
-  | begin_trans_stmt
-  | rollback_trans_stmt
-  | commit_trans_stmt
-  | proc_savepoint_stmt
-  | savepoint_stmt
-  | release_savepoint_stmt
-  | echo_stmt
-  | schema_upgrade_version_stmt
-  | schema_upgrade_script_stmt
-  | previous_schema_stmt
-  | enforce_strict_stmt
-  | enforce_normal_stmt
-  | enforce_reset_stmt
-  | enforce_push_stmt
-  | enforce_pop_stmt
-  | declare_schema_region_stmt
-  | declare_deployable_region_stmt
-  | begin_schema_region_stmt
-  | end_schema_region_stmt
-  | schema_ad_hoc_migration_stmt
-  | emit_enums_stmt
+  | update_cursor_stmt
+  | update_stmt
+  | upsert_stmt
+  | while_stmt
+  | with_delete_stmt
+  | with_insert_stmt
+  | with_update_stmt
+  | with_upsert_stmt
   ;
 
 explain_stmt:
@@ -1143,6 +1144,22 @@ call_stmt:
 
 while_stmt:
   "WHILE" expr "BEGIN" opt_stmt_list "END"
+  ;
+
+switch_stmt:
+  "SWITCH" expr switch_case switch_cases
+  | "SWITCH" expr "ALL" "VALUES" switch_case switch_cases
+  ;
+
+switch_case:
+  "WHEN" expr_list "THEN" stmt_list
+  | "WHEN" expr_list "THEN" "NOTHING"
+  ;
+
+switch_cases:
+  switch_case switch_cases
+  | "ELSE" stmt_list "END"
+  | "END"
   ;
 
 loop_stmt:

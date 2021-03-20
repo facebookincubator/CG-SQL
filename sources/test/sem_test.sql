@@ -1536,7 +1536,7 @@ begin
 end;
 
 -- TEST: try to leave outside of a loop
--- + Error % leave must be inside of a 'loop' or 'while' statement
+-- + Error % leave must be inside of a 'loop', 'while', or 'switch' statement
 -- +1 Error
 -- + {leave_stmt}: err
 leave;
@@ -14477,3 +14477,129 @@ LET bad_result := NOT 'x';
 -- + Error % duplicate variable name in the same scope 'created_obj'
 -- +1 Error
 LET created_obj := 1;
+
+
+-- a not null variable for the switch tests
+LET z := 1;
+
+-- TEST: switch statement with bogus expression
+-- + {switch_stmt}: err
+-- + {int 0}
+-- + {switch_body}
+-- + Error % string operand not allowed in 'NOT'
+-- +1 Error
+switch not 'x'
+  when 1 then nothing
+end;
+
+-- TEST: switch statement with bogus switch expression
+-- + {switch_stmt}: err
+-- + {int 0}
+-- + {switch_body}
+-- + Error % case expression must be a not-null integral type
+-- +1 Error
+switch 1.5
+  when 1 then nothing
+end;
+
+-- TEST: switch statement with when expression of the wrong type
+-- + {switch_stmt}: err
+-- + {int 0}
+-- + {switch_body}
+-- + Error % the type of a WHEN expression is bigger than the type of the SWITCH expression
+-- +1 Error
+switch z
+  when 1L then nothing
+end;
+
+-- TEST: switch statement with not constant when expression
+-- + {switch_stmt}: err
+-- + {int 0}
+-- + {switch_body}
+-- + Error % the WHEN expression cannot be evaluated to a constant
+-- +1 Error
+switch z
+  when 1+x then nothing
+end;
+
+-- TEST: switch statement with bogus when expression
+-- + {switch_stmt}: err
+-- + {int 0}
+-- + {switch_body}
+-- + Error % string operand not allowed in 'NOT'
+-- +1 Error
+switch z
+  when not "x" then nothing
+end;
+
+-- TEST: switch statement with bogus statement list
+-- + {switch_stmt}: err
+-- + {int 0}
+-- + {switch_body}
+-- + {stmt_list}: err
+-- + Error % string operand not allowed in 'NOT'
+-- +1 Error
+switch z
+  when 1 then 
+    if not "x" then end if;
+end;
+
+-- TEST: switch statement with no actual code in it
+-- + {switch_stmt}: err
+-- + {int 0}
+-- + {switch_body}
+-- + {switch_case}: err
+-- + Error % switch statement did not have any actual statements in it
+-- +1 Error
+switch z
+  when 1 then nothing -- no cases with statements
+  when 2 then nothing -- no cases with statements
+end;
+
+let thing := integer_things.pen;
+
+-- TEST: switch statement combining all values and else is a joke
+-- + {switch_stmt}: err
+-- + {int 1}
+-- + {switch_body}
+-- - {expr_list}: err
+-- 2 {expr_list}: ok
+-- + Error % switch ... ALL VALUES is useless with an ELSE clause
+-- +1 Error
+switch thing all values
+  when 
+    integer_things.pen, 
+    integer_things.pencil then 
+    set x := 10;
+  when integer_things.paper then
+    set x := 20;
+  else
+    set x := 30;
+end;
+
+-- TEST: switch statement with nullable switch expr
+-- + {switch_stmt}: err
+-- + {int 0}
+-- + {switch_body}
+-- + Error % case expression must be a not-null integral type
+-- +1 Error
+switch x
+  when 1 then nothing
+end;
+
+-- TEST: switch statement that actually works, 3 cases, 3 expressions
+-- + {switch_stmt}: ok
+-- +2 {expr_list}: ok
+-- + {int 1}: integer notnull
+-- + {int 2}: integer notnull
+-- + {int 3}: integer notnull
+-- no stmt list for "nothing"
+-- +2 {stmt_list}: ok
+-- - Error
+switch z
+  when 1, 2 then
+    set y := 1;
+  when 3 then nothing
+  else
+    set y := 2;
+end;

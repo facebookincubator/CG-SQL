@@ -3512,10 +3512,113 @@ begin
   end catch;
 end;
 
+-- TEST: basic code gen for the switch
+-- + switch (i2) {
+-- + case 1:
+-- + case 3:
+-- + i2 = 30;
+-- four code blocks one each for (1,3) and (4), (5), and default
+-- +4 break;
+-- + case 4:
+-- + i2 = 40;
+-- + default:
+-- + i2 = 50;
+-- case 5 must be present because there is a default, so it needs the case label and break;
+-- + case 5:
+-- + }
+switch i2
+  when 1, 3 then
+    set i2 := 30;
+  when 4 then
+    set i2 := 40;
+  when 5 then nothing
+  else
+    set i2 := 50;
+end;
+
+-- TEST: basic code gen for the switch (no default)
+-- + switch (i2) {
+-- + case 1:
+-- + case 3:
+-- + i2 = 30;
+-- only two code blocks for (1,3) and (4); 5 is omitted, no default
+-- +2 break;
+-- + case 4:
+-- + i2 = 40;
+-- - default:
+-- case 5 is no longer present because there is no default so we can just omit the label and save code
+-- - case 5:
+-- + }
+switch i2
+  when 1, 3 then
+    set i2 := 30;
+  when 4 then
+    set i2 := 40;
+  when 5 then nothing
+end;
+
+-- TEST: basic code gen for the switch (no default, int64)
+-- + switch (l2) {
+-- + case _64(1):
+-- + case _64(3):
+-- + i2 = 30;
+-- +2 break;
+-- + case _64(4):
+-- + i2 = 40;
+-- - default:
+-- - case _64(5):
+-- + }
+switch l2
+  when 1, 3 then
+    set i2 := 30;
+  when 4 then
+    set i2 := 40;
+  when 5 then nothing
+end;
+
+-- TEST: special case: just excluding 1, 2, 3... no statements but the ELSE
+-- + switch (i2) {
+-- + case 1:
+-- + case 2:
+-- + case 3:
+-- two net cases (1,2,3) and default
+-- +2 break;
+-- + default:
+-- + i2 = 123;
+switch i2
+  when 1, 2, 3 then nothing
+  else
+    set i2 := 123;
+end;
+
+
+-- TEST: use of LEAVE within a switch
+-- +  switch (i2) {
+-- +    case 1:
+-- +      if (i2) {
+-- +        break;
+-- +      }
+-- +      i2 = 999;
+-- +3      break;
+-- +    default:
+-- +      i2 = 1;
+-- +      break;
+-- +  }
+switch i2
+  when 1 then
+    if i2 then leave; end if;
+    set i2 := 999;
+  else
+    set i2 := 1;
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------
-create proc end_proc() begin declare x integer; end;
+let this_is_the_end := 0xf00d;
+
+create proc end_proc() begin end;
+
 -- TEST: end marker -- this is the last test
 -- + cql_nullable_int32 end_marker;
 -- + cql_code cql_startup(sqlite3 *_Nonnull _db_)

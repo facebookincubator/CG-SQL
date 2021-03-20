@@ -8247,22 +8247,19 @@ cql_cleanup:
   return _rc_;
 }
 #undef _PROC_
+cql_int32 this_is_the_end = 0;
 
 // The statement ending at line XXXX
 
 /*
 CREATE PROC end_proc ()
 BEGIN
-  DECLARE x INTEGER;
 END;
 */
 
 #define _PROC_ "end_proc"
 // export: DECLARE PROC end_proc ();
 void end_proc(void) {
-  cql_nullable_int32 x;
-  cql_set_null(x);
-
 
 cql_cleanup:
   ; // label requires some statement
@@ -10671,6 +10668,134 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   }
   _rc_ = SQLITE_OK;
   cql_finalize_stmt(&_temp_stmt);
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SWITCH i2
+    WHEN 1, 3 THEN
+      SET i2 := 30;
+    WHEN 4 THEN
+      SET i2 := 40;
+    WHEN 5 THEN NOTHING
+    ELSE
+      SET i2 := 50;
+  END;
+  */
+  switch (i2) {
+    case 1:
+    case 3:
+      i2 = 30;
+      break;
+    
+    case 4:
+      i2 = 40;
+      break;
+    
+    case 5:
+      break;
+    
+    default:
+      i2 = 50;
+      break;
+  }
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SWITCH i2
+    WHEN 1, 3 THEN
+      SET i2 := 30;
+    WHEN 4 THEN
+      SET i2 := 40;
+    WHEN 5 THEN NOTHING
+  END;
+  */
+  switch (i2) {
+    case 1:
+    case 3:
+      i2 = 30;
+      break;
+    
+    case 4:
+      i2 = 40;
+      break;
+  }
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SWITCH l2
+    WHEN 1, 3 THEN
+      SET i2 := 30;
+    WHEN 4 THEN
+      SET i2 := 40;
+    WHEN 5 THEN NOTHING
+  END;
+  */
+  switch (l2) {
+    case _64(1):
+    case _64(3):
+      i2 = 30;
+      break;
+    
+    case _64(4):
+      i2 = 40;
+      break;
+  }
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SWITCH i2
+    WHEN 1, 2, 3 THEN NOTHING
+    ELSE
+      SET i2 := 123;
+  END;
+  */
+  switch (i2) {
+    case 1:
+    case 2:
+    case 3:
+      break;
+    
+    default:
+      i2 = 123;
+      break;
+  }
+  
+  // The statement ending at line XXXX
+  
+  /*
+  SWITCH i2
+    WHEN 1 THEN
+      IF i2 THEN
+        LEAVE;
+      END IF;
+      SET i2 := 999;
+    ELSE
+      SET i2 := 1;
+  END;
+  */
+  switch (i2) {
+    case 1:
+      if (i2) {
+        break;
+      }
+      i2 = 999;
+      break;
+    
+    default:
+      i2 = 1;
+      break;
+  }
+  
+  // The statement ending at line XXXX
+  
+  /*
+  LET this_is_the_end := 0xf00d;
+  */
+  this_is_the_end = 0xf00d;
 
 cql_cleanup:
   cql_string_release(t0_nullable);

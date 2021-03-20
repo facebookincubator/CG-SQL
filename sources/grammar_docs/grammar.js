@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Thu Mar 18 16:47:46 2021
+// Snapshot as of Sat Mar 20 12:16:35 2021
 
 
 const PREC = {
@@ -27,7 +27,7 @@ module.exports = grammar({
     opt_stmt_list: $ => $.stmt_list,
     stmt_list: $ => repeat1(choice(seq($.stmt, ';'), $.comment, $.line_directive, $.macro)),
     stmt: $ => seq(optional($.misc_attrs), $.any_stmt),
-    any_stmt: $ => choice($.select_stmt, $.explain_stmt, $.create_trigger_stmt, $.create_table_stmt, $.create_virtual_table_stmt, $.create_index_stmt, $.create_view_stmt, $.alter_table_add_column_stmt, $.drop_table_stmt, $.drop_view_stmt, $.drop_index_stmt, $.drop_trigger_stmt, $.with_delete_stmt, $.delete_stmt, $.call_stmt, $.with_insert_stmt, $.insert_stmt, $.with_update_stmt, $.update_stmt, $.update_cursor_stmt, $.upsert_stmt, $.with_upsert_stmt, $.let_stmt, $.set_stmt, $.create_proc_stmt, $.declare_proc_stmt, $.declare_func_stmt, $.declare_stmt, $.declare_enum_stmt, $.fetch_stmt, $.fetch_values_stmt, $.fetch_call_stmt, $.while_stmt, $.loop_stmt, $.leave_stmt, $.return_stmt, $.rollback_return_stmt, $.commit_return_stmt, $.continue_stmt, $.if_stmt, $.open_stmt, $.close_stmt, $.out_stmt, $.out_union_stmt, $.throw_stmt, $.trycatch_stmt, $.begin_trans_stmt, $.rollback_trans_stmt, $.commit_trans_stmt, $.proc_savepoint_stmt, $.savepoint_stmt, $.release_savepoint_stmt, $.echo_stmt, $.schema_upgrade_version_stmt, $.schema_upgrade_script_stmt, $.previous_schema_stmt, $.enforce_strict_stmt, $.enforce_normal_stmt, $.enforce_reset_stmt, $.enforce_push_stmt, $.enforce_pop_stmt, $.declare_schema_region_stmt, $.declare_deployable_region_stmt, $.begin_schema_region_stmt, $.end_schema_region_stmt, $.schema_ad_hoc_migration_stmt, $.emit_enums_stmt),
+    any_stmt: $ => choice($.select_stmt, $.alter_table_add_column_stmt, $.begin_schema_region_stmt, $.begin_trans_stmt, $.call_stmt, $.close_stmt, $.commit_return_stmt, $.commit_trans_stmt, $.continue_stmt, $.create_index_stmt, $.create_proc_stmt, $.create_table_stmt, $.create_trigger_stmt, $.create_view_stmt, $.create_virtual_table_stmt, $.declare_deployable_region_stmt, $.declare_enum_stmt, $.declare_func_stmt, $.declare_proc_stmt, $.declare_schema_region_stmt, $.declare_stmt, $.delete_stmt, $.drop_index_stmt, $.drop_table_stmt, $.drop_trigger_stmt, $.drop_view_stmt, $.echo_stmt, $.emit_enums_stmt, $.end_schema_region_stmt, $.enforce_normal_stmt, $.enforce_pop_stmt, $.enforce_push_stmt, $.enforce_reset_stmt, $.enforce_strict_stmt, $.explain_stmt, $.fetch_call_stmt, $.fetch_stmt, $.fetch_values_stmt, $.if_stmt, $.insert_stmt, $.leave_stmt, $.let_stmt, $.loop_stmt, $.open_stmt, $.out_stmt, $.out_union_stmt, $.previous_schema_stmt, $.proc_savepoint_stmt, $.release_savepoint_stmt, $.return_stmt, $.rollback_return_stmt, $.rollback_trans_stmt, $.savepoint_stmt, $.schema_ad_hoc_migration_stmt, $.schema_upgrade_script_stmt, $.schema_upgrade_version_stmt, $.set_stmt, $.switch_stmt, $.throw_stmt, $.trycatch_stmt, $.update_cursor_stmt, $.update_stmt, $.upsert_stmt, $.while_stmt, $.with_delete_stmt, $.with_insert_stmt, $.with_update_stmt, $.with_upsert_stmt),
     explain_stmt: $ => seq($.EXPLAIN, optional($.opt_query_plan), $.explain_target),
     QUERY_PLAN: $ => prec.left(1, seq(CI('query'), CI('plan'))),
     opt_query_plan: $ => $.QUERY_PLAN,
@@ -207,6 +207,9 @@ module.exports = grammar({
     declare_stmt: $ => choice(seq($.DECLARE, $.name_list, $.data_type_with_options), seq($.DECLARE, $.name, $.CURSOR, $.FOR, $.select_stmt), seq($.DECLARE, $.name, $.CURSOR, $.FOR, $.explain_stmt), seq($.DECLARE, $.name, $.CURSOR, $.FOR, $.call_stmt), seq($.DECLARE, $.name, $.CURSOR, $.FETCH, $.FROM, $.call_stmt), seq($.DECLARE, $.name, $.CURSOR, $.shape_def), seq($.DECLARE, $.name, $.CURSOR, $.LIKE, $.select_stmt), seq($.DECLARE, $.name, $.CURSOR, $.FOR, $.name), seq($.DECLARE, $.name, $.TYPE, $.data_type_with_options)),
     call_stmt: $ => choice(seq($.CALL, $.name, '(', ')'), seq($.CALL, $.name, '(', $.call_expr_list, ')')),
     while_stmt: $ => seq($.WHILE, $.expr, $.BEGIN, optional($.opt_stmt_list), $.END),
+    switch_stmt: $ => choice(seq($.SWITCH, $.expr, $.switch_case, $.switch_cases), seq($.SWITCH, $.expr, $.ALL, $.VALUES, $.switch_case, $.switch_cases)),
+    switch_case: $ => choice(seq($.WHEN, $.expr_list, $.THEN, $.stmt_list), seq($.WHEN, $.expr_list, $.THEN, $.NOTHING)),
+    switch_cases: $ => choice(seq($.switch_case, $.switch_cases), seq($.ELSE, $.stmt_list, $.END), $.END),
     loop_stmt: $ => seq($.LOOP, $.fetch_stmt, $.BEGIN, optional($.opt_stmt_list), $.END),
     leave_stmt: $ => $.LEAVE,
     return_stmt: $ => $.RETURN,
@@ -434,6 +437,7 @@ module.exports = grammar({
     FETCH: $ => CI('fetch'),
     CALL: $ => CI('call'),
     WHILE: $ => CI('while'),
+    SWITCH: $ => CI('switch'),
     LOOP: $ => CI('loop'),
     LEAVE: $ => CI('leave'),
     RETURN: $ => CI('return'),

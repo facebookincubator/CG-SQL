@@ -742,6 +742,35 @@ In the context of computing the types of expressions, CQL is statically typed an
 
 The generated code for nullable types is considerably less efficient and so it should be avoided if that is reasonably possible.
 
+#### LET Statement
+
+You can declare and initialize a variable in one step using the `LET` form, e.g.
+
+```sql
+LET x := 1;
+```
+
+The named variable is declared to be the exact type of the expression on the right.  More on expressions in the coming sections.  The right side is often a constant
+in these cases but does not need to be.
+
+```sql
+LET i := 1;  -- integer not null
+LET l := 1L;  -- long not null
+LET t := "x";  -- text not null
+LET b := x IS y; -- bool not null
+LET b := x = y;  -- bool (maybe not null depending on x/y)
+```
+
+The psuedo function "nullable" removes "not null" from the type of its argument but otherwise does no computation.
+This can be useful to initialize nullable types.
+
+```sql
+LET n_i := nullable(1);  -- nullable integer variable initialized to 1
+LET l_i := nullable(1L);  -- nullable long variable initialized to 1
+```
+
+#### The `@RC` special variable
+
 CQL also has the special built-in variable `@RC` which refers to the most recent result code returned by a SQLite operation, e.g. 0 == `SQLITE_OK`, 1 == `SQLITE_ERROR`.   `@RC` is of type `integer not null`.  Note: there are many hidden SQLite operations such as statement finalization so `@RC` might change where there is no visible SQL operation.  The most common use of `@RC` is to capture the error code in the first statement of a `catch` block.
 
 ### Types of Literals
@@ -8011,7 +8040,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu Mar 18 11:16:08 PDT 2021
+Snapshot as of Sat Mar 20 12:16:34 PDT 2021
 
 ### Operators and Literals
 
@@ -8051,7 +8080,7 @@ CREATE DROP TABLE WITHOUT ROWID PRIMARY KEY NULL_ DEFAULT CHECK AT_DUMMY_SEED VI
 OBJECT TEXT BLOB LONG_ INT_ INTEGER LONG_INT LONG_INTEGER REAL ON UPDATE CASCADE ON_CONFLICT DO NOTHING
 DELETE INDEX FOREIGN REFERENCES CONSTRAINT UPSERT STATEMENT CONST
 INSERT INTO VALUES VIEW SELECT QUERY_PLAN EXPLAIN OVER WINDOW FILTER PARTITION RANGE ROWS GROUPS
-AS CASE WHEN FROM THEN ELSE END LEFT
+AS CASE WHEN FROM THEN ELSE END LEFT SWITCH
 OUTER JOIN WHERE GROUP BY ORDER ASC
 DESC INNER FCOUNT AUTOINCREMENT DISTINCT
 LIMIT OFFSET TEMP TRIGGER IF ALL CROSS USING RIGHT
@@ -8091,72 +8120,73 @@ stmt:
   ;
 
 any_stmt: select_stmt
-  | explain_stmt
-  | create_trigger_stmt
-  | create_table_stmt
-  | create_virtual_table_stmt
-  | create_index_stmt
-  | create_view_stmt
   | alter_table_add_column_stmt
-  | drop_table_stmt
-  | drop_view_stmt
-  | drop_index_stmt
-  | drop_trigger_stmt
-  | with_delete_stmt
-  | delete_stmt
+  | begin_schema_region_stmt
+  | begin_trans_stmt
   | call_stmt
-  | with_insert_stmt
-  | insert_stmt
-  | with_update_stmt
-  | update_stmt
-  | update_cursor_stmt
-  | upsert_stmt
-  | with_upsert_stmt
-  | let_stmt
-  | set_stmt
+  | close_stmt
+  | commit_return_stmt
+  | commit_trans_stmt
+  | continue_stmt
+  | create_index_stmt
   | create_proc_stmt
-  | declare_proc_stmt
-  | declare_func_stmt
-  | declare_stmt
+  | create_table_stmt
+  | create_trigger_stmt
+  | create_view_stmt
+  | create_virtual_table_stmt
+  | declare_deployable_region_stmt
   | declare_enum_stmt
+  | declare_func_stmt
+  | declare_proc_stmt
+  | declare_schema_region_stmt
+  | declare_stmt
+  | delete_stmt
+  | drop_index_stmt
+  | drop_table_stmt
+  | drop_trigger_stmt
+  | drop_view_stmt
+  | echo_stmt
+  | emit_enums_stmt
+  | end_schema_region_stmt
+  | enforce_normal_stmt
+  | enforce_pop_stmt
+  | enforce_push_stmt
+  | enforce_reset_stmt
+  | enforce_strict_stmt
+  | explain_stmt
+  | fetch_call_stmt
   | fetch_stmt
   | fetch_values_stmt
-  | fetch_call_stmt
-  | while_stmt
-  | loop_stmt
-  | leave_stmt
-  | return_stmt
-  | rollback_return_stmt
-  | commit_return_stmt
-  | continue_stmt
   | if_stmt
+  | insert_stmt
+  | leave_stmt
+  | let_stmt
+  | loop_stmt
   | open_stmt
-  | close_stmt
   | out_stmt
   | out_union_stmt
+  | previous_schema_stmt
+  | proc_savepoint_stmt
+  | release_savepoint_stmt
+  | return_stmt
+  | rollback_return_stmt
+  | rollback_trans_stmt
+  | savepoint_stmt
+  | schema_ad_hoc_migration_stmt
+  | schema_upgrade_script_stmt
+  | schema_upgrade_version_stmt
+  | set_stmt
+  | switch_stmt
   | throw_stmt
   | trycatch_stmt
-  | begin_trans_stmt
-  | rollback_trans_stmt
-  | commit_trans_stmt
-  | proc_savepoint_stmt
-  | savepoint_stmt
-  | release_savepoint_stmt
-  | echo_stmt
-  | schema_upgrade_version_stmt
-  | schema_upgrade_script_stmt
-  | previous_schema_stmt
-  | enforce_strict_stmt
-  | enforce_normal_stmt
-  | enforce_reset_stmt
-  | enforce_push_stmt
-  | enforce_pop_stmt
-  | declare_schema_region_stmt
-  | declare_deployable_region_stmt
-  | begin_schema_region_stmt
-  | end_schema_region_stmt
-  | schema_ad_hoc_migration_stmt
-  | emit_enums_stmt
+  | update_cursor_stmt
+  | update_stmt
+  | upsert_stmt
+  | while_stmt
+  | with_delete_stmt
+  | with_insert_stmt
+  | with_update_stmt
+  | with_upsert_stmt
   ;
 
 explain_stmt:
@@ -9141,6 +9171,22 @@ call_stmt:
 
 while_stmt:
   "WHILE" expr "BEGIN" opt_stmt_list "END"
+  ;
+
+switch_stmt:
+  "SWITCH" expr switch_case switch_cases
+  | "SWITCH" expr "ALL" "VALUES" switch_case switch_cases
+  ;
+
+switch_case:
+  "WHEN" expr_list "THEN" stmt_list
+  | "WHEN" expr_list "THEN" "NOTHING"
+  ;
+
+switch_cases:
+  switch_case switch_cases
+  | "ELSE" stmt_list "END"
+  | "END"
   ;
 
 loop_stmt:
@@ -11185,13 +11231,17 @@ In a `FETCH [cursor] INTO [variables]` the number of variables specified did not
 
 ### CQL0218: continue must be inside of a 'loop' or 'while' statement
 
-The `CONTINUE` statement may only appear inside of looping constructs.  CQL only has two `loop fetch ...` and `while`
+The `CONTINUE` statement may only appear inside of looping constructs.  CQL only has two `LOOP FETCH ...` and `WHILE`
 
 -----
 
-### CQL0219: leave must be inside of a 'loop' or 'while' statement
+### CQL0219: leave must be inside of a 'loop', 'while', or 'switch' statement
 
-The `LEAVE` statement may only appear inside of looping constructs.  CQL only has two `loop fetch ...` and `while`
+The `LEAVE` statement may only appear inside of looping constructs or the switch statement.
+
+CQL has two loop types: `LOOP FETCH ...` and `WHILE` and of course the `SWITCH` statement.
+
+The errant `LEAVE` statement is not in any of those.
 
 -----
 
@@ -12613,6 +12663,116 @@ select * from foo left join (select * from some_tvf(1));
 
 ----
 
+### CQL0372: SELECT ... IF NOTHING OR NULL NULL is redundant; use SELECT ... IF NOTHING NULL instead.
+
+It is always the case that `SELECT ... IF NOTHING OR NULL NULL` is equivalent to `SELECT ... IF NOTHING NULL`. As such, do not do this:
+
+```sql
+select foo from bar where baz if nothing or null null
+```
+
+Do this instead:
+
+```sql
+select foo from bar where baz if nothing null
+```
+----
+CQL 0373 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0374 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0375 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0376 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0377 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0378 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0379 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+
+### CQL0380: the WHEN expression cannot be evaluated to a constant
+
+In a `SWITCH` statement each expression each expression in a `WHEN` clause must be made up
+of constants and simple numeric math operations.  See the reference on the `const(..)` expression
+for the valid set.
+
+It's most likely that a variable or function call appears in the errant expression.
+
+----
+
+### CQL0381: case expression must be a not-null integral type
+
+The `SWITCH` statement can only switch over integers or long integers.  It will be translated
+directly to the C switch statement form.  `TEXT`, `REAL`, `BLOB`, `BOOL`, and `OBJECT` cannot
+be used in this way.
+
+----
+
+### CQL0382: the type of a WHEN expression is bigger than the type of the SWITCH expression
+
+The `WHEN` expression evaluates to a `LONG INTEGER` but the expression in the `SWITCH` is `INTEGER`.
+
+----
+
+### CQL0383: switch ... ALL VALUES is useless with an ELSE clause
+
+The `ALL VALUES` form of switch means that:
+ * the `SWITCH` expression is an enumerated type
+ * the `WHEN` cases will completely cover the values of the enum
+
+If you allow the `ELSE` form then `ALL VALUES` becomes meaningless because of
+course they are all covered.  So with `ALL VALUES` there can be no `ELSE`.
+
+You can list items that have no action with this form:
+
+```
+   WHEN 10, 15 THEN NOTHING -- explicitly do nothing in these cases so they are still covered
+```
+
+No code is generated for such cases.
+
+----
+
+### CQL0384: switch statement did not have any actual statements in it
+
+Either there were no `WHEN` clauses at all, or they were all `WHEN ... THEN NOTHING` so
+there is no actual code to execute.  You need to add some cases that do work.
+
+----
+CQL 0385 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0386 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0387 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0388 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0389 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0390 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0391 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0392 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0393 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0394 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0395 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0396 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0397 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0398 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0399 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0400 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+
 
 
 ## Appendix 5: JSON Schema Grammar
@@ -12625,7 +12785,7 @@ select * from foo left join (select * from some_tvf(1));
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Thu Mar 18 11:16:09 PDT 2021
+Snapshot as of Sat Mar 20 12:16:36 PDT 2021
 
 ### Rules
 
@@ -13439,6 +13599,19 @@ set dict := create_list();  -- error
 set list := create_list();  -- ok
 set list := dict;           -- error
 
+-- implied type initialization
+LET i := 1;  -- integer not null
+LET l := 1L;  -- long not null
+LET t := "x";  -- text not null
+LET b := x IS y; -- bool not null
+LET b := x = y;  -- bool (maybe not null depending on x/y)
+
+-- the psuedo function "nullable" converts the type of its arg to the nullable
+-- version of the same thing.
+
+LET n_i := nullable(1);  -- nullable integer variable initialized to 1
+LET l_i := nullable(1L);  -- nullable long variable initialized to 1
+
 /**********************************************************
  * 3. Control Flow
  *********************************************************/
@@ -13554,7 +13727,7 @@ null == null --> null
 null is 1     -> 0
 1 is not null -> 1
 
--- COALESCE returns the first non null argument, or the last arg if all were null
+-- COALESCE returns the first non null arg, or the last arg if all were null
 -- if the last arg is not null, you get a non null result for sure
 COALESCE(x==y, 0) --> if x or y is null, you get 0 not null, not quite "is"
 
@@ -13573,12 +13746,12 @@ CASE when x > 0 then "pos" when x < 0 then "neg" else "other" end;
 
 -- you can "throw" out of the current procedure (see exceptions below)
 declare x integer not null;
-set x := ifnull_throw(nullable_int_expression); -- returns non null, throws if null
+set x := ifnull_throw(nullable_int_expr); -- returns non null, throws if null
 
 -- if you have already tested the expression you can use assert-like form
-if x is not null then
+if nullable_int_expr is not null then
   -- I am very sure nullable_int_expression is not null
-  set x := ifnull_crash(nullable_int_expression);
+  set x := ifnull_crash(nullable_int_expr);
 end if;
 
 /**********************************************************
@@ -13651,7 +13824,8 @@ set rr := 1+1;           -- this is evaluated in generated C code
 set rr := (select 1+1);  -- this select statement is sent to SQLite, it does the add
 
 -- CQL tries to do most things the same as SQLite in the C context
--- some things are exceedingly hard to emulate correctly.  Even simply looking things
+-- but some things are exceedingly hard to emulate correctly.
+-- Even simple looking things:
 set rr := (select cast("1.23" as real));   -->  rr := 1.23
 set rr := cast("1.23" as real);   -->  error
 
@@ -13660,11 +13834,11 @@ set rr := cast("1.23" as real);   -->  error
 -- is different.  It would not do to give different answers in one context or
 -- another so those conversions are simply not supported.
 
--- Loose concatenation is likewise not supported because of the implied conversions
+-- Loose concatenation is not supported because of the implied conversions
 -- Loose means "not in the context of a SQL statement"
 set r := 1.23;
-set r := (select cast("100"||r as real));  -->  1001.23 (a number)
-set r := cast("100"||r as real);  -->  error, concatenation not supported in loose expressions
+set r := (select cast("100"||r as real));  --> 1001.23 (a number)
+set r := cast("100"||r as real);  --> error, concat not supported in loose expr
 
 -- illustrate a simple insertion
 insert into T1 values (1, "foo", 3.14);
@@ -13709,7 +13883,8 @@ end;
 -- procedures like "hello" have a void signature, they return nothing
 -- as nothing can go wrong but those that use the database like "swizzle"
 -- can return an error code if there is a problem.
--- will_fail will always return SQLITE_CONSTRAINT, the second insert is said to "throw"
+-- will_fail will always return SQLITE_CONSTRAINT, the second insert
+-- is said to "throw"
 create proc will_fail()
 begin
    insert into T1 values (1, "x", 1);
@@ -13743,7 +13918,8 @@ begin
   end catch;
 end;
 
--- you can throw an error explicitly (if there is no current error you get SQLITE_ERROR)
+-- you can (re)throw an error explicitly
+-- if there is no current error you get SQLITE_ERROR
 create proc upsert_wrapper(LIKE t1) -- my args are the same as the columns of T1
 begin
   if r_ > 10 then throw end if;
@@ -13824,14 +14000,14 @@ create proc peek_t1(r_ real, out rows_ integer not null)
 begin
    /* rows_ is set to zero for sure! */
    declare C cursor for select * from T1 where r < r_ limit 2;
-   open C;   -- this is no-op, present because other systems have it, no code generated
-   fetch C;
-   if C then  -- cursor name indicates presence of a row, fetch might find none!
+   open C;  -- this is no-op, present because other systems have it
+   fetch C;  -- fetch might find a row or not
+   if C then  -- cursor name as bool indicates presence of a row
      set rows_ = rows_ + (C.r < 5);
      fetch C;
      set rows_ = rows_ + (C and C.r < 5);
    end if;
-   close C;  -- cursors closed automatically at end of method but early close possible
+   close C;  -- cursors auto-closed at end of method but early close possible
 end;
 
 -- the fetch form can also fetch directly into variables
@@ -13853,30 +14029,36 @@ end;
  *********************************************************/
 
 -- to consume a procedure that uses "out" you can declare a value cursor
--- this does not imply the use of the database (unless the source uses the database)
+-- by itself this does not imply use of the database, but often the source
+-- of the cursor uses the database.
 create proc consume_one_t1()
 begin
-  declare C cursor like one_t1;   -- a cursor whose shape matches the one_t1 "out" statement
-  fetch C from call one_t1(7);    -- load it from the call
+  -- a cursor whose shape matches the one_t1 "out" statement
+  declare C cursor like one_t1;
+
+  -- load it from the call
+  fetch C from call one_t1(7);
   if C.r > 10 then
-    call printf("woohoo");   -- use values as you see fit
+    -- use values as you see fit
+    call printf("woohoo");
   end if;
 end;
 
 -- you can do the above in one go with the compound form
-declare C cursor fetch from call one_t1(7); -- same code
+declare C cursor fetch from call one_t1(7); -- same net code
 
 -- value cursors can come from anywhere and can be a result
 create proc use_t1_a_lot()
 begin
-  declare C cursor like T1;     -- T1 is the same shape as one_t1, this will work, too
+  -- T1 is the same shape as one_t1, this will work, too
+  declare C cursor like T1;
   fetch C from call one_t1(7);  -- load it from the call
 
   -- do something, then maybe load it again with different args
   fetch C from call one_t1(12);   -- load it again
- 
+
   -- do something, then maybe load it again with explicit args
-  fetch C using 
+  fetch C using
      1 id,
      "foo" t,
      8.2 r;
@@ -13888,16 +14070,21 @@ end;
 -- make a complex result set one row at a time
 create proc out_union_example()
 begin
-  declare C cursor like T1;     -- T1 is the same shape as one_t1, this will work, too
-  fetch C from call one_t1(7);  -- load it from the call
-  out union C;                  -- note out UNION rather than just out, indicating potentially many rows
+  -- T1 is the same shape as one_t1, this will work, too
+  declare C cursor like T1;
+
+  -- load it from the call
+  fetch C from call one_t1(7);
+
+  -- note out UNION rather than just out, indicating potentially many rows
+  out union C;
 
   -- load it again with different args
-  fetch C from call one_t1(12);   -- load it again
+  fetch C from call one_t1(12);
   out union C;
- 
+
   -- do something, then maybe load it again with explicit args
-  fetch C using 
+  fetch C using
      1 id,
      "foo" t,
      8.2 r;
@@ -13913,7 +14100,7 @@ begin
   loop fetch C
   begin
     -- use builtin cql_cursor_format to make the cursor into a string
-    call printf("%s\n", cql_cursor_format(C));  --> prints every column and value
+    call printf("%s\n", cql_cursor_format(C)); --> prints every column and value
   end;
 end;
 
@@ -13926,14 +14113,15 @@ declare my_type type integer not null;   -- make an alias for integer not null
 declare i my_type;  -- use it, "i" is an integer
 
 -- mixing in type kinds is helpful
-declare distance type real<meters>;     -- indicating distances to be measured in meters
-declare time type real<seconds>;        -- indicating time to be measured in seconds
-declare job_id type long<job_id>;  
-declare person_id type long<person_id>;  
+declare distance type real<meters>;  -- e.g., distances to be measured in meters
+declare time type real<seconds>;     -- e.g., time to be measured in seconds
+declare job_id type long<job_id>;
+declare person_id type long<person_id>;
 
--- variables/columns of type distance are not compatible with variables of type time
--- variables/columns of types job_id are not compatible with person_id
--- even though the underlying type is the same for both
+-- with the above done
+--  * vars/cols of type "distance" are incompatible with those of type "time"
+--  * vars/cols of types job_id are incompatible with person_id
+-- this is true even though the underlying type is the same for both!
 
 -- enums can have any numeric type as their base type
 declare enum implement integer (
@@ -13951,7 +14139,8 @@ set impl := implement.pen;  -- value "2"
 
 -- if you want this enum to be owned by the current compiland you can
 -- emit it into the .h file we are going to generate.
-@emit_enums implement;   -- do not put this in an include file, you want it to go to one place
+-- do not put this in an include file, you want it to go to one place
+@emit_enums implement;
 
 /**********************************************************
  * 10. Shapes and Their Uses
@@ -13960,7 +14149,7 @@ set impl := implement.pen;  -- value "2"
 -- shapes first appeared to help define value cursors like so:
 
 -- a table or view name defines a shape
-declare C cursor like T1;       
+declare C cursor like T1;
 
 -- the result of a proc defines a shape
 declare D cursor like one_t1;
@@ -13984,8 +14173,8 @@ call count_t1(from G);  -- the args become G.r_, G.rows_
 -- a shape can be used to define a functions args, or some of the args
 -- p will have args id_, t_, and r_ with types matching table T1
 -- note that an _ was added
-create proc p(like T1) 
-begin 
+create proc p(like T1)
+begin
   -- do something
 end;
 
@@ -14003,7 +14192,7 @@ begin
     -- convert args to cursor
     declare C like q arguments;
     fetch C from arguments;
-    call printf("%s\n", cql_cursor_format(C));  --> prints every column and value
+    call printf("%s\n", cql_cursor_format(C)); --> prints every column and value
   end if;
   -- insert a row based on the args
   insert into T1 from arguments;
@@ -14025,13 +14214,14 @@ end;
 
 -- shapes can be subsetted for instance
 -- here not just the arguments that match C are copied, there could be more
-fetch C from arguments(like C);  
+fetch C from arguments(like C);
 
 -- use the D shape to load C, defaults for other arguments
 fetch C(like D) from D;
 
 -- use the D shape to load C, dummy values for the others
--- dummy seed here means use "11" for any numerics and "col_name_11" for any strings/blobs
+-- dummy seed here means use "11" for any numerics
+-- and use  "col_name_11" for any strings/blobs
 fetch C(like D) from D @dummy_seed(11);
 
 -- use the Z shape to control which fields are copied
@@ -14047,7 +14237,7 @@ create get_foo_args(X like some_shape, seed_ integer not null)
 begin
   declare C cursor like foo arguments;
   -- any way of loading C could work this is one
-  fetch C(like X) from X @dummy_seed(seed_); 
+  fetch C(like X) from X @dummy_seed(seed_);
   out C;
 end;
 
@@ -14075,7 +14265,7 @@ declare C cursor like foo;
 fetch C USING
     1 a, 2 b, 3 c, null d, null e, 5 f, null g;
 ```
- 
+
 If you've read this far you know more than most now.  :)
 
 

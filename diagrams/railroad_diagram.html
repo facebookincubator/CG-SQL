@@ -238,7 +238,60 @@
          <div class="ebnf"><code>
                <div><a href="#program" title="program">program</a>  ::= <a href="#opt_stmt_list" title="opt_stmt_list">opt_stmt_list</a></div></code></div>
       </p>
-      <p>no references</p><br /><p style="font-size: 14px; font-weight:bold"><a name="opt_stmt_list">opt_stmt_list:</a></p><svg width="231" height="69">
+      <p>no references</p><br /><p style="font-size: 14px; font-weight:bold"><a name="opt_stmt_list">opt_stmt_list:</a></p><svg width="173" height="57">
+         <defs>
+            <style type="text/css">
+    @namespace "http://www.w3.org/2000/svg";
+    .line                 {fill: none; stroke: #332900; stroke-width: 1;}
+    .bold-line            {stroke: #141000; shape-rendering: crispEdges; stroke-width: 2;}
+    .thin-line            {stroke: #1F1800; shape-rendering: crispEdges}
+    .filled               {fill: #332900; stroke: none;}
+    text.terminal         {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #141000;
+                            font-weight: bold;
+                          }
+    text.nonterminal      {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #1A1400;
+                            font-weight: normal;
+                          }
+    text.regexp           {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #1F1800;
+                            font-weight: normal;
+                          }
+    rect, circle, polygon {fill: #332900; stroke: #332900;}
+    rect.terminal         {fill: #FFDB4D; stroke: #332900; stroke-width: 1;}
+    rect.nonterminal      {fill: #FFEC9E; stroke: #332900; stroke-width: 1;}
+    rect.text             {fill: none; stroke: none;}
+    polygon.regexp        {fill: #FFF4C7; stroke: #332900; stroke-width: 1;}
+  </style>
+         </defs>
+         <polygon points="9 5 1 1 1 9"></polygon>
+         <polygon points="17 5 9 1 9 9"></polygon><a href="#stmt_list" title="stmt_list">
+            <rect x="51" y="23" width="74" height="32"></rect>
+            <rect x="49" y="21" width="74" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="41">stmt_list</text></a><path class="line" d="m17 5 h2 m20 0 h10 m0 0 h84 m-114 0 h20 m94 0 h20 m-134 0 q10 0 10 10 m114 0 q0 -10 10 -10 m-124 10 v12 m114 0 v-12 m-114 12 q0 10 10 10 m94 0 q10 0 10 -10 m-104 10 h10 m74 0 h10 m23 -32 h-3"></path>
+         <polygon points="163 5 171 1 171 9"></polygon>
+         <polygon points="163 5 155 1 155 9"></polygon></svg><p>
+         <div class="ebnf"><code>
+               <div><a href="#opt_stmt_list" title="opt_stmt_list">opt_stmt_list</a></div>
+               <div>         ::= <a href="#stmt_list" title="stmt_list">stmt_list</a>?</div></code></div>
+      </p>
+      <p>referenced by:
+         <ul>
+            <li><a href="#create_proc_stmt" title="create_proc_stmt">create_proc_stmt</a></li>
+            <li><a href="#elseif_item" title="elseif_item">elseif_item</a></li>
+            <li><a href="#if_stmt" title="if_stmt">if_stmt</a></li>
+            <li><a href="#loop_stmt" title="loop_stmt">loop_stmt</a></li>
+            <li><a href="#opt_else" title="opt_else">opt_else</a></li>
+            <li><a href="#proc_savepoint_stmt" title="proc_savepoint_stmt">proc_savepoint_stmt</a></li>
+            <li><a href="#program" title="program">program</a></li>
+            <li><a href="#trycatch_stmt" title="trycatch_stmt">trycatch_stmt</a></li>
+            <li><a href="#while_stmt" title="while_stmt">while_stmt</a></li>
+         </ul>
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="stmt_list">stmt_list:</a></p><svg width="191" height="53">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -270,29 +323,23 @@
          </defs>
          <polygon points="9 33 1 29 1 37"></polygon>
          <polygon points="17 33 9 29 9 37"></polygon><a href="#stmt" title="stmt">
-            <rect x="71" y="19" width="48" height="32"></rect>
-            <rect x="69" y="17" width="48" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="79" y="37">stmt</text></a><rect x="139" y="19" width="24" height="32" rx="10"></rect>
-         <rect x="137" y="17" width="24" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="147" y="37">;</text>
-         <path class="line" d="m17 33 h2 m40 0 h10 m48 0 h10 m0 0 h10 m24 0 h10 m-132 0 l20 0 m-1 0 q-9 0 -9 -10 l0 -12 q0 -10 10 -10 m112 32 l20 0 m-20 0 q10 0 10 -10 l0 -12 q0 -10 -10 -10 m-112 0 h10 m0 0 h102 m-152 32 h20 m152 0 h20 m-192 0 q10 0 10 10 m172 0 q0 -10 10 -10 m-182 10 v14 m172 0 v-14 m-172 14 q0 10 10 10 m152 0 q10 0 10 -10 m-162 10 h10 m0 0 h142 m23 -34 h-3"></path>
-         <polygon points="221 33 229 29 229 37"></polygon>
-         <polygon points="221 33 213 29 213 37"></polygon></svg><p>
+            <rect x="51" y="19" width="48" height="32"></rect>
+            <rect x="49" y="17" width="48" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="37">stmt</text></a><rect x="119" y="19" width="24" height="32" rx="10"></rect>
+         <rect x="117" y="17" width="24" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="127" y="37">;</text>
+         <path class="line" d="m17 33 h2 m20 0 h10 m48 0 h10 m0 0 h10 m24 0 h10 m-132 0 l20 0 m-1 0 q-9 0 -9 -10 l0 -12 q0 -10 10 -10 m112 32 l20 0 m-20 0 q10 0 10 -10 l0 -12 q0 -10 -10 -10 m-112 0 h10 m0 0 h102 m23 32 h-3"></path>
+         <polygon points="181 33 189 29 189 37"></polygon>
+         <polygon points="181 33 173 29 173 37"></polygon></svg><p>
          <div class="ebnf"><code>
-               <div><a href="#opt_stmt_list" title="opt_stmt_list">opt_stmt_list</a></div>
-               <div>         ::= ( <a href="#stmt" title="stmt">stmt</a> ';' )*</div></code></div>
+               <div><a href="#stmt_list" title="stmt_list">stmt_list</a></div>
+               <div>         ::= ( <a href="#stmt" title="stmt">stmt</a> ';' )+</div></code></div>
       </p>
       <p>referenced by:
          <ul>
-            <li><a href="#create_proc_stmt" title="create_proc_stmt">create_proc_stmt</a></li>
-            <li><a href="#elseif_item" title="elseif_item">elseif_item</a></li>
-            <li><a href="#if_stmt" title="if_stmt">if_stmt</a></li>
-            <li><a href="#loop_stmt" title="loop_stmt">loop_stmt</a></li>
-            <li><a href="#opt_else" title="opt_else">opt_else</a></li>
-            <li><a href="#proc_savepoint_stmt" title="proc_savepoint_stmt">proc_savepoint_stmt</a></li>
-            <li><a href="#program" title="program">program</a></li>
-            <li><a href="#trycatch_stmt" title="trycatch_stmt">trycatch_stmt</a></li>
-            <li><a href="#while_stmt" title="while_stmt">while_stmt</a></li>
+            <li><a href="#opt_stmt_list" title="opt_stmt_list">opt_stmt_list</a></li>
+            <li><a href="#switch_case" title="switch_case">switch_case</a></li>
+            <li><a href="#switch_stmt" title="switch_stmt">switch_stmt</a></li>
          </ul>
       </p><br /><p style="font-size: 14px; font-weight:bold"><a name="stmt">stmt:</a></p><svg width="245" height="37">
          <defs>
@@ -339,9 +386,9 @@
       </p>
       <p>referenced by:
          <ul>
-            <li><a href="#opt_stmt_list" title="opt_stmt_list">opt_stmt_list</a></li>
+            <li><a href="#stmt_list" title="stmt_list">stmt_list</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="any_stmt">any_stmt:</a></p><svg width="327" height="2941">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="any_stmt">any_stmt:</a></p><svg width="327" height="2985">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -375,269 +422,271 @@
          <polygon points="17 17 9 13 9 21"></polygon><a href="#select_stmt" title="select_stmt">
             <rect x="51" y="3" width="94" height="32"></rect>
             <rect x="49" y="1" width="94" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="21">select_stmt</text></a><a href="#explain_stmt" title="explain_stmt">
-            <rect x="51" y="47" width="102" height="32"></rect>
-            <rect x="49" y="45" width="102" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="65">explain_stmt</text></a><a href="#create_trigger_stmt" title="create_trigger_stmt">
-            <rect x="51" y="91" width="146" height="32"></rect>
-            <rect x="49" y="89" width="146" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="109">create_trigger_stmt</text></a><a href="#create_table_stmt" title="create_table_stmt">
-            <rect x="51" y="135" width="136" height="32"></rect>
-            <rect x="49" y="133" width="136" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="153">create_table_stmt</text></a><a href="#create_virtual_table_stmt" title="create_virtual_table_stmt">
-            <rect x="51" y="179" width="184" height="32"></rect>
-            <rect x="49" y="177" width="184" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="197">create_virtual_table_stmt</text></a><a href="#create_index_stmt" title="create_index_stmt">
-            <rect x="51" y="223" width="138" height="32"></rect>
-            <rect x="49" y="221" width="138" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="241">create_index_stmt</text></a><a href="#create_view_stmt" title="create_view_stmt">
-            <rect x="51" y="267" width="132" height="32"></rect>
-            <rect x="49" y="265" width="132" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="285">create_view_stmt</text></a><a href="#alter_table_add_column_stmt" title="alter_table_add_column_stmt">
-            <rect x="51" y="311" width="210" height="32"></rect>
-            <rect x="49" y="309" width="210" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="329">alter_table_add_column_stmt</text></a><a href="#drop_table_stmt" title="drop_table_stmt">
-            <rect x="51" y="355" width="126" height="32"></rect>
-            <rect x="49" y="353" width="126" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="373">drop_table_stmt</text></a><a href="#drop_view_stmt" title="drop_view_stmt">
-            <rect x="51" y="399" width="122" height="32"></rect>
-            <rect x="49" y="397" width="122" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="417">drop_view_stmt</text></a><a href="#drop_index_stmt" title="drop_index_stmt">
-            <rect x="51" y="443" width="128" height="32"></rect>
-            <rect x="49" y="441" width="128" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="461">drop_index_stmt</text></a><a href="#drop_trigger_stmt" title="drop_trigger_stmt">
+            <text class="nonterminal" x="59" y="21">select_stmt</text></a><a href="#alter_table_add_column_stmt" title="alter_table_add_column_stmt">
+            <rect x="51" y="47" width="210" height="32"></rect>
+            <rect x="49" y="45" width="210" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="65">alter_table_add_column_stmt</text></a><a href="#begin_schema_region_stmt" title="begin_schema_region_stmt">
+            <rect x="51" y="91" width="196" height="32"></rect>
+            <rect x="49" y="89" width="196" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="109">begin_schema_region_stmt</text></a><a href="#begin_trans_stmt" title="begin_trans_stmt">
+            <rect x="51" y="135" width="132" height="32"></rect>
+            <rect x="49" y="133" width="132" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="153">begin_trans_stmt</text></a><a href="#call_stmt" title="call_stmt">
+            <rect x="51" y="179" width="76" height="32"></rect>
+            <rect x="49" y="177" width="76" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="197">call_stmt</text></a><a href="#close_stmt" title="close_stmt">
+            <rect x="51" y="223" width="88" height="32"></rect>
+            <rect x="49" y="221" width="88" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="241">close_stmt</text></a><a href="#commit_return_stmt" title="commit_return_stmt">
+            <rect x="51" y="267" width="150" height="32"></rect>
+            <rect x="49" y="265" width="150" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="285">commit_return_stmt</text></a><a href="#commit_trans_stmt" title="commit_trans_stmt">
+            <rect x="51" y="311" width="142" height="32"></rect>
+            <rect x="49" y="309" width="142" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="329">commit_trans_stmt</text></a><rect x="51" y="355" width="92" height="32" rx="10"></rect>
+         <rect x="49" y="353" width="92" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="59" y="373">CONTINUE</text><a href="#create_index_stmt" title="create_index_stmt">
+            <rect x="51" y="399" width="138" height="32"></rect>
+            <rect x="49" y="397" width="138" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="417">create_index_stmt</text></a><a href="#create_proc_stmt" title="create_proc_stmt">
+            <rect x="51" y="443" width="132" height="32"></rect>
+            <rect x="49" y="441" width="132" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="461">create_proc_stmt</text></a><a href="#create_table_stmt" title="create_table_stmt">
             <rect x="51" y="487" width="136" height="32"></rect>
             <rect x="49" y="485" width="136" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="505">drop_trigger_stmt</text></a><a href="#with_delete_stmt" title="with_delete_stmt">
-            <rect x="51" y="531" width="130" height="32"></rect>
-            <rect x="49" y="529" width="130" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="549">with_delete_stmt</text></a><a href="#delete_stmt" title="delete_stmt">
-            <rect x="51" y="575" width="96" height="32"></rect>
-            <rect x="49" y="573" width="96" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="593">delete_stmt</text></a><a href="#call_stmt" title="call_stmt">
-            <rect x="51" y="619" width="76" height="32"></rect>
-            <rect x="49" y="617" width="76" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="637">call_stmt</text></a><a href="#with_insert_stmt" title="with_insert_stmt">
-            <rect x="51" y="663" width="126" height="32"></rect>
-            <rect x="49" y="661" width="126" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="681">with_insert_stmt</text></a><a href="#insert_stmt" title="insert_stmt">
-            <rect x="51" y="707" width="92" height="32"></rect>
-            <rect x="49" y="705" width="92" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="725">insert_stmt</text></a><a href="#with_update_stmt" title="with_update_stmt">
-            <rect x="51" y="751" width="136" height="32"></rect>
-            <rect x="49" y="749" width="136" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="769">with_update_stmt</text></a><a href="#update_stmt" title="update_stmt">
-            <rect x="51" y="795" width="102" height="32"></rect>
-            <rect x="49" y="793" width="102" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="813">update_stmt</text></a><a href="#update_cursor_stmt" title="update_cursor_stmt">
-            <rect x="51" y="839" width="148" height="32"></rect>
-            <rect x="49" y="837" width="148" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="857">update_cursor_stmt</text></a><a href="#upsert_stmt" title="upsert_stmt">
-            <rect x="51" y="883" width="98" height="32"></rect>
-            <rect x="49" y="881" width="98" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="901">upsert_stmt</text></a><a href="#with_upsert_stmt" title="with_upsert_stmt">
-            <rect x="51" y="927" width="132" height="32"></rect>
-            <rect x="49" y="925" width="132" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="945">with_upsert_stmt</text></a><a href="#let_stmt" title="let_stmt">
-            <rect x="51" y="971" width="72" height="32"></rect>
-            <rect x="49" y="969" width="72" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="989">let_stmt</text></a><a href="#set_stmt" title="set_stmt">
-            <rect x="51" y="1015" width="76" height="32"></rect>
-            <rect x="49" y="1013" width="76" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="1033">set_stmt</text></a><a href="#create_proc_stmt" title="create_proc_stmt">
-            <rect x="51" y="1059" width="132" height="32"></rect>
-            <rect x="49" y="1057" width="132" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="1077">create_proc_stmt</text></a><a href="#declare_proc_stmt" title="declare_proc_stmt">
-            <rect x="51" y="1103" width="138" height="32"></rect>
-            <rect x="49" y="1101" width="138" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="1121">declare_proc_stmt</text></a><a href="#declare_func_stmt" title="declare_func_stmt">
-            <rect x="51" y="1147" width="138" height="32"></rect>
-            <rect x="49" y="1145" width="138" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="1165">declare_func_stmt</text></a><a href="#declare_stmt" title="declare_stmt">
-            <rect x="51" y="1191" width="102" height="32"></rect>
-            <rect x="49" y="1189" width="102" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="1209">declare_stmt</text></a><a href="#declare_enum_stmt" title="declare_enum_stmt">
-            <rect x="51" y="1235" width="146" height="32"></rect>
-            <rect x="49" y="1233" width="146" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="1253">declare_enum_stmt</text></a><a href="#fetch_stmt" title="fetch_stmt">
-            <rect x="51" y="1279" width="88" height="32"></rect>
-            <rect x="49" y="1277" width="88" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="1297">fetch_stmt</text></a><a href="#fetch_values_stmt" title="fetch_values_stmt">
-            <rect x="51" y="1323" width="136" height="32"></rect>
-            <rect x="49" y="1321" width="136" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="1341">fetch_values_stmt</text></a><a href="#fetch_call_stmt" title="fetch_call_stmt">
-            <rect x="51" y="1367" width="116" height="32"></rect>
-            <rect x="49" y="1365" width="116" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="1385">fetch_call_stmt</text></a><a href="#while_stmt" title="while_stmt">
-            <rect x="51" y="1411" width="88" height="32"></rect>
-            <rect x="49" y="1409" width="88" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="1429">while_stmt</text></a><a href="#loop_stmt" title="loop_stmt">
-            <rect x="51" y="1455" width="84" height="32"></rect>
-            <rect x="49" y="1453" width="84" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="1473">loop_stmt</text></a><rect x="51" y="1499" width="62" height="32" rx="10"></rect>
-         <rect x="49" y="1497" width="62" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="59" y="1517">LEAVE</text>
-         <rect x="51" y="1543" width="74" height="32" rx="10"></rect>
-         <rect x="49" y="1541" width="74" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="59" y="1561">RETURN</text><a href="#rollback_return_stmt" title="rollback_return_stmt">
-            <rect x="51" y="1587" width="152" height="32"></rect>
-            <rect x="49" y="1585" width="152" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="1605">rollback_return_stmt</text></a><a href="#commit_return_stmt" title="commit_return_stmt">
-            <rect x="51" y="1631" width="150" height="32"></rect>
-            <rect x="49" y="1629" width="150" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="1649">commit_return_stmt</text></a><rect x="51" y="1675" width="92" height="32" rx="10"></rect>
-         <rect x="49" y="1673" width="92" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="59" y="1693">CONTINUE</text><a href="#if_stmt" title="if_stmt">
-            <rect x="51" y="1719" width="64" height="32"></rect>
-            <rect x="49" y="1717" width="64" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="1737">if_stmt</text></a><a href="#open_stmt" title="open_stmt">
-            <rect x="51" y="1763" width="88" height="32"></rect>
-            <rect x="49" y="1761" width="88" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="1781">open_stmt</text></a><a href="#close_stmt" title="close_stmt">
-            <rect x="51" y="1807" width="88" height="32"></rect>
-            <rect x="49" y="1805" width="88" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="1825">close_stmt</text></a><a href="#out_stmt" title="out_stmt">
-            <rect x="51" y="1851" width="78" height="32"></rect>
-            <rect x="49" y="1849" width="78" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="1869">out_stmt</text></a><a href="#out_union_stmt" title="out_union_stmt">
-            <rect x="51" y="1895" width="120" height="32"></rect>
-            <rect x="49" y="1893" width="120" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="1913">out_union_stmt</text></a><rect x="51" y="1939" width="72" height="32" rx="10"></rect>
-         <rect x="49" y="1937" width="72" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="59" y="1957">THROW</text><a href="#trycatch_stmt" title="trycatch_stmt">
-            <rect x="51" y="1983" width="106" height="32"></rect>
-            <rect x="49" y="1981" width="106" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="2001">trycatch_stmt</text></a><a href="#begin_trans_stmt" title="begin_trans_stmt">
-            <rect x="51" y="2027" width="132" height="32"></rect>
-            <rect x="49" y="2025" width="132" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="2045">begin_trans_stmt</text></a><a href="#rollback_trans_stmt" title="rollback_trans_stmt">
-            <rect x="51" y="2071" width="146" height="32"></rect>
-            <rect x="49" y="2069" width="146" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="2089">rollback_trans_stmt</text></a><a href="#commit_trans_stmt" title="commit_trans_stmt">
-            <rect x="51" y="2115" width="142" height="32"></rect>
-            <rect x="49" y="2113" width="142" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="2133">commit_trans_stmt</text></a><a href="#proc_savepoint_stmt" title="proc_savepoint_stmt">
-            <rect x="51" y="2159" width="154" height="32"></rect>
-            <rect x="49" y="2157" width="154" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="2177">proc_savepoint_stmt</text></a><a href="#savepoint_stmt" title="savepoint_stmt">
-            <rect x="51" y="2203" width="118" height="32"></rect>
-            <rect x="49" y="2201" width="118" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="2221">savepoint_stmt</text></a><a href="#release_savepoint_stmt" title="release_savepoint_stmt">
-            <rect x="51" y="2247" width="174" height="32"></rect>
-            <rect x="49" y="2245" width="174" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="2265">release_savepoint_stmt</text></a><a href="#echo_stmt" title="echo_stmt">
-            <rect x="51" y="2291" width="86" height="32"></rect>
-            <rect x="49" y="2289" width="86" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="2309">echo_stmt</text></a><a href="#schema_upgrade_version_stmt" title="schema_upgrade_version_stmt">
-            <rect x="51" y="2335" width="220" height="32"></rect>
-            <rect x="49" y="2333" width="220" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="2353">schema_upgrade_version_stmt</text></a><rect x="51" y="2379" width="222" height="32" rx="10"></rect>
+            <text class="nonterminal" x="59" y="505">create_table_stmt</text></a><a href="#create_trigger_stmt" title="create_trigger_stmt">
+            <rect x="51" y="531" width="146" height="32"></rect>
+            <rect x="49" y="529" width="146" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="549">create_trigger_stmt</text></a><a href="#create_view_stmt" title="create_view_stmt">
+            <rect x="51" y="575" width="132" height="32"></rect>
+            <rect x="49" y="573" width="132" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="593">create_view_stmt</text></a><a href="#create_virtual_table_stmt" title="create_virtual_table_stmt">
+            <rect x="51" y="619" width="184" height="32"></rect>
+            <rect x="49" y="617" width="184" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="637">create_virtual_table_stmt</text></a><a href="#declare_deployable_region_stmt" title="declare_deployable_region_stmt">
+            <rect x="51" y="663" width="228" height="32"></rect>
+            <rect x="49" y="661" width="228" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="681">declare_deployable_region_stmt</text></a><a href="#declare_enum_stmt" title="declare_enum_stmt">
+            <rect x="51" y="707" width="146" height="32"></rect>
+            <rect x="49" y="705" width="146" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="725">declare_enum_stmt</text></a><a href="#declare_func_stmt" title="declare_func_stmt">
+            <rect x="51" y="751" width="138" height="32"></rect>
+            <rect x="49" y="749" width="138" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="769">declare_func_stmt</text></a><a href="#declare_proc_stmt" title="declare_proc_stmt">
+            <rect x="51" y="795" width="138" height="32"></rect>
+            <rect x="49" y="793" width="138" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="813">declare_proc_stmt</text></a><a href="#declare_schema_region_stmt" title="declare_schema_region_stmt">
+            <rect x="51" y="839" width="208" height="32"></rect>
+            <rect x="49" y="837" width="208" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="857">declare_schema_region_stmt</text></a><a href="#declare_stmt" title="declare_stmt">
+            <rect x="51" y="883" width="102" height="32"></rect>
+            <rect x="49" y="881" width="102" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="901">declare_stmt</text></a><a href="#delete_stmt" title="delete_stmt">
+            <rect x="51" y="927" width="96" height="32"></rect>
+            <rect x="49" y="925" width="96" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="945">delete_stmt</text></a><a href="#drop_index_stmt" title="drop_index_stmt">
+            <rect x="51" y="971" width="128" height="32"></rect>
+            <rect x="49" y="969" width="128" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="989">drop_index_stmt</text></a><a href="#drop_table_stmt" title="drop_table_stmt">
+            <rect x="51" y="1015" width="126" height="32"></rect>
+            <rect x="49" y="1013" width="126" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="1033">drop_table_stmt</text></a><a href="#drop_trigger_stmt" title="drop_trigger_stmt">
+            <rect x="51" y="1059" width="136" height="32"></rect>
+            <rect x="49" y="1057" width="136" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="1077">drop_trigger_stmt</text></a><a href="#drop_view_stmt" title="drop_view_stmt">
+            <rect x="51" y="1103" width="122" height="32"></rect>
+            <rect x="49" y="1101" width="122" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="1121">drop_view_stmt</text></a><a href="#echo_stmt" title="echo_stmt">
+            <rect x="51" y="1147" width="86" height="32"></rect>
+            <rect x="49" y="1145" width="86" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="1165">echo_stmt</text></a><a href="#emit_enums_stmt" title="emit_enums_stmt">
+            <rect x="51" y="1191" width="134" height="32"></rect>
+            <rect x="49" y="1189" width="134" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="1209">emit_enums_stmt</text></a><rect x="51" y="1235" width="190" height="32" rx="10"></rect>
+         <rect x="49" y="1233" width="190" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="59" y="1253">@END_SCHEMA_REGION</text><a href="#enforce_normal_stmt" title="enforce_normal_stmt">
+            <rect x="51" y="1279" width="156" height="32"></rect>
+            <rect x="49" y="1277" width="156" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="1297">enforce_normal_stmt</text></a><rect x="51" y="1323" width="134" height="32" rx="10"></rect>
+         <rect x="49" y="1321" width="134" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="59" y="1341">@ENFORCE_POP</text>
+         <rect x="51" y="1367" width="142" height="32" rx="10"></rect>
+         <rect x="49" y="1365" width="142" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="59" y="1385">@ENFORCE_PUSH</text>
+         <rect x="51" y="1411" width="148" height="32" rx="10"></rect>
+         <rect x="49" y="1409" width="148" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="59" y="1429">@ENFORCE_RESET</text><a href="#enforce_strict_stmt" title="enforce_strict_stmt">
+            <rect x="51" y="1455" width="144" height="32"></rect>
+            <rect x="49" y="1453" width="144" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="1473">enforce_strict_stmt</text></a><a href="#explain_stmt" title="explain_stmt">
+            <rect x="51" y="1499" width="102" height="32"></rect>
+            <rect x="49" y="1497" width="102" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="1517">explain_stmt</text></a><a href="#fetch_call_stmt" title="fetch_call_stmt">
+            <rect x="51" y="1543" width="116" height="32"></rect>
+            <rect x="49" y="1541" width="116" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="1561">fetch_call_stmt</text></a><a href="#fetch_stmt" title="fetch_stmt">
+            <rect x="51" y="1587" width="88" height="32"></rect>
+            <rect x="49" y="1585" width="88" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="1605">fetch_stmt</text></a><a href="#fetch_values_stmt" title="fetch_values_stmt">
+            <rect x="51" y="1631" width="136" height="32"></rect>
+            <rect x="49" y="1629" width="136" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="1649">fetch_values_stmt</text></a><a href="#if_stmt" title="if_stmt">
+            <rect x="51" y="1675" width="64" height="32"></rect>
+            <rect x="49" y="1673" width="64" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="1693">if_stmt</text></a><a href="#insert_stmt" title="insert_stmt">
+            <rect x="51" y="1719" width="92" height="32"></rect>
+            <rect x="49" y="1717" width="92" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="1737">insert_stmt</text></a><rect x="51" y="1763" width="62" height="32" rx="10"></rect>
+         <rect x="49" y="1761" width="62" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="59" y="1781">LEAVE</text><a href="#let_stmt" title="let_stmt">
+            <rect x="51" y="1807" width="72" height="32"></rect>
+            <rect x="49" y="1805" width="72" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="1825">let_stmt</text></a><a href="#loop_stmt" title="loop_stmt">
+            <rect x="51" y="1851" width="84" height="32"></rect>
+            <rect x="49" y="1849" width="84" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="1869">loop_stmt</text></a><a href="#open_stmt" title="open_stmt">
+            <rect x="51" y="1895" width="88" height="32"></rect>
+            <rect x="49" y="1893" width="88" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="1913">open_stmt</text></a><a href="#out_stmt" title="out_stmt">
+            <rect x="51" y="1939" width="78" height="32"></rect>
+            <rect x="49" y="1937" width="78" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="1957">out_stmt</text></a><a href="#out_union_stmt" title="out_union_stmt">
+            <rect x="51" y="1983" width="120" height="32"></rect>
+            <rect x="49" y="1981" width="120" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="2001">out_union_stmt</text></a><rect x="51" y="2027" width="170" height="32" rx="10"></rect>
+         <rect x="49" y="2025" width="170" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="59" y="2045">@PREVIOUS_SCHEMA</text><a href="#proc_savepoint_stmt" title="proc_savepoint_stmt">
+            <rect x="51" y="2071" width="154" height="32"></rect>
+            <rect x="49" y="2069" width="154" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="2089">proc_savepoint_stmt</text></a><a href="#release_savepoint_stmt" title="release_savepoint_stmt">
+            <rect x="51" y="2115" width="174" height="32"></rect>
+            <rect x="49" y="2113" width="174" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="2133">release_savepoint_stmt</text></a><rect x="51" y="2159" width="74" height="32" rx="10"></rect>
+         <rect x="49" y="2157" width="74" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="59" y="2177">RETURN</text><a href="#rollback_return_stmt" title="rollback_return_stmt">
+            <rect x="51" y="2203" width="152" height="32"></rect>
+            <rect x="49" y="2201" width="152" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="2221">rollback_return_stmt</text></a><a href="#rollback_trans_stmt" title="rollback_trans_stmt">
+            <rect x="51" y="2247" width="146" height="32"></rect>
+            <rect x="49" y="2245" width="146" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="2265">rollback_trans_stmt</text></a><a href="#savepoint_stmt" title="savepoint_stmt">
+            <rect x="51" y="2291" width="118" height="32"></rect>
+            <rect x="49" y="2289" width="118" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="2309">savepoint_stmt</text></a><a href="#schema_ad_hoc_migration_stmt" title="schema_ad_hoc_migration_stmt">
+            <rect x="51" y="2335" width="228" height="32"></rect>
+            <rect x="49" y="2333" width="228" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="2353">schema_ad_hoc_migration_stmt</text></a><rect x="51" y="2379" width="222" height="32" rx="10"></rect>
          <rect x="49" y="2377" width="222" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="59" y="2397">@SCHEMA_UPGRADE_SCRIPT</text>
-         <rect x="51" y="2423" width="170" height="32" rx="10"></rect>
-         <rect x="49" y="2421" width="170" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="59" y="2441">@PREVIOUS_SCHEMA</text><a href="#enforce_strict_stmt" title="enforce_strict_stmt">
-            <rect x="51" y="2467" width="144" height="32"></rect>
-            <rect x="49" y="2465" width="144" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="2485">enforce_strict_stmt</text></a><a href="#enforce_normal_stmt" title="enforce_normal_stmt">
-            <rect x="51" y="2511" width="156" height="32"></rect>
-            <rect x="49" y="2509" width="156" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="2529">enforce_normal_stmt</text></a><rect x="51" y="2555" width="148" height="32" rx="10"></rect>
-         <rect x="49" y="2553" width="148" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="59" y="2573">@ENFORCE_RESET</text>
-         <rect x="51" y="2599" width="142" height="32" rx="10"></rect>
-         <rect x="49" y="2597" width="142" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="59" y="2617">@ENFORCE_PUSH</text>
-         <rect x="51" y="2643" width="134" height="32" rx="10"></rect>
-         <rect x="49" y="2641" width="134" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="59" y="2661">@ENFORCE_POP</text><a href="#declare_schema_region_stmt" title="declare_schema_region_stmt">
-            <rect x="51" y="2687" width="208" height="32"></rect>
-            <rect x="49" y="2685" width="208" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="2705">declare_schema_region_stmt</text></a><a href="#declare_deployable_region_stmt" title="declare_deployable_region_stmt">
-            <rect x="51" y="2731" width="228" height="32"></rect>
-            <rect x="49" y="2729" width="228" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="2749">declare_deployable_region_stmt</text></a><a href="#begin_schema_region_stmt" title="begin_schema_region_stmt">
-            <rect x="51" y="2775" width="196" height="32"></rect>
-            <rect x="49" y="2773" width="196" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="2793">begin_schema_region_stmt</text></a><rect x="51" y="2819" width="190" height="32" rx="10"></rect>
-         <rect x="49" y="2817" width="190" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="59" y="2837">@END_SCHEMA_REGION</text><a href="#schema_ad_hoc_migration_stmt" title="schema_ad_hoc_migration_stmt">
-            <rect x="51" y="2863" width="228" height="32"></rect>
-            <rect x="49" y="2861" width="228" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="2881">schema_ad_hoc_migration_stmt</text></a><a href="#emit_enums_stmt" title="emit_enums_stmt">
-            <rect x="51" y="2907" width="134" height="32"></rect>
-            <rect x="49" y="2905" width="134" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="2925">emit_enums_stmt</text></a><path class="line" d="m17 17 h2 m20 0 h10 m94 0 h10 m0 0 h134 m-268 0 h20 m248 0 h20 m-288 0 q10 0 10 10 m268 0 q0 -10 10 -10 m-278 10 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m102 0 h10 m0 0 h126 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m146 0 h10 m0 0 h82 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m136 0 h10 m0 0 h92 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m184 0 h10 m0 0 h44 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m138 0 h10 m0 0 h90 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m132 0 h10 m0 0 h96 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m210 0 h10 m0 0 h18 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m126 0 h10 m0 0 h102 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m122 0 h10 m0 0 h106 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m128 0 h10 m0 0 h100 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m136 0 h10 m0 0 h92 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m130 0 h10 m0 0 h98 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m96 0 h10 m0 0 h132 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m76 0 h10 m0 0 h152 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m126 0 h10 m0 0 h102 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m92 0 h10 m0 0 h136 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m136 0 h10 m0 0 h92 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m102 0 h10 m0 0 h126 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m148 0 h10 m0 0 h80 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m98 0 h10 m0 0 h130 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m132 0 h10 m0 0 h96 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m72 0 h10 m0 0 h156 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m76 0 h10 m0 0 h152 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m132 0 h10 m0 0 h96 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m138 0 h10 m0 0 h90 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m138 0 h10 m0 0 h90 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m102 0 h10 m0 0 h126 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m146 0 h10 m0 0 h82 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m88 0 h10 m0 0 h140 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m136 0 h10 m0 0 h92 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m116 0 h10 m0 0 h112 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m88 0 h10 m0 0 h140 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m84 0 h10 m0 0 h144 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m62 0 h10 m0 0 h166 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m74 0 h10 m0 0 h154 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m152 0 h10 m0 0 h76 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m150 0 h10 m0 0 h78 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m92 0 h10 m0 0 h136 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m64 0 h10 m0 0 h164 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m88 0 h10 m0 0 h140 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m88 0 h10 m0 0 h140 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m78 0 h10 m0 0 h150 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m120 0 h10 m0 0 h108 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m72 0 h10 m0 0 h156 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m106 0 h10 m0 0 h122 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m132 0 h10 m0 0 h96 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m146 0 h10 m0 0 h82 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m142 0 h10 m0 0 h86 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m154 0 h10 m0 0 h74 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m118 0 h10 m0 0 h110 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m174 0 h10 m0 0 h54 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m86 0 h10 m0 0 h142 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m220 0 h10 m0 0 h8 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m222 0 h10 m0 0 h6 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m170 0 h10 m0 0 h58 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m144 0 h10 m0 0 h84 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m156 0 h10 m0 0 h72 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m148 0 h10 m0 0 h80 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m142 0 h10 m0 0 h86 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m134 0 h10 m0 0 h94 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m208 0 h10 m0 0 h20 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m228 0 h10 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m196 0 h10 m0 0 h32 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m190 0 h10 m0 0 h38 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m228 0 h10 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m134 0 h10 m0 0 h94 m23 -2904 h-3"></path>
+         <text class="terminal" x="59" y="2397">@SCHEMA_UPGRADE_SCRIPT</text><a href="#schema_upgrade_version_stmt" title="schema_upgrade_version_stmt">
+            <rect x="51" y="2423" width="220" height="32"></rect>
+            <rect x="49" y="2421" width="220" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="2441">schema_upgrade_version_stmt</text></a><a href="#set_stmt" title="set_stmt">
+            <rect x="51" y="2467" width="76" height="32"></rect>
+            <rect x="49" y="2465" width="76" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="2485">set_stmt</text></a><a href="#switch_stmt" title="switch_stmt">
+            <rect x="51" y="2511" width="96" height="32"></rect>
+            <rect x="49" y="2509" width="96" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="2529">switch_stmt</text></a><rect x="51" y="2555" width="72" height="32" rx="10"></rect>
+         <rect x="49" y="2553" width="72" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="59" y="2573">THROW</text><a href="#trycatch_stmt" title="trycatch_stmt">
+            <rect x="51" y="2599" width="106" height="32"></rect>
+            <rect x="49" y="2597" width="106" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="2617">trycatch_stmt</text></a><a href="#update_cursor_stmt" title="update_cursor_stmt">
+            <rect x="51" y="2643" width="148" height="32"></rect>
+            <rect x="49" y="2641" width="148" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="2661">update_cursor_stmt</text></a><a href="#update_stmt" title="update_stmt">
+            <rect x="51" y="2687" width="102" height="32"></rect>
+            <rect x="49" y="2685" width="102" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="2705">update_stmt</text></a><a href="#upsert_stmt" title="upsert_stmt">
+            <rect x="51" y="2731" width="98" height="32"></rect>
+            <rect x="49" y="2729" width="98" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="2749">upsert_stmt</text></a><a href="#while_stmt" title="while_stmt">
+            <rect x="51" y="2775" width="88" height="32"></rect>
+            <rect x="49" y="2773" width="88" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="2793">while_stmt</text></a><a href="#with_delete_stmt" title="with_delete_stmt">
+            <rect x="51" y="2819" width="130" height="32"></rect>
+            <rect x="49" y="2817" width="130" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="2837">with_delete_stmt</text></a><a href="#with_insert_stmt" title="with_insert_stmt">
+            <rect x="51" y="2863" width="126" height="32"></rect>
+            <rect x="49" y="2861" width="126" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="2881">with_insert_stmt</text></a><a href="#with_update_stmt" title="with_update_stmt">
+            <rect x="51" y="2907" width="136" height="32"></rect>
+            <rect x="49" y="2905" width="136" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="2925">with_update_stmt</text></a><a href="#with_upsert_stmt" title="with_upsert_stmt">
+            <rect x="51" y="2951" width="132" height="32"></rect>
+            <rect x="49" y="2949" width="132" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="2969">with_upsert_stmt</text></a><path class="line" d="m17 17 h2 m20 0 h10 m94 0 h10 m0 0 h134 m-268 0 h20 m248 0 h20 m-288 0 q10 0 10 10 m268 0 q0 -10 10 -10 m-278 10 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m210 0 h10 m0 0 h18 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m196 0 h10 m0 0 h32 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m132 0 h10 m0 0 h96 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m76 0 h10 m0 0 h152 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m88 0 h10 m0 0 h140 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m150 0 h10 m0 0 h78 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m142 0 h10 m0 0 h86 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m92 0 h10 m0 0 h136 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m138 0 h10 m0 0 h90 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m132 0 h10 m0 0 h96 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m136 0 h10 m0 0 h92 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m146 0 h10 m0 0 h82 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m132 0 h10 m0 0 h96 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m184 0 h10 m0 0 h44 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m228 0 h10 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m146 0 h10 m0 0 h82 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m138 0 h10 m0 0 h90 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m138 0 h10 m0 0 h90 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m208 0 h10 m0 0 h20 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m102 0 h10 m0 0 h126 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m96 0 h10 m0 0 h132 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m128 0 h10 m0 0 h100 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m126 0 h10 m0 0 h102 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m136 0 h10 m0 0 h92 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m122 0 h10 m0 0 h106 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m86 0 h10 m0 0 h142 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m134 0 h10 m0 0 h94 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m190 0 h10 m0 0 h38 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m156 0 h10 m0 0 h72 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m134 0 h10 m0 0 h94 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m142 0 h10 m0 0 h86 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m148 0 h10 m0 0 h80 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m144 0 h10 m0 0 h84 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m102 0 h10 m0 0 h126 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m116 0 h10 m0 0 h112 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m88 0 h10 m0 0 h140 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m136 0 h10 m0 0 h92 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m64 0 h10 m0 0 h164 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m92 0 h10 m0 0 h136 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m62 0 h10 m0 0 h166 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m72 0 h10 m0 0 h156 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m84 0 h10 m0 0 h144 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m88 0 h10 m0 0 h140 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m78 0 h10 m0 0 h150 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m120 0 h10 m0 0 h108 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m170 0 h10 m0 0 h58 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m154 0 h10 m0 0 h74 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m174 0 h10 m0 0 h54 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m74 0 h10 m0 0 h154 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m152 0 h10 m0 0 h76 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m146 0 h10 m0 0 h82 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m118 0 h10 m0 0 h110 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m228 0 h10 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m222 0 h10 m0 0 h6 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m220 0 h10 m0 0 h8 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m76 0 h10 m0 0 h152 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m96 0 h10 m0 0 h132 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m72 0 h10 m0 0 h156 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m106 0 h10 m0 0 h122 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m148 0 h10 m0 0 h80 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m102 0 h10 m0 0 h126 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m98 0 h10 m0 0 h130 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m88 0 h10 m0 0 h140 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m130 0 h10 m0 0 h98 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m126 0 h10 m0 0 h102 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m136 0 h10 m0 0 h92 m-258 -10 v20 m268 0 v-20 m-268 20 v24 m268 0 v-24 m-268 24 q0 10 10 10 m248 0 q10 0 10 -10 m-258 10 h10 m132 0 h10 m0 0 h96 m23 -2948 h-3"></path>
          <polygon points="317 17 325 13 325 21"></polygon>
          <polygon points="317 17 309 13 309 21"></polygon></svg><p>
          <div class="ebnf"><code>
                <div><a href="#any_stmt" title="any_stmt">any_stmt</a> ::= <a href="#select_stmt" title="select_stmt">select_stmt</a></div>
-               <div>           | <a href="#explain_stmt" title="explain_stmt">explain_stmt</a></div>
-               <div>           | <a href="#create_trigger_stmt" title="create_trigger_stmt">create_trigger_stmt</a></div>
-               <div>           | <a href="#create_table_stmt" title="create_table_stmt">create_table_stmt</a></div>
-               <div>           | <a href="#create_virtual_table_stmt" title="create_virtual_table_stmt">create_virtual_table_stmt</a></div>
-               <div>           | <a href="#create_index_stmt" title="create_index_stmt">create_index_stmt</a></div>
-               <div>           | <a href="#create_view_stmt" title="create_view_stmt">create_view_stmt</a></div>
                <div>           | <a href="#alter_table_add_column_stmt" title="alter_table_add_column_stmt">alter_table_add_column_stmt</a></div>
-               <div>           | <a href="#drop_table_stmt" title="drop_table_stmt">drop_table_stmt</a></div>
-               <div>           | <a href="#drop_view_stmt" title="drop_view_stmt">drop_view_stmt</a></div>
-               <div>           | <a href="#drop_index_stmt" title="drop_index_stmt">drop_index_stmt</a></div>
-               <div>           | <a href="#drop_trigger_stmt" title="drop_trigger_stmt">drop_trigger_stmt</a></div>
-               <div>           | <a href="#with_delete_stmt" title="with_delete_stmt">with_delete_stmt</a></div>
-               <div>           | <a href="#delete_stmt" title="delete_stmt">delete_stmt</a></div>
+               <div>           | <a href="#begin_schema_region_stmt" title="begin_schema_region_stmt">begin_schema_region_stmt</a></div>
+               <div>           | <a href="#begin_trans_stmt" title="begin_trans_stmt">begin_trans_stmt</a></div>
                <div>           | <a href="#call_stmt" title="call_stmt">call_stmt</a></div>
-               <div>           | <a href="#with_insert_stmt" title="with_insert_stmt">with_insert_stmt</a></div>
-               <div>           | <a href="#insert_stmt" title="insert_stmt">insert_stmt</a></div>
-               <div>           | <a href="#with_update_stmt" title="with_update_stmt">with_update_stmt</a></div>
-               <div>           | <a href="#update_stmt" title="update_stmt">update_stmt</a></div>
-               <div>           | <a href="#update_cursor_stmt" title="update_cursor_stmt">update_cursor_stmt</a></div>
-               <div>           | <a href="#upsert_stmt" title="upsert_stmt">upsert_stmt</a></div>
-               <div>           | <a href="#with_upsert_stmt" title="with_upsert_stmt">with_upsert_stmt</a></div>
-               <div>           | <a href="#let_stmt" title="let_stmt">let_stmt</a></div>
-               <div>           | <a href="#set_stmt" title="set_stmt">set_stmt</a></div>
+               <div>           | <a href="#close_stmt" title="close_stmt">close_stmt</a></div>
+               <div>           | <a href="#commit_return_stmt" title="commit_return_stmt">commit_return_stmt</a></div>
+               <div>           | <a href="#commit_trans_stmt" title="commit_trans_stmt">commit_trans_stmt</a></div>
+               <div>           | 'CONTINUE'</div>
+               <div>           | <a href="#create_index_stmt" title="create_index_stmt">create_index_stmt</a></div>
                <div>           | <a href="#create_proc_stmt" title="create_proc_stmt">create_proc_stmt</a></div>
-               <div>           | <a href="#declare_proc_stmt" title="declare_proc_stmt">declare_proc_stmt</a></div>
-               <div>           | <a href="#declare_func_stmt" title="declare_func_stmt">declare_func_stmt</a></div>
-               <div>           | <a href="#declare_stmt" title="declare_stmt">declare_stmt</a></div>
+               <div>           | <a href="#create_table_stmt" title="create_table_stmt">create_table_stmt</a></div>
+               <div>           | <a href="#create_trigger_stmt" title="create_trigger_stmt">create_trigger_stmt</a></div>
+               <div>           | <a href="#create_view_stmt" title="create_view_stmt">create_view_stmt</a></div>
+               <div>           | <a href="#create_virtual_table_stmt" title="create_virtual_table_stmt">create_virtual_table_stmt</a></div>
+               <div>           | <a href="#declare_deployable_region_stmt" title="declare_deployable_region_stmt">declare_deployable_region_stmt</a></div>
                <div>           | <a href="#declare_enum_stmt" title="declare_enum_stmt">declare_enum_stmt</a></div>
+               <div>           | <a href="#declare_func_stmt" title="declare_func_stmt">declare_func_stmt</a></div>
+               <div>           | <a href="#declare_proc_stmt" title="declare_proc_stmt">declare_proc_stmt</a></div>
+               <div>           | <a href="#declare_schema_region_stmt" title="declare_schema_region_stmt">declare_schema_region_stmt</a></div>
+               <div>           | <a href="#declare_stmt" title="declare_stmt">declare_stmt</a></div>
+               <div>           | <a href="#delete_stmt" title="delete_stmt">delete_stmt</a></div>
+               <div>           | <a href="#drop_index_stmt" title="drop_index_stmt">drop_index_stmt</a></div>
+               <div>           | <a href="#drop_table_stmt" title="drop_table_stmt">drop_table_stmt</a></div>
+               <div>           | <a href="#drop_trigger_stmt" title="drop_trigger_stmt">drop_trigger_stmt</a></div>
+               <div>           | <a href="#drop_view_stmt" title="drop_view_stmt">drop_view_stmt</a></div>
+               <div>           | <a href="#echo_stmt" title="echo_stmt">echo_stmt</a></div>
+               <div>           | <a href="#emit_enums_stmt" title="emit_enums_stmt">emit_enums_stmt</a></div>
+               <div>           | '@END_SCHEMA_REGION'</div>
+               <div>           | <a href="#enforce_normal_stmt" title="enforce_normal_stmt">enforce_normal_stmt</a></div>
+               <div>           | '@ENFORCE_POP'</div>
+               <div>           | '@ENFORCE_PUSH'</div>
+               <div>           | '@ENFORCE_RESET'</div>
+               <div>           | <a href="#enforce_strict_stmt" title="enforce_strict_stmt">enforce_strict_stmt</a></div>
+               <div>           | <a href="#explain_stmt" title="explain_stmt">explain_stmt</a></div>
+               <div>           | <a href="#fetch_call_stmt" title="fetch_call_stmt">fetch_call_stmt</a></div>
                <div>           | <a href="#fetch_stmt" title="fetch_stmt">fetch_stmt</a></div>
                <div>           | <a href="#fetch_values_stmt" title="fetch_values_stmt">fetch_values_stmt</a></div>
-               <div>           | <a href="#fetch_call_stmt" title="fetch_call_stmt">fetch_call_stmt</a></div>
-               <div>           | <a href="#while_stmt" title="while_stmt">while_stmt</a></div>
-               <div>           | <a href="#loop_stmt" title="loop_stmt">loop_stmt</a></div>
-               <div>           | 'LEAVE'</div>
-               <div>           | 'RETURN'</div>
-               <div>           | <a href="#rollback_return_stmt" title="rollback_return_stmt">rollback_return_stmt</a></div>
-               <div>           | <a href="#commit_return_stmt" title="commit_return_stmt">commit_return_stmt</a></div>
-               <div>           | 'CONTINUE'</div>
                <div>           | <a href="#if_stmt" title="if_stmt">if_stmt</a></div>
+               <div>           | <a href="#insert_stmt" title="insert_stmt">insert_stmt</a></div>
+               <div>           | 'LEAVE'</div>
+               <div>           | <a href="#let_stmt" title="let_stmt">let_stmt</a></div>
+               <div>           | <a href="#loop_stmt" title="loop_stmt">loop_stmt</a></div>
                <div>           | <a href="#open_stmt" title="open_stmt">open_stmt</a></div>
-               <div>           | <a href="#close_stmt" title="close_stmt">close_stmt</a></div>
                <div>           | <a href="#out_stmt" title="out_stmt">out_stmt</a></div>
                <div>           | <a href="#out_union_stmt" title="out_union_stmt">out_union_stmt</a></div>
+               <div>           | '@PREVIOUS_SCHEMA'</div>
+               <div>           | <a href="#proc_savepoint_stmt" title="proc_savepoint_stmt">proc_savepoint_stmt</a></div>
+               <div>           | <a href="#release_savepoint_stmt" title="release_savepoint_stmt">release_savepoint_stmt</a></div>
+               <div>           | 'RETURN'</div>
+               <div>           | <a href="#rollback_return_stmt" title="rollback_return_stmt">rollback_return_stmt</a></div>
+               <div>           | <a href="#rollback_trans_stmt" title="rollback_trans_stmt">rollback_trans_stmt</a></div>
+               <div>           | <a href="#savepoint_stmt" title="savepoint_stmt">savepoint_stmt</a></div>
+               <div>           | <a href="#schema_ad_hoc_migration_stmt" title="schema_ad_hoc_migration_stmt">schema_ad_hoc_migration_stmt</a></div>
+               <div>           | '@SCHEMA_UPGRADE_SCRIPT'</div>
+               <div>           | <a href="#schema_upgrade_version_stmt" title="schema_upgrade_version_stmt">schema_upgrade_version_stmt</a></div>
+               <div>           | <a href="#set_stmt" title="set_stmt">set_stmt</a></div>
+               <div>           | <a href="#switch_stmt" title="switch_stmt">switch_stmt</a></div>
                <div>           | 'THROW'</div>
                <div>           | <a href="#trycatch_stmt" title="trycatch_stmt">trycatch_stmt</a></div>
-               <div>           | <a href="#begin_trans_stmt" title="begin_trans_stmt">begin_trans_stmt</a></div>
-               <div>           | <a href="#rollback_trans_stmt" title="rollback_trans_stmt">rollback_trans_stmt</a></div>
-               <div>           | <a href="#commit_trans_stmt" title="commit_trans_stmt">commit_trans_stmt</a></div>
-               <div>           | <a href="#proc_savepoint_stmt" title="proc_savepoint_stmt">proc_savepoint_stmt</a></div>
-               <div>           | <a href="#savepoint_stmt" title="savepoint_stmt">savepoint_stmt</a></div>
-               <div>           | <a href="#release_savepoint_stmt" title="release_savepoint_stmt">release_savepoint_stmt</a></div>
-               <div>           | <a href="#echo_stmt" title="echo_stmt">echo_stmt</a></div>
-               <div>           | <a href="#schema_upgrade_version_stmt" title="schema_upgrade_version_stmt">schema_upgrade_version_stmt</a></div>
-               <div>           | '@SCHEMA_UPGRADE_SCRIPT'</div>
-               <div>           | '@PREVIOUS_SCHEMA'</div>
-               <div>           | <a href="#enforce_strict_stmt" title="enforce_strict_stmt">enforce_strict_stmt</a></div>
-               <div>           | <a href="#enforce_normal_stmt" title="enforce_normal_stmt">enforce_normal_stmt</a></div>
-               <div>           | '@ENFORCE_RESET'</div>
-               <div>           | '@ENFORCE_PUSH'</div>
-               <div>           | '@ENFORCE_POP'</div>
-               <div>           | <a href="#declare_schema_region_stmt" title="declare_schema_region_stmt">declare_schema_region_stmt</a></div>
-               <div>           | <a href="#declare_deployable_region_stmt" title="declare_deployable_region_stmt">declare_deployable_region_stmt</a></div>
-               <div>           | <a href="#begin_schema_region_stmt" title="begin_schema_region_stmt">begin_schema_region_stmt</a></div>
-               <div>           | '@END_SCHEMA_REGION'</div>
-               <div>           | <a href="#schema_ad_hoc_migration_stmt" title="schema_ad_hoc_migration_stmt">schema_ad_hoc_migration_stmt</a></div>
-               <div>           | <a href="#emit_enums_stmt" title="emit_enums_stmt">emit_enums_stmt</a></div></code></div>
+               <div>           | <a href="#update_cursor_stmt" title="update_cursor_stmt">update_cursor_stmt</a></div>
+               <div>           | <a href="#update_stmt" title="update_stmt">update_stmt</a></div>
+               <div>           | <a href="#upsert_stmt" title="upsert_stmt">upsert_stmt</a></div>
+               <div>           | <a href="#while_stmt" title="while_stmt">while_stmt</a></div>
+               <div>           | <a href="#with_delete_stmt" title="with_delete_stmt">with_delete_stmt</a></div>
+               <div>           | <a href="#with_insert_stmt" title="with_insert_stmt">with_insert_stmt</a></div>
+               <div>           | <a href="#with_update_stmt" title="with_update_stmt">with_update_stmt</a></div>
+               <div>           | <a href="#with_upsert_stmt" title="with_upsert_stmt">with_upsert_stmt</a></div></code></div>
       </p>
       <p>referenced by:
          <ul>
@@ -4673,6 +4722,7 @@
             <li><a href="#raise_expr" title="raise_expr">raise_expr</a></li>
             <li><a href="#select_expr" title="select_expr">select_expr</a></li>
             <li><a href="#set_stmt" title="set_stmt">set_stmt</a></li>
+            <li><a href="#switch_stmt" title="switch_stmt">switch_stmt</a></li>
             <li><a href="#update_entry" title="update_entry">update_entry</a></li>
             <li><a href="#while_stmt" title="while_stmt">while_stmt</a></li>
          </ul>
@@ -4827,6 +4877,7 @@
          <ul>
             <li><a href="#expr" title="expr">expr</a></li>
             <li><a href="#opt_partition_by" title="opt_partition_by">opt_partition_by</a></li>
+            <li><a href="#switch_case" title="switch_case">switch_case</a></li>
          </ul>
       </p><br /><p style="font-size: 14px; font-weight:bold"><a name="shape_arguments">shape_arguments:</a></p><svg width="429" height="81">
          <defs>
@@ -9760,6 +9811,126 @@
       <p>referenced by:
          <ul>
             <li><a href="#any_stmt" title="any_stmt">any_stmt</a></li>
+         </ul>
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="switch_stmt">switch_stmt:</a></p><svg width="829" height="85">
+         <defs>
+            <style type="text/css">
+    @namespace "http://www.w3.org/2000/svg";
+    .line                 {fill: none; stroke: #332900; stroke-width: 1;}
+    .bold-line            {stroke: #141000; shape-rendering: crispEdges; stroke-width: 2;}
+    .thin-line            {stroke: #1F1800; shape-rendering: crispEdges}
+    .filled               {fill: #332900; stroke: none;}
+    text.terminal         {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #141000;
+                            font-weight: bold;
+                          }
+    text.nonterminal      {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #1A1400;
+                            font-weight: normal;
+                          }
+    text.regexp           {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #1F1800;
+                            font-weight: normal;
+                          }
+    rect, circle, polygon {fill: #332900; stroke: #332900;}
+    rect.terminal         {fill: #FFDB4D; stroke: #332900; stroke-width: 1;}
+    rect.nonterminal      {fill: #FFEC9E; stroke: #332900; stroke-width: 1;}
+    rect.text             {fill: none; stroke: none;}
+    polygon.regexp        {fill: #FFF4C7; stroke: #332900; stroke-width: 1;}
+  </style>
+         </defs>
+         <polygon points="9 33 1 29 1 37"></polygon>
+         <polygon points="17 33 9 29 9 37"></polygon>
+         <rect x="31" y="19" width="76" height="32" rx="10"></rect>
+         <rect x="29" y="17" width="76" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="39" y="37">SWITCH</text><a href="#expr" title="expr">
+            <rect x="127" y="19" width="48" height="32"></rect>
+            <rect x="125" y="17" width="48" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="135" y="37">expr</text></a><rect x="215" y="51" width="44" height="32" rx="10"></rect>
+         <rect x="213" y="49" width="44" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="223" y="69">ALL</text>
+         <rect x="279" y="51" width="72" height="32" rx="10"></rect>
+         <rect x="277" y="49" width="72" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="287" y="69">VALUES</text><a href="#switch_case" title="switch_case">
+            <rect x="411" y="19" width="96" height="32"></rect>
+            <rect x="409" y="17" width="96" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="419" y="37">switch_case</text></a><rect x="567" y="51" width="52" height="32" rx="10"></rect>
+         <rect x="565" y="49" width="52" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="575" y="69">ELSE</text><a href="#stmt_list" title="stmt_list">
+            <rect x="639" y="51" width="74" height="32"></rect>
+            <rect x="637" y="49" width="74" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="647" y="69">stmt_list</text></a><rect x="753" y="19" width="48" height="32" rx="10"></rect>
+         <rect x="751" y="17" width="48" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="761" y="37">END</text>
+         <path class="line" d="m17 33 h2 m0 0 h10 m76 0 h10 m0 0 h10 m48 0 h10 m20 0 h10 m0 0 h146 m-176 0 h20 m156 0 h20 m-196 0 q10 0 10 10 m176 0 q0 -10 10 -10 m-186 10 v12 m176 0 v-12 m-176 12 q0 10 10 10 m156 0 q10 0 10 -10 m-166 10 h10 m44 0 h10 m0 0 h10 m72 0 h10 m40 -32 h10 m96 0 h10 m-136 0 l20 0 m-1 0 q-9 0 -9 -10 l0 -12 q0 -10 10 -10 m116 32 l20 0 m-20 0 q10 0 10 -10 l0 -12 q0 -10 -10 -10 m-116 0 h10 m0 0 h106 m40 32 h10 m0 0 h156 m-186 0 h20 m166 0 h20 m-206 0 q10 0 10 10 m186 0 q0 -10 10 -10 m-196 10 v12 m186 0 v-12 m-186 12 q0 10 10 10 m166 0 q10 0 10 -10 m-176 10 h10 m52 0 h10 m0 0 h10 m74 0 h10 m20 -32 h10 m48 0 h10 m3 0 h-3"></path>
+         <polygon points="819 33 827 29 827 37"></polygon>
+         <polygon points="819 33 811 29 811 37"></polygon></svg><p>
+         <div class="ebnf"><code>
+               <div><a href="#switch_stmt" title="switch_stmt">switch_stmt</a></div>
+               <div>         ::= 'SWITCH' <a href="#expr" title="expr">expr</a> ( 'ALL' 'VALUES' )? <a href="#switch_case" title="switch_case">switch_case</a>+ ( 'ELSE' <a href="#stmt_list" title="stmt_list">stmt_list</a> )? 'END'</div></code></div>
+      </p>
+      <p>referenced by:
+         <ul>
+            <li><a href="#any_stmt" title="any_stmt">any_stmt</a></li>
+         </ul>
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="switch_case">switch_case:</a></p><svg width="437" height="81">
+         <defs>
+            <style type="text/css">
+    @namespace "http://www.w3.org/2000/svg";
+    .line                 {fill: none; stroke: #332900; stroke-width: 1;}
+    .bold-line            {stroke: #141000; shape-rendering: crispEdges; stroke-width: 2;}
+    .thin-line            {stroke: #1F1800; shape-rendering: crispEdges}
+    .filled               {fill: #332900; stroke: none;}
+    text.terminal         {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #141000;
+                            font-weight: bold;
+                          }
+    text.nonterminal      {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #1A1400;
+                            font-weight: normal;
+                          }
+    text.regexp           {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #1F1800;
+                            font-weight: normal;
+                          }
+    rect, circle, polygon {fill: #332900; stroke: #332900;}
+    rect.terminal         {fill: #FFDB4D; stroke: #332900; stroke-width: 1;}
+    rect.nonterminal      {fill: #FFEC9E; stroke: #332900; stroke-width: 1;}
+    rect.text             {fill: none; stroke: none;}
+    polygon.regexp        {fill: #FFF4C7; stroke: #332900; stroke-width: 1;}
+  </style>
+         </defs>
+         <polygon points="9 17 1 13 1 21"></polygon>
+         <polygon points="17 17 9 13 9 21"></polygon>
+         <rect x="31" y="3" width="62" height="32" rx="10"></rect>
+         <rect x="29" y="1" width="62" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="39" y="21">WHEN</text><a href="#expr_list" title="expr_list">
+            <rect x="113" y="3" width="74" height="32"></rect>
+            <rect x="111" y="1" width="74" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="121" y="21">expr_list</text></a><rect x="207" y="3" width="56" height="32" rx="10"></rect>
+         <rect x="205" y="1" width="56" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="215" y="21">THEN</text><a href="#stmt_list" title="stmt_list">
+            <rect x="303" y="3" width="74" height="32"></rect>
+            <rect x="301" y="1" width="74" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="311" y="21">stmt_list</text></a><rect x="303" y="47" width="86" height="32" rx="10"></rect>
+         <rect x="301" y="45" width="86" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="311" y="65">NOTHING</text>
+         <path class="line" d="m17 17 h2 m0 0 h10 m62 0 h10 m0 0 h10 m74 0 h10 m0 0 h10 m56 0 h10 m20 0 h10 m74 0 h10 m0 0 h12 m-126 0 h20 m106 0 h20 m-146 0 q10 0 10 10 m126 0 q0 -10 10 -10 m-136 10 v24 m126 0 v-24 m-126 24 q0 10 10 10 m106 0 q10 0 10 -10 m-116 10 h10 m86 0 h10 m23 -44 h-3"></path>
+         <polygon points="427 17 435 13 435 21"></polygon>
+         <polygon points="427 17 419 13 419 21"></polygon></svg><p>
+         <div class="ebnf"><code>
+               <div><a href="#switch_case" title="switch_case">switch_case</a></div>
+               <div>         ::= 'WHEN' <a href="#expr_list" title="expr_list">expr_list</a> 'THEN' ( <a href="#stmt_list" title="stmt_list">stmt_list</a> | 'NOTHING' )</div></code></div>
+      </p>
+      <p>referenced by:
+         <ul>
+            <li><a href="#switch_stmt" title="switch_stmt">switch_stmt</a></li>
          </ul>
       </p><br /><p style="font-size: 14px; font-weight:bold"><a name="loop_stmt">loop_stmt:</a></p><svg width="501" height="37">
          <defs>
