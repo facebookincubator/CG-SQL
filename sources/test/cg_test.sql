@@ -3591,6 +3591,27 @@ switch i2
     set i2 := 123;
 end;
 
+
+-- TEST: use of LEAVE within a switch
+-- +  switch (i2) {
+-- +    case 1:
+-- +      if (i2) {
+-- +        break;
+-- +      }
+-- +      i2 = 999;
+-- +3      break;
+-- +    default:
+-- +      i2 = 1;
+-- +      break;
+-- +  }
+switch i2
+  when 1 then
+    if i2 then leave; end if;
+    set i2 := 999;
+  else
+    set i2 := 1;
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

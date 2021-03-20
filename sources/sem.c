@@ -276,6 +276,9 @@ static bool_t has_dml;
 // If the current context is a trigger statement list
 static bool_t in_trigger;
 
+// If the current context is inside of a switch statement
+static bool_t in_switch;
+
 // If we are within a proc savepoint block, then true
 static bool_t in_proc_savepoint;
 
@@ -15119,26 +15122,32 @@ static void sem_switch_stmt(ast_node *ast) {
   // SWITCH [expr] [switch_body] END
   // SWITCH [expr] ALL VALUES [switch_body] END
 
+  bool_t in_switch_saved = in_switch;
+  in_switch = true;
+
   sem_root_expr(expr, SEM_EXPR_CONTEXT_NONE);
   if (is_error(expr)) {
     record_error(ast);
-    return;
+    goto cleanup;
   }
 
   sem_t core_type = core_type_of(expr->sem->sem_type);
   if (!is_integer(core_type) || is_nullable(expr->sem->sem_type)) {
     report_error(expr, "CQL0381: case expression must be a not-null integral type", NULL);
     record_error(ast);
-    return;
+    goto cleanup;
   }
 
   sem_switch_cases(switch_case, core_type, all_values);
   if (is_error(switch_case)) {
     record_error(ast);
-    return;
+    goto cleanup;
   }
 
   record_ok(ast);
+
+cleanup:
+  in_switch = in_switch_saved;
 }
 
 // While semantic analysis is super simple.
@@ -15654,8 +15663,8 @@ static void sem_leave_stmt(ast_node *ast) {
   Contract(is_ast_leave_stmt(ast));
 
   // LEAVE
-  if (loop_depth == 0) {
-    report_error(ast, "CQL0219: leave must be inside of a 'loop' or 'while' statement", NULL);
+  if (loop_depth == 0 && !in_switch) {
+    report_error(ast, "CQL0219: leave must be inside of a 'loop', 'while', or 'switch' statement", NULL);
     record_error(ast);
     return;
   }
@@ -17819,6 +17828,7 @@ cql_noexport void sem_cleanup() {
   current_variables = NULL;  // this is either locals or globals, freed above
   has_dml = false;
   in_trigger = false;
+  in_switch = false;
   in_upsert = false;
   loop_depth = 0;
   in_proc_savepoint = false;

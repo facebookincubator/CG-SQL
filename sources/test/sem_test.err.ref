@@ -126,7 +126,7 @@ Error at test/sem_test.sql:XXXX : in leave_stmt : CQL0308: statement should be t
 Error at test/sem_test.sql:XXXX : in continue_stmt : CQL0308: statement should be the last thing in a statement list
 Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'X'
 Error at test/sem_test.sql:XXXX : in str : CQL0204: cursor not found 'not_a_variable'
-Error at test/sem_test.sql:XXXX : in leave_stmt : CQL0219: leave must be inside of a 'loop' or 'while' statement
+Error at test/sem_test.sql:XXXX : in leave_stmt : CQL0219: leave must be inside of a 'loop', 'while', or 'switch' statement
 Error at test/sem_test.sql:XXXX : in continue_stmt : CQL0218: continue must be inside of a 'loop' or 'while' statement
 Error at test/sem_test.sql:XXXX : in return_stmt : CQL0308: statement should be the last thing in a statement list
 Error at test/sem_test.sql:XXXX : in return_stmt : CQL0308: statement should be the last thing in a statement list

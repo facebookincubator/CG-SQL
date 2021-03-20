@@ -1536,7 +1536,7 @@ begin
 end;
 
 -- TEST: try to leave outside of a loop
--- + Error % leave must be inside of a 'loop' or 'while' statement
+-- + Error % leave must be inside of a 'loop', 'while', or 'switch' statement
 -- +1 Error
 -- + {leave_stmt}: err
 leave;

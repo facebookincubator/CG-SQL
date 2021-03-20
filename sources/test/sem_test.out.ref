@@ -5570,7 +5570,7 @@ The statement ending at line XXXX
 
 LEAVE;
 
-Error at test/sem_test.sql:XXXX : in leave_stmt : CQL0219: leave must be inside of a 'loop' or 'while' statement
+Error at test/sem_test.sql:XXXX : in leave_stmt : CQL0219: leave must be inside of a 'loop', 'while', or 'switch' statement
 
   {leave_stmt}: err
 
