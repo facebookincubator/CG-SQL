@@ -4299,6 +4299,90 @@ static void cg_update_cursor_stmt(ast_node *ast) {
   bprintf(cg_main_output, "}\n");
 }
 
+static void cg_switch_expr_list(ast_node *ast, sem_t sem_type_switch_expr) {
+  Contract(is_ast_expr_list(ast));
+
+  while (ast) {
+    Contract(is_ast_expr_list(ast));
+    EXTRACT_ANY_NOTNULL(expr, ast->left);
+
+    eval_node result = {};
+    eval(expr, &result);
+    Invariant(result.sem_type != SEM_TYPE_ERROR); // already checked
+
+    bool_t is_long = core_type_of(sem_type_switch_expr) == SEM_TYPE_LONG_INTEGER;
+
+    bprintf(cg_main_output, "case ");
+
+    if (is_long) {
+      bprintf(cg_main_output, "_64(");
+    }
+
+    eval_format_number(&result, cg_main_output);
+
+    if (is_long) {
+      bprintf(cg_main_output, ")");
+    }
+
+    bprintf(cg_main_output, ":\n");
+
+    ast = ast->right;
+  }
+}
+
+// Switch actually generates pretty easily because of the constraints that were
+// placed on the various expressions.  We know that the case lables are all
+// integers and we know that the expression type of the switch expression is
+// a not null integer type so we can easily generate the switch form.  Anything
+// that could go wrong has already been checked.
+static void cg_switch_stmt(ast_node *ast) {
+  Contract(is_ast_switch_stmt(ast));
+  EXTRACT_NOTNULL(switch_body, ast->right);
+  EXTRACT_ANY_NOTNULL(expr, switch_body->left);
+  EXTRACT_NOTNULL(switch_case, switch_body->right);
+
+  // SWITCH [expr] [switch_body] END
+  // SWITCH [expr] ALL VALUES [switch_body] END
+
+  CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
+
+  bprintf(cg_main_output, "switch (%s) {\n", expr_value.ptr);
+  CG_POP_EVAL(expr);
+
+  CG_PUSH_MAIN_INDENT(cases, 2);
+
+  bool_t first_case = true;
+
+  while (switch_case) {
+    EXTRACT_NOTNULL(connector, switch_case->left);
+    EXTRACT(stmt_list, connector->right);
+
+    // no stmt list corresponds to WHEN ... THEN NOTHING
+    if (stmt_list) {
+      if (!first_case) {
+        bprintf(cg_main_output, "\n");  // break between statement lists
+      }
+      first_case = false;
+
+      // no expr list corresponds to the else case
+      if (connector->left) {
+        EXTRACT_NOTNULL(expr_list, connector->left);
+        cg_switch_expr_list(expr_list, expr->sem->sem_type);
+      }
+      else {
+        bprintf(cg_main_output, "default:\n");
+      }
+
+      cg_stmt_list(stmt_list);
+      bprintf(cg_main_output, "  break;\n");
+    }
+    switch_case = switch_case->right;
+  }
+
+  CG_POP_MAIN_INDENT(cases);
+  bprintf(cg_main_output, "}\n", expr_value.ptr);
+}
+
 // "While" suffers from the same problem as IF and as a consequence
 // generating while (expression) would not generalize.
 // The overall pattern for while has to look like this:
@@ -6498,6 +6582,7 @@ cql_noexport void cg_c_init(void) {
   STMT_INIT(with_select_stmt);
 
   STMT_INIT(if_stmt);
+  STMT_INIT(switch_stmt);
   STMT_INIT(while_stmt);
   STMT_INIT(leave_stmt);
   STMT_INIT(continue_stmt);
