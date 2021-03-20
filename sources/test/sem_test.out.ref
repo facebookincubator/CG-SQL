@@ -57659,3 +57659,258 @@ Error at test/sem_test.sql:XXXX : in str : CQL0197: duplicate variable name in t
   | {name created_obj}
   | {int 1}
 
+The statement ending at line XXXX
+
+LET z := 1;
+
+  {let_stmt}: z: integer notnull variable
+  | {name z}: z: integer notnull variable
+  | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+SWITCH NOT 'x'
+  WHEN 1 THEN NOTHING
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+
+  {switch_stmt}: err
+  | {int 0}
+  | {switch_body}
+    | {not}: err
+    | | {strlit 'x'}: text notnull
+    | {switch_case}
+      | {connector}
+        | {expr_list}
+          | {int 1}
+
+The statement ending at line XXXX
+
+SWITCH 1.5
+  WHEN 1 THEN NOTHING
+END;
+
+Error at test/sem_test.sql:XXXX : in num : case expression must be a not-null integral type
+
+  {switch_stmt}: err
+  | {int 0}
+  | {switch_body}
+    | {dbl 1.5}: real notnull
+    | {switch_case}
+      | {connector}
+        | {expr_list}
+          | {int 1}
+
+The statement ending at line XXXX
+
+SWITCH z
+  WHEN 1L THEN NOTHING
+END;
+
+Error at test/sem_test.sql:XXXX : in num : the type of a WHEN expression is bigger than the type of the SWITCH expression
+
+  {switch_stmt}: err
+  | {int 0}
+  | {switch_body}
+    | {name z}: z: integer notnull variable
+    | {switch_case}: err
+      | {connector}
+        | {expr_list}: err
+          | {longint 1}: longint notnull
+
+The statement ending at line XXXX
+
+SWITCH z
+  WHEN 1 + x THEN NOTHING
+END;
+
+Error at test/sem_test.sql:XXXX : in add : the WHEN expression cannot be evaluated to a constant
+
+  {switch_stmt}: err
+  | {int 0}
+  | {switch_body}
+    | {name z}: z: integer notnull variable
+    | {switch_case}: err
+      | {connector}
+        | {expr_list}: err
+          | {add}: integer
+            | {int 1}: integer notnull
+            | {name x}: X: integer variable
+
+The statement ending at line XXXX
+
+SWITCH z
+  WHEN NOT "x" THEN NOTHING
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+
+  {switch_stmt}: err
+  | {int 0}
+  | {switch_body}
+    | {name z}: z: integer notnull variable
+    | {switch_case}: err
+      | {connector}
+        | {expr_list}: err
+          | {not}: err
+            | {strlit 'x'}: text notnull
+
+The statement ending at line XXXX
+
+SWITCH z
+  WHEN 1 THEN
+    IF NOT "x" THEN
+    END IF;
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+
+  {switch_stmt}: err
+  | {int 0}
+  | {switch_body}
+    | {name z}: z: integer notnull variable
+    | {switch_case}: err
+      | {connector}
+        | {expr_list}: ok
+        | | {int 1}: integer notnull
+        | {stmt_list}: err
+          | {if_stmt}: err
+            | {cond_action}: err
+            | | {not}: err
+            |   | {strlit 'x'}: text notnull
+            | {if_alt}
+
+The statement ending at line XXXX
+
+LET thing := 1;
+
+  {let_stmt}: thing: integer<integer_things> notnull variable
+  | {name thing}: thing: integer<integer_things> notnull variable
+  | {int 1}: integer<integer_things> notnull
+
+The statement ending at line XXXX
+
+SWITCH thing ALL VALUES
+  WHEN 1, 8 THEN
+    SET x := 10;
+  WHEN 7 THEN
+    SET x := 20;
+  ELSE
+    SET x := 30;
+END;
+
+Error at test/sem_test.sql:XXXX : in switch_case : switch ... ALL VALUES is useless with an ELSE clause
+
+  {switch_stmt}: err
+  | {int 1}
+  | {switch_body}
+    | {name thing}: thing: integer<integer_things> notnull variable
+    | {switch_case}: err
+      | {connector}
+      | | {expr_list}: ok
+      | | | {int 1}: integer<integer_things> notnull
+      | | | {expr_list}
+      | |   | {int 8}: integer<integer_things> notnull
+      | | {stmt_list}: ok
+      |   | {assign}: X: integer variable
+      |     | {name x}: X: integer variable
+      |     | {int 10}: integer notnull
+      | {switch_case}
+        | {connector}
+        | | {expr_list}: ok
+        | | | {int 7}: integer<integer_things> notnull
+        | | {stmt_list}: ok
+        |   | {assign}: X: integer variable
+        |     | {name x}: X: integer variable
+        |     | {int 20}: integer notnull
+        | {switch_case}
+          | {connector}
+            | {stmt_list}
+              | {assign}
+                | {name x}
+                | {int 30}
+
+The statement ending at line XXXX
+
+SWITCH z
+  ELSE
+    SELECT 2;
+END;
+
+Error at test/sem_test.sql:XXXX : in switch_case : switch statement has only an ELSE clause
+
+  {switch_stmt}: err
+  | {int 0}
+  | {switch_body}
+    | {name z}: z: integer notnull variable
+    | {switch_case}: err
+      | {connector}
+        | {stmt_list}
+          | {select_stmt}
+            | {select_core_list}
+            | | {select_core}
+            |   | {select_expr_list_con}
+            |     | {select_expr_list}
+            |     | | {select_expr}
+            |     |   | {int 2}
+            |     | {select_from_etc}
+            |       | {select_where}
+            |         | {select_groupby}
+            |           | {select_having}
+            | {select_orderby}
+              | {select_limit}
+                | {select_offset}
+
+The statement ending at line XXXX
+
+SWITCH x
+  WHEN 1 THEN NOTHING
+END;
+
+Error at test/sem_test.sql:XXXX : in str : case expression must be a not-null integral type
+
+  {switch_stmt}: err
+  | {int 0}
+  | {switch_body}
+    | {name x}: X: integer variable
+    | {switch_case}
+      | {connector}
+        | {expr_list}
+          | {int 1}
+
+The statement ending at line XXXX
+
+SWITCH z
+  WHEN 1, 2 THEN
+    SET y := 1;
+  WHEN 3 THEN NOTHING
+  ELSE
+    SET y := 2;
+END;
+
+  {switch_stmt}: ok
+  | {int 0}
+  | {switch_body}
+    | {name z}: z: integer notnull variable
+    | {switch_case}: ok
+      | {connector}
+      | | {expr_list}: ok
+      | | | {int 1}: integer notnull
+      | | | {expr_list}
+      | |   | {int 2}: integer notnull
+      | | {stmt_list}: ok
+      |   | {assign}: Y: integer variable
+      |     | {name y}: Y: integer variable
+      |     | {int 1}: integer notnull
+      | {switch_case}
+        | {connector}
+        | | {expr_list}: ok
+        |   | {int 3}: integer notnull
+        | {switch_case}
+          | {connector}
+            | {stmt_list}: ok
+              | {assign}: Y: integer variable
+                | {name y}: Y: integer variable
+                | {int 2}: integer notnull
+

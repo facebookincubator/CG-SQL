@@ -1445,6 +1445,28 @@ SET x := ( SELECT x
 
 LET z := 1 + 2;
 
+SWITCH x
+  WHEN 1, 3 THEN
+    SELECT 1;
+  WHEN 4 THEN
+    SET x := 1;
+    SET y := 2;
+  WHEN 5 THEN NOTHING
+  ELSE
+    SET y := 2;
+END;
+
+SWITCH x ALL VALUES
+  WHEN 1, 3 THEN
+    SELECT 1;
+  WHEN 4 THEN
+    SET x := 1;
+    SET y := 2;
+  WHEN 5 THEN NOTHING
+  ELSE
+    SET y := 2;
+END;
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

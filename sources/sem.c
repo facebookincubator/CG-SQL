@@ -14993,6 +14993,151 @@ cql_noexport void sem_cursor(ast_node *ast) {
   }
 }
 
+// Switch cases semantic analysis:
+// * the case expressions must be constant expressions
+// * the case expressions must promote to the type of the expression with no loss
+// * if all_values was specified you can't use else or it's a joke
+static void sem_switch_expr_list(ast_node *ast, sem_t core_type, bool_t all_values) {
+  Contract(is_ast_expr_list(ast));
+  ast_node *head = ast;
+
+  while (ast) {
+    Contract(is_ast_expr_list(ast));
+    EXTRACT_ANY_NOTNULL(expr, ast->left);
+    sem_root_expr(expr, SEM_EXPR_CONTEXT_NONE);
+    if (is_error(expr)) {
+      record_error(head);
+      return;
+    }
+    // we're going to do an immediate eval and it might have been replaced
+    // by enum rewrite.. so we have to fetch the node again.
+    expr = ast->left;
+    Invariant(expr);
+
+    sem_t core_type_expr = core_type_of(expr->sem->sem_type);
+    if (core_type_expr > core_type) {
+      report_error(expr, "the type of a WHEN expression is bigger than the type of the SWITCH expression", NULL);
+      record_error(head);
+      return;
+    }
+
+    eval_node result = {};
+    eval(expr, &result);
+
+    if (result.sem_type == SEM_TYPE_ERROR) {
+      report_error(expr, "the WHEN expression cannot be evaluated to a constant", NULL);
+      record_error(head);
+      return;
+    }
+
+    ast = ast->right;
+  }
+
+  record_ok(head);
+}
+
+// Switch cases semantic analysis:
+// * the case expressions must be constant expressions
+// * the case expressions must promote to the type of the expression with no loss
+// * the statement list must have no errors
+// * the expressions can't be just "else..."
+// * if all_values was specified you can't use else or it's a joke
+static void sem_switch_cases(ast_node *ast, sem_t core_type, bool_t all_values) {
+  Contract(is_ast_switch_case(ast));
+
+  ast_node *head = ast;
+
+  while (ast) {
+     EXTRACT_NOTNULL(connector, ast->left);
+
+     // no expr list corresponds to the else case
+     if (connector->left) {
+       EXTRACT_NOTNULL(expr_list, connector->left);
+
+       sem_switch_expr_list(expr_list, core_type, all_values);
+       if (is_error(expr_list)) {
+         record_error(head);
+         return;
+       }
+     }
+     else {
+       // the ELSE came first... that's no good (grammar allows this)
+       if (ast == head) {
+         report_error(ast, "switch statement has only an ELSE clause", NULL);
+         record_error(head);
+         return;
+       }
+
+       if (all_values) {
+         report_error(ast, "switch ... ALL VALUES is useless with an ELSE clause", NULL);
+         record_error(head);
+         return;
+       }
+     }
+
+     // no stmt list corresponds to WHEN ... THEN NOTHING
+     EXTRACT(stmt_list, connector->right);
+     if (stmt_list) {
+       sem_stmt_list(stmt_list);
+       if (is_error(stmt_list)) {
+         record_error(head);
+         return;
+       }
+     }
+     
+     ast = ast->right;
+  }
+  record_ok(head);
+}
+
+// Switch statement semantic analysis:
+// * the type of the switch expression must be integral (i.e. bool, integer, long_int)
+// * the type must be not null
+// * the case expressions must be constant expressions
+// * the case expressions must promote to the type of the expression with no loss
+// * the expressions can't be just "else..."
+// NYI: If ALL VALUES is specified then:
+//  * the type of switch expression must be an enum
+//  * all the values in the enum must be covered by the switch
+//  * if all_values was specified you can't use else or it's a joke
+static void sem_switch_stmt(ast_node *ast) {
+  Contract(is_ast_switch_stmt(ast));
+  EXTRACT_OPTION(all_values, ast->left);
+  EXTRACT_NOTNULL(switch_body, ast->right);
+  EXTRACT_ANY_NOTNULL(expr, switch_body->left);
+  EXTRACT_NOTNULL(switch_case, switch_body->right);
+
+  // SWITCH [expr] [switch_body] END
+  // SWITCH [expr] ALL VALUES [switch_body] END
+
+  sem_root_expr(expr, SEM_EXPR_CONTEXT_NONE);
+  if (is_error(expr)) {
+    record_error(ast);
+    return;
+  }
+
+  sem_t core_type = core_type_of(expr->sem->sem_type);
+  if (core_type < SEM_TYPE_BOOL || core_type > SEM_TYPE_LONG_INTEGER) {
+    report_error(expr, "case expression must be a not-null integral type", NULL);
+    record_error(ast);
+    return;
+  }
+
+  if (is_nullable(expr->sem->sem_type)) {
+    report_error(expr, "case expression must be a not-null integral type", NULL);
+    record_error(ast);
+    return;
+  }
+
+  sem_switch_cases(switch_case, core_type, all_values);
+  if (is_error(switch_case)) {
+    record_error(ast);
+    return;
+  }
+
+  record_ok(ast);
+}
+
 // While semantic analysis is super simple.
 //  * the condition must be numeric
 //  * the statement list must be error-free
@@ -17368,6 +17513,7 @@ cql_noexport void sem_main(ast_node *ast) {
 
   STMT_INIT(if_stmt);
   STMT_INIT(while_stmt);
+  STMT_INIT(switch_stmt);
   STMT_INIT(leave_stmt);
   STMT_INIT(continue_stmt);
   STMT_INIT(return_stmt);

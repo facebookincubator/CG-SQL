@@ -2847,7 +2847,7 @@ static void gen_switch_cases(ast_node *ast) {
             END_INDENT(statement);
         }
         else {
-          gen_printf(" NOTHING\n");
+          gen_printf(" THEN NOTHING\n");
         }
      }
      else {
