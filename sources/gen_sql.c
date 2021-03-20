@@ -2829,6 +2829,61 @@ static void gen_fetch_stmt(ast_node *ast) {
   }
 }
 
+static void gen_switch_cases(ast_node *ast) {
+  Contract(is_ast_switch_case(ast));
+
+  while (ast) {
+     EXTRACT_NOTNULL(connector, ast->left);
+     if (connector->left) {
+        EXTRACT_NOTNULL(expr_list, connector->left);
+        EXTRACT(stmt_list, connector->right);
+
+        gen_printf("  WHEN ");
+        gen_expr_list(expr_list);
+        if (stmt_list) {
+            gen_printf(" THEN\n");
+            BEGIN_INDENT(statement, 2);
+              gen_stmt_list(stmt_list);
+            END_INDENT(statement);
+        }
+        else {
+          gen_printf(" NOTHING\n");
+        }
+     }
+     else {
+        EXTRACT_NOTNULL(stmt_list, connector->right);
+
+        gen_printf("  ELSE\n");
+        BEGIN_INDENT(statement, 2);
+          gen_stmt_list(stmt_list);
+        END_INDENT(statement);
+     }
+     ast = ast->right;
+  }
+  gen_printf("END");
+}
+
+static void gen_switch_stmt(ast_node *ast) {
+  Contract(is_ast_switch_stmt(ast));
+  EXTRACT_OPTION(all_values, ast->left);
+  EXTRACT_NOTNULL(switch_body, ast->right);
+  EXTRACT_ANY_NOTNULL(expr, switch_body->left);
+  EXTRACT_NOTNULL(switch_case, switch_body->right);
+
+  // SWITCH [expr] [switch_body] END
+  // SWITCH [expr] ALL VALUES [switch_body] END
+
+  gen_printf("SWITCH ");
+  gen_root_expr(expr);
+
+  if (all_values) {
+    gen_printf(" ALL VALUES");
+  }
+  gen_printf("\n");
+
+  gen_switch_cases(switch_case);
+}
+
 static void gen_while_stmt(ast_node *ast) {
   Contract(is_ast_while_stmt(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
@@ -3314,6 +3369,7 @@ cql_noexport void gen_init() {
 
   STMT_INIT(if_stmt);
   STMT_INIT(while_stmt);
+  STMT_INIT(switch_stmt);
   STMT_INIT(leave_stmt);
   STMT_INIT(continue_stmt);
   STMT_INIT(return_stmt);

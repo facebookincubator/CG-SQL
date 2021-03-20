@@ -39,6 +39,7 @@ EXCLUDE[ \t\n]+TIES               {return EXCLUDE_TIES; }
 UNBOUNDED                    { return UNBOUNDED; }
 PRECEDING                    { return PRECEDING; }
 FOLLOWING                    { return FOLLOWING; }
+SWITCH                       { return SWITCH; }
 RANGE                        { return RANGE; }
 ENUM                         { return ENUM; }
 ROWS                         { return ROWS; }

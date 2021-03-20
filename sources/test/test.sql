@@ -1340,6 +1340,28 @@ set x := (select x from y if nothing throw);
 
 let z := 1 + 2;
 
+switch x
+  when 1, 3 then 
+    select 1;
+  when 4 then
+    set x := 1;
+    set y := 2;
+  when 5 then nothing
+  else
+    set y := 2;
+end;
+
+switch x all values
+  when 1, 3 then 
+    select 1;
+  when 4 then
+    set x := 1;
+    set y := 2;
+  when 5 then nothing
+  else
+    set y := 2;
+end;
+
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 
 # 1 "long/path/I/do/not/like"
