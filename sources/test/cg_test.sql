@@ -3576,6 +3576,21 @@ switch l2
   when 5 then nothing
 end;
 
+-- TEST: special case: just excluding 1, 2, 3... no statements but the ELSE
+-- + switch (i2) {
+-- + case 1:
+-- + case 2:
+-- + case 3:
+-- two net cases (1,2,3) and default
+-- +2 break;
+-- + default:
+-- + i2 = 123;
+switch i2
+  when 1, 2, 3 then nothing
+  else
+    set i2 := 123;
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

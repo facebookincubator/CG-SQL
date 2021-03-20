@@ -57691,7 +57691,7 @@ SWITCH 1.5
   WHEN 1 THEN NOTHING
 END;
 
-Error at test/sem_test.sql:XXXX : in num : case expression must be a not-null integral type
+Error at test/sem_test.sql:XXXX : in num : CQL0381: case expression must be a not-null integral type
 
   {switch_stmt}: err
   | {int 0}
@@ -57708,7 +57708,7 @@ SWITCH z
   WHEN 1L THEN NOTHING
 END;
 
-Error at test/sem_test.sql:XXXX : in num : the type of a WHEN expression is bigger than the type of the SWITCH expression
+Error at test/sem_test.sql:XXXX : in num : CQL0382: the type of a WHEN expression is bigger than the type of the SWITCH expression
 
   {switch_stmt}: err
   | {int 0}
@@ -57725,7 +57725,7 @@ SWITCH z
   WHEN 1 + x THEN NOTHING
 END;
 
-Error at test/sem_test.sql:XXXX : in add : the WHEN expression cannot be evaluated to a constant
+Error at test/sem_test.sql:XXXX : in add : CQL0380: the WHEN expression cannot be evaluated to a constant
 
   {switch_stmt}: err
   | {int 0}
@@ -57788,7 +57788,7 @@ SWITCH z
   WHEN 2 THEN NOTHING
 END;
 
-Error at test/sem_test.sql:XXXX : in switch_case : switch statement did not have any actual statements in it
+Error at test/sem_test.sql:XXXX : in switch_case : CQL0384: switch statement did not have any actual statements in it
 
   {switch_stmt}: err
   | {int 0}
@@ -57822,7 +57822,7 @@ SWITCH thing ALL VALUES
     SET x := 30;
 END;
 
-Error at test/sem_test.sql:XXXX : in switch_case : switch ... ALL VALUES is useless with an ELSE clause
+Error at test/sem_test.sql:XXXX : in switch_case : CQL0383: switch ... ALL VALUES is useless with an ELSE clause
 
   {switch_stmt}: err
   | {int 1}
@@ -57860,7 +57860,7 @@ SWITCH z
     SELECT 2;
 END;
 
-Error at test/sem_test.sql:XXXX : in switch_case : switch statement has only an ELSE clause
+Error at test/sem_test.sql:XXXX : in switch_case : CQL0385: switch statement has only an ELSE clause
 
   {switch_stmt}: err
   | {int 0}
@@ -57890,7 +57890,7 @@ SWITCH x
   WHEN 1 THEN NOTHING
 END;
 
-Error at test/sem_test.sql:XXXX : in str : case expression must be a not-null integral type
+Error at test/sem_test.sql:XXXX : in str : CQL0381: case expression must be a not-null integral type
 
   {switch_stmt}: err
   | {int 0}

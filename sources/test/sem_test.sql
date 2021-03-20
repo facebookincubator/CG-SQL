@@ -14564,7 +14564,7 @@ let thing := integer_things.pen;
 -- + {switch_body}
 -- - {expr_list}: err
 -- 2 {expr_list}: ok
--- + Error % in switch_case : switch ... ALL VALUES is useless with an ELSE clause
+-- + Error % switch ... ALL VALUES is useless with an ELSE clause
 -- +1 Error
 switch thing all values
   when 

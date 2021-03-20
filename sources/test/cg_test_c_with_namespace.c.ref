@@ -10747,6 +10747,26 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
   
   /*
+  SWITCH i2
+    WHEN 1, 2, 3 THEN NOTHING
+    ELSE
+      SET i2 := 123;
+  END;
+  */
+  switch (i2) {
+    case 1:
+    case 2:
+    case 3:
+      break;
+    
+    default:
+      i2 = 123;
+      break;
+  }
+  
+  // The statement ending at line XXXX
+  
+  /*
   LET this_is_the_end := 0xf00d;
   */
   this_is_the_end = 0xf00d;

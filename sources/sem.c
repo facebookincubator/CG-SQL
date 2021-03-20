@@ -15016,7 +15016,7 @@ static void sem_switch_expr_list(ast_node *ast, sem_t core_type, bool_t all_valu
 
     sem_t core_type_expr = core_type_of(expr->sem->sem_type);
     if (core_type_expr > core_type) {
-      report_error(expr, "the type of a WHEN expression is bigger than the type of the SWITCH expression", NULL);
+      report_error(expr, "CQL0382: the type of a WHEN expression is bigger than the type of the SWITCH expression", NULL);
       record_error(head);
       return;
     }
@@ -15025,7 +15025,7 @@ static void sem_switch_expr_list(ast_node *ast, sem_t core_type, bool_t all_valu
     eval(expr, &result);
 
     if (result.sem_type == SEM_TYPE_ERROR) {
-      report_error(expr, "the WHEN expression cannot be evaluated to a constant", NULL);
+      report_error(expr, "CQL0380: the WHEN expression cannot be evaluated to a constant", NULL);
       record_error(head);
       return;
     }
@@ -15063,14 +15063,14 @@ static void sem_switch_cases(ast_node *ast, sem_t core_type, bool_t all_values) 
      }
      else {
        // the ELSE came first... that's no good (grammar allows this)
-       if (stmt_lists == 0) {
-         report_error(ast, "switch statement has only an ELSE clause", NULL);
+       if (ast == head) {
+         report_error(ast, "CQL0385: switch statement has only an ELSE clause", NULL);
          record_error(head);
          return;
        }
 
        if (all_values) {
-         report_error(ast, "switch ... ALL VALUES is useless with an ELSE clause", NULL);
+         report_error(ast, "CQL0383: switch ... ALL VALUES is useless with an ELSE clause", NULL);
          record_error(head);
          return;
        }
@@ -15091,7 +15091,7 @@ static void sem_switch_cases(ast_node *ast, sem_t core_type, bool_t all_values) 
   }
 
   if (stmt_lists == 0) {
-    report_error(head, "switch statement did not have any actual statements in it", NULL);
+    report_error(head, "CQL0384: switch statement did not have any actual statements in it", NULL);
     record_error(head);
     return;
   }
@@ -15127,7 +15127,7 @@ static void sem_switch_stmt(ast_node *ast) {
 
   sem_t core_type = core_type_of(expr->sem->sem_type);
   if (!is_integer(core_type) || is_nullable(expr->sem->sem_type)) {
-    report_error(expr, "case expression must be a not-null integral type", NULL);
+    report_error(expr, "CQL0381: case expression must be a not-null integral type", NULL);
     record_error(ast);
     return;
   }
