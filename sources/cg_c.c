@@ -4247,6 +4247,7 @@ static void cg_fetch_stmt(ast_node *ast) {
   bprintf(cg_main_output, ");\n");
   if (!uses_out_union) {
     cg_error_on_expr("_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE");
+    bprintf(cg_main_output, "_rc_ = SQLITE_OK;\n");
   }
 }
 

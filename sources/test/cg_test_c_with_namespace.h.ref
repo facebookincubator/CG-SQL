@@ -2391,6 +2391,9 @@ extern CQL_WARN_UNUSED cql_code early_close_cursor(sqlite3 *_Nonnull _db_);
 extern void various_lets(void);
 
 // The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code try_catch_rc(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
 extern void end_proc(void);
 
 // The statement ending at line XXXX

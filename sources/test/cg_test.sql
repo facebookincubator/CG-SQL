@@ -3498,6 +3498,20 @@ begin
   let nt := nullable("NT");
 end;
 
+-- TEST: check that rc is set correctly in try/catch blocks
+-- +1 cql_code _rc_ = SQLITE_OK;
+-- two for setting the code plus one for the init as above
+-- +3 _rc_ = SQLITE_OK;
+create proc try_catch_rc()
+begin
+  declare C cursor for select 'foo' extra2 from bar;
+  begin try
+    fetch C;
+  end try;
+  begin catch
+  end catch;
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------
