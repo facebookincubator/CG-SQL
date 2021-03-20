@@ -57783,6 +57783,28 @@ Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed i
 
 The statement ending at line XXXX
 
+SWITCH z
+  WHEN 1 THEN NOTHING
+  WHEN 2 THEN NOTHING
+END;
+
+Error at test/sem_test.sql:XXXX : in switch_case : switch statement did not have any actual statements in it
+
+  {switch_stmt}: err
+  | {int 0}
+  | {switch_body}
+    | {name z}: z: integer notnull variable
+    | {switch_case}: err
+      | {connector}
+      | | {expr_list}: ok
+      |   | {int 1}: integer notnull
+      | {switch_case}
+        | {connector}
+          | {expr_list}: ok
+            | {int 2}: integer notnull
+
+The statement ending at line XXXX
+
 LET thing := 1;
 
   {let_stmt}: thing: integer<integer_things> notnull variable

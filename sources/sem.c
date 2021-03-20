@@ -15046,6 +15046,7 @@ static void sem_switch_cases(ast_node *ast, sem_t core_type, bool_t all_values) 
   Contract(is_ast_switch_case(ast));
 
   ast_node *head = ast;
+  int32_t stmt_lists = 0;
 
   while (ast) {
      EXTRACT_NOTNULL(connector, ast->left);
@@ -15062,7 +15063,7 @@ static void sem_switch_cases(ast_node *ast, sem_t core_type, bool_t all_values) 
      }
      else {
        // the ELSE came first... that's no good (grammar allows this)
-       if (ast == head) {
+       if (stmt_lists == 0) {
          report_error(ast, "switch statement has only an ELSE clause", NULL);
          record_error(head);
          return;
@@ -15078,6 +15079,7 @@ static void sem_switch_cases(ast_node *ast, sem_t core_type, bool_t all_values) 
      // no stmt list corresponds to WHEN ... THEN NOTHING
      EXTRACT(stmt_list, connector->right);
      if (stmt_list) {
+       stmt_lists++;
        sem_stmt_list(stmt_list);
        if (is_error(stmt_list)) {
          record_error(head);
@@ -15087,6 +15089,13 @@ static void sem_switch_cases(ast_node *ast, sem_t core_type, bool_t all_values) 
      
      ast = ast->right;
   }
+
+  if (stmt_lists == 0) {
+    report_error(head, "switch statement did not have any actual statements in it", NULL);
+    record_error(head);
+    return;
+  }
+
   record_ok(head);
 }
 
@@ -15117,13 +15126,7 @@ static void sem_switch_stmt(ast_node *ast) {
   }
 
   sem_t core_type = core_type_of(expr->sem->sem_type);
-  if (core_type < SEM_TYPE_BOOL || core_type > SEM_TYPE_LONG_INTEGER) {
-    report_error(expr, "case expression must be a not-null integral type", NULL);
-    record_error(ast);
-    return;
-  }
-
-  if (is_nullable(expr->sem->sem_type)) {
+  if (!is_integer(core_type) || is_nullable(expr->sem->sem_type)) {
     report_error(expr, "case expression must be a not-null integral type", NULL);
     record_error(ast);
     return;

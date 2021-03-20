@@ -14544,6 +14544,18 @@ switch z
     if not "x" then end if;
 end;
 
+-- TEST: switch statement with no actual code in it
+-- + {switch_stmt}: err
+-- + {int 0}
+-- + {switch_body}
+-- + {switch_case}: err
+-- + Error % switch statement did not have any actual statements in it
+-- +1 Error
+switch z
+  when 1 then nothing -- no cases with statements
+  when 2 then nothing -- no cases with statements
+end;
+
 let thing := integer_things.pen;
 
 -- TEST: switch statement combining all values and else is a joke
@@ -14602,4 +14614,3 @@ switch z
   else
     set y := 2;
 end;
-

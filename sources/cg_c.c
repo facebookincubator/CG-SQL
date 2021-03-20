@@ -4353,12 +4353,22 @@ static void cg_switch_stmt(ast_node *ast) {
 
   bool_t first_case = true;
 
+  bool_t has_default = false;
+  for (ast_node *temp = switch_case; temp; temp = temp->right) {
+    EXTRACT_NOTNULL(connector, temp->left);
+    if (!connector->left) {
+      has_default = true;
+    }
+  }
+
   while (switch_case) {
     EXTRACT_NOTNULL(connector, switch_case->left);
     EXTRACT(stmt_list, connector->right);
 
     // no stmt list corresponds to WHEN ... THEN NOTHING
-    if (stmt_list) {
+    // we can skip the entire case set unless there is a default
+    // in which case we have to emit it with just break...
+    if (stmt_list || has_default) {
       if (!first_case) {
         bprintf(cg_main_output, "\n");  // break between statement lists
       }
@@ -4373,7 +4383,9 @@ static void cg_switch_stmt(ast_node *ast) {
         bprintf(cg_main_output, "default:\n");
       }
 
-      cg_stmt_list(stmt_list);
+      if (stmt_list) {
+        cg_stmt_list(stmt_list);
+      }
       bprintf(cg_main_output, "  break;\n");
     }
     switch_case = switch_case->right;

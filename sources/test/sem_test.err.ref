@@ -1028,6 +1028,7 @@ Error at test/sem_test.sql:XXXX : in num : the type of a WHEN expression is bigg
 Error at test/sem_test.sql:XXXX : in add : the WHEN expression cannot be evaluated to a constant
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in switch_case : switch statement did not have any actual statements in it
 Error at test/sem_test.sql:XXXX : in switch_case : switch ... ALL VALUES is useless with an ELSE clause
 Error at test/sem_test.sql:XXXX : in switch_case : switch statement has only an ELSE clause
 Error at test/sem_test.sql:XXXX : in str : case expression must be a not-null integral type
