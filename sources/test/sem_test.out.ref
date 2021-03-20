@@ -5570,7 +5570,7 @@ The statement ending at line XXXX
 
 LEAVE;
 
-Error at test/sem_test.sql:XXXX : in leave_stmt : CQL0219: leave must be inside of a 'loop' or 'while' statement
+Error at test/sem_test.sql:XXXX : in leave_stmt : CQL0219: leave must be inside of a 'loop', 'while', or 'switch' statement
 
   {leave_stmt}: err
 
@@ -57691,7 +57691,7 @@ SWITCH 1.5
   WHEN 1 THEN NOTHING
 END;
 
-Error at test/sem_test.sql:XXXX : in num : case expression must be a not-null integral type
+Error at test/sem_test.sql:XXXX : in num : CQL0381: case expression must be a not-null integral type
 
   {switch_stmt}: err
   | {int 0}
@@ -57708,7 +57708,7 @@ SWITCH z
   WHEN 1L THEN NOTHING
 END;
 
-Error at test/sem_test.sql:XXXX : in num : the type of a WHEN expression is bigger than the type of the SWITCH expression
+Error at test/sem_test.sql:XXXX : in num : CQL0382: the type of a WHEN expression is bigger than the type of the SWITCH expression
 
   {switch_stmt}: err
   | {int 0}
@@ -57725,7 +57725,7 @@ SWITCH z
   WHEN 1 + x THEN NOTHING
 END;
 
-Error at test/sem_test.sql:XXXX : in add : the WHEN expression cannot be evaluated to a constant
+Error at test/sem_test.sql:XXXX : in add : CQL0380: the WHEN expression cannot be evaluated to a constant
 
   {switch_stmt}: err
   | {int 0}
@@ -57783,6 +57783,28 @@ Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed i
 
 The statement ending at line XXXX
 
+SWITCH z
+  WHEN 1 THEN NOTHING
+  WHEN 2 THEN NOTHING
+END;
+
+Error at test/sem_test.sql:XXXX : in switch_case : CQL0384: switch statement did not have any actual statements in it
+
+  {switch_stmt}: err
+  | {int 0}
+  | {switch_body}
+    | {name z}: z: integer notnull variable
+    | {switch_case}: err
+      | {connector}
+      | | {expr_list}: ok
+      |   | {int 1}: integer notnull
+      | {switch_case}
+        | {connector}
+          | {expr_list}: ok
+            | {int 2}: integer notnull
+
+The statement ending at line XXXX
+
 LET thing := 1;
 
   {let_stmt}: thing: integer<integer_things> notnull variable
@@ -57800,7 +57822,7 @@ SWITCH thing ALL VALUES
     SET x := 30;
 END;
 
-Error at test/sem_test.sql:XXXX : in switch_case : switch ... ALL VALUES is useless with an ELSE clause
+Error at test/sem_test.sql:XXXX : in switch_case : CQL0383: switch ... ALL VALUES is useless with an ELSE clause
 
   {switch_stmt}: err
   | {int 1}
@@ -57833,42 +57855,11 @@ Error at test/sem_test.sql:XXXX : in switch_case : switch ... ALL VALUES is usel
 
 The statement ending at line XXXX
 
-SWITCH z
-  ELSE
-    SELECT 2;
-END;
-
-Error at test/sem_test.sql:XXXX : in switch_case : switch statement has only an ELSE clause
-
-  {switch_stmt}: err
-  | {int 0}
-  | {switch_body}
-    | {name z}: z: integer notnull variable
-    | {switch_case}: err
-      | {connector}
-        | {stmt_list}
-          | {select_stmt}
-            | {select_core_list}
-            | | {select_core}
-            |   | {select_expr_list_con}
-            |     | {select_expr_list}
-            |     | | {select_expr}
-            |     |   | {int 2}
-            |     | {select_from_etc}
-            |       | {select_where}
-            |         | {select_groupby}
-            |           | {select_having}
-            | {select_orderby}
-              | {select_limit}
-                | {select_offset}
-
-The statement ending at line XXXX
-
 SWITCH x
   WHEN 1 THEN NOTHING
 END;
 
-Error at test/sem_test.sql:XXXX : in str : case expression must be a not-null integral type
+Error at test/sem_test.sql:XXXX : in str : CQL0381: case expression must be a not-null integral type
 
   {switch_stmt}: err
   | {int 0}

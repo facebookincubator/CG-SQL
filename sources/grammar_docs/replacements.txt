@@ -180,6 +180,7 @@ s/[[:<:]]SELECT[[:>:]]/"SELECT"/g
 s/[[:<:]]SET[[:>:]]/"SET"/g
 s/[[:<:]]STATEMENT[[:>:]]/"STATEMENT"/g
 s/[[:<:]]STRLIT[[:>:]]/"sql-string-literal"/g
+s/[[:<:]]SWITCH[[:>:]]/"SWITCH"/g
 s/[[:<:]]TABLE[[:>:]]/"TABLE"/g
 s/[[:<:]]TEMP[[:>:]]/"TEMP"/g
 s/[[:<:]]TEXT[[:>:]]/"TEXT"/g

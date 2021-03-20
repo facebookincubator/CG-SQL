@@ -1536,7 +1536,7 @@ begin
 end;
 
 -- TEST: try to leave outside of a loop
--- + Error % leave must be inside of a 'loop' or 'while' statement
+-- + Error % leave must be inside of a 'loop', 'while', or 'switch' statement
 -- +1 Error
 -- + {leave_stmt}: err
 leave;
@@ -14544,6 +14544,18 @@ switch z
     if not "x" then end if;
 end;
 
+-- TEST: switch statement with no actual code in it
+-- + {switch_stmt}: err
+-- + {int 0}
+-- + {switch_body}
+-- + {switch_case}: err
+-- + Error % switch statement did not have any actual statements in it
+-- +1 Error
+switch z
+  when 1 then nothing -- no cases with statements
+  when 2 then nothing -- no cases with statements
+end;
+
 let thing := integer_things.pen;
 
 -- TEST: switch statement combining all values and else is a joke
@@ -14552,7 +14564,7 @@ let thing := integer_things.pen;
 -- + {switch_body}
 -- - {expr_list}: err
 -- 2 {expr_list}: ok
--- + Error % in switch_case : switch ... ALL VALUES is useless with an ELSE clause
+-- + Error % switch ... ALL VALUES is useless with an ELSE clause
 -- +1 Error
 switch thing all values
   when 
@@ -14563,17 +14575,6 @@ switch thing all values
     set x := 20;
   else
     set x := 30;
-end;
-
--- TEST: switch statement with only an else clause
--- + {switch_stmt}: err
--- + {int 0}
--- + {switch_body}
--- + Error % switch statement has only an ELSE clause
--- +1 Error
-switch z
-  else
-    select 2;
 end;
 
 -- TEST: switch statement with nullable switch expr
@@ -14602,4 +14603,3 @@ switch z
   else
     set y := 2;
 end;
-

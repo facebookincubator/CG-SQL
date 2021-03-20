@@ -276,6 +276,9 @@ static bool_t has_dml;
 // If the current context is a trigger statement list
 static bool_t in_trigger;
 
+// If the current context is inside of a switch statement
+static bool_t in_switch;
+
 // If we are within a proc savepoint block, then true
 static bool_t in_proc_savepoint;
 
@@ -15016,7 +15019,7 @@ static void sem_switch_expr_list(ast_node *ast, sem_t core_type, bool_t all_valu
 
     sem_t core_type_expr = core_type_of(expr->sem->sem_type);
     if (core_type_expr > core_type) {
-      report_error(expr, "the type of a WHEN expression is bigger than the type of the SWITCH expression", NULL);
+      report_error(expr, "CQL0382: the type of a WHEN expression is bigger than the type of the SWITCH expression", NULL);
       record_error(head);
       return;
     }
@@ -15025,7 +15028,7 @@ static void sem_switch_expr_list(ast_node *ast, sem_t core_type, bool_t all_valu
     eval(expr, &result);
 
     if (result.sem_type == SEM_TYPE_ERROR) {
-      report_error(expr, "the WHEN expression cannot be evaluated to a constant", NULL);
+      report_error(expr, "CQL0380: the WHEN expression cannot be evaluated to a constant", NULL);
       record_error(head);
       return;
     }
@@ -15046,11 +15049,13 @@ static void sem_switch_cases(ast_node *ast, sem_t core_type, bool_t all_values) 
   Contract(is_ast_switch_case(ast));
 
   ast_node *head = ast;
+  int32_t stmt_lists = 0;
 
   while (ast) {
      EXTRACT_NOTNULL(connector, ast->left);
+     EXTRACT(stmt_list, connector->right);
 
-     // no expr list corresponds to the else case
+     // first check for expression list, this is a WHEN x,y,z THEN clause
      if (connector->left) {
        EXTRACT_NOTNULL(expr_list, connector->left);
 
@@ -15061,32 +15066,37 @@ static void sem_switch_cases(ast_node *ast, sem_t core_type, bool_t all_values) 
        }
      }
      else {
-       // the ELSE came first... that's no good (grammar allows this)
-       if (ast == head) {
-         report_error(ast, "switch statement has only an ELSE clause", NULL);
-         record_error(head);
-         return;
-       }
+       // no expr list corresponds to the else case
+       Invariant(ast != head);  // 'else' is never first!
+       Invariant(!ast->right);  // 'else' is always last!
+       Invariant(stmt_list);    // 'else' always has a statement list
 
        if (all_values) {
-         report_error(ast, "switch ... ALL VALUES is useless with an ELSE clause", NULL);
+         report_error(ast, "CQL0383: switch ... ALL VALUES is useless with an ELSE clause", NULL);
          record_error(head);
          return;
        }
      }
 
      // no stmt list corresponds to WHEN ... THEN NOTHING
-     EXTRACT(stmt_list, connector->right);
      if (stmt_list) {
+       stmt_lists++;
        sem_stmt_list(stmt_list);
        if (is_error(stmt_list)) {
          record_error(head);
          return;
        }
      }
-     
+
      ast = ast->right;
   }
+
+  if (stmt_lists == 0) {
+    report_error(head, "CQL0384: switch statement did not have any actual statements in it", NULL);
+    record_error(head);
+    return;
+  }
+
   record_ok(head);
 }
 
@@ -15110,32 +15120,32 @@ static void sem_switch_stmt(ast_node *ast) {
   // SWITCH [expr] [switch_body] END
   // SWITCH [expr] ALL VALUES [switch_body] END
 
+  bool_t in_switch_saved = in_switch;
+  in_switch = true;
+
   sem_root_expr(expr, SEM_EXPR_CONTEXT_NONE);
   if (is_error(expr)) {
     record_error(ast);
-    return;
+    goto cleanup;
   }
 
   sem_t core_type = core_type_of(expr->sem->sem_type);
-  if (core_type < SEM_TYPE_BOOL || core_type > SEM_TYPE_LONG_INTEGER) {
-    report_error(expr, "case expression must be a not-null integral type", NULL);
+  if (!is_integer(core_type) || is_nullable(expr->sem->sem_type)) {
+    report_error(expr, "CQL0381: case expression must be a not-null integral type", NULL);
     record_error(ast);
-    return;
+    goto cleanup;
   }
 
-  if (is_nullable(expr->sem->sem_type)) {
-    report_error(expr, "case expression must be a not-null integral type", NULL);
-    record_error(ast);
-    return;
-  }
-
-  sem_switch_cases(switch_case, core_type, all_values);
+  sem_switch_cases(switch_case, core_type, !!all_values);
   if (is_error(switch_case)) {
     record_error(ast);
-    return;
+    goto cleanup;
   }
 
   record_ok(ast);
+
+cleanup:
+  in_switch = in_switch_saved;
 }
 
 // While semantic analysis is super simple.
@@ -15651,8 +15661,8 @@ static void sem_leave_stmt(ast_node *ast) {
   Contract(is_ast_leave_stmt(ast));
 
   // LEAVE
-  if (loop_depth == 0) {
-    report_error(ast, "CQL0219: leave must be inside of a 'loop' or 'while' statement", NULL);
+  if (loop_depth == 0 && !in_switch) {
+    report_error(ast, "CQL0219: leave must be inside of a 'loop', 'while', or 'switch' statement", NULL);
     record_error(ast);
     return;
   }
@@ -17816,6 +17826,7 @@ cql_noexport void sem_cleanup() {
   current_variables = NULL;  // this is either locals or globals, freed above
   has_dml = false;
   in_trigger = false;
+  in_switch = false;
   in_upsert = false;
   loop_depth = 0;
   in_proc_savepoint = false;

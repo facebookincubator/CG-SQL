@@ -234,7 +234,7 @@ static void cql_reset_globals(void);
 %type <aval> schema_upgrade_script_stmt
 %type <aval> schema_upgrade_version_stmt
 %type <aval> set_stmt let_stmt
-%type <aval> switch_stmt switch_cases
+%type <aval> switch_stmt switch_cases switch_case
 %type <aval> throw_stmt
 %type <aval> trycatch_stmt
 %type <aval> version_annotation
@@ -1502,21 +1502,24 @@ while_stmt:
   ;
 
 switch_stmt:
-  SWITCH expr switch_cases { 
-    ast_node *switch_body = new_ast_switch_body($expr, $switch_cases); 
+  SWITCH expr switch_case switch_cases { 
+    ast_node *cases = new_ast_switch_case($switch_case, $switch_cases);
+    ast_node *switch_body = new_ast_switch_body($expr, cases); 
     $switch_stmt = new_ast_switch_stmt(new_ast_opt(0), switch_body);  }
-  | SWITCH expr ALL VALUES switch_cases { 
-    ast_node *switch_body = new_ast_switch_body($expr, $switch_cases); 
+  | SWITCH expr ALL VALUES switch_case switch_cases { 
+    ast_node *cases = new_ast_switch_case($switch_case, $switch_cases);
+    ast_node *switch_body = new_ast_switch_body($expr, cases); 
     $switch_stmt = new_ast_switch_stmt(new_ast_opt(1), switch_body);  }
   ;
 
+switch_case:
+  WHEN expr_list THEN stmt_list { $switch_case = new_ast_connector($expr_list, $stmt_list); }
+  | WHEN expr_list THEN NOTHING { $switch_case = new_ast_connector($expr_list, NULL); }
+  ;
+
 switch_cases[result]:
-  WHEN expr_list THEN stmt_list switch_cases[next] { 
-    ast_node *conn = new_ast_connector($expr_list, $stmt_list);
-    $result = new_ast_switch_case(conn, $next); }
-  | WHEN expr_list THEN NOTHING switch_cases[next] { 
-    ast_node *conn = new_ast_connector($expr_list, NULL);
-    $result = new_ast_switch_case(conn, $next); }
+  switch_case switch_cases[next] { 
+    $result = new_ast_switch_case($switch_case, $next); }
   | ELSE stmt_list END { 
     ast_node *conn = new_ast_connector(NULL, $stmt_list);
     $result = new_ast_switch_case(conn, NULL); }

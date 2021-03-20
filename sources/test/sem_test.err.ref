@@ -126,7 +126,7 @@ Error at test/sem_test.sql:XXXX : in leave_stmt : CQL0308: statement should be t
 Error at test/sem_test.sql:XXXX : in continue_stmt : CQL0308: statement should be the last thing in a statement list
 Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'X'
 Error at test/sem_test.sql:XXXX : in str : CQL0204: cursor not found 'not_a_variable'
-Error at test/sem_test.sql:XXXX : in leave_stmt : CQL0219: leave must be inside of a 'loop' or 'while' statement
+Error at test/sem_test.sql:XXXX : in leave_stmt : CQL0219: leave must be inside of a 'loop', 'while', or 'switch' statement
 Error at test/sem_test.sql:XXXX : in continue_stmt : CQL0218: continue must be inside of a 'loop' or 'while' statement
 Error at test/sem_test.sql:XXXX : in return_stmt : CQL0308: statement should be the last thing in a statement list
 Error at test/sem_test.sql:XXXX : in return_stmt : CQL0308: statement should be the last thing in a statement list
@@ -1023,12 +1023,12 @@ Error at test/sem_test.sql:XXXX : in let_stmt : CQL0056: NULL expression has no 
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
 Error at test/sem_test.sql:XXXX : in str : CQL0197: duplicate variable name in the same scope 'created_obj'
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
-Error at test/sem_test.sql:XXXX : in num : case expression must be a not-null integral type
-Error at test/sem_test.sql:XXXX : in num : the type of a WHEN expression is bigger than the type of the SWITCH expression
-Error at test/sem_test.sql:XXXX : in add : the WHEN expression cannot be evaluated to a constant
+Error at test/sem_test.sql:XXXX : in num : CQL0381: case expression must be a not-null integral type
+Error at test/sem_test.sql:XXXX : in num : CQL0382: the type of a WHEN expression is bigger than the type of the SWITCH expression
+Error at test/sem_test.sql:XXXX : in add : CQL0380: the WHEN expression cannot be evaluated to a constant
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
-Error at test/sem_test.sql:XXXX : in switch_case : switch ... ALL VALUES is useless with an ELSE clause
-Error at test/sem_test.sql:XXXX : in switch_case : switch statement has only an ELSE clause
-Error at test/sem_test.sql:XXXX : in str : case expression must be a not-null integral type
+Error at test/sem_test.sql:XXXX : in switch_case : CQL0384: switch statement did not have any actual statements in it
+Error at test/sem_test.sql:XXXX : in switch_case : CQL0383: switch ... ALL VALUES is useless with an ELSE clause
+Error at test/sem_test.sql:XXXX : in str : CQL0381: case expression must be a not-null integral type
 semantic errors present; no code gen.
