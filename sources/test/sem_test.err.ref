@@ -1030,5 +1030,6 @@ Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed i
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
 Error at test/sem_test.sql:XXXX : in switch_case : CQL0384: switch statement did not have any actual statements in it
 Error at test/sem_test.sql:XXXX : in switch_case : CQL0383: switch ... ALL VALUES is useless with an ELSE clause
+Error at test/sem_test.sql:XXXX : in num : CQL0385: duplicate case value '2'
 Error at test/sem_test.sql:XXXX : in str : CQL0381: case expression must be a not-null integral type
 semantic errors present; no code gen.

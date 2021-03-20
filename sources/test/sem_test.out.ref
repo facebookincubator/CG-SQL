@@ -57855,6 +57855,48 @@ Error at test/sem_test.sql:XXXX : in switch_case : CQL0383: switch ... ALL VALUE
 
 The statement ending at line XXXX
 
+SWITCH z
+  WHEN 1, 2 THEN
+    SET x := 10;
+  WHEN 2 THEN
+    SET x := 20;
+  ELSE
+    SET x := 30;
+END;
+
+Error at test/sem_test.sql:XXXX : in num : CQL0385: duplicate case value '2'
+
+  {switch_stmt}: err
+  | {int 0}
+  | {switch_body}
+    | {name z}: z: integer notnull variable
+    | {switch_case}: err
+      | {connector}
+      | | {expr_list}: ok
+      | | | {int 1}: integer notnull
+      | | | {expr_list}
+      | |   | {int 2}: integer notnull
+      | | {stmt_list}: ok
+      |   | {assign}: X: integer variable
+      |     | {name x}: X: integer variable
+      |     | {int 10}: integer notnull
+      | {switch_case}
+        | {connector}
+        | | {expr_list}: ok
+        | | | {int 2}: integer notnull
+        | | {stmt_list}: ok
+        |   | {assign}: X: integer variable
+        |     | {name x}: X: integer variable
+        |     | {int 20}: integer notnull
+        | {switch_case}
+          | {connector}
+            | {stmt_list}: ok
+              | {assign}: X: integer variable
+                | {name x}: X: integer variable
+                | {int 30}: integer notnull
+
+The statement ending at line XXXX
+
 SWITCH x
   WHEN 1 THEN NOTHING
 END;

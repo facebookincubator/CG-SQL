@@ -14577,6 +14577,20 @@ switch thing all values
     set x := 30;
 end;
 
+-- TEST: switch statement combining all values and else is a joke
+-- + {switch_stmt}: err
+-- + {int 1}
+-- + Error % duplicate case value '2'
+-- +1 Error
+switch z
+  when 1, 2 then
+    set x := 10;
+  when 2 then
+    set x := 20;
+  else
+    set x := 30;
+end;
+
 -- TEST: switch statement with nullable switch expr
 -- + {switch_stmt}: err
 -- + {int 0}

@@ -14996,11 +14996,16 @@ cql_noexport void sem_cursor(ast_node *ast) {
   }
 }
 
+typedef struct case_val {
+  int64_t value;
+  ast_node *source;
+} case_val;
+
 // Switch cases semantic analysis:
 // * the case expressions must be constant expressions
 // * the case expressions must promote to the type of the expression with no loss
 // * if all_values was specified you can't use else or it's a joke
-static void sem_switch_expr_list(ast_node *ast, sem_t core_type, bool_t all_values) {
+static void sem_switch_expr_list(ast_node *ast, sem_t core_type, bytebuf *values) {
   Contract(is_ast_expr_list(ast));
   ast_node *head = ast;
 
@@ -15033,10 +15038,27 @@ static void sem_switch_expr_list(ast_node *ast, sem_t core_type, bool_t all_valu
       return;
     }
 
+    eval_cast_to(&result, SEM_TYPE_LONG_INTEGER);
+
+    case_val val = {
+      .value = result.int64_value,
+      .source = expr
+    };
+
+    bytebuf_append(values, &val, sizeof(val));
     ast = ast->right;
   }
 
   record_ok(head);
+}
+
+static int case_val_comparator(const void *v1, const void *v2) {
+  case_val *c1 = (case_val *)v1;
+  case_val *c2 = (case_val *)v2;
+
+  if (c1->value < c2->value) return -1;
+  if (c1->value > c2->value) return 1;
+  return 0;
 }
 
 // Switch cases semantic analysis:
@@ -15047,6 +15069,8 @@ static void sem_switch_expr_list(ast_node *ast, sem_t core_type, bool_t all_valu
 // * if all_values was specified you can't use else or it's a joke
 static void sem_switch_cases(ast_node *ast, sem_t core_type, bool_t all_values) {
   Contract(is_ast_switch_case(ast));
+
+  bytebuf *case_values = _ast_pool_new(bytebuf);
 
   ast_node *head = ast;
   int32_t stmt_lists = 0;
@@ -15059,10 +15083,10 @@ static void sem_switch_cases(ast_node *ast, sem_t core_type, bool_t all_values) 
      if (connector->left) {
        EXTRACT_NOTNULL(expr_list, connector->left);
 
-       sem_switch_expr_list(expr_list, core_type, all_values);
+       sem_switch_expr_list(expr_list, core_type, case_values);
        if (is_error(expr_list)) {
          record_error(head);
-         return;
+         goto cleanup;
        }
      }
      else {
@@ -15074,7 +15098,7 @@ static void sem_switch_cases(ast_node *ast, sem_t core_type, bool_t all_values) 
        if (all_values) {
          report_error(ast, "CQL0383: switch ... ALL VALUES is useless with an ELSE clause", NULL);
          record_error(head);
-         return;
+         goto cleanup;
        }
      }
 
@@ -15084,7 +15108,7 @@ static void sem_switch_cases(ast_node *ast, sem_t core_type, bool_t all_values) 
        sem_stmt_list(stmt_list);
        if (is_error(stmt_list)) {
          record_error(head);
-         return;
+         goto cleanup;
        }
      }
 
@@ -15094,10 +15118,27 @@ static void sem_switch_cases(ast_node *ast, sem_t core_type, bool_t all_values) 
   if (stmt_lists == 0) {
     report_error(head, "CQL0384: switch statement did not have any actual statements in it", NULL);
     record_error(head);
-    return;
+    goto cleanup;
+  }
+
+  int32_t case_count = case_values->used / sizeof(case_val);
+  case_val *case_vals = (case_val *)case_values->ptr;
+  qsort(case_vals, case_count, sizeof(case_val), case_val_comparator);
+  Invariant(case_count > 0);  // enforced by grammar
+
+  for (int32_t i = 0; i < case_count - 1; i++) {
+    if (case_vals[i].value == case_vals[i+1].value) {
+      CSTR duplicate = dup_printf("%lld", (long long)case_vals[i].value);
+      report_error(case_vals[i].source, "CQL0385: duplicate case value", duplicate);
+      record_error(head);
+      goto cleanup;
+    }
   }
 
   record_ok(head);
+
+cleanup:
+  BYTEBUF_CLEANUP(case_values);
 }
 
 // Switch statement semantic analysis:
