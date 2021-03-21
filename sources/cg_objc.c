@@ -446,6 +446,7 @@ static void cg_objc_proc_result_set(ast_node *ast) {
   CHARBUF_CLOSE(objc_name);
 
   use_vault = 0;
+  symtab_delete(vault_columns);
   vault_columns = NULL;
 }
 

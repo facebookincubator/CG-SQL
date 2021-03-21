@@ -349,6 +349,7 @@ static void cg_java_proc_result_set(ast_node *ast) {
 
 cleanup:
   use_vault = 0;
+  symtab_delete(vault_columns);
   vault_columns = NULL;
 }
 

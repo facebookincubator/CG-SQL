@@ -3244,11 +3244,12 @@ static void cg_create_proc_stmt(ast_node *ast) {
 
   in_proc = 0;
   use_vault = 0;
-  vault_columns = NULL;
   current_proc = NULL;
   base_fragment_name = NULL;
 
+  symtab_delete(vault_columns);
   symtab_delete(named_temporaries);
+  vault_columns = NULL;
   named_temporaries = NULL;
   error_target_used = saved_error_target_used;
   Invariant(!strcmp(error_target, CQL_CLEANUP_DEFAULT_LABEL));
