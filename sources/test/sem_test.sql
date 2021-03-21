@@ -14620,6 +14620,7 @@ end;
 
 -- we need htis for the "all values" test
 declare enum three_things integer (
+  zip = 0, -- an alias
   zero = 0,
   one = 1,
   two = 2,

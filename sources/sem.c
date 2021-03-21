@@ -14996,6 +14996,8 @@ cql_noexport void sem_cursor(ast_node *ast) {
   }
 }
 
+// Information about switch cases, and the origin of the constants
+// this will be used to ensure enums are covered and there are no duplicates in the case list.
 typedef struct case_val {
   int64_t value;
   ast_node *source;
@@ -15066,6 +15068,14 @@ static int case_val_comparator(const void *v1, const void *v2) {
 //  * we already know that the type of the expression is integral so we don't have to check that again
 //  * at that point we need all the enum values, we get all the ones that do not start with "_"
 //     * this allows you to have psuedo-values like "_max" in your enum, simple convention
+//  * the enum may have aliases so we have to dedupe the values, this gives us the final count of items
+//     * we can de-dupe in place
+//  * then we sort the enum values, the case values are already sorted from the duplicates check
+//  * then we merge the case values and the enum values
+//    * we only need one index since we are going to error out at the first divergence of the merge
+//    * we report extra values on either side as "missing" or "invalid"
+//  * if the merge ends prematurely, whichever side has more values yields an error for missing or extra values
+// After that clean up the memory and we're done...
 static bytebuf *sem_check_all_values_condition(ast_node *expr, bytebuf *case_buffer) {
   bytebuf *enum_buffer = _ast_pool_new(bytebuf);
   int32_t case_count = case_buffer->used / sizeof(case_val);
@@ -15088,7 +15098,7 @@ static bytebuf *sem_check_all_values_condition(ast_node *expr, bytebuf *case_buf
   while (enum_values) {
      EXTRACT_NOTNULL(enum_value, enum_values->left);
      EXTRACT_STRING(enum_member, enum_value->left);
-    
+
      if (enum_member[0] != '_') {
        eval_node result = *enum_value->left->sem->value;
        eval_cast_to(&result, SEM_TYPE_LONG_INTEGER);
@@ -15133,14 +15143,14 @@ static bytebuf *sem_check_all_values_condition(ast_node *expr, bytebuf *case_buf
   while (i < case_count && i < enum_count) {
     if (case_vals[i].value < enum_vals[i].value) {
       CSTR errant = dup_printf("%lld", (long long)case_vals[i].value);
-      report_error(case_vals[i].source, "a value exists in the switch that is not present in the enum", errant);
+      report_error(case_vals[i].source, "CQL0388: a value exists in the switch that is not present in the enum", errant);
       record_error(expr);
       goto cleanup;
     }
 
     if (case_vals[i].value > enum_vals[i].value) {
       EXTRACT_STRING(enum_member, enum_vals[i].source->left);
-      report_error(expr, "a value exists in the enum that is not present in the switch", enum_member);
+      report_error(expr, "CQL0387: a value exists in the enum that is not present in the switch", enum_member);
       record_error(expr);
       goto cleanup;
     }
@@ -15152,7 +15162,7 @@ static bytebuf *sem_check_all_values_condition(ast_node *expr, bytebuf *case_buf
   if (i < case_count) {
     Invariant(i == enum_count);
     CSTR errant = dup_printf("%lld", (long long)case_vals[i].value);
-    report_error(case_vals[i].source, "a value exists in the switch that is not present in the enum", errant);
+    report_error(case_vals[i].source, "CQL0388: a value exists in the switch that is not present in the enum", errant);
     record_error(expr);
     goto cleanup;
   }
@@ -15160,7 +15170,7 @@ static bytebuf *sem_check_all_values_condition(ast_node *expr, bytebuf *case_buf
   if (i < enum_count) {
     Invariant(i == case_count);
     EXTRACT_STRING(enum_member, enum_vals[i].source->left);
-    report_error(expr, "a value exists in the enum that is not present in the switch", enum_member);
+    report_error(expr, "CQL0387: a value exists in the enum that is not present in the switch", enum_member);
     record_error(expr);
     goto cleanup;
   }

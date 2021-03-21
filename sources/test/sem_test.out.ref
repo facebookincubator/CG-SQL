@@ -57950,6 +57950,7 @@ END;
 The statement ending at line XXXX
 
 DECLARE ENUM three_things INTEGER (
+  zip = 0,
   zero = 0,
   one = 1,
   two = 2,
@@ -57962,20 +57963,24 @@ DECLARE ENUM three_things INTEGER (
   | | {type_int}: three_things: integer<three_things> notnull
   | {enum_values}
     | {enum_value}
-    | | {name zero}: integer = 0 notnull
+    | | {name zip}: integer = 0 notnull
     | | {int 0}: integer notnull
     | {enum_values}
       | {enum_value}
-      | | {name one}: integer = 1 notnull
-      | | {int 1}: integer notnull
+      | | {name zero}: integer = 0 notnull
+      | | {int 0}: integer notnull
       | {enum_values}
         | {enum_value}
-        | | {name two}: integer = 2 notnull
-        | | {int 2}: integer notnull
+        | | {name one}: integer = 1 notnull
+        | | {int 1}: integer notnull
         | {enum_values}
           | {enum_value}
-            | {name _count}: integer = 3 notnull
-            | {int 3}: integer notnull
+          | | {name two}: integer = 2 notnull
+          | | {int 2}: integer notnull
+          | {enum_values}
+            | {enum_value}
+              | {name _count}: integer = 3 notnull
+              | {int 3}: integer notnull
 
 The statement ending at line XXXX
 
@@ -58032,7 +58037,7 @@ SWITCH 0 ALL VALUES
     SET x := 1;
 END;
 
-Error at test/sem_test.sql:XXXX : in dot : a value exists in the enum that is not present in the switch 'zero'
+Error at test/sem_test.sql:XXXX : in dot : CQL0387: a value exists in the enum that is not present in the switch 'zero'
 
   {switch_stmt}: err
   | {int 1}
@@ -58056,7 +58061,7 @@ SWITCH 0 ALL VALUES
     SET x := 1;
 END;
 
-Error at test/sem_test.sql:XXXX : in dot : a value exists in the enum that is not present in the switch 'one'
+Error at test/sem_test.sql:XXXX : in dot : CQL0387: a value exists in the enum that is not present in the switch 'one'
 
   {switch_stmt}: err
   | {int 1}
@@ -58080,7 +58085,7 @@ SWITCH 0 ALL VALUES
     SET x := 1;
 END;
 
-Error at test/sem_test.sql:XXXX : in dot : a value exists in the enum that is not present in the switch 'two'
+Error at test/sem_test.sql:XXXX : in dot : CQL0387: a value exists in the enum that is not present in the switch 'two'
 
   {switch_stmt}: err
   | {int 1}
@@ -58104,7 +58109,7 @@ SWITCH 0 ALL VALUES
     SET x := 1;
 END;
 
-Error at test/sem_test.sql:XXXX : in uminus : a value exists in the switch that is not present in the enum '-1'
+Error at test/sem_test.sql:XXXX : in uminus : CQL0388: a value exists in the switch that is not present in the enum '-1'
 
   {switch_stmt}: err
   | {int 1}
@@ -58133,7 +58138,7 @@ SWITCH 0 ALL VALUES
     SET x := 1;
 END;
 
-Error at test/sem_test.sql:XXXX : in num : a value exists in the switch that is not present in the enum '5'
+Error at test/sem_test.sql:XXXX : in num : CQL0388: a value exists in the switch that is not present in the enum '5'
 
   {switch_stmt}: err
   | {int 1}

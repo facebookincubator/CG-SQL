@@ -1033,9 +1033,9 @@ Error at test/sem_test.sql:XXXX : in switch_case : CQL0383: switch ... ALL VALUE
 Error at test/sem_test.sql:XXXX : in num : CQL0385: duplicate case value '2'
 Error at test/sem_test.sql:XXXX : in str : CQL0381: case expression must be a not-null integral type
 Error at test/sem_test.sql:XXXX : in num : CQL0386: SWITCH ... ALL VALUES is used but the switch expression is not an enum type
-Error at test/sem_test.sql:XXXX : in dot : a value exists in the enum that is not present in the switch 'zero'
-Error at test/sem_test.sql:XXXX : in dot : a value exists in the enum that is not present in the switch 'one'
-Error at test/sem_test.sql:XXXX : in dot : a value exists in the enum that is not present in the switch 'two'
-Error at test/sem_test.sql:XXXX : in uminus : a value exists in the switch that is not present in the enum '-1'
-Error at test/sem_test.sql:XXXX : in num : a value exists in the switch that is not present in the enum '5'
+Error at test/sem_test.sql:XXXX : in dot : CQL0387: a value exists in the enum that is not present in the switch 'zero'
+Error at test/sem_test.sql:XXXX : in dot : CQL0387: a value exists in the enum that is not present in the switch 'one'
+Error at test/sem_test.sql:XXXX : in dot : CQL0387: a value exists in the enum that is not present in the switch 'two'
+Error at test/sem_test.sql:XXXX : in uminus : CQL0388: a value exists in the switch that is not present in the enum '-1'
+Error at test/sem_test.sql:XXXX : in num : CQL0388: a value exists in the switch that is not present in the enum '5'
 semantic errors present; no code gen.
