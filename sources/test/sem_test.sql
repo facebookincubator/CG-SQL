@@ -14617,3 +14617,67 @@ switch z
   else
     set y := 2;
 end;
+
+-- we need htis for the "all values" test
+declare enum three_things integer (
+  zero = 0,
+  one = 1,
+  two = 2,
+  _count = 3
+);
+
+-- TEST: switch with all values test: all good here
+-- + {switch_stmt}: ok
+-- +1 {expr_list}: ok
+-- - Error
+switch three_things.zero all values 
+  when three_things.zero, three_things.one, three_things.two then set x := 1;
+end;
+
+-- TEST: all values used but the expression isn't an enum
+-- + {switch_stmt}: err
+-- + Error % SWITCH ... ALL VALUES is used but the switch expression is not an enum type
+-- +1 Error
+switch 1 all values 
+  when three_things.one, three_things.two then set x := 1;
+end;
+
+-- TEST: switch with all values test: three_things.zero is missing
+-- + {switch_stmt}: err
+-- + Error % a value exists in the enum that is not present in the switch 'zero'
+-- +1 Error
+switch three_things.zero all values 
+  when three_things.one, three_things.two then set x := 1;
+end;
+
+-- TEST: switch with all values test: three_things.one is missing
+-- + {switch_stmt}: err
+-- + Error % a value exists in the enum that is not present in the switch 'one'
+-- +1 Error
+switch three_things.zero all values 
+  when three_things.zero, three_things.two then set x := 1;
+end;
+
+-- TEST: switch with all values test: three_things.two is missing
+-- + {switch_stmt}: err
+-- + Error % a value exists in the enum that is not present in the switch 'two'
+-- +1 Error
+switch three_things.zero all values 
+  when three_things.zero, three_things.one then set x := 1;
+end;
+
+-- TEST: switch with all values test: -1 is extra
+-- + {switch_stmt}: err
+-- + Error % a value exists in the switch that is not present in the enum '-1'
+-- +1 Error
+switch three_things.zero all values 
+  when -1, three_things.zero, three_things.one, three_things.two then set x := 1;
+end;
+
+-- TEST: switch with all values test: 5 is extra
+-- + {switch_stmt}: err
+-- + Error % a value exists in the switch that is not present in the enum '5'
+-- +1 Error
+switch three_things.zero all values 
+  when three_things.zero, three_things.one, three_things.two, 5 then set x := 1;
+end;
