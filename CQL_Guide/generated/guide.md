@@ -8040,7 +8040,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Sat Mar 20 12:16:34 PDT 2021
+Snapshot as of Sat Mar 20 19:05:17 PDT 2021
 
 ### Operators and Literals
 
@@ -12741,13 +12741,39 @@ Either there were no `WHEN` clauses at all, or they were all `WHEN ... THEN NOTH
 there is no actual code to execute.  You need to add some cases that do work.
 
 ----
-CQL 0385 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+
+### CQL0385: WHEN clauses contain duplicate values 'value'
+
+In a `SWITCH` statement all of the values in the `WHEN` clauses must be unique.  The indicated
+errant entry is a duplicate.
+
 ----
-CQL 0386 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+### CQL0386: SWITCH ... ALL VALUES is used but the switch expression is not an enum type
+
+In a `SWITCH` statement with `ALL VALUES` specified the switch expression was not an enumerated type.
+`ALL VALUES` is used to ensure that there is a case for every value of an enumerated type
+so this switch cannot be so checked.  Either correct the expression, or remove `ALL VALUES`.
+
 ----
-CQL 0387 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+
+### CQL0387: a value exists in the enum that is not present in the switch 'enum_member'
+
+In a `SWITCH` statement with `ALL VALUES` specified the errant enum member did not appear
+in any `WHEN` clause.  All members must be specified when `ALL VALUES` is used.
+
 ----
-CQL 0388 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+
+### CQL0388: a value exists in the switch that is not present in the enum 'numeric_value'
+
+In a `SWITCH` statement with `ALL VALUES` specified the errant integer value appeared in
+in a `WHEN` clause.  This value is not part of the members of the enum.  Note that enum members
+that begin with '_' are ignored as they are, by convention, consdiered to be pseudo-members.
+e.g. in `declare enum v integer (v0 = 0, v1 =1, v2 =2, _count = 3)` `_count` is a pseudo-member.
+
+The errant entry should probably be removed. Alternatively, `ALL VALUES` isn't appropriate as the
+domain of the switch is actually bigger than the domain of the enumeration.  One of these
+changes must happen.
+
 ----
 CQL 0389 : unused, this was added to prevent merge conflicts at the end on literally every checkin
 ----
@@ -12785,7 +12811,7 @@ CQL 0400 : unused, this was added to prevent merge conflicts at the end on liter
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Sat Mar 20 12:16:36 PDT 2021
+Snapshot as of Sat Mar 20 19:05:17 PDT 2021
 
 ### Rules
 

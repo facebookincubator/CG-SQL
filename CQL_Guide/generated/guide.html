@@ -605,11 +605,10 @@
 <li><a href="#cql0382-the-type-of-a-when-expression-is-bigger-than-the-type-of-the-switch-expression">CQL0382: the type of a WHEN expression is bigger than the type of the SWITCH expression</a></li>
 <li><a href="#cql0383-switch-all-values-is-useless-with-an-else-clause">CQL0383: switch … ALL VALUES is useless with an ELSE clause</a></li>
 <li><a href="#cql0384-switch-statement-did-not-have-any-actual-statements-in-it">CQL0384: switch statement did not have any actual statements in it</a></li>
+<li><a href="#cql0385-when-clauses-contain-duplicate-values-value">CQL0385: WHEN clauses contain duplicate values ‘value’</a></li>
+<li><a href="#cql0387-a-value-exists-in-the-enum-that-is-not-present-in-the-switch-enum_member">CQL0387: a value exists in the enum that is not present in the switch ‘enum_member’</a></li>
+<li><a href="#cql0388-a-value-exists-in-the-switch-that-is-not-present-in-the-enum-numeric_value">CQL0388: a value exists in the switch that is not present in the enum ‘numeric_value’</a></li>
 </ul></li>
-<li><a href="#cql-0387-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0387 : unused, this was added to prevent merge conflicts at the end on literally every checkin</a></li>
-<li><a href="#cql-0388-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0388 : unused, this was added to prevent merge conflicts at the end on literally every checkin</a></li>
-<li><a href="#cql-0389-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0389 : unused, this was added to prevent merge conflicts at the end on literally every checkin</a></li>
-<li><a href="#cql-0390-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0390 : unused, this was added to prevent merge conflicts at the end on literally every checkin</a></li>
 <li><a href="#cql-0391-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0391 : unused, this was added to prevent merge conflicts at the end on literally every checkin</a></li>
 <li><a href="#cql-0392-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0392 : unused, this was added to prevent merge conflicts at the end on literally every checkin</a></li>
 <li><a href="#cql-0393-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0393 : unused, this was added to prevent merge conflicts at the end on literally every checkin</a></li>
@@ -6142,7 +6141,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Sat Mar 20 12:16:34 PDT 2021</p>
+<p>Snapshot as of Sat Mar 20 19:05:17 PDT 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -9198,25 +9197,43 @@ insert into x
 <hr />
 <h3 id="cql0384-switch-statement-did-not-have-any-actual-statements-in-it">CQL0384: switch statement did not have any actual statements in it</h3>
 <p>Either there were no <code>WHEN</code> clauses at all, or they were all <code>WHEN ... THEN NOTHING</code> so there is no actual code to execute. You need to add some cases that do work.</p>
+<hr />
+<h3 id="cql0385-when-clauses-contain-duplicate-values-value">CQL0385: WHEN clauses contain duplicate values ‘value’</h3>
+<p>In a <code>SWITCH</code> statement all of the values in the <code>WHEN</code> clauses must be unique. The indicated errant entry is a duplicate.</p>
+<table style="width:7%;">
+<colgroup>
+<col style="width: 6%" />
+</colgroup>
+<tbody>
+<tr class="odd">
+<td>### CQL0386: SWITCH … ALL VALUES is used but the switch expression is not an enum type</td>
+</tr>
+<tr class="even">
+<td>In a <code>SWITCH</code> statement with <code>ALL VALUES</code> specified the switch expression was not an enumerated type. <code>ALL VALUES</code> is used to ensure that there is a case for every value of an enumerated type so this switch cannot be so checked. Either correct the expression, or remove <code>ALL VALUES</code>.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="cql0387-a-value-exists-in-the-enum-that-is-not-present-in-the-switch-enum_member">CQL0387: a value exists in the enum that is not present in the switch ‘enum_member’</h3>
+<p>In a <code>SWITCH</code> statement with <code>ALL VALUES</code> specified the errant enum member did not appear in any <code>WHEN</code> clause. All members must be specified when <code>ALL VALUES</code> is used.</p>
+<hr />
+<h3 id="cql0388-a-value-exists-in-the-switch-that-is-not-present-in-the-enum-numeric_value">CQL0388: a value exists in the switch that is not present in the enum ‘numeric_value’</h3>
+<p>In a <code>SWITCH</code> statement with <code>ALL VALUES</code> specified the errant integer value appeared in in a <code>WHEN</code> clause. This value is not part of the members of the enum. Note that enum members that begin with ’_’ are ignored as they are, by convention, consdiered to be pseudo-members. e.g. in <code>declare enum v integer (v0 = 0, v1 =1, v2 =2, _count = 3)</code> <code>_count</code> is a pseudo-member.</p>
+<p>The errant entry should probably be removed. Alternatively, <code>ALL VALUES</code> isn’t appropriate as the domain of the switch is actually bigger than the domain of the enumeration. One of these changes must happen.</p>
 <table style="width:7%;">
 <colgroup>
 <col style="width: 6%" />
 </colgroup>
 <thead>
 <tr class="header">
-<th>CQL 0385 : unused, this was added to prevent merge conflicts at the end on literally every checkin</th>
+<th>CQL 0389 : unused, this was added to prevent merge conflicts at the end on literally every checkin</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>CQL 0386 : unused, this was added to prevent merge conflicts at the end on literally every checkin</td>
+<td>CQL 0390 : unused, this was added to prevent merge conflicts at the end on literally every checkin</td>
 </tr>
 </tbody>
 </table>
-<h2 id="cql-0387-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0387 : unused, this was added to prevent merge conflicts at the end on literally every checkin</h2>
-<h2 id="cql-0388-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0388 : unused, this was added to prevent merge conflicts at the end on literally every checkin</h2>
-<h2 id="cql-0389-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0389 : unused, this was added to prevent merge conflicts at the end on literally every checkin</h2>
-<h2 id="cql-0390-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0390 : unused, this was added to prevent merge conflicts at the end on literally every checkin</h2>
 <h2 id="cql-0391-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0391 : unused, this was added to prevent merge conflicts at the end on literally every checkin</h2>
 <h2 id="cql-0392-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0392 : unused, this was added to prevent merge conflicts at the end on literally every checkin</h2>
 <h2 id="cql-0393-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0393 : unused, this was added to prevent merge conflicts at the end on literally every checkin</h2>
@@ -9235,7 +9252,7 @@ insert into x
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Sat Mar 20 12:16:36 PDT 2021</p>
+<p>Snapshot as of Sat Mar 20 19:05:17 PDT 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

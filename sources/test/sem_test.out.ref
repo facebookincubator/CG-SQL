@@ -57855,6 +57855,48 @@ Error at test/sem_test.sql:XXXX : in switch_case : CQL0383: switch ... ALL VALUE
 
 The statement ending at line XXXX
 
+SWITCH z
+  WHEN 1, 2 THEN
+    SET x := 10;
+  WHEN 2 THEN
+    SET x := 20;
+  ELSE
+    SET x := 30;
+END;
+
+Error at test/sem_test.sql:XXXX : in num : CQL0385: WHEN clauses contain duplicate values '2'
+
+  {switch_stmt}: err
+  | {int 0}
+  | {switch_body}
+    | {name z}: z: integer notnull variable
+    | {switch_case}: err
+      | {connector}
+      | | {expr_list}: ok
+      | | | {int 1}: integer notnull
+      | | | {expr_list}
+      | |   | {int 2}: integer notnull
+      | | {stmt_list}: ok
+      |   | {assign}: X: integer variable
+      |     | {name x}: X: integer variable
+      |     | {int 10}: integer notnull
+      | {switch_case}
+        | {connector}
+        | | {expr_list}: ok
+        | | | {int 2}: integer notnull
+        | | {stmt_list}: ok
+        |   | {assign}: X: integer variable
+        |     | {name x}: X: integer variable
+        |     | {int 20}: integer notnull
+        | {switch_case}
+          | {connector}
+            | {stmt_list}: ok
+              | {assign}: X: integer variable
+                | {name x}: X: integer variable
+                | {int 30}: integer notnull
+
+The statement ending at line XXXX
+
 SWITCH x
   WHEN 1 THEN NOTHING
 END;
@@ -57904,4 +57946,216 @@ END;
               | {assign}: Y: integer variable
                 | {name y}: Y: integer variable
                 | {int 2}: integer notnull
+
+The statement ending at line XXXX
+
+DECLARE ENUM three_things INTEGER (
+  zip = 0,
+  zero = 0,
+  one = 1,
+  two = 2,
+  _count = 3
+);
+
+  {declare_enum_stmt}: three_things: integer<three_things> notnull
+  | {typed_name}: three_things: integer<three_things> notnull
+  | | {name three_things}
+  | | {type_int}: three_things: integer<three_things> notnull
+  | {enum_values}
+    | {enum_value}
+    | | {name zip}: integer = 0 notnull
+    | | {int 0}: integer notnull
+    | {enum_values}
+      | {enum_value}
+      | | {name zero}: integer = 0 notnull
+      | | {int 0}: integer notnull
+      | {enum_values}
+        | {enum_value}
+        | | {name one}: integer = 1 notnull
+        | | {int 1}: integer notnull
+        | {enum_values}
+          | {enum_value}
+          | | {name two}: integer = 2 notnull
+          | | {int 2}: integer notnull
+          | {enum_values}
+            | {enum_value}
+              | {name _count}: integer = 3 notnull
+              | {int 3}: integer notnull
+
+The statement ending at line XXXX
+
+SWITCH 0 ALL VALUES
+  WHEN 0, 1, 2 THEN
+    SET x := 1;
+END;
+
+  {switch_stmt}: ok
+  | {int 1}
+  | {switch_body}
+    | {int 0}: integer<three_things> notnull
+    | {switch_case}: ok
+      | {connector}
+        | {expr_list}: ok
+        | | {int 0}: integer<three_things> notnull
+        | | {expr_list}
+        |   | {int 1}: integer<three_things> notnull
+        |   | {expr_list}
+        |     | {int 2}: integer<three_things> notnull
+        | {stmt_list}: ok
+          | {assign}: X: integer variable
+            | {name x}: X: integer variable
+            | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+SWITCH 1 ALL VALUES
+  WHEN 1, 2 THEN
+    SET x := 1;
+END;
+
+Error at test/sem_test.sql:XXXX : in num : CQL0386: SWITCH ... ALL VALUES is used but the switch expression is not an enum type
+
+  {switch_stmt}: err
+  | {int 1}
+  | {switch_body}
+    | {int 1}: err
+    | {switch_case}: err
+      | {connector}
+        | {expr_list}: ok
+        | | {int 1}: integer<three_things> notnull
+        | | {expr_list}
+        |   | {int 2}: integer<three_things> notnull
+        | {stmt_list}: ok
+          | {assign}: X: integer variable
+            | {name x}: X: integer variable
+            | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+SWITCH 0 ALL VALUES
+  WHEN 1, 2 THEN
+    SET x := 1;
+END;
+
+Error at test/sem_test.sql:XXXX : in dot : CQL0387: a value exists in the enum that is not present in the switch 'zero'
+
+  {switch_stmt}: err
+  | {int 1}
+  | {switch_body}
+    | {int 0}: integer<three_things> notnull
+    | {switch_case}: err
+      | {connector}
+        | {expr_list}: ok
+        | | {int 1}: integer<three_things> notnull
+        | | {expr_list}
+        |   | {int 2}: integer<three_things> notnull
+        | {stmt_list}: ok
+          | {assign}: X: integer variable
+            | {name x}: X: integer variable
+            | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+SWITCH 0 ALL VALUES
+  WHEN 0, 2 THEN
+    SET x := 1;
+END;
+
+Error at test/sem_test.sql:XXXX : in dot : CQL0387: a value exists in the enum that is not present in the switch 'one'
+
+  {switch_stmt}: err
+  | {int 1}
+  | {switch_body}
+    | {int 0}: integer<three_things> notnull
+    | {switch_case}: err
+      | {connector}
+        | {expr_list}: ok
+        | | {int 0}: integer<three_things> notnull
+        | | {expr_list}
+        |   | {int 2}: integer<three_things> notnull
+        | {stmt_list}: ok
+          | {assign}: X: integer variable
+            | {name x}: X: integer variable
+            | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+SWITCH 0 ALL VALUES
+  WHEN 0, 1 THEN
+    SET x := 1;
+END;
+
+Error at test/sem_test.sql:XXXX : in dot : CQL0387: a value exists in the enum that is not present in the switch 'two'
+
+  {switch_stmt}: err
+  | {int 1}
+  | {switch_body}
+    | {int 0}: integer<three_things> notnull
+    | {switch_case}: err
+      | {connector}
+        | {expr_list}: ok
+        | | {int 0}: integer<three_things> notnull
+        | | {expr_list}
+        |   | {int 1}: integer<three_things> notnull
+        | {stmt_list}: ok
+          | {assign}: X: integer variable
+            | {name x}: X: integer variable
+            | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+SWITCH 0 ALL VALUES
+  WHEN -1, 0, 1, 2 THEN
+    SET x := 1;
+END;
+
+Error at test/sem_test.sql:XXXX : in uminus : CQL0388: a value exists in the switch that is not present in the enum '-1'
+
+  {switch_stmt}: err
+  | {int 1}
+  | {switch_body}
+    | {int 0}: integer<three_things> notnull
+    | {switch_case}: err
+      | {connector}
+        | {expr_list}: ok
+        | | {uminus}: integer notnull
+        | | | {int 1}: integer notnull
+        | | {expr_list}
+        |   | {int 0}: integer<three_things> notnull
+        |   | {expr_list}
+        |     | {int 1}: integer<three_things> notnull
+        |     | {expr_list}
+        |       | {int 2}: integer<three_things> notnull
+        | {stmt_list}: ok
+          | {assign}: X: integer variable
+            | {name x}: X: integer variable
+            | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+SWITCH 0 ALL VALUES
+  WHEN 0, 1, 2, 5 THEN
+    SET x := 1;
+END;
+
+Error at test/sem_test.sql:XXXX : in num : CQL0388: a value exists in the switch that is not present in the enum '5'
+
+  {switch_stmt}: err
+  | {int 1}
+  | {switch_body}
+    | {int 0}: integer<three_things> notnull
+    | {switch_case}: err
+      | {connector}
+        | {expr_list}: ok
+        | | {int 0}: integer<three_things> notnull
+        | | {expr_list}
+        |   | {int 1}: integer<three_things> notnull
+        |   | {expr_list}
+        |     | {int 2}: integer<three_things> notnull
+        |     | {expr_list}
+        |       | {int 5}: integer notnull
+        | {stmt_list}: ok
+          | {assign}: X: integer variable
+            | {name x}: X: integer variable
+            | {int 1}: integer notnull
 

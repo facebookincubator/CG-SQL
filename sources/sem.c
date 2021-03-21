@@ -14996,11 +14996,18 @@ cql_noexport void sem_cursor(ast_node *ast) {
   }
 }
 
+// Information about switch cases, and the origin of the constants
+// this will be used to ensure enums are covered and there are no duplicates in the case list.
+typedef struct case_val {
+  int64_t value;
+  ast_node *source;
+} case_val;
+
 // Switch cases semantic analysis:
 // * the case expressions must be constant expressions
 // * the case expressions must promote to the type of the expression with no loss
 // * if all_values was specified you can't use else or it's a joke
-static void sem_switch_expr_list(ast_node *ast, sem_t core_type, bool_t all_values) {
+static void sem_switch_expr_list(ast_node *ast, sem_t core_type, bytebuf *case_data) {
   Contract(is_ast_expr_list(ast));
   ast_node *head = ast;
 
@@ -15033,10 +15040,143 @@ static void sem_switch_expr_list(ast_node *ast, sem_t core_type, bool_t all_valu
       return;
     }
 
+    eval_cast_to(&result, SEM_TYPE_LONG_INTEGER);
+
+    case_val val = {
+      .value = result.int64_value,
+      .source = expr
+    };
+
+    bytebuf_append(case_data, &val, sizeof(val));
     ast = ast->right;
   }
 
   record_ok(head);
+}
+
+static int case_val_comparator(const void *v1, const void *v2) {
+  case_val *c1 = (case_val *)v1;
+  case_val *c2 = (case_val *)v2;
+
+  if (c1->value < c2->value) return -1;
+  if (c1->value > c2->value) return 1;
+  return 0;
+}
+
+// Here we have a few things to do:
+//  * first we verify that the switch expression is indeed an enum type
+//  * we already know that the type of the expression is integral so we don't have to check that again
+//  * at that point we need all the enum values, we get all the ones that do not start with "_"
+//     * this allows you to have psuedo-values like "_max" in your enum, simple convention
+//  * the enum may have aliases so we have to dedupe the values, this gives us the final count of items
+//     * we can de-dupe in place
+//  * then we sort the enum values, the case values are already sorted from the duplicates check
+//  * then we merge the case values and the enum values
+//    * we only need one index since we are going to error out at the first divergence of the merge
+//    * we report extra values on either side as "missing" or "invalid"
+//  * if the merge ends prematurely, whichever side has more values yields an error for missing or extra values
+// After that clean up the memory and we're done...
+static void sem_check_all_values_condition(ast_node *expr, bytebuf *case_buffer) {
+  bytebuf *enum_buffer = _ast_pool_new(bytebuf);
+  int32_t case_count = case_buffer->used / sizeof(case_val);
+  case_val *case_vals = (case_val *)case_buffer->ptr;
+
+  CSTR kind = expr->sem->kind;
+  ast_node *enum_stmt = NULL;
+
+  if (!kind || !(enum_stmt = find_enum(kind))) {
+    report_error(expr, "CQL0386: SWITCH ... ALL VALUES is used but the switch expression is not an enum type", NULL);
+    record_error(expr);
+    goto cleanup;
+  }
+
+  Invariant(is_ast_declare_enum_stmt(enum_stmt));
+
+  // enumerate the list of enums and get their values, convert them all to LONG and then add them to the list
+  EXTRACT_NOTNULL(enum_values, enum_stmt->right);
+
+  while (enum_values) {
+     EXTRACT_NOTNULL(enum_value, enum_values->left);
+     EXTRACT_STRING(enum_member, enum_value->left);
+
+     if (enum_member[0] != '_') {
+       eval_node result = *enum_value->left->sem->value;
+       eval_cast_to(&result, SEM_TYPE_LONG_INTEGER);
+
+       case_val val = {
+         .value = result.int64_value,
+         .source = enum_value
+       };
+
+       bytebuf_append(enum_buffer, &val, sizeof(val));
+     }
+
+     enum_values = enum_values->right;
+  }
+
+  size_t enum_count = enum_buffer->used / sizeof(case_val);
+  case_val *enum_vals = (case_val *)enum_buffer->ptr;
+  qsort(enum_vals, enum_count, sizeof(case_val), case_val_comparator);
+
+  // dedupe the enumeration cases, there are sometimes aliases
+  // e.g. declare enum integer ( x = 1, another_name_for_x = 1);
+
+  uint32_t i = 0;
+  uint32_t j = 0;
+
+  for (i = 0; i < enum_count - 1; i++) {
+    Invariant(j <= i);
+    if (enum_vals[i].value == enum_vals[i+1].value) {
+      continue;
+    }
+    enum_vals[j++] = enum_vals[i];
+  }
+
+  // Now do a merge to find the differences
+  // NOTE: we only need one index since we stop at the first difference
+
+  Invariant(j < enum_count);
+  enum_vals[j++] = enum_vals[i];
+  enum_count = j;
+
+  i = 0;
+  while (i < case_count && i < enum_count) {
+    if (case_vals[i].value < enum_vals[i].value) {
+      CSTR errant = dup_printf("%lld", (long long)case_vals[i].value);
+      report_error(case_vals[i].source, "CQL0388: a value exists in the switch that is not present in the enum", errant);
+      record_error(expr);
+      goto cleanup;
+    }
+
+    if (case_vals[i].value > enum_vals[i].value) {
+      EXTRACT_STRING(enum_member, enum_vals[i].source->left);
+      report_error(expr, "CQL0387: a value exists in the enum that is not present in the switch", enum_member);
+      record_error(expr);
+      goto cleanup;
+    }
+    i++;
+  }
+
+  // if either side has left over members that's an error
+
+  if (i < case_count) {
+    Invariant(i == enum_count);
+    CSTR errant = dup_printf("%lld", (long long)case_vals[i].value);
+    report_error(case_vals[i].source, "CQL0388: a value exists in the switch that is not present in the enum", errant);
+    record_error(expr);
+    goto cleanup;
+  }
+
+  if (i < enum_count) {
+    Invariant(i == case_count);
+    EXTRACT_STRING(enum_member, enum_vals[i].source->left);
+    report_error(expr, "CQL0387: a value exists in the enum that is not present in the switch", enum_member);
+    record_error(expr);
+    goto cleanup;
+  }
+
+cleanup:
+  BYTEBUF_CLEANUP(enum_buffer);
 }
 
 // Switch cases semantic analysis:
@@ -15045,8 +15185,11 @@ static void sem_switch_expr_list(ast_node *ast, sem_t core_type, bool_t all_valu
 // * the statement list must have no errors
 // * the expressions can't be just "else..."
 // * if all_values was specified you can't use else or it's a joke
-static void sem_switch_cases(ast_node *ast, sem_t core_type, bool_t all_values) {
+static void sem_switch_cases(ast_node *ast, ast_node *expr, bool_t all_values) {
   Contract(is_ast_switch_case(ast));
+
+  sem_t core_type = core_type_of(expr->sem->sem_type);
+  bytebuf *case_buffer = _ast_pool_new(bytebuf);
 
   ast_node *head = ast;
   int32_t stmt_lists = 0;
@@ -15059,10 +15202,10 @@ static void sem_switch_cases(ast_node *ast, sem_t core_type, bool_t all_values) 
      if (connector->left) {
        EXTRACT_NOTNULL(expr_list, connector->left);
 
-       sem_switch_expr_list(expr_list, core_type, all_values);
+       sem_switch_expr_list(expr_list, core_type, case_buffer);
        if (is_error(expr_list)) {
          record_error(head);
-         return;
+         goto cleanup;
        }
      }
      else {
@@ -15074,7 +15217,7 @@ static void sem_switch_cases(ast_node *ast, sem_t core_type, bool_t all_values) 
        if (all_values) {
          report_error(ast, "CQL0383: switch ... ALL VALUES is useless with an ELSE clause", NULL);
          record_error(head);
-         return;
+         goto cleanup;
        }
      }
 
@@ -15084,7 +15227,7 @@ static void sem_switch_cases(ast_node *ast, sem_t core_type, bool_t all_values) 
        sem_stmt_list(stmt_list);
        if (is_error(stmt_list)) {
          record_error(head);
-         return;
+         goto cleanup;
        }
      }
 
@@ -15094,10 +15237,37 @@ static void sem_switch_cases(ast_node *ast, sem_t core_type, bool_t all_values) 
   if (stmt_lists == 0) {
     report_error(head, "CQL0384: switch statement did not have any actual statements in it", NULL);
     record_error(head);
-    return;
+    goto cleanup;
+  }
+
+  // check for duplicate cases in the case list
+
+  size_t case_count = case_buffer->used / sizeof(case_val);
+  case_val *case_vals = (case_val *)case_buffer->ptr;
+  qsort(case_vals, case_count, sizeof(case_val), case_val_comparator);
+  Invariant(case_count > 0);  // enforced by grammar
+
+  for (int32_t i = 0; i < case_count - 1; i++) {
+    if (case_vals[i].value == case_vals[i+1].value) {
+      CSTR duplicate = dup_printf("%lld", (long long)case_vals[i].value);
+      report_error(case_vals[i].source, "CQL0385: WHEN clauses contain duplicate values", duplicate);
+      record_error(head);
+      goto cleanup;
+    }
+  }
+
+  if (all_values) {
+    sem_check_all_values_condition(expr, case_buffer);
+    if (is_error(expr)) {
+      record_error(head);
+      goto cleanup;
+    }
   }
 
   record_ok(head);
+
+cleanup:
+  BYTEBUF_CLEANUP(case_buffer);
 }
 
 // Switch statement semantic analysis:
@@ -15136,7 +15306,7 @@ static void sem_switch_stmt(ast_node *ast) {
     goto cleanup;
   }
 
-  sem_switch_cases(switch_case, core_type, !!all_values);
+  sem_switch_cases(switch_case, expr, !!all_values);
   if (is_error(switch_case)) {
     record_error(ast);
     goto cleanup;

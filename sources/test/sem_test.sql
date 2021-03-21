@@ -14558,7 +14558,7 @@ end;
 
 let thing := integer_things.pen;
 
--- TEST: switch statement combining all values and else is a joke
+-- TEST: switch statement combining ALL VALUES and ELSE is a joke
 -- + {switch_stmt}: err
 -- + {int 1}
 -- + {switch_body}
@@ -14572,6 +14572,20 @@ switch thing all values
     integer_things.pencil then 
     set x := 10;
   when integer_things.paper then
+    set x := 20;
+  else
+    set x := 30;
+end;
+
+-- TEST: switch statement with duplicate values
+-- + {switch_stmt}: err
+-- + {int 1}
+-- + Error % WHEN clauses contain duplicate values '2'
+-- +1 Error
+switch z
+  when 1, 2 then
+    set x := 10;
+  when 2 then
     set x := 20;
   else
     set x := 30;
@@ -14602,4 +14616,69 @@ switch z
   when 3 then nothing
   else
     set y := 2;
+end;
+
+-- we need this for the "all values" test, it's just a sample enum
+declare enum three_things integer (
+  zip = 0, -- an alias
+  zero = 0,
+  one = 1,
+  two = 2,
+  _count = 3
+);
+
+-- TEST: switch with all values test: all good here
+-- + {switch_stmt}: ok
+-- +1 {expr_list}: ok
+-- - Error
+switch three_things.zero all values 
+  when three_things.zero, three_things.one, three_things.two then set x := 1;
+end;
+
+-- TEST: all values used but the expression isn't an enum
+-- + {switch_stmt}: err
+-- + Error % SWITCH ... ALL VALUES is used but the switch expression is not an enum type
+-- +1 Error
+switch 1 all values 
+  when three_things.one, three_things.two then set x := 1;
+end;
+
+-- TEST: switch with all values test: three_things.zero is missing
+-- + {switch_stmt}: err
+-- + Error % a value exists in the enum that is not present in the switch 'zero'
+-- +1 Error
+switch three_things.zero all values 
+  when three_things.one, three_things.two then set x := 1;
+end;
+
+-- TEST: switch with all values test: three_things.one is missing
+-- + {switch_stmt}: err
+-- + Error % a value exists in the enum that is not present in the switch 'one'
+-- +1 Error
+switch three_things.zero all values 
+  when three_things.zero, three_things.two then set x := 1;
+end;
+
+-- TEST: switch with all values test: three_things.two is missing
+-- + {switch_stmt}: err
+-- + Error % a value exists in the enum that is not present in the switch 'two'
+-- +1 Error
+switch three_things.zero all values 
+  when three_things.zero, three_things.one then set x := 1;
+end;
+
+-- TEST: switch with all values test: -1 is extra
+-- + {switch_stmt}: err
+-- + Error % a value exists in the switch that is not present in the enum '-1'
+-- +1 Error
+switch three_things.zero all values 
+  when -1, three_things.zero, three_things.one, three_things.two then set x := 1;
+end;
+
+-- TEST: switch with all values test: 5 is extra
+-- + {switch_stmt}: err
+-- + Error % a value exists in the switch that is not present in the enum '5'
+-- +1 Error
+switch three_things.zero all values 
+  when three_things.zero, three_things.one, three_things.two, 5 then set x := 1;
 end;
