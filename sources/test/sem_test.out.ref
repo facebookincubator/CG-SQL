@@ -58211,3 +58211,39 @@ Error at test/sem_test.sql:XXXX : in ne : CQL0373: Comparing against NULL always
     | {select_limit}
       | {select_offset}
 
+The statement ending at line XXXX
+
+SELECT 1 + ( SELECT NULL );
+
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0374: SELECT expression is equivalent to NULL
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {add}: err
+  |     |     | {int 1}: integer notnull
+  |     |     | {select_stmt}: err
+  |     |       | {select_core_list}: select: { _anon: null }
+  |     |       | | {select_core}: select: { _anon: null }
+  |     |       |   | {select_expr_list_con}: select: { _anon: null }
+  |     |       |     | {select_expr_list}: select: { _anon: null }
+  |     |       |     | | {select_expr}: null
+  |     |       |     |   | {null}: null
+  |     |       |     | {select_from_etc}: ok
+  |     |       |       | {select_where}
+  |     |       |         | {select_groupby}
+  |     |       |           | {select_having}
+  |     |       | {select_orderby}
+  |     |         | {select_limit}
+  |     |           | {select_offset}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+

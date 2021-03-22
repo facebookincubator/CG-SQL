@@ -1041,4 +1041,5 @@ Error at test/sem_test.sql:XXXX : in uminus : CQL0388: a value exists in the swi
 Error at test/sem_test.sql:XXXX : in num : CQL0388: a value exists in the switch that is not present in the enum '5'
 Error at test/sem_test.sql:XXXX : in eq : CQL0373: Comparing against NULL always yields NULL; use IS and IS NOT instead
 Error at test/sem_test.sql:XXXX : in ne : CQL0373: Comparing against NULL always yields NULL; use IS and IS NOT instead
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0374: SELECT expression is equivalent to NULL
 semantic errors present; no code gen.

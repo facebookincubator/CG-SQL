@@ -14690,3 +14690,9 @@ select (1 = NULL);
 -- + Error % Comparing against NULL always yields NULL; use IS and IS NOT instead
 -- +1 Error
 select (1 <> NULL);
+
+-- TEST: a select expression with a null type is an error
+-- + {select_expr}: err
+-- + Error % SELECT expression is equivalent to NULL
+-- +1 Error
+select (1 + (SELECT NULL));

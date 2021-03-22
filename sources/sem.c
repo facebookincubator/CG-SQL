@@ -16777,6 +16777,12 @@ static void sem_expr_select(ast_node *ast, CSTR cstr) {
 
   sem_t sem_type = sptr->semtypes[0];
 
+  if (sem_type == SEM_TYPE_NULL) {
+     report_error(ast, "CQL0374: SELECT expression is equivalent to NULL", NULL);
+     record_error(ast);
+     return;
+  }
+
   // and boom remove the bit if we're supposed to remove it (most times except the above exceptions)
   if (remove_notnull) {
     sem_type &= sem_not(SEM_TYPE_NOTNULL);
