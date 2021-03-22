@@ -375,6 +375,13 @@ code_gen_java_test() {
     failed
   fi
 
+  echo 'running missing --java_assembly_query_classname flag for extension fragment codegen test'
+  if ${CQL} --test --cg "${OUT_DIR}/__temp.out" --in "${TEST_DIR}/cg_test_extension_java_fragment.sql" --rt java --java_package_name com.facebook.cqlviewmodels 2>"${OUT_DIR}/java_classname_missing.err"
+  then
+    echo '--java_assembly_query_classname was missing, this should have caused an error'
+    failed
+  fi
+
   echo validating codegen
   echo "  computing diffs (empty if none)"
 
