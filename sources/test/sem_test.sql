@@ -387,6 +387,15 @@ insert into foo(id)
      select 1
    );
 
+-- TEST: anonymous columns produce an error (with T.* syntax too)
+-- + {insert_stmt}: err
+-- + Error % all columns in the select must have a name
+-- +1 Error
+insert into foo(id) 
+   select T.* from (
+     select 1
+   ) as T;
+
 -- TEST: select where statement
 -- + {select_stmt}: select: { T: integer notnull }
 -- + {select_core}: select: { T: integer notnull }

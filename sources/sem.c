@@ -4175,6 +4175,13 @@ static void sem_select_star(ast_node *ast) {
   sem_verify_no_anon_columns(ast);
 }
 
+// When expanding select T.* we need to do two passes.  Our ultimate goal is to make
+// a struct type for the select list of the select statement that has the T.*  but
+// there could be any number of these expansions in it.  So in pass one we go through
+// each item and count the room we will need for the expansions and the normal columns
+// this will give us the total space required.  In pass two we will those in
+// (see sem_select_table_star_add).  In pass 1 we do all the error checking so that
+// by the time we're running pass 2 nothing can go wrong.
 static uint32_t sem_select_table_star_count(ast_node *ast) {
   Contract(is_ast_table_star(ast));
   EXTRACT_STRING(name, ast->left);
@@ -4192,15 +4199,28 @@ static uint32_t sem_select_table_star_count(ast_node *ast) {
       ast->sem = new_sem(SEM_TYPE_STRUCT);
       ast->sem->name = jptr->names[i];
       ast->sem->sptr = jptr->tables[i];
+
+      // If the result has any un-named columns we can't use it.
+      // We need a valid name for each column to expand it correctly.
+      sem_verify_no_anon_columns(ast);
+      if (is_error(ast)) {
+        return 0;
+      }
+
       return jptr->tables[i]->count;
     }
   }
 
   report_error(ast, "CQL0054: table not found", name);
   record_error(ast);
-  return false;
+  return 0;
 }
 
+// Using the T in T.* from the ast, find the table in the current join that matches T
+// then fill in the types and names from that table into the indicated result struct
+// the result struct has already been allocated with enough room those the table at
+// the indicated index.  We do this operation in two passes so we know how much to
+// allocate and this is pass 2 where we fill in the values
 static int32_t sem_select_table_star_add(ast_node *ast, sem_struct *sptr, int32_t index) {
   Contract(is_ast_table_star(ast));
   EXTRACT_STRING(name, ast->left);
@@ -4217,6 +4237,7 @@ static int32_t sem_select_table_star_add(ast_node *ast, sem_struct *sptr, int32_
   // we found it once when we got the count, it's still there.
   Invariant(i < jptr->count);
 
+  // we know there's room here, fill it in...
   sem_struct *table = jptr->tables[i];
   for (int32_t j = 0; j < table->count; j++) {
     sptr->names[index] = table->names[j];
@@ -4228,6 +4249,10 @@ static int32_t sem_select_table_star_add(ast_node *ast, sem_struct *sptr, int32_
   return index;
 }
 
+// This verifies all the columns have a name.
+// This check is important for a variety of cases, but the main ones are:
+//  - select * or select T.*  -> we can't expand the start if there aren't names
+//  - select results -> we can't make the getters if the columns don't have names
 static void sem_verify_no_anon_columns(ast_node *ast) {
    // Sanity check our arguments, it is for sure a struct type.
   Invariant(is_struct(ast->sem->sem_type));
@@ -15142,7 +15167,7 @@ static void sem_check_all_values_condition(ast_node *expr, bytebuf *case_buffer)
   i = 0;
   while (i < case_count && i < enum_count) {
     if (case_vals[i].value < enum_vals[i].value) {
-      CSTR errant = dup_printf("%lld", (long long)case_vals[i].value);
+      CSTR errant = dup_printf("%lld", (llint_t)case_vals[i].value);
       report_error(case_vals[i].source, "CQL0388: a value exists in the switch that is not present in the enum", errant);
       record_error(expr);
       goto cleanup;
@@ -15161,7 +15186,7 @@ static void sem_check_all_values_condition(ast_node *expr, bytebuf *case_buffer)
 
   if (i < case_count) {
     Invariant(i == enum_count);
-    CSTR errant = dup_printf("%lld", (long long)case_vals[i].value);
+    CSTR errant = dup_printf("%lld", (llint_t)case_vals[i].value);
     report_error(case_vals[i].source, "CQL0388: a value exists in the switch that is not present in the enum", errant);
     record_error(expr);
     goto cleanup;

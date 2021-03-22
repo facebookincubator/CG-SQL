@@ -1508,6 +1508,54 @@ Error at test/sem_test.sql:XXXX : in star : CQL0055: all columns in the select m
 
 The statement ending at line XXXX
 
+INSERT INTO foo(id) SELECT T.*
+  FROM (SELECT 1) AS T;
+
+Error at test/sem_test.sql:XXXX : in table_star : CQL0055: all columns in the select must have a name
+
+  {insert_stmt}: err
+  | {insert_normal}
+  | {name_columns_values}
+    | {name foo}: foo: { id: integer notnull primary_key autoinc }
+    | {columns_values}: ok
+      | {column_spec}
+      | | {name_list}
+      |   | {name id}
+      | {select_stmt}: err
+        | {select_core_list}: err
+        | | {select_core}: err
+        |   | {select_expr_list_con}: err
+        |     | {select_expr_list}: err
+        |     | | {table_star}: err
+        |     |   | {name T}
+        |     | {select_from_etc}: TABLE { T: select }
+        |       | {table_or_subquery_list}: TABLE { T: select }
+        |       | | {table_or_subquery}: TABLE { T: select }
+        |       |   | {select_stmt}: select: { _anon: integer notnull }
+        |       |   | | {select_core_list}: select: { _anon: integer notnull }
+        |       |   | | | {select_core}: select: { _anon: integer notnull }
+        |       |   | |   | {select_expr_list_con}: select: { _anon: integer notnull }
+        |       |   | |     | {select_expr_list}: select: { _anon: integer notnull }
+        |       |   | |     | | {select_expr}: integer notnull
+        |       |   | |     |   | {int 1}: integer notnull
+        |       |   | |     | {select_from_etc}: ok
+        |       |   | |       | {select_where}
+        |       |   | |         | {select_groupby}
+        |       |   | |           | {select_having}
+        |       |   | | {select_orderby}
+        |       |   |   | {select_limit}
+        |       |   |     | {select_offset}
+        |       |   | {opt_as_alias}
+        |       |     | {name T}
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
 SELECT 10 AS T
   WHERE T = 1;
 
