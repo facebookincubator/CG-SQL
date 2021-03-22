@@ -856,10 +856,6 @@ extern cql_blob_ref _Nonnull blob_var2;
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
-
-// The statement ending at line XXXX
-
-// The statement ending at line XXXX
 extern void blob_proc(cql_blob_ref _Nullable *_Nonnull a_blob);
 
 // The statement ending at line XXXX

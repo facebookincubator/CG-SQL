@@ -553,7 +553,7 @@ BEGIN_TEST(string_comparisons)
   EXPECT(t1 != t2);
 END_TEST(string_comparisons)
 
--- string comnparison nullability checks
+-- string comparison nullability checks
 BEGIN_TEST(string_comparisons_nullability)
   declare null_ text;
   declare x text not null;
@@ -563,8 +563,7 @@ BEGIN_TEST(string_comparisons_nullability)
   EXPECT((null_ > x) is null);
   EXPECT((x > null_) is null);
   EXPECT((null_ > null_) is null);
-  EXPECT((NULL == null_) is null);
-  EXPECT((null_ == NULL) is null);
+  EXPECT((null_ == null_) is null);
 END_TEST(string_comparisons_nullability)
 
 -- string is null and is not null tests
@@ -1856,6 +1855,8 @@ end;
 
 -- Test precedence of equality (= == != <> LIKE GLOB MATCH IN NOT IN IS_NOT_NULL IS_NULL) with binary (< <= > >=)
 BEGIN_TEST(equality_pri)
+  declare null_ int;
+
   EXPECT(5 == 5);
   EXPECT(5 < 6 == 6 > 5);
   EXPECT(5 <= 6 == 6 >= 5);
@@ -1931,11 +1932,11 @@ BEGIN_TEST(equality_pri)
   EXPECT(1 + NULL == 3 - 1 <> 30 IS NULL);
   EXPECT((NULL IS NOT NULL) == 0);
   EXPECT(1 + 1 IS NOT NULL);
-  EXPECT(NULL == 3 IS NULL);
-  EXPECT(((NULL == 3) IS NULL) == 1);
-  EXPECT((NULL == 3 IS NULL) == 1);
-  EXPECT((NULL == 3 IS NULL) == 1);
-  EXPECT((NULL == 3 IS NULL) IS NOT NULL);
+  EXPECT(null_ == 3 IS NULL);
+  EXPECT(((null_ == 3) IS NULL) == 1);
+  EXPECT((null_ == 3 IS NULL) == 1);
+  EXPECT((null_ == 3 IS NULL) == 1);
+  EXPECT((null_ == 3 IS NULL) IS NOT NULL);
   EXPECT((1 + NULL == 3 IS NOT NULL) == 0);
   EXPECT((1 + NULL = 3 - 1 <> 0 IS NOT NULL) == 0);
   EXPECT((1 + NULL == 3 - 1 <> 0 IS NOT NULL) == 0);
@@ -1976,11 +1977,11 @@ BEGIN_TEST(equality_pri)
   EXPECT("1" IS NULL == 0);
   EXPECT(NULL IS "1" == 0);
   EXPECT(NULL IS NULL);
-  EXPECT(NULL == 0 IS NULL);
+  EXPECT(null_ == 0 IS NULL);
   EXPECT(NULL IS NULL == 1 != 0);
   EXPECT(NULL IS NULL = 1 <> 0);
-  EXPECT(NULL == NULL IS NULL);
-  EXPECT(NULL IS (NULL == 0));
+  EXPECT(null_ == null_ IS NULL);
+  EXPECT(NULL IS (null_ == 0));
   EXPECT(NULL IS NOT NULL == 0);
   EXPECT((NULL IS NOT NULL) == 0);
   EXPECT(5 > 2 IS NOT NULL);
@@ -2016,10 +2017,12 @@ END_TEST(equality_pri)
 
 -- AND tests with = == != <> IS IS_NOT IN NOT IN
 BEGIN_TEST(and_pri)
+  declare null_ int;
+
   EXPECT(3 + 3 AND 5);
   EXPECT((3 + 3 AND 0) == 0);
   EXPECT((NULL AND 1) IS NULL);
-  EXPECT((NULL AND 1 = NULL) IS NULL);
+  EXPECT((NULL AND 1 = null_) IS NULL);
   EXPECT(NOT (NULL AND 1 IS NULL));
   EXPECT((NULL AND 0) == 0);
   EXPECT(NOT (NULL AND 0));
@@ -2317,11 +2320,11 @@ BEGIN_TEST(nullable_test)
   EXPECT(x5 <= x6 IS x2 > x1);
   EXPECT(x5 == x5 IS x2 > x1);
   EXPECT(NULL IS NULL);
-  EXPECT(NULL == x0 IS NULL);
+  EXPECT(temp_null == x0 IS NULL);
   EXPECT(NULL IS NULL == x1 != x0);
   EXPECT(NULL IS NULL = x1 <> x0);
-  EXPECT(NULL == NULL IS NULL);
-  EXPECT(NULL IS (NULL == x0));
+  EXPECT(temp_null == temp_null IS NULL);
+  EXPECT(NULL IS (temp_null == x0));
   EXPECT(NULL IS NOT NULL == x0);
   EXPECT((NULL IS NOT NULL) == x0);
   EXPECT(x5 > x2 IS NOT NULL);
@@ -2365,7 +2368,7 @@ BEGIN_TEST(nullable_test)
   EXPECT(x3 + x3 AND x5);
   EXPECT((x3 + x3 AND x0) == x0);
   EXPECT((NULL AND x1) IS NULL);
-  EXPECT((NULL AND x1 = NULL) IS NULL);
+  EXPECT((NULL AND x1 = temp_null) IS NULL);
   EXPECT(NOT (NULL AND x1 IS NULL));
   EXPECT((NULL AND x0) == x0);
   EXPECT(NOT (NULL AND x0));
@@ -3099,7 +3102,6 @@ BEGIN_TEST(const_folding)
   EXPECT(const(2 < 3L));
   EXPECT(const((1 == 0) < (1 == 1)));
 
-  EXPECT((NULL == NULL) is NULL);
   EXPECT((NULL + NULL) is NULL);
   EXPECT((NULL - NULL) is NULL);
   EXPECT((NULL * NULL) is NULL);
@@ -3110,7 +3112,6 @@ BEGIN_TEST(const_folding)
   EXPECT((NULL << NULL) is NULL);
   EXPECT((NULL >> NULL) is NULL);
 
-  EXPECT(const(NULL == NULL) is NULL);
   EXPECT(const(NULL + NULL) is NULL);
   EXPECT(const(NULL - NULL) is NULL);
   EXPECT(const(NULL * NULL) is NULL);
@@ -3121,7 +3122,6 @@ BEGIN_TEST(const_folding)
   EXPECT(const(NULL << NULL) is NULL);
   EXPECT(const(NULL >> NULL) is NULL);
 
-  EXPECT(const((NULL == NULL) is NULL));
   EXPECT(const((NULL + NULL) is NULL));
   EXPECT(const((NULL - NULL) is NULL));
   EXPECT(const((NULL * NULL) is NULL));

@@ -382,7 +382,7 @@ select *;
 -- + {insert_stmt}: err
 -- + Error % all columns in the select must have a name
 -- +1 Error
-insert into foo(id) 
+insert into foo(id)
    select * from (
      select 1
    );
@@ -452,18 +452,6 @@ select l * (1==1) from big;
 -- + {select_stmt}: select: { _anon: real }
 -- + {select_from_etc}: TABLE { big: big }
 select l * 2.0 from big;
-
--- TEST: null can be used in numeric comparisons to give nullable bool
--- - Error
--- + {select_stmt}: select: { _anon: bool }
--- + {int 1}: integer notnull
-select null = 1;
-
--- TEST: null can be used in string comparison to give nullable bool
--- - Error
--- + {select_stmt}: select: { _anon: bool }
--- + {strlit 'foo'}: text notnull
-select null = 'foo';
 
 -- TEST: not x is an error, no cascade error reported just one error
 -- + Error % incompatible types in expression '='
@@ -14487,7 +14475,6 @@ LET bad_result := NOT 'x';
 -- +1 Error
 LET created_obj := 1;
 
-
 -- a not null variable for the switch tests
 LET z := 1;
 
@@ -14549,7 +14536,7 @@ end;
 -- + Error % string operand not allowed in 'NOT'
 -- +1 Error
 switch z
-  when 1 then 
+  when 1 then
     if not "x" then end if;
 end;
 
@@ -14576,9 +14563,9 @@ let thing := integer_things.pen;
 -- + Error % switch ... ALL VALUES is useless with an ELSE clause
 -- +1 Error
 switch thing all values
-  when 
-    integer_things.pen, 
-    integer_things.pencil then 
+  when
+    integer_things.pen,
+    integer_things.pencil then
     set x := 10;
   when integer_things.paper then
     set x := 20;
@@ -14640,7 +14627,7 @@ declare enum three_things integer (
 -- + {switch_stmt}: ok
 -- +1 {expr_list}: ok
 -- - Error
-switch three_things.zero all values 
+switch three_things.zero all values
   when three_things.zero, three_things.one, three_things.two then set x := 1;
 end;
 
@@ -14648,7 +14635,7 @@ end;
 -- + {switch_stmt}: err
 -- + Error % SWITCH ... ALL VALUES is used but the switch expression is not an enum type
 -- +1 Error
-switch 1 all values 
+switch 1 all values
   when three_things.one, three_things.two then set x := 1;
 end;
 
@@ -14656,7 +14643,7 @@ end;
 -- + {switch_stmt}: err
 -- + Error % a value exists in the enum that is not present in the switch 'zero'
 -- +1 Error
-switch three_things.zero all values 
+switch three_things.zero all values
   when three_things.one, three_things.two then set x := 1;
 end;
 
@@ -14664,7 +14651,7 @@ end;
 -- + {switch_stmt}: err
 -- + Error % a value exists in the enum that is not present in the switch 'one'
 -- +1 Error
-switch three_things.zero all values 
+switch three_things.zero all values
   when three_things.zero, three_things.two then set x := 1;
 end;
 
@@ -14672,7 +14659,7 @@ end;
 -- + {switch_stmt}: err
 -- + Error % a value exists in the enum that is not present in the switch 'two'
 -- +1 Error
-switch three_things.zero all values 
+switch three_things.zero all values
   when three_things.zero, three_things.one then set x := 1;
 end;
 
@@ -14680,7 +14667,7 @@ end;
 -- + {switch_stmt}: err
 -- + Error % a value exists in the switch that is not present in the enum '-1'
 -- +1 Error
-switch three_things.zero all values 
+switch three_things.zero all values
   when -1, three_things.zero, three_things.one, three_things.two then set x := 1;
 end;
 
@@ -14688,6 +14675,18 @@ end;
 -- + {switch_stmt}: err
 -- + Error % a value exists in the switch that is not present in the enum '5'
 -- +1 Error
-switch three_things.zero all values 
+switch three_things.zero all values
   when three_things.zero, three_things.one, three_things.two, 5 then set x := 1;
 end;
+
+-- TEST: checking if something is NULL with '=' is an error
+-- + {eq}: err
+-- + Error % Comparing against NULL always yields NULL; use IS and IS NOT instead
+-- +1 Error
+select (1 = NULL);
+
+-- TEST: checking if something is not null with '<>' is an error
+-- + {ne}: err
+-- + Error % Comparing against NULL always yields NULL; use IS and IS NOT instead
+-- +1 Error
+select (1 <> NULL);

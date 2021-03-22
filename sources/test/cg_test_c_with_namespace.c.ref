@@ -9623,13 +9623,6 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
   
   /*
-  SET b0_nullable := blob_var = NULL;
-  */
-  cql_set_null(b0_nullable);
-  
-  // The statement ending at line XXXX
-  
-  /*
   SET b0_nullable := blob_var IS NULL;
   */
   cql_set_notnull(b0_nullable, !blob_var);
@@ -9640,13 +9633,6 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   SET b0_nullable := blob_var <> blob_var;
   */
   cql_combine_nullables(b0_nullable, !blob_var, !blob_var, !cql_blob_equal(blob_var, blob_var));
-  
-  // The statement ending at line XXXX
-  
-  /*
-  SET b0_nullable := blob_var <> NULL;
-  */
-  cql_set_null(b0_nullable);
   
   // The statement ending at line XXXX
   

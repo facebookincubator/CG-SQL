@@ -3878,6 +3878,12 @@ static void sem_binary_eq_or_ne(ast_node *ast, CSTR op) {
     return;
   }
 
+  if (is_ast_null(ast->left) || is_ast_null(ast->right)) {
+    report_error(ast, "CQL0373: Comparing against NULL always yields NULL; use IS and IS NOT instead", NULL);
+    record_error(ast);
+    return;
+  }
+
   if (!sem_verify_compat(ast, core_type_left, core_type_right, op)) {
     return;
   }

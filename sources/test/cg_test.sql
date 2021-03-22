@@ -1328,10 +1328,6 @@ set blob_var := blob_var2;
 -- + cql_combine_nullables(b0_nullable, !blob_var, !blob_var, cql_blob_equal(blob_var, blob_var));
 set b0_nullable := blob_var == blob_var;
 
--- TEST: blob comparison "==" NULL
--- + cql_set_null(b0_nullable);
-set b0_nullable := blob_var == null;
-
 -- TEST: blob comparison "IS" NULL
 -- + cql_set_notnull(b0_nullable, !blob_var);
 set b0_nullable := blob_var IS null;
@@ -1339,10 +1335,6 @@ set b0_nullable := blob_var IS null;
 -- TEST: blob comparison "!="
 -- + cql_combine_nullables(b0_nullable, !blob_var, !blob_var, !cql_blob_equal(blob_var, blob_var));
 set b0_nullable := blob_var != blob_var;
-
--- TEST: blob comparison "!=" NULL
--- + cql_set_null(b0_nullable);
-set b0_nullable := blob_var != null;
 
 -- TEST: blob comparison "<>"
 -- + cql_combine_nullables(b0_nullable, !blob_var, !blob_var, !cql_blob_equal(blob_var, blob_var));
