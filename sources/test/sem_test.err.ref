@@ -192,8 +192,8 @@ Error at test/sem_test.sql:XXXX : in num : CQL0009: incompatible types in expres
 Error at test/sem_test.sql:XXXX : in call_stmt : CQL0235: too many arguments provided to procedure 'proc2'
 Error at test/sem_test.sql:XXXX : in call_stmt : CQL0212: too few arguments provided to procedure 'proc2'
 Error at test/sem_test.sql:XXXX : in call_stmt : CQL0213: procedure had errors, can't call 'proc3'
-Error at test/sem_test.sql:XXXX : in num : CQL0207: proc out parameter: formal cannot be fulfilled by non-variable 'arg2'
-Error at test/sem_test.sql:XXXX : in num : CQL0207: proc out parameter: formal cannot be fulfilled by non-variable 'arg3'
+Error at test/sem_test.sql:XXXX : in num : CQL0207: expected a variable name for out argument 'arg2'
+Error at test/sem_test.sql:XXXX : in num : CQL0207: expected a variable name for out argument 'arg3'
 Error at test/sem_test.sql:XXXX : in call : CQL0304: DISTINCT may only be used with one explicit argument in an aggregate function 'count'
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'total'
 Error at test/sem_test.sql:XXXX : in star : CQL0051: argument can only be used in count(*) '*'
@@ -1042,4 +1042,9 @@ Error at test/sem_test.sql:XXXX : in num : CQL0388: a value exists in the switch
 Error at test/sem_test.sql:XXXX : in eq : CQL0373: Comparing against NULL always yields NULL; use IS and IS NOT instead
 Error at test/sem_test.sql:XXXX : in ne : CQL0373: Comparing against NULL always yields NULL; use IS and IS NOT instead
 Error at test/sem_test.sql:XXXX : in select_stmt : CQL0374: SELECT expression is equivalent to NULL
+Error at test/sem_test.sql:XXXX : in declare_out_call_stmt : CQL0389: DECLARE OUT requires that the procedure be already declared 'not_defined'
+Error at test/sem_test.sql:XXXX : in str : CQL0390: DECLARE OUT CALL used on a procedure with no missing OUT arguments 'decl1'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in declare_out_call_stmt : CQL0213: procedure had errors, can't call 'decl_test_err'
+Error at test/sem_test.sql:XXXX : in add : CQL0207: expected a variable name for out argument 'y'
 semantic errors present; no code gen.

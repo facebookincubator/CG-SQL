@@ -2325,13 +2325,13 @@ begin
 end;
 
 -- TEST: can't use an integer for inout arg
--- + Error % formal cannot be fulfilled by non-variable 'arg2'
+-- + Error % expected a variable name for out argument 'arg2'
 -- + {call_stmt}: err
 -- +1 Error
 call proc_with_output(1, 2, X);
 
 -- TEST: can't use an integer for out arg
--- + Error % formal cannot be fulfilled by non-variable 'arg3'
+-- + Error % expected a variable name for out argument 'arg3'
 -- + {call_stmt}: err
 -- +1 Error
 call proc_with_output(1, X, 3);
@@ -14696,3 +14696,75 @@ select (1 <> NULL);
 -- + Error % SELECT expression is equivalent to NULL
 -- +1 Error
 select (1 + (SELECT NULL));
+
+-- used in the next suite of tests
+declare proc out2_proc(x integer, out y integer not null, out z integer not null);
+
+-- TEST: try to do declare out on a non-existent procedure
+-- + {declare_out_call_stmt}: err
+-- + Error % DECLARE OUT requires that the procedure be already declared 'not_defined'
+-- +1 Error
+declare out call not_defined();
+
+-- TEST: try to call a proc with no out args
+-- + {declare_out_call_stmt}: err
+-- + Error % DECLARE OUT CALL used on a procedure with no missing OUT arguments 'decl1'
+-- +1 Error
+declare out call decl1(1);
+
+-- TEST: try to call a proc but the args have errors
+-- + {declare_out_call_stmt}: err
+-- + Error % string operand not allowed in 'NOT'
+-- +1 Error
+create proc decl_test_err()
+begin
+  declare out call out2_proc(not 'x', u, v);
+end;
+
+-- TEST: try to call a proc but the proc had errors
+-- + {declare_out_call_stmt}: err
+-- + Error % CQL0213: procedure had errors, can't call 'decl_test_err'
+-- +1 Error
+declare out call decl_test_err(1, 2, 3);
+
+-- TEST: non-variable out arg in declare out
+-- + {declare_out_call_stmt}: err
+-- + Error % expected a variable name for out argument 'y'
+create proc out_decl_test_2(x integer)
+begin
+  declare out call out2_proc(x, 1+3, v);
+end;
+
+-- TEST: standard usage of declare out
+-- + {declare_out_call_stmt}: ok
+-- + {call_stmt}: ok
+-- + {name u}: u: integer notnull variable implicit
+-- + {name v}: v: integer notnull variable implicit
+-- - Error
+create proc out_decl_test_3(x integer)
+begin
+  declare out call out2_proc(x, u, v);
+end;
+
+-- + {declare_out_call_stmt}: ok
+-- + {call_stmt}: ok
+-- +1 {name u}: u: integer notnull variable implicit
+-- +2 {name u}: u: integer notnull variable
+-- - Error
+create proc out_decl_test_4(x integer)
+begin
+  declare out call out2_proc(x, u, u);
+end;
+
+-- + {declare_out_call_stmt}: ok
+-- + {call_stmt}: ok
+-- +1 {name u}: u: integer notnull variable implicit
+-- +3 {name u}: u: integer notnull variable
+-- +1 {name v}: v: integer notnull variable implicit
+-- +1 {name v}: v: integer notnull variable
+-- - Error
+create proc out_decl_test_5(x integer)
+begin
+  declare out call out2_proc(x, u, u);
+  declare out call out2_proc(x, u, v);
+end;

@@ -206,7 +206,7 @@ static void cql_reset_globals(void);
 %type <aval> data_type_any data_type_numeric data_type_with_options opt_kind
 
 /* proc stuff */
-%type <aval> create_proc_stmt declare_func_stmt declare_proc_stmt
+%type <aval> create_proc_stmt declare_func_stmt declare_proc_stmt declare_out_call_stmt
 %type <aval> arg_expr arg_list inout param params
 
 /* statements */
@@ -286,8 +286,8 @@ stmt:
   misc_attrs any_stmt  { $stmt = $misc_attrs ? new_ast_stmt_and_attr($misc_attrs, $any_stmt) : $any_stmt; }
   ;
 
-any_stmt: select_stmt
-  | alter_table_add_column_stmt
+any_stmt:
+    alter_table_add_column_stmt
   | begin_schema_region_stmt
   | begin_trans_stmt
   | call_stmt
@@ -304,6 +304,7 @@ any_stmt: select_stmt
   | declare_deployable_region_stmt
   | declare_enum_stmt
   | declare_func_stmt
+  | declare_out_call_stmt
   | declare_proc_stmt
   | declare_schema_region_stmt
   | declare_stmt
@@ -339,6 +340,7 @@ any_stmt: select_stmt
   | rollback_return_stmt
   | rollback_trans_stmt
   | savepoint_stmt
+  | select_stmt
   | schema_ad_hoc_migration_stmt
   | schema_upgrade_script_stmt
   | schema_upgrade_version_stmt
@@ -1390,6 +1392,10 @@ conflict_target:
 function: FUNC | FUNCTION
   ;
 
+declare_out_call_stmt:
+  DECLARE OUT call_stmt { $declare_out_call_stmt = new_ast_declare_out_call_stmt($call_stmt); }
+  ;
+
 declare_enum_stmt:
   DECLARE ENUM name data_type_numeric '(' enum_values ')' {
      ast_node *typed_name = new_ast_typed_name($name, $data_type_numeric);
@@ -1502,13 +1508,13 @@ while_stmt:
   ;
 
 switch_stmt:
-  SWITCH expr switch_case switch_cases { 
+  SWITCH expr switch_case switch_cases {
     ast_node *cases = new_ast_switch_case($switch_case, $switch_cases);
-    ast_node *switch_body = new_ast_switch_body($expr, cases); 
+    ast_node *switch_body = new_ast_switch_body($expr, cases);
     $switch_stmt = new_ast_switch_stmt(new_ast_opt(0), switch_body);  }
-  | SWITCH expr ALL VALUES switch_case switch_cases { 
+  | SWITCH expr ALL VALUES switch_case switch_cases {
     ast_node *cases = new_ast_switch_case($switch_case, $switch_cases);
-    ast_node *switch_body = new_ast_switch_body($expr, cases); 
+    ast_node *switch_body = new_ast_switch_body($expr, cases);
     $switch_stmt = new_ast_switch_stmt(new_ast_opt(1), switch_body);  }
   ;
 
@@ -1518,9 +1524,9 @@ switch_case:
   ;
 
 switch_cases[result]:
-  switch_case switch_cases[next] { 
+  switch_case switch_cases[next] {
     $result = new_ast_switch_case($switch_case, $next); }
-  | ELSE stmt_list END { 
+  | ELSE stmt_list END {
     ast_node *conn = new_ast_connector(NULL, $stmt_list);
     $result = new_ast_switch_case(conn, NULL); }
   | END { $result = NULL; }

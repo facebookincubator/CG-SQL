@@ -1362,6 +1362,8 @@ switch x all values
     set y := 2;
 end;
 
+declare out call foo(a, b);
+
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 
 # 1 "long/path/I/do/not/like"

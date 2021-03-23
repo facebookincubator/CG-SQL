@@ -1528,6 +1528,9 @@ static void get_sem_flags(sem_t sem_type, charbuf *out) {
   if (sem_type & SEM_TYPE_SENSITIVE) {
     bprintf(out, " sensitive");
   }
+  if (sem_type & SEM_TYPE_IMPLICIT) {
+    bprintf(out, " implicit");
+  }
   if (sem_type & SEM_TYPE_DEPLOYABLE) {
     bprintf(out, " deployable");
   }
@@ -15517,7 +15520,7 @@ static void sem_validate_args_vs_formals(ast_node *ast, CSTR name, ast_node *arg
 
     if (is_out_parameter(sem_type_param)) {
       if (!is_variable(sem_type_arg)) {
-        report_error(arg, "CQL0207: proc out parameter: formal cannot be fulfilled by non-variable", param->sem->name);
+        report_error(arg, "CQL0207: expected a variable name for out argument", param->sem->name);
         record_error(ast);
         return;
       }
@@ -16292,6 +16295,119 @@ static void sem_call_stmt(ast_node *ast) {
   if (is_struct(ast->sem->sem_type)) {
     sem_update_proc_type_for_select(ast);
   }
+}
+
+static void sem_declare_out_call_stmt(ast_node *ast) {
+  Contract(is_ast_declare_out_call_stmt(ast));
+  EXTRACT_NOTNULL(call_stmt, ast->left);
+
+  EXTRACT_ANY_NOTNULL(name_ast, call_stmt->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT(expr_list, call_stmt->right);
+
+  ast_node *proc_stmt = find_proc(name);
+
+  if (!proc_stmt) {
+    report_error(ast, "CQL0389: DECLARE OUT requires that the procedure be already declared", name);
+    record_error(ast);
+    return;
+  }
+
+  // The semantic info for the proc is useless if it had errors, can't use it
+  if (is_error(proc_stmt)) {
+    report_error(ast, "CQL0213: procedure had errors, can't call", name);
+    record_error(ast);
+    return;
+  }
+
+  ast_node *params = get_proc_params(proc_stmt);
+
+  int32_t out_args = 0;
+
+  for (; params && expr_list; params = params->right, expr_list = expr_list->right) {
+    EXTRACT_NOTNULL(param, params->left);
+
+    Invariant(param->sem);
+    sem_t sem_type_param = param->sem->sem_type;
+
+    if (is_in_parameter(sem_type_param)) {
+      // in or in/out we skip
+      continue;
+    }
+
+    Invariant(is_out_parameter(sem_type_param));  // that's all that's left
+    out_args++;
+ 
+    EXTRACT_ANY_NOTNULL(arg, expr_list->left);
+ 
+    if (!is_ast_str(arg)) {
+      report_error(arg, "CQL0207: expected a variable name for out argument", param->sem->name);
+      record_error(ast);
+      return;
+    }
+
+    EXTRACT_STRING(var_name, arg);
+
+    if (!symtab_find(current_variables, var_name)) {
+      sem_t sem_type_var = param->sem->sem_type;
+      sem_type_var &= (SEM_TYPE_NOTNULL | SEM_TYPE_SENSITIVE | SEM_TYPE_CORE);
+      sem_type_var |= SEM_TYPE_VARIABLE | SEM_TYPE_IMPLICIT;
+  
+      AST_REWRITE_INFO_SET(name_ast->lineno, name_ast->filename);
+      ast_node *variable = new_ast_str(var_name);
+      variable->sem = ast->sem = new_sem(sem_type_var);
+      variable->sem->name = var_name;
+      variable->sem->kind = param->sem->kind;
+      symtab_add(current_variables, var_name, variable);
+      AST_REWRITE_INFO_RESET();
+    }
+  }
+
+  if (out_args == 0) {
+    report_error(name_ast, "CQL0390: DECLARE OUT CALL used on a procedure with no missing OUT arguments", name);
+    record_error(ast);
+    return;
+  }
+
+  sem_call_stmt(call_stmt);
+  if (is_error(call_stmt)) {
+    record_error(ast);
+    return;
+  }
+
+  // Now we have to do a final swizzle, we want the call to have the IMPLICIT flag
+  // on the variable usages just as we set up above, but we only want *this* call
+  // to have them.  The flag must now be removed from the actual variables.  So we
+  // do the walk the code generator is going to do but sort of in reverse... we're
+  // wanting variables to undecorate.  The IMPLICIT bits are the bread crumbs we need.
+
+  expr_list = call_stmt->right;
+
+  for (; expr_list; expr_list = expr_list->right) {
+    EXTRACT_ANY_NOTNULL(arg, expr_list->left);
+    if (arg->sem->sem_type & SEM_TYPE_IMPLICIT) {
+      EXTRACT_STRING(var_name, arg);
+      symtab_entry *entry = symtab_find(current_variables, var_name);
+      Invariant(entry);  // we just added it!
+      ast_node *var = (ast_node*)(entry->val);
+
+      if (var->sem->sem_type & SEM_TYPE_IMPLICIT) {
+        // take it off the variable (so later uses will not get the mark)
+        var->sem->sem_type &= sem_not(SEM_TYPE_IMPLICIT);
+
+        // the implicit bit stays on the expression
+        // this is the normal case, unique args
+      }
+      else {
+        // the variable has already been processed, remove the IMPLICIT bit there is
+        // no need to imply a second declaration
+        // declare out foo(v, v);  case
+        sem_remove_flags(arg, SEM_TYPE_IMPLICIT);
+      }
+    }
+  }
+
+  record_ok(ast);
 }
 
 // This is the main entry point for any kind of statement.  When we don't know
@@ -17737,6 +17853,7 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(rollback_return_stmt);
   STMT_INIT(commit_return_stmt);
   STMT_INIT(call_stmt);
+  STMT_INIT(declare_out_call_stmt);
   STMT_INIT(declare_vars_type);
   STMT_INIT(let_stmt);
   STMT_INIT(assign);

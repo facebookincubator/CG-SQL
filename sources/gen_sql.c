@@ -2926,6 +2926,12 @@ static void gen_call_stmt(ast_node *ast) {
   gen_printf(")", name);
 }
 
+static void gen_declare_out_call_stmt(ast_node *ast) {
+  EXTRACT_NOTNULL(call_stmt, ast->left);
+  gen_printf("DECLARE OUT ");
+  gen_call_stmt(call_stmt);
+}
+
 static void gen_fetch_call_stmt(ast_node *ast) {
   Contract(is_ast_fetch_call_stmt(ast));
   Contract(is_ast_call_stmt(ast->right));
@@ -3376,6 +3382,7 @@ cql_noexport void gen_init() {
   STMT_INIT(rollback_return_stmt);
   STMT_INIT(commit_return_stmt);
   STMT_INIT(call_stmt);
+  STMT_INIT(declare_out_call_stmt);
   STMT_INIT(declare_vars_type);
   STMT_INIT(let_stmt);
   STMT_INIT(assign);

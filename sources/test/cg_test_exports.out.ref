@@ -149,4 +149,5 @@ DECLARE PROC set_out_arg_notnull_test (OUT x INTEGER NOT NULL);
 DECLARE PROC early_close_cursor () USING TRANSACTION;
 DECLARE PROC various_lets ();
 DECLARE PROC try_catch_rc () USING TRANSACTION;
+DECLARE PROC out_decl_test_3 (x INTEGER);
 DECLARE PROC end_proc ();

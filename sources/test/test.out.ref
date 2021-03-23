@@ -1467,6 +1467,8 @@ SWITCH x ALL VALUES
     SET y := 2;
 END;
 
+DECLARE OUT CALL foo(a, b);
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

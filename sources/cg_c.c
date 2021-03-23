@@ -4978,6 +4978,25 @@ static void cg_call_stmt(ast_node *ast) {
   return cg_call_stmt_with_cursor(ast, "*_result");
 }
 
+
+// emit the declarations for anything implicitly declared then do a normal call
+static void cg_declare_out_call_stmt(ast_node *ast) {
+  Contract(is_ast_declare_out_call_stmt(ast));
+  EXTRACT_NOTNULL(call_stmt, ast->left);
+  EXTRACT(expr_list, call_stmt->right);
+
+  for (; expr_list; expr_list = expr_list->right) {
+    EXTRACT_ANY_NOTNULL(arg, expr_list->left);
+    if (arg->sem->sem_type & SEM_TYPE_IMPLICIT) {
+      EXTRACT_STRING(var_name, arg);
+      cg_declare_simple_var(arg->sem->sem_type, var_name);
+    }
+  }
+
+  cg_call_stmt(call_stmt);
+}
+
+
 // This helper method walks all the args and all the formal paramaters at the same time
 // it gets the appropriate type info for each and then generates the expression
 // for the evaluation of that argument.
@@ -6609,6 +6628,7 @@ cql_noexport void cg_c_init(void) {
   STMT_INIT(rollback_return_stmt);
   STMT_INIT(commit_return_stmt);
   STMT_INIT(call_stmt);
+  STMT_INIT(declare_out_call_stmt);
   STMT_INIT(declare_vars_type);
   STMT_INIT(assign);
   STMT_INIT(let_stmt);

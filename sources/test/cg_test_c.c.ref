@@ -237,6 +237,8 @@ typedef struct global_cursor2_row {
 } global_cursor2_row;
 
 #define global_cursor2_refs_offset cql_offsetof(global_cursor2_row, x) // count = 1
+extern void out2_proc(cql_nullable_int32 x, cql_int32 *_Nonnull y, cql_int32 *_Nonnull z);
+
 cql_string_literal(_literal_1_This_is_a_test_, "This is a \" \\ test '' \n \" ");
 cql_string_literal(_literal_2_b_, "b");
 cql_string_literal(_literal_3_c_, "c");
@@ -8245,6 +8247,36 @@ cql_cleanup:
   cql_finalize_stmt(&C_stmt);
   cql_teardown_row(C);
   return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+DECLARE PROC out2_proc (x INTEGER, OUT y INTEGER NOT NULL, OUT z INTEGER NOT NULL);
+*/
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC out_decl_test_3 (x INTEGER)
+BEGIN
+  DECLARE OUT CALL out2_proc(x, u, u);
+  DECLARE OUT CALL out2_proc(x, u, v);
+END;
+*/
+
+#define _PROC_ "out_decl_test_3"
+// export: DECLARE PROC out_decl_test_3 (x INTEGER);
+void out_decl_test_3(cql_nullable_int32 x) {
+  cql_int32 u = 0;
+  cql_int32 v = 0;
+
+  out2_proc(x, &u, &u);
+  out2_proc(x, &u, &v);
+
+cql_cleanup:
+  ; // label requires some statement
 }
 #undef _PROC_
 cql_int32 this_is_the_end = 0;
