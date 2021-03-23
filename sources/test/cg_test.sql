@@ -3583,7 +3583,6 @@ switch i2
     set i2 := 123;
 end;
 
-
 -- TEST: use of LEAVE within a switch
 -- +  switch (i2) {
 -- +    case 1:
@@ -3619,6 +3618,73 @@ begin
   declare out call out2_proc(x, u, v);
 end;
 
+-- TEST: most binary operations involving a null-typed argument result in null
+-- + cql_set_null(add0);
+-- + cql_set_null(add1);
+-- + cql_set_null(bin_and0);
+-- + cql_set_null(bin_and1);
+-- + cql_set_null(bin_or0);
+-- + cql_set_null(bin_or1);
+-- + cql_set_null(div0);
+-- + cql_set_null(div1);
+-- + cql_set_null(ge0);
+-- + cql_set_null(ge1);
+-- + cql_set_null(gt0);
+-- + cql_set_null(gt1);
+-- + cql_set_null(le0);
+-- + cql_set_null(le1);
+-- + cql_set_null(like0);
+-- + cql_set_null(like1);
+-- + cql_set_null(lshift0);
+-- + cql_set_null(lshift1);
+-- + cql_set_null(lt0);
+-- + cql_set_null(lt1);
+-- + cql_set_null(mod0);
+-- + cql_set_null(mod1);
+-- + cql_set_null(mul0);
+-- + cql_set_null(mul1);
+-- + cql_set_null(not_like0);
+-- + cql_set_null(not_like1);
+-- + cql_set_null(rshift0);
+-- + cql_set_null(rshift1);
+-- + cql_set_null(sub0);
+-- + cql_set_null(sub1);
+-- - cql_set_notnull
+-- - Error
+create proc binary_ops_with_null()
+begin
+  let add0 := NULL + 42;
+  let add1 := 42 + NULL;
+  let bin_and0 := NULL & 42;
+  let bin_and1 := 42 & NULL;
+  let bin_or0 := NULL | 42;
+  let bin_or1 := 42 | NULL;
+  let div0 := NULL / 42;
+  let div1 := 42 / NULL;
+  let ge0 := NULL >= 42;
+  let ge1 := 42 >= NULL;
+  let gt0 := NULL > 42;
+  let gt1 := 42 > NULL;
+  let le0 := NULL <= 42;
+  let le1 := 42 <= NULL;
+  let like0 := NULL LIKE "foo";
+  let like1 := "foo" LIKE NULL;
+  let lshift0 := NULL << 42;
+  let lshift1 := 42 << NULL;
+  let lt0 := NULL < 42;
+  let lt1 := 42 < NULL;
+  let mod0 := NULL % 42;
+  let mod1 := 42 % NULL;
+  let mul0 := NULL * 42;
+  let mul1 := 42 * NULL;
+  let not_like0 := NULL NOT LIKE "foo";
+  let not_like1 := "foo" NOT LIKE NULL;
+  let rshift0 := NULL >> 42;
+  let rshift1 := 42 >> NULL;
+  let sub0 := NULL - 42;
+  let sub1 := 42 - NULL;
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------
@@ -3631,4 +3697,3 @@ create proc end_proc() begin end;
 -- + cql_code cql_startup(sqlite3 *_Nonnull _db_)
 declare end_marker integer;
 --------------------------------------------------------------------
-

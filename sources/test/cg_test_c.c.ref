@@ -253,6 +253,7 @@ cql_string_literal(_literal_11_, "");
 cql_string_literal(_literal_12_garbonzo_, "garbonzo");
 cql_string_literal(_literal_13_T_various_lets, "T");
 cql_string_literal(_literal_14_NT_various_lets, "NT");
+cql_string_literal(_literal_15_foo_binary_ops_with_null, "foo");
 
 // The statement ending at line XXXX
 
@@ -8274,6 +8275,144 @@ void out_decl_test_3(cql_nullable_int32 x) {
 
   out2_proc(x, &u, &u);
   out2_proc(x, &u, &v);
+
+cql_cleanup:
+  ; // label requires some statement
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC binary_ops_with_null ()
+BEGIN
+  LET add0 := NULL + 42;
+  LET add1 := 42 + NULL;
+  LET bin_and0 := NULL & 42;
+  LET bin_and1 := 42 & NULL;
+  LET bin_or0 := NULL | 42;
+  LET bin_or1 := 42 | NULL;
+  LET div0 := NULL / 42;
+  LET div1 := 42 / NULL;
+  LET ge0 := NULL >= 42;
+  LET ge1 := 42 >= NULL;
+  LET gt0 := NULL > 42;
+  LET gt1 := 42 > NULL;
+  LET le0 := NULL <= 42;
+  LET le1 := 42 <= NULL;
+  LET like0 := NULL LIKE "foo";
+  LET like1 := "foo" LIKE NULL;
+  LET lshift0 := NULL << 42;
+  LET lshift1 := 42 << NULL;
+  LET lt0 := NULL < 42;
+  LET lt1 := 42 < NULL;
+  LET mod0 := NULL % 42;
+  LET mod1 := 42 % NULL;
+  LET mul0 := NULL * 42;
+  LET mul1 := 42 * NULL;
+  LET not_like0 := NULL NOT LIKE "foo";
+  LET not_like1 := "foo" NOT LIKE NULL;
+  LET rshift0 := NULL >> 42;
+  LET rshift1 := 42 >> NULL;
+  LET sub0 := NULL - 42;
+  LET sub1 := 42 - NULL;
+END;
+*/
+
+#define _PROC_ "binary_ops_with_null"
+// export: DECLARE PROC binary_ops_with_null ();
+void binary_ops_with_null(void) {
+  cql_nullable_int32 add0;
+  cql_set_null(add0);
+  cql_nullable_int32 add1;
+  cql_set_null(add1);
+  cql_nullable_int32 bin_and0;
+  cql_set_null(bin_and0);
+  cql_nullable_int32 bin_and1;
+  cql_set_null(bin_and1);
+  cql_nullable_int32 bin_or0;
+  cql_set_null(bin_or0);
+  cql_nullable_int32 bin_or1;
+  cql_set_null(bin_or1);
+  cql_nullable_int32 div0;
+  cql_set_null(div0);
+  cql_nullable_int32 div1;
+  cql_set_null(div1);
+  cql_nullable_bool ge0;
+  cql_set_null(ge0);
+  cql_nullable_bool ge1;
+  cql_set_null(ge1);
+  cql_nullable_bool gt0;
+  cql_set_null(gt0);
+  cql_nullable_bool gt1;
+  cql_set_null(gt1);
+  cql_nullable_bool le0;
+  cql_set_null(le0);
+  cql_nullable_bool le1;
+  cql_set_null(le1);
+  cql_nullable_bool like0;
+  cql_set_null(like0);
+  cql_nullable_bool like1;
+  cql_set_null(like1);
+  cql_nullable_int32 lshift0;
+  cql_set_null(lshift0);
+  cql_nullable_int32 lshift1;
+  cql_set_null(lshift1);
+  cql_nullable_bool lt0;
+  cql_set_null(lt0);
+  cql_nullable_bool lt1;
+  cql_set_null(lt1);
+  cql_nullable_int32 mod0;
+  cql_set_null(mod0);
+  cql_nullable_int32 mod1;
+  cql_set_null(mod1);
+  cql_nullable_int32 mul0;
+  cql_set_null(mul0);
+  cql_nullable_int32 mul1;
+  cql_set_null(mul1);
+  cql_nullable_bool not_like0;
+  cql_set_null(not_like0);
+  cql_nullable_bool not_like1;
+  cql_set_null(not_like1);
+  cql_nullable_int32 rshift0;
+  cql_set_null(rshift0);
+  cql_nullable_int32 rshift1;
+  cql_set_null(rshift1);
+  cql_nullable_int32 sub0;
+  cql_set_null(sub0);
+  cql_nullable_int32 sub1;
+  cql_set_null(sub1);
+
+  cql_set_null(add0);
+  cql_set_null(add1);
+  cql_set_null(bin_and0);
+  cql_set_null(bin_and1);
+  cql_set_null(bin_or0);
+  cql_set_null(bin_or1);
+  cql_set_null(div0);
+  cql_set_null(div1);
+  cql_set_null(ge0);
+  cql_set_null(ge1);
+  cql_set_null(gt0);
+  cql_set_null(gt1);
+  cql_set_null(le0);
+  cql_set_null(le1);
+  cql_set_null(like0);
+  cql_set_null(like1);
+  cql_set_null(lshift0);
+  cql_set_null(lshift1);
+  cql_set_null(lt0);
+  cql_set_null(lt1);
+  cql_set_null(mod0);
+  cql_set_null(mod1);
+  cql_set_null(mul0);
+  cql_set_null(mul1);
+  cql_set_null(not_like0);
+  cql_set_null(not_like1);
+  cql_set_null(rshift0);
+  cql_set_null(rshift1);
+  cql_set_null(sub0);
+  cql_set_null(sub1);
 
 cql_cleanup:
   ; // label requires some statement

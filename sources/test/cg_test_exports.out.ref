@@ -150,4 +150,5 @@ DECLARE PROC early_close_cursor () USING TRANSACTION;
 DECLARE PROC various_lets ();
 DECLARE PROC try_catch_rc () USING TRANSACTION;
 DECLARE PROC out_decl_test_3 (x INTEGER);
+DECLARE PROC binary_ops_with_null ();
 DECLARE PROC end_proc ();
