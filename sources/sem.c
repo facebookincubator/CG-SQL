@@ -4683,6 +4683,7 @@ static void resolve_cursor_field(ast_node *expr, ast_node *cursor, CSTR field) {
      if (!Strcasecmp(sptr->names[i], field)) {
         expr->sem = new_sem(sptr->semtypes[i] | SEM_TYPE_VARIABLE);
         expr->sem->name = dup_printf("%s.%s", scope, sptr->names[i]);
+        expr->sem->kind = sptr->kinds[i];
         return;
      }
   }
@@ -4762,6 +4763,7 @@ static bool_t try_resolve_using_arg_bundle(ast_node *ast, CSTR name, CSTR bundle
      if (!Strcasecmp(sptr->names[i], name)) {
         ast->sem = new_sem(sptr->semtypes[i] | SEM_TYPE_VARIABLE);
         ast->sem->name = dup_printf("%s_%s", shape->sem->name, sptr->names[i]);
+        ast->sem->kind = sptr->kinds[i];
         return true;
      }
   }

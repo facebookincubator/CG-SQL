@@ -52537,6 +52537,98 @@ DECLARE ENUM integer_things INTEGER (
 
 The statement ending at line XXXX
 
+DECLARE PROC test_shape () (x INTEGER<integer_things> NOT NULL);
+
+  {declare_proc_stmt}: test_shape: { x: integer<integer_things> notnull } dml_proc
+  | {proc_name_type}
+  | | {name test_shape}: test_shape: { x: integer<integer_things> notnull } dml_proc
+  | | {int 3}
+  | {proc_params_stmts}
+    | {typed_names}: test_shape: { x: integer<integer_things> notnull }
+      | {typed_name}: x: integer<integer_things> notnull
+        | {name x}
+        | {notnull}: x: integer<integer_things> notnull
+          | {type_int}: integer<integer_things>
+            | {name integer_things}
+
+The statement ending at line XXXX
+
+CREATE PROC enum_users ()
+BEGIN
+  DECLARE C CURSOR LIKE test_shape;
+  FETCH C(x) FROM VALUES(1);
+  LET z := C.x;
+END;
+
+  {create_proc_stmt}: ok
+  | {name enum_users}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor_like_name}: C: test_shape: { x: integer<integer_things> notnull } variable shape_storage value_cursor
+      | | {name C}: C: test_shape: { x: integer<integer_things> notnull } variable shape_storage value_cursor
+      | | {like}: test_shape: { x: integer<integer_things> notnull } dml_proc
+      |   | {name test_shape}: test_shape: { x: integer<integer_things> notnull } dml_proc
+      | {fetch_values_stmt}: ok
+      | | {name_columns_values}
+      |   | {name C}: C: test_shape: { x: integer<integer_things> notnull } variable shape_storage value_cursor
+      |   | {columns_values}: ok
+      |     | {column_spec}
+      |     | | {name_list}
+      |     |   | {name x}: x: integer<integer_things> notnull
+      |     | {insert_list}
+      |       | {int 1}: integer<integer_things> notnull
+      | {let_stmt}: z: integer<integer_things> notnull variable
+        | {name z}: z: integer<integer_things> notnull variable
+        | {dot}: C.x: integer<integer_things> notnull variable
+          | {name C}
+          | {name x}
+
+The statement ending at line XXXX
+
+CREATE PROC enum_in_bundle (b_x INTEGER<integer_things> NOT NULL)
+BEGIN
+  LET u := b.x;
+  LET v := b_x;
+END;
+
+  {create_proc_stmt}: ok
+  | {name enum_in_bundle}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: b_x: integer<integer_things> notnull variable in
+    |   | {param_detail}: b_x: integer<integer_things> notnull variable in
+    |     | {name b_x}: b_x: integer<integer_things> notnull variable in
+    |     | {notnull}: integer<integer_things> notnull
+    |       | {type_int}: integer<integer_things>
+    |         | {name integer_things}
+    | {stmt_list}: ok
+      | {let_stmt}: u: integer<integer_things> notnull variable
+      | | {name u}: u: integer<integer_things> notnull variable
+      | | {dot}: b_x: integer<integer_things> notnull variable
+      |   | {name b}
+      |   | {name x}
+      | {let_stmt}: v: integer<integer_things> notnull variable
+        | {name v}: v: integer<integer_things> notnull variable
+        | {name b_x}: b_x: integer<integer_things> notnull variable in
+
+The statement ending at line XXXX
+
+DECLARE PROC shape_result_test () (x INTEGER<integer_things> NOT NULL);
+
+  {declare_proc_stmt}: shape_result_test: { x: integer<integer_things> notnull } dml_proc
+  | {proc_name_type}
+  | | {name shape_result_test}: shape_result_test: { x: integer<integer_things> notnull } dml_proc
+  | | {int 3}
+  | {proc_params_stmts}
+    | {typed_names}: shape_result_test: { x: integer<integer_things> notnull }
+      | {typed_name}: x: integer<integer_things> notnull
+        | {name x}
+        | {notnull}: x: integer<integer_things> notnull
+          | {type_int}: integer<integer_things>
+            | {name integer_things}
+
+The statement ending at line XXXX
+
 DECLARE ENUM integer_things INTEGER (
   pen,
   paper = 7,

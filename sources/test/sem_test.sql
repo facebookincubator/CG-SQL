@@ -12952,6 +12952,37 @@ declare enum integer_things integer (
   pencil
 );
 
+declare proc test_shape() (x integer_things);
+
+-- TEST: ensure that the type kind is preserved on cursor read
+-- + {name z}: z: integer<integer_things> notnull variable
+-- -Error
+create proc enum_users()
+begin
+   declare C cursor like test_shape;
+   fetch C using integer_things.pen x;
+   let z := C.x;
+end;
+
+-- TEST: ensure that the type kind is preserved from an arg bundle
+-- proof that the cursor fields had the right type when extracted
+-- + {name u}: u: integer<integer_things> notnull variable
+-- proof that the b_x arg has the right type
+-- + {name v}: v: integer<integer_things> notnull variable
+-- rewrite includes the KIND
+-- + CREATE PROC enum_in_bundle (b_x INTEGER<integer_things> NOT NULL)
+-- -Error
+create proc enum_in_bundle(b like test_shape)
+begin
+  let u := b.x;
+  let v := b_x;  -- the param normal name
+end;
+
+-- TEST: verify typed names preserve kind
+-- verify the rewrite include the enum type
+-- + DECLARE PROC shape_result_test () (x INTEGER<integer_things> NOT NULL);
+declare proc shape_result_test() (like test_shape);
+
 -- TEST: create an integer enum exact copy is OK!
 -- + {declare_enum_stmt}: integer_things: integer
 -- + {name pen}: integer = 1

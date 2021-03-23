@@ -445,6 +445,7 @@ static ast_node *rewrite_one_param(ast_node *param, symtab *param_names, bytebuf
   for (int32_t i = 0; i < count; i++) {
     sem_t sem_type = sptr->semtypes[i];
     CSTR param_name = sptr->names[i];
+    CSTR param_kind = sptr->kinds[i];
     CSTR original_name = param_name;
 
     if (shape_name[0]) {
@@ -479,7 +480,7 @@ static ast_node *rewrite_one_param(ast_node *param, symtab *param_names, bytebuf
       bytebuf_append_var(args_info, shape_type);
     }
 
-    ast_node *type = rewrite_gen_data_type(sem_type, NULL);
+    ast_node *type = rewrite_gen_data_type(sem_type, param_kind);
     ast_node *name_ast = new_ast_str(param_name);
     ast_node *param_detail_new = new_ast_param_detail(name_ast, type);
 
@@ -873,6 +874,7 @@ static void rewrite_one_typed_name(ast_node *typed_name, symtab *used_names) {
   for (int32_t i = 0; i < count; i++) {
     sem_t sem_type = sptr->semtypes[i];
     CSTR name = sptr->names[i];
+    CSTR kind = sptr->kinds[i];
     CSTR combined_name = name;
 
     if (shape_name[0]) {
@@ -885,7 +887,7 @@ static void rewrite_one_typed_name(ast_node *typed_name, symtab *used_names) {
     }
 
     ast_node *name_ast = new_ast_str(combined_name);
-    ast_node *type = rewrite_gen_data_type(sem_type, NULL);
+    ast_node *type = rewrite_gen_data_type(sem_type, kind);
     ast_node *new_typed_name = new_ast_typed_name(name_ast, type);
     ast_node *typed_names = insertion->parent;
 
