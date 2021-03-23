@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Sat Mar 20 19:05:17 PDT 2021
+Snapshot as of Mon Mar 22 18:26:17 PDT 2021
 
 ### Operators and Literals
 
@@ -92,8 +92,8 @@ stmt:
   misc_attrs any_stmt
   ;
 
-any_stmt: select_stmt
-  | alter_table_add_column_stmt
+any_stmt:
+    alter_table_add_column_stmt
   | begin_schema_region_stmt
   | begin_trans_stmt
   | call_stmt
@@ -110,6 +110,7 @@ any_stmt: select_stmt
   | declare_deployable_region_stmt
   | declare_enum_stmt
   | declare_func_stmt
+  | declare_out_call_stmt
   | declare_proc_stmt
   | declare_schema_region_stmt
   | declare_stmt
@@ -145,6 +146,7 @@ any_stmt: select_stmt
   | rollback_return_stmt
   | rollback_trans_stmt
   | savepoint_stmt
+  | select_stmt
   | schema_ad_hoc_migration_stmt
   | schema_upgrade_script_stmt
   | schema_upgrade_version_stmt
@@ -1055,6 +1057,10 @@ conflict_target:
   ;
 
 function: "FUNC" | "FUNCTION"
+  ;
+
+declare_out_call_stmt:
+  "DECLARE" "OUT" call_stmt
   ;
 
 declare_enum_stmt:

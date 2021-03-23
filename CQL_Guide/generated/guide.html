@@ -593,9 +593,9 @@
 <li><a href="#cql0370-due-to-a-memory-leak-bug-in-old-sqlite-versions-the-select-part-of-an-insert-must-not-have-a-top-level-join-or-compound-operator.-use-with-and-a-cte-or-a-nested-select-to-work-around-this.">CQL0370: due to a memory leak bug in old SQLite versions, the select part of an insert must not have a top level join or compound operator. Use WITH and a CTE, or a nested select to work around this.</a></li>
 <li><a href="#cql0371-table-valued-function-used-in-a-leftrightcross-context-this-would-hit-a-sqlite-bug.-wrap-it-in-a-cte-instead.">CQL0371: table valued function used in a left/right/cross context; this would hit a SQLite bug. Wrap it in a CTE instead.</a></li>
 <li><a href="#cql0372-select-if-nothing-or-null-null-is-redundant-use-select-if-nothing-null-instead.">CQL0372: SELECT … IF NOTHING OR NULL NULL is redundant; use SELECT … IF NOTHING NULL instead.</a></li>
+<li><a href="#cql0373-comparing-against-null-always-yields-null-use-is-and-is-not-instead.">CQL0373: Comparing against NULL always yields NULL; use IS and IS NOT instead.</a></li>
+<li><a href="#cql0374-select-expression-is-equivalent-to-null.">CQL0374: SELECT expression is equivalent to NULL.</a></li>
 </ul></li>
-<li><a href="#cql-0375-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0375 : unused, this was added to prevent merge conflicts at the end on literally every checkin</a></li>
-<li><a href="#cql-0376-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0376 : unused, this was added to prevent merge conflicts at the end on literally every checkin</a></li>
 <li><a href="#cql-0377-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0377 : unused, this was added to prevent merge conflicts at the end on literally every checkin</a></li>
 <li><a href="#cql-0378-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0378 : unused, this was added to prevent merge conflicts at the end on literally every checkin</a></li>
 <li><a href="#cql-0379-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0379 : unused, this was added to prevent merge conflicts at the end on literally every checkin</a>
@@ -608,9 +608,9 @@
 <li><a href="#cql0385-when-clauses-contain-duplicate-values-value">CQL0385: WHEN clauses contain duplicate values ‘value’</a></li>
 <li><a href="#cql0387-a-value-exists-in-the-enum-that-is-not-present-in-the-switch-enum_member">CQL0387: a value exists in the enum that is not present in the switch ‘enum_member’</a></li>
 <li><a href="#cql0388-a-value-exists-in-the-switch-that-is-not-present-in-the-enum-numeric_value">CQL0388: a value exists in the switch that is not present in the enum ‘numeric_value’</a></li>
+<li><a href="#cql0389-declare-out-requires-that-the-procedure-be-already-declared">CQL0389: DECLARE OUT requires that the procedure be already declared</a></li>
+<li><a href="#cql0390-declare-out-call-used-on-a-procedure-with-no-missing-out-arguments">CQL0390: DECLARE OUT CALL used on a procedure with no missing OUT arguments</a></li>
 </ul></li>
-<li><a href="#cql-0391-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0391 : unused, this was added to prevent merge conflicts at the end on literally every checkin</a></li>
-<li><a href="#cql-0392-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0392 : unused, this was added to prevent merge conflicts at the end on literally every checkin</a></li>
 <li><a href="#cql-0393-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0393 : unused, this was added to prevent merge conflicts at the end on literally every checkin</a></li>
 <li><a href="#cql-0394-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0394 : unused, this was added to prevent merge conflicts at the end on literally every checkin</a></li>
 <li><a href="#cql-0395-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0395 : unused, this was added to prevent merge conflicts at the end on literally every checkin</a></li>
@@ -6141,7 +6141,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Sat Mar 20 19:05:17 PDT 2021</p>
+<p>Snapshot as of Mon Mar 22 18:26:17 PDT 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -6208,8 +6208,8 @@ stmt:
   misc_attrs any_stmt
   ;
 
-any_stmt: select_stmt
-  | alter_table_add_column_stmt
+any_stmt:
+    alter_table_add_column_stmt
   | begin_schema_region_stmt
   | begin_trans_stmt
   | call_stmt
@@ -6226,6 +6226,7 @@ any_stmt: select_stmt
   | declare_deployable_region_stmt
   | declare_enum_stmt
   | declare_func_stmt
+  | declare_out_call_stmt
   | declare_proc_stmt
   | declare_schema_region_stmt
   | declare_stmt
@@ -6261,6 +6262,7 @@ any_stmt: select_stmt
   | rollback_return_stmt
   | rollback_trans_stmt
   | savepoint_stmt
+  | select_stmt
   | schema_ad_hoc_migration_stmt
   | schema_upgrade_script_stmt
   | schema_upgrade_version_stmt
@@ -7171,6 +7173,10 @@ conflict_target:
   ;
 
 function: &quot;FUNC&quot; | &quot;FUNCTION&quot;
+  ;
+
+declare_out_call_stmt:
+  &quot;DECLARE&quot; &quot;OUT&quot; call_stmt
   ;
 
 declare_enum_stmt:
@@ -9158,23 +9164,29 @@ insert into x
 <div class="sourceCode" id="cb431"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb431-1"><a href="#cb431-1"></a><span class="kw">select</span> foo <span class="kw">from</span> bar <span class="kw">where</span> baz <span class="cf">if</span> <span class="kw">nothing</span> <span class="kw">or</span> <span class="kw">null</span> <span class="kw">null</span></span></code></pre></div>
 <p>Do this instead:</p>
 <div class="sourceCode" id="cb432"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb432-1"><a href="#cb432-1"></a><span class="kw">select</span> foo <span class="kw">from</span> bar <span class="kw">where</span> baz <span class="cf">if</span> <span class="kw">nothing</span> <span class="kw">null</span></span></code></pre></div>
+<hr />
+<h3 id="cql0373-comparing-against-null-always-yields-null-use-is-and-is-not-instead.">CQL0373: Comparing against NULL always yields NULL; use IS and IS NOT instead.</h3>
+<p>Attepting to check if some value <code>x</code> is NULL via <code>x = NULL</code> or <code>x == NULL</code>, or isn’t NULL via <code>x &lt;&gt; NULL</code> or <code>x != NULL</code>, will always produce NULL regardless of the value of <code>x</code>. Instead, use <code>x IS NULL</code> or <code>x IS NOT NULL</code> to get the expected boolean result.</p>
+<hr />
+<h3 id="cql0374-select-expression-is-equivalent-to-null.">CQL0374: SELECT expression is equivalent to NULL.</h3>
+<p>CQL found a redundant select operation (e.g., <code>set x := (select NULL);</code>).</p>
+<p>There is no need to write a select expression that always evaluates to NULL. Simply use NULL instead (e.g., <code>set x := NULL;</code>).</p>
+<hr />
 <table style="width:7%;">
 <colgroup>
 <col style="width: 6%" />
 </colgroup>
 <thead>
 <tr class="header">
-<th>CQL 0373 : unused, this was added to prevent merge conflicts at the end on literally every checkin</th>
+<th>CQL 0375 : unused, this was added to prevent merge conflicts at the end on literally every checkin</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>CQL 0374 : unused, this was added to prevent merge conflicts at the end on literally every checkin</td>
+<td>CQL 0376 : unused, this was added to prevent merge conflicts at the end on literally every checkin</td>
 </tr>
 </tbody>
 </table>
-<h2 id="cql-0375-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0375 : unused, this was added to prevent merge conflicts at the end on literally every checkin</h2>
-<h2 id="cql-0376-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0376 : unused, this was added to prevent merge conflicts at the end on literally every checkin</h2>
 <h2 id="cql-0377-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0377 : unused, this was added to prevent merge conflicts at the end on literally every checkin</h2>
 <h2 id="cql-0378-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0378 : unused, this was added to prevent merge conflicts at the end on literally every checkin</h2>
 <h2 id="cql-0379-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0379 : unused, this was added to prevent merge conflicts at the end on literally every checkin</h2>
@@ -9219,23 +9231,28 @@ insert into x
 <h3 id="cql0388-a-value-exists-in-the-switch-that-is-not-present-in-the-enum-numeric_value">CQL0388: a value exists in the switch that is not present in the enum ‘numeric_value’</h3>
 <p>In a <code>SWITCH</code> statement with <code>ALL VALUES</code> specified the errant integer value appeared in in a <code>WHEN</code> clause. This value is not part of the members of the enum. Note that enum members that begin with ’_’ are ignored as they are, by convention, consdiered to be pseudo-members. e.g. in <code>declare enum v integer (v0 = 0, v1 =1, v2 =2, _count = 3)</code> <code>_count</code> is a pseudo-member.</p>
 <p>The errant entry should probably be removed. Alternatively, <code>ALL VALUES</code> isn’t appropriate as the domain of the switch is actually bigger than the domain of the enumeration. One of these changes must happen.</p>
+<hr />
+<h3 id="cql0389-declare-out-requires-that-the-procedure-be-already-declared">CQL0389: DECLARE OUT requires that the procedure be already declared</h3>
+<p>The purpose of the <code>DECLARE OUT</code> form is to automatically declare the out parameters for that procedure.</p>
+<p>This cannot be done if the type of the procedure is not yet known.</p>
+<hr />
+<h3 id="cql0390-declare-out-call-used-on-a-procedure-with-no-missing-out-arguments">CQL0390: DECLARE OUT CALL used on a procedure with no missing OUT arguments</h3>
+<p>The <code>DECLARE OUT CALL</code> form was used, but the procedure has no <code>OUT</code> arguments that need any implicit declaration. Either they have already all been declared or else there are no <code>OUT</code> arguments at all, or even no arguments of any kind.</p>
 <table style="width:7%;">
 <colgroup>
 <col style="width: 6%" />
 </colgroup>
 <thead>
 <tr class="header">
-<th>CQL 0389 : unused, this was added to prevent merge conflicts at the end on literally every checkin</th>
+<th>CQL 0391 : unused, this was added to prevent merge conflicts at the end on literally every checkin</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>CQL 0390 : unused, this was added to prevent merge conflicts at the end on literally every checkin</td>
+<td>CQL 0392 : unused, this was added to prevent merge conflicts at the end on literally every checkin</td>
 </tr>
 </tbody>
 </table>
-<h2 id="cql-0391-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0391 : unused, this was added to prevent merge conflicts at the end on literally every checkin</h2>
-<h2 id="cql-0392-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0392 : unused, this was added to prevent merge conflicts at the end on literally every checkin</h2>
 <h2 id="cql-0393-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0393 : unused, this was added to prevent merge conflicts at the end on literally every checkin</h2>
 <h2 id="cql-0394-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0394 : unused, this was added to prevent merge conflicts at the end on literally every checkin</h2>
 <h2 id="cql-0395-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0395 : unused, this was added to prevent merge conflicts at the end on literally every checkin</h2>
@@ -9252,7 +9269,7 @@ insert into x
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Sat Mar 20 19:05:17 PDT 2021</p>
+<p>Snapshot as of Mon Mar 22 18:26:17 PDT 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

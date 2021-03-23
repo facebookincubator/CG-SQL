@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Sat Mar 20 19:05:17 2021
+// Snapshot as of Mon Mar 22 18:26:17 2021
 
 
 const PREC = {
@@ -27,7 +27,7 @@ module.exports = grammar({
     opt_stmt_list: $ => $.stmt_list,
     stmt_list: $ => repeat1(choice(seq($.stmt, ';'), $.comment, $.line_directive, $.macro)),
     stmt: $ => seq(optional($.misc_attrs), $.any_stmt),
-    any_stmt: $ => choice($.select_stmt, $.alter_table_add_column_stmt, $.begin_schema_region_stmt, $.begin_trans_stmt, $.call_stmt, $.close_stmt, $.commit_return_stmt, $.commit_trans_stmt, $.continue_stmt, $.create_index_stmt, $.create_proc_stmt, $.create_table_stmt, $.create_trigger_stmt, $.create_view_stmt, $.create_virtual_table_stmt, $.declare_deployable_region_stmt, $.declare_enum_stmt, $.declare_func_stmt, $.declare_proc_stmt, $.declare_schema_region_stmt, $.declare_stmt, $.delete_stmt, $.drop_index_stmt, $.drop_table_stmt, $.drop_trigger_stmt, $.drop_view_stmt, $.echo_stmt, $.emit_enums_stmt, $.end_schema_region_stmt, $.enforce_normal_stmt, $.enforce_pop_stmt, $.enforce_push_stmt, $.enforce_reset_stmt, $.enforce_strict_stmt, $.explain_stmt, $.fetch_call_stmt, $.fetch_stmt, $.fetch_values_stmt, $.if_stmt, $.insert_stmt, $.leave_stmt, $.let_stmt, $.loop_stmt, $.open_stmt, $.out_stmt, $.out_union_stmt, $.previous_schema_stmt, $.proc_savepoint_stmt, $.release_savepoint_stmt, $.return_stmt, $.rollback_return_stmt, $.rollback_trans_stmt, $.savepoint_stmt, $.schema_ad_hoc_migration_stmt, $.schema_upgrade_script_stmt, $.schema_upgrade_version_stmt, $.set_stmt, $.switch_stmt, $.throw_stmt, $.trycatch_stmt, $.update_cursor_stmt, $.update_stmt, $.upsert_stmt, $.while_stmt, $.with_delete_stmt, $.with_insert_stmt, $.with_update_stmt, $.with_upsert_stmt),
+    any_stmt: $ => choice($.alter_table_add_column_stmt, $.begin_schema_region_stmt, $.begin_trans_stmt, $.call_stmt, $.close_stmt, $.commit_return_stmt, $.commit_trans_stmt, $.continue_stmt, $.create_index_stmt, $.create_proc_stmt, $.create_table_stmt, $.create_trigger_stmt, $.create_view_stmt, $.create_virtual_table_stmt, $.declare_deployable_region_stmt, $.declare_enum_stmt, $.declare_func_stmt, $.declare_out_call_stmt, $.declare_proc_stmt, $.declare_schema_region_stmt, $.declare_stmt, $.delete_stmt, $.drop_index_stmt, $.drop_table_stmt, $.drop_trigger_stmt, $.drop_view_stmt, $.echo_stmt, $.emit_enums_stmt, $.end_schema_region_stmt, $.enforce_normal_stmt, $.enforce_pop_stmt, $.enforce_push_stmt, $.enforce_reset_stmt, $.enforce_strict_stmt, $.explain_stmt, $.fetch_call_stmt, $.fetch_stmt, $.fetch_values_stmt, $.if_stmt, $.insert_stmt, $.leave_stmt, $.let_stmt, $.loop_stmt, $.open_stmt, $.out_stmt, $.out_union_stmt, $.previous_schema_stmt, $.proc_savepoint_stmt, $.release_savepoint_stmt, $.return_stmt, $.rollback_return_stmt, $.rollback_trans_stmt, $.savepoint_stmt, $.select_stmt, $.schema_ad_hoc_migration_stmt, $.schema_upgrade_script_stmt, $.schema_upgrade_version_stmt, $.set_stmt, $.switch_stmt, $.throw_stmt, $.trycatch_stmt, $.update_cursor_stmt, $.update_stmt, $.upsert_stmt, $.while_stmt, $.with_delete_stmt, $.with_insert_stmt, $.with_update_stmt, $.with_upsert_stmt),
     explain_stmt: $ => seq($.EXPLAIN, optional($.opt_query_plan), $.explain_target),
     QUERY_PLAN: $ => prec.left(1, seq(CI('query'), CI('plan'))),
     opt_query_plan: $ => $.QUERY_PLAN,
@@ -192,6 +192,7 @@ module.exports = grammar({
     update_cursor_stmt: $ => choice(seq($.UPDATE, $.CURSOR, $.name, optional($.opt_column_spec), $.FROM, $.VALUES, '(', optional($.insert_list), ')'), seq($.UPDATE, $.CURSOR, $.name, optional($.opt_column_spec), $.from_shape), seq($.UPDATE, $.CURSOR, $.name, $.USING, $.expr_names)),
     conflict_target: $ => seq('(', $.indexed_columns, ')', optional($.opt_where)),
     function: $ => choice($.FUNC, $.FUNCTION),
+    declare_out_call_stmt: $ => seq($.DECLARE, $.OUT, $.call_stmt),
     declare_enum_stmt: $ => seq($.DECLARE, $.ENUM, $.name, $.data_type_numeric, '(', $.enum_values, ')'),
     enum_values: $ => choice($.enum_value, seq($.enum_value, ',', $.enum_values)),
     enum_value: $ => choice($.name, seq($.name, '=', $.expr)),
@@ -426,11 +427,11 @@ module.exports = grammar({
     FUNC: $ => CI('func'),
     FUNCTION: $ => CI('function'),
     DECLARE: $ => CI('declare'),
+    OUT: $ => CI('out'),
     ENUM: $ => CI('enum'),
     PROC: $ => CI('proc'),
     PROCEDURE: $ => CI('procedure'),
     TRANSACTION: $ => CI('transaction'),
-    OUT: $ => CI('out'),
     BEGIN: $ => CI('begin'),
     INOUT: $ => CI('inout'),
     FOR: $ => CI('for'),

@@ -8040,7 +8040,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Sat Mar 20 19:05:17 PDT 2021
+Snapshot as of Mon Mar 22 18:26:17 PDT 2021
 
 ### Operators and Literals
 
@@ -8119,8 +8119,8 @@ stmt:
   misc_attrs any_stmt
   ;
 
-any_stmt: select_stmt
-  | alter_table_add_column_stmt
+any_stmt:
+    alter_table_add_column_stmt
   | begin_schema_region_stmt
   | begin_trans_stmt
   | call_stmt
@@ -8137,6 +8137,7 @@ any_stmt: select_stmt
   | declare_deployable_region_stmt
   | declare_enum_stmt
   | declare_func_stmt
+  | declare_out_call_stmt
   | declare_proc_stmt
   | declare_schema_region_stmt
   | declare_stmt
@@ -8172,6 +8173,7 @@ any_stmt: select_stmt
   | rollback_return_stmt
   | rollback_trans_stmt
   | savepoint_stmt
+  | select_stmt
   | schema_ad_hoc_migration_stmt
   | schema_upgrade_script_stmt
   | schema_upgrade_version_stmt
@@ -9082,6 +9084,10 @@ conflict_target:
   ;
 
 function: "FUNC" | "FUNCTION"
+  ;
+
+declare_out_call_stmt:
+  "DECLARE" "OUT" call_stmt
   ;
 
 declare_enum_stmt:
@@ -12676,10 +12682,23 @@ Do this instead:
 ```sql
 select foo from bar where baz if nothing null
 ```
+
 ----
-CQL 0373 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+
+### CQL0373: Comparing against NULL always yields NULL; use IS and IS NOT instead.
+
+Attepting to check if some value `x` is NULL via `x = NULL` or `x == NULL`, or isn't NULL via `x <> NULL` or `x != NULL`, will always produce NULL regardless of the value of `x`. Instead, use `x IS NULL` or `x IS NOT NULL` to get the expected boolean result.
+
 ----
-CQL 0374 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+
+### CQL0374: SELECT expression is equivalent to NULL.
+
+CQL found a redundant select operation (e.g., `set x := (select NULL);`).
+
+There is no need to write a select expression that always evaluates to NULL. Simply use NULL instead (e.g., `set x := NULL;`).
+
+----
+
 ----
 CQL 0375 : unused, this was added to prevent merge conflicts at the end on literally every checkin
 ----
@@ -12775,9 +12794,21 @@ domain of the switch is actually bigger than the domain of the enumeration.  One
 changes must happen.
 
 ----
-CQL 0389 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+
+### CQL0389: DECLARE OUT requires that the procedure be already declared
+
+The purpose of the `DECLARE OUT` form is to automatically declare the out parameters for that procedure.
+
+This cannot be done if the type of the procedure is not yet known.
+
 ----
-CQL 0390 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+
+### CQL0390: DECLARE OUT CALL used on a procedure with no missing OUT arguments
+
+The `DECLARE OUT CALL` form was used, but the procedure has no `OUT` arguments that need
+any implicit declaration.  Either they have already all been declared or else there are no
+`OUT` arguments at all, or even no arguments of any kind.
+
 ----
 CQL 0391 : unused, this was added to prevent merge conflicts at the end on literally every checkin
 ----
@@ -12811,7 +12842,7 @@ CQL 0400 : unused, this was added to prevent merge conflicts at the end on liter
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Sat Mar 20 19:05:17 PDT 2021
+Snapshot as of Mon Mar 22 18:26:17 PDT 2021
 
 ### Rules
 
