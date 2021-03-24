@@ -11044,6 +11044,26 @@ static void sem_insert_stmt(ast_node *ast) {
     Contract(is_ast_columns_values(columns_values));
   }
 
+  // here we look for the sugar form INSERT foo USING select ... and rewrite it
+  // we just need to make sure the select is semantically ok and has names we can use
+  // the rewrite itself will just create a name list, easy sugar.
+  if (is_select_stmt(columns_values)) {
+    sem_select_stmt(columns_values);
+    if (is_error(columns_values)) {
+      record_error(ast);
+      return;
+    }
+
+    sem_verify_no_anon_columns(columns_values);
+    if (is_error(columns_values)) {
+      record_error(ast);
+      return;
+    }
+
+    rewrite_select_stmt_to_columns_values(columns_values);
+    Contract(is_ast_columns_values(columns_values));
+  }
+
   // This means we're in upsert tree. We want to record table_ast to be used
   // later for semantic analysis in other part of the upsert tree. But also do
   // semantic analysis on this insert_stmt node.
@@ -15114,6 +15134,8 @@ static int case_val_comparator(const void *v1, const void *v2) {
 // After that clean up the memory and we're done...
 static void sem_check_all_values_condition(ast_node *expr, bytebuf *case_buffer) {
   bytebuf *enum_buffer = _ast_pool_new(bytebuf);
+  bytebuf_open(enum_buffer);
+
   int32_t case_count = case_buffer->used / sizeof(case_val);
   case_val *case_vals = (case_val *)case_buffer->ptr;
 
@@ -15226,6 +15248,7 @@ static void sem_switch_cases(ast_node *ast, ast_node *expr, bool_t all_values) {
 
   sem_t core_type = core_type_of(expr->sem->sem_type);
   bytebuf *case_buffer = _ast_pool_new(bytebuf);
+  bytebuf_open(case_buffer);
 
   ast_node *head = ast;
   int32_t stmt_lists = 0;
@@ -16339,9 +16362,9 @@ static void sem_declare_out_call_stmt(ast_node *ast) {
 
     Invariant(is_out_parameter(sem_type_param));  // that's all that's left
     out_args++;
- 
+
     EXTRACT_ANY_NOTNULL(arg, expr_list->left);
- 
+
     if (!is_ast_str(arg)) {
       report_error(arg, "CQL0207: expected a variable name for out argument", param->sem->name);
       record_error(ast);
@@ -16354,7 +16377,7 @@ static void sem_declare_out_call_stmt(ast_node *ast) {
       sem_t sem_type_var = param->sem->sem_type;
       sem_type_var &= (SEM_TYPE_NOTNULL | SEM_TYPE_SENSITIVE | SEM_TYPE_CORE);
       sem_type_var |= SEM_TYPE_VARIABLE | SEM_TYPE_IMPLICIT;
-  
+
       AST_REWRITE_INFO_SET(name_ast->lineno, name_ast->filename);
       ast_node *variable = new_ast_str(var_name);
       variable->sem = ast->sem = new_sem(sem_type_var);

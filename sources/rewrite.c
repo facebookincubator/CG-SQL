@@ -641,6 +641,48 @@ cql_noexport void rewrite_expr_names_to_columns_values(ast_node* columns_values)
   AST_REWRITE_INFO_RESET();
 }
 
+// This helper function rewrites the select statement ast to the columns_values ast.
+// e.g: insert into X using select 1 a, 2 b, 3 c; ==> insert into X (a,b,c) values (1, 2, 3);
+cql_noexport void rewrite_select_stmt_to_columns_values(ast_node* columns_values) {
+  EXTRACT_ANY_NOTNULL(select_stmt, columns_values);
+  Contract(is_select_stmt(select_stmt));
+
+  AST_REWRITE_INFO_SET(columns_values->lineno, columns_values->filename);
+
+  ast_node *name_list = NULL;
+
+  Invariant(select_stmt->sem);
+  Invariant(select_stmt->sem->sptr);
+
+  sem_struct *sptr = select_stmt->sem->sptr;
+
+  // doing the names in reverse order is easier to build up the list
+  int32_t i = (int32_t)sptr->count;
+
+  while (--i >= 0) {
+    CSTR name = sptr->names[i];
+    ast_node *name_ast = new_ast_str(name);
+
+    name_list = new_ast_name_list(name_ast, name_list);
+  }
+
+  // we need a new select statement to push down the tree because we're mutating the current one
+  ast_node *new_select_stmt = new_ast_select_stmt(select_stmt->left, select_stmt->right);
+  new_select_stmt->type = select_stmt->type;
+
+  // now make the columns values we need that holds the names we computed plus the new select node
+  ast_node *opt_column_spec = new_ast_column_spec(name_list);
+  ast_node *new_columns_values = new_ast_columns_values(opt_column_spec, new_select_stmt);
+
+  // The current columns_values becomes a true columns values node taking over the content
+  // of the fresh one we just made.  This used to be the select node, hence we copied it.
+  columns_values->type = new_columns_values->type;
+  ast_set_left(columns_values, new_columns_values->left);
+  ast_set_right(columns_values, new_columns_values->right);
+
+  AST_REWRITE_INFO_RESET();
+}
+
 // There are two reasons the columns might be missing. A form like this:
 //    INSERT C FROM VALUES(...);
 // or
@@ -1269,10 +1311,10 @@ cql_noexport void rewrite_data_type_if_needed(ast_node *ast) {
     //   are not expected/required in the rewrite.
     //
     // * Columns are a little different; nullability and sensitivity are
-    //   encoded differently in columns than in variables.  
+    //   encoded differently in columns than in variables.
     //   So in that case we again only produce the base type here.
-    //   The caller will do the rest. This work is done in 
-    //   rewrite_right_col_def_type_attrs_if_needed(ast_node 
+    //   The caller will do the rest. This work is done in
+    //   rewrite_right_col_def_type_attrs_if_needed(ast_node
     bool_t only_core_type = ast->parent &&
         (is_ast_col_def_name_type(ast->parent) || is_ast_cast_expr(ast->parent));
 

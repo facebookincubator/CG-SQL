@@ -14799,3 +14799,37 @@ begin
   declare out call out2_proc(x, u, u);
   declare out call out2_proc(x, u, v);
 end;
+
+-- TEST: try the select using form
+-- we only need to verify the rewrite, all else is normal processing
+-- {insert_stmt}: ok
+-- + INSERT INTO with_kind(id, cost, value) SELECT 1 AS id, 3.5 AS cost, 4.8 AS value;
+-- - Error
+insert into with_kind using
+  select 1 id, 3.5 cost, 4.8 value;
+
+-- TEST: try the select using form -- anonymous columns not allowed in this form
+-- {insert_stmt}: err
+-- + Error % all columns in the select must have a name
+-- +1 Error
+insert into with_kind using
+  select 1, 3.5 cost, 4.8 value;
+
+-- TEST: try the select using form -- errors in the select must prop up
+-- {insert_stmt}: err
+-- + Error % string operand not allowed in 'NOT'
+-- +1 Error
+insert into with_kind using
+  select not 'x', 3.5 cost, 4.8 value;
+
+-- TEST: try the select using form (and with clause)
+-- we only need to verify the rewrite, all else is normal processing
+-- {insert_stmt}: ok
+-- + INSERT INTO with_kind(id, cost, value) WITH
+-- + goo (x) AS (SELECT 1)
+-- + SELECT goo.x AS id, 3.5 AS cost, 4.8 AS value
+-- + FROM goo;
+-- - Error
+insert into with_kind using
+   with goo(x) as (select 1)
+   select goo.x id, 3.5 cost, 4.8 value from goo;

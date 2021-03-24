@@ -2329,6 +2329,10 @@ static void gen_insert_stmt(ast_node *ast) {
     gen_printf(" USING ");
     gen_expr_names(columns_values);
   }
+  else if (is_select_stmt(columns_values)) {
+    gen_printf(" USING ");
+    gen_select_stmt(columns_values);
+  }
   else if (is_ast_columns_values(columns_values)) {
     EXTRACT(column_spec, columns_values->left);
     EXTRACT_ANY(insert_list, columns_values->right);

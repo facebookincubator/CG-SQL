@@ -58548,3 +58548,190 @@ END;
               | {expr_list}
                 | {name v}: v: integer notnull variable implicit
 
+The statement ending at line XXXX
+
+INSERT INTO with_kind(id, cost, value) SELECT 1 AS id, 3.5 AS cost, 4.8 AS value;
+
+  {insert_stmt}: ok
+  | {insert_normal}
+  | {name_columns_values}
+    | {name with_kind}: with_kind: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> }
+    | {columns_values}: ok
+      | {column_spec}
+      | | {name_list}
+      |   | {name id}: id: integer<some_key>
+      |   | {name_list}
+      |     | {name cost}: cost: real<dollars>
+      |     | {name_list}
+      |       | {name value}: value: real<dollars>
+      | {select_stmt}: select: { id: integer notnull, cost: real notnull, value: real notnull }
+        | {select_core_list}: select: { id: integer notnull, cost: real notnull, value: real notnull }
+        | | {select_core}: select: { id: integer notnull, cost: real notnull, value: real notnull }
+        |   | {select_expr_list_con}: select: { id: integer notnull, cost: real notnull, value: real notnull }
+        |     | {select_expr_list}: select: { id: integer notnull, cost: real notnull, value: real notnull }
+        |     | | {select_expr}: id: integer notnull
+        |     | | | {int 1}: integer notnull
+        |     | | | {opt_as_alias}
+        |     | |   | {name id}
+        |     | | {select_expr_list}
+        |     |   | {select_expr}: cost: real notnull
+        |     |   | | {dbl 3.5}: real notnull
+        |     |   | | {opt_as_alias}
+        |     |   |   | {name cost}
+        |     |   | {select_expr_list}
+        |     |     | {select_expr}: value: real notnull
+        |     |       | {dbl 4.8}: real notnull
+        |     |       | {opt_as_alias}
+        |     |         | {name value}
+        |     | {select_from_etc}: ok
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+INSERT INTO with_kind USING SELECT 1, 3.5 AS cost, 4.8 AS value;
+
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0055: all columns in the select must have a name
+
+  {insert_stmt}: err
+  | {insert_normal}
+  | {name_columns_values}
+    | {name with_kind}: with_kind: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> }
+    | {select_stmt}: err
+      | {select_core_list}: select: { _anon: integer notnull, cost: real notnull, value: real notnull }
+      | | {select_core}: select: { _anon: integer notnull, cost: real notnull, value: real notnull }
+      |   | {select_expr_list_con}: select: { _anon: integer notnull, cost: real notnull, value: real notnull }
+      |     | {select_expr_list}: select: { _anon: integer notnull, cost: real notnull, value: real notnull }
+      |     | | {select_expr}: integer notnull
+      |     | | | {int 1}: integer notnull
+      |     | | {select_expr_list}
+      |     |   | {select_expr}: cost: real notnull
+      |     |   | | {dbl 3.5}: real notnull
+      |     |   | | {opt_as_alias}
+      |     |   |   | {name cost}
+      |     |   | {select_expr_list}
+      |     |     | {select_expr}: value: real notnull
+      |     |       | {dbl 4.8}: real notnull
+      |     |       | {opt_as_alias}
+      |     |         | {name value}
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+INSERT INTO with_kind USING SELECT NOT 'x', 3.5 AS cost, 4.8 AS value;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+
+  {insert_stmt}: err
+  | {insert_normal}
+  | {name_columns_values}
+    | {name with_kind}: with_kind: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> }
+    | {select_stmt}: err
+      | {select_core_list}: err
+      | | {select_core}: err
+      |   | {select_expr_list_con}: err
+      |     | {select_expr_list}: err
+      |     | | {select_expr}: err
+      |     | | | {not}: err
+      |     | |   | {strlit 'x'}: text notnull
+      |     | | {select_expr_list}
+      |     |   | {select_expr}
+      |     |   | | {dbl 3.5}
+      |     |   | | {opt_as_alias}
+      |     |   |   | {name cost}
+      |     |   | {select_expr_list}
+      |     |     | {select_expr}
+      |     |       | {dbl 4.8}
+      |     |       | {opt_as_alias}
+      |     |         | {name value}
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+INSERT INTO with_kind(id, cost, value) WITH
+goo (x) AS (SELECT 1)
+SELECT goo.x AS id, 3.5 AS cost, 4.8 AS value
+  FROM goo;
+
+  {insert_stmt}: ok
+  | {insert_normal}
+  | {name_columns_values}
+    | {name with_kind}: with_kind: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> }
+    | {columns_values}: ok
+      | {column_spec}
+      | | {name_list}
+      |   | {name id}: id: integer<some_key>
+      |   | {name_list}
+      |     | {name cost}: cost: real<dollars>
+      |     | {name_list}
+      |       | {name value}: value: real<dollars>
+      | {with_select_stmt}: select: { id: integer notnull, cost: real notnull, value: real notnull }
+        | {with}
+        | | {cte_tables}: ok
+        |   | {cte_table}: goo: { x: integer notnull }
+        |     | {cte_decl}: goo: { x: integer notnull }
+        |     | | {name goo}
+        |     | | {name_list}
+        |     |   | {name x}
+        |     | {select_stmt}: select: { _anon: integer notnull }
+        |       | {select_core_list}: select: { _anon: integer notnull }
+        |       | | {select_core}: select: { _anon: integer notnull }
+        |       |   | {select_expr_list_con}: select: { _anon: integer notnull }
+        |       |     | {select_expr_list}: select: { _anon: integer notnull }
+        |       |     | | {select_expr}: integer notnull
+        |       |     |   | {int 1}: integer notnull
+        |       |     | {select_from_etc}: ok
+        |       |       | {select_where}
+        |       |         | {select_groupby}
+        |       |           | {select_having}
+        |       | {select_orderby}
+        |         | {select_limit}
+        |           | {select_offset}
+        | {select_stmt}: select: { id: integer notnull, cost: real notnull, value: real notnull }
+          | {select_core_list}: select: { id: integer notnull, cost: real notnull, value: real notnull }
+          | | {select_core}: select: { id: integer notnull, cost: real notnull, value: real notnull }
+          |   | {select_expr_list_con}: select: { id: integer notnull, cost: real notnull, value: real notnull }
+          |     | {select_expr_list}: select: { id: integer notnull, cost: real notnull, value: real notnull }
+          |     | | {select_expr}: id: integer notnull
+          |     | | | {dot}: x: integer notnull
+          |     | | | | {name goo}
+          |     | | | | {name x}
+          |     | | | {opt_as_alias}
+          |     | |   | {name id}
+          |     | | {select_expr_list}
+          |     |   | {select_expr}: cost: real notnull
+          |     |   | | {dbl 3.5}: real notnull
+          |     |   | | {opt_as_alias}
+          |     |   |   | {name cost}
+          |     |   | {select_expr_list}
+          |     |     | {select_expr}: value: real notnull
+          |     |       | {dbl 4.8}: real notnull
+          |     |       | {opt_as_alias}
+          |     |         | {name value}
+          |     | {select_from_etc}: TABLE { goo: goo }
+          |       | {table_or_subquery_list}: TABLE { goo: goo }
+          |       | | {table_or_subquery}: TABLE { goo: goo }
+          |       |   | {name goo}: TABLE { goo: goo }
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+

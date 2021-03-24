@@ -1047,4 +1047,6 @@ Error at test/sem_test.sql:XXXX : in str : CQL0390: DECLARE OUT CALL used on a p
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
 Error at test/sem_test.sql:XXXX : in declare_out_call_stmt : CQL0213: procedure had errors, can't call 'decl_test_err'
 Error at test/sem_test.sql:XXXX : in add : CQL0207: expected a variable name for out argument 'y'
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0055: all columns in the select must have a name
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
 semantic errors present; no code gen.

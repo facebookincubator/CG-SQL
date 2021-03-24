@@ -1316,6 +1316,11 @@ insert_stmt:
     struct ast_node *default_columns_values = new_ast_default_columns_values();
     struct ast_node *name_columns_values = new_ast_name_columns_values($name, default_columns_values);
     $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values); }
+  | insert_stmt_type name USING select_stmt {
+    struct ast_node *name_columns_values = new_ast_name_columns_values($name, $select_stmt);
+    $insert_stmt_type->left = NULL; // dummy spec not allowed in this form
+    $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values);
+  }
   | insert_stmt_type name USING expr_names opt_insert_dummy_spec {
     struct ast_node *name_columns_values = new_ast_name_columns_values($name, $expr_names);
     $insert_stmt_type->left = $opt_insert_dummy_spec;
