@@ -97,6 +97,7 @@ typedef struct cql_fetch_info {
   const char *_Nullable autodrop_tables;
   int64_t crc;
   int32_t *_Nullable perf_index;
+  cql_object_ref _Nullable encoder;
 } cql_fetch_info;
 
 CQL_EXPORT void cql_multifetch_meta(char *_Nonnull data, cql_fetch_info *_Nonnull info);
@@ -229,4 +230,5 @@ void cql_results_from_data(cql_code rc,
                            cql_bytebuf *_Nonnull buffer,
                            cql_fetch_info *_Nonnull info,
                            cql_result_set_ref _Nullable *_Nonnull result_set);
+
 CQL_EXTERN_C_END
