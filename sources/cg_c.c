@@ -3028,6 +3028,7 @@ static void cg_create_proc_stmt(ast_node *ast) {
   bool_t result_set_proc = has_result_set(ast);
   bool_t out_stmt_proc = has_out_stmt_result(ast);
   bool_t out_union_proc = has_out_union_stmt_result(ast);
+  bool_t calls_out_union = has_out_union_call(ast);
 
   init_vault_info(misc_attrs, &use_vault, vault_columns);
 
@@ -3076,25 +3077,28 @@ static void cg_create_proc_stmt(ast_node *ast) {
 
     // result set type
     bprintf(&proc_decl, "%s _Nullable *_Nonnull _result_set_", result_set_ref.ptr);
-
     CHARBUF_CLOSE(result_set_ref);
+
     need_comma = 1;
+  
+    if (!calls_out_union) {
 
-    CSTR rc = dml_proc ? "_rc_" : "SQLITE_OK";
-    if (dml_proc) {
-      bprintf(&proc_cleanup, "  %s_info.db = _db_;\n", proc_name_base.ptr);
-    }
-    bprintf(&proc_cleanup, "  cql_results_from_data(%s, &_rows_, &%s_info, (cql_result_set_ref *)_result_set_);\n",
-      rc,
-      proc_name_base.ptr);
-    if (dml_proc) {
-      bprintf(&proc_cleanup, "  %s_info.db = NULL;\n", proc_name_base.ptr);
-    }
+      CSTR rc = dml_proc ? "_rc_" : "SQLITE_OK";
+      if (dml_proc) {
+        bprintf(&proc_cleanup, "  %s_info.db = _db_;\n", proc_name_base.ptr);
+      }
+      bprintf(&proc_cleanup, "  cql_results_from_data(%s, &_rows_, &%s_info, (cql_result_set_ref *)_result_set_);\n",
+        rc,
+        proc_name_base.ptr);
+      if (dml_proc) {
+        bprintf(&proc_cleanup, "  %s_info.db = NULL;\n", proc_name_base.ptr);
+      }
 
-    CG_CHARBUF_OPEN_SYM(perf_index, name, "_perf_index");
-      // emit profiling start signal
-      bprintf(&proc_body, "  cql_profile_start(CRC_%s, &%s);\n", proc_name_base.ptr, perf_index.ptr);
-    CHARBUF_CLOSE(perf_index);
+      CG_CHARBUF_OPEN_SYM(perf_index, name, "_perf_index");
+        // emit profiling start signal
+        bprintf(&proc_body, "  cql_profile_start(CRC_%s, &%s);\n", proc_name_base.ptr, perf_index.ptr);
+      CHARBUF_CLOSE(perf_index);
+    }
   }
 
   // CREATE PROC [name] ( [params] )
@@ -3182,7 +3186,7 @@ static void cg_create_proc_stmt(ast_node *ast) {
     }
   }
 
-  if (out_union_proc) {
+  if (out_union_proc && !calls_out_union) {
     bprintf(cg_declarations_output, "  cql_bytebuf _rows_;\n");
     bprintf(cg_declarations_output, "  cql_bytebuf_open(&_rows_);\n");
   }
@@ -4975,7 +4979,7 @@ static void cg_call_stmt(ast_node *ast) {
   // just like a loose select statement would be.  Note this can be
   // overrided by a later result which is totally ok.  Same as for select
   // statements.
-  return cg_call_stmt_with_cursor(ast, "*_result");
+  return cg_call_stmt_with_cursor(ast, NULL);
 }
 
 
@@ -5051,16 +5055,25 @@ static void cg_call_stmt_with_cursor(ast_node *ast, CSTR cursor_name) {
   bool_t out_stmt_proc = has_out_stmt_result(ast);
   bool_t out_union_proc = has_out_union_stmt_result(ast);
 
+  bool_t non_cursor_call = (cursor_name == NULL);
+  if (non_cursor_call) {
+    cursor_name = "*_result"; // this is the location of the out arg
+  }
+
   CSTR fetch_results = out_union_proc ? "_fetch_results" : "";
 
   CHARBUF_OPEN(invocation);
   CG_CHARBUF_OPEN_SYM(proc_sym, proc_name, fetch_results);
   CG_CHARBUF_OPEN_SYM(result_type, proc_name, "_row");
   CG_CHARBUF_OPEN_SYM(result_sym, proc_name, "_row", "_data");
+  CG_CHARBUF_OPEN_SYM(result_set_ref, name, "_result_set_ref");
 
   if (dml_proc) {
     bprintf(&invocation, "_rc_ = %s(_db_", proc_sym.ptr);
-    if (out_union_proc) {
+    if (out_union_proc && non_cursor_call) {
+      bprintf(&invocation, ", (%s*)_result_set_", result_set_ref.ptr);
+    }
+    else if (out_union_proc) {
       Invariant(cursor_name); // either specified or the default _result_ variable
       bprintf(&invocation, ", &%s_result_set_", cursor_name);
     }
@@ -5074,7 +5087,13 @@ static void cg_call_stmt_with_cursor(ast_node *ast, CSTR cursor_name) {
   }
   else {
     bprintf(&invocation, "%s(", proc_sym.ptr);
-    if (out_union_proc) {
+    if (out_union_proc && non_cursor_call) {
+      bprintf(&invocation, "(%s*)_result_set_", result_set_ref.ptr);
+      if (expr_list) {
+        bprintf(&invocation, ", ");
+      }
+    }
+    else if (out_union_proc) {
       Invariant(cursor_name); // either specified or the default _result_ variable
       bprintf(&invocation, "&%s_result_set_", cursor_name);
       if (expr_list) {
@@ -5105,7 +5124,7 @@ static void cg_call_stmt_with_cursor(ast_node *ast, CSTR cursor_name) {
 
   bprintf(cg_main_output, "%s", invocation.ptr);
 
-  if (out_union_proc) {
+  if (out_union_proc && !non_cursor_call) {
     bprintf(cg_main_output, "%s_row_num_ = %s_row_count_ = -1;\n", cursor_name, cursor_name);
   }
 
@@ -5114,11 +5133,12 @@ static void cg_call_stmt_with_cursor(ast_node *ast, CSTR cursor_name) {
     cg_error_on_not_sqlite_ok();
   }
 
-  if (out_union_proc) {
+  if (out_union_proc && !non_cursor_call) {
     bprintf(cg_main_output, "%s_row_count_ = cql_result_set_get_count((cql_result_set_ref)%s_result_set_);\n",
       cursor_name, cursor_name);
   }
 
+  CHARBUF_CLOSE(result_set_ref);
   CHARBUF_CLOSE(result_sym);
   CHARBUF_CLOSE(result_type);
   CHARBUF_CLOSE(proc_sym);

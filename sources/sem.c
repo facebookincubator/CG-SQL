@@ -923,6 +923,11 @@ cql_noexport bool_t has_out_union_stmt_result(ast_node *ast) {
   return !!(sem_type & SEM_TYPE_USES_OUT_UNION);
 }
 
+cql_noexport bool_t has_out_union_call(ast_node *ast) {
+  sem_t sem_type = ast->sem->sem_type;
+  return !!(sem_type & SEM_TYPE_CALLS_OUT_UNION);
+}
+
 // The proc has a normal result set if it has a struct type and it isn't using either out or out union
 cql_noexport bool_t has_result_set(ast_node *ast) {
   sem_t sem_type = ast->sem->sem_type;
@@ -1521,6 +1526,9 @@ static void get_sem_flags(sem_t sem_type, charbuf *out) {
   }
   if (sem_type & SEM_TYPE_USES_OUT_UNION) {
     bprintf(out, " uses_out_union");
+  }
+  if (sem_type & SEM_TYPE_CALLS_OUT_UNION) {
+    bprintf(out, " calls_out_union");
   }
   if (sem_type & SEM_TYPE_VALUE_CURSOR) {
     bprintf(out, " value_cursor");
@@ -4419,6 +4427,8 @@ static void sem_verify_identical_columns(ast_node *left, ast_node *right, CSTR t
   }
 }
 
+// rico
+
 // If a procedure is returning a select statement then we need to attach that
 // type to the procedures semantic info.  We have to do some extra validation
 // at this point, especially if the proc already has some other select return.
@@ -4427,9 +4437,21 @@ static void sem_verify_identical_columns(ast_node *left, ast_node *right, CSTR t
 static void sem_update_proc_type_for_select(ast_node *ast) {
   bool_t is_out = is_ast_out_stmt(ast);
   bool_t is_out_union = is_ast_out_union_stmt(ast);
-  bool_t is_select = is_select_stmt(ast) || is_ast_call_stmt(ast);
+  bool_t is_select = is_select_stmt(ast);
+  bool_t is_calling_out_union = false;
 
-  Contract(is_out || is_out_union || is_select);
+  if (is_ast_call_stmt(ast)) {
+     // still nothing
+     Invariant(0 == (is_out || is_out_union || is_select));
+
+     // the type of result is based on the call type
+     sem_t sem_call = ast->sem->sem_type;
+     is_out = !!(sem_call & SEM_TYPE_USES_OUT);
+     is_calling_out_union = !!(sem_call & SEM_TYPE_USES_OUT_UNION);
+     is_select = !(is_calling_out_union || is_out);
+  }
+
+  Contract(is_out || is_out_union || is_select || is_calling_out_union);
 
   // Ignore 'select'/'call'/'out'/'out union' statement nodes inside explain
   // statement subtree. This method should be called once for explain statement
@@ -4481,7 +4503,12 @@ static void sem_update_proc_type_for_select(ast_node *ast) {
       sem_type |= SEM_TYPE_USES_OUT_UNION;
     }
 
-    if (is_out){
+    if (is_calling_out_union) {
+      sem_type |= SEM_TYPE_CALLS_OUT_UNION;
+      sem_type |= SEM_TYPE_USES_OUT_UNION;
+    }
+
+    if (is_out) {
       sem_type |= SEM_TYPE_USES_OUT;
     }
 
@@ -4505,13 +4532,14 @@ static void sem_update_proc_type_for_select(ast_node *ast) {
   // the only time we change the type to one of these is in the above case where
   // the type was not yet set.
 
-  bool_t has_out = has_out_stmt_result(current_proc);
-  bool_t has_out_union = has_out_union_stmt_result(current_proc);
-  bool_t has_select = has_result_set(current_proc);
+  bool_t did_out = has_out_stmt_result(current_proc);
+  bool_t did_call_out_union = has_out_union_call(current_proc);
+  bool_t did_out_union = has_out_union_stmt_result(current_proc) && !did_call_out_union;
+  bool_t did_select = has_result_set(current_proc) && !did_call_out_union;
 
-  Invariant(has_out + has_out_union + has_select == 1);
+  Invariant(did_out + did_out_union + did_select + did_call_out_union == 1);
 
-  if (is_out != has_out || is_out_union != has_out_union || is_select != has_select) {
+  if (is_out != did_out || is_out_union != did_out_union || is_select != did_select || is_calling_out_union != did_call_out_union) {
     report_error(ast, "CQL0063: can't mix and match out, out union, or select/call for return values", name);
     record_error(ast);
     return;
