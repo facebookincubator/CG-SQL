@@ -5980,6 +5980,11 @@ static void sem_func_attest_notnull(ast_node *ast, uint32_t arg_count) {
 // just like attest_notnull semantically
 static void sem_func_ifnull_throw(ast_node *ast, uint32_t arg_count) {
   sem_func_attest_notnull(ast, arg_count);
+
+  // "throw" implies that we have a return code which implies all of the proc
+  // things as surely as if we had used the database.  We need to be a proc
+  // with a result code.
+  has_dml = 1;
 }
 
 // just like attest_notnull semantically
@@ -16025,6 +16030,11 @@ static void sem_throw_stmt(ast_node *ast) {
   else {
     global_proc_flags |= SEM_TYPE_USES_THROW;
   }
+
+  // "throw" implies that we have a return code which implies all of the proc
+  // things as surely as if we had used the database.  We need to be a proc
+  // with a result code.
+  has_dml = 1;
 
   // ok to throw at the end of any block
   sem_last_statement_in_block(ast);

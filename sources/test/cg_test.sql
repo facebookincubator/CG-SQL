@@ -3685,6 +3685,24 @@ begin
   let sub1 := 42 - NULL;
 end;
 
+-- Verify that this is a DML proc even though it does nothing but use throw
+-- + export: DECLARE PROC uses_throw () USING TRANSACTION;
+-- + CQL_WARN_UNUSED cql_code uses_throw(sqlite3 *_Nonnull _db_) {
+-- + _rc_ = cql_best_error(_rc_thrown_);
+create proc uses_throw()
+begin
+  throw;
+end;
+
+-- TEST: verify that this is a DML proc even though it does nothing but ifnull_throw
+-- + export: DECLARE PROC uses_ifnull_throw (x INTEGER) USING TRANSACTION;
+-- + CQL_WARN_UNUSED cql_code uses_ifnull_throw(sqlite3 *_Nonnull _db_, cql_nullable_int32 x) {
+-- + _rc_ = SQLITE_ERROR;
+create proc uses_ifnull_throw(x int)
+begin
+   let y := ifnull_throw(x);
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

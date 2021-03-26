@@ -8418,6 +8418,56 @@ cql_cleanup:
   ; // label requires some statement
 }
 #undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC uses_throw ()
+BEGIN
+  THROW;
+END;
+*/
+
+#define _PROC_ "uses_throw"
+// export: DECLARE PROC uses_throw () USING TRANSACTION;
+CQL_WARN_UNUSED cql_code uses_throw(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_code _rc_thrown_ = SQLITE_OK;
+  _rc_ = cql_best_error(_rc_thrown_);
+  goto cql_cleanup;
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC uses_ifnull_throw (x INTEGER)
+BEGIN
+  LET y := ifnull_throw(x);
+END;
+*/
+
+#define _PROC_ "uses_ifnull_throw"
+// export: DECLARE PROC uses_ifnull_throw (x INTEGER) USING TRANSACTION;
+CQL_WARN_UNUSED cql_code uses_ifnull_throw(sqlite3 *_Nonnull _db_, cql_nullable_int32 x) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_int32 y = 0;
+
+  if (x.is_null) {
+    _rc_ = SQLITE_ERROR;
+    goto cql_cleanup;
+  }
+  y = x.value;
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  return _rc_;
+}
+#undef _PROC_
 cql_int32 this_is_the_end = 0;
 
 // The statement ending at line XXXX
