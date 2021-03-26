@@ -3028,6 +3028,7 @@ static void cg_create_proc_stmt(ast_node *ast) {
   bool_t result_set_proc = has_result_set(ast);
   bool_t out_stmt_proc = has_out_stmt_result(ast);
   bool_t out_union_proc = has_out_union_stmt_result(ast);
+  bool_t calls_out_union = has_out_union_call(ast);
 
   init_vault_info(misc_attrs, &use_vault, vault_columns);
 
@@ -3076,25 +3077,28 @@ static void cg_create_proc_stmt(ast_node *ast) {
 
     // result set type
     bprintf(&proc_decl, "%s _Nullable *_Nonnull _result_set_", result_set_ref.ptr);
-
     CHARBUF_CLOSE(result_set_ref);
+
     need_comma = 1;
 
-    CSTR rc = dml_proc ? "_rc_" : "SQLITE_OK";
-    if (dml_proc) {
-      bprintf(&proc_cleanup, "  %s_info.db = _db_;\n", proc_name_base.ptr);
-    }
-    bprintf(&proc_cleanup, "  cql_results_from_data(%s, &_rows_, &%s_info, (cql_result_set_ref *)_result_set_);\n",
-      rc,
-      proc_name_base.ptr);
-    if (dml_proc) {
-      bprintf(&proc_cleanup, "  %s_info.db = NULL;\n", proc_name_base.ptr);
-    }
+    if (!calls_out_union) {
 
-    CG_CHARBUF_OPEN_SYM(perf_index, name, "_perf_index");
-      // emit profiling start signal
-      bprintf(&proc_body, "  cql_profile_start(CRC_%s, &%s);\n", proc_name_base.ptr, perf_index.ptr);
-    CHARBUF_CLOSE(perf_index);
+      CSTR rc = dml_proc ? "_rc_" : "SQLITE_OK";
+      if (dml_proc) {
+        bprintf(&proc_cleanup, "  %s_info.db = _db_;\n", proc_name_base.ptr);
+      }
+      bprintf(&proc_cleanup, "  cql_results_from_data(%s, &_rows_, &%s_info, (cql_result_set_ref *)_result_set_);\n",
+        rc,
+        proc_name_base.ptr);
+      if (dml_proc) {
+        bprintf(&proc_cleanup, "  %s_info.db = NULL;\n", proc_name_base.ptr);
+      }
+
+      CG_CHARBUF_OPEN_SYM(perf_index, name, "_perf_index");
+        // emit profiling start signal
+        bprintf(&proc_body, "  cql_profile_start(CRC_%s, &%s);\n", proc_name_base.ptr, perf_index.ptr);
+      CHARBUF_CLOSE(perf_index);
+    }
   }
 
   // CREATE PROC [name] ( [params] )
@@ -3154,6 +3158,11 @@ static void cg_create_proc_stmt(ast_node *ast) {
     bprintf(cg_declarations_output, ";\n");
   }
 
+  if (out_union_proc) {
+    // clobber the out arg, it is assumed to be trash by convention
+    bprintf(&proc_locals, "*_result_set_ = NULL;\n");
+  }
+
   cg_fwd_ref_output = &proc_fwd_ref;
   cg_main_output = &proc_body;
   cg_declarations_output = &proc_locals;
@@ -3182,7 +3191,7 @@ static void cg_create_proc_stmt(ast_node *ast) {
     }
   }
 
-  if (out_union_proc) {
+  if (out_union_proc && !calls_out_union) {
     bprintf(cg_declarations_output, "  cql_bytebuf _rows_;\n");
     bprintf(cg_declarations_output, "  cql_bytebuf_open(&_rows_);\n");
   }
@@ -4975,7 +4984,7 @@ static void cg_call_stmt(ast_node *ast) {
   // just like a loose select statement would be.  Note this can be
   // overrided by a later result which is totally ok.  Same as for select
   // statements.
-  return cg_call_stmt_with_cursor(ast, "*_result");
+  return cg_call_stmt_with_cursor(ast, NULL);
 }
 
 
@@ -5024,11 +5033,51 @@ static void cg_emit_proc_params(charbuf *output, ast_node *params, ast_node *arg
 //    * add the _db_ argument, for sure we have it because if we call a DML proc
 //      we are a DML proc so we, too, had such an arg.  Pass it along.
 //    * capture the _rc_ return code and do the error processing.
-//  * if the proc results a result set, the this call is happening in the contexts
-//    of "declare cursor for call func()" -- we have the cursor name.  Use it
-//    to generate the output arg for the statement.
-// Once that's done we can use the arg helper method to emit each arg.  There are
-// several rules for each kind of arg, described above in cg_emit_one_arg
+//  * if the proc returns a relational result (see below) we use the given
+//    cursor to capture it, or else we use the functions result argument
+//    as indicated below
+//
+// There are a variety of call forms (we'll see the symmetric version of this
+// in cg_create_proc_stmt).  The first thing to consider is, does the procedure
+// produce some kind of relational result, there are four ways it can do this:
+//
+//   1. It returns a statement (it used a loose SELECT)
+//   2. It returns a single row (it used OUT)
+//   3. It returns a result set (it used OUT UNION)
+//   4. It returns no relational result, just out args maybe.
+//
+//  Now we have to consider this particular call, and the chief question is
+//  are we capturing the relational result in a cursor? If we are then referring
+//  to the above:
+//
+//   1a. The cursor will be a statement cursor, holding the SQLite statement
+//   2a. The cursor will hold the row, it is a value cursor (you can't step it)
+//   3a. The cursor will hold a pointer to the result set which can be indexed
+//   4a. A cursor cannot be used if there is no relational result.
+//
+//  Note that the error case above has already been detected in semantic analysis
+//  so we would not be here if it happened.  This is true of the other error cases
+//  as well.  If we're doing code-gen we know we're good.
+//
+//  If the result is not captured in a cursor then we have the following outcomes
+//
+//  1b. The current procedure returns statement as a relational result
+//      (just as though it had done the select)
+//  2b. This is not allowed, the row must be captured by a cursor (error).
+//  3b. The current procedure returns the result set (just as though it had done
+//      the OUT UNION)
+//  4b. This is a "normal" function call with just normal arguments
+//
+// Compounding the above, the procedure might use the database or not.  If it uses
+// the database (dml_proc) we have to add that argument and we expect a success code.
+// If it doesn't use the database it can still return a relational result with
+// OUT or OUT UNION.  It can't have done a SELECT (no database) or could it have
+// called a procedure that did a SELECT (again, no database).  So the statement
+// cursor case is eliminated. This creates a fairly complex matrix but most of the
+// logic is highly similar.
+//
+// In call cases we can use the arg helper method to emit each arg.  There are
+// several rules for each kind of arg, described above in cg_emit_one_arg.
 static void cg_call_stmt_with_cursor(ast_node *ast, CSTR cursor_name) {
   Contract(is_ast_call_stmt(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
@@ -5057,30 +5106,52 @@ static void cg_call_stmt_with_cursor(ast_node *ast, CSTR cursor_name) {
   CG_CHARBUF_OPEN_SYM(proc_sym, proc_name, fetch_results);
   CG_CHARBUF_OPEN_SYM(result_type, proc_name, "_row");
   CG_CHARBUF_OPEN_SYM(result_sym, proc_name, "_row", "_data");
+  CG_CHARBUF_OPEN_SYM(result_set_ref, name, "_result_set_ref");
+
+  // most cases will emit hidden arg, such as the db
+  bool_t prefix_args = true;
 
   if (dml_proc) {
     bprintf(&invocation, "_rc_ = %s(_db_", proc_sym.ptr);
-    if (out_union_proc) {
+    if (out_union_proc && !cursor_name) {
+      // this is case 3b above
+      bprintf(&invocation, ", (%s*)_result_set_", result_set_ref.ptr);
+    }
+    else if (out_union_proc) {
+      // this is case 3a above
       Invariant(cursor_name); // either specified or the default _result_ variable
       bprintf(&invocation, ", &%s_result_set_", cursor_name);
     }
+    else if (result_set_proc && cursor_name == NULL) {
+      // this is case 1b above, prop the result as our output
+      bprintf(&invocation, ", _result_stmt");
+    }
     else if (result_set_proc) {
+      // this is case 1a above
       Invariant(cursor_name); // either specified or the default _result_ variable
       bprintf(&invocation, ", &%s_stmt", cursor_name);
-    }
-    if (expr_list) {
-      bprintf(&invocation, ", ");
     }
   }
   else {
     bprintf(&invocation, "%s(", proc_sym.ptr);
-    if (out_union_proc) {
+    if (out_union_proc && !cursor_name) {
+      // this is 3b again, but with no database arg
+      bprintf(&invocation, "(%s*)_result_set_", result_set_ref.ptr);
+    }
+    else if (out_union_proc) {
+      // this is 3a again, but with no database arg
       Invariant(cursor_name); // either specified or the default _result_ variable
       bprintf(&invocation, "&%s_result_set_", cursor_name);
-      if (expr_list) {
-        bprintf(&invocation, ", ");
-      }
     }
+    else {
+      // no prefix args were emitted (case 4b, with no DML)
+      prefix_args = false;
+    }
+  }
+
+  // if we emitted something (most cases) and there are args, we need a comma now
+  if (prefix_args && expr_list) {
+    bprintf(&invocation, ", ");
   }
 
   int32_t stack_level_saved = stack_level;
@@ -5091,6 +5162,8 @@ static void cg_call_stmt_with_cursor(ast_node *ast, CSTR cursor_name) {
   // For a fetch results proc we have to add the out argument here.
   // Declare that variable if needed.
   if (out_stmt_proc) {
+    // this is case 2a above
+    Invariant(cursor_name);  // this would be 2b, not allowed(!)
     if (dml_proc || params) {
       bprintf(&invocation, ", ");
     }
@@ -5105,20 +5178,23 @@ static void cg_call_stmt_with_cursor(ast_node *ast, CSTR cursor_name) {
 
   bprintf(cg_main_output, "%s", invocation.ptr);
 
-  if (out_union_proc) {
+  if (out_union_proc && cursor_name) {
+    // case 3a, capturing the cursor, we set the row index to -1 (it will be pre-incremented)
     bprintf(cg_main_output, "%s_row_num_ = %s_row_count_ = -1;\n", cursor_name, cursor_name);
   }
 
   if (dml_proc) {
-    // cascade the failure
+    // if there is an error code, check it, and cascade the failure
     cg_error_on_not_sqlite_ok();
   }
 
-  if (out_union_proc) {
+  if (out_union_proc && cursor_name) {
+    // case 3a again
     bprintf(cg_main_output, "%s_row_count_ = cql_result_set_get_count((cql_result_set_ref)%s_result_set_);\n",
       cursor_name, cursor_name);
   }
 
+  CHARBUF_CLOSE(result_set_ref);
   CHARBUF_CLOSE(result_sym);
   CHARBUF_CLOSE(result_type);
   CHARBUF_CLOSE(proc_sym);

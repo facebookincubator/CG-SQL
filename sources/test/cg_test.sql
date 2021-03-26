@@ -1214,7 +1214,7 @@ end;
 -- TEST: use a procedure to get a result set
 -- + cql_code uses_proc_for_result(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt)
 -- + *_result_stmt = NULL;
--- + _rc_ = with_result_set(_db_, &*_result_stmt);
+-- + _rc_ = with_result_set(_db_, _result_stmt);
 create procedure uses_proc_for_result()
 begin
   call with_result_set();
@@ -1905,10 +1905,21 @@ begin
   end;
 end;
 
+-- TEST: verify the decl, this is only for later tests
+-- + export: DECLARE PROC out_union_helper () OUT UNION (x INTEGER NOT NULL);
 create proc out_union_helper()
 begin
   declare C cursor like select 1 x;
   fetch C using 1 x;
+  out union C;
+end;
+
+-- TEST: verify the decl, this is only for later tests
+-- + export: DECLARE PROC out_union_dml_helper () OUT UNION (x INTEGER NOT NULL) USING TRANSACTION;
+create proc out_union_dml_helper()
+begin
+  declare C cursor for select 1 x;
+  fetch C;
   out union C;
 end;
 
@@ -1931,6 +1942,35 @@ begin
      declare C cursor for call out_union_helper();
      fetch C;
   end;
+end;
+
+-- TEST: here we create a proc that is going to forward the result of out union as its own result
+-- + export: DECLARE PROC forward_out_union () OUT UNION (x INTEGER NOT NULL)
+-- - USING TRANSACTION
+-- + *_result_set_ = NULL;
+-- + out_union_helper_fetch_results((out_union_helper_result_set_ref*)_result_set_);
+create proc forward_out_union()
+begin
+  call out_union_helper();
+end;
+
+-- declare one, this ensures we have the necessary types after the decl (the row type esp.)
+declare proc extern_out_union_helper () OUT UNION (x INTEGER NOT NULL);
+
+-- TEST: this should still compile even though the body of the proc isn't here
+-- + extern_out_union_helper_fetch_results((extern_out_union_helper_result_set_ref*)_result_set_);
+create proc forward_out_union_extern()
+begin
+  call extern_out_union_helper();
+end;
+
+-- TEST: forward out union result, with dml proc
+-- + export: DECLARE PROC forward_out_union_dml () OUT UNION (x INTEGER NOT NULL) USING TRANSACTION;
+-- + *_result_set_ = NULL;
+-- +  _rc_ = out_union_dml_helper_fetch_results(_db_, (out_union_dml_helper_result_set_ref*)_result_set_);
+create proc forward_out_union_dml()
+begin
+  call out_union_dml_helper();
 end;
 
 -- TEST: ensure cursors work outside of a proc

@@ -5285,6 +5285,68 @@ begin
   out union C;
 end;
 
+-- TEST simple out union proc with dml
+-- + {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union
+-- - Error
+create proc out_union_dml()
+begin
+  declare C cursor for select 1 A, 2 B;
+  fetch C;
+  out union C;
+end;
+
+-- TEST simple out union proc no DML
+-- + {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage uses_out_union
+-- - Error
+create proc out_union()
+begin
+  declare C cursor like select 1 A, 2 B;
+  fetch C using 1 A, 2 B;
+  out union C;
+end;
+
+-- TEST: pass through out union is and out union proc and marked "calls" (dml version)
+-- + {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union calls_out_union
+-- - Error
+create proc call_out_union_dml()
+begin
+  call out_union_dml();
+end;
+
+-- TEST: pass through out union is and out union proc and marked "calls" (not dml version)
+-- + {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage uses_out_union calls_out_union
+-- - Error
+create proc call_out_union()
+begin
+  call out_union();
+end;
+
+-- TEST: calling out union for pass through not compatible with regular out union
+-- + {create_proc_stmt}: err
+-- + {out_union_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
+-- + Error % can't mix and match out, out union, or select/call for return values 'out_union_call_and_out_union'
+-- +1 Error
+create proc out_union_call_and_out_union()
+begin
+  declare C cursor for select 1 A, 2 B;
+  fetch C;
+  out union C;
+  call out_union_dml();
+end;
+
+-- TEST: calling out union for pass through not compatible with regular out union
+-- + {create_proc_stmt}: err
+-- + {out_union_stmt}: err
+-- + Error % can't mix and match out, out union, or select/call for return values 'out_union_call_and_out_union_other_order'
+-- +1 Error
+create proc out_union_call_and_out_union_other_order()
+begin
+  declare C cursor for select 1 A, 2 B;
+  fetch C;
+  call out_union_dml();
+  out union C;
+end;
+
 -- TEST: use out statement with non cursor
 -- + {create_proc_stmt}: err
 -- + {out_stmt}: err

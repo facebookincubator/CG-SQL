@@ -483,6 +483,8 @@ Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0058: in multiple sel
 Error at test/sem_test.sql:XXXX : in select_stmt : CQL0063: can't mix and match out, out union, or select/call for return values 'out_cursor_proc_mixed_cursor_select'
 Error at test/sem_test.sql:XXXX : in out_stmt : CQL0063: can't mix and match out, out union, or select/call for return values 'out_cursor_proc_mixed_cursor_select_select_first'
 Error at test/sem_test.sql:XXXX : in out_union_stmt : CQL0063: can't mix and match out, out union, or select/call for return values 'out_cursor_proc_mixed_cursor_select_then_union'
+Error at test/sem_test.sql:XXXX : in call_stmt : CQL0063: can't mix and match out, out union, or select/call for return values 'out_union_call_and_out_union'
+Error at test/sem_test.sql:XXXX : in out_union_stmt : CQL0063: can't mix and match out, out union, or select/call for return values 'out_union_call_and_out_union_other_order'
 Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'C'
 Error at test/sem_test.sql:XXXX : in out_stmt : CQL0222: the out cursor statement only makes sense inside of a procedure
 Error at test/sem_test.sql:XXXX : in str : CQL0215: value cursors are not used with FETCH C, or FETCH C INTO 'C'

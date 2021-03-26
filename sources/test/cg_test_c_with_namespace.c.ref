@@ -125,6 +125,40 @@ typedef struct out_union_helper_row {
   cql_int32 x;
 } out_union_helper_row;
 
+typedef struct out_union_dml_helper_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 x;
+} out_union_dml_helper_row;
+
+typedef struct forward_out_union_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 x;
+} forward_out_union_row;
+#ifndef result_set_type_decl_extern_out_union_helper_result_set
+#define result_set_type_decl_extern_out_union_helper_result_set 1
+cql_result_set_type_decl(extern_out_union_helper_result_set, extern_out_union_helper_result_set_ref);
+#endif
+extern void extern_out_union_helper_fetch_results(extern_out_union_helper_result_set_ref _Nullable *_Nonnull _result_set_);
+
+
+typedef struct forward_out_union_extern_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 x;
+} forward_out_union_extern_row;
+
+typedef struct forward_out_union_dml_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 x;
+} forward_out_union_dml_row;
+
 typedef struct global_cursor_row {
   cql_bool _has_row_;
   cql_uint16 _refs_count_;
@@ -2348,7 +2382,7 @@ CQL_WARN_UNUSED cql_code uses_proc_for_result_fetch_results(sqlite3 *_Nonnull _d
 CQL_WARN_UNUSED cql_code uses_proc_for_result(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
-  _rc_ = with_result_set(_db_, &*_result_stmt);
+  _rc_ = with_result_set(_db_, _result_stmt);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 
@@ -4270,6 +4304,7 @@ typedef struct out_union_helper_C_row {
 void out_union_helper_fetch_results(out_union_helper_result_set_ref _Nullable *_Nonnull _result_set_) {
   cql_bytebuf _rows_;
   cql_bytebuf_open(&_rows_);
+  *_result_set_ = NULL;
   out_union_helper_C_row C = { 0 };
 
   cql_profile_start(CRC_out_union_helper, &out_union_helper_perf_index);
@@ -4279,6 +4314,85 @@ void out_union_helper_fetch_results(out_union_helper_result_set_ref _Nullable *_
   if (C._has_row_) cql_bytebuf_append(&_rows_, (const void *)&C, sizeof(C));
 
   cql_results_from_data(SQLITE_OK, &_rows_, &out_union_helper_info, (cql_result_set_ref *)_result_set_);
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC out_union_dml_helper ()
+BEGIN
+  DECLARE C CURSOR FOR SELECT 1 AS x;
+  FETCH C;
+  OUT UNION C;
+END;
+*/
+
+#define _PROC_ "out_union_dml_helper_fetch_results"
+static int32_t out_union_dml_helper_perf_index;
+
+cql_string_literal(out_union_dml_helper_stored_procedure_name, "out_union_dml_helper");
+
+cql_int32 out_union_dml_helper_get_x(out_union_dml_helper_result_set_ref _Nonnull result_set, cql_int32 row) {
+  out_union_dml_helper_row *data = (out_union_dml_helper_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].x;
+}
+
+uint8_t out_union_dml_helper_data_types[out_union_dml_helper_data_types_count] = {
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // x
+};
+
+static cql_uint16 out_union_dml_helper_col_offsets[] = { 1,
+  cql_offsetof(out_union_dml_helper_row, x)
+};
+
+cql_int32 out_union_dml_helper_result_count(out_union_dml_helper_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+cql_fetch_info out_union_dml_helper_info = {
+  .rc = SQLITE_OK,
+  .data_types = out_union_dml_helper_data_types,
+  .col_offsets = out_union_dml_helper_col_offsets,
+  .rowsize = sizeof(out_union_dml_helper_row),
+  .crc = CRC_out_union_dml_helper,
+  .perf_index = &out_union_dml_helper_perf_index,
+};
+// export: DECLARE PROC out_union_dml_helper () OUT UNION (x INTEGER NOT NULL) USING TRANSACTION;
+
+typedef struct out_union_dml_helper_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 x;
+} out_union_dml_helper_C_row;
+CQL_WARN_UNUSED cql_code out_union_dml_helper_fetch_results(sqlite3 *_Nonnull _db_, out_union_dml_helper_result_set_ref _Nullable *_Nonnull _result_set_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_bytebuf _rows_;
+  cql_bytebuf_open(&_rows_);
+  *_result_set_ = NULL;
+  sqlite3_stmt *C_stmt = NULL;
+  out_union_dml_helper_C_row C = { 0 };
+
+  cql_profile_start(CRC_out_union_dml_helper, &out_union_dml_helper_perf_index);
+  _rc_ = cql_prepare(_db_, &C_stmt,
+    "SELECT 1");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = sqlite3_step(C_stmt);
+  C._has_row_ = _rc_ == SQLITE_ROW;
+  cql_multifetch(_rc_, C_stmt, 1,
+                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.x);
+  if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+  cql_retain_row(C);
+  if (C._has_row_) cql_bytebuf_append(&_rows_, (const void *)&C, sizeof(C));
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  out_union_dml_helper_info.db = _db_;
+  cql_results_from_data(_rc_, &_rows_, &out_union_dml_helper_info, (cql_result_set_ref *)_result_set_);
+  out_union_dml_helper_info.db = NULL;
+  cql_finalize_stmt(&C_stmt);
+  return _rc_;
 }
 #undef _PROC_
 
@@ -4335,6 +4449,158 @@ CQL_WARN_UNUSED cql_code call_out_union_in_loop(sqlite3 *_Nonnull _db_) {
   _rc_ = SQLITE_OK;
 
   cql_object_release(C_result_set_);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC forward_out_union ()
+BEGIN
+  CALL out_union_helper();
+END;
+*/
+
+#define _PROC_ "forward_out_union_fetch_results"
+static int32_t forward_out_union_perf_index;
+
+cql_string_literal(forward_out_union_stored_procedure_name, "forward_out_union");
+
+cql_int32 forward_out_union_get_x(forward_out_union_result_set_ref _Nonnull result_set, cql_int32 row) {
+  forward_out_union_row *data = (forward_out_union_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].x;
+}
+
+uint8_t forward_out_union_data_types[forward_out_union_data_types_count] = {
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // x
+};
+
+static cql_uint16 forward_out_union_col_offsets[] = { 1,
+  cql_offsetof(forward_out_union_row, x)
+};
+
+cql_int32 forward_out_union_result_count(forward_out_union_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+cql_fetch_info forward_out_union_info = {
+  .rc = SQLITE_OK,
+  .data_types = forward_out_union_data_types,
+  .col_offsets = forward_out_union_col_offsets,
+  .rowsize = sizeof(forward_out_union_row),
+  .crc = CRC_forward_out_union,
+  .perf_index = &forward_out_union_perf_index,
+};
+// export: DECLARE PROC forward_out_union () OUT UNION (x INTEGER NOT NULL);
+void forward_out_union_fetch_results(forward_out_union_result_set_ref _Nullable *_Nonnull _result_set_) {
+  *_result_set_ = NULL;
+
+  out_union_helper_fetch_results((out_union_helper_result_set_ref*)_result_set_);
+
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+DECLARE PROC extern_out_union_helper () OUT UNION (x INTEGER NOT NULL);
+*/
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC forward_out_union_extern ()
+BEGIN
+  CALL extern_out_union_helper();
+END;
+*/
+
+#define _PROC_ "forward_out_union_extern_fetch_results"
+static int32_t forward_out_union_extern_perf_index;
+
+cql_string_literal(forward_out_union_extern_stored_procedure_name, "forward_out_union_extern");
+
+cql_int32 forward_out_union_extern_get_x(forward_out_union_extern_result_set_ref _Nonnull result_set, cql_int32 row) {
+  forward_out_union_extern_row *data = (forward_out_union_extern_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].x;
+}
+
+uint8_t forward_out_union_extern_data_types[forward_out_union_extern_data_types_count] = {
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // x
+};
+
+static cql_uint16 forward_out_union_extern_col_offsets[] = { 1,
+  cql_offsetof(forward_out_union_extern_row, x)
+};
+
+cql_int32 forward_out_union_extern_result_count(forward_out_union_extern_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+cql_fetch_info forward_out_union_extern_info = {
+  .rc = SQLITE_OK,
+  .data_types = forward_out_union_extern_data_types,
+  .col_offsets = forward_out_union_extern_col_offsets,
+  .rowsize = sizeof(forward_out_union_extern_row),
+  .crc = CRC_forward_out_union_extern,
+  .perf_index = &forward_out_union_extern_perf_index,
+};
+// export: DECLARE PROC forward_out_union_extern () OUT UNION (x INTEGER NOT NULL);
+void forward_out_union_extern_fetch_results(forward_out_union_extern_result_set_ref _Nullable *_Nonnull _result_set_) {
+  *_result_set_ = NULL;
+
+  extern_out_union_helper_fetch_results((extern_out_union_helper_result_set_ref*)_result_set_);
+
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC forward_out_union_dml ()
+BEGIN
+  CALL out_union_dml_helper();
+END;
+*/
+
+#define _PROC_ "forward_out_union_dml_fetch_results"
+static int32_t forward_out_union_dml_perf_index;
+
+cql_string_literal(forward_out_union_dml_stored_procedure_name, "forward_out_union_dml");
+
+cql_int32 forward_out_union_dml_get_x(forward_out_union_dml_result_set_ref _Nonnull result_set, cql_int32 row) {
+  forward_out_union_dml_row *data = (forward_out_union_dml_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].x;
+}
+
+uint8_t forward_out_union_dml_data_types[forward_out_union_dml_data_types_count] = {
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // x
+};
+
+static cql_uint16 forward_out_union_dml_col_offsets[] = { 1,
+  cql_offsetof(forward_out_union_dml_row, x)
+};
+
+cql_int32 forward_out_union_dml_result_count(forward_out_union_dml_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+cql_fetch_info forward_out_union_dml_info = {
+  .rc = SQLITE_OK,
+  .data_types = forward_out_union_dml_data_types,
+  .col_offsets = forward_out_union_dml_col_offsets,
+  .rowsize = sizeof(forward_out_union_dml_row),
+  .crc = CRC_forward_out_union_dml,
+  .perf_index = &forward_out_union_dml_perf_index,
+};
+// export: DECLARE PROC forward_out_union_dml () OUT UNION (x INTEGER NOT NULL) USING TRANSACTION;
+CQL_WARN_UNUSED cql_code forward_out_union_dml_fetch_results(sqlite3 *_Nonnull _db_, forward_out_union_dml_result_set_ref _Nullable *_Nonnull _result_set_) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_set_ = NULL;
+
+  _rc_ = out_union_dml_helper_fetch_results(_db_, (out_union_dml_helper_result_set_ref*)_result_set_);
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
   return _rc_;
 }
 #undef _PROC_
@@ -5631,6 +5897,7 @@ typedef struct out_union_two_C_row {
 void out_union_two_fetch_results(out_union_two_result_set_ref _Nullable *_Nonnull _result_set_) {
   cql_bytebuf _rows_;
   cql_bytebuf_open(&_rows_);
+  *_result_set_ = NULL;
   out_union_two_C_row C = { ._refs_count_ = 1, ._refs_offset_ = out_union_two_C_refs_offset };
 
   cql_profile_start(CRC_out_union_two, &out_union_two_perf_index);
@@ -5770,6 +6037,7 @@ CQL_WARN_UNUSED cql_code out_union_from_select_fetch_results(sqlite3 *_Nonnull _
   cql_code _rc_ = SQLITE_OK;
   cql_bytebuf _rows_;
   cql_bytebuf_open(&_rows_);
+  *_result_set_ = NULL;
   sqlite3_stmt *C_stmt = NULL;
   out_union_from_select_C_row C = { ._refs_count_ = 1, ._refs_offset_ = out_union_from_select_C_refs_offset };
 
@@ -5915,6 +6183,7 @@ typedef struct out_union_values_x_row {
 void out_union_values_fetch_results(out_union_values_result_set_ref _Nullable *_Nonnull _result_set_, cql_int32 a, cql_int32 b) {
   cql_bytebuf _rows_;
   cql_bytebuf_open(&_rows_);
+  *_result_set_ = NULL;
   out_union_values_x_row x = { 0 };
 
   cql_profile_start(CRC_out_union_values, &out_union_values_perf_index);
@@ -6044,6 +6313,7 @@ CQL_WARN_UNUSED cql_code out_union_dml_fetch_results(sqlite3 *_Nonnull _db_, out
   cql_code _rc_ = SQLITE_OK;
   cql_bytebuf _rows_;
   cql_bytebuf_open(&_rows_);
+  *_result_set_ = NULL;
   sqlite3_stmt *x_stmt = NULL;
   out_union_dml_x_row x = { ._refs_count_ = 1, ._refs_offset_ = out_union_dml_x_refs_offset };
 

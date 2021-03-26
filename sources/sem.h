@@ -152,7 +152,8 @@ cql_data_decl( bytebuf *recreate_annotations );
 #define SEM_TYPE_HIDDEN_COL       _64(0x200000000) // set if and only if hidden column on a virtual table
 #define SEM_TYPE_TVF              _64(0x400000000) // set if and only table node is a table valued function
 #define SEM_TYPE_IMPLICIT         _64(0x800000000) // set if and only the variable was declare implicitly (via declare out)
-#define SEM_TYPE_FLAGS            _64(0xFFFFFFF00) // all the flag bits we have so far
+#define SEM_TYPE_CALLS_OUT_UNION _64(0x1000000000) // set if proc calls an out union proc for a result
+#define SEM_TYPE_FLAGS           _64(0x1FFFFFFF00) // all the flag bits we have so far
 
 #define SEM_EXPR_CONTEXT_NONE           0x001
 #define SEM_EXPR_CONTEXT_SELECT_LIST    0x002
@@ -211,6 +212,7 @@ cql_noexport bool_t is_insert_stmt(ast_node *ast);
 cql_noexport bool_t is_update_stmt(ast_node *ast);
 cql_noexport bool_t has_result_set(ast_node *ast);
 cql_noexport bool_t has_out_stmt_result(ast_node *ast);
+cql_noexport bool_t has_out_union_call(ast_node *ast);
 cql_noexport bool_t has_out_union_stmt_result(ast_node *ast);
 cql_noexport bool_t is_autotest_dummy_table(CSTR name);
 cql_noexport bool_t is_autotest_dummy_insert(CSTR name);

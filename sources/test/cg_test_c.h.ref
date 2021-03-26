@@ -1270,7 +1270,121 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
 extern void out_union_helper_fetch_results(out_union_helper_result_set_ref _Nullable *_Nonnull _result_set_);
 
 // The statement ending at line XXXX
+#define CRC_out_union_dml_helper -160714497748671673L
+
+extern cql_string_ref _Nonnull out_union_dml_helper_stored_procedure_name;
+
+#define out_union_dml_helper_data_types_count 1
+
+#ifndef result_set_type_decl_out_union_dml_helper_result_set
+#define result_set_type_decl_out_union_dml_helper_result_set 1
+cql_result_set_type_decl(out_union_dml_helper_result_set, out_union_dml_helper_result_set_ref);
+#endif
+extern cql_int32 out_union_dml_helper_get_x(out_union_dml_helper_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 out_union_dml_helper_result_count(out_union_dml_helper_result_set_ref _Nonnull result_set);
+#define out_union_dml_helper_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define out_union_dml_helper_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define out_union_dml_helper_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+extern CQL_WARN_UNUSED cql_code out_union_dml_helper_fetch_results(sqlite3 *_Nonnull _db_, out_union_dml_helper_result_set_ref _Nullable *_Nonnull _result_set_);
+
+// The statement ending at line XXXX
 extern CQL_WARN_UNUSED cql_code call_out_union_in_loop(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+#define CRC_forward_out_union 7569950227901156785L
+
+extern cql_string_ref _Nonnull forward_out_union_stored_procedure_name;
+
+#define forward_out_union_data_types_count 1
+
+#ifndef result_set_type_decl_forward_out_union_result_set
+#define result_set_type_decl_forward_out_union_result_set 1
+cql_result_set_type_decl(forward_out_union_result_set, forward_out_union_result_set_ref);
+#endif
+extern cql_int32 forward_out_union_get_x(forward_out_union_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 forward_out_union_result_count(forward_out_union_result_set_ref _Nonnull result_set);
+#define forward_out_union_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define forward_out_union_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define forward_out_union_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+extern void forward_out_union_fetch_results(forward_out_union_result_set_ref _Nullable *_Nonnull _result_set_);
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+#define CRC_forward_out_union_extern -5479089429828632085L
+
+extern cql_string_ref _Nonnull forward_out_union_extern_stored_procedure_name;
+
+#define forward_out_union_extern_data_types_count 1
+
+#ifndef result_set_type_decl_forward_out_union_extern_result_set
+#define result_set_type_decl_forward_out_union_extern_result_set 1
+cql_result_set_type_decl(forward_out_union_extern_result_set, forward_out_union_extern_result_set_ref);
+#endif
+extern cql_int32 forward_out_union_extern_get_x(forward_out_union_extern_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 forward_out_union_extern_result_count(forward_out_union_extern_result_set_ref _Nonnull result_set);
+#define forward_out_union_extern_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define forward_out_union_extern_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define forward_out_union_extern_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+extern void forward_out_union_extern_fetch_results(forward_out_union_extern_result_set_ref _Nullable *_Nonnull _result_set_);
+
+// The statement ending at line XXXX
+#define CRC_forward_out_union_dml 2168239454489764896L
+
+extern cql_string_ref _Nonnull forward_out_union_dml_stored_procedure_name;
+
+#define forward_out_union_dml_data_types_count 1
+
+#ifndef result_set_type_decl_forward_out_union_dml_result_set
+#define result_set_type_decl_forward_out_union_dml_result_set 1
+cql_result_set_type_decl(forward_out_union_dml_result_set, forward_out_union_dml_result_set_ref);
+#endif
+extern cql_int32 forward_out_union_dml_get_x(forward_out_union_dml_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 forward_out_union_dml_result_count(forward_out_union_dml_result_set_ref _Nonnull result_set);
+#define forward_out_union_dml_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define forward_out_union_dml_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define forward_out_union_dml_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+extern CQL_WARN_UNUSED cql_code forward_out_union_dml_fetch_results(sqlite3 *_Nonnull _db_, forward_out_union_dml_result_set_ref _Nullable *_Nonnull _result_set_);
 
 // The statement ending at line XXXX
 

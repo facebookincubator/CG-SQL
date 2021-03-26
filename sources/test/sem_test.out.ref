@@ -19253,6 +19253,219 @@ Error at test/sem_test.sql:XXXX : in out_union_stmt : CQL0063: can't mix and mat
 
 The statement ending at line XXXX
 
+CREATE PROC out_union_dml ()
+BEGIN
+  DECLARE C CURSOR FOR SELECT 1 AS A, 2 AS B;
+  FETCH C;
+  OUT UNION C;
+END;
+
+  {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union
+  | {name out_union_dml}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
+      | | {select_stmt}: select: { A: integer notnull, B: integer notnull }
+      |   | {select_core_list}: select: { A: integer notnull, B: integer notnull }
+      |   | | {select_core}: select: { A: integer notnull, B: integer notnull }
+      |   |   | {select_expr_list_con}: select: { A: integer notnull, B: integer notnull }
+      |   |     | {select_expr_list}: select: { A: integer notnull, B: integer notnull }
+      |   |     | | {select_expr}: A: integer notnull
+      |   |     | | | {int 1}: integer notnull
+      |   |     | | | {opt_as_alias}
+      |   |     | |   | {name A}
+      |   |     | | {select_expr_list}
+      |   |     |   | {select_expr}: B: integer notnull
+      |   |     |     | {int 2}: integer notnull
+      |   |     |     | {opt_as_alias}
+      |   |     |       | {name B}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
+      | {out_union_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
+        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
+
+The statement ending at line XXXX
+
+CREATE PROC out_union ()
+BEGIN
+  DECLARE C CURSOR LIKE SELECT 1 AS A, 2 AS B;
+  FETCH C(A, B) FROM VALUES(1, 2);
+  OUT UNION C;
+END;
+
+  {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage uses_out_union value_cursor
+  | {name out_union}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage uses_out_union value_cursor
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor_like_select}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {select_stmt}: select: { A: integer notnull, B: integer notnull }
+      |   | {select_core_list}: select: { A: integer notnull, B: integer notnull }
+      |   | | {select_core}: select: { A: integer notnull, B: integer notnull }
+      |   |   | {select_expr_list_con}: select: { A: integer notnull, B: integer notnull }
+      |   |     | {select_expr_list}: select: { A: integer notnull, B: integer notnull }
+      |   |     | | {select_expr}: A: integer notnull
+      |   |     | | | {int 1}: integer notnull
+      |   |     | | | {opt_as_alias}
+      |   |     | |   | {name A}
+      |   |     | | {select_expr_list}
+      |   |     |   | {select_expr}: B: integer notnull
+      |   |     |     | {int 2}: integer notnull
+      |   |     |     | {opt_as_alias}
+      |   |     |       | {name B}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_values_stmt}: ok
+      | | {name_columns_values}
+      |   | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      |   | {columns_values}: ok
+      |     | {column_spec}
+      |     | | {name_list}
+      |     |   | {name A}: A: integer notnull
+      |     |   | {name_list}
+      |     |     | {name B}: B: integer notnull
+      |     | {insert_list}
+      |       | {int 1}: integer notnull
+      |       | {insert_list}
+      |         | {int 2}: integer notnull
+      | {out_union_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+
+The statement ending at line XXXX
+
+CREATE PROC call_out_union_dml ()
+BEGIN
+  CALL out_union_dml();
+END;
+
+  {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union calls_out_union
+  | {name call_out_union_dml}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union calls_out_union
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union
+        | {name out_union_dml}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union
+
+The statement ending at line XXXX
+
+CREATE PROC call_out_union ()
+BEGIN
+  CALL out_union();
+END;
+
+  {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage uses_out_union calls_out_union value_cursor
+  | {name call_out_union}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage uses_out_union calls_out_union value_cursor
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage uses_out_union value_cursor
+        | {name out_union}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage uses_out_union value_cursor
+
+The statement ending at line XXXX
+
+CREATE PROC out_union_call_and_out_union ()
+BEGIN
+  DECLARE C CURSOR FOR SELECT 1 AS A, 2 AS B;
+  FETCH C;
+  OUT UNION C;
+  CALL out_union_dml();
+END;
+
+Error at test/sem_test.sql:XXXX : in call_stmt : CQL0063: can't mix and match out, out union, or select/call for return values 'out_union_call_and_out_union'
+
+  {create_proc_stmt}: err
+  | {name out_union_call_and_out_union}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
+      | | {select_stmt}: select: { A: integer notnull, B: integer notnull }
+      |   | {select_core_list}: select: { A: integer notnull, B: integer notnull }
+      |   | | {select_core}: select: { A: integer notnull, B: integer notnull }
+      |   |   | {select_expr_list_con}: select: { A: integer notnull, B: integer notnull }
+      |   |     | {select_expr_list}: select: { A: integer notnull, B: integer notnull }
+      |   |     | | {select_expr}: A: integer notnull
+      |   |     | | | {int 1}: integer notnull
+      |   |     | | | {opt_as_alias}
+      |   |     | |   | {name A}
+      |   |     | | {select_expr_list}
+      |   |     |   | {select_expr}: B: integer notnull
+      |   |     |     | {int 2}: integer notnull
+      |   |     |     | {opt_as_alias}
+      |   |     |       | {name B}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
+      | {out_union_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
+      | {call_stmt}: err
+        | {name out_union_dml}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union
+
+The statement ending at line XXXX
+
+CREATE PROC out_union_call_and_out_union_other_order ()
+BEGIN
+  DECLARE C CURSOR FOR SELECT 1 AS A, 2 AS B;
+  FETCH C;
+  CALL out_union_dml();
+  OUT UNION C;
+END;
+
+Error at test/sem_test.sql:XXXX : in out_union_stmt : CQL0063: can't mix and match out, out union, or select/call for return values 'out_union_call_and_out_union_other_order'
+
+  {create_proc_stmt}: err
+  | {name out_union_call_and_out_union_other_order}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
+      | | {select_stmt}: select: { A: integer notnull, B: integer notnull }
+      |   | {select_core_list}: select: { A: integer notnull, B: integer notnull }
+      |   | | {select_core}: select: { A: integer notnull, B: integer notnull }
+      |   |   | {select_expr_list_con}: select: { A: integer notnull, B: integer notnull }
+      |   |     | {select_expr_list}: select: { A: integer notnull, B: integer notnull }
+      |   |     | | {select_expr}: A: integer notnull
+      |   |     | | | {int 1}: integer notnull
+      |   |     | | | {opt_as_alias}
+      |   |     | |   | {name A}
+      |   |     | | {select_expr_list}
+      |   |     |   | {select_expr}: B: integer notnull
+      |   |     |     | {int 2}: integer notnull
+      |   |     |     | {opt_as_alias}
+      |   |     |       | {name B}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
+      | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union
+      | | {name out_union_dml}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union
+      | {out_union_stmt}: err
+        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
+
+The statement ending at line XXXX
+
 CREATE PROC out_not_cursor ()
 BEGIN
   DECLARE C INTEGER;

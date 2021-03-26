@@ -1230,6 +1230,166 @@ static inline BOOL CGBOutUnionHelperRowEqual(CGBOutUnionHelper *resultSet1, int3
   return CGCOutUnionHelperRowEqual(CGCOutUnionHelperFromCGBOutUnionHelper(resultSet1), row1, CGCOutUnionHelperFromCGBOutUnionHelper(resultSet2), row2);
 }
 
+@class CGBOutUnionDmlHelper;
+
+static inline CGBOutUnionDmlHelper *CGBOutUnionDmlHelperFromCGCOutUnionDmlHelper(CGCOutUnionDmlHelperResultSetRef resultSet)
+{
+  return (__bridge CGBOutUnionDmlHelper *)resultSet;
+}
+
+static inline CGCOutUnionDmlHelperResultSetRef CGCOutUnionDmlHelperFromCGBOutUnionDmlHelper(CGBOutUnionDmlHelper *resultSet)
+{
+  return (__bridge CGCOutUnionDmlHelperResultSetRef)resultSet;
+}
+
+static inline int32_t CGBOutUnionDmlHelperGetX(CGBOutUnionDmlHelper *resultSet, int32_t row)
+{
+  CGCOutUnionDmlHelperResultSetRef cResultSet = CGCOutUnionDmlHelperFromCGBOutUnionDmlHelper(resultSet);
+  return CGCOutUnionDmlHelperGetX(cResultSet, row);
+}
+
+static inline int32_t CGBOutUnionDmlHelperResultCount(CGBOutUnionDmlHelper *resultSet)
+{
+  return CGCOutUnionDmlHelperResultCount(CGCOutUnionDmlHelperFromCGBOutUnionDmlHelper(resultSet));
+}
+
+static inline CGBOutUnionDmlHelper *CGBOutUnionDmlHelperCopy(CGBOutUnionDmlHelper *resultSet, int32_t from, int32_t count)
+{
+  CGCOutUnionDmlHelperResultSetRef copy;
+  CGCOutUnionDmlHelperCopy(CGCOutUnionDmlHelperFromCGBOutUnionDmlHelper(resultSet), &copy, from, count);
+  return (__bridge_transfer CGBOutUnionDmlHelper *)copy;
+}
+
+static inline NSUInteger CGBOutUnionDmlHelperRowHash(CGBOutUnionDmlHelper *resultSet, int32_t row)
+{
+  return CGCOutUnionDmlHelperRowHash(CGCOutUnionDmlHelperFromCGBOutUnionDmlHelper(resultSet), row);
+}
+
+static inline BOOL CGBOutUnionDmlHelperRowEqual(CGBOutUnionDmlHelper *resultSet1, int32_t row1, CGBOutUnionDmlHelper *resultSet2, int32_t row2)
+{
+  return CGCOutUnionDmlHelperRowEqual(CGCOutUnionDmlHelperFromCGBOutUnionDmlHelper(resultSet1), row1, CGCOutUnionDmlHelperFromCGBOutUnionDmlHelper(resultSet2), row2);
+}
+
+@class CGBForwardOutUnion;
+
+static inline CGBForwardOutUnion *CGBForwardOutUnionFromCGCForwardOutUnion(CGCForwardOutUnionResultSetRef resultSet)
+{
+  return (__bridge CGBForwardOutUnion *)resultSet;
+}
+
+static inline CGCForwardOutUnionResultSetRef CGCForwardOutUnionFromCGBForwardOutUnion(CGBForwardOutUnion *resultSet)
+{
+  return (__bridge CGCForwardOutUnionResultSetRef)resultSet;
+}
+
+static inline int32_t CGBForwardOutUnionGetX(CGBForwardOutUnion *resultSet, int32_t row)
+{
+  CGCForwardOutUnionResultSetRef cResultSet = CGCForwardOutUnionFromCGBForwardOutUnion(resultSet);
+  return CGCForwardOutUnionGetX(cResultSet, row);
+}
+
+static inline int32_t CGBForwardOutUnionResultCount(CGBForwardOutUnion *resultSet)
+{
+  return CGCForwardOutUnionResultCount(CGCForwardOutUnionFromCGBForwardOutUnion(resultSet));
+}
+
+static inline CGBForwardOutUnion *CGBForwardOutUnionCopy(CGBForwardOutUnion *resultSet, int32_t from, int32_t count)
+{
+  CGCForwardOutUnionResultSetRef copy;
+  CGCForwardOutUnionCopy(CGCForwardOutUnionFromCGBForwardOutUnion(resultSet), &copy, from, count);
+  return (__bridge_transfer CGBForwardOutUnion *)copy;
+}
+
+static inline NSUInteger CGBForwardOutUnionRowHash(CGBForwardOutUnion *resultSet, int32_t row)
+{
+  return CGCForwardOutUnionRowHash(CGCForwardOutUnionFromCGBForwardOutUnion(resultSet), row);
+}
+
+static inline BOOL CGBForwardOutUnionRowEqual(CGBForwardOutUnion *resultSet1, int32_t row1, CGBForwardOutUnion *resultSet2, int32_t row2)
+{
+  return CGCForwardOutUnionRowEqual(CGCForwardOutUnionFromCGBForwardOutUnion(resultSet1), row1, CGCForwardOutUnionFromCGBForwardOutUnion(resultSet2), row2);
+}
+
+@class CGBForwardOutUnionExtern;
+
+static inline CGBForwardOutUnionExtern *CGBForwardOutUnionExternFromCGCForwardOutUnionExtern(CGCForwardOutUnionExternResultSetRef resultSet)
+{
+  return (__bridge CGBForwardOutUnionExtern *)resultSet;
+}
+
+static inline CGCForwardOutUnionExternResultSetRef CGCForwardOutUnionExternFromCGBForwardOutUnionExtern(CGBForwardOutUnionExtern *resultSet)
+{
+  return (__bridge CGCForwardOutUnionExternResultSetRef)resultSet;
+}
+
+static inline int32_t CGBForwardOutUnionExternGetX(CGBForwardOutUnionExtern *resultSet, int32_t row)
+{
+  CGCForwardOutUnionExternResultSetRef cResultSet = CGCForwardOutUnionExternFromCGBForwardOutUnionExtern(resultSet);
+  return CGCForwardOutUnionExternGetX(cResultSet, row);
+}
+
+static inline int32_t CGBForwardOutUnionExternResultCount(CGBForwardOutUnionExtern *resultSet)
+{
+  return CGCForwardOutUnionExternResultCount(CGCForwardOutUnionExternFromCGBForwardOutUnionExtern(resultSet));
+}
+
+static inline CGBForwardOutUnionExtern *CGBForwardOutUnionExternCopy(CGBForwardOutUnionExtern *resultSet, int32_t from, int32_t count)
+{
+  CGCForwardOutUnionExternResultSetRef copy;
+  CGCForwardOutUnionExternCopy(CGCForwardOutUnionExternFromCGBForwardOutUnionExtern(resultSet), &copy, from, count);
+  return (__bridge_transfer CGBForwardOutUnionExtern *)copy;
+}
+
+static inline NSUInteger CGBForwardOutUnionExternRowHash(CGBForwardOutUnionExtern *resultSet, int32_t row)
+{
+  return CGCForwardOutUnionExternRowHash(CGCForwardOutUnionExternFromCGBForwardOutUnionExtern(resultSet), row);
+}
+
+static inline BOOL CGBForwardOutUnionExternRowEqual(CGBForwardOutUnionExtern *resultSet1, int32_t row1, CGBForwardOutUnionExtern *resultSet2, int32_t row2)
+{
+  return CGCForwardOutUnionExternRowEqual(CGCForwardOutUnionExternFromCGBForwardOutUnionExtern(resultSet1), row1, CGCForwardOutUnionExternFromCGBForwardOutUnionExtern(resultSet2), row2);
+}
+
+@class CGBForwardOutUnionDml;
+
+static inline CGBForwardOutUnionDml *CGBForwardOutUnionDmlFromCGCForwardOutUnionDml(CGCForwardOutUnionDmlResultSetRef resultSet)
+{
+  return (__bridge CGBForwardOutUnionDml *)resultSet;
+}
+
+static inline CGCForwardOutUnionDmlResultSetRef CGCForwardOutUnionDmlFromCGBForwardOutUnionDml(CGBForwardOutUnionDml *resultSet)
+{
+  return (__bridge CGCForwardOutUnionDmlResultSetRef)resultSet;
+}
+
+static inline int32_t CGBForwardOutUnionDmlGetX(CGBForwardOutUnionDml *resultSet, int32_t row)
+{
+  CGCForwardOutUnionDmlResultSetRef cResultSet = CGCForwardOutUnionDmlFromCGBForwardOutUnionDml(resultSet);
+  return CGCForwardOutUnionDmlGetX(cResultSet, row);
+}
+
+static inline int32_t CGBForwardOutUnionDmlResultCount(CGBForwardOutUnionDml *resultSet)
+{
+  return CGCForwardOutUnionDmlResultCount(CGCForwardOutUnionDmlFromCGBForwardOutUnionDml(resultSet));
+}
+
+static inline CGBForwardOutUnionDml *CGBForwardOutUnionDmlCopy(CGBForwardOutUnionDml *resultSet, int32_t from, int32_t count)
+{
+  CGCForwardOutUnionDmlResultSetRef copy;
+  CGCForwardOutUnionDmlCopy(CGCForwardOutUnionDmlFromCGBForwardOutUnionDml(resultSet), &copy, from, count);
+  return (__bridge_transfer CGBForwardOutUnionDml *)copy;
+}
+
+static inline NSUInteger CGBForwardOutUnionDmlRowHash(CGBForwardOutUnionDml *resultSet, int32_t row)
+{
+  return CGCForwardOutUnionDmlRowHash(CGCForwardOutUnionDmlFromCGBForwardOutUnionDml(resultSet), row);
+}
+
+static inline BOOL CGBForwardOutUnionDmlRowEqual(CGBForwardOutUnionDml *resultSet1, int32_t row1, CGBForwardOutUnionDml *resultSet2, int32_t row2)
+{
+  return CGCForwardOutUnionDmlRowEqual(CGCForwardOutUnionDmlFromCGBForwardOutUnionDml(resultSet1), row1, CGCForwardOutUnionDmlFromCGBForwardOutUnionDml(resultSet2), row2);
+}
+
 @class CGBSimpleIdentity;
 
 static inline CGBSimpleIdentity *CGBSimpleIdentityFromCGCSimpleIdentity(CGCSimpleIdentityResultSetRef resultSet)
