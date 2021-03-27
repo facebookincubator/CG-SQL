@@ -3077,12 +3077,10 @@ static void cg_create_proc_stmt(ast_node *ast) {
 
     // result set type
     bprintf(&proc_decl, "%s _Nullable *_Nonnull _result_set_", result_set_ref.ptr);
-    CHARBUF_CLOSE(result_set_ref);
 
     need_comma = 1;
 
     if (!calls_out_union) {
-
       CSTR rc = dml_proc ? "_rc_" : "SQLITE_OK";
       if (dml_proc) {
         bprintf(&proc_cleanup, "  %s_info.db = _db_;\n", proc_name_base.ptr);
@@ -3099,6 +3097,21 @@ static void cg_create_proc_stmt(ast_node *ast) {
         bprintf(&proc_body, "  cql_profile_start(CRC_%s, &%s);\n", proc_name_base.ptr, perf_index.ptr);
       CHARBUF_CLOSE(perf_index);
     }
+    else {
+      // If this is a forwarding procedure then we have to ensure that we produce at least an empty
+      // result even if the procedure didn't actually make the call to the forwarder.
+
+      if (dml_proc) {
+        bprintf(&proc_cleanup, "  if (_rc_ == SQLITE_OK && !*_result_set_) ");
+      }
+      else {
+        bprintf(&proc_cleanup, "  if (!*_result_set_) ");
+      }
+
+      bprintf(&proc_cleanup, "*_result_set_ = (%s)cql_no_rows_result_set();\n", result_set_ref.ptr);
+    }
+
+    CHARBUF_CLOSE(result_set_ref);
   }
 
   // CREATE PROC [name] ( [params] )
@@ -5115,7 +5128,7 @@ static void cg_call_stmt_with_cursor(ast_node *ast, CSTR cursor_name) {
     bprintf(&invocation, "_rc_ = %s(_db_", proc_sym.ptr);
     if (out_union_proc && !cursor_name) {
       // this is case 3b above
-      bprintf(&invocation, ", (%s*)_result_set_", result_set_ref.ptr);
+      bprintf(&invocation, ", (%s *)_result_set_", result_set_ref.ptr);
     }
     else if (out_union_proc) {
       // this is case 3a above
@@ -5136,7 +5149,7 @@ static void cg_call_stmt_with_cursor(ast_node *ast, CSTR cursor_name) {
     bprintf(&invocation, "%s(", proc_sym.ptr);
     if (out_union_proc && !cursor_name) {
       // this is 3b again, but with no database arg
-      bprintf(&invocation, "(%s*)_result_set_", result_set_ref.ptr);
+      bprintf(&invocation, "(%s *)_result_set_", result_set_ref.ptr);
     }
     else if (out_union_proc) {
       // this is 3a again, but with no database arg

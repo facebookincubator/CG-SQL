@@ -63,12 +63,6 @@ cql_code cql_prepare(sqlite3 *_Nonnull db, sqlite3_stmt *_Nullable *_Nonnull pst
   return cql_sqlite3_prepare_v2(db, sql, -1, pstmt, NULL);
 }
 
-// This statement for sure has no rows in it
-cql_code cql_no_rows_stmt(sqlite3 *_Nonnull db, sqlite3_stmt *_Nullable *_Nonnull pstmt) {
-  cql_finalize_stmt(pstmt);
-  return cql_sqlite3_prepare_v2(db, "select 0 where 0", -1, pstmt, NULL);
-}
-
 // This is a simple wrapper for the sqlite3_exec method with the usual extra arguments.
 // This code is here just to reduce the code size of exec calls in the generated code.
 // There are a lot of such calls.
@@ -1792,4 +1786,45 @@ cql_error:
   cql_autodrop_tables(info->db, info->autodrop_tables);
   cql_profile_stop(info->crc, info->perf_index);
   return rc;
+}
+
+// these are some structures we need so that we can make an empty result set
+// it has a canonical shape (1 column) but there are no rows
+// so no column getter will ever succeed not matter the shape that was
+// expected.
+
+typedef struct cql_no_rows_row {
+  cql_int32 x;
+} cql_no_rows_row;
+
+static int32_t cql_no_rows_row_perf_index;
+
+uint8_t cql_no_rows_row_data_types[] = {
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // x
+};
+
+static cql_uint16 cql_no_rows_row_col_offsets[] = { 1,
+  cql_offsetof(cql_no_rows_row, x)
+};
+
+cql_fetch_info cql_no_rows_row_info = {
+  .rc = SQLITE_OK,
+  .data_types = cql_no_rows_row_data_types,
+  .col_offsets = cql_no_rows_row_col_offsets,
+  .rowsize = sizeof(cql_no_rows_row),
+  .crc = 0,
+  .perf_index = &cql_no_rows_row_perf_index,
+};
+
+// The most trivial empty result set that still looks like a result set
+cql_result_set_ref _Nonnull cql_no_rows_result_set() {
+  cql_result_set_meta meta;
+  cql_initialize_meta(&meta, &cql_no_rows_row_info);
+  return cql_result_set_create(malloc(1), 0, meta);
+}
+
+// This statement for sure has no rows in it
+cql_code cql_no_rows_stmt(sqlite3 *_Nonnull db, sqlite3_stmt *_Nullable *_Nonnull pstmt) {
+  cql_finalize_stmt(pstmt);
+  return cql_sqlite3_prepare_v2(db, "select 0 where 0", -1, pstmt, NULL);
 }

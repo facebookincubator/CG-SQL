@@ -3443,6 +3443,41 @@ BEGIN_TEST(rc_simple_insert_and_select)
   end catch;
 END_TEST(rc_simple_insert_and_select)
 
+create proc out_union()
+begin
+  declare C cursor like select 1 x;
+  fetch C using 1 x;
+  out union C;
+end;
+
+-- claims to be an out-union proc but isn't really going to produce anything
+-- non dml path
+create proc out_union_nil_result()
+begin
+  if 0 then
+     call out_union();
+  end if;
+end;
+
+-- claims to be an out-union proc but isn't really going to produce anything
+-- dml path
+create proc out_union_nil_result_dml()
+begin
+  if 0 then
+     call out_union_dml();
+  end if;
+end;
+
+BEGIN_TEST(empty_out_union)
+  declare C cursor for call out_union_nil_result();
+  fetch C;
+  EXPECT(NOT C); -- cursor empty but not null
+
+  declare D cursor for call out_union_nil_result_dml();
+  fetch D;
+  EXPECT(NOT D); -- cursor empty but not null
+END_TEST(empty_out_union)
+
 END_SUITE()
 
 -- manually force tracing on by redefining the macros

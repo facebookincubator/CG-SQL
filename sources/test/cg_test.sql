@@ -1948,7 +1948,8 @@ end;
 -- + export: DECLARE PROC forward_out_union () OUT UNION (x INTEGER NOT NULL)
 -- - USING TRANSACTION
 -- + *_result_set_ = NULL;
--- + out_union_helper_fetch_results((out_union_helper_result_set_ref*)_result_set_);
+-- + out_union_helper_fetch_results((out_union_helper_result_set_ref *)_result_set_);
+-- + if (!*_result_set_) *_result_set_ = (forward_out_union_result_set_ref)cql_no_rows_result_set();
 create proc forward_out_union()
 begin
   call out_union_helper();
@@ -1958,7 +1959,7 @@ end;
 declare proc extern_out_union_helper () OUT UNION (x INTEGER NOT NULL);
 
 -- TEST: this should still compile even though the body of the proc isn't here
--- + extern_out_union_helper_fetch_results((extern_out_union_helper_result_set_ref*)_result_set_);
+-- + extern_out_union_helper_fetch_results((extern_out_union_helper_result_set_ref *)_result_set_);
 create proc forward_out_union_extern()
 begin
   call extern_out_union_helper();
@@ -1967,7 +1968,7 @@ end;
 -- TEST: forward out union result, with dml proc
 -- + export: DECLARE PROC forward_out_union_dml () OUT UNION (x INTEGER NOT NULL) USING TRANSACTION;
 -- + *_result_set_ = NULL;
--- +  _rc_ = out_union_dml_helper_fetch_results(_db_, (out_union_dml_helper_result_set_ref*)_result_set_);
+-- +  _rc_ = out_union_dml_helper_fetch_results(_db_, (out_union_dml_helper_result_set_ref *)_result_set_);
 create proc forward_out_union_dml()
 begin
   call out_union_dml_helper();
