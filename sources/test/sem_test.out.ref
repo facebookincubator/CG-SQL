@@ -5798,6 +5798,33 @@ Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'X'
 
 The statement ending at line XXXX
 
+CREATE PROC close_boxed_cursor (IN box OBJECT<foo CURSOR>)
+BEGIN
+  DECLARE C CURSOR FOR box;
+  CLOSE C;
+END;
+
+Error at test/sem_test.sql:XXXX : in close_stmt : CQL0391: CLOSE cannot be used on a boxed cursor 'C'
+
+  {create_proc_stmt}: err
+  | {name close_boxed_cursor}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: box: object<foo CURSOR> variable in
+    |   | {in}
+    |   | {param_detail}: box: object<foo CURSOR> variable in
+    |     | {name box}: box: object<foo CURSOR> variable in
+    |     | {type_object}: object<foo CURSOR>
+    |       | {name foo CURSOR}
+    | {stmt_list}: err
+      | {declare_cursor}: C: foo: { id: integer notnull primary_key autoinc } variable boxed
+      | | {name C}: C: foo: { id: integer notnull primary_key autoinc } variable boxed
+      | | {name box}: box: object<foo CURSOR> variable in
+      | {close_stmt}: err
+        | {name C}: C: foo: { id: integer notnull primary_key autoinc } variable boxed
+
+The statement ending at line XXXX
+
 DELETE FROM foo WHERE id = 33;
 
   {delete_stmt}: ok

@@ -4441,7 +4441,7 @@ static void sem_update_proc_type_for_select(ast_node *ast) {
 
   if (is_ast_call_stmt(ast)) {
      // still nothing
-     Invariant(!(is_out || is_out_union || is_select));
+      Invariant(!(is_out || is_out_union || is_select));
 
      // the type of result is based on the call type
      sem_t sem_call = ast->sem->sem_type;
@@ -16179,6 +16179,13 @@ static void sem_close_stmt(ast_node *ast) {
 
   sem_cursor(cursor);
   if (is_error(cursor)) {
+    record_error(ast);
+    return;
+  }
+
+  if (cursor->sem->sem_type & SEM_TYPE_BOXED) {
+    EXTRACT_STRING(name, cursor);
+    report_error(ast, "CQL0391: CLOSE cannot be used on a boxed cursor", name);
     record_error(ast);
     return;
   }

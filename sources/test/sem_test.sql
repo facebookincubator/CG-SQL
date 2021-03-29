@@ -391,7 +391,7 @@ insert into foo(id)
 -- + {insert_stmt}: err
 -- + Error % all columns in the select must have a name
 -- +1 Error
-insert into foo(id) 
+insert into foo(id)
    select T.* from (
      select 1
    ) as T;
@@ -1646,6 +1646,16 @@ open X;
 -- + {close_stmt}: err
 -- + {name X}: err
 close X;
+
+-- TEST: close boxed cursor
+-- + {close_stmt}: err
+-- + Error % CLOSE cannot be used on a boxed cursor 'C'
+-- +1 Error
+create proc close_boxed_cursor(in box object<foo cursor>)
+begin
+  declare C cursor for box;
+  close C;
+end;
 
 -- TEST: a working delete
 -- - Error

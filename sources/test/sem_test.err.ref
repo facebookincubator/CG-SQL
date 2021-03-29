@@ -136,6 +136,7 @@ Error at test/sem_test.sql:XXXX : in return_stmt : CQL0307: return statement sho
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
 Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'X'
 Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'X'
+Error at test/sem_test.sql:XXXX : in close_stmt : CQL0391: CLOSE cannot be used on a boxed cursor 'C'
 Error at test/sem_test.sql:XXXX : in str : CQL0151: table in delete statement does not exist 'bogus_table'
 Error at test/sem_test.sql:XXXX : in str : CQL0152: cannot delete from a view 'MyView'
 Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'missing_column'
