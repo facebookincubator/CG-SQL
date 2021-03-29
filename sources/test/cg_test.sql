@@ -514,7 +514,7 @@ end;
 -- + goto catch_end_1;
 -- + catch_start_1: {
 -- + printf("error\n");
--- + _rc_ = cql_best_error(_rc_thrown_);
+-- + _rc_ = cql_best_error(_rc_thrown_1);
 -- + goto cql_cleanup;
 -- + catch_end_1:
 -- + _rc_ = SQLITE_OK;
@@ -3035,7 +3035,7 @@ set l2 := cql_get_blob_size(blob_var2);
 -- + "RELEASE base_proc_savepoint");
 -- + catch_start% {
 -- + "ROLLBACK TO base_proc_savepoint");
--- + _rc_ = cql_best_error(_rc_thrown_);
+-- + _rc_ = cql_best_error(_rc_thrown_1);
 -- + catch_end%:;
 create proc base_proc_savepoint()
 begin
@@ -3287,10 +3287,105 @@ SalesMovingAverage FROM SalesInfo;
 -- + export: DECLARE PROC emit_rc (OUT result_code INTEGER NOT NULL) USING TRANSACTION;
 -- + CQL_WARN_UNUSED cql_code emit_rc(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull result_code)
 -- + cql_code _rc_ = SQLITE_OK;
--- + *result_code = _rc_;
+-- + *result_code = SQLITE_OK;
 create proc emit_rc(out result_code integer not null)
 begin
   set result_code := @rc;
+end;
+
+-- TEST: ensure that we use the right result code for thrown and storage
+-- this code samples the @rc value at various places, the different names
+-- allow us to be sure that we're using the right code in each scope.
+-- + cql_code _rc_ = SQLITE_OK;
+-- + cql_int32 err = 0;
+-- + cql_int32 e0 = 0;
+-- + cql_int32 e1 = 0;
+-- + cql_int32 e2 = 0;
+-- + cql_int32 e3 = 0;
+-- + cql_int32 e4 = 0;
+-- + cql_int32 e5 = 0;
+-- + cql_int32 e6 = 0;
+-- + e0 = SQLITE_OK;
+-- + err = SQLITE_OK;
+-- + int32_t _rc_thrown_1 = _rc_;
+-- + err = _rc_thrown_1;
+-- + e1 = _rc_thrown_1;
+-- + e2 = _rc_thrown_1;
+-- + int32_t _rc_thrown_2 = _rc_;
+-- + e3 = _rc_thrown_2;
+-- + err = _rc_thrown_2;
+-- + _rc_ = cql_best_error(_rc_thrown_2);
+-- + e4 = _rc_thrown_1;
+-- + int32_t _rc_thrown_3 = _rc_;
+-- + e5 = _rc_thrown_3;
+-- + printf("Error %d\n", err);
+-- + e6 = SQLITE_OK;
+create proc rc_test()
+begin
+  LET err := @rc;
+  let e0 := @rc;
+  begin try
+  begin try
+    create table whatever_anything(id integer);
+  end try;
+  begin catch
+    set err := @rc;
+    let e1 := @rc;
+    begin try
+       let e2 := @rc;
+       create table whatever_anything(id integer);
+    end try;
+    begin catch
+       let e3 := @rc;
+       set err := @rc;
+       throw;
+    end catch;
+    let e4 := @rc;
+  end catch;
+  end try;
+  begin catch
+    let e5 := @rc;
+    call printf("Error %d\n", err);
+  end catch;
+  let e6 := @rc;
+end;
+
+-- TEST: lazy decl of rcthrown variables (via throw)
+-- - int32_t _rc_thrown_1 = _rc_;
+-- + int32_t _rc_thrown_2 = _rc_;
+-- +  _rc_ = cql_best_error(_rc_thrown_2);
+create proc rc_test_lazy1()
+begin
+  begin try
+    create table whatever_anything(id integer);
+  end try;
+  begin catch
+    begin try
+       create table whatever_anything(id integer);
+    end try;
+    begin catch
+       throw;
+    end catch;
+  end catch;
+end;
+
+-- TEST: lazy decl of rcthrown variables (via @rc)
+-- - int32_t _rc_thrown_1 = _rc_;
+-- + int32_t _rc_thrown_2 = _rc_;
+-- +  err = _rc_thrown_2;
+create proc rc_test_lazy2()
+begin
+  begin try
+    create table whatever_anything(id integer);
+  end try;
+  begin catch
+    begin try
+       create table whatever_anything(id integer);
+    end try;
+    begin catch
+       let err := @rc;
+    end catch;
+  end catch;
 end;
 
 -- TEST: make an integer enum
@@ -3534,7 +3629,7 @@ end;
 -- TEST: check that rc is set correctly in try/catch blocks
 -- +1 cql_code _rc_ = SQLITE_OK;
 -- two for setting the code plus one for the init as above
--- +3 _rc_ = SQLITE_OK;
+-- +2 _rc_ = SQLITE_OK;
 create proc try_catch_rc()
 begin
   declare C cursor for select 'foo' extra2 from bar;
@@ -3729,7 +3824,7 @@ end;
 -- Verify that this is a DML proc even though it does nothing but use throw
 -- + export: DECLARE PROC uses_throw () USING TRANSACTION;
 -- + CQL_WARN_UNUSED cql_code uses_throw(sqlite3 *_Nonnull _db_) {
--- + _rc_ = cql_best_error(_rc_thrown_);
+-- + _rc_ = cql_best_error(SQLITE_OK);
 create proc uses_throw()
 begin
   throw;

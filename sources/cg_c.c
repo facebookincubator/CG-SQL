@@ -95,6 +95,15 @@ cql_data_defn( int32_t stmt_nesting_level );
 // a goto to the current cleanup target. This is it.  Try/catch manipulate this.
 static CSTR error_target = CQL_CLEANUP_DEFAULT_LABEL;
 
+#define CQL_RCTHROWN_DEFAULT "SQLITE_OK"  // no variable at the root level, it's just "ok"
+// When we need the most recent caught error code we have to use the variable that is
+// holding the right value.  Each catch scope has its own corresponding to the error
+// that it caught.
+
+static CSTR rcthrown_current = CQL_RCTHROWN_DEFAULT;
+static int32_t rcthrown_index = 0;
+static bool_t rcthrown_used = false;
+
 // We set this to true when we have used the error target in the current context
 // The current context is either the current procedure or the current try/catch block
 // If this is true we need to emit the cleanup label.
@@ -115,9 +124,6 @@ static symtab *string_literals;
 
 // Statement text fragments are frequently duplicated, we want a unique constant for each chunk of DML/DDL
 static symtab *text_fragments;
-
-// If the proc we are generating uses throw, we need to save the _rc_ in every catch block
-static bool_t proc_uses_throw = false;
 
 // See cg_find_best_line for more details on why this is what it is.
 // All that's going on here is we recursively visit the tree and find the smallest
@@ -2058,8 +2064,19 @@ static void cg_id(ast_node *expr, charbuf *is_null, charbuf *value) {
   sem_t sem_type = expr->sem->sem_type;
   Invariant(is_variable(sem_type));
 
+  // Crucial, we want the canonical version of the name, not any MixED case version 
+  // the user might have typed.
+  CSTR name = expr->sem->name;
+
+  // map the logical @rc variable to the correct saved version
+  if (!strcmp(name, "@rc")) {
+    bprintf(value, "%s", rcthrown_current);
+    bprintf(is_null, "0", name);
+    rcthrown_used = 1;
+    return;
+  }
+
   CHARBUF_OPEN(name_buff);
-  CSTR name = expr->sem->name; // crucial
 
   if (is_out_parameter(sem_type)) {
     bprintf(&name_buff, "(*%s)", name);
@@ -2403,7 +2420,6 @@ static void cg_expr_select(ast_node *ast, CSTR op, charbuf *is_null, charbuf *va
   bprintf(cg_main_output, "_rc_ = sqlite3_step(_temp_stmt);\n");
   cg_error_on_rc_notequal("SQLITE_ROW");
   cg_get_column(sem_type_result, "_temp_stmt", 0, result_var.ptr, cg_main_output);
-  bprintf(cg_main_output, "_rc_ = SQLITE_OK;\n");
   bprintf(cg_main_output, "cql_finalize_stmt(&_temp_stmt);\n");
 
   CG_CLEANUP_RESULT_VAR();
@@ -2497,7 +2513,6 @@ static void cg_expr_select_if_nothing(ast_node *ast, CSTR op, charbuf *is_null, 
   CG_POP_EVAL(expr);
 
   bprintf(cg_main_output, "}\n");
-  bprintf(cg_main_output, "_rc_ = SQLITE_OK;\n");
   bprintf(cg_main_output, "cql_finalize_stmt(&_temp_stmt);\n");
 
   CHARBUF_CLOSE(select_value);
@@ -2950,9 +2965,6 @@ static void cg_struct_teardown_info(charbuf *output, sem_struct *sptr, CSTR name
 // if the procedure uses throw then it needs the saved RC as well so we can re-throw it
 void cg_emit_rc_vars(charbuf *output) {
   bprintf(output, "  %s _rc_ = SQLITE_OK;\n", rt->cql_code);
-  if (proc_uses_throw) {
-    bprintf(output, "  %s _rc_thrown_ = SQLITE_OK;\n", rt->cql_code);
-  }
 }
 
 // Emitting a stored proc is mostly setup.  We have a bunch of housekeeping to do:
@@ -2989,9 +3001,6 @@ static void cg_create_proc_stmt(ast_node *ast) {
     return;
   }
 
-  // set up proc_uses_throw from the state bits
-  proc_uses_throw = !!(ast->sem->sem_type & SEM_TYPE_USES_THROW);
-
   CHARBUF_OPEN(proc_fwd_ref);
   CHARBUF_OPEN(proc_body);
   CHARBUF_OPEN(proc_locals);
@@ -2999,6 +3008,12 @@ static void cg_create_proc_stmt(ast_node *ast) {
 
   bool_t saved_error_target_used = error_target_used;
   error_target_used = 0;
+
+  int32_t saved_rcthrown_index = rcthrown_index;
+  rcthrown_index = 0;
+
+  bool_t saved_rcthrown_used = rcthrown_used;
+  rcthrown_used = 0;
 
   bool_t saved_temp_emitted = temp_statement_emitted;
   bool_t saved_seed_declared = seed_declared;
@@ -3274,7 +3289,10 @@ static void cg_create_proc_stmt(ast_node *ast) {
   vault_columns = NULL;
   named_temporaries = NULL;
   error_target_used = saved_error_target_used;
+  rcthrown_index = saved_rcthrown_index;
+  rcthrown_used = saved_rcthrown_used;
   Invariant(!strcmp(error_target, CQL_CLEANUP_DEFAULT_LABEL));
+  Invariant(!strcmp(rcthrown_current, CQL_RCTHROWN_DEFAULT));
 }
 
 // Here we have to emit the prototype for the declared function as a C prototype
@@ -3822,7 +3840,6 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_fl
   if (exec_only && vars) {
     bprintf(cg_main_output, "_rc_ = sqlite3_step(%s_stmt);\n", stmt_name);
     cg_error_on_rc_notequal("SQLITE_DONE");
-    bprintf(cg_main_output, "_rc_ = SQLITE_OK;\n");
     bprintf(cg_main_output, "cql_finalize_stmt(&%s_stmt);\n", stmt_name);
   }
 
@@ -4270,7 +4287,6 @@ static void cg_fetch_stmt(ast_node *ast) {
   bprintf(cg_main_output, ");\n");
   if (!uses_out_union) {
     cg_error_on_expr("_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE");
-    bprintf(cg_main_output, "_rc_ = SQLITE_OK;\n");
   }
 }
 
@@ -5340,17 +5356,39 @@ static void cg_trycatch_helper(ast_node *try_list, ast_node *try_extras, ast_nod
   // Restore the error target, the catch block runs with the old error target
   error_target = saved_error_target;
   error_target_used = saved_error_target_used;
+  CSTR rcthrown_saved = rcthrown_current;
 
   bprintf(cg_main_output, "{\n");
 
-  if (proc_uses_throw) {
-    bprintf(cg_main_output, "  _rc_thrown_ = _rc_;\n");
-  }
+  CHARBUF_OPEN(rcthrown);
 
-  cg_stmt_list(catch_list);
+  bprintf(&rcthrown, "_rc_thrown_%d", ++rcthrown_index);
+  rcthrown_current = rcthrown.ptr;
+  bool_t rcthrown_used_saved = rcthrown_used;
+  rcthrown_used = false;
+
+  CHARBUF_OPEN(catch_block);
+    charbuf *main_saved = cg_main_output;
+    cg_main_output = &catch_block;
+
+    cg_stmt_list(catch_list);
+
+    cg_main_output = main_saved;
+
+    if (rcthrown_used) {
+      bprintf(cg_main_output, "  int32_t %s = _rc_;\n", rcthrown.ptr);
+    }
+
+    bprintf(cg_main_output, "%s", catch_block.ptr);
+
+  CHARBUF_CLOSE(catch_block);
+
+  rcthrown_current = rcthrown_saved;
+  rcthrown_used = rcthrown_used_saved;
 
   bprintf(cg_main_output, "}\n%s:;\n", catch_end.ptr);
 
+  CHARBUF_CLOSE(rcthrown);
   CHARBUF_CLOSE(catch_end);
   CHARBUF_CLOSE(catch_start);
 }
@@ -5392,9 +5430,10 @@ static void cg_proc_savepoint_stmt(ast_node *ast) {
 static void cg_throw_stmt(ast_node *ast) {
   Contract(is_ast_throw_stmt(ast));
 
-  bprintf(cg_main_output, "_rc_ = cql_best_error(_rc_thrown_);\n");
+  bprintf(cg_main_output, "_rc_ = cql_best_error(%s);\n", rcthrown_current);
   bprintf(cg_main_output, "goto %s;\n", error_target);
   error_target_used = 1;
+  rcthrown_used = 1;
 }
 
 // Dispatch to one of the statement helpers using the symbol table.
@@ -6595,7 +6634,6 @@ cql_noexport void cg_c_main(ast_node *head) {
   if (global_proc_needed) {
     exit_on_no_global_proc();
 
-    proc_uses_throw = !!(global_proc_flags & SEM_TYPE_USES_THROW);
     bprintf(&body_file, "#define _PROC_ %s\n", global_proc_name);
 
     bindent(&indent, cg_scratch_vars_output, 2);
@@ -6823,6 +6861,9 @@ cql_noexport void cg_c_cleanup() {
   catch_block_count = 0;
   error_target = CQL_CLEANUP_DEFAULT_LABEL;
   error_target_used = false;
+  rcthrown_current = CQL_RCTHROWN_DEFAULT;
+  rcthrown_used = false;
+  rcthrown_index = 0;
   return_used = false;
   fragment_last_offset = 0;
   seed_declared = false;

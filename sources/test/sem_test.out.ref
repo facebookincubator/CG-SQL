@@ -5332,7 +5332,7 @@ SET X := @RC;
 
   {assign}: X: integer variable
   | {name X}: X: integer variable
-  | {name @RC}: _rc_: integer notnull variable
+  | {name @RC}: @rc: integer notnull variable
 
 The statement ending at line XXXX
 
@@ -5633,7 +5633,7 @@ END;
     | {stmt_list}: ok
       | {assign}: result_code: integer notnull variable out
         | {name result_code}: result_code: integer notnull variable out
-        | {name @RC}: _rc_: integer notnull variable
+        | {name @RC}: @rc: integer notnull variable
 
 The statement ending at line XXXX
 
@@ -7197,8 +7197,8 @@ BEGIN
   OUT C;
 END;
 
-  {create_proc_stmt}: C: select: { x: integer notnull } variable dml_proc shape_storage uses_out uses_throw
-  | {name throw_before_out}: C: select: { x: integer notnull } variable dml_proc shape_storage uses_out uses_throw
+  {create_proc_stmt}: C: select: { x: integer notnull } variable dml_proc shape_storage uses_out
+  | {name throw_before_out}: C: select: { x: integer notnull } variable dml_proc shape_storage uses_out
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {trycatch_stmt}: ok
@@ -52615,8 +52615,8 @@ BEGIN
   END;
 END;
 
-  {create_proc_stmt}: ok dml_proc uses_throw
-  | {name proc_savepoint_basic}: ok dml_proc uses_throw
+  {create_proc_stmt}: ok dml_proc
+  | {name proc_savepoint_basic}: ok dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {proc_savepoint_stmt}: ok

@@ -1429,7 +1429,7 @@ declare X integer;
 -- TEST: use the result code helper
 -- + SET X := @RC;
 -- + {assign}: X: integer variable
--- + {name @RC}: _rc_: integer notnull variable
+-- + {name @RC}: @rc: integer notnull variable
 -- - Error
 set X := @RC;
 
@@ -1561,7 +1561,7 @@ end;
 -- note this is now a dml_proc (!)
 -- + {create_proc_stmt}: ok dml_proc
 -- + {assign}: result_code: integer notnull variable out
--- + {name @RC}: _rc_: integer notnull variable
+-- + {name @RC}: @rc: integer notnull variable
 -- - Error
 create proc using_rc(out result_code integer not null)
 begin
@@ -2173,7 +2173,7 @@ end;
 
 -- TEST: the out statement will force the proc type to be recomputed, it must not lose the
 -- throw state when that happens.
--- + {create_proc_stmt}: C: select: { x: integer notnull } variable dml_proc shape_storage uses_out uses_throw
+-- + {create_proc_stmt}: C: select: { x: integer notnull } variable dml_proc shape_storage uses_out
 -- - Error
 create proc throw_before_out()
 begin

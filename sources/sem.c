@@ -1545,9 +1545,6 @@ static void get_sem_flags(sem_t sem_type, charbuf *out) {
   if (sem_type & SEM_TYPE_BOXED) {
     bprintf(out, " boxed");
   }
-  if (sem_type & SEM_TYPE_USES_THROW) {
-    bprintf(out, " uses_throw");
-  }
   if (sem_type & SEM_TYPE_VIRTUAL) {
     bprintf(out, " virtual");
   }
@@ -4487,8 +4484,6 @@ static void sem_update_proc_type_for_select(ast_node *ast) {
 
   // If we haven't seen any other result type, then we're good to go, use this one.
   if (core_type_of(current_proc->sem->sem_type) == SEM_TYPE_OK) {
-    // this must survive the upgrade
-    bool_t uses_throw = !!(current_proc->sem->sem_type & SEM_TYPE_USES_THROW);
 
     // start with the source of the data for the shape
     current_proc->sem = ast->sem;
@@ -4509,10 +4504,6 @@ static void sem_update_proc_type_for_select(ast_node *ast) {
 
     if (is_out) {
       sem_type |= SEM_TYPE_USES_OUT;
-    }
-
-    if (uses_throw) {
-      sem_type |= SEM_TYPE_USES_THROW;
     }
 
     // this clones the sem entirely, replacing the flags
@@ -16015,9 +16006,6 @@ static void sem_proc_savepoint_stmt(ast_node *ast)
     }
   }
 
-  // implicit throw associated with savepoint
-  sem_add_flags(current_proc, SEM_TYPE_USES_THROW);
-
   record_ok(ast);
 }
 
@@ -16050,13 +16038,6 @@ static void sem_trycatch_stmt(ast_node *ast) {
 // Throw can literally go anywhere, so it's ok.
 static void sem_throw_stmt(ast_node *ast) {
   Contract(is_ast_throw_stmt(ast));
-
-  if (current_proc) {
-    sem_add_flags(current_proc, SEM_TYPE_USES_THROW);
-  }
-  else {
-    global_proc_flags |= SEM_TYPE_USES_THROW;
-  }
 
   // "throw" implies that we have a return code which implies all of the proc
   // things as surely as if we had used the database.  We need to be a proc
@@ -16661,7 +16642,7 @@ static void sem_expr_proclit(ast_node *ast) {
 static void sem_expr_at_rc(ast_node *ast) {
   Contract(is_ast_str(ast));
   ast->sem = new_sem(SEM_TYPE_INTEGER | SEM_TYPE_NOTNULL| SEM_TYPE_VARIABLE);
-  ast->sem->name = "_rc_";
+  ast->sem->name = "@rc";
   has_dml = 1; // use of result code implies DML proc
 }
 

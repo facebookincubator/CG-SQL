@@ -3478,6 +3478,35 @@ BEGIN_TEST(empty_out_union)
   EXPECT(NOT D); -- cursor empty but not null
 END_TEST(empty_out_union)
 
+BEGIN_TEST(nested_rc_values)
+  let e0 := @rc;
+  EXPECT(e0 = 0); -- SQLITE_OK
+  begin try
+    -- force duplicate table error
+    create table foo(id integer primary key);
+    create table foo(id integer primary key);
+  end try;
+  begin catch
+    let e1 := @rc;
+    EXPECT(e1 == 1); -- SQLITE_ERROR
+    begin try
+       let e2 := @rc;
+       EXPECT(e2 == 1); -- SQLITE_ERROR
+       -- force constraint error
+       insert into foo using 1 id;
+       insert into foo using 1 id;
+    end try;
+    begin catch
+       let e3 := @rc;
+       EXPECT(e3 == 19); -- SQLITE_CONSTRAINT
+    end catch;
+    let e4 := @rc;
+    EXPECT(e4 == 1); -- back to SQLITE_ERROR
+  end catch;
+  let e7 := @rc;
+  EXPECT(e7 = 0); -- back to SQLITE_OK
+END_TEST(nested_rc_values)
+
 END_SUITE()
 
 -- manually force tracing on by redefining the macros

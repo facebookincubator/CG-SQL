@@ -147,7 +147,7 @@ cql_data_decl( bytebuf *recreate_annotations );
 #define SEM_TYPE_BOXED             _64(0x10000000) // set if a cursor's lifetime is managed by a box object
 #define SEM_TYPE_HAS_CHECK         _64(0x20000000) // set for table column with a "check" clause
 #define SEM_TYPE_HAS_COLLATE       _64(0x40000000) // set for table column with a "collate" clause
-#define SEM_TYPE_USES_THROW        _64(0x80000000) // set for a procedure that has a throw in it
+#define SEM_TYPE_AVAILABLE         _64(0x80000000) // this bit is no longer used
 #define SEM_TYPE_VIRTUAL          _64(0x100000000) // set if and only if this is a virtual table
 #define SEM_TYPE_HIDDEN_COL       _64(0x200000000) // set if and only if hidden column on a virtual table
 #define SEM_TYPE_TVF              _64(0x400000000) // set if and only table node is a table valued function
