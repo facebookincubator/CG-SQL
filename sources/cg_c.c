@@ -5143,16 +5143,23 @@ static void cg_call_stmt_with_cursor(ast_node *ast, CSTR cursor_name) {
   if (dml_proc) {
     bprintf(&invocation, "_rc_ = %s(_db_", proc_sym.ptr);
     if (out_union_proc && !cursor_name) {
-      // this is case 3b above
+      // This is case 3b above.  The tricky bit here is that there might
+      // be more than one such call.  The callee is not going to release
+      // the out arg as it might be junk from the callee's perspective so
+      // we have to release it in case this call is in a loop or if this
+      // call is repeated in some other way
+      bprintf(cg_main_output, "cql_object_release(_result_set_);\n");
       bprintf(&invocation, ", (%s *)_result_set_", result_set_ref.ptr);
     }
     else if (out_union_proc) {
-      // this is case 3a above
+      // this is case 3a above.
       Invariant(cursor_name); // either specified or the default _result_ variable
       bprintf(&invocation, ", &%s_result_set_", cursor_name);
     }
     else if (result_set_proc && cursor_name == NULL) {
-      // this is case 1b above, prop the result as our output
+      // This is case 1b above, prop the result as our output.  As with case
+      // 3b above we have to pre-release _result_stmt_ because of repetition.
+      bprintf(cg_main_output, "cql_finalize_stmt(_result_stmt);\n");
       bprintf(&invocation, ", _result_stmt");
     }
     else if (result_set_proc) {
@@ -5164,7 +5171,9 @@ static void cg_call_stmt_with_cursor(ast_node *ast, CSTR cursor_name) {
   else {
     bprintf(&invocation, "%s(", proc_sym.ptr);
     if (out_union_proc && !cursor_name) {
-      // this is 3b again, but with no database arg
+      // this is 3b again, but with no database arg. As with case
+      // 3b above we have to pre-release _result_stmt_ because of repetition.
+      bprintf(cg_main_output, "cql_object_release(_result_set_);\n");
       bprintf(&invocation, "(%s *)_result_set_", result_set_ref.ptr);
     }
     else if (out_union_proc) {
