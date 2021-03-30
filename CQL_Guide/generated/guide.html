@@ -6141,7 +6141,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Mon Mar 22 18:26:17 PDT 2021</p>
+<p>Snapshot as of Mon Mar 29 16:53:45 PDT 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -7122,6 +7122,7 @@ insert_stmt:
   insert_stmt_type name opt_column_spec select_stmt opt_insert_dummy_spec
   | insert_stmt_type name opt_column_spec from_shape opt_insert_dummy_spec
   | insert_stmt_type name &quot;DEFAULT&quot; &quot;VALUES&quot;
+  | insert_stmt_type name &quot;USING&quot; select_stmt
   | insert_stmt_type name &quot;USING&quot; expr_names opt_insert_dummy_spec
   ;
 
@@ -9269,7 +9270,7 @@ insert into x
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Mon Mar 22 18:26:17 PDT 2021</p>
+<p>Snapshot as of Mon Mar 29 16:53:46 PDT 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

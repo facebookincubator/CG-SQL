@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Mon Mar 22 18:26:17 PDT 2021
+Snapshot as of Mon Mar 29 16:53:45 PDT 2021
 
 ### Operators and Literals
 
@@ -1006,6 +1006,7 @@ insert_stmt:
   insert_stmt_type name opt_column_spec select_stmt opt_insert_dummy_spec
   | insert_stmt_type name opt_column_spec from_shape opt_insert_dummy_spec
   | insert_stmt_type name "DEFAULT" "VALUES"
+  | insert_stmt_type name "USING" select_stmt
   | insert_stmt_type name "USING" expr_names opt_insert_dummy_spec
   ;
 

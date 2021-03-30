@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Mon Mar 22 18:26:17 2021
+// Snapshot as of Mon Mar 29 16:53:45 2021
 
 
 const PREC = {
@@ -179,7 +179,7 @@ module.exports = grammar({
     with_insert_stmt: $ => seq($.with_prefix, $.insert_stmt),
     opt_column_spec: $ => choice(seq('(', optional($.opt_name_list), ')'), seq('(', $.shape_def, ')')),
     from_shape: $ => choice(seq($.FROM, $.CURSOR, $.name, optional($.opt_column_spec)), seq($.FROM, $.name, optional($.opt_column_spec)), seq($.FROM, $.ARGUMENTS, optional($.opt_column_spec))),
-    insert_stmt: $ => choice(seq($.insert_stmt_type, $.name, optional($.opt_column_spec), $.select_stmt, optional($.opt_insert_dummy_spec)), seq($.insert_stmt_type, $.name, optional($.opt_column_spec), $.from_shape, optional($.opt_insert_dummy_spec)), seq($.insert_stmt_type, $.name, $.DEFAULT, $.VALUES), seq($.insert_stmt_type, $.name, $.USING, $.expr_names, optional($.opt_insert_dummy_spec))),
+    insert_stmt: $ => choice(seq($.insert_stmt_type, $.name, optional($.opt_column_spec), $.select_stmt, optional($.opt_insert_dummy_spec)), seq($.insert_stmt_type, $.name, optional($.opt_column_spec), $.from_shape, optional($.opt_insert_dummy_spec)), seq($.insert_stmt_type, $.name, $.DEFAULT, $.VALUES), seq($.insert_stmt_type, $.name, $.USING, $.select_stmt), seq($.insert_stmt_type, $.name, $.USING, $.expr_names, optional($.opt_insert_dummy_spec))),
     insert_list: $ => choice($.expr, seq($.expr, ',', optional($.insert_list))),
     basic_update_stmt: $ => seq($.UPDATE, optional($.opt_name), $.SET, $.update_list, optional($.opt_where)),
     with_update_stmt: $ => seq($.with_prefix, $.update_stmt),
