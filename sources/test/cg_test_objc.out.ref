@@ -1563,6 +1563,11 @@ static inline BOOL CGBRadioactiveProcGetDataIsEncoded(CGBRadioactiveProc *result
   return CGCRadioactiveProcGetDataIsEncoded(CGCRadioactiveProcFromCGBRadioactiveProc(resultSet));
 }
 
+static inline void CGBRadioactiveProcSetEncoding(int32_t col, BOOL encode)
+{
+  return CGCRadioactiveProcSetEncoding(col, encode);
+}
+
 static inline int32_t CGBRadioactiveProcResultCount(CGBRadioactiveProc *resultSet)
 {
   return CGCRadioactiveProcResultCount(CGCRadioactiveProcFromCGBRadioactiveProc(resultSet));
@@ -1884,6 +1889,11 @@ static inline BOOL CGBOutUnionDmlGetDataIsEncoded(CGBOutUnionDml *resultSet)
   return CGCOutUnionDmlGetDataIsEncoded(CGCOutUnionDmlFromCGBOutUnionDml(resultSet));
 }
 
+static inline void CGBOutUnionDmlSetEncoding(int32_t col, BOOL encode)
+{
+  return CGCOutUnionDmlSetEncoding(col, encode);
+}
+
 static inline int32_t CGBOutUnionDmlResultCount(CGBOutUnionDml *resultSet)
 {
   return CGCOutUnionDmlResultCount(CGCOutUnionDmlFromCGBOutUnionDml(resultSet));
@@ -2027,6 +2037,11 @@ static inline BOOL CGBVaultSensitiveWithValuesProcGetNameIsEncoded(CGBVaultSensi
   return CGCVaultSensitiveWithValuesProcGetNameIsEncoded(CGCVaultSensitiveWithValuesProcFromCGBVaultSensitiveWithValuesProc(resultSet));
 }
 
+static inline void CGBVaultSensitiveWithValuesProcSetEncoding(int32_t col, BOOL encode)
+{
+  return CGCVaultSensitiveWithValuesProcSetEncoding(col, encode);
+}
+
 static inline int32_t CGBVaultSensitiveWithValuesProcResultCount(CGBVaultSensitiveWithValuesProc *resultSet)
 {
   return CGCVaultSensitiveWithValuesProcResultCount(CGCVaultSensitiveWithValuesProcFromCGBVaultSensitiveWithValuesProc(resultSet));
@@ -2087,6 +2102,11 @@ static inline BOOL CGBVaultSensitiveWithNoValuesProcGetNameIsEncoded(CGBVaultSen
 static inline BOOL CGBVaultSensitiveWithNoValuesProcGetTypeIsEncoded(CGBVaultSensitiveWithNoValuesProc *resultSet)
 {
   return CGCVaultSensitiveWithNoValuesProcGetTypeIsEncoded(CGCVaultSensitiveWithNoValuesProcFromCGBVaultSensitiveWithNoValuesProc(resultSet));
+}
+
+static inline void CGBVaultSensitiveWithNoValuesProcSetEncoding(int32_t col, BOOL encode)
+{
+  return CGCVaultSensitiveWithNoValuesProcSetEncoding(col, encode);
 }
 
 static inline int32_t CGBVaultSensitiveWithNoValuesProcResultCount(CGBVaultSensitiveWithNoValuesProc *resultSet)
@@ -2151,6 +2171,11 @@ static inline BOOL CGBVaultUnionAllTableProcGetTypeIsEncoded(CGBVaultUnionAllTab
   return CGCVaultUnionAllTableProcGetTypeIsEncoded(CGCVaultUnionAllTableProcFromCGBVaultUnionAllTableProc(resultSet));
 }
 
+static inline void CGBVaultUnionAllTableProcSetEncoding(int32_t col, BOOL encode)
+{
+  return CGCVaultUnionAllTableProcSetEncoding(col, encode);
+}
+
 static inline int32_t CGBVaultUnionAllTableProcResultCount(CGBVaultUnionAllTableProc *resultSet)
 {
   return CGCVaultUnionAllTableProcResultCount(CGCVaultUnionAllTableProcFromCGBVaultUnionAllTableProc(resultSet));
@@ -2194,6 +2219,11 @@ static inline NSString *_Nullable CGBVaultAliasColumnProcGetAliasName(CGBVaultAl
 static inline BOOL CGBVaultAliasColumnProcGetAliasNameIsEncoded(CGBVaultAliasColumnProc *resultSet)
 {
   return CGCVaultAliasColumnProcGetAliasNameIsEncoded(CGCVaultAliasColumnProcFromCGBVaultAliasColumnProc(resultSet));
+}
+
+static inline void CGBVaultAliasColumnProcSetEncoding(int32_t col, BOOL encode)
+{
+  return CGCVaultAliasColumnProcSetEncoding(col, encode);
 }
 
 static inline int32_t CGBVaultAliasColumnProcResultCount(CGBVaultAliasColumnProc *resultSet)
@@ -2241,6 +2271,11 @@ static inline BOOL CGBVaultAliasColumnNameProcGetAliasNameIsEncoded(CGBVaultAlia
   return CGCVaultAliasColumnNameProcGetAliasNameIsEncoded(CGCVaultAliasColumnNameProcFromCGBVaultAliasColumnNameProc(resultSet));
 }
 
+static inline void CGBVaultAliasColumnNameProcSetEncoding(int32_t col, BOOL encode)
+{
+  return CGCVaultAliasColumnNameProcSetEncoding(col, encode);
+}
+
 static inline int32_t CGBVaultAliasColumnNameProcResultCount(CGBVaultAliasColumnNameProc *resultSet)
 {
   return CGCVaultAliasColumnNameProcResultCount(CGCVaultAliasColumnNameProcFromCGBVaultAliasColumnNameProc(resultSet));
@@ -2285,6 +2320,11 @@ static inline NSNumber *_Nullable CGBExtGetF2(CGBFragTest *resultSet, int32_t ro
 static inline BOOL CGBExtGetF2IsEncoded(CGBFragTest *resultSet)
 {
   return CGBFragTestGetF2IsEncoded(resultSet);
+}
+
+static inline void CGBExtSetEncoding(int32_t col, BOOL encode)
+{
+  return CGCExtSetEncoding(col, encode);
 }
 
 static inline int32_t CGBExtResultCount(CGBFragTest *resultSet)

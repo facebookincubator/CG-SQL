@@ -360,6 +360,18 @@ static void cg_objc_proc_result_set(ast_node *ast) {
         CHARBUF_CLOSE(objc_getter);
       }
     }
+
+    // Add a helper function that overrides CQL_DATA_TYPE_ENCODED bit of a resultset.
+    // It's a debugging function that allow you to turn ON/OFF encoding/decoding when
+    // your app is running.
+    bprintf(h,
+            "\nstatic inline void %sSetEncoding(%s col, %s encode)\n",
+            objc_name.ptr,
+            rt->cql_int32,
+            rt->cql_bool);
+    bprintf(h, "{\n");
+    bprintf(h, "  return %sSetEncoding(col, encode);\n", c_name.ptr);
+    bprintf(h, "}\n");
   }
 
   bprintf(h,
