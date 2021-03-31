@@ -58,10 +58,10 @@ However, hello.c will not have a `main` -- rather it will have a function like t
 void hello(void);
 ```
 
-The declaration of this function can be found in `hello.h`.  
+The declaration of this function can be found in `hello.h`.
 
 That `hello` function is not quite adequate to do get a running program, which brings us to the next step in
-getting things running.  Typically you have some kind of client program that will execute the procedures you 
+getting things running.  Typically you have some kind of client program that will execute the procedures you
 create in CQL.  Let's create a simple one in a file we'll creatively name `main.c`.
 
 A very simple CQL main might look like this:
@@ -132,7 +132,7 @@ begin
 end;
 ```
 
-You may notice that both the SQL style `--` line prefix comments and the C style `/* */` forms 
+You may notice that both the SQL style `--` line prefix comments and the C style `/* */` forms
 are acceptable comment forms. Indeed, it's actually quite normal to pass CQL source through the C pre-processor before giving
 it to the CQL compiler, thereby gaining `#define` and `#include` as well as other pre-processing options
 like token pasting in addition to the other comment forms.  More on this later.
@@ -153,14 +153,13 @@ The most basic types are the scalar or "unitary" types (as they are referred to 
 |`text`      |n/a          | an immutable string reference      |
 |`blob`      |n/a          | an immutable blob reference        |
 |`object`    |n/a          | an object reference                |
-|`object<T>` |n/a          | an object reference of type T      |
 
 \* SQLite makes no distinction between integer storage and long integer storage, but the declaration
 tells CQL whether it should use the SQLite methods for binding and reading 64 bit or 32 bit quantities
-from the column.
+when using the variable or column so declared.
 
 There will be more notes on these types later, but importantly, all keywords and names in CQL
-are case insensitive just like in the underlying SQL language.   Additionally all of the 
+are case insensitive just like in the underlying SQL language.   Additionally all of the
 above may be combined with `not null` to indicate that a `null` value may not be stored
 in that variable (as in the example).  When generating the C code, the case used in the declaration
 becomes the canonical case of the variable and all other cases are converted to that in the emitted
@@ -175,7 +174,7 @@ All reference types are initialized to `NULL` when they are declared.
 The programs execution begins with three assignments:
 
 ```sql
-  set lower := 0; 
+  set lower := 0;
   set upper := 300;
   set step := 20;
 ```
@@ -192,7 +191,7 @@ The table is then printed using a `while` loop
   end;
 ```
 
-This has the usual meaning, with the statements in the `begin/end` block being executed repeatedly 
+This has the usual meaning, with the statements in the `begin/end` block being executed repeatedly
 until the condition becomes false.
 
 The body of a `begin/end` block such as the one in the `while` statement can contain one or more statements.
@@ -265,7 +264,7 @@ create table my_data(t text not null);
 
 create proc hello()
 begin
-  insert into my_data(t)  values("Hello, world\n");
+  insert into my_data(t) values("Hello, world\n");
   declare t text not null;
   set t := (select * from my_data);
   call printf('%s', t);
@@ -312,7 +311,7 @@ If we re-run CQL and look in the `hello.h` output file we'll see that the declar
   cql_code hello(sqlite3 *_db_);
 ```
 
-indicating that the database is used and a SQLite return code is provided.  We're nearly there.  If you attempt
+This indicates that the database is used and a SQLite return code is provided.  We're nearly there.  If you attempt
 to build the program as before there will be several link-time errors due to missing functions.  Typically these
 are resolved by providing the SQLite library to the command line and also adding the CQL runtime.
 The new command line looks something like this:
@@ -334,7 +333,7 @@ Let's talk about the final missing bit.
 ### Declaring Schema
 
 In CQL a loose piece of Data Definition Language (henceforth DDL) does not actually create or drop anything.
-In most CQL programs,  the normal situation is that "something" has already created the database and put some
+In most CQL programs the normal situation is that "something" has already created the database and put some
 data in it.  You need to tell the CQL compiler about the schema so that it knows what the tables are and what to
 expect to find in those tables.  This is because typically you're reconnecting to some sort of existing database.
 So, in CQL, loose DDL simply *declares* schema, it does not create it.  To create schema you have to put the DDL
@@ -378,7 +377,7 @@ We'll need such a database to use our procedure, and we use it in the call here:
 This provides a valid db handle to our procedure.  Note that the procedure doesn't know what database it is
 supposed to operate on, it expects to be handed a suitable database on a silver platter.  In fact any given proc
 could be used with various databases at various times.  Just like SQLite, CQL does not enforce any particular
-database setup;  it does what you tell it to.
+database setup; it does what you tell it to.
 
 When `hello` runs we begin with
 
@@ -421,13 +420,22 @@ SQLite for evaluation according to the SQLite rules.  The expression is statical
 ensure that it has exactly one result column. In this case the `*` is just column `t`, and actually it would have
 be clearer to use `t` directly here but then there wouldn't have a reason to talk about `*` and multiple columns.
 At run time, the `select` query must return exactly one row or an error code will be returned.  It's not uncommmon
-to see `(select ... limit 1)` to force the issue.  But that still leaves the possibility of zero rows, which would be an error.  We'll talk about more flexible ways to read from the database later.
+to see `(select ... limit 1)` to force the issue.  But that still leaves the possibility of zero rows, which would
+be an error.  We'll talk about more flexible ways to read from the database later.
+
+Note: you can declare a variable and assign it in one step with the `LET` keyword, e.g.
+```
+  let t := (select * from my_data);
+```
+
+The code would normally be written in this way but for discussion purposes, these examples continue to avoid `LET`.
 
 At this point it seems wise to bring up the unusual expression evaluation properties of CQL.
 CQL is by necessity a two-headed beast.  On the one side there is a rich expression evaluation language for
 working with local variables. Those expressions are compiled into C logic that emulates the behavior of SQLite
 on the data.  It provides complex expression constructs such `IN` and `CASE` but it is ultimately evaluated by C
-execution.  Alternately, anything that is inside of a piece of SQL is necessarily evaluated by SQLite itself.  To make this clearer let's change the example a little bit before we move on.
+execution.  Alternately, anything that is inside of a piece of SQL is necessarily evaluated by SQLite itself.
+To make this clearer let's change the example a little bit before we move on.
 
 ```sql
   set t := (select "__"||t||' '||1.234 from my_data);
@@ -647,9 +655,6 @@ Which probably doesn't come up very often but it does illustrate several things:
 
  * `WITH RECURSIVE` actually provides a full lambda calculus so arbitrary computation is possible
  * You can use `WITH RECURSIVE` to create table expressions that are sequences of numbers easily, with no reference to any real data
- * You can announce SQLite builtin functions other than the most standard ones, or SQLite user defined functions with `DECLARE SELECT FUNCTION` -- this creates a function whose type is known and is only useable inside of SQL evaluation contexts (just like the `||` operator)
-   *  in general CQL doesn't know what these declared functions do, so it cannot emulate them
-   *  some would be very hard to emulate correctly under the best of circumstances
 
 
 ## Chapter 3: Expressions, Literals, Nullability, Sensitivity
@@ -771,7 +776,14 @@ LET l_i := nullable(1L);  -- nullable long variable initialized to 1
 
 #### The `@RC` special variable
 
-CQL also has the special built-in variable `@RC` which refers to the most recent result code returned by a SQLite operation, e.g. 0 == `SQLITE_OK`, 1 == `SQLITE_ERROR`.   `@RC` is of type `integer not null`.  Note: there are many hidden SQLite operations such as statement finalization so `@RC` might change where there is no visible SQL operation.  The most common use of `@RC` is to capture the error code in the first statement of a `catch` block.
+CQL also has the special built-in variable `@RC` which refers to the most recent error code returned by a SQLite operation, e.g. 0 == `SQLITE_OK`, 1 == `SQLITE_ERROR`.   `@RC` is of type `integer not null`.  Specifically:
+
+* each catch block captures the error code when it is entered into its own local variable
+* this variable is created lazily, so it only exists if it is used
+  * the variable is called `_rc_thrown_n` where n is the catch block number in the procedure
+* any reference to `@RC` refers to the above error variable of the innermost catch block the `@RC` reference is in
+* if the `@RC` reference happens outside of any catch block its value is `SQLITE_OK` (i.e. zero).
+
 
 ### Types of Literals
 
@@ -1908,6 +1920,79 @@ This bit says that on every 100th iteration we go back to the start of the loop.
 
 Finishing up the control flow, on every 10th iteration we print the value of the loop variable.
 
+### The SWITCH Statement
+
+The  CQL `SWITCH` is designed to map to the C `switch` statement for better codegen and also to give us the opportunity to do better error checking.
+`SWITCH` is *statement* like `IF` not an *expression* like `CASE..WHEN..END` so it combines with other statements. The general form looks like this:
+
+```SQL
+SWITCH switch-expression [optional ALL VALUES]
+WHEN expr1, expr2, ... THEN
+  [statement_list]
+WHEN expr3, ... THEN
+  [statement_list]
+WHEN expr4 NOTHING
+ELSE
+  [statement_list]
+END;
+```
+* the switch-expression must be a not-null integral type (`integer not null` or `long integer not null`)
+* the `WHEN` expressions [expr1, expr2, etc.] are made from constant integer expressions (e.g. `5`, `1+7`, `1<<2`, or `my_enum.thing`)
+* the `WHEN` expressions must be compatible with the switch expression (long constants cannot be used if the switch expression is an integer)
+* the values in the `WHEN` clauses must be unique (after evaluation)
+* within one of the interior statement lists the `LEAVE` keyword exits the `SWITCH` prematurely, just like `break` in C
+   * a `LEAVE` is not required before the next `WHEN`
+   * there are no fall-through semantics as you can find in `C`, if fall-through ever comes to `SWITCH` it will be explicit
+* if the keyword `NOTHING` is used instead of `THEN` it means there is no code for that case, this is useful with `ALL VALUES` see below
+* the `ELSE` clause is optional and works just like `default` in `C`, covering any cases not otherwise explicitly listed
+* If you add `ALL VALUES` then:
+   * the expression be an from an enum type
+   * the `WHEN` values must cover every value of the enum
+      * enum members that start with a leading `_` are by convention considered pseudo values and do not need to be covered
+   * there can be no extra `WHEN` values not in the enum
+   * there can be no `ELSE` clause (it would defeat the point of listing `ALL VALUES` which is to get an error if new values come along)
+
+Some more complete examples:
+
+```
+let x := get_something();
+switch x
+  when 1,1+1 then -- constant expressions ok
+    set y := 'small';
+    -- other stuff
+  when 3,4,5 then
+    set y := 'medium';
+    -- other stuff
+  when 6,7,8 then
+    set y := 'large';
+    -- other stuff
+  else
+    set y := 'zomg enormous';
+end;
+
+declare enum item integer (
+  pen = 0, pencil, brush,
+  paper, canvas,
+  _count
+);
+
+let x := get_item(); -- returns one of the above
+
+switch x all values
+  when item.pen, item.pencil then
+     call write_something();
+  when item.brush then nothing
+     -- itemize brush but it needs no code
+  when item.paper, item.canvas then
+    call setup_writing();
+end;
+```
+
+Using `THEN NOTHING` allows the compiler to avoid emitting a useless `break` in the C code.  Hence that choice is better/clearer than `when brush then leave;`
+
+Note that the presence of `_count` in the enum will not cause an error in the above because it starts with `_`.
+
+The `C` output for this statement will be a direct mapping to a `C` switch statement.
 
 ### The TRY, CATCH, and THROW Statements
 
@@ -1925,7 +2010,7 @@ begin
       update foo set t = t_ where id = id_;
     end try;
     begin catch
-      printf("Error!\n");
+      call printf("Error code %d!\n", @rc);
       throw;
     end catch;
   end catch;
@@ -1955,14 +2040,16 @@ that row instead.  However that might also fail, so we  wrap it in another try. 
 
 ```sql
     begin catch
-      printf("Error!\n");
+      call printf("Error code %d!\n", @rc);
       throw;
     end catch;
 ```
 
-Here we print a diagnostic message and then use the `throw` keyword to rethrow the previous failure.  Throw will create a failure in
-the current block using the most recent result code from SQLite if it is an error, or else the general `SQLITE_ERROR` result code
-if there is no such error.  In this case the failure code for the `update` statement will become the result code of the current procedure.
+Here we see a usage of the `@rc` variable to observe the failed error code.  In this case we simply print a diagnostic message and
+then use the `throw` keyword to rethrow the previous failure (exactly what is stored in `@rc`).  In general, `throw` will create a
+failure in the current block using the most recent failed result code from SQLite (`@rc`) if it is an error, or else the general
+`SQLITE_ERROR` result code if there is no such error.  In this case the failure code for the `update` statement will become the
+result code of the current procedure.
 
 This leaves only the closing markers:
 
@@ -8040,7 +8127,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Mon Mar 29 16:53:45 PDT 2021
+Snapshot as of Tue Mar 30 17:28:35 PDT 2021
 
 ### Operators and Literals
 
@@ -12811,7 +12898,13 @@ any implicit declaration.  Either they have already all been declared or else th
 `OUT` arguments at all, or even no arguments of any kind.
 
 ----
-CQL 0391 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+
+### CQL0391: CLOSE cannot be used on a boxed cursor
+
+When a cursor is boxed—i.e., wrapped in an object—the lifetime of the box and underlying statement are automatically managed via reference counting. Accordingly, it does not make sense to manually call CLOSE on such a cursor as it may be retained elsewhere. Instead, to allow the box to be freed and the underlying statement to be finalized, set all references to the cursor to NULL.
+
+Note: As with all other objects, boxed cursors are automatically released when they fall out of scope. You only have to set a reference to NULL if you want to release the cursor sooner, for some reason.
+
 ----
 CQL 0392 : unused, this was added to prevent merge conflicts at the end on literally every checkin
 ----
@@ -12843,7 +12936,7 @@ CQL 0400 : unused, this was added to prevent merge conflicts at the end on liter
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Mon Mar 29 16:53:46 PDT 2021
+Snapshot as of Tue Mar 30 17:28:36 PDT 2021
 
 ### Rules
 
