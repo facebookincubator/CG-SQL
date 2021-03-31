@@ -2803,18 +2803,18 @@ As it turns out the underlying data type for all result sets is the same, only t
   cql_offsetof(read_foo_row, t)
 };</code></pre>
 <p>Using the above we can now write this fetcher</p>
-<pre><code>CQL_WARN_UNUSED cql_code
+<pre><code>CQL_WARN_UNUSED cql_code 
 read_foo_fetch_results(
-  sqlite3 *_Nonnull _db_,
-  read_foo_result_set_ref _Nullable *_Nonnull result_set,
-  cql_int32 id_)
+  sqlite3 *_Nonnull _db_, 
+  read_foo_result_set_ref _Nullable *_Nonnull result_set, 
+  cql_int32 id_) 
 {
   sqlite3_stmt *stmt = NULL;
   cql_profile_start(CRC_read_foo, &amp;read_foo_perf_index);
-
+  
   // we call the original procedure, it gives us a prepared statement
   cql_code rc = read_foo(_db_, &amp;stmt, id_);
-
+  
   // this is everything you need to know to fetch the result
   cql_fetch_info info = {
     .rc = rc,
@@ -2828,7 +2828,7 @@ read_foo_fetch_results(
     .crc = CRC_read_foo,
     .perf_index = &amp;read_foo_perf_index,
   };
-
+  
   // this function does all the work, it cleans up if .rc is an error code.
   return cql_fetch_all_results(&amp;info, (cql_result_set_ref *)result_set);
 }</code></pre>
@@ -2856,13 +2856,13 @@ read_foo_fetch_results(
 <span id="cb186-4"><a href="#cb186-4"></a>cql_bytebuf_open(&amp;_rows_);</span></code></pre></div>
 <p>We need to be able to copy the cursor into the buffer and retain any internal references</p>
 <pre><code>// This bit is what you get when you &quot;out union&quot; a cursor &quot;C&quot;
-// first we +1 any references in the cursor then we copy its bits
+// first we +1 any references in the cursor then we copy its bits 
 cql_retain_row(C_);   // a no-op if there is no row in the cursor
 if (C_._has_row_) cql_bytebuf_append(&amp;_rows_, (const void *)&amp;C_, sizeof(C_));</code></pre>
 <p>Finally, we make the rowset when the procedure exits. If the procedure is returning with no errors the result set is created, otherwise the buffer is released. The global <code>some_integers_info</code> has constants that describe the shape produced by this procedure just like the other cases that produce a result set.</p>
-<pre><code>cql_results_from_data(_rc_,
-                      &amp;_rows_,
-                      &amp;some_integers_info,
+<pre><code>cql_results_from_data(_rc_, 
+                      &amp;_rows_, 
+                      &amp;some_integers_info, 
                       (cql_result_set_ref *)_result_set_);</code></pre>
 <p>The operations here are basically the same ones that will happen inside of the standard helper <code>cql_fetch_all_results</code>, the difference is of course that you write the loop manually and therefore have full control of the rows as they go in to the result set.</p>
 <p>In short, the overhead is pretty low. What you’re left with is pretty much the base cost of your algorithm. The cost here is very similar to what it would be for any other thing that make rows.</p>
@@ -3150,6 +3150,24 @@ if (C_._has_row_) cql_bytebuf_append(&amp;_rows_, (const void *)&amp;C_, sizeof(
 <p>The top level if node links the initial condition with a possible series of else_if nodes and then the else node. Each condition is checked for validity. The conditions must be valid expressions that can be converted to a boolean.</p>
 <h4 id="the-set-statement">The <code>SET</code> Statement</h4>
 <p>The set statement is for variable assignment. We just validate that the target exists and is compatible with the source. Cursor variables cannot be set with simple assignment and CQL generates errors if you attempt to do so.</p>
+<h4 id="the-let-statement">The <code>LET</code> Statement</h4>
+<p>Let combines a <code>DECLARE</code> and a <code>SET</code>. The variable is declared to be the exact type of the right hand side. All the validations for <code>DECLARE</code> and <code>SET</code> are applicable, but there is no chance that the variable will not be compatible with the expression. The expression could still be erroneous in the first place. The variable could be a duplicate.</p>
+<h4 id="the-switch-statement-1">The <code>SWITCH</code> Statement</h4>
+<p>The <code>SWITCH</code> form requires a number of conditions to successfully map down to a <code>C</code> <code>switch</code> statement. These are:</p>
+<ul>
+<li>the switch-expression must be a not-null integral type (<code>integer not null</code> or <code>long integer not null</code>)
+<ul>
+<li>the <code>WHEN</code> expressions must be losslessly promotable to the type of the switch-expression</li>
+</ul></li>
+<li>the values in the <code>WHEN</code> clauses must be unique</li>
+<li>If <code>ALL VALUES</code> is present then:
+<ul>
+<li>the switch-expression be an from an enum type</li>
+<li>the <code>WHEN</code> values must cover every value of the enum except those beginning with ’_’</li>
+<li>there can be no extra <code>WHEN</code> values not in the enum</li>
+<li>there can be no <code>ELSE</code> clause</li>
+</ul></li>
+</ul>
 <h4 id="the-declare-procedure-statement">The <code>DECLARE PROCEDURE</code> Statement</h4>
 <p>There are three forms of this declaration: * a regular procedure with no DML * e.g. <code>declare proc X(id integer);</code> * a regular procedure that uses DML (it will need a db parameter and returns a result code) * e.g. <code>declare proc X(id integer) using transaction;</code> * a procedure that returns a result set, you provide the result columns * e.g. <code>declare proc X(id integer) : (A bool not null, B text);</code> The main validations here are that there are no duplicate parameter names, or return value columns.</p>
 <h4 id="the-declare-function-statement">The <code>DECLARE FUNCTION</code> Statement</h4>
@@ -3170,18 +3188,21 @@ if (C_._has_row_) cql_bytebuf_append(&amp;_rows_, (const void *)&amp;C_, sizeof(
 <p>The cursor form can be used if and only if the procedure has a loose select or a call to a procedure with a loose select. In that case the procedure will have a structure type, rather than just “ok” (the normal signature for a proc). If the user is attempting to do the second case, cursor_name will be set and the appropriate verification happens here.</p>
 <p>Note: Recursively calling fetch cursor is not really doable in general because at the point of the call we might not yet know that the method does in fact return a select. You could make it work if you put the select before the recursive call.</p>
 <p>Semantic rules: * for all cases each argument must be error-free (no internal type conflicts) * for known procs * the call has to have the correct number of arguments * if the formal is an out parameter the argument must be a variable * the type of the variable must be an exact type match for the formal * non-out parameters must be type-compatible, but exact match is not required</p>
+<h4 id="there-declare-out-call-statement">There <code>DECLARE OUT CALL</code> Statement</h4>
+<p>This form is syntatic sugar and corresponds to declaring any <code>OUT</code> parameters of the <code>CALL</code> portion that are not already declared as the exact type of the <code>OUT</code> parameter. This is intended to save you from declaring a lot of variables just so that you can use them as <code>OUT</code> arguments.</p>
+<p>Since any variables that already exist are not re-declared, there are no additional semantic rules beyond the normal call except that it is an error to use this form if it results in no <code>OUT</code> variables requiring to be declared.</p>
 <h4 id="the-fetch-statement">The <code>FETCH</code> Statement</h4>
 <p>The fetch statement has two forms: * fetch C into var1, var2, var3 etc. * fetch C; The second form is called the auto_cursor. In the first form the variables of the cursor must be assignment compatible with declared structure type of the cursor and the count must be correct. In the second form, the codegen will implicitly create local variables that are exactly the correct type, but that’s later. Since no semantic error is possible in that case we simply record that this is an auto_cursor and then later we will allow the use of C.field during analysis. Of course “C” must be a valid cursor.</p>
 <h4 id="the-continue-statement">The <code>CONTINUE</code> Statement</h4>
-<p>We just need to ensure that continue is inside a loop.</p>
+<p>We just need to ensure that <code>continue</code> is inside a <code>loop</code> or <code>while</code>.</p>
 <h4 id="the-leave-statement">The <code>LEAVE</code> Statement</h4>
-<p>We just need to ensure that leave is inside a loop.</p>
+<p>We just need to ensure that <code>leave</code> is inside a <code>loop</code>, <code>while</code> or <code>switch</code>.</p>
 <h4 id="the-trycatch-statements">The <code>TRY/CATCH</code> Statements</h4>
 <p>No analysis needed here other than that the two statement lists are ok.</p>
 <h4 id="the-open-cursor-statement">The <code>OPEN</code> CURSOR Statement</h4>
-<p>For open [cursor], we just validate that the name is in fact a cursor.</p>
+<p>For open [cursor], we just validate that the name is in fact a cursor. <code>OPEN</code> does nothing, it is included because other dialects require it and it may help with familiarity. It might be deprecated at some point.</p>
 <h4 id="the-close-cursor-statement">The <code>CLOSE</code> CURSOR Statement</h4>
-<p>For close [cursor], we just validate that the name is in fact a cursor.</p>
+<p>For close [cursor], we just validate that the name is in fact a cursor and it is not a boxed cursor. Boxed cursor lifetime is managed by the box object so manually closing it is not allowed. Instead the object is expected to be set to null to release the cursor.</p>
 <h4 id="the-out-cursor-statement">The <code>OUT</code> CURSOR Statement</h4>
 <p>For out [cursor], we first validate that the name is a cursor then we set the output type of the procedure we’re in accordingly</p>
 <h3 id="the-meta-statements">The “Meta” Statements</h3>
@@ -3206,6 +3227,8 @@ if (C_._has_row_) cql_bytebuf_append(&amp;_rows_, (const void *)&amp;C_, sizeof(
 <li>“WITHOUT ROWID” inciates WITHOUT ROWID may not be used</li>
 <li>“TRANSACTION” indicates no transactions may be started, committed, or aborted</li>
 <li>“SELECT IF NOTHING” indicates <code>(select ...)</code> expressions must include an <code>IF NOTHING</code> clause if they have a <code>FROM</code> part</li>
+<li>“INSERT SELECT” indicates that insert with select for values may not include top level joins (avoiding a SQLite bug)</li>
+<li>“TABLE FUNCTIONS” indicates table valued functions cannot be used on left/right joins (avoiding a SQLite bug)</li>
 </ul>
 <p>See the grammar details for exact syntax.</p>
 <h4 id="the-enforce_normal-statement">The <code>@ENFORCE_NORMAL</code> Statement</h4>
@@ -3463,7 +3486,7 @@ create table foo(
   name_2 text @create(6)
 );
 
--- much simpler table, lots of stuff added in v2.
+-- much simpler table, lots of stuff added in v2.  
 -- note v1 is the first new version and v0 is base version
 create table table2(
   id integer not null,
@@ -4744,17 +4767,17 @@ Any result shape can be generated in this fashion.</p>
 <p>When compiled, the above will create C methods that can create, drop, insert, and select from the temp table. They will have the following signatures:</p>
 <pre><code>CQL_WARN_UNUSED cql_code open_sample_proc(
   sqlite3 *_Nonnull _db_);
-
+  
 CQL_WARN_UNUSED cql_code close_sample_proc(
   sqlite3 *_Nonnull _db_);
-
+  
 CQL_WARN_UNUSED cql_code insert_sample_proc(
-  sqlite3 *_Nonnull _db_,
-  cql_int32 id_,
+  sqlite3 *_Nonnull _db_, 
+  cql_int32 id_, 
   cql_string_ref _Nonnull name_);
 
 CQL_WARN_UNUSED cql_code select_sample_proc_fetch_results(
-  sqlite3 *_Nonnull _db_,
+  sqlite3 *_Nonnull _db_, 
   select_sample_proc_result_set_ref _Nullable *_Nonnull result_set);</code></pre>
 <h4 id="single-row-resultset">Single Row ResultSet</h4>
 <p>In some cases, using four APIs to generate fake data can be verbose. In the case that only a single row of data needs to be faked, the dummy_result_set attribute can be more convenient.</p>
@@ -4922,23 +4945,23 @@ end;</code></pre>
 <p>In general, the <code>dummy_test</code> annotation can include any number of tables, for each table you can specify any of the columns and you can have any number of tuples of values for those columns.</p>
 <p>NOTE: if you include primary key and/or foreign key columns among the explicit values it’s up to you to ensure that they are valid combinations. SQLite will complain as usual if they are not, but the CQL compiler will simply emit the data you asked for.</p>
 <p>Generalizing the example a little bit, we could use the following:</p>
-<pre><code>(dummy_test, (foo, (name), (&#39;fred&#39;), (&#39;barney&#39;), (&#39;wilma&#39;), (&#39;betty&#39;)),
+<pre><code>(dummy_test, (foo, (name), (&#39;fred&#39;), (&#39;barney&#39;), (&#39;wilma&#39;), (&#39;betty&#39;)), 
                         (bar, (id, data), (1, &#39;dino&#39;), (2, &#39;hopparoo&#39;))))</code></pre>
 <p>to generate this population:</p>
 <pre><code>CREATE PROC test_the_subject_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO foo(name, id) VALUES(&#39;fred&#39;, 1) @dummy_seed(123);
-
+  
   INSERT OR IGNORE INTO foo(name, id) VALUES(&#39;barney&#39;, 2) @dummy_seed(124)
     @dummy_nullables @dummy_defaults;
-
+  
   INSERT OR IGNORE INTO foo(name, id) VALUES(&#39;wilma&#39;, 3) @dummy_seed(125);
-
+  
   INSERT OR IGNORE INTO foo(name, id) VALUES(&#39;betty&#39;, 4) @dummy_seed(126)
     @dummy_nullables @dummy_defaults;
-
+    
   INSERT OR IGNORE INTO bar(id, data) VALUES(1, &#39;dino&#39;) @dummy_seed(127);
-
+  
   INSERT OR IGNORE INTO bar(id, data) VALUES(2, &#39;hopparoo&#39;) @dummy_seed(128)
     @dummy_nullables @dummy_defaults;
 END;</code></pre>
@@ -6213,7 +6236,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Tue Mar 30 17:28:35 PDT 2021</p>
+<p>Snapshot as of Wed Mar 31 15:10:50 PDT 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -9345,7 +9368,7 @@ insert into x
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Tue Mar 30 17:28:36 PDT 2021</p>
+<p>Snapshot as of Wed Mar 31 15:10:51 PDT 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

@@ -2980,11 +2980,11 @@ Boxing isn’t the usual pattern at all and returning cursors in a box, while po
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-CQL generally doesn't see the whole world in one compilation.
+CQL generally doesn't see the whole world in one compilation.  
 In this way it's a lot more like say the C compiler than it is like say Java
 or C# or something like that.  This means several things:
 
-* You don't have to tell CQL about all your schema in all your files,
+* You don't have to tell CQL about all your schema in all your files, 
 so particular stored procs can be more encapsulated
 * You can have different databases mounted in different places and CQL
 won't care; you provide the database connection to the stored procedures when you call them, and that database is assumed to have the tables declared in this translation unit
@@ -3005,7 +3005,7 @@ the sections below.
 DECLARE PROCEDURE foo(id integer, out name text not null);
 ```
 
-This introduces the symbol name without providing the body.
+This introduces the symbol name without providing the body.  
 This has important variations.
 
 ### Procedures that use the database
@@ -3014,7 +3014,7 @@ This has important variations.
 DECLARE PROCEDURE foo(id integer, out name text not null) USING TRANSACTION;
 ```
 
-Most procedures you write will use SQLite in some fashion,
+Most procedures you write will use SQLite in some fashion, 
 maybe a `select` or something.  The `USING TRANSACTION` annotation indicates that
 the proc in question uses the database and therefore the generated code
 will need a database connection in-argument and it will return a SQLite error code.
@@ -3025,16 +3025,16 @@ If the procedure in question is going to use `select` or `call` to create a resu
 the type of that result set has to be declared.  An example might look like this:
 
 ```sql
-DECLARE PROC with_result_set () (id INTEGER NOT NULL,
-                                 name TEXT,
-                                 rate LONG INTEGER,
-                                 type INTEGER,
+DECLARE PROC with_result_set () (id INTEGER NOT NULL, 
+                                 name TEXT, 
+                                 rate LONG INTEGER, 
+                                 type INTEGER, 
                                  size REAL);
 ```
 
-This says that the procedure takes no arguments (other than the implicit database
+This says that the procedure takes no arguments (other than the implicit database 
 connection) and it has an implicit out-argument that can be read to get a result
-set with the indicated columns: id, name, rate, type, and size.
+set with the indicated columns: id, name, rate, type, and size.  
 This form implies `USING TRANSACTION`.
 
 ### Procedures that return a single row with a value cursor
@@ -3043,25 +3043,25 @@ If the procedure emits a cursor with the `OUT` statement to produce a single
 row then it can be declared as follows:
 
 ```sql
-DECLARE PROC with_result_set () OUT (id INTEGER NOT NULL,
-                                     name TEXT,
-                                     rate LONG INTEGER,
-                                     type INTEGER,
+DECLARE PROC with_result_set () OUT (id INTEGER NOT NULL, 
+                                     name TEXT, 
+                                     rate LONG INTEGER, 
+                                     type INTEGER, 
                                      size REAL);
 ```
 
 This form can have `USING TRANSACTION`  or not, since it is possible to emit a row with a value cursor and never use the database.  See the previous chapter for details on the `OUT` statement.
 
-### Procedures that return a full result set
+### Procedures that return a full result set 
 
 If the procedure emits many rows with the `OUT UNION` statement to produce a full result set
 then it can be declared as follows:
 
 ```sql
-DECLARE PROC with_result_set () OUT UNION (id INTEGER NOT NULL,
-                                     name TEXT,
-                                     rate LONG INTEGER,
-                                     type INTEGER,
+DECLARE PROC with_result_set () OUT UNION (id INTEGER NOT NULL, 
+                                     name TEXT, 
+                                     rate LONG INTEGER, 
+                                     type INTEGER, 
                                      size REAL);
 ```
 
@@ -3075,11 +3075,11 @@ by adding something like `--generate_exports` to the command line. This will req
 That file can then be used with `#include` when you combine the C pre-processor
 with CQL as is normally done.
 
-Nomenclature is perhaps a bit weird here.  You use `--generate_exports` to export
+Nomenclature is perhaps a bit weird here.  You use `--generate_exports` to export 
 the stored procedure declarations from the translation units.  Of course those
 exported symbols are what you then import in some other module.  Sometimes this
 output file is called `foo_imports.sql` because those exports are of course exactly
-what you need to import `foo`.  You can use whatever convention you like of course,
+what you need to import `foo`.  You can use whatever convention you like of course, 
 CQL doesn't care.  The full command line might look something like this:
 
 ```
@@ -3111,21 +3111,21 @@ DECLARE PROC make_view () USING TRANSACTION;
 
 DECLARE PROC copy_int (a INTEGER, OUT b INTEGER);
 
-DECLARE PROC complex_return ()
-  (_bool BOOL NOT NULL,
-   _integer INTEGER NOT NULL,
-   _longint LONG INTEGER NOT NULL,
-   _real REAL NOT NULL,
-   _text TEXT NOT NULL,
+DECLARE PROC complex_return () 
+  (_bool BOOL NOT NULL, 
+   _integer INTEGER NOT NULL, 
+   _longint LONG INTEGER NOT NULL, 
+   _real REAL NOT NULL, 
+   _text TEXT NOT NULL, 
    _nullable_bool BOOL);
 
 DECLARE PROC outint_nullable (
-  OUT output INTEGER,
+  OUT output INTEGER, 
   OUT result BOOL NOT NULL)
 USING TRANSACTION;
 
 DECLARE PROC outint_notnull (
-  OUT output INTEGER NOT NULL,
+  OUT output INTEGER NOT NULL, 
   OUT result BOOL NOT NULL)
 USING TRANSACTION;
 
@@ -3145,15 +3145,15 @@ generated C to demystify all this.  There is a very straightforward conversion.
 void test(cql_int32 i);
 
 void out_test(
-  cql_int32 *_Nonnull i,
+  cql_int32 *_Nonnull i, 
   cql_nullable_int32 *_Nonnull ii);
 
 cql_code outparm_test(
-  sqlite3 *_Nonnull _db_,
+  sqlite3 *_Nonnull _db_, 
   cql_int32 *_Nonnull foo);
 
 cql_code select_from_view_fetch_results(
-  sqlite3 *_Nonnull _db_,
+  sqlite3 *_Nonnull _db_, 
   select_from_view_result_set_ref _Nullable *_Nonnull result_set);
 
 cql_code make_view(sqlite3 *_Nonnull _db_);
@@ -3161,25 +3161,25 @@ cql_code make_view(sqlite3 *_Nonnull _db_);
 void copy_int(cql_nullable_int32 a, cql_nullable_int32 *_Nonnull b);
 
 cql_code complex_return_fetch_results(
-  sqlite3 *_Nonnull _db_,
+  sqlite3 *_Nonnull _db_, 
   complex_return_result_set_ref _Nullable *_Nonnull result_set);
 
 cql_code outint_nullable(
-  sqlite3 *_Nonnull _db_,
-  cql_nullable_int32 *_Nonnull output,
+  sqlite3 *_Nonnull _db_, 
+  cql_nullable_int32 *_Nonnull output, 
   cql_bool *_Nonnull result);
 
 cql_code outint_notnull(
-  sqlite3 *_Nonnull _db_,
-  cql_int32 *_Nonnull output,
+  sqlite3 *_Nonnull _db_, 
+  cql_int32 *_Nonnull output, 
   cql_bool *_Nonnull result);
 
 void obj_proc(
   cql_object_ref _Nullable *_Nonnull an_object);
 
 cql_code insert_values(
-  sqlite3 *_Nonnull _db_,
-  cql_int32 id_,
+  sqlite3 *_Nonnull _db_, 
+  cql_int32 id_, 
   cql_nullable_int32 type_);
 ```
 
@@ -3251,8 +3251,8 @@ as long as they are not recombined with SQLite statements.
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-Most of this tutorial is about the CQL language itself but here we must diverge a bit.  The purpose of the
-result set features of CQL is to create a C interface to SQLite data.  Because of this
+Most of this tutorial is about the CQL language itself but here we must diverge a bit.  The purpose of the 
+result set features of CQL is to create a C interface to SQLite data.  Because of this 
 there are a lot of essential details that require looking carefully at the generated C code.  Appendix 2
 covers this code in even more detail but here it makes sense to at least talk about the interface.
 
@@ -3268,7 +3268,7 @@ end;
 ```
 
 We've created a simple data reader, this CQL code will cause the compiler to
-generated helper functions to read the data and materialize a result set.
+generated helper functions to read the data and materialize a result set.  
 
 Let's look at the public interface of that result set now considering the most essential pieces.
 
@@ -3281,17 +3281,17 @@ cql_result_set_type_decl(
 
 extern cql_int32 read_foo_get_id(read_foo_result_set_ref
   _Nonnull result_set, cql_int32 row);
-extern cql_bool read_foo_get_b_is_null(read_foo_result_set_ref
+extern cql_bool read_foo_get_b_is_null(read_foo_result_set_ref 
   _Nonnull result_set, cql_int32 row);
-extern cql_bool read_foo_get_b_value(read_foo_result_set_ref
+extern cql_bool read_foo_get_b_value(read_foo_result_set_ref 
   _Nonnull result_set, cql_int32 row);
 extern cql_string_ref _Nullable read_foo_get_t(
-   read_foo_result_set_ref  _Nonnull result_set,
+   read_foo_result_set_ref  _Nonnull result_set, 
    cql_int32 row);
-extern cql_int32 read_foo_result_count(read_foo_result_set_ref
+extern cql_int32 read_foo_result_count(read_foo_result_set_ref 
   _Nonnull result_set);
-extern cql_code read_foo_fetch_results(sqlite3 *_Nonnull _db_,
-  read_foo_result_set_ref _Nullable *_Nonnull result_set,
+extern cql_code read_foo_fetch_results(sqlite3 *_Nonnull _db_, 
+  read_foo_result_set_ref _Nullable *_Nonnull result_set, 
   cql_int32 id_);
 #define read_foo_row_hash(result_set, row) \
   cql_result_set_get_meta((cql_result_set_ref)(result_set))->\
@@ -3306,16 +3306,16 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1)) \
 Let's consider some of these individually now
 ```C
 cql_result_set_type_decl(
-  read_foo_result_set,
+  read_foo_result_set, 
   read_foo_result_set_ref);
 ```
-This declares the data type for `read_foo_result_set` and the associated object reference `read_foo_result_set_ref`.
+This declares the data type for `read_foo_result_set` and the associated object reference `read_foo_result_set_ref`.  
 As it turns out the underlying data type for all result sets is the same, only the shape of the data varies.
 
 
 ```C
-extern cql_code read_foo_fetch_results(sqlite3 *_Nonnull _db_,
-  read_foo_result_set_ref _Nullable *_Nonnull result_set,
+extern cql_code read_foo_fetch_results(sqlite3 *_Nonnull _db_, 
+  read_foo_result_set_ref _Nullable *_Nonnull result_set, 
   cql_int32 id_);
 ```
 The result set fetcher method gives you a `read_foo_result_set_ref` if it succeeds.  It accepts the `id_` argument which it
@@ -3325,27 +3325,27 @@ This method is the main public entry point for result sets.
 Once you have a result set, you can read values out of it.
 
 ```C
-extern cql_int32 read_foo_result_count(read_foo_result_set_ref
+extern cql_int32 read_foo_result_count(read_foo_result_set_ref 
   _Nonnull result_set);
 ```
-That function tells you how many rows are in the result set.
+That function tells you how many rows are in the result set.  
 
 For each row you can use any of the row readers:
 
 ```C
 extern cql_int32 read_foo_get_id(read_foo_result_set_ref
   _Nonnull result_set, cql_int32 row);
-extern cql_bool read_foo_get_b_is_null(read_foo_result_set_ref
+extern cql_bool read_foo_get_b_is_null(read_foo_result_set_ref 
   _Nonnull result_set, cql_int32 row);
-extern cql_bool read_foo_get_b_value(read_foo_result_set_ref
+extern cql_bool read_foo_get_b_value(read_foo_result_set_ref 
   _Nonnull result_set, cql_int32 row);
 extern cql_string_ref _Nullable read_foo_get_t(
-   read_foo_result_set_ref  _Nonnull result_set,
+   read_foo_result_set_ref  _Nonnull result_set, 
    cql_int32 row);
 ```
 
 These let you read the `id` of a particular row, and get a `cql_int32` or you can read the nullable boolean,
-using the `read_foo_get_b_is_null` function first to see if the boolean is null and then `read_foo_get_b_value`
+using the `read_foo_get_b_is_null` function first to see if the boolean is null and then `read_foo_get_b_value` 
 to get the value.  Finally the string can be accessed with `read_foo_get_t`.  As you can see there is a
 simple naming convention for each of the field readers.
 
@@ -3354,14 +3354,14 @@ Note:  The compiler has runtime arrays that control naming conventions as well a
 Finally, also part of the public interface, are these macros:
 
 ```C
-#define read_foo_row_hash(result_set, row)
+#define read_foo_row_hash(result_set, row) 
 #define read_foo_row_equal(rs1, row1, rs2, row2)
 ```
 
-These use the CQL runtime to hash a row or compare two rows from identical result
-set types.  Metadata included in the result set allows general purpose code to work for
+These use the CQL runtime to hash a row or compare two rows from identical result 
+set types.  Metadata included in the result set allows general purpose code to work for 
 every result set.  Based on configuration, result set copying methods can also
-be generated.   When you're done with a result set you can use the `cql_release(...)`
+be generated.   When you're done with a result set you can use the `cql_release(...)` 
 method to free the memory.
 
 Importantly, all of the rows from the query in the stored procedure are materialized
@@ -3372,7 +3372,7 @@ The code that actually creates the result set starting from the prepared stateme
 The essential parts are:
 
 
-First, a constant array that holds the data types for each column.
+First, a constant array that holds the data types for each column. 
 
 ```
 uint8_t read_foo_data_types[read_foo_data_types_count] = {
@@ -3401,18 +3401,18 @@ static cql_uint16 read_foo_col_offsets[] = { 3,
 
 Using the above we can now write this fetcher
 ```
-CQL_WARN_UNUSED cql_code
+CQL_WARN_UNUSED cql_code 
 read_foo_fetch_results(
-  sqlite3 *_Nonnull _db_,
-  read_foo_result_set_ref _Nullable *_Nonnull result_set,
-  cql_int32 id_)
+  sqlite3 *_Nonnull _db_, 
+  read_foo_result_set_ref _Nullable *_Nonnull result_set, 
+  cql_int32 id_) 
 {
   sqlite3_stmt *stmt = NULL;
   cql_profile_start(CRC_read_foo, &read_foo_perf_index);
-
+  
   // we call the original procedure, it gives us a prepared statement
   cql_code rc = read_foo(_db_, &stmt, id_);
-
+  
   // this is everything you need to know to fetch the result
   cql_fetch_info info = {
     .rc = rc,
@@ -3426,7 +3426,7 @@ read_foo_fetch_results(
     .crc = CRC_read_foo,
     .perf_index = &read_foo_perf_index,
   };
-
+  
   // this function does all the work, it cleans up if .rc is an error code.
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
@@ -3456,7 +3456,7 @@ begin
 end;
 ```
 
-In this example the entire result set is made up out of thin air.  Of course any combination of this computation or data-access is possible, so you can ultimately make any rows you want in any order using SQLite to help you as much or as little as you need.
+In this example the entire result set is made up out of thin air.  Of course any combination of this computation or data-access is possible, so you can ultimately make any rows you want in any order using SQLite to help you as much or as little as you need.  
 
 Virtually all the code pieces to do this already exist for normal result sets.  The important parts of the output code look like this in your generated C.
 
@@ -3473,20 +3473,20 @@ We need to be able to copy the cursor into the buffer and retain any internal re
 
 ```
 // This bit is what you get when you "out union" a cursor "C"
-// first we +1 any references in the cursor then we copy its bits
+// first we +1 any references in the cursor then we copy its bits 
 cql_retain_row(C_);   // a no-op if there is no row in the cursor
 if (C_._has_row_) cql_bytebuf_append(&_rows_, (const void *)&C_, sizeof(C_));
 ```
 
-Finally, we make the rowset when the procedure exits. If the procedure is returning with no errors the result set is created, otherwise the buffer is released.  The global `some_integers_info` has constants that describe the shape produced by this procedure just like the other cases that produce a result set.
+Finally, we make the rowset when the procedure exits. If the procedure is returning with no errors the result set is created, otherwise the buffer is released.  The global `some_integers_info` has constants that describe the shape produced by this procedure just like the other cases that produce a result set. 
 ```
-cql_results_from_data(_rc_,
-                      &_rows_,
-                      &some_integers_info,
+cql_results_from_data(_rc_, 
+                      &_rows_, 
+                      &some_integers_info, 
                       (cql_result_set_ref *)_result_set_);
 ```
-The operations here are basically the same ones that will happen inside of the standard helper
-`cql_fetch_all_results`, the difference is of course that you write the loop manually and therefore have
+The operations here are basically the same ones that will happen inside of the standard helper 
+`cql_fetch_all_results`, the difference is of course that you write the loop manually and therefore have 
 full control of the rows as they go in to the result set.
 
 In short, the overhead is pretty low.  What you’re left with is pretty much the base cost of your algorithm.  The cost here is very similar to what it would be for any other thing that make rows.
@@ -4068,6 +4068,26 @@ that the target exists and is compatible with the source.
 Cursor variables cannot be set with simple assignment and CQL generates
 errors if you attempt to do so.
 
+#### The `LET` Statement
+Let combines a `DECLARE` and a `SET`.  The variable is declared to be
+the exact type of the right hand side.  All the validations for `DECLARE`
+and `SET` are applicable, but there is no chance that the variable will
+not be compatible with the expression.  The expression could still be
+erroneous in the first place.  The variable could be a duplicate.
+
+#### The `SWITCH` Statement
+The `SWITCH` form requires a number of conditions to successfully map
+down to a `C` `switch` statement.  These are:
+
+* the switch-expression must be a not-null integral type (`integer not null` or `long integer not null`)
+  * the `WHEN` expressions must be losslessly promotable to the type of the switch-expression
+* the values in the `WHEN` clauses must be unique
+* If `ALL VALUES` is present then:
+   * the switch-expression be an from an enum type
+   * the `WHEN` values must cover every value of the enum except those beginning with '_'
+   * there can be no extra `WHEN` values not in the enum
+   * there can be no `ELSE` clause
+
 #### The `DECLARE PROCEDURE` Statement
 There are three forms of this declaration:
 * a regular procedure with no DML
@@ -4155,6 +4175,16 @@ Semantic rules:
      * the type of the variable must be an exact type match for the formal
    * non-out parameters must be type-compatible, but exact match is not required
 
+#### There `DECLARE OUT CALL` Statement
+This form is syntatic sugar and corresponds to declaring any `OUT` parameters
+of the `CALL` portion that are not already declared as the exact type of the
+`OUT` parameter.  This is intended to save you from declaring a lot of variables
+just so that you can use them as `OUT` arguments.
+
+Since any variables that already exist are not re-declared, there are no
+additional semantic rules beyond the normal call except that it is an error
+to use this form if it results in no `OUT` variables requiring to be declared.
+
 #### The `FETCH` Statement
 The fetch statement has two forms:
   * fetch C into var1, var2, var3 etc.
@@ -4169,19 +4199,24 @@ later we will allow the use of C.field during analysis.
 Of course "C" must be a valid cursor.
 
 #### The `CONTINUE` Statement
-We just need to ensure that continue is inside a loop.
+We just need to ensure that `continue` is inside a `loop` or `while`.
 
 #### The `LEAVE` Statement
-We just need to ensure that leave is inside a loop.
+We just need to ensure that `leave` is inside a `loop`, `while` or `switch`.
 
 #### The `TRY/CATCH` Statements
 No analysis needed here other than that the two statement lists are ok.
 
 #### The `OPEN` CURSOR Statement
 For open [cursor], we just validate that the name is in fact a cursor.
+`OPEN` does nothing, it is included because other dialects require it
+and it may help with familiarity.  It might be deprecated at some point.
 
 #### The `CLOSE` CURSOR Statement
-For close [cursor], we just validate that the name is in fact a cursor.
+For close [cursor], we just validate that the name is in fact a cursor
+and it is not a boxed cursor.  Boxed cursor lifetime is managed by the
+box object so manually closing it is not allowed.  Instead the object
+is expected to be set to null to release the cursor.
 
 #### The `OUT` CURSOR Statement
 For out [cursor], we first validate that the name is a cursor
@@ -4226,6 +4261,8 @@ Switch to strict mode for the indicated item, the choices are
   * "WITHOUT ROWID" inciates WITHOUT ROWID may not be used
   * "TRANSACTION" indicates no transactions may be started, committed, or aborted
   * "SELECT IF NOTHING" indicates `(select ...)` expressions must include an `IF NOTHING` clause if they have a `FROM` part
+  * "INSERT SELECT" indicates that insert with select for values may not include top level joins (avoiding a SQLite bug)
+  * "TABLE FUNCTIONS" indicates table valued functions cannot be used on left/right joins (avoiding a SQLite bug)
 
 See the grammar details for exact syntax.
 
@@ -4545,7 +4582,7 @@ In addition, if there is some data migration that needs to happen at a particula
 
 `@create` declares that the annotated object first appeared in the indicated version, and at that time the migration proc needs to be executed to fill in default values, denormalize values, or whatever the case may be.
 
-`@delete` declares that the annotated object disappeared in the indicated version, and at that time the migration proc needs to be executed to clean up the contents, or potentially move them elsewhere.
+`@delete` declares that the annotated object disappeared in the indicated version, and at that time the migration proc needs to be executed to clean up the contents, or potentially move them elsewhere. 
 
 `@recreate` declares that the annotated object can be dropped and recreated when it changes, there is no need to preserve its contents during an upgrade. Such objects may be changed arbitrarily from version to version
 
@@ -4554,7 +4591,7 @@ In addition, if there is some data migration that needs to happen at a particula
 
 NOTE: all annotations are suppressed from generated SQL.  SQLite never sees them.
 
-NOTE: looking at the annotations it is possible to compute the logical schema at any version, especially the original schema -- it's what you get if you disregard all ```@delete``` entirely (don't delete) and then remove anything marked with ```@create``` directives.
+NOTE: looking at the annotations it is possible to compute the logical schema at any version, especially the original schema -- it's what you get if you disregard all ```@delete``` entirely (don't delete) and then remove anything marked with ```@create``` directives. 
 
 ### Allowable changes
 Not all migrations are possible in a sensible fashion, therefore CQL enforces certain limitations:
@@ -4629,7 +4666,7 @@ create table foo(
   name_2 text @create(6)
 );
 
--- much simpler table, lots of stuff added in v2.
+-- much simpler table, lots of stuff added in v2.  
 -- note v1 is the first new version and v0 is base version
 create table table2(
   id integer not null,
@@ -4697,7 +4734,7 @@ I've split the script into logical pieces to explain what's going on.
 ```
 
 Schema upgrade scripts need to see all the columns even the ones that would be logically deleted in normal mode.  This is so that things like `alter table add column` can refer to real columns and `drop table` can refer to a table that shouldn't even be visible.  Remember in CQL the declarations tell you the logical state of the universe and DLL mutations are expected to create that condition, so you should be dropping tables that are marked with `@delete`
-CQL stores the current state of the universe in this table.
+CQL stores the current state of the universe in this table.  
 
 ```sql
 -- schema crc -7714030317354747478
@@ -4709,7 +4746,7 @@ The schema crc is computed by hashing all the schema declarations in canonical f
 Wherein all the necessary objects are declared...
 
 ```sql
--- declare sqlite_master --
+-- declare sqlite_master -- 
 CREATE TABLE sqlite_master (
   type TEXT NOT NULL,
   name TEXT NOT NULL,
@@ -4721,7 +4758,7 @@ CREATE TABLE sqlite_master (
 The `sqlite_master` table is built-in but it has to be introduced to CQL so that we can query it. Like all the other loose DDL declarations here there is no code generated for this.  We are simply declaring tables.  To create code you have to put the DDL in a proc.  Normally DDL in procs also declares the table but since we may need the original version of a table created and the final version declared we have `@schema_upgrade_script` to help avoid name conflicts.
 
 ```sql
--- declare full schema of tables and views to be upgraded --
+-- declare full schema of tables and views to be upgraded -- 
 CREATE TABLE foo(
   id INTEGER NOT NULL,
   rate LONG INT @DELETE(5),
@@ -4803,11 +4840,11 @@ NOTE: the prefix "test" was specified when this file was built so all the method
 #### Helper Procedures
 ```sql
 -- helper proc for testing for the presence of a column/type
-CREATE PROCEDURE test_check_column_exists(table_name TEXT NOT NULL,
-                                          decl TEXT NOT NULL,
+CREATE PROCEDURE test_check_column_exists(table_name TEXT NOT NULL, 
+                                          decl TEXT NOT NULL, 
                                           OUT present BOOL NOT NULL)
 BEGIN
-  SET present := (SELECT EXISTS(SELECT * FROM sqlite_master
+  SET present := (SELECT EXISTS(SELECT * FROM sqlite_master 
                   WHERE tbl_name = table_name AND sql GLOB decl));
 END;
 ```
@@ -4840,24 +4877,24 @@ BEGIN
 END;
 ```
 
-The `save_sql_schema_facets` procedure simply makes a snapshot of the current facets table.  Later we use
+The `save_sql_schema_facets` procedure simply makes a snapshot of the current facets table.  Later we use 
 this snapshot to report the differences by joining these tables.
 
 ```sql
 -- helper proc for setting the schema version of a facet
-CREATE PROCEDURE test_cql_set_facet_version(_facet TEXT NOT NULL,
+CREATE PROCEDURE test_cql_set_facet_version(_facet TEXT NOT NULL, 
                                             _version LONG INTEGER NOT NULL)
 BEGIN
-  INSERT OR REPLACE INTO test_cql_schema_facets (facet, version)
+  INSERT OR REPLACE INTO test_cql_schema_facets (facet, version) 
        VALUES(_facet, _version);
 END;
 
 -- helper proc for getting the schema version of a facet
-CREATE PROCEDURE test_cql_get_facet_version(_facet TEXT NOT NULL,
+CREATE PROCEDURE test_cql_get_facet_version(_facet TEXT NOT NULL, 
                                             out _version LONG INTEGER NOT NULL)
 BEGIN
   BEGIN TRY
-    SET _version := (SELECT version FROM test_cql_schema_facets
+    SET _version := (SELECT version FROM test_cql_schema_facets 
         WHERE facet = _facet LIMIT 1);
   END TRY;
   BEGIN CATCH
@@ -4871,11 +4908,11 @@ There are two additional helper procedures that do essentially the same thing us
 
 ```sql
 -- helper proc for getting the schema version CRC for a version index
-CREATE PROCEDURE test_cql_get_version_crc(_v INTEGER NOT NULL,
+CREATE PROCEDURE test_cql_get_version_crc(_v INTEGER NOT NULL, 
                                           out _crc LONG INTEGER NOT NULL)
 BEGIN
   BEGIN TRY
-    SET _crc := (SELECT version FROM test_cql_schema_facets
+    SET _crc := (SELECT version FROM test_cql_schema_facets 
         WHERE facet = 'cql_schema_v'||_v LIMIT 1);
   END TRY;
   BEGIN CATCH
@@ -4884,10 +4921,10 @@ BEGIN
 END;
 
 -- helper proc for setting the schema version CRC for a version index
-CREATE PROCEDURE test_cql_set_version_crc(_v INTEGER NOT NULL,
+CREATE PROCEDURE test_cql_set_version_crc(_v INTEGER NOT NULL, 
                                           _crc LONG INTEGER NOT NULL)
 BEGIN
-  INSERT OR REPLACE INTO test_cql_schema_facets (facet, version)
+  INSERT OR REPLACE INTO test_cql_schema_facets (facet, version) 
        VALUES('cql_schema_v'||_v, _crc);
 END;
 ```
@@ -5282,7 +5319,7 @@ BEGIN
 END;
 ```
 
-This entry point can be used any time you need the temp tables.  But normally it is
+This entry point can be used any time you need the temp tables.  But normally it is 
 automatically invoked.
 
 ```sql
@@ -5688,7 +5725,7 @@ the declared schema.  Which means the `--rt schema` result type will not see it.
 operation like so:
 
 ```bash
-cc -E -x c prev_check.sql | cql --cg new_previous_schema.sql --rt schema
+cc -E -x c prev_check.sql | cql --cg new_previous_schema.sql --rt schema 
 ```
 
 The above command will generate the schema in new_previous_schema and, if this command succeeds, it's safe to replace the existing
@@ -5697,7 +5734,7 @@ The above command will generate the schema in new_previous_schema and, if this c
 NOTE: you can bootstrap the above by leaving off the `@previous_schema` and what follows to get your first previous schema from the command above.
 
 Now as, you can imagine, comparing against the previous schema allows many more kinds of errors to be discovered.
-What follows is a large chuck of the CQL tests for this area taken from the test files themselves.
+What follows is a large chuck of the CQL tests for this area taken from the test files themselves.  
 For easy visibility I have brought each fragment of current and previous schema close to each other
 and I show the errors that are reported.  We start with a valid fragment and go from there.
 
@@ -5947,7 +5984,7 @@ Table became a TEMP table, there is no way to generate an alter statement for th
 ```sql
 create table t_new_table_ok(a int not null, b int) @create(6);
 -------
--- no previous version
+-- no previous version 
 ```
 No errors here, properly created new table.
 
@@ -5955,7 +5992,7 @@ No errors here, properly created new table.
 ```sql
 create table t_new_table_no_annotation(a int not null, b int);
 -------
--- no previous version
+-- no previous version 
 
 Error at sem_test_prev.sql:85 : in create_table_stmt : new table must be added with
 @create(6) or later 't_new_table_no_annotation'
@@ -5966,7 +6003,7 @@ This table was added with no annotation.  It has to have an @create and be at le
 ```sql
 create table t_new_table_stale_annotation(a int not null, b int) @create(2);
 -------
--- no previous version
+-- no previous version 
 
 Error at sem_test_prev.sql:91 : in create_table_stmt : new table must be added with
 @create(6) or later 't_new_table_stale_annotation'
@@ -6179,7 +6216,7 @@ CQL includes a number of features to make it easier to create what you might cal
 
 ### Dummy Data
 
-Test code can be needlessly brittle, especially when creating dummy data; any column changes typically cause all sorts of data insertion code to need to be repaired.
+Test code can be needlessly brittle, especially when creating dummy data; any column changes typically cause all sorts of data insertion code to need to be repaired.  
 In many cases the actual data values are completely uninteresting to the test -- any values would do.  There are several strategies you can use to get good dummy data into your database in a more maintainable way.
 
 #### Simple Inserts With Dummy Data
@@ -6189,7 +6226,7 @@ The simplest form uses a variant of the insert statement that fills in any missi
 ```sql
 create proc dummy_user()
 begin
-  insert into users () values () @dummy_seed(123)
+  insert into users () values () @dummy_seed(123) 
      @dummy_nullables @dummy_defaults;
 end;
 ```
@@ -6198,7 +6235,7 @@ This statement causes all values including columns that are nullable or have a d
 
 If you omit the `@dummy_nullables` then any nullable fields will be null as usual.  And likewise if you omit `@dummy_defaults` then any fields with a default value will use thatt value as usual.  You might want any combination of those for your tests (null values are handy in your tests and default behavior is also handy).
 
-The `@dummy_seed` expression provided can be anything that resolves to a non-null integer value, so it can be pretty flexible.  You might use a `while` loop to insert a bunch of
+The `@dummy_seed` expression provided can be anything that resolves to a non-null integer value, so it can be pretty flexible.  You might use a `while` loop to insert a bunch of 
 rows with the seed value being computed from the `while` loop variable.
 
 The form above is sort of like `insert * into table` in that it is giving dummy values for all columns but you can also specify some of the columns while using the seed value for others.  Importantly, you can specify values you particularly want to control either for purposes of creating a more tailored test or because you need them
@@ -6236,7 +6273,7 @@ begin
   FROM dummy;
 end;
 ```
-The first part of the above creates a series of numbers from 1 to `lim`.  The second uses those values to create dummy columns.
+The first part of the above creates a series of numbers from 1 to `lim`.  The second uses those values to create dummy columns.  
 Any result shape can be generated in this fashion.
 
 You get data like this from the above:
@@ -6253,8 +6290,8 @@ You get data like this from the above:
 10|name_10|0|13.0|10|10
 ```
 
-The result of the select statement is itself quite flexible and if more dummy data is what you wanted, this form can be combined with
-`INSERT ... FROM SELECT...` to create dummy data in real tables.   And of course once you have a core query you could use it in a variety of ways
+The result of the select statement is itself quite flexible and if more dummy data is what you wanted, this form can be combined with 
+`INSERT ... FROM SELECT...` to create dummy data in real tables.   And of course once you have a core query you could use it in a variety of ways 
 combined with cursors or any other strategy to `select` out pieces and `insert` them into various tables.
 
 #### Using Temporary Tables
@@ -6270,8 +6307,8 @@ emulating the results of `my_proc`.
 create proc begin_dummy()
 begin
    drop table if exists my_dummy_data;
-
-   -- the shape of my_dummy_data matches the columns
+   
+   -- the shape of my_dummy_data matches the columns 
    -- returned by proc_I_want_to_emulate
    create temp table my_dummy_data(
      like proc_I_want_to_emulate;
@@ -6280,7 +6317,7 @@ end;
 ```
 
 Next, you will need a procedure that accepts and writes a single row to your temp table.  You can of course write this all explicitly but the testing
-support features provide more support to make things easier; In this example, arguments  of the procedure will exactly match the output of the procedure we emulating,
+support features provide more support to make things easier; In this example, arguments  of the procedure will exactly match the output of the procedure we emulating, 
 one argument for each column the proc returns. The `insert` statement gets its values from the arguments.
 
 ```sql
@@ -6374,7 +6411,7 @@ The attributes dummy_table, dummy_insert, and dummy_select can be used together 
 
 Example:
 
-To create a dummy row set for `sample_proc`, add the cql:autotest attribute with dummy_table, dummy_insert, and dummy_select values.
+To create a dummy row set for `sample_proc`, add the cql:autotest attribute with dummy_table, dummy_insert, and dummy_select values. 
 
 ```sql
 create table foo(
@@ -6428,23 +6465,23 @@ When compiled, the above will create C methods that can create, drop, insert, an
 ```
 CQL_WARN_UNUSED cql_code open_sample_proc(
   sqlite3 *_Nonnull _db_);
-
+  
 CQL_WARN_UNUSED cql_code close_sample_proc(
   sqlite3 *_Nonnull _db_);
-
+  
 CQL_WARN_UNUSED cql_code insert_sample_proc(
-  sqlite3 *_Nonnull _db_,
-  cql_int32 id_,
+  sqlite3 *_Nonnull _db_, 
+  cql_int32 id_, 
   cql_string_ref _Nonnull name_);
 
 CQL_WARN_UNUSED cql_code select_sample_proc_fetch_results(
-  sqlite3 *_Nonnull _db_,
+  sqlite3 *_Nonnull _db_, 
   select_sample_proc_result_set_ref _Nullable *_Nonnull result_set);
 ```
 
 #### Single Row ResultSet
 
-In some cases, using four APIs to generate fake data can be verbose.
+In some cases, using four APIs to generate fake data can be verbose. 
 In the case that only a single row of data needs to be faked, the dummy_result_set attribute can be more convenient.
 
 Example:
@@ -6472,8 +6509,8 @@ Which generates this C API:
 
 ```C
 void generate_sample_proc_row_fetch_results(
-    generate_sample_proc_row_rowset_ref _Nullable *_Nonnull result_set,
-    string_ref _Nonnull foo_,
+    generate_sample_proc_row_rowset_ref _Nullable *_Nonnull result_set, 
+    string_ref _Nonnull foo_, 
     int64_t bar_);
 ```
 
@@ -6644,12 +6681,12 @@ Finally, the most complicated helper is the one that used that large annotation.
 CREATE PROC test_the_subject_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO foo(id) VALUES(1) @dummy_seed(123);
-
-  INSERT OR IGNORE INTO foo(id) VALUES(2) @dummy_seed(124)
+  
+  INSERT OR IGNORE INTO foo(id) VALUES(2) @dummy_seed(124) 
       @dummy_nullables @dummy_defaults;
-
+  
 INSERT OR IGNORE INTO bar(data, id) VALUES('plugh', 1) @dummy_seed(125);
-
+  
   INSERT OR IGNORE INTO bar(id) VALUES(2) @dummy_seed(126)
      @dummy_nullables @dummy_defaults;
 END;
@@ -6668,7 +6705,7 @@ NOTE: if you include primary key and/or foreign key columns among the explicit v
 Generalizing the example a little bit, we could use the following:
 
 ```
-(dummy_test, (foo, (name), ('fred'), ('barney'), ('wilma'), ('betty')),
+(dummy_test, (foo, (name), ('fred'), ('barney'), ('wilma'), ('betty')), 
                         (bar, (id, data), (1, 'dino'), (2, 'hopparoo'))))
 ```
 
@@ -6678,17 +6715,17 @@ to generate this population:
 CREATE PROC test_the_subject_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO foo(name, id) VALUES('fred', 1) @dummy_seed(123);
-
+  
   INSERT OR IGNORE INTO foo(name, id) VALUES('barney', 2) @dummy_seed(124)
     @dummy_nullables @dummy_defaults;
-
+  
   INSERT OR IGNORE INTO foo(name, id) VALUES('wilma', 3) @dummy_seed(125);
-
+  
   INSERT OR IGNORE INTO foo(name, id) VALUES('betty', 4) @dummy_seed(126)
     @dummy_nullables @dummy_defaults;
-
+    
   INSERT OR IGNORE INTO bar(id, data) VALUES(1, 'dino') @dummy_seed(127);
-
+  
   INSERT OR IGNORE INTO bar(id, data) VALUES(2, 'hopparoo') @dummy_seed(128)
     @dummy_nullables @dummy_defaults;
 END;
@@ -8127,7 +8164,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Mar 30 17:28:35 PDT 2021
+Snapshot as of Wed Mar 31 15:10:50 PDT 2021
 
 ### Operators and Literals
 
@@ -9560,7 +9597,7 @@ The complete list (as of this writing) is:
  * marks a column or variable as 'sensitive' for privacy purposes, this behaves somewhat like nullability (See Chapter 3) in that it is radioactive, contaminating anything it touches
  * the intent of this annotation is to make it clear where sensitive data is being returned or consumed in your procedures
  * this information appears in the JSON output for further codegen or for analysis (See Chapter 13)
-
+ 
 `@DECLARE_SCHEMA_REGION`
 `@DECLARE_DEPLOYABLE_REGION`
 `@BEGIN_SCHEMA_REGION`
@@ -9574,7 +9611,7 @@ The complete list (as of this writing) is:
 `@ECHO`
  * Emits text into the C output stream, useful for emiting things like function prototypes or preprocessor directives
  * e.g. `echo C, '#define foo bar'
-
+ 
 `@RECREATE`
 `@CREATE`
 `@DELETE`
@@ -9584,16 +9621,16 @@ The complete list (as of this writing) is:
  * used to indicate that the code that follows is part of a migration script for the indicated schema version
  * this has the effect of making the schema appear to be how it existed at the indicated version
  * the idea here is that migration procedures operate on previous versions of the schema where (e.g.) some columns/tables hadn't been deleted yet
-
+ 
 `@PREVIOUS_SCHEMA`
  * indicates the start of the previous version of the schema for comparison (See Chapter 11)
-
+ 
 `@SCHEMA_UPGRADE_SCRIPT`
  * CQL emits a schema upgrade script as part of its upgrade features, this script declares tables in their final form but also creates the same tables as they existed when they were first created
  * this directive instructs CQL to ignore the incompatible creations, the first declaration controls
  * the idea here is that the upgrade script is in the business of getting you to the finish line in an orderly fashion and some of the interim steps are just not all the way there yet
  * note that the upgrade script recapitulates the version history, it does not take you directly to the finish line, this is so that all instances get to the same place the same way (and this fleshes out any bugs in migration)
-
+ 
 `@DUMMY_NULLABLES`
 `@DUMMY_DEFAULTS`
 `@DUMMY_SEED`
@@ -9601,12 +9638,12 @@ The complete list (as of this writing) is:
 
 `@FILE`
  * a string literal that corresponds to the current file name with a prefix stripped (to remove build lab junk in the path)
-
+ 
 `@ATTRIBUTE`
   * the main purpose of `@attribute` is to appear in the JSON output so that it can control later codegen stages in whatever way you deem appropriate
   * the nested nature of attribute values is sufficiently flexible than you could encode an arbitary LISP program in an attribute, so really anything you might need to express is possible
   * there are a number of attributes known to the compiler which I list below (complete as of this writing)
-
+  
   * `cql:autodrop=(table1, table2, ...)` when present the indicated tables, which must be temp tables, are dropped when the results of the procedure have been fetched into a rowset
   * `cql:indentity=(column1, column2, ...)` the indicated columns are used to create a row comparator for the rowset corresponding to the procedure, this appears in a C macro of the form `procedure_name_row_same(rowset1, row1, rowset2, row2)`
   * `cql:suppres_getters` the indicated procedure should not emit the column getter functions (useful if you only indend to call the procedure from CQL, or if you wish to restrict access in C)
@@ -12936,7 +12973,7 @@ CQL 0400 : unused, this was added to prevent merge conflicts at the end on liter
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue Mar 30 17:28:36 PDT 2021
+Snapshot as of Wed Mar 31 15:10:51 PDT 2021
 
 ### Rules
 
@@ -14418,3 +14455,6 @@ fetch C USING
 ```
 
 If you've read this far you know more than most now.  :)
+
+
+
