@@ -4223,7 +4223,7 @@ declare not_null_object object not null;
 -- + {assign}: not_null_object: object notnull variable
 -- + {name not_null_object}: not_null_object: object notnull variable
 -- - Error
-set not_null_object := attest_notnull(obj_var);
+set not_null_object := ifnull_crash(obj_var);
 
 -- TEST: convert object to not null -- ifnull_crash form
 -- + {assign}: not_null_object: object notnull variable
@@ -4241,37 +4241,37 @@ set not_null_object := ifnull_throw(obj_var);
 -- + {assign}: price_d: real<dollars> variable
 -- + {name price_d}: price_d: real<dollars> variable
 -- + {call}: price_d: real<dollars> notnull variable
-set price_d := attest_notnull(price_d);
+set price_d := ifnull_crash(price_d);
 
 -- TEST: attest should copy the semantic info including kind, hence can produce errors
 -- + {assign}: err
 -- + Error % expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
 -- +1 Error
-set price_d := attest_notnull(price_e);
+set price_d := ifnull_crash(price_e);
 
 -- TEST: convert to not null -- fails already not null
 -- + {call}: err
--- + Error % argument must be a nullable type (but not constant NULL) in 'attest_notnull'
+-- + Error % argument must be a nullable type (but not constant NULL) in 'ifnull_crash'
 -- +1 Error
-set not_null_object := attest_notnull(not_null_object);
+set not_null_object := ifnull_crash(not_null_object);
 
 -- TEST: convert to not null -- fails can't do this to 'null'
 -- + {call}: err
--- + Error % argument must be a nullable type (but not constant NULL) in 'attest_notnull'
+-- + Error % argument must be a nullable type (but not constant NULL) in 'ifnull_crash'
 -- +1 Error
-set not_null_object := attest_notnull(null);
+set not_null_object := ifnull_crash(null);
 
 -- TEST: convert to not null -- fails wrong arg count
 -- + {call}: err
--- + Error % function got incorrect number of arguments 'attest_notnull'
+-- + Error % function got incorrect number of arguments 'ifnull_crash'
 -- +1 Error
-set not_null_object := attest_notnull(1, 7);
+set not_null_object := ifnull_crash(1, 7);
 
 -- TEST: convert to not null -- fails in SQL context
 -- + {call}: err
--- + Error % function may not appear in this context 'attest_notnull'
+-- + Error % function may not appear in this context 'ifnull_crash'
 -- +1 Error
-set not_null_object := (select attest_notnull(1));
+set not_null_object := (select ifnull_crash(1));
 
 -- TEST: echo statement is ok in any top level context
 -- + {echo_stmt}: ok

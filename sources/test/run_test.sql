@@ -1377,7 +1377,7 @@ BEGIN_TEST(object_notnull)
  declare _setNN object not null;
  declare _set object;
  set _set := set_create();
- set _setNN := attest_notnull(_set);
+ set _setNN := ifnull_crash(_set);
  EXPECT(_set == _setNN); // should be the same pointer
 END_TEST(object_notnull)
 

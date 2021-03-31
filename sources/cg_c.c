@@ -2064,7 +2064,7 @@ static void cg_id(ast_node *expr, charbuf *is_null, charbuf *value) {
   sem_t sem_type = expr->sem->sem_type;
   Invariant(is_variable(sem_type));
 
-  // Crucial, we want the canonical version of the name, not any MixED case version 
+  // Crucial, we want the canonical version of the name, not any MixED case version
   // the user might have typed.
   CSTR name = expr->sem->name;
 
@@ -2221,7 +2221,7 @@ static void cg_func_ifnull_throw(ast_node *call_ast, charbuf *is_null, charbuf *
   CG_POP_EVAL(expr);
 }
 
-static void cg_func_attest_notnull(ast_node *call_ast, charbuf *is_null, charbuf *value) {
+static void cg_func_ifnull_crash(ast_node *call_ast, charbuf *is_null, charbuf *value) {
   Contract(is_ast_call(call_ast));
   EXTRACT_ANY_NOTNULL(name_ast, call_ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -2242,11 +2242,6 @@ static void cg_func_attest_notnull(ast_node *call_ast, charbuf *is_null, charbuf
     bprintf(is_null, "0");
     bprintf(value, "%s", expr_value.ptr);
   CG_POP_EVAL(expr);
-}
-
-// synonym for attest_notnull -- we'll be getting rid of the other one soon
-static void cg_func_ifnull_crash(ast_node *call_ast, charbuf *is_null, charbuf *value) {
-  cg_func_attest_notnull(call_ast, is_null, value);
 }
 
 // There's a helper for this method, just call it.  Super easy.
@@ -6795,7 +6790,6 @@ cql_noexport void cg_c_init(void) {
   STMT_INIT(out_union_stmt);
   STMT_INIT(echo_stmt);
 
-  FUNC_INIT(attest_notnull);
   FUNC_INIT(nullable);
   FUNC_INIT(ifnull_throw);
   FUNC_INIT(ifnull_crash);

@@ -2803,18 +2803,18 @@ As it turns out the underlying data type for all result sets is the same, only t
   cql_offsetof(read_foo_row, t)
 };</code></pre>
 <p>Using the above we can now write this fetcher</p>
-<pre><code>CQL_WARN_UNUSED cql_code 
+<pre><code>CQL_WARN_UNUSED cql_code
 read_foo_fetch_results(
-  sqlite3 *_Nonnull _db_, 
-  read_foo_result_set_ref _Nullable *_Nonnull result_set, 
-  cql_int32 id_) 
+  sqlite3 *_Nonnull _db_,
+  read_foo_result_set_ref _Nullable *_Nonnull result_set,
+  cql_int32 id_)
 {
   sqlite3_stmt *stmt = NULL;
   cql_profile_start(CRC_read_foo, &amp;read_foo_perf_index);
-  
+
   // we call the original procedure, it gives us a prepared statement
   cql_code rc = read_foo(_db_, &amp;stmt, id_);
-  
+
   // this is everything you need to know to fetch the result
   cql_fetch_info info = {
     .rc = rc,
@@ -2828,7 +2828,7 @@ read_foo_fetch_results(
     .crc = CRC_read_foo,
     .perf_index = &amp;read_foo_perf_index,
   };
-  
+
   // this function does all the work, it cleans up if .rc is an error code.
   return cql_fetch_all_results(&amp;info, (cql_result_set_ref *)result_set);
 }</code></pre>
@@ -2856,13 +2856,13 @@ read_foo_fetch_results(
 <span id="cb186-4"><a href="#cb186-4"></a>cql_bytebuf_open(&amp;_rows_);</span></code></pre></div>
 <p>We need to be able to copy the cursor into the buffer and retain any internal references</p>
 <pre><code>// This bit is what you get when you &quot;out union&quot; a cursor &quot;C&quot;
-// first we +1 any references in the cursor then we copy its bits 
+// first we +1 any references in the cursor then we copy its bits
 cql_retain_row(C_);   // a no-op if there is no row in the cursor
 if (C_._has_row_) cql_bytebuf_append(&amp;_rows_, (const void *)&amp;C_, sizeof(C_));</code></pre>
 <p>Finally, we make the rowset when the procedure exits. If the procedure is returning with no errors the result set is created, otherwise the buffer is released. The global <code>some_integers_info</code> has constants that describe the shape produced by this procedure just like the other cases that produce a result set.</p>
-<pre><code>cql_results_from_data(_rc_, 
-                      &amp;_rows_, 
-                      &amp;some_integers_info, 
+<pre><code>cql_results_from_data(_rc_,
+                      &amp;_rows_,
+                      &amp;some_integers_info,
                       (cql_result_set_ref *)_result_set_);</code></pre>
 <p>The operations here are basically the same ones that will happen inside of the standard helper <code>cql_fetch_all_results</code>, the difference is of course that you write the loop manually and therefore have full control of the rows as they go in to the result set.</p>
 <p>In short, the overhead is pretty low. What you’re left with is pretty much the base cost of your algorithm. The cost here is very similar to what it would be for any other thing that make rows.</p>
@@ -3463,7 +3463,7 @@ create table foo(
   name_2 text @create(6)
 );
 
--- much simpler table, lots of stuff added in v2.  
+-- much simpler table, lots of stuff added in v2.
 -- note v1 is the first new version and v0 is base version
 create table table2(
   id integer not null,
@@ -4744,17 +4744,17 @@ Any result shape can be generated in this fashion.</p>
 <p>When compiled, the above will create C methods that can create, drop, insert, and select from the temp table. They will have the following signatures:</p>
 <pre><code>CQL_WARN_UNUSED cql_code open_sample_proc(
   sqlite3 *_Nonnull _db_);
-  
+
 CQL_WARN_UNUSED cql_code close_sample_proc(
   sqlite3 *_Nonnull _db_);
-  
+
 CQL_WARN_UNUSED cql_code insert_sample_proc(
-  sqlite3 *_Nonnull _db_, 
-  cql_int32 id_, 
+  sqlite3 *_Nonnull _db_,
+  cql_int32 id_,
   cql_string_ref _Nonnull name_);
 
 CQL_WARN_UNUSED cql_code select_sample_proc_fetch_results(
-  sqlite3 *_Nonnull _db_, 
+  sqlite3 *_Nonnull _db_,
   select_sample_proc_result_set_ref _Nullable *_Nonnull result_set);</code></pre>
 <h4 id="single-row-resultset">Single Row ResultSet</h4>
 <p>In some cases, using four APIs to generate fake data can be verbose. In the case that only a single row of data needs to be faked, the dummy_result_set attribute can be more convenient.</p>
@@ -4922,23 +4922,23 @@ end;</code></pre>
 <p>In general, the <code>dummy_test</code> annotation can include any number of tables, for each table you can specify any of the columns and you can have any number of tuples of values for those columns.</p>
 <p>NOTE: if you include primary key and/or foreign key columns among the explicit values it’s up to you to ensure that they are valid combinations. SQLite will complain as usual if they are not, but the CQL compiler will simply emit the data you asked for.</p>
 <p>Generalizing the example a little bit, we could use the following:</p>
-<pre><code>(dummy_test, (foo, (name), (&#39;fred&#39;), (&#39;barney&#39;), (&#39;wilma&#39;), (&#39;betty&#39;)), 
+<pre><code>(dummy_test, (foo, (name), (&#39;fred&#39;), (&#39;barney&#39;), (&#39;wilma&#39;), (&#39;betty&#39;)),
                         (bar, (id, data), (1, &#39;dino&#39;), (2, &#39;hopparoo&#39;))))</code></pre>
 <p>to generate this population:</p>
 <pre><code>CREATE PROC test_the_subject_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO foo(name, id) VALUES(&#39;fred&#39;, 1) @dummy_seed(123);
-  
+
   INSERT OR IGNORE INTO foo(name, id) VALUES(&#39;barney&#39;, 2) @dummy_seed(124)
     @dummy_nullables @dummy_defaults;
-  
+
   INSERT OR IGNORE INTO foo(name, id) VALUES(&#39;wilma&#39;, 3) @dummy_seed(125);
-  
+
   INSERT OR IGNORE INTO foo(name, id) VALUES(&#39;betty&#39;, 4) @dummy_seed(126)
     @dummy_nullables @dummy_defaults;
-    
+
   INSERT OR IGNORE INTO bar(id, data) VALUES(1, &#39;dino&#39;) @dummy_seed(127);
-  
+
   INSERT OR IGNORE INTO bar(id, data) VALUES(2, &#39;hopparoo&#39;) @dummy_seed(128)
     @dummy_nullables @dummy_defaults;
 END;</code></pre>
@@ -9097,7 +9097,7 @@ set x := y;</code></pre>
 <p>The argument for the CQL builtin function cql_get_blob_size should always be of type blob</p>
 <hr />
 <h3 id="cql0344-argument-must-be-a-nullable-type-but-not-constant-null-in-function">CQL0344: argument must be a nullable type (but not constant NULL) in ‘function’</h3>
-<p>Functions like <code>attest_notnull</code> only make sense if the argument is nullable. If it’s already not null the operation is uninteresting/redundant.</p>
+<p>Functions like <code>ifnull_crash</code> only make sense if the argument is nullable. If it’s already not null the operation is uninteresting/redundant.</p>
 <p>The most likely cause is that the function call in question is vestigial and you can simply remove it.</p>
 <hr />
 <h3 id="cql0345-the-arguments-must-be-of-type-blob-function_name">CQL0345: the arguments must be of type blob ‘function_name’</h3>
