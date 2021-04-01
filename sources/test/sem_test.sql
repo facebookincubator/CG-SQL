@@ -14905,3 +14905,32 @@ insert into with_kind using
 insert into with_kind using
    with goo(x) as (select 1)
    select goo.x id, 3.5 cost, 4.8 value from goo;
+
+-- TEST: use built-in migration
+-- + {create_table_stmt}: moving_to_recreate: { id: integer } @create(1)
+-- + {dot}: ok
+-- + {name cql}
+-- + {name from_recreate}
+-- - Error
+create table moving_to_recreate (
+ id integer
+) @create(1, cql:from_recreate);
+
+-- TEST: try to use some bogus migrator
+-- + {create_table_stmt}: err
+-- + {dot}: err
+-- + Error % unknown built-in migration procedure 'cql:fxom_recreate'
+-- +1 Error
+create table bogus_builtin_migrator (
+ id integer
+) @create(1, cql:fxom_recreate);
+
+-- TEST: try to use valid migrator in a column entry instead of the table entry
+-- + {create_table_stmt}: err
+-- + {dot}: err
+-- + Error % built-in migration procedure not valid in this context 'cql:from_recreate'
+-- +1 Error
+create table bogus_builtin_migrator_placement (
+ id integer,
+ id2 integer @create(2, cql:from_recreate)
+) @create(1);

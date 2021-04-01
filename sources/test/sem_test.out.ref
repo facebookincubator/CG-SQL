@@ -58975,3 +58975,89 @@ SELECT goo.x AS id, 3.5 AS cost, 4.8 AS value
             | {select_limit}
               | {select_offset}
 
+The statement ending at line XXXX
+
+CREATE TABLE moving_to_recreate(
+  id INTEGER
+) @CREATE(1, cql:from_recreate);
+
+  {create_table_stmt}: moving_to_recreate: { id: integer } @create(1)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {create_attr}
+  | |   | {version_annotation}
+  | |     | {int 1}
+  | |     | {dot}: ok
+  | |       | {name cql}
+  | |       | {name from_recreate}
+  | | {name moving_to_recreate}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE bogus_builtin_migrator(
+  id INTEGER
+) @CREATE(1, cql:fxom_recreate);
+
+Error at test/sem_test.sql:XXXX : in dot : CQL0379: unknown built-in migration procedure 'cql:fxom_recreate'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {create_attr}: err
+  | |   | {version_annotation}
+  | |     | {int 1}
+  | |     | {dot}: err
+  | |       | {name cql}
+  | |       | {name fxom_recreate}
+  | | {name bogus_builtin_migrator}
+  | {col_key_list}
+    | {col_def}
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}
+
+The statement ending at line XXXX
+
+CREATE TABLE bogus_builtin_migrator_placement(
+  id INTEGER,
+  id2 INTEGER @CREATE(2, cql:from_recreate)
+) @CREATE(1);
+
+Error at test/sem_test.sql:XXXX : in dot : CQL0378: built-in migration procedure not valid in this context 'cql:from_recreate'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {create_attr}
+  | |   | {version_annotation}
+  | |     | {int 1}
+  | | {name bogus_builtin_migrator_placement}
+  | {col_key_list}
+    | {col_def}: id: integer
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: err
+        | {col_def_type_attrs}: ok
+          | {col_def_name_type}
+          | | {name id2}
+          | | {type_int}: integer
+          | {create_attr}: err
+            | {version_annotation}
+              | {int 2}
+              | {dot}: err
+                | {name cql}
+                | {name from_recreate}
+

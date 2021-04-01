@@ -754,6 +754,9 @@ alter table foo add column bar integer not null;
 -- table with column create version attribute
 create table foo (id int @create(1, Foo)) ;
 
+-- table with column create version attribute
+create table foo (id int @create(1, cql:from_recreate)) ;
+
 -- table with column delete  version attribute
 create table foo (id int @delete(2, Bar));
 

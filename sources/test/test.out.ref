@@ -836,6 +836,10 @@ CREATE TABLE foo(
 );
 
 CREATE TABLE foo(
+  id INTEGER @CREATE(1, cql:from_recreate)
+);
+
+CREATE TABLE foo(
   id INTEGER @DELETE(2, Bar)
 );
 

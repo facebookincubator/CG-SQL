@@ -1140,13 +1140,16 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
         facet_version_out = true;
       }
 
-      EXTRACT_STRING(proc, version_annotation->right);
-      bprintf(&pending, "      CALL %s_cql_get_facet_version('%s', facet_version);\n", global_proc_name, proc);
-      bprintf(&pending, "      IF facet_version = -1 THEN\n");
-      bprintf(&pending, "        CALL %s();\n", proc);
-      bprintf(&pending, "        CALL %s_cql_set_facet_version('%s', %d);\n", global_proc_name, proc, vers);
-      bprintf(&pending, "      END IF;\n");
-      bprintf(&decls, "DECLARE proc %s() USING TRANSACTION;\n", proc);
+      // for now simply ignore all builtins, there are no implementations yet.
+      if (!is_ast_dot(version_annotation->right)) {
+        EXTRACT_STRING(proc, version_annotation->right);
+        bprintf(&pending, "      CALL %s_cql_get_facet_version('%s', facet_version);\n", global_proc_name, proc);
+        bprintf(&pending, "      IF facet_version = -1 THEN\n");
+        bprintf(&pending, "        CALL %s();\n", proc);
+        bprintf(&pending, "        CALL %s_cql_set_facet_version('%s', %d);\n", global_proc_name, proc, vers);
+        bprintf(&pending, "      END IF;\n");
+        bprintf(&decls, "DECLARE proc %s() USING TRANSACTION;\n", proc);
+      }
     }
   }
 

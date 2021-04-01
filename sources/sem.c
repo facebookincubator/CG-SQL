@@ -3097,7 +3097,29 @@ static void sem_pk_def(ast_node *table_ast, ast_node *def) {
   sem_update_column_type(table_ast, name_list, SEM_TYPE_NOTNULL);
 }
 
-static bool_t sem_validate_version(ast_node *ast, int32_t *version, CSTR *out_proc) {
+// Currently the only known builtin migration proc is "cql:from_recreate"
+// and it is only valid on @create in a table.
+// If this is ever generalized something fancier might be needed here
+// like a name table or something.  For now, keeping it simple.
+
+static void sem_validate_builtin_migration_proc(ast_node *ast, uint32_t code, CSTR name) {
+  if (Strcasecmp("cql:from_recreate", name)) {
+    report_error(ast, "CQL0379: unknown built-in migration procedure", name);
+    record_error(ast);
+    return;
+  }
+
+  if (code != SCHEMA_ANNOTATION_CREATE_TABLE) {
+    report_error(ast, "CQL0378: built-in migration procedure not valid in this context", name);
+    record_error(ast);
+    return;
+  }
+
+  record_ok(ast);
+  return;
+}
+
+static bool_t sem_validate_version(uint32_t code, ast_node *ast, int32_t *version, CSTR *out_proc) {
   Contract(version);
   EXTRACT(version_annotation, ast->left);
   EXTRACT_OPTION(vers, version_annotation->left);
@@ -3117,19 +3139,35 @@ static bool_t sem_validate_version(ast_node *ast, int32_t *version, CSTR *out_pr
   }
 
   if (version_annotation->right) {
-    EXTRACT_STRING(name, version_annotation->right);
+    CSTR proc_name = NULL;
 
-    size_t len = strlen(name);
-    if (len >= 4) {
-      size_t offset = len - 4;
-      if (!Strcasecmp(name + offset, "_crc")) {
-        report_error(ast, "CQL0338: the name of a migration procedure may not end in '_crc'", name);
+    if (is_ast_dot(version_annotation->right)) {
+      EXTRACT_NOTNULL(dot, version_annotation->right);
+      EXTRACT_STRING(lhs, dot->left);
+      EXTRACT_STRING(rhs, dot->right);
+      proc_name = dup_printf("%s:%s", lhs, rhs);
+      sem_validate_builtin_migration_proc(dot, code, proc_name);
+      if (is_error(dot)) {
         record_error(ast);
         return false;
       }
     }
+    else {
+      EXTRACT_STRING(name, version_annotation->right);
+      proc_name = name;
 
-    *out_proc = name;
+      size_t len = strlen(name);
+      if (len >= 4) {
+        size_t offset = len - 4;
+        if (!Strcasecmp(name + offset, "_crc")) {
+          report_error(ast, "CQL0338: the name of a migration procedure may not end in '_crc'", name);
+          record_error(ast);
+          return false;
+        }
+      }
+    }
+
+    *out_proc = proc_name;
   }
 
   if (validating_previous_schema) {
@@ -3145,7 +3183,7 @@ static bool_t sem_validate_version(ast_node *ast, int32_t *version, CSTR *out_pr
   else {
     // In normal operation we just look for duplicate procs, note duplicate procs
     // are not a problem when validating against previous schema.
-    if (version_annotation->right) {
+    if (version_annotation->right && !is_ast_dot(version_annotation->right)) {
       EXTRACT_STRING(name, version_annotation->right);
       if (!symtab_add(upgrade_procs, name, ast)) {
         report_error(version_annotation->right, "CQL0027: a procedure can appear in only one annotation", name);
@@ -3331,7 +3369,7 @@ static sem_t sem_col_attrs(ast_node *def, ast_node *_Nullable head, coldef_info 
   for (ast_node *ast = head; ast; ast = ast->right) {
     sem_t new_flags = 0;
     if (is_ast_create_attr(ast)) {
-      if (!sem_validate_version(ast, &info->create_version, &info->create_proc)) {
+      if (!sem_validate_version(SCHEMA_ANNOTATION_CREATE_COLUMN, ast, &info->create_version, &info->create_proc)) {
         record_error(head);
         return false;
       }
@@ -3341,7 +3379,7 @@ static sem_t sem_col_attrs(ast_node *def, ast_node *_Nullable head, coldef_info 
       }
     }
     else if (is_ast_delete_attr(ast)) {
-      if (!sem_validate_version(ast, &info->delete_version, &info->delete_proc)) {
+      if (!sem_validate_version(SCHEMA_ANNOTATION_DELETE_COLUMN, ast, &info->delete_version, &info->delete_proc)) {
         record_error(head);
         return false;
       }
@@ -8989,7 +9027,7 @@ static bool_t sem_validate_version_attrs(version_attrs_info *vers_info) {
       return true;
     }
     if (is_ast_create_attr(ast)) {
-      if (!sem_validate_version(ast, &vers_info->create_version, &vers_info->create_proc)) {
+      if (!sem_validate_version(vers_info->create_code, ast, &vers_info->create_version, &vers_info->create_proc)) {
         record_error(vers_info->target_ast);
         return false;
       }
@@ -8997,7 +9035,7 @@ static bool_t sem_validate_version_attrs(version_attrs_info *vers_info) {
       vers_info->create_version_ast = version_annotation;
     } else {
       Contract (is_ast_delete_attr(ast));
-      if (!sem_validate_version(ast, &vers_info->delete_version, &vers_info->delete_proc)) {
+      if (!sem_validate_version(vers_info->delete_code, ast, &vers_info->delete_version, &vers_info->delete_proc)) {
         record_error(vers_info->target_ast);
         return false;
       }
@@ -17697,7 +17735,7 @@ static void sem_schema_ad_hoc_migration_stmt(ast_node *ast) {
   CSTR name;
   int32_t version = -1; // sentinel indicating it's not yet set
 
-  if (!sem_validate_version(ast, &version, &name)) {
+  if (!sem_validate_version(SCHEMA_ANNOTATION_AD_HOC, ast, &version, &name)) {
     record_error(ast);
     return;
   }

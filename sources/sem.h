@@ -90,7 +90,7 @@ typedef struct schema_annotation {
   ast_node *column_ast;           // a particular column if column annotation
 } schema_annotation;
 
-// Note: schema annoations are processed in the indicated order: the numbers matter
+// Note: schema annotations are processed in the indicated order: the numbers matter
 #define SCHEMA_ANNOTATION_INVALID 0
 #define SCHEMA_ANNOTATION_FIRST 1
 #define SCHEMA_ANNOTATION_CREATE_TABLE 1

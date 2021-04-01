@@ -405,14 +405,24 @@ static void gen_pk_def(ast_node *def) {
   gen_printf(")");
 }
 
-static void gen_version_and_proc(ast_node *version_annotation)
+static void gen_version_and_proc(ast_node *ast)
 {
-  Contract(is_ast_version_annotation(version_annotation));
-  EXTRACT_OPTION(vers, version_annotation->left);
+  Contract(is_ast_version_annotation(ast));
+  EXTRACT_OPTION(vers, ast->left);
   gen_printf("%d", vers);
-  if (version_annotation->right) {
-    EXTRACT_STRING(name, version_annotation->right);
-    gen_printf(", %s", name);
+  if (ast->right) {
+    if (is_ast_dot(ast->right)) {
+      EXTRACT_NOTNULL(dot, ast->right);
+      EXTRACT_STRING(lhs, dot->left);
+      EXTRACT_STRING(rhs, dot->right);
+
+      gen_printf(", %s:%s", lhs, rhs);
+    }
+    else
+    {
+      EXTRACT_STRING(name, ast->right);
+      gen_printf(", %s", name);
+    }
   }
 }
 

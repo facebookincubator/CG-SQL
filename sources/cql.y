@@ -694,6 +694,9 @@ col_attrs[result]:
 version_annotation:
   '(' INTLIT ',' name ')'  {
     $version_annotation = new_ast_version_annotation(new_ast_opt(atoi($INTLIT)), $name); }
+  | '(' INTLIT ',' name[lhs] ':' name[rhs] ')'  {
+    ast_node *dot = new_ast_dot($lhs, $rhs);
+    $version_annotation = new_ast_version_annotation(new_ast_opt(atoi($INTLIT)), dot); }
   | '(' INTLIT ')'  {
     $version_annotation = new_ast_version_annotation(new_ast_opt(atoi($INTLIT)), NULL); }
   ;
