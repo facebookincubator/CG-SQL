@@ -39,6 +39,7 @@ Error at test/sem_test_prev.sql:XXXX : in fk_def : FOREIGN KEY (id) REFERENCES c
 The above must be identical.
 Error at test/sem_test_prev.sql:XXXX : in fk_def : CQL0132: table has a facet that is different in the previous and current schema 'fk_facet'
 Error at test/sem_test_prev.sql:XXXX : in str : CQL0114: current schema can't go back to @recreate semantics for 'cannot_change_to_recreate'
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0377: table transitioning from @recreate to @create must use @create(nn,cql:from_recreate) 'not_ok_to_create_recreate_table'
 Error at test/sem_test_prev.sql:XXXX : in create_table_stmt : CQL0126: table was present but now it does not exist (use @delete instead) 'disapparing_recreate'
 Error at test/sem_test_prev.sql:XXXX : in create_trigger_stmt : CQL0106: trigger was present but now it does not exist (use @delete instead) 'trigger_removed_with_no_annotation'
 Error at test/sem_test_prev.sql:XXXX : in col_key_list : CQL0133: non-column facets have been removed from the table 't_removed_facet'

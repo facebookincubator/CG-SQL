@@ -186,19 +186,29 @@ create table fk_facet
 );
 
 -- try to change a table to the recreate plan after it was on the other plan
+-- - Error
 create table cannot_change_to_recreate
 (
   id int
 ) @recreate;
 
 -- the new version of this table is on the delete plan, that's ok to go
+-- - Error
 create table ok_to_delete_recreate_table
 (
   id int
 ) @delete(6);
 
 -- the new version of this table is on the create plan, that's ok to go
+-- - Error
 create table ok_to_create_recreate_table
+(
+  id int
+) @create(6, cql:from_recreate);
+
+-- the new version of this table is on the create plan, but attribute missing -> error
+-- - Error
+create table not_ok_to_create_recreate_table
 (
   id int
 ) @create(6);
@@ -702,10 +712,19 @@ create table ok_to_delete_recreate_table
  id int
 ) @recreate;
 
--- TEST: the new version of this table is on the delete plan, that's ok to go
+-- TEST: the new version of this table is on the create plan, with cql_from_recreate that's ok to go
 -- + {create_table_stmt}: ok_to_create_recreate_table: { id: integer } @recreate
 -- - Error
 create table ok_to_create_recreate_table
+(
+ id int
+) @recreate;
+
+-- TEST: the new version of this table is on the create plan, but missing cql:from_recreate
+-- + {create_table_stmt}: err
+-- + Error % table transitioning from @recreate to @create must use @create(nn,cql:from_recreate) 'not_ok_to_create_recreate_table'
+-- +1 Error
+create table not_ok_to_create_recreate_table
 (
  id int
 ) @recreate;

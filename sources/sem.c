@@ -9232,10 +9232,26 @@ static bool_t sem_validate_attrs_prev_cur(version_attrs_info *prev, version_attr
     }
   }
 
-  // if we used to be on the @recreate plan then we don't have to check the current create version
-  if (!prev->recreate) {
+  if (prev->recreate) {
+    // if we used to be on the @recreate plan then we don't have to check the current create version
+    // but we do have to make sure the recreate transition special action is being used
+    if (cur->create_version > 0 && cur->create_code == SCHEMA_ANNOTATION_CREATE_TABLE) {
+       if (!cur->create_proc || Strcasecmp("cql:from_recreate", cur->create_proc)) {
+         report_error(name_ast, "CQL0377: table transitioning from @recreate to @create must use @create(nn,cql:from_recreate)", name);
+         return false;
+       }
+    }
+  }
+  else {
+    // otherwise this is not a recreate to create transition so normal version checks
     if (!sem_validate_create_prev_cur(prev->create_version, cur->create_version)) {
       report_error(name_ast, "CQL0115: current create version not equal to previous create version for", name);
+      return false;
+    }
+
+    // not previously on the recreate plan the proc name must match
+    if (!sem_match_optional_string(prev->create_proc, cur->create_proc)) {
+      report_error(name_ast, "CQL0118: @create procedure changed in object", name);
       return false;
     }
   }
@@ -9247,11 +9263,6 @@ static bool_t sem_validate_attrs_prev_cur(version_attrs_info *prev, version_attr
 
   if (!sem_match_optional_string(prev->delete_proc, cur->delete_proc)) {
     report_error(name_ast, "CQL0117: @delete procedure changed in object", name);
-    return false;
-  }
-
-  if (!sem_match_optional_string(prev->create_proc, cur->create_proc)) {
-    report_error(name_ast, "CQL0118: @create procedure changed in object", name);
     return false;
   }
 

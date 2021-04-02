@@ -1060,7 +1060,7 @@ The statement ending at line XXXX
 
 CREATE TABLE ok_to_create_recreate_table(
   id INTEGER
-) @CREATE(6);
+) @CREATE(6, cql:from_recreate);
 
   {create_table_stmt}: ok_to_create_recreate_table: { id: integer } validated @create(6)
   | {create_table_name_flags}
@@ -1069,7 +1069,31 @@ CREATE TABLE ok_to_create_recreate_table(
   | | | {create_attr}
   | |   | {version_annotation}
   | |     | {int 6}
+  | |     | {dot}: ok
+  | |       | {name cql}
+  | |       | {name from_recreate}
   | | {name ok_to_create_recreate_table}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE not_ok_to_create_recreate_table(
+  id INTEGER
+) @CREATE(6);
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {create_attr}
+  | |   | {version_annotation}
+  | |     | {int 6}
+  | | {name not_ok_to_create_recreate_table}
   | {col_key_list}
     | {col_def}: id: integer
       | {col_def_type_attrs}: ok
@@ -3054,6 +3078,27 @@ CREATE TABLE ok_to_create_recreate_table(
   | | | {int 0}
   | | | {recreate_attr}
   | | {name ok_to_create_recreate_table}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE not_ok_to_create_recreate_table(
+  id INTEGER
+) @RECREATE;
+
+Error at test/sem_test_prev.sql:XXXX : in str : CQL0377: table transitioning from @recreate to @create must use @create(nn,cql:from_recreate) 'not_ok_to_create_recreate_table'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {recreate_attr}
+  | | {name not_ok_to_create_recreate_table}
   | {col_key_list}
     | {col_def}: id: integer
       | {col_def_type_attrs}: ok
