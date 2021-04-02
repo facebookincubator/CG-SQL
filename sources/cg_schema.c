@@ -249,6 +249,16 @@ static void cg_schema_helpers(charbuf *decls) {
   bprintf(decls, "    call cql_exec_internal(printf('DROP TRIGGER %%s;', C.name));\n");
   bprintf(decls, "  END;\n");
   bprintf(decls, "END;\n\n");
+
+  bprintf(decls, "CREATE PROCEDURE %s_cql_one_time_drop(name TEXT NOT NULL, version INTEGER NOT NULL)\n", global_proc_name);
+  bprintf(decls, "BEGIN\n");
+  bprintf(decls, "  LET facet := printf('1_time_drop_%%s', name);\n");
+  bprintf(decls, "  IF %s_cql_get_facet_version(facet) != version THEN\n", global_proc_name);
+  bprintf(decls, "    call cql_exec_internal(printf('DROP TABLE IF EXISTS %%s;', name));\n");
+  bprintf(decls, "    call %s_cql_set_facet_version(facet, version);\n", global_proc_name);
+  bprintf(decls, "  END IF;\n");
+  bprintf(decls, "END;\n\n");
+
 }
 
 // Emit the delcaration of the sqlite_master table so we can read from it.
@@ -1089,7 +1099,22 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
       }
 
       case SCHEMA_ANNOTATION_CREATE_TABLE: {
+        // check for one time drop
+
+        EXTRACT_ANY(dot, version_annotation->right);
+        if (dot && is_ast_dot(dot)) {
+          EXTRACT_STRING(lhs, dot->left);
+          EXTRACT_STRING(rhs, dot->right);
+
+          if (!Strcasecmp(lhs, "cql") && !Strcasecmp(rhs, "from_recreate")) {
+            bprintf(&upgrade, "      -- one time drop %s\n\n", target_name);
+            bprintf(&upgrade, "      CALL %s_cql_one_time_drop('%s', %d);\n\n", global_proc_name, target_name, vers);
+          }
+        }
+
         bprintf(&upgrade, "      -- creating table %s\n\n", target_name);
+
+
         gen_sql_callbacks callbacks;
         init_gen_sql_callbacks(&callbacks);
         callbacks.col_def_callback = cg_suppress_new_col_def;
@@ -1140,7 +1165,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
         facet_version_out = true;
       }
 
-      // for now simply ignore all builtins, there are no implementations yet.
+      // call any non-builtins the generic way, builtins get whatever special handling they need
       if (!is_ast_dot(version_annotation->right)) {
         EXTRACT_STRING(proc, version_annotation->right);
         bprintf(&pending, "      CALL %s_cql_get_facet_version('%s', facet_version);\n", global_proc_name, proc);

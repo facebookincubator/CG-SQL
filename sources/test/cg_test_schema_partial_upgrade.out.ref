@@ -237,6 +237,15 @@ BEGIN
   END;
 END;
 
+CREATE PROCEDURE test_cql_one_time_drop(name TEXT NOT NULL, version INTEGER NOT NULL)
+BEGIN
+  LET facet := printf('1_time_drop_%s', name);
+  IF test_cql_get_facet_version(facet) != version THEN
+    call cql_exec_internal(printf('DROP TABLE IF EXISTS %s;', name));
+    call test_cql_set_facet_version(facet, version);
+  END IF;
+END;
+
 CREATE PROCEDURE test_cql_install_baseline_schema()
 BEGIN
   CREATE TABLE IF NOT EXISTS table2(

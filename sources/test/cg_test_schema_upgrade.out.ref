@@ -3,7 +3,7 @@
 -- DDL in procs will not count as declarations
 @SCHEMA_UPGRADE_SCRIPT;
 
--- schema crc 5969428477865480946
+-- schema crc 2649697718772058963
 
 -- declare sqlite_master -- 
 CREATE TABLE sqlite_master (
@@ -116,6 +116,11 @@ CREATE VIRTUAL TABLE deleted_virtual_table USING a_module (ARGUMENTS FOLLOWING) 
   id INTEGER @SENSITIVE,
   t TEXT
 ) @DELETE(4);
+
+CREATE TABLE migrated_from_recreate(
+  id INTEGER,
+  t TEXT
+) @CREATE(4, cql:from_recreate);
 
 @begin_schema_region shared;
 CREATE VIEW shared_view AS
@@ -293,6 +298,15 @@ BEGIN
   BEGIN
     call cql_exec_internal(printf('DROP TRIGGER %s;', C.name));
   END;
+END;
+
+CREATE PROCEDURE test_cql_one_time_drop(name TEXT NOT NULL, version INTEGER NOT NULL)
+BEGIN
+  LET facet := printf('1_time_drop_%s', name);
+  IF test_cql_get_facet_version(facet) != version THEN
+    call cql_exec_internal(printf('DROP TABLE IF EXISTS %s;', name));
+    call test_cql_set_facet_version(facet, version);
+  END IF;
 END;
 
 CREATE PROCEDURE test_cql_install_baseline_schema()
@@ -616,7 +630,18 @@ BEGIN
     ---- upgrade to schema version 4 ----
 
     CALL test_cql_get_version_crc(4, schema_version);
-    IF schema_version != -3248746700223362445 THEN
+    IF schema_version != -6135294704505031313 THEN
+      -- one time drop migrated_from_recreate
+
+      CALL test_cql_one_time_drop('migrated_from_recreate', 4);
+
+      -- creating table migrated_from_recreate
+
+      CREATE TABLE IF NOT EXISTS migrated_from_recreate(
+        id INTEGER,
+        t TEXT
+      );
+
       -- altering table added_table to add column name2 TEXT;
 
       CALL test_check_column_exists('added_table', '*[( ]name2 TEXT*', column_exists);
@@ -649,7 +674,7 @@ BEGIN
         CALL test_cql_set_facet_version('DeleteRate2Proc', 4);
       END IF;
 
-      CALL test_cql_set_version_crc(4, -3248746700223362445);
+      CALL test_cql_set_version_crc(4, -6135294704505031313);
     END IF;
 
     ---- upgrade to schema version 5 ----
@@ -700,7 +725,7 @@ BEGIN
     CALL test_cql_create_all_indices();
     CALL test_cql_create_all_triggers();
     CALL test_cql_set_facet_version('cql_schema_version', 6);
-    CALL test_cql_set_facet_version('cql_schema_crc', 5969428477865480946);
+    CALL test_cql_set_facet_version('cql_schema_crc', 2649697718772058963);
 
     -- finally produce the list of differences
     SELECT T1.facet FROM
@@ -721,7 +746,7 @@ BEGIN
   -- fetch the last known schema crc, if it's different do the upgrade --
   CALL test_cql_get_facet_version('cql_schema_crc', schema_crc);
 
-  IF schema_crc <> 5969428477865480946 THEN
+  IF schema_crc <> 2649697718772058963 THEN
     -- save the current facets so we can diff them later --
     CALL test_perform_needed_upgrades();
   ELSE

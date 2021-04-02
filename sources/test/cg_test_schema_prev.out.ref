@@ -101,6 +101,11 @@ CREATE VIRTUAL TABLE deleted_virtual_table USING a_module (ARGUMENTS FOLLOWING) 
   t TEXT
 ) @DELETE(4);
 
+CREATE TABLE migrated_from_recreate(
+  id INTEGER,
+  t TEXT
+) @CREATE(4, cql:from_recreate);
+
 @begin_schema_region shared;
 CREATE VIEW shared_view AS
 SELECT *

@@ -189,3 +189,8 @@ as (
   id integer @sensitive,
   t text
 ) @delete(4);
+
+create table migrated_from_recreate(
+  id integer,
+  t text
+) @create(4, cql:from_recreate);
