@@ -1090,7 +1090,7 @@ bool_t should_vault_col(CSTR col, sem_t sem_type, bool_t use_vault_arg, symtab *
 // the string values from a vault_sensitive attribute. These string value
 // are used later on to decided whether or not to encode a sensitive column
 // value fetched from db or result set.
-static void find_vault_columns_callback(CSTR _Nonnull name, ast_node *_Nonnull found_ast, void *_Nullable context) {
+static void find_vault_columns_callback(CSTR name, ast_node *found_ast, void *context) {
   Invariant(context);
   symtab *output = (symtab*)context;
   symtab_add(output, name, NULL);
@@ -1388,7 +1388,7 @@ static bool_t add_named_type(CSTR name, ast_node *ast) {
 
 // Look up the named type node from the relevant symbol tables.
 // Recall that local named types are in their own table.
-cql_noexport ast_node *_Nullable find_named_type(CSTR name) {
+cql_noexport ast_node *find_named_type(CSTR name) {
   symtab_entry *entry = NULL;
   // We first try to find it in local storage because it has
   // higher priority otherwise we look into the global storage
@@ -1657,7 +1657,7 @@ cql_noexport void print_sem_type(sem_node *sem) {
 // The standard error reporter, the ast node is used to get the line number
 // the message is logged and the subject is cited if present.  The type
 // of node is also included but it's frequently useless...
-cql_noexport void report_error(ast_node *ast, CSTR msg, CSTR _Nullable subject) {
+cql_noexport void report_error(ast_node *ast, CSTR msg, CSTR subject) {
   CSTR subj1 = "";
   CSTR subj2 = "";
   CSTR subj3 = "";
@@ -2773,7 +2773,7 @@ static ast_node *find_and_validate_referenced_table(CSTR table_name, ast_node *e
 // a specific column name.
 // This is used in autotest(dummy_test) to figure out if a column should have
 // an explicit value to avoid sql foreign key violation
-static bool_t validate_referenceable_column_callback(ast_node *name_list, void *_Nullable context) {
+static bool_t validate_referenceable_column_callback(ast_node *name_list, void *context) {
   CSTR column_name = (CSTR)context;
   for (; name_list; name_list = name_list->right) {
     ast_node *name_ast;
@@ -2815,7 +2815,7 @@ typedef bool_t (*validate_referenceable_columns_callback)(ast_node *name_list, v
 static bool_t find_referenceable_columns(
   ast_node *ref_table_ast,
   validate_referenceable_columns_callback callback,
-  void *_Nullable context
+  void *context
 ) {
   Contract(is_ast_create_table_stmt(ref_table_ast));
 
@@ -2893,7 +2893,7 @@ cql_noexport bool_t is_referenceable_by_foreign_key(ast_node *ref_table_ast, CST
 // find_referenceable_columns's callback. It return true if both name lists are
 // have the same items (in any order). This is used to figure out a list of columns
 // in a foreign key clause are referenceable.
-static bool_t validate_referenceable_fk_def_callback(ast_node *name_list, void *_Nullable context) {
+static bool_t validate_referenceable_fk_def_callback(ast_node *name_list, void *context) {
   Contract(is_ast_name_list(context) || is_ast_indexed_columns(context));
   return is_name_list_equal(name_list, (ast_node *)context);
 }
@@ -3358,7 +3358,7 @@ void sem_validate_fk_attr(pending_table_validation *pending) {
 
 // Parse out the column information for this column and add the necessary flags
 // to the semantic type.  Note that we don't care about all of these flags.
-static sem_t sem_col_attrs(ast_node *def, ast_node *_Nullable head, coldef_info *info) {
+static sem_t sem_col_attrs(ast_node *def, ast_node *head, coldef_info *info) {
   Contract(head);
   Contract(info);
 
@@ -4141,7 +4141,7 @@ static void sem_arg_expr(ast_node *ast, bool_t is_count) {
 // arguments with the function and each other.  That doesn't happen here.
 // This just gets the type of each arg and makes sure independently they are
 // not bogus.
-static void sem_arg_list(ast_node *_Nullable head, bool_t is_count) {
+static void sem_arg_list(ast_node *head, bool_t is_count) {
   Contract(!head || is_ast_arg_list(head));
 
   for (ast_node *ast = head; ast; ast = ast->right) {
@@ -8395,7 +8395,7 @@ static void sem_select_core(ast_node *ast) {
 // in [select_core]. If we dont do that then the list of used symbols in a
 // select statement will be incomplete and minify_aliases feature (CG_MINIFY_ALIASES)
 // won't work correctly
-static void sem_add_used_symbols(symtab *_Nullable *_Nonnull used_symbols, symtab *_Nullable add_symbols) {
+static void sem_add_used_symbols(symtab **used_symbols, symtab *add_symbols) {
   if (*used_symbols == NULL) {
     *used_symbols = add_symbols;
   }
@@ -9272,7 +9272,7 @@ static bool_t sem_validate_attrs_prev_cur(version_attrs_info *prev, version_attr
 // Return the default value from the attribute list
 // This must be called when there is a default value by contract.
 // This has the side-effect of validating the HAS_DEFAULT flag
-cql_noexport ast_node *sem_get_col_default_value(ast_node *_Nonnull attrs) {
+cql_noexport ast_node *sem_get_col_default_value(ast_node *attrs) {
   Contract(attrs);
 
   ast_node *ast = attrs;
@@ -12306,7 +12306,7 @@ static void sem_validate_unique_names_struct_type(ast_node *ast) {
 }
 
 // Check the identity columns: make sure they are part of the proc return struct
-static void sem_column_name_annotation_callback(CSTR _Nonnull name, ast_node *_Nonnull misc_attr_value, void *_Nullable context) {
+static void sem_column_name_annotation_callback(CSTR name, ast_node *misc_attr_value, void *context) {
   EXTRACT_NOTNULL(misc_attrs, (ast_node *)context);
   Contract(current_proc);
 
@@ -12350,7 +12350,7 @@ static void report_dummy_test_error(ast_node *target, CSTR message, CSTR subject
 // semantic analysis of dummy_test info. Return true if the node is processed otherwise false
 static bool_t sem_autotest_dummy_test(
   ast_node *misc_attr_value_list,
-  void *_Nullable context)
+  void *context)
 {
   Contract(is_ast_misc_attr_value_list(misc_attr_value_list));
   EXTRACT_STRING(autotest_attr_name, misc_attr_value_list->left);
@@ -12555,7 +12555,7 @@ static void sem_find_ast_misc_attr_callback(
   CSTR misc_attr_prefix,
   CSTR misc_attr_name,
   ast_node *ast_misc_attr_value_list,
-  void *_Nullable context)
+  void *context)
 {
   if (misc_attr_prefix &&
       misc_attr_name &&
@@ -12660,7 +12660,7 @@ static uint32_t sem_column_name_annotation(ast_node *misc_attrs, find_annotation
 }
 
 // Check the autodrop to make sure it is conformant, it has to be a valid temp table.
-static void sem_one_autodrop(CSTR _Nonnull name, ast_node *misc_attr_value, void *_Nullable context) {
+static void sem_one_autodrop(CSTR name, ast_node *misc_attr_value, void *context) {
   EXTRACT_NOTNULL(misc_attrs, (ast_node *)context);
 
   // temp tables are never @deleted, look only for not_deleted tables
@@ -12706,9 +12706,9 @@ static uint32_t sem_autodrops(ast_node *misc_attrs) {
 // In a query fragment, the first CTE name has to match the core fragment name.
 // This helper can be used to validate any CTE name.
 static bool_t sem_fragment_CTE_name_check(
-  ast_node *_Nonnull cte_decl,
-  CSTR _Nonnull name,
-  CSTR _Nonnull error_msg)
+  ast_node *cte_decl,
+  CSTR name,
+  CSTR error_msg)
 {
   EXTRACT_ANY_NOTNULL(name_cte_decl, cte_decl->left);
   EXTRACT_STRING(with_cte_name, name_cte_decl);
@@ -12797,7 +12797,7 @@ static void sem_fragment_union_shape(ast_node *select_core, CSTR name)
 }
 
 // The query fragment must use the WITH for to define a chain of CTE's
-static void sem_fragment_has_with_select_stmt(ast_node *_Nonnull stmt_list) {
+static void sem_fragment_has_with_select_stmt(ast_node *stmt_list) {
   Contract(is_ast_stmt_list(stmt_list));
 
   if (stmt_list->right) {
@@ -12819,7 +12819,7 @@ error:
 }
 
 // Check the number of params under two name lists are the same.
-static bool_t fragment_base_cte_name_list_check(ast_node *_Nullable base_name_list, ast_node *_Nullable name_list) {
+static bool_t fragment_base_cte_name_list_check(ast_node *base_name_list, ast_node *name_list) {
   if (!base_name_list && !name_list) {
     return true;
   } else
@@ -12864,7 +12864,7 @@ static bool_t fragment_base_cte_sem_types_check(ast_node *base_select_expr_list,
 
 typedef struct name_record {
   CSTR name;
-  ast_node *_Nullable ast;
+  ast_node *ast;
 } name_record;
 
 static void reset_name_record(name_record *data) {
@@ -12873,7 +12873,7 @@ static void reset_name_record(name_record *data) {
 }
 
 // records the at most one instance of found attribute
-static void record_frag_name(CSTR _Nonnull name, ast_node *_Nonnull misc_attr_value, void *_Nullable context) {
+static void record_frag_name(CSTR name, ast_node *misc_attr_value, void *context) {
   Contract(context);
   name_record *record = (name_record *)context;
 
@@ -12951,8 +12951,8 @@ error:
 // some_extension_cte(x,y,z,foo) as (
 // select base.* ..... from .....)
 // In this example, base.* is what we want
-static bool_t extension_fragment_select_check(ast_node *_Nonnull select_expr_list_con,
-  ast_node *_Nonnull my_cte_tables, CSTR _Nonnull name) {
+static bool_t extension_fragment_select_check(ast_node *select_expr_list_con,
+  ast_node *my_cte_tables, CSTR name) {
   EXTRACT_NOTNULL(select_expr_list, select_expr_list_con->left);
 
   // the first entry has to be table.*
@@ -13041,9 +13041,9 @@ static bool_t fragment_params_check(CSTR base_frag_name, ast_node *create_proc_s
 // Check for fragment name in extension/assembly fragment from existing base fragment
 // Also check for column consistency (name list & column sem types) in fragment base CTEs.
 static bool_t fragment_base_columns_check(
-  CSTR _Nonnull name,
-  ast_node *_Nonnull str_ast,
-  ast_node *_Nullable stmt_list)
+  CSTR name,
+  ast_node * str_ast,
+  ast_node * stmt_list)
 {
   ast_node *base_fragment = find_base_fragment(name);
   if (!base_fragment) {
@@ -13393,7 +13393,7 @@ error:
 // extension fragments, we need to rename their names to the name of previous extenstion table.
 // This procedure change their names recursively by passing in the select_compund_stmt ast node, base table name and the
 // previous extension table name.
-static void replace_fragment_name(ast_node *node, CSTR _Nonnull base_name, CSTR _Nonnull new_name) {
+static void replace_fragment_name(ast_node *node, CSTR base_name, CSTR new_name) {
   if (node == NULL) {
     return;
   }
@@ -13425,9 +13425,9 @@ static void replace_fragment_name(ast_node *node, CSTR _Nonnull base_name, CSTR 
 // Since we replace the name of base cte table to the previous extension cte table, the declaration of newly spliced
 // extension need to be expanded to include all parameters in the declaration of previous extension table.
 static bool_t assembly_fragment_expand_cte_tables(
-  ast_node *_Nonnull old_extension_cte_tables,
-  ast_node *_Nonnull cte_tables,
-  ast_node *_Nonnull extension_cte_tables)
+  ast_node *old_extension_cte_tables,
+  ast_node *cte_tables,
+  ast_node *extension_cte_tables)
 {
   Contract(!ast_has_right(extension_cte_tables));
   EXTRACT_NOTNULL(cte_decl, cte_tables->left->left);
