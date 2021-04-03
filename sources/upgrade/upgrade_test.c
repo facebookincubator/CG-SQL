@@ -29,6 +29,7 @@ int post_validate(sqlite3* db, cql_int64 old_version) {
   cql_int64 new_version = -1;
   cql_string_ref facet = cql_string_ref_new("cql_schema_version");
   if (test_cql_get_facet_version(db, facet, &new_version)) {
+    printf("Unable to read cql_schema_version facet\n");
     cql_string_release(facet);
     return SQLITE_ERROR;
   }
@@ -39,7 +40,13 @@ int post_validate(sqlite3* db, cql_int64 old_version) {
   }
 
   cql_string_release(facet);
-  return old_version < new_version ? SQLITE_OK : SQLITE_ERROR;
+  int result = old_version <= new_version ? SQLITE_OK : SQLITE_ERROR;
+
+  if (result != SQLITE_OK) {
+    printf("unexpected version old:%d, new:%d\n", (int)old_version, (int)new_version);
+  }
+
+  return result;
 }
 
 int main(int argc, char *argv[]) {

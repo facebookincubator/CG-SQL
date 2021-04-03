@@ -4,8 +4,6 @@ reference results for version 0
 
 type: table
 tbl_name: g1
-rootpage: 8
-
 CREATE TABLE g1(
   id INTEGER PRIMARY KEY,
   name TEXT)
@@ -14,15 +12,11 @@ CREATE TABLE g1(
 
 type: index
 tbl_name: test_cql_schema_facets
-rootpage: 3
-
 
 ----- test_cql_schema_facets -----
 
 type: table
 tbl_name: test_cql_schema_facets
-rootpage: 2
-
 CREATE TABLE test_cql_schema_facets(
   facet TEXT NOT NULL PRIMARY KEY,
   version LONG_INT NOT NULL)
@@ -31,8 +25,6 @@ CREATE TABLE test_cql_schema_facets(
 
 type: table
 tbl_name: test_create_table_A
-rootpage: 4
-
 CREATE TABLE test_create_table_A(
   colA INTEGER,
   colB LONG_INT,
@@ -42,8 +34,6 @@ CREATE TABLE test_create_table_A(
 
 type: table
 tbl_name: test_recreate_table_A
-rootpage: 6
-
 CREATE TABLE test_recreate_table_A(
   colA INTEGER,
   colB LONG_INT,
@@ -53,8 +43,6 @@ CREATE TABLE test_recreate_table_A(
 
 type: table
 tbl_name: test_this_table_will_become_create
-rootpage: 5
-
 CREATE TABLE test_this_table_will_become_create(
   xyzzy INTEGER)
 
@@ -62,16 +50,12 @@ CREATE TABLE test_this_table_will_become_create(
 
 type: trigger
 tbl_name: test_create_table_A
-rootpage: 0
-
-CREATE TRIGGER tr__dummy BEFORE DELETE ON test_create_table_A BEGIN SELECT 1; END
+CREATE TRIGGER tr__dummy  BEFORE DELETE ON test_create_table_A BEGIN  SELECT 1; END
 
 ----- use_g1 -----
 
 type: table
 tbl_name: use_g1
-rootpage: 7
-
 CREATE TABLE use_g1(
   id INTEGER PRIMARY KEY REFERENCES g1 (
     id),

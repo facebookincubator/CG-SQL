@@ -4,8 +4,6 @@ reference results for version 3
 
 type: table
 tbl_name: g1
-rootpage: 7
-
 CREATE TABLE g1(
   id INTEGER PRIMARY KEY,
   name TEXT)
@@ -14,15 +12,11 @@ CREATE TABLE g1(
 
 type: index
 tbl_name: test_cql_schema_facets
-rootpage: 3
-
 
 ----- test_cql_schema_facets -----
 
 type: table
 tbl_name: test_cql_schema_facets
-rootpage: 2
-
 CREATE TABLE test_cql_schema_facets(
   facet TEXT NOT NULL PRIMARY KEY,
   version LONG_INT NOT NULL)
@@ -31,8 +25,6 @@ CREATE TABLE test_cql_schema_facets(
 
 type: table
 tbl_name: test_create_table_C
-rootpage: 8
-
 CREATE TABLE test_create_table_C(
   colA TEXT,
   colB LONG_INT,
@@ -42,8 +34,6 @@ CREATE TABLE test_create_table_C(
 
 type: table
 tbl_name: test_recreate_table_B
-rootpage: 5
-
 CREATE TABLE test_recreate_table_B(
   colA INTEGER,
   colB LONG_INT,
@@ -53,17 +43,13 @@ CREATE TABLE test_recreate_table_B(
 
 type: view
 tbl_name: test_view
-rootpage: 0
-
 CREATE VIEW test_view AS SELECT colA,
-colB FROM test_create_table_C
+colB  FROM test_create_table_C
 
 ----- use_g1 -----
 
 type: table
 tbl_name: use_g1
-rootpage: 6
-
 CREATE TABLE use_g1(
   id INTEGER PRIMARY KEY REFERENCES g1 (
     id),
