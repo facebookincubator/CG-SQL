@@ -19,6 +19,7 @@ CREATE TABLE sqlite_master (
   sql TEXT
 );
 
+declare select function replace(str text, pat text, replacement text) text;
 
 create proc validate_transition()
 begin
@@ -29,7 +30,40 @@ begin
   declare C cursor for select * from sqlite_master order by name;
   loop fetch C
   begin
-    call printf("----- %s -----\n\n%s\n\n", C.name, cql_cursor_format(C));
+    call printf("----- %s -----\n\n", C.name);
+    call printf("type: %s\n", C.type);
+    call printf("tbl_name: %s\n", C.tbl_name);
+    call printf("rootpage: %d\n\n", C.rootpage);
+
+    -- Canonicalize and put in the split markers so we get some useful line breaks consistently
+    -- Different SQL versions will either preserve whitespace or not so this is an effort to
+    -- normalize.  It's not perfect but it doesn't need to be, it only needs to work for
+    -- schema the test will ever see.
+
+    LET s := (select replace(C.sql, "\n", " "));
+    SET s := (select replace(s, "  ", " "));
+    SET s := (select replace(s, ",", ",$"));
+    SET s := (select replace(s, "(", "($"));
+
+    -- split the string at the $ marks
+    declare lines cursor for
+      WITH split(line, str) AS (
+      SELECT '', s || '$'
+      UNION ALL SELECT
+      substr(str, 0, instr(str, '$')),
+      substr(str, instr(str, '$')+1)
+      FROM split WHERE str!=''
+    ) SELECT trim(line) line FROM split WHERE line != '';
+
+    -- some standard indenting, very simple
+    let i := 0;
+    loop fetch lines
+    begin
+      call printf("%s%s\n", case when i then "  " else "" end, lines.line);
+      set i := i + 1;
+    end;
+
+    call printf("\n");
   end;
 
   let recreate_sql := (

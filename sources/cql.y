@@ -650,6 +650,7 @@ name:
   | TEXT  { $name = new_ast_str("text"); }
   | TRIGGER  { $name = new_ast_str("trigger"); }
   | ROWID  { $name = new_ast_str("rowid"); }
+  | REPLACE  { $name = new_ast_str("replace"); }
   | KEY  { $name = new_ast_str("key"); }
   | VIRTUAL  { $name = new_ast_str("virtual"); }
   | TYPE { $name = new_ast_str("type"); }
