@@ -9545,7 +9545,7 @@ static void sem_validate_previous_table(ast_node *prev_table) {
 
   // If we're on the @recreate plan then we can make any changes we like to the table
   // We don't need to check the rest... drop/create works on everything.
-  if (cur_info.recreate) {
+  if (cur_info.recreate || prev_info.recreate) {
     return;
   }
 
@@ -17799,10 +17799,10 @@ static void sem_validate_previous_deployable_region(ast_node *root, deployable_v
   ast_node *prev = v->prev;
   CSTR  name = v->name;
 
-  // no need to pile on more errors
-  if (is_error(cur) || is_error(prev)) {
-    return;
-  }
+  // sem error will be missing useful state, no need to look at this and no need to pile
+  // on more errors, whatever it is already has errors reported against it
+  Contract(!is_error(cur));
+  Contract(!is_error(prev));
 
   // null previous region is not enqueued, there's nothing to validate
   Invariant(prev_region);
@@ -17848,7 +17848,12 @@ static void sem_validate_all_deployable_regions(ast_node *root) {
   deployable_validation *validations = (deployable_validation *)deployable_validations->ptr;
 
   for (int32_t i = 0; i < count; i++) {
-    sem_validate_previous_deployable_region(root, &validations[i]);
+    deployable_validation *v = &validations[i];
+
+    // don't pile on more errors...
+    if (!is_error(v->prev) && !is_error(v->cur)) {
+      sem_validate_previous_deployable_region(root, v);
+    }
   }
 }
 

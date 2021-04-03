@@ -403,6 +403,19 @@ static void cg_json_enums(charbuf* output) {
   bprintf(output, "]");
 }
 
+static void cg_migration_proc(ast_node *ast, charbuf *output) {
+  if (is_ast_dot(ast)) {
+    EXTRACT_NOTNULL(dot, ast);
+    EXTRACT_STRING(lhs, dot->left);
+    EXTRACT_STRING(rhs, dot->right);
+    bprintf(output,"\"%s:%s\"", lhs, rhs);
+  }
+  else {
+    EXTRACT_STRING(migration_proc_name, ast);
+    bprintf(output,"\"%s\"", migration_proc_name);
+  }
+}
+
 // Searches for an "ast_create" node from a list and emits the name of the migration
 // proc associated with it, if any
 static void cg_json_added_migration_proc(charbuf *output, ast_node *list) {
@@ -410,8 +423,8 @@ static void cg_json_added_migration_proc(charbuf *output, ast_node *list) {
     if (is_ast_create_attr(attr)){
       EXTRACT(version_annotation, attr->left);
       if (version_annotation->right) {
-        EXTRACT_STRING(migration_proc_name, version_annotation->right);
-        bprintf(output,",\n\"addedMigrationProc\" : \"%s\"", migration_proc_name);
+        bprintf(output,",\n\"addedMigrationProc\" : ");
+        cg_migration_proc(version_annotation->right, output);
       }
     }
   }
@@ -424,8 +437,8 @@ static void cg_json_deleted_migration_proc(charbuf *output, ast_node *list) {
     if (is_ast_delete_attr(attr)){
       EXTRACT(version_annotation, attr->left);
       if (version_annotation->right) {
-        EXTRACT_STRING(migration_proc_name, version_annotation->right);
-        bprintf(output,",\n\"deletedMigrationProc\" : \"%s\"", migration_proc_name);
+        bprintf(output,",\n\"deletedMigrationProc\" : ");
+        cg_migration_proc(version_annotation->right, output);
       }
     }
   }

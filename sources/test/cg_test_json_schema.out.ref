@@ -1256,6 +1256,54 @@
           "checkExprArgs" : [  ]
         }
       ]
+    },
+    
+    The statement ending at line XXXX
+    
+    CREATE TABLE with_from_recreate(
+      id INTEGER,
+      t TEXT
+    ) @CREATE(3, cql:from_recreate)
+    
+    {
+      "name" : "with_from_recreate",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 1,
+      "addedVersion" : 3,
+      "addedMigrationProc" : "cql:from_recreate",
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "columns" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "t",
+          "type" : "text",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
+      ]
     }
   ],
   "virtualTables" : [

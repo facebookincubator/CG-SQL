@@ -4,7 +4,8 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-OUT_DIR=out
+OUT_DIR="out"
+TEST_DIR="test"
 CQL_FILE="${OUT_DIR}/generated_upgrade_test.cql"
 GENERATED_DOWNGRADE_SOURCE="${OUT_DIR}/generated_downgrade_test"
 GENERATED_UPGRADE_SOURCE="${OUT_DIR}/generated_upgrade_test"
@@ -14,7 +15,7 @@ TEST_PREFIX="test"
 CQL="./${OUT_DIR}/cql"
 
 # Delete databases (if they exist).
-rm $TEST_PREFIX*.db &> /dev/null
+rm $OUT_DIR/*.db &> /dev/null
 
 while [ "$1" != "" ]
 do
@@ -27,6 +28,12 @@ do
      exit 1
   fi
 done
+
+if ! ${CQL} --in upgrade/upgrade_validate.sql --cg ${OUT_DIR}/upgrade_validate.h ${OUT_DIR}/upgrade_validate.c; then
+  echo failed compiling upgrade validator
+  echo ${CQL} --in upgrade/upgrade_validate.sql --cg ${OUT_DIR}/upgrade_validate.h ${OUT_DIR}/upgrade_validate.c
+  exit 1;
+fi
 
 # ----- BEGIN UPGRADE TESTING -----
 
@@ -46,7 +53,9 @@ do
         echo "@previous_schema;" >> "$SCHEMA_FILE"
         echo "#include \"upgrade/SchemaPersistentV$k.sql\"" >> "$SCHEMA_FILE"
         echo "Testing upgrade of DB $j from V$k to V$i"
+        from=$k
       else
+        from='_empty'
         echo "Testing baseline installation of V0 on DB $j"
       fi
 
@@ -77,7 +86,7 @@ do
       fi
 
       # Run the upgrade test binary.
-      if ! (./${OUT_DIR}/upgrade_test "${OUT_DIR}/$TEST_PREFIX$j.db"); then
+      if ! (./${OUT_DIR}/upgrade_test "${OUT_DIR}/$TEST_PREFIX$j.db") > "${TEST_DIR}/upgrade_result_db${j}_script${from}_to_${i}.ref"; then
         echo "Upgrade test failed."
         echo "./${OUT_DIR}/upgrade_test ${OUT_DIR}/$TEST_PREFIX$j.db"
         exit 1

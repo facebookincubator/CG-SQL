@@ -32,7 +32,7 @@ CREATE TABLE test_recreate_table_B(
   colC    INT
 ) @recreate;
 
-// make a recreate-group with an FK dependency (legal)
+-- make a recreate-group with an FK dependency (legal)
 
 CREATE TABLE g1(
   id INTEGER PRIMARY KEY,
@@ -43,3 +43,8 @@ CREATE TABLE use_g1(
   id INTEGER PRIMARY KEY REFERENCES g1(id),
   name2 TEXT
 ) @recreate(gr1);
+
+-- this table changes to the create plan (note table contents changed)
+CREATE TABLE test_this_table_will_become_create(
+  id integer primary key
+) @create(1, cql:from_recreate);

@@ -51,3 +51,8 @@ CREATE TABLE use_g1(
   id INTEGER PRIMARY KEY REFERENCES g1(id),
   name2 TEXT
 ) @recreate(gr1);
+
+-- deleted in version 3
+CREATE TABLE test_this_table_will_become_create(
+  id integer primary key
+) @create(1, cql:from_recreate) @delete(3);

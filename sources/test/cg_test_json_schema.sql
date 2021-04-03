@@ -1167,3 +1167,10 @@ create proc using_kinds(list object<list>, s integer<seconds>)
 begin
   set s := s + 1;
 end;
+
+-- TEST: ensure we can format the qualified migration proc names
+-- + "addedMigrationProc" : "cql:from_recreate",
+create table with_from_recreate(
+  id integer,
+  t text
+) @create(3, cql:from_recreate);

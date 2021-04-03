@@ -49,3 +49,8 @@ CREATE TABLE use_g1(
   id INTEGER PRIMARY KEY REFERENCES g1(id),
   name2 TEXT
 ) @recreate(gr1);
+
+-- this table stays on the create palan
+CREATE TABLE test_this_table_will_become_create(
+  id integer primary key
+) @create(1, cql:from_recreate);

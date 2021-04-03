@@ -25,7 +25,7 @@ BEGIN
   SELECT 1;
 END;
 
-// make a recreate-group with an FK dependency (legal)
+-- make a recreate-group with an FK dependency (legal)
 CREATE TABLE g1(
   id INTEGER PRIMARY KEY,
   name TEXT
@@ -35,3 +35,8 @@ CREATE TABLE use_g1(
   id INTEGER PRIMARY KEY REFERENCES g1(id),
   name2 TEXT
 ) @recreate(gr1);
+
+-- we will migrate this table to create in version 1
+CREATE TABLE test_this_table_will_become_create(
+  xyzzy integer -- we'll change the table in a significant way
+) @recreate;

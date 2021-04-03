@@ -9,6 +9,7 @@
 #include <stdio.h>
 
 #include "generated_upgrade_test.h"
+#include "upgrade_validate.h"
 
 int pre_validate(sqlite3* db, cql_int64 *version) {
   cql_string_ref facet = cql_string_ref_new("cql_schema_version");
@@ -31,6 +32,12 @@ int post_validate(sqlite3* db, cql_int64 old_version) {
     cql_string_release(facet);
     return SQLITE_ERROR;
   }
+
+  if (validate_transition(db)) {
+    cql_string_release(facet);
+    return SQLITE_ERROR;
+  }
+
   cql_string_release(facet);
   return old_version < new_version ? SQLITE_OK : SQLITE_ERROR;
 }
