@@ -8,7 +8,7 @@ rootpage: 8
 
 CREATE TABLE g1(
   id INTEGER PRIMARY KEY,
-  name TEXT )
+  name TEXT)
 
 ----- sqlite_autoindex_test_cql_schema_facets_1 -----
 
@@ -25,7 +25,7 @@ rootpage: 2
 
 CREATE TABLE test_cql_schema_facets(
   facet TEXT NOT NULL PRIMARY KEY,
-  version LONG_INT NOT NULL )
+  version LONG_INT NOT NULL)
 
 ----- test_create_table_A -----
 
@@ -36,7 +36,7 @@ rootpage: 4
 CREATE TABLE test_create_table_A(
   colA INTEGER,
   colB LONG_INT,
-  colC TEXT )
+  colC TEXT)
 
 ----- test_recreate_table_A -----
 
@@ -47,7 +47,7 @@ rootpage: 6
 CREATE TABLE test_recreate_table_A(
   colA INTEGER,
   colB LONG_INT,
-  colC TEXT )
+  colC TEXT)
 
 ----- test_this_table_will_become_create -----
 
@@ -56,7 +56,7 @@ tbl_name: test_this_table_will_become_create
 rootpage: 5
 
 CREATE TABLE test_this_table_will_become_create(
-  xyzzy INTEGER )
+  xyzzy INTEGER)
 
 ----- tr__dummy -----
 
@@ -74,6 +74,6 @@ rootpage: 7
 
 CREATE TABLE use_g1(
   id INTEGER PRIMARY KEY REFERENCES g1 (
-  id),
-  name2 TEXT )
+    id),
+  name2 TEXT)
 

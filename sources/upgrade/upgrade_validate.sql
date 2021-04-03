@@ -41,6 +41,9 @@ begin
     -- schema the test will ever see.
 
     LET s := (select replace(C.sql, "\n", " "));
+    SET s := (select replace(s, " ,", ","));
+    SET s := (select replace(s, " )", ")"));
+    SET s := (select replace(s, "( ", "("));
     SET s := (select replace(s, "  ", " "));
     SET s := (select replace(s, ",", ",$"));
     SET s := (select replace(s, "(", "($"));
@@ -56,11 +59,31 @@ begin
     ) SELECT trim(line) line FROM split WHERE line != '';
 
     -- some standard indenting, very simple
-    let i := 0;
+    let indent := 0;
     loop fetch lines
     begin
-      call printf("%s%s\n", case when i then "  " else "" end, lines.line);
-      set i := i + 1;
+      LET i := 0;
+      while i < indent 
+      begin
+        call printf("  ");
+        set i := i + 1;
+      end;
+      call printf("%s\n", lines.line);
+
+      -- trailing ( starts indent
+      -- trailing ) ends indent
+      let tail := (select substr(lines.line, length(lines.line)));
+      if tail == '(' then
+        set indent := indent + 1;
+      else if tail == ')' then
+        set indent := indent - 1;
+      end if;
+
+      -- trailing ), ends indent
+      set tail := (select substr(lines.line, length(lines.line)-1));
+      if tail == '),' then
+        set indent := indent - 1;
+      end if;
     end;
 
     call printf("\n");

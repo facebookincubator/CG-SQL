@@ -74,14 +74,7 @@ do
     echo "failed generating schema from scratch"
     exit 1
   fi
-
-  if [ $i -ge 1 ]; then
-    (( p=i-1 ))
-    echo "  ... recording diff  from v$p to v$i"
-    diff "${TEST_DIR}/upgrade_schema_v$p.ref" "${TEST_DIR}/upgrade_schema_v$i.ref" > "${TEST_DIR}/upgrade_schema_diff_$p_$i.ref"   
-  fi 
 done
-
 
 exit 0
 
