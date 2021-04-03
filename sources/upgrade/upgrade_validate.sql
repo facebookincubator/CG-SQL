@@ -26,7 +26,7 @@ begin
 
   call printf("reference results for version %d\n\n", version);
 
-  declare C cursor for select * from sqlite_master;
+  declare C cursor for select * from sqlite_master order by name;
   loop fetch C
   begin
     call printf("----- %s -----\n\n%s\n\n", C.name, cql_cursor_format(C));

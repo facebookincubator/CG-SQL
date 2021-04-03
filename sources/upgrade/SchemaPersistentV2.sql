@@ -38,7 +38,7 @@ CREATE TABLE test_recreate_table_B(
   colC    INT
 ) @recreate;
 
-// make a recreate-group with an FK dependency (legal)
+-- make a recreate-group with an FK dependency (legal)
 
 CREATE TABLE g1(
   id INTEGER PRIMARY KEY,

@@ -14,9 +14,6 @@ TEMP_FILE="${OUT_DIR}/upgrade_tmp_file"
 TEST_PREFIX="test"
 CQL="./${OUT_DIR}/cql"
 
-# Delete databases (if they exist).
-rm $OUT_DIR/*.db &> /dev/null
-
 while [ "$1" != "" ]
 do
   if [ "$1" == "--coverage" ]
@@ -29,11 +26,64 @@ do
   fi
 done
 
+# Delete databases (if they exist).
+rm $OUT_DIR/*.db &> /dev/null
+
+# Delete upgraders if they exist
+rm -f $OUT_DIR/generated_upgrader*
+rm -f $OUT_DIR/upgrade?
+
+echo "compiling the shared schema validator to C"
+
 if ! ${CQL} --in upgrade/upgrade_validate.sql --cg ${OUT_DIR}/upgrade_validate.h ${OUT_DIR}/upgrade_validate.c; then
   echo failed compiling upgrade validator
   echo ${CQL} --in upgrade/upgrade_validate.sql --cg ${OUT_DIR}/upgrade_validate.h ${OUT_DIR}/upgrade_validate.c
   exit 1;
 fi
+
+echo "creating the upgrade to v[n] schema upgraders"
+
+for i in {0..3}
+do
+  if ! ${CQL} --in "upgrade/SchemaPersistentV$i.sql" --rt schema_upgrade --cg "${OUT_DIR}/generated_upgrader$i.sql" --global_proc "$TEST_PREFIX"; then
+    echo ${CQL} --in "upgrade/SchemaPersistentV$i.sql" --rt schema_upgrade --cg "${OUT_DIR}/generated_upgrader$i.sql" --global_proc "$TEST_PREFIX"
+    echo "failed generating upgrade to version $i CQL"
+    exit 1
+  fi
+
+  if ! ${CQL} --in "${OUT_DIR}/generated_upgrader$i.sql" --cg "${OUT_DIR}/generated_upgrade$i.h" "${OUT_DIR}/generated_upgrade$i.c"; then
+    echo ${CQL} --in "${OUT_DIR}/generated_upgrader$i.sql" --cg "${OUT_DIR}/generated_upgrade$i.h" "${OUT_DIR}/generated_upgrade$i.c"
+    echo "failed C from the upgrader $i"
+    exit 1
+  fi
+done
+
+# compile the upgraders above to executables upgrade0, 1, 2, 3
+
+if ! make ${MAKE_COVERAGE_ARGS} upgrade_test; then
+  echo make ${MAKE_COVERAGE_ARGS} upgrade_test
+  echo failed compiling upgraders
+fi
+
+# now do the basic validation, can we create a schema of version n?
+for i in {0..3}
+do
+  echo "testing upgrade to v$i from scratch"
+  if ! "${OUT_DIR}/upgrade$i" "${OUT_DIR}/test_$i.db" > "${TEST_DIR}/upgrade_schema_v$i.ref"; then
+    echo "${OUT_DIR}/upgrade$i" "${OUT_DIR}/test_$i.db" > "${TEST_DIR}/upgrade_schema_v$i.ref"
+    echo "failed generating schema from scratch"
+    exit 1
+  fi
+
+  if [ $i -ge 1 ]; then
+    (( p=i-1 ))
+    echo "  ... recording diff  from v$p to v$i"
+    diff "${TEST_DIR}/upgrade_schema_v$p.ref" "${TEST_DIR}/upgrade_schema_v$i.ref" > "${TEST_DIR}/upgrade_schema_diff_$p_$i.ref"   
+  fi 
+done
+
+
+exit 0
 
 # ----- BEGIN UPGRADE TESTING -----
 

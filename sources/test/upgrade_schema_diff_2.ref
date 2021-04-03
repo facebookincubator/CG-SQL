@@ -1,0 +1,37 @@
+1c1
+< reference results for version 1
+---
+> reference results for version 2
+5c5
+< type:table|name:g1|tbl_name:g1|rootpage:10|sql:CREATE TABLE g1( id INTEGER PRIMARY KEY, name TEXT )
+---
+> type:table|name:g1|tbl_name:g1|rootpage:9|sql:CREATE TABLE g1( id INTEGER PRIMARY KEY, name TEXT )
+15,18d14
+< ----- test_create_table_A -----
+< 
+< type:table|name:test_create_table_A|tbl_name:test_create_table_A|rootpage:4|sql:CREATE TABLE test_create_table_A( colA INTEGER, colB LONG_INT, colC TEXT , colD TEXT)
+< 
+21c17
+< type:table|name:test_create_table_B|tbl_name:test_create_table_B|rootpage:5|sql:CREATE TABLE test_create_table_B( colA TEXT, colB LONG_INT, colC INTEGER )
+---
+> type:table|name:test_create_table_B|tbl_name:test_create_table_B|rootpage:6|sql:CREATE TABLE test_create_table_B( colA TEXT, colB LONG_INT, colC INTEGER )
+23c19
+< ----- test_recreate_table_A -----
+---
+> ----- test_create_table_C -----
+25c21
+< type:table|name:test_recreate_table_A|tbl_name:test_recreate_table_A|rootpage:8|sql:CREATE TABLE test_recreate_table_A( colA INTEGER, colC TEXT, colD TEXT )
+---
+> type:table|name:test_create_table_C|tbl_name:test_create_table_C|rootpage:8|sql:CREATE TABLE test_create_table_C( colA TEXT, colB LONG_INT, colC LONG_INT )
+29c25
+< type:table|name:test_recreate_table_B|tbl_name:test_recreate_table_B|rootpage:7|sql:CREATE TABLE test_recreate_table_B( colA INTEGER, colB LONG_INT, colC INTEGER )
+---
+> type:table|name:test_recreate_table_B|tbl_name:test_recreate_table_B|rootpage:5|sql:CREATE TABLE test_recreate_table_B( colA INTEGER, colB LONG_INT, colC INTEGER )
+33c29
+< type:table|name:test_this_table_will_become_create|tbl_name:test_this_table_will_become_create|rootpage:6|sql:CREATE TABLE test_this_table_will_become_create( id INTEGER PRIMARY KEY )
+---
+> type:table|name:test_this_table_will_become_create|tbl_name:test_this_table_will_become_create|rootpage:7|sql:CREATE TABLE test_this_table_will_become_create( id INTEGER PRIMARY KEY )
+37c33
+< type:table|name:use_g1|tbl_name:use_g1|rootpage:9|sql:CREATE TABLE use_g1( id INTEGER PRIMARY KEY REFERENCES g1 (id), name2 TEXT )
+---
+> type:table|name:use_g1|tbl_name:use_g1|rootpage:4|sql:CREATE TABLE use_g1( id INTEGER PRIMARY KEY REFERENCES g1 (id), name2 TEXT )

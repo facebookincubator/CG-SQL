@@ -189,14 +189,11 @@ downgrade_test: $O/generated_downgrade_test.o $O/downgrade_test_obj.o $O/cqlrt.o
 
 $O/generated_upgrade_test$(RUN).o: $O/generated_upgrade_test$(RUN).c $O/generated_upgrade_test.h
 
-$O/upgrade_validate.o: $O/upgrade_validate.c
-	$(CC) $(CFLAGS) -c -o $O/upgrade_validate.o $O/upgrade_validate.c
-
-$O/upgrade_test_obj.o: upgrade/upgrade_test.c
-	$(CC) $(CFLAGS) -c -o $O/upgrade_test_obj.o upgrade/upgrade_test.c
-
-upgrade_test: $O/generated_upgrade_test$(RUN).o $O/upgrade_test_obj.o $O/upgrade_validate.o $O/cqlrt.o
-	$(CC) $(CFLAGS) -o $O/upgrade_test $O/cqlrt.o $O/upgrade_validate.o $O/generated_upgrade_test$(RUN).o $O/upgrade_test_obj.o $(SQLITE_LINK)
+upgrade_test:
+	$(CC) $(CFLAGS) -o $O/upgrade0 $O/cqlrt.o $O/upgrade_validate.c $O/generated_upgrade0.c upgrade/upgrade_test.c $(SQLITE_LINK)
+	$(CC) $(CFLAGS) -o $O/upgrade1 $O/cqlrt.o $O/upgrade_validate.c $O/generated_upgrade1.c upgrade/upgrade_test.c $(SQLITE_LINK)
+	$(CC) $(CFLAGS) -o $O/upgrade2 $O/cqlrt.o $O/upgrade_validate.c $O/generated_upgrade2.c upgrade/upgrade_test.c $(SQLITE_LINK)
+	$(CC) $(CFLAGS) -o $O/upgrade3 $O/cqlrt.o $O/upgrade_validate.c $O/generated_upgrade3.c upgrade/upgrade_test.c $(SQLITE_LINK)
 
 query_plan_test: $O/query_plan_test.o $O/cqlrt.o $O/query_plan.o $O/udf.o
 	$(CC) $(CFLAGS) -o $O/query_plan_test $O/query_plan_test.o $O/cqlrt.o $O/query_plan.o $O/udf.o $(SQLITE_LINK)
