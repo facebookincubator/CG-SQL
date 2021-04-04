@@ -75,9 +75,6 @@ create procedure compare_lines(
   out compares integer not null,
   out errors integer not null)
 begin
-  set compares := 0;
-  set errors := 0;
-  set procs := 0;
   declare p cursor for select * from procs;
   loop fetch p
   begin

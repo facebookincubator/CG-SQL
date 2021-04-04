@@ -10,6 +10,7 @@
 #pragma clang diagnostic ignored "-Wbitwise-op-parentheses"
 #pragma clang diagnostic ignored "-Wshift-op-parentheses"
 #pragma clang diagnostic ignored "-Wlogical-not-parentheses"
+#pragma clang diagnostic ignored "-Wlogical-op-parentheses"
 #pragma clang diagnostic ignored "-Wliteral-conversion"
 extern CQL_WARN_UNUSED cql_code dbhelp_source(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 
@@ -89,6 +90,7 @@ CQL_WARN_UNUSED cql_code dbhelp_prev_line(sqlite3 *_Nonnull _db_, cql_int32 line
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *_temp_stmt = NULL;
 
+  *prev = 0; // set out arg to non-garbage
   // try
   {
     _rc_ = cql_prepare(_db_, &_temp_stmt,
@@ -256,6 +258,8 @@ CQL_WARN_UNUSED cql_code dbhelp_find(sqlite3 *_Nonnull _db_, cql_int32 line_, cq
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *_temp_stmt = NULL;
 
+  *search_line = 0; // set out arg to non-garbage
+  *found = 0; // set out arg to non-garbage
   _rc_ = cql_prepare(_db_, &_temp_stmt,
     "SELECT line "
       "FROM test_output "
@@ -423,7 +427,7 @@ CQL_WARN_UNUSED cql_code dbhelp_source(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nu
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
-  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = SQLITE_ERROR;
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
   return _rc_;
 }
 #undef _PROC_

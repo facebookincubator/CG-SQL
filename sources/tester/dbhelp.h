@@ -37,7 +37,10 @@ extern cql_string_ref _Nonnull dbhelp_source_stored_procedure_name;
 
 #define dbhelp_source_data_types_count 2
 
+#ifndef result_set_type_decl_dbhelp_source_result_set
+#define result_set_type_decl_dbhelp_source_result_set 1
 cql_result_set_type_decl(dbhelp_source_result_set, dbhelp_source_result_set_ref);
+#endif
 extern cql_int32 dbhelp_source_get_line(dbhelp_source_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_string_ref _Nonnull dbhelp_source_get_data(dbhelp_source_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 dbhelp_source_result_count(dbhelp_source_result_set_ref _Nonnull result_set);

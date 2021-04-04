@@ -10,6 +10,7 @@
 #pragma clang diagnostic ignored "-Wbitwise-op-parentheses"
 #pragma clang diagnostic ignored "-Wshift-op-parentheses"
 #pragma clang diagnostic ignored "-Wlogical-not-parentheses"
+#pragma clang diagnostic ignored "-Wlogical-op-parentheses"
 #pragma clang diagnostic ignored "-Wliteral-conversion"
 cql_string_literal(_literal_1_exp_dump, "exp");
 cql_string_literal(_literal_2_act_dump, "act");
@@ -275,14 +276,11 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from linetest.sql:135
+// Generated from linetest.sql:132
 
 /*
 CREATE PROC compare_lines (OUT procs INTEGER NOT NULL, OUT compares INTEGER NOT NULL, OUT errors INTEGER NOT NULL)
 BEGIN
-  SET compares := 0;
-  SET errors := 0;
-  SET procs := 0;
   DECLARE p CURSOR FOR SELECT *
     FROM procs;
   LOOP FETCH p
@@ -377,9 +375,9 @@ CQL_WARN_UNUSED cql_code compare_lines(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnu
   sqlite3_stmt *expected_stmt = NULL;
   compare_lines_expected_row expected = { ._refs_count_ = 3, ._refs_offset_ = compare_lines_expected_refs_offset };
 
-  *compares = 0;
-  *errors = 0;
-  *procs = 0;
+  *procs = 0; // set out arg to non-garbage
+  *compares = 0; // set out arg to non-garbage
+  *errors = 0; // set out arg to non-garbage
   _rc_ = cql_prepare(_db_, &p_stmt,
     "SELECT procname "
       "FROM procs");
@@ -392,6 +390,7 @@ CQL_WARN_UNUSED cql_code compare_lines(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnu
     if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
     if (!p._has_row_) break;
     *procs = (*procs) + 1;
+    cql_finalize_stmt(&actual_stmt);
     _rc_ = cql_prepare(_db_, &actual_stmt,
       "SELECT source, procname, line, data, physical_line "
         "FROM linedata "
@@ -399,6 +398,7 @@ CQL_WARN_UNUSED cql_code compare_lines(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnu
     cql_multibind(&_rc_, _db_, &actual_stmt, 1,
                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, p.procname);
     if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+    cql_finalize_stmt(&expected_stmt);
     _rc_ = cql_prepare(_db_, &expected_stmt,
       "SELECT source, procname, line, data, physical_line "
         "FROM linedata "
