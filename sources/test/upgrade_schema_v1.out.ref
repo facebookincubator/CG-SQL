@@ -1,0 +1,76 @@
+reference results for version 1
+
+----- g1 -----
+
+type: table
+tbl_name: g1
+CREATE TABLE g1(
+  id INTEGER PRIMARY KEY,
+  name TEXT)
+
+----- sqlite_autoindex_test_cql_schema_facets_1 -----
+
+type: index
+tbl_name: test_cql_schema_facets
+
+----- test_cql_schema_facets -----
+
+type: table
+tbl_name: test_cql_schema_facets
+CREATE TABLE test_cql_schema_facets(
+  facet TEXT NOT NULL PRIMARY KEY,
+  version LONG_INT NOT NULL)
+
+----- test_create_table_A -----
+
+type: table
+tbl_name: test_create_table_A
+CREATE TABLE test_create_table_A(
+  colA INTEGER,
+  colB LONG_INT,
+  colC TEXT,
+  colD TEXT)
+
+----- test_create_table_B -----
+
+type: table
+tbl_name: test_create_table_B
+CREATE TABLE test_create_table_B(
+  colA TEXT,
+  colB LONG_INT,
+  colC INTEGER)
+
+----- test_recreate_table_A -----
+
+type: table
+tbl_name: test_recreate_table_A
+CREATE TABLE test_recreate_table_A(
+  colA INTEGER,
+  colC TEXT,
+  colD TEXT)
+
+----- test_recreate_table_B -----
+
+type: table
+tbl_name: test_recreate_table_B
+CREATE TABLE test_recreate_table_B(
+  colA INTEGER,
+  colB LONG_INT,
+  colC INTEGER)
+
+----- test_this_table_will_become_create -----
+
+type: table
+tbl_name: test_this_table_will_become_create
+CREATE TABLE test_this_table_will_become_create(
+  id INTEGER PRIMARY KEY)
+
+----- use_g1 -----
+
+type: table
+tbl_name: use_g1
+CREATE TABLE use_g1(
+  id INTEGER PRIMARY KEY REFERENCES g1 (
+    id),
+  name2 TEXT)
+

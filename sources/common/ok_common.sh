@@ -96,6 +96,10 @@ copy_ref udf.h
 copy_ref unsupported_in_dasm.err
 copy_ref unwriteable.err
 copy_ref write_fail.err
+copy_ref upgrade_schema_v0.out
+copy_ref upgrade_schema_v1.out
+copy_ref upgrade_schema_v2.out
+copy_ref upgrade_schema_v3.out
 
 copy_extras
 

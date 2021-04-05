@@ -7,15 +7,12 @@
 OUT_DIR="out"
 TEST_DIR="test"
 CQL_FILE="${OUT_DIR}/generated_upgrade_test.cql"
-GENERATED_DOWNGRADE_SOURCE="${OUT_DIR}/generated_downgrade_test"
-GENERATED_UPGRADE_SOURCE="${OUT_DIR}/generated_upgrade_test"
 SCHEMA_FILE="${OUT_DIR}/generated_upgrade_test_schema.sql"
-TEMP_FILE="${OUT_DIR}/upgrade_tmp_file"
 TEST_PREFIX="test"
 CQL="./${OUT_DIR}/cql"
 
-# Delete databases (if they exist).
-rm $OUT_DIR/*.db &> /dev/null
+# shellcheck disable=SC1091
+source common/test_helpers.sh || exit 1
 
 while [ "$1" != "" ]
 do
@@ -29,13 +26,96 @@ do
   fi
 done
 
+diff_exit() {
+  if ! colordiff "${TEST_DIR}/$1.ref" "${OUT_DIR}/$1"
+  then
+    echo "When running: diff" "$@"
+    echo "The above differences were detected. If these are expected then run ok.sh to proceed."
+    echo "Don't just run ok.sh to make the error go away; you have to really understand the diff first!"
+    echo " "
+    exit 1
+  fi
+}
+
+# Delete databases (if they exist).
+rm -f ${OUT_DIR}/*.db
+
+# Delete upgraders if they exist
+rm -f ${OUT_DIR}/generated_upgrader*
+rm -f ${OUT_DIR}/upgrade?
+
+echo "compiling the shared schema validator to C"
+
 if ! ${CQL} --in upgrade/upgrade_validate.sql --cg ${OUT_DIR}/upgrade_validate.h ${OUT_DIR}/upgrade_validate.c; then
   echo failed compiling upgrade validator
   echo ${CQL} --in upgrade/upgrade_validate.sql --cg ${OUT_DIR}/upgrade_validate.h ${OUT_DIR}/upgrade_validate.c
   exit 1;
 fi
 
-# ----- BEGIN UPGRADE TESTING -----
+echo "creating the upgrade to v[n] schema upgraders"
+
+for i in {0..3}
+do
+  if ! ${CQL} --in "upgrade/SchemaPersistentV$i.sql" --rt schema_upgrade --cg "${OUT_DIR}/generated_upgrader$i.sql" --global_proc "$TEST_PREFIX"; then
+    echo ${CQL} --in "upgrade/SchemaPersistentV$i.sql" --rt schema_upgrade --cg "${OUT_DIR}/generated_upgrader$i.sql" --global_proc "$TEST_PREFIX"
+    echo "failed generating upgrade to version $i CQL"
+    exit 1
+  fi
+
+  if ! ${CQL} --in "${OUT_DIR}/generated_upgrader$i.sql" --compress --cg "${OUT_DIR}/generated_upgrade$i.h" "${OUT_DIR}/generated_upgrade$i.c"; then
+    echo ${CQL} --in "${OUT_DIR}/generated_upgrader$i.sql" --compress --cg "${OUT_DIR}/generated_upgrade$i.h" "${OUT_DIR}/generated_upgrade$i.c"
+    echo "failed C from the upgrader $i"
+    exit 1
+  fi
+done
+
+# compile the upgraders above to executables upgrade0, 1, 2, 3
+
+if ! make ${MAKE_COVERAGE_ARGS} upgrade_test; then
+  echo make ${MAKE_COVERAGE_ARGS} upgrade_test
+  echo failed compiling upgraders
+fi
+
+# now do the basic validation, can we create a schema of version n?
+for i in {0..3}
+do
+  echo "testing upgrade to v$i from scratch"
+  if ! "${OUT_DIR}/upgrade$i" "${OUT_DIR}/test_$i.db" > "${OUT_DIR}/upgrade_schema_v$i.out"; then
+    echo "${OUT_DIR}/upgrade$i" "${OUT_DIR}/test_$i.db" > "${OUT_DIR}/upgrade_schema_v$i.out"
+    echo "failed generating schema from scratch"
+    exit 1
+  fi
+
+  diff_exit "upgrade_schema_v$i.out"
+done
+
+# now we'll try various previous schema combos with the current upgrader to make sure the work
+
+for i in {1..3}
+do
+  (( j=i-1 ))
+  echo "Verifying previous schema $j vs. final schema $i is ok"
+
+  # Generate schema file with previous schema
+  cat "upgrade/SchemaPersistentV$i.sql" > "$SCHEMA_FILE"
+  echo "@previous_schema;" >> "$SCHEMA_FILE"
+  cat "upgrade/SchemaPersistentV$j.sql" >> "$SCHEMA_FILE"
+
+  # Generate upgrade CQL.
+  if ! ${CQL} --in "$SCHEMA_FILE" --cg "$CQL_FILE" --rt schema_upgrade --global_proc "$TEST_PREFIX"; then
+    echo "Failed to generate upgrade CQL."
+    echo "cc -I./ -Iupgrade -w -E -x c $SCHEMA_FILE > $TEMP_FILE && ${CQL} -- \
+        --in $TEMP_FILE --cg $CQL_FILE --rt schema_upgrade \
+        --global_proc $TEST_PREFIX"
+    exit 1
+  fi
+
+  if ! diff "${OUT_DIR}/generated_upgrader$i.sql" "${CQL_FILE}" ; then
+    echo diff "${OUT_DIR}/generated_upgrader$i.sql" "${CQL_FILE}"
+    echo "The upgrader from $j to $i was different than with no previous schema specified $i!"
+    exit 1
+  fi
+done
 
 for i in {0..3}
 do
@@ -43,59 +123,28 @@ do
   do
     if [ $j -le $i ]; then
 
-      # Generate schema file.
-      echo "#include \"upgrade/SchemaPersistentV$i.sql\"" > "$SCHEMA_FILE"
+      echo "Upgrade from nothing to v$j, then to v$i -- must match direct update to v$i"
 
-      # Perform previous schema validation, if applicable.
-      (( k=i-1 ))
-      (( b=i*3+j ))
-      if [ $k -ge 0 ]; then
-        echo "@previous_schema;" >> "$SCHEMA_FILE"
-        echo "#include \"upgrade/SchemaPersistentV$k.sql\"" >> "$SCHEMA_FILE"
-        echo "Testing upgrade of DB $j from V$k to V$i"
-        from=$k
-      else
-        from='_empty'
-        echo "Testing baseline installation of V0 on DB $j"
+      rm -f "$OUT_DIR/test.db"
+      if ! ${OUT_DIR}/upgrade$j "${OUT_DIR}/test.db" > ${OUT_DIR}/partial.out; then
+        echo ${OUT_DIR}/upgrade$j "${OUT_DIR}/test.db > ${OUT_DIR}/partial.out"
+        echo "initial step to version $j" failed
       fi
 
-      # Generate upgrade CQL.
-      if ! (cc -I./ -Iupgrade -w -E -x c "$SCHEMA_FILE" > "$TEMP_FILE" && ${CQL} \
-          --in "$TEMP_FILE" --cg "$CQL_FILE" --rt schema_upgrade \
-          --global_proc "$TEST_PREFIX"); then
-        echo "Failed to generate upgrade CQL."
-        echo "cc -I./ -Iupgrade -w -E -x c $SCHEMA_FILE > $TEMP_FILE && ${CQL} -- \
-            --in $TEMP_FILE --cg $CQL_FILE --rt schema_upgrade \
-            --global_proc $TEST_PREFIX"
+      if ! diff "${OUT_DIR}/upgrade_schema_v$j.out" "${OUT_DIR}/partial.out";  then
+        echo diff "${OUT_DIR}/upgrade_schema_v$j.out" "${OUT_DIR}/partial.out"
+        echo going from nothing to $j was different when the upgrader was run again!
         exit 1
       fi
 
-      # Compile upgrade CQL to C.
-      if ! (${CQL} --compress --rt c --in "$CQL_FILE" \
-          --cg "${GENERATED_UPGRADE_SOURCE}.h" "${GENERATED_UPGRADE_SOURCE}$b.c"); then
-        echo "Failed to compile upgrade CQL to C."
-        echo "${CQL} -- --compress --rt c --in $CQL_FILE \
-          --cg ${GENERATED_UPGRADE_SOURCE}.h ${GENERATED_UPGRADE_SOURCE}$b.c"
-        exit 1
+      if ! ${OUT_DIR}/upgrade$i "${OUT_DIR}/test.db" > ${OUT_DIR}/final.out; then
+        echo ${OUT_DIR}/upgrade$i "${OUT_DIR}/test.db > ${OUT_DIR}/final.out"
+        echo "initial step to version $i" failed
       fi
 
-      if ! (make --always-make ${MAKE_COVERAGE_ARGS} RUN=$b upgrade_test); then
-        echo "Upgrade test build failed."
-        echo "make RUN=$b --always-make ${MAKE_COVERAGE_ARGS} upgrade_test"
-        exit 1
-      fi
-
-      # Run the upgrade test binary.
-      if ! (./${OUT_DIR}/upgrade_test "${OUT_DIR}/$TEST_PREFIX$j.db") > "${TEST_DIR}/upgrade_result_db${j}_script${from}_to_${i}.ref"; then
-        echo "Upgrade test failed."
-        echo "./${OUT_DIR}/upgrade_test ${OUT_DIR}/$TEST_PREFIX$j.db"
-        exit 1
-      fi
-
-      # Delete the temporary file.
-      if ! rm "$TEMP_FILE"; then
-        echo "Unable to delete the temporary file."
-        echo "rm $TEMP_FILE"
+      if ! diff "${OUT_DIR}/upgrade_schema_v$i.out" "${OUT_DIR}/final.out";  then
+        echo diff "${OUT_DIR}/upgrade_schema_v$i.out" "${OUT_DIR}/final.out"
+        echo going from $j to $i was different than going directly to $i
         exit 1
       fi
     fi
@@ -106,49 +155,13 @@ done
 
 # ----- BEGIN DOWNGRADE TESTING -----
 
-(( i=1 ))
-echo "Testing downgrade of DB $i"
+echo "Testing downgrade"
 
-# Generate the V1 schema file.
-echo "#include \"upgrade/SchemaPersistentV$i.sql\"" > "$SCHEMA_FILE"
-
-# Generate upgrade CQL.
-if ! (cc -I./ -Iupgrade -w -E -x c "$SCHEMA_FILE" > "$TEMP_FILE" && ${CQL} \
-    --in "$TEMP_FILE" --cg "$CQL_FILE" --rt schema_upgrade \
-    --global_proc "$TEST_PREFIX"); then
-  echo "Failed to generate upgrade CQL for downgrade test."
-  echo "cc -I./ -Iupgrade -w -E -x c $SCHEMA_FILE > $TEMP_FILE && ${CQL} -- \
-      --in $TEMP_FILE --cg $CQL_FILE --rt schema_upgrade \
-      --global_proc $TEST_PREFIX"
-  exit 1
-fi
-
-# Compile upgrade CQL to C.
-if ! (${CQL} --compress --rt c --in "$CQL_FILE" \
-    --cg "${GENERATED_DOWNGRADE_SOURCE}.h" "${GENERATED_DOWNGRADE_SOURCE}.c"); then
-  echo "Failed to compile upgrade CQL to C for downgrade test."
-  echo "${CQL} -- --compress --rt c --in $CQL_FILE \
-    --cg ${GENERATED_DOWNGRADE_SOURCE}.h ${GENERATED_DOWNGRADE_SOURCE}.c"
-  exit 1
-fi
-
-if ! (make --always-make ${MAKE_COVERAGE_ARGS} downgrade_test); then
-  echo "Downgrade test build failed."
-  echo "make --always-make ${MAKE_COVERAGE_ARGS} downgrade_test"
-  exit 1
-fi
-
-# Run the downgrade test binary on DB 1, which now has the V3 schema.
-if ! (./${OUT_DIR}/downgrade_test "${OUT_DIR}/$TEST_PREFIX$i.db"); then
+# Run the downgrade test binary on the test db which now has the v3 format
+# the upgrader needed was already built and the downgrade test hardness was already linked
+if ! (./${OUT_DIR}/downgrade_test "${OUT_DIR}/test.db"); then
   echo "Downgrade test failed."
-  echo "./${OUT_DIR}/downgrade_test ${OUT_DIR}/$TEST_PREFIX$i.db"
-  exit 1
-fi
-
-# Delete the temporary file.
-if ! rm "$TEMP_FILE"; then
-  echo "Unable to delete the temporary file."
-  echo "rm $TEMP_FILE"
+  echo "./${OUT_DIR}/downgrade_test ${OUT_DIR}/test.db"
   exit 1
 fi
 

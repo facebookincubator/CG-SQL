@@ -8,27 +8,34 @@
 #include <sqlite3.h>
 #include <stdio.h>
 
-#include "generated_upgrade_test.h"
+// All versions have the same signatures, include them all! 
+// If we screwed this up the compiler will complain!
+#include "generated_upgrade0.h"
+#include "generated_upgrade1.h"
+#include "generated_upgrade2.h"
+#include "generated_upgrade3.h"
+
 #include "upgrade_validate.h"
 
-int pre_validate(sqlite3* db, cql_int64 *version) {
+int32_t pre_validate(sqlite3* db, cql_int64 *version) {
   cql_string_ref facet = cql_string_ref_new("cql_schema_version");
   int rv = test_cql_get_facet_version(db, facet, version);
   cql_string_release(facet);
   return rv;
 }
 
-int upgrade(sqlite3* db) {
+int32_t upgrade(sqlite3* db) {
   test_result_set_ref result_set;
-  int rv = test_fetch_results(db, &result_set);
+  int32_t rv = test_fetch_results(db, &result_set);
   cql_result_set_release(result_set);
   return rv;
 }
 
-int post_validate(sqlite3* db, cql_int64 old_version) {
+int32_t post_validate(sqlite3* db, cql_int64 old_version) {
   cql_int64 new_version = -1;
   cql_string_ref facet = cql_string_ref_new("cql_schema_version");
   if (test_cql_get_facet_version(db, facet, &new_version)) {
+    printf("Unable to read cql_schema_version facet\n");
     cql_string_release(facet);
     return SQLITE_ERROR;
   }
@@ -39,7 +46,13 @@ int post_validate(sqlite3* db, cql_int64 old_version) {
   }
 
   cql_string_release(facet);
-  return old_version < new_version ? SQLITE_OK : SQLITE_ERROR;
+  int32_t result = old_version <= new_version ? SQLITE_OK : SQLITE_ERROR;
+
+  if (result != SQLITE_OK) {
+    printf("unexpected version old:%d, new:%d\n", (int32_t)old_version, (int32_t)new_version);
+  }
+
+  return result;
 }
 
 int main(int argc, char *argv[]) {

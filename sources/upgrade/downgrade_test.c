@@ -8,7 +8,15 @@
 #include <sqlite3.h>
 #include <stdio.h>
 
-#include "generated_downgrade_test.h"
+// All versions have the same signatures, include them all!
+// If we screwed this up the compiler will complain!
+//
+// Note that the downgrade test of course uses the upgrader but with a bad setup
+// there is no such thing as a generated downgrader...
+#include "generated_upgrade0.h"
+#include "generated_upgrade1.h"
+#include "generated_upgrade2.h"
+#include "generated_upgrade3.h"
 
 int downgrade(sqlite3* db, test_result_set_ref* result_set) {
   return test_fetch_results(db, result_set);
