@@ -3002,7 +3002,8 @@ static void cg_create_proc_stmt(ast_node *ast) {
   CHARBUF_OPEN(proc_cleanup);
 
   bool_t saved_error_target_used = error_target_used;
-  error_target_used = 0;
+  error_target_used = false;
+  return_used = false;
 
   int32_t saved_rcthrown_index = rcthrown_index;
   rcthrown_index = 0;

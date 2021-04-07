@@ -2639,8 +2639,7 @@ end;
 -- + BEGIN
 -- + END;
 -- + void empty_proc(void) {
--- + cql_cleanup:
--- +   ; // label requires some statement
+-- - cql_cleanup:
 -- + }
 create proc empty_proc()
 begin

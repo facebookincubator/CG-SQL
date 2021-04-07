@@ -6660,8 +6660,6 @@ END;
 // export: DECLARE PROC empty_proc ();
 void empty_proc(void) {
 
-cql_cleanup:
-  ; // label requires some statement
 }
 #undef _PROC_
 
@@ -6786,7 +6784,6 @@ CQL_WARN_UNUSED cql_code tail_catch(sqlite3 *_Nonnull _db_) {
   catch_end_6:;
   _rc_ = SQLITE_OK;
 
-cql_cleanup:
   return _rc_;
 }
 #undef _PROC_
@@ -7681,8 +7678,6 @@ void local_cast_int_notnull(void) {
 
   x = ((cql_int32)(3.2));
 
-cql_cleanup:
-  ; // label requires some statement
 }
 #undef _PROC_
 
@@ -7709,8 +7704,6 @@ void local_cast_int(void) {
   cql_set_notnull(r, 3.2);
   cql_set_nullable(x, r.is_null, ((cql_int32)(r.value)));
 
-cql_cleanup:
-  ; // label requires some statement
 }
 #undef _PROC_
 
@@ -7731,8 +7724,6 @@ void local_cast_long_notnull(void) {
 
   x = ((cql_int64)(3.2));
 
-cql_cleanup:
-  ; // label requires some statement
 }
 #undef _PROC_
 
@@ -7759,8 +7750,6 @@ void local_cast_long(void) {
   cql_set_notnull(r, 3.2);
   cql_set_nullable(x, r.is_null, ((cql_int64)(r.value)));
 
-cql_cleanup:
-  ; // label requires some statement
 }
 #undef _PROC_
 
@@ -7781,8 +7770,6 @@ void local_cast_real_notnull(void) {
 
   x = ((cql_double)(3));
 
-cql_cleanup:
-  ; // label requires some statement
 }
 #undef _PROC_
 
@@ -7809,8 +7796,6 @@ void local_cast_real(void) {
   cql_set_notnull(r, 3);
   cql_set_nullable(x, r.is_null, ((cql_double)(r.value)));
 
-cql_cleanup:
-  ; // label requires some statement
 }
 #undef _PROC_
 
@@ -7831,8 +7816,6 @@ void local_cast_bool_notnull(void) {
 
   x = ((cql_bool)!!(3.2));
 
-cql_cleanup:
-  ; // label requires some statement
 }
 #undef _PROC_
 
@@ -7859,8 +7842,6 @@ void local_cast_bool(void) {
   cql_set_notnull(r, 3.2);
   cql_set_nullable(x, r.is_null, ((cql_bool)!!(r.value)));
 
-cql_cleanup:
-  ; // label requires some statement
 }
 #undef _PROC_
 
@@ -7885,8 +7866,6 @@ void local_cast_from_bool_notnull(void) {
   b = 1;
   x = ((cql_double)!!(b));
 
-cql_cleanup:
-  ; // label requires some statement
 }
 #undef _PROC_
 
@@ -7913,8 +7892,6 @@ void local_cast_from_bool(void) {
   cql_set_notnull(b, 1);
   cql_set_nullable(x, b.is_null, ((cql_double)!!(b.value)));
 
-cql_cleanup:
-  ; // label requires some statement
 }
 #undef _PROC_
 
@@ -7939,8 +7916,6 @@ void local_cast_from_bool_no_op_notnull(void) {
   b = 1;
   x = b;
 
-cql_cleanup:
-  ; // label requires some statement
 }
 #undef _PROC_
 
@@ -7967,8 +7942,6 @@ void local_cast_from_bool_no_op(void) {
   cql_set_notnull(b, 1);
   cql_set_nullable(x, b.is_null, b.value);
 
-cql_cleanup:
-  ; // label requires some statement
 }
 #undef _PROC_
 
@@ -8155,7 +8128,6 @@ CQL_WARN_UNUSED cql_code emit_rc(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull res
   *result_code = SQLITE_OK;
   _rc_ = SQLITE_OK;
 
-cql_cleanup:
   return _rc_;
 }
 #undef _PROC_
@@ -8260,7 +8232,6 @@ CQL_WARN_UNUSED cql_code rc_test(sqlite3 *_Nonnull _db_) {
   e6 = SQLITE_OK;
   _rc_ = SQLITE_OK;
 
-cql_cleanup:
   return _rc_;
 }
 #undef _PROC_
@@ -8383,7 +8354,6 @@ CQL_WARN_UNUSED cql_code rc_test_lazy2(sqlite3 *_Nonnull _db_) {
   catch_end_16:;
   _rc_ = SQLITE_OK;
 
-cql_cleanup:
   return _rc_;
 }
 #undef _PROC_
@@ -8446,8 +8416,6 @@ void out_arg_cursor(cql_int32 x, cql_int32 *_Nonnull y) {
   C.y = 1;
   out_arg_cursor(C.x, &C.y);
 
-cql_cleanup:
-  ; // label requires some statement
 }
 #undef _PROC_
 
@@ -8505,8 +8473,6 @@ static void private_proc(cql_nullable_int32 *_Nonnull x) {
   cql_set_null(*x); // set out arg to non-garbage
   cql_set_notnull(*x, 1);
 
-cql_cleanup:
-  ; // label requires some statement
 }
 #undef _PROC_
 
@@ -8559,8 +8525,6 @@ END;
 void set_out_arg_ref_test(cql_string_ref _Nullable *_Nonnull x) {
   *(void **)x = NULL; // set out arg to non-garbage
 
-cql_cleanup:
-  ; // label requires some statement
 }
 #undef _PROC_
 
@@ -8577,8 +8541,6 @@ END;
 void set_out_arg_null_test(cql_nullable_int32 *_Nonnull x) {
   cql_set_null(*x); // set out arg to non-garbage
 
-cql_cleanup:
-  ; // label requires some statement
 }
 #undef _PROC_
 
@@ -8595,8 +8557,6 @@ END;
 void set_out_arg_notnull_test(cql_int32 *_Nonnull x) {
   *x = 0; // set out arg to non-garbage
 
-cql_cleanup:
-  ; // label requires some statement
 }
 #undef _PROC_
 global_cursor2_row global_cursor2 = { ._refs_count_ = 1, ._refs_offset_ = global_cursor2_refs_offset };
@@ -8619,7 +8579,6 @@ CQL_WARN_UNUSED cql_code early_close_cursor(sqlite3 *_Nonnull _db_) {
   cql_teardown_row(global_cursor2);
   _rc_ = SQLITE_OK;
 
-cql_cleanup:
   return _rc_;
 }
 #undef _PROC_
@@ -8664,7 +8623,6 @@ void various_lets(void) {
   cql_set_notnull(nr, 2.0);
   cql_set_string_ref(&nt, _literal_14_NT_various_lets);
 
-cql_cleanup:
   cql_string_release(t);
   cql_string_release(nt);
 }
@@ -8751,8 +8709,6 @@ void out_decl_test_3(cql_nullable_int32 x) {
   out2_proc(x, &u, &u);
   out2_proc(x, &u, &v);
 
-cql_cleanup:
-  ; // label requires some statement
 }
 #undef _PROC_
 
@@ -8889,8 +8845,6 @@ void binary_ops_with_null(void) {
   cql_set_null(sub0);
   cql_set_null(sub1);
 
-cql_cleanup:
-  ; // label requires some statement
 }
 #undef _PROC_
 
@@ -8956,8 +8910,6 @@ END;
 // export: DECLARE PROC end_proc ();
 void end_proc(void) {
 
-cql_cleanup:
-  ; // label requires some statement
 }
 #undef _PROC_
 
