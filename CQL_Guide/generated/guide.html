@@ -544,7 +544,7 @@
 <li><a href="#cql0320-extension-fragment-cte-must-have-a-from-clause-and-no-other-top-level-clauses-frag_name">CQL0320: extension fragment CTE must have a FROM clause and no other top level clauses ‘frag_name’</a></li>
 <li><a href="#cql0321-migration-proc-not-allowed-on-object-object_name">CQL0321: migration proc not allowed on object ‘object_name’</a></li>
 <li><a href="#cql0322-fragment-parameters-must-be-exactly-arguments-procedure_name">CQL0322: fragment parameters must be exactly ‘[arguments]’ ‘procedure_name’</a></li>
-<li><a href="#cql0323-calls-to-undeclared-procedures-are-forbidden-if-strict-procedure-mode-is-enabled-procedure_name">CQL0323: calls to undeclared procedures are forbidden if strict procedure mode is enabled ‘procedure_name’</a></li>
+<li><a href="#cql0323-calls-to-undeclared-procedures-are-forbidden-if-strict-procedure-mode-is-enabled-declaration-missing-or-typo-procedure_name">CQL0323: calls to undeclared procedures are forbidden if strict procedure mode is enabled; declaration missing or typo ‘procedure_name’</a></li>
 <li><a href="#cql0324-referenced-table-was-created-in-a-later-version-so-it-cannot-be-used-in-a-foreign-key-referenced_table">CQL0324: referenced table was created in a later version so it cannot be used in a foreign key ‘referenced_table’</a></li>
 <li><a href="#cql0325-ok_table_scan-attribute-must-be-a-name">CQL0325: ok_table_scan attribute must be a name</a></li>
 <li><a href="#cql0326-the-table-name-in-ok_table_scan-does-not-exist-table_name">CQL0326: the table name in ok_table_scan does not exist ‘table_name’</a></li>
@@ -596,11 +596,9 @@
 <li><a href="#cql0372-select-if-nothing-or-null-null-is-redundant-use-select-if-nothing-null-instead.">CQL0372: SELECT … IF NOTHING OR NULL NULL is redundant; use SELECT … IF NOTHING NULL instead.</a></li>
 <li><a href="#cql0373-comparing-against-null-always-yields-null-use-is-and-is-not-instead.">CQL0373: Comparing against NULL always yields NULL; use IS and IS NOT instead.</a></li>
 <li><a href="#cql0374-select-expression-is-equivalent-to-null.">CQL0374: SELECT expression is equivalent to NULL.</a></li>
-</ul></li>
-<li><a href="#cql-0377-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0377 : unused, this was added to prevent merge conflicts at the end on literally every checkin</a></li>
-<li><a href="#cql-0378-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0378 : unused, this was added to prevent merge conflicts at the end on literally every checkin</a></li>
-<li><a href="#cql-0379-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0379 : unused, this was added to prevent merge conflicts at the end on literally every checkin</a>
-<ul>
+<li><a href="#cql0377-table-transitioning-from-recreate-to-create-must-use-createnncqlfrom_recreate-table-name">CQL0377: table transitioning from <code>@recreate</code> to <code>@create</code> must use <code>@create(nn,cql:from_recreate)</code> ‘table name’</a></li>
+<li><a href="#cql0378-built-in-migration-procedure-not-valid-in-this-context-name">CQL0378: built-in migration procedure not valid in this context ‘name’</a></li>
+<li><a href="#cql0379-unknown-built-in-migration-procedure-name">CQL0379: unknown built-in migration procedure ‘name’</a></li>
 <li><a href="#cql0380-the-when-expression-cannot-be-evaluated-to-a-constant">CQL0380: the WHEN expression cannot be evaluated to a constant</a></li>
 <li><a href="#cql0381-case-expression-must-be-a-not-null-integral-type">CQL0381: case expression must be a not-null integral type</a></li>
 <li><a href="#cql0382-the-type-of-a-when-expression-is-bigger-than-the-type-of-the-switch-expression">CQL0382: the type of a WHEN expression is bigger than the type of the SWITCH expression</a></li>
@@ -3162,7 +3160,7 @@ if (C_._has_row_) cql_bytebuf_append(&amp;_rows_, (const void *)&amp;C_, sizeof(
 <li>the values in the <code>WHEN</code> clauses must be unique</li>
 <li>If <code>ALL VALUES</code> is present then:
 <ul>
-<li>the switch-expression be an from an enum type</li>
+<li>the switch-expression must be of an enum type</li>
 <li>the <code>WHEN</code> values must cover every value of the enum except those beginning with ’_’</li>
 <li>there can be no extra <code>WHEN</code> values not in the enum</li>
 <li>there can be no <code>ELSE</code> clause</li>
@@ -3190,7 +3188,7 @@ if (C_._has_row_) cql_bytebuf_append(&amp;_rows_, (const void *)&amp;C_, sizeof(
 <p>Semantic rules: * for all cases each argument must be error-free (no internal type conflicts) * for known procs * the call has to have the correct number of arguments * if the formal is an out parameter the argument must be a variable * the type of the variable must be an exact type match for the formal * non-out parameters must be type-compatible, but exact match is not required</p>
 <h4 id="there-declare-out-call-statement">There <code>DECLARE OUT CALL</code> Statement</h4>
 <p>This form is syntatic sugar and corresponds to declaring any <code>OUT</code> parameters of the <code>CALL</code> portion that are not already declared as the exact type of the <code>OUT</code> parameter. This is intended to save you from declaring a lot of variables just so that you can use them as <code>OUT</code> arguments.</p>
-<p>Since any variables that already exist are not re-declared, there are no additional semantic rules beyond the normal call except that it is an error to use this form if it results in no <code>OUT</code> variables requiring to be declared.</p>
+<p>Since any variables that already exist are not re-declared, there are no additional semantic rules beyond the normal call except that it is an error to use this form if no <code>OUT</code> variables needed to be declared.</p>
 <h4 id="the-fetch-statement">The <code>FETCH</code> Statement</h4>
 <p>The fetch statement has two forms: * fetch C into var1, var2, var3 etc. * fetch C; The second form is called the auto_cursor. In the first form the variables of the cursor must be assignment compatible with declared structure type of the cursor and the count must be correct. In the second form, the codegen will implicitly create local variables that are exactly the correct type, but that’s later. Since no semantic error is possible in that case we simply record that this is an auto_cursor and then later we will allow the use of C.field during analysis. Of course “C” must be a valid cursor.</p>
 <h4 id="the-continue-statement">The <code>CONTINUE</code> Statement</h4>
@@ -3202,7 +3200,7 @@ if (C_._has_row_) cql_bytebuf_append(&amp;_rows_, (const void *)&amp;C_, sizeof(
 <h4 id="the-open-cursor-statement">The <code>OPEN</code> CURSOR Statement</h4>
 <p>For open [cursor], we just validate that the name is in fact a cursor. <code>OPEN</code> does nothing, it is included because other dialects require it and it may help with familiarity. It might be deprecated at some point.</p>
 <h4 id="the-close-cursor-statement">The <code>CLOSE</code> CURSOR Statement</h4>
-<p>For close [cursor], we just validate that the name is in fact a cursor and it is not a boxed cursor. Boxed cursor lifetime is managed by the box object so manually closing it is not allowed. Instead the object is expected to be set to null to release the cursor.</p>
+<p>For close [cursor], we just validate that the name is in fact a cursor and it is not a boxed cursor. Boxed cursor lifetime is managed by the box object so manually closing it is not allowed. Instead, the usual reference-counting semantics apply; the boxed cursor variable typically falls out of scope and is released, or is perhaps set to NULL to release its reference early.</p>
 <h4 id="the-out-cursor-statement">The <code>OUT</code> CURSOR Statement</h4>
 <p>For out [cursor], we first validate that the name is a cursor then we set the output type of the procedure we’re in accordingly</p>
 <h3 id="the-meta-statements">The “Meta” Statements</h3>
@@ -6236,7 +6234,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Wed Mar 31 15:10:50 PDT 2021</p>
+<p>Snapshot as of Wed Apr 7 15:04:19 PDT 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -6629,6 +6627,7 @@ name:
   | &quot;TEXT&quot;
   | &quot;TRIGGER&quot;
   | &quot;ROWID&quot;
+  | &quot;REPLACE&quot;
   | &quot;KEY&quot;
   | &quot;VIRTUAL&quot;
   | &quot;TYPE&quot;
@@ -6672,6 +6671,7 @@ col_attrs:
 
 version_annotation:
   &#39;(&#39; &quot;integer-literal&quot; &#39;,&#39; name &#39;)&#39;
+  | &#39;(&#39; &quot;integer-literal&quot; &#39;,&#39; name &#39;:&#39; name &#39;)&#39;
   | &#39;(&#39; &quot;integer-literal&quot; &#39;)&#39;
   ;
 
@@ -9047,9 +9047,10 @@ set x := y;</code></pre>
 <p>Recall that the code for the procedure that does the select comes from the assembly fragment, so its arguments are in some sense the only ones that matter. But the extension fragments are also allowed to use the arguments. Of course we must ensure that the extension fragments do not use any arguments that aren’t in the assembly, and so the only choice we have is to make sure the extensions conform to the base. And so for that to work the assembly also has to conform to the base. So the base fragment must define the args for all the other fragments.</p>
 <p>You could imagine a scheme where the extension fragments are allowed to use a subset of the parameters defined in the base but if that were the case you might have names that mean different things in different fragments and then you could get errors or different semantics when the fragments were assembled. To avoid all of these problems, and for simplicity, we demand that the arguments of all fragments match exactly.</p>
 <hr />
-<h3 id="cql0323-calls-to-undeclared-procedures-are-forbidden-if-strict-procedure-mode-is-enabled-procedure_name">CQL0323: calls to undeclared procedures are forbidden if strict procedure mode is enabled ‘procedure_name’</h3>
+<h3 id="cql0323-calls-to-undeclared-procedures-are-forbidden-if-strict-procedure-mode-is-enabled-declaration-missing-or-typo-procedure_name">CQL0323: calls to undeclared procedures are forbidden if strict procedure mode is enabled; declaration missing or typo ‘procedure_name’</h3>
 <p><code>@enforce_strict PROCEDURE</code> has been enabled. In this mode you may only call procedures that have a declaration. In <code>@enforce_normal PROCEDURE</code> mode, a call to an unknown proc is interpreted as a simple C call. This lets you call functions like <code>printf</code> in normal mode, even if they have a strange calling convention. Strict mode limits you to declared procedures and is generally safer.</p>
-<p>If you get this error the most likely reason is that there is a typo in the name of the procedure you are trying to call. If you really need to call a c runtime function then you must temporarily switch back to <code>@enforce_normal</code> for procedures.</p>
+<p>If you get this error it means that there is a typo in the name of the procedure you are trying to call, or else the declaration for the procedure is totally missing. Maybe a necessary <code>#include</code> needs to be added to the compiland.</p>
+<p>If you really need to call a c runtime function, especially one with varargs, then you must temporarily switch back to <code>@enforce_normal</code> for procedures.</p>
 <hr />
 <h3 id="cql0324-referenced-table-was-created-in-a-later-version-so-it-cannot-be-used-in-a-foreign-key-referenced_table">CQL0324: referenced table was created in a later version so it cannot be used in a foreign key ‘referenced_table’</h3>
 <p>In a foreign key, we enforce the following rules: * <code>@recreate</code> tables can see any version they like, if the name is in scope that’s good enough * other tables may only “see” the same version or an earlier version.</p>
@@ -9283,9 +9284,20 @@ insert into x
 </tr>
 </tbody>
 </table>
-<h2 id="cql-0377-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0377 : unused, this was added to prevent merge conflicts at the end on literally every checkin</h2>
-<h2 id="cql-0378-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0378 : unused, this was added to prevent merge conflicts at the end on literally every checkin</h2>
-<h2 id="cql-0379-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0379 : unused, this was added to prevent merge conflicts at the end on literally every checkin</h2>
+<h3 id="cql0377-table-transitioning-from-recreate-to-create-must-use-createnncqlfrom_recreate-table-name">CQL0377: table transitioning from <code>@recreate</code> to <code>@create</code> must use <code>@create(nn,cql:from_recreate)</code> ‘table name’</h3>
+<p>The indicated table is moving from <code>@recreate</code> to <code>@create</code> meaning it will now be schema managed in an upgradable fashion. When this happens end-user databases might have some stale version of the table from a previous installation. This stale version must get a one-time cleanup in order to ensure that the now current schema is correctly applied. The <code>cql:from_recreate</code> annotation does this. It is required because otherwise there would be no record that this table “used to be recreate” and therefore might have an old version still in the database.</p>
+<p>A correct table might look something like this:</p>
+<div class="sourceCode" id="cb436"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb436-1"><a href="#cb436-1"></a><span class="kw">create</span> <span class="kw">table</span> correct_migration_to_create(</span>
+<span id="cb436-2"><a href="#cb436-2"></a> <span class="kw">id</span> <span class="dt">integer</span> <span class="kw">primary</span> <span class="kw">key</span>,</span>
+<span id="cb436-3"><a href="#cb436-3"></a> t text</span>
+<span id="cb436-4"><a href="#cb436-4"></a>) @create(<span class="dv">7</span>, cql<span class="ch">:from_recreate</span>);</span></code></pre></div>
+<hr />
+<h3 id="cql0378-built-in-migration-procedure-not-valid-in-this-context-name">CQL0378: built-in migration procedure not valid in this context ‘name’</h3>
+<p>The indicated name is a valid built-in migration procedure but it is not valid on this kind of item. For instance <code>cql:from_recreate</code> can only be applied to tables.</p>
+<hr />
+<h3 id="cql0379-unknown-built-in-migration-procedure-name">CQL0379: unknown built-in migration procedure ‘name’</h3>
+<p>Certain schema migration steps are built-in. Currently the only one is <code>cql:from_recreate</code> for moving to <code>@create</code> from <code>@recreate</code>. Others may be added in the future. The <code>cql:</code> prefix ensures that this name cannot conflict with a valid user migration procedure.</p>
+<hr />
 <h3 id="cql0380-the-when-expression-cannot-be-evaluated-to-a-constant">CQL0380: the WHEN expression cannot be evaluated to a constant</h3>
 <p>In a <code>SWITCH</code> statement each expression each expression in a <code>WHEN</code> clause must be made up of constants and simple numeric math operations. See the reference on the <code>const(..)</code> expression for the valid set.</p>
 <p>It’s most likely that a variable or function call appears in the errant expression.</p>
@@ -9368,7 +9380,7 @@ insert into x
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Wed Mar 31 15:10:51 PDT 2021</p>
+<p>Snapshot as of Wed Apr 7 15:04:19 PDT 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

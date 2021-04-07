@@ -839,7 +839,7 @@ Error at test/sem_test.sql:XXXX : in select_stmt : CQL0251: fragment must end wi
 Error at test/sem_test.sql:XXXX : in select_stmt : CQL0251: fragment must end with exactly 'SELECT * FROM core'
 Error at test/sem_test.sql:XXXX : in select_stmt : CQL0251: fragment must end with exactly 'SELECT * FROM core'
 Error at test/sem_test.sql:XXXX : in fk_def : CQL0021: foreign key refers to non-existent table 'this_table_does_not_exist'
-Error at test/sem_test.sql:XXXX : in call_stmt : CQL0323: calls to undeclared procedures are forbidden if strict procedure mode is enabled 'some_external_thing'
+Error at test/sem_test.sql:XXXX : in call_stmt : CQL0323: calls to undeclared procedures are forbidden if strict procedure mode is enabled; declaration missing or typo 'some_external_thing'
 Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, table, or view 'invalid_type_name'
 Error at test/sem_test.sql:XXXX : in dot : CQL0068: field not found in shape 'xyzzy'
 Error at test/sem_test.sql:XXXX : in fk_def : CQL0324: referenced table was created in a later version so it cannot be used in a foreign key 'from_the_future'

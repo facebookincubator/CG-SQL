@@ -46953,7 +46953,7 @@ The statement ending at line XXXX
 
 CALL some_external_thing();
 
-Error at test/sem_test.sql:XXXX : in call_stmt : CQL0323: calls to undeclared procedures are forbidden if strict procedure mode is enabled 'some_external_thing'
+Error at test/sem_test.sql:XXXX : in call_stmt : CQL0323: calls to undeclared procedures are forbidden if strict procedure mode is enabled; declaration missing or typo 'some_external_thing'
 
   {call_stmt}: err
   | {name some_external_thing}

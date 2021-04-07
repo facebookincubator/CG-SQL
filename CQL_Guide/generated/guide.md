@@ -4083,7 +4083,7 @@ down to a `C` `switch` statement.  These are:
   * the `WHEN` expressions must be losslessly promotable to the type of the switch-expression
 * the values in the `WHEN` clauses must be unique
 * If `ALL VALUES` is present then:
-   * the switch-expression be an from an enum type
+   * the switch-expression must be of an enum type
    * the `WHEN` values must cover every value of the enum except those beginning with '_'
    * there can be no extra `WHEN` values not in the enum
    * there can be no `ELSE` clause
@@ -4183,7 +4183,7 @@ just so that you can use them as `OUT` arguments.
 
 Since any variables that already exist are not re-declared, there are no
 additional semantic rules beyond the normal call except that it is an error
-to use this form if it results in no `OUT` variables requiring to be declared.
+to use this form if no `OUT` variables needed to be declared.
 
 #### The `FETCH` Statement
 The fetch statement has two forms:
@@ -4215,8 +4215,9 @@ and it may help with familiarity.  It might be deprecated at some point.
 #### The `CLOSE` CURSOR Statement
 For close [cursor], we just validate that the name is in fact a cursor
 and it is not a boxed cursor.  Boxed cursor lifetime is managed by the
-box object so manually closing it is not allowed.  Instead the object
-is expected to be set to null to release the cursor.
+box object so manually closing it is not allowed.  Instead, the usual
+reference-counting semantics apply; the boxed cursor variable typically falls out of
+scope and is released, or is perhaps set to NULL to release its reference early.
 
 #### The `OUT` CURSOR Statement
 For out [cursor], we first validate that the name is a cursor
@@ -8164,7 +8165,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed Mar 31 15:10:50 PDT 2021
+Snapshot as of Wed Apr  7 15:04:19 PDT 2021
 
 ### Operators and Literals
 
@@ -8569,6 +8570,7 @@ name:
   | "TEXT"
   | "TRIGGER"
   | "ROWID"
+  | "REPLACE"
   | "KEY"
   | "VIRTUAL"
   | "TYPE"
@@ -8612,6 +8614,7 @@ col_attrs:
 
 version_annotation:
   '(' "integer-literal" ',' name ')'
+  | '(' "integer-literal" ',' name ':' name ')'
   | '(' "integer-literal" ')'
   ;
 
@@ -12312,15 +12315,17 @@ You could imagine a scheme where the extension fragments are allowed to use a su
 
 -----
 
-### CQL0323: calls to undeclared procedures are forbidden if strict procedure mode is enabled 'procedure_name'
+### CQL0323: calls to undeclared procedures are forbidden if strict procedure mode is enabled; declaration missing or typo 'procedure_name'
 
 `@enforce_strict PROCEDURE` has been enabled.   In this mode you may only call procedures that have a declaration.
 In `@enforce_normal PROCEDURE` mode, a call to an unknown proc is interpreted as a simple C call.  This lets you call
 functions like `printf` in normal mode, even if they have a strange calling convention.  Strict mode limits you to declared procedures
 and is generally safer.
 
-If you get this error the most likely reason is that there is a typo in the name of the procedure you are trying to call.  If you really
-need to call a c runtime function then you must temporarily switch back to `@enforce_normal` for procedures.
+If you get this error it means that there is a typo in the name of the procedure you are trying to call, or else the declaration for the
+procedure is totally missing.  Maybe a necessary `#include` needs to be added to the compiland.
+
+If you really need to call a c runtime function, especially one with varargs, then you must temporarily switch back to `@enforce_normal` for procedures.
 
 -----
 
@@ -12829,11 +12834,40 @@ CQL 0375 : unused, this was added to prevent merge conflicts at the end on liter
 ----
 CQL 0376 : unused, this was added to prevent merge conflicts at the end on literally every checkin
 ----
-CQL 0377 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+
+### CQL0377: table transitioning from `@recreate` to `@create` must use `@create(nn,cql:from_recreate)` 'table name'
+
+The indicated table is moving from `@recreate` to `@create` meaning it will now be schema managed in an
+upgradable fashion.  When this happens end-user databases might have some stale version of the table
+from a previous installation.  This stale version must get a one-time cleanup in order to ensure that the
+now current schema is correctly applied.  The `cql:from_recreate` annotation does this.  It is required
+because otherwise there would be no record that this table "used to be recreate" and therefore might have
+an old version still in the database.
+
+A correct table might look something like this:
+
+```sql
+create table correct_migration_to_create(
+ id integer primary key,
+ t text
+) @create(7, cql:from_recreate);
+```
+
 ----
-CQL 0378 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+
+### CQL0378: built-in migration procedure not valid in this context 'name'
+
+The indicated name is a valid built-in migration procedure but it is not valid on
+this kind of item.  For instance `cql:from_recreate` can only be applied to tables.
+
 ----
-CQL 0379 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+
+### CQL0379: unknown built-in migration procedure 'name'
+
+Certain schema migration steps are built-in.  Currently the only one is `cql:from_recreate` for
+moving to `@create` from `@recreate`.  Others may be added in the future.  The `cql:` prefix
+ensures that this name cannot conflict with a valid user migration procedure.
+
 ----
 
 ### CQL0380: the WHEN expression cannot be evaluated to a constant
@@ -12973,7 +13007,7 @@ CQL 0400 : unused, this was added to prevent merge conflicts at the end on liter
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Wed Mar 31 15:10:51 PDT 2021
+Snapshot as of Wed Apr  7 15:04:19 PDT 2021
 
 ### Rules
 

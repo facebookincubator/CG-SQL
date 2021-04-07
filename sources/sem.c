@@ -15719,7 +15719,7 @@ static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name) {
   ast_node *proc_stmt = find_proc(name);
 
   if (enforcement.strict_procedure && !proc_stmt) {
-    report_error(ast, "CQL0323: calls to undeclared procedures are forbidden if strict procedure mode is enabled", name);
+    report_error(ast, "CQL0323: calls to undeclared procedures are forbidden if strict procedure mode is enabled; declaration missing or typo", name);
     record_error(ast);
     return;
   }

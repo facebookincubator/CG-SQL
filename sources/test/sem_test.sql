@@ -11485,7 +11485,7 @@ create table bogus_reference_in_fk(
 @enforce_strict procedure;
 
 -- TEST: try to call an undeclared proc while in strict mode
--- + Error % calls to undeclared procedures are forbidden if strict procedure mode is enabled 'some_external_thing'
+-- + Error % calls to undeclared procedures are forbidden if strict procedure mode is enabled; declaration missing or typo 'some_external_thing'
 -- +1 Error
 call some_external_thing();
 
