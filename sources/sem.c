@@ -30,6 +30,9 @@
 #define NORMAL_CALL  0  // a normal procedure or function call
 #define PROC_AS_FUNC 1  // treating a proc like a function with the out-arg trick
 
+#define CQL_FROM_RECREATE "cql:from_recreate"
+#define CQL_MODULE_WARN "cql:module_must_not_be_deleted_see_docs_for_CQL0392"
+
 // These are the symbol tables with the ast dispatch when we get to an ast node
 // we look it up here and call the appropriate function whose name matches the ast
 // node type.
@@ -3097,19 +3100,29 @@ static void sem_pk_def(ast_node *table_ast, ast_node *def) {
   sem_update_column_type(table_ast, name_list, SEM_TYPE_NOTNULL);
 }
 
-// Currently the only known builtin migration proc is "cql:from_recreate"
-// and it is only valid on @create in a table.
+// Currently the only known builtin migration proc are
+//  * cql:from_recreate
+//  * cql:module_must_not_be_deleted_see_docs_for_CQLmmmm
+//
 // If this is ever generalized something fancier might be needed here
 // like a name table or something.  For now, keeping it simple.
-
 static void sem_validate_builtin_migration_proc(ast_node *ast, uint32_t code, CSTR name) {
-  if (Strcasecmp("cql:from_recreate", name)) {
+  bool_t is_from_recreate = !Strcasecmp(CQL_FROM_RECREATE, name);
+  bool_t is_module_warn = !Strcasecmp(CQL_MODULE_WARN, name);
+
+  if (!is_from_recreate && !is_module_warn) {
     report_error(ast, "CQL0379: unknown built-in migration procedure", name);
     record_error(ast);
     return;
   }
 
-  if (code != SCHEMA_ANNOTATION_CREATE_TABLE) {
+  if (is_from_recreate && code != SCHEMA_ANNOTATION_CREATE_TABLE) {
+    report_error(ast, "CQL0378: built-in migration procedure not valid in this context", name);
+    record_error(ast);
+    return;
+  }
+
+  if (is_module_warn && code != SCHEMA_ANNOTATION_DELETE_TABLE) {
     report_error(ast, "CQL0378: built-in migration procedure not valid in this context", name);
     record_error(ast);
     return;
@@ -9236,7 +9249,7 @@ static bool_t sem_validate_attrs_prev_cur(version_attrs_info *prev, version_attr
     // if we used to be on the @recreate plan then we don't have to check the current create version
     // but we do have to make sure the recreate transition special action is being used
     if (cur->create_version > 0 && cur->create_code == SCHEMA_ANNOTATION_CREATE_TABLE) {
-       if (!cur->create_proc || Strcasecmp("cql:from_recreate", cur->create_proc)) {
+       if (!cur->create_proc || Strcasecmp(CQL_FROM_RECREATE, cur->create_proc)) {
          report_error(name_ast, "CQL0377: table transitioning from @recreate to @create must use @create(nn,cql:from_recreate)", name);
          return false;
        }
@@ -9261,9 +9274,16 @@ static bool_t sem_validate_attrs_prev_cur(version_attrs_info *prev, version_attr
     return false;
   }
 
-  if (!sem_match_optional_string(prev->delete_proc, cur->delete_proc)) {
-    report_error(name_ast, "CQL0117: @delete procedure changed in object", name);
-    return false;
+  // adding a migrate proc when moving to the delete plan is ok
+  // if we were already on the delete plan then the migrate proc must match
+  if (prev->delete_version > 0) {
+    // temporarily allow moving from no proc to CQL_MODULE_WARN to get people compliant
+    if (prev->delete_proc || !cur->delete_proc || Strcasecmp(cur->delete_proc, CQL_MODULE_WARN)) {
+      if (!sem_match_optional_string(prev->delete_proc, cur->delete_proc)) {
+        report_error(name_ast, "CQL0117: @delete procedure changed in object", name);
+        return false;
+      }
+    }
   }
 
   return true;
@@ -9903,6 +9923,15 @@ static void sem_create_trigger_stmt(ast_node *ast) {
   }
 }
 
+static bool_t sem_validate_virtual_table_vers(version_attrs_info *table_vers_info) {
+  Contract(table_vers_info);
+  EXTRACT_NOTNULL(create_table_stmt, table_vers_info->target_ast); 
+
+  // temporarily ok, validation coming in the next change
+
+  return true;
+}
+
 // Unlike the other parts of DDL we actually deeply care about the tables.
 // We have to grab all the columns and column types out of it and create
 // the appropriate sem_struct, as well as the sem_join with just one table.
@@ -9941,6 +9970,11 @@ static void sem_create_table_stmt(ast_node *ast) {
   init_version_attrs_info(&table_vers_info, name, ast, table_attrs);
 
   if (!sem_validate_version_attrs(&table_vers_info)) {
+    record_error(ast);
+    goto cleanup;
+  }
+
+  if (!sem_validate_virtual_table_vers(&table_vers_info)) {
     record_error(ast);
     goto cleanup;
   }
