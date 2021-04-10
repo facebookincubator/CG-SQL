@@ -426,7 +426,7 @@ create virtual table unchanged_virtual using my_virtual(goo) as (
 -- - Error
 create virtual table deleted_virtual using my_virtual(goo) as (
   id integer
-) @delete(3);
+) @delete(3, cql:module_must_not_be_deleted_see_docs_for_CQL0392);
 
 -- TEST: zombie comes back to life (invalid)
 create virtual table undead_virtual using my_virtual(goo) as (
@@ -444,7 +444,7 @@ create virtual table changing_virtual using my_virtual(goo, goo) as (
 -- - Error
 create virtual table delete_change_virtual using my_virtual(goo) as (
   id integer
-) @delete(1);
+) @delete(1, cql:module_must_not_be_deleted_see_docs_for_CQL0392);
 
 ------------------------------------------------------------------------------------------------------------
 @previous_schema;
@@ -950,7 +950,7 @@ create virtual table deleted_virtual using my_virtual(goo) as (
 -- +1 Error
 create virtual table undead_virtual using my_virtual(goo) as (
   id integer
-) @delete(3);
+) @delete(3, cql:module_must_not_be_deleted_see_docs_for_CQL0392);
 
 -- TEST: it's ok at add things to a virtual table and change args
 -- - Error
@@ -963,4 +963,4 @@ create virtual table changing_virtual using my_virtual(goo) as (
 -- +1 Error
 create virtual table delete_change_virtual using my_virtual(goo) as (
   id integer
-) @delete(3);
+) @delete(3, cql:module_must_not_be_deleted_see_docs_for_CQL0392);

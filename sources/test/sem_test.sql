@@ -13434,6 +13434,32 @@ end;
 -- +1 Error
 alter table basic_virtual add column xname text;
 
+-- TEST: must specify appropriate delete attribute
+-- + {create_virtual_table_stmt}: err
+-- + Error % when deleting a virtual table you must specify @delete(nn, cql:module_must_not_be_deleted_see_docs_for_CQL0392) as a reminder not to delete the module for this virtual table 'deleting_virtual'
+-- +1 Error
+create virtual table deleting_virtual using module_name(this, that, the_other) as (
+  id integer,
+  t text
+) @delete(1);
+
+-- TEST: using module attribute in an invalid location
+-- + {create_table_stmt}: err
+-- + Error % built-in migration procedure not valid in this context 'cql:module_must_not_be_deleted_see_docs_for_CQL0392'
+-- +1 Error
+create table any_table_at_all(
+  id integer,
+  t text
+) @create(1, cql:module_must_not_be_deleted_see_docs_for_CQL0392);
+
+-- TEST: must specify appropriate delete attribute, done correctly
+-- + {create_virtual_table_stmt}: deleting_virtual_correctly: { id: integer, t: text } deleted virtual @delete(1)
+-- - Error
+create virtual table deleting_virtual_correctly using module_name(this, that, the_other) as (
+  id integer,
+  t text
+) @delete(1, cql:module_must_not_be_deleted_see_docs_for_CQL0392);
+
 -- TEST: emit an enum
 -- + {emit_enums_stmt}: ok
 -- - Error

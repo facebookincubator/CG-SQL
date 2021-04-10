@@ -188,7 +188,7 @@ create virtual table deleted_virtual_table using a_module(arguments following)
 as (
   id integer @sensitive,
   t text
-) @delete(4);
+) @delete(4, cql:module_must_not_be_deleted_see_docs_for_CQL0392);
 
 create table migrated_from_recreate(
   id integer,

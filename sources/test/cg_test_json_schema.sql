@@ -1127,7 +1127,7 @@ create virtual table a_deleted_virtual_table using a_module (arguments following
   id integer @sensitive,
   t text,
   q real
-) @delete(2);
+) @delete(2, cql:module_must_not_be_deleted_see_docs_for_CQL0392);
 
 
 -- TEST: table level check expression

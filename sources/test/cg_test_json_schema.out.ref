@@ -1480,7 +1480,7 @@
       id INTEGER @SENSITIVE,
       t TEXT,
       q REAL
-    ) @DELETE(2)
+    ) @DELETE(2, cql:module_must_not_be_deleted_see_docs_for_CQL0392)
     
     {
       "name" : "a_deleted_virtual_table",
@@ -1490,6 +1490,7 @@
       "isAdded" : 0,
       "isDeleted" : 1,
       "deletedVersion" : 2,
+      "deletedMigrationProc" : "cql:module_must_not_be_deleted_see_docs_for_CQL0392",
       "isRecreated": 0,
       "isVirtual" : 1,
       "module" : "a_module",

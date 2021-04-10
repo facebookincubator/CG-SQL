@@ -99,7 +99,7 @@ CREATE VIRTUAL TABLE complex_virtual_table USING a_module (ARGUMENTS FOLLOWING) 
 CREATE VIRTUAL TABLE deleted_virtual_table USING a_module (ARGUMENTS FOLLOWING) AS (
   id INTEGER @SENSITIVE,
   t TEXT
-) @DELETE(4);
+) @DELETE(4, cql:module_must_not_be_deleted_see_docs_for_CQL0392);
 
 CREATE TABLE migrated_from_recreate(
   id INTEGER,

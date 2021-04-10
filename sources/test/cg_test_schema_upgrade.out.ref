@@ -3,7 +3,7 @@
 -- DDL in procs will not count as declarations
 @SCHEMA_UPGRADE_SCRIPT;
 
--- schema crc 2649697718772058963
+-- schema crc -32645795981288759
 
 -- declare sqlite_master -- 
 CREATE TABLE sqlite_master (
@@ -115,7 +115,7 @@ CREATE VIRTUAL TABLE complex_virtual_table USING a_module (ARGUMENTS FOLLOWING) 
 CREATE VIRTUAL TABLE deleted_virtual_table USING a_module (ARGUMENTS FOLLOWING) AS (
   id INTEGER @SENSITIVE,
   t TEXT
-) @DELETE(4);
+) @DELETE(4, cql:module_must_not_be_deleted_see_docs_for_CQL0392);
 
 CREATE TABLE migrated_from_recreate(
   id INTEGER,
@@ -725,7 +725,7 @@ BEGIN
     CALL test_cql_create_all_indices();
     CALL test_cql_create_all_triggers();
     CALL test_cql_set_facet_version('cql_schema_version', 6);
-    CALL test_cql_set_facet_version('cql_schema_crc', 2649697718772058963);
+    CALL test_cql_set_facet_version('cql_schema_crc', -32645795981288759);
 
     -- finally produce the list of differences
     SELECT T1.facet FROM
@@ -746,7 +746,7 @@ BEGIN
   -- fetch the last known schema crc, if it's different do the upgrade --
   CALL test_cql_get_facet_version('cql_schema_crc', schema_crc);
 
-  IF schema_crc <> 2649697718772058963 THEN
+  IF schema_crc <> -32645795981288759 THEN
     -- save the current facets so we can diff them later --
     CALL test_perform_needed_upgrades();
   ELSE

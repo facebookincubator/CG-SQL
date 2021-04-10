@@ -54457,6 +54457,118 @@ Error at test/sem_test.sql:XXXX : in str : CQL0164: cannot use ALTER TABLE on a 
 
 The statement ending at line XXXX
 
+CREATE VIRTUAL TABLE deleting_virtual USING module_name (this, that, the_other) AS (
+  id INTEGER,
+  t TEXT
+) @DELETE(1);
+
+Error at test/sem_test.sql:XXXX : in version_annotation : CQL0392: when deleting a virtual table you must specify @delete(nn, cql:module_must_not_be_deleted_see_docs_for_CQL0392) as a reminder not to delete the module for this virtual table 'deleting_virtual'
+
+  {create_virtual_table_stmt}: err
+  | {module_info}
+  | | {name module_name}
+  | | {misc_attr_value_list}
+  |   | {name this}
+  |   | {misc_attr_value_list}
+  |     | {name that}
+  |     | {misc_attr_value_list}
+  |       | {name the_other}
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | | {delete_attr}
+    | |   | {version_annotation}
+    | |     | {int 1}
+    | | {name deleting_virtual}
+    | {col_key_list}
+      | {col_def}
+      | | {col_def_type_attrs}
+      |   | {col_def_name_type}
+      |     | {name id}
+      |     | {type_int}
+      | {col_key_list}
+        | {col_def}
+          | {col_def_type_attrs}
+            | {col_def_name_type}
+              | {name t}
+              | {type_text}
+
+The statement ending at line XXXX
+
+CREATE TABLE any_table_at_all(
+  id INTEGER,
+  t TEXT
+) @CREATE(1, cql:module_must_not_be_deleted_see_docs_for_CQL0392);
+
+Error at test/sem_test.sql:XXXX : in dot : CQL0378: built-in migration procedure not valid in this context 'cql:module_must_not_be_deleted_see_docs_for_CQL0392'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {create_attr}: err
+  | |   | {version_annotation}
+  | |     | {int 1}
+  | |     | {dot}: err
+  | |       | {name cql}
+  | |       | {name module_must_not_be_deleted_see_docs_for_CQL0392}
+  | | {name any_table_at_all}
+  | {col_key_list}
+    | {col_def}
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}
+    | {col_key_list}
+      | {col_def}
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+            | {name t}
+            | {type_text}
+
+The statement ending at line XXXX
+
+CREATE VIRTUAL TABLE deleting_virtual_correctly USING module_name (this, that, the_other) AS (
+  id INTEGER,
+  t TEXT
+) @DELETE(1, cql:module_must_not_be_deleted_see_docs_for_CQL0392);
+
+  {create_virtual_table_stmt}: deleting_virtual_correctly: { id: integer, t: text } deleted virtual @delete(1)
+  | {module_info}
+  | | {name module_name}
+  | | {misc_attr_value_list}
+  |   | {name this}
+  |   | {misc_attr_value_list}
+  |     | {name that}
+  |     | {misc_attr_value_list}
+  |       | {name the_other}
+  | {create_table_stmt}: deleting_virtual_correctly: { id: integer, t: text } deleted virtual @delete(1)
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | | {delete_attr}
+    | |   | {version_annotation}
+    | |     | {int 1}
+    | |     | {dot}: ok
+    | |       | {name cql}
+    | |       | {name module_must_not_be_deleted_see_docs_for_CQL0392}
+    | | {name deleting_virtual_correctly}
+    | {col_key_list}
+      | {col_def}: id: integer
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |     | {name id}
+      |     | {type_int}: integer
+      | {col_key_list}
+        | {col_def}: t: text
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name t}
+              | {type_text}: text
+
+The statement ending at line XXXX
+
 @EMIT_ENUMS ints;
 
   {emit_enums_stmt}: ok

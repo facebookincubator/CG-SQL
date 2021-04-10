@@ -1902,7 +1902,7 @@ The statement ending at line XXXX
 
 CREATE VIRTUAL TABLE deleted_virtual USING my_virtual (goo) AS (
   id INTEGER
-) @DELETE(3);
+) @DELETE(3, cql:module_must_not_be_deleted_see_docs_for_CQL0392);
 
   {create_virtual_table_stmt}: deleted_virtual: { id: integer } deleted virtual @delete(3)
   | {module_info}
@@ -1916,6 +1916,9 @@ CREATE VIRTUAL TABLE deleted_virtual USING my_virtual (goo) AS (
     | | | {delete_attr}
     | |   | {version_annotation}
     | |     | {int 3}
+    | |     | {dot}: ok
+    | |       | {name cql}
+    | |       | {name module_must_not_be_deleted_see_docs_for_CQL0392}
     | | {name deleted_virtual}
     | {col_key_list}
       | {col_def}: id: integer
@@ -1985,7 +1988,7 @@ The statement ending at line XXXX
 
 CREATE VIRTUAL TABLE delete_change_virtual USING my_virtual (goo) AS (
   id INTEGER
-) @DELETE(1);
+) @DELETE(1, cql:module_must_not_be_deleted_see_docs_for_CQL0392);
 
   {create_virtual_table_stmt}: delete_change_virtual: { id: integer } deleted virtual @delete(1)
   | {module_info}
@@ -1999,6 +2002,9 @@ CREATE VIRTUAL TABLE delete_change_virtual USING my_virtual (goo) AS (
     | | | {delete_attr}
     | |   | {version_annotation}
     | |     | {int 1}
+    | |     | {dot}: ok
+    | |       | {name cql}
+    | |       | {name module_must_not_be_deleted_see_docs_for_CQL0392}
     | | {name delete_change_virtual}
     | {col_key_list}
       | {col_def}: id: integer
@@ -3965,7 +3971,7 @@ The statement ending at line XXXX
 
 CREATE VIRTUAL TABLE undead_virtual USING my_virtual (goo) AS (
   id INTEGER
-) @DELETE(3);
+) @DELETE(3, cql:module_must_not_be_deleted_see_docs_for_CQL0392);
 
 Error at test/sem_test_prev.sql:XXXX : in str : CQL0114: current schema can't go back to @recreate semantics for 'undead_virtual'
 
@@ -3981,6 +3987,9 @@ Error at test/sem_test_prev.sql:XXXX : in str : CQL0114: current schema can't go
     | | | {delete_attr}
     | |   | {version_annotation}
     | |     | {int 3}
+    | |     | {dot}: ok
+    | |       | {name cql}
+    | |       | {name module_must_not_be_deleted_see_docs_for_CQL0392}
     | | {name undead_virtual}
     | {col_key_list}
       | {col_def}: id: integer
@@ -4017,7 +4026,7 @@ The statement ending at line XXXX
 
 CREATE VIRTUAL TABLE delete_change_virtual USING my_virtual (goo) AS (
   id INTEGER
-) @DELETE(3);
+) @DELETE(3, cql:module_must_not_be_deleted_see_docs_for_CQL0392);
 
 Error at test/sem_test_prev.sql:XXXX : in str : CQL0116: current delete version not equal to previous delete version for 'delete_change_virtual'
 
@@ -4033,6 +4042,9 @@ Error at test/sem_test_prev.sql:XXXX : in str : CQL0116: current delete version 
     | | | {delete_attr}
     | |   | {version_annotation}
     | |     | {int 3}
+    | |     | {dot}: ok
+    | |       | {name cql}
+    | |       | {name module_must_not_be_deleted_see_docs_for_CQL0392}
     | | {name delete_change_virtual}
     | {col_key_list}
       | {col_def}: id: integer

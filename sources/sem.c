@@ -9277,12 +9277,9 @@ static bool_t sem_validate_attrs_prev_cur(version_attrs_info *prev, version_attr
   // adding a migrate proc when moving to the delete plan is ok
   // if we were already on the delete plan then the migrate proc must match
   if (prev->delete_version > 0) {
-    // temporarily allow moving from no proc to CQL_MODULE_WARN to get people compliant
-    if (prev->delete_proc || !cur->delete_proc || Strcasecmp(cur->delete_proc, CQL_MODULE_WARN)) {
-      if (!sem_match_optional_string(prev->delete_proc, cur->delete_proc)) {
-        report_error(name_ast, "CQL0117: @delete procedure changed in object", name);
-        return false;
-      }
+    if (!sem_match_optional_string(prev->delete_proc, cur->delete_proc)) {
+      report_error(name_ast, "CQL0117: @delete procedure changed in object", name);
+      return false;
     }
   }
 
@@ -9927,8 +9924,17 @@ static bool_t sem_validate_virtual_table_vers(version_attrs_info *table_vers_inf
   Contract(table_vers_info);
   EXTRACT_NOTNULL(create_table_stmt, table_vers_info->target_ast); 
 
-  // temporarily ok, validation coming in the next change
+  bool_t is_virtual_table = create_table_stmt->parent && is_ast_create_virtual_table_stmt(create_table_stmt->parent);
 
+  // if deleting virtual table... you must add the reminder
+  if (is_virtual_table && table_vers_info->delete_version_ast) {
+     if (!table_vers_info->delete_proc || Strcasecmp(CQL_MODULE_WARN, table_vers_info->delete_proc )) {
+        report_error(table_vers_info->delete_version_ast, "CQL0392: when deleting a virtual table you must specify @delete(nn, "
+            CQL_MODULE_WARN ") as a reminder not to delete the module for this virtual table", table_vers_info->name);
+        record_error(create_table_stmt);
+        return false;
+     }
+  }
   return true;
 }
 
