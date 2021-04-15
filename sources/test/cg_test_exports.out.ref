@@ -27,6 +27,7 @@ DECLARE PROC parent_proc_child () (four INTEGER NOT NULL, five INTEGER NOT NULL,
 DECLARE PROC outint_nullable (OUT output INTEGER, OUT result BOOL NOT NULL) USING TRANSACTION;
 DECLARE PROC outint_notnull (OUT output INTEGER NOT NULL, OUT result BOOL NOT NULL) USING TRANSACTION;
 DECLARE PROC obj_proc (OUT an_object OBJECT);
+DECLARE PROC cursor_with_object (object_ OBJECT) OUT (object_ OBJECT);
 DECLARE PROC unused_temp (i INTEGER, OUT o INTEGER NOT NULL);
 DECLARE PROC echo_test ();
 DECLARE PROC insert_values (id_ INTEGER NOT NULL, type_ INTEGER) USING TRANSACTION;

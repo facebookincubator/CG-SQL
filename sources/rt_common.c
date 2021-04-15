@@ -90,6 +90,7 @@ static rtdata rt_c = {
   .cql_result_set_get_int32 = "cql_result_set_get_int32_col",
   .cql_result_set_get_int64 = "cql_result_set_get_int64_col",
   .cql_result_set_get_string = "cql_result_set_get_string_col",
+  .cql_result_set_get_object = "cql_result_set_get_object_col",
   .cql_result_set_get_blob = "cql_result_set_get_blob_col",
   .cql_result_set_get_is_null = "cql_result_set_get_is_null_col",
   .cql_result_set_get_is_encoded = "cql_result_set_get_is_encoded_col",

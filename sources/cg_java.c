@@ -363,6 +363,20 @@ static void cg_java_create_proc_stmt(ast_node *ast) {
   bool_t out_union_proc = has_out_union_stmt_result(ast);
 
   if (result_set_proc || out_stmt_proc || out_union_proc) {
+
+    sem_struct *sptr = ast->sem->sptr;
+    uint32_t count = sptr->count;
+    for (int32_t i = 0; i < count; i++) {
+      sem_t sem_type = sptr->semtypes[i];
+
+      // resultsets with objects in java are not supported
+      if (core_type_of(sem_type) == SEM_TYPE_OBJECT) {
+        cql_error("out cursors with object columns are not yet supported for java\n");
+        cql_cleanup_and_exit(1);
+        return;
+      }
+    }
+
     cg_java_proc_result_set(ast);
   }
 }

@@ -2562,9 +2562,6 @@ cql_noexport void gen_declare_proc_from_create_proc(ast_node *ast) {
         gen_printf("%s ", sptr->names[i]);
         sem_t sem_type = sptr->semtypes[i];
 
-        // results come from select statements, they cannot include objects!
-        Invariant(core_type_of(sem_type) != SEM_TYPE_OBJECT);
-
         gen_printf("%s", coretype_string(sem_type));
 
         if (is_not_nullable(sem_type)) {

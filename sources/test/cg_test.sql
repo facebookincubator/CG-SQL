@@ -1074,6 +1074,16 @@ begin
   set an_object := null;
 end;
 
+-- TEST: cursor with object in it
+-- + cursor_with_object(object_, row);
+-- + void cursor_with_object(cql_object_ref _Nullable object_, cursor_with_object_row *_Nonnull _result_)
+create proc cursor_with_object(object_ Object)
+begin
+  declare C cursor like cursor_with_object arguments;
+  fetch C from arguments;
+  out C;
+end;
+
 -- TEST: case statement with objects
 -- + if (cql_is_nullable_true(!obj_var, _tmp_n_object_1 == obj_var))
 set i2 := case obj_var when obj_var then 1 else 2 end;

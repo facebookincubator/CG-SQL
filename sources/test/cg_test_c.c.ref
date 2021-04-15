@@ -23,6 +23,14 @@ extern CQL_WARN_UNUSED cql_code with_stmt(sqlite3 *_Nonnull _db_, sqlite3_stmt *
 extern CQL_WARN_UNUSED cql_code with_recursive_stmt(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code parent_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code parent_proc_child(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+
+typedef struct cursor_with_object_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_object_ref _Nullable object_;
+} cursor_with_object_row;
+extern void cursor_with_object(cql_object_ref _Nullable object_, cursor_with_object_row *_Nonnull _result_);
 extern CQL_WARN_UNUSED cql_code uses_proc_for_result(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code blob_returner(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 
@@ -2124,6 +2132,84 @@ void obj_proc(cql_object_ref _Nullable *_Nonnull an_object) {
   *(void **)an_object = NULL; // set out arg to non-garbage
   cql_set_object_ref(an_object, NULL);
 
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC cursor_with_object (object_ OBJECT)
+BEGIN
+  DECLARE C CURSOR LIKE cursor_with_object ARGUMENTS;
+  FETCH C(object_) FROM VALUES(object_);
+  OUT C;
+END;
+*/
+
+#define _PROC_ "cursor_with_object"
+
+#define cursor_with_object_refs_offset cql_offsetof(cursor_with_object_row, object_) // count = 1
+static int32_t cursor_with_object_perf_index;
+
+cql_string_literal(cursor_with_object_stored_procedure_name, "cursor_with_object");
+
+cql_object_ref _Nullable cursor_with_object_get_object_(cursor_with_object_result_set_ref _Nonnull result_set) {
+  cursor_with_object_row *data = (cursor_with_object_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data->object_;
+}
+
+uint8_t cursor_with_object_data_types[cursor_with_object_data_types_count] = {
+  CQL_DATA_TYPE_OBJECT, // object_
+};
+
+static cql_uint16 cursor_with_object_col_offsets[] = { 1,
+  cql_offsetof(cursor_with_object_row, object_)
+};
+
+cql_int32 cursor_with_object_result_count(cursor_with_object_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+void cursor_with_object_fetch_results( cursor_with_object_result_set_ref _Nullable *_Nonnull result_set, cql_object_ref _Nullable object_) {
+  cql_profile_start(CRC_cursor_with_object, &cursor_with_object_perf_index);
+  *result_set = NULL;
+  cursor_with_object_row *row = (cursor_with_object_row *)calloc(1, sizeof(cursor_with_object_row));
+  cursor_with_object(object_, row);
+  cql_fetch_info info = {
+    .rc = SQLITE_OK,
+    .data_types = cursor_with_object_data_types,
+    .col_offsets = cursor_with_object_col_offsets,
+    .refs_count = 1,
+    .refs_offset = cursor_with_object_refs_offset,
+    .rowsize = sizeof(cursor_with_object_row),
+    .crc = CRC_cursor_with_object,
+    .perf_index = &cursor_with_object_perf_index,
+  };
+  cql_one_row_result(&info, (char *)row, row->_has_row_, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC cursor_with_object (object_ OBJECT) OUT (object_ OBJECT);
+
+typedef struct cursor_with_object_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_object_ref _Nullable object_;
+} cursor_with_object_C_row;
+
+#define cursor_with_object_C_refs_offset cql_offsetof(cursor_with_object_C_row, object_) // count = 1
+void cursor_with_object(cql_object_ref _Nullable object_, cursor_with_object_row *_Nonnull _result_) {
+  memset(_result_, 0, sizeof(*_result_));
+  cursor_with_object_C_row C = { ._refs_count_ = 1, ._refs_offset_ = cursor_with_object_C_refs_offset };
+
+  C._has_row_ = 1;
+  cql_set_object_ref(&C.object_, object_);
+  _result_->_has_row_ = C._has_row_;
+  _result_->_refs_count_ = 1;
+  _result_->_refs_offset_ = cursor_with_object_refs_offset;
+  cql_set_object_ref(&_result_->object_, C.object_);
+
+  cql_teardown_row(C);
 }
 #undef _PROC_
 

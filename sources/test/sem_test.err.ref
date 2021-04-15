@@ -916,7 +916,6 @@ Error at test/sem_test.sql:XXXX : in call : CQL0345: the argument must be of typ
 Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'cql_get_blob_size'
 Error at test/sem_test.sql:XXXX : in like : CQL0069: name not found 'some_proc3'
 Error at test/sem_test.sql:XXXX : in like : CQL0262: LIKE ... ARGUMENTS used on a procedure with no arguments 'proc1'
-Error at test/sem_test.sql:XXXX : in str : CQL0335: out cursors with object columns are not yet supported 'cursor_with_object'
 Error at test/sem_test.sql:XXXX : in str : CQL0347: select function may not return type OBJECT 'returns_object_is_bogus'
 Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'hip'
 Error at test/sem_test.sql:XXXX : in str : CQL0348: collate applied to a non-text column 'i'

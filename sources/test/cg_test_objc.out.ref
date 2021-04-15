@@ -658,6 +658,46 @@ static inline BOOL CGBParentProcChildRowEqual(CGBParentProcChild *resultSet1, in
   return CGCParentProcChildRowEqual(CGCParentProcChildFromCGBParentProcChild(resultSet1), row1, CGCParentProcChildFromCGBParentProcChild(resultSet2), row2);
 }
 
+@class CGBCursorWithObject;
+
+static inline CGBCursorWithObject *CGBCursorWithObjectFromCGCCursorWithObject(CGCCursorWithObjectResultSetRef resultSet)
+{
+  return (__bridge CGBCursorWithObject *)resultSet;
+}
+
+static inline CGCCursorWithObjectResultSetRef CGCCursorWithObjectFromCGBCursorWithObject(CGBCursorWithObject *resultSet)
+{
+  return (__bridge CGCCursorWithObjectResultSetRef)resultSet;
+}
+
+static inline NSObject *_Nullable CGBCursorWithObjectGetObject(CGBCursorWithObject *resultSet)
+{
+  CGCCursorWithObjectResultSetRef cResultSet = CGCCursorWithObjectFromCGBCursorWithObject(resultSet);
+  return (__bridge NSObject *)CGCCursorWithObjectGetObject(cResultSet);
+}
+
+static inline int32_t CGBCursorWithObjectResultCount(CGBCursorWithObject *resultSet)
+{
+  return CGCCursorWithObjectResultCount(CGCCursorWithObjectFromCGBCursorWithObject(resultSet));
+}
+
+static inline CGBCursorWithObject *CGBCursorWithObjectCopy(CGBCursorWithObject *resultSet)
+{
+  CGCCursorWithObjectResultSetRef copy;
+  CGCCursorWithObjectCopy(CGCCursorWithObjectFromCGBCursorWithObject(resultSet), &copy);
+  return (__bridge_transfer CGBCursorWithObject *)copy;
+}
+
+static inline NSUInteger CGBCursorWithObjectHash(CGBCursorWithObject *resultSet)
+{
+  return CGCCursorWithObjectHash(CGCCursorWithObjectFromCGBCursorWithObject(resultSet));
+}
+
+static inline BOOL CGBCursorWithObjectEqual(CGBCursorWithObject *resultSet1, CGBCursorWithObject *resultSet2)
+{
+  return CGCCursorWithObjectEqual(CGCCursorWithObjectFromCGBCursorWithObject(resultSet1), CGCCursorWithObjectFromCGBCursorWithObject(resultSet2));
+}
+
 @class CGBUsesProcForResult;
 
 static inline CGBUsesProcForResult *CGBUsesProcForResultFromCGCUsesProcForResult(CGCUsesProcForResultResultSetRef resultSet)

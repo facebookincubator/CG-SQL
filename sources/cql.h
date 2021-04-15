@@ -452,6 +452,16 @@ typedef struct rtdata {
   // cql_string_ref _Nullable cql_result_set_get_string(cql_result_set_ref result_set, int32_t row, int32_t col)
   const char *cql_result_set_get_string;
 
+  // Generic object value getter on base result set object.
+  // NOTE: This is only used when generate_type_getters is true.  This function should call through to the
+  // inline type getters that are passed into the ctor for the result set.
+  // @param result_set The cql result_set object.
+  // @param row The row number to fetch the value for.
+  // @param col The column to fetch the value for.
+  // @return The object value.
+  // cql_object_ref _Nullable cql_result_set_get_object(cql_result_set_ref result_set, int32_t row, int32_t col)
+  const char *cql_result_set_get_object;
+
   // Generic blob value getter on base result set object.
   // NOTE: This is only used when generate_type_getters is true.  This function should call through to the
   // inline type getters that are passed into the ctor for the result set.

@@ -52085,13 +52085,11 @@ BEGIN
   OUT cursor_with_object;
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0335: out cursors with object columns are not yet supported 'cursor_with_object'
-
-  {create_proc_stmt}: err
-  | {name try_to_emit_object}: err
+  {create_proc_stmt}: cursor_with_object: obj_proc[arguments]: { an_obj: object in } variable shape_storage uses_out value_cursor
+  | {name try_to_emit_object}: cursor_with_object: obj_proc[arguments]: { an_obj: object in } variable shape_storage uses_out value_cursor
   | {proc_params_stmts}
-    | {stmt_list}: err
-      | {out_stmt}: err
+    | {stmt_list}: ok
+      | {out_stmt}: cursor_with_object: obj_proc[arguments]: { an_obj: object in } variable shape_storage value_cursor
         | {name cursor_with_object}: cursor_with_object: obj_proc[arguments]: { an_obj: object in } variable shape_storage value_cursor
 
 The statement ending at line XXXX

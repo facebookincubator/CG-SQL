@@ -709,6 +709,34 @@ extern cql_object_ref _Nonnull obj_var2;
 extern void obj_proc(cql_object_ref _Nullable *_Nonnull an_object);
 
 // The statement ending at line XXXX
+#define CRC_cursor_with_object -3278989848261056143L
+
+extern cql_string_ref _Nonnull cursor_with_object_stored_procedure_name;
+
+#define cursor_with_object_data_types_count 1
+
+#ifndef result_set_type_decl_cursor_with_object_result_set
+#define result_set_type_decl_cursor_with_object_result_set 1
+cql_result_set_type_decl(cursor_with_object_result_set, cursor_with_object_result_set_ref);
+#endif
+extern cql_object_ref _Nullable cursor_with_object_get_object_(cursor_with_object_result_set_ref _Nonnull result_set);
+extern cql_int32 cursor_with_object_result_count(cursor_with_object_result_set_ref _Nonnull result_set);
+extern void cursor_with_object_fetch_results( cursor_with_object_result_set_ref _Nullable *_Nonnull result_set, cql_object_ref _Nullable object_);
+#define cursor_with_object_copy(result_set, result_set_to) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  0, \
+  1)
+#define cursor_with_object_hash(result_set) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), 0)
+#define cursor_with_object_equal(rs1, rs2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  0, \
+  (cql_result_set_ref)(rs2), \
+  0)
+
+// The statement ending at line XXXX
 
 // The statement ending at line XXXX
 

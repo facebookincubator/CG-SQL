@@ -1347,6 +1347,16 @@ cql_string_ref _Nullable cql_result_set_get_string_col(cql_result_set_ref _Nonnu
   return *(cql_string_ref *)data;
 }
 
+
+// This is the helper method that reads a object out of a rowset at a particular row and column.
+// The same helper is used for reading the value from a nullable or not nullable value, so the address helper
+// has to report which kind of datum it is.  All the error checking is in cql_address_of_col.
+cql_object_ref _Nullable cql_result_set_get_object_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col) {
+  cql_int32 data_type = CQL_DATA_TYPE_OBJECT;
+  char *data = cql_address_of_col(result_set, row, col, &data_type);
+  return *(cql_object_ref *)data;
+}
+
 // This is the helper method that reads a blob out of a rowset at a particular row and column.
 // The same helper is used for reading the value from a nullable or not nullable value, so the address helper
 // has to report which kind of datum it is.  All the error checking is in cql_address_of_col.
@@ -1509,6 +1519,7 @@ void cql_initialize_meta(cql_result_set_meta *_Nonnull meta, cql_fetch_info *_No
       meta->getInt32 = cql_result_set_get_int32_col;
       meta->getInt64 = cql_result_set_get_int64_col;
       meta->getString = cql_result_set_get_string_col;
+      meta->getObject = cql_result_set_get_object_col;
       meta->getBlob = cql_result_set_get_blob_col;
       meta->getIsNull = cql_result_set_get_is_null_col;
       meta->getIsEncoded = cql_result_set_get_is_encoded_col;

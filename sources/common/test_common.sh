@@ -375,6 +375,13 @@ code_gen_java_test() {
     failed
   fi
 
+  echo running java codegen test for out with object
+  if ${CQL} --test --cg "${OUT_DIR}/cg_test_java_out_object.out" --in "${TEST_DIR}/cg_test_out_object.sql" --rt java --java_package_name com.facebook.cqlviewmodels 2>"${OUT_DIR}/cg_test_java.err"
+  then
+    echo 'cursor with object in it, this should have caused an error'
+    failed
+  fi
+
   echo 'running missing --java_assembly_query_classname flag for extension fragment codegen test'
   if ${CQL} --test --cg "${OUT_DIR}/__temp.out" --in "${TEST_DIR}/cg_test_extension_java_fragment.sql" --rt java --java_package_name com.facebook.cqlviewmodels 2>"${OUT_DIR}/java_classname_missing.err"
   then

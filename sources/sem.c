@@ -1128,6 +1128,7 @@ CSTR coretype_string(sem_t sem_type) {
     case SEM_TYPE_REAL: result = "REAL"; break;
     case SEM_TYPE_BOOL: result = "BOOL"; break;
     case SEM_TYPE_BLOB: result = "BLOB"; break;
+    case SEM_TYPE_OBJECT: result = "OBJECT"; break;
   }
   Invariant(result);
   return result;
@@ -9922,7 +9923,7 @@ static void sem_create_trigger_stmt(ast_node *ast) {
 
 static bool_t sem_validate_virtual_table_vers(version_attrs_info *table_vers_info) {
   Contract(table_vers_info);
-  EXTRACT_NOTNULL(create_table_stmt, table_vers_info->target_ast); 
+  EXTRACT_NOTNULL(create_table_stmt, table_vers_info->target_ast);
 
   bool_t is_virtual_table = create_table_stmt->parent && is_ast_create_virtual_table_stmt(create_table_stmt->parent);
 
@@ -16281,17 +16282,6 @@ static void sem_out_any(ast_node *ast) {
   if (is_error(cursor)) {
     record_error(ast);
     return;
-  }
-
-  sem_struct *sptr = cursor->sem->sptr;
-
-  for (int32_t i = 0; i < sptr->count; i++) {
-    sem_t core_type = core_type_of(sptr->semtypes[i]);
-    if (core_type == SEM_TYPE_OBJECT) {
-      report_error(cursor, "CQL0335: out cursors with object columns are not yet supported", cursor->sem->name);
-      record_error(ast);
-      return;
-    }
   }
 
   if (!(cursor->sem->sem_type & SEM_TYPE_HAS_SHAPE_STORAGE)) {

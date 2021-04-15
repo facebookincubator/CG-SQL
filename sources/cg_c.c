@@ -5608,7 +5608,6 @@ static void cg_stmt_list(ast_node *head) {
 static void cg_data_type(charbuf *buffer, bool_t encode, sem_t sem_type) {
   Contract(is_unitary(sem_type));
   Contract(!is_null_type(sem_type));
-  Contract(!is_object(sem_type));
 
   sem_t core_type = core_type_of(sem_type);
 
@@ -5630,6 +5629,9 @@ static void cg_data_type(charbuf *buffer, bool_t encode, sem_t sem_type) {
       break;
     case SEM_TYPE_BLOB:
       bprintf(buffer, "CQL_DATA_TYPE_BLOB");
+      break;
+    case SEM_TYPE_OBJECT:
+      bprintf(buffer, "CQL_DATA_TYPE_OBJECT");
       break;
   }
   if (is_not_nullable(sem_type)) {
@@ -5869,8 +5871,7 @@ static void cg_proc_result_set_type_based_getter(getter_info *_Nonnull info)
               row,
               info->col_index);
     }
-    // You can't return object types in result sets, so they cannot be used here.
-    Contract(info->name_type != SEM_TYPE_OBJECT);
+
     switch (info->name_type) {
       case SEM_TYPE_NULL:
         bprintf(out, "%s", rt->cql_result_set_get_is_null);
@@ -5892,6 +5893,9 @@ static void cg_proc_result_set_type_based_getter(getter_info *_Nonnull info)
         break;
       case SEM_TYPE_BLOB:
         bprintf(out, "%s", rt->cql_result_set_get_blob);
+        break;
+      case SEM_TYPE_OBJECT:
+        bprintf(out, "%s", rt->cql_result_set_get_object);
         break;
     }
     bprintf(out, "((cql_result_set_ref)result_set, %s, %d);\n", row, info->col_index);

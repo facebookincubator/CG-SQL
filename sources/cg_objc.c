@@ -121,6 +121,11 @@ static void cg_objc_proc_result_set_getter(
         return_type_separator = " ";
         value_convert_begin = "(__bridge NSString *)";
         break;
+      case SEM_TYPE_OBJECT:
+        return_type = "NSObject *_Nullable";
+        return_type_separator = " ";
+        value_convert_begin = "(__bridge NSObject *)";
+        break;
     }
   } else {
     switch (core_type) {
@@ -148,6 +153,11 @@ static void cg_objc_proc_result_set_getter(
       case SEM_TYPE_BLOB:
         return_type = rt->cql_blob_ref;
         value_convert_begin = "(__bridge NSData *)";
+        break;
+      case SEM_TYPE_OBJECT:
+        return_type = rt->cql_object_ref;
+        return_type_separator = " ";
+        value_convert_begin = "(__bridge NSObject *)";
         break;
     }
   }

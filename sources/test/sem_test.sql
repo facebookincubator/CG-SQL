@@ -12753,20 +12753,21 @@ create proc some_proc4_proxy(like proc1 arguments)
 begin
 end;
 
--- TEST: object arguments are not yet supported (this requires cursor generalizations)
+-- TEST: object arguments are supported
 -- + {declare_cursor_like_name}: cursor_with_object: obj_proc[arguments]: { an_obj: object in } variable shape_storage value_cursor
 -- + {like}: obj_proc[arguments]: { an_obj: object in }
 -- - Error
 declare cursor_with_object cursor like obj_proc arguments;
 
 -- TEST: try to make a proc that emits a cursor with an object in it
--- + {create_proc_stmt}: err
--- + {out_stmt}: err
--- + Error % out cursors with object columns are not yet supported 'cursor_with_object'
--- +1 Error
+-- + {stmt_list}: ok
+-- + {create_proc_stmt}: cursor_with_object: obj_proc[arguments]: { an_obj: object in } variable shape_storage uses_out value_cursor
+-- + {out_stmt}: cursor_with_object: obj_proc[arguments]: { an_obj: object in } variable shape_storage value_cursor
+-- + {name try_to_emit_object}: cursor_with_object: obj_proc[arguments]: { an_obj: object in } variable shape_storage uses_out value_cursor
+-- - Error
 create proc try_to_emit_object()
 begin
-  out cursor_with_object; -- boom
+  out cursor_with_object;
 end;
 
 -- TEST: test rewrite for [FETCH [c] USING ... ] grammar
