@@ -2338,6 +2338,46 @@ static inline BOOL CGBVaultAliasColumnNameProcRowEqual(CGBVaultAliasColumnNamePr
   return CGCVaultAliasColumnNameProcRowEqual(CGCVaultAliasColumnNameProcFromCGBVaultAliasColumnNameProc(resultSet1), row1, CGCVaultAliasColumnNameProcFromCGBVaultAliasColumnNameProc(resultSet2), row2);
 }
 
+@class CGBOutObject;
+
+static inline CGBOutObject *CGBOutObjectFromCGCOutObject(CGCOutObjectResultSetRef resultSet)
+{
+  return (__bridge CGBOutObject *)resultSet;
+}
+
+static inline CGCOutObjectResultSetRef CGCOutObjectFromCGBOutObject(CGBOutObject *resultSet)
+{
+  return (__bridge CGCOutObjectResultSetRef)resultSet;
+}
+
+static inline NSObject * CGBOutObjectGetO(CGBOutObject *resultSet)
+{
+  CGCOutObjectResultSetRef cResultSet = CGCOutObjectFromCGBOutObject(resultSet);
+  return (__bridge NSObject *)CGCOutObjectGetO(cResultSet);
+}
+
+static inline int32_t CGBOutObjectResultCount(CGBOutObject *resultSet)
+{
+  return CGCOutObjectResultCount(CGCOutObjectFromCGBOutObject(resultSet));
+}
+
+static inline CGBOutObject *CGBOutObjectCopy(CGBOutObject *resultSet)
+{
+  CGCOutObjectResultSetRef copy;
+  CGCOutObjectCopy(CGCOutObjectFromCGBOutObject(resultSet), &copy);
+  return (__bridge_transfer CGBOutObject *)copy;
+}
+
+static inline NSUInteger CGBOutObjectHash(CGBOutObject *resultSet)
+{
+  return CGCOutObjectHash(CGCOutObjectFromCGBOutObject(resultSet));
+}
+
+static inline BOOL CGBOutObjectEqual(CGBOutObject *resultSet1, CGBOutObject *resultSet2)
+{
+  return CGCOutObjectEqual(CGCOutObjectFromCGBOutObject(resultSet1), CGCOutObjectFromCGBOutObject(resultSet2));
+}
+
 @class CGBFragTest;
 
 static inline CGCFragTestResultSetRef CGCExtFromCGBExt(CGBFragTest *resultSet)

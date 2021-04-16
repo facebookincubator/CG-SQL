@@ -113,3 +113,13 @@ begin
     ext2(*) as (select frag_test.*, f3 from frag_test left outer join foo on f1 = id)
   select * from ext2;
 end;
+
+-- TEST: emit an object result set with type getters
+-- + static inline cql_object_ref _Nonnull emit_object_result_set_get_o(emit_object_result_set_result_set_ref _Nonnull result_set, cql_int32 row) {
+-- +   return cql_result_set_get_object_col((cql_result_set_ref)result_set, row, 0);
+create proc emit_object_result_set(o object not null)
+begin
+   declare C cursor like emit_object_result_set arguments;
+   fetch C from arguments;
+   out union C;
+end;

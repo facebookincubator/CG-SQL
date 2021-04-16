@@ -281,6 +281,14 @@ typedef struct global_cursor2_row {
 #define global_cursor2_refs_offset cql_offsetof(global_cursor2_row, x) // count = 1
 extern void out2_proc(cql_nullable_int32 x, cql_int32 *_Nonnull y, cql_int32 *_Nonnull z);
 
+
+typedef struct out_object_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_object_ref _Nonnull o;
+} out_object_row;
+extern void out_object(cql_object_ref _Nonnull o, out_object_row *_Nonnull _result_);
 cql_string_literal(_literal_1_This_is_a_test_, "This is a \" \\ test '' \n \" ");
 cql_string_literal(_literal_2_b_, "b");
 cql_string_literal(_literal_3_c_, "c");
@@ -8980,6 +8988,84 @@ CQL_WARN_UNUSED cql_code uses_ifnull_throw(sqlite3 *_Nonnull _db_, cql_nullable_
 
 cql_cleanup:
   return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC out_object (o OBJECT NOT NULL)
+BEGIN
+  DECLARE C CURSOR LIKE out_object ARGUMENTS;
+  FETCH C(o) FROM VALUES(o);
+  OUT C;
+END;
+*/
+
+#define _PROC_ "out_object"
+
+#define out_object_refs_offset cql_offsetof(out_object_row, o) // count = 1
+static int32_t out_object_perf_index;
+
+cql_string_literal(out_object_stored_procedure_name, "out_object");
+
+cql_object_ref _Nonnull out_object_get_o(out_object_result_set_ref _Nonnull result_set) {
+  out_object_row *data = (out_object_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data->o;
+}
+
+uint8_t out_object_data_types[out_object_data_types_count] = {
+  CQL_DATA_TYPE_OBJECT | CQL_DATA_TYPE_NOT_NULL, // o
+};
+
+static cql_uint16 out_object_col_offsets[] = { 1,
+  cql_offsetof(out_object_row, o)
+};
+
+cql_int32 out_object_result_count(out_object_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+void out_object_fetch_results( out_object_result_set_ref _Nullable *_Nonnull result_set, cql_object_ref _Nonnull o) {
+  cql_profile_start(CRC_out_object, &out_object_perf_index);
+  *result_set = NULL;
+  out_object_row *row = (out_object_row *)calloc(1, sizeof(out_object_row));
+  out_object(o, row);
+  cql_fetch_info info = {
+    .rc = SQLITE_OK,
+    .data_types = out_object_data_types,
+    .col_offsets = out_object_col_offsets,
+    .refs_count = 1,
+    .refs_offset = out_object_refs_offset,
+    .rowsize = sizeof(out_object_row),
+    .crc = CRC_out_object,
+    .perf_index = &out_object_perf_index,
+  };
+  cql_one_row_result(&info, (char *)row, row->_has_row_, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC out_object (o OBJECT NOT NULL) OUT (o OBJECT NOT NULL);
+
+typedef struct out_object_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_object_ref _Nonnull o;
+} out_object_C_row;
+
+#define out_object_C_refs_offset cql_offsetof(out_object_C_row, o) // count = 1
+void out_object(cql_object_ref _Nonnull o, out_object_row *_Nonnull _result_) {
+  memset(_result_, 0, sizeof(*_result_));
+  out_object_C_row C = { ._refs_count_ = 1, ._refs_offset_ = out_object_C_refs_offset };
+
+  C._has_row_ = 1;
+  cql_set_object_ref(&C.o, o);
+  _result_->_has_row_ = C._has_row_;
+  _result_->_refs_count_ = 1;
+  _result_->_refs_offset_ = out_object_refs_offset;
+  cql_set_object_ref(&_result_->o, C.o);
+
+  cql_teardown_row(C);
 }
 #undef _PROC_
 cql_int32 this_is_the_end = 0;

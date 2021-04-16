@@ -2550,6 +2550,44 @@ BEGIN_TEST(encoded_null_values)
   EXPECT(C.bl0 IS null);
 END_TEST(encoded_null_values)
 
+
+declare proc obj_shape(set_ object) out union (o object);
+declare proc not_null_obj_shape(set_ object not null) out union (o object not null);
+
+create proc emit_object_result_set(set_ object)
+begin
+  declare C cursor like obj_shape;
+  fetch C using set_ o;
+  out union C;
+
+  fetch C using null o;
+  out union C;
+end;
+
+create proc emit_object_result_set_not_null(set_ object not null)
+begin
+  declare C cursor like not_null_obj_shape;
+  fetch C using set_ o;
+  out union C;
+end;
+
+BEGIN_TEST(object_result_set_value)
+  let s := set_create();
+  declare D cursor for call emit_object_result_set(s);
+  fetch D;
+  EXPECT(D);
+  EXPECT(D.o is s);
+
+  fetch D;
+  EXPECT(D);
+  EXPECT(D.o is null);
+
+  declare E cursor for call emit_object_result_set_not_null(s);
+  fetch E;
+  EXPECT(E);
+  EXPECT(E.o is s);
+END_TEST(object_result_set_value)
+
 @attribute(cql:vault_sensitive=(y))
 create procedure load_some_encoded_field()
 begin

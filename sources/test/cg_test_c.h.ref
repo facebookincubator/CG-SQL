@@ -2565,6 +2565,34 @@ extern CQL_WARN_UNUSED cql_code uses_throw(sqlite3 *_Nonnull _db_);
 extern CQL_WARN_UNUSED cql_code uses_ifnull_throw(sqlite3 *_Nonnull _db_, cql_nullable_int32 x);
 
 // The statement ending at line XXXX
+#define CRC_out_object 1794985861949478211L
+
+extern cql_string_ref _Nonnull out_object_stored_procedure_name;
+
+#define out_object_data_types_count 1
+
+#ifndef result_set_type_decl_out_object_result_set
+#define result_set_type_decl_out_object_result_set 1
+cql_result_set_type_decl(out_object_result_set, out_object_result_set_ref);
+#endif
+extern cql_object_ref _Nonnull out_object_get_o(out_object_result_set_ref _Nonnull result_set);
+extern cql_int32 out_object_result_count(out_object_result_set_ref _Nonnull result_set);
+extern void out_object_fetch_results( out_object_result_set_ref _Nullable *_Nonnull result_set, cql_object_ref _Nonnull o);
+#define out_object_copy(result_set, result_set_to) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  0, \
+  1)
+#define out_object_hash(result_set) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), 0)
+#define out_object_equal(rs1, rs2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  0, \
+  (cql_result_set_ref)(rs2), \
+  0)
+
+// The statement ending at line XXXX
 extern cql_int32 this_is_the_end;
 
 // The statement ending at line XXXX

@@ -161,4 +161,5 @@ DECLARE PROC out_decl_test_3 (x INTEGER);
 DECLARE PROC binary_ops_with_null ();
 DECLARE PROC uses_throw () USING TRANSACTION;
 DECLARE PROC uses_ifnull_throw (x INTEGER) USING TRANSACTION;
+DECLARE PROC out_object (o OBJECT NOT NULL) OUT (o OBJECT NOT NULL);
 DECLARE PROC end_proc ();

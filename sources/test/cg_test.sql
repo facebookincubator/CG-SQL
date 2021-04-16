@@ -3852,6 +3852,15 @@ begin
    let y := ifnull_throw(x);
 end;
 
+-- +  CQL_DATA_TYPE_OBJECT | CQL_DATA_TYPE_NOT_NULL, // o
+-- + cql_offsetof(out_object_row, o)
+create proc out_object(o object not null)
+begin
+  declare C cursor like out_object arguments;
+  fetch C from arguments;
+  out C;
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------
