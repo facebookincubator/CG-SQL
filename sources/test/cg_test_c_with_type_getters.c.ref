@@ -8,6 +8,13 @@
 #pragma clang diagnostic ignored "-Wliteral-conversion"
 extern CQL_WARN_UNUSED cql_code selector(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 
+typedef struct emit_object_result_set_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_object_ref _Nonnull o;
+} emit_object_result_set_row;
+
 // The statement ending at line XXXX
 
 /*
@@ -161,3 +168,71 @@ END;
 cql_int32 ext2_result_count(frag_test_result_set_ref _Nonnull result_set) {
   return cql_result_set_get_count((cql_result_set_ref)result_set);
 }
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC emit_object_result_set (o OBJECT NOT NULL)
+BEGIN
+  DECLARE C CURSOR LIKE emit_object_result_set ARGUMENTS;
+  FETCH C(o) FROM VALUES(o);
+  OUT UNION C;
+END;
+*/
+
+#define _PROC_ "emit_object_result_set_fetch_results"
+
+#define emit_object_result_set_refs_offset cql_offsetof(emit_object_result_set_row, o) // count = 1
+static int32_t emit_object_result_set_perf_index;
+
+cql_string_literal(emit_object_result_set_stored_procedure_name, "emit_object_result_set");
+
+uint8_t emit_object_result_set_data_types[emit_object_result_set_data_types_count] = {
+  CQL_DATA_TYPE_OBJECT | CQL_DATA_TYPE_NOT_NULL, // o
+};
+
+#define emit_object_result_set_refs_offset cql_offsetof(emit_object_result_set_row, o) // count = 1
+
+static cql_uint16 emit_object_result_set_col_offsets[] = { 1,
+  cql_offsetof(emit_object_result_set_row, o)
+};
+
+cql_int32 emit_object_result_set_result_count(emit_object_result_set_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+cql_fetch_info emit_object_result_set_info = {
+  .rc = SQLITE_OK,
+  .data_types = emit_object_result_set_data_types,
+  .col_offsets = emit_object_result_set_col_offsets,
+  .refs_count = 1,
+  .refs_offset = emit_object_result_set_refs_offset,
+  .rowsize = sizeof(emit_object_result_set_row),
+  .crc = CRC_emit_object_result_set,
+  .perf_index = &emit_object_result_set_perf_index,
+};
+// export: DECLARE PROC emit_object_result_set (o OBJECT NOT NULL) OUT UNION (o OBJECT NOT NULL);
+
+typedef struct emit_object_result_set_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_object_ref _Nonnull o;
+} emit_object_result_set_C_row;
+
+#define emit_object_result_set_C_refs_offset cql_offsetof(emit_object_result_set_C_row, o) // count = 1
+void emit_object_result_set_fetch_results(emit_object_result_set_result_set_ref _Nullable *_Nonnull _result_set_, cql_object_ref _Nonnull o) {
+  cql_bytebuf _rows_;
+  cql_bytebuf_open(&_rows_);
+  *_result_set_ = NULL;
+  emit_object_result_set_C_row C = { ._refs_count_ = 1, ._refs_offset_ = emit_object_result_set_C_refs_offset };
+
+  cql_profile_start(CRC_emit_object_result_set, &emit_object_result_set_perf_index);
+  C._has_row_ = 1;
+  cql_set_object_ref(&C.o, o);
+  cql_retain_row(C);
+  if (C._has_row_) cql_bytebuf_append(&_rows_, (const void *)&C, sizeof(C));
+
+  cql_results_from_data(SQLITE_OK, &_rows_, &emit_object_result_set_info, (cql_result_set_ref *)_result_set_);
+  cql_teardown_row(C);
+}
+#undef _PROC_

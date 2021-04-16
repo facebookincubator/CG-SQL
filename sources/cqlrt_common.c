@@ -752,6 +752,11 @@ void cql_copyoutrow(sqlite3 *_Nullable db, cql_result_set_ref _Nonnull result_se
         }
         break;
       }
+      case CQL_DATA_TYPE_OBJECT | CQL_DATA_TYPE_NOT_NULL: {
+        cql_object_ref *obj_ref = va_arg(args, cql_object_ref *);
+        cql_set_object_ref(obj_ref, cql_result_set_get_object_col(result_set, row, column));
+        break;
+      }
       case CQL_DATA_TYPE_INT32: {
         cql_nullable_int32 *_Nonnull int32p = va_arg(args, cql_nullable_int32 *_Nonnull);
         if (cql_result_set_get_is_null_col(result_set, row, column)) {
@@ -824,6 +829,11 @@ void cql_copyoutrow(sqlite3 *_Nullable db, cql_result_set_ref _Nonnull result_se
           cql_set_blob_ref(blob_ref, new_blob_ref);
           cql_blob_release(new_blob_ref);
         }
+        break;
+      }
+      case CQL_DATA_TYPE_OBJECT: {
+        cql_object_ref *obj_ref = va_arg(args, cql_object_ref *);
+        cql_set_object_ref(obj_ref, cql_result_set_get_object_col(result_set, row, column));
         break;
       }
     }

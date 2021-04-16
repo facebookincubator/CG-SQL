@@ -389,6 +389,13 @@ code_gen_java_test() {
     failed
   fi
 
+  echo 'running object result not supported by java test'
+  if ${CQL} --in "${TEST_DIR}/java_no_object.sql" --cg out/x.java --rt java --java_package_name x 2>"${OUT_DIR}/java_object_result.err"
+  then
+    echo 'object type appears in result set, this should have caused an error'
+    failed
+  fi
+
   echo validating codegen
   echo "  computing diffs (empty if none)"
 

@@ -373,7 +373,6 @@ static void cg_java_create_proc_stmt(ast_node *ast) {
       if (core_type_of(sem_type) == SEM_TYPE_OBJECT) {
         cql_error("out cursors with object columns are not yet supported for java\n");
         cql_cleanup_and_exit(1);
-        return;
       }
     }
 
