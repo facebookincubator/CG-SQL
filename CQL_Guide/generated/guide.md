@@ -8082,6 +8082,26 @@ Example:
 cql --in foo.sql --cg foo.h foo.c
 ```
 
+### --nolines ...
+
+* Suppress the # directives for lines.  Useful if you need to debug the C code.
+
+Example:
+
+```
+cql --in test.sql --nolines --cg foo.h foo.c
+```
+
+### --generate_copy ...
+
+* Generate a C copy function for the resultset. Most of the stored procedures don't need to generate this thats why is optional.
+
+Example:
+
+```
+cql --in test.sql --cg foo.h foo.c --generate_copy
+```
+
 ### --global_proc name
 * any loose SQL statements not in a stored proc are gathered and put into a procedure of the given name
 * when generating a schema migrate script the global proc name is used as a prefix on all of the artifacts so that there can be several independent migrations linked into a single executable
@@ -8101,6 +8121,9 @@ NOTE: different result types require a different number of output files with dif
 
 ### --java_package_name
 * used by java code generators when they output a class. Allows to specify the name of package the class will be a part of
+
+### --java_assembly_query_classname
+* Fully qualified name of the parent class for the Java assembly. Used by java code generators when they output an extension fragment class.
 
 ### --c_include_namespace
 * for the C codegen runtimes, it determines the header namespace (as in #include <namespace/file.h) that the headers will have to be referred when included from other sources.
@@ -8165,7 +8188,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed Apr  7 15:04:19 PDT 2021
+Snapshot as of Fri Apr 16 11:56:25 PDT 2021
 
 ### Operators and Literals
 
@@ -12431,18 +12454,6 @@ The compound operators in CTE must and always be an UNION ALL.
 
 Dummy insert feature makes only sense when it's used in a VALUES clause that is not part of a compound select statement.
 
------
-
-### CQL0335: out cursors with object columns are not yet supported 'cursor_name'
-
-You are using the `LIKE procedure_name ARGUMENTS` construct on a procedure with a parameter of type object.
-The resulting cursor can be used in various places like call x(from C) but it cannot be used to make a result
-set. This is because there is no good way to make general purpose objects available in result sets so they
-are limited to the primitive types.  This might be extended at some point.  So, you can make the cursor,
-use it in some ways, but you cannot use it in an OUT or OUT UNION statement.
-
------
-
 ### CQL0336: select statement with VALUES clause requires a non empty list of values
 
 VALUES clause requires at least a value for each of the values list. Empty values list are not supported.
@@ -12977,7 +12988,16 @@ When a cursor is boxed—i.e., wrapped in an object—the lifetime of the box an
 Note: As with all other objects, boxed cursors are automatically released when they fall out of scope. You only have to set a reference to NULL if you want to release the cursor sooner, for some reason.
 
 ----
-CQL 0392 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+
+### CQL0392: when deleting a virtual table you must specify @delete(nn, cql:module_must_not_be_deleted_see_docs_for_CQL0392) as a reminder not to delete the module for this virtual table
+
+When the schema upgrader runs, if the virtual table is deleted it will attempt to do `DROP TABLE IF EXISTS` on the indicated table.  This table
+is a virtual table.  SQLite will attempt to initialize the table even when you simply try to drop it.  For that to work the module must still
+be present.  This means modules can never be deleted!  This attribute is here to remind you of this fact so that you are not tempted to
+delete the module for the virtual table when you delete the table.  You may, however, replace it with a shared do-nothing stub.
+
+The attribute itself does nothing other than hopefully cause you to read this documentation.
+
 ----
 CQL 0393 : unused, this was added to prevent merge conflicts at the end on literally every checkin
 ----
@@ -13007,7 +13027,7 @@ CQL 0400 : unused, this was added to prevent merge conflicts at the end on liter
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Wed Apr  7 15:04:19 PDT 2021
+Snapshot as of Fri Apr 16 11:56:25 PDT 2021
 
 ### Rules
 
