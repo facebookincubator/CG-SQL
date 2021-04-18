@@ -900,9 +900,12 @@ static void cg_json_indices(charbuf *output) {
 
     EXTRACT_NOTNULL(create_index_on_list, ast->left);
     EXTRACT_NOTNULL(flags_names_attrs, ast->right);
-    EXTRACT_NOTNULL(index_names_and_attrs, flags_names_attrs->right);
+    EXTRACT_NOTNULL(connector, flags_names_attrs->right);
+    EXTRACT_NOTNULL(index_names_and_attrs, connector->left);
     EXTRACT_OPTION(flags, flags_names_attrs->left);
     EXTRACT_NOTNULL(indexed_columns, index_names_and_attrs->left);
+    EXTRACT(opt_where, index_names_and_attrs->right);
+    EXTRACT_ANY(attrs, connector->right);
     EXTRACT_ANY_NOTNULL(index_name_ast, create_index_on_list->left);
     EXTRACT_STRING(index_name, index_name_ast);
     EXTRACT_ANY_NOTNULL(table_name_ast, create_index_on_list->right);

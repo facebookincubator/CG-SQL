@@ -720,15 +720,20 @@ static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *c
       continue;
     }
 
+    Contract(is_ast_create_index_stmt(ast));
     EXTRACT_NOTNULL(create_index_on_list, ast->left);
     EXTRACT_NOTNULL(flags_names_attrs, ast->right);
-    EXTRACT_NOTNULL(index_names_and_attrs, flags_names_attrs->right);
+    EXTRACT_NOTNULL(connector, flags_names_attrs->right);
+    EXTRACT_NOTNULL(index_names_and_attrs, connector->left);
+    EXTRACT_OPTION(flags, flags_names_attrs->left);
     EXTRACT_NOTNULL(indexed_columns, index_names_and_attrs->left);
+    EXTRACT(opt_where, index_names_and_attrs->right);
+    EXTRACT_ANY(attrs, connector->right);
     EXTRACT_ANY_NOTNULL(index_name_ast, create_index_on_list->left);
     EXTRACT_STRING(index_name, index_name_ast);
     EXTRACT_ANY_NOTNULL(table_name_ast, create_index_on_list->right);
     EXTRACT_STRING(table_name, table_name_ast);
-
+    
     if (ast->sem->delete_version > 0) {
       // delete only, we're done here
       bprintf(&drop, "  DROP INDEX IF EXISTS %s;\n", index_name);

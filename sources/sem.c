@@ -2449,13 +2449,20 @@ static void sem_validate_previous_index(ast_node *prev_index) {
   Contract(!current_joinscope);
 
   Contract(is_ast_create_index_stmt(prev_index));
-  EXTRACT_NAMED(prev_create_index_on_list, create_index_on_list, prev_index->left);
-  EXTRACT_NAMED_NOTNULL(prev_flags_names_attrs, flags_names_attrs, prev_index->right);
-  EXTRACT_NAMED(prev_index_names_and_attrs, index_names_and_attrs, prev_flags_names_attrs->right);
-  EXTRACT_ANY_NOTNULL(prev_name_ast, prev_create_index_on_list->left)
-  EXTRACT_STRING(name, prev_name_ast);
+  EXTRACT_NOTNULL(create_index_on_list, prev_index->left);
+  EXTRACT_NOTNULL(flags_names_attrs, prev_index->right);
+  EXTRACT_NOTNULL(connector, flags_names_attrs->right);
+  EXTRACT_NOTNULL(index_names_and_attrs, connector->left);
+  EXTRACT_OPTION(flags, flags_names_attrs->left);
+  EXTRACT_NOTNULL(indexed_columns, index_names_and_attrs->left);
+  EXTRACT(opt_where, index_names_and_attrs->right);
+  EXTRACT_ANY(attrs, connector->right);
+  EXTRACT_ANY_NOTNULL(index_name_ast, create_index_on_list->left);
+  EXTRACT_STRING(index_name, index_name_ast);
+  EXTRACT_ANY_NOTNULL(table_name_ast, create_index_on_list->right);
+  EXTRACT_STRING(table_name, table_name_ast);
 
-  ast_node *ast = find_index(name);
+  ast_node *ast = find_index(index_name);
 
   if (!ast) {
     // If the table the index was on is going away then we don't need
@@ -2463,17 +2470,16 @@ static void sem_validate_previous_index(ast_node *prev_index) {
     // possible to declare the tombstone now because the table name is not
     // valid.  There's no need for the tombstone anyway because when the
     // table is deleted all its indices will also be deleted.
-    EXTRACT_STRING(prev_table_name, prev_create_index_on_list->right);
-    ast = find_table_or_view_even_deleted(prev_table_name);
+    ast = find_table_or_view_even_deleted(table_name);
 
     if (!ast || ast->sem->delete_version < 0) {
-      report_error(prev_index, "CQL0017: index was present but now it does not exist (use @delete instead)", name);
+      report_error(prev_index, "CQL0017: index was present but now it does not exist (use @delete instead)", index_name);
       record_error(prev_index);
       return;
     }
   }
 
-  enqueue_pending_region_validation(prev_index, ast, name);
+  enqueue_pending_region_validation(prev_index, ast, index_name);
 }
 
 // Helper function to update the column type in a table node.
@@ -2521,9 +2527,12 @@ static void sem_create_index_stmt(ast_node *ast) {
   Contract(is_ast_create_index_stmt(ast));
   EXTRACT_NOTNULL(create_index_on_list, ast->left);
   EXTRACT_NOTNULL(flags_names_attrs, ast->right);
-  EXTRACT_NOTNULL(index_names_and_attrs, flags_names_attrs->right);
+  EXTRACT_NOTNULL(connector, flags_names_attrs->right);
+  EXTRACT_NOTNULL(index_names_and_attrs, connector->left);
+  EXTRACT_OPTION(flags, flags_names_attrs->left);
   EXTRACT_NOTNULL(indexed_columns, index_names_and_attrs->left);
-  EXTRACT_ANY(attrs, index_names_and_attrs->right);
+  EXTRACT(opt_where, index_names_and_attrs->right);
+  EXTRACT_ANY(attrs, connector->right);
   EXTRACT_ANY_NOTNULL(index_name_ast, create_index_on_list->left);
   EXTRACT_STRING(index_name, index_name_ast);
   EXTRACT_ANY_NOTNULL(table_name_ast, create_index_on_list->right);
@@ -2850,21 +2859,29 @@ static bool_t find_referenceable_columns(
     symtab_entry entry = indices->payload[i];
     if (entry.sym) {
       ast_node *index_ast = (ast_node *)entry.val;
+
+      Contract(is_ast_create_index_stmt(index_ast));
       EXTRACT_NOTNULL(create_index_on_list, index_ast->left);
       EXTRACT_NOTNULL(flags_names_attrs, index_ast->right);
-
+      EXTRACT_NOTNULL(connector, flags_names_attrs->right);
+      EXTRACT_NOTNULL(index_names_and_attrs, connector->left);
       EXTRACT_OPTION(flags, flags_names_attrs->left);
+      EXTRACT_NOTNULL(indexed_columns, index_names_and_attrs->left);
+      EXTRACT(opt_where, index_names_and_attrs->right);
+      EXTRACT_ANY(attrs, connector->right);
+      EXTRACT_ANY_NOTNULL(index_name_ast, create_index_on_list->left);
+      EXTRACT_STRING(index_name, index_name_ast);
+      EXTRACT_ANY_NOTNULL(table_name_ast, create_index_on_list->right);
+      EXTRACT_STRING(table_name, table_name_ast);
+
       if (!(flags & INDEX_UNIQUE)) {
         continue;
       }
 
-      EXTRACT_STRING(table_name_target, create_index_on_list->right);
-      if (Strcasecmp(ref_table_name, table_name_target)) {
+      if (Strcasecmp(ref_table_name, table_name)) {
         continue;
       }
 
-      EXTRACT_NOTNULL(index_names_and_attrs, flags_names_attrs->right);
-      EXTRACT_NOTNULL(indexed_columns, index_names_and_attrs->left);
       if (callback(indexed_columns, context)) {
         return true;
       }
@@ -2894,7 +2911,7 @@ cql_noexport bool_t is_referenceable_by_foreign_key(ast_node *ref_table_ast, CST
       (void *)column_name);
 }
 
-// find_referenceable_columns's callback. It return true if both name lists are
+// find_referenceable_columns's callback. It returns true if both name lists
 // have the same items (in any order). This is used to figure out a list of columns
 // in a foreign key clause are referenceable.
 static bool_t validate_referenceable_fk_def_callback(ast_node *name_list, void *context) {

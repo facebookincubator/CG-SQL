@@ -53,6 +53,7 @@ static void gen_opt_filter_clause(ast_node *ast);
 static void gen_if_not_exists(ast_node *ast, bool_t if_not_exist);
 static void gen_shape_def(ast_node *ast);
 static void gen_expr_names(ast_node *ast);
+static void gen_opt_where(ast_node *ast);
 
 #define gen_printf(...) bprintf(output, __VA_ARGS__)
 
@@ -224,9 +225,9 @@ static void gen_data_type(ast_node *ast) {
 
 static void gen_indexed_column(ast_node *ast) {
   Contract(is_ast_indexed_column(ast));
-  EXTRACT_STRING(name, ast->left);
+  EXTRACT_ANY_NOTNULL(expr, ast->left);
 
-  gen_printf("%s", name);
+  gen_root_expr(expr);
   if (is_ast_asc(ast->right)) {
     gen_printf(" ASC");
   }
@@ -249,10 +250,12 @@ static void gen_create_index_stmt(ast_node *ast) {
   Contract(is_ast_create_index_stmt(ast));
   EXTRACT_NOTNULL(create_index_on_list, ast->left);
   EXTRACT_NOTNULL(flags_names_attrs, ast->right);
-  EXTRACT_NOTNULL(index_names_and_attrs, flags_names_attrs->right);
+  EXTRACT_NOTNULL(connector, flags_names_attrs->right);
+  EXTRACT_NOTNULL(index_names_and_attrs, connector->left);
   EXTRACT_OPTION(flags, flags_names_attrs->left);
   EXTRACT_NOTNULL(indexed_columns, index_names_and_attrs->left);
-  EXTRACT_ANY(attrs, index_names_and_attrs->right);
+  EXTRACT(opt_where, index_names_and_attrs->right);
+  EXTRACT_ANY(attrs, connector->right);
   EXTRACT_STRING(index_name, create_index_on_list->left);
   EXTRACT_STRING(table_name, create_index_on_list->right);
 
@@ -265,6 +268,9 @@ static void gen_create_index_stmt(ast_node *ast) {
   gen_printf("%s ON %s (", index_name, table_name);
   gen_indexed_columns(indexed_columns);
   gen_printf(")");
+  if (opt_where) {
+    gen_opt_where(opt_where);
+  }
   gen_version_attrs(attrs);
 }
 
