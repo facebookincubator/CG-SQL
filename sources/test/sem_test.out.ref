@@ -3813,7 +3813,7 @@ The statement ending at line XXXX
 
 CREATE INDEX index_3 ON foo (doesNotExist);
 
-Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'doesNotExist'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'doesNotExist'
 
   {create_index_stmt}: err
   | {create_index_on_list}
@@ -3826,6 +3826,157 @@ Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'doesNotExist
         | {indexed_columns}: err
           | {indexed_column}
             | {name doesNotExist}: err
+
+The statement ending at line XXXX
+
+CREATE INDEX index_4 ON foo (id + id);
+
+  {create_index_stmt}: ok
+  | {create_index_on_list}
+  | | {name index_4}
+  | | {name foo}
+  | {flags_names_attrs}
+    | {int 0}
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}
+          | {indexed_column}
+            | {add}: integer notnull
+              | {name id}: id: integer notnull
+              | {name id}: id: integer notnull
+
+The statement ending at line XXXX
+
+CREATE INDEX index_5 ON foo (NOT 'x');
+
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+
+  {create_index_stmt}: err
+  | {create_index_on_list}
+  | | {name index_5}
+  | | {name foo}
+  | {flags_names_attrs}
+    | {int 0}
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}: err
+          | {indexed_column}
+            | {not}: err
+              | {strlit 'x'}: text notnull
+
+The statement ending at line XXXX
+
+CREATE INDEX index_6 ON foo (id + id, id + id);
+
+Error at test/sem_test.sql:XXXX : in add : CQL0172: name list has duplicate name 'id + id'
+
+  {create_index_stmt}: err
+  | {create_index_on_list}
+  | | {name index_6}
+  | | {name foo}
+  | {flags_names_attrs}
+    | {int 0}
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}: err
+          | {indexed_column}
+          | | {add}: integer notnull
+          |   | {name id}: id: integer notnull
+          |   | {name id}: id: integer notnull
+          | {indexed_columns}
+            | {indexed_column}
+              | {add}: err
+                | {name id}: id: integer notnull
+                | {name id}: id: integer notnull
+
+The statement ending at line XXXX
+
+CREATE INDEX index_7 ON foo (id + id)
+  WHERE id < 100;
+
+  {create_index_stmt}: ok
+  | {create_index_on_list}
+  | | {name index_7}
+  | | {name foo}
+  | {flags_names_attrs}
+    | {int 0}
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}
+        | | {indexed_column}
+        |   | {add}: integer notnull
+        |     | {name id}: id: integer notnull
+        |     | {name id}: id: integer notnull
+        | {opt_where}: bool notnull
+          | {lt}: bool notnull
+            | {name id}: id: integer notnull primary_key autoinc
+            | {int 100}: integer notnull
+
+The statement ending at line XXXX
+
+CREATE INDEX index_8 ON foo (id)
+  WHERE NOT 'x';
+
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+
+  {create_index_stmt}: err
+  | {create_index_on_list}
+  | | {name index_8}
+  | | {name foo}
+  | {flags_names_attrs}
+    | {int 0}
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}
+        | | {indexed_column}
+        |   | {name id}: id: integer notnull
+        | {opt_where}: err
+          | {not}: err
+            | {strlit 'x'}: text notnull
+
+The statement ending at line XXXX
+
+CREATE INDEX index_9 ON foo (id)
+  WHERE x = 5;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'x'
+
+  {create_index_stmt}: err
+  | {create_index_on_list}
+  | | {name index_9}
+  | | {name foo}
+  | {flags_names_attrs}
+    | {int 0}
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}
+        | | {indexed_column}
+        |   | {name id}: id: integer notnull
+        | {opt_where}: err
+          | {eq}: err
+            | {name x}: err
+            | {int 5}: integer notnull
+
+The statement ending at line XXXX
+
+CREATE INDEX index_10 ON foo (id)
+  WHERE 'hi';
+
+Error at test/sem_test.sql:XXXX : in str : CQL0015: expected numeric expression 'WHERE'
+
+  {create_index_stmt}: err
+  | {create_index_on_list}
+  | | {name index_10}
+  | | {name foo}
+  | {flags_names_attrs}
+    | {int 0}
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}
+        | | {indexed_column}
+        |   | {name id}: id: integer notnull
+        | {opt_where}: err
+          | {strlit 'hi'}: err
 
 The statement ending at line XXXX
 
@@ -40065,7 +40216,7 @@ BEGIN
   ON CONFLICT (id, bogus) DO NOTHING;
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'bogus'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'bogus'
 
   {create_proc_stmt}: err
   | {name upsert_conflict_on_unknown_column}: err

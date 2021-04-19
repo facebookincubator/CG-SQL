@@ -90,7 +90,12 @@ Error at test/sem_test.sql:XXXX : in create_index_stmt : CREATE INDEX index_1 ON
 The above must be identical.
 Error at test/sem_test.sql:XXXX : in str : CQL0018: duplicate index name 'index_1'
 Error at test/sem_test.sql:XXXX : in str : CQL0019: create index table name not found 'doesNotExist'
-Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'doesNotExist'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'doesNotExist'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in add : CQL0172: name list has duplicate name 'id + id'
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'x'
+Error at test/sem_test.sql:XXXX : in str : CQL0015: expected numeric expression 'WHERE'
 Error at test/sem_test.sql:XXXX : in str : CQL0024: table does not have pk column 'pk_col_not_exist'
 Error at test/sem_test.sql:XXXX : in str : CQL0143: more than one primary key in table 'baz'
 Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this unique key is redundant with previous unique keys
@@ -735,7 +740,7 @@ Error at test/sem_test.sql:XXXX : in declare_cursor : CQL0270: use FETCH FROM fo
 Error at test/sem_test.sql:XXXX : in opt_offset : CQL0271: the OFFSET clause may only be used if LIMIT is also present
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
-Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'bogus'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'bogus'
 Error at test/sem_test.sql:XXXX : in str : CQL0281: upsert statement does not include table name in the update statement 'foo'
 Error at test/sem_test.sql:XXXX : in insert_stmt : CQL0280: upsert statement requires a where clause if the insert clause uses select
 Error at test/sem_test.sql:XXXX : in insert_or_ignore : CQL0283: upsert syntax only supports INSERT INTO 'foo'
