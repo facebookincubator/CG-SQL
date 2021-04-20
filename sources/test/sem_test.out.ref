@@ -54609,6 +54609,242 @@ CREATE TABLE with_check_expr(
 
 The statement ending at line XXXX
 
+CREATE TABLE with_check_expr_random(
+  v INTEGER,
+  CHECK (v > random())
+);
+
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'random'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name with_check_expr_random}
+  | {col_key_list}
+    | {col_def}: v: integer
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |     | {name v}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {check_def}: err
+        | {gt}: err
+          | {name v}: v: integer
+          | {call}: err
+            | {name random}
+            | {call_arg_list}
+              | {call_filter_clause}
+
+The statement ending at line XXXX
+
+CREATE TABLE with_check_expr_changes(
+  v INTEGER,
+  CHECK (v > changes())
+);
+
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'changes'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name with_check_expr_changes}
+  | {col_key_list}
+    | {col_def}: v: integer
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |     | {name v}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {check_def}: err
+        | {gt}: err
+          | {name v}: v: integer
+          | {call}: err
+            | {name changes}
+            | {call_arg_list}
+              | {call_filter_clause}
+
+The statement ending at line XXXX
+
+CREATE TABLE with_check_expr_udf(
+  v INTEGER,
+  CHECK (v > SqlUserFunc(1))
+);
+
+Error at test/sem_test.sql:XXXX : in call : CQL0393: User function cannot appear in a constraint expression  'SqlUserFunc'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name with_check_expr_udf}
+  | {col_key_list}
+    | {col_def}: v: integer
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |     | {name v}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {check_def}: err
+        | {gt}: err
+          | {name v}: v: integer
+          | {call}: err
+            | {name SqlUserFunc}
+            | {call_arg_list}
+              | {call_filter_clause}
+              | {arg_list}: ok
+                | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+SELECT random(5);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'random'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name random}: err
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {int 5}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT random();
+
+  {select_stmt}: select: { _anon: longint notnull }
+  | {select_core_list}: select: { _anon: longint notnull }
+  | | {select_core}: select: { _anon: longint notnull }
+  |   | {select_expr_list_con}: select: { _anon: longint notnull }
+  |     | {select_expr_list}: select: { _anon: longint notnull }
+  |     | | {select_expr}: longint notnull
+  |     |   | {call}: longint notnull
+  |     |     | {name random}: longint notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE TABLE with_check_expr_select(
+  v INTEGER,
+  CHECK (v > ( SELECT 5 ))
+);
+
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0394: Nested select expressions may not appear inside of a constraint expression
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name with_check_expr_select}
+  | {col_key_list}
+    | {col_def}: v: integer
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |     | {name v}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {check_def}: err
+        | {gt}: err
+          | {name v}: v: integer
+          | {select_stmt}: err
+            | {select_core_list}
+            | | {select_core}
+            |   | {select_expr_list_con}
+            |     | {select_expr_list}
+            |     | | {select_expr}
+            |     |   | {int 5}
+            |     | {select_from_etc}
+            |       | {select_where}
+            |         | {select_groupby}
+            |           | {select_having}
+            | {select_orderby}
+              | {select_limit}
+                | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE TABLE with_check_expr_strftime(
+  t TEXT CHECK(t > strftime('%s', 'now')) 
+);
+
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'strftime'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name with_check_expr_strftime}
+  | {col_key_list}
+    | {col_def}: t: text has_check
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+        | | {name t}
+        | | {type_text}: text
+        | {col_attrs_check}: err
+          | {gt}: err
+            | {name t}: t: text has_check
+            | {call}: err
+              | {name strftime}
+              | {call_arg_list}
+                | {call_filter_clause}
+                | {arg_list}: ok
+                  | {strlit '%s'}: text notnull
+                  | {arg_list}
+                    | {strlit 'now'}: text notnull
+
+The statement ending at line XXXX
+
+CREATE TABLE with_check_expr_date(
+  t TEXT CHECK(t > date('now')) 
+);
+
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'date'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name with_check_expr_date}
+  | {col_key_list}
+    | {col_def}: t: text has_check
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+        | | {name t}
+        | | {type_text}: text
+        | {col_attrs_check}: err
+          | {gt}: err
+            | {name t}: t: text has_check
+            | {call}: err
+              | {name date}
+              | {call_arg_list}
+                | {call_filter_clause}
+                | {arg_list}: ok
+                  | {strlit 'now'}: text notnull
+
+The statement ending at line XXXX
+
 CREATE TABLE with_bogus_check_expr(
   v INTEGER,
   CHECK (q > 5)

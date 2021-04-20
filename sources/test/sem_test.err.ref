@@ -960,6 +960,13 @@ Error at test/sem_test.sql:XXXX : in str : CQL0164: cannot use ALTER TABLE on a 
 Error at test/sem_test.sql:XXXX : in version_annotation : CQL0392: when deleting a virtual table you must specify @delete(nn, cql:module_must_not_be_deleted_see_docs_for_CQL0392) as a reminder not to delete the module for this virtual table 'deleting_virtual'
 Error at test/sem_test.sql:XXXX : in dot : CQL0378: built-in migration procedure not valid in this context 'cql:module_must_not_be_deleted_see_docs_for_CQL0392'
 Error at test/sem_test.sql:XXXX : in str : CQL0169: enum not found 'bogus_enum_name'
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'random'
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'changes'
+Error at test/sem_test.sql:XXXX : in call : CQL0393: User function cannot appear in a constraint expression  'SqlUserFunc'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'random'
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0394: Nested select expressions may not appear inside of a constraint expression
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'strftime'
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'date'
 Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'q'
 Error at test/sem_test.sql:XXXX : in sensitive_attr : CQL0367: an attribute was specified twice '@sensitive'
 Error at test/sem_test.sql:XXXX : in sensitive_attr : CQL0367: an attribute was specified twice '@sensitive'

@@ -13485,6 +13485,72 @@ create table with_check_expr(
   check (v > 5)
 );
 
+-- TEST: can't use random in a constraint expression
+-- + {create_table_stmt}: err
+-- + Error % function may not appear in this context 'random'
+-- +1 Error
+create table with_check_expr_random(
+  v integer,
+  check (v > random())
+);
+
+-- TEST: can't use changes in a constraint expression
+-- + {create_table_stmt}: err
+-- + Error % function may not appear in this context 'changes'
+-- +1 Error
+create table with_check_expr_changes(
+  v integer,
+  check (v > changes())
+);
+
+-- TEST: can't use UDF in a constraint expression
+-- + {create_table_stmt}: err
+-- + Error % User function cannot appear in a constraint expression  'SqlUserFunc'
+-- +1 Error
+create table with_check_expr_udf(
+  v integer,
+  check (v > SqlUserFunc(1))
+);
+
+-- TEST: random takes no args
+-- + {select_stmt}: err
+-- + Error % function got incorrect number of arguments 'random'
+-- +1 Error
+select random(5);
+
+-- TEST: random success case
+-- + {select_stmt}: select: { _anon: longint notnull }
+-- + {name random}: longint notnull
+-- - Error
+select random();
+
+-- TEST: can't use nested select in a constraint expression
+-- + {create_table_stmt}: err
+-- + Error % Nested select expressions may not appear inside of a constraint expression
+-- +1 Error
+create table with_check_expr_select(
+  v integer,
+  check (v > (select 5))
+);
+
+-- TEST: can't use 'now' in strftime in a constraint expression
+-- + {create_table_stmt}: err
+-- + Error % function may not appear in this context 'strftime'
+-- +1 Error
+create table with_check_expr_strftime(
+  t text
+  check (t > strftime('%s', 'now'))
+);
+
+-- TEST: can't use 'now' in time in a constraint expression
+-- + {create_table_stmt}: err
+-- + Error % function may not appear in this context 'date'
+-- +1 Error
+create table with_check_expr_date(
+  t text
+  check (t > date('now'))
+);
+
 -- TEST: check expression error
 -- + {create_table_stmt}: err
 -- + {check_def}: err

@@ -528,7 +528,7 @@ static void sem_validate_check_expr(ast_node *table, ast_node *expr) {
     jptr->tables[0] = sptr;
 
     PUSH_JOIN(expr_scope, jptr);
-    sem_numeric_expr(expr, NULL, "CHECK", SEM_EXPR_CONTEXT_WHERE);
+    sem_numeric_expr(expr, NULL, "CHECK", SEM_EXPR_CONTEXT_CONSTRAINT);
     POP_JOIN();
 
     locals = saved_locals;
@@ -5588,6 +5588,11 @@ static bool_t sem_validate_appear_inside_sql_stmt(ast_node *ast) {
   return sem_validate_function_context(ast, u32_not(SEM_EXPR_CONTEXT_NONE));
 }
 
+// validate the node appear inside SQL statement
+static bool_t sem_validate_sql_not_constraint(ast_node *ast) {
+  return sem_validate_function_context(ast, u32_not(SEM_EXPR_CONTEXT_NONE | SEM_EXPR_CONTEXT_CONSTRAINT));
+}
+
 // You can count anything, you always get an integer
 static void sem_aggr_func_count(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
@@ -6643,6 +6648,7 @@ static void sem_strftime(ast_node *ast, uint32_t arg_count, bool_t has_format, s
                                      SEM_EXPR_CONTEXT_WHERE |
                                      SEM_EXPR_CONTEXT_GROUP_BY |
                                      SEM_EXPR_CONTEXT_ORDER_BY |
+                                     SEM_EXPR_CONTEXT_CONSTRAINT |
                                      SEM_EXPR_CONTEXT_TABLE_FUNC)) {
     return;
   }
@@ -6670,8 +6676,13 @@ static void sem_strftime(ast_node *ast, uint32_t arg_count, bool_t has_format, s
        EXTRACT_STRING(arg1, first);
        EXTRACT_STRING(arg2, second);
        if (!strcmp(arg1, "'%s'") && !strcmp(arg2, "'now'")) {
+         // 'now' can't be used in a contraint, not deterministic
+         if (!sem_validate_sql_not_constraint(ast)) {
+           return;
+         }
+
          sem_type |= SEM_TYPE_NOTNULL;
-       }
+      }
     }
   }
 
@@ -6681,6 +6692,11 @@ static void sem_strftime(ast_node *ast, uint32_t arg_count, bool_t has_format, s
     if (is_ast_str(first)) {
       EXTRACT_STRING(arg1, first);
       if (!strcmp(arg1, "'now'")) {
+        // 'now' can't be used in a contraint, not deterministic
+        if (!sem_validate_sql_not_constraint(ast)) {
+          return;
+        }
+
         sem_type |= SEM_TYPE_NOTNULL;
       }
     }
@@ -6768,6 +6784,7 @@ static bool sem_validate_db_func_with_no_args(ast_node *ast, uint32_t arg_count)
   }
 
   // DB functions can appear reasonably in most places, but not for grouping or limiting
+  // and not in constraints (not deterministic) (this is for 'changes' and 'last_insert_rowid'
   if (!sem_validate_function_context(ast,
           SEM_EXPR_CONTEXT_SELECT_LIST |
           SEM_EXPR_CONTEXT_ON |
@@ -6779,6 +6796,22 @@ static bool sem_validate_db_func_with_no_args(ast_node *ast, uint32_t arg_count)
   }
 
   return 0;
+}
+
+// The random function gives you a random long_int
+static void sem_func_random(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+
+  if (!sem_validate_arg_count(ast, arg_count, 0)) {
+    return;
+  }
+
+  if (!sem_validate_sql_not_constraint(ast)) {
+    return;
+  }
+
+  name_ast->sem = ast->sem = new_sem(SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL);
 }
 
 // The changes function is used to get the integer number of rows changed
@@ -6881,6 +6914,7 @@ static void sem_func_printf(ast_node *ast, uint32_t arg_count) {
           SEM_EXPR_CONTEXT_WHERE |
           SEM_EXPR_CONTEXT_GROUP_BY |
           SEM_EXPR_CONTEXT_ORDER_BY |
+          SEM_EXPR_CONTEXT_CONSTRAINT |
           SEM_EXPR_CONTEXT_TABLE_FUNC |
           SEM_EXPR_CONTEXT_NONE)) {
             return;
@@ -6952,6 +6986,14 @@ static void sem_user_func(ast_node *ast, ast_node *user_func) {
     // Must be is_ast_declare_select_func case (verified above)
     if (CURRENT_EXPR_CONTEXT_IS(SEM_EXPR_CONTEXT_NONE)) {
       report_error(ast, "CQL0089: User function may only appear in the context of a SQL statement", name);
+      record_error(ast);
+      return;
+    }
+
+    // We don't know if UDF is deterministic or not (we need notation for that at some point)
+    // for now forbid UDF in a constraint
+    if (CURRENT_EXPR_CONTEXT_IS(SEM_EXPR_CONTEXT_CONSTRAINT)) {
+      report_error(ast, "CQL0393: User function cannot appear in a constraint expression ", name);
       record_error(ast);
       return;
     }
@@ -16966,6 +17008,12 @@ static void sem_expr_select(ast_node *ast, CSTR cstr) {
     return;
   }
 
+  if (current_expr_context == SEM_EXPR_CONTEXT_CONSTRAINT) {
+    report_error(ast, "CQL0394: Nested select expressions may not appear inside of a constraint expression", NULL);
+    record_error(ast);
+    return;
+  }
+
   // For purposes of testing "strict if nothing", a select on the left side of the if nothing
   // operator is in an if nothing context  but the right side is not in an if nothing context.
   //  e.g.
@@ -18105,6 +18153,7 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(first_value);
   FUNC_INIT(last_value);
   FUNC_INIT(nth_value);
+  FUNC_INIT(random);
 
   FUNC_INIT(trim);
   FUNC_INIT(ltrim);
