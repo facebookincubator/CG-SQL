@@ -6999,6 +6999,12 @@ static void sem_user_func(ast_node *ast, ast_node *user_func) {
     }
   }
 
+  if (is_struct(user_func->sem->sem_type)) {
+    report_error(ast, "CQL0395: table valued functions may not be used in an expression context", name);
+    record_error(ast);
+    return;
+  }
+
   // arg list already validated and no errors by expr_call
   // sem_validate_args not needed
 

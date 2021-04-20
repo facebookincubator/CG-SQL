@@ -38503,6 +38503,37 @@ DECLARE SELECT FUNC tvf (id INTEGER) (foo TEXT);
 
 The statement ending at line XXXX
 
+SELECT 1
+  WHERE tvf(5) = 1;
+
+Error at test/sem_test.sql:XXXX : in call : CQL0395: table valued functions may not be used in an expression context 'tvf'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: integer notnull
+  |     |   | {int 1}: integer notnull
+  |     | {select_from_etc}: err
+  |       | {select_where}
+  |         | {opt_where}: err
+  |         | | {eq}: err
+  |         |   | {call}: err
+  |         |   | | {name tvf}
+  |         |   | | {call_arg_list}
+  |         |   |   | {call_filter_clause}
+  |         |   |   | {arg_list}: ok
+  |         |   |     | {int 5}: integer notnull
+  |         |   | {int 1}: integer notnull
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
 CREATE PROC using_tvf ()
 BEGIN
   SELECT *

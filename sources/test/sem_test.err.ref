@@ -713,6 +713,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0112: index in drop statement was 
 Error at test/sem_test.sql:XXXX : in table_or_subquery : CQL0095: table/view not defined (object is in schema region 'dep_region' not accessible from region 'dep2_region') 'a_table_in_dep_region'
 Error at test/sem_test.sql:XXXX : in table_or_subquery : CQL0095: table/view not defined (while in schema region 'dep2_region', accessing an object that isn't in a region is invalid) 'bar'
 Error at test/sem_test.sql:XXXX : in create_index_stmt : CQL0066: if a table is marked @recreate, its indices must be in its schema region 'invalid_wrong_group_index'
+Error at test/sem_test.sql:XXXX : in call : CQL0395: table valued functions may not be used in an expression context 'tvf'
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
 Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expression 'id'
 Error at test/sem_test.sql:XXXX : in str : CQL0249: function is not a table-valued-function 'SqlUserFunc'

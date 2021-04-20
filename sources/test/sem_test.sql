@@ -9264,6 +9264,12 @@ SET x := (WITH threads2 (count) AS (SELECT 1 foo) SELECT COUNT(*) FROM threads2)
 -- - Error
 declare select function tvf(id integer) (foo text);
 
+-- TEST: table valued functions may not appear in an expression context
+-- + {select_stmt}: err
+-- + Error % table valued functions may not be used in an expression context 'tvf'
+-- + Error
+select 1 where tvf(5) = 1;
+
 -- TEST: use a table valued function
 -- + {create_proc_stmt}: select: { foo: text } dml_proc
 -- + {select_stmt}: select: { foo: text }
