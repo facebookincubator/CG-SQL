@@ -2551,10 +2551,32 @@ static void sem_create_index_stmt(ast_node *ast) {
   // if there is an existing index, save it here so we can check for duplicates later.
   ast_node *existing_defn = adding_current_entity ? find_index(index_name) : NULL;
 
-  ast_node *table_ast = find_usable_and_not_deleted_table_or_view(
-    table_name,
-    table_name_ast,
-    "CQL0019: create index table name not found");
+  ast_node *table_ast = NULL;
+
+  version_attrs_info vers_info;
+  init_version_attrs_info(&vers_info, index_name, ast, attrs);
+  bool_t valid_version_info = sem_validate_version_attrs(&vers_info);
+  Invariant(valid_version_info);  // nothing can go wrong with index version info
+
+  if (!sem_validate_no_delete_migration(&vers_info, ast, index_name)) {
+    return;
+  }
+
+  bool_t deleting = vers_info.delete_version > 0;
+
+  if (deleting) {
+    table_ast = find_usable_table_or_view_even_deleted(
+      table_name,
+      table_name_ast,
+      "CQL0019: create index table name not found");
+  }
+  else {
+    table_ast = find_usable_and_not_deleted_table_or_view(
+      table_name,
+      table_name_ast,
+      "CQL0019: create index table name not found");
+  }
+
   if (!table_ast) {
     record_error(ast);
     return;
@@ -2581,18 +2603,9 @@ static void sem_create_index_stmt(ast_node *ast) {
   }
 
   // CREATE INDEX [index_name] ON [table-name] ( [name_list] )
-  if (!sem_validate_name_list(indexed_columns, table_ast->sem->jptr)) {
+  // don't check the index names if we're deleting the index, they are useless anyway
+  if (!deleting && !sem_validate_name_list(indexed_columns, table_ast->sem->jptr)) {
     record_error(ast);
-    return;
-  }
-
-  version_attrs_info vers_info;
-  init_version_attrs_info(&vers_info, index_name, ast, attrs);
-
-  bool_t valid_version_info = sem_validate_version_attrs(&vers_info);
-  Invariant(valid_version_info);  // nothing can go wrong with index version info
-
-  if (!sem_validate_no_delete_migration(&vers_info, ast, index_name)) {
     return;
   }
 

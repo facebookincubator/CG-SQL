@@ -3760,7 +3760,7 @@ Error at test/sem_test.sql:XXXX : in create_index_stmt : CQL0321: migration proc
     | {index_names_and_attrs}
       | {indexed_columns}
       | | {indexed_column}
-      |   | {name id}: id: integer notnull
+      |   | {name id}
       | {delete_attr}
         | {version_annotation}
           | {int 1}
@@ -59076,6 +59076,45 @@ Error at test/sem_test.sql:XXXX : in add : CQL0207: expected a variable name for
               | | {int 3}
               | {expr_list}
                 | {name v}
+
+The statement ending at line XXXX
+
+CREATE TABLE this_table_is_deleted(
+  id INTEGER
+) @DELETE(1);
+
+  {create_table_stmt}: this_table_is_deleted: { id: integer } deleted @delete(1)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {delete_attr}
+  | |   | {version_annotation}
+  | |     | {int 1}
+  | | {name this_table_is_deleted}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE INDEX deleted_index ON this_table_is_deleted (xxx) @DELETE(1);
+
+  {create_index_stmt}: ok @delete(1)
+  | {create_index_on_list}
+  | | {name deleted_index}
+  | | {name this_table_is_deleted}
+  | {flags_names_attrs}
+    | {int 0}
+    | {index_names_and_attrs}
+      | {indexed_columns}
+      | | {indexed_column}
+      |   | {name xxx}
+      | {delete_attr}
+        | {version_annotation}
+          | {int 1}
 
 The statement ending at line XXXX
 

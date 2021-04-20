@@ -14937,6 +14937,19 @@ begin
   declare out call out2_proc(x, 1+3, v);
 end;
 
+-- we need a deleted table for the next test
+CREATE TABLE this_table_is_deleted(
+  id INTEGER
+) @DELETE(1);
+
+-- TEST: it's ok to have an index refer to a deleted table if the index is deleted
+-- the index now refers to a stub column, that's ok because we're only generating
+-- a drop for this index
+-- + CREATE INDEX deleteD_index ON this_table_is_deleted (xxx) @DELETE(1);
+-- + {create_index_stmt}: ok @delete(1)
+-- - Error
+CREATE INDEX deleted_index ON this_table_is_deleted (xxx) @DELETE(1);
+
 -- TEST: standard usage of declare out
 -- + {declare_out_call_stmt}: ok
 -- + {call_stmt}: ok
