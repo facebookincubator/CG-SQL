@@ -95,6 +95,7 @@ int fileno(FILE *);
 \"usesViews\"[ \t]*:             { return USES_VIEWS; }
 \"whenExpr\"[ \t]*:              { return WHEN_EXPR; }
 \"whenExprArgs\"[ \t]*:          { return WHEN_EXPR_ARGS; }
+\"where\"[ \t]*:                 { return WHERE; }
 \"triggers\"[ \t]*:              { return TRIGGERS; }
 \"queries\"[ \t]*:               { return QUERIES; }
 \"inserts\"[ \t]*:               { return INSERTS; }

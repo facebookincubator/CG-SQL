@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Fri Apr 16 11:56:25 2021
+// Snapshot as of Mon Apr 19 12:42:15 2021
 
 
 const PREC = {
@@ -74,9 +74,9 @@ module.exports = grammar({
     fk_target_options: $ => prec.left(seq($.REFERENCES, $.name, '(', $.name_list, ')', optional($.opt_fk_options))),
     unq_def: $ => choice(seq($.CONSTRAINT, $.name, $.UNIQUE, '(', $.name_list, ')'), seq($.UNIQUE, '(', $.name_list, ')')),
     opt_unique: $ => $.UNIQUE,
-    indexed_column: $ => seq($.name, optional($.opt_asc_desc)),
+    indexed_column: $ => seq($.expr, optional($.opt_asc_desc)),
     indexed_columns: $ => choice($.indexed_column, seq($.indexed_column, ',', $.indexed_columns)),
-    create_index_stmt: $ => seq($.CREATE, optional($.opt_unique), $.INDEX, optional($.opt_if_not_exists), $.name, $.ON, $.name, '(', $.indexed_columns, ')', optional($.opt_delete_version_attr)),
+    create_index_stmt: $ => seq($.CREATE, optional($.opt_unique), $.INDEX, optional($.opt_if_not_exists), $.name, $.ON, $.name, '(', $.indexed_columns, ')', optional($.opt_where), optional($.opt_delete_version_attr)),
     name: $ => choice($.ID, $.TEXT, $.TRIGGER, $.ROWID, $.REPLACE, $.KEY, $.VIRTUAL, $.TYPE, $.HIDDEN, $.PRIVATE),
     opt_name: $ => $.name,
     name_list: $ => choice($.name, seq($.name, ',', $.name_list)),

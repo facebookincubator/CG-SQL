@@ -39,7 +39,7 @@
 -- + "primaryKey" : [
 -- + "foreignKeys" : [
 -- + "uniqueKeys" : [
--- + "indices" : [ "region_0_index", "MyIndex", "MyOtherIndex" ]
+-- + "indices" : [ "region_0_index", "MyIndex", "MyOtherIndex", "MyExpressionIndex", "MyPartialIndex" ],
 -- + "region" : "region0",
 create table Foo
 (
@@ -491,6 +491,30 @@ create unique index if not exists MyIndex on Foo(name desc, id asc);
 -- + "isDeleted" : 0,
 -- + "columns" : [ "id" ]
 create index MyOtherIndex on Foo(id);
+
+-- TEST: an index with expressions
+-- + CREATE INDEX MyExpressionIndex ON Foo (id + 5, id * id)
+-- + "name" : "MyExpressionIndex",
+-- + "table" : "Foo",
+-- + "isUnique" : 0,
+-- + "ifNotExists" : 0,
+-- + "isDeleted" : 0,
+-- + "columns" : [ "id + 5", "id * id" ],
+-- + "sortOrders" : [ "", "" ]
+create index MyExpressionIndex on Foo(id+5, id*id);
+
+-- TEST: a partial index
+-- + CREATE INDEX MyPartialIndex ON Foo (id * id)
+-- + WHERE id < 1000
+-- + "name" : "MyPartialIndex",
+-- + "table" : "Foo",
+-- + "isUnique" : 0,
+-- + "ifNotExists" : 0,
+-- + "isDeleted" : 0,
+-- + "where" : "id < 1000",
+-- + "columns" : [ "id * id" ],
+-- + "sortOrders" : [ "" ]
+create index MyPartialIndex on Foo(id*id) where id < 1000;
 
 -- TEST: an index
 -- + "name" : "YetAnotherIndex",

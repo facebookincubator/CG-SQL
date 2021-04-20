@@ -8188,7 +8188,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Fri Apr 16 11:56:25 PDT 2021
+Snapshot as of Mon Apr 19 12:42:15 PDT 2021
 
 ### Operators and Literals
 
@@ -8576,7 +8576,7 @@ opt_unique:
   ;
 
 indexed_column:
-  name opt_asc_desc
+  expr opt_asc_desc
   ;
 
 indexed_columns:
@@ -8585,7 +8585,7 @@ indexed_columns:
   ;
 
 create_index_stmt:
-  "CREATE" opt_unique "INDEX" opt_if_not_exists name "ON" name '(' indexed_columns ')' opt_delete_version_attr
+  "CREATE" opt_unique "INDEX" opt_if_not_exists name "ON" name '(' indexed_columns ')' opt_where opt_delete_version_attr
   ;
 
 name:
@@ -12999,11 +12999,55 @@ delete the module for the virtual table when you delete the table.  You may, how
 The attribute itself does nothing other than hopefully cause you to read this documentation.
 
 ----
-CQL 0393 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+
+### CQL0393: User function cannot appear in a constraint expression 'function_name'
+
+`CHECK` expressions and partial indexes (`CREATE INDEX` with a `WHERE` clause) require that the expressions
+be deterministic.  User defined functions may or may not be deterministic. Since there is at this time no way
+to declare them one way or the otherw UDFs cannot appear inside these constraints to avoid potentially
+weird bugs.  This is likely to change in the future when there is a way to declare deterministic UDFs.
+
 ----
-CQL 0394 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+
+### CQL0394: Nested select expressions may not appear inside of a constraint expression
+
+SQLite does not allow the use of correlated subqueries or other embedded select statements inside of
+a CHECK expression or the WHERE clauses of a partial index.  This would require additional joins
+on every such operation which would be far too expensive.
+
 ----
-CQL 0395 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+
+### CQL0395: table valued functions may not be used in an expression context 'function_name'
+
+A table valued function should be used like a table e.g.
+
+```
+-- this is right
+select * from table_valued_func(5);
+```
+
+Not like a value e.g.
+
+```
+-- this is wrong
+select table_valued_func(5);
+
+-- this is also wrong
+select 1 where table_valued_func(5) = 3;
+```
+
+----
+CQL 0396 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0397 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0398 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0399 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0400 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+```
+
 ----
 CQL 0396 : unused, this was added to prevent merge conflicts at the end on literally every checkin
 ----
@@ -13027,7 +13071,7 @@ CQL 0400 : unused, this was added to prevent merge conflicts at the end on liter
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Fri Apr 16 11:56:25 PDT 2021
+Snapshot as of Mon Apr 19 12:42:15 PDT 2021
 
 ### Rules
 
@@ -13362,9 +13406,13 @@ index: '{'
         '"isDeleted"' ':' BOOL_LITERAL ','
         opt_deleted_version
         opt_region_info
+        opt_partial_index_where
         '"columns"' ':' '[' column_names ']' ','
         '"sortOrders"' ':' '[' sort_order_names ']'
        '}'
+  ;
+
+opt_partial_index_where: | '"where"' ':' STRING_LITERAL ','
   ;
 
 opt_triggers: | triggers

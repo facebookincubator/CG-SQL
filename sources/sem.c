@@ -143,7 +143,8 @@ static void sem_inside_create_proc_stmt(ast_node *ast);
 static void sem_one_stmt(ast_node *stmt);
 static void sem_declare_cursor_for_name(ast_node *ast);
 static sem_join * new_sem_join(uint32_t count);
-static void sem_validate_check_expr(ast_node *table, ast_node *expr);
+static void sem_validate_check_expr_for_table(ast_node *table, ast_node *expr, CSTR context);
+static void sem_validate_index_expr_for_jptr(sem_join *jptr, ast_node *expr);
 static void sem_numeric_expr(ast_node *expr, ast_node *context, CSTR subject, uint32_t expr_context);
 static void sem_misc_attrs_basic(ast_node *ast);
 static void sem_data_type_var(ast_node *ast);
@@ -152,6 +153,7 @@ static CSTR sem_combine_kinds(ast_node *ast, CSTR current_kind);
 static bool_t sem_select_stmt_is_mixed_results(ast_node *ast);
 static bool_t sem_verify_legal_variable_name(ast_node *variable, CSTR name);
 static void sem_verify_no_anon_columns(ast_node *ast);
+static bool_t sem_verify_no_duplicate_names(ast_node *name_list);
 
 static void lazy_free_symtab(void *syms) {
   symtab_delete(syms);
@@ -480,7 +482,7 @@ static void run_pending_table_validations() {
     }
     else {
       Invariant(v->check);
-      sem_validate_check_expr(v->table_ast, v->check);
+      sem_validate_check_expr_for_table(v->table_ast, v->check, "CHECK");
       if (is_error(v->check)) {
         goto error;
       }
@@ -509,7 +511,7 @@ error:
 //     because that can match no syntactically correct "T".
 //   * do smeantic analysis as usual on the expression, any numeric is
 //     ok for a bool
-static void sem_validate_check_expr(ast_node *table, ast_node *expr) {
+static void sem_validate_check_expr_for_table(ast_node *table, ast_node *expr, CSTR context) {
   Contract(is_ast_create_table_stmt(table));
   Contract(expr);
 
@@ -517,27 +519,51 @@ static void sem_validate_check_expr(ast_node *table, ast_node *expr) {
     sem_join *jptr;
     sem_struct *sptr = table->sem->sptr;
 
-    symtab *saved_locals = locals;
-    symtab *saved_globals = globals;
-
-    // hide variables for this expression, no variables on left of :=
-    locals = globals = NULL;
-
     jptr = new_sem_join(1);
     jptr->names[0] = "$$"; // there is no scope name for this make something that is an invalidate identifier
     jptr->tables[0] = sptr;
 
+    // jptr is freed by the mini allocator later
+
+    // save current symbol tables
+    symtab *saved_locals = locals;
+    symtab *saved_globals = globals;
+
+    // hide variables for this expression
+    locals = globals = NULL;
+
     PUSH_JOIN(expr_scope, jptr);
-    sem_numeric_expr(expr, NULL, "CHECK", SEM_EXPR_CONTEXT_CONSTRAINT);
+    sem_numeric_expr(expr, NULL, context, SEM_EXPR_CONTEXT_CONSTRAINT);
     POP_JOIN();
 
     locals = saved_locals;
     globals = saved_globals;
 
     // expr is already marked with an error by the above, no further record_error needed
-    // jptr is freed by the mini allocator
   }
 }
+
+static void sem_validate_index_expr_for_jptr(sem_join *jptr, ast_node *expr) {
+  Contract(jptr);
+  Contract(expr);
+
+  // save current symbol tables
+  symtab *saved_locals = locals;
+  symtab *saved_globals = globals;
+
+  // hide variables for this expression
+  locals = globals = NULL;
+
+  PUSH_JOIN(expr_scope, jptr);
+  sem_root_expr(expr, SEM_EXPR_CONTEXT_CONSTRAINT);
+  POP_JOIN();
+
+  locals = saved_locals;
+  globals = saved_globals;
+
+  // expr is already marked with an error by the above, no further record_error needed
+}
+
 
 // data needed for processing a column definition
 typedef struct coldef_info {
@@ -586,6 +612,8 @@ typedef struct name_check {
   uint32_t count;            // the count of names
 } name_check;
 
+static bool_t sem_name_check(name_check *check);
+
 // This is the setup for looking for a list of names in a particular join scope.  This is useful for
 // making sure names are from (e.g.) the names in the select list, or the names of the
 // columns of a table (one sptr in the jptr will do that job) or other such contexts.
@@ -604,8 +632,47 @@ static void destroy_name_check(name_check *check) {
   check->count = 0;
 }
 
-static bool_t sem_name_check(name_check *check);
-static bool_t sem_verify_no_duplicate_names(ast_node *name_list);
+// create a durable copy of the text of a simple expression
+CSTR dup_expr_text(ast_node *expr) {
+  CSTR result = NULL;
+
+  CHARBUF_OPEN(tmp);
+  gen_sql_callbacks callbacks;
+  init_gen_sql_callbacks(&callbacks);
+  callbacks.mode = gen_mode_echo; // we want all the text, unexpanded, so NOT for sqlite output (this is raw echo)
+  gen_set_output_buffer(&tmp);
+  gen_with_callbacks(expr, gen_root_expr, &callbacks);
+  result = Strdup(tmp.ptr);
+  CHARBUF_CLOSE(tmp);
+
+  return result;
+}
+
+// The name list item could be either indexed columns or a vanilla name list
+// indexed columns have extra shape and might hold an expression. If an expression
+// then we need to use the text of the expression as the value.
+CSTR string_from_name_list_item(ast_node *node) {
+  Contract(is_ast_indexed_columns(node) || is_ast_name_list(node));
+  ast_node *name_ast = NULL;
+
+  if (is_ast_indexed_columns(node)) {
+    EXTRACT_NOTNULL(indexed_column, node->left);
+    EXTRACT_ANY_NOTNULL(expr, indexed_column->left);
+
+    if (is_ast_str(expr)) {
+      name_ast = expr;
+    }
+    else {
+      return dup_expr_text(expr); // freed by autorelease pool
+    }
+  } else {
+    name_ast = node->left;
+  }
+
+  Invariant(name_ast);
+  EXTRACT_STRING(name, name_ast);
+  return name;
+}
 
 // Check if two name list nodes have the same members (in any order)
 static bool_t is_name_list_equal(ast_node *name_list1, ast_node *name_list2) {
@@ -614,7 +681,7 @@ static bool_t is_name_list_equal(ast_node *name_list1, ast_node *name_list2) {
   int32_t count1 = 0;
 
   for (ast_node *name_list = name_list1; name_list; name_list = name_list->right) {
-    EXTRACT_STRING_FROM_NAME_LIST(name, name_list);
+    CSTR name = string_from_name_list_item(name_list);
     symtab_add(cache, name, NULL);
     count1++;
   }
@@ -622,7 +689,7 @@ static bool_t is_name_list_equal(ast_node *name_list1, ast_node *name_list2) {
   int32_t count2 = 0;
 
   for (ast_node *name_list = name_list2; name_list; name_list = name_list->right) {
-    EXTRACT_STRING_FROM_NAME_LIST(name, name_list);
+    CSTR name = string_from_name_list_item(name_list);
     if (!symtab_find(cache, name)) {
       symtab_delete(cache);
       return false;
@@ -2449,13 +2516,18 @@ static void sem_validate_previous_index(ast_node *prev_index) {
   Contract(!current_joinscope);
 
   Contract(is_ast_create_index_stmt(prev_index));
-  EXTRACT_NAMED(prev_create_index_on_list, create_index_on_list, prev_index->left);
-  EXTRACT_NAMED_NOTNULL(prev_flags_names_attrs, flags_names_attrs, prev_index->right);
-  EXTRACT_NAMED(prev_index_names_and_attrs, index_names_and_attrs, prev_flags_names_attrs->right);
-  EXTRACT_ANY_NOTNULL(prev_name_ast, prev_create_index_on_list->left)
-  EXTRACT_STRING(name, prev_name_ast);
+  EXTRACT_NOTNULL(create_index_on_list, prev_index->left);
+  EXTRACT_NOTNULL(flags_names_attrs, prev_index->right);
+  EXTRACT_NOTNULL(connector, flags_names_attrs->right);
+  EXTRACT_NOTNULL(index_names_and_attrs, connector->left);
+  EXTRACT_NOTNULL(indexed_columns, index_names_and_attrs->left);
+  EXTRACT(opt_where, index_names_and_attrs->right);
+  EXTRACT_ANY_NOTNULL(index_name_ast, create_index_on_list->left);
+  EXTRACT_STRING(index_name, index_name_ast);
+  EXTRACT_ANY_NOTNULL(table_name_ast, create_index_on_list->right);
+  EXTRACT_STRING(table_name, table_name_ast);
 
-  ast_node *ast = find_index(name);
+  ast_node *ast = find_index(index_name);
 
   if (!ast) {
     // If the table the index was on is going away then we don't need
@@ -2463,17 +2535,16 @@ static void sem_validate_previous_index(ast_node *prev_index) {
     // possible to declare the tombstone now because the table name is not
     // valid.  There's no need for the tombstone anyway because when the
     // table is deleted all its indices will also be deleted.
-    EXTRACT_STRING(prev_table_name, prev_create_index_on_list->right);
-    ast = find_table_or_view_even_deleted(prev_table_name);
+    ast = find_table_or_view_even_deleted(table_name);
 
     if (!ast || ast->sem->delete_version < 0) {
-      report_error(prev_index, "CQL0017: index was present but now it does not exist (use @delete instead)", name);
+      report_error(prev_index, "CQL0017: index was present but now it does not exist (use @delete instead)", index_name);
       record_error(prev_index);
       return;
     }
   }
 
-  enqueue_pending_region_validation(prev_index, ast, name);
+  enqueue_pending_region_validation(prev_index, ast, index_name);
 }
 
 // Helper function to update the column type in a table node.
@@ -2521,9 +2592,11 @@ static void sem_create_index_stmt(ast_node *ast) {
   Contract(is_ast_create_index_stmt(ast));
   EXTRACT_NOTNULL(create_index_on_list, ast->left);
   EXTRACT_NOTNULL(flags_names_attrs, ast->right);
-  EXTRACT_NOTNULL(index_names_and_attrs, flags_names_attrs->right);
+  EXTRACT_NOTNULL(connector, flags_names_attrs->right);
+  EXTRACT_NOTNULL(index_names_and_attrs, connector->left);
   EXTRACT_NOTNULL(indexed_columns, index_names_and_attrs->left);
-  EXTRACT_ANY(attrs, index_names_and_attrs->right);
+  EXTRACT(opt_where, index_names_and_attrs->right);
+  EXTRACT_ANY(attrs, connector->right);
   EXTRACT_ANY_NOTNULL(index_name_ast, create_index_on_list->left);
   EXTRACT_STRING(index_name, index_name_ast);
   EXTRACT_ANY_NOTNULL(table_name_ast, create_index_on_list->right);
@@ -2607,6 +2680,16 @@ static void sem_create_index_stmt(ast_node *ast) {
   if (!deleting && !sem_validate_name_list(indexed_columns, table_ast->sem->jptr)) {
     record_error(ast);
     return;
+  }
+
+  if (opt_where) {
+    EXTRACT_ANY_NOTNULL(expr, opt_where->left);
+    sem_validate_check_expr_for_table(table_ast, expr, "WHERE");
+    opt_where->sem = expr->sem;
+    if (is_error(expr))  {
+      record_error(ast);
+      return;
+    }
   }
 
   ast->sem = new_sem(SEM_TYPE_OK);
@@ -2800,9 +2883,14 @@ static bool_t validate_referenceable_column_callback(ast_node *name_list, void *
     } else {
       name_ast = name_list->left;
     }
-    EXTRACT_STRING(name, name_ast);
-    if (!Strcasecmp(column_name, name)) {
-      return true;
+
+    // if this is an expression that is other than a simple name, it can't match any identifier
+    // auto test will have no way of meeting this constraint automatically
+    if (is_ast_str(name_ast)) {
+      EXTRACT_STRING(name, name_ast);
+      if (!Strcasecmp(column_name, name)) {
+        return true;
+      }
     }
   }
   return false;
@@ -2863,21 +2951,28 @@ static bool_t find_referenceable_columns(
     symtab_entry entry = indices->payload[i];
     if (entry.sym) {
       ast_node *index_ast = (ast_node *)entry.val;
+
+      Contract(is_ast_create_index_stmt(index_ast));
       EXTRACT_NOTNULL(create_index_on_list, index_ast->left);
       EXTRACT_NOTNULL(flags_names_attrs, index_ast->right);
-
+      EXTRACT_NOTNULL(connector, flags_names_attrs->right);
+      EXTRACT_NOTNULL(index_names_and_attrs, connector->left);
       EXTRACT_OPTION(flags, flags_names_attrs->left);
+      EXTRACT_NOTNULL(indexed_columns, index_names_and_attrs->left);
+      EXTRACT(opt_where, index_names_and_attrs->right);
+      EXTRACT_ANY_NOTNULL(index_name_ast, create_index_on_list->left);
+      EXTRACT_STRING(index_name, index_name_ast);
+      EXTRACT_ANY_NOTNULL(table_name_ast, create_index_on_list->right);
+      EXTRACT_STRING(table_name, table_name_ast);
+
       if (!(flags & INDEX_UNIQUE)) {
         continue;
       }
 
-      EXTRACT_STRING(table_name_target, create_index_on_list->right);
-      if (Strcasecmp(ref_table_name, table_name_target)) {
+      if (Strcasecmp(ref_table_name, table_name)) {
         continue;
       }
 
-      EXTRACT_NOTNULL(index_names_and_attrs, flags_names_attrs->right);
-      EXTRACT_NOTNULL(indexed_columns, index_names_and_attrs->left);
       if (callback(indexed_columns, context)) {
         return true;
       }
@@ -2907,7 +3002,7 @@ cql_noexport bool_t is_referenceable_by_foreign_key(ast_node *ref_table_ast, CST
       (void *)column_name);
 }
 
-// find_referenceable_columns's callback. It return true if both name lists are
+// find_referenceable_columns's callback. It returns true if both name lists
 // have the same items (in any order). This is used to figure out a list of columns
 // in a foreign key clause are referenceable.
 static bool_t validate_referenceable_fk_def_callback(ast_node *name_list, void *context) {
@@ -11450,10 +11545,10 @@ static void sem_upsert_stmt(ast_node *stmt) {
     // - unique index (CREATE UNIQUE INDEX ...)
     // - a group of primary key (PRIMARY KEY (a,b,...)).
     if (!is_single_unique_key) {
-      bool_t validate = find_referenceable_columns(current_upsert_table_ast,
-                                                   validate_referenceable_fk_def_callback,
-                                                   indexed_columns);
-      if (!validate) {
+      bool_t valid = find_referenceable_columns(current_upsert_table_ast,
+                                                validate_referenceable_fk_def_callback,
+                                                indexed_columns);
+      if (!valid) {
         report_error(indexed_columns, "CQL0279: the set of columns referenced in the conflict target should match exactly a unique key in table we apply upsert", NULL);
         record_error(upsert_update);
         record_error(conflict_target);
@@ -11719,7 +11814,7 @@ static void sem_fetch_values_stmt(ast_node *ast) {
 // of an FK relationship.  This is only used to evaluate at the top level
 // if it's happening in the context of a join that's wrong.
 static bool_t sem_name_check(name_check *check) {
-  bool_t valid = 1;
+  bool_t valid = true;
   PUSH_JOIN_BLOCK()
   PUSH_JOIN(name_check, check->jptr);
 
@@ -11731,31 +11826,54 @@ static bool_t sem_name_check(name_check *check) {
     Contract(is_ast_name_list(item) || is_ast_indexed_columns(item));
     check->name_list_tail = item;
 
-    ast_node *name_ast = NULL;
+    CSTR item_name = NULL;
+    ast_node *target = NULL;
 
     if (is_ast_name_list(item)) {
-      name_ast = item->left;
+      ast_node *name_ast = target = item->left;
+
+      // Resolve name with no qualifier in the current scope.
+      EXTRACT_STRING(name, name_ast);
+
+      if (!try_resolve_column(name_ast, name, NULL) || is_error(name_ast)) {
+        report_error(name_ast, "CQL0171: name not found", name);
+        record_error(name_ast);
+        record_error(check->name_list);
+        valid = false;
+        break;
+      }
+
+      item_name = name_ast->sem->name;
     }
     else {
       EXTRACT_NOTNULL(indexed_column, item->left);
-      name_ast = indexed_column->left;
+      EXTRACT_ANY_NOTNULL(expr, indexed_column->left);
+
+      sem_validate_index_expr_for_jptr(check->jptr, expr);
+      if (is_error(expr)) {
+        record_error(check->name_list);
+        valid = false;
+        break;
+      }
+
+      if (is_ast_str(expr)) {
+        // easy case, we have the name handy
+        EXTRACT_STRING(name, expr);
+        item_name = name;
+      }
+      else {
+        // it's an expression so we have to compute the text
+        item_name = dup_expr_text(expr);
+      }
+
+      target = expr;
     }
 
-    Invariant(name_ast);
+    Invariant(item_name);
 
-    // Resolve name with no qualifier in the current scope.
-    EXTRACT_STRING(name, name_ast);
-    if (!try_resolve_column(name_ast, name, NULL) || is_error(name_ast)) {
-      report_error(name_ast, "CQL0171: name not found", name);
-      record_error(name_ast);
-      record_error(check->name_list);
-      valid = 0;
-      break;
-    }
-
-    if (!symtab_add(check->names, name_ast->sem->name, NULL)) {
-      report_error(name_ast, "CQL0172: name list has duplicate name", name_ast->sem->name);
-      record_error(name_ast);
+    if (!symtab_add(check->names, item_name, NULL)) {
+      report_error(target, "CQL0172: name list has duplicate name", item_name);
+      record_error(target);
       record_error(check->name_list);
       valid = 0;
       break;

@@ -389,20 +389,6 @@ sqlite> select ~(1*3);
   Contract(is_ast_int(node)); \
   int32_t name = (int32_t)((int_ast_node *)node)->value;
 
-#define EXTRACT_STRING_FROM_NAME_LIST(name, node) \
-  const char *name = NULL; \
-  do { \
-    Contract(is_ast_indexed_columns(node) || is_ast_name_list(node)); \
-    ast_node *name_ast = NULL; \
-    if (is_ast_indexed_columns(node)) { \
-      EXTRACT_NOTNULL(indexed_column, node->left); \
-      name_ast = indexed_column->left; \
-    } else { \
-      name_ast = node->left; \
-    } \
-    name = ((str_ast_node *)name_ast)->value; \
-  } while (0);
-
 // For searching proc dependencies/attributes
 typedef void (*find_ast_str_node_callback)(CSTR _Nonnull found_name, ast_node *_Nonnull str_ast, void *_Nullable context);
 

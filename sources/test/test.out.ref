@@ -114,7 +114,16 @@ CREATE TABLE T(
   C3 TEXT
 );
 
-CREATE INDEX __idx__participants__thread_key__contact_id ON participants (thread_key, contact_id);
+CREATE INDEX thread_key_contact_id ON participants (thread_key, contact_id);
+
+CREATE INDEX thread_key_contact_id ON participants (thread_key, contact_id)
+  WHERE contact_id > 50;
+
+CREATE INDEX thread_key_contact_id ON participants (thread_key + contact_id, contact_id % 5)
+  WHERE contact_id > 50;
+
+CREATE INDEX thread_key_contact_id ON participants (thread_key COLLATE some_collation, contact_id % 5)
+  WHERE contact_id > 50;
 
 SELECT 2 * 3;
 

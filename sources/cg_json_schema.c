@@ -612,6 +612,16 @@ static void cg_json_name_list(charbuf *output, ast_node *list) {
   }
 }
 
+// This is useful for expressions known to have no parameters (e.g. constraint expressions)
+// variables are illegal in such things so there can be no binding needed
+static void cg_json_vanilla_expr(charbuf *output, ast_node *expr) {
+  gen_sql_callbacks callbacks;
+  init_gen_sql_callbacks(&callbacks);
+  callbacks.mode = gen_mode_echo; // we want all the text, unexpanded, so NOT for sqlite output (this is raw echo)
+  gen_set_output_buffer(output);
+  gen_with_callbacks(expr, gen_root_expr, &callbacks);
+}
+
 // Similar to the above, this is also a list of names but we emit two arrays
 // one array for the names and another array for the sort orders specified if any.
 // Note unspecified sort orders are emitted as "".
@@ -621,7 +631,7 @@ static void cg_json_indexed_columns(charbuf *cols, charbuf *orders, ast_node *li
     EXTRACT_NOTNULL(indexed_column, item->left);
 
     bprintf(cols, "\"");
-    cg_json_name(cols, indexed_column->left);
+    cg_json_vanilla_expr(cols, indexed_column->left);
     bprintf(cols, "\"");
 
     if (is_ast_asc(indexed_column->right)) {
@@ -900,9 +910,11 @@ static void cg_json_indices(charbuf *output) {
 
     EXTRACT_NOTNULL(create_index_on_list, ast->left);
     EXTRACT_NOTNULL(flags_names_attrs, ast->right);
-    EXTRACT_NOTNULL(index_names_and_attrs, flags_names_attrs->right);
+    EXTRACT_NOTNULL(connector, flags_names_attrs->right);
+    EXTRACT_NOTNULL(index_names_and_attrs, connector->left);
     EXTRACT_OPTION(flags, flags_names_attrs->left);
     EXTRACT_NOTNULL(indexed_columns, index_names_and_attrs->left);
+    EXTRACT(opt_where, index_names_and_attrs->right);
     EXTRACT_ANY_NOTNULL(index_name_ast, create_index_on_list->left);
     EXTRACT_STRING(index_name, index_name_ast);
     EXTRACT_ANY_NOTNULL(table_name_ast, create_index_on_list->right);
@@ -927,6 +939,12 @@ static void cg_json_indices(charbuf *output) {
 
     if (ast->sem->region) {
       cg_json_emit_region_info(output, ast);
+    }
+
+    if (opt_where) {
+      bprintf(output, ",\n\"where\" : \"");
+      cg_json_vanilla_expr(output, opt_where->left);
+      bprintf(output, "\"");
     }
 
     CHARBUF_OPEN(cols);

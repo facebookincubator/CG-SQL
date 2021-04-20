@@ -12,7 +12,7 @@ sidebar_label: "Appendix 5: JSON Schema Grammar"
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Fri Apr 16 11:56:25 PDT 2021
+Snapshot as of Mon Apr 19 12:42:15 PDT 2021
 
 ### Rules
 
@@ -347,9 +347,13 @@ index: '{'
         '"isDeleted"' ':' BOOL_LITERAL ','
         opt_deleted_version
         opt_region_info
+        opt_partial_index_where
         '"columns"' ':' '[' column_names ']' ','
         '"sortOrders"' ':' '[' sort_order_names ']'
        '}'
+  ;
+
+opt_partial_index_where: | '"where"' ':' STRING_LITERAL ','
   ;
 
 opt_triggers: | triggers

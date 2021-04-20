@@ -81,7 +81,16 @@ create table T2(C21 int not null, C22 int default 93, primary key (a,b,c));
 create table T(C1 int not null, C2 real, C3 text);
 
 -- create index
-create index __idx__participants__thread_key__contact_id on participants (thread_key, contact_id);
+create index thread_key_contact_id on participants(thread_key, contact_id);
+
+-- create partial index
+create index thread_key_contact_id on participants(thread_key, contact_id) where contact_id > 50;
+
+-- create partial index with expressionss
+create index thread_key_contact_id on participants(thread_key + contact_id, contact_id % 5) where contact_id > 50;
+
+-- create partial index with expressionss and collate
+create index thread_key_contact_id on participants(thread_key collate some_collation , contact_id % 5) where contact_id > 50;
 
 -- basic binary expression
 select 2 * 3;

@@ -87,10 +87,11 @@ CREATE INDEX recent_index ON foo (name_2);
   | | {name foo}
   | {flags_names_attrs}
     | {int 0}
-    | {index_names_and_attrs}
-      | {indexed_columns}
-        | {indexed_column}
-          | {name name_2}
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}
+          | {indexed_column}
+            | {name name_2}
 
 The statement ending at line XXXX
 

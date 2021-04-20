@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Fri Apr 16 11:56:25 PDT 2021
+Snapshot as of Mon Apr 19 12:42:15 PDT 2021
 
 ### Operators and Literals
 
@@ -401,7 +401,7 @@ opt_unique:
   ;
 
 indexed_column:
-  name opt_asc_desc
+  expr opt_asc_desc
   ;
 
 indexed_columns:
@@ -410,7 +410,7 @@ indexed_columns:
   ;
 
 create_index_stmt:
-  "CREATE" opt_unique "INDEX" opt_if_not_exists name "ON" name '(' indexed_columns ')' opt_delete_version_attr
+  "CREATE" opt_unique "INDEX" opt_if_not_exists name "ON" name '(' indexed_columns ')' opt_where opt_delete_version_attr
   ;
 
 name:

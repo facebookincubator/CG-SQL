@@ -3725,10 +3725,11 @@ CREATE INDEX index_1 ON foo (id);
   | | {name foo}
   | {flags_names_attrs}
     | {int 0}
-    | {index_names_and_attrs}
-      | {indexed_columns}
-        | {indexed_column}
-          | {name id}: id: integer notnull
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}
+          | {indexed_column}
+            | {name id}: id: integer notnull
 
 The statement ending at line XXXX
 
@@ -3740,10 +3741,11 @@ CREATE INDEX index_1 ON foo (id);
   | | {name foo}
   | {flags_names_attrs}
     | {int 0}
-    | {index_names_and_attrs}
-      | {indexed_columns}
-        | {indexed_column}
-          | {name id}: id: integer notnull
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}
+          | {indexed_column}
+            | {name id}: id: integer notnull
 
 The statement ending at line XXXX
 
@@ -3757,10 +3759,11 @@ Error at test/sem_test.sql:XXXX : in create_index_stmt : CQL0321: migration proc
   | | {name foo}
   | {flags_names_attrs}
     | {int 0}
-    | {index_names_and_attrs}
-      | {indexed_columns}
-      | | {indexed_column}
-      |   | {name id}
+    | {connector}
+      | {index_names_and_attrs}
+      | | {indexed_columns}
+      |   | {indexed_column}
+      |     | {name id}
       | {delete_attr}
         | {version_annotation}
           | {int 1}
@@ -3782,10 +3785,11 @@ Error at test/sem_test.sql:XXXX : in str : CQL0018: duplicate index name 'index_
   | | {name bar}
   | {flags_names_attrs}
     | {int 0}
-    | {index_names_and_attrs}
-      | {indexed_columns}
-        | {indexed_column}
-          | {name id}: id: integer notnull
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}
+          | {indexed_column}
+            | {name id}: id: integer notnull
 
 The statement ending at line XXXX
 
@@ -3799,16 +3803,17 @@ Error at test/sem_test.sql:XXXX : in str : CQL0019: create index table name not 
   | | {name doesNotExist}
   | {flags_names_attrs}
     | {int 0}
-    | {index_names_and_attrs}
-      | {indexed_columns}
-        | {indexed_column}
-          | {name id}
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}
+          | {indexed_column}
+            | {name id}
 
 The statement ending at line XXXX
 
 CREATE INDEX index_3 ON foo (doesNotExist);
 
-Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'doesNotExist'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'doesNotExist'
 
   {create_index_stmt}: err
   | {create_index_on_list}
@@ -3816,10 +3821,162 @@ Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'doesNotExist
   | | {name foo}
   | {flags_names_attrs}
     | {int 0}
-    | {index_names_and_attrs}
-      | {indexed_columns}: err
-        | {indexed_column}
-          | {name doesNotExist}: err
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}: err
+          | {indexed_column}
+            | {name doesNotExist}: err
+
+The statement ending at line XXXX
+
+CREATE INDEX index_4 ON foo (id + id);
+
+  {create_index_stmt}: ok
+  | {create_index_on_list}
+  | | {name index_4}
+  | | {name foo}
+  | {flags_names_attrs}
+    | {int 0}
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}
+          | {indexed_column}
+            | {add}: integer notnull
+              | {name id}: id: integer notnull
+              | {name id}: id: integer notnull
+
+The statement ending at line XXXX
+
+CREATE INDEX index_5 ON foo (NOT 'x');
+
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+
+  {create_index_stmt}: err
+  | {create_index_on_list}
+  | | {name index_5}
+  | | {name foo}
+  | {flags_names_attrs}
+    | {int 0}
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}: err
+          | {indexed_column}
+            | {not}: err
+              | {strlit 'x'}: text notnull
+
+The statement ending at line XXXX
+
+CREATE INDEX index_6 ON foo (id + id, id + id);
+
+Error at test/sem_test.sql:XXXX : in add : CQL0172: name list has duplicate name 'id + id'
+
+  {create_index_stmt}: err
+  | {create_index_on_list}
+  | | {name index_6}
+  | | {name foo}
+  | {flags_names_attrs}
+    | {int 0}
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}: err
+          | {indexed_column}
+          | | {add}: integer notnull
+          |   | {name id}: id: integer notnull
+          |   | {name id}: id: integer notnull
+          | {indexed_columns}
+            | {indexed_column}
+              | {add}: err
+                | {name id}: id: integer notnull
+                | {name id}: id: integer notnull
+
+The statement ending at line XXXX
+
+CREATE INDEX index_7 ON foo (id + id)
+  WHERE id < 100;
+
+  {create_index_stmt}: ok
+  | {create_index_on_list}
+  | | {name index_7}
+  | | {name foo}
+  | {flags_names_attrs}
+    | {int 0}
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}
+        | | {indexed_column}
+        |   | {add}: integer notnull
+        |     | {name id}: id: integer notnull
+        |     | {name id}: id: integer notnull
+        | {opt_where}: bool notnull
+          | {lt}: bool notnull
+            | {name id}: id: integer notnull primary_key autoinc
+            | {int 100}: integer notnull
+
+The statement ending at line XXXX
+
+CREATE INDEX index_8 ON foo (id)
+  WHERE NOT 'x';
+
+Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+
+  {create_index_stmt}: err
+  | {create_index_on_list}
+  | | {name index_8}
+  | | {name foo}
+  | {flags_names_attrs}
+    | {int 0}
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}
+        | | {indexed_column}
+        |   | {name id}: id: integer notnull
+        | {opt_where}: err
+          | {not}: err
+            | {strlit 'x'}: text notnull
+
+The statement ending at line XXXX
+
+CREATE INDEX index_9 ON foo (id)
+  WHERE x = 5;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'x'
+
+  {create_index_stmt}: err
+  | {create_index_on_list}
+  | | {name index_9}
+  | | {name foo}
+  | {flags_names_attrs}
+    | {int 0}
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}
+        | | {indexed_column}
+        |   | {name id}: id: integer notnull
+        | {opt_where}: err
+          | {eq}: err
+            | {name x}: err
+            | {int 5}: integer notnull
+
+The statement ending at line XXXX
+
+CREATE INDEX index_10 ON foo (id)
+  WHERE 'hi';
+
+Error at test/sem_test.sql:XXXX : in str : CQL0015: expected numeric expression 'WHERE'
+
+  {create_index_stmt}: err
+  | {create_index_on_list}
+  | | {name index_10}
+  | | {name foo}
+  | {flags_names_attrs}
+    | {int 0}
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}
+        | | {indexed_column}
+        |   | {name id}: id: integer notnull
+        | {opt_where}: err
+          | {strlit 'hi'}: err
 
 The statement ending at line XXXX
 
@@ -6582,13 +6739,14 @@ Error at test/sem_test.sql:XXXX : in str : CQL0172: name list has duplicate name
   | | {name foo}
   | {flags_names_attrs}
     | {int 0}
-    | {index_names_and_attrs}
-      | {indexed_columns}: err
-        | {indexed_column}
-        | | {name id}: id: integer notnull
-        | {indexed_columns}
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}: err
           | {indexed_column}
-            | {name id}: err
+          | | {name id}: id: integer notnull
+          | {indexed_columns}
+            | {indexed_column}
+              | {name id}: err
 
 The statement ending at line XXXX
 
@@ -17215,10 +17373,11 @@ Error at test/sem_test.sql:XXXX : in str : CQL0019: create index table name not 
   | | {name versioned_table}
   | {flags_names_attrs}
     | {int 0}
-    | {index_names_and_attrs}
-      | {indexed_columns}
-        | {indexed_column}
-          | {name id}
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}
+          | {indexed_column}
+            | {name id}
 
 The statement ending at line XXXX
 
@@ -21257,7 +21416,7 @@ CREATE TABLE misc_attr_table(
 
 The statement ending at line XXXX
 
-CREATE UNIQUE INDEX IF NOT EXISTS my_unique_index ON bar (id ASC, name DESC, rate);
+CREATE UNIQUE INDEX IF NOT EXISTS my_unique_index ON bar (id / 2 ASC, name DESC, rate);
 
   {create_index_stmt}: ok
   | {create_index_on_list}
@@ -21265,18 +21424,49 @@ CREATE UNIQUE INDEX IF NOT EXISTS my_unique_index ON bar (id ASC, name DESC, rat
   | | {name bar}
   | {flags_names_attrs}
     | {int 3}
-    | {index_names_and_attrs}
-      | {indexed_columns}
-        | {indexed_column}
-        | | {name id}: id: integer notnull
-        | | {asc}
+    | {connector}
+      | {index_names_and_attrs}
         | {indexed_columns}
           | {indexed_column}
-          | | {name name}: name: text
-          | | {desc}
+          | | {div}: integer notnull
+          | | | {name id}: id: integer notnull
+          | | | {int 2}: integer notnull
+          | | {asc}
           | {indexed_columns}
             | {indexed_column}
-              | {name rate}: rate: longint
+            | | {name name}: name: text
+            | | {desc}
+            | {indexed_columns}
+              | {indexed_column}
+                | {name rate}: rate: longint
+
+The statement ending at line XXXX
+
+CREATE TABLE ref_bar(
+  id INTEGER NOT NULL REFERENCES bar (id)
+);
+
+Error at test/sem_test.sql:XXXX : in name_list : CQL0272: the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table 'bar'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name ref_bar}
+  | {col_key_list}
+    | {col_def}: err
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+        | | {name id}
+        | | {type_int}: integer
+        | {col_attrs_not_null}: ok
+          | {col_attrs_fk}: err
+            | {fk_target_options}
+              | {fk_target}
+              | | {name bar}
+              | | {name_list}
+              |   | {name id}: id: integer notnull
+              | {int 0}
 
 The statement ending at line XXXX
 
@@ -29305,13 +29495,14 @@ CREATE UNIQUE INDEX referenceable_index ON referenceable (c, d);
   | | {name referenceable}
   | {flags_names_attrs}
     | {int 1}
-    | {index_names_and_attrs}
-      | {indexed_columns}
-        | {indexed_column}
-        | | {name c}: c: text
+    | {connector}
+      | {index_names_and_attrs}
         | {indexed_columns}
           | {indexed_column}
-            | {name d}: d: text
+          | | {name c}: c: text
+          | {indexed_columns}
+            | {indexed_column}
+              | {name d}: d: text
 
 The statement ending at line XXXX
 
@@ -37970,10 +38161,11 @@ CREATE INDEX a_index_in_root_region ON a_table_in_root_region (id);
   | | {name a_table_in_root_region}
   | {flags_names_attrs}
     | {int 0}
-    | {index_names_and_attrs}
-      | {indexed_columns}
-        | {indexed_column}
-          | {name id}: id: integer
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}
+          | {indexed_column}
+            | {name id}: id: integer
 
 The statement ending at line XXXX
 
@@ -38423,10 +38615,11 @@ Error at test/sem_test.sql:XXXX : in create_index_stmt : CQL0066: if a table is 
   | | {name diamond_region_table}
   | {flags_names_attrs}
     | {int 0}
-    | {index_names_and_attrs}
-      | {indexed_columns}
-        | {indexed_column}
-          | {name id}
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}
+          | {indexed_column}
+            | {name id}
 
 The statement ending at line XXXX
 
@@ -40084,7 +40277,7 @@ BEGIN
   ON CONFLICT (id, bogus) DO NOTHING;
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'bogus'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'bogus'
 
   {create_proc_stmt}: err
   | {name upsert_conflict_on_unknown_column}: err
@@ -45215,10 +45408,11 @@ CREATE INDEX IF NOT EXISTS index_1 ON foo (id);
   | | {name foo}
   | {flags_names_attrs}
     | {int 2}
-    | {index_names_and_attrs}
-      | {indexed_columns}
-        | {indexed_column}
-          | {name id}: id: integer notnull
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}
+          | {indexed_column}
+            | {name id}: id: integer notnull
 
 The statement ending at line XXXX
 
@@ -54432,10 +54626,11 @@ Error at test/sem_test.sql:XXXX : in str : CQL0159: cannot add an index to a vir
   | | {name basic_virtual}
   | {flags_names_attrs}
     | {int 0}
-    | {index_names_and_attrs}
-      | {indexed_columns}
-        | {indexed_column}
-          | {name id}
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}
+          | {indexed_column}
+            | {name id}
 
 The statement ending at line XXXX
 
@@ -59108,10 +59303,11 @@ CREATE INDEX deleted_index ON this_table_is_deleted (xxx) @DELETE(1);
   | | {name this_table_is_deleted}
   | {flags_names_attrs}
     | {int 0}
-    | {index_names_and_attrs}
-      | {indexed_columns}
-      | | {indexed_column}
-      |   | {name xxx}
+    | {connector}
+      | {index_names_and_attrs}
+      | | {indexed_columns}
+      |   | {indexed_column}
+      |     | {name xxx}
       | {delete_attr}
         | {version_annotation}
           | {int 1}

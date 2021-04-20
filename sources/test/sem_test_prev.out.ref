@@ -922,10 +922,11 @@ CREATE INDEX this_index_was_created_with_no_annotation ON foo (id);
   | | {name foo}
   | {flags_names_attrs}
     | {int 0}
-    | {index_names_and_attrs}
-      | {indexed_columns}
-        | {indexed_column}
-          | {name id}: id: integer notnull
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}
+          | {indexed_column}
+            | {name id}: id: integer notnull
 
 The statement ending at line XXXX
 
@@ -1466,10 +1467,11 @@ Error at test/sem_test_prev.sql:XXXX : in create_index_stmt : CQL0311: object's 
   | | {name TChanging}
   | {flags_names_attrs}
     | {int 0}
-    | {index_names_and_attrs}
-      | {indexed_columns}
-        | {indexed_column}
-          | {name id}: id: integer
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}
+          | {indexed_column}
+            | {name id}: id: integer
 
 The statement ending at line XXXX
 
@@ -2926,10 +2928,11 @@ Error at test/sem_test_prev.sql:XXXX : in create_index_stmt : CQL0017: index was
   | | {name foo}
   | {flags_names_attrs}
     | {int 0}
-    | {index_names_and_attrs}
-      | {indexed_columns}
-        | {indexed_column}
-          | {name id}
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}
+          | {indexed_column}
+            | {name id}
 
 The statement ending at line XXXX
 
@@ -3475,10 +3478,11 @@ CREATE INDEX IChanging ON TChanging (id);
   | | {name TChanging}
   | {flags_names_attrs}
     | {int 0}
-    | {index_names_and_attrs}
-      | {indexed_columns}
-        | {indexed_column}
-          | {name id}
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}
+          | {indexed_column}
+            | {name id}
 
 The statement ending at line XXXX
 
@@ -3729,10 +3733,11 @@ CREATE INDEX deleted_index ON t_was_correctly_deleted (id);
   | | {name t_was_correctly_deleted}
   | {flags_names_attrs}
     | {int 0}
-    | {index_names_and_attrs}
-      | {indexed_columns}
-        | {indexed_column}
-          | {name id}
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}
+          | {indexed_column}
+            | {name id}
 
 The statement ending at line XXXX
 

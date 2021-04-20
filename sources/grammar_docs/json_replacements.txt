@@ -1,6 +1,7 @@
 s/[[:<:]]VIRTUAL_TABLES[[:>:]]/'"virtualTables"' ':'/g
 s/[[:<:]]TABLES[[:>:]]/'"tables"' ':'/g
 s/[[:<:]]NAME[[:>:]]/'"name"' ':'/g
+s/[[:<:]]WHERE[[:>:]]/'"where"' ':'/g
 s/[[:<:]]ARG_ORIGIN[[:>:]]/'"argOrigin"' ':'/g
 s/[[:<:]]ENUMS[[:>:]]/'"enums"' ':'/g
 s/[[:<:]]IS_TEMP[[:>:]]/'"isTemp"' ':'/g

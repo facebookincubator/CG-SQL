@@ -624,7 +624,8 @@ opt_unique:
   ;
 
 indexed_column:
-  name opt_asc_desc  { $indexed_column = new_ast_indexed_column($name, $opt_asc_desc); }
+  expr opt_asc_desc  { 
+    $indexed_column = new_ast_indexed_column($expr, $opt_asc_desc); }
   ;
 
 indexed_columns[result]:
@@ -633,14 +634,15 @@ indexed_columns[result]:
   ;
 
 create_index_stmt:
-  CREATE opt_unique INDEX opt_if_not_exists name[tbl_name] ON name[idx_name] '(' indexed_columns ')' opt_delete_version_attr  {
+  CREATE opt_unique INDEX opt_if_not_exists name[tbl_name] ON name[idx_name] '(' indexed_columns ')' opt_where opt_delete_version_attr  {
     int flags = 0;
     if ($opt_unique) flags |= INDEX_UNIQUE;
     if ($opt_if_not_exists) flags |= INDEX_IFNE;
 
     ast_node *create_index_on_list = new_ast_create_index_on_list($tbl_name, $idx_name);
-    ast_node *index_names_and_attrs = new_ast_index_names_and_attrs($indexed_columns, $opt_delete_version_attr);
-    ast_node *flags_names_attrs = new_ast_flags_names_attrs(new_ast_opt(flags), index_names_and_attrs);
+    ast_node *index_names_and_attrs = new_ast_index_names_and_attrs($indexed_columns, $opt_where);
+    ast_node *connector = new_ast_connector(index_names_and_attrs, $opt_delete_version_attr);
+    ast_node *flags_names_attrs = new_ast_flags_names_attrs(new_ast_opt(flags), connector);
     $create_index_stmt = new_ast_create_index_stmt(create_index_on_list, flags_names_attrs);
   }
   ;

@@ -1009,6 +1009,54 @@ create index index_2 on doesNotExist(id);
 -- + {name doesNotExist}: err
 create index index_3 on foo(doesNotExist);
 
+-- TEST: index on a basic expression
+-- + CREATE INDEX index_4 ON foo (id + id);
+-- + {create_index_stmt}: ok
+-- - Error
+create index index_4 on foo(id+id);
+
+-- TEST: index on a bogus expression
+-- + {create_index_stmt}: err
+-- + Error % string operand not allowed in 'NOT'
+-- +1 Error
+create index index_5 on foo(not 'x');
+
+-- TEST: duplicate expressions still give an error
+-- + CREATE INDEX index_6 ON foo (id + id, id + id);
+-- + {create_index_stmt}: err
+-- + Error % name list has duplicate name 'id + id'
+-- +1 Error
+create index index_6 on foo(id+id, id+id);
+
+-- TEST: partial index with valid expression
+-- + CREATE INDEX index_7 ON foo (id + id)
+-- + WHERE id < 100;
+-- + {create_index_stmt}: ok
+-- + {opt_where}: bool notnull
+-- - Error
+create index index_7 on foo(id+id) where id < 100;
+
+-- TEST: partial index with invalid expression (semantic error)
+-- + {create_index_stmt}: err
+-- + {opt_where}: err
+-- + Error % string operand not allowed in 'NOT'
+-- +1 Error
+create index index_8 on foo(id) where not 'x';
+
+-- TEST: partial index with invalid expression (x not in scope)
+-- + {create_index_stmt}: err
+-- + {opt_where}: err
+-- + Error % name not found 'x'
+-- +1 Error
+create index index_9 on foo(id) where x = 5;
+
+-- TEST: partial index with invalid expression (not numeric)
+-- + {create_index_stmt}: err
+-- + {opt_where}: err
+-- + Error % expected numeric expression 'WHERE'
+-- +1 Error
+create index index_10 on foo(id) where 'hi';
+
 -- TEST: validate primary key columns, ok
 -- - Error
 -- + {create_table_stmt}: simple_pk_table: { id: integer notnull }
@@ -5958,8 +6006,19 @@ create table misc_attr_table
   id integer not null
 );
 
--- TEST: complex index
-create unique index if not exists my_unique_index on bar(id asc, name desc, rate);
+-- TEST: complex index (with expression)
+-- + CREATE UNIQUE INDEX IF NOT EXISTS my_unique_index ON bar (id / 2 ASC, name DESC, rate);
+-- + {create_index_stmt}: ok
+-- - Error
+create unique index if not exists my_unique_index on bar(id/2 asc, name desc, rate);
+
+-- TEST: there is no index that covers id so this is an error, the index covers id/2
+-- + {create_table_stmt}: err
+-- + Error % the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table 'bar'
+-- +1 Error
+create table ref_bar(
+ id integer not null references bar(id) -- index is on id/2
+);
 
 -- TEST: try to update a table that does not exist
 -- + {update_stmt}: err
