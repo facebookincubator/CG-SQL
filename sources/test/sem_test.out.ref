@@ -59477,3 +59477,64 @@ Error at test/sem_test.sql:XXXX : in dot : CQL0378: built-in migration procedure
                 | {name cql}
                 | {name from_recreate}
 
+The statement ending at line XXXX
+
+DECLARE PROC proc_as_func (IN transport_key_ TEXT, OUT code_ TEXT NOT NULL @SENSITIVE) USING TRANSACTION;
+
+  {declare_proc_stmt}: ok dml_proc
+  | {proc_name_type}
+  | | {name proc_as_func}: ok dml_proc
+  | | {int 2}
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: transport_key_: text variable in
+      | | {in}
+      | | {param_detail}: transport_key_: text variable in
+      |   | {name transport_key_}: transport_key_: text variable in
+      |   | {type_text}: text
+      | {params}
+        | {param}: code_: text notnull variable out sensitive
+          | {out}
+          | {param_detail}: code_: text notnull variable out sensitive
+            | {name code_}: code_: text notnull variable out sensitive
+            | {sensitive_attr}: text notnull sensitive
+              | {notnull}: text notnull
+                | {type_text}: text
+
+The statement ending at line XXXX
+
+LET pr := proc_as_func("t");
+
+  {let_stmt}: pr: text notnull variable sensitive
+  | {name pr}: pr: text notnull variable sensitive
+  | {call}: text notnull sensitive
+    | {name proc_as_func}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {strlit 't'}: text notnull
+
+The statement ending at line XXXX
+
+DECLARE pr2 TEXT;
+
+  {declare_vars_type}: text
+  | {name_list}: pr2: text variable
+  | | {name pr2}: pr2: text variable
+  | {type_text}: text
+
+The statement ending at line XXXX
+
+SET pr2 := proc_as_func("t");
+
+Error at test/sem_test.sql:XXXX : in call : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'pr2'
+
+  {assign}: err
+  | {name pr2}: err
+  | {call}: text notnull sensitive
+    | {name proc_as_func}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {strlit 't'}: text notnull
+

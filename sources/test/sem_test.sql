@@ -15046,3 +15046,26 @@ create table bogus_builtin_migrator_placement (
  id integer,
  id2 integer @create(2, cql:from_recreate)
 ) @create(1);
+
+-- TEST: test sensitive flag on out param in declare proc using transaction
+-- + {declare_proc_stmt}: ok dml_proc
+-- + {param}: code_: text notnull variable out sensitive
+-- - Error
+DECLARE PROC proc_as_func(IN transport_key_ TEXT, OUT code_ TEXT NOT NULL @sensitive) USING TRANSACTION;
+
+-- TEST: test sensitive flag on pr variable for LET stmt
+-- + {let_stmt}: pr: text notnull variable sensitive
+-- + {name pr}: pr: text notnull variable sensitive
+-- + {call}: text notnull sensitive
+-- - Error
+LET pr := proc_as_func("t");
+
+-- TEST: helper variable
+DECLARE pr2 text;
+
+-- TEST: test sensitive flag on pr variable for SET stmt
+-- + {assign}: err
+-- + {call}: text notnull sensitive
+-- + Error % cannot assign/copy sensitive expression to non-sensitive target 'pr2'
+-- +1 Error
+SET pr2 := proc_as_func("t");
