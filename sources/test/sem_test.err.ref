@@ -534,7 +534,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0028: the FK reference must be
 Error at test/sem_test.sql:XXXX : in col_def : CQL0028: the FK reference must be exactly one column with the correct type 'fk_src'
 Error at test/sem_test.sql:XXXX : in col_def : CQL0021: foreign key refers to non-existent table 'no_such_table'
 Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'no_such_column'
-Error at test/sem_test.sql:XXXX : in col_attrs_autoinc : CQL0029: autoincrement column must be [LONG_]INTEGER PRIMARY KEY 'id'
+Error at test/sem_test.sql:XXXX : in autoinc_and_conflict_clause : CQL0029: autoincrement column must be [LONG_]INTEGER PRIMARY KEY 'id'
 Error at test/sem_test.sql:XXXX : in create_table_stmt : CQL0141: table has an AUTOINCREMENT column; it cannot also be WITHOUT ROWID 'bogus_without_rowid'
 Error at test/sem_test.sql:XXXX : in col_def : CQL0033: columns in a table marked @recreate cannot have @create or @delete 'id'
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'

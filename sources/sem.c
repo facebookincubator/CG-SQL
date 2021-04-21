@@ -810,13 +810,15 @@ static ast_node *find_next_unique_key(ast_node *unq_def) {
 // key is already unique.
 static bool_t is_unique_key_valid(ast_node *table_ast, ast_node *uk) {
   Contract(is_ast_create_table_stmt(table_ast) && is_ast_unq_def(uk));
-  EXTRACT_NAMED_NOTNULL(name_list1, name_list, uk->right);
+  EXTRACT_NOTNULL(name_list_and_conflict_clause, uk->right);
+  EXTRACT_NAMED_NOTNULL(name_list1, name_list, name_list_and_conflict_clause->left);
   for (ast_node *unq_def = find_first_unique_key(table_ast); unq_def; unq_def = find_next_unique_key(unq_def)) {
     if (uk == unq_def) {
       break;
     }
 
-    EXTRACT_NAMED_NOTNULL(name_list2, name_list, unq_def->right);
+    EXTRACT_NAMED_NOTNULL(name_list_and_conflict_clause2, name_list_and_conflict_clause, unq_def->right);
+    EXTRACT_NAMED_NOTNULL(name_list2, name_list, name_list_and_conflict_clause2->left);
     if (is_either_list_a_subset(name_list1, name_list2)) {
       return false;
     }
@@ -2727,7 +2729,8 @@ static void sem_unq_def(ast_node *table_ast, ast_node *def) {
   Contract(!current_joinscope);  // I don't belong inside a select(!)
   Contract(is_ast_create_table_stmt(table_ast));
   Contract(is_ast_unq_def(def));
-  EXTRACT_NOTNULL(name_list, def->right);
+  EXTRACT_NOTNULL(name_list_and_conflict_clause, def->right);
+  EXTRACT_NOTNULL(name_list, name_list_and_conflict_clause->left);
 
   if (def->left) {
     EXTRACT_STRING(name, def->left);
@@ -2932,14 +2935,16 @@ static bool_t find_referenceable_columns(
     EXTRACT_ANY_NOTNULL(col_def, col_key_list->left);
     // check if all column are in PRIMARY KEY ([name_list]) statement
     if (is_ast_pk_def(col_def)) {
-      EXTRACT_NAMED_NOTNULL(name_list2, name_list, col_def->right);
+      EXTRACT_NOTNULL(name_list_and_conflict_clause, col_def->right);
+      EXTRACT_NAMED_NOTNULL(name_list2, name_list, name_list_and_conflict_clause->left);
       if (callback(name_list2, context)) {
         return true;
       }
     }
     // check if all column are in CONSTRAINT UNIQUE ([name_list]) statement
     else if (is_ast_unq_def(col_def)) {
-      EXTRACT_NAMED_NOTNULL(name_list2, name_list, col_def->right);
+      EXTRACT_NOTNULL(name_list_and_conflict_clause, col_def->right);
+      EXTRACT_NAMED_NOTNULL(name_list2, name_list, name_list_and_conflict_clause->left);
       if (callback(name_list2, context)) {
         return true;
       }
@@ -3166,7 +3171,8 @@ static void sem_pk_def(ast_node *table_ast, ast_node *def) {
   Contract(!current_joinscope);  // I don't belong inside a select(!)
   Contract(is_ast_create_table_stmt(table_ast));
   Contract(is_ast_pk_def(def));
-  EXTRACT(name_list, def->right);
+  EXTRACT_NOTNULL(name_list_and_conflict_clause, def->right);
+  EXTRACT(name_list, name_list_and_conflict_clause->left);
 
   // PRIMARY KEY [name_list]
 
@@ -3562,7 +3568,9 @@ static sem_t sem_col_attrs(ast_node *def, ast_node *head, coldef_info *info) {
       // sqlite defines all pk columns to be not null
       new_flags = SEM_TYPE_PK;
       info->primary_keys++;
-      if (is_ast_col_attrs_autoinc(ast->left)) {
+      EXTRACT_NOTNULL(autoinc_and_conflict_clause, ast->left);
+      EXTRACT(col_attrs_autoinc, autoinc_and_conflict_clause->left);
+      if (col_attrs_autoinc) {
         // We need this so that we can validate INSERT statements
         // this column must be absent in an INSERT.
         new_flags |= SEM_TYPE_AUTOINCREMENT;

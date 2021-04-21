@@ -1326,7 +1326,7 @@ declare proc p2() (x integer<special>,  y integer<also_special>);
 create table special(
  id integer<special>,
  id2 integer<less_special>,
- id3 integer 
+ id3 integer
 );
 
 declare l1 long integer<one>;
@@ -1353,7 +1353,7 @@ set x := (select x from y if nothing throw);
 let z := 1 + 2;
 
 switch x
-  when 1, 3 then 
+  when 1, 3 then
     select 1;
   when 4 then
     set x := 1;
@@ -1364,7 +1364,7 @@ switch x
 end;
 
 switch x all values
-  when 1, 3 then 
+  when 1, 3 then
     select 1;
   when 4 then
     set x := 1;
@@ -1378,6 +1378,33 @@ declare out call foo(a, b);
 
 insert into foo using
    select 1 a,  2 b;
+
+-- create table with pk column on conflict clause rollback
+create table foo(id int not null, constraint pk1 primary key (id, name) on conflict rollback);
+
+-- create table with pk column on conflict clause fail
+create table foo(id int not null, constraint pk1 primary key (id, name) on conflict fail);
+
+-- create table with pk column on conflict clause ignore
+create table foo(id int not null, constraint pk1 primary key (id, name) on conflict ignore);
+
+-- create table with pk column on conflict clause replace
+create table foo(id int not null, constraint pk1 primary key (id, name) on conflict replace);
+
+-- create table with unique column on conflict clause abort
+create table foo(id int not null, constraint pk1 unique (id, name) on conflict abort);
+
+-- create table with unique column on conflict clause rollback
+create table foo(id int unique on conflict rollback);
+
+-- create table with pk column on conflict clause abort
+create table foo(id int primary key on conflict fail);
+
+-- create table with pk column auto increment on conflict clause fail
+create table foo(id int primary key on conflict fail autoincrement);
+
+-- create table with not null column on conflict clause abort
+create table foo(id int not null on conflict fail);
 
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 

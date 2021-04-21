@@ -18,7 +18,8 @@ CREATE TABLE foo(
         | | {name id}
         | | {type_int}: integer
         | {col_attrs_pk}: ok
-          | {col_attrs_autoinc}
+          | {autoinc_and_conflict_clause}
+            | {col_attrs_autoinc}
 
 The statement ending at line XXXX
 
@@ -38,7 +39,8 @@ CREATE TABLE foo(
         | | {name id}
         | | {type_int}: integer
         | {col_attrs_pk}: ok
-          | {col_attrs_autoinc}
+          | {autoinc_and_conflict_clause}
+            | {col_attrs_autoinc}
 
 The statement ending at line XXXX
 
@@ -3999,8 +4001,9 @@ CREATE TABLE simple_pk_table(
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
       | {pk_def}
-        | {name_list}
-          | {name id}
+        | {name_list_and_conflict_clause}
+          | {name_list}
+            | {name id}
 
 The statement ending at line XXXX
 
@@ -4025,8 +4028,9 @@ Error at test/sem_test.sql:XXXX : in str : CQL0024: table does not have pk colum
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
       | {pk_def}
-        | {name_list}
-          | {name pk_col_not_exist}: err
+        | {name_list_and_conflict_clause}
+          | {name_list}
+            | {name pk_col_not_exist}: err
 
 The statement ending at line XXXX
 
@@ -4052,12 +4056,14 @@ Error at test/sem_test.sql:XXXX : in str : CQL0143: more than one primary key in
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
       | {pk_def}
-      | | {name_list}
-      |   | {name id}
+      | | {name_list_and_conflict_clause}
+      |   | {name_list}
+      |     | {name id}
       | {col_key_list}
         | {pk_def}
-          | {name_list}
-            | {name id}
+          | {name_list_and_conflict_clause}
+            | {name_list}
+              | {name id}
 
 The statement ending at line XXXX
 
@@ -4081,8 +4087,9 @@ CREATE TABLE simple_ak_table(
     | {col_key_list}
       | {unq_def}
         | {name ak1}
-        | {name_list}
-          | {name id}: id: integer notnull
+        | {name_list_and_conflict_clause}
+          | {name_list}
+            | {name id}: id: integer notnull
 
 The statement ending at line XXXX
 
@@ -4128,20 +4135,23 @@ CREATE TABLE simple_ak_table_2(
           |     | {type_long}: longint
           | {col_key_list}
             | {unq_def}
-            | | {name_list}
-            |   | {name a}: a: integer notnull
+            | | {name_list_and_conflict_clause}
             |   | {name_list}
-            |     | {name b}: b: text
+            |     | {name a}: a: integer notnull
+            |     | {name_list}
+            |       | {name b}: b: text
             | {col_key_list}
               | {unq_def}
-              | | {name_list}
-              |   | {name a}: a: integer notnull
+              | | {name_list_and_conflict_clause}
               |   | {name_list}
-              |     | {name c}: c: real
+              |     | {name a}: a: integer notnull
+              |     | {name_list}
+              |       | {name c}: c: real
               | {col_key_list}
                 | {unq_def}
-                  | {name_list}
-                    | {name d}: d: longint
+                  | {name_list_and_conflict_clause}
+                    | {name_list}
+                      | {name d}: d: longint
 
 The statement ending at line XXXX
 
@@ -4186,16 +4196,18 @@ CREATE TABLE simple_ak_table_3(
           |     | {type_long}: longint
           | {col_key_list}
             | {unq_def}
-            | | {name_list}
-            |   | {name a}: a: integer notnull
+            | | {name_list_and_conflict_clause}
             |   | {name_list}
-            |     | {name b}: b: text
+            |     | {name a}: a: integer notnull
+            |     | {name_list}
+            |       | {name b}: b: text
             | {col_key_list}
               | {unq_def}
-                | {name_list}
-                  | {name b}: b: text
+                | {name_list_and_conflict_clause}
                   | {name_list}
-                    | {name d}: d: longint
+                    | {name b}: b: text
+                    | {name_list}
+                      | {name d}: d: longint
 
 The statement ending at line XXXX
 
@@ -4235,18 +4247,20 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this un
         |     | {type_real}: real
         | {col_key_list}
           | {unq_def}
-          | | {name_list}
-          |   | {name a}: a: integer notnull
+          | | {name_list_and_conflict_clause}
           |   | {name_list}
-          |     | {name b}: b: text
+          |     | {name a}: a: integer notnull
+          |     | {name_list}
+          |       | {name b}: b: text
           | {col_key_list}
             | {unq_def}
-              | {name_list}
-                | {name a}
+              | {name_list_and_conflict_clause}
                 | {name_list}
-                  | {name b}
+                  | {name a}
                   | {name_list}
-                    | {name c}
+                    | {name b}
+                    | {name_list}
+                      | {name c}
 
 The statement ending at line XXXX
 
@@ -4293,16 +4307,18 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this un
           |     | {type_long}: longint
           | {col_key_list}
             | {unq_def}
-            | | {name_list}
-            |   | {name a}: a: integer notnull
+            | | {name_list_and_conflict_clause}
             |   | {name_list}
-            |     | {name b}: b: text
+            |     | {name a}: a: integer notnull
+            |     | {name_list}
+            |       | {name b}: b: text
             | {col_key_list}
               | {unq_def}
-                | {name_list}
-                  | {name b}
+                | {name_list_and_conflict_clause}
                   | {name_list}
-                    | {name a}
+                    | {name b}
+                    | {name_list}
+                      | {name a}
 
 The statement ending at line XXXX
 
@@ -4349,20 +4365,22 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this un
           |     | {type_long}: longint
           | {col_key_list}
             | {unq_def}
-            | | {name_list}
-            |   | {name a}: a: integer notnull
+            | | {name_list_and_conflict_clause}
             |   | {name_list}
-            |     | {name b}: b: text
+            |     | {name a}: a: integer notnull
+            |     | {name_list}
+            |       | {name b}: b: text
             | {col_key_list}
               | {unq_def}
-                | {name_list}
-                  | {name c}
+                | {name_list_and_conflict_clause}
                   | {name_list}
-                    | {name d}
+                    | {name c}
                     | {name_list}
-                      | {name b}
+                      | {name d}
                       | {name_list}
-                        | {name a}
+                        | {name b}
+                        | {name_list}
+                          | {name a}
 
 The statement ending at line XXXX
 
@@ -4409,14 +4427,16 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this un
           |     | {type_long}: longint
           | {col_key_list}
             | {unq_def}
-            | | {name_list}
-            |   | {name a}: a: integer notnull
+            | | {name_list_and_conflict_clause}
             |   | {name_list}
-            |     | {name b}: b: text
+            |     | {name a}: a: integer notnull
+            |     | {name_list}
+            |       | {name b}: b: text
             | {col_key_list}
               | {unq_def}
-                | {name_list}
-                  | {name a}
+                | {name_list_and_conflict_clause}
+                  | {name_list}
+                    | {name a}
 
 The statement ending at line XXXX
 
@@ -4440,18 +4460,21 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0020: duplicate constraint nam
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
-    |     | {col_attrs_autoinc}
+    |     | {autoinc_and_conflict_clause}
+    |     | | {col_attrs_autoinc}
     |     | {col_attrs_not_null}
     | {col_key_list}
       | {unq_def}
       | | {name ak1}
-      | | {name_list}
-      |   | {name id}: id: integer notnull
+      | | {name_list_and_conflict_clause}
+      |   | {name_list}
+      |     | {name id}: id: integer notnull
       | {col_key_list}
         | {unq_def}
           | {name ak1}
-          | {name_list}
-            | {name id}
+          | {name_list_and_conflict_clause}
+            | {name_list}
+              | {name id}
 
 The statement ending at line XXXX
 
@@ -4478,13 +4501,15 @@ Error at test/sem_test.sql:XXXX : in pk_def : CQL0020: duplicate constraint name
     | {col_key_list}
       | {pk_def}
       | | {name pk1}
-      | | {name_list}
-      |   | {name id}
+      | | {name_list_and_conflict_clause}
+      |   | {name_list}
+      |     | {name id}
       | {col_key_list}
         | {pk_def}
           | {name pk1}
-          | {name_list}
-            | {name id}
+          | {name_list_and_conflict_clause}
+            | {name_list}
+              | {name id}
 
 The statement ending at line XXXX
 
@@ -4509,7 +4534,8 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this un
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
-    |     | {col_attrs_autoinc}
+    |     | {autoinc_and_conflict_clause}
+    |     | | {col_attrs_autoinc}
     |     | {col_attrs_not_null}
     | {col_key_list}
       | {col_def}: name: text
@@ -4519,16 +4545,18 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this un
       |     | {type_text}: text
       | {col_key_list}
         | {unq_def}
-        | | {name_list}
-        |   | {name id}: id: integer notnull
+        | | {name_list_and_conflict_clause}
         |   | {name_list}
-        |     | {name name}: name: text
+        |     | {name id}: id: integer notnull
+        |     | {name_list}
+        |       | {name name}: name: text
         | {col_key_list}
           | {unq_def}
-            | {name_list}
-              | {name name}
+            | {name_list_and_conflict_clause}
               | {name_list}
-                | {name id}
+                | {name name}
+                | {name_list}
+                  | {name id}
 
 The statement ending at line XXXX
 
@@ -4551,13 +4579,15 @@ Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'ak_col_not_e
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
-    |     | {col_attrs_autoinc}
+    |     | {autoinc_and_conflict_clause}
+    |     | | {col_attrs_autoinc}
     |     | {col_attrs_not_null}
     | {col_key_list}
       | {unq_def}
         | {name ak1}
-        | {name_list}: err
-          | {name ak_col_not_exist}: err
+        | {name_list_and_conflict_clause}
+          | {name_list}: err
+            | {name ak_col_not_exist}: err
 
 The statement ending at line XXXX
 
@@ -4580,12 +4610,14 @@ Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'ak_col_not_e
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
-    |     | {col_attrs_autoinc}
+    |     | {autoinc_and_conflict_clause}
+    |     | | {col_attrs_autoinc}
     |     | {col_attrs_not_null}
     | {col_key_list}
       | {unq_def}
-        | {name_list}: err
-          | {name ak_col_not_exist}: err
+        | {name_list_and_conflict_clause}
+          | {name_list}: err
+            | {name ak_col_not_exist}: err
 
 The statement ending at line XXXX
 
@@ -6469,7 +6501,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0040: table can only have one auto
     |   | | {name id1}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
-    |     | {col_attrs_autoinc}
+    |     | {autoinc_and_conflict_clause}
+    |     | | {col_attrs_autoinc}
     |     | {col_attrs_not_null}
     | {col_key_list}
       | {col_def}: err
@@ -6478,7 +6511,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0040: table can only have one auto
           | | {name id2}
           | | {type_int}: integer
           | {col_attrs_pk}: ok
-            | {col_attrs_autoinc}
+            | {autoinc_and_conflict_clause}
+            | | {col_attrs_autoinc}
             | {col_attrs_not_null}
 
 The statement ending at line XXXX
@@ -6769,15 +6803,17 @@ Error at test/sem_test.sql:XXXX : in str : CQL0172: name list has duplicate name
     |   | | {name key_id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
-    |     | {col_attrs_autoinc}
+    |     | {autoinc_and_conflict_clause}
+    |     | | {col_attrs_autoinc}
     |     | {col_attrs_not_null}
     | {col_key_list}
       | {unq_def}
         | {name ak1}
-        | {name_list}: err
-          | {name key_id}: key_id: integer notnull
-          | {name_list}
-            | {name key_id}: err
+        | {name_list_and_conflict_clause}
+          | {name_list}: err
+            | {name key_id}: key_id: integer notnull
+            | {name_list}
+              | {name key_id}: err
 
 The statement ending at line XXXX
 
@@ -6800,14 +6836,16 @@ Error at test/sem_test.sql:XXXX : in str : CQL0172: name list has duplicate name
     |   | | {name key_id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
-    |     | {col_attrs_autoinc}
+    |     | {autoinc_and_conflict_clause}
+    |     | | {col_attrs_autoinc}
     |     | {col_attrs_not_null}
     | {col_key_list}
       | {unq_def}
-        | {name_list}: err
-          | {name key_id}: key_id: integer notnull
-          | {name_list}
-            | {name key_id}: err
+        | {name_list_and_conflict_clause}
+          | {name_list}: err
+            | {name key_id}: key_id: integer notnull
+            | {name_list}
+              | {name key_id}: err
 
 The statement ending at line XXXX
 
@@ -12456,6 +12494,7 @@ CREATE TABLE pk_test(
         | | {name id}
         | | {type_int}: integer
         | {col_attrs_pk}: ok
+          | {autoinc_and_conflict_clause}
 
 The statement ending at line XXXX
 
@@ -12477,8 +12516,9 @@ CREATE TABLE pk_test_2(
     |     | {type_int}: integer
     | {col_key_list}
       | {pk_def}
-        | {name_list}
-          | {name id}
+        | {name_list_and_conflict_clause}
+          | {name_list}
+            | {name id}
 
 The statement ending at line XXXX
 
@@ -16814,7 +16854,8 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0146: adding an auto increment
       | | {name id}
       | | {type_int}: integer
       | {col_attrs_pk}: ok
-        | {col_attrs_autoinc}
+        | {autoinc_and_conflict_clause}
+          | {col_attrs_autoinc}
 
 The statement ending at line XXXX
 
@@ -16830,7 +16871,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0144: table in alter statement doe
       | | {name id}
       | | {type_int}
       | {col_attrs_pk}
-        | {col_attrs_autoinc}
+        | {autoinc_and_conflict_clause}
+          | {col_attrs_autoinc}
 
 The statement ending at line XXXX
 
@@ -16846,7 +16888,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0144: cannot alter a view 'MyView'
       | | {name id}
       | | {type_int}
       | {col_attrs_pk}
-        | {col_attrs_autoinc}
+        | {autoinc_and_conflict_clause}
+          | {col_attrs_autoinc}
 
 The statement ending at line XXXX
 
@@ -18079,8 +18122,9 @@ CREATE TABLE trickier_alter_target(
         |       | {int 2}
         | {col_key_list}
           | {pk_def}
-            | {name_list}
-              | {name id}
+            | {name_list_and_conflict_clause}
+              | {name_list}
+                | {name id}
 
 The statement ending at line XXXX
 
@@ -18297,6 +18341,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0031: column can't be primary 
         | | {name id}
         | | {type_int}: integer
         | {col_attrs_pk}: ok
+          | {autoinc_and_conflict_clause}
           | {col_attrs_unique}
 
 The statement ending at line XXXX
@@ -18339,12 +18384,14 @@ Error at test/sem_test.sql:XXXX : in str : CQL0143: more than one primary key in
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
-    |     | {col_attrs_autoinc}
+    |     | {autoinc_and_conflict_clause}
+    |     | | {col_attrs_autoinc}
     |     | {col_attrs_not_null}
     | {col_key_list}
       | {pk_def}
-        | {name_list}
-          | {name id}
+        | {name_list_and_conflict_clause}
+          | {name_list}
+            | {name id}
 
 The statement ending at line XXXX
 
@@ -21626,7 +21673,7 @@ CREATE TABLE bogus_autoinc_type(
   id BOOL PRIMARY KEY AUTOINCREMENT
 );
 
-Error at test/sem_test.sql:XXXX : in col_attrs_autoinc : CQL0029: autoincrement column must be [LONG_]INTEGER PRIMARY KEY 'id'
+Error at test/sem_test.sql:XXXX : in autoinc_and_conflict_clause : CQL0029: autoincrement column must be [LONG_]INTEGER PRIMARY KEY 'id'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -21640,7 +21687,8 @@ Error at test/sem_test.sql:XXXX : in col_attrs_autoinc : CQL0029: autoincrement 
         | | {name id}
         | | {type_bool}: bool
         | {col_attrs_pk}: err
-          | {col_attrs_autoinc}
+          | {autoinc_and_conflict_clause}
+            | {col_attrs_autoinc}
 
 The statement ending at line XXXX
 
@@ -21662,7 +21710,8 @@ Error at test/sem_test.sql:XXXX : in create_table_stmt : CQL0141: table has an A
         | | {name id}
         | | {type_int}: integer
         | {col_attrs_pk}: ok
-          | {col_attrs_autoinc}
+          | {autoinc_and_conflict_clause}
+            | {col_attrs_autoinc}
 
 The statement ending at line XXXX
 
@@ -21684,6 +21733,7 @@ CREATE TABLE recreatable(
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
+    |     | {autoinc_and_conflict_clause}
     | {col_key_list}
       | {col_def}: name: text
         | {col_def_type_attrs}: ok
@@ -21713,6 +21763,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0033: columns in a table marke
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
+    |     | {autoinc_and_conflict_clause}
     |     | {create_attr}
     |       | {version_annotation}
     |         | {int 2}
@@ -23327,6 +23378,7 @@ CREATE TABLE args1(
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
+    |     | {autoinc_and_conflict_clause}
     | {col_key_list}
       | {col_def}: name: text
       | | {col_def_type_attrs}: ok
@@ -26687,6 +26739,7 @@ CREATE TABLE a(
     |   | | {type_int}: integer
     |   | {col_attrs_not_null}: ok
     |     | {col_attrs_pk}
+    |       | {autoinc_and_conflict_clause}
     | {col_key_list}
       | {col_def}: sort_key: integer notnull
         | {col_def_type_attrs}: ok
@@ -26716,6 +26769,7 @@ CREATE TABLE b(
     |   | | {type_int}: integer
     |   | {col_attrs_not_null}: ok
     |     | {col_attrs_pk}
+    |       | {autoinc_and_conflict_clause}
     | {col_key_list}
       | {col_def}: a_key_: integer notnull
       | | {col_def_type_attrs}: ok
@@ -29427,6 +29481,7 @@ CREATE TABLE referenceable(
     |   | | {name a}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
+    |     | {autoinc_and_conflict_clause}
     | {col_key_list}
       | {col_def}: b: real unique_key
       | | {col_def_type_attrs}: ok
@@ -29480,10 +29535,11 @@ CREATE TABLE referenceable_2(
       |     | {type_real}: real
       | {col_key_list}
         | {pk_def}
-          | {name_list}
-            | {name a}
+          | {name_list_and_conflict_clause}
             | {name_list}
-              | {name b}
+              | {name a}
+              | {name_list}
+                | {name b}
 
 The statement ending at line XXXX
 
@@ -29848,6 +29904,7 @@ Error at test/sem_test.sql:XXXX : in name_list : CQL0272: the set of columns ref
     |   | | {name id}
     |   | | {type_long}: longint
     |   | {col_attrs_pk}: ok
+    |     | {autoinc_and_conflict_clause}
     | {col_key_list}
       | {fk_def}: err
         | {fk_info}
@@ -29883,6 +29940,7 @@ Error at test/sem_test.sql:XXXX : in name_list : CQL0272: the set of columns ref
     |   | | {name id1}
     |   | | {type_text}: text
     |   | {col_attrs_pk}: ok
+    |     | {autoinc_and_conflict_clause}
     | {col_key_list}
       | {col_def}: id2: text
       | | {col_def_type_attrs}: ok
@@ -31145,6 +31203,7 @@ CREATE TABLE plugin_table(
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
+    |     | {autoinc_and_conflict_clause}
     | {col_key_list}
       | {col_def}: name: text
       | | {col_def_type_attrs}: ok
@@ -39561,6 +39620,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0060: referenced table can be 
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: err
+    |     | {autoinc_and_conflict_clause}
     |     | {col_attrs_fk}: err
     |       | {fk_target_options}
     |         | {fk_target}
@@ -39597,6 +39657,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0060: referenced table can be 
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: err
+    |     | {autoinc_and_conflict_clause}
     |     | {col_attrs_fk}: err
     |       | {fk_target_options}
     |         | {fk_target}
@@ -39632,6 +39693,7 @@ CREATE TABLE in_group_test(
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
+    |     | {autoinc_and_conflict_clause}
     | {col_key_list}
       | {col_def}: name: text
         | {col_def_type_attrs}: ok
@@ -39661,6 +39723,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0060: referenced table can be 
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: err
+    |     | {autoinc_and_conflict_clause}
     |     | {col_attrs_fk}: err
     |       | {fk_target_options}
     |         | {fk_target}
@@ -39698,6 +39761,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0060: referenced table can be 
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: err
+    |     | {autoinc_and_conflict_clause}
     |     | {col_attrs_fk}: err
     |       | {fk_target_options}
     |         | {fk_target}
@@ -39733,6 +39797,7 @@ CREATE TABLE recreatable_reference_5(
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
+    |     | {autoinc_and_conflict_clause}
     |     | {col_attrs_fk}: ok
     |       | {fk_target_options}
     |         | {fk_target}
@@ -39791,8 +39856,9 @@ Error at test/sem_test.sql:XXXX : in fk_def : CQL0021: foreign key refers to non
         |     | {int 0}
         | {col_key_list}
           | {pk_def}
-            | {name_list}
-              | {name garbonzo}
+            | {name_list_and_conflict_clause}
+              | {name_list}
+                | {name garbonzo}
 
 The statement ending at line XXXX
 
@@ -39822,6 +39888,7 @@ END;
           |   | | {name id}
           |   | | {type_int}: integer
           |   | {col_attrs_pk}: ok
+          |     | {autoinc_and_conflict_clause}
           |     | {col_attrs_fk}: ok
           |       | {fk_target_options}
           |         | {fk_target}
@@ -41254,6 +41321,7 @@ CREATE TABLE upsert_test(
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
+    |     | {autoinc_and_conflict_clause}
     | {col_key_list}
       | {col_def}: name: text
       | | {col_def_type_attrs}: ok
@@ -41634,6 +41702,7 @@ CREATE TABLE private_region_table(
         | | {name id}
         | | {type_int}: integer
         | {col_attrs_pk}: ok
+          | {autoinc_and_conflict_clause}
 
 The statement ending at line XXXX
 
@@ -41666,6 +41735,7 @@ CREATE TABLE containing_region_table(
         | | {name id}
         | | {type_int}: integer
         | {col_attrs_pk}: ok
+          | {autoinc_and_conflict_clause}
           | {col_attrs_fk}: ok
             | {fk_target_options}
               | {fk_target}
@@ -41707,6 +41777,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0021: foreign key refers to no
         | | {name id}
         | | {type_int}: integer
         | {col_attrs_pk}: err
+          | {autoinc_and_conflict_clause}
           | {col_attrs_fk}: err
             | {fk_target_options}
               | {fk_target}
@@ -41733,6 +41804,7 @@ CREATE TABLE client_region_table_2(
         | | {name id}
         | | {type_int}: integer
         | {col_attrs_pk}: ok
+          | {autoinc_and_conflict_clause}
           | {col_attrs_fk}: ok
             | {fk_target_options}
               | {fk_target}
@@ -45326,7 +45398,8 @@ CREATE TABLE IF NOT EXISTS foo(
         | | {name id}
         | | {type_int}: integer
         | {col_attrs_pk}: ok
-          | {col_attrs_autoinc}
+          | {autoinc_and_conflict_clause}
+            | {col_attrs_autoinc}
 
 The statement ending at line XXXX
 
@@ -47480,6 +47553,7 @@ CREATE TABLE from_the_future(
         | | {name col1}
         | | {type_text}: text
         | {col_attrs_pk}: ok
+          | {autoinc_and_conflict_clause}
 
 The statement ending at line XXXX
 
@@ -47630,6 +47704,7 @@ CREATE TABLE self_ref1(
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
+    |     | {autoinc_and_conflict_clause}
     | {col_key_list}
       | {col_def}: id2: integer foreign_key
         | {col_def_type_attrs}: ok
@@ -47664,6 +47739,7 @@ CREATE TABLE self_ref2(
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
+    |     | {autoinc_and_conflict_clause}
     | {col_key_list}
       | {col_def}: id2: integer
       | | {col_def_type_attrs}: ok
@@ -47703,6 +47779,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'idx'
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
+    |     | {autoinc_and_conflict_clause}
     | {col_key_list}
       | {col_def}: err
         | {col_def_type_attrs}: ok
@@ -47739,6 +47816,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'idx'
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
+    |     | {autoinc_and_conflict_clause}
     | {col_key_list}
       | {col_def}: id2: integer
       | | {col_def_type_attrs}: ok
@@ -47779,6 +47857,7 @@ Error at test/sem_test.sql:XXXX : in name_list : CQL0272: the set of columns ref
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
+    |     | {autoinc_and_conflict_clause}
     | {col_key_list}
       | {col_def}: id2: integer
       | | {col_def_type_attrs}: ok
@@ -48681,7 +48760,8 @@ CREATE TABLE values_table(
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
-    |     | {col_attrs_autoinc}
+    |     | {autoinc_and_conflict_clause}
+    |       | {col_attrs_autoinc}
     | {col_key_list}
       | {col_def}: name: text
         | {col_def_type_attrs}: ok
@@ -48743,6 +48823,7 @@ Error at test/sem_test.sql:XXXX : in create_table_stmt : CQL0339: WITHOUT ROWID 
         | | {name id}
         | | {type_int}: integer
         | {col_attrs_pk}: ok
+          | {autoinc_and_conflict_clause}
 
 The statement ending at line XXXX
 
@@ -48769,6 +48850,7 @@ CREATE TABLE table_with_valid_without_rowid_mode(
         | | {name id}
         | | {type_int}: integer
         | {col_attrs_pk}: ok
+          | {autoinc_and_conflict_clause}
 
 The statement ending at line XXXX
 
@@ -52559,8 +52641,9 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0349: column definitions may n
     |     | {type_int}: integer
     | {col_key_list}
       | {pk_def}
-      | | {name_list}
-      |   | {name id}
+      | | {name_list_and_conflict_clause}
+      |   | {name_list}
+      |     | {name id}
       | {col_key_list}
         | {col_def}
           | {col_def_type_attrs}
@@ -59733,4 +59816,51 @@ Error at test/sem_test.sql:XXXX : in call : CQL0014: cannot assign/copy sensitiv
       | {call_filter_clause}
       | {arg_list}: ok
         | {strlit 't'}: text notnull
+
+The statement ending at line XXXX
+
+CREATE TABLE conflict_clause_t(
+  id INTEGER NOT NULL ON CONFLICT FAIL
+);
+
+  {create_table_stmt}: conflict_clause_t: { id: integer notnull }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name conflict_clause_t}
+  | {col_key_list}
+    | {col_def}: id: integer notnull
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+        | | {name id}
+        | | {type_int}: integer
+        | {col_attrs_not_null}: ok
+          | {int 2}
+
+The statement ending at line XXXX
+
+CREATE TABLE conflict_clause_pk(
+  id INTEGER NOT NULL,
+  CONSTRAINT pk1 PRIMARY KEY (id) ON CONFLICT ROLLBACK
+);
+
+  {create_table_stmt}: conflict_clause_pk: { id: integer notnull }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name conflict_clause_pk}
+  | {col_key_list}
+    | {col_def}: id: integer notnull
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |   | | {name id}
+    |   | | {type_int}: integer
+    |   | {col_attrs_not_null}: ok
+    | {col_key_list}
+      | {pk_def}
+        | {name pk1}
+        | {name_list_and_conflict_clause}
+          | {name_list}
+          | | {name id}
+          | {int 0}
 

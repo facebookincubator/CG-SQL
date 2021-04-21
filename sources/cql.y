@@ -165,14 +165,14 @@ static void cql_reset_globals(void);
 
 /* ddl stuff */
 %type <ival> opt_temp opt_if_not_exists opt_unique opt_no_rowid dummy_modifier compound_operator opt_query_plan
-%type <ival> opt_fk_options fk_options fk_on_options fk_action fk_initial_state fk_deferred_options transaction_mode
+%type <ival> opt_fk_options fk_options fk_on_options fk_action fk_initial_state fk_deferred_options transaction_mode conflict_clause
 %type <ival> frame_type frame_exclude join_type
 
 %type <aval> col_key_list col_key_def col_def col_name
 %type <aval> version_attrs opt_version_attrs version_attrs_opt_recreate opt_delete_version_attr
 %type <aval> misc_attr_key misc_attr misc_attrs misc_attr_value misc_attr_value_list
 %type <aval> col_attrs str_literal num_literal any_literal const_expr
-%type <aval> pk_def fk_def unq_def check_def fk_target_options opt_module_args
+%type <aval> pk_def fk_def unq_def check_def fk_target_options opt_module_args opt_conflict_clause
 
 %type <aval> alter_table_add_column_stmt
 %type <aval> create_index_stmt create_table_stmt create_view_stmt create_virtual_table_stmt
@@ -558,8 +558,27 @@ col_def:
   ;
 
 pk_def:
-  CONSTRAINT name PRIMARY KEY '(' name_list ')'  { $pk_def = new_ast_pk_def($name, $name_list);}
-  | PRIMARY KEY '(' name_list ')'  { $pk_def = new_ast_pk_def(NULL, $name_list);}
+  CONSTRAINT name PRIMARY KEY '(' name_list ')' opt_conflict_clause {
+    ast_node *name_list_and_conflict_clause = new_ast_name_list_and_conflict_clause($name_list, $opt_conflict_clause);
+    $pk_def = new_ast_pk_def($name, name_list_and_conflict_clause);
+  }
+  | PRIMARY KEY '(' name_list ')' opt_conflict_clause {
+    ast_node *name_list_and_conflict_clause = new_ast_name_list_and_conflict_clause($name_list, $opt_conflict_clause);
+    $pk_def = new_ast_pk_def(NULL, name_list_and_conflict_clause);
+  }
+  ;
+
+opt_conflict_clause:
+  /* nil */ { $opt_conflict_clause = NULL; }
+  | conflict_clause { $opt_conflict_clause = new_ast_opt($conflict_clause); }
+  ;
+
+conflict_clause:
+  ON_CONFLICT ROLLBACK { $conflict_clause = ON_CONFLICT_ROLLBACK; }
+  | ON_CONFLICT ABORT { $conflict_clause = ON_CONFLICT_ABORT; }
+  | ON_CONFLICT FAIL { $conflict_clause = ON_CONFLICT_FAIL; }
+  | ON_CONFLICT IGNORE { $conflict_clause = ON_CONFLICT_IGNORE; }
+  | ON_CONFLICT REPLACE { $conflict_clause = ON_CONFLICT_REPLACE; }
   ;
 
 opt_fk_options:
@@ -614,8 +633,14 @@ fk_target_options:
   ;
 
 unq_def:
-  CONSTRAINT name UNIQUE '(' name_list ')'  { $unq_def = new_ast_unq_def($name, $name_list); }
-  | UNIQUE '(' name_list ')'  { $unq_def = new_ast_unq_def(NULL, $name_list); }
+  CONSTRAINT name UNIQUE '(' name_list ')' opt_conflict_clause {
+    ast_node *name_list_and_conflict_clause = new_ast_name_list_and_conflict_clause($name_list, $opt_conflict_clause);
+    $unq_def = new_ast_unq_def($name, name_list_and_conflict_clause);
+  }
+  | UNIQUE '(' name_list ')' opt_conflict_clause {
+    ast_node *name_list_and_conflict_clause = new_ast_name_list_and_conflict_clause($name_list, $opt_conflict_clause);
+    $unq_def = new_ast_unq_def(NULL, name_list_and_conflict_clause);
+  }
   ;
 
 opt_unique:
@@ -677,16 +702,22 @@ opt_name_list:
 
 col_attrs[result]:
   /* nil */  { $result = NULL; }
-  | NOT NULL_ col_attrs[ca]  { $result = new_ast_col_attrs_not_null(NULL, $ca); }
-  | PRIMARY KEY col_attrs[ca]  { $result = new_ast_col_attrs_pk(NULL, $ca); }
-  | PRIMARY KEY AUTOINCREMENT col_attrs[ca]  { $result = new_ast_col_attrs_pk(new_ast_col_attrs_autoinc(), $ca);}
+  | NOT NULL_ opt_conflict_clause col_attrs[ca]  { $result = new_ast_col_attrs_not_null($opt_conflict_clause, $ca); }
+  | PRIMARY KEY opt_conflict_clause col_attrs[ca]  {
+    ast_node *autoinc_and_conflict_clause = new_ast_autoinc_and_conflict_clause(NULL, $opt_conflict_clause);
+    $result = new_ast_col_attrs_pk(autoinc_and_conflict_clause, $ca);
+  }
+  | PRIMARY KEY opt_conflict_clause AUTOINCREMENT col_attrs[ca]  {
+    ast_node *autoinc_and_conflict_clause = new_ast_autoinc_and_conflict_clause(new_ast_col_attrs_autoinc(), $opt_conflict_clause);
+    $result = new_ast_col_attrs_pk(autoinc_and_conflict_clause, $ca);
+  }
   | DEFAULT '-' num_literal col_attrs[ca]  { $result = new_ast_col_attrs_default(new_ast_uminus($num_literal), $ca);}
   | DEFAULT num_literal col_attrs[ca]  { $result = new_ast_col_attrs_default($num_literal, $ca);}
   | DEFAULT const_expr col_attrs[ca]  { $result = new_ast_col_attrs_default($const_expr, $ca);}
   | DEFAULT str_literal col_attrs[ca]  { $result = new_ast_col_attrs_default($str_literal, $ca);}
   | COLLATE name col_attrs[ca]  { $result = new_ast_col_attrs_collate($name, $ca);}
   | CHECK '(' expr ')' col_attrs[ca]  { $result = new_ast_col_attrs_check($expr, $ca);}
-  | UNIQUE col_attrs[ca]  { $result = new_ast_col_attrs_unique(NULL, $ca);}
+  | UNIQUE opt_conflict_clause col_attrs[ca]  { $result = new_ast_col_attrs_unique($opt_conflict_clause, $ca);}
   | HIDDEN col_attrs[ca]  { $result = new_ast_col_attrs_hidden(NULL, $ca);}
   | AT_SENSITIVE col_attrs[ca]  { $result = new_ast_sensitive_attr(NULL, $ca); }
   | AT_CREATE version_annotation col_attrs[ca]  { $result = new_ast_create_attr($version_annotation, $ca);}

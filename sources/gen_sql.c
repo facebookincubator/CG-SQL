@@ -54,6 +54,7 @@ static void gen_if_not_exists(ast_node *ast, bool_t if_not_exist);
 static void gen_shape_def(ast_node *ast);
 static void gen_expr_names(ast_node *ast);
 static void gen_opt_where(ast_node *ast);
+static void gen_conflict_clause(ast_node *ast);
 
 #define gen_printf(...) bprintf(output, __VA_ARGS__)
 
@@ -276,15 +277,21 @@ static void gen_create_index_stmt(ast_node *ast) {
 
 static void gen_unq_def(ast_node *def) {
   Contract(is_ast_unq_def(def));
+  EXTRACT_NOTNULL(name_list_and_conflict_clause, def->right);
+  EXTRACT_NOTNULL(name_list, name_list_and_conflict_clause->left);
+  EXTRACT_ANY(conflict_clause, name_list_and_conflict_clause->right);
+
   if (def->left) {
     EXTRACT_STRING(name, def->left);
     gen_printf("CONSTRAINT %s ", name);
   }
 
-  EXTRACT_NOTNULL(name_list, def->right);
   gen_printf("UNIQUE (");
   gen_name_list(name_list);
   gen_printf(")");
+  if (conflict_clause) {
+    gen_conflict_clause(conflict_clause);
+  }
 }
 
 static void gen_check_def(ast_node *def) {
@@ -397,9 +404,35 @@ static void gen_fk_def(ast_node *def) {
   gen_fk_target_options(fk_target_options);
 }
 
+static void gen_conflict_clause(ast_node *ast) {
+  Contract(is_ast_int(ast));
+  EXTRACT_OPTION(conflict_clause_opt, ast);
+
+  gen_printf(" ON CONFLICT ");
+  switch (conflict_clause_opt) {
+    case ON_CONFLICT_ROLLBACK:
+      gen_printf("ROLLBACK");
+      break;
+    case ON_CONFLICT_ABORT:
+      gen_printf("ABORT");
+      break;
+    case ON_CONFLICT_FAIL:
+      gen_printf("FAIL");
+      break;
+    case ON_CONFLICT_IGNORE:
+      gen_printf("IGNORE");
+      break;
+    case ON_CONFLICT_REPLACE:
+      gen_printf("REPLACE");
+      break;
+  }
+}
+
 static void gen_pk_def(ast_node *def) {
   Contract(is_ast_pk_def(def));
-  EXTRACT(name_list, def->right);
+  EXTRACT_NOTNULL(name_list_and_conflict_clause, def->right);
+  EXTRACT_NOTNULL(name_list, name_list_and_conflict_clause->left);
+  EXTRACT_ANY(conflict_clause, name_list_and_conflict_clause->right);
 
   if (def->left) {
     EXTRACT_STRING(name, def->left);
@@ -409,6 +442,9 @@ static void gen_pk_def(ast_node *def) {
   gen_printf("PRIMARY KEY (");
   gen_name_list(name_list);
   gen_printf(")");
+  if (conflict_clause) {
+    gen_conflict_clause(conflict_clause);
+  }
 }
 
 static void gen_version_and_proc(ast_node *ast)
@@ -482,13 +518,27 @@ static void gen_col_attrs(ast_node *_Nullable attrs) {
       gen_delete_attr(attr);
     } else if (is_ast_col_attrs_not_null(attr)) {
       gen_printf(" NOT NULL");
+      EXTRACT_ANY(conflict_clause, attr->left);
+      if (conflict_clause) {
+        gen_conflict_clause(conflict_clause);
+      }
     } else if (is_ast_col_attrs_pk(attr)) {
+      EXTRACT_NOTNULL(autoinc_and_conflict_clause, attr->left);
+      EXTRACT(col_attrs_autoinc, autoinc_and_conflict_clause->left);
+      EXTRACT_ANY(conflict_clause, autoinc_and_conflict_clause->right);
+
       gen_printf(" PRIMARY KEY");
-      if (is_ast_col_attrs_autoinc(attr->left)) {
+      if (conflict_clause) {
+        gen_conflict_clause(conflict_clause);
+      }
+      if (col_attrs_autoinc) {
         gen_printf(" AUTOINCREMENT");
       }
     } else if (is_ast_col_attrs_unique(attr)) {
       gen_printf(" UNIQUE");
+      if (attr->left) {
+        gen_conflict_clause(attr->left);
+      }
     } else if (is_ast_col_attrs_hidden(attr)) {
       gen_printf(" HIDDEN");
     } else if (is_ast_col_attrs_fk(attr)) {

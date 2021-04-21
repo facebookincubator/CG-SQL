@@ -477,10 +477,11 @@ CREATE TABLE t_additional_attribute_present(
       |     | {type_int}: integer
       | {col_key_list}
         | {pk_def}
-          | {name_list}
-            | {name a}
+          | {name_list_and_conflict_clause}
             | {name_list}
-              | {name b}
+              | {name a}
+              | {name_list}
+                | {name b}
 
 The statement ending at line XXXX
 
@@ -511,8 +512,9 @@ CREATE TABLE t_additional_attribute_mismatch(
       |   | {col_attrs_not_null}: ok
       | {col_key_list}
         | {pk_def}
-          | {name_list}
-            | {name a}
+          | {name_list_and_conflict_clause}
+            | {name_list}
+              | {name a}
 
 The statement ending at line XXXX
 
@@ -553,8 +555,9 @@ CREATE TABLE t_attribute_added(
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
       | {pk_def}
-        | {name_list}
-          | {name a}
+        | {name_list_and_conflict_clause}
+          | {name_list}
+            | {name a}
 
 The statement ending at line XXXX
 
@@ -1346,8 +1349,9 @@ CREATE TABLE t_several_columns_added_interleaved(
         |       | {int 2}
         | {col_key_list}
           | {pk_def}
-            | {name_list}
-              | {name col1}
+            | {name_list_and_conflict_clause}
+              | {name_list}
+                | {name col1}
 
 The statement ending at line XXXX
 
@@ -1407,6 +1411,7 @@ CREATE TABLE Recreated1(
         | | {name id}
         | | {type_int}: integer
         | {col_attrs_pk}: ok
+          | {autoinc_and_conflict_clause}
 
 The statement ending at line XXXX
 
@@ -1646,6 +1651,7 @@ CREATE TABLE logical_moving_T1(
         | | {name id}
         | | {type_int}: integer
         | {col_attrs_pk}: ok
+          | {autoinc_and_conflict_clause}
 
 The statement ending at line XXXX
 
@@ -1746,6 +1752,7 @@ CREATE TABLE table_staying(
         | | {name col1}
         | | {type_int}: integer
         | {col_attrs_pk}: ok
+          | {autoinc_and_conflict_clause}
           | {col_attrs_not_null}
 
 The statement ending at line XXXX
@@ -1813,6 +1820,7 @@ CREATE TABLE adding_with_migrators_ok(
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
+    |     | {autoinc_and_conflict_clause}
     | {col_key_list}
       | {col_def}: id2: integer deleted @delete(3)
       | | {col_def_type_attrs}: ok
@@ -2526,10 +2534,11 @@ CREATE TABLE t_additional_attribute_present(
       |     | {type_int}: integer
       | {col_key_list}
         | {pk_def}
-          | {name_list}
-            | {name a}
+          | {name_list_and_conflict_clause}
             | {name_list}
-              | {name b}
+              | {name a}
+              | {name_list}
+                | {name b}
 
 The statement ending at line XXXX
 
@@ -2566,10 +2575,11 @@ Error at test/sem_test_prev.sql:XXXX : in pk_def : CQL0132: table has a facet th
       |   | {col_attrs_not_null}: ok
       | {col_key_list}
         | {pk_def}
-          | {name_list}
-            | {name a}
+          | {name_list_and_conflict_clause}
             | {name_list}
-              | {name b}
+              | {name a}
+              | {name_list}
+                | {name b}
 
 The statement ending at line XXXX
 
@@ -3302,8 +3312,9 @@ Error at test/sem_test_prev.sql:XXXX : in col_key_list : CQL0133: non-column fac
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
       | {pk_def}
-        | {name_list}
-          | {name id}
+        | {name_list_and_conflict_clause}
+          | {name_list}
+            | {name id}
 
 The statement ending at line XXXX
 
@@ -3356,8 +3367,9 @@ CREATE TABLE t_several_columns_added_interleaved(
     |     | {type_int}: integer
     | {col_key_list}
       | {pk_def}
-        | {name_list}
-          | {name col1}
+        | {name_list_and_conflict_clause}
+          | {name_list}
+            | {name col1}
 
 The statement ending at line XXXX
 
@@ -3649,6 +3661,7 @@ CREATE TABLE logical_moving_T1(
         | | {name id}
         | | {type_int}: integer
         | {col_attrs_pk}: ok
+          | {autoinc_and_conflict_clause}
 
 The statement ending at line XXXX
 
@@ -3806,6 +3819,7 @@ CREATE TABLE table_staying(
         | | {name col1}
         | | {type_int}: integer
         | {col_attrs_pk}: ok
+          | {autoinc_and_conflict_clause}
           | {col_attrs_not_null}
 
 The statement ending at line XXXX
@@ -3869,6 +3883,7 @@ CREATE TABLE adding_with_migrators_ok(
     |   | | {name id}
     |   | | {type_int}: integer
     |   | {col_attrs_pk}: ok
+    |     | {autoinc_and_conflict_clause}
     | {col_key_list}
       | {col_def}: id2: integer
         | {col_def_type_attrs}: ok

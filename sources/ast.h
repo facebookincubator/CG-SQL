@@ -46,6 +46,12 @@
 #define RAISE_ABORT         2
 #define RAISE_FAIL          3
 
+#define ON_CONFLICT_ROLLBACK   0
+#define ON_CONFLICT_ABORT      1
+#define ON_CONFLICT_FAIL       2
+#define ON_CONFLICT_IGNORE     3
+#define ON_CONFLICT_REPLACE    4
+
 #define FK_ON_UPDATE   0xF0
 #define FK_ON_DELETE   0x0F
 
@@ -673,6 +679,8 @@ AST(case_expr)
 AST(case_list)
 AST(when)
 AST0(null)
+AST(autoinc_and_conflict_clause)
+AST(name_list_and_conflict_clause)
 AST(alter_table_add_column_stmt)
 AST(view_and_attrs)
 AST(create_view_stmt)
