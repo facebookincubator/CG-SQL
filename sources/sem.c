@@ -2646,8 +2646,6 @@ static void sem_create_index_stmt(ast_node *ast) {
   // if there is an existing index, save it here so we can check for duplicates later.
   ast_node *existing_defn = adding_current_entity ? find_index(index_name) : NULL;
 
-  ast_node *table_ast = NULL;
-
   version_attrs_info vers_info;
   init_version_attrs_info(&vers_info, index_name, ast, attrs);
   bool_t valid_version_info = sem_validate_version_attrs(&vers_info);
@@ -2662,6 +2660,7 @@ static void sem_create_index_stmt(ast_node *ast) {
     return;
   }
 
+  ast_node *table_ast = NULL;
   bool_t deleting = vers_info.delete_version > 0;
 
   if (deleting) {
@@ -10043,10 +10042,22 @@ static void sem_create_trigger_stmt(ast_node *ast) {
     return;
   }
 
-  ast_node *target = find_usable_and_not_deleted_table_or_view(
-    table_name,
-    table_name_ast,
-    "CQL0137: table/view not found");
+  ast_node *target = NULL;
+  bool_t deleting = vers_info.delete_version > 0;
+
+  if (deleting) {
+    target = find_usable_table_or_view_even_deleted(
+      table_name,
+      table_name_ast,
+      "CQL0137: table/view not found");
+  }
+  else {
+    target = find_usable_and_not_deleted_table_or_view(
+      table_name,
+      table_name_ast,
+      "CQL0137: table/view not found");
+  }
+
   if (!target) {
     record_error(ast);
     return;

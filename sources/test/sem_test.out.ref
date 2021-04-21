@@ -39902,7 +39902,7 @@ CREATE PROC invalid_ddl_1 ()
 BEGIN
   CREATE TABLE inv_1(
     id INTEGER
-  ) @RECREATE(xxx);
+  ) @RECREATE(xyx);
 END;
 
 Error at test/sem_test.sql:XXXX : in create_table_stmt : CQL0396: versioning attributes may not be used on DDL inside a procedure 'inv_1'
@@ -39916,7 +39916,7 @@ Error at test/sem_test.sql:XXXX : in create_table_stmt : CQL0396: versioning att
         | | {table_flags_attrs}
         | | | {int 0}
         | | | {recreate_attr}
-        | |   | {name xxx}
+        | |   | {name xyx}
         | | {name inv_1}
         | {col_key_list}
           | {col_def}
@@ -59572,7 +59572,7 @@ CREATE TABLE this_table_is_deleted(
 
 The statement ending at line XXXX
 
-CREATE INDEX deleted_index ON this_table_is_deleted (xxx) @DELETE(1);
+CREATE INDEX deleted_index ON this_table_is_deleted (xyx) @DELETE(1);
 
   {create_index_stmt}: ok @delete(1)
   | {create_index_on_list}
@@ -59584,10 +59584,52 @@ CREATE INDEX deleted_index ON this_table_is_deleted (xxx) @DELETE(1);
       | {index_names_and_attrs}
       | | {indexed_columns}
       |   | {indexed_column}
-      |     | {name xxx}
+      |     | {name xyx}
       | {delete_attr}
         | {version_annotation}
           | {int 1}
+
+The statement ending at line XXXX
+
+CREATE TRIGGER trigger_deleted
+  BEFORE DELETE ON this_table_is_deleted
+BEGIN
+  SELECT 1;
+END @DELETE(1);
+
+  {create_trigger_stmt}: ok @delete(1)
+  | {int 0}
+  | {trigger_body_vers}
+    | {trigger_def}
+    | | {name trigger_deleted}
+    | | {trigger_condition}
+    |   | {int 4}
+    |   | {trigger_op_target}
+    |     | {trigger_operation}
+    |     | | {int 64}
+    |     | {trigger_target_action}
+    |       | {name this_table_is_deleted}: this_table_is_deleted: { id: integer } deleted @delete(1)
+    |       | {trigger_action}
+    |         | {int 0}
+    |         | {trigger_when_stmts}
+    |           | {stmt_list}: ok
+    |             | {select_stmt}: select: { _anon: integer notnull }
+    |               | {select_core_list}: select: { _anon: integer notnull }
+    |               | | {select_core}: select: { _anon: integer notnull }
+    |               |   | {select_expr_list_con}: select: { _anon: integer notnull }
+    |               |     | {select_expr_list}: select: { _anon: integer notnull }
+    |               |     | | {select_expr}: integer notnull
+    |               |     |   | {int 1}: integer notnull
+    |               |     | {select_from_etc}: ok
+    |               |       | {select_where}
+    |               |         | {select_groupby}
+    |               |           | {select_having}
+    |               | {select_orderby}
+    |                 | {select_limit}
+    |                   | {select_offset}
+    | {delete_attr}
+      | {version_annotation}
+        | {int 1}
 
 The statement ending at line XXXX
 
