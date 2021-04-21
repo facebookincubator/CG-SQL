@@ -6601,9 +6601,27 @@ create temp table table_with_dup_col(
   f1 text, like MyView
 );
 
+/* test disabled because this enforcement is temporarily off
+ * -- TEST: try to create a temp view with versioning -- not allowed
+ * -- + {create_view_stmt}: err
+ * -- + Error % temp objects may not have versioning annotations 'bogus_temp_view_with_versioning'
+ * -- +1 Error
+ * create temp view bogus_temp_view_with_versioning as select 1 x @delete(1);
+ */
+
+-- TEST: try to create a temp trigger with versioning -- not allowed
+-- + {create_trigger_stmt}: err
+-- + Error % temp objects may not have versioning annotations 'bogus_temp_trigger'
+-- +1 Error
+create temp trigger if not exists bogus_temp_trigger
+  before delete on bar
+begin
+  delete from bar where rate > id;
+end @delete(2);
+
 -- TEST: try to create a temp table with versioning -- not allowed
 -- + {create_table_stmt}: err
--- + Error % temp tables may not have versioning annotations 'bogus_temp_with_create_versioning'
+-- + Error % temp objects may not have versioning annotations 'bogus_temp_with_create_versioning'
 -- +1 Error
 create temp table bogus_temp_with_create_versioning(
   id integer
@@ -6611,7 +6629,7 @@ create temp table bogus_temp_with_create_versioning(
 
 -- TEST: try to create a temp table with versioning -- not allowed
 -- + {create_table_stmt}: err
--- + Error % temp tables may not have versioning annotations 'bogus_temp_with_delete_versioning'
+-- + Error % temp objects may not have versioning annotations 'bogus_temp_with_delete_versioning'
 -- +1 Error
 create temp table bogus_temp_with_delete_versioning(
   id integer
@@ -6619,7 +6637,7 @@ create temp table bogus_temp_with_delete_versioning(
 
 -- TEST: try to create a temp table with recreate versioning -- not allowed
 -- + {create_table_stmt}: err
--- + Error % temp tables may not have versioning annotations 'bogus_temp_with_recreate_versioning'
+-- + Error % temp objects may not have versioning annotations 'bogus_temp_with_recreate_versioning'
 -- +1 Error
 create temp table bogus_temp_with_recreate_versioning(
   id integer
@@ -6983,7 +7001,7 @@ end;
 -- + {create_trigger_stmt}: err
 -- + Error % migration proc not allowed on object 'trigger8'
 -- +1 Error
-create temp trigger if not exists trigger8
+create trigger if not exists trigger8
   before delete on bar
 begin
   select 1 x;
@@ -9534,7 +9552,7 @@ select min(_sens, 1L);
 -- TEST: create a non-recreate table that references a recreated table
 -- + create_table_stmt}: err
 -- + col_attrs_fk}: err
--- +1 Error % referenced table can be independently be recreated so it cannot be used in a foreign key 'recreatable'
+-- +1 Error % referenced table can be independently recreated so it cannot be used in a foreign key 'recreatable'
 -- + Error
 create table recreatable_reference_1(
   id integer primary key references recreatable(id),
@@ -9544,7 +9562,7 @@ create table recreatable_reference_1(
 -- TEST: create a recreate table that references a recreated table
 -- + create_table_stmt}: err
 -- + col_attrs_fk}: err
--- +1 Error % referenced table can be independently be recreated so it cannot be used in a foreign key 'recreatable'
+-- +1 Error % referenced table can be independently recreated so it cannot be used in a foreign key 'recreatable'
 -- + Error
 create table recreatable_reference_2(
   id integer primary key references recreatable(id),
@@ -9564,7 +9582,7 @@ create table in_group_test(
 -- TEST: create a recreate table that references a recreated table, it's in a group, but I'm not
 -- + create_table_stmt}: err
 -- + col_attrs_fk}: err
--- +1 Error % referenced table can be independently be recreated so it cannot be used in a foreign key 'in_group_test'
+-- +1 Error % referenced table can be independently recreated so it cannot be used in a foreign key 'in_group_test'
 -- + Error
 create table recreatable_reference_3(
   id integer primary key references in_group_test(id),
@@ -9574,7 +9592,7 @@ create table recreatable_reference_3(
 -- TEST: create a recreate table that references a recreated table, it's in a group, but I'm in a different group
 -- + create_table_stmt}: err
 -- + col_attrs_fk}: err
--- +1 Error % referenced table can be independently be recreated so it cannot be used in a foreign key 'in_group_test'
+-- +1 Error % referenced table can be independently recreated so it cannot be used in a foreign key 'in_group_test'
 -- + Error
 create table recreatable_reference_4(
   id integer primary key references in_group_test(id),
@@ -9594,7 +9612,7 @@ create table recreatable_reference_5(
 ) @recreate(rtest);
 
 -- TEST: once we have found one error in the constraint section it's not safe to proceed to look for more
---       errors because the semantic type of the node has arleady been changed to "error"
+--       errors because the semantic type of the node has already been changed to "error"
 --       so we have to early out.  To prove this is happening we force an error in the PK section here
 --       this error will not be reported becuase we bail before that.
 -- + {create_table_stmt}: err
@@ -9609,20 +9627,68 @@ CREATE TABLE early_out_on_errs(
   PRIMARY KEY (garbonzo)
 ) @RECREATE;
 
--- TEST: create a recreate table that references a recreated table
---       we're doing this in the context of a proc so we we MUST generate the table
---       best we can.  This is exactly what schema upgrade will do.  Note that
---       in the context of schema upgrade the recreate annotations and such will be
---       missing from the statements that do the work.  The declarations are right though.
--- + {create_table_stmt}: recreatable_reference_6: { id: integer notnull primary_key foreign_key, name: text } @recreate(rtest_other_group)
--- + {col_attrs_fk}: ok
--- - Error
-create proc some_fake_upgrader()
+-- TEST: attributes not allowed inside of a procedure
+-- + {create_table_stmt}: err
+-- + Error % versioning attributes may not be used on DDL inside a procedure
+-- +1 Error
+create proc invalid_ddl_1()
 begin
-  create table recreatable_reference_6(
-    id integer primary key references in_group_test(id) on update cascade on delete cascade,
-    name text
-  ) @recreate(rtest_other_group);
+  create table inv_1(
+    id integer
+  ) @recreate(xxx);
+end;
+
+-- TEST: attributes not allowed inside of a procedure
+-- + {create_table_stmt}: err
+-- + Error % versioning attributes may not be used on DDL inside a procedure
+-- +1 Error
+create proc invalid_ddl_2()
+begin
+  create table inv2(
+    id integer
+  ) @create(1);
+end;
+
+-- TEST: attributes not allowed inside of a procedure
+-- + {create_table_stmt}: err
+-- + Error % versioning attributes may not be used on DDL inside a procedure
+-- +1 Error
+create proc invalid_ddl_3()
+begin
+  create table inv3(
+    id integer
+  ) @delete(2);
+end;
+
+-- TEST: attributes not allowed inside of a procedure
+-- + {create_index_stmt}: err
+-- + Error % versioning attributes may not be used on DDL inside a procedure
+-- +1 Error
+create proc invalid_ddl_4()
+begin
+  create index inv_4 on bar(x) @delete(2);
+end;
+
+-- TEST: attributes not allowed inside of a procedure
+-- + {create_view_stmt}: err
+-- + Error % versioning attributes may not be used on DDL inside a procedure
+-- +1 Error
+create proc invalid_ddl_5()
+begin
+ create view inv_5 as select 1 as f1 @delete(2);
+end;
+
+-- TEST: attributes not allowed inside of a procedure
+-- + {create_trigger_stmt}: err
+-- + Error % versioning attributes may not be used on DDL inside a procedure
+-- +1 Error
+create proc invalid_ddl_6()
+begin
+  create trigger if not exists trigger2
+    after insert on bar
+  begin
+    delete from bar where rate > new.id;
+  end @delete(2);
 end;
 
 -- TEST: enable strict join mode
@@ -15004,7 +15070,7 @@ CREATE TABLE this_table_is_deleted(
 -- TEST: it's ok to have an index refer to a deleted table if the index is deleted
 -- the index now refers to a stub column, that's ok because we're only generating
 -- a drop for this index
--- + CREATE INDEX deleteD_index ON this_table_is_deleted (xxx) @DELETE(1);
+-- + CREATE INDEX deleted_index ON this_table_is_deleted (xxx) @DELETE(1);
 -- + {create_index_stmt}: ok @delete(1)
 -- - Error
 CREATE INDEX deleted_index ON this_table_is_deleted (xxx) @DELETE(1);

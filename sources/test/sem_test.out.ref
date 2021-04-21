@@ -24027,11 +24027,47 @@ Error at test/sem_test.sql:XXXX : in str : CQL0142: duplicate column name 'f1'
 
 The statement ending at line XXXX
 
+CREATE TEMP TRIGGER IF NOT EXISTS bogus_temp_trigger
+  BEFORE DELETE ON bar
+BEGIN
+  DELETE FROM bar WHERE rate > id;
+END @DELETE(2);
+
+Error at test/sem_test.sql:XXXX : in create_trigger_stmt : CQL0139: temp objects may not have versioning annotations 'bogus_temp_trigger'
+
+  {create_trigger_stmt}: err
+  | {int 3}
+  | {trigger_body_vers}
+    | {trigger_def}
+    | | {name bogus_temp_trigger}
+    | | {trigger_condition}
+    |   | {int 4}
+    |   | {trigger_op_target}
+    |     | {trigger_operation}
+    |     | | {int 64}
+    |     | {trigger_target_action}
+    |       | {name bar}
+    |       | {trigger_action}
+    |         | {int 0}
+    |         | {trigger_when_stmts}
+    |           | {stmt_list}
+    |             | {delete_stmt}
+    |               | {name bar}
+    |               | {opt_where}
+    |                 | {gt}
+    |                   | {name rate}
+    |                   | {name id}
+    | {delete_attr}
+      | {version_annotation}
+        | {int 2}
+
+The statement ending at line XXXX
+
 CREATE TEMP TABLE bogus_temp_with_create_versioning(
   id INTEGER
 ) @CREATE(1);
 
-Error at test/sem_test.sql:XXXX : in create_table_stmt : CQL0139: temp tables may not have versioning annotations 'bogus_temp_with_create_versioning'
+Error at test/sem_test.sql:XXXX : in create_table_stmt : CQL0139: temp objects may not have versioning annotations 'bogus_temp_with_create_versioning'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -24054,7 +24090,7 @@ CREATE TEMP TABLE bogus_temp_with_delete_versioning(
   id INTEGER
 ) @DELETE(1);
 
-Error at test/sem_test.sql:XXXX : in create_table_stmt : CQL0139: temp tables may not have versioning annotations 'bogus_temp_with_delete_versioning'
+Error at test/sem_test.sql:XXXX : in create_table_stmt : CQL0139: temp objects may not have versioning annotations 'bogus_temp_with_delete_versioning'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -24077,7 +24113,7 @@ CREATE TEMP TABLE bogus_temp_with_recreate_versioning(
   id INTEGER
 ) @RECREATE;
 
-Error at test/sem_test.sql:XXXX : in create_table_stmt : CQL0139: temp tables may not have versioning annotations 'bogus_temp_with_recreate_versioning'
+Error at test/sem_test.sql:XXXX : in create_table_stmt : CQL0139: temp objects may not have versioning annotations 'bogus_temp_with_recreate_versioning'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -25327,7 +25363,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed i
 
 The statement ending at line XXXX
 
-CREATE TEMP TRIGGER IF NOT EXISTS trigger8
+CREATE TRIGGER IF NOT EXISTS trigger8
   BEFORE DELETE ON bar
 BEGIN
   SELECT 1 AS x;
@@ -25336,7 +25372,7 @@ END @DELETE(1, MigrateProcFoo);
 Error at test/sem_test.sql:XXXX : in create_trigger_stmt : CQL0321: migration proc not allowed on object 'trigger8'
 
   {create_trigger_stmt}: err
-  | {int 3}
+  | {int 2}
   | {trigger_body_vers}
     | {trigger_def}
     | | {name trigger8}
@@ -39606,7 +39642,7 @@ CREATE TABLE recreatable_reference_1(
   name TEXT
 );
 
-Error at test/sem_test.sql:XXXX : in col_def : CQL0060: referenced table can be independently be recreated so it cannot be used in a foreign key 'recreatable'
+Error at test/sem_test.sql:XXXX : in col_def : CQL0060: referenced table can be independently recreated so it cannot be used in a foreign key 'recreatable'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -39642,7 +39678,7 @@ CREATE TABLE recreatable_reference_2(
   name TEXT
 ) @RECREATE;
 
-Error at test/sem_test.sql:XXXX : in col_def : CQL0060: referenced table can be independently be recreated so it cannot be used in a foreign key 'recreatable'
+Error at test/sem_test.sql:XXXX : in col_def : CQL0060: referenced table can be independently recreated so it cannot be used in a foreign key 'recreatable'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -39708,7 +39744,7 @@ CREATE TABLE recreatable_reference_3(
   name TEXT
 ) @RECREATE;
 
-Error at test/sem_test.sql:XXXX : in col_def : CQL0060: referenced table can be independently be recreated so it cannot be used in a foreign key 'in_group_test'
+Error at test/sem_test.sql:XXXX : in col_def : CQL0060: referenced table can be independently recreated so it cannot be used in a foreign key 'in_group_test'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -39745,7 +39781,7 @@ CREATE TABLE recreatable_reference_4(
   name TEXT
 ) @RECREATE(rtest_other_group);
 
-Error at test/sem_test.sql:XXXX : in col_def : CQL0060: referenced table can be independently be recreated so it cannot be used in a foreign key 'in_group_test'
+Error at test/sem_test.sql:XXXX : in col_def : CQL0060: referenced table can be independently recreated so it cannot be used in a foreign key 'in_group_test'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -39862,46 +39898,204 @@ Error at test/sem_test.sql:XXXX : in fk_def : CQL0021: foreign key refers to non
 
 The statement ending at line XXXX
 
-CREATE PROC some_fake_upgrader ()
+CREATE PROC invalid_ddl_1 ()
 BEGIN
-  CREATE TABLE recreatable_reference_6(
-    id INTEGER PRIMARY KEY REFERENCES in_group_test (id) ON UPDATE CASCADE ON DELETE CASCADE,
-    name TEXT
-  ) @RECREATE(rtest_other_group);
+  CREATE TABLE inv_1(
+    id INTEGER
+  ) @RECREATE(xxx);
 END;
 
-  {create_proc_stmt}: ok dml_proc
-  | {name some_fake_upgrader}: ok dml_proc
+Error at test/sem_test.sql:XXXX : in create_table_stmt : CQL0396: versioning attributes may not be used on DDL inside a procedure 'inv_1'
+
+  {create_proc_stmt}: err
+  | {name invalid_ddl_1}: err
   | {proc_params_stmts}
-    | {stmt_list}: ok
-      | {create_table_stmt}: recreatable_reference_6: { id: integer notnull primary_key foreign_key, name: text } @recreate(rtest_other_group)
+    | {stmt_list}: err
+      | {create_table_stmt}: err
         | {create_table_name_flags}
         | | {table_flags_attrs}
         | | | {int 0}
         | | | {recreate_attr}
-        | |   | {name rtest_other_group}
-        | | {name recreatable_reference_6}
+        | |   | {name xxx}
+        | | {name inv_1}
         | {col_key_list}
-          | {col_def}: id: integer notnull primary_key foreign_key
-          | | {col_def_type_attrs}: ok
-          |   | {col_def_name_type}
-          |   | | {name id}
-          |   | | {type_int}: integer
-          |   | {col_attrs_pk}: ok
-          |     | {autoinc_and_conflict_clause}
-          |     | {col_attrs_fk}: ok
-          |       | {fk_target_options}
-          |         | {fk_target}
-          |         | | {name in_group_test}
-          |         | | {name_list}
-          |         |   | {name id}: id: integer notnull
-          |         | {int 51}
-          | {col_key_list}
-            | {col_def}: name: text
-              | {col_def_type_attrs}: ok
-                | {col_def_name_type}
-                  | {name name}
-                  | {type_text}: text
+          | {col_def}
+            | {col_def_type_attrs}
+              | {col_def_name_type}
+                | {name id}
+                | {type_int}
+
+The statement ending at line XXXX
+
+CREATE PROC invalid_ddl_2 ()
+BEGIN
+  CREATE TABLE inv2(
+    id INTEGER
+  ) @CREATE(1);
+END;
+
+Error at test/sem_test.sql:XXXX : in create_table_stmt : CQL0396: versioning attributes may not be used on DDL inside a procedure 'inv2'
+
+  {create_proc_stmt}: err
+  | {name invalid_ddl_2}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {create_table_stmt}: err
+        | {create_table_name_flags}
+        | | {table_flags_attrs}
+        | | | {int 0}
+        | | | {create_attr}
+        | |   | {version_annotation}
+        | |     | {int 1}
+        | | {name inv2}
+        | {col_key_list}
+          | {col_def}
+            | {col_def_type_attrs}
+              | {col_def_name_type}
+                | {name id}
+                | {type_int}
+
+The statement ending at line XXXX
+
+CREATE PROC invalid_ddl_3 ()
+BEGIN
+  CREATE TABLE inv3(
+    id INTEGER
+  ) @DELETE(2);
+END;
+
+Error at test/sem_test.sql:XXXX : in create_table_stmt : CQL0396: versioning attributes may not be used on DDL inside a procedure 'inv3'
+
+  {create_proc_stmt}: err
+  | {name invalid_ddl_3}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {create_table_stmt}: err
+        | {create_table_name_flags}
+        | | {table_flags_attrs}
+        | | | {int 0}
+        | | | {delete_attr}
+        | |   | {version_annotation}
+        | |     | {int 2}
+        | | {name inv3}
+        | {col_key_list}
+          | {col_def}
+            | {col_def_type_attrs}
+              | {col_def_name_type}
+                | {name id}
+                | {type_int}
+
+The statement ending at line XXXX
+
+CREATE PROC invalid_ddl_4 ()
+BEGIN
+  CREATE INDEX inv_4 ON bar (x) @DELETE(2);
+END;
+
+Error at test/sem_test.sql:XXXX : in create_index_stmt : CQL0396: versioning attributes may not be used on DDL inside a procedure 'inv_4'
+
+  {create_proc_stmt}: err
+  | {name invalid_ddl_4}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {create_index_stmt}: err
+        | {create_index_on_list}
+        | | {name inv_4}
+        | | {name bar}
+        | {flags_names_attrs}
+          | {int 0}
+          | {connector}
+            | {index_names_and_attrs}
+            | | {indexed_columns}
+            |   | {indexed_column}
+            |     | {name x}
+            | {delete_attr}
+              | {version_annotation}
+                | {int 2}
+
+The statement ending at line XXXX
+
+CREATE PROC invalid_ddl_5 ()
+BEGIN
+  CREATE VIEW inv_5 AS
+  SELECT 1 AS f1 @DELETE(2);
+END;
+
+Error at test/sem_test.sql:XXXX : in create_view_stmt : CQL0396: versioning attributes may not be used on DDL inside a procedure 'inv_5'
+
+  {create_proc_stmt}: err
+  | {name invalid_ddl_5}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {create_view_stmt}: err
+        | {int 0}
+        | {view_and_attrs}
+          | {name_and_select}
+          | | {name inv_5}
+          | | {select_stmt}: select: { f1: integer notnull }
+          |   | {select_core_list}: select: { f1: integer notnull }
+          |   | | {select_core}: select: { f1: integer notnull }
+          |   |   | {select_expr_list_con}: select: { f1: integer notnull }
+          |   |     | {select_expr_list}: select: { f1: integer notnull }
+          |   |     | | {select_expr}: f1: integer notnull
+          |   |     |   | {int 1}: integer notnull
+          |   |     |   | {opt_as_alias}
+          |   |     |     | {name f1}
+          |   |     | {select_from_etc}: ok
+          |   |       | {select_where}
+          |   |         | {select_groupby}
+          |   |           | {select_having}
+          |   | {select_orderby}
+          |     | {select_limit}
+          |       | {select_offset}
+          | {delete_attr}
+            | {version_annotation}
+              | {int 2}
+
+The statement ending at line XXXX
+
+CREATE PROC invalid_ddl_6 ()
+BEGIN
+  CREATE TRIGGER IF NOT EXISTS trigger2
+    AFTER INSERT ON bar
+  BEGIN
+    DELETE FROM bar WHERE rate > new.id;
+  END @DELETE(2);
+END;
+
+Error at test/sem_test.sql:XXXX : in create_trigger_stmt : CQL0396: versioning attributes may not be used on DDL inside a procedure 'trigger2'
+
+  {create_proc_stmt}: err
+  | {name invalid_ddl_6}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {create_trigger_stmt}: err
+        | {int 2}
+        | {trigger_body_vers}
+          | {trigger_def}
+          | | {name trigger2}
+          | | {trigger_condition}
+          |   | {int 8}
+          |   | {trigger_op_target}
+          |     | {trigger_operation}
+          |     | | {int 128}
+          |     | {trigger_target_action}
+          |       | {name bar}
+          |       | {trigger_action}
+          |         | {int 0}
+          |         | {trigger_when_stmts}
+          |           | {stmt_list}
+          |             | {delete_stmt}
+          |               | {name bar}
+          |               | {opt_where}
+          |                 | {gt}
+          |                   | {name rate}
+          |                   | {dot}
+          |                     | {name new}
+          |                     | {name id}
+          | {delete_attr}
+            | {version_annotation}
+              | {int 2}
 
 The statement ending at line XXXX
 

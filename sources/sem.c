@@ -221,6 +221,8 @@ typedef struct version_attrs_info {
   bool_t recreate;                    // true if table is on the @recreate plan
   ast_node *recreate_version_ast;     // the @recreate node
   CSTR recreate_group_name;           // the @recreate group name if there is one
+  bool_t is_virtual_table;            // versioning rules for virtual tables apply
+  bool_t is_temp;                     // versioning rules for temp objects apply
 } version_attrs_info;
 
 // extracts the useful information out of @create and @delete versions
@@ -228,6 +230,9 @@ static bool_t sem_validate_version_attrs(version_attrs_info *vers_info);
 
 // validates previous and current attributes for valid progression
 static bool_t sem_validate_attrs_prev_cur(version_attrs_info *prev, version_attrs_info *cur, ast_node *name_ast);
+
+// ensures DDL inside of a proc has no attributes
+static bool_t sem_validate_vers_ok_in_context(version_attrs_info *vers);
 
 // records an annotation from the version info
 static void sem_record_annotation_from_vers_info(version_attrs_info *vers_info);
@@ -1215,13 +1220,20 @@ static void init_version_attrs_info(version_attrs_info *vers_info, CSTR name, as
   vers_info->delete_version_ast = NULL;
   vers_info->delete_proc = NULL;
   vers_info->flags = 0;
-  vers_info->recreate = 0;
+  vers_info->recreate = false;
   vers_info->recreate_version_ast = NULL;
   vers_info->recreate_group_name = NULL;
+  vers_info->is_virtual_table = false;
+  vers_info->is_temp = false;
 
   if (is_ast_create_table_stmt(ast)) {
     vers_info->create_code = SCHEMA_ANNOTATION_CREATE_TABLE;
     vers_info->delete_code = SCHEMA_ANNOTATION_DELETE_TABLE;
+    vers_info->is_virtual_table =  ast->parent && is_ast_create_virtual_table_stmt(ast->parent);
+    EXTRACT(create_table_name_flags, ast->left);
+    EXTRACT(table_flags_attrs, create_table_name_flags->left);
+    EXTRACT_OPTION(flags, table_flags_attrs->left);
+    vers_info->is_temp = !!(flags & TABLE_IS_TEMP);
   }
   else if (is_ast_create_index_stmt(ast)) {
     vers_info->create_code = SCHEMA_ANNOTATION_INVALID;
@@ -1230,12 +1242,17 @@ static void init_version_attrs_info(version_attrs_info *vers_info, CSTR name, as
   else if (is_ast_create_trigger_stmt(ast)) {
     vers_info->create_code = SCHEMA_ANNOTATION_INVALID;
     vers_info->delete_code = SCHEMA_ANNOTATION_DELETE_TRIGGER;
+    EXTRACT_OPTION(flags, ast->left);
+    vers_info->is_temp = !! (flags & TRIGGER_IS_TEMP);
   }
   else {
     // this is all that's left
     Contract(is_ast_create_view_stmt(ast));
     vers_info->create_code = SCHEMA_ANNOTATION_INVALID;
     vers_info->delete_code = SCHEMA_ANNOTATION_DELETE_VIEW;
+
+    EXTRACT_OPTION(flags, ast->left);
+    vers_info->is_temp = !! (flags & VIEW_IS_TEMP);
   }
 }
 
@@ -1817,7 +1834,7 @@ static sem_node * new_sem(sem_t sem_type) {
   sem->jptr = NULL;
   sem->create_version = -1;
   sem->delete_version = -1;
-  sem->recreate = 0;
+  sem->recreate = false;
   sem->recreate_group_name = NULL;
   sem->used_symbols = NULL;
   sem->index_list = NULL;
@@ -2537,13 +2554,16 @@ static void sem_validate_previous_index(ast_node *prev_index) {
     // possible to declare the tombstone now because the table name is not
     // valid.  There's no need for the tombstone anyway because when the
     // table is deleted all its indices will also be deleted.
-    ast = find_table_or_view_even_deleted(table_name);
+    ast_node *table_ast = find_table_or_view_even_deleted(table_name);
 
-    if (!ast || ast->sem->delete_version < 0) {
-      report_error(prev_index, "CQL0017: index was present but now it does not exist (use @delete instead)", index_name);
-      record_error(prev_index);
+    // the table must exist and be affirmatively deleted to avoid the error!
+    if (table_ast && table_ast->sem->delete_version > 0) {
       return;
     }
+
+    report_error(prev_index, "CQL0017: index was present but now it does not exist (use @delete instead)", index_name);
+    record_error(prev_index);
+    return;
   }
 
   enqueue_pending_region_validation(prev_index, ast, index_name);
@@ -2632,6 +2652,11 @@ static void sem_create_index_stmt(ast_node *ast) {
   init_version_attrs_info(&vers_info, index_name, ast, attrs);
   bool_t valid_version_info = sem_validate_version_attrs(&vers_info);
   Invariant(valid_version_info);  // nothing can go wrong with index version info
+
+  if (!sem_validate_vers_ok_in_context(&vers_info)) {
+    record_error(ast);
+    return;
+  }
 
   if (!sem_validate_no_delete_migration(&vers_info, ast, index_name)) {
     return;
@@ -2863,7 +2888,7 @@ static ast_node *find_and_validate_referenced_table(CSTR table_name, ast_node *e
         !table_info->recreate ||
         !table_info->recreate_group_name ||
         Strcasecmp(table_info->recreate_group_name, ref_table_ast->sem->recreate_group_name)) {
-    report_error(err_target, "CQL0060: referenced table can be independently be recreated so it cannot be used in a foreign key", table_name);
+    report_error(err_target, "CQL0060: referenced table can be independently recreated so it cannot be used in a foreign key", table_name);
     record_error(err_target);
     return NULL;
     }
@@ -9019,12 +9044,21 @@ static void sem_validate_previous_view(ast_node *prev_view) {
   Contract(!current_joinscope);
 
   Contract(is_ast_create_view_stmt(prev_view));
+  EXTRACT_OPTION(prev_flags, prev_view->left);
   EXTRACT_NAMED(prev_view_and_attrs, view_and_attrs, prev_view->right);
   EXTRACT_NAMED(prev_name_and_select, name_and_select, prev_view_and_attrs->left);
   EXTRACT_ANY_NOTNULL(prev_name_ast, prev_name_and_select->left);
   EXTRACT_STRING(name, prev_name_ast);
 
+  bool_t is_temp = !! (prev_flags & VIEW_IS_TEMP);
+
   ast_node *ast = find_table_or_view_even_deleted(name);
+
+  if (is_temp && !ast) {
+    // temp view totally deleted -> that's ok
+    return;
+  }
+
   if (!ast) {
     report_error(prev_view, "CQL0104: view was present but now it does not exist (use @delete instead)", name);
     record_error(prev_view);
@@ -9050,6 +9084,7 @@ static void sem_validate_previous_trigger(ast_node *prev_trigger) {
   Contract(!current_joinscope);
   Contract(is_ast_create_trigger_stmt(prev_trigger));
 
+  EXTRACT_OPTION(prev_flags, prev_trigger->left);
   EXTRACT_NAMED_NOTNULL(prev_trigger_body_vers, trigger_body_vers, prev_trigger->right);
   EXTRACT_NAMED_NOTNULL(prev_trigger_def, trigger_def, prev_trigger_body_vers->left);
   EXTRACT_ANY_NOTNULL(prev_trigger_name_ast, prev_trigger_def->left);
@@ -9060,10 +9095,17 @@ static void sem_validate_previous_trigger(ast_node *prev_trigger) {
     return;
   }
 
+  bool_t is_temp = !! (prev_flags & TRIGGER_IS_TEMP);
+
   ast_node *ast = find_trigger(name);
   if (!ast) {
+    if (is_temp) {
+      // temp totally deleted -> that's ok
+      return;
+    }
+
     // If the table the trigger was on is going away then we don't need
-    // to verify that the trigger has a tombstone.  In fact it is not
+    // to verify that the trigger has a tombstone.  In fact is it not
     // possible to declare the tombstone now because the table name is not
     // valid.  There's no need for the tombstone anyway because when the
     // table is deleted all its triggers will also be deleted.
@@ -9072,13 +9114,16 @@ static void sem_validate_previous_trigger(ast_node *prev_trigger) {
     EXTRACT_NAMED_NOTNULL(prev_trigger_op_target, trigger_op_target, prev_trigger_condition->right);
     EXTRACT_NAMED_NOTNULL(prev_trigger_target_action, trigger_target_action, prev_trigger_op_target->right);
     EXTRACT_STRING(prev_table_name, prev_trigger_target_action->left);
-    ast = find_table_or_view_even_deleted(prev_table_name);
+    ast_node *ast_table = find_table_or_view_even_deleted(prev_table_name);
 
-    if (!ast || ast->sem->delete_version < 0) {
-      report_error(prev_trigger, "CQL0106: trigger was present but now it does not exist (use @delete instead)", name);
-      record_error(prev_trigger);
+    // the table must exist and be affirmatively deleted to avoid the error!
+    if (ast_table && ast_table->sem->delete_version > 0) {
       return;
     }
+
+    report_error(prev_trigger, "CQL0106: trigger was present but now it does not exist (use @delete instead)", name);
+    record_error(prev_trigger);
+    return;
   }
 
   enqueue_pending_region_validation(prev_trigger, ast, name);
@@ -9149,6 +9194,11 @@ static void sem_create_view_stmt(ast_node *ast) {
   bool_t valid_version_info = sem_validate_version_attrs(&vers_info);
   Invariant(valid_version_info);  // nothing can go wrong with view version info
 
+  if (!sem_validate_vers_ok_in_context(&vers_info)) {
+    record_error(ast);
+    return;
+  }
+
   Invariant(is_struct(select_stmt->sem->sem_type));
   Invariant(select_stmt->sem->sptr);
 
@@ -9195,7 +9245,7 @@ static bool_t sem_validate_version_attrs(version_attrs_info *vers_info) {
       // there is exactly one attribute and it is @recreate (syntax allows nothing else)
       Contract(!ast->right);
       Contract(ast == vers_info->attrs_ast);
-      vers_info->recreate = 1;
+      vers_info->recreate = true;
       vers_info->recreate_version_ast = ast;
 
       if (ast->left) {
@@ -9681,8 +9731,16 @@ static void sem_validate_previous_table(ast_node *prev_table) {
   EXTRACT_STRING(name, prev_name_ast);
   EXTRACT_ANY_NOTNULL(prev_col_key_list, prev_table->right);
 
+  bool_t is_temp = !!(prev_flags & TABLE_IS_TEMP);
+
   // validation of @deleted tables is a thing, so we need deleted tables, too
   ast_node *ast = find_table_or_view_even_deleted(name);
+
+  if (!ast && is_temp) {
+    // temp table totally gone, that's ok
+    return;
+  }
+
   if (!ast) {
     report_error(prev_table, "CQL0126: table was present but now it does not exist (use @delete instead)", name);
     record_error(prev_table);
@@ -9976,6 +10034,11 @@ static void sem_create_trigger_stmt(ast_node *ast) {
   bool_t valid_version_info = sem_validate_version_attrs(&vers_info);
   Invariant(valid_version_info);   // nothing can go wrong with trigger versions
 
+  if (!sem_validate_vers_ok_in_context(&vers_info)) {
+    record_error(ast);
+    return;
+  }
+
   if (!sem_validate_no_delete_migration(&vers_info, ast, trigger_name)) {
     return;
   }
@@ -10089,10 +10152,8 @@ static bool_t sem_validate_virtual_table_vers(version_attrs_info *table_vers_inf
   Contract(table_vers_info);
   EXTRACT_NOTNULL(create_table_stmt, table_vers_info->target_ast);
 
-  bool_t is_virtual_table = create_table_stmt->parent && is_ast_create_virtual_table_stmt(create_table_stmt->parent);
-
   // if deleting virtual table... you must add the reminder
-  if (is_virtual_table && table_vers_info->delete_version_ast) {
+  if (table_vers_info->is_virtual_table && table_vers_info->delete_version_ast) {
      if (!table_vers_info->delete_proc || Strcasecmp(CQL_MODULE_WARN, table_vers_info->delete_proc )) {
         report_error(table_vers_info->delete_version_ast, "CQL0392: when deleting a virtual table you must specify @delete(nn, "
             CQL_MODULE_WARN ") as a reminder not to delete the module for this virtual table", table_vers_info->name);
@@ -10100,6 +10161,31 @@ static bool_t sem_validate_virtual_table_vers(version_attrs_info *table_vers_inf
         return false;
      }
   }
+  return true;
+}
+
+// If you are putting DDL inside of a procedure then it is going to run regardless; these
+// entires do not get versioning attributes, those are reserved for schema declarations outside
+// of any procedure.
+static bool_t sem_validate_vers_ok_in_context(version_attrs_info *vers) {
+  bool_t is_versioned = vers->create_version > 0 || vers->delete_version > 0;
+
+  // virtual tables are always recreate, this is hard coded, so disregard that as a versioning error
+  is_versioned |= !vers->is_virtual_table && vers->recreate;
+
+  if (current_proc && is_versioned) {
+     report_error(vers->target_ast, "CQL0396: versioning attributes may not be used on DDL inside a procedure", vers->name);
+     return false;
+  }
+
+  // temporarily allow temp views to get @delete, to get to conformance
+  if (vers->delete_code != SCHEMA_ANNOTATION_DELETE_VIEW) {
+    if (vers->is_temp && is_versioned) {
+      report_error(vers->target_ast, "CQL0139: temp objects may not have versioning annotations", vers->name);
+      return false;
+    }
+  }
+
   return true;
 }
 
@@ -10150,12 +10236,7 @@ static void sem_create_table_stmt(ast_node *ast) {
     goto cleanup;
   }
 
-  bool_t table_is_versioned = table_vers_info.create_version > 0 ||
-                              table_vers_info.delete_version > 0 ||
-                              table_vers_info.recreate;
-
-  if (temp && table_is_versioned) {
-    report_error(ast, "CQL0139: temp tables may not have versioning annotations", name);
+  if (!sem_validate_vers_ok_in_context(&table_vers_info)) {
     record_error(ast);
     goto cleanup;
   }
@@ -17996,7 +18077,7 @@ static void sem_schema_ad_hoc_migration_stmt(ast_node *ast) {
   }
 }
 
-static void  enqueue_pending_region_validation(ast_node *prev, ast_node *cur, CSTR name) {
+static void enqueue_pending_region_validation(ast_node *prev, ast_node *cur, CSTR name) {
   // we're processing the previous item when we enqueue, if that item has no region
   // then it is allowed to make any change it wants to.
   if (!current_region) {

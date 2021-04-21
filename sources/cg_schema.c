@@ -363,6 +363,11 @@ static void cg_generate_baseline_tables(charbuf *output) {
 // for one object.
 static void cg_generate_schema_by_mode(charbuf *output, int32_t mode) {
 
+  // non-null-callbacks will generate SQL for Sqlite (no attributes)
+  gen_sql_callbacks callbacks;
+  init_gen_sql_callbacks(&callbacks);
+  callbacks.mode = gen_mode_no_annotations;
+  
   // If the mode is SCHEMA_TO_DECLARE then we include all the regions we are upgrading
   // and all their dependencies.  We do not exclude things that are upgraded elsewhere.
   // We do this because we need a logically consistent set of declarations.
@@ -377,6 +382,10 @@ static void cg_generate_schema_by_mode(charbuf *output, int32_t mode) {
   // otherwise we emit only NON temp items.
   bool_t temp_required = !!(mode & SCHEMA_TEMP_ITEMS);
   bool_t schema_declare = !!(mode & SCHEMA_TO_DECLARE);
+  bool_t schema_upgrade = !!(mode & SCHEMA_TO_UPGRADE);
+
+  // full annotations for declarations, no annotations for temp items upgrade
+  gen_sql_callbacks *use_callbacks = (temp_required && schema_upgrade) ? &callbacks : NULL;
 
   // emit all the delare select function statements (they may appear in the SQL)
   if (!temp_required && schema_declare) {
@@ -388,7 +397,7 @@ static void cg_generate_schema_by_mode(charbuf *output, int32_t mode) {
       ast_node *ast = item->ast;
       Contract(is_ast_declare_select_func_stmt(ast));
       gen_set_output_buffer(output);
-      gen_statement_with_callbacks(ast, NULL);
+      gen_statement_with_callbacks(ast, use_callbacks);
       bprintf(output, ";\n\n");
     }
 
@@ -396,7 +405,7 @@ static void cg_generate_schema_by_mode(charbuf *output, int32_t mode) {
       ast_node *ast = item->ast;
       Contract(is_ast_declare_schema_region_stmt(ast) || is_ast_declare_deployable_region_stmt(ast));
       gen_set_output_buffer(output);
-      gen_statement_with_callbacks(ast, NULL);
+      gen_statement_with_callbacks(ast, use_callbacks);
       bprintf(output, ";\n\n");
     }
   }
@@ -433,7 +442,7 @@ static void cg_generate_schema_by_mode(charbuf *output, int32_t mode) {
     }
 
     gen_set_output_buffer(output);
-    gen_statement_with_callbacks(ast_output, NULL);
+    gen_statement_with_callbacks(ast_output, use_callbacks);
     bprintf(output, ";\n");
 
     if (region && schema_declare) {
@@ -463,7 +472,7 @@ static void cg_generate_schema_by_mode(charbuf *output, int32_t mode) {
     }
 
     gen_set_output_buffer(output);
-    gen_statement_with_callbacks(ast, NULL);
+    gen_statement_with_callbacks(ast, use_callbacks);
     bprintf(output, ";\n");
 
     if (region && schema_declare) {
@@ -489,7 +498,7 @@ static void cg_generate_schema_by_mode(charbuf *output, int32_t mode) {
       }
 
       gen_set_output_buffer(output);
-      gen_statement_with_callbacks(ast, NULL);
+      gen_statement_with_callbacks(ast, use_callbacks);
       bprintf(output, ";\n");
 
       if (region && schema_declare) {
@@ -520,7 +529,7 @@ static void cg_generate_schema_by_mode(charbuf *output, int32_t mode) {
     }
 
     gen_set_output_buffer(output);
-    gen_statement_with_callbacks(ast, NULL);
+    gen_statement_with_callbacks(ast, use_callbacks);
     bprintf(output, ";\n");
 
     if (region && schema_declare) {
@@ -546,7 +555,7 @@ static void cg_generate_schema_by_mode(charbuf *output, int32_t mode) {
       }
 
       gen_set_output_buffer(output);
-      gen_statement_with_callbacks(ast, NULL);
+      gen_statement_with_callbacks(ast, use_callbacks);
       bprintf(output, ";\n");
 
       if (region && schema_declare) {
@@ -731,7 +740,7 @@ static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *c
     EXTRACT_STRING(index_name, index_name_ast);
     EXTRACT_ANY_NOTNULL(table_name_ast, create_index_on_list->right);
     EXTRACT_STRING(table_name, table_name_ast);
-    
+
     if (ast->sem->delete_version > 0) {
       // delete only, we're done here
       bprintf(&drop, "  DROP INDEX IF EXISTS %s;\n", index_name);

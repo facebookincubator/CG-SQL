@@ -964,3 +964,22 @@ create virtual table changing_virtual using my_virtual(goo) as (
 create virtual table delete_change_virtual using my_virtual(goo) as (
   id integer
 ) @delete(3, cql:module_must_not_be_deleted_see_docs_for_CQL0392);
+
+-- TEST: ok for a temp view to just vanish
+-- + {create_view_stmt}: ok
+-- - Error
+create temp view this_view_is_gone as select 1 x;
+
+-- TEST: ok for a temp table to just vanish
+-- + {create_table_stmt}: this_table_is_gone: { id: integer }
+-- - Error
+create temp table this_table_is_gone(id integer);
+
+-- TEST: ok for a temp trigger to just vanish
+-- + {create_trigger_stmt}: ok
+-- - Error
+create temp trigger this_trigger_is_gone
+  before delete on foo
+begin
+  select old.id;
+end;

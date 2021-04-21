@@ -4073,3 +4073,89 @@ Error at test/sem_test_prev.sql:XXXX : in str : CQL0116: current delete version 
             | {name id}
             | {type_int}: integer
 
+The statement ending at line XXXX
+
+CREATE TEMP VIEW this_view_is_gone AS
+SELECT 1 AS x;
+
+  {create_view_stmt}: ok
+  | {int 1}
+  | {view_and_attrs}
+    | {name_and_select}
+      | {name this_view_is_gone}
+      | {select_stmt}
+        | {select_core_list}
+        | | {select_core}
+        |   | {select_expr_list_con}
+        |     | {select_expr_list}
+        |     | | {select_expr}
+        |     |   | {int 1}
+        |     |   | {opt_as_alias}
+        |     |     | {name x}
+        |     | {select_from_etc}
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE TEMP TABLE this_table_is_gone(
+  id INTEGER
+);
+
+  {create_table_stmt}: this_table_is_gone: { id: integer }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 1}
+  | | {name this_table_is_gone}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TEMP TRIGGER this_trigger_is_gone
+  BEFORE DELETE ON foo
+BEGIN
+  SELECT old.id;
+END;
+
+  {create_trigger_stmt}: ok
+  | {int 1}
+  | {trigger_body_vers}
+    | {trigger_def}
+      | {name this_trigger_is_gone}
+      | {trigger_condition}
+        | {int 4}
+        | {trigger_op_target}
+          | {trigger_operation}
+          | | {int 64}
+          | {trigger_target_action}
+            | {name foo}
+            | {trigger_action}
+              | {int 0}
+              | {trigger_when_stmts}
+                | {stmt_list}
+                  | {select_stmt}
+                    | {select_core_list}
+                    | | {select_core}
+                    |   | {select_expr_list_con}
+                    |     | {select_expr_list}
+                    |     | | {select_expr}
+                    |     |   | {dot}
+                    |     |     | {name old}
+                    |     |     | {name id}
+                    |     | {select_from_etc}
+                    |       | {select_where}
+                    |         | {select_groupby}
+                    |           | {select_having}
+                    | {select_orderby}
+                      | {select_limit}
+                        | {select_offset}
+
