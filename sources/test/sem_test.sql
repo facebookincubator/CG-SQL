@@ -15071,18 +15071,20 @@ CREATE TABLE this_table_is_deleted(
 -- the index now refers to a stub column, that's ok because we're only generating
 -- a drop for this index
 -- + CREATE INDEX deleted_index ON this_table_is_deleted (xyx) @DELETE(1);
--- + {create_index_stmt}: ok @delete(1)
--- - Error
+-- + {create_index_stmt}: err
+-- + Error % object is an orphan because its table is deleted. Remove rather than @delete 'deleted_index'
+-- +1 Error
 CREATE INDEX deleted_index ON this_table_is_deleted (xyx) @DELETE(1);
 
 -- TEST: it's ok to have a trigger be based on a deleted table if the trigger is also deleted
--- + {create_trigger_stmt}: ok @delete(1)
 -- + CREATE TRIGGER trigger_deleted
 -- + BEFORE DELETE ON this_table_is_deleted
 -- + BEGIN
 -- + SELECT 1;
 -- + END @DELETE(1);
--- - Error
+-- + {create_trigger_stmt}: err
+-- + Error % object is an orphan because its table is deleted. Remove rather than @delete 'trigger_deleted'
+-- +1 Error
 create trigger trigger_deleted
   before delete on this_table_is_deleted
 begin

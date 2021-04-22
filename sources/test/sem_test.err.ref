@@ -1072,6 +1072,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0390: DECLARE OUT CALL used on a p
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
 Error at test/sem_test.sql:XXXX : in declare_out_call_stmt : CQL0213: procedure had errors, can't call 'decl_test_err'
 Error at test/sem_test.sql:XXXX : in add : CQL0207: expected a variable name for out argument 'y'
+Error at test/sem_test.sql:XXXX : in create_index_stmt : CQL0397: object is an orphan because its table is deleted. Remove rather than @delete 'deleted_index'
+Error at test/sem_test.sql:XXXX : in create_trigger_stmt : CQL0397: object is an orphan because its table is deleted. Remove rather than @delete 'trigger_deleted'
 Error at test/sem_test.sql:XXXX : in select_stmt : CQL0055: all columns in the select must have a name
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
 Error at test/sem_test.sql:XXXX : in dot : CQL0379: unknown built-in migration procedure 'cql:fxom_recreate'

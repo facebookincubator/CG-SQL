@@ -59574,7 +59574,9 @@ The statement ending at line XXXX
 
 CREATE INDEX deleted_index ON this_table_is_deleted (xyx) @DELETE(1);
 
-  {create_index_stmt}: ok @delete(1)
+Error at test/sem_test.sql:XXXX : in create_index_stmt : CQL0397: object is an orphan because its table is deleted. Remove rather than @delete 'deleted_index'
+
+  {create_index_stmt}: err
   | {create_index_on_list}
   | | {name deleted_index}
   | | {name this_table_is_deleted}
@@ -59597,7 +59599,9 @@ BEGIN
   SELECT 1;
 END @DELETE(1);
 
-  {create_trigger_stmt}: ok @delete(1)
+Error at test/sem_test.sql:XXXX : in create_trigger_stmt : CQL0397: object is an orphan because its table is deleted. Remove rather than @delete 'trigger_deleted'
+
+  {create_trigger_stmt}: err
   | {int 0}
   | {trigger_body_vers}
     | {trigger_def}
@@ -59608,19 +59612,19 @@ END @DELETE(1);
     |     | {trigger_operation}
     |     | | {int 64}
     |     | {trigger_target_action}
-    |       | {name this_table_is_deleted}: this_table_is_deleted: { id: integer } deleted @delete(1)
+    |       | {name this_table_is_deleted}
     |       | {trigger_action}
     |         | {int 0}
     |         | {trigger_when_stmts}
-    |           | {stmt_list}: ok
-    |             | {select_stmt}: select: { _anon: integer notnull }
-    |               | {select_core_list}: select: { _anon: integer notnull }
-    |               | | {select_core}: select: { _anon: integer notnull }
-    |               |   | {select_expr_list_con}: select: { _anon: integer notnull }
-    |               |     | {select_expr_list}: select: { _anon: integer notnull }
-    |               |     | | {select_expr}: integer notnull
-    |               |     |   | {int 1}: integer notnull
-    |               |     | {select_from_etc}: ok
+    |           | {stmt_list}
+    |             | {select_stmt}
+    |               | {select_core_list}
+    |               | | {select_core}
+    |               |   | {select_expr_list_con}
+    |               |     | {select_expr_list}
+    |               |     | | {select_expr}
+    |               |     |   | {int 1}
+    |               |     | {select_from_etc}
     |               |       | {select_where}
     |               |         | {select_groupby}
     |               |           | {select_having}

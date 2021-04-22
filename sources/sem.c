@@ -2668,6 +2668,12 @@ static void sem_create_index_stmt(ast_node *ast) {
       table_name,
       table_name_ast,
       "CQL0019: create index table name not found");
+
+    if (is_deleted(table_ast->sem->sem_type)) {
+      report_error(ast, "CQL0397: object is an orphan because its table is deleted. Remove rather than @delete", index_name);
+      record_error(ast);
+      return;
+    }
   }
   else {
     table_ast = find_usable_and_not_deleted_table_or_view(
@@ -10050,6 +10056,12 @@ static void sem_create_trigger_stmt(ast_node *ast) {
       table_name,
       table_name_ast,
       "CQL0137: table/view not found");
+
+    if (is_deleted(target->sem->sem_type)) {
+      report_error(ast, "CQL0397: object is an orphan because its table is deleted. Remove rather than @delete", trigger_name);
+      record_error(ast);
+      return;
+    }
   }
   else {
     target = find_usable_and_not_deleted_table_or_view(
