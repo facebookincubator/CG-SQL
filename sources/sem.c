@@ -6896,6 +6896,29 @@ static void sem_func_ptr(ast_node *ast, uint32_t arg_count) {
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL);
 }
 
+// The "sensitive" function is used to take something that is
+// not sensitive  and have it be treated as sensitive.  This is really
+// only needed to get argument types to match in compound select
+// statements or other similar situations.
+static void sem_func_sensitive(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  if (!sem_validate_arg_count(ast, arg_count, 1)) {
+    return;
+  }
+
+  ast_node *arg = first_arg(arg_list);
+
+  // add sensitive
+  ast->sem = arg->sem;
+  sem_add_flags(ast, SEM_TYPE_SENSITIVE); // note this makes a copy
+  name_ast->sem = ast->sem;
+}
+
 // The "nullable" function is used to take something that is
 // not nullable and have it be treated as nullable.  This is really
 // only needed to get argument types to match in compound select
@@ -18389,6 +18412,7 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(ifnull_crash);
   FUNC_INIT(ifnull_throw);
   FUNC_INIT(nullable);
+  FUNC_INIT(sensitive);
   FUNC_INIT(ptr);
   FUNC_INIT(substr);
   FUNC_INIT(row_number);

@@ -13405,20 +13405,22 @@ SELECT 3 AS A, 4 AS B;
 
 The statement ending at line XXXX
 
-SELECT nullable(1);
+SELECT nullable(1) AS x;
 
-  {select_stmt}: select: { _anon: integer }
-  | {select_core_list}: select: { _anon: integer }
-  | | {select_core}: select: { _anon: integer }
-  |   | {select_expr_list_con}: select: { _anon: integer }
-  |     | {select_expr_list}: select: { _anon: integer }
-  |     | | {select_expr}: integer
+  {select_stmt}: select: { x: integer }
+  | {select_core_list}: select: { x: integer }
+  | | {select_core}: select: { x: integer }
+  |   | {select_expr_list_con}: select: { x: integer }
+  |     | {select_expr_list}: select: { x: integer }
+  |     | | {select_expr}: x: integer
   |     |   | {call}: integer
-  |     |     | {name nullable}: integer
-  |     |     | {call_arg_list}
-  |     |       | {call_filter_clause}
-  |     |       | {arg_list}: ok
-  |     |         | {int 1}: integer notnull
+  |     |   | | {name nullable}: integer
+  |     |   | | {call_arg_list}
+  |     |   |   | {call_filter_clause}
+  |     |   |   | {arg_list}: ok
+  |     |   |     | {int 1}: integer notnull
+  |     |   | {opt_as_alias}
+  |     |     | {name x}
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -13426,6 +13428,58 @@ SELECT nullable(1);
   | {select_orderby}
     | {select_limit}
       | {select_offset}
+
+The statement ending at line XXXX
+
+LET nullable_one := nullable(1);
+
+  {let_stmt}: nullable_one: integer variable
+  | {name nullable_one}: nullable_one: integer variable
+  | {call}: integer
+    | {name nullable}: integer
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+SELECT sensitive(1) AS x;
+
+  {select_stmt}: select: { x: integer notnull sensitive }
+  | {select_core_list}: select: { x: integer notnull sensitive }
+  | | {select_core}: select: { x: integer notnull sensitive }
+  |   | {select_expr_list_con}: select: { x: integer notnull sensitive }
+  |     | {select_expr_list}: select: { x: integer notnull sensitive }
+  |     | | {select_expr}: x: integer notnull sensitive
+  |     |   | {call}: integer notnull sensitive
+  |     |   | | {name sensitive}: integer notnull sensitive
+  |     |   | | {call_arg_list}
+  |     |   |   | {call_filter_clause}
+  |     |   |   | {arg_list}: ok
+  |     |   |     | {int 1}: integer notnull
+  |     |   | {opt_as_alias}
+  |     |     | {name x}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+LET sens_one := sensitive(1);
+
+  {let_stmt}: sens_one: integer notnull variable sensitive
+  | {name sens_one}: sens_one: integer notnull variable sensitive
+  | {call}: integer notnull sensitive
+    | {name sensitive}: integer notnull sensitive
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {int 1}: integer notnull
 
 The statement ending at line XXXX
 
@@ -13528,6 +13582,34 @@ Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect numbe
   |     | | {select_expr}: err
   |     |   | {call}: err
   |     |     | {name nullable}: err
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {int 1}: integer notnull
+  |     |         | {arg_list}
+  |     |           | {int 2}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT sensitive(1, 2);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'sensitive'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name sensitive}: err
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok

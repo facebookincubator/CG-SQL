@@ -3662,8 +3662,24 @@ except
 select 3 as A, 4 as B;
 
 -- TEST: use nullable in a select
+-- + {select_stmt}: select: { x: integer }
 -- - Error
-select nullable(1);
+select nullable(1) x;
+
+-- TEST: use nullable in an expr
+-- + {let_stmt}: nullable_one: integer variable
+-- - Error
+let nullable_one := nullable(1);
+
+-- TEST: use sensitive in a select
+-- + {select_stmt}: select: { x: integer notnull sensitive }
+-- - Error
+select sensitive(1) x;
+
+-- TEST: use sensitive in an expr
+-- + {let_stmt}: sens_one: integer notnull variable sensitive
+-- - Error
+let sens_one := sensitive(1);
 
 -- helper variable
 declare sens_notnull text not null @sensitive;
@@ -3691,6 +3707,11 @@ set price_d := (select nullable(price_e));
 -- + Error % function got incorrect number of arguments 'nullable'
 -- +1 Error
 select nullable(1, 2);
+
+-- TEST: use nullable in a select with wrong args
+-- + Error % function got incorrect number of arguments 'sensitive'
+-- +1 Error
+select sensitive(1, 2);
 
 -- try some const cases especially those with errors
 

@@ -2176,6 +2176,23 @@ static void cg_func_ifnull(ast_node *call_ast, charbuf *is_null, charbuf *value)
   cg_func_coalesce(call_ast, is_null, value);
 }
 
+static void cg_func_sensitive(ast_node *call_ast, charbuf *is_null, charbuf *value) {
+  Contract(is_ast_call(call_ast));
+  EXTRACT_ANY_NOTNULL(name_ast, call_ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, call_ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  // sensitive ( any expression ) -- at run time this function is a no-op
+  EXTRACT_ANY_NOTNULL(expr, arg_list->left);
+
+  // we just evaluate the inner expression
+  // we have to fake a high binding strength so that it will for sure emit parens
+  // as the nullable() construct looks like has parens and we don't know our context
+  // oh well, extra parens is better than the temporaries of doing this with PUSH_EVAL etc.
+  cg_expr(expr, is_null, value, C_EXPR_PRI_HIGHEST);
+}
+
 static void cg_func_nullable(ast_node *call_ast, charbuf *is_null, charbuf *value) {
   Contract(is_ast_call(call_ast));
   EXTRACT_ANY_NOTNULL(name_ast, call_ast->left);
@@ -6795,6 +6812,7 @@ cql_noexport void cg_c_init(void) {
   STMT_INIT(out_union_stmt);
   STMT_INIT(echo_stmt);
 
+  FUNC_INIT(sensitive);
   FUNC_INIT(nullable);
   FUNC_INIT(ifnull_throw);
   FUNC_INIT(ifnull_crash);

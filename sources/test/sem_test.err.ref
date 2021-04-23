@@ -304,6 +304,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed i
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
 Error at test/sem_test.sql:XXXX : in select_stmt : CQL0070: expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'nullable'
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'sensitive'
 Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
 Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
 Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed

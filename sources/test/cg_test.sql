@@ -3621,11 +3621,15 @@ end;
 -- + r = 1.0;
 -- + i = 1;
 -- + l = _64(1);
--- + cql_set_string_ref(&t, _literal_13_T_various_lets);
+-- + cql_set_string_ref(&t, _literal_%_T_various_lets);
 -- + cql_set_notnull(nl, (~_64(2)));
 -- + cql_set_notnull(ni, (2 + 2));
 -- + cql_set_notnull(nr, 2.0);
--- + cql_set_string_ref(&nt, _literal_14_NT_various_lets);
+-- + cql_set_string_ref(&nt, _literal_%_NT_various_lets);
+-- + sl = (~_64(3));
+-- + si = (3 + 3);
+-- + sr = 3.0;
+-- + cql_set_string_ref(&st, _literal_%_ST_various_lets);
 -- - Error
 create proc various_lets()
 begin
@@ -3637,6 +3641,10 @@ begin
   let ni := nullable(2+2);
   let nr := nullable(2.0);
   let nt := nullable("NT");
+  let sl := sensitive(~3L);
+  let si := sensitive(3+3);
+  let sr := sensitive(3.0);
+  let st := sensitive("ST");
 end;
 
 -- TEST: check that rc is set correctly in try/catch blocks
