@@ -700,7 +700,7 @@ cql_code test_c_one_row_result(sqlite3 *db) {
 cql_code test_all_column_encoded_fetchers(sqlite3 *db) {
   printf("Running column encoded fetchers test\n");
   tests++;
- 
+
   cql_object_ref encoder = cql_copy_encoder(db);
 
   load_encoded_table_result_set_ref result_set;
@@ -1142,6 +1142,21 @@ cql_code test_all_column_some_encoded_field(sqlite3 *db) {
 cql_code test_all_column_fetchers(sqlite3 *db) {
   printf("Running column fetchers test\n");
   tests++;
+
+  // test object
+  cql_object_ref set = set_create();
+  emit_object_result_set_result_set_ref object_result_set;
+  emit_object_result_set_fetch_results(&object_result_set, set);
+  E(emit_object_result_set_result_count(object_result_set) == 2, "expected 2 rows from the object union\n");
+  for (int32_t row = 0; row <= 1; row++) {
+    for (int32_t col = 0; col < 1; col++) {
+      cql_bool is_null = cql_result_set_get_is_null_col((cql_result_set_ref)object_result_set, row, col);
+      cql_bool is_null_expected = (row == 1) && col == 0;
+      E(is_null == is_null_expected, "expected is_null did not match seed data, row %d, col %d\n", row, col);
+    }
+  }
+  cql_object_release(set);
+  cql_result_set_release(object_result_set);
 
   load_all_types_table_result_set_ref result_set;
   SQL_E(load_all_types_table_fetch_results(db, &result_set));

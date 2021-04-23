@@ -1405,7 +1405,9 @@ cql_bool cql_result_set_get_is_null_col(cql_result_set_ref _Nonnull result_set, 
 
   int32_t core_data_type = CQL_CORE_DATA_TYPE_OF(data_type);
 
-  if (core_data_type == CQL_DATA_TYPE_BLOB || core_data_type == CQL_DATA_TYPE_STRING) {
+  if (core_data_type == CQL_DATA_TYPE_BLOB
+    || core_data_type == CQL_DATA_TYPE_STRING
+    || core_data_type == CQL_DATA_TYPE_OBJECT) {
      return !*(void **)data;
   }
 
