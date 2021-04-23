@@ -946,6 +946,15 @@ misc_cases() {
     failed
   fi
 
+  echo "  check that the objc_c_include_path argument is provided in arguments"
+  if ${CQL} --test --cg "${OUT_DIR}/cg_test_extension_fragment_objc.out" --in "${TEST_DIR}/cg_test_extension_fragment.sql" --rt objc 2>"${OUT_DIR}/c_include_needed.err"
+  then
+    echo c_include is required for extension fragment
+    failed
+  fi
+
+  on_diff_exit c_include_needed.err
+
   if ! grep "Generated from test/cg_test_generated_from.sql:21" "${OUT_DIR}/cg_test_generated_from.h" >/dev/null
   then
     echo Generated from text did not appear in the header output.

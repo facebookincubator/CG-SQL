@@ -533,7 +533,10 @@ static void cg_objc_init(void) {
 // Main entry point for code-gen.
 cql_noexport void cg_objc_main(ast_node *head) {
   Invariant(options.file_names_count == 1);
-  Invariant(options.objc_c_include_path != NULL);
+  if (!options.objc_c_include_path) {
+    cql_error("The C header path must be provided as argument (use --objc_c_include_path)\n");
+    cql_cleanup_and_exit(1);
+  }
   cql_exit_on_semantic_errors(head);
   exit_on_validating_schema();
   cg_objc_init();
