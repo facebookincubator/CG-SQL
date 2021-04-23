@@ -2025,6 +2025,53 @@ CREATE VIRTUAL TABLE delete_change_virtual USING my_virtual (goo) AS (
 
 The statement ending at line XXXX
 
+CREATE TABLE conflict_clause_t(
+  id INTEGER NOT NULL ON CONFLICT FAIL
+);
+
+  {create_table_stmt}: conflict_clause_t: { id: integer notnull } validated
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name conflict_clause_t}
+  | {col_key_list}
+    | {col_def}: id: integer notnull
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+        | | {name id}
+        | | {type_int}: integer
+        | {col_attrs_not_null}: ok
+          | {int 2}
+
+The statement ending at line XXXX
+
+CREATE TABLE conflict_clause_pk(
+  id INTEGER NOT NULL,
+  CONSTRAINT pk1 PRIMARY KEY (id) ON CONFLICT ROLLBACK
+);
+
+  {create_table_stmt}: conflict_clause_pk: { id: integer notnull } validated
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name conflict_clause_pk}
+  | {col_key_list}
+    | {col_def}: id: integer notnull
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |   | | {name id}
+    |   | | {type_int}: integer
+    |   | {col_attrs_not_null}: ok
+    | {col_key_list}
+      | {pk_def}
+        | {name pk1}
+        | {name_list_and_conflict_clause}
+          | {name_list}
+          | | {name id}
+          | {int 0}
+
+The statement ending at line XXXX
+
 @PREVIOUS_SCHEMA;
 
   {previous_schema_stmt}: ok
@@ -4158,4 +4205,51 @@ END;
                     | {select_orderby}
                       | {select_limit}
                         | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE TABLE conflict_clause_t(
+  id INTEGER NOT NULL ON CONFLICT FAIL
+);
+
+  {create_table_stmt}: conflict_clause_t: { id: integer notnull }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name conflict_clause_t}
+  | {col_key_list}
+    | {col_def}: id: integer notnull
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+        | | {name id}
+        | | {type_int}: integer
+        | {col_attrs_not_null}: ok
+          | {int 2}
+
+The statement ending at line XXXX
+
+CREATE TABLE conflict_clause_pk(
+  id INTEGER NOT NULL,
+  CONSTRAINT pk1 PRIMARY KEY (id) ON CONFLICT ROLLBACK
+);
+
+  {create_table_stmt}: conflict_clause_pk: { id: integer notnull }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name conflict_clause_pk}
+  | {col_key_list}
+    | {col_def}: id: integer notnull
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |   | | {name id}
+    |   | | {type_int}: integer
+    |   | {col_attrs_not_null}: ok
+    | {col_key_list}
+      | {pk_def}
+        | {name pk1}
+        | {name_list_and_conflict_clause}
+          | {name_list}
+          | | {name id}
+          | {int 0}
 

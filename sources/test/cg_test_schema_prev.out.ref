@@ -106,6 +106,15 @@ CREATE TABLE migrated_from_recreate(
   t TEXT
 ) @CREATE(4, cql:from_recreate);
 
+CREATE TABLE conflict_clause_t(
+  id INTEGER NOT NULL ON CONFLICT FAIL
+);
+
+CREATE TABLE conflict_clause_pk(
+  id INTEGER NOT NULL,
+  CONSTRAINT pk1 PRIMARY KEY (id) ON CONFLICT ROLLBACK
+);
+
 @begin_schema_region shared;
 CREATE VIEW shared_view AS
 SELECT *

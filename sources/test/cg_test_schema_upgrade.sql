@@ -194,3 +194,10 @@ create table migrated_from_recreate(
   id integer,
   t text
 ) @create(4, cql:from_recreate);
+
+create table conflict_clause_t(id int not null on conflict fail);
+
+create table conflict_clause_pk(
+  id int not null,
+  constraint pk1 primary key (id) on conflict rollback
+);

@@ -147,7 +147,7 @@ create table with_delete_migrator(id integer) @delete(1, ADeleteMigrator);
 -- create a table which was a view in the previous schema
 -- No error is charged to this node, the error is reported in the previous validation
 -- however the node is marked in error so that additional errors are not reported
--- In particular we don't give version number errors because the table looks new 
+-- In particular we don't give version number errors because the table looks new
 -- and possibly not now in the right version
 -- + {create_table_stmt}: err
 -- - Error
@@ -445,6 +445,18 @@ create virtual table changing_virtual using my_virtual(goo, goo) as (
 create virtual table delete_change_virtual using my_virtual(goo) as (
   id integer
 ) @delete(1, cql:module_must_not_be_deleted_see_docs_for_CQL0392);
+
+
+-- TEST: test create table with not null column on conflict clause abort
+-- - Error
+create table conflict_clause_t(id int not null on conflict fail);
+
+-- TEST: test create table with pk column on conflict clause rollback
+-- - Error
+create table conflict_clause_pk(
+  id int not null,
+  constraint pk1 primary key (id) on conflict rollback
+);
 
 ------------------------------------------------------------------------------------------------------------
 @previous_schema;
@@ -983,3 +995,20 @@ create temp trigger this_trigger_is_gone
 begin
   select old.id;
 end;
+
+-- TEST: test create table with not null column on conflict clause abort
+-- + {create_table_stmt}: conflict_clause_t: { id: integer notnull }
+-- + {col_attrs_not_null}: ok
+-- + {int 2}
+-- - Error
+create table conflict_clause_t(id int not null on conflict fail);
+
+-- TEST: test create table with pk column on conflict clause rollback
+-- + {create_table_stmt}: conflict_clause_pk: { id: integer notnull }
+-- + {name_list_and_conflict_clause}
+-- + {int 0}
+-- - Error
+create table conflict_clause_pk(
+  id int not null,
+  constraint pk1 primary key (id) on conflict rollback
+);
