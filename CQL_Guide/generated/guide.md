@@ -766,12 +766,20 @@ LET b := x IS y; -- bool not null
 LET b := x = y;  -- bool (maybe not null depending on x/y)
 ```
 
-The psuedo function "nullable" removes "not null" from the type of its argument but otherwise does no computation.
+The psuedo function "nullable" removes `not null` from the type of its argument but otherwise does no computation.
 This can be useful to initialize nullable types.
 
 ```sql
 LET n_i := nullable(1);  -- nullable integer variable initialized to 1
-LET l_i := nullable(1L);  -- nullable long variable initialized to 1
+LET n_l := nullable(1L);  -- nullable long variable initialized to 1
+```
+
+The psuedo function "sensitive" adds `@sensitive` to the type of its argument but otherwise does no computation.
+This also can be useful to initialize nullable types.
+
+```sql
+LET s_i := sensitive(1);  -- sensitive nullable integer variable initialized to 1
+LET s_l := sensitive(1L);  -- sensitive nullable long variable initialized to 1
 ```
 
 #### The `@RC` special variable
@@ -3679,9 +3687,12 @@ CQL's hard-coded builtin list includes:
 
 Special Functions
  * nullable
+ * sensitive
  * ptr
 
 `Nullable` casts an operand to the nullable version of its type and otherwise does nothing.  This cast might be useful if you need an exact type match in a situation.  It is stripped from any generated SQL and generated C so it has no runtime effect at all other than the indirect consequences of changing the storage class of its operand.
+
+`Sensitive` casts an operand to the sensitive version of its type and otherwise does nothing.  This cast might be useful if you need an exact type match in a situation.  It is stripped from any generated SQL and generated C so it has no runtime effect at all other than the indirect consequences of changing the storage class of its operand.
 
 `Ptr` is used to cause a reference type variable to be bound as a long integer to SQLite. This is a way of giving object pointers to SQLite UDFs. Not all versions of Sqlite support
 binding object variables, so passing memory addresses is the best we can do on all versions.
@@ -8188,7 +8199,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Mon Apr 19 12:42:15 PDT 2021
+Snapshot as of Tue Apr 27 10:50:54 PDT 2021
 
 ### Operators and Literals
 
@@ -8515,8 +8526,21 @@ col_def:
   ;
 
 pk_def:
-  "CONSTRAINT" name "PRIMARY" "KEY" '(' name_list ')'
-  | "PRIMARY" "KEY" '(' name_list ')'
+  "CONSTRAINT" name "PRIMARY" "KEY" '(' indexed_columns ')' opt_conflict_clause
+  | "PRIMARY" "KEY" '(' indexed_columns ')' opt_conflict_clause
+  ;
+
+opt_conflict_clause:
+  /* nil */
+  | conflict_clause
+  ;
+
+conflict_clause:
+  "ON CONFLICT" "ROLLBACK"
+  | "ON CONFLICT" "ABORT"
+  | "ON CONFLICT" "FAIL"
+  | "ON CONFLICT" "IGNORE"
+  | "ON CONFLICT" "REPLACE"
   ;
 
 opt_fk_options:
@@ -8566,8 +8590,8 @@ fk_target_options:
   ;
 
 unq_def:
-  "CONSTRAINT" name "UNIQUE" '(' name_list ')'
-  | "UNIQUE" '(' name_list ')'
+  "CONSTRAINT" name "UNIQUE" '(' indexed_columns ')' opt_conflict_clause
+  | "UNIQUE" '(' indexed_columns ')' opt_conflict_clause
   ;
 
 opt_unique:
@@ -8618,16 +8642,16 @@ opt_name_list:
 
 col_attrs:
   /* nil */
-  | "NOT" "NULL" col_attrs
-  | "PRIMARY" "KEY" col_attrs
-  | "PRIMARY" "KEY" "AUTOINCREMENT" col_attrs
+  | "NOT" "NULL" opt_conflict_clause col_attrs
+  | "PRIMARY" "KEY" opt_conflict_clause col_attrs
+  | "PRIMARY" "KEY" opt_conflict_clause "AUTOINCREMENT" col_attrs
   | "DEFAULT" '-' num_literal col_attrs
   | "DEFAULT" num_literal col_attrs
   | "DEFAULT" const_expr col_attrs
   | "DEFAULT" str_literal col_attrs
   | "COLLATE" name col_attrs
   | "CHECK" '(' expr ')' col_attrs
-  | "UNIQUE" col_attrs
+  | "UNIQUE" opt_conflict_clause col_attrs
   | "HIDDEN" col_attrs
   | "@SENSITIVE" col_attrs
   | "@CREATE" version_annotation col_attrs
@@ -9835,10 +9859,7 @@ This usually means a column is missing in the REFERENCES part of the declaration
 
 -----
 
-### CQL0024: table does not have pk column 'column'
-
-In a primary key declaration, the indicated column, found in the primary is not actually a column of the table.
-This usually means there is a typo in the primary key column declaration.
+CQL0024: no longer in use
 
 -----
 
@@ -10108,7 +10129,7 @@ To correct this, rename the local/global.  Or else pick a more distinctive colum
 
 -----
 
-### CQL0060: referenced table can be independently be recreated so it cannot be used in a foreign key, 'referenced_table'
+### CQL0060: referenced table can be independently recreated so it cannot be used in a foreign key, 'referenced_table'
 
 The referenced table is marked recreate so it must be in the same recreate
 group as the current table because the referenced table might be recreated away leaving all the
@@ -10739,9 +10760,10 @@ In a `CREATE TRIGGER` statement, the named target of the trigger was a view but 
 
 -----
 
-### CQL0139: temp tables may not have versioning annotations 'table_name'
+### CQL0139: temp objects may not have versioning annotations 'object_name'
 
-The indicated table is a temporary table.  Since temp tables do not survive sessions it makes no sense to try to version them for schema upgrade.  They are always recreated on demand.
+The indicated object is a temporary.  Since temporary  do not survive sessions it makes no sense to try to version them for schema upgrade.
+They are always recreated on demand.  If you need to remove one, simply delete it entirely, it requires no tombstone.
 
 -----
 
@@ -13037,9 +13059,29 @@ select 1 where table_valued_func(5) = 3;
 ```
 
 ----
-CQL 0396 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+
+### CQL0396: versioning attributes may not be used on DDL inside a procedure
+
+If you are putting DDL inside of a procedure then that is going to run regardless of any `@create`,
+`@delete`, or `@recreate` attributes;
+
+DDL in entires do not get versioning attributes, attributes are reserved for schema declarations outside
+of any procedure.
+
 ----
-CQL 0397 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+
+### CQL0397: object is an orphan because its table is deleted. Remove rather than @delete 'object_name'
+
+This error is about either a trigger or an index. In both cases you are trying to use `@delete` on the index/trigger
+but the table that the named  object is based on is itself deleted, so the object is an orphan.
+Because of this, the orphaned object doesn't need, or no longer needs, an `@delete` tombstone because
+when the table is dropped, all of its orphaned indices and triggers will also be dropped.
+
+To fix this error, remove the named object entirely rather than marking it `@delete`.
+
+Note: if the index/trigger was previously deleted and now the table is also deleted, it is now safe to remove
+the index/trigger `@delete` tombstone and this error reminds you to do so.
+
 ----
 CQL 0398 : unused, this was added to prevent merge conflicts at the end on literally every checkin
 ----
@@ -13071,7 +13113,7 @@ CQL 0400 : unused, this was added to prevent merge conflicts at the end on liter
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Mon Apr 19 12:42:15 PDT 2021
+Snapshot as of Tue Apr 27 10:50:55 PDT 2021
 
 ### Rules
 
@@ -13122,6 +13164,7 @@ table: '{'
        opt_attributes
        '"columns"' ':' '[' columns ']' ','
        '"primaryKey"' ':' '[' opt_column_names ']' ','
+       PRIMARY_KEY_SORT_ORDERS '[' opt_sort_order_names ']' ','
        opt_primary_key_name
        '"foreignKeys"' ':' '[' opt_foreign_keys ']' ','
        '"uniqueKeys"' ':' '[' opt_unique_keys ']' ','
@@ -13155,6 +13198,7 @@ virtual_table: '{'
        opt_attributes
        '"columns"' ':' '[' columns ']' ','
        '"primaryKey"' ':' '[' opt_column_names ']' ','
+       PRIMARY_KEY_SORT_ORDERS '[' opt_sort_order_names ']' ','
        '"foreignKeys"' ':' '[' opt_foreign_keys ']' ','
        '"uniqueKeys"' ':' '[' opt_unique_keys ']' ','
        '"checkExpressions"' ':' '[' opt_check_expressions ']'
@@ -13213,6 +13257,9 @@ opt_procedure_names: | procedure_names
   ;
 
 procedure_names: STRING_LITERAL | STRING_LITERAL ',' procedure_names
+  ;
+
+opt_sort_order_names: | sort_order_names
   ;
 
 sort_order_names: STRING_LITERAL | STRING_LITERAL ',' sort_order_names
@@ -13281,7 +13328,8 @@ unique_keys : unique_key | unique_key ',' unique_keys
 
 unique_key:  '{'
               opt_name
-              '"columns"' ':' '[' column_names ']'
+              '"columns"' ':' '[' column_names ']' ','
+              '"sortOrders"' ':' '[' sort_order_names ']'
              '}'
   ;
 

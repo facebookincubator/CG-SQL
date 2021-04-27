@@ -12,7 +12,7 @@ sidebar_label: "Appendix 5: JSON Schema Grammar"
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Mon Apr 19 12:42:15 PDT 2021
+Snapshot as of Tue Apr 27 10:50:55 PDT 2021
 
 ### Rules
 
@@ -63,6 +63,7 @@ table: '{'
        opt_attributes
        '"columns"' ':' '[' columns ']' ','
        '"primaryKey"' ':' '[' opt_column_names ']' ','
+       PRIMARY_KEY_SORT_ORDERS '[' opt_sort_order_names ']' ','
        opt_primary_key_name
        '"foreignKeys"' ':' '[' opt_foreign_keys ']' ','
        '"uniqueKeys"' ':' '[' opt_unique_keys ']' ','
@@ -96,6 +97,7 @@ virtual_table: '{'
        opt_attributes
        '"columns"' ':' '[' columns ']' ','
        '"primaryKey"' ':' '[' opt_column_names ']' ','
+       PRIMARY_KEY_SORT_ORDERS '[' opt_sort_order_names ']' ','
        '"foreignKeys"' ':' '[' opt_foreign_keys ']' ','
        '"uniqueKeys"' ':' '[' opt_unique_keys ']' ','
        '"checkExpressions"' ':' '[' opt_check_expressions ']'
@@ -154,6 +156,9 @@ opt_procedure_names: | procedure_names
   ;
 
 procedure_names: STRING_LITERAL | STRING_LITERAL ',' procedure_names
+  ;
+
+opt_sort_order_names: | sort_order_names
   ;
 
 sort_order_names: STRING_LITERAL | STRING_LITERAL ',' sort_order_names
@@ -222,7 +227,8 @@ unique_keys : unique_key | unique_key ',' unique_keys
 
 unique_key:  '{'
               opt_name
-              '"columns"' ':' '[' column_names ']'
+              '"columns"' ':' '[' column_names ']' ','
+              '"sortOrders"' ':' '[' sort_order_names ']'
              '}'
   ;
 

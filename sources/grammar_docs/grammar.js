@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Mon Apr 19 12:42:15 2021
+// Snapshot as of Tue Apr 27 10:50:54 2021
 
 
 const PREC = {
@@ -62,7 +62,10 @@ module.exports = grammar({
     misc_attr: $ => choice(seq($.AT_ATTRIBUTE, '(', $.misc_attr_key, ')'), seq($.AT_ATTRIBUTE, '(', $.misc_attr_key, '=', $.misc_attr_value, ')')),
     misc_attrs: $ => seq($.misc_attr, optional($.misc_attrs)),
     col_def: $ => seq(optional($.misc_attrs), $.col_name, $.data_type_any, optional($.col_attrs)),
-    pk_def: $ => choice(seq($.CONSTRAINT, $.name, $.PRIMARY, $.KEY, '(', $.name_list, ')'), seq($.PRIMARY, $.KEY, '(', $.name_list, ')')),
+    pk_def: $ => choice(seq($.CONSTRAINT, $.name, $.PRIMARY, $.KEY, '(', $.indexed_columns, ')', optional($.opt_conflict_clause)), seq($.PRIMARY, $.KEY, '(', $.indexed_columns, ')', optional($.opt_conflict_clause))),
+    opt_conflict_clause: $ => $.conflict_clause,
+    ON_CONFLICT: $ => prec.left(1, seq(CI('on'), CI('conflict'))),
+    conflict_clause: $ => choice(seq($.ON_CONFLICT, $.ROLLBACK), seq($.ON_CONFLICT, $.ABORT), seq($.ON_CONFLICT, $.FAIL), seq($.ON_CONFLICT, $.IGNORE), seq($.ON_CONFLICT, $.REPLACE)),
     opt_fk_options: $ => $.fk_options,
     fk_options: $ => choice($.fk_on_options, $.fk_deferred_options, seq($.fk_on_options, $.fk_deferred_options)),
     fk_on_options: $ => choice(seq($.ON, $.DELETE, $.fk_action), seq($.ON, $.UPDATE, $.fk_action), seq($.ON, $.UPDATE, $.fk_action, $.ON, $.DELETE, $.fk_action), seq($.ON, $.DELETE, $.fk_action, $.ON, $.UPDATE, $.fk_action)),
@@ -72,7 +75,7 @@ module.exports = grammar({
     fk_initial_state: $ => choice(seq($.INITIALLY, $.DEFERRED), seq($.INITIALLY, $.IMMEDIATE)),
     fk_def: $ => choice(seq($.CONSTRAINT, $.name, $.FOREIGN, $.KEY, '(', $.name_list, ')', $.fk_target_options), seq($.FOREIGN, $.KEY, '(', $.name_list, ')', $.fk_target_options)),
     fk_target_options: $ => prec.left(seq($.REFERENCES, $.name, '(', $.name_list, ')', optional($.opt_fk_options))),
-    unq_def: $ => choice(seq($.CONSTRAINT, $.name, $.UNIQUE, '(', $.name_list, ')'), seq($.UNIQUE, '(', $.name_list, ')')),
+    unq_def: $ => choice(seq($.CONSTRAINT, $.name, $.UNIQUE, '(', $.indexed_columns, ')', optional($.opt_conflict_clause)), seq($.UNIQUE, '(', $.indexed_columns, ')', optional($.opt_conflict_clause))),
     opt_unique: $ => $.UNIQUE,
     indexed_column: $ => seq($.expr, optional($.opt_asc_desc)),
     indexed_columns: $ => choice($.indexed_column, seq($.indexed_column, ',', $.indexed_columns)),
@@ -81,7 +84,7 @@ module.exports = grammar({
     opt_name: $ => $.name,
     name_list: $ => choice($.name, seq($.name, ',', $.name_list)),
     opt_name_list: $ => $.name_list,
-    col_attrs: $ => choice(seq($.NOT, $.NULL, optional($.col_attrs)), seq($.PRIMARY, $.KEY, optional($.col_attrs)), seq($.PRIMARY, $.KEY, $.AUTOINCREMENT, optional($.col_attrs)), seq($.DEFAULT, '-', $.num_literal, optional($.col_attrs)), seq($.DEFAULT, $.num_literal, optional($.col_attrs)), seq($.DEFAULT, $.const_expr, optional($.col_attrs)), seq($.DEFAULT, $.str_literal, optional($.col_attrs)), seq($.COLLATE, $.name, optional($.col_attrs)), seq($.CHECK, '(', $.expr, ')', optional($.col_attrs)), seq($.UNIQUE, optional($.col_attrs)), seq($.HIDDEN, optional($.col_attrs)), seq($.AT_SENSITIVE, optional($.col_attrs)), seq($.AT_CREATE, $.version_annotation, optional($.col_attrs)), seq($.AT_DELETE, $.version_annotation, optional($.col_attrs)), seq($.fk_target_options, optional($.col_attrs))),
+    col_attrs: $ => choice(seq($.NOT, $.NULL, optional($.opt_conflict_clause), optional($.col_attrs)), seq($.PRIMARY, $.KEY, optional($.opt_conflict_clause), optional($.col_attrs)), seq($.PRIMARY, $.KEY, optional($.opt_conflict_clause), $.AUTOINCREMENT, optional($.col_attrs)), seq($.DEFAULT, '-', $.num_literal, optional($.col_attrs)), seq($.DEFAULT, $.num_literal, optional($.col_attrs)), seq($.DEFAULT, $.const_expr, optional($.col_attrs)), seq($.DEFAULT, $.str_literal, optional($.col_attrs)), seq($.COLLATE, $.name, optional($.col_attrs)), seq($.CHECK, '(', $.expr, ')', optional($.col_attrs)), seq($.UNIQUE, optional($.opt_conflict_clause), optional($.col_attrs)), seq($.HIDDEN, optional($.col_attrs)), seq($.AT_SENSITIVE, optional($.col_attrs)), seq($.AT_CREATE, $.version_annotation, optional($.col_attrs)), seq($.AT_DELETE, $.version_annotation, optional($.col_attrs)), seq($.fk_target_options, optional($.col_attrs))),
     version_annotation: $ => choice(seq('(', $.INT_LIT, ',', $.name, ')'), seq('(', $.INT_LIT, ',', $.name, ':', $.name, ')'), seq('(', $.INT_LIT, ')')),
     opt_kind: $ => seq('<', $.name, '>'),
     data_type_numeric: $ => choice(seq($.INT, optional($.opt_kind)), seq($.INTEGER, optional($.opt_kind)), seq($.REAL, optional($.opt_kind)), seq($.LONG, optional($.opt_kind)), seq($.BOOL, optional($.opt_kind)), seq($.LONG, $.INTEGER, optional($.opt_kind)), seq($.LONG, $.INT, optional($.opt_kind)), seq($.LONG_INT, optional($.opt_kind)), seq($.LONG_INTEGER, optional($.opt_kind))),
@@ -187,7 +190,6 @@ module.exports = grammar({
     update_entry: $ => seq($.name, '=', $.expr),
     update_list: $ => choice($.update_entry, seq($.update_entry, ',', $.update_list)),
     with_upsert_stmt: $ => seq($.with_prefix, $.upsert_stmt),
-    ON_CONFLICT: $ => prec.left(1, seq(CI('on'), CI('conflict'))),
     upsert_stmt: $ => choice(seq($.insert_stmt, $.ON_CONFLICT, optional($.conflict_target), $.DO, $.NOTHING), seq($.insert_stmt, $.ON_CONFLICT, optional($.conflict_target), $.DO, $.basic_update_stmt)),
     update_cursor_stmt: $ => choice(seq($.UPDATE, $.CURSOR, $.name, optional($.opt_column_spec), $.FROM, $.VALUES, '(', optional($.insert_list), ')'), seq($.UPDATE, $.CURSOR, $.name, optional($.opt_column_spec), $.from_shape), seq($.UPDATE, $.CURSOR, $.name, $.USING, $.expr_names)),
     conflict_target: $ => seq('(', $.indexed_columns, ')', optional($.opt_where)),
@@ -320,6 +322,11 @@ module.exports = grammar({
     AT_ATTRIBUTE: $ => CI('@attribute'),
     PRIMARY: $ => CI('primary'),
     KEY: $ => CI('key'),
+    ROLLBACK: $ => CI('rollback'),
+    ABORT: $ => CI('abort'),
+    FAIL: $ => CI('fail'),
+    IGNORE: $ => CI('ignore'),
+    REPLACE: $ => CI('replace'),
     ON: $ => CI('on'),
     DELETE: $ => CI('delete'),
     UPDATE: $ => CI('update'),
@@ -337,7 +344,6 @@ module.exports = grammar({
     REFERENCES: $ => CI('references'),
     UNIQUE: $ => CI('unique'),
     TEXT: $ => CI('text'),
-    REPLACE: $ => CI('replace'),
     TYPE: $ => CI('type'),
     HIDDEN: $ => CI('hidden'),
     PRIVATE: $ => CI('private'),
@@ -357,10 +363,6 @@ module.exports = grammar({
     AT_FILE: $ => CI('@file'),
     AT_PROC: $ => CI('@proc'),
     RAISE: $ => CI('raise'),
-    IGNORE: $ => CI('ignore'),
-    ROLLBACK: $ => CI('rollback'),
-    ABORT: $ => CI('abort'),
-    FAIL: $ => CI('fail'),
     DISTINCT: $ => CI('distinct'),
     AT_RC: $ => CI('@rc'),
     NOTHING: $ => CI('nothing'),
