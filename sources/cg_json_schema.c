@@ -658,8 +658,8 @@ static void cg_json_indexed_columns(charbuf *cols, charbuf *orders, ast_node *li
 // The primary key def is emitted just as an ordinary name list
 static void cg_json_pk_def(charbuf *output, ast_node *def) {
   Contract(is_ast_pk_def(def));
-  EXTRACT_NOTNULL(name_list_and_conflict_clause, def->right);
-  EXTRACT_NOTNULL(indexed_columns, name_list_and_conflict_clause->left);
+  EXTRACT_NOTNULL(indexed_columns_conflict_clause, def->right);
+  EXTRACT_NOTNULL(indexed_columns, indexed_columns_conflict_clause->left);
 
   CHARBUF_OPEN(cols);
   CHARBUF_OPEN(orders);
@@ -752,8 +752,8 @@ static void cg_json_fk_def(charbuf *output, ast_node *def) {
 // the participating columns.
 static void cg_json_unq_def(charbuf *output, ast_node *def) {
   Contract(is_ast_unq_def(def));
-  EXTRACT_NOTNULL(name_list_and_conflict_clause, def->right);
-  EXTRACT_NOTNULL(indexed_columns, name_list_and_conflict_clause->left);
+  EXTRACT_NOTNULL(indexed_columns_conflict_clause, def->right);
+  EXTRACT_NOTNULL(indexed_columns, indexed_columns_conflict_clause->left);
 
   bprintf(output, "{\n");
   BEGIN_INDENT(uk, 2);

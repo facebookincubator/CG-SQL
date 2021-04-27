@@ -477,7 +477,7 @@ CREATE TABLE t_additional_attribute_present(
       |     | {type_int}: integer
       | {col_key_list}
         | {pk_def}
-          | {name_list_and_conflict_clause}
+          | {indexed_columns_conflict_clause}
             | {indexed_columns}
               | {indexed_column}
               | | {name a}: a: integer notnull
@@ -514,7 +514,7 @@ CREATE TABLE t_additional_attribute_mismatch(
       |   | {col_attrs_not_null}: ok
       | {col_key_list}
         | {pk_def}
-          | {name_list_and_conflict_clause}
+          | {indexed_columns_conflict_clause}
             | {indexed_columns}
               | {indexed_column}
                 | {name a}: a: integer notnull
@@ -558,7 +558,7 @@ CREATE TABLE t_attribute_added(
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
       | {pk_def}
-        | {name_list_and_conflict_clause}
+        | {indexed_columns_conflict_clause}
           | {indexed_columns}
             | {indexed_column}
               | {name a}: a: integer notnull
@@ -1353,7 +1353,7 @@ CREATE TABLE t_several_columns_added_interleaved(
         |       | {int 2}
         | {col_key_list}
           | {pk_def}
-            | {name_list_and_conflict_clause}
+            | {indexed_columns_conflict_clause}
               | {indexed_columns}
                 | {indexed_column}
                   | {name col1}: col1: integer
@@ -2070,7 +2070,7 @@ CREATE TABLE conflict_clause_pk(
     | {col_key_list}
       | {pk_def}
         | {name pk1}
-        | {name_list_and_conflict_clause}
+        | {indexed_columns_conflict_clause}
           | {indexed_columns}
           | | {indexed_column}
           |   | {name id}: id: integer notnull
@@ -2587,7 +2587,7 @@ CREATE TABLE t_additional_attribute_present(
       |     | {type_int}: integer
       | {col_key_list}
         | {pk_def}
-          | {name_list_and_conflict_clause}
+          | {indexed_columns_conflict_clause}
             | {indexed_columns}
               | {indexed_column}
               | | {name a}: a: integer notnull
@@ -2630,7 +2630,7 @@ Error at test/sem_test_prev.sql:XXXX : in pk_def : CQL0132: table has a facet th
       |   | {col_attrs_not_null}: ok
       | {col_key_list}
         | {pk_def}
-          | {name_list_and_conflict_clause}
+          | {indexed_columns_conflict_clause}
             | {indexed_columns}
               | {indexed_column}
               | | {name a}: a: integer notnull
@@ -3369,7 +3369,7 @@ Error at test/sem_test_prev.sql:XXXX : in col_key_list : CQL0133: non-column fac
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
       | {pk_def}
-        | {name_list_and_conflict_clause}
+        | {indexed_columns_conflict_clause}
           | {indexed_columns}
             | {indexed_column}
               | {name id}: id: integer notnull
@@ -3425,7 +3425,7 @@ CREATE TABLE t_several_columns_added_interleaved(
     |     | {type_int}: integer
     | {col_key_list}
       | {pk_def}
-        | {name_list_and_conflict_clause}
+        | {indexed_columns_conflict_clause}
           | {indexed_columns}
             | {indexed_column}
               | {name col1}: col1: integer
@@ -4260,7 +4260,7 @@ CREATE TABLE conflict_clause_pk(
     | {col_key_list}
       | {pk_def}
         | {name pk1}
-        | {name_list_and_conflict_clause}
+        | {indexed_columns_conflict_clause}
           | {indexed_columns}
           | | {indexed_column}
           |   | {name id}: id: integer notnull

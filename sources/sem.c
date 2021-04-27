@@ -822,15 +822,15 @@ static ast_node *find_next_unique_key(ast_node *unq_def) {
 // key is already unique.
 static bool_t is_unique_key_valid(ast_node *table_ast, ast_node *uk) {
   Contract(is_ast_create_table_stmt(table_ast) && is_ast_unq_def(uk));
-  EXTRACT_NOTNULL(name_list_and_conflict_clause, uk->right);
-  EXTRACT_NAMED_NOTNULL(indexed_columns1, indexed_columns, name_list_and_conflict_clause->left);
+  EXTRACT_NOTNULL(indexed_columns_conflict_clause, uk->right);
+  EXTRACT_NAMED_NOTNULL(indexed_columns1, indexed_columns, indexed_columns_conflict_clause->left);
   for (ast_node *unq_def = find_first_unique_key(table_ast); unq_def; unq_def = find_next_unique_key(unq_def)) {
     if (uk == unq_def) {
       break;
     }
 
-    EXTRACT_NAMED_NOTNULL(name_list_and_conflict_clause2, name_list_and_conflict_clause, unq_def->right);
-    EXTRACT_NAMED_NOTNULL(indexed_columns2, indexed_columns, name_list_and_conflict_clause2->left);
+    EXTRACT_NAMED_NOTNULL(indexed_columns_conflict_clause2, indexed_columns_conflict_clause, unq_def->right);
+    EXTRACT_NAMED_NOTNULL(indexed_columns2, indexed_columns, indexed_columns_conflict_clause2->left);
     if (is_either_list_a_subset(indexed_columns1, indexed_columns2)) {
       return false;
     }
@@ -2775,8 +2775,8 @@ static void sem_unq_def(ast_node *table_ast, ast_node *def) {
   Contract(!current_joinscope);  // I don't belong inside a select(!)
   Contract(is_ast_create_table_stmt(table_ast));
   Contract(is_ast_unq_def(def));
-  EXTRACT_NOTNULL(name_list_and_conflict_clause, def->right);
-  EXTRACT_NOTNULL(indexed_columns, name_list_and_conflict_clause->left);
+  EXTRACT_NOTNULL(indexed_columns_conflict_clause, def->right);
+  EXTRACT_NOTNULL(indexed_columns, indexed_columns_conflict_clause->left);
 
   if (def->left) {
     EXTRACT_STRING(name, def->left);
@@ -2980,16 +2980,16 @@ static bool_t find_referenceable_columns(
     EXTRACT_ANY_NOTNULL(col_def, col_key_list->left);
     // check if all column are in PRIMARY KEY ([name_list]) statement
     if (is_ast_pk_def(col_def)) {
-      EXTRACT_NOTNULL(name_list_and_conflict_clause, col_def->right);
-      EXTRACT_NAMED_NOTNULL(indexed_columns2, indexed_columns, name_list_and_conflict_clause->left);
+      EXTRACT_NOTNULL(indexed_columns_conflict_clause, col_def->right);
+      EXTRACT_NAMED_NOTNULL(indexed_columns2, indexed_columns, indexed_columns_conflict_clause->left);
       if (callback(indexed_columns2, context)) {
         return true;
       }
     }
     // check if all column are in CONSTRAINT UNIQUE ([name_list]) statement
     else if (is_ast_unq_def(col_def)) {
-      EXTRACT_NOTNULL(name_list_and_conflict_clause, col_def->right);
-      EXTRACT_NAMED_NOTNULL(indexed_columns2, indexed_columns, name_list_and_conflict_clause->left);
+      EXTRACT_NOTNULL(indexed_columns_conflict_clause, col_def->right);
+      EXTRACT_NAMED_NOTNULL(indexed_columns2, indexed_columns, indexed_columns_conflict_clause->left);
       if (callback(indexed_columns2, context)) {
         return true;
       }
@@ -3216,8 +3216,8 @@ static void sem_pk_def(ast_node *table_ast, ast_node *def) {
   Contract(!current_joinscope);  // I don't belong inside a select(!)
   Contract(is_ast_create_table_stmt(table_ast));
   Contract(is_ast_pk_def(def));
-  EXTRACT_NOTNULL(name_list_and_conflict_clause, def->right);
-  EXTRACT(indexed_columns, name_list_and_conflict_clause->left);
+  EXTRACT_NOTNULL(indexed_columns_conflict_clause, def->right);
+  EXTRACT(indexed_columns, indexed_columns_conflict_clause->left);
 
   // PRIMARY KEY [indexed_columns]
 

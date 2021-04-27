@@ -277,9 +277,9 @@ static void gen_create_index_stmt(ast_node *ast) {
 
 static void gen_unq_def(ast_node *def) {
   Contract(is_ast_unq_def(def));
-  EXTRACT_NOTNULL(name_list_and_conflict_clause, def->right);
-  EXTRACT_NOTNULL(indexed_columns, name_list_and_conflict_clause->left);
-  EXTRACT_ANY(conflict_clause, name_list_and_conflict_clause->right);
+  EXTRACT_NOTNULL(indexed_columns_conflict_clause, def->right);
+  EXTRACT_NOTNULL(indexed_columns, indexed_columns_conflict_clause->left);
+  EXTRACT_ANY(conflict_clause, indexed_columns_conflict_clause->right);
 
   if (def->left) {
     EXTRACT_STRING(name, def->left);
@@ -430,9 +430,9 @@ static void gen_conflict_clause(ast_node *ast) {
 
 static void gen_pk_def(ast_node *def) {
   Contract(is_ast_pk_def(def));
-  EXTRACT_NOTNULL(name_list_and_conflict_clause, def->right);
-  EXTRACT_NOTNULL(indexed_columns, name_list_and_conflict_clause->left);
-  EXTRACT_ANY(conflict_clause, name_list_and_conflict_clause->right);
+  EXTRACT_NOTNULL(indexed_columns_conflict_clause, def->right);
+  EXTRACT_NOTNULL(indexed_columns, indexed_columns_conflict_clause->left);
+  EXTRACT_ANY(conflict_clause, indexed_columns_conflict_clause->right);
 
   if (def->left) {
     EXTRACT_STRING(name, def->left);

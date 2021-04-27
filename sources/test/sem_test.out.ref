@@ -4001,7 +4001,7 @@ CREATE TABLE simple_pk_table(
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
       | {pk_def}
-        | {name_list_and_conflict_clause}
+        | {indexed_columns_conflict_clause}
           | {indexed_columns}
             | {indexed_column}
               | {name id}: id: integer notnull
@@ -4029,7 +4029,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'pk_col_not_e
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
       | {pk_def}
-        | {name_list_and_conflict_clause}
+        | {indexed_columns_conflict_clause}
           | {indexed_columns}: err
             | {indexed_column}
               | {name pk_col_not_exist}: err
@@ -4058,13 +4058,13 @@ Error at test/sem_test.sql:XXXX : in str : CQL0143: more than one primary key in
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
       | {pk_def}
-      | | {name_list_and_conflict_clause}
+      | | {indexed_columns_conflict_clause}
       |   | {indexed_columns}
       |     | {indexed_column}
       |       | {name id}: id: integer notnull
       | {col_key_list}
         | {pk_def}
-          | {name_list_and_conflict_clause}
+          | {indexed_columns_conflict_clause}
             | {indexed_columns}
               | {indexed_column}
                 | {name id}: id: integer notnull
@@ -4091,7 +4091,7 @@ CREATE TABLE simple_ak_table(
     | {col_key_list}
       | {unq_def}
         | {name ak1}
-        | {name_list_and_conflict_clause}
+        | {indexed_columns_conflict_clause}
           | {indexed_columns}
             | {indexed_column}
               | {name id}: id: integer notnull
@@ -4140,7 +4140,7 @@ CREATE TABLE simple_ak_table_2(
           |     | {type_long}: longint
           | {col_key_list}
             | {unq_def}
-            | | {name_list_and_conflict_clause}
+            | | {indexed_columns_conflict_clause}
             |   | {indexed_columns}
             |     | {indexed_column}
             |     | | {name a}: a: integer notnull
@@ -4149,7 +4149,7 @@ CREATE TABLE simple_ak_table_2(
             |         | {name b}: b: text
             | {col_key_list}
               | {unq_def}
-              | | {name_list_and_conflict_clause}
+              | | {indexed_columns_conflict_clause}
               |   | {indexed_columns}
               |     | {indexed_column}
               |     | | {name a}: a: integer notnull
@@ -4158,7 +4158,7 @@ CREATE TABLE simple_ak_table_2(
               |         | {name c}: c: real
               | {col_key_list}
                 | {unq_def}
-                  | {name_list_and_conflict_clause}
+                  | {indexed_columns_conflict_clause}
                     | {indexed_columns}
                       | {indexed_column}
                         | {name d}: d: longint
@@ -4206,7 +4206,7 @@ CREATE TABLE simple_ak_table_3(
           |     | {type_long}: longint
           | {col_key_list}
             | {unq_def}
-            | | {name_list_and_conflict_clause}
+            | | {indexed_columns_conflict_clause}
             |   | {indexed_columns}
             |     | {indexed_column}
             |     | | {name a}: a: integer notnull
@@ -4215,7 +4215,7 @@ CREATE TABLE simple_ak_table_3(
             |         | {name b}: b: text
             | {col_key_list}
               | {unq_def}
-                | {name_list_and_conflict_clause}
+                | {indexed_columns_conflict_clause}
                   | {indexed_columns}
                     | {indexed_column}
                     | | {name b}: b: text
@@ -4261,7 +4261,7 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this un
         |     | {type_real}: real
         | {col_key_list}
           | {unq_def}
-          | | {name_list_and_conflict_clause}
+          | | {indexed_columns_conflict_clause}
           |   | {indexed_columns}
           |     | {indexed_column}
           |     | | {name a}: a: integer notnull
@@ -4270,7 +4270,7 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this un
           |         | {name b}: b: text
           | {col_key_list}
             | {unq_def}
-              | {name_list_and_conflict_clause}
+              | {indexed_columns_conflict_clause}
                 | {indexed_columns}
                   | {indexed_column}
                   | | {name a}
@@ -4326,7 +4326,7 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this un
           |     | {type_long}: longint
           | {col_key_list}
             | {unq_def}
-            | | {name_list_and_conflict_clause}
+            | | {indexed_columns_conflict_clause}
             |   | {indexed_columns}
             |     | {indexed_column}
             |     | | {name a}: a: integer notnull
@@ -4335,7 +4335,7 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this un
             |         | {name b}: b: text
             | {col_key_list}
               | {unq_def}
-                | {name_list_and_conflict_clause}
+                | {indexed_columns_conflict_clause}
                   | {indexed_columns}
                     | {indexed_column}
                     | | {name b}
@@ -4388,7 +4388,7 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this un
           |     | {type_long}: longint
           | {col_key_list}
             | {unq_def}
-            | | {name_list_and_conflict_clause}
+            | | {indexed_columns_conflict_clause}
             |   | {indexed_columns}
             |     | {indexed_column}
             |     | | {name a}: a: integer notnull
@@ -4397,7 +4397,7 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this un
             |         | {name b}: b: text
             | {col_key_list}
               | {unq_def}
-                | {name_list_and_conflict_clause}
+                | {indexed_columns_conflict_clause}
                   | {indexed_columns}
                     | {indexed_column}
                     | | {name c}
@@ -4456,7 +4456,7 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this un
           |     | {type_long}: longint
           | {col_key_list}
             | {unq_def}
-            | | {name_list_and_conflict_clause}
+            | | {indexed_columns_conflict_clause}
             |   | {indexed_columns}
             |     | {indexed_column}
             |     | | {name a}: a: integer notnull
@@ -4465,7 +4465,7 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this un
             |         | {name b}: b: text
             | {col_key_list}
               | {unq_def}
-                | {name_list_and_conflict_clause}
+                | {indexed_columns_conflict_clause}
                   | {indexed_columns}
                     | {indexed_column}
                       | {name a}
@@ -4495,7 +4495,7 @@ CREATE TABLE baz_expr_uk(
     | {col_key_list}
       | {unq_def}
         | {name ak1}
-        | {name_list_and_conflict_clause}
+        | {indexed_columns_conflict_clause}
           | {indexed_columns}
             | {indexed_column}
               | {div}: integer notnull
@@ -4529,7 +4529,7 @@ Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in 
     | {col_key_list}
       | {unq_def}
         | {name ak1}
-        | {name_list_and_conflict_clause}
+        | {indexed_columns_conflict_clause}
           | {indexed_columns}: err
             | {indexed_column}
               | {call}: err
@@ -4558,7 +4558,7 @@ CREATE TABLE baz_expr_pk(
     | {col_key_list}
       | {pk_def}
         | {name pk1}
-        | {name_list_and_conflict_clause}
+        | {indexed_columns_conflict_clause}
           | {indexed_columns}
             | {indexed_column}
               | {div}: integer
@@ -4588,7 +4588,7 @@ Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in 
     | {col_key_list}
       | {pk_def}
         | {name pk1}
-        | {name_list_and_conflict_clause}
+        | {indexed_columns_conflict_clause}
           | {indexed_columns}: err
             | {indexed_column}
               | {call}: err
@@ -4624,14 +4624,14 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0020: duplicate constraint nam
     | {col_key_list}
       | {unq_def}
       | | {name ak1}
-      | | {name_list_and_conflict_clause}
+      | | {indexed_columns_conflict_clause}
       |   | {indexed_columns}
       |     | {indexed_column}
       |       | {name id}: id: integer notnull
       | {col_key_list}
         | {unq_def}
           | {name ak1}
-          | {name_list_and_conflict_clause}
+          | {indexed_columns_conflict_clause}
             | {indexed_columns}
               | {indexed_column}
                 | {name id}
@@ -4661,14 +4661,14 @@ Error at test/sem_test.sql:XXXX : in pk_def : CQL0020: duplicate constraint name
     | {col_key_list}
       | {pk_def}
       | | {name pk1}
-      | | {name_list_and_conflict_clause}
+      | | {indexed_columns_conflict_clause}
       |   | {indexed_columns}
       |     | {indexed_column}
       |       | {name id}: id: integer notnull
       | {col_key_list}
         | {pk_def}
           | {name pk1}
-          | {name_list_and_conflict_clause}
+          | {indexed_columns_conflict_clause}
             | {indexed_columns}
               | {indexed_column}
                 | {name id}
@@ -4707,7 +4707,7 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this un
       |     | {type_text}: text
       | {col_key_list}
         | {unq_def}
-        | | {name_list_and_conflict_clause}
+        | | {indexed_columns_conflict_clause}
         |   | {indexed_columns}
         |     | {indexed_column}
         |     | | {name id}: id: integer notnull
@@ -4716,7 +4716,7 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this un
         |         | {name name}: name: text
         | {col_key_list}
           | {unq_def}
-            | {name_list_and_conflict_clause}
+            | {indexed_columns_conflict_clause}
               | {indexed_columns}
                 | {indexed_column}
                 | | {name name}
@@ -4751,7 +4751,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'ak_col_not_e
     | {col_key_list}
       | {unq_def}
         | {name ak1}
-        | {name_list_and_conflict_clause}
+        | {indexed_columns_conflict_clause}
           | {indexed_columns}: err
             | {indexed_column}
               | {name ak_col_not_exist}: err
@@ -4782,7 +4782,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'ak_col_not_e
     |     | {col_attrs_not_null}
     | {col_key_list}
       | {unq_def}
-        | {name_list_and_conflict_clause}
+        | {indexed_columns_conflict_clause}
           | {indexed_columns}: err
             | {indexed_column}
               | {name ak_col_not_exist}: err
@@ -6977,7 +6977,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0172: name list has duplicate name
     | {col_key_list}
       | {unq_def}
         | {name ak1}
-        | {name_list_and_conflict_clause}
+        | {indexed_columns_conflict_clause}
           | {indexed_columns}: err
             | {indexed_column}
             | | {name key_id}: key_id: integer notnull
@@ -7011,7 +7011,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0172: name list has duplicate name
     |     | {col_attrs_not_null}
     | {col_key_list}
       | {unq_def}
-        | {name_list_and_conflict_clause}
+        | {indexed_columns_conflict_clause}
           | {indexed_columns}: err
             | {indexed_column}
             | | {name key_id}: key_id: integer notnull
@@ -12688,7 +12688,7 @@ CREATE TABLE pk_test_2(
     |     | {type_int}: integer
     | {col_key_list}
       | {pk_def}
-        | {name_list_and_conflict_clause}
+        | {indexed_columns_conflict_clause}
           | {indexed_columns}
             | {indexed_column}
               | {name id}: id: integer
@@ -18377,7 +18377,7 @@ CREATE TABLE trickier_alter_target(
         |       | {int 2}
         | {col_key_list}
           | {pk_def}
-            | {name_list_and_conflict_clause}
+            | {indexed_columns_conflict_clause}
               | {indexed_columns}
                 | {indexed_column}
                   | {name id}: id: integer
@@ -18645,7 +18645,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0143: more than one primary key in
     |     | {col_attrs_not_null}
     | {col_key_list}
       | {pk_def}
-        | {name_list_and_conflict_clause}
+        | {indexed_columns_conflict_clause}
           | {indexed_columns}
             | {indexed_column}
               | {name id}: id: integer notnull
@@ -29828,7 +29828,7 @@ CREATE TABLE referenceable_2(
       |     | {type_real}: real
       | {col_key_list}
         | {pk_def}
-          | {name_list_and_conflict_clause}
+          | {indexed_columns_conflict_clause}
             | {indexed_columns}
               | {indexed_column}
               | | {name a}: a: integer
@@ -40151,7 +40151,7 @@ Error at test/sem_test.sql:XXXX : in fk_def : CQL0021: foreign key refers to non
         |     | {int 0}
         | {col_key_list}
           | {pk_def}
-            | {name_list_and_conflict_clause}
+            | {indexed_columns_conflict_clause}
               | {indexed_columns}
                 | {indexed_column}
                   | {name garbonzo}
@@ -53095,7 +53095,7 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0349: column definitions may n
     |     | {type_int}: integer
     | {col_key_list}
       | {pk_def}
-      | | {name_list_and_conflict_clause}
+      | | {indexed_columns_conflict_clause}
       |   | {indexed_columns}
       |     | {indexed_column}
       |       | {name id}
@@ -60360,7 +60360,7 @@ CREATE TABLE conflict_clause_pk(
     | {col_key_list}
       | {pk_def}
         | {name pk1}
-        | {name_list_and_conflict_clause}
+        | {indexed_columns_conflict_clause}
           | {indexed_columns}
           | | {indexed_column}
           |   | {name id}: id: integer notnull

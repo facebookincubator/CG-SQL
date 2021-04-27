@@ -15280,7 +15280,7 @@ create table conflict_clause_t(id int not null on conflict fail);
 
 -- TEST: test create table with pk column on conflict clause rollback
 -- + {create_table_stmt}: conflict_clause_pk: { id: integer notnull }
--- + {name_list_and_conflict_clause}
+-- + {indexed_columns_conflict_clause}
 -- + {int 0}
 -- - Error
 create table conflict_clause_pk(
