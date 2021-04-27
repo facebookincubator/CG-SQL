@@ -326,59 +326,60 @@ code_gen_java_test() {
   on_diff_exit cg_test_java.err
 
   echo running java with suppressed getters
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_java.out" --in "${TEST_DIR}/cg_test_suppressed.sql" --rt java --java_package_name com.facebook.cqlviewmodels 2>"${OUT_DIR}/cg_test_java.err"
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_java.out" --in "${TEST_DIR}/cg_test_suppressed.sql" --rt java --java_package_name com.facebook.cqlviewmodels 2>"${OUT_DIR}/cg_test_java_getters.err"
   then
     echo "ERROR:"
-    cat "${OUT_DIR}/cg_test_java.err"
+    cat "${OUT_DIR}/cg_test_java_getters.err"
     failed
   fi
 
   echo validating empty codegen
   echo "  computing diffs (empty if none)"
-  on_diff_exit cg_test_java.err
+  on_diff_exit cg_test_java_getters.err
 
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_java_not_nullable_proc.out" --in "${TEST_DIR}/cg_test_single_proc_not_nullable.sql" --rt java --java_package_name com.facebook.cqlviewmodels 2>"${OUT_DIR}/cg_test_java.err"
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_java_not_nullable_proc.out" --in "${TEST_DIR}/cg_test_single_proc_not_nullable.sql" --rt java --java_package_name com.facebook.cqlviewmodels 2>"${OUT_DIR}/cg_test_java_not_nullable_proc.err"
   then
     echo "ERROR:"
-    cat "${OUT_DIR}/cg_test_java.err"
+    cat "${OUT_DIR}/cg_test_java_not_nullable_proc.err"
     failed
   fi
 
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_java_nullable_proc.out" --in "${TEST_DIR}/cg_test_single_proc_nullable.sql" --rt java --java_package_name com.facebook.cqlviewmodels 2>"${OUT_DIR}/cg_test_java.err"
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_java_nullable_proc.out" --in "${TEST_DIR}/cg_test_single_proc_nullable.sql" --rt java --java_package_name com.facebook.cqlviewmodels 2>"${OUT_DIR}/cg_test_java_nullable_proc.err"
   then
     echo "ERROR:"
-    cat "${OUT_DIR}/cg_test_java.err"
+    cat "${OUT_DIR}/cg_test_java_nullable_proc.err"
     failed
   fi
 
   echo running java codegen test for extension query fragment
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_extension_fragment_java.out" --in "${TEST_DIR}/cg_test_extension_java_fragment.sql" --rt java --java_package_name com.facebook.cqlviewmodels --java_assembly_query_classname com.facebook.cqlviewmodels.cg_test_assembly_query_java 2>"${OUT_DIR}/cg_test_java.err"
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_extension_fragment_java.out" --in "${TEST_DIR}/cg_test_extension_java_fragment.sql" --rt java --java_package_name com.facebook.cqlviewmodels --java_assembly_query_classname com.facebook.cqlviewmodels.cg_test_assembly_query_java 2>"${OUT_DIR}/cg_test_java_ext_frag.err"
   then
     echo "ERROR:"
-    cat "${OUT_DIR}/cg_test_java.err"
+    cat "${OUT_DIR}/cg_test_java_ext_frag.err"
     failed
   fi
 
   echo running java codegen test for assembly query fragment
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_assembly_query_java.out" --in "${TEST_DIR}/cg_test_assembly_query.sql" --rt java --java_package_name com.facebook.cqlviewmodels 2>"${OUT_DIR}/cg_test_java.err"
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_assembly_query_java.out" --in "${TEST_DIR}/cg_test_assembly_query.sql" --rt java --java_package_name com.facebook.cqlviewmodels 2>"${OUT_DIR}/cg_test_java_asm_frag.err"
   then
     echo "ERROR:"
-    cat "${OUT_DIR}/cg_test_java.err"
+    cat "${OUT_DIR}/cg_test_java_asm_frag.err"
     failed
   fi
 
   echo running java codegen test for out union
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_java_out_union.out" --in "${TEST_DIR}/cg_test_out_union.sql" --rt java --java_package_name com.facebook.cqlviewmodels 2>"${OUT_DIR}/cg_test_java.err"
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_java_out_union.out" --in "${TEST_DIR}/cg_test_out_union.sql" --rt java --java_package_name com.facebook.cqlviewmodels 2>"${OUT_DIR}/cg_test_java_out_union.err"
   then
     echo "ERROR:"
-    cat "${OUT_DIR}/cg_test_java.err"
+    cat "${OUT_DIR}/cg_test_java_out_union.err"
     failed
   fi
 
   echo running java codegen test for out with object
-  if ${CQL} --test --cg "${OUT_DIR}/cg_test_java_out_object.out" --in "${TEST_DIR}/cg_test_out_object.sql" --rt java --java_package_name com.facebook.cqlviewmodels 2>"${OUT_DIR}/cg_test_java.err"
+  if ${CQL} --test --cg "${OUT_DIR}/cg_test_java_out_object.out" --in "${TEST_DIR}/cg_test_out_object.sql" --rt java --java_package_name com.facebook.cqlviewmodels 2>"${OUT_DIR}/cg_test_java_obj_cursor.err"
   then
     echo 'cursor with object in it, this should have caused an error'
+    cat "${OUT_DIR}/cg_test_java_obj_cursor.err"
     failed
   fi
 

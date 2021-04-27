@@ -478,10 +478,12 @@ CREATE TABLE t_additional_attribute_present(
       | {col_key_list}
         | {pk_def}
           | {name_list_and_conflict_clause}
-            | {name_list}
-              | {name a}
-              | {name_list}
-                | {name b}
+            | {indexed_columns}
+              | {indexed_column}
+              | | {name a}: a: integer notnull
+              | {indexed_columns}
+                | {indexed_column}
+                  | {name b}: b: integer
 
 The statement ending at line XXXX
 
@@ -513,8 +515,9 @@ CREATE TABLE t_additional_attribute_mismatch(
       | {col_key_list}
         | {pk_def}
           | {name_list_and_conflict_clause}
-            | {name_list}
-              | {name a}
+            | {indexed_columns}
+              | {indexed_column}
+                | {name a}: a: integer notnull
 
 The statement ending at line XXXX
 
@@ -556,8 +559,9 @@ CREATE TABLE t_attribute_added(
     | {col_key_list}
       | {pk_def}
         | {name_list_and_conflict_clause}
-          | {name_list}
-            | {name a}
+          | {indexed_columns}
+            | {indexed_column}
+              | {name a}: a: integer notnull
 
 The statement ending at line XXXX
 
@@ -1350,8 +1354,9 @@ CREATE TABLE t_several_columns_added_interleaved(
         | {col_key_list}
           | {pk_def}
             | {name_list_and_conflict_clause}
-              | {name_list}
-                | {name col1}
+              | {indexed_columns}
+                | {indexed_column}
+                  | {name col1}: col1: integer
 
 The statement ending at line XXXX
 
@@ -2066,8 +2071,9 @@ CREATE TABLE conflict_clause_pk(
       | {pk_def}
         | {name pk1}
         | {name_list_and_conflict_clause}
-          | {name_list}
-          | | {name id}
+          | {indexed_columns}
+          | | {indexed_column}
+          |   | {name id}: id: integer notnull
           | {int 0}
 
 The statement ending at line XXXX
@@ -2582,10 +2588,12 @@ CREATE TABLE t_additional_attribute_present(
       | {col_key_list}
         | {pk_def}
           | {name_list_and_conflict_clause}
-            | {name_list}
-              | {name a}
-              | {name_list}
-                | {name b}
+            | {indexed_columns}
+              | {indexed_column}
+              | | {name a}: a: integer notnull
+              | {indexed_columns}
+                | {indexed_column}
+                  | {name b}: b: integer
 
 The statement ending at line XXXX
 
@@ -2623,10 +2631,12 @@ Error at test/sem_test_prev.sql:XXXX : in pk_def : CQL0132: table has a facet th
       | {col_key_list}
         | {pk_def}
           | {name_list_and_conflict_clause}
-            | {name_list}
-              | {name a}
-              | {name_list}
-                | {name b}
+            | {indexed_columns}
+              | {indexed_column}
+              | | {name a}: a: integer notnull
+              | {indexed_columns}
+                | {indexed_column}
+                  | {name b}: b: integer notnull
 
 The statement ending at line XXXX
 
@@ -3360,8 +3370,9 @@ Error at test/sem_test_prev.sql:XXXX : in col_key_list : CQL0133: non-column fac
     | {col_key_list}
       | {pk_def}
         | {name_list_and_conflict_clause}
-          | {name_list}
-            | {name id}
+          | {indexed_columns}
+            | {indexed_column}
+              | {name id}: id: integer notnull
 
 The statement ending at line XXXX
 
@@ -3415,8 +3426,9 @@ CREATE TABLE t_several_columns_added_interleaved(
     | {col_key_list}
       | {pk_def}
         | {name_list_and_conflict_clause}
-          | {name_list}
-            | {name col1}
+          | {indexed_columns}
+            | {indexed_column}
+              | {name col1}: col1: integer
 
 The statement ending at line XXXX
 
@@ -4249,7 +4261,8 @@ CREATE TABLE conflict_clause_pk(
       | {pk_def}
         | {name pk1}
         | {name_list_and_conflict_clause}
-          | {name_list}
-          | | {name id}
+          | {indexed_columns}
+          | | {indexed_column}
+          |   | {name id}: id: integer notnull
           | {int 0}
 

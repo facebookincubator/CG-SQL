@@ -58,6 +58,7 @@ int fileno(FILE *);
 \"isVirtual\"[ \t]*:             { return IS_VIRTUAL; }
 \"primaryKey\"[ \t]*:            { return PRIMARY_KEY; }
 \"primaryKeyName\"[ \t]*:        { return PRIMARY_KEY_NAME; }
+\"primaryKeySortOrders\"[ \t]*:  { return PRIMARY_KEY_SORT_ORDERS; }
 \"foreignKeys\"[ \t]*:           { return FOREIGN_KEYS; }
 \"uniqueKeys\"[ \t]*:            { return UNIQUE_KEYS; }
 \"referenceTable\"[ \t]*:        { return REFERENCE_TABLE; }

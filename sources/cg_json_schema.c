@@ -479,7 +479,11 @@ static void cg_json_col_attrs(charbuf *output, col_info *info) {
     if (info->col_uk->used > 1) {
       bprintf(info->col_uk, ",\n");
     }
-    bprintf(info->col_uk, "{\n  \"name\" : \"%s_uk\",\n  \"columns\" : [ \"%s\" ]\n}", name, name );
+    bprintf(info->col_uk, "{\n");
+    bprintf(info->col_uk, "  \"name\" : \"%s_uk\",\n", name);
+    bprintf(info->col_uk, "  \"columns\" : [ \"%s\" ],\n", name);
+    bprintf(info->col_uk, "  \"sortOrders\" : [ \"\" ]\n");
+    bprintf(info->col_uk, "}");
   }
 
   // There could be several foreign keys, we have to walk the list of attributes and gather them all
@@ -655,9 +659,18 @@ static void cg_json_indexed_columns(charbuf *cols, charbuf *orders, ast_node *li
 static void cg_json_pk_def(charbuf *output, ast_node *def) {
   Contract(is_ast_pk_def(def));
   EXTRACT_NOTNULL(name_list_and_conflict_clause, def->right);
-  EXTRACT_NOTNULL(name_list, name_list_and_conflict_clause->left);
+  EXTRACT_NOTNULL(indexed_columns, name_list_and_conflict_clause->left);
 
-  cg_json_name_list(output, name_list);
+  CHARBUF_OPEN(cols);
+  CHARBUF_OPEN(orders);
+
+  cg_json_indexed_columns(&cols, &orders, indexed_columns);
+
+  bprintf(output, "\"primaryKey\" : [ %s ]", cols.ptr);
+  bprintf(output, ",\n\"primaryKeySortOrders\" : [ %s ],\n", orders.ptr);
+
+  CHARBUF_CLOSE(orders);
+  CHARBUF_CLOSE(cols);
 }
 
 // This is just a little wrapper to set up the buffer to get the FK
@@ -740,7 +753,7 @@ static void cg_json_fk_def(charbuf *output, ast_node *def) {
 static void cg_json_unq_def(charbuf *output, ast_node *def) {
   Contract(is_ast_unq_def(def));
   EXTRACT_NOTNULL(name_list_and_conflict_clause, def->right);
-  EXTRACT_NOTNULL(name_list, name_list_and_conflict_clause->left);
+  EXTRACT_NOTNULL(indexed_columns, name_list_and_conflict_clause->left);
 
   bprintf(output, "{\n");
   BEGIN_INDENT(uk, 2);
@@ -748,9 +761,18 @@ static void cg_json_unq_def(charbuf *output, ast_node *def) {
     EXTRACT_STRING(name, def->left);
     bprintf(output, "\"name\" : \"%s\",\n", name);
   }
-  bprintf(output, "\"columns\" : [ ");
-  cg_json_name_list(output, name_list);
-  bprintf(output, " ]");
+
+  CHARBUF_OPEN(cols);
+  CHARBUF_OPEN(orders);
+
+  cg_json_indexed_columns(&cols, &orders, indexed_columns);
+
+  bprintf(output, "\"columns\" : [ %s ]", cols.ptr);
+  bprintf(output, ",\n\"sortOrders\" : [ %s ]", orders.ptr);
+
+  CHARBUF_CLOSE(orders);
+  CHARBUF_CLOSE(cols);
+
   END_INDENT(uk);
   bprintf(output, "\n}");
 }
@@ -812,9 +834,9 @@ static void cg_json_col_key_list(charbuf *output, ast_node *list) {
   ast_node *pk_def = NULL;
 
   {
-    bprintf(output, "\"primaryKey\" : [ ");
     if (col_pk.used > 1) {
-      bprintf(output, "%s", col_pk.ptr);
+      bprintf(output, "\"primaryKey\" : [ %s ],\n", col_pk.ptr);
+      bprintf(output, "\"primaryKeySortOrders\" : [ \"\" ],\n");
     }
     else {
       for (ast_node *item = list; item; item = item->right) {
@@ -824,9 +846,13 @@ static void cg_json_col_key_list(charbuf *output, ast_node *list) {
           pk_def = def;
         }
       }
+      if (!pk_def) {
+        bprintf(output, "\"primaryKey\" : [  ],\n");
+        bprintf(output, "\"primaryKeySortOrders\" : [  ],\n");
+      }
     }
-    bprintf(output, " ],\n");
   }
+
 
   if (pk_def && pk_def->left) {
     EXTRACT_STRING(pk_name, pk_def->left);

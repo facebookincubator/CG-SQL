@@ -278,7 +278,7 @@ static void gen_create_index_stmt(ast_node *ast) {
 static void gen_unq_def(ast_node *def) {
   Contract(is_ast_unq_def(def));
   EXTRACT_NOTNULL(name_list_and_conflict_clause, def->right);
-  EXTRACT_NOTNULL(name_list, name_list_and_conflict_clause->left);
+  EXTRACT_NOTNULL(indexed_columns, name_list_and_conflict_clause->left);
   EXTRACT_ANY(conflict_clause, name_list_and_conflict_clause->right);
 
   if (def->left) {
@@ -287,7 +287,7 @@ static void gen_unq_def(ast_node *def) {
   }
 
   gen_printf("UNIQUE (");
-  gen_name_list(name_list);
+  gen_indexed_columns(indexed_columns);
   gen_printf(")");
   if (conflict_clause) {
     gen_conflict_clause(conflict_clause);
@@ -431,7 +431,7 @@ static void gen_conflict_clause(ast_node *ast) {
 static void gen_pk_def(ast_node *def) {
   Contract(is_ast_pk_def(def));
   EXTRACT_NOTNULL(name_list_and_conflict_clause, def->right);
-  EXTRACT_NOTNULL(name_list, name_list_and_conflict_clause->left);
+  EXTRACT_NOTNULL(indexed_columns, name_list_and_conflict_clause->left);
   EXTRACT_ANY(conflict_clause, name_list_and_conflict_clause->right);
 
   if (def->left) {
@@ -440,7 +440,7 @@ static void gen_pk_def(ast_node *def) {
   }
 
   gen_printf("PRIMARY KEY (");
-  gen_name_list(name_list);
+  gen_indexed_columns(indexed_columns);
   gen_printf(")");
   if (conflict_clause) {
     gen_conflict_clause(conflict_clause);

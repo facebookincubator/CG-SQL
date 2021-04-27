@@ -115,6 +115,16 @@ CREATE TABLE conflict_clause_pk(
   CONSTRAINT pk1 PRIMARY KEY (id) ON CONFLICT ROLLBACK
 );
 
+CREATE TABLE expression_pk(
+  id INTEGER NOT NULL,
+  CONSTRAINT pk1 PRIMARY KEY (id / 2, id % 2)
+);
+
+CREATE TABLE expression_uk(
+  id INTEGER NOT NULL,
+  CONSTRAINT uk1 UNIQUE (id / 2, id % 2)
+);
+
 @begin_schema_region shared;
 CREATE VIEW shared_view AS
 SELECT *

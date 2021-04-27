@@ -49,7 +49,7 @@ void yyset_lineno(int);
 %token ADDED_VERSION DELETED_VERSION ADDED_MIGRATION_PROC DELETED_MIGRATION_PROC RECREATE_GROUP_NAME
 %token COLUMNS
 %token TYPE KIND IS_NOT_NULL IS_PRIMARY_KEY IS_UNIQUE_KEY IS_AUTO_INCREMENT IS_SENSITIVE
-%token PRIMARY_KEY PRIMARY_KEY_NAME FOREIGN_KEYS UNIQUE_KEYS
+%token PRIMARY_KEY PRIMARY_KEY_SORT_ORDERS PRIMARY_KEY_NAME FOREIGN_KEYS UNIQUE_KEYS
 %token REFERENCE_TABLE REFERENCE_COLUMNS ON_UPDATE ON_DELETE IS_DEFERRED
 %token ATTRIBUTES VALUE DEFAULT_VALUE VALUES
 %token VIEWS PROJECTION SELECT SELECT_ARGS
@@ -111,6 +111,7 @@ table: '{'
        opt_attributes
        COLUMNS '[' columns ']' ','
        PRIMARY_KEY '[' opt_column_names ']' ','
+       PRIMARY_KEY_SORT_ORDERS '[' opt_sort_order_names ']' ','
        opt_primary_key_name
        FOREIGN_KEYS '[' opt_foreign_keys ']' ','
        UNIQUE_KEYS '[' opt_unique_keys ']' ','
@@ -144,6 +145,7 @@ virtual_table: '{'
        opt_attributes
        COLUMNS '[' columns ']' ','
        PRIMARY_KEY '[' opt_column_names ']' ','
+       PRIMARY_KEY_SORT_ORDERS '[' opt_sort_order_names ']' ','
        FOREIGN_KEYS '[' opt_foreign_keys ']' ','
        UNIQUE_KEYS '[' opt_unique_keys ']' ','
        CHECK_EXPRESSIONS '[' opt_check_expressions ']'
@@ -202,6 +204,9 @@ opt_procedure_names: | procedure_names
   ;
 
 procedure_names: STRING_LITERAL | STRING_LITERAL ',' procedure_names
+  ;
+
+opt_sort_order_names: | sort_order_names
   ;
 
 sort_order_names: STRING_LITERAL | STRING_LITERAL ',' sort_order_names
@@ -270,7 +275,8 @@ unique_keys : unique_key | unique_key ',' unique_keys
 
 unique_key:  '{'
               opt_name
-              COLUMNS '[' column_names ']'
+              COLUMNS '[' column_names ']' ','
+              SORT_ORDERS '[' sort_order_names ']'
              '}'
   ;
 

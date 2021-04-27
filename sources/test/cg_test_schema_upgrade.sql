@@ -201,3 +201,13 @@ create table conflict_clause_pk(
   id int not null,
   constraint pk1 primary key (id) on conflict rollback
 );
+
+create table expression_pk(
+  id int not null,
+  constraint pk1 primary key (id/2, id%2)
+);
+
+create table expression_uk(
+  id int not null,
+  constraint uk1 unique (id/2, id%2)
+);

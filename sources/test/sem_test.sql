@@ -1066,7 +1066,7 @@ create table simple_pk_table(
 );
 
 -- TEST: validate primary key columns, bogus name
--- + Error % table does not have pk column 'pk_col_not_exist'
+-- + Error % name not found 'pk_col_not_exist'
 -- +1 Error
 -- + {create_table_stmt}: err
 -- +  {name pk_col_not_exist}: err
@@ -1168,6 +1168,45 @@ create table simple_ak_table_7 (
   d long int,
   UNIQUE (a, b),
   UNIQUE (a)
+);
+
+-- TEST: validate unique key expression
+-- + CONSTRAINT ak1 UNIQUE (id / 2)
+-- + {create_table_stmt}: baz_expr_uk: { id: integer notnull primary_key autoinc }
+-- - Error
+create table baz_expr_uk (
+  id integer PRIMARY KEY AUTOINCREMENT not null,
+  CONSTRAINT ak1 UNIQUE (id/2)
+);
+
+-- TEST: unique key expression is bogus
+-- + CONSTRAINT ak1 UNIQUE (random())
+-- + {create_table_stmt}: err
+-- + Error % function may not appear in this context 'random'
+-- +1 Error
+create table baz_expr_uk_bogus (
+  id integer PRIMARY KEY AUTOINCREMENT not null,
+  CONSTRAINT ak1 UNIQUE (random())
+);
+
+-- TEST: validate primary key expression
+-- + CONSTRAINT pk1 PRIMARY KEY (id / 2)
+-- note id was not converted to 'not null' because constraint id+1 does not match column id
+-- + {create_table_stmt}: baz_expr_pk: { id: integer }
+-- - Error
+create table baz_expr_pk (
+  id integer,
+  CONSTRAINT pk1 PRIMARY KEY (id/2)
+);
+
+-- TEST: primary key expression is bogus
+-- + CONSTRAINT pk1 PRIMARY KEY (random())
+-- + {create_table_stmt}: err
+-- + Error % function may not appear in this context 'random'
+-- +1 Error
+create table baz_expr_uk_bogus (
+  id integer,
+  CONSTRAINT pk1 PRIMARY KEY (random())
 );
 
 -- TEST: validate duplicate unique key

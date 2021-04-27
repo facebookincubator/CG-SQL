@@ -217,6 +217,12 @@ create table T8b (
 -- + "defaultValue" : "xyzzy"
 -- + "defaultValue" : -3.5
 -- + "defaultValue" : 123456789123456789
+-- + "name" : "uk1",
+-- + "columns" : [ "id2", "id3" ],
+-- + "sortOrders" : [ "desc", "asc" ]
+-- + "name" : "uk2",
+-- + "columns" : [ "id2 / 2", "id3 + 2" ],
+-- + "sortOrders" : [ "asc", "desc" ]
 @attribute(an_integer=1)
 @attribute(a_double=2.5)
 @attribute(a_double=2.5)
@@ -227,7 +233,8 @@ create table T9 (
   name text default "xyzzy",
   val real default -3.5,
   val2 long default 123456789123456789,
-  constraint uk1 unique (id2, id3)
+  constraint uk1 unique (id2 desc, id3 asc),
+  constraint uk2 unique (id2/2 asc, id3+2 desc)
 );
 
 -- TEST: create an fk
@@ -254,7 +261,7 @@ create table T10 (
   id2 integer,
   id3 integer,
   id4 integer unique,
-  constraint pk1 primary key (id1, id2),
+  constraint pk1 primary key (id1 desc, id2 asc),
   constraint fk1 foreign key (id1, id2) references T9 (id2, id3),
   constraint uk1 unique ( id2, id3 ),
   unique ( id3, id4 )

@@ -62,6 +62,9 @@ create table foo(id int not null, name text, rate long int, primary key (id, nam
 -- create table with named primary key as it's own row
 create table foo(id int not null, name text, rate long int, constraint pk1 primary key (id, name));
 
+-- create table with named primary key as it's own row
+create table foo(id int not null, name text, rate long int, constraint pk1 primary key (id+1, name));
+
 -- create table with foreign key
 create table foo(id int not null, name text, rate long int, primary key (id, name), foreign key (id, name) references baz(id, name2) );
 
@@ -1393,6 +1396,9 @@ create table foo(id int not null, constraint pk1 primary key (id, name) on confl
 
 -- create table with unique column on conflict clause abort
 create table foo(id int not null, constraint pk1 unique (id, name) on conflict abort);
+
+-- create table with unique column on conflict clause abort
+create table foo(id int not null, constraint pk1 unique (id+5, name) on conflict abort);
 
 -- create table with unique column on conflict clause rollback
 create table foo(id int unique on conflict rollback);

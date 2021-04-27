@@ -4002,8 +4002,9 @@ CREATE TABLE simple_pk_table(
     | {col_key_list}
       | {pk_def}
         | {name_list_and_conflict_clause}
-          | {name_list}
-            | {name id}
+          | {indexed_columns}
+            | {indexed_column}
+              | {name id}: id: integer notnull
 
 The statement ending at line XXXX
 
@@ -4012,7 +4013,7 @@ CREATE TABLE baz(
   PRIMARY KEY (pk_col_not_exist)
 );
 
-Error at test/sem_test.sql:XXXX : in str : CQL0024: table does not have pk column 'pk_col_not_exist'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'pk_col_not_exist'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -4029,8 +4030,9 @@ Error at test/sem_test.sql:XXXX : in str : CQL0024: table does not have pk colum
     | {col_key_list}
       | {pk_def}
         | {name_list_and_conflict_clause}
-          | {name_list}
-            | {name pk_col_not_exist}: err
+          | {indexed_columns}: err
+            | {indexed_column}
+              | {name pk_col_not_exist}: err
 
 The statement ending at line XXXX
 
@@ -4057,13 +4059,15 @@ Error at test/sem_test.sql:XXXX : in str : CQL0143: more than one primary key in
     | {col_key_list}
       | {pk_def}
       | | {name_list_and_conflict_clause}
-      |   | {name_list}
-      |     | {name id}
+      |   | {indexed_columns}
+      |     | {indexed_column}
+      |       | {name id}: id: integer notnull
       | {col_key_list}
         | {pk_def}
           | {name_list_and_conflict_clause}
-            | {name_list}
-              | {name id}
+            | {indexed_columns}
+              | {indexed_column}
+                | {name id}: id: integer notnull
 
 The statement ending at line XXXX
 
@@ -4088,8 +4092,9 @@ CREATE TABLE simple_ak_table(
       | {unq_def}
         | {name ak1}
         | {name_list_and_conflict_clause}
-          | {name_list}
-            | {name id}: id: integer notnull
+          | {indexed_columns}
+            | {indexed_column}
+              | {name id}: id: integer notnull
 
 The statement ending at line XXXX
 
@@ -4136,22 +4141,27 @@ CREATE TABLE simple_ak_table_2(
           | {col_key_list}
             | {unq_def}
             | | {name_list_and_conflict_clause}
-            |   | {name_list}
-            |     | {name a}: a: integer notnull
-            |     | {name_list}
-            |       | {name b}: b: text
+            |   | {indexed_columns}
+            |     | {indexed_column}
+            |     | | {name a}: a: integer notnull
+            |     | {indexed_columns}
+            |       | {indexed_column}
+            |         | {name b}: b: text
             | {col_key_list}
               | {unq_def}
               | | {name_list_and_conflict_clause}
-              |   | {name_list}
-              |     | {name a}: a: integer notnull
-              |     | {name_list}
-              |       | {name c}: c: real
+              |   | {indexed_columns}
+              |     | {indexed_column}
+              |     | | {name a}: a: integer notnull
+              |     | {indexed_columns}
+              |       | {indexed_column}
+              |         | {name c}: c: real
               | {col_key_list}
                 | {unq_def}
                   | {name_list_and_conflict_clause}
-                    | {name_list}
-                      | {name d}: d: longint
+                    | {indexed_columns}
+                      | {indexed_column}
+                        | {name d}: d: longint
 
 The statement ending at line XXXX
 
@@ -4197,17 +4207,21 @@ CREATE TABLE simple_ak_table_3(
           | {col_key_list}
             | {unq_def}
             | | {name_list_and_conflict_clause}
-            |   | {name_list}
-            |     | {name a}: a: integer notnull
-            |     | {name_list}
-            |       | {name b}: b: text
+            |   | {indexed_columns}
+            |     | {indexed_column}
+            |     | | {name a}: a: integer notnull
+            |     | {indexed_columns}
+            |       | {indexed_column}
+            |         | {name b}: b: text
             | {col_key_list}
               | {unq_def}
                 | {name_list_and_conflict_clause}
-                  | {name_list}
-                    | {name b}: b: text
-                    | {name_list}
-                      | {name d}: d: longint
+                  | {indexed_columns}
+                    | {indexed_column}
+                    | | {name b}: b: text
+                    | {indexed_columns}
+                      | {indexed_column}
+                        | {name d}: d: longint
 
 The statement ending at line XXXX
 
@@ -4248,19 +4262,24 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this un
         | {col_key_list}
           | {unq_def}
           | | {name_list_and_conflict_clause}
-          |   | {name_list}
-          |     | {name a}: a: integer notnull
-          |     | {name_list}
-          |       | {name b}: b: text
+          |   | {indexed_columns}
+          |     | {indexed_column}
+          |     | | {name a}: a: integer notnull
+          |     | {indexed_columns}
+          |       | {indexed_column}
+          |         | {name b}: b: text
           | {col_key_list}
             | {unq_def}
               | {name_list_and_conflict_clause}
-                | {name_list}
-                  | {name a}
-                  | {name_list}
-                    | {name b}
-                    | {name_list}
-                      | {name c}
+                | {indexed_columns}
+                  | {indexed_column}
+                  | | {name a}
+                  | {indexed_columns}
+                    | {indexed_column}
+                    | | {name b}
+                    | {indexed_columns}
+                      | {indexed_column}
+                        | {name c}
 
 The statement ending at line XXXX
 
@@ -4308,17 +4327,21 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this un
           | {col_key_list}
             | {unq_def}
             | | {name_list_and_conflict_clause}
-            |   | {name_list}
-            |     | {name a}: a: integer notnull
-            |     | {name_list}
-            |       | {name b}: b: text
+            |   | {indexed_columns}
+            |     | {indexed_column}
+            |     | | {name a}: a: integer notnull
+            |     | {indexed_columns}
+            |       | {indexed_column}
+            |         | {name b}: b: text
             | {col_key_list}
               | {unq_def}
                 | {name_list_and_conflict_clause}
-                  | {name_list}
-                    | {name b}
-                    | {name_list}
-                      | {name a}
+                  | {indexed_columns}
+                    | {indexed_column}
+                    | | {name b}
+                    | {indexed_columns}
+                      | {indexed_column}
+                        | {name a}
 
 The statement ending at line XXXX
 
@@ -4366,21 +4389,27 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this un
           | {col_key_list}
             | {unq_def}
             | | {name_list_and_conflict_clause}
-            |   | {name_list}
-            |     | {name a}: a: integer notnull
-            |     | {name_list}
-            |       | {name b}: b: text
+            |   | {indexed_columns}
+            |     | {indexed_column}
+            |     | | {name a}: a: integer notnull
+            |     | {indexed_columns}
+            |       | {indexed_column}
+            |         | {name b}: b: text
             | {col_key_list}
               | {unq_def}
                 | {name_list_and_conflict_clause}
-                  | {name_list}
-                    | {name c}
-                    | {name_list}
-                      | {name d}
-                      | {name_list}
-                        | {name b}
-                        | {name_list}
-                          | {name a}
+                  | {indexed_columns}
+                    | {indexed_column}
+                    | | {name c}
+                    | {indexed_columns}
+                      | {indexed_column}
+                      | | {name d}
+                      | {indexed_columns}
+                        | {indexed_column}
+                        | | {name b}
+                        | {indexed_columns}
+                          | {indexed_column}
+                            | {name a}
 
 The statement ending at line XXXX
 
@@ -4428,15 +4457,144 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this un
           | {col_key_list}
             | {unq_def}
             | | {name_list_and_conflict_clause}
-            |   | {name_list}
-            |     | {name a}: a: integer notnull
-            |     | {name_list}
-            |       | {name b}: b: text
+            |   | {indexed_columns}
+            |     | {indexed_column}
+            |     | | {name a}: a: integer notnull
+            |     | {indexed_columns}
+            |       | {indexed_column}
+            |         | {name b}: b: text
             | {col_key_list}
               | {unq_def}
                 | {name_list_and_conflict_clause}
-                  | {name_list}
-                    | {name a}
+                  | {indexed_columns}
+                    | {indexed_column}
+                      | {name a}
+
+The statement ending at line XXXX
+
+CREATE TABLE baz_expr_uk(
+  id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+  CONSTRAINT ak1 UNIQUE (id / 2)
+);
+
+  {create_table_stmt}: baz_expr_uk: { id: integer notnull primary_key autoinc }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name baz_expr_uk}
+  | {col_key_list}
+    | {col_def}: id: integer notnull primary_key autoinc
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |   | | {name id}
+    |   | | {type_int}: integer
+    |   | {col_attrs_pk}: ok
+    |     | {autoinc_and_conflict_clause}
+    |     | | {col_attrs_autoinc}
+    |     | {col_attrs_not_null}
+    | {col_key_list}
+      | {unq_def}
+        | {name ak1}
+        | {name_list_and_conflict_clause}
+          | {indexed_columns}
+            | {indexed_column}
+              | {div}: integer notnull
+                | {name id}: id: integer notnull
+                | {int 2}: integer notnull
+
+The statement ending at line XXXX
+
+CREATE TABLE baz_expr_uk_bogus(
+  id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+  CONSTRAINT ak1 UNIQUE (random())
+);
+
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'random'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name baz_expr_uk_bogus}
+  | {col_key_list}
+    | {col_def}: id: integer notnull primary_key autoinc
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |   | | {name id}
+    |   | | {type_int}: integer
+    |   | {col_attrs_pk}: ok
+    |     | {autoinc_and_conflict_clause}
+    |     | | {col_attrs_autoinc}
+    |     | {col_attrs_not_null}
+    | {col_key_list}
+      | {unq_def}
+        | {name ak1}
+        | {name_list_and_conflict_clause}
+          | {indexed_columns}: err
+            | {indexed_column}
+              | {call}: err
+                | {name random}
+                | {call_arg_list}
+                  | {call_filter_clause}
+
+The statement ending at line XXXX
+
+CREATE TABLE baz_expr_pk(
+  id INTEGER,
+  CONSTRAINT pk1 PRIMARY KEY (id / 2)
+);
+
+  {create_table_stmt}: baz_expr_pk: { id: integer }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name baz_expr_pk}
+  | {col_key_list}
+    | {col_def}: id: integer
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {pk_def}
+        | {name pk1}
+        | {name_list_and_conflict_clause}
+          | {indexed_columns}
+            | {indexed_column}
+              | {div}: integer
+                | {name id}: id: integer
+                | {int 2}: integer notnull
+
+The statement ending at line XXXX
+
+CREATE TABLE baz_expr_uk_bogus(
+  id INTEGER,
+  CONSTRAINT pk1 PRIMARY KEY (random())
+);
+
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'random'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name baz_expr_uk_bogus}
+  | {col_key_list}
+    | {col_def}: id: integer
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {pk_def}
+        | {name pk1}
+        | {name_list_and_conflict_clause}
+          | {indexed_columns}: err
+            | {indexed_column}
+              | {call}: err
+                | {name random}
+                | {call_arg_list}
+                  | {call_filter_clause}
 
 The statement ending at line XXXX
 
@@ -4467,14 +4625,16 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0020: duplicate constraint nam
       | {unq_def}
       | | {name ak1}
       | | {name_list_and_conflict_clause}
-      |   | {name_list}
-      |     | {name id}: id: integer notnull
+      |   | {indexed_columns}
+      |     | {indexed_column}
+      |       | {name id}: id: integer notnull
       | {col_key_list}
         | {unq_def}
           | {name ak1}
           | {name_list_and_conflict_clause}
-            | {name_list}
-              | {name id}
+            | {indexed_columns}
+              | {indexed_column}
+                | {name id}
 
 The statement ending at line XXXX
 
@@ -4502,14 +4662,16 @@ Error at test/sem_test.sql:XXXX : in pk_def : CQL0020: duplicate constraint name
       | {pk_def}
       | | {name pk1}
       | | {name_list_and_conflict_clause}
-      |   | {name_list}
-      |     | {name id}
+      |   | {indexed_columns}
+      |     | {indexed_column}
+      |       | {name id}: id: integer notnull
       | {col_key_list}
         | {pk_def}
           | {name pk1}
           | {name_list_and_conflict_clause}
-            | {name_list}
-              | {name id}
+            | {indexed_columns}
+              | {indexed_column}
+                | {name id}
 
 The statement ending at line XXXX
 
@@ -4546,17 +4708,21 @@ Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this un
       | {col_key_list}
         | {unq_def}
         | | {name_list_and_conflict_clause}
-        |   | {name_list}
-        |     | {name id}: id: integer notnull
-        |     | {name_list}
-        |       | {name name}: name: text
+        |   | {indexed_columns}
+        |     | {indexed_column}
+        |     | | {name id}: id: integer notnull
+        |     | {indexed_columns}
+        |       | {indexed_column}
+        |         | {name name}: name: text
         | {col_key_list}
           | {unq_def}
             | {name_list_and_conflict_clause}
-              | {name_list}
-                | {name name}
-                | {name_list}
-                  | {name id}
+              | {indexed_columns}
+                | {indexed_column}
+                | | {name name}
+                | {indexed_columns}
+                  | {indexed_column}
+                    | {name id}
 
 The statement ending at line XXXX
 
@@ -4565,7 +4731,7 @@ CREATE TABLE baz(
   CONSTRAINT ak1 UNIQUE (ak_col_not_exist)
 );
 
-Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'ak_col_not_exist'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'ak_col_not_exist'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -4586,8 +4752,9 @@ Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'ak_col_not_e
       | {unq_def}
         | {name ak1}
         | {name_list_and_conflict_clause}
-          | {name_list}: err
-            | {name ak_col_not_exist}: err
+          | {indexed_columns}: err
+            | {indexed_column}
+              | {name ak_col_not_exist}: err
 
 The statement ending at line XXXX
 
@@ -4596,7 +4763,7 @@ CREATE TABLE baz_3(
   UNIQUE (ak_col_not_exist)
 );
 
-Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'ak_col_not_exist'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'ak_col_not_exist'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -4616,8 +4783,9 @@ Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'ak_col_not_e
     | {col_key_list}
       | {unq_def}
         | {name_list_and_conflict_clause}
-          | {name_list}: err
-            | {name ak_col_not_exist}: err
+          | {indexed_columns}: err
+            | {indexed_column}
+              | {name ak_col_not_exist}: err
 
 The statement ending at line XXXX
 
@@ -6810,10 +6978,12 @@ Error at test/sem_test.sql:XXXX : in str : CQL0172: name list has duplicate name
       | {unq_def}
         | {name ak1}
         | {name_list_and_conflict_clause}
-          | {name_list}: err
-            | {name key_id}: key_id: integer notnull
-            | {name_list}
-              | {name key_id}: err
+          | {indexed_columns}: err
+            | {indexed_column}
+            | | {name key_id}: key_id: integer notnull
+            | {indexed_columns}
+              | {indexed_column}
+                | {name key_id}: err
 
 The statement ending at line XXXX
 
@@ -6842,10 +7012,12 @@ Error at test/sem_test.sql:XXXX : in str : CQL0172: name list has duplicate name
     | {col_key_list}
       | {unq_def}
         | {name_list_and_conflict_clause}
-          | {name_list}: err
-            | {name key_id}: key_id: integer notnull
-            | {name_list}
-              | {name key_id}: err
+          | {indexed_columns}: err
+            | {indexed_column}
+            | | {name key_id}: key_id: integer notnull
+            | {indexed_columns}
+              | {indexed_column}
+                | {name key_id}: err
 
 The statement ending at line XXXX
 
@@ -12517,8 +12689,9 @@ CREATE TABLE pk_test_2(
     | {col_key_list}
       | {pk_def}
         | {name_list_and_conflict_clause}
-          | {name_list}
-            | {name id}
+          | {indexed_columns}
+            | {indexed_column}
+              | {name id}: id: integer
 
 The statement ending at line XXXX
 
@@ -18205,8 +18378,9 @@ CREATE TABLE trickier_alter_target(
         | {col_key_list}
           | {pk_def}
             | {name_list_and_conflict_clause}
-              | {name_list}
-                | {name id}
+              | {indexed_columns}
+                | {indexed_column}
+                  | {name id}: id: integer
 
 The statement ending at line XXXX
 
@@ -18472,8 +18646,9 @@ Error at test/sem_test.sql:XXXX : in str : CQL0143: more than one primary key in
     | {col_key_list}
       | {pk_def}
         | {name_list_and_conflict_clause}
-          | {name_list}
-            | {name id}
+          | {indexed_columns}
+            | {indexed_column}
+              | {name id}: id: integer notnull
 
 The statement ending at line XXXX
 
@@ -29654,10 +29829,12 @@ CREATE TABLE referenceable_2(
       | {col_key_list}
         | {pk_def}
           | {name_list_and_conflict_clause}
-            | {name_list}
-              | {name a}
-              | {name_list}
-                | {name b}
+            | {indexed_columns}
+              | {indexed_column}
+              | | {name a}: a: integer
+              | {indexed_columns}
+                | {indexed_column}
+                  | {name b}: b: real
 
 The statement ending at line XXXX
 
@@ -39975,8 +40152,9 @@ Error at test/sem_test.sql:XXXX : in fk_def : CQL0021: foreign key refers to non
         | {col_key_list}
           | {pk_def}
             | {name_list_and_conflict_clause}
-              | {name_list}
-                | {name garbonzo}
+              | {indexed_columns}
+                | {indexed_column}
+                  | {name garbonzo}
 
 The statement ending at line XXXX
 
@@ -52918,8 +53096,9 @@ Error at test/sem_test.sql:XXXX : in col_def : CQL0349: column definitions may n
     | {col_key_list}
       | {pk_def}
       | | {name_list_and_conflict_clause}
-      |   | {name_list}
-      |     | {name id}
+      |   | {indexed_columns}
+      |     | {indexed_column}
+      |       | {name id}
       | {col_key_list}
         | {col_def}
           | {col_def_type_attrs}
@@ -60182,7 +60361,8 @@ CREATE TABLE conflict_clause_pk(
       | {pk_def}
         | {name pk1}
         | {name_list_and_conflict_clause}
-          | {name_list}
-          | | {name id}
+          | {indexed_columns}
+          | | {indexed_column}
+          |   | {name id}: id: integer notnull
           | {int 0}
 

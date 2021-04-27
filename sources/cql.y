@@ -558,12 +558,12 @@ col_def:
   ;
 
 pk_def:
-  CONSTRAINT name PRIMARY KEY '(' name_list ')' opt_conflict_clause {
-    ast_node *name_list_and_conflict_clause = new_ast_name_list_and_conflict_clause($name_list, $opt_conflict_clause);
+  CONSTRAINT name PRIMARY KEY '(' indexed_columns ')' opt_conflict_clause {
+    ast_node *name_list_and_conflict_clause = new_ast_name_list_and_conflict_clause($indexed_columns, $opt_conflict_clause);
     $pk_def = new_ast_pk_def($name, name_list_and_conflict_clause);
   }
-  | PRIMARY KEY '(' name_list ')' opt_conflict_clause {
-    ast_node *name_list_and_conflict_clause = new_ast_name_list_and_conflict_clause($name_list, $opt_conflict_clause);
+  | PRIMARY KEY '(' indexed_columns ')' opt_conflict_clause {
+    ast_node *name_list_and_conflict_clause = new_ast_name_list_and_conflict_clause($indexed_columns, $opt_conflict_clause);
     $pk_def = new_ast_pk_def(NULL, name_list_and_conflict_clause);
   }
   ;
@@ -633,12 +633,12 @@ fk_target_options:
   ;
 
 unq_def:
-  CONSTRAINT name UNIQUE '(' name_list ')' opt_conflict_clause {
-    ast_node *name_list_and_conflict_clause = new_ast_name_list_and_conflict_clause($name_list, $opt_conflict_clause);
+  CONSTRAINT name UNIQUE '(' indexed_columns ')' opt_conflict_clause {
+    ast_node *name_list_and_conflict_clause = new_ast_name_list_and_conflict_clause($indexed_columns, $opt_conflict_clause);
     $unq_def = new_ast_unq_def($name, name_list_and_conflict_clause);
   }
-  | UNIQUE '(' name_list ')' opt_conflict_clause {
-    ast_node *name_list_and_conflict_clause = new_ast_name_list_and_conflict_clause($name_list, $opt_conflict_clause);
+  | UNIQUE '(' indexed_columns ')' opt_conflict_clause {
+    ast_node *name_list_and_conflict_clause = new_ast_name_list_and_conflict_clause($indexed_columns, $opt_conflict_clause);
     $unq_def = new_ast_unq_def(NULL, name_list_and_conflict_clause);
   }
   ;
@@ -649,7 +649,7 @@ opt_unique:
   ;
 
 indexed_column:
-  expr opt_asc_desc  { 
+  expr opt_asc_desc  {
     $indexed_column = new_ast_indexed_column($expr, $opt_asc_desc); }
   ;
 

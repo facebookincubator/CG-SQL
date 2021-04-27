@@ -96,17 +96,19 @@ Error at test/sem_test.sql:XXXX : in add : CQL0172: name list has duplicate name
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
 Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'x'
 Error at test/sem_test.sql:XXXX : in str : CQL0015: expected numeric expression 'WHERE'
-Error at test/sem_test.sql:XXXX : in str : CQL0024: table does not have pk column 'pk_col_not_exist'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'pk_col_not_exist'
 Error at test/sem_test.sql:XXXX : in str : CQL0143: more than one primary key in table 'baz'
 Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this unique key is redundant with previous unique keys
 Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this unique key is redundant with previous unique keys
 Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this unique key is redundant with previous unique keys
 Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this unique key is redundant with previous unique keys
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'random'
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'random'
 Error at test/sem_test.sql:XXXX : in unq_def : CQL0020: duplicate constraint name in table 'ak1'
 Error at test/sem_test.sql:XXXX : in pk_def : CQL0020: duplicate constraint name in table 'pk1'
 Error at test/sem_test.sql:XXXX : in unq_def : CQL0269: at least part of this unique key is redundant with previous unique keys
-Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'ak_col_not_exist'
-Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'ak_col_not_exist'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'ak_col_not_exist'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'ak_col_not_exist'
 Error at test/sem_test.sql:XXXX : in fk_def : CQL0020: duplicate constraint name in table 'x'
 Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'bogus'
 Error at test/sem_test.sql:XXXX : in str : CQL0171: name not found 'bogus'

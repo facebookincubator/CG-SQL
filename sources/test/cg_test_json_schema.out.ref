@@ -44,6 +44,7 @@
         }
       ],
       "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
@@ -79,6 +80,7 @@
         }
       ],
       "primaryKey" : [ "id" ],
+      "primaryKeySortOrders" : [ "" ],
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
@@ -114,12 +116,14 @@
         }
       ],
       "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
         {
           "name" : "id_uk",
-          "columns" : [ "id" ]
+          "columns" : [ "id" ],
+          "sortOrders" : [ "" ]
         }
       ],
       "checkExpressions" : [
@@ -177,6 +181,7 @@
         }
       ],
       "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
@@ -252,6 +257,7 @@
         }
       ],
       "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
@@ -294,6 +300,7 @@
         }
       ],
       "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
@@ -331,6 +338,7 @@
         }
       ],
       "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
@@ -370,6 +378,7 @@
         }
       ],
       "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
@@ -407,6 +416,7 @@
         }
       ],
       "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
@@ -446,6 +456,7 @@
         }
       ],
       "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
@@ -466,7 +477,8 @@
       name TEXT DEFAULT "xyzzy",
       val REAL DEFAULT -3.5,
       val2 LONG_INT DEFAULT 123456789123456789L,
-      CONSTRAINT uk1 UNIQUE (id2, id3)
+      CONSTRAINT uk1 UNIQUE (id2 DESC, id3 ASC),
+      CONSTRAINT uk2 UNIQUE (id2 / 2 ASC, id3 + 2 DESC)
     )
     
     {
@@ -558,12 +570,19 @@
         }
       ],
       "primaryKey" : [ "id1" ],
+      "primaryKeySortOrders" : [ "" ],
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
         {
           "name" : "uk1",
-          "columns" : [ "id2", "id3" ]
+          "columns" : [ "id2", "id3" ],
+          "sortOrders" : [ "desc", "asc" ]
+        },
+        {
+          "name" : "uk2",
+          "columns" : [ "id2 / 2", "id3 + 2" ],
+          "sortOrders" : [ "asc", "desc" ]
         }
       ],
       "checkExpressions" : [
@@ -577,7 +596,7 @@
       id2 INTEGER,
       id3 INTEGER,
       id4 INTEGER UNIQUE,
-      CONSTRAINT pk1 PRIMARY KEY (id1, id2),
+      CONSTRAINT pk1 PRIMARY KEY (id1 DESC, id2 ASC),
       CONSTRAINT fk1 FOREIGN KEY (id1, id2) REFERENCES T9 (id2, id3),
       CONSTRAINT uk1 UNIQUE (id2, id3),
       UNIQUE (id3, id4)
@@ -634,6 +653,7 @@
         }
       ],
       "primaryKey" : [ "id1", "id2" ],
+      "primaryKeySortOrders" : [ "desc", "asc" ],
       "primaryKeyName" : "pk1",
       "foreignKeys" : [
         {
@@ -649,18 +669,22 @@
       "uniqueKeys" : [
         {
           "name" : "id1_uk",
-          "columns" : [ "id1" ]
+          "columns" : [ "id1" ],
+          "sortOrders" : [ "" ]
         },
         {
           "name" : "id4_uk",
-          "columns" : [ "id4" ]
+          "columns" : [ "id4" ],
+          "sortOrders" : [ "" ]
         },
         {
           "name" : "uk1",
-          "columns" : [ "id2", "id3" ]
+          "columns" : [ "id2", "id3" ],
+          "sortOrders" : [ "", "" ]
         },
         {
-          "columns" : [ "id3", "id4" ]
+          "columns" : [ "id3", "id4" ],
+          "sortOrders" : [ "", "" ]
         }
       ],
       "checkExpressions" : [
@@ -718,6 +742,7 @@
         }
       ],
       "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
       "foreignKeys" : [
         {
           "columns" : [ "id1" ],
@@ -793,6 +818,7 @@
         }
       ],
       "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
       "foreignKeys" : [
         {
           "columns" : [ "id1" ],
@@ -867,6 +893,7 @@
         }
       ],
       "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
       "foreignKeys" : [
         {
           "columns" : [ "id1" ],
@@ -922,6 +949,7 @@
         }
       ],
       "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
       "foreignKeys" : [
         {
           "columns" : [ "id1" ],
@@ -977,6 +1005,7 @@
         }
       ],
       "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
       "foreignKeys" : [
         {
           "columns" : [ "id1" ],
@@ -1037,6 +1066,7 @@
         }
       ],
       "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
@@ -1084,6 +1114,7 @@
         }
       ],
       "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
@@ -1130,6 +1161,7 @@
         }
       ],
       "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
@@ -1168,6 +1200,7 @@
         }
       ],
       "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
@@ -1204,6 +1237,7 @@
         }
       ],
       "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
@@ -1246,6 +1280,7 @@
         }
       ],
       "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
@@ -1298,6 +1333,7 @@
         }
       ],
       "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
@@ -1356,6 +1392,7 @@
         }
       ],
       "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
@@ -1405,6 +1442,7 @@
         }
       ],
       "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
@@ -1466,6 +1504,7 @@
         }
       ],
       "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
@@ -1529,6 +1568,7 @@
         }
       ],
       "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
       "foreignKeys" : [
       ],
       "uniqueKeys" : [

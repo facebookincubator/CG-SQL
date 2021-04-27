@@ -653,29 +653,32 @@ CSTR dup_expr_text(ast_node *expr) {
   return result;
 }
 
+// get the text for the expression, avoid the memory alloc for the easy case
+static CSTR expr_as_text(ast_node *expr) {
+  if (is_ast_str(expr)) {
+   // easy case, super common, we have the name handy
+   EXTRACT_STRING(name, expr);
+   return name;
+  }
+
+  // it's an expression so we have to compute the text
+  return dup_expr_text(expr);
+}
+
 // The name list item could be either indexed columns or a vanilla name list
 // indexed columns have extra shape and might hold an expression. If an expression
 // then we need to use the text of the expression as the value.
 CSTR string_from_name_list_item(ast_node *node) {
   Contract(is_ast_indexed_columns(node) || is_ast_name_list(node));
-  ast_node *name_ast = NULL;
 
   if (is_ast_indexed_columns(node)) {
     EXTRACT_NOTNULL(indexed_column, node->left);
     EXTRACT_ANY_NOTNULL(expr, indexed_column->left);
 
-    if (is_ast_str(expr)) {
-      name_ast = expr;
-    }
-    else {
-      return dup_expr_text(expr); // freed by autorelease pool
-    }
-  } else {
-    name_ast = node->left;
+    return expr_as_text(expr);
   }
 
-  Invariant(name_ast);
-  EXTRACT_STRING(name, name_ast);
+  EXTRACT_STRING(name, node->left);
   return name;
 }
 
@@ -706,44 +709,48 @@ static bool_t is_name_list_equal(ast_node *name_list1, ast_node *name_list2) {
   return count1 == count2;
 }
 
-// Check if one of the name_list is a subset of the other
-// e.g: name_list2(a, b)
+// Check if one of the indexed_columns is a subset of the other
+// e.g: if indexed_columns2 is (a, b) then
 //
-// name_list1(a, b, c) return true
-// name_list1(b, a) return true
-// name_list1(c, d, b, a) return true
-// name_list1(a) return true
+// indexed_columns1 = (a, b, c) returns true
+// indexed_columns1 = (b, a) returns true
+// indexed_columns1 = (c, d, b, a) returns true
+// indexed_columns1 = (a) returns true
 //
-// name_list1(a, c) return false
-// name_list1(d) return false
-// name_list1(b, d) return false
-static bool_t is_either_list_a_subset(ast_node *name_list1, ast_node *name_list2) {
-  ast_node *a1 = name_list1;
-  ast_node *a2 = name_list2;
+// AND
+//
+// indexed_columns1 = (a, c) return false
+// indexed_columns1 = (d) return false
+// indexed_columns1 = (b, d) return false
+static bool_t is_either_list_a_subset(ast_node *indexed_columns1, ast_node *indexed_columns2) {
+  ast_node *a1 = indexed_columns1;
+  ast_node *a2 = indexed_columns2;
   while (a1 && a2) {
     a1 = a1->right;
     a2 = a2->right;
   }
 
-  // First make sure the small list is name_list1 and bigger list is name_list2
+  // First make sure the small list is indexed_columns1 and bigger list is indexed_columns2
   // so we can just check if small list is in bigger list.
   if (!a2 && a1) {
     // exchange if is a2 is smaller
-    ast_node *temp = name_list1;
-    name_list1 = name_list2;
-    name_list2 = temp;
+    ast_node *temp = indexed_columns1;
+    indexed_columns1 = indexed_columns2;
+    indexed_columns2 = temp;
   }
 
   bool_t included = true;
   symtab *cache = symtab_new();
-  for (ast_node *names = name_list2; names; names = names->right) {
-    EXTRACT_STRING(name, names->left);
-    symtab_add(cache, name, NULL);
+  for (ast_node *names = indexed_columns2; names; names = names->right) {
+    EXTRACT(indexed_column, names->left);
+    EXTRACT_ANY_NOTNULL(expr, indexed_column->left);
+    symtab_add(cache, expr_as_text(expr), NULL);
   }
 
-  for (ast_node *names = name_list1; names; names = names->right) {
-    EXTRACT_STRING(name, names->left);
-    if (!symtab_find(cache, name)) {
+  for (ast_node *names = indexed_columns1; names; names = names->right) {
+    EXTRACT(indexed_column, names->left);
+    EXTRACT_ANY_NOTNULL(expr, indexed_column->left);
+    if (!symtab_find(cache, expr_as_text(expr))) {
       included = false;
       break;
     }
@@ -816,15 +823,15 @@ static ast_node *find_next_unique_key(ast_node *unq_def) {
 static bool_t is_unique_key_valid(ast_node *table_ast, ast_node *uk) {
   Contract(is_ast_create_table_stmt(table_ast) && is_ast_unq_def(uk));
   EXTRACT_NOTNULL(name_list_and_conflict_clause, uk->right);
-  EXTRACT_NAMED_NOTNULL(name_list1, name_list, name_list_and_conflict_clause->left);
+  EXTRACT_NAMED_NOTNULL(indexed_columns1, indexed_columns, name_list_and_conflict_clause->left);
   for (ast_node *unq_def = find_first_unique_key(table_ast); unq_def; unq_def = find_next_unique_key(unq_def)) {
     if (uk == unq_def) {
       break;
     }
 
     EXTRACT_NAMED_NOTNULL(name_list_and_conflict_clause2, name_list_and_conflict_clause, unq_def->right);
-    EXTRACT_NAMED_NOTNULL(name_list2, name_list, name_list_and_conflict_clause2->left);
-    if (is_either_list_a_subset(name_list1, name_list2)) {
+    EXTRACT_NAMED_NOTNULL(indexed_columns2, indexed_columns, name_list_and_conflict_clause2->left);
+    if (is_either_list_a_subset(indexed_columns1, indexed_columns2)) {
       return false;
     }
   }
@@ -2570,16 +2577,25 @@ static void sem_validate_previous_index(ast_node *prev_index) {
 }
 
 // Helper function to update the column type in a table node.
-static void sem_update_column_type(ast_node *table_ast, ast_node *name_list, sem_t type) {
+static void sem_update_column_type(ast_node *table_ast, ast_node *columns, sem_t type) {
+  Contract(is_ast_name_list(columns) || is_ast_indexed_columns(columns));
+
   sem_struct *sptr = table_ast->sem->sptr;
   sem_join *jptr = table_ast->sem->jptr;
-  for (ast_node *item = name_list; item; item = item->right) {
-    EXTRACT_STRING(name, item->left);
-    for (int32_t i = 0; i < sptr->count; i++) {
-      if (!Strcasecmp(name, sptr->names[i])) {
-        sptr->semtypes[i] |= type;
-        jptr->tables[0]->semtypes[i] |= type;
-        break;
+  for (ast_node *item = columns; item; item = item->right) {
+    ast_node *name_ast = item->left;
+    if (is_ast_indexed_column(name_ast)) {
+      name_ast = name_ast->left;
+    }
+
+    if (is_ast_str(name_ast)) {
+      EXTRACT_STRING(name, name_ast);
+      for (int32_t i = 0; i < sptr->count; i++) {
+        if (!Strcasecmp(name, sptr->names[i])) {
+          sptr->semtypes[i] |= type;
+          jptr->tables[0]->semtypes[i] |= type;
+          break;
+        }
       }
     }
   }
@@ -2760,7 +2776,7 @@ static void sem_unq_def(ast_node *table_ast, ast_node *def) {
   Contract(is_ast_create_table_stmt(table_ast));
   Contract(is_ast_unq_def(def));
   EXTRACT_NOTNULL(name_list_and_conflict_clause, def->right);
-  EXTRACT_NOTNULL(name_list, name_list_and_conflict_clause->left);
+  EXTRACT_NOTNULL(indexed_columns, name_list_and_conflict_clause->left);
 
   if (def->left) {
     EXTRACT_STRING(name, def->left);
@@ -2779,9 +2795,9 @@ static void sem_unq_def(ast_node *table_ast, ast_node *def) {
     return;
   }
 
-  // CONSTRAINT name UNIQUE [name_list]
-  // or UNIQUE [name_list]
-  if (!sem_validate_name_list(name_list, table_ast->sem->jptr)) {
+  // CONSTRAINT name UNIQUE [indexed_columns]
+  // or UNIQUE [indexed_columns]
+  if (!sem_validate_name_list(indexed_columns, table_ast->sem->jptr)) {
     record_error(table_ast);
     return;
   }
@@ -2906,16 +2922,15 @@ static ast_node *find_and_validate_referenced_table(CSTR table_name, ast_node *e
 // a specific column name.
 // This is used in autotest(dummy_test) to figure out if a column should have
 // an explicit value to avoid sql foreign key violation
-static bool_t validate_referenceable_column_callback(ast_node *name_list, void *context) {
+static bool_t validate_referenceable_column_callback(ast_node *indexed_columns, void *context) {
+  Contract(is_ast_indexed_columns(indexed_columns));
   CSTR column_name = (CSTR)context;
-  for (; name_list; name_list = name_list->right) {
-    ast_node *name_ast;
-    if (is_ast_indexed_columns(name_list)) {
-      EXTRACT_NOTNULL(indexed_column, name_list->left);
-      name_ast = indexed_column->left;
-    } else {
-      name_ast = name_list->left;
-    }
+
+  for (; indexed_columns; indexed_columns = indexed_columns->right) {
+    Invariant(is_ast_indexed_columns(indexed_columns));
+
+    EXTRACT_NOTNULL(indexed_column, indexed_columns->left);
+    ast_node *name_ast = indexed_column->left;
 
     // if this is an expression that is other than a simple name, it can't match any identifier
     // auto test will have no way of meeting this constraint automatically
@@ -2966,16 +2981,16 @@ static bool_t find_referenceable_columns(
     // check if all column are in PRIMARY KEY ([name_list]) statement
     if (is_ast_pk_def(col_def)) {
       EXTRACT_NOTNULL(name_list_and_conflict_clause, col_def->right);
-      EXTRACT_NAMED_NOTNULL(name_list2, name_list, name_list_and_conflict_clause->left);
-      if (callback(name_list2, context)) {
+      EXTRACT_NAMED_NOTNULL(indexed_columns2, indexed_columns, name_list_and_conflict_clause->left);
+      if (callback(indexed_columns2, context)) {
         return true;
       }
     }
     // check if all column are in CONSTRAINT UNIQUE ([name_list]) statement
     else if (is_ast_unq_def(col_def)) {
       EXTRACT_NOTNULL(name_list_and_conflict_clause, col_def->right);
-      EXTRACT_NAMED_NOTNULL(name_list2, name_list, name_list_and_conflict_clause->left);
-      if (callback(name_list2, context)) {
+      EXTRACT_NAMED_NOTNULL(indexed_columns2, indexed_columns, name_list_and_conflict_clause->left);
+      if (callback(indexed_columns2, context)) {
         return true;
       }
     }
@@ -3202,9 +3217,9 @@ static void sem_pk_def(ast_node *table_ast, ast_node *def) {
   Contract(is_ast_create_table_stmt(table_ast));
   Contract(is_ast_pk_def(def));
   EXTRACT_NOTNULL(name_list_and_conflict_clause, def->right);
-  EXTRACT(name_list, name_list_and_conflict_clause->left);
+  EXTRACT(indexed_columns, name_list_and_conflict_clause->left);
 
-  // PRIMARY KEY [name_list]
+  // PRIMARY KEY [indexed_columns]
 
   if (def->left) {
     EXTRACT_STRING(name, def->left);
@@ -3216,33 +3231,16 @@ static void sem_pk_def(ast_node *table_ast, ast_node *def) {
     symtab_add(table_items, name, def);
   }
 
-  sem_struct *sptr = table_ast->sem->sptr;
-
-  for (ast_node *item = name_list; item; item = item->right) {
-    // Resolve name with no qualifier in the current scope
-    EXTRACT_ANY_NOTNULL(name_ast, item->left);
-    EXTRACT_STRING(name, name_ast);
-
-    int32_t i = 0;
-    for (; i < sptr->count; i++) {
-      if (!Strcasecmp(name, sptr->names[i])) {
-        break;
-      }
-    }
-
-    if (i == sptr->count) {
-      report_error(name_ast, "CQL0024: table does not have pk column", name);
-      record_error(name_ast);
-      record_error(table_ast);
-      return;
-    }
+  if (!sem_validate_name_list(indexed_columns, table_ast->sem->jptr)) {
+    record_error(table_ast);
+    return;
   }
 
   // pk columns are all not null. These mutations are not visible elsewhere
   // because `sptr` and `jptr` are uniquely referenced at this point:
   // `sem_pk_def` is only called via `sem_constraints` which in turn is only
   // called from `sem_create_table_stmt` which allocates new values.
-  sem_update_column_type(table_ast, name_list, SEM_TYPE_NOTNULL);
+  sem_update_column_type(table_ast, indexed_columns, SEM_TYPE_NOTNULL);
 }
 
 // Currently the only known builtin migration proc are
@@ -11991,15 +11989,7 @@ static bool_t sem_name_check(name_check *check) {
         break;
       }
 
-      if (is_ast_str(expr)) {
-        // easy case, we have the name handy
-        EXTRACT_STRING(name, expr);
-        item_name = name;
-      }
-      else {
-        // it's an expression so we have to compute the text
-        item_name = dup_expr_text(expr);
-      }
+      item_name = expr_as_text(expr);
 
       target = expr;
     }

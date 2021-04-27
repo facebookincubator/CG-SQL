@@ -39,8 +39,12 @@ copy_ref cg_test_extension_fragment_java.out
 copy_ref cg_test_extension_fragment_objc.out
 copy_ref cg_test_java.err
 copy_ref cg_test_java_not_nullable_proc.out
+copy_ref cg_test_java_not_nullable_proc.err
 copy_ref cg_test_java_nullable_proc.out
+copy_ref cg_test_java_nullable_proc.err
 copy_ref cg_test_java_out_union.out
+copy_ref cg_test_java_getters.err
+copy_ref cg_test_java_out_union.err
 copy_ref cg_test_json_schema.out
 copy_ref cg_test_objc.out
 copy_ref cg_test_objc.err

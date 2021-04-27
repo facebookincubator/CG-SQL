@@ -80,6 +80,13 @@ CREATE TABLE foo(
   id INTEGER NOT NULL,
   name TEXT,
   rate LONG_INT,
+  CONSTRAINT pk1 PRIMARY KEY (id + 1, name)
+);
+
+CREATE TABLE foo(
+  id INTEGER NOT NULL,
+  name TEXT,
+  rate LONG_INT,
   PRIMARY KEY (id, name),
   FOREIGN KEY (id, name) REFERENCES baz (id, name2)
 );
@@ -1507,6 +1514,11 @@ CREATE TABLE foo(
 CREATE TABLE foo(
   id INTEGER NOT NULL,
   CONSTRAINT pk1 UNIQUE (id, name) ON CONFLICT ABORT
+);
+
+CREATE TABLE foo(
+  id INTEGER NOT NULL,
+  CONSTRAINT pk1 UNIQUE (id + 5, name) ON CONFLICT ABORT
 );
 
 CREATE TABLE foo(

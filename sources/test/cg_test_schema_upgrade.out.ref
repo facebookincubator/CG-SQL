@@ -3,7 +3,7 @@
 -- DDL in procs will not count as declarations
 @SCHEMA_UPGRADE_SCRIPT;
 
--- schema crc 232637449222442455
+-- schema crc -6360627252302701852
 
 -- declare sqlite_master -- 
 CREATE TABLE sqlite_master (
@@ -129,6 +129,16 @@ CREATE TABLE conflict_clause_t(
 CREATE TABLE conflict_clause_pk(
   id INTEGER NOT NULL,
   CONSTRAINT pk1 PRIMARY KEY (id) ON CONFLICT ROLLBACK
+);
+
+CREATE TABLE expression_pk(
+  id INTEGER NOT NULL,
+  CONSTRAINT pk1 PRIMARY KEY (id / 2, id % 2)
+);
+
+CREATE TABLE expression_uk(
+  id INTEGER NOT NULL,
+  CONSTRAINT uk1 UNIQUE (id / 2, id % 2)
 );
 
 @begin_schema_region shared;
@@ -353,6 +363,16 @@ BEGIN
     CONSTRAINT pk1 PRIMARY KEY (id) ON CONFLICT ROLLBACK
   );
   
+  CREATE TABLE IF NOT EXISTS expression_pk(
+    id INTEGER NOT NULL,
+    CONSTRAINT pk1 PRIMARY KEY (id / 2, id % 2)
+  );
+  
+  CREATE TABLE IF NOT EXISTS expression_uk(
+    id INTEGER NOT NULL,
+    CONSTRAINT uk1 UNIQUE (id / 2, id % 2)
+  );
+  
 END;
 -- declared upgrade procedures if any
 DECLARE proc CreateName1Proc() USING TRANSACTION;
@@ -572,9 +592,9 @@ BEGIN
     ---- install baseline schema if needed ----
 
     CALL test_cql_get_version_crc(0, schema_version);
-    IF schema_version != 9183554378860394282 THEN
+    IF schema_version != -812004145491149135 THEN
       CALL test_cql_install_baseline_schema();
-      CALL test_cql_set_version_crc(0, 9183554378860394282);
+      CALL test_cql_set_version_crc(0, -812004145491149135);
     END IF;
 
     ---- upgrade to schema version 2 ----
@@ -743,7 +763,7 @@ BEGIN
     CALL test_cql_create_all_indices();
     CALL test_cql_create_all_triggers();
     CALL test_cql_set_facet_version('cql_schema_version', 6);
-    CALL test_cql_set_facet_version('cql_schema_crc', 232637449222442455);
+    CALL test_cql_set_facet_version('cql_schema_crc', -6360627252302701852);
 
     -- finally produce the list of differences
     SELECT T1.facet FROM
@@ -764,7 +784,7 @@ BEGIN
   -- fetch the last known schema crc, if it's different do the upgrade --
   CALL test_cql_get_facet_version('cql_schema_crc', schema_crc);
 
-  IF schema_crc <> 232637449222442455 THEN
+  IF schema_crc <> -6360627252302701852 THEN
     -- save the current facets so we can diff them later --
     CALL test_perform_needed_upgrades();
   ELSE
