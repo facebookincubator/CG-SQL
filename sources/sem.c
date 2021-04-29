@@ -12828,8 +12828,8 @@ static bool_t sem_autotest_dummy_test(
            // an integer literal is good for any numeric type
            EXTRACT_NUM_TYPE(num_type, misc_attr_value);
 
-           if (num_type == NUM_INT) {
-             // an integer literal is good for any numeric type
+           if (num_type == NUM_INT || num_type == NUM_BOOL) {
+             // an integer or bool literal is good for any numeric type
              ok = is_numeric(core_type);
            }
            else if (num_type == NUM_LONG) {
@@ -17034,6 +17034,10 @@ static void sem_expr_num(ast_node *ast, CSTR cstr) {
   Contract(is_ast_num(ast));
   EXTRACT_NUM_TYPE(num_type, ast);
   switch (num_type) {
+  case NUM_BOOL:
+    ast->sem = new_sem(SEM_TYPE_BOOL | SEM_TYPE_NOTNULL);
+    break;
+
   case NUM_INT:
     ast->sem = new_sem(SEM_TYPE_INTEGER | SEM_TYPE_NOTNULL);
     break;

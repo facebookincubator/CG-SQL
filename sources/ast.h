@@ -126,6 +126,7 @@
 #define NUM_INT 0
 #define NUM_LONG 1
 #define NUM_REAL 2
+#define NUM_BOOL 3
 
 typedef struct ast_node {
   const char *_Nonnull type;

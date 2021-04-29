@@ -5506,6 +5506,22 @@ Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant fai
 
 The statement ending at line XXXX
 
+LET bool_x := 1;
+
+  {let_stmt}: bool_x: bool notnull variable
+  | {name bool_x}: bool_x: bool notnull variable
+  | : bool notnull
+
+The statement ending at line XXXX
+
+LET bool_x2 := 1;
+
+  {let_stmt}: bool_x2: bool notnull variable
+  | {name bool_x2}: bool_x2: bool notnull variable
+  | : bool notnull
+
+The statement ending at line XXXX
+
 @ATTRIBUTE(whatever=-1)
 @ATTRIBUTE(whatever=CONST(1 / 0))
 DECLARE PROC bad_constants_proc ();

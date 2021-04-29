@@ -1447,6 +1447,23 @@ create table bad_constants_table(
   y integer default const(1/0)
 );
 
+-- TEST: this should be of type bool not type int
+-- rewritten as "1"
+-- this proves that we can correctly produce the semantic type bool from the bool literal
+-- + LET bool_x := 1;
+-- + {let_stmt}: bool_x: bool notnull variable
+-- - Error
+let bool_x := const(1==1);
+
+-- TEST: internal const expression 
+-- the internal const(1==1) is evaluated to a literal which then is used by the outer const
+-- the result must still be bool, this proves that we can correctly eval the type of
+-- an internal bool literal
+-- + LET bool_x2 := 1;
+-- + {let_stmt}: bool_x2: bool notnull variable
+-- - Error
+let bool_x2 := const(const(1==1));
+
 -- TEST: use const expr where literals go in attribute
 -- + {const}: err
 -- + @ATTRIBUTE(whatever=-1)

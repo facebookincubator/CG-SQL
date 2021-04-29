@@ -47,6 +47,11 @@ static void eval_num(ast_node *expr, eval_node *result) {
   result->sem_type = SEM_TYPE_ERROR;
 
   switch (num_type) {
+  case NUM_BOOL:
+    result->bool_value = (bool_t)!!strtol(lit, NULL, 10);
+    result->sem_type = SEM_TYPE_BOOL;
+    break;
+
   case NUM_INT:
     result->int32_value = (int32_t)strtol(lit, NULL, has_hex_prefix(lit) ? 16 : 10);
     result->sem_type = SEM_TYPE_INTEGER;
@@ -176,7 +181,7 @@ cql_noexport ast_node *eval_set(ast_node *expr, eval_node *result) {
     break;
 
   case SEM_TYPE_BOOL:
-    new_num = new_ast_num(NUM_INT, dup_printf("%d", !!result->bool_value));
+    new_num = new_ast_num(NUM_BOOL, dup_printf("%d", !!result->bool_value));
     break;
 
   case SEM_TYPE_REAL:
