@@ -6678,13 +6678,11 @@ create temp table table_with_dup_col(
   f1 text, like MyView
 );
 
-/* test disabled because this enforcement is temporarily off
- * -- TEST: try to create a temp view with versioning -- not allowed
- * -- + {create_view_stmt}: err
- * -- + Error % temp objects may not have versioning annotations 'bogus_temp_view_with_versioning'
- * -- +1 Error
- * create temp view bogus_temp_view_with_versioning as select 1 x @delete(1);
- */
+-- TEST: try to create a temp view with versioning -- not allowed
+-- + {create_view_stmt}: err
+-- + Error % temp objects may not have versioning annotations 'bogus_temp_view_with_versioning'
+-- +1 Error
+create temp view bogus_temp_view_with_versioning as select 1 x @delete(1);
 
 -- TEST: try to create a temp trigger with versioning -- not allowed
 -- + {create_trigger_stmt}: err

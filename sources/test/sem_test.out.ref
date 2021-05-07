@@ -24300,6 +24300,38 @@ Error at test/sem_test.sql:XXXX : in str : CQL0142: duplicate column name 'f1'
 
 The statement ending at line XXXX
 
+CREATE TEMP VIEW bogus_temp_view_with_versioning AS
+SELECT 1 AS x @DELETE(1);
+
+Error at test/sem_test.sql:XXXX : in create_view_stmt : CQL0139: temp objects may not have versioning annotations 'bogus_temp_view_with_versioning'
+
+  {create_view_stmt}: err
+  | {int 1}
+  | {view_and_attrs}
+    | {name_and_select}
+    | | {name bogus_temp_view_with_versioning}
+    | | {select_stmt}: select: { x: integer notnull }
+    |   | {select_core_list}: select: { x: integer notnull }
+    |   | | {select_core}: select: { x: integer notnull }
+    |   |   | {select_expr_list_con}: select: { x: integer notnull }
+    |   |     | {select_expr_list}: select: { x: integer notnull }
+    |   |     | | {select_expr}: x: integer notnull
+    |   |     |   | {int 1}: integer notnull
+    |   |     |   | {opt_as_alias}
+    |   |     |     | {name x}
+    |   |     | {select_from_etc}: ok
+    |   |       | {select_where}
+    |   |         | {select_groupby}
+    |   |           | {select_having}
+    |   | {select_orderby}
+    |     | {select_limit}
+    |       | {select_offset}
+    | {delete_attr}
+      | {version_annotation}
+        | {int 1}
+
+The statement ending at line XXXX
+
 CREATE TEMP TRIGGER IF NOT EXISTS bogus_temp_trigger
   BEFORE DELETE ON bar
 BEGIN

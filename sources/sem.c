@@ -10222,12 +10222,9 @@ static bool_t sem_validate_vers_ok_in_context(version_attrs_info *vers) {
      return false;
   }
 
-  // temporarily allow temp views to get @delete, to get to conformance
-  if (vers->delete_code != SCHEMA_ANNOTATION_DELETE_VIEW) {
-    if (vers->is_temp && is_versioned) {
-      report_error(vers->target_ast, "CQL0139: temp objects may not have versioning annotations", vers->name);
-      return false;
-    }
+  if (vers->is_temp && is_versioned) {
+    report_error(vers->target_ast, "CQL0139: temp objects may not have versioning annotations", vers->name);
+    return false;
   }
 
   return true;
