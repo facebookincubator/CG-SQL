@@ -258,8 +258,11 @@ static void cg_qp_emit_create_schema_proc(charbuf *output) {
                   "  CREATE TABLE no_table_scan(\n"
                   "    table_name TEXT NOT NULL PRIMARY KEY\n"
                   "  );\n"
-                  "  CREATE TABLE alert(\n"
-                  "    table_name TEXT NOT NULL\n"
+                  "  CREATE TABLE table_scan_alert(\n"
+                  "    info TEXT NOT NULL\n"
+                  "  );\n"
+                  "  CREATE TABLE b_tree_alert(\n"
+                  "    info TEXT NOT NULL\n"
                   "  );\n"
                   "  CREATE TABLE ok_table_scan(\n"
                   "    sql_id INT NOT NULL PRIMARY KEY,\n"
@@ -285,11 +288,11 @@ static void emit_print_sql_statement_proc(charbuf *output) {
   );
 }
 
-static void emit_populate_alert_table_proc(charbuf *output) {
-  bprintf(output, "CREATE PROC populate_alert_table(table_ text not null)\n");
+static void emit_populate_table_scan_alert_table_proc(charbuf *output) {
+  bprintf(output, "CREATE PROC populate_table_scan_alert_table(table_ text not null)\n");
   bprintf(output, "BEGIN\n");
-  bprintf(output, "  INSERT OR IGNORE INTO alert\n");
-  bprintf(output, "    SELECT upper(table_) || '(' || count(*) || ')' as table_name FROM plan_temp\n");
+  bprintf(output, "  INSERT OR IGNORE INTO table_scan_alert\n");
+  bprintf(output, "    SELECT upper(table_) || '(' || count(*) || ')' as info FROM plan_temp\n");
   bprintf(output, "    WHERE ( zdetail GLOB ('*[Ss][Cc][Aa][Nn]* ' || table_) OR \n");
   bprintf(output, "            zdetail GLOB ('*[Ss][Cc][Aa][Nn]* ' || table_ || ' *')\n");
   bprintf(output, "          )\n");
@@ -300,28 +303,43 @@ static void emit_populate_alert_table_proc(charbuf *output) {
   bprintf(output, "END;\n");
 }
 
-static void emit_print_table_scan_violation_proc(charbuf *output) {
+static void emit_populate_b_tree_alert_table_proc(charbuf *output) {
   bprintf(output,
           "%s",
-          "CREATE PROC print_table_scan_violation()\n"
+          "CREATE PROC populate_b_tree_alert_table()\n"
           "BEGIN\n"
+          "  INSERT OR IGNORE INTO b_tree_alert\n"
+          "    SELECT '#' || sql_id || '(' || count(*) || ')' as info FROM plan_temp\n"
+          "    WHERE zdetail LIKE '%temp b-tree%'\n"
+          "    GROUP BY sql_id;\n"
+          "END;\n");
+}
+
+static void emit_print_query_violation_proc(charbuf *output) {
+  bprintf(output,
+          "%s",
+          "CREATE PROC print_query_violation()\n"
+          "BEGIN\n"
+          "  CALL populate_b_tree_alert_table();\n"
           "  DECLARE C CURSOR FOR SELECT table_name FROM no_table_scan;\n"
           "  LOOP FETCH C\n"
           "  BEGIN\n"
-          "    CALL populate_alert_table(C.table_name);\n"
+          "    CALL populate_table_scan_alert_table(C.table_name);\n"
           "  END;\n\n"
-          "  DECLARE count INTEGER NOT NULL;\n"
-          "  SET count := (SELECT COUNT(*) FROM alert);\n"
+          "  LET count := (SELECT COUNT(*) FROM table_scan_alert UNION ALL SELECT COUNT(*) FROM b_tree_alert);\n"
           "  IF count > 0 THEN \n"
           "    CALL printf(\"[\\\"Alert\\\"],\\n\");\n"
-          "    CALL printf(\"[{\\\"value\\\": \\\"TABLE SCAN VIOLATION:  \");\n"
-          "    DECLARE C2 CURSOR FOR SELECT group_concat(table_name, ', ') AS table_list FROM alert;\n"
-          "    FETCH C2;\n"
-          "    CALL printf(\"%s\", C2.table_list);\n"
-          "    CALL printf(\"\\\", \\\"style\\\": {\\\"fontSize\\\": 14, \\\"color\\\": \\\"red\\\", \\\"fontWeight\\\": \\\"bold\\\"}}],\\n\");\n"
-          "  ELSE\n"
-          "    CALL printf(\"[],\\n\");\n"
-          "  END IF;"
+          "    DECLARE C2 CURSOR FOR\n"
+          "      SELECT 'TABLE SCAN VIOLATION:  ' AS key, group_concat(info, ', ') AS info_list FROM table_scan_alert\n"
+          "      UNION ALL\n"
+          "      SELECT 'TEMP B-TREE VIOLATION:  ' AS key, group_concat(info, ', ') AS info_list FROM b_tree_alert;\n"
+          "    LOOP FETCH C2\n"
+          "    BEGIN\n"
+          "      CALL printf(\"[{\\\"value\\\": \\\"%s\", C2.key);\n"
+          "      CALL printf(\"%s\", C2.info_list);\n"
+          "      CALL printf(\"\\\", \\\"style\\\": {\\\"fontSize\\\": 14, \\\"color\\\": \\\"red\\\", \\\"fontWeight\\\": \\\"bold\\\"}}],\\n\");\n"
+          "    END;\n"
+          "  END IF;\n"
           "END;\n"
   );
 }
@@ -353,7 +371,7 @@ static void emit_print_query_plan_stat_proc(charbuf *output) {
           "        FROM plan_temp \n"
           "        WHERE zdetail LIKE '%search%using%covering%' AND sql_id = id_\n"
           "    ),\n"
-          "    bree(name, count, priority) AS (\n"
+          "    b_tree(name, count, priority) AS (\n"
           "      SELECT 'TEMP B-TREE', COUNT(*), 1 \n"
           "        FROM plan_temp \n"
           "        WHERE zdetail LIKE '%temp b-tree%' AND sql_id = id_\n"
@@ -386,7 +404,7 @@ static void emit_print_query_plan_stat_proc(charbuf *output) {
           "   UNION ALL\n"
           "   SELECT * FROM search_fast\n"
           "   UNION ALL\n"
-          "   SELECT * FROM bree\n"
+          "   SELECT * FROM b_tree\n"
           "   UNION ALL\n"
           "   SELECT * FROM compound_subqueries\n"
           "   UNION ALL\n"
@@ -518,9 +536,11 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
     bprintf(&output_buf, "\n");
     emit_populate_tables_proc(&output_buf);
     bprintf(&output_buf, "\n");
-    emit_populate_alert_table_proc(&output_buf);
+    emit_populate_table_scan_alert_table_proc(&output_buf);
     bprintf(&output_buf, "\n");
-    emit_print_table_scan_violation_proc(&output_buf);
+    emit_populate_b_tree_alert_table_proc(&output_buf);
+    bprintf(&output_buf, "\n");
+    emit_print_query_violation_proc(&output_buf);
     bprintf(&output_buf, "\n");
     emit_print_sql_statement_proc(&output_buf);
     bprintf(&output_buf, "\n");
@@ -559,7 +579,7 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   bprintf(&output_buf, "  CALL printf(\"[\\n\");\n");
 
   if (sql_stmt_count) {
-    bprintf(&output_buf, "  CALL print_table_scan_violation();\n");
+    bprintf(&output_buf, "  CALL print_query_violation();\n");
   }
 
   bprintf(&output_buf, "  CALL printf(\"[\\n\");\n");

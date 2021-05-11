@@ -23,7 +23,10 @@
 -- + CREATE TABLE foo_
 -- + CREATE TABLE _foo
 -- +17 CREATE PROC populate_query_plan_%()
--- + CREATE PROC populate_alert_table(table_ text not null)
+-- + CREATE PROC populate_table_scan_alert_table(table_ text not null)
+-- + CREATE PROC populate_b_tree_alert_table()
+-- + CALL populate_table_scan_alert_table(C.table_name);
+-- + CALL populate_b_tree_alert_table()
 -- +17 INSERT INTO sql_temp(id, sql)
 -- +17 INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(%, C.iselectid, C.iorder, C.ifrom, C.zdetail);
 -- +17 DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
@@ -32,7 +35,7 @@
 -- + CREATE PROC print_query_plan_stat(id_ integer not null)
 -- + CREATE PROC print_query_plan_graph(id_ integer not null)
 -- + CREATE PROC print_query_plan(sql_id integer not null)
--- + CREATE PROC print_table_scan_violation()
+-- + CREATE PROC print_query_violation()
 -- + CALL print_sql_statement(sql_id);
 -- + CALL print_query_plan_stat(sql_id);
 -- + CALL print_query_plan_graph(sql_id);
@@ -41,7 +44,7 @@
 -- +17 CALL populate_query_plan_%();
 -- + CREATE PROC populate_no_table_scan()
 -- +1  INSERT OR IGNORE INTO no_table_scan(table_name)
--- +1  INSERT OR IGNORE INTO alert
+-- +1  INSERT OR IGNORE INTO table_scan_alert
 -- - Error
 @attribute(cql:no_table_scan)
 create table t1(id int primary key, name text);

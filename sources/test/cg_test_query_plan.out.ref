@@ -66,8 +66,11 @@ BEGIN
   CREATE TABLE no_table_scan(
     table_name TEXT NOT NULL PRIMARY KEY
   );
-  CREATE TABLE alert(
-    table_name TEXT NOT NULL
+  CREATE TABLE table_scan_alert(
+    info TEXT NOT NULL
+  );
+  CREATE TABLE b_tree_alert(
+    info TEXT NOT NULL
   );
   CREATE TABLE ok_table_scan(
     sql_id INT NOT NULL PRIMARY KEY,
@@ -346,10 +349,10 @@ BEGIN
 END;
 
 
-CREATE PROC populate_alert_table(table_ text not null)
+CREATE PROC populate_table_scan_alert_table(table_ text not null)
 BEGIN
-  INSERT OR IGNORE INTO alert
-    SELECT upper(table_) || '(' || count(*) || ')' as table_name FROM plan_temp
+  INSERT OR IGNORE INTO table_scan_alert
+    SELECT upper(table_) || '(' || count(*) || ')' as info FROM plan_temp
     WHERE ( zdetail GLOB ('*[Ss][Cc][Aa][Nn]* ' || table_) OR 
             zdetail GLOB ('*[Ss][Cc][Aa][Nn]* ' || table_ || ' *')
           )
@@ -359,26 +362,38 @@ BEGIN
     ) GROUP BY table_;
 END;
 
-CREATE PROC print_table_scan_violation()
+CREATE PROC populate_b_tree_alert_table()
 BEGIN
+  INSERT OR IGNORE INTO b_tree_alert
+    SELECT '#' || sql_id || '(' || count(*) || ')' as info FROM plan_temp
+    WHERE zdetail LIKE '%temp b-tree%'
+    GROUP BY sql_id;
+END;
+
+CREATE PROC print_query_violation()
+BEGIN
+  CALL populate_b_tree_alert_table();
   DECLARE C CURSOR FOR SELECT table_name FROM no_table_scan;
   LOOP FETCH C
   BEGIN
-    CALL populate_alert_table(C.table_name);
+    CALL populate_table_scan_alert_table(C.table_name);
   END;
 
-  DECLARE count INTEGER NOT NULL;
-  SET count := (SELECT COUNT(*) FROM alert);
+  LET count := (SELECT COUNT(*) FROM table_scan_alert UNION ALL SELECT COUNT(*) FROM b_tree_alert);
   IF count > 0 THEN 
     CALL printf("[\"Alert\"],\n");
-    CALL printf("[{\"value\": \"TABLE SCAN VIOLATION:  ");
-    DECLARE C2 CURSOR FOR SELECT group_concat(table_name, ', ') AS table_list FROM alert;
-    FETCH C2;
-    CALL printf("%s", C2.table_list);
-    CALL printf("\", \"style\": {\"fontSize\": 14, \"color\": \"red\", \"fontWeight\": \"bold\"}}],\n");
-  ELSE
-    CALL printf("[],\n");
-  END IF;END;
+    DECLARE C2 CURSOR FOR
+      SELECT 'TABLE SCAN VIOLATION:  ' AS key, group_concat(info, ', ') AS info_list FROM table_scan_alert
+      UNION ALL
+      SELECT 'TEMP B-TREE VIOLATION:  ' AS key, group_concat(info, ', ') AS info_list FROM b_tree_alert;
+    LOOP FETCH C2
+    BEGIN
+      CALL printf("[{\"value\": \"%s", C2.key);
+      CALL printf("%s", C2.info_list);
+      CALL printf("\", \"style\": {\"fontSize\": 14, \"color\": \"red\", \"fontWeight\": \"bold\"}}],\n");
+    END;
+  END IF;
+END;
 
 CREATE PROC print_sql_statement(sql_id integer not null)
 BEGIN
@@ -411,7 +426,7 @@ BEGIN
         FROM plan_temp 
         WHERE zdetail LIKE '%search%using%covering%' AND sql_id = id_
     ),
-    bree(name, count, priority) AS (
+    b_tree(name, count, priority) AS (
       SELECT 'TEMP B-TREE', COUNT(*), 1 
         FROM plan_temp 
         WHERE zdetail LIKE '%temp b-tree%' AND sql_id = id_
@@ -444,7 +459,7 @@ BEGIN
    UNION ALL
    SELECT * FROM search_fast
    UNION ALL
-   SELECT * FROM bree
+   SELECT * FROM b_tree
    UNION ALL
    SELECT * FROM compound_subqueries
    UNION ALL
@@ -623,7 +638,7 @@ BEGIN
     THROW;
   END CATCH;
   CALL printf("[\n");
-  CALL print_table_scan_violation();
+  CALL print_query_violation();
   CALL printf("[\n");
   CALL printf("[\n");
   CALL printf("[\"Query\", \"Stat\", \"Graph\"],\n");

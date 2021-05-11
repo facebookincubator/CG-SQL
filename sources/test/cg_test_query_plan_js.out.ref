@@ -13,6 +13,16 @@
     }
   ],
   [
+    {
+      "value": "TEMP B-TREE VIOLATION:  #1(1)",
+      "style": {
+        "fontSize": 14,
+        "color": "red",
+        "fontWeight": "bold"
+      }
+    }
+  ],
+  [
     [
       [
         "Query",
