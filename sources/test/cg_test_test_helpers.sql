@@ -135,6 +135,17 @@ create virtual table basic_virtual using module_name(this, that, the_other) as (
   t text
 );
 
+create table blob_primary_key (
+  id blob primary key,
+  name text
+);
+
+create table child_blob_primary_key (
+  id blob primary key,
+  name text,
+  foreign key (id) references blob_primary_key(id) on update no action
+);
+
 -- TEST: dummy_table only
 -- + %DECLARE PROC sample_proc1 () (id INTEGER NOT NULL, dl REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);%
 -- + %CREATE TEMP TABLE test_sample_proc1(LIKE sample_proc1);%
@@ -834,4 +845,45 @@ end;
 create proc test_virtual_table_proc()
 begin
   select * from basic_virtual;
+end;
+
+-- TEST: test blob primary key is emitted as blob
+-- + INSERT OR IGNORE INTO blob_primary_key(id) VALUES(CAST('1' as blob)) @dummy_seed(123);
+-- + INSERT OR IGNORE INTO blob_primary_key(id) VALUES(CAST('2' as blob)) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+@attribute(cql:autotest=(dummy_test))
+create proc test_blob_primary_key()
+begin
+  select * from blob_primary_key;
+end;
+
+-- TEST: test parent and child blob primary key are emitted as blob
+-- + INSERT OR IGNORE INTO blob_primary_key(id) VALUES(CAST('1' as blob)) @dummy_seed(123);
+-- + INSERT OR IGNORE INTO blob_primary_key(id) VALUES(CAST('2' as blob)) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+-- + INSERT OR IGNORE INTO child_blob_primary_key(id) VALUES(CAST('1' as blob)) @dummy_seed(125);
+-- + INSERT OR IGNORE INTO child_blob_primary_key(id) VALUES(CAST('2' as blob)) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+@attribute(cql:autotest=(dummy_test))
+create proc test_child_blob_primary_key()
+begin
+  select * from child_blob_primary_key;
+end;
+
+-- TEST: test blob value in dummy_test attribution
+-- + INSERT OR IGNORE INTO blob_primary_key(id) VALUES(X'90') @dummy_seed(123);
+-- + INSERT OR IGNORE INTO blob_primary_key(id) VALUES(X'91') @dummy_seed(124) @dummy_nullables @dummy_defaults;
+-- + INSERT OR IGNORE INTO child_blob_primary_key(id) VALUES(X'90') @dummy_seed(125);
+-- + INSERT OR IGNORE INTO child_blob_primary_key(id) VALUES(X'91') @dummy_seed(126) @dummy_nullables @dummy_defaults;
+@attribute(
+  cql:autotest=(
+    (dummy_test,
+      (blob_primary_key,
+        (id),
+        (X'90'),
+        (X'91')
+      )
+    )
+  )
+)
+create proc test_blob_literal_in_dummy_test()
+begin
+  select * from child_blob_primary_key;
 end;

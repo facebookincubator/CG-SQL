@@ -2395,3 +2395,110 @@ CREATE PROC test_test_virtual_table_proc_read_basic_virtual()
 BEGIN
   SELECT * FROM basic_virtual;
 END;
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_test_blob_primary_key_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS blob_primary_key(
+    id BLOB PRIMARY KEY,
+    name TEXT
+  );
+END;
+
+CREATE PROC test_test_blob_primary_key_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO blob_primary_key(id) VALUES(CAST('1' as blob)) @dummy_seed(123);
+  INSERT OR IGNORE INTO blob_primary_key(id) VALUES(CAST('2' as blob)) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_test_blob_primary_key_drop_tables()
+BEGIN
+  DROP TABLE IF EXISTS blob_primary_key;
+END;
+
+CREATE PROC test_test_blob_primary_key_read_blob_primary_key()
+BEGIN
+  SELECT * FROM blob_primary_key;
+END;
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_test_child_blob_primary_key_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS blob_primary_key(
+    id BLOB PRIMARY KEY,
+    name TEXT
+  );
+  CREATE TABLE IF NOT EXISTS child_blob_primary_key(
+    id BLOB PRIMARY KEY,
+    name TEXT,
+    FOREIGN KEY (id) REFERENCES blob_primary_key (id) ON UPDATE NO ACTION
+  );
+END;
+
+CREATE PROC test_test_child_blob_primary_key_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO blob_primary_key(id) VALUES(CAST('1' as blob)) @dummy_seed(123);
+  INSERT OR IGNORE INTO blob_primary_key(id) VALUES(CAST('2' as blob)) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO child_blob_primary_key(id) VALUES(CAST('1' as blob)) @dummy_seed(125);
+  INSERT OR IGNORE INTO child_blob_primary_key(id) VALUES(CAST('2' as blob)) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_test_child_blob_primary_key_drop_tables()
+BEGIN
+  DROP TABLE IF EXISTS child_blob_primary_key;
+  DROP TABLE IF EXISTS blob_primary_key;
+END;
+
+CREATE PROC test_test_child_blob_primary_key_read_blob_primary_key()
+BEGIN
+  SELECT * FROM blob_primary_key;
+END;
+
+CREATE PROC test_test_child_blob_primary_key_read_child_blob_primary_key()
+BEGIN
+  SELECT * FROM child_blob_primary_key;
+END;
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_test_blob_literal_in_dummy_test_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS blob_primary_key(
+    id BLOB PRIMARY KEY,
+    name TEXT
+  );
+  CREATE TABLE IF NOT EXISTS child_blob_primary_key(
+    id BLOB PRIMARY KEY,
+    name TEXT,
+    FOREIGN KEY (id) REFERENCES blob_primary_key (id) ON UPDATE NO ACTION
+  );
+END;
+
+CREATE PROC test_test_blob_literal_in_dummy_test_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO blob_primary_key(id) VALUES(X'90') @dummy_seed(123);
+  INSERT OR IGNORE INTO blob_primary_key(id) VALUES(X'91') @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO child_blob_primary_key(id) VALUES(X'90') @dummy_seed(125);
+  INSERT OR IGNORE INTO child_blob_primary_key(id) VALUES(X'91') @dummy_seed(126) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_test_blob_literal_in_dummy_test_drop_tables()
+BEGIN
+  DROP TABLE IF EXISTS child_blob_primary_key;
+  DROP TABLE IF EXISTS blob_primary_key;
+END;
+
+CREATE PROC test_test_blob_literal_in_dummy_test_read_blob_primary_key()
+BEGIN
+  SELECT * FROM blob_primary_key;
+END;
+
+CREATE PROC test_test_blob_literal_in_dummy_test_read_child_blob_primary_key()
+BEGIN
+  SELECT * FROM child_blob_primary_key;
+END;

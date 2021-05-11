@@ -12847,6 +12847,10 @@ static bool_t sem_autotest_dummy_test(
            // the null token is ok for any nullable column
            ok = is_nullable(col_type);
         }
+        else if (is_ast_blob(misc_attr_value)) {
+           // a blob literal is ok for blob column
+           ok = core_type == SEM_TYPE_BLOB;
+        }
 
         if (!ok) {
           report_dummy_test_error(

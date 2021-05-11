@@ -299,7 +299,8 @@ static void cg_dummy_test_column_value(charbuf *output, ast_node *value) {
   }
 
   if (is_ast_str(value)) {
-    bprintf(output, "%s", ((str_ast_node *)value)->value);
+    EXTRACT_STRING(lit, value);
+    bprintf(output, "%s", lit);
   }
   else if (is_ast_num(value)) {
     EXTRACT_NUM_VALUE(lit, value);
@@ -307,6 +308,11 @@ static void cg_dummy_test_column_value(charbuf *output, ast_node *value) {
   }
   else if (is_ast_null(value)) {
     bprintf(output, "NULL");
+  }
+  else {
+    Contract(is_ast_blob(value));
+    EXTRACT_BLOBTEXT(lit, value);
+    bprintf(output, "%s", lit);
   }
 }
 
@@ -441,6 +447,17 @@ static void cg_parent_column_value(charbuf *output, CSTR table_name, CSTR column
   }
 }
 
+// Emit a literal using an integer value base on the sem type.  e.g. quote it, cast it to blog, etc.
+static void cg_dummy_test_emit_integer_value(charbuf *output, sem_t col_type, int32_t value) {
+  if (is_numeric(col_type)) {
+    bprintf(output, "%d", value);
+  } else if (is_blob(col_type)) {
+    bprintf(output, "CAST(\'%d\' as blob)", value);
+  } else {
+    bprintf(output, "\'%d\'", value);
+  }
+}
+
 // Emit INSERT statement for a table by using @dummy_seed to generated dummy data
 // but also info in dummy_test attribute. If column's values are provided in
 // dummy_test info for the table, it'll be used otherwise @dummy_seed is used to
@@ -514,7 +531,7 @@ static void cg_dummy_test_populate (charbuf *gen_insert_tables, ast_node *table_
                 // In this case the parent table key referenced here was created with default value
                 // between 1 and DUMMY_TEST_INSERT_ROWS. We just need to select one of these default
                 // value.
-                bprintf(&str_val, is_numeric(col_type) ? "%d" : "\'%d\'", cg_validate_value_range(index_value));
+                cg_dummy_test_emit_integer_value(&str_val, col_type, cg_validate_value_range(index_value));
               }
             }
             bprintf(&names, "%s%s", comma, column_name);
@@ -524,7 +541,7 @@ static void cg_dummy_test_populate (charbuf *gen_insert_tables, ast_node *table_
             if (str_val.used > 1) {
               bprintf(&values, "%s", str_val.ptr);
             } else {
-              bprintf(&values, is_numeric(col_type) ? "%d" : "\'%d\'", index_value);
+              cg_dummy_test_emit_integer_value(&values, col_type, index_value);
             }
             CHARBUF_CLOSE(str_val);
           }

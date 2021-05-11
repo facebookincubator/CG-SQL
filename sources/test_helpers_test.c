@@ -19,6 +19,15 @@ extern cql_code test_test_too_many_row_in_child_table_create_tables(sqlite3 *_No
 extern cql_code test_test_too_many_row_in_child_table_populate_tables(sqlite3 *_Nonnull _db_);
 extern cql_code test_test_too_many_row_in_child_table_drop_tables(sqlite3 *_Nonnull _db_);
 
+extern cql_code test_test_blob_literal_in_dummy_test_create_tables(sqlite3 *_Nonnull _db_);
+extern cql_code test_test_blob_literal_in_dummy_test_populate_tables(sqlite3 *_Nonnull _db_);
+extern cql_code test_test_blob_literal_in_dummy_test_drop_tables(sqlite3 *_Nonnull _db_);
+
+extern cql_code test_test_child_blob_primary_key_create_tables(sqlite3 *_Nonnull _db_);
+extern cql_code test_test_child_blob_primary_key_populate_tables(sqlite3 *_Nonnull _db_);
+extern cql_code test_test_child_blob_primary_key_drop_tables(sqlite3 *_Nonnull _db_);
+
+
 int main(int argc, char **argv) {
   // Setup database
   sqlite3 *db = NULL;
@@ -53,6 +62,25 @@ int main(int argc, char **argv) {
   if (rc == SQLITE_OK) {
     rc = test_test_too_many_row_in_child_table_drop_tables(db);
   }
+  if (rc == SQLITE_OK) {
+    rc = test_test_blob_literal_in_dummy_test_create_tables(db);
+  }
+  if (rc == SQLITE_OK) {
+    rc = test_test_blob_literal_in_dummy_test_populate_tables(db);
+  }
+  if (rc == SQLITE_OK) {
+    rc = test_test_blob_literal_in_dummy_test_drop_tables(db);
+  }
+  if (rc == SQLITE_OK) {
+    rc = test_test_child_blob_primary_key_create_tables(db);
+  }
+  if (rc == SQLITE_OK) {
+    rc = test_test_child_blob_primary_key_populate_tables(db);
+  }
+  if (rc == SQLITE_OK) {
+    rc = test_test_child_blob_primary_key_drop_tables(db);
+  }
+
   sqlite3_close(db);
   return rc;
 }
