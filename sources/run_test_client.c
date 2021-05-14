@@ -1155,7 +1155,17 @@ cql_code test_all_column_fetchers(sqlite3 *db) {
       E(is_null == is_null_expected, "expected is_null did not match seed data, row %d, col %d\n", row, col);
     }
   }
+
+  cql_object_ref _Nullable object = cql_result_set_get_object_col((cql_result_set_ref)object_result_set, 1, 0);
+  E(!object, "expected object to be null\n");
+  cql_object_ref new_set = set_create();
+  cql_result_set_set_object_col((cql_result_set_ref)object_result_set, 1, 0, new_set);
+  object = cql_result_set_get_object_col((cql_result_set_ref)object_result_set, 1, 0);
+  E(object, "expected not null object\n");
+  cql_result_set_set_object_col((cql_result_set_ref)object_result_set, 1, 0, NULL);
+
   cql_object_release(set);
+  cql_object_release(new_set);
   cql_result_set_release(object_result_set);
 
   load_all_types_table_result_set_ref result_set;
@@ -1182,24 +1192,36 @@ cql_code test_all_column_fetchers(sqlite3 *db) {
           // bool
           E(cql_result_set_get_bool_col(rs, row, col) == row,
             "expected bool did not match seed data, row %d, col %d\n", row, col);
+          cql_result_set_set_bool_col(rs, row, col, !row);
+          E(cql_result_set_get_bool_col(rs, row, col) == !row,
+            "expected bool did not match seed data, row %d, col %d\n", !row, col);
           break;
         }
         case 1: {
           // int32
           E(cql_result_set_get_int32_col(rs, row, col) == row,
             "expected int32 did not match seed data, row %d, col %d\n", row, col);
+          cql_result_set_set_int32_col(rs, row, col, row + 19);
+          E(cql_result_set_get_int32_col(rs, row, col) == row + 19,
+            "expected int32 did not match seed data, row %d, col %d\n", row + 19, col);
           break;
         }
         case 2: {
           // int64
           E(cql_result_set_get_int64_col(rs, row, col) == row,
             "expected int64 did not match seed data, row %d, col %d\n", row, col);
+          cql_result_set_set_int64_col(rs, row, col, row + 29);
+          E(cql_result_set_get_int64_col(rs, row, col) == row + 29,
+            "expected int64 did not match seed data, row %d, col %d\n", row + 29, col);
           break;
         }
         case 3: {
           // double
           E(cql_result_set_get_double_col(rs, row, col) == row,
             "expected double did not match seed data, row %d, col %d\n", row, col);
+          cql_result_set_set_double_col(rs, row, col, row + 39);
+          E(cql_result_set_get_double_col(rs, row, col) == row + 39,
+            "expected double did not match seed data, row %d, col %d\n", row + 39, col);
           break;
         }
         case 4: {
@@ -1211,6 +1233,12 @@ cql_code test_all_column_fetchers(sqlite3 *db) {
           cql_string_ref str = cql_result_set_get_string_col(rs, row, col);
           const char *expected = row == 0 ? "s1_0" : col < 6 ? "s0_1" : "s1_1";
           E(strcmp(str->ptr, expected) == 0, "expected string did not match seed data, row %d, col %d\n", row, col);
+
+          cql_string_ref updated = string_create();
+          cql_result_set_set_string_col(rs, row, col, updated);
+          str = cql_result_set_get_string_col(rs, row, col);
+          E(strcmp(str->ptr, updated->ptr) == 0, "expected string did not match seed data, row %d, col %d\n", row, col);
+          cql_string_release(updated);
           break;
         }
         case 5: {
@@ -1223,6 +1251,15 @@ cql_code test_all_column_fetchers(sqlite3 *db) {
           const char *expected = row == 0 ? "bl1_0" : col < 6 ? "bl0_1" : "bl1_1";
           E(bl->size == 5 && memcmp(bl->ptr, expected, 5) == 0,
             "expected blob did not match seed data, row %d, col %d\n", row, col);
+
+          cql_string_ref str_blob = string_create();
+          cql_blob_ref updated_bl = blob_from_string(str_blob);
+          cql_result_set_set_blob_col(rs, row, col, updated_bl);
+          bl = cql_result_set_get_blob_col(rs, row, col);
+          E(bl->size == 13 && memcmp(bl->ptr, "Hello, world.", 13) == 0,
+            "expected blob did not match seed data, row %d, col %d\n", row, col);
+          cql_string_release(str_blob);
+          cql_blob_release(updated_bl);
           break;
         }
       }

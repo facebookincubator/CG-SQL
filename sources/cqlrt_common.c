@@ -1309,6 +1309,20 @@ cql_int32 cql_result_set_get_int32_col(cql_result_set_ref _Nonnull result_set, c
   return ((cql_nullable_int32 *)data)->value;
 }
 
+// This is the helper method that write an int32 into a rowset at a particular row and column.
+// The same helper is used for writing the value from a nullable or not nullable value, so the address helper
+// has to report which kind of datum it is.  All the error checking is in cql_address_of_col.
+void cql_result_set_set_int32_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_int32 new_value) {
+  cql_int32 data_type = CQL_DATA_TYPE_INT32;
+  char *data = cql_address_of_col(result_set, row, col, &data_type);
+
+  if (data_type & CQL_DATA_TYPE_NOT_NULL) {
+    *(cql_int32 *)data = new_value;
+  } else {
+    ((cql_nullable_int32 *)data)->value = new_value;
+  }
+}
+
 // This is the helper method that reads an int64 out of a rowset at a particular row and column.
 // The same helper is used for reading the value from a nullable or not nullable value, so the address helper
 // has to report which kind of datum it is.  All the error checking is in cql_address_of_col.
@@ -1320,6 +1334,20 @@ cql_int64 cql_result_set_get_int64_col(cql_result_set_ref _Nonnull result_set, c
     return *(cql_int64 *)data;
   }
   return ((cql_nullable_int64 *)data)->value;
+}
+
+// This is the helper method that write an int64 into a rowset at a particular row and column.
+// The same helper is used for writing the value from a nullable or not nullable value, so the address helper
+// has to report which kind of datum it is.  All the error checking is in cql_address_of_col.
+void cql_result_set_set_int64_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_int64 new_value) {
+  cql_int32 data_type = CQL_DATA_TYPE_INT64;
+  char *data = cql_address_of_col(result_set, row, col, &data_type);
+
+  if (data_type & CQL_DATA_TYPE_NOT_NULL) {
+    *(cql_int64 *)data = new_value;
+  } else {
+    ((cql_nullable_int64 *)data)->value = new_value;
+  }
 }
 
 // This is the helper method that reads a double out of a rowset at a particular row and column.
@@ -1335,6 +1363,20 @@ cql_double cql_result_set_get_double_col(cql_result_set_ref _Nonnull result_set,
   return ((cql_nullable_double *)data)->value;
 }
 
+// This is the helper method that write an double into a rowset at a particular row and column.
+// The same helper is used for writing the value from a nullable or not nullable value, so the address helper
+// has to report which kind of datum it is.  All the error checking is in cql_address_of_col.
+void cql_result_set_set_double_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_double new_value) {
+  cql_int32 data_type = CQL_DATA_TYPE_DOUBLE;
+  char *data = cql_address_of_col(result_set, row, col, &data_type);
+
+  if (data_type & CQL_DATA_TYPE_NOT_NULL) {
+    *(cql_double *)data = new_value;
+  } else {
+    ((cql_nullable_double *)data)->value = new_value;
+  }
+}
+
 // This is the helper method that reads an bool out of a rowset at a particular row and column.
 // The same helper is used for reading the value from a nullable or not nullable value, so the address helper
 // has to report which kind of datum it is.  All the error checking is in cql_address_of_col.
@@ -1348,6 +1390,20 @@ cql_bool cql_result_set_get_bool_col(cql_result_set_ref _Nonnull result_set, cql
   return ((cql_nullable_bool *)data)->value;
 }
 
+// This is the helper method that write an bool into a rowset at a particular row and column.
+// The same helper is used for writing the value from a nullable or not nullable value, so the address helper
+// has to report which kind of datum it is.  All the error checking is in cql_address_of_col.
+void cql_result_set_set_bool_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_bool new_value) {
+  cql_int32 data_type = CQL_DATA_TYPE_BOOL;
+  char *data = cql_address_of_col(result_set, row, col, &data_type);
+
+  if (data_type & CQL_DATA_TYPE_NOT_NULL) {
+    *(cql_bool *)data = new_value;
+  } else {
+    ((cql_nullable_bool *)data)->value = new_value;
+  }
+}
+
 // This is the helper method that reads a string out of a rowset at a particular row and column.
 // The same helper is used for reading the value from a nullable or not nullable value, so the address helper
 // has to report which kind of datum it is.  All the error checking is in cql_address_of_col.
@@ -1355,6 +1411,15 @@ cql_string_ref _Nullable cql_result_set_get_string_col(cql_result_set_ref _Nonnu
   cql_int32 data_type = CQL_DATA_TYPE_STRING;
   char *data = cql_address_of_col(result_set, row, col, &data_type);
   return *(cql_string_ref *)data;
+}
+
+// This is the helper method that write an string into a rowset at a particular row and column.
+// The same helper is used for writing the value from a nullable or not nullable value, so the address helper
+// has to report which kind of datum it is.  All the error checking is in cql_address_of_col.
+void cql_result_set_set_string_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_string_ref _Nullable new_value) {
+  cql_int32 data_type = CQL_DATA_TYPE_STRING;
+  char *data = cql_address_of_col(result_set, row, col, &data_type);
+  cql_set_string_ref((cql_string_ref *)data, new_value);
 }
 
 
@@ -1367,6 +1432,15 @@ cql_object_ref _Nullable cql_result_set_get_object_col(cql_result_set_ref _Nonnu
   return *(cql_object_ref *)data;
 }
 
+// This is the helper method that write an object into a rowset at a particular row and column.
+// The same helper is used for writing the value from a nullable or not nullable value, so the address helper
+// has to report which kind of datum it is.  All the error checking is in cql_address_of_col.
+void cql_result_set_set_object_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_object_ref _Nullable new_value) {
+  cql_int32 data_type = CQL_DATA_TYPE_OBJECT;
+  char *data = cql_address_of_col(result_set, row, col, &data_type);
+  cql_set_object_ref((cql_object_ref *)data, new_value);
+}
+
 // This is the helper method that reads a blob out of a rowset at a particular row and column.
 // The same helper is used for reading the value from a nullable or not nullable value, so the address helper
 // has to report which kind of datum it is.  All the error checking is in cql_address_of_col.
@@ -1374,6 +1448,15 @@ cql_blob_ref _Nullable cql_result_set_get_blob_col(cql_result_set_ref _Nonnull r
   cql_int32 data_type = CQL_DATA_TYPE_BLOB;
   char *data = cql_address_of_col(result_set, row, col, &data_type);
   return *(cql_blob_ref *)data;
+}
+
+// This is the helper method that write an blob into a rowset at a particular row and column.
+// The same helper is used for writing the value from a nullable or not nullable value, so the address helper
+// has to report which kind of datum it is.  All the error checking is in cql_address_of_col.
+void cql_result_set_set_blob_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_blob_ref _Nullable new_value) {
+  cql_int32 data_type = CQL_DATA_TYPE_BLOB;
+  char *data = cql_address_of_col(result_set, row, col, &data_type);
+  cql_set_blob_ref((cql_blob_ref *)data, new_value);
 }
 
 // This is the helper method that determines if a nullable column column is null or not.
@@ -1535,6 +1618,14 @@ void cql_initialize_meta(cql_result_set_meta *_Nonnull meta, cql_fetch_info *_No
       meta->getBlob = cql_result_set_get_blob_col;
       meta->getIsNull = cql_result_set_get_is_null_col;
       meta->getIsEncoded = cql_result_set_get_is_encoded_col;
+
+      meta->setBoolean = cql_result_set_set_bool_col;
+      meta->setDouble = cql_result_set_set_double_col;
+      meta->setInt32 = cql_result_set_set_int32_col;
+      meta->setInt64 = cql_result_set_set_int64_col;
+      meta->setString = cql_result_set_set_string_col;
+      meta->setObject = cql_result_set_set_object_col;
+      meta->setBlob = cql_result_set_set_blob_col;
   #endif
 }
 
