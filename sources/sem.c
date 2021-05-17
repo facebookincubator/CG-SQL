@@ -8637,6 +8637,40 @@ static void sem_add_used_symbols(symtab **used_symbols, symtab *add_symbols) {
   }
 }
 
+// Like sem_select_orderby, but with the restriction that ordering can only
+// be specified via indicies (e.g., 2) and simple name expressions (e.g, x), not
+// arbitrary expressions (e.g., x + y).
+static bool_t sem_select_orderby_with_simple_ordering_only(ast_node *ast) {
+  Contract(is_ast_select_orderby(ast));
+
+  if (sem_select_orderby(ast)) {
+    return 1;
+  }
+
+  EXTRACT(opt_orderby, ast->left);
+  if (!opt_orderby) {
+    return 0;
+  }
+
+  EXTRACT_NOTNULL(groupby_list, opt_orderby->left);
+  for (ast_node *list = groupby_list; list; list = list->right) {
+    Contract(is_ast_groupby_list(list));
+    EXTRACT_NOTNULL(groupby_item, list->left);
+    EXTRACT_ANY_NOTNULL(expr, groupby_item->left);
+    if (is_ast_num(expr)) {
+      continue;
+    }
+    if (is_ast_str(expr) && !is_ast_strlit(expr)) {
+      continue;
+    }
+    report_error(expr, "CQL0398: A compound select cannot be ordered by the result of an expression", NULL);
+    record_error(ast);
+    return 1;
+  }
+
+  return 0;
+}
+
 // A select statement in any context, it has the options (which we don't care
 // about for semantic analysis) plus the statement itself.
 static void sem_select_no_with(ast_node *ast) {
@@ -8690,7 +8724,7 @@ static void sem_select_no_with(ast_node *ast) {
       // For select values statement you can not reference the columns listed in [select_insert_list]
       // because they are anonimous. Therefore we should not push into the JOIN stack the columns from
       // [select_insert_list].
-      error = sem_select_orderby(select_orderby);
+      error = sem_select_orderby_with_simple_ordering_only(select_orderby);
     }
     else {
       // [SELECT ...]

@@ -7439,6 +7439,31 @@ create table b (
   sort_key int not null
 );
 
+-- TEST: compound select ordered by name
+-- + {select_stmt}: UNION: { key_: integer notnull, sort_key: integer notnull }
+-- - Error
+select key_, sort_key from a
+union
+select key_, sort_key from b
+order by sort_key, key_;
+
+-- TEST: compound select ordered by index
+-- + {select_stmt}: UNION: { key_: integer notnull, sort_key: integer notnull }
+-- - Error
+select key_, sort_key from a
+union
+select key_, sort_key from b
+order by 2, key_;
+
+-- TEST: compound select ordered by an arbitrary expression
+-- + {select_stmt}: err
+-- + {select_orderby}: err
+-- +1 Error
+select key_, sort_key from a
+union
+select key_, sort_key from b
+order by 1 + 1, key_;
+
 -- TEST: compound select name lookup from select list (other places ambiguous, still ok)
 -- + {select_stmt}: union_all: { key_: integer notnull, sort_key: integer notnull }
 -- + {select_core_list}: union_all: { key_: integer notnull, sort_key: integer notnull }

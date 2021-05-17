@@ -609,6 +609,7 @@ Error at test/sem_test.sql:XXXX : in select_core : CQL0012: incompatible types i
 Error at test/sem_test.sql:XXXX : in select_stmt : CQL0056: NULL expression has no type to imply the type of the select result 'n'
 Error at test/sem_test.sql:XXXX : in str : CQL0056: NULL expression has no type to imply the type of the select result 'n'
 Error at test/sem_test.sql:XXXX : in str : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'name'
+Error at test/sem_test.sql:XXXX : in add : CQL0398: A compound select cannot be ordered by the result of an expression
 Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'a_key_'
 Error at test/sem_test.sql:XXXX : in dot : CQL0069: name not found 'a_key_'
 Error at test/sem_test.sql:XXXX : in str : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'X'

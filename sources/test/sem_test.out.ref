@@ -27128,6 +27128,175 @@ CREATE TABLE b(
 
 The statement ending at line XXXX
 
+SELECT key_, sort_key
+  FROM a
+UNION
+SELECT key_, sort_key
+  FROM b
+ORDER BY sort_key, key_;
+
+  {select_stmt}: UNION: { key_: integer notnull, sort_key: integer notnull }
+  | {select_core_list}: UNION: { key_: integer notnull, sort_key: integer notnull }
+  | | {select_core}: select: { key_: integer notnull, sort_key: integer notnull }
+  | | | {select_expr_list_con}: select: { key_: integer notnull, sort_key: integer notnull }
+  | |   | {select_expr_list}: select: { key_: integer notnull, sort_key: integer notnull }
+  | |   | | {select_expr}: key_: integer notnull
+  | |   | | | {name key_}: key_: integer notnull
+  | |   | | {select_expr_list}
+  | |   |   | {select_expr}: sort_key: integer notnull
+  | |   |     | {name sort_key}: sort_key: integer notnull
+  | |   | {select_from_etc}: TABLE { a: a }
+  | |     | {table_or_subquery_list}: TABLE { a: a }
+  | |     | | {table_or_subquery}: TABLE { a: a }
+  | |     |   | {name a}: TABLE { a: a }
+  | |     | {select_where}
+  | |       | {select_groupby}
+  | |         | {select_having}
+  | | {select_core_compound}
+  |   | {int 1}
+  |   | {select_core_list}: select: { key_: integer notnull, sort_key: integer notnull }
+  |     | {select_core}: select: { key_: integer notnull, sort_key: integer notnull }
+  |       | {select_expr_list_con}: select: { key_: integer notnull, sort_key: integer notnull }
+  |         | {select_expr_list}: select: { key_: integer notnull, sort_key: integer notnull }
+  |         | | {select_expr}: key_: integer notnull
+  |         | | | {name key_}: key_: integer notnull
+  |         | | {select_expr_list}
+  |         |   | {select_expr}: sort_key: integer notnull
+  |         |     | {name sort_key}: sort_key: integer notnull
+  |         | {select_from_etc}: TABLE { b: b }
+  |           | {table_or_subquery_list}: TABLE { b: b }
+  |           | | {table_or_subquery}: TABLE { b: b }
+  |           |   | {name b}: TABLE { b: b }
+  |           | {select_where}
+  |             | {select_groupby}
+  |               | {select_having}
+  | {select_orderby}
+    | {opt_orderby}: ok
+    | | {groupby_list}: ok
+    |   | {groupby_item}
+    |   | | {name sort_key}: sort_key: integer notnull
+    |   | {groupby_list}
+    |     | {groupby_item}
+    |       | {name key_}: key_: integer notnull
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT key_, sort_key
+  FROM a
+UNION
+SELECT key_, sort_key
+  FROM b
+ORDER BY 2, key_;
+
+  {select_stmt}: UNION: { key_: integer notnull, sort_key: integer notnull }
+  | {select_core_list}: UNION: { key_: integer notnull, sort_key: integer notnull }
+  | | {select_core}: select: { key_: integer notnull, sort_key: integer notnull }
+  | | | {select_expr_list_con}: select: { key_: integer notnull, sort_key: integer notnull }
+  | |   | {select_expr_list}: select: { key_: integer notnull, sort_key: integer notnull }
+  | |   | | {select_expr}: key_: integer notnull
+  | |   | | | {name key_}: key_: integer notnull
+  | |   | | {select_expr_list}
+  | |   |   | {select_expr}: sort_key: integer notnull
+  | |   |     | {name sort_key}: sort_key: integer notnull
+  | |   | {select_from_etc}: TABLE { a: a }
+  | |     | {table_or_subquery_list}: TABLE { a: a }
+  | |     | | {table_or_subquery}: TABLE { a: a }
+  | |     |   | {name a}: TABLE { a: a }
+  | |     | {select_where}
+  | |       | {select_groupby}
+  | |         | {select_having}
+  | | {select_core_compound}
+  |   | {int 1}
+  |   | {select_core_list}: select: { key_: integer notnull, sort_key: integer notnull }
+  |     | {select_core}: select: { key_: integer notnull, sort_key: integer notnull }
+  |       | {select_expr_list_con}: select: { key_: integer notnull, sort_key: integer notnull }
+  |         | {select_expr_list}: select: { key_: integer notnull, sort_key: integer notnull }
+  |         | | {select_expr}: key_: integer notnull
+  |         | | | {name key_}: key_: integer notnull
+  |         | | {select_expr_list}
+  |         |   | {select_expr}: sort_key: integer notnull
+  |         |     | {name sort_key}: sort_key: integer notnull
+  |         | {select_from_etc}: TABLE { b: b }
+  |           | {table_or_subquery_list}: TABLE { b: b }
+  |           | | {table_or_subquery}: TABLE { b: b }
+  |           |   | {name b}: TABLE { b: b }
+  |           | {select_where}
+  |             | {select_groupby}
+  |               | {select_having}
+  | {select_orderby}
+    | {opt_orderby}: ok
+    | | {groupby_list}: ok
+    |   | {groupby_item}
+    |   | | {int 2}: integer notnull
+    |   | {groupby_list}
+    |     | {groupby_item}
+    |       | {name key_}: key_: integer notnull
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT key_, sort_key
+  FROM a
+UNION
+SELECT key_, sort_key
+  FROM b
+ORDER BY 1 + 1, key_;
+
+Error at test/sem_test.sql:XXXX : in add : CQL0398: A compound select cannot be ordered by the result of an expression
+
+  {select_stmt}: err
+  | {select_core_list}: UNION: { key_: integer notnull, sort_key: integer notnull }
+  | | {select_core}: select: { key_: integer notnull, sort_key: integer notnull }
+  | | | {select_expr_list_con}: select: { key_: integer notnull, sort_key: integer notnull }
+  | |   | {select_expr_list}: select: { key_: integer notnull, sort_key: integer notnull }
+  | |   | | {select_expr}: key_: integer notnull
+  | |   | | | {name key_}: key_: integer notnull
+  | |   | | {select_expr_list}
+  | |   |   | {select_expr}: sort_key: integer notnull
+  | |   |     | {name sort_key}: sort_key: integer notnull
+  | |   | {select_from_etc}: TABLE { a: a }
+  | |     | {table_or_subquery_list}: TABLE { a: a }
+  | |     | | {table_or_subquery}: TABLE { a: a }
+  | |     |   | {name a}: TABLE { a: a }
+  | |     | {select_where}
+  | |       | {select_groupby}
+  | |         | {select_having}
+  | | {select_core_compound}
+  |   | {int 1}
+  |   | {select_core_list}: select: { key_: integer notnull, sort_key: integer notnull }
+  |     | {select_core}: select: { key_: integer notnull, sort_key: integer notnull }
+  |       | {select_expr_list_con}: select: { key_: integer notnull, sort_key: integer notnull }
+  |         | {select_expr_list}: select: { key_: integer notnull, sort_key: integer notnull }
+  |         | | {select_expr}: key_: integer notnull
+  |         | | | {name key_}: key_: integer notnull
+  |         | | {select_expr_list}
+  |         |   | {select_expr}: sort_key: integer notnull
+  |         |     | {name sort_key}: sort_key: integer notnull
+  |         | {select_from_etc}: TABLE { b: b }
+  |           | {table_or_subquery_list}: TABLE { b: b }
+  |           | | {table_or_subquery}: TABLE { b: b }
+  |           |   | {name b}: TABLE { b: b }
+  |           | {select_where}
+  |             | {select_groupby}
+  |               | {select_having}
+  | {select_orderby}: err
+    | {opt_orderby}: ok
+    | | {groupby_list}: ok
+    |   | {groupby_item}
+    |   | | {add}: integer notnull
+    |   |   | {int 1}: integer notnull
+    |   |   | {int 1}: integer notnull
+    |   | {groupby_list}
+    |     | {groupby_item}
+    |       | {name key_}: key_: integer notnull
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
 SELECT a.key_, a.sort_key
   FROM a
 UNION ALL
