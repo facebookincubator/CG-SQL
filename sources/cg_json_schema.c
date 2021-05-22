@@ -1221,7 +1221,14 @@ static void cg_json_views(charbuf *output) {
     ast_node *ast = item->ast;
     Invariant(is_ast_create_view_stmt(ast));
 
-    cg_json_test_details(output, ast, NULL);
+    ast_node *misc_attrs = NULL;
+    ast_node *attr_target = ast->parent;
+    if (is_ast_stmt_and_attr(attr_target)) {
+      EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc, attr_target->parent);
+      misc_attrs = misc;
+    }
+
+    cg_json_test_details(output, ast, misc_attrs);
 
     EXTRACT_OPTION(flags, ast->left);
     EXTRACT(view_and_attrs, ast->right);
@@ -1246,6 +1253,11 @@ static void cg_json_views(charbuf *output) {
     }
     if (ast->sem->region) {
       cg_json_emit_region_info(output, ast);
+    }
+
+    if (misc_attrs) {
+      bprintf(output, ",\n");
+      cg_json_misc_attrs(output, misc_attrs);
     }
 
     cg_json_projection(output, select_stmt);

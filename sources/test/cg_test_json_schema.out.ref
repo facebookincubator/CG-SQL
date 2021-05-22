@@ -1663,6 +1663,45 @@
     }
     The statement ending at line XXXX
     
+    @ATTRIBUTE(my_attribute=('any', ('tree', 'of'), 'values'))
+    @ATTRIBUTE(my_single_attribute='other_value')
+    CREATE VIEW MyViewWithAttributes AS
+    SELECT *
+      FROM Foo
+    
+    ,
+    {
+      "name" : "MyViewWithAttributes",
+      "isTemp" : 0,
+      "isDeleted" : 0,
+      "attributes" : [
+        {
+          "name" : "my_attribute",
+          "value" : ["any", ["tree", "of"], "values"]
+        },
+        {
+          "name" : "my_single_attribute",
+          "value" : "other_value"
+        }
+      ],
+      "projection" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "kind" : "ident",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "name",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ],
+      "select" : "SELECT id, name FROM Foo",
+      "selectArgs" : [  ]
+    }
+    The statement ending at line XXXX
+    
     CREATE VIEW ADeletedView AS
     SELECT *
       FROM Foo @DELETE(1)

@@ -360,6 +360,7 @@ view:  '{'
        IS_DELETED BOOL_LITERAL ','
        opt_deleted_version
        opt_region_info
+       opt_attributes
        projection
        SELECT STRING_LITERAL ','
        SELECT_ARGS '[' ']'

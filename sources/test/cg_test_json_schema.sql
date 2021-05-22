@@ -548,6 +548,19 @@ create view MyView as select * from Foo;
 -- +  CREATE VIEW MyOtherView AS
 create view MyOtherView as select * from Foo;
 
+-- TEST: a view with attributes
+-- + @ATTRIBUTE(my_attribute=('any', ('tree', 'of'), 'values'))
+-- + @ATTRIBUTE(my_single_attribute='other_value')
+-- + CREATE VIEW MyViewWithAttributes AS
+-- + "attributes" : [
+-- + "name" : "my_attribute",
+-- + "value" : ["any", ["tree", "of"], "values"]
+-- + "name" : "my_single_attribute",
+-- + "value" : "other_value"
+@attribute(my_attribute = ('any', ('tree', 'of'), 'values'))
+@attribute(my_single_attribute = 'other_value')
+create view MyViewWithAttributes as select * from Foo;
+
 -- TEST: dummy inserts
 -- + "statement" : "INSERT INTO Foo(id, name) VALUES(?, printf('name_%d', ?))",
 -- + "columns" : [ "id", "name" ],
@@ -802,7 +815,7 @@ create proc proc_args_4(like b_cursor)
 begin
 end;
 
--- TEST: args like a procedures arguments 
+-- TEST: args like a procedures arguments
 -- + "argOrigin" : "proc_args_1[arguments] arg1_x",
 -- + "argOrigin" : "proc_args_1[arguments] arg1_y",
 create proc proc_args_5(like proc_args_1 arguments)
@@ -1075,7 +1088,7 @@ end;
 -- + "checkExpr" : "id >= '_' AND id <= 'zzzzz'",
 -- + "checkExprArgs" : [  ]
 create table with_collate_and_check
-( 
+(
  id text collate bar check (id >= '_' and id <= 'zzzzz')
 );
 
