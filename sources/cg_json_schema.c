@@ -948,7 +948,14 @@ static void cg_json_indices(charbuf *output) {
     EXTRACT_ANY_NOTNULL(table_name_ast, create_index_on_list->right);
     EXTRACT_STRING(table_name, table_name_ast);
 
-    cg_json_test_details(output, ast, NULL);
+    ast_node *misc_attrs = NULL;
+    ast_node *attr_target = ast->parent;
+    if (is_ast_stmt_and_attr(attr_target)) {
+      EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc, attr_target->parent);
+      misc_attrs = misc;
+    }
+
+    cg_json_test_details(output, ast, misc_attrs);
 
     COMMA;
     bprintf(output, "{\n");
@@ -973,6 +980,11 @@ static void cg_json_indices(charbuf *output) {
       bprintf(output, ",\n\"where\" : \"");
       cg_json_vanilla_expr(output, opt_where->left);
       bprintf(output, "\"");
+    }
+
+    if (misc_attrs) {
+      bprintf(output, ",\n");
+      cg_json_misc_attrs(output, misc_attrs);
     }
 
     CHARBUF_OPEN(cols);

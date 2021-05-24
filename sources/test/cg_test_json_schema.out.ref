@@ -19,7 +19,7 @@
       "isRecreated": 0,
       "region" : "region0",
       "deployedInRegion" : "region2",
-      "indices" : [ "region_0_index", "MyIndex", "MyOtherIndex", "MyExpressionIndex", "MyPartialIndex" ],
+      "indices" : [ "region_0_index", "MyIndex", "MyOtherIndex", "MyExpressionIndex", "MyPartialIndex", "MyIndexWithAttributes" ],
       "columns" : [
         {
           "name" : "id",
@@ -1876,6 +1876,32 @@
       "ifNotExists" : 0,
       "isDeleted" : 1,
       "deletedVersion" : 1,
+      "columns" : [ "id" ],
+      "sortOrders" : [ "" ]
+    }
+    The statement ending at line XXXX
+    
+    @ATTRIBUTE(my_attribute=('any', ('tree', 'of'), 'values'))
+    @ATTRIBUTE(my_single_attribute='other_value')
+    CREATE INDEX MyIndexWithAttributes ON Foo (id)
+    
+    ,
+    {
+      "name" : "MyIndexWithAttributes",
+      "table" : "Foo",
+      "isUnique" : 0,
+      "ifNotExists" : 0,
+      "isDeleted" : 0,
+      "attributes" : [
+        {
+          "name" : "my_attribute",
+          "value" : ["any", ["tree", "of"], "values"]
+        },
+        {
+          "name" : "my_single_attribute",
+          "value" : "other_value"
+        }
+      ],
       "columns" : [ "id" ],
       "sortOrders" : [ "" ]
     }

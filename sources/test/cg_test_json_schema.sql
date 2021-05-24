@@ -39,7 +39,7 @@
 -- + "primaryKey" : [
 -- + "foreignKeys" : [
 -- + "uniqueKeys" : [
--- + "indices" : [ "region_0_index", "MyIndex", "MyOtherIndex", "MyExpressionIndex", "MyPartialIndex" ],
+-- + "indices" : [ "region_0_index", "MyIndex", "MyOtherIndex", "MyExpressionIndex", "MyPartialIndex", "MyIndexWithAttributes" ],
 -- + "region" : "region0",
 create table Foo
 (
@@ -530,6 +530,19 @@ create index MyPartialIndex on Foo(id*id) where id < 1000;
 -- + "isDeleted" : 1,
 -- + "deletedVersion" : 1
 create index YetAnotherIndex on Foo(id) @delete(1);
+
+-- TEST: an index with attributes
+-- + @ATTRIBUTE(my_attribute=('any', ('tree', 'of'), 'values'))
+-- + @ATTRIBUTE(my_single_attribute='other_value')
+-- + CREATE INDEX MyIndexWithAttributes ON Foo (id)
+-- + "attributes" : [
+-- + "name" : "my_attribute",
+-- + "value" : ["any", ["tree", "of"], "values"]
+-- + "name" : "my_single_attribute",
+-- + "value" : "other_value"
+@attribute(my_attribute = ('any', ('tree', 'of'), 'values'))
+@attribute(my_single_attribute = 'other_value')
+create index MyIndexWithAttributes on Foo(id);
 
 -- TEST: a view
 -- + "name" : "MyView",

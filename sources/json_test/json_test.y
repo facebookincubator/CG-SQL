@@ -403,6 +403,7 @@ index: '{'
         opt_deleted_version
         opt_region_info
         opt_partial_index_where
+        opt_attributes
         COLUMNS '[' column_names ']' ','
         SORT_ORDERS '[' sort_order_names ']'
        '}'
