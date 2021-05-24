@@ -1046,7 +1046,14 @@ static void cg_json_triggers(charbuf *output) {
     EXTRACT_ANY(when_expr, trigger_when_stmts->left);
     EXTRACT_NOTNULL(stmt_list, trigger_when_stmts->right);
 
-    cg_json_test_details(output, ast, NULL);
+    ast_node *misc_attrs = NULL;
+    ast_node *attr_target = ast->parent;
+    if (is_ast_stmt_and_attr(attr_target)) {
+      EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc, attr_target->parent);
+      misc_attrs = misc;
+    }
+
+    cg_json_test_details(output, ast, misc_attrs);
 
     // use the canonical name (which may be case-sensitively different)
     CSTR table_name = table_name_ast->sem->sptr->struct_name;
@@ -1086,6 +1093,11 @@ static void cg_json_triggers(charbuf *output) {
 
     if (ast->sem->region) {
       cg_json_emit_region_info(output, ast);
+    }
+
+    if (misc_attrs) {
+      bprintf(output, ",\n");
+      cg_json_misc_attrs(output, misc_attrs);
     }
 
     cg_json_dependencies(output, ast);

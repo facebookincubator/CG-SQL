@@ -935,6 +935,43 @@ begin
   select 1;
 end;
 
+-- TEST: trigger with attributes
+-- + @ATTRIBUTE(my_attribute=('any', ('tree', 'of'), 'values'))
+-- + @ATTRIBUTE(my_single_attribute='other_value')
+-- + CREATE TRIGGER trigger7
+-- + "attributes" : [
+-- + "name" : "my_attribute",
+-- + "value" : ["any", ["tree", "of"], "values"]
+-- + "name" : "my_single_attribute",
+-- + "value" : "other_value"
+@attribute(my_attribute = ('any', ('tree', 'of'), 'values'))
+@attribute(my_single_attribute = 'other_value')
+create trigger trigger7
+  after insert on Foo
+begin
+  delete from Foo where id < new.id;
+end;
+
+-- TEST: create temp trigger with attributes
+-- + @ATTRIBUTE(my_attribute=('any', ('tree', 'of'), 'values'))
+-- + @ATTRIBUTE(my_single_attribute='other_value')
+-- + CREATE TEMP TRIGGER IF NOT EXISTS trigger8
+-- + "attributes" : [
+-- + "name" : "my_attribute",
+-- + "value" : ["any", ["tree", "of"], "values"]
+-- + "name" : "my_single_attribute",
+-- + "value" : "other_value"
+@attribute(my_attribute = ('any', ('tree', 'of'), 'values'))
+@attribute(my_single_attribute = 'other_value')
+create temp trigger if not exists trigger8
+  before delete on foo
+  for each row
+  when old.id = 7
+begin
+  delete from Foo where id = id + 1;
+  delete from Foo where id = old.id;
+end;
+
 @begin_schema_region region0;
 
 -- TEST: basic delete trigger with RAISE expression

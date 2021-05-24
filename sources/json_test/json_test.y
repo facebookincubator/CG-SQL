@@ -432,6 +432,7 @@ trigger: '{'
           STATEMENT STRING_LITERAL ','
           STATEMENT_ARGS '[' opt_arg_names ']' ','
           opt_region_info
+          opt_attributes
           dependencies
          '}'
   ;

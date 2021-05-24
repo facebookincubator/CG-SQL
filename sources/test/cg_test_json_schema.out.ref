@@ -2011,6 +2011,81 @@
     }
     The statement ending at line XXXX
     
+    @ATTRIBUTE(my_attribute=('any', ('tree', 'of'), 'values'))
+    @ATTRIBUTE(my_single_attribute='other_value')
+    CREATE TRIGGER trigger7
+      AFTER INSERT ON Foo
+    BEGIN
+    DELETE FROM Foo WHERE id < new.id;
+    END
+    
+    ,
+    {
+      "name" : "trigger7",
+      "target" : "Foo",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "isDeleted" : 0,
+      "isAfterTrigger" : 1,
+      "isInsertTrigger" : 1,
+      "statement" : "CREATE TRIGGER trigger7 AFTER INSERT ON Foo BEGIN DELETE FROM Foo WHERE id < new.id; END",
+      "statementArgs" : [  ],
+      "attributes" : [
+        {
+          "name" : "my_attribute",
+          "value" : ["any", ["tree", "of"], "values"]
+        },
+        {
+          "name" : "my_single_attribute",
+          "value" : "other_value"
+        }
+      ],
+      "deleteTables" : [ "Foo" ],
+      "usesTables" : [ "Foo" ]
+    }
+    The statement ending at line XXXX
+    
+    @ATTRIBUTE(my_attribute=('any', ('tree', 'of'), 'values'))
+    @ATTRIBUTE(my_single_attribute='other_value')
+    CREATE TEMP TRIGGER IF NOT EXISTS trigger8
+      BEFORE DELETE ON foo
+      FOR EACH ROW
+      WHEN old.id = 7
+    BEGIN
+    DELETE FROM Foo WHERE id = id + 1;
+    
+    DELETE FROM Foo WHERE id = old.id;
+    END
+    
+    ,
+    {
+      "name" : "trigger8",
+      "target" : "Foo",
+      "isTemp" : 1,
+      "ifNotExists" : 1,
+      "isDeleted" : 0,
+      "isBeforeTrigger" : 1,
+      "isDeleteTrigger" : 1,
+      "forEachRow" : 1,
+      "whenExpr" : "old.id = 7",
+      "whenExprArgs" : [  ],
+      "statement" : "CREATE TEMP TRIGGER IF NOT EXISTS trigger8 BEFORE DELETE ON foo FOR EACH ROW WHEN old.id = 7 BEGIN DELETE FROM Foo WHERE id = id + 1;  DELETE FROM Foo WHERE id = old.id; END",
+      "statementArgs" : [  ],
+      "attributes" : [
+        {
+          "name" : "my_attribute",
+          "value" : ["any", ["tree", "of"], "values"]
+        },
+        {
+          "name" : "my_single_attribute",
+          "value" : "other_value"
+        }
+      ],
+      "deleteTables" : [ "Foo" ],
+      "usesTables" : [ "Foo" ]
+    }
+    The statement ending at line XXXX
+    
     CREATE TEMP TRIGGER IF NOT EXISTS trigger5
       BEFORE DELETE ON Foo
     BEGIN
