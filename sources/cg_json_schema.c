@@ -322,12 +322,25 @@ static void cg_json_ad_hoc_migration_procs(charbuf* output) {
     EXTRACT_OPTION(version, version_annotation->left);
     EXTRACT_STRING(name, version_annotation->right);
 
-    cg_json_test_details(output, ast, NULL);
+    ast_node *misc_attrs = NULL;
+    ast_node *attr_target = ast->parent;
+    if (is_ast_stmt_and_attr(attr_target)) {
+      EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc, attr_target->parent);
+      misc_attrs = misc;
+    }
+
+    cg_json_test_details(output, ast, misc_attrs);
 
     COMMA;
     bprintf(output, "{\n");
     BEGIN_INDENT(t, 2);
     bprintf(output, "\"name\" : \"%s\",\n", name);
+
+    if (misc_attrs) {
+      cg_json_misc_attrs(output, misc_attrs);
+      bprintf(output, ",\n");
+    }
+
     bprintf(output, "\"version\" : %d", version);
     END_INDENT(t);
     bprintf(output, "\n}");

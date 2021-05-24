@@ -1116,6 +1116,19 @@ end;
 -- + "version" : 2
 @schema_ad_hoc_migration(2, ad_hoc_migration_proc_2);
 
+-- TEST: ad-hoc migration proc with attributes
+-- + @ATTRIBUTE(my_attribute=('any', ('tree', 'of'), 'values'))
+-- + @ATTRIBUTE(my_single_attribute='other_value')
+-- + @SCHEMA_AD_HOC_MIGRATION(3, ad_hoc_migration_proc_3)
+-- + "attributes" : [
+-- + "name" : "my_attribute",
+-- + "value" : ["any", ["tree", "of"], "values"]
+-- + "name" : "my_single_attribute",
+-- + "value" : "other_value"
+@attribute(my_attribute = ('any', ('tree', 'of'), 'values'))
+@attribute(my_single_attribute = 'other_value')
+@schema_ad_hoc_migration(3, ad_hoc_migration_proc_3);
+
 -- TEST: make sure we can walk dependencies from a view to a table
 -- + "usesTables" : [ "Foo" ],
 -- + "usesViews" : [ "MyView" ],

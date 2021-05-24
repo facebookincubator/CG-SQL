@@ -3418,6 +3418,27 @@
       "name" : "ad_hoc_migration_proc_2",
       "version" : 2
     }
+    The statement ending at line XXXX
+    
+    @ATTRIBUTE(my_attribute=('any', ('tree', 'of'), 'values'))
+    @ATTRIBUTE(my_single_attribute='other_value')
+    @SCHEMA_AD_HOC_MIGRATION(3, ad_hoc_migration_proc_3)
+    
+    ,
+    {
+      "name" : "ad_hoc_migration_proc_3",
+      "attributes" : [
+        {
+          "name" : "my_attribute",
+          "value" : ["any", ["tree", "of"], "values"]
+        },
+        {
+          "name" : "my_single_attribute",
+          "value" : "other_value"
+        }
+      ],
+      "version" : 3
+    }
   ],
   "enums" : [
     

@@ -690,6 +690,7 @@ ad_hoc_migrations: ad_hoc_migration | ad_hoc_migration ',' ad_hoc_migrations
 
 ad_hoc_migration: '{'
                   NAME STRING_LITERAL ','
+                  opt_attributes
                   VERSION any_integer
                   '}'
   ;
