@@ -617,7 +617,10 @@
 <li><a href="#cql0395-table-valued-functions-may-not-be-used-in-an-expression-context-function_name">CQL0395: table valued functions may not be used in an expression context ‘function_name’</a></li>
 <li><a href="#cql0396-versioning-attributes-may-not-be-used-on-ddl-inside-a-procedure">CQL0396: versioning attributes may not be used on DDL inside a procedure</a></li>
 <li><a href="#cql0397-object-is-an-orphan-because-its-table-is-deleted.-remove-rather-than-delete-object_name">CQL0397: object is an orphan because its table is deleted. Remove rather than <span class="citation" data-cites="delete">@delete</span> ‘object_name’</a></li>
+<li><a href="#cql0398-a-compound-select-cannot-be-ordered-by-the-result-of-an-expression">CQL0398: A compound select cannot be ordered by the result of an expression</a></li>
+<li><a href="#rules-1">Rules</a></li>
 </ul></li>
+<li><a href="#appendix-6-cql-in-20-minutes">Appendix 6: CQL In 20 Minutes</a></li>
 </ul>
 </nav>
 <!--- @generated -->
@@ -6250,7 +6253,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Wed May 5 14:53:29 PDT 2021</p>
+<p>Snapshot as of Mon May 24 14:29:45 PDT 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -7815,6 +7818,12 @@ enforce_pop_stmt:
 </tr>
 <tr class="even">
 <td>Any new column added to a schema must have a default value or be nullable so that its initial state is clear and so that all existing insert statements do not have to be updated to include it. Either make the column nullable or give it a default value.</td>
+</tr>
+<tr class="odd">
+<td>Similarly, any column being deleted must be nullable or have a default value. The column can’t actually be deleted (not all versions of SQLite support this) so it will only be “deprecated”. But if the column is not null and has no default then it would be impossible to write a correct insert statement for the table with the deleted column.</td>
+</tr>
+<tr class="even">
+<td>As a consequence you can neither add nor remove columns that are not null and have no default.</td>
 </tr>
 </tbody>
 </table>
@@ -9404,349 +9413,1512 @@ select 1 where table_valued_func(5) = 3;</code></pre>
 <p>This error is about either a trigger or an index. In both cases you are trying to use <code>@delete</code> on the index/trigger but the table that the named object is based on is itself deleted, so the object is an orphan. Because of this, the orphaned object doesn’t need, or no longer needs, an <code>@delete</code> tombstone because when the table is dropped, all of its orphaned indices and triggers will also be dropped.</p>
 <p>To fix this error, remove the named object entirely rather than marking it <code>@delete</code>.</p>
 <p>Note: if the index/trigger was previously deleted and now the table is also deleted, it is now safe to remove the index/trigger <code>@delete</code> tombstone and this error reminds you to do so.</p>
+<hr />
+<h3 id="cql0398-a-compound-select-cannot-be-ordered-by-the-result-of-an-expression">CQL0398: A compound select cannot be ordered by the result of an expression</h3>
+<p>When specifying an <code>ORDER BY</code> for a compound select, you may only order by indicies (e.g., <code>3</code>) or names (e.g., <code>foo</code>) that correspond to an output column, not by the result of an arbitrary expression (e.g., <code>foo + bar</code>).</p>
+<p>For example, this is allowed:</p>
+<div class="sourceCode" id="cb443"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb443-1"><a href="#cb443-1"></a><span class="kw">SELECT</span> x, y <span class="kw">FROM</span> t0 <span class="kw">UNION</span> <span class="kw">ALL</span> <span class="kw">select</span> x, y <span class="kw">FROM</span> t1 <span class="kw">ORDER</span> <span class="kw">BY</span> y</span></code></pre></div>
+<p>The equivalent using an index is also allowed:</p>
+<div class="sourceCode" id="cb444"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb444-1"><a href="#cb444-1"></a><span class="kw">SELECT</span> x, y <span class="kw">FROM</span> t0 <span class="kw">UNION</span> <span class="kw">ALL</span> <span class="kw">select</span> x, y <span class="kw">FROM</span> t1 <span class="kw">ORDER</span> <span class="kw">BY</span> <span class="dv">2</span></span></code></pre></div>
+<p>This seemingly equivalent version containing an arbitrary expression, however, is not:</p>
+<div class="sourceCode" id="cb445"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb445-1"><a href="#cb445-1"></a><span class="kw">SELECT</span> x, y <span class="kw">FROM</span> t0 <span class="kw">UNION</span> <span class="kw">ALL</span> <span class="kw">select</span> x, y <span class="kw">FROM</span> t1 <span class="kw">ORDER</span> <span class="kw">BY</span> <span class="dv">1</span> <span class="op">+</span> <span class="dv">1</span>;</span></code></pre></div>
 <table style="width:7%;">
 <colgroup>
 <col style="width: 6%" />
 </colgroup>
 <thead>
 <tr class="header">
-<th>CQL 0398 : unused, this was added to prevent merge conflicts at the end on literally every checkin</th>
+<th>CQL 0399 : unused, this was added to prevent merge conflicts at the end on literally every checkin</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>CQL 0399 : unused, this was added to prevent merge conflicts at the end on literally every checkin</td>
+<td>CQL 0400 : unused, this was added to prevent merge conflicts at the end on literally every checkin</td>
+</tr>
+<tr class="even">
+<td>## Appendix 5: JSON Schema Grammar &lt;!— – Copyright (c) Facebook, Inc. and its affiliates.</td>
 </tr>
 </tbody>
 </table>
-<p>CQL 0400 : unused, this was added to prevent merge conflicts at the end on literally every checkin</p>
+<p>– This source code is licensed under the MIT license found in the – LICENSE file in the root directory of this source tree. –&gt;</p>
+<p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
+<p>Snapshot as of Mon May 24 14:29:46 PDT 2021</p>
+<h3 id="rules-1">Rules</h3>
 <pre><code>
-----
-CQL 0396 : unused, this was added to prevent merge conflicts at the end on literally every checkin
-----
-CQL 0397 : unused, this was added to prevent merge conflicts at the end on literally every checkin
-----
-CQL 0398 : unused, this was added to prevent merge conflicts at the end on literally every checkin
-----
-CQL 0399 : unused, this was added to prevent merge conflicts at the end on literally every checkin
-----
-CQL 0400 : unused, this was added to prevent merge conflicts at the end on literally every checkin
 
+json_schema: &#39;{&#39;
+         &#39;&quot;tables&quot;&#39; &#39;:&#39; &#39;[&#39; opt_tables &#39;]&#39; &#39;,&#39;
+         &#39;&quot;virtualTables&quot;&#39; &#39;:&#39; &#39;[&#39; opt_virtual_tables &#39;]&#39; &#39;,&#39;
+         &#39;&quot;views&quot;&#39; &#39;:&#39; &#39;[&#39; opt_views &#39;]&#39; &#39;,&#39;
+         &#39;&quot;indices&quot;&#39; &#39;:&#39; &#39;[&#39; opt_indices &#39;]&#39; &#39;,&#39;
+         &#39;&quot;triggers&quot;&#39; &#39;:&#39; &#39;[&#39; opt_triggers &#39;]&#39; &#39;,&#39;
+         &#39;&quot;attributes&quot;&#39; &#39;:&#39; &#39;[&#39; opt_attribute_list &#39;]&#39; &#39;,&#39;
+         &#39;&quot;queries&quot;&#39; &#39;:&#39; &#39;[&#39; opt_queries &#39;]&#39; &#39;,&#39;
+         &#39;&quot;inserts&quot;&#39; &#39;:&#39; &#39;[&#39; opt_inserts &#39;]&#39; &#39;,&#39;
+         &#39;&quot;generalInserts&quot;&#39; &#39;:&#39; &#39;[&#39; opt_inserts_general &#39;]&#39; &#39;,&#39;
+         &#39;&quot;updates&quot;&#39; &#39;:&#39; &#39;[&#39; opt_updates &#39;]&#39; &#39;,&#39;
+         &#39;&quot;deletes&quot;&#39; &#39;:&#39; &#39;[&#39; opt_deletes &#39;]&#39; &#39;,&#39;
+         &#39;&quot;general&quot;&#39; &#39;:&#39; &#39;[&#39; opt_generals &#39;]&#39; &#39;,&#39;
+         &#39;&quot;regions&quot;&#39; &#39;:&#39; &#39;[&#39; opt_regions &#39;]&#39; &#39;,&#39;
+         &#39;&quot;adHocMigrationProcs&quot;&#39; &#39;:&#39; &#39;[&#39; opt_ad_hoc_migrations &#39;]&#39; &#39;,&#39;
+         &#39;&quot;enums&quot;&#39; &#39;:&#39;  &#39;[&#39; opt_enums &#39;]&#39;
+         &#39;}&#39;
+  ;
 
+BOOL_LITERAL: &#39;0&#39; | &#39;1&#39;
+  ;
 
-## Appendix 5: JSON Schema Grammar
-&lt;!---
+opt_tables: | tables
+  ;
+
+tables: table | table &#39;,&#39; tables
+  ;
+
+table: &#39;{&#39;
+       &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+       &#39;&quot;isTemp&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
+       &#39;&quot;ifNotExists&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
+       &#39;&quot;withoutRowid&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
+       &#39;&quot;isAdded&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
+       opt_added_version
+       &#39;&quot;isDeleted&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
+       opt_deleted_version
+       &#39;&quot;isRecreated&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
+       opt_recreate_group_name
+       opt_region_info
+       opt_table_indices
+       opt_attributes
+       &#39;&quot;columns&quot;&#39; &#39;:&#39; &#39;[&#39; columns &#39;]&#39; &#39;,&#39;
+       &#39;&quot;primaryKey&quot;&#39; &#39;:&#39; &#39;[&#39; opt_column_names &#39;]&#39; &#39;,&#39;
+       PRIMARY_KEY_SORT_ORDERS &#39;[&#39; opt_sort_order_names &#39;]&#39; &#39;,&#39;
+       opt_primary_key_name
+       &#39;&quot;foreignKeys&quot;&#39; &#39;:&#39; &#39;[&#39; opt_foreign_keys &#39;]&#39; &#39;,&#39;
+       &#39;&quot;uniqueKeys&quot;&#39; &#39;:&#39; &#39;[&#39; opt_unique_keys &#39;]&#39; &#39;,&#39;
+       &#39;&quot;checkExpressions&quot;&#39; &#39;:&#39; &#39;[&#39; opt_check_expressions &#39;]&#39;
+       &#39;}&#39;
+  ;
+
+opt_primary_key_name:  | &#39;&quot;primaryKeyName&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+  ;
+
+opt_virtual_tables: | virtual_tables
+  ;
+
+virtual_tables: virtual_table | virtual_table &#39;,&#39; virtual_tables
+  ;
+
+virtual_table: &#39;{&#39;
+       &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+       &#39;&quot;isTemp&quot;&#39; &#39;:&#39; &#39;0&#39; &#39;,&#39;
+       &#39;&quot;ifNotExists&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
+       &#39;&quot;withoutRowid&quot;&#39; &#39;:&#39; &#39;0&#39; &#39;,&#39;
+       &#39;&quot;isAdded&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
+       opt_added_version
+       &#39;&quot;isDeleted&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
+       opt_deleted_version
+       &#39;&quot;isRecreated&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
+       opt_region_info
+       &#39;&quot;isVirtual&quot;&#39; &#39;:&#39; &#39;1&#39; &#39;,&#39;
+       &#39;&quot;module&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+       opt_module_args
+       opt_attributes
+       &#39;&quot;columns&quot;&#39; &#39;:&#39; &#39;[&#39; columns &#39;]&#39; &#39;,&#39;
+       &#39;&quot;primaryKey&quot;&#39; &#39;:&#39; &#39;[&#39; opt_column_names &#39;]&#39; &#39;,&#39;
+       PRIMARY_KEY_SORT_ORDERS &#39;[&#39; opt_sort_order_names &#39;]&#39; &#39;,&#39;
+       &#39;&quot;foreignKeys&quot;&#39; &#39;:&#39; &#39;[&#39; opt_foreign_keys &#39;]&#39; &#39;,&#39;
+       &#39;&quot;uniqueKeys&quot;&#39; &#39;:&#39; &#39;[&#39; opt_unique_keys &#39;]&#39; &#39;,&#39;
+       &#39;&quot;checkExpressions&quot;&#39; &#39;:&#39; &#39;[&#39; opt_check_expressions &#39;]&#39;
+       &#39;}&#39;
+  ;
+
+opt_module_args: | &#39;&quot;moduleArgs&quot;&#39; &#39;:&#39;  STRING_LITERAL &#39;,&#39;
+  ;
+
+opt_added_version: | &#39;&quot;addedVersion&quot;&#39; &#39;:&#39; any_integer &#39;,&#39; opt_added_migration_proc
+  ;
+
+opt_added_migration_proc: | &#39;&quot;addedMigrationProc&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+  ;
+
+opt_deleted_version: | &#39;&quot;deletedVersion&quot;&#39; &#39;:&#39; any_integer &#39;,&#39; opt_deleted_migration_proc
+  ;
+
+opt_deleted_migration_proc: | &#39;&quot;deletedMigrationProc&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+  ;
+
+opt_recreate_group_name: | &#39;&quot;recreateGroupName&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+  ;
+
+opt_index_names: | index_names
+  ;
+
+index_names: STRING_LITERAL | STRING_LITERAL &#39;,&#39; index_names
+  ;
+
+opt_arg_names: | arg_names
+  ;
+
+arg_names: STRING_LITERAL | STRING_LITERAL &#39;,&#39; arg_names
+  ;
+
+opt_column_names: | column_names
+  ;
+
+column_names: STRING_LITERAL | STRING_LITERAL &#39;,&#39; column_names
+  ;
+
+opt_table_names: | table_names
+  ;
+
+table_names: STRING_LITERAL | STRING_LITERAL &#39;,&#39; table_names
+  ;
+
+opt_view_names: | view_names
+  ;
+
+view_names: STRING_LITERAL | STRING_LITERAL &#39;,&#39; view_names
+  ;
+
+opt_procedure_names: | procedure_names
+  ;
+
+procedure_names: STRING_LITERAL | STRING_LITERAL &#39;,&#39; procedure_names
+  ;
+
+opt_sort_order_names: | sort_order_names
+  ;
+
+sort_order_names: STRING_LITERAL | STRING_LITERAL &#39;,&#39; sort_order_names
+  ;
+
+columns: column | column &#39;,&#39; columns
+  ;
+
+column: &#39;{&#39;
+        &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+        opt_attributes
+        &#39;&quot;type&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+        opt_kind
+        opt_is_sensitive
+        &#39;&quot;isNotNull&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
+        &#39;&quot;isAdded&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
+        opt_added_version
+        &#39;&quot;isDeleted&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
+        opt_deleted_version
+        opt_default_value
+        opt_collate
+        opt_check_expr
+        &#39;&quot;isPrimaryKey&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
+        &#39;&quot;isUniqueKey&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
+        &#39;&quot;isAutoIncrement&quot;&#39; &#39;:&#39; BOOL_LITERAL
+        &#39;}&#39;
+  ;
+
+opt_collate : | &#39;&quot;collate&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+  ;
+
+opt_check_expr: | &#39;&quot;checkExpr&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39; &#39;&quot;checkExprArgs&quot;&#39; &#39;:&#39; &#39;[&#39; opt_arg_names &#39;]&#39; &#39;,&#39;
+  ;
+
+opt_default_value: | &#39;&quot;defaultValue&quot;&#39; &#39;:&#39; any_literal &#39;,&#39;
+  ;
+
+opt_foreign_keys : | foreign_keys
+  ;
+
+opt_kind: | &#39;&quot;kind&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+  ;
+
+opt_is_sensitive: | &#39;&quot;isSensitive&quot;&#39; &#39;:&#39; &#39;1&#39; &#39;,&#39;
+  ;
+
+foreign_keys :  foreign_key | foreign_key &#39;,&#39; foreign_keys
+  ;
+
+foreign_key : &#39;{&#39;
+               opt_name
+               &#39;&quot;columns&quot;&#39; &#39;:&#39; &#39;[&#39; column_names &#39;]&#39; &#39;,&#39;
+               &#39;&quot;referenceTable&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+               &#39;&quot;referenceColumns&quot;&#39; &#39;:&#39; &#39;[&#39; column_names &#39;]&#39; &#39;,&#39;
+               &#39;&quot;onUpdate&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+               &#39;&quot;onDelete&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+               &#39;&quot;isDeferred&quot;&#39; &#39;:&#39; BOOL_LITERAL
+              &#39;}&#39;
+  ;
+
+opt_unique_keys :  | unique_keys
+  ;
+
+unique_keys : unique_key | unique_key &#39;,&#39; unique_keys
+  ;
+
+unique_key:  &#39;{&#39;
+              opt_name
+              &#39;&quot;columns&quot;&#39; &#39;:&#39; &#39;[&#39; column_names &#39;]&#39; &#39;,&#39;
+              &#39;&quot;sortOrders&quot;&#39; &#39;:&#39; &#39;[&#39; sort_order_names &#39;]&#39;
+             &#39;}&#39;
+  ;
+
+opt_check_expressions: | check_expressions
+  ;
+
+check_expressions: check_expression | check_expression &#39;,&#39; check_expressions
+  ;
+
+check_expression: &#39;{&#39;
+                   opt_name
+                   &#39;&quot;checkExpr&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+                   &#39;&quot;checkExprArgs&quot;&#39; &#39;:&#39; &#39;[&#39; &#39;]&#39;
+                  &#39;}&#39;
+  ;
+
+opt_name: | &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+  ;
+
+opt_table_indices: | table_indices
+  ;
+
+table_indices: &#39;&quot;indices&quot;&#39; &#39;:&#39; &#39;[&#39; opt_index_names &#39;]&#39; &#39;,&#39;
+  ;
+
+opt_attributes:  | attributes
+  ;
+
+attributes: &#39;&quot;attributes&quot;&#39; &#39;:&#39; &#39;[&#39; attribute_list &#39;]&#39; &#39;,&#39;
+  ;
+
+opt_attribute_list: | attribute_list
+  ;
+
+attribute_list: attribute | attribute &#39;,&#39; attribute_list
+  ;
+
+attribute:  &#39;{&#39;
+             &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+             &#39;&quot;value&quot;&#39; &#39;:&#39; attribute_value
+            &#39;}&#39;
+  ;
+
+attribute_array: &#39;[&#39; opt_attribute_value_list &#39;]&#39;
+  ;
+
+opt_attribute_value_list: | attribute_value_list
+  ;
+
+attribute_value_list: attribute_value | attribute_value &#39;,&#39; attribute_value_list
+  ;
+
+attribute_value: any_literal | attribute_array
+  ;
+
+any_integer: BOOL_LITERAL | INT_LITERAL
+  ;
+
+any_literal:  BOOL_LITERAL |
+              INT_LITERAL | &#39;-&#39; INT_LITERAL |
+              LONG_LITERAL | &#39;-&#39; LONG_LITERAL |
+              REAL_LITERAL | &#39;-&#39; REAL_LITERAL |
+              STRING_LITERAL | NULL_LITERAL
+  ;
+
+num_literal:  BOOL_LITERAL |
+              INT_LITERAL | &#39;-&#39; INT_LITERAL |
+              LONG_LITERAL | &#39;-&#39; LONG_LITERAL |
+              REAL_LITERAL | &#39;-&#39; REAL_LITERAL
+  ;
+
+opt_views: | views
+  ;
+
+views: view | view &#39;,&#39; views
+  ;
+
+view:  &#39;{&#39;
+       &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+       &#39;&quot;isTemp&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
+       &#39;&quot;isDeleted&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
+       opt_deleted_version
+       opt_region_info
+       opt_attributes
+       projection
+       &#39;&quot;select&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+       &#39;&quot;selectArgs&quot;&#39; &#39;:&#39; &#39;[&#39; &#39;]&#39;
+       &#39;}&#39;
+  ;
+
+opt_region_info: | &#39;&quot;region&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39; |  &#39;&quot;region&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39; &#39;&quot;deployedInRegion&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+  ;
+
+opt_projection: | projection
+  ;
+
+projection: &#39;&quot;projection&quot;&#39; &#39;:&#39; &#39;[&#39; projected_columns &#39;]&#39; &#39;,&#39;
+  ;
+
+projected_columns: projected_column | projected_column &#39;,&#39; projected_columns
+  ;
+
+projected_column: &#39;{&#39;
+                   &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+                   &#39;&quot;type&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+                   opt_kind
+                   opt_is_sensitive
+                   &#39;&quot;isNotNull&quot;&#39; &#39;:&#39; BOOL_LITERAL
+                  &#39;}&#39;
+  ;
+
+opt_indices:  | indices
+  ;
+
+indices: index  | index &#39;,&#39; indices
+  ;
+
+index: &#39;{&#39;
+        &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+        &#39;&quot;table&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+        &#39;&quot;isUnique&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
+        &#39;&quot;ifNotExists&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
+        &#39;&quot;isDeleted&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
+        opt_deleted_version
+        opt_region_info
+        opt_partial_index_where
+        opt_attributes
+        &#39;&quot;columns&quot;&#39; &#39;:&#39; &#39;[&#39; column_names &#39;]&#39; &#39;,&#39;
+        &#39;&quot;sortOrders&quot;&#39; &#39;:&#39; &#39;[&#39; sort_order_names &#39;]&#39;
+       &#39;}&#39;
+  ;
+
+opt_partial_index_where: | &#39;&quot;where&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+  ;
+
+opt_triggers: | triggers
+  ;
+
+triggers: trigger | trigger &#39;,&#39; triggers
+  ;
+
+trigger: &#39;{&#39;
+          &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+          &#39;&quot;target&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+          &#39;&quot;isTemp&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
+          &#39;&quot;ifNotExists&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
+          &#39;&quot;isDeleted&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
+          opt_deleted_version
+          before_after_instead &#39;,&#39;
+          delete_insert_update &#39;,&#39;
+          opt_for_each_row
+          opt_when_expr
+          &#39;&quot;statement&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+          &#39;&quot;statementArgs&quot;&#39; &#39;:&#39; &#39;[&#39; opt_arg_names &#39;]&#39; &#39;,&#39;
+          opt_region_info
+          opt_attributes
+          dependencies
+         &#39;}&#39;
+  ;
+
+before_after_instead: &#39;&quot;isBeforeTrigger&quot;&#39; &#39;:&#39; &#39;1&#39; | &#39;&quot;isAfterTrigger&quot;&#39; &#39;:&#39; &#39;1&#39;  | &#39;&quot;isInsteadOfTrigger&quot;&#39; &#39;:&#39; &#39;1&#39;
+  ;
+
+delete_insert_update: &#39;&quot;isDeleteTrigger&quot;&#39; &#39;:&#39; &#39;1&#39; | &#39;&quot;isInsertTrigger&quot;&#39; &#39;:&#39; &#39;1&#39; | &#39;&quot;isUpdateTrigger&quot;&#39; &#39;:&#39; &#39;1&#39;
+  ;
+
+opt_for_each_row: | &#39;&quot;forEachRow&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
+  ;
+
+opt_when_expr: | &#39;&quot;whenExpr&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39; &#39;&quot;whenExprArgs&quot;&#39; &#39;:&#39; &#39;[&#39; opt_arg_names &#39;]&#39; &#39;,&#39;
+  ;
+
+dependencies: opt_insert_tables
+            opt_update_tables
+            opt_delete_tables
+            opt_from_tables
+            opt_uses_procedures
+            opt_uses_views
+            &#39;&quot;usesTables&quot;&#39; &#39;:&#39; &#39;[&#39; opt_table_names &#39;]&#39;
+  ;
+
+opt_uses_views: | &#39;&quot;usesViews&quot;&#39; &#39;:&#39; &#39;[&#39; opt_view_names &#39;]&#39; &#39;,&#39;
+  ;
+
+opt_insert_tables: | &#39;&quot;insertTables&quot;&#39; &#39;:&#39; &#39;[&#39; opt_table_names &#39;]&#39; &#39;,&#39;
+  ;
+
+opt_update_tables: | &#39;&quot;updateTables&quot;&#39; &#39;:&#39; &#39;[&#39; opt_table_names &#39;]&#39; &#39;,&#39;
+  ;
+
+opt_delete_tables: | &#39;&quot;deleteTables&quot;&#39; &#39;:&#39; &#39;[&#39; opt_table_names &#39;]&#39; &#39;,&#39;
+  ;
+
+opt_from_tables: | &#39;&quot;fromTables&quot;&#39; &#39;:&#39; &#39;[&#39; opt_table_names &#39;]&#39; &#39;,&#39;
+  ;
+
+opt_uses_procedures : | &#39;&quot;usesProcedures&quot;&#39; &#39;:&#39; &#39;[&#39; opt_procedure_names &#39;]&#39; &#39;,&#39;
+  ;
+
+opt_queries: | queries ;
+
+queries: query | query &#39;,&#39; queries ;
+
+query: &#39;{&#39;
+       &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+       &#39;&quot;definedInFile&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+       &#39;&quot;args&quot;&#39; &#39;:&#39; &#39;[&#39; opt_args &#39;]&#39; &#39;,&#39;
+       dependencies &#39;,&#39;
+       opt_region_info
+       opt_attributes
+       projection
+       &#39;&quot;statement&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+       &#39;&quot;statementArgs&quot;&#39; &#39;:&#39; &#39;[&#39; opt_arg_names &#39;]&#39;
+       &#39;}&#39;
+  ;
+
+opt_args: | args
+  ;
+
+args: arg | arg &#39;,&#39; args
+  ;
+
+arg: &#39;{&#39;
+      &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+      &#39;&quot;argOrigin&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+      &#39;&quot;type&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+      opt_kind
+      opt_is_sensitive
+      &#39;&quot;isNotNull&quot;&#39; &#39;:&#39; BOOL_LITERAL
+      &#39;}&#39;
+  ;
+
+opt_inserts: | inserts
+  ;
+
+inserts: insert | insert &#39;,&#39; inserts
+  ;
+
+insert : &#39;{&#39; insert_details &#39;,&#39; &#39;&quot;values&quot;&#39; &#39;:&#39; &#39;[&#39; opt_values &#39;]&#39; &#39;}&#39;
+  ;
+
+opt_inserts_general: | inserts_general
+  ;
+
+inserts_general: insert_general | insert_general &#39;,&#39; inserts_general
+  ;
+
+insert_details:
+         &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+         &#39;&quot;definedInFile&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+         &#39;&quot;args&quot;&#39; &#39;:&#39; &#39;[&#39; opt_args &#39;]&#39; &#39;,&#39;
+         dependencies &#39;,&#39;
+         opt_region_info
+         opt_attributes
+         &#39;&quot;table&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+         &#39;&quot;statement&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+         &#39;&quot;statementArgs&quot;&#39; &#39;:&#39; &#39;[&#39; opt_arg_names &#39;]&#39; &#39;,&#39;
+         &#39;&quot;statementType&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+         &#39;&quot;columns&quot;&#39; &#39;:&#39; &#39;[&#39; column_names &#39;]&#39;
+
+insert_general : &#39;{&#39; insert_details &#39;}&#39;
+  ;
+
+opt_values: | values
+  ;
+
+values: value | value &#39;,&#39; values
+  ;
+
+value:  &#39;{&#39;
+         &#39;&quot;value&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+         &#39;&quot;valueArgs&quot;&#39; &#39;:&#39; &#39;[&#39; opt_arg_names &#39;]&#39;
+        &#39;}&#39;
+  ;
+
+opt_updates: | updates
+  ;
+
+updates: update | update &#39;,&#39; updates
+  ;
+
+update : &#39;{&#39;
+         &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+         &#39;&quot;definedInFile&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+         &#39;&quot;args&quot;&#39; &#39;:&#39; &#39;[&#39; opt_args &#39;]&#39; &#39;,&#39;
+         dependencies &#39;,&#39;
+         opt_region_info
+         opt_attributes
+         &#39;&quot;table&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+         &#39;&quot;statement&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+         &#39;&quot;statementArgs&quot;&#39; &#39;:&#39; &#39;[&#39; opt_arg_names &#39;]&#39;
+         &#39;}&#39;
+  ;
+
+opt_deletes: | deletes
+  ;
+
+deletes: delete | delete &#39;,&#39; deletes
+  ;
+
+delete : &#39;{&#39;
+         &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+         &#39;&quot;definedInFile&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+         &#39;&quot;args&quot;&#39; &#39;:&#39; &#39;[&#39; opt_args &#39;]&#39; &#39;,&#39;
+         dependencies &#39;,&#39;
+         opt_region_info
+         opt_attributes
+         &#39;&quot;table&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+         &#39;&quot;statement&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+         &#39;&quot;statementArgs&quot;&#39; &#39;:&#39; &#39;[&#39; opt_arg_names &#39;]&#39;
+         &#39;}&#39;
+  ;
+
+opt_generals: | generals
+  ;
+
+generals: general | general &#39;,&#39; generals
+  ;
+
+general: &#39;{&#39;
+          &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+          &#39;&quot;definedInFile&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+          &#39;&quot;args&quot;&#39; &#39;:&#39; &#39;[&#39; opt_complex_args &#39;]&#39; &#39;,&#39;
+          dependencies &#39;,&#39;
+          opt_regions
+          opt_attributes
+          opt_projection
+          opt_result_contract
+          &#39;&quot;usesDatabase&quot;&#39; &#39;:&#39; BOOL_LITERAL
+         &#39;}&#39;
+  ;
+
+opt_result_contract: | &#39;&quot;hasSelectResult&quot;&#39; &#39;:&#39; &#39;1&#39; &#39;,&#39; | &#39;&quot;hasOutResult&quot;&#39; &#39;:&#39; &#39;1&#39; &#39;,&#39; | &#39;&quot;hasOutUnionResult&quot;&#39; &#39;:&#39;&#39;1&#39; &#39;,&#39;
+  ;
+
+opt_complex_args: | complex_args
+  ;
+
+complex_args: complex_arg | complex_arg &#39;,&#39; complex_args
+  ;
+
+complex_arg: &#39;{&#39;
+              binding
+              &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+              &#39;&quot;argOrigin&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+              &#39;&quot;type&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+              opt_kind
+              opt_is_sensitive
+              &#39;&quot;isNotNull&quot;&#39; &#39;:&#39; BOOL_LITERAL
+             &#39;}&#39;
+  ;
+
+binding: | &#39;&quot;binding&quot;&#39; &#39;:&#39; &#39;&quot;inout&quot;&#39; &#39;,&#39; | &#39;&quot;binding&quot;&#39; &#39;:&#39; &#39;&quot;out&quot;&#39; &#39;,&#39;
+  ;
+
+opt_enums: | enums
+  ;
+
+enums: enum | enum &#39;,&#39; enums
+  ;
+
+enum: &#39;{&#39;
+      &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+      &#39;&quot;type&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+      &#39;&quot;isNotNull&quot;&#39; &#39;:&#39; &#39;1&#39; &#39;,&#39;
+      &#39;&quot;values&quot;&#39; &#39;:&#39; &#39;[&#39; enum_values &#39;]&#39;
+      &#39;}&#39;
+  ;
+
+enum_values: enum_value | enum_value &#39;,&#39; enum_values
+  ;
+
+enum_value: &#39;{&#39;
+             &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+             &#39;&quot;value&quot;&#39; &#39;:&#39; num_literal
+            &#39;}&#39;
+  ;
+
+opt_regions: | regions
+  ;
+
+regions: region | region &#39;,&#39; regions
+  ;
+
+region:  &#39;{&#39;
+          &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+          &#39;&quot;isDeployableRoot&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
+          &#39;&quot;deployedInRegion&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+          &#39;&quot;using&quot;&#39; &#39;:&#39; &#39;[&#39; opt_region_names &#39;]&#39; &#39;,&#39;
+          &#39;&quot;usingPrivately&quot;&#39; &#39;:&#39; &#39;[&#39; opt_bool_list &#39;]&#39;
+         &#39;}&#39;
+  ;
+
+opt_region_names: | region_names
+  ;
+
+region_names: STRING_LITERAL | STRING_LITERAL &#39;,&#39; region_names
+  ;
+
+opt_bool_list: | bool_list
+  ;
+
+bool_list: BOOL_LITERAL | BOOL_LITERAL &#39;,&#39; bool_list
+  ;
+
+opt_ad_hoc_migrations: | ad_hoc_migrations
+  ;
+
+ad_hoc_migrations: ad_hoc_migration | ad_hoc_migration &#39;,&#39; ad_hoc_migrations
+  ;
+
+ad_hoc_migration: &#39;{&#39;
+                  &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+                  opt_attributes
+                  &#39;&quot;version&quot;&#39; &#39;:&#39; any_integer
+                  &#39;}&#39;
+  ;
+</code></pre>
+<h2 id="appendix-6-cql-in-20-minutes">Appendix 6: CQL In 20 Minutes</h2>
+<!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
---&gt;
+-->
+<p>What follows is a series of examples intended to illustrate the most important features of the CQL language. This appendix was significantly influenced by a similar article on Python at https://learnxinyminutes.com/docs/python/</p>
+<p>Also of interest: * http://sqlite.org * https://learnxinyminutes.com/docs/sql</p>
+<p>And with no further delay, CQL in 20 minutes…</p>
+<pre><code>-- Single line comments start with two dashes
 
-What follows is taken from the JSON validation grammar with the tree building rules removed.
+/* C style comments also work
+ *
+ * C pre-processor features like #include and #define are generally available
+ * CQL is typically run through the C pre-processor before it is compile.
+ */
 
-Snapshot as of Wed May  5 14:53:30 PDT 2021
+/**********************************************************
+ * 1. Primitive Datatypes and Operators
+ *********************************************************/
 
-### Rules
-</code></pre>
-<p>json_schema: ‘{’ ‘“tables”’ ‘:’ ‘[’ opt_tables ’]’ ‘,’ ‘“virtualTables”’ ‘:’ ‘[’ opt_virtual_tables ’]’ ‘,’ ‘“views”’ ‘:’ ‘[’ opt_views ’]’ ‘,’ ‘“indices”’ ‘:’ ‘[’ opt_indices ’]’ ‘,’ ‘“triggers”’ ‘:’ ‘[’ opt_triggers ’]’ ‘,’ ‘“attributes”’ ‘:’ ‘[’ opt_attribute_list ’]’ ‘,’ ‘“queries”’ ‘:’ ‘[’ opt_queries ’]’ ‘,’ ‘“inserts”’ ‘:’ ‘[’ opt_inserts ’]’ ‘,’ ‘“generalInserts”’ ‘:’ ‘[’ opt_inserts_general ’]’ ‘,’ ‘“updates”’ ‘:’ ‘[’ opt_updates ’]’ ‘,’ ‘“deletes”’ ‘:’ ‘[’ opt_deletes ’]’ ‘,’ ‘“general”’ ‘:’ ‘[’ opt_generals ’]’ ‘,’ ‘“regions”’ ‘:’ ‘[’ opt_regions ’]’ ‘,’ ‘“adHocMigrationProcs”’ ‘:’ ‘[’ opt_ad_hoc_migrations ’]’ ‘,’ ‘“enums”’ ‘:’ ‘[’ opt_enums ’]’ ‘}’ ;</p>
-<p>BOOL_LITERAL: ‘0’ | ‘1’ ;</p>
-<p>opt_tables: | tables ;</p>
-<p>tables: table | table ‘,’ tables ;</p>
-<p>table: ‘{’ ‘“name”’ ‘:’ STRING_LITERAL ‘,’ ‘“isTemp”’ ‘:’ BOOL_LITERAL ‘,’ ‘“ifNotExists”’ ‘:’ BOOL_LITERAL ‘,’ ‘“withoutRowid”’ ‘:’ BOOL_LITERAL ‘,’ ‘“isAdded”’ ‘:’ BOOL_LITERAL ‘,’ opt_added_version ‘“isDeleted”’ ‘:’ BOOL_LITERAL ‘,’ opt_deleted_version ‘“isRecreated”’ ‘:’ BOOL_LITERAL ‘,’ opt_recreate_group_name opt_region_info opt_table_indices opt_attributes ‘“columns”’ ‘:’ ‘[’ columns ’]’ ‘,’ ‘“primaryKey”’ ‘:’ ‘[’ opt_column_names ’]’ ‘,’ PRIMARY_KEY_SORT_ORDERS ‘[’ opt_sort_order_names ’]’ ‘,’ opt_primary_key_name ‘“foreignKeys”’ ‘:’ ‘[’ opt_foreign_keys ’]’ ‘,’ ‘“uniqueKeys”’ ‘:’ ‘[’ opt_unique_keys ’]’ ‘,’ ‘“checkExpressions”’ ‘:’ ‘[’ opt_check_expressions ’]’ ‘}’ ;</p>
-<p>opt_primary_key_name: | ‘“primaryKeyName”’ ‘:’ STRING_LITERAL ‘,’ ;</p>
-<p>opt_virtual_tables: | virtual_tables ;</p>
-<p>virtual_tables: virtual_table | virtual_table ‘,’ virtual_tables ;</p>
-<p>virtual_table: ‘{’ ‘“name”’ ‘:’ STRING_LITERAL ‘,’ ‘“isTemp”’ ‘:’ ‘0’ ‘,’ ‘“ifNotExists”’ ‘:’ BOOL_LITERAL ‘,’ ‘“withoutRowid”’ ‘:’ ‘0’ ‘,’ ‘“isAdded”’ ‘:’ BOOL_LITERAL ‘,’ opt_added_version ‘“isDeleted”’ ‘:’ BOOL_LITERAL ‘,’ opt_deleted_version ‘“isRecreated”’ ‘:’ BOOL_LITERAL ‘,’ opt_region_info ‘“isVirtual”’ ‘:’ ‘1’ ‘,’ ‘“module”’ ‘:’ STRING_LITERAL ‘,’ opt_module_args opt_attributes ‘“columns”’ ‘:’ ‘[’ columns ’]’ ‘,’ ‘“primaryKey”’ ‘:’ ‘[’ opt_column_names ’]’ ‘,’ PRIMARY_KEY_SORT_ORDERS ‘[’ opt_sort_order_names ’]’ ‘,’ ‘“foreignKeys”’ ‘:’ ‘[’ opt_foreign_keys ’]’ ‘,’ ‘“uniqueKeys”’ ‘:’ ‘[’ opt_unique_keys ’]’ ‘,’ ‘“checkExpressions”’ ‘:’ ‘[’ opt_check_expressions ’]’ ‘}’ ;</p>
-<p>opt_module_args: | ‘“moduleArgs”’ ‘:’ STRING_LITERAL ‘,’ ;</p>
-<p>opt_added_version: | ‘“addedVersion”’ ‘:’ any_integer ‘,’ opt_added_migration_proc ;</p>
-<p>opt_added_migration_proc: | ‘“addedMigrationProc”’ ‘:’ STRING_LITERAL ‘,’ ;</p>
-<p>opt_deleted_version: | ‘“deletedVersion”’ ‘:’ any_integer ‘,’ opt_deleted_migration_proc ;</p>
-<p>opt_deleted_migration_proc: | ‘“deletedMigrationProc”’ ‘:’ STRING_LITERAL ‘,’ ;</p>
-<p>opt_recreate_group_name: | ‘“recreateGroupName”’ ‘:’ STRING_LITERAL ‘,’ ;</p>
-<p>opt_index_names: | index_names ;</p>
-<p>index_names: STRING_LITERAL | STRING_LITERAL ‘,’ index_names ;</p>
-<p>opt_arg_names: | arg_names ;</p>
-<p>arg_names: STRING_LITERAL | STRING_LITERAL ‘,’ arg_names ;</p>
-<p>opt_column_names: | column_names ;</p>
-<p>column_names: STRING_LITERAL | STRING_LITERAL ‘,’ column_names ;</p>
-<p>opt_table_names: | table_names ;</p>
-<p>table_names: STRING_LITERAL | STRING_LITERAL ‘,’ table_names ;</p>
-<p>opt_view_names: | view_names ;</p>
-<p>view_names: STRING_LITERAL | STRING_LITERAL ‘,’ view_names ;</p>
-<p>opt_procedure_names: | procedure_names ;</p>
-<p>procedure_names: STRING_LITERAL | STRING_LITERAL ‘,’ procedure_names ;</p>
-<p>opt_sort_order_names: | sort_order_names ;</p>
-<p>sort_order_names: STRING_LITERAL | STRING_LITERAL ‘,’ sort_order_names ;</p>
-<p>columns: column | column ‘,’ columns ;</p>
-<p>column: ‘{’ ‘“name”’ ‘:’ STRING_LITERAL ‘,’ opt_attributes ‘“type”’ ‘:’ STRING_LITERAL ‘,’ opt_kind opt_is_sensitive ‘“isNotNull”’ ‘:’ BOOL_LITERAL ‘,’ ‘“isAdded”’ ‘:’ BOOL_LITERAL ‘,’ opt_added_version ‘“isDeleted”’ ‘:’ BOOL_LITERAL ‘,’ opt_deleted_version opt_default_value opt_collate opt_check_expr ‘“isPrimaryKey”’ ‘:’ BOOL_LITERAL ‘,’ ‘“isUniqueKey”’ ‘:’ BOOL_LITERAL ‘,’ ‘“isAutoIncrement”’ ‘:’ BOOL_LITERAL ‘}’ ;</p>
-<p>opt_collate : | ‘“collate”’ ‘:’ STRING_LITERAL ‘,’ ;</p>
-<p>opt_check_expr: | ‘“checkExpr”’ ‘:’ STRING_LITERAL ‘,’ ‘“checkExprArgs”’ ‘:’ ‘[’ opt_arg_names ’]’ ‘,’ ;</p>
-<p>opt_default_value: | ‘“defaultValue”’ ‘:’ any_literal ‘,’ ;</p>
-<p>opt_foreign_keys : | foreign_keys ;</p>
-<p>opt_kind: | ‘“kind”’ ‘:’ STRING_LITERAL ‘,’ ;</p>
-<p>opt_is_sensitive: | ‘“isSensitive”’ ‘:’ ‘1’ ‘,’ ;</p>
-<p>foreign_keys : foreign_key | foreign_key ‘,’ foreign_keys ;</p>
-<p>foreign_key : ‘{’ opt_name ‘“columns”’ ‘:’ ‘[’ column_names ’]’ ‘,’ ‘“referenceTable”’ ‘:’ STRING_LITERAL ‘,’ ‘“referenceColumns”’ ‘:’ ‘[’ column_names ’]’ ‘,’ ‘“onUpdate”’ ‘:’ STRING_LITERAL ‘,’ ‘“onDelete”’ ‘:’ STRING_LITERAL ‘,’ ‘“isDeferred”’ ‘:’ BOOL_LITERAL ‘}’ ;</p>
-<p>opt_unique_keys : | unique_keys ;</p>
-<p>unique_keys : unique_key | unique_key ‘,’ unique_keys ;</p>
-<p>unique_key: ‘{’ opt_name ‘“columns”’ ‘:’ ‘[’ column_names ’]’ ‘,’ ‘“sortOrders”’ ‘:’ ‘[’ sort_order_names ’]’ ‘}’ ;</p>
-<p>opt_check_expressions: | check_expressions ;</p>
-<p>check_expressions: check_expression | check_expression ‘,’ check_expressions ;</p>
-<p>check_expression: ‘{’ opt_name ‘“checkExpr”’ ‘:’ STRING_LITERAL ‘,’ ‘“checkExprArgs”’ ‘:’ ‘[’ ’]’ ‘}’ ;</p>
-<p>opt_name: | ‘“name”’ ‘:’ STRING_LITERAL ‘,’ ;</p>
-<p>opt_table_indices: | table_indices ;</p>
-<p>table_indices: ‘“indices”’ ‘:’ ‘[’ opt_index_names ’]’ ‘,’ ;</p>
-<p>opt_attributes: | attributes ;</p>
-<p>attributes: ‘“attributes”’ ‘:’ ‘[’ attribute_list ’]’ ‘,’ ;</p>
-<p>opt_attribute_list: | attribute_list ;</p>
-<p>attribute_list: attribute | attribute ‘,’ attribute_list ;</p>
-<p>attribute: ‘{’ ‘“name”’ ‘:’ STRING_LITERAL ‘,’ ‘“value”’ ‘:’ attribute_value ‘}’ ;</p>
-<p>attribute_array: ‘[’ opt_attribute_value_list ’]’ ;</p>
-<p>opt_attribute_value_list: | attribute_value_list ;</p>
-<p>attribute_value_list: attribute_value | attribute_value ‘,’ attribute_value_list ;</p>
-<p>attribute_value: any_literal | attribute_array ;</p>
-<p>any_integer: BOOL_LITERAL | INT_LITERAL ;</p>
-<p>any_literal: BOOL_LITERAL | INT_LITERAL | ‘-’ INT_LITERAL | LONG_LITERAL | ‘-’ LONG_LITERAL | REAL_LITERAL | ‘-’ REAL_LITERAL | STRING_LITERAL | NULL_LITERAL ;</p>
-<p>num_literal: BOOL_LITERAL | INT_LITERAL | ‘-’ INT_LITERAL | LONG_LITERAL | ‘-’ LONG_LITERAL | REAL_LITERAL | ‘-’ REAL_LITERAL ;</p>
-<p>opt_views: | views ;</p>
-<p>views: view | view ‘,’ views ;</p>
-<p>view: ‘{’ ‘“name”’ ‘:’ STRING_LITERAL ‘,’ ‘“isTemp”’ ‘:’ BOOL_LITERAL ‘,’ ‘“isDeleted”’ ‘:’ BOOL_LITERAL ‘,’ opt_deleted_version opt_region_info projection ‘“select”’ ‘:’ STRING_LITERAL ‘,’ ‘“selectArgs”’ ‘:’ ‘[’ ’]’ ‘}’ ;</p>
-<p>opt_region_info: | ‘“region”’ ‘:’ STRING_LITERAL ‘,’ | ‘“region”’ ‘:’ STRING_LITERAL ‘,’ ‘“deployedInRegion”’ ‘:’ STRING_LITERAL ‘,’ ;</p>
-<p>opt_projection: | projection ;</p>
-<p>projection: ‘“projection”’ ‘:’ ‘[’ projected_columns ’]’ ‘,’ ;</p>
-<p>projected_columns: projected_column | projected_column ‘,’ projected_columns ;</p>
-<p>projected_column: ‘{’ ‘“name”’ ‘:’ STRING_LITERAL ‘,’ ‘“type”’ ‘:’ STRING_LITERAL ‘,’ opt_kind opt_is_sensitive ‘“isNotNull”’ ‘:’ BOOL_LITERAL ‘}’ ;</p>
-<p>opt_indices: | indices ;</p>
-<p>indices: index | index ‘,’ indices ;</p>
-<p>index: ‘{’ ‘“name”’ ‘:’ STRING_LITERAL ‘,’ ‘“table”’ ‘:’ STRING_LITERAL ‘,’ ‘“isUnique”’ ‘:’ BOOL_LITERAL ‘,’ ‘“ifNotExists”’ ‘:’ BOOL_LITERAL ‘,’ ‘“isDeleted”’ ‘:’ BOOL_LITERAL ‘,’ opt_deleted_version opt_region_info opt_partial_index_where ‘“columns”’ ‘:’ ‘[’ column_names ’]’ ‘,’ ‘“sortOrders”’ ‘:’ ‘[’ sort_order_names ’]’ ‘}’ ;</p>
-<p>opt_partial_index_where: | ‘“where”’ ‘:’ STRING_LITERAL ‘,’ ;</p>
-<p>opt_triggers: | triggers ;</p>
-<p>triggers: trigger | trigger ‘,’ triggers ;</p>
-<p>trigger: ‘{’ ‘“name”’ ‘:’ STRING_LITERAL ‘,’ ‘“target”’ ‘:’ STRING_LITERAL ‘,’ ‘“isTemp”’ ‘:’ BOOL_LITERAL ‘,’ ‘“ifNotExists”’ ‘:’ BOOL_LITERAL ‘,’ ‘“isDeleted”’ ‘:’ BOOL_LITERAL ‘,’ opt_deleted_version before_after_instead ‘,’ delete_insert_update ‘,’ opt_for_each_row opt_when_expr ‘“statement”’ ‘:’ STRING_LITERAL ‘,’ ‘“statementArgs”’ ‘:’ ‘[’ opt_arg_names ’]’ ‘,’ opt_region_info dependencies ‘}’ ;</p>
-<p>before_after_instead: ‘“isBeforeTrigger”’ ‘:’ ‘1’ | ‘“isAfterTrigger”’ ‘:’ ‘1’ | ‘“isInsteadOfTrigger”’ ‘:’ ‘1’ ;</p>
-<p>delete_insert_update: ‘“isDeleteTrigger”’ ‘:’ ‘1’ | ‘“isInsertTrigger”’ ‘:’ ‘1’ | ‘“isUpdateTrigger”’ ‘:’ ‘1’ ;</p>
-<p>opt_for_each_row: | ‘“forEachRow”’ ‘:’ BOOL_LITERAL ‘,’ ;</p>
-<p>opt_when_expr: | ‘“whenExpr”’ ‘:’ STRING_LITERAL ‘,’ ‘“whenExprArgs”’ ‘:’ ‘[’ opt_arg_names ’]’ ‘,’ ;</p>
-<p>dependencies: opt_insert_tables opt_update_tables opt_delete_tables opt_from_tables opt_uses_procedures opt_uses_views ‘“usesTables”’ ‘:’ ‘[’ opt_table_names ’]’ ;</p>
-<p>opt_uses_views: | ‘“usesViews”’ ‘:’ ‘[’ opt_view_names ’]’ ‘,’ ;</p>
-<p>opt_insert_tables: | ‘“insertTables”’ ‘:’ ‘[’ opt_table_names ’]’ ‘,’ ;</p>
-<p>opt_update_tables: | ‘“updateTables”’ ‘:’ ‘[’ opt_table_names ’]’ ‘,’ ;</p>
-<p>opt_delete_tables: | ‘“deleteTables”’ ‘:’ ‘[’ opt_table_names ’]’ ‘,’ ;</p>
-<p>opt_from_tables: | ‘“fromTables”’ ‘:’ ‘[’ opt_table_names ’]’ ‘,’ ;</p>
-<p>opt_uses_procedures : | ‘“usesProcedures”’ ‘:’ ‘[’ opt_procedure_names ’]’ ‘,’ ;</p>
-<p>opt_queries: | queries ;</p>
-<p>queries: query | query ‘,’ queries ;</p>
-<p>query: ‘{’ ‘“name”’ ‘:’ STRING_LITERAL ‘,’ ‘“definedInFile”’ ‘:’ STRING_LITERAL ‘,’ ‘“args”’ ‘:’ ‘[’ opt_args ’]’ ‘,’ dependencies ‘,’ opt_region_info opt_attributes projection ‘“statement”’ ‘:’ STRING_LITERAL ‘,’ ‘“statementArgs”’ ‘:’ ‘[’ opt_arg_names ’]’ ‘}’ ;</p>
-<p>opt_args: | args ;</p>
-<p>args: arg | arg ‘,’ args ;</p>
-<p>arg: ‘{’ ‘“name”’ ‘:’ STRING_LITERAL ‘,’ ‘“argOrigin”’ ‘:’ STRING_LITERAL ‘,’ ‘“type”’ ‘:’ STRING_LITERAL ‘,’ opt_kind opt_is_sensitive ‘“isNotNull”’ ‘:’ BOOL_LITERAL ‘}’ ;</p>
-<p>opt_inserts: | inserts ;</p>
-<p>inserts: insert | insert ‘,’ inserts ;</p>
-<p>insert : ‘{’ insert_details ‘,’ ‘“values”’ ‘:’ ‘[’ opt_values ’]’ ‘}’ ;</p>
-<p>opt_inserts_general: | inserts_general ;</p>
-<p>inserts_general: insert_general | insert_general ‘,’ inserts_general ;</p>
-<p>insert_details: ‘“name”’ ‘:’ STRING_LITERAL ‘,’ ‘“definedInFile”’ ‘:’ STRING_LITERAL ‘,’ ‘“args”’ ‘:’ ‘[’ opt_args ’]’ ‘,’ dependencies ‘,’ opt_region_info opt_attributes ‘“table”’ ‘:’ STRING_LITERAL ‘,’ ‘“statement”’ ‘:’ STRING_LITERAL ‘,’ ‘“statementArgs”’ ‘:’ ‘[’ opt_arg_names ’]’ ‘,’ ‘“statementType”’ ‘:’ STRING_LITERAL ‘,’ ‘“columns”’ ‘:’ ‘[’ column_names ’]’</p>
-<p>insert_general : ‘{’ insert_details ‘}’ ;</p>
-<p>opt_values: | values ;</p>
-<p>values: value | value ‘,’ values ;</p>
-<p>value: ‘{’ ‘“value”’ ‘:’ STRING_LITERAL ‘,’ ‘“valueArgs”’ ‘:’ ‘[’ opt_arg_names ’]’ ‘}’ ;</p>
-<p>opt_updates: | updates ;</p>
-<p>updates: update | update ‘,’ updates ;</p>
-<p>update : ‘{’ ‘“name”’ ‘:’ STRING_LITERAL ‘,’ ‘“definedInFile”’ ‘:’ STRING_LITERAL ‘,’ ‘“args”’ ‘:’ ‘[’ opt_args ’]’ ‘,’ dependencies ‘,’ opt_region_info opt_attributes ‘“table”’ ‘:’ STRING_LITERAL ‘,’ ‘“statement”’ ‘:’ STRING_LITERAL ‘,’ ‘“statementArgs”’ ‘:’ ‘[’ opt_arg_names ’]’ ‘}’ ;</p>
-<p>opt_deletes: | deletes ;</p>
-<p>deletes: delete | delete ‘,’ deletes ;</p>
-<p>delete : ‘{’ ‘“name”’ ‘:’ STRING_LITERAL ‘,’ ‘“definedInFile”’ ‘:’ STRING_LITERAL ‘,’ ‘“args”’ ‘:’ ‘[’ opt_args ’]’ ‘,’ dependencies ‘,’ opt_region_info opt_attributes ‘“table”’ ‘:’ STRING_LITERAL ‘,’ ‘“statement”’ ‘:’ STRING_LITERAL ‘,’ ‘“statementArgs”’ ‘:’ ‘[’ opt_arg_names ’]’ ‘}’ ;</p>
-<p>opt_generals: | generals ;</p>
-<p>generals: general | general ‘,’ generals ;</p>
-<p>general: ‘{’ ‘“name”’ ‘:’ STRING_LITERAL ‘,’ ‘“definedInFile”’ ‘:’ STRING_LITERAL ‘,’ ‘“args”’ ‘:’ ‘[’ opt_complex_args ’]’ ‘,’ dependencies ‘,’ opt_regions opt_attributes opt_projection opt_result_contract ‘“usesDatabase”’ ‘:’ BOOL_LITERAL ‘}’ ;</p>
-<p>opt_result_contract: | ‘“hasSelectResult”’ ‘:’ ‘1’ ‘,’ | ‘“hasOutResult”’ ‘:’ ‘1’ ‘,’ | ‘“hasOutUnionResult”’ ‘:’‘1’ ‘,’ ;</p>
-<p>opt_complex_args: | complex_args ;</p>
-<p>complex_args: complex_arg | complex_arg ‘,’ complex_args ;</p>
-<p>complex_arg: ‘{’ binding ‘“name”’ ‘:’ STRING_LITERAL ‘,’ ‘“argOrigin”’ ‘:’ STRING_LITERAL ‘,’ ‘“type”’ ‘:’ STRING_LITERAL ‘,’ opt_kind opt_is_sensitive ‘“isNotNull”’ ‘:’ BOOL_LITERAL ‘}’ ;</p>
-<p>binding: | ‘“binding”’ ‘:’ ‘“inout”’ ‘,’ | ‘“binding”’ ‘:’ ‘“out”’ ‘,’ ;</p>
-<p>opt_enums: | enums ;</p>
-<p>enums: enum | enum ‘,’ enums ;</p>
-<p>enum: ‘{’ ‘“name”’ ‘:’ STRING_LITERAL ‘,’ ‘“type”’ ‘:’ STRING_LITERAL ‘,’ ‘“isNotNull”’ ‘:’ ‘1’ ‘,’ ‘“values”’ ‘:’ ‘[’ enum_values ’]’ ‘}’ ;</p>
-<p>enum_values: enum_value | enum_value ‘,’ enum_values ;</p>
-<p>enum_value: ‘{’ ‘“name”’ ‘:’ STRING_LITERAL ‘,’ ‘“value”’ ‘:’ num_literal ‘}’ ;</p>
-<p>opt_regions: | regions ;</p>
-<p>regions: region | region ‘,’ regions ;</p>
-<p>region: ‘{’ ‘“name”’ ‘:’ STRING_LITERAL ‘,’ ‘“isDeployableRoot”’ ‘:’ BOOL_LITERAL ‘,’ ‘“deployedInRegion”’ ‘:’ STRING_LITERAL ‘,’ ‘“using”’ ‘:’ ‘[’ opt_region_names ’]’ ‘,’ ‘“usingPrivately”’ ‘:’ ‘[’ opt_bool_list ’]’ ‘}’ ;</p>
-<p>opt_region_names: | region_names ;</p>
-<p>region_names: STRING_LITERAL | STRING_LITERAL ‘,’ region_names ;</p>
-<p>opt_bool_list: | bool_list ;</p>
-<p>bool_list: BOOL_LITERAL | BOOL_LITERAL ‘,’ bool_list ;</p>
-<p>opt_ad_hoc_migrations: | ad_hoc_migrations ;</p>
-<p>ad_hoc_migrations: ad_hoc_migration | ad_hoc_migration ‘,’ ad_hoc_migrations ;</p>
-<p>ad_hoc_migration: ‘{’ ‘“name”’ ‘:’ STRING_LITERAL ‘,’ ‘“version”’ ‘:’ any_integer ‘}’ ;</p>
-<pre><code>
+-- You have numbers
+3     -- an integer
+3L    -- a long integer
+3.5   -- a real literal
+0x10  -- 16 in hex
+
+-- Math is what you would expect
+1 + 1     --&gt; 2
+8 - 1     --&gt; 7
+10 * 2    --&gt; 20
+35.0 / 5  --&gt; 7.0
+
+-- Modulo operation, same as C and SQLite
+7 % 3    --&gt; 1
+-7 % 3   --&gt; -1
+7 % -3   --&gt; 1
+-7 % 3   --&gt; -1
+
+-- Bitwise operators bind left to right like in SQLite
+1 | 4 &amp; 3  --&gt;  1  (not 0)
+
+-- Enforce precedence with parentheses
+1 + 3 * 2    --&gt; 7
+(1 + 3) * 2  --&gt; 8
+
+-- use 0 and 1 for bools
+0    --&gt; how to true
+1    --&gt; how to false
+null --&gt; null means &quot;unknown&quot; in CQL like SQLite
+
+-- negate with not
+not 0    --&gt; 1
+not 1    --&gt; 0
+not null --&gt; null (not unknown is unknown)
+
+-- Logical Operators
+1 and 0 --&gt; 0
+0 or 1  --&gt; 1
+0 and x --&gt; 0 and x not evaluated
+1 or x  --&gt; 1 and x not evaluated
+
+-- remember null is &quot;unknown&quot;
+null or 0  --&gt; null
+null or 1  --&gt; 1
+null and 0 --&gt; 0
+null and 1 --&gt; null
+
+-- Non-zero values are true
+0        --&gt; false
+4        --&gt; true
+-6       --&gt; true
+0 and 2  --&gt; 0 (false)
+-5 or 0  --&gt; 1 (true)
+
+-- Equality is ==, but note unknown is not == to anything
+1 == 1       --&gt; true
+1 = 1        --&gt; true  (= and == are the same thing)
+2 == 1       --&gt; false
+null == 1    --&gt; null (hence not true)
+null == null --&gt; null (hence not true)
+&quot;x&quot; == &quot;x&quot;   --&gt; true
+
+-- IS lets you compare against null
+1 IS 1       --&gt; true
+2 IS 1       --&gt; false
+null IS 1    --&gt; false
+null IS null --&gt; true  (Unknown is Unknown?  Yes it is!)
+&quot;x&quot; IS &quot;x&quot;   --&gt; true
+
+-- x IS NOT y is the same as NOT (x IS y)
+1 IS NOT 1       --&gt; false
+2 IS NOT 1       --&gt; true
+null IS NOT 1    --&gt; true
+null IS NOT null --&gt; false
+&quot;x&quot; IS NOT &quot;x&quot;   --&gt; false
+
+-- Inequality is != or &lt;&gt;
+1 != 1       --&gt; false
+2 &lt;&gt; 1       --&gt; true
+null != 1    --&gt; null
+null &lt;&gt; null --&gt; null
+
+-- More comparisons
+1 &lt; 10    --&gt; true
+1 &gt; 10    --&gt; false
+2 &lt;= 2    --&gt; true
+2 &gt;= 2    --&gt; true
+10 &lt; null --&gt; null
+
+-- Seeing whether a value is in a range
+1 &lt; 2 and 2 &lt; 3  --&gt; true
+2 &lt; 3 and 3 &lt; 2  --&gt; false
+
+-- BETWEEN makes this look nicer
+2 BETWEEN 1 AND 3 --&gt; true
+3 BETWEEN 2 AND 2 --&gt; false
+
+-- Strings are created with &quot;x&quot; or &#39;x&#39;
+&quot;This is a string.\n&quot;           -- can have C style escapes (no embedded nulls)
+&quot;Th\x69s is a string.\n&quot;        -- even hex literals
+&#39;This isn&#39;&#39;t a C style string&#39;  -- use &#39;&#39; to escape single quote ONLY
+
+/**********************************************************
+ * 2. Simple Variables
+ *********************************************************/
+
+-- CQL can call simple libc methods with no declaration
+-- we&#39;ll need this for later examples so we can do something
+-- with our expressions (i.e. print them)
+call printf(&quot;I&#39;m CQL. Nice to meet you!\n&quot;);
+
+-- variables are declared with DECLARE
+-- keywords and identifiers are not case sensitive
+declare x integer not null;
+
+-- you can call it X, it is the same thing.
+set X := 0;
+
+-- all variables begin with a null value if allowed, else a zero value.
+declare y integer not null;
+if y == 0 then
+  call printf(&quot;Yes, this will run.\n&quot;);
+end if;
+
+-- a nullable variable (i.e. not marked with not null) initialized to null
+declare z real;
+if z is null then
+  call printf(&quot;Yes, this will run.\n&quot;);
+end if;
+
+-- the various types
+declare a_blob blob;
+declare a_string text;
+declare a_real real;
+declare an_int integer;
+declare a_long long;
+declare an_object object;
+
+-- there are some typical SQL synonyms
+declare an_int int;
+declare a_long long integer;
+declare a_long long int;
+declare a_long long_int;
+
+-- the basic types can be tagged to make them less miscible
+declare m real&lt;meters&gt;;
+declare kg real&lt;kilos&gt;;
+
+set m := kg;  -- error!
+
+-- object variables can be tagged so that they are not mixed-up easily
+declare dict object&lt;dict&gt; not null;
+declare list object&lt;list&gt; not null;
+set dict := create_dict();  -- an external function that creates a dict
+set dict := create_list();  -- error
+set list := create_list();  -- ok
+set list := dict;           -- error
+
+-- implied type initialization
+LET i := 1;  -- integer not null
+LET l := 1L;  -- long not null
+LET t := &quot;x&quot;;  -- text not null
+LET b := x IS y; -- bool not null
+LET b := x = y;  -- bool (maybe not null depending on x/y)
+
+-- the psuedo function &quot;nullable&quot; converts the type of its arg to the nullable
+-- version of the same thing.
+
+LET n_i := nullable(1);  -- nullable integer variable initialized to 1
+LET l_i := nullable(1L);  -- nullable long variable initialized to 1
+
+/**********************************************************
+ * 3. Control Flow
+ *********************************************************/
+
+-- Just make a variable
+declare some_var integer not null;
+set some_var := 5
+
+-- Here is an if statement
+if some_var &gt; 10 then
+    call printf(&quot;some_var is totally bigger than 10.\n&quot;)
+else if some_var &lt; 10 then  -- else if is optional
+    call printf(&quot;some_var is smaller than 10.\n&quot;)
+else -- else is optional
+    call printf(&quot;some_var is indeed 10.\n&quot;)
+end if;
 
 
-## Appendix 6: CQL In 20 Minutes
-&lt;!---
--- Copyright (c) Facebook, Inc. and its affiliates.
---
--- This source code is licensed under the MIT license found in the
--- LICENSE file in the root directory of this source tree.
---&gt;
+-- while loops iterate as usual
+declare i integer not null;
+set i := 0;
+while i &lt; 5
+begin
+   call printf(&quot;%d\n&quot;, i);
+   set i := i + 1;
+end;
 
-What follows is a series of examples intended to illustrate the most important features of
-the CQL language. This appendix was significantly influenced by a similar article on Python
-at https://learnxinyminutes.com/docs/python/
+-- use &quot;leave&quot; to end a loop early
+declare i integer not null;
+set i := 0;
+while i &lt; 500
+begin
+   if i &gt;= 5 then
+     -- we are not going to get anywhere near 500
+     leave;
+   end if;
 
-Also of interest:
-* http://sqlite.org
-* https://learnxinyminutes.com/docs/sql
+   call printf(&quot;%d\n&quot;, i);
+   set i := i + 1;
+end;
 
-And with no further delay, CQL in 20 minutes...
-</code></pre>
-<p>– Single line comments start with two dashes</p>
-<p>/* C style comments also work <em> </em> C pre-processor features like #include and #define are generally available * CQL is typically run through the C pre-processor before it is compile. */</p>
-<p>/********************************************************** * 1. Primitive Datatypes and Operators *********************************************************/</p>
-<p>– You have numbers 3 – an integer 3L – a long integer 3.5 – a real literal 0x10 – 16 in hex</p>
-<p>– Math is what you would expect 1 + 1 –&gt; 2 8 - 1 –&gt; 7 10 * 2 –&gt; 20 35.0 / 5 –&gt; 7.0</p>
-<p>– Modulo operation, same as C and SQLite 7 % 3 –&gt; 1 -7 % 3 –&gt; -1 7 % -3 –&gt; 1 -7 % 3 –&gt; -1</p>
-<p>– Bitwise operators bind left to right like in SQLite 1 | 4 &amp; 3 –&gt; 1 (not 0)</p>
-<p>– Enforce precedence with parentheses 1 + 3 * 2 –&gt; 7 (1 + 3) * 2 –&gt; 8</p>
-<p>– use 0 and 1 for bools 0 –&gt; how to true 1 –&gt; how to false null –&gt; null means “unknown” in CQL like SQLite</p>
-<p>– negate with not not 0 –&gt; 1 not 1 –&gt; 0 not null –&gt; null (not unknown is unknown)</p>
-<p>– Logical Operators 1 and 0 –&gt; 0 0 or 1 –&gt; 1 0 and x –&gt; 0 and x not evaluated 1 or x –&gt; 1 and x not evaluated</p>
-<p>– remember null is “unknown” null or 0 –&gt; null null or 1 –&gt; 1 null and 0 –&gt; 0 null and 1 –&gt; null</p>
-<p>– Non-zero values are true 0 –&gt; false 4 –&gt; true -6 –&gt; true 0 and 2 –&gt; 0 (false) -5 or 0 –&gt; 1 (true)</p>
-<p>– Equality is ==, but note unknown is not == to anything 1 == 1 –&gt; true 1 = 1 –&gt; true (= and == are the same thing) 2 == 1 –&gt; false null == 1 –&gt; null (hence not true) null == null –&gt; null (hence not true) “x” == “x” –&gt; true</p>
-<p>– IS lets you compare against null 1 IS 1 –&gt; true 2 IS 1 –&gt; false null IS 1 –&gt; false null IS null –&gt; true (Unknown is Unknown? Yes it is!) “x” IS “x” –&gt; true</p>
-<p>– x IS NOT y is the same as NOT (x IS y) 1 IS NOT 1 –&gt; false 2 IS NOT 1 –&gt; true null IS NOT 1 –&gt; true null IS NOT null –&gt; false “x” IS NOT “x” –&gt; false</p>
-<p>– Inequality is != or &lt;&gt; 1 != 1 –&gt; false 2 &lt;&gt; 1 –&gt; true null != 1 –&gt; null null &lt;&gt; null –&gt; null</p>
-<p>– More comparisons 1 &lt; 10 –&gt; true 1 &gt; 10 –&gt; false 2 &lt;= 2 –&gt; true 2 &gt;= 2 –&gt; true 10 &lt; null –&gt; null</p>
-<p>– Seeing whether a value is in a range 1 &lt; 2 and 2 &lt; 3 –&gt; true 2 &lt; 3 and 3 &lt; 2 –&gt; false</p>
-<p>– BETWEEN makes this look nicer 2 BETWEEN 1 AND 3 –&gt; true 3 BETWEEN 2 AND 2 –&gt; false</p>
-<p>– Strings are created with “x” or ‘x’ “This is a string.” – can have C style escapes (no embedded nulls) “Th69s is a string.” – even hex literals ‘This isn’‘t a C style string’ – use ’’ to escape single quote ONLY</p>
-<p>/********************************************************** * 2. Simple Variables *********************************************************/</p>
-<p>– CQL can call simple libc methods with no declaration – we’ll need this for later examples so we can do something – with our expressions (i.e. print them) call printf(“I’m CQL. Nice to meet you!”);</p>
-<p>– variables are declared with DECLARE – keywords and identifiers are not case sensitive declare x integer not null;</p>
-<p>– you can call it X, it is the same thing. set X := 0;</p>
-<p>– all variables begin with a null value if allowed, else a zero value. declare y integer not null; if y == 0 then call printf(“Yes, this will run.”); end if;</p>
-<p>– a nullable variable (i.e. not marked with not null) initialized to null declare z real; if z is null then call printf(“Yes, this will run.”); end if;</p>
-<p>– the various types declare a_blob blob; declare a_string text; declare a_real real; declare an_int integer; declare a_long long; declare an_object object;</p>
-<p>– there are some typical SQL synonyms declare an_int int; declare a_long long integer; declare a_long long int; declare a_long long_int;</p>
-<p>– the basic types can be tagged to make them less miscible declare m real<meters>; declare kg real<kilos>;</p>
-<p>set m := kg; – error!</p>
-<p>– object variables can be tagged so that they are not mixed-up easily declare dict object<dict> not null; declare list object<list> not null; set dict := create_dict(); – an external function that creates a dict set dict := create_list(); – error set list := create_list(); – ok set list := dict; – error</p>
-<p>– implied type initialization LET i := 1; – integer not null LET l := 1L; – long not null LET t := “x”; – text not null LET b := x IS y; – bool not null LET b := x = y; – bool (maybe not null depending on x/y)</p>
-<p>– the psuedo function “nullable” converts the type of its arg to the nullable – version of the same thing.</p>
-<p>LET n_i := nullable(1); – nullable integer variable initialized to 1 LET l_i := nullable(1L); – nullable long variable initialized to 1</p>
-<p>/********************************************************** * 3. Control Flow *********************************************************/</p>
-<p>– Just make a variable declare some_var integer not null; set some_var := 5</p>
-<p>– Here is an if statement if some_var &gt; 10 then call printf(“some_var is totally bigger than 10.”) else if some_var &lt; 10 then – else if is optional call printf(“some_var is smaller than 10.”) else – else is optional call printf(“some_var is indeed 10.”) end if;</p>
-<p>– while loops iterate as usual declare i integer not null; set i := 0; while i &lt; 5 begin call printf(“%d”, i); set i := i + 1; end;</p>
-<p>– use “leave” to end a loop early declare i integer not null; set i := 0; while i &lt; 500 begin if i &gt;= 5 then – we are not going to get anywhere near 500 leave; end if;</p>
-<p>call printf(“%d”, i); set i := i + 1; end;</p>
-<p>– use “continue” to go back to the loop test declare i integer not null; set i := 0; while i &lt; 500 begin set i := i + 1; if i % 2 then continue; – note we had to do this after “i” was incremented! end if;</p>
-<p>– odd numbers will not be printed because of continue above call printf(“%d”, i); end;</p>
-<p>/********************************************************** * 4. Complex Expression Forms *********************************************************/</p>
-<p>– case is an expression, so it is more like the C ?: operator – than a switch statement. It is ?: on steroids.</p>
-<p>case i – a switch expression is optional when 1 then “one” – one or more cases when 2 then “two” else “other” – else is optional end;</p>
-<p>– case with no common expression, is a series of booleans case when i == 1 then “i = one” – booleans could be completely unrelated when j == 2 then “j = two” – first match wins else “other” end;</p>
-<p>– if nothing matches the result is null case 7 when 1 then “one” end;</p>
-<p>–&gt; result null</p>
-<p>– case is just an expression so it can nest case X when 1 case y when 1 “x:1 y:1” else “x:1 y:other” end else case when z == 1 “x:other z:1” else “x:other z:other” end;</p>
-<p>– IN is used to test for membership 5 IN (1, 2, 3, 4, 5) –&gt; true 7 IN (1, 2) –&gt; false null in (1, 2, 3) –&gt; null null in (1, null, 3) –&gt; null (null == null is not true) 7 NOT IN (1, 2) –&gt; true null not in (null, 3) –&gt; null</p>
-<p>/********************************************************** * 4. Working and “getting rid of” null *********************************************************/</p>
-<p>– null can be annoying, you might need a not null value – in most operations null is radioactive null + x –&gt; null null * x –&gt; null null == null –&gt; null</p>
-<p>– IS and IS NOT always return 0 or 1 null is 1 -&gt; 0 1 is not null -&gt; 1</p>
-<p>– COALESCE returns the first non null arg, or the last arg if all were null – if the last arg is not null, you get a non null result for sure COALESCE(x==y, 0) –&gt; if x or y is null, you get 0 not null, not quite “is”</p>
-<p>– IFNULL is coalesce with 2 args only (COALESCE is more general) IFNULL(x, -1) –&gt; use -1 if x is null</p>
-<p>– the reverse, convert a sentinel value to unknown, more exotic NULLIF(x, -1) –&gt; if x is -1 then use null</p>
-<p>– the else part of a case can get rid of nulls CASE when x == y then 1 else 0 end; –&gt; true iff x = y and neither is null</p>
-<p>– case can be used to give you a default value after various tests – this expression is never null, “other” is returned if x is null CASE when x &gt; 0 then “pos” when x &lt; 0 then “neg” else “other” end;</p>
-<p>– you can “throw” out of the current procedure (see exceptions below) declare x integer not null; set x := ifnull_throw(nullable_int_expr); – returns non null, throws if null</p>
-<p>– if you have already tested the expression you can use assert-like form if nullable_int_expr is not null then – I am very sure nullable_int_expression is not null set x := ifnull_crash(nullable_int_expr); end if;</p>
-<p>/********************************************************** * 5. Tables, Views, Indices, Triggers *********************************************************/</p>
-<p>– most forms of data definition language DDL are supported – “loose” DDL (outside of any procedure) simply declares – schema, it does not actually create it, it is assumed to – exist as you specified.</p>
-<p>create table T1( id integer primary key, t text, r real );</p>
-<p>create table T2( id integer primary key references T1(id), l long, b blob );</p>
-<p>– CQL can take a series of declarations and automatically – create a procedure that will materialize the declarations – you made. This will not be discussed here. But you will get – procedures that have things like.</p>
-<p>create proc make_tables() begin create table T1 if not exists ( id integer primary key, t text, r real ); end;</p>
-<p>– views are supported create view V1 as (select * from T1);</p>
-<p>– triggers are supported create trigger if not exists trigger1 before delete on T1 begin delete from T2 where id = old.id; end;</p>
-<p>– indices are supported create index I1 on T1(t); create index I2 on T1(r);</p>
-<p>– the various drop forms are supported drop index I1; drop index I2; drop view V1; drop table T2; drop table T1;</p>
-<p>– a complete discussion of DDL is out of scope, refer to sqlite.org</p>
-<p>/********************************************************** * 6. Selecting Data *********************************************************/</p>
-<p>– we will use this scratch variable in examples declare rr real;</p>
-<p>– first observe CQL is a two-headed language set rr := 1+1; – this is evaluated in generated C code set rr := (select 1+1); – this select statement is sent to SQLite, it does the add</p>
-<p>– CQL tries to do most things the same as SQLite in the C context – but some things are exceedingly hard to emulate correctly. – Even simple looking things: set rr := (select cast(“1.23” as real)); –&gt; rr := 1.23 set rr := cast(“1.23” as real); –&gt; error</p>
-<p>– In general, numeric/text conversions have to happen in SQLite context – because the specific library that does the conversion could be and usually – is different. It would not do to give different answers in one context or – another so those conversions are simply not supported.</p>
-<p>– Loose concatenation is not supported because of the implied conversions – Loose means “not in the context of a SQL statement” set r := 1.23; set r := (select cast(“100”||r as real)); –&gt; 1001.23 (a number) set r := cast(“100”||r as real); –&gt; error, concat not supported in loose expr</p>
-<p>– illustrate a simple insertion insert into T1 values (1, “foo”, 3.14);</p>
-<p>– finally, reading from the database set r := (select r from T1 where id = 1); –&gt; r = 3.14</p>
-<p>– the (select …) form requires the result to have at least one row – you can use “if nothing” forms to handle other cases set r := (select r from T1 where id = 2 if nothing -1); –&gt; r = -1</p>
-<p>– if the select statement might return a null result you can handle that as well set r := (select r from T1 where id = 2 if nothing or null -1); –&gt; r = -1</p>
-<p>– with no if nothing clause, lack of a row will cause the select expression to throw – an exception. “If nothing throw” merely makes this explicit. set r := (select r from T1 where id = 2 if nothing throw); –&gt; will throw</p>
-<p>/********************************************************** * 6. Procedures, Results, Exceptions *********************************************************/</p>
-<p>– procedures are a list of statements that can be executed with arguments create proc hello() begin call printf(“Hello, world”); end;</p>
-<p>– in, out, and in/out parameters are possible create proc swizzle(x integer, inout y integer, out z real not null) begin set y := x + y; – any computation you like</p>
-<p>– bizarre way to compute an id but this is just an illustration set z := (select r from T1 where id = x if nothing or null -1); end;</p>
-<p>– procedures like “hello” have a void signature, they return nothing – as nothing can go wrong but those that use the database like “swizzle” – can return an error code if there is a problem. – will_fail will always return SQLITE_CONSTRAINT, the second insert – is said to “throw” create proc will_fail() begin insert into T1 values (1, “x”, 1); insert into T1 values (1, “x”, 1); –&gt; duplicate key end;</p>
-<p>– exceptions can be caught, here is an examples create proc upsert_t1( id_ integer primary key, t_ text, r_ real ) begin begin try insert into T1(id, t, r) values (id_, t_, r_); end try; begin catch update T1 set t = t_, r = r_ where id = id_; end catch; end;</p>
-<p>– shapes can be very useful in avoiding boilerplate code – the following is equivalent, more on shapes later create proc upsert_t1(LIKE t1) – my args are the same as the columns of T1 begin begin try insert into T1 from arguments end try; begin catch update T1 set t = t_, r = r_ where id = id_; end catch; end;</p>
-<p>– you can (re)throw an error explicitly – if there is no current error you get SQLITE_ERROR create proc upsert_wrapper(LIKE t1) – my args are the same as the columns of T1 begin if r_ &gt; 10 then throw end if; call upsert_t1(from arguments); end;</p>
-<p>– procedures can also produce a result set – the compiler generates the code to create this result set – and helper functions to read rows out of it create proc get_low_r(r_ real) begin – optionally insert some rows or do other things select * from T1 where T1.r &lt;= r_; end;</p>
-<p>– a procedure can choose between various results, they must be compatible – the last “select” to run controls the ultimate result create proc get_hi_or_low(r_ real, hi_not_low bool not null) begin if hi_not_ low then select * from T1 where T1.r &gt;= r_; – economical easy query else select * from T1 where T1.r &lt;= r_; – economical easy query end if; end;</p>
-<p>– using IF to create to nice selects above is a powerful thing. – SQLite has no IF, if we tried to create a shared query we get – something that does not use indices at all. As in the below. – The two-headed beast has its advantages. select * from T1 where case hi_not_low then T1.r &gt;= r_ else T1.r &lt;= r_ end;</p>
-<p>– you can get the current return code to help you manage your catch things – this upsert is a bit better than the first create proc upsert_t1(LIKE t1) – my args are the same as the columns of T1 begin begin try insert into T1 from arguments end try; begin catch; if <span class="citation" data-cites="rc">@rc</span> == 19 /* SQLITE_CONSTRAINT */ then update T1 set t = t_, r = r_ where id = id_; else throw; – rethrow, something bad happened. end if; end catch; end;</p>
-<p>– By convention you can call a proc with an out parameter as its last arg – using function notation. The out variable is the return value – If the proc uses the database it could throw which causes the caller to throw create proc fib(n integer not null, out result integer not null) begin result := case n &lt;= 2 then 1 else fib(n-1) + fib(n-2) end; end;</p>
-<p>/********************************************************** * 7. Statement Cursors *********************************************************/</p>
-<p>– statement cursors let you iterate over a select result – here we introduce cursors loop and fetch create proc count_t1(r_ real, out rows_ integer not null) begin declare rows integer not null; – starts at zero guaranteed declare C cursor for select * from T1 where r &lt; r_; loop fetch C – iterate until fetch returns no row begin if C.r &lt; 5 then rows := rows + 1; end if; end; set rows_ := rows; end;</p>
-<p>– more elementary forms are possible create proc peek_t1(r_ real, out rows_ integer not null) begin /* rows_ is set to zero for sure! <em>/ declare C cursor for select </em> from T1 where r &lt; r_ limit 2; open C; – this is no-op, present because other systems have it fetch C; – fetch might find a row or not if C then – cursor name as bool indicates presence of a row set rows_ = rows_ + (C.r &lt; 5); fetch C; set rows_ = rows_ + (C and C.r &lt; 5); end if; close C; – cursors auto-closed at end of method but early close possible end;</p>
-<p>– the fetch form can also fetch directly into variables fetch C into id_, t_, r_; –&gt; loads named locals instead of C.id, C.t, C.r</p>
-<p>– a procedure can be the source of a cursor declare C cursor for call get_low_r(3.2); – valid cursor source</p>
-<p>– “out” can be used to create a result set that is just one row create proc one_t1(r_ real) begin declare C cursor for select * from T1 where r &lt; r_ limit 1; fetch C; out C; – emits a row if we have one, no row is ok too, empty result set. end;</p>
-<p>/********************************************************** * 8. Value Cursors, Out, and Out Union *********************************************************/</p>
-<p>– to consume a procedure that uses “out” you can declare a value cursor – by itself this does not imply use of the database, but often the source – of the cursor uses the database. create proc consume_one_t1() begin – a cursor whose shape matches the one_t1 “out” statement declare C cursor like one_t1;</p>
-<p>– load it from the call fetch C from call one_t1(7); if C.r &gt; 10 then – use values as you see fit call printf(“woohoo”); end if; end;</p>
-<p>– you can do the above in one go with the compound form declare C cursor fetch from call one_t1(7); – same net code</p>
-<p>– value cursors can come from anywhere and can be a result create proc use_t1_a_lot() begin – T1 is the same shape as one_t1, this will work, too declare C cursor like T1; fetch C from call one_t1(7); – load it from the call</p>
-<p>– do something, then maybe load it again with different args fetch C from call one_t1(12); – load it again</p>
-<p>– do something, then maybe load it again with explicit args fetch C using 1 id, “foo” t, 8.2 r;</p>
-<p>– now return it out C; end;</p>
-<p>– make a complex result set one row at a time create proc out_union_example() begin – T1 is the same shape as one_t1, this will work, too declare C cursor like T1;</p>
-<p>– load it from the call fetch C from call one_t1(7);</p>
-<p>– note out UNION rather than just out, indicating potentially many rows out union C;</p>
-<p>– load it again with different args fetch C from call one_t1(12); out union C;</p>
-<p>– do something, then maybe load it again with explicit args fetch C using 1 id, “foo” t, 8.2 r; out union C;</p>
-<p>– we have generated a 3 row result set end;</p>
-<p>– consume the above create proc consume_result() begin declare C cursor for call out_union_example(); loop fetch C begin – use builtin cql_cursor_format to make the cursor into a string call printf(“%s”, cql_cursor_format(C)); –&gt; prints every column and value end; end;</p>
-<p>/********************************************************** * 9. Named Types and Enumerations *********************************************************/</p>
-<p>– create a simple named types declare my_type type integer not null; – make an alias for integer not null declare i my_type; – use it, “i” is an integer</p>
-<p>– mixing in type kinds is helpful declare distance type real<meters>; – e.g., distances to be measured in meters declare time type real<seconds>; – e.g., time to be measured in seconds declare job_id type long<job_id>; declare person_id type long<person_id>;</p>
-<p>– with the above done – * vars/cols of type “distance” are incompatible with those of type “time” – * vars/cols of types job_id are incompatible with person_id – this is true even though the underlying type is the same for both!</p>
-<p>– enums can have any numeric type as their base type declare enum implement integer ( pencil, – values start at 1 unless you use = to choose something pen, – the next enum gets previous + 1 as its value (2) brush = 7 – with = expression you get the indicated value );</p>
-<p>– the above also implicitly does this declare implement type integer<implement> not null;</p>
-<p>– using the enum, simply use dot notation declare impl implement; set impl := implement.pen; – value “2”</p>
-<p>– if you want this enum to be owned by the current compiland you can – emit it into the .h file we are going to generate. – do not put this in an include file, you want it to go to one place <span class="citation" data-cites="emit_enums">@emit_enums</span> implement;</p>
-<p>/********************************************************** * 10. Shapes and Their Uses *********************************************************/</p>
-<p>– shapes first appeared to help define value cursors like so:</p>
-<p>– a table or view name defines a shape declare C cursor like T1;</p>
-<p>– the result of a proc defines a shape declare D cursor like one_t1;</p>
-<p>– a dummy select statement defines a shape (the select does not run) – this one is the same as (x integer not null, y text not null) declare E cursor like select 1 x, “2” y;</p>
-<p>– another cursor defines a shape declare F cursor like C;</p>
-<p>– the arguments of a procedure define a shape – create proc count_t1(r_ real, out rows_ integer not null) … – the shape will be: – (r_ real, rows_ integer not null) declare G cursor like count_t1 arguments;</p>
-<p>– a loaded cursor can be used to make a call call count_t1(from G); – the args become G.r_, G.rows_</p>
-<p>– a shape can be used to define a functions args, or some of the args – p will have args id_, t_, and r_ with types matching table T1 – note that an _ was added create proc p(like T1) begin – do something end;</p>
-<p>– the arguments of the current procedure are a synthetic shape – called “arguments” and can used where other shapes can appeared – for instance you can have q shim to p using this form: create proc q(like T1, print bool not null) begin – maybe pre-process, silly example set id_ := id_ + 1; call p(from arguments); – maybe post-process, silly example set r_ := r_ - 1; if print then – convert args to cursor declare C like q arguments; fetch C from arguments; call printf(“%s”, cql_cursor_format(C)); –&gt; prints every column and value end if; – insert a row based on the args insert into T1 from arguments; end;</p>
-<p>– you an use a given shape more than once if you name them – more exciting if T1 was like a “person” or something create proc r(a like T1, b like T1) begin call p(from a); call p(from b); – you can refer to a.id, b.id etc. declare C like a; fetch C from a; call printf(“%s”, cql_cursor_format(C)); fetch C from b; call printf(“%s”, cql_cursor_format(C)); end;</p>
-<p>– shapes can be subsetted for instance – here not just the arguments that match C are copied, there could be more fetch C from arguments(like C);</p>
-<p>– use the D shape to load C, defaults for other arguments fetch C(like D) from D;</p>
-<p>– use the D shape to load C, dummy values for the others – dummy seed here means use “11” for any numerics – and use “col_name_11” for any strings/blobs fetch C(like D) from D <span class="citation" data-cites="dummy_seed">@dummy_seed</span>(11);</p>
-<p>– use the Z shape to control which fields are copied – use the dummy value even if the field is nullable and null woud have be ok fetch C(like Z) from D(like Z) <span class="citation" data-cites="dummy_seed">@dummy_seed</span>(11) <span class="citation" data-cites="dummy_nullables">@dummy_nullables</span>;</p>
-<p>– same works for insert statements insert into T1(like Z) from D(like Z) <span class="citation" data-cites="dummy_seed">@dummy_seed</span>(11) <span class="citation" data-cites="dummy_nullables">@dummy_nullables</span>;</p>
-<p>– you can make a helper to create test args that are mostly constant – or computable create get_foo_args(X like some_shape, seed_ integer not null) begin declare C cursor like foo arguments; – any way of loading C could work this is one fetch C(like X) from X <span class="citation" data-cites="dummy_seed">@dummy_seed</span>(seed_); out C; end;</p>
-<p>– then get the full arg set and call it – some_shape is the part of the args that needs to manually vary in each – test iteration, the rest will be dummy values. There could be zillions. – some_shape is going to get the values 1, 2, 3 and 100 will be the seed declare foo_args cursor fetch from call get_foo_args(1,2,3, 100); call foo(from foo_args);</p>
-<p>/********************************************************** * 11. INSERT USING and FETCH USING *********************************************************/</p>
-<p>– this kind of thing is a pain insert into foo(a, b, c, d, e, f, g) values(1, 2, 3, null, null, 5, null);</p>
-<p>– instead write this form: insert into foo USING 1 a, 2 b, 3 c, null d, null e, 5 f, null g;</p>
-<p>– the FETCH statement can also be “fetch using” declare C cursor like foo; fetch C USING 1 a, 2 b, 3 c, null d, null e, 5 f, null g; ```</p>
+-- use &quot;continue&quot; to go back to the loop test
+declare i integer not null;
+set i := 0;
+while i &lt; 500
+begin
+   set i := i + 1;
+   if i % 2 then
+     continue; -- note we had to do this after &quot;i&quot; was incremented!
+   end if;
+
+   -- odd numbers will not be printed because of continue above
+   call printf(&quot;%d\n&quot;, i);
+end;
+
+ /**********************************************************
+ * 4. Complex Expression Forms
+ *********************************************************/
+
+ -- case is an expression, so it is more like the C ?: operator
+ -- than a switch statement.  It is ?: on steroids.
+
+ case i              -- a switch expression is optional
+   when 1 then &quot;one&quot; -- one or more cases
+   when 2 then &quot;two&quot;
+   else &quot;other&quot;      -- else is optional
+ end;
+
+-- case with no common expression, is a series of booleans
+case
+   when i == 1 then &quot;i = one&quot;   -- booleans could be completely unrelated
+   when j == 2 then &quot;j = two&quot;   -- first match wins
+   else &quot;other&quot;
+end;
+
+-- if nothing matches the result is null
+case 7
+  when 1 then &quot;one&quot;
+end;
+
+--&gt; result null
+
+-- case is just an expression so it can nest
+case X
+  when 1
+    case y when 1 &quot;x:1 y:1&quot;
+           else &quot;x:1 y:other&quot;
+    end
+  else
+    case when z == 1 &quot;x:other z:1&quot;
+         else &quot;x:other z:other&quot;
+end;
+
+-- IN is used to test for membership
+5 IN (1, 2, 3, 4, 5)  --&gt; true
+7 IN (1, 2)           --&gt; false
+null in (1, 2, 3)     --&gt; null
+null in (1, null, 3)  --&gt; null  (null == null is not true)
+7 NOT IN (1, 2)       --&gt; true
+null not in (null, 3) --&gt; null
+
+/**********************************************************
+ * 4. Working and &quot;getting rid of&quot; null
+ *********************************************************/
+
+-- null can be annoying, you might need a not null value
+-- in most operations null is radioactive
+null + x     --&gt; null
+null * x     --&gt; null
+null == null --&gt; null
+
+-- IS and IS NOT always return 0 or 1
+null is 1     -&gt; 0
+1 is not null -&gt; 1
+
+-- COALESCE returns the first non null arg, or the last arg if all were null
+-- if the last arg is not null, you get a non null result for sure
+COALESCE(x==y, 0) --&gt; if x or y is null, you get 0 not null, not quite &quot;is&quot;
+
+-- IFNULL is coalesce with 2 args only (COALESCE is more general)
+IFNULL(x, -1) --&gt; use -1 if x is null
+
+-- the reverse, convert a sentinel value to unknown, more exotic
+NULLIF(x, -1) --&gt; if x is -1 then use null
+
+-- the else part of a case can get rid of nulls
+CASE when x == y then 1 else 0 end;  --&gt; true iff x = y and neither is null
+
+-- case can be used to give you a default value after various tests
+-- this expression is never null, &quot;other&quot; is returned if x is null
+CASE when x &gt; 0 then &quot;pos&quot; when x &lt; 0 then &quot;neg&quot; else &quot;other&quot; end;
+
+-- you can &quot;throw&quot; out of the current procedure (see exceptions below)
+declare x integer not null;
+set x := ifnull_throw(nullable_int_expr); -- returns non null, throws if null
+
+-- if you have already tested the expression you can use assert-like form
+if nullable_int_expr is not null then
+  -- I am very sure nullable_int_expression is not null
+  set x := ifnull_crash(nullable_int_expr);
+end if;
+
+/**********************************************************
+ * 5. Tables, Views, Indices, Triggers
+ *********************************************************/
+
+-- most forms of data definition language DDL are supported
+-- &quot;loose&quot; DDL (outside of any procedure) simply declares
+-- schema, it does not actually create it, it is assumed to
+-- exist as you specified.
+
+create table T1(
+  id integer primary key,
+  t text,
+  r real
+);
+
+create table T2(
+  id integer primary key references T1(id),
+  l long,
+  b blob
+);
+
+-- CQL can take a series of declarations and automatically
+-- create a procedure that will materialize the declarations
+-- you made.  This will not be discussed here.  But you will get
+-- procedures that have things like.
+
+create proc make_tables()
+begin
+  create table T1 if not exists (
+    id integer primary key,
+    t text,
+    r real
+  );
+end;
+
+-- views are supported
+create view V1 as (select * from T1);
+
+-- triggers are supported
+create trigger if not exists trigger1
+  before delete on T1
+begin
+  delete from T2 where id = old.id;
+end;
+
+-- indices are supported
+create index I1 on T1(t);
+create index I2 on T1(r);
+
+-- the various drop forms are supported
+drop index I1;
+drop index I2;
+drop view V1;
+drop table T2;
+drop table T1;
+
+-- a complete discussion of DDL is out of scope, refer to sqlite.org
+
+/**********************************************************
+ * 6. Selecting Data
+ *********************************************************/
+
+-- we will use this scratch variable in examples
+declare rr real;
+
+-- first observe CQL is a two-headed language
+set rr := 1+1;           -- this is evaluated in generated C code
+set rr := (select 1+1);  -- this select statement is sent to SQLite, it does the add
+
+-- CQL tries to do most things the same as SQLite in the C context
+-- but some things are exceedingly hard to emulate correctly.
+-- Even simple looking things:
+set rr := (select cast(&quot;1.23&quot; as real));   --&gt;  rr := 1.23
+set rr := cast(&quot;1.23&quot; as real);   --&gt;  error
+
+-- In general, numeric/text conversions have to happen in SQLite context
+-- because the specific library that does the conversion could be and usually
+-- is different.  It would not do to give different answers in one context or
+-- another so those conversions are simply not supported.
+
+-- Loose concatenation is not supported because of the implied conversions
+-- Loose means &quot;not in the context of a SQL statement&quot;
+set r := 1.23;
+set r := (select cast(&quot;100&quot;||r as real));  --&gt; 1001.23 (a number)
+set r := cast(&quot;100&quot;||r as real);  --&gt; error, concat not supported in loose expr
+
+-- illustrate a simple insertion
+insert into T1 values (1, &quot;foo&quot;, 3.14);
+
+-- finally, reading from the database
+set r := (select r from T1 where id = 1);  --&gt; r = 3.14
+
+-- the (select ...) form requires the result to have at least one row
+-- you can use &quot;if nothing&quot; forms to handle other cases
+set r := (select r from T1
+          where id = 2
+          if nothing -1);  --&gt; r = -1
+
+-- if the select statement might return a null result you can handle that as well
+set r := (select r from T1
+          where id = 2
+          if nothing or null -1);  --&gt; r = -1
+
+-- with no if nothing clause, lack of a row will cause the select expression to throw
+-- an exception.  &quot;If nothing throw&quot; merely makes this explicit.
+set r := (select r from T1 where id = 2 if nothing throw);  --&gt; will throw
+
+/**********************************************************
+ * 6. Procedures, Results, Exceptions
+ *********************************************************/
+
+-- procedures are a list of statements that can be executed with arguments
+create proc hello()
+begin
+  call printf(&quot;Hello, world\n&quot;);
+end;
+
+-- in, out, and in/out parameters are possible
+create proc swizzle(x integer, inout y integer, out z real not null)
+begin
+  set y := x + y;  -- any computation you like
+
+  -- bizarre way to compute an id but this is just an illustration
+  set z := (select r from T1 where id = x if nothing or null -1);
+end;
+
+-- procedures like &quot;hello&quot; have a void signature, they return nothing
+-- as nothing can go wrong but those that use the database like &quot;swizzle&quot;
+-- can return an error code if there is a problem.
+-- will_fail will always return SQLITE_CONSTRAINT, the second insert
+-- is said to &quot;throw&quot;
+create proc will_fail()
+begin
+   insert into T1 values (1, &quot;x&quot;, 1);
+   insert into T1 values (1, &quot;x&quot;, 1);  --&gt; duplicate key
+end;
+
+-- exceptions can be caught, here is an examples
+create proc upsert_t1(
+  id_ integer primary key,
+  t_ text,
+  r_ real
+)
+begin
+  begin try
+    insert into T1(id, t, r) values (id_, t_, r_);
+  end try;
+  begin catch
+    update T1 set t = t_, r = r_ where id = id_;
+  end catch;
+end;
+
+-- shapes can be very useful in avoiding boilerplate code
+-- the following is equivalent, more on shapes later
+create proc upsert_t1(LIKE t1) -- my args are the same as the columns of T1
+begin
+  begin try
+    insert into T1 from arguments
+  end try;
+  begin catch
+    update T1 set t = t_, r = r_ where id = id_;
+  end catch;
+end;
+
+-- you can (re)throw an error explicitly
+-- if there is no current error you get SQLITE_ERROR
+create proc upsert_wrapper(LIKE t1) -- my args are the same as the columns of T1
+begin
+  if r_ &gt; 10 then throw end if;
+  call upsert_t1(from arguments);
+end;
+
+-- procedures can also produce a result set
+-- the compiler generates the code to create this result set
+-- and helper functions to read rows out of it
+create proc get_low_r(r_ real)
+begin
+   -- optionally insert some rows or do other things
+   select * from T1 where T1.r &lt;= r_;
+end;
+
+-- a procedure can choose between various results, they must be compatible
+-- the last &quot;select&quot; to run controls the ultimate result
+create proc get_hi_or_low(r_ real, hi_not_low bool not null)
+begin
+  if hi_not_ low then
+    select * from T1 where T1.r &gt;= r_; -- economical easy query
+  else
+    select * from T1 where T1.r &lt;= r_; -- economical easy query
+  end if;
+end;
+
+-- using IF to create to nice selects above is a powerful thing.
+-- SQLite has no IF, if we tried to create a shared query we get
+-- something that does not use indices at all.  As in the below.
+-- The two-headed beast has its advantages.
+select * from T1 where case hi_not_low then T1.r &gt;= r_ else T1.r &lt;= r_ end;
+
+-- you can get the current return code to help you manage your catch things
+-- this upsert is a bit better than the first
+create proc upsert_t1(LIKE t1) -- my args are the same as the columns of T1
+begin
+  begin try
+    insert into T1 from arguments
+  end try;
+  begin catch;
+    if @rc == 19 /* SQLITE_CONSTRAINT */ then
+      update T1 set t = t_, r = r_ where id = id_;
+    else
+      throw;  -- rethrow, something bad happened.
+    end if;
+  end catch;
+end;
+
+-- By convention you can call a proc with an out parameter as its last arg
+-- using function notation.  The out variable is the return value
+-- If the proc uses the database it could throw which causes the caller to throw
+create proc fib(n integer not null, out result integer not null)
+begin
+   result := case n &lt;= 2 then 1 else fib(n-1) + fib(n-2) end;
+end;
+
+/**********************************************************
+ * 7. Statement Cursors
+ *********************************************************/
+
+-- statement cursors let you iterate over a select result
+-- here we introduce cursors loop and fetch
+create proc count_t1(r_ real, out rows_ integer not null)
+begin
+  declare rows integer not null;  -- starts at zero guaranteed
+  declare C cursor for select * from T1 where r &lt; r_;
+  loop fetch C -- iterate until fetch returns no row
+  begin
+    if C.r &lt; 5 then
+      rows := rows + 1;
+    end if;
+  end;
+  set rows_ := rows;
+end;
+
+-- more elementary forms are possible
+create proc peek_t1(r_ real, out rows_ integer not null)
+begin
+   /* rows_ is set to zero for sure! */
+   declare C cursor for select * from T1 where r &lt; r_ limit 2;
+   open C;  -- this is no-op, present because other systems have it
+   fetch C;  -- fetch might find a row or not
+   if C then  -- cursor name as bool indicates presence of a row
+     set rows_ = rows_ + (C.r &lt; 5);
+     fetch C;
+     set rows_ = rows_ + (C and C.r &lt; 5);
+   end if;
+   close C;  -- cursors auto-closed at end of method but early close possible
+end;
+
+-- the fetch form can also fetch directly into variables
+fetch C into id_, t_, r_;  --&gt; loads named locals instead of C.id, C.t, C.r
+
+-- a procedure can be the source of a cursor
+declare C cursor for call get_low_r(3.2);  -- valid cursor source
+
+-- &quot;out&quot; can be used to create a result set that is just one row
+create proc one_t1(r_ real)
+begin
+   declare C cursor for select * from T1 where r &lt; r_ limit 1;
+   fetch C;
+   out C;  -- emits a row if we have one, no row is ok too, empty result set.
+end;
+
+/**********************************************************
+ * 8. Value Cursors, Out, and Out Union
+ *********************************************************/
+
+-- to consume a procedure that uses &quot;out&quot; you can declare a value cursor
+-- by itself this does not imply use of the database, but often the source
+-- of the cursor uses the database.
+create proc consume_one_t1()
+begin
+  -- a cursor whose shape matches the one_t1 &quot;out&quot; statement
+  declare C cursor like one_t1;
+
+  -- load it from the call
+  fetch C from call one_t1(7);
+  if C.r &gt; 10 then
+    -- use values as you see fit
+    call printf(&quot;woohoo&quot;);
+  end if;
+end;
+
+-- you can do the above in one go with the compound form
+declare C cursor fetch from call one_t1(7); -- same net code
+
+-- value cursors can come from anywhere and can be a result
+create proc use_t1_a_lot()
+begin
+  -- T1 is the same shape as one_t1, this will work, too
+  declare C cursor like T1;
+  fetch C from call one_t1(7);  -- load it from the call
+
+  -- do something, then maybe load it again with different args
+  fetch C from call one_t1(12);   -- load it again
+
+  -- do something, then maybe load it again with explicit args
+  fetch C using
+     1 id,
+     &quot;foo&quot; t,
+     8.2 r;
+
+  -- now return it
+  out C;
+end;
+
+-- make a complex result set one row at a time
+create proc out_union_example()
+begin
+  -- T1 is the same shape as one_t1, this will work, too
+  declare C cursor like T1;
+
+  -- load it from the call
+  fetch C from call one_t1(7);
+
+  -- note out UNION rather than just out, indicating potentially many rows
+  out union C;
+
+  -- load it again with different args
+  fetch C from call one_t1(12);
+  out union C;
+
+  -- do something, then maybe load it again with explicit args
+  fetch C using
+     1 id,
+     &quot;foo&quot; t,
+     8.2 r;
+  out union C;
+
+  -- we have generated a 3 row result set
+end;
+
+-- consume the above
+create proc consume_result()
+begin
+  declare C cursor for call out_union_example();
+  loop fetch C
+  begin
+    -- use builtin cql_cursor_format to make the cursor into a string
+    call printf(&quot;%s\n&quot;, cql_cursor_format(C)); --&gt; prints every column and value
+  end;
+end;
+
+/**********************************************************
+ * 9. Named Types and Enumerations
+ *********************************************************/
+
+-- create a simple named types
+declare my_type type integer not null;   -- make an alias for integer not null
+declare i my_type;  -- use it, &quot;i&quot; is an integer
+
+-- mixing in type kinds is helpful
+declare distance type real&lt;meters&gt;;  -- e.g., distances to be measured in meters
+declare time type real&lt;seconds&gt;;     -- e.g., time to be measured in seconds
+declare job_id type long&lt;job_id&gt;;
+declare person_id type long&lt;person_id&gt;;
+
+-- with the above done
+--  * vars/cols of type &quot;distance&quot; are incompatible with those of type &quot;time&quot;
+--  * vars/cols of types job_id are incompatible with person_id
+-- this is true even though the underlying type is the same for both!
+
+-- enums can have any numeric type as their base type
+declare enum implement integer (
+   pencil,       -- values start at 1 unless you use = to choose something
+   pen,          -- the next enum gets previous + 1 as its value (2)
+   brush = 7     -- with = expression you get the indicated value
+);
+
+-- the above also implicitly does this
+declare implement type integer&lt;implement&gt; not null;
+
+-- using the enum, simply use dot notation
+declare impl implement;
+set impl := implement.pen;  -- value &quot;2&quot;
+
+-- if you want this enum to be owned by the current compiland you can
+-- emit it into the .h file we are going to generate.
+-- do not put this in an include file, you want it to go to one place
+@emit_enums implement;
+
+/**********************************************************
+ * 10. Shapes and Their Uses
+ *********************************************************/
+
+-- shapes first appeared to help define value cursors like so:
+
+-- a table or view name defines a shape
+declare C cursor like T1;
+
+-- the result of a proc defines a shape
+declare D cursor like one_t1;
+
+-- a dummy select statement defines a shape (the select does not run)
+-- this one is the same as (x integer not null, y text not null)
+declare E cursor like select 1 x, &quot;2&quot; y;
+
+-- another cursor defines a shape
+declare F cursor like C;
+
+-- the arguments of a procedure define a shape
+-- create proc count_t1(r_ real, out rows_ integer not null) ...
+-- the shape will be:
+--  (r_ real, rows_ integer not null)
+declare G cursor like count_t1 arguments;
+
+-- a loaded cursor can be used to make a call
+call count_t1(from G);  -- the args become G.r_, G.rows_
+
+-- a shape can be used to define a functions args, or some of the args
+-- p will have args id_, t_, and r_ with types matching table T1
+-- note that an _ was added
+create proc p(like T1)
+begin
+  -- do something
+end;
+
+-- the arguments of the current procedure are a synthetic shape
+-- called &quot;arguments&quot; and can used where other shapes can appeared
+-- for instance you can have q shim to p using this form:
+create proc q(like T1, print bool not null)
+begin
+  -- maybe pre-process, silly example
+  set id_ := id_ + 1;
+  call p(from arguments);
+  -- maybe post-process, silly example
+  set r_ := r_ - 1;
+  if print then
+    -- convert args to cursor
+    declare C like q arguments;
+    fetch C from arguments;
+    call printf(&quot;%s\n&quot;, cql_cursor_format(C)); --&gt; prints every column and value
+  end if;
+  -- insert a row based on the args
+  insert into T1 from arguments;
+end;
+
+-- you an use a given shape more than once if you name them
+-- more exciting if T1 was like a &quot;person&quot; or something
+create proc r(a like T1, b like T1)
+begin
+  call p(from a);
+  call p(from b);
+  -- you can refer to a.id, b.id etc.
+  declare C like a;
+  fetch C from a;
+  call printf(&quot;%s\n&quot;, cql_cursor_format(C));
+  fetch C from b;
+  call printf(&quot;%s\n&quot;, cql_cursor_format(C));
+end;
+
+-- shapes can be subsetted for instance
+-- here not just the arguments that match C are copied, there could be more
+fetch C from arguments(like C);
+
+-- use the D shape to load C, defaults for other arguments
+fetch C(like D) from D;
+
+-- use the D shape to load C, dummy values for the others
+-- dummy seed here means use &quot;11&quot; for any numerics
+-- and use  &quot;col_name_11&quot; for any strings/blobs
+fetch C(like D) from D @dummy_seed(11);
+
+-- use the Z shape to control which fields are copied
+-- use the dummy value even if the field is nullable and null woud have be ok
+fetch C(like Z) from D(like Z) @dummy_seed(11) @dummy_nullables;
+
+-- same works for insert statements
+insert into T1(like Z) from D(like Z) @dummy_seed(11) @dummy_nullables;
+
+-- you can make a helper to create test args that are mostly constant
+-- or computable
+create get_foo_args(X like some_shape, seed_ integer not null)
+begin
+  declare C cursor like foo arguments;
+  -- any way of loading C could work this is one
+  fetch C(like X) from X @dummy_seed(seed_);
+  out C;
+end;
+
+-- then get the full arg set and call it
+-- some_shape is the part of the args that needs to manually vary in each
+-- test iteration, the rest will be dummy values.  There could be zillions.
+-- some_shape is going to get the values 1, 2, 3 and 100 will be the seed
+declare foo_args cursor fetch from call get_foo_args(1,2,3, 100);
+call foo(from foo_args);
+
+/**********************************************************
+ * 11. INSERT USING and FETCH USING
+ *********************************************************/
+
+ -- this kind of thing is a pain
+ insert into foo(a, b, c, d, e, f, g)
+    values(1, 2, 3, null, null, 5, null);
+
+-- instead write this form:
+insert into foo USING
+    1 a, 2 b, 3 c, null d, null e, 5 f, null g;
+
+-- the FETCH statement can also be &quot;fetch using&quot;
+declare C cursor like foo;
+fetch C USING
+    1 a, 2 b, 3 c, null d, null e, 5 f, null g;</code></pre>
 <p>If you’ve read this far you know more than most now. :)</p>
 </body>
 </html>

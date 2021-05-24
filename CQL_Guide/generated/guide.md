@@ -8199,7 +8199,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed May  5 14:53:29 PDT 2021
+Snapshot as of Mon May 24 14:29:45 PDT 2021
 
 ### Operators and Literals
 
@@ -9931,6 +9931,12 @@ This error prevents the build up of useless annotations.
 Any new column added to a schema must have a default value or be nullable so that its initial state is clear
 and so that all existing insert statements do not have to be updated to include it.  Either make the column
 nullable or give it a default value.
+
+Similarly, any column being deleted must be nullable or have a default value.  The column can't actually be deleted
+(not all versions of SQLite support this) so it will only be "deprecated".  But if the column is not null and has no default
+then it would be impossible to write a correct insert statement for the table with the deleted column.
+
+As a consequence you can neither add nor remove columns that are not null and have no default.
 
 -----
 
@@ -13083,19 +13089,29 @@ Note: if the index/trigger was previously deleted and now the table is also dele
 the index/trigger `@delete` tombstone and this error reminds you to do so.
 
 ----
-CQL 0398 : unused, this was added to prevent merge conflicts at the end on literally every checkin
-----
-CQL 0399 : unused, this was added to prevent merge conflicts at the end on literally every checkin
-----
-CQL 0400 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+
+### CQL0398: A compound select cannot be ordered by the result of an expression
+
+When specifying an `ORDER BY` for a compound select, you may only order by indicies (e.g., `3`) or names (e.g., `foo`) that correspond to an output column, not by the result of an arbitrary expression (e.g., `foo + bar`).
+
+For example, this is allowed:
+
+```sql
+SELECT x, y FROM t0 UNION ALL select x, y FROM t1 ORDER BY y
 ```
 
-----
-CQL 0396 : unused, this was added to prevent merge conflicts at the end on literally every checkin
-----
-CQL 0397 : unused, this was added to prevent merge conflicts at the end on literally every checkin
-----
-CQL 0398 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+The equivalent using an index is also allowed:
+
+```sql
+SELECT x, y FROM t0 UNION ALL select x, y FROM t1 ORDER BY 2
+```
+
+This seemingly equivalent version containing an arbitrary expression, however, is not:
+
+```sql
+SELECT x, y FROM t0 UNION ALL select x, y FROM t1 ORDER BY 1 + 1;
+```
+
 ----
 CQL 0399 : unused, this was added to prevent merge conflicts at the end on literally every checkin
 ----
@@ -13113,7 +13129,7 @@ CQL 0400 : unused, this was added to prevent merge conflicts at the end on liter
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Wed May  5 14:53:30 PDT 2021
+Snapshot as of Mon May 24 14:29:46 PDT 2021
 
 ### Rules
 
@@ -13413,6 +13429,7 @@ view:  '{'
        '"isDeleted"' ':' BOOL_LITERAL ','
        opt_deleted_version
        opt_region_info
+       opt_attributes
        projection
        '"select"' ':' STRING_LITERAL ','
        '"selectArgs"' ':' '[' ']'
@@ -13455,6 +13472,7 @@ index: '{'
         opt_deleted_version
         opt_region_info
         opt_partial_index_where
+        opt_attributes
         '"columns"' ':' '[' column_names ']' ','
         '"sortOrders"' ':' '[' sort_order_names ']'
        '}'
@@ -13483,6 +13501,7 @@ trigger: '{'
           '"statement"' ':' STRING_LITERAL ','
           '"statementArgs"' ':' '[' opt_arg_names ']' ','
           opt_region_info
+          opt_attributes
           dependencies
          '}'
   ;
@@ -13740,6 +13759,7 @@ ad_hoc_migrations: ad_hoc_migration | ad_hoc_migration ',' ad_hoc_migrations
 
 ad_hoc_migration: '{'
                   '"name"' ':' STRING_LITERAL ','
+                  opt_attributes
                   '"version"' ':' any_integer
                   '}'
   ;

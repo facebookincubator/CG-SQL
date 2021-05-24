@@ -3045,13 +3045,17 @@
       </p>
       <p>referenced by:
          <ul>
+            <li><a href="#ad_hoc_migration" title="ad_hoc_migration">ad_hoc_migration</a></li>
             <li><a href="#column" title="column">column</a></li>
             <li><a href="#delete" title="delete">delete</a></li>
             <li><a href="#general" title="general">general</a></li>
+            <li><a href="#index" title="index">index</a></li>
             <li><a href="#insert_details" title="insert_details">insert_details</a></li>
             <li><a href="#query" title="query">query</a></li>
             <li><a href="#table" title="table">table</a></li>
+            <li><a href="#trigger" title="trigger">trigger</a></li>
             <li><a href="#update" title="update">update</a></li>
+            <li><a href="#view" title="view">view</a></li>
             <li><a href="#virtual_table" title="virtual_table">virtual_table</a></li>
          </ul>
       </p><br /><p style="font-size: 14px; font-weight:bold"><a name="attributes">attributes:</a></p><svg width="461" height="37">
@@ -3647,7 +3651,7 @@
          <ul>
             <li><a href="#json_schema" title="json_schema">json_schema</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="view">view:</a></p><svg width="945" height="169">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="view">view:</a></p><svg width="887" height="169">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -3720,40 +3724,43 @@
             <text class="nonterminal" x="209" y="87">opt_deleted_version</text></a><a href="#opt_region_info" title="opt_region_info">
             <rect x="373" y="69" width="120" height="32"></rect>
             <rect x="371" y="67" width="120" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="381" y="87">opt_region_info</text></a><a href="#projection" title="projection">
-            <rect x="513" y="69" width="84" height="32"></rect>
-            <rect x="511" y="67" width="84" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="521" y="87">projection</text></a><rect x="617" y="69" width="74" height="32" rx="10"></rect>
-         <rect x="615" y="67" width="74" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="625" y="87">"select"</text>
-         <rect x="711" y="69" width="24" height="32" rx="10"></rect>
-         <rect x="709" y="67" width="24" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="719" y="87">:</text><a href="#STRING_LITERAL" title="STRING_LITERAL">
-            <rect x="755" y="69" width="124" height="32"></rect>
-            <rect x="753" y="67" width="124" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="763" y="87">STRING_LITERAL</text></a><rect x="899" y="69" width="24" height="32" rx="10"></rect>
-         <rect x="897" y="67" width="24" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="907" y="87">,</text>
-         <rect x="629" y="135" width="104" height="32" rx="10"></rect>
-         <rect x="627" y="133" width="104" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="637" y="153">"selectArgs"</text>
-         <rect x="753" y="135" width="24" height="32" rx="10"></rect>
-         <rect x="751" y="133" width="24" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="761" y="153">:</text>
-         <rect x="797" y="135" width="26" height="32" rx="10"></rect>
-         <rect x="795" y="133" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="805" y="153">[</text>
-         <rect x="843" y="135" width="26" height="32" rx="10"></rect>
-         <rect x="841" y="133" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="851" y="153">]</text>
-         <rect x="889" y="135" width="28" height="32" rx="10"></rect>
-         <rect x="887" y="133" width="28" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="897" y="153">}</text>
-         <path class="line" d="m17 17 h2 m0 0 h10 m28 0 h10 m0 0 h10 m70 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m124 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m82 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m112 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m96 0 h10 m0 0 h10 m24 0 h10 m2 0 l2 0 m2 0 l2 0 m2 0 l2 0 m-882 66 l2 0 m2 0 l2 0 m2 0 l2 0 m2 0 h10 m112 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m152 0 h10 m0 0 h10 m120 0 h10 m0 0 h10 m84 0 h10 m0 0 h10 m74 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m124 0 h10 m0 0 h10 m24 0 h10 m2 0 l2 0 m2 0 l2 0 m2 0 l2 0 m-338 66 l2 0 m2 0 l2 0 m2 0 l2 0 m2 0 h10 m104 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m28 0 h10 m3 0 h-3"></path>
-         <polygon points="935 149 943 145 943 153"></polygon>
-         <polygon points="935 149 927 145 927 153"></polygon></svg><p>
+            <text class="nonterminal" x="381" y="87">opt_region_info</text></a><a href="#opt_attributes" title="opt_attributes">
+            <rect x="513" y="69" width="110" height="32"></rect>
+            <rect x="511" y="67" width="110" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="521" y="87">opt_attributes</text></a><a href="#projection" title="projection">
+            <rect x="643" y="69" width="84" height="32"></rect>
+            <rect x="641" y="67" width="84" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="651" y="87">projection</text></a><rect x="747" y="69" width="74" height="32" rx="10"></rect>
+         <rect x="745" y="67" width="74" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="755" y="87">"select"</text>
+         <rect x="841" y="69" width="24" height="32" rx="10"></rect>
+         <rect x="839" y="67" width="24" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="849" y="87">:</text><a href="#STRING_LITERAL" title="STRING_LITERAL">
+            <rect x="383" y="135" width="124" height="32"></rect>
+            <rect x="381" y="133" width="124" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="391" y="153">STRING_LITERAL</text></a><rect x="527" y="135" width="24" height="32" rx="10"></rect>
+         <rect x="525" y="133" width="24" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="535" y="153">,</text>
+         <rect x="571" y="135" width="104" height="32" rx="10"></rect>
+         <rect x="569" y="133" width="104" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="579" y="153">"selectArgs"</text>
+         <rect x="695" y="135" width="24" height="32" rx="10"></rect>
+         <rect x="693" y="133" width="24" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="703" y="153">:</text>
+         <rect x="739" y="135" width="26" height="32" rx="10"></rect>
+         <rect x="737" y="133" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="747" y="153">[</text>
+         <rect x="785" y="135" width="26" height="32" rx="10"></rect>
+         <rect x="783" y="133" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="793" y="153">]</text>
+         <rect x="831" y="135" width="28" height="32" rx="10"></rect>
+         <rect x="829" y="133" width="28" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="839" y="153">}</text>
+         <path class="line" d="m17 17 h2 m0 0 h10 m28 0 h10 m0 0 h10 m70 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m124 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m82 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m112 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m96 0 h10 m0 0 h10 m24 0 h10 m2 0 l2 0 m2 0 l2 0 m2 0 l2 0 m-882 66 l2 0 m2 0 l2 0 m2 0 l2 0 m2 0 h10 m112 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m152 0 h10 m0 0 h10 m120 0 h10 m0 0 h10 m110 0 h10 m0 0 h10 m84 0 h10 m0 0 h10 m74 0 h10 m0 0 h10 m24 0 h10 m2 0 l2 0 m2 0 l2 0 m2 0 l2 0 m-526 66 l2 0 m2 0 l2 0 m2 0 l2 0 m2 0 h10 m124 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m104 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m28 0 h10 m3 0 h-3"></path>
+         <polygon points="877 149 885 145 885 153"></polygon>
+         <polygon points="877 149 869 145 869 153"></polygon></svg><p>
          <div class="ebnf"><code>
-               <div><a href="#view" title="view">view</a>     ::= '{' '"name"' ':' <a href="#STRING_LITERAL" title="STRING_LITERAL">STRING_LITERAL</a> ',' '"isTemp"' ':' <a href="#BOOL_LITERAL" title="BOOL_LITERAL">BOOL_LITERAL</a> ',' '"isDeleted"' ':' <a href="#BOOL_LITERAL" title="BOOL_LITERAL">BOOL_LITERAL</a> ',' <a href="#opt_deleted_version" title="opt_deleted_version">opt_deleted_version</a> <a href="#opt_region_info" title="opt_region_info">opt_region_info</a> <a href="#projection" title="projection">projection</a> '"select"' ':' <a href="#STRING_LITERAL" title="STRING_LITERAL">STRING_LITERAL</a> ',' '"selectArgs"' ':' '[' ']' '}'</div></code></div>
+               <div><a href="#view" title="view">view</a>     ::= '{' '"name"' ':' <a href="#STRING_LITERAL" title="STRING_LITERAL">STRING_LITERAL</a> ',' '"isTemp"' ':' <a href="#BOOL_LITERAL" title="BOOL_LITERAL">BOOL_LITERAL</a> ',' '"isDeleted"' ':' <a href="#BOOL_LITERAL" title="BOOL_LITERAL">BOOL_LITERAL</a> ',' <a href="#opt_deleted_version" title="opt_deleted_version">opt_deleted_version</a> <a href="#opt_region_info" title="opt_region_info">opt_region_info</a> <a href="#opt_attributes" title="opt_attributes">opt_attributes</a> <a href="#projection" title="projection">projection</a> '"select"' ':' <a href="#STRING_LITERAL" title="STRING_LITERAL">STRING_LITERAL</a> ',' '"selectArgs"' ':' '[' ']' '}'</div></code></div>
       </p>
       <p>referenced by:
          <ul>
@@ -4074,7 +4081,7 @@
          <ul>
             <li><a href="#json_schema" title="json_schema">json_schema</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="index">index:</a></p><svg width="963" height="235">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="index">index:</a></p><svg width="885" height="235">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -4137,80 +4144,83 @@
          <rect x="833" y="3" width="24" height="32" rx="10"></rect>
          <rect x="831" y="1" width="24" height="32" class="terminal" rx="10"></rect>
          <text class="terminal" x="841" y="21">:</text><a href="#BOOL_LITERAL" title="BOOL_LITERAL">
-            <rect x="64" y="69" width="112" height="32"></rect>
-            <rect x="62" y="67" width="112" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="72" y="87">BOOL_LITERAL</text></a><rect x="196" y="69" width="24" height="32" rx="10"></rect>
-         <rect x="194" y="67" width="24" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="204" y="87">,</text>
-         <rect x="240" y="69" width="106" height="32" rx="10"></rect>
-         <rect x="238" y="67" width="106" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="248" y="87">"ifNotExists"</text>
-         <rect x="366" y="69" width="24" height="32" rx="10"></rect>
-         <rect x="364" y="67" width="24" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="374" y="87">:</text><a href="#BOOL_LITERAL" title="BOOL_LITERAL">
-            <rect x="410" y="69" width="112" height="32"></rect>
-            <rect x="408" y="67" width="112" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="418" y="87">BOOL_LITERAL</text></a><rect x="542" y="69" width="24" height="32" rx="10"></rect>
-         <rect x="540" y="67" width="24" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="550" y="87">,</text>
-         <rect x="586" y="69" width="96" height="32" rx="10"></rect>
-         <rect x="584" y="67" width="96" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="594" y="87">"isDeleted"</text>
-         <rect x="702" y="69" width="24" height="32" rx="10"></rect>
-         <rect x="700" y="67" width="24" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="710" y="87">:</text><a href="#BOOL_LITERAL" title="BOOL_LITERAL">
-            <rect x="746" y="69" width="112" height="32"></rect>
-            <rect x="744" y="67" width="112" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="754" y="87">BOOL_LITERAL</text></a><rect x="878" y="69" width="24" height="32" rx="10"></rect>
-         <rect x="876" y="67" width="24" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="886" y="87">,</text><a href="#opt_deleted_version" title="opt_deleted_version">
-            <rect x="25" y="135" width="152" height="32"></rect>
-            <rect x="23" y="133" width="152" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="33" y="153">opt_deleted_version</text></a><a href="#opt_region_info" title="opt_region_info">
-            <rect x="197" y="135" width="120" height="32"></rect>
-            <rect x="195" y="133" width="120" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="205" y="153">opt_region_info</text></a><a href="#opt_partial_index_where" title="opt_partial_index_where">
-            <rect x="337" y="135" width="178" height="32"></rect>
-            <rect x="335" y="133" width="178" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="345" y="153">opt_partial_index_where</text></a><rect x="535" y="135" width="90" height="32" rx="10"></rect>
-         <rect x="533" y="133" width="90" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="543" y="153">"columns"</text>
-         <rect x="645" y="135" width="24" height="32" rx="10"></rect>
-         <rect x="643" y="133" width="24" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="653" y="153">:</text>
-         <rect x="689" y="135" width="26" height="32" rx="10"></rect>
-         <rect x="687" y="133" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="697" y="153">[</text><a href="#column_names" title="column_names">
-            <rect x="735" y="135" width="116" height="32"></rect>
-            <rect x="733" y="133" width="116" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="743" y="153">column_names</text></a><rect x="871" y="135" width="26" height="32" rx="10"></rect>
-         <rect x="869" y="133" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="879" y="153">]</text>
-         <rect x="917" y="135" width="24" height="32" rx="10"></rect>
-         <rect x="915" y="133" width="24" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="925" y="153">,</text>
-         <rect x="487" y="201" width="106" height="32" rx="10"></rect>
-         <rect x="485" y="199" width="106" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="495" y="219">"sortOrders"</text>
-         <rect x="613" y="201" width="24" height="32" rx="10"></rect>
-         <rect x="611" y="199" width="24" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="621" y="219">:</text>
-         <rect x="657" y="201" width="26" height="32" rx="10"></rect>
-         <rect x="655" y="199" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="665" y="219">[</text><a href="#sort_order_names" title="sort_order_names">
-            <rect x="703" y="201" width="138" height="32"></rect>
-            <rect x="701" y="199" width="138" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="711" y="219">sort_order_names</text></a><rect x="861" y="201" width="26" height="32" rx="10"></rect>
-         <rect x="859" y="199" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="869" y="219">]</text>
-         <rect x="907" y="201" width="28" height="32" rx="10"></rect>
-         <rect x="905" y="199" width="28" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="915" y="219">}</text>
-         <path class="line" d="m17 17 h2 m0 0 h10 m28 0 h10 m0 0 h10 m70 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m124 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m68 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m124 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m92 0 h10 m0 0 h10 m24 0 h10 m2 0 l2 0 m2 0 l2 0 m2 0 l2 0 m-837 66 l2 0 m2 0 l2 0 m2 0 l2 0 m2 0 h10 m112 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m106 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m112 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m96 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m112 0 h10 m0 0 h10 m24 0 h10 m2 0 l2 0 m2 0 l2 0 m2 0 l2 0 m-921 66 l2 0 m2 0 l2 0 m2 0 l2 0 m2 0 h10 m152 0 h10 m0 0 h10 m120 0 h10 m0 0 h10 m178 0 h10 m0 0 h10 m90 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m116 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m24 0 h10 m2 0 l2 0 m2 0 l2 0 m2 0 l2 0 m-498 66 l2 0 m2 0 l2 0 m2 0 l2 0 m2 0 h10 m106 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m138 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m28 0 h10 m3 0 h-3"></path>
-         <polygon points="953 215 961 211 961 219"></polygon>
-         <polygon points="953 215 945 211 945 219"></polygon></svg><p>
+            <rect x="25" y="69" width="112" height="32"></rect>
+            <rect x="23" y="67" width="112" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="33" y="87">BOOL_LITERAL</text></a><rect x="157" y="69" width="24" height="32" rx="10"></rect>
+         <rect x="155" y="67" width="24" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="165" y="87">,</text>
+         <rect x="201" y="69" width="106" height="32" rx="10"></rect>
+         <rect x="199" y="67" width="106" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="209" y="87">"ifNotExists"</text>
+         <rect x="327" y="69" width="24" height="32" rx="10"></rect>
+         <rect x="325" y="67" width="24" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="335" y="87">:</text><a href="#BOOL_LITERAL" title="BOOL_LITERAL">
+            <rect x="371" y="69" width="112" height="32"></rect>
+            <rect x="369" y="67" width="112" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="379" y="87">BOOL_LITERAL</text></a><rect x="503" y="69" width="24" height="32" rx="10"></rect>
+         <rect x="501" y="67" width="24" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="511" y="87">,</text>
+         <rect x="547" y="69" width="96" height="32" rx="10"></rect>
+         <rect x="545" y="67" width="96" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="555" y="87">"isDeleted"</text>
+         <rect x="663" y="69" width="24" height="32" rx="10"></rect>
+         <rect x="661" y="67" width="24" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="671" y="87">:</text><a href="#BOOL_LITERAL" title="BOOL_LITERAL">
+            <rect x="707" y="69" width="112" height="32"></rect>
+            <rect x="705" y="67" width="112" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="715" y="87">BOOL_LITERAL</text></a><rect x="839" y="69" width="24" height="32" rx="10"></rect>
+         <rect x="837" y="67" width="24" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="847" y="87">,</text><a href="#opt_deleted_version" title="opt_deleted_version">
+            <rect x="34" y="135" width="152" height="32"></rect>
+            <rect x="32" y="133" width="152" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="42" y="153">opt_deleted_version</text></a><a href="#opt_region_info" title="opt_region_info">
+            <rect x="206" y="135" width="120" height="32"></rect>
+            <rect x="204" y="133" width="120" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="214" y="153">opt_region_info</text></a><a href="#opt_partial_index_where" title="opt_partial_index_where">
+            <rect x="346" y="135" width="178" height="32"></rect>
+            <rect x="344" y="133" width="178" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="354" y="153">opt_partial_index_where</text></a><a href="#opt_attributes" title="opt_attributes">
+            <rect x="544" y="135" width="110" height="32"></rect>
+            <rect x="542" y="133" width="110" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="552" y="153">opt_attributes</text></a><rect x="674" y="135" width="90" height="32" rx="10"></rect>
+         <rect x="672" y="133" width="90" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="682" y="153">"columns"</text>
+         <rect x="784" y="135" width="24" height="32" rx="10"></rect>
+         <rect x="782" y="133" width="24" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="792" y="153">:</text>
+         <rect x="828" y="135" width="26" height="32" rx="10"></rect>
+         <rect x="826" y="133" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="836" y="153">[</text><a href="#column_names" title="column_names">
+            <rect x="183" y="201" width="116" height="32"></rect>
+            <rect x="181" y="199" width="116" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="191" y="219">column_names</text></a><rect x="319" y="201" width="26" height="32" rx="10"></rect>
+         <rect x="317" y="199" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="327" y="219">]</text>
+         <rect x="365" y="201" width="24" height="32" rx="10"></rect>
+         <rect x="363" y="199" width="24" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="373" y="219">,</text>
+         <rect x="409" y="201" width="106" height="32" rx="10"></rect>
+         <rect x="407" y="199" width="106" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="417" y="219">"sortOrders"</text>
+         <rect x="535" y="201" width="24" height="32" rx="10"></rect>
+         <rect x="533" y="199" width="24" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="543" y="219">:</text>
+         <rect x="579" y="201" width="26" height="32" rx="10"></rect>
+         <rect x="577" y="199" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="587" y="219">[</text><a href="#sort_order_names" title="sort_order_names">
+            <rect x="625" y="201" width="138" height="32"></rect>
+            <rect x="623" y="199" width="138" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="633" y="219">sort_order_names</text></a><rect x="783" y="201" width="26" height="32" rx="10"></rect>
+         <rect x="781" y="199" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="791" y="219">]</text>
+         <rect x="829" y="201" width="28" height="32" rx="10"></rect>
+         <rect x="827" y="199" width="28" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="837" y="219">}</text>
+         <path class="line" d="m17 17 h2 m0 0 h10 m28 0 h10 m0 0 h10 m70 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m124 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m68 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m124 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m92 0 h10 m0 0 h10 m24 0 h10 m2 0 l2 0 m2 0 l2 0 m2 0 l2 0 m-876 66 l2 0 m2 0 l2 0 m2 0 l2 0 m2 0 h10 m112 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m106 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m112 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m96 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m112 0 h10 m0 0 h10 m24 0 h10 m2 0 l2 0 m2 0 l2 0 m2 0 l2 0 m-873 66 l2 0 m2 0 l2 0 m2 0 l2 0 m2 0 h10 m152 0 h10 m0 0 h10 m120 0 h10 m0 0 h10 m178 0 h10 m0 0 h10 m110 0 h10 m0 0 h10 m90 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m26 0 h10 m2 0 l2 0 m2 0 l2 0 m2 0 l2 0 m-715 66 l2 0 m2 0 l2 0 m2 0 l2 0 m2 0 h10 m116 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m106 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m138 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m28 0 h10 m3 0 h-3"></path>
+         <polygon points="875 215 883 211 883 219"></polygon>
+         <polygon points="875 215 867 211 867 219"></polygon></svg><p>
          <div class="ebnf"><code>
-               <div><a href="#index" title="index">index</a>    ::= '{' '"name"' ':' <a href="#STRING_LITERAL" title="STRING_LITERAL">STRING_LITERAL</a> ',' '"table"' ':' <a href="#STRING_LITERAL" title="STRING_LITERAL">STRING_LITERAL</a> ',' '"isUnique"' ':' <a href="#BOOL_LITERAL" title="BOOL_LITERAL">BOOL_LITERAL</a> ',' '"ifNotExists"' ':' <a href="#BOOL_LITERAL" title="BOOL_LITERAL">BOOL_LITERAL</a> ',' '"isDeleted"' ':' <a href="#BOOL_LITERAL" title="BOOL_LITERAL">BOOL_LITERAL</a> ',' <a href="#opt_deleted_version" title="opt_deleted_version">opt_deleted_version</a> <a href="#opt_region_info" title="opt_region_info">opt_region_info</a> <a href="#opt_partial_index_where" title="opt_partial_index_where">opt_partial_index_where</a> '"columns"' ':' '[' <a href="#column_names" title="column_names">column_names</a> ']' ',' '"sortOrders"' ':' '[' <a href="#sort_order_names" title="sort_order_names">sort_order_names</a> ']' '}'</div></code></div>
+               <div><a href="#index" title="index">index</a>    ::= '{' '"name"' ':' <a href="#STRING_LITERAL" title="STRING_LITERAL">STRING_LITERAL</a> ',' '"table"' ':' <a href="#STRING_LITERAL" title="STRING_LITERAL">STRING_LITERAL</a> ',' '"isUnique"' ':' <a href="#BOOL_LITERAL" title="BOOL_LITERAL">BOOL_LITERAL</a> ',' '"ifNotExists"' ':' <a href="#BOOL_LITERAL" title="BOOL_LITERAL">BOOL_LITERAL</a> ',' '"isDeleted"' ':' <a href="#BOOL_LITERAL" title="BOOL_LITERAL">BOOL_LITERAL</a> ',' <a href="#opt_deleted_version" title="opt_deleted_version">opt_deleted_version</a> <a href="#opt_region_info" title="opt_region_info">opt_region_info</a> <a href="#opt_partial_index_where" title="opt_partial_index_where">opt_partial_index_where</a> <a href="#opt_attributes" title="opt_attributes">opt_attributes</a> '"columns"' ':' '[' <a href="#column_names" title="column_names">column_names</a> ']' ',' '"sortOrders"' ':' '[' <a href="#sort_order_names" title="sort_order_names">sort_order_names</a> ']' '}'</div></code></div>
       </p>
       <p>referenced by:
          <ul>
@@ -4456,17 +4466,20 @@
          <text class="terminal" x="815" y="219">,</text><a href="#opt_region_info" title="opt_region_info">
             <rect x="851" y="201" width="120" height="32"></rect>
             <rect x="849" y="199" width="120" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="859" y="219">opt_region_info</text></a><a href="#dependencies" title="dependencies">
+            <text class="nonterminal" x="859" y="219">opt_region_info</text></a><a href="#opt_attributes" title="opt_attributes">
+            <rect x="679" y="267" width="110" height="32"></rect>
+            <rect x="677" y="265" width="110" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="687" y="285">opt_attributes</text></a><a href="#dependencies" title="dependencies">
             <rect x="809" y="267" width="108" height="32"></rect>
             <rect x="807" y="265" width="108" height="32" class="nonterminal"></rect>
             <text class="nonterminal" x="817" y="285">dependencies</text></a><rect x="937" y="267" width="28" height="32" rx="10"></rect>
          <rect x="935" y="265" width="28" height="32" class="terminal" rx="10"></rect>
          <text class="terminal" x="945" y="285">}</text>
-         <path class="line" d="m17 17 h2 m0 0 h10 m28 0 h10 m0 0 h10 m70 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m124 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m74 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m124 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m82 0 h10 m0 0 h10 m24 0 h10 m2 0 l2 0 m2 0 l2 0 m2 0 l2 0 m-818 66 l2 0 m2 0 l2 0 m2 0 l2 0 m2 0 h10 m112 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m106 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m112 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m96 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m112 0 h10 m0 0 h10 m24 0 h10 m2 0 l2 0 m2 0 l2 0 m2 0 l2 0 m-905 66 l2 0 m2 0 l2 0 m2 0 l2 0 m2 0 h10 m152 0 h10 m0 0 h10 m154 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m158 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m134 0 h10 m0 0 h10 m118 0 h10 m2 0 l2 0 m2 0 l2 0 m2 0 l2 0 m-959 66 l2 0 m2 0 l2 0 m2 0 l2 0 m2 0 h10 m102 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m124 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m132 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m120 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m120 0 h10 m2 0 l2 0 m2 0 l2 0 m2 0 l2 0 m-206 66 l2 0 m2 0 l2 0 m2 0 l2 0 m2 0 h10 m108 0 h10 m0 0 h10 m28 0 h10 m3 0 h-3"></path>
+         <path class="line" d="m17 17 h2 m0 0 h10 m28 0 h10 m0 0 h10 m70 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m124 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m74 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m124 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m82 0 h10 m0 0 h10 m24 0 h10 m2 0 l2 0 m2 0 l2 0 m2 0 l2 0 m-818 66 l2 0 m2 0 l2 0 m2 0 l2 0 m2 0 h10 m112 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m106 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m112 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m96 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m112 0 h10 m0 0 h10 m24 0 h10 m2 0 l2 0 m2 0 l2 0 m2 0 l2 0 m-905 66 l2 0 m2 0 l2 0 m2 0 l2 0 m2 0 h10 m152 0 h10 m0 0 h10 m154 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m158 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m134 0 h10 m0 0 h10 m118 0 h10 m2 0 l2 0 m2 0 l2 0 m2 0 l2 0 m-959 66 l2 0 m2 0 l2 0 m2 0 l2 0 m2 0 h10 m102 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m124 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m132 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m120 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m120 0 h10 m2 0 l2 0 m2 0 l2 0 m2 0 l2 0 m-336 66 l2 0 m2 0 l2 0 m2 0 l2 0 m2 0 h10 m110 0 h10 m0 0 h10 m108 0 h10 m0 0 h10 m28 0 h10 m3 0 h-3"></path>
          <polygon points="983 281 991 277 991 285"></polygon>
          <polygon points="983 281 975 277 975 285"></polygon></svg><p>
          <div class="ebnf"><code>
-               <div><a href="#trigger" title="trigger">trigger</a>  ::= '{' '"name"' ':' <a href="#STRING_LITERAL" title="STRING_LITERAL">STRING_LITERAL</a> ',' '"target"' ':' <a href="#STRING_LITERAL" title="STRING_LITERAL">STRING_LITERAL</a> ',' '"isTemp"' ':' <a href="#BOOL_LITERAL" title="BOOL_LITERAL">BOOL_LITERAL</a> ',' '"ifNotExists"' ':' <a href="#BOOL_LITERAL" title="BOOL_LITERAL">BOOL_LITERAL</a> ',' '"isDeleted"' ':' <a href="#BOOL_LITERAL" title="BOOL_LITERAL">BOOL_LITERAL</a> ',' <a href="#opt_deleted_version" title="opt_deleted_version">opt_deleted_version</a> <a href="#before_after_instead" title="before_after_instead">before_after_instead</a> ',' <a href="#delete_insert_update" title="delete_insert_update">delete_insert_update</a> ',' <a href="#opt_for_each_row" title="opt_for_each_row">opt_for_each_row</a> <a href="#opt_when_expr" title="opt_when_expr">opt_when_expr</a> '"statement"' ':' <a href="#STRING_LITERAL" title="STRING_LITERAL">STRING_LITERAL</a> ',' '"statementArgs"' ':' '[' <a href="#opt_arg_names" title="opt_arg_names">opt_arg_names</a> ']' ',' <a href="#opt_region_info" title="opt_region_info">opt_region_info</a> <a href="#dependencies" title="dependencies">dependencies</a> '}'</div></code></div>
+               <div><a href="#trigger" title="trigger">trigger</a>  ::= '{' '"name"' ':' <a href="#STRING_LITERAL" title="STRING_LITERAL">STRING_LITERAL</a> ',' '"target"' ':' <a href="#STRING_LITERAL" title="STRING_LITERAL">STRING_LITERAL</a> ',' '"isTemp"' ':' <a href="#BOOL_LITERAL" title="BOOL_LITERAL">BOOL_LITERAL</a> ',' '"ifNotExists"' ':' <a href="#BOOL_LITERAL" title="BOOL_LITERAL">BOOL_LITERAL</a> ',' '"isDeleted"' ':' <a href="#BOOL_LITERAL" title="BOOL_LITERAL">BOOL_LITERAL</a> ',' <a href="#opt_deleted_version" title="opt_deleted_version">opt_deleted_version</a> <a href="#before_after_instead" title="before_after_instead">before_after_instead</a> ',' <a href="#delete_insert_update" title="delete_insert_update">delete_insert_update</a> ',' <a href="#opt_for_each_row" title="opt_for_each_row">opt_for_each_row</a> <a href="#opt_when_expr" title="opt_when_expr">opt_when_expr</a> '"statement"' ':' <a href="#STRING_LITERAL" title="STRING_LITERAL">STRING_LITERAL</a> ',' '"statementArgs"' ':' '[' <a href="#opt_arg_names" title="opt_arg_names">opt_arg_names</a> ']' ',' <a href="#opt_region_info" title="opt_region_info">opt_region_info</a> <a href="#opt_attributes" title="opt_attributes">opt_attributes</a> <a href="#dependencies" title="dependencies">dependencies</a> '}'</div></code></div>
       </p>
       <p>referenced by:
          <ul>
@@ -7268,7 +7281,7 @@
          <ul>
             <li><a href="#json_schema" title="json_schema">json_schema</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="ad_hoc_migration">ad_hoc_migration:</a></p><svg width="721" height="37">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="ad_hoc_migration">ad_hoc_migration:</a></p><svg width="851" height="37">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -7313,24 +7326,26 @@
             <rect x="211" y="1" width="124" height="32" class="nonterminal"></rect>
             <text class="nonterminal" x="221" y="21">STRING_LITERAL</text></a><rect x="357" y="3" width="24" height="32" rx="10"></rect>
          <rect x="355" y="1" width="24" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="365" y="21">,</text>
-         <rect x="401" y="3" width="84" height="32" rx="10"></rect>
-         <rect x="399" y="1" width="84" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="409" y="21">"version"</text>
-         <rect x="505" y="3" width="24" height="32" rx="10"></rect>
-         <rect x="503" y="1" width="24" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="513" y="21">:</text><a href="#any_integer" title="any_integer">
-            <rect x="549" y="3" width="96" height="32"></rect>
-            <rect x="547" y="1" width="96" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="557" y="21">any_integer</text></a><rect x="665" y="3" width="28" height="32" rx="10"></rect>
-         <rect x="663" y="1" width="28" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="673" y="21">}</text>
-         <path class="line" d="m17 17 h2 m0 0 h10 m28 0 h10 m0 0 h10 m70 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m124 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m84 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m96 0 h10 m0 0 h10 m28 0 h10 m3 0 h-3"></path>
-         <polygon points="711 17 719 13 719 21"></polygon>
-         <polygon points="711 17 703 13 703 21"></polygon></svg><p>
+         <text class="terminal" x="365" y="21">,</text><a href="#opt_attributes" title="opt_attributes">
+            <rect x="401" y="3" width="110" height="32"></rect>
+            <rect x="399" y="1" width="110" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="409" y="21">opt_attributes</text></a><rect x="531" y="3" width="84" height="32" rx="10"></rect>
+         <rect x="529" y="1" width="84" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="539" y="21">"version"</text>
+         <rect x="635" y="3" width="24" height="32" rx="10"></rect>
+         <rect x="633" y="1" width="24" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="643" y="21">:</text><a href="#any_integer" title="any_integer">
+            <rect x="679" y="3" width="96" height="32"></rect>
+            <rect x="677" y="1" width="96" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="687" y="21">any_integer</text></a><rect x="795" y="3" width="28" height="32" rx="10"></rect>
+         <rect x="793" y="1" width="28" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="803" y="21">}</text>
+         <path class="line" d="m17 17 h2 m0 0 h10 m28 0 h10 m0 0 h10 m70 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m124 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m110 0 h10 m0 0 h10 m84 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m96 0 h10 m0 0 h10 m28 0 h10 m3 0 h-3"></path>
+         <polygon points="841 17 849 13 849 21"></polygon>
+         <polygon points="841 17 833 13 833 21"></polygon></svg><p>
          <div class="ebnf"><code>
                <div><a href="#ad_hoc_migration" title="ad_hoc_migration">ad_hoc_migration</a></div>
-               <div>         ::= '{' '"name"' ':' <a href="#STRING_LITERAL" title="STRING_LITERAL">STRING_LITERAL</a> ',' '"version"' ':' <a href="#any_integer" title="any_integer">any_integer</a> '}'</div></code></div>
+               <div>         ::= '{' '"name"' ':' <a href="#STRING_LITERAL" title="STRING_LITERAL">STRING_LITERAL</a> ',' <a href="#opt_attributes" title="opt_attributes">opt_attributes</a> '"version"' ':' <a href="#any_integer" title="any_integer">any_integer</a> '}'</div></code></div>
       </p>
       <p>referenced by:
          <ul>
