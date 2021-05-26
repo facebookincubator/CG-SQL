@@ -621,6 +621,18 @@
 <li><a href="#rules-1">Rules</a></li>
 </ul></li>
 <li><a href="#appendix-6-cql-in-20-minutes">Appendix 6: CQL In 20 Minutes</a></li>
+<li><a href="#appendix-7-cql-anti-patterns">Appendix 7: CQL Anti-patterns</a>
+<ul>
+<li><a href="#common-schema">Common Schema</a></li>
+<li><a href="#declarations">Declarations</a></li>
+<li><a href="#casts">Casts</a></li>
+<li><a href="#boolean-expressions-and-casewhen">Boolean expressions and CASE/WHEN</a></li>
+<li><a href="#case-and-cast-and-null">CASE and CAST and NULL</a></li>
+<li><a href="#filtering-out-nulls">Filtering out NULLs</a></li>
+<li><a href="#not-null-boolean-expressions">Not null boolean expressions</a></li>
+<li><a href="#using-is-when-it-makes-sense-to-do-so">Using <code>IS</code> when it makes sense to do so</a></li>
+<li><a href="#left-joins-that-are-not-left-joins">Left joins that are not left joins</a></li>
+</ul></li>
 </ul>
 </nav>
 <!--- @generated -->
@@ -6253,7 +6265,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Mon May 24 14:29:45 PDT 2021</p>
+<p>Snapshot as of Wed May 26 14:51:14 PDT 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -9442,7 +9454,7 @@ select 1 where table_valued_func(5) = 3;</code></pre>
 </table>
 <p>– This source code is licensed under the MIT license found in the – LICENSE file in the root directory of this source tree. –&gt;</p>
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Mon May 24 14:29:46 PDT 2021</p>
+<p>Snapshot as of Wed May 26 14:51:15 PDT 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 
@@ -10920,5 +10932,175 @@ declare C cursor like foo;
 fetch C USING
     1 a, 2 b, 3 c, null d, null e, 5 f, null g;</code></pre>
 <p>If you’ve read this far you know more than most now. :)</p>
+<h2 id="appendix-7-cql-anti-patterns">Appendix 7: CQL Anti-patterns</h2>
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
+<p>These are a few of the antipatterns I’ve seen while travelling through various CQL source files. They are in various categories.</p>
+<h3 id="common-schema">Common Schema</h3>
+<p>For these examples let’s create a couple of tables we might need for examples</p>
+<div class="sourceCode" id="cb448"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb448-1"><a href="#cb448-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> foo (</span>
+<span id="cb448-2"><a href="#cb448-2"></a>    <span class="kw">id</span> <span class="dt">integer</span> <span class="kw">primary</span> <span class="kw">key</span>,</span>
+<span id="cb448-3"><a href="#cb448-3"></a>    name text</span>
+<span id="cb448-4"><a href="#cb448-4"></a>);</span>
+<span id="cb448-5"><a href="#cb448-5"></a></span>
+<span id="cb448-6"><a href="#cb448-6"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> bar (</span>
+<span id="cb448-7"><a href="#cb448-7"></a>    <span class="kw">id</span> <span class="dt">integer</span> <span class="kw">primary</span> <span class="kw">key</span>,</span>
+<span id="cb448-8"><a href="#cb448-8"></a>    rate <span class="dt">real</span></span>
+<span id="cb448-9"><a href="#cb448-9"></a>);</span></code></pre></div>
+<h3 id="declarations">Declarations</h3>
+<div class="sourceCode" id="cb449"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb449-1"><a href="#cb449-1"></a><span class="kw">DECLARE</span> v <span class="dt">LONG</span> <span class="kw">NOT</span> <span class="kw">NULL</span>;</span>
+<span id="cb449-2"><a href="#cb449-2"></a><span class="kw">SET</span> v <span class="op">:=</span> <span class="dv">1</span>;</span></code></pre></div>
+<p>better</p>
+<div class="sourceCode" id="cb450"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb450-1"><a href="#cb450-1"></a>LET v <span class="op">:=</span> 1L;  <span class="co">-- long literals have the L suffix like in C</span></span></code></pre></div>
+<p>Similarly</p>
+<div class="sourceCode" id="cb451"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb451-1"><a href="#cb451-1"></a><span class="kw">DECLARE</span> v <span class="dt">REAL</span> <span class="kw">NOT</span> <span class="kw">NULL</span>;</span>
+<span id="cb451-2"><a href="#cb451-2"></a><span class="kw">SET</span> v <span class="op">:=</span> <span class="dv">1</span>;</span></code></pre></div>
+<p>better</p>
+<div class="sourceCode" id="cb452"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb452-1"><a href="#cb452-1"></a>LET v <span class="op">:=</span> <span class="fl">1.0</span>; <span class="co">-- use scientific notation or add .0 to make a real literal</span></span></code></pre></div>
+<h3 id="casts">Casts</h3>
+<p>Redundant casts fatten the code and don’t really add anything to readability. Sometimems it’s necessary to cast NULL to a particular type so that you can be sure that generated result set has the right data type, but most of the casts below are not necessary.</p>
+<div class="sourceCode" id="cb453"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb453-1"><a href="#cb453-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb453-2"><a href="#cb453-2"></a>    <span class="fu">CAST</span>(foo.<span class="kw">id</span> <span class="kw">as</span> <span class="dt">INTEGER</span>) <span class="kw">as</span> <span class="kw">id</span>,</span>
+<span id="cb453-3"><a href="#cb453-3"></a>    <span class="fu">CAST</span>(foo.name <span class="kw">as</span> TEXT) <span class="kw">as</span> name,</span>
+<span id="cb453-4"><a href="#cb453-4"></a>    <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> <span class="dt">REAL</span>) <span class="kw">as</span> rate</span>
+<span id="cb453-5"><a href="#cb453-5"></a>  <span class="kw">FROM</span> foo</span>
+<span id="cb453-6"><a href="#cb453-6"></a><span class="kw">UNION</span> <span class="kw">ALL</span></span>
+<span id="cb453-7"><a href="#cb453-7"></a>  <span class="kw">SELECT</span></span>
+<span id="cb453-8"><a href="#cb453-8"></a>    <span class="fu">CAST</span>(bar.<span class="kw">id</span> <span class="kw">as</span> <span class="dt">INTEGER</span>) <span class="kw">as</span> <span class="kw">id</span>,</span>
+<span id="cb453-9"><a href="#cb453-9"></a>    <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> TEXT) <span class="kw">as</span> name,</span>
+<span id="cb453-10"><a href="#cb453-10"></a>    <span class="fu">CAST</span>(bar.rate <span class="kw">as</span> <span class="dt">REAL</span>) <span class="kw">as</span> rate</span>
+<span id="cb453-11"><a href="#cb453-11"></a>  <span class="kw">FROM</span> bar</span></code></pre></div>
+<p>Better</p>
+<div class="sourceCode" id="cb454"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb454-1"><a href="#cb454-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb454-2"><a href="#cb454-2"></a>    foo.<span class="kw">id</span>,</span>
+<span id="cb454-3"><a href="#cb454-3"></a>    foo.name,</span>
+<span id="cb454-4"><a href="#cb454-4"></a>    <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> <span class="dt">REAL</span>) <span class="kw">as</span> rate</span>
+<span id="cb454-5"><a href="#cb454-5"></a>  <span class="kw">FROM</span> foo</span>
+<span id="cb454-6"><a href="#cb454-6"></a><span class="kw">UNION</span> <span class="kw">ALL</span></span>
+<span id="cb454-7"><a href="#cb454-7"></a>  <span class="kw">SELECT</span></span>
+<span id="cb454-8"><a href="#cb454-8"></a>    bar.<span class="kw">id</span>,</span>
+<span id="cb454-9"><a href="#cb454-9"></a>    <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> TEXT) <span class="kw">as</span> name,</span>
+<span id="cb454-10"><a href="#cb454-10"></a>    bar.rate</span>
+<span id="cb454-11"><a href="#cb454-11"></a>  <span class="kw">FROM</span> bar</span></code></pre></div>
+<p>It’s possible to do the following to make this even cleaner:</p>
+<div class="sourceCode" id="cb455"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb455-1"><a href="#cb455-1"></a><span class="co">-- somewhere central</span></span>
+<span id="cb455-2"><a href="#cb455-2"></a>#define NULL_TEXT <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> TEXT)</span>
+<span id="cb455-3"><a href="#cb455-3"></a>#define NULL_REAL <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> <span class="dt">REAL</span>)</span>
+<span id="cb455-4"><a href="#cb455-4"></a>#define NULL_INT <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> <span class="dt">INTEGER</span>)</span>
+<span id="cb455-5"><a href="#cb455-5"></a>#define NULL_LONG <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> <span class="dt">LONG</span>)</span></code></pre></div>
+<p>Then you can write</p>
+<div class="sourceCode" id="cb456"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb456-1"><a href="#cb456-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb456-2"><a href="#cb456-2"></a>    foo.<span class="kw">id</span>,</span>
+<span id="cb456-3"><a href="#cb456-3"></a>    foo.name,</span>
+<span id="cb456-4"><a href="#cb456-4"></a>    NULL_REAL <span class="kw">as</span> rate</span>
+<span id="cb456-5"><a href="#cb456-5"></a>  <span class="kw">FROM</span> foo</span>
+<span id="cb456-6"><a href="#cb456-6"></a><span class="kw">UNION</span> <span class="kw">ALL</span></span>
+<span id="cb456-7"><a href="#cb456-7"></a>  <span class="kw">SELECT</span></span>
+<span id="cb456-8"><a href="#cb456-8"></a>    bar.<span class="kw">id</span>,</span>
+<span id="cb456-9"><a href="#cb456-9"></a>    NULL_TEXT <span class="kw">as</span> name,</span>
+<span id="cb456-10"><a href="#cb456-10"></a>    bar.rate</span>
+<span id="cb456-11"><a href="#cb456-11"></a>  <span class="kw">FROM</span> bar</span></code></pre></div>
+<h4 id="booleans">Booleans</h4>
+<p>There are no boolean literals in the language, but it’s very easily to create one</p>
+<p>Poor:</p>
+<div class="sourceCode" id="cb457"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb457-1"><a href="#cb457-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb457-2"><a href="#cb457-2"></a>    foo.<span class="kw">id</span>,</span>
+<span id="cb457-3"><a href="#cb457-3"></a>    foo.name,</span>
+<span id="cb457-4"><a href="#cb457-4"></a>    NULL_REAL <span class="kw">as</span> rate,</span>
+<span id="cb457-5"><a href="#cb457-5"></a>    <span class="fu">CAST</span>(<span class="dv">1</span> <span class="kw">AS</span> BOOL) <span class="kw">as</span> has_name,  <span class="co">-- this is a bit artificial but you get the idea</span></span>
+<span id="cb457-6"><a href="#cb457-6"></a>    <span class="fu">CAST</span>(<span class="dv">0</span> <span class="kw">AS</span> BOOL) <span class="kw">as</span> has_rate</span>
+<span id="cb457-7"><a href="#cb457-7"></a>  <span class="kw">FROM</span> foo</span>
+<span id="cb457-8"><a href="#cb457-8"></a><span class="kw">UNION</span> <span class="kw">ALL</span></span>
+<span id="cb457-9"><a href="#cb457-9"></a>  <span class="kw">SELECT</span></span>
+<span id="cb457-10"><a href="#cb457-10"></a>    bar.<span class="kw">id</span>,</span>
+<span id="cb457-11"><a href="#cb457-11"></a>    NULL_TEXT <span class="kw">as</span> name,</span>
+<span id="cb457-12"><a href="#cb457-12"></a>    bar.rate,</span>
+<span id="cb457-13"><a href="#cb457-13"></a>    <span class="fu">CAST</span>(<span class="dv">0</span> <span class="kw">AS</span> BOOL) <span class="kw">as</span> has_name,</span>
+<span id="cb457-14"><a href="#cb457-14"></a>    <span class="fu">CAST</span>(<span class="dv">1</span> <span class="kw">AS</span> BOOL) <span class="kw">as</span> has_rate</span>
+<span id="cb457-15"><a href="#cb457-15"></a>  <span class="kw">FROM</span> bar</span></code></pre></div>
+<p>Actually <code>CAST(0 AS BOOL)</code> is a pretty verbose way to make a bool constant. Much easier would be <code>0==1</code> but even that leaves an expression in the generated code. We can do better still with <code>const(0==1)</code> which forces the expression to be evaluated at compile time. This leads us to the usual definitions which are preferred.</p>
+<div class="sourceCode" id="cb458"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb458-1"><a href="#cb458-1"></a><span class="co">-- somewhere common</span></span>
+<span id="cb458-2"><a href="#cb458-2"></a>#define <span class="kw">TRUE</span> const(<span class="dv">1</span><span class="op">==</span><span class="dv">1</span>)</span>
+<span id="cb458-3"><a href="#cb458-3"></a>#define <span class="kw">FALSE</span> const(<span class="dv">1</span><span class="op">==</span><span class="dv">0</span>)</span></code></pre></div>
+<p>This gives you the most economy, the code gen will be just 0/1. SQLite doesn’t care about the type but CQL will get the type information it needs to make the columns of type BOOL</p>
+<div class="sourceCode" id="cb459"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb459-1"><a href="#cb459-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb459-2"><a href="#cb459-2"></a>    foo.<span class="kw">id</span>,</span>
+<span id="cb459-3"><a href="#cb459-3"></a>    foo.name,</span>
+<span id="cb459-4"><a href="#cb459-4"></a>    NULL_REAL <span class="kw">as</span> rate,</span>
+<span id="cb459-5"><a href="#cb459-5"></a>    <span class="kw">TRUE</span> <span class="kw">as</span> has_name,  <span class="co">-- this is a bit artificial but you get the idea</span></span>
+<span id="cb459-6"><a href="#cb459-6"></a>    <span class="kw">FALSE</span> <span class="kw">as</span> has_rate</span>
+<span id="cb459-7"><a href="#cb459-7"></a>  <span class="kw">FROM</span> foo</span>
+<span id="cb459-8"><a href="#cb459-8"></a><span class="kw">UNION</span> <span class="kw">ALL</span></span>
+<span id="cb459-9"><a href="#cb459-9"></a>  <span class="kw">SELECT</span></span>
+<span id="cb459-10"><a href="#cb459-10"></a>    bar.<span class="kw">id</span>,</span>
+<span id="cb459-11"><a href="#cb459-11"></a>    NULL_TEXT <span class="kw">as</span> name,</span>
+<span id="cb459-12"><a href="#cb459-12"></a>    bar.rate,</span>
+<span id="cb459-13"><a href="#cb459-13"></a>    <span class="kw">FALSE</span> <span class="kw">as</span> has_name,</span>
+<span id="cb459-14"><a href="#cb459-14"></a>    <span class="kw">TRUE</span> <span class="kw">as</span> has_rate</span>
+<span id="cb459-15"><a href="#cb459-15"></a>  <span class="kw">FROM</span> bar</span></code></pre></div>
+<h3 id="boolean-expressions-and-casewhen">Boolean expressions and CASE/WHEN</h3>
+<p>It’s easy to get carried away with the power of <code>CASE</code> expressions, I’ve seen this kind of thing:</p>
+<div class="sourceCode" id="cb460"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb460-1"><a href="#cb460-1"></a><span class="fu">CAST</span>(<span class="cf">CASE</span> <span class="cf">WHEN</span> foo.name <span class="kw">IS</span> <span class="kw">NULL</span> <span class="cf">THEN</span> <span class="dv">0</span> <span class="cf">ELSE</span> <span class="dv">1</span> <span class="cf">END</span> <span class="kw">AS</span> BOOL)</span></code></pre></div>
+<p>But this is simply</p>
+<div class="sourceCode" id="cb461"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb461-1"><a href="#cb461-1"></a>foo.name <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span></span></code></pre></div>
+<p>In general, if your case alternates are booleans a direct boolean expression would have served you better.</p>
+<h3 id="case-and-cast-and-null">CASE and CAST and NULL</h3>
+<p>Somtimes there’s clamping or filtering going on in a case statement</p>
+<div class="sourceCode" id="cb462"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb462-1"><a href="#cb462-1"></a><span class="fu">CAST</span>(<span class="cf">CASE</span> <span class="cf">WHEN</span> foo.name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span> <span class="cf">THEN</span> foo.name <span class="cf">ELSE</span> <span class="kw">NULL</span> <span class="cf">END</span> <span class="kw">AS</span> TEXT)</span></code></pre></div>
+<p>Here the <code>CAST</code> is not needed at all so we could go to</p>
+<div class="sourceCode" id="cb463"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb463-1"><a href="#cb463-1"></a><span class="cf">CASE</span> <span class="cf">WHEN</span> foo.name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span> <span class="cf">THEN</span> foo.name <span class="cf">ELSE</span> <span class="kw">NULL</span> <span class="cf">END</span></span></code></pre></div>
+<p><code>NULL</code> is already the default value for the <code>ELSE</code> clause so you never need <code>ELSE NULL</code></p>
+<p>So better:</p>
+<div class="sourceCode" id="cb464"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb464-1"><a href="#cb464-1"></a><span class="cf">CASE</span> <span class="cf">WHEN</span> foo.name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span> <span class="cf">THEN</span> foo.name <span class="cf">END</span></span></code></pre></div>
+<h3 id="filtering-out-nulls">Filtering out NULLs</h3>
+<p>Consider</p>
+<div class="sourceCode" id="cb465"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb465-1"><a href="#cb465-1"></a><span class="kw">SELECT</span> <span class="op">*</span></span>
+<span id="cb465-2"><a href="#cb465-2"></a>    <span class="kw">FROM</span> foo</span>
+<span id="cb465-3"><a href="#cb465-3"></a>    <span class="kw">WHERE</span> foo.name <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">AND</span> foo.name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span>;</span></code></pre></div>
+<p>There’s no need to test for <code>NOT NULL</code> here, the boolean will result in <code>NULL</code> if <code>foo.name</code> is null which is not true so the <code>WHERE</code> test will fail.</p>
+<p>Better:</p>
+<div class="sourceCode" id="cb466"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb466-1"><a href="#cb466-1"></a><span class="kw">SELECT</span> <span class="op">*</span></span>
+<span id="cb466-2"><a href="#cb466-2"></a>    <span class="kw">FROM</span> foo</span>
+<span id="cb466-3"><a href="#cb466-3"></a>    <span class="kw">WHERE</span> foo.name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span>;</span></code></pre></div>
+<h3 id="not-null-boolean-expressions">Not null boolean expressions</h3>
+<p>In this statement we do not want to have a null result for the boolean expression</p>
+<div class="sourceCode" id="cb467"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb467-1"><a href="#cb467-1"></a><span class="kw">SELECT</span></span>
+<span id="cb467-2"><a href="#cb467-2"></a>    <span class="kw">id</span>,</span>
+<span id="cb467-3"><a href="#cb467-3"></a>    name,</span>
+<span id="cb467-4"><a href="#cb467-4"></a>    <span class="fu">CAST</span>(IFNULL(name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span>, <span class="dv">0</span>) <span class="kw">AS</span> BOOL) <span class="kw">AS</span> name_bigger_than_m</span>
+<span id="cb467-5"><a href="#cb467-5"></a>    <span class="kw">FROM</span> FOO;</span></code></pre></div>
+<p>So now we’ve made several mistakes. We could have used the usual <code>FALSE</code> defintion to avoid the cast. But even that would have left us with an IFNULL that’s harder to read. Here’s a much simpler formulation:</p>
+<div class="sourceCode" id="cb468"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb468-1"><a href="#cb468-1"></a><span class="kw">SELECT</span></span>
+<span id="cb468-2"><a href="#cb468-2"></a>    <span class="kw">id</span>,</span>
+<span id="cb468-3"><a href="#cb468-3"></a>    name,</span>
+<span id="cb468-4"><a href="#cb468-4"></a>    name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span> <span class="kw">IS</span> <span class="kw">TRUE</span> <span class="kw">AS</span> name_bigger_than_m</span>
+<span id="cb468-5"><a href="#cb468-5"></a>    <span class="kw">FROM</span> FOO;</span></code></pre></div>
+<p>Even without the <code>TRUE</code> macro you could do <code>IS 1</code> above and still get a result of type <code>BOOL NOT NULL</code></p>
+<h3 id="using-is-when-it-makes-sense-to-do-so">Using <code>IS</code> when it makes sense to do so</h3>
+<p>This kind of boolean expression is also verbose for no reason</p>
+<div class="sourceCode" id="cb469"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb469-1"><a href="#cb469-1"></a>    rate <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">AND</span> rate <span class="op">=</span> <span class="dv">20</span></span></code></pre></div>
+<p>In a <code>WHERE</code> clause probably <code>rate = 20</code> suffices but even if you really need a <code>NOT NULL BOOL</code> result the expression above is exactly what the <code>IS</code> operator is for. e.g.</p>
+<div class="sourceCode" id="cb470"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb470-1"><a href="#cb470-1"></a>    rate <span class="kw">IS</span> <span class="dv">20</span></span></code></pre></div>
+<p>The <code>IS</code> operator is frequently avoided except for <code>IS NULL</code> and <code>IS NOT NULL</code> but it’s a general equality operator with the added semantic that it never returns <code>NULL</code>. <code>NULL IS NULL</code> is true. <code>NULL IS [anything not null]</code> is false.</p>
+<h3 id="left-joins-that-are-not-left-joins">Left joins that are not left joins</h3>
+<p>Consider</p>
+<div class="sourceCode" id="cb471"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb471-1"><a href="#cb471-1"></a>  <span class="kw">SELECT</span> foo.<span class="kw">id</span>,</span>
+<span id="cb471-2"><a href="#cb471-2"></a>         foo.name,</span>
+<span id="cb471-3"><a href="#cb471-3"></a>         bar.rate</span>
+<span id="cb471-4"><a href="#cb471-4"></a>  <span class="kw">FROM</span> foo</span>
+<span id="cb471-5"><a href="#cb471-5"></a>  <span class="kw">LEFT</span> <span class="kw">JOIN</span> bar <span class="kw">ON</span> foo.<span class="kw">id</span> <span class="op">=</span> bar.<span class="kw">id</span></span>
+<span id="cb471-6"><a href="#cb471-6"></a>  <span class="kw">WHERE</span> bar.rate <span class="op">&gt;</span> <span class="dv">5</span>;</span></code></pre></div>
+<p>This is no longer a left join because the <code>WHERE</code> clause demands a value for at least one column from <code>bar</code>.</p>
+<p>Better:</p>
+<div class="sourceCode" id="cb472"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb472-1"><a href="#cb472-1"></a>  <span class="kw">SELECT</span> foo.<span class="kw">id</span>,</span>
+<span id="cb472-2"><a href="#cb472-2"></a>         foo.name,</span>
+<span id="cb472-3"><a href="#cb472-3"></a>         bar.rate</span>
+<span id="cb472-4"><a href="#cb472-4"></a>  <span class="kw">FROM</span> foo</span>
+<span id="cb472-5"><a href="#cb472-5"></a>  <span class="kw">INNER</span> <span class="kw">JOIN</span> bar <span class="kw">ON</span> foo.<span class="kw">id</span> <span class="op">=</span> bar.<span class="kw">id</span></span>
+<span id="cb472-6"><a href="#cb472-6"></a>  <span class="kw">WHERE</span> bar.rate <span class="op">&gt;</span> <span class="dv">5</span>;</span></code></pre></div>
 </body>
 </html>
