@@ -1239,6 +1239,10 @@ cql_code test_all_column_fetchers(sqlite3 *db) {
           str = cql_result_set_get_string_col(rs, row, col);
           E(strcmp(str->ptr, updated->ptr) == 0, "expected string did not match seed data, row %d, col %d\n", row, col);
           cql_string_release(updated);
+
+          cql_result_set_set_string_col(rs, row, col, NULL);
+          cql_string_ref _Nullable nullable_str = cql_result_set_get_string_col(rs, row, col);
+          E(nullable_str == NULL, "expected string to be nil");
           break;
         }
         case 5: {
