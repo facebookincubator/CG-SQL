@@ -216,10 +216,10 @@ Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed i
 Error at test/sem_test.sql:XXXX : in str : CQL0184: stored procedures cannot be nested 'bar'
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
-Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0061: in multiple select statements, all columns must be an exact type match (expected real notnull; found integer notnull) 'B'
-Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0057: in multiple select statements, all must have the same column count
-Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0062: in multiple select statements, all columns must be an exact type match (including nullability) (expected integer notnull; found integer) 'A'
-Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0058: in multiple select statements, all column names must be identical so they have unambiguous names 'B'
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0061: in multiple select/out statements, all columns must be an exact type match (expected real notnull; found integer notnull) 'B'
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0057: in multiple select/out statements, all must have the same column count
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0062: in multiple select/out statements, all columns must be an exact type match (including nullability) (expected integer notnull; found integer) 'A'
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0058: in multiple select/out statements, all column names must be identical so they have unambiguous names 'B'
 Error at test/sem_test.sql:XXXX : in select_stmt : CQL0055: all columns in the select must have a name
 Error at test/sem_test.sql:XXXX : in call_stmt : CQL0214: procedures with results can only be called using a cursor in global context 'with_result_set'
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
@@ -488,7 +488,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0010: incompatible types in expres
 Error at test/sem_test.sql:XXXX : in in_pred : CQL0078: [not] in (select ...) is only allowed inside of select lists, where, on, and having clauses
 Error at test/sem_test.sql:XXXX : in not_in : CQL0078: [not] in (select ...) is only allowed inside of select lists, where, on, and having clauses
 Error at test/sem_test.sql:XXXX : in out_stmt : CQL0223: the cursor was not fetched with the auto-fetch syntax 'fetch [cursor]' 'C'
-Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0058: in multiple select statements, all column names must be identical so they have unambiguous names 'C'
+Error at test/sem_test.sql:XXXX : in out_stmt : CQL0058: in multiple select/out statements, all column names must be identical so they have unambiguous names 'C'
 Error at test/sem_test.sql:XXXX : in select_stmt : CQL0063: can't mix and match out, out union, or select/call for return values 'out_cursor_proc_mixed_cursor_select'
 Error at test/sem_test.sql:XXXX : in out_stmt : CQL0063: can't mix and match out, out union, or select/call for return values 'out_cursor_proc_mixed_cursor_select_select_first'
 Error at test/sem_test.sql:XXXX : in out_union_stmt : CQL0063: can't mix and match out, out union, or select/call for return values 'out_cursor_proc_mixed_cursor_select_then_union'
@@ -509,7 +509,7 @@ Error at test/sem_test.sql:XXXX : in call_stmt : CQL0203: cursor requires a proc
 Error at test/sem_test.sql:XXXX : in call_stmt : CQL0235: too many arguments provided to procedure 'out_cursor_proc'
 Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'C'
 Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'C'
-Error at test/sem_test.sql:XXXX : in str : CQL0058: in multiple select statements, all column names must be identical so they have unambiguous names 'B'
+Error at test/sem_test.sql:XXXX : in call_stmt : CQL0058: receiving cursor from call, all column names must be identical so they have unambiguous names 'B'
 Error at test/sem_test.sql:XXXX : in str : CQL0204: cursor not found 'not_a_cursor'
 Error at test/sem_test.sql:XXXX : in str : CQL0165: fetch values is only for value cursors, not for sqlite cursors 'my_cursor'
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
@@ -1084,4 +1084,5 @@ Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed i
 Error at test/sem_test.sql:XXXX : in dot : CQL0379: unknown built-in migration procedure 'cql:fxom_recreate'
 Error at test/sem_test.sql:XXXX : in dot : CQL0378: built-in migration procedure not valid in this context 'cql:from_recreate'
 Error at test/sem_test.sql:XXXX : in call : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'pr2'
+Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0061: in extension fragment, all columns must be an exact type match (expected integer notnull; found real notnull) 'id'
 semantic errors present; no code gen.

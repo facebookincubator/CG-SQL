@@ -4567,43 +4567,40 @@ static sem_struct *sem_unify_compatible_columns(ast_node *left, ast_node *right)
   return sptr;
 }
 
-static void sem_verify_identical_columns(ast_node *left, ast_node *right, CSTR target) {
-  Invariant(is_struct(left->sem->sem_type));
-  sem_struct *sptr_left = left->sem->sptr;
-  Invariant(is_struct(right->sem->sem_type));
-  sem_struct *sptr_right = right->sem->sptr;
+static void sem_verify_identical_columns(ast_node *expected, ast_node *actual, CSTR target) {
+  Invariant(is_struct(expected->sem->sem_type));
+  sem_struct *sptr_expected = expected->sem->sptr;
+  Invariant(is_struct(actual->sem->sem_type));
+  sem_struct *sptr_actual = actual->sem->sptr;
 
   // Count, type, and names of columns must be an *exact* match.
 
-  if (sptr_left->count != sptr_right->count) {
+  if (sptr_expected->count != sptr_actual->count) {
     CSTR errmsg = dup_printf("CQL0057: %s, all must have the same column count", target);
-    report_error(left, errmsg, NULL);
-    record_error(left);
-    record_error(right);
+    report_error(actual, errmsg, NULL);
+    record_error(actual);
     return;
   }
 
-  for (int32_t i = 0; i < sptr_left->count; i++) {
-    sem_t sem_type_1 = sptr_left->semtypes[i];
-    sem_t sem_type_2 = sptr_right->semtypes[i];
-    const char *col1 = sptr_left->names[i];
-    const char *col2 = sptr_right->names[i];
+  for (int32_t i = 0; i < sptr_expected->count; i++) {
+    sem_t sem_type_1 = sptr_expected->semtypes[i];
+    sem_t sem_type_2 = sptr_actual->semtypes[i];
+    const char *col1 = sptr_expected->names[i];
+    const char *col2 = sptr_actual->names[i];
 
     if (strcmp(col1, col2)) {
       CSTR errmsg = dup_printf(
         "CQL0058: %s,"
         " all column names must be identical so they have unambiguous names", target);
-      report_error(left, errmsg, col2);
-      record_error(left);
-      record_error(right);
+      report_error(actual, errmsg, col2);
+      record_error(actual);
       return;
     }
 
     if (core_type_of(sem_type_1) != core_type_of(sem_type_2)) {
       CSTR error_message = dup_printf("CQL0061: %s, all columns must be an exact type match", target);
-      report_sem_type_mismatch(sem_type_1, sem_type_2, left, error_message, col2);
-      record_error(left);
-      record_error(right);
+      report_sem_type_mismatch(sem_type_1, sem_type_2, actual, error_message, col2);
+      record_error(actual);
       return;
     }
 
@@ -4612,9 +4609,8 @@ static void sem_verify_identical_columns(ast_node *left, ast_node *right, CSTR t
         dup_printf("CQL0062: %s, all columns must be "
         "an exact type match (including nullability)", target);
       report_sem_type_mismatch(
-          sem_type_1, sem_type_2, left, error_message, col2);
-      record_error(left);
-      record_error(right);
+          sem_type_1, sem_type_2, actual, error_message, col2);
+      record_error(actual);
       return;
     }
   }
@@ -4731,7 +4727,7 @@ static void sem_update_proc_type_for_select(ast_node *ast) {
     return;
   }
 
-  sem_verify_identical_columns(current_proc, ast, "in multiple select statements");
+  sem_verify_identical_columns(current_proc, ast, "in multiple select/out statements");
 }
 
 // Look for the given name as a local or global variable.  First local.
@@ -6257,11 +6253,11 @@ static bool_t validate_cql_cursor_diff(ast_node *ast, uint32_t arg_count) {
     return false;
   }
 
-  // we're making sure the two arguments cursor have the same shape, because we can
+  // we're making sure the two argument cursors have the same shape, because we can
   // only do diffing with cursors with the same shape.
   CSTR target = dup_printf("in %s", name);
   sem_verify_identical_columns(arg1, arg2, target);
-  if (is_error(arg1)) {
+  if (is_error(arg2)) {
     record_error(ast);
     return false;
   }
@@ -13740,6 +13736,14 @@ static void sem_extension_fragment(ast_node *misc_attrs, ast_node *stmt_list, as
         goto error;
       }
     }
+
+    ast_node *base_proc = find_base_fragment(base_frag_name);
+    Invariant(base_proc);
+
+    sem_verify_identical_columns(base_proc, create_proc_stmt, "in extension fragment");
+    if (is_error(create_proc_stmt)) {
+      goto error;
+    }
   }
 
   // check for select * from {extension CTE name}
@@ -15278,16 +15282,7 @@ static void sem_set_from_cursor(ast_node *ast) {
     return;
   }
 
-  // The verification below marks both sides as erroneous if there is a mismatch
-  // but we don't want to mark the original like_target with any errors
-  // so we make a scratch node with the right sptr and pass that.
-  AST_REWRITE_INFO_SET(like_target->lineno, like_target->filename);
-  ast_node *tmp = new_ast_str("scratch");
-  tmp->sem = new_sem(SEM_TYPE_STRUCT);
-  tmp->sem->sptr = like_target->sem->sptr;
-  AST_REWRITE_INFO_RESET();
-
-  sem_verify_identical_columns(cursor, tmp, "in the cursor and the variable type");
+  sem_verify_identical_columns(like_target, cursor, "in the cursor and the variable type");
   if (is_error(cursor)) {
     record_error(ast);
     return;
@@ -16287,8 +16282,8 @@ static void sem_fetch_call_stmt(ast_node *ast) {
     return;
   }
 
-  sem_verify_identical_columns(cursor, call_stmt, "in multiple select statements");
-  if (is_error(cursor)) {
+  sem_verify_identical_columns(cursor, call_stmt, "receiving cursor from call");
+  if (is_error(call_stmt)) {
     record_error(ast);
     return;
   }

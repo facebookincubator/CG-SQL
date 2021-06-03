@@ -2713,7 +2713,7 @@ begin
 end;
 
 -- TEST: this procedure will have have not matching arg types
--- + Error % in multiple select statements, all columns must be an exact type match (expected real notnull; found integer notnull) 'B'
+-- + Error % in multiple select/out statements, all columns must be an exact type match (expected real notnull; found integer notnull) 'B'
 -- + {select_expr_list}: select: { A: integer notnull, B: real notnull }
 -- + {select_expr_list}: select: { A: integer notnull, B: integer notnull }
 create procedure with_wrong_types(i integer)
@@ -2726,7 +2726,7 @@ begin
 end;
 
 -- TEST: this procedure will have have not matching arg counts
--- + Error % in multiple select statements, all must have the same column count
+-- + Error % in multiple select/out statements, all must have the same column count
 -- + {select_expr_list}: select: { A: integer notnull, B: real notnull }
 -- + {select_expr_list}: select: { A: integer notnull }
 create procedure with_wrong_count(i integer)
@@ -2739,7 +2739,7 @@ begin
 end;
 
 -- TEST: this procedure will have nullability mismatch
--- + Error % in multiple select statements, all columns must be an exact type match (including nullability) (expected integer notnull; found integer) 'A'
+-- + Error % in multiple select/out statements, all columns must be an exact type match (including nullability) (expected integer notnull; found integer) 'A'
 -- + {create_proc_stmt}: err
 -- + {select_stmt}: select: { A: integer notnull variable in }
 -- + {select_expr_list_con}: select: { A: integer variable }
@@ -2767,7 +2767,7 @@ begin
 end;
 
 -- TEST: this procedure will not match column names
--- + Error % in multiple select statements, all column names must be identical so they have unambiguous names 'B'
+-- + Error % in multiple select/out statements, all column names must be identical so they have unambiguous names 'B'
 -- + {create_proc_stmt}: err
 -- + {select_stmt}: select: { A: integer notnull }
 -- + {select_expr_list_con}: select: { B: integer notnull }
@@ -5365,7 +5365,7 @@ end;
 -- TEST: use non-fetched cursor for out statement
 -- + {create_proc_stmt}: err
 -- + {out_stmt}: err
--- + Error % in multiple select statements, all column names must be identical so they have unambiguous names 'C'
+-- + Error % in multiple select/out statements, all column names must be identical so they have unambiguous names 'C'
 -- +1 Error
 create proc out_cursor_proc_incompat_results()
 begin
@@ -5697,9 +5697,10 @@ end;
 -- + {name fetch_from_call_to_proc_with_different_column_names}: err
 -- + {stmt_list}: err
 -- + {fetch_call_stmt}: err
--- + {name C}: err
 -- + {call_stmt}: err
--- + Error % in multiple select statements, all column names must be identical so they have unambiguous names 'B'
+-- expected type is not marked as an error
+-- - {name C}: err
+-- + Error % receiving cursor from call, all column names must be identical so they have unambiguous names 'B'
 -- +1 Error
 create proc fetch_from_call_to_proc_with_different_column_names()
 begin
@@ -12500,7 +12501,9 @@ end;
 -- + {create_proc_stmt}: err
 -- + {assign}: err
 -- + {call}: err
--- + {name c1}: err
+-- the expected type does not get error marking
+-- - {name c1}: err
+-- + {name c2}: err
 -- + Error % in cql_cursor_diff_col, all columns must be an exact type match (expected integer notnull; found text notnull) 'x'
 -- +1 Error
 create proc cql_cursor_diff_col_wrong_cursor_type()
@@ -15327,3 +15330,29 @@ create table conflict_clause_pk(
   id int not null,
   constraint pk1 primary key (id) on conflict rollback
 );
+
+-- a base fragment for the test case below
+-- - Error
+@attribute(cql:base_fragment=id_frag)
+create proc id_frag_base()
+begin
+  with id_frag(id) as (select 1)
+  select * from id_frag;
+end;
+
+-- Make sure that the types match exactly between extension columns and base columns
+-- here the issue is that 3.5 is type compatible with the integer type of the base
+-- and that's not good enough for an extension proc.  We need an additional check
+-- + {create_proc_stmt}: err
+-- + Error % in extension fragment, all columns must be an exact type match (expected integer notnull; found real notnull) 'id'
+-- +1 Error
+@attribute(cql:extension_fragment=id_frag)
+create proc bogus_ext()
+begin
+  with id_frag(id) as (select * from foo),
+  ext1(*) as (
+    select * from id_frag
+    union all
+    select 3.5 id)
+  select * from ext1;
+end;

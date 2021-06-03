@@ -9003,7 +9003,7 @@ BEGIN
   END IF;
 END;
 
-Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0061: in multiple select statements, all columns must be an exact type match (expected real notnull; found integer notnull) 'B'
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0061: in multiple select/out statements, all columns must be an exact type match (expected real notnull; found integer notnull) 'B'
 
   {create_proc_stmt}: err
   | {name with_wrong_types}: err
@@ -9075,7 +9075,7 @@ BEGIN
   END IF;
 END;
 
-Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0057: in multiple select statements, all must have the same column count
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0057: in multiple select/out statements, all must have the same column count
 
   {create_proc_stmt}: err
   | {name with_wrong_count}: err
@@ -9142,7 +9142,7 @@ BEGIN
   END IF;
 END;
 
-Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0062: in multiple select statements, all columns must be an exact type match (including nullability) (expected integer notnull; found integer) 'A'
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0062: in multiple select/out statements, all columns must be an exact type match (including nullability) (expected integer notnull; found integer) 'A'
 
   {create_proc_stmt}: err
   | {name with_wrong_flags}: err
@@ -9266,7 +9266,7 @@ BEGIN
   END IF;
 END;
 
-Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0058: in multiple select statements, all column names must be identical so they have unambiguous names 'B'
+Error at test/sem_test.sql:XXXX : in select_stmt : CQL0058: in multiple select/out statements, all column names must be identical so they have unambiguous names 'B'
 
   {create_proc_stmt}: err
   | {name with_bad_names}: err
@@ -19470,7 +19470,7 @@ BEGIN
   OUT D;
 END;
 
-Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0058: in multiple select statements, all column names must be identical so they have unambiguous names 'C'
+Error at test/sem_test.sql:XXXX : in out_stmt : CQL0058: in multiple select/out statements, all column names must be identical so they have unambiguous names 'C'
 
   {create_proc_stmt}: err
   | {name out_cursor_proc_incompat_results}: err
@@ -20491,7 +20491,7 @@ BEGIN
   OUT C;
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0058: in multiple select statements, all column names must be identical so they have unambiguous names 'B'
+Error at test/sem_test.sql:XXXX : in call_stmt : CQL0058: receiving cursor from call, all column names must be identical so they have unambiguous names 'B'
 
   {create_proc_stmt}: err
   | {name fetch_from_call_to_proc_with_different_column_names}: err
@@ -20521,7 +20521,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0058: in multiple select statement
       |     | {select_limit}
       |       | {select_offset}
       | {fetch_call_stmt}: err
-      | | {name C}: err
+      | | {name C}: C: select: { A: integer notnull, C: integer notnull } variable shape_storage value_cursor
       | | {call_stmt}: err
       |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {out_stmt}: C: select: { A: integer notnull, C: integer notnull } variable shape_storage value_cursor
@@ -50902,7 +50902,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0061: in cql_cursor_diff_col, all 
           | {call_arg_list}
             | {call_filter_clause}
             | {arg_list}: ok
-              | {name c1}: err
+              | {name c1}: c1: select: { x: integer notnull } variable dml_proc shape_storage
               | {arg_list}
                 | {name c2}: err
 
@@ -51053,7 +51053,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0058: in cql_cursor_diff_col, all 
           | {call_arg_list}
             | {call_filter_clause}
             | {arg_list}: ok
-              | {name c1}: err
+              | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
               | {arg_list}
                 | {name c2}: err
 
@@ -60582,4 +60582,171 @@ CREATE TABLE conflict_clause_pk(
           | | {indexed_column}
           |   | {name id}: id: integer notnull
           | {int 0}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:base_fragment=id_frag)
+CREATE PROC id_frag_base ()
+BEGIN
+  WITH
+  id_frag (id) AS (SELECT 1)
+  SELECT *
+    FROM id_frag;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name base_fragment}
+  |   | {name id_frag}: ok
+  | {create_proc_stmt}: select: { id: integer notnull } dml_proc
+    | {name id_frag_base}: select: { id: integer notnull } dml_proc
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {with_select_stmt}: select: { id: integer notnull }
+          | {with}
+          | | {cte_tables}: ok
+          |   | {cte_table}: id_frag: { id: integer notnull }
+          |     | {cte_decl}: id_frag: { id: integer notnull }
+          |     | | {name id_frag}
+          |     | | {name_list}
+          |     |   | {name id}
+          |     | {select_stmt}: select: { _anon: integer notnull }
+          |       | {select_core_list}: select: { _anon: integer notnull }
+          |       | | {select_core}: select: { _anon: integer notnull }
+          |       |   | {select_expr_list_con}: select: { _anon: integer notnull }
+          |       |     | {select_expr_list}: select: { _anon: integer notnull }
+          |       |     | | {select_expr}: integer notnull
+          |       |     |   | {int 1}: integer notnull
+          |       |     | {select_from_etc}: ok
+          |       |       | {select_where}
+          |       |         | {select_groupby}
+          |       |           | {select_having}
+          |       | {select_orderby}
+          |         | {select_limit}
+          |           | {select_offset}
+          | {select_stmt}: select: { id: integer notnull }
+            | {select_core_list}: select: { id: integer notnull }
+            | | {select_core}: select: { id: integer notnull }
+            |   | {select_expr_list_con}: select: { id: integer notnull }
+            |     | {select_expr_list}: select: { id: integer notnull }
+            |     | | {star}: select: { id: integer notnull }
+            |     | {select_from_etc}: TABLE { id_frag: id_frag }
+            |       | {table_or_subquery_list}: TABLE { id_frag: id_frag }
+            |       | | {table_or_subquery}: TABLE { id_frag: id_frag }
+            |       |   | {name id_frag}: TABLE { id_frag: id_frag }
+            |       | {select_where}
+            |         | {select_groupby}
+            |           | {select_having}
+            | {select_orderby}
+              | {select_limit}
+                | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:extension_fragment=id_frag)
+CREATE PROC bogus_ext ()
+BEGIN
+  WITH
+  id_frag (id) AS (SELECT *
+    FROM foo),
+  ext1 (id) AS (SELECT *
+    FROM id_frag
+  UNION ALL
+  SELECT 3.5 AS id)
+  SELECT *
+    FROM ext1;
+END;
+
+Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0061: in extension fragment, all columns must be an exact type match (expected integer notnull; found real notnull) 'id'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name extension_fragment}
+  |   | {name id_frag}: ok
+  | {create_proc_stmt}: err
+    | {name bogus_ext}: err
+    | {proc_params_stmts}
+      | {stmt_list}: err
+        | {with_select_stmt}: select: { id: real notnull }
+          | {with}
+          | | {cte_tables}: ok
+          |   | {cte_table}: id_frag: { id: integer notnull }
+          |   | | {cte_decl}: id_frag: { id: integer notnull }
+          |   | | | {name id_frag}
+          |   | | | {name_list}
+          |   | |   | {name id}
+          |   | | {select_stmt}: select: { id: integer notnull }
+          |   |   | {select_core_list}: select: { id: integer notnull }
+          |   |   | | {select_core}: select: { id: integer notnull }
+          |   |   |   | {select_expr_list_con}: select: { id: integer notnull }
+          |   |   |     | {select_expr_list}: select: { id: integer notnull }
+          |   |   |     | | {star}: select: { id: integer notnull }
+          |   |   |     | {select_from_etc}: TABLE { foo: foo }
+          |   |   |       | {table_or_subquery_list}: TABLE { foo: foo }
+          |   |   |       | | {table_or_subquery}: TABLE { foo: foo }
+          |   |   |       |   | {name foo}: TABLE { foo: foo }
+          |   |   |       | {select_where}
+          |   |   |         | {select_groupby}
+          |   |   |           | {select_having}
+          |   |   | {select_orderby}
+          |   |     | {select_limit}
+          |   |       | {select_offset}
+          |   | {cte_tables}
+          |     | {cte_table}: ext1: { id: real notnull }
+          |       | {cte_decl}: ext1: { id: real notnull }
+          |       | | {name ext1}
+          |       | | {name_list}
+          |       |   | {name id}
+          |       | {select_stmt}: UNION ALL: { id: real notnull }
+          |         | {select_core_list}: UNION ALL: { id: real notnull }
+          |         | | {select_core}: select: { id: integer notnull }
+          |         | | | {select_expr_list_con}: select: { id: integer notnull }
+          |         | |   | {select_expr_list}: select: { id: integer notnull }
+          |         | |   | | {star}: select: { id: integer notnull }
+          |         | |   | {select_from_etc}: TABLE { id_frag: id_frag }
+          |         | |     | {table_or_subquery_list}: TABLE { id_frag: id_frag }
+          |         | |     | | {table_or_subquery}: TABLE { id_frag: id_frag }
+          |         | |     |   | {name id_frag}: TABLE { id_frag: id_frag }
+          |         | |     | {select_where}
+          |         | |       | {select_groupby}
+          |         | |         | {select_having}
+          |         | | {select_core_compound}
+          |         |   | {int 2}
+          |         |   | {select_core_list}: select: { id: real notnull }
+          |         |     | {select_core}: select: { id: real notnull }
+          |         |       | {select_expr_list_con}: select: { id: real notnull }
+          |         |         | {select_expr_list}: select: { id: real notnull }
+          |         |         | | {select_expr}: id: real notnull
+          |         |         |   | {dbl 3.5}: real notnull
+          |         |         |   | {opt_as_alias}
+          |         |         |     | {name id}
+          |         |         | {select_from_etc}: ok
+          |         |           | {select_where}
+          |         |             | {select_groupby}
+          |         |               | {select_having}
+          |         | {select_orderby}
+          |           | {select_limit}
+          |             | {select_offset}
+          | {select_stmt}: select: { id: real notnull }
+            | {select_core_list}: select: { id: real notnull }
+            | | {select_core}: select: { id: real notnull }
+            |   | {select_expr_list_con}: select: { id: real notnull }
+            |     | {select_expr_list}: select: { id: real notnull }
+            |     | | {star}: select: { id: real notnull }
+            |     | {select_from_etc}: TABLE { ext1: ext1 }
+            |       | {table_or_subquery_list}: TABLE { ext1: ext1 }
+            |       | | {table_or_subquery}: TABLE { ext1: ext1 }
+            |       |   | {name ext1}: TABLE { ext1: ext1 }
+            |       | {select_where}
+            |         | {select_groupby}
+            |           | {select_having}
+            | {select_orderby}
+              | {select_limit}
+                | {select_offset}
 
