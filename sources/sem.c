@@ -8410,8 +8410,6 @@ static void sem_select_expr_list_con(ast_node *ast) {
   EXTRACT_NOTNULL(select_expr_list, ast->left);
   EXTRACT_NOTNULL(select_from_etc, ast->right);
   EXTRACT_ANY(query_parts, select_from_etc->left);
-  EXTRACT(select_where, select_from_etc->right);
-  EXTRACT_NOTNULL(select_core, ast->parent);
 
   sem_join *jptr = NULL;
 
