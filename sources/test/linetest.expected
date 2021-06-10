@@ -18,51 +18,51 @@ annotated source code from there included.
 
 TEST: simple statements
 ----------------
- 3: CREATE PROC based_statements ()
- 4: BEGIN
- 5:   DECLARE x INTEGER NOT NULL;      THIS IS FOR DISPLAY ONLY.
- 6:   SET x := 1;                      THIS TEXT IS PROOF THAT THIS IS NOT PARSED.
- 7:   SET x := 2;
- 8:   SET x := 3;
- 9:   @ECHO c, "/* hello ";
-10:   @ECHO c, "world \n";
-11:   SET x := 4;
-12:   SET x := 5;
-13: END;
+10: CREATE PROC based_statements ()
+11: BEGIN
+12:   DECLARE x INTEGER NOT NULL;      THIS IS FOR DISPLAY ONLY.
+13:   SET x := 1;                      THIS TEXT IS PROOF THAT THIS IS NOT PARSED.
+14:   SET x := 2;
+15:   SET x := 3;
+16:   @ECHO c, "/* hello ";
+17:   @ECHO c, "world \n";
+18:   SET x := 4;
+19:   SET x := 5;
+20: END;
 ----------------
 
-Note that the proc started at line 3.  That's because there was a comment
+Note that the proc started at line 10.  That's because there was a comment
 but the starting line is not relevant, everything will be normalized to
 a proc that starts at line 1 anyway.
 
 #define _PROC_ "based_statements"
-# 3
+# 1
 void based_statements(void) {
-# 3
+# 1
   cql_int32 x = 0;
-# 3
+# 1
 
-# 5 "x"
-# 6 "x"
+# 3 "test/linetest.sql"
+# 4 "test/linetest.sql"
   x = 1;
-# 7 "x"
+# 5 "test/linetest.sql"
   x = 2;
-# 8 "x"
+# 6 "test/linetest.sql"
   x = 3;
-# 8
+# 6
   /* hello world 
-# 11 "x"
+# 9 "test/linetest.sql"
   x = 4;
-# 12 "x"
+# 10 "test/linetest.sql"
   x = 5;
-# 13 "x"
+# 11 "test/linetest.sql"
 
-# 13
+# 11
 }
 #undef _PROC_
 ------------------------ ------------------------ ------------------------
 
-TEST: assorted if combinations 
+TEST: assorted if combinations
 
 ------------------------
  1: create proc if_test()
@@ -71,13 +71,13 @@ TEST: assorted if combinations
  4:   if x = 1 then                        THIS TEXT IS PROOF THAT THIS IS NOT PARSED.
  5:      set x := 10;
  6:   end if;
- 7: 
+ 7:
  8:   if x = 2 then
  9:      set x := 21;
 10:   else
 11:      set x := 22;
 12:   end if;
-13: 
+13:
 14:   if x = 3 then
 15:      set x := 31;
 16:   else if x = 3  then
@@ -159,14 +159,14 @@ TEST: some case, coalesce and if statements
  8:
  9:   declare x integer;
 10:
-11:   set x :=  coalesce( case 
-12:              when  1 
+11:   set x :=  coalesce( case
+12:              when  1
 13:              then 200
 14:              when 2
 15:              then 300
-16:              end, 
+16:              end,
 17:             3000);
-18:    
+18:
 19: end;
 ----------------
 
@@ -263,6 +263,10 @@ TEST: IN predicate
 # 1
 void in_pred_lines(cql_int32 i, cql_bool *_Nonnull b) {
 # 1
+  cql_contract(b);
+# 1
+
+# 1
   cql_bool _tmp_bool_0 = 0;
 # 1
   cql_int32 _tmp_int_2 = 0;
@@ -316,6 +320,10 @@ void in_pred_lines(cql_int32 i, cql_bool *_Nonnull b) {
 #define _PROC_ "in_pred_and_case"
 # 1
 void in_pred_and_case(cql_int32 i, cql_bool *_Nonnull b) {
+# 1
+  cql_contract(b);
+# 1
+
 # 1
   cql_bool _tmp_bool_2 = 0;
 # 1

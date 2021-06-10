@@ -185,4 +185,8 @@ DECLARE PROC binary_ops_with_null ();
 DECLARE PROC uses_throw () USING TRANSACTION;
 DECLARE PROC uses_ifnull_throw (x INTEGER) USING TRANSACTION;
 DECLARE PROC out_object (o OBJECT NOT NULL) OUT (o OBJECT NOT NULL);
+DECLARE PROC exercise_contracts (a INTEGER, b INTEGER NOT NULL, c TEXT, d TEXT NOT NULL, e BLOB, f BLOB NOT NULL, g OBJECT, h OBJECT NOT NULL, OUT i INTEGER, OUT j INTEGER NOT NULL, OUT k TEXT, OUT l TEXT NOT NULL, INOUT m INTEGER, INOUT n INTEGER NOT NULL, INOUT o TEXT, INOUT p TEXT NOT NULL);
+DECLARE PROC public_proc_with_a_contract (t TEXT NOT NULL);
+DECLARE PROC result_set_proc_with_contract_in_fetch_results (t TEXT NOT NULL) (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
+DECLARE PROC out_proc_with_contract_in_fetch_results (t TEXT NOT NULL) OUT (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
 DECLARE PROC end_proc ();

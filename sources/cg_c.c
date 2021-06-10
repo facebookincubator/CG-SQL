@@ -2979,6 +2979,47 @@ void cg_emit_rc_vars(charbuf *output) {
   bprintf(output, "  %s _rc_ = SQLITE_OK;\n", rt->cql_code);
 }
 
+// For each parameter, emit a contract that enforces nullability as follows:
+//
+// * In the case of an IN NOT NULL parameter, enforce that the caller has not
+//   passed NULL.
+// * Similarly, in the case of an OUT or INOUT parameter, again enforce that the
+//   caller has not passed NULL.
+// * In addition to the previous case, in the case of an INOUT NOT NULL
+//   parameter, enforce that the pointer provided by the caller does not point
+//   to NULL.
+//
+// The contracts emitted always match the _Notnull parameter attributes in the
+// declaration of the procedure.
+static void cg_emit_contracts(ast_node *ast, charbuf *b) {
+  Contract(is_ast_params(ast));
+  Contract(b);
+
+  bool_t did_emit_contract = 0;
+
+  for (ast_node *params = ast; params; params = params->right) {
+    Contract(is_ast_params(params));
+    EXTRACT_NOTNULL(param, params->left);
+    EXTRACT_NOTNULL(param_detail, param->right);
+    EXTRACT_ANY_NOTNULL(name_ast, param_detail->left);
+    EXTRACT_STRING(name, name_ast);
+    sem_t sem_type = name_ast->sem->sem_type;
+    bool_t is_nonnull_ref_type = is_not_nullable(sem_type) && is_ref_type(sem_type);
+    if (is_out_parameter(sem_type) || is_nonnull_ref_type) {
+      bprintf(b, "  cql_contract(%s);\n", name);
+      did_emit_contract = 1;
+    }
+    if (is_inout_parameter(sem_type) && is_nonnull_ref_type) {
+      bprintf(b, "  cql_contract(*%s);\n", name);
+      did_emit_contract = 1;
+    }
+  }
+
+  if (did_emit_contract) {
+    bprintf(b, "\n");
+  }
+}
+
 // Emitting a stored proc is mostly setup.  We have a bunch of housekeeping to do:
 //  * create new scratch buffers for the body and the locals and the cleanup section
 //  * save the current output globals
@@ -3014,6 +3055,7 @@ static void cg_create_proc_stmt(ast_node *ast) {
   }
 
   CHARBUF_OPEN(proc_fwd_ref);
+  CHARBUF_OPEN(proc_contracts);
   CHARBUF_OPEN(proc_body);
   CHARBUF_OPEN(proc_locals);
   CHARBUF_OPEN(proc_cleanup);
@@ -3148,6 +3190,9 @@ static void cg_create_proc_stmt(ast_node *ast) {
       bprintf(&proc_decl, ", ");
     }
     cg_params(params, &proc_decl, &proc_body);
+    if (!private_proc) {
+      cg_emit_contracts(params, &proc_contracts);
+    }
   }
 
   if (out_stmt_proc) {
@@ -3224,6 +3269,7 @@ static void cg_create_proc_stmt(ast_node *ast) {
 
   bprintf(cg_declarations_output, proc_fwd_ref.ptr);
   bprintf(cg_declarations_output, "%s) {\n", proc_decl.ptr);
+  bprintf(cg_declarations_output, proc_contracts.ptr);
 
   if (dml_proc) {
     cg_emit_rc_vars(cg_declarations_output);
@@ -3290,6 +3336,7 @@ static void cg_create_proc_stmt(ast_node *ast) {
   CHARBUF_CLOSE(proc_cleanup);
   CHARBUF_CLOSE(proc_locals);
   CHARBUF_CLOSE(proc_body);
+  CHARBUF_CLOSE(proc_contracts);
   CHARBUF_CLOSE(proc_fwd_ref);
 
   in_proc = 0;

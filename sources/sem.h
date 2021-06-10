@@ -199,6 +199,7 @@ cql_noexport bool_t is_not_nullable(sem_t sem_type);
 cql_noexport bool_t is_variable(sem_t sem_type);
 cql_noexport bool_t is_in_parameter(sem_t sem_type);
 cql_noexport bool_t is_out_parameter(sem_t sem_type);
+cql_noexport bool_t is_inout_parameter(sem_t sem_type);
 cql_noexport bool_t is_dml_proc(sem_t sem_type);
 cql_noexport bool_t is_text(sem_t sem_type);
 cql_noexport bool_t sem_is_str_name(ast_node *ast);

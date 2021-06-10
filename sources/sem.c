@@ -997,6 +997,10 @@ cql_noexport bool_t is_out_parameter(sem_t sem_type) {
   return !!(sem_type & SEM_TYPE_OUT_PARAMETER);
 }
 
+cql_noexport bool_t is_inout_parameter(sem_t sem_type) {
+  return is_in_parameter(sem_type) && is_out_parameter(sem_type);
+}
+
 cql_noexport bool_t has_out_stmt_result(ast_node *ast) {
   sem_t sem_type = ast->sem->sem_type;
   return !!(sem_type & SEM_TYPE_USES_OUT);

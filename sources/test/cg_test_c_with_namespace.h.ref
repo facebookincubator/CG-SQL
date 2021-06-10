@@ -3235,6 +3235,85 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   0)
 
 // The statement ending at line XXXX
+extern void exercise_contracts(cql_nullable_int32 a, cql_int32 b, cql_string_ref _Nullable c, cql_string_ref _Nonnull d, cql_blob_ref _Nullable e, cql_blob_ref _Nonnull f, cql_object_ref _Nullable g, cql_object_ref _Nonnull h, cql_nullable_int32 *_Nonnull i, cql_int32 *_Nonnull j, cql_string_ref _Nullable *_Nonnull k, cql_string_ref _Nonnull *_Nonnull l, cql_nullable_int32 *_Nonnull m, cql_int32 *_Nonnull n, cql_string_ref _Nullable *_Nonnull o, cql_string_ref _Nonnull *_Nonnull p);
+
+// The statement ending at line XXXX
+extern void public_proc_with_a_contract(cql_string_ref _Nonnull t);
+
+// The statement ending at line XXXX
+// static void private_proc_without_a_contract(cql_string_ref _Nonnull t);
+
+// The statement ending at line XXXX
+#define CRC_result_set_proc_with_contract_in_fetch_results -2370781435236145144L
+
+extern cql_string_ref _Nonnull result_set_proc_with_contract_in_fetch_results_stored_procedure_name;
+
+#define result_set_proc_with_contract_in_fetch_results_data_types_count 5
+
+#ifndef result_set_type_decl_result_set_proc_with_contract_in_fetch_results_result_set
+#define result_set_type_decl_result_set_proc_with_contract_in_fetch_results_result_set 1
+cql_result_set_type_decl(result_set_proc_with_contract_in_fetch_results_result_set, result_set_proc_with_contract_in_fetch_results_result_set_ref);
+#endif
+extern cql_int32 result_set_proc_with_contract_in_fetch_results_get_id(result_set_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_string_ref _Nullable result_set_proc_with_contract_in_fetch_results_get_name(result_set_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool result_set_proc_with_contract_in_fetch_results_get_rate_is_null(result_set_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int64 result_set_proc_with_contract_in_fetch_results_get_rate_value(result_set_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool result_set_proc_with_contract_in_fetch_results_get_type_is_null(result_set_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 result_set_proc_with_contract_in_fetch_results_get_type_value(result_set_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool result_set_proc_with_contract_in_fetch_results_get_size_is_null(result_set_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double result_set_proc_with_contract_in_fetch_results_get_size_value(result_set_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 result_set_proc_with_contract_in_fetch_results_result_count(result_set_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code result_set_proc_with_contract_in_fetch_results_fetch_results(sqlite3 *_Nonnull _db_, result_set_proc_with_contract_in_fetch_results_result_set_ref _Nullable *_Nonnull result_set, cql_string_ref _Nonnull t);
+#define result_set_proc_with_contract_in_fetch_results_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define result_set_proc_with_contract_in_fetch_results_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define result_set_proc_with_contract_in_fetch_results_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+#define CRC_out_proc_with_contract_in_fetch_results 4197072212473113909L
+
+extern cql_string_ref _Nonnull out_proc_with_contract_in_fetch_results_stored_procedure_name;
+
+#define out_proc_with_contract_in_fetch_results_data_types_count 5
+
+#ifndef result_set_type_decl_out_proc_with_contract_in_fetch_results_result_set
+#define result_set_type_decl_out_proc_with_contract_in_fetch_results_result_set 1
+cql_result_set_type_decl(out_proc_with_contract_in_fetch_results_result_set, out_proc_with_contract_in_fetch_results_result_set_ref);
+#endif
+extern cql_int32 out_proc_with_contract_in_fetch_results_get_id(out_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set);
+extern cql_string_ref _Nullable out_proc_with_contract_in_fetch_results_get_name(out_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set);
+extern cql_bool out_proc_with_contract_in_fetch_results_get_rate_is_null(out_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set);
+extern cql_int64 out_proc_with_contract_in_fetch_results_get_rate_value(out_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set);
+extern cql_bool out_proc_with_contract_in_fetch_results_get_type_is_null(out_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set);
+extern cql_int32 out_proc_with_contract_in_fetch_results_get_type_value(out_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set);
+extern cql_bool out_proc_with_contract_in_fetch_results_get_size_is_null(out_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set);
+extern cql_double out_proc_with_contract_in_fetch_results_get_size_value(out_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set);
+extern cql_int32 out_proc_with_contract_in_fetch_results_result_count(out_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set);
+extern void out_proc_with_contract_in_fetch_results_fetch_results( out_proc_with_contract_in_fetch_results_result_set_ref _Nullable *_Nonnull result_set, cql_string_ref _Nonnull t);
+#define out_proc_with_contract_in_fetch_results_copy(result_set, result_set_to) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  0, \
+  1)
+#define out_proc_with_contract_in_fetch_results_hash(result_set) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), 0)
+#define out_proc_with_contract_in_fetch_results_equal(rs1, rs2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  0, \
+  (cql_result_set_ref)(rs2), \
+  0)
+
+// The statement ending at line XXXX
 extern cql_int32 this_is_the_end;
 
 // The statement ending at line XXXX

@@ -3302,6 +3302,134 @@ static inline BOOL CGBOutObjectEqual(CGBOutObject *resultSet1, CGBOutObject *res
   return CGCOutObjectEqual(CGCOutObjectFromCGBOutObject(resultSet1), CGCOutObjectFromCGBOutObject(resultSet2));
 }
 
+@class CGBResultSetProcWithContractInFetchResults;
+
+static inline CGBResultSetProcWithContractInFetchResults *CGBResultSetProcWithContractInFetchResultsFromCGCResultSetProcWithContractInFetchResults(CGCResultSetProcWithContractInFetchResultsResultSetRef resultSet)
+{
+  return (__bridge CGBResultSetProcWithContractInFetchResults *)resultSet;
+}
+
+static inline CGCResultSetProcWithContractInFetchResultsResultSetRef CGCResultSetProcWithContractInFetchResultsFromCGBResultSetProcWithContractInFetchResults(CGBResultSetProcWithContractInFetchResults *resultSet)
+{
+  return (__bridge CGCResultSetProcWithContractInFetchResultsResultSetRef)resultSet;
+}
+
+static inline int32_t CGBResultSetProcWithContractInFetchResultsGetId(CGBResultSetProcWithContractInFetchResults *resultSet, int32_t row)
+{
+  CGCResultSetProcWithContractInFetchResultsResultSetRef cResultSet = CGCResultSetProcWithContractInFetchResultsFromCGBResultSetProcWithContractInFetchResults(resultSet);
+  return CGCResultSetProcWithContractInFetchResultsGetId(cResultSet, row);
+}
+
+static inline NSString *_Nullable CGBResultSetProcWithContractInFetchResultsGetName(CGBResultSetProcWithContractInFetchResults *resultSet, int32_t row)
+{
+  CGCResultSetProcWithContractInFetchResultsResultSetRef cResultSet = CGCResultSetProcWithContractInFetchResultsFromCGBResultSetProcWithContractInFetchResults(resultSet);
+  return (__bridge NSString *)CGCResultSetProcWithContractInFetchResultsGetName(cResultSet, row);
+}
+
+static inline NSNumber *_Nullable CGBResultSetProcWithContractInFetchResultsGetRate(CGBResultSetProcWithContractInFetchResults *resultSet, int32_t row)
+{
+  CGCResultSetProcWithContractInFetchResultsResultSetRef cResultSet = CGCResultSetProcWithContractInFetchResultsFromCGBResultSetProcWithContractInFetchResults(resultSet);
+  return CGCResultSetProcWithContractInFetchResultsGetRateIsNull(cResultSet, row) ? nil : @(CGCResultSetProcWithContractInFetchResultsGetRateValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBResultSetProcWithContractInFetchResultsGetType(CGBResultSetProcWithContractInFetchResults *resultSet, int32_t row)
+{
+  CGCResultSetProcWithContractInFetchResultsResultSetRef cResultSet = CGCResultSetProcWithContractInFetchResultsFromCGBResultSetProcWithContractInFetchResults(resultSet);
+  return CGCResultSetProcWithContractInFetchResultsGetTypeIsNull(cResultSet, row) ? nil : @(CGCResultSetProcWithContractInFetchResultsGetTypeValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBResultSetProcWithContractInFetchResultsGetSize(CGBResultSetProcWithContractInFetchResults *resultSet, int32_t row)
+{
+  CGCResultSetProcWithContractInFetchResultsResultSetRef cResultSet = CGCResultSetProcWithContractInFetchResultsFromCGBResultSetProcWithContractInFetchResults(resultSet);
+  return CGCResultSetProcWithContractInFetchResultsGetSizeIsNull(cResultSet, row) ? nil : @(CGCResultSetProcWithContractInFetchResultsGetSizeValue(cResultSet, row));
+}
+
+static inline int32_t CGBResultSetProcWithContractInFetchResultsResultCount(CGBResultSetProcWithContractInFetchResults *resultSet)
+{
+  return CGCResultSetProcWithContractInFetchResultsResultCount(CGCResultSetProcWithContractInFetchResultsFromCGBResultSetProcWithContractInFetchResults(resultSet));
+}
+
+static inline CGBResultSetProcWithContractInFetchResults *CGBResultSetProcWithContractInFetchResultsCopy(CGBResultSetProcWithContractInFetchResults *resultSet, int32_t from, int32_t count)
+{
+  CGCResultSetProcWithContractInFetchResultsResultSetRef copy;
+  CGCResultSetProcWithContractInFetchResultsCopy(CGCResultSetProcWithContractInFetchResultsFromCGBResultSetProcWithContractInFetchResults(resultSet), &copy, from, count);
+  return (__bridge_transfer CGBResultSetProcWithContractInFetchResults *)copy;
+}
+
+static inline NSUInteger CGBResultSetProcWithContractInFetchResultsRowHash(CGBResultSetProcWithContractInFetchResults *resultSet, int32_t row)
+{
+  return CGCResultSetProcWithContractInFetchResultsRowHash(CGCResultSetProcWithContractInFetchResultsFromCGBResultSetProcWithContractInFetchResults(resultSet), row);
+}
+
+static inline BOOL CGBResultSetProcWithContractInFetchResultsRowEqual(CGBResultSetProcWithContractInFetchResults *resultSet1, int32_t row1, CGBResultSetProcWithContractInFetchResults *resultSet2, int32_t row2)
+{
+  return CGCResultSetProcWithContractInFetchResultsRowEqual(CGCResultSetProcWithContractInFetchResultsFromCGBResultSetProcWithContractInFetchResults(resultSet1), row1, CGCResultSetProcWithContractInFetchResultsFromCGBResultSetProcWithContractInFetchResults(resultSet2), row2);
+}
+
+@class CGBOutProcWithContractInFetchResults;
+
+static inline CGBOutProcWithContractInFetchResults *CGBOutProcWithContractInFetchResultsFromCGCOutProcWithContractInFetchResults(CGCOutProcWithContractInFetchResultsResultSetRef resultSet)
+{
+  return (__bridge CGBOutProcWithContractInFetchResults *)resultSet;
+}
+
+static inline CGCOutProcWithContractInFetchResultsResultSetRef CGCOutProcWithContractInFetchResultsFromCGBOutProcWithContractInFetchResults(CGBOutProcWithContractInFetchResults *resultSet)
+{
+  return (__bridge CGCOutProcWithContractInFetchResultsResultSetRef)resultSet;
+}
+
+static inline int32_t CGBOutProcWithContractInFetchResultsGetId(CGBOutProcWithContractInFetchResults *resultSet)
+{
+  CGCOutProcWithContractInFetchResultsResultSetRef cResultSet = CGCOutProcWithContractInFetchResultsFromCGBOutProcWithContractInFetchResults(resultSet);
+  return CGCOutProcWithContractInFetchResultsGetId(cResultSet);
+}
+
+static inline NSString *_Nullable CGBOutProcWithContractInFetchResultsGetName(CGBOutProcWithContractInFetchResults *resultSet)
+{
+  CGCOutProcWithContractInFetchResultsResultSetRef cResultSet = CGCOutProcWithContractInFetchResultsFromCGBOutProcWithContractInFetchResults(resultSet);
+  return (__bridge NSString *)CGCOutProcWithContractInFetchResultsGetName(cResultSet);
+}
+
+static inline NSNumber *_Nullable CGBOutProcWithContractInFetchResultsGetRate(CGBOutProcWithContractInFetchResults *resultSet)
+{
+  CGCOutProcWithContractInFetchResultsResultSetRef cResultSet = CGCOutProcWithContractInFetchResultsFromCGBOutProcWithContractInFetchResults(resultSet);
+  return CGCOutProcWithContractInFetchResultsGetRateIsNull(cResultSet) ? nil : @(CGCOutProcWithContractInFetchResultsGetRateValue(cResultSet));
+}
+
+static inline NSNumber *_Nullable CGBOutProcWithContractInFetchResultsGetType(CGBOutProcWithContractInFetchResults *resultSet)
+{
+  CGCOutProcWithContractInFetchResultsResultSetRef cResultSet = CGCOutProcWithContractInFetchResultsFromCGBOutProcWithContractInFetchResults(resultSet);
+  return CGCOutProcWithContractInFetchResultsGetTypeIsNull(cResultSet) ? nil : @(CGCOutProcWithContractInFetchResultsGetTypeValue(cResultSet));
+}
+
+static inline NSNumber *_Nullable CGBOutProcWithContractInFetchResultsGetSize(CGBOutProcWithContractInFetchResults *resultSet)
+{
+  CGCOutProcWithContractInFetchResultsResultSetRef cResultSet = CGCOutProcWithContractInFetchResultsFromCGBOutProcWithContractInFetchResults(resultSet);
+  return CGCOutProcWithContractInFetchResultsGetSizeIsNull(cResultSet) ? nil : @(CGCOutProcWithContractInFetchResultsGetSizeValue(cResultSet));
+}
+
+static inline int32_t CGBOutProcWithContractInFetchResultsResultCount(CGBOutProcWithContractInFetchResults *resultSet)
+{
+  return CGCOutProcWithContractInFetchResultsResultCount(CGCOutProcWithContractInFetchResultsFromCGBOutProcWithContractInFetchResults(resultSet));
+}
+
+static inline CGBOutProcWithContractInFetchResults *CGBOutProcWithContractInFetchResultsCopy(CGBOutProcWithContractInFetchResults *resultSet)
+{
+  CGCOutProcWithContractInFetchResultsResultSetRef copy;
+  CGCOutProcWithContractInFetchResultsCopy(CGCOutProcWithContractInFetchResultsFromCGBOutProcWithContractInFetchResults(resultSet), &copy);
+  return (__bridge_transfer CGBOutProcWithContractInFetchResults *)copy;
+}
+
+static inline NSUInteger CGBOutProcWithContractInFetchResultsHash(CGBOutProcWithContractInFetchResults *resultSet)
+{
+  return CGCOutProcWithContractInFetchResultsHash(CGCOutProcWithContractInFetchResultsFromCGBOutProcWithContractInFetchResults(resultSet));
+}
+
+static inline BOOL CGBOutProcWithContractInFetchResultsEqual(CGBOutProcWithContractInFetchResults *resultSet1, CGBOutProcWithContractInFetchResults *resultSet2)
+{
+  return CGCOutProcWithContractInFetchResultsEqual(CGCOutProcWithContractInFetchResultsFromCGBOutProcWithContractInFetchResults(resultSet1), CGCOutProcWithContractInFetchResultsFromCGBOutProcWithContractInFetchResults(resultSet2));
+}
+
 @class CGBFragTest;
 
 static inline CGCFragTestResultSetRef CGCExtFromCGBExt(CGBFragTest *resultSet)

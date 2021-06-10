@@ -328,6 +328,19 @@ typedef struct out_object_row {
   cql_object_ref _Nonnull o;
 } out_object_row;
 extern void out_object(cql_object_ref _Nonnull o, out_object_row *_Nonnull _result_);
+extern CQL_WARN_UNUSED cql_code result_set_proc_with_contract_in_fetch_results(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_string_ref _Nonnull t);
+
+typedef struct out_proc_with_contract_in_fetch_results_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 id;
+  cql_nullable_int64 rate;
+  cql_nullable_int32 type;
+  cql_nullable_double size;
+  cql_string_ref _Nullable name;
+} out_proc_with_contract_in_fetch_results_row;
+extern void out_proc_with_contract_in_fetch_results(cql_string_ref _Nonnull t, out_proc_with_contract_in_fetch_results_row *_Nonnull _result_);
 cql_string_literal(_literal_1_This_is_a_test_, "This is a \" \\ test '' \n \" ");
 cql_string_literal(_literal_2_b_, "b");
 cql_string_literal(_literal_3_c_, "c");
@@ -469,6 +482,9 @@ END;
 #define _PROC_ "out_test"
 // export: DECLARE PROC out_test (OUT i INTEGER NOT NULL, OUT ii INTEGER);
 void out_test(cql_int32 *_Nonnull i, cql_nullable_int32 *_Nonnull ii) {
+  cql_contract(i);
+  cql_contract(ii);
+
   *i = 0; // set out arg to non-garbage
   cql_set_null(*ii); // set out arg to non-garbage
   *i = i2;
@@ -532,6 +548,8 @@ END;
 #define _PROC_ "outparm_test"
 // export: DECLARE PROC outparm_test (OUT foo INTEGER NOT NULL) USING TRANSACTION;
 CQL_WARN_UNUSED cql_code outparm_test(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull foo) {
+  cql_contract(foo);
+
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *_temp_stmt = NULL;
 
@@ -958,6 +976,8 @@ CQL_WARN_UNUSED cql_code get_data_fetch_results(sqlite3 *_Nonnull _db_, get_data
 
 // export: DECLARE PROC get_data (name_ TEXT NOT NULL, id_ INTEGER NOT NULL) (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
 CQL_WARN_UNUSED cql_code get_data(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_string_ref _Nonnull name_, cql_int32 id_) {
+  cql_contract(name_);
+
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
   _rc_ = cql_prepare(_db_, _result_stmt,
@@ -1060,6 +1080,8 @@ END;
 #define _PROC_ "copy_int"
 // export: DECLARE PROC copy_int (a INTEGER, OUT b INTEGER);
 void copy_int(cql_nullable_int32 a, cql_nullable_int32 *_Nonnull b) {
+  cql_contract(b);
+
   cql_set_null(*b); // set out arg to non-garbage
   cql_set_nullable(*b, a.is_null, a.value);
 
@@ -2083,6 +2105,9 @@ END;
 #define _PROC_ "outint_nullable"
 // export: DECLARE PROC outint_nullable (OUT output INTEGER, OUT result BOOL NOT NULL) USING TRANSACTION;
 CQL_WARN_UNUSED cql_code outint_nullable(sqlite3 *_Nonnull _db_, cql_nullable_int32 *_Nonnull output, cql_bool *_Nonnull result) {
+  cql_contract(output);
+  cql_contract(result);
+
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *C_stmt = NULL;
   cql_bool _C_has_row_ = 0;
@@ -2120,6 +2145,9 @@ END;
 #define _PROC_ "outint_notnull"
 // export: DECLARE PROC outint_notnull (OUT output INTEGER NOT NULL, OUT result BOOL NOT NULL) USING TRANSACTION;
 CQL_WARN_UNUSED cql_code outint_notnull(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull output, cql_bool *_Nonnull result) {
+  cql_contract(output);
+  cql_contract(result);
+
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *C_stmt = NULL;
   cql_bool _C_has_row_ = 0;
@@ -2177,6 +2205,8 @@ END;
 #define _PROC_ "obj_proc"
 // export: DECLARE PROC obj_proc (OUT an_object OBJECT);
 void obj_proc(cql_object_ref _Nullable *_Nonnull an_object) {
+  cql_contract(an_object);
+
   *(void **)an_object = NULL; // set out arg to non-garbage
   cql_set_object_ref(an_object, NULL);
 
@@ -2273,6 +2303,8 @@ END;
 #define _PROC_ "unused_temp"
 // export: DECLARE PROC unused_temp (i INTEGER, OUT o INTEGER NOT NULL);
 void unused_temp(cql_nullable_int32 i, cql_int32 *_Nonnull o) {
+  cql_contract(o);
+
   *o = 0; // set out arg to non-garbage
   do {
     if (!i.is_null) {
@@ -2635,6 +2667,8 @@ END;
 #define _PROC_ "proc_with_out_arg"
 // export: DECLARE PROC proc_with_out_arg (OUT foo TEXT);
 void proc_with_out_arg(cql_string_ref _Nullable *_Nonnull foo) {
+  cql_contract(foo);
+
   *(void **)foo = NULL; // set out arg to non-garbage
   cql_set_string_ref(&*foo, _literal_5_x_);
 
@@ -2656,6 +2690,8 @@ END;
 #define _PROC_ "calls_out_proc"
 // export: DECLARE PROC calls_out_proc (OUT foo TEXT);
 void calls_out_proc(cql_string_ref _Nullable *_Nonnull foo) {
+  cql_contract(foo);
+
   cql_string_ref bar = NULL;
 
   *(void **)foo = NULL; // set out arg to non-garbage
@@ -2695,6 +2731,8 @@ END;
 #define _PROC_ "blob_proc"
 // export: DECLARE PROC blob_proc (OUT a_blob BLOB);
 void blob_proc(cql_blob_ref _Nullable *_Nonnull a_blob) {
+  cql_contract(a_blob);
+
   *(void **)a_blob = NULL; // set out arg to non-garbage
   cql_set_blob_ref(&*a_blob, NULL);
 
@@ -3103,6 +3141,8 @@ END;
 #define _PROC_ "dml_user"
 // export: DECLARE PROC dml_user (OUT a_ INTEGER NOT NULL) USING TRANSACTION;
 CQL_WARN_UNUSED cql_code dml_user(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull a_) {
+  cql_contract(a_);
+
   cql_code _rc_ = SQLITE_OK;
   *a_ = 0; // set out arg to non-garbage
   _rc_ = dml_compute(_db_, 1, &*a_);
@@ -3247,6 +3287,8 @@ END;
 #define _PROC_ "c_literal"
 // export: DECLARE PROC c_literal (OUT x TEXT);
 void c_literal(cql_string_ref _Nullable *_Nonnull x) {
+  cql_contract(x);
+
   *(void **)x = NULL; // set out arg to non-garbage
   cql_set_string_ref(&*x, _literal_8_Testing_c_literal);
 
@@ -4003,6 +4045,9 @@ END;
 #define _PROC_ "multi_rewrite"
 // export: DECLARE PROC multi_rewrite (blob_id_ INTEGER NOT NULL, b_notnull_ BLOB NOT NULL, b_nullable_ BLOB, id_ INTEGER NOT NULL, name_ TEXT, rate_ LONG_INT, type_ INTEGER, size_ REAL, OUT out_arg INTEGER NOT NULL) USING TRANSACTION;
 CQL_WARN_UNUSED cql_code multi_rewrite(sqlite3 *_Nonnull _db_, cql_int32 blob_id_, cql_blob_ref _Nonnull b_notnull_, cql_blob_ref _Nullable b_nullable_, cql_int32 id_, cql_string_ref _Nullable name_, cql_nullable_int64 rate_, cql_nullable_int32 type_, cql_nullable_double size_, cql_int32 *_Nonnull out_arg) {
+  cql_contract(b_notnull_);
+  cql_contract(out_arg);
+
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *_temp_stmt = NULL;
 
@@ -4883,6 +4928,8 @@ END;
 #define _PROC_ "in_test"
 // export: DECLARE PROC in_test (x INTEGER, OUT b BOOL);
 void in_test(cql_nullable_int32 x, cql_nullable_bool *_Nonnull b) {
+  cql_contract(b);
+
   cql_set_null(*b); // set out arg to non-garbage
   cql_set_null(*b);
 
@@ -4901,6 +4948,8 @@ END;
 #define _PROC_ "not_in_test"
 // export: DECLARE PROC not_in_test (x INTEGER, OUT b BOOL);
 void not_in_test(cql_nullable_int32 x, cql_nullable_bool *_Nonnull b) {
+  cql_contract(b);
+
   cql_set_null(*b); // set out arg to non-garbage
   cql_set_null(*b);
 
@@ -7100,6 +7149,8 @@ typedef struct early_out_rc_cleared_C_row {
   cql_int32 x;
 } early_out_rc_cleared_C_row;
 CQL_WARN_UNUSED cql_code early_out_rc_cleared(sqlite3 *_Nonnull _db_, cql_nullable_int32 *_Nonnull x) {
+  cql_contract(x);
+
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *C_stmt = NULL;
   early_out_rc_cleared_C_row C = { 0 };
@@ -7722,6 +7773,8 @@ END;
 #define _PROC_ "try_boxing"
 // export: DECLARE PROC try_boxing (OUT result OBJECT<bar CURSOR>) USING TRANSACTION;
 CQL_WARN_UNUSED cql_code try_boxing(sqlite3 *_Nonnull _db_, cql_object_ref _Nullable *_Nonnull result) {
+  cql_contract(result);
+
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *C_stmt = NULL;
   cql_object_ref C_object_ = NULL;
@@ -9889,6 +9942,8 @@ END;
 #define _PROC_ "emit_rc"
 // export: DECLARE PROC emit_rc (OUT result_code INTEGER NOT NULL) USING TRANSACTION;
 CQL_WARN_UNUSED cql_code emit_rc(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull result_code) {
+  cql_contract(result_code);
+
   cql_code _rc_ = SQLITE_OK;
   *result_code = 0; // set out arg to non-garbage
   *result_code = SQLITE_OK;
@@ -10174,6 +10229,8 @@ typedef struct out_arg_cursor_C_row {
   cql_int32 y;
 } out_arg_cursor_C_row;
 void out_arg_cursor(cql_int32 x, cql_int32 *_Nonnull y) {
+  cql_contract(y);
+
   out_arg_cursor_C_row C = { 0 };
 
   *y = 0; // set out arg to non-garbage
@@ -10776,6 +10833,8 @@ END;
 #define _PROC_ "set_out_arg_ref_test"
 // export: DECLARE PROC set_out_arg_ref_test (OUT x TEXT);
 void set_out_arg_ref_test(cql_string_ref _Nullable *_Nonnull x) {
+  cql_contract(x);
+
   *(void **)x = NULL; // set out arg to non-garbage
 
 }
@@ -10792,6 +10851,8 @@ END;
 #define _PROC_ "set_out_arg_null_test"
 // export: DECLARE PROC set_out_arg_null_test (OUT x INTEGER);
 void set_out_arg_null_test(cql_nullable_int32 *_Nonnull x) {
+  cql_contract(x);
+
   cql_set_null(*x); // set out arg to non-garbage
 
 }
@@ -10808,6 +10869,8 @@ END;
 #define _PROC_ "set_out_arg_notnull_test"
 // export: DECLARE PROC set_out_arg_notnull_test (OUT x INTEGER NOT NULL);
 void set_out_arg_notnull_test(cql_int32 *_Nonnull x) {
+  cql_contract(x);
+
   *x = 0; // set out arg to non-garbage
 
 }
@@ -11227,6 +11290,8 @@ typedef struct out_object_C_row {
 
 #define out_object_C_refs_offset cql_offsetof(out_object_C_row, o) // count = 1
 void out_object(cql_object_ref _Nonnull o, out_object_row *_Nonnull _result_) {
+  cql_contract(o);
+
   memset(_result_, 0, sizeof(*_result_));
   out_object_C_row C = { ._refs_count_ = 1, ._refs_offset_ = out_object_C_refs_offset };
 
@@ -11236,6 +11301,321 @@ void out_object(cql_object_ref _Nonnull o, out_object_row *_Nonnull _result_) {
   _result_->_refs_count_ = 1;
   _result_->_refs_offset_ = out_object_refs_offset;
   cql_set_object_ref(&_result_->o, C.o);
+
+  cql_teardown_row(C);
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC exercise_contracts (a INTEGER, b INTEGER NOT NULL, c TEXT, d TEXT NOT NULL, e BLOB, f BLOB NOT NULL, g OBJECT, h OBJECT NOT NULL, OUT i INTEGER, OUT j INTEGER NOT NULL, OUT k TEXT, OUT l TEXT NOT NULL, INOUT m INTEGER, INOUT n INTEGER NOT NULL, INOUT o TEXT, INOUT p TEXT NOT NULL)
+BEGIN
+END;
+*/
+
+#define _PROC_ "exercise_contracts"
+// export: DECLARE PROC exercise_contracts (a INTEGER, b INTEGER NOT NULL, c TEXT, d TEXT NOT NULL, e BLOB, f BLOB NOT NULL, g OBJECT, h OBJECT NOT NULL, OUT i INTEGER, OUT j INTEGER NOT NULL, OUT k TEXT, OUT l TEXT NOT NULL, INOUT m INTEGER, INOUT n INTEGER NOT NULL, INOUT o TEXT, INOUT p TEXT NOT NULL);
+void exercise_contracts(cql_nullable_int32 a, cql_int32 b, cql_string_ref _Nullable c, cql_string_ref _Nonnull d, cql_blob_ref _Nullable e, cql_blob_ref _Nonnull f, cql_object_ref _Nullable g, cql_object_ref _Nonnull h, cql_nullable_int32 *_Nonnull i, cql_int32 *_Nonnull j, cql_string_ref _Nullable *_Nonnull k, cql_string_ref _Nonnull *_Nonnull l, cql_nullable_int32 *_Nonnull m, cql_int32 *_Nonnull n, cql_string_ref _Nullable *_Nonnull o, cql_string_ref _Nonnull *_Nonnull p) {
+  cql_contract(d);
+  cql_contract(f);
+  cql_contract(h);
+  cql_contract(i);
+  cql_contract(j);
+  cql_contract(k);
+  cql_contract(l);
+  cql_contract(m);
+  cql_contract(n);
+  cql_contract(o);
+  cql_contract(p);
+  cql_contract(*p);
+
+  cql_set_null(*i); // set out arg to non-garbage
+  *j = 0; // set out arg to non-garbage
+  *(void **)k = NULL; // set out arg to non-garbage
+  *(void **)l = NULL; // set out arg to non-garbage
+
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC public_proc_with_a_contract (t TEXT NOT NULL)
+BEGIN
+END;
+*/
+
+#define _PROC_ "public_proc_with_a_contract"
+// export: DECLARE PROC public_proc_with_a_contract (t TEXT NOT NULL);
+void public_proc_with_a_contract(cql_string_ref _Nonnull t) {
+  cql_contract(t);
+
+
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:private)
+CREATE PROC private_proc_without_a_contract (t TEXT NOT NULL)
+BEGIN
+END;
+*/
+
+#define _PROC_ "private_proc_without_a_contract"
+// private: DECLARE PROC private_proc_without_a_contract (t TEXT NOT NULL);
+static void private_proc_without_a_contract(cql_string_ref _Nonnull t) {
+
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC result_set_proc_with_contract_in_fetch_results (t TEXT NOT NULL)
+BEGIN
+  SELECT *
+    FROM bar;
+END;
+*/
+
+#define _PROC_ "result_set_proc_with_contract_in_fetch_results"
+static int32_t result_set_proc_with_contract_in_fetch_results_perf_index;
+
+cql_string_literal(result_set_proc_with_contract_in_fetch_results_stored_procedure_name, "result_set_proc_with_contract_in_fetch_results");
+
+typedef struct result_set_proc_with_contract_in_fetch_results_row {
+  cql_int32 id;
+  cql_nullable_int64 rate;
+  cql_nullable_int32 type;
+  cql_nullable_double size;
+  cql_string_ref _Nullable name;
+} result_set_proc_with_contract_in_fetch_results_row;
+
+cql_int32 result_set_proc_with_contract_in_fetch_results_get_id(result_set_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set, cql_int32 row) {
+  result_set_proc_with_contract_in_fetch_results_row *data = (result_set_proc_with_contract_in_fetch_results_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].id;
+}
+
+cql_string_ref _Nullable result_set_proc_with_contract_in_fetch_results_get_name(result_set_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set, cql_int32 row) {
+  result_set_proc_with_contract_in_fetch_results_row *data = (result_set_proc_with_contract_in_fetch_results_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].name;
+}
+
+cql_bool result_set_proc_with_contract_in_fetch_results_get_rate_is_null(result_set_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set, cql_int32 row) {
+  result_set_proc_with_contract_in_fetch_results_row *data = (result_set_proc_with_contract_in_fetch_results_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].rate.is_null;
+}
+
+cql_int64 result_set_proc_with_contract_in_fetch_results_get_rate_value(result_set_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set, cql_int32 row) {
+  result_set_proc_with_contract_in_fetch_results_row *data = (result_set_proc_with_contract_in_fetch_results_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].rate.value;
+}
+
+cql_bool result_set_proc_with_contract_in_fetch_results_get_type_is_null(result_set_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set, cql_int32 row) {
+  result_set_proc_with_contract_in_fetch_results_row *data = (result_set_proc_with_contract_in_fetch_results_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].type.is_null;
+}
+
+cql_int32 result_set_proc_with_contract_in_fetch_results_get_type_value(result_set_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set, cql_int32 row) {
+  result_set_proc_with_contract_in_fetch_results_row *data = (result_set_proc_with_contract_in_fetch_results_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].type.value;
+}
+
+cql_bool result_set_proc_with_contract_in_fetch_results_get_size_is_null(result_set_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set, cql_int32 row) {
+  result_set_proc_with_contract_in_fetch_results_row *data = (result_set_proc_with_contract_in_fetch_results_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].size.is_null;
+}
+
+cql_double result_set_proc_with_contract_in_fetch_results_get_size_value(result_set_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set, cql_int32 row) {
+  result_set_proc_with_contract_in_fetch_results_row *data = (result_set_proc_with_contract_in_fetch_results_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].size.value;
+}
+
+uint8_t result_set_proc_with_contract_in_fetch_results_data_types[result_set_proc_with_contract_in_fetch_results_data_types_count] = {
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
+  CQL_DATA_TYPE_STRING, // name
+  CQL_DATA_TYPE_INT64, // rate
+  CQL_DATA_TYPE_INT32, // type
+  CQL_DATA_TYPE_DOUBLE, // size
+};
+
+#define result_set_proc_with_contract_in_fetch_results_refs_offset cql_offsetof(result_set_proc_with_contract_in_fetch_results_row, name) // count = 1
+
+static cql_uint16 result_set_proc_with_contract_in_fetch_results_col_offsets[] = { 5,
+  cql_offsetof(result_set_proc_with_contract_in_fetch_results_row, id),
+  cql_offsetof(result_set_proc_with_contract_in_fetch_results_row, name),
+  cql_offsetof(result_set_proc_with_contract_in_fetch_results_row, rate),
+  cql_offsetof(result_set_proc_with_contract_in_fetch_results_row, type),
+  cql_offsetof(result_set_proc_with_contract_in_fetch_results_row, size)
+};
+
+cql_int32 result_set_proc_with_contract_in_fetch_results_result_count(result_set_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code result_set_proc_with_contract_in_fetch_results_fetch_results(sqlite3 *_Nonnull _db_, result_set_proc_with_contract_in_fetch_results_result_set_ref _Nullable *_Nonnull result_set, cql_string_ref _Nonnull t) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_result_set_proc_with_contract_in_fetch_results, &result_set_proc_with_contract_in_fetch_results_perf_index);
+  cql_code rc = result_set_proc_with_contract_in_fetch_results(_db_, &stmt, t);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = result_set_proc_with_contract_in_fetch_results_data_types,
+    .col_offsets = result_set_proc_with_contract_in_fetch_results_col_offsets,
+    .refs_count = 1,
+    .refs_offset = result_set_proc_with_contract_in_fetch_results_refs_offset,
+    .rowsize = sizeof(result_set_proc_with_contract_in_fetch_results_row),
+    .crc = CRC_result_set_proc_with_contract_in_fetch_results,
+    .perf_index = &result_set_proc_with_contract_in_fetch_results_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC result_set_proc_with_contract_in_fetch_results (t TEXT NOT NULL) (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
+CQL_WARN_UNUSED cql_code result_set_proc_with_contract_in_fetch_results(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_string_ref _Nonnull t) {
+  cql_contract(t);
+
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT id, name, rate, type, size "
+      "FROM bar");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC out_proc_with_contract_in_fetch_results (t TEXT NOT NULL)
+BEGIN
+  DECLARE C CURSOR LIKE bar;
+  OUT C;
+END;
+*/
+
+#define _PROC_ "out_proc_with_contract_in_fetch_results"
+
+#define out_proc_with_contract_in_fetch_results_refs_offset cql_offsetof(out_proc_with_contract_in_fetch_results_row, name) // count = 1
+static int32_t out_proc_with_contract_in_fetch_results_perf_index;
+
+cql_string_literal(out_proc_with_contract_in_fetch_results_stored_procedure_name, "out_proc_with_contract_in_fetch_results");
+
+cql_int32 out_proc_with_contract_in_fetch_results_get_id(out_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set) {
+  out_proc_with_contract_in_fetch_results_row *data = (out_proc_with_contract_in_fetch_results_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data->id;
+}
+
+cql_string_ref _Nullable out_proc_with_contract_in_fetch_results_get_name(out_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set) {
+  out_proc_with_contract_in_fetch_results_row *data = (out_proc_with_contract_in_fetch_results_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data->name;
+}
+
+cql_bool out_proc_with_contract_in_fetch_results_get_rate_is_null(out_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set) {
+  out_proc_with_contract_in_fetch_results_row *data = (out_proc_with_contract_in_fetch_results_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data->rate.is_null;
+}
+
+cql_int64 out_proc_with_contract_in_fetch_results_get_rate_value(out_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set) {
+  out_proc_with_contract_in_fetch_results_row *data = (out_proc_with_contract_in_fetch_results_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data->rate.value;
+}
+
+cql_bool out_proc_with_contract_in_fetch_results_get_type_is_null(out_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set) {
+  out_proc_with_contract_in_fetch_results_row *data = (out_proc_with_contract_in_fetch_results_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data->type.is_null;
+}
+
+cql_int32 out_proc_with_contract_in_fetch_results_get_type_value(out_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set) {
+  out_proc_with_contract_in_fetch_results_row *data = (out_proc_with_contract_in_fetch_results_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data->type.value;
+}
+
+cql_bool out_proc_with_contract_in_fetch_results_get_size_is_null(out_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set) {
+  out_proc_with_contract_in_fetch_results_row *data = (out_proc_with_contract_in_fetch_results_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data->size.is_null;
+}
+
+cql_double out_proc_with_contract_in_fetch_results_get_size_value(out_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set) {
+  out_proc_with_contract_in_fetch_results_row *data = (out_proc_with_contract_in_fetch_results_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data->size.value;
+}
+
+uint8_t out_proc_with_contract_in_fetch_results_data_types[out_proc_with_contract_in_fetch_results_data_types_count] = {
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
+  CQL_DATA_TYPE_STRING, // name
+  CQL_DATA_TYPE_INT64, // rate
+  CQL_DATA_TYPE_INT32, // type
+  CQL_DATA_TYPE_DOUBLE, // size
+};
+
+static cql_uint16 out_proc_with_contract_in_fetch_results_col_offsets[] = { 5,
+  cql_offsetof(out_proc_with_contract_in_fetch_results_row, id),
+  cql_offsetof(out_proc_with_contract_in_fetch_results_row, name),
+  cql_offsetof(out_proc_with_contract_in_fetch_results_row, rate),
+  cql_offsetof(out_proc_with_contract_in_fetch_results_row, type),
+  cql_offsetof(out_proc_with_contract_in_fetch_results_row, size)
+};
+
+cql_int32 out_proc_with_contract_in_fetch_results_result_count(out_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+void out_proc_with_contract_in_fetch_results_fetch_results( out_proc_with_contract_in_fetch_results_result_set_ref _Nullable *_Nonnull result_set, cql_string_ref _Nonnull t) {
+  cql_profile_start(CRC_out_proc_with_contract_in_fetch_results, &out_proc_with_contract_in_fetch_results_perf_index);
+  *result_set = NULL;
+  out_proc_with_contract_in_fetch_results_row *row = (out_proc_with_contract_in_fetch_results_row *)calloc(1, sizeof(out_proc_with_contract_in_fetch_results_row));
+  out_proc_with_contract_in_fetch_results(t, row);
+  cql_fetch_info info = {
+    .rc = SQLITE_OK,
+    .data_types = out_proc_with_contract_in_fetch_results_data_types,
+    .col_offsets = out_proc_with_contract_in_fetch_results_col_offsets,
+    .refs_count = 1,
+    .refs_offset = out_proc_with_contract_in_fetch_results_refs_offset,
+    .rowsize = sizeof(out_proc_with_contract_in_fetch_results_row),
+    .crc = CRC_out_proc_with_contract_in_fetch_results,
+    .perf_index = &out_proc_with_contract_in_fetch_results_perf_index,
+  };
+  cql_one_row_result(&info, (char *)row, row->_has_row_, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC out_proc_with_contract_in_fetch_results (t TEXT NOT NULL) OUT (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
+
+typedef struct out_proc_with_contract_in_fetch_results_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 id;
+  cql_nullable_int64 rate;
+  cql_nullable_int32 type;
+  cql_nullable_double size;
+  cql_string_ref _Nullable name;
+} out_proc_with_contract_in_fetch_results_C_row;
+
+#define out_proc_with_contract_in_fetch_results_C_refs_offset cql_offsetof(out_proc_with_contract_in_fetch_results_C_row, name) // count = 1
+void out_proc_with_contract_in_fetch_results(cql_string_ref _Nonnull t, out_proc_with_contract_in_fetch_results_row *_Nonnull _result_) {
+  cql_contract(t);
+
+  memset(_result_, 0, sizeof(*_result_));
+  out_proc_with_contract_in_fetch_results_C_row C = { ._refs_count_ = 1, ._refs_offset_ = out_proc_with_contract_in_fetch_results_C_refs_offset };
+
+  _result_->_has_row_ = C._has_row_;
+  _result_->_refs_count_ = 1;
+  _result_->_refs_offset_ = out_proc_with_contract_in_fetch_results_refs_offset;
+  _result_->id = C.id;
+  cql_set_string_ref(&_result_->name, C.name);
+  _result_->rate = C.rate;
+  _result_->type = C.type;
+  _result_->size = C.size;
 
   cql_teardown_row(C);
 }
