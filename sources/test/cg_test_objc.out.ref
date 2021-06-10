@@ -2338,6 +2338,930 @@ static inline BOOL CGBVaultAliasColumnNameProcRowEqual(CGBVaultAliasColumnNamePr
   return CGCVaultAliasColumnNameProcRowEqual(CGCVaultAliasColumnNameProcFromCGBVaultAliasColumnNameProc(resultSet1), row1, CGCVaultAliasColumnNameProcFromCGBVaultAliasColumnNameProc(resultSet2), row2);
 }
 
+@class CGBWindow1;
+
+static inline CGBWindow1 *CGBWindow1FromCGCWindow1(CGCWindow1ResultSetRef resultSet)
+{
+  return (__bridge CGBWindow1 *)resultSet;
+}
+
+static inline CGCWindow1ResultSetRef CGCWindow1FromCGBWindow1(CGBWindow1 *resultSet)
+{
+  return (__bridge CGCWindow1ResultSetRef)resultSet;
+}
+
+static inline NSNumber *_Nullable CGBWindow1GetMonth(CGBWindow1 *resultSet, int32_t row)
+{
+  CGCWindow1ResultSetRef cResultSet = CGCWindow1FromCGBWindow1(resultSet);
+  return CGCWindow1GetMonthIsNull(cResultSet, row) ? nil : @(CGCWindow1GetMonthValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBWindow1GetAmount(CGBWindow1 *resultSet, int32_t row)
+{
+  CGCWindow1ResultSetRef cResultSet = CGCWindow1FromCGBWindow1(resultSet);
+  return CGCWindow1GetAmountIsNull(cResultSet, row) ? nil : @(CGCWindow1GetAmountValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBWindow1GetSalesMovingAverage(CGBWindow1 *resultSet, int32_t row)
+{
+  CGCWindow1ResultSetRef cResultSet = CGCWindow1FromCGBWindow1(resultSet);
+  return CGCWindow1GetSalesMovingAverageIsNull(cResultSet, row) ? nil : @(CGCWindow1GetSalesMovingAverageValue(cResultSet, row));
+}
+
+static inline int32_t CGBWindow1ResultCount(CGBWindow1 *resultSet)
+{
+  return CGCWindow1ResultCount(CGCWindow1FromCGBWindow1(resultSet));
+}
+
+static inline CGBWindow1 *CGBWindow1Copy(CGBWindow1 *resultSet, int32_t from, int32_t count)
+{
+  CGCWindow1ResultSetRef copy;
+  CGCWindow1Copy(CGCWindow1FromCGBWindow1(resultSet), &copy, from, count);
+  return (__bridge_transfer CGBWindow1 *)copy;
+}
+
+static inline NSUInteger CGBWindow1RowHash(CGBWindow1 *resultSet, int32_t row)
+{
+  return CGCWindow1RowHash(CGCWindow1FromCGBWindow1(resultSet), row);
+}
+
+static inline BOOL CGBWindow1RowEqual(CGBWindow1 *resultSet1, int32_t row1, CGBWindow1 *resultSet2, int32_t row2)
+{
+  return CGCWindow1RowEqual(CGCWindow1FromCGBWindow1(resultSet1), row1, CGCWindow1FromCGBWindow1(resultSet2), row2);
+}
+
+@class CGBWindow2;
+
+static inline CGBWindow2 *CGBWindow2FromCGCWindow2(CGCWindow2ResultSetRef resultSet)
+{
+  return (__bridge CGBWindow2 *)resultSet;
+}
+
+static inline CGCWindow2ResultSetRef CGCWindow2FromCGBWindow2(CGBWindow2 *resultSet)
+{
+  return (__bridge CGCWindow2ResultSetRef)resultSet;
+}
+
+static inline NSNumber *_Nullable CGBWindow2GetMonth(CGBWindow2 *resultSet, int32_t row)
+{
+  CGCWindow2ResultSetRef cResultSet = CGCWindow2FromCGBWindow2(resultSet);
+  return CGCWindow2GetMonthIsNull(cResultSet, row) ? nil : @(CGCWindow2GetMonthValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBWindow2GetAmount(CGBWindow2 *resultSet, int32_t row)
+{
+  CGCWindow2ResultSetRef cResultSet = CGCWindow2FromCGBWindow2(resultSet);
+  return CGCWindow2GetAmountIsNull(cResultSet, row) ? nil : @(CGCWindow2GetAmountValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBWindow2GetRunningTotal(CGBWindow2 *resultSet, int32_t row)
+{
+  CGCWindow2ResultSetRef cResultSet = CGCWindow2FromCGBWindow2(resultSet);
+  return CGCWindow2GetRunningTotalIsNull(cResultSet, row) ? nil : @(CGCWindow2GetRunningTotalValue(cResultSet, row));
+}
+
+static inline int32_t CGBWindow2ResultCount(CGBWindow2 *resultSet)
+{
+  return CGCWindow2ResultCount(CGCWindow2FromCGBWindow2(resultSet));
+}
+
+static inline CGBWindow2 *CGBWindow2Copy(CGBWindow2 *resultSet, int32_t from, int32_t count)
+{
+  CGCWindow2ResultSetRef copy;
+  CGCWindow2Copy(CGCWindow2FromCGBWindow2(resultSet), &copy, from, count);
+  return (__bridge_transfer CGBWindow2 *)copy;
+}
+
+static inline NSUInteger CGBWindow2RowHash(CGBWindow2 *resultSet, int32_t row)
+{
+  return CGCWindow2RowHash(CGCWindow2FromCGBWindow2(resultSet), row);
+}
+
+static inline BOOL CGBWindow2RowEqual(CGBWindow2 *resultSet1, int32_t row1, CGBWindow2 *resultSet2, int32_t row2)
+{
+  return CGCWindow2RowEqual(CGCWindow2FromCGBWindow2(resultSet1), row1, CGCWindow2FromCGBWindow2(resultSet2), row2);
+}
+
+@class CGBWindow3;
+
+static inline CGBWindow3 *CGBWindow3FromCGCWindow3(CGCWindow3ResultSetRef resultSet)
+{
+  return (__bridge CGBWindow3 *)resultSet;
+}
+
+static inline CGCWindow3ResultSetRef CGCWindow3FromCGBWindow3(CGBWindow3 *resultSet)
+{
+  return (__bridge CGCWindow3ResultSetRef)resultSet;
+}
+
+static inline NSNumber *_Nullable CGBWindow3GetMonth(CGBWindow3 *resultSet, int32_t row)
+{
+  CGCWindow3ResultSetRef cResultSet = CGCWindow3FromCGBWindow3(resultSet);
+  return CGCWindow3GetMonthIsNull(cResultSet, row) ? nil : @(CGCWindow3GetMonthValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBWindow3GetAmount(CGBWindow3 *resultSet, int32_t row)
+{
+  CGCWindow3ResultSetRef cResultSet = CGCWindow3FromCGBWindow3(resultSet);
+  return CGCWindow3GetAmountIsNull(cResultSet, row) ? nil : @(CGCWindow3GetAmountValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBWindow3GetSalesMovingAverage(CGBWindow3 *resultSet, int32_t row)
+{
+  CGCWindow3ResultSetRef cResultSet = CGCWindow3FromCGBWindow3(resultSet);
+  return CGCWindow3GetSalesMovingAverageIsNull(cResultSet, row) ? nil : @(CGCWindow3GetSalesMovingAverageValue(cResultSet, row));
+}
+
+static inline int32_t CGBWindow3ResultCount(CGBWindow3 *resultSet)
+{
+  return CGCWindow3ResultCount(CGCWindow3FromCGBWindow3(resultSet));
+}
+
+static inline CGBWindow3 *CGBWindow3Copy(CGBWindow3 *resultSet, int32_t from, int32_t count)
+{
+  CGCWindow3ResultSetRef copy;
+  CGCWindow3Copy(CGCWindow3FromCGBWindow3(resultSet), &copy, from, count);
+  return (__bridge_transfer CGBWindow3 *)copy;
+}
+
+static inline NSUInteger CGBWindow3RowHash(CGBWindow3 *resultSet, int32_t row)
+{
+  return CGCWindow3RowHash(CGCWindow3FromCGBWindow3(resultSet), row);
+}
+
+static inline BOOL CGBWindow3RowEqual(CGBWindow3 *resultSet1, int32_t row1, CGBWindow3 *resultSet2, int32_t row2)
+{
+  return CGCWindow3RowEqual(CGCWindow3FromCGBWindow3(resultSet1), row1, CGCWindow3FromCGBWindow3(resultSet2), row2);
+}
+
+@class CGBWindow4;
+
+static inline CGBWindow4 *CGBWindow4FromCGCWindow4(CGCWindow4ResultSetRef resultSet)
+{
+  return (__bridge CGBWindow4 *)resultSet;
+}
+
+static inline CGCWindow4ResultSetRef CGCWindow4FromCGBWindow4(CGBWindow4 *resultSet)
+{
+  return (__bridge CGCWindow4ResultSetRef)resultSet;
+}
+
+static inline NSNumber *_Nullable CGBWindow4GetMonth(CGBWindow4 *resultSet, int32_t row)
+{
+  CGCWindow4ResultSetRef cResultSet = CGCWindow4FromCGBWindow4(resultSet);
+  return CGCWindow4GetMonthIsNull(cResultSet, row) ? nil : @(CGCWindow4GetMonthValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBWindow4GetAmount(CGBWindow4 *resultSet, int32_t row)
+{
+  CGCWindow4ResultSetRef cResultSet = CGCWindow4FromCGBWindow4(resultSet);
+  return CGCWindow4GetAmountIsNull(cResultSet, row) ? nil : @(CGCWindow4GetAmountValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBWindow4GetSalesMovingAverage(CGBWindow4 *resultSet, int32_t row)
+{
+  CGCWindow4ResultSetRef cResultSet = CGCWindow4FromCGBWindow4(resultSet);
+  return CGCWindow4GetSalesMovingAverageIsNull(cResultSet, row) ? nil : @(CGCWindow4GetSalesMovingAverageValue(cResultSet, row));
+}
+
+static inline int32_t CGBWindow4ResultCount(CGBWindow4 *resultSet)
+{
+  return CGCWindow4ResultCount(CGCWindow4FromCGBWindow4(resultSet));
+}
+
+static inline CGBWindow4 *CGBWindow4Copy(CGBWindow4 *resultSet, int32_t from, int32_t count)
+{
+  CGCWindow4ResultSetRef copy;
+  CGCWindow4Copy(CGCWindow4FromCGBWindow4(resultSet), &copy, from, count);
+  return (__bridge_transfer CGBWindow4 *)copy;
+}
+
+static inline NSUInteger CGBWindow4RowHash(CGBWindow4 *resultSet, int32_t row)
+{
+  return CGCWindow4RowHash(CGCWindow4FromCGBWindow4(resultSet), row);
+}
+
+static inline BOOL CGBWindow4RowEqual(CGBWindow4 *resultSet1, int32_t row1, CGBWindow4 *resultSet2, int32_t row2)
+{
+  return CGCWindow4RowEqual(CGCWindow4FromCGBWindow4(resultSet1), row1, CGCWindow4FromCGBWindow4(resultSet2), row2);
+}
+
+@class CGBWindow5;
+
+static inline CGBWindow5 *CGBWindow5FromCGCWindow5(CGCWindow5ResultSetRef resultSet)
+{
+  return (__bridge CGBWindow5 *)resultSet;
+}
+
+static inline CGCWindow5ResultSetRef CGCWindow5FromCGBWindow5(CGBWindow5 *resultSet)
+{
+  return (__bridge CGCWindow5ResultSetRef)resultSet;
+}
+
+static inline NSNumber *_Nullable CGBWindow5GetMonth(CGBWindow5 *resultSet, int32_t row)
+{
+  CGCWindow5ResultSetRef cResultSet = CGCWindow5FromCGBWindow5(resultSet);
+  return CGCWindow5GetMonthIsNull(cResultSet, row) ? nil : @(CGCWindow5GetMonthValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBWindow5GetAmount(CGBWindow5 *resultSet, int32_t row)
+{
+  CGCWindow5ResultSetRef cResultSet = CGCWindow5FromCGBWindow5(resultSet);
+  return CGCWindow5GetAmountIsNull(cResultSet, row) ? nil : @(CGCWindow5GetAmountValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBWindow5GetSalesMovingAverage(CGBWindow5 *resultSet, int32_t row)
+{
+  CGCWindow5ResultSetRef cResultSet = CGCWindow5FromCGBWindow5(resultSet);
+  return CGCWindow5GetSalesMovingAverageIsNull(cResultSet, row) ? nil : @(CGCWindow5GetSalesMovingAverageValue(cResultSet, row));
+}
+
+static inline int32_t CGBWindow5ResultCount(CGBWindow5 *resultSet)
+{
+  return CGCWindow5ResultCount(CGCWindow5FromCGBWindow5(resultSet));
+}
+
+static inline CGBWindow5 *CGBWindow5Copy(CGBWindow5 *resultSet, int32_t from, int32_t count)
+{
+  CGCWindow5ResultSetRef copy;
+  CGCWindow5Copy(CGCWindow5FromCGBWindow5(resultSet), &copy, from, count);
+  return (__bridge_transfer CGBWindow5 *)copy;
+}
+
+static inline NSUInteger CGBWindow5RowHash(CGBWindow5 *resultSet, int32_t row)
+{
+  return CGCWindow5RowHash(CGCWindow5FromCGBWindow5(resultSet), row);
+}
+
+static inline BOOL CGBWindow5RowEqual(CGBWindow5 *resultSet1, int32_t row1, CGBWindow5 *resultSet2, int32_t row2)
+{
+  return CGCWindow5RowEqual(CGCWindow5FromCGBWindow5(resultSet1), row1, CGCWindow5FromCGBWindow5(resultSet2), row2);
+}
+
+@class CGBWindow6;
+
+static inline CGBWindow6 *CGBWindow6FromCGCWindow6(CGCWindow6ResultSetRef resultSet)
+{
+  return (__bridge CGBWindow6 *)resultSet;
+}
+
+static inline CGCWindow6ResultSetRef CGCWindow6FromCGBWindow6(CGBWindow6 *resultSet)
+{
+  return (__bridge CGCWindow6ResultSetRef)resultSet;
+}
+
+static inline NSNumber *_Nullable CGBWindow6GetMonth(CGBWindow6 *resultSet, int32_t row)
+{
+  CGCWindow6ResultSetRef cResultSet = CGCWindow6FromCGBWindow6(resultSet);
+  return CGCWindow6GetMonthIsNull(cResultSet, row) ? nil : @(CGCWindow6GetMonthValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBWindow6GetAmount(CGBWindow6 *resultSet, int32_t row)
+{
+  CGCWindow6ResultSetRef cResultSet = CGCWindow6FromCGBWindow6(resultSet);
+  return CGCWindow6GetAmountIsNull(cResultSet, row) ? nil : @(CGCWindow6GetAmountValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBWindow6GetSalesMovingAverage(CGBWindow6 *resultSet, int32_t row)
+{
+  CGCWindow6ResultSetRef cResultSet = CGCWindow6FromCGBWindow6(resultSet);
+  return CGCWindow6GetSalesMovingAverageIsNull(cResultSet, row) ? nil : @(CGCWindow6GetSalesMovingAverageValue(cResultSet, row));
+}
+
+static inline int32_t CGBWindow6ResultCount(CGBWindow6 *resultSet)
+{
+  return CGCWindow6ResultCount(CGCWindow6FromCGBWindow6(resultSet));
+}
+
+static inline CGBWindow6 *CGBWindow6Copy(CGBWindow6 *resultSet, int32_t from, int32_t count)
+{
+  CGCWindow6ResultSetRef copy;
+  CGCWindow6Copy(CGCWindow6FromCGBWindow6(resultSet), &copy, from, count);
+  return (__bridge_transfer CGBWindow6 *)copy;
+}
+
+static inline NSUInteger CGBWindow6RowHash(CGBWindow6 *resultSet, int32_t row)
+{
+  return CGCWindow6RowHash(CGCWindow6FromCGBWindow6(resultSet), row);
+}
+
+static inline BOOL CGBWindow6RowEqual(CGBWindow6 *resultSet1, int32_t row1, CGBWindow6 *resultSet2, int32_t row2)
+{
+  return CGCWindow6RowEqual(CGCWindow6FromCGBWindow6(resultSet1), row1, CGCWindow6FromCGBWindow6(resultSet2), row2);
+}
+
+@class CGBWindow7;
+
+static inline CGBWindow7 *CGBWindow7FromCGCWindow7(CGCWindow7ResultSetRef resultSet)
+{
+  return (__bridge CGBWindow7 *)resultSet;
+}
+
+static inline CGCWindow7ResultSetRef CGCWindow7FromCGBWindow7(CGBWindow7 *resultSet)
+{
+  return (__bridge CGCWindow7ResultSetRef)resultSet;
+}
+
+static inline NSNumber *_Nullable CGBWindow7GetMonth(CGBWindow7 *resultSet, int32_t row)
+{
+  CGCWindow7ResultSetRef cResultSet = CGCWindow7FromCGBWindow7(resultSet);
+  return CGCWindow7GetMonthIsNull(cResultSet, row) ? nil : @(CGCWindow7GetMonthValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBWindow7GetAmount(CGBWindow7 *resultSet, int32_t row)
+{
+  CGCWindow7ResultSetRef cResultSet = CGCWindow7FromCGBWindow7(resultSet);
+  return CGCWindow7GetAmountIsNull(cResultSet, row) ? nil : @(CGCWindow7GetAmountValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBWindow7GetSalesMovingAverage(CGBWindow7 *resultSet, int32_t row)
+{
+  CGCWindow7ResultSetRef cResultSet = CGCWindow7FromCGBWindow7(resultSet);
+  return CGCWindow7GetSalesMovingAverageIsNull(cResultSet, row) ? nil : @(CGCWindow7GetSalesMovingAverageValue(cResultSet, row));
+}
+
+static inline int32_t CGBWindow7ResultCount(CGBWindow7 *resultSet)
+{
+  return CGCWindow7ResultCount(CGCWindow7FromCGBWindow7(resultSet));
+}
+
+static inline CGBWindow7 *CGBWindow7Copy(CGBWindow7 *resultSet, int32_t from, int32_t count)
+{
+  CGCWindow7ResultSetRef copy;
+  CGCWindow7Copy(CGCWindow7FromCGBWindow7(resultSet), &copy, from, count);
+  return (__bridge_transfer CGBWindow7 *)copy;
+}
+
+static inline NSUInteger CGBWindow7RowHash(CGBWindow7 *resultSet, int32_t row)
+{
+  return CGCWindow7RowHash(CGCWindow7FromCGBWindow7(resultSet), row);
+}
+
+static inline BOOL CGBWindow7RowEqual(CGBWindow7 *resultSet1, int32_t row1, CGBWindow7 *resultSet2, int32_t row2)
+{
+  return CGCWindow7RowEqual(CGCWindow7FromCGBWindow7(resultSet1), row1, CGCWindow7FromCGBWindow7(resultSet2), row2);
+}
+
+@class CGBWindow8;
+
+static inline CGBWindow8 *CGBWindow8FromCGCWindow8(CGCWindow8ResultSetRef resultSet)
+{
+  return (__bridge CGBWindow8 *)resultSet;
+}
+
+static inline CGCWindow8ResultSetRef CGCWindow8FromCGBWindow8(CGBWindow8 *resultSet)
+{
+  return (__bridge CGCWindow8ResultSetRef)resultSet;
+}
+
+static inline NSNumber *_Nullable CGBWindow8GetMonth(CGBWindow8 *resultSet, int32_t row)
+{
+  CGCWindow8ResultSetRef cResultSet = CGCWindow8FromCGBWindow8(resultSet);
+  return CGCWindow8GetMonthIsNull(cResultSet, row) ? nil : @(CGCWindow8GetMonthValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBWindow8GetAmount(CGBWindow8 *resultSet, int32_t row)
+{
+  CGCWindow8ResultSetRef cResultSet = CGCWindow8FromCGBWindow8(resultSet);
+  return CGCWindow8GetAmountIsNull(cResultSet, row) ? nil : @(CGCWindow8GetAmountValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBWindow8GetSalesMovingAverage(CGBWindow8 *resultSet, int32_t row)
+{
+  CGCWindow8ResultSetRef cResultSet = CGCWindow8FromCGBWindow8(resultSet);
+  return CGCWindow8GetSalesMovingAverageIsNull(cResultSet, row) ? nil : @(CGCWindow8GetSalesMovingAverageValue(cResultSet, row));
+}
+
+static inline int32_t CGBWindow8ResultCount(CGBWindow8 *resultSet)
+{
+  return CGCWindow8ResultCount(CGCWindow8FromCGBWindow8(resultSet));
+}
+
+static inline CGBWindow8 *CGBWindow8Copy(CGBWindow8 *resultSet, int32_t from, int32_t count)
+{
+  CGCWindow8ResultSetRef copy;
+  CGCWindow8Copy(CGCWindow8FromCGBWindow8(resultSet), &copy, from, count);
+  return (__bridge_transfer CGBWindow8 *)copy;
+}
+
+static inline NSUInteger CGBWindow8RowHash(CGBWindow8 *resultSet, int32_t row)
+{
+  return CGCWindow8RowHash(CGCWindow8FromCGBWindow8(resultSet), row);
+}
+
+static inline BOOL CGBWindow8RowEqual(CGBWindow8 *resultSet1, int32_t row1, CGBWindow8 *resultSet2, int32_t row2)
+{
+  return CGCWindow8RowEqual(CGCWindow8FromCGBWindow8(resultSet1), row1, CGCWindow8FromCGBWindow8(resultSet2), row2);
+}
+
+@class CGBWindow9;
+
+static inline CGBWindow9 *CGBWindow9FromCGCWindow9(CGCWindow9ResultSetRef resultSet)
+{
+  return (__bridge CGBWindow9 *)resultSet;
+}
+
+static inline CGCWindow9ResultSetRef CGCWindow9FromCGBWindow9(CGBWindow9 *resultSet)
+{
+  return (__bridge CGCWindow9ResultSetRef)resultSet;
+}
+
+static inline NSNumber *_Nullable CGBWindow9GetMonth(CGBWindow9 *resultSet, int32_t row)
+{
+  CGCWindow9ResultSetRef cResultSet = CGCWindow9FromCGBWindow9(resultSet);
+  return CGCWindow9GetMonthIsNull(cResultSet, row) ? nil : @(CGCWindow9GetMonthValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBWindow9GetAmount(CGBWindow9 *resultSet, int32_t row)
+{
+  CGCWindow9ResultSetRef cResultSet = CGCWindow9FromCGBWindow9(resultSet);
+  return CGCWindow9GetAmountIsNull(cResultSet, row) ? nil : @(CGCWindow9GetAmountValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBWindow9GetSalesMovingAverage(CGBWindow9 *resultSet, int32_t row)
+{
+  CGCWindow9ResultSetRef cResultSet = CGCWindow9FromCGBWindow9(resultSet);
+  return CGCWindow9GetSalesMovingAverageIsNull(cResultSet, row) ? nil : @(CGCWindow9GetSalesMovingAverageValue(cResultSet, row));
+}
+
+static inline int32_t CGBWindow9ResultCount(CGBWindow9 *resultSet)
+{
+  return CGCWindow9ResultCount(CGCWindow9FromCGBWindow9(resultSet));
+}
+
+static inline CGBWindow9 *CGBWindow9Copy(CGBWindow9 *resultSet, int32_t from, int32_t count)
+{
+  CGCWindow9ResultSetRef copy;
+  CGCWindow9Copy(CGCWindow9FromCGBWindow9(resultSet), &copy, from, count);
+  return (__bridge_transfer CGBWindow9 *)copy;
+}
+
+static inline NSUInteger CGBWindow9RowHash(CGBWindow9 *resultSet, int32_t row)
+{
+  return CGCWindow9RowHash(CGCWindow9FromCGBWindow9(resultSet), row);
+}
+
+static inline BOOL CGBWindow9RowEqual(CGBWindow9 *resultSet1, int32_t row1, CGBWindow9 *resultSet2, int32_t row2)
+{
+  return CGCWindow9RowEqual(CGCWindow9FromCGBWindow9(resultSet1), row1, CGCWindow9FromCGBWindow9(resultSet2), row2);
+}
+
+@class CGBWindow10;
+
+static inline CGBWindow10 *CGBWindow10FromCGCWindow10(CGCWindow10ResultSetRef resultSet)
+{
+  return (__bridge CGBWindow10 *)resultSet;
+}
+
+static inline CGCWindow10ResultSetRef CGCWindow10FromCGBWindow10(CGBWindow10 *resultSet)
+{
+  return (__bridge CGCWindow10ResultSetRef)resultSet;
+}
+
+static inline NSNumber *_Nullable CGBWindow10GetMonth(CGBWindow10 *resultSet, int32_t row)
+{
+  CGCWindow10ResultSetRef cResultSet = CGCWindow10FromCGBWindow10(resultSet);
+  return CGCWindow10GetMonthIsNull(cResultSet, row) ? nil : @(CGCWindow10GetMonthValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBWindow10GetAmount(CGBWindow10 *resultSet, int32_t row)
+{
+  CGCWindow10ResultSetRef cResultSet = CGCWindow10FromCGBWindow10(resultSet);
+  return CGCWindow10GetAmountIsNull(cResultSet, row) ? nil : @(CGCWindow10GetAmountValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBWindow10GetSalesMovingAverage(CGBWindow10 *resultSet, int32_t row)
+{
+  CGCWindow10ResultSetRef cResultSet = CGCWindow10FromCGBWindow10(resultSet);
+  return CGCWindow10GetSalesMovingAverageIsNull(cResultSet, row) ? nil : @(CGCWindow10GetSalesMovingAverageValue(cResultSet, row));
+}
+
+static inline int32_t CGBWindow10ResultCount(CGBWindow10 *resultSet)
+{
+  return CGCWindow10ResultCount(CGCWindow10FromCGBWindow10(resultSet));
+}
+
+static inline CGBWindow10 *CGBWindow10Copy(CGBWindow10 *resultSet, int32_t from, int32_t count)
+{
+  CGCWindow10ResultSetRef copy;
+  CGCWindow10Copy(CGCWindow10FromCGBWindow10(resultSet), &copy, from, count);
+  return (__bridge_transfer CGBWindow10 *)copy;
+}
+
+static inline NSUInteger CGBWindow10RowHash(CGBWindow10 *resultSet, int32_t row)
+{
+  return CGCWindow10RowHash(CGCWindow10FromCGBWindow10(resultSet), row);
+}
+
+static inline BOOL CGBWindow10RowEqual(CGBWindow10 *resultSet1, int32_t row1, CGBWindow10 *resultSet2, int32_t row2)
+{
+  return CGCWindow10RowEqual(CGCWindow10FromCGBWindow10(resultSet1), row1, CGCWindow10FromCGBWindow10(resultSet2), row2);
+}
+
+@class CGBWindow11;
+
+static inline CGBWindow11 *CGBWindow11FromCGCWindow11(CGCWindow11ResultSetRef resultSet)
+{
+  return (__bridge CGBWindow11 *)resultSet;
+}
+
+static inline CGCWindow11ResultSetRef CGCWindow11FromCGBWindow11(CGBWindow11 *resultSet)
+{
+  return (__bridge CGCWindow11ResultSetRef)resultSet;
+}
+
+static inline NSNumber *_Nullable CGBWindow11GetMonth(CGBWindow11 *resultSet, int32_t row)
+{
+  CGCWindow11ResultSetRef cResultSet = CGCWindow11FromCGBWindow11(resultSet);
+  return CGCWindow11GetMonthIsNull(cResultSet, row) ? nil : @(CGCWindow11GetMonthValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBWindow11GetAmount(CGBWindow11 *resultSet, int32_t row)
+{
+  CGCWindow11ResultSetRef cResultSet = CGCWindow11FromCGBWindow11(resultSet);
+  return CGCWindow11GetAmountIsNull(cResultSet, row) ? nil : @(CGCWindow11GetAmountValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBWindow11GetSalesMovingAverage(CGBWindow11 *resultSet, int32_t row)
+{
+  CGCWindow11ResultSetRef cResultSet = CGCWindow11FromCGBWindow11(resultSet);
+  return CGCWindow11GetSalesMovingAverageIsNull(cResultSet, row) ? nil : @(CGCWindow11GetSalesMovingAverageValue(cResultSet, row));
+}
+
+static inline int32_t CGBWindow11ResultCount(CGBWindow11 *resultSet)
+{
+  return CGCWindow11ResultCount(CGCWindow11FromCGBWindow11(resultSet));
+}
+
+static inline CGBWindow11 *CGBWindow11Copy(CGBWindow11 *resultSet, int32_t from, int32_t count)
+{
+  CGCWindow11ResultSetRef copy;
+  CGCWindow11Copy(CGCWindow11FromCGBWindow11(resultSet), &copy, from, count);
+  return (__bridge_transfer CGBWindow11 *)copy;
+}
+
+static inline NSUInteger CGBWindow11RowHash(CGBWindow11 *resultSet, int32_t row)
+{
+  return CGCWindow11RowHash(CGCWindow11FromCGBWindow11(resultSet), row);
+}
+
+static inline BOOL CGBWindow11RowEqual(CGBWindow11 *resultSet1, int32_t row1, CGBWindow11 *resultSet2, int32_t row2)
+{
+  return CGCWindow11RowEqual(CGCWindow11FromCGBWindow11(resultSet1), row1, CGCWindow11FromCGBWindow11(resultSet2), row2);
+}
+
+@class CGBWindow12;
+
+static inline CGBWindow12 *CGBWindow12FromCGCWindow12(CGCWindow12ResultSetRef resultSet)
+{
+  return (__bridge CGBWindow12 *)resultSet;
+}
+
+static inline CGCWindow12ResultSetRef CGCWindow12FromCGBWindow12(CGBWindow12 *resultSet)
+{
+  return (__bridge CGCWindow12ResultSetRef)resultSet;
+}
+
+static inline NSNumber *_Nullable CGBWindow12GetMonth(CGBWindow12 *resultSet, int32_t row)
+{
+  CGCWindow12ResultSetRef cResultSet = CGCWindow12FromCGBWindow12(resultSet);
+  return CGCWindow12GetMonthIsNull(cResultSet, row) ? nil : @(CGCWindow12GetMonthValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBWindow12GetAmount(CGBWindow12 *resultSet, int32_t row)
+{
+  CGCWindow12ResultSetRef cResultSet = CGCWindow12FromCGBWindow12(resultSet);
+  return CGCWindow12GetAmountIsNull(cResultSet, row) ? nil : @(CGCWindow12GetAmountValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBWindow12GetSalesMovingAverage(CGBWindow12 *resultSet, int32_t row)
+{
+  CGCWindow12ResultSetRef cResultSet = CGCWindow12FromCGBWindow12(resultSet);
+  return CGCWindow12GetSalesMovingAverageIsNull(cResultSet, row) ? nil : @(CGCWindow12GetSalesMovingAverageValue(cResultSet, row));
+}
+
+static inline int32_t CGBWindow12ResultCount(CGBWindow12 *resultSet)
+{
+  return CGCWindow12ResultCount(CGCWindow12FromCGBWindow12(resultSet));
+}
+
+static inline CGBWindow12 *CGBWindow12Copy(CGBWindow12 *resultSet, int32_t from, int32_t count)
+{
+  CGCWindow12ResultSetRef copy;
+  CGCWindow12Copy(CGCWindow12FromCGBWindow12(resultSet), &copy, from, count);
+  return (__bridge_transfer CGBWindow12 *)copy;
+}
+
+static inline NSUInteger CGBWindow12RowHash(CGBWindow12 *resultSet, int32_t row)
+{
+  return CGCWindow12RowHash(CGCWindow12FromCGBWindow12(resultSet), row);
+}
+
+static inline BOOL CGBWindow12RowEqual(CGBWindow12 *resultSet1, int32_t row1, CGBWindow12 *resultSet2, int32_t row2)
+{
+  return CGCWindow12RowEqual(CGCWindow12FromCGBWindow12(resultSet1), row1, CGCWindow12FromCGBWindow12(resultSet2), row2);
+}
+
+@class CGBWindow13;
+
+static inline CGBWindow13 *CGBWindow13FromCGCWindow13(CGCWindow13ResultSetRef resultSet)
+{
+  return (__bridge CGBWindow13 *)resultSet;
+}
+
+static inline CGCWindow13ResultSetRef CGCWindow13FromCGBWindow13(CGBWindow13 *resultSet)
+{
+  return (__bridge CGCWindow13ResultSetRef)resultSet;
+}
+
+static inline NSNumber *_Nullable CGBWindow13GetMonth(CGBWindow13 *resultSet, int32_t row)
+{
+  CGCWindow13ResultSetRef cResultSet = CGCWindow13FromCGBWindow13(resultSet);
+  return CGCWindow13GetMonthIsNull(cResultSet, row) ? nil : @(CGCWindow13GetMonthValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBWindow13GetAmount(CGBWindow13 *resultSet, int32_t row)
+{
+  CGCWindow13ResultSetRef cResultSet = CGCWindow13FromCGBWindow13(resultSet);
+  return CGCWindow13GetAmountIsNull(cResultSet, row) ? nil : @(CGCWindow13GetAmountValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBWindow13GetSalesMovingAverage(CGBWindow13 *resultSet, int32_t row)
+{
+  CGCWindow13ResultSetRef cResultSet = CGCWindow13FromCGBWindow13(resultSet);
+  return CGCWindow13GetSalesMovingAverageIsNull(cResultSet, row) ? nil : @(CGCWindow13GetSalesMovingAverageValue(cResultSet, row));
+}
+
+static inline int32_t CGBWindow13ResultCount(CGBWindow13 *resultSet)
+{
+  return CGCWindow13ResultCount(CGCWindow13FromCGBWindow13(resultSet));
+}
+
+static inline CGBWindow13 *CGBWindow13Copy(CGBWindow13 *resultSet, int32_t from, int32_t count)
+{
+  CGCWindow13ResultSetRef copy;
+  CGCWindow13Copy(CGCWindow13FromCGBWindow13(resultSet), &copy, from, count);
+  return (__bridge_transfer CGBWindow13 *)copy;
+}
+
+static inline NSUInteger CGBWindow13RowHash(CGBWindow13 *resultSet, int32_t row)
+{
+  return CGCWindow13RowHash(CGCWindow13FromCGBWindow13(resultSet), row);
+}
+
+static inline BOOL CGBWindow13RowEqual(CGBWindow13 *resultSet1, int32_t row1, CGBWindow13 *resultSet2, int32_t row2)
+{
+  return CGCWindow13RowEqual(CGCWindow13FromCGBWindow13(resultSet1), row1, CGCWindow13FromCGBWindow13(resultSet2), row2);
+}
+
+@class CGBWindow14;
+
+static inline CGBWindow14 *CGBWindow14FromCGCWindow14(CGCWindow14ResultSetRef resultSet)
+{
+  return (__bridge CGBWindow14 *)resultSet;
+}
+
+static inline CGCWindow14ResultSetRef CGCWindow14FromCGBWindow14(CGBWindow14 *resultSet)
+{
+  return (__bridge CGCWindow14ResultSetRef)resultSet;
+}
+
+static inline NSNumber *_Nullable CGBWindow14GetMonth(CGBWindow14 *resultSet, int32_t row)
+{
+  CGCWindow14ResultSetRef cResultSet = CGCWindow14FromCGBWindow14(resultSet);
+  return CGCWindow14GetMonthIsNull(cResultSet, row) ? nil : @(CGCWindow14GetMonthValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBWindow14GetAmount(CGBWindow14 *resultSet, int32_t row)
+{
+  CGCWindow14ResultSetRef cResultSet = CGCWindow14FromCGBWindow14(resultSet);
+  return CGCWindow14GetAmountIsNull(cResultSet, row) ? nil : @(CGCWindow14GetAmountValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBWindow14GetSalesMovingAverage(CGBWindow14 *resultSet, int32_t row)
+{
+  CGCWindow14ResultSetRef cResultSet = CGCWindow14FromCGBWindow14(resultSet);
+  return CGCWindow14GetSalesMovingAverageIsNull(cResultSet, row) ? nil : @(CGCWindow14GetSalesMovingAverageValue(cResultSet, row));
+}
+
+static inline int32_t CGBWindow14ResultCount(CGBWindow14 *resultSet)
+{
+  return CGCWindow14ResultCount(CGCWindow14FromCGBWindow14(resultSet));
+}
+
+static inline CGBWindow14 *CGBWindow14Copy(CGBWindow14 *resultSet, int32_t from, int32_t count)
+{
+  CGCWindow14ResultSetRef copy;
+  CGCWindow14Copy(CGCWindow14FromCGBWindow14(resultSet), &copy, from, count);
+  return (__bridge_transfer CGBWindow14 *)copy;
+}
+
+static inline NSUInteger CGBWindow14RowHash(CGBWindow14 *resultSet, int32_t row)
+{
+  return CGCWindow14RowHash(CGCWindow14FromCGBWindow14(resultSet), row);
+}
+
+static inline BOOL CGBWindow14RowEqual(CGBWindow14 *resultSet1, int32_t row1, CGBWindow14 *resultSet2, int32_t row2)
+{
+  return CGCWindow14RowEqual(CGCWindow14FromCGBWindow14(resultSet1), row1, CGCWindow14FromCGBWindow14(resultSet2), row2);
+}
+
+@class CGBWindow15;
+
+static inline CGBWindow15 *CGBWindow15FromCGCWindow15(CGCWindow15ResultSetRef resultSet)
+{
+  return (__bridge CGBWindow15 *)resultSet;
+}
+
+static inline CGCWindow15ResultSetRef CGCWindow15FromCGBWindow15(CGBWindow15 *resultSet)
+{
+  return (__bridge CGCWindow15ResultSetRef)resultSet;
+}
+
+static inline NSNumber *_Nullable CGBWindow15GetMonth(CGBWindow15 *resultSet, int32_t row)
+{
+  CGCWindow15ResultSetRef cResultSet = CGCWindow15FromCGBWindow15(resultSet);
+  return CGCWindow15GetMonthIsNull(cResultSet, row) ? nil : @(CGCWindow15GetMonthValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBWindow15GetAmount(CGBWindow15 *resultSet, int32_t row)
+{
+  CGCWindow15ResultSetRef cResultSet = CGCWindow15FromCGBWindow15(resultSet);
+  return CGCWindow15GetAmountIsNull(cResultSet, row) ? nil : @(CGCWindow15GetAmountValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBWindow15GetSalesMovingAverage(CGBWindow15 *resultSet, int32_t row)
+{
+  CGCWindow15ResultSetRef cResultSet = CGCWindow15FromCGBWindow15(resultSet);
+  return CGCWindow15GetSalesMovingAverageIsNull(cResultSet, row) ? nil : @(CGCWindow15GetSalesMovingAverageValue(cResultSet, row));
+}
+
+static inline int32_t CGBWindow15ResultCount(CGBWindow15 *resultSet)
+{
+  return CGCWindow15ResultCount(CGCWindow15FromCGBWindow15(resultSet));
+}
+
+static inline CGBWindow15 *CGBWindow15Copy(CGBWindow15 *resultSet, int32_t from, int32_t count)
+{
+  CGCWindow15ResultSetRef copy;
+  CGCWindow15Copy(CGCWindow15FromCGBWindow15(resultSet), &copy, from, count);
+  return (__bridge_transfer CGBWindow15 *)copy;
+}
+
+static inline NSUInteger CGBWindow15RowHash(CGBWindow15 *resultSet, int32_t row)
+{
+  return CGCWindow15RowHash(CGCWindow15FromCGBWindow15(resultSet), row);
+}
+
+static inline BOOL CGBWindow15RowEqual(CGBWindow15 *resultSet1, int32_t row1, CGBWindow15 *resultSet2, int32_t row2)
+{
+  return CGCWindow15RowEqual(CGCWindow15FromCGBWindow15(resultSet1), row1, CGCWindow15FromCGBWindow15(resultSet2), row2);
+}
+
+@class CGBWindow16;
+
+static inline CGBWindow16 *CGBWindow16FromCGCWindow16(CGCWindow16ResultSetRef resultSet)
+{
+  return (__bridge CGBWindow16 *)resultSet;
+}
+
+static inline CGCWindow16ResultSetRef CGCWindow16FromCGBWindow16(CGBWindow16 *resultSet)
+{
+  return (__bridge CGCWindow16ResultSetRef)resultSet;
+}
+
+static inline NSNumber *_Nullable CGBWindow16GetMonth(CGBWindow16 *resultSet, int32_t row)
+{
+  CGCWindow16ResultSetRef cResultSet = CGCWindow16FromCGBWindow16(resultSet);
+  return CGCWindow16GetMonthIsNull(cResultSet, row) ? nil : @(CGCWindow16GetMonthValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBWindow16GetAmount(CGBWindow16 *resultSet, int32_t row)
+{
+  CGCWindow16ResultSetRef cResultSet = CGCWindow16FromCGBWindow16(resultSet);
+  return CGCWindow16GetAmountIsNull(cResultSet, row) ? nil : @(CGCWindow16GetAmountValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBWindow16GetSalesMovingAverage(CGBWindow16 *resultSet, int32_t row)
+{
+  CGCWindow16ResultSetRef cResultSet = CGCWindow16FromCGBWindow16(resultSet);
+  return CGCWindow16GetSalesMovingAverageIsNull(cResultSet, row) ? nil : @(CGCWindow16GetSalesMovingAverageValue(cResultSet, row));
+}
+
+static inline int32_t CGBWindow16ResultCount(CGBWindow16 *resultSet)
+{
+  return CGCWindow16ResultCount(CGCWindow16FromCGBWindow16(resultSet));
+}
+
+static inline CGBWindow16 *CGBWindow16Copy(CGBWindow16 *resultSet, int32_t from, int32_t count)
+{
+  CGCWindow16ResultSetRef copy;
+  CGCWindow16Copy(CGCWindow16FromCGBWindow16(resultSet), &copy, from, count);
+  return (__bridge_transfer CGBWindow16 *)copy;
+}
+
+static inline NSUInteger CGBWindow16RowHash(CGBWindow16 *resultSet, int32_t row)
+{
+  return CGCWindow16RowHash(CGCWindow16FromCGBWindow16(resultSet), row);
+}
+
+static inline BOOL CGBWindow16RowEqual(CGBWindow16 *resultSet1, int32_t row1, CGBWindow16 *resultSet2, int32_t row2)
+{
+  return CGCWindow16RowEqual(CGCWindow16FromCGBWindow16(resultSet1), row1, CGCWindow16FromCGBWindow16(resultSet2), row2);
+}
+
+@class CGBVirtual1;
+
+static inline CGBVirtual1 *CGBVirtual1FromCGCVirtual1(CGCVirtual1ResultSetRef resultSet)
+{
+  return (__bridge CGBVirtual1 *)resultSet;
+}
+
+static inline CGCVirtual1ResultSetRef CGCVirtual1FromCGBVirtual1(CGBVirtual1 *resultSet)
+{
+  return (__bridge CGCVirtual1ResultSetRef)resultSet;
+}
+
+static inline int32_t CGBVirtual1GetVx(CGBVirtual1 *resultSet, int32_t row)
+{
+  CGCVirtual1ResultSetRef cResultSet = CGCVirtual1FromCGBVirtual1(resultSet);
+  return CGCVirtual1GetVx(cResultSet, row);
+}
+
+static inline NSNumber *_Nullable CGBVirtual1GetVy(CGBVirtual1 *resultSet, int32_t row)
+{
+  CGCVirtual1ResultSetRef cResultSet = CGCVirtual1FromCGBVirtual1(resultSet);
+  return CGCVirtual1GetVyIsNull(cResultSet, row) ? nil : @(CGCVirtual1GetVyValue(cResultSet, row));
+}
+
+static inline int32_t CGBVirtual1ResultCount(CGBVirtual1 *resultSet)
+{
+  return CGCVirtual1ResultCount(CGCVirtual1FromCGBVirtual1(resultSet));
+}
+
+static inline CGBVirtual1 *CGBVirtual1Copy(CGBVirtual1 *resultSet, int32_t from, int32_t count)
+{
+  CGCVirtual1ResultSetRef copy;
+  CGCVirtual1Copy(CGCVirtual1FromCGBVirtual1(resultSet), &copy, from, count);
+  return (__bridge_transfer CGBVirtual1 *)copy;
+}
+
+static inline NSUInteger CGBVirtual1RowHash(CGBVirtual1 *resultSet, int32_t row)
+{
+  return CGCVirtual1RowHash(CGCVirtual1FromCGBVirtual1(resultSet), row);
+}
+
+static inline BOOL CGBVirtual1RowEqual(CGBVirtual1 *resultSet1, int32_t row1, CGBVirtual1 *resultSet2, int32_t row2)
+{
+  return CGCVirtual1RowEqual(CGCVirtual1FromCGBVirtual1(resultSet1), row1, CGCVirtual1FromCGBVirtual1(resultSet2), row2);
+}
+
+@class CGBVirtual2;
+
+static inline CGBVirtual2 *CGBVirtual2FromCGCVirtual2(CGCVirtual2ResultSetRef resultSet)
+{
+  return (__bridge CGBVirtual2 *)resultSet;
+}
+
+static inline CGCVirtual2ResultSetRef CGCVirtual2FromCGBVirtual2(CGBVirtual2 *resultSet)
+{
+  return (__bridge CGCVirtual2ResultSetRef)resultSet;
+}
+
+static inline int32_t CGBVirtual2GetVx(CGBVirtual2 *resultSet, int32_t row)
+{
+  CGCVirtual2ResultSetRef cResultSet = CGCVirtual2FromCGBVirtual2(resultSet);
+  return CGCVirtual2GetVx(cResultSet, row);
+}
+
+static inline NSNumber *_Nullable CGBVirtual2GetVy(CGBVirtual2 *resultSet, int32_t row)
+{
+  CGCVirtual2ResultSetRef cResultSet = CGCVirtual2FromCGBVirtual2(resultSet);
+  return CGCVirtual2GetVyIsNull(cResultSet, row) ? nil : @(CGCVirtual2GetVyValue(cResultSet, row));
+}
+
+static inline int32_t CGBVirtual2ResultCount(CGBVirtual2 *resultSet)
+{
+  return CGCVirtual2ResultCount(CGCVirtual2FromCGBVirtual2(resultSet));
+}
+
+static inline CGBVirtual2 *CGBVirtual2Copy(CGBVirtual2 *resultSet, int32_t from, int32_t count)
+{
+  CGCVirtual2ResultSetRef copy;
+  CGCVirtual2Copy(CGCVirtual2FromCGBVirtual2(resultSet), &copy, from, count);
+  return (__bridge_transfer CGBVirtual2 *)copy;
+}
+
+static inline NSUInteger CGBVirtual2RowHash(CGBVirtual2 *resultSet, int32_t row)
+{
+  return CGCVirtual2RowHash(CGCVirtual2FromCGBVirtual2(resultSet), row);
+}
+
+static inline BOOL CGBVirtual2RowEqual(CGBVirtual2 *resultSet1, int32_t row1, CGBVirtual2 *resultSet2, int32_t row2)
+{
+  return CGCVirtual2RowEqual(CGCVirtual2FromCGBVirtual2(resultSet1), row1, CGCVirtual2FromCGBVirtual2(resultSet2), row2);
+}
+
 @class CGBOutObject;
 
 static inline CGBOutObject *CGBOutObjectFromCGCOutObject(CGCOutObjectResultSetRef resultSet)

@@ -2384,36 +2384,532 @@ extern cql_int32 x;
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
+#define CRC_window1 -9110545578536106646L
+
+extern cql_string_ref _Nonnull window1_stored_procedure_name;
+
+#define window1_data_types_count 3
+
+#ifndef result_set_type_decl_window1_result_set
+#define result_set_type_decl_window1_result_set 1
+cql_result_set_type_decl(window1_result_set, window1_result_set_ref);
+#endif
+extern cql_bool window1_get_month_is_null(window1_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window1_get_month_value(window1_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool window1_get_amount_is_null(window1_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double window1_get_amount_value(window1_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool window1_get_SalesMovingAverage_is_null(window1_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double window1_get_SalesMovingAverage_value(window1_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window1_result_count(window1_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code window1_fetch_results(sqlite3 *_Nonnull _db_, window1_result_set_ref _Nullable *_Nonnull result_set);
+#define window1_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define window1_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define window1_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
 
 // The statement ending at line XXXX
+#define CRC_window2 8983376849470527101L
+
+extern cql_string_ref _Nonnull window2_stored_procedure_name;
+
+#define window2_data_types_count 3
+
+#ifndef result_set_type_decl_window2_result_set
+#define result_set_type_decl_window2_result_set 1
+cql_result_set_type_decl(window2_result_set, window2_result_set_ref);
+#endif
+extern cql_bool window2_get_month_is_null(window2_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window2_get_month_value(window2_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool window2_get_amount_is_null(window2_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double window2_get_amount_value(window2_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool window2_get_RunningTotal_is_null(window2_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double window2_get_RunningTotal_value(window2_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window2_result_count(window2_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code window2_fetch_results(sqlite3 *_Nonnull _db_, window2_result_set_ref _Nullable *_Nonnull result_set);
+#define window2_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define window2_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define window2_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
 
 // The statement ending at line XXXX
+#define CRC_window3 2900920917095376752L
+
+extern cql_string_ref _Nonnull window3_stored_procedure_name;
+
+#define window3_data_types_count 3
+
+#ifndef result_set_type_decl_window3_result_set
+#define result_set_type_decl_window3_result_set 1
+cql_result_set_type_decl(window3_result_set, window3_result_set_ref);
+#endif
+extern cql_bool window3_get_month_is_null(window3_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window3_get_month_value(window3_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool window3_get_amount_is_null(window3_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double window3_get_amount_value(window3_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool window3_get_SalesMovingAverage_is_null(window3_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double window3_get_SalesMovingAverage_value(window3_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window3_result_count(window3_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code window3_fetch_results(sqlite3 *_Nonnull _db_, window3_result_set_ref _Nullable *_Nonnull result_set);
+#define window3_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define window3_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define window3_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
 
 // The statement ending at line XXXX
+#define CRC_window4 1442532731698589398L
+
+extern cql_string_ref _Nonnull window4_stored_procedure_name;
+
+#define window4_data_types_count 3
+
+#ifndef result_set_type_decl_window4_result_set
+#define result_set_type_decl_window4_result_set 1
+cql_result_set_type_decl(window4_result_set, window4_result_set_ref);
+#endif
+extern cql_bool window4_get_month_is_null(window4_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window4_get_month_value(window4_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool window4_get_amount_is_null(window4_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double window4_get_amount_value(window4_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool window4_get_SalesMovingAverage_is_null(window4_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double window4_get_SalesMovingAverage_value(window4_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window4_result_count(window4_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code window4_fetch_results(sqlite3 *_Nonnull _db_, window4_result_set_ref _Nullable *_Nonnull result_set);
+#define window4_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define window4_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define window4_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
 
 // The statement ending at line XXXX
+#define CRC_window5 4678569801261801435L
+
+extern cql_string_ref _Nonnull window5_stored_procedure_name;
+
+#define window5_data_types_count 3
+
+#ifndef result_set_type_decl_window5_result_set
+#define result_set_type_decl_window5_result_set 1
+cql_result_set_type_decl(window5_result_set, window5_result_set_ref);
+#endif
+extern cql_bool window5_get_month_is_null(window5_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window5_get_month_value(window5_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool window5_get_amount_is_null(window5_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double window5_get_amount_value(window5_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool window5_get_SalesMovingAverage_is_null(window5_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double window5_get_SalesMovingAverage_value(window5_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window5_result_count(window5_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code window5_fetch_results(sqlite3 *_Nonnull _db_, window5_result_set_ref _Nullable *_Nonnull result_set);
+#define window5_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define window5_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define window5_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
 
 // The statement ending at line XXXX
+#define CRC_window6 -4767600319982646068L
+
+extern cql_string_ref _Nonnull window6_stored_procedure_name;
+
+#define window6_data_types_count 3
+
+#ifndef result_set_type_decl_window6_result_set
+#define result_set_type_decl_window6_result_set 1
+cql_result_set_type_decl(window6_result_set, window6_result_set_ref);
+#endif
+extern cql_bool window6_get_month_is_null(window6_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window6_get_month_value(window6_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool window6_get_amount_is_null(window6_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double window6_get_amount_value(window6_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool window6_get_SalesMovingAverage_is_null(window6_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double window6_get_SalesMovingAverage_value(window6_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window6_result_count(window6_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code window6_fetch_results(sqlite3 *_Nonnull _db_, window6_result_set_ref _Nullable *_Nonnull result_set);
+#define window6_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define window6_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define window6_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
 
 // The statement ending at line XXXX
+#define CRC_window7 -1639471520844235327L
+
+extern cql_string_ref _Nonnull window7_stored_procedure_name;
+
+#define window7_data_types_count 3
+
+#ifndef result_set_type_decl_window7_result_set
+#define result_set_type_decl_window7_result_set 1
+cql_result_set_type_decl(window7_result_set, window7_result_set_ref);
+#endif
+extern cql_bool window7_get_month_is_null(window7_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window7_get_month_value(window7_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool window7_get_amount_is_null(window7_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double window7_get_amount_value(window7_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool window7_get_SalesMovingAverage_is_null(window7_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double window7_get_SalesMovingAverage_value(window7_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window7_result_count(window7_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code window7_fetch_results(sqlite3 *_Nonnull _db_, window7_result_set_ref _Nullable *_Nonnull result_set);
+#define window7_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define window7_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define window7_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
 
 // The statement ending at line XXXX
+#define CRC_window8 -4225621730571526272L
+
+extern cql_string_ref _Nonnull window8_stored_procedure_name;
+
+#define window8_data_types_count 3
+
+#ifndef result_set_type_decl_window8_result_set
+#define result_set_type_decl_window8_result_set 1
+cql_result_set_type_decl(window8_result_set, window8_result_set_ref);
+#endif
+extern cql_bool window8_get_month_is_null(window8_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window8_get_month_value(window8_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool window8_get_amount_is_null(window8_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double window8_get_amount_value(window8_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool window8_get_SalesMovingAverage_is_null(window8_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double window8_get_SalesMovingAverage_value(window8_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window8_result_count(window8_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code window8_fetch_results(sqlite3 *_Nonnull _db_, window8_result_set_ref _Nullable *_Nonnull result_set);
+#define window8_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define window8_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define window8_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
 
 // The statement ending at line XXXX
+#define CRC_window9 -7948032011438117235L
+
+extern cql_string_ref _Nonnull window9_stored_procedure_name;
+
+#define window9_data_types_count 3
+
+#ifndef result_set_type_decl_window9_result_set
+#define result_set_type_decl_window9_result_set 1
+cql_result_set_type_decl(window9_result_set, window9_result_set_ref);
+#endif
+extern cql_bool window9_get_month_is_null(window9_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window9_get_month_value(window9_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool window9_get_amount_is_null(window9_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double window9_get_amount_value(window9_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool window9_get_SalesMovingAverage_is_null(window9_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double window9_get_SalesMovingAverage_value(window9_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window9_result_count(window9_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code window9_fetch_results(sqlite3 *_Nonnull _db_, window9_result_set_ref _Nullable *_Nonnull result_set);
+#define window9_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define window9_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define window9_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
 
 // The statement ending at line XXXX
+#define CRC_window10 -2070418722936796800L
+
+extern cql_string_ref _Nonnull window10_stored_procedure_name;
+
+#define window10_data_types_count 3
+
+#ifndef result_set_type_decl_window10_result_set
+#define result_set_type_decl_window10_result_set 1
+cql_result_set_type_decl(window10_result_set, window10_result_set_ref);
+#endif
+extern cql_bool window10_get_month_is_null(window10_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window10_get_month_value(window10_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool window10_get_amount_is_null(window10_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double window10_get_amount_value(window10_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool window10_get_SalesMovingAverage_is_null(window10_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double window10_get_SalesMovingAverage_value(window10_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window10_result_count(window10_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code window10_fetch_results(sqlite3 *_Nonnull _db_, window10_result_set_ref _Nullable *_Nonnull result_set);
+#define window10_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define window10_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define window10_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
 
 // The statement ending at line XXXX
+#define CRC_window11 -5211477624582817651L
+
+extern cql_string_ref _Nonnull window11_stored_procedure_name;
+
+#define window11_data_types_count 3
+
+#ifndef result_set_type_decl_window11_result_set
+#define result_set_type_decl_window11_result_set 1
+cql_result_set_type_decl(window11_result_set, window11_result_set_ref);
+#endif
+extern cql_bool window11_get_month_is_null(window11_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window11_get_month_value(window11_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool window11_get_amount_is_null(window11_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double window11_get_amount_value(window11_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool window11_get_SalesMovingAverage_is_null(window11_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double window11_get_SalesMovingAverage_value(window11_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window11_result_count(window11_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code window11_fetch_results(sqlite3 *_Nonnull _db_, window11_result_set_ref _Nullable *_Nonnull result_set);
+#define window11_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define window11_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define window11_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
 
 // The statement ending at line XXXX
+#define CRC_window12 5374648134786427802L
+
+extern cql_string_ref _Nonnull window12_stored_procedure_name;
+
+#define window12_data_types_count 3
+
+#ifndef result_set_type_decl_window12_result_set
+#define result_set_type_decl_window12_result_set 1
+cql_result_set_type_decl(window12_result_set, window12_result_set_ref);
+#endif
+extern cql_bool window12_get_month_is_null(window12_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window12_get_month_value(window12_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool window12_get_amount_is_null(window12_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double window12_get_amount_value(window12_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool window12_get_SalesMovingAverage_is_null(window12_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double window12_get_SalesMovingAverage_value(window12_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window12_result_count(window12_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code window12_fetch_results(sqlite3 *_Nonnull _db_, window12_result_set_ref _Nullable *_Nonnull result_set);
+#define window12_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define window12_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define window12_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
 
 // The statement ending at line XXXX
+#define CRC_window13 2197738557793753751L
+
+extern cql_string_ref _Nonnull window13_stored_procedure_name;
+
+#define window13_data_types_count 3
+
+#ifndef result_set_type_decl_window13_result_set
+#define result_set_type_decl_window13_result_set 1
+cql_result_set_type_decl(window13_result_set, window13_result_set_ref);
+#endif
+extern cql_bool window13_get_month_is_null(window13_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window13_get_month_value(window13_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool window13_get_amount_is_null(window13_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double window13_get_amount_value(window13_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool window13_get_SalesMovingAverage_is_null(window13_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double window13_get_SalesMovingAverage_value(window13_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window13_result_count(window13_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code window13_fetch_results(sqlite3 *_Nonnull _db_, window13_result_set_ref _Nullable *_Nonnull result_set);
+#define window13_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define window13_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define window13_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
 
 // The statement ending at line XXXX
+#define CRC_window14 2466050953464582961L
+
+extern cql_string_ref _Nonnull window14_stored_procedure_name;
+
+#define window14_data_types_count 3
+
+#ifndef result_set_type_decl_window14_result_set
+#define result_set_type_decl_window14_result_set 1
+cql_result_set_type_decl(window14_result_set, window14_result_set_ref);
+#endif
+extern cql_bool window14_get_month_is_null(window14_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window14_get_month_value(window14_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool window14_get_amount_is_null(window14_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double window14_get_amount_value(window14_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool window14_get_SalesMovingAverage_is_null(window14_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double window14_get_SalesMovingAverage_value(window14_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window14_result_count(window14_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code window14_fetch_results(sqlite3 *_Nonnull _db_, window14_result_set_ref _Nullable *_Nonnull result_set);
+#define window14_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define window14_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define window14_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
 
 // The statement ending at line XXXX
+#define CRC_window15 8561437263263031868L
+
+extern cql_string_ref _Nonnull window15_stored_procedure_name;
+
+#define window15_data_types_count 3
+
+#ifndef result_set_type_decl_window15_result_set
+#define result_set_type_decl_window15_result_set 1
+cql_result_set_type_decl(window15_result_set, window15_result_set_ref);
+#endif
+extern cql_bool window15_get_month_is_null(window15_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window15_get_month_value(window15_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool window15_get_amount_is_null(window15_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double window15_get_amount_value(window15_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool window15_get_SalesMovingAverage_is_null(window15_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double window15_get_SalesMovingAverage_value(window15_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window15_result_count(window15_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code window15_fetch_results(sqlite3 *_Nonnull _db_, window15_result_set_ref _Nullable *_Nonnull result_set);
+#define window15_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define window15_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define window15_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
 
 // The statement ending at line XXXX
+#define CRC_window16 -8364346268781842133L
+
+extern cql_string_ref _Nonnull window16_stored_procedure_name;
+
+#define window16_data_types_count 3
+
+#ifndef result_set_type_decl_window16_result_set
+#define result_set_type_decl_window16_result_set 1
+cql_result_set_type_decl(window16_result_set, window16_result_set_ref);
+#endif
+extern cql_bool window16_get_month_is_null(window16_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window16_get_month_value(window16_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool window16_get_amount_is_null(window16_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double window16_get_amount_value(window16_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool window16_get_SalesMovingAverage_is_null(window16_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double window16_get_SalesMovingAverage_value(window16_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 window16_result_count(window16_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code window16_fetch_results(sqlite3 *_Nonnull _db_, window16_result_set_ref _Nullable *_Nonnull result_set);
+#define window16_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define window16_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define window16_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
 
 // The statement ending at line XXXX
 extern CQL_WARN_UNUSED cql_code emit_rc(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull result_code);
@@ -2496,8 +2992,64 @@ extern CQL_WARN_UNUSED cql_code make_virt_table(sqlite3 *_Nonnull _db_);
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
+#define CRC_virtual1 6359168283958570447L
+
+extern cql_string_ref _Nonnull virtual1_stored_procedure_name;
+
+#define virtual1_data_types_count 2
+
+#ifndef result_set_type_decl_virtual1_result_set
+#define result_set_type_decl_virtual1_result_set 1
+cql_result_set_type_decl(virtual1_result_set, virtual1_result_set_ref);
+#endif
+extern cql_int32 virtual1_get_vx(virtual1_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool virtual1_get_vy_is_null(virtual1_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 virtual1_get_vy_value(virtual1_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 virtual1_result_count(virtual1_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code virtual1_fetch_results(sqlite3 *_Nonnull _db_, virtual1_result_set_ref _Nullable *_Nonnull result_set);
+#define virtual1_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define virtual1_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define virtual1_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
 
 // The statement ending at line XXXX
+#define CRC_virtual2 -6522400375940120872L
+
+extern cql_string_ref _Nonnull virtual2_stored_procedure_name;
+
+#define virtual2_data_types_count 2
+
+#ifndef result_set_type_decl_virtual2_result_set
+#define result_set_type_decl_virtual2_result_set 1
+cql_result_set_type_decl(virtual2_result_set, virtual2_result_set_ref);
+#endif
+extern cql_int32 virtual2_get_vx(virtual2_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool virtual2_get_vy_is_null(virtual2_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 virtual2_get_vy_value(virtual2_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 virtual2_result_count(virtual2_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code virtual2_fetch_results(sqlite3 *_Nonnull _db_, virtual2_result_set_ref _Nullable *_Nonnull result_set);
+#define virtual2_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define virtual2_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define virtual2_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
 
 // The statement ending at line XXXX
 
@@ -2515,6 +3067,96 @@ extern CQL_WARN_UNUSED cql_code make_virt_table(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX
 // static void private_proc(cql_nullable_int32 *_Nonnull x);
+
+// The statement ending at line XXXX
+#define CRC_private_out_union -565460166543099256L
+
+extern cql_string_ref _Nonnull private_out_union_stored_procedure_name;
+
+#define private_out_union_data_types_count 1
+
+#ifndef result_set_type_decl_private_out_union_result_set
+#define result_set_type_decl_private_out_union_result_set 1
+cql_result_set_type_decl(private_out_union_result_set, private_out_union_result_set_ref);
+#endif
+extern cql_int32 private_out_union_result_count(private_out_union_result_set_ref _Nonnull result_set);
+#define private_out_union_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define private_out_union_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define private_out_union_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+// static void private_out_union_fetch_results(private_out_union_result_set_ref _Nullable *_Nonnull _result_set_);
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code use_private_out_union(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+#define CRC_no_getters_out_union 9163025532430980765L
+
+extern cql_string_ref _Nonnull no_getters_out_union_stored_procedure_name;
+
+#define no_getters_out_union_data_types_count 1
+
+#ifndef result_set_type_decl_no_getters_out_union_result_set
+#define result_set_type_decl_no_getters_out_union_result_set 1
+cql_result_set_type_decl(no_getters_out_union_result_set, no_getters_out_union_result_set_ref);
+#endif
+extern cql_int32 no_getters_out_union_result_count(no_getters_out_union_result_set_ref _Nonnull result_set);
+#define no_getters_out_union_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define no_getters_out_union_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define no_getters_out_union_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+extern void no_getters_out_union_fetch_results(no_getters_out_union_result_set_ref _Nullable *_Nonnull _result_set_);
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code use_no_getters_out_union(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+#define CRC_suppress_results_out_union 3499927777655194670L
+
+extern cql_string_ref _Nonnull suppress_results_out_union_stored_procedure_name;
+
+#define suppress_results_out_union_data_types_count 1
+
+#ifndef result_set_type_decl_suppress_results_out_union_result_set
+#define result_set_type_decl_suppress_results_out_union_result_set 1
+cql_result_set_type_decl(suppress_results_out_union_result_set, suppress_results_out_union_result_set_ref);
+#endif
+extern cql_int32 suppress_results_out_union_result_count(suppress_results_out_union_result_set_ref _Nonnull result_set);
+#define suppress_results_out_union_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define suppress_results_out_union_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define suppress_results_out_union_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+extern void suppress_results_out_union_fetch_results(suppress_results_out_union_result_set_ref _Nullable *_Nonnull _result_set_);
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code use_suppress_results_out_union(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX
 

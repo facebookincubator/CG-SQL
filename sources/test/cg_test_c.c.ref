@@ -269,6 +269,45 @@ extern CQL_WARN_UNUSED cql_code vault_sensitive_with_no_values_proc(sqlite3 *_No
 extern CQL_WARN_UNUSED cql_code vault_union_all_table_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code vault_alias_column_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code vault_alias_column_name_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code window1(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code window2(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code window3(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code window4(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code window5(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code window6(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code window7(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code window8(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code window9(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code window10(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code window11(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code window12(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code window13(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code window14(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code window15(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code window16(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code virtual1(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code virtual2(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+
+typedef struct private_out_union_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 a_field;
+} private_out_union_row;
+
+typedef struct no_getters_out_union_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 a_field;
+} no_getters_out_union_row;
+
+typedef struct suppress_results_out_union_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 a_field;
+} suppress_results_out_union_row;
 // static CQL_WARN_UNUSED cql_code private_result(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_nullable_int32 *_Nonnull x);
 
 typedef struct global_cursor2_row {
@@ -7696,7 +7735,7 @@ CQL_WARN_UNUSED cql_code try_boxing(sqlite3 *_Nonnull _db_, cql_object_ref _Null
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   cql_object_release(C_object_);
   C_object_ = cql_box_stmt(C_stmt);
-  cql_set_object_ref(&result, C_object_);
+  cql_set_object_ref(result, C_object_);
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
@@ -8209,6 +8248,1638 @@ cql_int32 x = 0;
 // The statement ending at line XXXX
 
 /*
+CREATE PROC window1 ()
+BEGIN
+  SELECT month, amount, 
+    AVG(amount) OVER (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) AS SalesMovingAverage
+    FROM SalesInfo;
+END;
+*/
+
+#define _PROC_ "window1"
+static int32_t window1_perf_index;
+
+cql_string_literal(window1_stored_procedure_name, "window1");
+
+typedef struct window1_row {
+  cql_nullable_int32 month;
+  cql_nullable_double amount;
+  cql_nullable_double SalesMovingAverage;
+} window1_row;
+
+cql_bool window1_get_month_is_null(window1_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window1_row *data = (window1_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].month.is_null;
+}
+
+cql_int32 window1_get_month_value(window1_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window1_row *data = (window1_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].month.value;
+}
+
+cql_bool window1_get_amount_is_null(window1_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window1_row *data = (window1_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].amount.is_null;
+}
+
+cql_double window1_get_amount_value(window1_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window1_row *data = (window1_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].amount.value;
+}
+
+cql_bool window1_get_SalesMovingAverage_is_null(window1_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window1_row *data = (window1_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].SalesMovingAverage.is_null;
+}
+
+cql_double window1_get_SalesMovingAverage_value(window1_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window1_row *data = (window1_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].SalesMovingAverage.value;
+}
+
+uint8_t window1_data_types[window1_data_types_count] = {
+  CQL_DATA_TYPE_INT32, // month
+  CQL_DATA_TYPE_DOUBLE, // amount
+  CQL_DATA_TYPE_DOUBLE, // SalesMovingAverage
+};
+
+static cql_uint16 window1_col_offsets[] = { 3,
+  cql_offsetof(window1_row, month),
+  cql_offsetof(window1_row, amount),
+  cql_offsetof(window1_row, SalesMovingAverage)
+};
+
+cql_int32 window1_result_count(window1_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code window1_fetch_results(sqlite3 *_Nonnull _db_, window1_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_window1, &window1_perf_index);
+  cql_code rc = window1(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = window1_data_types,
+    .col_offsets = window1_col_offsets,
+    .rowsize = sizeof(window1_row),
+    .crc = CRC_window1,
+    .perf_index = &window1_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC window1 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+CQL_WARN_UNUSED cql_code window1(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT month, amount,  "
+      "AVG(amount) OVER (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) "
+      "FROM SalesInfo");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC window2 ()
+BEGIN
+  SELECT month, amount, 
+    SUM(amount) OVER (ORDER BY month) AS RunningTotal
+    FROM SalesInfo;
+END;
+*/
+
+#define _PROC_ "window2"
+static int32_t window2_perf_index;
+
+cql_string_literal(window2_stored_procedure_name, "window2");
+
+typedef struct window2_row {
+  cql_nullable_int32 month;
+  cql_nullable_double amount;
+  cql_nullable_double RunningTotal;
+} window2_row;
+
+cql_bool window2_get_month_is_null(window2_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window2_row *data = (window2_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].month.is_null;
+}
+
+cql_int32 window2_get_month_value(window2_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window2_row *data = (window2_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].month.value;
+}
+
+cql_bool window2_get_amount_is_null(window2_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window2_row *data = (window2_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].amount.is_null;
+}
+
+cql_double window2_get_amount_value(window2_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window2_row *data = (window2_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].amount.value;
+}
+
+cql_bool window2_get_RunningTotal_is_null(window2_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window2_row *data = (window2_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].RunningTotal.is_null;
+}
+
+cql_double window2_get_RunningTotal_value(window2_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window2_row *data = (window2_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].RunningTotal.value;
+}
+
+uint8_t window2_data_types[window2_data_types_count] = {
+  CQL_DATA_TYPE_INT32, // month
+  CQL_DATA_TYPE_DOUBLE, // amount
+  CQL_DATA_TYPE_DOUBLE, // RunningTotal
+};
+
+static cql_uint16 window2_col_offsets[] = { 3,
+  cql_offsetof(window2_row, month),
+  cql_offsetof(window2_row, amount),
+  cql_offsetof(window2_row, RunningTotal)
+};
+
+cql_int32 window2_result_count(window2_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code window2_fetch_results(sqlite3 *_Nonnull _db_, window2_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_window2, &window2_perf_index);
+  cql_code rc = window2(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = window2_data_types,
+    .col_offsets = window2_col_offsets,
+    .rowsize = sizeof(window2_row),
+    .crc = CRC_window2,
+    .perf_index = &window2_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC window2 () (month INTEGER, amount REAL, RunningTotal REAL);
+CQL_WARN_UNUSED cql_code window2(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT month, amount,  "
+      "SUM(amount) OVER (ORDER BY month) "
+      "FROM SalesInfo");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC window3 ()
+BEGIN
+  SELECT month, amount, 
+    AVG(amount) OVER (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING EXCLUDE NO OTHERS) AS SalesMovingAverage
+    FROM SalesInfo;
+END;
+*/
+
+#define _PROC_ "window3"
+static int32_t window3_perf_index;
+
+cql_string_literal(window3_stored_procedure_name, "window3");
+
+typedef struct window3_row {
+  cql_nullable_int32 month;
+  cql_nullable_double amount;
+  cql_nullable_double SalesMovingAverage;
+} window3_row;
+
+cql_bool window3_get_month_is_null(window3_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window3_row *data = (window3_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].month.is_null;
+}
+
+cql_int32 window3_get_month_value(window3_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window3_row *data = (window3_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].month.value;
+}
+
+cql_bool window3_get_amount_is_null(window3_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window3_row *data = (window3_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].amount.is_null;
+}
+
+cql_double window3_get_amount_value(window3_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window3_row *data = (window3_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].amount.value;
+}
+
+cql_bool window3_get_SalesMovingAverage_is_null(window3_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window3_row *data = (window3_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].SalesMovingAverage.is_null;
+}
+
+cql_double window3_get_SalesMovingAverage_value(window3_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window3_row *data = (window3_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].SalesMovingAverage.value;
+}
+
+uint8_t window3_data_types[window3_data_types_count] = {
+  CQL_DATA_TYPE_INT32, // month
+  CQL_DATA_TYPE_DOUBLE, // amount
+  CQL_DATA_TYPE_DOUBLE, // SalesMovingAverage
+};
+
+static cql_uint16 window3_col_offsets[] = { 3,
+  cql_offsetof(window3_row, month),
+  cql_offsetof(window3_row, amount),
+  cql_offsetof(window3_row, SalesMovingAverage)
+};
+
+cql_int32 window3_result_count(window3_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code window3_fetch_results(sqlite3 *_Nonnull _db_, window3_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_window3, &window3_perf_index);
+  cql_code rc = window3(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = window3_data_types,
+    .col_offsets = window3_col_offsets,
+    .rowsize = sizeof(window3_row),
+    .crc = CRC_window3,
+    .perf_index = &window3_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC window3 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+CQL_WARN_UNUSED cql_code window3(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT month, amount,  "
+      "AVG(amount) OVER (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING EXCLUDE NO OTHERS) "
+      "FROM SalesInfo");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC window4 ()
+BEGIN
+  SELECT month, amount, 
+    AVG(amount) FILTER (WHERE month = 1) OVER (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING EXCLUDE NO OTHERS) AS SalesMovingAverage
+    FROM SalesInfo;
+END;
+*/
+
+#define _PROC_ "window4"
+static int32_t window4_perf_index;
+
+cql_string_literal(window4_stored_procedure_name, "window4");
+
+typedef struct window4_row {
+  cql_nullable_int32 month;
+  cql_nullable_double amount;
+  cql_nullable_double SalesMovingAverage;
+} window4_row;
+
+cql_bool window4_get_month_is_null(window4_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window4_row *data = (window4_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].month.is_null;
+}
+
+cql_int32 window4_get_month_value(window4_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window4_row *data = (window4_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].month.value;
+}
+
+cql_bool window4_get_amount_is_null(window4_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window4_row *data = (window4_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].amount.is_null;
+}
+
+cql_double window4_get_amount_value(window4_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window4_row *data = (window4_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].amount.value;
+}
+
+cql_bool window4_get_SalesMovingAverage_is_null(window4_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window4_row *data = (window4_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].SalesMovingAverage.is_null;
+}
+
+cql_double window4_get_SalesMovingAverage_value(window4_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window4_row *data = (window4_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].SalesMovingAverage.value;
+}
+
+uint8_t window4_data_types[window4_data_types_count] = {
+  CQL_DATA_TYPE_INT32, // month
+  CQL_DATA_TYPE_DOUBLE, // amount
+  CQL_DATA_TYPE_DOUBLE, // SalesMovingAverage
+};
+
+static cql_uint16 window4_col_offsets[] = { 3,
+  cql_offsetof(window4_row, month),
+  cql_offsetof(window4_row, amount),
+  cql_offsetof(window4_row, SalesMovingAverage)
+};
+
+cql_int32 window4_result_count(window4_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code window4_fetch_results(sqlite3 *_Nonnull _db_, window4_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_window4, &window4_perf_index);
+  cql_code rc = window4(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = window4_data_types,
+    .col_offsets = window4_col_offsets,
+    .rowsize = sizeof(window4_row),
+    .crc = CRC_window4,
+    .perf_index = &window4_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC window4 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+CQL_WARN_UNUSED cql_code window4(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT month, amount,  "
+      "AVG(amount) FILTER (WHERE month = 1) OVER (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING EXCLUDE NO OTHERS) "
+      "FROM SalesInfo");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC window5 ()
+BEGIN
+  SELECT month, amount, 
+    AVG(amount) OVER (ORDER BY month ROWS BETWEEN 3 PRECEDING AND 4 FOLLOWING EXCLUDE CURRENT ROW) AS SalesMovingAverage
+    FROM SalesInfo;
+END;
+*/
+
+#define _PROC_ "window5"
+static int32_t window5_perf_index;
+
+cql_string_literal(window5_stored_procedure_name, "window5");
+
+typedef struct window5_row {
+  cql_nullable_int32 month;
+  cql_nullable_double amount;
+  cql_nullable_double SalesMovingAverage;
+} window5_row;
+
+cql_bool window5_get_month_is_null(window5_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window5_row *data = (window5_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].month.is_null;
+}
+
+cql_int32 window5_get_month_value(window5_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window5_row *data = (window5_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].month.value;
+}
+
+cql_bool window5_get_amount_is_null(window5_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window5_row *data = (window5_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].amount.is_null;
+}
+
+cql_double window5_get_amount_value(window5_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window5_row *data = (window5_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].amount.value;
+}
+
+cql_bool window5_get_SalesMovingAverage_is_null(window5_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window5_row *data = (window5_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].SalesMovingAverage.is_null;
+}
+
+cql_double window5_get_SalesMovingAverage_value(window5_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window5_row *data = (window5_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].SalesMovingAverage.value;
+}
+
+uint8_t window5_data_types[window5_data_types_count] = {
+  CQL_DATA_TYPE_INT32, // month
+  CQL_DATA_TYPE_DOUBLE, // amount
+  CQL_DATA_TYPE_DOUBLE, // SalesMovingAverage
+};
+
+static cql_uint16 window5_col_offsets[] = { 3,
+  cql_offsetof(window5_row, month),
+  cql_offsetof(window5_row, amount),
+  cql_offsetof(window5_row, SalesMovingAverage)
+};
+
+cql_int32 window5_result_count(window5_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code window5_fetch_results(sqlite3 *_Nonnull _db_, window5_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_window5, &window5_perf_index);
+  cql_code rc = window5(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = window5_data_types,
+    .col_offsets = window5_col_offsets,
+    .rowsize = sizeof(window5_row),
+    .crc = CRC_window5,
+    .perf_index = &window5_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC window5 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+CQL_WARN_UNUSED cql_code window5(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT month, amount,  "
+      "AVG(amount) OVER (ORDER BY month ROWS BETWEEN 3 PRECEDING AND 4 FOLLOWING EXCLUDE CURRENT ROW) "
+      "FROM SalesInfo");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC window6 ()
+BEGIN
+  SELECT month, amount, 
+    AVG(amount) OVER (ORDER BY month ROWS BETWEEN 4 PRECEDING AND 5 FOLLOWING EXCLUDE GROUP) AS SalesMovingAverage
+    FROM SalesInfo;
+END;
+*/
+
+#define _PROC_ "window6"
+static int32_t window6_perf_index;
+
+cql_string_literal(window6_stored_procedure_name, "window6");
+
+typedef struct window6_row {
+  cql_nullable_int32 month;
+  cql_nullable_double amount;
+  cql_nullable_double SalesMovingAverage;
+} window6_row;
+
+cql_bool window6_get_month_is_null(window6_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window6_row *data = (window6_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].month.is_null;
+}
+
+cql_int32 window6_get_month_value(window6_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window6_row *data = (window6_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].month.value;
+}
+
+cql_bool window6_get_amount_is_null(window6_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window6_row *data = (window6_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].amount.is_null;
+}
+
+cql_double window6_get_amount_value(window6_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window6_row *data = (window6_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].amount.value;
+}
+
+cql_bool window6_get_SalesMovingAverage_is_null(window6_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window6_row *data = (window6_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].SalesMovingAverage.is_null;
+}
+
+cql_double window6_get_SalesMovingAverage_value(window6_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window6_row *data = (window6_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].SalesMovingAverage.value;
+}
+
+uint8_t window6_data_types[window6_data_types_count] = {
+  CQL_DATA_TYPE_INT32, // month
+  CQL_DATA_TYPE_DOUBLE, // amount
+  CQL_DATA_TYPE_DOUBLE, // SalesMovingAverage
+};
+
+static cql_uint16 window6_col_offsets[] = { 3,
+  cql_offsetof(window6_row, month),
+  cql_offsetof(window6_row, amount),
+  cql_offsetof(window6_row, SalesMovingAverage)
+};
+
+cql_int32 window6_result_count(window6_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code window6_fetch_results(sqlite3 *_Nonnull _db_, window6_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_window6, &window6_perf_index);
+  cql_code rc = window6(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = window6_data_types,
+    .col_offsets = window6_col_offsets,
+    .rowsize = sizeof(window6_row),
+    .crc = CRC_window6,
+    .perf_index = &window6_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC window6 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+CQL_WARN_UNUSED cql_code window6(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT month, amount,  "
+      "AVG(amount) OVER (ORDER BY month ROWS BETWEEN 4 PRECEDING AND 5 FOLLOWING EXCLUDE GROUP) "
+      "FROM SalesInfo");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC window7 ()
+BEGIN
+  SELECT month, amount, 
+    AVG(amount) OVER (ORDER BY month ROWS BETWEEN 6 PRECEDING AND 7 FOLLOWING EXCLUDE TIES) AS SalesMovingAverage
+    FROM SalesInfo;
+END;
+*/
+
+#define _PROC_ "window7"
+static int32_t window7_perf_index;
+
+cql_string_literal(window7_stored_procedure_name, "window7");
+
+typedef struct window7_row {
+  cql_nullable_int32 month;
+  cql_nullable_double amount;
+  cql_nullable_double SalesMovingAverage;
+} window7_row;
+
+cql_bool window7_get_month_is_null(window7_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window7_row *data = (window7_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].month.is_null;
+}
+
+cql_int32 window7_get_month_value(window7_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window7_row *data = (window7_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].month.value;
+}
+
+cql_bool window7_get_amount_is_null(window7_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window7_row *data = (window7_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].amount.is_null;
+}
+
+cql_double window7_get_amount_value(window7_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window7_row *data = (window7_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].amount.value;
+}
+
+cql_bool window7_get_SalesMovingAverage_is_null(window7_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window7_row *data = (window7_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].SalesMovingAverage.is_null;
+}
+
+cql_double window7_get_SalesMovingAverage_value(window7_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window7_row *data = (window7_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].SalesMovingAverage.value;
+}
+
+uint8_t window7_data_types[window7_data_types_count] = {
+  CQL_DATA_TYPE_INT32, // month
+  CQL_DATA_TYPE_DOUBLE, // amount
+  CQL_DATA_TYPE_DOUBLE, // SalesMovingAverage
+};
+
+static cql_uint16 window7_col_offsets[] = { 3,
+  cql_offsetof(window7_row, month),
+  cql_offsetof(window7_row, amount),
+  cql_offsetof(window7_row, SalesMovingAverage)
+};
+
+cql_int32 window7_result_count(window7_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code window7_fetch_results(sqlite3 *_Nonnull _db_, window7_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_window7, &window7_perf_index);
+  cql_code rc = window7(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = window7_data_types,
+    .col_offsets = window7_col_offsets,
+    .rowsize = sizeof(window7_row),
+    .crc = CRC_window7,
+    .perf_index = &window7_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC window7 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+CQL_WARN_UNUSED cql_code window7(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT month, amount,  "
+      "AVG(amount) OVER (ORDER BY month ROWS BETWEEN 6 PRECEDING AND 7 FOLLOWING EXCLUDE TIES) "
+      "FROM SalesInfo");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC window8 ()
+BEGIN
+  SELECT month, amount, 
+    AVG(amount) OVER (ORDER BY month RANGE BETWEEN 8 PRECEDING AND 9 FOLLOWING EXCLUDE TIES) AS SalesMovingAverage
+    FROM SalesInfo;
+END;
+*/
+
+#define _PROC_ "window8"
+static int32_t window8_perf_index;
+
+cql_string_literal(window8_stored_procedure_name, "window8");
+
+typedef struct window8_row {
+  cql_nullable_int32 month;
+  cql_nullable_double amount;
+  cql_nullable_double SalesMovingAverage;
+} window8_row;
+
+cql_bool window8_get_month_is_null(window8_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window8_row *data = (window8_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].month.is_null;
+}
+
+cql_int32 window8_get_month_value(window8_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window8_row *data = (window8_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].month.value;
+}
+
+cql_bool window8_get_amount_is_null(window8_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window8_row *data = (window8_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].amount.is_null;
+}
+
+cql_double window8_get_amount_value(window8_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window8_row *data = (window8_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].amount.value;
+}
+
+cql_bool window8_get_SalesMovingAverage_is_null(window8_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window8_row *data = (window8_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].SalesMovingAverage.is_null;
+}
+
+cql_double window8_get_SalesMovingAverage_value(window8_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window8_row *data = (window8_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].SalesMovingAverage.value;
+}
+
+uint8_t window8_data_types[window8_data_types_count] = {
+  CQL_DATA_TYPE_INT32, // month
+  CQL_DATA_TYPE_DOUBLE, // amount
+  CQL_DATA_TYPE_DOUBLE, // SalesMovingAverage
+};
+
+static cql_uint16 window8_col_offsets[] = { 3,
+  cql_offsetof(window8_row, month),
+  cql_offsetof(window8_row, amount),
+  cql_offsetof(window8_row, SalesMovingAverage)
+};
+
+cql_int32 window8_result_count(window8_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code window8_fetch_results(sqlite3 *_Nonnull _db_, window8_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_window8, &window8_perf_index);
+  cql_code rc = window8(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = window8_data_types,
+    .col_offsets = window8_col_offsets,
+    .rowsize = sizeof(window8_row),
+    .crc = CRC_window8,
+    .perf_index = &window8_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC window8 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+CQL_WARN_UNUSED cql_code window8(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT month, amount,  "
+      "AVG(amount) OVER (ORDER BY month RANGE BETWEEN 8 PRECEDING AND 9 FOLLOWING EXCLUDE TIES) "
+      "FROM SalesInfo");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC window9 ()
+BEGIN
+  SELECT month, amount, 
+    AVG(amount) OVER (ORDER BY month GROUPS BETWEEN 10 PRECEDING AND 11 FOLLOWING EXCLUDE TIES) AS SalesMovingAverage
+    FROM SalesInfo;
+END;
+*/
+
+#define _PROC_ "window9"
+static int32_t window9_perf_index;
+
+cql_string_literal(window9_stored_procedure_name, "window9");
+
+typedef struct window9_row {
+  cql_nullable_int32 month;
+  cql_nullable_double amount;
+  cql_nullable_double SalesMovingAverage;
+} window9_row;
+
+cql_bool window9_get_month_is_null(window9_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window9_row *data = (window9_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].month.is_null;
+}
+
+cql_int32 window9_get_month_value(window9_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window9_row *data = (window9_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].month.value;
+}
+
+cql_bool window9_get_amount_is_null(window9_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window9_row *data = (window9_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].amount.is_null;
+}
+
+cql_double window9_get_amount_value(window9_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window9_row *data = (window9_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].amount.value;
+}
+
+cql_bool window9_get_SalesMovingAverage_is_null(window9_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window9_row *data = (window9_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].SalesMovingAverage.is_null;
+}
+
+cql_double window9_get_SalesMovingAverage_value(window9_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window9_row *data = (window9_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].SalesMovingAverage.value;
+}
+
+uint8_t window9_data_types[window9_data_types_count] = {
+  CQL_DATA_TYPE_INT32, // month
+  CQL_DATA_TYPE_DOUBLE, // amount
+  CQL_DATA_TYPE_DOUBLE, // SalesMovingAverage
+};
+
+static cql_uint16 window9_col_offsets[] = { 3,
+  cql_offsetof(window9_row, month),
+  cql_offsetof(window9_row, amount),
+  cql_offsetof(window9_row, SalesMovingAverage)
+};
+
+cql_int32 window9_result_count(window9_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code window9_fetch_results(sqlite3 *_Nonnull _db_, window9_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_window9, &window9_perf_index);
+  cql_code rc = window9(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = window9_data_types,
+    .col_offsets = window9_col_offsets,
+    .rowsize = sizeof(window9_row),
+    .crc = CRC_window9,
+    .perf_index = &window9_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC window9 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+CQL_WARN_UNUSED cql_code window9(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT month, amount,  "
+      "AVG(amount) OVER (ORDER BY month GROUPS BETWEEN 10 PRECEDING AND 11 FOLLOWING EXCLUDE TIES) "
+      "FROM SalesInfo");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC window10 ()
+BEGIN
+  SELECT month, amount, 
+    AVG(amount) OVER (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND 12 FOLLOWING EXCLUDE TIES) AS SalesMovingAverage
+    FROM SalesInfo;
+END;
+*/
+
+#define _PROC_ "window10"
+static int32_t window10_perf_index;
+
+cql_string_literal(window10_stored_procedure_name, "window10");
+
+typedef struct window10_row {
+  cql_nullable_int32 month;
+  cql_nullable_double amount;
+  cql_nullable_double SalesMovingAverage;
+} window10_row;
+
+cql_bool window10_get_month_is_null(window10_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window10_row *data = (window10_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].month.is_null;
+}
+
+cql_int32 window10_get_month_value(window10_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window10_row *data = (window10_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].month.value;
+}
+
+cql_bool window10_get_amount_is_null(window10_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window10_row *data = (window10_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].amount.is_null;
+}
+
+cql_double window10_get_amount_value(window10_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window10_row *data = (window10_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].amount.value;
+}
+
+cql_bool window10_get_SalesMovingAverage_is_null(window10_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window10_row *data = (window10_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].SalesMovingAverage.is_null;
+}
+
+cql_double window10_get_SalesMovingAverage_value(window10_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window10_row *data = (window10_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].SalesMovingAverage.value;
+}
+
+uint8_t window10_data_types[window10_data_types_count] = {
+  CQL_DATA_TYPE_INT32, // month
+  CQL_DATA_TYPE_DOUBLE, // amount
+  CQL_DATA_TYPE_DOUBLE, // SalesMovingAverage
+};
+
+static cql_uint16 window10_col_offsets[] = { 3,
+  cql_offsetof(window10_row, month),
+  cql_offsetof(window10_row, amount),
+  cql_offsetof(window10_row, SalesMovingAverage)
+};
+
+cql_int32 window10_result_count(window10_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code window10_fetch_results(sqlite3 *_Nonnull _db_, window10_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_window10, &window10_perf_index);
+  cql_code rc = window10(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = window10_data_types,
+    .col_offsets = window10_col_offsets,
+    .rowsize = sizeof(window10_row),
+    .crc = CRC_window10,
+    .perf_index = &window10_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC window10 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+CQL_WARN_UNUSED cql_code window10(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT month, amount,  "
+      "AVG(amount) OVER (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND 12 FOLLOWING EXCLUDE TIES) "
+      "FROM SalesInfo");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC window11 ()
+BEGIN
+  SELECT month, amount, 
+    AVG(amount) OVER (ORDER BY month GROUPS BETWEEN 13 FOLLOWING AND 14 PRECEDING) AS SalesMovingAverage
+    FROM SalesInfo;
+END;
+*/
+
+#define _PROC_ "window11"
+static int32_t window11_perf_index;
+
+cql_string_literal(window11_stored_procedure_name, "window11");
+
+typedef struct window11_row {
+  cql_nullable_int32 month;
+  cql_nullable_double amount;
+  cql_nullable_double SalesMovingAverage;
+} window11_row;
+
+cql_bool window11_get_month_is_null(window11_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window11_row *data = (window11_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].month.is_null;
+}
+
+cql_int32 window11_get_month_value(window11_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window11_row *data = (window11_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].month.value;
+}
+
+cql_bool window11_get_amount_is_null(window11_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window11_row *data = (window11_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].amount.is_null;
+}
+
+cql_double window11_get_amount_value(window11_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window11_row *data = (window11_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].amount.value;
+}
+
+cql_bool window11_get_SalesMovingAverage_is_null(window11_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window11_row *data = (window11_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].SalesMovingAverage.is_null;
+}
+
+cql_double window11_get_SalesMovingAverage_value(window11_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window11_row *data = (window11_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].SalesMovingAverage.value;
+}
+
+uint8_t window11_data_types[window11_data_types_count] = {
+  CQL_DATA_TYPE_INT32, // month
+  CQL_DATA_TYPE_DOUBLE, // amount
+  CQL_DATA_TYPE_DOUBLE, // SalesMovingAverage
+};
+
+static cql_uint16 window11_col_offsets[] = { 3,
+  cql_offsetof(window11_row, month),
+  cql_offsetof(window11_row, amount),
+  cql_offsetof(window11_row, SalesMovingAverage)
+};
+
+cql_int32 window11_result_count(window11_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code window11_fetch_results(sqlite3 *_Nonnull _db_, window11_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_window11, &window11_perf_index);
+  cql_code rc = window11(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = window11_data_types,
+    .col_offsets = window11_col_offsets,
+    .rowsize = sizeof(window11_row),
+    .crc = CRC_window11,
+    .perf_index = &window11_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC window11 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+CQL_WARN_UNUSED cql_code window11(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT month, amount,  "
+      "AVG(amount) OVER (ORDER BY month GROUPS BETWEEN 13 FOLLOWING AND 14 PRECEDING) "
+      "FROM SalesInfo");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC window12 ()
+BEGIN
+  SELECT month, amount, 
+    AVG(amount) OVER (ORDER BY month GROUPS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) AS SalesMovingAverage
+    FROM SalesInfo;
+END;
+*/
+
+#define _PROC_ "window12"
+static int32_t window12_perf_index;
+
+cql_string_literal(window12_stored_procedure_name, "window12");
+
+typedef struct window12_row {
+  cql_nullable_int32 month;
+  cql_nullable_double amount;
+  cql_nullable_double SalesMovingAverage;
+} window12_row;
+
+cql_bool window12_get_month_is_null(window12_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window12_row *data = (window12_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].month.is_null;
+}
+
+cql_int32 window12_get_month_value(window12_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window12_row *data = (window12_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].month.value;
+}
+
+cql_bool window12_get_amount_is_null(window12_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window12_row *data = (window12_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].amount.is_null;
+}
+
+cql_double window12_get_amount_value(window12_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window12_row *data = (window12_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].amount.value;
+}
+
+cql_bool window12_get_SalesMovingAverage_is_null(window12_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window12_row *data = (window12_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].SalesMovingAverage.is_null;
+}
+
+cql_double window12_get_SalesMovingAverage_value(window12_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window12_row *data = (window12_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].SalesMovingAverage.value;
+}
+
+uint8_t window12_data_types[window12_data_types_count] = {
+  CQL_DATA_TYPE_INT32, // month
+  CQL_DATA_TYPE_DOUBLE, // amount
+  CQL_DATA_TYPE_DOUBLE, // SalesMovingAverage
+};
+
+static cql_uint16 window12_col_offsets[] = { 3,
+  cql_offsetof(window12_row, month),
+  cql_offsetof(window12_row, amount),
+  cql_offsetof(window12_row, SalesMovingAverage)
+};
+
+cql_int32 window12_result_count(window12_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code window12_fetch_results(sqlite3 *_Nonnull _db_, window12_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_window12, &window12_perf_index);
+  cql_code rc = window12(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = window12_data_types,
+    .col_offsets = window12_col_offsets,
+    .rowsize = sizeof(window12_row),
+    .crc = CRC_window12,
+    .perf_index = &window12_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC window12 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+CQL_WARN_UNUSED cql_code window12(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT month, amount,  "
+      "AVG(amount) OVER (ORDER BY month GROUPS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) "
+      "FROM SalesInfo");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC window13 ()
+BEGIN
+  SELECT month, amount, 
+    AVG(amount) OVER (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS SalesMovingAverage
+    FROM SalesInfo;
+END;
+*/
+
+#define _PROC_ "window13"
+static int32_t window13_perf_index;
+
+cql_string_literal(window13_stored_procedure_name, "window13");
+
+typedef struct window13_row {
+  cql_nullable_int32 month;
+  cql_nullable_double amount;
+  cql_nullable_double SalesMovingAverage;
+} window13_row;
+
+cql_bool window13_get_month_is_null(window13_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window13_row *data = (window13_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].month.is_null;
+}
+
+cql_int32 window13_get_month_value(window13_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window13_row *data = (window13_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].month.value;
+}
+
+cql_bool window13_get_amount_is_null(window13_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window13_row *data = (window13_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].amount.is_null;
+}
+
+cql_double window13_get_amount_value(window13_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window13_row *data = (window13_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].amount.value;
+}
+
+cql_bool window13_get_SalesMovingAverage_is_null(window13_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window13_row *data = (window13_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].SalesMovingAverage.is_null;
+}
+
+cql_double window13_get_SalesMovingAverage_value(window13_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window13_row *data = (window13_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].SalesMovingAverage.value;
+}
+
+uint8_t window13_data_types[window13_data_types_count] = {
+  CQL_DATA_TYPE_INT32, // month
+  CQL_DATA_TYPE_DOUBLE, // amount
+  CQL_DATA_TYPE_DOUBLE, // SalesMovingAverage
+};
+
+static cql_uint16 window13_col_offsets[] = { 3,
+  cql_offsetof(window13_row, month),
+  cql_offsetof(window13_row, amount),
+  cql_offsetof(window13_row, SalesMovingAverage)
+};
+
+cql_int32 window13_result_count(window13_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code window13_fetch_results(sqlite3 *_Nonnull _db_, window13_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_window13, &window13_perf_index);
+  cql_code rc = window13(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = window13_data_types,
+    .col_offsets = window13_col_offsets,
+    .rowsize = sizeof(window13_row),
+    .crc = CRC_window13,
+    .perf_index = &window13_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC window13 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+CQL_WARN_UNUSED cql_code window13(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT month, amount,  "
+      "AVG(amount) OVER (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) "
+      "FROM SalesInfo");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC window14 ()
+BEGIN
+  SELECT month, amount, 
+    AVG(amount) OVER (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW EXCLUDE TIES) AS SalesMovingAverage
+    FROM SalesInfo;
+END;
+*/
+
+#define _PROC_ "window14"
+static int32_t window14_perf_index;
+
+cql_string_literal(window14_stored_procedure_name, "window14");
+
+typedef struct window14_row {
+  cql_nullable_int32 month;
+  cql_nullable_double amount;
+  cql_nullable_double SalesMovingAverage;
+} window14_row;
+
+cql_bool window14_get_month_is_null(window14_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window14_row *data = (window14_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].month.is_null;
+}
+
+cql_int32 window14_get_month_value(window14_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window14_row *data = (window14_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].month.value;
+}
+
+cql_bool window14_get_amount_is_null(window14_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window14_row *data = (window14_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].amount.is_null;
+}
+
+cql_double window14_get_amount_value(window14_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window14_row *data = (window14_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].amount.value;
+}
+
+cql_bool window14_get_SalesMovingAverage_is_null(window14_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window14_row *data = (window14_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].SalesMovingAverage.is_null;
+}
+
+cql_double window14_get_SalesMovingAverage_value(window14_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window14_row *data = (window14_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].SalesMovingAverage.value;
+}
+
+uint8_t window14_data_types[window14_data_types_count] = {
+  CQL_DATA_TYPE_INT32, // month
+  CQL_DATA_TYPE_DOUBLE, // amount
+  CQL_DATA_TYPE_DOUBLE, // SalesMovingAverage
+};
+
+static cql_uint16 window14_col_offsets[] = { 3,
+  cql_offsetof(window14_row, month),
+  cql_offsetof(window14_row, amount),
+  cql_offsetof(window14_row, SalesMovingAverage)
+};
+
+cql_int32 window14_result_count(window14_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code window14_fetch_results(sqlite3 *_Nonnull _db_, window14_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_window14, &window14_perf_index);
+  cql_code rc = window14(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = window14_data_types,
+    .col_offsets = window14_col_offsets,
+    .rowsize = sizeof(window14_row),
+    .crc = CRC_window14,
+    .perf_index = &window14_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC window14 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+CQL_WARN_UNUSED cql_code window14(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT month, amount,  "
+      "AVG(amount) OVER (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW EXCLUDE TIES) "
+      "FROM SalesInfo");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC window15 ()
+BEGIN
+  SELECT month, amount, 
+    AVG(amount) OVER (PARTITION BY month ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW EXCLUDE TIES) AS SalesMovingAverage
+    FROM SalesInfo;
+END;
+*/
+
+#define _PROC_ "window15"
+static int32_t window15_perf_index;
+
+cql_string_literal(window15_stored_procedure_name, "window15");
+
+typedef struct window15_row {
+  cql_nullable_int32 month;
+  cql_nullable_double amount;
+  cql_nullable_double SalesMovingAverage;
+} window15_row;
+
+cql_bool window15_get_month_is_null(window15_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window15_row *data = (window15_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].month.is_null;
+}
+
+cql_int32 window15_get_month_value(window15_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window15_row *data = (window15_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].month.value;
+}
+
+cql_bool window15_get_amount_is_null(window15_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window15_row *data = (window15_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].amount.is_null;
+}
+
+cql_double window15_get_amount_value(window15_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window15_row *data = (window15_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].amount.value;
+}
+
+cql_bool window15_get_SalesMovingAverage_is_null(window15_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window15_row *data = (window15_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].SalesMovingAverage.is_null;
+}
+
+cql_double window15_get_SalesMovingAverage_value(window15_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window15_row *data = (window15_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].SalesMovingAverage.value;
+}
+
+uint8_t window15_data_types[window15_data_types_count] = {
+  CQL_DATA_TYPE_INT32, // month
+  CQL_DATA_TYPE_DOUBLE, // amount
+  CQL_DATA_TYPE_DOUBLE, // SalesMovingAverage
+};
+
+static cql_uint16 window15_col_offsets[] = { 3,
+  cql_offsetof(window15_row, month),
+  cql_offsetof(window15_row, amount),
+  cql_offsetof(window15_row, SalesMovingAverage)
+};
+
+cql_int32 window15_result_count(window15_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code window15_fetch_results(sqlite3 *_Nonnull _db_, window15_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_window15, &window15_perf_index);
+  cql_code rc = window15(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = window15_data_types,
+    .col_offsets = window15_col_offsets,
+    .rowsize = sizeof(window15_row),
+    .crc = CRC_window15,
+    .perf_index = &window15_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC window15 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+CQL_WARN_UNUSED cql_code window15(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT month, amount,  "
+      "AVG(amount) OVER (PARTITION BY month ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW EXCLUDE TIES) "
+      "FROM SalesInfo");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC window16 ()
+BEGIN
+  SELECT month, amount, 
+    AVG(amount) OVER (GROUPS CURRENT ROW) AS SalesMovingAverage
+    FROM SalesInfo;
+END;
+*/
+
+#define _PROC_ "window16"
+static int32_t window16_perf_index;
+
+cql_string_literal(window16_stored_procedure_name, "window16");
+
+typedef struct window16_row {
+  cql_nullable_int32 month;
+  cql_nullable_double amount;
+  cql_nullable_double SalesMovingAverage;
+} window16_row;
+
+cql_bool window16_get_month_is_null(window16_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window16_row *data = (window16_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].month.is_null;
+}
+
+cql_int32 window16_get_month_value(window16_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window16_row *data = (window16_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].month.value;
+}
+
+cql_bool window16_get_amount_is_null(window16_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window16_row *data = (window16_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].amount.is_null;
+}
+
+cql_double window16_get_amount_value(window16_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window16_row *data = (window16_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].amount.value;
+}
+
+cql_bool window16_get_SalesMovingAverage_is_null(window16_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window16_row *data = (window16_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].SalesMovingAverage.is_null;
+}
+
+cql_double window16_get_SalesMovingAverage_value(window16_result_set_ref _Nonnull result_set, cql_int32 row) {
+  window16_row *data = (window16_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].SalesMovingAverage.value;
+}
+
+uint8_t window16_data_types[window16_data_types_count] = {
+  CQL_DATA_TYPE_INT32, // month
+  CQL_DATA_TYPE_DOUBLE, // amount
+  CQL_DATA_TYPE_DOUBLE, // SalesMovingAverage
+};
+
+static cql_uint16 window16_col_offsets[] = { 3,
+  cql_offsetof(window16_row, month),
+  cql_offsetof(window16_row, amount),
+  cql_offsetof(window16_row, SalesMovingAverage)
+};
+
+cql_int32 window16_result_count(window16_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code window16_fetch_results(sqlite3 *_Nonnull _db_, window16_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_window16, &window16_perf_index);
+  cql_code rc = window16(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = window16_data_types,
+    .col_offsets = window16_col_offsets,
+    .rowsize = sizeof(window16_row),
+    .crc = CRC_window16,
+    .perf_index = &window16_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC window16 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+CQL_WARN_UNUSED cql_code window16(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT month, amount,  "
+      "AVG(amount) OVER (GROUPS CURRENT ROW) "
+      "FROM SalesInfo");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
 CREATE PROC emit_rc (OUT result_code INTEGER NOT NULL)
 BEGIN
   SET result_code := @RC;
@@ -8555,6 +10226,172 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
+CREATE PROC virtual1 ()
+BEGIN
+  SELECT *
+    FROM virtual_with_hidden;
+END;
+*/
+
+#define _PROC_ "virtual1"
+static int32_t virtual1_perf_index;
+
+cql_string_literal(virtual1_stored_procedure_name, "virtual1");
+
+typedef struct virtual1_row {
+  cql_int32 vx;
+  cql_nullable_int32 vy;
+} virtual1_row;
+
+cql_int32 virtual1_get_vx(virtual1_result_set_ref _Nonnull result_set, cql_int32 row) {
+  virtual1_row *data = (virtual1_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].vx;
+}
+
+cql_bool virtual1_get_vy_is_null(virtual1_result_set_ref _Nonnull result_set, cql_int32 row) {
+  virtual1_row *data = (virtual1_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].vy.is_null;
+}
+
+cql_int32 virtual1_get_vy_value(virtual1_result_set_ref _Nonnull result_set, cql_int32 row) {
+  virtual1_row *data = (virtual1_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].vy.value;
+}
+
+uint8_t virtual1_data_types[virtual1_data_types_count] = {
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // vx
+  CQL_DATA_TYPE_INT32, // vy
+};
+
+static cql_uint16 virtual1_col_offsets[] = { 2,
+  cql_offsetof(virtual1_row, vx),
+  cql_offsetof(virtual1_row, vy)
+};
+
+cql_int32 virtual1_result_count(virtual1_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code virtual1_fetch_results(sqlite3 *_Nonnull _db_, virtual1_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_virtual1, &virtual1_perf_index);
+  cql_code rc = virtual1(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = virtual1_data_types,
+    .col_offsets = virtual1_col_offsets,
+    .rowsize = sizeof(virtual1_row),
+    .crc = CRC_virtual1,
+    .perf_index = &virtual1_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC virtual1 () (vx INTEGER NOT NULL, vy INTEGER);
+CQL_WARN_UNUSED cql_code virtual1(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT vy "
+      "FROM virtual_with_hidden");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC virtual2 ()
+BEGIN
+  SELECT vx, vy
+    FROM virtual_with_hidden
+    WHERE vx = 2;
+END;
+*/
+
+#define _PROC_ "virtual2"
+static int32_t virtual2_perf_index;
+
+cql_string_literal(virtual2_stored_procedure_name, "virtual2");
+
+typedef struct virtual2_row {
+  cql_int32 vx;
+  cql_nullable_int32 vy;
+} virtual2_row;
+
+cql_int32 virtual2_get_vx(virtual2_result_set_ref _Nonnull result_set, cql_int32 row) {
+  virtual2_row *data = (virtual2_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].vx;
+}
+
+cql_bool virtual2_get_vy_is_null(virtual2_result_set_ref _Nonnull result_set, cql_int32 row) {
+  virtual2_row *data = (virtual2_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].vy.is_null;
+}
+
+cql_int32 virtual2_get_vy_value(virtual2_result_set_ref _Nonnull result_set, cql_int32 row) {
+  virtual2_row *data = (virtual2_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].vy.value;
+}
+
+uint8_t virtual2_data_types[virtual2_data_types_count] = {
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // vx
+  CQL_DATA_TYPE_INT32, // vy
+};
+
+static cql_uint16 virtual2_col_offsets[] = { 2,
+  cql_offsetof(virtual2_row, vx),
+  cql_offsetof(virtual2_row, vy)
+};
+
+cql_int32 virtual2_result_count(virtual2_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code virtual2_fetch_results(sqlite3 *_Nonnull _db_, virtual2_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_virtual2, &virtual2_perf_index);
+  cql_code rc = virtual2(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = virtual2_data_types,
+    .col_offsets = virtual2_col_offsets,
+    .rowsize = sizeof(virtual2_row),
+    .crc = CRC_virtual2,
+    .perf_index = &virtual2_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC virtual2 () (vx INTEGER NOT NULL, vy INTEGER);
+CQL_WARN_UNUSED cql_code virtual2(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT vx, vy "
+      "FROM virtual_with_hidden "
+      "WHERE vx = 2");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
 @ATTRIBUTE(cql:private)
 CREATE PROC private_proc (OUT x INTEGER)
 BEGIN
@@ -8568,6 +10405,327 @@ static void private_proc(cql_nullable_int32 *_Nonnull x) {
   cql_set_null(*x); // set out arg to non-garbage
   cql_set_notnull(*x, 1);
 
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:private)
+CREATE PROC private_out_union ()
+BEGIN
+  DECLARE C CURSOR LIKE SELECT 1 AS a_field;
+  FETCH C(a_field) FROM VALUES(1);
+  OUT UNION C;
+END;
+*/
+
+#define _PROC_ "private_out_union_fetch_results"
+static int32_t private_out_union_perf_index;
+
+cql_string_literal(private_out_union_stored_procedure_name, "private_out_union");
+
+uint8_t private_out_union_data_types[private_out_union_data_types_count] = {
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // a_field
+};
+
+static cql_uint16 private_out_union_col_offsets[] = { 1,
+  cql_offsetof(private_out_union_row, a_field)
+};
+
+cql_int32 private_out_union_result_count(private_out_union_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+cql_fetch_info private_out_union_info = {
+  .rc = SQLITE_OK,
+  .data_types = private_out_union_data_types,
+  .col_offsets = private_out_union_col_offsets,
+  .rowsize = sizeof(private_out_union_row),
+  .crc = CRC_private_out_union,
+  .perf_index = &private_out_union_perf_index,
+};
+// private: DECLARE PROC private_out_union () OUT UNION (a_field INTEGER NOT NULL);
+
+typedef struct private_out_union_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 a_field;
+} private_out_union_C_row;
+static void private_out_union_fetch_results(private_out_union_result_set_ref _Nullable *_Nonnull _result_set_) {
+  cql_bytebuf _rows_;
+  cql_bytebuf_open(&_rows_);
+  *_result_set_ = NULL;
+  private_out_union_C_row C = { 0 };
+
+  cql_profile_start(CRC_private_out_union, &private_out_union_perf_index);
+  C._has_row_ = 1;
+  C.a_field = 1;
+  cql_retain_row(C);
+  if (C._has_row_) cql_bytebuf_append(&_rows_, (const void *)&C, sizeof(C));
+
+  cql_results_from_data(SQLITE_OK, &_rows_, &private_out_union_info, (cql_result_set_ref *)_result_set_);
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC use_private_out_union ()
+BEGIN
+  DECLARE C CURSOR FOR CALL private_out_union();
+  LOOP FETCH C
+  BEGIN
+    CALL printf("%d\n", C.a_field);
+  END;
+END;
+*/
+
+#define _PROC_ "use_private_out_union"
+// export: DECLARE PROC use_private_out_union () USING TRANSACTION;
+
+typedef struct use_private_out_union_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 a_field;
+} use_private_out_union_C_row;
+CQL_WARN_UNUSED cql_code use_private_out_union(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  private_out_union_result_set_ref C_result_set_ = NULL;
+  cql_int32 C_row_num_ = 0;
+  cql_int32 C_row_count_ = 0;
+  use_private_out_union_C_row C = { 0 };
+
+  private_out_union_fetch_results(&C_result_set_);
+  C_row_num_ = C_row_count_ = -1;
+  C_row_count_ = cql_result_set_get_count((cql_result_set_ref)C_result_set_);
+  for (;;) {
+    C_row_num_++;
+    C._has_row_ = C_row_num_ < C_row_count_;
+    cql_copyoutrow(NULL, (cql_result_set_ref)C_result_set_, C_row_num_, 1,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.a_field);
+    if (!C._has_row_) break;
+    printf("%d\n", C.a_field);
+  }
+  _rc_ = SQLITE_OK;
+
+  cql_object_release(C_result_set_);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:suppress_getters)
+CREATE PROC no_getters_out_union ()
+BEGIN
+  DECLARE C CURSOR LIKE SELECT 1 AS a_field;
+  FETCH C(a_field) FROM VALUES(1);
+  OUT UNION C;
+END;
+*/
+
+#define _PROC_ "no_getters_out_union_fetch_results"
+static int32_t no_getters_out_union_perf_index;
+
+cql_string_literal(no_getters_out_union_stored_procedure_name, "no_getters_out_union");
+
+uint8_t no_getters_out_union_data_types[no_getters_out_union_data_types_count] = {
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // a_field
+};
+
+static cql_uint16 no_getters_out_union_col_offsets[] = { 1,
+  cql_offsetof(no_getters_out_union_row, a_field)
+};
+
+cql_int32 no_getters_out_union_result_count(no_getters_out_union_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+cql_fetch_info no_getters_out_union_info = {
+  .rc = SQLITE_OK,
+  .data_types = no_getters_out_union_data_types,
+  .col_offsets = no_getters_out_union_col_offsets,
+  .rowsize = sizeof(no_getters_out_union_row),
+  .crc = CRC_no_getters_out_union,
+  .perf_index = &no_getters_out_union_perf_index,
+};
+// export: DECLARE PROC no_getters_out_union () OUT UNION (a_field INTEGER NOT NULL);
+
+typedef struct no_getters_out_union_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 a_field;
+} no_getters_out_union_C_row;
+void no_getters_out_union_fetch_results(no_getters_out_union_result_set_ref _Nullable *_Nonnull _result_set_) {
+  cql_bytebuf _rows_;
+  cql_bytebuf_open(&_rows_);
+  *_result_set_ = NULL;
+  no_getters_out_union_C_row C = { 0 };
+
+  cql_profile_start(CRC_no_getters_out_union, &no_getters_out_union_perf_index);
+  C._has_row_ = 1;
+  C.a_field = 1;
+  cql_retain_row(C);
+  if (C._has_row_) cql_bytebuf_append(&_rows_, (const void *)&C, sizeof(C));
+
+  cql_results_from_data(SQLITE_OK, &_rows_, &no_getters_out_union_info, (cql_result_set_ref *)_result_set_);
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC use_no_getters_out_union ()
+BEGIN
+  DECLARE C CURSOR FOR CALL no_getters_out_union();
+  LOOP FETCH C
+  BEGIN
+    CALL printf("%d\n", C.a_field);
+  END;
+END;
+*/
+
+#define _PROC_ "use_no_getters_out_union"
+// export: DECLARE PROC use_no_getters_out_union () USING TRANSACTION;
+
+typedef struct use_no_getters_out_union_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 a_field;
+} use_no_getters_out_union_C_row;
+CQL_WARN_UNUSED cql_code use_no_getters_out_union(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  no_getters_out_union_result_set_ref C_result_set_ = NULL;
+  cql_int32 C_row_num_ = 0;
+  cql_int32 C_row_count_ = 0;
+  use_no_getters_out_union_C_row C = { 0 };
+
+  no_getters_out_union_fetch_results(&C_result_set_);
+  C_row_num_ = C_row_count_ = -1;
+  C_row_count_ = cql_result_set_get_count((cql_result_set_ref)C_result_set_);
+  for (;;) {
+    C_row_num_++;
+    C._has_row_ = C_row_num_ < C_row_count_;
+    cql_copyoutrow(NULL, (cql_result_set_ref)C_result_set_, C_row_num_, 1,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.a_field);
+    if (!C._has_row_) break;
+    printf("%d\n", C.a_field);
+  }
+  _rc_ = SQLITE_OK;
+
+  cql_object_release(C_result_set_);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:suppress_result_set)
+CREATE PROC suppress_results_out_union ()
+BEGIN
+  DECLARE C CURSOR LIKE SELECT 1 AS a_field;
+  FETCH C(a_field) FROM VALUES(1);
+  OUT UNION C;
+END;
+*/
+
+#define _PROC_ "suppress_results_out_union_fetch_results"
+static int32_t suppress_results_out_union_perf_index;
+
+cql_string_literal(suppress_results_out_union_stored_procedure_name, "suppress_results_out_union");
+
+uint8_t suppress_results_out_union_data_types[suppress_results_out_union_data_types_count] = {
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // a_field
+};
+
+static cql_uint16 suppress_results_out_union_col_offsets[] = { 1,
+  cql_offsetof(suppress_results_out_union_row, a_field)
+};
+
+cql_int32 suppress_results_out_union_result_count(suppress_results_out_union_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+cql_fetch_info suppress_results_out_union_info = {
+  .rc = SQLITE_OK,
+  .data_types = suppress_results_out_union_data_types,
+  .col_offsets = suppress_results_out_union_col_offsets,
+  .rowsize = sizeof(suppress_results_out_union_row),
+  .crc = CRC_suppress_results_out_union,
+  .perf_index = &suppress_results_out_union_perf_index,
+};
+// export: DECLARE PROC suppress_results_out_union () OUT UNION (a_field INTEGER NOT NULL);
+
+typedef struct suppress_results_out_union_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 a_field;
+} suppress_results_out_union_C_row;
+void suppress_results_out_union_fetch_results(suppress_results_out_union_result_set_ref _Nullable *_Nonnull _result_set_) {
+  cql_bytebuf _rows_;
+  cql_bytebuf_open(&_rows_);
+  *_result_set_ = NULL;
+  suppress_results_out_union_C_row C = { 0 };
+
+  cql_profile_start(CRC_suppress_results_out_union, &suppress_results_out_union_perf_index);
+  C._has_row_ = 1;
+  C.a_field = 1;
+  cql_retain_row(C);
+  if (C._has_row_) cql_bytebuf_append(&_rows_, (const void *)&C, sizeof(C));
+
+  cql_results_from_data(SQLITE_OK, &_rows_, &suppress_results_out_union_info, (cql_result_set_ref *)_result_set_);
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC use_suppress_results_out_union ()
+BEGIN
+  DECLARE C CURSOR FOR CALL suppress_results_out_union();
+  LOOP FETCH C
+  BEGIN
+    CALL printf("%d\n", C.a_field);
+  END;
+END;
+*/
+
+#define _PROC_ "use_suppress_results_out_union"
+// export: DECLARE PROC use_suppress_results_out_union () USING TRANSACTION;
+
+typedef struct use_suppress_results_out_union_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 a_field;
+} use_suppress_results_out_union_C_row;
+CQL_WARN_UNUSED cql_code use_suppress_results_out_union(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  suppress_results_out_union_result_set_ref C_result_set_ = NULL;
+  cql_int32 C_row_num_ = 0;
+  cql_int32 C_row_count_ = 0;
+  use_suppress_results_out_union_C_row C = { 0 };
+
+  suppress_results_out_union_fetch_results(&C_result_set_);
+  C_row_num_ = C_row_count_ = -1;
+  C_row_count_ = cql_result_set_get_count((cql_result_set_ref)C_result_set_);
+  for (;;) {
+    C_row_num_++;
+    C._has_row_ = C_row_num_ < C_row_count_;
+    cql_copyoutrow(NULL, (cql_result_set_ref)C_result_set_, C_row_num_, 1,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.a_field);
+    if (!C._has_row_) break;
+    printf("%d\n", C.a_field);
+  }
+  _rc_ = SQLITE_OK;
+
+  cql_object_release(C_result_set_);
+  return _rc_;
 }
 #undef _PROC_
 
@@ -10887,9 +13045,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
   
   /*
-  SET x := 1 * (2 / 3);
+  SET x := 1 * (4 / 3);
   */
-  x = 1 * (2 / 3);
+  x = 1 * (4 / 3);
   
   // The statement ending at line XXXX
   
@@ -10964,9 +13122,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
   
   /*
-  SET x := 1 / (2 / 3);
+  SET x := 1 / (4 / 3);
   */
-  x = 1 / (2 / 3);
+  x = 1 / (4 / 3);
   
   // The statement ending at line XXXX
   
@@ -11114,238 +13272,6 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   SET x := 1 = 2 <> 3;
   */
   x = 1 == (2 != 3);
-  
-  // The statement ending at line XXXX
-  
-  /*
-  SELECT month, amount, 
-    AVG(amount) OVER (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) AS SalesMovingAverage
-    FROM SalesInfo;
-  */
-  _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT month, amount,  "
-      "AVG(amount) OVER (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) "
-      "FROM SalesInfo");
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
-  // The statement ending at line XXXX
-  
-  /*
-  SELECT month, amount, 
-    SUM(amount) OVER (ORDER BY month) AS RunningTotal
-    FROM SalesInfo;
-  */
-  _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT month, amount,  "
-      "SUM(amount) OVER (ORDER BY month) "
-      "FROM SalesInfo");
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
-  // The statement ending at line XXXX
-  
-  /*
-  SELECT month, amount, 
-    AVG(amount) OVER (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING EXCLUDE NO OTHERS) AS SalesMovingAverage
-    FROM SalesInfo;
-  */
-  _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT month, amount,  "
-      "AVG(amount) OVER (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING EXCLUDE NO OTHERS) "
-      "FROM SalesInfo");
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
-  // The statement ending at line XXXX
-  
-  /*
-  SELECT month, amount, 
-    AVG(amount) FILTER (WHERE month = 1) OVER (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING EXCLUDE NO OTHERS) AS SalesMovingAverage
-    FROM SalesInfo;
-  */
-  _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT month, amount,  "
-      "AVG(amount) FILTER (WHERE month = 1) OVER (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING EXCLUDE NO OTHERS) "
-      "FROM SalesInfo");
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
-  // The statement ending at line XXXX
-  
-  /*
-  SELECT month, amount, 
-    AVG(amount) OVER (ORDER BY month ROWS BETWEEN 3 PRECEDING AND 4 FOLLOWING EXCLUDE CURRENT ROW) AS SalesMovingAverage
-    FROM SalesInfo;
-  */
-  _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT month, amount,  "
-      "AVG(amount) OVER (ORDER BY month ROWS BETWEEN 3 PRECEDING AND 4 FOLLOWING EXCLUDE CURRENT ROW) "
-      "FROM SalesInfo");
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
-  // The statement ending at line XXXX
-  
-  /*
-  SELECT month, amount, 
-    AVG(amount) OVER (ORDER BY month ROWS BETWEEN 4 PRECEDING AND 5 FOLLOWING EXCLUDE GROUP) AS SalesMovingAverage
-    FROM SalesInfo;
-  */
-  _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT month, amount,  "
-      "AVG(amount) OVER (ORDER BY month ROWS BETWEEN 4 PRECEDING AND 5 FOLLOWING EXCLUDE GROUP) "
-      "FROM SalesInfo");
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
-  // The statement ending at line XXXX
-  
-  /*
-  SELECT month, amount, 
-    AVG(amount) OVER (ORDER BY month ROWS BETWEEN 6 PRECEDING AND 7 FOLLOWING EXCLUDE TIES) AS SalesMovingAverage
-    FROM SalesInfo;
-  */
-  _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT month, amount,  "
-      "AVG(amount) OVER (ORDER BY month ROWS BETWEEN 6 PRECEDING AND 7 FOLLOWING EXCLUDE TIES) "
-      "FROM SalesInfo");
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
-  // The statement ending at line XXXX
-  
-  /*
-  SELECT month, amount, 
-    AVG(amount) OVER (ORDER BY month RANGE BETWEEN 8 PRECEDING AND 9 FOLLOWING EXCLUDE TIES) AS SalesMovingAverage
-    FROM SalesInfo;
-  */
-  _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT month, amount,  "
-      "AVG(amount) OVER (ORDER BY month RANGE BETWEEN 8 PRECEDING AND 9 FOLLOWING EXCLUDE TIES) "
-      "FROM SalesInfo");
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
-  // The statement ending at line XXXX
-  
-  /*
-  SELECT month, amount, 
-    AVG(amount) OVER (ORDER BY month GROUPS BETWEEN 10 PRECEDING AND 11 FOLLOWING EXCLUDE TIES) AS SalesMovingAverage
-    FROM SalesInfo;
-  */
-  _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT month, amount,  "
-      "AVG(amount) OVER (ORDER BY month GROUPS BETWEEN 10 PRECEDING AND 11 FOLLOWING EXCLUDE TIES) "
-      "FROM SalesInfo");
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
-  // The statement ending at line XXXX
-  
-  /*
-  SELECT month, amount, 
-    AVG(amount) OVER (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND 12 FOLLOWING EXCLUDE TIES) AS SalesMovingAverage
-    FROM SalesInfo;
-  */
-  _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT month, amount,  "
-      "AVG(amount) OVER (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND 12 FOLLOWING EXCLUDE TIES) "
-      "FROM SalesInfo");
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
-  // The statement ending at line XXXX
-  
-  /*
-  SELECT month, amount, 
-    AVG(amount) OVER (ORDER BY month GROUPS BETWEEN 13 FOLLOWING AND 14 PRECEDING) AS SalesMovingAverage
-    FROM SalesInfo;
-  */
-  _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT month, amount,  "
-      "AVG(amount) OVER (ORDER BY month GROUPS BETWEEN 13 FOLLOWING AND 14 PRECEDING) "
-      "FROM SalesInfo");
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
-  // The statement ending at line XXXX
-  
-  /*
-  SELECT month, amount, 
-    AVG(amount) OVER (ORDER BY month GROUPS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) AS SalesMovingAverage
-    FROM SalesInfo;
-  */
-  _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT month, amount,  "
-      "AVG(amount) OVER (ORDER BY month GROUPS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) "
-      "FROM SalesInfo");
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
-  // The statement ending at line XXXX
-  
-  /*
-  SELECT month, amount, 
-    AVG(amount) OVER (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS SalesMovingAverage
-    FROM SalesInfo;
-  */
-  _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT month, amount,  "
-      "AVG(amount) OVER (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) "
-      "FROM SalesInfo");
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
-  // The statement ending at line XXXX
-  
-  /*
-  SELECT month, amount, 
-    AVG(amount) OVER (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW EXCLUDE TIES) AS SalesMovingAverage
-    FROM SalesInfo;
-  */
-  _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT month, amount,  "
-      "AVG(amount) OVER (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW EXCLUDE TIES) "
-      "FROM SalesInfo");
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
-  // The statement ending at line XXXX
-  
-  /*
-  SELECT month, amount, 
-    AVG(amount) OVER (PARTITION BY month ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW EXCLUDE TIES) AS SalesMovingAverage
-    FROM SalesInfo;
-  */
-  _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT month, amount,  "
-      "AVG(amount) OVER (PARTITION BY month ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW EXCLUDE TIES) "
-      "FROM SalesInfo");
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
-  // The statement ending at line XXXX
-  
-  /*
-  SELECT month, amount, 
-    AVG(amount) OVER (GROUPS CURRENT ROW) AS SalesMovingAverage
-    FROM SalesInfo;
-  */
-  _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT month, amount,  "
-      "AVG(amount) OVER (GROUPS CURRENT ROW) "
-      "FROM SalesInfo");
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
-  // The statement ending at line XXXX
-  
-  /*
-  SELECT *
-    FROM virtual_with_hidden;
-  */
-  _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT vy "
-      "FROM virtual_with_hidden");
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
-  // The statement ending at line XXXX
-  
-  /*
-  SELECT vx, vy
-    FROM virtual_with_hidden
-    WHERE vx = 2;
-  */
-  _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT vx, vy "
-      "FROM virtual_with_hidden "
-      "WHERE vx = 2");
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   
   // The statement ending at line XXXX
   

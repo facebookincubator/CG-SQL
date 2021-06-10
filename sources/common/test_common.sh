@@ -215,6 +215,14 @@ code_gen_c_test() {
     failed
   fi
 
+  echo testing for successful compilation of generated C
+  rm -f out/cg_test_c.o
+  if ! do_make out/cg_test_c.o
+  then
+    echo "ERROR: failed to compile the C code from the code gen test"
+    failed
+  fi
+
   echo running codegen test with type getters enabled
   if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_c_with_type_getters.h" "${OUT_DIR}/cg_test_c_with_type_getters.c" --in "${TEST_DIR}/cg_test_c_type_getters.sql" --global_proc cql_startup --generate_copy --generate_type_getters  2>"${OUT_DIR}/cg_test_c.err"
   then

@@ -149,6 +149,8 @@ $O/cqltest.o: $T/cqltest.c
 
 $O/run_test.o: $O/run_test.c
 
+$O/cg_test_c.o: $O/cg_test_c.c
+
 $O/run_test_client.o: run_test_client.c
 
 $O/result_set_extension.o: result_set_extension.c

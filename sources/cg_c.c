@@ -4126,7 +4126,18 @@ static void cg_set_from_cursor(ast_node *ast) {
 
   CHARBUF_OPEN(value);
   bprintf(&value, "%s_object_", cursor_name);
-  cg_copy(cg_main_output, var_name, SEM_TYPE_OBJECT, value.ptr);
+
+
+  CSTR prefix = "";
+  if (is_out_parameter(variable->sem->sem_type)) {
+    prefix = "*";
+  }
+
+  CHARBUF_OPEN(tmp_var_name);
+  bprintf(&tmp_var_name, "%s%s", prefix, var_name);
+  cg_copy(cg_main_output, tmp_var_name.ptr, SEM_TYPE_OBJECT, value.ptr);
+  CHARBUF_CLOSE(tmp_var_name);
+
   CHARBUF_CLOSE(value);
 }
 
@@ -6041,12 +6052,13 @@ static void cg_proc_result_set(ast_node *ast) {
   bool_t suppress_result_set = misc_attrs && exists_attribute_str(misc_attrs, "suppress_result_set");
   bool_t is_private = misc_attrs && exists_attribute_str(misc_attrs, "private");
 
-  if (suppress_result_set || is_private) {
+  bool_t uses_out_union = has_out_union_stmt_result(ast);
+
+  if (!uses_out_union && (suppress_result_set || is_private)) {
     return;
   }
 
   bool_t uses_out = has_out_stmt_result(ast);
-  bool_t uses_out_union = has_out_union_stmt_result(ast);
   bool_t result_set_proc = has_result_set(ast);
 
   // exactly one of these
@@ -6150,7 +6162,14 @@ static void cg_proc_result_set(ast_node *ast) {
   }
 
   // we may not want the getters, at all.
-  bool_t suppress_getters = misc_attrs && exists_attribute_str(misc_attrs, "suppress_getters");
+  bool_t suppress_getters = false;
+ 
+  if (misc_attrs) {
+    suppress_getters =
+      exists_attribute_str(misc_attrs, "suppress_getters") ||
+      exists_attribute_str(misc_attrs, "private") ||            // private implies suppress result set
+      exists_attribute_str(misc_attrs, "suppress_result_set");  // and suppress result set implies suppress getters
+  }
 
   // For each field emit the _get_field method
   for (int32_t i = 0; i < count; i++) {

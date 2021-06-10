@@ -6265,7 +6265,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Wed May 26 14:51:14 PDT 2021</p>
+<p>Snapshot as of Wed Jun 9 13:53:52 PDT 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -7709,10 +7709,26 @@ enforce_pop_stmt:
 <ul>
 <li><code>cql:autodrop=(table1, table2, ...)</code> when present the indicated tables, which must be temp tables, are dropped when the results of the procedure have been fetched into a rowset</li>
 <li><code>cql:indentity=(column1, column2, ...)</code> the indicated columns are used to create a row comparator for the rowset corresponding to the procedure, this appears in a C macro of the form <code>procedure_name_row_same(rowset1, row1, rowset2, row2)</code></li>
-<li><code>cql:suppres_getters</code> the indicated procedure should not emit the column getter functions (useful if you only indend to call the procedure from CQL, or if you wish to restrict access in C)</li>
-<li><code>cql:base_fragment=frag_name</code> for base fragments (See Chapter 14)</li>
-<li><code>cql:extension_fragment=frag_name</code> for extension fragments (See Chapter 14)</li>
-<li><code>cql:assembly_fragment=frag_name</code> for assembly fragments (See Chapter 14)</li>
+<li><code>cql:suppress_getters</code> the annotated procedure should not emit its related column getter functions.
+<ul>
+<li>Useful if you only indend to call the procedure from CQL.</li>
+<li>Saves code generation and removes the possibility of C code using the getters.</li>
+</ul></li>
+<li><code>cql:suppress_result_set</code> the annotated procedure should not emit its related “fetch results” function.
+<ul>
+<li>Useful if you only indend to call the procedure from CQL.</li>
+<li>Saves code generation and removes the possibility of C code using the result set or getters.</li>
+<li>Implies <code>cql:suppress_getters</code>; since there is no result set, getters would be redundant.</li>
+<li>Note: an <code>OUT UNION</code> procedure cannot have a suppressed result set since all such a procedure does is produce a result set. This attribute is ignored for out union procedures.</li>
+</ul></li>
+<li><code>cql:private</code> the annotated procedure will be static in the generated C
+<ul>
+<li>Because the generated function is <code>static</code> it cannot be called from other modules and therefore will not go in any CQL exports file (that would be moot since you couldn’t call it).</li>
+<li>This attribute also implies <code>cql:suppress_result_set</code> since only CQL code in the same translation unit could possibly call it and hence the result set procedure is useless to other C code.</li>
+</ul></li>
+<li><code>cql:base_fragment=frag_name</code> used for base fragments (See Chapter 14)</li>
+<li><code>cql:extension_fragment=frag_name</code> used for extension fragments (See Chapter 14)</li>
+<li><code>cql:assembly_fragment=frag_name</code> used for assembly fragments (See Chapter 14)</li>
 <li><code>cql:no_table_scan</code> for query plan processing, indicates that the table in question should never be table scanned in any plan (for better diagnostics)</li>
 <li><code>cql:autotest=([many forms])</code> declares various autotest features (See Chapter 12)</li>
 </ul>
@@ -9454,7 +9470,7 @@ select 1 where table_valued_func(5) = 3;</code></pre>
 </table>
 <p>– This source code is licensed under the MIT license found in the – LICENSE file in the root directory of this source tree. –&gt;</p>
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Wed May 26 14:51:15 PDT 2021</p>
+<p>Snapshot as of Wed Jun 9 13:53:53 PDT 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

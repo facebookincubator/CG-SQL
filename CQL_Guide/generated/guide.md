@@ -8199,7 +8199,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed May 26 14:51:14 PDT 2021
+Snapshot as of Wed Jun  9 13:53:52 PDT 2021
 
 ### Operators and Literals
 
@@ -9647,7 +9647,7 @@ The complete list (as of this writing) is:
  * marks a column or variable as 'sensitive' for privacy purposes, this behaves somewhat like nullability (See Chapter 3) in that it is radioactive, contaminating anything it touches
  * the intent of this annotation is to make it clear where sensitive data is being returned or consumed in your procedures
  * this information appears in the JSON output for further codegen or for analysis (See Chapter 13)
- 
+
 `@DECLARE_SCHEMA_REGION`
 `@DECLARE_DEPLOYABLE_REGION`
 `@BEGIN_SCHEMA_REGION`
@@ -9661,7 +9661,7 @@ The complete list (as of this writing) is:
 `@ECHO`
  * Emits text into the C output stream, useful for emiting things like function prototypes or preprocessor directives
  * e.g. `echo C, '#define foo bar'
- 
+
 `@RECREATE`
 `@CREATE`
 `@DELETE`
@@ -9671,16 +9671,16 @@ The complete list (as of this writing) is:
  * used to indicate that the code that follows is part of a migration script for the indicated schema version
  * this has the effect of making the schema appear to be how it existed at the indicated version
  * the idea here is that migration procedures operate on previous versions of the schema where (e.g.) some columns/tables hadn't been deleted yet
- 
+
 `@PREVIOUS_SCHEMA`
  * indicates the start of the previous version of the schema for comparison (See Chapter 11)
- 
+
 `@SCHEMA_UPGRADE_SCRIPT`
  * CQL emits a schema upgrade script as part of its upgrade features, this script declares tables in their final form but also creates the same tables as they existed when they were first created
  * this directive instructs CQL to ignore the incompatible creations, the first declaration controls
  * the idea here is that the upgrade script is in the business of getting you to the finish line in an orderly fashion and some of the interim steps are just not all the way there yet
  * note that the upgrade script recapitulates the version history, it does not take you directly to the finish line, this is so that all instances get to the same place the same way (and this fleshes out any bugs in migration)
- 
+
 `@DUMMY_NULLABLES`
 `@DUMMY_DEFAULTS`
 `@DUMMY_SEED`
@@ -9688,18 +9688,28 @@ The complete list (as of this writing) is:
 
 `@FILE`
  * a string literal that corresponds to the current file name with a prefix stripped (to remove build lab junk in the path)
- 
+
 `@ATTRIBUTE`
   * the main purpose of `@attribute` is to appear in the JSON output so that it can control later codegen stages in whatever way you deem appropriate
   * the nested nature of attribute values is sufficiently flexible than you could encode an arbitary LISP program in an attribute, so really anything you might need to express is possible
   * there are a number of attributes known to the compiler which I list below (complete as of this writing)
-  
+
   * `cql:autodrop=(table1, table2, ...)` when present the indicated tables, which must be temp tables, are dropped when the results of the procedure have been fetched into a rowset
   * `cql:indentity=(column1, column2, ...)` the indicated columns are used to create a row comparator for the rowset corresponding to the procedure, this appears in a C macro of the form `procedure_name_row_same(rowset1, row1, rowset2, row2)`
-  * `cql:suppres_getters` the indicated procedure should not emit the column getter functions (useful if you only indend to call the procedure from CQL, or if you wish to restrict access in C)
-  * `cql:base_fragment=frag_name` for base fragments (See Chapter 14)
-  * `cql:extension_fragment=frag_name` for extension fragments (See Chapter 14)
-  * `cql:assembly_fragment=frag_name` for assembly fragments (See Chapter 14)
+  * `cql:suppress_getters` the annotated procedure should not emit its related column getter functions.
+    * Useful if you only indend to call the procedure from CQL.
+    * Saves code generation and removes the possibility of C code using the getters.
+  * `cql:suppress_result_set` the annotated procedure should not emit its related "fetch results" function.
+    * Useful if you only indend to call the procedure from CQL.
+    * Saves code generation and removes the possibility of C code using the result set or getters.
+    * Implies `cql:suppress_getters`; since there is no result set, getters would be redundant.
+    * Note: an `OUT UNION` procedure cannot have a suppressed result set since all such a procedure does is produce a result set. This attribute is ignored for out union procedures.
+  * `cql:private` the annotated procedure will be static in the generated C
+    * Because the generated function is `static` it cannot be called from other modules and therefore will not go in any CQL exports file (that would be moot since you couldn't call it).
+    * This attribute also implies `cql:suppress_result_set` since only CQL code in the same translation unit could possibly call it and hence the result set procedure is useless to other C code.
+  * `cql:base_fragment=frag_name` used for base fragments (See Chapter 14)
+  * `cql:extension_fragment=frag_name` used for extension fragments (See Chapter 14)
+  * `cql:assembly_fragment=frag_name` used for assembly fragments (See Chapter 14)
   * `cql:no_table_scan` for query plan processing, indicates that the table in question should never be table scanned in any plan (for better diagnostics)
   * `cql:autotest=([many forms])` declares various autotest features (See Chapter 12)
 
@@ -13129,7 +13139,7 @@ CQL 0400 : unused, this was added to prevent merge conflicts at the end on liter
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Wed May 26 14:51:15 PDT 2021
+Snapshot as of Wed Jun  9 13:53:53 PDT 2021
 
 ### Rules
 

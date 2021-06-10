@@ -2903,6 +2903,7 @@ end;
 -- 1 for the boxing and 1 for the cleanup
 -- +2 cql_object_release(C_object_);
 -- + C_object_ = cql_box_stmt(C_stmt);
+-- + cql_set_object_ref(result, C_object_);
 -- - cql_finalize_stmt(&C);
 create proc try_boxing(out result object<bar cursor>)
 begin
@@ -3089,9 +3090,9 @@ end;
 DECLARE x INTEGER NOT NULL;
 
 -- TEST: a series of paren checks on left association
-
--- + x = 1 * (2 / 3);
-SET x := 1 * (2 / 3);
+-- avoid hard coded divide by zero
+-- + x = 1 * (4 / 3);
+SET x := 1 * (4 / 3);
 
 -- + x = 1 * 2 / 3;
 SET x := 1 * 2 / 3;
@@ -3124,8 +3125,9 @@ SET x := (1 - 2) - (2 - 3);
 -- + x = 1 / 2 / 3;
 SET x := 1 / 2 / 3;
 
--- + x = 1 / (2 / 3);
-SET x := 1 / (2 / 3);
+-- avoid hard coded divide by zero
+-- + x = 1 / (4 / 3);
+SET x := 1 / (4 / 3);
 
 -- + x = 1 / 2;
 SET x := 1 / 2;
@@ -3202,99 +3204,147 @@ create table SalesInfo(
 
 -- TEST: ORDERBY BETWEEN PRECEEDING AND FOLLOWING NO FILTER NO EXCLUDE
 -- + AVG(amount) OVER (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) AS SalesMovingAverage
-SELECT month, amount, AVG(amount) OVER
-  (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING)
-SalesMovingAverage FROM SalesInfo;
+create proc window1()
+begin
+  SELECT month, amount, AVG(amount) OVER
+    (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING)
+  SalesMovingAverage FROM SalesInfo;
+end;
 
 -- TEST: simple OVER and ORDER BY
 -- + SUM(amount) OVER (ORDER BY month) AS RunningTotal
-SELECT month, amount, SUM(amount) OVER
-  (ORDER BY month) RunningTotal
-FROM SalesInfo;
+create proc window2()
+begin
+  SELECT month, amount, SUM(amount) OVER
+    (ORDER BY month) RunningTotal
+  FROM SalesInfo;
+end;
 
 -- TEST: ROWS expr preceeding and expr following, exclude no others
 -- + AVG(amount) OVER (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING EXCLUDE NO OTHERS) AS SalesMovingAverage
-SELECT month, amount, AVG(amount) OVER
-  (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING EXCLUDE NO OTHERS)
-SalesMovingAverage FROM SalesInfo;
+create proc window3()
+begin
+  SELECT month, amount, AVG(amount) OVER
+    (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING EXCLUDE NO OTHERS)
+  SalesMovingAverage FROM SalesInfo;
+end;
 
 -- TEST: ROWS expr preceeding and expr following, exclude no others with FILTER
 -- + AVG(amount) FILTER (WHERE month = 1) OVER (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING EXCLUDE NO OTHERS) AS SalesMovingAverage
-SELECT month, amount, AVG(amount) FILTER(WHERE month = 1) OVER
-  (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING EXCLUDE NO OTHERS)
-SalesMovingAverage FROM SalesInfo;
+create proc window4()
+begin
+  SELECT month, amount, AVG(amount) FILTER(WHERE month = 1) OVER
+    (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING EXCLUDE NO OTHERS)
+  SalesMovingAverage FROM SalesInfo;
+end;
 
 -- TEST: ROWS expr preceeding and expr following, exclude current row
 -- + AVG(amount) OVER (ORDER BY month ROWS BETWEEN 3 PRECEDING AND 4 FOLLOWING EXCLUDE CURRENT ROW) AS SalesMovingAverage
-SELECT month, amount, AVG(amount) OVER
-  (ORDER BY month ROWS BETWEEN 3 PRECEDING AND 4 FOLLOWING EXCLUDE CURRENT ROW)
-SalesMovingAverage FROM SalesInfo;
+create proc window5()
+begin
+  SELECT month, amount, AVG(amount) OVER
+    (ORDER BY month ROWS BETWEEN 3 PRECEDING AND 4 FOLLOWING EXCLUDE CURRENT ROW)
+  SalesMovingAverage FROM SalesInfo;
+end;
 
 -- TEST: ROWS expr preceeding and expr following, exclude group
 -- + AVG(amount) OVER (ORDER BY month ROWS BETWEEN 4 PRECEDING AND 5 FOLLOWING EXCLUDE GROUP) AS SalesMovingAverage
-SELECT month, amount, AVG(amount) OVER
-  (ORDER BY month ROWS BETWEEN 4 PRECEDING AND 5 FOLLOWING EXCLUDE GROUP)
-SalesMovingAverage FROM SalesInfo;
+create proc window6()
+begin
+  SELECT month, amount, AVG(amount) OVER
+    (ORDER BY month ROWS BETWEEN 4 PRECEDING AND 5 FOLLOWING EXCLUDE GROUP)
+  SalesMovingAverage FROM SalesInfo;
+end;
 
 -- TEST: ROWS expr preceeding and expr following, exclude ties
 -- + AVG(amount) OVER (ORDER BY month ROWS BETWEEN 6 PRECEDING AND 7 FOLLOWING EXCLUDE TIES) AS SalesMovingAverage
-SELECT month, amount, AVG(amount) OVER
-  (ORDER BY month ROWS BETWEEN 6 PRECEDING AND 7 FOLLOWING EXCLUDE TIES)
-SalesMovingAverage FROM SalesInfo;
+create proc window7()
+begin
+  SELECT month, amount, AVG(amount) OVER
+    (ORDER BY month ROWS BETWEEN 6 PRECEDING AND 7 FOLLOWING EXCLUDE TIES)
+  SalesMovingAverage FROM SalesInfo;
+end;
 
 -- TEST: RANGE expr preceeding and expr following, exclude ties
 -- + AVG(amount) OVER (ORDER BY month RANGE BETWEEN 8 PRECEDING AND 9 FOLLOWING EXCLUDE TIES) AS SalesMovingAverage
-SELECT month, amount, AVG(amount) OVER
-  (ORDER BY month RANGE BETWEEN 8 PRECEDING AND 9 FOLLOWING EXCLUDE TIES)
-SalesMovingAverage FROM SalesInfo;
+create proc window8()
+begin
+  SELECT month, amount, AVG(amount) OVER
+    (ORDER BY month RANGE BETWEEN 8 PRECEDING AND 9 FOLLOWING EXCLUDE TIES)
+  SalesMovingAverage FROM SalesInfo;
+end;
 
 -- TEST: GROUPS expr preceeding and expr following, exclude ties
 -- + AVG(amount) OVER (ORDER BY month GROUPS BETWEEN 10 PRECEDING AND 11 FOLLOWING EXCLUDE TIES) AS SalesMovingAverage
-SELECT month, amount, AVG(amount) OVER
-  (ORDER BY month GROUPS BETWEEN 10 PRECEDING AND 11 FOLLOWING EXCLUDE TIES)
-SalesMovingAverage FROM SalesInfo;
+create proc window9()
+begin
+  SELECT month, amount, AVG(amount) OVER
+    (ORDER BY month GROUPS BETWEEN 10 PRECEDING AND 11 FOLLOWING EXCLUDE TIES)
+  SalesMovingAverage FROM SalesInfo;
+end;
 
 -- TEST: GROUPS unbounded proceeding and expr following, exclude ties
 -- + AVG(amount) OVER (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND 12 FOLLOWING EXCLUDE TIES) AS SalesMovingAverage
-SELECT month, amount, AVG(amount) OVER
-  (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND 12 FOLLOWING EXCLUDE TIES)
-SalesMovingAverage FROM SalesInfo;
+create proc window10()
+begin
+  SELECT month, amount, AVG(amount) OVER
+    (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND 12 FOLLOWING EXCLUDE TIES)
+  SalesMovingAverage FROM SalesInfo;
+end;
 
 -- TEST: GROUPS expr following and expr preceeding
 -- + AVG(amount) OVER (ORDER BY month GROUPS BETWEEN 13 FOLLOWING AND 14 PRECEDING) AS SalesMovingAverage
-SELECT month, amount, AVG(amount) OVER
-  (ORDER BY month GROUPS BETWEEN 13 FOLLOWING AND 14 PRECEDING)
-SalesMovingAverage FROM SalesInfo;
+create proc window11()
+begin
+  SELECT month, amount, AVG(amount) OVER
+    (ORDER BY month GROUPS BETWEEN 13 FOLLOWING AND 14 PRECEDING)
+  SalesMovingAverage FROM SalesInfo;
+end;
 
 -- TEST: GROUPS between current row and unbounded following
 -- + AVG(amount) OVER (ORDER BY month GROUPS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) AS SalesMovingAverage
-SELECT month, amount, AVG(amount) OVER
-  (ORDER BY month GROUPS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
-SalesMovingAverage FROM SalesInfo;
+create proc window12()
+begin
+  SELECT month, amount, AVG(amount) OVER
+    (ORDER BY month GROUPS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
+  SalesMovingAverage FROM SalesInfo;
+end;
 
 -- TEST: GROUPS between unbounded preceding and current row with no exclude
 -- + AVG(amount) OVER (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS SalesMovingAverage
-SELECT month, amount, AVG(amount) OVER
-  (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
-SalesMovingAverage FROM SalesInfo;
+create proc window13()
+begin
+  SELECT month, amount, AVG(amount) OVER
+    (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+  SalesMovingAverage FROM SalesInfo;
+end;
 
 -- TEST: GROUPS between unbounded preceding and current row with exclude ties
 -- +  AVG(amount) OVER (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW EXCLUDE TIES) AS SalesMovingAverage
-SELECT month, amount, AVG(amount) OVER
-  (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW EXCLUDE TIES)
-SalesMovingAverage FROM SalesInfo;
+create proc window14()
+begin
+  SELECT month, amount, AVG(amount) OVER
+    (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW EXCLUDE TIES)
+  SalesMovingAverage FROM SalesInfo;
+end;
 
 -- TEST: correct parse and re-emit of CURRENT_ROW
 -- + AVG(amount) OVER (PARTITION BY month ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW EXCLUDE TIES) AS SalesMovingAverage
-SELECT month, amount, AVG(amount) OVER
-  (PARTITION BY month ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW EXCLUDE TIES)
-SalesMovingAverage FROM SalesInfo;
+create proc window15()
+begin
+  SELECT month, amount, AVG(amount) OVER
+    (PARTITION BY month ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW EXCLUDE TIES)
+  SalesMovingAverage FROM SalesInfo;
+end;
 
 -- TEST: correct parse and re-emit of CURRENT_ROW
 -- + AVG(amount) OVER (GROUPS CURRENT ROW) AS SalesMovingAverage
-SELECT month, amount, AVG(amount) OVER
-  (GROUPS CURRENT ROW)
-SalesMovingAverage FROM SalesInfo;
+create proc window16()
+begin
+  SELECT month, amount, AVG(amount) OVER
+    (GROUPS CURRENT ROW)
+  SalesMovingAverage FROM SalesInfo;
+end;
 
 -- TEST: use result code in a procedure
 -- + export: DECLARE PROC emit_rc (OUT result_code INTEGER NOT NULL) USING TRANSACTION;
@@ -3474,14 +3524,20 @@ create virtual table virtual_with_hidden using module_name as (
 -- TEST: hidden applied on virtual tables
 -- + "SELECT vy "
 -- + "FROM virtual_with_hidden");
-select * from virtual_with_hidden;
+create proc virtual1()
+begin
+  select * from virtual_with_hidden;
+end;
 
 -- TEST: hidden columns may be used by name
 -- +  _rc_ = cql_prepare(_db_, _result_stmt,
 -- + "SELECT vx, vy "
 -- + "FROM virtual_with_hidden "
 -- + "WHERE vx = 2");
-select vx, vy from virtual_with_hidden where vx = 2;
+create proc virtual2()
+begin
+  select vx, vy from virtual_with_hidden where vx = 2;
+end;
 
 -- TEST: insert into the table, verify autoexpand is correct there, too
 -- only "y" should be inserted here
@@ -3559,6 +3615,95 @@ set t2 := (select name from bar if nothing or null "garbonzo");
 create proc private_proc(out x integer)
 begin
   set x := 1;
+end;
+
+-- TEST: verify that getters are not present on private out union but the fetcher is
+-- + .crc = CRC_private_out_union,
+-- + CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // a_field
+-- + // private: DECLARE PROC private_out_union () OUT UNION (a_field INTEGER NOT NULL);
+-- + static void private_out_union_fetch_results(private_out_union_result_set_ref _Nullable *_Nonnull _result_set_) {
+-- -- no getter
+-- - private_out_union_get_a_field
+@attribute(cql:private)
+create proc private_out_union()
+begin
+  declare C cursor like select 1 a_field;
+
+  fetch C from values(1);
+  out union C;
+end;
+
+-- TEST: use the private out union function in the same translation unit, it should have everything we need to call it
+-- note that compiling this code in C correctly is part of the test which verifies lots of linkage in addition
+-- to just these strings.
+-- + private_out_union_fetch_results(&C_result_set_);
+create proc use_private_out_union()
+begin
+  declare C cursor for call private_out_union();
+  loop fetch C
+  begin
+    call printf("%d\n", C.a_field);
+  end;
+end;
+
+-- TEST: verify that getters are not present on no getters out union but the fetcher is
+-- + .crc = CRC_no_getters_out_union,
+-- + CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // a_field
+-- + // export: DECLARE PROC no_getters_out_union () OUT UNION (a_field INTEGER NOT NULL);
+-- - static void
+-- + void no_getters_out_union_fetch_results(no_getters_out_union_result_set_ref _Nullable *_Nonnull _result_set_) {
+-- -- no getter
+-- - no_getters_out_union_get_a_field
+@attribute(cql:suppress_getters)
+create proc no_getters_out_union()
+begin
+  declare C cursor like select 1 a_field;
+
+  fetch C from values(1);
+  out union C;
+end;
+
+-- TEST: use the private out union function in the same translation unit, it should have everything we need to call it
+-- note that compiling this code in C correctly is part of the test which verifies lots of linkage in addition
+-- to just these strings.
+-- + no_getters_out_union_fetch_results(&C_result_set_);
+create proc use_no_getters_out_union()
+begin
+  declare C cursor for call no_getters_out_union();
+  loop fetch C
+  begin
+    call printf("%d\n", C.a_field);
+  end;
+end;
+
+-- TEST: verify that getters are not present on suppress results out union but the fetcher is
+-- + .crc = CRC_suppress_results_out_union,
+-- + CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // a_field
+-- + // export: DECLARE PROC suppress_results_out_union () OUT UNION (a_field INTEGER NOT NULL);
+-- - static void
+-- + void suppress_results_out_union_fetch_results(suppress_results_out_union_result_set_ref _Nullable *_Nonnull _result_set_) {
+-- -- no getter
+-- - suppress_results_out_union_get_a_field
+@attribute(cql:suppress_result_set)
+create proc suppress_results_out_union()
+begin
+  declare C cursor like select 1 a_field;
+
+  fetch C from values(1);
+  out union C;
+end;
+
+-- TEST: use the private out union function in the same translation unit, it should have everything we need to call it
+-- note that compiling this code in C correctly is part of the test which verifies lots of linkage in addition
+-- to just these strings.
+-- + suppress_results_out_union_fetch_results(&C_result_set_);
+create proc use_suppress_results_out_union()
+begin
+  declare C cursor for call suppress_results_out_union();
+  loop fetch C
+  begin
+    call printf("%d\n", C.a_field);
+  end;
 end;
 
 -- TEST: verify private exports and binding for result set case
