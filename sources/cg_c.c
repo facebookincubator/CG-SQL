@@ -486,6 +486,28 @@ static void cg_emit_local_nullable_init(charbuf *output, CSTR name, sem_t sem_ty
    }
 }
 
+// Emit the nullability annotation for a BLOB, OBJECT, or TEXT variable.
+static void cg_var_nullability_annotation(charbuf *output, sem_t sem_type) {
+  sem_t core_type = core_type_of(sem_type);
+  Contract(core_type == SEM_TYPE_BLOB || core_type == SEM_TYPE_OBJECT || core_type == SEM_TYPE_TEXT);
+
+  if (is_out_parameter(sem_type) && !is_in_parameter(sem_type)) {
+    // In the case of an OUT NOT NULL variable (but *not* an INOUT NOT NULL
+    // variable), we annotate with _Nullable despite the NOT NULL because 
+    // purpose of calling the procedure is to initialize the location pointed to
+    // with a value. Accordingly, the value at the location pointed to should be
+    // NULL before the call. For example, `TEXT t OUT NOT NULL` should become
+    // `cql_string_ref _Nullable *_Nonnull t`, whereas `TEXT t INOUT NOT NULL`
+    // should become `cql_string_ref _Nonnull *_Nonnull t`.
+    bprintf(output, "_Nullable ");
+    return;
+  } else if (is_not_nullable(sem_type)) {
+    bprintf(output, "_Nonnull ");
+  } else {
+    bprintf(output, "_Nullable ");
+  }
+}
+
 // Emit a declaration for a local whose name is base_name and whose type
 // is given by sem_type.   Is_local really only decides if we add ";\n" to
 // the end of the output.  This lets us use the same helper for list of
@@ -522,11 +544,7 @@ static void cg_var_decl(charbuf *output, sem_t sem_type, CSTR base_name, bool_t 
     case SEM_TYPE_TEXT:
       bprintf(output, "%s ", rt->cql_string_ref);
       if (!is_local) {
-        if (notnull) {
-          bprintf(output, "_Nonnull ");
-        } else {
-          bprintf(output, "_Nullable ");
-        }
+        cg_var_nullability_annotation(output, sem_type);
       }
       bprintf(output, "%s", name.ptr);
       if (is_local) {
@@ -537,11 +555,7 @@ static void cg_var_decl(charbuf *output, sem_t sem_type, CSTR base_name, bool_t 
     case SEM_TYPE_BLOB:
       bprintf(output, "%s ", rt->cql_blob_ref);
       if (!is_local) {
-        if (notnull) {
-          bprintf(output, "_Nonnull ");
-        } else {
-          bprintf(output, "_Nullable ");
-        }
+        cg_var_nullability_annotation(output, sem_type);
       }
       bprintf(output, "%s", name.ptr);
       if (is_local) {
@@ -552,11 +566,7 @@ static void cg_var_decl(charbuf *output, sem_t sem_type, CSTR base_name, bool_t 
   case SEM_TYPE_OBJECT:
       bprintf(output, "%s ", rt->cql_object_ref);
       if (!is_local) {
-        if (notnull) {
-          bprintf(output, "_Nonnull ");
-        } else {
-          bprintf(output, "_Nullable ");
-        }
+        cg_var_nullability_annotation(output, sem_type);
       }
       bprintf(output, "%s", name.ptr);
       if (is_local) {

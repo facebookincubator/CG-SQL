@@ -3235,7 +3235,7 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   0)
 
 // The statement ending at line XXXX
-extern void exercise_contracts(cql_nullable_int32 a, cql_int32 b, cql_string_ref _Nullable c, cql_string_ref _Nonnull d, cql_blob_ref _Nullable e, cql_blob_ref _Nonnull f, cql_object_ref _Nullable g, cql_object_ref _Nonnull h, cql_nullable_int32 *_Nonnull i, cql_int32 *_Nonnull j, cql_string_ref _Nullable *_Nonnull k, cql_string_ref _Nonnull *_Nonnull l, cql_nullable_int32 *_Nonnull m, cql_int32 *_Nonnull n, cql_string_ref _Nullable *_Nonnull o, cql_string_ref _Nonnull *_Nonnull p);
+extern void exercise_contracts(cql_nullable_int32 a, cql_int32 b, cql_string_ref _Nullable c, cql_string_ref _Nonnull d, cql_blob_ref _Nullable e, cql_blob_ref _Nonnull f, cql_object_ref _Nullable g, cql_object_ref _Nonnull h, cql_nullable_int32 *_Nonnull i, cql_int32 *_Nonnull j, cql_string_ref _Nullable *_Nonnull k, cql_string_ref _Nullable *_Nonnull l, cql_nullable_int32 *_Nonnull m, cql_int32 *_Nonnull n, cql_string_ref _Nullable *_Nonnull o, cql_string_ref _Nonnull *_Nonnull p);
 
 // The statement ending at line XXXX
 extern void public_proc_with_a_contract(cql_string_ref _Nonnull t);
