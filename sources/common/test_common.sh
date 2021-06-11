@@ -238,6 +238,14 @@ code_gen_c_test() {
     failed
   fi
 
+  echo testing for successful compilation of generated C with type getters
+  rm -f out/cg_test_c_with_type_getters.o
+  if ! do_make out/cg_test_c_with_type_getters.o
+  then
+    echo "ERROR: failed to compile the C code from the type getters code gen test"
+    failed
+  fi
+
   echo running codegen test with namespace enabled
   if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_c_with_namespace.h" "${OUT_DIR}/cg_test_c_with_namespace.c" "${OUT_DIR}/cg_test_imports_with_namespace.ref" --in "${TEST_DIR}/cg_test.sq"l --global_proc cql_startup --generate_copy --c_include_namespace test_namespace --generate_exports 2>"${OUT_DIR}/cg_test_c.err"
   then
