@@ -1115,9 +1115,7 @@ CREATE TABLE recreate_deleted_in_the_past(
   id INTEGER
 ) @DELETE(2);
 
-Error at test/sem_test_prev.sql:XXXX : in create_table_stmt : table must leave @recreate management with @create/delete(6) or later 'recreate_deleted_in_the_past'
-
-  {create_table_stmt}: err
+  {create_table_stmt}: recreate_deleted_in_the_past: { id: integer } deleted validated @delete(2)
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
@@ -1125,6 +1123,32 @@ Error at test/sem_test_prev.sql:XXXX : in create_table_stmt : table must leave @
   | |   | {version_annotation}
   | |     | {int 2}
   | | {name recreate_deleted_in_the_past}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE recreate_created_in_the_past(
+  id INTEGER
+) @CREATE(2, cql:from_recreate);
+
+Error at test/sem_test_prev.sql:XXXX : in create_table_stmt : CQL0399: table must leave @recreate management with @create(6) or later 'recreate_created_in_the_past'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {create_attr}
+  | |   | {version_annotation}
+  | |     | {int 2}
+  | |     | {dot}: ok
+  | |       | {name cql}
+  | |       | {name from_recreate}
+  | | {name recreate_created_in_the_past}
   | {col_key_list}
     | {col_def}: id: integer
       | {col_def_type_attrs}: ok
@@ -1768,9 +1792,7 @@ CREATE TABLE table_going(
   FOREIGN KEY (col2) REFERENCES table_staying (col1) ON UPDATE CASCADE ON DELETE CASCADE
 ) @DELETE(1);
 
-Error at test/sem_test_prev.sql:XXXX : in create_table_stmt : table must leave @recreate management with @create/delete(6) or later 'table_going'
-
-  {create_table_stmt}: err
+  {create_table_stmt}: table_going: { col1: text, col2: integer foreign_key } deleted validated @delete(1)
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
@@ -1924,7 +1946,7 @@ CREATE VIRTUAL TABLE deleted_virtual USING my_virtual (goo) AS (
   | | {name my_virtual}
   | | {misc_attr_value_list}
   |   | {name goo}
-  | {create_table_stmt}: err
+  | {create_table_stmt}: deleted_virtual: { id: integer } deleted validated virtual @delete(3)
     | {create_table_name_flags}
     | | {table_flags_attrs}
     | | | {int 0}
@@ -3194,6 +3216,25 @@ CREATE TABLE recreate_deleted_in_the_past(
   | | | {int 0}
   | | | {recreate_attr}
   | | {name recreate_deleted_in_the_past}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE recreate_created_in_the_past(
+  id INTEGER
+) @RECREATE;
+
+  {create_table_stmt}: recreate_created_in_the_past: { id: integer } @recreate
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {recreate_attr}
+  | | {name recreate_created_in_the_past}
   | {col_key_list}
     | {col_def}: id: integer
       | {col_def_type_attrs}: ok

@@ -213,14 +213,22 @@ create table not_ok_to_create_recreate_table
   id int
 ) @create(6);
 
--- TEST : the new version of this table is ok the delete plan but the version number is too small
--- + {create_table_stmt}: err
--- + Error % Table must leave @recreate management with @create/delete(6) or later 'recreate_deleted_in_the_past'
--- +1 Error
+-- TEST : the new version of this table is ok the delete plan, the version number can be low, it's ok for deleted
+-- + {create_table_stmt}: recreate_deleted_in_the_past: { id: integer } deleted validated @delete(2)
+-- - Error
 create table recreate_deleted_in_the_past
 (
   id int
 ) @delete(2);
+
+-- TEST : the new version of this table is ok on the create plan but the version number is too small
+-- + {create_table_stmt}: err
+-- + Error % Table must leave @recreate management with @create(6) or later 'recreate_created_in_the_past'
+-- +1 Error
+create table recreate_created_in_the_past
+(
+  id int
+) @create(2, cql:from_recreate);
 
 -- mega changes to the table, it's recreate so whatever
 create table recreate_feel_the_power
@@ -391,12 +399,14 @@ create table table_staying(
   col1 int primary key not null
 ) @recreate(my_recreate_group);
 
+-- This table references a different recreate group but it's being deleted so that's ok
+-- you can exit the recreate group when you are deleted, your existing foreign keys don't matter
+-- - Error
 create table table_going(
   col1 text,
   col2 int,
   foreign key(col2) references table_staying(col1) on update cascade on delete cascade
 ) @delete(1);
-
 
 -- TEST: it's ok for items to appear with a migration
 -- create validated in normal processing, delete validated in previous
@@ -747,6 +757,12 @@ create table recreate_deleted_in_the_past
  id int
 ) @recreate;
 
+-- the new version of this table is on the create plan, but it was created in the past
+create table recreate_created_in_the_past
+(
+ id int
+) @recreate;
+
 -- TEST: mega changes to the table, it's recreate so whatever
 -- + create_table_stmt}: recreate_feel_the_power: { id: text, payload: text, whatever: integer } @recreate
 -- - Error
@@ -922,6 +938,8 @@ create table table_staying(
   col1 int primary key not null
 ) @recreate(my_recreate_group);
 
+-- This table (in the previous schema) has an FK within the same recreate group so that's ok
+-- - Error
 create table table_going(
   col1 text,
   col2 int,

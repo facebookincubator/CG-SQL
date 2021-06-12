@@ -9838,7 +9838,10 @@ static void sem_validate_previous_table(ast_node *prev_table) {
   // if this table changed to the new plan we have to transition against
   // the max schema number, we can't do that until later so save it.
   if (prev_info.recreate && !cur_info.recreate) {
-    add_item_to_list(&all_prev_recreate_tables, ast);
+    // check create verisions
+    if (ast->sem->create_version > 0) {
+      add_item_to_list(&all_prev_recreate_tables, ast);
+    }
   }
 
   // If we're on the @recreate plan then we can make any changes we like to the table
@@ -17516,7 +17519,7 @@ static void sem_validate_old_object_or_marked_create(ast_node *root, ast_node *a
 // so we have to do our own error capture logic.
 static void sem_validate_all_prev_recreate_tables(ast_node *root) {
   CHARBUF_OPEN(err_msg);
-  bprintf(&err_msg, "table must leave @recreate management with @create/delete(%d) or later", max_previous_schema_version);
+  bprintf(&err_msg, "CQL0399: table must leave @recreate management with @create(%d) or later", max_previous_schema_version);
 
   for (list_item *item = all_prev_recreate_tables; item; item = item->next) {
     ast_node *ast = item->ast;
@@ -17550,12 +17553,6 @@ static void sem_validate_marked_create_or_delete(ast_node *root, ast_node *ast, 
   // If the object is marked as created at or after the previous schema version
   // then it's good.
   if (ast->sem->create_version >= max_previous_schema_version) {
-    return;
-  }
-
-  // If the object is marked as deleted at or after the previous schema version
-  // then it's good.
-  if (ast->sem->delete_version >= max_previous_schema_version) {
     return;
   }
 
