@@ -349,6 +349,14 @@ code_gen_java_test() {
     failed
   fi
 
+  echo running java with generate_copy
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_java.out" --in "${TEST_DIR}/cg_test_generate_copy.sql" --rt java --java_package_name com.facebook.cqlviewmodels 2>"${OUT_DIR}/cg_test_java_getters.err"
+  then
+    echo "ERROR:"
+    cat "${OUT_DIR}/cg_test_java_getters.err"
+    failed
+  fi
+
   echo validating empty codegen
   echo "  computing diffs (empty if none)"
   on_diff_exit cg_test_java_getters.err

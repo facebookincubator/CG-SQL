@@ -47,13 +47,6 @@ static inline int32_t CGBAssemblyCoreResultCount(CGBAssemblyCore *resultSet)
   return CGCAssemblyCoreResultCount(CGCAssemblyCoreFromCGBAssemblyCore(resultSet));
 }
 
-static inline CGBAssemblyCore *CGBAssemblyCoreCopy(CGBAssemblyCore *resultSet, int32_t from, int32_t count)
-{
-  CGCAssemblyCoreResultSetRef copy;
-  CGCAssemblyCoreCopy(CGCAssemblyCoreFromCGBAssemblyCore(resultSet), &copy, from, count);
-  return (__bridge_transfer CGBAssemblyCore *)copy;
-}
-
 static inline NSUInteger CGBAssemblyCoreRowHash(CGBAssemblyCore *resultSet, int32_t row)
 {
   return CGCAssemblyCoreRowHash(CGCAssemblyCoreFromCGBAssemblyCore(resultSet), row);

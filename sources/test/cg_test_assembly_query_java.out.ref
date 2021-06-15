@@ -54,15 +54,6 @@ public final class cg_test_assembly_query_java extends CQLViewModel {
     return mResultSet.getCount();
   }
   
-  @Nullable
-  public cg_test_assembly_query_java copy(int row, int count) {
-    CQLResultSet resultSet = mResultSet.copy(row, count); 
-    if (resultSet == null) {
-      return null;
-    }
-    return new cg_test_assembly_query_java(resultSet);
-  }
-  
   @Override 
   protected boolean hasIdentityColumns() {
     return false;

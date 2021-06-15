@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-/* 
+/*
  * Note this file is set up to verify the .h file rather than the .c file in test.sh
  */
 
@@ -122,4 +122,12 @@ begin
    declare C cursor like emit_object_result_set arguments;
    fetch C from arguments;
    out union C;
+end;
+
+-- TEST: a copy function will be generated
+-- + #define sproc_copy_func_copy(result_set, result_set_to, from, count)
+@attribute(cql:generate_copy)
+create proc sproc_copy_func()
+begin
+  select * from foo;
 end;

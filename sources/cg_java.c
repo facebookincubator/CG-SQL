@@ -331,7 +331,12 @@ static void cg_java_proc_result_set(ast_node *ast) {
   }
 
   bprintf(&body, "%s", rt->cql_result_set_get_count);
-  bprintf(&body, rt->cql_result_set_copy, class_name.ptr, class_name.ptr);
+
+  bool_t generate_copy = misc_attrs && exists_attribute_str(misc_attrs, "generate_copy");
+  if (options.generate_copy || generate_copy) {
+    bprintf(&body, rt->cql_result_set_copy, class_name.ptr, class_name.ptr);
+  }
+
   bprintf(&body, rt->cql_result_set_has_identity_columns, include_identity_columns ? "true" : "false");
   bindent(&cg_java_output, &class_def, 0);
   bindent(&cg_java_output, &body, 2);

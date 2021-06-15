@@ -14,6 +14,7 @@ typedef struct emit_object_result_set_row {
   cql_uint16 _refs_offset_;
   cql_object_ref _Nonnull o;
 } emit_object_result_set_row;
+extern CQL_WARN_UNUSED cql_code sproc_copy_func(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 
 // The statement ending at line XXXX
 
@@ -236,5 +237,107 @@ void emit_object_result_set_fetch_results(emit_object_result_set_result_set_ref 
 
   cql_results_from_data(SQLITE_OK, &_rows_, &emit_object_result_set_info, (cql_result_set_ref *)_result_set_);
   cql_teardown_row(C);
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:generate_copy)
+CREATE PROC sproc_copy_func ()
+BEGIN
+  SELECT *
+    FROM foo;
+END;
+*/
+
+#define _PROC_ "sproc_copy_func"
+static int32_t sproc_copy_func_perf_index;
+
+cql_string_literal(sproc_copy_func_stored_procedure_name, "sproc_copy_func");
+
+typedef struct sproc_copy_func_row {
+  cql_int32 f1;
+  cql_double f3;
+  cql_bool f4;
+  cql_int64 f5;
+  cql_nullable_int32 g1;
+  cql_nullable_double g3;
+  cql_nullable_bool g4;
+  cql_nullable_int64 g5;
+  cql_string_ref _Nonnull f2;
+  cql_blob_ref _Nonnull f6;
+  cql_string_ref _Nullable g2;
+  cql_blob_ref _Nullable g6;
+} sproc_copy_func_row;
+
+uint8_t sproc_copy_func_data_types[sproc_copy_func_data_types_count] = {
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // f1
+  CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_NOT_NULL, // f2
+  CQL_DATA_TYPE_DOUBLE | CQL_DATA_TYPE_NOT_NULL, // f3
+  CQL_DATA_TYPE_BOOL | CQL_DATA_TYPE_NOT_NULL, // f4
+  CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_NOT_NULL, // f5
+  CQL_DATA_TYPE_BLOB | CQL_DATA_TYPE_NOT_NULL, // f6
+  CQL_DATA_TYPE_INT32, // g1
+  CQL_DATA_TYPE_STRING, // g2
+  CQL_DATA_TYPE_DOUBLE, // g3
+  CQL_DATA_TYPE_BOOL, // g4
+  CQL_DATA_TYPE_INT64, // g5
+  CQL_DATA_TYPE_BLOB, // g6
+};
+
+#define sproc_copy_func_refs_offset cql_offsetof(sproc_copy_func_row, f2) // count = 4
+
+static cql_uint16 sproc_copy_func_col_offsets[] = { 12,
+  cql_offsetof(sproc_copy_func_row, f1),
+  cql_offsetof(sproc_copy_func_row, f2),
+  cql_offsetof(sproc_copy_func_row, f3),
+  cql_offsetof(sproc_copy_func_row, f4),
+  cql_offsetof(sproc_copy_func_row, f5),
+  cql_offsetof(sproc_copy_func_row, f6),
+  cql_offsetof(sproc_copy_func_row, g1),
+  cql_offsetof(sproc_copy_func_row, g2),
+  cql_offsetof(sproc_copy_func_row, g3),
+  cql_offsetof(sproc_copy_func_row, g4),
+  cql_offsetof(sproc_copy_func_row, g5),
+  cql_offsetof(sproc_copy_func_row, g6)
+};
+
+cql_int32 sproc_copy_func_result_count(sproc_copy_func_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code sproc_copy_func_fetch_results(sqlite3 *_Nonnull _db_, sproc_copy_func_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_sproc_copy_func, &sproc_copy_func_perf_index);
+  cql_code rc = sproc_copy_func(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = sproc_copy_func_data_types,
+    .col_offsets = sproc_copy_func_col_offsets,
+    .refs_count = 4,
+    .refs_offset = sproc_copy_func_refs_offset,
+    .rowsize = sizeof(sproc_copy_func_row),
+    .crc = CRC_sproc_copy_func,
+    .perf_index = &sproc_copy_func_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC sproc_copy_func () (f1 INTEGER NOT NULL, f2 TEXT NOT NULL, f3 REAL NOT NULL, f4 BOOL NOT NULL, f5 LONG_INT NOT NULL, f6 BLOB NOT NULL, g1 INTEGER, g2 TEXT, g3 REAL, g4 BOOL, g5 LONG_INT, g6 BLOB);
+CQL_WARN_UNUSED cql_code sproc_copy_func(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT f1, f2, f3, f4, f5, f6, g1, g2, g3, g4, g5, g6 "
+      "FROM foo");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
 }
 #undef _PROC_

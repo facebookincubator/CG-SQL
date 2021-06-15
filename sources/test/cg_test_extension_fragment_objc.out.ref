@@ -36,13 +36,6 @@ static inline int32_t CGBExtensionFragmentOneResultCount(CGBAssemblyCore *result
   return CGCExtensionFragmentOneResultCount(CGCExtensionFragmentOneFromCGBExtensionFragmentOne(resultSet));
 }
 
-static inline CGBAssemblyCore *CGBExtensionFragmentOneCopy(CGBAssemblyCore *resultSet, int32_t from, int32_t count)
-{
-  CGCAssemblyCoreResultSetRef copy;
-  CGCExtensionFragmentOneCopy(CGCExtensionFragmentOneFromCGBExtensionFragmentOne(resultSet), &copy, from, count);
-  return (__bridge_transfer CGBAssemblyCore *)copy;
-}
-
 @class CGBAssemblyCore;
 
 static inline CGCAssemblyCoreResultSetRef CGCExtensionFragmentTwoFromCGBExtensionFragmentTwo(CGBAssemblyCore *resultSet)
@@ -79,13 +72,6 @@ static inline int32_t CGBExtensionFragmentTwoResultCount(CGBAssemblyCore *result
   return CGCExtensionFragmentTwoResultCount(CGCExtensionFragmentTwoFromCGBExtensionFragmentTwo(resultSet));
 }
 
-static inline CGBAssemblyCore *CGBExtensionFragmentTwoCopy(CGBAssemblyCore *resultSet, int32_t from, int32_t count)
-{
-  CGCAssemblyCoreResultSetRef copy;
-  CGCExtensionFragmentTwoCopy(CGCExtensionFragmentTwoFromCGBExtensionFragmentTwo(resultSet), &copy, from, count);
-  return (__bridge_transfer CGBAssemblyCore *)copy;
-}
-
 @class CGBAssemblyNonCore;
 
 static inline CGCAssemblyNonCoreResultSetRef CGCExtensionFragmentThreeFromCGBExtensionFragmentThree(CGBAssemblyNonCore *resultSet)
@@ -120,13 +106,6 @@ static inline NSNumber *_Nullable CGBExtensionFragmentThreeGetD(CGBAssemblyNonCo
 static inline int32_t CGBExtensionFragmentThreeResultCount(CGBAssemblyNonCore *resultSet)
 {
   return CGCExtensionFragmentThreeResultCount(CGCExtensionFragmentThreeFromCGBExtensionFragmentThree(resultSet));
-}
-
-static inline CGBAssemblyNonCore *CGBExtensionFragmentThreeCopy(CGBAssemblyNonCore *resultSet, int32_t from, int32_t count)
-{
-  CGCAssemblyNonCoreResultSetRef copy;
-  CGCExtensionFragmentThreeCopy(CGCExtensionFragmentThreeFromCGBExtensionFragmentThree(resultSet), &copy, from, count);
-  return (__bridge_transfer CGBAssemblyNonCore *)copy;
 }
 
 NS_ASSUME_NONNULL_END

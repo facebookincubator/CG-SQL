@@ -200,3 +200,97 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   (cql_result_set_ref)(rs2), \
   row2)
 extern void emit_object_result_set_fetch_results(emit_object_result_set_result_set_ref _Nullable *_Nonnull _result_set_, cql_object_ref _Nonnull o);
+
+// The statement ending at line XXXX
+#define CRC_sproc_copy_func 861265627824666461L
+
+extern cql_string_ref _Nonnull sproc_copy_func_stored_procedure_name;
+
+#define sproc_copy_func_data_types_count 12
+
+extern uint8_t sproc_copy_func_data_types[sproc_copy_func_data_types_count];
+
+#ifndef result_set_type_decl_sproc_copy_func_result_set
+#define result_set_type_decl_sproc_copy_func_result_set 1
+cql_result_set_type_decl(sproc_copy_func_result_set, sproc_copy_func_result_set_ref);
+#endif
+
+static inline cql_int32 sproc_copy_func_get_f1(sproc_copy_func_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 0);
+}
+
+static inline cql_string_ref _Nonnull sproc_copy_func_get_f2(sproc_copy_func_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_string_col((cql_result_set_ref)result_set, row, 1);
+}
+
+static inline cql_double sproc_copy_func_get_f3(sproc_copy_func_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_double_col((cql_result_set_ref)result_set, row, 2);
+}
+
+static inline cql_bool sproc_copy_func_get_f4(sproc_copy_func_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_bool_col((cql_result_set_ref)result_set, row, 3);
+}
+
+static inline cql_int64 sproc_copy_func_get_f5(sproc_copy_func_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_int64_col((cql_result_set_ref)result_set, row, 4);
+}
+
+static inline cql_blob_ref _Nonnull sproc_copy_func_get_f6(sproc_copy_func_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_blob_col((cql_result_set_ref)result_set, row, 5);
+}
+
+static inline cql_bool sproc_copy_func_get_g1_is_null(sproc_copy_func_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 6);
+}
+
+static inline cql_int32 sproc_copy_func_get_g1_value(sproc_copy_func_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 6);
+}
+
+static inline cql_string_ref _Nullable sproc_copy_func_get_g2(sproc_copy_func_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 7) ? NULL : cql_result_set_get_string_col((cql_result_set_ref)result_set, row, 7);
+}
+
+static inline cql_bool sproc_copy_func_get_g3_is_null(sproc_copy_func_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 8);
+}
+
+static inline cql_double sproc_copy_func_get_g3_value(sproc_copy_func_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_double_col((cql_result_set_ref)result_set, row, 8);
+}
+
+static inline cql_bool sproc_copy_func_get_g4_is_null(sproc_copy_func_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 9);
+}
+
+static inline cql_bool sproc_copy_func_get_g4_value(sproc_copy_func_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_bool_col((cql_result_set_ref)result_set, row, 9);
+}
+
+static inline cql_bool sproc_copy_func_get_g5_is_null(sproc_copy_func_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 10);
+}
+
+static inline cql_int64 sproc_copy_func_get_g5_value(sproc_copy_func_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_int64_col((cql_result_set_ref)result_set, row, 10);
+}
+
+static inline cql_blob_ref _Nullable sproc_copy_func_get_g6(sproc_copy_func_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 11) ? NULL : cql_result_set_get_blob_col((cql_result_set_ref)result_set, row, 11);
+}
+
+extern cql_int32 sproc_copy_func_result_count(sproc_copy_func_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code sproc_copy_func_fetch_results(sqlite3 *_Nonnull _db_, sproc_copy_func_result_set_ref _Nullable *_Nonnull result_set);
+#define sproc_copy_func_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define sproc_copy_func_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define sproc_copy_func_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)

@@ -2749,6 +2749,14 @@ begin
   select * from bar;
 end;
 
+-- TEST: a copy function will be generated
+-- + cql_code sproc_with_copy(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt)
+@attribute(cql:generate_copy)
+create proc sproc_with_copy()
+begin
+  select * from bar;
+end;
+
 
 -- TEST: no result set items should be generated at all
 -- - CQL_DATA_TYPE

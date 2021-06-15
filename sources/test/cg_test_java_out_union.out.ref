@@ -25,15 +25,6 @@ public final class cg_test_java_out_union extends CQLViewModel {
     return mResultSet.getCount();
   }
   
-  @Nullable
-  public cg_test_java_out_union copy(int row, int count) {
-    CQLResultSet resultSet = mResultSet.copy(row, count); 
-    if (resultSet == null) {
-      return null;
-    }
-    return new cg_test_java_out_union(resultSet);
-  }
-  
   @Override 
   protected boolean hasIdentityColumns() {
     return false;

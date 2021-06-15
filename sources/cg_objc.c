@@ -393,27 +393,30 @@ static void cg_objc_proc_result_set(ast_node *ast) {
   bprintf(h, "  return %sResultCount(%s(resultSet));\n", c_name.ptr, c_convert.ptr);
   bprintf(h, "}\n");
 
-  bprintf(h,
-          "\nstatic inline %s *%sCopy(%s *resultSet",
-          objc_result_set_name.ptr,
-          objc_name.ptr,
-          objc_result_set_name.ptr);
-  if (!out_stmt_proc) {
+  bool_t generate_copy = misc_attrs && exists_attribute_str(misc_attrs, "generate_copy");
+  if (options.generate_copy || generate_copy) {
     bprintf(h,
-            ", %s from, %s count",
-            rt->cql_int32,
-            rt->cql_int32);
+            "\nstatic inline %s *%sCopy(%s *resultSet",
+            objc_result_set_name.ptr,
+            objc_name.ptr,
+            objc_result_set_name.ptr);
+    if (!out_stmt_proc) {
+      bprintf(h,
+              ", %s from, %s count",
+              rt->cql_int32,
+              rt->cql_int32);
+    }
+    bprintf(h, ")\n");
+    bprintf(h, "{\n");
+    bprintf(h, "  %s copy;\n", c_result_set_ref.ptr);
+    bprintf(h,
+            "  %sCopy(%s(resultSet), &copy%s);\n",
+            c_name.ptr,
+            c_convert.ptr,
+            out_stmt_proc ? "" : ", from, count");
+    bprintf(h, "  return (__bridge_transfer %s *)copy;\n", is_ext ? objc_class_name.ptr : objc_name.ptr);
+    bprintf(h, "}\n");
   }
-  bprintf(h, ")\n");
-  bprintf(h, "{\n");
-  bprintf(h, "  %s copy;\n", c_result_set_ref.ptr);
-  bprintf(h,
-          "  %sCopy(%s(resultSet), &copy%s);\n",
-          c_name.ptr,
-          c_convert.ptr,
-          out_stmt_proc ? "" : ", from, count");
-  bprintf(h, "  return (__bridge_transfer %s *)copy;\n", is_ext ? objc_class_name.ptr : objc_name.ptr);
-  bprintf(h, "}\n");
 
   if (!is_ext) {
     bprintf(h,

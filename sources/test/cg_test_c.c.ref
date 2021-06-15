@@ -263,6 +263,7 @@ extern void out_union_no_dml_fetch_results(out_union_no_dml_result_set_ref _Null
 
 extern CQL_WARN_UNUSED cql_code use_return(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code lotsa_columns_no_getters(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code sproc_with_copy(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code lotsa_columns_no_result_set(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code vault_sensitive_with_values_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code vault_sensitive_with_no_values_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
@@ -7084,6 +7085,127 @@ CQL_WARN_UNUSED cql_code lotsa_columns_no_getters_fetch_results(sqlite3 *_Nonnul
 
 // export: DECLARE PROC lotsa_columns_no_getters () (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
 CQL_WARN_UNUSED cql_code lotsa_columns_no_getters(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT id, name, rate, type, size "
+      "FROM bar");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:generate_copy)
+CREATE PROC sproc_with_copy ()
+BEGIN
+  SELECT *
+    FROM bar;
+END;
+*/
+
+#define _PROC_ "sproc_with_copy"
+static int32_t sproc_with_copy_perf_index;
+
+cql_string_literal(sproc_with_copy_stored_procedure_name, "sproc_with_copy");
+
+typedef struct sproc_with_copy_row {
+  cql_int32 id;
+  cql_nullable_int64 rate;
+  cql_nullable_int32 type;
+  cql_nullable_double size;
+  cql_string_ref _Nullable name;
+} sproc_with_copy_row;
+
+cql_int32 sproc_with_copy_get_id(sproc_with_copy_result_set_ref _Nonnull result_set, cql_int32 row) {
+  sproc_with_copy_row *data = (sproc_with_copy_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].id;
+}
+
+cql_string_ref _Nullable sproc_with_copy_get_name(sproc_with_copy_result_set_ref _Nonnull result_set, cql_int32 row) {
+  sproc_with_copy_row *data = (sproc_with_copy_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].name;
+}
+
+cql_bool sproc_with_copy_get_rate_is_null(sproc_with_copy_result_set_ref _Nonnull result_set, cql_int32 row) {
+  sproc_with_copy_row *data = (sproc_with_copy_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].rate.is_null;
+}
+
+cql_int64 sproc_with_copy_get_rate_value(sproc_with_copy_result_set_ref _Nonnull result_set, cql_int32 row) {
+  sproc_with_copy_row *data = (sproc_with_copy_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].rate.value;
+}
+
+cql_bool sproc_with_copy_get_type_is_null(sproc_with_copy_result_set_ref _Nonnull result_set, cql_int32 row) {
+  sproc_with_copy_row *data = (sproc_with_copy_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].type.is_null;
+}
+
+cql_int32 sproc_with_copy_get_type_value(sproc_with_copy_result_set_ref _Nonnull result_set, cql_int32 row) {
+  sproc_with_copy_row *data = (sproc_with_copy_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].type.value;
+}
+
+cql_bool sproc_with_copy_get_size_is_null(sproc_with_copy_result_set_ref _Nonnull result_set, cql_int32 row) {
+  sproc_with_copy_row *data = (sproc_with_copy_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].size.is_null;
+}
+
+cql_double sproc_with_copy_get_size_value(sproc_with_copy_result_set_ref _Nonnull result_set, cql_int32 row) {
+  sproc_with_copy_row *data = (sproc_with_copy_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].size.value;
+}
+
+uint8_t sproc_with_copy_data_types[sproc_with_copy_data_types_count] = {
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
+  CQL_DATA_TYPE_STRING, // name
+  CQL_DATA_TYPE_INT64, // rate
+  CQL_DATA_TYPE_INT32, // type
+  CQL_DATA_TYPE_DOUBLE, // size
+};
+
+#define sproc_with_copy_refs_offset cql_offsetof(sproc_with_copy_row, name) // count = 1
+
+static cql_uint16 sproc_with_copy_col_offsets[] = { 5,
+  cql_offsetof(sproc_with_copy_row, id),
+  cql_offsetof(sproc_with_copy_row, name),
+  cql_offsetof(sproc_with_copy_row, rate),
+  cql_offsetof(sproc_with_copy_row, type),
+  cql_offsetof(sproc_with_copy_row, size)
+};
+
+cql_int32 sproc_with_copy_result_count(sproc_with_copy_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code sproc_with_copy_fetch_results(sqlite3 *_Nonnull _db_, sproc_with_copy_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_sproc_with_copy, &sproc_with_copy_perf_index);
+  cql_code rc = sproc_with_copy(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = sproc_with_copy_data_types,
+    .col_offsets = sproc_with_copy_col_offsets,
+    .refs_count = 1,
+    .refs_offset = sproc_with_copy_refs_offset,
+    .rowsize = sizeof(sproc_with_copy_row),
+    .crc = CRC_sproc_with_copy,
+    .perf_index = &sproc_with_copy_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC sproc_with_copy () (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
+CQL_WARN_UNUSED cql_code sproc_with_copy(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
   _rc_ = cql_prepare(_db_, _result_stmt,

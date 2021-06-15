@@ -2009,6 +2009,41 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   row2)
 
 // The statement ending at line XXXX
+#define CRC_sproc_with_copy 4273120440728091142L
+
+extern cql_string_ref _Nonnull sproc_with_copy_stored_procedure_name;
+
+#define sproc_with_copy_data_types_count 5
+
+#ifndef result_set_type_decl_sproc_with_copy_result_set
+#define result_set_type_decl_sproc_with_copy_result_set 1
+cql_result_set_type_decl(sproc_with_copy_result_set, sproc_with_copy_result_set_ref);
+#endif
+extern cql_int32 sproc_with_copy_get_id(sproc_with_copy_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_string_ref _Nullable sproc_with_copy_get_name(sproc_with_copy_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool sproc_with_copy_get_rate_is_null(sproc_with_copy_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int64 sproc_with_copy_get_rate_value(sproc_with_copy_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool sproc_with_copy_get_type_is_null(sproc_with_copy_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 sproc_with_copy_get_type_value(sproc_with_copy_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool sproc_with_copy_get_size_is_null(sproc_with_copy_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double sproc_with_copy_get_size_value(sproc_with_copy_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 sproc_with_copy_result_count(sproc_with_copy_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code sproc_with_copy_fetch_results(sqlite3 *_Nonnull _db_, sproc_with_copy_result_set_ref _Nullable *_Nonnull result_set);
+#define sproc_with_copy_copy(result_set, result_set_to, from, count) \
+cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
+  (cql_result_set_ref)(result_set), \
+  (cql_result_set_ref *)(result_set_to), \
+  from, \
+  count)
+#define sproc_with_copy_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define sproc_with_copy_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
 
 // The statement ending at line XXXX
 extern CQL_WARN_UNUSED cql_code early_out_rc_cleared(sqlite3 *_Nonnull _db_, cql_nullable_int32 *_Nonnull x);

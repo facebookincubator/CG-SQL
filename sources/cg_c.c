@@ -493,7 +493,7 @@ static void cg_var_nullability_annotation(charbuf *output, sem_t sem_type) {
 
   if (is_out_parameter(sem_type) && !is_in_parameter(sem_type)) {
     // In the case of an OUT NOT NULL variable (but *not* an INOUT NOT NULL
-    // variable), we annotate with _Nullable despite the NOT NULL because 
+    // variable), we annotate with _Nullable despite the NOT NULL because
     // purpose of calling the procedure is to initialize the location pointed to
     // with a value. Accordingly, the value at the location pointed to should be
     // NULL before the call. For example, `TEXT t OUT NOT NULL` should become
@@ -6220,7 +6220,7 @@ static void cg_proc_result_set(ast_node *ast) {
 
   // we may not want the getters, at all.
   bool_t suppress_getters = false;
- 
+
   if (misc_attrs) {
     suppress_getters =
       exists_attribute_str(misc_attrs, "suppress_getters") ||
@@ -6341,9 +6341,12 @@ static void cg_proc_result_set(ast_node *ast) {
 
   CHARBUF_OPEN(is_null_getter);
 
+  bool_t generate_copy_attr = misc_attrs && exists_attribute_str(misc_attrs, "generate_copy");
+
   // Check whether we need to generate a copy function.
   bool_t generate_copy = (options.generate_copy ||
-                         (rt->proc_should_generate_copy && rt->proc_should_generate_copy(name)));
+                         (rt->proc_should_generate_copy && rt->proc_should_generate_copy(name)) ||
+                         generate_copy_attr);
 
   int32_t refs_count = refs_count_sptr(sptr);
 
