@@ -6344,9 +6344,8 @@ static void cg_proc_result_set(ast_node *ast) {
   bool_t generate_copy_attr = misc_attrs && exists_attribute_str(misc_attrs, "generate_copy");
 
   // Check whether we need to generate a copy function.
-  bool_t generate_copy = (options.generate_copy ||
-                         (rt->proc_should_generate_copy && rt->proc_should_generate_copy(name)) ||
-                         generate_copy_attr);
+  bool_t generate_copy = (generate_copy_attr ||
+                         (rt->proc_should_generate_copy && rt->proc_should_generate_copy(name)));
 
   int32_t refs_count = refs_count_sptr(sptr);
 

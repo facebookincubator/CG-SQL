@@ -15,12 +15,6 @@ extern cql_string_ref _Nullable assembly_core_get_y(assembly_core_result_set_ref
 extern cql_bool assembly_core_get_z_is_null(assembly_core_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int64 assembly_core_get_z_value(assembly_core_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 assembly_core_result_count(assembly_core_result_set_ref _Nonnull result_set);
-#define assembly_core_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define assembly_core_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define assembly_core_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -47,12 +41,6 @@ extern cql_bool __PRIVATE__assembly_core_get_flag_is_null(assembly_core_result_s
 extern cql_bool __PRIVATE__assembly_core_get_flag_value(assembly_core_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 assembly_core_result_count(assembly_core_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code assembly_core_fetch_results(sqlite3 *_Nonnull _db_, assembly_core_result_set_ref _Nullable *_Nonnull result_set, cql_int32 id_, cql_string_ref _Nonnull name_);
-#define assembly_core_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define assembly_core_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define assembly_core_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \

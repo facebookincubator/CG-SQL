@@ -201,7 +201,7 @@ semantic_test() {
 code_gen_c_test() {
   echo '--------------------------------- STAGE 5 -- C CODE GEN TEST'
   echo running codegen test
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_c.h" "${OUT_DIR}/cg_test_c.c" "${OUT_DIR}/cg_test_exports.out" --in "${TEST_DIR}/cg_test.sql" --global_proc cql_startup --generate_copy --generate_exports 2>"${OUT_DIR}/cg_test_c.err"
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_c.h" "${OUT_DIR}/cg_test_c.c" "${OUT_DIR}/cg_test_exports.out" --in "${TEST_DIR}/cg_test.sql" --global_proc cql_startup --generate_exports 2>"${OUT_DIR}/cg_test_c.err"
   then
     echo "ERROR:"
     cat "${OUT_DIR}/cg_test_c.err"
@@ -224,7 +224,7 @@ code_gen_c_test() {
   fi
 
   echo running codegen test with type getters enabled
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_c_with_type_getters.h" "${OUT_DIR}/cg_test_c_with_type_getters.c" --in "${TEST_DIR}/cg_test_c_type_getters.sql" --global_proc cql_startup --generate_copy --generate_type_getters  2>"${OUT_DIR}/cg_test_c.err"
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_c_with_type_getters.h" "${OUT_DIR}/cg_test_c_with_type_getters.c" --in "${TEST_DIR}/cg_test_c_type_getters.sql" --global_proc cql_startup --generate_type_getters  2>"${OUT_DIR}/cg_test_c.err"
   then
     echo "ERROR:"
     cat "${OUT_DIR}/cg_test_c.err"
@@ -247,7 +247,7 @@ code_gen_c_test() {
   fi
 
   echo running codegen test with namespace enabled
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_c_with_namespace.h" "${OUT_DIR}/cg_test_c_with_namespace.c" "${OUT_DIR}/cg_test_imports_with_namespace.ref" --in "${TEST_DIR}/cg_test.sq"l --global_proc cql_startup --generate_copy --c_include_namespace test_namespace --generate_exports 2>"${OUT_DIR}/cg_test_c.err"
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_c_with_namespace.h" "${OUT_DIR}/cg_test_c_with_namespace.c" "${OUT_DIR}/cg_test_imports_with_namespace.ref" --in "${TEST_DIR}/cg_test.sq"l --global_proc cql_startup --c_include_namespace test_namespace --generate_exports 2>"${OUT_DIR}/cg_test_c.err"
   then
     echo "ERROR:"
     cat "${OUT_DIR}/cg_test_c.err"
@@ -262,7 +262,7 @@ code_gen_c_test() {
   fi
 
   echo running codegen test for extension query fragment
-  if ! ${CQL} --generate_type_getters --test --cg "${OUT_DIR}/cg_test_extension_fragment_c.h" "${OUT_DIR}/cg_test_extension_fragment_c.c" "${OUT_DIR}/cg_test_extension_fragment_imports.ref" --in "${TEST_DIR}/cg_test_extension_fragment.sql" --global_proc cql_startup --generate_copy --generate_exports 2>"${OUT_DIR}/cg_test_c.err"
+  if ! ${CQL} --generate_type_getters --test --cg "${OUT_DIR}/cg_test_extension_fragment_c.h" "${OUT_DIR}/cg_test_extension_fragment_c.c" "${OUT_DIR}/cg_test_extension_fragment_imports.ref" --in "${TEST_DIR}/cg_test_extension_fragment.sql" --global_proc cql_startup --generate_exports 2>"${OUT_DIR}/cg_test_c.err"
   then
     echo "ERROR:"
     cat "${OUT_DIR}/cg_test_c.err"
@@ -277,7 +277,7 @@ code_gen_c_test() {
   fi
 
   echo running codegen test for assembly query
-  if ! ${CQL} --generate_type_getters --test --cg "${OUT_DIR}/cg_test_assembly_query_c.h" "${OUT_DIR}/cg_test_assembly_query_c.c" "${OUT_DIR}/cg_test_assembly_query_imports.ref" --in "${TEST_DIR}/cg_test_assembly_query.sql" --global_proc cql_startup --generate_copy --generate_exports 2>"${OUT_DIR}/cg_test_c.err"
+  if ! ${CQL} --generate_type_getters --test --cg "${OUT_DIR}/cg_test_assembly_query_c.h" "${OUT_DIR}/cg_test_assembly_query_c.c" "${OUT_DIR}/cg_test_assembly_query_imports.ref" --in "${TEST_DIR}/cg_test_assembly_query.sql" --global_proc cql_startup --generate_exports 2>"${OUT_DIR}/cg_test_c.err"
   then
     echo "ERROR:"
     cat "${OUT_DIR}/cg_test_c.err"
@@ -1100,7 +1100,7 @@ run_test() {
   then
     echo preprocessing failed.
     failed
-  elif ! ${CQL} --nolines --cg "${OUT_DIR}/run_test.h" "${OUT_DIR}/run_test.c" --in "${OUT_DIR}/run_test_cpp.out" --global_proc cql_startup --rt c --generate_copy
+  elif ! ${CQL} --nolines --cg "${OUT_DIR}/run_test.h" "${OUT_DIR}/run_test.c" --in "${OUT_DIR}/run_test_cpp.out" --global_proc cql_startup --rt c
   then
     echo codegen failed.
     failed
@@ -1112,7 +1112,7 @@ run_test() {
   then
     echo tests failed
     failed
-  elif ! ${CQL} --compress --cg "${OUT_DIR}/run_test.h" "${OUT_DIR}/run_test.c" --in "${OUT_DIR}/run_test_cpp.out" --global_proc cql_startup --rt c --generate_copy
+  elif ! ${CQL} --compress --cg "${OUT_DIR}/run_test.h" "${OUT_DIR}/run_test.c" --in "${OUT_DIR}/run_test_cpp.out" --global_proc cql_startup --rt c
   then
     echo compressed codegen failed.
     failed

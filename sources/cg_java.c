@@ -333,7 +333,7 @@ static void cg_java_proc_result_set(ast_node *ast) {
   bprintf(&body, "%s", rt->cql_result_set_get_count);
 
   bool_t generate_copy = misc_attrs && exists_attribute_str(misc_attrs, "generate_copy");
-  if (options.generate_copy || generate_copy) {
+  if (generate_copy) {
     bprintf(&body, rt->cql_result_set_copy, class_name.ptr, class_name.ptr);
   }
 

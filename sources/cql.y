@@ -1966,8 +1966,6 @@ static void parse_cmd(int argc, char **argv) {
       a = gather_arg_params(a, argc, argv, &options.include_regions_count, &options.include_regions);
     } else if (strcmp(arg, "--exclude_regions") == 0) {
       a = gather_arg_params(a, argc, argv, &options.exclude_regions_count, &options.exclude_regions);
-    } else if (strcmp(arg, "--generate_copy") == 0) {
-      options.generate_copy = 1;
     } else if (strcmp(arg, "--cqlrt") == 0) {
       if (a + 1 < argc) {
         a++;

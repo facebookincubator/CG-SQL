@@ -205,7 +205,7 @@ cql-linetest: linetester/main.c cqlrt.c cqlrt.h linetester/linetest.c linetester
 json-test: $O/json_test
 
 demo-binary: $(SQLITE_OBJ)
-	$O/cql --in demo/demo.sql --cg $O/demo.h $O/demo.c --generate_copy
+	$O/cql --in demo/demo.sql --cg $O/demo.h $O/demo.c
 	$(CC) $(CFLAGS) -o $O/demo $O/demo.c cqlrt.c demo/demo_client.c $(SQLITE_LINK)
 
 $O/json_test: json_test/json_test.y json_test/json_test.l

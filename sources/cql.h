@@ -84,7 +84,6 @@ typedef struct cmd_options {
   bool_t compress;
   bool_t generate_type_getters;
   bool_t generate_exports;
-  bool_t generate_copy;
   bool_t run_unit_tests;
   bool_t nolines;
   char *rt;
@@ -181,7 +180,7 @@ typedef struct rtdata {
   bool_t (*register_proc_name)(const char *proc_name);
 
   // Predicate function to determine whether to implicitly generate the copy function for a result set.
-  // The generate_copy command line argument overrides the value, if specified.
+  // The cql:generate_copy attribute overrides the value, if specified.
   bool_t (*proc_should_generate_copy)(const char *proc_name);
 
   // Provides a chance to add some extra definitions to the result set type, specify if extra stuff needed.

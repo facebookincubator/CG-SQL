@@ -15,12 +15,6 @@ extern cql_string_ref _Nullable assembly_core_get_y(assembly_core_result_set_ref
 extern cql_bool assembly_core_get_z_is_null(assembly_core_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int64 assembly_core_get_z_value(assembly_core_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 assembly_core_result_count(assembly_core_result_set_ref _Nonnull result_set);
-#define assembly_core_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define assembly_core_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define assembly_core_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -53,12 +47,6 @@ static inline cql_int64 extension_fragment_one_get_z_value(assembly_core_result_
 }
 
 extern cql_int32 extension_fragment_one_result_count(assembly_core_result_set_ref _Nonnull result_set);
-#define extension_fragment_one_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 
 // The statement ending at line XXXX
 
@@ -72,12 +60,6 @@ extern cql_string_ref _Nullable assembly_non_core_get_b(assembly_non_core_result
 extern cql_bool assembly_non_core_get_c_is_null(assembly_non_core_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 assembly_non_core_get_c_value(assembly_non_core_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 assembly_non_core_result_count(assembly_non_core_result_set_ref _Nonnull result_set);
-#define assembly_non_core_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define assembly_non_core_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define assembly_non_core_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -120,12 +102,6 @@ static inline cql_bool extension_fragment_two_get_flag_value(assembly_core_resul
 }
 
 extern cql_int32 extension_fragment_two_result_count(assembly_core_result_set_ref _Nonnull result_set);
-#define extension_fragment_two_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 
 // The statement ending at line XXXX
 
@@ -161,9 +137,3 @@ static inline cql_int64 extension_fragment_three_get_d_value(assembly_non_core_r
 }
 
 extern cql_int32 extension_fragment_three_result_count(assembly_non_core_result_set_ref _Nonnull result_set);
-#define extension_fragment_three_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)

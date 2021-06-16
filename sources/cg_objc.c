@@ -394,7 +394,7 @@ static void cg_objc_proc_result_set(ast_node *ast) {
   bprintf(h, "}\n");
 
   bool_t generate_copy = misc_attrs && exists_attribute_str(misc_attrs, "generate_copy");
-  if (options.generate_copy || generate_copy) {
+  if (generate_copy) {
     bprintf(h,
             "\nstatic inline %s *%sCopy(%s *resultSet",
             objc_result_set_name.ptr,

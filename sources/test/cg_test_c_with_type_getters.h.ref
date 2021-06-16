@@ -83,12 +83,6 @@ static inline cql_blob_ref _Nullable selector_get_g6(selector_result_set_ref _No
 
 extern cql_int32 selector_result_count(selector_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code selector_fetch_results(sqlite3 *_Nonnull _db_, selector_result_set_ref _Nullable *_Nonnull result_set);
-#define selector_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define selector_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define selector_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -106,12 +100,6 @@ cql_result_set_type_decl(frag_test_result_set, frag_test_result_set_ref);
 
 extern cql_int32 frag_test_get_id(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 frag_test_result_count(frag_test_result_set_ref _Nonnull result_set);
-#define frag_test_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define frag_test_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define frag_test_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -134,12 +122,6 @@ static inline cql_string_ref _Nullable ext_get_f2(frag_test_result_set_ref _Nonn
 }
 
 extern cql_int32 ext_result_count(frag_test_result_set_ref _Nonnull result_set);
-#define ext_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 
 // The statement ending at line XXXX
 
@@ -160,12 +142,6 @@ static inline cql_double ext2_get_f3_value(frag_test_result_set_ref _Nonnull res
 }
 
 extern cql_int32 ext2_result_count(frag_test_result_set_ref _Nonnull result_set);
-#define ext2_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 
 // The statement ending at line XXXX
 #define CRC_emit_object_result_set -8134731798097882462L
@@ -186,12 +162,6 @@ static inline cql_object_ref _Nonnull emit_object_result_set_get_o(emit_object_r
 }
 
 extern cql_int32 emit_object_result_set_result_count(emit_object_result_set_result_set_ref _Nonnull result_set);
-#define emit_object_result_set_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define emit_object_result_set_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define emit_object_result_set_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
