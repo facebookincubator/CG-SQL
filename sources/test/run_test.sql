@@ -1060,11 +1060,13 @@ BEGIN_TEST(transaction_mechanics)
 END_TEST(transaction_mechanics)
 
 @attribute(cql:identity=(id, code, bl))
+@attribute(cql:generate_copy)
 create procedure get_mixed(lim integer not null)
 begin
   select * from mixed limit lim;
 end;
 
+@attribute(cql:generate_copy)
 create procedure get_one_from_mixed(id_ integer not null)
 begin
   declare C cursor for select * from mixed where id = id_;
