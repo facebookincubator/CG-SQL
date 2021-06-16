@@ -2734,7 +2734,7 @@ static void cg_let_stmt(ast_node *ast) {
 // This is the processing for a single parameter in a stored proc declaration.
 // All we have to do is emit the type signature of that parameter.  This is
 // precisely what cg_var_decl with CG_VAR_DECL_PROTO is for...
-static void cg_param(ast_node *ast, charbuf *decls, charbuf *body) {
+static void cg_param(ast_node *ast, charbuf *decls) {
   Contract(is_ast_param(ast));
   EXTRACT_NOTNULL(param_detail, ast->right);
   EXTRACT_ANY_NOTNULL(name_ast, param_detail->left)
@@ -2745,11 +2745,44 @@ static void cg_param(ast_node *ast, charbuf *decls, charbuf *body) {
   sem_t sem_type = name_ast->sem->sem_type;
 
   cg_var_decl(decls, sem_type, name, CG_VAR_DECL_PROTO);
+}
+
+// Walk all the params of a stored proc and emit each one with a comma where needed.
+// cg_param does all the hard work.
+static void cg_params(ast_node *ast, charbuf *decls) {
+  Contract(is_ast_params(ast));
+
+  while (ast) {
+    Contract(is_ast_params(ast));
+    EXTRACT_NOTNULL(param, ast->left);
+
+    cg_param(param, decls);
+
+    if (ast->right) {
+      bprintf(decls, ", ");
+    }
+
+    ast = ast->right;
+  }
+}
+
+// Emit any initialization code needed for the parameters
+// in particular out parameters assume that there is garbage
+// in the out location, so they hammer a NULL or 0 into that slot.
+static void cg_param_init(ast_node *ast, charbuf *body) {
+  Contract(is_ast_param(ast));
+  EXTRACT_NOTNULL(param_detail, ast->right);
+  EXTRACT_ANY_NOTNULL(name_ast, param_detail->left)
+  EXTRACT_STRING(name, name_ast);
+
+  // [in out] name [datatype]
+
+  sem_t sem_type = name_ast->sem->sem_type;
 
   // In a proc decl the out arg initialized to null, this avoids attempting
   // to release any incoming garbage value and ensures some sanity in the event
   // the the return code is ignored...  Nobody ignores return codes, right?
-  if (body && is_out_parameter(sem_type) && !is_in_parameter(sem_type)) {
+  if (is_out_parameter(sem_type) && !is_in_parameter(sem_type)) {
     if (is_ref_type(sem_type)) {
       bprintf(body, "  *(void **)%s = NULL; // set out arg to non-garbage\n", name);
     }
@@ -2762,20 +2795,16 @@ static void cg_param(ast_node *ast, charbuf *decls, charbuf *body) {
   }
 }
 
-// Walk all the params of a stored proc and emit each one with a comma where needed.
-// cg_param does all the hard work.
-static void cg_params(ast_node *ast, charbuf *decls, charbuf *body) {
+// Walk all the params of a stored proc, if any of them require initialization code
+// in the body, emit that here.
+static void cg_params_init(ast_node *ast, charbuf *body) {
   Contract(is_ast_params(ast));
 
   while (ast) {
     Contract(is_ast_params(ast));
     EXTRACT_NOTNULL(param, ast->left);
 
-    cg_param(param, decls, body);
-
-    if (ast->right) {
-      bprintf(decls, ", ");
-    }
+    cg_param_init(param, body);
 
     ast = ast->right;
   }
@@ -3030,6 +3059,86 @@ static void cg_emit_contracts(ast_node *ast, charbuf *b) {
   }
 }
 
+// The prototype for the given procedure goes into the given buffer.  This
+// is a naked prototype, so additional arguments could be added -- it will be
+// missing the trailing ")" and it will not have EXPORT or anything like that
+// on it.
+static void cg_emit_proc_prototype(ast_node *ast, charbuf *proc_decl) {
+  Contract(is_ast_create_proc_stmt(ast));
+  EXTRACT_STRING(name, ast->left);
+  EXTRACT_NOTNULL(proc_params_stmts, ast->right);
+  EXTRACT(params, proc_params_stmts->left);
+  EXTRACT(stmt_list, proc_params_stmts->right);
+
+  EXTRACT_MISC_ATTRS(ast, misc_attrs);
+  bool_t private_proc = misc_attrs && exists_attribute_str(misc_attrs, "private");
+  bool_t dml_proc = is_dml_proc(ast->sem->sem_type);
+  bool_t result_set_proc = has_result_set(ast);
+  bool_t out_stmt_proc = has_out_stmt_result(ast);
+  bool_t out_union_proc = has_out_union_stmt_result(ast);
+
+  // if you're doing out_union then the row fetcher is all there is
+  CSTR suffix = out_union_proc ? "_fetch_results" : "";
+
+  CG_CHARBUF_OPEN_SYM(proc_name_base, name);
+  CG_CHARBUF_OPEN_SYM(proc_sym, name, suffix);
+
+  if (private_proc) {
+    bprintf(proc_decl, "static ");
+  }
+
+  bool_t need_comma = 0;
+  if (dml_proc) {
+    bprintf(proc_decl, "CQL_WARN_UNUSED %s %s(sqlite3 *_Nonnull _db_", rt->cql_code, proc_sym.ptr);
+    if (result_set_proc) {
+      bprintf(proc_decl, ", sqlite3_stmt *_Nullable *_Nonnull _result_stmt");
+    }
+    need_comma = 1;
+  }
+  else {
+    bprintf(proc_decl, "void %s(", proc_sym.ptr);
+  }
+
+  if (out_union_proc) {
+    CG_CHARBUF_OPEN_SYM(result_set_ref, name, "_result_set_ref");
+
+    if (need_comma) {
+      bprintf(proc_decl, ", ");
+    }
+
+    // result set type
+    bprintf(proc_decl, "%s _Nullable *_Nonnull _result_set_", result_set_ref.ptr);
+
+    need_comma = 1;
+    CHARBUF_CLOSE(result_set_ref);
+  }
+
+  // CREATE PROC [name] ( [params] )
+  if (params) {
+    if (need_comma) {
+      bprintf(proc_decl, ", ");
+    }
+    cg_params(params, proc_decl);
+  }
+
+  if (out_stmt_proc) {
+    if (dml_proc || params) {
+      bprintf(proc_decl, ", ");
+    }
+
+    CG_CHARBUF_OPEN_SYM(result_type, name, "_row");
+    bprintf(proc_decl, "%s *_Nonnull _result_", result_type.ptr);
+    CHARBUF_CLOSE(result_type);
+  }
+
+  if (!params && !out_stmt_proc && !out_union_proc && !dml_proc) {
+    bprintf(proc_decl, "void");  // make foo(void) rather than foo()
+  }
+
+  CHARBUF_CLOSE(proc_sym);
+  CHARBUF_CLOSE(proc_name_base);
+}
+
 // Emitting a stored proc is mostly setup.  We have a bunch of housekeeping to do:
 //  * create new scratch buffers for the body and the locals and the cleanup section
 //  * save the current output globals
@@ -3117,7 +3226,6 @@ static void cg_create_proc_stmt(ast_node *ast) {
   // if you're doing out_union then the row fetcher is all there is
   CSTR suffix = out_union_proc ? "_fetch_results" : "";
 
-  CHARBUF_OPEN(proc_decl);
   CG_CHARBUF_OPEN_SYM(proc_name_base, name);
   CG_CHARBUF_OPEN_SYM(proc_sym, name, suffix);
 
@@ -3132,33 +3240,11 @@ static void cg_create_proc_stmt(ast_node *ast) {
     cg_proc_result_set(ast);
   }
 
-  if (private_proc) {
-    bprintf(&proc_decl, "static ");
-  }
-
-  bool_t need_comma = 0;
-  if (dml_proc) {
-    bprintf(&proc_decl, "CQL_WARN_UNUSED %s %s(sqlite3 *_Nonnull _db_", rt->cql_code, proc_sym.ptr);
-    if (result_set_proc) {
-      bprintf(&proc_decl, ", sqlite3_stmt *_Nullable *_Nonnull _result_stmt");
-    }
-    need_comma = 1;
-  }
-  else {
-    bprintf(&proc_decl, "void %s(", proc_sym.ptr);
-  }
+  CHARBUF_OPEN(proc_decl);
+  cg_emit_proc_prototype(ast, &proc_decl);
 
   if (out_union_proc) {
     CG_CHARBUF_OPEN_SYM(result_set_ref, name, "_result_set_ref");
-
-    if (need_comma) {
-      bprintf(&proc_decl, ", ");
-    }
-
-    // result set type
-    bprintf(&proc_decl, "%s _Nullable *_Nonnull _result_set_", result_set_ref.ptr);
-
-    need_comma = 1;
 
     if (!calls_out_union) {
       CSTR rc = dml_proc ? "_rc_" : "SQLITE_OK";
@@ -3190,35 +3276,19 @@ static void cg_create_proc_stmt(ast_node *ast) {
 
       bprintf(&proc_cleanup, "*_result_set_ = (%s)cql_no_rows_result_set();\n", result_set_ref.ptr);
     }
-
     CHARBUF_CLOSE(result_set_ref);
   }
 
   // CREATE PROC [name] ( [params] )
   if (params) {
-    if (need_comma) {
-      bprintf(&proc_decl, ", ");
-    }
-    cg_params(params, &proc_decl, &proc_body);
+    cg_params_init(params, &proc_body);
     if (!private_proc) {
       cg_emit_contracts(params, &proc_contracts);
     }
   }
 
   if (out_stmt_proc) {
-    if (dml_proc || params) {
-      bprintf(&proc_decl, ", ");
-    }
-
-    CG_CHARBUF_OPEN_SYM(result_type, name, "_row");
-    bprintf(&proc_decl, "%s *_Nonnull _result_", result_type.ptr);
-    CHARBUF_CLOSE(result_type);
-
     bprintf(&proc_locals, "memset(_result_, 0, sizeof(*_result_));\n");
-  }
-
-  if (!params && !out_stmt_proc && !out_union_proc && !dml_proc) {
-    bprintf(&proc_decl, "void");  // make foo(void) rather than foo()
   }
 
   // If the proc has a result, don't expose a function with the proc name.
@@ -3340,9 +3410,9 @@ static void cg_create_proc_stmt(ast_node *ast) {
   bprintf(cg_declarations_output, "}\n");
   bprintf(cg_declarations_output, "#undef _PROC_\n");
 
+  CHARBUF_CLOSE(proc_decl);
   CHARBUF_CLOSE(proc_sym);
   CHARBUF_CLOSE(proc_name_base);
-  CHARBUF_CLOSE(proc_decl);
   CHARBUF_CLOSE(proc_cleanup);
   CHARBUF_CLOSE(proc_locals);
   CHARBUF_CLOSE(proc_body);
@@ -3384,7 +3454,7 @@ static void cg_declare_func_stmt(ast_node *ast) {
 
   // DECLARE FUNC [name] ( [params] ) returntype
   if (params) {
-    cg_params(params, &func_decl, NULL);
+    cg_params(params, &func_decl);
   }
   else {
     bprintf(&func_decl, "void");
@@ -3466,7 +3536,7 @@ static void cg_declare_proc_stmt(ast_node *ast) {
 
   // CREATE PROC [name] ( [params] )
   if (params) {
-    cg_params(params, &proc_decl, NULL);
+    cg_params(params, &proc_decl);
   }
 
   if (out_stmt_proc) {
@@ -6420,7 +6490,7 @@ static void cg_proc_result_set(ast_node *ast) {
       // args to forward
       if (params) {
         bprintf(&temp, ", ");
-        cg_params(params, &temp, NULL);
+        cg_params(params, &temp);
       }
 
       // ready for prototype and function begin now
@@ -6489,7 +6559,7 @@ static void cg_proc_result_set(ast_node *ast) {
 
       if (params) {
         bprintf(&temp, ", ");
-        cg_params(params, &temp, NULL);
+        cg_params(params, &temp);
       }
 
       // To create the rowset we make a byte buffer object.  That object lets us
