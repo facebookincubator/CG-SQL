@@ -7130,7 +7130,7 @@ static void sem_validate_args(ast_node *ast, ast_node *arg_list) {
 //     * we can't use these in SQL, so this has to be a loose expression
 //  * If this is declared with the select keyword then
 //     * we can ONLY use these in SQL, not in a loose expression
-//  * args have to be compatible with formals
+//  * args have to be checked and compatible with formals
 static void sem_user_func(ast_node *ast, ast_node *user_func) {
   Contract(is_ast_call(ast));
   Contract(is_ast_declare_func_stmt(user_func) || is_ast_declare_select_func_stmt(user_func));
@@ -7172,9 +7172,6 @@ static void sem_user_func(ast_node *ast, ast_node *user_func) {
     return;
   }
 
-  // arg list already validated and no errors by expr_call
-  // sem_validate_args not needed
-
   sem_validate_args_vs_formals(ast, name, arg_list, params, NORMAL_CALL);
   if (is_error(ast)) {
     return;
@@ -7186,7 +7183,7 @@ static void sem_user_func(ast_node *ast, ast_node *user_func) {
 // Calling a stored procedure as a function
 // There are a few things to check:
 //  * we can't use these in SQL, so this has to be a loose expression
-//  * args have to be compatible with formals, except
+//  * args have to be checked and compatible with formals, except
 //  * the last formal must be an OUT arg and it must be a scalar type
 //  * that out arg will be treated as the return value of the "function"
 //  * in code-gen we will create a temporary for it, semantic analysis doesn't care
@@ -7206,9 +7203,6 @@ static void sem_proc_as_func(ast_node *ast, ast_node *proc) {
     record_error(ast);
     return;
   }
-
-  // arg list already validated and no errors by expr_call
-  // sem_validate_args not needed
 
   if (has_out_stmt_result(proc) || has_result_set(proc)) {
     report_error(ast, "CQL0091: Stored procs that deal with result sets or cursors cannot be invoked as functions", name);
@@ -7256,8 +7250,7 @@ static void sem_expr_raise(ast_node *ast, CSTR cstr) {
 
 // This validates that the call is to one of the functions that we know and
 // then delegates to the appropriate shared helper function for that type
-// of call for additional validation.  We compute the semantic type of all
-// the arguments before we validate the particular function.
+// of call for additional validation.
 static void sem_expr_call(ast_node *ast, CSTR cstr) {
   Contract(is_ast_call(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
@@ -7302,36 +7295,34 @@ static void sem_expr_call(ast_node *ast, CSTR cstr) {
     return;
   }
 
-  if (is_ptr_function) {
-    PUSH_EXPR_CONTEXT(SEM_EXPR_CONTEXT_TABLE_FUNC);
-    sem_arg_list(arg_list, is_count_function);
-    if (arg_list && is_error(arg_list)) {
-      record_error(ast);
-      return;
-    }
-    POP_EXPR_CONTEXT();
-  }
-  else {
-    sem_arg_list(arg_list, is_count_function);
-    if (arg_list && is_error(arg_list)) {
-      record_error(ast);
-      return;
-    }
-  }
-
   // check for functions
   symtab_entry *entry = symtab_find(builtin_funcs, name);
-  if (entry) {
-    ((void (*)(ast_node*, uint32_t))entry->val)(ast, arg_count);
-
-    goto cleanup;
+  if (!entry) {
+    // check for aggregate functions
+    entry = symtab_find(builtin_aggregated_funcs, name);
+    if (entry) {
+      call_aggr_or_user_def_func = 1;
+    }
   }
 
-  // check for aggregate functions
-  symtab_entry *aggr_entry = symtab_find(builtin_aggregated_funcs, name);
-  if (aggr_entry) {
-    ((void (*)(ast_node*, uint32_t))aggr_entry->val)(ast, arg_count);
-    call_aggr_or_user_def_func = 1;
+  if (entry) {
+    if (is_ptr_function) {
+      PUSH_EXPR_CONTEXT(SEM_EXPR_CONTEXT_TABLE_FUNC);
+      sem_arg_list(arg_list, is_count_function);
+      if (arg_list && is_error(arg_list)) {
+        record_error(ast);
+        return;
+      }
+      POP_EXPR_CONTEXT();
+    }
+    else {
+      sem_arg_list(arg_list, is_count_function);
+      if (arg_list && is_error(arg_list)) {
+        record_error(ast);
+        return;
+      }
+    }
+    ((void (*)(ast_node*, uint32_t))entry->val)(ast, arg_count);
     goto cleanup;
   }
 
@@ -8143,15 +8134,9 @@ static void sem_table_function(ast_node *ast) {
 
   // SQL Func context is basically the same the ON context but allows for Object types
   PUSH_EXPR_CONTEXT(SEM_EXPR_CONTEXT_TABLE_FUNC);
-  sem_arg_list(arg_list, 0 /* '*' not allowed */);
+  sem_validate_args_vs_formals(ast, name, arg_list, params, NORMAL_CALL);
   POP_EXPR_CONTEXT();
 
-  if (arg_list && is_error(arg_list)) {
-    record_error(ast);
-    return;
-  }
-
-  sem_validate_args_vs_formals(ast, name, arg_list, params, NORMAL_CALL);
   if (is_error(ast)) {
     return;
   }
@@ -8658,7 +8643,7 @@ static bool_t sem_select_orderby_with_simple_ordering_only(ast_node *ast) {
     if (is_ast_num(expr)) {
       continue;
     }
-    if (is_ast_str(expr) && !is_ast_strlit(expr)) {
+    if (is_ast_id(expr)) {
       continue;
     }
     report_error(expr, "CQL0398: A compound select cannot be ordered by the result of an expression", NULL);
@@ -15948,79 +15933,126 @@ static bool_t sem_verify_no_duplicate_regions(ast_node *region_list) {
   return sem_verify_no_duplicate_names_func(region_list, name_from_region_list_node);
 }
 
-// This is the core helper method for procedure calls and function calls
-// it validates that the type and number of arguments are compatible for the
-// call in question.  By the time we get here we have a list of arguments in
-// arg_list and the formals to verify against in paramas.  Errors will be
-// recorded on the given ast.  Since the shape of the tree varies slightly
-// between function and procedure calls, this helper expects to have the items
-// harvested and ready to go.
+// Verify that an expression passed as the out argument for a call is a valid
+// variable. If it is not, report an error indicating for what parameter such a 
+// variable was expected.
+static void sem_arg_out(ast_node *arg, CSTR param_name) {
+  bool_t success = false;
+  if (is_ast_id(arg)) {
+    EXTRACT_STRING(name, arg);
+    sem_resolve_id(arg, name, NULL);
+    success = !is_error(arg);
+  } else if (is_ast_dot(arg)) {
+    EXTRACT_STRING(scope, arg->left);
+    EXTRACT_STRING(name, arg->right);
+    sem_resolve_id(arg, name, scope);
+    success = !is_error(arg);
+  }
+  if (!success || !is_variable(arg->sem->sem_type)) {
+    report_error(arg, "CQL0207: expected a variable name for out argument", param_name);
+    record_error(arg);
+  }
+}
+
+// Given an argument that (typically) has not yet been checked and a formal 
+// parameter that has been, check the argument and verify that it is allowed to
+// be passed for that particular parameter.
+static bool_t sem_validate_arg_vs_formal(ast_node *arg, ast_node *param) {
+  Contract(arg);
+  Contract(param);
+  Contract(param->sem);
+
+  sem_t sem_type_param = param->sem->sem_type;
+
+  // As a first step, we check the argument itself.
+
+  if (is_out_parameter(sem_type_param)) {
+    // In the case of an OUT or IN OUT parameter, we only want to allow a
+    // reference to an existing variable.
+    sem_arg_out(arg, param->sem->name);
+    if (is_error(arg)) {
+      return false;
+    }
+  } else {
+    // In the case of an IN-only parameter, we allow an expression.
+    sem_arg_expr(arg, false);
+    if (is_error(arg)) {
+      return false;
+    }
+  }
+
+  sem_t sem_type_arg = arg->sem->sem_type;
+
+  // Now, we can check it against what was expected. Note that it's possible to
+  // be both in and out in which case both validations have to happen.
+
+  if (is_in_parameter(sem_type_param)) {
+    // you have to be able to "assign" the arg to the param
+    if (!sem_verify_assignment(arg, sem_type_param, sem_type_arg, param->sem->name)) {
+      return false;
+    }
+  }
+
+  // the formal and the argument must match object types as well (if present)
+  sem_combine_kinds(arg, param->sem->kind);
+  if (is_error(arg)) {
+    return false;
+  }
+
+  if (is_out_parameter(sem_type_param)) {
+    // We already checked this above when checking the arg itself.
+    Invariant(is_variable(sem_type_arg));
+
+    // you have to be able to "assign" the param to the arg (reverse of in)
+    if (!sem_verify_assignment(arg, sem_type_arg, sem_type_param, arg->sem->name)) {
+      return false;
+    }
+
+    if (core_type_of(sem_type_param) != core_type_of(sem_type_arg)) {
+      CSTR error_message = "CQL0209: proc out parameter: arg must be an exact type match";
+      report_sem_type_mismatch(sem_type_param, sem_type_arg, arg, error_message, arg->sem->name);
+      return false;
+    }
+
+    if (is_nullable(sem_type_param) != is_nullable(sem_type_arg)) {
+      CSTR error_message = "CQL0210: proc out parameter: arg must be an exact type match (even nullability)";
+      report_sem_type_mismatch(sem_type_param, sem_type_arg, arg, error_message, arg->sem->name);
+      return false;
+    }
+  }
+
+  return true;
+}
+
+// This is the core helper method for procedure calls and function calls.
+// It validates that the type and number of arguments are compatible for the
+// call in question. When we get here, we typically have a list of unchecked 
+// arguments in arg_list and the formals to verify against in params. (In the 
+// case of recursive expressions, arg_list may have already been checked.)
+// Errors will be recorded on the given ast.  Since the shape of the tree 
+// varies slightly between function and procedure calls, this helper expects to 
+// have the items harvested and ready to go.
 //
 // Semantic rules:
-//  * for all cases each argument must be error-free (no internal type conflicts)
+//  * for all cases each argument must be error-free (no internal type 
+//    conflicts)
 //  * for known procs
 //    * the call has to have the correct number of arguments
 //    * if the formal is an out parameter the argument must be a variable
 //      * the type of the variable must be an exact type match for the formal
-//    * non-out parameters must be type-compatible, but exact match is not required
+//    * non-out parameters must be type-compatible, but exact match is not 
+//      required
 static void sem_validate_args_vs_formals(ast_node *ast, CSTR name, ast_node *arg_list, ast_node *params, bool_t proc_as_func) {
   ast_node *item = arg_list;
 
+  // First, we check the arguments themselves.
   for (; item && params; item = item->right, params = params->right) {
     EXTRACT_ANY_NOTNULL(arg, item->left);
     EXTRACT_NOTNULL(param, params->left);
 
-    // args already evaluated and no errors
-    Invariant(param->sem);
-    Invariant(arg->sem);
-    Invariant(!is_error(arg));
-
-    sem_t sem_type_param = param->sem->sem_type;
-    sem_t sem_type_arg = arg->sem->sem_type;
-
-    if (is_in_parameter(sem_type_param)) {
-      // you have to be able to "assign" the arg to the param
-      if (!sem_verify_assignment(arg, sem_type_param, sem_type_arg, param->sem->name)) {
-        record_error(ast);
-        return;
-      }
-    }
-
-    // the formal and the argument must match object types as well (if present)
-    sem_combine_kinds(arg, param->sem->kind);
-    if (is_error(arg)) {
+    if (!sem_validate_arg_vs_formal(arg, param)) {
       record_error(ast);
       return;
-    }
-
-    // note it's possible to be in and out in which case both validations have to happen
-
-    if (is_out_parameter(sem_type_param)) {
-      if (!is_variable(sem_type_arg)) {
-        report_error(arg, "CQL0207: expected a variable name for out argument", param->sem->name);
-        record_error(ast);
-        return;
-      }
-
-      // you have to be able to "assign" the param to the arg (reverse of in)
-      if (!sem_verify_assignment(arg, sem_type_arg, sem_type_param, arg->sem->name)) {
-        record_error(ast);
-        return;
-      }
-
-      if (core_type_of(sem_type_param) != core_type_of(sem_type_arg)) {
-        CSTR error_message = "CQL0209: proc out parameter: arg must be an exact type match";
-        report_sem_type_mismatch(sem_type_param, sem_type_arg, arg, error_message, arg->sem->name);
-        record_error(ast);
-        return;
-      }
-
-      if (is_nullable(sem_type_param) != is_nullable(sem_type_arg)) {
-        CSTR error_message = "CQL0210: proc out parameter: arg must be an exact type match (even nullability)";
-        report_sem_type_mismatch(sem_type_param, sem_type_arg, arg, error_message, arg->sem->name);
-        record_error(ast);
-        return;
-      }
     }
   }
 
@@ -16125,12 +16157,6 @@ static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name) {
     return;
   }
 
-  // compute semantic type of each arg, reporting errors
-  sem_validate_args(ast, expr_list);
-  if (is_error(ast)) {
-    return;
-  }
-
   record_ok(name_ast);
 
   // If known proc, do additional validation
@@ -16144,6 +16170,12 @@ static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name) {
     has_dml |= is_dml_proc(proc_stmt->sem->sem_type);
 
     sem_validate_args_vs_formals(ast, name, expr_list, params, NORMAL_CALL);
+    if (is_error(ast)) {
+      return;
+    }
+  } else {
+    // compute semantic type of each arg, reporting errors
+    sem_validate_args(ast, expr_list);
     if (is_error(ast)) {
       return;
     }

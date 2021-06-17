@@ -7945,7 +7945,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expres
   | {expr_list}: ok
     | {strlit 'bar'}: err
     | {expr_list}
-      | {strlit 'foo'}: text notnull
+      | {strlit 'foo'}
 
 The statement ending at line XXXX
 
@@ -7973,7 +7973,7 @@ Error at test/sem_test.sql:XXXX : in call_stmt : CQL0235: too many arguments pro
     | {expr_list}
       | {strlit 'foo'}: text notnull
       | {expr_list}
-        | {int 1}: integer notnull
+        | {int 1}
 
 The statement ending at line XXXX
 
@@ -8038,9 +8038,9 @@ Error at test/sem_test.sql:XXXX : in num : CQL0207: expected a variable name for
   | {expr_list}: ok
     | {int 1}: integer notnull
     | {expr_list}
-      | {int 2}: integer notnull
+      | {int 2}: err
       | {expr_list}
-        | {name X}: X: integer variable
+        | {name X}
 
 The statement ending at line XXXX
 
@@ -8055,7 +8055,7 @@ Error at test/sem_test.sql:XXXX : in num : CQL0207: expected a variable name for
     | {expr_list}
       | {name X}: X: integer variable
       | {expr_list}
-        | {int 3}: integer notnull
+        | {int 3}: err
 
 The statement ending at line XXXX
 
@@ -8665,7 +8665,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0094: function not yet implemented
     |     |     | {call_arg_list}
     |     |       | {call_filter_clause}
     |     |       | {arg_list}: ok
-    |     |         | {null}: null
+    |     |         | {null}
     |     | {select_from_etc}: ok
     |       | {select_where}
     |         | {select_groupby}
@@ -9379,7 +9379,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed i
   {declare_cursor}: err
   | {name curs}
   | {call_stmt}: err
-    | {name bogus_call}
+    | {name bogus_call}: ok
     | {expr_list}: err
       | {not}: err
         | {strlit 'x'}: text notnull
@@ -15878,7 +15878,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed i
     | {name simple_func}
     | {call_arg_list}
       | {call_filter_clause}
-      | {arg_list}: err
+      | {arg_list}: ok
         | {not}: err
           | {strlit 'xx'}: text notnull
 
@@ -15899,7 +15899,7 @@ Error at test/sem_test.sql:XXXX : in call : CQL0088: User function may not appea
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
-  |     |         | {int 1}: integer notnull
+  |     |         | {int 1}
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -16633,7 +16633,7 @@ CALL printf('%d', simple_func(NOT 'x'));
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
 
   {call_stmt}: err
-  | {name printf}
+  | {name printf}: ok
   | {expr_list}: err
     | {strlit '%d'}: text notnull
     | {expr_list}
@@ -16641,7 +16641,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed i
         | {name simple_func}
         | {call_arg_list}
           | {call_filter_clause}
-          | {arg_list}: err
+          | {arg_list}: ok
             | {not}: err
               | {strlit 'x'}: text notnull
 
@@ -16891,7 +16891,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed i
     | {name goo_func}
     | {call_arg_list}
       | {call_filter_clause}
-      | {arg_list}: err
+      | {arg_list}: ok
         | {not}: err
           | {strlit 'x'}: text notnull
 
@@ -20060,7 +20060,7 @@ The statement ending at line XXXX
 
 CREATE PROC invalid_proc_fetch_bogus_call ()
 BEGIN
-  DECLARE C CURSOR FETCH FROM CALL out_cursor_proc(NOT 'x');
+  DECLARE C CURSOR FETCH FROM CALL declared_proc(NOT 'x');
 END;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
@@ -20072,8 +20072,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed i
       | {declare_value_cursor}: err
         | {name C}
         | {call_stmt}: err
-          | {name out_cursor_proc}
-          | {expr_list}: err
+          | {name declared_proc}: declared_proc: { t: text } uses_out
+          | {expr_list}: ok
             | {not}: err
               | {strlit 'x'}: text notnull
 
@@ -20241,11 +20241,11 @@ Error at test/sem_test.sql:XXXX : in call : CQL0090: Stored proc calls may not a
     |     |     | {call_arg_list}
     |     |       | {call_filter_clause}
     |     |       | {arg_list}: ok
-    |     |         | {int 1}: integer notnull
+    |     |         | {int 1}
     |     |         | {arg_list}
-    |     |           | {name an_int}: an_int: integer variable
+    |     |           | {name an_int}
     |     |           | {arg_list}
-    |     |             | {name an_int}: an_int: integer variable
+    |     |             | {name an_int}
     |     | {select_from_etc}: ok
     |       | {select_where}
     |         | {select_groupby}
@@ -20451,7 +20451,7 @@ Error at test/sem_test.sql:XXXX : in call_stmt : CQL0235: too many arguments pro
       | | {call_stmt}: err
       |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       |   | {expr_list}: ok
-      |     | {int 42}: integer notnull
+      |     | {int 42}
       | {out_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
         | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
 
@@ -22838,7 +22838,7 @@ Error at test/sem_test.sql:XXXX : in call : CQL0089: User function may only appe
     | {call_arg_list}
       | {call_filter_clause}
       | {arg_list}: ok
-        | {int 1}: integer notnull
+        | {int 1}
 
 The statement ending at line XXXX
 
@@ -22854,7 +22854,7 @@ Error at test/sem_test.sql:XXXX : in call : CQL0089: User function may only appe
       | {call_filter_clause}
       | | {distinct}
       | {arg_list}: ok
-        | {int 1}: integer notnull
+        | {int 1}
 
 The statement ending at line XXXX
 
@@ -22872,7 +22872,7 @@ Error at test/sem_test.sql:XXXX : in call : CQL0089: User function may only appe
       |   | {opt_where}: integer notnull
       |     | {int 0}: integer notnull
       | {arg_list}: ok
-        | {int 1}: integer notnull
+        | {int 1}
 
 The statement ending at line XXXX
 
@@ -39288,7 +39288,7 @@ Error at test/sem_test.sql:XXXX : in call : CQL0395: table valued functions may 
   |         |   | | {call_arg_list}
   |         |   |   | {call_filter_clause}
   |         |   |   | {arg_list}: ok
-  |         |   |     | {int 5}: integer notnull
+  |         |   |     | {int 5}
   |         |   | {int 1}: integer notnull
   |         | {select_groupby}
   |           | {select_having}
@@ -39319,7 +39319,7 @@ END;
         |       | | {table_or_subquery}: TABLE { tvf: select } table_valued_function
         |       |   | {table_function}: TABLE { tvf: select } table_valued_function
         |       |     | {name tvf}: TABLE { tvf: select } table_valued_function
-        |       |     | {arg_list}: ok
+        |       |     | {arg_list}
         |       |       | {int 1}: integer notnull
         |       | {select_where}
         |         | {select_groupby}
@@ -39353,7 +39353,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed i
         |       | | {table_or_subquery}: err
         |       |   | {table_function}: err
         |       |     | {name tvf}
-        |       |     | {arg_list}: err
+        |       |     | {arg_list}
         |       |       | {not}: err
         |       |         | {strlit 'x'}: text notnull
         |       | {select_where}
@@ -39388,7 +39388,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expres
         |       | | {table_or_subquery}: err
         |       |   | {table_function}: err
         |       |     | {name tvf}
-        |       |     | {arg_list}: ok
+        |       |     | {arg_list}
         |       |       | {strlit 'x'}: err
         |       | {select_where}
         |         | {select_groupby}
@@ -39421,7 +39421,7 @@ END;
         |       | | {table_or_subquery}: TABLE { tvf: select } table_valued_function
         |       |   | {table_function}: TABLE { tvf: select } table_valued_function
         |       |     | {name tvf}: TABLE { tvf: select } table_valued_function
-        |       |     | {arg_list}: ok
+        |       |     | {arg_list}
         |       |       | {int 1}: integer notnull
         |       | {select_where}
         |         | {opt_where}: bool
@@ -39460,7 +39460,7 @@ END;
         |       | | {table_or_subquery}: TABLE { T1: select } table_valued_function
         |       |   | {table_function}: TABLE { T1: select } table_valued_function
         |       |   | | {name tvf}: TABLE { T1: select } table_valued_function
-        |       |   | | {arg_list}: ok
+        |       |   | | {arg_list}
         |       |   |   | {int 1}: integer notnull
         |       |   | {opt_as_alias}
         |       |     | {name T1}
@@ -39592,7 +39592,7 @@ END;
         |       | | {table_or_subquery}: TABLE { ReadFromRowset: select } table_valued_function
         |       |   | {table_function}: TABLE { ReadFromRowset: select } table_valued_function
         |       |     | {name ReadFromRowset}: TABLE { ReadFromRowset: select } table_valued_function
-        |       |     | {arg_list}: ok
+        |       |     | {arg_list}
         |       |       | {name rowset}: rowset: object<rowset> variable in
         |       | {select_where}
         |         | {select_groupby}
@@ -48152,7 +48152,7 @@ Error at test/sem_test.sql:XXXX : in dot : CQL0068: field not found in shape 'xy
     |       | {type_text}: text
     | {stmt_list}: err
       | {call_stmt}: err
-        | {name printf}
+        | {name printf}: ok
         | {expr_list}: err
           | {strlit '%s
 '}: text notnull
@@ -49793,8 +49793,8 @@ Error at test/sem_test.sql:XXXX : in dot : CQL0067: cursor was not used with 'fe
       |     | {select_limit}
       |       | {select_offset}
       | {call_stmt}: err
-        | {name shape_consumer}
-        | {expr_list}: err
+        | {name shape_consumer}: ok
+        | {expr_list}: ok
           | {dot}: err
           | | {name C}
           | | {name x}
@@ -50463,8 +50463,8 @@ Error at test/sem_test.sql:XXXX : in dot : CQL0201: expanding FROM ARGUMENTS, th
     |     | {type_int}: integer
     | {stmt_list}: err
       | {call_stmt}: err
-        | {name lotsa_ints}
-        | {expr_list}: err
+        | {name lotsa_ints}: ok
+        | {expr_list}: ok
           | {int 1}: integer notnull
           | {expr_list}
             | {int 2}: integer notnull
@@ -55675,7 +55675,7 @@ Error at test/sem_test.sql:XXXX : in call : CQL0393: User function cannot appear
             | {call_arg_list}
               | {call_filter_clause}
               | {arg_list}: ok
-                | {int 1}: integer notnull
+                | {int 1}
 
 The statement ending at line XXXX
 
@@ -59055,7 +59055,7 @@ SELECT *
   |       |       | {table_or_subquery}: TABLE { tvf: select } table_valued_function
   |       |         | {table_function}: TABLE { tvf: select } table_valued_function
   |       |           | {name tvf}: TABLE { tvf: select } table_valued_function
-  |       |           | {arg_list}: ok
+  |       |           | {arg_list}
   |       |             | {int 1}: integer notnull
   |       | {select_where}
   |         | {select_groupby}
@@ -59089,7 +59089,7 @@ Error at test/sem_test.sql:XXXX : in join_target : CQL0371: table valued functio
   |       |       | {table_or_subquery}: TABLE { tvf: select } table_valued_function
   |       |         | {table_function}: TABLE { tvf: select } table_valued_function
   |       |           | {name tvf}: TABLE { tvf: select } table_valued_function
-  |       |           | {arg_list}: ok
+  |       |           | {arg_list}
   |       |             | {int 1}: integer notnull
   |       | {select_where}
   |         | {select_groupby}
@@ -59117,7 +59117,7 @@ Error at test/sem_test.sql:XXXX : in join_target : CQL0371: table valued functio
   |       | | {table_or_subquery}: TABLE { tvf: select } table_valued_function
   |       | | | {table_function}: TABLE { tvf: select } table_valued_function
   |       | |   | {name tvf}: TABLE { tvf: select } table_valued_function
-  |       | |   | {arg_list}: ok
+  |       | |   | {arg_list}
   |       | |     | {int 1}: integer notnull
   |       | | {join_target_list}
   |       |   | {join_target}: err
@@ -59151,7 +59151,7 @@ Error at test/sem_test.sql:XXXX : in join_target : CQL0371: table valued functio
   |       | | {table_or_subquery}: TABLE { tvf: select } table_valued_function
   |       | | | {table_function}: TABLE { tvf: select } table_valued_function
   |       | |   | {name tvf}: TABLE { tvf: select } table_valued_function
-  |       | |   | {arg_list}: ok
+  |       | |   | {arg_list}
   |       | |     | {int 1}: integer notnull
   |       | | {join_target_list}
   |       |   | {join_target}: err
@@ -59191,7 +59191,7 @@ Error at test/sem_test.sql:XXXX : in join_target : CQL0371: table valued functio
   |       |       | {table_or_subquery}: TABLE { tvf: select } table_valued_function
   |       |         | {table_function}: TABLE { tvf: select } table_valued_function
   |       |           | {name tvf}: TABLE { tvf: select } table_valued_function
-  |       |           | {arg_list}: ok
+  |       |           | {arg_list}
   |       |             | {int 1}: integer notnull
   |       | {select_where}
   |         | {select_groupby}
@@ -59972,8 +59972,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed i
     | {stmt_list}: err
       | {declare_out_call_stmt}: err
         | {call_stmt}: err
-          | {name out2_proc}
-          | {expr_list}: err
+          | {name out2_proc}: ok
+          | {expr_list}: ok
             | {not}: err
             | | {strlit 'x'}: text notnull
             | {expr_list}

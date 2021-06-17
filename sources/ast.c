@@ -75,7 +75,11 @@ cql_noexport bool_t is_ast_proclit(ast_node *node) {
 }
 
 cql_noexport bool_t is_ast_strlit(ast_node *node) {
-  return is_ast_str(node) && (( str_ast_node*)node)->value[0] == '\'';
+  return is_ast_str(node) && ((str_ast_node *)node)->value[0] == '\'';
+}
+
+cql_noexport bool_t is_ast_id(ast_node *node) {
+  return is_ast_str(node) && ((str_ast_node *)node)->value[0] != '\'';
 }
 
 cql_noexport bool_t is_ast_primitive(ast_node *node) {

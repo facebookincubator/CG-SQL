@@ -216,6 +216,7 @@ cql_noexport bool_t is_ast_str(ast_node *_Nullable node);
 cql_noexport bool_t is_ast_num(ast_node *_Nullable node);
 cql_noexport bool_t is_ast_blob(ast_node *_Nullable node);
 cql_noexport bool_t is_ast_strlit(ast_node *_Nullable node);
+cql_noexport bool_t is_ast_id(ast_node *_Nullable node);
 cql_noexport bool_t is_ast_proclit(ast_node *_Nullable node);
 cql_noexport bool_t is_ast_at_rc(ast_node *_Nullable node);
 cql_noexport bool_t is_ast_primitive(ast_node *_Nullable  node);

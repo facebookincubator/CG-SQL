@@ -4472,7 +4472,7 @@ set bar_obj := case 1 when 1 then bar_obj else foo_object end;
 set bar_obj := case 1 when 1 then bar_obj when 2 then bar_obj else bar_obj end;
 
 -- TEST: non-user func with bogus arg
--- + {arg_list}: err
+-- + {call_stmt}: err
 -- + Error % string operand not allowed in 'NOT'
 -- +1 Error
 call printf('%d', simple_func(not 'x'));
@@ -5530,7 +5530,7 @@ declare proc declared_proc(id integer) out (t text);
 -- +1 Error
 create proc invalid_proc_fetch_bogus_call()
 begin
-  declare C cursor fetch from call out_cursor_proc(not 'x');
+  declare C cursor fetch from call declared_proc(not 'x');
 end;
 
 -- TEST: call a procedure that is just all wrong
@@ -12368,7 +12368,6 @@ end;
 
 -- TEST: try to do from arguments with a type but there is no matching arg
 -- + {call_stmt}: err
--- + {expr_list}: err
 -- + Error % expanding FROM ARGUMENTS, there is no argument matching 'id'
 -- +1 Error
 create proc call_with_missing_type(x integer)
