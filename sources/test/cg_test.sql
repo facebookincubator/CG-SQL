@@ -4024,33 +4024,33 @@ end;
 
 -- TEST: Verify that contracts are inserted where appropriate (and not inserted
 -- where not appropriate)
--- - cql_contract(a);
--- - cql_contract(b);
--- - cql_contract(c);
--- + cql_contract(d);
--- - cql_contract(*d);
--- - cql_contract(e);
--- + cql_contract(f);
--- - cql_contract(*f);
--- - cql_contract(g);
--- + cql_contract(h);
--- - cql_contract(*h);
--- + cql_contract(i);
--- - cql_contract(*i);
--- + cql_contract(j);
--- - cql_contract(*j);
--- + cql_contract(k);
--- - cql_contract(*k);
--- + cql_contract(l);
--- - cql_contract(*l);
--- + cql_contract(m);
--- - cql_contract(*m);
--- + cql_contract(n);
--- - cql_contract(*n);
--- + cql_contract(o);
--- - cql_contract(*o);
--- + cql_contract(p);
--- + cql_contract(*p);
+-- - cql_tripwire(a);
+-- - cql_tripwire(b);
+-- - cql_tripwire(c);
+-- + cql_tripwire(d);
+-- - cql_tripwire(*d);
+-- - cql_tripwire(e);
+-- + cql_tripwire(f);
+-- - cql_tripwire(*f);
+-- - cql_tripwire(g);
+-- + cql_tripwire(h);
+-- - cql_tripwire(*h);
+-- + cql_tripwire(i);
+-- - cql_tripwire(*i);
+-- + cql_tripwire(j);
+-- - cql_tripwire(*j);
+-- + cql_tripwire(k);
+-- - cql_tripwire(*k);
+-- + cql_tripwire(l);
+-- - cql_tripwire(*l);
+-- + cql_tripwire(m);
+-- - cql_tripwire(*m);
+-- + cql_tripwire(n);
+-- - cql_tripwire(*n);
+-- + cql_tripwire(o);
+-- - cql_tripwire(*o);
+-- + cql_tripwire(p);
+-- + cql_tripwire(*p);
 create proc exercise_contracts(
   a int,
   b int not null,
@@ -4073,27 +4073,27 @@ begin
 end;
 
 -- TEST: Contracts should be emitted for public procs
--- + cql_contract(t);
+-- + cql_tripwire(t);
 create proc public_proc_with_a_contract(t text not null)
 begin
 end;
 
 -- TEST: Contracts should not be emitted for private procs
--- - cql_contract(t);
+-- - cql_tripwire(t);
 @attribute(cql:private)
 create proc private_proc_without_a_contract(t text not null)
 begin
 end;
 
 -- TEST: Contracts should be emitted only in _fetch_results for result set procs
--- +1 cql_contract(t);
+-- +1 cql_tripwire(t);
 create proc result_set_proc_with_contract_in_fetch_results(t text not null)
 begin
   select * from bar;
 end;
 
 -- TEST: Contracts should be emitted only in _fetch_results for out procs
--- +1 cql_contract(t);
+-- +1 cql_tripwire(t);
 create proc out_proc_with_contract_in_fetch_results(t text not null)
 begin
   declare C cursor like bar;

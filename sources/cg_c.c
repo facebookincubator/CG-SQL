@@ -3030,6 +3030,8 @@ void cg_emit_rc_vars(charbuf *output) {
 //
 // The contracts emitted always match the _Notnull parameter attributes in the
 // declaration of the procedure.
+//
+// NOTE: These are temporarily being emitted as tripwires instead of contracts.
 static void cg_emit_contracts(ast_node *ast, charbuf *b) {
   Contract(is_ast_params(ast));
   Contract(b);
@@ -3045,11 +3047,11 @@ static void cg_emit_contracts(ast_node *ast, charbuf *b) {
     sem_t sem_type = name_ast->sem->sem_type;
     bool_t is_nonnull_ref_type = is_not_nullable(sem_type) && is_ref_type(sem_type);
     if (is_out_parameter(sem_type) || is_nonnull_ref_type) {
-      bprintf(b, "  cql_contract(%s);\n", name);
+      bprintf(b, "  cql_tripwire(%s);\n", name);
       did_emit_contract = 1;
     }
     if (is_inout_parameter(sem_type) && is_nonnull_ref_type) {
-      bprintf(b, "  cql_contract(*%s);\n", name);
+      bprintf(b, "  cql_tripwire(*%s);\n", name);
       did_emit_contract = 1;
     }
   }
