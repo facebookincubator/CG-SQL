@@ -31563,7 +31563,7 @@ BEGIN
     FROM bar;
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0253: base fragment must include a single CTE named same as the fragment 'bar'
+Error at test/sem_test.sql:XXXX : in str : CQL0253: base fragment must have only a single CTE named the same as the fragment 'bar'
 
   {stmt_and_attr}: err
   | {misc_attrs}: err
@@ -31631,6 +31631,112 @@ Error at test/sem_test.sql:XXXX : in str : CQL0253: base fragment must include a
             |       | {table_or_subquery_list}: TABLE { bar: bar }
             |       | | {table_or_subquery}: TABLE { bar: bar }
             |       |   | {name bar}: TABLE { bar: bar }
+            |       | {select_where}
+            |         | {select_groupby}
+            |           | {select_having}
+            | {select_orderby}
+              | {select_limit}
+                | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:base_fragment=err_assembly_name)
+CREATE PROC ext1 ()
+BEGIN
+  WITH
+  err_assembly_name (id) AS (SELECT *
+    FROM foo),
+  ext1 (id) AS (SELECT *
+    FROM err_assembly_name
+  UNION ALL
+  SELECT 1 AS id)
+  SELECT *
+    FROM ext1;
+END;
+
+Error at test/sem_test.sql:XXXX : in cte_tables : CQL0253: base fragment must have only a single CTE named the same as the fragment 'err_assembly_name'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name base_fragment}
+  |   | {name err_assembly_name}: ok
+  | {create_proc_stmt}: err
+    | {name ext1}: err
+    | {proc_params_stmts}
+      | {stmt_list}: err
+        | {with_select_stmt}: select: { id: integer notnull }
+          | {with}
+          | | {cte_tables}: ok
+          |   | {cte_table}: err_assembly_name: { id: integer notnull }
+          |   | | {cte_decl}: err_assembly_name: { id: integer notnull }
+          |   | | | {name err_assembly_name}
+          |   | | | {name_list}
+          |   | |   | {name id}
+          |   | | {select_stmt}: select: { id: integer notnull }
+          |   |   | {select_core_list}: select: { id: integer notnull }
+          |   |   | | {select_core}: select: { id: integer notnull }
+          |   |   |   | {select_expr_list_con}: select: { id: integer notnull }
+          |   |   |     | {select_expr_list}: select: { id: integer notnull }
+          |   |   |     | | {star}: select: { id: integer notnull }
+          |   |   |     | {select_from_etc}: TABLE { foo: foo }
+          |   |   |       | {table_or_subquery_list}: TABLE { foo: foo }
+          |   |   |       | | {table_or_subquery}: TABLE { foo: foo }
+          |   |   |       |   | {name foo}: TABLE { foo: foo }
+          |   |   |       | {select_where}
+          |   |   |         | {select_groupby}
+          |   |   |           | {select_having}
+          |   |   | {select_orderby}
+          |   |     | {select_limit}
+          |   |       | {select_offset}
+          |   | {cte_tables}
+          |     | {cte_table}: ext1: { id: integer notnull }
+          |       | {cte_decl}: ext1: { id: integer notnull }
+          |       | | {name ext1}
+          |       | | {name_list}
+          |       |   | {name id}
+          |       | {select_stmt}: UNION ALL: { id: integer notnull }
+          |         | {select_core_list}: UNION ALL: { id: integer notnull }
+          |         | | {select_core}: select: { id: integer notnull }
+          |         | | | {select_expr_list_con}: select: { id: integer notnull }
+          |         | |   | {select_expr_list}: select: { id: integer notnull }
+          |         | |   | | {star}: select: { id: integer notnull }
+          |         | |   | {select_from_etc}: TABLE { err_assembly_name: err_assembly_name }
+          |         | |     | {table_or_subquery_list}: TABLE { err_assembly_name: err_assembly_name }
+          |         | |     | | {table_or_subquery}: TABLE { err_assembly_name: err_assembly_name }
+          |         | |     |   | {name err_assembly_name}: TABLE { err_assembly_name: err_assembly_name }
+          |         | |     | {select_where}
+          |         | |       | {select_groupby}
+          |         | |         | {select_having}
+          |         | | {select_core_compound}
+          |         |   | {int 2}
+          |         |   | {select_core_list}: select: { id: integer notnull }
+          |         |     | {select_core}: select: { id: integer notnull }
+          |         |       | {select_expr_list_con}: select: { id: integer notnull }
+          |         |         | {select_expr_list}: select: { id: integer notnull }
+          |         |         | | {select_expr}: id: integer notnull
+          |         |         |   | {int 1}: integer notnull
+          |         |         |   | {opt_as_alias}
+          |         |         |     | {name id}
+          |         |         | {select_from_etc}: ok
+          |         |           | {select_where}
+          |         |             | {select_groupby}
+          |         |               | {select_having}
+          |         | {select_orderby}
+          |           | {select_limit}
+          |             | {select_offset}
+          | {select_stmt}: select: { id: integer notnull }
+            | {select_core_list}: select: { id: integer notnull }
+            | | {select_core}: select: { id: integer notnull }
+            |   | {select_expr_list_con}: select: { id: integer notnull }
+            |     | {select_expr_list}: select: { id: integer notnull }
+            |     | | {star}: select: { id: integer notnull }
+            |     | {select_from_etc}: TABLE { ext1: ext1 }
+            |       | {table_or_subquery_list}: TABLE { ext1: ext1 }
+            |       | | {table_or_subquery}: TABLE { ext1: ext1 }
+            |       |   | {name ext1}: TABLE { ext1: ext1 }
             |       | {select_where}
             |         | {select_groupby}
             |           | {select_having}
@@ -60749,4 +60855,32 @@ Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0061: in extension fr
             | {select_orderby}
               | {select_limit}
                 | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE TABLE foo(
+  id INTEGER
+);
+
+Incompatible declarations found
+Error at test/sem_test.sql:XXXX : in create_table_stmt : CREATE TABLE foo(
+  id INTEGER PRIMARY KEY AUTOINCREMENT
+)
+Error at test/sem_test.sql:XXXX : in create_table_stmt : CREATE TABLE foo(
+  id INTEGER
+)
+The above must be identical.
+Error at test/sem_test.sql:XXXX : in str : CQL0103: duplicate table/view name 'foo'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name foo}: err
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
 

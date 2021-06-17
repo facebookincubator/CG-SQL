@@ -668,7 +668,8 @@ Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0240: identity annotation c
 Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0256: fragment name conflicts with existing base fragment 'core'
 Error at test/sem_test.sql:XXXX : in select_stmt : CQL0251: fragment must end with exactly 'SELECT * FROM core_one'
 Error at test/sem_test.sql:XXXX : in select_stmt : CQL0251: fragment must end with exactly 'SELECT * FROM core_two'
-Error at test/sem_test.sql:XXXX : in str : CQL0253: base fragment must include a single CTE named same as the fragment 'bar'
+Error at test/sem_test.sql:XXXX : in str : CQL0253: base fragment must have only a single CTE named the same as the fragment 'bar'
+Error at test/sem_test.sql:XXXX : in cte_tables : CQL0253: base fragment must have only a single CTE named the same as the fragment 'err_assembly_name'
 Error at test/sem_test.sql:XXXX : in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH..SELECT
 Error at test/sem_test.sql:XXXX : in select_core_compound : CQL0333: all the compound operators in this CTE must be UNION ALL 'not_union_all'
 Error at test/sem_test.sql:XXXX : in select_core : CQL0332: all extension fragments that use UNION ALL must come before those that use LEFT OUTER JOIN 'out_of_order'
@@ -1085,4 +1086,13 @@ Error at test/sem_test.sql:XXXX : in dot : CQL0379: unknown built-in migration p
 Error at test/sem_test.sql:XXXX : in dot : CQL0378: built-in migration procedure not valid in this context 'cql:from_recreate'
 Error at test/sem_test.sql:XXXX : in call : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'pr2'
 Error at test/sem_test.sql:XXXX : in create_proc_stmt : CQL0061: in extension fragment, all columns must be an exact type match (expected integer notnull; found real notnull) 'id'
+Incompatible declarations found
+Error at test/sem_test.sql:XXXX : in create_table_stmt : CREATE TABLE foo(
+  id INTEGER PRIMARY KEY AUTOINCREMENT
+)
+Error at test/sem_test.sql:XXXX : in create_table_stmt : CREATE TABLE foo(
+  id INTEGER
+)
+The above must be identical.
+Error at test/sem_test.sql:XXXX : in str : CQL0103: duplicate table/view name 'foo'
 semantic errors present; no code gen.

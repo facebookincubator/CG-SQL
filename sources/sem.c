@@ -13279,10 +13279,14 @@ static void sem_base_fragment(ast_node *misc_attrs, ast_node *stmt_list, ast_nod
 
   // check for the single named CTE
   EXTRACT_NOTNULL(cte_tables, with_select_stmt->left->left);
-  Contract(cte_tables->right == NULL);
+  if (cte_tables->right) {
+    report_error(cte_tables, "CQL0253: base fragment must have only a single CTE named the same as the fragment", base_frag_name);
+    goto error;
+  }
+
   EXTRACT_NOTNULL(cte_decl, cte_tables->left->left);
   if (!sem_fragment_CTE_name_check(cte_decl, base_frag_name,
-    "CQL0253: base fragment must include a single CTE named same as the fragment")) {
+    "CQL0253: base fragment must have only a single CTE named the same as the fragment")) {
     goto error;
   }
 

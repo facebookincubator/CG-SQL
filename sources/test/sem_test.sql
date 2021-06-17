@@ -8436,7 +8436,7 @@ begin
 end;
 
 -- TEST: base_fragment attribute (erroneous usage)
--- + Error % base fragment must include a single CTE named same as the fragment 'bar'
+-- + Error % base fragment must have only a single CTE named the same as the fragment 'bar'
 -- +1 Error
 @attribute(cql:base_fragment=bar)
 create proc bad_base_fragment_three(id_ integer not null)
@@ -8444,6 +8444,25 @@ begin
   with
     core_three(x,y,z) as (select id,name,rate from bar where id = id_)
   select * from bar;
+end;
+
+-- TEST: make sure that using two CTEs in a base fragment causes an error
+-- You can run into this error if you mark your extension fragment as a base fragment on accident.
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- + {create_proc_stmt}: err
+-- + Error % base fragment must have only a single CTE named the same as the fragment 'err_assembly_name'
+-- +1 Error
+@attribute(cql:base_fragment=err_assembly_name)
+create proc ext1()
+begin
+  with err_assembly_name(id) as (select * from foo),
+  ext1(*) as (
+    select * from err_assembly_name
+    union all
+    select 1 id
+  )
+  select * from ext1;
 end;
 
 -- TEST: base_fragment attribute (erroneous usage)
@@ -15330,7 +15349,7 @@ create table conflict_clause_pk(
   constraint pk1 primary key (id) on conflict rollback
 );
 
--- a base fragment for the test case below
+-- TEST: a base fragment for the test case below
 -- - Error
 @attribute(cql:base_fragment=id_frag)
 create proc id_frag_base()
@@ -15339,7 +15358,7 @@ begin
   select * from id_frag;
 end;
 
--- Make sure that the types match exactly between extension columns and base columns
+-- TEST: Make sure that the types match exactly between extension columns and base columns
 -- here the issue is that 3.5 is type compatible with the integer type of the base
 -- and that's not good enough for an extension proc.  We need an additional check
 -- + {create_proc_stmt}: err
@@ -15355,3 +15374,4 @@ begin
     select 3.5 id)
   select * from ext1;
 end;
+create table foo(id integer);
