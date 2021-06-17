@@ -3064,13 +3064,23 @@ static void cg_emit_contracts(ast_node *ast, charbuf *b) {
 // missing the trailing ")" and it will not have EXPORT or anything like that
 // on it.
 static void cg_emit_proc_prototype(ast_node *ast, charbuf *proc_decl) {
-  Contract(is_ast_create_proc_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
+  Contract(is_ast_create_proc_stmt(ast) || is_ast_declare_proc_stmt(ast));
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT(params, proc_params_stmts->left);
-  EXTRACT(stmt_list, proc_params_stmts->right);
-
   EXTRACT_MISC_ATTRS(ast, misc_attrs);
+
+  CSTR name;
+
+  if (is_ast_create_proc_stmt(ast)) {
+    EXTRACT_STRING(n, ast->left);
+    name = n;
+  }
+  else {
+    EXTRACT_NOTNULL(proc_name_type, ast->left);
+    EXTRACT_STRING(n, proc_name_type->left);
+    name = n;
+  }
+
   bool_t private_proc = misc_attrs && exists_attribute_str(misc_attrs, "private");
   bool_t dml_proc = is_dml_proc(ast->sem->sem_type);
   bool_t result_set_proc = has_result_set(ast);
@@ -3159,8 +3169,14 @@ static void cg_create_proc_stmt(ast_node *ast) {
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT(params, proc_params_stmts->left);
   EXTRACT(stmt_list, proc_params_stmts->right);
-
   EXTRACT_MISC_ATTRS(ast, misc_attrs);
+
+  bool_t private_proc = misc_attrs && exists_attribute_str(misc_attrs, "private");
+  bool_t dml_proc = is_dml_proc(ast->sem->sem_type);
+  bool_t result_set_proc = has_result_set(ast);
+  bool_t out_stmt_proc = has_out_stmt_result(ast);
+  bool_t out_union_proc = has_out_union_stmt_result(ast);
+  bool_t calls_out_union = has_out_union_call(ast);
 
   uint32_t frag_type = find_fragment_attr_type(misc_attrs);
 
@@ -3211,13 +3227,6 @@ static void cg_create_proc_stmt(ast_node *ast) {
   in_proc = 1;
   current_proc = ast;
   seed_declared = 0;
-
-  bool_t private_proc = misc_attrs && exists_attribute_str(misc_attrs, "private");
-  bool_t dml_proc = is_dml_proc(ast->sem->sem_type);
-  bool_t result_set_proc = has_result_set(ast);
-  bool_t out_stmt_proc = has_out_stmt_result(ast);
-  bool_t out_union_proc = has_out_union_stmt_result(ast);
-  bool_t calls_out_union = has_out_union_call(ast);
 
   init_vault_info(misc_attrs, &use_vault, vault_columns);
 
@@ -3490,71 +3499,29 @@ static void cg_declare_proc_stmt(ast_node *ast) {
   current_proc = ast;
 
   bool_t private_proc = misc_attrs && exists_attribute_str(misc_attrs, "private");
-  bool_t dml_proc = is_dml_proc(ast->sem->sem_type);
-  bool_t result_set_proc = has_result_set(ast);
   bool_t out_stmt_proc = has_out_stmt_result(ast);
   bool_t out_union_proc = has_out_union_stmt_result(ast);
 
-  CSTR fetch_results = out_union_proc ? "_fetch_results" : "";
-
   CHARBUF_OPEN(proc_decl);
-  CG_CHARBUF_OPEN_SYM(proc_sym, name, fetch_results);
 
-  if (dml_proc) {
-    bprintf(&proc_decl, "CQL_WARN_UNUSED %s %s(sqlite3 *_Nonnull _db_", rt->cql_code, proc_sym.ptr);
-    if (out_union_proc) {
-      bprintf(&proc_decl, ", ");
-      CG_CHARBUF_OPEN_SYM(result_set_ref, name, "_result_set_ref");
-      CG_CHARBUF_OPEN_SYM(result_set, name, "_result_set");
-        cg_result_set_type_decl(cg_fwd_ref_output, result_set.ptr, result_set_ref.ptr);
-        bprintf(&proc_decl, "%s _Nullable *_Nonnull _result_set_", result_set_ref.ptr);
-      CHARBUF_CLOSE(result_set);
-      CHARBUF_CLOSE(result_set_ref);
-    }
-    else if (result_set_proc) {
-      bprintf(&proc_decl, ", sqlite3_stmt *_Nullable *_Nonnull _result_stmt");
-    }
-    if (params) {
-      bprintf(&proc_decl, ", ");
-    }
-  }
-  else {
-    bprintf(&proc_decl, "void %s(", proc_sym.ptr);
-    if (out_union_proc) {
-      CG_CHARBUF_OPEN_SYM(result_set_ref, name, "_result_set_ref");
-      CG_CHARBUF_OPEN_SYM(result_set, name, "_result_set");
-        cg_result_set_type_decl(cg_fwd_ref_output, result_set.ptr, result_set_ref.ptr);
-        bprintf(&proc_decl, "%s _Nullable *_Nonnull _result_set_", result_set_ref.ptr);
-      CHARBUF_CLOSE(result_set);
-      CHARBUF_CLOSE(result_set_ref);
+  cg_emit_proc_prototype(ast, &proc_decl);
 
-      if (params) {
-        bprintf(&proc_decl, ", ");
-      }
-    }
+  if (out_union_proc) {
+    CG_CHARBUF_OPEN_SYM(result_set_ref, name, "_result_set_ref");
+    CG_CHARBUF_OPEN_SYM(result_set, name, "_result_set");
+
+    cg_result_set_type_decl(cg_fwd_ref_output, result_set.ptr, result_set_ref.ptr);
+
+    CHARBUF_CLOSE(result_set);
+    CHARBUF_CLOSE(result_set_ref);
   }
 
-  // CREATE PROC [name] ( [params] )
-  if (params) {
-    cg_params(params, &proc_decl);
-  }
-
-  if (out_stmt_proc) {
-    if (dml_proc || params) {
-      bprintf(&proc_decl, ", ");
-    }
-    CG_CHARBUF_OPEN_SYM(result_type, name, "_row");
-    bprintf(&proc_decl, "%s *_Nonnull _result_", result_type.ptr);
-    CHARBUF_CLOSE(result_type);
+   if (out_stmt_proc) {
     cg_c_struct_for_sptr(cg_fwd_ref_output, ast->sem->sptr, NULL);
   }
 
-  if (!params && !out_stmt_proc && !dml_proc && !out_union_proc) {
-    bprintf(&proc_decl, "void");  // make foo(void) rather than foo()
-  }
-
   if (private_proc) {
-    bprintf(cg_declarations_output, "static %s);\n\n", proc_decl.ptr);
+    bprintf(cg_declarations_output, "%s);\n\n", proc_decl.ptr);
   }
   else {
     bprintf(cg_fwd_ref_output, "%s%s);\n\n", rt->symbol_visibility, proc_decl.ptr);
@@ -3562,7 +3529,6 @@ static void cg_declare_proc_stmt(ast_node *ast) {
 
   current_proc = NULL;
 
-  CHARBUF_CLOSE(proc_sym);
   CHARBUF_CLOSE(proc_decl);
 }
 
