@@ -3180,6 +3180,7 @@ static void cg_create_proc_stmt(ast_node *ast) {
   bool_t out_union_proc = has_out_union_stmt_result(ast);
   bool_t calls_out_union = has_out_union_call(ast);
 
+  // sets base_fragment_name as well for the current fragment
   uint32_t frag_type = find_fragment_attr_type(misc_attrs);
 
   // Neither extension fragments nor base fragments produce the code for the procedure, only
@@ -3188,6 +3189,37 @@ static void cg_create_proc_stmt(ast_node *ast) {
   if (frag_type == FRAG_TYPE_EXTENSION || frag_type == FRAG_TYPE_BASE) {
     Contract(has_result_set(ast));
     cg_proc_result_set(ast);
+
+    if (frag_type == FRAG_TYPE_BASE) {
+      // Emit assembly_fetch_results, it has the same signature as the base only with a result set
+      // instead of a statement.
+
+      // Note we can do this prototype on an easy plan.  We know everything about the signature already
+      // from the base_fragment_name.  We also know that it is not an out union proc or an out proc
+      // because it's a fragment and we know it's a DML proc for the same reason.
+      // So we're on the easiest plan for sure.
+
+      CG_CHARBUF_OPEN_SYM(fetch_results_sym, base_fragment_name, "_fetch_results");
+      CG_CHARBUF_OPEN_SYM(result_set_ref, base_fragment_name, "_result_set_ref");
+      CHARBUF_OPEN(temp);
+
+      bprintf(&temp,
+          "CQL_WARN_UNUSED %s %s(sqlite3 *_Nonnull _db_, %s _Nullable *_Nonnull result_set",
+          rt->cql_code,
+          fetch_results_sym.ptr,
+          result_set_ref.ptr);
+
+      if (params) {
+        bprintf(&temp, ", ");
+        cg_params(params, &temp);
+      }
+
+      bprintf(cg_header_output, "%s%s);\n", rt->symbol_visibility, temp.ptr);
+
+      CHARBUF_CLOSE(temp);
+      CHARBUF_CLOSE(result_set_ref);
+      CHARBUF_CLOSE(fetch_results_sym);
+    }
     return;
   }
 
@@ -6161,6 +6193,7 @@ static void cg_proc_result_set(ast_node *ast) {
 
   bool_t dml_proc = is_dml_proc(ast->sem->sem_type);
 
+  // sets base_fragment_name as well for the current fragment
   uint32_t frag_type = find_fragment_attr_type(misc_attrs);
 
   // register the proc name if there is a callback, the particular result type will do whatever it wants

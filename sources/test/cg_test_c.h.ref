@@ -1448,6 +1448,7 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   row1, \
   (cql_result_set_ref)(rs2), \
   row2)
+extern CQL_WARN_UNUSED cql_code core_fetch_results(sqlite3 *_Nonnull _db_, core_result_set_ref _Nullable *_Nonnull result_set, cql_int32 id_);
 
 // The statement ending at line XXXX
 #define CRC_simple_cursor_proc -6717012445748654937L
@@ -1955,6 +1956,7 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   row1, \
   (cql_result_set_ref)(rs2), \
   row2)
+extern CQL_WARN_UNUSED cql_code frag_test_fetch_results(sqlite3 *_Nonnull _db_, frag_test_result_set_ref _Nullable *_Nonnull result_set);
 
 // The statement ending at line XXXX
 
