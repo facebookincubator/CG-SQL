@@ -5629,11 +5629,20 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
   symtab_entry *entry = symtab_find(cg_stmts, stmt->type);
   Contract(entry);
 
-  // DDL operations not in a procedure are ignored
-  // but they can declare schema during the semantic pass
-  if (entry->val == cg_any_ddl_stmt && !in_proc) {
-     return;
+
+  if (!in_proc) {
+    // DDL operations not in a procedure are ignored
+    // but they can declare schema during the semantic pass
+    if (entry->val == cg_any_ddl_stmt) {
+       return;
+    }
+
+    // loose select statements also have no codegen, the global proc has no result type
+    if (is_select_stmt(stmt)) {
+       return;
+    }
   }
+
 
   // don't emit a # line directive for the echo statement because it will messed up
   // if the echo doesn't end in a linefeed and that's legal.  And there is normally

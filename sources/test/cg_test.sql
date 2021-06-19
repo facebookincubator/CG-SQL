@@ -4100,6 +4100,14 @@ begin
   out C;
 end;
 
+-- TEST: a loose select statement generates no code (and will produce no errors)
+-- the errors are checked when this code is compiled in C.  If the code
+-- were generated there would be errors because the global proc
+-- doesn't have the statement out arg.  We also verify that
+-- no call to cql_prepare happens hence no select
+-- - cql_prepare
+select 1 x;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------
