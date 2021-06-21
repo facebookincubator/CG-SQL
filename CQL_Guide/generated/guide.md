@@ -8199,7 +8199,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Fri Jun 18 15:40:53 PDT 2021
+Snapshot as of Wed Jun  9 13:53:52 PDT 2021
 
 ### Operators and Literals
 
@@ -11720,13 +11720,9 @@ An @PROC literal was used outside of any procedure.  It cannot be resolved if it
 
 -----
 
-### CQL0253: base fragment must have only a single CTE named the same as the fragment 'name'
+### CQL0253: base fragment must include a single CTE named same as the fragment 'name'
 
-Query fragments have an exact prescription for their shape.  This prescription includes  `select * from CTE` where CTE is the single common table expression with the same name as the base query.
-
-This error says that the final select came from something other than the single CTE that is the base name or there was more than one CTE in the fragment.
-
-You can also get this error if you have an extension fragment but you accidentally marked it as a base fragment.
+Query fragments have an exact prescription for their shape.  This prescription includes  `select * from CTE` where CTE is the common table expression that is the name of the base query.  This error says that the final select came from something other than the single CTE that is the base name.
 
 -----
 
@@ -13127,13 +13123,7 @@ SELECT x, y FROM t0 UNION ALL select x, y FROM t1 ORDER BY 1 + 1;
 ```
 
 ----
-### CQL0399: table must leave @recreate management with @create(nn) or later 'table_name'
-
-The indicated table changed from `@recreate` to `@create` but it did so in a past schema version.  The change
-must happen in the current schema version.  That version is indicated by the value of nn.
-
-To fix this you can change the `@create` annotation so that it matches the number in this error message
-
+CQL 0399 : unused, this was added to prevent merge conflicts at the end on literally every checkin
 ----
 CQL 0400 : unused, this was added to prevent merge conflicts at the end on literally every checkin
 
@@ -13149,7 +13139,7 @@ CQL 0400 : unused, this was added to prevent merge conflicts at the end on liter
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Fri Jun 18 15:40:54 PDT 2021
+Snapshot as of Wed Jun  9 13:53:53 PDT 2021
 
 ### Rules
 

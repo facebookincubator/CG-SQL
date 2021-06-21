@@ -476,7 +476,7 @@
 <li><a href="#cql0250-table-valued-function-not-declared-function_name">CQL0250: table-valued function not declared ‘function_name’</a></li>
 <li><a href="#cql0251-fragment-must-end-with-exactly-select-from-cte">CQL0251: fragment must end with exactly ‘SELECT * FROM CTE’</a></li>
 <li><a href="#cql0252-proc-literal-can-only-appear-inside-of-procedures">CQL0252: <span class="citation" data-cites="PROC">@PROC</span> literal can only appear inside of procedures</a></li>
-<li><a href="#cql0253-base-fragment-must-have-only-a-single-cte-named-the-same-as-the-fragment-name">CQL0253: base fragment must have only a single CTE named the same as the fragment ‘name’</a></li>
+<li><a href="#cql0253-base-fragment-must-include-a-single-cte-named-same-as-the-fragment-name">CQL0253: base fragment must include a single CTE named same as the fragment ‘name’</a></li>
 <li><a href="#cql0254-switching-to-previous-schema-validation-mode-not-allowed-if-schema_upgrade_version-was-used">CQL0254: switching to previous schema validation mode not allowed if <code>@schema_upgrade_version</code> was used</a></li>
 <li><a href="#cql0255-fragment-name-is-not-a-previously-declared-base-fragment-bad_fragment_name">CQL0255: fragment name is not a previously declared base fragment ‘bad_fragment_name’</a></li>
 <li><a href="#cql0256-fragment-name-conflicts-with-existing-base-fragment-name">CQL0256: fragment name conflicts with existing base fragment ‘NAME’</a></li>
@@ -618,9 +618,6 @@
 <li><a href="#cql0396-versioning-attributes-may-not-be-used-on-ddl-inside-a-procedure">CQL0396: versioning attributes may not be used on DDL inside a procedure</a></li>
 <li><a href="#cql0397-object-is-an-orphan-because-its-table-is-deleted.-remove-rather-than-delete-object_name">CQL0397: object is an orphan because its table is deleted. Remove rather than <span class="citation" data-cites="delete">@delete</span> ‘object_name’</a></li>
 <li><a href="#cql0398-a-compound-select-cannot-be-ordered-by-the-result-of-an-expression">CQL0398: A compound select cannot be ordered by the result of an expression</a></li>
-</ul></li>
-<li><a href="#appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</a>
-<ul>
 <li><a href="#rules-1">Rules</a></li>
 </ul></li>
 <li><a href="#appendix-6-cql-in-20-minutes">Appendix 6: CQL In 20 Minutes</a></li>
@@ -6268,7 +6265,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Fri Jun 18 15:40:53 PDT 2021</p>
+<p>Snapshot as of Wed Jun 9 13:53:52 PDT 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -8773,10 +8770,8 @@ set x := y;</code></pre>
 <h3 id="cql0252-proc-literal-can-only-appear-inside-of-procedures">CQL0252: <span class="citation" data-cites="PROC">@PROC</span> literal can only appear inside of procedures</h3>
 <p>An <span class="citation" data-cites="PROC">@PROC</span> literal was used outside of any procedure. It cannot be resolved if it isn’t inside a procedure.</p>
 <hr />
-<h3 id="cql0253-base-fragment-must-have-only-a-single-cte-named-the-same-as-the-fragment-name">CQL0253: base fragment must have only a single CTE named the same as the fragment ‘name’</h3>
-<p>Query fragments have an exact prescription for their shape. This prescription includes <code>select * from CTE</code> where CTE is the single common table expression with the same name as the base query.</p>
-<p>This error says that the final select came from something other than the single CTE that is the base name or there was more than one CTE in the fragment.</p>
-<p>You can also get this error if you have an extension fragment but you accidentally marked it as a base fragment.</p>
+<h3 id="cql0253-base-fragment-must-include-a-single-cte-named-same-as-the-fragment-name">CQL0253: base fragment must include a single CTE named same as the fragment ‘name’</h3>
+<p>Query fragments have an exact prescription for their shape. This prescription includes <code>select * from CTE</code> where CTE is the common table expression that is the name of the base query. This error says that the final select came from something other than the single CTE that is the base name.</p>
 <hr />
 <h3 id="cql0254-switching-to-previous-schema-validation-mode-not-allowed-if-schema_upgrade_version-was-used">CQL0254: switching to previous schema validation mode not allowed if <code>@schema_upgrade_version</code> was used</h3>
 <p>When authoring a schema migration script (a stored proc named in an <code>@create</code> or <code>@delete</code> annotation) you must create that procedure in a file that is marked with <code>@schema_upgrade_verison</code> specifying the schema version it is upgrading. If you do this, then the proc (correctly) only sees the schema as it existed at that version. However that makes the schema unsuitable for analysis using <code>@previous_schema</code> because it could be arbitrarily far in the past. This error prevents you from combining those features. Previous schema validation should only happen against the current schema.</p>
@@ -9459,28 +9454,23 @@ select 1 where table_valued_func(5) = 3;</code></pre>
 <colgroup>
 <col style="width: 6%" />
 </colgroup>
+<thead>
+<tr class="header">
+<th>CQL 0399 : unused, this was added to prevent merge conflicts at the end on literally every checkin</th>
+</tr>
+</thead>
 <tbody>
 <tr class="odd">
-<td>### CQL0399: table must leave <span class="citation" data-cites="recreate">@recreate</span> management with <span class="citation" data-cites="create">@create</span>(nn) or later ‘table_name’</td>
+<td>CQL 0400 : unused, this was added to prevent merge conflicts at the end on literally every checkin</td>
 </tr>
 <tr class="even">
-<td>The indicated table changed from <code>@recreate</code> to <code>@create</code> but it did so in a past schema version. The change must happen in the current schema version. That version is indicated by the value of nn.</td>
-</tr>
-<tr class="odd">
-<td>To fix this you can change the <code>@create</code> annotation so that it matches the number in this error message</td>
+<td>## Appendix 5: JSON Schema Grammar &lt;!— – Copyright (c) Facebook, Inc. and its affiliates.</td>
 </tr>
 </tbody>
 </table>
-<p>CQL 0400 : unused, this was added to prevent merge conflicts at the end on literally every checkin</p>
-<h2 id="appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</h2>
-<!---
--- Copyright (c) Facebook, Inc. and its affiliates.
---
--- This source code is licensed under the MIT license found in the
--- LICENSE file in the root directory of this source tree.
--->
+<p>– This source code is licensed under the MIT license found in the – LICENSE file in the root directory of this source tree. –&gt;</p>
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Fri Jun 18 15:40:54 PDT 2021</p>
+<p>Snapshot as of Wed Jun 9 13:53:53 PDT 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 
