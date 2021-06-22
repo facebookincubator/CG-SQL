@@ -19,7 +19,6 @@
 #include "eval.h"
 #include "symtab.h"
 #include "encoders.h"
-#include <stdio.h>
 
 static void cg_expr(ast_node *node, charbuf *is_null, charbuf *value, int32_t pri);
 static void cg_stmt_list(ast_node *node);
@@ -3061,6 +3060,50 @@ static void cg_emit_contracts(ast_node *ast, charbuf *b) {
   }
 }
 
+#define EMIT_DML_PROC 1
+
+// emit a prototype for the fetch results function into the indicated buffer
+// we need some context such as "is it a dml proc" to do this correctly but
+// otherwise this is just using some of our standard helpers
+static void cg_emit_fetch_results_prototype(
+  bool_t dml_proc,
+  ast_node *params,
+  CSTR proc_name,
+  CSTR result_set_name,
+  charbuf *decl)
+{
+  CG_CHARBUF_OPEN_SYM(fetch_results_sym, proc_name, "_fetch_results");
+  CG_CHARBUF_OPEN_SYM(result_set_ref, result_set_name, "_result_set_ref");
+
+  // either return code or void
+  if (dml_proc) {
+    bprintf(decl, "CQL_WARN_UNUSED %s ", rt->cql_code);
+  }
+  else {
+    bprintf(decl, "void ");
+  }
+
+  // proc name
+  bprintf(decl, "%s(", fetch_results_sym.ptr);
+
+  // optional db reference
+  if (dml_proc) {
+    bprintf(decl, "sqlite3 *_Nonnull _db_,");
+  }
+
+  // result set type
+  bprintf(decl, " %s _Nullable *_Nonnull result_set", result_set_ref.ptr);
+
+  // args to forward
+  if (params) {
+    bprintf(decl, ", ");
+    cg_params(params, decl);
+  }
+
+  CHARBUF_CLOSE(result_set_ref);
+  CHARBUF_CLOSE(fetch_results_sym);
+}
+
 // The prototype for the given procedure goes into the given buffer.  This
 // is a naked prototype, so additional arguments could be added -- it will be
 // missing the trailing ")" and it will not have EXPORT or anything like that
@@ -3199,26 +3242,10 @@ static void cg_create_proc_stmt(ast_node *ast) {
       // because it's a fragment and we know it's a DML proc for the same reason.
       // So we're on the easiest plan for sure.
 
-      CG_CHARBUF_OPEN_SYM(fetch_results_sym, base_fragment_name, "_fetch_results");
-      CG_CHARBUF_OPEN_SYM(result_set_ref, base_fragment_name, "_result_set_ref");
       CHARBUF_OPEN(temp);
-
-      bprintf(&temp,
-          "CQL_WARN_UNUSED %s %s(sqlite3 *_Nonnull _db_, %s _Nullable *_Nonnull result_set",
-          rt->cql_code,
-          fetch_results_sym.ptr,
-          result_set_ref.ptr);
-
-      if (params) {
-        bprintf(&temp, ", ");
-        cg_params(params, &temp);
-      }
-
-      bprintf(cg_header_output, "%s%s);\n", rt->symbol_visibility, temp.ptr);
-
+        cg_emit_fetch_results_prototype(EMIT_DML_PROC, params, base_fragment_name, base_fragment_name, &temp);
+        bprintf(cg_header_output, "%s%s);\n", rt->symbol_visibility, temp.ptr);
       CHARBUF_CLOSE(temp);
-      CHARBUF_CLOSE(result_set_ref);
-      CHARBUF_CLOSE(fetch_results_sym);
     }
     return;
   }
@@ -6477,31 +6504,7 @@ static void cg_proc_result_set(ast_node *ast) {
       // Emit foo_fetch_results, it has the same signature as foo only with a result set
       // instead of a statement.
       bclear(&temp);
-
-      // either return code or void
-      if (dml_proc) {
-        bprintf(&temp, "CQL_WARN_UNUSED %s ", rt->cql_code);
-      }
-      else {
-        bprintf(&temp, "void ");
-      }
-
-      // proc name
-      bprintf(&temp, "%s(", fetch_results_sym.ptr);
-
-      // optional db reference
-      if (dml_proc) {
-        bprintf(&temp, "sqlite3 *_Nonnull _db_,");
-      }
-
-      // result set type
-      bprintf(&temp, " %s _Nullable *_Nonnull result_set", result_set_ref.ptr);
-
-      // args to forward
-      if (params) {
-        bprintf(&temp, ", ");
-        cg_params(params, &temp);
-      }
+      cg_emit_fetch_results_prototype(dml_proc, params, name, result_set_name, &temp);
 
       // ready for prototype and function begin now
       bprintf(h, "%s%s);\n", rt->symbol_visibility, temp.ptr);
@@ -6561,16 +6564,7 @@ static void cg_proc_result_set(ast_node *ast) {
       // Emit foo_fetch_results, it has the same signature as foo only with a result set
       // instead of a statement.
       bclear(&temp);
-      bprintf(&temp,
-          "CQL_WARN_UNUSED %s %s(sqlite3 *_Nonnull _db_, %s _Nullable *_Nonnull result_set",
-          rt->cql_code,
-          fetch_results_sym.ptr,
-          result_set_ref.ptr);
-
-      if (params) {
-        bprintf(&temp, ", ");
-        cg_params(params, &temp);
-      }
+      cg_emit_fetch_results_prototype(EMIT_DML_PROC, params, name, result_set_name, &temp);
 
       // To create the rowset we make a byte buffer object.  That object lets us
       // append row data to an in-memory stream.  Each row is fetched by binding
