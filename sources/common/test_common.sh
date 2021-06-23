@@ -451,14 +451,6 @@ code_gen_objc_test() {
     failed
   fi
 
-  echo running objc codegen test for extension query fragment with core base
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_extension_fragment_with_core_base_test_objc.out" --objc_c_include_path Test/TestFile.h --in "${TEST_DIR}/cg_test_extension_fragment.sql" --rt objc 2>"${OUT_DIR}/cg_test_objc.err"
-  then
-    echo "ERROR:"
-    cat "${OUT_DIR}/cg_test_objc.err"
-    failed
-  fi
-
   echo running objc codegen test for assembly query fragment
   if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_assembly_query_objc.out" --objc_c_include_path Test/TestFile.h --in "${TEST_DIR}/cg_test_assembly_query.sql" --rt objc 2>"${OUT_DIR}/cg_test_objc.err"
   then
@@ -472,7 +464,6 @@ code_gen_objc_test() {
 
   on_diff_exit cg_test_objc.out
   on_diff_exit cg_test_extension_fragment_objc.out
-  on_diff_exit cg_extension_fragment_with_core_base_test_objc.out
   on_diff_exit cg_test_assembly_query_objc.out
   on_diff_exit cg_test_objc.err
 }
