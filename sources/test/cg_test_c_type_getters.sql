@@ -105,6 +105,8 @@ end;
 
 -- TEST: another extension, this one should not include anything about f2, it doesn't "know" about that column
 -- - f2
+-- + static inline cql_int32 ext2_result_count(frag_test_result_set_ref _Nonnull result_set)
+-- + return cql_result_set_get_count((cql_result_set_ref)result_set);
 @attribute(cql:extension_fragment=frag_test)
 create proc ext2()
 begin

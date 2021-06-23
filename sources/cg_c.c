@@ -6485,16 +6485,26 @@ static void cg_proc_result_set(ast_node *ast) {
   // Emit foo_result_count, which is really just a proxy to cql_result_set_get_count,
   // but it is hiding the cql_result_set implementation detail from the API of the generated
   // code by providing a proc-scoped function for it with the typedef for the result set.
-  bclear(&temp);
-  bprintf(&temp, "%s %s(%s _Nonnull result_set)", rt->cql_int32, result_count_sym.ptr, result_set_ref.ptr);
-  bprintf(h, "%s%s;\n", rt->symbol_visibility, temp.ptr);
 
-  // the base fragment doesn't emit the row count symbol, this is done by the assembly; the base
-  // fragment only emits the header for it.  In fact the base fragment only emits headers in general.
-  if (frag_type != FRAG_TYPE_BASE) {
-    bprintf(d, "\n%s {\n", temp.ptr);
-    bprintf(d, "  return %s((cql_result_set_ref)result_set);\n", rt->cql_result_set_get_count);
-    bprintf(d, "}\n");
+  if (frag_type == FRAG_TYPE_EXTENSION && options.generate_type_getters) {
+    // extensions get inline everything in type getters mode
+    bprintf(h, "static inline %s %s(%s _Nonnull result_set) {\n", rt->cql_int32, result_count_sym.ptr, result_set_ref.ptr);
+    bprintf(h, "   return %s((cql_result_set_ref)result_set);\n", rt->cql_result_set_get_count);
+    bprintf(h, "}\n\n");
+  }
+  else {
+    bclear(&temp);
+    bprintf(&temp, "%s %s(%s _Nonnull result_set)", rt->cql_int32, result_count_sym.ptr, result_set_ref.ptr);
+    bprintf(h, "%s%s;\n", rt->symbol_visibility, temp.ptr);
+
+    // the base fragment doesn't emit the row count symbol, this is done by the assembly; the base
+    // fragment only emits the header for it.  In fact the base fragment only emits headers in general.
+
+    if (frag_type != FRAG_TYPE_BASE) {
+      bprintf(d, "\n%s {\n", temp.ptr);
+      bprintf(d, "  return %s((cql_result_set_ref)result_set);\n", rt->cql_result_set_get_count);
+      bprintf(d, "}\n");
+    }
   }
 
   // Skip generating fetch result function for extension and fragments since they always get

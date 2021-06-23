@@ -146,10 +146,6 @@ BEGIN
 END;
 */
 
-cql_int32 ext_result_count(frag_test_result_set_ref _Nonnull result_set) {
-  return cql_result_set_get_count((cql_result_set_ref)result_set);
-}
-
 // The statement ending at line XXXX
 
 /*
@@ -165,10 +161,6 @@ BEGIN
     FROM ext2;
 END;
 */
-
-cql_int32 ext2_result_count(frag_test_result_set_ref _Nonnull result_set) {
-  return cql_result_set_get_count((cql_result_set_ref)result_set);
-}
 
 // The statement ending at line XXXX
 

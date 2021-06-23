@@ -39,10 +39,6 @@ BEGIN
 END;
 */
 
-cql_int32 extension_fragment_one_result_count(assembly_core_result_set_ref _Nonnull result_set) {
-  return cql_result_set_get_count((cql_result_set_ref)result_set);
-}
-
 // The statement ending at line XXXX
 
 /*
@@ -74,10 +70,6 @@ BEGIN
 END;
 */
 
-cql_int32 extension_fragment_two_result_count(assembly_core_result_set_ref _Nonnull result_set) {
-  return cql_result_set_get_count((cql_result_set_ref)result_set);
-}
-
 // The statement ending at line XXXX
 
 /*
@@ -93,7 +85,3 @@ BEGIN
     FROM plugin_three;
 END;
 */
-
-cql_int32 extension_fragment_three_result_count(assembly_non_core_result_set_ref _Nonnull result_set) {
-  return cql_result_set_get_count((cql_result_set_ref)result_set);
-}

@@ -47,7 +47,10 @@ static inline cql_int64 extension_fragment_one_get_z_value(assembly_core_result_
   return assembly_core_get_z_value(result_set, row);
 }
 
-extern cql_int32 extension_fragment_one_result_count(assembly_core_result_set_ref _Nonnull result_set);
+static inline cql_int32 extension_fragment_one_result_count(assembly_core_result_set_ref _Nonnull result_set) {
+   return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
 
 // The statement ending at line XXXX
 
@@ -103,7 +106,10 @@ static inline cql_bool extension_fragment_two_get_flag_value(assembly_core_resul
   return __PRIVATE__assembly_core_get_flag_value(result_set, row);
 }
 
-extern cql_int32 extension_fragment_two_result_count(assembly_core_result_set_ref _Nonnull result_set);
+static inline cql_int32 extension_fragment_two_result_count(assembly_core_result_set_ref _Nonnull result_set) {
+   return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
 
 // The statement ending at line XXXX
 
@@ -138,4 +144,7 @@ static inline cql_int64 extension_fragment_three_get_d_value(assembly_non_core_r
   return __PRIVATE__assembly_non_core_get_d_value(result_set, row);
 }
 
-extern cql_int32 extension_fragment_three_result_count(assembly_non_core_result_set_ref _Nonnull result_set);
+static inline cql_int32 extension_fragment_three_result_count(assembly_non_core_result_set_ref _Nonnull result_set) {
+   return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
