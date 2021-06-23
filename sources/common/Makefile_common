@@ -138,6 +138,8 @@ $O/cql.y.o: $O/cql.y.c $O/cql.y.h
 
 cg_test: $O/cg_test_c.c
 
+cg_test_base_fragment: $O/cg_test_base_fragment_c.o
+
 cg_test_extension_fragment: $O/cg_test_extension_fragment_c.o
 
 cg_test_assembly_query: $O/cg_test_assembly_query_c.o

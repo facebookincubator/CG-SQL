@@ -1,0 +1,38 @@
+
+#include "out/cg_test_base_fragment_c.h"
+
+#pragma clang diagnostic ignored "-Wbitwise-op-parentheses"
+#pragma clang diagnostic ignored "-Wshift-op-parentheses"
+#pragma clang diagnostic ignored "-Wlogical-not-parentheses"
+#pragma clang diagnostic ignored "-Wlogical-op-parentheses"
+#pragma clang diagnostic ignored "-Wliteral-conversion"
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:base_fragment=assembly_core)
+CREATE PROC base_fragment (id_ INTEGER NOT NULL, name_ TEXT NOT NULL)
+BEGIN
+  WITH
+  assembly_core (x, y, z) AS (SELECT id, name, rate
+    FROM bar
+    WHERE id = id_)
+  SELECT *
+    FROM assembly_core;
+END;
+*/
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:base_fragment=assembly_non_core)
+CREATE PROC second_base_fragment (name_ TEXT NOT NULL)
+BEGIN
+  WITH
+  assembly_non_core (a, b, c) AS (SELECT id, name, col
+    FROM foo
+    WHERE name = name_)
+  SELECT *
+    FROM assembly_non_core;
+END;
+*/

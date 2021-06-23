@@ -1,0 +1,46 @@
+#pragma once
+
+#include "cqlrt.h"
+
+
+// The statement ending at line XXXX
+
+#ifndef result_set_type_decl_assembly_core_result_set
+#define result_set_type_decl_assembly_core_result_set 1
+cql_result_set_type_decl(assembly_core_result_set, assembly_core_result_set_ref);
+#endif
+
+extern cql_int32 assembly_core_get_x(assembly_core_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_string_ref _Nullable assembly_core_get_y(assembly_core_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool assembly_core_get_z_is_null(assembly_core_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int64 assembly_core_get_z_value(assembly_core_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 assembly_core_result_count(assembly_core_result_set_ref _Nonnull result_set);
+#define assembly_core_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define assembly_core_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+extern CQL_WARN_UNUSED cql_code assembly_core_fetch_results(sqlite3 *_Nonnull _db_, assembly_core_result_set_ref _Nullable *_Nonnull result_set, cql_int32 id_, cql_string_ref _Nonnull name_);
+
+// The statement ending at line XXXX
+
+#ifndef result_set_type_decl_assembly_non_core_result_set
+#define result_set_type_decl_assembly_non_core_result_set 1
+cql_result_set_type_decl(assembly_non_core_result_set, assembly_non_core_result_set_ref);
+#endif
+
+extern cql_string_ref _Nonnull assembly_non_core_get_a(assembly_non_core_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_string_ref _Nullable assembly_non_core_get_b(assembly_non_core_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool assembly_non_core_get_c_is_null(assembly_non_core_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 assembly_non_core_get_c_value(assembly_non_core_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 assembly_non_core_result_count(assembly_non_core_result_set_ref _Nonnull result_set);
+#define assembly_non_core_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define assembly_non_core_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+extern CQL_WARN_UNUSED cql_code assembly_non_core_fetch_results(sqlite3 *_Nonnull _db_, assembly_non_core_result_set_ref _Nullable *_Nonnull result_set, cql_string_ref _Nonnull name_);
