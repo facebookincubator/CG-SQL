@@ -376,26 +376,26 @@ sqlite> select ~(1*3);
 
 #define EXTRACT_STRING(name, node) \
   Contract(is_ast_str(node)); \
-  const char *name = ((str_ast_node *)node)->value; \
+  const char *name = ((str_ast_node *)(node))->value; \
   Contract(name);
 
 #define EXTRACT_BLOBTEXT(name, node) \
   Contract(is_ast_blob(node)); \
-  const char *name = ((str_ast_node *)node)->value; \
+  const char *name = ((str_ast_node *)(node))->value; \
   Contract(name);
 
 #define EXTRACT_NUM_TYPE(num_type, node) \
   Contract(is_ast_num(node)); \
-  int32_t num_type = ((num_ast_node *)node)->num_type;
+  int32_t num_type = ((num_ast_node *)(node))->num_type;
 
 #define EXTRACT_NUM_VALUE(val, node) \
   Contract(is_ast_num(node)); \
-  CSTR val = ((num_ast_node *)node)->value; \
+  CSTR val = ((num_ast_node *)(node))->value; \
   Contract(val);
 
 #define EXTRACT_OPTION(name, node) \
   Contract(is_ast_int(node)); \
-  int32_t name = (int32_t)((int_ast_node *)node)->value;
+  int32_t name = (int32_t)((int_ast_node *)(node))->value;
 
 // For searching proc dependencies/attributes
 typedef void (*find_ast_str_node_callback)(CSTR _Nonnull found_name, ast_node *_Nonnull str_ast, void *_Nullable context);
