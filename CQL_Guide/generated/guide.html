@@ -636,6 +636,29 @@
 <li><a href="#using-is-when-it-makes-sense-to-do-so">Using <code>IS</code> when it makes sense to do so</a></li>
 <li><a href="#left-joins-that-are-not-left-joins">Left joins that are not left joins</a></li>
 </ul></li>
+<li><a href="#appendix-8-cql-best-practices">Appendix 8: CQL Best Practices</a>
+<ul>
+<li><a href="#data-definition-language-ddl">Data Definition Language (DDL)</a></li>
+<li><a href="#ad-hoc-migrations">Ad Hoc Migrations</a></li>
+<li><a href="#transactions">Transactions</a></li>
+<li><a href="#savepoints">Savepoints</a></li>
+<li><a href="#compilation-options">Compilation options</a></li>
+<li><a href="#previous-schema">Previous Schema</a></li>
+<li><a href="#schema-regions-1">Schema Regions</a></li>
+<li><a href="#schema-version">Schema Version</a></li>
+<li><a href="#c-text-echo">C Text Echo</a></li>
+<li><a href="#enumerations">Enumerations</a></li>
+<li><a href="#cursor-lifetime">Cursor Lifetime</a></li>
+<li><a href="#procedure-calls-and-exceptions">Procedure Calls and Exceptions</a></li>
+<li><a href="#control-flow-with-big-moves">Control Flow with “Big Moves”</a></li>
+<li><a href="#getting-access-to-external-code">Getting access to external code</a></li>
+<li><a href="#regular-data-manipulation-language-dml">Regular Data Manipulation Language (DML)</a></li>
+<li><a href="#variable-and-cursor-declarations">Variable and Cursor declarations</a></li>
+<li><a href="#query-plans">Query Plans</a></li>
+<li><a href="#fetching-data-from-a-cursor-or-from-loose-data">Fetching Data from a Cursor or from Loose Data</a></li>
+<li><a href="#control-flow">Control Flow</a></li>
+<li><a href="#manual-control-of-results">Manual Control of Results</a></li>
+</ul></li>
 </ul>
 </nav>
 <!--- @generated -->
@@ -6268,7 +6291,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Tue Jun 22 13:46:31 PDT 2021</p>
+<p>Snapshot as of Thu Jun 24 16:06:47 PDT 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -9480,7 +9503,7 @@ select 1 where table_valued_func(5) = 3;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Tue Jun 22 13:46:33 PDT 2021</p>
+<p>Snapshot as of Thu Jun 24 16:06:47 PDT 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 
@@ -10966,6 +10989,7 @@ fetch C USING
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>These are a few of the antipatterns I’ve seen while travelling through various CQL source files. They are in various categories.</p>
+<p>Refer also to Appendix 8: CQL Best Practices.</p>
 <h3 id="common-schema">Common Schema</h3>
 <p>For these examples let’s create a couple of tables we might need for examples</p>
 <div class="sourceCode" id="cb448"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb448-1"><a href="#cb448-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> foo (</span>
@@ -11128,5 +11152,191 @@ fetch C USING
 <span id="cb472-4"><a href="#cb472-4"></a>  <span class="kw">FROM</span> foo</span>
 <span id="cb472-5"><a href="#cb472-5"></a>  <span class="kw">INNER</span> <span class="kw">JOIN</span> bar <span class="kw">ON</span> foo.<span class="kw">id</span> <span class="op">=</span> bar.<span class="kw">id</span></span>
 <span id="cb472-6"><a href="#cb472-6"></a>  <span class="kw">WHERE</span> bar.rate <span class="op">&gt;</span> <span class="dv">5</span>;</span></code></pre></div>
+<h2 id="appendix-8-cql-best-practices">Appendix 8: CQL Best Practices</h2>
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
+<p>This is a brief discussion of every statement type and some general best practices for that statement. The statements are in mostly alphabetical order except related statements were moved up in the order to make logical groups.</p>
+<p>Refer also to Appendix 7: CQL Anti-patterns.</p>
+<h3 id="data-definition-language-ddl">Data Definition Language (DDL)</h3>
+<ul>
+<li><code>ALTER TABLE ADD COLUMN</code></li>
+<li><code>CREATE INDEX</code></li>
+<li><code>CREATE PROC</code></li>
+<li><code>CREATE TABLE</code></li>
+<li><code>CREATE TRIGGER</code></li>
+<li><code>CREATE VIEW</code></li>
+<li><code>CREATE VIRTUAL TABLE</code></li>
+<li><code>DROP INDEX</code></li>
+<li><code>DROP TABLE</code></li>
+<li><code>DROP TRIGGER</code></li>
+<li><code>DROP VIEW</code></li>
+</ul>
+<p>These statements almost never appear in normal procedures and generally should be avoided. The normal way of handling schema in CQL is to have one or more files declare all the schema you need and then let CQL create a schema upgrader for you. This means you’ll never manually drop tables or indices etc. The <code>create</code> declarations with their annotations will totally drive the schema.</p>
+<p>Any ad hoc DDL is usually a very bad sign.</p>
+<h3 id="ad-hoc-migrations">Ad Hoc Migrations</h3>
+<ul>
+<li><code>@SCHEMA_AD_HOC_MIGRATION</code></li>
+</ul>
+<p>This is a special upgrade step that should be taken at the version indicated in the statement. These can be quite complex and even super important but should not be used lightly. Any migration procedure has to be highly tolerant of a variety of incoming schema versions and previous partial successes. In any case this directive should not appear in normal code. It should be part of the schema DDL declarations.</p>
+<h3 id="transactions">Transactions</h3>
+<ul>
+<li><code>BEGIN TRANSACTION</code></li>
+<li><code>COMMIT TRANSACTION</code></li>
+<li><code>ROLLBACK TRANSACTION</code></li>
+</ul>
+<p>Transactions do not nest and most procedures do not know the context in which they will be called, so the vast majority of procedures will not and should not actaully start transactions. You can only do this if you know, somehow, for sure, that the procedure in question is somehow a “top level” procedure. So generally, don’t use these statements.</p>
+<h3 id="savepoints">Savepoints</h3>
+<ul>
+<li><code>SAVEPOINT</code></li>
+<li><code>ROLLBACK TO SAVEPOINT</code></li>
+<li><code>RELEASE SAVEPOINT</code></li>
+<li><code>PROC SAVEPOINT</code></li>
+<li><code>COMMIT RETURN</code></li>
+<li><code>ROLLBACK RETURN</code></li>
+</ul>
+<p>Savepoints are the preferred tool for having interim state that can be rolled back if needed. You can use ad hoc savepoints, just give your save point and name then use <code>RELEASE SAVEPOINT</code> to commit it, or else <code>ROLLBACK TO SAVEPOINT</code> followed by a <code>RELEASE</code> to abort it. Note that you always <code>RELEASE</code> savepoints in both the rollback and the commit case.</p>
+<p>Managing savepoints can be tricky, especially given the various error cases. They combine nicely with <code>TRY CATCH</code> to do this job. However, even that is a lot of boilerplate. The best way to use savepoints is with <code>PROC SAVEPOINT BEGIN</code> .. <code>END</code>;</p>
+<p>When you use <code>PROC SAVEPOINT</code>, a savepoint is created for you with the name of your procedure. When the block exits the savepoint is released (committed). However you also get an automatically generated try/catch block which will rollback the savepoint if anything inside the block were to invoke <code>THROW</code>. Also, you may not use a regular <code>RETURN</code> inside this block, you must use either <code>ROLLBACK RETURN</code> or <code>COMMIT RETURN</code>. Both of these directly indicate the fate of the automatically generated statement when they run. This gives you useful options to early-out (with no error) while keeping or abandoning any work in progress. Of course you can use <code>THROW</code> to return an error and abandon the work in progress.</p>
+<h3 id="compilation-options">Compilation options</h3>
+<ul>
+<li><code>@ENFORCE_NORMAL</code></li>
+<li><code>@ENFORCE_POP</code></li>
+<li><code>@ENFORCE_PUSH</code></li>
+<li><code>@ENFORCE_RESET</code></li>
+<li><code>@ENFORCE_STRICT</code></li>
+</ul>
+<p>CQL allows you to specify a number of useful options such as “do not allow Window Functions” or “all foreign keys must choose some update or delete strategy”. These additional enforcements are designed to prevent errors. Because of this they should be established once, somewhere central and they should be rarely if ever overrided. For instance <code>@ENFORCE_NORMAL WINDOW FUNCTION</code> would allow you to use window functions again, but this is probably a bad idea. If strict mode is on, disallowing them, that probably means your project is expected to target versions of SQLite that do not have window functions. Overriding that setting is likely to lead to runtime errors.</p>
+<p>In general you don’t want to see these options in most code.</p>
+<h3 id="previous-schema">Previous Schema</h3>
+<ul>
+<li><code>@PREVIOUS_SCHEMA</code></li>
+</ul>
+<p>CQL can ensure that the current schema is compatible with the previous schema, meaning that an upgrade script could reasonably be generated to go from the previous to the current. This directive demarks the start of the previous schema section when that validatio happens. This direcive is useless except for creating that schema validation so it should never appear in normal procedures.</p>
+<h3 id="schema-regions-1">Schema Regions</h3>
+<ul>
+<li><code>@BEGIN_SCHEMA_REGION</code></li>
+<li><code>@DECLARE_DEPLOYABLE_REGION</code></li>
+<li><code>@DECLARE_SCHEMA_REGION</code></li>
+<li><code>@END_SCHEMA_REGION</code></li>
+</ul>
+<p>CQL allows you to declare arbitrary schema regions and limit what parts of the schema any given region may consume. This helps you to prevent schema from getting entangled. There is never a reason to use this directives inside normal procedures; They should appear only in your schema declaration files.</p>
+<h3 id="schema-version">Schema Version</h3>
+<ul>
+<li><code>@SCHEMA_UPGRADE_SCRIPT</code></li>
+<li><code>@SCHEMA_UPGRADE_VERSION</code></li>
+</ul>
+<p>The <code>@SCHEMA_UPGRADE_SCRIPT</code> directive is only used by CQL itself to declare that the incoming file is an autogenerated schema upgrade script. These scripts have slightly different rules for schema declaration that are not useful outside of such scripts. So you should never use this.</p>
+<p><code>@SCHEMA_UPGRADE_VERSION</code> on the other hand is used if you are creating a manual migration script. You need this script to run in the context of the schema version that it affects. Use this directive at the start of the file to do so. Generally manual migration scripts are to be avoided so hopefully this directive is rarely if ever used.</p>
+<h3 id="c-text-echo">C Text Echo</h3>
+<ul>
+<li><code>@ECHO</code></li>
+</ul>
+<p>This directive emits plain text directly into the compiler’s output stream. It can be invaluable for adding new runtime features and for ensuring that (e.g.) additional <code>#include</code> or <code>#define</code> directives are present in the output but you can really break things by over-using this feature. Most parts of the CQL output are subject to change so any use of this should be super clean. The indended use was, as mentioned, to allow an extra <code>#include</code> in your code so that CQL could call into some library. Most uses of this combine with <code>DECLARE FUNCTION</code> or <code>DECLARE PROCEDURE</code> to declare an external entity.</p>
+<h3 id="enumerations">Enumerations</h3>
+<ul>
+<li><code>DECLARE ENUM</code></li>
+<li><code>@EMIT_ENUMS</code></li>
+</ul>
+<p>Avoid embedded constants whenever possible. Instead declare a suitable enumeration. Use <code>@EMIT_ENUMS Some_Enum</code> to get the enumeration constants into the generated .h file for C. But be sure to do this only from one compiland. You do not want the enumerations in every .h file. Choose a single .sql file (not included by lots of other things) to place the <code>@EMIT_ENUMS</code> directive. You can make a file specifically for this purpose if nothing else is serviceable.</p>
+<h3 id="cursor-lifetime">Cursor Lifetime</h3>
+<ul>
+<li><code>CLOSE</code></li>
+<li><code>OPEN</code></li>
+</ul>
+<p>The <code>OPEN</code> statement is a no-op, SQLite has no such notion. It was included becasue it is present in <code>MYSQL</code> and other variants and its inclusion can easy readability sometimes. But it does nothing. The <code>CLOSE</code> statement is normally not necessary because all cursors are closed at the end of the procedure they are declared in (unless they are boxed, see below). You only need <code>CLOSE</code> if you want to close a global cursor (which has no scope) or if you want to close a local cursor “sooner” because waiting to the end of the procedure might be a very long time. Using close more than once is safe, the second and later close operations do nothing.</p>
+<h3 id="procedure-calls-and-exceptions">Procedure Calls and Exceptions</h3>
+<ul>
+<li><code>CALL</code></li>
+<li><code>THROW</code></li>
+<li><code>TRY CATCH</code></li>
+</ul>
+<p>Remember that if you call a procedure and it uses <code>THROW</code> or else uses some SQL that failed, this return code will cause your code to <code>THROW</code> when the procedure returns. Normally that’s exactly what you want, the error will ripple out and some top-level <code>CATCH</code> will cause a <code>ROLLBACK</code> and the top level callers sees the error. If you have your own rollback needs be sure to install your own <code>TRY</code>/<code>CATCH</code> block or else use <code>PROC SAVEPOINT</code> as above to do it for you.</p>
+<p>Inside of a <code>CATCH</code> block you can use the special variable <code>@RC</code> to see the most recent return code from SQLite.</p>
+<h3 id="control-flow-with-big-moves">Control Flow with “Big Moves”</h3>
+<ul>
+<li><code>CONTINUE</code></li>
+<li><code>LEAVE</code></li>
+<li><code>RETURN</code></li>
+</ul>
+<p>These work as usual but beware, you can easily use any of these to accidentally leave a block with a savepoint or transaction and you might skip over the <code>ROLLBACK</code> or <code>COMMIT</code> portions of the logic. Avoid this problem by using <code>PROC SAVEPOINT</code>.</p>
+<h3 id="getting-access-to-external-code">Getting access to external code</h3>
+<ul>
+<li><code>DECLARE FUNCTION</code></li>
+<li><code>DECLARE SELECT FUNCTION</code></li>
+<li><code>DECLARE PROCEDURE</code></li>
+</ul>
+<p>The best practice is to put any declarations into a shared header file which you can <code>#include</code> in all the places it is needed. This is especially important should you have to forward declare a procedure. CQL normally provides exports for all procedures so you basically get an automatically generated and certain-to-be-correct <code>#include</code> file. But, if the procedures are being compiled together then an export file won’t have been generated yet at the time you need it; To work around this you use the <code>DECLARE PROCEDURE</code> form. However, procedure declarations are tricky; they include not just the type of the arguments but the types of any/all of the columns in any result set the procedure might have. This must not be wrong or callers will get unpredictable failures.</p>
+<p>The easiest way to ensure it is correct is to use the same trick as you would in C – make sure that you <code>#include</code> the declaration the in the translation unit with the definition. If they don’t match there will be an error.</p>
+<p>A very useful trick: the error will include the exact text of the correct declaration. So if you don’t know it, or are too lazy to figure it out; simply put <code>ANY</code> declaration in the shared header file and then paste in the correct declaration from the error. should the definition ever change you will get a compilation error which you can again harvest to get the correct declaration.</p>
+<p>In this way you can be sure the declarations are correct.</p>
+<p>Functions have no CQL equivalent, but they generally don’t change very often. Use <code>DECLARE FUNCTION</code> to allow access to some C code that returns a result of some kind. Be sure to add the <code>CREATE</code> option if the function returns a reference that the caller owns.</p>
+<p>Use <code>DECLARE SELECT FUNCTION</code> to tell CQL about any User Defined Functions you have added to SQLite so that it knows how to call them. Note that CQL does not register those UDFs, it couldn’t make that call lacking the essential C information required to do so. If you find that you are getting errors when calling a UDF the most likely reason for the failure is that the UDF was declared but never registered with SQLite at runtime. This happens in test code a lot – product code tends to have some central place to register the UDFs and it normally runs at startup, e.g. right after the schema is upgraded.</p>
+<h3 id="regular-data-manipulation-language-dml">Regular Data Manipulation Language (DML)</h3>
+<ul>
+<li><code>DELETE</code></li>
+<li><code>INSERT</code></li>
+<li><code>SELECT</code></li>
+<li><code>UPDATE</code></li>
+<li><code>UPSERT</code></li>
+</ul>
+<p>These statements are the most essential and they’ll appear in almost every procedure. There are a few general best practices we can go over.</p>
+<ul>
+<li><p>Try to do as much as you can in one batch rather than iterating; e.g.</p>
+<ul>
+<li>don’t write a loop with a <code>DELETE</code> statement that deletes one row if you can avoid it, write a delete statement that deletes all you need to delete</li>
+<li>don’t write a loop with of <code>SELECT</code> statement that fetches one row, try to fetch all the rows you need with one select</li>
+</ul></li>
+<li><p>Make sure <code>UPSERT</code> is supported on the SQLite system you are using, older versions do not support it</p></li>
+<li><p>Don’t put unnecessary casts in your <code>SELECT</code> statements, they just add fat</p></li>
+<li><p>Don’t use <code>CASE</code>/<code>WHEN</code> to compute a boolean, the boolean operations are more economical (e.g. use <code>IS</code>)</p></li>
+<li><p>Don’t use <code>COUNT</code> if all you need to know is whether a row exists or not, use <code>EXISTS</code></p></li>
+<li><p>Don’t use <code>GROUP BY</code>, <code>ORDER BY</code>, or <code>DISTINCT</code> on large rowsets, the sort is expensive and it will make your <code>SELECT</code> statements write to disk rather than just read</p></li>
+<li><p>Always use the <code>INSERT INTO FOO USING</code> form of the <code>INSERT</code> statement, it’s much easier to read than the standard form and compiles to the same thing</p></li>
+</ul>
+<h3 id="variable-and-cursor-declarations">Variable and Cursor declarations</h3>
+<ul>
+<li><code>DECLARE OUT CALL</code></li>
+<li><code>DECLARE</code></li>
+<li><code>LET</code></li>
+<li><code>SET</code></li>
+</ul>
+<p>These are likely to appear all over as well. If you can avoid a variable declaration by using <code>LET</code> then do so; The code will be more concise and you’ll get the exact variable type you need. This is the same as <code>var x = foo();</code> in other languages. Once the variable is declared use <code>SET</code>.</p>
+<p>You can save yourself a lot of declarations of <code>OUT</code> variables with <code>DECLARE OUT CALL</code>. That declaration form automatically declares the <code>OUT</code> variables used in the call you are about to make with the correct type. If the number of arguments changes you just have to add the args you don’t have to also add new declarations.</p>
+<p>The <code>LIKE</code> construct can be used to let you declare things whose type is the same as another thing. Patterns like <code>DECLARE ARGS CURSOR LIKE FOO ARGUMENTS</code> save you a lot of typing and also enhance correctness. There’s a whole chapter dedicated to “shapes” defined by <code>LIKE</code>.</p>
+<h3 id="query-plans">Query Plans</h3>
+<ul>
+<li><code>EXPLAIN</code></li>
+</ul>
+<p>Explain can be used in front of other queries to generate a plan. The way SQLite handles this is that you fetch the rows of the plan as usual. So basically <code>EXPLAIN</code> is kind of like <code>SELECT QUERY PLAN OF</code>. This hardly ever comes up in normal coding. CQL has an output option where it will generate code that gives you the query plan for a procedures queries rather than the normal body of the procedure.</p>
+<h3 id="fetching-data-from-a-cursor-or-from-loose-data">Fetching Data from a Cursor or from Loose Data</h3>
+<ul>
+<li><code>FETCH</code></li>
+<li><code>UPDATE CURSOR</code></li>
+</ul>
+<p>The <code>FETCH</code> statement has many variations, all are useful at some time or another. There are a few helpful guidelines.</p>
+<ul>
+<li>If fetching from loose values into a cursor use the <code>FETCH USING</code> form (as you would with <code>INSERT INTO USING</code>) because it is less error prone</li>
+<li><code>FETCH INTO</code> is generally a bad idea, you’ll have to declare a lot of variables, instead just rely on automatic storage in the cursor e.g. <code>fetch my_cursor</code> rather than <code>fetch my_cursor into a, b, c</code></li>
+<li>If you have data already in a cursor you can mutate some of the columns using <code>UPDATE CURSOR</code>, this can let you adjust values or apply defaults</li>
+</ul>
+<h3 id="control-flow">Control Flow</h3>
+<ul>
+<li><code>IF</code></li>
+<li><code>LOOP</code></li>
+<li><code>SWITCH</code></li>
+<li><code>WHILE</code></li>
+</ul>
+<p>These are your bread and butter and they will appear all over. One tip: Use the <code>ALL VALUES</code> variant of switch whenever possible to ensure that you haven’t missed any cases.</p>
+<h3 id="manual-control-of-results">Manual Control of Results</h3>
+<ul>
+<li><p><code>OUT</code></p></li>
+<li><p><code>OUT UNION</code></p></li>
+<li><p>If you know you are producing exactly one row <code>OUT</code> is more economical than <code>SELECT</code></p></li>
+<li><p>If you need complete flexibility on what rows to produce (e.g. skip some, add extras, mutate some) then <code>OUT UNION</code> will give you that, use it only when needed, it’s more expensive than just <code>SELECT</code></p></li>
+</ul>
 </body>
 </html>
