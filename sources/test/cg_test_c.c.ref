@@ -5024,7 +5024,7 @@ static cql_uint16 simple_identity_col_offsets[] = { 2,
   cql_offsetof(simple_identity_row, data)
 };
 
-static cql_uint16 simple_identity_identity_columns[] = { 1,
+cql_uint16 simple_identity_identity_columns[] = { 1,
   0, // id
 };
 
@@ -5113,7 +5113,7 @@ static cql_uint16 complex_identity_col_offsets[] = { 3,
   cql_offsetof(complex_identity_row, data)
 };
 
-static cql_uint16 complex_identity_identity_columns[] = { 2,
+cql_uint16 complex_identity_identity_columns[] = { 2,
   0, // col1
   1, // col2
 };
@@ -5192,7 +5192,7 @@ static cql_uint16 out_cursor_identity_col_offsets[] = { 2,
   cql_offsetof(out_cursor_identity_row, data)
 };
 
-static cql_uint16 out_cursor_identity_identity_columns[] = { 1,
+cql_uint16 out_cursor_identity_identity_columns[] = { 1,
   0, // id
 };
 

@@ -2964,10 +2964,13 @@ static void find_identity_columns_callback(CSTR _Nonnull name, ast_node *_Nonnul
 
 // Emit the array of identity columns (used by cql_rows_same to determine which columns identify the "same" record)
 // Return 1 if any identity columns were found; otherwise 0
-static bool_t cg_identity_columns(charbuf *output,
-                                  CSTR proc_name,
-                                  ast_node *_Nullable misc_attrs,
-                                  CSTR identity_columns_sym) {
+static bool_t cg_identity_columns(
+  charbuf *headers_output,
+  charbuf *defs_output,
+  CSTR proc_name,
+  ast_node *_Nullable misc_attrs,
+  CSTR identity_columns_sym)
+{
   if (!misc_attrs) {
     return false;
   }
@@ -2975,7 +2978,8 @@ static bool_t cg_identity_columns(charbuf *output,
   CHARBUF_OPEN(cols);
   uint32_t count = find_identity_columns(misc_attrs, &find_identity_columns_callback, &cols);
   if (count > 0) {
-    bprintf(output, "\nstatic cql_uint16 %s[] = { %d,\n%s};\n", identity_columns_sym, count, cols.ptr);
+    bprintf(headers_output, "%scql_uint16 %s[];\n\n", rt->symbol_visibility, identity_columns_sym);
+    bprintf(defs_output, "\ncql_uint16 %s[] = { %d,\n%s};\n", identity_columns_sym, count, cols.ptr);
   }
   CHARBUF_CLOSE(cols);
   return count > 0;
@@ -6470,7 +6474,7 @@ static void cg_proc_result_set(ast_node *ast) {
     cg_col_offsets(d, sptr, col_offsets_sym.ptr, row_sym.ptr);
   }
 
-  bool_t has_identity_columns = cg_identity_columns(d, name, misc_attrs, identity_columns_sym.ptr);
+  bool_t has_identity_columns = cg_identity_columns(h, d, name, misc_attrs, identity_columns_sym.ptr);
 
   bprintf(&result_set_create,
           "(%s)%s(%s, count, %d, %s, meta)",

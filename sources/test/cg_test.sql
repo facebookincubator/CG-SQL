@@ -2161,7 +2161,7 @@ begin
 end;
 
 -- TEST: create proc with a single-column identity attribute
--- + static cql_uint16 simple_identity_identity_columns[] = { 1,
+-- + cql_uint16 simple_identity_identity_columns[] = { 1,
 -- + // export: DECLARE PROC simple_identity () (id INTEGER NOT NULL, data INTEGER NOT NULL);
 @attribute(cql:identity=(id))
 create proc simple_identity()
@@ -2170,7 +2170,7 @@ begin
 end;
 
 -- TEST: create proc with a multi-column identity attribute
--- + static cql_uint16 complex_identity_identity_columns[] = { 2,
+-- + cql_uint16 complex_identity_identity_columns[] = { 2,
 @attribute(cql:identity=(col1, col2))
 create proc complex_identity()
 begin
@@ -2178,7 +2178,7 @@ begin
 end;
 
 -- TEST: create proc with a out cursor and identity column
--- + static cql_uint16 out_cursor_identity_identity_columns[] = { 1,
+-- + cql_uint16 out_cursor_identity_identity_columns[] = { 1,
 @attribute(cql:identity=(id))
 create proc out_cursor_identity()
 begin
