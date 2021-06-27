@@ -7052,10 +7052,9 @@ static void sem_func_julianday(ast_node *ast, uint32_t arg_count) {
   sem_strftime(ast, arg_count, 0, SEM_TYPE_REAL);
 }
 
-// The "nullable" function is used to take something that is
-// not nullable and have it be treated as nullable.  This is really
-// only needed to get argument types to match in compound select
-// statements or other similar situations.
+// The "ptr" function is used to get the memory address of an object at runtime
+// as a LONG INT. This is useful when calling SQLite functions as they are
+// unable to deal with objects directly.
 static void sem_func_ptr(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
