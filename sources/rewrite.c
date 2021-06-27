@@ -1334,3 +1334,30 @@ cql_noexport void rewrite_data_type_if_needed(ast_node *ast) {
 
   record_ok(ast);
 }
+
+// Wraps an id or dot in a call to cql_inferred_notnull.
+cql_noexport void rewrite_nullable_to_unsafe_notnull(ast_node *_Nonnull ast) {
+  Contract(is_ast_id(ast) || is_ast_dot(ast));
+
+  AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
+
+  ast_node *id_or_dot;
+  if (is_ast_id(ast)) {
+    EXTRACT_STRING(name, ast);
+    id_or_dot = new_ast_str(name);
+  } else {
+    Invariant(is_ast_dot(ast));
+    EXTRACT_STRING(name, ast->right);
+    EXTRACT_STRING(scope, ast->left);
+    id_or_dot = new_ast_dot(new_ast_str(scope), new_ast_str(name));
+  }
+  ast_node *cql_inferred_notnull = new_ast_str("cql_inferred_notnull");
+  ast_node* call_arg_list = new_ast_call_arg_list(
+      new_ast_call_filter_clause(NULL, NULL),
+      new_ast_arg_list(id_or_dot, NULL));
+  ast->type = k_ast_call;
+  ast_set_left(ast, cql_inferred_notnull);
+  ast_set_right(ast, call_arg_list);
+
+  AST_REWRITE_INFO_RESET();
+}

@@ -60884,3 +60884,2311 @@ Error at test/sem_test.sql:XXXX : in str : CQL0103: duplicate table/view name 'f
           | {name id}
           | {type_int}: integer
 
+The statement ending at line XXXX
+
+@ENFORCE_STRICT NOT NULL AFTER CHECK;
+
+  {enforce_strict_stmt}: ok
+  | {int 12}
+
+The statement ending at line XXXX
+
+CREATE PROC conditionals_improve_nullable_variables ()
+BEGIN
+  DECLARE a INTEGER;
+  DECLARE b INTEGER;
+  DECLARE c INTEGER;
+  LET x0 := a;
+  IF a IS NOT NULL THEN
+    LET x1 := cql_inferred_notnull(a);
+  ELSE
+    LET x2 := a;
+    IF a IS NOT NULL THEN
+      LET x3 := cql_inferred_notnull(a);
+    ELSE
+      LET x4 := a;
+    END IF;
+  END IF;
+  LET x5 := a;
+END;
+
+  {create_proc_stmt}: ok
+  | {name conditionals_improve_nullable_variables}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: b: integer variable
+      | | | {name b}: b: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: c: integer variable
+      | | | {name c}: c: integer variable
+      | | {type_int}: integer
+      | {let_stmt}: x0: integer variable
+      | | {name x0}: x0: integer variable
+      | | {name a}: a: integer variable
+      | {if_stmt}: bool notnull
+      | | {cond_action}: bool notnull
+      | | | {is_not}: bool notnull
+      | | | | {name a}: a: integer variable
+      | | | | {null}: null
+      | | | {stmt_list}: ok
+      | |   | {let_stmt}: x1: integer notnull variable
+      | |     | {name x1}: x1: integer notnull variable
+      | |     | {call}: a: integer notnull variable
+      | |       | {name cql_inferred_notnull}: a: integer notnull variable
+      | |       | {call_arg_list}
+      | |         | {call_filter_clause}
+      | |         | {arg_list}: ok
+      | |           | {name a}: a: integer inferred_notnull variable
+      | | {if_alt}: ok
+      |   | {else}: ok
+      |     | {stmt_list}: ok
+      |       | {let_stmt}: x2: integer variable
+      |       | | {name x2}: x2: integer variable
+      |       | | {name a}: a: integer variable
+      |       | {if_stmt}: bool notnull
+      |         | {cond_action}: bool notnull
+      |         | | {is_not}: bool notnull
+      |         | | | {name a}: a: integer variable
+      |         | | | {null}: null
+      |         | | {stmt_list}: ok
+      |         |   | {let_stmt}: x3: integer notnull variable
+      |         |     | {name x3}: x3: integer notnull variable
+      |         |     | {call}: a: integer notnull variable
+      |         |       | {name cql_inferred_notnull}: a: integer notnull variable
+      |         |       | {call_arg_list}
+      |         |         | {call_filter_clause}
+      |         |         | {arg_list}: ok
+      |         |           | {name a}: a: integer inferred_notnull variable
+      |         | {if_alt}: ok
+      |           | {else}: ok
+      |             | {stmt_list}: ok
+      |               | {let_stmt}: x4: integer variable
+      |                 | {name x4}: x4: integer variable
+      |                 | {name a}: a: integer variable
+      | {let_stmt}: x5: integer variable
+        | {name x5}: x5: integer variable
+        | {name a}: a: integer variable
+
+The statement ending at line XXXX
+
+CREATE PROC conditionals_only_improve_through_ands ()
+BEGIN
+  DECLARE a TEXT;
+  DECLARE b TEXT;
+  DECLARE c TEXT;
+  IF a IS NOT NULL AND (b IS NOT NULL OR c IS NOT NULL) THEN
+    DECLARE c0 CURSOR FOR SELECT cql_inferred_notnull(a) AS a0, b AS b0, c AS c0;
+    IF (b IS NOT NULL OR cql_inferred_notnull(a) LIKE "hello") AND c IS NOT NULL THEN
+      DECLARE c1 CURSOR FOR SELECT cql_inferred_notnull(a) AS a1, b AS b1, cql_inferred_notnull(c) AS c1;
+      IF b IS NOT NULL THEN
+        DECLARE c2 CURSOR FOR SELECT cql_inferred_notnull(a) AS a2, cql_inferred_notnull(b) AS b2, cql_inferred_notnull(c) AS c2;
+      END IF;
+    END IF;
+  END IF;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name conditionals_only_improve_through_ands}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: text
+      | | {name_list}: a: text variable
+      | | | {name a}: a: text variable
+      | | {type_text}: text
+      | {declare_vars_type}: text
+      | | {name_list}: b: text variable
+      | | | {name b}: b: text variable
+      | | {type_text}: text
+      | {declare_vars_type}: text
+      | | {name_list}: c: text variable
+      | | | {name c}: c: text variable
+      | | {type_text}: text
+      | {if_stmt}: bool notnull
+        | {cond_action}: bool notnull
+        | | {and}: bool notnull
+        | | | {is_not}: bool notnull
+        | | | | {name a}: a: text variable
+        | | | | {null}: null
+        | | | {or}: bool notnull
+        | |   | {is_not}: bool notnull
+        | |   | | {name b}: b: text variable
+        | |   | | {null}: null
+        | |   | {is_not}: bool notnull
+        | |     | {name c}: c: text variable
+        | |     | {null}: null
+        | | {stmt_list}: ok
+        |   | {declare_cursor}: c0: select: { a0: text notnull variable, b0: text variable, c0: text variable } variable dml_proc
+        |   | | {name c0}: c0: select: { a0: text notnull variable, b0: text variable, c0: text variable } variable dml_proc
+        |   | | {select_stmt}: select: { a0: text notnull variable, b0: text variable, c0: text variable }
+        |   |   | {select_core_list}: select: { a0: text notnull variable, b0: text variable, c0: text variable }
+        |   |   | | {select_core}: select: { a0: text notnull variable, b0: text variable, c0: text variable }
+        |   |   |   | {select_expr_list_con}: select: { a0: text notnull variable, b0: text variable, c0: text variable }
+        |   |   |     | {select_expr_list}: select: { a0: text notnull variable, b0: text variable, c0: text variable }
+        |   |   |     | | {select_expr}: a0: text notnull variable
+        |   |   |     | | | {call}: a: text notnull variable
+        |   |   |     | | | | {name cql_inferred_notnull}: a: text notnull variable
+        |   |   |     | | | | {call_arg_list}
+        |   |   |     | | |   | {call_filter_clause}
+        |   |   |     | | |   | {arg_list}: ok
+        |   |   |     | | |     | {name a}: a: text inferred_notnull variable
+        |   |   |     | | | {opt_as_alias}
+        |   |   |     | |   | {name a0}
+        |   |   |     | | {select_expr_list}
+        |   |   |     |   | {select_expr}: b0: text variable
+        |   |   |     |   | | {name b}: b: text variable
+        |   |   |     |   | | {opt_as_alias}
+        |   |   |     |   |   | {name b0}
+        |   |   |     |   | {select_expr_list}
+        |   |   |     |     | {select_expr}: c0: text variable
+        |   |   |     |       | {name c}: c: text variable
+        |   |   |     |       | {opt_as_alias}
+        |   |   |     |         | {name c0}
+        |   |   |     | {select_from_etc}: ok
+        |   |   |       | {select_where}
+        |   |   |         | {select_groupby}
+        |   |   |           | {select_having}
+        |   |   | {select_orderby}
+        |   |     | {select_limit}
+        |   |       | {select_offset}
+        |   | {if_stmt}: bool notnull
+        |     | {cond_action}: bool notnull
+        |     | | {and}: bool notnull
+        |     | | | {or}: bool notnull
+        |     | | | | {is_not}: bool notnull
+        |     | | | | | {name b}: b: text variable
+        |     | | | | | {null}: null
+        |     | | | | {like}: bool notnull
+        |     | | |   | {call}: a: text notnull variable
+        |     | | |   | | {name cql_inferred_notnull}: a: text notnull variable
+        |     | | |   | | {call_arg_list}
+        |     | | |   |   | {call_filter_clause}
+        |     | | |   |   | {arg_list}: ok
+        |     | | |   |     | {name a}: a: text inferred_notnull variable
+        |     | | |   | {strlit 'hello'}: text notnull
+        |     | | | {is_not}: bool notnull
+        |     | |   | {name c}: c: text variable
+        |     | |   | {null}: null
+        |     | | {stmt_list}: ok
+        |     |   | {declare_cursor}: c1: select: { a1: text notnull variable, b1: text variable, c1: text notnull variable } variable dml_proc
+        |     |   | | {name c1}: c1: select: { a1: text notnull variable, b1: text variable, c1: text notnull variable } variable dml_proc
+        |     |   | | {select_stmt}: select: { a1: text notnull variable, b1: text variable, c1: text notnull variable }
+        |     |   |   | {select_core_list}: select: { a1: text notnull variable, b1: text variable, c1: text notnull variable }
+        |     |   |   | | {select_core}: select: { a1: text notnull variable, b1: text variable, c1: text notnull variable }
+        |     |   |   |   | {select_expr_list_con}: select: { a1: text notnull variable, b1: text variable, c1: text notnull variable }
+        |     |   |   |     | {select_expr_list}: select: { a1: text notnull variable, b1: text variable, c1: text notnull variable }
+        |     |   |   |     | | {select_expr}: a1: text notnull variable
+        |     |   |   |     | | | {call}: a: text notnull variable
+        |     |   |   |     | | | | {name cql_inferred_notnull}: a: text notnull variable
+        |     |   |   |     | | | | {call_arg_list}
+        |     |   |   |     | | |   | {call_filter_clause}
+        |     |   |   |     | | |   | {arg_list}: ok
+        |     |   |   |     | | |     | {name a}: a: text inferred_notnull variable
+        |     |   |   |     | | | {opt_as_alias}
+        |     |   |   |     | |   | {name a1}
+        |     |   |   |     | | {select_expr_list}
+        |     |   |   |     |   | {select_expr}: b1: text variable
+        |     |   |   |     |   | | {name b}: b: text variable
+        |     |   |   |     |   | | {opt_as_alias}
+        |     |   |   |     |   |   | {name b1}
+        |     |   |   |     |   | {select_expr_list}
+        |     |   |   |     |     | {select_expr}: c1: text notnull variable
+        |     |   |   |     |       | {call}: c: text notnull variable
+        |     |   |   |     |       | | {name cql_inferred_notnull}: c: text notnull variable
+        |     |   |   |     |       | | {call_arg_list}
+        |     |   |   |     |       |   | {call_filter_clause}
+        |     |   |   |     |       |   | {arg_list}: ok
+        |     |   |   |     |       |     | {name c}: c: text inferred_notnull variable
+        |     |   |   |     |       | {opt_as_alias}
+        |     |   |   |     |         | {name c1}
+        |     |   |   |     | {select_from_etc}: ok
+        |     |   |   |       | {select_where}
+        |     |   |   |         | {select_groupby}
+        |     |   |   |           | {select_having}
+        |     |   |   | {select_orderby}
+        |     |   |     | {select_limit}
+        |     |   |       | {select_offset}
+        |     |   | {if_stmt}: bool notnull
+        |     |     | {cond_action}: bool notnull
+        |     |     | | {is_not}: bool notnull
+        |     |     | | | {name b}: b: text variable
+        |     |     | | | {null}: null
+        |     |     | | {stmt_list}: ok
+        |     |     |   | {declare_cursor}: c2: select: { a2: text notnull variable, b2: text notnull variable, c2: text notnull variable } variable dml_proc
+        |     |     |     | {name c2}: c2: select: { a2: text notnull variable, b2: text notnull variable, c2: text notnull variable } variable dml_proc
+        |     |     |     | {select_stmt}: select: { a2: text notnull variable, b2: text notnull variable, c2: text notnull variable }
+        |     |     |       | {select_core_list}: select: { a2: text notnull variable, b2: text notnull variable, c2: text notnull variable }
+        |     |     |       | | {select_core}: select: { a2: text notnull variable, b2: text notnull variable, c2: text notnull variable }
+        |     |     |       |   | {select_expr_list_con}: select: { a2: text notnull variable, b2: text notnull variable, c2: text notnull variable }
+        |     |     |       |     | {select_expr_list}: select: { a2: text notnull variable, b2: text notnull variable, c2: text notnull variable }
+        |     |     |       |     | | {select_expr}: a2: text notnull variable
+        |     |     |       |     | | | {call}: a: text notnull variable
+        |     |     |       |     | | | | {name cql_inferred_notnull}: a: text notnull variable
+        |     |     |       |     | | | | {call_arg_list}
+        |     |     |       |     | | |   | {call_filter_clause}
+        |     |     |       |     | | |   | {arg_list}: ok
+        |     |     |       |     | | |     | {name a}: a: text inferred_notnull variable
+        |     |     |       |     | | | {opt_as_alias}
+        |     |     |       |     | |   | {name a2}
+        |     |     |       |     | | {select_expr_list}
+        |     |     |       |     |   | {select_expr}: b2: text notnull variable
+        |     |     |       |     |   | | {call}: b: text notnull variable
+        |     |     |       |     |   | | | {name cql_inferred_notnull}: b: text notnull variable
+        |     |     |       |     |   | | | {call_arg_list}
+        |     |     |       |     |   | |   | {call_filter_clause}
+        |     |     |       |     |   | |   | {arg_list}: ok
+        |     |     |       |     |   | |     | {name b}: b: text inferred_notnull variable
+        |     |     |       |     |   | | {opt_as_alias}
+        |     |     |       |     |   |   | {name b2}
+        |     |     |       |     |   | {select_expr_list}
+        |     |     |       |     |     | {select_expr}: c2: text notnull variable
+        |     |     |       |     |       | {call}: c: text notnull variable
+        |     |     |       |     |       | | {name cql_inferred_notnull}: c: text notnull variable
+        |     |     |       |     |       | | {call_arg_list}
+        |     |     |       |     |       |   | {call_filter_clause}
+        |     |     |       |     |       |   | {arg_list}: ok
+        |     |     |       |     |       |     | {name c}: c: text inferred_notnull variable
+        |     |     |       |     |       | {opt_as_alias}
+        |     |     |       |     |         | {name c2}
+        |     |     |       |     | {select_from_etc}: ok
+        |     |     |       |       | {select_where}
+        |     |     |       |         | {select_groupby}
+        |     |     |       |           | {select_having}
+        |     |     |       | {select_orderby}
+        |     |     |         | {select_limit}
+        |     |     |           | {select_offset}
+        |     |     | {if_alt}: ok
+        |     | {if_alt}: ok
+        | {if_alt}: ok
+
+The statement ending at line XXXX
+
+CREATE PROC local_improvements_persist_until_set ()
+BEGIN
+  DECLARE a INTEGER;
+  DECLARE b INTEGER;
+  LET x0 := a;
+  LET y0 := b;
+  IF a IS NOT NULL AND b IS NOT NULL THEN
+    LET x1 := cql_inferred_notnull(a);
+    LET y1 := cql_inferred_notnull(b);
+    SET b := 0;
+    LET x2 := cql_inferred_notnull(a);
+    LET y2 := b;
+    IF cql_inferred_notnull(a) IS NOT NULL AND b IS NOT NULL THEN
+      LET x3 := cql_inferred_notnull(a);
+      LET y3 := cql_inferred_notnull(b);
+      SET a := 0;
+      LET x4 := a;
+      LET y4 := cql_inferred_notnull(b);
+      SET b := 0;
+    END IF;
+    LET x5 := a;
+    LET y5 := b;
+  END IF;
+  LET x6 := a;
+  LET y6 := b;
+END;
+
+  {create_proc_stmt}: ok
+  | {name local_improvements_persist_until_set}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: b: integer variable
+      | | | {name b}: b: integer variable
+      | | {type_int}: integer
+      | {let_stmt}: x0: integer variable
+      | | {name x0}: x0: integer variable
+      | | {name a}: a: integer variable
+      | {let_stmt}: y0: integer variable
+      | | {name y0}: y0: integer variable
+      | | {name b}: b: integer variable
+      | {if_stmt}: bool notnull
+      | | {cond_action}: bool notnull
+      | | | {and}: bool notnull
+      | | | | {is_not}: bool notnull
+      | | | | | {name a}: a: integer variable
+      | | | | | {null}: null
+      | | | | {is_not}: bool notnull
+      | | |   | {name b}: b: integer variable
+      | | |   | {null}: null
+      | | | {stmt_list}: ok
+      | |   | {let_stmt}: x1: integer notnull variable
+      | |   | | {name x1}: x1: integer notnull variable
+      | |   | | {call}: a: integer notnull variable
+      | |   |   | {name cql_inferred_notnull}: a: integer notnull variable
+      | |   |   | {call_arg_list}
+      | |   |     | {call_filter_clause}
+      | |   |     | {arg_list}: ok
+      | |   |       | {name a}: a: integer inferred_notnull variable
+      | |   | {let_stmt}: y1: integer notnull variable
+      | |   | | {name y1}: y1: integer notnull variable
+      | |   | | {call}: b: integer notnull variable
+      | |   |   | {name cql_inferred_notnull}: b: integer notnull variable
+      | |   |   | {call_arg_list}
+      | |   |     | {call_filter_clause}
+      | |   |     | {arg_list}: ok
+      | |   |       | {name b}: b: integer inferred_notnull variable
+      | |   | {assign}: b: integer variable
+      | |   | | {name b}: b: integer variable
+      | |   | | {int 0}: integer notnull
+      | |   | {let_stmt}: x2: integer notnull variable
+      | |   | | {name x2}: x2: integer notnull variable
+      | |   | | {call}: a: integer notnull variable
+      | |   |   | {name cql_inferred_notnull}: a: integer notnull variable
+      | |   |   | {call_arg_list}
+      | |   |     | {call_filter_clause}
+      | |   |     | {arg_list}: ok
+      | |   |       | {name a}: a: integer inferred_notnull variable
+      | |   | {let_stmt}: y2: integer variable
+      | |   | | {name y2}: y2: integer variable
+      | |   | | {name b}: b: integer variable
+      | |   | {if_stmt}: bool notnull
+      | |   | | {cond_action}: bool notnull
+      | |   | | | {and}: bool notnull
+      | |   | | | | {is_not}: bool notnull
+      | |   | | | | | {call}: a: integer notnull variable
+      | |   | | | | | | {name cql_inferred_notnull}: a: integer notnull variable
+      | |   | | | | | | {call_arg_list}
+      | |   | | | | |   | {call_filter_clause}
+      | |   | | | | |   | {arg_list}: ok
+      | |   | | | | |     | {name a}: a: integer inferred_notnull variable
+      | |   | | | | | {null}: null
+      | |   | | | | {is_not}: bool notnull
+      | |   | | |   | {name b}: b: integer variable
+      | |   | | |   | {null}: null
+      | |   | | | {stmt_list}: ok
+      | |   | |   | {let_stmt}: x3: integer notnull variable
+      | |   | |   | | {name x3}: x3: integer notnull variable
+      | |   | |   | | {call}: a: integer notnull variable
+      | |   | |   |   | {name cql_inferred_notnull}: a: integer notnull variable
+      | |   | |   |   | {call_arg_list}
+      | |   | |   |     | {call_filter_clause}
+      | |   | |   |     | {arg_list}: ok
+      | |   | |   |       | {name a}: a: integer inferred_notnull variable
+      | |   | |   | {let_stmt}: y3: integer notnull variable
+      | |   | |   | | {name y3}: y3: integer notnull variable
+      | |   | |   | | {call}: b: integer notnull variable
+      | |   | |   |   | {name cql_inferred_notnull}: b: integer notnull variable
+      | |   | |   |   | {call_arg_list}
+      | |   | |   |     | {call_filter_clause}
+      | |   | |   |     | {arg_list}: ok
+      | |   | |   |       | {name b}: b: integer inferred_notnull variable
+      | |   | |   | {assign}: a: integer variable
+      | |   | |   | | {name a}: a: integer variable
+      | |   | |   | | {int 0}: integer notnull
+      | |   | |   | {let_stmt}: x4: integer variable
+      | |   | |   | | {name x4}: x4: integer variable
+      | |   | |   | | {name a}: a: integer variable
+      | |   | |   | {let_stmt}: y4: integer notnull variable
+      | |   | |   | | {name y4}: y4: integer notnull variable
+      | |   | |   | | {call}: b: integer notnull variable
+      | |   | |   |   | {name cql_inferred_notnull}: b: integer notnull variable
+      | |   | |   |   | {call_arg_list}
+      | |   | |   |     | {call_filter_clause}
+      | |   | |   |     | {arg_list}: ok
+      | |   | |   |       | {name b}: b: integer inferred_notnull variable
+      | |   | |   | {assign}: b: integer variable
+      | |   | |     | {name b}: b: integer variable
+      | |   | |     | {int 0}: integer notnull
+      | |   | | {if_alt}: ok
+      | |   | {let_stmt}: x5: integer variable
+      | |   | | {name x5}: x5: integer variable
+      | |   | | {name a}: a: integer variable
+      | |   | {let_stmt}: y5: integer variable
+      | |     | {name y5}: y5: integer variable
+      | |     | {name b}: b: integer variable
+      | | {if_alt}: ok
+      | {let_stmt}: x6: integer variable
+      | | {name x6}: x6: integer variable
+      | | {name a}: a: integer variable
+      | {let_stmt}: y6: integer variable
+        | {name y6}: y6: integer variable
+        | {name b}: b: integer variable
+
+The statement ending at line XXXX
+
+CREATE PROC sets_out (OUT a INTEGER, OUT b INTEGER)
+BEGIN
+END;
+
+  {create_proc_stmt}: ok
+  | {name sets_out}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: a: integer variable out
+      | | {out}
+      | | {param_detail}: a: integer variable out
+      |   | {name a}: a: integer variable out
+      |   | {type_int}: integer
+      | {params}
+        | {param}: b: integer variable out
+          | {out}
+          | {param_detail}: b: integer variable out
+            | {name b}: b: integer variable out
+            | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE PROC local_improvements_persist_until_used_as_out_arg ()
+BEGIN
+  DECLARE a INTEGER;
+  DECLARE b INTEGER;
+  DECLARE x INTEGER;
+  IF a IS NOT NULL AND b IS NOT NULL THEN
+    LET x0 := cql_inferred_notnull(a);
+    LET y0 := cql_inferred_notnull(b);
+    CALL sets_out(x, b);
+    LET x1 := cql_inferred_notnull(a);
+    LET y1 := b;
+    CALL sets_out(a, x);
+    LET x2 := a;
+    LET y2 := b;
+  END IF;
+  IF a IS NOT NULL AND b IS NOT NULL THEN
+    LET x3 := cql_inferred_notnull(a);
+    LET y3 := cql_inferred_notnull(b);
+    CALL sets_out(a, b);
+    LET x4 := a;
+    LET y4 := b;
+  END IF;
+END;
+
+  {create_proc_stmt}: ok
+  | {name local_improvements_persist_until_used_as_out_arg}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: b: integer variable
+      | | | {name b}: b: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: x: integer variable
+      | | | {name x}: x: integer variable
+      | | {type_int}: integer
+      | {if_stmt}: bool notnull
+      | | {cond_action}: bool notnull
+      | | | {and}: bool notnull
+      | | | | {is_not}: bool notnull
+      | | | | | {name a}: a: integer variable
+      | | | | | {null}: null
+      | | | | {is_not}: bool notnull
+      | | |   | {name b}: b: integer variable
+      | | |   | {null}: null
+      | | | {stmt_list}: ok
+      | |   | {let_stmt}: x0: integer notnull variable
+      | |   | | {name x0}: x0: integer notnull variable
+      | |   | | {call}: a: integer notnull variable
+      | |   |   | {name cql_inferred_notnull}: a: integer notnull variable
+      | |   |   | {call_arg_list}
+      | |   |     | {call_filter_clause}
+      | |   |     | {arg_list}: ok
+      | |   |       | {name a}: a: integer inferred_notnull variable
+      | |   | {let_stmt}: y0: integer notnull variable
+      | |   | | {name y0}: y0: integer notnull variable
+      | |   | | {call}: b: integer notnull variable
+      | |   |   | {name cql_inferred_notnull}: b: integer notnull variable
+      | |   |   | {call_arg_list}
+      | |   |     | {call_filter_clause}
+      | |   |     | {arg_list}: ok
+      | |   |       | {name b}: b: integer inferred_notnull variable
+      | |   | {call_stmt}: ok
+      | |   | | {name sets_out}: ok
+      | |   | | {expr_list}: ok
+      | |   |   | {name x}: x: integer variable
+      | |   |   | {expr_list}
+      | |   |     | {name b}: b: integer inferred_notnull variable
+      | |   | {let_stmt}: x1: integer notnull variable
+      | |   | | {name x1}: x1: integer notnull variable
+      | |   | | {call}: a: integer notnull variable
+      | |   |   | {name cql_inferred_notnull}: a: integer notnull variable
+      | |   |   | {call_arg_list}
+      | |   |     | {call_filter_clause}
+      | |   |     | {arg_list}: ok
+      | |   |       | {name a}: a: integer inferred_notnull variable
+      | |   | {let_stmt}: y1: integer variable
+      | |   | | {name y1}: y1: integer variable
+      | |   | | {name b}: b: integer variable
+      | |   | {call_stmt}: ok
+      | |   | | {name sets_out}: ok
+      | |   | | {expr_list}: ok
+      | |   |   | {name a}: a: integer inferred_notnull variable
+      | |   |   | {expr_list}
+      | |   |     | {name x}: x: integer variable
+      | |   | {let_stmt}: x2: integer variable
+      | |   | | {name x2}: x2: integer variable
+      | |   | | {name a}: a: integer variable
+      | |   | {let_stmt}: y2: integer variable
+      | |     | {name y2}: y2: integer variable
+      | |     | {name b}: b: integer variable
+      | | {if_alt}: ok
+      | {if_stmt}: bool notnull
+        | {cond_action}: bool notnull
+        | | {and}: bool notnull
+        | | | {is_not}: bool notnull
+        | | | | {name a}: a: integer variable
+        | | | | {null}: null
+        | | | {is_not}: bool notnull
+        | |   | {name b}: b: integer variable
+        | |   | {null}: null
+        | | {stmt_list}: ok
+        |   | {let_stmt}: x3: integer notnull variable
+        |   | | {name x3}: x3: integer notnull variable
+        |   | | {call}: a: integer notnull variable
+        |   |   | {name cql_inferred_notnull}: a: integer notnull variable
+        |   |   | {call_arg_list}
+        |   |     | {call_filter_clause}
+        |   |     | {arg_list}: ok
+        |   |       | {name a}: a: integer inferred_notnull variable
+        |   | {let_stmt}: y3: integer notnull variable
+        |   | | {name y3}: y3: integer notnull variable
+        |   | | {call}: b: integer notnull variable
+        |   |   | {name cql_inferred_notnull}: b: integer notnull variable
+        |   |   | {call_arg_list}
+        |   |     | {call_filter_clause}
+        |   |     | {arg_list}: ok
+        |   |       | {name b}: b: integer inferred_notnull variable
+        |   | {call_stmt}: ok
+        |   | | {name sets_out}: ok
+        |   | | {expr_list}: ok
+        |   |   | {name a}: a: integer inferred_notnull variable
+        |   |   | {expr_list}
+        |   |     | {name b}: b: integer inferred_notnull variable
+        |   | {let_stmt}: x4: integer variable
+        |   | | {name x4}: x4: integer variable
+        |   | | {name a}: a: integer variable
+        |   | {let_stmt}: y4: integer variable
+        |     | {name y4}: y4: integer variable
+        |     | {name b}: b: integer variable
+        | {if_alt}: ok
+
+The statement ending at line XXXX
+
+CREATE TABLE tnull(
+  xn INTEGER,
+  yn INTEGER
+);
+
+  {create_table_stmt}: tnull: { xn: integer, yn: integer }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name tnull}
+  | {col_key_list}
+    | {col_def}: xn: integer
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |     | {name xn}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: yn: integer
+        | {col_def_type_attrs}: ok
+          | {col_def_name_type}
+            | {name yn}
+            | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE PROC local_improvements_persist_until_fetch_into ()
+BEGIN
+  DECLARE a INTEGER;
+  DECLARE b INTEGER;
+  DECLARE x INTEGER;
+  DECLARE c CURSOR FOR SELECT *
+    FROM tnull;
+  IF a IS NOT NULL AND b IS NOT NULL THEN
+    LET x0 := cql_inferred_notnull(a);
+    LET y0 := cql_inferred_notnull(b);
+    FETCH c INTO x, b;
+    LET x1 := cql_inferred_notnull(a);
+    LET y1 := b;
+    FETCH c INTO a, x;
+    LET x2 := a;
+    LET y2 := b;
+  END IF;
+  IF a IS NOT NULL AND b IS NOT NULL THEN
+    LET x3 := cql_inferred_notnull(a);
+    LET y3 := cql_inferred_notnull(b);
+    FETCH c INTO a, b;
+    LET x4 := a;
+    LET y4 := b;
+  END IF;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name local_improvements_persist_until_fetch_into}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: b: integer variable
+      | | | {name b}: b: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: x: integer variable
+      | | | {name x}: x: integer variable
+      | | {type_int}: integer
+      | {declare_cursor}: c: select: { xn: integer, yn: integer } variable dml_proc
+      | | {name c}: c: select: { xn: integer, yn: integer } variable dml_proc
+      | | {select_stmt}: select: { xn: integer, yn: integer }
+      |   | {select_core_list}: select: { xn: integer, yn: integer }
+      |   | | {select_core}: select: { xn: integer, yn: integer }
+      |   |   | {select_expr_list_con}: select: { xn: integer, yn: integer }
+      |   |     | {select_expr_list}: select: { xn: integer, yn: integer }
+      |   |     | | {star}: select: { xn: integer, yn: integer }
+      |   |     | {select_from_etc}: TABLE { tnull: tnull }
+      |   |       | {table_or_subquery_list}: TABLE { tnull: tnull }
+      |   |       | | {table_or_subquery}: TABLE { tnull: tnull }
+      |   |       |   | {name tnull}: TABLE { tnull: tnull }
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {if_stmt}: bool notnull
+      | | {cond_action}: bool notnull
+      | | | {and}: bool notnull
+      | | | | {is_not}: bool notnull
+      | | | | | {name a}: a: integer variable
+      | | | | | {null}: null
+      | | | | {is_not}: bool notnull
+      | | |   | {name b}: b: integer variable
+      | | |   | {null}: null
+      | | | {stmt_list}: ok
+      | |   | {let_stmt}: x0: integer notnull variable
+      | |   | | {name x0}: x0: integer notnull variable
+      | |   | | {call}: a: integer notnull variable
+      | |   |   | {name cql_inferred_notnull}: a: integer notnull variable
+      | |   |   | {call_arg_list}
+      | |   |     | {call_filter_clause}
+      | |   |     | {arg_list}: ok
+      | |   |       | {name a}: a: integer inferred_notnull variable
+      | |   | {let_stmt}: y0: integer notnull variable
+      | |   | | {name y0}: y0: integer notnull variable
+      | |   | | {call}: b: integer notnull variable
+      | |   |   | {name cql_inferred_notnull}: b: integer notnull variable
+      | |   |   | {call_arg_list}
+      | |   |     | {call_filter_clause}
+      | |   |     | {arg_list}: ok
+      | |   |       | {name b}: b: integer inferred_notnull variable
+      | |   | {fetch_stmt}: c: select: { xn: integer, yn: integer } variable dml_proc
+      | |   | | {name c}: c: select: { xn: integer, yn: integer } variable dml_proc
+      | |   | | {name_list}
+      | |   |   | {name x}: x: integer variable
+      | |   |   | {name_list}
+      | |   |     | {name b}: b: integer variable
+      | |   | {let_stmt}: x1: integer notnull variable
+      | |   | | {name x1}: x1: integer notnull variable
+      | |   | | {call}: a: integer notnull variable
+      | |   |   | {name cql_inferred_notnull}: a: integer notnull variable
+      | |   |   | {call_arg_list}
+      | |   |     | {call_filter_clause}
+      | |   |     | {arg_list}: ok
+      | |   |       | {name a}: a: integer inferred_notnull variable
+      | |   | {let_stmt}: y1: integer variable
+      | |   | | {name y1}: y1: integer variable
+      | |   | | {name b}: b: integer variable
+      | |   | {fetch_stmt}: c: select: { xn: integer, yn: integer } variable dml_proc
+      | |   | | {name c}: c: select: { xn: integer, yn: integer } variable dml_proc
+      | |   | | {name_list}
+      | |   |   | {name a}: a: integer variable
+      | |   |   | {name_list}
+      | |   |     | {name x}: x: integer variable
+      | |   | {let_stmt}: x2: integer variable
+      | |   | | {name x2}: x2: integer variable
+      | |   | | {name a}: a: integer variable
+      | |   | {let_stmt}: y2: integer variable
+      | |     | {name y2}: y2: integer variable
+      | |     | {name b}: b: integer variable
+      | | {if_alt}: ok
+      | {if_stmt}: bool notnull
+        | {cond_action}: bool notnull
+        | | {and}: bool notnull
+        | | | {is_not}: bool notnull
+        | | | | {name a}: a: integer variable
+        | | | | {null}: null
+        | | | {is_not}: bool notnull
+        | |   | {name b}: b: integer variable
+        | |   | {null}: null
+        | | {stmt_list}: ok
+        |   | {let_stmt}: x3: integer notnull variable
+        |   | | {name x3}: x3: integer notnull variable
+        |   | | {call}: a: integer notnull variable
+        |   |   | {name cql_inferred_notnull}: a: integer notnull variable
+        |   |   | {call_arg_list}
+        |   |     | {call_filter_clause}
+        |   |     | {arg_list}: ok
+        |   |       | {name a}: a: integer inferred_notnull variable
+        |   | {let_stmt}: y3: integer notnull variable
+        |   | | {name y3}: y3: integer notnull variable
+        |   | | {call}: b: integer notnull variable
+        |   |   | {name cql_inferred_notnull}: b: integer notnull variable
+        |   |   | {call_arg_list}
+        |   |     | {call_filter_clause}
+        |   |     | {arg_list}: ok
+        |   |       | {name b}: b: integer inferred_notnull variable
+        |   | {fetch_stmt}: c: select: { xn: integer, yn: integer } variable dml_proc
+        |   | | {name c}: c: select: { xn: integer, yn: integer } variable dml_proc
+        |   | | {name_list}
+        |   |   | {name a}: a: integer variable
+        |   |   | {name_list}
+        |   |     | {name b}: b: integer variable
+        |   | {let_stmt}: x4: integer variable
+        |   | | {name x4}: x4: integer variable
+        |   | | {name a}: a: integer variable
+        |   | {let_stmt}: y4: integer variable
+        |     | {name y4}: y4: integer variable
+        |     | {name b}: b: integer variable
+        | {if_alt}: ok
+
+The statement ending at line XXXX
+
+DECLARE c_global CURSOR LIKE tnull;
+
+  {declare_cursor_like_name}: c_global: tnull: { xn: integer, yn: integer } variable shape_storage value_cursor
+  | {name c_global}: c_global: tnull: { xn: integer, yn: integer } variable shape_storage value_cursor
+  | {like}: tnull: { xn: integer, yn: integer }
+    | {name tnull}: tnull: { xn: integer, yn: integer }
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_work_for_auto_cursors ()
+BEGIN
+  DECLARE c CURSOR FOR SELECT *
+    FROM tnull;
+  FETCH c;
+  LET x0 := c.xn;
+  LET y0 := c.yn;
+  IF c.xn IS NOT NULL AND c.yn IS NOT NULL THEN
+    LET x1 := cql_inferred_notnull(c.xn);
+    LET y1 := cql_inferred_notnull(c.yn);
+    FETCH c;
+    LET x2 := c.xn;
+    LET y2 := c.yn;
+  END IF;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name improvements_work_for_auto_cursors}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor}: c: select: { xn: integer, yn: integer } variable dml_proc
+      | | {name c}: c: select: { xn: integer, yn: integer } variable dml_proc shape_storage
+      | | {select_stmt}: select: { xn: integer, yn: integer }
+      |   | {select_core_list}: select: { xn: integer, yn: integer }
+      |   | | {select_core}: select: { xn: integer, yn: integer }
+      |   |   | {select_expr_list_con}: select: { xn: integer, yn: integer }
+      |   |     | {select_expr_list}: select: { xn: integer, yn: integer }
+      |   |     | | {star}: select: { xn: integer, yn: integer }
+      |   |     | {select_from_etc}: TABLE { tnull: tnull }
+      |   |       | {table_or_subquery_list}: TABLE { tnull: tnull }
+      |   |       | | {table_or_subquery}: TABLE { tnull: tnull }
+      |   |       |   | {name tnull}: TABLE { tnull: tnull }
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_stmt}: c: select: { xn: integer, yn: integer } variable dml_proc shape_storage
+      | | {name c}: c: select: { xn: integer, yn: integer } variable dml_proc shape_storage
+      | {let_stmt}: x0: integer variable
+      | | {name x0}: x0: integer variable
+      | | {dot}: c.xn: integer variable
+      |   | {name c}
+      |   | {name xn}
+      | {let_stmt}: y0: integer variable
+      | | {name y0}: y0: integer variable
+      | | {dot}: c.yn: integer variable
+      |   | {name c}
+      |   | {name yn}
+      | {if_stmt}: bool notnull
+        | {cond_action}: bool notnull
+        | | {and}: bool notnull
+        | | | {is_not}: bool notnull
+        | | | | {dot}: c.xn: integer variable
+        | | | | | {name c}
+        | | | | | {name xn}
+        | | | | {null}: null
+        | | | {is_not}: bool notnull
+        | |   | {dot}: c.yn: integer variable
+        | |   | | {name c}
+        | |   | | {name yn}
+        | |   | {null}: null
+        | | {stmt_list}: ok
+        |   | {let_stmt}: x1: integer notnull variable
+        |   | | {name x1}: x1: integer notnull variable
+        |   | | {call}: c.xn: integer notnull variable
+        |   |   | {name cql_inferred_notnull}: c.xn: integer notnull variable
+        |   |   | {call_arg_list}
+        |   |     | {call_filter_clause}
+        |   |     | {arg_list}: ok
+        |   |       | {dot}: c.xn: integer inferred_notnull variable
+        |   |         | {name c}
+        |   |         | {name xn}
+        |   | {let_stmt}: y1: integer notnull variable
+        |   | | {name y1}: y1: integer notnull variable
+        |   | | {call}: c.yn: integer notnull variable
+        |   |   | {name cql_inferred_notnull}: c.yn: integer notnull variable
+        |   |   | {call_arg_list}
+        |   |     | {call_filter_clause}
+        |   |     | {arg_list}: ok
+        |   |       | {dot}: c.yn: integer inferred_notnull variable
+        |   |         | {name c}
+        |   |         | {name yn}
+        |   | {fetch_stmt}: c: select: { xn: integer, yn: integer } variable dml_proc shape_storage
+        |   | | {name c}: c: select: { xn: integer, yn: integer } variable dml_proc shape_storage
+        |   | {let_stmt}: x2: integer variable
+        |   | | {name x2}: x2: integer variable
+        |   | | {dot}: c.xn: integer variable
+        |   |   | {name c}
+        |   |   | {name xn}
+        |   | {let_stmt}: y2: integer variable
+        |     | {name y2}: y2: integer variable
+        |     | {dot}: c.yn: integer variable
+        |       | {name c}
+        |       | {name yn}
+        | {if_alt}: ok
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_work_for_local_auto_cursors_that_do_not_shadow_a_global ()
+BEGIN
+  DECLARE c_local CURSOR LIKE tnull;
+  FETCH c_local(xn, yn) FROM VALUES(0, 0);
+  LET x0 := c_local.xn;
+  LET y0 := c_local.yn;
+  IF c_local.xn IS NOT NULL AND c_local.yn IS NOT NULL THEN
+    LET x1 := cql_inferred_notnull(c_local.xn);
+    LET y1 := cql_inferred_notnull(c_local.yn);
+    FETCH c_local(xn, yn) FROM VALUES(0, 0);
+    LET x2 := c_local.xn;
+    LET y2 := c_local.yn;
+  END IF;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_work_for_local_auto_cursors_that_do_not_shadow_a_global}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor_like_name}: c_local: tnull: { xn: integer, yn: integer } variable shape_storage value_cursor
+      | | {name c_local}: c_local: tnull: { xn: integer, yn: integer } variable shape_storage value_cursor
+      | | {like}: tnull: { xn: integer, yn: integer }
+      |   | {name tnull}: tnull: { xn: integer, yn: integer }
+      | {fetch_values_stmt}: ok
+      | | {name_columns_values}
+      |   | {name c_local}: c_local: tnull: { xn: integer, yn: integer } variable shape_storage value_cursor
+      |   | {columns_values}: ok
+      |     | {column_spec}
+      |     | | {name_list}
+      |     |   | {name xn}: xn: integer
+      |     |   | {name_list}
+      |     |     | {name yn}: yn: integer
+      |     | {insert_list}
+      |       | {int 0}: integer notnull
+      |       | {insert_list}
+      |         | {int 0}: integer notnull
+      | {let_stmt}: x0: integer variable
+      | | {name x0}: x0: integer variable
+      | | {dot}: c_local.xn: integer variable
+      |   | {name c_local}
+      |   | {name xn}
+      | {let_stmt}: y0: integer variable
+      | | {name y0}: y0: integer variable
+      | | {dot}: c_local.yn: integer variable
+      |   | {name c_local}
+      |   | {name yn}
+      | {if_stmt}: bool notnull
+        | {cond_action}: bool notnull
+        | | {and}: bool notnull
+        | | | {is_not}: bool notnull
+        | | | | {dot}: c_local.xn: integer variable
+        | | | | | {name c_local}
+        | | | | | {name xn}
+        | | | | {null}: null
+        | | | {is_not}: bool notnull
+        | |   | {dot}: c_local.yn: integer variable
+        | |   | | {name c_local}
+        | |   | | {name yn}
+        | |   | {null}: null
+        | | {stmt_list}: ok
+        |   | {let_stmt}: x1: integer notnull variable
+        |   | | {name x1}: x1: integer notnull variable
+        |   | | {call}: c_local.xn: integer notnull variable
+        |   |   | {name cql_inferred_notnull}: c_local.xn: integer notnull variable
+        |   |   | {call_arg_list}
+        |   |     | {call_filter_clause}
+        |   |     | {arg_list}: ok
+        |   |       | {dot}: c_local.xn: integer inferred_notnull variable
+        |   |         | {name c_local}
+        |   |         | {name xn}
+        |   | {let_stmt}: y1: integer notnull variable
+        |   | | {name y1}: y1: integer notnull variable
+        |   | | {call}: c_local.yn: integer notnull variable
+        |   |   | {name cql_inferred_notnull}: c_local.yn: integer notnull variable
+        |   |   | {call_arg_list}
+        |   |     | {call_filter_clause}
+        |   |     | {arg_list}: ok
+        |   |       | {dot}: c_local.yn: integer inferred_notnull variable
+        |   |         | {name c_local}
+        |   |         | {name yn}
+        |   | {fetch_values_stmt}: ok
+        |   | | {name_columns_values}
+        |   |   | {name c_local}: c_local: tnull: { xn: integer, yn: integer } variable shape_storage value_cursor
+        |   |   | {columns_values}: ok
+        |   |     | {column_spec}
+        |   |     | | {name_list}
+        |   |     |   | {name xn}: xn: integer
+        |   |     |   | {name_list}
+        |   |     |     | {name yn}: yn: integer
+        |   |     | {insert_list}
+        |   |       | {int 0}: integer notnull
+        |   |       | {insert_list}
+        |   |         | {int 0}: integer notnull
+        |   | {let_stmt}: x2: integer variable
+        |   | | {name x2}: x2: integer variable
+        |   | | {dot}: c_local.xn: integer variable
+        |   |   | {name c_local}
+        |   |   | {name xn}
+        |   | {let_stmt}: y2: integer variable
+        |     | {name y2}: y2: integer variable
+        |     | {dot}: c_local.yn: integer variable
+        |       | {name c_local}
+        |       | {name yn}
+        | {if_alt}: ok
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_work_for_auto_cursors_that_shadow_a_global ()
+BEGIN
+  DECLARE c_global CURSOR LIKE SELECT nullable(1) AS xn, nullable(2) AS yn;
+  FETCH c_global(xn, yn) FROM VALUES(0, 0);
+  LET x0 := c_global.xn;
+  LET y0 := c_global.yn;
+  IF c_global.xn IS NOT NULL AND c_global.yn IS NOT NULL THEN
+    LET x1 := cql_inferred_notnull(c_global.xn);
+    LET y1 := cql_inferred_notnull(c_global.yn);
+    FETCH c_global(xn, yn) FROM VALUES(0, 0);
+    LET x2 := c_global.xn;
+    LET y2 := c_global.yn;
+  END IF;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_work_for_auto_cursors_that_shadow_a_global}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor_like_select}: c_global: select: { xn: integer, yn: integer } variable shape_storage value_cursor
+      | | {name c_global}: c_global: select: { xn: integer, yn: integer } variable shape_storage value_cursor
+      | | {select_stmt}: select: { xn: integer, yn: integer }
+      |   | {select_core_list}: select: { xn: integer, yn: integer }
+      |   | | {select_core}: select: { xn: integer, yn: integer }
+      |   |   | {select_expr_list_con}: select: { xn: integer, yn: integer }
+      |   |     | {select_expr_list}: select: { xn: integer, yn: integer }
+      |   |     | | {select_expr}: xn: integer
+      |   |     | | | {call}: integer
+      |   |     | | | | {name nullable}: integer
+      |   |     | | | | {call_arg_list}
+      |   |     | | |   | {call_filter_clause}
+      |   |     | | |   | {arg_list}: ok
+      |   |     | | |     | {int 1}: integer notnull
+      |   |     | | | {opt_as_alias}
+      |   |     | |   | {name xn}
+      |   |     | | {select_expr_list}
+      |   |     |   | {select_expr}: yn: integer
+      |   |     |     | {call}: integer
+      |   |     |     | | {name nullable}: integer
+      |   |     |     | | {call_arg_list}
+      |   |     |     |   | {call_filter_clause}
+      |   |     |     |   | {arg_list}: ok
+      |   |     |     |     | {int 2}: integer notnull
+      |   |     |     | {opt_as_alias}
+      |   |     |       | {name yn}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_values_stmt}: ok
+      | | {name_columns_values}
+      |   | {name c_global}: c_global: select: { xn: integer, yn: integer } variable shape_storage value_cursor
+      |   | {columns_values}: ok
+      |     | {column_spec}
+      |     | | {name_list}
+      |     |   | {name xn}: xn: integer
+      |     |   | {name_list}
+      |     |     | {name yn}: yn: integer
+      |     | {insert_list}
+      |       | {int 0}: integer notnull
+      |       | {insert_list}
+      |         | {int 0}: integer notnull
+      | {let_stmt}: x0: integer variable
+      | | {name x0}: x0: integer variable
+      | | {dot}: c_global.xn: integer variable
+      |   | {name c_global}
+      |   | {name xn}
+      | {let_stmt}: y0: integer variable
+      | | {name y0}: y0: integer variable
+      | | {dot}: c_global.yn: integer variable
+      |   | {name c_global}
+      |   | {name yn}
+      | {if_stmt}: bool notnull
+        | {cond_action}: bool notnull
+        | | {and}: bool notnull
+        | | | {is_not}: bool notnull
+        | | | | {dot}: c_global.xn: integer variable
+        | | | | | {name c_global}
+        | | | | | {name xn}
+        | | | | {null}: null
+        | | | {is_not}: bool notnull
+        | |   | {dot}: c_global.yn: integer variable
+        | |   | | {name c_global}
+        | |   | | {name yn}
+        | |   | {null}: null
+        | | {stmt_list}: ok
+        |   | {let_stmt}: x1: integer notnull variable
+        |   | | {name x1}: x1: integer notnull variable
+        |   | | {call}: c_global.xn: integer notnull variable
+        |   |   | {name cql_inferred_notnull}: c_global.xn: integer notnull variable
+        |   |   | {call_arg_list}
+        |   |     | {call_filter_clause}
+        |   |     | {arg_list}: ok
+        |   |       | {dot}: c_global.xn: integer inferred_notnull variable
+        |   |         | {name c_global}
+        |   |         | {name xn}
+        |   | {let_stmt}: y1: integer notnull variable
+        |   | | {name y1}: y1: integer notnull variable
+        |   | | {call}: c_global.yn: integer notnull variable
+        |   |   | {name cql_inferred_notnull}: c_global.yn: integer notnull variable
+        |   |   | {call_arg_list}
+        |   |     | {call_filter_clause}
+        |   |     | {arg_list}: ok
+        |   |       | {dot}: c_global.yn: integer inferred_notnull variable
+        |   |         | {name c_global}
+        |   |         | {name yn}
+        |   | {fetch_values_stmt}: ok
+        |   | | {name_columns_values}
+        |   |   | {name c_global}: c_global: select: { xn: integer, yn: integer } variable shape_storage value_cursor
+        |   |   | {columns_values}: ok
+        |   |     | {column_spec}
+        |   |     | | {name_list}
+        |   |     |   | {name xn}: xn: integer
+        |   |     |   | {name_list}
+        |   |     |     | {name yn}: yn: integer
+        |   |     | {insert_list}
+        |   |       | {int 0}: integer notnull
+        |   |       | {insert_list}
+        |   |         | {int 0}: integer notnull
+        |   | {let_stmt}: x2: integer variable
+        |   | | {name x2}: x2: integer variable
+        |   | | {dot}: c_global.xn: integer variable
+        |   |   | {name c_global}
+        |   |   | {name xn}
+        |   | {let_stmt}: y2: integer variable
+        |     | {name y2}: y2: integer variable
+        |     | {dot}: c_global.yn: integer variable
+        |       | {name c_global}
+        |       | {name yn}
+        | {if_alt}: ok
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_do_not_work_for_global_auto_cursors ()
+BEGIN
+  FETCH c_global(xn, yn) FROM VALUES(0, 0);
+  LET x0 := c_global.xn;
+  LET y0 := c_global.yn;
+  IF c_global.xn IS NOT NULL AND c_global.yn IS NOT NULL THEN
+    LET x1 := c_global.xn;
+    LET y1 := c_global.yn;
+    FETCH c_global(xn, yn) FROM VALUES(0, 0);
+    LET x2 := c_global.xn;
+    LET y2 := c_global.yn;
+  END IF;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_do_not_work_for_global_auto_cursors}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {fetch_values_stmt}: ok
+      | | {name_columns_values}
+      |   | {name c_global}: c_global: tnull: { xn: integer, yn: integer } variable shape_storage value_cursor
+      |   | {columns_values}: ok
+      |     | {column_spec}
+      |     | | {name_list}
+      |     |   | {name xn}: xn: integer
+      |     |   | {name_list}
+      |     |     | {name yn}: yn: integer
+      |     | {insert_list}
+      |       | {int 0}: integer notnull
+      |       | {insert_list}
+      |         | {int 0}: integer notnull
+      | {let_stmt}: x0: integer variable
+      | | {name x0}: x0: integer variable
+      | | {dot}: c_global.xn: integer variable
+      |   | {name c_global}
+      |   | {name xn}
+      | {let_stmt}: y0: integer variable
+      | | {name y0}: y0: integer variable
+      | | {dot}: c_global.yn: integer variable
+      |   | {name c_global}
+      |   | {name yn}
+      | {if_stmt}: bool notnull
+        | {cond_action}: bool notnull
+        | | {and}: bool notnull
+        | | | {is_not}: bool notnull
+        | | | | {dot}: c_global.xn: integer variable
+        | | | | | {name c_global}
+        | | | | | {name xn}
+        | | | | {null}: null
+        | | | {is_not}: bool notnull
+        | |   | {dot}: c_global.yn: integer variable
+        | |   | | {name c_global}
+        | |   | | {name yn}
+        | |   | {null}: null
+        | | {stmt_list}: ok
+        |   | {let_stmt}: x1: integer variable
+        |   | | {name x1}: x1: integer variable
+        |   | | {dot}: c_global.xn: integer variable
+        |   |   | {name c_global}
+        |   |   | {name xn}
+        |   | {let_stmt}: y1: integer variable
+        |   | | {name y1}: y1: integer variable
+        |   | | {dot}: c_global.yn: integer variable
+        |   |   | {name c_global}
+        |   |   | {name yn}
+        |   | {fetch_values_stmt}: ok
+        |   | | {name_columns_values}
+        |   |   | {name c_global}: c_global: tnull: { xn: integer, yn: integer } variable shape_storage value_cursor
+        |   |   | {columns_values}: ok
+        |   |     | {column_spec}
+        |   |     | | {name_list}
+        |   |     |   | {name xn}: xn: integer
+        |   |     |   | {name_list}
+        |   |     |     | {name yn}: yn: integer
+        |   |     | {insert_list}
+        |   |       | {int 0}: integer notnull
+        |   |       | {insert_list}
+        |   |         | {int 0}: integer notnull
+        |   | {let_stmt}: x2: integer variable
+        |   | | {name x2}: x2: integer variable
+        |   | | {dot}: c_global.xn: integer variable
+        |   |   | {name c_global}
+        |   |   | {name xn}
+        |   | {let_stmt}: y2: integer variable
+        |     | {name y2}: y2: integer variable
+        |     | {dot}: c_global.yn: integer variable
+        |       | {name c_global}
+        |       | {name yn}
+        | {if_alt}: ok
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_work_for_in_args (a INTEGER)
+BEGIN
+  IF a IS NOT NULL THEN
+    LET x := cql_inferred_notnull(a);
+  END IF;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_work_for_in_args}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: integer variable in
+    |   | {param_detail}: a: integer variable in
+    |     | {name a}: a: integer variable in
+    |     | {type_int}: integer
+    | {stmt_list}: ok
+      | {if_stmt}: bool notnull
+        | {cond_action}: bool notnull
+        | | {is_not}: bool notnull
+        | | | {name a}: a: integer variable in
+        | | | {null}: null
+        | | {stmt_list}: ok
+        |   | {let_stmt}: x: integer notnull variable
+        |     | {name x}: x: integer notnull variable
+        |     | {call}: a: integer notnull variable in
+        |       | {name cql_inferred_notnull}: a: integer notnull variable in
+        |       | {call_arg_list}
+        |         | {call_filter_clause}
+        |         | {arg_list}: ok
+        |           | {name a}: a: integer inferred_notnull variable in
+        | {if_alt}: ok
+
+The statement ending at line XXXX
+
+CREATE PROC requires_notnull_out (OUT a INTEGER NOT NULL)
+BEGIN
+END;
+
+  {create_proc_stmt}: ok
+  | {name requires_notnull_out}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: a: integer notnull variable out
+        | {out}
+        | {param_detail}: a: integer notnull variable out
+          | {name a}: a: integer notnull variable out
+          | {notnull}: integer notnull
+            | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_do_not_work_for_out ()
+BEGIN
+  DECLARE a INTEGER;
+  IF a IS NOT NULL THEN
+    CALL requires_notnull_out(a);
+  END IF;
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0210: proc out parameter: arg must be an exact type match (even nullability) (expected integer notnull; found integer) 'a'
+
+  {create_proc_stmt}: err
+  | {name improvements_do_not_work_for_out}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {if_stmt}: err
+        | {cond_action}: err
+        | | {is_not}: bool notnull
+        | | | {name a}: a: integer variable
+        | | | {null}: null
+        | | {stmt_list}: err
+        |   | {call_stmt}: err
+        |     | {name requires_notnull_out}: ok
+        |     | {expr_list}: ok
+        |       | {name a}: a: integer inferred_notnull variable
+        | {if_alt}
+
+The statement ending at line XXXX
+
+CREATE PROC requires_notnull_inout (INOUT a INTEGER NOT NULL)
+BEGIN
+END;
+
+  {create_proc_stmt}: ok
+  | {name requires_notnull_inout}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: a: integer notnull variable in out
+        | {inout}
+        | {param_detail}: a: integer notnull variable in out
+          | {name a}: a: integer notnull variable in out
+          | {notnull}: integer notnull
+            | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_do_not_work_for_inout ()
+BEGIN
+  DECLARE a INTEGER;
+  IF a IS NOT NULL THEN
+    CALL requires_notnull_inout(a);
+  END IF;
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0013: cannot assign/copy possibly null expression to not null target 'a'
+
+  {create_proc_stmt}: err
+  | {name improvements_do_not_work_for_inout}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {if_stmt}: err
+        | {cond_action}: err
+        | | {is_not}: bool notnull
+        | | | {name a}: a: integer variable
+        | | | {null}: null
+        | | {stmt_list}: err
+        |   | {call_stmt}: err
+        |     | {name requires_notnull_inout}: ok
+        |     | {expr_list}: ok
+        |       | {name a}: a: integer inferred_notnull variable
+        | {if_alt}
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_work_in_sql ()
+BEGIN
+  DECLARE a INTEGER;
+  IF a IS NOT NULL THEN
+    SELECT 1 + cql_inferred_notnull(a) AS b;
+  END IF;
+END;
+
+  {create_proc_stmt}: select: { b: integer notnull } dml_proc
+  | {name improvements_work_in_sql}: select: { b: integer notnull } dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {if_stmt}: bool notnull
+        | {cond_action}: bool notnull
+        | | {is_not}: bool notnull
+        | | | {name a}: a: integer variable
+        | | | {null}: null
+        | | {stmt_list}: ok
+        |   | {select_stmt}: select: { b: integer notnull }
+        |     | {select_core_list}: select: { b: integer notnull }
+        |     | | {select_core}: select: { b: integer notnull }
+        |     |   | {select_expr_list_con}: select: { b: integer notnull }
+        |     |     | {select_expr_list}: select: { b: integer notnull }
+        |     |     | | {select_expr}: b: integer notnull
+        |     |     |   | {add}: integer notnull
+        |     |     |   | | {int 1}: integer notnull
+        |     |     |   | | {call}: a: integer notnull variable
+        |     |     |   |   | {name cql_inferred_notnull}: a: integer notnull variable
+        |     |     |   |   | {call_arg_list}
+        |     |     |   |     | {call_filter_clause}
+        |     |     |   |     | {arg_list}: ok
+        |     |     |   |       | {name a}: a: integer inferred_notnull variable
+        |     |     |   | {opt_as_alias}
+        |     |     |     | {name b}
+        |     |     | {select_from_etc}: ok
+        |     |       | {select_where}
+        |     |         | {select_groupby}
+        |     |           | {select_having}
+        |     | {select_orderby}
+        |       | {select_limit}
+        |         | {select_offset}
+        | {if_alt}: ok
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_are_not_applied_to_notnull_variables ()
+BEGIN
+  LET a := 42;
+  IF a IS NOT NULL THEN
+    LET b := a;
+  END IF;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_are_not_applied_to_notnull_variables}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {let_stmt}: a: integer notnull variable
+      | | {name a}: a: integer notnull variable
+      | | {int 42}: integer notnull
+      | {if_stmt}: bool notnull
+        | {cond_action}: bool notnull
+        | | {is_not}: bool notnull
+        | | | {name a}: a: integer notnull variable
+        | | | {null}: null
+        | | {stmt_list}: ok
+        |   | {let_stmt}: b: integer notnull variable
+        |     | {name b}: b: integer notnull variable
+        |     | {name a}: a: integer notnull variable
+        | {if_alt}: ok
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_are_not_applied_if_not_an_id_or_dot ()
+BEGIN
+  DECLARE a INTEGER;
+  IF a + 1 IS NOT NULL THEN
+    LET b := a;
+  END IF;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_are_not_applied_if_not_an_id_or_dot}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {if_stmt}: bool notnull
+        | {cond_action}: bool notnull
+        | | {is_not}: bool notnull
+        | | | {add}: integer
+        | | | | {name a}: a: integer variable
+        | | | | {int 1}: integer notnull
+        | | | {null}: null
+        | | {stmt_list}: ok
+        |   | {let_stmt}: b: integer variable
+        |     | {name b}: b: integer variable
+        |     | {name a}: a: integer variable
+        | {if_alt}: ok
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_do_not_work_for_globals ()
+BEGIN
+  IF Y IS NOT NULL THEN
+    LET x := Y;
+  END IF;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_do_not_work_for_globals}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {if_stmt}: bool notnull
+        | {cond_action}: bool notnull
+        | | {is_not}: bool notnull
+        | | | {name Y}: Y: integer variable
+        | | | {null}: null
+        | | {stmt_list}: ok
+        |   | {let_stmt}: x: integer variable
+        |     | {name x}: x: integer variable
+        |     | {name Y}: Y: integer variable
+        | {if_alt}: ok
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_work_for_select_star ()
+BEGIN
+  SELECT *
+    FROM tnull
+    WHERE yn IS NOT NULL;
+END;
+
+  {create_proc_stmt}: select: { xn: integer, yn: integer notnull } dml_proc
+  | {name improvements_work_for_select_star}: select: { xn: integer, yn: integer notnull } dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {select_stmt}: select: { xn: integer, yn: integer notnull }
+        | {select_core_list}: select: { xn: integer, yn: integer notnull }
+        | | {select_core}: select: { xn: integer, yn: integer notnull }
+        |   | {select_expr_list_con}: select: { xn: integer, yn: integer notnull }
+        |     | {select_expr_list}: select: { xn: integer, yn: integer notnull }
+        |     | | {star}: select: { xn: integer, yn: integer notnull }
+        |     | {select_from_etc}: TABLE { tnull: tnull }
+        |       | {table_or_subquery_list}: TABLE { tnull: tnull }
+        |       | | {table_or_subquery}: TABLE { tnull: tnull }
+        |       |   | {name tnull}: TABLE { tnull: tnull }
+        |       | {select_where}
+        |         | {opt_where}: bool notnull
+        |         | | {is_not}: bool notnull
+        |         |   | {name yn}: yn: integer
+        |         |   | {null}: null
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_work_for_select_expressions ()
+BEGIN
+  SELECT cql_inferred_notnull(xn), cql_inferred_notnull(yn)
+    FROM tnull
+    WHERE xn IS NOT NULL AND yn IS NOT NULL;
+END;
+
+  {create_proc_stmt}: select: { xn: integer notnull, yn: integer notnull } dml_proc
+  | {name improvements_work_for_select_expressions}: select: { xn: integer notnull, yn: integer notnull } dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {select_stmt}: select: { xn: integer notnull, yn: integer notnull }
+        | {select_core_list}: select: { xn: integer notnull, yn: integer notnull }
+        | | {select_core}: select: { xn: integer notnull, yn: integer notnull }
+        |   | {select_expr_list_con}: select: { xn: integer notnull, yn: integer notnull }
+        |     | {select_expr_list}: select: { xn: integer notnull, yn: integer notnull }
+        |     | | {select_expr}: xn: integer notnull
+        |     | | | {call}: xn: integer notnull
+        |     | |   | {name cql_inferred_notnull}: xn: integer notnull
+        |     | |   | {call_arg_list}
+        |     | |     | {call_filter_clause}
+        |     | |     | {arg_list}: ok
+        |     | |       | {name xn}: xn: integer inferred_notnull
+        |     | | {select_expr_list}
+        |     |   | {select_expr}: yn: integer notnull
+        |     |     | {call}: yn: integer notnull
+        |     |       | {name cql_inferred_notnull}: yn: integer notnull
+        |     |       | {call_arg_list}
+        |     |         | {call_filter_clause}
+        |     |         | {arg_list}: ok
+        |     |           | {name yn}: yn: integer inferred_notnull
+        |     | {select_from_etc}: TABLE { tnull: tnull }
+        |       | {table_or_subquery_list}: TABLE { tnull: tnull }
+        |       | | {table_or_subquery}: TABLE { tnull: tnull }
+        |       |   | {name tnull}: TABLE { tnull: tnull }
+        |       | {select_where}
+        |         | {opt_where}: bool notnull
+        |         | | {and}: bool notnull
+        |         |   | {is_not}: bool notnull
+        |         |   | | {name xn}: xn: integer
+        |         |   | | {null}: null
+        |         |   | {is_not}: bool notnull
+        |         |     | {name yn}: yn: integer
+        |         |     | {null}: null
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_correctly_handle_nested_selects ()
+BEGIN
+  SELECT ( SELECT cql_inferred_notnull(xn) ), ( SELECT yn
+    FROM tnull ), ( SELECT cql_inferred_notnull(yn)
+    FROM tnull
+    WHERE yn IS NOT NULL ) AS yn0, ( SELECT cql_inferred_notnull(yn) ) AS yn1
+    FROM tnull
+    WHERE xn IS NOT NULL AND yn IS NOT NULL;
+END;
+
+  {create_proc_stmt}: select: { xn: integer notnull, yn: integer notnull, yn0: integer, yn1: integer notnull } dml_proc
+  | {name improvements_correctly_handle_nested_selects}: select: { xn: integer notnull, yn: integer notnull, yn0: integer, yn1: integer notnull } dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {select_stmt}: select: { xn: integer notnull, yn: integer notnull, yn0: integer, yn1: integer notnull }
+        | {select_core_list}: select: { xn: integer notnull, yn: integer notnull, yn0: integer, yn1: integer notnull }
+        | | {select_core}: select: { xn: integer notnull, yn: integer notnull, yn0: integer, yn1: integer notnull }
+        |   | {select_expr_list_con}: select: { xn: integer notnull, yn: integer notnull, yn0: integer, yn1: integer notnull }
+        |     | {select_expr_list}: select: { xn: integer notnull, yn: integer notnull, yn0: integer, yn1: integer notnull }
+        |     | | {select_expr}: xn: integer notnull
+        |     | | | {select_stmt}: xn: integer notnull
+        |     | |   | {select_core_list}: select: { xn: integer notnull }
+        |     | |   | | {select_core}: select: { xn: integer notnull }
+        |     | |   |   | {select_expr_list_con}: select: { xn: integer notnull }
+        |     | |   |     | {select_expr_list}: select: { xn: integer notnull }
+        |     | |   |     | | {select_expr}: xn: integer notnull
+        |     | |   |     |   | {call}: xn: integer notnull
+        |     | |   |     |     | {name cql_inferred_notnull}: xn: integer notnull
+        |     | |   |     |     | {call_arg_list}
+        |     | |   |     |       | {call_filter_clause}
+        |     | |   |     |       | {arg_list}: ok
+        |     | |   |     |         | {name xn}: xn: integer inferred_notnull
+        |     | |   |     | {select_from_etc}: ok
+        |     | |   |       | {select_where}
+        |     | |   |         | {select_groupby}
+        |     | |   |           | {select_having}
+        |     | |   | {select_orderby}
+        |     | |     | {select_limit}
+        |     | |       | {select_offset}
+        |     | | {select_expr_list}
+        |     |   | {select_expr}: yn: integer
+        |     |   | | {select_stmt}: yn: integer
+        |     |   |   | {select_core_list}: select: { yn: integer }
+        |     |   |   | | {select_core}: select: { yn: integer }
+        |     |   |   |   | {select_expr_list_con}: select: { yn: integer }
+        |     |   |   |     | {select_expr_list}: select: { yn: integer }
+        |     |   |   |     | | {select_expr}: yn: integer
+        |     |   |   |     |   | {name yn}: yn: integer
+        |     |   |   |     | {select_from_etc}: TABLE { tnull: tnull }
+        |     |   |   |       | {table_or_subquery_list}: TABLE { tnull: tnull }
+        |     |   |   |       | | {table_or_subquery}: TABLE { tnull: tnull }
+        |     |   |   |       |   | {name tnull}: TABLE { tnull: tnull }
+        |     |   |   |       | {select_where}
+        |     |   |   |         | {select_groupby}
+        |     |   |   |           | {select_having}
+        |     |   |   | {select_orderby}
+        |     |   |     | {select_limit}
+        |     |   |       | {select_offset}
+        |     |   | {select_expr_list}
+        |     |     | {select_expr}: yn0: integer
+        |     |     | | {select_stmt}: yn: integer
+        |     |     | | | {select_core_list}: select: { yn: integer notnull }
+        |     |     | | | | {select_core}: select: { yn: integer notnull }
+        |     |     | | |   | {select_expr_list_con}: select: { yn: integer notnull }
+        |     |     | | |     | {select_expr_list}: select: { yn: integer notnull }
+        |     |     | | |     | | {select_expr}: yn: integer notnull
+        |     |     | | |     |   | {call}: yn: integer notnull
+        |     |     | | |     |     | {name cql_inferred_notnull}: yn: integer notnull
+        |     |     | | |     |     | {call_arg_list}
+        |     |     | | |     |       | {call_filter_clause}
+        |     |     | | |     |       | {arg_list}: ok
+        |     |     | | |     |         | {name yn}: yn: integer inferred_notnull
+        |     |     | | |     | {select_from_etc}: TABLE { tnull: tnull }
+        |     |     | | |       | {table_or_subquery_list}: TABLE { tnull: tnull }
+        |     |     | | |       | | {table_or_subquery}: TABLE { tnull: tnull }
+        |     |     | | |       |   | {name tnull}: TABLE { tnull: tnull }
+        |     |     | | |       | {select_where}
+        |     |     | | |         | {opt_where}: bool notnull
+        |     |     | | |         | | {is_not}: bool notnull
+        |     |     | | |         |   | {name yn}: yn: integer
+        |     |     | | |         |   | {null}: null
+        |     |     | | |         | {select_groupby}
+        |     |     | | |           | {select_having}
+        |     |     | | | {select_orderby}
+        |     |     | |   | {select_limit}
+        |     |     | |     | {select_offset}
+        |     |     | | {opt_as_alias}
+        |     |     |   | {name yn0}
+        |     |     | {select_expr_list}
+        |     |       | {select_expr}: yn1: integer notnull
+        |     |         | {select_stmt}: yn: integer notnull
+        |     |         | | {select_core_list}: select: { yn: integer notnull }
+        |     |         | | | {select_core}: select: { yn: integer notnull }
+        |     |         | |   | {select_expr_list_con}: select: { yn: integer notnull }
+        |     |         | |     | {select_expr_list}: select: { yn: integer notnull }
+        |     |         | |     | | {select_expr}: yn: integer notnull
+        |     |         | |     |   | {call}: yn: integer notnull
+        |     |         | |     |     | {name cql_inferred_notnull}: yn: integer notnull
+        |     |         | |     |     | {call_arg_list}
+        |     |         | |     |       | {call_filter_clause}
+        |     |         | |     |       | {arg_list}: ok
+        |     |         | |     |         | {name yn}: yn: integer inferred_notnull
+        |     |         | |     | {select_from_etc}: ok
+        |     |         | |       | {select_where}
+        |     |         | |         | {select_groupby}
+        |     |         | |           | {select_having}
+        |     |         | | {select_orderby}
+        |     |         |   | {select_limit}
+        |     |         |     | {select_offset}
+        |     |         | {opt_as_alias}
+        |     |           | {name yn1}
+        |     | {select_from_etc}: TABLE { tnull: tnull }
+        |       | {table_or_subquery_list}: TABLE { tnull: tnull }
+        |       | | {table_or_subquery}: TABLE { tnull: tnull }
+        |       |   | {name tnull}: TABLE { tnull: tnull }
+        |       | {select_where}
+        |         | {opt_where}: bool notnull
+        |         | | {and}: bool notnull
+        |         |   | {is_not}: bool notnull
+        |         |   | | {name xn}: xn: integer
+        |         |   | | {null}: null
+        |         |   | {is_not}: bool notnull
+        |         |     | {name yn}: yn: integer
+        |         |     | {null}: null
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_are_not_done_in_select_exprs_if_shadowed_by_an_alias ()
+BEGIN
+  SELECT xn AS c, 1 + NULL AS xn
+    FROM tnull
+    WHERE xn IS NOT NULL;
+END;
+
+  {create_proc_stmt}: select: { c: integer, xn: integer notnull } dml_proc
+  | {name improvements_are_not_done_in_select_exprs_if_shadowed_by_an_alias}: select: { c: integer, xn: integer notnull } dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {select_stmt}: select: { c: integer, xn: integer notnull }
+        | {select_core_list}: select: { c: integer, xn: integer notnull }
+        | | {select_core}: select: { c: integer, xn: integer notnull }
+        |   | {select_expr_list_con}: select: { c: integer, xn: integer notnull }
+        |     | {select_expr_list}: select: { c: integer, xn: integer notnull }
+        |     | | {select_expr}: c: integer
+        |     | | | {name xn}: xn: integer
+        |     | | | {opt_as_alias}
+        |     | |   | {name c}
+        |     | | {select_expr_list}
+        |     |   | {select_expr}: xn: integer
+        |     |     | {add}: integer
+        |     |     | | {int 1}: integer notnull
+        |     |     | | {null}: null
+        |     |     | {opt_as_alias}
+        |     |       | {name xn}
+        |     | {select_from_etc}: TABLE { tnull: tnull }
+        |       | {table_or_subquery_list}: TABLE { tnull: tnull }
+        |       | | {table_or_subquery}: TABLE { tnull: tnull }
+        |       |   | {name tnull}: TABLE { tnull: tnull }
+        |       | {select_where}
+        |         | {opt_where}: bool notnull
+        |         | | {is_not}: bool notnull
+        |         |   | {name xn}: xn: integer
+        |         |   | {null}: null
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_apply_in_select_exprs ()
+BEGIN
+  SELECT cql_inferred_notnull(xn) + cql_inferred_notnull(xn) AS yn, yn AS yn0
+    FROM tnull
+    WHERE xn IS NOT NULL;
+END;
+
+  {create_proc_stmt}: select: { yn: integer notnull, yn0: integer } dml_proc
+  | {name improvements_apply_in_select_exprs}: select: { yn: integer notnull, yn0: integer } dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {select_stmt}: select: { yn: integer notnull, yn0: integer }
+        | {select_core_list}: select: { yn: integer notnull, yn0: integer }
+        | | {select_core}: select: { yn: integer notnull, yn0: integer }
+        |   | {select_expr_list_con}: select: { yn: integer notnull, yn0: integer }
+        |     | {select_expr_list}: select: { yn: integer notnull, yn0: integer }
+        |     | | {select_expr}: yn: integer notnull
+        |     | | | {add}: integer notnull
+        |     | | | | {call}: xn: integer notnull
+        |     | | | | | {name cql_inferred_notnull}: xn: integer notnull
+        |     | | | | | {call_arg_list}
+        |     | | | |   | {call_filter_clause}
+        |     | | | |   | {arg_list}: ok
+        |     | | | |     | {name xn}: xn: integer inferred_notnull
+        |     | | | | {call}: xn: integer notnull
+        |     | | |   | {name cql_inferred_notnull}: xn: integer notnull
+        |     | | |   | {call_arg_list}
+        |     | | |     | {call_filter_clause}
+        |     | | |     | {arg_list}: ok
+        |     | | |       | {name xn}: xn: integer inferred_notnull
+        |     | | | {opt_as_alias}
+        |     | |   | {name yn}
+        |     | | {select_expr_list}
+        |     |   | {select_expr}: yn0: integer
+        |     |     | {name yn}: yn: integer
+        |     |     | {opt_as_alias}
+        |     |       | {name yn0}
+        |     | {select_from_etc}: TABLE { tnull: tnull }
+        |       | {table_or_subquery_list}: TABLE { tnull: tnull }
+        |       | | {table_or_subquery}: TABLE { tnull: tnull }
+        |       |   | {name tnull}: TABLE { tnull: tnull }
+        |       | {select_where}
+        |         | {opt_where}: bool notnull
+        |         | | {is_not}: bool notnull
+        |         |   | {name xn}: xn: integer
+        |         |   | {null}: null
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_to_aliases_apply_in_the_result_but_not_in_the_exprs ()
+BEGIN
+  SELECT xn + xn AS yn, xn, yn AS yn0
+    FROM tnull
+    WHERE yn IS NOT NULL;
+END;
+
+  {create_proc_stmt}: select: { yn: integer notnull, xn: integer, yn0: integer } dml_proc
+  | {name improvements_to_aliases_apply_in_the_result_but_not_in_the_exprs}: select: { yn: integer notnull, xn: integer, yn0: integer } dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {select_stmt}: select: { yn: integer notnull, xn: integer, yn0: integer }
+        | {select_core_list}: select: { yn: integer notnull, xn: integer, yn0: integer }
+        | | {select_core}: select: { yn: integer notnull, xn: integer, yn0: integer }
+        |   | {select_expr_list_con}: select: { yn: integer notnull, xn: integer, yn0: integer }
+        |     | {select_expr_list}: select: { yn: integer notnull, xn: integer, yn0: integer }
+        |     | | {select_expr}: yn: integer
+        |     | | | {add}: integer
+        |     | | | | {name xn}: xn: integer
+        |     | | | | {name xn}: xn: integer
+        |     | | | {opt_as_alias}
+        |     | |   | {name yn}
+        |     | | {select_expr_list}
+        |     |   | {select_expr}: xn: integer
+        |     |   | | {name xn}: xn: integer
+        |     |   | {select_expr_list}
+        |     |     | {select_expr}: yn0: integer
+        |     |       | {name yn}: yn: integer
+        |     |       | {opt_as_alias}
+        |     |         | {name yn0}
+        |     | {select_from_etc}: TABLE { tnull: tnull }
+        |       | {table_or_subquery_list}: TABLE { tnull: tnull }
+        |       | | {table_or_subquery}: TABLE { tnull: tnull }
+        |       |   | {name tnull}: TABLE { tnull: tnull }
+        |       | {select_where}
+        |         | {opt_where}: bool notnull
+        |         | | {is_not}: bool notnull
+        |         |   | {name yn}: yn: integer
+        |         |   | {null}: null
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE TABLE another_table_with_nullables(
+  xn INTEGER
+);
+
+  {create_table_stmt}: another_table_with_nullables: { xn: integer }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name another_table_with_nullables}
+  | {col_key_list}
+    | {col_def}: xn: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name xn}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_work_on_join_results ()
+BEGIN
+  SELECT tnull.xn AS xn0
+    FROM tnull
+    INNER JOIN another_table_with_nullables ON tnull.xn = another_table_with_nullables.xn
+    WHERE xn0 IS NOT NULL;
+END;
+
+  {create_proc_stmt}: select: { xn0: integer notnull } dml_proc
+  | {name improvements_work_on_join_results}: select: { xn0: integer notnull } dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {select_stmt}: select: { xn0: integer notnull }
+        | {select_core_list}: select: { xn0: integer notnull }
+        | | {select_core}: select: { xn0: integer notnull }
+        |   | {select_expr_list_con}: select: { xn0: integer notnull }
+        |     | {select_expr_list}: select: { xn0: integer notnull }
+        |     | | {select_expr}: xn0: integer
+        |     |   | {dot}: xn: integer
+        |     |   | | {name tnull}
+        |     |   | | {name xn}
+        |     |   | {opt_as_alias}
+        |     |     | {name xn0}
+        |     | {select_from_etc}: JOIN { tnull: tnull, another_table_with_nullables: another_table_with_nullables }
+        |       | {join_clause}: JOIN { tnull: tnull, another_table_with_nullables: another_table_with_nullables }
+        |       | | {table_or_subquery}: TABLE { tnull: tnull }
+        |       | | | {name tnull}: TABLE { tnull: tnull }
+        |       | | {join_target_list}
+        |       |   | {join_target}: JOIN { tnull: tnull, another_table_with_nullables: another_table_with_nullables }
+        |       |     | {int 1}
+        |       |     | {table_join}
+        |       |       | {table_or_subquery}: TABLE { another_table_with_nullables: another_table_with_nullables }
+        |       |       | | {name another_table_with_nullables}: TABLE { another_table_with_nullables: another_table_with_nullables }
+        |       |       | {join_cond}: JOIN { tnull: tnull, another_table_with_nullables: another_table_with_nullables }
+        |       |         | {on}: bool
+        |       |         | {eq}: bool
+        |       |           | {dot}: xn: integer
+        |       |           | | {name tnull}
+        |       |           | | {name xn}
+        |       |           | {dot}: xn: integer
+        |       |             | {name another_table_with_nullables}
+        |       |             | {name xn}
+        |       | {select_where}
+        |         | {opt_where}: bool notnull
+        |         | | {is_not}: bool notnull
+        |         |   | {name xn0}: xn0: integer
+        |         |   | {null}: null
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_do_not_work_for_on_clauses ()
+BEGIN
+  CREATE TABLE another_table_with_nullables(
+    xn INTEGER
+  );
+  SELECT tnull.xn AS xn0
+    FROM tnull
+    INNER JOIN another_table_with_nullables ON tnull.xn = another_table_with_nullables.xn AND tnull.xn IS NOT NULL;
+END;
+
+  {create_proc_stmt}: select: { xn0: integer } dml_proc
+  | {name improvements_do_not_work_for_on_clauses}: select: { xn0: integer } dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {create_table_stmt}: another_table_with_nullables: { xn: integer }
+      | | {create_table_name_flags}
+      | | | {table_flags_attrs}
+      | | | | {int 0}
+      | | | {name another_table_with_nullables}
+      | | {col_key_list}
+      |   | {col_def}: xn: integer
+      |     | {col_def_type_attrs}: ok
+      |       | {col_def_name_type}
+      |         | {name xn}
+      |         | {type_int}: integer
+      | {select_stmt}: select: { xn0: integer }
+        | {select_core_list}: select: { xn0: integer }
+        | | {select_core}: select: { xn0: integer }
+        |   | {select_expr_list_con}: select: { xn0: integer }
+        |     | {select_expr_list}: select: { xn0: integer }
+        |     | | {select_expr}: xn0: integer
+        |     |   | {dot}: xn: integer
+        |     |   | | {name tnull}
+        |     |   | | {name xn}
+        |     |   | {opt_as_alias}
+        |     |     | {name xn0}
+        |     | {select_from_etc}: JOIN { tnull: tnull, another_table_with_nullables: another_table_with_nullables }
+        |       | {join_clause}: JOIN { tnull: tnull, another_table_with_nullables: another_table_with_nullables }
+        |       | | {table_or_subquery}: TABLE { tnull: tnull }
+        |       | | | {name tnull}: TABLE { tnull: tnull }
+        |       | | {join_target_list}
+        |       |   | {join_target}: JOIN { tnull: tnull, another_table_with_nullables: another_table_with_nullables }
+        |       |     | {int 1}
+        |       |     | {table_join}
+        |       |       | {table_or_subquery}: TABLE { another_table_with_nullables: another_table_with_nullables }
+        |       |       | | {name another_table_with_nullables}: TABLE { another_table_with_nullables: another_table_with_nullables }
+        |       |       | {join_cond}: JOIN { tnull: tnull, another_table_with_nullables: another_table_with_nullables }
+        |       |         | {on}: bool
+        |       |         | {and}: bool
+        |       |           | {eq}: bool
+        |       |           | | {dot}: xn: integer
+        |       |           | | | {name tnull}
+        |       |           | | | {name xn}
+        |       |           | | {dot}: xn: integer
+        |       |           |   | {name another_table_with_nullables}
+        |       |           |   | {name xn}
+        |       |           | {is_not}: bool notnull
+        |       |             | {dot}: xn: integer
+        |       |             | | {name tnull}
+        |       |             | | {name xn}
+        |       |             | {null}: null
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC notnull_inferred_does_not_get_copied_via_declare_cursor_like_cursor ()
+BEGIN
+  DECLARE c CURSOR LIKE tnull;
+  FETCH c(xn, yn) FROM VALUES(1, 2);
+  IF c.xn IS NOT NULL AND c.yn IS NOT NULL THEN
+    LET x0 := cql_inferred_notnull(c.xn);
+    LET y0 := cql_inferred_notnull(c.yn);
+    DECLARE d CURSOR LIKE c;
+    LET x1 := cql_inferred_notnull(c.xn);
+    LET y1 := cql_inferred_notnull(c.yn);
+    LET x2 := d.xn;
+    LET y2 := d.yn;
+  END IF;
+END;
+
+  {create_proc_stmt}: ok
+  | {name notnull_inferred_does_not_get_copied_via_declare_cursor_like_cursor}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor_like_name}: c: tnull: { xn: integer, yn: integer } variable shape_storage value_cursor
+      | | {name c}: c: tnull: { xn: integer, yn: integer } variable shape_storage value_cursor
+      | | {like}: tnull: { xn: integer, yn: integer }
+      |   | {name tnull}: tnull: { xn: integer, yn: integer }
+      | {fetch_values_stmt}: ok
+      | | {name_columns_values}
+      |   | {name c}: c: tnull: { xn: integer, yn: integer } variable shape_storage value_cursor
+      |   | {columns_values}: ok
+      |     | {column_spec}
+      |     | | {name_list}
+      |     |   | {name xn}: xn: integer
+      |     |   | {name_list}
+      |     |     | {name yn}: yn: integer
+      |     | {insert_list}
+      |       | {int 1}: integer notnull
+      |       | {insert_list}
+      |         | {int 2}: integer notnull
+      | {if_stmt}: bool notnull
+        | {cond_action}: bool notnull
+        | | {and}: bool notnull
+        | | | {is_not}: bool notnull
+        | | | | {dot}: c.xn: integer variable
+        | | | | | {name c}
+        | | | | | {name xn}
+        | | | | {null}: null
+        | | | {is_not}: bool notnull
+        | |   | {dot}: c.yn: integer variable
+        | |   | | {name c}
+        | |   | | {name yn}
+        | |   | {null}: null
+        | | {stmt_list}: ok
+        |   | {let_stmt}: x0: integer notnull variable
+        |   | | {name x0}: x0: integer notnull variable
+        |   | | {call}: c.xn: integer notnull variable
+        |   |   | {name cql_inferred_notnull}: c.xn: integer notnull variable
+        |   |   | {call_arg_list}
+        |   |     | {call_filter_clause}
+        |   |     | {arg_list}: ok
+        |   |       | {dot}: c.xn: integer inferred_notnull variable
+        |   |         | {name c}
+        |   |         | {name xn}
+        |   | {let_stmt}: y0: integer notnull variable
+        |   | | {name y0}: y0: integer notnull variable
+        |   | | {call}: c.yn: integer notnull variable
+        |   |   | {name cql_inferred_notnull}: c.yn: integer notnull variable
+        |   |   | {call_arg_list}
+        |   |     | {call_filter_clause}
+        |   |     | {arg_list}: ok
+        |   |       | {dot}: c.yn: integer inferred_notnull variable
+        |   |         | {name c}
+        |   |         | {name yn}
+        |   | {declare_cursor_like_name}: d: tnull: { xn: integer, yn: integer } variable shape_storage value_cursor
+        |   | | {name d}: d: tnull: { xn: integer, yn: integer } variable shape_storage value_cursor
+        |   | | {like}: c: tnull: { xn: integer, yn: integer } variable shape_storage value_cursor
+        |   |   | {name c}: c: tnull: { xn: integer, yn: integer } variable shape_storage value_cursor
+        |   | {let_stmt}: x1: integer notnull variable
+        |   | | {name x1}: x1: integer notnull variable
+        |   | | {call}: c.xn: integer notnull variable
+        |   |   | {name cql_inferred_notnull}: c.xn: integer notnull variable
+        |   |   | {call_arg_list}
+        |   |     | {call_filter_clause}
+        |   |     | {arg_list}: ok
+        |   |       | {dot}: c.xn: integer inferred_notnull variable
+        |   |         | {name c}
+        |   |         | {name xn}
+        |   | {let_stmt}: y1: integer notnull variable
+        |   | | {name y1}: y1: integer notnull variable
+        |   | | {call}: c.yn: integer notnull variable
+        |   |   | {name cql_inferred_notnull}: c.yn: integer notnull variable
+        |   |   | {call_arg_list}
+        |   |     | {call_filter_clause}
+        |   |     | {arg_list}: ok
+        |   |       | {dot}: c.yn: integer inferred_notnull variable
+        |   |         | {name c}
+        |   |         | {name yn}
+        |   | {let_stmt}: x2: integer variable
+        |   | | {name x2}: x2: integer variable
+        |   | | {dot}: d.xn: integer variable
+        |   |   | {name d}
+        |   |   | {name xn}
+        |   | {let_stmt}: y2: integer variable
+        |     | {name y2}: y2: integer variable
+        |     | {dot}: d.yn: integer variable
+        |       | {name d}
+        |       | {name yn}
+        | {if_alt}: ok
+
+The statement ending at line XXXX
+
+CREATE PROC notnull_inferred_does_not_get_copied_via_declare_cursor_like_proc ()
+BEGIN
+  DECLARE c CURSOR LIKE improvements_work_for_in_args ARGUMENTS;
+  FETCH c(a) FROM VALUES(0);
+  IF c.a IS NOT NULL THEN
+    LET x0 := cql_inferred_notnull(c.a);
+    DECLARE d CURSOR LIKE improvements_work_for_in_args ARGUMENTS;
+    FETCH d(a) FROM VALUES(0);
+    LET x1 := cql_inferred_notnull(c.a);
+    LET x2 := d.a;
+    DECLARE e CURSOR LIKE improvements_work_for_in_args ARGUMENTS;
+  END IF;
+END;
+
+  {create_proc_stmt}: ok
+  | {name notnull_inferred_does_not_get_copied_via_declare_cursor_like_proc}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor_like_name}: c: improvements_work_for_in_args[arguments]: { a: integer in } variable shape_storage value_cursor
+      | | {name c}: c: improvements_work_for_in_args[arguments]: { a: integer in } variable shape_storage value_cursor
+      | | {like}: improvements_work_for_in_args[arguments]: { a: integer in }
+      |   | {name improvements_work_for_in_args}: improvements_work_for_in_args[arguments]: { a: integer in }
+      |   | {name improvements_work_for_in_args}: improvements_work_for_in_args[arguments]: { a: integer in }
+      | {fetch_values_stmt}: ok
+      | | {name_columns_values}
+      |   | {name c}: c: improvements_work_for_in_args[arguments]: { a: integer in } variable shape_storage value_cursor
+      |   | {columns_values}: ok
+      |     | {column_spec}
+      |     | | {name_list}
+      |     |   | {name a}: a: integer
+      |     | {insert_list}
+      |       | {int 0}: integer notnull
+      | {if_stmt}: bool notnull
+        | {cond_action}: bool notnull
+        | | {is_not}: bool notnull
+        | | | {dot}: c.a: integer variable in
+        | | | | {name c}
+        | | | | {name a}
+        | | | {null}: null
+        | | {stmt_list}: ok
+        |   | {let_stmt}: x0: integer notnull variable
+        |   | | {name x0}: x0: integer notnull variable
+        |   | | {call}: c.a: integer notnull variable in
+        |   |   | {name cql_inferred_notnull}: c.a: integer notnull variable in
+        |   |   | {call_arg_list}
+        |   |     | {call_filter_clause}
+        |   |     | {arg_list}: ok
+        |   |       | {dot}: c.a: integer inferred_notnull variable in
+        |   |         | {name c}
+        |   |         | {name a}
+        |   | {declare_cursor_like_name}: d: improvements_work_for_in_args[arguments]: { a: integer in } variable shape_storage value_cursor
+        |   | | {name d}: d: improvements_work_for_in_args[arguments]: { a: integer in } variable shape_storage value_cursor
+        |   | | {like}: improvements_work_for_in_args[arguments]: { a: integer in }
+        |   |   | {name improvements_work_for_in_args}: improvements_work_for_in_args[arguments]: { a: integer in }
+        |   |   | {name improvements_work_for_in_args}: improvements_work_for_in_args[arguments]: { a: integer in }
+        |   | {fetch_values_stmt}: ok
+        |   | | {name_columns_values}
+        |   |   | {name d}: d: improvements_work_for_in_args[arguments]: { a: integer in } variable shape_storage value_cursor
+        |   |   | {columns_values}: ok
+        |   |     | {column_spec}
+        |   |     | | {name_list}
+        |   |     |   | {name a}: a: integer
+        |   |     | {insert_list}
+        |   |       | {int 0}: integer notnull
+        |   | {let_stmt}: x1: integer notnull variable
+        |   | | {name x1}: x1: integer notnull variable
+        |   | | {call}: c.a: integer notnull variable in
+        |   |   | {name cql_inferred_notnull}: c.a: integer notnull variable in
+        |   |   | {call_arg_list}
+        |   |     | {call_filter_clause}
+        |   |     | {arg_list}: ok
+        |   |       | {dot}: c.a: integer inferred_notnull variable in
+        |   |         | {name c}
+        |   |         | {name a}
+        |   | {let_stmt}: x2: integer variable
+        |   | | {name x2}: x2: integer variable
+        |   | | {dot}: d.a: integer variable in
+        |   |   | {name d}
+        |   |   | {name a}
+        |   | {declare_cursor_like_name}: e: improvements_work_for_in_args[arguments]: { a: integer in } variable shape_storage value_cursor
+        |     | {name e}: e: improvements_work_for_in_args[arguments]: { a: integer in } variable shape_storage value_cursor
+        |     | {like}: improvements_work_for_in_args[arguments]: { a: integer in }
+        |       | {name improvements_work_for_in_args}: improvements_work_for_in_args[arguments]: { a: integer in }
+        |       | {name improvements_work_for_in_args}: improvements_work_for_in_args[arguments]: { a: integer in }
+        | {if_alt}: ok
+
+The statement ending at line XXXX
+
+CREATE PROC returns_nullable_int ()
+BEGIN
+  DECLARE c CURSOR LIKE SELECT nullable(0) AS a;
+  OUT c;
+END;
+
+  {create_proc_stmt}: c: select: { a: integer } variable shape_storage uses_out value_cursor
+  | {name returns_nullable_int}: c: select: { a: integer } variable shape_storage uses_out value_cursor
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor_like_select}: c: select: { a: integer } variable shape_storage value_cursor
+      | | {name c}: c: select: { a: integer } variable shape_storage value_cursor
+      | | {select_stmt}: select: { a: integer }
+      |   | {select_core_list}: select: { a: integer }
+      |   | | {select_core}: select: { a: integer }
+      |   |   | {select_expr_list_con}: select: { a: integer }
+      |   |     | {select_expr_list}: select: { a: integer }
+      |   |     | | {select_expr}: a: integer
+      |   |     |   | {call}: integer
+      |   |     |   | | {name nullable}: integer
+      |   |     |   | | {call_arg_list}
+      |   |     |   |   | {call_filter_clause}
+      |   |     |   |   | {arg_list}: ok
+      |   |     |   |     | {int 0}: integer notnull
+      |   |     |   | {opt_as_alias}
+      |   |     |     | {name a}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {out_stmt}: c: select: { a: integer } variable shape_storage value_cursor
+        | {name c}: c: select: { a: integer } variable shape_storage value_cursor
+
+The statement ending at line XXXX
+
+CREATE PROC notnull_inferred_does_not_get_copied_via_arguments_like_proc (args_a INTEGER)
+BEGIN
+  IF args.a IS NOT NULL THEN
+    LET x0 := cql_inferred_notnull(args.a);
+    DECLARE c CURSOR FETCH FROM CALL returns_nullable_int();
+    LET x1 := c.a;
+  END IF;
+END;
+
+  {create_proc_stmt}: ok
+  | {name notnull_inferred_does_not_get_copied_via_arguments_like_proc}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: args_a: integer variable in
+    |   | {param_detail}: args_a: integer variable in
+    |     | {name args_a}: args_a: integer variable in
+    |     | {type_int}: integer
+    | {stmt_list}: ok
+      | {if_stmt}: bool notnull
+        | {cond_action}: bool notnull
+        | | {is_not}: bool notnull
+        | | | {dot}: args_a: integer variable
+        | | | | {name args}
+        | | | | {name a}
+        | | | {null}: null
+        | | {stmt_list}: ok
+        |   | {let_stmt}: x0: integer notnull variable
+        |   | | {name x0}: x0: integer notnull variable
+        |   | | {call}: args_a: integer notnull variable
+        |   |   | {name cql_inferred_notnull}: args_a: integer notnull variable
+        |   |   | {call_arg_list}
+        |   |     | {call_filter_clause}
+        |   |     | {arg_list}: ok
+        |   |       | {dot}: args_a: integer inferred_notnull variable
+        |   |         | {name args}
+        |   |         | {name a}
+        |   | {declare_value_cursor}: c: select: { a: integer } variable shape_storage value_cursor
+        |   | | {name c}: c: select: { a: integer } variable shape_storage value_cursor
+        |   | | {call_stmt}: c: select: { a: integer } variable shape_storage uses_out value_cursor
+        |   |   | {name returns_nullable_int}: c: select: { a: integer } variable shape_storage uses_out value_cursor
+        |   | {let_stmt}: x1: integer variable
+        |     | {name x1}: x1: integer variable
+        |     | {dot}: c.a: integer variable
+        |       | {name c}
+        |       | {name a}
+        | {if_alt}: ok
+
+The statement ending at line XXXX
+
+@ENFORCE_NORMAL NOT NULL AFTER CHECK;
+
+  {enforce_normal_stmt}: ok
+  | {int 12}
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_do_not_work_when_disabled ()
+BEGIN
+  DECLARE a INTEGER;
+  IF a IS NOT NULL THEN
+    LET x := a;
+  END IF;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_do_not_work_when_disabled}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {if_stmt}: bool notnull
+        | {cond_action}: bool notnull
+        | | {is_not}: bool notnull
+        | | | {name a}: a: integer variable
+        | | | {null}: null
+        | | {stmt_list}: ok
+        |   | {let_stmt}: x: integer variable
+        |     | {name x}: x: integer variable
+        |     | {name a}: a: integer variable
+        | {if_alt}: ok
+

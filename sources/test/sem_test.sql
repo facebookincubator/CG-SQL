@@ -15375,3 +15375,558 @@ begin
   select * from ext1;
 end;
 create table foo(id integer);
+
+-- TEST: Enable flow-sensitive nullability.
+-- + @ENFORCE_STRICT NOT NULL AFTER CHECK
+-- + {enforce_strict_stmt}: ok
+@enforce_strict not null after check;
+
+-- TEST: Variables can be improved to NOT NULL via a conditional, but only
+-- within the body of the THEN.
+-- + {let_stmt}: x0: integer variable
+-- + {let_stmt}: x1: integer notnull variable
+-- + {let_stmt}: x2: integer variable
+-- + {let_stmt}: x3: integer notnull variable
+-- + {let_stmt}: x4: integer variable
+-- + {let_stmt}: x5: integer variable
+-- - Error
+create proc conditionals_improve_nullable_variables()
+begin
+  declare a int;
+  declare b int;
+  declare c int;
+
+  let x0 := a;
+  if a is not null then
+    let x1 := a;
+  else
+    let x2 := a;
+    if a is not null then
+      let x3 := a;
+    else
+      let x4 := a;
+    end if;
+  end if;
+  let x5 := a;
+end;
+
+-- TEST: Conditionals only improve along the spine of ANDs.
+-- + {declare_cursor}: c0: select: { a0: text notnull variable, b0: text variable, c0: text variable }
+-- + {declare_cursor}: c1: select: { a1: text notnull variable, b1: text variable, c1: text notnull variable } variable dml_proc
+-- + {declare_cursor}: c2: select: { a2: text notnull variable, b2: text notnull variable, c2: text notnull variable } variable dml_proc
+-- - Error
+create proc conditionals_only_improve_through_ands()
+begin
+  declare a text;
+  declare b text;
+  declare c text;
+
+  if a is not null and (b is not null or c is not null) then
+    declare c0 cursor for select a as a0, b as b0, c as c0;
+    if (b is not null or a like "hello") and c is not null then
+      declare c1 cursor for select a as a1, b as b1, c as c1;
+      if b is not null then
+        declare c2 cursor for select a as a2, b as b2, c as c2;
+      end if;
+    end if;
+  end if;
+end;
+
+-- TEST: Nullability improvements for locals cease at corresponding SETs.
+-- + {let_stmt}: x0: integer variable
+-- + {let_stmt}: y0: integer variable
+-- + {let_stmt}: x1: integer notnull variable
+-- + {let_stmt}: y1: integer notnull variable
+-- + {let_stmt}: x2: integer notnull variable
+-- + {let_stmt}: y2: integer variable
+-- + {let_stmt}: x3: integer notnull variable
+-- + {let_stmt}: y3: integer notnull variable
+-- + {let_stmt}: x4: integer variable
+-- + {let_stmt}: y4: integer notnull variable
+-- + {let_stmt}: x5: integer variable
+-- + {let_stmt}: y5: integer variable
+-- + {let_stmt}: x6: integer variable
+-- + {let_stmt}: y6: integer variable
+-- - Error
+create proc local_improvements_persist_until_set()
+begin
+  declare a int;
+  declare b int;
+  let x0 := a;
+  let y0 := b;
+  if a is not null and b is not null then  
+    let x1 := a;
+    let y1 := b;
+    set b := 0;
+    let x2 := a;
+    let y2 := b;
+    if a is not null and b is not null then
+      let x3 := a;
+      let y3 := b;
+      set a := 0;
+      let x4 := a;
+      let y4 := b;
+      set b := 0;
+    end if;
+    let x5 := a;
+    let y5 := b;
+  end if;
+  let x6 := a;
+  let y6 := b;
+end;
+
+-- Used in the following test.
+-- - Error
+create proc sets_out(out a int, out b int)
+begin
+end;
+
+-- TEST: Nullability improvements for locals persist until used as an OUT arg.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: y0: integer notnull variable
+-- + {let_stmt}: x1: integer notnull variable
+-- + {let_stmt}: y1: integer variable
+-- + {let_stmt}: x2: integer variable
+-- + {let_stmt}: y2: integer variable
+-- + {let_stmt}: x3: integer notnull variable
+-- + {let_stmt}: y3: integer notnull variable
+-- + {let_stmt}: x4: integer variable
+-- + {let_stmt}: y4: integer variable
+-- - Error
+create proc local_improvements_persist_until_used_as_out_arg()
+begin
+  declare a int;
+  declare b int;
+  declare x int;
+  if a is not null and b is not null then
+    let x0 := a;
+    let y0 := b;
+    call sets_out(x, b);
+    let x1 := a;
+    let y1 := b;
+    call sets_out(a, x);
+    let x2 := a;
+    let y2 := b;
+  end if;
+  if a is not null and b is not null then
+    let x3 := a;
+    let y3 := b;
+    call sets_out(a, b);
+    let x4 := a;
+    let y4 := b;
+  end if;
+end;
+
+-- Used in the following tests.
+-- - Error
+create table tnull (xn int, yn int);
+
+-- TEST: Nullability improvements for locals cease at corresponding FETCH INTOs.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: y0: integer notnull variable
+-- + {let_stmt}: x1: integer notnull variable
+-- + {let_stmt}: y1: integer variable
+-- + {let_stmt}: x2: integer variable
+-- + {let_stmt}: y2: integer variable
+-- + {let_stmt}: x3: integer notnull variable
+-- + {let_stmt}: y3: integer notnull variable
+-- + {let_stmt}: x4: integer variable
+-- + {let_stmt}: y4: integer variable
+-- - Error
+create proc local_improvements_persist_until_fetch_into()
+begin
+  declare a int;
+  declare b int;
+  declare x int;
+  declare c cursor for select * from tnull;
+  if a is not null and b is not null then  
+    let x0 := a;
+    let y0 := b;
+    fetch c into x, b;
+    let x1 := a;
+    let y1 := b;
+    fetch c into a, x;
+    let x2 := a;
+    let y2 := b;
+  end if;
+  if a is not null and b is not null then
+    let x3 := a;
+    let y3 := b;
+    fetch c into a, b;
+    let x4 := a;
+    let y4 := b;
+  end if;
+end;
+
+-- We need this for our following tests.
+-- - Error
+declare c_global cursor like tnull;
+
+-- TEST: Improvements work for auto cursors.
+-- + {let_stmt}: x0: integer variable
+-- + {let_stmt}: y0: integer variable
+-- + {let_stmt}: x1: integer notnull variable
+-- + {let_stmt}: y1: integer notnull variable
+-- + {let_stmt}: x2: integer variable
+-- + {let_stmt}: y2: integer variable
+-- - Error
+create proc improvements_work_for_auto_cursors()
+begin
+  declare c cursor for select * from tnull;
+  fetch c;
+  let x0 := c.xn;
+  let y0 := c.yn;
+  if c.xn is not null and c.yn is not null then
+    let x1 := c.xn;
+    let y1 := c.yn;
+    fetch c;
+    let x2 := c.xn;
+    let y2 := c.yn;
+  end if;
+end;
+
+-- TEST: Improvements work for local auto cursors that do not shadow a global
+-- cursor. This test exercises our code that checks whether or not a dot that
+-- has been found should be tracked as a global. There is no global cursor named
+-- `c0`, so it must be local and can be improved.
+-- + {let_stmt}: x0: integer variable
+-- + {let_stmt}: y0: integer variable
+-- + {let_stmt}: x1: integer notnull variable
+-- + {let_stmt}: y1: integer notnull variable
+-- + {let_stmt}: x2: integer variable
+-- + {let_stmt}: y2: integer variable
+-- - Error
+create proc improvements_work_for_local_auto_cursors_that_do_not_shadow_a_global()
+begin
+  declare c_local cursor like tnull;
+  fetch c_local from values (0, 0);
+  let x0 := c_local.xn;
+  let y0 := c_local.yn;
+  if c_local.xn is not null and c_local.yn is not null then
+    let x1 := c_local.xn;
+    let y1 := c_local.yn;
+    fetch c_local from values (0, 0);
+    let x2 := c_local.xn;
+    let y2 := c_local.yn;
+  end if;
+end;
+
+-- TEST: Improvements work for local auto cursors that shadow a global cursor
+-- (in this case, `c_global`). This test exercises our code that checks whether
+-- or not a dot that has been found should be tracked as a global. There is a
+-- global cursor named `c_global`, but it's not the same one as the one in the
+-- nearest enclosing scope that we want to improve here, so we can do the
+-- improvement.
+-- + {let_stmt}: x0: integer variable
+-- + {let_stmt}: y0: integer variable
+-- + {let_stmt}: x1: integer notnull variable
+-- + {let_stmt}: y1: integer notnull variable
+-- + {let_stmt}: x2: integer variable
+-- + {let_stmt}: y2: integer variable
+-- - Error
+create proc improvements_work_for_auto_cursors_that_shadow_a_global()
+begin
+  declare c_global cursor like select nullable(1) as xn, nullable(2) as yn;
+  fetch c_global from values (0, 0);
+  let x0 := c_global.xn;
+  let y0 := c_global.yn;
+  if c_global.xn is not null and c_global.yn is not null then
+    let x1 := c_global.xn;
+    let y1 := c_global.yn;
+    fetch c_global from values (0, 0);
+    let x2 := c_global.xn;
+    let y2 := c_global.yn;
+  end if;
+end;
+
+-- TEST: Improvements do not (yet) work for global auto cursors.
+-- + {let_stmt}: x0: integer variable
+-- + {let_stmt}: y0: integer variable
+-- + {let_stmt}: x1: integer variable
+-- + {let_stmt}: y1: integer variable
+-- + {let_stmt}: x2: integer variable
+-- + {let_stmt}: y2: integer variable
+-- - Error
+create proc improvements_do_not_work_for_global_auto_cursors()
+begin
+  fetch c_global from values (0, 0);
+  let x0 := c_global.xn;
+  let y0 := c_global.yn;
+  if c_global.xn is not null and c_global.yn is not null then
+    let x1 := c_global.xn;
+    let y1 := c_global.yn;
+    fetch c_global from values (0, 0);
+    let x2 := c_global.xn;
+    let y2 := c_global.yn;
+  end if;
+end;
+
+-- TEST: Improvements work on IN arguments.
+-- + {let_stmt}: x: integer notnull variable
+-- - Error
+create proc improvements_work_for_in_args(a int)
+begin
+  if a is not null then
+    let x := a;
+  end if;
+end;
+
+-- Used in the following test.
+-- - Error
+create proc requires_notnull_out(OUT a INT NOT NULL)
+begin
+end;
+
+-- TEST: Improvements do NOT work for OUT arguments.
+-- + {call_stmt}: err
+-- + Error % proc out parameter: arg must be an exact type match (even nullability) (expected integer notnull; found integer) 'a'
+-- +1 Error
+create proc improvements_do_not_work_for_out()
+begin
+  declare a int;
+  if a is not null then
+    call requires_notnull_out(a);
+  end if;
+end;
+
+-- Used in the following test.
+-- - Error
+create proc requires_notnull_inout(INOUT a INT NOT NULL)
+begin
+end;
+
+-- TEST: Improvements do NOT work for INOUT arguments.
+-- + {call_stmt}: err
+-- + Error % cannot assign/copy possibly null expression to not null target 'a'
+-- +1 Error
+create proc improvements_do_not_work_for_inout()
+begin
+  declare a int;
+  if a is not null then
+    call requires_notnull_inout(a);
+  end if;
+end;
+
+-- TEST: Improvements work in SQL.
+-- + {create_proc_stmt}: select: { b: integer notnull } dml_proc
+-- - Error
+create proc improvements_work_in_sql()
+begin
+  declare a int;
+  if a is not null then
+    select (1 + a) as b;
+  end if;
+end;
+
+-- TEST: Improvements are not applied to variables of a NOT NULL type.
+-- - cql_inferred_notnull
+-- - Error
+create proc improvements_are_not_applied_to_notnull_variables()
+begin
+  let a := 42;
+  if a is not null then
+    let b := a;
+  end if;
+end;
+
+-- TEST: Improvements are not applied if an id or dot is not the entirety of the
+-- expression left of IF NOT NULL.
+-- + {let_stmt}: b: integer variable
+-- - Error
+create proc improvements_are_not_applied_if_not_an_id_or_dot()
+begin
+  declare a int;
+  if a + 1 is not null then
+    let b := a;
+  end if; 
+end;
+
+-- TEST: Improvements do not work for globals (yet).
+-- + {let_stmt}: x: integer variable
+-- - Error
+create proc improvements_do_not_work_for_globals()
+begin
+  if Y is not null then
+    let x := Y;
+  end if;
+end;
+
+-- TEST: Improvements work on columns resulting from a select *.
+-- + {create_proc_stmt}: select: { xn: integer, yn: integer notnull } dml_proc
+-- - Error
+create proc improvements_work_for_select_star()
+begin
+  select * from tnull where yn is not null;
+end;
+
+-- TEST: Improvements work for select expressions.
+-- + {create_proc_stmt}: select: { xn: integer notnull, yn: integer notnull } dml_proc
+-- - Error
+create proc improvements_work_for_select_expressions()
+begin
+  select xn, yn from tnull where xn is not null and yn is not null;
+end;
+
+-- TEST: Improvements correctly handle nested selects.
+-- + {create_proc_stmt}: select: { xn: integer notnull, yn: integer notnull, yn0: integer, yn1: integer notnull } dml_proc
+-- - Error
+create proc improvements_correctly_handle_nested_selects()
+begin
+  select
+    (select xn),
+    (select yn from tnull),
+    (select yn from tnull where yn is not null) as yn0,
+    (select yn) as yn1
+  from tnull
+  where xn is not null and yn is not null;
+end;
+
+-- TEST: We have to be careful with aliases. Here, the result column `c` should
+-- NOT be improved despite it being an alias for `xn` when `xn is not null`
+-- because the `xn` in the where clause actually refers to `1 + null`. The
+-- result column `xn`, however, is not null depsite `1 + null` because of the
+-- same where clause.
+-- + {create_proc_stmt}: select: { c: integer, xn: integer notnull } dml_proc
+-- - Error
+create proc improvements_are_not_done_in_select_exprs_if_shadowed_by_an_alias()
+begin
+  select xn as c, 1 + null as xn from tnull where xn is not null;
+end;
+
+-- TEST: We actually want `yn` to be improved in the result even though `xn is
+-- not null` because `yn` is an alias for `xn + xn` and `xn is not null`. `yn0`
+-- should not be improved even though it is an alias for `yn` because that is a
+-- different `yn` from the one we're improving (it's actually `tnull.yn`).
+-- + {create_proc_stmt}: select: { yn: integer notnull, yn0: integer } dml_proc
+-- - Error
+create proc improvements_apply_in_select_exprs()
+begin
+  select xn + xn as yn, yn as yn0 from tnull where xn is not null;
+end;
+
+-- TEST: Here, we improve the resulting `yn` due to `yn is not null` because it
+-- refers to the result column, not `tnull.yn`. Whereas the previous test
+-- improved a select expresion which lead to an improved result, here we improve
+-- the result directly, not the select expression.
+-- + {create_proc_stmt}: select: { yn: integer notnull, xn: integer, yn0: integer } dml_proc
+-- - Error
+create proc improvements_to_aliases_apply_in_the_result_but_not_in_the_exprs()
+begin
+  select xn + xn as yn, xn, yn as yn0 from tnull where yn is not null;
+end;
+
+-- Used in the following tests.
+-- - Error
+create table another_table_with_nullables (xn integer);
+
+-- TEST: Improvements work on the result of joins.
+-- + {create_proc_stmt}: select: { xn0: integer notnull } dml_proc
+-- - Error
+create proc improvements_work_on_join_results()
+begin
+  select tnull.xn as xn0
+  from tnull
+  inner join another_table_with_nullables
+  on tnull.xn = another_table_with_nullables.xn
+  where xn0 is not null;
+end;
+
+-- TEST: TODO: Improvements do not yet work for ON clauses.
+-- + {create_proc_stmt}: select: { xn0: integer } dml_proc
+-- - Error
+create proc improvements_do_not_work_for_on_clauses()
+begin
+  create table another_table_with_nullables (xn int);
+  select tnull.xn as xn0
+  from tnull
+  inner join another_table_with_nullables
+  on tnull.xn = another_table_with_nullables.xn
+  and tnull.xn is not null;
+end;
+
+-- TEST: We do not want `SEM_TYPE_INFERRED_NOTNULL` flags to be copied via LIKE.
+-- Copying the flag would incorrectly imply an inferred NOT NULL status. We also
+-- ensure here that there is no aliasing of struct pointers between `c` and `d`.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: y0: integer notnull variable
+-- + {let_stmt}: x1: integer notnull variable
+-- + {let_stmt}: y1: integer notnull variable
+-- + {let_stmt}: x2: integer variable
+-- + {let_stmt}: y2: integer variable
+-- - Error
+create proc notnull_inferred_does_not_get_copied_via_declare_cursor_like_cursor()
+begin
+  declare c cursor like tnull;
+  fetch c from values (1, 2);
+  if c.xn is not null and c.yn is not null then
+    let x0 := c.xn;
+    let y0 := c.yn;
+    declare d cursor like c;
+    let x1 := c.xn;
+    let y1 := c.yn;
+    let x2 := d.xn;
+    let y2 := d.yn;
+  end if;
+end;
+
+-- TEST: Ensure that `c.a is not null` does not result in an improvement that
+-- shows up in the params of `improvements_work_for_in_args` via unintentional
+-- aliasing.
+-- + {declare_cursor_like_name}: c: improvements_work_for_in_args[arguments]: { a: integer in } variable shape_storage value_cursor
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer notnull variable
+-- + {let_stmt}: x2: integer variable
+-- + {declare_cursor_like_name}: d: improvements_work_for_in_args[arguments]: { a: integer in } variable shape_storage value_cursor
+-- + {declare_cursor_like_name}: e: improvements_work_for_in_args[arguments]: { a: integer in } variable shape_storage value_cursor
+-- - Error
+create proc notnull_inferred_does_not_get_copied_via_declare_cursor_like_proc()
+begin
+  declare c cursor like improvements_work_for_in_args arguments;
+  fetch c from values (0);
+  if c.a is not null then
+    let x0 := c.a;
+    declare d cursor like improvements_work_for_in_args arguments;
+    fetch d from values (0);
+    let x1 := c.a;
+    let x2 := d.a;
+    declare e cursor like improvements_work_for_in_args arguments;
+  end if;
+end;
+
+-- Used in the following test.
+-- - Error
+create proc returns_nullable_int()
+begin
+  declare c cursor like select nullable(0) as a;
+  out c;
+end;
+
+-- TEST: Verify that `returns_nullable_int` does not get improved when we
+-- improve `args like returns_nullable_int` (which would indicate aliasing).
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- - Error
+create proc notnull_inferred_does_not_get_copied_via_arguments_like_proc(args like returns_nullable_int)
+begin
+  if args.a is not null then
+    let x0 := args.a;
+    declare c cursor fetch from call returns_nullable_int();
+    let x1 := c.a;
+  end if;
+end;
+
+-- TEST: Disable flow-sensitive nullability.
+-- + @ENFORCE_NORMAL NOT NULL AFTER CHECK
+-- + {enforce_normal_stmt}: ok
+@enforce_normal not null after check;
+
+-- TEST: Improvements do not work when disabled.
+-- + {let_stmt}: x: integer variable
+-- - Error
+create proc improvements_do_not_work_when_disabled()
+begin
+ declare a int;
+  if a is not null then
+    let x := a;
+  end if;
+end;

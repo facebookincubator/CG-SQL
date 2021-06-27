@@ -342,6 +342,7 @@ typedef struct out_proc_with_contract_in_fetch_results_row {
   cql_string_ref _Nullable name;
 } out_proc_with_contract_in_fetch_results_row;
 extern void out_proc_with_contract_in_fetch_results(cql_string_ref _Nonnull t, out_proc_with_contract_in_fetch_results_row *_Nonnull _result_);
+extern CQL_WARN_UNUSED cql_code nullability_improvements_are_erased_for_sql(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 cql_string_literal(_literal_1_This_is_a_test_, "This is a \" \\ test '' \n \" ");
 cql_string_literal(_literal_2_b_, "b");
 cql_string_literal(_literal_3_c_, "c");
@@ -11740,6 +11741,111 @@ void out_proc_with_contract_in_fetch_results(cql_string_ref _Nonnull t, out_proc
   _result_->size = C.size;
 
   cql_teardown_row(C);
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC nullability_improvements_are_erased_for_sql ()
+BEGIN
+  DECLARE a INTEGER;
+  IF a IS NOT NULL THEN
+    SELECT cql_inferred_notnull(a) + 1 AS b;
+  END IF;
+END;
+*/
+
+#define _PROC_ "nullability_improvements_are_erased_for_sql"
+static int32_t nullability_improvements_are_erased_for_sql_perf_index;
+
+cql_string_literal(nullability_improvements_are_erased_for_sql_stored_procedure_name, "nullability_improvements_are_erased_for_sql");
+
+typedef struct nullability_improvements_are_erased_for_sql_row {
+  cql_int32 b;
+} nullability_improvements_are_erased_for_sql_row;
+
+cql_int32 nullability_improvements_are_erased_for_sql_get_b(nullability_improvements_are_erased_for_sql_result_set_ref _Nonnull result_set, cql_int32 row) {
+  nullability_improvements_are_erased_for_sql_row *data = (nullability_improvements_are_erased_for_sql_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].b;
+}
+
+uint8_t nullability_improvements_are_erased_for_sql_data_types[nullability_improvements_are_erased_for_sql_data_types_count] = {
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // b
+};
+
+static cql_uint16 nullability_improvements_are_erased_for_sql_col_offsets[] = { 1,
+  cql_offsetof(nullability_improvements_are_erased_for_sql_row, b)
+};
+
+cql_int32 nullability_improvements_are_erased_for_sql_result_count(nullability_improvements_are_erased_for_sql_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code nullability_improvements_are_erased_for_sql_fetch_results(sqlite3 *_Nonnull _db_, nullability_improvements_are_erased_for_sql_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_nullability_improvements_are_erased_for_sql, &nullability_improvements_are_erased_for_sql_perf_index);
+  cql_code rc = nullability_improvements_are_erased_for_sql(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = nullability_improvements_are_erased_for_sql_data_types,
+    .col_offsets = nullability_improvements_are_erased_for_sql_col_offsets,
+    .rowsize = sizeof(nullability_improvements_are_erased_for_sql_row),
+    .crc = CRC_nullability_improvements_are_erased_for_sql,
+    .perf_index = &nullability_improvements_are_erased_for_sql_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC nullability_improvements_are_erased_for_sql () (b INTEGER NOT NULL);
+CQL_WARN_UNUSED cql_code nullability_improvements_are_erased_for_sql(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  cql_nullable_int32 a;
+  cql_set_null(a);
+
+  if (!a.is_null) {
+    _rc_ = cql_prepare(_db_, _result_stmt,
+      "SELECT ? + 1");
+    cql_multibind(&_rc_, _db_, _result_stmt, 1,
+                  CQL_DATA_TYPE_INT32, &a);
+    if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC nullability_improvements_do_not_change_access ()
+BEGIN
+  DECLARE a INTEGER;
+  IF a IS NOT NULL THEN
+    LET b := cql_inferred_notnull(a);
+    SET a := 0;
+  END IF;
+END;
+*/
+
+#define _PROC_ "nullability_improvements_do_not_change_access"
+// export: DECLARE PROC nullability_improvements_do_not_change_access ();
+void nullability_improvements_do_not_change_access(void) {
+  cql_nullable_int32 a;
+  cql_set_null(a);
+  cql_int32 b = 0;
+
+  if (!a.is_null) {
+    b = a.value;
+    cql_set_notnull(a, 0);
+  }
+
 }
 #undef _PROC_
 cql_int32 this_is_the_end = 0;

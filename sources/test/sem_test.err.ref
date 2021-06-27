@@ -1095,4 +1095,6 @@ Error at test/sem_test.sql:XXXX : in create_table_stmt : CREATE TABLE foo(
 )
 The above must be identical.
 Error at test/sem_test.sql:XXXX : in str : CQL0103: duplicate table/view name 'foo'
+Error at test/sem_test.sql:XXXX : in str : CQL0210: proc out parameter: arg must be an exact type match (even nullability) (expected integer notnull; found integer) 'a'
+Error at test/sem_test.sql:XXXX : in str : CQL0013: cannot assign/copy possibly null expression to not null target 'a'
 semantic errors present; no code gen.

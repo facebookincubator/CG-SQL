@@ -976,6 +976,12 @@ static void gen_expr_call(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) 
       return;
     }
 
+    // As with "nullable", there's nothing to do here.
+    if (!Strcasecmp("cql_inferred_notnull", name)) {
+      gen_arg_list(arg_list);
+      return;
+    }
+
     // the ptr function has no actual sql for it, it's just type info
     // don't echo ptr if we're doing codegen (callback present)
     if (!Strcasecmp("ptr", name)) {
@@ -3214,6 +3220,10 @@ static void gen_enforcement_options(ast_node *ast) {
 
     case ENFORCE_TABLE_FUNCTION:
       gen_printf("TABLE FUNCTION");
+      break;
+
+    case ENFORCE_NOT_NULL_AFTER_CHECK:
+      gen_printf("NOT NULL AFTER CHECK");
       break;
 
     default:

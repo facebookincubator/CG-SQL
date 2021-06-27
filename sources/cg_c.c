@@ -2219,7 +2219,14 @@ static void cg_func_nullable(ast_node *call_ast, charbuf *is_null, charbuf *valu
   cg_expr(expr, is_null, value, C_EXPR_PRI_HIGHEST);
 }
 
-static void cg_func_ifnull_throw(ast_node *call_ast, charbuf *is_null, charbuf *value) {
+typedef enum {
+  ATTEST_NOTNULL_VARIANT_CRASH,
+  ATTEST_NOTNULL_VARIANT_INFERRED,
+  ATTEST_NOTNULL_VARIANT_THROW,
+} attest_notnull_variant;
+
+// Generates code for all functions of the attest_notnull family.
+static void cg_func_attest_notnull(ast_node *call_ast, charbuf *is_null, charbuf *value, attest_notnull_variant variant) {
   Contract(is_ast_call(call_ast));
   EXTRACT_ANY_NOTNULL(name_ast, call_ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -2236,38 +2243,46 @@ static void cg_func_ifnull_throw(ast_node *call_ast, charbuf *is_null, charbuf *
   Invariant(is_nullable(sem_type_expr));  // expression must already be in a temp
 
   CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
-    bprintf(cg_main_output, "if (%s) {\n", expr_is_null.ptr);
-    bprintf(cg_main_output, "  _rc_ = SQLITE_ERROR;\n");
-    bprintf(cg_main_output, "  goto %s;\n", error_target);
-    bprintf(cg_main_output, "}\n");
-    error_target_used = 1;
+
+    switch (variant) {
+      case ATTEST_NOTNULL_VARIANT_CRASH:
+        bprintf(cg_main_output, "cql_invariant(!%s);\n", expr_is_null.ptr);
+        break;
+      case ATTEST_NOTNULL_VARIANT_INFERRED:
+        // Semantic analysis has guaranteed that the input is not going to be
+        // NULL so we don't need to check anything here.
+        break;
+      case ATTEST_NOTNULL_VARIANT_THROW:
+        bprintf(cg_main_output, "if (%s) {\n", expr_is_null.ptr);
+        bprintf(cg_main_output, "  _rc_ = SQLITE_ERROR;\n");
+        bprintf(cg_main_output, "  goto %s;\n", error_target);
+        bprintf(cg_main_output, "}\n");
+        error_target_used = 1;
+        break;
+    }
 
     bprintf(is_null, "0");
     bprintf(value, "%s", expr_value.ptr);
+  
   CG_POP_EVAL(expr);
 }
 
+static void cg_func_ifnull_throw(ast_node *call_ast, charbuf *is_null, charbuf *value) {
+  cg_func_attest_notnull(call_ast, is_null, value, ATTEST_NOTNULL_VARIANT_THROW);
+}
+
 static void cg_func_ifnull_crash(ast_node *call_ast, charbuf *is_null, charbuf *value) {
-  Contract(is_ast_call(call_ast));
-  EXTRACT_ANY_NOTNULL(name_ast, call_ast->left);
-  EXTRACT_STRING(name, name_ast);
-  EXTRACT_NOTNULL(call_arg_list, call_ast->right);
-  EXTRACT(arg_list, call_arg_list->right);
+  cg_func_attest_notnull(call_ast, is_null, value, ATTEST_NOTNULL_VARIANT_CRASH);
+}
 
-  // notnull ( a_nullable_expression )
-
-  EXTRACT_ANY_NOTNULL(expr, arg_list->left);
-
-  // result known to be not null so easy codegen
-
-  sem_t sem_type_expr = expr->sem->sem_type;
-  Invariant(is_nullable(sem_type_expr));  // expression must already be in a temp
-
-  CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
-    bprintf(cg_main_output, "cql_invariant(!%s);\n", expr_is_null.ptr);
-    bprintf(is_null, "0");
-    bprintf(value, "%s", expr_value.ptr);
-  CG_POP_EVAL(expr);
+// The `cql_inferred_notnull` function is not used by the programmer directly,
+// but rather inserted via a rewrite during semantic analysis to coerce a value
+// of a nullable type to be nonnull. The reason for this approach, as opposed to
+// just changing the type directly, is that there are also representational
+// differences between values of nullable and nonnull types; some conversion is
+// required.
+static void cg_func_cql_inferred_notnull(ast_node *call_ast, charbuf *is_null, charbuf *value) {
+  cg_func_attest_notnull(call_ast, is_null, value, ATTEST_NOTNULL_VARIANT_INFERRED);
 }
 
 // There's a helper for this method, just call it.  Super easy.
@@ -6988,6 +7003,7 @@ cql_noexport void cg_c_init(void) {
   FUNC_INIT(changes);
   FUNC_INIT(printf);
   FUNC_INIT(cql_get_blob_size);
+  FUNC_INIT(cql_inferred_notnull);
 
   EXPR_INIT(num, cg_expr_num, "num", C_EXPR_PRI_ROOT);
   EXPR_INIT(str, cg_expr_str, "STR", C_EXPR_PRI_ROOT);

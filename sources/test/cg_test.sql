@@ -4100,6 +4100,38 @@ begin
   out C;
 end;
 
+-- TEST: The following tests do not compile without this enabled.
+@enforce_strict not null after check;
+
+-- TEST: The improving of nullable variables compiles to nothing in SQL.
+-- + "SELECT ? + 1"
+create proc nullability_improvements_are_erased_for_sql()
+begin
+  declare a int;
+  if a is not null then
+    select (a + 1) as b;
+  end if;
+end;
+
+-- TEST: The improving of nullable variables to be nonnull respects the 
+-- underlying nullable representation.
+-- + cql_nullable_int32 a;
+-- + cql_set_null(a);
+-- + cql_int32 b = 0;
+-- + b = a.value;
+-- + cql_set_notnull(a, 0);
+create proc nullability_improvements_do_not_change_access()
+begin
+  declare a int;
+  if a is not null then
+    let b := a;
+    set a := 0;
+  end if;
+end;
+
+-- TEST: We can turn this back off.
+@enforce_normal not null after check;
+
 -- TEST: a loose select statement generates no code (and will produce no errors)
 -- the errors are checked when this code is compiled in C.  If the code
 -- were generated there would be errors because the global proc

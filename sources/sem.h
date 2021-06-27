@@ -147,7 +147,7 @@ cql_data_decl( bytebuf *recreate_annotations );
 #define SEM_TYPE_BOXED             _64(0x10000000) // set if a cursor's lifetime is managed by a box object
 #define SEM_TYPE_HAS_CHECK         _64(0x20000000) // set for table column with a "check" clause
 #define SEM_TYPE_HAS_COLLATE       _64(0x40000000) // set for table column with a "collate" clause
-#define SEM_TYPE_AVAILABLE         _64(0x80000000) // this bit is no longer used
+#define SEM_TYPE_INFERRED_NOTNULL  _64(0x80000000) // set if inferred to not be nonnull (but was originally nullable)
 #define SEM_TYPE_VIRTUAL          _64(0x100000000) // set if and only if this is a virtual table
 #define SEM_TYPE_HIDDEN_COL       _64(0x200000000) // set if and only if hidden column on a virtual table
 #define SEM_TYPE_TVF              _64(0x400000000) // set if and only table node is a table valued function
@@ -168,6 +168,7 @@ cql_data_decl( bytebuf *recreate_annotations );
 #define SEM_EXPR_CONTEXT_WINDOW         0x0400
 #define SEM_EXPR_CONTEXT_WINDOW_FILTER  0x0800
 #define SEM_EXPR_CONTEXT_CONSTRAINT     0x1000
+#define SEM_EXPR_CONTEXT_FLAGS          0x1FFF // all the flag bits
 
 #define CURRENT_EXPR_CONTEXT_IS(x)  (!!(current_expr_context & (x)))
 #define CURRENT_EXPR_CONTEXT_IS_NOT(x)  (!(current_expr_context & (x)))

@@ -1842,6 +1842,7 @@ enforcement_options:
   | SELECT IF NOTHING { $enforcement_options = new_ast_opt(ENFORCE_SELECT_IF_NOTHING); }
   | INSERT SELECT { $enforcement_options = new_ast_opt(ENFORCE_INSERT_SELECT); }
   | TABLE FUNCTION { $enforcement_options = new_ast_opt(ENFORCE_TABLE_FUNCTION); }
+  | NOT NULL_ AFTER CHECK { $enforcement_options = new_ast_opt(ENFORCE_NOT_NULL_AFTER_CHECK); }
   ;
 
 enforce_strict_stmt:

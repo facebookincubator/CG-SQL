@@ -2901,6 +2901,35 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   0)
 
 // The statement ending at line XXXX
+
+// The statement ending at line XXXX
+#define CRC_nullability_improvements_are_erased_for_sql -6535467785075335629L
+
+extern cql_string_ref _Nonnull nullability_improvements_are_erased_for_sql_stored_procedure_name;
+
+#define nullability_improvements_are_erased_for_sql_data_types_count 1
+
+#ifndef result_set_type_decl_nullability_improvements_are_erased_for_sql_result_set
+#define result_set_type_decl_nullability_improvements_are_erased_for_sql_result_set 1
+cql_result_set_type_decl(nullability_improvements_are_erased_for_sql_result_set, nullability_improvements_are_erased_for_sql_result_set_ref);
+#endif
+extern cql_int32 nullability_improvements_are_erased_for_sql_get_b(nullability_improvements_are_erased_for_sql_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 nullability_improvements_are_erased_for_sql_result_count(nullability_improvements_are_erased_for_sql_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code nullability_improvements_are_erased_for_sql_fetch_results(sqlite3 *_Nonnull _db_, nullability_improvements_are_erased_for_sql_result_set_ref _Nullable *_Nonnull result_set);
+#define nullability_improvements_are_erased_for_sql_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define nullability_improvements_are_erased_for_sql_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+extern void nullability_improvements_do_not_change_access(void);
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
 extern cql_int32 this_is_the_end;
 
 // The statement ending at line XXXX

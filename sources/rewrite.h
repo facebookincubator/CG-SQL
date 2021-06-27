@@ -35,3 +35,4 @@ cql_noexport void rewrite_params(ast_node *_Nullable head, bytebuf *_Nullable ar
 cql_noexport void rewrite_typed_names(ast_node *_Nullable head);
 cql_noexport void rewrite_data_type_if_needed(ast_node *_Nonnull ast);
 cql_noexport void rewrite_right_col_def_type_attrs_if_needed(ast_node *_Nonnull ast);
+cql_noexport void rewrite_nullable_to_unsafe_notnull(ast_node *_Nonnull ast);
