@@ -1455,7 +1455,7 @@ create table bad_constants_table(
 -- - Error
 let bool_x := const(1==1);
 
--- TEST: internal const expression 
+-- TEST: internal const expression
 -- the internal const(1==1) is evaluated to a literal which then is used by the outer const
 -- the result must still be bool, this proves that we can correctly eval the type of
 -- an internal bool literal
