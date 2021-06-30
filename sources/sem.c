@@ -5454,14 +5454,12 @@ static void sem_case_list(ast_node *head, sem_t sem_type_required_for_when, CSTR
 
   for (ast_node *ast = head; ast; ast = ast->right) {
     EXTRACT_NOTNULL(when, ast->left);
+    // WHEN [case_expr] THEN [then_expr]
     EXTRACT_ANY_NOTNULL(case_expr, when->left);
     EXTRACT_ANY_NOTNULL(then_expr, when->right);
 
-    // WHEN [case_expr] THEN [then_expr]
     sem_expr(case_expr);
-    sem_expr(then_expr);
-
-    if (is_error(case_expr) || is_error(then_expr)) {
+    if (is_error(case_expr)) {
       record_error(ast);
       record_error(head);
       return;
@@ -5475,6 +5473,16 @@ static void sem_case_list(ast_node *head, sem_t sem_type_required_for_when, CSTR
 
     sem_combine_kinds(case_expr, kind_required_for_when);
     if (is_error(case_expr)) {
+      record_error(ast);
+      record_error(head);
+      return;
+    }
+
+    PUSH_NOTNULL_IMPROVEMENT_CONTEXT(case_expr, NULL);
+    sem_expr(then_expr);
+    POP_NOTNULL_IMPROVEMENT_CONTEXT();
+
+    if (is_error(then_expr)) {
       record_error(ast);
       record_error(head);
       return;

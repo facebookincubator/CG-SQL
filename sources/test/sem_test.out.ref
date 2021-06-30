@@ -1781,6 +1781,35 @@ Error at test/sem_test.sql:XXXX : in eq : CQL0009: incompatible types in express
 
 The statement ending at line XXXX
 
+SELECT CASE WHEN 'x' LIKE 42 THEN 'foo'
+END;
+
+Error at test/sem_test.sql:XXXX : in num : CQL0043: right operand must be a string in 'LIKE'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {case_expr}: err
+  |     |     | {connector}
+  |     |       | {case_list}: err
+  |     |         | {when}
+  |     |           | {like}: err
+  |     |           | | {strlit 'x'}: text notnull
+  |     |           | | {int 42}: integer notnull
+  |     |           | {strlit 'foo'}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
 SELECT CASE WHEN 1 = 2 THEN 'foo'
 WHEN 3 = 4 THEN 'bar'
 END;
@@ -1867,7 +1896,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expres
   |     |       | {case_list}: err
   |     |         | {when}
   |     |           | {strlit 'x'}: err
-  |     |           | {strlit 'foo'}: text notnull
+  |     |           | {strlit 'foo'}
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -1957,7 +1986,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expres
   |     |       | {case_list}: err
   |     |         | {when}
   |     |           | {strlit 'x'}: err
-  |     |           | {int 1}: integer notnull
+  |     |           | {int 1}
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -57292,7 +57321,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0070: expressions of different kin
       | | {case_list}: err
       |   | {when}
       |     | {name y1}: err
-      |     | {name v2}: v2: integer<v> variable
+      |     | {name v2}
       | {name v3}
 
 The statement ending at line XXXX
@@ -61484,6 +61513,48 @@ END;
       | {let_stmt}: x1: integer variable
         | {name x1}: x1: integer variable
         | {name a}: a: integer variable
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_work_in_case_expressions ()
+BEGIN
+  DECLARE a INTEGER;
+  LET x := CASE WHEN a IS NOT NULL THEN cql_inferred_notnull(a) + cql_inferred_notnull(a)
+  ELSE 42
+  END;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_work_in_case_expressions}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {let_stmt}: x: integer notnull variable
+        | {name x}: x: integer notnull variable
+        | {case_expr}: integer notnull
+          | {connector}: integer notnull
+            | {case_list}: integer notnull
+            | | {when}: integer notnull
+            |   | {is_not}: bool notnull
+            |   | | {name a}: a: integer variable
+            |   | | {null}: null
+            |   | {add}: integer notnull
+            |     | {call}: a: integer notnull variable
+            |     | | {name cql_inferred_notnull}: a: integer notnull variable
+            |     | | {call_arg_list}
+            |     |   | {call_filter_clause}
+            |     |   | {arg_list}: ok
+            |     |     | {name a}: a: integer inferred_notnull variable
+            |     | {call}: a: integer notnull variable
+            |       | {name cql_inferred_notnull}: a: integer notnull variable
+            |       | {call_arg_list}
+            |         | {call_filter_clause}
+            |         | {arg_list}: ok
+            |           | {name a}: a: integer inferred_notnull variable
+            | {int 42}: integer notnull
 
 The statement ending at line XXXX
 

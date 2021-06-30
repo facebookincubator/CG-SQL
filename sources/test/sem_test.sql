@@ -461,6 +461,13 @@ select l * 2.0 from big;
 -- + {not}: err
 select not 'x' == 1;
 
+-- TEST: `when` expression must be valid
+-- + Error % right operand must be a string in 'LIKE'
+-- +1 Error
+select case
+  when 'x' like 42 then 'foo'
+end;
+
 -- TEST: ok to have two different strings
 -- - Error
 -- note there was no else case, so nullable result
@@ -15530,6 +15537,20 @@ begin
     end if;
   end if;
   let x1 := a;
+end;
+
+-- TEST: Improvements work in CASE expressions.
+-- + {let_stmt}: x: integer notnull variable
+-- +2 {name cql_inferred_notnull}: a: integer notnull variable
+-- - Error
+create proc improvements_work_in_case_expressions()
+begin
+  declare a int;
+  let x :=
+    case
+      when a is not null then a + a
+      else 42
+    end;
 end;
 
 -- TEST: Used in the following test.

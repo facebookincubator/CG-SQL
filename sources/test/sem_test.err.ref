@@ -35,6 +35,7 @@ Error at test/sem_test.sql:XXXX : in table_star : CQL0055: all columns in the se
 Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'c'
 Error at test/sem_test.sql:XXXX : in table_or_subquery : CQL0095: table/view not defined 'goo'
 Error at test/sem_test.sql:XXXX : in eq : CQL0009: incompatible types in expression '='
+Error at test/sem_test.sql:XXXX : in num : CQL0043: right operand must be a string in 'LIKE'
 Error at test/sem_test.sql:XXXX : in num : CQL0009: incompatible types in expression 'then'
 Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expression 'when'
 Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expression 'when'
