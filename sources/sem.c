@@ -339,10 +339,18 @@ static bool_t validating_previous_schema;
 // The curernt annonation target in create proc statement
 static CSTR annotation_target;
 
-// This records whether or not a rewrite to improve a nullable variable to be
-// not null is currently underway. We keep track of this to avoid recursively
-// rewriting improvements ad infinitum.
-static bool_t is_rewriting_nullable_to_notnull;
+// This is true if we are analyzing a call to `cql_inferred_notnull`. This can
+// happen for three reasons:
+//
+// * We just did a rewrite that produced a `cql_inferred_notnull` call and now
+//   we're computing its type.
+// * We're analyzing an expression that was already analyzed (e.g., in a CTE).
+// * We're analyzing the output of a previous CQL run within which calls to
+//   `cql_inferrred_notnull` may occur.
+//
+// Regardless of the cause, if `is_analyzing_notnull_rewrite` is true, we do not
+// want to rewrite again.
+static bool_t is_analyzing_notnull_rewrite;
 
 // This keeps track of all global variables that may currently be improved to be
 // NOT NULL. We need this because we must unimprove all such variables before 
@@ -5293,8 +5301,9 @@ static sem_resolve sem_try_resolve_arg_bundle(ast_node *ast, CSTR name, CSTR sco
 //  next resolver is tried.
 //
 // This function should not be called directly. If one is interested in
-// performing semantic analysis, call `sem_resolve_id`. Alternatively, if one
-// wants to get a mutable type from the environment, call `find_mutable_type`.
+// performing semantic analysis, call `sem_resolve_id` (or, if within an
+// expression, `sem_resolve_id_expr`). Alternatively, if one wants to get a
+// mutable type from the environment, call `find_mutable_type`.
 static void sem_resolve_id_with_type(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
   Contract(name);
   Contract(type_ptr);
@@ -5326,12 +5335,38 @@ static void sem_resolve_id_with_type(ast_node *ast, CSTR name, CSTR scope, sem_t
 // into `ast` if successful, or reporting and recording an error for `ast` if
 // not.
 static void sem_resolve_id(ast_node *ast, CSTR name, CSTR scope) {
-  Contract(ast);
+  Contract(is_ast_id(ast) || is_ast_dot(ast));
   Contract(name);
 
   // We have no use for `type` and simply throw it away.
   sem_t *type = NULL;
   sem_resolve_id_with_type(ast, name, scope, &type);
+}
+
+// Like `sem_resolve_id`, but specific to expression contexts (where nullability
+// improvements are applicable).
+static void sem_resolve_id_expr(ast_node *ast, CSTR name, CSTR scope) {
+  Contract(is_ast_id(ast) || is_ast_dot(ast));
+  Contract(name);
+
+  // Perform resolution, as for ids and dots outside of expressions.
+  sem_resolve_id(ast, name, scope);
+
+  if (is_analyzing_notnull_rewrite) {
+    // If we're analyzing the product of a rewrite and we're already inside of a
+    // call to `cql_inferred_notnull`, do not expand again.
+    // forever.
+    return;
+  }
+
+  if (!sem_is_notnull_improved(name, scope)) {
+    // This identifier isn't improved, so we stop.
+    return;
+  }
+
+  // If we've made it here, it's safe and appropriate to do the rewrite.
+  rewrite_nullable_to_unsafe_notnull(ast);
+  sem_expr(ast);
 }
 
 // Returns the *mutable* type (`sem_t *`) for a given (potentially qualified)
@@ -6499,6 +6534,7 @@ static void sem_func_ifnull_crash(ast_node *ast, uint32_t arg_count) {
 static void sem_func_cql_inferred_notnull(ast_node *ast, uint32_t arg_count) {
   // This compiles to nothing for SQLite so we can allow all contexts.
   sem_func_attest_notnull(ast, arg_count, SEM_EXPR_CONTEXT_FLAGS);
+  Invariant(ast->sem->sem_type & SEM_TYPE_INFERRED_NOTNULL);
   // Prevent this from propagating needlessly to keep --print clean.
   ast->sem->sem_type ^= SEM_TYPE_INFERRED_NOTNULL;
 }
@@ -7607,7 +7643,16 @@ static void sem_expr_call(ast_node *ast, CSTR cstr) {
       POP_EXPR_CONTEXT();
     }
     else {
-      sem_arg_list(arg_list, is_count_function);
+      if (!Strcasecmp("cql_inferred_notnull", name)) {
+        // If we're checking a call to `cql_inferred_notnull`, its arguments
+        // have already been rewritten and we don't want to do it again. Setting
+        // `is_analyzing_notnull_rewrite` prevents that.
+        is_analyzing_notnull_rewrite = true;
+        sem_arg_list(arg_list, is_count_function);
+        is_analyzing_notnull_rewrite = false;
+      } else {
+        sem_arg_list(arg_list, is_count_function);
+      }
       if (arg_list && is_error(arg_list)) {
         record_error(ast);
         return;
@@ -17680,36 +17725,6 @@ static void sem_expr_blob(ast_node *ast, CSTR cstr) {
   ast->sem = new_sem(SEM_TYPE_BLOB | SEM_TYPE_NOTNULL);
 }
 
-static void sem_make_notnull_if_allowed(ast_node *ast) {
-  Contract(is_ast_id(ast) || is_ast_dot(ast));
-
-  if (is_rewriting_nullable_to_notnull) {
-    // We're already in the middle of a rewrite, so let's not go into an 
-    // infinite loop.
-    return;
-  }
-
-  // Bail out if we shouldn't be improving this.
-  if (is_ast_id(ast)) {
-    EXTRACT_STRING(name, ast);
-    if (!sem_is_notnull_improved(name, NULL)) {
-      return;
-    }
-  } else if (is_ast_dot(ast)) {
-    EXTRACT_STRING(scope, ast->left);
-    EXTRACT_STRING(name, ast->right);
-    if (!sem_is_notnull_improved(name, scope)) {
-      return;
-    }
-  }
-
-  // We're all set. Let's do the rewrite.
-  is_rewriting_nullable_to_notnull = true;
-  rewrite_nullable_to_unsafe_notnull(ast);
-  sem_expr(ast);
-  is_rewriting_nullable_to_notnull = false;
-}
-
 // Expression type for string or identifier primitives
 static void sem_expr_str(ast_node *ast, CSTR cstr) {
   Contract(is_ast_str(ast));
@@ -17725,11 +17740,7 @@ static void sem_expr_str(ast_node *ast, CSTR cstr) {
     sem_expr_at_rc(ast);
   }
   else {
-    // identifier
-    sem_resolve_id(ast, str, NULL);
-    // This is one of the two places this is allowed to happen (with the other being
-    // sem_expr_dot). Doing it here ensures it is only improved in an expression context.
-    sem_make_notnull_if_allowed(ast);
+    sem_resolve_id_expr(ast, str, NULL);
   }
 }
 
@@ -17745,10 +17756,7 @@ static void sem_expr_dot(ast_node *ast, CSTR cstr) {
   Contract(is_ast_dot(ast));
   EXTRACT_STRING(scope, ast->left);
   EXTRACT_STRING(name, ast->right);
-  sem_resolve_id(ast, name, scope);
-  // This is one of the two places this is allowed to happen (with the other being
-  // sem_expr_str). Doing it here ensures it is only improved in an expression context.
-  sem_make_notnull_if_allowed(ast);
+  sem_resolve_id_expr(ast, name, scope);
 }
 
 // This function is used to detect the pattern that leaks memory on SQLite.
@@ -19266,7 +19274,7 @@ cql_noexport void sem_cleanup() {
   current_table_name = NULL;
   current_table_ast = NULL;
   local_types = NULL;
-  is_rewriting_nullable_to_notnull = false;
+  is_analyzing_notnull_rewrite = false;
   notnull_improved_globals = NULL;
   current_notnull_improvement_context = NULL;
 }

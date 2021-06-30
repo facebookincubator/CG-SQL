@@ -63327,6 +63327,113 @@ END;
 
 The statement ending at line XXXX
 
+CREATE PROC improvements_work_within_ctes ()
+BEGIN
+  DECLARE a INTEGER;
+  IF a IS NOT NULL THEN
+    WITH RECURSIVE
+    foo (b) AS (SELECT cql_inferred_notnull(a))
+    SELECT b
+      FROM foo;
+  END IF;
+END;
+
+  {create_proc_stmt}: select: { b: integer notnull } dml_proc
+  | {name improvements_work_within_ctes}: select: { b: integer notnull } dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {if_stmt}: bool notnull
+        | {cond_action}: bool notnull
+        | | {is_not}: bool notnull
+        | | | {name a}: a: integer variable
+        | | | {null}: null
+        | | {stmt_list}: ok
+        |   | {with_select_stmt}: select: { b: integer notnull }
+        |     | {with_recursive}
+        |     | | {cte_tables}: ok
+        |     |   | {cte_table}: foo: { b: integer notnull variable }
+        |     |     | {cte_decl}: foo: { b: integer notnull variable }
+        |     |     | | {name foo}
+        |     |     | | {name_list}
+        |     |     |   | {name b}
+        |     |     | {select_stmt}: select: { a: integer notnull variable }
+        |     |       | {select_core_list}: select: { a: integer notnull variable }
+        |     |       | | {select_core}: select: { a: integer notnull variable }
+        |     |       |   | {select_expr_list_con}: select: { a: integer notnull variable }
+        |     |       |     | {select_expr_list}: select: { a: integer notnull variable }
+        |     |       |     | | {select_expr}: a: integer notnull variable
+        |     |       |     |   | {call}: a: integer notnull variable
+        |     |       |     |     | {name cql_inferred_notnull}: a: integer notnull variable
+        |     |       |     |     | {call_arg_list}
+        |     |       |     |       | {call_filter_clause}
+        |     |       |     |       | {arg_list}: ok
+        |     |       |     |         | {name a}: a: integer inferred_notnull variable
+        |     |       |     | {select_from_etc}: ok
+        |     |       |       | {select_where}
+        |     |       |         | {select_groupby}
+        |     |       |           | {select_having}
+        |     |       | {select_orderby}
+        |     |         | {select_limit}
+        |     |           | {select_offset}
+        |     | {select_stmt}: select: { b: integer notnull }
+        |       | {select_core_list}: select: { b: integer notnull }
+        |       | | {select_core}: select: { b: integer notnull }
+        |       |   | {select_expr_list_con}: select: { b: integer notnull }
+        |       |     | {select_expr_list}: select: { b: integer notnull }
+        |       |     | | {select_expr}: b: integer notnull
+        |       |     |   | {name b}: b: integer notnull
+        |       |     | {select_from_etc}: TABLE { foo: foo }
+        |       |       | {table_or_subquery_list}: TABLE { foo: foo }
+        |       |       | | {table_or_subquery}: TABLE { foo: foo }
+        |       |       |   | {name foo}: TABLE { foo: foo }
+        |       |       | {select_where}
+        |       |         | {select_groupby}
+        |       |           | {select_having}
+        |       | {select_orderby}
+        |         | {select_limit}
+        |           | {select_offset}
+        | {if_alt}: ok
+
+The statement ending at line XXXX
+
+CREATE PROC analyzing_generated_rewrite_calls_does_not_rewrite ()
+BEGIN
+  DECLARE a INTEGER;
+  IF a IS NOT NULL THEN
+    LET b := cql_inferred_notnull(a);
+  END IF;
+END;
+
+  {create_proc_stmt}: ok
+  | {name analyzing_generated_rewrite_calls_does_not_rewrite}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {if_stmt}: bool notnull
+        | {cond_action}: bool notnull
+        | | {is_not}: bool notnull
+        | | | {name a}: a: integer variable
+        | | | {null}: null
+        | | {stmt_list}: ok
+        |   | {let_stmt}: b: integer notnull variable
+        |     | {name b}: b: integer notnull variable
+        |     | {call}: a: integer notnull variable
+        |       | {name cql_inferred_notnull}: a: integer notnull variable
+        |       | {call_arg_list}
+        |         | {call_filter_clause}
+        |         | {arg_list}: ok
+        |           | {name a}: a: integer inferred_notnull variable
+        | {if_alt}: ok
+
+The statement ending at line XXXX
+
 @ENFORCE_NORMAL NOT NULL AFTER CHECK;
 
   {enforce_normal_stmt}: ok
