@@ -9592,6 +9592,17 @@ begin
   set id := (select id from foo);
 end;
 
+-- TEST: try to alias rowid with a local variable of the same name
+-- + {assign}: err
+-- + {select_stmt}: err
+-- + Error % a variable name might be ambiguous with a column name, this is an anti-pattern 'rowid'
+-- +1 Error
+create proc variable_conflict_rowid()
+begin
+  declare rowid integer;
+  set rowid := (select rowid from foo);
+end;
+
 -- TEST: group concat has to preserve sensitivity
 -- + {select_stmt}: select: { gc: text sensitive }
 -- - Error

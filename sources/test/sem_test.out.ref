@@ -39835,6 +39835,45 @@ Error at test/sem_test.sql:XXXX : in str : CQL0059: a variable name might be amb
 
 The statement ending at line XXXX
 
+CREATE PROC variable_conflict_rowid ()
+BEGIN
+  DECLARE rowid INTEGER;
+  SET rowid := ( SELECT rowid
+    FROM foo );
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0059: a variable name might be ambiguous with a column name, this is an anti-pattern 'rowid'
+
+  {create_proc_stmt}: err
+  | {name variable_conflict_rowid}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: integer
+      | | {name_list}: rowid: integer variable
+      | | | {name rowid}: rowid: integer variable
+      | | {type_int}: integer
+      | {assign}: err
+        | {name rowid}: rowid: integer variable
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {name rowid}: err
+          |     | {select_from_etc}: TABLE { foo: foo }
+          |       | {table_or_subquery_list}: TABLE { foo: foo }
+          |       | | {table_or_subquery}: TABLE { foo: foo }
+          |       |   | {name foo}: TABLE { foo: foo }
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
 SELECT group_concat(name) AS gc
   FROM with_sensitive;
 

@@ -735,6 +735,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed i
 Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'ptr'
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'ptr'
 Error at test/sem_test.sql:XXXX : in str : CQL0059: a variable name might be ambiguous with a column name, this is an anti-pattern 'id'
+Error at test/sem_test.sql:XXXX : in str : CQL0059: a variable name might be ambiguous with a column name, this is an anti-pattern 'rowid'
 Error at test/sem_test.sql:XXXX : in call : CQL0257: argument must be a string or numeric in 'min'
 Error at test/sem_test.sql:XXXX : in call : CQL0012: incompatible types in expression 'min'
 Error at test/sem_test.sql:XXXX : in call : CQL0257: argument must be a string or numeric in 'min'

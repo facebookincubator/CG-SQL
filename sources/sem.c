@@ -124,7 +124,7 @@ static void sem_resolve_id(ast_node *ast, CSTR name, CSTR scope);
 static void sem_fetch_stmt(ast_node *ast);
 static void sem_fetch_values_stmt(ast_node *ast);
 static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name);
-static void resolve_cursor_field_with_type(ast_node *expr, ast_node *cursor, CSTR field, sem_t **type_ptr);
+static void sem_resolve_cursor_field(ast_node *expr, ast_node *cursor, CSTR field, sem_t **type_ptr);
 static bool_t sem_validate_context(ast_node *ast, CSTR name, uint32_t valid_contexts);
 static void sem_expr_select(ast_node *ast, CSTR cstr);
 static void sem_verify_identical_columns(ast_node *left, ast_node *right, CSTR target);
@@ -165,7 +165,7 @@ static void sem_verify_no_anon_columns(ast_node *ast);
 static bool_t sem_verify_no_duplicate_names(ast_node *name_list);
 static sem_t *find_mutable_type(CSTR name, CSTR scope);
 static sem_t *find_mutable_type_for_global_variable(CSTR name);
-static sem_t *find_mutable_type_for_global_auto_cursor_field(CSTR name, CSTR cursor_name);
+static sem_t *find_mutable_type_for_global_cursor_field(CSTR name, CSTR cursor_name);
 static bool_t sem_is_notnull_improved(CSTR name, CSTR scope);
 static void sem_add_notnull_improvements(ast_node *expr, ast_node *select_expr_list, notnull_improvement_item **added);
 static void sem_remove_notnull_improvements(notnull_improvement_item **added);
@@ -4771,331 +4771,6 @@ static void sem_update_proc_type_for_select(ast_node *ast) {
   sem_verify_identical_columns(current_proc, ast, "in multiple select/out statements");
 }
 
-// Look for the given name as a local or global variable.  First local.
-static ast_node *find_local_or_global_variable(CSTR name) {
-  // look in the two variable tables, in order, first match wins
-  symtab_entry *entry = symtab_find(locals, name);
-
-  if (!entry) {
-    entry = symtab_find(globals, name);
-  }
-
-  return entry ? entry->val : NULL;
-}
-
-// Given an ast that is a name try to find its semantic info in the
-// declared variables table.  Note that there are special rules for cursors
-// that are applied here.
-// A cursor name C in an expression context refers to the deleted "_C_has_row_"
-// boolean. This lets you say "if C then stuff; end if;"
-// True if we found something. Sets `*type_ptr` to a `sem_t *` if found and
-// successful and what was found was not a cursor in an expression context.
-static bool_t try_resolve_variable_with_type(ast_node *ast, CSTR name, sem_t **type_ptr) {
-  if (type_ptr) {
-    *type_ptr = NULL;
-  }
-
-  ast_node *variable = find_local_or_global_variable(name);
-  if (variable) {
-    sem_t sem_type = variable->sem->sem_type;
-
-    if (is_cursor(sem_type)) {
-      // cursor appearing in an expression context, rewrite as the flag that says
-      // if the cursor has data.  This lets you write
-      // fetch cursor into ... then  if cursor then ... endif
-
-      CSTR vname = NULL;
-
-      if (sem_type & SEM_TYPE_HAS_SHAPE_STORAGE) {
-        vname = dup_printf("%s._has_row_", variable->sem->name);
-      }
-      else {
-        vname = dup_printf("_%s_has_row_", variable->sem->name);
-      }
-
-      if (ast) {
-        ast->sem = new_sem(SEM_TYPE_BOOL | SEM_TYPE_VARIABLE | SEM_TYPE_NOTNULL);
-        ast->sem->name = vname;
-      }
-    }
-    else {
-      // cursor is the only non-unitary variable type, and we just handled it
-      Invariant(is_unitary(sem_type));
-
-      if (ast) {
-        ast->sem = new_sem(sem_type);
-        ast->sem->name = variable->sem->name;
-        ast->sem->kind = variable->sem->kind;
-      }
-
-      if (is_object(sem_type) &&
-          CURRENT_EXPR_CONTEXT_IS_NOT(SEM_EXPR_CONTEXT_NONE | SEM_EXPR_CONTEXT_TABLE_FUNC)) {
-        if (ast) {
-          report_error(ast, "CQL0064: object variables may not appear in the context"
-                            " of a SQL statement (except table-valued functions)", name);
-          record_error(ast);
-        }
-      } else {
-        if (type_ptr) {
-          *type_ptr = &variable->sem->sem_type;
-        }
-      }
-    }
-  }
-
-  return !!variable;;
-}
-
-// Given an ast that is a name, try to find it as one of the columns in the
-// current join scope or else in one of the parent joinscopes.  If the name
-// is ambiguous at any given level then it is an error, but inner scopes are
-// allowed to hide the names of outer scopes.  True if we found something
-// or have an affirmative error. Sets `*type_ptr` to a `sem_t *` if we found
-// something, and there was not an error, and the thing we found is a normal
-// column (i.e., not a rowid).
-static bool_t try_resolve_column_with_type(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
-  sem_t sem_type = 0;
-  CSTR col = NULL;
-  CSTR kind = NULL;
-  sem_join *found_jptr = NULL;
-  sem_t *type = NULL;
-
-  if (type_ptr) {
-    *type_ptr = NULL;
-  }
-
-  // We walk the chain of scopes until we find a stop frame or else we run out
-  // this allows nested joins to see their parent scopes.
-
-  for (sem_joinscope *jscp = current_joinscope; jscp && jscp->jptr && !col; jscp = jscp->parent) {
-    sem_join *jptr = jscp->jptr;
-    for (int32_t i = 0; i < jptr->count; i++) {
-      if (scope == NULL || !Strcasecmp(scope, jptr->names[i])) {
-        sem_struct *table = jptr->tables[i];
-        for (int32_t j = 0; j < table->count; j++) {
-          if (!Strcasecmp(name, table->names[j])) {
-            if (col) {
-              if (ast) {
-                report_error(ast, "CQL0065: identifier is ambiguous", name);
-                record_error(ast);
-              }
-              return true;  // found but failed.
-            }
-            sem_type = table->semtypes[j];
-            col = table->names[j];
-            kind = table->kinds[j];
-            found_jptr = jptr;
-            // Store this for setting type_ptr later, if successful.
-            type = &table->semtypes[j];
-          }
-        }
-      }
-    }
-  }
-
-  // If we didn't find the column name, it might be the rowid, look for that
-  // we can only do this if there are actually tables in this joinscope
-  if (!col && current_joinscope && current_joinscope->jptr) {
-    // there are 3 valid names for the rowid, any will do.
-    if (!Strcasecmp(name, "_rowid_") || !Strcasecmp(name, "rowid") ||  !Strcasecmp(name, "oid")) {
-      sem_join *jptr = current_joinscope->jptr;
-      if (scope == NULL && jptr->count == 1) {
-        // if only one table then that's the rowid
-        col = name;
-        sem_type = SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL;
-      }
-      else if (scope != NULL) {
-        // more than one table but the name is scoped, still have a chance
-        for (int32_t i = 0; i < jptr->count; i++) {
-          if (!Strcasecmp(scope, jptr->names[i])) {
-            col = name;
-            kind = NULL;
-            sem_type = SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL;
-            break;
-          }
-        }
-      }
-      else {
-        if (ast) {
-          report_error(ast, "CQL0066: identifier is ambiguous", name);
-          record_error(ast);
-        }
-        return true;  // found but failed.
-      }
-    }
-  }
-
-  if (col) {
-    if (ast) {
-      ast->sem = new_sem(sem_type);
-      ast->sem->name = col; // be sure to use the canonical name
-      ast->sem->kind = kind; // use the kind if there is one
-    }
-
-    if (found_jptr && found_jptr == monitor_jptr) {
-      symtab_add(monitor_symtab, col, NULL);
-    }
-
-    if (type_ptr) {
-      *type_ptr = type;
-    }
-  }
-
-  return !!col;
-}
-
-static bool_t try_resolve_column(ast_node *ast, CSTR name, CSTR scope) {
-  return try_resolve_column_with_type(ast, name, scope, NULL);
-}
-
-// If we have the construct C.x where C is a cursor and x is a column returned
-// by the query corresponding to the cursor then this is mapped to the local
-// that was automatically created for that cursor. Sets `*type_ptr` to a
-// `sem_t *` if successful.
-static void resolve_cursor_field_with_type(ast_node *expr, ast_node *cursor, CSTR field, sem_t **type_ptr) {
-  if (type_ptr) {
-    *type_ptr = NULL;
-  }
-
-  sem_t sem_type = cursor->sem->sem_type;
-  CSTR scope = cursor->sem->name;
-
-  // We don't do this if the cursor was not used with the auto syntax
-  if (!(sem_type & SEM_TYPE_HAS_SHAPE_STORAGE)) {
-    if (expr) {
-      report_error(expr, "CQL0067: cursor was not used with 'fetch [cursor]'", scope);
-      record_error(expr);
-    }
-    return;
-  }
-
-  // Find the name if it exists;  emit the canonical field name, which
-  // has the exact case from the declaration.  The user might have used
-  // something like C.VaLuE when the field is "value". The local has to match.
-
-  sem_struct *sptr = cursor->sem->sptr;
-  Invariant(sptr->count > 0);
-
-  for (int32_t i = 0; i < sptr->count; i++) {
-    if (!Strcasecmp(sptr->names[i], field)) {
-      if (expr) {
-        expr->sem = new_sem(sptr->semtypes[i] | SEM_TYPE_VARIABLE);
-        expr->sem->name = dup_printf("%s.%s", scope, sptr->names[i]);
-        expr->sem->kind = sptr->kinds[i];
-      }
-      if (type_ptr) {
-        *type_ptr = &sptr->semtypes[i];
-      }
-      return;
-    }
-  }
-
-  if (expr) {
-    report_error(expr, "CQL0068: field not found in cursor", field);
-    record_error(expr);
-  }
-}
-
-// Returns if the cursor name is a valid cursor then try to look it up as a
-// cursor auto-field (which might generate errors).  If it isn't a cursor then
-// just report not found. Sets `*type_ptr` to a `sem_t *` if successful.
-static bool_t try_resolve_auto_cursor_with_type(ast_node *ast, CSTR name, CSTR cursor_name, sem_t **type_ptr) {
-   Contract(cursor_name);
-   ast_node *variable = find_local_or_global_variable(cursor_name);
-
-   if (variable && is_cursor(variable->sem->sem_type)) {
-     resolve_cursor_field_with_type(ast, variable, name, type_ptr);
-     return true;
-   }
-
-   return false;
-}
-
-static bool_t try_resolve_using_enum(ast_node *ast, CSTR name, CSTR enum_name) {
-  Contract(enum_name);
-  ast_node *enum_stmt = find_enum(enum_name);
-  if (!enum_stmt) {
-    // try something else
-    return false;
-  }
-
-  Invariant(is_ast_declare_enum_stmt(enum_stmt));
-
-  // Find the name if it exists;  if it does then this becomes a rewrite
-
-  EXTRACT_NOTNULL(enum_values, enum_stmt->right);
-
-  while (enum_values) {
-     EXTRACT_NOTNULL(enum_value, enum_values->left);
-     EXTRACT_STRING(enum_member, enum_value->left);
-
-     if (!Strcasecmp(enum_member, name)) {
-       if (ast) {
-          ast_node *ast_new = eval_set(ast, enum_value->left->sem->value);
-          sem_root_expr(ast_new, SEM_EXPR_CONTEXT_NONE);
-          ast->sem = ast_new->sem;
-          ast->sem->kind = enum_stmt->sem->kind;
-        }
-        return true;
-     }
-     enum_values = enum_values->right;
-  }
-
-  // if we get this far we're stopping the search
-  if (ast) {
-    report_error(ast, "CQL0357: enum does not contain", name);
-    record_error(ast);
-  }
-  return true;
-}
-
-// Returns if the scope name is a valid shape then try to look it up
-// as a shape arg auto-field (which might generate errors).  If it isn't a
-// shape then just report not found. Sets `*type_ptr` to a `sem_t *` if
-// successful.
-static bool_t try_resolve_using_arg_bundle_with_type(ast_node *ast, CSTR name, CSTR bundle_name, sem_t **type_ptr) {
-   Contract(bundle_name);
-
-   if (type_ptr) {
-     *type_ptr = NULL;
-   }
-
-   ast_node *shape = find_arg_bundle(bundle_name);
-   if (!shape) {
-     // try something else
-     return false;
-   }
-
-  // Find the name if it exists;  emit the canonical field name, which
-  // has the exact case from the declaration.  The user might have used
-  // something like C.VaLuE when the field is "value". The local has to match.
-
-  sem_struct *sptr = shape->sem->sptr;
-  Invariant(sptr->count > 0);
-
-  for (int32_t i = 0; i < sptr->count; i++) {
-    if (!Strcasecmp(sptr->names[i], name)) {
-      if (ast) {
-        ast->sem = new_sem(sptr->semtypes[i] | SEM_TYPE_VARIABLE);
-        ast->sem->name = dup_printf("%s_%s", shape->sem->name, sptr->names[i]);
-        ast->sem->kind = sptr->kinds[i];
-      }  
-      if (type_ptr) {
-        *type_ptr = &sptr->semtypes[i];
-      }
-      return true;
-    }
-  }
-
-  // if we get this far we're stopping the search
-  if (ast) {
-    report_error(ast, "CQL0068: field not found in shape", name);
-    record_error(ast);
-  }
-  
-  return true;
-}
-
 static ast_node *get_named_param(ast_node *params, CSTR name) {
   for (; params; params = params->right) {
     EXTRACT_NOTNULL(param, params->left);
@@ -5111,15 +4786,42 @@ static ast_node *get_named_param(ast_node *params, CSTR name) {
   return NULL;
 }
 
-// Sets `*type_ptr` to a `sem_t *` if successful.
-static void resolve_using_arguments_with_type(ast_node *dot, CSTR name, sem_t **type_ptr) {
-  Contract(current_proc);
-  ast_node *params = get_proc_params(current_proc);
-  Contract(params);
-
-  if (type_ptr) {
-    *type_ptr = NULL;
+// Like `report_error`, but does nothing if `ast` is NULL. Used to make it
+// easier to handle a NULL AST in the `sem_try_resolve_*` family of functions.
+static void report_resolve_error(ast_node *ast, CSTR msg, CSTR subject) {
+  if (ast) {
+    report_error(ast, msg, subject);
   }
+}
+
+// Like `record_error`, but does nothing if `ast` is NULL. Used to make it
+// easier to handle a NULL AST in the `sem_try_resolve_*` family of functions.
+static void record_resolve_error(ast_node *ast) {
+  if (ast) {
+    record_error(ast);
+  }
+}
+
+// All `sem_try_resolve_*` functions return either `SEM_RESOLVE_CONTINUE` to
+// indicate that another resolver should be tried, or `SEM_RESOLVE_STOP` to
+// indicate that the correct resolver was found. Continuing implies that no
+// failure has (yet) occurred, but stopping implies neither success nor failure.
+typedef enum {
+  SEM_RESOLVE_CONTINUE = 0,
+  SEM_RESOLVE_STOP = 1
+} sem_resolve;
+
+static sem_resolve sem_try_resolve_arguments(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+  Contract(name);
+  Contract(type_ptr);
+
+  if (!scope || strcmp(scope, "ARGUMENTS")) {
+    return SEM_RESOLVE_CONTINUE;
+  }
+  
+  Invariant(current_proc);
+  ast_node *params = get_proc_params(current_proc);
+  Invariant(params);
 
   // these are always synthetically generated so they are 100% sure to match
   ast_node *param = get_named_param(params, name);
@@ -5130,102 +4832,485 @@ static void resolve_using_arguments_with_type(ast_node *dot, CSTR name, sem_t **
     CHARBUF_CLOSE(tmp);
   }
 
-  if (param) {
-    if (dot) {
-      dot->sem = param->sem;
-    }
-    if (type_ptr) {
-      *type_ptr = &param->sem->sem_type;
-    }
+  if (!param) {
+    report_resolve_error(ast, "CQL0201: expanding FROM ARGUMENTS, there is no argument matching", name);
+    record_resolve_error(ast);
+    return SEM_RESOLVE_STOP;
   }
-  else if (dot) {
-    report_error(dot, "CQL0201: expanding FROM ARGUMENTS, there is no argument matching", name);
-    record_error(dot);
+  
+  if (ast) {
+    ast->sem = param->sem;
   }
+  
+  *type_ptr = &param->sem->sem_type; 
+
+  return SEM_RESOLVE_STOP;
 }
 
-// Try to look up a [possibly] scoped name in one of the places:
-// 1. a reference to the special ARGUMENTS arg bundle
-// 2. a column in the current joinscope if any (this must not conflict with #2)
-// 3. a local or global variable
-// 4. a declared enum
-// 5. a field in an open cursor
-// 6. a field in an arg bundle
-//
-// ... otherwise, name not found.
-//
-// Sets `*type_ptr` to a `sem_t *` if possible.
-static void sem_resolve_id_with_type(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
-  if (type_ptr) {
-    *type_ptr = NULL;
+// Look for the given name as a local or global variable.  First local.
+static ast_node *find_local_or_global_variable(CSTR name) {
+  // look in the two variable tables, in order, first match wins
+  symtab_entry *entry = symtab_find(locals, name);
+
+  if (!entry) {
+    entry = symtab_find(globals, name);
   }
 
-  if (scope && !strcmp(scope, "ARGUMENTS")) {
-    // if it's the arguments scope this is the only choice
-    resolve_using_arguments_with_type(ast, name, type_ptr);
-    return;
+  return entry ? entry->val : NULL;
+}
+
+// A cursor name C in an expression context refers to the deleted "_C_has_row_"
+// boolean. This lets you say "if C then stuff; end if;"
+static sem_resolve sem_try_resolve_cursor_as_expression(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+  Contract(name);
+  Contract(type_ptr);
+
+  if (scope) {
+    return SEM_RESOLVE_CONTINUE;
   }
 
-  // We check columns early, only after the special ARGUMENTS case
-  if (try_resolve_column_with_type(ast, name, scope, type_ptr)) {
-    // Checking columns first doesn't let them hide locals because
-    // it is an error if a column hides a local/global.
-    // This is only a problem if the table is not scoped. The form
-    // T1.x is always the table column so it's always safe.  However
-    // T1.x == x will give an error if there is a local 'x' because
-    // the 'x' could be either.
-    if (!scope && find_local_or_global_variable(name)) {
-      if (ast) {
-        report_error(ast, "CQL0059: a variable name might be ambiguous "
-                          "with a column name, this is an anti-pattern", name);
-        record_error(ast);
-      }
+  ast_node *variable = find_local_or_global_variable(name);
+  if (!variable) {
+    return SEM_RESOLVE_CONTINUE;
+  }
+
+  sem_t sem_type = variable->sem->sem_type;
+  if (!is_cursor(sem_type)) {
+    return SEM_RESOLVE_CONTINUE;
+  }
+
+  // cursor appearing in an expression context, rewrite as the flag that says
+  // if the cursor has data.  This lets you write
+  // fetch cursor into ... then  if cursor then ... endif
+
+  if (ast) {
+    CSTR vname = NULL;
+
+    if (sem_type & SEM_TYPE_HAS_SHAPE_STORAGE) {
+      vname = dup_printf("%s._has_row_", variable->sem->name);
     }
-    return;
+    else {
+      vname = dup_printf("_%s_has_row_", variable->sem->name);
+    }
+
+    ast->sem = new_sem(SEM_TYPE_BOOL | SEM_TYPE_VARIABLE | SEM_TYPE_NOTNULL);
+    ast->sem->name = vname;
   }
 
-  // scoped names like T1.id can never be a variable/parameter
-  // if no scope was provided then look for variables
-  if (!scope && try_resolve_variable_with_type(ast, name, type_ptr)) {
-    return;
+  return SEM_RESOLVE_STOP;
+}
+
+static sem_resolve sem_try_resolve_variable(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+  Contract(name);
+  Contract(type_ptr);
+
+  if (scope) {
+    return SEM_RESOLVE_CONTINUE;
   }
 
-  // The scope might be the name of an enum, if it is, then do
-  // the appropriate rewrite and proceed
-  if (scope && try_resolve_using_enum(ast, name, scope)) {
-    return;
+  ast_node *variable = find_local_or_global_variable(name);
+  if (!variable) {
+    return SEM_RESOLVE_CONTINUE;
   }
 
-  // a scope might refer to a cursor, since these are always scoped
-  // there is no issue with confusion with locals.
-  if (scope && try_resolve_auto_cursor_with_type(ast, name, scope, type_ptr)) {
-    return;
-  }
+  sem_t sem_type = variable->sem->sem_type;
+  // Cursors-as-expressions are checked first, so this must be true.
+  Invariant(is_unitary(sem_type));
 
-  // a scope might refer to an arg bungle, again these are always scoped
-  if (scope && try_resolve_using_arg_bundle_with_type(ast, name, scope, type_ptr)) {
-    return;
+  if (is_object(sem_type) &&
+      CURRENT_EXPR_CONTEXT_IS_NOT(SEM_EXPR_CONTEXT_NONE | SEM_EXPR_CONTEXT_TABLE_FUNC)) {
+    report_resolve_error(ast, "CQL0064: object variables may not appear in the context"
+                              " of a SQL statement (except table-valued functions)", name);
+    record_resolve_error(ast);
+    return SEM_RESOLVE_STOP;
   }
 
   if (ast) {
-    report_error(ast, "CQL0069: name not found", name);
-    record_error(ast);
+    ast->sem = new_sem(sem_type);
+    ast->sem->name = variable->sem->name;
+    ast->sem->kind = variable->sem->kind;
   }
 
-  return;
+  *type_ptr = &variable->sem->sem_type;
+
+  return SEM_RESOLVE_STOP;
 }
 
+// Returns true if okay, else false.
+static bool_t sem_resolve_column_does_not_conflict_with_variable(ast_node *ast, CSTR column_name, CSTR table_name) {
+  Contract(column_name);
+
+  // It is an error if a column hides a local/global. This is only a problem if
+  // the table is not scoped. The form T1.x is always the table column so it's
+  // always safe. However T1.x == x will give an error if there is a local 'x'
+  // because the 'x' could be either.
+  if (!table_name && find_local_or_global_variable(column_name)) {
+    report_resolve_error(ast, "CQL0059: a variable name might be ambiguous "
+                              "with a column name, this is an anti-pattern", column_name);
+    record_resolve_error(ast);
+    return false;
+  }
+
+  return true;
+}
+
+// Given a column name and optional scope (table name), try to find it as one of
+// the columns in the current join scope or else in one of the parent
+// joinscopes. If the name is ambiguous at any given level then it is an error,
+// but inner scopes are allowed to hide the names of outer scopes.
+static sem_resolve sem_try_resolve_column(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+  Contract(name);
+  Contract(type_ptr);
+
+  sem_t sem_type = 0;
+  CSTR col = NULL;
+  CSTR kind = NULL;
+  sem_join *found_jptr = NULL;
+  sem_t *type = NULL;
+
+  // We walk the chain of scopes until we find a stop frame or else we run out
+  // this allows nested joins to see their parent scopes.
+
+  for (sem_joinscope *jscp = current_joinscope; jscp && jscp->jptr && !col; jscp = jscp->parent) {
+    sem_join *jptr = jscp->jptr;
+    for (int32_t i = 0; i < jptr->count; i++) {
+      if (scope == NULL || !Strcasecmp(scope, jptr->names[i])) {
+        sem_struct *table = jptr->tables[i];
+        for (int32_t j = 0; j < table->count; j++) {
+          if (!Strcasecmp(name, table->names[j])) {
+            if (col) {
+              report_resolve_error(ast, "CQL0065: identifier is ambiguous", name);
+              record_resolve_error(ast);
+              return SEM_RESOLVE_STOP;
+            }
+            sem_type = table->semtypes[j];
+            col = table->names[j];
+            kind = table->kinds[j];
+            found_jptr = jptr;
+            // Store this for setting type_ptr later, if successful.
+            type = &table->semtypes[j];
+          }
+        }
+      }
+    }
+  }
+
+  if (!col) {
+    return SEM_RESOLVE_CONTINUE;
+  }
+
+  if (!sem_resolve_column_does_not_conflict_with_variable(ast, name, scope)) {
+    return SEM_RESOLVE_STOP;
+  }
+
+  if (ast) {
+    ast->sem = new_sem(sem_type);
+    ast->sem->name = col; // be sure to use the canonical name
+    ast->sem->kind = kind; // use the kind if there is one 
+    if (found_jptr && found_jptr == monitor_jptr) {
+      symtab_add(monitor_symtab, col, NULL);
+    }
+  }
+
+  *type_ptr = type;
+
+  return SEM_RESOLVE_STOP;
+}
+
+static sem_resolve sem_try_resolve_rowid(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+  Contract(name);
+  Contract(type_ptr);
+
+  sem_t sem_type = 0;
+  CSTR col = NULL;
+  CSTR kind = NULL;
+
+  if (!(current_joinscope && current_joinscope->jptr)) {
+    return SEM_RESOLVE_CONTINUE;
+  }
+
+  // there are 3 valid names for the rowid, any will do.
+  if (Strcasecmp(name, "_rowid_") && Strcasecmp(name, "rowid") && Strcasecmp(name, "oid")) {
+    return SEM_RESOLVE_CONTINUE;
+  }
+
+  sem_join *jptr = current_joinscope->jptr;
+  if (scope == NULL && jptr->count == 1) {
+    // if only one table then that's the rowid
+    col = name;
+    sem_type = SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL;
+  }
+  else if (scope != NULL) {
+    // more than one table but the name is scoped, still have a chance
+    for (int32_t i = 0; i < jptr->count; i++) {
+      if (!Strcasecmp(scope, jptr->names[i])) {
+        col = name;
+        kind = NULL;
+        sem_type = SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL;
+        break;
+      }
+    }
+  }
+  else {
+    report_resolve_error(ast, "CQL0066: identifier is ambiguous", name);
+    record_resolve_error(ast);
+    return SEM_RESOLVE_STOP;
+  }
+
+  if (!col) {
+    return SEM_RESOLVE_CONTINUE;
+  }
+
+  if (!sem_resolve_column_does_not_conflict_with_variable(ast, name, scope)) {
+    return SEM_RESOLVE_STOP;
+  }
+
+  if (ast) {
+    ast->sem = new_sem(sem_type);
+    ast->sem->name = col;
+    ast->sem->kind = kind;
+  }
+
+  return SEM_RESOLVE_STOP;
+}
+
+// Similar to `sem_try_resolve_column`, but used outside of the
+// `sem_try_resolve_*` family of functions a way of looking up a column given
+// only a column name. Intentionally allows situations in which the name of a
+// column shadows a variable. Returns `true` if the column was found, else
+// `false`. Returning `true` does not imply that semantic analysis was
+// successful.
+static bool_t sem_find_column_for_name(ast_node *ast, CSTR name) {
+  Contract(ast);
+  Contract(name);
+
+  sem_t *type = NULL;
+
+  // We want to bypass checking for conflicts with locals and globals.
+  symtab *saved_locals = locals;
+  symtab *saved_globals = globals;
+  locals = NULL;
+  globals = NULL;
+
+  bool_t found = sem_try_resolve_column(ast, name, NULL, &type) == SEM_RESOLVE_STOP;
+  if (!found) {
+    found = sem_try_resolve_rowid(ast, name, NULL, &type) == SEM_RESOLVE_STOP;
+  }
+
+  locals = saved_locals;
+  globals = saved_globals;
+
+  return found;
+}
+
+static void sem_resolve_cursor_field(ast_node *ast, ast_node *cursor, CSTR field, sem_t **type_ptr) {
+  Contract(cursor);
+  Contract(field);
+  Contract(type_ptr);
+
+  sem_t sem_type = cursor->sem->sem_type;
+  CSTR scope = cursor->sem->name;
+
+  // We don't do this if the cursor was not used with the auto syntax
+  if (!(sem_type & SEM_TYPE_HAS_SHAPE_STORAGE)) {
+    report_resolve_error(ast, "CQL0067: cursor was not used with 'fetch [cursor]'", scope);
+    record_resolve_error(ast);
+    return;
+  }
+
+  // Find the name if it exists;  emit the canonical field name, which
+  // has the exact case from the declaration.  The user might have used
+  // something like C.VaLuE when the field is "value". The local has to match.
+
+  sem_struct *sptr = cursor->sem->sptr;
+  Invariant(sptr->count > 0);
+
+  for (int32_t i = 0; i < sptr->count; i++) {
+    if (!Strcasecmp(sptr->names[i], field)) {
+      if (ast) {
+        ast->sem = new_sem(sptr->semtypes[i] | SEM_TYPE_VARIABLE);
+        ast->sem->name = dup_printf("%s.%s", scope, sptr->names[i]);
+        ast->sem->kind = sptr->kinds[i];
+      }
+      *type_ptr = &sptr->semtypes[i];
+      return;
+    }
+  }
+
+  report_resolve_error(ast, "CQL0068: field not found in cursor", field);
+  record_resolve_error(ast);
+}
+
+static sem_resolve sem_try_resolve_cursor_field(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+  Contract(name);
+  Contract(type_ptr);
+
+  if (!scope) {
+    return SEM_RESOLVE_CONTINUE;
+  }
+
+  ast_node *variable = find_local_or_global_variable(scope);
+  if (!variable || !is_cursor(variable->sem->sem_type)) {
+    return SEM_RESOLVE_CONTINUE;
+  }
+
+  sem_resolve_cursor_field(ast, variable, name, type_ptr);
+  return SEM_RESOLVE_STOP;
+}
+
+static sem_resolve sem_try_resolve_enum(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+  Contract(name);
+  Contract(type_ptr);
+
+  if (!scope) {
+    return SEM_RESOLVE_CONTINUE;
+  }
+
+  ast_node *enum_stmt = find_enum(scope);
+  if (!enum_stmt) {
+    return SEM_RESOLVE_CONTINUE;
+  }
+
+  Invariant(is_ast_declare_enum_stmt(enum_stmt));
+
+  // Find the name if it exists;  if it does then this becomes a rewrite
+
+  EXTRACT_NOTNULL(enum_values, enum_stmt->right);
+
+  while (enum_values) {
+    EXTRACT_NOTNULL(enum_value, enum_values->left);
+    EXTRACT_STRING(enum_member, enum_value->left);
+
+    if (!Strcasecmp(enum_member, name)) {
+      if (ast) {
+        ast_node *ast_new = eval_set(ast, enum_value->left->sem->value);
+        sem_root_expr(ast_new, SEM_EXPR_CONTEXT_NONE);
+        ast->sem = ast_new->sem;
+        ast->sem->kind = enum_stmt->sem->kind;
+      }
+      return true;
+    }
+    enum_values = enum_values->right;
+  }
+
+  report_resolve_error(ast, "CQL0357: enum does not contain", name);
+  record_resolve_error(ast);
+
+  return SEM_RESOLVE_STOP;
+}
+
+static sem_resolve sem_try_resolve_arg_bundle(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+  Contract(name);
+  Contract(type_ptr);
+
+   if (!scope) {
+     return SEM_RESOLVE_CONTINUE;
+   }
+
+   ast_node *shape = find_arg_bundle(scope);
+   if (!shape) {
+     return SEM_RESOLVE_CONTINUE;
+   }
+
+  // Find the name if it exists;  emit the canonical field name, which
+  // has the exact case from the declaration.  The user might have used
+  // something like C.VaLuE when the field is "value". The local has to match.
+
+  sem_struct *sptr = shape->sem->sptr;
+  Invariant(sptr->count > 0);
+
+  for (int32_t i = 0; i < sptr->count; i++) {
+    if (!Strcasecmp(sptr->names[i], name)) {
+      if (ast) {
+        ast->sem = new_sem(sptr->semtypes[i] | SEM_TYPE_VARIABLE);
+        ast->sem->name = dup_printf("%s_%s", shape->sem->name, sptr->names[i]);
+        ast->sem->kind = sptr->kinds[i];
+      }
+      *type_ptr = &sptr->semtypes[i];
+      return SEM_RESOLVE_STOP;
+    }
+  }
+
+  report_resolve_error(ast, "CQL0068: field not found in shape", name);
+  record_resolve_error(ast);
+  
+  return SEM_RESOLVE_STOP;
+}
+
+// This function is responsible for resolving both unqualified identifiers (ids)
+// and qualified identifiers (dots). It performs the following two roles:
+//
+// - If an optional `ast` is provided, it works the same way most semantic
+//   analysis functions work: semantic information will be written into into the
+//   ast, errors will be reported to the user, and errors will be recorded in
+//   the AST.
+//
+// - `*typr_ptr` will be set to mutable type (`sem_t *`) in the current
+//   environment if the identifier successfully resolves to a type. (There are,
+//   unfortunately, a few exceptions in which a type will be successfully
+//   resolved and yet `*typr_ptr` will not be set. These include when a cursor
+//   in an expression position, when the expression is `rowid` (or similar), and
+//   when the id resolves to an enum case. The reason no mutable type is
+//   returned in these cases is that a new type is allocated as part of semantic
+//   analysis, and there exists no single, stable type in the environment to
+//   which a pointer could be returned. This is a limitation of this function,
+//   albeit one that's currently not problematic.)
+//
+//  Resolution is attempted in the order that the `sem_try_resolve_*` functions
+//  appear in the `resolver` array. Each takes the same arguments: An (optional)
+//  AST, a mandatory name, an optional scope, and mandatory type pointer. If the
+//  identifier provided to one of these resolvers is resolved successfully, *or*
+//  if the correct resolver was found but there was an error in the program,
+//  `SEM_RESOLVE_STOP` is returned and resolution is complete, succesful or not.
+//  If a resolver is tried and it determines that it is not the correct resolver
+//  for the identifier in question, `SEM_RESOLVE_CONTINUE` is returned and the
+//  next resolver is tried.
+//
+// This function should not be called directly. If one is interested in
+// performing semantic analysis, call `sem_resolve_id`. Alternatively, if one
+// wants to get a mutable type from the environment, call `find_mutable_type`.
+static void sem_resolve_id_with_type(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+  Contract(name);
+  Contract(type_ptr);
+
+  *type_ptr = NULL;
+
+  sem_resolve (*resolver[])(ast_node *ast, CSTR, CSTR, sem_t **) = {
+    sem_try_resolve_arguments,
+    sem_try_resolve_column,
+    sem_try_resolve_rowid,
+    sem_try_resolve_cursor_as_expression,
+    sem_try_resolve_variable,
+    sem_try_resolve_enum,
+    sem_try_resolve_cursor_field,
+    sem_try_resolve_arg_bundle,
+  };
+
+  for (uint32_t i = 0; i < sizeof(resolver) / sizeof(void *); i++) {
+    if (resolver[i](ast, name, scope, type_ptr) == SEM_RESOLVE_STOP) {
+      return;
+    }
+  }
+
+  report_resolve_error(ast, "CQL0069: name not found", name);
+  record_resolve_error(ast);
+}
+
+// Resolves a (potentially qualified) identifier, writing semantic information
+// into `ast` if successful, or reporting and recording an error for `ast` if
+// not.
 static void sem_resolve_id(ast_node *ast, CSTR name, CSTR scope) {
   Contract(ast);
+  Contract(name);
 
-  sem_resolve_id_with_type(ast, name, scope, NULL);
+  // We have no use for `type` and simply throw it away.
+  sem_t *type = NULL;
+  sem_resolve_id_with_type(ast, name, scope, &type);
 }
 
-// Returns the *mutable* type (`sem_t *`) for a given name and scope if one
-// exists by following the same lookup method as `sem_resolve_id`. Note that, in
-// some cases (e.g., enums, cursors used in an expression context, and rowid), a
-// name/scope pair may have a type, but returning a mutable type may not be
-// possible, and so NULL will be returned instead.
+// Returns the *mutable* type (`sem_t *`) for a given (potentially qualified)
+// identifier if one exists in the environment. See the documentation for
+// `sem_resolve_id_with_type` for limitations.
 static sem_t *find_mutable_type(CSTR name, CSTR scope) {
   Contract(name);
 
@@ -5249,7 +5334,7 @@ static sem_t *find_mutable_type_for_global_variable(CSTR name) {
 }
 
 // Like `find_mutable_type`, but restricted to global auto cursor fields only.
-static sem_t *find_mutable_type_for_global_auto_cursor_field(CSTR name, CSTR cursor_name) {
+static sem_t *find_mutable_type_for_global_cursor_field(CSTR name, CSTR cursor_name) {
   symtab_entry *entry = symtab_find(globals, cursor_name);
   if (!entry) {
     return NULL;
@@ -5259,7 +5344,7 @@ static sem_t *find_mutable_type_for_global_auto_cursor_field(CSTR name, CSTR cur
   Invariant(is_cursor(cursor->sem->sem_type));
 
   sem_t *type = NULL;
-  resolve_cursor_field_with_type(NULL, cursor, name, &type);
+  sem_resolve_cursor_field(NULL, cursor, name, &type);
   
   return type;
 }
@@ -8075,7 +8160,7 @@ static sem_t sem_join_using_columns(ast_node *join, ast_node *join_cond, sem_joi
     {
       PUSH_JOIN_BLOCK();
       PUSH_JOIN(left_join, left);
-      if (!try_resolve_column(ast, name, NULL)) {
+      if (!sem_find_column_for_name(ast, name)) {
         report_error(ast, "CQL0096: join using column not found on the left side of the join", name);
         record_error(join_cond);
         record_error(join);
@@ -8095,7 +8180,7 @@ static sem_t sem_join_using_columns(ast_node *join, ast_node *join_cond, sem_joi
     {
       PUSH_JOIN_BLOCK();
       PUSH_JOIN(right_join, right);
-      if (!try_resolve_column(ast, name, NULL)) {
+      if (!sem_find_column_for_name(ast, name)) {
         report_error(ast, "CQL0097: join using column not found on the right side of the join", name);
         record_error(join_cond);
         record_error(join);
@@ -10924,7 +11009,7 @@ static sem_t *sem_set_notnull_improved(CSTR name, CSTR scope) {
     // There is nothing else mutable at a global scope with a qualified
     // identifier except for cursor fields, so we don't need to check for
     // anything else.
-    is_global = type == find_mutable_type_for_global_auto_cursor_field(name, scope);
+    is_global = type == find_mutable_type_for_global_cursor_field(name, scope);
   } else {
     is_global = type == find_mutable_type_for_global_variable(name);
   }
@@ -12402,7 +12487,7 @@ static bool_t sem_name_check(name_check *check) {
       // Resolve name with no qualifier in the current scope.
       EXTRACT_STRING(name, name_ast);
 
-      if (!try_resolve_column(name_ast, name, NULL) || is_error(name_ast)) {
+      if (!sem_find_column_for_name(name_ast, name) || is_error(name_ast)) {
         report_error(name_ast, "CQL0171: name not found", name);
         record_error(name_ast);
         record_error(check->name_list);
@@ -12488,8 +12573,8 @@ static void sem_synthesize_dummy_value(dummy_info *info) {
   ast_node *ast_col = new_ast_str(info->name);
   PUSH_JOIN_BLOCK()
   PUSH_JOIN(info_scope, info->jptr);
-  bool_t resolved = try_resolve_column(ast_col, info->name, NULL);
-  Invariant(resolved);
+  bool_t found = sem_find_column_for_name(ast_col, info->name);
+  Invariant(found);
   Invariant(!is_error(ast_col));  // name is known to be good!
   POP_JOIN();
   POP_JOIN();
