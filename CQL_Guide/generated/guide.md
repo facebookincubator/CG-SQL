@@ -1070,95 +1070,283 @@ Importantly type kind can be applied to object types as well, allowing `object<d
 At run time the kind information is lost. But it does find its way into the JSON output so external tools
 also get to see the kinds.
 
-### Nullability Rules
+### Nullability
 
-#### General Rule
+#### Nullability Rules
 
-Except as noted in the exceptions below, the result of an operator is a nullable type if and only if any of its operands
-are of nullable type. This applies no matter the number of operands the operator requires.
+Nullability is tracked via CQL's type system. To understand whether or not an
+expression will be assigned a nullable type, you can follow these rules; they
+will hopefully be intuitive if you are familiar with SQL:
 
-Note: CQL does not do constant folding or other inferencing except in `const()`, it only uses the types of the values so
-even an expression such as `NULL or 1` is of nullable type even though plainly it must evaluate to `1`.  This may change
-in time but presently no attempt is made to compute values to improve type information except in `const()` expressions.
+* The literal `NULL` is, of course, always assigned a nullable type. All other
+  literals are nonnull.
 
-#### Identifiers and Literals
+* In general, the type of an expression involving an operator (e.g., `+`, `==`,
+  `!=`, `~`, `LIKE`, et cetera) is nullable if any of its arguments are
+  nullable. For example, `1 + NULL` is assigned the type `INTEGER`, implying
+  nullability. `1 + 2`, however, is assigned the type `INTEGER NOT NULL`.
 
-Nullable variables and columns are always nullable.  The `NULL` literal is nullable.  Other literals are not nullable.
+* `IN` and `NOT IN` expressions are assigned a nullable type if and only if
+  their left argument is nullable: The nullability of the right side is
+  irrelevant. For example, `"foo" IN (a, b)` will always have the type `BOOL NOT
+  NULL`, whereas `some_nullable IN (a, b)` will have the type `BOOL`.
 
-#### IS and IS NOT
+  * **NOTE:** In CQL, the `IN` operator behaves like a series of equality tests
+    (i.e., `==` tests, not `IS` tests), and `NOT IN` behaves symmetrically.
+    SQLite has slightly different nullability rules for `IN` and `NOT IN`. *This
+    is the one place where CQL has different evaluation rules from SQLite, by
+    design.*
 
-These operators always return a non-null boolean.
+* The result of `IS` and `IS NOT` is always of type `BOOL NOT NULL`, regardless
+  of the nullability of either argument.
 
-#### IN and NOT IN
+* For `CASE` expressions, the result is always of a nullable type if no `ELSE`
+  clause is given. If an `ELSE` is given, the result is nullable if any of the
+  `THEN` or `ELSE` expressions are nullable.
 
-In an expression like `needle IN (haystack)` the result is always a boolean. The boolean is nullable if and only if `needle` is nullable.
-The presence of nulls in the the haystack is irrelevant.
+  * **NOTE:** The SQL `CASE` construct is quite powerful: Unlike the C `switch`
+    statement, it is actually an expression. In this sense, it is rather more
+    like a highly generalized ternary `a ? b : c` operator than a C switch
+    statement. There can be arbitrarily many conditions specified, each with
+    their own result, and the conditions need not be constants; typically, they
+    are not.
 
-The `IN` operator behaves like a series of equality tests (i.e. `==` tests not `IS` tests).  `NOT IN` behaves symmetrically.
+* `IFNULL` and `COALESCE` are assigned a `NOT NULL` type if one or more of their
+  arguments are of a `NOT NULL` type.
 
-NOTE: SQLite has slightly different nullability rules for `IN` and `NOT IN` q.v.  This is only place where CQL has different evaluation rules by design.
+* In most join operations, the nullability of each column participating in the
+  join is preserved. However, in a `LEFT OUTER` join, the columns on the right
+  side of the join are always considered nullable; in a `RIGHT OUTER` join, the
+  columns on the left side of the join are considered nullable.
 
-#### CASE ..WHEN ..THEN.. ELSE.. END
+* As in most other languages, CQL does not perform evaluation of value-level
+  expressions during type checking. There is one exception to this rule: An
+  expression within a `const` is evaluated at compilation time, and if its
+  result is then known to be nonnull, it will be given a `NOT NULL` type. For
+  example, `const(NULL or 1)` is given the type `BOOL NOT NULL`, whereas merely
+  `NULL or 1` has the type `BOOL`.
 
-The following rules apply when considering nullability of a `CASE` expression.
+#### Nullability Improvements
 
-* if there is no `ELSE` clause, the result is nullable.
-* if any of the output values (i.e. any `THEN` or `ELSE` values) are nullable, the result is nullable
-* otherwise the result is not nullable
+**NOTE:** This is a new feature of CQL that currently **disabled by default**. Until
+it becomes the default in a future version of CQL, you will need to use
+`@enforce_strict not null after check;` to gain access to this functionality.
 
-The SQL `CASE` construct is quite powerful and unlike the C `switch` statement it is actually an expression.
-So this operator is rather more like a highly generalized ternary `a ? b : c` operator rather than the C switch statement.
-There can be arbitrarily many conditions specified each with their own result and the conditions need not be constants, and typically are not.
+CQL is able to "improve" the type of some expressions from a nullable type to a
+`NOT NULL` type via occurrence typing, also known as flow typing. As in other
+languages (e.g., Racket, where occurrence typing originated, and more recently
+Kotlin, TypeScript, et cetera), it is possible to use a conditional to refine a
+type.
 
-#### The IFNULL and COALESCE Functions
+##### Improvements in `IF` and `CASE`
 
-These functions are nullable or non-nullable based on their arguments. If the `IFNULL` or `COALESCE` call has
-at least one non-nullable argument then the result is non-nullable.
-
-#### The ifnull_crash and ifnull_throw functions
-
-Sometimes `ifnull` is not possible, e.g. if the operand is an object or blob type.  Other times it's just not convenient.
-The "attesting" forms gives you a type conversion to not null with a runtime check.  They cannot be used in SQLite contexts
-because the functions are not known to SQLite.  But in loose expressions you can write this important pattern:
+One way to improve a type to be `NOT NULL` is by using an `IS NOT NULL` check
+within an `IF … THEN … END IF`:
 
 ```sql
-create proc foo(x object)
+DECLARE x INT;
+CALL some_proc_with_an_out_arg(x);
+IF x IS NOT NULL THEN
+  -- `x` has type `INT NOT NULL` here
+END IF;
+-- `x` reverts to type `INT` here
+```
+
+Above, you can see how the check in `IF x IS NOT NULL` allows `x` to be of type
+`INT NOT NULL` within the body of the `THEN`.
+
+The same applies to `WHEN` clauses within a `CASE` expression:
+
+```sql
+DECLARE x INT;
+CALL some_proc_with_an_out_arg(x);
+LET y := CASE
+            WHEN x IS NOT NULL THEN x + x
+            ELSE 100
+          END;
+END IF;
+-- `y` has type `INT NOT NULL` here
+```
+
+Cursor fields are also eligible identifiers for improvement:
+
+```sql
+CREATE TABLE t (x int);
+DECLARE c CURSOR FOR SELECT x FROM t;
+IF c.x IS NOT NULL THEN
+  -- `c.x` has type `INT NOT NULL` here
+END IF;
+```
+
+For some identifier `x` to be improved via some conditional expression, it must
+be along the outermost spine of `AND`-separated expressions, and it must be
+exactly of the form `x IS NOT NULL`. For example, this will work for both `x1`
+and `x2`:
+
+```sql
+IF x1 IS NOT NULL and (y > 20 AND x2 IS NOT NULL) THEN
+  -- `x1` and `x2` are nonnull here
+END IF;
+```
+
+Neither, however, will be improved here:
+
+```sql
+IF x1 IS NOT NULL OR (x2 IS NOT NULL AND x1 > 100) THEN
+  -- `x1` and `x2` are nullable here because the checks
+  -- involving `IS NOT NULL` appear within an `OR`
+END IF;
+```
+
+**NOTE:** CQL currently only improves some identifier `x` if the check is
+*exactly* of the form `x IS NOT NULL`: Other expressions that are only true if
+`x` is not `NULL`, such as `x > 100`, cause no such improvement to occur.
+Additionally, no improvement will occur if `x` is a global: Only local variables
+are eligible. Both of these restrictions may be lifted in a future version of
+CQL.
+
+The nullability improvement for a given identifier persists up until a `SET`,
+`FETCH`, or use in an `OUT` position that involves the improved variable. For
+example:
+
+```sql
+DECLARE x INT;
+IF x IS NOT NULL THEN
+   -- `x` is nonnull here
+   SET x := null;
+   -- `x` is nullable here
+  IF x IS NOT NULL THEN
+    -- `x` is once again NOT NULL
+    FETCH c INTO x;
+    -- `x` is again nullable
+  END IF;
+  IF x IS NOT NULL THEN
+    -- `x` is nonnull here
+    CALL some_proc_with_an_out_arg(x);
+    -- `x` is nullable
+  END IF;
+END IF;
+```
+
+As a special case, `SET` does not remove an improvement for a given identifier
+if the right side of the `SET` is of a `NOT NULL` type. On the contrary, `SET`
+will *improve* the type of the identifier on the left-hand side in such
+situations. For example:
+
+```sql
+DECLARE a INT;
+set a := 42;   -- `a` now has type `INT NOT NULL`
+set a := null; -- `a` reverts to type `INT`
+```
+
+Improvements via `SET`—and, indeed, all nullability improvements—respect the
+control flow of the program. If an improvement is made via `SET` within the body
+of a `THEN`, for example, it will not be present in the `ELSE`, nor will it be
+present after the end of the `IF … THEN … ELSE … END IF` block.
+
+##### Improvements in Select Expressions
+
+CQL can also improve the type of an identifier in a `SELECT` expression via `IS
+NOT NULL` checks in a `WHERE` clause. These improvements apply both in the
+select expressions themselves and in the resulting columns. Let's look at the
+following example:
+
+```sql
+CREATE TABLE t (x INT, y INT);
+DECLARE c CURSOR FOR
+  SELECT x + x AS a, y + y AS b
+  FROM t
+  WHERE x IS NOT NULL
+    AND b IS NOT NULL;
+FETCH c;
+-- both `c.a` and `c.b` have type `INT NOT NULL` here
+```
+
+Above, `c.a` has type `INT NOT NULL` because `x` was established to be nonnull,
+thus so too was `x + x`. In addition, `c.b` has type `INT NOT NULL` because the
+resulting column `b` was established to be `NOT NULL` directly.
+
+**NOTE:** CQL is currently unable to improve a type via an `IS NOT NULL`
+expression appearing in an `ON` or `HAVING` clause. This restriction may be
+lifted in a future version of CQL.
+
+**NOTE:** CQL is not yet able to take details of JOINs into account. For example:
+
+```sql
+CREATE PROC both_results_columns_are_again_nonnull()
 begin
-  if x is not null then
-     declare xo object not null;
-     set xo := ifnull_crash(x); -- this is like an assert
-     -- use xo where a non-null object is needed
-  end;
+  CREATE TABLE t (x INT, y INT);
+  CREATE TABLE u (x INT, INT);
+  SELECT t.x AS a, t.y AS b
+  FROM t
+  INNER JOIN u
+  ON t.x = u.x
+  WHERE t.x IS NOT NULL AND b IS NOT NULL;
 end;
 ```
 
-If you can't assert that the object is not null but rather you want to test it
-then you can use `ifnull_throw`.  This form is shown below:
+Both resulting columns in the above example have type `INT NOT NULL`: `a`,
+because `t.x IS NOT NULL`, and `b`, because `b IS NOT NULL`. However, if one
+were to have specified `u.x IS NOT NULL` instead of `t.x IS NOT NULL`, `a` would
+*not* have been given a nonnull type even though it arguably should have been.
+This can be worked around easily, yet it remains a minor deficiency of CQL for
+the time being.
+
+#### Forcing Nonnull Types
+
+If possible, it is best to use the techniques described in "Nullability
+Improvements" to verify that value of a nullable type is nonnull before using it
+as such.
+
+Sometimes, however, you may know that a value with a nullable type cannot be
+null and simply wish to use it as though it were nonnull.  The `ifnull_crash`
+and `ifnull_throw` "attesting" functions convert the type of an expression to be
+nonnull and ensure that the value is nonnull with a runtime check.  They cannot
+be used in SQLite contexts because the functions are not known to SQLite, but
+they can be used in loose expressions. For example:
 
 ```sql
-create proc foo(x object)
-begin
-  declare xo object not null;
-  set xo := ifnull_throw(x);
-  -- use xo where a non-null object is needed
-  end;
-end;
+CREATE PROC square_if_odd(a INT NOT NULL, OUT result INT)
+BEGIN
+  IF a % 2 = 0 THEN
+    SET result := NULL;
+  ELSE
+    SET result := a * a;
+  END IF;
+END;
+
+-- `x` has type `INT`, but we know it can't be `NULL`
+let x := call square_if_odd(3);
+
+-- `y` has type `INT NOT NULL`
+let y := ifnull_crash(x);
 ```
 
-It is equivalent to adding this inline in the expression
+Above, the `ifnull_crash` attesting function is used to coerce the expression
+`x` to be of type `INT NOT NULL`. If our assumptions were somehow wrong,
+however—and `x` were, in fact, `NULL`—our program would crash.
 
+As an alternative to crashing, you can use `ifnull_throw`. The following two
+pieces of code are equivalent:
+
+```sql
+CREATE PROC y_is_not_null(x INT)
+BEGIN
+  let y := ifnull_throw(x);
+END;
 ```
-  if x is null then throw end if;
+
+```sql
+CREATE PROC y_is_not_null(x INT)
+BEGIN
+  DECLARE y INT NOT NULL;
+  IF x IS NOT NULL THEN
+    SET y := x;
+  ELSE
+    THROW;
+  END IF;
+END;
 ```
-
-The compiler then considers 'x' to be not null having tested it at run time.
-
-#### LEFT and RIGHT OUTER JOINS
-In most join operations the nullability of each column participating in the join is preserved.  However in a
-`LEFT OUTER` join the columns on the right side of the join are always considered nullable and in a
-`RIGHT OUTER` join the columns on the left side of the join are considered nullable.
-
-NOTE: CQL does not use constraints in the `WHERE`, `ON`, or `HAVING` clause to infer non-null status even where this would be possible.  CQL does no data-flow at all.  e.g. `select foo where foo is not null` does not change the type of the column.  You can only do this with expression forms that strip the nullability (e.g. `IFNULL`).
 
 ### Expression Types
 
@@ -8199,7 +8387,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu Jun 24 16:06:47 PDT 2021
+Snapshot as of Wed Jun 30 18:52:51 EDT 2021
 
 ### Operators and Literals
 
@@ -9595,6 +9783,7 @@ enforcement_options:
   | "SELECT" "IF" "NOTHING"
   | "INSERT" "SELECT"
   | "TABLE" "FUNCTION"
+  | "NOT" "NULL" "AFTER" "CHECK"
   ;
 
 enforce_strict_stmt:
@@ -13149,7 +13338,7 @@ CQL 0400 : unused, this was added to prevent merge conflicts at the end on liter
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Thu Jun 24 16:06:47 PDT 2021
+Snapshot as of Wed Jun 30 18:52:52 EDT 2021
 
 ### Rules
 
