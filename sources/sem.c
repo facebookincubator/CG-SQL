@@ -167,6 +167,8 @@ static sem_t *find_mutable_type(CSTR name, CSTR scope);
 static sem_t *find_mutable_type_for_global_variable(CSTR name);
 static sem_t *find_mutable_type_for_global_cursor_field(CSTR name, CSTR cursor_name);
 static bool_t sem_is_notnull_improved(CSTR name, CSTR scope);
+static void sem_set_notnull_improved(CSTR name, CSTR scope);
+static void sem_unset_notnull_improved(CSTR name, CSTR scope);
 static void sem_add_notnull_improvements(ast_node *expr, ast_node *select_expr_list);
 static void sem_remove_notnull_improvements();
 
@@ -12818,13 +12820,6 @@ static void sem_assign(ast_node *ast) {
     return;
   }
 
-  // Since we're mutating the variable and possibly setting it to NULL, we need
-  // to remove it from the set of currently improved variables.
-  //
-  // NOTE: An obvious way to do better here would be to only remove the variable
-  // if expr is of a nullable type.
-  sem_unset_notnull_improved(name, NULL);
-
   Invariant(!current_joinscope);
   sem_root_expr(expr, SEM_EXPR_CONTEXT_NONE);
 
@@ -12841,6 +12836,15 @@ static void sem_assign(ast_node *ast) {
   sem_combine_kinds(expr, variable->sem->kind);
   if (is_error(expr)) {
     record_error(ast);
+  }
+
+  // We can infer that the left side of `:=` is not null if the right side is
+  // not null. Otherwise, we remove any existing improvement as it is no longer
+  // valid.
+  if (is_not_nullable(expr->sem->sem_type)) {
+    sem_set_notnull_improved(name, NULL);
+  } else {
+    sem_unset_notnull_improved(name, NULL);
   }
 }
 
@@ -17575,7 +17579,11 @@ static void sem_misc_attrs_basic(ast_node *ast) {
 static void sem_stmt_list(ast_node *head) {
   Contract(head);
 
+  // For any list of statements, any improvements made within cannot be assumed
+  // to be valid afterwards. We therefore need to create a new context.
+  PUSH_NOTNULL_IMPROVEMENT_CONTEXT(NULL, NULL);
   sem_stmt_level++;
+
   bool_t error = false;
   for (ast_node *ast = head; ast; ast = ast->right) {
     ast_node *stmt = ast->left;
@@ -17596,7 +17604,9 @@ static void sem_stmt_list(ast_node *head) {
   else {
     record_ok(head);
   }
+
   sem_stmt_level--;
+  POP_NOTNULL_IMPROVEMENT_CONTEXT();
 }
 
 // Expression type for current proc literal

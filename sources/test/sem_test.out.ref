@@ -61207,7 +61207,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC local_improvements_persist_until_set ()
+CREATE PROC local_improvements_persist_until_set_to_a_nullable ()
 BEGIN
   DECLARE a INTEGER;
   DECLARE b INTEGER;
@@ -61216,16 +61216,16 @@ BEGIN
   IF a IS NOT NULL AND b IS NOT NULL THEN
     LET x1 := cql_inferred_notnull(a);
     LET y1 := cql_inferred_notnull(b);
-    SET b := 0;
+    SET b := NULL;
     LET x2 := cql_inferred_notnull(a);
     LET y2 := b;
     IF cql_inferred_notnull(a) IS NOT NULL AND b IS NOT NULL THEN
       LET x3 := cql_inferred_notnull(a);
       LET y3 := cql_inferred_notnull(b);
-      SET a := 0;
+      SET a := NULL;
       LET x4 := a;
       LET y4 := cql_inferred_notnull(b);
-      SET b := 0;
+      SET b := NULL;
     END IF;
     LET x5 := a;
     LET y5 := b;
@@ -61235,7 +61235,7 @@ BEGIN
 END;
 
   {create_proc_stmt}: ok
-  | {name local_improvements_persist_until_set}: ok
+  | {name local_improvements_persist_until_set_to_a_nullable}: ok
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_vars_type}: integer
@@ -61280,7 +61280,7 @@ END;
       | |   |       | {name b}: b: integer inferred_notnull variable
       | |   | {assign}: b: integer variable
       | |   | | {name b}: b: integer variable
-      | |   | | {int 0}: integer notnull
+      | |   | | {null}: null
       | |   | {let_stmt}: x2: integer notnull variable
       | |   | | {name x2}: x2: integer notnull variable
       | |   | | {call}: a: integer notnull variable
@@ -61325,7 +61325,7 @@ END;
       | |   | |   |       | {name b}: b: integer inferred_notnull variable
       | |   | |   | {assign}: a: integer variable
       | |   | |   | | {name a}: a: integer variable
-      | |   | |   | | {int 0}: integer notnull
+      | |   | |   | | {null}: null
       | |   | |   | {let_stmt}: x4: integer variable
       | |   | |   | | {name x4}: x4: integer variable
       | |   | |   | | {name a}: a: integer variable
@@ -61339,7 +61339,7 @@ END;
       | |   | |   |       | {name b}: b: integer inferred_notnull variable
       | |   | |   | {assign}: b: integer variable
       | |   | |     | {name b}: b: integer variable
-      | |   | |     | {int 0}: integer notnull
+      | |   | |     | {null}: null
       | |   | | {if_alt}: ok
       | |   | {let_stmt}: x5: integer variable
       | |   | | {name x5}: x5: integer variable
@@ -61354,6 +61354,136 @@ END;
       | {let_stmt}: y6: integer variable
         | {name y6}: y6: integer variable
         | {name b}: b: integer variable
+
+The statement ending at line XXXX
+
+CREATE PROC set_can_improve_a_type_if_set_to_something_not_null ()
+BEGIN
+  DECLARE a INTEGER;
+  LET x0 := a;
+  SET a := 42;
+  LET x1 := cql_inferred_notnull(a);
+  SET a := NULL;
+  LET x2 := a;
+END;
+
+  {create_proc_stmt}: ok
+  | {name set_can_improve_a_type_if_set_to_something_not_null}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {let_stmt}: x0: integer variable
+      | | {name x0}: x0: integer variable
+      | | {name a}: a: integer variable
+      | {assign}: a: integer variable
+      | | {name a}: a: integer variable
+      | | {int 42}: integer notnull
+      | {let_stmt}: x1: integer notnull variable
+      | | {name x1}: x1: integer notnull variable
+      | | {call}: a: integer notnull variable
+      |   | {name cql_inferred_notnull}: a: integer notnull variable
+      |   | {call_arg_list}
+      |     | {call_filter_clause}
+      |     | {arg_list}: ok
+      |       | {name a}: a: integer inferred_notnull variable
+      | {assign}: a: integer variable
+      | | {name a}: a: integer variable
+      | | {null}: null
+      | {let_stmt}: x2: integer variable
+        | {name x2}: x2: integer variable
+        | {name a}: a: integer variable
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_added_by_set_do_not_persist_outside_the_statement_list ()
+BEGIN
+  DECLARE a INTEGER;
+  IF 0 THEN
+    SET a := 42;
+    LET x0 := cql_inferred_notnull(a);
+  END IF;
+  LET x1 := a;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_added_by_set_do_not_persist_outside_the_statement_list}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {if_stmt}: integer notnull
+      | | {cond_action}: integer notnull
+      | | | {int 0}: integer notnull
+      | | | {stmt_list}: ok
+      | |   | {assign}: a: integer variable
+      | |   | | {name a}: a: integer variable
+      | |   | | {int 42}: integer notnull
+      | |   | {let_stmt}: x0: integer notnull variable
+      | |     | {name x0}: x0: integer notnull variable
+      | |     | {call}: a: integer notnull variable
+      | |       | {name cql_inferred_notnull}: a: integer notnull variable
+      | |       | {call_arg_list}
+      | |         | {call_filter_clause}
+      | |         | {arg_list}: ok
+      | |           | {name a}: a: integer inferred_notnull variable
+      | | {if_alt}: ok
+      | {let_stmt}: x1: integer variable
+        | {name x1}: x1: integer variable
+        | {name a}: a: integer variable
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_removed_by_set_do_persist_outside_the_statement_list ()
+BEGIN
+  DECLARE a INTEGER;
+  IF a IS NOT NULL THEN
+    LET x0 := cql_inferred_notnull(a);
+    IF 1 THEN
+      SET a := NULL;
+    END IF;
+  END IF;
+  LET x1 := a;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_removed_by_set_do_persist_outside_the_statement_list}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {if_stmt}: bool notnull
+      | | {cond_action}: bool notnull
+      | | | {is_not}: bool notnull
+      | | | | {name a}: a: integer variable
+      | | | | {null}: null
+      | | | {stmt_list}: ok
+      | |   | {let_stmt}: x0: integer notnull variable
+      | |   | | {name x0}: x0: integer notnull variable
+      | |   | | {call}: a: integer notnull variable
+      | |   |   | {name cql_inferred_notnull}: a: integer notnull variable
+      | |   |   | {call_arg_list}
+      | |   |     | {call_filter_clause}
+      | |   |     | {arg_list}: ok
+      | |   |       | {name a}: a: integer inferred_notnull variable
+      | |   | {if_stmt}: integer notnull
+      | |     | {cond_action}: integer notnull
+      | |     | | {int 1}: integer notnull
+      | |     | | {stmt_list}: ok
+      | |     |   | {assign}: a: integer variable
+      | |     |     | {name a}: a: integer variable
+      | |     |     | {null}: null
+      | |     | {if_alt}: ok
+      | | {if_alt}: ok
+      | {let_stmt}: x1: integer variable
+        | {name x1}: x1: integer variable
+        | {name a}: a: integer variable
 
 The statement ending at line XXXX
 

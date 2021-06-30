@@ -15443,7 +15443,8 @@ begin
   end if;
 end;
 
--- TEST: Nullability improvements for locals cease at corresponding SETs.
+-- TEST: Nullability improvements for locals cease at corresponding SETs to 
+-- nullables.
 -- + {let_stmt}: x0: integer variable
 -- + {let_stmt}: y0: integer variable
 -- + {let_stmt}: x1: integer notnull variable
@@ -15459,7 +15460,7 @@ end;
 -- + {let_stmt}: x6: integer variable
 -- + {let_stmt}: y6: integer variable
 -- - Error
-create proc local_improvements_persist_until_set()
+create proc local_improvements_persist_until_set_to_a_nullable()
 begin
   declare a int;
   declare b int;
@@ -15468,16 +15469,16 @@ begin
   if a is not null and b is not null then  
     let x1 := a;
     let y1 := b;
-    set b := 0;
+    set b := null;
     let x2 := a;
     let y2 := b;
     if a is not null and b is not null then
       let x3 := a;
       let y3 := b;
-      set a := 0;
+      set a := null;
       let x4 := a;
       let y4 := b;
-      set b := 0;
+      set b := null;
     end if;
     let x5 := a;
     let y5 := b;
@@ -15486,7 +15487,52 @@ begin
   let y6 := b;
 end;
 
--- Used in the following test.
+-- TEST: SET can improve a type if set to something known to be not null.
+-- + {let_stmt}: x0: integer variable
+-- + {let_stmt}: x1: integer notnull variable
+-- + {let_stmt}: x2: integer variable
+-- - Error
+create proc set_can_improve_a_type_if_set_to_something_not_null()
+begin
+  declare a int;
+  let x0 := a;
+  set a := 42;
+  let x1 := a;
+  set a := null;
+  let x2 := a;
+end;
+
+-- TEST: `x1` should be nullable because `set a := 42` may not have happened.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- - Error
+create proc improvements_added_by_set_do_not_persist_outside_the_statement_list()
+begin
+  declare a int;
+  if 0 then
+    set a := 42;
+    let x0 := a;
+  end if;
+  let x1 := a;
+end;
+
+-- TEST: `x1` should be nullable because `set a := null` may have happened.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- - Error
+create proc improvements_removed_by_set_do_persist_outside_the_statement_list()
+begin
+  declare a int;
+  if a is not null then
+    let x0 := a;
+    if 1 then
+      set a := null;
+    end if;
+  end if;
+  let x1 := a;
+end;
+
+-- TEST: Used in the following test.
 -- - Error
 create proc sets_out(out a int, out b int)
 begin
