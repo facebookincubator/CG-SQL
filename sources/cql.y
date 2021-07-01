@@ -848,17 +848,7 @@ math_expr[result]:
   ;
 
 expr[result]:
-  basic_expr  { $result = $basic_expr; }
-  | expr[lhs] '&' expr[rhs]  { $result = new_ast_bin_and($lhs, $rhs); }
-  | expr[lhs] '|' expr[rhs]  { $result = new_ast_bin_or($lhs, $rhs); }
-  | expr[lhs] LS expr[rhs]  { $result = new_ast_lshift($lhs, $rhs); }
-  | expr[lhs] RS expr[rhs]  { $result = new_ast_rshift($lhs, $rhs); }
-  | expr[lhs] '+' expr[rhs]  { $result = new_ast_add($lhs, $rhs); }
-  | expr[lhs] '-' expr[rhs]  { $result = new_ast_sub($lhs, $rhs); }
-  | expr[lhs] '*' expr[rhs]  { $result = new_ast_mul($lhs, $rhs); }
-  | expr[lhs] '/' expr[rhs]  { $result = new_ast_div($lhs, $rhs); }
-  | expr[lhs] '%' expr[rhs]  { $result = new_ast_mod($lhs, $rhs); }
-  | '-' expr[rhs] %prec UMINUS  { $result = new_ast_uminus($rhs); }
+  math_expr { $result = $math_expr; }
   | NOT expr[rhs]  { $result = new_ast_not($rhs); }
   | '~' expr[rhs]  { $result = new_ast_tilde($rhs); }
   | expr[lhs] COLLATE name  { $result = new_ast_collate($lhs, $name); }
@@ -885,7 +875,6 @@ expr[result]:
   | expr[lhs] BETWEEN math_expr[me1] AND math_expr[me2]  { $result = new_ast_between($lhs, new_ast_range($me1,$me2)); }
   | expr[lhs] IS_NOT expr[rhs]  { $result = new_ast_is_not($lhs, $rhs); }
   | expr[lhs] IS expr[rhs]  { $result = new_ast_is($lhs, $rhs); }
-  | expr[lhs] CONCAT expr[rhs]  { $result = new_ast_concat($lhs, $rhs); }
   | CASE expr[cond] case_list END  { $result = new_ast_case_expr($cond, new_ast_connector($case_list, NULL)); }
   | CASE expr[cond1] case_list ELSE expr[cond2] END  { $result = new_ast_case_expr($cond1, new_ast_connector($case_list, $cond2));}
   | CASE case_list END  { $result = new_ast_case_expr(NULL, new_ast_connector($case_list, NULL));}
