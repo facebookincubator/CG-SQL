@@ -1942,3 +1942,143 @@ cql_code cql_no_rows_stmt(sqlite3 *_Nonnull db, sqlite3_stmt *_Nullable *_Nonnul
   cql_finalize_stmt(pstmt);
   return cql_sqlite3_prepare_v2(db, "select 0 where 0", -1, pstmt, NULL);
 }
+
+// basic closed hash table, small initial size with doubling
+#define HASHTAB_INIT_SIZE 4
+#define HASHTAB_LOAD_FACTOR .75
+
+// helper to set the payload array, used at init time and during rehash
+static void cql_hashtab_set_payload(cql_hashtab *_Nonnull ht) {
+  ht->payload = (cql_hashtab_entry *)calloc(ht->capacity, sizeof(cql_hashtab_entry));
+}
+
+// Rehash to a bigger size, all the items are re-inserted.
+// Note we have to release the old values because the new values
+// are retained upon insertion.  This keeps the reference counting correct.
+static void cql_hashtab_rehash(cql_hashtab *_Nonnull ht) {
+  uint32_t old_capacity = ht->capacity;
+  cql_hashtab_entry *old_payload = ht->payload;
+
+  ht->count = 0;
+  ht->capacity *= 2;
+  cql_hashtab_set_payload(ht);
+
+  for (uint32_t i = 0; i < old_capacity; i++) {
+    cql_string_ref key = old_payload[i].key;
+    if (key) {
+      cql_hashtab_add(ht, key, old_payload[i].val);
+      cql_string_release(key);
+    }
+  }
+
+  free(old_payload);
+}
+
+// Making a new hash table, initial size
+cql_hashtab *_Nonnull cql_hashtab_new() {
+  cql_hashtab *ht = malloc(sizeof(cql_hashtab));
+  ht->count = 0;
+  ht->capacity = HASHTAB_INIT_SIZE;
+  cql_hashtab_set_payload(ht);
+  return ht;
+}
+
+// release the memory for the hash table including
+// releasing all the strings stored as keys.
+void cql_hashtab_delete(cql_hashtab *_Nonnull ht) {
+  for (int32_t i = 0; i < ht->capacity; i++) {
+    cql_string_ref key = ht->payload[i].key;
+    if (key) {
+       cql_string_release(key);
+    }
+  }
+  free(ht->payload);
+  free(ht);
+}
+
+// Add a new key to the hash table
+// * if the key is addred return true
+// * if the key exists return false and do nothing
+cql_bool cql_hashtab_add(cql_hashtab *_Nonnull ht, cql_string_ref _Nonnull key_new, cql_int64 val_new) {
+  uint32_t hash = (uint32_t)cql_string_hash(key_new);
+  uint32_t offset = hash % ht->capacity;
+  cql_hashtab_entry *payload = ht->payload;
+
+  for (;;) {
+    cql_string_ref key = payload[offset].key;
+    if (!key) {
+      cql_string_retain(key_new);
+
+      payload[offset].key = key_new;
+      payload[offset].val = val_new;
+
+      ht->count++;
+      if (ht->count > ht->capacity * HASHTAB_LOAD_FACTOR) {
+        cql_hashtab_rehash(ht);
+      }
+
+      return true;
+    }
+
+    if (cql_string_equal(key, key_new)) {
+      return false;
+    }
+
+    offset++;
+    if (offset >= ht->capacity) {
+      offset = 0;
+    }
+  }
+}
+
+// returns the payload item for the indicated key (allowing mutation)
+// if the key is not found returns null
+cql_hashtab_entry *_Nullable cql_hashtab_find(cql_hashtab *_Nonnull ht, cql_string_ref _Nonnull key_needed) {
+  uint32_t hash = (uint32_t)cql_string_hash(key_needed);
+  uint32_t offset = hash % ht->capacity;
+  cql_hashtab_entry *payload = ht->payload;
+
+  for (;;) {
+    cql_string_ref key = ht->payload[offset].key;
+    if (!key) {
+      return NULL;
+    }
+
+    if (cql_string_equal(key, key_needed)) {
+      return &payload[offset];
+    }
+
+    offset++;
+    if (offset >= ht->capacity) {
+      offset = 0;
+    }
+  }
+}
+
+// These are CQL friendly versions of the hashtable, these signatures are directly callable from CQL
+
+// create the facets storage using the hashtable
+cql_int64 cql_facets_new(void) {
+  return (cql_int64)cql_hashtab_new();
+}
+
+// cleanup the facet storage if facets is valid
+void cql_facets_delete(cql_int64 facets){
+  if (facets) {
+    cql_hashtab_delete((cql_hashtab*)facets);
+  }
+}
+
+// add a facet value to the hash table
+cql_bool cql_facet_add(cql_int64 facets, cql_string_ref _Nonnull name, cql_int64 crc) {
+  return cql_hashtab_add((cql_hashtab *)facets, name, crc);
+}
+
+// Search for the facet value in the hash table, if not found return -1
+cql_int64 cql_facet_find(cql_int64 facets, cql_string_ref _Nonnull name) {
+  cql_hashtab_entry *payload = cql_hashtab_find((cql_hashtab *)facets, name);
+  if (!payload) {
+     return -1;
+  }
+  return payload->val;
+}

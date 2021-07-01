@@ -5,6 +5,14 @@
 
 -- schema crc -6360627252302701852
 
+-- declare facet helpers-- 
+DECLARE facet_data TYPE LONG<facet_data> not null;
+DECLARE test_facets facet_data;
+DECLARE FUNCTION cql_facets_new() facet_data;
+DECLARE PROCEDURE cql_facets_delete(facets facet_data);
+DECLARE FUNCTION cql_facet_add(facets facet_data, facet TEXT NOT NULL, crc LONG NOT NULL) BOOL NOT NULL;
+DECLARE FUNCTION cql_facet_find(facets facet_data, facet TEXT NOT NULL) LONG NOT NULL;
+
 -- declare sqlite_master -- 
 CREATE TABLE sqlite_master (
   type TEXT NOT NULL,
@@ -247,12 +255,14 @@ CREATE TEMP TABLE test_cql_schema_facets_saved(
 );
 
 -- helper proc for testing for the presence of a column/type
+@attribute(cql:private)
 CREATE PROCEDURE test_check_column_exists(table_name TEXT NOT NULL, decl TEXT NOT NULL, OUT present BOOL NOT NULL)
 BEGIN
   SET present := (SELECT EXISTS(SELECT * FROM sqlite_master WHERE tbl_name = table_name AND sql GLOB decl));
 END;
 
 -- helper proc for creating the schema version table
+@attribute(cql:private)
 CREATE PROCEDURE test_create_cql_schema_facets_if_needed()
 BEGIN
   CREATE TABLE IF NOT EXISTS test_cql_schema_facets(
@@ -262,6 +272,7 @@ BEGIN
 END;
 
 -- helper proc for saving the schema version table
+@attribute(cql:private)
 CREATE PROCEDURE test_save_cql_schema_facets()
 BEGIN
   DROP TABLE IF EXISTS test_cql_schema_facets_saved;
@@ -283,7 +294,7 @@ END;
 CREATE PROCEDURE test_cql_get_facet_version(_facet TEXT NOT NULL, out _version LONG INTEGER NOT NULL)
 BEGIN
   BEGIN TRY
-    SET _version := (SELECT version FROM test_cql_schema_facets WHERE facet = _facet LIMIT 1);
+    SET _version := (SELECT version FROM test_cql_schema_facets WHERE facet = _facet LIMIT 1 IF NOTHING -1);
   END TRY;
   BEGIN CATCH
     SET _version := -1;
@@ -291,14 +302,10 @@ BEGIN
 END;
 
 -- helper proc for getting the schema version CRC for a version index
+@attribute(cql:private)
 CREATE PROCEDURE test_cql_get_version_crc(_v INTEGER NOT NULL, out _crc LONG INTEGER NOT NULL)
 BEGIN
-  BEGIN TRY
-    SET _crc := (SELECT version FROM test_cql_schema_facets WHERE facet = 'cql_schema_v'||_v LIMIT 1);
-  END TRY;
-  BEGIN CATCH
-    SET _crc := -1;
-  END CATCH;
+  SET _crc := cql_facet_find(test_facets, printf('cql_schema_v%d', _v));
 END;
 
 -- helper proc for setting the schema version CRC for a version index
@@ -309,6 +316,8 @@ END;
 
 -- helper proc to reset any triggers that are on the old plan --
 DECLARE PROCEDURE cql_exec_internal(sql TEXT NOT NULL) USING TRANSACTION;
+
+@attribute(cql:private)
 CREATE PROCEDURE test_cql_drop_legacy_triggers()
 BEGIN
   DECLARE C CURSOR FOR SELECT name from sqlite_master
@@ -317,15 +326,6 @@ BEGIN
   BEGIN
     call cql_exec_internal(printf('DROP TRIGGER %s;', C.name));
   END;
-END;
-
-CREATE PROCEDURE test_cql_one_time_drop(name TEXT NOT NULL, version INTEGER NOT NULL)
-BEGIN
-  LET facet := printf('1_time_drop_%s', name);
-  IF test_cql_get_facet_version(facet) != version THEN
-    call cql_exec_internal(printf('DROP TABLE IF EXISTS %s;', name));
-    call test_cql_set_facet_version(facet, version);
-  END IF;
 END;
 
 CREATE PROCEDURE test_cql_install_baseline_schema()
@@ -381,8 +381,19 @@ DECLARE proc DeadViewMigration() USING TRANSACTION;
 DECLARE proc CreateId2Proc() USING TRANSACTION;
 DECLARE proc DeleteRate2Proc() USING TRANSACTION;
 DECLARE proc MyAdHocMigrationScript() USING TRANSACTION;
+@attribute(cql:private)
+CREATE PROCEDURE test_cql_one_time_drop(name TEXT NOT NULL, version INTEGER NOT NULL)
+BEGIN
+  LET facet := printf('1_time_drop_%s', name);
+  IF cql_facet_find(test_facets, facet) != version THEN
+    call cql_exec_internal(printf('DROP TABLE IF EXISTS %s;', name));
+    call test_cql_set_facet_version(facet, version);
+  END IF;
+END;
+
 
 -- drop all the views we know
+@attribute(cql:private)
 CREATE PROCEDURE test_cql_drop_all_views()
 BEGIN
   DROP VIEW IF EXISTS shared_view;
@@ -392,6 +403,7 @@ BEGIN
 END;
 
 -- create all the views we know
+@attribute(cql:private)
 CREATE PROCEDURE test_cql_create_all_views()
 BEGIN
   CREATE VIEW shared_view AS
@@ -406,38 +418,35 @@ BEGIN
 END;
 
 -- drop all the indices that are deleted or changing
+@attribute(cql:private)
 CREATE PROCEDURE test_cql_drop_all_indices()
 BEGIN
-  DECLARE index_crc LONG INTEGER NOT NULL;
-  CALL test_cql_get_facet_version('shared_index_index_crc', index_crc);
-  IF index_crc <> -8812401562048594220 THEN
+  IF cql_facet_find(test_facets, 'shared_index_index_crc') != -8812401562048594220 THEN
     DROP INDEX IF EXISTS shared_index;
   END IF;
   DROP INDEX IF EXISTS gr1_index3;
-  CALL test_cql_get_facet_version('not_shared_present_index_index_crc', index_crc);
-  IF index_crc <> -4019575091142856767 THEN
+  IF cql_facet_find(test_facets, 'not_shared_present_index_index_crc') != -4019575091142856767 THEN
     DROP INDEX IF EXISTS not_shared_present_index;
   END IF;
   DROP INDEX IF EXISTS index_going_away;
 END;
 
 -- create all the indices we need
+@attribute(cql:private)
 CREATE PROCEDURE test_cql_create_all_indices()
 BEGIN
-  DECLARE index_crc LONG INTEGER NOT NULL;
-  CALL test_cql_get_facet_version('shared_index_index_crc', index_crc);
-  IF index_crc <> -8812401562048594220 THEN
+  IF cql_facet_find(test_facets, 'shared_index_index_crc') != -8812401562048594220 THEN
     CREATE INDEX shared_index ON foo (name, name_2);
     CALL test_cql_set_facet_version('shared_index_index_crc', -8812401562048594220);
   END IF;
-  CALL test_cql_get_facet_version('not_shared_present_index_index_crc', index_crc);
-  IF index_crc <> -4019575091142856767 THEN
+  IF cql_facet_find(test_facets, 'not_shared_present_index_index_crc') != -4019575091142856767 THEN
     CREATE INDEX not_shared_present_index ON table2 (name1, name2);
     CALL test_cql_set_facet_version('not_shared_present_index_index_crc', -4019575091142856767);
   END IF;
 END;
 
 -- drop all the triggers we know
+@attribute(cql:private)
 CREATE PROCEDURE test_cql_drop_all_triggers()
 BEGIN
   CALL test_cql_drop_legacy_triggers();
@@ -449,6 +458,7 @@ BEGIN
 END;
 
 -- create all the triggers we know
+@attribute(cql:private)
 CREATE PROCEDURE test_cql_create_all_triggers()
 BEGIN
   CREATE TRIGGER shared_trigger
@@ -477,11 +487,10 @@ BEGIN
 END;
 
 -- recreate all the @recreate tables that might have changed
+@attribute(cql:private)
 CREATE PROCEDURE test_cql_recreate_tables()
 BEGIN
-  DECLARE table_crc LONG INTEGER NOT NULL;
-  CALL test_cql_get_facet_version('complex_virtual_table_table_crc', table_crc);
-  IF table_crc <> 5892669275896520096 THEN
+  IF cql_facet_find(test_facets, 'complex_virtual_table_table_crc') != 5892669275896520096 THEN
     DROP TABLE IF EXISTS complex_virtual_table;
     CREATE VIRTUAL TABLE complex_virtual_table USING a_module (ARGUMENTS FOLLOWING) AS (
       id INTEGER @SENSITIVE,
@@ -489,8 +498,7 @@ BEGIN
     );
     CALL test_cql_set_facet_version('complex_virtual_table_table_crc', 5892669275896520096);
   END IF;
-  CALL test_cql_get_facet_version('a_virtual_table_table_crc', table_crc);
-  IF table_crc <> -4813907186176555661 THEN
+  IF cql_facet_find(test_facets, 'a_virtual_table_table_crc') != -4813907186176555661 THEN
     DROP TABLE IF EXISTS a_virtual_table;
     CREATE VIRTUAL TABLE a_virtual_table USING a_module (this, that, the_other) AS (
       id INTEGER @SENSITIVE,
@@ -498,8 +506,7 @@ BEGIN
     );
     CALL test_cql_set_facet_version('a_virtual_table_table_crc', -4813907186176555661);
   END IF;
-  CALL test_cql_get_facet_version('table_to_recreate_table_crc', table_crc);
-  IF table_crc <> 3137661388576624799 THEN
+  IF cql_facet_find(test_facets, 'table_to_recreate_table_crc') != 3137661388576624799 THEN
     DROP TABLE IF EXISTS table_to_recreate;
     CREATE TABLE table_to_recreate(
       id INTEGER NOT NULL,
@@ -507,8 +514,7 @@ BEGIN
     );
     CALL test_cql_set_facet_version('table_to_recreate_table_crc', 3137661388576624799);
   END IF;
-  CALL test_cql_get_facet_version('gr1_group_crc', table_crc);
-  IF table_crc <> -5344641248211221614 THEN
+  IF cql_facet_find(test_facets, 'gr1_group_crc') != -5344641248211221614 THEN
     DROP TABLE IF EXISTS use_g1;
     CREATE TABLE use_g1(
       id INTEGER PRIMARY KEY REFERENCES g1 (id),
@@ -523,8 +529,7 @@ BEGIN
     CREATE INDEX gr1_index2 ON g1 (name, id);
     CALL test_cql_set_facet_version('gr1_group_crc', -5344641248211221614);
   END IF;
-  CALL test_cql_get_facet_version('my_group_group_crc', table_crc);
-  IF table_crc <> 5282334304804635811 THEN
+  IF cql_facet_find(test_facets, 'my_group_group_crc') != 5282334304804635811 THEN
     DROP TABLE IF EXISTS grouped_table_3;
     CREATE TABLE grouped_table_3(
       id INTEGER NOT NULL,
@@ -563,23 +568,12 @@ BEGIN
   END;
   
 END;
-CREATE PROCEDURE test_perform_needed_upgrades()
+
+@attribute(cql:private)
+CREATE PROCEDURE test_perform_upgrade_steps()
 BEGIN
   DECLARE column_exists BOOL NOT NULL;
-  DECLARE facet_version LONG INTEGER NOT NULL;
   DECLARE schema_version LONG INTEGER NOT NULL;
-
-  -- fetch current schema version --
-  CALL test_cql_get_facet_version('cql_schema_version', schema_version);
-
-  -- check for downgrade --
-
-  IF schema_version > 6 THEN
-    SELECT 'downgrade detected' facet;
-  ELSE
-
-    -- save the current facets so we can diff them later --
-    CALL test_save_cql_schema_facets();
     -- dropping all views --
     CALL test_cql_drop_all_views();
 
@@ -600,7 +594,7 @@ BEGIN
     ---- upgrade to schema version 2 ----
 
     CALL test_cql_get_version_crc(2, schema_version);
-    IF schema_version != -401344828189278189 THEN
+    IF schema_version != -8206802029265210093 THEN
       -- altering table table2 to add column name1 TEXT;
 
       CALL test_check_column_exists('table2', '*[( ]name1 TEXT*', column_exists);
@@ -632,23 +626,20 @@ BEGIN
       -- delete migration proc for dead_view will run
 
       -- data migration procedures
-      CALL test_cql_get_facet_version('CreateName1Proc', facet_version);
-      IF facet_version = -1 THEN
+      IF cql_facet_find(test_facets, 'CreateName1Proc') = -1 THEN
         CALL CreateName1Proc();
         CALL test_cql_set_facet_version('CreateName1Proc', 2);
       END IF;
-      CALL test_cql_get_facet_version('CreateName2Proc', facet_version);
-      IF facet_version = -1 THEN
+      IF cql_facet_find(test_facets, 'CreateName2Proc') = -1 THEN
         CALL CreateName2Proc();
         CALL test_cql_set_facet_version('CreateName2Proc', 2);
       END IF;
-      CALL test_cql_get_facet_version('DeadViewMigration', facet_version);
-      IF facet_version = -1 THEN
+      IF cql_facet_find(test_facets, 'DeadViewMigration') = -1 THEN
         CALL DeadViewMigration();
         CALL test_cql_set_facet_version('DeadViewMigration', 2);
       END IF;
 
-      CALL test_cql_set_version_crc(2, -401344828189278189);
+      CALL test_cql_set_version_crc(2, -8206802029265210093);
     END IF;
 
     ---- upgrade to schema version 3 ----
@@ -668,7 +659,7 @@ BEGIN
     ---- upgrade to schema version 4 ----
 
     CALL test_cql_get_version_crc(4, schema_version);
-    IF schema_version != -6135294704505031313 THEN
+    IF schema_version != 8252122123803320687 THEN
       -- one time drop migrated_from_recreate
 
       CALL test_cql_one_time_drop('migrated_from_recreate', 4);
@@ -701,24 +692,22 @@ BEGIN
       DROP TABLE IF EXISTS deleted_virtual_table;
 
       -- data migration procedures
-      CALL test_cql_get_facet_version('CreateId2Proc', facet_version);
-      IF facet_version = -1 THEN
+      IF cql_facet_find(test_facets, 'CreateId2Proc') = -1 THEN
         CALL CreateId2Proc();
         CALL test_cql_set_facet_version('CreateId2Proc', 4);
       END IF;
-      CALL test_cql_get_facet_version('DeleteRate2Proc', facet_version);
-      IF facet_version = -1 THEN
+      IF cql_facet_find(test_facets, 'DeleteRate2Proc') = -1 THEN
         CALL DeleteRate2Proc();
         CALL test_cql_set_facet_version('DeleteRate2Proc', 4);
       END IF;
 
-      CALL test_cql_set_version_crc(4, -6135294704505031313);
+      CALL test_cql_set_version_crc(4, 8252122123803320687);
     END IF;
 
     ---- upgrade to schema version 5 ----
 
     CALL test_cql_get_version_crc(5, schema_version);
-    IF schema_version != -3402344138949501972 THEN
+    IF schema_version != 7448981524046949017 THEN
       -- altering table foo to add column name TEXT;
 
       CALL test_check_column_exists('foo', '*[( ]name TEXT*', column_exists);
@@ -735,13 +724,12 @@ BEGIN
       -- ad hoc migration proc MyAdHocMigrationScript will run
 
       -- data migration procedures
-      CALL test_cql_get_facet_version('MyAdHocMigrationScript', facet_version);
-      IF facet_version = -1 THEN
+      IF cql_facet_find(test_facets, 'MyAdHocMigrationScript') = -1 THEN
         CALL MyAdHocMigrationScript();
         CALL test_cql_set_facet_version('MyAdHocMigrationScript', 5);
       END IF;
 
-      CALL test_cql_set_version_crc(5, -3402344138949501972);
+      CALL test_cql_set_version_crc(5, 7448981524046949017);
     END IF;
 
     ---- upgrade to schema version 6 ----
@@ -764,6 +752,34 @@ BEGIN
     CALL test_cql_create_all_triggers();
     CALL test_cql_set_facet_version('cql_schema_version', 6);
     CALL test_cql_set_facet_version('cql_schema_crc', -6360627252302701852);
+END;
+
+@attribute(cql:private)
+CREATE PROCEDURE test_setup_facets()
+BEGIN
+  BEGIN TRY
+    SET test_facets := cql_facets_new();
+    DECLARE C CURSOR FOR SELECT * from test_cql_schema_facets;
+    LOOP FETCH C
+    BEGIN
+      LET added := cql_facet_add(test_facets, C.facet, C.version);
+    END;
+  END TRY;
+  BEGIN CATCH
+   -- if table doesn't exist we just have empty facets, that's ok
+  END CATCH;
+END;
+
+@attribute(cql:private)
+CREATE PROCEDURE test_perform_needed_upgrades()
+BEGIN
+  -- check for downgrade --
+  IF cql_facet_find(test_facets, 'cql_schema_version') > 6 THEN
+    SELECT 'downgrade detected' facet;
+  ELSE
+    -- save the current facets so we can diff them later --
+    CALL test_save_cql_schema_facets();
+    CALL test_perform_upgrade_steps();
 
     -- finally produce the list of differences
     SELECT T1.facet FROM
@@ -785,8 +801,17 @@ BEGIN
   CALL test_cql_get_facet_version('cql_schema_crc', schema_crc);
 
   IF schema_crc <> -6360627252302701852 THEN
-    -- save the current facets so we can diff them later --
-    CALL test_perform_needed_upgrades();
+    BEGIN TRY
+      CALL test_setup_facets();
+      CALL test_perform_needed_upgrades();
+    END TRY;
+    BEGIN CATCH
+      CALL cql_facets_delete(test_facets);
+      SET test_facets := 0;
+      THROW;
+    END CATCH;
+    CALL cql_facets_delete(test_facets);
+    SET test_facets := 0;
   ELSE
     -- some canonical result for no differences --
     SELECT 'no differences' facet;

@@ -3547,6 +3547,55 @@ BEGIN_TEST(nested_rc_values)
   EXPECT(e7 = 0); -- back to SQLITE_OK
 END_TEST(nested_rc_values)
 
+-- facet helper functions, used by the schema upgrader
+DECLARE facet_data TYPE LONG<facet_data> not null;
+DECLARE FUNCTION cql_facets_new() facet_data;
+DECLARE PROCEDURE cql_facets_delete(facets facet_data);
+DECLARE FUNCTION cql_facet_add(facets facet_data, facet TEXT NOT NULL, crc LONG NOT NULL) BOOL NOT NULL;
+DECLARE FUNCTION cql_facet_find(facets facet_data, facet TEXT NOT NULL) LONG NOT NULL;
+
+BEGIN_TEST(facet_helpers)
+  let facets := cql_facets_new();
+  EXPECT(facets);
+
+  -- add some facets
+  let i := 0;
+  while i < 1000
+  begin
+    EXPECT(cql_facet_add(facets, printf('fake facet %d', i), i*i));
+    set i := i + 1;
+  end;
+
+  -- all duplicates, all the adds should return false
+  set i := 0;
+  while i < 1000
+  begin
+    EXPECT(NOT cql_facet_add(facets, printf('fake facet %d', i), i*i));
+    set i := i + 1;
+  end;
+
+  -- we should be able to find all of these
+  set i := 0;
+  while i < 1000
+  begin
+    EXPECT(i*i == cql_facet_find(facets, printf('fake facet %d', i)));
+    set i := i + 1;
+  end;
+
+  -- we should be able to find none of these
+  set i := 0;
+  while i < 1000
+  begin
+    EXPECT(-1 == cql_facet_find(facets, printf('fake_facet %d', i)));
+    set i := i + 1;
+  end;
+
+  -- NOTE the test infra is counting refs so that if we fail
+  -- to clean up the test fails; no expectation is required
+  call cql_facets_delete(facets);
+  
+END_TEST(facet_helpers)
+
 END_SUITE()
 
 -- manually force tracing on by redefining the macros

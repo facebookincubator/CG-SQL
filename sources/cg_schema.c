@@ -172,12 +172,14 @@ static void cg_schema_helpers(charbuf *decls) {
   bprintf(decls, ");\n\n");
 
   bprintf(decls, "-- helper proc for testing for the presence of a column/type\n");
+  bprintf(decls, "@attribute(cql:private)\n");
   bprintf(decls, "CREATE PROCEDURE %s_check_column_exists(table_name TEXT NOT NULL, decl TEXT NOT NULL, OUT present BOOL NOT NULL)\n", global_proc_name);
   bprintf(decls, "BEGIN\n");
   bprintf(decls, "  SET present := (SELECT EXISTS(SELECT * FROM sqlite_master WHERE tbl_name = table_name AND sql GLOB decl));\n");
   bprintf(decls, "END;\n\n");
 
   bprintf(decls, "-- helper proc for creating the schema version table\n");
+  bprintf(decls, "@attribute(cql:private)\n");
   bprintf(decls, "CREATE PROCEDURE %s_create_cql_schema_facets_if_needed()\n", global_proc_name);
   bprintf(decls, "BEGIN\n");
   bprintf(decls, "  CREATE TABLE IF NOT EXISTS %s_cql_schema_facets(\n", global_proc_name);
@@ -187,6 +189,7 @@ static void cg_schema_helpers(charbuf *decls) {
   bprintf(decls, "END;\n\n");
 
   bprintf(decls, "-- helper proc for saving the schema version table\n");
+  bprintf(decls, "@attribute(cql:private)\n");
   bprintf(decls, "CREATE PROCEDURE %s_save_cql_schema_facets()\n", global_proc_name);
   bprintf(decls, "BEGIN\n");
   bprintf(decls, "  DROP TABLE IF EXISTS %s_cql_schema_facets_saved;\n", global_proc_name);
@@ -204,32 +207,26 @@ static void cg_schema_helpers(charbuf *decls) {
   bprintf(decls, "  INSERT OR REPLACE INTO %s_cql_schema_facets (facet, version) VALUES(_facet, _version);\n", global_proc_name);
   bprintf(decls, "END;\n\n");
 
-  // note do not try to convert this proc to the (select .. if nothing) pattern; that isn't going to work
-  // because it has to handle the case where the table doesn't exist yet for retro-version validation
+  // Note this procedure has to handle the case where the table doesn't exist yet for retro-version validation
+  // (this happens in test code so it's validated)
+  // We stil use the IF NOTHING -1 pattern so that it doesn't produce suprious errors when there is no row, that's not an error.
 
   bprintf(decls, "-- helper proc for getting the schema version of a facet\n");
   bprintf(decls, "CREATE PROCEDURE %s_cql_get_facet_version(_facet TEXT NOT NULL, out _version LONG INTEGER NOT NULL)\n", global_proc_name);
   bprintf(decls, "BEGIN\n");
   bprintf(decls, "  BEGIN TRY\n");
-  bprintf(decls, "    SET _version := (SELECT version FROM %s_cql_schema_facets WHERE facet = _facet LIMIT 1);\n", global_proc_name);
+  bprintf(decls, "    SET _version := (SELECT version FROM %s_cql_schema_facets WHERE facet = _facet LIMIT 1 IF NOTHING -1);\n", global_proc_name);
   bprintf(decls, "  END TRY;\n");
   bprintf(decls, "  BEGIN CATCH\n");
-  bprintf(decls, "    SET _version := -1;\n");
+  bprintf(decls, "    SET _version := -1;\n"); // this is here to handle the case where the table doesn't exist
   bprintf(decls, "  END CATCH;\n");
   bprintf(decls, "END;\n\n");
 
-  // note do not try to convert this proc to the (select .. if nothing) pattern; that isn't going to work
-  // because it has to handle the case where the table doesn't exist yet for retro-version validation
-
   bprintf(decls, "-- helper proc for getting the schema version CRC for a version index\n");
+  bprintf(decls, "@attribute(cql:private)\n");
   bprintf(decls, "CREATE PROCEDURE %s_cql_get_version_crc(_v INTEGER NOT NULL, out _crc LONG INTEGER NOT NULL)\n", global_proc_name);
   bprintf(decls, "BEGIN\n");
-  bprintf(decls, "  BEGIN TRY\n");
-  bprintf(decls, "    SET _crc := (SELECT version FROM %s_cql_schema_facets WHERE facet = 'cql_schema_v'||_v LIMIT 1);\n", global_proc_name);
-  bprintf(decls, "  END TRY;\n");
-  bprintf(decls, "  BEGIN CATCH\n");
-  bprintf(decls, "    SET _crc := -1;\n");
-  bprintf(decls, "  END CATCH;\n");
+  bprintf(decls, "  SET _crc := cql_facet_find(%s_facets, printf('cql_schema_v%%d', _v));\n", global_proc_name);
   bprintf(decls, "END;\n\n");
 
   bprintf(decls, "-- helper proc for setting the schema version CRC for a version index\n");
@@ -239,7 +236,9 @@ static void cg_schema_helpers(charbuf *decls) {
   bprintf(decls, "END;\n\n");
 
   bprintf(decls, "-- helper proc to reset any triggers that are on the old plan --\n");
-  bprintf(decls, "DECLARE PROCEDURE cql_exec_internal(sql TEXT NOT NULL) USING TRANSACTION;\n");
+  bprintf(decls, "DECLARE PROCEDURE cql_exec_internal(sql TEXT NOT NULL) USING TRANSACTION;\n\n");
+
+  bprintf(decls, "@attribute(cql:private)\n");
   bprintf(decls, "CREATE PROCEDURE %s_cql_drop_legacy_triggers()\n", global_proc_name);
   bprintf(decls, "BEGIN\n");
   bprintf(decls, "  DECLARE C CURSOR FOR SELECT name from sqlite_master\n");
@@ -249,27 +248,39 @@ static void cg_schema_helpers(charbuf *decls) {
   bprintf(decls, "    call cql_exec_internal(printf('DROP TRIGGER %%s;', C.name));\n");
   bprintf(decls, "  END;\n");
   bprintf(decls, "END;\n\n");
+}
 
+static void cg_schema_emit_one_time_drop(charbuf *decls) {
+  bprintf(decls, "@attribute(cql:private)\n");
   bprintf(decls, "CREATE PROCEDURE %s_cql_one_time_drop(name TEXT NOT NULL, version INTEGER NOT NULL)\n", global_proc_name);
   bprintf(decls, "BEGIN\n");
   bprintf(decls, "  LET facet := printf('1_time_drop_%%s', name);\n");
-  bprintf(decls, "  IF %s_cql_get_facet_version(facet) != version THEN\n", global_proc_name);
+  bprintf(decls, "  IF cql_facet_find(%s_facets, facet) != version THEN\n", global_proc_name);
   bprintf(decls, "    call cql_exec_internal(printf('DROP TABLE IF EXISTS %%s;', name));\n");
   bprintf(decls, "    call %s_cql_set_facet_version(facet, version);\n", global_proc_name);
   bprintf(decls, "  END IF;\n");
   bprintf(decls, "END;\n\n");
-
 }
 
 // Emit the delcaration of the sqlite_master table so we can read from it.
 static void cg_schema_emit_sqlite_master(charbuf *decls) {
   bprintf(decls, "-- declare sqlite_master -- \n");
   bprintf(decls, "CREATE TABLE sqlite_master (\n");
-  bprintf(decls, "  type TEXT NOT NULL,\n");          //	The type of database object such as table, index, trigger or view.
+  bprintf(decls, "  type TEXT NOT NULL,\n");          // The type of database object such as table, index, trigger or view.
   bprintf(decls, "  name TEXT NOT NULL,\n");          // The name of the database object.
-  bprintf(decls, "  tbl_name TEXT NOT NULL,\n");	    // The table name that the database object is associated with.
-  bprintf(decls, "  rootpage INTEGER NOT NULL,\n");   //	Root page.
+  bprintf(decls, "  tbl_name TEXT NOT NULL,\n");      // The table name that the database object is associated with.
+  bprintf(decls, "  rootpage INTEGER NOT NULL,\n");   // Root page.
   bprintf(decls, "  sql TEXT NOT NULL\n);\n\n");      // the DDL to CREATE this object
+}
+
+static void cg_schema_emit_facet_functions(charbuf *decls) {
+  bprintf(decls, "-- declare facet helpers-- \n");
+  bprintf(decls, "DECLARE facet_data TYPE LONG<facet_data> not null;\n");
+  bprintf(decls, "DECLARE %s_facets facet_data;\n", global_proc_name);
+  bprintf(decls, "DECLARE FUNCTION cql_facets_new() facet_data;\n");
+  bprintf(decls, "DECLARE PROCEDURE cql_facets_delete(facets facet_data);\n");
+  bprintf(decls, "DECLARE FUNCTION cql_facet_add(facets facet_data, facet TEXT NOT NULL, crc LONG NOT NULL) BOOL NOT NULL;\n");
+  bprintf(decls, "DECLARE FUNCTION cql_facet_find(facets facet_data, facet TEXT NOT NULL) LONG NOT NULL;\n\n");
 }
 
 // Emit all tables versioned as they before modifications, just the original items
@@ -367,7 +378,7 @@ static void cg_generate_schema_by_mode(charbuf *output, int32_t mode) {
   gen_sql_callbacks callbacks;
   init_gen_sql_callbacks(&callbacks);
   callbacks.mode = gen_mode_no_annotations;
-  
+
   // If the mode is SCHEMA_TO_DECLARE then we include all the regions we are upgrading
   // and all their dependencies.  We do not exclude things that are upgraded elsewhere.
   // We do this because we need a logically consistent set of declarations.
@@ -626,6 +637,7 @@ static void cg_schema_manage_triggers(charbuf *output, int32_t *drops, int32_t *
 
   if (*drops) {
     bprintf(output, "-- drop all the triggers we know\n");
+    bprintf(output, "@attribute(cql:private)\n");
     bprintf(output, "CREATE PROCEDURE %s_cql_drop_all_triggers()\n", global_proc_name);
     bprintf(output, "BEGIN\n");
     bprintf(output, "  CALL %s_cql_drop_legacy_triggers();\n", global_proc_name);
@@ -635,6 +647,7 @@ static void cg_schema_manage_triggers(charbuf *output, int32_t *drops, int32_t *
 
   if (*creates) {
     bprintf(output, "-- create all the triggers we know\n");
+    bprintf(output, "@attribute(cql:private)\n");
     bprintf(output, "CREATE PROCEDURE %s_cql_create_all_triggers()\n", global_proc_name);
     bprintf(output, "BEGIN\n");
     bindent(output, &create, 2);
@@ -690,6 +703,7 @@ static void cg_schema_manage_views(charbuf *output, int32_t *drops, int32_t *cre
 
   if (*drops) {
     bprintf(output, "-- drop all the views we know\n");
+    bprintf(output, "@attribute(cql:private)\n");
     bprintf(output, "CREATE PROCEDURE %s_cql_drop_all_views()\n", global_proc_name);
     bprintf(output, "BEGIN\n");
     bprintf(output, "%s", drop.ptr);
@@ -698,6 +712,7 @@ static void cg_schema_manage_views(charbuf *output, int32_t *drops, int32_t *cre
 
   if (*creates) {
     bprintf(output, "-- create all the views we know\n");
+    bprintf(output, "@attribute(cql:private)\n");
     bprintf(output, "CREATE PROCEDURE %s_cql_create_all_views()\n", global_proc_name);
     bprintf(output, "BEGIN\n");
     bindent(output, &create, 2);
@@ -770,13 +785,11 @@ static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *c
 
     crc_t index_crc = crc_charbuf(&make_index);
 
-    bprintf(&drop, "  CALL %s_cql_get_facet_version('%s_index_crc', index_crc);\n", global_proc_name, index_name);
-    bprintf(&drop, "  IF index_crc <> %lld THEN\n", (llint_t)index_crc);
+    bprintf(&drop, "  IF cql_facet_find(%s_facets, '%s_index_crc') != %lld THEN\n", global_proc_name, index_name, (llint_t)index_crc);
     bprintf(&drop, "    DROP INDEX IF EXISTS %s;\n", index_name);
     bprintf(&drop, "  END IF;\n");
 
-    bprintf(&create, "  CALL %s_cql_get_facet_version('%s_index_crc', index_crc);\n", global_proc_name, index_name);
-    bprintf(&create, "  IF index_crc <> %lld THEN\n", (llint_t)index_crc);
+    bprintf(&create, "  IF cql_facet_find(%s_facets, '%s_index_crc') != %lld THEN\n", global_proc_name, index_name, (llint_t)index_crc);
     bindent(&create, &make_index, 4);
     bprintf(&create, "    CALL %s_cql_set_facet_version('%s_index_crc', %lld);\n", global_proc_name, index_name, (llint_t)index_crc);
     bprintf(&create, "  END IF;\n");
@@ -791,21 +804,18 @@ static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *c
 
   if (*drops) {
     bprintf(output, "-- drop all the indices that are deleted or changing\n");
+    bprintf(output, "@attribute(cql:private)\n");
     bprintf(output, "CREATE PROCEDURE %s_cql_drop_all_indices()\n", global_proc_name);
     bprintf(output, "BEGIN\n");
-    if (*creates) {
-      // if any creates we need the hash variable
-      bprintf(output, "  DECLARE index_crc LONG INTEGER NOT NULL;\n");
-    }
     bprintf(output, "%s", drop.ptr);
     bprintf(output, "END;\n\n");
   }
 
   if (*creates) {
     bprintf(output, "-- create all the indices we need\n");
+    bprintf(output, "@attribute(cql:private)\n");
     bprintf(output, "CREATE PROCEDURE %s_cql_create_all_indices()\n", global_proc_name);
     bprintf(output, "BEGIN\n");
-    bprintf(output, "  DECLARE index_crc LONG INTEGER NOT NULL;\n");
     bprintf(output, "%s", create.ptr);
     bprintf(output, "END;\n\n");
   }
@@ -896,8 +906,7 @@ static void cg_schema_manage_recreate_tables(charbuf *output, recreate_annotatio
       bprintf(&facet, "%s_table_crc", table_name);
     }
 
-    bprintf(&recreate, "  CALL %s_cql_get_facet_version('%s', table_crc);\n", global_proc_name, facet.ptr);
-    bprintf(&recreate, "  IF table_crc <> %lld THEN\n", (llint_t)table_crc);
+    bprintf(&recreate, "  IF cql_facet_find(%s_facets, '%s') != %lld THEN\n", global_proc_name, facet.ptr, (llint_t)table_crc);
     bprintf(&recreate, "%s", update_tables.ptr);
     bprintf(&recreate, "    CALL %s_cql_set_facet_version('%s', %lld);\n", global_proc_name, facet.ptr, (llint_t)table_crc);
     bprintf(&recreate, "  END IF;\n");
@@ -910,9 +919,9 @@ static void cg_schema_manage_recreate_tables(charbuf *output, recreate_annotatio
   }
 
   bprintf(output, "-- recreate all the @recreate tables that might have changed\n");
+  bprintf(output, "@attribute(cql:private)\n");
   bprintf(output, "CREATE PROCEDURE %s_cql_recreate_tables()\n", global_proc_name);
   bprintf(output, "BEGIN\n");
-  bprintf(output, "  DECLARE table_crc LONG INTEGER NOT NULL;\n");
   bprintf(output, "%s", recreate.ptr);
   bprintf(output, "END;\n\n");
 
@@ -973,6 +982,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&decls, "@SCHEMA_UPGRADE_SCRIPT;\n\n");
   bprintf(&decls, "-- schema crc %lld\n\n", (llint_t)schema_crc);
 
+  cg_schema_emit_facet_functions(&decls);
   cg_schema_emit_sqlite_master(&decls);
   bprintf(&decls, "-- declare full schema of tables and views to be upgraded and their dependencies -- \n");
   cg_generate_schema_by_mode(&decls, SCHEMA_TO_DECLARE);
@@ -994,23 +1004,14 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
 
   bool_t has_temp_schema = cg_schema_emit_temp_schema_proc(&preamble);
   bool_t column_exists_out = false;
-  bool_t facet_version_out = false;
+  bool_t one_time_drop_needed = false;
 
   bprintf(&decls, "-- declared upgrade procedures if any\n");
 
-  bprintf(&preamble, "CREATE PROCEDURE %s_perform_needed_upgrades()\n", global_proc_name);
+  bprintf(&preamble, "\n@attribute(cql:private)\n");
+  bprintf(&preamble, "CREATE PROCEDURE %s_perform_upgrade_steps()\n", global_proc_name);
   bprintf(&preamble, "BEGIN\n");
   bprintf(&main, "  DECLARE schema_version LONG INTEGER NOT NULL;\n");
-
-  bprintf(&main, "\n");
-  bprintf(&main, "  -- fetch current schema version --\n");
-  bprintf(&main, "  CALL %s_cql_get_facet_version('cql_schema_version', schema_version);\n\n", global_proc_name);
-  bprintf(&main, "  -- check for downgrade --\n\n");
-  bprintf(&main, "  IF schema_version > %lld THEN\n", max_schema_version);
-  bprintf(&main, "    SELECT 'downgrade detected' facet;\n");
-  bprintf(&main, "  ELSE\n\n");
-  bprintf(&main, "    -- save the current facets so we can diff them later --\n");
-  bprintf(&main, "    CALL %s_save_cql_schema_facets();\n", global_proc_name);
 
   if (view_drops) {
     bprintf(&main, "    -- dropping all views --\n");
@@ -1121,6 +1122,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
           if (!Strcasecmp(lhs, "cql") && !Strcasecmp(rhs, "from_recreate")) {
             bprintf(&upgrade, "      -- one time drop %s\n\n", target_name);
             bprintf(&upgrade, "      CALL %s_cql_one_time_drop('%s', %d);\n\n", global_proc_name, target_name, vers);
+            one_time_drop_needed = true;
           }
         }
 
@@ -1172,16 +1174,10 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
 
     // handle any migration proc for any annotation
     if (version_annotation->right) {
-      if (!facet_version_out) {
-        bprintf(&preamble, "  DECLARE facet_version LONG INTEGER NOT NULL;\n");
-        facet_version_out = true;
-      }
-
-      // call any non-builtins the generic way, builtins get whatever special handling they need
+      // call any non-builtin migrations the generic way, builtins get whatever special handling they need
       if (!is_ast_dot(version_annotation->right)) {
         EXTRACT_STRING(proc, version_annotation->right);
-        bprintf(&pending, "      CALL %s_cql_get_facet_version('%s', facet_version);\n", global_proc_name, proc);
-        bprintf(&pending, "      IF facet_version = -1 THEN\n");
+        bprintf(&pending, "      IF cql_facet_find(%s_facets, '%s') = -1 THEN\n", global_proc_name, proc);
         bprintf(&pending, "        CALL %s();\n", proc);
         bprintf(&pending, "        CALL %s_cql_set_facet_version('%s', %d);\n", global_proc_name, proc, vers);
         bprintf(&pending, "      END IF;\n");
@@ -1210,8 +1206,34 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
 
   bprintf(&main, "    CALL %s_cql_set_facet_version('cql_schema_version', %d);\n", global_proc_name, prev_version);
   bprintf(&main, "    CALL %s_cql_set_facet_version('cql_schema_crc', %lld);\n", global_proc_name, (llint_t)schema_crc);
+  bprintf(&main, "END;\n\n");
 
-  bprintf(&main, "\n");
+  bprintf(&main, "@attribute(cql:private)\n");
+  bprintf(&main, "CREATE PROCEDURE %s_setup_facets()\n", global_proc_name);
+  bprintf(&main, "BEGIN\n");
+  bprintf(&main, "  BEGIN TRY\n");
+  bprintf(&main, "    SET %s_facets := cql_facets_new();\n", global_proc_name);
+  bprintf(&main, "    DECLARE C CURSOR FOR SELECT * from %s_cql_schema_facets;\n", global_proc_name);
+  bprintf(&main, "    LOOP FETCH C\n");
+  bprintf(&main, "    BEGIN\n");
+  bprintf(&main, "      LET added := cql_facet_add(%s_facets, C.facet, C.version);\n", global_proc_name);
+  bprintf(&main, "    END;\n");
+  bprintf(&main, "  END TRY;\n");
+  bprintf(&main, "  BEGIN CATCH\n");
+  bprintf(&main, "   -- if table doesn't exist we just have empty facets, that's ok\n");
+  bprintf(&main, "  END CATCH;\n");
+  bprintf(&main, "END;\n\n");
+
+  bprintf(&main, "@attribute(cql:private)\n");
+  bprintf(&main, "CREATE PROCEDURE %s_perform_needed_upgrades()\n", global_proc_name);
+  bprintf(&main, "BEGIN\n");
+  bprintf(&main, "  -- check for downgrade --\n");
+  bprintf(&main, "  IF cql_facet_find(%s_facets, 'cql_schema_version') > %d THEN\n", global_proc_name, max_schema_version);
+  bprintf(&main, "    SELECT 'downgrade detected' facet;\n");
+  bprintf(&main, "  ELSE\n");
+  bprintf(&main, "    -- save the current facets so we can diff them later --\n");
+  bprintf(&main, "    CALL %s_save_cql_schema_facets();\n", global_proc_name);
+  bprintf(&main, "    CALL %s_perform_upgrade_steps();\n\n", global_proc_name);
   bprintf(&main, "    -- finally produce the list of differences\n");
   bprintf(&main, "    SELECT T1.facet FROM\n");
   bprintf(&main, "      %s_cql_schema_facets T1\n", global_proc_name);
@@ -1230,8 +1252,17 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&main, "  -- fetch the last known schema crc, if it's different do the upgrade --\n");
   bprintf(&main, "  CALL %s_cql_get_facet_version('cql_schema_crc', schema_crc);\n\n", global_proc_name);
   bprintf(&main, "  IF schema_crc <> %lld THEN\n", (llint_t)schema_crc);
-  bprintf(&main, "    -- save the current facets so we can diff them later --\n");
-  bprintf(&main, "    CALL %s_perform_needed_upgrades();\n", global_proc_name);
+  bprintf(&main, "    BEGIN TRY\n");
+  bprintf(&main, "      CALL %s_setup_facets();\n", global_proc_name);
+  bprintf(&main, "      CALL %s_perform_needed_upgrades();\n", global_proc_name);
+  bprintf(&main, "    END TRY;\n");
+  bprintf(&main, "    BEGIN CATCH\n");
+  bprintf(&main, "      CALL cql_facets_delete(%s_facets);\n", global_proc_name);
+  bprintf(&main, "      SET %s_facets := 0;\n", global_proc_name);
+  bprintf(&main, "      THROW;\n");
+  bprintf(&main, "    END CATCH;\n");
+  bprintf(&main, "    CALL cql_facets_delete(%s_facets);\n", global_proc_name);
+  bprintf(&main, "    SET %s_facets := 0;\n", global_proc_name);
   bprintf(&main, "  ELSE\n");
   bprintf(&main, "    -- some canonical result for no differences --\n");
   bprintf(&main, "    SELECT 'no differences' facet;\n");
@@ -1243,6 +1274,10 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   }
 
   bprintf(&main, "END;\n\n");
+
+  if (one_time_drop_needed) {
+    cg_schema_emit_one_time_drop(&decls);
+  }
 
   CHARBUF_OPEN(output_file);
   bprintf(&output_file, "%s\n", decls.ptr);
