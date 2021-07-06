@@ -1043,6 +1043,12 @@ Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0408: encode context column
 Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0401: context column must be specified if strict encode context column mode is enabled 'vault_sensitive'
 Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0401: context column must be specified if strict encode context column mode is enabled 'vault_sensitive'
 Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0401: context column must be specified if strict encode context column mode is enabled 'vault_sensitive'
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0402: vault context column in vault_senstive attribute must match the specified type in strict mode 'vault_sensitive'
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0402: vault context column in vault_senstive attribute must match the specified type in strict mode 'vault_sensitive'
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0402: vault context column in vault_senstive attribute must match the specified type in strict mode 'vault_sensitive'
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0402: vault context column in vault_senstive attribute must match the specified type in strict mode 'vault_sensitive'
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0402: vault context column in vault_senstive attribute must match the specified type in strict mode 'vault_sensitive'
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0402: vault context column in vault_senstive attribute must match the specified type in strict mode 'vault_sensitive'
 Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0364: vault_sensitive annotation can only go on a procedure that uses the database
 Error at test/sem_test.sql:XXXX : in col_attrs_hidden : CQL0362: The HIDDEN column attribute must be the first attribute if present
 Error at test/sem_test.sql:XXXX : in col_attrs_fk : CQL0237: strict FK validation requires that some ON UPDATE option be selected for every foreign key

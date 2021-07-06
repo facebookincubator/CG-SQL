@@ -185,22 +185,25 @@ static void add_pending_symtab_free(symtab *syms) {
 }
 
 struct enforcement_options {
-  bool_t strict_fk_update;      // indicates there must be some "ON UPDATE" action in every FK
-  bool_t strict_fk_delete;      // indicates there must be some "ON DELETE" action in every FK
-  bool_t strict_join;           // only ANSI style joins may be used, "from A,B" is rejected
-  bool_t strict_upsert_stmt;    // no upsert statement may be used
-  bool_t strict_window_func;    // no window functions may be used
-  bool_t strict_procedure;      // no calls to undeclared procedures (like printf)
-  bool_t strict_without_rowid;  // no WITHOUT ROWID may be used.
-  bool_t strict_transaction;    // no transactions may be started, commited, aborted etc.
-  bool_t strict_if_nothing;     // (select ..) expressions must include the if nothing form
-  bool_t strict_insert_select;  // insert with select may not include joins
-  bool_t strict_table_function; // table valued functions cannot be used on left/right joins (avoiding SQLite bug)
-  bool_t strict_not_null_after; // variables should be treated as NOT NULL after an IS NOT NULL check
-  bool_t strict_encode_context;  // encode context must be specified in @vault_sensitive
+  bool_t strict_fk_update;            // indicates there must be some "ON UPDATE" action in every FK
+  bool_t strict_fk_delete;            // indicates there must be some "ON DELETE" action in every FK
+  bool_t strict_join;                 // only ANSI style joins may be used, "from A,B" is rejected
+  bool_t strict_upsert_stmt;          // no upsert statement may be used
+  bool_t strict_window_func;          // no window functions may be used
+  bool_t strict_procedure;            // no calls to undeclared procedures (like printf)
+  bool_t strict_without_rowid;        // no WITHOUT ROWID may be used.
+  bool_t strict_transaction;          // no transactions may be started, commited, aborted etc.
+  bool_t strict_if_nothing;           // (select ..) expressions must include the if nothing form
+  bool_t strict_insert_select;        // insert with select may not include joins
+  bool_t strict_table_function;       // table valued functions cannot be used on left/right joins (avoiding SQLite bug)
+  bool_t strict_not_null_after;       // variables should be treated as NOT NULL after an IS NOT NULL check
+  bool_t strict_encode_context;       // encode context must be specified in @vault_sensitive
+  bool_t strict_encode_context_type;  // the specified vault context column must be the specified data type
 };
 
 static struct enforcement_options  enforcement;
+
+static sem_t encode_context_type;
 
 typedef struct enforcement_stack_record {
   struct enforcement_stack_record *next;
@@ -1257,6 +1260,27 @@ static void sem_column_name_exist_in_result_set(CSTR name, ast_node *misc_attr_v
   record_ok(misc_attr_value);
 }
 
+// This is used to ensure column type matches the specified encode context column type
+static void sem_column_name_match_encode_context_column_type(CSTR name, ast_node *misc_attrs)
+{
+  if (!enforcement.strict_encode_context_type) {
+    return;
+  }
+  Contract(misc_attrs);
+  Contract(current_proc);
+  sem_struct *sptr = current_proc->sem->sptr;
+  uint32_t count = sptr->count;
+  for (int32_t i = 0; i < count; i++) {
+    CSTR col = sptr->names[i];
+    if (!strcmp(name, col)) {
+      if (core_type_of(sptr->semtypes[i]) != encode_context_type) {
+        report_error(misc_attrs, "CQL0402: vault context column in vault_senstive attribute must match the specified type in strict mode", "vault_sensitive");
+        record_error(misc_attrs);
+      }
+    }
+  }
+}
+
 // The helper checks whether or not a column should be encoded. A column
 // is encoded if and only if it's marked and is also sensitive.
 // The eligibility infos are extract from vault_sensitive attribution
@@ -1440,6 +1464,7 @@ enforce_encode_context_column_with_strict_mode(misc_attrs);
       if (misc_attrs && current_proc) {
         enforce_non_sensitive_context_column(context_col, misc_attrs);
         sem_column_name_exist_in_result_set(context_col, misc_attr_value, misc_attrs);
+        sem_column_name_match_encode_context_column_type(context_col, misc_attrs);
       }
       // extrac context column
       if (info->encode_context_column) {
@@ -18454,6 +18479,36 @@ static void sem_enforcement_options(ast_node *ast, bool_t strict) {
 
     case ENFORCE_ENCODE_CONTEXT_COLUMN:
       enforcement.strict_encode_context = strict;
+      break;
+
+    case ENFORCE_ENCODE_CONTEXT_TYPE_INTEGER:
+      enforcement.strict_encode_context_type= strict;
+      encode_context_type = SEM_TYPE_INTEGER;
+      break;
+
+    case ENFORCE_ENCODE_CONTEXT_TYPE_LONG_INTEGER:
+      enforcement.strict_encode_context_type= strict;
+      encode_context_type = SEM_TYPE_LONG_INTEGER;
+      break;
+
+    case ENFORCE_ENCODE_CONTEXT_TYPE_REAL:
+      enforcement.strict_encode_context_type= strict;
+      encode_context_type = SEM_TYPE_REAL;
+      break;
+
+    case ENFORCE_ENCODE_CONTEXT_TYPE_BOOL:
+      enforcement.strict_encode_context_type= strict;
+      encode_context_type = SEM_TYPE_BOOL;
+      break;
+
+    case ENFORCE_ENCODE_CONTEXT_TYPE_TEXT:
+      enforcement.strict_encode_context_type= strict;
+      encode_context_type = SEM_TYPE_TEXT;
+      break;
+
+    case ENFORCE_ENCODE_CONTEXT_TYPE_BLOB:
+      enforcement.strict_encode_context_type= strict;
+      encode_context_type = SEM_TYPE_BLOB;
       break;
 
     default:

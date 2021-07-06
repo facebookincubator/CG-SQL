@@ -14658,6 +14658,150 @@ begin
   select * from bar;
 end;
 
+-- TEST: vault_sensitive attribution with integer encode context
+-- + {stmt_and_attr}: ok
+-- - Error
+@attribute(cql:vault_sensitive=(id, (name)))
+create proc vault_sensitive_with_integer_encode_context()
+begin
+  select * from bar;
+end;
+
+-- TEST: strict encode context type integer
+-- + {enforce_strict_stmt}: ok
+-- - Error;
+@enforce_strict encode context type integer;
+
+-- TEST: vault_sensitive attribution with integer encode context and strict mode
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- Error % encode context column in vault_senstive attribute must match the specified type in strict mode
+-- +1 Error
+@attribute(cql:vault_sensitive=(name, (rate)))
+create proc vault_sensitive_encode_context_integer_strict_mode()
+begin
+  select * from bar;
+end;
+
+-- TEST verify back to normal mode
+-- + {enforce_normal_stmt}: ok
+-- - Error
+@enforce_normal encode context type integer;
+
+-- TEST: strict encode context type long_integer
+-- + {enforce_strict_stmt}: ok
+-- - Error;
+@enforce_strict encode context type long_integer;
+
+-- TEST: vault_sensitive attribution with long integer encode context and strict mode
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- Error % encode context column in vault_senstive attribute must match the specified type in strict mode
+-- +1 Error
+@attribute(cql:vault_sensitive=(name, (rate)))
+create proc vault_sensitive_encode_context_long_integer_strict_mode()
+begin
+  select * from bar;
+end;
+
+-- TEST verify back to normal mode
+-- + {enforce_normal_stmt}: ok
+-- - Error
+@enforce_normal encode context type long_integer;
+
+-- TEST: strict encode context type real
+-- + {enforce_strict_stmt}: ok
+-- - Error;
+@enforce_strict encode context type real;
+
+-- TEST: vault_sensitive attribution with real encode context and strict mode
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- Error % encode context column in vault_senstive attribute must match the specified type in strict mode
+-- +1 Error
+@attribute(cql:vault_sensitive=(name, (rate)))
+create proc vault_sensitive_encode_context_real_strict_mode()
+begin
+  select * from bar;
+end;
+
+-- TEST verify back to normal mode
+-- + {enforce_normal_stmt}: ok
+-- - Error
+@enforce_normal encode context type real;
+
+-- TEST: strict encode context type bool
+-- + {enforce_strict_stmt}: ok
+-- - Error;
+@enforce_strict encode context type bool;
+
+-- TEST: vault_sensitive attribution with bool encode context and strict mode
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- Error % encode context column in vault_senstive attribute must match the specified type in strict mode
+-- +1 Error
+@attribute(cql:vault_sensitive=(name, (rate)))
+create proc vault_sensitive_encode_context_bool_strict_mode()
+begin
+  select * from bar;
+end;
+
+-- TEST verify back to normal mode
+-- + {enforce_normal_stmt}: ok
+-- - Error
+@enforce_normal encode context type bool;
+
+-- TEST: strict encode context type blob
+-- + {enforce_strict_stmt}: ok
+-- - Error;
+@enforce_strict encode context type blob;
+
+-- TEST: vault_sensitive attribution with blob encode context and strict mode
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- Error % encode context column in vault_senstive attribute must match the specified type in strict mode
+-- +1 Error
+@attribute(cql:vault_sensitive=(name, (rate)))
+create proc vault_sensitive_encode_context_blob_strict_mode()
+begin
+  select * from bar;
+end;
+
+-- TEST verify back to normal mode
+-- + {enforce_normal_stmt}: ok
+-- - Error
+@enforce_normal encode context type blob;
+
+-- TEST: strict encode context type text
+-- + {enforce_strict_stmt}: ok
+-- - Error;
+@enforce_strict encode context type text;
+
+-- TEST: vault_sensitive attribution with integer encode context and strict mode
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- Error % encode context column in vault_senstive attribute must match the specified type in strict mode
+-- +1 Error
+@attribute(cql:vault_sensitive=(id, (name, rate)))
+create proc vault_sensitive_with_integer_encode_context_strict_mode()
+begin
+  select * from bar;
+end;
+
+-- TEST: vault_sensitive attribution with text encode context
+-- + {stmt_and_attr}: ok
+-- - Error
+@attribute(cql:vault_sensitive=(name, (rate)))
+create proc vault_sensitive_with_text_encode_context_strict_mode()
+begin
+  select * from bar;
+end;
+
+-- TEST verify back to normal mode
+-- + {enforce_normal_stmt}: ok
+-- - Error
+@enforce_normal encode context type text;
+
 -- TEST verify back to normal mode
 -- + {enforce_normal_stmt}: ok
 -- - Error

@@ -58292,6 +58292,432 @@ Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0401: context column must b
 
 The statement ending at line XXXX
 
+@ATTRIBUTE(cql:vault_sensitive=(id, (name)))
+CREATE PROC vault_sensitive_with_integer_encode_context ()
+BEGIN
+  SELECT *
+    FROM bar;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name vault_sensitive}
+  |   | {misc_attr_value_list}: ok
+  |     | {name id}: ok
+  |     | {misc_attr_value_list}
+  |       | {misc_attr_value_list}: ok
+  |         | {name name}: ok
+  | {create_proc_stmt}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+    | {name vault_sensitive_with_integer_encode_context}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
+          | {select_core_list}: select: { id: integer notnull, name: text, rate: longint }
+          | | {select_core}: select: { id: integer notnull, name: text, rate: longint }
+          |   | {select_expr_list_con}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_expr_list}: select: { id: integer notnull, name: text, rate: longint }
+          |     | | {star}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_from_etc}: TABLE { bar: bar }
+          |       | {table_or_subquery_list}: TABLE { bar: bar }
+          |       | | {table_or_subquery}: TABLE { bar: bar }
+          |       |   | {name bar}: TABLE { bar: bar }
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ENFORCE_STRICT ENCODE CONTEXT TYPE INTEGER;
+
+  {enforce_strict_stmt}: ok
+  | {int 14}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:vault_sensitive=(name, (rate)))
+CREATE PROC vault_sensitive_encode_context_integer_strict_mode ()
+BEGIN
+  SELECT *
+    FROM bar;
+END;
+
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0402: vault context column in vault_senstive attribute must match the specified type in strict mode 'vault_sensitive'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name vault_sensitive}
+  |   | {misc_attr_value_list}: ok
+  |     | {name name}: ok
+  |     | {misc_attr_value_list}
+  |       | {misc_attr_value_list}: ok
+  |         | {name rate}: ok
+  | {create_proc_stmt}: err
+    | {name vault_sensitive_encode_context_integer_strict_mode}: err
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
+          | {select_core_list}: select: { id: integer notnull, name: text, rate: longint }
+          | | {select_core}: select: { id: integer notnull, name: text, rate: longint }
+          |   | {select_expr_list_con}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_expr_list}: select: { id: integer notnull, name: text, rate: longint }
+          |     | | {star}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_from_etc}: TABLE { bar: bar }
+          |       | {table_or_subquery_list}: TABLE { bar: bar }
+          |       | | {table_or_subquery}: TABLE { bar: bar }
+          |       |   | {name bar}: TABLE { bar: bar }
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ENFORCE_NORMAL ENCODE CONTEXT TYPE INTEGER;
+
+  {enforce_normal_stmt}: ok
+  | {int 14}
+
+The statement ending at line XXXX
+
+@ENFORCE_STRICT ENCODE CONTEXT TYPE LONG_INTEGER;
+
+  {enforce_strict_stmt}: ok
+  | {int 15}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:vault_sensitive=(name, (rate)))
+CREATE PROC vault_sensitive_encode_context_long_integer_strict_mode ()
+BEGIN
+  SELECT *
+    FROM bar;
+END;
+
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0402: vault context column in vault_senstive attribute must match the specified type in strict mode 'vault_sensitive'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name vault_sensitive}
+  |   | {misc_attr_value_list}: ok
+  |     | {name name}: ok
+  |     | {misc_attr_value_list}
+  |       | {misc_attr_value_list}: ok
+  |         | {name rate}: ok
+  | {create_proc_stmt}: err
+    | {name vault_sensitive_encode_context_long_integer_strict_mode}: err
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
+          | {select_core_list}: select: { id: integer notnull, name: text, rate: longint }
+          | | {select_core}: select: { id: integer notnull, name: text, rate: longint }
+          |   | {select_expr_list_con}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_expr_list}: select: { id: integer notnull, name: text, rate: longint }
+          |     | | {star}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_from_etc}: TABLE { bar: bar }
+          |       | {table_or_subquery_list}: TABLE { bar: bar }
+          |       | | {table_or_subquery}: TABLE { bar: bar }
+          |       |   | {name bar}: TABLE { bar: bar }
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ENFORCE_NORMAL ENCODE CONTEXT TYPE LONG_INTEGER;
+
+  {enforce_normal_stmt}: ok
+  | {int 15}
+
+The statement ending at line XXXX
+
+@ENFORCE_STRICT ENCODE CONTEXT TYPE REAL;
+
+  {enforce_strict_stmt}: ok
+  | {int 16}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:vault_sensitive=(name, (rate)))
+CREATE PROC vault_sensitive_encode_context_real_strict_mode ()
+BEGIN
+  SELECT *
+    FROM bar;
+END;
+
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0402: vault context column in vault_senstive attribute must match the specified type in strict mode 'vault_sensitive'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name vault_sensitive}
+  |   | {misc_attr_value_list}: ok
+  |     | {name name}: ok
+  |     | {misc_attr_value_list}
+  |       | {misc_attr_value_list}: ok
+  |         | {name rate}: ok
+  | {create_proc_stmt}: err
+    | {name vault_sensitive_encode_context_real_strict_mode}: err
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
+          | {select_core_list}: select: { id: integer notnull, name: text, rate: longint }
+          | | {select_core}: select: { id: integer notnull, name: text, rate: longint }
+          |   | {select_expr_list_con}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_expr_list}: select: { id: integer notnull, name: text, rate: longint }
+          |     | | {star}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_from_etc}: TABLE { bar: bar }
+          |       | {table_or_subquery_list}: TABLE { bar: bar }
+          |       | | {table_or_subquery}: TABLE { bar: bar }
+          |       |   | {name bar}: TABLE { bar: bar }
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ENFORCE_NORMAL ENCODE CONTEXT TYPE REAL;
+
+  {enforce_normal_stmt}: ok
+  | {int 16}
+
+The statement ending at line XXXX
+
+@ENFORCE_STRICT ENCODE CONTEXT TYPE BOOL;
+
+  {enforce_strict_stmt}: ok
+  | {int 17}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:vault_sensitive=(name, (rate)))
+CREATE PROC vault_sensitive_encode_context_bool_strict_mode ()
+BEGIN
+  SELECT *
+    FROM bar;
+END;
+
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0402: vault context column in vault_senstive attribute must match the specified type in strict mode 'vault_sensitive'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name vault_sensitive}
+  |   | {misc_attr_value_list}: ok
+  |     | {name name}: ok
+  |     | {misc_attr_value_list}
+  |       | {misc_attr_value_list}: ok
+  |         | {name rate}: ok
+  | {create_proc_stmt}: err
+    | {name vault_sensitive_encode_context_bool_strict_mode}: err
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
+          | {select_core_list}: select: { id: integer notnull, name: text, rate: longint }
+          | | {select_core}: select: { id: integer notnull, name: text, rate: longint }
+          |   | {select_expr_list_con}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_expr_list}: select: { id: integer notnull, name: text, rate: longint }
+          |     | | {star}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_from_etc}: TABLE { bar: bar }
+          |       | {table_or_subquery_list}: TABLE { bar: bar }
+          |       | | {table_or_subquery}: TABLE { bar: bar }
+          |       |   | {name bar}: TABLE { bar: bar }
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ENFORCE_NORMAL ENCODE CONTEXT TYPE BOOL;
+
+  {enforce_normal_stmt}: ok
+  | {int 17}
+
+The statement ending at line XXXX
+
+@ENFORCE_STRICT ENCODE CONTEXT TYPE BLOB;
+
+  {enforce_strict_stmt}: ok
+  | {int 19}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:vault_sensitive=(name, (rate)))
+CREATE PROC vault_sensitive_encode_context_blob_strict_mode ()
+BEGIN
+  SELECT *
+    FROM bar;
+END;
+
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0402: vault context column in vault_senstive attribute must match the specified type in strict mode 'vault_sensitive'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name vault_sensitive}
+  |   | {misc_attr_value_list}: ok
+  |     | {name name}: ok
+  |     | {misc_attr_value_list}
+  |       | {misc_attr_value_list}: ok
+  |         | {name rate}: ok
+  | {create_proc_stmt}: err
+    | {name vault_sensitive_encode_context_blob_strict_mode}: err
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
+          | {select_core_list}: select: { id: integer notnull, name: text, rate: longint }
+          | | {select_core}: select: { id: integer notnull, name: text, rate: longint }
+          |   | {select_expr_list_con}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_expr_list}: select: { id: integer notnull, name: text, rate: longint }
+          |     | | {star}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_from_etc}: TABLE { bar: bar }
+          |       | {table_or_subquery_list}: TABLE { bar: bar }
+          |       | | {table_or_subquery}: TABLE { bar: bar }
+          |       |   | {name bar}: TABLE { bar: bar }
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ENFORCE_NORMAL ENCODE CONTEXT TYPE BLOB;
+
+  {enforce_normal_stmt}: ok
+  | {int 19}
+
+The statement ending at line XXXX
+
+@ENFORCE_STRICT ENCODE CONTEXT TYPE TEXT;
+
+  {enforce_strict_stmt}: ok
+  | {int 18}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:vault_sensitive=(id, (name, rate)))
+CREATE PROC vault_sensitive_with_integer_encode_context_strict_mode ()
+BEGIN
+  SELECT *
+    FROM bar;
+END;
+
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0402: vault context column in vault_senstive attribute must match the specified type in strict mode 'vault_sensitive'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name vault_sensitive}
+  |   | {misc_attr_value_list}: ok
+  |     | {name id}: ok
+  |     | {misc_attr_value_list}
+  |       | {misc_attr_value_list}: ok
+  |         | {name name}: ok
+  |         | {misc_attr_value_list}
+  |           | {name rate}: ok
+  | {create_proc_stmt}: err
+    | {name vault_sensitive_with_integer_encode_context_strict_mode}: err
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
+          | {select_core_list}: select: { id: integer notnull, name: text, rate: longint }
+          | | {select_core}: select: { id: integer notnull, name: text, rate: longint }
+          |   | {select_expr_list_con}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_expr_list}: select: { id: integer notnull, name: text, rate: longint }
+          |     | | {star}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_from_etc}: TABLE { bar: bar }
+          |       | {table_or_subquery_list}: TABLE { bar: bar }
+          |       | | {table_or_subquery}: TABLE { bar: bar }
+          |       |   | {name bar}: TABLE { bar: bar }
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:vault_sensitive=(name, (rate)))
+CREATE PROC vault_sensitive_with_text_encode_context_strict_mode ()
+BEGIN
+  SELECT *
+    FROM bar;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name vault_sensitive}
+  |   | {misc_attr_value_list}: ok
+  |     | {name name}: ok
+  |     | {misc_attr_value_list}
+  |       | {misc_attr_value_list}: ok
+  |         | {name rate}: ok
+  | {create_proc_stmt}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+    | {name vault_sensitive_with_text_encode_context_strict_mode}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
+          | {select_core_list}: select: { id: integer notnull, name: text, rate: longint }
+          | | {select_core}: select: { id: integer notnull, name: text, rate: longint }
+          |   | {select_expr_list_con}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_expr_list}: select: { id: integer notnull, name: text, rate: longint }
+          |     | | {star}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_from_etc}: TABLE { bar: bar }
+          |       | {table_or_subquery_list}: TABLE { bar: bar }
+          |       | | {table_or_subquery}: TABLE { bar: bar }
+          |       |   | {name bar}: TABLE { bar: bar }
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ENFORCE_NORMAL ENCODE CONTEXT TYPE TEXT;
+
+  {enforce_normal_stmt}: ok
+  | {int 18}
+
+The statement ending at line XXXX
+
 @ENFORCE_NORMAL ENCODE CONTEXT COLUMN;
 
   {enforce_normal_stmt}: ok
