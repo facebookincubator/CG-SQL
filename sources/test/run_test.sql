@@ -2437,6 +2437,35 @@ begin
   select * from all_types_encoded_table;
 end;
 
+@attribute(cql:vault_sensitive=(context, (b0, i0, l0, d0, s0, bl0, b1, i1, l1, d1, s1, bl1)))
+create procedure load_encoded_with_context_table()
+begin
+  create table all_types_encoded_with_context_table(
+    b0 bool @sensitive,
+    i0 integer @sensitive,
+    l0 long @sensitive,
+    d0 real @sensitive,
+    s0 text @sensitive,
+    bl0 blob @sensitive,
+
+    b1 bool not null @sensitive,
+    i1 integer not null @sensitive,
+    l1 long not null @sensitive,
+    d1 real not null @sensitive,
+    s1 text not null @sensitive,
+    bl1 blob not null @sensitive,
+
+    context text not null
+  );
+
+  insert into all_types_encoded_with_context_table values (
+    cast(0 as bool), 0, 0, 0.0, "0", cast("0" as blob),
+    cast(1 as bool), 1, 1, 1.1, "1", cast("1" as blob), "cxt"
+  );
+
+  select * from all_types_encoded_with_context_table;
+end;
+
 @attribute(cql:vault_sensitive)
 create procedure load_encoded_cursor()
 begin
@@ -2495,6 +2524,25 @@ begin
   fetch C1;
   out union C1;
 end;
+
+@attribute(cql:vault_sensitive=(z, (y)))
+create proc out_union_dml_with_encode_context()
+begin
+  create table some_type_encoded_table(x integer, y text @sensitive, z text);
+  insert into some_type_encoded_table using 66 x, 'abc' y, 'xyz' z;
+  declare x cursor for select * from some_type_encoded_table;
+  fetch x;
+  out union x;
+end;
+
+BEGIN_TEST(decoded_value_with_encode_context)
+ declare C cursor for call out_union_dml_with_encode_context();
+ fetch C;
+
+ EXPECT(C.x IS 66);
+ EXPECT(C.y IS 'abc');
+ EXPECT(C.z IS 'xyz');
+END_TEST(decoded_value_with_encode_context)
 
 BEGIN_TEST(encoded_values)
   declare C cursor for call load_encoded_table();
@@ -2607,6 +2655,25 @@ BEGIN_TEST(read_partially_vault_cursor)
  EXPECT(C.x IS 66);
  EXPECT(C.y IS 'bogus');
 END_TEST(read_partially_vault_cursor)
+
+@attribute(cql:vault_sensitive=(z, (y)))
+create procedure load_some_encoded_field_with_encode_context()
+begin
+  create table some_encoded_field_context_table(x integer, y text @sensitive, z text);
+  insert into some_encoded_field_context_table using 66 x, 'bogus' y, 'context' z;
+
+  declare C cursor for select * from some_encoded_field_context_table;
+  fetch C;
+  out C;
+end;
+
+BEGIN_TEST(read_partially_encode_with_encode_context_cursor)
+ declare C cursor fetch from call load_some_encoded_field_with_encode_context();
+
+ EXPECT(C.x IS 66);
+ EXPECT(C.y IS 'bogus');
+ EXPECT(C.z IS 'context');
+END_TEST(read_partially_encode_with_encode_context_cursor)
 
 create procedure load_all_types_table()
 begin

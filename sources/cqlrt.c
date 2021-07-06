@@ -213,52 +213,90 @@ cql_bool cql_ref_equal(cql_type_ref typeref1, cql_type_ref typeref2) {
 }
 
 // naive implementation of encode for cql_bool. It flip the boolean value
-cql_bool cql_encode_bool(cql_object_ref _Nullable encoder, cql_bool value) {
+cql_bool cql_encode_bool(cql_object_ref _Nullable encoder,
+                         cql_bool value,
+                         cql_int32 context_type,
+                         void *_Nullable context) {
   return !value;
 }
 
 // naive implementation of decode for cql_bool. It flip the boolean value
-cql_bool cql_decode_bool(cql_object_ref _Nullable encoder, cql_bool value) {
+cql_bool cql_decode_bool(cql_object_ref _Nullable encoder,
+                         cql_bool value,
+                         cql_int32 context_type,
+                         void *_Nullable context) {
   return !value;
 }
 
 // naive implementation of encode for cql_int32.
-cql_int32 cql_encode_int32(cql_object_ref _Nullable encoder, cql_int32 value) {
+cql_int32 cql_encode_int32(cql_object_ref _Nullable encoder,
+                           cql_int32 value,
+                           cql_int32 context_type,
+                           void *_Nullable context) {
   return (value >> 16) | (value << 16);
 }
 
 // naive implementation of decode for cql_int32.
-cql_int32 cql_decode_int32(cql_object_ref _Nullable encoder, cql_int32 value) {
+cql_int32 cql_decode_int32(cql_object_ref _Nullable encoder,
+                           cql_int32 value,
+                           cql_int32 context_type,
+                           void *_Nullable context) {
   return (value << 16) | (value >> 16);
 }
 
 // naive implementation of encode for cql_int64.
-cql_int64 cql_encode_int64(cql_object_ref _Nullable encoder, cql_int64 value) {
+cql_int64 cql_encode_int64(cql_object_ref _Nullable encoder,
+                           cql_int64 value,
+                           cql_int32 context_type,
+                           void *_Nullable context) {
   return (value >> 32) | (value << 32);
 }
 
 // naive implementation of decode for cql_int64.
-cql_int64 cql_decode_int64(cql_object_ref _Nullable encoder, cql_int64 value) {
+cql_int64 cql_decode_int64(cql_object_ref _Nullable encoder,
+                           cql_int64 value,
+                           cql_int32 context_type,
+                           void *_Nullable context) {
   return (value << 32) | (value >> 32);
 }
 
 // naive implementation of encode for double.
-cql_double cql_encode_double(cql_object_ref _Nullable encoder, cql_double value) {
+cql_double cql_encode_double(cql_object_ref _Nullable encoder,
+                             cql_double value,
+                             cql_int32 context_type,
+                             void *_Nullable context) {
   return -value;
 }
 
 // naive implementation of decode for double.
-cql_double cql_decode_double(cql_object_ref _Nullable encoder, cql_double value) {
+cql_double cql_decode_double(cql_object_ref _Nullable encoder,
+                             cql_double value,
+                             cql_int32 context_type,
+                             void *_Nullable context) {
   return -value;
 }
 
-// naive implementation of encode for string. It appends a character to the
-// string
-cql_string_ref cql_encode_string_ref_new(cql_object_ref _Nullable encoder, cql_string_ref _Nonnull value) {
+// naive implementation of encode for string. It appends a character
+// and encode context to the string
+cql_string_ref cql_encode_string_ref_new(cql_object_ref _Nullable encoder,
+                                        cql_string_ref _Nonnull value,
+                                        cql_int32 context_type,
+                                        void *_Nullable context) {
   size_t cstrlen = strlen(value->ptr);
-  char *tmp = malloc(cstrlen + 2);
+  size_t context_len = 0;
+  if (context != NULL && CQL_CORE_DATA_TYPE_OF(context_type) == CQL_DATA_TYPE_STRING) {
+    cql_string_ref _Nullable encode_context = *(cql_string_ref *)context;
+    context_len = strlen(encode_context->ptr);
+  }
+  char *tmp = malloc(cstrlen + 2 + context_len);
   memcpy(tmp, value->ptr, cstrlen);
   tmp[cstrlen] = '#';
+  // naive test case for string type encode context
+  if (context != NULL && CQL_CORE_DATA_TYPE_OF(context_type) == CQL_DATA_TYPE_STRING) {
+    cql_string_ref _Nullable encode_context = *(cql_string_ref *)context;
+    memcpy(tmp + cstrlen + 1, encode_context->ptr, context_len);
+    cstrlen += context_len;
+  }
   tmp[cstrlen + 1] = 0;
   cql_string_ref rs = cql_string_ref_new(tmp);
   free(tmp);
@@ -266,9 +304,17 @@ cql_string_ref cql_encode_string_ref_new(cql_object_ref _Nullable encoder, cql_s
 }
 
 // naive implementation of decode for string. It remove the last character
-// in the string
-cql_string_ref cql_decode_string_ref_new(cql_object_ref _Nullable encoder, cql_string_ref _Nonnull value) {
+// and encode context in the string
+cql_string_ref cql_decode_string_ref_new(cql_object_ref _Nullable encoder,
+                                         cql_string_ref _Nonnull value,
+                                         cql_int32 context_type,
+                                         void *_Nullable context) {
   size_t cstrlen = strlen(value->ptr);
+  // naive test case for string type encode context
+  if (context != NULL && CQL_CORE_DATA_TYPE_OF(context_type) == CQL_DATA_TYPE_STRING) {
+    cql_string_ref _Nullable encode_context = *(cql_string_ref *)context;
+    cstrlen -= strlen(encode_context->ptr);
+  }
   char *tmp = malloc(cstrlen);
   memcpy(tmp, value->ptr, cstrlen - 1);
   tmp[cstrlen - 1] = 0;
@@ -278,7 +324,10 @@ cql_string_ref cql_decode_string_ref_new(cql_object_ref _Nullable encoder, cql_s
 }
 
 // naive implementation of encode for blob. It appends a byte to the blob
-cql_blob_ref cql_encode_blob_ref_new(cql_object_ref _Nullable encoder, cql_blob_ref _Nonnull value) {
+cql_blob_ref cql_encode_blob_ref_new(cql_object_ref _Nullable encoder,
+                                     cql_blob_ref _Nonnull value,
+                                     cql_int32 context_type,
+                                     void *_Nullable context) {
   cql_uint32 size = value->size + 1;
   char *tmp = malloc(size);
   memcpy(tmp, value->ptr, size - 1);
@@ -290,7 +339,10 @@ cql_blob_ref cql_encode_blob_ref_new(cql_object_ref _Nullable encoder, cql_blob_
 
 // naive implementation of decode for blob. It removes the last byte
 // in the blob.
-cql_blob_ref cql_decode_blob_ref_new(cql_object_ref _Nullable encoder, cql_blob_ref _Nonnull value) {
+cql_blob_ref cql_decode_blob_ref_new(cql_object_ref _Nullable encoder,
+                                    cql_blob_ref _Nonnull value,
+                                    cql_int32 context_type,
+                                    void *_Nullable context) {
   cql_uint32 size = value->size - 1;
   void *tmp = malloc(size);
   memcpy(tmp, value->ptr, size);

@@ -93,6 +93,7 @@ typedef struct cql_fetch_info {
   uint16_t refs_count;
   uint16_t refs_offset;
   uint16_t *_Nullable identity_columns;
+  int16_t encode_context_index;
   int32_t rowsize;
   const char *_Nullable autodrop_tables;
   int64_t crc;

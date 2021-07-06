@@ -113,6 +113,7 @@ CQL_WARN_UNUSED cql_code assembly_core_fetch_results(sqlite3 *_Nonnull _db_, ass
     .col_offsets = assembly_core_col_offsets,
     .refs_count = 1,
     .refs_offset = assembly_core_refs_offset,
+    .encode_context_index = -1,
     .rowsize = sizeof(assembly_core_row),
     .crc = CRC_assembly_core,
     .perf_index = &assembly_core_perf_index,

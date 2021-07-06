@@ -6158,6 +6158,7 @@ typedef struct fetch_result_info {
   bool_t use_stmt;
   int32_t indent;
   CSTR prefix;
+  int16_t encode_context_index;
 } fetch_result_info;
 
 // This generates the cql_fetch_info structure for the various output flavors
@@ -6202,6 +6203,7 @@ static void cg_fetch_info(fetch_result_info *info, charbuf *output)
     if (info->has_identity_columns) {
       bprintf(&tmp, "  .identity_columns = %s,\n", info->identity_columns_sym);
     }
+    bprintf(&tmp, "  .encode_context_index = %d,\n", info->encode_context_index);
     bprintf(&tmp, "  .rowsize = sizeof(%s),\n", info->row_sym);
     bprintf(&tmp, "  .crc = CRC_%s,\n", info->proc_sym);
     bprintf(&tmp, "  .perf_index = &%s,\n", info->perf_index);
@@ -6356,6 +6358,9 @@ static void cg_proc_result_set(ast_node *ast) {
       exists_attribute_str(misc_attrs, "suppress_result_set");  // and suppress result set implies suppress getters
   }
 
+  // the index of the encode context column, -1 represents not found
+  int16_t encode_context_index = -1;
+
   // For each field emit the _get_field method
   for (int32_t i = 0; i < count; i++) {
     sem_t sem_type = sptr->semtypes[i];
@@ -6368,6 +6373,10 @@ static void cg_proc_result_set(ast_node *ast) {
       bool_t encode = should_encode_col(col, sem_type, use_encode, encode_columns);
       cg_data_type(&data_types, encode, sem_type);
       bprintf(&data_types, ", // %s\n", col);
+
+      if (encode_context_column != NULL && !strcmp(col, encode_context_column)) {
+        encode_context_index = (int16_t)i;
+      }
     }
 
     if (suppress_getters) {
@@ -6578,6 +6587,7 @@ static void cg_proc_result_set(ast_node *ast) {
           .perf_index = perf_index.ptr,
           .misc_attrs = misc_attrs,
           .indent = 2,
+          .encode_context_index = encode_context_index,
       };
 
       cg_fetch_info(&info, d);
@@ -6631,6 +6641,7 @@ static void cg_proc_result_set(ast_node *ast) {
           .perf_index = perf_index.ptr,
           .misc_attrs = misc_attrs,
           .indent = 2,
+          .encode_context_index = encode_context_index,
       };
 
       cg_fetch_info(&info, d);
@@ -6656,6 +6667,7 @@ static void cg_proc_result_set(ast_node *ast) {
           .misc_attrs = misc_attrs,
           .indent = 0,
           .prefix = proc_sym.ptr,
+          .encode_context_index = encode_context_index,
       };
 
       cg_fetch_info(&info, d);

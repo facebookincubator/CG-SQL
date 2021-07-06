@@ -25,10 +25,12 @@ cql_code test_cql_bytebuf_open(sqlite3 *db);
 cql_code test_cql_bytebuf_alloc_within_bytebuf_exp_growth_cap(sqlite3 *db);
 cql_code test_cql_bytebuf_alloc_over_bytebuf_exp_growth_cap(sqlite3 *db);
 cql_code test_all_column_encoded_fetchers(sqlite3 *db);
+cql_code test_all_column_encoded_with_context_fetchers(sqlite3 *db);
 cql_code test_all_column_encoded_cursor(sqlite3 *db);
 cql_code test_all_column_encoded_out_union(sqlite3 *db);
 cql_code test_all_column_encoded_multi_out_union(sqlite3 *db);
 cql_code test_all_column_some_encoded_field(sqlite3 *db);
+cql_code test_all_column_some_encoded_field_with_encode_context(sqlite3 *db);
 cql_code test_all_column_encoded_runtime_turn_on_off(sqlite3 *db);
 
 static int32_t steps_until_fail = 0;
@@ -110,6 +112,9 @@ cql_code run_client(sqlite3 *db) {
   SQL_E(test_all_column_encoded_fetchers(db));
   E(!cql_outstanding_refs, "outstanding refs in test_all_column_encoded_fetchers: %d\n", cql_outstanding_refs);
 
+  SQL_E(test_all_column_encoded_with_context_fetchers(db));
+  E(!cql_outstanding_refs, "outstanding refs in test_all_column_encoded_with_context_fetchers: %d\n", cql_outstanding_refs);
+
   SQL_E(test_all_column_encoded_cursor(db));
   E(!cql_outstanding_refs, "outstanding refs in test_all_column_encoded_cursor: %d\n", cql_outstanding_refs);
 
@@ -124,6 +129,9 @@ cql_code run_client(sqlite3 *db) {
 
   SQL_E(test_all_column_some_encoded_field(db));
   E(!cql_outstanding_refs, "outstanding refs in test_all_column_some_encoded_field: %d\n", cql_outstanding_refs);
+
+  SQL_E(test_all_column_some_encoded_field_with_encode_context(db));
+  E(!cql_outstanding_refs, "outstanding refs in test_all_column_some_encoded_field_with_encode_context: %d\n", cql_outstanding_refs);
 
   SQL_E(test_error_case_rowset(db));
   E(!cql_outstanding_refs, "outstanding refs in test_error_case_rowset: %d\n", cql_outstanding_refs);
@@ -711,28 +719,28 @@ cql_code test_all_column_encoded_fetchers(sqlite3 *db) {
 
   cql_bool b0 = load_encoded_table_get_b0_value(rs, 0);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 0), "expected b0 is encoded\n");
-  cql_bool b0_exp = cql_decode_bool(encoder, b0);
+  cql_bool b0_exp = cql_decode_bool(encoder, b0, -1, NULL);
   E(b0_exp == 0, "expected b0 is 0, value %d\n", b0_exp);
 
   cql_int32 i0 = load_encoded_table_get_i0_value(rs, 0);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 1), "expected i0 is encoded\n");
-  cql_int32 i0_exp = cql_decode_int32(encoder, i0);
+  cql_int32 i0_exp = cql_decode_int32(encoder, i0, -1, NULL);
   E(i0_exp == 0, "expected i0 is 0, value %d\n", i0_exp);
 
   cql_int64 l0 = load_encoded_table_get_l0_value(rs, 0);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 2), "expected l0 is encoded\n");
-  cql_int64 l0_exp = cql_decode_int64(encoder, l0);
+  cql_int64 l0_exp = cql_decode_int64(encoder, l0, -1, NULL);
   E(l0_exp == 0, "expected l0 is 0, value %lld\n", l0_exp);
 
   cql_double d0 = load_encoded_table_get_d0_value(rs, 0);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 3), "expected d0 is encoded\n");
-  cql_double d0_exp = cql_decode_double(encoder, d0);
+  cql_double d0_exp = cql_decode_double(encoder, d0, -1, NULL);
   E(d0_exp == 0.0, "expected d0 is 0.0, value %lf\n", d0_exp);
 
 
   cql_string_ref s0 = load_encoded_table_get_s0(rs, 0);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 4), "expected s0 is encoded\n");
-  cql_string_ref s0_decode = cql_decode_string_ref_new(encoder, s0);
+  cql_string_ref s0_decode = cql_decode_string_ref_new(encoder, s0, -1, NULL);
   cql_string_ref s0_exp = cql_string_ref_new("0");
   E(cql_string_equal(s0_decode, s0_exp), "expected s0 is 0, value %s\n", s0_decode->ptr);
   cql_string_release(s0_decode);
@@ -740,7 +748,7 @@ cql_code test_all_column_encoded_fetchers(sqlite3 *db) {
 
   cql_blob_ref bl0 = load_encoded_table_get_bl0(rs, 0);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 5), "expected bl0 is encoded\n");
-  cql_blob_ref bl0_decode = cql_decode_blob_ref_new(encoder, bl0);
+  cql_blob_ref bl0_decode = cql_decode_blob_ref_new(encoder, bl0, -1, NULL);
   cql_blob_ref bl0_exp = cql_blob_ref_new("0", 1);
   E(cql_blob_equal(bl0_decode, bl0_exp), "expected bl0 is \"0\", value %s\n", (const char*)bl0_decode->ptr);
   cql_blob_release(bl0_decode);
@@ -748,27 +756,27 @@ cql_code test_all_column_encoded_fetchers(sqlite3 *db) {
 
   cql_bool b1 = load_encoded_table_get_b1(rs, 0);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 6), "expected b1 is encoded\n");
-  cql_bool b1_exp = cql_decode_bool(encoder, b1);
+  cql_bool b1_exp = cql_decode_bool(encoder, b1, -1, NULL);
   E(b1_exp == 1, "expected b1 is 1, value %d\n", b1_exp);
 
   cql_int32 i1 = load_encoded_table_get_i1(rs, 0);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 7), "expected i1 is encoded\n");
-  cql_int32 i1_exp = cql_decode_int32(encoder, i1);
+  cql_int32 i1_exp = cql_decode_int32(encoder, i1, -1, NULL);
   E(i1_exp == 1, "expected i1 is 1, value %d\n", i1_exp);
 
   cql_int64 l1 = load_encoded_table_get_l1(rs, 0);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 8), "expected l1 is encoded\n");
-  cql_int64 l1_exp = cql_decode_int64(encoder, l1);
+  cql_int64 l1_exp = cql_decode_int64(encoder, l1, -1, NULL);
   E(l1_exp == 1, "expected l1 is 1, value %lld\n", l1_exp);
 
   cql_double d1 = load_encoded_table_get_d1(rs, 0);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 9), "expected d1 is encoded\n");
-  cql_double d1_exp = cql_decode_double(encoder, d1);
+  cql_double d1_exp = cql_decode_double(encoder, d1, -1, NULL);
   E(d1_exp == 1.1, "expected d1 is 1.1, value %lf\n", d1_exp);
 
   cql_string_ref s1 = load_encoded_table_get_s1(rs, 0);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 10), "expected s1 is encoded\n");
-  cql_string_ref s1_decode = cql_decode_string_ref_new(encoder, s1);
+  cql_string_ref s1_decode = cql_decode_string_ref_new(encoder, s1, -1, NULL);
   cql_string_ref s1_exp = cql_string_ref_new("1");
   E(cql_string_equal(s1_decode, s1_exp), "expected s1 is 1, value %s\n", s1_decode->ptr);
   cql_string_release(s1_decode);
@@ -776,7 +784,102 @@ cql_code test_all_column_encoded_fetchers(sqlite3 *db) {
 
   cql_blob_ref bl1 = load_encoded_table_get_bl1(rs, 0);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 11), "expected bl1 is encoded\n");
-  cql_blob_ref bl1_decode = cql_decode_blob_ref_new(encoder, bl1);
+  cql_blob_ref bl1_decode = cql_decode_blob_ref_new(encoder, bl1, -1, NULL);
+  cql_blob_ref bl1_exp = cql_blob_ref_new("1", 1);
+  E(cql_blob_equal(bl1_decode, bl1_exp), "expected bl1 is \"1\", value %s\n", (const char*)bl1_decode->ptr);
+  cql_blob_release(bl1_decode);
+  cql_blob_release(bl1_exp);
+
+  cql_result_set_release(result_set);
+  cql_object_release(encoder);
+
+  tests_passed++;
+  return SQLITE_OK;
+}
+
+cql_code test_all_column_encoded_with_context_fetchers(sqlite3 *db) {
+  printf("Running column encoded with context fetchers test\n");
+  tests++;
+
+  cql_object_ref encoder = cql_copy_encoder(db);
+
+  load_encoded_with_context_table_result_set_ref result_set;
+  SQL_E(load_encoded_with_context_table_fetch_results(db, &result_set));
+  E(load_encoded_with_context_table_result_count(result_set) == 1, "expected 1 rows from result table\n");
+  E(cql_result_set_get_meta(result_set)->columnCount == 13, "expected 13 columns from result table\n");
+  load_encoded_with_context_table_result_set_ref rs = (load_encoded_with_context_table_result_set_ref)result_set;
+
+  cql_string_ref context_value = load_encoded_with_context_table_get_context(rs, 0);
+  char* context = (char *)&context_value;
+
+  cql_bool b0 = load_encoded_with_context_table_get_b0_value(rs, 0);
+  E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 0), "expected b0 is encoded\n");
+  cql_bool b0_exp = cql_decode_bool(encoder, b0, CQL_DATA_TYPE_STRING, context);
+  E(b0_exp == 0, "expected b0 is 0, value %d\n", b0_exp);
+
+  cql_int32 i0 = load_encoded_with_context_table_get_i0_value(rs, 0);
+  E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 1), "expected i0 is encoded\n");
+  cql_int32 i0_exp = cql_decode_int32(encoder, i0, CQL_DATA_TYPE_STRING, context);
+  E(i0_exp == 0, "expected i0 is 0, value %d\n", i0_exp);
+
+  cql_int64 l0 = load_encoded_with_context_table_get_l0_value(rs, 0);
+  E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 2), "expected l0 is encoded\n");
+  cql_int64 l0_exp = cql_decode_int64(encoder, l0, CQL_DATA_TYPE_STRING, context);
+  E(l0_exp == 0, "expected l0 is 0, value %lld\n", l0_exp);
+
+  cql_double d0 = load_encoded_with_context_table_get_d0_value(rs, 0);
+  E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 3), "expected d0 is encoded\n");
+  cql_double d0_exp = cql_decode_double(encoder, d0, CQL_DATA_TYPE_STRING, context);
+  E(d0_exp == 0.0, "expected d0 is 0.0, value %lf\n", d0_exp);
+
+
+  cql_string_ref s0 = load_encoded_with_context_table_get_s0(rs, 0);
+  E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 4), "expected s0 is encoded\n");
+  cql_string_ref s0_decode = cql_decode_string_ref_new(encoder, s0, CQL_DATA_TYPE_STRING, context);
+  cql_string_ref s0_exp = cql_string_ref_new("0");
+  E(cql_string_equal(s0_decode, s0_exp), "expected s0 is 0, value %s\n", s0_decode->ptr);
+  cql_string_release(s0_decode);
+  cql_string_release(s0_exp);
+
+  cql_blob_ref bl0 = load_encoded_with_context_table_get_bl0(rs, 0);
+  E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 5), "expected bl0 is encoded\n");
+  cql_blob_ref bl0_decode = cql_decode_blob_ref_new(encoder, bl0, CQL_DATA_TYPE_STRING, context);
+  cql_blob_ref bl0_exp = cql_blob_ref_new("0", 1);
+  E(cql_blob_equal(bl0_decode, bl0_exp), "expected bl0 is \"0\", value %s\n", (const char*)bl0_decode->ptr);
+  cql_blob_release(bl0_decode);
+  cql_blob_release(bl0_exp);
+
+  cql_bool b1 = load_encoded_with_context_table_get_b1(rs, 0);
+  E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 6), "expected b1 is encoded\n");
+  cql_bool b1_exp = cql_decode_bool(encoder, b1, CQL_DATA_TYPE_STRING, context);
+  E(b1_exp == 1, "expected b1 is 1, value %d\n", b1_exp);
+
+  cql_int32 i1 = load_encoded_with_context_table_get_i1(rs, 0);
+  E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 7), "expected i1 is encoded\n");
+  cql_int32 i1_exp = cql_decode_int32(encoder, i1, CQL_DATA_TYPE_STRING, context);
+  E(i1_exp == 1, "expected i1 is 1, value %d\n", i1_exp);
+
+  cql_int64 l1 = load_encoded_with_context_table_get_l1(rs, 0);
+  E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 8), "expected l1 is encoded\n");
+  cql_int64 l1_exp = cql_decode_int64(encoder, l1, CQL_DATA_TYPE_STRING, context);
+  E(l1_exp == 1, "expected l1 is 1, value %lld\n", l1_exp);
+
+  cql_double d1 = load_encoded_with_context_table_get_d1(rs, 0);
+  E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 9), "expected d1 is encoded\n");
+  cql_double d1_exp = cql_decode_double(encoder, d1, CQL_DATA_TYPE_STRING, context);
+  E(d1_exp == 1.1, "expected d1 is 1.1, value %lf\n", d1_exp);
+
+  cql_string_ref s1 = load_encoded_with_context_table_get_s1(rs, 0);
+  E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 10), "expected s1 is encoded\n");
+  cql_string_ref s1_decode = cql_decode_string_ref_new(encoder, s1, CQL_DATA_TYPE_STRING, context);
+  cql_string_ref s1_exp = cql_string_ref_new("1");
+  E(cql_string_equal(s1_decode, s1_exp), "expected s1 is 1, value %s\n", s1_decode->ptr);
+  cql_string_release(s1_decode);
+  cql_string_release(s1_exp);
+
+  cql_blob_ref bl1 = load_encoded_with_context_table_get_bl1(rs, 0);
+  E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 11), "expected bl1 is encoded\n");
+  cql_blob_ref bl1_decode = cql_decode_blob_ref_new(encoder, bl1, CQL_DATA_TYPE_STRING, context);
   cql_blob_ref bl1_exp = cql_blob_ref_new("1", 1);
   E(cql_blob_equal(bl1_decode, bl1_exp), "expected bl1 is \"1\", value %s\n", (const char*)bl1_decode->ptr);
   cql_blob_release(bl1_decode);
@@ -803,27 +906,27 @@ cql_code test_all_column_encoded_cursor(sqlite3 *db) {
 
   cql_bool b0 = load_encoded_cursor_get_b0_value(rs);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 0), "expected b0 is encoded\n");
-  cql_bool b0_exp = cql_decode_bool(encoder, b0);
+  cql_bool b0_exp = cql_decode_bool(encoder, b0, -1, NULL);
   E(b0_exp == 0, "expected b0 is 0, value %d\n", b0_exp);
 
   cql_int32 i0 = load_encoded_cursor_get_i0_value(rs);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 1), "expected i0 is encoded\n");
-  cql_int32 i0_exp = cql_decode_int32(encoder, i0);
+  cql_int32 i0_exp = cql_decode_int32(encoder, i0, -1, NULL);
   E(i0_exp == 0, "expected i0 is 0, value %d\n", i0_exp);
 
   cql_int64 l0 = load_encoded_cursor_get_l0_value(rs);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 2), "expected l0 is encoded\n");
-  cql_int64 l0_exp = cql_decode_int64(encoder, l0);
+  cql_int64 l0_exp = cql_decode_int64(encoder, l0, -1, NULL);
   E(l0_exp == 0, "expected l0 is 0, value %lld\n", l0_exp);
 
   cql_double d0 = load_encoded_cursor_get_d0_value(rs);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 3), "expected d0 is encoded\n");
-  cql_double d0_exp = cql_decode_double(encoder, d0);
+  cql_double d0_exp = cql_decode_double(encoder, d0, -1, NULL);
   E(d0_exp == 0.0, "expected d0 is 0.0, value %lf\n", d0_exp);
 
   cql_string_ref s0 = load_encoded_cursor_get_s0(rs);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 4), "expected s0 is encoded\n");
-  cql_string_ref s0_decode = cql_decode_string_ref_new(encoder, s0);
+  cql_string_ref s0_decode = cql_decode_string_ref_new(encoder, s0, -1, NULL);
   cql_string_ref s0_exp = cql_string_ref_new("0");
   E(cql_string_equal(s0_decode, s0_exp), "expected s0 is 0, value %s\n", s0_decode->ptr);
   cql_string_release(s0_decode);
@@ -831,7 +934,7 @@ cql_code test_all_column_encoded_cursor(sqlite3 *db) {
 
   cql_blob_ref bl0 = load_encoded_cursor_get_bl0(rs);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 5), "expected bl0 is encoded\n");
-  cql_blob_ref bl0_decode = cql_decode_blob_ref_new(encoder, bl0);
+  cql_blob_ref bl0_decode = cql_decode_blob_ref_new(encoder, bl0, -1, NULL);
   cql_blob_ref bl0_exp = cql_blob_ref_new("0", 1);
   E(cql_blob_equal(bl0_decode, bl0_exp), "expected bl0 is \"0\", value %s\n", (const char*)bl0_decode->ptr);
   cql_blob_release(bl0_decode);
@@ -839,27 +942,27 @@ cql_code test_all_column_encoded_cursor(sqlite3 *db) {
 
   cql_bool b1 = load_encoded_cursor_get_b1(rs);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 6), "expected b1 is encoded\n");
-  cql_bool b1_exp = cql_decode_bool(encoder, b1);
+  cql_bool b1_exp = cql_decode_bool(encoder, b1, -1, NULL);
   E(b1_exp == 1, "expected b1 is 1, value %d\n", b1_exp);
 
   cql_int32 i1 = load_encoded_cursor_get_i1(rs);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 7), "expected i1 is encoded\n");
-  cql_int32 i1_exp = cql_decode_int32(encoder, i1);
+  cql_int32 i1_exp = cql_decode_int32(encoder, i1, -1, NULL);
   E(i1_exp == 1, "expected i1 is 1, value %d\n", i1_exp);
 
   cql_int64 l1 = load_encoded_cursor_get_l1(rs);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 8), "expected l1 is encoded\n");
-  cql_int64 l1_exp = cql_decode_int64(encoder, l1);
+  cql_int64 l1_exp = cql_decode_int64(encoder, l1, -1, NULL);
   E(l1_exp == 1, "expected l1 is 1, value %lld\n", l1_exp);
 
   cql_double d1 = load_encoded_cursor_get_d1(rs);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 9), "expected d1 is encoded\n");
-  cql_double d1_exp = cql_decode_double(encoder, d1);
+  cql_double d1_exp = cql_decode_double(encoder, d1, -1, NULL);
   E(d1_exp == 1.1, "expected d1 is 1.1, value %lf\n", d1_exp);
 
   cql_string_ref s1 = load_encoded_cursor_get_s1(rs);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 10), "expected s1 is encoded\n");
-  cql_string_ref s1_decode = cql_decode_string_ref_new(encoder, s1);
+  cql_string_ref s1_decode = cql_decode_string_ref_new(encoder, s1, -1, NULL);
   cql_string_ref s1_exp = cql_string_ref_new("1");
   E(cql_string_equal(s1_decode, s1_exp), "expected s1 is 1, value %s\n", s1_decode->ptr);
   cql_string_release(s1_decode);
@@ -867,7 +970,7 @@ cql_code test_all_column_encoded_cursor(sqlite3 *db) {
 
   cql_blob_ref bl1 = load_encoded_cursor_get_bl1(rs);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 11), "expected bl1 is encoded\n");
-  cql_blob_ref bl1_decode = cql_decode_blob_ref_new(encoder, bl1);
+  cql_blob_ref bl1_decode = cql_decode_blob_ref_new(encoder, bl1, -1, NULL);
   cql_blob_ref bl1_exp = cql_blob_ref_new("1", 1);
   E(cql_blob_equal(bl1_decode, bl1_exp), "expected bl1 is \"1\", value %s\n", (const char*)bl1_decode->ptr);
   cql_blob_release(bl1_decode);
@@ -894,27 +997,27 @@ cql_code test_all_column_encoded_out_union(sqlite3 *db) {
 
   cql_bool b0 = load_decoded_out_union_get_b0_value(rs);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 0), "expected b0 is encoded\n");
-  cql_bool b0_exp = cql_decode_bool(encoder, b0);
+  cql_bool b0_exp = cql_decode_bool(encoder, b0, -1, NULL);
   E(b0_exp == 0, "expected b0 is 0, value %d\n", b0_exp);
 
   cql_int32 i0 = load_decoded_out_union_get_i0_value(rs);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 1), "expected i0 is encoded\n");
-  cql_int32 i0_exp = cql_decode_int32(encoder, i0);
+  cql_int32 i0_exp = cql_decode_int32(encoder, i0, -1, NULL);
   E(i0_exp == 0, "expected i0 is 0, value %d\n", i0_exp);
 
   cql_int64 l0 = load_decoded_out_union_get_l0_value(rs);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 2), "expected l0 is encoded\n");
-  cql_int64 l0_exp = cql_decode_int64(encoder, l0);
+  cql_int64 l0_exp = cql_decode_int64(encoder, l0, -1, NULL);
   E(l0_exp == 0, "expected l0 is 0, value %lld\n", l0_exp);
 
   cql_double d0 = load_decoded_out_union_get_d0_value(rs);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 3), "expected d0 is encoded\n");
-  cql_double d0_exp = cql_decode_double(encoder, d0);
+  cql_double d0_exp = cql_decode_double(encoder, d0, -1, NULL);
   E(d0_exp == 0.0, "expected d0 is 0.0, value %lf\n", d0_exp);
 
   cql_string_ref s0 = load_decoded_out_union_get_s0(rs);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 4), "expected s0 is encoded\n");
-  cql_string_ref s0_decode = cql_decode_string_ref_new(encoder, s0);
+  cql_string_ref s0_decode = cql_decode_string_ref_new(encoder, s0, -1, NULL);
   cql_string_ref s0_exp = cql_string_ref_new("0");
   E(cql_string_equal(s0_decode, s0_exp), "expected s0 is 0, value %s\n", s0_decode->ptr);
   cql_string_release(s0_decode);
@@ -922,7 +1025,7 @@ cql_code test_all_column_encoded_out_union(sqlite3 *db) {
 
   cql_blob_ref bl0 = load_decoded_out_union_get_bl0(rs);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 5), "expected bl0 is encoded\n");
-  cql_blob_ref bl0_decode = cql_decode_blob_ref_new(encoder, bl0);
+  cql_blob_ref bl0_decode = cql_decode_blob_ref_new(encoder, bl0, -1, NULL);
   cql_blob_ref bl0_exp = cql_blob_ref_new("0", 1);
   E(cql_blob_equal(bl0_decode, bl0_exp), "expected bl0 is \"0\", value %s\n", (const char *)bl0_decode->ptr);
   cql_blob_release(bl0_decode);
@@ -930,27 +1033,27 @@ cql_code test_all_column_encoded_out_union(sqlite3 *db) {
 
   cql_bool b1 = load_decoded_out_union_get_b1(rs);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 6), "expected b1 is encoded\n");
-  cql_bool b1_exp = cql_decode_bool(encoder, b1);
+  cql_bool b1_exp = cql_decode_bool(encoder, b1, -1, NULL);
   E(b1_exp == 1, "expected b1 is 1, value %d\n", b1_exp);
 
   cql_int32 i1 = load_decoded_out_union_get_i1(rs);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 7), "expected i1 is encoded\n");
-  cql_int32 i1_exp = cql_decode_int32(encoder, i1);
+  cql_int32 i1_exp = cql_decode_int32(encoder, i1, -1, NULL);
   E(i1_exp == 1, "expected i1 is 1, value %d\n", i1_exp);
 
   cql_int64 l1 = load_decoded_out_union_get_l1(rs);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 8), "expected l1 is encoded\n");
-  cql_int64 l1_exp = cql_decode_int64(encoder, l1);
+  cql_int64 l1_exp = cql_decode_int64(encoder, l1, -1, NULL);
   E(l1_exp == 1, "expected l1 is 1, value %lld\n", l1_exp);
 
   cql_double d1 = load_decoded_out_union_get_d1(rs);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 9), "expected d1 is encoded\n");
-  cql_double d1_exp = cql_decode_double(encoder, d1);
+  cql_double d1_exp = cql_decode_double(encoder, d1, -1, NULL);
   E(d1_exp == 1.1, "expected d1 is 1.1, value %lf\n", d1_exp);
 
   cql_string_ref s1 = load_decoded_out_union_get_s1(rs);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 10), "expected s1 is encoded\n");
-  cql_string_ref s1_decode = cql_decode_string_ref_new(encoder, s1);
+  cql_string_ref s1_decode = cql_decode_string_ref_new(encoder, s1, -1, NULL);
   cql_string_ref s1_exp = cql_string_ref_new("1");
   E(cql_string_equal(s1_decode, s1_exp), "expected s1 is 1, value %s\n", s1_decode->ptr);
   cql_string_release(s1_decode);
@@ -958,7 +1061,7 @@ cql_code test_all_column_encoded_out_union(sqlite3 *db) {
 
   cql_blob_ref bl1 = load_decoded_out_union_get_bl1(rs);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 11), "expected bl1 is encoded\n");
-  cql_blob_ref bl1_decode = cql_decode_blob_ref_new(encoder, bl1);
+  cql_blob_ref bl1_decode = cql_decode_blob_ref_new(encoder, bl1, -1, NULL);
   cql_blob_ref bl1_exp = cql_blob_ref_new("1", 1);
   E(cql_blob_equal(bl1_decode, bl1_exp), "expected bl1 is \"1\", value %s\n", (const char *)bl1_decode->ptr);
   cql_blob_release(bl1_decode);
@@ -985,7 +1088,7 @@ cql_code test_all_column_encoded_runtime_turn_on_off(sqlite3 *db) {
 
   cql_bool b0 = load_decoded_multi_out_union_get_b0_value(rs, 1);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 0), "expected b0 is encoded\n");
-  cql_bool b0_exp = cql_decode_bool(encoder, b0);
+  cql_bool b0_exp = cql_decode_bool(encoder, b0, -1, NULL);
   E(b0_exp == 0, "expected b0 is 0, value %d\n", b0_exp);
   cql_result_set_release(result_set);
 
@@ -1006,7 +1109,7 @@ cql_code test_all_column_encoded_runtime_turn_on_off(sqlite3 *db) {
 
   b0 = load_decoded_multi_out_union_get_b0_value(rs, 1);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 0), "expected b0 is encoded\n");
-  b0_exp = cql_decode_bool(encoder, b0);
+  b0_exp = cql_decode_bool(encoder, b0, -1, NULL);
   E(b0_exp == 0, "expected b0 is 0, value %d\n", b0_exp);
 
   cql_result_set_release(result_set);
@@ -1031,27 +1134,27 @@ cql_code test_all_column_encoded_multi_out_union(sqlite3 *db) {
   cql_bool b0 = load_decoded_multi_out_union_get_b0_value(rs, 1);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 0), "expected b0 is encoded\n");
   E(load_decoded_multi_out_union_get_b0_is_encoded(rs), "expected b0 is encoded\n");
-  cql_bool b0_exp = cql_decode_bool(encoder, b0);
+  cql_bool b0_exp = cql_decode_bool(encoder, b0, -1, NULL);
   E(b0_exp == 0, "expected b0 is 0, value %d\n", b0_exp);
 
   cql_int32 i0 = load_decoded_multi_out_union_get_i0_value(rs, 1);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 1), "expected i0 is encoded\n");
-  cql_int32 i0_exp = cql_decode_int32(encoder, i0);
+  cql_int32 i0_exp = cql_decode_int32(encoder, i0, -1, NULL);
   E(i0_exp == 0, "expected i0 is 0, value %d\n", i0_exp);
 
   cql_int64 l0 = load_decoded_multi_out_union_get_l0_value(rs, 1);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 2), "expected l0 is encoded\n");
-  cql_int64 l0_exp = cql_decode_int64(encoder, l0);
+  cql_int64 l0_exp = cql_decode_int64(encoder, l0, -1, NULL);
   E(l0_exp == 0, "expected l0 is 0, value %lld\n", l0_exp);
 
   cql_double d0 = load_decoded_multi_out_union_get_d0_value(rs, 1);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 3), "expected dd0 is encoded\n");
-  cql_double d0_exp = cql_decode_double(encoder, d0);
+  cql_double d0_exp = cql_decode_double(encoder, d0, -1, NULL);
   E(d0_exp == 0.0, "expected d0 is 0.0, value %lf\n", d0_exp);
 
   cql_string_ref s0 = load_decoded_multi_out_union_get_s0(rs, 1);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 4), "expected s0 is encoded\n");
-  cql_string_ref s0_decode = cql_decode_string_ref_new(encoder, s0);
+  cql_string_ref s0_decode = cql_decode_string_ref_new(encoder, s0, -1, NULL);
   cql_string_ref s0_exp = cql_string_ref_new("0");
   E(cql_string_equal(s0_decode, s0_exp), "expected s0 is 0, value %s\n", s0_decode->ptr);
   cql_string_release(s0_decode);
@@ -1059,7 +1162,7 @@ cql_code test_all_column_encoded_multi_out_union(sqlite3 *db) {
 
   cql_blob_ref bl0 = load_decoded_multi_out_union_get_bl0(rs, 1);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 5), "expected bl0 is encoded\n");
-  cql_blob_ref bl0_decode = cql_decode_blob_ref_new(encoder, bl0);
+  cql_blob_ref bl0_decode = cql_decode_blob_ref_new(encoder, bl0, -1, NULL);
   cql_blob_ref bl0_exp = cql_blob_ref_new("0", 1);
   E(cql_blob_equal(bl0_decode, bl0_exp), "expected bl0 is \"0\", value \"%s\"\n", (const char *)bl0_decode->ptr);
   cql_blob_release(bl0_decode);
@@ -1067,27 +1170,27 @@ cql_code test_all_column_encoded_multi_out_union(sqlite3 *db) {
 
   cql_bool b1 = load_decoded_multi_out_union_get_b1(rs, 1);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 6), "expected b1 is encoded\n");
-  cql_bool b1_exp = cql_decode_bool(encoder, b1);
+  cql_bool b1_exp = cql_decode_bool(encoder, b1, -1, NULL);
   E(b1_exp == 1, "expected b1 is 1, value %d\n", b1_exp);
 
   cql_int32 i1 = load_decoded_multi_out_union_get_i1(rs, 1);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 7), "expected i1 is encoded\n");
-  cql_int32 i1_exp = cql_decode_int32(encoder, i1);
+  cql_int32 i1_exp = cql_decode_int32(encoder, i1, -1, NULL);
   E(i1_exp == 1, "expected i1 is 1, value %d\n", i1_exp);
 
   cql_int64 l1 = load_decoded_multi_out_union_get_l1(rs, 1);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 8), "expected l1 is encoded\n");
-  cql_int64 l1_exp = cql_decode_int64(encoder, l1);
+  cql_int64 l1_exp = cql_decode_int64(encoder, l1, -1, NULL);
   E(l1_exp == 1, "expected l1 is 1, value %lld\n", l1_exp);
 
   cql_double d1 = load_decoded_multi_out_union_get_d1(rs, 1);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 9), "expected d1 is encoded\n");
-  cql_double d1_exp = cql_decode_double(encoder, d1);
+  cql_double d1_exp = cql_decode_double(encoder, d1, -1, NULL);
   E(d1_exp == 1.1, "expected d1 is 1.1, value %lf\n", d1_exp);
 
   cql_string_ref s1 = load_decoded_multi_out_union_get_s1(rs, 1);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 10), "expected s1 is encoded\n");
-  cql_string_ref s1_decode = cql_decode_string_ref_new(encoder, s1);
+  cql_string_ref s1_decode = cql_decode_string_ref_new(encoder, s1, -1, NULL);
   cql_string_ref s1_exp = cql_string_ref_new("1");
   E(cql_string_equal(s1_decode, s1_exp), "expected s1 is 1, value %s\n", s1_decode->ptr);
   cql_string_release(s1_decode);
@@ -1095,7 +1198,7 @@ cql_code test_all_column_encoded_multi_out_union(sqlite3 *db) {
 
   cql_blob_ref bl1 = load_decoded_multi_out_union_get_bl1(rs, 1);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 11), "expected bl1 is encoded\n");
-  cql_blob_ref bl1_decode = cql_decode_blob_ref_new(encoder, bl1);
+  cql_blob_ref bl1_decode = cql_decode_blob_ref_new(encoder, bl1, -1, NULL);
   cql_blob_ref bl1_exp = cql_blob_ref_new("1", 1);
   E(cql_blob_equal(bl1_decode, bl1_exp), "expected bl1 is \"1\", value \"%s\"\n", (const char *)bl1_decode->ptr);
   cql_blob_release(bl1_decode);
@@ -1126,7 +1229,39 @@ cql_code test_all_column_some_encoded_field(sqlite3 *db) {
 
   cql_string_ref y = load_some_encoded_field_get_y(rs);
   E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 1), "expected y is encoded\n");
-  cql_string_ref y_decode = cql_decode_string_ref_new(encoder, y);
+  cql_string_ref y_decode = cql_decode_string_ref_new(encoder, y, -1, NULL);
+  cql_string_ref y_exp = cql_string_ref_new("bogus");
+  E(cql_string_equal(y_decode, y_exp), "expected y is \"bogus\", value %s\n", y_decode->ptr);
+  cql_string_release(y_decode);
+  cql_string_release(y_exp);
+
+  cql_result_set_release(result_set);
+  cql_object_release(encoder);
+
+  tests_passed++;
+  return SQLITE_OK;
+}
+
+cql_code test_all_column_some_encoded_field_with_encode_context(sqlite3 *db) {
+  printf("Running column some encoded field with encode context fetchers test\n");
+  tests++;
+
+  cql_object_ref encoder = cql_copy_encoder(db);
+
+  load_some_encoded_field_with_encode_context_result_set_ref result_set;
+  SQL_E(load_some_encoded_field_with_encode_context_fetch_results(db, &result_set));
+  E(load_some_encoded_field_with_encode_context_result_count(result_set) == 1, "expected 1 rows from result table\n");
+  E(cql_result_set_get_meta(result_set)->columnCount == 3, "expected 3 columns from result table\n");
+  load_some_encoded_field_with_encode_context_result_set_ref rs = (load_some_encoded_field_with_encode_context_result_set_ref)result_set;
+
+  cql_string_ref y = load_some_encoded_field_with_encode_context_get_y(rs);
+  cql_string_ref y_encoded_exp = cql_string_ref_new("bogus#context");
+  E(cql_string_equal(y, y_encoded_exp), "expected y is \"bogus#context\", value %s\n", y->ptr);
+  cql_string_release(y_encoded_exp);
+
+  E(cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 1), "expected y is encoded\n");
+  cql_string_ref z = load_some_encoded_field_with_encode_context_get_z(rs);
+  cql_string_ref y_decode = cql_decode_string_ref_new(encoder, y, CQL_DATA_TYPE_STRING, (char *)&z);
   cql_string_ref y_exp = cql_string_ref_new("bogus");
   E(cql_string_equal(y_decode, y_exp), "expected y is \"bogus\", value %s\n", y_decode->ptr);
   cql_string_release(y_decode);
