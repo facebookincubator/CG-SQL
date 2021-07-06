@@ -414,6 +414,7 @@ static void cg_objc_proc_result_set(ast_node *ast) {
             c_name.ptr,
             c_convert.ptr,
             out_stmt_proc ? "" : ", from, count");
+    bprintf(h, "  %s(copy);\n", rt->cql_result_set_note_ownership_transferred);
     bprintf(h, "  return (__bridge_transfer %s *)copy;\n", is_ext ? objc_class_name.ptr : objc_name.ptr);
     bprintf(h, "}\n");
   }

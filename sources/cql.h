@@ -387,6 +387,11 @@ typedef struct rtdata {
   // void cql_result_set_release(** _Nullable result_set);
   const char *cql_result_set_release;
 
+  // Accounts for a transfer of ownership of the result_set object by decrementing its reference count.
+  // @param result_set The result set object whose reference count should be decremented.
+  // void cql_result_set_note_ownership_transferred(** _Nullable result_set);
+  const char *cql_result_set_note_ownership_transferred;
+
   // Get the count of the query data.
   // NOTE: This MUST be implemented as a macro, as it takes a result set as a param, which has an undefined type.
   // @param result_set The cql result set object.

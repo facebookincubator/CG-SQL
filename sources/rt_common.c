@@ -122,6 +122,7 @@ static rtdata rt_objc = {
   .cql_blob_ref = "NSData *",
   .cql_object_ref = "NSObject *",
   .cql_string_ref = "NSString *",
+  .cql_result_set_note_ownership_transferred = "cql_result_set_note_ownership_transferred",
 };
 
 static rtdata rt_java = {

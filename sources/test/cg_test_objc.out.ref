@@ -1799,6 +1799,7 @@ static inline CGBSprocWithCopy *CGBSprocWithCopyCopy(CGBSprocWithCopy *resultSet
 {
   CGCSprocWithCopyResultSetRef copy;
   CGCSprocWithCopyCopy(CGCSprocWithCopyFromCGBSprocWithCopy(resultSet), &copy, from, count);
+  cql_result_set_note_ownership_transferred(copy);
   return (__bridge_transfer CGBSprocWithCopy *)copy;
 }
 

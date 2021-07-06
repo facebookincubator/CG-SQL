@@ -183,6 +183,7 @@ cql_result_set_ref _Nonnull cql_result_set_create(void *_Nonnull data,
 
 #define cql_result_set_retain(result_set) cql_retain((cql_type_ref)result_set);
 #define cql_result_set_release(result_set) cql_release((cql_type_ref)result_set);
+#define cql_result_set_note_ownership_transferred(result_set)
 #define cql_result_set_get_meta(result_set) (&((cql_result_set_ref)result_set)->meta)
 #define cql_result_set_get_data(result_set) ((cql_result_set_ref)result_set)->data
 #define cql_result_set_get_count(result_set) ((cql_result_set_ref)result_set)->count
