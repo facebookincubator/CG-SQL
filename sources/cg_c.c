@@ -2263,7 +2263,7 @@ static void cg_func_attest_notnull(ast_node *call_ast, charbuf *is_null, charbuf
 
     bprintf(is_null, "0");
     bprintf(value, "%s", expr_value.ptr);
-  
+
   CG_POP_EVAL(expr);
 }
 
@@ -3294,9 +3294,10 @@ static void cg_create_proc_stmt(ast_node *ast) {
   charbuf *saved_fwd_ref = cg_fwd_ref_output;
   cg_scratch_masks *saved_masks = cg_current_masks;
 
-  Invariant(!use_vault);
-  Invariant(!vault_columns);
-  vault_columns = symtab_new();
+  Invariant(!use_encode);
+  Invariant(!encode_context_column);
+  Invariant(!encode_columns);
+  encode_columns = symtab_new();
   Invariant(named_temporaries == NULL);
   named_temporaries = symtab_new();
 
@@ -3308,7 +3309,7 @@ static void cg_create_proc_stmt(ast_node *ast) {
   current_proc = ast;
   seed_declared = 0;
 
-  init_vault_info(misc_attrs, &use_vault, vault_columns);
+  init_encode_info(misc_attrs, &use_encode, &encode_context_column, encode_columns);
 
   bprintf(cg_declarations_output, "\n");
 
@@ -3509,13 +3510,14 @@ static void cg_create_proc_stmt(ast_node *ast) {
   CHARBUF_CLOSE(proc_fwd_ref);
 
   in_proc = 0;
-  use_vault = 0;
+  use_encode = 0;
   current_proc = NULL;
   base_fragment_name = NULL;
 
-  symtab_delete(vault_columns);
+  symtab_delete(encode_columns);
   symtab_delete(named_temporaries);
-  vault_columns = NULL;
+  encode_context_column = NULL;
+  encode_columns = NULL;
   named_temporaries = NULL;
   error_target_used = saved_error_target_used;
   rcthrown_index = saved_rcthrown_index;
@@ -6363,7 +6365,7 @@ static void cg_proc_result_set(ast_node *ast) {
     // the assembly fragement does that, all columns will be known at that time.
     if (frag_type != FRAG_TYPE_EXTENSION && frag_type != FRAG_TYPE_BASE) {
       bprintf(&data_types, "  ");
-      bool_t encode = should_vault_col(col, sem_type, use_vault, vault_columns);
+      bool_t encode = should_encode_col(col, sem_type, use_encode, encode_columns);
       cg_data_type(&data_types, encode, sem_type);
       bprintf(&data_types, ", // %s\n", col);
     }
@@ -6440,7 +6442,7 @@ static void cg_proc_result_set(ast_node *ast) {
       cg_proc_result_set_getter(&info);
     }
 
-    if (use_vault && sensitive_flag(sem_type)) {
+    if (use_encode && sensitive_flag(sem_type)) {
       CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
         col_getter_sym,
         rt->symbol_prefix,
@@ -6725,7 +6727,7 @@ static void cg_proc_result_set(ast_node *ast) {
   // Add a helper function that overrides CQL_DATA_TYPE_ENCODED bit of a resultset.
   // It's a debugging function that allow you to turn ON/OFF encoding/decoding when
   // your app is running.
-  if (use_vault) {
+  if (use_encode) {
     bprintf(h, "\nextern void %s(%s col, %s encode);\n", set_encoding_sym.ptr, rt->cql_int32, rt->cql_bool);
     bprintf(d, "void %s(%s col, %s encode) {\n", set_encoding_sym.ptr, rt->cql_int32, rt->cql_bool);
     bprintf(d, "  return cql_set_encoding(%s, %s, col, encode);\n", data_types_sym.ptr, data_types_count_sym.ptr);

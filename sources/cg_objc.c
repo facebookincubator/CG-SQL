@@ -265,10 +265,11 @@ static void cg_objc_proc_result_set(ast_node *ast) {
     return;
   }
 
-  Invariant(!use_vault);
-  Invariant(!vault_columns);
-  vault_columns = symtab_new();
-  init_vault_info(misc_attrs, &use_vault, vault_columns);
+  Invariant(!use_encode);
+  Invariant(!encode_context_column);
+  Invariant(!encode_columns);
+  encode_columns = symtab_new();
+  init_encode_info(misc_attrs, &use_encode, &encode_context_column, encode_columns);
 
   bool_t is_ext = objc_frag_type == FRAG_TYPE_EXTENSION;
   if (is_ext) {
@@ -337,11 +338,11 @@ static void cg_objc_proc_result_set(ast_node *ast) {
       h);
   }
 
-  if (use_vault) {
+  if (use_encode) {
     for (uint32_t i = 0; i < count; i++) {
       CSTR col = sptr->names[i];
       sem_t sem_type = sptr->semtypes[i];
-      bool_t encode = should_vault_col(col, sem_type, use_vault, vault_columns);
+      bool_t encode = should_encode_col(col, sem_type, use_encode, encode_columns);
       if (encode) {
         CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
             objc_getter, objc_name.ptr, "_get_", col, "_is_encoded");
@@ -471,9 +472,10 @@ static void cg_objc_proc_result_set(ast_node *ast) {
   CHARBUF_CLOSE(objc_result_set_name);
   CHARBUF_CLOSE(objc_name);
 
-  use_vault = 0;
-  symtab_delete(vault_columns);
-  vault_columns = NULL;
+  use_encode = 0;
+  symtab_delete(encode_columns);
+  encode_columns = NULL;
+  encode_context_column = NULL;
 }
 
 static void cg_objc_create_proc_stmt(ast_node *ast) {

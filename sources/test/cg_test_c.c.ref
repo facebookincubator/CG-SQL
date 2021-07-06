@@ -270,6 +270,9 @@ extern CQL_WARN_UNUSED cql_code vault_sensitive_with_no_values_proc(sqlite3 *_No
 extern CQL_WARN_UNUSED cql_code vault_union_all_table_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code vault_alias_column_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code vault_alias_column_name_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code vault_sensitive_with_context_and_sensitive_columns_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code vault_sensitive_with_no_context_and_sensitive_columns_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code vault_sensitive_with_context_and_no_sensitive_columns_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code window1(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code window2(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code window3(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
@@ -7319,6 +7322,7 @@ typedef struct vault_sensitive_with_values_proc_row {
   cql_int32 id;
   cql_nullable_int64 type;
   cql_string_ref _Nullable name;
+  cql_string_ref _Nullable title;
 } vault_sensitive_with_values_proc_row;
 
 cql_int32 vault_sensitive_with_values_proc_get_id(vault_sensitive_with_values_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
@@ -7329,6 +7333,11 @@ cql_int32 vault_sensitive_with_values_proc_get_id(vault_sensitive_with_values_pr
 cql_string_ref _Nullable vault_sensitive_with_values_proc_get_name(vault_sensitive_with_values_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
   vault_sensitive_with_values_proc_row *data = (vault_sensitive_with_values_proc_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
   return data[row].name;
+}
+
+cql_string_ref _Nullable vault_sensitive_with_values_proc_get_title(vault_sensitive_with_values_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+  vault_sensitive_with_values_proc_row *data = (vault_sensitive_with_values_proc_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].title;
 }
 
 cql_bool vault_sensitive_with_values_proc_get_type_is_null(vault_sensitive_with_values_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
@@ -7344,14 +7353,16 @@ cql_int64 vault_sensitive_with_values_proc_get_type_value(vault_sensitive_with_v
 uint8_t vault_sensitive_with_values_proc_data_types[vault_sensitive_with_values_proc_data_types_count] = {
   CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
   CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // name
+  CQL_DATA_TYPE_STRING, // title
   CQL_DATA_TYPE_INT64, // type
 };
 
-#define vault_sensitive_with_values_proc_refs_offset cql_offsetof(vault_sensitive_with_values_proc_row, name) // count = 1
+#define vault_sensitive_with_values_proc_refs_offset cql_offsetof(vault_sensitive_with_values_proc_row, name) // count = 2
 
-static cql_uint16 vault_sensitive_with_values_proc_col_offsets[] = { 3,
+static cql_uint16 vault_sensitive_with_values_proc_col_offsets[] = { 4,
   cql_offsetof(vault_sensitive_with_values_proc_row, id),
   cql_offsetof(vault_sensitive_with_values_proc_row, name),
+  cql_offsetof(vault_sensitive_with_values_proc_row, title),
   cql_offsetof(vault_sensitive_with_values_proc_row, type)
 };
 
@@ -7369,7 +7380,7 @@ CQL_WARN_UNUSED cql_code vault_sensitive_with_values_proc_fetch_results(sqlite3 
     .stmt = stmt,
     .data_types = vault_sensitive_with_values_proc_data_types,
     .col_offsets = vault_sensitive_with_values_proc_col_offsets,
-    .refs_count = 1,
+    .refs_count = 2,
     .refs_offset = vault_sensitive_with_values_proc_refs_offset,
     .rowsize = sizeof(vault_sensitive_with_values_proc_row),
     .crc = CRC_vault_sensitive_with_values_proc,
@@ -7382,12 +7393,12 @@ void vault_sensitive_with_values_proc_set_encoding(cql_int32 col, cql_bool encod
   return cql_set_encoding(vault_sensitive_with_values_proc_data_types, vault_sensitive_with_values_proc_data_types_count, col, encode);
 }
 
-// export: DECLARE PROC vault_sensitive_with_values_proc () (id INTEGER NOT NULL, name TEXT @SENSITIVE, type LONG_INT @SENSITIVE);
+// export: DECLARE PROC vault_sensitive_with_values_proc () (id INTEGER NOT NULL, name TEXT @SENSITIVE, title TEXT, type LONG_INT @SENSITIVE);
 CQL_WARN_UNUSED cql_code vault_sensitive_with_values_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
   _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT id, name, type "
+    "SELECT id, name, title, type "
       "FROM vault_mixed_sensitive");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -7418,6 +7429,7 @@ typedef struct vault_sensitive_with_no_values_proc_row {
   cql_int32 id;
   cql_nullable_int64 type;
   cql_string_ref _Nullable name;
+  cql_string_ref _Nullable title;
 } vault_sensitive_with_no_values_proc_row;
 
 cql_int32 vault_sensitive_with_no_values_proc_get_id(vault_sensitive_with_no_values_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
@@ -7428,6 +7440,11 @@ cql_int32 vault_sensitive_with_no_values_proc_get_id(vault_sensitive_with_no_val
 cql_string_ref _Nullable vault_sensitive_with_no_values_proc_get_name(vault_sensitive_with_no_values_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
   vault_sensitive_with_no_values_proc_row *data = (vault_sensitive_with_no_values_proc_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
   return data[row].name;
+}
+
+cql_string_ref _Nullable vault_sensitive_with_no_values_proc_get_title(vault_sensitive_with_no_values_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+  vault_sensitive_with_no_values_proc_row *data = (vault_sensitive_with_no_values_proc_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].title;
 }
 
 cql_bool vault_sensitive_with_no_values_proc_get_type_is_null(vault_sensitive_with_no_values_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
@@ -7443,14 +7460,16 @@ cql_int64 vault_sensitive_with_no_values_proc_get_type_value(vault_sensitive_wit
 uint8_t vault_sensitive_with_no_values_proc_data_types[vault_sensitive_with_no_values_proc_data_types_count] = {
   CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
   CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // name
+  CQL_DATA_TYPE_STRING, // title
   CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_ENCODED, // type
 };
 
-#define vault_sensitive_with_no_values_proc_refs_offset cql_offsetof(vault_sensitive_with_no_values_proc_row, name) // count = 1
+#define vault_sensitive_with_no_values_proc_refs_offset cql_offsetof(vault_sensitive_with_no_values_proc_row, name) // count = 2
 
-static cql_uint16 vault_sensitive_with_no_values_proc_col_offsets[] = { 3,
+static cql_uint16 vault_sensitive_with_no_values_proc_col_offsets[] = { 4,
   cql_offsetof(vault_sensitive_with_no_values_proc_row, id),
   cql_offsetof(vault_sensitive_with_no_values_proc_row, name),
+  cql_offsetof(vault_sensitive_with_no_values_proc_row, title),
   cql_offsetof(vault_sensitive_with_no_values_proc_row, type)
 };
 
@@ -7468,7 +7487,7 @@ CQL_WARN_UNUSED cql_code vault_sensitive_with_no_values_proc_fetch_results(sqlit
     .stmt = stmt,
     .data_types = vault_sensitive_with_no_values_proc_data_types,
     .col_offsets = vault_sensitive_with_no_values_proc_col_offsets,
-    .refs_count = 1,
+    .refs_count = 2,
     .refs_offset = vault_sensitive_with_no_values_proc_refs_offset,
     .rowsize = sizeof(vault_sensitive_with_no_values_proc_row),
     .crc = CRC_vault_sensitive_with_no_values_proc,
@@ -7481,12 +7500,12 @@ void vault_sensitive_with_no_values_proc_set_encoding(cql_int32 col, cql_bool en
   return cql_set_encoding(vault_sensitive_with_no_values_proc_data_types, vault_sensitive_with_no_values_proc_data_types_count, col, encode);
 }
 
-// export: DECLARE PROC vault_sensitive_with_no_values_proc () (id INTEGER NOT NULL, name TEXT @SENSITIVE, type LONG_INT @SENSITIVE);
+// export: DECLARE PROC vault_sensitive_with_no_values_proc () (id INTEGER NOT NULL, name TEXT @SENSITIVE, title TEXT, type LONG_INT @SENSITIVE);
 CQL_WARN_UNUSED cql_code vault_sensitive_with_no_values_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
   _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT id, name, type "
+    "SELECT id, name, title, type "
       "FROM vault_mixed_sensitive");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -7520,6 +7539,7 @@ typedef struct vault_union_all_table_proc_row {
   cql_int32 id;
   cql_nullable_int64 type;
   cql_string_ref _Nullable name;
+  cql_string_ref _Nullable title;
 } vault_union_all_table_proc_row;
 
 cql_int32 vault_union_all_table_proc_get_id(vault_union_all_table_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
@@ -7530,6 +7550,11 @@ cql_int32 vault_union_all_table_proc_get_id(vault_union_all_table_proc_result_se
 cql_string_ref _Nullable vault_union_all_table_proc_get_name(vault_union_all_table_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
   vault_union_all_table_proc_row *data = (vault_union_all_table_proc_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
   return data[row].name;
+}
+
+cql_string_ref _Nullable vault_union_all_table_proc_get_title(vault_union_all_table_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+  vault_union_all_table_proc_row *data = (vault_union_all_table_proc_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].title;
 }
 
 cql_bool vault_union_all_table_proc_get_type_is_null(vault_union_all_table_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
@@ -7545,14 +7570,16 @@ cql_int64 vault_union_all_table_proc_get_type_value(vault_union_all_table_proc_r
 uint8_t vault_union_all_table_proc_data_types[vault_union_all_table_proc_data_types_count] = {
   CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
   CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // name
+  CQL_DATA_TYPE_STRING, // title
   CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_ENCODED, // type
 };
 
-#define vault_union_all_table_proc_refs_offset cql_offsetof(vault_union_all_table_proc_row, name) // count = 1
+#define vault_union_all_table_proc_refs_offset cql_offsetof(vault_union_all_table_proc_row, name) // count = 2
 
-static cql_uint16 vault_union_all_table_proc_col_offsets[] = { 3,
+static cql_uint16 vault_union_all_table_proc_col_offsets[] = { 4,
   cql_offsetof(vault_union_all_table_proc_row, id),
   cql_offsetof(vault_union_all_table_proc_row, name),
+  cql_offsetof(vault_union_all_table_proc_row, title),
   cql_offsetof(vault_union_all_table_proc_row, type)
 };
 
@@ -7570,7 +7597,7 @@ CQL_WARN_UNUSED cql_code vault_union_all_table_proc_fetch_results(sqlite3 *_Nonn
     .stmt = stmt,
     .data_types = vault_union_all_table_proc_data_types,
     .col_offsets = vault_union_all_table_proc_col_offsets,
-    .refs_count = 1,
+    .refs_count = 2,
     .refs_offset = vault_union_all_table_proc_refs_offset,
     .rowsize = sizeof(vault_union_all_table_proc_row),
     .crc = CRC_vault_union_all_table_proc,
@@ -7583,15 +7610,15 @@ void vault_union_all_table_proc_set_encoding(cql_int32 col, cql_bool encode) {
   return cql_set_encoding(vault_union_all_table_proc_data_types, vault_union_all_table_proc_data_types_count, col, encode);
 }
 
-// export: DECLARE PROC vault_union_all_table_proc () (id INTEGER NOT NULL, name TEXT @SENSITIVE, type LONG_INT @SENSITIVE);
+// export: DECLARE PROC vault_union_all_table_proc () (id INTEGER NOT NULL, name TEXT @SENSITIVE, title TEXT, type LONG_INT @SENSITIVE);
 CQL_WARN_UNUSED cql_code vault_union_all_table_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
   _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT id, name, type "
+    "SELECT id, name, title, type "
       "FROM vault_mixed_sensitive "
     "UNION ALL "
-    "SELECT id, name, type "
+    "SELECT id, name, title, type "
       "FROM vault_non_sensitive");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -7800,6 +7827,327 @@ CQL_WARN_UNUSED cql_code vault_cursor_proc(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   cql_finalize_stmt(&C_stmt);
   cql_teardown_row(C);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:vault_sensitive=(title, (id, name)))
+CREATE PROC vault_sensitive_with_context_and_sensitive_columns_proc ()
+BEGIN
+  SELECT *
+    FROM vault_mixed_sensitive;
+END;
+*/
+
+#define _PROC_ "vault_sensitive_with_context_and_sensitive_columns_proc"
+static int32_t vault_sensitive_with_context_and_sensitive_columns_proc_perf_index;
+
+cql_string_literal(vault_sensitive_with_context_and_sensitive_columns_proc_stored_procedure_name, "vault_sensitive_with_context_and_sensitive_columns_proc");
+
+typedef struct vault_sensitive_with_context_and_sensitive_columns_proc_row {
+  cql_int32 id;
+  cql_nullable_int64 type;
+  cql_string_ref _Nullable name;
+  cql_string_ref _Nullable title;
+} vault_sensitive_with_context_and_sensitive_columns_proc_row;
+
+cql_int32 vault_sensitive_with_context_and_sensitive_columns_proc_get_id(vault_sensitive_with_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+  vault_sensitive_with_context_and_sensitive_columns_proc_row *data = (vault_sensitive_with_context_and_sensitive_columns_proc_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].id;
+}
+
+cql_string_ref _Nullable vault_sensitive_with_context_and_sensitive_columns_proc_get_name(vault_sensitive_with_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+  vault_sensitive_with_context_and_sensitive_columns_proc_row *data = (vault_sensitive_with_context_and_sensitive_columns_proc_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].name;
+}
+
+cql_string_ref _Nullable vault_sensitive_with_context_and_sensitive_columns_proc_get_title(vault_sensitive_with_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+  vault_sensitive_with_context_and_sensitive_columns_proc_row *data = (vault_sensitive_with_context_and_sensitive_columns_proc_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].title;
+}
+
+cql_bool vault_sensitive_with_context_and_sensitive_columns_proc_get_type_is_null(vault_sensitive_with_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+  vault_sensitive_with_context_and_sensitive_columns_proc_row *data = (vault_sensitive_with_context_and_sensitive_columns_proc_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].type.is_null;
+}
+
+cql_int64 vault_sensitive_with_context_and_sensitive_columns_proc_get_type_value(vault_sensitive_with_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+  vault_sensitive_with_context_and_sensitive_columns_proc_row *data = (vault_sensitive_with_context_and_sensitive_columns_proc_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].type.value;
+}
+
+uint8_t vault_sensitive_with_context_and_sensitive_columns_proc_data_types[vault_sensitive_with_context_and_sensitive_columns_proc_data_types_count] = {
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
+  CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // name
+  CQL_DATA_TYPE_STRING, // title
+  CQL_DATA_TYPE_INT64, // type
+};
+
+#define vault_sensitive_with_context_and_sensitive_columns_proc_refs_offset cql_offsetof(vault_sensitive_with_context_and_sensitive_columns_proc_row, name) // count = 2
+
+static cql_uint16 vault_sensitive_with_context_and_sensitive_columns_proc_col_offsets[] = { 4,
+  cql_offsetof(vault_sensitive_with_context_and_sensitive_columns_proc_row, id),
+  cql_offsetof(vault_sensitive_with_context_and_sensitive_columns_proc_row, name),
+  cql_offsetof(vault_sensitive_with_context_and_sensitive_columns_proc_row, title),
+  cql_offsetof(vault_sensitive_with_context_and_sensitive_columns_proc_row, type)
+};
+
+cql_int32 vault_sensitive_with_context_and_sensitive_columns_proc_result_count(vault_sensitive_with_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code vault_sensitive_with_context_and_sensitive_columns_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_sensitive_with_context_and_sensitive_columns_proc_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_vault_sensitive_with_context_and_sensitive_columns_proc, &vault_sensitive_with_context_and_sensitive_columns_proc_perf_index);
+  cql_code rc = vault_sensitive_with_context_and_sensitive_columns_proc(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = vault_sensitive_with_context_and_sensitive_columns_proc_data_types,
+    .col_offsets = vault_sensitive_with_context_and_sensitive_columns_proc_col_offsets,
+    .refs_count = 2,
+    .refs_offset = vault_sensitive_with_context_and_sensitive_columns_proc_refs_offset,
+    .rowsize = sizeof(vault_sensitive_with_context_and_sensitive_columns_proc_row),
+    .crc = CRC_vault_sensitive_with_context_and_sensitive_columns_proc,
+    .perf_index = &vault_sensitive_with_context_and_sensitive_columns_proc_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+void vault_sensitive_with_context_and_sensitive_columns_proc_set_encoding(cql_int32 col, cql_bool encode) {
+  return cql_set_encoding(vault_sensitive_with_context_and_sensitive_columns_proc_data_types, vault_sensitive_with_context_and_sensitive_columns_proc_data_types_count, col, encode);
+}
+
+// export: DECLARE PROC vault_sensitive_with_context_and_sensitive_columns_proc () (id INTEGER NOT NULL, name TEXT @SENSITIVE, title TEXT, type LONG_INT @SENSITIVE);
+CQL_WARN_UNUSED cql_code vault_sensitive_with_context_and_sensitive_columns_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT id, name, title, type "
+      "FROM vault_mixed_sensitive");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:vault_sensitive=((id, name)))
+CREATE PROC vault_sensitive_with_no_context_and_sensitive_columns_proc ()
+BEGIN
+  SELECT *
+    FROM vault_mixed_sensitive;
+END;
+*/
+
+#define _PROC_ "vault_sensitive_with_no_context_and_sensitive_columns_proc"
+static int32_t vault_sensitive_with_no_context_and_sensitive_columns_proc_perf_index;
+
+cql_string_literal(vault_sensitive_with_no_context_and_sensitive_columns_proc_stored_procedure_name, "vault_sensitive_with_no_context_and_sensitive_columns_proc");
+
+typedef struct vault_sensitive_with_no_context_and_sensitive_columns_proc_row {
+  cql_int32 id;
+  cql_nullable_int64 type;
+  cql_string_ref _Nullable name;
+  cql_string_ref _Nullable title;
+} vault_sensitive_with_no_context_and_sensitive_columns_proc_row;
+
+cql_int32 vault_sensitive_with_no_context_and_sensitive_columns_proc_get_id(vault_sensitive_with_no_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+  vault_sensitive_with_no_context_and_sensitive_columns_proc_row *data = (vault_sensitive_with_no_context_and_sensitive_columns_proc_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].id;
+}
+
+cql_string_ref _Nullable vault_sensitive_with_no_context_and_sensitive_columns_proc_get_name(vault_sensitive_with_no_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+  vault_sensitive_with_no_context_and_sensitive_columns_proc_row *data = (vault_sensitive_with_no_context_and_sensitive_columns_proc_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].name;
+}
+
+cql_string_ref _Nullable vault_sensitive_with_no_context_and_sensitive_columns_proc_get_title(vault_sensitive_with_no_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+  vault_sensitive_with_no_context_and_sensitive_columns_proc_row *data = (vault_sensitive_with_no_context_and_sensitive_columns_proc_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].title;
+}
+
+cql_bool vault_sensitive_with_no_context_and_sensitive_columns_proc_get_type_is_null(vault_sensitive_with_no_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+  vault_sensitive_with_no_context_and_sensitive_columns_proc_row *data = (vault_sensitive_with_no_context_and_sensitive_columns_proc_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].type.is_null;
+}
+
+cql_int64 vault_sensitive_with_no_context_and_sensitive_columns_proc_get_type_value(vault_sensitive_with_no_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+  vault_sensitive_with_no_context_and_sensitive_columns_proc_row *data = (vault_sensitive_with_no_context_and_sensitive_columns_proc_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].type.value;
+}
+
+uint8_t vault_sensitive_with_no_context_and_sensitive_columns_proc_data_types[vault_sensitive_with_no_context_and_sensitive_columns_proc_data_types_count] = {
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
+  CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // name
+  CQL_DATA_TYPE_STRING, // title
+  CQL_DATA_TYPE_INT64, // type
+};
+
+#define vault_sensitive_with_no_context_and_sensitive_columns_proc_refs_offset cql_offsetof(vault_sensitive_with_no_context_and_sensitive_columns_proc_row, name) // count = 2
+
+static cql_uint16 vault_sensitive_with_no_context_and_sensitive_columns_proc_col_offsets[] = { 4,
+  cql_offsetof(vault_sensitive_with_no_context_and_sensitive_columns_proc_row, id),
+  cql_offsetof(vault_sensitive_with_no_context_and_sensitive_columns_proc_row, name),
+  cql_offsetof(vault_sensitive_with_no_context_and_sensitive_columns_proc_row, title),
+  cql_offsetof(vault_sensitive_with_no_context_and_sensitive_columns_proc_row, type)
+};
+
+cql_int32 vault_sensitive_with_no_context_and_sensitive_columns_proc_result_count(vault_sensitive_with_no_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code vault_sensitive_with_no_context_and_sensitive_columns_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_sensitive_with_no_context_and_sensitive_columns_proc_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_vault_sensitive_with_no_context_and_sensitive_columns_proc, &vault_sensitive_with_no_context_and_sensitive_columns_proc_perf_index);
+  cql_code rc = vault_sensitive_with_no_context_and_sensitive_columns_proc(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = vault_sensitive_with_no_context_and_sensitive_columns_proc_data_types,
+    .col_offsets = vault_sensitive_with_no_context_and_sensitive_columns_proc_col_offsets,
+    .refs_count = 2,
+    .refs_offset = vault_sensitive_with_no_context_and_sensitive_columns_proc_refs_offset,
+    .rowsize = sizeof(vault_sensitive_with_no_context_and_sensitive_columns_proc_row),
+    .crc = CRC_vault_sensitive_with_no_context_and_sensitive_columns_proc,
+    .perf_index = &vault_sensitive_with_no_context_and_sensitive_columns_proc_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+void vault_sensitive_with_no_context_and_sensitive_columns_proc_set_encoding(cql_int32 col, cql_bool encode) {
+  return cql_set_encoding(vault_sensitive_with_no_context_and_sensitive_columns_proc_data_types, vault_sensitive_with_no_context_and_sensitive_columns_proc_data_types_count, col, encode);
+}
+
+// export: DECLARE PROC vault_sensitive_with_no_context_and_sensitive_columns_proc () (id INTEGER NOT NULL, name TEXT @SENSITIVE, title TEXT, type LONG_INT @SENSITIVE);
+CQL_WARN_UNUSED cql_code vault_sensitive_with_no_context_and_sensitive_columns_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT id, name, title, type "
+      "FROM vault_mixed_sensitive");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:vault_sensitive=(title, (id, name)))
+CREATE PROC vault_sensitive_with_context_and_no_sensitive_columns_proc ()
+BEGIN
+  SELECT *
+    FROM vault_non_sensitive;
+END;
+*/
+
+#define _PROC_ "vault_sensitive_with_context_and_no_sensitive_columns_proc"
+static int32_t vault_sensitive_with_context_and_no_sensitive_columns_proc_perf_index;
+
+cql_string_literal(vault_sensitive_with_context_and_no_sensitive_columns_proc_stored_procedure_name, "vault_sensitive_with_context_and_no_sensitive_columns_proc");
+
+typedef struct vault_sensitive_with_context_and_no_sensitive_columns_proc_row {
+  cql_int32 id;
+  cql_nullable_int64 type;
+  cql_string_ref _Nullable name;
+  cql_string_ref _Nullable title;
+} vault_sensitive_with_context_and_no_sensitive_columns_proc_row;
+
+cql_int32 vault_sensitive_with_context_and_no_sensitive_columns_proc_get_id(vault_sensitive_with_context_and_no_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+  vault_sensitive_with_context_and_no_sensitive_columns_proc_row *data = (vault_sensitive_with_context_and_no_sensitive_columns_proc_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].id;
+}
+
+cql_string_ref _Nullable vault_sensitive_with_context_and_no_sensitive_columns_proc_get_name(vault_sensitive_with_context_and_no_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+  vault_sensitive_with_context_and_no_sensitive_columns_proc_row *data = (vault_sensitive_with_context_and_no_sensitive_columns_proc_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].name;
+}
+
+cql_string_ref _Nullable vault_sensitive_with_context_and_no_sensitive_columns_proc_get_title(vault_sensitive_with_context_and_no_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+  vault_sensitive_with_context_and_no_sensitive_columns_proc_row *data = (vault_sensitive_with_context_and_no_sensitive_columns_proc_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].title;
+}
+
+cql_bool vault_sensitive_with_context_and_no_sensitive_columns_proc_get_type_is_null(vault_sensitive_with_context_and_no_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+  vault_sensitive_with_context_and_no_sensitive_columns_proc_row *data = (vault_sensitive_with_context_and_no_sensitive_columns_proc_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].type.is_null;
+}
+
+cql_int64 vault_sensitive_with_context_and_no_sensitive_columns_proc_get_type_value(vault_sensitive_with_context_and_no_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+  vault_sensitive_with_context_and_no_sensitive_columns_proc_row *data = (vault_sensitive_with_context_and_no_sensitive_columns_proc_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].type.value;
+}
+
+uint8_t vault_sensitive_with_context_and_no_sensitive_columns_proc_data_types[vault_sensitive_with_context_and_no_sensitive_columns_proc_data_types_count] = {
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
+  CQL_DATA_TYPE_STRING, // name
+  CQL_DATA_TYPE_STRING, // title
+  CQL_DATA_TYPE_INT64, // type
+};
+
+#define vault_sensitive_with_context_and_no_sensitive_columns_proc_refs_offset cql_offsetof(vault_sensitive_with_context_and_no_sensitive_columns_proc_row, name) // count = 2
+
+static cql_uint16 vault_sensitive_with_context_and_no_sensitive_columns_proc_col_offsets[] = { 4,
+  cql_offsetof(vault_sensitive_with_context_and_no_sensitive_columns_proc_row, id),
+  cql_offsetof(vault_sensitive_with_context_and_no_sensitive_columns_proc_row, name),
+  cql_offsetof(vault_sensitive_with_context_and_no_sensitive_columns_proc_row, title),
+  cql_offsetof(vault_sensitive_with_context_and_no_sensitive_columns_proc_row, type)
+};
+
+cql_int32 vault_sensitive_with_context_and_no_sensitive_columns_proc_result_count(vault_sensitive_with_context_and_no_sensitive_columns_proc_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code vault_sensitive_with_context_and_no_sensitive_columns_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_sensitive_with_context_and_no_sensitive_columns_proc_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_vault_sensitive_with_context_and_no_sensitive_columns_proc, &vault_sensitive_with_context_and_no_sensitive_columns_proc_perf_index);
+  cql_code rc = vault_sensitive_with_context_and_no_sensitive_columns_proc(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = vault_sensitive_with_context_and_no_sensitive_columns_proc_data_types,
+    .col_offsets = vault_sensitive_with_context_and_no_sensitive_columns_proc_col_offsets,
+    .refs_count = 2,
+    .refs_offset = vault_sensitive_with_context_and_no_sensitive_columns_proc_refs_offset,
+    .rowsize = sizeof(vault_sensitive_with_context_and_no_sensitive_columns_proc_row),
+    .crc = CRC_vault_sensitive_with_context_and_no_sensitive_columns_proc,
+    .perf_index = &vault_sensitive_with_context_and_no_sensitive_columns_proc_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+void vault_sensitive_with_context_and_no_sensitive_columns_proc_set_encoding(cql_int32 col, cql_bool encode) {
+  return cql_set_encoding(vault_sensitive_with_context_and_no_sensitive_columns_proc_data_types, vault_sensitive_with_context_and_no_sensitive_columns_proc_data_types_count, col, encode);
+}
+
+// export: DECLARE PROC vault_sensitive_with_context_and_no_sensitive_columns_proc () (id INTEGER NOT NULL, name TEXT, title TEXT, type LONG_INT);
+CQL_WARN_UNUSED cql_code vault_sensitive_with_context_and_no_sensitive_columns_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT id, name, title, type "
+      "FROM vault_non_sensitive");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
   return _rc_;
 }
 #undef _PROC_

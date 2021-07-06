@@ -57716,6 +57716,45 @@ END;
 
 The statement ending at line XXXX
 
+@ATTRIBUTE(cql:vault_sensitive=bogus)
+CREATE PROC vault_sensitive_with_invalid_single_column ()
+BEGIN
+  SELECT *
+    FROM bar;
+END;
+
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0239: vault_sensitive column does not exist in result set 'bogus'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name vault_sensitive}
+  |   | {name bogus}: ok
+  | {create_proc_stmt}: err
+    | {name vault_sensitive_with_invalid_single_column}: err
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
+          | {select_core_list}: select: { id: integer notnull, name: text, rate: longint }
+          | | {select_core}: select: { id: integer notnull, name: text, rate: longint }
+          |   | {select_expr_list_con}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_expr_list}: select: { id: integer notnull, name: text, rate: longint }
+          |     | | {star}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_from_etc}: TABLE { bar: bar }
+          |       | {table_or_subquery_list}: TABLE { bar: bar }
+          |       | | {table_or_subquery}: TABLE { bar: bar }
+          |       |   | {name bar}: TABLE { bar: bar }
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
 @ATTRIBUTE(cql:vault_sensitive=1)
 CREATE PROC vault_sensitive_with_not_string_value_proc_val ()
 BEGIN
@@ -57751,7 +57790,7 @@ Error at test/sem_test.sql:XXXX : in num : CQL0363: all arguments must be names 
   |   | | {name vault_sensitive}
   |   | {misc_attr_value_list}: ok
   |     | {name name}: ok
-  |     | {misc_attr_value_list}: err
+  |     | {misc_attr_value_list}
   |       | {int 1}: err
   |       | {misc_attr_value_list}
   |         | {strlit 'lol'}: ok
@@ -57778,6 +57817,352 @@ Error at test/sem_test.sql:XXXX : in str : CQL0363: all arguments must be names 
   | {create_proc_stmt}: err
     | {name vault_sensitive_with_lit_string_value_proc_val}
     | {proc_params_stmts}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:vault_sensitive=(bogus, (nan)))
+CREATE PROC vault_sensitive_with_invalid_encode_context_columns ()
+BEGIN
+  SELECT *
+    FROM bar;
+END;
+
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0239: vault_sensitive column does not exist in result set 'bogus'
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0239: vault_sensitive column does not exist in result set 'nan'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name vault_sensitive}
+  |   | {misc_attr_value_list}: ok
+  |     | {name bogus}: ok
+  |     | {misc_attr_value_list}
+  |       | {misc_attr_value_list}: ok
+  |         | {name nan}: ok
+  | {create_proc_stmt}: err
+    | {name vault_sensitive_with_invalid_encode_context_columns}: err
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
+          | {select_core_list}: select: { id: integer notnull, name: text, rate: longint }
+          | | {select_core}: select: { id: integer notnull, name: text, rate: longint }
+          |   | {select_expr_list_con}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_expr_list}: select: { id: integer notnull, name: text, rate: longint }
+          |     | | {star}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_from_etc}: TABLE { bar: bar }
+          |       | {table_or_subquery_list}: TABLE { bar: bar }
+          |       | | {table_or_subquery}: TABLE { bar: bar }
+          |       |   | {name bar}: TABLE { bar: bar }
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:vault_sensitive=(1, (name)))
+CREATE PROC vault_sensitive_with_not_string_vault_context_proc_val ()
+BEGIN
+END;
+
+Error at test/sem_test.sql:XXXX : in num : CQL0363: all arguments must be names 'vault_sensitive'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name vault_sensitive}
+  |   | {misc_attr_value_list}: ok
+  |     | {int 1}: err
+  |     | {misc_attr_value_list}
+  |       | {misc_attr_value_list}: ok
+  |         | {name name}: ok
+  | {create_proc_stmt}: err
+    | {name vault_sensitive_with_not_string_vault_context_proc_val}
+    | {proc_params_stmts}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:vault_sensitive=('lol', (name)))
+CREATE PROC vault_sensitive_with_literal_string_vault_context_proc_val ()
+BEGIN
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0363: all arguments must be names 'vault_sensitive'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name vault_sensitive}
+  |   | {misc_attr_value_list}: ok
+  |     | {strlit 'lol'}: err
+  |     | {misc_attr_value_list}
+  |       | {misc_attr_value_list}: ok
+  |         | {name name}: ok
+  | {create_proc_stmt}: err
+    | {name vault_sensitive_with_literal_string_vault_context_proc_val}
+    | {proc_params_stmts}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:vault_sensitive=(name, (1)))
+CREATE PROC vault_sensitive_with_not_string_vault_column_proc_val ()
+BEGIN
+END;
+
+Error at test/sem_test.sql:XXXX : in num : CQL0363: all arguments must be names 'vault_sensitive'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name vault_sensitive}
+  |   | {misc_attr_value_list}: ok
+  |     | {name name}: ok
+  |     | {misc_attr_value_list}
+  |       | {misc_attr_value_list}: ok
+  |         | {int 1}: err
+  | {create_proc_stmt}: err
+    | {name vault_sensitive_with_not_string_vault_column_proc_val}
+    | {proc_params_stmts}
+
+The statement ending at line XXXX
+
+CREATE TABLE bar_with_sensitive(
+  id INTEGER NOT NULL,
+  name TEXT @SENSITIVE @CREATE(2),
+  title TEXT @SENSITIVE @CREATE(2),
+  intro TEXT @CREATE(2)
+);
+
+  {create_table_stmt}: bar_with_sensitive: { id: integer notnull, name: text sensitive, title: text sensitive, intro: text }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name bar_with_sensitive}
+  | {col_key_list}
+    | {col_def}: id: integer notnull
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |   | | {name id}
+    |   | | {type_int}: integer
+    |   | {col_attrs_not_null}: ok
+    | {col_key_list}
+      | {col_def}: name: text sensitive @create(2)
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name name}
+      |   | | {type_text}: text
+      |   | {sensitive_attr}: ok
+      |     | {create_attr}
+      |       | {version_annotation}
+      |         | {int 2}
+      | {col_key_list}
+        | {col_def}: title: text sensitive @create(2)
+        | | {col_def_type_attrs}: ok
+        |   | {col_def_name_type}
+        |   | | {name title}
+        |   | | {type_text}: text
+        |   | {sensitive_attr}: ok
+        |     | {create_attr}
+        |       | {version_annotation}
+        |         | {int 2}
+        | {col_key_list}
+          | {col_def}: intro: text @create(2)
+            | {col_def_type_attrs}: ok
+              | {col_def_name_type}
+              | | {name intro}
+              | | {type_text}: text
+              | {create_attr}: ok
+                | {version_annotation}
+                  | {int 2}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:vault_sensitive=(name, (id, title)))
+CREATE PROC vault_sensitive_with_sensitive_encode_context_column_proc_val ()
+BEGIN
+  SELECT *
+    FROM bar_with_sensitive;
+END;
+
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0400: encode context column can't be sensitive 'name'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name vault_sensitive}
+  |   | {misc_attr_value_list}: ok
+  |     | {name name}: ok
+  |     | {misc_attr_value_list}
+  |       | {misc_attr_value_list}: ok
+  |         | {name id}: ok
+  |         | {misc_attr_value_list}
+  |           | {name title}: ok
+  | {create_proc_stmt}: err
+    | {name vault_sensitive_with_sensitive_encode_context_column_proc_val}: err
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {select_stmt}: select: { id: integer notnull, name: text sensitive, title: text sensitive, intro: text }
+          | {select_core_list}: select: { id: integer notnull, name: text sensitive, title: text sensitive, intro: text }
+          | | {select_core}: select: { id: integer notnull, name: text sensitive, title: text sensitive, intro: text }
+          |   | {select_expr_list_con}: select: { id: integer notnull, name: text sensitive, title: text sensitive, intro: text }
+          |     | {select_expr_list}: select: { id: integer notnull, name: text sensitive, title: text sensitive, intro: text }
+          |     | | {star}: select: { id: integer notnull, name: text sensitive, title: text sensitive, intro: text }
+          |     | {select_from_etc}: TABLE { bar_with_sensitive: bar_with_sensitive }
+          |       | {table_or_subquery_list}: TABLE { bar_with_sensitive: bar_with_sensitive }
+          |       | | {table_or_subquery}: TABLE { bar_with_sensitive: bar_with_sensitive }
+          |       |   | {name bar_with_sensitive}: TABLE { bar_with_sensitive: bar_with_sensitive }
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:vault_sensitive=(intro, (id, (title))))
+CREATE PROC vault_sensitive_with_invalid_nested_vault_column_proc_val ()
+BEGIN
+  SELECT *
+    FROM bar_with_sensitive;
+END;
+
+Error at test/sem_test.sql:XXXX : in misc_attr_value_list : CQL0363: all arguments must be names 'vault_sensitive'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name vault_sensitive}
+  |   | {misc_attr_value_list}: ok
+  |     | {name intro}: ok
+  |     | {misc_attr_value_list}
+  |       | {misc_attr_value_list}: ok
+  |         | {name id}: ok
+  |         | {misc_attr_value_list}
+  |           | {misc_attr_value_list}: err
+  |             | {name title}: ok
+  | {create_proc_stmt}: err
+    | {name vault_sensitive_with_invalid_nested_vault_column_proc_val}
+    | {proc_params_stmts}
+      | {stmt_list}
+        | {select_stmt}
+          | {select_core_list}
+          | | {select_core}
+          |   | {select_expr_list_con}
+          |     | {select_expr_list}
+          |     | | {star}
+          |     | {select_from_etc}
+          |       | {table_or_subquery_list}
+          |       | | {table_or_subquery}
+          |       |   | {name bar_with_sensitive}
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:vault_sensitive=(intro, (name), id))
+CREATE PROC vault_sensitive_with_multi_encode_context_columns_proc_val ()
+BEGIN
+  SELECT *
+    FROM bar_with_sensitive;
+END;
+
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0408: encode context column can be only specified once 'id'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name vault_sensitive}
+  |   | {misc_attr_value_list}: ok
+  |     | {name intro}: ok
+  |     | {misc_attr_value_list}
+  |       | {misc_attr_value_list}: ok
+  |       | | {name name}: ok
+  |       | {misc_attr_value_list}
+  |         | {name id}: ok
+  | {create_proc_stmt}: err
+    | {name vault_sensitive_with_multi_encode_context_columns_proc_val}
+    | {proc_params_stmts}
+      | {stmt_list}
+        | {select_stmt}
+          | {select_core_list}
+          | | {select_core}
+          |   | {select_expr_list_con}
+          |     | {select_expr_list}
+          |     | | {star}
+          |     | {select_from_etc}
+          |       | {table_or_subquery_list}
+          |       | | {table_or_subquery}
+          |       |   | {name bar_with_sensitive}
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:vault_sensitive=(intro, (name, title)))
+CREATE PROC vault_sensitive_with_valid_context_and_vault_columns ()
+BEGIN
+  SELECT *
+    FROM bar_with_sensitive;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name vault_sensitive}
+  |   | {misc_attr_value_list}: ok
+  |     | {name intro}: ok
+  |     | {misc_attr_value_list}
+  |       | {misc_attr_value_list}: ok
+  |         | {name name}: ok
+  |         | {misc_attr_value_list}
+  |           | {name title}: ok
+  | {create_proc_stmt}: select: { id: integer notnull, name: text sensitive, title: text sensitive, intro: text } dml_proc
+    | {name vault_sensitive_with_valid_context_and_vault_columns}: select: { id: integer notnull, name: text sensitive, title: text sensitive, intro: text } dml_proc
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {select_stmt}: select: { id: integer notnull, name: text sensitive, title: text sensitive, intro: text }
+          | {select_core_list}: select: { id: integer notnull, name: text sensitive, title: text sensitive, intro: text }
+          | | {select_core}: select: { id: integer notnull, name: text sensitive, title: text sensitive, intro: text }
+          |   | {select_expr_list_con}: select: { id: integer notnull, name: text sensitive, title: text sensitive, intro: text }
+          |     | {select_expr_list}: select: { id: integer notnull, name: text sensitive, title: text sensitive, intro: text }
+          |     | | {star}: select: { id: integer notnull, name: text sensitive, title: text sensitive, intro: text }
+          |     | {select_from_etc}: TABLE { bar_with_sensitive: bar_with_sensitive }
+          |       | {table_or_subquery_list}: TABLE { bar_with_sensitive: bar_with_sensitive }
+          |       | | {table_or_subquery}: TABLE { bar_with_sensitive: bar_with_sensitive }
+          |       |   | {name bar_with_sensitive}: TABLE { bar_with_sensitive: bar_with_sensitive }
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
 
 The statement ending at line XXXX
 

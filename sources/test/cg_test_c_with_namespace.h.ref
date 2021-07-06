@@ -1796,7 +1796,7 @@ extern CQL_WARN_UNUSED cql_code early_out_rc_cleared(sqlite3 *_Nonnull _db_, cql
 
 extern cql_string_ref _Nonnull vault_sensitive_with_values_proc_stored_procedure_name;
 
-#define vault_sensitive_with_values_proc_data_types_count 3
+#define vault_sensitive_with_values_proc_data_types_count 4
 
 #ifndef result_set_type_decl_vault_sensitive_with_values_proc_result_set
 #define result_set_type_decl_vault_sensitive_with_values_proc_result_set 1
@@ -1807,11 +1807,12 @@ extern cql_string_ref _Nullable vault_sensitive_with_values_proc_get_name(vault_
 
 #define vault_sensitive_with_values_proc_get_name_is_encoded(rs) \
   cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 1)
+extern cql_string_ref _Nullable vault_sensitive_with_values_proc_get_title(vault_sensitive_with_values_proc_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_bool vault_sensitive_with_values_proc_get_type_is_null(vault_sensitive_with_values_proc_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int64 vault_sensitive_with_values_proc_get_type_value(vault_sensitive_with_values_proc_result_set_ref _Nonnull result_set, cql_int32 row);
 
 #define vault_sensitive_with_values_proc_get_type_is_encoded(rs) \
-  cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 2)
+  cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 3)
 extern cql_int32 vault_sensitive_with_values_proc_result_count(vault_sensitive_with_values_proc_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code vault_sensitive_with_values_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_sensitive_with_values_proc_result_set_ref _Nullable *_Nonnull result_set);
 #define vault_sensitive_with_values_proc_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
@@ -1829,7 +1830,7 @@ extern void vault_sensitive_with_values_proc_set_encoding(cql_int32 col, cql_boo
 
 extern cql_string_ref _Nonnull vault_sensitive_with_no_values_proc_stored_procedure_name;
 
-#define vault_sensitive_with_no_values_proc_data_types_count 3
+#define vault_sensitive_with_no_values_proc_data_types_count 4
 
 #ifndef result_set_type_decl_vault_sensitive_with_no_values_proc_result_set
 #define result_set_type_decl_vault_sensitive_with_no_values_proc_result_set 1
@@ -1840,11 +1841,12 @@ extern cql_string_ref _Nullable vault_sensitive_with_no_values_proc_get_name(vau
 
 #define vault_sensitive_with_no_values_proc_get_name_is_encoded(rs) \
   cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 1)
+extern cql_string_ref _Nullable vault_sensitive_with_no_values_proc_get_title(vault_sensitive_with_no_values_proc_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_bool vault_sensitive_with_no_values_proc_get_type_is_null(vault_sensitive_with_no_values_proc_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int64 vault_sensitive_with_no_values_proc_get_type_value(vault_sensitive_with_no_values_proc_result_set_ref _Nonnull result_set, cql_int32 row);
 
 #define vault_sensitive_with_no_values_proc_get_type_is_encoded(rs) \
-  cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 2)
+  cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 3)
 extern cql_int32 vault_sensitive_with_no_values_proc_result_count(vault_sensitive_with_no_values_proc_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code vault_sensitive_with_no_values_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_sensitive_with_no_values_proc_result_set_ref _Nullable *_Nonnull result_set);
 #define vault_sensitive_with_no_values_proc_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
@@ -1862,7 +1864,7 @@ extern void vault_sensitive_with_no_values_proc_set_encoding(cql_int32 col, cql_
 
 extern cql_string_ref _Nonnull vault_union_all_table_proc_stored_procedure_name;
 
-#define vault_union_all_table_proc_data_types_count 3
+#define vault_union_all_table_proc_data_types_count 4
 
 #ifndef result_set_type_decl_vault_union_all_table_proc_result_set
 #define result_set_type_decl_vault_union_all_table_proc_result_set 1
@@ -1873,11 +1875,12 @@ extern cql_string_ref _Nullable vault_union_all_table_proc_get_name(vault_union_
 
 #define vault_union_all_table_proc_get_name_is_encoded(rs) \
   cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 1)
+extern cql_string_ref _Nullable vault_union_all_table_proc_get_title(vault_union_all_table_proc_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_bool vault_union_all_table_proc_get_type_is_null(vault_union_all_table_proc_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int64 vault_union_all_table_proc_get_type_value(vault_union_all_table_proc_result_set_ref _Nonnull result_set, cql_int32 row);
 
 #define vault_union_all_table_proc_get_type_is_encoded(rs) \
-  cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 2)
+  cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 3)
 extern cql_int32 vault_union_all_table_proc_result_count(vault_union_all_table_proc_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code vault_union_all_table_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_union_all_table_proc_result_set_ref _Nullable *_Nonnull result_set);
 #define vault_union_all_table_proc_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
@@ -1946,6 +1949,102 @@ extern void vault_alias_column_name_proc_set_encoding(cql_int32 col, cql_bool en
 
 // The statement ending at line XXXX
 extern CQL_WARN_UNUSED cql_code vault_cursor_proc(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+#define CRC_vault_sensitive_with_context_and_sensitive_columns_proc -3624977926726665152L
+
+extern cql_string_ref _Nonnull vault_sensitive_with_context_and_sensitive_columns_proc_stored_procedure_name;
+
+#define vault_sensitive_with_context_and_sensitive_columns_proc_data_types_count 4
+
+#ifndef result_set_type_decl_vault_sensitive_with_context_and_sensitive_columns_proc_result_set
+#define result_set_type_decl_vault_sensitive_with_context_and_sensitive_columns_proc_result_set 1
+cql_result_set_type_decl(vault_sensitive_with_context_and_sensitive_columns_proc_result_set, vault_sensitive_with_context_and_sensitive_columns_proc_result_set_ref);
+#endif
+extern cql_int32 vault_sensitive_with_context_and_sensitive_columns_proc_get_id(vault_sensitive_with_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_string_ref _Nullable vault_sensitive_with_context_and_sensitive_columns_proc_get_name(vault_sensitive_with_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+
+#define vault_sensitive_with_context_and_sensitive_columns_proc_get_name_is_encoded(rs) \
+  cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 1)
+extern cql_string_ref _Nullable vault_sensitive_with_context_and_sensitive_columns_proc_get_title(vault_sensitive_with_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool vault_sensitive_with_context_and_sensitive_columns_proc_get_type_is_null(vault_sensitive_with_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int64 vault_sensitive_with_context_and_sensitive_columns_proc_get_type_value(vault_sensitive_with_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+
+#define vault_sensitive_with_context_and_sensitive_columns_proc_get_type_is_encoded(rs) \
+  cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 3)
+extern cql_int32 vault_sensitive_with_context_and_sensitive_columns_proc_result_count(vault_sensitive_with_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code vault_sensitive_with_context_and_sensitive_columns_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_sensitive_with_context_and_sensitive_columns_proc_result_set_ref _Nullable *_Nonnull result_set);
+#define vault_sensitive_with_context_and_sensitive_columns_proc_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define vault_sensitive_with_context_and_sensitive_columns_proc_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+extern void vault_sensitive_with_context_and_sensitive_columns_proc_set_encoding(cql_int32 col, cql_bool encode);
+
+// The statement ending at line XXXX
+#define CRC_vault_sensitive_with_no_context_and_sensitive_columns_proc -7467575730168659275L
+
+extern cql_string_ref _Nonnull vault_sensitive_with_no_context_and_sensitive_columns_proc_stored_procedure_name;
+
+#define vault_sensitive_with_no_context_and_sensitive_columns_proc_data_types_count 4
+
+#ifndef result_set_type_decl_vault_sensitive_with_no_context_and_sensitive_columns_proc_result_set
+#define result_set_type_decl_vault_sensitive_with_no_context_and_sensitive_columns_proc_result_set 1
+cql_result_set_type_decl(vault_sensitive_with_no_context_and_sensitive_columns_proc_result_set, vault_sensitive_with_no_context_and_sensitive_columns_proc_result_set_ref);
+#endif
+extern cql_int32 vault_sensitive_with_no_context_and_sensitive_columns_proc_get_id(vault_sensitive_with_no_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_string_ref _Nullable vault_sensitive_with_no_context_and_sensitive_columns_proc_get_name(vault_sensitive_with_no_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+
+#define vault_sensitive_with_no_context_and_sensitive_columns_proc_get_name_is_encoded(rs) \
+  cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 1)
+extern cql_string_ref _Nullable vault_sensitive_with_no_context_and_sensitive_columns_proc_get_title(vault_sensitive_with_no_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool vault_sensitive_with_no_context_and_sensitive_columns_proc_get_type_is_null(vault_sensitive_with_no_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int64 vault_sensitive_with_no_context_and_sensitive_columns_proc_get_type_value(vault_sensitive_with_no_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+
+#define vault_sensitive_with_no_context_and_sensitive_columns_proc_get_type_is_encoded(rs) \
+  cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 3)
+extern cql_int32 vault_sensitive_with_no_context_and_sensitive_columns_proc_result_count(vault_sensitive_with_no_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code vault_sensitive_with_no_context_and_sensitive_columns_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_sensitive_with_no_context_and_sensitive_columns_proc_result_set_ref _Nullable *_Nonnull result_set);
+#define vault_sensitive_with_no_context_and_sensitive_columns_proc_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define vault_sensitive_with_no_context_and_sensitive_columns_proc_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+extern void vault_sensitive_with_no_context_and_sensitive_columns_proc_set_encoding(cql_int32 col, cql_bool encode);
+
+// The statement ending at line XXXX
+#define CRC_vault_sensitive_with_context_and_no_sensitive_columns_proc -7109769656603081234L
+
+extern cql_string_ref _Nonnull vault_sensitive_with_context_and_no_sensitive_columns_proc_stored_procedure_name;
+
+#define vault_sensitive_with_context_and_no_sensitive_columns_proc_data_types_count 4
+
+#ifndef result_set_type_decl_vault_sensitive_with_context_and_no_sensitive_columns_proc_result_set
+#define result_set_type_decl_vault_sensitive_with_context_and_no_sensitive_columns_proc_result_set 1
+cql_result_set_type_decl(vault_sensitive_with_context_and_no_sensitive_columns_proc_result_set, vault_sensitive_with_context_and_no_sensitive_columns_proc_result_set_ref);
+#endif
+extern cql_int32 vault_sensitive_with_context_and_no_sensitive_columns_proc_get_id(vault_sensitive_with_context_and_no_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_string_ref _Nullable vault_sensitive_with_context_and_no_sensitive_columns_proc_get_name(vault_sensitive_with_context_and_no_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_string_ref _Nullable vault_sensitive_with_context_and_no_sensitive_columns_proc_get_title(vault_sensitive_with_context_and_no_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool vault_sensitive_with_context_and_no_sensitive_columns_proc_get_type_is_null(vault_sensitive_with_context_and_no_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int64 vault_sensitive_with_context_and_no_sensitive_columns_proc_get_type_value(vault_sensitive_with_context_and_no_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 vault_sensitive_with_context_and_no_sensitive_columns_proc_result_count(vault_sensitive_with_context_and_no_sensitive_columns_proc_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code vault_sensitive_with_context_and_no_sensitive_columns_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_sensitive_with_context_and_no_sensitive_columns_proc_result_set_ref _Nullable *_Nonnull result_set);
+#define vault_sensitive_with_context_and_no_sensitive_columns_proc_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define vault_sensitive_with_context_and_no_sensitive_columns_proc_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+extern void vault_sensitive_with_context_and_no_sensitive_columns_proc_set_encoding(cql_int32 col, cql_bool encode);
 
 // The statement ending at line XXXX
 

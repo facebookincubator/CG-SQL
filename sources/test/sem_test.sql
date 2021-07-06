@@ -14473,6 +14473,15 @@ begin
   select * from bar;
 end;
 
+-- TEST: vault_sensitive attribution with invalid single column
+-- + Error % vault_sensitive column does not exist in result set 'bogus'
+-- +1 Error
+@attribute(cql:vault_sensitive=bogus)
+create proc vault_sensitive_with_invalid_single_column()
+begin
+  select * from bar;
+end;
+
 -- TEST: vault_sensitive attribution with an not string value
 -- + {stmt_and_attr}: err
 -- + {misc_attrs}: err
@@ -14507,6 +14516,108 @@ end;
 @attribute(cql:vault_sensitive='lol')
 create proc vault_sensitive_with_lit_string_value_proc_val()
 begin
+end;
+
+-- TEST: vault_sensitive attribution with invalid encode context and encode column
+-- + {stmt_and_attr}: err
+-- + Error % vault_sensitive column does not exist in result set 'bogus'
+-- + Error % vault_sensitive column does not exist in result set 'nan'
+-- +2 Error
+@attribute(cql:vault_sensitive=(bogus, (nan)))
+create proc vault_sensitive_with_invalid_encode_context_columns()
+begin
+  select * from bar;
+end;
+
+-- TEST: vault_sensitive attribution with an not string value encode context
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- + {create_proc_stmt}: err
+-- + {int 1}: err
+-- Error % all arguments must be names 'vault_sensitive'
+-- +1 Error
+@attribute(cql:vault_sensitive=(1, (name)))
+create proc vault_sensitive_with_not_string_vault_context_proc_val()
+begin
+end;
+
+-- TEST: vault_sensitive attribution with literal string encode context
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- + {create_proc_stmt}: err
+-- + {strlit 'lol'}: err
+-- Error % all arguments must be names 'vault_sensitive'
+-- +1 Error
+@attribute(cql:vault_sensitive=('lol', (name)))
+create proc vault_sensitive_with_literal_string_vault_context_proc_val()
+begin
+end;
+
+-- TEST: vault_sensitive attribution with an not string value encode column
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- + {create_proc_stmt}: err
+-- + {int 1}: err
+-- Error % all arguments must be names 'vault_sensitive'
+-- +1 Error
+@attribute(cql:vault_sensitive=(name, (1)))
+create proc vault_sensitive_with_not_string_vault_column_proc_val()
+begin
+end;
+
+-- TEST: test table with both sensitive and non-sensitive columns
+-- + {create_table_stmt}: bar_with_sensitive: { id: integer notnull, name: text sensitive, title: text sensitive, intro: text }
+-- - Error
+create table bar_with_sensitive(
+  id integer not null,
+  name text @sensitive @create(2),
+  title text @sensitive @create(2),
+  intro text @create(2)
+);
+
+-- TEST: vault_sensitive attribution with sensitive encode column
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- + {create_proc_stmt}: err
+-- Error % encode context column can't be sensitive 'name'
+-- +1 Error
+@attribute(cql:vault_sensitive=(name, (id, title)))
+create proc vault_sensitive_with_sensitive_encode_context_column_proc_val()
+begin
+  select * from bar_with_sensitive;
+end;
+
+-- TEST: vault_sensitive attribution with invalid nested encode columns
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- + {create_proc_stmt}: err
+-- Error % all arguments must be names 'vault_sensitive'
+-- +1 Error
+@attribute(cql:vault_sensitive=(intro, (id, (title))))
+create proc vault_sensitive_with_invalid_nested_vault_column_proc_val()
+begin
+  select * from bar_with_sensitive;
+end;
+
+-- TEST: vault_sensitive attribution with multi encode context columns
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- + {create_proc_stmt}: err
+-- Error % encode context column can be only specified in front 'id'
+-- +1 Error
+@attribute(cql:vault_sensitive=(intro, (name), id))
+create proc vault_sensitive_with_multi_encode_context_columns_proc_val()
+begin
+  select * from bar_with_sensitive;
+end;
+
+-- TEST: vault_sensitive attribution with valid context and vault columns
+-- + {stmt_and_attr}: ok
+-- - Error
+@attribute(cql:vault_sensitive=(intro, (name, title)))
+create proc vault_sensitive_with_valid_context_and_vault_columns()
+begin
+  select * from bar_with_sensitive;
 end;
 
 -- TEST: no_scan_table attribution on create proc node

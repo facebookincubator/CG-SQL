@@ -2788,6 +2788,7 @@ end;
 create table vault_mixed_sensitive(
   id int not null primary key,
   name text @sensitive,
+  title text,
   type long @sensitive
 );
 
@@ -2795,12 +2796,14 @@ create table vault_mixed_sensitive(
 create table vault_non_sensitive(
   id int not null primary key,
   name text,
+  title text,
   type long
 );
 
 -- TEST: vault_sensitive attribute includes sensitive column (name) and non sensitive column (id)
 -- + CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
 -- + CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // name
+-- + CQL_DATA_TYPE_STRING, // title
 -- + CQL_DATA_TYPE_INT64, // type
 @attribute(cql:vault_sensitive=(id, name))
 create proc vault_sensitive_with_values_proc()
@@ -2811,6 +2814,7 @@ end;
 -- TEST: vault_sensitive attribute includes sensitive column (data) and non sensitive column (id)
 -- + CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
 -- + CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // name
+-- + CQL_DATA_TYPE_STRING, // title
 -- + CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_ENCODED, // type
 @attribute(cql:vault_sensitive)
 create proc vault_sensitive_with_no_values_proc()
@@ -2821,6 +2825,7 @@ end;
 -- TEST: vault union all a sensitive and non sensitive table
 -- + CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
 -- + CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // name
+-- + CQL_DATA_TYPE_STRING, // title
 -- + CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_ENCODED, // type
 @attribute(cql:vault_sensitive)
 create proc vault_union_all_table_proc()
@@ -2854,6 +2859,39 @@ create proc vault_cursor_proc()
 begin
   declare C cursor for select name from vault_mixed_sensitive;
   fetch c;
+end;
+
+-- TEST: vault_sensitive attribute includes encode context column (title) and sensitive column (id, name)
+-- + CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
+-- + CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // name
+-- + CQL_DATA_TYPE_STRING, // title
+-- + CQL_DATA_TYPE_INT64, // type
+@attribute(cql:vault_sensitive=(title, (id, name)))
+create proc vault_sensitive_with_context_and_sensitive_columns_proc()
+begin
+ select * from vault_mixed_sensitive;
+end;
+
+-- TEST: vault_sensitive attribute includes no encode context column and sensitive column (id, name)
+-- + CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
+-- + CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // name
+-- + CQL_DATA_TYPE_STRING, // title
+-- + CQL_DATA_TYPE_INT64, // type
+@attribute(cql:vault_sensitive=((id, name)))
+create proc vault_sensitive_with_no_context_and_sensitive_columns_proc()
+begin
+ select * from vault_mixed_sensitive;
+end;
+
+-- TEST: vault_sensitive attribute includes encode context column (title) and no sensitive column
+-- + CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
+-- + CQL_DATA_TYPE_STRING, // name
+-- + CQL_DATA_TYPE_STRING, // title
+-- + CQL_DATA_TYPE_INT64, // type
+@attribute(cql:vault_sensitive=(title, (id, name)))
+create proc vault_sensitive_with_context_and_no_sensitive_columns_proc()
+begin
+ select * from vault_non_sensitive;
 end;
 
 create table ext_test_table (

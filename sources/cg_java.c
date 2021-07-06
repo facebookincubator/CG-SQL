@@ -212,10 +212,11 @@ static void cg_java_proc_result_set(ast_node *ast) {
     return;
   }
 
-  Invariant(!use_vault);
-  Invariant(!vault_columns);
-  vault_columns = symtab_new();
-  init_vault_info(misc_attrs, &use_vault, vault_columns);
+  Invariant(!use_encode);
+  Invariant(!encode_context_column);
+  Invariant(!encode_columns);
+  encode_columns = symtab_new();
+  init_encode_info(misc_attrs, &use_encode, &encode_context_column, encode_columns);
 
   is_extension_fragment = misc_attrs && find_extension_fragment_attr(misc_attrs, NULL, NULL);
   is_assembly_query = misc_attrs && find_assembly_query_attr(misc_attrs, NULL, NULL);
@@ -326,7 +327,7 @@ static void cg_java_proc_result_set(ast_node *ast) {
   for (int32_t i = 0; i < count; i++) {
     sem_t sem_type = sptr->semtypes[i];
     CSTR col = sptr->names[i];
-    bool_t encode = should_vault_col(col, sem_type, use_vault, vault_columns);
+    bool_t encode = should_encode_col(col, sem_type, use_encode, encode_columns);
     cg_java_proc_result_set_getter(out_stmt_proc, name, col, i, &body, sem_type, encode);
   }
 
@@ -353,9 +354,10 @@ static void cg_java_proc_result_set(ast_node *ast) {
   generated_java_sp_count++;
 
 cleanup:
-  use_vault = 0;
-  symtab_delete(vault_columns);
-  vault_columns = NULL;
+  use_encode = 0;
+  symtab_delete(encode_columns);
+  encode_columns = NULL;
+  encode_context_column = NULL;
 }
 
 static void cg_java_create_proc_stmt(ast_node *ast) {

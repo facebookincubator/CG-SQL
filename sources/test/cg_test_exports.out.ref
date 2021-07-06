@@ -122,12 +122,15 @@ DECLARE PROC lotsa_columns_no_getters () (id INTEGER NOT NULL, name TEXT, rate L
 DECLARE PROC sproc_with_copy () (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
 DECLARE PROC lotsa_columns_no_result_set () (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
 DECLARE PROC early_out_rc_cleared (OUT x INTEGER) USING TRANSACTION;
-DECLARE PROC vault_sensitive_with_values_proc () (id INTEGER NOT NULL, name TEXT @SENSITIVE, type LONG_INT @SENSITIVE);
-DECLARE PROC vault_sensitive_with_no_values_proc () (id INTEGER NOT NULL, name TEXT @SENSITIVE, type LONG_INT @SENSITIVE);
-DECLARE PROC vault_union_all_table_proc () (id INTEGER NOT NULL, name TEXT @SENSITIVE, type LONG_INT @SENSITIVE);
+DECLARE PROC vault_sensitive_with_values_proc () (id INTEGER NOT NULL, name TEXT @SENSITIVE, title TEXT, type LONG_INT @SENSITIVE);
+DECLARE PROC vault_sensitive_with_no_values_proc () (id INTEGER NOT NULL, name TEXT @SENSITIVE, title TEXT, type LONG_INT @SENSITIVE);
+DECLARE PROC vault_union_all_table_proc () (id INTEGER NOT NULL, name TEXT @SENSITIVE, title TEXT, type LONG_INT @SENSITIVE);
 DECLARE PROC vault_alias_column_proc () (alias_name TEXT @SENSITIVE);
 DECLARE PROC vault_alias_column_name_proc () (alias_name TEXT @SENSITIVE);
 DECLARE PROC vault_cursor_proc () USING TRANSACTION;
+DECLARE PROC vault_sensitive_with_context_and_sensitive_columns_proc () (id INTEGER NOT NULL, name TEXT @SENSITIVE, title TEXT, type LONG_INT @SENSITIVE);
+DECLARE PROC vault_sensitive_with_no_context_and_sensitive_columns_proc () (id INTEGER NOT NULL, name TEXT @SENSITIVE, title TEXT, type LONG_INT @SENSITIVE);
+DECLARE PROC vault_sensitive_with_context_and_no_sensitive_columns_proc () (id INTEGER NOT NULL, name TEXT, title TEXT, type LONG_INT);
 DECLARE PROC try_boxing (OUT result OBJECT<bar CURSOR>) USING TRANSACTION;
 DECLARE PROC try_unboxing (boxed_cursor OBJECT<bar CURSOR>) USING TRANSACTION;
 DECLARE PROC local_cast_int_notnull ();
