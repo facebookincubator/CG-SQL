@@ -58124,7 +58124,7 @@ Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0408: encode context column
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:vault_sensitive=(intro, (name, title)))
-CREATE PROC vault_sensitive_with_valid_context_and_vault_columns ()
+CREATE PROC vault_sensitive_with_valid_context_and_encode_columns ()
 BEGIN
   SELECT *
     FROM bar_with_sensitive;
@@ -58144,7 +58144,7 @@ END;
   |         | {misc_attr_value_list}
   |           | {name title}: ok
   | {create_proc_stmt}: select: { id: integer notnull, name: text sensitive, title: text sensitive, intro: text } dml_proc
-    | {name vault_sensitive_with_valid_context_and_vault_columns}: select: { id: integer notnull, name: text sensitive, title: text sensitive, intro: text } dml_proc
+    | {name vault_sensitive_with_valid_context_and_encode_columns}: select: { id: integer notnull, name: text sensitive, title: text sensitive, intro: text } dml_proc
     | {proc_params_stmts}
       | {stmt_list}: ok
         | {select_stmt}: select: { id: integer notnull, name: text sensitive, title: text sensitive, intro: text }
@@ -58163,6 +58163,139 @@ END;
           | {select_orderby}
             | {select_limit}
               | {select_offset}
+
+The statement ending at line XXXX
+
+@ENFORCE_STRICT ENCODE CONTEXT COLUMN;
+
+  {enforce_strict_stmt}: ok
+  | {int 13}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:vault_sensitive=(name, rate))
+CREATE PROC vault_sensitive_with_only_encode_columns_strict_mode ()
+BEGIN
+  SELECT *
+    FROM bar;
+END;
+
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0401: context column must be specified if strict encode context column mode is enabled 'vault_sensitive'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name vault_sensitive}
+  |   | {misc_attr_value_list}: ok
+  |     | {name name}: ok
+  |     | {misc_attr_value_list}
+  |       | {name rate}: ok
+  | {create_proc_stmt}: err
+    | {name vault_sensitive_with_only_encode_columns_strict_mode}
+    | {proc_params_stmts}
+      | {stmt_list}
+        | {select_stmt}
+          | {select_core_list}
+          | | {select_core}
+          |   | {select_expr_list_con}
+          |     | {select_expr_list}
+          |     | | {star}
+          |     | {select_from_etc}
+          |       | {table_or_subquery_list}
+          |       | | {table_or_subquery}
+          |       |   | {name bar}
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:vault_sensitive=name)
+CREATE PROC vault_sensitive_with_only_encode_column_strict_mode ()
+BEGIN
+  SELECT *
+    FROM bar;
+END;
+
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0401: context column must be specified if strict encode context column mode is enabled 'vault_sensitive'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name vault_sensitive}
+  |   | {name name}: ok
+  | {create_proc_stmt}: err
+    | {name vault_sensitive_with_only_encode_column_strict_mode}
+    | {proc_params_stmts}
+      | {stmt_list}
+        | {select_stmt}
+          | {select_core_list}
+          | | {select_core}
+          |   | {select_expr_list_con}
+          |     | {select_expr_list}
+          |     | | {star}
+          |     | {select_from_etc}
+          |       | {table_or_subquery_list}
+          |       | | {table_or_subquery}
+          |       |   | {name bar}
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:vault_sensitive)
+CREATE PROC vault_sensitive_with_no_columns_strict_mode ()
+BEGIN
+  SELECT *
+    FROM bar;
+END;
+
+Error at test/sem_test.sql:XXXX : in misc_attrs : CQL0401: context column must be specified if strict encode context column mode is enabled 'vault_sensitive'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name vault_sensitive}
+  | {create_proc_stmt}: err
+    | {name vault_sensitive_with_no_columns_strict_mode}
+    | {proc_params_stmts}
+      | {stmt_list}
+        | {select_stmt}
+          | {select_core_list}
+          | | {select_core}
+          |   | {select_expr_list_con}
+          |     | {select_expr_list}
+          |     | | {star}
+          |     | {select_from_etc}
+          |       | {table_or_subquery_list}
+          |       | | {table_or_subquery}
+          |       |   | {name bar}
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ENFORCE_NORMAL ENCODE CONTEXT COLUMN;
+
+  {enforce_normal_stmt}: ok
+  | {int 13}
 
 The statement ending at line XXXX
 

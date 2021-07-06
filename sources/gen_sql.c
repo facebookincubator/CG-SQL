@@ -3226,6 +3226,10 @@ static void gen_enforcement_options(ast_node *ast) {
       gen_printf("NOT NULL AFTER CHECK");
       break;
 
+    case ENFORCE_ENCODE_CONTEXT_COLUMN:
+      gen_printf("ENCODE CONTEXT COLUMN");
+      break;
+
     default:
       // this is all that's left
       Contract(option == ENFORCE_FK_ON_DELETE);

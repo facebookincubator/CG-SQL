@@ -197,6 +197,7 @@ struct enforcement_options {
   bool_t strict_insert_select;  // insert with select may not include joins
   bool_t strict_table_function; // table valued functions cannot be used on left/right joins (avoiding SQLite bug)
   bool_t strict_not_null_after; // variables should be treated as NOT NULL after an IS NOT NULL check
+  bool_t strict_encode_context;  // encode context must be specified in @vault_sensitive
 };
 
 static struct enforcement_options  enforcement;
@@ -1284,6 +1285,15 @@ static void enforce_non_sensitive_context_column(CSTR name, ast_node *misc_attrs
   }
 }
 
+// report error if encode context column mode is on and no encode context column is provided
+static void enforce_encode_context_column_with_strict_mode(ast_node *misc_attrs)
+{
+  if (enforcement.strict_encode_context) {
+    report_error(misc_attrs, "CQL0401: context column must be specified if strict encode context column mode is enabled", "vault_sensitive");
+    record_error(misc_attrs);
+  }
+}
+
 // enforce the specified column name must be valid string
 // return false if column is not valid string
 static bool_t vault_sensitive_encode_column_valid_string(ast_node *misc_attr_value, ast_node *misc_attrs)
@@ -1365,6 +1375,8 @@ static void sem_find_ast_misc_attr_vault_sensitive_callback(
   // case @attribute(cql:vault_sensitive)
   // all sensitive columns in the result set will be encoded without context column.
   if (ast_misc_attr_value_list == NULL) {
+    // report error if strict mode is on for encode context column
+    enforce_encode_context_column_with_strict_mode(misc_attrs);
     return;
   }
 
@@ -1384,6 +1396,8 @@ static void sem_find_ast_misc_attr_vault_sensitive_callback(
     if (info->encode_columns) {
       symtab_add(info->encode_columns, name, NULL);
     }
+    // report error if strict mode is on for encode context column
+    enforce_encode_context_column_with_strict_mode(misc_attrs);
     return;
   }
 
@@ -1403,6 +1417,8 @@ static void sem_find_ast_misc_attr_vault_sensitive_callback(
   // case @attribute(cql:vault_sensitive=(col1, col2, ...))
   if (!has_nested_columns) {
     vault_sensitive_encode_columns(ast_misc_attr_value_list, info->encode_columns, misc_attrs);
+    // report error if strict mode is on for encode context column
+enforce_encode_context_column_with_strict_mode(misc_attrs);
     return;
   }
 
@@ -18434,6 +18450,10 @@ static void sem_enforcement_options(ast_node *ast, bool_t strict) {
 
     case ENFORCE_NOT_NULL_AFTER_CHECK:
       enforcement.strict_not_null_after = strict;
+      break;
+
+    case ENFORCE_ENCODE_CONTEXT_COLUMN:
+      enforcement.strict_encode_context = strict;
       break;
 
     default:

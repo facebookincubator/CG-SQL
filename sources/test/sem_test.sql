@@ -14611,14 +14611,57 @@ begin
   select * from bar_with_sensitive;
 end;
 
--- TEST: vault_sensitive attribution with valid context and vault columns
+-- TEST: vault_sensitive attribution with valid context and encode columns
 -- + {stmt_and_attr}: ok
 -- - Error
 @attribute(cql:vault_sensitive=(intro, (name, title)))
-create proc vault_sensitive_with_valid_context_and_vault_columns()
+create proc vault_sensitive_with_valid_context_and_encode_columns()
 begin
   select * from bar_with_sensitive;
 end;
+
+-- TEST: strict encode context column
+-- + {enforce_strict_stmt}: ok
+-- - Error;
+@enforce_strict encode context column;
+
+-- TEST: vault_sensitive attribution with only encode column list
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- Error % context column must be specified if strict encode context column mode is enabled
+-- +1 Error
+@attribute(cql:vault_sensitive=(name, rate))
+create proc vault_sensitive_with_only_encode_columns_strict_mode()
+begin
+  select * from bar;
+end;
+
+-- TEST: vault_sensitive attribution with only one encode column
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- Error % context column must be specified if strict encode context column mode is enabled
+-- +1 Error
+@attribute(cql:vault_sensitive=name)
+create proc vault_sensitive_with_only_encode_column_strict_mode()
+begin
+  select * from bar;
+end;
+
+-- TEST: vault_sensitive attribution with no columns
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- Error % context column must be specified if strict encode context column mode is enabled
+-- +1 Error
+@attribute(cql:vault_sensitive)
+create proc vault_sensitive_with_no_columns_strict_mode()
+begin
+  select * from bar;
+end;
+
+-- TEST verify back to normal mode
+-- + {enforce_normal_stmt}: ok
+-- - Error
+@enforce_normal encode context column;
 
 -- TEST: no_scan_table attribution on create proc node
 -- + {stmt_and_attr}: ok
