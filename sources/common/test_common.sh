@@ -1022,6 +1022,15 @@ misc_cases() {
   fi
 
   on_diff_exit parse_test_fetch_from_call_columns.err
+
+  echo 'running parser disallows cql_inferred_notnull test'
+  if ${CQL} --in "${TEST_DIR}/parse_test_cql_inferred_notnull.sql" 2>"${OUT_DIR}/parse_test_cql_inferred_notnull.err"
+  then
+    echo 'failed to disallow cql_inferred_notnull'
+    failed
+  fi
+
+  on_diff_exit parse_test_cql_inferred_notnull.err
 }
 
 json_schema_test() {

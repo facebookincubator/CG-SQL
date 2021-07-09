@@ -61912,11 +61912,11 @@ BEGIN
   DECLARE c INTEGER;
   LET x0 := a;
   IF a IS NOT NULL THEN
-    LET x1 := cql_inferred_notnull(a);
+    LET x1 := a;
   ELSE
     LET x2 := a;
     IF a IS NOT NULL THEN
-      LET x3 := cql_inferred_notnull(a);
+      LET x3 := a;
     ELSE
       LET x4 := a;
     END IF;
@@ -61995,11 +61995,11 @@ BEGIN
   DECLARE b TEXT;
   DECLARE c TEXT;
   IF a IS NOT NULL AND (b IS NOT NULL OR c IS NOT NULL) THEN
-    DECLARE c0 CURSOR FOR SELECT cql_inferred_notnull(a) AS a0, b AS b0, c AS c0;
-    IF (b IS NOT NULL OR cql_inferred_notnull(a) LIKE "hello") AND c IS NOT NULL THEN
-      DECLARE c1 CURSOR FOR SELECT cql_inferred_notnull(a) AS a1, b AS b1, cql_inferred_notnull(c) AS c1;
+    DECLARE c0 CURSOR FOR SELECT a AS a0, b AS b0, c AS c0;
+    IF (b IS NOT NULL OR a LIKE "hello") AND c IS NOT NULL THEN
+      DECLARE c1 CURSOR FOR SELECT a AS a1, b AS b1, c AS c1;
       IF b IS NOT NULL THEN
-        DECLARE c2 CURSOR FOR SELECT cql_inferred_notnull(a) AS a2, cql_inferred_notnull(b) AS b2, cql_inferred_notnull(c) AS c2;
+        DECLARE c2 CURSOR FOR SELECT a AS a2, b AS b2, c AS c2;
       END IF;
     END IF;
   END IF;
@@ -62187,17 +62187,17 @@ BEGIN
   LET x0 := a;
   LET y0 := b;
   IF a IS NOT NULL AND b IS NOT NULL THEN
-    LET x1 := cql_inferred_notnull(a);
-    LET y1 := cql_inferred_notnull(b);
+    LET x1 := a;
+    LET y1 := b;
     SET b := NULL;
-    LET x2 := cql_inferred_notnull(a);
+    LET x2 := a;
     LET y2 := b;
-    IF cql_inferred_notnull(a) IS NOT NULL AND b IS NOT NULL THEN
-      LET x3 := cql_inferred_notnull(a);
-      LET y3 := cql_inferred_notnull(b);
+    IF a IS NOT NULL AND b IS NOT NULL THEN
+      LET x3 := a;
+      LET y3 := b;
       SET a := NULL;
       LET x4 := a;
-      LET y4 := cql_inferred_notnull(b);
+      LET y4 := b;
       SET b := NULL;
     END IF;
     LET x5 := a;
@@ -62335,7 +62335,7 @@ BEGIN
   DECLARE a INTEGER;
   LET x0 := a;
   SET a := 42;
-  LET x1 := cql_inferred_notnull(a);
+  LET x1 := a;
   SET a := NULL;
   LET x2 := a;
 END;
@@ -62376,7 +62376,7 @@ BEGIN
   DECLARE a INTEGER;
   IF 0 THEN
     SET a := 42;
-    LET x0 := cql_inferred_notnull(a);
+    LET x0 := a;
   END IF;
   LET x1 := a;
 END;
@@ -62415,7 +62415,7 @@ CREATE PROC improvements_removed_by_set_do_persist_outside_the_statement_list ()
 BEGIN
   DECLARE a INTEGER;
   IF a IS NOT NULL THEN
-    LET x0 := cql_inferred_notnull(a);
+    LET x0 := a;
     IF 1 THEN
       SET a := NULL;
     END IF;
@@ -62463,7 +62463,7 @@ The statement ending at line XXXX
 CREATE PROC improvements_work_in_case_expressions ()
 BEGIN
   DECLARE a INTEGER;
-  LET x := CASE WHEN a IS NOT NULL THEN cql_inferred_notnull(a) + cql_inferred_notnull(a)
+  LET x := CASE WHEN a IS NOT NULL THEN a + a
   ELSE 42
   END;
 END;
@@ -62530,18 +62530,18 @@ BEGIN
   DECLARE b INTEGER;
   DECLARE x INTEGER;
   IF a IS NOT NULL AND b IS NOT NULL THEN
-    LET x0 := cql_inferred_notnull(a);
-    LET y0 := cql_inferred_notnull(b);
+    LET x0 := a;
+    LET y0 := b;
     CALL sets_out(x, b);
-    LET x1 := cql_inferred_notnull(a);
+    LET x1 := a;
     LET y1 := b;
     CALL sets_out(a, x);
     LET x2 := a;
     LET y2 := b;
   END IF;
   IF a IS NOT NULL AND b IS NOT NULL THEN
-    LET x3 := cql_inferred_notnull(a);
-    LET y3 := cql_inferred_notnull(b);
+    LET x3 := a;
+    LET y3 := b;
     CALL sets_out(a, b);
     LET x4 := a;
     LET y4 := b;
@@ -62695,18 +62695,18 @@ BEGIN
   DECLARE c CURSOR FOR SELECT *
     FROM tnull;
   IF a IS NOT NULL AND b IS NOT NULL THEN
-    LET x0 := cql_inferred_notnull(a);
-    LET y0 := cql_inferred_notnull(b);
+    LET x0 := a;
+    LET y0 := b;
     FETCH c INTO x, b;
-    LET x1 := cql_inferred_notnull(a);
+    LET x1 := a;
     LET y1 := b;
     FETCH c INTO a, x;
     LET x2 := a;
     LET y2 := b;
   END IF;
   IF a IS NOT NULL AND b IS NOT NULL THEN
-    LET x3 := cql_inferred_notnull(a);
-    LET y3 := cql_inferred_notnull(b);
+    LET x3 := a;
+    LET y3 := b;
     FETCH c INTO a, b;
     LET x4 := a;
     LET y4 := b;
@@ -62862,8 +62862,8 @@ BEGIN
   LET x0 := c.xn;
   LET y0 := c.yn;
   IF c.xn IS NOT NULL AND c.yn IS NOT NULL THEN
-    LET x1 := cql_inferred_notnull(c.xn);
-    LET y1 := cql_inferred_notnull(c.yn);
+    LET x1 := c.xn;
+    LET y1 := c.yn;
     FETCH c;
     LET x2 := c.xn;
     LET y2 := c.yn;
@@ -62961,8 +62961,8 @@ BEGIN
   LET x0 := c_local.xn;
   LET y0 := c_local.yn;
   IF c_local.xn IS NOT NULL AND c_local.yn IS NOT NULL THEN
-    LET x1 := cql_inferred_notnull(c_local.xn);
-    LET y1 := cql_inferred_notnull(c_local.yn);
+    LET x1 := c_local.xn;
+    LET y1 := c_local.yn;
     FETCH c_local(xn, yn) FROM VALUES(0, 0);
     LET x2 := c_local.xn;
     LET y2 := c_local.yn;
@@ -63068,8 +63068,8 @@ BEGIN
   LET x0 := c_global.xn;
   LET y0 := c_global.yn;
   IF c_global.xn IS NOT NULL AND c_global.yn IS NOT NULL THEN
-    LET x1 := cql_inferred_notnull(c_global.xn);
-    LET y1 := cql_inferred_notnull(c_global.yn);
+    LET x1 := c_global.xn;
+    LET y1 := c_global.yn;
     FETCH c_global(xn, yn) FROM VALUES(0, 0);
     LET x2 := c_global.xn;
     LET y2 := c_global.yn;
@@ -63292,7 +63292,7 @@ The statement ending at line XXXX
 CREATE PROC improvements_work_for_in_args (a INTEGER)
 BEGIN
   IF a IS NOT NULL THEN
-    LET x := cql_inferred_notnull(a);
+    LET x := a;
   END IF;
 END;
 
@@ -63425,7 +63425,7 @@ CREATE PROC improvements_work_in_sql ()
 BEGIN
   DECLARE a INTEGER;
   IF a IS NOT NULL THEN
-    SELECT 1 + cql_inferred_notnull(a) AS b;
+    SELECT 1 + a AS b;
   END IF;
 END;
 
@@ -63589,7 +63589,7 @@ The statement ending at line XXXX
 
 CREATE PROC improvements_work_for_select_expressions ()
 BEGIN
-  SELECT cql_inferred_notnull(xn), cql_inferred_notnull(yn)
+  SELECT xn, yn
     FROM tnull
     WHERE xn IS NOT NULL AND yn IS NOT NULL;
 END;
@@ -63641,10 +63641,10 @@ The statement ending at line XXXX
 
 CREATE PROC improvements_correctly_handle_nested_selects ()
 BEGIN
-  SELECT ( SELECT cql_inferred_notnull(xn) ), ( SELECT yn
-    FROM tnull ), ( SELECT cql_inferred_notnull(yn)
+  SELECT ( SELECT xn ), ( SELECT yn
+    FROM tnull ), ( SELECT yn
     FROM tnull
-    WHERE yn IS NOT NULL ) AS yn0, ( SELECT cql_inferred_notnull(yn) ) AS yn1
+    WHERE yn IS NOT NULL ) AS yn0, ( SELECT yn ) AS yn1
     FROM tnull
     WHERE xn IS NOT NULL AND yn IS NOT NULL;
 END;
@@ -63817,7 +63817,7 @@ The statement ending at line XXXX
 
 CREATE PROC improvements_apply_in_select_exprs ()
 BEGIN
-  SELECT cql_inferred_notnull(xn) + cql_inferred_notnull(xn) AS yn, yn AS yn0
+  SELECT xn + xn AS yn, yn AS yn0
     FROM tnull
     WHERE xn IS NOT NULL;
 END;
@@ -64064,11 +64064,11 @@ BEGIN
   DECLARE c CURSOR LIKE tnull;
   FETCH c(xn, yn) FROM VALUES(1, 2);
   IF c.xn IS NOT NULL AND c.yn IS NOT NULL THEN
-    LET x0 := cql_inferred_notnull(c.xn);
-    LET y0 := cql_inferred_notnull(c.yn);
+    LET x0 := c.xn;
+    LET y0 := c.yn;
     DECLARE d CURSOR LIKE c;
-    LET x1 := cql_inferred_notnull(c.xn);
-    LET y1 := cql_inferred_notnull(c.yn);
+    LET x1 := c.xn;
+    LET y1 := c.yn;
     LET x2 := d.xn;
     LET y2 := d.yn;
   END IF;
@@ -64172,10 +64172,10 @@ BEGIN
   DECLARE c CURSOR LIKE improvements_work_for_in_args ARGUMENTS;
   FETCH c(a) FROM VALUES(0);
   IF c.a IS NOT NULL THEN
-    LET x0 := cql_inferred_notnull(c.a);
+    LET x0 := c.a;
     DECLARE d CURSOR LIKE improvements_work_for_in_args ARGUMENTS;
     FETCH d(a) FROM VALUES(0);
-    LET x1 := cql_inferred_notnull(c.a);
+    LET x1 := c.a;
     LET x2 := d.a;
     DECLARE e CURSOR LIKE improvements_work_for_in_args ARGUMENTS;
   END IF;
@@ -64296,7 +64296,7 @@ The statement ending at line XXXX
 CREATE PROC notnull_inferred_does_not_get_copied_via_arguments_like_proc (args_a INTEGER)
 BEGIN
   IF args.a IS NOT NULL THEN
-    LET x0 := cql_inferred_notnull(args.a);
+    LET x0 := args.a;
     DECLARE c CURSOR FETCH FROM CALL returns_nullable_int();
     LET x1 := c.a;
   END IF;
@@ -64347,7 +64347,7 @@ BEGIN
   DECLARE a INTEGER;
   IF a IS NOT NULL THEN
     WITH RECURSIVE
-    foo (b) AS (SELECT cql_inferred_notnull(a))
+    foo (b) AS (SELECT a)
     SELECT b
       FROM foo;
   END IF;
@@ -64411,40 +64411,6 @@ END;
         |       | {select_orderby}
         |         | {select_limit}
         |           | {select_offset}
-        | {if_alt}: ok
-
-The statement ending at line XXXX
-
-CREATE PROC analyzing_generated_rewrite_calls_does_not_rewrite ()
-BEGIN
-  DECLARE a INTEGER;
-  IF a IS NOT NULL THEN
-    LET b := cql_inferred_notnull(a);
-  END IF;
-END;
-
-  {create_proc_stmt}: ok
-  | {name analyzing_generated_rewrite_calls_does_not_rewrite}: ok
-  | {proc_params_stmts}
-    | {stmt_list}: ok
-      | {declare_vars_type}: integer
-      | | {name_list}: a: integer variable
-      | | | {name a}: a: integer variable
-      | | {type_int}: integer
-      | {if_stmt}: bool notnull
-        | {cond_action}: bool notnull
-        | | {is_not}: bool notnull
-        | | | {name a}: a: integer variable
-        | | | {null}: null
-        | | {stmt_list}: ok
-        |   | {let_stmt}: b: integer notnull variable
-        |     | {name b}: b: integer notnull variable
-        |     | {call}: a: integer notnull variable
-        |       | {name cql_inferred_notnull}: a: integer notnull variable
-        |       | {call_arg_list}
-        |         | {call_filter_clause}
-        |         | {arg_list}: ok
-        |           | {name a}: a: integer inferred_notnull variable
         | {if_alt}: ok
 
 The statement ending at line XXXX

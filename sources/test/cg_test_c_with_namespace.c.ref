@@ -12175,7 +12175,7 @@ CREATE PROC nullability_improvements_are_erased_for_sql ()
 BEGIN
   DECLARE a INTEGER;
   IF a IS NOT NULL THEN
-    SELECT cql_inferred_notnull(a) + 1 AS b;
+    SELECT a + 1 AS b;
   END IF;
 END;
 */
@@ -12253,7 +12253,7 @@ CREATE PROC nullability_improvements_do_not_change_access ()
 BEGIN
   DECLARE a INTEGER;
   IF a IS NOT NULL THEN
-    LET b := cql_inferred_notnull(a);
+    LET b := a;
     SET a := 0;
   END IF;
 END;

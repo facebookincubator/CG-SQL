@@ -16305,19 +16305,6 @@ begin
   end if;
 end;
 
--- TEST: Calls to `cql_inferred_notnull` can appear in generated code. We need
--- to be able to cope with this and avoid rewriting again.
--- + {let_stmt}: b: integer notnull variable
--- +1 {name cql_inferred_notnull}: a: integer notnull variable
--- - Error
-create proc analyzing_generated_rewrite_calls_does_not_rewrite()
-begin
-  declare a int;
-  if a is not null then
-    let b := cql_inferred_notnull(a);
-  end if;
-end;
-
 -- TEST: Disable flow-sensitive nullability.
 -- + @ENFORCE_NORMAL NOT NULL AFTER CHECK
 -- + {enforce_normal_stmt}: ok

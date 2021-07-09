@@ -92,6 +92,17 @@ void yyset_lineno(int);
 #define YY_ERROR_ON_COLUMNS(x) \
   if (x) yyerror("Cursor columns not allowed in this form.")
 
+// We insert calls to `cql_inferred_notnull` as part of a rewrite so we expect
+// to see it during semantic analysis, but it cannot be allowed to appear in a
+// program. It would be unsafe if it could: It coerces a value from a nullable
+// type to a nonnull type without any runtime check.
+
+#define YY_ERROR_ON_CQL_INFERRED_NOTNULL(x) \
+  EXTRACT_STRING(proc_name, x); \
+  if (!strcmp(proc_name, "cql_inferred_notnull")) { \
+    yyerror("Call to internal function is not allowed 'cql_inferred_notnull'"); \
+  }
+
 #ifdef CQL_AMALGAM
 static void cql_reset_globals(void);
 #endif
@@ -812,11 +823,13 @@ raise_expr:
 
 call:
   name '(' arg_list ')' opt_filter_clause  {
+      YY_ERROR_ON_CQL_INFERRED_NOTNULL($name);
       struct ast_node *call_filter_clause = new_ast_call_filter_clause(NULL, $opt_filter_clause);
       struct ast_node *call_arg_list = new_ast_call_arg_list(call_filter_clause, $arg_list);
       $call = new_ast_call($name, call_arg_list);
   }
   | name '(' DISTINCT arg_list ')' opt_filter_clause  {
+      YY_ERROR_ON_CQL_INFERRED_NOTNULL($name);
       struct ast_node *call_filter_clause = new_ast_call_filter_clause(new_ast_distinct(), $opt_filter_clause);
       struct ast_node *call_arg_list = new_ast_call_arg_list(call_filter_clause, $arg_list);
       $call = new_ast_call($name, call_arg_list);
@@ -1549,8 +1562,14 @@ declare_stmt:
   ;
 
 call_stmt:
-  CALL name '(' ')'  { $call_stmt = new_ast_call_stmt($name, NULL); }
-  | CALL name '(' call_expr_list ')'  { $call_stmt = new_ast_call_stmt($name, $call_expr_list); }
+  CALL name '(' ')'  {
+      YY_ERROR_ON_CQL_INFERRED_NOTNULL($name);
+      $call_stmt = new_ast_call_stmt($name, NULL);
+  }
+  | CALL name '(' call_expr_list ')'  {
+      YY_ERROR_ON_CQL_INFERRED_NOTNULL($name);
+      $call_stmt = new_ast_call_stmt($name, $call_expr_list);
+  }
   ;
 
 while_stmt:

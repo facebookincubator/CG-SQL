@@ -968,16 +968,17 @@ static void gen_expr_call(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) 
   EXTRACT(opt_filter_clause, call_filter_clause->right);
   EXTRACT(arg_list, call_arg_list->right);
 
+  // We never want this to appear. Calls to `cql_inferred_notnull` exist only as
+  // the product of a rewrite rule and should not be visible to users.
+  if (!Strcasecmp("cql_inferred_notnull", name)) {
+    gen_arg_list(arg_list);
+    return;
+  }
+
   if (for_sqlite()) {
     // The nullable function has no actual sql for it, it's just type info
     // don't echo nullable if we're doing codegen (callback present)
     if (!Strcasecmp("nullable", name)) {
-      gen_arg_list(arg_list);
-      return;
-    }
-
-    // As with "nullable", there's nothing to do here.
-    if (!Strcasecmp("cql_inferred_notnull", name)) {
       gen_arg_list(arg_list);
       return;
     }
