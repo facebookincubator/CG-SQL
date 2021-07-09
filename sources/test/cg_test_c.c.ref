@@ -487,8 +487,8 @@ END;
 #define _PROC_ "out_test"
 // export: DECLARE PROC out_test (OUT i INTEGER NOT NULL, OUT ii INTEGER);
 void out_test(cql_int32 *_Nonnull i, cql_nullable_int32 *_Nonnull ii) {
-  cql_tripwire(i);
-  cql_tripwire(ii);
+  cql_contract_argument_notnull((void *)i, 1);
+  cql_contract_argument_notnull((void *)ii, 2);
 
   *i = 0; // set out arg to non-garbage
   cql_set_null(*ii); // set out arg to non-garbage
@@ -553,7 +553,7 @@ END;
 #define _PROC_ "outparm_test"
 // export: DECLARE PROC outparm_test (OUT foo INTEGER NOT NULL) USING TRANSACTION;
 CQL_WARN_UNUSED cql_code outparm_test(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull foo) {
-  cql_tripwire(foo);
+  cql_contract_argument_notnull((void *)foo, 1);
 
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *_temp_stmt = NULL;
@@ -984,7 +984,7 @@ CQL_WARN_UNUSED cql_code get_data_fetch_results(sqlite3 *_Nonnull _db_, get_data
 
 // export: DECLARE PROC get_data (name_ TEXT NOT NULL, id_ INTEGER NOT NULL) (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
 CQL_WARN_UNUSED cql_code get_data(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_string_ref _Nonnull name_, cql_int32 id_) {
-  cql_tripwire(name_);
+  cql_contract_argument_notnull((void *)name_, 1);
 
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -1088,7 +1088,7 @@ END;
 #define _PROC_ "copy_int"
 // export: DECLARE PROC copy_int (a INTEGER, OUT b INTEGER);
 void copy_int(cql_nullable_int32 a, cql_nullable_int32 *_Nonnull b) {
-  cql_tripwire(b);
+  cql_contract_argument_notnull((void *)b, 2);
 
   cql_set_null(*b); // set out arg to non-garbage
   cql_set_nullable(*b, a.is_null, a.value);
@@ -2123,8 +2123,8 @@ END;
 #define _PROC_ "outint_nullable"
 // export: DECLARE PROC outint_nullable (OUT output INTEGER, OUT result BOOL NOT NULL) USING TRANSACTION;
 CQL_WARN_UNUSED cql_code outint_nullable(sqlite3 *_Nonnull _db_, cql_nullable_int32 *_Nonnull output, cql_bool *_Nonnull result) {
-  cql_tripwire(output);
-  cql_tripwire(result);
+  cql_contract_argument_notnull((void *)output, 1);
+  cql_contract_argument_notnull((void *)result, 2);
 
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *C_stmt = NULL;
@@ -2163,8 +2163,8 @@ END;
 #define _PROC_ "outint_notnull"
 // export: DECLARE PROC outint_notnull (OUT output INTEGER NOT NULL, OUT result BOOL NOT NULL) USING TRANSACTION;
 CQL_WARN_UNUSED cql_code outint_notnull(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull output, cql_bool *_Nonnull result) {
-  cql_tripwire(output);
-  cql_tripwire(result);
+  cql_contract_argument_notnull((void *)output, 1);
+  cql_contract_argument_notnull((void *)result, 2);
 
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *C_stmt = NULL;
@@ -2223,7 +2223,7 @@ END;
 #define _PROC_ "obj_proc"
 // export: DECLARE PROC obj_proc (OUT an_object OBJECT);
 void obj_proc(cql_object_ref _Nullable *_Nonnull an_object) {
-  cql_tripwire(an_object);
+  cql_contract_argument_notnull((void *)an_object, 1);
 
   *(void **)an_object = NULL; // set out arg to non-garbage
   cql_set_object_ref(an_object, NULL);
@@ -2322,7 +2322,7 @@ END;
 #define _PROC_ "unused_temp"
 // export: DECLARE PROC unused_temp (i INTEGER, OUT o INTEGER NOT NULL);
 void unused_temp(cql_nullable_int32 i, cql_int32 *_Nonnull o) {
-  cql_tripwire(o);
+  cql_contract_argument_notnull((void *)o, 2);
 
   *o = 0; // set out arg to non-garbage
   do {
@@ -2687,7 +2687,7 @@ END;
 #define _PROC_ "proc_with_out_arg"
 // export: DECLARE PROC proc_with_out_arg (OUT foo TEXT);
 void proc_with_out_arg(cql_string_ref _Nullable *_Nonnull foo) {
-  cql_tripwire(foo);
+  cql_contract_argument_notnull((void *)foo, 1);
 
   *(void **)foo = NULL; // set out arg to non-garbage
   cql_set_string_ref(&*foo, _literal_5_x_);
@@ -2710,7 +2710,7 @@ END;
 #define _PROC_ "calls_out_proc"
 // export: DECLARE PROC calls_out_proc (OUT foo TEXT);
 void calls_out_proc(cql_string_ref _Nullable *_Nonnull foo) {
-  cql_tripwire(foo);
+  cql_contract_argument_notnull((void *)foo, 1);
 
   cql_string_ref bar = NULL;
 
@@ -2751,7 +2751,7 @@ END;
 #define _PROC_ "blob_proc"
 // export: DECLARE PROC blob_proc (OUT a_blob BLOB);
 void blob_proc(cql_blob_ref _Nullable *_Nonnull a_blob) {
-  cql_tripwire(a_blob);
+  cql_contract_argument_notnull((void *)a_blob, 1);
 
   *(void **)a_blob = NULL; // set out arg to non-garbage
   cql_set_blob_ref(&*a_blob, NULL);
@@ -3163,7 +3163,7 @@ END;
 #define _PROC_ "dml_user"
 // export: DECLARE PROC dml_user (OUT a_ INTEGER NOT NULL) USING TRANSACTION;
 CQL_WARN_UNUSED cql_code dml_user(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull a_) {
-  cql_tripwire(a_);
+  cql_contract_argument_notnull((void *)a_, 1);
 
   cql_code _rc_ = SQLITE_OK;
   *a_ = 0; // set out arg to non-garbage
@@ -3310,7 +3310,7 @@ END;
 #define _PROC_ "c_literal"
 // export: DECLARE PROC c_literal (OUT x TEXT);
 void c_literal(cql_string_ref _Nullable *_Nonnull x) {
-  cql_tripwire(x);
+  cql_contract_argument_notnull((void *)x, 1);
 
   *(void **)x = NULL; // set out arg to non-garbage
   cql_set_string_ref(&*x, _literal_8_Testing_c_literal);
@@ -4073,8 +4073,8 @@ END;
 #define _PROC_ "multi_rewrite"
 // export: DECLARE PROC multi_rewrite (blob_id_ INTEGER NOT NULL, b_notnull_ BLOB NOT NULL, b_nullable_ BLOB, id_ INTEGER NOT NULL, name_ TEXT, rate_ LONG_INT, type_ INTEGER, size_ REAL, OUT out_arg INTEGER NOT NULL) USING TRANSACTION;
 CQL_WARN_UNUSED cql_code multi_rewrite(sqlite3 *_Nonnull _db_, cql_int32 blob_id_, cql_blob_ref _Nonnull b_notnull_, cql_blob_ref _Nullable b_nullable_, cql_int32 id_, cql_string_ref _Nullable name_, cql_nullable_int64 rate_, cql_nullable_int32 type_, cql_nullable_double size_, cql_int32 *_Nonnull out_arg) {
-  cql_tripwire(b_notnull_);
-  cql_tripwire(out_arg);
+  cql_contract_argument_notnull((void *)b_notnull_, 2);
+  cql_contract_argument_notnull((void *)out_arg, 9);
 
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *_temp_stmt = NULL;
@@ -4962,7 +4962,7 @@ END;
 #define _PROC_ "in_test"
 // export: DECLARE PROC in_test (x INTEGER, OUT b BOOL);
 void in_test(cql_nullable_int32 x, cql_nullable_bool *_Nonnull b) {
-  cql_tripwire(b);
+  cql_contract_argument_notnull((void *)b, 2);
 
   cql_set_null(*b); // set out arg to non-garbage
   cql_set_null(*b);
@@ -4982,7 +4982,7 @@ END;
 #define _PROC_ "not_in_test"
 // export: DECLARE PROC not_in_test (x INTEGER, OUT b BOOL);
 void not_in_test(cql_nullable_int32 x, cql_nullable_bool *_Nonnull b) {
-  cql_tripwire(b);
+  cql_contract_argument_notnull((void *)b, 2);
 
   cql_set_null(*b); // set out arg to non-garbage
   cql_set_null(*b);
@@ -7319,7 +7319,7 @@ typedef struct early_out_rc_cleared_C_row {
   cql_int32 x;
 } early_out_rc_cleared_C_row;
 CQL_WARN_UNUSED cql_code early_out_rc_cleared(sqlite3 *_Nonnull _db_, cql_nullable_int32 *_Nonnull x) {
-  cql_tripwire(x);
+  cql_contract_argument_notnull((void *)x, 1);
 
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *C_stmt = NULL;
@@ -8296,7 +8296,7 @@ END;
 #define _PROC_ "try_boxing"
 // export: DECLARE PROC try_boxing (OUT result OBJECT<bar CURSOR>) USING TRANSACTION;
 CQL_WARN_UNUSED cql_code try_boxing(sqlite3 *_Nonnull _db_, cql_object_ref _Nullable *_Nonnull result) {
-  cql_tripwire(result);
+  cql_contract_argument_notnull((void *)result, 1);
 
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *C_stmt = NULL;
@@ -10481,7 +10481,7 @@ END;
 #define _PROC_ "emit_rc"
 // export: DECLARE PROC emit_rc (OUT result_code INTEGER NOT NULL) USING TRANSACTION;
 CQL_WARN_UNUSED cql_code emit_rc(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull result_code) {
-  cql_tripwire(result_code);
+  cql_contract_argument_notnull((void *)result_code, 1);
 
   cql_code _rc_ = SQLITE_OK;
   *result_code = 0; // set out arg to non-garbage
@@ -10768,7 +10768,7 @@ typedef struct out_arg_cursor_C_row {
   cql_int32 y;
 } out_arg_cursor_C_row;
 void out_arg_cursor(cql_int32 x, cql_int32 *_Nonnull y) {
-  cql_tripwire(y);
+  cql_contract_argument_notnull((void *)y, 2);
 
   out_arg_cursor_C_row C = { 0 };
 
@@ -11377,7 +11377,7 @@ END;
 #define _PROC_ "set_out_arg_ref_test"
 // export: DECLARE PROC set_out_arg_ref_test (OUT x TEXT);
 void set_out_arg_ref_test(cql_string_ref _Nullable *_Nonnull x) {
-  cql_tripwire(x);
+  cql_contract_argument_notnull((void *)x, 1);
 
   *(void **)x = NULL; // set out arg to non-garbage
 
@@ -11395,7 +11395,7 @@ END;
 #define _PROC_ "set_out_arg_null_test"
 // export: DECLARE PROC set_out_arg_null_test (OUT x INTEGER);
 void set_out_arg_null_test(cql_nullable_int32 *_Nonnull x) {
-  cql_tripwire(x);
+  cql_contract_argument_notnull((void *)x, 1);
 
   cql_set_null(*x); // set out arg to non-garbage
 
@@ -11413,7 +11413,7 @@ END;
 #define _PROC_ "set_out_arg_notnull_test"
 // export: DECLARE PROC set_out_arg_notnull_test (OUT x INTEGER NOT NULL);
 void set_out_arg_notnull_test(cql_int32 *_Nonnull x) {
-  cql_tripwire(x);
+  cql_contract_argument_notnull((void *)x, 1);
 
   *x = 0; // set out arg to non-garbage
 
@@ -11835,7 +11835,7 @@ typedef struct out_object_C_row {
 
 #define out_object_C_refs_offset cql_offsetof(out_object_C_row, o) // count = 1
 void out_object(cql_object_ref _Nonnull o, out_object_row *_Nonnull _result_) {
-  cql_tripwire(o);
+  cql_contract_argument_notnull((void *)o, 1);
 
   memset(_result_, 0, sizeof(*_result_));
   out_object_C_row C = { ._refs_count_ = 1, ._refs_offset_ = out_object_C_refs_offset };
@@ -11862,18 +11862,17 @@ END;
 #define _PROC_ "exercise_contracts"
 // export: DECLARE PROC exercise_contracts (a INTEGER, b INTEGER NOT NULL, c TEXT, d TEXT NOT NULL, e BLOB, f BLOB NOT NULL, g OBJECT, h OBJECT NOT NULL, OUT i INTEGER, OUT j INTEGER NOT NULL, OUT k TEXT, OUT l TEXT NOT NULL, INOUT m INTEGER, INOUT n INTEGER NOT NULL, INOUT o TEXT, INOUT p TEXT NOT NULL);
 void exercise_contracts(cql_nullable_int32 a, cql_int32 b, cql_string_ref _Nullable c, cql_string_ref _Nonnull d, cql_blob_ref _Nullable e, cql_blob_ref _Nonnull f, cql_object_ref _Nullable g, cql_object_ref _Nonnull h, cql_nullable_int32 *_Nonnull i, cql_int32 *_Nonnull j, cql_string_ref _Nullable *_Nonnull k, cql_string_ref _Nullable *_Nonnull l, cql_nullable_int32 *_Nonnull m, cql_int32 *_Nonnull n, cql_string_ref _Nullable *_Nonnull o, cql_string_ref _Nonnull *_Nonnull p) {
-  cql_tripwire(d);
-  cql_tripwire(f);
-  cql_tripwire(h);
-  cql_tripwire(i);
-  cql_tripwire(j);
-  cql_tripwire(k);
-  cql_tripwire(l);
-  cql_tripwire(m);
-  cql_tripwire(n);
-  cql_tripwire(o);
-  cql_tripwire(p);
-  cql_tripwire(*p);
+  cql_contract_argument_notnull((void *)d, 4);
+  cql_contract_argument_notnull((void *)f, 6);
+  cql_contract_argument_notnull((void *)h, 8);
+  cql_contract_argument_notnull((void *)i, 9);
+  cql_contract_argument_notnull((void *)j, 10);
+  cql_contract_argument_notnull((void *)k, 11);
+  cql_contract_argument_notnull((void *)l, 12);
+  cql_contract_argument_notnull((void *)m, 13);
+  cql_contract_argument_notnull((void *)n, 14);
+  cql_contract_argument_notnull((void *)o, 15);
+  cql_contract_argument_notnull_when_dereferenced((void *)p, 16);
 
   cql_set_null(*i); // set out arg to non-garbage
   *j = 0; // set out arg to non-garbage
@@ -11894,7 +11893,7 @@ END;
 #define _PROC_ "public_proc_with_a_contract"
 // export: DECLARE PROC public_proc_with_a_contract (t TEXT NOT NULL);
 void public_proc_with_a_contract(cql_string_ref _Nonnull t) {
-  cql_tripwire(t);
+  cql_contract_argument_notnull((void *)t, 1);
 
 
 }
@@ -12023,7 +12022,7 @@ CQL_WARN_UNUSED cql_code result_set_proc_with_contract_in_fetch_results_fetch_re
 
 // export: DECLARE PROC result_set_proc_with_contract_in_fetch_results (t TEXT NOT NULL) (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
 CQL_WARN_UNUSED cql_code result_set_proc_with_contract_in_fetch_results(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_string_ref _Nonnull t) {
-  cql_tripwire(t);
+  cql_contract_argument_notnull((void *)t, 1);
 
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -12150,7 +12149,7 @@ typedef struct out_proc_with_contract_in_fetch_results_C_row {
 
 #define out_proc_with_contract_in_fetch_results_C_refs_offset cql_offsetof(out_proc_with_contract_in_fetch_results_C_row, name) // count = 1
 void out_proc_with_contract_in_fetch_results(cql_string_ref _Nonnull t, out_proc_with_contract_in_fetch_results_row *_Nonnull _result_) {
-  cql_tripwire(t);
+  cql_contract_argument_notnull((void *)t, 1);
 
   memset(_result_, 0, sizeof(*_result_));
   out_proc_with_contract_in_fetch_results_C_row C = { ._refs_count_ = 1, ._refs_offset_ = out_proc_with_contract_in_fetch_results_C_refs_offset };

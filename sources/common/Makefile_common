@@ -156,6 +156,7 @@ $O/cg_test_c.o: $O/cg_test_c.c
 $O/cg_test_c_with_type_getters.o: $O/cg_test_c_with_type_getters.c
 
 $O/run_test_client.o: run_test_client.c
+	$(CC) $(CFLAGS) -DCQL_RUN_TEST -c -o $O/run_test_client.o run_test_client.c
 
 $O/result_set_extension.o: result_set_extension.c
 

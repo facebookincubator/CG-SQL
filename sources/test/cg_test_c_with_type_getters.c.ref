@@ -216,7 +216,7 @@ typedef struct emit_object_result_set_C_row {
 
 #define emit_object_result_set_C_refs_offset cql_offsetof(emit_object_result_set_C_row, o) // count = 1
 void emit_object_result_set_fetch_results(emit_object_result_set_result_set_ref _Nullable *_Nonnull _result_set_, cql_object_ref _Nonnull o) {
-  cql_tripwire(o);
+  cql_contract_argument_notnull((void *)o, 1);
 
   cql_bytebuf _rows_;
   cql_bytebuf_open(&_rows_);

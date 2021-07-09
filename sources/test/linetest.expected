@@ -263,7 +263,7 @@ TEST: IN predicate
 # 1
 void in_pred_lines(cql_int32 i, cql_bool *_Nonnull b) {
 # 1
-  cql_tripwire(b);
+  cql_contract_argument_notnull((void *)b, 2);
 # 1
 
 # 1
@@ -321,7 +321,7 @@ void in_pred_lines(cql_int32 i, cql_bool *_Nonnull b) {
 # 1
 void in_pred_and_case(cql_int32 i, cql_bool *_Nonnull b) {
 # 1
-  cql_tripwire(b);
+  cql_contract_argument_notnull((void *)b, 2);
 # 1
 
 # 1

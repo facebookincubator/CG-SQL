@@ -4062,33 +4062,19 @@ end;
 
 -- TEST: Verify that contracts are inserted where appropriate (and not inserted
 -- where not appropriate)
--- - cql_tripwire(a);
--- - cql_tripwire(b);
--- - cql_tripwire(c);
--- + cql_tripwire(d);
--- - cql_tripwire(*d);
--- - cql_tripwire(e);
--- + cql_tripwire(f);
--- - cql_tripwire(*f);
--- - cql_tripwire(g);
--- + cql_tripwire(h);
--- - cql_tripwire(*h);
--- + cql_tripwire(i);
--- - cql_tripwire(*i);
--- + cql_tripwire(j);
--- - cql_tripwire(*j);
--- + cql_tripwire(k);
--- - cql_tripwire(*k);
--- + cql_tripwire(l);
--- - cql_tripwire(*l);
--- + cql_tripwire(m);
--- - cql_tripwire(*m);
--- + cql_tripwire(n);
--- - cql_tripwire(*n);
--- + cql_tripwire(o);
--- - cql_tripwire(*o);
--- + cql_tripwire(p);
--- + cql_tripwire(*p);
+-- + cql_contract_argument_notnull((void *)d, 4);
+-- + cql_contract_argument_notnull((void *)f, 6);
+-- + cql_contract_argument_notnull((void *)h, 8);
+-- + cql_contract_argument_notnull((void *)i, 9);
+-- + cql_contract_argument_notnull((void *)j, 10);
+-- + cql_contract_argument_notnull((void *)k, 11);
+-- + cql_contract_argument_notnull((void *)l, 12);
+-- + cql_contract_argument_notnull((void *)m, 13);
+-- + cql_contract_argument_notnull((void *)n, 14);
+-- + cql_contract_argument_notnull((void *)o, 15);
+-- + cql_contract_argument_notnull_when_dereferenced((void *)p, 16);
+-- +11 cql_contract_argument_notnull
+-- +1 cql_contract_argument_notnull_when_dereferenced
 create proc exercise_contracts(
   a int,
   b int not null,
@@ -4111,27 +4097,27 @@ begin
 end;
 
 -- TEST: Contracts should be emitted for public procs
--- + cql_tripwire(t);
+-- + cql_contract_argument_notnull((void *)t, 1);
 create proc public_proc_with_a_contract(t text not null)
 begin
 end;
 
 -- TEST: Contracts should not be emitted for private procs
--- - cql_tripwire(t);
+-- - cql_contract_argument_notnull((void *)t, 1);
 @attribute(cql:private)
 create proc private_proc_without_a_contract(t text not null)
 begin
 end;
 
 -- TEST: Contracts should be emitted only in _fetch_results for result set procs
--- +1 cql_tripwire(t);
+-- +1 cql_contract_argument_notnull((void *)t, 1);
 create proc result_set_proc_with_contract_in_fetch_results(t text not null)
 begin
   select * from bar;
 end;
 
 -- TEST: Contracts should be emitted only in _fetch_results for out procs
--- +1 cql_tripwire(t);
+-- +1 cql_contract_argument_notnull((void *)t, 1);
 create proc out_proc_with_contract_in_fetch_results(t text not null)
 begin
   declare C cursor like bar;

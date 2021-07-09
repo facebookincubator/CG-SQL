@@ -307,6 +307,116 @@ void cql_set_blob_ref(cql_blob_ref _Nullable *_Nonnull target, cql_blob_ref _Nul
   *target = source;
 }
 
+#ifdef CQL_RUN_TEST
+jmp_buf *_Nullable cql_contract_argument_notnull_tripwire_jmp_buf;
+#endif
+
+// Wraps calls to `cql_tripwire` to allow us to longjmp, if required. This is
+// called for both the argument itself and, in the case of an INOUT NOT NULL
+// reference type argument, what the argument points to as well.
+static void cql_contract_argument_notnull_tripwire(void *_Nullable ptr, cql_uint32 position) {
+#ifdef CQL_RUN_TEST
+  if (cql_contract_argument_notnull_tripwire_jmp_buf && !ptr) {
+    longjmp(*cql_contract_argument_notnull_tripwire_jmp_buf, position);
+  }
+#endif
+  cql_tripwire(ptr);
+}
+
+// This will be called in the case of an INOUT NOT NULL reference type argument
+// to ensure that `argument` does not point to NULL. This function does not need
+// per-position variants (as `DEFINE_ARGUMENT_AT_POSITION_N_MUST_NOT_BE_NULL`
+// enables) as such a function will always be above this in the stack.
+// `__attribute__((optnone))` is used to ensure we actually see this in stack
+// traces and it doesn't get inlined or merged away.
+__attribute__((optnone))
+static void cql_inout_reference_type_notnull_argument_must_not_point_to_null(
+  void *_Nullable *_Nonnull argument,
+  cql_int32 position)
+{
+  cql_contract_argument_notnull_tripwire(*argument, position);
+}
+
+// This helps us generate variants of nonnull argument enforcement for each of
+// the first eight arguments. As above, `__attribute__((optnone))` prevents
+// these from getting inlined or merged.
+#define DEFINE_ARGUMENT_AT_POSITION_N_MUST_NOT_BE_NULL(N) \
+  __attribute__((optnone)) \
+  static void cql_argument_at_position_ ## N ## _must_not_be_null(void *_Nullable argument, cql_bool inout_notnull) { \
+   cql_contract_argument_notnull_tripwire(argument, N); \
+    if (inout_notnull) { \
+      cql_inout_reference_type_notnull_argument_must_not_point_to_null(argument, N); \
+    } \
+  }
+
+DEFINE_ARGUMENT_AT_POSITION_N_MUST_NOT_BE_NULL(1);
+DEFINE_ARGUMENT_AT_POSITION_N_MUST_NOT_BE_NULL(2);
+DEFINE_ARGUMENT_AT_POSITION_N_MUST_NOT_BE_NULL(3);
+DEFINE_ARGUMENT_AT_POSITION_N_MUST_NOT_BE_NULL(4);
+DEFINE_ARGUMENT_AT_POSITION_N_MUST_NOT_BE_NULL(5);
+DEFINE_ARGUMENT_AT_POSITION_N_MUST_NOT_BE_NULL(6);
+DEFINE_ARGUMENT_AT_POSITION_N_MUST_NOT_BE_NULL(7);
+DEFINE_ARGUMENT_AT_POSITION_N_MUST_NOT_BE_NULL(8);
+
+__attribute__((optnone))
+static void cql_argument_at_position_9_or_greater_must_not_be_null(
+  void *_Nullable argument,
+  cql_uint32 position,
+  cql_bool deref)
+{
+  cql_contract_argument_notnull_tripwire(argument, position);
+  if (deref) {
+    cql_inout_reference_type_notnull_argument_must_not_point_to_null(argument, position);
+  }
+}
+
+// Calls a position-specific function that will call `cql_tripwire(argument)`
+// (and `cql_tripwire(*argument)` when `deref` is true, as in the case of `INOUT
+// arg R NOT NULL`, where `R` is some reference type). This is done so that a
+// maximally informative function name will appear in stack traces.
+//
+// NOTE: This function takes a `position` starting from 1 instead of an `index`
+// starting from 0 so that, when someone is debugging a crash, `position` will
+// line up with the name of the position-specific function and not cause
+// confusion. Having the "first argument" be "position 1", as opposed to "index
+// 0", seems to be the most intuitive. It also makes things a bit cleaner when
+// performing a longjmp during testing (because jumping with 0 is
+// indistinguishable from jumping with 1).
+static void cql_contract_argument_notnull_with_optional_dereference_check(
+  void *_Nullable argument,
+  cql_uint32 position,
+  cql_bool deref)
+{
+  switch (position) {
+    case 1:
+      return cql_argument_at_position_1_must_not_be_null(argument, deref);
+    case 2:
+      return cql_argument_at_position_2_must_not_be_null(argument, deref);
+    case 3:
+      return cql_argument_at_position_3_must_not_be_null(argument, deref);
+    case 4:
+      return cql_argument_at_position_4_must_not_be_null(argument, deref);
+    case 5:
+      return cql_argument_at_position_5_must_not_be_null(argument, deref);
+    case 6:
+      return cql_argument_at_position_6_must_not_be_null(argument, deref);
+    case 7:
+      return cql_argument_at_position_7_must_not_be_null(argument, deref);
+    case 8:
+      return cql_argument_at_position_8_must_not_be_null(argument, deref);
+    default:
+      return cql_argument_at_position_9_or_greater_must_not_be_null(argument, position, deref);
+  }
+}
+
+void cql_contract_argument_notnull(void * _Nullable argument, cql_uint32 position) {
+  cql_contract_argument_notnull_with_optional_dereference_check(argument, position, false);
+}
+
+void cql_contract_argument_notnull_when_dereferenced(void * _Nullable argument, cql_uint32 position) {
+  cql_contract_argument_notnull_with_optional_dereference_check(argument, position, true);
+}
+
 // Creates a growable byte-buffer.  This code is used in the creation of the data blob for a result set.
 // The buffer will double in size when it would otherwise overflow resulting in at most 2N data operations
 // for N rows.

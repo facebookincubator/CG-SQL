@@ -3689,6 +3689,25 @@ begin
    end catch;
 end;
 
+-- Called in the test client to verify that we hit tripwires when passing NULL
+-- inappropriately for various argument types and at various argument indices.
+create proc proc_with_notnull_args(
+  a text not null,
+  b text not null,
+  out c text not null,
+  out d text not null,
+  inout e text not null,
+  inout f text not null,
+  inout g text not null,
+  inout h text not null,
+  i text not null,
+  out j text not null,
+  inout k text not null,
+  inout l text not null,
+)
+begin
+end;
+
 @echo c,"#undef cql_error_trace\n";
 @echo c,"#define cql_error_trace()\n";
 

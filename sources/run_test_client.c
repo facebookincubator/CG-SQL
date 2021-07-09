@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#include <setjmp.h>
+
 #include "cqlrt.h"
 #include "run_test.h"
 #include "alloca.h"
@@ -32,6 +34,7 @@ cql_code test_all_column_encoded_multi_out_union(sqlite3 *db);
 cql_code test_all_column_some_encoded_field(sqlite3 *db);
 cql_code test_all_column_some_encoded_field_with_encode_context(sqlite3 *db);
 cql_code test_all_column_encoded_runtime_turn_on_off(sqlite3 *db);
+cql_code test_cql_contract_argument_notnull_tripwires(sqlite3 *db);
 
 static int32_t steps_until_fail = 0;
 static int32_t trace_received = 0;
@@ -156,6 +159,11 @@ cql_code run_client(sqlite3 *db) {
   SQL_E(test_cql_bytebuf_alloc_over_bytebuf_exp_growth_cap(db));
   E(!cql_outstanding_refs,
     "outstanding refs in test_cql_bytebuf_alloc_over_bytebuf_exp_growth_cap: %d\n",
+    cql_outstanding_refs);
+  
+  SQL_E(test_cql_contract_argument_notnull_tripwires(db));
+  E(!cql_outstanding_refs,
+    "outstanding refs in test_cql_contract_argument_notnull_tripwires: %d\n",
     cql_outstanding_refs);
 
   return SQLITE_OK;
@@ -1545,6 +1553,65 @@ cql_code test_cql_bytebuf_alloc_over_bytebuf_exp_growth_cap(sqlite3 *db) {
     "used %d did not match expected value %d\n",
     used,
     init_used + needed);
+
+  tests_passed++;
+  return SQLITE_OK;
+}
+
+// Verify that we hit a tripwire in all of the appropriate cases and avoid them
+// otherwise.
+cql_code test_cql_contract_argument_notnull_tripwires(sqlite3 *db) {
+  printf("Running cql_contract_argument_notnull_tripwires test\n");
+  tests++;
+
+  jmp_buf tripwire_jmp_buf;
+
+  // This causes `cql_contract_argument_notnull` (and its `_when_dereferenced`
+  // variant) to longjmp instead of calling `cql_tripwire`.
+  cql_contract_argument_notnull_tripwire_jmp_buf = &tripwire_jmp_buf;
+
+  // Used for IN TEXT NOT NULL and INOUT TEXT NOT NULL arguments.
+  cql_string_ref string = string_create();
+
+  // Used for OUT NOT NULL arguments and bogus INOUT NOT NULL arguments.
+  cql_string_ref null_string = NULL;
+
+  // Test passing NULL when we're not supposed to. We do this one argument at a
+  // time to exercise all possible code paths.
+  for (int32_t position = 1; position <= 12; position++) {
+    // `position_failed` will hold the position of the argument that failed,
+    // counting from 1.
+    int position_failed = 0;
+    if (!(position_failed = setjmp(tripwire_jmp_buf))) {
+      proc_with_notnull_args(
+        // Arguments 1-8 have dedicated contract functions. Each case gets
+        // tested twice just to pad us out to the 9-or-greater case. INOUT can
+        // fail two different ways so we test both.
+        position ==  1 ? NULL         : string,       // IN
+        position ==  2 ? NULL         : string,       // IN
+        position ==  3 ? NULL         : &null_string, // OUT
+        position ==  4 ? NULL         : &null_string, // OUT
+        position ==  5 ? NULL         : &string,      // INOUT
+        position ==  6 ? NULL         : &string,      // INOUT
+        position ==  7 ? &null_string : &string,      // INOUT
+        position ==  8 ? &null_string : &string,      // INOUT
+        position ==  9 ? NULL         : string,       // IN
+        position == 10 ? NULL         : &null_string, // OUT
+        position == 11 ? NULL         : &string,      // INOUT
+        position == 12 ? &null_string : &string       // INOUT
+      );
+    }
+    E(position != 0, "expected tripwire but did not hit one\n");
+    E(position == position_failed,
+      "expected tripwire for position %d but hit one for %d\n",
+      position,
+      position_failed);
+  }
+
+  // Allow `cql_contract_argument_notnull` to call `cql_tripwire` again.
+  cql_contract_argument_notnull_tripwire_jmp_buf = NULL;
+  
+  cql_string_release(string);
 
   tests_passed++;
   return SQLITE_OK;

@@ -3056,7 +3056,8 @@ static void cg_emit_contracts(ast_node *ast, charbuf *b) {
 
   bool_t did_emit_contract = 0;
 
-  for (ast_node *params = ast; params; params = params->right) {
+  int32_t position = 1;
+  for (ast_node *params = ast; params; params = params->right, position++) {
     Contract(is_ast_params(params));
     EXTRACT_NOTNULL(param, params->left);
     EXTRACT_NOTNULL(param_detail, param->right);
@@ -3064,12 +3065,19 @@ static void cg_emit_contracts(ast_node *ast, charbuf *b) {
     EXTRACT_STRING(name, name_ast);
     sem_t sem_type = name_ast->sem->sem_type;
     bool_t is_nonnull_ref_type = is_not_nullable(sem_type) && is_ref_type(sem_type);
-    if (is_out_parameter(sem_type) || is_nonnull_ref_type) {
-      bprintf(b, "  cql_tripwire(%s);\n", name);
-      did_emit_contract = 1;
-    }
     if (is_inout_parameter(sem_type) && is_nonnull_ref_type) {
-      bprintf(b, "  cql_tripwire(*%s);\n", name);
+      // This is the special case of `INOUT arg R NOT NULL`, where `R` is a
+      // reference type. This case is special because both the argument and what
+      // it points to must not be null; the former because we'll write to it,
+      // and the latter because we'll read it and expect it to not be NULL.
+      bprintf(b, "  cql_contract_argument_notnull_when_dereferenced((void *)%s, %d);\n", name, position);
+      did_emit_contract = 1;
+    } else if (is_out_parameter(sem_type) || is_nonnull_ref_type) {
+      // Here, only the argument itself must not be null. This is either because
+      // we have an OUT argument and thus only need to be able to write to the
+      // address given, or because we have an `IN arg R NOT NULL` (where `R` is
+      // some reference type) that we'll read and expect to not be NULL.
+      bprintf(b, "  cql_contract_argument_notnull((void *)%s, %d);\n", name, position);
       did_emit_contract = 1;
     }
   }
