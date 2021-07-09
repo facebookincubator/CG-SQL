@@ -201,14 +201,6 @@ cql_data_decl( symtab *_Nullable cg_exprs );
 // various purposes, mostly indenting and diagnostic output.
 cql_data_decl( int32_t stmt_nesting_level );
 
-// True if we are presently emitting an assembly query and need to skip
-// including extension outputs
-cql_data_decl( bool_t is_assembly_query );
-
-// True if we are presently emitting an extension fragment and need to import
-// parent assembly query getters
-cql_data_decl( bool_t is_extension_fragment );
-
 // This is the first of two major outputs, this one holds the .h file output
 // it will get the prototypes of all the functions we generate.
 cql_data_decl( charbuf *_Nullable cg_header_output );
