@@ -9240,8 +9240,8 @@ static void sem_add_used_symbols(symtab **used_symbols, symtab *add_symbols) {
   }
 }
 
-// Like sem_select_orderby, but with the restriction that ordering can only
-// be specified via indicies (e.g., 2) and simple name expressions (e.g, x), not
+// Like sem_select_orderby, but with the restriction that ordering can only be
+// specified via indices (e.g., 2) and simple name expressions (e.g, x), not
 // arbitrary expressions (e.g., x + y).
 static bool_t sem_select_orderby_with_simple_ordering_only(ast_node *ast) {
   Contract(is_ast_select_orderby(ast));
@@ -10609,7 +10609,7 @@ static void sem_validate_previous_table(ast_node *prev_table) {
   enqueue_pending_region_validation(prev_table, ast, name);
 }
 
-// Verison info can be gathered from tables, views, or indicies (columns are done seperately)
+// Verison info can be gathered from tables, views, or indices (columns are done seperately)
 // Here we emit a record the annotation with the correct code into the pending annotations buffer
 // this will be later sorted and used to drive schema migration if schema codegen happens.
 static void sem_record_annotation_from_vers_info(version_attrs_info *vers_info) {
