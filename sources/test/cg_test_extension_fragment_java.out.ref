@@ -1,5 +1,5 @@
 
-package com.facebook.cqlviewmodels; 
+package com.facebook.cqlviewmodels;
 
 import com.facebook.cgsql.CQLResultSet;
 import com.facebook.cgsql.CQLViewModel;

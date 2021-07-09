@@ -133,7 +133,7 @@ static rtdata rt_java = {
     RT_IP_NOTICE("//")
     RT_SIGNSRC("//") "\n",
   .source_wrapper_begin =
-    "package %s; \n\n"
+    "package %s;\n\n"
     "import " RT_JAVA_RT_PACKAGE ".CQLResultSet;\n"
     "import " RT_JAVA_RT_PACKAGE ".CQLViewModel;\n"
     "import javax.annotation.Nullable;\n\n",
