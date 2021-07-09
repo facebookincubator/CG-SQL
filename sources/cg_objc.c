@@ -502,11 +502,10 @@ static void cg_objc_one_stmt(ast_node *stmt) {
 
 static void cg_objc_stmt_list(ast_node *head) {
   bool_t containsAssembly = false;
-  symtab *assembly_query_names = symtab_new();
   for (ast_node *ast = head; ast; ast = ast->right) {
     EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc_attrs, ast);
     // skiping the base fragment getters since generating in each extension
-    // will cause colisions including two fragments headers
+    // will cause collisions including two fragments headers
     objc_frag_type = find_fragment_attr_type(misc_attrs);
     if (objc_frag_type == FRAG_TYPE_BASE) {
       continue;
@@ -514,10 +513,6 @@ static void cg_objc_stmt_list(ast_node *head) {
     if (!containsAssembly) {
       // record if an assembly is present
       containsAssembly = objc_frag_type == FRAG_TYPE_ASSEMBLY;
-    }
-    if (objc_frag_type == FRAG_TYPE_EXTENSION) {
-      // record the extension base name to build the imports
-      symtab_add(assembly_query_names, base_fragment_name, NULL);
     }
     cg_objc_one_stmt(stmt);
   }
@@ -527,8 +522,6 @@ static void cg_objc_stmt_list(ast_node *head) {
   if (!containsAssembly) {
     bprintf(cg_header_output, "%s", objc_extension_header->ptr);
   }
-
-  SYMTAB_CLEANUP(assembly_query_names);
 }
 
 
