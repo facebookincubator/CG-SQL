@@ -1013,6 +1013,15 @@ misc_cases() {
     echo Generated from text did not appear in the implementation output.
     failed
   fi
+
+  echo 'running parser disallows columns in FETCH FROM CALL test'
+  if ${CQL} --in "${TEST_DIR}/parse_test_fetch_from_call_columns.sql" 2>"${OUT_DIR}/parse_test_fetch_from_call_columns.err"
+  then
+    echo 'failed to disallow cursor columns in FETCH FROM CALL'
+    failed
+  fi
+
+  on_diff_exit parse_test_fetch_from_call_columns.err
 }
 
 json_schema_test() {

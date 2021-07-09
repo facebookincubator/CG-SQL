@@ -67,6 +67,11 @@
 static void parse_cmd(int argc, char **argv);
 static void print_dot(struct ast_node* node);
 static ast_node *file_literal(ast_node *);
+static void cql_exit_on_parse_errors();
+static void parse_cleanup();
+
+// Set to true upon a call to `yyerror`.
+static bool_t parse_error_occurred;
 
 int yylex();
 void yyerror(const char *s, ...);
@@ -85,7 +90,7 @@ void yyset_lineno(int);
 // and definitely more maintainable.
 
 #define YY_ERROR_ON_COLUMNS(x) \
-  if (x) yyerror("\nCursor columns not allowed in this form.\n")
+  if (x) yyerror("Cursor columns not allowed in this form.")
 
 #ifdef CQL_AMALGAM
 static void cql_reset_globals(void);
@@ -248,6 +253,9 @@ static void cql_reset_globals(void);
 
 program:
   opt_stmt_list  {
+    if (parse_error_occurred) {
+      cql_exit_on_parse_errors();
+    }
     gen_init();
     if (options.semantic) {
       sem_main($opt_stmt_list);
@@ -1882,11 +1890,14 @@ void yyerror(const char *format, ...) {
   va_start(args, format);
 
   CHARBUF_OPEN(err);
-  bprintf(&err, "Error at: %s:%d ", current_file, yylineno);
+  bprintf(&err, "Error at %s:%d : ", current_file, yylineno);
   vbprintf(&err, format, args);
+  bputc(&err, '\n');
   cql_emit_error(err.ptr);
   CHARBUF_CLOSE(err);
   va_end(args);
+
+  parse_error_occurred = true;
 }
 
 static unsigned long next_id = 0;
@@ -2092,10 +2103,8 @@ static void parse_cmd(int argc, char **argv) {
 
 static jmp_buf for_exit;
 static int32_t exit_code;
-static int32_t manual_syntax_errors;
 
 int cql_main(int argc, char **argv) {
-  manual_syntax_errors = 0;
   exit_code = 0;
   yylineno = 1;
 
@@ -2105,15 +2114,15 @@ int cql_main(int argc, char **argv) {
 
     if (options.run_unit_tests) {
       run_unit_tests();
-    } else if (yyparse() || manual_syntax_errors) {
-      cql_error("\nParse errors found, no further passes will run.\n");
-      cql_cleanup_and_exit(2);
+    } else if (yyparse()) {
+      cql_exit_on_parse_errors();
     }
   }
 
   cg_c_cleanup();
   sem_cleanup();
   ast_cleanup();
+  parse_cleanup();
   gen_cleanup();
   rt_cleanup();
 
@@ -2132,6 +2141,15 @@ int cql_main(int argc, char **argv) {
 // for why this has to be this way.  Note we do this in one line so that
 // we don't get bogus code coverage errors for not covering the trialing brace
 void cql_cleanup_and_exit(int32_t code) { exit_code = code; longjmp(for_exit, 1); }
+
+static void cql_exit_on_parse_errors() {
+  cql_error("Parse errors found, no further passes will run.\n");
+  cql_cleanup_and_exit(2);
+}
+
+static void parse_cleanup() {
+  parse_error_occurred = false;
+}
 
 static int32_t gather_arg_params(int32_t a, int32_t argc, char **argv, int *out_count, char ***out_args) {
   if (a + 1 < argc) {
