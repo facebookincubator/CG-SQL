@@ -176,14 +176,14 @@ static rtdata rt_java = {
     "  return mResultSet.get%s(%s, %s);\n"
     "}\n\n",
   .cql_result_set_has_identity_columns =
-    "@Override \n"
+    "@Override\n"
     "protected boolean hasIdentityColumns() {\n"
     "  return %s;\n"
     "}\n\n",
   .cql_result_set_copy =
     "@Nullable\n"
     "public %s copy(int row, int count) {\n"
-    "  CQLResultSet resultSet = mResultSet.copy(row, count); \n"
+    "  CQLResultSet resultSet = mResultSet.copy(row, count);\n"
     "  if (resultSet == null) {\n"
     "    return null;\n"
     "  }\n"

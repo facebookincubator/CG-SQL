@@ -45,7 +45,7 @@ public final class cg_test_extension_fragment_java extends CQLViewModel {
     return mResultSet.getCount();
   }
 
-  @Override 
+  @Override
   protected boolean hasIdentityColumns() {
     return false;
   }

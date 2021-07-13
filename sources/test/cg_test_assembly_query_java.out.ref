@@ -54,7 +54,7 @@ public final class cg_test_assembly_query_java extends CQLViewModel {
     return mResultSet.getCount();
   }
 
-  @Override 
+  @Override
   protected boolean hasIdentityColumns() {
     return false;
   }
