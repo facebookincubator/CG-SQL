@@ -1,14 +1,14 @@
 
 {
   "tables" : [
-    
+
     The statement ending at line XXXX
-    
+
     CREATE TABLE Foo(
       id INTEGER<ident> NOT NULL,
       name TEXT
     )
-    
+
     {
       "name" : "Foo",
       "isTemp" : 0,
@@ -52,13 +52,13 @@
       "checkExpressions" : [
       ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE TABLE T2(
       id INTEGER PRIMARY KEY AUTOINCREMENT
     )
-    
+
     {
       "name" : "T2",
       "isTemp" : 0,
@@ -88,13 +88,13 @@
       "checkExpressions" : [
       ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE TABLE T3(
       id INTEGER UNIQUE NOT NULL
     )
-    
+
     {
       "name" : "T3",
       "isTemp" : 0,
@@ -129,9 +129,9 @@
       "checkExpressions" : [
       ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     @ATTRIBUTE(foo=bar)
     @ATTRIBUTE(num=-7)
     @ATTRIBUTE(hex=0x53)
@@ -139,7 +139,7 @@
       @ATTRIBUTE(cool)
       id INTEGER
     )
-    
+
     {
       "name" : "T4",
       "isTemp" : 0,
@@ -189,9 +189,9 @@
       "checkExpressions" : [
       ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     @ATTRIBUTE(crazy="\\ ' \a \b \f \n \t \r \v \\ \" ")
     CREATE TABLE T5(
       r REAL,
@@ -199,7 +199,7 @@
       b BOOL,
       l LONG_INT
     )
-    
+
     {
       "name" : "T5",
       "isTemp" : 0,
@@ -265,14 +265,14 @@
       "checkExpressions" : [
       ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     @ATTRIBUTE(this:that=1L)
     CREATE TEMP TABLE IF NOT EXISTS T6(
       id INTEGER NOT NULL
     ) WITHOUT ROWID
-    
+
     {
       "name" : "T6",
       "isTemp" : 1,
@@ -308,13 +308,13 @@
       "checkExpressions" : [
       ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE TABLE T7a(
       id INTEGER @CREATE(1) @DELETE(3)
     )
-    
+
     {
       "name" : "T7a",
       "isTemp" : 0,
@@ -346,13 +346,13 @@
       "checkExpressions" : [
       ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE TABLE T7b(
       id INTEGER @CREATE(1, t7_col_create) @DELETE(3, t7_col_delete)
     )
-    
+
     {
       "name" : "T7b",
       "isTemp" : 0,
@@ -386,13 +386,13 @@
       "checkExpressions" : [
       ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE TABLE T8a(
       id INTEGER
     ) @CREATE(1) @DELETE(3)
-    
+
     {
       "name" : "T8a",
       "isTemp" : 0,
@@ -424,13 +424,13 @@
       "checkExpressions" : [
       ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE TABLE T8b(
       id INTEGER
     ) @CREATE(1, t8_table_create) @DELETE(3, t8_table_delete)
-    
+
     {
       "name" : "T8b",
       "isTemp" : 0,
@@ -464,9 +464,9 @@
       "checkExpressions" : [
       ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     @ATTRIBUTE(an_integer=1)
     @ATTRIBUTE(a_double=2.5)
     @ATTRIBUTE(a_double=2.5)
@@ -480,7 +480,7 @@
       CONSTRAINT uk1 UNIQUE (id2 DESC, id3 ASC),
       CONSTRAINT uk2 UNIQUE (id2 / 2 ASC, id3 + 2 DESC)
     )
-    
+
     {
       "name" : "T9",
       "isTemp" : 0,
@@ -588,9 +588,9 @@
       "checkExpressions" : [
       ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE TABLE T10(
       id1 INTEGER UNIQUE,
       id2 INTEGER,
@@ -601,7 +601,7 @@
       CONSTRAINT uk1 UNIQUE (id2, id3),
       UNIQUE (id3, id4)
     )
-    
+
     {
       "name" : "T10",
       "isTemp" : 0,
@@ -690,9 +690,9 @@
       "checkExpressions" : [
       ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE TABLE T11(
       id1 INTEGER,
       id2 INTEGER,
@@ -700,7 +700,7 @@
       FOREIGN KEY (id1) REFERENCES T9 (id1) ON DELETE CASCADE,
       FOREIGN KEY (id1) REFERENCES T9 (id1) ON UPDATE SET NULL
     )
-    
+
     {
       "name" : "T11",
       "isTemp" : 0,
@@ -766,9 +766,9 @@
       "checkExpressions" : [
       ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE TABLE T12(
       id1 INTEGER,
       id2 INTEGER,
@@ -776,7 +776,7 @@
       FOREIGN KEY (id1) REFERENCES T9 (id1) ON DELETE SET DEFAULT DEFERRABLE INITIALLY DEFERRED,
       FOREIGN KEY (id2) REFERENCES T9 (id1) ON UPDATE NO ACTION
     )
-    
+
     {
       "name" : "T12",
       "isTemp" : 0,
@@ -842,16 +842,16 @@
       "checkExpressions" : [
       ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE TABLE T12a(
       id1 INTEGER,
       id2 INTEGER,
       id3 INTEGER,
       FOREIGN KEY (id1) REFERENCES T9 (id1) ON DELETE RESTRICT NOT DEFERRABLE
     )
-    
+
     {
       "name" : "T12a",
       "isTemp" : 0,
@@ -909,15 +909,15 @@
       "checkExpressions" : [
       ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE TABLE T12b(
       id1 INTEGER,
       id2 INTEGER,
       FOREIGN KEY (id1) REFERENCES T9 (id1) NOT DEFERRABLE
     )
-    
+
     {
       "name" : "T12b",
       "isTemp" : 0,
@@ -965,15 +965,15 @@
       "checkExpressions" : [
       ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE TABLE with_fk_on_columns(
       id1 INTEGER NOT NULL REFERENCES T2 (id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED,
       id2 INTEGER NOT NULL REFERENCES T10 (id4) ON DELETE CASCADE,
       FOREIGN KEY (id1, id2) REFERENCES T10 (id3, id4)
     )
-    
+
     {
       "name" : "with_fk_on_columns",
       "isTemp" : 0,
@@ -1037,13 +1037,13 @@
       "checkExpressions" : [
       ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE TABLE recreated_in_a_group(
       id INTEGER
     ) @RECREATE(my_recreate_group)
-    
+
     {
       "name" : "recreated_in_a_group",
       "isTemp" : 0,
@@ -1074,14 +1074,14 @@
       "checkExpressions" : [
       ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE TABLE radioactive(
       id INTEGER NOT NULL,
       danger TEXT @SENSITIVE
     )
-    
+
     {
       "name" : "radioactive",
       "isTemp" : 0,
@@ -1122,14 +1122,14 @@
       "checkExpressions" : [
       ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE TABLE T1(
       id INTEGER,
       name TEXT
     )
-    
+
     {
       "name" : "T1",
       "isTemp" : 0,
@@ -1169,13 +1169,13 @@
       "checkExpressions" : [
       ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE TABLE with_collate_and_check(
       id TEXT COLLATE bar CHECK(id >= '_' AND id <= 'zzzzz') 
     )
-    
+
     {
       "name" : "with_collate_and_check",
       "isTemp" : 0,
@@ -1208,14 +1208,14 @@
       "checkExpressions" : [
       ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE TABLE with_check_constraints(
       v INTEGER,
       CONSTRAINT x CHECK (v > 5)
     )
-    
+
     {
       "name" : "with_check_constraints",
       "isTemp" : 0,
@@ -1250,14 +1250,14 @@
         }
       ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE TABLE with_unnamed_check_constraints(
       w INTEGER<meters>,
       CHECK (w > 5)
     )
-    
+
     {
       "name" : "with_unnamed_check_constraints",
       "isTemp" : 0,
@@ -1292,14 +1292,14 @@
         }
       ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE TABLE with_from_recreate(
       id INTEGER,
       t TEXT
     ) @CREATE(3, cql:from_recreate)
-    
+
     {
       "name" : "with_from_recreate",
       "isTemp" : 0,
@@ -1343,15 +1343,15 @@
     }
   ],
   "virtualTables" : [
-    
+
     The statement ending at line XXXX
-    
+
     @ATTRIBUTE(banana)
     CREATE TABLE a_virtual_table(
       id INTEGER,
       t TEXT
     ) @RECREATE
-    
+
     {
       "name" : "a_virtual_table",
       "isTemp" : 0,
@@ -1400,14 +1400,14 @@
       "checkExpressions" : [
       ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE TABLE a_second_virtual_table(
       id INTEGER @SENSITIVE,
       t TEXT
     ) @RECREATE
-    
+
     {
       "name" : "a_second_virtual_table",
       "isTemp" : 0,
@@ -1450,15 +1450,15 @@
       "checkExpressions" : [
       ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE TABLE a_third_virtual_table(
       id INTEGER @SENSITIVE,
       t TEXT,
       q REAL
     ) @RECREATE
-    
+
     {
       "name" : "a_third_virtual_table",
       "isTemp" : 0,
@@ -1512,15 +1512,15 @@
       "checkExpressions" : [
       ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE TABLE a_deleted_virtual_table(
       id INTEGER @SENSITIVE,
       t TEXT,
       q REAL
     ) @DELETE(2, cql:module_must_not_be_deleted_see_docs_for_CQL0392)
-    
+
     {
       "name" : "a_deleted_virtual_table",
       "isTemp" : 0,
@@ -1578,13 +1578,13 @@
     }
   ],
   "views" : [
-    
+
     The statement ending at line XXXX
-    
+
     CREATE VIEW region_0_view AS
     SELECT *
       FROM Foo
-    
+
     {
       "name" : "region_0_view",
       "isTemp" : 0,
@@ -1608,11 +1608,11 @@
       "selectArgs" : [  ]
     }
     The statement ending at line XXXX
-    
+
     CREATE VIEW MyView AS
     SELECT *
       FROM Foo
-    
+
     ,
     {
       "name" : "MyView",
@@ -1635,11 +1635,11 @@
       "selectArgs" : [  ]
     }
     The statement ending at line XXXX
-    
+
     CREATE VIEW MyOtherView AS
     SELECT *
       FROM Foo
-    
+
     ,
     {
       "name" : "MyOtherView",
@@ -1662,13 +1662,13 @@
       "selectArgs" : [  ]
     }
     The statement ending at line XXXX
-    
+
     @ATTRIBUTE(my_attribute=('any', ('tree', 'of'), 'values'))
     @ATTRIBUTE(my_single_attribute='other_value')
     CREATE VIEW MyViewWithAttributes AS
     SELECT *
       FROM Foo
-    
+
     ,
     {
       "name" : "MyViewWithAttributes",
@@ -1701,11 +1701,11 @@
       "selectArgs" : [  ]
     }
     The statement ending at line XXXX
-    
+
     CREATE VIEW ADeletedView AS
     SELECT *
       FROM Foo @DELETE(1)
-    
+
     ,
     {
       "name" : "ADeletedView",
@@ -1729,11 +1729,11 @@
       "selectArgs" : [  ]
     }
     The statement ending at line XXXX
-    
+
     CREATE VIEW ADeletedViewWithMigrationProc AS
     SELECT *
       FROM Foo @DELETE(1, view_delete)
-    
+
     ,
     {
       "name" : "ADeletedViewWithMigrationProc",
@@ -1758,11 +1758,11 @@
       "selectArgs" : [  ]
     }
     The statement ending at line XXXX
-    
+
     CREATE VIEW my_view AS
     SELECT 1 AS foo, T1.*
       FROM T1
-    
+
     ,
     {
       "name" : "my_view",
@@ -1790,11 +1790,11 @@
     }
   ],
   "indices" : [
-    
+
     The statement ending at line XXXX
-    
+
     CREATE INDEX region_0_index ON Foo (name, id)
-    
+
     {
       "name" : "region_0_index",
       "table" : "Foo",
@@ -1807,9 +1807,9 @@
       "sortOrders" : [ "", "" ]
     }
     The statement ending at line XXXX
-    
+
     CREATE UNIQUE INDEX IF NOT EXISTS MyIndex ON Foo (name DESC, id ASC)
-    
+
     ,
     {
       "name" : "MyIndex",
@@ -1821,9 +1821,9 @@
       "sortOrders" : [ "desc", "asc" ]
     }
     The statement ending at line XXXX
-    
+
     CREATE INDEX MyOtherIndex ON Foo (id)
-    
+
     ,
     {
       "name" : "MyOtherIndex",
@@ -1835,9 +1835,9 @@
       "sortOrders" : [ "" ]
     }
     The statement ending at line XXXX
-    
+
     CREATE INDEX MyExpressionIndex ON Foo (id + 5, id * id)
-    
+
     ,
     {
       "name" : "MyExpressionIndex",
@@ -1849,10 +1849,10 @@
       "sortOrders" : [ "", "" ]
     }
     The statement ending at line XXXX
-    
+
     CREATE INDEX MyPartialIndex ON Foo (id * id)
       WHERE id < 1000
-    
+
     ,
     {
       "name" : "MyPartialIndex",
@@ -1865,9 +1865,9 @@
       "sortOrders" : [ "" ]
     }
     The statement ending at line XXXX
-    
+
     CREATE INDEX YetAnotherIndex ON Foo (id) @DELETE(1)
-    
+
     ,
     {
       "name" : "YetAnotherIndex",
@@ -1880,11 +1880,11 @@
       "sortOrders" : [ "" ]
     }
     The statement ending at line XXXX
-    
+
     @ATTRIBUTE(my_attribute=('any', ('tree', 'of'), 'values'))
     @ATTRIBUTE(my_single_attribute='other_value')
     CREATE INDEX MyIndexWithAttributes ON Foo (id)
-    
+
     ,
     {
       "name" : "MyIndexWithAttributes",
@@ -1907,19 +1907,19 @@
     }
   ],
   "triggers" : [
-    
+
     The statement ending at line XXXX
-    
+
     CREATE TEMP TRIGGER IF NOT EXISTS trigger1
       BEFORE DELETE ON foo
       FOR EACH ROW
       WHEN old.id = 3
     BEGIN
     DELETE FROM Foo WHERE id = id + 1;
-    
+
     DELETE FROM Foo WHERE id = old.id;
     END
-    
+
     {
       "name" : "trigger1",
       "target" : "Foo",
@@ -1937,13 +1937,13 @@
       "usesTables" : [ "Foo" ]
     }
     The statement ending at line XXXX
-    
+
     CREATE TRIGGER trigger2
       AFTER INSERT ON Foo
     BEGIN
     DELETE FROM Foo WHERE id > new.id;
     END
-    
+
     ,
     {
       "name" : "trigger2",
@@ -1959,7 +1959,7 @@
       "usesTables" : [ "Foo" ]
     }
     The statement ending at line XXXX
-    
+
     CREATE TRIGGER trigger3
       INSTEAD OF UPDATE ON MyView
       WHEN old.id > 1 AND new.id < 3
@@ -1967,10 +1967,10 @@
     UPDATE Foo
     SET id = 7
       WHERE name > old.name AND name < new.name;
-    
+
     INSERT INTO Foo(id, name) VALUES(7, 'goo');
     END
-    
+
     ,
     {
       "name" : "trigger3",
@@ -1989,13 +1989,13 @@
       "usesTables" : [ "Foo" ]
     }
     The statement ending at line XXXX
-    
+
     CREATE TRIGGER trigger4
       INSTEAD OF UPDATE OF id, name ON MyView
     BEGIN
     SELECT 1;
     END
-    
+
     ,
     {
       "name" : "trigger4",
@@ -2010,7 +2010,7 @@
       "usesTables" : [  ]
     }
     The statement ending at line XXXX
-    
+
     @ATTRIBUTE(my_attribute=('any', ('tree', 'of'), 'values'))
     @ATTRIBUTE(my_single_attribute='other_value')
     CREATE TRIGGER trigger7
@@ -2018,7 +2018,7 @@
     BEGIN
     DELETE FROM Foo WHERE id < new.id;
     END
-    
+
     ,
     {
       "name" : "trigger7",
@@ -2044,7 +2044,7 @@
       "usesTables" : [ "Foo" ]
     }
     The statement ending at line XXXX
-    
+
     @ATTRIBUTE(my_attribute=('any', ('tree', 'of'), 'values'))
     @ATTRIBUTE(my_single_attribute='other_value')
     CREATE TEMP TRIGGER IF NOT EXISTS trigger8
@@ -2053,10 +2053,10 @@
       WHEN old.id = 7
     BEGIN
     DELETE FROM Foo WHERE id = id + 1;
-    
+
     DELETE FROM Foo WHERE id = old.id;
     END
-    
+
     ,
     {
       "name" : "trigger8",
@@ -2085,13 +2085,13 @@
       "usesTables" : [ "Foo" ]
     }
     The statement ending at line XXXX
-    
+
     CREATE TEMP TRIGGER IF NOT EXISTS trigger5
       BEFORE DELETE ON Foo
     BEGIN
     SELECT RAISE(ROLLBACK, "omg roll it back!");
     END
-    
+
     ,
     {
       "name" : "trigger5",
@@ -2108,13 +2108,13 @@
       "usesTables" : [  ]
     }
     The statement ending at line XXXX
-    
+
     CREATE TRIGGER trigger6
       AFTER INSERT ON Foo
     BEGIN
     SELECT 1;
     END @DELETE(3)
-    
+
     ,
     {
       "name" : "trigger6",
@@ -2132,14 +2132,14 @@
       "usesTables" : [  ]
     }
   ],
-  
+
   The statement ending at line XXXX
-  
+
   @ATTRIBUTE(my_other_attribute=('any', ('tree', 'of'), 'values'))
   @ATTRIBUTE(dbname='fred.sql')
   @ATTRIBUTE(dbfile='test/cg_test_json_schema.sql')
   DECLARE database OBJECT
-  
+
   "attributes" : [
     {
       "name" : "my_other_attribute",
@@ -2155,14 +2155,14 @@
     }
   ],
   "queries" : [
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC crazy_string ()
     BEGIN
     SELECT "\\ ' \a \b \f \n \t \r \v \\ \" " AS crazy;
     END
-    
+
     {
       "name" : "crazy_string",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -2179,16 +2179,16 @@
       "statement" : "SELECT '\\ '' \u0007 \b \f \n \t \r \u000b \\ \" ' AS crazy",
       "statementArgs" : [  ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC a_query (pattern TEXT NOT NULL, reject TEXT)
     BEGIN
     SELECT id
       FROM Foo
       WHERE name LIKE pattern AND name <> reject;
     END
-    
+
     {
       "name" : "a_query",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -2219,9 +2219,9 @@
       "statement" : "SELECT id FROM Foo WHERE name LIKE ? AND name <> ?",
       "statementArgs" : [ "pattern", "reject" ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC bigger_query (pattern TEXT NOT NULL, reject TEXT)
     BEGIN
     SELECT DISTINCT *
@@ -2233,7 +2233,7 @@
     LIMIT 1
     OFFSET 3;
     END
-    
+
     {
       "name" : "bigger_query",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -2269,9 +2269,9 @@
       "statement" : "SELECT DISTINCT id, name FROM Foo WHERE name LIKE ? AND name <> ? GROUP BY name HAVING name > ? ORDER BY ? LIMIT 1 OFFSET 3",
       "statementArgs" : [ "pattern", "reject", "reject", "pattern" ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     @ATTRIBUTE(my_attribute='This is a string attribute')
     CREATE PROC joiner (id_ INTEGER NOT NULL)
     BEGIN
@@ -2279,7 +2279,7 @@
       FROM Foo AS T1
       INNER JOIN T5 ON T1.id = id_ AND T1.id = T5.l;
     END
-    
+
     {
       "name" : "joiner",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -2335,15 +2335,15 @@
       "statement" : "SELECT id, name, r, bl, b, l FROM Foo AS T1 INNER JOIN T5 ON T1.id = ? AND T1.id = T5.l",
       "statementArgs" : [ "id_" ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC radioactive_proc ()
     BEGIN
     SELECT *
       FROM radioactive;
     END
-    
+
     {
       "name" : "radioactive_proc",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -2367,14 +2367,14 @@
       "statement" : "SELECT id, danger FROM radioactive",
       "statementArgs" : [  ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC object_proc (anObject OBJECT)
     BEGIN
     SELECT 1 AS x;
     END
-    
+
     {
       "name" : "object_proc",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -2397,14 +2397,14 @@
       "statement" : "SELECT 1 AS x",
       "statementArgs" : [  ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC proc_inside_region ()
     BEGIN
     SELECT 1 AS a;
     END
-    
+
     {
       "name" : "proc_inside_region",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -2423,9 +2423,9 @@
       "statement" : "SELECT 1 AS a",
       "statementArgs" : [  ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC with_select_proc ()
     BEGIN
     WITH
@@ -2439,7 +2439,7 @@
     SELECT *
       FROM vals;
     END
-    
+
     {
       "name" : "with_select_proc",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -2456,14 +2456,14 @@
       "statement" : "WITH nums (i) AS (SELECT 0 UNION ALL SELECT i + 1 FROM nums LIMIT 1), vals (v) AS (SELECT i FROM nums) SELECT v FROM vals",
       "statementArgs" : [  ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC json_escapes ()
     BEGIN
     SELECT "\\\r\n\t\b\f\"\x01" AS quoted_text;
     END
-    
+
     {
       "name" : "json_escapes",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -2480,15 +2480,15 @@
       "statement" : "SELECT '\\\r\n\t\b\f\"\u0001' AS quoted_text",
       "statementArgs" : [  ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC use_view ()
     BEGIN
     SELECT *
       FROM MyView;
     END
-    
+
     {
       "name" : "use_view",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -2513,16 +2513,16 @@
       "statement" : "SELECT id, name FROM MyView",
       "statementArgs" : [  ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     @ATTRIBUTE(cql:autotest=((dummy_test, (Foo, (id, name), (1, NULL), (2, "hi")))))
     CREATE PROC null_attribute ()
     BEGIN
     SELECT *
       FROM Foo;
     END
-    
+
     {
       "name" : "null_attribute",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -2554,14 +2554,14 @@
     }
   ],
   "inserts" : [
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC insert_proc (id_ INTEGER NOT NULL, name_ TEXT)
     BEGIN
     INSERT OR REPLACE INTO Foo(id, name) VALUES(id_, name_);
     END
-    
+
     {
       "name" : "insert_proc",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -2597,14 +2597,14 @@
         }
       ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC dummy_insert_proc (seed_ INTEGER NOT NULL)
     BEGIN
     INSERT INTO fOo(id, name) VALUES(_seed_, printf('name_%d', _seed_)) @DUMMY_SEED(seed_) @DUMMY_NULLABLES;
     END
-    
+
     {
       "name" : "dummy_insert_proc",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -2636,14 +2636,14 @@
     }
   ],
   "generalInserts" : [
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC insert_with_select ()
     BEGIN
     INSERT INTO T3(id) SELECT 1;
     END
-    
+
     {
       "name" : "insert_with_select",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -2657,16 +2657,16 @@
       "statementType" : "INSERT",
       "columns" : [ "id" ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC insert_compound ()
     BEGIN
     INSERT INTO T3(id) VALUES(1)
     UNION ALL
     SELECT 1 AS column1;
     END
-    
+
     {
       "name" : "insert_compound",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -2680,14 +2680,14 @@
       "statementType" : "INSERT",
       "columns" : [ "id" ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC insert_multi_value ()
     BEGIN
     INSERT INTO T3(id) VALUES(1), (2), (3);
     END
-    
+
     {
       "name" : "insert_multi_value",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -2701,9 +2701,9 @@
       "statementType" : "INSERT",
       "columns" : [ "id" ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC upsert_proc ()
     BEGIN
     INSERT INTO T3(id) VALUES(1)
@@ -2711,7 +2711,7 @@
     SET id = 1
       WHERE id = 9;
     END
-    
+
     {
       "name" : "upsert_proc",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -2725,9 +2725,9 @@
       "statementType" : "INSERT",
       "columns" : [ "id" ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC with_upsert_proc ()
     BEGIN
     WITH
@@ -2739,7 +2739,7 @@
     SET id = 1
       WHERE id = 9;
     END
-    
+
     {
       "name" : "with_upsert_proc",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -2753,9 +2753,9 @@
       "statementType" : "INSERT",
       "columns" : [ "id" ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC with_insert_proc (x INTEGER NOT NULL)
     BEGIN
     WITH
@@ -2763,7 +2763,7 @@
     INSERT INTO T3(id) SELECT *
       FROM data;
     END
-    
+
     {
       "name" : "with_insert_proc",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -2785,9 +2785,9 @@
     }
   ],
   "updates" : [
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC update_proc (id_ INTEGER NOT NULL, name_ TEXT)
     BEGIN
     UPDATE foO
@@ -2796,7 +2796,7 @@
     ORDER BY name
     LIMIT 1;
     END
-    
+
     {
       "name" : "update_proc",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -2820,9 +2820,9 @@
       "statement" : "UPDATE foO SET name = ? WHERE id = ? ORDER BY name LIMIT 1",
       "statementArgs" : [ "name_", "id_" ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC update_with_proc (id_ INTEGER NOT NULL, name_ TEXT)
     BEGIN
     WITH
@@ -2832,7 +2832,7 @@
       WHERE name IN (SELECT *
       FROM names);
     END
-    
+
     {
       "name" : "update_with_proc",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -2858,14 +2858,14 @@
     }
   ],
   "deletes" : [
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC delete_proc (name_ TEXT)
     BEGIN
     DELETE FROM foO WHERE name LIKE name_;
     END
-    
+
     {
       "name" : "delete_proc",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -2883,9 +2883,9 @@
       "statement" : "DELETE FROM foO WHERE name LIKE ?",
       "statementArgs" : [ "name_" ]
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC delete_with_values (name_ TEXT)
     BEGIN
     WITH
@@ -2893,7 +2893,7 @@
     DELETE FROM foO WHERE name IN (SELECT *
       FROM names);
     END
-    
+
     {
       "name" : "delete_with_values",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -2913,14 +2913,14 @@
     }
   ],
   "general" : [
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC with_complex_args (OUT pattern TEXT NOT NULL, INOUT arg REAL)
     BEGIN
     SELECT 1 AS a;
     END
-    
+
     {
       "name" : "with_complex_args",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -2951,14 +2951,14 @@
       "hasSelectResult" : 1,
       "usesDatabase" : 1
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC atypical_noreturn ()
     BEGIN
     DECLARE C CURSOR LIKE SELECT 1 AS A;
     END
-    
+
     {
       "name" : "atypical_noreturn",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -2967,18 +2967,18 @@
       "usesTables" : [  ],
       "usesDatabase" : 0
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC typical_outresult ()
     BEGIN
     DECLARE C CURSOR LIKE SELECT 1 AS A;
-    
+
     FETCH C(A) FROM VALUES(7);
-    
+
     OUT C;
     END
-    
+
     {
       "name" : "typical_outresult",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -2995,20 +2995,20 @@
       "hasOutResult" : 1,
       "usesDatabase" : 0
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC typical_out_union_result ()
     BEGIN
     DECLARE C CURSOR LIKE SELECT 1 AS A;
-    
+
     FETCH C(A) FROM VALUES(7);
-    
+
     OUT UNION C;
-    
+
     OUT UNION C;
     END
-    
+
     {
       "name" : "typical_out_union_result",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -3025,17 +3025,17 @@
       "hasOutUnionResult" : 1,
       "usesDatabase" : 0
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC typical_select ()
     BEGIN
     DECLARE x INTEGER;
-    
+
     SELECT *
       FROM T5;
     END
-    
+
     {
       "name" : "typical_select",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -3068,13 +3068,13 @@
       "hasSelectResult" : 1,
       "usesDatabase" : 1
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC proc_args_1 (arg1_x INTEGER, arg1_y INTEGER)
     BEGIN
     END
-    
+
     {
       "name" : "proc_args_1",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -3095,13 +3095,13 @@
       "usesTables" : [  ],
       "usesDatabase" : 0
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC proc_args_2 (id_ INTEGER, name_ TEXT)
     BEGIN
     END
-    
+
     {
       "name" : "proc_args_2",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -3122,13 +3122,13 @@
       "usesTables" : [  ],
       "usesDatabase" : 0
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC proc_args_3 (x_ INTEGER NOT NULL, y_ INTEGER NOT NULL)
     BEGIN
     END
-    
+
     {
       "name" : "proc_args_3",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -3149,13 +3149,13 @@
       "usesTables" : [  ],
       "usesDatabase" : 0
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC proc_args_4 (id_ INTEGER, name_ TEXT)
     BEGIN
     END
-    
+
     {
       "name" : "proc_args_4",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -3176,13 +3176,13 @@
       "usesTables" : [  ],
       "usesDatabase" : 0
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC proc_args_5 (arg1_x INTEGER, arg1_y INTEGER)
     BEGIN
     END
-    
+
     {
       "name" : "proc_args_5",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -3203,13 +3203,13 @@
       "usesTables" : [  ],
       "usesDatabase" : 0
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC proc_args_6 (foo_ INTEGER NOT NULL, id_ INTEGER, name_ TEXT)
     BEGIN
     END
-    
+
     {
       "name" : "proc_args_6",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -3236,13 +3236,13 @@
       "usesTables" : [  ],
       "usesDatabase" : 0
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC empty_proc ()
     BEGIN
     END
-    
+
     {
       "name" : "empty_proc",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -3251,39 +3251,39 @@
       "usesTables" : [  ],
       "usesDatabase" : 0
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC empty_blocks ()
     BEGIN
     IF 1 THEN
     END IF;
-    
+
     IF 2 THEN
     ELSE
     END IF;
-    
+
     IF 3 THEN
     ELSE IF 4 THEN
     ELSE
     END IF;
-    
+
     WHILE 1
     BEGIN
     END;
-    
+
     DECLARE c CURSOR FOR SELECT 1 AS x;
-    
+
     LOOP FETCH c
     BEGIN
     END;
-    
+
     BEGIN TRY
     END TRY;
     BEGIN CATCH
     END CATCH;
     END
-    
+
     {
       "name" : "empty_blocks",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -3292,16 +3292,16 @@
       "usesTables" : [  ],
       "usesDatabase" : 1
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC proc_with_deps (OUT x INTEGER NOT NULL)
     BEGIN
     CALL other_Proc();
-    
+
     SET x := proC_aS_Func();
     END
-    
+
     {
       "name" : "proc_with_deps",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -3318,14 +3318,14 @@
       "usesTables" : [  ],
       "usesDatabase" : 0
     },
-    
+
     The statement ending at line XXXX
-    
+
     CREATE PROC using_kinds (list OBJECT<list>, s INTEGER<seconds>)
     BEGIN
     SET s := s + 1;
     END
-    
+
     {
       "name" : "using_kinds",
       "definedInFile" : "cg_test_json_schema.sql",
@@ -3350,11 +3350,11 @@
     }
   ],
   "regions" : [
-    
+
     The statement ending at line XXXX
-    
+
     @DECLARE_SCHEMA_REGION region0
-    
+
     {
     "name" : "region0",
     "isDeployableRoot" : 0,
@@ -3363,9 +3363,9 @@
     "usingPrivately" : [  ]
     }
     The statement ending at line XXXX
-    
+
     @DECLARE_SCHEMA_REGION orphan_region
-    
+
     ,
     {
     "name" : "orphan_region",
@@ -3375,9 +3375,9 @@
     "usingPrivately" : [  ]
     }
     The statement ending at line XXXX
-    
+
     @DECLARE_SCHEMA_REGION region1 USING region0 PRIVATE
-    
+
     ,
     {
     "name" : "region1",
@@ -3387,9 +3387,9 @@
     "usingPrivately" : [ 1 ]
     }
     The statement ending at line XXXX
-    
+
     @DECLARE_DEPLOYABLE_REGION region2 USING region1, region0
-    
+
     ,
     {
     "name" : "region2",
@@ -3400,30 +3400,30 @@
     }
   ],
   "adHocMigrationProcs" : [
-    
+
     The statement ending at line XXXX
-    
+
     @SCHEMA_AD_HOC_MIGRATION(1, ad_hoc_migration_proc_1)
-    
+
     {
       "name" : "ad_hoc_migration_proc_1",
       "version" : 1
     }
     The statement ending at line XXXX
-    
+
     @SCHEMA_AD_HOC_MIGRATION(2, ad_hoc_migration_proc_2)
-    
+
     ,
     {
       "name" : "ad_hoc_migration_proc_2",
       "version" : 2
     }
     The statement ending at line XXXX
-    
+
     @ATTRIBUTE(my_attribute=('any', ('tree', 'of'), 'values'))
     @ATTRIBUTE(my_single_attribute='other_value')
     @SCHEMA_AD_HOC_MIGRATION(3, ad_hoc_migration_proc_3)
-    
+
     ,
     {
       "name" : "ad_hoc_migration_proc_3",
@@ -3441,15 +3441,15 @@
     }
   ],
   "enums" : [
-    
+
     The statement ending at line XXXX
-    
+
     DECLARE ENUM some_reals REAL (
       one = 1.0,
       e = 2.718,
       pi = 3.14
     )
-    
+
     {
       "name" : "some_reals",
       "type" : "real",
@@ -3470,12 +3470,12 @@
       ]
     }
     The statement ending at line XXXX
-    
+
     DECLARE ENUM some_longs LONG_INT (
       neg = -1000,
       pos = 0x100010001000L
     )
-    
+
     ,
     {
       "name" : "some_longs",

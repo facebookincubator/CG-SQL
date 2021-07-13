@@ -122,7 +122,11 @@ cql_noexport void bindent(charbuf *output, charbuf *input, int32_t indent) {
 
   for (;;) {
     if (!*p) break;
-    bprintf(output, "%s", spaces.ptr);
+
+    // skip indenting blank lines
+    if (*p != '\n') {
+      bprintf(output, "%s", spaces.ptr);
+    }
 
     while (*p) {
       char ch = *p++;
@@ -160,4 +164,3 @@ cql_noexport bool_t breadline(charbuf *output, CSTR *data) {
   *data = p;
   return true;
 }
-

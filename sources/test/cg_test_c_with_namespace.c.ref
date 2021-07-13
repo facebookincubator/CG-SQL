@@ -12323,146 +12323,146 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   cql_blob_ref _tmp_n_blob_1 = NULL;
   cql_blob_ref _tmp_blob_0 = NULL;
   cql_string_ref _tmp_n_text_1 = NULL;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := 1;
   */
   i2 = 1;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i1_nullable := 88;
   */
   cql_set_notnull(i1_nullable, 88);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i0_nullable := i1_nullable;
   */
   cql_set_nullable(i0_nullable, i1_nullable.is_null, i1_nullable.value);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET t0_nullable := NULL;
   */
   cql_set_string_ref(&t0_nullable, NULL);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET t0_nullable := t2;
   */
   cql_set_string_ref(&t0_nullable, t2);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := - -1;
   */
   i2 = - - 1;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i0_nullable := -i2;
   */
   cql_set_notnull(i0_nullable, - i2);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i0_nullable := -NULL;
   */
   cql_set_null(i0_nullable);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i1_nullable := -i0_nullable;
   */
   cql_set_nullable(i1_nullable, i0_nullable.is_null, - i0_nullable.value);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET r0_nullable := 2.2;
   */
   cql_set_notnull(r0_nullable, 2.2);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET r2 := 3.5;
   */
   r2 = 3.5;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i1_nullable := NOT NOT i0_nullable;
   */
   cql_set_nullable(_tmp_n_bool_1, i0_nullable.is_null, ! i0_nullable.value);
   cql_set_nullable(_tmp_n_bool_0, _tmp_n_bool_1.is_null, ! _tmp_n_bool_1.value);
   cql_set_nullable(i1_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := NOT NOT b2;
   */
   i2 = ! ! b2;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := 1 * 3 + 5;
   */
   i2 = 1 * 3 + 5;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET r0_nullable := r0_nullable * i1_nullable;
   */
   cql_combine_nullables(r0_nullable, r0_nullable.is_null, i1_nullable.is_null, r0_nullable.value * i1_nullable.value);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET r0_nullable := r0_nullable * i2;
   */
   cql_set_nullable(r0_nullable, r0_nullable.is_null, r0_nullable.value * i2);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i0_nullable := 12 * i1_nullable;
   */
   cql_set_nullable(i0_nullable, i1_nullable.is_null, 12 * i1_nullable.value);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i0_nullable := NULL * i1_nullable;
   */
   cql_set_null(i0_nullable);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET r0_nullable := r0_nullable * i1_nullable + r0_nullable * i1_nullable;
   */
   cql_combine_nullables(_tmp_n_double_1, r0_nullable.is_null, i1_nullable.is_null, r0_nullable.value * i1_nullable.value);
   cql_combine_nullables(_tmp_n_double_2, r0_nullable.is_null, i1_nullable.is_null, r0_nullable.value * i1_nullable.value);
   cql_combine_nullables(r0_nullable, _tmp_n_double_1.is_null, _tmp_n_double_2.is_null, _tmp_n_double_1.value + _tmp_n_double_2.value);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET r0_nullable := r0_nullable * i1_nullable + r0_nullable * i0_nullable + r0_nullable;
   */
@@ -12470,30 +12470,30 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   cql_combine_nullables(_tmp_n_double_3, r0_nullable.is_null, i0_nullable.is_null, r0_nullable.value * i0_nullable.value);
   cql_combine_nullables(_tmp_n_double_1, _tmp_n_double_2.is_null, _tmp_n_double_3.is_null, _tmp_n_double_2.value + _tmp_n_double_3.value);
   cql_combine_nullables(r0_nullable, _tmp_n_double_1.is_null, r0_nullable.is_null, _tmp_n_double_1.value + r0_nullable.value);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET t2 := "This is a \" \\ test '' \n \" ";
   */
   cql_set_string_ref(&t2, _literal_1_This_is_a_test_);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   CALL printf("Hello, world\n");
   */
   printf("Hello, world\n");
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := r2 AND l2;
   */
   i2 = r2 && l2;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := coalesce(side_effect1(), 7) AND coalesce(side_effect2(), 5);
   */
@@ -12520,17 +12520,17 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     _tmp_bool_0 = !!(_tmp_int_1);
   }
   i2 = _tmp_bool_0;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i0_nullable := NULL AND NULL;
   */
   cql_set_null(_tmp_n_bool_0);
   cql_set_nullable(i0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i0_nullable := i0_nullable AND i1_nullable;
   */
@@ -12546,9 +12546,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     }
   }
   cql_set_nullable(i0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i0_nullable := NULL AND i1_nullable;
   */
@@ -12564,9 +12564,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     }
   }
   cql_set_nullable(i0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i0_nullable := i0_nullable AND NULL;
   */
@@ -12582,16 +12582,16 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     }
   }
   cql_set_nullable(i0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := r2 OR l2;
   */
   i2 = r2 || l2;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := coalesce(side_effect1(), 7) OR coalesce(side_effect2(), 5);
   */
@@ -12618,17 +12618,17 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     _tmp_bool_0 = !!(_tmp_int_1);
   }
   i2 = _tmp_bool_0;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i0_nullable := NULL OR NULL;
   */
   cql_set_null(_tmp_n_bool_0);
   cql_set_nullable(i0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i0_nullable := i0_nullable OR i1_nullable;
   */
@@ -12644,9 +12644,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     }
   }
   cql_set_nullable(i0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i0_nullable := NULL OR i1_nullable;
   */
@@ -12662,9 +12662,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     }
   }
   cql_set_nullable(i0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i0_nullable := i0_nullable OR NULL;
   */
@@ -12680,53 +12680,53 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     }
   }
   cql_set_nullable(i0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := NULL IS NULL;
   */
   i2 = 1;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := 1 + 2 * 3 IS NULL;
   */
   i2 = 0;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := i0_nullable + i1_nullable IS NULL;
   */
   cql_combine_nullables(_tmp_n_int_0, i0_nullable.is_null, i1_nullable.is_null, i0_nullable.value + i1_nullable.value);
   i2 = _tmp_n_int_0.is_null;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := NULL IS NOT NULL;
   */
   i2 = !1;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := 1 + 2 * 3 IS NOT NULL;
   */
   i2 = 1;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := i0_nullable + i1_nullable IS NOT NULL;
   */
   cql_combine_nullables(_tmp_n_int_0, i0_nullable.is_null, i1_nullable.is_null, i0_nullable.value + i1_nullable.value);
   i2 = !_tmp_n_int_0.is_null;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   IF 1 THEN
     SET i2 := 1;
@@ -12748,9 +12748,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
       i2 = 3;
     }
   }
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   IF 1 THEN
     SET i2 := 1;
@@ -12782,17 +12782,17 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
       i2 = 3;
     }
   }
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET b2 := BETWEEN REWRITE _between_0_ := 1 CHECK (_between_0_ >= 0 AND _between_0_ <= 3);
   */
   _between_0_ = 1;
   b2 = _between_0_ >= 0 && _between_0_ <= 3;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i0_nullable := BETWEEN REWRITE _between_1_ := i1_nullable CHECK (_between_1_ >= i0_nullable AND _between_1_ <= r2);
   */
@@ -12811,9 +12811,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     }
   }
   cql_set_nullable(i0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i0_nullable := BETWEEN REWRITE _between_2_ := i1_nullable CHECK (_between_2_ >= r2 AND _between_2_ <= i0_nullable);
   */
@@ -12832,17 +12832,17 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     }
   }
   cql_set_nullable(i0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET b2 := BETWEEN REWRITE _between_3_ := 1 CHECK (_between_3_ < 0 OR _between_3_ > 3);
   */
   _between_3_ = 1;
   b2 = _between_3_ < 0 || _between_3_ > 3;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i0_nullable := BETWEEN REWRITE _between_4_ := i1_nullable CHECK (_between_4_ < i0_nullable OR _between_4_ > r2);
   */
@@ -12861,9 +12861,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     }
   }
   cql_set_nullable(i0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i0_nullable := BETWEEN REWRITE _between_5_ := i1_nullable CHECK (_between_5_ < r2 OR _between_5_ > i0_nullable);
   */
@@ -12882,17 +12882,17 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     }
   }
   cql_set_nullable(i0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET longint_var := (l0_nullable + l1_nullable) * 5;
   */
   cql_combine_nullables(_tmp_n_int64_1, l0_nullable.is_null, l1_nullable.is_null, l0_nullable.value + l1_nullable.value);
   cql_set_nullable(longint_var, _tmp_n_int64_1.is_null, _tmp_n_int64_1.value * 5);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   DECLARE foo_cursor CURSOR FOR SELECT id, i2
     FROM foo
@@ -12906,9 +12906,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, i2,
                 CQL_DATA_TYPE_INT32, &i0_nullable);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   FETCH foo_cursor INTO i0_nullable, i2;
   */
@@ -12918,18 +12918,18 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
                  CQL_DATA_TYPE_INT32, &i0_nullable,
                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &i2);
   if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   DECLARE basic_cursor CURSOR FOR SELECT 1, 2.5;
   */
   _rc_ = cql_prepare(_db_, &basic_cursor_stmt,
     "SELECT 1, 2.5");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   FETCH basic_cursor INTO col1, col2;
   */
@@ -12939,30 +12939,30 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
                  CQL_DATA_TYPE_INT32, &col1,
                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_DOUBLE, &col2);
   if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   CLOSE basic_cursor;
   */
   cql_finalize_stmt(&basic_cursor_stmt);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET arg1 := 7;
   */
   arg1 = 7;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET arg2 := 11;
   */
   arg2 = 11;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   DECLARE exchange_cursor CURSOR FOR SELECT arg2, arg1;
   */
@@ -12972,9 +12972,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, arg2,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, arg1);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   FETCH exchange_cursor INTO arg1, arg2;
   */
@@ -12984,16 +12984,16 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &arg1,
                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &arg2);
   if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   CLOSE exchange_cursor;
   */
   cql_finalize_stmt(&exchange_cursor_stmt);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := ( SELECT i2 + 1 );
   */
@@ -13006,9 +13006,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
     i2 = sqlite3_column_int(_temp_stmt, 0);
   cql_finalize_stmt(&_temp_stmt);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i0_nullable := ( SELECT i0_nullable + 1 );
   */
@@ -13021,18 +13021,18 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
     cql_column_nullable_int32(_temp_stmt, 0, &i0_nullable);
   cql_finalize_stmt(&_temp_stmt);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   DELETE FROM bar WHERE name LIKE '\\ " \n';
   */
   _rc_ = cql_exec(_db_,
     "DELETE FROM bar WHERE name LIKE '\\\\ \" \\n'");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := CASE WHEN 1 THEN 100
   WHEN 2 THEN 200
@@ -13051,9 +13051,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     }
     i2 = 300;
   } while (0);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := 3 IN (1, 2, NULL, 4);
   */
@@ -13066,9 +13066,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     _tmp_bool_0 = 0;
   } while (0);
   i2 = _tmp_bool_0;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i0_nullable := i1_nullable IN (1, 2, NULL, b0_nullable);
   */
@@ -13085,9 +13085,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     cql_set_notnull(_tmp_n_bool_0, 0);
   } while (0);
   cql_set_nullable(i0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := 3 NOT IN (1, 2, NULL, 4);
   */
@@ -13100,9 +13100,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     _tmp_bool_0 = 1;
   } while (0);
   i2 = _tmp_bool_0;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i0_nullable := i1_nullable NOT IN (1, 2, NULL, b0_nullable);
   */
@@ -13119,17 +13119,17 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     cql_set_notnull(_tmp_n_bool_0, 1);
   } while (0);
   cql_set_nullable(i0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET b2 := BETWEEN REWRITE _between_6_ := 'b' CHECK (_between_6_ >= 'a' AND _between_6_ <= 'c');
   */
   cql_set_string_ref(&_between_6_, _literal_2_b_);
   b2 = cql_string_compare(_between_6_, _literal_4_a_) >= 0 && cql_string_compare(_between_6_, _literal_3_c_) <= 0;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET b0_nullable := BETWEEN REWRITE _between_7_ := 'b' CHECK (_between_7_ >= 'a' AND _between_7_ <= t0_nullable);
   */
@@ -13147,9 +13147,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     }
   }
   cql_set_nullable(b0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET b0_nullable := BETWEEN REWRITE _between_8_ := 'b' CHECK (_between_8_ >= t0_nullable AND _between_8_ <= 'c');
   */
@@ -13167,9 +13167,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     }
   }
   cql_set_nullable(b0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET b0_nullable := BETWEEN REWRITE _between_9_ := 'b' CHECK (_between_9_ >= NULL AND _between_9_ <= 'c');
   */
@@ -13187,17 +13187,17 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     }
   }
   cql_set_nullable(b0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET b2 := BETWEEN REWRITE _between_10_ := 'b' CHECK (_between_10_ < 'a' OR _between_10_ > 'c');
   */
   cql_set_string_ref(&_between_10_, _literal_2_b_);
   b2 = cql_string_compare(_between_10_, _literal_4_a_) < 0 || cql_string_compare(_between_10_, _literal_3_c_) > 0;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET b0_nullable := BETWEEN REWRITE _between_11_ := 'b' CHECK (_between_11_ < 'a' OR _between_11_ > t0_nullable);
   */
@@ -13215,9 +13215,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     }
   }
   cql_set_nullable(b0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET b0_nullable := BETWEEN REWRITE _between_12_ := 'b' CHECK (_between_12_ < t0_nullable OR _between_12_ > 'c');
   */
@@ -13235,9 +13235,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     }
   }
   cql_set_nullable(b0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET b0_nullable := BETWEEN REWRITE _between_13_ := 'b' CHECK (_between_13_ < NULL OR _between_13_ > 'c');
   */
@@ -13255,9 +13255,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     }
   }
   cql_set_nullable(b0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := ifnull(i0_nullable, 3);
   */
@@ -13268,9 +13268,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     }
     i2 = 3;
   } while (0);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i0_nullable := ifnull(i0_nullable, i1_nullable);
   */
@@ -13281,16 +13281,16 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     }
     cql_set_nullable(i0_nullable, i1_nullable.is_null, i1_nullable.value);
   } while (0);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   CALL copy_int(i0_nullable, i1_nullable);
   */
   copy_int(i0_nullable, &i1_nullable);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET s := printf('%d and %d', 1, 2);
   */
@@ -13300,9 +13300,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     s = cql_string_ref_new(_printf_result);
     sqlite3_free(_printf_result);
   }
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET s := printf('%d and %d', 3, 4);
   */
@@ -13312,63 +13312,63 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     s = cql_string_ref_new(_printf_result);
     sqlite3_free(_printf_result);
   }
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET S := 'x';
   */
   cql_set_string_ref(&s, _literal_5_x_);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   LET result := simple_func(2);
   */
   cql_set_notnull(_tmp_n_int_2, 2);
   result = simple_func(_tmp_n_int_2);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET result := simple_func(simple_func(1));
   */
   cql_set_notnull(_tmp_n_int_3, 1);
   _tmp_n_int_1 = simple_func(_tmp_n_int_3);
   result = simple_func(_tmp_n_int_1);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET text_result := text_func(123, 456);
   */
   cql_set_notnull(_tmp_n_int_2, 123);
   cql_set_string_ref(&_tmp_text_0, text_func(_tmp_n_int_2, 456));
   cql_set_string_ref(&text_result, _tmp_text_0);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET obj_var := NULL;
   */
   cql_set_object_ref(&obj_var, NULL);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET obj_var := obj_var2;
   */
   cql_set_object_ref(&obj_var, obj_var2);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET b0_nullable := obj_var = obj_var;
   */
   cql_combine_nullables(b0_nullable, !obj_var, !obj_var, obj_var == obj_var);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET b0_nullable := obj_var IN (obj_var, obj_var);
   */
@@ -13384,9 +13384,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     cql_set_notnull(_tmp_n_bool_0, 0);
   } while (0);
   cql_set_nullable(b0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET b2 := obj_var2 IN (obj_var2, obj_var2);
   */
@@ -13398,9 +13398,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     _tmp_bool_0 = 0;
   } while (0);
   b2 = _tmp_bool_0;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET b0_nullable := obj_var NOT IN (obj_var, obj_var);
   */
@@ -13416,9 +13416,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     cql_set_notnull(_tmp_n_bool_0, 1);
   } while (0);
   cql_set_nullable(b0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET b2 := obj_var2 NOT IN (obj_var2, obj_var2);
   */
@@ -13430,9 +13430,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     _tmp_bool_0 = 1;
   } while (0);
   b2 = _tmp_bool_0;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := CASE obj_var WHEN obj_var THEN 1
   ELSE 2
@@ -13448,9 +13448,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     case_else_1:
     i2 = 2;
   } while (0);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET obj_var := CASE 1 WHEN 1 THEN obj_var2
   ELSE NULL
@@ -13464,50 +13464,50 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     }
     cql_set_object_ref(&obj_var, NULL);
   } while (0);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET obj_var := obj_func();
   */
   cql_set_object_ref(&obj_var, obj_func());
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET obj_var := obj_func_create();
   */
   cql_object_release(obj_var);
   obj_var = obj_func_create();
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET text_result := text_func_create();
   */
   cql_string_release(text_result);
   text_result = text_func_create();
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET obj_var2 := ifnull_crash(obj_func());
   */
   cql_set_object_ref(&_tmp_n_object_0, obj_func());
   cql_invariant(!!_tmp_n_object_0);
   cql_set_object_ref(&obj_var2, _tmp_n_object_0);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET obj_var2 := ifnull_crash(obj_func());
   */
   cql_set_object_ref(&_tmp_n_object_0, obj_func());
   cql_invariant(!!_tmp_n_object_0);
   cql_set_object_ref(&obj_var2, _tmp_n_object_0);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET obj_var2 := ifnull_throw(obj_func());
   */
@@ -13517,9 +13517,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     goto cql_cleanup;
   }
   cql_set_object_ref(&obj_var2, _tmp_n_object_0);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET obj_var2 := ifnull_crash(obj_func_create());
   */
@@ -13527,17 +13527,17 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   _tmp_n_object_0 = obj_func_create();
   cql_invariant(!!_tmp_n_object_0);
   cql_set_object_ref(&obj_var2, _tmp_n_object_0);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := ifnull_crash(i0_nullable);
   */
   cql_invariant(!i0_nullable.is_null);
   i2 = i0_nullable.value;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := ifnull_throw(i0_nullable);
   */
@@ -13546,27 +13546,27 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     goto cql_cleanup;
   }
   i2 = i0_nullable.value;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   INSERT OR REPLACE INTO bar(id, type) VALUES(1, 5);
   */
   _rc_ = cql_exec(_db_,
     "INSERT OR REPLACE INTO bar(id, type) VALUES(1, 5)");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   INSERT INTO foo DEFAULT VALUES;
   */
   _rc_ = cql_exec(_db_,
     "INSERT INTO foo DEFAULT VALUES");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET b2 := ( SELECT EXISTS (SELECT *
     FROM bar) );
@@ -13579,9 +13579,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
     b2 = sqlite3_column_int(_temp_stmt, 0) != 0;
   cql_finalize_stmt(&_temp_stmt);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   DECLARE expanded_select CURSOR FOR SELECT *
     FROM bar;
@@ -13590,9 +13590,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     "SELECT id, name, rate, type, size "
       "FROM bar");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   DECLARE table_expanded_select CURSOR FOR SELECT bar.*
     FROM bar;
@@ -13601,79 +13601,79 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size "
       "FROM bar");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET l2 := 3147483647L;
   */
   l2 = _64(3147483647);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET l2 := 3147483647L;
   */
   l2 = _64(3147483647);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET blob_var := NULL;
   */
   cql_set_blob_ref(&blob_var, NULL);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET blob_var := blob_var2;
   */
   cql_set_blob_ref(&blob_var, blob_var2);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET b0_nullable := blob_var = blob_var;
   */
   cql_combine_nullables(b0_nullable, !blob_var, !blob_var, cql_blob_equal(blob_var, blob_var));
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET b0_nullable := blob_var IS NULL;
   */
   cql_set_notnull(b0_nullable, !blob_var);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET b0_nullable := blob_var <> blob_var;
   */
   cql_combine_nullables(b0_nullable, !blob_var, !blob_var, !cql_blob_equal(blob_var, blob_var));
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET b0_nullable := blob_var <> blob_var;
   */
   cql_combine_nullables(b0_nullable, !blob_var, !blob_var, !cql_blob_equal(blob_var, blob_var));
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET b0_nullable := blob_var IS blob_var;
   */
   cql_set_notnull(b0_nullable, cql_blob_equal(blob_var, blob_var));
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET b0_nullable := blob_var IS NOT blob_var;
   */
   cql_set_notnull(b0_nullable, !cql_blob_equal(blob_var, blob_var));
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET b0_nullable := blob_var IN (blob_var, blob_var);
   */
@@ -13689,9 +13689,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     cql_set_notnull(_tmp_n_bool_0, 0);
   } while (0);
   cql_set_nullable(b0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET b2 := blob_var2 IN (blob_var, blob_var2);
   */
@@ -13703,9 +13703,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     _tmp_bool_0 = 0;
   } while (0);
   b2 = _tmp_bool_0;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET b0_nullable := blob_var NOT IN (blob_var, blob_var);
   */
@@ -13721,9 +13721,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     cql_set_notnull(_tmp_n_bool_0, 1);
   } while (0);
   cql_set_nullable(b0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET b2 := blob_var2 NOT IN (blob_var, blob_var2);
   */
@@ -13735,9 +13735,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     _tmp_bool_0 = 1;
   } while (0);
   b2 = _tmp_bool_0;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := CASE blob_var WHEN blob_var THEN 1
   ELSE 2
@@ -13753,9 +13753,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     case_else_2:
     i2 = 2;
   } while (0);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET blob_var := CASE 1 WHEN 1 THEN blob_var2
   ELSE NULL
@@ -13769,24 +13769,24 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     }
     cql_set_blob_ref(&blob_var, NULL);
   } while (0);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET blob_var := blob_func();
   */
   cql_set_blob_ref(&blob_var, blob_func());
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET blob_var := blob_func_create();
   */
   cql_blob_release(blob_var);
   blob_var = blob_func_create();
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET blob_var := ( SELECT b_nullable
     FROM blob_table
@@ -13801,9 +13801,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
     cql_column_nullable_blob_ref(_temp_stmt, 0, &blob_var);
   cql_finalize_stmt(&_temp_stmt);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET blob_var := ( SELECT b_notnull
     FROM blob_table
@@ -13819,9 +13819,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     cql_column_blob_ref(_temp_stmt, 0, &_tmp_blob_0);
   cql_finalize_stmt(&_temp_stmt);
   cql_set_blob_ref(&blob_var, _tmp_blob_0);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   INSERT INTO blob_table(blob_id, b_nullable, b_notnull) VALUES(0, blob_var, blob_var_notnull);
   */
@@ -13834,9 +13834,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   _rc_ = sqlite3_step(_temp_stmt);
   if (_rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
   cql_finalize_stmt(&_temp_stmt);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET obj_var := CASE WHEN 1 THEN obj_var
   END;
@@ -13847,25 +13847,25 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     }
     cql_set_object_ref(&obj_var, NULL);
   } while (0);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := outparm_test();
   */
   _rc_ = outparm_test(_db_, &i2);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := compute(compute(1));
   */
   compute(1, &_tmp_int_1);
   compute(_tmp_int_1, &i2);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := dml_compute(dml_compute(1));
   */
@@ -13873,9 +13873,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = dml_compute(_db_, _tmp_int_1, &i2);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   WITH
   x (a) AS (SELECT 111)
@@ -13888,9 +13888,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     "INSERT INTO foo(id) VALUES(ifnull(( SELECT a "
       "FROM x ), 0))");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET r2 := ( SELECT SqlUserFunc(123) );
   */
@@ -13901,18 +13901,18 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
     r2 = sqlite3_column_double(_temp_stmt, 0);
   cql_finalize_stmt(&_temp_stmt);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   DECLARE global_cursor CURSOR FOR SELECT 1 AS a, 2 AS b;
   */
   _rc_ = cql_prepare(_db_, &global_cursor_stmt,
     "SELECT 1, 2");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   FETCH global_cursor;
   */
@@ -13922,23 +13922,23 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &global_cursor.a,
                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &global_cursor.b);
   if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := 'x' LIKE 'y';
   */
   i2 = cql_string_like(_literal_5_x_, _literal_10_y_) == 0;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := 'x' NOT LIKE 'y';
   */
   i2 = cql_string_like(_literal_5_x_, _literal_10_y_) != 0;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := ( SELECT 'x' LIKE 'y' );
   */
@@ -13950,9 +13950,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     _tmp_bool_0 = sqlite3_column_int(_temp_stmt, 0) != 0;
   cql_finalize_stmt(&_temp_stmt);
   i2 = _tmp_bool_0;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := ( SELECT 'x' NOT LIKE 'y' );
   */
@@ -13964,9 +13964,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     _tmp_bool_0 = sqlite3_column_int(_temp_stmt, 0) != 0;
   cql_finalize_stmt(&_temp_stmt);
   i2 = _tmp_bool_0;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := ( SELECT 'x' MATCH 'y' );
   */
@@ -13978,9 +13978,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     _tmp_bool_0 = sqlite3_column_int(_temp_stmt, 0) != 0;
   cql_finalize_stmt(&_temp_stmt);
   i2 = _tmp_bool_0;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := ( SELECT 'x' GLOB 'y' );
   */
@@ -13992,37 +13992,37 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     _tmp_bool_0 = sqlite3_column_int(_temp_stmt, 0) != 0;
   cql_finalize_stmt(&_temp_stmt);
   i2 = _tmp_bool_0;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := 1 << 2 | 1 << 4 & 1 >> 8;
   */
   i2 = ((1 << 2 | 1) << 4 & 1) >> 8;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := 1 << 2 | (1 << 4) & (1 >> 8);
   */
   i2 = (1 << 2 | 1 << 4) & 1 >> 8;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := 1 << 2 | (1 << 4 & (1 >> 8));
   */
   i2 = 1 << 2 | 1 << 4 & 1 >> 8;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := 1 | ~i2;
   */
   i2 = 1 | ~ i2;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   WITH
   foo (id) AS (SELECT 1 AS id)
@@ -14036,9 +14036,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     "INSERT INTO bar(id) VALUES(ifnull(( SELECT id "
       "FROM foo ), 0))");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   INSERT INTO bar(id) VALUES(1) @DUMMY_SEED(1338)
   ON CONFLICT (id) DO UPDATE
@@ -14050,9 +14050,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     "ON CONFLICT (id) DO UPDATE "
     "SET id = 10");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET l0_nullable := cql_get_blob_size(( SELECT blob_var ));
   */
@@ -14066,265 +14066,265 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     cql_column_nullable_blob_ref(_temp_stmt, 0, &_tmp_n_blob_1);
   cql_finalize_stmt(&_temp_stmt);
   cql_set_nullable(l0_nullable, !_tmp_n_blob_1, cql_get_blob_size(_tmp_n_blob_1));
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET l2 := cql_get_blob_size(blob_var2);
   */
   l2 = cql_get_blob_size(blob_var2);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := 1 * (4 / 3);
   */
   x = 1 * (4 / 3);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := 1 * 2 / 3;
   */
   x = 1 * 2 / 3;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := 1 + 2 / 3;
   */
   x = 1 + 2 / 3;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := 1 + (2 - 3);
   */
   x = 1 + (2 - 3);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := 1 + 2 * 3;
   */
   x = 1 + 2 * 3;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := 1 * (2 + 3);
   */
   x = 1 * (2 + 3);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := 1 - (2 + 3);
   */
   x = 1 - (2 + 3);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := 1 - (2 - 3);
   */
   x = 1 - (2 - 3);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := 1 - 2 - (2 - 3);
   */
   x = 1 - 2 - (2 - 3);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := 1 - 2 - (2 - 3);
   */
   x = 1 - 2 - (2 - 3);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := 1 / 2 / 3;
   */
   x = 1 / 2 / 3;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := 1 / (4 / 3);
   */
   x = 1 / (4 / 3);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := 1 / 2;
   */
   x = 1 / 2;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := 1 * 2 * (3 * 4);
   */
   x = 1 * 2 * (3 * 4);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := 1 * 2 * (3 * 4);
   */
   x = 1 * 2 * (3 * 4);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := 1 | 2 & 3;
   */
   x = (1 | 2) & 3;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := 1 | (2 & 3);
   */
   x = 1 | 2 & 3;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := 1 | 2 | 3;
   */
   x = 1 | 2 | 3;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := 1 | (2 | 3);
   */
   x = 1 | (2 | 3);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := 1 | (3 + 4 | 5);
   */
   x = 1 | (3 + 4 | 5);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := 1 | 3 + (4 | 5);
   */
   x = 1 | 3 + (4 | 5);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := (1 | 3) + (4 | 5);
   */
   x = (1 | 3) + (4 | 5);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := (1 + 2) * 5;
   */
   x = (1 + 2) * 5;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := 1 + 2 - 1;
   */
   x = 1 + 2 - 1;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := 1 << 2 | 3;
   */
   x = 1 << 2 | 3;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := 1 << (2 | 3);
   */
   x = 1 << (2 | 3);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := 1 | (2 << 3);
   */
   x = 1 | 2 << 3;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := 1 << (2 << 3);
   */
   x = 1 << (2 << 3);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := 1 < (2 > 3);
   */
   x = 1 < (2 > 3);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := 1 << (2 >> 3);
   */
   x = 1 << (2 >> 3);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := 1 | (2 | 3);
   */
   x = 1 | (2 | 3);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := 1 | 2 | 3;
   */
   x = 1 | 2 | 3;
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET x := 1 = 2 <> 3;
   */
   x = 1 == (2 != 3);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   INSERT INTO virtual_with_hidden(vy) VALUES(1);
   */
   _rc_ = cql_exec(_db_,
     "INSERT INTO virtual_with_hidden(vy) VALUES(1)");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   INSERT INTO virtual_with_hidden(vx, vy) VALUES(1, 2);
   */
   _rc_ = cql_exec(_db_,
     "INSERT INTO virtual_with_hidden(vx, vy) VALUES(1, 2)");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i0_nullable := ( SELECT type
     FROM bar IF NOTHING -1 );
@@ -14343,9 +14343,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     cql_set_notnull(i0_nullable, - 1);
   }
   cql_finalize_stmt(&_temp_stmt);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i0_nullable := ( SELECT type
     FROM bar IF NOTHING THROW );
@@ -14359,9 +14359,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     cql_column_nullable_int32(_temp_stmt, 0, &_tmp_n_int_0);
   cql_finalize_stmt(&_temp_stmt);
   cql_set_nullable(i0_nullable, _tmp_n_int_0.is_null, _tmp_n_int_0.value);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET i2 := ( SELECT type
     FROM bar IF NOTHING OR NULL -1 );
@@ -14382,9 +14382,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   }
   _rc_ = SQLITE_OK;
   cql_finalize_stmt(&_temp_stmt);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET t0_nullable := ( SELECT name
     FROM bar IF NOTHING "" );
@@ -14403,9 +14403,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     cql_set_string_ref(&t0_nullable, _literal_11_);
   }
   cql_finalize_stmt(&_temp_stmt);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SET t2 := ( SELECT name
     FROM bar IF NOTHING OR NULL "garbonzo" );
@@ -14426,9 +14426,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   }
   _rc_ = SQLITE_OK;
   cql_finalize_stmt(&_temp_stmt);
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SWITCH i2
     WHEN 1, 3 THEN
@@ -14445,21 +14445,21 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     case 3:
       i2 = 30;
       break;
-    
+
     case 4:
       i2 = 40;
       break;
-    
+
     case 5:
       break;
-    
+
     default:
       i2 = 50;
       break;
   }
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SWITCH i2
     WHEN 1, 3 THEN
@@ -14474,14 +14474,14 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     case 3:
       i2 = 30;
       break;
-    
+
     case 4:
       i2 = 40;
       break;
   }
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SWITCH l2
     WHEN 1, 3 THEN
@@ -14496,14 +14496,14 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     case _64(3):
       i2 = 30;
       break;
-    
+
     case _64(4):
       i2 = 40;
       break;
   }
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SWITCH i2
     WHEN 1, 2, 3 THEN NOTHING
@@ -14516,14 +14516,14 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     case 2:
     case 3:
       break;
-    
+
     default:
       i2 = 123;
       break;
   }
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   SWITCH i2
     WHEN 1 THEN
@@ -14542,14 +14542,14 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
       }
       i2 = 999;
       break;
-    
+
     default:
       i2 = 1;
       break;
   }
-  
+
   // The statement ending at line XXXX
-  
+
   /*
   LET this_is_the_end := 0xf00d;
   */

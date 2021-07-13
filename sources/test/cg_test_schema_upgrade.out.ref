@@ -335,44 +335,44 @@ BEGIN
     rate LONG_INT,
     rate_2 LONG_INT
   );
-  
+
   CREATE TABLE IF NOT EXISTS table2(
     id INTEGER NOT NULL REFERENCES foo (id)
   );
-  
+
   CREATE TABLE IF NOT EXISTS other_table(
     id INTEGER
   );
-  
+
   CREATE TABLE IF NOT EXISTS t5(
     id LONG_INT PRIMARY KEY AUTOINCREMENT,
     data TEXT
   );
-  
+
   CREATE TABLE IF NOT EXISTS t6(
     id LONG_INT PRIMARY KEY,
     FOREIGN KEY (id) REFERENCES t5 (id) ON UPDATE CASCADE ON DELETE CASCADE
   );
-  
+
   CREATE TABLE IF NOT EXISTS conflict_clause_t(
     id INTEGER NOT NULL ON CONFLICT FAIL
   );
-  
+
   CREATE TABLE IF NOT EXISTS conflict_clause_pk(
     id INTEGER NOT NULL,
     CONSTRAINT pk1 PRIMARY KEY (id) ON CONFLICT ROLLBACK
   );
-  
+
   CREATE TABLE IF NOT EXISTS expression_pk(
     id INTEGER NOT NULL,
     CONSTRAINT pk1 PRIMARY KEY (id / 2, id % 2)
   );
-  
+
   CREATE TABLE IF NOT EXISTS expression_uk(
     id INTEGER NOT NULL,
     CONSTRAINT uk1 UNIQUE (id / 2, id % 2)
   );
-  
+
 END;
 -- declared upgrade procedures if any
 DECLARE proc CreateName1Proc() USING TRANSACTION;
@@ -554,11 +554,11 @@ BEGIN
   CREATE TEMP TABLE this_table_appears_in_temp_section(
     temp_section_integer INTEGER
   );
-  
+
   CREATE TEMP VIEW temp_view_in_temp_section AS
   SELECT *
     FROM foo;
-  
+
   CREATE TEMP TRIGGER temp_trigger_in_temp_section
     BEFORE DELETE ON foo
     FOR EACH ROW
@@ -566,7 +566,7 @@ BEGIN
   BEGIN
   SELECT old.id;
   END;
-  
+
 END;
 
 @attribute(cql:private)

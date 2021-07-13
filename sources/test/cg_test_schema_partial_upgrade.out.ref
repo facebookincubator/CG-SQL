@@ -251,7 +251,7 @@ BEGIN
   CREATE TABLE IF NOT EXISTS table2(
     id INTEGER NOT NULL REFERENCES foo (id)
   );
-  
+
 END;
 -- declared upgrade procedures if any
 DECLARE proc CreateName1Proc() USING TRANSACTION;
