@@ -1545,6 +1545,14 @@ CREATE TABLE foo(
   id INTEGER NOT NULL ON CONFLICT FAIL
 );
 
+SELECT CAST(1 AS REAL) + 1;
+
+SELECT CAST(1 AS REAL) - 1;
+
+SELECT CAST(1 AS REAL) * 1;
+
+SELECT CAST(1 AS REAL) / 1;
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';
