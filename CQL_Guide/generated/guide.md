@@ -693,11 +693,11 @@ CQL evaluation rules are designed to be as similar as possible but some variance
 ASSIGNMENT:    :=
 LOGICAL_OR:    OR
 LOGICAL_AND:   AND
+LOGICAL_NOT:   NOT
+BETWEEN:       BETWEEN  NOT BETWEEN
 EQUALITY:      = == != <> IS, IS NOT, IN, NOT IN, LIKE, GLOB, MATCH, REGEXP
 INEQUALITY:    <   <=  >   >=
-LOGICAL_NOT:   NOT
 BINARY:        << >> & |
-BETWEEN:       BETWEEN  NOT BETWEEN
 ADDITION:      + -
 MULIPLICATION: * / %
 BINARY_NOT:    ~
@@ -8387,7 +8387,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed Jun 30 18:52:51 EDT 2021
+Snapshot as of Wed Jul 14 14:22:34 PDT 2021
 
 ### Operators and Literals
 
@@ -8398,8 +8398,8 @@ UNION_ALL UNION INTERSECT EXCEPT
 ASSIGN
 OR
 AND
-BETWEEN
 NOT
+BETWEEN
 '<>' '!=' '=' '==' LIKE NOT_LIKE GLOB MATCH REGEXP IN IS_NOT IS
 '<' '>' '>=' '<='
 '<<' '>>' '&' '|'
@@ -8432,7 +8432,7 @@ OUTER JOIN WHERE GROUP BY ORDER ASC
 DESC INNER FCOUNT AUTOINCREMENT DISTINCT
 LIMIT OFFSET TEMP TRIGGER IF ALL CROSS USING RIGHT
 HIDDEN UNIQUE HAVING SET LET TO DISTINCTROW ENUM
-FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR DECLARE TYPE FETCH LOOP LEAVE CONTINUE FOR
+FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR DECLARE TYPE FETCH LOOP LEAVE CONTINUE FOR ENCODE CONTEXT_COLUMN CONTEXT_TYPE
 OPEN CLOSE ELSE_IF WHILE CALL TRY CATCH THROW RETURN
 SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
 CAST WITH RECURSIVE REPLACE IGNORE ADD COLUMN RENAME ALTER
@@ -9784,6 +9784,13 @@ enforcement_options:
   | "INSERT" "SELECT"
   | "TABLE" "FUNCTION"
   | "NOT" "NULL" "AFTER" "CHECK"
+  | ENCODE CONTEXT_COLUMN
+  | ENCODE CONTEXT_TYPE "INTEGER"
+  | ENCODE CONTEXT_TYPE "LONG_INTEGER"
+  | ENCODE CONTEXT_TYPE "REAL"
+  | ENCODE CONTEXT_TYPE "BOOL"
+  | ENCODE CONTEXT_TYPE "TEXT"
+  | ENCODE CONTEXT_TYPE "BLOB"
   ;
 
 enforce_strict_stmt:
@@ -13295,7 +13302,7 @@ the index/trigger `@delete` tombstone and this error reminds you to do so.
 
 ### CQL0398: A compound select cannot be ordered by the result of an expression
 
-When specifying an `ORDER BY` for a compound select, you may only order by indicies (e.g., `3`) or names (e.g., `foo`) that correspond to an output column, not by the result of an arbitrary expression (e.g., `foo + bar`).
+When specifying an `ORDER BY` for a compound select, you may only order by indices (e.g., `3`) or names (e.g., `foo`) that correspond to an output column, not by the result of an arbitrary expression (e.g., `foo + bar`).
 
 For example, this is allowed:
 
@@ -13324,7 +13331,42 @@ must happen in the current schema version.  That version is indicated by the val
 To fix this you can change the `@create` annotation so that it matches the number in this error message
 
 ----
-CQL 0400 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+### CQL0400: encode context column can't be sensitive
+
+The encode context column will be used to encode sensitive fields, it can't be exposed to encode functions
+
+----
+### CQL0401: encode context column must be specified if strict encode context column mode is enabled
+
+encode context column must be specified in vault_senstive attribute with format:
+@attribute(cql:vault_sensitive=(encode_context_col, (col1, col2, ...))
+
+----
+### CQL0402: encode context column in vault_senstive attribute must match the specified type in strict mode
+
+encode context column must match the specified type in vault_senstive attribute with format:
+@attribute(cql:vault_sensitive=(encode_context_col, (col1, col2, ...))
+
+----
+CQL 0403 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0404 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0405 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0406 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0407 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+
+### CQL0408: encode context column can be only specified once
+
+The encode context column can be only specified once in @vault_sensitive attribute
+
+----
+CQL 0409 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0410 : unused, this was added to prevent merge conflicts at the end on literally every checkin
 
 
 
@@ -13338,7 +13380,7 @@ CQL 0400 : unused, this was added to prevent merge conflicts at the end on liter
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Wed Jun 30 18:52:52 EDT 2021
+Snapshot as of Wed Jul 14 14:22:35 PDT 2021
 
 ### Rules
 

@@ -267,7 +267,7 @@ cql_noexport CSTR _Nonnull get_compound_operator_name(int32_t compound_operator)
 */
 
 /*
- NOT is weaker than bitwise &
+-----  NOT is weaker than bitwise &
 sqlite> select not 2 & 1;
 1
 sqlite> select (not 2) & 1;
@@ -275,21 +275,21 @@ sqlite> select (not 2) & 1;
 sqlite> select not (2 & 1);
 1
 
-NOT is weaker than BETWEEN
-sqlite> select  not 1 between 0 and 1;
+-----  NOT is weaker than BETWEEN
+sqlite> select not 0 between -1 and 2;
 0
-sqlite> select  (not 1) between 0 and 1;
+sqlite> select (not 0) between -1 and 2;
 1
-sqlite> select  not (1 between 0 and 1);
+sqlite> select not (0 between -1 and 2);
 0
 
-NOT is stronger than logical AND
+-----  NOT is stronger than logical AND
 sqlite> select not 1 and (1/0);
 0
 sqlite> select not 0 and (1/0);
 [error]
 
-NOT is weaker than <=
+-----  NOT is weaker than <=
 sqlite> select not 0 <= 1;
 0
 sqlite> select not (0 <= 1);
@@ -297,8 +297,7 @@ sqlite> select not (0 <= 1);
 sqlite> select (not 0) <= 1;
 1
 
-~ is stronger than *
-
+-----  ~ is stronger than *
 sqlite> select ~1*3;
 -6
 sqlite> select (~1)*3;
@@ -306,21 +305,29 @@ sqlite> select (~1)*3;
 sqlite> select ~(1*3);
 -4
 
+----- between is weaker than equality
+sqlite> select 1=2 between 2 and 2;
+0
+sqlite> select 1=(2 between 2 and 2);
+1
+sqlite> select (1=2) between 2 and 2;
+0
+
 */
 
 #define EXPR_PRI_ROOT -999
 #define EXPR_PRI_ASSIGN 0
 #define EXPR_PRI_OR 1
 #define EXPR_PRI_AND 2
-#define EXPR_PRI_EQUALITY 3
-#define EXPR_PRI_INEQUALITY 4
-#define EXPR_PRI_NOT 5
-#define EXPR_PRI_BINARY 6
-#define EXPR_PRI_BETWEEN 7
+#define EXPR_PRI_NOT 3
+#define EXPR_PRI_BETWEEN 4
+#define EXPR_PRI_EQUALITY 5
+#define EXPR_PRI_INEQUALITY 6
+#define EXPR_PRI_BINARY 7
 #define EXPR_PRI_ADD 8
 #define EXPR_PRI_MUL 9
 #define EXPR_PRI_TILDE 10
-#define EXPR_PRI_CONCAT 11   // nyi
+#define EXPR_PRI_CONCAT 11
 
 // relevant C binding order
 #define C_EXPR_PRI_ROOT -999

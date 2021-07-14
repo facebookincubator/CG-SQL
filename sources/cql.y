@@ -149,8 +149,8 @@ static void cql_reset_globals(void);
 %right ASSIGN
 %left OR
 %left AND
-%left BETWEEN
 %left NOT
+%left BETWEEN
 %left NE NE_ '=' EQEQ LIKE NOT_LIKE GLOB MATCH REGEXP IN IS_NOT IS
 %left '<' '>' GE LE
 %left LS RS '&' '|'

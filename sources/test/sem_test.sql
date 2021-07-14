@@ -15748,7 +15748,7 @@ begin
   end if;
 end;
 
--- TEST: Nullability improvements for locals cease at corresponding SETs to 
+-- TEST: Nullability improvements for locals cease at corresponding SETs to
 -- nullables.
 -- + {let_stmt}: x0: integer variable
 -- + {let_stmt}: y0: integer variable
@@ -15771,7 +15771,7 @@ begin
   declare b int;
   let x0 := a;
   let y0 := b;
-  if a is not null and b is not null then  
+  if a is not null and b is not null then
     let x1 := a;
     let y1 := b;
     set b := null;
@@ -15915,7 +15915,7 @@ begin
   declare b int;
   declare x int;
   declare c cursor for select * from tnull;
-  if a is not null and b is not null then  
+  if a is not null and b is not null then
     let x0 := a;
     let y0 := b;
     fetch c into x, b;
@@ -16114,7 +16114,7 @@ begin
   declare a int;
   if a + 1 is not null then
     let b := a;
-  end if; 
+  end if;
 end;
 
 -- TEST: Improvements do not work for globals (yet).
@@ -16320,3 +16320,72 @@ begin
     let x := a;
   end if;
 end;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- NOT is weaker than +, parens stay even though this is a special case
+-- the parens could be elided becuse it's on the right of the +
+-- + SELECT 1 + (NOT 2 IS NULL);
+select 1 + not 2 is null;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- NOT is weaker than +, parens stay even though this is a special case
+--  the parens could be elided becuse it's on the right of the +
+-- + SELECT (NOT 1) + (NOT 2 IS NULL);
+select (not 1) + not 2 is null;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- IS is weaker than + , parens must stay
+-- + SELECT NOT 1 + (2 IS NULL);
+select not 1 + (2 is null);
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- plus is stronger than IS
+-- + SELECT NOT 1 + 2 IS NULL;
+select not 1 + 2 is null;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- NOT is weaker than IS, parens must stay
+-- + SELECT 1 + (NOT 2) IS NULL;
+select 1 + (not 2) is null;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- NOT is weaker than IS, parens must stay
+-- + SELECT 1 IS NOT NULL AND 2 + (NOT 3) IS NULL;
+select 1 is not null and 2 + (not 3) is null;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+--  NOT is weaker than +, parens stay even though this is a special case
+--  the parens could be elided becuse it's on the right of the +
+-- + SELECT 1 IS NOT NULL AND 2 + (NOT 3 IS NULL)
+select 1 is not null and 2 + not 3 is null;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- not is weaker than between, no parens needed
+-- + SELECT NOT 0 BETWEEN -1 AND 2;
+select not 0 between -1 and 2;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- not is weaker than between, must keep parens
+-- + SELECT (NOT 0) BETWEEN -1 AND 2;
+select (not 0 ) between -1 and 2;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- not is weaker than between, no parens needed
+-- + SELECT NOT 0 BETWEEN -1 AND 2;
+select not (0  between -1 and 2);
+
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- between is weaker than =, don't need parens
+-- + SELECT 1 = 2 BETWEEN 2 AND 2;
+select 1=2 between 2 and 2;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- between is weaker than =, keep the parens
+-- + SELECT 1 = (2 BETWEEN 2 AND 2);
+select 1=(2 between 2 and 2);
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- between is weaker than =, don't need the parens
+-- + SELECT 1 = 2 BETWEEN 2 AND 2;
+select (1=2) between 2 and 2;

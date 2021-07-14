@@ -5092,7 +5092,7 @@ static sem_resolve sem_try_resolve_arguments(ast_node *ast, CSTR name, CSTR scop
   if (!scope || strcmp(scope, "ARGUMENTS")) {
     return SEM_RESOLVE_CONTINUE;
   }
-  
+
   Invariant(current_proc);
   ast_node *params = get_proc_params(current_proc);
   Invariant(params);
@@ -5111,12 +5111,12 @@ static sem_resolve sem_try_resolve_arguments(ast_node *ast, CSTR name, CSTR scop
     record_resolve_error(ast);
     return SEM_RESOLVE_STOP;
   }
-  
+
   if (ast) {
     ast->sem = param->sem;
   }
-  
-  *type_ptr = &param->sem->sem_type; 
+
+  *type_ptr = &param->sem->sem_type;
 
   return SEM_RESOLVE_STOP;
 }
@@ -5280,7 +5280,7 @@ static sem_resolve sem_try_resolve_column(ast_node *ast, CSTR name, CSTR scope, 
   if (ast) {
     ast->sem = new_sem(sem_type);
     ast->sem->name = col; // be sure to use the canonical name
-    ast->sem->kind = kind; // use the kind if there is one 
+    ast->sem->kind = kind; // use the kind if there is one
     if (found_jptr && found_jptr == monitor_jptr) {
       symtab_add(monitor_symtab, col, NULL);
     }
@@ -5507,7 +5507,7 @@ static sem_resolve sem_try_resolve_arg_bundle(ast_node *ast, CSTR name, CSTR sco
 
   report_resolve_error(ast, "CQL0068: field not found in shape", name);
   record_resolve_error(ast);
-  
+
   return SEM_RESOLVE_STOP;
 }
 
@@ -5646,7 +5646,7 @@ static sem_t *find_mutable_type_for_global_cursor_field(CSTR name, CSTR cursor_n
 
   sem_t *type = NULL;
   sem_resolve_cursor_field(NULL, cursor, name, &type);
-  
+
   return type;
 }
 

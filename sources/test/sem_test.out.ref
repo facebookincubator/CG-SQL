@@ -1757,7 +1757,7 @@ SELECT l * 2.0
 
 The statement ending at line XXXX
 
-SELECT NOT ('x' = 1);
+SELECT NOT 'x' = 1;
 
 Error at test/sem_test.sql:XXXX : in eq : CQL0009: incompatible types in expression '='
 
@@ -3252,7 +3252,7 @@ Error at test/sem_test.sql:XXXX : in in_pred : CQL0012: incompatible types in ex
 
 The statement ending at line XXXX
 
-SELECT NOT 'x' IN (1, 'x');
+SELECT (NOT 'x') IN (1, 'x');
 
 Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
 
@@ -64448,4 +64448,331 @@ END;
         |     | {name x}: x: integer variable
         |     | {name a}: a: integer variable
         | {if_alt}: ok
+
+The statement ending at line XXXX
+
+SELECT 1 + (NOT 2 IS NULL);
+
+  {select_stmt}: select: { _anon: integer notnull }
+  | {select_core_list}: select: { _anon: integer notnull }
+  | | {select_core}: select: { _anon: integer notnull }
+  |   | {select_expr_list_con}: select: { _anon: integer notnull }
+  |     | {select_expr_list}: select: { _anon: integer notnull }
+  |     | | {select_expr}: integer notnull
+  |     |   | {add}: integer notnull
+  |     |     | {int 1}: integer notnull
+  |     |     | {not}: bool notnull
+  |     |       | {is}: bool notnull
+  |     |         | {int 2}: integer notnull
+  |     |         | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT (NOT 1) + (NOT 2 IS NULL);
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | {add}: bool notnull
+  |     |     | {not}: bool notnull
+  |     |     | | {int 1}: integer notnull
+  |     |     | {not}: bool notnull
+  |     |       | {is}: bool notnull
+  |     |         | {int 2}: integer notnull
+  |     |         | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NOT 1 + (2 IS NULL);
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | {not}: bool notnull
+  |     |     | {add}: integer notnull
+  |     |       | {int 1}: integer notnull
+  |     |       | {is}: bool notnull
+  |     |         | {int 2}: integer notnull
+  |     |         | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NOT 1 + 2 IS NULL;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | {not}: bool notnull
+  |     |     | {is}: bool notnull
+  |     |       | {add}: integer notnull
+  |     |       | | {int 1}: integer notnull
+  |     |       | | {int 2}: integer notnull
+  |     |       | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 1 + (NOT 2) IS NULL;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | {is}: bool notnull
+  |     |     | {add}: integer notnull
+  |     |     | | {int 1}: integer notnull
+  |     |     | | {not}: bool notnull
+  |     |     |   | {int 2}: integer notnull
+  |     |     | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 1 IS NOT NULL AND 2 + (NOT 3) IS NULL;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | {and}: bool notnull
+  |     |     | {is_not}: bool notnull
+  |     |     | | {int 1}: integer notnull
+  |     |     | | {null}: null
+  |     |     | {is}: bool notnull
+  |     |       | {add}: integer notnull
+  |     |       | | {int 2}: integer notnull
+  |     |       | | {not}: bool notnull
+  |     |       |   | {int 3}: integer notnull
+  |     |       | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 1 IS NOT NULL AND 2 + (NOT 3 IS NULL);
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | {and}: bool notnull
+  |     |     | {is_not}: bool notnull
+  |     |     | | {int 1}: integer notnull
+  |     |     | | {null}: null
+  |     |     | {add}: integer notnull
+  |     |       | {int 2}: integer notnull
+  |     |       | {not}: bool notnull
+  |     |         | {is}: bool notnull
+  |     |           | {int 3}: integer notnull
+  |     |           | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NOT 0 BETWEEN -1 AND 2;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | {not}: bool notnull
+  |     |     | {between}: bool notnull
+  |     |       | {int 0}: integer notnull
+  |     |       | {range}
+  |     |         | {uminus}: integer notnull
+  |     |         | | {int 1}: integer notnull
+  |     |         | {int 2}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT (NOT 0) BETWEEN -1 AND 2;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | {between}: bool notnull
+  |     |     | {not}: bool notnull
+  |     |     | | {int 0}: integer notnull
+  |     |     | {range}
+  |     |       | {uminus}: integer notnull
+  |     |       | | {int 1}: integer notnull
+  |     |       | {int 2}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NOT 0 BETWEEN -1 AND 2;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | {not}: bool notnull
+  |     |     | {between}: bool notnull
+  |     |       | {int 0}: integer notnull
+  |     |       | {range}
+  |     |         | {uminus}: integer notnull
+  |     |         | | {int 1}: integer notnull
+  |     |         | {int 2}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 1 = 2 BETWEEN 2 AND 2;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | {between}: bool notnull
+  |     |     | {eq}: bool notnull
+  |     |     | | {int 1}: integer notnull
+  |     |     | | {int 2}: integer notnull
+  |     |     | {range}
+  |     |       | {int 2}: integer notnull
+  |     |       | {int 2}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 1 = (2 BETWEEN 2 AND 2);
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | {eq}: bool notnull
+  |     |     | {int 1}: integer notnull
+  |     |     | {between}: bool notnull
+  |     |       | {int 2}: integer notnull
+  |     |       | {range}
+  |     |         | {int 2}: integer notnull
+  |     |         | {int 2}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 1 = 2 BETWEEN 2 AND 2;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | {between}: bool notnull
+  |     |     | {eq}: bool notnull
+  |     |     | | {int 1}: integer notnull
+  |     |     | | {int 2}: integer notnull
+  |     |     | {range}
+  |     |       | {int 2}: integer notnull
+  |     |       | {int 2}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
 

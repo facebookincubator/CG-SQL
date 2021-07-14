@@ -750,9 +750,14 @@
 <li><a href="#cql0396-versioning-attributes-may-not-be-used-on-ddl-inside-a-procedure">CQL0396: versioning attributes may not be used on DDL inside a procedure</a></li>
 <li><a href="#cql0397-object-is-an-orphan-because-its-table-is-deleted.-remove-rather-than-delete-object_name">CQL0397: object is an orphan because its table is deleted. Remove rather than <span class="citation" data-cites="delete">@delete</span> ‘object_name’</a></li>
 <li><a href="#cql0398-a-compound-select-cannot-be-ordered-by-the-result-of-an-expression">CQL0398: A compound select cannot be ordered by the result of an expression</a></li>
+<li><a href="#cql0400-encode-context-column-cant-be-sensitive">CQL0400: encode context column can’t be sensitive</a></li>
+<li><a href="#cql0402-encode-context-column-in-vault_senstive-attribute-must-match-the-specified-type-in-strict-mode">CQL0402: encode context column in vault_senstive attribute must match the specified type in strict mode</a></li>
 </ul></li>
-<li><a href="#appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</a>
+<li><a href="#cql-0405-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0405 : unused, this was added to prevent merge conflicts at the end on literally every checkin</a></li>
+<li><a href="#cql-0406-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0406 : unused, this was added to prevent merge conflicts at the end on literally every checkin</a></li>
+<li><a href="#cql-0407-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0407 : unused, this was added to prevent merge conflicts at the end on literally every checkin</a>
 <ul>
+<li><a href="#cql0408-encode-context-column-can-be-only-specified-once">CQL0408: encode context column can be only specified once</a></li>
 <li><a href="#rules-1">Rules</a></li>
 </ul></li>
 <li><a href="#appendix-6-cql-in-20-minutes">Appendix 6: CQL In 20 Minutes</a></li>
@@ -818,17 +823,17 @@
 <div class="sourceCode" id="cb2"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cql</span> <span class="at">--in</span> hello.sql <span class="at">--cg</span> hello.h hello.c</span></code></pre></div>
 <p>This will produce the C output files <code>hello.c</code> and <code>hello.h</code> which can be readily compiled.</p>
 <p>However, hello.c will not have a <code>main</code> – rather it will have a function like this:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> hello(<span class="dt">void</span>);</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> hello<span class="op">(</span><span class="dt">void</span><span class="op">);</span></span></code></pre></div>
 <p>The declaration of this function can be found in <code>hello.h</code>.</p>
 <p>That <code>hello</code> function is not quite adequate to do get a running program, which brings us to the next step in getting things running. Typically you have some kind of client program that will execute the procedures you create in CQL. Let’s create a simple one in a file we’ll creatively name <code>main.c</code>.</p>
 <p>A very simple CQL main might look like this:</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdlib.h&gt;</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&quot;hello.h&quot;</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main(<span class="dt">int</span> argc, <span class="dt">char</span> **argv)</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>   hello();</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>   <span class="cf">return</span> <span class="dv">0</span>;</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">(</span><span class="dt">int</span> argc<span class="op">,</span> <span class="dt">char</span> <span class="op">**</span>argv<span class="op">)</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>   hello<span class="op">();</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>   <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <p>Now we should be able to get do the following:</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cc <span class="at">-o</span> hello main.c hello.c</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ./hello</span>
@@ -988,22 +993,22 @@
 <div class="sourceCode" id="cb12"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdlib.h&gt;</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;sqlite3.h&gt;</span></span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main(<span class="dt">int</span> argc, <span class="dt">char</span> **argv)</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  sqlite3 *db;</span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int</span> rc = sqlite3_open(<span class="st">&quot;:memory:&quot;</span>, &amp;db);</span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (rc != SQLITE_OK) {</span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    exit(<span class="dv">1</span>); <span class="co">/* not exactly world class error handling but that isn&#39;t the point */</span></span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  rc = hello(db);</span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (rc != SQLITE_OK) {</span>
-<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    exit(<span class="dv">2</span>);</span>
-<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">(</span><span class="dt">int</span> argc<span class="op">,</span> <span class="dt">char</span> <span class="op">**</span>argv<span class="op">)</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  sqlite3 <span class="op">*</span>db<span class="op">;</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int</span> rc <span class="op">=</span> sqlite3_open<span class="op">(</span><span class="st">&quot;:memory:&quot;</span><span class="op">,</span> <span class="op">&amp;</span>db<span class="op">);</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>rc <span class="op">!=</span> SQLITE_OK<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    exit<span class="op">(</span><span class="dv">1</span><span class="op">);</span> <span class="co">/* not exactly world class error handling but that isn&#39;t the point */</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  rc <span class="op">=</span> hello<span class="op">(</span>db<span class="op">);</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>rc <span class="op">!=</span> SQLITE_OK<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    exit<span class="op">(</span><span class="dv">2</span><span class="op">);</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
 <span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>  sqlite3_close(db);</span>
-<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>  sqlite3_close<span class="op">(</span>db<span class="op">);</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <p>If we re-run CQL and look in the <code>hello.h</code> output file we’ll see that the declaration of the <code>hello</code> function is now:</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>  cql_code hello(sqlite3 *_db_);</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>  cql_code hello<span class="op">(</span>sqlite3 <span class="op">*</span>_db_<span class="op">);</span></span></code></pre></div>
 <p>This indicates that the database is used and a SQLite return code is provided. We’re nearly there. If you attempt to build the program as before there will be several link-time errors due to missing functions. Typically these are resolved by providing the SQLite library to the command line and also adding the CQL runtime. The new command line looks something like this:</p>
 <div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cc <span class="at">-o</span> hello main.c hello.c cqlrt.c <span class="at">-lsqlite3</span></span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ./hello</span>
@@ -1026,10 +1031,10 @@
 <p>If we rebuild the program, it will now behave as expected.</p>
 <h3 id="explaining-the-new-hello-world">Explaining The New Hello World</h3>
 <p>Let’s go over every important line of the new program, starting from main.</p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int</span> rc = sqlite3_open(<span class="st">&quot;:memory:&quot;</span>, &amp;db);</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int</span> rc <span class="op">=</span> sqlite3_open<span class="op">(</span><span class="st">&quot;:memory:&quot;</span><span class="op">,</span> <span class="op">&amp;</span>db<span class="op">);</span></span></code></pre></div>
 <p>This statement gives us an empty private in-memory only database to work with. This is the simplest case and it’s still very useful. The <code>sqlite_open</code> and <code>sqlite_open_v2</code> functions can be used to create a variety of databases per the SQLite documentation.</p>
 <p>We’ll need such a database to use our procedure, and we use it in the call here:</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>  rc = hello(db);</span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>  rc <span class="op">=</span> hello<span class="op">(</span>db<span class="op">);</span></span></code></pre></div>
 <p>This provides a valid db handle to our procedure. Note that the procedure doesn’t know what database it is supposed to operate on, it expects to be handed a suitable database on a silver platter. In fact any given proc could be used with various databases at various times. Just like SQLite, CQL does not enforce any particular database setup; it does what you tell it to.</p>
 <p>When <code>hello</code> runs we begin with</p>
 <div class="sourceCode" id="cb18"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">create</span> <span class="kw">table</span> my_data(t text <span class="kw">not</span> <span class="kw">null</span>);</span></code></pre></div>
@@ -1209,11 +1214,11 @@
 <pre><code>ASSIGNMENT:    :=
 LOGICAL_OR:    OR
 LOGICAL_AND:   AND
+LOGICAL_NOT:   NOT
+BETWEEN:       BETWEEN  NOT BETWEEN
 EQUALITY:      = == != &lt;&gt; IS, IS NOT, IN, NOT IN, LIKE, GLOB, MATCH, REGEXP
 INEQUALITY:    &lt;   &lt;=  &gt;   &gt;=
-LOGICAL_NOT:   NOT
 BINARY:        &lt;&lt; &gt;&gt; &amp; |
-BETWEEN:       BETWEEN  NOT BETWEEN
 ADDITION:      + -
 MULIPLICATION: * / %
 BINARY_NOT:    ~
@@ -2900,45 +2905,45 @@ This form implies <code>USING TRANSACTION</code>.</p>
 <span id="cb179-35"><a href="#cb179-35" aria-hidden="true" tabindex="-1"></a>  type_ <span class="dt">INTEGER</span>)</span>
 <span id="cb179-36"><a href="#cb179-36" aria-hidden="true" tabindex="-1"></a>  <span class="kw">USING</span> <span class="kw">TRANSACTION</span>;</span></code></pre></div>
 <p>So far we’ve avoided discussing the generated C code in any details but here it seems helpful to show exactly what these declarations correspond to in the generated C to demystify all this. There is a very straightforward conversion.</p>
-<div class="sourceCode" id="cb180"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb180-1"><a href="#cb180-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> test(cql_int32 i);</span>
+<div class="sourceCode" id="cb180"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb180-1"><a href="#cb180-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> test<span class="op">(</span>cql_int32 i<span class="op">);</span></span>
 <span id="cb180-2"><a href="#cb180-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb180-3"><a href="#cb180-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> out_test(</span>
-<span id="cb180-4"><a href="#cb180-4" aria-hidden="true" tabindex="-1"></a>  cql_int32 *_Nonnull i, </span>
-<span id="cb180-5"><a href="#cb180-5" aria-hidden="true" tabindex="-1"></a>  cql_nullable_int32 *_Nonnull ii);</span>
+<span id="cb180-3"><a href="#cb180-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> out_test<span class="op">(</span></span>
+<span id="cb180-4"><a href="#cb180-4" aria-hidden="true" tabindex="-1"></a>  cql_int32 <span class="op">*</span>_Nonnull i<span class="op">,</span> </span>
+<span id="cb180-5"><a href="#cb180-5" aria-hidden="true" tabindex="-1"></a>  cql_nullable_int32 <span class="op">*</span>_Nonnull ii<span class="op">);</span></span>
 <span id="cb180-6"><a href="#cb180-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb180-7"><a href="#cb180-7" aria-hidden="true" tabindex="-1"></a>cql_code outparm_test(</span>
-<span id="cb180-8"><a href="#cb180-8" aria-hidden="true" tabindex="-1"></a>  sqlite3 *_Nonnull _db_, </span>
-<span id="cb180-9"><a href="#cb180-9" aria-hidden="true" tabindex="-1"></a>  cql_int32 *_Nonnull foo);</span>
+<span id="cb180-7"><a href="#cb180-7" aria-hidden="true" tabindex="-1"></a>cql_code outparm_test<span class="op">(</span></span>
+<span id="cb180-8"><a href="#cb180-8" aria-hidden="true" tabindex="-1"></a>  sqlite3 <span class="op">*</span>_Nonnull _db_<span class="op">,</span> </span>
+<span id="cb180-9"><a href="#cb180-9" aria-hidden="true" tabindex="-1"></a>  cql_int32 <span class="op">*</span>_Nonnull foo<span class="op">);</span></span>
 <span id="cb180-10"><a href="#cb180-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb180-11"><a href="#cb180-11" aria-hidden="true" tabindex="-1"></a>cql_code select_from_view_fetch_results(</span>
-<span id="cb180-12"><a href="#cb180-12" aria-hidden="true" tabindex="-1"></a>  sqlite3 *_Nonnull _db_, </span>
-<span id="cb180-13"><a href="#cb180-13" aria-hidden="true" tabindex="-1"></a>  select_from_view_result_set_ref _Nullable *_Nonnull result_set);</span>
+<span id="cb180-11"><a href="#cb180-11" aria-hidden="true" tabindex="-1"></a>cql_code select_from_view_fetch_results<span class="op">(</span></span>
+<span id="cb180-12"><a href="#cb180-12" aria-hidden="true" tabindex="-1"></a>  sqlite3 <span class="op">*</span>_Nonnull _db_<span class="op">,</span> </span>
+<span id="cb180-13"><a href="#cb180-13" aria-hidden="true" tabindex="-1"></a>  select_from_view_result_set_ref _Nullable <span class="op">*</span>_Nonnull result_set<span class="op">);</span></span>
 <span id="cb180-14"><a href="#cb180-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb180-15"><a href="#cb180-15" aria-hidden="true" tabindex="-1"></a>cql_code make_view(sqlite3 *_Nonnull _db_);</span>
+<span id="cb180-15"><a href="#cb180-15" aria-hidden="true" tabindex="-1"></a>cql_code make_view<span class="op">(</span>sqlite3 <span class="op">*</span>_Nonnull _db_<span class="op">);</span></span>
 <span id="cb180-16"><a href="#cb180-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb180-17"><a href="#cb180-17" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> copy_int(cql_nullable_int32 a, cql_nullable_int32 *_Nonnull b);</span>
+<span id="cb180-17"><a href="#cb180-17" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> copy_int<span class="op">(</span>cql_nullable_int32 a<span class="op">,</span> cql_nullable_int32 <span class="op">*</span>_Nonnull b<span class="op">);</span></span>
 <span id="cb180-18"><a href="#cb180-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb180-19"><a href="#cb180-19" aria-hidden="true" tabindex="-1"></a>cql_code complex_return_fetch_results(</span>
-<span id="cb180-20"><a href="#cb180-20" aria-hidden="true" tabindex="-1"></a>  sqlite3 *_Nonnull _db_, </span>
-<span id="cb180-21"><a href="#cb180-21" aria-hidden="true" tabindex="-1"></a>  complex_return_result_set_ref _Nullable *_Nonnull result_set);</span>
+<span id="cb180-19"><a href="#cb180-19" aria-hidden="true" tabindex="-1"></a>cql_code complex_return_fetch_results<span class="op">(</span></span>
+<span id="cb180-20"><a href="#cb180-20" aria-hidden="true" tabindex="-1"></a>  sqlite3 <span class="op">*</span>_Nonnull _db_<span class="op">,</span> </span>
+<span id="cb180-21"><a href="#cb180-21" aria-hidden="true" tabindex="-1"></a>  complex_return_result_set_ref _Nullable <span class="op">*</span>_Nonnull result_set<span class="op">);</span></span>
 <span id="cb180-22"><a href="#cb180-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb180-23"><a href="#cb180-23" aria-hidden="true" tabindex="-1"></a>cql_code outint_nullable(</span>
-<span id="cb180-24"><a href="#cb180-24" aria-hidden="true" tabindex="-1"></a>  sqlite3 *_Nonnull _db_, </span>
-<span id="cb180-25"><a href="#cb180-25" aria-hidden="true" tabindex="-1"></a>  cql_nullable_int32 *_Nonnull output, </span>
-<span id="cb180-26"><a href="#cb180-26" aria-hidden="true" tabindex="-1"></a>  cql_bool *_Nonnull result);</span>
+<span id="cb180-23"><a href="#cb180-23" aria-hidden="true" tabindex="-1"></a>cql_code outint_nullable<span class="op">(</span></span>
+<span id="cb180-24"><a href="#cb180-24" aria-hidden="true" tabindex="-1"></a>  sqlite3 <span class="op">*</span>_Nonnull _db_<span class="op">,</span> </span>
+<span id="cb180-25"><a href="#cb180-25" aria-hidden="true" tabindex="-1"></a>  cql_nullable_int32 <span class="op">*</span>_Nonnull output<span class="op">,</span> </span>
+<span id="cb180-26"><a href="#cb180-26" aria-hidden="true" tabindex="-1"></a>  cql_bool <span class="op">*</span>_Nonnull result<span class="op">);</span></span>
 <span id="cb180-27"><a href="#cb180-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb180-28"><a href="#cb180-28" aria-hidden="true" tabindex="-1"></a>cql_code outint_notnull(</span>
-<span id="cb180-29"><a href="#cb180-29" aria-hidden="true" tabindex="-1"></a>  sqlite3 *_Nonnull _db_, </span>
-<span id="cb180-30"><a href="#cb180-30" aria-hidden="true" tabindex="-1"></a>  cql_int32 *_Nonnull output, </span>
-<span id="cb180-31"><a href="#cb180-31" aria-hidden="true" tabindex="-1"></a>  cql_bool *_Nonnull result);</span>
+<span id="cb180-28"><a href="#cb180-28" aria-hidden="true" tabindex="-1"></a>cql_code outint_notnull<span class="op">(</span></span>
+<span id="cb180-29"><a href="#cb180-29" aria-hidden="true" tabindex="-1"></a>  sqlite3 <span class="op">*</span>_Nonnull _db_<span class="op">,</span> </span>
+<span id="cb180-30"><a href="#cb180-30" aria-hidden="true" tabindex="-1"></a>  cql_int32 <span class="op">*</span>_Nonnull output<span class="op">,</span> </span>
+<span id="cb180-31"><a href="#cb180-31" aria-hidden="true" tabindex="-1"></a>  cql_bool <span class="op">*</span>_Nonnull result<span class="op">);</span></span>
 <span id="cb180-32"><a href="#cb180-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb180-33"><a href="#cb180-33" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> obj_proc(</span>
-<span id="cb180-34"><a href="#cb180-34" aria-hidden="true" tabindex="-1"></a>  cql_object_ref _Nullable *_Nonnull an_object);</span>
+<span id="cb180-33"><a href="#cb180-33" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> obj_proc<span class="op">(</span></span>
+<span id="cb180-34"><a href="#cb180-34" aria-hidden="true" tabindex="-1"></a>  cql_object_ref _Nullable <span class="op">*</span>_Nonnull an_object<span class="op">);</span></span>
 <span id="cb180-35"><a href="#cb180-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb180-36"><a href="#cb180-36" aria-hidden="true" tabindex="-1"></a>cql_code insert_values(</span>
-<span id="cb180-37"><a href="#cb180-37" aria-hidden="true" tabindex="-1"></a>  sqlite3 *_Nonnull _db_, </span>
-<span id="cb180-38"><a href="#cb180-38" aria-hidden="true" tabindex="-1"></a>  cql_int32 id_, </span>
-<span id="cb180-39"><a href="#cb180-39" aria-hidden="true" tabindex="-1"></a>  cql_nullable_int32 type_);</span></code></pre></div>
+<span id="cb180-36"><a href="#cb180-36" aria-hidden="true" tabindex="-1"></a>cql_code insert_values<span class="op">(</span></span>
+<span id="cb180-37"><a href="#cb180-37" aria-hidden="true" tabindex="-1"></a>  sqlite3 <span class="op">*</span>_Nonnull _db_<span class="op">,</span> </span>
+<span id="cb180-38"><a href="#cb180-38" aria-hidden="true" tabindex="-1"></a>  cql_int32 id_<span class="op">,</span> </span>
+<span id="cb180-39"><a href="#cb180-39" aria-hidden="true" tabindex="-1"></a>  cql_nullable_int32 type_<span class="op">);</span></span></code></pre></div>
 <p>As you can see, these declarations use exactly the normal SQLite types and so it is very easy to declare a procedure in CQL and then implement it yourself in straight C, simply by conforming to the contract.</p>
 <p>Importantly, SQLite does not know anything about CQL stored procedures, or anything at all about CQL really so CQL stored procedure names cannot be used in any way in SQL statements. CQL control flow like the <code>call</code> statement can be used to invoke other procedures and results can be captured by combing the <code>OUT</code> statement and a <code>DECLARE CURSOR</code> construct but SQLite is not involved in those things. This is another place where the inherent two-headed nature of CQL leaks out.</p>
 <p>Finally, this is a good place to reinforce that procedures with any of the structured result types (<code>select</code>, <code>out</code>, <code>out union</code>) can be used with a suitable cursor.</p>
@@ -2988,24 +2993,24 @@ This form implies <code>USING TRANSACTION</code>.</p>
 <p>Let’s look at the public interface of that result set now considering the most essential pieces.</p>
 <div class="sourceCode" id="cb185"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb185-1"><a href="#cb185-1" aria-hidden="true" tabindex="-1"></a><span class="co">/* this is almost everything in the generated header file */</span></span>
 <span id="cb185-2"><a href="#cb185-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define read_foo_data_types_count 3</span></span>
-<span id="cb185-3"><a href="#cb185-3" aria-hidden="true" tabindex="-1"></a>cql_result_set_type_decl(</span>
-<span id="cb185-4"><a href="#cb185-4" aria-hidden="true" tabindex="-1"></a>  read_foo_result_set, \</span>
-<span id="cb185-5"><a href="#cb185-5" aria-hidden="true" tabindex="-1"></a>  read_foo_result_set_ref);</span>
+<span id="cb185-3"><a href="#cb185-3" aria-hidden="true" tabindex="-1"></a>cql_result_set_type_decl<span class="op">(</span></span>
+<span id="cb185-4"><a href="#cb185-4" aria-hidden="true" tabindex="-1"></a>  read_foo_result_set<span class="op">,</span> \</span>
+<span id="cb185-5"><a href="#cb185-5" aria-hidden="true" tabindex="-1"></a>  read_foo_result_set_ref<span class="op">);</span></span>
 <span id="cb185-6"><a href="#cb185-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb185-7"><a href="#cb185-7" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_int32 read_foo_get_id(read_foo_result_set_ref</span>
-<span id="cb185-8"><a href="#cb185-8" aria-hidden="true" tabindex="-1"></a>  _Nonnull result_set, cql_int32 row);</span>
-<span id="cb185-9"><a href="#cb185-9" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_bool read_foo_get_b_is_null(read_foo_result_set_ref </span>
-<span id="cb185-10"><a href="#cb185-10" aria-hidden="true" tabindex="-1"></a>  _Nonnull result_set, cql_int32 row);</span>
-<span id="cb185-11"><a href="#cb185-11" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_bool read_foo_get_b_value(read_foo_result_set_ref </span>
-<span id="cb185-12"><a href="#cb185-12" aria-hidden="true" tabindex="-1"></a>  _Nonnull result_set, cql_int32 row);</span>
-<span id="cb185-13"><a href="#cb185-13" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_string_ref _Nullable read_foo_get_t(</span>
-<span id="cb185-14"><a href="#cb185-14" aria-hidden="true" tabindex="-1"></a>   read_foo_result_set_ref  _Nonnull result_set, </span>
-<span id="cb185-15"><a href="#cb185-15" aria-hidden="true" tabindex="-1"></a>   cql_int32 row);</span>
-<span id="cb185-16"><a href="#cb185-16" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_int32 read_foo_result_count(read_foo_result_set_ref </span>
-<span id="cb185-17"><a href="#cb185-17" aria-hidden="true" tabindex="-1"></a>  _Nonnull result_set);</span>
-<span id="cb185-18"><a href="#cb185-18" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_code read_foo_fetch_results(sqlite3 *_Nonnull _db_, </span>
-<span id="cb185-19"><a href="#cb185-19" aria-hidden="true" tabindex="-1"></a>  read_foo_result_set_ref _Nullable *_Nonnull result_set, </span>
-<span id="cb185-20"><a href="#cb185-20" aria-hidden="true" tabindex="-1"></a>  cql_int32 id_);</span>
+<span id="cb185-7"><a href="#cb185-7" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_int32 read_foo_get_id<span class="op">(</span>read_foo_result_set_ref</span>
+<span id="cb185-8"><a href="#cb185-8" aria-hidden="true" tabindex="-1"></a>  _Nonnull result_set<span class="op">,</span> cql_int32 row<span class="op">);</span></span>
+<span id="cb185-9"><a href="#cb185-9" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_bool read_foo_get_b_is_null<span class="op">(</span>read_foo_result_set_ref </span>
+<span id="cb185-10"><a href="#cb185-10" aria-hidden="true" tabindex="-1"></a>  _Nonnull result_set<span class="op">,</span> cql_int32 row<span class="op">);</span></span>
+<span id="cb185-11"><a href="#cb185-11" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_bool read_foo_get_b_value<span class="op">(</span>read_foo_result_set_ref </span>
+<span id="cb185-12"><a href="#cb185-12" aria-hidden="true" tabindex="-1"></a>  _Nonnull result_set<span class="op">,</span> cql_int32 row<span class="op">);</span></span>
+<span id="cb185-13"><a href="#cb185-13" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_string_ref _Nullable read_foo_get_t<span class="op">(</span></span>
+<span id="cb185-14"><a href="#cb185-14" aria-hidden="true" tabindex="-1"></a>   read_foo_result_set_ref  _Nonnull result_set<span class="op">,</span> </span>
+<span id="cb185-15"><a href="#cb185-15" aria-hidden="true" tabindex="-1"></a>   cql_int32 row<span class="op">);</span></span>
+<span id="cb185-16"><a href="#cb185-16" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_int32 read_foo_result_count<span class="op">(</span>read_foo_result_set_ref </span>
+<span id="cb185-17"><a href="#cb185-17" aria-hidden="true" tabindex="-1"></a>  _Nonnull result_set<span class="op">);</span></span>
+<span id="cb185-18"><a href="#cb185-18" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_code read_foo_fetch_results<span class="op">(</span>sqlite3 <span class="op">*</span>_Nonnull _db_<span class="op">,</span> </span>
+<span id="cb185-19"><a href="#cb185-19" aria-hidden="true" tabindex="-1"></a>  read_foo_result_set_ref _Nullable <span class="op">*</span>_Nonnull result_set<span class="op">,</span> </span>
+<span id="cb185-20"><a href="#cb185-20" aria-hidden="true" tabindex="-1"></a>  cql_int32 id_<span class="op">);</span></span>
 <span id="cb185-21"><a href="#cb185-21" aria-hidden="true" tabindex="-1"></a><span class="pp">#define read_foo_row_hash(result_set, row) \</span></span>
 <span id="cb185-22"><a href="#cb185-22" aria-hidden="true" tabindex="-1"></a><span class="pp">  cql_result_set_get_meta((cql_result_set_ref)(result_set))-&gt;\</span></span>
 <span id="cb185-23"><a href="#cb185-23" aria-hidden="true" tabindex="-1"></a><span class="pp">  rowHash((cql_result_set_ref)(result_set), row)</span></span>
@@ -3015,29 +3020,29 @@ This form implies <code>USING TRANSACTION</code>.</p>
 <span id="cb185-27"><a href="#cb185-27" aria-hidden="true" tabindex="-1"></a><span class="pp">   (cql_result_set_ref)(rs1),  row1,  \</span></span>
 <span id="cb185-28"><a href="#cb185-28" aria-hidden="true" tabindex="-1"></a><span class="pp">   (cql_result_set_ref)(rs2),  row2)</span></span></code></pre></div>
 <p>Let’s consider some of these individually now</p>
-<div class="sourceCode" id="cb186"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb186-1"><a href="#cb186-1" aria-hidden="true" tabindex="-1"></a>cql_result_set_type_decl(</span>
-<span id="cb186-2"><a href="#cb186-2" aria-hidden="true" tabindex="-1"></a>  read_foo_result_set, </span>
-<span id="cb186-3"><a href="#cb186-3" aria-hidden="true" tabindex="-1"></a>  read_foo_result_set_ref);</span></code></pre></div>
+<div class="sourceCode" id="cb186"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb186-1"><a href="#cb186-1" aria-hidden="true" tabindex="-1"></a>cql_result_set_type_decl<span class="op">(</span></span>
+<span id="cb186-2"><a href="#cb186-2" aria-hidden="true" tabindex="-1"></a>  read_foo_result_set<span class="op">,</span> </span>
+<span id="cb186-3"><a href="#cb186-3" aria-hidden="true" tabindex="-1"></a>  read_foo_result_set_ref<span class="op">);</span></span></code></pre></div>
 <p>This declares the data type for <code>read_foo_result_set</code> and the associated object reference <code>read_foo_result_set_ref</code>.<br />
 As it turns out the underlying data type for all result sets is the same, only the shape of the data varies.</p>
-<div class="sourceCode" id="cb187"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb187-1"><a href="#cb187-1" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_code read_foo_fetch_results(sqlite3 *_Nonnull _db_, </span>
-<span id="cb187-2"><a href="#cb187-2" aria-hidden="true" tabindex="-1"></a>  read_foo_result_set_ref _Nullable *_Nonnull result_set, </span>
-<span id="cb187-3"><a href="#cb187-3" aria-hidden="true" tabindex="-1"></a>  cql_int32 id_);</span></code></pre></div>
+<div class="sourceCode" id="cb187"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb187-1"><a href="#cb187-1" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_code read_foo_fetch_results<span class="op">(</span>sqlite3 <span class="op">*</span>_Nonnull _db_<span class="op">,</span> </span>
+<span id="cb187-2"><a href="#cb187-2" aria-hidden="true" tabindex="-1"></a>  read_foo_result_set_ref _Nullable <span class="op">*</span>_Nonnull result_set<span class="op">,</span> </span>
+<span id="cb187-3"><a href="#cb187-3" aria-hidden="true" tabindex="-1"></a>  cql_int32 id_<span class="op">);</span></span></code></pre></div>
 <p>The result set fetcher method gives you a <code>read_foo_result_set_ref</code> if it succeeds. It accepts the <code>id_</code> argument which it will internally pass along to <code>read_foo(...)</code>. The latter function provides a <code>sqlite3_stmt*</code> which can then be iterated in the fetcher. This method is the main public entry point for result sets.</p>
 <p>Once you have a result set, you can read values out of it.</p>
-<div class="sourceCode" id="cb188"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb188-1"><a href="#cb188-1" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_int32 read_foo_result_count(read_foo_result_set_ref </span>
-<span id="cb188-2"><a href="#cb188-2" aria-hidden="true" tabindex="-1"></a>  _Nonnull result_set);</span></code></pre></div>
+<div class="sourceCode" id="cb188"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb188-1"><a href="#cb188-1" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_int32 read_foo_result_count<span class="op">(</span>read_foo_result_set_ref </span>
+<span id="cb188-2"><a href="#cb188-2" aria-hidden="true" tabindex="-1"></a>  _Nonnull result_set<span class="op">);</span></span></code></pre></div>
 <p>That function tells you how many rows are in the result set.</p>
 <p>For each row you can use any of the row readers:</p>
-<div class="sourceCode" id="cb189"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb189-1"><a href="#cb189-1" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_int32 read_foo_get_id(read_foo_result_set_ref</span>
-<span id="cb189-2"><a href="#cb189-2" aria-hidden="true" tabindex="-1"></a>  _Nonnull result_set, cql_int32 row);</span>
-<span id="cb189-3"><a href="#cb189-3" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_bool read_foo_get_b_is_null(read_foo_result_set_ref </span>
-<span id="cb189-4"><a href="#cb189-4" aria-hidden="true" tabindex="-1"></a>  _Nonnull result_set, cql_int32 row);</span>
-<span id="cb189-5"><a href="#cb189-5" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_bool read_foo_get_b_value(read_foo_result_set_ref </span>
-<span id="cb189-6"><a href="#cb189-6" aria-hidden="true" tabindex="-1"></a>  _Nonnull result_set, cql_int32 row);</span>
-<span id="cb189-7"><a href="#cb189-7" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_string_ref _Nullable read_foo_get_t(</span>
-<span id="cb189-8"><a href="#cb189-8" aria-hidden="true" tabindex="-1"></a>   read_foo_result_set_ref  _Nonnull result_set, </span>
-<span id="cb189-9"><a href="#cb189-9" aria-hidden="true" tabindex="-1"></a>   cql_int32 row);</span></code></pre></div>
+<div class="sourceCode" id="cb189"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb189-1"><a href="#cb189-1" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_int32 read_foo_get_id<span class="op">(</span>read_foo_result_set_ref</span>
+<span id="cb189-2"><a href="#cb189-2" aria-hidden="true" tabindex="-1"></a>  _Nonnull result_set<span class="op">,</span> cql_int32 row<span class="op">);</span></span>
+<span id="cb189-3"><a href="#cb189-3" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_bool read_foo_get_b_is_null<span class="op">(</span>read_foo_result_set_ref </span>
+<span id="cb189-4"><a href="#cb189-4" aria-hidden="true" tabindex="-1"></a>  _Nonnull result_set<span class="op">,</span> cql_int32 row<span class="op">);</span></span>
+<span id="cb189-5"><a href="#cb189-5" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_bool read_foo_get_b_value<span class="op">(</span>read_foo_result_set_ref </span>
+<span id="cb189-6"><a href="#cb189-6" aria-hidden="true" tabindex="-1"></a>  _Nonnull result_set<span class="op">,</span> cql_int32 row<span class="op">);</span></span>
+<span id="cb189-7"><a href="#cb189-7" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_string_ref _Nullable read_foo_get_t<span class="op">(</span></span>
+<span id="cb189-8"><a href="#cb189-8" aria-hidden="true" tabindex="-1"></a>   read_foo_result_set_ref  _Nonnull result_set<span class="op">,</span> </span>
+<span id="cb189-9"><a href="#cb189-9" aria-hidden="true" tabindex="-1"></a>   cql_int32 row<span class="op">);</span></span></code></pre></div>
 <p>These let you read the <code>id</code> of a particular row, and get a <code>cql_int32</code> or you can read the nullable boolean, using the <code>read_foo_get_b_is_null</code> function first to see if the boolean is null and then <code>read_foo_get_b_value</code> to get the value. Finally the string can be accessed with <code>read_foo_get_t</code>. As you can see there is a simple naming convention for each of the field readers.</p>
 <p>Note: The compiler has runtime arrays that control naming conventions as well as using CamelCasing. Additional customizations may be created by adding new runtime arrays into the CQL compiler.</p>
 <p>Finally, also part of the public interface, are these macros:</p>
@@ -3110,8 +3115,8 @@ read_foo_fetch_results(
 <p>We need a buffer to hold the rows we are going to accumulate; We use <code>cql_bytebuf</code> just like the normal fetcher above.</p>
 <div class="sourceCode" id="cb196"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb196-1"><a href="#cb196-1" aria-hidden="true" tabindex="-1"></a><span class="co">// This bit creates a growable buffer to hold the rows</span></span>
 <span id="cb196-2"><a href="#cb196-2" aria-hidden="true" tabindex="-1"></a><span class="co">// This is how we do all the other result sets, too</span></span>
-<span id="cb196-3"><a href="#cb196-3" aria-hidden="true" tabindex="-1"></a>cql_bytebuf _rows_;</span>
-<span id="cb196-4"><a href="#cb196-4" aria-hidden="true" tabindex="-1"></a>cql_bytebuf_open(&amp;_rows_);</span></code></pre></div>
+<span id="cb196-3"><a href="#cb196-3" aria-hidden="true" tabindex="-1"></a>cql_bytebuf _rows_<span class="op">;</span></span>
+<span id="cb196-4"><a href="#cb196-4" aria-hidden="true" tabindex="-1"></a>cql_bytebuf_open<span class="op">(&amp;</span>_rows_<span class="op">);</span></span></code></pre></div>
 <p>We need to be able to copy the cursor into the buffer and retain any internal references</p>
 <pre><code>// This bit is what you get when you &quot;out union&quot; a cursor &quot;C&quot;
 // first we +1 any references in the cursor then we copy its bits 
@@ -5054,10 +5059,10 @@ CQL_WARN_UNUSED cql_code select_sample_proc_fetch_results(
 <span id="cb321-5"><a href="#cb321-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">OUT</span> curs;</span>
 <span id="cb321-6"><a href="#cb321-6" aria-hidden="true" tabindex="-1"></a><span class="cf">END</span>;</span></code></pre></div>
 <p>Which generates this C API:</p>
-<div class="sourceCode" id="cb322"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb322-1"><a href="#cb322-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> generate_sample_proc_row_fetch_results(</span>
-<span id="cb322-2"><a href="#cb322-2" aria-hidden="true" tabindex="-1"></a>    generate_sample_proc_row_rowset_ref _Nullable *_Nonnull result_set, </span>
-<span id="cb322-3"><a href="#cb322-3" aria-hidden="true" tabindex="-1"></a>    string_ref _Nonnull foo_, </span>
-<span id="cb322-4"><a href="#cb322-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> bar_);</span></code></pre></div>
+<div class="sourceCode" id="cb322"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb322-1"><a href="#cb322-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> generate_sample_proc_row_fetch_results<span class="op">(</span></span>
+<span id="cb322-2"><a href="#cb322-2" aria-hidden="true" tabindex="-1"></a>    generate_sample_proc_row_rowset_ref _Nullable <span class="op">*</span>_Nonnull result_set<span class="op">,</span> </span>
+<span id="cb322-3"><a href="#cb322-3" aria-hidden="true" tabindex="-1"></a>    string_ref _Nonnull foo_<span class="op">,</span> </span>
+<span id="cb322-4"><a href="#cb322-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> bar_<span class="op">);</span></span></code></pre></div>
 <p>These few test helpers are useful in a variety of scenarios and can save you a lot of typing and maintenance. They evolve automatically as the code changes, always matching the signature of the attributed procedure.</p>
 <h4 id="generalized-dummy-test-pattern">Generalized Dummy Test Pattern</h4>
 <p>The most flexible test helper is the <code>dummy_test</code> form. This is far more advanced than the simple helpers above. While the choices above were designed to help you create fake result sets pretty easily, <code>dummy_test</code> goes much further letting you set up arbitrary schema and data so that you can run your procedure on actual data. The <code>dummy_test</code> code generator uses the features above to do its job and like the other autotest options, it works by automatically generating CQL code from your procedure definition. However, you get a lot more code in this mode. It’s easiest to study an example so let’s begin there.</p>
@@ -5226,7 +5231,7 @@ BEGIN
 END;</code></pre>
 <p>And of course if the annotation is not flexible enough, you can write your own data population as usual.</p>
 <p>The CQL above results in the usual C signatures. For instance:</p>
-<div class="sourceCode" id="cb332"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb332-1"><a href="#cb332-1" aria-hidden="true" tabindex="-1"></a>CQL_WARN_UNUSED cql_code test_the_subject_populate_tables(sqlite3 *_Nonnull _db_);</span></code></pre></div>
+<div class="sourceCode" id="cb332"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb332-1"><a href="#cb332-1" aria-hidden="true" tabindex="-1"></a>CQL_WARN_UNUSED cql_code test_the_subject_populate_tables<span class="op">(</span>sqlite3 <span class="op">*</span>_Nonnull _db_<span class="op">);</span></span></code></pre></div>
 <p>So it’s fairly easy to call from C/C++ test code or from CQL test code.</p>
 <h2 id="chapter-13-json-output">Chapter 13: JSON Output</h2>
 <!---
@@ -6212,24 +6217,24 @@ end;</code></pre>
 </ul>
 <p>This fragment can be (and should be) compiled in its own compiland while using <code>#include</code> to get the base fragment only. This will result in code gen for the accessor functions for a piece of the overall query – the part this extension knows about. Importantly code that uses this extension’s data does not need or want to know about any other extensions that may be present, thereby keeping dependencies under control.</p>
 <p>The C signatures generated would look like this:</p>
-<div class="sourceCode" id="cb358"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb358-1"><a href="#cb358-1" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_int32 adds_columns_get_id(</span>
-<span id="cb358-2"><a href="#cb358-2" aria-hidden="true" tabindex="-1"></a>    base_frag_result_set_ref _Nonnull result_set,</span>
-<span id="cb358-3"><a href="#cb358-3" aria-hidden="true" tabindex="-1"></a>    cql_int32 row);</span>
+<div class="sourceCode" id="cb358"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb358-1"><a href="#cb358-1" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_int32 adds_columns_get_id<span class="op">(</span></span>
+<span id="cb358-2"><a href="#cb358-2" aria-hidden="true" tabindex="-1"></a>    base_frag_result_set_ref _Nonnull result_set<span class="op">,</span></span>
+<span id="cb358-3"><a href="#cb358-3" aria-hidden="true" tabindex="-1"></a>    cql_int32 row<span class="op">);</span></span>
 <span id="cb358-4"><a href="#cb358-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb358-5"><a href="#cb358-5" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_string_ref _Nonnull adds_columns_get_name(</span>
-<span id="cb358-6"><a href="#cb358-6" aria-hidden="true" tabindex="-1"></a>  base_frag_result_set_ref _Nonnull result_set,</span>
-<span id="cb358-7"><a href="#cb358-7" aria-hidden="true" tabindex="-1"></a>  cql_int32 row);</span>
+<span id="cb358-5"><a href="#cb358-5" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_string_ref _Nonnull adds_columns_get_name<span class="op">(</span></span>
+<span id="cb358-6"><a href="#cb358-6" aria-hidden="true" tabindex="-1"></a>  base_frag_result_set_ref _Nonnull result_set<span class="op">,</span></span>
+<span id="cb358-7"><a href="#cb358-7" aria-hidden="true" tabindex="-1"></a>  cql_int32 row<span class="op">);</span></span>
 <span id="cb358-8"><a href="#cb358-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb358-9"><a href="#cb358-9" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_double adds_columns_get_rate(</span>
-<span id="cb358-10"><a href="#cb358-10" aria-hidden="true" tabindex="-1"></a>  base_frag_result_set_ref _Nonnull result_set,</span>
-<span id="cb358-11"><a href="#cb358-11" aria-hidden="true" tabindex="-1"></a>  cql_int32 row);</span>
+<span id="cb358-9"><a href="#cb358-9" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_double adds_columns_get_rate<span class="op">(</span></span>
+<span id="cb358-10"><a href="#cb358-10" aria-hidden="true" tabindex="-1"></a>  base_frag_result_set_ref _Nonnull result_set<span class="op">,</span></span>
+<span id="cb358-11"><a href="#cb358-11" aria-hidden="true" tabindex="-1"></a>  cql_int32 row<span class="op">);</span></span>
 <span id="cb358-12"><a href="#cb358-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb358-13"><a href="#cb358-13" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_string_ref _Nullable adds_columns_get_data(</span>
-<span id="cb358-14"><a href="#cb358-14" aria-hidden="true" tabindex="-1"></a>  base_frag_result_set_ref _Nonnull result_set,</span>
-<span id="cb358-15"><a href="#cb358-15" aria-hidden="true" tabindex="-1"></a>  cql_int32 row);</span>
+<span id="cb358-13"><a href="#cb358-13" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_string_ref _Nullable adds_columns_get_data<span class="op">(</span></span>
+<span id="cb358-14"><a href="#cb358-14" aria-hidden="true" tabindex="-1"></a>  base_frag_result_set_ref _Nonnull result_set<span class="op">,</span></span>
+<span id="cb358-15"><a href="#cb358-15" aria-hidden="true" tabindex="-1"></a>  cql_int32 row<span class="op">);</span></span>
 <span id="cb358-16"><a href="#cb358-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb358-17"><a href="#cb358-17" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_int32 adds_columns_result_count(</span>
-<span id="cb358-18"><a href="#cb358-18" aria-hidden="true" tabindex="-1"></a>  base_frag_result_set_ref _Nonnull result_set);</span></code></pre></div>
+<span id="cb358-17"><a href="#cb358-17" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_int32 adds_columns_result_count<span class="op">(</span></span>
+<span id="cb358-18"><a href="#cb358-18" aria-hidden="true" tabindex="-1"></a>  base_frag_result_set_ref _Nonnull result_set<span class="op">);</span></span></code></pre></div>
 <p>Even if there were dozens of other extensions, the functions for reading those columns would not be declared in the header for this extension. Any given extension “sees” only the core columns plus any columns it added.</p>
 <h4 id="adding-rows">Adding Rows</h4>
 <p>Query extensions also frequently want to add additional rows to the main result set, based on the data that is already present.</p>
@@ -6247,20 +6252,20 @@ end;</code></pre>
 <span id="cb359-11"><a href="#cb359-11" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span>;</span></code></pre></div>
 <p>Let’s review the features of this second template form: * there is a surrogate for the core query * there is a manatory second CTE * the second CTE is a compound query with any number of branches, all <code>union all</code> * the first branch must be <code>select * from base_frag</code> (the base fragment) to ensure that the original rows remain * this is also why all the branches must be <code>union all</code> * this form cannot add new columns * the extension CTE may not include <code>order by</code> or <code>limit</code> because that might reorder or remove rows of the base * any extensions of this form must come before those of the <code>left outer join</code> form for a given base fragment * which ironically means <code>row_adder_frag</code> has to come before <code>col_adder_frag</code> * the usual restrictions on compound selects (same type and number of columns) ensure a consistent result * the final select after the CTE section must exactly in the form <code>select * from row_adder_frag</code> which is the name of the one and only additional CTE with no other clauses or options * in practice only the CTE will be used to create the final assembly so even if you did change the final select to something else it would be moot</p>
 <p>The signatures generated for this will look something like so:</p>
-<div class="sourceCode" id="cb360"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb360-1"><a href="#cb360-1" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_int32 adds_rows_get_id(</span>
-<span id="cb360-2"><a href="#cb360-2" aria-hidden="true" tabindex="-1"></a>  base_frag_result_set_ref _Nonnull result_set,</span>
-<span id="cb360-3"><a href="#cb360-3" aria-hidden="true" tabindex="-1"></a>  cql_int32 row);</span>
+<div class="sourceCode" id="cb360"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb360-1"><a href="#cb360-1" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_int32 adds_rows_get_id<span class="op">(</span></span>
+<span id="cb360-2"><a href="#cb360-2" aria-hidden="true" tabindex="-1"></a>  base_frag_result_set_ref _Nonnull result_set<span class="op">,</span></span>
+<span id="cb360-3"><a href="#cb360-3" aria-hidden="true" tabindex="-1"></a>  cql_int32 row<span class="op">);</span></span>
 <span id="cb360-4"><a href="#cb360-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb360-5"><a href="#cb360-5" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_string_ref _Nonnull adds_rows_get_name(</span>
-<span id="cb360-6"><a href="#cb360-6" aria-hidden="true" tabindex="-1"></a>  base_frag_result_set_ref _Nonnull result_set,</span>
-<span id="cb360-7"><a href="#cb360-7" aria-hidden="true" tabindex="-1"></a>  cql_int32 row);</span>
+<span id="cb360-5"><a href="#cb360-5" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_string_ref _Nonnull adds_rows_get_name<span class="op">(</span></span>
+<span id="cb360-6"><a href="#cb360-6" aria-hidden="true" tabindex="-1"></a>  base_frag_result_set_ref _Nonnull result_set<span class="op">,</span></span>
+<span id="cb360-7"><a href="#cb360-7" aria-hidden="true" tabindex="-1"></a>  cql_int32 row<span class="op">);</span></span>
 <span id="cb360-8"><a href="#cb360-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb360-9"><a href="#cb360-9" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_double adds_rows_get_rate(</span>
-<span id="cb360-10"><a href="#cb360-10" aria-hidden="true" tabindex="-1"></a>  base_frag_result_set_ref _Nonnull result_set,</span>
-<span id="cb360-11"><a href="#cb360-11" aria-hidden="true" tabindex="-1"></a>  cql_int32 row);</span>
+<span id="cb360-9"><a href="#cb360-9" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_double adds_rows_get_rate<span class="op">(</span></span>
+<span id="cb360-10"><a href="#cb360-10" aria-hidden="true" tabindex="-1"></a>  base_frag_result_set_ref _Nonnull result_set<span class="op">,</span></span>
+<span id="cb360-11"><a href="#cb360-11" aria-hidden="true" tabindex="-1"></a>  cql_int32 row<span class="op">);</span></span>
 <span id="cb360-12"><a href="#cb360-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb360-13"><a href="#cb360-13" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_int32 adds_rows_result_count(</span>
-<span id="cb360-14"><a href="#cb360-14" aria-hidden="true" tabindex="-1"></a>  base_frag_result_set_ref _Nonnull result_set);</span></code></pre></div>
+<span id="cb360-13"><a href="#cb360-13" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_int32 adds_rows_result_count<span class="op">(</span></span>
+<span id="cb360-14"><a href="#cb360-14" aria-hidden="true" tabindex="-1"></a>  base_frag_result_set_ref _Nonnull result_set<span class="op">);</span></span></code></pre></div>
 <p>Which gives you access to the core columns. Again this fragment can and should be compiled standalone with only the declaration for the base fragment in the same translation unit to get the cleanest possible output. This is so that consumers of this extension do not “see” other extensions which may or may not be related and may or may not always be present.</p>
 <h4 id="assembling-the-fragments">Assembling the Fragments</h4>
 <p>With all the fragments independently declared they need to be unified to create one final query. This is where the major rewriting happens. The <code>assembly_fragment</code> looks something like this:</p>
@@ -6329,31 +6334,31 @@ end;</code></pre>
 <p>With the rewrite of the assembly_fragment complete, the codegen for that procedure is the normal codegen for a procedure with a single select.</p>
 <p>As always, Java and Objective C codegen on these pieces will produce suitable wrappers for the C.</p>
 <p>The output code for the assembly fragment generates these reading functions:</p>
-<div class="sourceCode" id="cb363"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb363-1"><a href="#cb363-1" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_int32 base_frag_get_id(</span>
-<span id="cb363-2"><a href="#cb363-2" aria-hidden="true" tabindex="-1"></a>  base_frag_result_set_ref _Nonnull result_set,</span>
-<span id="cb363-3"><a href="#cb363-3" aria-hidden="true" tabindex="-1"></a>  cql_int32 row);</span>
+<div class="sourceCode" id="cb363"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb363-1"><a href="#cb363-1" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_int32 base_frag_get_id<span class="op">(</span></span>
+<span id="cb363-2"><a href="#cb363-2" aria-hidden="true" tabindex="-1"></a>  base_frag_result_set_ref _Nonnull result_set<span class="op">,</span></span>
+<span id="cb363-3"><a href="#cb363-3" aria-hidden="true" tabindex="-1"></a>  cql_int32 row<span class="op">);</span></span>
 <span id="cb363-4"><a href="#cb363-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb363-5"><a href="#cb363-5" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_string_ref _Nonnull base_frag_get_name(</span>
-<span id="cb363-6"><a href="#cb363-6" aria-hidden="true" tabindex="-1"></a>  base_frag_result_set_ref _Nonnull result_set,</span>
-<span id="cb363-7"><a href="#cb363-7" aria-hidden="true" tabindex="-1"></a>  cql_int32 row);</span>
+<span id="cb363-5"><a href="#cb363-5" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_string_ref _Nonnull base_frag_get_name<span class="op">(</span></span>
+<span id="cb363-6"><a href="#cb363-6" aria-hidden="true" tabindex="-1"></a>  base_frag_result_set_ref _Nonnull result_set<span class="op">,</span></span>
+<span id="cb363-7"><a href="#cb363-7" aria-hidden="true" tabindex="-1"></a>  cql_int32 row<span class="op">);</span></span>
 <span id="cb363-8"><a href="#cb363-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb363-9"><a href="#cb363-9" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_double base_frag_get_rate(</span>
-<span id="cb363-10"><a href="#cb363-10" aria-hidden="true" tabindex="-1"></a>  base_frag_result_set_ref _Nonnull result_set,</span>
-<span id="cb363-11"><a href="#cb363-11" aria-hidden="true" tabindex="-1"></a>  cql_int32 row);</span>
+<span id="cb363-9"><a href="#cb363-9" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_double base_frag_get_rate<span class="op">(</span></span>
+<span id="cb363-10"><a href="#cb363-10" aria-hidden="true" tabindex="-1"></a>  base_frag_result_set_ref _Nonnull result_set<span class="op">,</span></span>
+<span id="cb363-11"><a href="#cb363-11" aria-hidden="true" tabindex="-1"></a>  cql_int32 row<span class="op">);</span></span>
 <span id="cb363-12"><a href="#cb363-12" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb363-13"><a href="#cb363-13" aria-hidden="true" tabindex="-1"></a><span class="co">// used by adds_columns_get_data() to read its data</span></span>
-<span id="cb363-14"><a href="#cb363-14" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_string_ref _Nullable __PRIVATE__base_frag_get_data(</span>
-<span id="cb363-15"><a href="#cb363-15" aria-hidden="true" tabindex="-1"></a>  base_frag_result_set_ref _Nonnull result_set,</span>
-<span id="cb363-16"><a href="#cb363-16" aria-hidden="true" tabindex="-1"></a>  cql_int32 row);</span>
+<span id="cb363-14"><a href="#cb363-14" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_string_ref _Nullable __PRIVATE__base_frag_get_data<span class="op">(</span></span>
+<span id="cb363-15"><a href="#cb363-15" aria-hidden="true" tabindex="-1"></a>  base_frag_result_set_ref _Nonnull result_set<span class="op">,</span></span>
+<span id="cb363-16"><a href="#cb363-16" aria-hidden="true" tabindex="-1"></a>  cql_int32 row<span class="op">);</span></span>
 <span id="cb363-17"><a href="#cb363-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb363-18"><a href="#cb363-18" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_int32 base_frag_result_count(</span>
-<span id="cb363-19"><a href="#cb363-19" aria-hidden="true" tabindex="-1"></a>  base_frag_result_set_ref _Nonnull result_set);</span></code></pre></div>
+<span id="cb363-18"><a href="#cb363-18" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> cql_int32 base_frag_result_count<span class="op">(</span></span>
+<span id="cb363-19"><a href="#cb363-19" aria-hidden="true" tabindex="-1"></a>  base_frag_result_set_ref _Nonnull result_set<span class="op">);</span></span></code></pre></div>
 <p>These are exactly what you would get for a normal query except that the pieces that came from extensions are marked <code>PRIVATE</code>. Those methods should not be used directly but instead the methods generated for each extension proc should be used.</p>
 <p>Additionally, to create the result set, as usual.</p>
-<div class="sourceCode" id="cb364"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb364-1"><a href="#cb364-1" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> CQL_WARN_UNUSED cql_code base_frag_fetch_results(</span>
-<span id="cb364-2"><a href="#cb364-2" aria-hidden="true" tabindex="-1"></a>  sqlite3 *_Nonnull _db_,</span>
-<span id="cb364-3"><a href="#cb364-3" aria-hidden="true" tabindex="-1"></a>  base_frag_result_set_ref _Nullable *_Nonnull result_set,</span>
-<span id="cb364-4"><a href="#cb364-4" aria-hidden="true" tabindex="-1"></a>  cql_int32 id_);</span></code></pre></div>
+<div class="sourceCode" id="cb364"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb364-1"><a href="#cb364-1" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> CQL_WARN_UNUSED cql_code base_frag_fetch_results<span class="op">(</span></span>
+<span id="cb364-2"><a href="#cb364-2" aria-hidden="true" tabindex="-1"></a>  sqlite3 <span class="op">*</span>_Nonnull _db_<span class="op">,</span></span>
+<span id="cb364-3"><a href="#cb364-3" aria-hidden="true" tabindex="-1"></a>  base_frag_result_set_ref _Nullable <span class="op">*</span>_Nonnull result_set<span class="op">,</span></span>
+<span id="cb364-4"><a href="#cb364-4" aria-hidden="true" tabindex="-1"></a>  cql_int32 id_<span class="op">);</span></span></code></pre></div>
 <p>With the combined set of methods you can create a variety of assembled queries from extensions in a fairly straightforward way.</p>
 <h2 id="appendix-1-command-line-options">Appendix 1: Command Line Options</h2>
 <!---
@@ -6511,15 +6516,15 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Wed Jun 30 18:52:51 EDT 2021</p>
+<p>Snapshot as of Wed Jul 14 14:22:34 PDT 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
 ASSIGN
 OR
 AND
-BETWEEN
 NOT
+BETWEEN
 &#39;&lt;&gt;&#39; &#39;!=&#39; &#39;=&#39; &#39;==&#39; LIKE NOT_LIKE GLOB MATCH REGEXP IN IS_NOT IS
 &#39;&lt;&#39; &#39;&gt;&#39; &#39;&gt;=&#39; &#39;&lt;=&#39;
 &#39;&lt;&lt;&#39; &#39;&gt;&gt;&#39; &#39;&amp;&#39; &#39;|&#39;
@@ -6547,7 +6552,7 @@ OUTER JOIN WHERE GROUP BY ORDER ASC
 DESC INNER FCOUNT AUTOINCREMENT DISTINCT
 LIMIT OFFSET TEMP TRIGGER IF ALL CROSS USING RIGHT
 HIDDEN UNIQUE HAVING SET LET TO DISTINCTROW ENUM
-FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR DECLARE TYPE FETCH LOOP LEAVE CONTINUE FOR
+FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR DECLARE TYPE FETCH LOOP LEAVE CONTINUE FOR ENCODE CONTEXT_COLUMN CONTEXT_TYPE
 OPEN CLOSE ELSE_IF WHILE CALL TRY CATCH THROW RETURN
 SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
 CAST WITH RECURSIVE REPLACE IGNORE ADD COLUMN RENAME ALTER
@@ -7896,6 +7901,13 @@ enforcement_options:
   | &quot;INSERT&quot; &quot;SELECT&quot;
   | &quot;TABLE&quot; &quot;FUNCTION&quot;
   | &quot;NOT&quot; &quot;NULL&quot; &quot;AFTER&quot; &quot;CHECK&quot;
+  | ENCODE CONTEXT_COLUMN
+  | ENCODE CONTEXT_TYPE &quot;INTEGER&quot;
+  | ENCODE CONTEXT_TYPE &quot;LONG_INTEGER&quot;
+  | ENCODE CONTEXT_TYPE &quot;REAL&quot;
+  | ENCODE CONTEXT_TYPE &quot;BOOL&quot;
+  | ENCODE CONTEXT_TYPE &quot;TEXT&quot;
+  | ENCODE CONTEXT_TYPE &quot;BLOB&quot;
   ;
 
 enforce_strict_stmt:
@@ -9692,7 +9704,7 @@ select 1 where table_valued_func(5) = 3;</code></pre>
 <p>Note: if the index/trigger was previously deleted and now the table is also deleted, it is now safe to remove the index/trigger <code>@delete</code> tombstone and this error reminds you to do so.</p>
 <hr />
 <h3 id="cql0398-a-compound-select-cannot-be-ordered-by-the-result-of-an-expression">CQL0398: A compound select cannot be ordered by the result of an expression</h3>
-<p>When specifying an <code>ORDER BY</code> for a compound select, you may only order by indicies (e.g., <code>3</code>) or names (e.g., <code>foo</code>) that correspond to an output column, not by the result of an arbitrary expression (e.g., <code>foo + bar</code>).</p>
+<p>When specifying an <code>ORDER BY</code> for a compound select, you may only order by indices (e.g., <code>3</code>) or names (e.g., <code>foo</code>) that correspond to an output column, not by the result of an arbitrary expression (e.g., <code>foo + bar</code>).</p>
 <p>For example, this is allowed:</p>
 <div class="sourceCode" id="cb452"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb452-1"><a href="#cb452-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> x, y <span class="kw">FROM</span> t0 <span class="kw">UNION</span> <span class="kw">ALL</span> <span class="kw">select</span> x, y <span class="kw">FROM</span> t1 <span class="kw">ORDER</span> <span class="kw">BY</span> y</span></code></pre></div>
 <p>The equivalent using an index is also allowed:</p>
@@ -9715,16 +9727,64 @@ select 1 where table_valued_func(5) = 3;</code></pre>
 </tr>
 </tbody>
 </table>
-<p>CQL 0400 : unused, this was added to prevent merge conflicts at the end on literally every checkin</p>
-<h2 id="appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</h2>
-<!---
--- Copyright (c) Facebook, Inc. and its affiliates.
---
--- This source code is licensed under the MIT license found in the
--- LICENSE file in the root directory of this source tree.
--->
+<h3 id="cql0400-encode-context-column-cant-be-sensitive">CQL0400: encode context column can’t be sensitive</h3>
+<p>The encode context column will be used to encode sensitive fields, it can’t be exposed to encode functions</p>
+<table style="width:7%;">
+<colgroup>
+<col style="width: 6%" />
+</colgroup>
+<tbody>
+<tr class="odd">
+<td>### CQL0401: encode context column must be specified if strict encode context column mode is enabled</td>
+</tr>
+<tr class="even">
+<td>encode context column must be specified in vault_senstive attribute with format: <span class="citation" data-cites="attribute">@attribute</span>(cql:vault_sensitive=(encode_context_col, (col1, col2, …))</td>
+</tr>
+</tbody>
+</table>
+<h3 id="cql0402-encode-context-column-in-vault_senstive-attribute-must-match-the-specified-type-in-strict-mode">CQL0402: encode context column in vault_senstive attribute must match the specified type in strict mode</h3>
+<p>encode context column must match the specified type in vault_senstive attribute with format: <span class="citation" data-cites="attribute">@attribute</span>(cql:vault_sensitive=(encode_context_col, (col1, col2, …))</p>
+<table style="width:7%;">
+<colgroup>
+<col style="width: 6%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>CQL 0403 : unused, this was added to prevent merge conflicts at the end on literally every checkin</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>CQL 0404 : unused, this was added to prevent merge conflicts at the end on literally every checkin</td>
+</tr>
+</tbody>
+</table>
+<h2 id="cql-0405-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0405 : unused, this was added to prevent merge conflicts at the end on literally every checkin</h2>
+<h2 id="cql-0406-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0406 : unused, this was added to prevent merge conflicts at the end on literally every checkin</h2>
+<h2 id="cql-0407-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0407 : unused, this was added to prevent merge conflicts at the end on literally every checkin</h2>
+<h3 id="cql0408-encode-context-column-can-be-only-specified-once">CQL0408: encode context column can be only specified once</h3>
+<p>The encode context column can be only specified once in <span class="citation" data-cites="vault_sensitive">@vault_sensitive</span> attribute</p>
+<table style="width:7%;">
+<colgroup>
+<col style="width: 6%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>CQL 0409 : unused, this was added to prevent merge conflicts at the end on literally every checkin</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>CQL 0410 : unused, this was added to prevent merge conflicts at the end on literally every checkin</td>
+</tr>
+<tr class="even">
+<td>## Appendix 5: JSON Schema Grammar &lt;!— – Copyright (c) Facebook, Inc. and its affiliates.</td>
+</tr>
+</tbody>
+</table>
+<p>– This source code is licensed under the MIT license found in the – LICENSE file in the root directory of this source tree. –&gt;</p>
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Wed Jun 30 18:52:52 EDT 2021</p>
+<p>Snapshot as of Wed Jul 14 14:22:35 PDT 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 
