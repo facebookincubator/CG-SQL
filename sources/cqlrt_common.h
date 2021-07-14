@@ -30,6 +30,18 @@
 #define _64(x) x##LL
 #endif
 
+#ifndef __has_attribute         // Optional of course.
+  #define __has_attribute(x) 0  // Compatibility with non-clang compilers.
+#endif
+
+#if __has_attribute(optnone)
+  #define CQL_OPT_NONE __attribute__((optnone))
+#elif __has_attribute(optimize)
+  #define CQL_OPT_NONE __attribute__((optimize("O0")))
+#else
+  #define CQL_OPT_NONE
+#endif
+
 #define CQL_EXPORT extern __attribute__((visibility("default")))
 #define CQL_WARN_UNUSED __attribute__((warn_unused_result))
 

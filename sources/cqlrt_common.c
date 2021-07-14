@@ -329,8 +329,7 @@ static void cql_contract_argument_notnull_tripwire(void *_Nullable ptr, cql_uint
 // enables) as such a function will always be above this in the stack.
 // `__attribute__((optnone))` is used to ensure we actually see this in stack
 // traces and it doesn't get inlined or merged away.
-__attribute__((optnone))
-static void cql_inout_reference_type_notnull_argument_must_not_point_to_null(
+CQL_OPT_NONE static void cql_inout_reference_type_notnull_argument_must_not_point_to_null(
   void *_Nullable *_Nonnull argument,
   cql_int32 position)
 {
@@ -341,7 +340,7 @@ static void cql_inout_reference_type_notnull_argument_must_not_point_to_null(
 // the first eight arguments. As above, `__attribute__((optnone))` prevents
 // these from getting inlined or merged.
 #define DEFINE_ARGUMENT_AT_POSITION_N_MUST_NOT_BE_NULL(N) \
-  __attribute__((optnone)) \
+  CQL_OPT_NONE \
   static void cql_argument_at_position_ ## N ## _must_not_be_null(void *_Nullable argument, cql_bool inout_notnull) { \
    cql_contract_argument_notnull_tripwire(argument, N); \
     if (inout_notnull) { \
@@ -358,9 +357,7 @@ DEFINE_ARGUMENT_AT_POSITION_N_MUST_NOT_BE_NULL(6);
 DEFINE_ARGUMENT_AT_POSITION_N_MUST_NOT_BE_NULL(7);
 DEFINE_ARGUMENT_AT_POSITION_N_MUST_NOT_BE_NULL(8);
 
-__attribute__((optnone))
-static void cql_argument_at_position_9_or_greater_must_not_be_null(
-  void *_Nullable argument,
+CQL_OPT_NONE static void cql_argument_at_position_9_or_greater_must_not_be_null( void *_Nullable argument,
   cql_uint32 position,
   cql_bool deref)
 {
