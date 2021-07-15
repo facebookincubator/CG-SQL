@@ -851,6 +851,11 @@ basic_expr:
   | '(' select_stmt IF NOTHING OR NULL_ expr ')'  { $basic_expr = new_ast_select_if_nothing_or_null_expr($select_stmt, $expr); }
   | '(' select_stmt IF NOTHING THROW')'  { $basic_expr = new_ast_select_if_nothing_throw_expr($select_stmt); }
   | EXISTS '(' select_stmt ')'  { $basic_expr = new_ast_exists_expr($select_stmt); }
+  | CASE expr[cond] case_list END  { $basic_expr = new_ast_case_expr($cond, new_ast_connector($case_list, NULL)); }
+  | CASE expr[cond1] case_list ELSE expr[cond2] END  { $basic_expr = new_ast_case_expr($cond1, new_ast_connector($case_list, $cond2));}
+  | CASE case_list END  { $basic_expr = new_ast_case_expr(NULL, new_ast_connector($case_list, NULL));}
+  | CASE case_list ELSE expr[cond] END  { $basic_expr = new_ast_case_expr(NULL, new_ast_connector($case_list, $cond));}
+  | CAST '(' expr[sexp] AS data_type_any ')'  { $basic_expr = new_ast_cast_expr($sexp, $data_type_any); }
   ;
 
 math_expr[result]:
@@ -865,53 +870,37 @@ math_expr[result]:
   | math_expr[lhs] '/' math_expr[rhs]  { $result = new_ast_div($lhs, $rhs); }
   | math_expr[lhs] '%' math_expr[rhs]  { $result = new_ast_mod($lhs, $rhs); }
   | '-' math_expr[rhs] %prec UMINUS  { $result = new_ast_uminus($rhs); }
+  | '~' math_expr[rhs]  { $result = new_ast_tilde($rhs); }
+  | NOT math_expr[rhs]  { $result = new_ast_not($rhs); }
+  | math_expr[lhs] '=' math_expr[rhs]  { $result = new_ast_eq($lhs, $rhs); }
+  | math_expr[lhs] EQEQ math_expr[rhs]  { $result = new_ast_eq($lhs, $rhs); }
+  | math_expr[lhs] '<' math_expr[rhs]  { $result = new_ast_lt($lhs, $rhs); }
+  | math_expr[lhs] '>' math_expr[rhs]  { $result = new_ast_gt($lhs, $rhs); }
+  | math_expr[lhs] NE math_expr[rhs]  { $result = new_ast_ne($lhs, $rhs); }
+  | math_expr[lhs] NE_ math_expr[rhs]  { $result = new_ast_ne($lhs, $rhs); }
+  | math_expr[lhs] GE math_expr[rhs]  { $result = new_ast_ge($lhs, $rhs); }
+  | math_expr[lhs] LE math_expr[rhs]  { $result = new_ast_le($lhs, $rhs); }
+  | math_expr[lhs] NOT IN '(' expr_list ')'  { $result = new_ast_not_in($lhs, $expr_list); }
+  | math_expr[lhs] NOT IN '(' select_stmt ')'  { $result = new_ast_not_in($lhs, $select_stmt); }
+  | math_expr[lhs] IN '(' expr_list ')'  { $result = new_ast_in_pred($lhs, $expr_list); }
+  | math_expr[lhs] IN '(' select_stmt ')'  { $result = new_ast_in_pred($lhs, $select_stmt); }
+  | math_expr[lhs] LIKE math_expr[rhs]  { $result = new_ast_like($lhs, $rhs); }
+  | math_expr[lhs] NOT_LIKE math_expr[rhs]  { $result = new_ast_not_like($lhs, $rhs); }
+  | math_expr[lhs] MATCH math_expr[rhs]  { $result = new_ast_match($lhs, $rhs); }
+  | math_expr[lhs] REGEXP math_expr[rhs]  { $result = new_ast_regexp($lhs, $rhs); }
+  | math_expr[lhs] GLOB math_expr[rhs]  { $result = new_ast_glob($lhs, $rhs); }
+  | math_expr[lhs] NOT BETWEEN math_expr[me1] AND math_expr[me2]  { $result = new_ast_not_between($lhs, new_ast_range($me1,$me2)); }
+  | math_expr[lhs] BETWEEN math_expr[me1] %prec BETWEEN AND math_expr[me2]  { $result = new_ast_between($lhs, new_ast_range($me1,$me2)); }
+  | math_expr[lhs] IS_NOT math_expr[rhs]  { $result = new_ast_is_not($lhs, $rhs); }
+  | math_expr[lhs] IS math_expr[rhs]  { $result = new_ast_is($lhs, $rhs); }
   | math_expr[lhs] CONCAT math_expr[rhs]  { $result = new_ast_concat($lhs, $rhs); }
   ;
 
 expr[result]:
-  basic_expr  { $result = $basic_expr; }
-  | expr[lhs] '&' expr[rhs]  { $result = new_ast_bin_and($lhs, $rhs); }
-  | expr[lhs] '|' expr[rhs]  { $result = new_ast_bin_or($lhs, $rhs); }
-  | expr[lhs] LS expr[rhs]  { $result = new_ast_lshift($lhs, $rhs); }
-  | expr[lhs] RS expr[rhs]  { $result = new_ast_rshift($lhs, $rhs); }
-  | expr[lhs] '+' expr[rhs]  { $result = new_ast_add($lhs, $rhs); }
-  | expr[lhs] '-' expr[rhs]  { $result = new_ast_sub($lhs, $rhs); }
-  | expr[lhs] '*' expr[rhs]  { $result = new_ast_mul($lhs, $rhs); }
-  | expr[lhs] '/' expr[rhs]  { $result = new_ast_div($lhs, $rhs); }
-  | expr[lhs] '%' expr[rhs]  { $result = new_ast_mod($lhs, $rhs); }
-  | '-' expr[rhs] %prec UMINUS  { $result = new_ast_uminus($rhs); }
-  | NOT expr[rhs]  { $result = new_ast_not($rhs); }
-  | '~' expr[rhs]  { $result = new_ast_tilde($rhs); }
-  | expr[lhs] COLLATE name  { $result = new_ast_collate($lhs, $name); }
+  math_expr { $result = $math_expr; }
   | expr[lhs] AND expr[rhs]  { $result = new_ast_and($lhs, $rhs); }
   | expr[lhs] OR expr[rhs]  { $result = new_ast_or($lhs, $rhs); }
-  | expr[lhs] '=' expr[rhs]  { $result = new_ast_eq($lhs, $rhs); }
-  | expr[lhs] EQEQ expr[rhs]  { $result = new_ast_eq($lhs, $rhs); }
-  | expr[lhs] '<' expr[rhs]  { $result = new_ast_lt($lhs, $rhs); }
-  | expr[lhs] '>' expr[rhs]  { $result = new_ast_gt($lhs, $rhs); }
-  | expr[lhs] NE expr[rhs]  { $result = new_ast_ne($lhs, $rhs); }
-  | expr[lhs] NE_ expr[rhs]  { $result = new_ast_ne($lhs, $rhs); }
-  | expr[lhs] GE expr[rhs]  { $result = new_ast_ge($lhs, $rhs); }
-  | expr[lhs] LE expr[rhs]  { $result = new_ast_le($lhs, $rhs); }
-  | expr[lhs] NOT IN '(' expr_list ')'  { $result = new_ast_not_in($lhs, $expr_list); }
-  | expr[lhs] NOT IN '(' select_stmt ')'  { $result = new_ast_not_in($lhs, $select_stmt); }
-  | expr[lhs] IN '(' expr_list ')'  { $result = new_ast_in_pred($lhs, $expr_list); }
-  | expr[lhs] IN '(' select_stmt ')'  { $result = new_ast_in_pred($lhs, $select_stmt); }
-  | expr[lhs] LIKE expr[rhs]  { $result = new_ast_like($lhs, $rhs); }
-  | expr[lhs] NOT_LIKE expr[rhs]  { $result = new_ast_not_like($lhs, $rhs); }
-  | expr[lhs] MATCH expr[rhs]  { $result = new_ast_match($lhs, $rhs); }
-  | expr[lhs] REGEXP expr[rhs]  { $result = new_ast_regexp($lhs, $rhs); }
-  | expr[lhs] GLOB expr[rhs]  { $result = new_ast_glob($lhs, $rhs); }
-  | expr[lhs] NOT BETWEEN math_expr[me1] AND math_expr[me2]  { $result = new_ast_not_between($lhs, new_ast_range($me1,$me2)); }
-  | expr[lhs] BETWEEN math_expr[me1] AND math_expr[me2]  { $result = new_ast_between($lhs, new_ast_range($me1,$me2)); }
-  | expr[lhs] IS_NOT expr[rhs]  { $result = new_ast_is_not($lhs, $rhs); }
-  | expr[lhs] IS expr[rhs]  { $result = new_ast_is($lhs, $rhs); }
-  | expr[lhs] CONCAT expr[rhs]  { $result = new_ast_concat($lhs, $rhs); }
-  | CASE expr[cond] case_list END  { $result = new_ast_case_expr($cond, new_ast_connector($case_list, NULL)); }
-  | CASE expr[cond1] case_list ELSE expr[cond2] END  { $result = new_ast_case_expr($cond1, new_ast_connector($case_list, $cond2));}
-  | CASE case_list END  { $result = new_ast_case_expr(NULL, new_ast_connector($case_list, NULL));}
-  | CASE case_list ELSE expr[cond] END  { $result = new_ast_case_expr(NULL, new_ast_connector($case_list, $cond));}
-  | CAST '(' expr[sexp] AS data_type_any ')'  { $result = new_ast_cast_expr($sexp, $data_type_any); }
+  | expr[lhs] COLLATE name  { $result = new_ast_collate($lhs, $name); }
   ;
 
 case_list[result]:

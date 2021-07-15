@@ -5839,6 +5839,13 @@ static void sem_expr_case(ast_node *ast, CSTR cstr) {
   connector->sem = ast->sem;
 }
 
+// if we get here we are re-evaluating a subtree, this rewritten bit
+// is necessarily processed so we don't have to do it again
+static void sem_expr_between_rewrite(ast_node *ast, CSTR cstr) {
+  Contract(is_ast_between_rewrite(ast));
+  return;
+}
+
 // Between requires type compatability between all three of its arguments.
 // Nullability follows the usual rules, if any might be null then the result
 // type might be null.  In any case the result's core type is BOOL.
@@ -19376,6 +19383,7 @@ cql_noexport void sem_main(ast_node *ast) {
   EXPR_INIT(exists_expr, sem_expr_exists, "EXISTS");
   EXPR_INIT(between, sem_expr_between_or_not_between, "BETWEEN");
   EXPR_INIT(not_between, sem_expr_between_or_not_between, "NOT BETWEEN");
+  EXPR_INIT(between_rewrite, sem_expr_between_rewrite, "BETWEEN REWRITE");
   EXPR_INIT(and, sem_binary_logical, "AND");
   EXPR_INIT(or, sem_binary_logical, "OR");
   EXPR_INIT(select_stmt, sem_expr_select, "SELECT");

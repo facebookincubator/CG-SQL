@@ -1426,6 +1426,11 @@ select CAST(1 AS REAL) - 1;
 select CAST(1 AS REAL) * 1;
 select CAST(1 AS REAL) / 1;
 
+---
+select 0 between 0 and 3 between 2 and 3; --  0
+select 0 between 0 and (3 between 2 and 3); -- 1
+select (0 between 0 and 3) between 2 and 3; -- 0
+
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 
 # 1 "long/path/I/do/not/like"

@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Wed Jul 14 14:22:34 2021
+// Snapshot as of Wed Jul 14 17:40:22 2021
 
 
 const PREC = {
@@ -96,11 +96,11 @@ module.exports = grammar({
     any_literal: $ => choice($.str_literal, $.num_literal, $.NULL, seq($.AT_FILE, '(', $.str_literal, ')'), $.AT_PROC, $.BLOB_LIT),
     raise_expr: $ => choice(seq($.RAISE, '(', $.IGNORE, ')'), seq($.RAISE, '(', $.ROLLBACK, ',', $.expr, ')'), seq($.RAISE, '(', $.ABORT, ',', $.expr, ')'), seq($.RAISE, '(', $.FAIL, ',', $.expr, ')')),
     call: $ => choice(seq($.name, '(', optional($.arg_list), ')', optional($.opt_filter_clause)), seq($.name, '(', $.DISTINCT, optional($.arg_list), ')', optional($.opt_filter_clause))),
-    basic_expr: $ => choice($.name, $.AT_RC, seq($.name, '.', $.name), $.any_literal, $.const_expr, seq('(', $.expr, ')'), $.call, $.window_func_inv, $.raise_expr, seq('(', $.select_stmt, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.expr, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.OR, $.NULL, $.expr, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.THROW, ')'), seq($.EXISTS, '(', $.select_stmt, ')')),
-    math_expr: $ => prec.left(choice($.basic_expr, seq($.math_expr, '&', $.math_expr), seq($.math_expr, '|', $.math_expr), seq($.math_expr, "<<", $.math_expr), seq($.math_expr, ">>", $.math_expr), seq($.math_expr, '+', $.math_expr), seq($.math_expr, '-', $.math_expr), seq($.math_expr, '*', $.math_expr), seq($.math_expr, '/', $.math_expr), seq($.math_expr, '%', $.math_expr), seq('-', $.math_expr), seq($.math_expr, "||", $.math_expr))),
+    basic_expr: $ => choice($.name, $.AT_RC, seq($.name, '.', $.name), $.any_literal, $.const_expr, seq('(', $.expr, ')'), $.call, $.window_func_inv, $.raise_expr, seq('(', $.select_stmt, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.expr, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.OR, $.NULL, $.expr, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.THROW, ')'), seq($.EXISTS, '(', $.select_stmt, ')'), seq($.CASE, $.expr, $.case_list, $.END), seq($.CASE, $.expr, $.case_list, $.ELSE, $.expr, $.END), seq($.CASE, $.case_list, $.END), seq($.CASE, $.case_list, $.ELSE, $.expr, $.END), seq($.CAST, '(', $.expr, $.AS, $.data_type_any, ')')),
     NOT_LIKE: $ => prec.left(1, seq(CI('not'), CI('like'))),
     IS_NOT: $ => prec.left(1, seq(CI('is'), CI('not'))),
-    expr: $ => prec.left(choice($.basic_expr, seq($.expr, '&', $.expr), seq($.expr, '|', $.expr), seq($.expr, "<<", $.expr), seq($.expr, ">>", $.expr), seq($.expr, '+', $.expr), seq($.expr, '-', $.expr), seq($.expr, '*', $.expr), seq($.expr, '/', $.expr), seq($.expr, '%', $.expr), seq('-', $.expr), seq($.NOT, $.expr), seq('~', $.expr), seq($.expr, $.COLLATE, $.name), seq($.expr, $.AND, $.expr), seq($.expr, $.OR, $.expr), seq($.expr, '=', $.expr), seq($.expr, "==", $.expr), seq($.expr, '<', $.expr), seq($.expr, '>', $.expr), seq($.expr, "<>", $.expr), seq($.expr, "!=", $.expr), seq($.expr, ">=", $.expr), seq($.expr, "<=", $.expr), seq($.expr, $.NOT, $.IN, '(', $.expr_list, ')'), seq($.expr, $.NOT, $.IN, '(', $.select_stmt, ')'), seq($.expr, $.IN, '(', $.expr_list, ')'), seq($.expr, $.IN, '(', $.select_stmt, ')'), seq($.expr, $.LIKE, $.expr), seq($.expr, $.NOT_LIKE, $.expr), seq($.expr, $.MATCH, $.expr), seq($.expr, $.REGEXP, $.expr), seq($.expr, $.GLOB, $.expr), seq($.expr, $.NOT, $.BETWEEN, $.math_expr, $.AND, $.math_expr), seq($.expr, $.BETWEEN, $.math_expr, $.AND, $.math_expr), seq($.expr, $.IS_NOT, $.expr), seq($.expr, $.IS, $.expr), seq($.expr, "||", $.expr), seq($.CASE, $.expr, $.case_list, $.END), seq($.CASE, $.expr, $.case_list, $.ELSE, $.expr, $.END), seq($.CASE, $.case_list, $.END), seq($.CASE, $.case_list, $.ELSE, $.expr, $.END), seq($.CAST, '(', $.expr, $.AS, $.data_type_any, ')'))),
+    math_expr: $ => prec.left(choice($.basic_expr, seq($.math_expr, '&', $.math_expr), seq($.math_expr, '|', $.math_expr), seq($.math_expr, "<<", $.math_expr), seq($.math_expr, ">>", $.math_expr), seq($.math_expr, '+', $.math_expr), seq($.math_expr, '-', $.math_expr), seq($.math_expr, '*', $.math_expr), seq($.math_expr, '/', $.math_expr), seq($.math_expr, '%', $.math_expr), seq('-', $.math_expr), seq('~', $.math_expr), seq($.NOT, $.math_expr), seq($.math_expr, '=', $.math_expr), seq($.math_expr, "==", $.math_expr), seq($.math_expr, '<', $.math_expr), seq($.math_expr, '>', $.math_expr), seq($.math_expr, "<>", $.math_expr), seq($.math_expr, "!=", $.math_expr), seq($.math_expr, ">=", $.math_expr), seq($.math_expr, "<=", $.math_expr), seq($.math_expr, $.NOT, $.IN, '(', $.expr_list, ')'), seq($.math_expr, $.NOT, $.IN, '(', $.select_stmt, ')'), seq($.math_expr, $.IN, '(', $.expr_list, ')'), seq($.math_expr, $.IN, '(', $.select_stmt, ')'), seq($.math_expr, $.LIKE, $.math_expr), seq($.math_expr, $.NOT_LIKE, $.math_expr), seq($.math_expr, $.MATCH, $.math_expr), seq($.math_expr, $.REGEXP, $.math_expr), seq($.math_expr, $.GLOB, $.math_expr), seq($.math_expr, $.NOT, $.BETWEEN, $.math_expr, $.AND, $.math_expr), seq($.math_expr, $.BETWEEN, $.math_expr, $.AND, $.math_expr), seq($.math_expr, $.IS_NOT, $.math_expr), seq($.math_expr, $.IS, $.math_expr), seq($.math_expr, "||", $.math_expr))),
+    expr: $ => prec.left(choice($.math_expr, seq($.expr, $.AND, $.expr), seq($.expr, $.OR, $.expr), seq($.expr, $.COLLATE, $.name))),
     case_list: $ => choice(seq($.WHEN, $.expr, $.THEN, $.expr), seq($.WHEN, $.expr, $.THEN, $.expr, $.case_list)),
     arg_expr: $ => choice('*', $.expr, $.shape_arguments),
     arg_list: $ => choice($.arg_expr, seq($.arg_expr, ',', optional($.arg_list))),
@@ -368,17 +368,17 @@ module.exports = grammar({
     NOTHING: $ => CI('nothing'),
     OR: $ => CI('or'),
     THROW: $ => CI('throw'),
-    AND: $ => CI('and'),
+    CASE: $ => CI('case'),
+    END: $ => CI('end'),
+    ELSE: $ => CI('else'),
+    CAST: $ => CI('cast'),
     IN: $ => CI('in'),
     MATCH: $ => CI('match'),
     REGEXP: $ => CI('regexp'),
     GLOB: $ => CI('glob'),
     BETWEEN: $ => CI('between'),
+    AND: $ => CI('and'),
     IS: $ => CI('is'),
-    CASE: $ => CI('case'),
-    END: $ => CI('end'),
-    ELSE: $ => CI('else'),
-    CAST: $ => CI('cast'),
     WHEN: $ => CI('when'),
     THEN: $ => CI('then'),
     WITH: $ => CI('with'),

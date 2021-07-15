@@ -1,4 +1,5 @@
 s/%prec UMINUS//g
+s/%prec BETWEEN//g
 s/[[:<:]]CONCAT[[:>:]]/"||"/g
 s/[[:<:]]RS[[:>:]]/">>"/g
 s/[[:<:]]LS[[:>:]]/"<<"/g

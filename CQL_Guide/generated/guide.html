@@ -6516,7 +6516,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Wed Jul 14 14:22:34 PDT 2021</p>
+<p>Snapshot as of Wed Jul 14 17:40:21 PDT 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -7055,6 +7055,11 @@ basic_expr:
   | &#39;(&#39; select_stmt &quot;IF&quot; &quot;NOTHING&quot; &quot;OR&quot; &quot;NULL&quot; expr &#39;)&#39;
   | &#39;(&#39; select_stmt &quot;IF&quot; &quot;NOTHING&quot; &quot;THROW&quot;&#39;)&#39;
   | &quot;EXISTS&quot; &#39;(&#39; select_stmt &#39;)&#39;
+  | &quot;CASE&quot; expr case_list &quot;END&quot;
+  | &quot;CASE&quot; expr case_list &quot;ELSE&quot; expr &quot;END&quot;
+  | &quot;CASE&quot; case_list &quot;END&quot;
+  | &quot;CASE&quot; case_list &quot;ELSE&quot; expr &quot;END&quot;
+  | &quot;CAST&quot; &#39;(&#39; expr &quot;AS&quot; data_type_any &#39;)&#39;
   ;
 
 math_expr:
@@ -7069,53 +7074,37 @@ math_expr:
   | math_expr &#39;/&#39; math_expr
   | math_expr &#39;%&#39; math_expr
   | &#39;-&#39; math_expr
+  | &#39;~&#39; math_expr
+  | &quot;NOT&quot; math_expr
+  | math_expr &#39;=&#39; math_expr
+  | math_expr &quot;==&quot; math_expr
+  | math_expr &#39;&lt;&#39; math_expr
+  | math_expr &#39;&gt;&#39; math_expr
+  | math_expr &quot;&lt;&gt;&quot; math_expr
+  | math_expr &quot;!=&quot; math_expr
+  | math_expr &quot;&gt;=&quot; math_expr
+  | math_expr &quot;&lt;=&quot; math_expr
+  | math_expr &quot;NOT&quot; &quot;IN&quot; &#39;(&#39; expr_list &#39;)&#39;
+  | math_expr &quot;NOT&quot; &quot;IN&quot; &#39;(&#39; select_stmt &#39;)&#39;
+  | math_expr &quot;IN&quot; &#39;(&#39; expr_list &#39;)&#39;
+  | math_expr &quot;IN&quot; &#39;(&#39; select_stmt &#39;)&#39;
+  | math_expr &quot;LIKE&quot; math_expr
+  | math_expr &quot;NOT LIKE&quot; math_expr
+  | math_expr &quot;MATCH&quot; math_expr
+  | math_expr &quot;REGEXP&quot; math_expr
+  | math_expr &quot;GLOB&quot; math_expr
+  | math_expr &quot;NOT&quot; &quot;BETWEEN&quot; math_expr &quot;AND&quot; math_expr
+  | math_expr &quot;BETWEEN&quot; math_expr  &quot;AND&quot; math_expr
+  | math_expr &quot;IS NOT&quot; math_expr
+  | math_expr &quot;IS&quot; math_expr
   | math_expr &quot;||&quot; math_expr
   ;
 
 expr:
-  basic_expr
-  | expr &#39;&amp;&#39; expr
-  | expr &#39;|&#39; expr
-  | expr &quot;&lt;&lt;&quot; expr
-  | expr &quot;&gt;&gt;&quot; expr
-  | expr &#39;+&#39; expr
-  | expr &#39;-&#39; expr
-  | expr &#39;*&#39; expr
-  | expr &#39;/&#39; expr
-  | expr &#39;%&#39; expr
-  | &#39;-&#39; expr
-  | &quot;NOT&quot; expr
-  | &#39;~&#39; expr
-  | expr &quot;COLLATE&quot; name
+  math_expr
   | expr &quot;AND&quot; expr
   | expr &quot;OR&quot; expr
-  | expr &#39;=&#39; expr
-  | expr &quot;==&quot; expr
-  | expr &#39;&lt;&#39; expr
-  | expr &#39;&gt;&#39; expr
-  | expr &quot;&lt;&gt;&quot; expr
-  | expr &quot;!=&quot; expr
-  | expr &quot;&gt;=&quot; expr
-  | expr &quot;&lt;=&quot; expr
-  | expr &quot;NOT&quot; &quot;IN&quot; &#39;(&#39; expr_list &#39;)&#39;
-  | expr &quot;NOT&quot; &quot;IN&quot; &#39;(&#39; select_stmt &#39;)&#39;
-  | expr &quot;IN&quot; &#39;(&#39; expr_list &#39;)&#39;
-  | expr &quot;IN&quot; &#39;(&#39; select_stmt &#39;)&#39;
-  | expr &quot;LIKE&quot; expr
-  | expr &quot;NOT LIKE&quot; expr
-  | expr &quot;MATCH&quot; expr
-  | expr &quot;REGEXP&quot; expr
-  | expr &quot;GLOB&quot; expr
-  | expr &quot;NOT&quot; &quot;BETWEEN&quot; math_expr &quot;AND&quot; math_expr
-  | expr &quot;BETWEEN&quot; math_expr &quot;AND&quot; math_expr
-  | expr &quot;IS NOT&quot; expr
-  | expr &quot;IS&quot; expr
-  | expr &quot;||&quot; expr
-  | &quot;CASE&quot; expr case_list &quot;END&quot;
-  | &quot;CASE&quot; expr case_list &quot;ELSE&quot; expr &quot;END&quot;
-  | &quot;CASE&quot; case_list &quot;END&quot;
-  | &quot;CASE&quot; case_list &quot;ELSE&quot; expr &quot;END&quot;
-  | &quot;CAST&quot; &#39;(&#39; expr &quot;AS&quot; data_type_any &#39;)&#39;
+  | expr &quot;COLLATE&quot; name
   ;
 
 case_list:
@@ -9784,7 +9773,7 @@ select 1 where table_valued_func(5) = 3;</code></pre>
 </table>
 <p>– This source code is licensed under the MIT license found in the – LICENSE file in the root directory of this source tree. –&gt;</p>
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Wed Jul 14 14:22:35 PDT 2021</p>
+<p>Snapshot as of Wed Jul 14 17:40:22 PDT 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

@@ -16389,3 +16389,23 @@ select 1=(2 between 2 and 2);
 -- between is weaker than =, don't need the parens
 -- + SELECT 1 = 2 BETWEEN 2 AND 2;
 select (1=2) between 2 and 2;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- no parens need to be added in the natural order (and its left associative)
+-- + SELECT 0 BETWEEN 0 AND 3 BETWEEN 2 AND 3;
+select 0 between 0 and 3 between 2 and 3;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- no parens are needed here, this is left associative, the parens are redundant
+-- + SELECT 0 BETWEEN 0 AND 3 BETWEEN 2 AND 3;
+select (0 between 0 and 3) between 2 and 3;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- must keep the parens on the right arg, between is left associative
+-- + SELECT 0 BETWEEN 0 AND (3 BETWEEN 2 AND 3);
+select 0 between 0 and (3 between 2 and 3);
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- no parens are needed for the left arg of the between range
+-- + SELECT 0 BETWEEN 1 BETWEEN 3 AND 4 AND (3 BETWEEN 2 AND 3);
+select 0 between (1 between 3 and 4) and (3 between 2 and 3);

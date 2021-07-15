@@ -1225,7 +1225,7 @@ static void gen_expr_between(ast_node *ast, CSTR op, int32_t pri, int32_t pri_ne
   gen_printf(" BETWEEN ");
   gen_expr(range->left, pri_new);
   gen_printf(" AND ");
-  gen_expr(range->right, pri_new);
+  gen_expr(range->right, pri_new + 1); // the usual rules for the right operator 
   if (pri_new < pri) gen_printf(")");
 }
 

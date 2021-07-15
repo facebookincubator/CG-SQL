@@ -64776,3 +64776,115 @@ SELECT 1 = 2 BETWEEN 2 AND 2;
     | {select_limit}
       | {select_offset}
 
+The statement ending at line XXXX
+
+SELECT 0 BETWEEN 0 AND 3 BETWEEN 2 AND 3;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | {between}: bool notnull
+  |     |     | {between}: bool notnull
+  |     |     | | {int 0}: integer notnull
+  |     |     | | {range}
+  |     |     |   | {int 0}: integer notnull
+  |     |     |   | {int 3}: integer notnull
+  |     |     | {range}
+  |     |       | {int 2}: integer notnull
+  |     |       | {int 3}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 0 BETWEEN 0 AND 3 BETWEEN 2 AND 3;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | {between}: bool notnull
+  |     |     | {between}: bool notnull
+  |     |     | | {int 0}: integer notnull
+  |     |     | | {range}
+  |     |     |   | {int 0}: integer notnull
+  |     |     |   | {int 3}: integer notnull
+  |     |     | {range}
+  |     |       | {int 2}: integer notnull
+  |     |       | {int 3}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 0 BETWEEN 0 AND (3 BETWEEN 2 AND 3);
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | {between}: bool notnull
+  |     |     | {int 0}: integer notnull
+  |     |     | {range}
+  |     |       | {int 0}: integer notnull
+  |     |       | {between}: bool notnull
+  |     |         | {int 3}: integer notnull
+  |     |         | {range}
+  |     |           | {int 2}: integer notnull
+  |     |           | {int 3}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 0 BETWEEN 1 BETWEEN 3 AND 4 AND (3 BETWEEN 2 AND 3);
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | {between}: bool notnull
+  |     |     | {int 0}: integer notnull
+  |     |     | {range}
+  |     |       | {between}: bool notnull
+  |     |       | | {int 1}: integer notnull
+  |     |       | | {range}
+  |     |       |   | {int 3}: integer notnull
+  |     |       |   | {int 4}: integer notnull
+  |     |       | {between}: bool notnull
+  |     |         | {int 3}: integer notnull
+  |     |         | {range}
+  |     |           | {int 2}: integer notnull
+  |     |           | {int 3}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
