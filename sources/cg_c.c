@@ -19,7 +19,6 @@
 #include "eval.h"
 #include "symtab.h"
 #include "encoders.h"
-#include <stdio.h>
 
 static void cg_expr(ast_node *node, charbuf *is_null, charbuf *value, int32_t pri);
 static void cg_stmt_list(ast_node *node);
@@ -493,7 +492,7 @@ static void cg_var_nullability_annotation(charbuf *output, sem_t sem_type) {
 
   if (is_out_parameter(sem_type) && !is_in_parameter(sem_type)) {
     // In the case of an OUT NOT NULL variable (but *not* an INOUT NOT NULL
-    // variable), we annotate with _Nullable despite the NOT NULL because 
+    // variable), we annotate with _Nullable despite the NOT NULL because
     // purpose of calling the procedure is to initialize the location pointed to
     // with a value. Accordingly, the value at the location pointed to should be
     // NULL before the call. For example, `TEXT t OUT NOT NULL` should become
@@ -2220,7 +2219,14 @@ static void cg_func_nullable(ast_node *call_ast, charbuf *is_null, charbuf *valu
   cg_expr(expr, is_null, value, C_EXPR_PRI_HIGHEST);
 }
 
-static void cg_func_ifnull_throw(ast_node *call_ast, charbuf *is_null, charbuf *value) {
+typedef enum {
+  ATTEST_NOTNULL_VARIANT_CRASH,
+  ATTEST_NOTNULL_VARIANT_INFERRED,
+  ATTEST_NOTNULL_VARIANT_THROW,
+} attest_notnull_variant;
+
+// Generates code for all functions of the attest_notnull family.
+static void cg_func_attest_notnull(ast_node *call_ast, charbuf *is_null, charbuf *value, attest_notnull_variant variant) {
   Contract(is_ast_call(call_ast));
   EXTRACT_ANY_NOTNULL(name_ast, call_ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -2237,38 +2243,46 @@ static void cg_func_ifnull_throw(ast_node *call_ast, charbuf *is_null, charbuf *
   Invariant(is_nullable(sem_type_expr));  // expression must already be in a temp
 
   CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
-    bprintf(cg_main_output, "if (%s) {\n", expr_is_null.ptr);
-    bprintf(cg_main_output, "  _rc_ = SQLITE_ERROR;\n");
-    bprintf(cg_main_output, "  goto %s;\n", error_target);
-    bprintf(cg_main_output, "}\n");
-    error_target_used = 1;
+
+    switch (variant) {
+      case ATTEST_NOTNULL_VARIANT_CRASH:
+        bprintf(cg_main_output, "cql_invariant(!%s);\n", expr_is_null.ptr);
+        break;
+      case ATTEST_NOTNULL_VARIANT_INFERRED:
+        // Semantic analysis has guaranteed that the input is not going to be
+        // NULL so we don't need to check anything here.
+        break;
+      case ATTEST_NOTNULL_VARIANT_THROW:
+        bprintf(cg_main_output, "if (%s) {\n", expr_is_null.ptr);
+        bprintf(cg_main_output, "  _rc_ = SQLITE_ERROR;\n");
+        bprintf(cg_main_output, "  goto %s;\n", error_target);
+        bprintf(cg_main_output, "}\n");
+        error_target_used = 1;
+        break;
+    }
 
     bprintf(is_null, "0");
     bprintf(value, "%s", expr_value.ptr);
+
   CG_POP_EVAL(expr);
 }
 
+static void cg_func_ifnull_throw(ast_node *call_ast, charbuf *is_null, charbuf *value) {
+  cg_func_attest_notnull(call_ast, is_null, value, ATTEST_NOTNULL_VARIANT_THROW);
+}
+
 static void cg_func_ifnull_crash(ast_node *call_ast, charbuf *is_null, charbuf *value) {
-  Contract(is_ast_call(call_ast));
-  EXTRACT_ANY_NOTNULL(name_ast, call_ast->left);
-  EXTRACT_STRING(name, name_ast);
-  EXTRACT_NOTNULL(call_arg_list, call_ast->right);
-  EXTRACT(arg_list, call_arg_list->right);
+  cg_func_attest_notnull(call_ast, is_null, value, ATTEST_NOTNULL_VARIANT_CRASH);
+}
 
-  // notnull ( a_nullable_expression )
-
-  EXTRACT_ANY_NOTNULL(expr, arg_list->left);
-
-  // result known to be not null so easy codegen
-
-  sem_t sem_type_expr = expr->sem->sem_type;
-  Invariant(is_nullable(sem_type_expr));  // expression must already be in a temp
-
-  CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
-    bprintf(cg_main_output, "cql_invariant(!%s);\n", expr_is_null.ptr);
-    bprintf(is_null, "0");
-    bprintf(value, "%s", expr_value.ptr);
-  CG_POP_EVAL(expr);
+// The `cql_inferred_notnull` function is not used by the programmer directly,
+// but rather inserted via a rewrite during semantic analysis to coerce a value
+// of a nullable type to be nonnull. The reason for this approach, as opposed to
+// just changing the type directly, is that there are also representational
+// differences between values of nullable and nonnull types; some conversion is
+// required.
+static void cg_func_cql_inferred_notnull(ast_node *call_ast, charbuf *is_null, charbuf *value) {
+  cg_func_attest_notnull(call_ast, is_null, value, ATTEST_NOTNULL_VARIANT_INFERRED);
 }
 
 // There's a helper for this method, just call it.  Super easy.
@@ -2734,7 +2748,7 @@ static void cg_let_stmt(ast_node *ast) {
 // This is the processing for a single parameter in a stored proc declaration.
 // All we have to do is emit the type signature of that parameter.  This is
 // precisely what cg_var_decl with CG_VAR_DECL_PROTO is for...
-static void cg_param(ast_node *ast, charbuf *decls, charbuf *body) {
+static void cg_param(ast_node *ast, charbuf *decls) {
   Contract(is_ast_param(ast));
   EXTRACT_NOTNULL(param_detail, ast->right);
   EXTRACT_ANY_NOTNULL(name_ast, param_detail->left)
@@ -2745,11 +2759,44 @@ static void cg_param(ast_node *ast, charbuf *decls, charbuf *body) {
   sem_t sem_type = name_ast->sem->sem_type;
 
   cg_var_decl(decls, sem_type, name, CG_VAR_DECL_PROTO);
+}
+
+// Walk all the params of a stored proc and emit each one with a comma where needed.
+// cg_param does all the hard work.
+static void cg_params(ast_node *ast, charbuf *decls) {
+  Contract(is_ast_params(ast));
+
+  while (ast) {
+    Contract(is_ast_params(ast));
+    EXTRACT_NOTNULL(param, ast->left);
+
+    cg_param(param, decls);
+
+    if (ast->right) {
+      bprintf(decls, ", ");
+    }
+
+    ast = ast->right;
+  }
+}
+
+// Emit any initialization code needed for the parameters
+// in particular out parameters assume that there is garbage
+// in the out location, so they hammer a NULL or 0 into that slot.
+static void cg_param_init(ast_node *ast, charbuf *body) {
+  Contract(is_ast_param(ast));
+  EXTRACT_NOTNULL(param_detail, ast->right);
+  EXTRACT_ANY_NOTNULL(name_ast, param_detail->left)
+  EXTRACT_STRING(name, name_ast);
+
+  // [in out] name [datatype]
+
+  sem_t sem_type = name_ast->sem->sem_type;
 
   // In a proc decl the out arg initialized to null, this avoids attempting
   // to release any incoming garbage value and ensures some sanity in the event
   // the the return code is ignored...  Nobody ignores return codes, right?
-  if (body && is_out_parameter(sem_type) && !is_in_parameter(sem_type)) {
+  if (is_out_parameter(sem_type) && !is_in_parameter(sem_type)) {
     if (is_ref_type(sem_type)) {
       bprintf(body, "  *(void **)%s = NULL; // set out arg to non-garbage\n", name);
     }
@@ -2762,20 +2809,16 @@ static void cg_param(ast_node *ast, charbuf *decls, charbuf *body) {
   }
 }
 
-// Walk all the params of a stored proc and emit each one with a comma where needed.
-// cg_param does all the hard work.
-static void cg_params(ast_node *ast, charbuf *decls, charbuf *body) {
+// Walk all the params of a stored proc, if any of them require initialization code
+// in the body, emit that here.
+static void cg_params_init(ast_node *ast, charbuf *body) {
   Contract(is_ast_params(ast));
 
   while (ast) {
     Contract(is_ast_params(ast));
     EXTRACT_NOTNULL(param, ast->left);
 
-    cg_param(param, decls, body);
-
-    if (ast->right) {
-      bprintf(decls, ", ");
-    }
+    cg_param_init(param, body);
 
     ast = ast->right;
   }
@@ -2936,10 +2979,13 @@ static void find_identity_columns_callback(CSTR _Nonnull name, ast_node *_Nonnul
 
 // Emit the array of identity columns (used by cql_rows_same to determine which columns identify the "same" record)
 // Return 1 if any identity columns were found; otherwise 0
-static bool_t cg_identity_columns(charbuf *output,
-                                  CSTR proc_name,
-                                  ast_node *_Nullable misc_attrs,
-                                  CSTR identity_columns_sym) {
+static bool_t cg_identity_columns(
+  charbuf *headers_output,
+  charbuf *defs_output,
+  CSTR proc_name,
+  ast_node *_Nullable misc_attrs,
+  CSTR identity_columns_sym)
+{
   if (!misc_attrs) {
     return false;
   }
@@ -2947,7 +2993,8 @@ static bool_t cg_identity_columns(charbuf *output,
   CHARBUF_OPEN(cols);
   uint32_t count = find_identity_columns(misc_attrs, &find_identity_columns_callback, &cols);
   if (count > 0) {
-    bprintf(output, "\nstatic cql_uint16 %s[] = { %d,\n%s};\n", identity_columns_sym, count, cols.ptr);
+    bprintf(headers_output, "%scql_uint16 %s[];\n\n", rt->symbol_visibility, identity_columns_sym);
+    bprintf(defs_output, "\ncql_uint16 %s[] = { %d,\n%s};\n", identity_columns_sym, count, cols.ptr);
   }
   CHARBUF_CLOSE(cols);
   return count > 0;
@@ -3001,13 +3048,16 @@ void cg_emit_rc_vars(charbuf *output) {
 //
 // The contracts emitted always match the _Notnull parameter attributes in the
 // declaration of the procedure.
+//
+// NOTE: These are temporarily being emitted as tripwires instead of contracts.
 static void cg_emit_contracts(ast_node *ast, charbuf *b) {
   Contract(is_ast_params(ast));
   Contract(b);
 
   bool_t did_emit_contract = 0;
 
-  for (ast_node *params = ast; params; params = params->right) {
+  int32_t position = 1;
+  for (ast_node *params = ast; params; params = params->right, position++) {
     Contract(is_ast_params(params));
     EXTRACT_NOTNULL(param, params->left);
     EXTRACT_NOTNULL(param_detail, param->right);
@@ -3015,12 +3065,19 @@ static void cg_emit_contracts(ast_node *ast, charbuf *b) {
     EXTRACT_STRING(name, name_ast);
     sem_t sem_type = name_ast->sem->sem_type;
     bool_t is_nonnull_ref_type = is_not_nullable(sem_type) && is_ref_type(sem_type);
-    if (is_out_parameter(sem_type) || is_nonnull_ref_type) {
-      bprintf(b, "  cql_contract(%s);\n", name);
-      did_emit_contract = 1;
-    }
     if (is_inout_parameter(sem_type) && is_nonnull_ref_type) {
-      bprintf(b, "  cql_contract(*%s);\n", name);
+      // This is the special case of `INOUT arg R NOT NULL`, where `R` is a
+      // reference type. This case is special because both the argument and what
+      // it points to must not be null; the former because we'll write to it,
+      // and the latter because we'll read it and expect it to not be NULL.
+      bprintf(b, "  cql_contract_argument_notnull_when_dereferenced((void *)%s, %d);\n", name, position);
+      did_emit_contract = 1;
+    } else if (is_out_parameter(sem_type) || is_nonnull_ref_type) {
+      // Here, only the argument itself must not be null. This is either because
+      // we have an OUT argument and thus only need to be able to write to the
+      // address given, or because we have an `IN arg R NOT NULL` (where `R` is
+      // some reference type) that we'll read and expect to not be NULL.
+      bprintf(b, "  cql_contract_argument_notnull((void *)%s, %d);\n", name, position);
       did_emit_contract = 1;
     }
   }
@@ -3028,6 +3085,140 @@ static void cg_emit_contracts(ast_node *ast, charbuf *b) {
   if (did_emit_contract) {
     bprintf(b, "\n");
   }
+}
+
+#define EMIT_DML_PROC 1
+
+// emit a prototype for the fetch results function into the indicated buffer
+// we need some context such as "is it a dml proc" to do this correctly but
+// otherwise this is just using some of our standard helpers
+static void cg_emit_fetch_results_prototype(
+  bool_t dml_proc,
+  ast_node *params,
+  CSTR proc_name,
+  CSTR result_set_name,
+  charbuf *decl)
+{
+  CG_CHARBUF_OPEN_SYM(fetch_results_sym, proc_name, "_fetch_results");
+  CG_CHARBUF_OPEN_SYM(result_set_ref, result_set_name, "_result_set_ref");
+
+  // either return code or void
+  if (dml_proc) {
+    bprintf(decl, "CQL_WARN_UNUSED %s ", rt->cql_code);
+  }
+  else {
+    bprintf(decl, "void ");
+  }
+
+  // proc name
+  bprintf(decl, "%s(", fetch_results_sym.ptr);
+
+  // optional db reference
+  if (dml_proc) {
+    bprintf(decl, "sqlite3 *_Nonnull _db_,");
+  }
+
+  // result set type
+  bprintf(decl, " %s _Nullable *_Nonnull result_set", result_set_ref.ptr);
+
+  // args to forward
+  if (params) {
+    bprintf(decl, ", ");
+    cg_params(params, decl);
+  }
+
+  CHARBUF_CLOSE(result_set_ref);
+  CHARBUF_CLOSE(fetch_results_sym);
+}
+
+// The prototype for the given procedure goes into the given buffer.  This
+// is a naked prototype, so additional arguments could be added -- it will be
+// missing the trailing ")" and it will not have EXPORT or anything like that
+// on it.
+static void cg_emit_proc_prototype(ast_node *ast, charbuf *proc_decl) {
+  Contract(is_ast_create_proc_stmt(ast) || is_ast_declare_proc_stmt(ast));
+  EXTRACT_NOTNULL(proc_params_stmts, ast->right);
+  EXTRACT(params, proc_params_stmts->left);
+  EXTRACT_MISC_ATTRS(ast, misc_attrs);
+
+  CSTR name;
+
+  if (is_ast_create_proc_stmt(ast)) {
+    EXTRACT_STRING(n, ast->left);
+    name = n;
+  }
+  else {
+    EXTRACT_NOTNULL(proc_name_type, ast->left);
+    EXTRACT_STRING(n, proc_name_type->left);
+    name = n;
+  }
+
+  bool_t private_proc = misc_attrs && exists_attribute_str(misc_attrs, "private");
+  bool_t dml_proc = is_dml_proc(ast->sem->sem_type);
+  bool_t result_set_proc = has_result_set(ast);
+  bool_t out_stmt_proc = has_out_stmt_result(ast);
+  bool_t out_union_proc = has_out_union_stmt_result(ast);
+
+  // if you're doing out_union then the row fetcher is all there is
+  CSTR suffix = out_union_proc ? "_fetch_results" : "";
+
+  CG_CHARBUF_OPEN_SYM(proc_name_base, name);
+  CG_CHARBUF_OPEN_SYM(proc_sym, name, suffix);
+
+  if (private_proc) {
+    bprintf(proc_decl, "static ");
+  }
+
+  bool_t need_comma = 0;
+  if (dml_proc) {
+    bprintf(proc_decl, "CQL_WARN_UNUSED %s %s(sqlite3 *_Nonnull _db_", rt->cql_code, proc_sym.ptr);
+    if (result_set_proc) {
+      bprintf(proc_decl, ", sqlite3_stmt *_Nullable *_Nonnull _result_stmt");
+    }
+    need_comma = 1;
+  }
+  else {
+    bprintf(proc_decl, "void %s(", proc_sym.ptr);
+  }
+
+  if (out_union_proc) {
+    CG_CHARBUF_OPEN_SYM(result_set_ref, name, "_result_set_ref");
+
+    if (need_comma) {
+      bprintf(proc_decl, ", ");
+    }
+
+    // result set type
+    bprintf(proc_decl, "%s _Nullable *_Nonnull _result_set_", result_set_ref.ptr);
+
+    need_comma = 1;
+    CHARBUF_CLOSE(result_set_ref);
+  }
+
+  // CREATE PROC [name] ( [params] )
+  if (params) {
+    if (need_comma) {
+      bprintf(proc_decl, ", ");
+    }
+    cg_params(params, proc_decl);
+  }
+
+  if (out_stmt_proc) {
+    if (dml_proc || params) {
+      bprintf(proc_decl, ", ");
+    }
+
+    CG_CHARBUF_OPEN_SYM(result_type, name, "_row");
+    bprintf(proc_decl, "%s *_Nonnull _result_", result_type.ptr);
+    CHARBUF_CLOSE(result_type);
+  }
+
+  if (!params && !out_stmt_proc && !out_union_proc && !dml_proc) {
+    bprintf(proc_decl, "void");  // make foo(void) rather than foo()
+  }
+
+  CHARBUF_CLOSE(proc_sym);
+  CHARBUF_CLOSE(proc_name_base);
 }
 
 // Emitting a stored proc is mostly setup.  We have a bunch of housekeeping to do:
@@ -3050,9 +3241,16 @@ static void cg_create_proc_stmt(ast_node *ast) {
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT(params, proc_params_stmts->left);
   EXTRACT(stmt_list, proc_params_stmts->right);
-
   EXTRACT_MISC_ATTRS(ast, misc_attrs);
 
+  bool_t private_proc = misc_attrs && exists_attribute_str(misc_attrs, "private");
+  bool_t dml_proc = is_dml_proc(ast->sem->sem_type);
+  bool_t result_set_proc = has_result_set(ast);
+  bool_t out_stmt_proc = has_out_stmt_result(ast);
+  bool_t out_union_proc = has_out_union_stmt_result(ast);
+  bool_t calls_out_union = has_out_union_call(ast);
+
+  // sets base_fragment_name as well for the current fragment
   uint32_t frag_type = find_fragment_attr_type(misc_attrs);
 
   // Neither extension fragments nor base fragments produce the code for the procedure, only
@@ -3061,6 +3259,21 @@ static void cg_create_proc_stmt(ast_node *ast) {
   if (frag_type == FRAG_TYPE_EXTENSION || frag_type == FRAG_TYPE_BASE) {
     Contract(has_result_set(ast));
     cg_proc_result_set(ast);
+
+    if (frag_type == FRAG_TYPE_BASE) {
+      // Emit assembly_fetch_results, it has the same signature as the base only with a result set
+      // instead of a statement.
+
+      // Note we can do this prototype on an easy plan.  We know everything about the signature already
+      // from the base_fragment_name.  We also know that it is not an out union proc or an out proc
+      // because it's a fragment and we know it's a DML proc for the same reason.
+      // So we're on the easiest plan for sure.
+
+      CHARBUF_OPEN(temp);
+        cg_emit_fetch_results_prototype(EMIT_DML_PROC, params, base_fragment_name, base_fragment_name, &temp);
+        bprintf(cg_header_output, "%s%s);\n", rt->symbol_visibility, temp.ptr);
+      CHARBUF_CLOSE(temp);
+    }
     return;
   }
 
@@ -3089,9 +3302,10 @@ static void cg_create_proc_stmt(ast_node *ast) {
   charbuf *saved_fwd_ref = cg_fwd_ref_output;
   cg_scratch_masks *saved_masks = cg_current_masks;
 
-  Invariant(!use_vault);
-  Invariant(!vault_columns);
-  vault_columns = symtab_new();
+  Invariant(!use_encode);
+  Invariant(!encode_context_column);
+  Invariant(!encode_columns);
+  encode_columns = symtab_new();
   Invariant(named_temporaries == NULL);
   named_temporaries = symtab_new();
 
@@ -3103,21 +3317,13 @@ static void cg_create_proc_stmt(ast_node *ast) {
   current_proc = ast;
   seed_declared = 0;
 
-  bool_t private_proc = misc_attrs && exists_attribute_str(misc_attrs, "private");
-  bool_t dml_proc = is_dml_proc(ast->sem->sem_type);
-  bool_t result_set_proc = has_result_set(ast);
-  bool_t out_stmt_proc = has_out_stmt_result(ast);
-  bool_t out_union_proc = has_out_union_stmt_result(ast);
-  bool_t calls_out_union = has_out_union_call(ast);
-
-  init_vault_info(misc_attrs, &use_vault, vault_columns);
+  init_encode_info(misc_attrs, &use_encode, &encode_context_column, encode_columns);
 
   bprintf(cg_declarations_output, "\n");
 
   // if you're doing out_union then the row fetcher is all there is
   CSTR suffix = out_union_proc ? "_fetch_results" : "";
 
-  CHARBUF_OPEN(proc_decl);
   CG_CHARBUF_OPEN_SYM(proc_name_base, name);
   CG_CHARBUF_OPEN_SYM(proc_sym, name, suffix);
 
@@ -3132,33 +3338,11 @@ static void cg_create_proc_stmt(ast_node *ast) {
     cg_proc_result_set(ast);
   }
 
-  if (private_proc) {
-    bprintf(&proc_decl, "static ");
-  }
-
-  bool_t need_comma = 0;
-  if (dml_proc) {
-    bprintf(&proc_decl, "CQL_WARN_UNUSED %s %s(sqlite3 *_Nonnull _db_", rt->cql_code, proc_sym.ptr);
-    if (result_set_proc) {
-      bprintf(&proc_decl, ", sqlite3_stmt *_Nullable *_Nonnull _result_stmt");
-    }
-    need_comma = 1;
-  }
-  else {
-    bprintf(&proc_decl, "void %s(", proc_sym.ptr);
-  }
+  CHARBUF_OPEN(proc_decl);
+  cg_emit_proc_prototype(ast, &proc_decl);
 
   if (out_union_proc) {
     CG_CHARBUF_OPEN_SYM(result_set_ref, name, "_result_set_ref");
-
-    if (need_comma) {
-      bprintf(&proc_decl, ", ");
-    }
-
-    // result set type
-    bprintf(&proc_decl, "%s _Nullable *_Nonnull _result_set_", result_set_ref.ptr);
-
-    need_comma = 1;
 
     if (!calls_out_union) {
       CSTR rc = dml_proc ? "_rc_" : "SQLITE_OK";
@@ -3190,35 +3374,19 @@ static void cg_create_proc_stmt(ast_node *ast) {
 
       bprintf(&proc_cleanup, "*_result_set_ = (%s)cql_no_rows_result_set();\n", result_set_ref.ptr);
     }
-
     CHARBUF_CLOSE(result_set_ref);
   }
 
   // CREATE PROC [name] ( [params] )
   if (params) {
-    if (need_comma) {
-      bprintf(&proc_decl, ", ");
-    }
-    cg_params(params, &proc_decl, &proc_body);
+    cg_params_init(params, &proc_body);
     if (!private_proc) {
       cg_emit_contracts(params, &proc_contracts);
     }
   }
 
   if (out_stmt_proc) {
-    if (dml_proc || params) {
-      bprintf(&proc_decl, ", ");
-    }
-
-    CG_CHARBUF_OPEN_SYM(result_type, name, "_row");
-    bprintf(&proc_decl, "%s *_Nonnull _result_", result_type.ptr);
-    CHARBUF_CLOSE(result_type);
-
     bprintf(&proc_locals, "memset(_result_, 0, sizeof(*_result_));\n");
-  }
-
-  if (!params && !out_stmt_proc && !out_union_proc && !dml_proc) {
-    bprintf(&proc_decl, "void");  // make foo(void) rather than foo()
   }
 
   // If the proc has a result, don't expose a function with the proc name.
@@ -3340,9 +3508,9 @@ static void cg_create_proc_stmt(ast_node *ast) {
   bprintf(cg_declarations_output, "}\n");
   bprintf(cg_declarations_output, "#undef _PROC_\n");
 
+  CHARBUF_CLOSE(proc_decl);
   CHARBUF_CLOSE(proc_sym);
   CHARBUF_CLOSE(proc_name_base);
-  CHARBUF_CLOSE(proc_decl);
   CHARBUF_CLOSE(proc_cleanup);
   CHARBUF_CLOSE(proc_locals);
   CHARBUF_CLOSE(proc_body);
@@ -3350,13 +3518,14 @@ static void cg_create_proc_stmt(ast_node *ast) {
   CHARBUF_CLOSE(proc_fwd_ref);
 
   in_proc = 0;
-  use_vault = 0;
+  use_encode = 0;
   current_proc = NULL;
   base_fragment_name = NULL;
 
-  symtab_delete(vault_columns);
+  symtab_delete(encode_columns);
   symtab_delete(named_temporaries);
-  vault_columns = NULL;
+  encode_context_column = NULL;
+  encode_columns = NULL;
   named_temporaries = NULL;
   error_target_used = saved_error_target_used;
   rcthrown_index = saved_rcthrown_index;
@@ -3384,7 +3553,7 @@ static void cg_declare_func_stmt(ast_node *ast) {
 
   // DECLARE FUNC [name] ( [params] ) returntype
   if (params) {
-    cg_params(params, &func_decl, NULL);
+    cg_params(params, &func_decl);
   }
   else {
     bprintf(&func_decl, "void");
@@ -3420,71 +3589,29 @@ static void cg_declare_proc_stmt(ast_node *ast) {
   current_proc = ast;
 
   bool_t private_proc = misc_attrs && exists_attribute_str(misc_attrs, "private");
-  bool_t dml_proc = is_dml_proc(ast->sem->sem_type);
-  bool_t result_set_proc = has_result_set(ast);
   bool_t out_stmt_proc = has_out_stmt_result(ast);
   bool_t out_union_proc = has_out_union_stmt_result(ast);
 
-  CSTR fetch_results = out_union_proc ? "_fetch_results" : "";
-
   CHARBUF_OPEN(proc_decl);
-  CG_CHARBUF_OPEN_SYM(proc_sym, name, fetch_results);
 
-  if (dml_proc) {
-    bprintf(&proc_decl, "CQL_WARN_UNUSED %s %s(sqlite3 *_Nonnull _db_", rt->cql_code, proc_sym.ptr);
-    if (out_union_proc) {
-      bprintf(&proc_decl, ", ");
-      CG_CHARBUF_OPEN_SYM(result_set_ref, name, "_result_set_ref");
-      CG_CHARBUF_OPEN_SYM(result_set, name, "_result_set");
-        cg_result_set_type_decl(cg_fwd_ref_output, result_set.ptr, result_set_ref.ptr);
-        bprintf(&proc_decl, "%s _Nullable *_Nonnull _result_set_", result_set_ref.ptr);
-      CHARBUF_CLOSE(result_set);
-      CHARBUF_CLOSE(result_set_ref);
-    }
-    else if (result_set_proc) {
-      bprintf(&proc_decl, ", sqlite3_stmt *_Nullable *_Nonnull _result_stmt");
-    }
-    if (params) {
-      bprintf(&proc_decl, ", ");
-    }
-  }
-  else {
-    bprintf(&proc_decl, "void %s(", proc_sym.ptr);
-    if (out_union_proc) {
-      CG_CHARBUF_OPEN_SYM(result_set_ref, name, "_result_set_ref");
-      CG_CHARBUF_OPEN_SYM(result_set, name, "_result_set");
-        cg_result_set_type_decl(cg_fwd_ref_output, result_set.ptr, result_set_ref.ptr);
-        bprintf(&proc_decl, "%s _Nullable *_Nonnull _result_set_", result_set_ref.ptr);
-      CHARBUF_CLOSE(result_set);
-      CHARBUF_CLOSE(result_set_ref);
+  cg_emit_proc_prototype(ast, &proc_decl);
 
-      if (params) {
-        bprintf(&proc_decl, ", ");
-      }
-    }
+  if (out_union_proc) {
+    CG_CHARBUF_OPEN_SYM(result_set_ref, name, "_result_set_ref");
+    CG_CHARBUF_OPEN_SYM(result_set, name, "_result_set");
+
+    cg_result_set_type_decl(cg_fwd_ref_output, result_set.ptr, result_set_ref.ptr);
+
+    CHARBUF_CLOSE(result_set);
+    CHARBUF_CLOSE(result_set_ref);
   }
 
-  // CREATE PROC [name] ( [params] )
-  if (params) {
-    cg_params(params, &proc_decl, NULL);
-  }
-
-  if (out_stmt_proc) {
-    if (dml_proc || params) {
-      bprintf(&proc_decl, ", ");
-    }
-    CG_CHARBUF_OPEN_SYM(result_type, name, "_row");
-    bprintf(&proc_decl, "%s *_Nonnull _result_", result_type.ptr);
-    CHARBUF_CLOSE(result_type);
+   if (out_stmt_proc) {
     cg_c_struct_for_sptr(cg_fwd_ref_output, ast->sem->sptr, NULL);
   }
 
-  if (!params && !out_stmt_proc && !dml_proc && !out_union_proc) {
-    bprintf(&proc_decl, "void");  // make foo(void) rather than foo()
-  }
-
   if (private_proc) {
-    bprintf(cg_declarations_output, "static %s);\n\n", proc_decl.ptr);
+    bprintf(cg_declarations_output, "%s);\n\n", proc_decl.ptr);
   }
   else {
     bprintf(cg_fwd_ref_output, "%s%s);\n\n", rt->symbol_visibility, proc_decl.ptr);
@@ -3492,7 +3619,6 @@ static void cg_declare_proc_stmt(ast_node *ast) {
 
   current_proc = NULL;
 
-  CHARBUF_CLOSE(proc_sym);
   CHARBUF_CLOSE(proc_decl);
 }
 
@@ -5559,11 +5685,20 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
   symtab_entry *entry = symtab_find(cg_stmts, stmt->type);
   Contract(entry);
 
-  // DDL operations not in a procedure are ignored
-  // but they can declare schema during the semantic pass
-  if (entry->val == cg_any_ddl_stmt && !in_proc) {
-     return;
+
+  if (!in_proc) {
+    // DDL operations not in a procedure are ignored
+    // but they can declare schema during the semantic pass
+    if (entry->val == cg_any_ddl_stmt) {
+       return;
+    }
+
+    // loose select statements also have no codegen, the global proc has no result type
+    if (is_select_stmt(stmt)) {
+       return;
+    }
   }
+
 
   // don't emit a # line directive for the echo statement because it will messed up
   // if the echo doesn't end in a linefeed and that's legal.  And there is normally
@@ -6031,6 +6166,7 @@ typedef struct fetch_result_info {
   bool_t use_stmt;
   int32_t indent;
   CSTR prefix;
+  int16_t encode_context_index;
 } fetch_result_info;
 
 // This generates the cql_fetch_info structure for the various output flavors
@@ -6075,6 +6211,7 @@ static void cg_fetch_info(fetch_result_info *info, charbuf *output)
     if (info->has_identity_columns) {
       bprintf(&tmp, "  .identity_columns = %s,\n", info->identity_columns_sym);
     }
+    bprintf(&tmp, "  .encode_context_index = %d,\n", info->encode_context_index);
     bprintf(&tmp, "  .rowsize = sizeof(%s),\n", info->row_sym);
     bprintf(&tmp, "  .crc = CRC_%s,\n", info->proc_sym);
     bprintf(&tmp, "  .perf_index = &%s,\n", info->perf_index);
@@ -6123,6 +6260,7 @@ static void cg_proc_result_set(ast_node *ast) {
 
   bool_t dml_proc = is_dml_proc(ast->sem->sem_type);
 
+  // sets base_fragment_name as well for the current fragment
   uint32_t frag_type = find_fragment_attr_type(misc_attrs);
 
   // register the proc name if there is a callback, the particular result type will do whatever it wants
@@ -6220,13 +6358,16 @@ static void cg_proc_result_set(ast_node *ast) {
 
   // we may not want the getters, at all.
   bool_t suppress_getters = false;
- 
+
   if (misc_attrs) {
     suppress_getters =
       exists_attribute_str(misc_attrs, "suppress_getters") ||
       exists_attribute_str(misc_attrs, "private") ||            // private implies suppress result set
       exists_attribute_str(misc_attrs, "suppress_result_set");  // and suppress result set implies suppress getters
   }
+
+  // the index of the encode context column, -1 represents not found
+  int16_t encode_context_index = -1;
 
   // For each field emit the _get_field method
   for (int32_t i = 0; i < count; i++) {
@@ -6237,9 +6378,13 @@ static void cg_proc_result_set(ast_node *ast) {
     // the assembly fragement does that, all columns will be known at that time.
     if (frag_type != FRAG_TYPE_EXTENSION && frag_type != FRAG_TYPE_BASE) {
       bprintf(&data_types, "  ");
-      bool_t encode = should_vault_col(col, sem_type, use_vault, vault_columns);
+      bool_t encode = should_encode_col(col, sem_type, use_encode, encode_columns);
       cg_data_type(&data_types, encode, sem_type);
       bprintf(&data_types, ", // %s\n", col);
+
+      if (encode_context_column != NULL && !strcmp(col, encode_context_column)) {
+        encode_context_index = (int16_t)i;
+      }
     }
 
     if (suppress_getters) {
@@ -6314,7 +6459,7 @@ static void cg_proc_result_set(ast_node *ast) {
       cg_proc_result_set_getter(&info);
     }
 
-    if (use_vault && sensitive_flag(sem_type)) {
+    if (use_encode && sensitive_flag(sem_type)) {
       CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
         col_getter_sym,
         rt->symbol_prefix,
@@ -6341,8 +6486,10 @@ static void cg_proc_result_set(ast_node *ast) {
 
   CHARBUF_OPEN(is_null_getter);
 
+  bool_t generate_copy_attr = misc_attrs && exists_attribute_str(misc_attrs, "generate_copy");
+
   // Check whether we need to generate a copy function.
-  bool_t generate_copy = (options.generate_copy ||
+  bool_t generate_copy = (generate_copy_attr ||
                          (rt->proc_should_generate_copy && rt->proc_should_generate_copy(name)));
 
   int32_t refs_count = refs_count_sptr(sptr);
@@ -6361,7 +6508,7 @@ static void cg_proc_result_set(ast_node *ast) {
     cg_col_offsets(d, sptr, col_offsets_sym.ptr, row_sym.ptr);
   }
 
-  bool_t has_identity_columns = cg_identity_columns(d, name, misc_attrs, identity_columns_sym.ptr);
+  bool_t has_identity_columns = cg_identity_columns(h, d, name, misc_attrs, identity_columns_sym.ptr);
 
   bprintf(&result_set_create,
           "(%s)%s(%s, count, %d, %s, meta)",
@@ -6376,16 +6523,26 @@ static void cg_proc_result_set(ast_node *ast) {
   // Emit foo_result_count, which is really just a proxy to cql_result_set_get_count,
   // but it is hiding the cql_result_set implementation detail from the API of the generated
   // code by providing a proc-scoped function for it with the typedef for the result set.
-  bclear(&temp);
-  bprintf(&temp, "%s %s(%s _Nonnull result_set)", rt->cql_int32, result_count_sym.ptr, result_set_ref.ptr);
-  bprintf(h, "%s%s;\n", rt->symbol_visibility, temp.ptr);
 
-  // the base fragment doesn't emit the row count symbol, this is done by the assembly; the base
-  // fragment only emits the header for it.  In fact the base fragment only emits headers in general.
-  if (frag_type != FRAG_TYPE_BASE) {
-    bprintf(d, "\n%s {\n", temp.ptr);
-    bprintf(d, "  return %s((cql_result_set_ref)result_set);\n", rt->cql_result_set_get_count);
-    bprintf(d, "}\n");
+  if (frag_type == FRAG_TYPE_EXTENSION && options.generate_type_getters) {
+    // extensions get inline everything in type getters mode
+    bprintf(h, "static inline %s %s(%s _Nonnull result_set) {\n", rt->cql_int32, result_count_sym.ptr, result_set_ref.ptr);
+    bprintf(h, "   return %s((cql_result_set_ref)result_set);\n", rt->cql_result_set_get_count);
+    bprintf(h, "}\n\n");
+  }
+  else {
+    bclear(&temp);
+    bprintf(&temp, "%s %s(%s _Nonnull result_set)", rt->cql_int32, result_count_sym.ptr, result_set_ref.ptr);
+    bprintf(h, "%s%s;\n", rt->symbol_visibility, temp.ptr);
+
+    // the base fragment doesn't emit the row count symbol, this is done by the assembly; the base
+    // fragment only emits the header for it.  In fact the base fragment only emits headers in general.
+
+    if (frag_type != FRAG_TYPE_BASE) {
+      bprintf(d, "\n%s {\n", temp.ptr);
+      bprintf(d, "  return %s((cql_result_set_ref)result_set);\n", rt->cql_result_set_get_count);
+      bprintf(d, "}\n");
+    }
   }
 
   // Skip generating fetch result function for extension and fragments since they always get
@@ -6395,31 +6552,7 @@ static void cg_proc_result_set(ast_node *ast) {
       // Emit foo_fetch_results, it has the same signature as foo only with a result set
       // instead of a statement.
       bclear(&temp);
-
-      // either return code or void
-      if (dml_proc) {
-        bprintf(&temp, "CQL_WARN_UNUSED %s ", rt->cql_code);
-      }
-      else {
-        bprintf(&temp, "void ");
-      }
-
-      // proc name
-      bprintf(&temp, "%s(", fetch_results_sym.ptr);
-
-      // optional db reference
-      if (dml_proc) {
-        bprintf(&temp, "sqlite3 *_Nonnull _db_,");
-      }
-
-      // result set type
-      bprintf(&temp, " %s _Nullable *_Nonnull result_set", result_set_ref.ptr);
-
-      // args to forward
-      if (params) {
-        bprintf(&temp, ", ");
-        cg_params(params, &temp, NULL);
-      }
+      cg_emit_fetch_results_prototype(dml_proc, params, name, result_set_name, &temp);
 
       // ready for prototype and function begin now
       bprintf(h, "%s%s);\n", rt->symbol_visibility, temp.ptr);
@@ -6462,6 +6595,7 @@ static void cg_proc_result_set(ast_node *ast) {
           .perf_index = perf_index.ptr,
           .misc_attrs = misc_attrs,
           .indent = 2,
+          .encode_context_index = encode_context_index,
       };
 
       cg_fetch_info(&info, d);
@@ -6479,16 +6613,7 @@ static void cg_proc_result_set(ast_node *ast) {
       // Emit foo_fetch_results, it has the same signature as foo only with a result set
       // instead of a statement.
       bclear(&temp);
-      bprintf(&temp,
-          "CQL_WARN_UNUSED %s %s(sqlite3 *_Nonnull _db_, %s _Nullable *_Nonnull result_set",
-          rt->cql_code,
-          fetch_results_sym.ptr,
-          result_set_ref.ptr);
-
-      if (params) {
-        bprintf(&temp, ", ");
-        cg_params(params, &temp, NULL);
-      }
+      cg_emit_fetch_results_prototype(EMIT_DML_PROC, params, name, result_set_name, &temp);
 
       // To create the rowset we make a byte buffer object.  That object lets us
       // append row data to an in-memory stream.  Each row is fetched by binding
@@ -6524,6 +6649,7 @@ static void cg_proc_result_set(ast_node *ast) {
           .perf_index = perf_index.ptr,
           .misc_attrs = misc_attrs,
           .indent = 2,
+          .encode_context_index = encode_context_index,
       };
 
       cg_fetch_info(&info, d);
@@ -6549,6 +6675,7 @@ static void cg_proc_result_set(ast_node *ast) {
           .misc_attrs = misc_attrs,
           .indent = 0,
           .prefix = proc_sym.ptr,
+          .encode_context_index = encode_context_index,
       };
 
       cg_fetch_info(&info, d);
@@ -6620,7 +6747,7 @@ static void cg_proc_result_set(ast_node *ast) {
   // Add a helper function that overrides CQL_DATA_TYPE_ENCODED bit of a resultset.
   // It's a debugging function that allow you to turn ON/OFF encoding/decoding when
   // your app is running.
-  if (use_vault) {
+  if (use_encode) {
     bprintf(h, "\nextern void %s(%s col, %s encode);\n", set_encoding_sym.ptr, rt->cql_int32, rt->cql_bool);
     bprintf(d, "void %s(%s col, %s encode) {\n", set_encoding_sym.ptr, rt->cql_int32, rt->cql_bool);
     bprintf(d, "  return cql_set_encoding(%s, %s, col, encode);\n", data_types_sym.ptr, data_types_count_sym.ptr);
@@ -6898,6 +7025,7 @@ cql_noexport void cg_c_init(void) {
   FUNC_INIT(changes);
   FUNC_INIT(printf);
   FUNC_INIT(cql_get_blob_size);
+  FUNC_INIT(cql_inferred_notnull);
 
   EXPR_INIT(num, cg_expr_num, "num", C_EXPR_PRI_ROOT);
   EXPR_INIT(str, cg_expr_str, "STR", C_EXPR_PRI_ROOT);

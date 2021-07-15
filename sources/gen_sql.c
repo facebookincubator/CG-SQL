@@ -968,6 +968,13 @@ static void gen_expr_call(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) 
   EXTRACT(opt_filter_clause, call_filter_clause->right);
   EXTRACT(arg_list, call_arg_list->right);
 
+  // We never want this to appear. Calls to `cql_inferred_notnull` exist only as
+  // the product of a rewrite rule and should not be visible to users.
+  if (!Strcasecmp("cql_inferred_notnull", name)) {
+    gen_arg_list(arg_list);
+    return;
+  }
+
   if (for_sqlite()) {
     // The nullable function has no actual sql for it, it's just type info
     // don't echo nullable if we're doing codegen (callback present)
@@ -1218,7 +1225,7 @@ static void gen_expr_between(ast_node *ast, CSTR op, int32_t pri, int32_t pri_ne
   gen_printf(" BETWEEN ");
   gen_expr(range->left, pri_new);
   gen_printf(" AND ");
-  gen_expr(range->right, pri_new);
+  gen_expr(range->right, pri_new + 1); // the usual rules for the right operator 
   if (pri_new < pri) gen_printf(")");
 }
 
@@ -3214,6 +3221,38 @@ static void gen_enforcement_options(ast_node *ast) {
 
     case ENFORCE_TABLE_FUNCTION:
       gen_printf("TABLE FUNCTION");
+      break;
+
+    case ENFORCE_NOT_NULL_AFTER_CHECK:
+      gen_printf("NOT NULL AFTER CHECK");
+      break;
+
+    case ENFORCE_ENCODE_CONTEXT_COLUMN:
+      gen_printf("ENCODE CONTEXT COLUMN");
+      break;
+
+    case ENFORCE_ENCODE_CONTEXT_TYPE_INTEGER:
+      gen_printf("ENCODE CONTEXT TYPE INTEGER");
+      break;
+
+    case ENFORCE_ENCODE_CONTEXT_TYPE_LONG_INTEGER:
+      gen_printf("ENCODE CONTEXT TYPE LONG_INTEGER");
+      break;
+
+    case ENFORCE_ENCODE_CONTEXT_TYPE_REAL:
+      gen_printf("ENCODE CONTEXT TYPE REAL");
+      break;
+
+    case ENFORCE_ENCODE_CONTEXT_TYPE_BOOL:
+      gen_printf("ENCODE CONTEXT TYPE BOOL");
+      break;
+
+    case ENFORCE_ENCODE_CONTEXT_TYPE_TEXT:
+      gen_printf("ENCODE CONTEXT TYPE TEXT");
+      break;
+
+    case ENFORCE_ENCODE_CONTEXT_TYPE_BLOB:
+      gen_printf("ENCODE CONTEXT TYPE BLOB");
       break;
 
     default:

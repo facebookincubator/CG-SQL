@@ -147,7 +147,7 @@ cql_data_decl( bytebuf *recreate_annotations );
 #define SEM_TYPE_BOXED             _64(0x10000000) // set if a cursor's lifetime is managed by a box object
 #define SEM_TYPE_HAS_CHECK         _64(0x20000000) // set for table column with a "check" clause
 #define SEM_TYPE_HAS_COLLATE       _64(0x40000000) // set for table column with a "collate" clause
-#define SEM_TYPE_AVAILABLE         _64(0x80000000) // this bit is no longer used
+#define SEM_TYPE_INFERRED_NOTNULL  _64(0x80000000) // set if inferred to not be nonnull (but was originally nullable)
 #define SEM_TYPE_VIRTUAL          _64(0x100000000) // set if and only if this is a virtual table
 #define SEM_TYPE_HIDDEN_COL       _64(0x200000000) // set if and only if hidden column on a virtual table
 #define SEM_TYPE_TVF              _64(0x400000000) // set if and only table node is a table valued function
@@ -168,6 +168,7 @@ cql_data_decl( bytebuf *recreate_annotations );
 #define SEM_EXPR_CONTEXT_WINDOW         0x0400
 #define SEM_EXPR_CONTEXT_WINDOW_FILTER  0x0800
 #define SEM_EXPR_CONTEXT_CONSTRAINT     0x1000
+#define SEM_EXPR_CONTEXT_FLAGS          0x1FFF // all the flag bits
 
 #define CURRENT_EXPR_CONTEXT_IS(x)  (!!(current_expr_context & (x)))
 #define CURRENT_EXPR_CONTEXT_IS_NOT(x)  (!(current_expr_context & (x)))
@@ -242,8 +243,8 @@ cql_noexport ast_node *sem_get_col_default_value(ast_node *attrs);
 cql_noexport void sem_accumulate_full_region_image(symtab *regions, CSTR name);
 cql_noexport void sem_accumulate_public_region_image(symtab *regions, CSTR name);
 cql_noexport sem_t find_column_type(CSTR table_name, CSTR column_name);
-cql_noexport void init_vault_info(ast_node *misc_attrs, bool_t *use_vault_arg, symtab *vault_columns_arg);
-cql_noexport bool_t should_vault_col(CSTR col, sem_t sem_type, bool_t use_vault_arg, symtab *vault_columns_arg);
+cql_noexport void init_encode_info(ast_node *misc_attrs, bool_t *use_encode_arg, CSTR *encode_context_column_arg, symtab *encode_columns_arg);
+cql_noexport bool_t should_encode_col(CSTR col, sem_t sem_type, bool_t use_encode_arg, symtab *encode_columns_arg);
 
 cql_data_decl( struct list_item *all_tables_list );
 cql_data_decl( struct list_item *all_functions_list );
@@ -259,9 +260,10 @@ cql_data_decl( ast_node *current_proc );
 cql_data_decl( charbuf *error_capture );
 // True if we are presently emitting a vault stored proc.
 // A stored proc with attribution vault_sensitive is a vault stored proc
-cql_data_decl( bool_t use_vault );
+cql_data_decl( bool_t use_encode );
+cql_data_decl( CSTR encode_context_column );
 // List of column names reference in a stored proc that we should vault
-cql_data_decl( symtab *vault_columns );
+cql_data_decl( symtab *encode_columns );
 
 // These are the symbol tables with the accumulated included/excluded regions
 cql_data_decl( symtab *included_regions );

@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed Jun  9 13:53:52 PDT 2021
+Snapshot as of Wed Jul 14 17:40:21 PDT 2021
 
 ### Operators and Literals
 
@@ -24,8 +24,8 @@ UNION_ALL UNION INTERSECT EXCEPT
 ASSIGN
 OR
 AND
-BETWEEN
 NOT
+BETWEEN
 '<>' '!=' '=' '==' LIKE NOT_LIKE GLOB MATCH REGEXP IN IS_NOT IS
 '<' '>' '>=' '<='
 '<<' '>>' '&' '|'
@@ -58,7 +58,7 @@ OUTER JOIN WHERE GROUP BY ORDER ASC
 DESC INNER FCOUNT AUTOINCREMENT DISTINCT
 LIMIT OFFSET TEMP TRIGGER IF ALL CROSS USING RIGHT
 HIDDEN UNIQUE HAVING SET LET TO DISTINCTROW ENUM
-FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR DECLARE TYPE FETCH LOOP LEAVE CONTINUE FOR
+FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR DECLARE TYPE FETCH LOOP LEAVE CONTINUE FOR ENCODE CONTEXT_COLUMN CONTEXT_TYPE
 OPEN CLOSE ELSE_IF WHILE CALL TRY CATCH THROW RETURN
 SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
 CAST WITH RECURSIVE REPLACE IGNORE ADD COLUMN RENAME ALTER
@@ -564,6 +564,11 @@ basic_expr:
   | '(' select_stmt "IF" "NOTHING" "OR" "NULL" expr ')'
   | '(' select_stmt "IF" "NOTHING" "THROW"')'
   | "EXISTS" '(' select_stmt ')'
+  | "CASE" expr case_list "END"
+  | "CASE" expr case_list "ELSE" expr "END"
+  | "CASE" case_list "END"
+  | "CASE" case_list "ELSE" expr "END"
+  | "CAST" '(' expr "AS" data_type_any ')'
   ;
 
 math_expr:
@@ -578,53 +583,37 @@ math_expr:
   | math_expr '/' math_expr
   | math_expr '%' math_expr
   | '-' math_expr
+  | '~' math_expr
+  | "NOT" math_expr
+  | math_expr '=' math_expr
+  | math_expr "==" math_expr
+  | math_expr '<' math_expr
+  | math_expr '>' math_expr
+  | math_expr "<>" math_expr
+  | math_expr "!=" math_expr
+  | math_expr ">=" math_expr
+  | math_expr "<=" math_expr
+  | math_expr "NOT" "IN" '(' expr_list ')'
+  | math_expr "NOT" "IN" '(' select_stmt ')'
+  | math_expr "IN" '(' expr_list ')'
+  | math_expr "IN" '(' select_stmt ')'
+  | math_expr "LIKE" math_expr
+  | math_expr "NOT LIKE" math_expr
+  | math_expr "MATCH" math_expr
+  | math_expr "REGEXP" math_expr
+  | math_expr "GLOB" math_expr
+  | math_expr "NOT" "BETWEEN" math_expr "AND" math_expr
+  | math_expr "BETWEEN" math_expr  "AND" math_expr
+  | math_expr "IS NOT" math_expr
+  | math_expr "IS" math_expr
   | math_expr "||" math_expr
   ;
 
 expr:
-  basic_expr
-  | expr '&' expr
-  | expr '|' expr
-  | expr "<<" expr
-  | expr ">>" expr
-  | expr '+' expr
-  | expr '-' expr
-  | expr '*' expr
-  | expr '/' expr
-  | expr '%' expr
-  | '-' expr
-  | "NOT" expr
-  | '~' expr
-  | expr "COLLATE" name
+  math_expr
   | expr "AND" expr
   | expr "OR" expr
-  | expr '=' expr
-  | expr "==" expr
-  | expr '<' expr
-  | expr '>' expr
-  | expr "<>" expr
-  | expr "!=" expr
-  | expr ">=" expr
-  | expr "<=" expr
-  | expr "NOT" "IN" '(' expr_list ')'
-  | expr "NOT" "IN" '(' select_stmt ')'
-  | expr "IN" '(' expr_list ')'
-  | expr "IN" '(' select_stmt ')'
-  | expr "LIKE" expr
-  | expr "NOT LIKE" expr
-  | expr "MATCH" expr
-  | expr "REGEXP" expr
-  | expr "GLOB" expr
-  | expr "NOT" "BETWEEN" math_expr "AND" math_expr
-  | expr "BETWEEN" math_expr "AND" math_expr
-  | expr "IS NOT" expr
-  | expr "IS" expr
-  | expr "||" expr
-  | "CASE" expr case_list "END"
-  | "CASE" expr case_list "ELSE" expr "END"
-  | "CASE" case_list "END"
-  | "CASE" case_list "ELSE" expr "END"
-  | "CAST" '(' expr "AS" data_type_any ')'
+  | expr "COLLATE" name
   ;
 
 case_list:
@@ -1409,6 +1398,14 @@ enforcement_options:
   | "SELECT" "IF" "NOTHING"
   | "INSERT" "SELECT"
   | "TABLE" "FUNCTION"
+  | "NOT" "NULL" "AFTER" "CHECK"
+  | ENCODE CONTEXT_COLUMN
+  | ENCODE CONTEXT_TYPE "INTEGER"
+  | ENCODE CONTEXT_TYPE "LONG_INTEGER"
+  | ENCODE CONTEXT_TYPE "REAL"
+  | ENCODE CONTEXT_TYPE "BOOL"
+  | ENCODE CONTEXT_TYPE "TEXT"
+  | ENCODE CONTEXT_TYPE "BLOB"
   ;
 
 enforce_strict_stmt:

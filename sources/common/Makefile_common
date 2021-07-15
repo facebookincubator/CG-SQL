@@ -138,6 +138,8 @@ $O/cql.y.o: $O/cql.y.c $O/cql.y.h
 
 cg_test: $O/cg_test_c.c
 
+cg_test_base_fragment: $O/cg_test_base_fragment_c.o
+
 cg_test_extension_fragment: $O/cg_test_extension_fragment_c.o
 
 cg_test_assembly_query: $O/cg_test_assembly_query_c.o
@@ -154,6 +156,7 @@ $O/cg_test_c.o: $O/cg_test_c.c
 $O/cg_test_c_with_type_getters.o: $O/cg_test_c_with_type_getters.c
 
 $O/run_test_client.o: run_test_client.c
+	$(CC) $(CFLAGS) -DCQL_RUN_TEST -c -o $O/run_test_client.o run_test_client.c
 
 $O/result_set_extension.o: result_set_extension.c
 
@@ -205,7 +208,7 @@ cql-linetest: linetester/main.c cqlrt.c cqlrt.h linetester/linetest.c linetester
 json-test: $O/json_test
 
 demo-binary: $(SQLITE_OBJ)
-	$O/cql --in demo/demo.sql --cg $O/demo.h $O/demo.c --generate_copy
+	$O/cql --in demo/demo.sql --cg $O/demo.h $O/demo.c
 	$(CC) $(CFLAGS) -o $O/demo $O/demo.c cqlrt.c demo/demo_client.c $(SQLITE_LINK)
 
 $O/json_test: json_test/json_test.y json_test/json_test.l

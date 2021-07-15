@@ -1049,6 +1049,14 @@ update foo set xyzzy = 7 where foo.id in (select * from x);
 
 @enforce_normal select if nothing;
 
+@enforce_strict not null after check;
+
+@enforce_normal not null after check;
+
+@enforce_strict encode context column;
+
+@enforce_normal encode context column;
+
 @enforce_reset;
 
 set rc := @rc;
@@ -1411,6 +1419,17 @@ create table foo(id int primary key on conflict fail autoincrement);
 
 -- create table with not null column on conflict clause abort
 create table foo(id int not null on conflict fail);
+
+-- this makes sure that +/-/etc can have expr on both sides not just math expr
+select CAST(1 AS REAL) + 1;
+select CAST(1 AS REAL) - 1;
+select CAST(1 AS REAL) * 1;
+select CAST(1 AS REAL) / 1;
+
+---
+select 0 between 0 and 3 between 2 and 3; --  0
+select 0 between 0 and (3 between 2 and 3); -- 1
+select (0 between 0 and 3) between 2 and 3; -- 0
 
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 

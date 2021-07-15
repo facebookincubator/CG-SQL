@@ -693,11 +693,11 @@ CQL evaluation rules are designed to be as similar as possible but some variance
 ASSIGNMENT:    :=
 LOGICAL_OR:    OR
 LOGICAL_AND:   AND
+LOGICAL_NOT:   NOT
+BETWEEN:       BETWEEN  NOT BETWEEN
 EQUALITY:      = == != <> IS, IS NOT, IN, NOT IN, LIKE, GLOB, MATCH, REGEXP
 INEQUALITY:    <   <=  >   >=
-LOGICAL_NOT:   NOT
 BINARY:        << >> & |
-BETWEEN:       BETWEEN  NOT BETWEEN
 ADDITION:      + -
 MULIPLICATION: * / %
 BINARY_NOT:    ~
@@ -1070,95 +1070,283 @@ Importantly type kind can be applied to object types as well, allowing `object<d
 At run time the kind information is lost. But it does find its way into the JSON output so external tools
 also get to see the kinds.
 
-### Nullability Rules
+### Nullability
 
-#### General Rule
+#### Nullability Rules
 
-Except as noted in the exceptions below, the result of an operator is a nullable type if and only if any of its operands
-are of nullable type. This applies no matter the number of operands the operator requires.
+Nullability is tracked via CQL's type system. To understand whether or not an
+expression will be assigned a nullable type, you can follow these rules; they
+will hopefully be intuitive if you are familiar with SQL:
 
-Note: CQL does not do constant folding or other inferencing except in `const()`, it only uses the types of the values so
-even an expression such as `NULL or 1` is of nullable type even though plainly it must evaluate to `1`.  This may change
-in time but presently no attempt is made to compute values to improve type information except in `const()` expressions.
+* The literal `NULL` is, of course, always assigned a nullable type. All other
+  literals are nonnull.
 
-#### Identifiers and Literals
+* In general, the type of an expression involving an operator (e.g., `+`, `==`,
+  `!=`, `~`, `LIKE`, et cetera) is nullable if any of its arguments are
+  nullable. For example, `1 + NULL` is assigned the type `INTEGER`, implying
+  nullability. `1 + 2`, however, is assigned the type `INTEGER NOT NULL`.
 
-Nullable variables and columns are always nullable.  The `NULL` literal is nullable.  Other literals are not nullable.
+* `IN` and `NOT IN` expressions are assigned a nullable type if and only if
+  their left argument is nullable: The nullability of the right side is
+  irrelevant. For example, `"foo" IN (a, b)` will always have the type `BOOL NOT
+  NULL`, whereas `some_nullable IN (a, b)` will have the type `BOOL`.
 
-#### IS and IS NOT
+  * **NOTE:** In CQL, the `IN` operator behaves like a series of equality tests
+    (i.e., `==` tests, not `IS` tests), and `NOT IN` behaves symmetrically.
+    SQLite has slightly different nullability rules for `IN` and `NOT IN`. *This
+    is the one place where CQL has different evaluation rules from SQLite, by
+    design.*
 
-These operators always return a non-null boolean.
+* The result of `IS` and `IS NOT` is always of type `BOOL NOT NULL`, regardless
+  of the nullability of either argument.
 
-#### IN and NOT IN
+* For `CASE` expressions, the result is always of a nullable type if no `ELSE`
+  clause is given. If an `ELSE` is given, the result is nullable if any of the
+  `THEN` or `ELSE` expressions are nullable.
 
-In an expression like `needle IN (haystack)` the result is always a boolean. The boolean is nullable if and only if `needle` is nullable.
-The presence of nulls in the the haystack is irrelevant.
+  * **NOTE:** The SQL `CASE` construct is quite powerful: Unlike the C `switch`
+    statement, it is actually an expression. In this sense, it is rather more
+    like a highly generalized ternary `a ? b : c` operator than a C switch
+    statement. There can be arbitrarily many conditions specified, each with
+    their own result, and the conditions need not be constants; typically, they
+    are not.
 
-The `IN` operator behaves like a series of equality tests (i.e. `==` tests not `IS` tests).  `NOT IN` behaves symmetrically.
+* `IFNULL` and `COALESCE` are assigned a `NOT NULL` type if one or more of their
+  arguments are of a `NOT NULL` type.
 
-NOTE: SQLite has slightly different nullability rules for `IN` and `NOT IN` q.v.  This is only place where CQL has different evaluation rules by design.
+* In most join operations, the nullability of each column participating in the
+  join is preserved. However, in a `LEFT OUTER` join, the columns on the right
+  side of the join are always considered nullable; in a `RIGHT OUTER` join, the
+  columns on the left side of the join are considered nullable.
 
-#### CASE ..WHEN ..THEN.. ELSE.. END
+* As in most other languages, CQL does not perform evaluation of value-level
+  expressions during type checking. There is one exception to this rule: An
+  expression within a `const` is evaluated at compilation time, and if its
+  result is then known to be nonnull, it will be given a `NOT NULL` type. For
+  example, `const(NULL or 1)` is given the type `BOOL NOT NULL`, whereas merely
+  `NULL or 1` has the type `BOOL`.
 
-The following rules apply when considering nullability of a `CASE` expression.
+#### Nullability Improvements
 
-* if there is no `ELSE` clause, the result is nullable.
-* if any of the output values (i.e. any `THEN` or `ELSE` values) are nullable, the result is nullable
-* otherwise the result is not nullable
+**NOTE:** This is a new feature of CQL that currently **disabled by default**. Until
+it becomes the default in a future version of CQL, you will need to use
+`@enforce_strict not null after check;` to gain access to this functionality.
 
-The SQL `CASE` construct is quite powerful and unlike the C `switch` statement it is actually an expression.
-So this operator is rather more like a highly generalized ternary `a ? b : c` operator rather than the C switch statement.
-There can be arbitrarily many conditions specified each with their own result and the conditions need not be constants, and typically are not.
+CQL is able to "improve" the type of some expressions from a nullable type to a
+`NOT NULL` type via occurrence typing, also known as flow typing. As in other
+languages (e.g., Racket, where occurrence typing originated, and more recently
+Kotlin, TypeScript, et cetera), it is possible to use a conditional to refine a
+type.
 
-#### The IFNULL and COALESCE Functions
+##### Improvements in `IF` and `CASE`
 
-These functions are nullable or non-nullable based on their arguments. If the `IFNULL` or `COALESCE` call has
-at least one non-nullable argument then the result is non-nullable.
-
-#### The ifnull_crash and ifnull_throw functions
-
-Sometimes `ifnull` is not possible, e.g. if the operand is an object or blob type.  Other times it's just not convenient.
-The "attesting" forms gives you a type conversion to not null with a runtime check.  They cannot be used in SQLite contexts
-because the functions are not known to SQLite.  But in loose expressions you can write this important pattern:
+One way to improve a type to be `NOT NULL` is by using an `IS NOT NULL` check
+within an `IF … THEN … END IF`:
 
 ```sql
-create proc foo(x object)
+DECLARE x INT;
+CALL some_proc_with_an_out_arg(x);
+IF x IS NOT NULL THEN
+  -- `x` has type `INT NOT NULL` here
+END IF;
+-- `x` reverts to type `INT` here
+```
+
+Above, you can see how the check in `IF x IS NOT NULL` allows `x` to be of type
+`INT NOT NULL` within the body of the `THEN`.
+
+The same applies to `WHEN` clauses within a `CASE` expression:
+
+```sql
+DECLARE x INT;
+CALL some_proc_with_an_out_arg(x);
+LET y := CASE
+            WHEN x IS NOT NULL THEN x + x
+            ELSE 100
+          END;
+END IF;
+-- `y` has type `INT NOT NULL` here
+```
+
+Cursor fields are also eligible identifiers for improvement:
+
+```sql
+CREATE TABLE t (x int);
+DECLARE c CURSOR FOR SELECT x FROM t;
+IF c.x IS NOT NULL THEN
+  -- `c.x` has type `INT NOT NULL` here
+END IF;
+```
+
+For some identifier `x` to be improved via some conditional expression, it must
+be along the outermost spine of `AND`-separated expressions, and it must be
+exactly of the form `x IS NOT NULL`. For example, this will work for both `x1`
+and `x2`:
+
+```sql
+IF x1 IS NOT NULL and (y > 20 AND x2 IS NOT NULL) THEN
+  -- `x1` and `x2` are nonnull here
+END IF;
+```
+
+Neither, however, will be improved here:
+
+```sql
+IF x1 IS NOT NULL OR (x2 IS NOT NULL AND x1 > 100) THEN
+  -- `x1` and `x2` are nullable here because the checks
+  -- involving `IS NOT NULL` appear within an `OR`
+END IF;
+```
+
+**NOTE:** CQL currently only improves some identifier `x` if the check is
+*exactly* of the form `x IS NOT NULL`: Other expressions that are only true if
+`x` is not `NULL`, such as `x > 100`, cause no such improvement to occur.
+Additionally, no improvement will occur if `x` is a global: Only local variables
+are eligible. Both of these restrictions may be lifted in a future version of
+CQL.
+
+The nullability improvement for a given identifier persists up until a `SET`,
+`FETCH`, or use in an `OUT` position that involves the improved variable. For
+example:
+
+```sql
+DECLARE x INT;
+IF x IS NOT NULL THEN
+   -- `x` is nonnull here
+   SET x := null;
+   -- `x` is nullable here
+  IF x IS NOT NULL THEN
+    -- `x` is once again NOT NULL
+    FETCH c INTO x;
+    -- `x` is again nullable
+  END IF;
+  IF x IS NOT NULL THEN
+    -- `x` is nonnull here
+    CALL some_proc_with_an_out_arg(x);
+    -- `x` is nullable
+  END IF;
+END IF;
+```
+
+As a special case, `SET` does not remove an improvement for a given identifier
+if the right side of the `SET` is of a `NOT NULL` type. On the contrary, `SET`
+will *improve* the type of the identifier on the left-hand side in such
+situations. For example:
+
+```sql
+DECLARE a INT;
+set a := 42;   -- `a` now has type `INT NOT NULL`
+set a := null; -- `a` reverts to type `INT`
+```
+
+Improvements via `SET`—and, indeed, all nullability improvements—respect the
+control flow of the program. If an improvement is made via `SET` within the body
+of a `THEN`, for example, it will not be present in the `ELSE`, nor will it be
+present after the end of the `IF … THEN … ELSE … END IF` block.
+
+##### Improvements in Select Expressions
+
+CQL can also improve the type of an identifier in a `SELECT` expression via `IS
+NOT NULL` checks in a `WHERE` clause. These improvements apply both in the
+select expressions themselves and in the resulting columns. Let's look at the
+following example:
+
+```sql
+CREATE TABLE t (x INT, y INT);
+DECLARE c CURSOR FOR
+  SELECT x + x AS a, y + y AS b
+  FROM t
+  WHERE x IS NOT NULL
+    AND b IS NOT NULL;
+FETCH c;
+-- both `c.a` and `c.b` have type `INT NOT NULL` here
+```
+
+Above, `c.a` has type `INT NOT NULL` because `x` was established to be nonnull,
+thus so too was `x + x`. In addition, `c.b` has type `INT NOT NULL` because the
+resulting column `b` was established to be `NOT NULL` directly.
+
+**NOTE:** CQL is currently unable to improve a type via an `IS NOT NULL`
+expression appearing in an `ON` or `HAVING` clause. This restriction may be
+lifted in a future version of CQL.
+
+**NOTE:** CQL is not yet able to take details of JOINs into account. For example:
+
+```sql
+CREATE PROC both_results_columns_are_again_nonnull()
 begin
-  if x is not null then
-     declare xo object not null;
-     set xo := ifnull_crash(x); -- this is like an assert
-     -- use xo where a non-null object is needed
-  end;
+  CREATE TABLE t (x INT, y INT);
+  CREATE TABLE u (x INT, INT);
+  SELECT t.x AS a, t.y AS b
+  FROM t
+  INNER JOIN u
+  ON t.x = u.x
+  WHERE t.x IS NOT NULL AND b IS NOT NULL;
 end;
 ```
 
-If you can't assert that the object is not null but rather you want to test it
-then you can use `ifnull_throw`.  This form is shown below:
+Both resulting columns in the above example have type `INT NOT NULL`: `a`,
+because `t.x IS NOT NULL`, and `b`, because `b IS NOT NULL`. However, if one
+were to have specified `u.x IS NOT NULL` instead of `t.x IS NOT NULL`, `a` would
+*not* have been given a nonnull type even though it arguably should have been.
+This can be worked around easily, yet it remains a minor deficiency of CQL for
+the time being.
+
+#### Forcing Nonnull Types
+
+If possible, it is best to use the techniques described in "Nullability
+Improvements" to verify that value of a nullable type is nonnull before using it
+as such.
+
+Sometimes, however, you may know that a value with a nullable type cannot be
+null and simply wish to use it as though it were nonnull.  The `ifnull_crash`
+and `ifnull_throw` "attesting" functions convert the type of an expression to be
+nonnull and ensure that the value is nonnull with a runtime check.  They cannot
+be used in SQLite contexts because the functions are not known to SQLite, but
+they can be used in loose expressions. For example:
 
 ```sql
-create proc foo(x object)
-begin
-  declare xo object not null;
-  set xo := ifnull_throw(x);
-  -- use xo where a non-null object is needed
-  end;
-end;
+CREATE PROC square_if_odd(a INT NOT NULL, OUT result INT)
+BEGIN
+  IF a % 2 = 0 THEN
+    SET result := NULL;
+  ELSE
+    SET result := a * a;
+  END IF;
+END;
+
+-- `x` has type `INT`, but we know it can't be `NULL`
+let x := call square_if_odd(3);
+
+-- `y` has type `INT NOT NULL`
+let y := ifnull_crash(x);
 ```
 
-It is equivalent to adding this inline in the expression
+Above, the `ifnull_crash` attesting function is used to coerce the expression
+`x` to be of type `INT NOT NULL`. If our assumptions were somehow wrong,
+however—and `x` were, in fact, `NULL`—our program would crash.
 
+As an alternative to crashing, you can use `ifnull_throw`. The following two
+pieces of code are equivalent:
+
+```sql
+CREATE PROC y_is_not_null(x INT)
+BEGIN
+  let y := ifnull_throw(x);
+END;
 ```
-  if x is null then throw end if;
+
+```sql
+CREATE PROC y_is_not_null(x INT)
+BEGIN
+  DECLARE y INT NOT NULL;
+  IF x IS NOT NULL THEN
+    SET y := x;
+  ELSE
+    THROW;
+  END IF;
+END;
 ```
-
-The compiler then considers 'x' to be not null having tested it at run time.
-
-#### LEFT and RIGHT OUTER JOINS
-In most join operations the nullability of each column participating in the join is preserved.  However in a
-`LEFT OUTER` join the columns on the right side of the join are always considered nullable and in a
-`RIGHT OUTER` join the columns on the left side of the join are considered nullable.
-
-NOTE: CQL does not use constraints in the `WHERE`, `ON`, or `HAVING` clause to infer non-null status even where this would be possible.  CQL does no data-flow at all.  e.g. `select foo where foo is not null` does not change the type of the column.  You can only do this with expression forms that strip the nullability (e.g. `IFNULL`).
 
 ### Expression Types
 
@@ -8199,7 +8387,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed Jun  9 13:53:52 PDT 2021
+Snapshot as of Wed Jul 14 17:40:21 PDT 2021
 
 ### Operators and Literals
 
@@ -8210,8 +8398,8 @@ UNION_ALL UNION INTERSECT EXCEPT
 ASSIGN
 OR
 AND
-BETWEEN
 NOT
+BETWEEN
 '<>' '!=' '=' '==' LIKE NOT_LIKE GLOB MATCH REGEXP IN IS_NOT IS
 '<' '>' '>=' '<='
 '<<' '>>' '&' '|'
@@ -8244,7 +8432,7 @@ OUTER JOIN WHERE GROUP BY ORDER ASC
 DESC INNER FCOUNT AUTOINCREMENT DISTINCT
 LIMIT OFFSET TEMP TRIGGER IF ALL CROSS USING RIGHT
 HIDDEN UNIQUE HAVING SET LET TO DISTINCTROW ENUM
-FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR DECLARE TYPE FETCH LOOP LEAVE CONTINUE FOR
+FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR DECLARE TYPE FETCH LOOP LEAVE CONTINUE FOR ENCODE CONTEXT_COLUMN CONTEXT_TYPE
 OPEN CLOSE ELSE_IF WHILE CALL TRY CATCH THROW RETURN
 SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
 CAST WITH RECURSIVE REPLACE IGNORE ADD COLUMN RENAME ALTER
@@ -8750,6 +8938,11 @@ basic_expr:
   | '(' select_stmt "IF" "NOTHING" "OR" "NULL" expr ')'
   | '(' select_stmt "IF" "NOTHING" "THROW"')'
   | "EXISTS" '(' select_stmt ')'
+  | "CASE" expr case_list "END"
+  | "CASE" expr case_list "ELSE" expr "END"
+  | "CASE" case_list "END"
+  | "CASE" case_list "ELSE" expr "END"
+  | "CAST" '(' expr "AS" data_type_any ')'
   ;
 
 math_expr:
@@ -8764,53 +8957,37 @@ math_expr:
   | math_expr '/' math_expr
   | math_expr '%' math_expr
   | '-' math_expr
+  | '~' math_expr
+  | "NOT" math_expr
+  | math_expr '=' math_expr
+  | math_expr "==" math_expr
+  | math_expr '<' math_expr
+  | math_expr '>' math_expr
+  | math_expr "<>" math_expr
+  | math_expr "!=" math_expr
+  | math_expr ">=" math_expr
+  | math_expr "<=" math_expr
+  | math_expr "NOT" "IN" '(' expr_list ')'
+  | math_expr "NOT" "IN" '(' select_stmt ')'
+  | math_expr "IN" '(' expr_list ')'
+  | math_expr "IN" '(' select_stmt ')'
+  | math_expr "LIKE" math_expr
+  | math_expr "NOT LIKE" math_expr
+  | math_expr "MATCH" math_expr
+  | math_expr "REGEXP" math_expr
+  | math_expr "GLOB" math_expr
+  | math_expr "NOT" "BETWEEN" math_expr "AND" math_expr
+  | math_expr "BETWEEN" math_expr  "AND" math_expr
+  | math_expr "IS NOT" math_expr
+  | math_expr "IS" math_expr
   | math_expr "||" math_expr
   ;
 
 expr:
-  basic_expr
-  | expr '&' expr
-  | expr '|' expr
-  | expr "<<" expr
-  | expr ">>" expr
-  | expr '+' expr
-  | expr '-' expr
-  | expr '*' expr
-  | expr '/' expr
-  | expr '%' expr
-  | '-' expr
-  | "NOT" expr
-  | '~' expr
-  | expr "COLLATE" name
+  math_expr
   | expr "AND" expr
   | expr "OR" expr
-  | expr '=' expr
-  | expr "==" expr
-  | expr '<' expr
-  | expr '>' expr
-  | expr "<>" expr
-  | expr "!=" expr
-  | expr ">=" expr
-  | expr "<=" expr
-  | expr "NOT" "IN" '(' expr_list ')'
-  | expr "NOT" "IN" '(' select_stmt ')'
-  | expr "IN" '(' expr_list ')'
-  | expr "IN" '(' select_stmt ')'
-  | expr "LIKE" expr
-  | expr "NOT LIKE" expr
-  | expr "MATCH" expr
-  | expr "REGEXP" expr
-  | expr "GLOB" expr
-  | expr "NOT" "BETWEEN" math_expr "AND" math_expr
-  | expr "BETWEEN" math_expr "AND" math_expr
-  | expr "IS NOT" expr
-  | expr "IS" expr
-  | expr "||" expr
-  | "CASE" expr case_list "END"
-  | "CASE" expr case_list "ELSE" expr "END"
-  | "CASE" case_list "END"
-  | "CASE" case_list "ELSE" expr "END"
-  | "CAST" '(' expr "AS" data_type_any ')'
+  | expr "COLLATE" name
   ;
 
 case_list:
@@ -9595,6 +9772,14 @@ enforcement_options:
   | "SELECT" "IF" "NOTHING"
   | "INSERT" "SELECT"
   | "TABLE" "FUNCTION"
+  | "NOT" "NULL" "AFTER" "CHECK"
+  | ENCODE CONTEXT_COLUMN
+  | ENCODE CONTEXT_TYPE "INTEGER"
+  | ENCODE CONTEXT_TYPE "LONG_INTEGER"
+  | ENCODE CONTEXT_TYPE "REAL"
+  | ENCODE CONTEXT_TYPE "BOOL"
+  | ENCODE CONTEXT_TYPE "TEXT"
+  | ENCODE CONTEXT_TYPE "BLOB"
   ;
 
 enforce_strict_stmt:
@@ -11720,9 +11905,13 @@ An @PROC literal was used outside of any procedure.  It cannot be resolved if it
 
 -----
 
-### CQL0253: base fragment must include a single CTE named same as the fragment 'name'
+### CQL0253: base fragment must have only a single CTE named the same as the fragment 'name'
 
-Query fragments have an exact prescription for their shape.  This prescription includes  `select * from CTE` where CTE is the common table expression that is the name of the base query.  This error says that the final select came from something other than the single CTE that is the base name.
+Query fragments have an exact prescription for their shape.  This prescription includes  `select * from CTE` where CTE is the single common table expression with the same name as the base query.
+
+This error says that the final select came from something other than the single CTE that is the base name or there was more than one CTE in the fragment.
+
+You can also get this error if you have an extension fragment but you accidentally marked it as a base fragment.
 
 -----
 
@@ -13102,7 +13291,7 @@ the index/trigger `@delete` tombstone and this error reminds you to do so.
 
 ### CQL0398: A compound select cannot be ordered by the result of an expression
 
-When specifying an `ORDER BY` for a compound select, you may only order by indicies (e.g., `3`) or names (e.g., `foo`) that correspond to an output column, not by the result of an arbitrary expression (e.g., `foo + bar`).
+When specifying an `ORDER BY` for a compound select, you may only order by indices (e.g., `3`) or names (e.g., `foo`) that correspond to an output column, not by the result of an arbitrary expression (e.g., `foo + bar`).
 
 For example, this is allowed:
 
@@ -13123,9 +13312,50 @@ SELECT x, y FROM t0 UNION ALL select x, y FROM t1 ORDER BY 1 + 1;
 ```
 
 ----
-CQL 0399 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+### CQL0399: table must leave @recreate management with @create(nn) or later 'table_name'
+
+The indicated table changed from `@recreate` to `@create` but it did so in a past schema version.  The change
+must happen in the current schema version.  That version is indicated by the value of nn.
+
+To fix this you can change the `@create` annotation so that it matches the number in this error message
+
 ----
-CQL 0400 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+### CQL0400: encode context column can't be sensitive
+
+The encode context column will be used to encode sensitive fields, it can't be exposed to encode functions
+
+----
+### CQL0401: encode context column must be specified if strict encode context column mode is enabled
+
+encode context column must be specified in vault_senstive attribute with format:
+@attribute(cql:vault_sensitive=(encode_context_col, (col1, col2, ...))
+
+----
+### CQL0402: encode context column in vault_senstive attribute must match the specified type in strict mode
+
+encode context column must match the specified type in vault_senstive attribute with format:
+@attribute(cql:vault_sensitive=(encode_context_col, (col1, col2, ...))
+
+----
+CQL 0403 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0404 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0405 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0406 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0407 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+
+### CQL0408: encode context column can be only specified once
+
+The encode context column can be only specified once in @vault_sensitive attribute
+
+----
+CQL 0409 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+----
+CQL 0410 : unused, this was added to prevent merge conflicts at the end on literally every checkin
 
 
 
@@ -13139,7 +13369,7 @@ CQL 0400 : unused, this was added to prevent merge conflicts at the end on liter
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Wed Jun  9 13:53:53 PDT 2021
+Snapshot as of Wed Jul 14 17:40:22 PDT 2021
 
 ### Rules
 
@@ -14648,6 +14878,8 @@ If you've read this far you know more than most now.  :)
 
 These are a few of the antipatterns I've seen while travelling through various CQL source files.  They are in various categories.
 
+Refer also to Appendix 8: CQL Best Practices.
+
 ### Common Schema
 
 For these examples let's create a couple of tables we might need for examples
@@ -14935,6 +15167,297 @@ Better:
   INNER JOIN bar ON foo.id = bar.id
   WHERE bar.rate > 5;
 ```
+
+
+
+## Appendix 8: CQL Best Practices
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
+
+This is a brief discussion of every statement type and some general best practices for that statement.
+The statements are in mostly alphabetical order except related statements were moved up in the order
+to make logical groups.
+
+Refer also to Appendix 7: CQL Anti-patterns.
+
+### Data Definition Language (DDL)
+
+* `ALTER TABLE ADD COLUMN`
+* `CREATE INDEX`
+* `CREATE PROC`
+* `CREATE TABLE`
+* `CREATE TRIGGER`
+* `CREATE VIEW`
+* `CREATE VIRTUAL TABLE`
+* `DROP INDEX`
+* `DROP TABLE`
+* `DROP TRIGGER`
+* `DROP VIEW`
+
+These statements almost never appear in normal procedures and generally should be avoided.  The normal way of handling schema in CQL
+is to have one or more files declare all the schema you need and then let CQL create a schema upgrader for you.  This means you'll
+never manually drop tables or indices etc.  The `create` declarations with their annotations will totally drive the schema.
+
+Any ad hoc DDL is usually a very bad sign.
+
+### Ad Hoc Migrations
+
+* `@SCHEMA_AD_HOC_MIGRATION`
+
+This is a special upgrade step that should be taken at the version indicated in the statement.  These can be quite complex and even super important
+but should not be used lightly.  Any migration procedure has to be highly tolerant of a variety of incoming schema versions and previous partial successes.
+In any case this directive should not appear in normal code.  It should be part of the schema DDL declarations.
+
+### Transactions
+
+* `BEGIN TRANSACTION`
+* `COMMIT TRANSACTION`
+* `ROLLBACK TRANSACTION`
+
+Transactions do not nest and most procedures do not know the context in which they will be called, so the vast majority of
+procedures will not and should not actaully start transactions.  You can only do this if you know, somehow, for sure, that
+the procedure in question is somehow a "top level" procedure.  So generally, don't use these statements.
+
+
+### Savepoints
+
+* `SAVEPOINT`
+* `ROLLBACK TO SAVEPOINT`
+* `RELEASE SAVEPOINT`
+* `PROC SAVEPOINT`
+* `COMMIT RETURN`
+* `ROLLBACK RETURN`
+
+Savepoints are the preferred tool for having interim state that can be rolled back if needed.  You can use ad hoc
+savepoints, just give your save point and name then use `RELEASE SAVEPOINT` to commit it, or else `ROLLBACK TO SAVEPOINT`
+followed by a `RELEASE` to abort it.  Note that you always `RELEASE` savepoints in both the rollback and the commit case.
+
+Managing savepoints can be tricky, especially given the various error cases.  They combine nicely with `TRY CATCH` to do
+this job.  However, even that is a lot of boilerplate.  The best way to use savepoints is with `PROC SAVEPOINT BEGIN` .. `END`;
+
+When you use `PROC SAVEPOINT`, a savepoint is created for you with the name of your procedure.  When the block exits
+the savepoint is released (committed).  However you also get an automatically generated try/catch block which will
+rollback the savepoint if anything inside the block were to invoke `THROW`.  Also, you may not use a regular `RETURN`
+inside this block, you must use either `ROLLBACK RETURN` or `COMMIT RETURN`.  Both of these directly indicate the fate
+of the automatically generated statement when they run.  This gives you useful options to early-out (with no error)
+while keeping or abandoning any work in progress.  Of course you can use `THROW` to return an error and
+abandon the work in progress.
+
+### Compilation options
+
+* `@ENFORCE_NORMAL`
+* `@ENFORCE_POP`
+* `@ENFORCE_PUSH`
+* `@ENFORCE_RESET`
+* `@ENFORCE_STRICT`
+
+CQL allows you to specify a number of useful options such as "do not allow Window Functions" or "all foreign keys must choose some update or delete strategy".
+These additional enforcements are designed to prevent errors.  Because of this they should be established once, somewhere central and they should be rarely
+if ever overrided.  For instance `@ENFORCE_NORMAL WINDOW FUNCTION` would allow you to use window functions again, but this is probably a bad idea. If
+strict mode is on, disallowing them, that probably means your project is expected to target versions of SQLite that do not have window functions.  Overriding
+that setting is likely to lead to runtime errors.
+
+In general you don't want to see these options in most code.
+
+### Previous Schema
+
+* `@PREVIOUS_SCHEMA`
+
+CQL can ensure that the current schema is compatible with the previous schema, meaning that an upgrade script could reasonably be generated to go from the
+previous to the current.  This directive demarks the start of the previous schema section when that validatio happens.  This direcive is useless except
+for creating that schema validation so it should never appear in normal procedures.
+
+### Schema Regions
+
+* `@BEGIN_SCHEMA_REGION`
+* `@DECLARE_DEPLOYABLE_REGION`
+* `@DECLARE_SCHEMA_REGION`
+* `@END_SCHEMA_REGION`
+
+CQL allows you to declare arbitrary schema regions and limit what parts of the schema any given region may consume.  This helps you to prevent schema from getting
+entangled.  There is never a reason to use this directives inside normal procedures;  They should appear only in your schema declaration files.
+
+### Schema Version
+
+* `@SCHEMA_UPGRADE_SCRIPT`
+* `@SCHEMA_UPGRADE_VERSION`
+
+The `@SCHEMA_UPGRADE_SCRIPT` directive is only used by CQL itself to declare that the incoming file is an autogenerated schema upgrade script.
+These scripts have slightly different rules for schema declaration that are not useful outside of such scripts.  So you should never use this.
+
+`@SCHEMA_UPGRADE_VERSION` on the other hand is used if you are creating a manual migration script.  You need this script to run in the context
+of the schema version that it affects.  Use this directive at the start of the file to do so.  Generally manual migration scripts are to be
+avoided so hopefully this directive is rarely if ever used.
+
+
+### C Text Echo
+
+* `@ECHO`
+
+This directive emits plain text directly into the compiler's output stream.  It can be invaluable for adding new runtime features and for ensuring that
+(e.g.) additional `#include` or `#define` directives are present in the output but you can really break things by over-using this feature.  Most parts
+of the CQL output are subject to change so any use of this should be super clean.  The indended use was, as mentioned, to allow an extra `#include` in your code
+so that CQL could call into some library.  Most uses of this combine with `DECLARE FUNCTION` or `DECLARE PROCEDURE` to declare an external entity.
+
+### Enumerations
+
+* `DECLARE ENUM`
+* `@EMIT_ENUMS`
+
+Avoid embedded constants whenever possible.  Instead declare a suitable enumeration.   Use `@EMIT_ENUMS Some_Enum` to get the enumeration
+constants into the generated .h file for C. But be sure to do this only from one compiland.  You do not want the enumerations in every .h file.
+Choose a single .sql file (not included by lots of other things) to place the `@EMIT_ENUMS` directive. You can make a file specifically for this
+purpose if nothing else is serviceable.
+
+### Cursor Lifetime
+
+* `CLOSE`
+* `OPEN`
+
+The `OPEN` statement is a no-op, SQLite has no such notion.  It was included becasue it is present in `MYSQL` and other variants and its inclusion can
+easy readability sometimes.  But it does nothing.   The `CLOSE` statement is normally not necessary because all cursors are closed at the end of the
+procedure they are declared in (unless they are boxed, see below).  You only need `CLOSE` if you want to close a global cursor (which has no scope)
+or if you want to close a local cursor "sooner" because waiting to the end of the procedure might be a very long time.  Using close more than once
+is safe, the second and later close operations do nothing.
+
+### Procedure Calls and Exceptions
+
+* `CALL`
+* `THROW`
+* `TRY CATCH`
+
+Remember that if you call a procedure and it uses `THROW` or else uses some SQL that failed, this return code will cause your
+code to `THROW` when the procedure returns.  Normally that's exactly what you want, the error will ripple out and some top-level
+`CATCH` will cause a `ROLLBACK` and the top level callers sees the error.  If you have your own rollback needs be sure to install
+your own `TRY`/`CATCH` block or else use `PROC SAVEPOINT` as above to do it for you.
+
+Inside of a `CATCH` block you can use the special variable `@RC` to see the most recent return code from SQLite.
+
+
+### Control Flow with "Big Moves"
+
+* `CONTINUE`
+* `LEAVE`
+* `RETURN`
+
+These work as usual but beware, you can easily use any of these to accidentally leave a block with a savepoint or transaction
+and you might skip over the `ROLLBACK` or `COMMIT` portions of the logic.  Avoid this problem by using `PROC SAVEPOINT`.
+
+
+### Getting access to external code
+
+* `DECLARE FUNCTION`
+* `DECLARE SELECT FUNCTION`
+* `DECLARE PROCEDURE`
+
+The best practice is to put any declarations into a shared header file which you can `#include` in all the places it is needed.
+This is especially important should you have to forward declare a procedure.  CQL normally provides exports for all procedures
+so you basically get an automatically generated and certain-to-be-correct `#include` file.  But, if the procedures are being compiled
+together then an export file won't have been generated yet at the time you need it;  To work around this you use the ``DECLARE PROCEDURE``
+form.  However, procedure declarations are tricky;  they include not just the type of the arguments but the types of any/all of the
+columns in any result set the procedure might have.  This must not be wrong or callers will get unpredictable failures.
+
+The easiest way to ensure it is correct is to use the same trick as you would in C -- make sure that you `#include` the declaration
+the in the translation unit with the definition.  If they don't match there will be an error.
+
+A very useful trick: the error will include the exact text of the correct declaration.  So if you don't know it, or are too lazy to
+figure it out; simply put `ANY` declaration in the shared header file and then paste in the correct declaration from the error.  should
+the definition ever change you will get a compilation error which you can again harvest to get the correct declaration.
+
+In this way you can be sure the declarations are correct.
+
+Functions have no CQL equivalent, but they generally don't change very often.  Use `DECLARE FUNCTION` to allow access to some C code
+that returns a result of some kind.   Be sure to add the `CREATE` option if the function returns a reference that the caller owns.
+
+Use `DECLARE SELECT FUNCTION` to tell CQL about any User Defined Functions you have added to SQLite so that it knows how to call them.
+Note that CQL does not register those UDFs, it couldn't make that call lacking the essential C information required to do so.  If you
+find that you are getting errors when calling a UDF the most likely reason for the failure is that the UDF was declared but never
+registered with SQLite at runtime.  This happens in test code a lot -- product code tends to have some central place to register the
+UDFs and it normally runs at startup, e.g. right after the schema is upgraded.
+
+
+### Regular Data Manipulation Language (DML)
+
+* `DELETE`
+* `INSERT`
+* `SELECT`
+* `UPDATE`
+* `UPSERT`
+
+These statements are the most essential and they'll appear in almost every procedure. There are a few general best practices we can go over.
+
+ * Try to do as much as you can in one batch rather than iterating;  e.g.
+   * don't write a loop with a `DELETE` statement that deletes one row if you can avoid it, write a delete statement that deletes all you need to delete
+   * don't write a loop with of `SELECT` statement that fetches one row, try to fetch all the rows you need with one select
+
+ * Make sure `UPSERT` is supported on the SQLite system you are using, older versions do not support it
+
+ * Don't put unnecessary casts in your `SELECT` statements, they just add fat
+ * Don't use `CASE`/`WHEN` to compute a boolean, the boolean operations are more economical (e.g. use `IS`)
+ * Don't use `COUNT` if all you need to know is whether a row exists or not, use `EXISTS`
+ * Don't use `GROUP BY`, `ORDER BY`, or `DISTINCT` on large rowsets, the sort is expensive and it will make your `SELECT` statements write to disk rather than just read
+
+ * Always use the `INSERT INTO FOO USING` form of the `INSERT` statement, it's much easier to read than the standard form and compiles to the same thing
+
+
+### Variable and Cursor declarations
+
+* `DECLARE OUT CALL`
+* `DECLARE`
+* `LET`
+* `SET`
+
+These are likely to appear all over as well.  If you can avoid a variable declaration by using `LET` then do so;  The code will be more concise and you'll
+get the exact variable type you need.  This is the same as `var x = foo();` in other languages.  Once the variable is declared use `SET`.
+
+You can save yourself a lot of declarations of `OUT` variables with `DECLARE OUT CALL`.  That declaration form automatically declares the `OUT` variables used
+in the call you are about to make with the correct type.  If the number of arguments changes you just have to add the args you don't have to also add
+new declarations.
+
+The `LIKE` construct can be used to let you declare things whose type is the same as another thing.  Patterns like `DECLARE ARGS CURSOR LIKE FOO ARGUMENTS`
+save you a lot of typing and also enhance correctness.  There's a whole chapter dedicated to "shapes" defined by `LIKE`.
+
+
+### Query Plans
+
+* `EXPLAIN`
+
+Explain can be used in front of other queries to generate a plan.  The way SQLite handles this is that you fetch the rows of the plan as usual.  So basically
+`EXPLAIN` is kind of like `SELECT QUERY PLAN OF`.  This hardly ever comes up in normal coding.  CQL has an output option where it will generate code that gives you
+the query plan for a procedures queries rather than the normal body of the procedure.
+
+### Fetching Data from a Cursor or from Loose Data
+
+* `FETCH`
+* `UPDATE CURSOR`
+
+The `FETCH` statement has many variations, all are useful at some time or another. There are a few helpful guidelines.
+
+* If fetching from loose values into a cursor use the `FETCH USING` form (as you would with `INSERT INTO USING`) because it is less error prone
+* `FETCH INTO` is generally a bad idea, you'll have to declare a lot of variables, instead just rely on automatic storage in the cursor e.g.
+  `fetch my_cursor` rather than `fetch my_cursor into a, b, c`
+* If you have data already in a cursor you can mutate some of the columns using `UPDATE CURSOR`, this can let you adjust values or apply defaults
+
+### Control Flow
+
+* `IF`
+* `LOOP`
+* `SWITCH`
+* `WHILE`
+
+These are your bread and butter and they will appear all over.  One tip: Use the `ALL VALUES` variant of switch whenever possible to ensure that you haven't missed any cases.
+
+### Manual Control of Results
+
+* `OUT`
+* `OUT UNION`
+
+* If you know you are producing exactly one row `OUT` is more economical than `SELECT`
+* If you need complete flexibility on what rows to produce (e.g. skip some, add extras, mutate some) then `OUT UNION` will give you that, use it only when needed, it's more expensive than just `SELECT`
 
 
 

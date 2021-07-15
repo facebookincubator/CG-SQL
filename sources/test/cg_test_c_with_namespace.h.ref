@@ -247,12 +247,6 @@ extern cql_bool with_result_set_get_size_is_null(with_result_set_result_set_ref 
 extern cql_double with_result_set_get_size_value(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 with_result_set_result_count(with_result_set_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code with_result_set_fetch_results(sqlite3 *_Nonnull _db_, with_result_set_result_set_ref _Nullable *_Nonnull result_set);
-#define with_result_set_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define with_result_set_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define with_result_set_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -277,12 +271,6 @@ extern cql_bool select_from_view_get_type_is_null(select_from_view_result_set_re
 extern cql_int32 select_from_view_get_type_value(select_from_view_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 select_from_view_result_count(select_from_view_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code select_from_view_fetch_results(sqlite3 *_Nonnull _db_, select_from_view_result_set_ref _Nullable *_Nonnull result_set);
-#define select_from_view_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define select_from_view_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define select_from_view_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -318,12 +306,6 @@ extern cql_bool get_data_get_size_is_null(get_data_result_set_ref _Nonnull resul
 extern cql_double get_data_get_size_value(get_data_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 get_data_result_count(get_data_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code get_data_fetch_results(sqlite3 *_Nonnull _db_, get_data_result_set_ref _Nullable *_Nonnull result_set, cql_string_ref _Nonnull name_, cql_int32 id_);
-#define get_data_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define get_data_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define get_data_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -386,12 +368,6 @@ extern cql_bool complex_return_get__nullable_bool_is_null(complex_return_result_
 extern cql_bool complex_return_get__nullable_bool_value(complex_return_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 complex_return_result_count(complex_return_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code complex_return_fetch_results(sqlite3 *_Nonnull _db_, complex_return_result_set_ref _Nullable *_Nonnull result_set);
-#define complex_return_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define complex_return_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define complex_return_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -414,12 +390,6 @@ cql_result_set_type_decl(hierarchical_query_result_set, hierarchical_query_resul
 extern cql_int32 hierarchical_query_get_id(hierarchical_query_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 hierarchical_query_result_count(hierarchical_query_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code hierarchical_query_fetch_results(sqlite3 *_Nonnull _db_, hierarchical_query_result_set_ref _Nullable *_Nonnull result_set, cql_int64 rate_, cql_int32 limit_, cql_int32 offset_);
-#define hierarchical_query_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define hierarchical_query_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define hierarchical_query_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -442,12 +412,6 @@ cql_result_set_type_decl(hierarchical_unmatched_query_result_set, hierarchical_u
 extern cql_int32 hierarchical_unmatched_query_get_id(hierarchical_unmatched_query_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 hierarchical_unmatched_query_result_count(hierarchical_unmatched_query_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code hierarchical_unmatched_query_fetch_results(sqlite3 *_Nonnull _db_, hierarchical_unmatched_query_result_set_ref _Nullable *_Nonnull result_set, cql_int64 rate_, cql_int32 limit_, cql_int32 offset_);
-#define hierarchical_unmatched_query_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define hierarchical_unmatched_query_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define hierarchical_unmatched_query_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -470,12 +434,6 @@ cql_result_set_type_decl(union_select_result_set, union_select_result_set_ref);
 extern cql_int32 union_select_get_A(union_select_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 union_select_result_count(union_select_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code union_select_fetch_results(sqlite3 *_Nonnull _db_, union_select_result_set_ref _Nullable *_Nonnull result_set);
-#define union_select_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define union_select_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define union_select_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -498,12 +456,6 @@ cql_result_set_type_decl(union_all_select_result_set, union_all_select_result_se
 extern cql_int32 union_all_select_get_A(union_all_select_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 union_all_select_result_count(union_all_select_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code union_all_select_fetch_results(sqlite3 *_Nonnull _db_, union_all_select_result_set_ref _Nullable *_Nonnull result_set);
-#define union_all_select_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define union_all_select_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define union_all_select_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -526,12 +478,6 @@ cql_result_set_type_decl(union_all_with_nullable_result_set, union_all_with_null
 extern cql_string_ref _Nullable union_all_with_nullable_get_name(union_all_with_nullable_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 union_all_with_nullable_result_count(union_all_with_nullable_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code union_all_with_nullable_fetch_results(sqlite3 *_Nonnull _db_, union_all_with_nullable_result_set_ref _Nullable *_Nonnull result_set);
-#define union_all_with_nullable_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define union_all_with_nullable_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define union_all_with_nullable_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -559,12 +505,6 @@ extern cql_int32 with_stmt_get_b(with_stmt_result_set_ref _Nonnull result_set, c
 extern cql_int32 with_stmt_get_c(with_stmt_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 with_stmt_result_count(with_stmt_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code with_stmt_fetch_results(sqlite3 *_Nonnull _db_, with_stmt_result_set_ref _Nullable *_Nonnull result_set);
-#define with_stmt_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define with_stmt_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define with_stmt_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -589,12 +529,6 @@ extern cql_int32 with_recursive_stmt_get_b(with_recursive_stmt_result_set_ref _N
 extern cql_int32 with_recursive_stmt_get_c(with_recursive_stmt_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 with_recursive_stmt_result_count(with_recursive_stmt_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code with_recursive_stmt_fetch_results(sqlite3 *_Nonnull _db_, with_recursive_stmt_result_set_ref _Nullable *_Nonnull result_set);
-#define with_recursive_stmt_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define with_recursive_stmt_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define with_recursive_stmt_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -619,12 +553,6 @@ extern cql_int32 parent_proc_get_two(parent_proc_result_set_ref _Nonnull result_
 extern cql_int32 parent_proc_get_three(parent_proc_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 parent_proc_result_count(parent_proc_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code parent_proc_fetch_results(sqlite3 *_Nonnull _db_, parent_proc_result_set_ref _Nullable *_Nonnull result_set);
-#define parent_proc_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define parent_proc_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define parent_proc_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -649,12 +577,6 @@ extern cql_int32 parent_proc_child_get_five(parent_proc_child_result_set_ref _No
 extern cql_int32 parent_proc_child_get_six(parent_proc_child_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 parent_proc_child_result_count(parent_proc_child_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code parent_proc_child_fetch_results(sqlite3 *_Nonnull _db_, parent_proc_child_result_set_ref _Nullable *_Nonnull result_set);
-#define parent_proc_child_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define parent_proc_child_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define parent_proc_child_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -722,12 +644,6 @@ cql_result_set_type_decl(cursor_with_object_result_set, cursor_with_object_resul
 extern cql_object_ref _Nullable cursor_with_object_get_object_(cursor_with_object_result_set_ref _Nonnull result_set);
 extern cql_int32 cursor_with_object_result_count(cursor_with_object_result_set_ref _Nonnull result_set);
 extern void cursor_with_object_fetch_results( cursor_with_object_result_set_ref _Nullable *_Nonnull result_set, cql_object_ref _Nullable object_);
-#define cursor_with_object_copy(result_set, result_set_to) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  0, \
-  1)
 #define cursor_with_object_hash(result_set) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), 0)
 #define cursor_with_object_equal(rs1, rs2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -811,12 +727,6 @@ extern cql_bool uses_proc_for_result_get_size_is_null(uses_proc_for_result_resul
 extern cql_double uses_proc_for_result_get_size_value(uses_proc_for_result_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 uses_proc_for_result_result_count(uses_proc_for_result_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code uses_proc_for_result_fetch_results(sqlite3 *_Nonnull _db_, uses_proc_for_result_result_set_ref _Nullable *_Nonnull result_set);
-#define uses_proc_for_result_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define uses_proc_for_result_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define uses_proc_for_result_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -925,12 +835,6 @@ extern cql_blob_ref _Nonnull blob_returner_get_b_notnull(blob_returner_result_se
 extern cql_blob_ref _Nullable blob_returner_get_b_nullable(blob_returner_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 blob_returner_result_count(blob_returner_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code blob_returner_fetch_results(sqlite3 *_Nonnull _db_, blob_returner_result_set_ref _Nullable *_Nonnull result_set);
-#define blob_returner_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define blob_returner_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define blob_returner_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -967,12 +871,6 @@ extern cql_string_ref _Nonnull out_cursor_proc_get_extra1(out_cursor_proc_result
 extern cql_string_ref _Nonnull out_cursor_proc_get_extra2(out_cursor_proc_result_set_ref _Nonnull result_set);
 extern cql_int32 out_cursor_proc_result_count(out_cursor_proc_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code out_cursor_proc_fetch_results(sqlite3 *_Nonnull _db_, out_cursor_proc_result_set_ref _Nullable *_Nonnull result_set);
-#define out_cursor_proc_copy(result_set, result_set_to) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  0, \
-  1)
 #define out_cursor_proc_hash(result_set) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), 0)
 #define out_cursor_proc_equal(rs1, rs2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -1018,12 +916,6 @@ cql_result_set_type_decl(thread_theme_info_list_result_set, thread_theme_info_li
 extern cql_int64 thread_theme_info_list_get_thread_key(thread_theme_info_list_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 thread_theme_info_list_result_count(thread_theme_info_list_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code thread_theme_info_list_fetch_results(sqlite3 *_Nonnull _db_, thread_theme_info_list_result_set_ref _Nullable *_Nonnull result_set, cql_int64 thread_key_);
-#define thread_theme_info_list_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define thread_theme_info_list_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define thread_theme_info_list_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -1059,12 +951,6 @@ extern cql_int32 out_no_db_get_A(out_no_db_result_set_ref _Nonnull result_set);
 extern cql_double out_no_db_get_B(out_no_db_result_set_ref _Nonnull result_set);
 extern cql_int32 out_no_db_result_count(out_no_db_result_set_ref _Nonnull result_set);
 extern void out_no_db_fetch_results( out_no_db_result_set_ref _Nullable *_Nonnull result_set);
-#define out_no_db_copy(result_set, result_set_to) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  0, \
-  1)
 #define out_no_db_hash(result_set) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), 0)
 #define out_no_db_equal(rs1, rs2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -1088,12 +974,6 @@ extern cql_int32 declare_cursor_like_cursor_get_A(declare_cursor_like_cursor_res
 extern cql_double declare_cursor_like_cursor_get_B(declare_cursor_like_cursor_result_set_ref _Nonnull result_set);
 extern cql_int32 declare_cursor_like_cursor_result_count(declare_cursor_like_cursor_result_set_ref _Nonnull result_set);
 extern void declare_cursor_like_cursor_fetch_results( declare_cursor_like_cursor_result_set_ref _Nullable *_Nonnull result_set);
-#define declare_cursor_like_cursor_copy(result_set, result_set_to) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  0, \
-  1)
 #define declare_cursor_like_cursor_hash(result_set) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), 0)
 #define declare_cursor_like_cursor_equal(rs1, rs2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -1118,12 +998,6 @@ extern cql_int32 declare_cursor_like_proc_get_a_value(declare_cursor_like_proc_r
 extern cql_string_ref _Nullable declare_cursor_like_proc_get_b(declare_cursor_like_proc_result_set_ref _Nonnull result_set);
 extern cql_int32 declare_cursor_like_proc_result_count(declare_cursor_like_proc_result_set_ref _Nonnull result_set);
 extern void declare_cursor_like_proc_fetch_results( declare_cursor_like_proc_result_set_ref _Nullable *_Nonnull result_set);
-#define declare_cursor_like_proc_copy(result_set, result_set_to) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  0, \
-  1)
 #define declare_cursor_like_proc_hash(result_set) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), 0)
 #define declare_cursor_like_proc_equal(rs1, rs2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -1153,12 +1027,6 @@ extern cql_bool declare_cursor_like_table_get_size_is_null(declare_cursor_like_t
 extern cql_double declare_cursor_like_table_get_size_value(declare_cursor_like_table_result_set_ref _Nonnull result_set);
 extern cql_int32 declare_cursor_like_table_result_count(declare_cursor_like_table_result_set_ref _Nonnull result_set);
 extern void declare_cursor_like_table_fetch_results( declare_cursor_like_table_result_set_ref _Nullable *_Nonnull result_set);
-#define declare_cursor_like_table_copy(result_set, result_set_to) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  0, \
-  1)
 #define declare_cursor_like_table_hash(result_set) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), 0)
 #define declare_cursor_like_table_equal(rs1, rs2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -1183,12 +1051,6 @@ extern cql_int32 declare_cursor_like_view_get_f2(declare_cursor_like_view_result
 extern cql_int32 declare_cursor_like_view_get_f3(declare_cursor_like_view_result_set_ref _Nonnull result_set);
 extern cql_int32 declare_cursor_like_view_result_count(declare_cursor_like_view_result_set_ref _Nonnull result_set);
 extern void declare_cursor_like_view_fetch_results( declare_cursor_like_view_result_set_ref _Nullable *_Nonnull result_set);
-#define declare_cursor_like_view_copy(result_set, result_set_to) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  0, \
-  1)
 #define declare_cursor_like_view_hash(result_set) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), 0)
 #define declare_cursor_like_view_equal(rs1, rs2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -1241,12 +1103,6 @@ extern cql_int32 fetch_to_cursor_from_cursor_get_A(fetch_to_cursor_from_cursor_r
 extern cql_string_ref _Nonnull fetch_to_cursor_from_cursor_get_B(fetch_to_cursor_from_cursor_result_set_ref _Nonnull result_set);
 extern cql_int32 fetch_to_cursor_from_cursor_result_count(fetch_to_cursor_from_cursor_result_set_ref _Nonnull result_set);
 extern void fetch_to_cursor_from_cursor_fetch_results( fetch_to_cursor_from_cursor_result_set_ref _Nullable *_Nonnull result_set);
-#define fetch_to_cursor_from_cursor_copy(result_set, result_set_to) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  0, \
-  1)
 #define fetch_to_cursor_from_cursor_hash(result_set) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), 0)
 #define fetch_to_cursor_from_cursor_equal(rs1, rs2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -1282,12 +1138,6 @@ cql_result_set_type_decl(out_union_helper_result_set, out_union_helper_result_se
 #endif
 extern cql_int32 out_union_helper_get_x(out_union_helper_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 out_union_helper_result_count(out_union_helper_result_set_ref _Nonnull result_set);
-#define out_union_helper_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define out_union_helper_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define out_union_helper_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -1310,12 +1160,6 @@ cql_result_set_type_decl(out_union_dml_helper_result_set, out_union_dml_helper_r
 #endif
 extern cql_int32 out_union_dml_helper_get_x(out_union_dml_helper_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 out_union_dml_helper_result_count(out_union_dml_helper_result_set_ref _Nonnull result_set);
-#define out_union_dml_helper_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define out_union_dml_helper_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define out_union_dml_helper_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -1341,12 +1185,6 @@ cql_result_set_type_decl(forward_out_union_result_set, forward_out_union_result_
 #endif
 extern cql_int32 forward_out_union_get_x(forward_out_union_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 forward_out_union_result_count(forward_out_union_result_set_ref _Nonnull result_set);
-#define forward_out_union_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define forward_out_union_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define forward_out_union_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -1371,12 +1209,6 @@ cql_result_set_type_decl(forward_out_union_extern_result_set, forward_out_union_
 #endif
 extern cql_int32 forward_out_union_extern_get_x(forward_out_union_extern_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 forward_out_union_extern_result_count(forward_out_union_extern_result_set_ref _Nonnull result_set);
-#define forward_out_union_extern_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define forward_out_union_extern_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define forward_out_union_extern_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -1399,12 +1231,6 @@ cql_result_set_type_decl(forward_out_union_dml_result_set, forward_out_union_dml
 #endif
 extern cql_int32 forward_out_union_dml_get_x(forward_out_union_dml_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 forward_out_union_dml_result_count(forward_out_union_dml_result_set_ref _Nonnull result_set);
-#define forward_out_union_dml_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define forward_out_union_dml_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define forward_out_union_dml_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -1472,14 +1298,10 @@ cql_result_set_type_decl(simple_identity_result_set, simple_identity_result_set_
 #endif
 extern cql_int32 simple_identity_get_id(simple_identity_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 simple_identity_get_data(simple_identity_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_uint16 simple_identity_identity_columns[];
+
 extern cql_int32 simple_identity_result_count(simple_identity_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code simple_identity_fetch_results(sqlite3 *_Nonnull _db_, simple_identity_result_set_ref _Nullable *_Nonnull result_set);
-#define simple_identity_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define simple_identity_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define simple_identity_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -1508,14 +1330,10 @@ cql_result_set_type_decl(complex_identity_result_set, complex_identity_result_se
 extern cql_int32 complex_identity_get_col1(complex_identity_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 complex_identity_get_col2(complex_identity_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 complex_identity_get_data(complex_identity_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_uint16 complex_identity_identity_columns[];
+
 extern cql_int32 complex_identity_result_count(complex_identity_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code complex_identity_fetch_results(sqlite3 *_Nonnull _db_, complex_identity_result_set_ref _Nullable *_Nonnull result_set);
-#define complex_identity_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define complex_identity_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define complex_identity_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -1543,14 +1361,10 @@ cql_result_set_type_decl(out_cursor_identity_result_set, out_cursor_identity_res
 #endif
 extern cql_int32 out_cursor_identity_get_id(out_cursor_identity_result_set_ref _Nonnull result_set);
 extern cql_int32 out_cursor_identity_get_data(out_cursor_identity_result_set_ref _Nonnull result_set);
+extern cql_uint16 out_cursor_identity_identity_columns[];
+
 extern cql_int32 out_cursor_identity_result_count(out_cursor_identity_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code out_cursor_identity_fetch_results(sqlite3 *_Nonnull _db_, out_cursor_identity_result_set_ref _Nullable *_Nonnull result_set);
-#define out_cursor_identity_copy(result_set, result_set_to) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  0, \
-  1)
 #define out_cursor_identity_hash(result_set) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), 0)
 #define out_cursor_identity_equal(rs1, rs2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -1583,12 +1397,6 @@ extern cql_string_ref _Nullable radioactive_proc_get_data(radioactive_proc_resul
   cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 1)
 extern cql_int32 radioactive_proc_result_count(radioactive_proc_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code radioactive_proc_fetch_results(sqlite3 *_Nonnull _db_, radioactive_proc_result_set_ref _Nullable *_Nonnull result_set);
-#define radioactive_proc_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define radioactive_proc_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define radioactive_proc_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -1620,12 +1428,6 @@ extern cql_int32 autodropper_get_a(autodropper_result_set_ref _Nonnull result_se
 extern cql_int32 autodropper_get_b(autodropper_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 autodropper_result_count(autodropper_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code autodropper_fetch_results(sqlite3 *_Nonnull _db_, autodropper_result_set_ref _Nullable *_Nonnull result_set);
-#define autodropper_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define autodropper_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define autodropper_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -1645,12 +1447,6 @@ extern cql_string_ref _Nullable core_get_y(core_result_set_ref _Nonnull result_s
 extern cql_bool core_get_z_is_null(core_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int64 core_get_z_value(core_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 core_result_count(core_result_set_ref _Nonnull result_set);
-#define core_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define core_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define core_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -1658,6 +1454,7 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   row1, \
   (cql_result_set_ref)(rs2), \
   row2)
+extern CQL_WARN_UNUSED cql_code core_fetch_results(sqlite3 *_Nonnull _db_, core_result_set_ref _Nullable *_Nonnull result_set, cql_int32 id_);
 
 // The statement ending at line XXXX
 #define CRC_simple_cursor_proc -6717012445748654937L
@@ -1673,12 +1470,6 @@ cql_result_set_type_decl(simple_cursor_proc_result_set, simple_cursor_proc_resul
 extern cql_int32 simple_cursor_proc_get_id(simple_cursor_proc_result_set_ref _Nonnull result_set);
 extern cql_int32 simple_cursor_proc_result_count(simple_cursor_proc_result_set_ref _Nonnull result_set);
 extern void simple_cursor_proc_fetch_results( simple_cursor_proc_result_set_ref _Nullable *_Nonnull result_set);
-#define simple_cursor_proc_copy(result_set, result_set_to) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  0, \
-  1)
 #define simple_cursor_proc_hash(result_set) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), 0)
 #define simple_cursor_proc_equal(rs1, rs2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -1712,12 +1503,6 @@ extern cql_int32 redundant_cast_get_plugh(redundant_cast_result_set_ref _Nonnull
 extern cql_int32 redundant_cast_get_five(redundant_cast_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 redundant_cast_result_count(redundant_cast_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code redundant_cast_fetch_results(sqlite3 *_Nonnull _db_, redundant_cast_result_set_ref _Nullable *_Nonnull result_set);
-#define redundant_cast_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define redundant_cast_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define redundant_cast_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -1777,12 +1562,6 @@ cql_result_set_type_decl(out_union_two_result_set, out_union_two_result_set_ref)
 extern cql_int32 out_union_two_get_x(out_union_two_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_string_ref _Nonnull out_union_two_get_y(out_union_two_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 out_union_two_result_count(out_union_two_result_set_ref _Nonnull result_set);
-#define out_union_two_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define out_union_two_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define out_union_two_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -1809,12 +1588,6 @@ cql_result_set_type_decl(out_union_from_select_result_set, out_union_from_select
 extern cql_int32 out_union_from_select_get_x(out_union_from_select_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_string_ref _Nonnull out_union_from_select_get_y(out_union_from_select_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 out_union_from_select_result_count(out_union_from_select_result_set_ref _Nonnull result_set);
-#define out_union_from_select_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define out_union_from_select_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define out_union_from_select_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -1841,12 +1614,6 @@ cql_result_set_type_decl(out_union_values_result_set, out_union_values_result_se
 extern cql_int32 out_union_values_get_x(out_union_values_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 out_union_values_get_y(out_union_values_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 out_union_values_result_count(out_union_values_result_set_ref _Nonnull result_set);
-#define out_union_values_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define out_union_values_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define out_union_values_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -1876,12 +1643,6 @@ extern cql_string_ref _Nullable out_union_dml_get_data(out_union_dml_result_set_
 #define out_union_dml_get_data_is_encoded(rs) \
   cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 1)
 extern cql_int32 out_union_dml_result_count(out_union_dml_result_set_ref _Nonnull result_set);
-#define out_union_dml_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define out_union_dml_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define out_union_dml_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -1914,12 +1675,6 @@ extern cql_int32 window_function_invocation_get_id(window_function_invocation_re
 extern cql_int32 window_function_invocation_get_row_num(window_function_invocation_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 window_function_invocation_result_count(window_function_invocation_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code window_function_invocation_fetch_results(sqlite3 *_Nonnull _db_, window_function_invocation_result_set_ref _Nullable *_Nonnull result_set);
-#define window_function_invocation_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define window_function_invocation_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define window_function_invocation_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -1949,12 +1704,6 @@ cql_result_set_type_decl(use_return_result_set, use_return_result_set_ref);
 extern cql_int32 use_return_get_x(use_return_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 use_return_result_count(use_return_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code use_return_fetch_results(sqlite3 *_Nonnull _db_, use_return_result_set_ref _Nullable *_Nonnull result_set);
-#define use_return_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define use_return_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define use_return_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -1994,14 +1743,43 @@ cql_result_set_type_decl(lotsa_columns_no_getters_result_set, lotsa_columns_no_g
 #endif
 extern cql_int32 lotsa_columns_no_getters_result_count(lotsa_columns_no_getters_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code lotsa_columns_no_getters_fetch_results(sqlite3 *_Nonnull _db_, lotsa_columns_no_getters_result_set_ref _Nullable *_Nonnull result_set);
-#define lotsa_columns_no_getters_copy(result_set, result_set_to, from, count) \
+#define lotsa_columns_no_getters_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define lotsa_columns_no_getters_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+#define CRC_sproc_with_copy 4273120440728091142L
+
+extern cql_string_ref _Nonnull sproc_with_copy_stored_procedure_name;
+
+#define sproc_with_copy_data_types_count 5
+
+#ifndef result_set_type_decl_sproc_with_copy_result_set
+#define result_set_type_decl_sproc_with_copy_result_set 1
+cql_result_set_type_decl(sproc_with_copy_result_set, sproc_with_copy_result_set_ref);
+#endif
+extern cql_int32 sproc_with_copy_get_id(sproc_with_copy_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_string_ref _Nullable sproc_with_copy_get_name(sproc_with_copy_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool sproc_with_copy_get_rate_is_null(sproc_with_copy_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int64 sproc_with_copy_get_rate_value(sproc_with_copy_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool sproc_with_copy_get_type_is_null(sproc_with_copy_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 sproc_with_copy_get_type_value(sproc_with_copy_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool sproc_with_copy_get_size_is_null(sproc_with_copy_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double sproc_with_copy_get_size_value(sproc_with_copy_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 sproc_with_copy_result_count(sproc_with_copy_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code sproc_with_copy_fetch_results(sqlite3 *_Nonnull _db_, sproc_with_copy_result_set_ref _Nullable *_Nonnull result_set);
+#define sproc_with_copy_copy(result_set, result_set_to, from, count) \
 cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
   (cql_result_set_ref)(result_set), \
   (cql_result_set_ref *)(result_set_to), \
   from, \
   count)
-#define lotsa_columns_no_getters_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
-#define lotsa_columns_no_getters_row_equal(rs1, row1, rs2, row2) \
+#define sproc_with_copy_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define sproc_with_copy_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   (cql_result_set_ref)(rs1), \
   row1, \
@@ -2018,7 +1796,7 @@ extern CQL_WARN_UNUSED cql_code early_out_rc_cleared(sqlite3 *_Nonnull _db_, cql
 
 extern cql_string_ref _Nonnull vault_sensitive_with_values_proc_stored_procedure_name;
 
-#define vault_sensitive_with_values_proc_data_types_count 3
+#define vault_sensitive_with_values_proc_data_types_count 4
 
 #ifndef result_set_type_decl_vault_sensitive_with_values_proc_result_set
 #define result_set_type_decl_vault_sensitive_with_values_proc_result_set 1
@@ -2029,19 +1807,14 @@ extern cql_string_ref _Nullable vault_sensitive_with_values_proc_get_name(vault_
 
 #define vault_sensitive_with_values_proc_get_name_is_encoded(rs) \
   cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 1)
+extern cql_string_ref _Nullable vault_sensitive_with_values_proc_get_title(vault_sensitive_with_values_proc_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_bool vault_sensitive_with_values_proc_get_type_is_null(vault_sensitive_with_values_proc_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int64 vault_sensitive_with_values_proc_get_type_value(vault_sensitive_with_values_proc_result_set_ref _Nonnull result_set, cql_int32 row);
 
 #define vault_sensitive_with_values_proc_get_type_is_encoded(rs) \
-  cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 2)
+  cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 3)
 extern cql_int32 vault_sensitive_with_values_proc_result_count(vault_sensitive_with_values_proc_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code vault_sensitive_with_values_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_sensitive_with_values_proc_result_set_ref _Nullable *_Nonnull result_set);
-#define vault_sensitive_with_values_proc_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define vault_sensitive_with_values_proc_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define vault_sensitive_with_values_proc_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -2057,7 +1830,7 @@ extern void vault_sensitive_with_values_proc_set_encoding(cql_int32 col, cql_boo
 
 extern cql_string_ref _Nonnull vault_sensitive_with_no_values_proc_stored_procedure_name;
 
-#define vault_sensitive_with_no_values_proc_data_types_count 3
+#define vault_sensitive_with_no_values_proc_data_types_count 4
 
 #ifndef result_set_type_decl_vault_sensitive_with_no_values_proc_result_set
 #define result_set_type_decl_vault_sensitive_with_no_values_proc_result_set 1
@@ -2068,19 +1841,14 @@ extern cql_string_ref _Nullable vault_sensitive_with_no_values_proc_get_name(vau
 
 #define vault_sensitive_with_no_values_proc_get_name_is_encoded(rs) \
   cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 1)
+extern cql_string_ref _Nullable vault_sensitive_with_no_values_proc_get_title(vault_sensitive_with_no_values_proc_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_bool vault_sensitive_with_no_values_proc_get_type_is_null(vault_sensitive_with_no_values_proc_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int64 vault_sensitive_with_no_values_proc_get_type_value(vault_sensitive_with_no_values_proc_result_set_ref _Nonnull result_set, cql_int32 row);
 
 #define vault_sensitive_with_no_values_proc_get_type_is_encoded(rs) \
-  cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 2)
+  cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 3)
 extern cql_int32 vault_sensitive_with_no_values_proc_result_count(vault_sensitive_with_no_values_proc_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code vault_sensitive_with_no_values_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_sensitive_with_no_values_proc_result_set_ref _Nullable *_Nonnull result_set);
-#define vault_sensitive_with_no_values_proc_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define vault_sensitive_with_no_values_proc_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define vault_sensitive_with_no_values_proc_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -2096,7 +1864,7 @@ extern void vault_sensitive_with_no_values_proc_set_encoding(cql_int32 col, cql_
 
 extern cql_string_ref _Nonnull vault_union_all_table_proc_stored_procedure_name;
 
-#define vault_union_all_table_proc_data_types_count 3
+#define vault_union_all_table_proc_data_types_count 4
 
 #ifndef result_set_type_decl_vault_union_all_table_proc_result_set
 #define result_set_type_decl_vault_union_all_table_proc_result_set 1
@@ -2107,19 +1875,14 @@ extern cql_string_ref _Nullable vault_union_all_table_proc_get_name(vault_union_
 
 #define vault_union_all_table_proc_get_name_is_encoded(rs) \
   cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 1)
+extern cql_string_ref _Nullable vault_union_all_table_proc_get_title(vault_union_all_table_proc_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_bool vault_union_all_table_proc_get_type_is_null(vault_union_all_table_proc_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int64 vault_union_all_table_proc_get_type_value(vault_union_all_table_proc_result_set_ref _Nonnull result_set, cql_int32 row);
 
 #define vault_union_all_table_proc_get_type_is_encoded(rs) \
-  cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 2)
+  cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 3)
 extern cql_int32 vault_union_all_table_proc_result_count(vault_union_all_table_proc_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code vault_union_all_table_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_union_all_table_proc_result_set_ref _Nullable *_Nonnull result_set);
-#define vault_union_all_table_proc_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define vault_union_all_table_proc_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define vault_union_all_table_proc_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -2147,12 +1910,6 @@ extern cql_string_ref _Nullable vault_alias_column_proc_get_alias_name(vault_ali
   cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 0)
 extern cql_int32 vault_alias_column_proc_result_count(vault_alias_column_proc_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code vault_alias_column_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_alias_column_proc_result_set_ref _Nullable *_Nonnull result_set);
-#define vault_alias_column_proc_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define vault_alias_column_proc_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define vault_alias_column_proc_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -2180,12 +1937,6 @@ extern cql_string_ref _Nullable vault_alias_column_name_proc_get_alias_name(vaul
   cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 0)
 extern cql_int32 vault_alias_column_name_proc_result_count(vault_alias_column_name_proc_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code vault_alias_column_name_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_alias_column_name_proc_result_set_ref _Nullable *_Nonnull result_set);
-#define vault_alias_column_name_proc_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define vault_alias_column_name_proc_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define vault_alias_column_name_proc_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -2200,6 +1951,102 @@ extern void vault_alias_column_name_proc_set_encoding(cql_int32 col, cql_bool en
 extern CQL_WARN_UNUSED cql_code vault_cursor_proc(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX
+#define CRC_vault_sensitive_with_context_and_sensitive_columns_proc -3624977926726665152L
+
+extern cql_string_ref _Nonnull vault_sensitive_with_context_and_sensitive_columns_proc_stored_procedure_name;
+
+#define vault_sensitive_with_context_and_sensitive_columns_proc_data_types_count 4
+
+#ifndef result_set_type_decl_vault_sensitive_with_context_and_sensitive_columns_proc_result_set
+#define result_set_type_decl_vault_sensitive_with_context_and_sensitive_columns_proc_result_set 1
+cql_result_set_type_decl(vault_sensitive_with_context_and_sensitive_columns_proc_result_set, vault_sensitive_with_context_and_sensitive_columns_proc_result_set_ref);
+#endif
+extern cql_int32 vault_sensitive_with_context_and_sensitive_columns_proc_get_id(vault_sensitive_with_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_string_ref _Nullable vault_sensitive_with_context_and_sensitive_columns_proc_get_name(vault_sensitive_with_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+
+#define vault_sensitive_with_context_and_sensitive_columns_proc_get_name_is_encoded(rs) \
+  cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 1)
+extern cql_string_ref _Nullable vault_sensitive_with_context_and_sensitive_columns_proc_get_title(vault_sensitive_with_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool vault_sensitive_with_context_and_sensitive_columns_proc_get_type_is_null(vault_sensitive_with_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int64 vault_sensitive_with_context_and_sensitive_columns_proc_get_type_value(vault_sensitive_with_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+
+#define vault_sensitive_with_context_and_sensitive_columns_proc_get_type_is_encoded(rs) \
+  cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 3)
+extern cql_int32 vault_sensitive_with_context_and_sensitive_columns_proc_result_count(vault_sensitive_with_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code vault_sensitive_with_context_and_sensitive_columns_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_sensitive_with_context_and_sensitive_columns_proc_result_set_ref _Nullable *_Nonnull result_set);
+#define vault_sensitive_with_context_and_sensitive_columns_proc_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define vault_sensitive_with_context_and_sensitive_columns_proc_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+extern void vault_sensitive_with_context_and_sensitive_columns_proc_set_encoding(cql_int32 col, cql_bool encode);
+
+// The statement ending at line XXXX
+#define CRC_vault_sensitive_with_no_context_and_sensitive_columns_proc -7467575730168659275L
+
+extern cql_string_ref _Nonnull vault_sensitive_with_no_context_and_sensitive_columns_proc_stored_procedure_name;
+
+#define vault_sensitive_with_no_context_and_sensitive_columns_proc_data_types_count 4
+
+#ifndef result_set_type_decl_vault_sensitive_with_no_context_and_sensitive_columns_proc_result_set
+#define result_set_type_decl_vault_sensitive_with_no_context_and_sensitive_columns_proc_result_set 1
+cql_result_set_type_decl(vault_sensitive_with_no_context_and_sensitive_columns_proc_result_set, vault_sensitive_with_no_context_and_sensitive_columns_proc_result_set_ref);
+#endif
+extern cql_int32 vault_sensitive_with_no_context_and_sensitive_columns_proc_get_id(vault_sensitive_with_no_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_string_ref _Nullable vault_sensitive_with_no_context_and_sensitive_columns_proc_get_name(vault_sensitive_with_no_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+
+#define vault_sensitive_with_no_context_and_sensitive_columns_proc_get_name_is_encoded(rs) \
+  cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 1)
+extern cql_string_ref _Nullable vault_sensitive_with_no_context_and_sensitive_columns_proc_get_title(vault_sensitive_with_no_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool vault_sensitive_with_no_context_and_sensitive_columns_proc_get_type_is_null(vault_sensitive_with_no_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int64 vault_sensitive_with_no_context_and_sensitive_columns_proc_get_type_value(vault_sensitive_with_no_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+
+#define vault_sensitive_with_no_context_and_sensitive_columns_proc_get_type_is_encoded(rs) \
+  cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 3)
+extern cql_int32 vault_sensitive_with_no_context_and_sensitive_columns_proc_result_count(vault_sensitive_with_no_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code vault_sensitive_with_no_context_and_sensitive_columns_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_sensitive_with_no_context_and_sensitive_columns_proc_result_set_ref _Nullable *_Nonnull result_set);
+#define vault_sensitive_with_no_context_and_sensitive_columns_proc_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define vault_sensitive_with_no_context_and_sensitive_columns_proc_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+extern void vault_sensitive_with_no_context_and_sensitive_columns_proc_set_encoding(cql_int32 col, cql_bool encode);
+
+// The statement ending at line XXXX
+#define CRC_vault_sensitive_with_context_and_no_sensitive_columns_proc -7109769656603081234L
+
+extern cql_string_ref _Nonnull vault_sensitive_with_context_and_no_sensitive_columns_proc_stored_procedure_name;
+
+#define vault_sensitive_with_context_and_no_sensitive_columns_proc_data_types_count 4
+
+#ifndef result_set_type_decl_vault_sensitive_with_context_and_no_sensitive_columns_proc_result_set
+#define result_set_type_decl_vault_sensitive_with_context_and_no_sensitive_columns_proc_result_set 1
+cql_result_set_type_decl(vault_sensitive_with_context_and_no_sensitive_columns_proc_result_set, vault_sensitive_with_context_and_no_sensitive_columns_proc_result_set_ref);
+#endif
+extern cql_int32 vault_sensitive_with_context_and_no_sensitive_columns_proc_get_id(vault_sensitive_with_context_and_no_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_string_ref _Nullable vault_sensitive_with_context_and_no_sensitive_columns_proc_get_name(vault_sensitive_with_context_and_no_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_string_ref _Nullable vault_sensitive_with_context_and_no_sensitive_columns_proc_get_title(vault_sensitive_with_context_and_no_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool vault_sensitive_with_context_and_no_sensitive_columns_proc_get_type_is_null(vault_sensitive_with_context_and_no_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int64 vault_sensitive_with_context_and_no_sensitive_columns_proc_get_type_value(vault_sensitive_with_context_and_no_sensitive_columns_proc_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 vault_sensitive_with_context_and_no_sensitive_columns_proc_result_count(vault_sensitive_with_context_and_no_sensitive_columns_proc_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code vault_sensitive_with_context_and_no_sensitive_columns_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_sensitive_with_context_and_no_sensitive_columns_proc_result_set_ref _Nullable *_Nonnull result_set);
+#define vault_sensitive_with_context_and_no_sensitive_columns_proc_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define vault_sensitive_with_context_and_no_sensitive_columns_proc_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+extern void vault_sensitive_with_context_and_no_sensitive_columns_proc_set_encoding(cql_int32 col, cql_bool encode);
+
+// The statement ending at line XXXX
 
 #ifndef result_set_type_decl_frag_test_result_set
 #define result_set_type_decl_frag_test_result_set 1
@@ -2207,12 +2054,6 @@ cql_result_set_type_decl(frag_test_result_set, frag_test_result_set_ref);
 #endif
 extern cql_int32 frag_test_get_id(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 frag_test_result_count(frag_test_result_set_ref _Nonnull result_set);
-#define frag_test_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define frag_test_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define frag_test_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -2220,6 +2061,7 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   row1, \
   (cql_result_set_ref)(rs2), \
   row2)
+extern CQL_WARN_UNUSED cql_code frag_test_fetch_results(sqlite3 *_Nonnull _db_, frag_test_result_set_ref _Nullable *_Nonnull result_set);
 
 // The statement ending at line XXXX
 
@@ -2233,12 +2075,6 @@ extern cql_int32 ext_get_f2_value(frag_test_result_set_ref _Nonnull result_set, 
 extern cql_int32 __PRIVATE__frag_test_get_f2_value(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
 
 extern cql_int32 ext_result_count(frag_test_result_set_ref _Nonnull result_set);
-#define ext_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 
 // The statement ending at line XXXX
 
@@ -2252,12 +2088,6 @@ extern cql_int32 ext2_get_f3_value(frag_test_result_set_ref _Nonnull result_set,
 extern cql_int32 __PRIVATE__frag_test_get_f3_value(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
 
 extern cql_int32 ext2_result_count(frag_test_result_set_ref _Nonnull result_set);
-#define ext2_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 
 // The statement ending at line XXXX
 extern CQL_WARN_UNUSED cql_code try_boxing(sqlite3 *_Nonnull _db_, cql_object_ref _Nullable *_Nonnull result);
@@ -2402,12 +2232,6 @@ extern cql_bool window1_get_SalesMovingAverage_is_null(window1_result_set_ref _N
 extern cql_double window1_get_SalesMovingAverage_value(window1_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 window1_result_count(window1_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code window1_fetch_results(sqlite3 *_Nonnull _db_, window1_result_set_ref _Nullable *_Nonnull result_set);
-#define window1_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define window1_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define window1_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -2435,12 +2259,6 @@ extern cql_bool window2_get_RunningTotal_is_null(window2_result_set_ref _Nonnull
 extern cql_double window2_get_RunningTotal_value(window2_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 window2_result_count(window2_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code window2_fetch_results(sqlite3 *_Nonnull _db_, window2_result_set_ref _Nullable *_Nonnull result_set);
-#define window2_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define window2_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define window2_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -2468,12 +2286,6 @@ extern cql_bool window3_get_SalesMovingAverage_is_null(window3_result_set_ref _N
 extern cql_double window3_get_SalesMovingAverage_value(window3_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 window3_result_count(window3_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code window3_fetch_results(sqlite3 *_Nonnull _db_, window3_result_set_ref _Nullable *_Nonnull result_set);
-#define window3_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define window3_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define window3_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -2501,12 +2313,6 @@ extern cql_bool window4_get_SalesMovingAverage_is_null(window4_result_set_ref _N
 extern cql_double window4_get_SalesMovingAverage_value(window4_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 window4_result_count(window4_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code window4_fetch_results(sqlite3 *_Nonnull _db_, window4_result_set_ref _Nullable *_Nonnull result_set);
-#define window4_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define window4_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define window4_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -2534,12 +2340,6 @@ extern cql_bool window5_get_SalesMovingAverage_is_null(window5_result_set_ref _N
 extern cql_double window5_get_SalesMovingAverage_value(window5_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 window5_result_count(window5_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code window5_fetch_results(sqlite3 *_Nonnull _db_, window5_result_set_ref _Nullable *_Nonnull result_set);
-#define window5_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define window5_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define window5_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -2567,12 +2367,6 @@ extern cql_bool window6_get_SalesMovingAverage_is_null(window6_result_set_ref _N
 extern cql_double window6_get_SalesMovingAverage_value(window6_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 window6_result_count(window6_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code window6_fetch_results(sqlite3 *_Nonnull _db_, window6_result_set_ref _Nullable *_Nonnull result_set);
-#define window6_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define window6_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define window6_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -2600,12 +2394,6 @@ extern cql_bool window7_get_SalesMovingAverage_is_null(window7_result_set_ref _N
 extern cql_double window7_get_SalesMovingAverage_value(window7_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 window7_result_count(window7_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code window7_fetch_results(sqlite3 *_Nonnull _db_, window7_result_set_ref _Nullable *_Nonnull result_set);
-#define window7_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define window7_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define window7_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -2633,12 +2421,6 @@ extern cql_bool window8_get_SalesMovingAverage_is_null(window8_result_set_ref _N
 extern cql_double window8_get_SalesMovingAverage_value(window8_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 window8_result_count(window8_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code window8_fetch_results(sqlite3 *_Nonnull _db_, window8_result_set_ref _Nullable *_Nonnull result_set);
-#define window8_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define window8_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define window8_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -2666,12 +2448,6 @@ extern cql_bool window9_get_SalesMovingAverage_is_null(window9_result_set_ref _N
 extern cql_double window9_get_SalesMovingAverage_value(window9_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 window9_result_count(window9_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code window9_fetch_results(sqlite3 *_Nonnull _db_, window9_result_set_ref _Nullable *_Nonnull result_set);
-#define window9_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define window9_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define window9_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -2699,12 +2475,6 @@ extern cql_bool window10_get_SalesMovingAverage_is_null(window10_result_set_ref 
 extern cql_double window10_get_SalesMovingAverage_value(window10_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 window10_result_count(window10_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code window10_fetch_results(sqlite3 *_Nonnull _db_, window10_result_set_ref _Nullable *_Nonnull result_set);
-#define window10_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define window10_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define window10_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -2732,12 +2502,6 @@ extern cql_bool window11_get_SalesMovingAverage_is_null(window11_result_set_ref 
 extern cql_double window11_get_SalesMovingAverage_value(window11_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 window11_result_count(window11_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code window11_fetch_results(sqlite3 *_Nonnull _db_, window11_result_set_ref _Nullable *_Nonnull result_set);
-#define window11_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define window11_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define window11_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -2765,12 +2529,6 @@ extern cql_bool window12_get_SalesMovingAverage_is_null(window12_result_set_ref 
 extern cql_double window12_get_SalesMovingAverage_value(window12_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 window12_result_count(window12_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code window12_fetch_results(sqlite3 *_Nonnull _db_, window12_result_set_ref _Nullable *_Nonnull result_set);
-#define window12_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define window12_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define window12_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -2798,12 +2556,6 @@ extern cql_bool window13_get_SalesMovingAverage_is_null(window13_result_set_ref 
 extern cql_double window13_get_SalesMovingAverage_value(window13_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 window13_result_count(window13_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code window13_fetch_results(sqlite3 *_Nonnull _db_, window13_result_set_ref _Nullable *_Nonnull result_set);
-#define window13_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define window13_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define window13_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -2831,12 +2583,6 @@ extern cql_bool window14_get_SalesMovingAverage_is_null(window14_result_set_ref 
 extern cql_double window14_get_SalesMovingAverage_value(window14_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 window14_result_count(window14_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code window14_fetch_results(sqlite3 *_Nonnull _db_, window14_result_set_ref _Nullable *_Nonnull result_set);
-#define window14_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define window14_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define window14_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -2864,12 +2610,6 @@ extern cql_bool window15_get_SalesMovingAverage_is_null(window15_result_set_ref 
 extern cql_double window15_get_SalesMovingAverage_value(window15_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 window15_result_count(window15_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code window15_fetch_results(sqlite3 *_Nonnull _db_, window15_result_set_ref _Nullable *_Nonnull result_set);
-#define window15_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define window15_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define window15_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -2897,12 +2637,6 @@ extern cql_bool window16_get_SalesMovingAverage_is_null(window16_result_set_ref 
 extern cql_double window16_get_SalesMovingAverage_value(window16_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 window16_result_count(window16_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code window16_fetch_results(sqlite3 *_Nonnull _db_, window16_result_set_ref _Nullable *_Nonnull result_set);
-#define window16_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define window16_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define window16_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -3007,12 +2741,6 @@ extern cql_bool virtual1_get_vy_is_null(virtual1_result_set_ref _Nonnull result_
 extern cql_int32 virtual1_get_vy_value(virtual1_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 virtual1_result_count(virtual1_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code virtual1_fetch_results(sqlite3 *_Nonnull _db_, virtual1_result_set_ref _Nullable *_Nonnull result_set);
-#define virtual1_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define virtual1_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define virtual1_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -3037,12 +2765,6 @@ extern cql_bool virtual2_get_vy_is_null(virtual2_result_set_ref _Nonnull result_
 extern cql_int32 virtual2_get_vy_value(virtual2_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 virtual2_result_count(virtual2_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code virtual2_fetch_results(sqlite3 *_Nonnull _db_, virtual2_result_set_ref _Nullable *_Nonnull result_set);
-#define virtual2_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define virtual2_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define virtual2_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -3080,12 +2802,6 @@ extern cql_string_ref _Nonnull private_out_union_stored_procedure_name;
 cql_result_set_type_decl(private_out_union_result_set, private_out_union_result_set_ref);
 #endif
 extern cql_int32 private_out_union_result_count(private_out_union_result_set_ref _Nonnull result_set);
-#define private_out_union_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define private_out_union_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define private_out_union_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -3110,12 +2826,6 @@ extern cql_string_ref _Nonnull no_getters_out_union_stored_procedure_name;
 cql_result_set_type_decl(no_getters_out_union_result_set, no_getters_out_union_result_set_ref);
 #endif
 extern cql_int32 no_getters_out_union_result_count(no_getters_out_union_result_set_ref _Nonnull result_set);
-#define no_getters_out_union_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define no_getters_out_union_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define no_getters_out_union_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -3140,12 +2850,6 @@ extern cql_string_ref _Nonnull suppress_results_out_union_stored_procedure_name;
 cql_result_set_type_decl(suppress_results_out_union_result_set, suppress_results_out_union_result_set_ref);
 #endif
 extern cql_int32 suppress_results_out_union_result_count(suppress_results_out_union_result_set_ref _Nonnull result_set);
-#define suppress_results_out_union_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define suppress_results_out_union_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define suppress_results_out_union_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -3220,12 +2924,6 @@ cql_result_set_type_decl(out_object_result_set, out_object_result_set_ref);
 extern cql_object_ref _Nonnull out_object_get_o(out_object_result_set_ref _Nonnull result_set);
 extern cql_int32 out_object_result_count(out_object_result_set_ref _Nonnull result_set);
 extern void out_object_fetch_results( out_object_result_set_ref _Nullable *_Nonnull result_set, cql_object_ref _Nonnull o);
-#define out_object_copy(result_set, result_set_to) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  0, \
-  1)
 #define out_object_hash(result_set) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), 0)
 #define out_object_equal(rs1, rs2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -3264,12 +2962,6 @@ extern cql_bool result_set_proc_with_contract_in_fetch_results_get_size_is_null(
 extern cql_double result_set_proc_with_contract_in_fetch_results_get_size_value(result_set_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 result_set_proc_with_contract_in_fetch_results_result_count(result_set_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code result_set_proc_with_contract_in_fetch_results_fetch_results(sqlite3 *_Nonnull _db_, result_set_proc_with_contract_in_fetch_results_result_set_ref _Nullable *_Nonnull result_set, cql_string_ref _Nonnull t);
-#define result_set_proc_with_contract_in_fetch_results_copy(result_set, result_set_to, from, count) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  from, \
-  count)
 #define result_set_proc_with_contract_in_fetch_results_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
 #define result_set_proc_with_contract_in_fetch_results_row_equal(rs1, row1, rs2, row2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -3299,12 +2991,6 @@ extern cql_bool out_proc_with_contract_in_fetch_results_get_size_is_null(out_pro
 extern cql_double out_proc_with_contract_in_fetch_results_get_size_value(out_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set);
 extern cql_int32 out_proc_with_contract_in_fetch_results_result_count(out_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set);
 extern void out_proc_with_contract_in_fetch_results_fetch_results( out_proc_with_contract_in_fetch_results_result_set_ref _Nullable *_Nonnull result_set, cql_string_ref _Nonnull t);
-#define out_proc_with_contract_in_fetch_results_copy(result_set, result_set_to) \
-cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \
-  (cql_result_set_ref)(result_set), \
-  (cql_result_set_ref *)(result_set_to), \
-  0, \
-  1)
 #define out_proc_with_contract_in_fetch_results_hash(result_set) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), 0)
 #define out_proc_with_contract_in_fetch_results_equal(rs1, rs2) \
 cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
@@ -3312,6 +2998,35 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   0, \
   (cql_result_set_ref)(rs2), \
   0)
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+#define CRC_nullability_improvements_are_erased_for_sql -6535467785075335629L
+
+extern cql_string_ref _Nonnull nullability_improvements_are_erased_for_sql_stored_procedure_name;
+
+#define nullability_improvements_are_erased_for_sql_data_types_count 1
+
+#ifndef result_set_type_decl_nullability_improvements_are_erased_for_sql_result_set
+#define result_set_type_decl_nullability_improvements_are_erased_for_sql_result_set 1
+cql_result_set_type_decl(nullability_improvements_are_erased_for_sql_result_set, nullability_improvements_are_erased_for_sql_result_set_ref);
+#endif
+extern cql_int32 nullability_improvements_are_erased_for_sql_get_b(nullability_improvements_are_erased_for_sql_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 nullability_improvements_are_erased_for_sql_result_count(nullability_improvements_are_erased_for_sql_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code nullability_improvements_are_erased_for_sql_fetch_results(sqlite3 *_Nonnull _db_, nullability_improvements_are_erased_for_sql_result_set_ref _Nullable *_Nonnull result_set);
+#define nullability_improvements_are_erased_for_sql_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define nullability_improvements_are_erased_for_sql_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+extern void nullability_improvements_do_not_change_access(void);
+
+// The statement ending at line XXXX
 
 // The statement ending at line XXXX
 extern cql_int32 this_is_the_end;

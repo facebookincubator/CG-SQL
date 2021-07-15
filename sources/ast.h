@@ -82,6 +82,14 @@
 #define ENFORCE_SELECT_IF_NOTHING 9
 #define ENFORCE_INSERT_SELECT 10
 #define ENFORCE_TABLE_FUNCTION 11
+#define ENFORCE_NOT_NULL_AFTER_CHECK 12
+#define ENFORCE_ENCODE_CONTEXT_COLUMN 13
+#define ENFORCE_ENCODE_CONTEXT_TYPE_INTEGER 14
+#define ENFORCE_ENCODE_CONTEXT_TYPE_LONG_INTEGER 15
+#define ENFORCE_ENCODE_CONTEXT_TYPE_REAL 16
+#define ENFORCE_ENCODE_CONTEXT_TYPE_BOOL 17
+#define ENFORCE_ENCODE_CONTEXT_TYPE_TEXT 18
+#define ENFORCE_ENCODE_CONTEXT_TYPE_BLOB 19
 
 #define COMPOUND_OP_UNION 1
 #define COMPOUND_OP_UNION_ALL 2
@@ -216,6 +224,7 @@ cql_noexport bool_t is_ast_str(ast_node *_Nullable node);
 cql_noexport bool_t is_ast_num(ast_node *_Nullable node);
 cql_noexport bool_t is_ast_blob(ast_node *_Nullable node);
 cql_noexport bool_t is_ast_strlit(ast_node *_Nullable node);
+cql_noexport bool_t is_ast_id(ast_node *_Nullable node);
 cql_noexport bool_t is_ast_proclit(ast_node *_Nullable node);
 cql_noexport bool_t is_ast_at_rc(ast_node *_Nullable node);
 cql_noexport bool_t is_ast_primitive(ast_node *_Nullable  node);
@@ -258,7 +267,7 @@ cql_noexport CSTR _Nonnull get_compound_operator_name(int32_t compound_operator)
 */
 
 /*
- NOT is weaker than bitwise &
+-----  NOT is weaker than bitwise &
 sqlite> select not 2 & 1;
 1
 sqlite> select (not 2) & 1;
@@ -266,21 +275,21 @@ sqlite> select (not 2) & 1;
 sqlite> select not (2 & 1);
 1
 
-NOT is weaker than BETWEEN
-sqlite> select  not 1 between 0 and 1;
+-----  NOT is weaker than BETWEEN
+sqlite> select not 0 between -1 and 2;
 0
-sqlite> select  (not 1) between 0 and 1;
+sqlite> select (not 0) between -1 and 2;
 1
-sqlite> select  not (1 between 0 and 1);
+sqlite> select not (0 between -1 and 2);
 0
 
-NOT is stronger than logical AND
+-----  NOT is stronger than logical AND
 sqlite> select not 1 and (1/0);
 0
 sqlite> select not 0 and (1/0);
 [error]
 
-NOT is weaker than <=
+-----  NOT is weaker than <=
 sqlite> select not 0 <= 1;
 0
 sqlite> select not (0 <= 1);
@@ -288,8 +297,7 @@ sqlite> select not (0 <= 1);
 sqlite> select (not 0) <= 1;
 1
 
-~ is stronger than *
-
+-----  ~ is stronger than *
 sqlite> select ~1*3;
 -6
 sqlite> select (~1)*3;
@@ -297,21 +305,29 @@ sqlite> select (~1)*3;
 sqlite> select ~(1*3);
 -4
 
+----- between is weaker than equality
+sqlite> select 1=2 between 2 and 2;
+0
+sqlite> select 1=(2 between 2 and 2);
+1
+sqlite> select (1=2) between 2 and 2;
+0
+
 */
 
 #define EXPR_PRI_ROOT -999
 #define EXPR_PRI_ASSIGN 0
 #define EXPR_PRI_OR 1
 #define EXPR_PRI_AND 2
-#define EXPR_PRI_EQUALITY 3
-#define EXPR_PRI_INEQUALITY 4
-#define EXPR_PRI_NOT 5
-#define EXPR_PRI_BINARY 6
-#define EXPR_PRI_BETWEEN 7
+#define EXPR_PRI_NOT 3
+#define EXPR_PRI_BETWEEN 4
+#define EXPR_PRI_EQUALITY 5
+#define EXPR_PRI_INEQUALITY 6
+#define EXPR_PRI_BINARY 7
 #define EXPR_PRI_ADD 8
 #define EXPR_PRI_MUL 9
 #define EXPR_PRI_TILDE 10
-#define EXPR_PRI_CONCAT 11   // nyi
+#define EXPR_PRI_CONCAT 11
 
 // relevant C binding order
 #define C_EXPR_PRI_ROOT -999
@@ -375,26 +391,26 @@ sqlite> select ~(1*3);
 
 #define EXTRACT_STRING(name, node) \
   Contract(is_ast_str(node)); \
-  const char *name = ((str_ast_node *)node)->value; \
+  const char *name = ((str_ast_node *)(node))->value; \
   Contract(name);
 
 #define EXTRACT_BLOBTEXT(name, node) \
   Contract(is_ast_blob(node)); \
-  const char *name = ((str_ast_node *)node)->value; \
+  const char *name = ((str_ast_node *)(node))->value; \
   Contract(name);
 
 #define EXTRACT_NUM_TYPE(num_type, node) \
   Contract(is_ast_num(node)); \
-  int32_t num_type = ((num_ast_node *)node)->num_type;
+  int32_t num_type = ((num_ast_node *)(node))->num_type;
 
 #define EXTRACT_NUM_VALUE(val, node) \
   Contract(is_ast_num(node)); \
-  CSTR val = ((num_ast_node *)node)->value; \
+  CSTR val = ((num_ast_node *)(node))->value; \
   Contract(val);
 
 #define EXTRACT_OPTION(name, node) \
   Contract(is_ast_int(node)); \
-  int32_t name = (int32_t)((int_ast_node *)node)->value;
+  int32_t name = (int32_t)((int_ast_node *)(node))->value;
 
 // For searching proc dependencies/attributes
 typedef void (*find_ast_str_node_callback)(CSTR _Nonnull found_name, ast_node *_Nonnull str_ast, void *_Nullable context);
@@ -416,11 +432,6 @@ cql_noexport uint32_t find_autodrops(
    void *_Nullable context);
 
 cql_noexport uint32_t find_identity_columns(
-  ast_node *_Nullable misc_attr_list,
-  find_ast_str_node_callback _Nonnull callback,
-  void *_Nullable callback_context);
-
-cql_noexport uint32_t find_vault_columns(
   ast_node *_Nullable misc_attr_list,
   find_ast_str_node_callback _Nonnull callback,
   void *_Nullable callback_context);

@@ -14,6 +14,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <limits.h>
+#include <setjmp.h>
 
 #ifdef __cplusplus
 #define CQL_EXTERN_C_BEGIN extern "C" {
@@ -27,6 +28,18 @@
 #define _64(x) x##L
 #else
 #define _64(x) x##LL
+#endif
+
+#ifndef __has_attribute         // Optional of course.
+  #define __has_attribute(x) 0  // Compatibility with non-clang compilers.
+#endif
+
+#if __has_attribute(optnone)
+  #define CQL_OPT_NONE __attribute__((optnone))
+#elif __has_attribute(optimize)
+  #define CQL_OPT_NONE __attribute__((optimize("O0")))
+#else
+  #define CQL_OPT_NONE
 #endif
 
 #define CQL_EXPORT extern __attribute__((visibility("default")))
@@ -93,6 +106,7 @@ typedef struct cql_fetch_info {
   uint16_t refs_count;
   uint16_t refs_offset;
   uint16_t *_Nullable identity_columns;
+  int16_t encode_context_index;
   int32_t rowsize;
   const char *_Nullable autodrop_tables;
   int64_t crc;
@@ -163,6 +177,25 @@ CQL_EXPORT void cql_column_blob_ref(sqlite3_stmt *_Nonnull stmt, cql_int32 index
 
 #define cql_is_nullable_true(is_null, value) (!(is_null) && (value))
 #define cql_is_nullable_false(is_null, value) (!(is_null) && !(value))
+
+// Enforces (via `cql_tripwire`) that an argument passed in from C to a stored
+// procedure is not NULL. `position` indicates for which argument we're doing
+// the checking, counting from 1, *not* 0.
+void cql_contract_argument_notnull(void *_Nullable argument, cql_uint32 position);
+
+// Like `cql_contract_argument_notnull`, but also checks that `*argument` is not
+// NULL. This should only be used for INOUT arguments of a NOT NULL reference
+// type; `cql_contract_argument_notnull` should be used in all other cases.
+void cql_contract_argument_notnull_when_dereferenced(void *_Nullable argument, cql_uint32 position);
+
+#ifdef CQL_RUN_TEST
+// If compiled with `CQL_RUN_TEST`, `cql_contract_argument_notnull` and
+// `cql_contract_argument_notnull_when_dereferenced` will longjmp here instead
+// of calling `cql_tripwire` when this is not NULL. The jump will be performed
+// with a value of `position`, thus allowing tests to know for which argument a
+// tripwire would have normally been encountered.
+extern jmp_buf *_Nullable cql_contract_argument_notnull_tripwire_jmp_buf;
+#endif
 
 #define BYTEBUF_GROWTH_SIZE 1024
 #define BYTEBUF_EXP_GROWTH_CAP 1024 * 1024
@@ -245,5 +278,30 @@ CQL_EXPORT void cql_results_from_data(
   cql_bytebuf *_Nonnull buffer,
   cql_fetch_info *_Nonnull info,
   cql_result_set_ref _Nullable *_Nonnull result_set);
+
+// data entry for a closed hash table
+typedef struct cql_hashtab_entry {
+ cql_string_ref _Nullable key;
+ cql_int64 val;
+} cql_hashtab_entry;
+
+// hash table with payloads and capacity info
+typedef struct cql_hashtab {
+  cql_int32 count;
+  cql_int32 capacity;
+  cql_hashtab_entry *_Nullable payload;
+} cql_hashtab;
+
+// elementary hash table functions
+CQL_EXPORT cql_hashtab *_Nonnull cql_hashtab_new(void);
+CQL_EXPORT void cql_hashtab_delete(cql_hashtab *_Nonnull ht);
+CQL_EXPORT cql_bool cql_hashtab_add(cql_hashtab *_Nonnull ht, cql_string_ref _Nonnull key, cql_int64 val);
+CQL_EXPORT cql_hashtab_entry *_Nullable cql_hashtab_find(cql_hashtab *_Nonnull ht, cql_string_ref _Nonnull key);
+
+// CQL friendly versions of the above, easy to call from CQL
+CQL_EXPORT cql_int64 cql_facets_new(void);
+CQL_EXPORT void cql_facets_delete(cql_int64 facets);
+CQL_EXPORT cql_bool cql_facet_add(cql_int64 facets, cql_string_ref _Nonnull name, cql_int64 crc);
+CQL_EXPORT cql_int64 cql_facet_find(cql_int64 facets, cql_string_ref _Nonnull key);
 
 CQL_EXTERN_C_END

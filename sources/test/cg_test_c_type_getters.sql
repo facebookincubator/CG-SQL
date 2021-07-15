@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-/* 
+/*
  * Note this file is set up to verify the .h file rather than the .c file in test.sh
  */
 
@@ -105,6 +105,8 @@ end;
 
 -- TEST: another extension, this one should not include anything about f2, it doesn't "know" about that column
 -- - f2
+-- + static inline cql_int32 ext2_result_count(frag_test_result_set_ref _Nonnull result_set)
+-- + return cql_result_set_get_count((cql_result_set_ref)result_set);
 @attribute(cql:extension_fragment=frag_test)
 create proc ext2()
 begin
@@ -122,4 +124,12 @@ begin
    declare C cursor like emit_object_result_set arguments;
    fetch C from arguments;
    out union C;
+end;
+
+-- TEST: a copy function will be generated
+-- + #define sproc_copy_func_copy(result_set, result_set_to, from, count)
+@attribute(cql:generate_copy)
+create proc sproc_copy_func()
+begin
+  select * from foo;
 end;

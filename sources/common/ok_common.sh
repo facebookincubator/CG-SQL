@@ -25,6 +25,9 @@ copy_ref cg_test_assembly_query_c.c
 copy_ref cg_test_assembly_query_c.h
 copy_ref cg_test_assembly_query_java.out
 copy_ref cg_test_assembly_query_objc.out
+copy_ref cg_test_base_fragment_c.c
+copy_ref cg_test_base_fragment_c.h
+copy_ref cg_test_base_fragment_objc.out
 copy_ref cg_test_c.c
 copy_ref cg_test_c.h
 copy_ref cg_test_c.err

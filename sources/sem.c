@@ -52,8 +52,9 @@ cql_data_defn( list_item *all_regions_list );
 cql_data_defn( list_item *all_ad_hoc_list );
 cql_data_defn( list_item *all_select_functions_list );
 cql_data_defn( list_item *all_enums_list );
-cql_data_defn( bool_t use_vault );
-cql_data_defn( symtab *vault_columns );
+cql_data_defn( bool_t use_encode );
+cql_data_defn( CSTR _Nullable encode_context_column );
+cql_data_defn( symtab *encode_columns );
 
 // Note: initialized statics are moot because in amalgam mode the code
 // will not be reloaded... you have to re-initialize all statics in the cleanup function
@@ -104,6 +105,15 @@ typedef void (*sem_misc_attribute_callback)(
 
 static bytebuf *deployable_validations;
 
+// A list node holding the `sem_t *` for a nullability improvement. These are
+// used both for unsetting improvements when the scope of an improvement ends
+// and for keeping track of improvements that require special treatment (i.e.,
+// improvements of globals must be unset at every CALL).
+typedef struct notnull_improvement_item {
+  sem_t *type;
+  struct notnull_improvement_item *next;
+} notnull_improvement_item;
+
 // forward references for mutual recursion cases
 static void sem_stmt_list(ast_node *root);
 static void sem_select(ast_node *node);
@@ -115,7 +125,7 @@ static void sem_resolve_id(ast_node *ast, CSTR name, CSTR scope);
 static void sem_fetch_stmt(ast_node *ast);
 static void sem_fetch_values_stmt(ast_node *ast);
 static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name);
-static void resolve_cursor_field(ast_node *expr, ast_node *cursor, CSTR field);
+static void sem_resolve_cursor_field(ast_node *expr, ast_node *cursor, CSTR field, sem_t **type_ptr);
 static bool_t sem_validate_context(ast_node *ast, CSTR name, uint32_t valid_contexts);
 static void sem_expr_select(ast_node *ast, CSTR cstr);
 static void sem_verify_identical_columns(ast_node *left, ast_node *right, CSTR target);
@@ -154,6 +164,14 @@ static bool_t sem_select_stmt_is_mixed_results(ast_node *ast);
 static bool_t sem_verify_legal_variable_name(ast_node *variable, CSTR name);
 static void sem_verify_no_anon_columns(ast_node *ast);
 static bool_t sem_verify_no_duplicate_names(ast_node *name_list);
+static sem_t *find_mutable_type(CSTR name, CSTR scope);
+static sem_t *find_mutable_type_for_global_variable(CSTR name);
+static sem_t *find_mutable_type_for_global_cursor_field(CSTR name, CSTR cursor_name);
+static bool_t sem_is_notnull_improved(CSTR name, CSTR scope);
+static void sem_set_notnull_improved(CSTR name, CSTR scope);
+static void sem_unset_notnull_improved(CSTR name, CSTR scope);
+static void sem_add_notnull_improvements(ast_node *expr, ast_node *select_expr_list);
+static void sem_remove_notnull_improvements();
 
 static void lazy_free_symtab(void *syms) {
   symtab_delete(syms);
@@ -167,20 +185,25 @@ static void add_pending_symtab_free(symtab *syms) {
 }
 
 struct enforcement_options {
-  bool_t strict_fk_update;      // indicates there must be some "ON UPDATE" action in every FK
-  bool_t strict_fk_delete;      // indicates there must be some "ON DELETE" action in every FK
-  bool_t strict_join;           // only ANSI style joins may be used, "from A,B" is rejected
-  bool_t strict_upsert_stmt;    // no upsert statement may be used
-  bool_t strict_window_func;    // no window functions may be used
-  bool_t strict_procedure;      // no calls to undeclared procedures (like printf)
-  bool_t strict_without_rowid;  // no WITHOUT ROWID may be used.
-  bool_t strict_transaction;    // no transactions may be started, commited, aborted etc.
-  bool_t strict_if_nothing;     // (select ..) expressions must include the if nothing form
-  bool_t strict_insert_select;  // insert with select may not include joins
-  bool_t strict_table_function; // table valued functions cannot be used on left/right joins (avoiding SQLite bug)
+  bool_t strict_fk_update;            // indicates there must be some "ON UPDATE" action in every FK
+  bool_t strict_fk_delete;            // indicates there must be some "ON DELETE" action in every FK
+  bool_t strict_join;                 // only ANSI style joins may be used, "from A,B" is rejected
+  bool_t strict_upsert_stmt;          // no upsert statement may be used
+  bool_t strict_window_func;          // no window functions may be used
+  bool_t strict_procedure;            // no calls to undeclared procedures (like printf)
+  bool_t strict_without_rowid;        // no WITHOUT ROWID may be used.
+  bool_t strict_transaction;          // no transactions may be started, commited, aborted etc.
+  bool_t strict_if_nothing;           // (select ..) expressions must include the if nothing form
+  bool_t strict_insert_select;        // insert with select may not include joins
+  bool_t strict_table_function;       // table valued functions cannot be used on left/right joins (avoiding SQLite bug)
+  bool_t strict_not_null_after;       // variables should be treated as NOT NULL after an IS NOT NULL check
+  bool_t strict_encode_context;       // encode context must be specified in @vault_sensitive
+  bool_t strict_encode_context_type;  // the specified vault context column must be the specified data type
 };
 
 static struct enforcement_options  enforcement;
+
+static sem_t encode_context_type;
 
 typedef struct enforcement_stack_record {
   struct enforcement_stack_record *next;
@@ -320,6 +343,49 @@ static bool_t validating_previous_schema;
 
 // The curernt annonation target in create proc statement
 static CSTR annotation_target;
+
+// This is true if we are analyzing a call to `cql_inferred_notnull`. This can
+// happen for three reasons:
+//
+// * We just did a rewrite that produced a `cql_inferred_notnull` call and now
+//   we're computing its type.
+// * We're analyzing an expression that was already analyzed (e.g., in a CTE).
+// * We're analyzing the output of a previous CQL run within which calls to
+//   `cql_inferrred_notnull` may occur.
+//
+// Regardless of the cause, if `is_analyzing_notnull_rewrite` is true, we do not
+// want to rewrite again.
+static bool_t is_analyzing_notnull_rewrite;
+
+// This keeps track of all global variables that may currently be improved to be
+// NOT NULL. We need this because we must unimprove all such variables before
+// every CALL (because we don't do interprocedural analysis and cannot know
+// which globals may have been set to NULL).
+static notnull_improvement_item *notnull_improved_globals;
+
+// This is the context into which any nonnull improvements made will be
+// recorded. Each context holds all of the improvements that were made while it
+// was the current context, not just those that are still in effect. For
+// example, if a particular improvement is unset due to a SET or FETCH, it will
+// remain in whichever context was the current context when it was first set.
+// This is okay because the goal of maintaining contexts is merely to be able to
+// unset all improvements within a given context when it ends.
+static notnull_improvement_item *current_notnull_improvement_context;
+
+// Pushes a new context for nullability improvements with improvements gathered
+// from `cond`, restricted by an optional `select_expr_list`. It is valid to
+// pass NULL for `cond` simply to create a new context.
+#define PUSH_NOTNULL_IMPROVEMENT_CONTEXT(cond, select_expr_list) \
+  notnull_improvement_item *saved_notnull_improvement_context = \
+    current_notnull_improvement_context; \
+  current_notnull_improvement_context = NULL; \
+  sem_add_notnull_improvements(cond, select_expr_list);
+
+// Unsets all improvements made within the current context and reverts to the
+// previous context.
+#define POP_NOTNULL_IMPROVEMENT_CONTEXT() \
+  sem_remove_notnull_improvements(); \
+  current_notnull_improvement_context = saved_notnull_improvement_context;
 
 // Push a context that stops us from searching further up.
 #define PUSH_JOIN_BLOCK() \
@@ -1157,37 +1223,272 @@ cql_noexport bool_t sem_is_str_name(ast_node *ast) {
   return false;
 }
 
+// Detect if column name is sensitive in result set
+bool_t is_sensitive_column_in_result_set(CSTR name) {
+  sem_struct *sptr = current_proc->sem->sptr;
+  uint32_t count = sptr->count;
+  for (int32_t i = 0; i < count; i++) {
+    CSTR col = sptr->names[i];
+    if (!strcmp(name, col)) {
+      if (sptr->semtypes[i] & SEM_TYPE_SENSITIVE) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+// This is used to ensure column name (param 'name') is part of the proc return struct
+static void sem_column_name_exist_in_result_set(CSTR name, ast_node *misc_attr_value, void *context) {
+  EXTRACT_NOTNULL(misc_attrs, (ast_node *)context);
+  Contract(current_proc);
+  sem_struct *sptr = current_proc->sem->sptr;
+
+  // if there is no return struct that's a different error
+  if (sptr) {
+    int32_t icol = sem_column_index(sptr, name);
+    if (icol < 0) {
+      CHARBUF_OPEN(msg);
+      bprintf(&msg, "CQL0239: %s column does not exist in result set", annotation_target);
+      report_error(misc_attrs, msg.ptr, name);
+      record_error(misc_attrs);
+      CHARBUF_CLOSE(msg);
+      return;
+    }
+  }
+
+  record_ok(misc_attr_value);
+}
+
+// This is used to ensure column type matches the specified encode context column type
+static void sem_column_name_match_encode_context_column_type(CSTR name, ast_node *misc_attrs)
+{
+  if (!enforcement.strict_encode_context_type) {
+    return;
+  }
+  Contract(misc_attrs);
+  Contract(current_proc);
+  sem_struct *sptr = current_proc->sem->sptr;
+  uint32_t count = sptr->count;
+  for (int32_t i = 0; i < count; i++) {
+    CSTR col = sptr->names[i];
+    if (!strcmp(name, col)) {
+      if (core_type_of(sptr->semtypes[i]) != encode_context_type) {
+        report_error(misc_attrs, "CQL0402: vault context column in vault_senstive attribute must match the specified type in strict mode", "vault_sensitive");
+        record_error(misc_attrs);
+      }
+    }
+  }
+}
+
 // The helper checks whether or not a column should be encoded. A column
 // is encoded if and only if it's marked and is also sensitive.
 // The eligibility infos are extract from vault_sensitive attribution
-// on create_proc_stmt node and stored in vault_columns symtab.
+// on create_proc_stmt node and stored in encode_columns symtab.
 // Eligible columns are encoded if they are sensitive as soon as they're
 // fetched from db (see cql_multifetch(...)).
-bool_t should_vault_col(CSTR col, sem_t sem_type, bool_t use_vault_arg, symtab *vault_columns_arg) {
+bool_t should_encode_col(CSTR col, sem_t sem_type, bool_t use_encode_arg, symtab *encode_columns_arg) {
   bool_t is_col_eligible = false;
-  if (vault_columns_arg && vault_columns_arg->count > 0 ) {
-    is_col_eligible = symtab_find(vault_columns_arg, col) != NULL;
+  if (encode_columns_arg && encode_columns_arg->count > 0 ) {
+    is_col_eligible = symtab_find(encode_columns_arg, col) != NULL;
   } else {
-    // otherwise all column are always eligible if use_vault is TRUE.
-    is_col_eligible = use_vault_arg;
+    // otherwise all column are always eligible if use_encode is TRUE.
+    is_col_eligible = use_encode_arg;
   }
   return is_col_eligible && sensitive_flag(sem_type);
 }
 
-// It's a callback to find_vault_columns(...). It record into a symtab all
-// the string values from a vault_sensitive attribute. These string value
-// are used later on to decided whether or not to encode a sensitive column
-// value fetched from db or result set.
-static void find_vault_columns_callback(CSTR name, ast_node *found_ast, void *context) {
-  Invariant(context);
-  symtab *output = (symtab*)context;
-  symtab_add(output, name, NULL);
+// encode context column in vault_sensitive attribute must not be sensitive
+static void enforce_non_sensitive_context_column(CSTR name, ast_node *misc_attrs)
+{
+  if (is_sensitive_column_in_result_set(name)) {
+    report_error(misc_attrs, "CQL0400: encode context column can't be sensitive", name);
+    record_error(misc_attrs);
+  } else {
+    record_ok(misc_attrs);
+  }
 }
 
-void init_vault_info(ast_node *misc_attrs, bool_t *use_vault_arg, symtab *vault_columns_arg) {
-  *use_vault_arg = misc_attrs && exists_attribute_str(misc_attrs, "vault_sensitive");
-  if (*use_vault_arg) {
-    find_vault_columns(misc_attrs, find_vault_columns_callback, vault_columns_arg);
+// report error if encode context column mode is on and no encode context column is provided
+static void enforce_encode_context_column_with_strict_mode(ast_node *misc_attrs)
+{
+  if (enforcement.strict_encode_context) {
+    report_error(misc_attrs, "CQL0401: context column must be specified if strict encode context column mode is enabled", "vault_sensitive");
+    record_error(misc_attrs);
+  }
+}
+
+// enforce the specified column name must be valid string
+// return false if column is not valid string
+static bool_t vault_sensitive_encode_column_valid_string(ast_node *misc_attr_value, ast_node *misc_attrs)
+{
+  if (!sem_is_str_name(misc_attr_value)) {
+    report_error(misc_attr_value, "CQL0363: all arguments must be names", "vault_sensitive");
+    record_error(misc_attr_value);
+    if (misc_attrs) {
+      record_error(misc_attrs);
+    }
+    return false;
+  }
+  return true;
+}
+
+// This is the place we add all the to-be-encoded columns to a list.
+// The passed in ast_misc_attrs may contain non string values (like list),
+// which are considered to be error cases and skipped here.
+static void vault_sensitive_encode_columns(ast_node *ast_misc_attrs, symtab *vault_column_list, ast_node *misc_attrs) {
+  for (ast_node *list = ast_misc_attrs; list; list = list->right) {
+    // any non-string values are error cases
+    if (is_ast_str(list->left)) {
+      EXTRACT_STRING(name, list->left);
+      if (misc_attrs && current_proc) {
+        sem_column_name_exist_in_result_set(name, list->left, misc_attrs);
+      }
+      if (vault_column_list) {
+        symtab_add(vault_column_list, name, NULL);
+      }
+    } else {
+      report_error(list->left, "CQL0363: all arguments must be names", "vault_sensitive");
+      record_error(list->left);
+      if (misc_attrs) {
+        record_error(misc_attrs);
+      }
+    }
+  }
+}
+
+// Information about the vault_sensitive parsing result
+// encode_context_column is the column used as encode context
+// encode_columns is a list of columns to be encoded.
+// misc_attrs is used to report parsing errors.
+// This is used in the find_misc_attrs callback to save parsing result.
+typedef struct encode_info {
+  CSTR *encode_context_column;
+  symtab *encode_columns;
+  ast_node *misc_attrs;
+} encode_info;
+
+// This is the core part of the parsing logic for vault_sensitive
+// It does two things:
+// (1) extract encode_info struct from the net info.
+// (2) report error case if invalid format is detected.
+// There are two types of formats for vault_sensitive
+// (a) @attribute(cql:vault_sensitive=(<col1>, <col2>, ...))
+// (b) @attribute(cql:vault_sensitive=(<context_col>, (<col1>, <col2>, ...)))
+// format (b) has extra encode context column specified.
+// both encode context column and encode columns need to be present in resultSet
+static void sem_find_ast_misc_attr_vault_sensitive_callback(
+  CSTR misc_attr_prefix,
+  CSTR misc_attr_name,
+  ast_node *ast_misc_attr_value_list,
+  void *context)
+{
+  Contract(misc_attr_prefix);
+  Contract(misc_attr_name);
+  Contract(context);
+  Contract(!(Strcasecmp(misc_attr_prefix, "cql")));
+
+  // not vault_sensitive attribute
+  if (Strcasecmp(misc_attr_name, "vault_sensitive")) {
+    return;
+  }
+
+  encode_info *info = (encode_info *)context;
+  ast_node *misc_attrs = info->misc_attrs;
+
+  // case @attribute(cql:vault_sensitive)
+  // all sensitive columns in the result set will be encoded without context column.
+  if (ast_misc_attr_value_list == NULL) {
+    // report error if strict mode is on for encode context column
+    enforce_encode_context_column_with_strict_mode(misc_attrs);
+    return;
+  }
+
+  // case @attribute(cql:vault_sensitive=col)
+  // only col is encoded without context column
+  if (!is_ast_misc_attr_value_list(ast_misc_attr_value_list)) {
+    // detect invalid string column
+    if (!vault_sensitive_encode_column_valid_string(ast_misc_attr_value_list, misc_attrs)) {
+      return;
+    }
+    // ensure column exists in result set
+    EXTRACT_STRING(name, ast_misc_attr_value_list);
+    if (misc_attrs && current_proc) {
+      sem_column_name_exist_in_result_set(name, ast_misc_attr_value_list, misc_attrs);
+    }
+    // extract the single to-be-encoded column
+    if (info->encode_columns) {
+      symtab_add(info->encode_columns, name, NULL);
+    }
+    // report error if strict mode is on for encode context column
+    enforce_encode_context_column_with_strict_mode(misc_attrs);
+    return;
+  }
+
+  // find out if we are dealing with format (a) or format (b)
+  // (a) @attribute(cql:vault_sensitive=(<col1>, <col2>, ...))
+  // (b) @attribute(cql:vault_sensitive=(<context_col>, (<col1>, <col2>, ...)))
+  // if we see nested column list, it's format (b) with context column, otherwise format (a).
+  bool_t has_nested_columns = false;
+  for (ast_node *list = ast_misc_attr_value_list; list; list = list->right) {
+    ast_node *misc_attr_value = list->left;
+    if (is_ast_misc_attr_value_list(misc_attr_value)) {
+      has_nested_columns = true;
+    }
+  }
+
+  // format (a) without context column
+  // case @attribute(cql:vault_sensitive=(col1, col2, ...))
+  if (!has_nested_columns) {
+    vault_sensitive_encode_columns(ast_misc_attr_value_list, info->encode_columns, misc_attrs);
+    // report error if strict mode is on for encode context column
+enforce_encode_context_column_with_strict_mode(misc_attrs);
+    return;
+  }
+
+  // format (b) with context column
+  // case @attribute(cql:vault_sensitive=(context_col, (col1, col2, ...)))
+  uint32_t context_col_count = 0;
+  for (ast_node *list = ast_misc_attr_value_list; list; list = list->right) {
+    ast_node *misc_attr_value = list->left;
+    // we found the column list to be encoded
+    if (is_ast_misc_attr_value_list(misc_attr_value)) {
+      vault_sensitive_encode_columns(misc_attr_value, info->encode_columns, misc_attrs);
+    }
+    else {
+      // we found encode context column and ensure it is valid string
+      if (!vault_sensitive_encode_column_valid_string(misc_attr_value, misc_attrs)) {
+        return;
+      }
+      EXTRACT_STRING(context_col, misc_attr_value);
+      if (misc_attrs && current_proc) {
+        enforce_non_sensitive_context_column(context_col, misc_attrs);
+        sem_column_name_exist_in_result_set(context_col, misc_attr_value, misc_attrs);
+        sem_column_name_match_encode_context_column_type(context_col, misc_attrs);
+      }
+      // extrac context column
+      if (info->encode_context_column) {
+        *(info->encode_context_column) = context_col;
+      }
+      // enforce that we only specify context column once
+      context_col_count ++;
+      if (context_col_count > 1 && misc_attrs) {
+        report_error(misc_attrs, "CQL0408: encode context column can be only specified once", context_col);
+        record_error(misc_attrs);
+      }
+    }
+  }
+}
+
+void init_encode_info(ast_node *misc_attrs, bool_t *use_encode_arg, CSTR *encode_context_column_arg, symtab *encode_columns_arg) {
+  *use_encode_arg = misc_attrs && exists_attribute_str(misc_attrs, "vault_sensitive");
+  if (*use_encode_arg) {
+    encode_info info;
+    info.encode_context_column = encode_context_column_arg;
+    info.encode_columns = encode_columns_arg;
+    info.misc_attrs = NULL;
+    find_misc_attrs(misc_attrs, sem_find_ast_misc_attr_vault_sensitive_callback, &info);
+    record_ok(misc_attrs);
   }
 }
 
@@ -1565,6 +1866,9 @@ static void get_sem_core(sem_t sem_type, charbuf *out) {
 
 // For debug/test output, prettyprint the flags
 static void get_sem_flags(sem_t sem_type, charbuf *out) {
+  if (sem_type & SEM_TYPE_INFERRED_NOTNULL) {
+    bprintf(out, " inferred_notnull");
+  }
   if (sem_type & SEM_TYPE_NOTNULL) {
     bprintf(out, " notnull");
   }
@@ -4374,8 +4678,15 @@ static void sem_select_star(ast_node *ast) {
   for (int32_t i = 0; i < jptr->count; i++) {
     sem_struct *table = jptr->tables[i];
     for (int32_t j = 0; j < table->count; j++, field++) {
+      sem_t type = table->semtypes[j];
+      if (type & SEM_TYPE_INFERRED_NOTNULL) {
+        // Upgrade the inferred nonnull column so it has a proper NOT NULL type.
+        type |= SEM_TYPE_NOTNULL;
+        // Prevent this from propagating needlessly to keep --print clean.
+        type ^= SEM_TYPE_INFERRED_NOTNULL;
+      }
       sptr->names[field] = table->names[j];
-      sptr->semtypes[field] = table->semtypes[j];
+      sptr->semtypes[field] = type;
       sptr->kinds[field] = table->kinds[j];
     }
   }
@@ -4734,260 +5045,6 @@ static void sem_update_proc_type_for_select(ast_node *ast) {
   sem_verify_identical_columns(current_proc, ast, "in multiple select/out statements");
 }
 
-// Look for the given name as a local or global variable.  First local.
-static ast_node *find_local_or_global_variable(CSTR name) {
-  // look in the two variable tables, in order, first match wins
-  symtab_entry *entry = symtab_find(locals, name);
-
-  if (!entry) {
-    entry = symtab_find(globals, name);
-  }
-
-  return entry ? entry->val : NULL;
-}
-
-// Given an ast that is a name try to find its semantic info in the
-// declared variables table.  Note that there are special rules for cursors
-// that are applied here.
-// A cursor name C in an expression context refers to the deleted "_C_has_row_"
-// boolean. This lets you say "if C then stuff; end if;"
-// True if we found something.
-static bool_t try_resolve_variable(ast_node *ast, CSTR name) {
-  ast_node *variable = find_local_or_global_variable(name);
-  if (variable) {
-    sem_t sem_type = variable->sem->sem_type;
-
-    if (is_cursor(sem_type)) {
-      // cursor appearing in an expression context, rewrite as the flag that says
-      // if the cursor has data.  This lets you write
-      // fetch cursor into ... then  if cursor then ... endif
-
-      CSTR vname = NULL;
-
-      if (sem_type & SEM_TYPE_HAS_SHAPE_STORAGE) {
-        vname = dup_printf("%s._has_row_", variable->sem->name);
-      }
-      else {
-        vname = dup_printf("_%s_has_row_", variable->sem->name);
-      }
-
-      ast->sem = new_sem(SEM_TYPE_BOOL | SEM_TYPE_VARIABLE | SEM_TYPE_NOTNULL);
-      ast->sem->name = vname;
-    }
-    else {
-      // cursor is the only non-unitary variable type, and we just handled it
-      Invariant(is_unitary(sem_type));
-
-      ast->sem = new_sem(sem_type);
-      ast->sem->name = variable->sem->name;
-      ast->sem->kind = variable->sem->kind;
-
-      if (is_object(sem_type) &&
-          CURRENT_EXPR_CONTEXT_IS_NOT(SEM_EXPR_CONTEXT_NONE | SEM_EXPR_CONTEXT_TABLE_FUNC)) {
-        report_error(ast, "CQL0064: object variables may not appear in the context"
-                          " of a SQL statement (except table-valued functions)", name);
-        record_error(ast);
-      }
-    }
-  }
-  return !!variable;;
-}
-
-// Given an ast that is a name, try to find it as one of the columns in the
-// current join scope or else in one of the parent joinscopes.  If the name
-// is ambiguous at any given level then it is an error, but inner scopes are
-// allowed to hide the names of outer scopes.  True if we found something
-// or have an affirmative error.
-static bool_t try_resolve_column(ast_node *ast, CSTR name, CSTR scope) {
-  sem_t sem_type = 0;
-  CSTR col = NULL;
-  CSTR kind = NULL;
-  sem_join *found_jptr = NULL;
-
-  // We walk the chain of scopes until we find a stop frame or else we run out
-  // this allows nested joins to see their parent scopes.
-
-  for (sem_joinscope *jscp = current_joinscope; jscp && jscp->jptr && !col; jscp = jscp->parent) {
-    sem_join *jptr = jscp->jptr;
-    for (int32_t i = 0; i < jptr->count; i++) {
-      if (scope == NULL || !Strcasecmp(scope, jptr->names[i])) {
-        sem_struct *table = jptr->tables[i];
-        for (int32_t j = 0; j < table->count; j++) {
-          if (!Strcasecmp(name, table->names[j])) {
-            if (col) {
-              report_error(ast, "CQL0065: identifier is ambiguous", name);
-              record_error(ast);
-              return true;  // found but failed.
-            }
-            sem_type = table->semtypes[j];
-            col = table->names[j];
-            kind = table->kinds[j];
-            found_jptr = jptr;
-          }
-        }
-      }
-    }
-  }
-
-  // If we didn't find the column name, it might be the rowid, look for that
-  // we can only do this if there are actually tables in this joinscope
-  if (!col && current_joinscope && current_joinscope->jptr) {
-    // there are 3 valid names for the rowid, any will do.
-    if (!Strcasecmp(name, "_rowid_") || !Strcasecmp(name, "rowid") ||  !Strcasecmp(name, "oid")) {
-      sem_join *jptr = current_joinscope->jptr;
-      if (scope == NULL && jptr->count == 1) {
-        // if only one table then that's the rowid
-        col = name;
-        sem_type = SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL;
-      }
-      else if (scope != NULL) {
-        // more than one table but the name is scoped, still have a chance
-        for (int32_t i = 0; i < jptr->count; i++) {
-          if (!Strcasecmp(scope, jptr->names[i])) {
-            col = name;
-            kind = NULL;
-            sem_type = SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL;
-            break;
-          }
-        }
-      }
-      else {
-        report_error(ast, "CQL0066: identifier is ambiguous", name);
-        record_error(ast);
-        return true;  // found but failed.
-      }
-    }
-  }
-
-  if (col) {
-    ast->sem = new_sem(sem_type);
-    ast->sem->name = col; // be sure to use the canonical name
-    ast->sem->kind = kind; // use the kind if there is one
-
-    if (found_jptr && found_jptr == monitor_jptr) {
-      symtab_add(monitor_symtab, col, NULL);
-    }
-  }
-
-  return !!col;
-}
-
-// If we have the construct C.x where C is a cursor and x is a column
-// returned by the query corresponding to the cursor then this is
-// mapped to the local that was automatically created for that cursor.
-static void resolve_cursor_field(ast_node *expr, ast_node *cursor, CSTR field) {
-  sem_t sem_type = cursor->sem->sem_type;
-  CSTR scope = cursor->sem->name;
-
-  // We don't do this if the cursor was not used with the auto syntax
-  if (!(sem_type & SEM_TYPE_HAS_SHAPE_STORAGE)) {
-    report_error(expr, "CQL0067: cursor was not used with 'fetch [cursor]'", scope);
-    record_error(expr);
-    return;
-  }
-
-  // Find the name if it exists;  emit the canonical field name, which
-  // has the exact case from the declaration.  The user might have used
-  // something like C.VaLuE when the field is "value". The local has to match.
-
-  sem_struct *sptr = cursor->sem->sptr;
-  Invariant(sptr->count > 0);
-
-  for (int32_t i = 0; i < sptr->count; i++) {
-     if (!Strcasecmp(sptr->names[i], field)) {
-        expr->sem = new_sem(sptr->semtypes[i] | SEM_TYPE_VARIABLE);
-        expr->sem->name = dup_printf("%s.%s", scope, sptr->names[i]);
-        expr->sem->kind = sptr->kinds[i];
-        return;
-     }
-  }
-
-  report_error(expr, "CQL0068: field not found in cursor", field);
-  record_error(expr);
-}
-
-// Returns if the cursor name is a valid cursor then try to look it up
-// as a cursor auto-field (which might generate errors).  If it isn't a
-// cursor then just report not found.
-static bool_t try_resolve_auto_cursor(ast_node *ast, CSTR name, CSTR cursor) {
-   Contract(cursor);
-   ast_node *variable = find_local_or_global_variable(cursor);
-
-   if (variable && is_cursor(variable->sem->sem_type)) {
-     resolve_cursor_field(ast, variable, name);
-     return true;
-   }
-
-   return false;
-}
-
-static bool_t try_resolve_using_enum(ast_node *ast, CSTR name, CSTR enum_name) {
-  Contract(enum_name);
-  ast_node *enum_stmt = find_enum(enum_name);
-  if (!enum_stmt) {
-    // try something else
-    return false;
-  }
-
-  Invariant(is_ast_declare_enum_stmt(enum_stmt));
-
-  // Find the name if it exists;  if it does then this becomes a rewrite
-
-  EXTRACT_NOTNULL(enum_values, enum_stmt->right);
-
-  while (enum_values) {
-     EXTRACT_NOTNULL(enum_value, enum_values->left);
-     EXTRACT_STRING(enum_member, enum_value->left);
-
-     if (!Strcasecmp(enum_member, name)) {
-        ast_node *ast_new = eval_set(ast, enum_value->left->sem->value);
-        sem_root_expr(ast_new, SEM_EXPR_CONTEXT_NONE);
-        ast->sem = ast_new->sem;
-        ast->sem->kind = enum_stmt->sem->kind;
-        return true;
-     }
-     enum_values = enum_values->right;
-  }
-
-  // if we get this far we're stopping the search
-  report_error(ast, "CQL0357: enum does not contain", name);
-  record_error(ast);
-  return true;
-}
-
-// Returns if the scope name is a valid shape then try to look it up
-// as a shape arg auto-field (which might generate errors).  If it isn't a
-// shape then just report not found.
-static bool_t try_resolve_using_arg_bundle(ast_node *ast, CSTR name, CSTR bundle_name) {
-   Contract(bundle_name);
-   ast_node *shape = find_arg_bundle(bundle_name);
-   if (!shape) {
-     // try something else
-     return false;
-   }
-
-  // Find the name if it exists;  emit the canonical field name, which
-  // has the exact case from the declaration.  The user might have used
-  // something like C.VaLuE when the field is "value". The local has to match.
-
-  sem_struct *sptr = shape->sem->sptr;
-  Invariant(sptr->count > 0);
-
-  for (int32_t i = 0; i < sptr->count; i++) {
-     if (!Strcasecmp(sptr->names[i], name)) {
-        ast->sem = new_sem(sptr->semtypes[i] | SEM_TYPE_VARIABLE);
-        ast->sem->name = dup_printf("%s_%s", shape->sem->name, sptr->names[i]);
-        ast->sem->kind = sptr->kinds[i];
-        return true;
-     }
-  }
-
-  // if we get this far we're stopping the search
-  report_error(ast, "CQL0068: field not found in shape", name);
-  record_error(ast);
-  return true;
-}
-
 static ast_node *get_named_param(ast_node *params, CSTR name) {
   for (; params; params = params->right) {
     EXTRACT_NOTNULL(param, params->left);
@@ -5003,10 +5060,42 @@ static ast_node *get_named_param(ast_node *params, CSTR name) {
   return NULL;
 }
 
-static void resolve_using_arguments(ast_node *dot, CSTR name) {
-  Contract(current_proc);
+// Like `report_error`, but does nothing if `ast` is NULL. Used to make it
+// easier to handle a NULL AST in the `sem_try_resolve_*` family of functions.
+static void report_resolve_error(ast_node *ast, CSTR msg, CSTR subject) {
+  if (ast) {
+    report_error(ast, msg, subject);
+  }
+}
+
+// Like `record_error`, but does nothing if `ast` is NULL. Used to make it
+// easier to handle a NULL AST in the `sem_try_resolve_*` family of functions.
+static void record_resolve_error(ast_node *ast) {
+  if (ast) {
+    record_error(ast);
+  }
+}
+
+// All `sem_try_resolve_*` functions return either `SEM_RESOLVE_CONTINUE` to
+// indicate that another resolver should be tried, or `SEM_RESOLVE_STOP` to
+// indicate that the correct resolver was found. Continuing implies that no
+// failure has (yet) occurred, but stopping implies neither success nor failure.
+typedef enum {
+  SEM_RESOLVE_CONTINUE = 0,
+  SEM_RESOLVE_STOP = 1
+} sem_resolve;
+
+static sem_resolve sem_try_resolve_arguments(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+  Contract(name);
+  Contract(type_ptr);
+
+  if (!scope || strcmp(scope, "ARGUMENTS")) {
+    return SEM_RESOLVE_CONTINUE;
+  }
+
+  Invariant(current_proc);
   ast_node *params = get_proc_params(current_proc);
-  Contract(params);
+  Invariant(params);
 
   // these are always synthetically generated so they are 100% sure to match
   ast_node *param = get_named_param(params, name);
@@ -5017,74 +5106,548 @@ static void resolve_using_arguments(ast_node *dot, CSTR name) {
     CHARBUF_CLOSE(tmp);
   }
 
-  if (param) {
-    dot->sem = param->sem;
+  if (!param) {
+    report_resolve_error(ast, "CQL0201: expanding FROM ARGUMENTS, there is no argument matching", name);
+    record_resolve_error(ast);
+    return SEM_RESOLVE_STOP;
   }
-  else {
-    report_error(dot, "CQL0201: expanding FROM ARGUMENTS, there is no argument matching", name);
-    record_error(dot);
+
+  if (ast) {
+    ast->sem = param->sem;
   }
+
+  *type_ptr = &param->sem->sem_type;
+
+  return SEM_RESOLVE_STOP;
 }
 
-// Try to look up a [possibly] scoped name in one of the places:
-// 1. a reference to the special ARGUMENTS arg bundle
-// 2. a column in the current joinscope if any (this must not conflict with #2)
-// 3. a local or global variable
-// 4. a declared enum
-// 5. a field in an open cursor
-// 6. a field in an arg bundle
-//
-// ... otherwise, name not found.
-static void sem_resolve_id(ast_node *ast, CSTR name, CSTR scope) {
+// Look for the given name as a local or global variable.  First local.
+static ast_node *find_local_or_global_variable(CSTR name) {
+  // look in the two variable tables, in order, first match wins
+  symtab_entry *entry = symtab_find(locals, name);
 
-  if (scope && !strcmp(scope, "ARGUMENTS")) {
-    // if it's the arguments scope this is the only choice
-    resolve_using_arguments(ast, name);
-    return;
+  if (!entry) {
+    entry = symtab_find(globals, name);
   }
 
-  // We check columns early, only after the special ARGUMENTS case
-  if (try_resolve_column(ast, name, scope)) {
-    // Checking columns first doesn't let them hide locals because
-    // it is an error if a column hides a local/global.
-    // This is only a problem if the table is not scoped. The form
-    // T1.x is always the table column so it's always safe.  However
-    // T1.x == x will give an error if there is a local 'x' because
-    // the 'x' could be either.
-    if (!scope && find_local_or_global_variable(name)) {
-      report_error(ast, "CQL0059: a variable name might be ambiguous "
-                        "with a column name, this is an anti-pattern", name);
-      record_error(ast);
+  return entry ? entry->val : NULL;
+}
+
+// A cursor name C in an expression context refers to the deleted "_C_has_row_"
+// boolean. This lets you say "if C then stuff; end if;"
+static sem_resolve sem_try_resolve_cursor_as_expression(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+  Contract(name);
+  Contract(type_ptr);
+
+  if (scope) {
+    return SEM_RESOLVE_CONTINUE;
+  }
+
+  ast_node *variable = find_local_or_global_variable(name);
+  if (!variable) {
+    return SEM_RESOLVE_CONTINUE;
+  }
+
+  sem_t sem_type = variable->sem->sem_type;
+  if (!is_cursor(sem_type)) {
+    return SEM_RESOLVE_CONTINUE;
+  }
+
+  // cursor appearing in an expression context, rewrite as the flag that says
+  // if the cursor has data.  This lets you write
+  // fetch cursor into ... then  if cursor then ... endif
+
+  if (ast) {
+    CSTR vname = NULL;
+
+    if (sem_type & SEM_TYPE_HAS_SHAPE_STORAGE) {
+      vname = dup_printf("%s._has_row_", variable->sem->name);
     }
+    else {
+      vname = dup_printf("_%s_has_row_", variable->sem->name);
+    }
+
+    ast->sem = new_sem(SEM_TYPE_BOOL | SEM_TYPE_VARIABLE | SEM_TYPE_NOTNULL);
+    ast->sem->name = vname;
+  }
+
+  return SEM_RESOLVE_STOP;
+}
+
+static sem_resolve sem_try_resolve_variable(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+  Contract(name);
+  Contract(type_ptr);
+
+  if (scope) {
+    return SEM_RESOLVE_CONTINUE;
+  }
+
+  ast_node *variable = find_local_or_global_variable(name);
+  if (!variable) {
+    return SEM_RESOLVE_CONTINUE;
+  }
+
+  sem_t sem_type = variable->sem->sem_type;
+  // Cursors-as-expressions are checked first, so this must be true.
+  Invariant(is_unitary(sem_type));
+
+  if (is_object(sem_type) &&
+      CURRENT_EXPR_CONTEXT_IS_NOT(SEM_EXPR_CONTEXT_NONE | SEM_EXPR_CONTEXT_TABLE_FUNC)) {
+    report_resolve_error(ast, "CQL0064: object variables may not appear in the context"
+                              " of a SQL statement (except table-valued functions)", name);
+    record_resolve_error(ast);
+    return SEM_RESOLVE_STOP;
+  }
+
+  if (ast) {
+    ast->sem = new_sem(sem_type);
+    ast->sem->name = variable->sem->name;
+    ast->sem->kind = variable->sem->kind;
+  }
+
+  *type_ptr = &variable->sem->sem_type;
+
+  return SEM_RESOLVE_STOP;
+}
+
+// Returns true if okay, else false.
+static bool_t sem_resolve_column_does_not_conflict_with_variable(ast_node *ast, CSTR column_name, CSTR table_name) {
+  Contract(column_name);
+
+  // It is an error if a column hides a local/global. This is only a problem if
+  // the table is not scoped. The form T1.x is always the table column so it's
+  // always safe. However T1.x == x will give an error if there is a local 'x'
+  // because the 'x' could be either.
+  if (!table_name && find_local_or_global_variable(column_name)) {
+    report_resolve_error(ast, "CQL0059: a variable name might be ambiguous "
+                              "with a column name, this is an anti-pattern", column_name);
+    record_resolve_error(ast);
+    return false;
+  }
+
+  return true;
+}
+
+// Given a column name and optional scope (table name), try to find it as one of
+// the columns in the current join scope or else in one of the parent
+// joinscopes. If the name is ambiguous at any given level then it is an error,
+// but inner scopes are allowed to hide the names of outer scopes.
+static sem_resolve sem_try_resolve_column(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+  Contract(name);
+  Contract(type_ptr);
+
+  sem_t sem_type = 0;
+  CSTR col = NULL;
+  CSTR kind = NULL;
+  sem_join *found_jptr = NULL;
+  sem_t *type = NULL;
+
+  // We walk the chain of scopes until we find a stop frame or else we run out
+  // this allows nested joins to see their parent scopes.
+
+  for (sem_joinscope *jscp = current_joinscope; jscp && jscp->jptr && !col; jscp = jscp->parent) {
+    sem_join *jptr = jscp->jptr;
+    for (int32_t i = 0; i < jptr->count; i++) {
+      if (scope == NULL || !Strcasecmp(scope, jptr->names[i])) {
+        sem_struct *table = jptr->tables[i];
+        for (int32_t j = 0; j < table->count; j++) {
+          if (!Strcasecmp(name, table->names[j])) {
+            if (col) {
+              report_resolve_error(ast, "CQL0065: identifier is ambiguous", name);
+              record_resolve_error(ast);
+              return SEM_RESOLVE_STOP;
+            }
+            sem_type = table->semtypes[j];
+            col = table->names[j];
+            kind = table->kinds[j];
+            found_jptr = jptr;
+            // Store this for setting type_ptr later, if successful.
+            type = &table->semtypes[j];
+          }
+        }
+      }
+    }
+  }
+
+  if (!col) {
+    return SEM_RESOLVE_CONTINUE;
+  }
+
+  if (!sem_resolve_column_does_not_conflict_with_variable(ast, name, scope)) {
+    return SEM_RESOLVE_STOP;
+  }
+
+  if (ast) {
+    ast->sem = new_sem(sem_type);
+    ast->sem->name = col; // be sure to use the canonical name
+    ast->sem->kind = kind; // use the kind if there is one
+    if (found_jptr && found_jptr == monitor_jptr) {
+      symtab_add(monitor_symtab, col, NULL);
+    }
+  }
+
+  *type_ptr = type;
+
+  return SEM_RESOLVE_STOP;
+}
+
+static sem_resolve sem_try_resolve_rowid(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+  Contract(name);
+  Contract(type_ptr);
+
+  sem_t sem_type = 0;
+  CSTR col = NULL;
+  CSTR kind = NULL;
+
+  if (!(current_joinscope && current_joinscope->jptr)) {
+    return SEM_RESOLVE_CONTINUE;
+  }
+
+  // there are 3 valid names for the rowid, any will do.
+  if (Strcasecmp(name, "_rowid_") && Strcasecmp(name, "rowid") && Strcasecmp(name, "oid")) {
+    return SEM_RESOLVE_CONTINUE;
+  }
+
+  sem_join *jptr = current_joinscope->jptr;
+  if (scope == NULL && jptr->count == 1) {
+    // if only one table then that's the rowid
+    col = name;
+    sem_type = SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL;
+  }
+  else if (scope != NULL) {
+    // more than one table but the name is scoped, still have a chance
+    for (int32_t i = 0; i < jptr->count; i++) {
+      if (!Strcasecmp(scope, jptr->names[i])) {
+        col = name;
+        kind = NULL;
+        sem_type = SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL;
+        break;
+      }
+    }
+  }
+  else {
+    report_resolve_error(ast, "CQL0066: identifier is ambiguous", name);
+    record_resolve_error(ast);
+    return SEM_RESOLVE_STOP;
+  }
+
+  if (!col) {
+    return SEM_RESOLVE_CONTINUE;
+  }
+
+  if (!sem_resolve_column_does_not_conflict_with_variable(ast, name, scope)) {
+    return SEM_RESOLVE_STOP;
+  }
+
+  if (ast) {
+    ast->sem = new_sem(sem_type);
+    ast->sem->name = col;
+    ast->sem->kind = kind;
+  }
+
+  return SEM_RESOLVE_STOP;
+}
+
+// Similar to `sem_try_resolve_column`, but used outside of the
+// `sem_try_resolve_*` family of functions a way of looking up a column given
+// only a column name. Intentionally allows situations in which the name of a
+// column shadows a variable. Returns `true` if the column was found, else
+// `false`. Returning `true` does not imply that semantic analysis was
+// successful.
+static bool_t sem_find_column_for_name(ast_node *ast, CSTR name) {
+  Contract(ast);
+  Contract(name);
+
+  sem_t *type = NULL;
+
+  // We want to bypass checking for conflicts with locals and globals.
+  symtab *saved_locals = locals;
+  symtab *saved_globals = globals;
+  locals = NULL;
+  globals = NULL;
+
+  bool_t found = sem_try_resolve_column(ast, name, NULL, &type) == SEM_RESOLVE_STOP;
+  if (!found) {
+    found = sem_try_resolve_rowid(ast, name, NULL, &type) == SEM_RESOLVE_STOP;
+  }
+
+  locals = saved_locals;
+  globals = saved_globals;
+
+  return found;
+}
+
+static void sem_resolve_cursor_field(ast_node *ast, ast_node *cursor, CSTR field, sem_t **type_ptr) {
+  Contract(cursor);
+  Contract(field);
+  Contract(type_ptr);
+
+  sem_t sem_type = cursor->sem->sem_type;
+  CSTR scope = cursor->sem->name;
+
+  // We don't do this if the cursor was not used with the auto syntax
+  if (!(sem_type & SEM_TYPE_HAS_SHAPE_STORAGE)) {
+    report_resolve_error(ast, "CQL0067: cursor was not used with 'fetch [cursor]'", scope);
+    record_resolve_error(ast);
     return;
   }
 
-  // scoped names like T1.id can never be a variable/parameter
-  // if no scope was provided then look for variables
-  if (!scope && try_resolve_variable(ast, name)) {
+  // Find the name if it exists;  emit the canonical field name, which
+  // has the exact case from the declaration.  The user might have used
+  // something like C.VaLuE when the field is "value". The local has to match.
+
+  sem_struct *sptr = cursor->sem->sptr;
+  Invariant(sptr->count > 0);
+
+  for (int32_t i = 0; i < sptr->count; i++) {
+    if (!Strcasecmp(sptr->names[i], field)) {
+      if (ast) {
+        ast->sem = new_sem(sptr->semtypes[i] | SEM_TYPE_VARIABLE);
+        ast->sem->name = dup_printf("%s.%s", scope, sptr->names[i]);
+        ast->sem->kind = sptr->kinds[i];
+      }
+      *type_ptr = &sptr->semtypes[i];
+      return;
+    }
+  }
+
+  report_resolve_error(ast, "CQL0068: field not found in cursor", field);
+  record_resolve_error(ast);
+}
+
+static sem_resolve sem_try_resolve_cursor_field(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+  Contract(name);
+  Contract(type_ptr);
+
+  if (!scope) {
+    return SEM_RESOLVE_CONTINUE;
+  }
+
+  ast_node *variable = find_local_or_global_variable(scope);
+  if (!variable || !is_cursor(variable->sem->sem_type)) {
+    return SEM_RESOLVE_CONTINUE;
+  }
+
+  sem_resolve_cursor_field(ast, variable, name, type_ptr);
+  return SEM_RESOLVE_STOP;
+}
+
+static sem_resolve sem_try_resolve_enum(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+  Contract(name);
+  Contract(type_ptr);
+
+  if (!scope) {
+    return SEM_RESOLVE_CONTINUE;
+  }
+
+  ast_node *enum_stmt = find_enum(scope);
+  if (!enum_stmt) {
+    return SEM_RESOLVE_CONTINUE;
+  }
+
+  Invariant(is_ast_declare_enum_stmt(enum_stmt));
+
+  // Find the name if it exists;  if it does then this becomes a rewrite
+
+  EXTRACT_NOTNULL(enum_values, enum_stmt->right);
+
+  while (enum_values) {
+    EXTRACT_NOTNULL(enum_value, enum_values->left);
+    EXTRACT_STRING(enum_member, enum_value->left);
+
+    if (!Strcasecmp(enum_member, name)) {
+      if (ast) {
+        ast_node *ast_new = eval_set(ast, enum_value->left->sem->value);
+        sem_root_expr(ast_new, SEM_EXPR_CONTEXT_NONE);
+        ast->sem = ast_new->sem;
+        ast->sem->kind = enum_stmt->sem->kind;
+      }
+      return true;
+    }
+    enum_values = enum_values->right;
+  }
+
+  report_resolve_error(ast, "CQL0357: enum does not contain", name);
+  record_resolve_error(ast);
+
+  return SEM_RESOLVE_STOP;
+}
+
+static sem_resolve sem_try_resolve_arg_bundle(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+  Contract(name);
+  Contract(type_ptr);
+
+   if (!scope) {
+     return SEM_RESOLVE_CONTINUE;
+   }
+
+   ast_node *shape = find_arg_bundle(scope);
+   if (!shape) {
+     return SEM_RESOLVE_CONTINUE;
+   }
+
+  // Find the name if it exists;  emit the canonical field name, which
+  // has the exact case from the declaration.  The user might have used
+  // something like C.VaLuE when the field is "value". The local has to match.
+
+  sem_struct *sptr = shape->sem->sptr;
+  Invariant(sptr->count > 0);
+
+  for (int32_t i = 0; i < sptr->count; i++) {
+    if (!Strcasecmp(sptr->names[i], name)) {
+      if (ast) {
+        ast->sem = new_sem(sptr->semtypes[i] | SEM_TYPE_VARIABLE);
+        ast->sem->name = dup_printf("%s_%s", shape->sem->name, sptr->names[i]);
+        ast->sem->kind = sptr->kinds[i];
+      }
+      *type_ptr = &sptr->semtypes[i];
+      return SEM_RESOLVE_STOP;
+    }
+  }
+
+  report_resolve_error(ast, "CQL0068: field not found in shape", name);
+  record_resolve_error(ast);
+
+  return SEM_RESOLVE_STOP;
+}
+
+// This function is responsible for resolving both unqualified identifiers (ids)
+// and qualified identifiers (dots). It performs the following two roles:
+//
+// - If an optional `ast` is provided, it works the same way most semantic
+//   analysis functions work: semantic information will be written into into the
+//   ast, errors will be reported to the user, and errors will be recorded in
+//   the AST.
+//
+// - `*typr_ptr` will be set to mutable type (`sem_t *`) in the current
+//   environment if the identifier successfully resolves to a type. (There are,
+//   unfortunately, a few exceptions in which a type will be successfully
+//   resolved and yet `*typr_ptr` will not be set. These include when a cursor
+//   in an expression position, when the expression is `rowid` (or similar), and
+//   when the id resolves to an enum case. The reason no mutable type is
+//   returned in these cases is that a new type is allocated as part of semantic
+//   analysis, and there exists no single, stable type in the environment to
+//   which a pointer could be returned. This is a limitation of this function,
+//   albeit one that's currently not problematic.)
+//
+//  Resolution is attempted in the order that the `sem_try_resolve_*` functions
+//  appear in the `resolver` array. Each takes the same arguments: An (optional)
+//  AST, a mandatory name, an optional scope, and mandatory type pointer. If the
+//  identifier provided to one of these resolvers is resolved successfully, *or*
+//  if the correct resolver was found but there was an error in the program,
+//  `SEM_RESOLVE_STOP` is returned and resolution is complete, succesful or not.
+//  If a resolver is tried and it determines that it is not the correct resolver
+//  for the identifier in question, `SEM_RESOLVE_CONTINUE` is returned and the
+//  next resolver is tried.
+//
+// This function should not be called directly. If one is interested in
+// performing semantic analysis, call `sem_resolve_id` (or, if within an
+// expression, `sem_resolve_id_expr`). Alternatively, if one wants to get a
+// mutable type from the environment, call `find_mutable_type`.
+static void sem_resolve_id_with_type(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+  Contract(name);
+  Contract(type_ptr);
+
+  *type_ptr = NULL;
+
+  sem_resolve (*resolver[])(ast_node *ast, CSTR, CSTR, sem_t **) = {
+    sem_try_resolve_arguments,
+    sem_try_resolve_column,
+    sem_try_resolve_rowid,
+    sem_try_resolve_cursor_as_expression,
+    sem_try_resolve_variable,
+    sem_try_resolve_enum,
+    sem_try_resolve_cursor_field,
+    sem_try_resolve_arg_bundle,
+  };
+
+  for (uint32_t i = 0; i < sizeof(resolver) / sizeof(void *); i++) {
+    if (resolver[i](ast, name, scope, type_ptr) == SEM_RESOLVE_STOP) {
+      return;
+    }
+  }
+
+  report_resolve_error(ast, "CQL0069: name not found", name);
+  record_resolve_error(ast);
+}
+
+// Resolves a (potentially qualified) identifier, writing semantic information
+// into `ast` if successful, or reporting and recording an error for `ast` if
+// not.
+static void sem_resolve_id(ast_node *ast, CSTR name, CSTR scope) {
+  Contract(is_ast_id(ast) || is_ast_dot(ast));
+  Contract(name);
+
+  // We have no use for `type` and simply throw it away.
+  sem_t *type = NULL;
+  sem_resolve_id_with_type(ast, name, scope, &type);
+}
+
+// Like `sem_resolve_id`, but specific to expression contexts (where nullability
+// improvements are applicable).
+static void sem_resolve_id_expr(ast_node *ast, CSTR name, CSTR scope) {
+  Contract(is_ast_id(ast) || is_ast_dot(ast));
+  Contract(name);
+
+  // Perform resolution, as for ids and dots outside of expressions.
+  sem_resolve_id(ast, name, scope);
+
+  if (is_analyzing_notnull_rewrite) {
+    // If we're analyzing the product of a rewrite and we're already inside of a
+    // call to `cql_inferred_notnull`, do not expand again.
+    // forever.
     return;
   }
 
-  // The scope might be the name of an enum, if it is, then do
-  // the appropriate rewrite and proceed
-  if (scope && try_resolve_using_enum(ast, name, scope)) {
+  if (!sem_is_notnull_improved(name, scope)) {
+    // This identifier isn't improved, so we stop.
     return;
   }
 
-  // a scope might refer to a cursor, since these are always scoped
-  // there is no issue with confusion with locals.
-  if (scope && try_resolve_auto_cursor(ast, name, scope)) {
-    return;
+  // If we've made it here, it's safe and appropriate to do the rewrite.
+  rewrite_nullable_to_unsafe_notnull(ast);
+  sem_expr(ast);
+}
+
+// Returns the *mutable* type (`sem_t *`) for a given (potentially qualified)
+// identifier if one exists in the environment. See the documentation for
+// `sem_resolve_id_with_type` for limitations.
+static sem_t *find_mutable_type(CSTR name, CSTR scope) {
+  Contract(name);
+
+  sem_t *type = NULL;
+  sem_resolve_id_with_type(NULL, name, scope, &type);
+
+  return type;
+}
+
+// Like `find_mutable_type`, but restricted to global variables only.
+static sem_t *find_mutable_type_for_global_variable(CSTR name) {
+  symtab_entry *entry = symtab_find(globals, name);
+  if (!entry) {
+    return NULL;
   }
 
-  // a scope might refer to an arg bungle, again these are always scoped
-  if (scope && try_resolve_using_arg_bundle(ast, name, scope)) {
-    return;
+  ast_node *variable = entry->val;
+  Invariant(is_variable(variable->sem->sem_type));
+
+  return &variable->sem->sem_type;
+}
+
+// Like `find_mutable_type`, but restricted to global auto cursor fields only.
+static sem_t *find_mutable_type_for_global_cursor_field(CSTR name, CSTR cursor_name) {
+  symtab_entry *entry = symtab_find(globals, cursor_name);
+  if (!entry) {
+    return NULL;
   }
 
-  report_error(ast, "CQL0069: name not found", name);
-  record_error(ast);
-  return;
+  ast_node *cursor = entry->val;
+  Invariant(is_cursor(cursor->sem->sem_type));
+
+  sem_t *type = NULL;
+  sem_resolve_cursor_field(NULL, cursor, name, &type);
+
+  return type;
 }
 
 // Here we check that type<Foo> only combines with type<Foo> or type.
@@ -5131,14 +5694,12 @@ static void sem_case_list(ast_node *head, sem_t sem_type_required_for_when, CSTR
 
   for (ast_node *ast = head; ast; ast = ast->right) {
     EXTRACT_NOTNULL(when, ast->left);
+    // WHEN [case_expr] THEN [then_expr]
     EXTRACT_ANY_NOTNULL(case_expr, when->left);
     EXTRACT_ANY_NOTNULL(then_expr, when->right);
 
-    // WHEN [case_expr] THEN [then_expr]
     sem_expr(case_expr);
-    sem_expr(then_expr);
-
-    if (is_error(case_expr) || is_error(then_expr)) {
+    if (is_error(case_expr)) {
       record_error(ast);
       record_error(head);
       return;
@@ -5152,6 +5713,16 @@ static void sem_case_list(ast_node *head, sem_t sem_type_required_for_when, CSTR
 
     sem_combine_kinds(case_expr, kind_required_for_when);
     if (is_error(case_expr)) {
+      record_error(ast);
+      record_error(head);
+      return;
+    }
+
+    PUSH_NOTNULL_IMPROVEMENT_CONTEXT(case_expr, NULL);
+    sem_expr(then_expr);
+    POP_NOTNULL_IMPROVEMENT_CONTEXT();
+
+    if (is_error(then_expr)) {
       record_error(ast);
       record_error(head);
       return;
@@ -5266,6 +5837,13 @@ static void sem_expr_case(ast_node *ast, CSTR cstr) {
     sem_replace_flags(ast, new_flags);
   }
   connector->sem = ast->sem;
+}
+
+// if we get here we are re-evaluating a subtree, this rewritten bit
+// is necessarily processed so we don't have to do it again
+static void sem_expr_between_rewrite(ast_node *ast, CSTR cstr) {
+  Contract(is_ast_between_rewrite(ast));
+  return;
 }
 
 // Between requires type compatability between all three of its arguments.
@@ -6159,20 +6737,19 @@ static bool_t sem_validate_cursor_from_variable(ast_node *ast, CSTR target) {
   return false;
 }
 
-// The attest notnull family are CQL builtin functions that returns their input if not null
-// or fail somehow if null.  The notion here is you already checked that the expression
-// is notnull and you want to tell the type system this. The runtime check is
-// only a failsafe.
-static void sem_func_attest_notnull(ast_node *ast, uint32_t arg_count) {
+// The attest notnull family are CQL builtin functions that return a value of a
+// nonnull type when given a nullable value, either after some runtime check is
+// performed (in the case of ifnull_throw and ifnull_crash, which are used
+// directly by the programmer), or not (in the case of cql_inferred_notnull, which
+// will only show up as the product of rewrite rules).
+static void sem_func_attest_notnull(ast_node *ast, uint32_t arg_count, uint32_t valid_contexts) {
   Contract(is_ast_call(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  if (CURRENT_EXPR_CONTEXT_IS_NOT(SEM_EXPR_CONTEXT_NONE)) {
-    report_error(ast, "CQL0080: function may not appear in this context", name);
-    record_error(ast);
+  if (!sem_validate_context(ast, name, valid_contexts)) {
     return;
   }
 
@@ -6184,21 +6761,19 @@ static void sem_func_attest_notnull(ast_node *ast, uint32_t arg_count) {
   sem_t sem_type = arg1->sem->sem_type;
 
   if (is_null_type(sem_type) || is_not_nullable(sem_type)) {
-     report_error(arg1, "CQL0344: argument must be a nullable type (but not constant NULL) in", name);
-     record_error(ast);
-     return;
+    report_error(arg1, "CQL0344: argument must be a nullable type (but not constant NULL) in", name);
+    record_error(ast);
+    return;
   }
 
   ast->sem = arg1->sem;
   sem_add_flags(ast, SEM_TYPE_NOTNULL); // note this makes a copy
   name_ast->sem = ast->sem;
-  // attest not null compiles to nothing so we do preserve the name in this case
-  // Sqlite would never see the attest if it ever went through
 }
 
 // uses attest notnull semantic helper
 static void sem_func_ifnull_throw(ast_node *ast, uint32_t arg_count) {
-  sem_func_attest_notnull(ast, arg_count);
+  sem_func_attest_notnull(ast, arg_count, SEM_EXPR_CONTEXT_NONE);
 
   // "throw" implies that we have a return code which implies all of the proc
   // things as surely as if we had used the database.  We need to be a proc
@@ -6208,7 +6783,15 @@ static void sem_func_ifnull_throw(ast_node *ast, uint32_t arg_count) {
 
 // uses attest notnull semantic helper
 static void sem_func_ifnull_crash(ast_node *ast, uint32_t arg_count) {
-  sem_func_attest_notnull(ast, arg_count);
+  sem_func_attest_notnull(ast, arg_count, SEM_EXPR_CONTEXT_NONE);
+}
+
+static void sem_func_cql_inferred_notnull(ast_node *ast, uint32_t arg_count) {
+  // This compiles to nothing for SQLite so we can allow all contexts.
+  sem_func_attest_notnull(ast, arg_count, SEM_EXPR_CONTEXT_FLAGS);
+  Invariant(ast->sem->sem_type & SEM_TYPE_INFERRED_NOTNULL);
+  // Prevent this from propagating needlessly to keep --print clean.
+  ast->sem->sem_type ^= SEM_TYPE_INFERRED_NOTNULL;
 }
 
 // validate expression with cql_cursor_diff_xxx func is semantically correct.
@@ -6871,10 +7454,9 @@ static void sem_func_julianday(ast_node *ast, uint32_t arg_count) {
   sem_strftime(ast, arg_count, 0, SEM_TYPE_REAL);
 }
 
-// The "nullable" function is used to take something that is
-// not nullable and have it be treated as nullable.  This is really
-// only needed to get argument types to match in compound select
-// statements or other similar situations.
+// The "ptr" function is used to get the memory address of an object at runtime
+// as a LONG INT. This is useful when calling SQLite functions as they are
+// unable to deal with objects directly.
 static void sem_func_ptr(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
@@ -7130,7 +7712,7 @@ static void sem_validate_args(ast_node *ast, ast_node *arg_list) {
 //     * we can't use these in SQL, so this has to be a loose expression
 //  * If this is declared with the select keyword then
 //     * we can ONLY use these in SQL, not in a loose expression
-//  * args have to be compatible with formals
+//  * args have to be checked and compatible with formals
 static void sem_user_func(ast_node *ast, ast_node *user_func) {
   Contract(is_ast_call(ast));
   Contract(is_ast_declare_func_stmt(user_func) || is_ast_declare_select_func_stmt(user_func));
@@ -7172,9 +7754,6 @@ static void sem_user_func(ast_node *ast, ast_node *user_func) {
     return;
   }
 
-  // arg list already validated and no errors by expr_call
-  // sem_validate_args not needed
-
   sem_validate_args_vs_formals(ast, name, arg_list, params, NORMAL_CALL);
   if (is_error(ast)) {
     return;
@@ -7186,7 +7765,7 @@ static void sem_user_func(ast_node *ast, ast_node *user_func) {
 // Calling a stored procedure as a function
 // There are a few things to check:
 //  * we can't use these in SQL, so this has to be a loose expression
-//  * args have to be compatible with formals, except
+//  * args have to be checked and compatible with formals, except
 //  * the last formal must be an OUT arg and it must be a scalar type
 //  * that out arg will be treated as the return value of the "function"
 //  * in code-gen we will create a temporary for it, semantic analysis doesn't care
@@ -7206,9 +7785,6 @@ static void sem_proc_as_func(ast_node *ast, ast_node *proc) {
     record_error(ast);
     return;
   }
-
-  // arg list already validated and no errors by expr_call
-  // sem_validate_args not needed
 
   if (has_out_stmt_result(proc) || has_result_set(proc)) {
     report_error(ast, "CQL0091: Stored procs that deal with result sets or cursors cannot be invoked as functions", name);
@@ -7256,8 +7832,7 @@ static void sem_expr_raise(ast_node *ast, CSTR cstr) {
 
 // This validates that the call is to one of the functions that we know and
 // then delegates to the appropriate shared helper function for that type
-// of call for additional validation.  We compute the semantic type of all
-// the arguments before we validate the particular function.
+// of call for additional validation.
 static void sem_expr_call(ast_node *ast, CSTR cstr) {
   Contract(is_ast_call(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
@@ -7302,36 +7877,43 @@ static void sem_expr_call(ast_node *ast, CSTR cstr) {
     return;
   }
 
-  if (is_ptr_function) {
-    PUSH_EXPR_CONTEXT(SEM_EXPR_CONTEXT_TABLE_FUNC);
-    sem_arg_list(arg_list, is_count_function);
-    if (arg_list && is_error(arg_list)) {
-      record_error(ast);
-      return;
-    }
-    POP_EXPR_CONTEXT();
-  }
-  else {
-    sem_arg_list(arg_list, is_count_function);
-    if (arg_list && is_error(arg_list)) {
-      record_error(ast);
-      return;
-    }
-  }
-
   // check for functions
   symtab_entry *entry = symtab_find(builtin_funcs, name);
-  if (entry) {
-    ((void (*)(ast_node*, uint32_t))entry->val)(ast, arg_count);
-
-    goto cleanup;
+  if (!entry) {
+    // check for aggregate functions
+    entry = symtab_find(builtin_aggregated_funcs, name);
+    if (entry) {
+      call_aggr_or_user_def_func = 1;
+    }
   }
 
-  // check for aggregate functions
-  symtab_entry *aggr_entry = symtab_find(builtin_aggregated_funcs, name);
-  if (aggr_entry) {
-    ((void (*)(ast_node*, uint32_t))aggr_entry->val)(ast, arg_count);
-    call_aggr_or_user_def_func = 1;
+  if (entry) {
+    if (is_ptr_function) {
+      PUSH_EXPR_CONTEXT(SEM_EXPR_CONTEXT_TABLE_FUNC);
+      sem_arg_list(arg_list, is_count_function);
+      if (arg_list && is_error(arg_list)) {
+        record_error(ast);
+        return;
+      }
+      POP_EXPR_CONTEXT();
+    }
+    else {
+      if (!Strcasecmp("cql_inferred_notnull", name)) {
+        // If we're checking a call to `cql_inferred_notnull`, its arguments
+        // have already been rewritten and we don't want to do it again. Setting
+        // `is_analyzing_notnull_rewrite` prevents that.
+        is_analyzing_notnull_rewrite = true;
+        sem_arg_list(arg_list, is_count_function);
+        is_analyzing_notnull_rewrite = false;
+      } else {
+        sem_arg_list(arg_list, is_count_function);
+      }
+      if (arg_list && is_error(arg_list)) {
+        record_error(ast);
+        return;
+      }
+    }
+    ((void (*)(ast_node*, uint32_t))entry->val)(ast, arg_count);
     goto cleanup;
   }
 
@@ -7783,6 +8365,26 @@ static void sem_select_expr_list(ast_node *ast) {
   Invariant(count == i);
 }
 
+// Helper to analyze a select expression list with nullability improvements from
+// `opt_where`, if provided.
+static void sem_select_expr_list_with_opt_where(ast_node *ast, ast_node *opt_where) {
+  Contract(is_ast_select_expr_list(ast));
+  Contract(!opt_where || is_ast_opt_where(opt_where));
+
+  ast_node *where_cond = opt_where ? opt_where->left : NULL;
+
+  // We pass `ast`, the `select_expr_list`, when pushing the context so that
+  // any aliases can be excluded from the possible improvements. We must do
+  // this because the aliases are in scope for the where clause (and so may be
+  // referenced there), but not in scope for the selection expression list
+  // we're about to check. As such, trying to look up an alias and improve it
+  // here might actually improve a variable with the same name in an enclosing
+  // scope.
+  PUSH_NOTNULL_IMPROVEMENT_CONTEXT(where_cond, ast);
+  sem_select_expr_list(ast);
+  POP_NOTNULL_IMPROVEMENT_CONTEXT();
+}
+
 // A table factor is one of three things:
 // * a table name (a string)  select * from X
 // * a select subquery (select X,Y from..) as T2
@@ -7881,7 +8483,7 @@ static sem_t sem_join_using_columns(ast_node *join, ast_node *join_cond, sem_joi
     {
       PUSH_JOIN_BLOCK();
       PUSH_JOIN(left_join, left);
-      if (!try_resolve_column(ast, name, NULL)) {
+      if (!sem_find_column_for_name(ast, name)) {
         report_error(ast, "CQL0096: join using column not found on the left side of the join", name);
         record_error(join_cond);
         record_error(join);
@@ -7901,7 +8503,7 @@ static sem_t sem_join_using_columns(ast_node *join, ast_node *join_cond, sem_joi
     {
       PUSH_JOIN_BLOCK();
       PUSH_JOIN(right_join, right);
-      if (!try_resolve_column(ast, name, NULL)) {
+      if (!sem_find_column_for_name(ast, name)) {
         report_error(ast, "CQL0097: join using column not found on the right side of the join", name);
         record_error(join_cond);
         record_error(join);
@@ -8143,15 +8745,9 @@ static void sem_table_function(ast_node *ast) {
 
   // SQL Func context is basically the same the ON context but allows for Object types
   PUSH_EXPR_CONTEXT(SEM_EXPR_CONTEXT_TABLE_FUNC);
-  sem_arg_list(arg_list, 0 /* '*' not allowed */);
+  sem_validate_args_vs_formals(ast, name, arg_list, params, NORMAL_CALL);
   POP_EXPR_CONTEXT();
 
-  if (arg_list && is_error(arg_list)) {
-    record_error(ast);
-    return;
-  }
-
-  sem_validate_args_vs_formals(ast, name, arg_list, params, NORMAL_CALL);
   if (is_error(ast)) {
     return;
   }
@@ -8414,6 +9010,8 @@ static void sem_select_expr_list_con(ast_node *ast) {
   EXTRACT_NOTNULL(select_expr_list, ast->left);
   EXTRACT_NOTNULL(select_from_etc, ast->right);
   EXTRACT_ANY(query_parts, select_from_etc->left);
+  EXTRACT_NOTNULL(select_where, select_from_etc->right);
+  EXTRACT(opt_where, select_where->left);
 
   sem_join *jptr = NULL;
 
@@ -8433,7 +9031,7 @@ static void sem_select_expr_list_con(ast_node *ast) {
 
       // evaluate the select list using only the scope of the FROM
       PUSH_JOIN(j, jptr);
-      sem_select_expr_list(select_expr_list);
+      sem_select_expr_list_with_opt_where(select_expr_list, opt_where);
       error = is_error(select_expr_list);
       POP_JOIN();
     }
@@ -8445,7 +9043,7 @@ static void sem_select_expr_list_con(ast_node *ast) {
       // In this context the semantic analysis of select_expr_list node should be done
       // without select_from_etc's jptr in the join stack because there is no table
       // reference in the select statement
-      sem_select_expr_list(select_expr_list);
+      sem_select_expr_list_with_opt_where(select_expr_list, opt_where);
       error = is_error(select_expr_list);
     }
   }
@@ -8469,6 +9067,31 @@ static void sem_select_expr_list_con(ast_node *ast) {
       }
 
       POP_MONITOR_SYMTAB();
+
+      if (!error) {
+        ast->sem = select_expr_list->sem;
+        ast->sem->used_symbols = used_symbols;
+
+        ast_node *where_cond = opt_where ? opt_where->left : NULL;
+
+        // Push improvements for the resulting columns. We don't pass
+        // `select_expr_list` here because we want to include the aliases when
+        // improving, unlike in `sem_select_expr_list_with_opt_where` where
+        // the aliases were not in scope for the select expressions.
+        PUSH_NOTNULL_IMPROVEMENT_CONTEXT(where_cond, NULL);
+
+        sem_struct *sptr = ast->sem->sptr;
+        for (int32_t i = 0; i < sptr->count; i++) {
+          if (sem_sensitive) {
+            sptr->semtypes[i] |= sem_sensitive;
+          }
+          if (sem_is_notnull_improved(sptr->names[i], NULL)) {
+            sptr->semtypes[i] |= SEM_TYPE_NOTNULL;
+          }
+        }
+
+        POP_NOTNULL_IMPROVEMENT_CONTEXT();
+      }
     }
     POP_JOIN();
   }
@@ -8476,17 +9099,6 @@ static void sem_select_expr_list_con(ast_node *ast) {
   if (error) {
     record_error(ast);
     record_error(select_expr_list);
-  }
-  else {
-    ast->sem = select_expr_list->sem;
-    ast->sem->used_symbols = used_symbols;
-
-    if (sem_sensitive) {
-      sem_struct *sptr = ast->sem->sptr;
-      for (int32_t i = 0; i < sptr->count; i++) {
-        sptr->semtypes[i] |= sem_sensitive;
-      }
-    }
   }
 }
 
@@ -8635,8 +9247,8 @@ static void sem_add_used_symbols(symtab **used_symbols, symtab *add_symbols) {
   }
 }
 
-// Like sem_select_orderby, but with the restriction that ordering can only
-// be specified via indicies (e.g., 2) and simple name expressions (e.g, x), not
+// Like sem_select_orderby, but with the restriction that ordering can only be
+// specified via indices (e.g., 2) and simple name expressions (e.g, x), not
 // arbitrary expressions (e.g., x + y).
 static bool_t sem_select_orderby_with_simple_ordering_only(ast_node *ast) {
   Contract(is_ast_select_orderby(ast));
@@ -8658,7 +9270,7 @@ static bool_t sem_select_orderby_with_simple_ordering_only(ast_node *ast) {
     if (is_ast_num(expr)) {
       continue;
     }
-    if (is_ast_str(expr) && !is_ast_strlit(expr)) {
+    if (is_ast_id(expr)) {
       continue;
     }
     report_error(expr, "CQL0398: A compound select cannot be ordered by the result of an expression", NULL);
@@ -9838,7 +10450,10 @@ static void sem_validate_previous_table(ast_node *prev_table) {
   // if this table changed to the new plan we have to transition against
   // the max schema number, we can't do that until later so save it.
   if (prev_info.recreate && !cur_info.recreate) {
-    add_item_to_list(&all_prev_recreate_tables, ast);
+    // check create verisions
+    if (ast->sem->create_version > 0) {
+      add_item_to_list(&all_prev_recreate_tables, ast);
+    }
   }
 
   // If we're on the @recreate plan then we can make any changes we like to the table
@@ -10001,7 +10616,7 @@ static void sem_validate_previous_table(ast_node *prev_table) {
   enqueue_pending_region_validation(prev_table, ast, name);
 }
 
-// Verison info can be gathered from tables, views, or indicies (columns are done seperately)
+// Verison info can be gathered from tables, views, or indices (columns are done seperately)
 // Here we emit a record the annotation with the correct code into the pending annotations buffer
 // this will be later sorted and used to drive schema migration if schema codegen happens.
 static void sem_record_annotation_from_vers_info(version_attrs_info *vers_info) {
@@ -10668,6 +11283,170 @@ static void sem_alter_table_add_column_stmt(ast_node *ast) {
   record_ok(ast);
 }
 
+// Returns true if currently improved to be nonnull, else false.
+static bool_t sem_is_notnull_improved(CSTR name, CSTR scope) {
+  Contract(name);
+
+  sem_t *type = find_mutable_type(name, scope);
+  if (!type) {
+    return false;
+  }
+
+  return !!(*type & SEM_TYPE_INFERRED_NOTNULL);
+}
+
+// Enables a nonnull improvement, if possible.
+static void sem_set_notnull_improved(CSTR name, CSTR scope) {
+  Contract(name);
+
+  if (!enforcement.strict_not_null_after) {
+    return;
+  }
+
+  sem_t *type = find_mutable_type(name, scope);
+  if (!type) {
+    return;
+  }
+
+  // It's very important that we return NULL if something is already improved or
+  // does not need to be, else `sem_add_notnull_improvements` will push it onto
+  // the list of added improvements and `sem_remove_notnull_improvements` will
+  // inappropriately remove it too soon.
+  if (*type & (SEM_TYPE_INFERRED_NOTNULL | SEM_TYPE_NOTNULL)) {
+    return;
+  }
+
+  // We keep track of globals so that we can unset them before procedure calls
+  // so they are not inappropriately considered nonnull in the callee (or after
+  // the call returns).
+  bool_t is_global;
+  if (scope) {
+    // There is nothing else mutable at a global scope with a qualified
+    // identifier except for cursor fields, so we don't need to check for
+    // anything else.
+    is_global = type == find_mutable_type_for_global_cursor_field(name, scope);
+  } else {
+    is_global = type == find_mutable_type_for_global_variable(name);
+  }
+
+  if (is_global) {
+    // Since this is a global, record it as such.
+    notnull_improvement_item *global_item = _ast_pool_new(notnull_improvement_item);
+    global_item->type = type;
+    global_item->next = notnull_improved_globals;
+    notnull_improved_globals = global_item;
+    // TODO: Since we do not yet have hazards in place for calls, it's not
+    // safe to actually do the improvement.
+    return;
+  }
+
+  // Improve the type.
+  *type |= SEM_TYPE_INFERRED_NOTNULL;
+
+  // Add it to the current context so that it can be unset when the context
+  // ends.
+  notnull_improvement_item *item = _ast_pool_new(notnull_improvement_item);
+  item->type = type;
+  item->next = current_notnull_improvement_context;
+  current_notnull_improvement_context = item;
+}
+
+// This needs to be called for everything that is no longer safe to consider NOT
+// NULL due to a mutation. It is fine to call this for something not currently
+// subject to improvement.
+static void sem_unset_notnull_improved(CSTR name, CSTR scope) {
+  Contract(name);
+
+  sem_t *type = find_mutable_type(name, scope);
+  if (type) {
+    *type &= u64_not(SEM_TYPE_INFERRED_NOTNULL);
+  }
+
+  // Unlike in `sem_set_notnull_improved`, we do not bother updating
+  // `current_notnull_improvement_context`. Since the entire purpose of keeping
+  // the list of current improvements is to be able to unset them, no harm will
+  // be done if we re-unset them later.
+}
+
+// Given an optional expression `ast` containing possibly AND-linked IS NOT NULL
+// subexpressions, set all of the applicable nullability improvements and add
+// them to `added` so the caller can remove them later. If the optional
+// `select_expr_list` is provided, any aliases within it will be excluded when
+// improving ids.
+static void sem_add_notnull_improvements(ast_node* ast, ast_node* select_expr_list)
+{
+  Contract(!select_expr_list || is_ast_select_expr_list(select_expr_list));
+
+  // If we have no AST, either because we recursed on NULL or because a new
+  // context was pushed without a conditional expression to analyze, we can just
+  // stop here.
+  if (!ast) {
+    return;
+  }
+
+  // We include all improvements along the outermost spine of AND expressions.
+  if (is_ast_and(ast)) {
+    Invariant(ast->left);
+    Invariant(ast->right);
+    sem_add_notnull_improvements(ast->left, select_expr_list);
+    sem_add_notnull_improvements(ast->right, select_expr_list);
+    return;
+  }
+
+  // We want exactly `s IS NOT NULL`, but if and only if `s` is nullable. Only
+  // taking the nullable expressions makes it easy to toggle nullability off and
+  // back on later.
+  if (!(is_ast_is_not(ast) && is_ast_null(ast->right))) {
+    return;
+  }
+
+  if (!is_ast_id(ast->left) && !is_ast_dot(ast->left)) {
+    return;
+  }
+
+  ast_node *id_or_dot = ast->left;
+
+  if (is_ast_id(id_or_dot)) {
+    EXTRACT_STRING(name, id_or_dot);
+    // If we have `select_expr_list`, we should not improve `name` if the id
+    // also appears as an alias in the expression list. This is because `name`
+    // will be shadowed by said alias when we sem the expression list.
+    for (ast_node *item = select_expr_list; item; item = item->right) {
+      Invariant(is_ast_select_expr_list(item));
+      EXTRACT_ANY_NOTNULL(select_expr_or_star, item->left);
+      if (is_ast_star(select_expr_or_star)) {
+        Invariant(!item->right);
+        break;
+      }
+      Invariant(is_ast_select_expr(select_expr_or_star));
+      EXTRACT(opt_as_alias, select_expr_or_star->right);
+      if (opt_as_alias) {
+        EXTRACT_STRING(alias_name, opt_as_alias->left);
+        if (!strcmp(name, alias_name)) {
+          return;
+        }
+      }
+    }
+    sem_set_notnull_improved(name, NULL);
+  } else {
+    Invariant(is_ast_dot(id_or_dot));
+    EXTRACT_STRING(name, id_or_dot->right);
+    EXTRACT_STRING(scope, id_or_dot->left);
+    sem_set_notnull_improved(name, scope);
+  }
+}
+
+// The converse to `sem_add_notnull_improvements`, this unsets nullability
+// improvements given a list of previously added improvements and sets `*items`
+// to NULL;
+static void sem_remove_notnull_improvements() {
+  for (notnull_improvement_item *item = current_notnull_improvement_context; item; item = item->next) {
+    *item->type &= u64_not(SEM_TYPE_INFERRED_NOTNULL);
+  }
+
+  current_notnull_improvement_context = NULL;
+}
+
 // This is the [expression] then [statements] part of an IF or ELSE IF
 // Which is what we mean by a conditional action.  We have to validate
 // that the condition is numeric and the statements have no errors.
@@ -10691,7 +11470,9 @@ static void sem_cond_action(ast_node *ast) {
   }
 
   if (stmt_list) {
+    PUSH_NOTNULL_IMPROVEMENT_CONTEXT(expr, NULL);
     sem_stmt_list(stmt_list);
+    POP_NOTNULL_IMPROVEMENT_CONTEXT();
     if (is_error(stmt_list)) {
       record_error(ast);
       return;
@@ -11961,6 +12742,14 @@ static void sem_fetch_values_stmt(ast_node *ast) {
   destroy_name_check(&check);
 
   if (valid) {
+    // It's possible to do better here by unimproving those being set to a value of a
+    // nullable type and actually improving those being set to a notnull type. For now
+    // though, we just unimprove all of them.
+    sem_struct *sptr = cursor->sem->sptr;
+    for (uint32_t i = 0; i < sptr->count; i++) {
+      sem_unset_notnull_improved(sptr->names[i], cursor->sem->name);
+    }
+
     record_ok(ast);
   }
   else {
@@ -11997,7 +12786,7 @@ static bool_t sem_name_check(name_check *check) {
       // Resolve name with no qualifier in the current scope.
       EXTRACT_STRING(name, name_ast);
 
-      if (!try_resolve_column(name_ast, name, NULL) || is_error(name_ast)) {
+      if (!sem_find_column_for_name(name_ast, name) || is_error(name_ast)) {
         report_error(name_ast, "CQL0171: name not found", name);
         record_error(name_ast);
         record_error(check->name_list);
@@ -12083,8 +12872,8 @@ static void sem_synthesize_dummy_value(dummy_info *info) {
   ast_node *ast_col = new_ast_str(info->name);
   PUSH_JOIN_BLOCK()
   PUSH_JOIN(info_scope, info->jptr);
-  bool_t resolved = try_resolve_column(ast_col, info->name, NULL);
-  Invariant(resolved);
+  bool_t found = sem_find_column_for_name(ast_col, info->name);
+  Invariant(found);
   Invariant(!is_error(ast_col));  // name is known to be good!
   POP_JOIN();
   POP_JOIN();
@@ -12312,8 +13101,6 @@ static void sem_assign(ast_node *ast) {
   EXTRACT_STRING(name, name_ast);
   EXTRACT_ANY_NOTNULL(expr, ast->right);
 
-  // SET [name] := [expr]
-  // LET [name] := [expr]
   ast_node *variable = find_local_or_global_variable(name);
 
   if (!variable) {
@@ -12349,6 +13136,15 @@ static void sem_assign(ast_node *ast) {
   sem_combine_kinds(expr, variable->sem->kind);
   if (is_error(expr)) {
     record_error(ast);
+  }
+
+  // We can infer that the left side of `:=` is not null if the right side is
+  // not null. Otherwise, we remove any existing improvement as it is no longer
+  // valid.
+  if (is_not_nullable(expr->sem->sem_type)) {
+    sem_set_notnull_improved(name, NULL);
+  } else {
+    sem_unset_notnull_improved(name, NULL);
   }
 }
 
@@ -12523,10 +13319,11 @@ error:
     return NULL;
 }
 
-// This is the general helper for handling the "LIKE [name]" form
-// Basically we are going to replace the LIKE sequence with a list
-// of names.  We just need to find an named object that has a structure
-// type.  It can be
+// This is the general helper for handling the "LIKE [name]" form Basically we
+// are going to replace the LIKE sequence with a list of names.  We just need to
+// find an named object that has a structure type, then return a fresh copy of
+// it with a fresh sptr (to prevent aliasing).
+// It can be:
 //   * a cursor
 //   * a proc that returns a result set (or any proc if using ARGUMENTS form)
 //   * a table
@@ -12541,6 +13338,8 @@ cql_noexport ast_node *sem_find_likeable_ast(ast_node *like_ast, int32_t likeabl
 
   if (like_ast->right) {
     // from arguments form, only proc names allowed
+    // `sem_find_likeable_proc_args` gives us a fresh ast with a fresh sem node
+    // and sptr, so we can just return it here.
     return sem_find_likeable_proc_args(like_ast, likeable_for);
   }
 
@@ -12581,7 +13380,20 @@ cql_noexport ast_node *sem_find_likeable_ast(ast_node *like_ast, int32_t likeabl
   }
 
   record_ok(like_ast);
-  return found_shape;
+
+  // To prevent aliasing of the sptr (which would make it impossible to use
+  // functions like `find_mutable_type` safely), we need to shallow copy the ast
+  // and its sem node before cloning the sptr in the next step.
+  ast_node *new_shape = _ast_pool_new(ast_node);
+  *new_shape = *found_shape;
+  new_shape->sem = _ast_pool_new(sem_node);
+  *new_shape->sem = *found_shape->sem;
+
+  // We never want `SEM_TYPE_INFERRED_NOTNULL` to propagate via LIKE as it would
+  // falsely imply a NOT NULL status, e.g., in `declare C0 cursor like C1`.
+  new_shape->sem->sptr = sem_clone_struct_strip_flags(new_shape->sem->sptr, SEM_TYPE_INFERRED_NOTNULL);
+
+  return new_shape;
 
 error:
   record_error(like_ast);
@@ -12677,29 +13489,6 @@ static void sem_validate_unique_names_struct_type(ast_node *ast) {
 
   symtab_delete(fields);
   return;
-}
-
-// Check the identity columns: make sure they are part of the proc return struct
-static void sem_column_name_annotation_callback(CSTR name, ast_node *misc_attr_value, void *context) {
-  EXTRACT_NOTNULL(misc_attrs, (ast_node *)context);
-  Contract(current_proc);
-
-  sem_struct *sptr = current_proc->sem->sptr;
-
-  // if there is no return struct that's a different error
-  if (sptr) {
-    int32_t icol = sem_column_index(sptr, name);
-    if (icol < 0) {
-      CHARBUF_OPEN(msg);
-      bprintf(&msg, "CQL0239: %s column does not exist in result set", annotation_target);
-      report_error(misc_attrs, msg.ptr, name);
-      record_error(misc_attrs);
-      CHARBUF_CLOSE(msg);
-      return;
-    }
-  }
-
-  record_ok(misc_attr_value);
 }
 
 // Find the column type of a column in a table. Return 0 if not found
@@ -13032,7 +13821,7 @@ static uint32_t sem_column_name_annotation(ast_node *misc_attrs, find_annotation
   record_ok(misc_attrs);
 
   annotation_target = target;
-  uint32_t result = find(misc_attrs, sem_column_name_annotation_callback, misc_attrs);
+  uint32_t result = find(misc_attrs, sem_column_name_exist_in_result_set, misc_attrs);
   annotation_target = NULL;
   return result;
 }
@@ -13291,10 +14080,14 @@ static void sem_base_fragment(ast_node *misc_attrs, ast_node *stmt_list, ast_nod
 
   // check for the single named CTE
   EXTRACT_NOTNULL(cte_tables, with_select_stmt->left->left);
-  Contract(cte_tables->right == NULL);
+  if (cte_tables->right) {
+    report_error(cte_tables, "CQL0253: base fragment must have only a single CTE named the same as the fragment", base_frag_name);
+    goto error;
+  }
+
   EXTRACT_NOTNULL(cte_decl, cte_tables->left->left);
   if (!sem_fragment_CTE_name_check(cte_decl, base_frag_name,
-    "CQL0253: base fragment must include a single CTE named same as the fragment")) {
+    "CQL0253: base fragment must have only a single CTE named the same as the fragment")) {
     goto error;
   }
 
@@ -14212,13 +15005,18 @@ static void sem_misc_attrs_no_table_scan(
 
 // This function validate the semantic of vault_sensitive attribute. The attribute does not take a value
 // and can only be used in create proc statement.
+// The vault_sensitive attribution should look like this:
+// @attribute(cql:vault_sensitive=(<column_name1>, <column_name2>, ...)) or
+// @attribute(cql:vault_sensitive=(<context_column_name>, (<column_name1>, <column_name2>, ...)))
+// <context_column_name> can be any column name in the resultset, and will be passed in as encoding context param
+// <column_name1>, <column_name2>, ... are the column names to be encoded if eligible.
 static void sem_misc_attrs_vault_sensitive(
     CSTR misc_attr_prefix,
     CSTR misc_attr_name,
     ast_node *ast_misc_attr_values,
     ast_node *misc_attrs,
     ast_node *any_stmt) {
-  Contract(misc_attr_name);
+   Contract(misc_attr_name);
   Contract(any_stmt);
   Contract(misc_attrs);
 
@@ -14231,24 +15029,12 @@ static void sem_misc_attrs_vault_sensitive(
     }
   }
 
-  if (ast_misc_attr_values != NULL) {
-    if (is_ast_misc_attr_value_list(ast_misc_attr_values)) {
-      for (ast_node *value = ast_misc_attr_values; value; value = value->right) {
-        if (!sem_is_str_name(value->left)) {
-          report_error(value->left, "CQL0363: all arguments must be names", "vault_sensitive");
-          record_error(value->left);
-          record_error(value);
-          record_error(misc_attrs);
-          return;
-        }
-      }
-    }
-    else if (!sem_is_str_name(ast_misc_attr_values)) {
-      report_error(ast_misc_attr_values, "CQL0363: all arguments must be names", "vault_sensitive");
-      record_error(ast_misc_attr_values);
-      record_error(misc_attrs);
-      return;
-    }
+  if (exists_attribute_str(misc_attrs, "vault_sensitive")) {
+    encode_info info;
+    info.encode_columns = NULL;
+    info.encode_context_column = NULL;
+    info.misc_attrs = misc_attrs;
+    find_misc_attrs(misc_attrs, sem_find_ast_misc_attr_vault_sensitive_callback, &info);
   }
 }
 
@@ -14417,13 +15203,22 @@ static void sem_create_proc_stmt(ast_node *ast) {
     bool_t out_stmt_proc = has_out_stmt_result(ast);
     bool_t out_union_proc = has_out_union_stmt_result(current_proc);
 
-    // If a stored proc is marked with the vault_sensitive annotation then we generate the
-    // "sameness" helper method that checks those columns.  The attributes should look like this:
-    // @attribute(cql:vault_sensitve=(col1, col2, ,...))
-    sem_column_name_annotation(misc_attrs, find_vault_columns, "vault_sensitive");
+    // If a stored proc is marked with the vault_sensitive annotation then we validate
+    // both the encode context and encode columns.  The attributes should look like this:
+    // @attribute(cql:vault_sensitve=(col1, col2, ,...)) or
+    // @attribute(cql:vault_sensitve=(context_col, (col1, col2, ,...)))
+    annotation_target = "vault_sensitive";
+    if (exists_attribute_str(misc_attrs, annotation_target)) {
+      encode_info info;
+      info.encode_columns = NULL;
+      info.encode_context_column = NULL;
+      info.misc_attrs = misc_attrs;
+      find_misc_attrs(misc_attrs, sem_find_ast_misc_attr_vault_sensitive_callback, &info);
+    }
     if (is_error(misc_attrs)) {
       goto cleanup;
     }
+    annotation_target = NULL;
 
     // Vault required db pointer to encode/decode column values. Because of that the proc with vault
     // attribution should have access to the db pointer. Only dml proc has a db pointer, therefore
@@ -15945,79 +16740,128 @@ static bool_t sem_verify_no_duplicate_regions(ast_node *region_list) {
   return sem_verify_no_duplicate_names_func(region_list, name_from_region_list_node);
 }
 
-// This is the core helper method for procedure calls and function calls
-// it validates that the type and number of arguments are compatible for the
-// call in question.  By the time we get here we have a list of arguments in
-// arg_list and the formals to verify against in paramas.  Errors will be
-// recorded on the given ast.  Since the shape of the tree varies slightly
-// between function and procedure calls, this helper expects to have the items
-// harvested and ready to go.
+// Verify that an expression passed as the out argument for a call is a valid
+// variable. If it is not, report an error indicating for what parameter such a
+// variable was expected.
+static void sem_arg_out(ast_node *arg, CSTR param_name) {
+  bool_t success = false;
+  if (is_ast_id(arg)) {
+    EXTRACT_STRING(name, arg);
+    sem_resolve_id(arg, name, NULL);
+    sem_unset_notnull_improved(name, NULL);
+    success = !is_error(arg);
+  } else if (is_ast_dot(arg)) {
+    EXTRACT_STRING(scope, arg->left);
+    EXTRACT_STRING(name, arg->right);
+    sem_resolve_id(arg, name, scope);
+    sem_unset_notnull_improved(name, scope);
+    success = !is_error(arg);
+  }
+  if (!success || !is_variable(arg->sem->sem_type)) {
+    report_error(arg, "CQL0207: expected a variable name for out argument", param_name);
+    record_error(arg);
+  }
+}
+
+// Given an argument that (typically) has not yet been checked and a formal
+// parameter that has been, check the argument and verify that it is allowed to
+// be passed for that particular parameter.
+static bool_t sem_validate_arg_vs_formal(ast_node *arg, ast_node *param) {
+  Contract(arg);
+  Contract(param);
+  Contract(param->sem);
+
+  sem_t sem_type_param = param->sem->sem_type;
+
+  // As a first step, we check the argument itself.
+
+  if (is_out_parameter(sem_type_param)) {
+    // In the case of an OUT or IN OUT parameter, we only want to allow a
+    // reference to an existing variable.
+    sem_arg_out(arg, param->sem->name);
+    if (is_error(arg)) {
+      return false;
+    }
+  } else {
+    // In the case of an IN-only parameter, we allow an expression.
+    sem_arg_expr(arg, false);
+    if (is_error(arg)) {
+      return false;
+    }
+  }
+
+  sem_t sem_type_arg = arg->sem->sem_type;
+
+  // Now, we can check it against what was expected. Note that it's possible to
+  // be both in and out in which case both validations have to happen.
+
+  if (is_in_parameter(sem_type_param)) {
+    // you have to be able to "assign" the arg to the param
+    if (!sem_verify_assignment(arg, sem_type_param, sem_type_arg, param->sem->name)) {
+      return false;
+    }
+  }
+
+  // the formal and the argument must match object types as well (if present)
+  sem_combine_kinds(arg, param->sem->kind);
+  if (is_error(arg)) {
+    return false;
+  }
+
+  if (is_out_parameter(sem_type_param)) {
+    // We already checked this above when checking the arg itself.
+    Invariant(is_variable(sem_type_arg));
+
+    // you have to be able to "assign" the param to the arg (reverse of in)
+    if (!sem_verify_assignment(arg, sem_type_arg, sem_type_param, arg->sem->name)) {
+      return false;
+    }
+
+    if (core_type_of(sem_type_param) != core_type_of(sem_type_arg)) {
+      CSTR error_message = "CQL0209: proc out parameter: arg must be an exact type match";
+      report_sem_type_mismatch(sem_type_param, sem_type_arg, arg, error_message, arg->sem->name);
+      return false;
+    }
+
+    if (is_nullable(sem_type_param) != is_nullable(sem_type_arg)) {
+      CSTR error_message = "CQL0210: proc out parameter: arg must be an exact type match (even nullability)";
+      report_sem_type_mismatch(sem_type_param, sem_type_arg, arg, error_message, arg->sem->name);
+      return false;
+    }
+  }
+
+  return true;
+}
+
+// This is the core helper method for procedure calls and function calls.
+// It validates that the type and number of arguments are compatible for the
+// call in question. When we get here, we typically have a list of unchecked
+// arguments in arg_list and the formals to verify against in params. (In the
+// case of recursive expressions, arg_list may have already been checked.)
+// Errors will be recorded on the given ast.  Since the shape of the tree
+// varies slightly between function and procedure calls, this helper expects to
+// have the items harvested and ready to go.
 //
 // Semantic rules:
-//  * for all cases each argument must be error-free (no internal type conflicts)
+//  * for all cases each argument must be error-free (no internal type
+//    conflicts)
 //  * for known procs
 //    * the call has to have the correct number of arguments
 //    * if the formal is an out parameter the argument must be a variable
 //      * the type of the variable must be an exact type match for the formal
-//    * non-out parameters must be type-compatible, but exact match is not required
+//    * non-out parameters must be type-compatible, but exact match is not
+//      required
 static void sem_validate_args_vs_formals(ast_node *ast, CSTR name, ast_node *arg_list, ast_node *params, bool_t proc_as_func) {
   ast_node *item = arg_list;
 
+  // First, we check the arguments themselves.
   for (; item && params; item = item->right, params = params->right) {
     EXTRACT_ANY_NOTNULL(arg, item->left);
     EXTRACT_NOTNULL(param, params->left);
 
-    // args already evaluated and no errors
-    Invariant(param->sem);
-    Invariant(arg->sem);
-    Invariant(!is_error(arg));
-
-    sem_t sem_type_param = param->sem->sem_type;
-    sem_t sem_type_arg = arg->sem->sem_type;
-
-    if (is_in_parameter(sem_type_param)) {
-      // you have to be able to "assign" the arg to the param
-      if (!sem_verify_assignment(arg, sem_type_param, sem_type_arg, param->sem->name)) {
-        record_error(ast);
-        return;
-      }
-    }
-
-    // the formal and the argument must match object types as well (if present)
-    sem_combine_kinds(arg, param->sem->kind);
-    if (is_error(arg)) {
+    if (!sem_validate_arg_vs_formal(arg, param)) {
       record_error(ast);
       return;
-    }
-
-    // note it's possible to be in and out in which case both validations have to happen
-
-    if (is_out_parameter(sem_type_param)) {
-      if (!is_variable(sem_type_arg)) {
-        report_error(arg, "CQL0207: expected a variable name for out argument", param->sem->name);
-        record_error(ast);
-        return;
-      }
-
-      // you have to be able to "assign" the param to the arg (reverse of in)
-      if (!sem_verify_assignment(arg, sem_type_arg, sem_type_param, arg->sem->name)) {
-        record_error(ast);
-        return;
-      }
-
-      if (core_type_of(sem_type_param) != core_type_of(sem_type_arg)) {
-        CSTR error_message = "CQL0209: proc out parameter: arg must be an exact type match";
-        report_sem_type_mismatch(sem_type_param, sem_type_arg, arg, error_message, arg->sem->name);
-        record_error(ast);
-        return;
-      }
-
-      if (is_nullable(sem_type_param) != is_nullable(sem_type_arg)) {
-        CSTR error_message = "CQL0210: proc out parameter: arg must be an exact type match (even nullability)";
-        report_sem_type_mismatch(sem_type_param, sem_type_arg, arg, error_message, arg->sem->name);
-        record_error(ast);
-        return;
-      }
     }
   }
 
@@ -16122,12 +16966,6 @@ static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name) {
     return;
   }
 
-  // compute semantic type of each arg, reporting errors
-  sem_validate_args(ast, expr_list);
-  if (is_error(ast)) {
-    return;
-  }
-
   record_ok(name_ast);
 
   // If known proc, do additional validation
@@ -16141,6 +16979,12 @@ static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name) {
     has_dml |= is_dml_proc(proc_stmt->sem->sem_type);
 
     sem_validate_args_vs_formals(ast, name, expr_list, params, NORMAL_CALL);
+    if (is_error(ast)) {
+      return;
+    }
+  } else {
+    // compute semantic type of each arg, reporting errors
+    sem_validate_args(ast, expr_list);
     if (is_error(ast)) {
       return;
     }
@@ -16208,6 +17052,12 @@ static void sem_fetch_stmt(ast_node *ast) {
     sem_add_flags(cursor, SEM_TYPE_HAS_SHAPE_STORAGE);
     ast->sem = cursor->sem;
 
+    // Remove nullability improvements from all of the fields.
+    sem_struct *sptr = cursor_var->sem->sptr;
+    for (uint32_t i = 0; i < sptr->count; i++) {
+      sem_unset_notnull_improved(sptr->names[i], cursor->sem->name);
+    }
+
     return;
   }
 
@@ -16244,6 +17094,9 @@ static void sem_fetch_stmt(ast_node *ast) {
       record_error(ast);
       return;
     }
+
+    // This may once again be NULL.
+    sem_unset_notnull_improved(name, NULL);
   }
 
   if (icol != cols || item) {
@@ -17005,7 +17858,11 @@ static void sem_misc_attrs_basic(ast_node *ast) {
 static void sem_stmt_list(ast_node *head) {
   Contract(head);
 
+  // For any list of statements, any improvements made within cannot be assumed
+  // to be valid afterwards. We therefore need to create a new context.
+  PUSH_NOTNULL_IMPROVEMENT_CONTEXT(NULL, NULL);
   sem_stmt_level++;
+
   bool_t error = false;
   for (ast_node *ast = head; ast; ast = ast->right) {
     ast_node *stmt = ast->left;
@@ -17026,7 +17883,9 @@ static void sem_stmt_list(ast_node *head) {
   else {
     record_ok(head);
   }
+
   sem_stmt_level--;
+  POP_NOTNULL_IMPROVEMENT_CONTEXT();
 }
 
 // Expression type for current proc literal
@@ -17115,8 +17974,7 @@ static void sem_expr_str(ast_node *ast, CSTR cstr) {
     sem_expr_at_rc(ast);
   }
   else {
-    // identifier
-    sem_resolve_id(ast, str, NULL);
+    sem_resolve_id_expr(ast, str, NULL);
   }
 }
 
@@ -17132,7 +17990,7 @@ static void sem_expr_dot(ast_node *ast, CSTR cstr) {
   Contract(is_ast_dot(ast));
   EXTRACT_STRING(scope, ast->left);
   EXTRACT_STRING(name, ast->right);
-  sem_resolve_id(ast, name, scope);
+  sem_resolve_id_expr(ast, name, scope);
 }
 
 // This function is used to detect the pattern that leaks memory on SQLite.
@@ -17516,7 +18374,7 @@ static void sem_validate_old_object_or_marked_create(ast_node *root, ast_node *a
 // so we have to do our own error capture logic.
 static void sem_validate_all_prev_recreate_tables(ast_node *root) {
   CHARBUF_OPEN(err_msg);
-  bprintf(&err_msg, "table must leave @recreate management with @create/delete(%d) or later", max_previous_schema_version);
+  bprintf(&err_msg, "CQL0399: table must leave @recreate management with @create(%d) or later", max_previous_schema_version);
 
   for (list_item *item = all_prev_recreate_tables; item; item = item->next) {
     ast_node *ast = item->ast;
@@ -17550,12 +18408,6 @@ static void sem_validate_marked_create_or_delete(ast_node *root, ast_node *ast, 
   // If the object is marked as created at or after the previous schema version
   // then it's good.
   if (ast->sem->create_version >= max_previous_schema_version) {
-    return;
-  }
-
-  // If the object is marked as deleted at or after the previous schema version
-  // then it's good.
-  if (ast->sem->delete_version >= max_previous_schema_version) {
     return;
   }
 
@@ -17626,6 +18478,44 @@ static void sem_enforcement_options(ast_node *ast, bool_t strict) {
 
     case ENFORCE_TABLE_FUNCTION:
       enforcement.strict_table_function = strict;
+      break;
+
+    case ENFORCE_NOT_NULL_AFTER_CHECK:
+      enforcement.strict_not_null_after = strict;
+      break;
+
+    case ENFORCE_ENCODE_CONTEXT_COLUMN:
+      enforcement.strict_encode_context = strict;
+      break;
+
+    case ENFORCE_ENCODE_CONTEXT_TYPE_INTEGER:
+      enforcement.strict_encode_context_type= strict;
+      encode_context_type = SEM_TYPE_INTEGER;
+      break;
+
+    case ENFORCE_ENCODE_CONTEXT_TYPE_LONG_INTEGER:
+      enforcement.strict_encode_context_type= strict;
+      encode_context_type = SEM_TYPE_LONG_INTEGER;
+      break;
+
+    case ENFORCE_ENCODE_CONTEXT_TYPE_REAL:
+      enforcement.strict_encode_context_type= strict;
+      encode_context_type = SEM_TYPE_REAL;
+      break;
+
+    case ENFORCE_ENCODE_CONTEXT_TYPE_BOOL:
+      enforcement.strict_encode_context_type= strict;
+      encode_context_type = SEM_TYPE_BOOL;
+      break;
+
+    case ENFORCE_ENCODE_CONTEXT_TYPE_TEXT:
+      enforcement.strict_encode_context_type= strict;
+      encode_context_type = SEM_TYPE_TEXT;
+      break;
+
+    case ENFORCE_ENCODE_CONTEXT_TYPE_BLOB:
+      enforcement.strict_encode_context_type= strict;
+      encode_context_type = SEM_TYPE_BLOB;
       break;
 
     default:
@@ -18460,6 +19350,7 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(length);
 
   FUNC_INIT(cql_get_blob_size);
+  FUNC_INIT(cql_inferred_notnull);
 
   EXPR_INIT(num, sem_expr_num, "NUM");
   EXPR_INIT(str, sem_expr_str, "STR");
@@ -18492,6 +19383,7 @@ cql_noexport void sem_main(ast_node *ast) {
   EXPR_INIT(exists_expr, sem_expr_exists, "EXISTS");
   EXPR_INIT(between, sem_expr_between_or_not_between, "BETWEEN");
   EXPR_INIT(not_between, sem_expr_between_or_not_between, "NOT BETWEEN");
+  EXPR_INIT(between_rewrite, sem_expr_between_rewrite, "BETWEEN REWRITE");
   EXPR_INIT(and, sem_binary_logical, "AND");
   EXPR_INIT(or, sem_binary_logical, "OR");
   EXPR_INIT(select_stmt, sem_expr_select, "SELECT");
@@ -18651,4 +19543,7 @@ cql_noexport void sem_cleanup() {
   current_table_name = NULL;
   current_table_ast = NULL;
   local_types = NULL;
+  is_analyzing_notnull_rewrite = false;
+  notnull_improved_globals = NULL;
+  current_notnull_improvement_context = NULL;
 }

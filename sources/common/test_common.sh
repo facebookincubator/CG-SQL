@@ -201,7 +201,7 @@ semantic_test() {
 code_gen_c_test() {
   echo '--------------------------------- STAGE 5 -- C CODE GEN TEST'
   echo running codegen test
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_c.h" "${OUT_DIR}/cg_test_c.c" "${OUT_DIR}/cg_test_exports.out" --in "${TEST_DIR}/cg_test.sql" --global_proc cql_startup --generate_copy --generate_exports 2>"${OUT_DIR}/cg_test_c.err"
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_c.h" "${OUT_DIR}/cg_test_c.c" "${OUT_DIR}/cg_test_exports.out" --in "${TEST_DIR}/cg_test.sql" --global_proc cql_startup --generate_exports 2>"${OUT_DIR}/cg_test_c.err"
   then
     echo "ERROR:"
     cat "${OUT_DIR}/cg_test_c.err"
@@ -224,7 +224,7 @@ code_gen_c_test() {
   fi
 
   echo running codegen test with type getters enabled
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_c_with_type_getters.h" "${OUT_DIR}/cg_test_c_with_type_getters.c" --in "${TEST_DIR}/cg_test_c_type_getters.sql" --global_proc cql_startup --generate_copy --generate_type_getters  2>"${OUT_DIR}/cg_test_c.err"
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_c_with_type_getters.h" "${OUT_DIR}/cg_test_c_with_type_getters.c" --in "${TEST_DIR}/cg_test_c_type_getters.sql" --global_proc cql_startup --generate_type_getters  2>"${OUT_DIR}/cg_test_c.err"
   then
     echo "ERROR:"
     cat "${OUT_DIR}/cg_test_c.err"
@@ -247,7 +247,7 @@ code_gen_c_test() {
   fi
 
   echo running codegen test with namespace enabled
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_c_with_namespace.h" "${OUT_DIR}/cg_test_c_with_namespace.c" "${OUT_DIR}/cg_test_imports_with_namespace.ref" --in "${TEST_DIR}/cg_test.sq"l --global_proc cql_startup --generate_copy --c_include_namespace test_namespace --generate_exports 2>"${OUT_DIR}/cg_test_c.err"
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_c_with_namespace.h" "${OUT_DIR}/cg_test_c_with_namespace.c" "${OUT_DIR}/cg_test_imports_with_namespace.ref" --in "${TEST_DIR}/cg_test.sq"l --global_proc cql_startup --c_include_namespace test_namespace --generate_exports 2>"${OUT_DIR}/cg_test_c.err"
   then
     echo "ERROR:"
     cat "${OUT_DIR}/cg_test_c.err"
@@ -261,8 +261,23 @@ code_gen_c_test() {
     failed
   fi
 
+  echo running codegen test for base query fragment
+  if ! ${CQL} --generate_type_getters --test --cg "${OUT_DIR}/cg_test_base_fragment_c.h" "${OUT_DIR}/cg_test_base_fragment_c.c" "${OUT_DIR}/cg_test_base_fragment_imports.ref" --in "${TEST_DIR}/cg_test_base_fragment.sql" --global_proc cql_startup --generate_exports 2>"${OUT_DIR}/cg_test_c.err"
+  then
+    echo "ERROR:"
+    cat "${OUT_DIR}/cg_test_c.err"
+    failed
+  fi
+
+  echo validating codegen
+  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/cg_test_base_fragment.sql" "${OUT_DIR}/cg_test_base_fragment_c.c"
+  then
+    echo "ERROR: failed verification"
+    failed
+  fi
+
   echo running codegen test for extension query fragment
-  if ! ${CQL} --generate_type_getters --test --cg "${OUT_DIR}/cg_test_extension_fragment_c.h" "${OUT_DIR}/cg_test_extension_fragment_c.c" "${OUT_DIR}/cg_test_extension_fragment_imports.ref" --in "${TEST_DIR}/cg_test_extension_fragment.sql" --global_proc cql_startup --generate_copy --generate_exports 2>"${OUT_DIR}/cg_test_c.err"
+  if ! ${CQL} --generate_type_getters --test --cg "${OUT_DIR}/cg_test_extension_fragment_c.h" "${OUT_DIR}/cg_test_extension_fragment_c.c" "${OUT_DIR}/cg_test_extension_fragment_imports.ref" --in "${TEST_DIR}/cg_test_extension_fragment.sql" --global_proc cql_startup --generate_exports 2>"${OUT_DIR}/cg_test_c.err"
   then
     echo "ERROR:"
     cat "${OUT_DIR}/cg_test_c.err"
@@ -277,7 +292,7 @@ code_gen_c_test() {
   fi
 
   echo running codegen test for assembly query
-  if ! ${CQL} --generate_type_getters --test --cg "${OUT_DIR}/cg_test_assembly_query_c.h" "${OUT_DIR}/cg_test_assembly_query_c.c" "${OUT_DIR}/cg_test_assembly_query_imports.ref" --in "${TEST_DIR}/cg_test_assembly_query.sql" --global_proc cql_startup --generate_copy --generate_exports 2>"${OUT_DIR}/cg_test_c.err"
+  if ! ${CQL} --generate_type_getters --test --cg "${OUT_DIR}/cg_test_assembly_query_c.h" "${OUT_DIR}/cg_test_assembly_query_c.c" "${OUT_DIR}/cg_test_assembly_query_imports.ref" --in "${TEST_DIR}/cg_test_assembly_query.sql" --global_proc cql_startup --generate_exports 2>"${OUT_DIR}/cg_test_c.err"
   then
     echo "ERROR:"
     cat "${OUT_DIR}/cg_test_c.err"
@@ -299,6 +314,8 @@ code_gen_c_test() {
   on_diff_exit cg_test_c_with_type_getters.c
   on_diff_exit cg_test_c_with_type_getters.h
   on_diff_exit cg_test_exports.out
+  on_diff_exit cg_test_base_fragment_c.c
+  on_diff_exit cg_test_base_fragment_c.h
   on_diff_exit cg_test_extension_fragment_c.c
   on_diff_exit cg_test_extension_fragment_c.h
   on_diff_exit cg_test_assembly_query_c.c
@@ -314,6 +331,12 @@ code_gen_c_test() {
   fi
 
   echo "  compiling query fragment code"
+  if ! do_make cg_test_base_fragment
+  then
+    echo CQL generated invalid C code for base query fragment
+    failed
+  fi
+
   if ! do_make cg_test_extension_fragment
   then
     echo CQL generated invalid C code for extension query fragment
@@ -343,6 +366,14 @@ code_gen_java_test() {
 
   echo running java with suppressed getters
   if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_java.out" --in "${TEST_DIR}/cg_test_suppressed.sql" --rt java --java_package_name com.facebook.cqlviewmodels 2>"${OUT_DIR}/cg_test_java_getters.err"
+  then
+    echo "ERROR:"
+    cat "${OUT_DIR}/cg_test_java_getters.err"
+    failed
+  fi
+
+  echo running java with generate_copy
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_java.out" --in "${TEST_DIR}/cg_test_generate_copy.sql" --rt java --java_package_name com.facebook.cqlviewmodels 2>"${OUT_DIR}/cg_test_java_getters.err"
   then
     echo "ERROR:"
     cat "${OUT_DIR}/cg_test_java_getters.err"
@@ -435,16 +466,16 @@ code_gen_objc_test() {
     failed
   fi
 
-  echo running objc codegen test for extension query fragment
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_extension_fragment_objc.out" --objc_c_include_path Test/TestFile.h --in "${TEST_DIR}/cg_test_extension_fragment.sql" --rt objc 2>"${OUT_DIR}/cg_test_objc.err"
+  echo running objc codegen test for base query fragment
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_base_fragment_objc.out" --objc_c_include_path Test/TestFile.h --in "${TEST_DIR}/cg_test_base_fragment.sql" --rt objc 2>"${OUT_DIR}/cg_test_objc.err"
   then
     echo "ERROR:"
     cat "${OUT_DIR}/cg_test_objc.err"
     failed
   fi
 
-  echo running objc codegen test for extension query fragment with core base
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_extension_fragment_with_core_base_test_objc.out" --objc_c_include_path Test/TestFile.h --in "${TEST_DIR}/cg_test_extension_fragment.sql" --rt objc 2>"${OUT_DIR}/cg_test_objc.err"
+  echo running objc codegen test for extension query fragment
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_extension_fragment_objc.out" --objc_c_include_path Test/TestFile.h --in "${TEST_DIR}/cg_test_extension_fragment.sql" --rt objc 2>"${OUT_DIR}/cg_test_objc.err"
   then
     echo "ERROR:"
     cat "${OUT_DIR}/cg_test_objc.err"
@@ -463,8 +494,8 @@ code_gen_objc_test() {
   echo "  computing diffs (empty if none)"
 
   on_diff_exit cg_test_objc.out
+  on_diff_exit cg_test_base_fragment_objc.out
   on_diff_exit cg_test_extension_fragment_objc.out
-  on_diff_exit cg_extension_fragment_with_core_base_test_objc.out
   on_diff_exit cg_test_assembly_query_objc.out
   on_diff_exit cg_test_objc.err
 }
@@ -982,6 +1013,24 @@ misc_cases() {
     echo Generated from text did not appear in the implementation output.
     failed
   fi
+
+  echo 'running parser disallows columns in FETCH FROM CALL test'
+  if ${CQL} --in "${TEST_DIR}/parse_test_fetch_from_call_columns.sql" 2>"${OUT_DIR}/parse_test_fetch_from_call_columns.err"
+  then
+    echo 'failed to disallow cursor columns in FETCH FROM CALL'
+    failed
+  fi
+
+  on_diff_exit parse_test_fetch_from_call_columns.err
+
+  echo 'running parser disallows cql_inferred_notnull test'
+  if ${CQL} --in "${TEST_DIR}/parse_test_cql_inferred_notnull.sql" 2>"${OUT_DIR}/parse_test_cql_inferred_notnull.err"
+  then
+    echo 'failed to disallow cql_inferred_notnull'
+    failed
+  fi
+
+  on_diff_exit parse_test_cql_inferred_notnull.err
 }
 
 json_schema_test() {
@@ -1092,7 +1141,7 @@ run_test() {
   then
     echo preprocessing failed.
     failed
-  elif ! ${CQL} --nolines --cg "${OUT_DIR}/run_test.h" "${OUT_DIR}/run_test.c" --in "${OUT_DIR}/run_test_cpp.out" --global_proc cql_startup --rt c --generate_copy
+  elif ! ${CQL} --nolines --cg "${OUT_DIR}/run_test.h" "${OUT_DIR}/run_test.c" --in "${OUT_DIR}/run_test_cpp.out" --global_proc cql_startup --rt c
   then
     echo codegen failed.
     failed
@@ -1104,7 +1153,7 @@ run_test() {
   then
     echo tests failed
     failed
-  elif ! ${CQL} --compress --cg "${OUT_DIR}/run_test.h" "${OUT_DIR}/run_test.c" --in "${OUT_DIR}/run_test_cpp.out" --global_proc cql_startup --rt c --generate_copy
+  elif ! ${CQL} --compress --cg "${OUT_DIR}/run_test.h" "${OUT_DIR}/run_test.c" --in "${OUT_DIR}/run_test_cpp.out" --global_proc cql_startup --rt c
   then
     echo compressed codegen failed.
     failed

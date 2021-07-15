@@ -20,6 +20,8 @@ create table Baa
 
 create unique index baa_id on Baa(id, id2);
 
+create unique index baa_id_deleted on Baa(id, id2) @delete(1);
+
 create table dbl_table (
   num real,
   label text,
@@ -71,6 +73,8 @@ declare proc decl1(id integer) ( A integer not null, B bool );
 
 create index p_id on primary_as_column(id_);
 
+create index p_id_delete on primary_as_column(id_) @delete(1);
+
 declare select function is_declare_func_enabled() bool not null;
 
 create trigger triggerAaa
@@ -78,6 +82,12 @@ create trigger triggerAaa
   begin
     delete from dbl_table where num = OLD.dl;
   end;
+
+create trigger triggerAaa_deleted
+    before delete on Aaa when is_declare_func_enabled()
+  begin
+    delete from dbl_table where num = OLD.dl;
+  end @delete(2);
 
 create table experiment_value
 (
@@ -124,11 +134,23 @@ begin
   delete from T2 where id = OLD.id;
 end;
 
+create trigger R1_deleted
+    before delete on T1
+begin
+  delete from T2 where id = OLD.id;
+end @delete(3);
+
 create trigger R2
     before delete on T2
 begin
   delete from T3 where id = OLD.id;
 end;
+
+create trigger R2_deleted
+    before delete on T2
+begin
+  delete from T3 where id = OLD.id;
+end @delete(1);
 
 create virtual table basic_virtual using module_name(this, that, the_other) as (
   id integer,

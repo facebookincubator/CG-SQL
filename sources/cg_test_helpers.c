@@ -253,8 +253,10 @@ static void find_all_table_node(dummy_test_info *info, ast_node *node) {
   if (table_or_view_name_ast) {
     EXTRACT_STRING(table_or_view_name, table_or_view_name_ast);
     ast_node *table_or_view = find_table_or_view_even_deleted(table_or_view_name);
-
-    if (table_or_view) {
+    bool deleted = table_or_view && table_or_view->sem->delete_version > 0;
+    
+    // dummy_test should not emit deleted tables
+    if (table_or_view && !deleted) {
       // This part prevents us from any cycles, the only possible cycle is T references T in an FK
       bool skip = is_ast_fk_target(node) && info->table_current && !Strcasecmp(table_or_view_name, info->table_current);
 
@@ -578,6 +580,11 @@ static void init_all_trigger_per_table() {
     EXTRACT_ANY_NOTNULL(table_name_ast, trigger_target_action->left);
     EXTRACT_STRING(table_name, table_name_ast);
 
+    if (create_trigger_stmt->sem->delete_version > 0) {
+      // dummy_test should not emit deleted trigger
+      continue;
+    }
+
     symtab_append_bytes(all_tables_with_triggers, table_name, &create_trigger_stmt, sizeof(create_trigger_stmt));
   }
 }
@@ -591,6 +598,11 @@ static void init_all_indexes_per_table() {
     EXTRACT_NOTNULL(create_index_on_list, create_index_stmt->left);
     EXTRACT_ANY_NOTNULL(table_name_ast, create_index_on_list->right);
     EXTRACT_STRING(table_name, table_name_ast);
+
+    if (create_index_stmt->sem->delete_version > 0) {
+      // dummy_test should not emit deleted indexes
+      continue;
+    }
 
     symtab_append_bytes(all_tables_with_indexes, table_name, &create_index_stmt, sizeof(create_index_stmt));
   }
@@ -611,13 +623,13 @@ static void cg_emit_index_stmt(
 
   for (int32_t i = 0; i < count; i++) {
     ast_node *index_ast = indexes_ast[i];
-    gen_statement_with_callbacks(index_ast, callback);
-    bprintf(gen_create_indexes, ";\n");
-
-    Contract(is_ast_create_index_stmt(index_ast));
-    EXTRACT_NOTNULL(create_index_on_list, index_ast->left);
+    EXTRACT_NOTNULL(create_index_stmt, index_ast);
+    EXTRACT_NOTNULL(create_index_on_list, create_index_stmt->left);
     EXTRACT_ANY_NOTNULL(index_name_ast, create_index_on_list->left);
     EXTRACT_STRING(index_name, index_name_ast);
+
+    gen_statement_with_callbacks(index_ast, callback);
+    bprintf(gen_create_indexes, ";\n");
     bprintf(gen_drop_indexes, "DROP INDEX IF EXISTS %s;\n", index_name);
   }
 }

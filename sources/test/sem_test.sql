@@ -461,6 +461,13 @@ select l * 2.0 from big;
 -- + {not}: err
 select not 'x' == 1;
 
+-- TEST: `when` expression must be valid
+-- + Error % right operand must be a string in 'LIKE'
+-- +1 Error
+select case
+  when 'x' like 42 then 'foo'
+end;
+
 -- TEST: ok to have two different strings
 -- - Error
 -- note there was no else case, so nullable result
@@ -1455,7 +1462,7 @@ create table bad_constants_table(
 -- - Error
 let bool_x := const(1==1);
 
--- TEST: internal const expression 
+-- TEST: internal const expression
 -- the internal const(1==1) is evaluated to a literal which then is used by the outer const
 -- the result must still be bool, this proves that we can correctly eval the type of
 -- an internal bool literal
@@ -4472,7 +4479,7 @@ set bar_obj := case 1 when 1 then bar_obj else foo_object end;
 set bar_obj := case 1 when 1 then bar_obj when 2 then bar_obj else bar_obj end;
 
 -- TEST: non-user func with bogus arg
--- + {arg_list}: err
+-- + {call_stmt}: err
 -- + Error % string operand not allowed in 'NOT'
 -- +1 Error
 call printf('%d', simple_func(not 'x'));
@@ -5530,7 +5537,7 @@ declare proc declared_proc(id integer) out (t text);
 -- +1 Error
 create proc invalid_proc_fetch_bogus_call()
 begin
-  declare C cursor fetch from call out_cursor_proc(not 'x');
+  declare C cursor fetch from call declared_proc(not 'x');
 end;
 
 -- TEST: call a procedure that is just all wrong
@@ -8436,7 +8443,7 @@ begin
 end;
 
 -- TEST: base_fragment attribute (erroneous usage)
--- + Error % base fragment must include a single CTE named same as the fragment 'bar'
+-- + Error % base fragment must have only a single CTE named the same as the fragment 'bar'
 -- +1 Error
 @attribute(cql:base_fragment=bar)
 create proc bad_base_fragment_three(id_ integer not null)
@@ -8444,6 +8451,25 @@ begin
   with
     core_three(x,y,z) as (select id,name,rate from bar where id = id_)
   select * from bar;
+end;
+
+-- TEST: make sure that using two CTEs in a base fragment causes an error
+-- You can run into this error if you mark your extension fragment as a base fragment on accident.
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- + {create_proc_stmt}: err
+-- + Error % base fragment must have only a single CTE named the same as the fragment 'err_assembly_name'
+-- +1 Error
+@attribute(cql:base_fragment=err_assembly_name)
+create proc ext1()
+begin
+  with err_assembly_name(id) as (select * from foo),
+  ext1(*) as (
+    select * from err_assembly_name
+    union all
+    select 1 id
+  )
+  select * from ext1;
 end;
 
 -- TEST: base_fragment attribute (erroneous usage)
@@ -9571,6 +9597,17 @@ create proc variable_conflict()
 begin
   declare id integer;
   set id := (select id from foo);
+end;
+
+-- TEST: try to alias rowid with a local variable of the same name
+-- + {assign}: err
+-- + {select_stmt}: err
+-- + Error % a variable name might be ambiguous with a column name, this is an anti-pattern 'rowid'
+-- +1 Error
+create proc variable_conflict_rowid()
+begin
+  declare rowid integer;
+  set rowid := (select rowid from foo);
 end;
 
 -- TEST: group concat has to preserve sensitivity
@@ -12368,7 +12405,6 @@ end;
 
 -- TEST: try to do from arguments with a type but there is no matching arg
 -- + {call_stmt}: err
--- + {expr_list}: err
 -- + Error % expanding FROM ARGUMENTS, there is no argument matching 'id'
 -- +1 Error
 create proc call_with_missing_type(x integer)
@@ -14437,6 +14473,15 @@ begin
   select * from bar;
 end;
 
+-- TEST: vault_sensitive attribution with invalid single column
+-- + Error % vault_sensitive column does not exist in result set 'bogus'
+-- +1 Error
+@attribute(cql:vault_sensitive=bogus)
+create proc vault_sensitive_with_invalid_single_column()
+begin
+  select * from bar;
+end;
+
 -- TEST: vault_sensitive attribution with an not string value
 -- + {stmt_and_attr}: err
 -- + {misc_attrs}: err
@@ -14472,6 +14517,295 @@ end;
 create proc vault_sensitive_with_lit_string_value_proc_val()
 begin
 end;
+
+-- TEST: vault_sensitive attribution with invalid encode context and encode column
+-- + {stmt_and_attr}: err
+-- + Error % vault_sensitive column does not exist in result set 'bogus'
+-- + Error % vault_sensitive column does not exist in result set 'nan'
+-- +2 Error
+@attribute(cql:vault_sensitive=(bogus, (nan)))
+create proc vault_sensitive_with_invalid_encode_context_columns()
+begin
+  select * from bar;
+end;
+
+-- TEST: vault_sensitive attribution with an not string value encode context
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- + {create_proc_stmt}: err
+-- + {int 1}: err
+-- Error % all arguments must be names 'vault_sensitive'
+-- +1 Error
+@attribute(cql:vault_sensitive=(1, (name)))
+create proc vault_sensitive_with_not_string_vault_context_proc_val()
+begin
+end;
+
+-- TEST: vault_sensitive attribution with literal string encode context
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- + {create_proc_stmt}: err
+-- + {strlit 'lol'}: err
+-- Error % all arguments must be names 'vault_sensitive'
+-- +1 Error
+@attribute(cql:vault_sensitive=('lol', (name)))
+create proc vault_sensitive_with_literal_string_vault_context_proc_val()
+begin
+end;
+
+-- TEST: vault_sensitive attribution with an not string value encode column
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- + {create_proc_stmt}: err
+-- + {int 1}: err
+-- Error % all arguments must be names 'vault_sensitive'
+-- +1 Error
+@attribute(cql:vault_sensitive=(name, (1)))
+create proc vault_sensitive_with_not_string_vault_column_proc_val()
+begin
+end;
+
+-- TEST: test table with both sensitive and non-sensitive columns
+-- + {create_table_stmt}: bar_with_sensitive: { id: integer notnull, name: text sensitive, title: text sensitive, intro: text }
+-- - Error
+create table bar_with_sensitive(
+  id integer not null,
+  name text @sensitive @create(2),
+  title text @sensitive @create(2),
+  intro text @create(2)
+);
+
+-- TEST: vault_sensitive attribution with sensitive encode column
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- + {create_proc_stmt}: err
+-- Error % encode context column can't be sensitive 'name'
+-- +1 Error
+@attribute(cql:vault_sensitive=(name, (id, title)))
+create proc vault_sensitive_with_sensitive_encode_context_column_proc_val()
+begin
+  select * from bar_with_sensitive;
+end;
+
+-- TEST: vault_sensitive attribution with invalid nested encode columns
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- + {create_proc_stmt}: err
+-- Error % all arguments must be names 'vault_sensitive'
+-- +1 Error
+@attribute(cql:vault_sensitive=(intro, (id, (title))))
+create proc vault_sensitive_with_invalid_nested_vault_column_proc_val()
+begin
+  select * from bar_with_sensitive;
+end;
+
+-- TEST: vault_sensitive attribution with multi encode context columns
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- + {create_proc_stmt}: err
+-- Error % encode context column can be only specified in front 'id'
+-- +1 Error
+@attribute(cql:vault_sensitive=(intro, (name), id))
+create proc vault_sensitive_with_multi_encode_context_columns_proc_val()
+begin
+  select * from bar_with_sensitive;
+end;
+
+-- TEST: vault_sensitive attribution with valid context and encode columns
+-- + {stmt_and_attr}: ok
+-- - Error
+@attribute(cql:vault_sensitive=(intro, (name, title)))
+create proc vault_sensitive_with_valid_context_and_encode_columns()
+begin
+  select * from bar_with_sensitive;
+end;
+
+-- TEST: strict encode context column
+-- + {enforce_strict_stmt}: ok
+-- - Error;
+@enforce_strict encode context column;
+
+-- TEST: vault_sensitive attribution with only encode column list
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- Error % context column must be specified if strict encode context column mode is enabled
+-- +1 Error
+@attribute(cql:vault_sensitive=(name, rate))
+create proc vault_sensitive_with_only_encode_columns_strict_mode()
+begin
+  select * from bar;
+end;
+
+-- TEST: vault_sensitive attribution with only one encode column
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- Error % context column must be specified if strict encode context column mode is enabled
+-- +1 Error
+@attribute(cql:vault_sensitive=name)
+create proc vault_sensitive_with_only_encode_column_strict_mode()
+begin
+  select * from bar;
+end;
+
+-- TEST: vault_sensitive attribution with no columns
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- Error % context column must be specified if strict encode context column mode is enabled
+-- +1 Error
+@attribute(cql:vault_sensitive)
+create proc vault_sensitive_with_no_columns_strict_mode()
+begin
+  select * from bar;
+end;
+
+-- TEST: vault_sensitive attribution with integer encode context
+-- + {stmt_and_attr}: ok
+-- - Error
+@attribute(cql:vault_sensitive=(id, (name)))
+create proc vault_sensitive_with_integer_encode_context()
+begin
+  select * from bar;
+end;
+
+-- TEST: strict encode context type integer
+-- + {enforce_strict_stmt}: ok
+-- - Error;
+@enforce_strict encode context type integer;
+
+-- TEST: vault_sensitive attribution with integer encode context and strict mode
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- Error % encode context column in vault_senstive attribute must match the specified type in strict mode
+-- +1 Error
+@attribute(cql:vault_sensitive=(name, (rate)))
+create proc vault_sensitive_encode_context_integer_strict_mode()
+begin
+  select * from bar;
+end;
+
+-- TEST verify back to normal mode
+-- + {enforce_normal_stmt}: ok
+-- - Error
+@enforce_normal encode context type integer;
+
+-- TEST: strict encode context type long_integer
+-- + {enforce_strict_stmt}: ok
+-- - Error;
+@enforce_strict encode context type long_integer;
+
+-- TEST: vault_sensitive attribution with long integer encode context and strict mode
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- Error % encode context column in vault_senstive attribute must match the specified type in strict mode
+-- +1 Error
+@attribute(cql:vault_sensitive=(name, (rate)))
+create proc vault_sensitive_encode_context_long_integer_strict_mode()
+begin
+  select * from bar;
+end;
+
+-- TEST verify back to normal mode
+-- + {enforce_normal_stmt}: ok
+-- - Error
+@enforce_normal encode context type long_integer;
+
+-- TEST: strict encode context type real
+-- + {enforce_strict_stmt}: ok
+-- - Error;
+@enforce_strict encode context type real;
+
+-- TEST: vault_sensitive attribution with real encode context and strict mode
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- Error % encode context column in vault_senstive attribute must match the specified type in strict mode
+-- +1 Error
+@attribute(cql:vault_sensitive=(name, (rate)))
+create proc vault_sensitive_encode_context_real_strict_mode()
+begin
+  select * from bar;
+end;
+
+-- TEST verify back to normal mode
+-- + {enforce_normal_stmt}: ok
+-- - Error
+@enforce_normal encode context type real;
+
+-- TEST: strict encode context type bool
+-- + {enforce_strict_stmt}: ok
+-- - Error;
+@enforce_strict encode context type bool;
+
+-- TEST: vault_sensitive attribution with bool encode context and strict mode
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- Error % encode context column in vault_senstive attribute must match the specified type in strict mode
+-- +1 Error
+@attribute(cql:vault_sensitive=(name, (rate)))
+create proc vault_sensitive_encode_context_bool_strict_mode()
+begin
+  select * from bar;
+end;
+
+-- TEST verify back to normal mode
+-- + {enforce_normal_stmt}: ok
+-- - Error
+@enforce_normal encode context type bool;
+
+-- TEST: strict encode context type blob
+-- + {enforce_strict_stmt}: ok
+-- - Error;
+@enforce_strict encode context type blob;
+
+-- TEST: vault_sensitive attribution with blob encode context and strict mode
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- Error % encode context column in vault_senstive attribute must match the specified type in strict mode
+-- +1 Error
+@attribute(cql:vault_sensitive=(name, (rate)))
+create proc vault_sensitive_encode_context_blob_strict_mode()
+begin
+  select * from bar;
+end;
+
+-- TEST verify back to normal mode
+-- + {enforce_normal_stmt}: ok
+-- - Error
+@enforce_normal encode context type blob;
+
+-- TEST: strict encode context type text
+-- + {enforce_strict_stmt}: ok
+-- - Error;
+@enforce_strict encode context type text;
+
+-- TEST: vault_sensitive attribution with integer encode context and strict mode
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- Error % encode context column in vault_senstive attribute must match the specified type in strict mode
+-- +1 Error
+@attribute(cql:vault_sensitive=(id, (name, rate)))
+create proc vault_sensitive_with_integer_encode_context_strict_mode()
+begin
+  select * from bar;
+end;
+
+-- TEST: vault_sensitive attribution with text encode context
+-- + {stmt_and_attr}: ok
+-- - Error
+@attribute(cql:vault_sensitive=(name, (rate)))
+create proc vault_sensitive_with_text_encode_context_strict_mode()
+begin
+  select * from bar;
+end;
+
+-- TEST verify back to normal mode
+-- + {enforce_normal_stmt}: ok
+-- - Error
+@enforce_normal encode context type text;
+
+-- TEST verify back to normal mode
+-- + {enforce_normal_stmt}: ok
+-- - Error
+@enforce_normal encode context column;
 
 -- TEST: no_scan_table attribution on create proc node
 -- + {stmt_and_attr}: ok
@@ -15331,7 +15665,7 @@ create table conflict_clause_pk(
   constraint pk1 primary key (id) on conflict rollback
 );
 
--- a base fragment for the test case below
+-- TEST: a base fragment for the test case below
 -- - Error
 @attribute(cql:base_fragment=id_frag)
 create proc id_frag_base()
@@ -15340,7 +15674,7 @@ begin
   select * from id_frag;
 end;
 
--- Make sure that the types match exactly between extension columns and base columns
+-- TEST: Make sure that the types match exactly between extension columns and base columns
 -- here the issue is that 3.5 is type compatible with the integer type of the base
 -- and that's not good enough for an extension proc.  We need an additional check
 -- + {create_proc_stmt}: err
@@ -15356,3 +15690,722 @@ begin
     select 3.5 id)
   select * from ext1;
 end;
+create table foo(id integer);
+
+-- TEST: Enable flow-sensitive nullability.
+-- + @ENFORCE_STRICT NOT NULL AFTER CHECK
+-- + {enforce_strict_stmt}: ok
+@enforce_strict not null after check;
+
+-- TEST: Variables can be improved to NOT NULL via a conditional, but only
+-- within the body of the THEN.
+-- + {let_stmt}: x0: integer variable
+-- + {let_stmt}: x1: integer notnull variable
+-- + {let_stmt}: x2: integer variable
+-- + {let_stmt}: x3: integer notnull variable
+-- + {let_stmt}: x4: integer variable
+-- + {let_stmt}: x5: integer variable
+-- - Error
+create proc conditionals_improve_nullable_variables()
+begin
+  declare a int;
+  declare b int;
+  declare c int;
+
+  let x0 := a;
+  if a is not null then
+    let x1 := a;
+  else
+    let x2 := a;
+    if a is not null then
+      let x3 := a;
+    else
+      let x4 := a;
+    end if;
+  end if;
+  let x5 := a;
+end;
+
+-- TEST: Conditionals only improve along the spine of ANDs.
+-- + {declare_cursor}: c0: select: { a0: text notnull variable, b0: text variable, c0: text variable }
+-- + {declare_cursor}: c1: select: { a1: text notnull variable, b1: text variable, c1: text notnull variable } variable dml_proc
+-- + {declare_cursor}: c2: select: { a2: text notnull variable, b2: text notnull variable, c2: text notnull variable } variable dml_proc
+-- - Error
+create proc conditionals_only_improve_through_ands()
+begin
+  declare a text;
+  declare b text;
+  declare c text;
+
+  if a is not null and (b is not null or c is not null) then
+    declare c0 cursor for select a as a0, b as b0, c as c0;
+    if (b is not null or a like "hello") and c is not null then
+      declare c1 cursor for select a as a1, b as b1, c as c1;
+      if b is not null then
+        declare c2 cursor for select a as a2, b as b2, c as c2;
+      end if;
+    end if;
+  end if;
+end;
+
+-- TEST: Nullability improvements for locals cease at corresponding SETs to
+-- nullables.
+-- + {let_stmt}: x0: integer variable
+-- + {let_stmt}: y0: integer variable
+-- + {let_stmt}: x1: integer notnull variable
+-- + {let_stmt}: y1: integer notnull variable
+-- + {let_stmt}: x2: integer notnull variable
+-- + {let_stmt}: y2: integer variable
+-- + {let_stmt}: x3: integer notnull variable
+-- + {let_stmt}: y3: integer notnull variable
+-- + {let_stmt}: x4: integer variable
+-- + {let_stmt}: y4: integer notnull variable
+-- + {let_stmt}: x5: integer variable
+-- + {let_stmt}: y5: integer variable
+-- + {let_stmt}: x6: integer variable
+-- + {let_stmt}: y6: integer variable
+-- - Error
+create proc local_improvements_persist_until_set_to_a_nullable()
+begin
+  declare a int;
+  declare b int;
+  let x0 := a;
+  let y0 := b;
+  if a is not null and b is not null then
+    let x1 := a;
+    let y1 := b;
+    set b := null;
+    let x2 := a;
+    let y2 := b;
+    if a is not null and b is not null then
+      let x3 := a;
+      let y3 := b;
+      set a := null;
+      let x4 := a;
+      let y4 := b;
+      set b := null;
+    end if;
+    let x5 := a;
+    let y5 := b;
+  end if;
+  let x6 := a;
+  let y6 := b;
+end;
+
+-- TEST: SET can improve a type if set to something known to be not null.
+-- + {let_stmt}: x0: integer variable
+-- + {let_stmt}: x1: integer notnull variable
+-- + {let_stmt}: x2: integer variable
+-- - Error
+create proc set_can_improve_a_type_if_set_to_something_not_null()
+begin
+  declare a int;
+  let x0 := a;
+  set a := 42;
+  let x1 := a;
+  set a := null;
+  let x2 := a;
+end;
+
+-- TEST: `x1` should be nullable because `set a := 42` may not have happened.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- - Error
+create proc improvements_added_by_set_do_not_persist_outside_the_statement_list()
+begin
+  declare a int;
+  if 0 then
+    set a := 42;
+    let x0 := a;
+  end if;
+  let x1 := a;
+end;
+
+-- TEST: `x1` should be nullable because `set a := null` may have happened.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- - Error
+create proc improvements_removed_by_set_do_persist_outside_the_statement_list()
+begin
+  declare a int;
+  if a is not null then
+    let x0 := a;
+    if 1 then
+      set a := null;
+    end if;
+  end if;
+  let x1 := a;
+end;
+
+-- TEST: Improvements work in CASE expressions.
+-- + {let_stmt}: x: integer notnull variable
+-- +2 {name cql_inferred_notnull}: a: integer notnull variable
+-- - Error
+create proc improvements_work_in_case_expressions()
+begin
+  declare a int;
+  let x :=
+    case
+      when a is not null then a + a
+      else 42
+    end;
+end;
+
+-- TEST: Used in the following test.
+-- - Error
+create proc sets_out(out a int, out b int)
+begin
+end;
+
+-- TEST: Nullability improvements for locals persist until used as an OUT arg.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: y0: integer notnull variable
+-- + {let_stmt}: x1: integer notnull variable
+-- + {let_stmt}: y1: integer variable
+-- + {let_stmt}: x2: integer variable
+-- + {let_stmt}: y2: integer variable
+-- + {let_stmt}: x3: integer notnull variable
+-- + {let_stmt}: y3: integer notnull variable
+-- + {let_stmt}: x4: integer variable
+-- + {let_stmt}: y4: integer variable
+-- - Error
+create proc local_improvements_persist_until_used_as_out_arg()
+begin
+  declare a int;
+  declare b int;
+  declare x int;
+  if a is not null and b is not null then
+    let x0 := a;
+    let y0 := b;
+    call sets_out(x, b);
+    let x1 := a;
+    let y1 := b;
+    call sets_out(a, x);
+    let x2 := a;
+    let y2 := b;
+  end if;
+  if a is not null and b is not null then
+    let x3 := a;
+    let y3 := b;
+    call sets_out(a, b);
+    let x4 := a;
+    let y4 := b;
+  end if;
+end;
+
+-- Used in the following tests.
+-- - Error
+create table tnull (xn int, yn int);
+
+-- TEST: Nullability improvements for locals cease at corresponding FETCH INTOs.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: y0: integer notnull variable
+-- + {let_stmt}: x1: integer notnull variable
+-- + {let_stmt}: y1: integer variable
+-- + {let_stmt}: x2: integer variable
+-- + {let_stmt}: y2: integer variable
+-- + {let_stmt}: x3: integer notnull variable
+-- + {let_stmt}: y3: integer notnull variable
+-- + {let_stmt}: x4: integer variable
+-- + {let_stmt}: y4: integer variable
+-- - Error
+create proc local_improvements_persist_until_fetch_into()
+begin
+  declare a int;
+  declare b int;
+  declare x int;
+  declare c cursor for select * from tnull;
+  if a is not null and b is not null then
+    let x0 := a;
+    let y0 := b;
+    fetch c into x, b;
+    let x1 := a;
+    let y1 := b;
+    fetch c into a, x;
+    let x2 := a;
+    let y2 := b;
+  end if;
+  if a is not null and b is not null then
+    let x3 := a;
+    let y3 := b;
+    fetch c into a, b;
+    let x4 := a;
+    let y4 := b;
+  end if;
+end;
+
+-- We need this for our following tests.
+-- - Error
+declare c_global cursor like tnull;
+
+-- TEST: Improvements work for auto cursors.
+-- + {let_stmt}: x0: integer variable
+-- + {let_stmt}: y0: integer variable
+-- + {let_stmt}: x1: integer notnull variable
+-- + {let_stmt}: y1: integer notnull variable
+-- + {let_stmt}: x2: integer variable
+-- + {let_stmt}: y2: integer variable
+-- - Error
+create proc improvements_work_for_auto_cursors()
+begin
+  declare c cursor for select * from tnull;
+  fetch c;
+  let x0 := c.xn;
+  let y0 := c.yn;
+  if c.xn is not null and c.yn is not null then
+    let x1 := c.xn;
+    let y1 := c.yn;
+    fetch c;
+    let x2 := c.xn;
+    let y2 := c.yn;
+  end if;
+end;
+
+-- TEST: Improvements work for local auto cursors that do not shadow a global
+-- cursor. This test exercises our code that checks whether or not a dot that
+-- has been found should be tracked as a global. There is no global cursor named
+-- `c0`, so it must be local and can be improved.
+-- + {let_stmt}: x0: integer variable
+-- + {let_stmt}: y0: integer variable
+-- + {let_stmt}: x1: integer notnull variable
+-- + {let_stmt}: y1: integer notnull variable
+-- + {let_stmt}: x2: integer variable
+-- + {let_stmt}: y2: integer variable
+-- - Error
+create proc improvements_work_for_local_auto_cursors_that_do_not_shadow_a_global()
+begin
+  declare c_local cursor like tnull;
+  fetch c_local from values (0, 0);
+  let x0 := c_local.xn;
+  let y0 := c_local.yn;
+  if c_local.xn is not null and c_local.yn is not null then
+    let x1 := c_local.xn;
+    let y1 := c_local.yn;
+    fetch c_local from values (0, 0);
+    let x2 := c_local.xn;
+    let y2 := c_local.yn;
+  end if;
+end;
+
+-- TEST: Improvements work for local auto cursors that shadow a global cursor
+-- (in this case, `c_global`). This test exercises our code that checks whether
+-- or not a dot that has been found should be tracked as a global. There is a
+-- global cursor named `c_global`, but it's not the same one as the one in the
+-- nearest enclosing scope that we want to improve here, so we can do the
+-- improvement.
+-- + {let_stmt}: x0: integer variable
+-- + {let_stmt}: y0: integer variable
+-- + {let_stmt}: x1: integer notnull variable
+-- + {let_stmt}: y1: integer notnull variable
+-- + {let_stmt}: x2: integer variable
+-- + {let_stmt}: y2: integer variable
+-- - Error
+create proc improvements_work_for_auto_cursors_that_shadow_a_global()
+begin
+  declare c_global cursor like select nullable(1) as xn, nullable(2) as yn;
+  fetch c_global from values (0, 0);
+  let x0 := c_global.xn;
+  let y0 := c_global.yn;
+  if c_global.xn is not null and c_global.yn is not null then
+    let x1 := c_global.xn;
+    let y1 := c_global.yn;
+    fetch c_global from values (0, 0);
+    let x2 := c_global.xn;
+    let y2 := c_global.yn;
+  end if;
+end;
+
+-- TEST: Improvements do not (yet) work for global auto cursors.
+-- + {let_stmt}: x0: integer variable
+-- + {let_stmt}: y0: integer variable
+-- + {let_stmt}: x1: integer variable
+-- + {let_stmt}: y1: integer variable
+-- + {let_stmt}: x2: integer variable
+-- + {let_stmt}: y2: integer variable
+-- - Error
+create proc improvements_do_not_work_for_global_auto_cursors()
+begin
+  fetch c_global from values (0, 0);
+  let x0 := c_global.xn;
+  let y0 := c_global.yn;
+  if c_global.xn is not null and c_global.yn is not null then
+    let x1 := c_global.xn;
+    let y1 := c_global.yn;
+    fetch c_global from values (0, 0);
+    let x2 := c_global.xn;
+    let y2 := c_global.yn;
+  end if;
+end;
+
+-- TEST: Improvements work on IN arguments.
+-- + {let_stmt}: x: integer notnull variable
+-- - Error
+create proc improvements_work_for_in_args(a int)
+begin
+  if a is not null then
+    let x := a;
+  end if;
+end;
+
+-- Used in the following test.
+-- - Error
+create proc requires_notnull_out(OUT a INT NOT NULL)
+begin
+end;
+
+-- TEST: Improvements do NOT work for OUT arguments.
+-- + {call_stmt}: err
+-- + Error % proc out parameter: arg must be an exact type match (even nullability) (expected integer notnull; found integer) 'a'
+-- +1 Error
+create proc improvements_do_not_work_for_out()
+begin
+  declare a int;
+  if a is not null then
+    call requires_notnull_out(a);
+  end if;
+end;
+
+-- Used in the following test.
+-- - Error
+create proc requires_notnull_inout(INOUT a INT NOT NULL)
+begin
+end;
+
+-- TEST: Improvements do NOT work for INOUT arguments.
+-- + {call_stmt}: err
+-- + Error % cannot assign/copy possibly null expression to not null target 'a'
+-- +1 Error
+create proc improvements_do_not_work_for_inout()
+begin
+  declare a int;
+  if a is not null then
+    call requires_notnull_inout(a);
+  end if;
+end;
+
+-- TEST: Improvements work in SQL.
+-- + {create_proc_stmt}: select: { b: integer notnull } dml_proc
+-- - Error
+create proc improvements_work_in_sql()
+begin
+  declare a int;
+  if a is not null then
+    select (1 + a) as b;
+  end if;
+end;
+
+-- TEST: Improvements are not applied to variables of a NOT NULL type.
+-- - cql_inferred_notnull
+-- - Error
+create proc improvements_are_not_applied_to_notnull_variables()
+begin
+  let a := 42;
+  if a is not null then
+    let b := a;
+  end if;
+end;
+
+-- TEST: Improvements are not applied if an id or dot is not the entirety of the
+-- expression left of IF NOT NULL.
+-- + {let_stmt}: b: integer variable
+-- - Error
+create proc improvements_are_not_applied_if_not_an_id_or_dot()
+begin
+  declare a int;
+  if a + 1 is not null then
+    let b := a;
+  end if;
+end;
+
+-- TEST: Improvements do not work for globals (yet).
+-- + {let_stmt}: x: integer variable
+-- - Error
+create proc improvements_do_not_work_for_globals()
+begin
+  if Y is not null then
+    let x := Y;
+  end if;
+end;
+
+-- TEST: Improvements work on columns resulting from a select *.
+-- + {create_proc_stmt}: select: { xn: integer, yn: integer notnull } dml_proc
+-- - Error
+create proc improvements_work_for_select_star()
+begin
+  select * from tnull where yn is not null;
+end;
+
+-- TEST: Improvements work for select expressions.
+-- + {create_proc_stmt}: select: { xn: integer notnull, yn: integer notnull } dml_proc
+-- - Error
+create proc improvements_work_for_select_expressions()
+begin
+  select xn, yn from tnull where xn is not null and yn is not null;
+end;
+
+-- TEST: Improvements correctly handle nested selects.
+-- + {create_proc_stmt}: select: { xn: integer notnull, yn: integer notnull, yn0: integer, yn1: integer notnull } dml_proc
+-- - Error
+create proc improvements_correctly_handle_nested_selects()
+begin
+  select
+    (select xn),
+    (select yn from tnull),
+    (select yn from tnull where yn is not null) as yn0,
+    (select yn) as yn1
+  from tnull
+  where xn is not null and yn is not null;
+end;
+
+-- TEST: We have to be careful with aliases. Here, the result column `c` should
+-- NOT be improved despite it being an alias for `xn` when `xn is not null`
+-- because the `xn` in the where clause actually refers to `1 + null`. The
+-- result column `xn`, however, is not null depsite `1 + null` because of the
+-- same where clause.
+-- + {create_proc_stmt}: select: { c: integer, xn: integer notnull } dml_proc
+-- - Error
+create proc improvements_are_not_done_in_select_exprs_if_shadowed_by_an_alias()
+begin
+  select xn as c, 1 + null as xn from tnull where xn is not null;
+end;
+
+-- TEST: We actually want `yn` to be improved in the result even though `xn is
+-- not null` because `yn` is an alias for `xn + xn` and `xn is not null`. `yn0`
+-- should not be improved even though it is an alias for `yn` because that is a
+-- different `yn` from the one we're improving (it's actually `tnull.yn`).
+-- + {create_proc_stmt}: select: { yn: integer notnull, yn0: integer } dml_proc
+-- - Error
+create proc improvements_apply_in_select_exprs()
+begin
+  select xn + xn as yn, yn as yn0 from tnull where xn is not null;
+end;
+
+-- TEST: Here, we improve the resulting `yn` due to `yn is not null` because it
+-- refers to the result column, not `tnull.yn`. Whereas the previous test
+-- improved a select expresion which lead to an improved result, here we improve
+-- the result directly, not the select expression.
+-- + {create_proc_stmt}: select: { yn: integer notnull, xn: integer, yn0: integer } dml_proc
+-- - Error
+create proc improvements_to_aliases_apply_in_the_result_but_not_in_the_exprs()
+begin
+  select xn + xn as yn, xn, yn as yn0 from tnull where yn is not null;
+end;
+
+-- Used in the following tests.
+-- - Error
+create table another_table_with_nullables (xn integer);
+
+-- TEST: Improvements work on the result of joins.
+-- + {create_proc_stmt}: select: { xn0: integer notnull } dml_proc
+-- - Error
+create proc improvements_work_on_join_results()
+begin
+  select tnull.xn as xn0
+  from tnull
+  inner join another_table_with_nullables
+  on tnull.xn = another_table_with_nullables.xn
+  where xn0 is not null;
+end;
+
+-- TEST: TODO: Improvements do not yet work for ON clauses.
+-- + {create_proc_stmt}: select: { xn0: integer } dml_proc
+-- - Error
+create proc improvements_do_not_work_for_on_clauses()
+begin
+  create table another_table_with_nullables (xn int);
+  select tnull.xn as xn0
+  from tnull
+  inner join another_table_with_nullables
+  on tnull.xn = another_table_with_nullables.xn
+  and tnull.xn is not null;
+end;
+
+-- TEST: We do not want `SEM_TYPE_INFERRED_NOTNULL` flags to be copied via LIKE.
+-- Copying the flag would incorrectly imply an inferred NOT NULL status. We also
+-- ensure here that there is no aliasing of struct pointers between `c` and `d`.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: y0: integer notnull variable
+-- + {let_stmt}: x1: integer notnull variable
+-- + {let_stmt}: y1: integer notnull variable
+-- + {let_stmt}: x2: integer variable
+-- + {let_stmt}: y2: integer variable
+-- - Error
+create proc notnull_inferred_does_not_get_copied_via_declare_cursor_like_cursor()
+begin
+  declare c cursor like tnull;
+  fetch c from values (1, 2);
+  if c.xn is not null and c.yn is not null then
+    let x0 := c.xn;
+    let y0 := c.yn;
+    declare d cursor like c;
+    let x1 := c.xn;
+    let y1 := c.yn;
+    let x2 := d.xn;
+    let y2 := d.yn;
+  end if;
+end;
+
+-- TEST: Ensure that `c.a is not null` does not result in an improvement that
+-- shows up in the params of `improvements_work_for_in_args` via unintentional
+-- aliasing.
+-- + {declare_cursor_like_name}: c: improvements_work_for_in_args[arguments]: { a: integer in } variable shape_storage value_cursor
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer notnull variable
+-- + {let_stmt}: x2: integer variable
+-- + {declare_cursor_like_name}: d: improvements_work_for_in_args[arguments]: { a: integer in } variable shape_storage value_cursor
+-- + {declare_cursor_like_name}: e: improvements_work_for_in_args[arguments]: { a: integer in } variable shape_storage value_cursor
+-- - Error
+create proc notnull_inferred_does_not_get_copied_via_declare_cursor_like_proc()
+begin
+  declare c cursor like improvements_work_for_in_args arguments;
+  fetch c from values (0);
+  if c.a is not null then
+    let x0 := c.a;
+    declare d cursor like improvements_work_for_in_args arguments;
+    fetch d from values (0);
+    let x1 := c.a;
+    let x2 := d.a;
+    declare e cursor like improvements_work_for_in_args arguments;
+  end if;
+end;
+
+-- Used in the following test.
+-- - Error
+create proc returns_nullable_int()
+begin
+  declare c cursor like select nullable(0) as a;
+  out c;
+end;
+
+-- TEST: Verify that `returns_nullable_int` does not get improved when we
+-- improve `args like returns_nullable_int` (which would indicate aliasing).
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- - Error
+create proc notnull_inferred_does_not_get_copied_via_arguments_like_proc(args like returns_nullable_int)
+begin
+  if args.a is not null then
+    let x0 := args.a;
+    declare c cursor fetch from call returns_nullable_int();
+    let x1 := c.a;
+  end if;
+end;
+
+-- TEST: Verify that rewrites for nullability work correctly within CTEs and do
+-- not get applied twice.
+-- + {create_proc_stmt}: select: { b: integer notnull } dml_proc
+-- +1 {name cql_inferred_notnull}: a: integer notnull variable
+-- - Error
+create proc improvements_work_within_ctes()
+begin
+  declare a int;
+  if a is not null then
+    with recursive foo(b) as (select a)
+    select b from foo;
+  end if;
+end;
+
+-- TEST: Disable flow-sensitive nullability.
+-- + @ENFORCE_NORMAL NOT NULL AFTER CHECK
+-- + {enforce_normal_stmt}: ok
+@enforce_normal not null after check;
+
+-- TEST: Improvements do not work when disabled.
+-- + {let_stmt}: x: integer variable
+-- - Error
+create proc improvements_do_not_work_when_disabled()
+begin
+ declare a int;
+  if a is not null then
+    let x := a;
+  end if;
+end;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- NOT is weaker than +, parens stay even though this is a special case
+-- the parens could be elided becuse it's on the right of the +
+-- + SELECT 1 + (NOT 2 IS NULL);
+select 1 + not 2 is null;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- NOT is weaker than +, parens stay even though this is a special case
+--  the parens could be elided becuse it's on the right of the +
+-- + SELECT (NOT 1) + (NOT 2 IS NULL);
+select (not 1) + not 2 is null;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- IS is weaker than + , parens must stay
+-- + SELECT NOT 1 + (2 IS NULL);
+select not 1 + (2 is null);
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- plus is stronger than IS
+-- + SELECT NOT 1 + 2 IS NULL;
+select not 1 + 2 is null;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- NOT is weaker than IS, parens must stay
+-- + SELECT 1 + (NOT 2) IS NULL;
+select 1 + (not 2) is null;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- NOT is weaker than IS, parens must stay
+-- + SELECT 1 IS NOT NULL AND 2 + (NOT 3) IS NULL;
+select 1 is not null and 2 + (not 3) is null;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+--  NOT is weaker than +, parens stay even though this is a special case
+--  the parens could be elided becuse it's on the right of the +
+-- + SELECT 1 IS NOT NULL AND 2 + (NOT 3 IS NULL)
+select 1 is not null and 2 + not 3 is null;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- not is weaker than between, no parens needed
+-- + SELECT NOT 0 BETWEEN -1 AND 2;
+select not 0 between -1 and 2;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- not is weaker than between, must keep parens
+-- + SELECT (NOT 0) BETWEEN -1 AND 2;
+select (not 0 ) between -1 and 2;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- not is weaker than between, no parens needed
+-- + SELECT NOT 0 BETWEEN -1 AND 2;
+select not (0  between -1 and 2);
+
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- between is weaker than =, don't need parens
+-- + SELECT 1 = 2 BETWEEN 2 AND 2;
+select 1=2 between 2 and 2;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- between is weaker than =, keep the parens
+-- + SELECT 1 = (2 BETWEEN 2 AND 2);
+select 1=(2 between 2 and 2);
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- between is weaker than =, don't need the parens
+-- + SELECT 1 = 2 BETWEEN 2 AND 2;
+select (1=2) between 2 and 2;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- no parens need to be added in the natural order (and its left associative)
+-- + SELECT 0 BETWEEN 0 AND 3 BETWEEN 2 AND 3;
+select 0 between 0 and 3 between 2 and 3;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- no parens are needed here, this is left associative, the parens are redundant
+-- + SELECT 0 BETWEEN 0 AND 3 BETWEEN 2 AND 3;
+select (0 between 0 and 3) between 2 and 3;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- must keep the parens on the right arg, between is left associative
+-- + SELECT 0 BETWEEN 0 AND (3 BETWEEN 2 AND 3);
+select 0 between 0 and (3 between 2 and 3);
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- no parens are needed for the left arg of the between range
+-- + SELECT 0 BETWEEN 1 BETWEEN 3 AND 4 AND (3 BETWEEN 2 AND 3);
+select 0 between (1 between 3 and 4) and (3 between 2 and 3);

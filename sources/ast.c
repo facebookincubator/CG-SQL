@@ -75,7 +75,11 @@ cql_noexport bool_t is_ast_proclit(ast_node *node) {
 }
 
 cql_noexport bool_t is_ast_strlit(ast_node *node) {
-  return is_ast_str(node) && (( str_ast_node*)node)->value[0] == '\'';
+  return is_ast_str(node) && ((str_ast_node *)node)->value[0] == '\'';
+}
+
+cql_noexport bool_t is_ast_id(ast_node *node) {
+  return is_ast_str(node) && ((str_ast_node *)node)->value[0] != '\'';
 }
 
 cql_noexport bool_t is_ast_primitive(ast_node *node) {
@@ -500,16 +504,6 @@ cql_noexport uint32_t find_identity_columns(
   void *_Nullable context)
 {
   return find_attribute_str(misc_attr_list, callback, context, "identity");
-}
-
-// Helper function to extract the vault columns (if any) from the misc attributes
-// provided, and invoke the callback function
-cql_noexport uint32_t find_vault_columns(
-  ast_node *_Nullable misc_attr_list,
-  find_ast_str_node_callback _Nonnull callback,
-  void *_Nullable context)
-{
-  return find_attribute_str(misc_attr_list, callback, context, "vault_sensitive");
 }
 
 // Helper function to extract the base fragment node (if any) from the misc attributes

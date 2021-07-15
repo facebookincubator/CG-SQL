@@ -81,6 +81,12 @@ cql_code cql_exec_internal(sqlite3 *_Nonnull db, cql_string_ref _Nonnull str_ref
   return rc;
 }
 
+char *_Nonnull cql_address_of_col(
+    cql_result_set_ref _Nonnull result_set,
+    cql_int32 row,
+    cql_int32 col,
+    cql_int32 *_Nonnull type);
+
 // The variable byte encoding is little endian, you stop when you reach
 // a byte that does not have the high bit set.  This is good enough for 2^28 bits
 // in four bytes which is more than enough for sql strings...
@@ -301,6 +307,113 @@ void cql_set_blob_ref(cql_blob_ref _Nullable *_Nonnull target, cql_blob_ref _Nul
   *target = source;
 }
 
+#ifdef CQL_RUN_TEST
+jmp_buf *_Nullable cql_contract_argument_notnull_tripwire_jmp_buf;
+#endif
+
+// Wraps calls to `cql_tripwire` to allow us to longjmp, if required. This is
+// called for both the argument itself and, in the case of an INOUT NOT NULL
+// reference type argument, what the argument points to as well.
+static void cql_contract_argument_notnull_tripwire(void *_Nullable ptr, cql_uint32 position) {
+#ifdef CQL_RUN_TEST
+  if (cql_contract_argument_notnull_tripwire_jmp_buf && !ptr) {
+    longjmp(*cql_contract_argument_notnull_tripwire_jmp_buf, position);
+  }
+#endif
+  cql_tripwire(ptr);
+}
+
+// This will be called in the case of an INOUT NOT NULL reference type argument
+// to ensure that `argument` does not point to NULL. This function does not need
+// per-position variants (as `DEFINE_ARGUMENT_AT_POSITION_N_MUST_NOT_BE_NULL`
+// enables) as such a function will always be above this in the stack.
+// `__attribute__((optnone))` is used to ensure we actually see this in stack
+// traces and it doesn't get inlined or merged away.
+CQL_OPT_NONE static void cql_inout_reference_type_notnull_argument_must_not_point_to_null(
+  void *_Nullable *_Nonnull argument,
+  cql_int32 position)
+{
+  cql_contract_argument_notnull_tripwire(*argument, position);
+}
+
+// This helps us generate variants of nonnull argument enforcement for each of
+// the first eight arguments. As above, `__attribute__((optnone))` prevents
+// these from getting inlined or merged.
+#define DEFINE_ARGUMENT_AT_POSITION_N_MUST_NOT_BE_NULL(N) \
+  CQL_OPT_NONE \
+  static void cql_argument_at_position_ ## N ## _must_not_be_null(void *_Nullable argument, cql_bool inout_notnull) { \
+   cql_contract_argument_notnull_tripwire(argument, N); \
+    if (inout_notnull) { \
+      cql_inout_reference_type_notnull_argument_must_not_point_to_null(argument, N); \
+    } \
+  }
+
+DEFINE_ARGUMENT_AT_POSITION_N_MUST_NOT_BE_NULL(1);
+DEFINE_ARGUMENT_AT_POSITION_N_MUST_NOT_BE_NULL(2);
+DEFINE_ARGUMENT_AT_POSITION_N_MUST_NOT_BE_NULL(3);
+DEFINE_ARGUMENT_AT_POSITION_N_MUST_NOT_BE_NULL(4);
+DEFINE_ARGUMENT_AT_POSITION_N_MUST_NOT_BE_NULL(5);
+DEFINE_ARGUMENT_AT_POSITION_N_MUST_NOT_BE_NULL(6);
+DEFINE_ARGUMENT_AT_POSITION_N_MUST_NOT_BE_NULL(7);
+DEFINE_ARGUMENT_AT_POSITION_N_MUST_NOT_BE_NULL(8);
+
+CQL_OPT_NONE static void cql_argument_at_position_9_or_greater_must_not_be_null( void *_Nullable argument,
+  cql_uint32 position,
+  cql_bool deref)
+{
+  cql_contract_argument_notnull_tripwire(argument, position);
+  if (deref) {
+    cql_inout_reference_type_notnull_argument_must_not_point_to_null(argument, position);
+  }
+}
+
+// Calls a position-specific function that will call `cql_tripwire(argument)`
+// (and `cql_tripwire(*argument)` when `deref` is true, as in the case of `INOUT
+// arg R NOT NULL`, where `R` is some reference type). This is done so that a
+// maximally informative function name will appear in stack traces.
+//
+// NOTE: This function takes a `position` starting from 1 instead of an `index`
+// starting from 0 so that, when someone is debugging a crash, `position` will
+// line up with the name of the position-specific function and not cause
+// confusion. Having the "first argument" be "position 1", as opposed to "index
+// 0", seems to be the most intuitive. It also makes things a bit cleaner when
+// performing a longjmp during testing (because jumping with 0 is
+// indistinguishable from jumping with 1).
+static void cql_contract_argument_notnull_with_optional_dereference_check(
+  void *_Nullable argument,
+  cql_uint32 position,
+  cql_bool deref)
+{
+  switch (position) {
+    case 1:
+      return cql_argument_at_position_1_must_not_be_null(argument, deref);
+    case 2:
+      return cql_argument_at_position_2_must_not_be_null(argument, deref);
+    case 3:
+      return cql_argument_at_position_3_must_not_be_null(argument, deref);
+    case 4:
+      return cql_argument_at_position_4_must_not_be_null(argument, deref);
+    case 5:
+      return cql_argument_at_position_5_must_not_be_null(argument, deref);
+    case 6:
+      return cql_argument_at_position_6_must_not_be_null(argument, deref);
+    case 7:
+      return cql_argument_at_position_7_must_not_be_null(argument, deref);
+    case 8:
+      return cql_argument_at_position_8_must_not_be_null(argument, deref);
+    default:
+      return cql_argument_at_position_9_or_greater_must_not_be_null(argument, position, deref);
+  }
+}
+
+void cql_contract_argument_notnull(void * _Nullable argument, cql_uint32 position) {
+  cql_contract_argument_notnull_with_optional_dereference_check(argument, position, false);
+}
+
+void cql_contract_argument_notnull_when_dereferenced(void * _Nullable argument, cql_uint32 position) {
+  cql_contract_argument_notnull_with_optional_dereference_check(argument, position, true);
+}
+
 // Creates a growable byte-buffer.  This code is used in the creation of the data blob for a result set.
 // The buffer will double in size when it would otherwise overflow resulting in at most 2N data operations
 // for N rows.
@@ -397,7 +510,6 @@ int cql_compat_sqlite3_strlike(const char *_Nonnull zGlob, const char *_Nonnull 
   return strlike_impl(zGlob, zStr, cEsc);
 }
 
-
 // If there is no row available we can use this helper to ensure that
 // the output data is put into a known state.
 static void cql_multinull(cql_int32 count, va_list args) {
@@ -488,6 +600,8 @@ static void cql_fetch_field(
     sqlite3_stmt *_Nullable stmt,
     char *_Nonnull field,
     cql_bool enable_encoding,
+    cql_int32 encode_context_type,
+    char *_Nullable encode_context_field,
     cql_object_ref _Nullable encoder) {
 
   cql_bool is_encoded = (type & CQL_DATA_TYPE_ENCODED) && enable_encoding;
@@ -498,7 +612,7 @@ static void cql_fetch_field(
       cql_int32 *int32_data = (cql_int32 *)field;
       *int32_data = sqlite3_column_int(stmt, column);
       if (is_encoded) {
-        *int32_data = cql_encode_int32(encoder, *int32_data);
+        *int32_data = cql_encode_int32(encoder, *int32_data, encode_context_type, encode_context_field);
       }
       break;
     }
@@ -506,7 +620,7 @@ static void cql_fetch_field(
       cql_int64 *int64_data = (cql_int64 *)field;
       *int64_data = sqlite3_column_int64(stmt, column);
       if (is_encoded) {
-        *int64_data = cql_encode_int64(encoder, *int64_data);
+        *int64_data = cql_encode_int64(encoder, *int64_data, encode_context_type, encode_context_field);
       }
       break;
     }
@@ -514,7 +628,7 @@ static void cql_fetch_field(
       cql_double *double_data = (cql_double *)field;
       *double_data = sqlite3_column_double(stmt, column);
       if (is_encoded) {
-        *double_data = cql_encode_double(encoder, *double_data);
+        *double_data = cql_encode_double(encoder, *double_data, encode_context_type, encode_context_field);
       }
       break;
     }
@@ -522,7 +636,7 @@ static void cql_fetch_field(
       cql_bool *bool_data = (cql_bool *)field;
       *bool_data = !!sqlite3_column_int(stmt, column);
       if (is_encoded) {
-        *bool_data = cql_encode_bool(encoder, *bool_data);
+        *bool_data = cql_encode_bool(encoder, *bool_data, encode_context_type, encode_context_field);
       }
       break;
     }
@@ -530,7 +644,7 @@ static void cql_fetch_field(
       cql_string_ref *str_ref = (cql_string_ref *)field;
       cql_column_string_ref(stmt, column, str_ref);
       if (is_encoded) {
-        cql_string_ref new_str_ref = cql_encode_string_ref_new(encoder, *str_ref);
+        cql_string_ref new_str_ref = cql_encode_string_ref_new(encoder, *str_ref, encode_context_type, encode_context_field);
         cql_set_string_ref(str_ref, new_str_ref);
         cql_string_release(new_str_ref);
       }
@@ -540,7 +654,7 @@ static void cql_fetch_field(
       cql_blob_ref *blob_ref = (cql_blob_ref *)field;
       cql_column_blob_ref(stmt, column, blob_ref);
       if (is_encoded) {
-        cql_blob_ref new_blob_ref = cql_encode_blob_ref_new(encoder, *blob_ref);
+        cql_blob_ref new_blob_ref = cql_encode_blob_ref_new(encoder, *blob_ref, encode_context_type, encode_context_field);
         cql_set_blob_ref(blob_ref, new_blob_ref);
         cql_blob_release(new_blob_ref);
       }
@@ -550,7 +664,7 @@ static void cql_fetch_field(
       cql_nullable_int32 *_Nonnull int32p = (cql_nullable_int32 *)field;
       cql_column_nullable_int32(stmt, column, int32p);
       if (is_encoded && !int32p->is_null) {
-        int32p->value = cql_encode_int32(encoder, int32p->value);
+        int32p->value = cql_encode_int32(encoder, int32p->value, encode_context_type, encode_context_field);
       }
       break;
     }
@@ -558,7 +672,7 @@ static void cql_fetch_field(
       cql_nullable_int64 *_Nonnull int64p = (cql_nullable_int64 *)field;
       cql_column_nullable_int64(stmt, column, int64p);
       if (is_encoded && !int64p->is_null) {
-        int64p->value = cql_encode_int64(encoder, int64p->value);
+        int64p->value = cql_encode_int64(encoder, int64p->value, encode_context_type, encode_context_field);
       }
       break;
     }
@@ -566,7 +680,7 @@ static void cql_fetch_field(
       cql_nullable_double *_Nonnull doublep = (cql_nullable_double *)field;
       cql_column_nullable_double(stmt, column, doublep);
       if (is_encoded && !doublep->is_null) {
-        doublep->value = cql_encode_double(encoder, doublep->value);
+        doublep->value = cql_encode_double(encoder, doublep->value, encode_context_type, encode_context_field);
       }
       break;
     }
@@ -574,7 +688,7 @@ static void cql_fetch_field(
       cql_nullable_bool *_Nonnull boolp = (cql_nullable_bool *)field;
       cql_column_nullable_bool(stmt, column, boolp);
       if (is_encoded && !boolp->is_null) {
-        boolp->value = cql_encode_bool(encoder, boolp->value);
+        boolp->value = cql_encode_bool(encoder, boolp->value, encode_context_type, encode_context_field);
       }
       break;
     }
@@ -582,7 +696,7 @@ static void cql_fetch_field(
       cql_string_ref *str_ref = (cql_string_ref *)field;
       cql_column_nullable_string_ref(stmt, column, str_ref);
       if (is_encoded && *str_ref) {
-        cql_string_ref new_str_ref = cql_encode_string_ref_new(encoder, *str_ref);
+        cql_string_ref new_str_ref = cql_encode_string_ref_new(encoder, *str_ref, encode_context_type, encode_context_field);
         cql_set_string_ref(str_ref, new_str_ref);
         cql_string_release(new_str_ref);
       }
@@ -592,7 +706,7 @@ static void cql_fetch_field(
       cql_blob_ref *blob_ref = (cql_blob_ref *)field;
       cql_column_nullable_blob_ref(stmt, column, blob_ref);
       if (is_encoded && *blob_ref) {
-        cql_blob_ref new_blob_ref = cql_encode_blob_ref_new(encoder, *blob_ref);
+        cql_blob_ref new_blob_ref = cql_encode_blob_ref_new(encoder, *blob_ref, encode_context_type, encode_context_field);
         cql_set_blob_ref(blob_ref, new_blob_ref);
         cql_blob_release(new_blob_ref);
       }
@@ -617,14 +731,43 @@ void cql_multifetch_meta(char *_Nonnull data, cql_fetch_info *_Nonnull info) {
   uint32_t count = col_offsets[0];
   col_offsets++;
 
+  // If vault context column is specified, we fetch it first with the column index
+  cql_int32 encode_context_type = -1;
+  char *encode_context_field = NULL;
+  if (info->encode_context_index >= 0) {
+    encode_context_type = data_types[info->encode_context_index];
+    encode_context_field = data + col_offsets[info->encode_context_index];
+    cql_fetch_field(encode_context_type,
+                    info->encode_context_index,
+                    db,
+                    stmt,
+                    encode_context_field,
+                    false /* enable_encoding */,
+                    -1 /* encode_context_type */,
+                    NULL /* encode_context_field */,
+                    info->encoder);
+  }
+
   for (cql_int32 column = 0; column < count; column++) {
+    if (column == info->encode_context_index) {
+      // This vault context column has been fetched already, skip
+      continue;
+    }
     uint8_t type = data_types[column];
     char *field = data + col_offsets[column];
     // We're fetching column values from db to store in a result_set. Therefore we
     // need to encode those values because it's the result_set output of the proc.
     // Because of that we set enable_encoding = TRUE. The value true means if the
     // field has the CQL_DATA_TYPE_ENCODED bit then encode otherwise don't
-    cql_fetch_field(type, column, db, stmt, field, true /* enable_encoding */, info->encoder);
+    cql_fetch_field(type,
+                    column,
+                    db,
+                    stmt,
+                    field,
+                    true /* enable_encoding */,
+                    encode_context_type,
+                    encode_context_field,
+                    info->encoder);
   }
 }
 
@@ -652,7 +795,15 @@ void cql_multifetch(cql_code rc, sqlite3_stmt *_Nullable stmt, cql_int32 count, 
     // don't need to encode it because it's not a result_set output of the proc.
     // Because of that we set enable_encoding = FALSE. The value false means
     // do not encode even if the field has the CQL_DATA_TYPE_ENCODED bit.
-    cql_fetch_field(type, column, db, stmt, field, false /* enable_encoding */, NULL);
+    cql_fetch_field(type,
+                    column,
+                    db,
+                    stmt,
+                    field,
+                    false /* enable_encoding */,
+                    -1 /* encode_context_type */,
+                    NULL /* encode_context_field */,
+                    NULL /* encoder */);
   }
 
   va_end(args);
@@ -679,6 +830,15 @@ void cql_copyoutrow(sqlite3 *_Nullable db, cql_result_set_ref _Nonnull result_se
   bool got_decoder = false;
   cql_object_ref _Nullable encoder = NULL;
 
+  // Find vault context column
+  cql_result_set_meta *meta = cql_result_set_get_meta(result_set);
+  cql_int32 encode_context_type = -1;
+  char *encode_context_field = NULL;
+  if (meta->encodeContextIndex >= 0) {
+    encode_context_type = meta->dataTypes[meta->encodeContextIndex];
+    encode_context_field = cql_address_of_col(result_set, row, meta->encodeContextIndex, &encode_context_type);
+  }
+
   for (cql_int32 column = 0; column < count; column++) {
     cql_int32 type = va_arg(args, cql_int32);
     cql_int32 core_data_type_and_not_null = CQL_CORE_DATA_TYPE_OF(type) | (type & CQL_DATA_TYPE_NOT_NULL);
@@ -702,7 +862,7 @@ void cql_copyoutrow(sqlite3 *_Nullable db, cql_result_set_ref _Nonnull result_se
         cql_int32 *int32_data = va_arg(args, cql_int32 *);
         *int32_data = cql_result_set_get_int32_col(result_set, row, column);
         if (should_decode) {
-          *int32_data = cql_decode_int32(encoder, *int32_data);
+          *int32_data = cql_decode_int32(encoder, *int32_data, encode_context_type, encode_context_field);
         }
         break;
       }
@@ -710,7 +870,7 @@ void cql_copyoutrow(sqlite3 *_Nullable db, cql_result_set_ref _Nonnull result_se
         cql_int64 *int64_data = va_arg(args, cql_int64 *);
         *int64_data = cql_result_set_get_int64_col(result_set, row, column);
         if (should_decode) {
-          *int64_data = cql_decode_int64(encoder, *int64_data);
+          *int64_data = cql_decode_int64(encoder, *int64_data, encode_context_type, encode_context_field);
         }
         break;
       }
@@ -718,7 +878,7 @@ void cql_copyoutrow(sqlite3 *_Nullable db, cql_result_set_ref _Nonnull result_se
         cql_double *double_data = va_arg(args, cql_double *);
         *double_data = cql_result_set_get_double_col(result_set, row, column);
         if (should_decode) {
-          *double_data = cql_decode_double(encoder, *double_data);
+          *double_data = cql_decode_double(encoder, *double_data, encode_context_type, encode_context_field);
         }
         break;
       }
@@ -726,7 +886,7 @@ void cql_copyoutrow(sqlite3 *_Nullable db, cql_result_set_ref _Nonnull result_se
         cql_bool *bool_data = va_arg(args, cql_bool *);
         *bool_data = cql_result_set_get_bool_col(result_set, row, column);
         if (should_decode) {
-          *bool_data = cql_decode_bool(encoder, *bool_data);
+          *bool_data = cql_decode_bool(encoder, *bool_data, encode_context_type, encode_context_field);
         }
         break;
       }
@@ -735,7 +895,7 @@ void cql_copyoutrow(sqlite3 *_Nullable db, cql_result_set_ref _Nonnull result_se
         cql_set_string_ref(str_ref, cql_result_set_get_string_col(result_set, row, column));
         cql_string_ref new_str_ref = NULL;
         if (should_decode) {
-          new_str_ref = cql_decode_string_ref_new(encoder, *str_ref);
+          new_str_ref = cql_decode_string_ref_new(encoder, *str_ref, encode_context_type, encode_context_field);
           cql_set_string_ref(str_ref, new_str_ref);
           cql_string_release(new_str_ref);
         }
@@ -746,7 +906,7 @@ void cql_copyoutrow(sqlite3 *_Nullable db, cql_result_set_ref _Nonnull result_se
         cql_set_blob_ref(blob_ref, cql_result_set_get_blob_col(result_set, row, column));
         cql_blob_ref new_blob_ref = NULL;
         if (should_decode) {
-          new_blob_ref = cql_decode_blob_ref_new(encoder, *blob_ref);
+          new_blob_ref = cql_decode_blob_ref_new(encoder, *blob_ref, encode_context_type, encode_context_field);
           cql_set_blob_ref(blob_ref, new_blob_ref);
           cql_blob_release(new_blob_ref);
         }
@@ -766,7 +926,7 @@ void cql_copyoutrow(sqlite3 *_Nullable db, cql_result_set_ref _Nonnull result_se
           cql_set_notnull(*int32p, cql_result_set_get_int32_col(result_set, row, column));
         }
         if (!int32p->is_null && should_decode) {
-          int32p->value = cql_decode_int32(encoder, int32p->value);
+          int32p->value = cql_decode_int32(encoder, int32p->value, encode_context_type, encode_context_field);
         }
         break;
       }
@@ -779,7 +939,7 @@ void cql_copyoutrow(sqlite3 *_Nullable db, cql_result_set_ref _Nonnull result_se
           cql_set_notnull(*int64p, cql_result_set_get_int64_col(result_set, row, column));
         }
         if (!int64p->is_null && should_decode) {
-          int64p->value = cql_decode_int64(encoder, int64p->value);
+          int64p->value = cql_decode_int64(encoder, int64p->value, encode_context_type, encode_context_field);
         }
         break;
       }
@@ -792,7 +952,7 @@ void cql_copyoutrow(sqlite3 *_Nullable db, cql_result_set_ref _Nonnull result_se
           cql_set_notnull(*doublep, cql_result_set_get_double_col(result_set, row, column));
         }
         if (!doublep->is_null && should_decode) {
-          doublep->value = cql_decode_double(encoder, doublep->value);
+          doublep->value = cql_decode_double(encoder, doublep->value, encode_context_type, encode_context_field);
         }
         break;
       }
@@ -805,7 +965,7 @@ void cql_copyoutrow(sqlite3 *_Nullable db, cql_result_set_ref _Nonnull result_se
           cql_set_notnull(*boolp, cql_result_set_get_bool_col(result_set, row, column));
         }
         if (!boolp->is_null && should_decode) {
-          boolp->value = cql_decode_bool(encoder, boolp->value);
+          boolp->value = cql_decode_bool(encoder, boolp->value, encode_context_type, encode_context_field);
         }
         break;
       }
@@ -814,7 +974,7 @@ void cql_copyoutrow(sqlite3 *_Nullable db, cql_result_set_ref _Nonnull result_se
         cql_set_string_ref(str_ref, cql_result_set_get_string_col(result_set, row, column));
         cql_string_ref new_str_ref = NULL;
         if (*str_ref && should_decode) {
-          new_str_ref = cql_decode_string_ref_new(encoder, *str_ref);
+          new_str_ref = cql_decode_string_ref_new(encoder, *str_ref, encode_context_type, encode_context_field);
           cql_set_string_ref(str_ref, new_str_ref);
           cql_string_release(new_str_ref);
         }
@@ -825,7 +985,7 @@ void cql_copyoutrow(sqlite3 *_Nullable db, cql_result_set_ref _Nonnull result_se
         cql_set_blob_ref(blob_ref, cql_result_set_get_blob_col(result_set, row, column));
         cql_blob_ref new_blob_ref = NULL;
         if (*blob_ref && should_decode) {
-          new_blob_ref = cql_decode_blob_ref_new(encoder, *blob_ref);
+          new_blob_ref = cql_decode_blob_ref_new(encoder, *blob_ref, encode_context_type, encode_context_field);
           cql_set_blob_ref(blob_ref, new_blob_ref);
           cql_blob_release(new_blob_ref);
         }
@@ -1262,7 +1422,7 @@ void cql_rowset_copy(cql_result_set_ref _Nonnull result_set,
 //
 // If one of the contracts does fail, look a few frames up the stack for the source of the problem.
 // This helper code is pretty stupid and it's unlikely there is a problem actually in this code.
-static char *_Nonnull cql_address_of_col(
+char *_Nonnull cql_address_of_col(
     cql_result_set_ref _Nonnull result_set,
     cql_int32 row,
     cql_int32 col,
@@ -1607,6 +1767,7 @@ void cql_initialize_meta(cql_result_set_meta *_Nonnull meta, cql_fetch_info *_No
   meta->columnCount = info->col_offsets[0];
   meta->identityColumns = info->identity_columns;
   meta->dataTypes = info->data_types;
+  meta->encodeContextIndex = info->encode_context_index;
   meta->copy = cql_rowset_copy;
   #ifndef CQL_NO_GETTERS
       meta->getBoolean = cql_result_set_get_bool_col;
@@ -1739,8 +1900,16 @@ static void cql_encode_new_result_set_data(cql_fetch_info *_Nonnull info,
   cql_bool got_encoder = false;
   cql_object_ref encoder = NULL;
 
+  cql_int32 encode_context_type = -1;
+  if (info->encode_context_index >= 0) {
+    encode_context_type = data_types[info->encode_context_index];
+  }
+  char *encode_context_field = NULL;
   char *row = data;
   for (cql_int32 i = 0; i < rows ; i++, row += rowsize) {
+    if (info->encode_context_index >= 0) {
+      encode_context_field = row + col_offsets[info->encode_context_index];
+    }
     for (cql_int32 column = 0; column < count; column++) {
       uint8_t type = data_types[column];
       char *field = row + col_offsets[column];
@@ -1753,34 +1922,34 @@ static void cql_encode_new_result_set_data(cql_fetch_info *_Nonnull info,
       switch (type) {
         case CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_ENCODED | CQL_DATA_TYPE_NOT_NULL: {
           cql_int32 *int32_data = (cql_int32 *)field;
-          *int32_data = cql_encode_int32(encoder, *int32_data);
+          *int32_data = cql_encode_int32(encoder, *int32_data, encode_context_type, encode_context_field);
           break;
         }
         case CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_ENCODED | CQL_DATA_TYPE_NOT_NULL: {
           cql_int64 *int64_data = (cql_int64 *)field;
-          *int64_data = cql_encode_int64(encoder, *int64_data);
+          *int64_data = cql_encode_int64(encoder, *int64_data, encode_context_type, encode_context_field);
           break;
         }
         case CQL_DATA_TYPE_DOUBLE | CQL_DATA_TYPE_ENCODED | CQL_DATA_TYPE_NOT_NULL: {
           cql_double *double_data = (cql_double *)field;
-          *double_data = cql_encode_double(encoder, *double_data);
+          *double_data = cql_encode_double(encoder, *double_data, encode_context_type, encode_context_field);
           break;
         }
         case CQL_DATA_TYPE_BOOL | CQL_DATA_TYPE_ENCODED | CQL_DATA_TYPE_NOT_NULL: {
           cql_bool *bool_data = (cql_bool *)field;
-          *bool_data = cql_encode_bool(encoder, *bool_data);
+          *bool_data = cql_encode_bool(encoder, *bool_data, encode_context_type, encode_context_field);
           break;
         }
         case CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED | CQL_DATA_TYPE_NOT_NULL: {
           cql_string_ref *str_ref = (cql_string_ref *)field;
-          cql_string_ref new_str_ref = cql_encode_string_ref_new(encoder, *str_ref);
+          cql_string_ref new_str_ref = cql_encode_string_ref_new(encoder, *str_ref, encode_context_type, encode_context_field);
           cql_set_string_ref(str_ref, new_str_ref);
           cql_string_release(new_str_ref);
           break;
         }
         case CQL_DATA_TYPE_BLOB | CQL_DATA_TYPE_ENCODED | CQL_DATA_TYPE_NOT_NULL: {
           cql_blob_ref *blob_ref = (cql_blob_ref *)field;
-          cql_blob_ref new_blob_ref = cql_encode_blob_ref_new(encoder, *blob_ref);
+          cql_blob_ref new_blob_ref = cql_encode_blob_ref_new(encoder, *blob_ref, encode_context_type, encode_context_field);
           cql_set_blob_ref(blob_ref, new_blob_ref);
           cql_blob_release(new_blob_ref);
           break;
@@ -1788,35 +1957,35 @@ static void cql_encode_new_result_set_data(cql_fetch_info *_Nonnull info,
         case CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_ENCODED: {
           cql_nullable_int32 *_Nonnull int32p = (cql_nullable_int32 *_Nonnull)field;
           if (!int32p->is_null) {
-            int32p->value = cql_encode_int32(encoder, int32p->value);
+            int32p->value = cql_encode_int32(encoder, int32p->value, encode_context_type, encode_context_field);
           }
           break;
         }
         case CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_ENCODED: {
           cql_nullable_int64 *_Nonnull int64p = (cql_nullable_int64 *_Nonnull)field;
           if (!int64p->is_null) {
-            int64p->value = cql_encode_int64(encoder, int64p->value);
+            int64p->value = cql_encode_int64(encoder, int64p->value, encode_context_type, encode_context_field);
           }
           break;
         }
         case CQL_DATA_TYPE_DOUBLE | CQL_DATA_TYPE_ENCODED: {
           cql_nullable_double *_Nonnull doublep = (cql_nullable_double *_Nonnull)field;
           if (!doublep->is_null) {
-            doublep->value = cql_encode_double(encoder, doublep->value);
+            doublep->value = cql_encode_double(encoder, doublep->value, encode_context_type, encode_context_field);
           }
           break;
         }
         case CQL_DATA_TYPE_BOOL | CQL_DATA_TYPE_ENCODED: {
           cql_nullable_bool *_Nonnull boolp = (cql_nullable_bool *_Nonnull)field;
           if (!boolp->is_null) {
-            boolp->value = cql_encode_bool(encoder, boolp->value);
+            boolp->value = cql_encode_bool(encoder, boolp->value, encode_context_type, encode_context_field);
           }
           break;
         }
         case CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED: {
           cql_string_ref *str_ref = (cql_string_ref *)field;
           if (*str_ref) {
-            cql_string_ref new_str_ref = cql_encode_string_ref_new(encoder, *str_ref);
+            cql_string_ref new_str_ref = cql_encode_string_ref_new(encoder, *str_ref, encode_context_type, encode_context_field);
             cql_set_string_ref(str_ref, new_str_ref);
             cql_string_release(new_str_ref);
           }
@@ -1825,7 +1994,7 @@ static void cql_encode_new_result_set_data(cql_fetch_info *_Nonnull info,
         case CQL_DATA_TYPE_BLOB | CQL_DATA_TYPE_ENCODED: {
           cql_blob_ref *blob_ref = (cql_blob_ref *)field;
           if (*blob_ref) {
-            cql_blob_ref new_blob_ref = cql_encode_blob_ref_new(encoder, *blob_ref);
+            cql_blob_ref new_blob_ref = cql_encode_blob_ref_new(encoder, *blob_ref, encode_context_type, encode_context_field);
             cql_set_blob_ref(blob_ref, new_blob_ref);
             cql_blob_release(new_blob_ref);
           }
@@ -1941,4 +2110,144 @@ cql_result_set_ref _Nonnull cql_no_rows_result_set() {
 cql_code cql_no_rows_stmt(sqlite3 *_Nonnull db, sqlite3_stmt *_Nullable *_Nonnull pstmt) {
   cql_finalize_stmt(pstmt);
   return cql_sqlite3_prepare_v2(db, "select 0 where 0", -1, pstmt, NULL);
+}
+
+// basic closed hash table, small initial size with doubling
+#define HASHTAB_INIT_SIZE 4
+#define HASHTAB_LOAD_FACTOR .75
+
+// helper to set the payload array, used at init time and during rehash
+static void cql_hashtab_set_payload(cql_hashtab *_Nonnull ht) {
+  ht->payload = (cql_hashtab_entry *)calloc(ht->capacity, sizeof(cql_hashtab_entry));
+}
+
+// Rehash to a bigger size, all the items are re-inserted.
+// Note we have to release the old values because the new values
+// are retained upon insertion.  This keeps the reference counting correct.
+static void cql_hashtab_rehash(cql_hashtab *_Nonnull ht) {
+  uint32_t old_capacity = ht->capacity;
+  cql_hashtab_entry *old_payload = ht->payload;
+
+  ht->count = 0;
+  ht->capacity *= 2;
+  cql_hashtab_set_payload(ht);
+
+  for (uint32_t i = 0; i < old_capacity; i++) {
+    cql_string_ref key = old_payload[i].key;
+    if (key) {
+      cql_hashtab_add(ht, key, old_payload[i].val);
+      cql_string_release(key);
+    }
+  }
+
+  free(old_payload);
+}
+
+// Making a new hash table, initial size
+cql_hashtab *_Nonnull cql_hashtab_new() {
+  cql_hashtab *ht = malloc(sizeof(cql_hashtab));
+  ht->count = 0;
+  ht->capacity = HASHTAB_INIT_SIZE;
+  cql_hashtab_set_payload(ht);
+  return ht;
+}
+
+// release the memory for the hash table including
+// releasing all the strings stored as keys.
+void cql_hashtab_delete(cql_hashtab *_Nonnull ht) {
+  for (int32_t i = 0; i < ht->capacity; i++) {
+    cql_string_ref key = ht->payload[i].key;
+    if (key) {
+       cql_string_release(key);
+    }
+  }
+  free(ht->payload);
+  free(ht);
+}
+
+// Add a new key to the hash table
+// * if the key is addred return true
+// * if the key exists return false and do nothing
+cql_bool cql_hashtab_add(cql_hashtab *_Nonnull ht, cql_string_ref _Nonnull key_new, cql_int64 val_new) {
+  uint32_t hash = (uint32_t)cql_string_hash(key_new);
+  uint32_t offset = hash % ht->capacity;
+  cql_hashtab_entry *payload = ht->payload;
+
+  for (;;) {
+    cql_string_ref key = payload[offset].key;
+    if (!key) {
+      cql_string_retain(key_new);
+
+      payload[offset].key = key_new;
+      payload[offset].val = val_new;
+
+      ht->count++;
+      if (ht->count > ht->capacity * HASHTAB_LOAD_FACTOR) {
+        cql_hashtab_rehash(ht);
+      }
+
+      return true;
+    }
+
+    if (cql_string_equal(key, key_new)) {
+      return false;
+    }
+
+    offset++;
+    if (offset >= ht->capacity) {
+      offset = 0;
+    }
+  }
+}
+
+// returns the payload item for the indicated key (allowing mutation)
+// if the key is not found returns null
+cql_hashtab_entry *_Nullable cql_hashtab_find(cql_hashtab *_Nonnull ht, cql_string_ref _Nonnull key_needed) {
+  uint32_t hash = (uint32_t)cql_string_hash(key_needed);
+  uint32_t offset = hash % ht->capacity;
+  cql_hashtab_entry *payload = ht->payload;
+
+  for (;;) {
+    cql_string_ref key = ht->payload[offset].key;
+    if (!key) {
+      return NULL;
+    }
+
+    if (cql_string_equal(key, key_needed)) {
+      return &payload[offset];
+    }
+
+    offset++;
+    if (offset >= ht->capacity) {
+      offset = 0;
+    }
+  }
+}
+
+// These are CQL friendly versions of the hashtable, these signatures are directly callable from CQL
+
+// create the facets storage using the hashtable
+cql_int64 cql_facets_new(void) {
+  return (cql_int64)cql_hashtab_new();
+}
+
+// cleanup the facet storage if facets is valid
+void cql_facets_delete(cql_int64 facets){
+  if (facets) {
+    cql_hashtab_delete((cql_hashtab*)facets);
+  }
+}
+
+// add a facet value to the hash table
+cql_bool cql_facet_add(cql_int64 facets, cql_string_ref _Nonnull name, cql_int64 crc) {
+  return cql_hashtab_add((cql_hashtab *)facets, name, crc);
+}
+
+// Search for the facet value in the hash table, if not found return -1
+cql_int64 cql_facet_find(cql_int64 facets, cql_string_ref _Nonnull name) {
+  cql_hashtab_entry *payload = cql_hashtab_find((cql_hashtab *)facets, name);
+  if (!payload) {
+     return -1;
+  }
+  return payload->val;
 }

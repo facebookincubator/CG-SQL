@@ -3981,9 +3981,9 @@
       </p>
       <p>referenced by:
          <ul>
+            <li><a href="#basic_expr" title="basic_expr">basic_expr</a></li>
             <li><a href="#col_def" title="col_def">col_def</a></li>
             <li><a href="#data_type_with_options" title="data_type_with_options">data_type_with_options</a></li>
-            <li><a href="#expr" title="expr">expr</a></li>
          </ul>
       </p><br /><p style="font-size: 14px; font-weight:bold"><a name="data_type_with_options">data_type_with_options:</a></p><svg width="525" height="177">
          <defs>
@@ -4415,7 +4415,7 @@
          <ul>
             <li><a href="#basic_expr" title="basic_expr">basic_expr</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="basic_expr">basic_expr:</a></p><svg width="849" height="573">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="basic_expr">basic_expr:</a></p><svg width="849" height="715">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -4495,18 +4495,54 @@
          <text class="terminal" x="169" y="425">(</text><a href="#select_stmt" title="select_stmt">
             <rect x="207" y="407" width="94" height="32"></rect>
             <rect x="205" y="405" width="94" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="215" y="425">select_stmt</text></a><rect x="775" y="211" width="26" height="32" rx="10"></rect>
+            <text class="nonterminal" x="215" y="425">select_stmt</text></a><rect x="71" y="451" width="56" height="32" rx="10"></rect>
+         <rect x="69" y="449" width="56" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="79" y="469">CAST</text>
+         <rect x="147" y="451" width="26" height="32" rx="10"></rect>
+         <rect x="145" y="449" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="155" y="469">(</text><a href="#expr" title="expr">
+            <rect x="193" y="451" width="48" height="32"></rect>
+            <rect x="191" y="449" width="48" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="201" y="469">expr</text></a><rect x="261" y="451" width="38" height="32" rx="10"></rect>
+         <rect x="259" y="449" width="38" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="269" y="469">AS</text><a href="#data_type_any" title="data_type_any">
+            <rect x="319" y="451" width="116" height="32"></rect>
+            <rect x="317" y="449" width="116" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="327" y="469">data_type_any</text></a><rect x="775" y="211" width="26" height="32" rx="10"></rect>
          <rect x="773" y="209" width="26" height="32" class="terminal" rx="10"></rect>
          <text class="terminal" x="783" y="229">)</text><a href="#call" title="call">
-            <rect x="51" y="451" width="40" height="32"></rect>
-            <rect x="49" y="449" width="40" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="469">call</text></a><a href="#window_func_inv" title="window_func_inv">
-            <rect x="51" y="495" width="128" height="32"></rect>
-            <rect x="49" y="493" width="128" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="513">window_func_inv</text></a><a href="#raise_expr" title="raise_expr">
-            <rect x="51" y="539" width="88" height="32"></rect>
-            <rect x="49" y="537" width="88" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="557">raise_expr</text></a><path class="line" d="m17 17 h2 m20 0 h10 m56 0 h10 m20 0 h10 m0 0 h110 m-140 0 h20 m120 0 h20 m-160 0 q10 0 10 10 m140 0 q0 -10 10 -10 m-150 10 v12 m140 0 v-12 m-140 12 q0 10 10 10 m120 0 q10 0 10 -10 m-130 10 h10 m24 0 h10 m0 0 h10 m56 0 h10 m20 -32 h534 m-790 0 h20 m770 0 h20 m-810 0 q10 0 10 10 m790 0 q0 -10 10 -10 m-800 10 v56 m790 0 v-56 m-790 56 q0 10 10 10 m770 0 q10 0 10 -10 m-780 10 h10 m50 0 h10 m0 0 h700 m-780 -10 v20 m790 0 v-20 m-790 20 v24 m790 0 v-24 m-790 24 q0 10 10 10 m770 0 q10 0 10 -10 m-780 10 h10 m86 0 h10 m0 0 h664 m-780 -10 v20 m790 0 v-20 m-790 20 v24 m790 0 v-24 m-790 24 q0 10 10 10 m770 0 q10 0 10 -10 m-780 10 h10 m90 0 h10 m0 0 h660 m-780 -10 v20 m790 0 v-20 m-790 20 v24 m790 0 v-24 m-790 24 q0 10 10 10 m770 0 q10 0 10 -10 m-760 10 h10 m26 0 h10 m20 0 h10 m48 0 h10 m0 0 h530 m-618 0 h20 m598 0 h20 m-638 0 q10 0 10 10 m618 0 q0 -10 10 -10 m-628 10 v24 m618 0 v-24 m-618 24 q0 10 10 10 m598 0 q10 0 10 -10 m-608 10 h10 m94 0 h10 m20 0 h10 m0 0 h434 m-464 0 h20 m444 0 h20 m-484 0 q10 0 10 10 m464 0 q0 -10 10 -10 m-474 10 v12 m464 0 v-12 m-464 12 q0 10 10 10 m444 0 q10 0 10 -10 m-454 10 h10 m34 0 h10 m0 0 h10 m86 0 h10 m40 0 h10 m0 0 h126 m-156 0 h20 m136 0 h20 m-176 0 q10 0 10 10 m156 0 q0 -10 10 -10 m-166 10 v12 m156 0 v-12 m-156 12 q0 10 10 10 m136 0 q10 0 10 -10 m-146 10 h10 m40 0 h10 m0 0 h10 m56 0 h10 m20 -32 h10 m48 0 h10 m-264 0 h20 m244 0 h20 m-284 0 q10 0 10 10 m264 0 q0 -10 10 -10 m-274 10 v56 m264 0 v-56 m-264 56 q0 10 10 10 m244 0 q10 0 10 -10 m-254 10 h10 m72 0 h10 m0 0 h152 m-644 -152 h20 m684 0 h20 m-724 0 q10 0 10 10 m704 0 q0 -10 10 -10 m-714 10 v176 m704 0 v-176 m-704 176 q0 10 10 10 m684 0 q10 0 10 -10 m-694 10 h10 m70 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m94 0 h10 m0 0 h434 m20 -196 h10 m26 0 h10 m-780 -10 v20 m790 0 v-20 m-790 20 v220 m790 0 v-220 m-790 220 q0 10 10 10 m770 0 q10 0 10 -10 m-780 10 h10 m40 0 h10 m0 0 h710 m-780 -10 v20 m790 0 v-20 m-790 20 v24 m790 0 v-24 m-790 24 q0 10 10 10 m770 0 q10 0 10 -10 m-780 10 h10 m128 0 h10 m0 0 h622 m-780 -10 v20 m790 0 v-20 m-790 20 v24 m790 0 v-24 m-790 24 q0 10 10 10 m770 0 q10 0 10 -10 m-780 10 h10 m88 0 h10 m0 0 h662 m23 -536 h-3"></path>
+            <rect x="51" y="495" width="40" height="32"></rect>
+            <rect x="49" y="493" width="40" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="513">call</text></a><a href="#window_func_inv" title="window_func_inv">
+            <rect x="51" y="539" width="128" height="32"></rect>
+            <rect x="49" y="537" width="128" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="557">window_func_inv</text></a><a href="#raise_expr" title="raise_expr">
+            <rect x="51" y="583" width="88" height="32"></rect>
+            <rect x="49" y="581" width="88" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="601">raise_expr</text></a><rect x="51" y="649" width="56" height="32" rx="10"></rect>
+         <rect x="49" y="647" width="56" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="59" y="667">CASE</text><a href="#expr" title="expr">
+            <rect x="147" y="681" width="48" height="32"></rect>
+            <rect x="145" y="679" width="48" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="155" y="699">expr</text></a><rect x="255" y="649" width="62" height="32" rx="10"></rect>
+         <rect x="253" y="647" width="62" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="263" y="667">WHEN</text><a href="#expr" title="expr">
+            <rect x="337" y="649" width="48" height="32"></rect>
+            <rect x="335" y="647" width="48" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="345" y="667">expr</text></a><rect x="405" y="649" width="56" height="32" rx="10"></rect>
+         <rect x="403" y="647" width="56" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="413" y="667">THEN</text><a href="#expr" title="expr">
+            <rect x="481" y="649" width="48" height="32"></rect>
+            <rect x="479" y="647" width="48" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="489" y="667">expr</text></a><rect x="589" y="681" width="52" height="32" rx="10"></rect>
+         <rect x="587" y="679" width="52" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="597" y="699">ELSE</text><a href="#expr" title="expr">
+            <rect x="661" y="681" width="48" height="32"></rect>
+            <rect x="659" y="679" width="48" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="669" y="699">expr</text></a><rect x="749" y="649" width="48" height="32" rx="10"></rect>
+         <rect x="747" y="647" width="48" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="757" y="667">END</text>
+         <path class="line" d="m17 17 h2 m20 0 h10 m56 0 h10 m20 0 h10 m0 0 h110 m-140 0 h20 m120 0 h20 m-160 0 q10 0 10 10 m140 0 q0 -10 10 -10 m-150 10 v12 m140 0 v-12 m-140 12 q0 10 10 10 m120 0 q10 0 10 -10 m-130 10 h10 m24 0 h10 m0 0 h10 m56 0 h10 m20 -32 h534 m-790 0 h20 m770 0 h20 m-810 0 q10 0 10 10 m790 0 q0 -10 10 -10 m-800 10 v56 m790 0 v-56 m-790 56 q0 10 10 10 m770 0 q10 0 10 -10 m-780 10 h10 m50 0 h10 m0 0 h700 m-780 -10 v20 m790 0 v-20 m-790 20 v24 m790 0 v-24 m-790 24 q0 10 10 10 m770 0 q10 0 10 -10 m-780 10 h10 m86 0 h10 m0 0 h664 m-780 -10 v20 m790 0 v-20 m-790 20 v24 m790 0 v-24 m-790 24 q0 10 10 10 m770 0 q10 0 10 -10 m-780 10 h10 m90 0 h10 m0 0 h660 m-780 -10 v20 m790 0 v-20 m-790 20 v24 m790 0 v-24 m-790 24 q0 10 10 10 m770 0 q10 0 10 -10 m-760 10 h10 m26 0 h10 m20 0 h10 m48 0 h10 m0 0 h530 m-618 0 h20 m598 0 h20 m-638 0 q10 0 10 10 m618 0 q0 -10 10 -10 m-628 10 v24 m618 0 v-24 m-618 24 q0 10 10 10 m598 0 q10 0 10 -10 m-608 10 h10 m94 0 h10 m20 0 h10 m0 0 h434 m-464 0 h20 m444 0 h20 m-484 0 q10 0 10 10 m464 0 q0 -10 10 -10 m-474 10 v12 m464 0 v-12 m-464 12 q0 10 10 10 m444 0 q10 0 10 -10 m-454 10 h10 m34 0 h10 m0 0 h10 m86 0 h10 m40 0 h10 m0 0 h126 m-156 0 h20 m136 0 h20 m-176 0 q10 0 10 10 m156 0 q0 -10 10 -10 m-166 10 v12 m156 0 v-12 m-156 12 q0 10 10 10 m136 0 q10 0 10 -10 m-146 10 h10 m40 0 h10 m0 0 h10 m56 0 h10 m20 -32 h10 m48 0 h10 m-264 0 h20 m244 0 h20 m-284 0 q10 0 10 10 m264 0 q0 -10 10 -10 m-274 10 v56 m264 0 v-56 m-264 56 q0 10 10 10 m244 0 q10 0 10 -10 m-254 10 h10 m72 0 h10 m0 0 h152 m-644 -152 h20 m684 0 h20 m-724 0 q10 0 10 10 m704 0 q0 -10 10 -10 m-714 10 v176 m704 0 v-176 m-704 176 q0 10 10 10 m684 0 q10 0 10 -10 m-694 10 h10 m70 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m94 0 h10 m0 0 h434 m-694 -10 v20 m704 0 v-20 m-704 20 v24 m704 0 v-24 m-704 24 q0 10 10 10 m684 0 q10 0 10 -10 m-694 10 h10 m56 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m48 0 h10 m0 0 h10 m38 0 h10 m0 0 h10 m116 0 h10 m0 0 h300 m20 -240 h10 m26 0 h10 m-780 -10 v20 m790 0 v-20 m-790 20 v264 m790 0 v-264 m-790 264 q0 10 10 10 m770 0 q10 0 10 -10 m-780 10 h10 m40 0 h10 m0 0 h710 m-780 -10 v20 m790 0 v-20 m-790 20 v24 m790 0 v-24 m-790 24 q0 10 10 10 m770 0 q10 0 10 -10 m-780 10 h10 m128 0 h10 m0 0 h622 m-780 -10 v20 m790 0 v-20 m-790 20 v24 m790 0 v-24 m-790 24 q0 10 10 10 m770 0 q10 0 10 -10 m-780 10 h10 m88 0 h10 m0 0 h662 m-780 -10 v20 m790 0 v-20 m-790 20 v46 m790 0 v-46 m-790 46 q0 10 10 10 m770 0 q10 0 10 -10 m-780 10 h10 m56 0 h10 m20 0 h10 m0 0 h58 m-88 0 h20 m68 0 h20 m-108 0 q10 0 10 10 m88 0 q0 -10 10 -10 m-98 10 v12 m88 0 v-12 m-88 12 q0 10 10 10 m68 0 q10 0 10 -10 m-78 10 h10 m48 0 h10 m40 -32 h10 m62 0 h10 m0 0 h10 m48 0 h10 m0 0 h10 m56 0 h10 m0 0 h10 m48 0 h10 m-314 0 l20 0 m-1 0 q-9 0 -9 -10 l0 -12 q0 -10 10 -10 m294 32 l20 0 m-20 0 q10 0 10 -10 l0 -12 q0 -10 -10 -10 m-294 0 h10 m0 0 h284 m40 32 h10 m0 0 h130 m-160 0 h20 m140 0 h20 m-180 0 q10 0 10 10 m160 0 q0 -10 10 -10 m-170 10 v12 m160 0 v-12 m-160 12 q0 10 10 10 m140 0 q10 0 10 -10 m-150 10 h10 m52 0 h10 m0 0 h10 m48 0 h10 m20 -32 h10 m48 0 h10 m0 0 h4 m23 -646 h-3"></path>
          <polygon points="839 17 847 13 847 21"></polygon>
          <polygon points="839 17 831 13 831 21"></polygon></svg><p>
          <div class="ebnf"><code>
@@ -4515,17 +4551,17 @@
                <div>           | '@RC'</div>
                <div>           | <a href="#any_literal" title="any_literal">any_literal</a></div>
                <div>           | <a href="#const_expr" title="const_expr">const_expr</a></div>
-               <div>           | ( '(' ( <a href="#expr" title="expr">expr</a> | <a href="#select_stmt" title="select_stmt">select_stmt</a> ( 'IF' 'NOTHING' ( ( 'OR' 'NULL' )? <a href="#expr" title="expr">expr</a> | 'THROW' ) )? ) | 'EXISTS' '(' <a href="#select_stmt" title="select_stmt">select_stmt</a> ) ')'</div>
+               <div>           | ( '(' ( <a href="#expr" title="expr">expr</a> | <a href="#select_stmt" title="select_stmt">select_stmt</a> ( 'IF' 'NOTHING' ( ( 'OR' 'NULL' )? <a href="#expr" title="expr">expr</a> | 'THROW' ) )? ) | 'EXISTS' '(' <a href="#select_stmt" title="select_stmt">select_stmt</a> | 'CAST' '(' <a href="#expr" title="expr">expr</a> 'AS' <a href="#data_type_any" title="data_type_any">data_type_any</a> ) ')'</div>
                <div>           | <a href="#call" title="call">call</a></div>
                <div>           | <a href="#window_func_inv" title="window_func_inv">window_func_inv</a></div>
-               <div>           | <a href="#raise_expr" title="raise_expr">raise_expr</a></div></code></div>
+               <div>           | <a href="#raise_expr" title="raise_expr">raise_expr</a></div>
+               <div>           | 'CASE' <a href="#expr" title="expr">expr</a>? ( 'WHEN' <a href="#expr" title="expr">expr</a> 'THEN' <a href="#expr" title="expr">expr</a> )+ ( 'ELSE' <a href="#expr" title="expr">expr</a> )? 'END'</div></code></div>
       </p>
       <p>referenced by:
          <ul>
-            <li><a href="#expr" title="expr">expr</a></li>
             <li><a href="#math_expr" title="math_expr">math_expr</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="math_expr">math_expr:</a></p><svg width="435" height="521">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="math_expr">math_expr:</a></p><svg width="725" height="1533">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -4560,9 +4596,9 @@
             <rect x="51" y="3" width="88" height="32"></rect>
             <rect x="49" y="1" width="88" height="32" class="nonterminal"></rect>
             <text class="nonterminal" x="59" y="21">basic_expr</text></a><a href="#math_expr" title="math_expr">
-            <rect x="71" y="47" width="88" height="32"></rect>
-            <rect x="69" y="45" width="88" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="79" y="65">math_expr</text></a><rect x="199" y="47" width="30" height="32" rx="10"></rect>
+            <rect x="51" y="47" width="88" height="32"></rect>
+            <rect x="49" y="45" width="88" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="65">math_expr</text></a><rect x="199" y="47" width="30" height="32" rx="10"></rect>
          <rect x="197" y="45" width="30" height="32" class="terminal" rx="10"></rect>
          <text class="terminal" x="207" y="65">&amp;</text>
          <rect x="199" y="91" width="26" height="32" rx="10"></rect>
@@ -4589,28 +4625,133 @@
          <rect x="199" y="399" width="34" height="32" rx="10"></rect>
          <rect x="197" y="397" width="34" height="32" class="terminal" rx="10"></rect>
          <text class="terminal" x="207" y="417">%</text>
-         <rect x="199" y="443" width="32" height="32" rx="10"></rect>
-         <rect x="197" y="441" width="32" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="207" y="461">||</text>
-         <rect x="71" y="487" width="26" height="32" rx="10"></rect>
-         <rect x="69" y="485" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="79" y="505">-</text><a href="#math_expr" title="math_expr">
-            <rect x="299" y="47" width="88" height="32"></rect>
-            <rect x="297" y="45" width="88" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="307" y="65">math_expr</text></a><path class="line" d="m17 17 h2 m20 0 h10 m88 0 h10 m0 0 h248 m-376 0 h20 m356 0 h20 m-396 0 q10 0 10 10 m376 0 q0 -10 10 -10 m-386 10 v24 m376 0 v-24 m-376 24 q0 10 10 10 m356 0 q10 0 10 -10 m-346 10 h10 m88 0 h10 m20 0 h10 m30 0 h10 m0 0 h10 m-80 0 h20 m60 0 h20 m-100 0 q10 0 10 10 m80 0 q0 -10 10 -10 m-90 10 v24 m80 0 v-24 m-80 24 q0 10 10 10 m60 0 q10 0 10 -10 m-70 10 h10 m26 0 h10 m0 0 h14 m-70 -10 v20 m80 0 v-20 m-80 20 v24 m80 0 v-24 m-80 24 q0 10 10 10 m60 0 q10 0 10 -10 m-70 10 h10 m40 0 h10 m-70 -10 v20 m80 0 v-20 m-80 20 v24 m80 0 v-24 m-80 24 q0 10 10 10 m60 0 q10 0 10 -10 m-70 10 h10 m40 0 h10 m-70 -10 v20 m80 0 v-20 m-80 20 v24 m80 0 v-24 m-80 24 q0 10 10 10 m60 0 q10 0 10 -10 m-70 10 h10 m30 0 h10 m0 0 h10 m-70 -10 v20 m80 0 v-20 m-80 20 v24 m80 0 v-24 m-80 24 q0 10 10 10 m60 0 q10 0 10 -10 m-70 10 h10 m26 0 h10 m0 0 h14 m-70 -10 v20 m80 0 v-20 m-80 20 v24 m80 0 v-24 m-80 24 q0 10 10 10 m60 0 q10 0 10 -10 m-70 10 h10 m28 0 h10 m0 0 h12 m-70 -10 v20 m80 0 v-20 m-80 20 v24 m80 0 v-24 m-80 24 q0 10 10 10 m60 0 q10 0 10 -10 m-70 10 h10 m28 0 h10 m0 0 h12 m-70 -10 v20 m80 0 v-20 m-80 20 v24 m80 0 v-24 m-80 24 q0 10 10 10 m60 0 q10 0 10 -10 m-70 10 h10 m34 0 h10 m0 0 h6 m-70 -10 v20 m80 0 v-20 m-80 20 v24 m80 0 v-24 m-80 24 q0 10 10 10 m60 0 q10 0 10 -10 m-70 10 h10 m32 0 h10 m0 0 h8 m-208 -396 h20 m208 0 h20 m-248 0 q10 0 10 10 m228 0 q0 -10 10 -10 m-238 10 v420 m228 0 v-420 m-228 420 q0 10 10 10 m208 0 q10 0 10 -10 m-218 10 h10 m26 0 h10 m0 0 h162 m20 -440 h10 m88 0 h10 m23 -44 h-3"></path>
-         <polygon points="425 17 433 13 433 21"></polygon>
-         <polygon points="425 17 417 13 417 21"></polygon></svg><p>
+         <rect x="199" y="443" width="30" height="32" rx="10"></rect>
+         <rect x="197" y="441" width="30" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="207" y="461">=</text>
+         <rect x="199" y="487" width="40" height="32" rx="10"></rect>
+         <rect x="197" y="485" width="40" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="207" y="505">==</text>
+         <rect x="199" y="531" width="30" height="32" rx="10"></rect>
+         <rect x="197" y="529" width="30" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="207" y="549">&lt;</text>
+         <rect x="199" y="575" width="30" height="32" rx="10"></rect>
+         <rect x="197" y="573" width="30" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="207" y="593">&gt;</text>
+         <rect x="199" y="619" width="40" height="32" rx="10"></rect>
+         <rect x="197" y="617" width="40" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="207" y="637">&lt;&gt;</text>
+         <rect x="199" y="663" width="34" height="32" rx="10"></rect>
+         <rect x="197" y="661" width="34" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="207" y="681">!=</text>
+         <rect x="199" y="707" width="40" height="32" rx="10"></rect>
+         <rect x="197" y="705" width="40" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="207" y="725">&gt;=</text>
+         <rect x="199" y="751" width="40" height="32" rx="10"></rect>
+         <rect x="197" y="749" width="40" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="207" y="769">&lt;=</text>
+         <rect x="199" y="795" width="52" height="32" rx="10"></rect>
+         <rect x="197" y="793" width="52" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="207" y="813">LIKE</text>
+         <rect x="199" y="839" width="84" height="32" rx="10"></rect>
+         <rect x="197" y="837" width="84" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="207" y="857">NOT LIKE</text>
+         <rect x="199" y="883" width="68" height="32" rx="10"></rect>
+         <rect x="197" y="881" width="68" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="207" y="901">MATCH</text>
+         <rect x="199" y="927" width="74" height="32" rx="10"></rect>
+         <rect x="197" y="925" width="74" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="207" y="945">REGEXP</text>
+         <rect x="199" y="971" width="58" height="32" rx="10"></rect>
+         <rect x="197" y="969" width="58" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="207" y="989">GLOB</text>
+         <rect x="199" y="1015" width="86" height="32" rx="10"></rect>
+         <rect x="197" y="1013" width="86" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="207" y="1033">BETWEEN</text><a href="#math_expr" title="math_expr">
+            <rect x="305" y="1015" width="88" height="32"></rect>
+            <rect x="303" y="1013" width="88" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="313" y="1033">math_expr</text></a><rect x="413" y="1015" width="48" height="32" rx="10"></rect>
+         <rect x="411" y="1013" width="48" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="421" y="1033">AND</text>
+         <rect x="199" y="1059" width="68" height="32" rx="10"></rect>
+         <rect x="197" y="1057" width="68" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="207" y="1077">IS NOT</text>
+         <rect x="199" y="1103" width="36" height="32" rx="10"></rect>
+         <rect x="197" y="1101" width="36" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="207" y="1121">IS</text>
+         <rect x="199" y="1147" width="32" height="32" rx="10"></rect>
+         <rect x="197" y="1145" width="32" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="207" y="1165">||</text><a href="#math_expr" title="math_expr">
+            <rect x="501" y="47" width="88" height="32"></rect>
+            <rect x="499" y="45" width="88" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="509" y="65">math_expr</text></a><rect x="179" y="1191" width="48" height="32" rx="10"></rect>
+         <rect x="177" y="1189" width="48" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="187" y="1209">NOT</text>
+         <rect x="267" y="1191" width="36" height="32" rx="10"></rect>
+         <rect x="265" y="1189" width="36" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="275" y="1209">IN</text>
+         <rect x="323" y="1191" width="26" height="32" rx="10"></rect>
+         <rect x="321" y="1189" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="331" y="1209">(</text><a href="#expr_list" title="expr_list">
+            <rect x="389" y="1191" width="74" height="32"></rect>
+            <rect x="387" y="1189" width="74" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="397" y="1209">expr_list</text></a><a href="#select_stmt" title="select_stmt">
+            <rect x="389" y="1235" width="94" height="32"></rect>
+            <rect x="387" y="1233" width="94" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="397" y="1253">select_stmt</text></a><rect x="523" y="1191" width="26" height="32" rx="10"></rect>
+         <rect x="521" y="1189" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="531" y="1209">)</text>
+         <rect x="267" y="1279" width="86" height="32" rx="10"></rect>
+         <rect x="265" y="1277" width="86" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="275" y="1297">BETWEEN</text><a href="#math_expr" title="math_expr">
+            <rect x="373" y="1279" width="88" height="32"></rect>
+            <rect x="371" y="1277" width="88" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="381" y="1297">math_expr</text></a><rect x="481" y="1279" width="48" height="32" rx="10"></rect>
+         <rect x="479" y="1277" width="48" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="489" y="1297">AND</text><a href="#math_expr" title="math_expr">
+            <rect x="549" y="1279" width="88" height="32"></rect>
+            <rect x="547" y="1277" width="88" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="557" y="1297">math_expr</text></a><rect x="179" y="1323" width="36" height="32" rx="10"></rect>
+         <rect x="177" y="1321" width="36" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="187" y="1341">IN</text>
+         <rect x="235" y="1323" width="26" height="32" rx="10"></rect>
+         <rect x="233" y="1321" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="243" y="1341">(</text><a href="#expr_list" title="expr_list">
+            <rect x="301" y="1323" width="74" height="32"></rect>
+            <rect x="299" y="1321" width="74" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="309" y="1341">expr_list</text></a><a href="#select_stmt" title="select_stmt">
+            <rect x="301" y="1367" width="94" height="32"></rect>
+            <rect x="299" y="1365" width="94" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="309" y="1385">select_stmt</text></a><rect x="435" y="1323" width="26" height="32" rx="10"></rect>
+         <rect x="433" y="1321" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="443" y="1341">)</text>
+         <rect x="71" y="1411" width="26" height="32" rx="10"></rect>
+         <rect x="69" y="1409" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="79" y="1429">-</text>
+         <rect x="71" y="1455" width="30" height="32" rx="10"></rect>
+         <rect x="69" y="1453" width="30" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="79" y="1473">~</text>
+         <rect x="71" y="1499" width="48" height="32" rx="10"></rect>
+         <rect x="69" y="1497" width="48" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="79" y="1517">NOT</text><a href="#math_expr" title="math_expr">
+            <rect x="159" y="1411" width="88" height="32"></rect>
+            <rect x="157" y="1409" width="88" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="167" y="1429">math_expr</text></a><path class="line" d="m17 17 h2 m20 0 h10 m88 0 h10 m0 0 h538 m-666 0 h20 m646 0 h20 m-686 0 q10 0 10 10 m666 0 q0 -10 10 -10 m-676 10 v24 m666 0 v-24 m-666 24 q0 10 10 10 m646 0 q10 0 10 -10 m-656 10 h10 m88 0 h10 m40 0 h10 m30 0 h10 m0 0 h232 m-302 0 h20 m282 0 h20 m-322 0 q10 0 10 10 m302 0 q0 -10 10 -10 m-312 10 v24 m302 0 v-24 m-302 24 q0 10 10 10 m282 0 q10 0 10 -10 m-292 10 h10 m26 0 h10 m0 0 h236 m-292 -10 v20 m302 0 v-20 m-302 20 v24 m302 0 v-24 m-302 24 q0 10 10 10 m282 0 q10 0 10 -10 m-292 10 h10 m40 0 h10 m0 0 h222 m-292 -10 v20 m302 0 v-20 m-302 20 v24 m302 0 v-24 m-302 24 q0 10 10 10 m282 0 q10 0 10 -10 m-292 10 h10 m40 0 h10 m0 0 h222 m-292 -10 v20 m302 0 v-20 m-302 20 v24 m302 0 v-24 m-302 24 q0 10 10 10 m282 0 q10 0 10 -10 m-292 10 h10 m30 0 h10 m0 0 h232 m-292 -10 v20 m302 0 v-20 m-302 20 v24 m302 0 v-24 m-302 24 q0 10 10 10 m282 0 q10 0 10 -10 m-292 10 h10 m26 0 h10 m0 0 h236 m-292 -10 v20 m302 0 v-20 m-302 20 v24 m302 0 v-24 m-302 24 q0 10 10 10 m282 0 q10 0 10 -10 m-292 10 h10 m28 0 h10 m0 0 h234 m-292 -10 v20 m302 0 v-20 m-302 20 v24 m302 0 v-24 m-302 24 q0 10 10 10 m282 0 q10 0 10 -10 m-292 10 h10 m28 0 h10 m0 0 h234 m-292 -10 v20 m302 0 v-20 m-302 20 v24 m302 0 v-24 m-302 24 q0 10 10 10 m282 0 q10 0 10 -10 m-292 10 h10 m34 0 h10 m0 0 h228 m-292 -10 v20 m302 0 v-20 m-302 20 v24 m302 0 v-24 m-302 24 q0 10 10 10 m282 0 q10 0 10 -10 m-292 10 h10 m30 0 h10 m0 0 h232 m-292 -10 v20 m302 0 v-20 m-302 20 v24 m302 0 v-24 m-302 24 q0 10 10 10 m282 0 q10 0 10 -10 m-292 10 h10 m40 0 h10 m0 0 h222 m-292 -10 v20 m302 0 v-20 m-302 20 v24 m302 0 v-24 m-302 24 q0 10 10 10 m282 0 q10 0 10 -10 m-292 10 h10 m30 0 h10 m0 0 h232 m-292 -10 v20 m302 0 v-20 m-302 20 v24 m302 0 v-24 m-302 24 q0 10 10 10 m282 0 q10 0 10 -10 m-292 10 h10 m30 0 h10 m0 0 h232 m-292 -10 v20 m302 0 v-20 m-302 20 v24 m302 0 v-24 m-302 24 q0 10 10 10 m282 0 q10 0 10 -10 m-292 10 h10 m40 0 h10 m0 0 h222 m-292 -10 v20 m302 0 v-20 m-302 20 v24 m302 0 v-24 m-302 24 q0 10 10 10 m282 0 q10 0 10 -10 m-292 10 h10 m34 0 h10 m0 0 h228 m-292 -10 v20 m302 0 v-20 m-302 20 v24 m302 0 v-24 m-302 24 q0 10 10 10 m282 0 q10 0 10 -10 m-292 10 h10 m40 0 h10 m0 0 h222 m-292 -10 v20 m302 0 v-20 m-302 20 v24 m302 0 v-24 m-302 24 q0 10 10 10 m282 0 q10 0 10 -10 m-292 10 h10 m40 0 h10 m0 0 h222 m-292 -10 v20 m302 0 v-20 m-302 20 v24 m302 0 v-24 m-302 24 q0 10 10 10 m282 0 q10 0 10 -10 m-292 10 h10 m52 0 h10 m0 0 h210 m-292 -10 v20 m302 0 v-20 m-302 20 v24 m302 0 v-24 m-302 24 q0 10 10 10 m282 0 q10 0 10 -10 m-292 10 h10 m84 0 h10 m0 0 h178 m-292 -10 v20 m302 0 v-20 m-302 20 v24 m302 0 v-24 m-302 24 q0 10 10 10 m282 0 q10 0 10 -10 m-292 10 h10 m68 0 h10 m0 0 h194 m-292 -10 v20 m302 0 v-20 m-302 20 v24 m302 0 v-24 m-302 24 q0 10 10 10 m282 0 q10 0 10 -10 m-292 10 h10 m74 0 h10 m0 0 h188 m-292 -10 v20 m302 0 v-20 m-302 20 v24 m302 0 v-24 m-302 24 q0 10 10 10 m282 0 q10 0 10 -10 m-292 10 h10 m58 0 h10 m0 0 h204 m-292 -10 v20 m302 0 v-20 m-302 20 v24 m302 0 v-24 m-302 24 q0 10 10 10 m282 0 q10 0 10 -10 m-292 10 h10 m86 0 h10 m0 0 h10 m88 0 h10 m0 0 h10 m48 0 h10 m-292 -10 v20 m302 0 v-20 m-302 20 v24 m302 0 v-24 m-302 24 q0 10 10 10 m282 0 q10 0 10 -10 m-292 10 h10 m68 0 h10 m0 0 h194 m-292 -10 v20 m302 0 v-20 m-302 20 v24 m302 0 v-24 m-302 24 q0 10 10 10 m282 0 q10 0 10 -10 m-292 10 h10 m36 0 h10 m0 0 h226 m-292 -10 v20 m302 0 v-20 m-302 20 v24 m302 0 v-24 m-302 24 q0 10 10 10 m282 0 q10 0 10 -10 m-292 10 h10 m32 0 h10 m0 0 h230 m20 -1100 h10 m88 0 h10 m0 0 h68 m-518 0 h20 m498 0 h20 m-538 0 q10 0 10 10 m518 0 q0 -10 10 -10 m-528 10 v1124 m518 0 v-1124 m-518 1124 q0 10 10 10 m498 0 q10 0 10 -10 m-508 10 h10 m48 0 h10 m20 0 h10 m36 0 h10 m0 0 h10 m26 0 h10 m20 0 h10 m74 0 h10 m0 0 h20 m-134 0 h20 m114 0 h20 m-154 0 q10 0 10 10 m134 0 q0 -10 10 -10 m-144 10 v24 m134 0 v-24 m-134 24 q0 10 10 10 m114 0 q10 0 10 -10 m-124 10 h10 m94 0 h10 m20 -44 h10 m26 0 h10 m0 0 h88 m-410 0 h20 m390 0 h20 m-430 0 q10 0 10 10 m410 0 q0 -10 10 -10 m-420 10 v68 m410 0 v-68 m-410 68 q0 10 10 10 m390 0 q10 0 10 -10 m-400 10 h10 m86 0 h10 m0 0 h10 m88 0 h10 m0 0 h10 m48 0 h10 m0 0 h10 m88 0 h10 m-488 -98 v20 m518 0 v-20 m-518 20 v112 m518 0 v-112 m-518 112 q0 10 10 10 m498 0 q10 0 10 -10 m-508 10 h10 m36 0 h10 m0 0 h10 m26 0 h10 m20 0 h10 m74 0 h10 m0 0 h20 m-134 0 h20 m114 0 h20 m-154 0 q10 0 10 10 m134 0 q0 -10 10 -10 m-144 10 v24 m134 0 v-24 m-134 24 q0 10 10 10 m114 0 q10 0 10 -10 m-124 10 h10 m94 0 h10 m20 -44 h10 m26 0 h10 m0 0 h196 m-636 -1286 v20 m666 0 v-20 m-666 20 v1344 m666 0 v-1344 m-666 1344 q0 10 10 10 m646 0 q10 0 10 -10 m-636 10 h10 m26 0 h10 m0 0 h22 m-88 0 h20 m68 0 h20 m-108 0 q10 0 10 10 m88 0 q0 -10 10 -10 m-98 10 v24 m88 0 v-24 m-88 24 q0 10 10 10 m68 0 q10 0 10 -10 m-78 10 h10 m30 0 h10 m0 0 h18 m-78 -10 v20 m88 0 v-20 m-88 20 v24 m88 0 v-24 m-88 24 q0 10 10 10 m68 0 q10 0 10 -10 m-78 10 h10 m48 0 h10 m20 -88 h10 m88 0 h10 m0 0 h430 m23 -1408 h-3"></path>
+         <polygon points="715 17 723 13 723 21"></polygon>
+         <polygon points="715 17 707 13 707 21"></polygon></svg><p>
          <div class="ebnf"><code>
                <div><a href="#math_expr" title="math_expr">math_expr</a></div>
                <div>         ::= <a href="#basic_expr" title="basic_expr">basic_expr</a></div>
-               <div>           | ( <a href="#math_expr" title="math_expr">math_expr</a> ( '&amp;' | '|' | '&lt;&lt;' | '&gt;&gt;' | '+' | '-' | '*' | '/' | '%' | '||' ) | '-' ) <a href="#math_expr" title="math_expr">math_expr</a></div></code></div>
+               <div>           | <a href="#math_expr" title="math_expr">math_expr</a> ( ( '&amp;' | '|' | '&lt;&lt;' | '&gt;&gt;' | '+' | '-' | '*' | '/' | '%' | '=' | '==' | '&lt;' | '&gt;'
+                  | '&lt;&gt;' | '!=' | '&gt;=' | '&lt;=' | 'LIKE' | 'NOT LIKE' | 'MATCH' | 'REGEXP' | 'GLOB' |
+                  'BETWEEN' <a href="#math_expr" title="math_expr">math_expr</a> 'AND' | 'IS NOT' | 'IS' | '||' ) <a href="#math_expr" title="math_expr">math_expr</a> | 'NOT' ( 'IN' '(' ( <a href="#expr_list" title="expr_list">expr_list</a> | <a href="#select_stmt" title="select_stmt">select_stmt</a> ) ')' | 'BETWEEN' <a href="#math_expr" title="math_expr">math_expr</a> 'AND' <a href="#math_expr" title="math_expr">math_expr</a> ) | 'IN' '(' ( <a href="#expr_list" title="expr_list">expr_list</a> | <a href="#select_stmt" title="select_stmt">select_stmt</a> ) ')' )</div>
+               <div>           | ( '-' | '~' | 'NOT' ) <a href="#math_expr" title="math_expr">math_expr</a></div></code></div>
       </p>
       <p>referenced by:
          <ul>
             <li><a href="#expr" title="expr">expr</a></li>
             <li><a href="#math_expr" title="math_expr">math_expr</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="expr">expr:</a></p><svg width="845" height="1675">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="expr">expr:</a></p><svg width="365" height="169">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -4641,188 +4782,31 @@
   </style>
          </defs>
          <polygon points="9 17 1 13 1 21"></polygon>
-         <polygon points="17 17 9 13 9 21"></polygon><a href="#basic_expr" title="basic_expr">
+         <polygon points="17 17 9 13 9 21"></polygon><a href="#math_expr" title="math_expr">
             <rect x="51" y="3" width="88" height="32"></rect>
             <rect x="49" y="1" width="88" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="21">basic_expr</text></a><a href="#expr" title="expr">
+            <text class="nonterminal" x="59" y="21">math_expr</text></a><a href="#expr" title="expr">
             <rect x="51" y="47" width="48" height="32"></rect>
             <rect x="49" y="45" width="48" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="65">expr</text></a><rect x="159" y="47" width="30" height="32" rx="10"></rect>
-         <rect x="157" y="45" width="30" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="167" y="65">&amp;</text>
-         <rect x="159" y="91" width="26" height="32" rx="10"></rect>
-         <rect x="157" y="89" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="167" y="109">|</text>
-         <rect x="159" y="135" width="40" height="32" rx="10"></rect>
-         <rect x="157" y="133" width="40" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="167" y="153">&lt;&lt;</text>
-         <rect x="159" y="179" width="40" height="32" rx="10"></rect>
-         <rect x="157" y="177" width="40" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="167" y="197">&gt;&gt;</text>
-         <rect x="159" y="223" width="30" height="32" rx="10"></rect>
-         <rect x="157" y="221" width="30" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="167" y="241">+</text>
-         <rect x="159" y="267" width="26" height="32" rx="10"></rect>
-         <rect x="157" y="265" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="167" y="285">-</text>
-         <rect x="159" y="311" width="28" height="32" rx="10"></rect>
-         <rect x="157" y="309" width="28" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="167" y="329">*</text>
-         <rect x="159" y="355" width="28" height="32" rx="10"></rect>
-         <rect x="157" y="353" width="28" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="167" y="373">/</text>
-         <rect x="159" y="399" width="34" height="32" rx="10"></rect>
-         <rect x="157" y="397" width="34" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="167" y="417">%</text>
-         <rect x="159" y="443" width="48" height="32" rx="10"></rect>
-         <rect x="157" y="441" width="48" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="167" y="461">AND</text>
-         <rect x="159" y="487" width="40" height="32" rx="10"></rect>
-         <rect x="157" y="485" width="40" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="167" y="505">OR</text>
-         <rect x="159" y="531" width="30" height="32" rx="10"></rect>
-         <rect x="157" y="529" width="30" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="167" y="549">=</text>
-         <rect x="159" y="575" width="40" height="32" rx="10"></rect>
-         <rect x="157" y="573" width="40" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="167" y="593">==</text>
-         <rect x="159" y="619" width="30" height="32" rx="10"></rect>
-         <rect x="157" y="617" width="30" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="167" y="637">&lt;</text>
-         <rect x="159" y="663" width="30" height="32" rx="10"></rect>
-         <rect x="157" y="661" width="30" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="167" y="681">&gt;</text>
-         <rect x="159" y="707" width="40" height="32" rx="10"></rect>
-         <rect x="157" y="705" width="40" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="167" y="725">&lt;&gt;</text>
-         <rect x="159" y="751" width="34" height="32" rx="10"></rect>
-         <rect x="157" y="749" width="34" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="167" y="769">!=</text>
-         <rect x="159" y="795" width="40" height="32" rx="10"></rect>
-         <rect x="157" y="793" width="40" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="167" y="813">&gt;=</text>
-         <rect x="159" y="839" width="40" height="32" rx="10"></rect>
-         <rect x="157" y="837" width="40" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="167" y="857">&lt;=</text>
-         <rect x="159" y="883" width="52" height="32" rx="10"></rect>
-         <rect x="157" y="881" width="52" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="167" y="901">LIKE</text>
-         <rect x="159" y="927" width="84" height="32" rx="10"></rect>
-         <rect x="157" y="925" width="84" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="167" y="945">NOT LIKE</text>
-         <rect x="159" y="971" width="68" height="32" rx="10"></rect>
-         <rect x="157" y="969" width="68" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="167" y="989">MATCH</text>
-         <rect x="159" y="1015" width="74" height="32" rx="10"></rect>
-         <rect x="157" y="1013" width="74" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="167" y="1033">REGEXP</text>
-         <rect x="159" y="1059" width="58" height="32" rx="10"></rect>
-         <rect x="157" y="1057" width="58" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="167" y="1077">GLOB</text>
-         <rect x="159" y="1103" width="68" height="32" rx="10"></rect>
-         <rect x="157" y="1101" width="68" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="167" y="1121">IS NOT</text>
-         <rect x="159" y="1147" width="36" height="32" rx="10"></rect>
-         <rect x="157" y="1145" width="36" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="167" y="1165">IS</text>
-         <rect x="159" y="1191" width="32" height="32" rx="10"></rect>
-         <rect x="157" y="1189" width="32" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="167" y="1209">||</text><a href="#expr" title="expr">
-            <rect x="283" y="47" width="48" height="32"></rect>
-            <rect x="281" y="45" width="48" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="291" y="65">expr</text></a><rect x="139" y="1235" width="82" height="32" rx="10"></rect>
-         <rect x="137" y="1233" width="82" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="147" y="1253">COLLATE</text><a href="#name" title="name">
-            <rect x="241" y="1235" width="56" height="32"></rect>
-            <rect x="239" y="1233" width="56" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="249" y="1253">name</text></a><rect x="159" y="1311" width="48" height="32" rx="10"></rect>
-         <rect x="157" y="1309" width="48" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="167" y="1329">NOT</text>
-         <rect x="267" y="1279" width="36" height="32" rx="10"></rect>
-         <rect x="265" y="1277" width="36" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="275" y="1297">IN</text>
-         <rect x="323" y="1279" width="26" height="32" rx="10"></rect>
-         <rect x="321" y="1277" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="331" y="1297">(</text><a href="#expr_list" title="expr_list">
-            <rect x="389" y="1279" width="74" height="32"></rect>
-            <rect x="387" y="1277" width="74" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="397" y="1297">expr_list</text></a><a href="#select_stmt" title="select_stmt">
-            <rect x="389" y="1323" width="94" height="32"></rect>
-            <rect x="387" y="1321" width="94" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="397" y="1341">select_stmt</text></a><rect x="523" y="1279" width="26" height="32" rx="10"></rect>
-         <rect x="521" y="1277" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="531" y="1297">)</text>
-         <rect x="267" y="1367" width="86" height="32" rx="10"></rect>
-         <rect x="265" y="1365" width="86" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="275" y="1385">BETWEEN</text><a href="#math_expr" title="math_expr">
-            <rect x="373" y="1367" width="88" height="32"></rect>
-            <rect x="371" y="1365" width="88" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="381" y="1385">math_expr</text></a><rect x="481" y="1367" width="48" height="32" rx="10"></rect>
-         <rect x="479" y="1365" width="48" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="489" y="1385">AND</text><a href="#math_expr" title="math_expr">
-            <rect x="549" y="1367" width="88" height="32"></rect>
-            <rect x="547" y="1365" width="88" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="557" y="1385">math_expr</text></a><rect x="71" y="1411" width="26" height="32" rx="10"></rect>
-         <rect x="69" y="1409" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="79" y="1429">-</text>
-         <rect x="71" y="1455" width="48" height="32" rx="10"></rect>
-         <rect x="69" y="1453" width="48" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="79" y="1473">NOT</text>
-         <rect x="71" y="1499" width="30" height="32" rx="10"></rect>
-         <rect x="69" y="1497" width="30" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="79" y="1517">~</text><a href="#expr" title="expr">
-            <rect x="159" y="1411" width="48" height="32"></rect>
-            <rect x="157" y="1409" width="48" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="167" y="1429">expr</text></a><rect x="51" y="1565" width="56" height="32" rx="10"></rect>
-         <rect x="49" y="1563" width="56" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="59" y="1583">CASE</text><a href="#expr" title="expr">
-            <rect x="147" y="1597" width="48" height="32"></rect>
-            <rect x="145" y="1595" width="48" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="155" y="1615">expr</text></a><rect x="255" y="1565" width="62" height="32" rx="10"></rect>
-         <rect x="253" y="1563" width="62" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="263" y="1583">WHEN</text><a href="#expr" title="expr">
-            <rect x="337" y="1565" width="48" height="32"></rect>
-            <rect x="335" y="1563" width="48" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="345" y="1583">expr</text></a><rect x="405" y="1565" width="56" height="32" rx="10"></rect>
-         <rect x="403" y="1563" width="56" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="413" y="1583">THEN</text><a href="#expr" title="expr">
-            <rect x="481" y="1565" width="48" height="32"></rect>
-            <rect x="479" y="1563" width="48" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="489" y="1583">expr</text></a><rect x="589" y="1597" width="52" height="32" rx="10"></rect>
-         <rect x="587" y="1595" width="52" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="597" y="1615">ELSE</text><a href="#expr" title="expr">
-            <rect x="661" y="1597" width="48" height="32"></rect>
-            <rect x="659" y="1595" width="48" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="669" y="1615">expr</text></a><rect x="749" y="1565" width="48" height="32" rx="10"></rect>
-         <rect x="747" y="1563" width="48" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="757" y="1583">END</text>
-         <rect x="51" y="1641" width="56" height="32" rx="10"></rect>
-         <rect x="49" y="1639" width="56" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="59" y="1659">CAST</text>
-         <rect x="127" y="1641" width="26" height="32" rx="10"></rect>
-         <rect x="125" y="1639" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="135" y="1659">(</text><a href="#expr" title="expr">
-            <rect x="173" y="1641" width="48" height="32"></rect>
-            <rect x="171" y="1639" width="48" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="181" y="1659">expr</text></a><rect x="241" y="1641" width="38" height="32" rx="10"></rect>
-         <rect x="239" y="1639" width="38" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="249" y="1659">AS</text><a href="#data_type_any" title="data_type_any">
-            <rect x="299" y="1641" width="116" height="32"></rect>
-            <rect x="297" y="1639" width="116" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="307" y="1659">data_type_any</text></a><rect x="435" y="1641" width="26" height="32" rx="10"></rect>
-         <rect x="433" y="1639" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="443" y="1659">)</text>
-         <path class="line" d="m17 17 h2 m20 0 h10 m88 0 h10 m0 0 h658 m-786 0 h20 m766 0 h20 m-806 0 q10 0 10 10 m786 0 q0 -10 10 -10 m-796 10 v24 m786 0 v-24 m-786 24 q0 10 10 10 m766 0 q10 0 10 -10 m-776 10 h10 m48 0 h10 m40 0 h10 m30 0 h10 m0 0 h54 m-124 0 h20 m104 0 h20 m-144 0 q10 0 10 10 m124 0 q0 -10 10 -10 m-134 10 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m26 0 h10 m0 0 h58 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m40 0 h10 m0 0 h44 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m40 0 h10 m0 0 h44 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m30 0 h10 m0 0 h54 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m26 0 h10 m0 0 h58 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m28 0 h10 m0 0 h56 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m28 0 h10 m0 0 h56 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m34 0 h10 m0 0 h50 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m48 0 h10 m0 0 h36 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m40 0 h10 m0 0 h44 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m30 0 h10 m0 0 h54 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m40 0 h10 m0 0 h44 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m30 0 h10 m0 0 h54 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m30 0 h10 m0 0 h54 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m40 0 h10 m0 0 h44 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m34 0 h10 m0 0 h50 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m40 0 h10 m0 0 h44 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m40 0 h10 m0 0 h44 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m52 0 h10 m0 0 h32 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m84 0 h10 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m68 0 h10 m0 0 h16 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m74 0 h10 m0 0 h10 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m58 0 h10 m0 0 h26 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m68 0 h10 m0 0 h16 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m36 0 h10 m0 0 h48 m-114 -10 v20 m124 0 v-20 m-124 20 v24 m124 0 v-24 m-124 24 q0 10 10 10 m104 0 q10 0 10 -10 m-114 10 h10 m32 0 h10 m0 0 h52 m20 -1144 h10 m48 0 h10 m0 0 h326 m-558 0 h20 m538 0 h20 m-578 0 q10 0 10 10 m558 0 q0 -10 10 -10 m-568 10 v1168 m558 0 v-1168 m-558 1168 q0 10 10 10 m538 0 q10 0 10 -10 m-548 10 h10 m82 0 h10 m0 0 h10 m56 0 h10 m0 0 h360 m-548 -10 v20 m558 0 v-20 m-558 20 v24 m558 0 v-24 m-558 24 q0 10 10 10 m538 0 q10 0 10 -10 m-528 10 h10 m0 0 h58 m-88 0 h20 m68 0 h20 m-108 0 q10 0 10 10 m88 0 q0 -10 10 -10 m-98 10 v12 m88 0 v-12 m-88 12 q0 10 10 10 m68 0 q10 0 10 -10 m-78 10 h10 m48 0 h10 m40 -32 h10 m36 0 h10 m0 0 h10 m26 0 h10 m20 0 h10 m74 0 h10 m0 0 h20 m-134 0 h20 m114 0 h20 m-154 0 q10 0 10 10 m134 0 q0 -10 10 -10 m-144 10 v24 m134 0 v-24 m-134 24 q0 10 10 10 m114 0 q10 0 10 -10 m-124 10 h10 m94 0 h10 m20 -44 h10 m26 0 h10 m0 0 h88 m-410 0 h20 m390 0 h20 m-430 0 q10 0 10 10 m410 0 q0 -10 10 -10 m-420 10 v68 m410 0 v-68 m-410 68 q0 10 10 10 m390 0 q10 0 10 -10 m-400 10 h10 m86 0 h10 m0 0 h10 m88 0 h10 m0 0 h10 m48 0 h10 m0 0 h10 m88 0 h10 m40 -1320 h120 m-776 -10 v20 m786 0 v-20 m-786 20 v1344 m786 0 v-1344 m-786 1344 q0 10 10 10 m766 0 q10 0 10 -10 m-756 10 h10 m26 0 h10 m0 0 h22 m-88 0 h20 m68 0 h20 m-108 0 q10 0 10 10 m88 0 q0 -10 10 -10 m-98 10 v24 m88 0 v-24 m-88 24 q0 10 10 10 m68 0 q10 0 10 -10 m-78 10 h10 m48 0 h10 m-78 -10 v20 m88 0 v-20 m-88 20 v24 m88 0 v-24 m-88 24 q0 10 10 10 m68 0 q10 0 10 -10 m-78 10 h10 m30 0 h10 m0 0 h18 m20 -88 h10 m48 0 h10 m0 0 h590 m-776 -10 v20 m786 0 v-20 m-786 20 v134 m786 0 v-134 m-786 134 q0 10 10 10 m766 0 q10 0 10 -10 m-776 10 h10 m56 0 h10 m20 0 h10 m0 0 h58 m-88 0 h20 m68 0 h20 m-108 0 q10 0 10 10 m88 0 q0 -10 10 -10 m-98 10 v12 m88 0 v-12 m-88 12 q0 10 10 10 m68 0 q10 0 10 -10 m-78 10 h10 m48 0 h10 m40 -32 h10 m62 0 h10 m0 0 h10 m48 0 h10 m0 0 h10 m56 0 h10 m0 0 h10 m48 0 h10 m-314 0 l20 0 m-1 0 q-9 0 -9 -10 l0 -12 q0 -10 10 -10 m294 32 l20 0 m-20 0 q10 0 10 -10 l0 -12 q0 -10 -10 -10 m-294 0 h10 m0 0 h284 m40 32 h10 m0 0 h130 m-160 0 h20 m140 0 h20 m-180 0 q10 0 10 10 m160 0 q0 -10 10 -10 m-170 10 v12 m160 0 v-12 m-160 12 q0 10 10 10 m140 0 q10 0 10 -10 m-150 10 h10 m52 0 h10 m0 0 h10 m48 0 h10 m20 -32 h10 m48 0 h10 m-776 -10 v20 m786 0 v-20 m-786 20 v56 m786 0 v-56 m-786 56 q0 10 10 10 m766 0 q10 0 10 -10 m-776 10 h10 m56 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m48 0 h10 m0 0 h10 m38 0 h10 m0 0 h10 m116 0 h10 m0 0 h10 m26 0 h10 m0 0 h336 m23 -1638 h-3"></path>
-         <polygon points="835 17 843 13 843 21"></polygon>
-         <polygon points="835 17 827 13 827 21"></polygon></svg><p>
+            <text class="nonterminal" x="59" y="65">expr</text></a><rect x="159" y="47" width="48" height="32" rx="10"></rect>
+         <rect x="157" y="45" width="48" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="167" y="65">AND</text>
+         <rect x="159" y="91" width="40" height="32" rx="10"></rect>
+         <rect x="157" y="89" width="40" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="167" y="109">OR</text><a href="#expr" title="expr">
+            <rect x="247" y="47" width="48" height="32"></rect>
+            <rect x="245" y="45" width="48" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="255" y="65">expr</text></a><rect x="139" y="135" width="82" height="32" rx="10"></rect>
+         <rect x="137" y="133" width="82" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="147" y="153">COLLATE</text><a href="#name" title="name">
+            <rect x="241" y="135" width="56" height="32"></rect>
+            <rect x="239" y="133" width="56" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="249" y="153">name</text></a><path class="line" d="m17 17 h2 m20 0 h10 m88 0 h10 m0 0 h178 m-306 0 h20 m286 0 h20 m-326 0 q10 0 10 10 m306 0 q0 -10 10 -10 m-316 10 v24 m306 0 v-24 m-306 24 q0 10 10 10 m286 0 q10 0 10 -10 m-296 10 h10 m48 0 h10 m40 0 h10 m48 0 h10 m-88 0 h20 m68 0 h20 m-108 0 q10 0 10 10 m88 0 q0 -10 10 -10 m-98 10 v24 m88 0 v-24 m-88 24 q0 10 10 10 m68 0 q10 0 10 -10 m-78 10 h10 m40 0 h10 m0 0 h8 m20 -44 h10 m48 0 h10 m0 0 h2 m-198 0 h20 m178 0 h20 m-218 0 q10 0 10 10 m198 0 q0 -10 10 -10 m-208 10 v68 m198 0 v-68 m-198 68 q0 10 10 10 m178 0 q10 0 10 -10 m-188 10 h10 m82 0 h10 m0 0 h10 m56 0 h10 m43 -132 h-3"></path>
+         <polygon points="355 17 363 13 363 21"></polygon>
+         <polygon points="355 17 347 13 347 21"></polygon></svg><p>
          <div class="ebnf"><code>
-               <div><a href="#expr" title="expr">expr</a>     ::= <a href="#basic_expr" title="basic_expr">basic_expr</a></div>
-               <div>           | <a href="#expr" title="expr">expr</a> ( ( '&amp;' | '|' | '&lt;&lt;' | '&gt;&gt;' | '+' | '-' | '*' | '/' | '%' | 'AND' | 'OR' | '=' |
-                  '==' | '&lt;' | '&gt;' | '&lt;&gt;' | '!=' | '&gt;=' | '&lt;=' | 'LIKE' | 'NOT LIKE' | 'MATCH' | 'REGEXP'
-                  | 'GLOB' | 'IS NOT' | 'IS' | '||' ) <a href="#expr" title="expr">expr</a> | 'COLLATE' <a href="#name" title="name">name</a> | 'NOT'? ( 'IN' '(' ( <a href="#expr_list" title="expr_list">expr_list</a> | <a href="#select_stmt" title="select_stmt">select_stmt</a> ) ')' | 'BETWEEN' <a href="#math_expr" title="math_expr">math_expr</a> 'AND' <a href="#math_expr" title="math_expr">math_expr</a> ) )</div>
-               <div>           | ( '-' | 'NOT' | '~' ) <a href="#expr" title="expr">expr</a></div>
-               <div>           | 'CASE' <a href="#expr" title="expr">expr</a>? ( 'WHEN' <a href="#expr" title="expr">expr</a> 'THEN' <a href="#expr" title="expr">expr</a> )+ ( 'ELSE' <a href="#expr" title="expr">expr</a> )? 'END'</div>
-               <div>           | 'CAST' '(' <a href="#expr" title="expr">expr</a> 'AS' <a href="#data_type_any" title="data_type_any">data_type_any</a> ')'</div></code></div>
+               <div><a href="#expr" title="expr">expr</a>     ::= <a href="#math_expr" title="math_expr">math_expr</a></div>
+               <div>           | <a href="#expr" title="expr">expr</a> ( ( 'AND' | 'OR' ) <a href="#expr" title="expr">expr</a> | 'COLLATE' <a href="#name" title="name">name</a> )</div></code></div>
       </p>
       <p>referenced by:
          <ul>
@@ -5008,7 +4992,7 @@
       </p>
       <p>referenced by:
          <ul>
-            <li><a href="#expr" title="expr">expr</a></li>
+            <li><a href="#math_expr" title="math_expr">math_expr</a></li>
             <li><a href="#opt_partition_by" title="opt_partition_by">opt_partition_by</a></li>
             <li><a href="#switch_case" title="switch_case">switch_case</a></li>
          </ul>
@@ -5340,8 +5324,8 @@
             <li><a href="#create_view_stmt" title="create_view_stmt">create_view_stmt</a></li>
             <li><a href="#declare_stmt" title="declare_stmt">declare_stmt</a></li>
             <li><a href="#explain_target" title="explain_target">explain_target</a></li>
-            <li><a href="#expr" title="expr">expr</a></li>
             <li><a href="#insert_stmt" title="insert_stmt">insert_stmt</a></li>
+            <li><a href="#math_expr" title="math_expr">math_expr</a></li>
             <li><a href="#table_or_subquery" title="table_or_subquery">table_or_subquery</a></li>
          </ul>
       </p><br /><p style="font-size: 14px; font-weight:bold"><a name="select_stmt_no_with">select_stmt_no_with:</a></p><svg width="565" height="81">
@@ -12236,7 +12220,7 @@
          <ul>
             <li><a href="#trigger_stmt" title="trigger_stmt">trigger_stmt</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="enforcement_options">enforcement_options:</a></p><svg width="441" height="477">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="enforcement_options">enforcement_options:</a></p><svg width="535" height="829">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -12330,9 +12314,47 @@
          <rect x="133" y="443" width="92" height="32" rx="10"></rect>
          <rect x="131" y="441" width="92" height="32" class="terminal" rx="10"></rect>
          <text class="terminal" x="141" y="461">FUNCTION</text>
-         <path class="line" d="m17 17 h2 m20 0 h10 m82 0 h10 m0 0 h10 m46 0 h10 m0 0 h10 m40 0 h10 m20 0 h10 m74 0 h10 m-114 0 h20 m94 0 h20 m-134 0 q10 0 10 10 m114 0 q0 -10 10 -10 m-124 10 v24 m114 0 v-24 m-114 24 q0 10 10 10 m94 0 q10 0 10 -10 m-104 10 h10 m70 0 h10 m0 0 h4 m-362 -44 h20 m362 0 h20 m-402 0 q10 0 10 10 m382 0 q0 -10 10 -10 m-392 10 v68 m382 0 v-68 m-382 68 q0 10 10 10 m362 0 q10 0 10 -10 m-372 10 h10 m54 0 h10 m0 0 h288 m-372 -10 v20 m382 0 v-20 m-382 20 v24 m382 0 v-24 m-382 24 q0 10 10 10 m362 0 q10 0 10 -10 m-372 10 h10 m74 0 h10 m0 0 h10 m100 0 h10 m0 0 h148 m-372 -10 v20 m382 0 v-20 m-382 20 v24 m382 0 v-24 m-382 24 q0 10 10 10 m362 0 q10 0 10 -10 m-372 10 h10 m86 0 h10 m0 0 h10 m70 0 h10 m0 0 h166 m-372 -10 v20 m382 0 v-20 m-382 20 v24 m382 0 v-24 m-382 24 q0 10 10 10 m362 0 q10 0 10 -10 m-372 10 h10 m84 0 h10 m0 0 h258 m-372 -10 v20 m382 0 v-20 m-382 20 v24 m382 0 v-24 m-382 24 q0 10 10 10 m362 0 q10 0 10 -10 m-372 10 h10 m88 0 h10 m0 0 h10 m70 0 h10 m0 0 h164 m-372 -10 v20 m382 0 v-20 m-382 20 v24 m382 0 v-24 m-382 24 q0 10 10 10 m362 0 q10 0 10 -10 m-372 10 h10 m120 0 h10 m0 0 h222 m-372 -10 v20 m382 0 v-20 m-382 20 v24 m382 0 v-24 m-382 24 q0 10 10 10 m362 0 q10 0 10 -10 m-372 10 h10 m70 0 h10 m0 0 h10 m34 0 h10 m0 0 h10 m86 0 h10 m0 0 h112 m-372 -10 v20 m382 0 v-20 m-382 20 v24 m382 0 v-24 m-382 24 q0 10 10 10 m362 0 q10 0 10 -10 m-372 10 h10 m70 0 h10 m0 0 h10 m70 0 h10 m0 0 h182 m-372 -10 v20 m382 0 v-20 m-382 20 v24 m382 0 v-24 m-382 24 q0 10 10 10 m362 0 q10 0 10 -10 m-372 10 h10 m62 0 h10 m0 0 h10 m92 0 h10 m0 0 h168 m23 -440 h-3"></path>
-         <polygon points="431 17 439 13 439 21"></polygon>
-         <polygon points="431 17 423 13 423 21"></polygon></svg><p>
+         <rect x="51" y="487" width="48" height="32" rx="10"></rect>
+         <rect x="49" y="485" width="48" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="59" y="505">NOT</text>
+         <rect x="119" y="487" width="56" height="32" rx="10"></rect>
+         <rect x="117" y="485" width="56" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="127" y="505">NULL</text>
+         <rect x="195" y="487" width="62" height="32" rx="10"></rect>
+         <rect x="193" y="485" width="62" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="203" y="505">AFTER</text>
+         <rect x="277" y="487" width="64" height="32" rx="10"></rect>
+         <rect x="275" y="485" width="64" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="285" y="505">CHECK</text><a href="#ENCODE" title="ENCODE">
+            <rect x="51" y="531" width="72" height="32"></rect>
+            <rect x="49" y="529" width="72" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="549">ENCODE</text></a><a href="#CONTEXT_COLUMN" title="CONTEXT_COLUMN">
+            <rect x="163" y="531" width="138" height="32"></rect>
+            <rect x="161" y="529" width="138" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="171" y="549">CONTEXT_COLUMN</text></a><a href="#CONTEXT_TYPE" title="CONTEXT_TYPE">
+            <rect x="163" y="575" width="116" height="32"></rect>
+            <rect x="161" y="573" width="116" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="171" y="593">CONTEXT_TYPE</text></a><rect x="319" y="575" width="80" height="32" rx="10"></rect>
+         <rect x="317" y="573" width="80" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="327" y="593">INTEGER</text>
+         <rect x="319" y="619" width="128" height="32" rx="10"></rect>
+         <rect x="317" y="617" width="128" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="327" y="637">LONG_INTEGER</text>
+         <rect x="319" y="663" width="54" height="32" rx="10"></rect>
+         <rect x="317" y="661" width="54" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="327" y="681">REAL</text>
+         <rect x="319" y="707" width="58" height="32" rx="10"></rect>
+         <rect x="317" y="705" width="58" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="327" y="725">BOOL</text>
+         <rect x="319" y="751" width="54" height="32" rx="10"></rect>
+         <rect x="317" y="749" width="54" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="327" y="769">TEXT</text>
+         <rect x="319" y="795" width="56" height="32" rx="10"></rect>
+         <rect x="317" y="793" width="56" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="327" y="813">BLOB</text>
+         <path class="line" d="m17 17 h2 m20 0 h10 m82 0 h10 m0 0 h10 m46 0 h10 m0 0 h10 m40 0 h10 m20 0 h10 m74 0 h10 m-114 0 h20 m94 0 h20 m-134 0 q10 0 10 10 m114 0 q0 -10 10 -10 m-124 10 v24 m114 0 v-24 m-114 24 q0 10 10 10 m94 0 q10 0 10 -10 m-104 10 h10 m70 0 h10 m0 0 h4 m20 -44 h94 m-476 0 h20 m456 0 h20 m-496 0 q10 0 10 10 m476 0 q0 -10 10 -10 m-486 10 v68 m476 0 v-68 m-476 68 q0 10 10 10 m456 0 q10 0 10 -10 m-466 10 h10 m54 0 h10 m0 0 h382 m-466 -10 v20 m476 0 v-20 m-476 20 v24 m476 0 v-24 m-476 24 q0 10 10 10 m456 0 q10 0 10 -10 m-466 10 h10 m74 0 h10 m0 0 h10 m100 0 h10 m0 0 h242 m-466 -10 v20 m476 0 v-20 m-476 20 v24 m476 0 v-24 m-476 24 q0 10 10 10 m456 0 q10 0 10 -10 m-466 10 h10 m86 0 h10 m0 0 h10 m70 0 h10 m0 0 h260 m-466 -10 v20 m476 0 v-20 m-476 20 v24 m476 0 v-24 m-476 24 q0 10 10 10 m456 0 q10 0 10 -10 m-466 10 h10 m84 0 h10 m0 0 h352 m-466 -10 v20 m476 0 v-20 m-476 20 v24 m476 0 v-24 m-476 24 q0 10 10 10 m456 0 q10 0 10 -10 m-466 10 h10 m88 0 h10 m0 0 h10 m70 0 h10 m0 0 h258 m-466 -10 v20 m476 0 v-20 m-476 20 v24 m476 0 v-24 m-476 24 q0 10 10 10 m456 0 q10 0 10 -10 m-466 10 h10 m120 0 h10 m0 0 h316 m-466 -10 v20 m476 0 v-20 m-476 20 v24 m476 0 v-24 m-476 24 q0 10 10 10 m456 0 q10 0 10 -10 m-466 10 h10 m70 0 h10 m0 0 h10 m34 0 h10 m0 0 h10 m86 0 h10 m0 0 h206 m-466 -10 v20 m476 0 v-20 m-476 20 v24 m476 0 v-24 m-476 24 q0 10 10 10 m456 0 q10 0 10 -10 m-466 10 h10 m70 0 h10 m0 0 h10 m70 0 h10 m0 0 h276 m-466 -10 v20 m476 0 v-20 m-476 20 v24 m476 0 v-24 m-476 24 q0 10 10 10 m456 0 q10 0 10 -10 m-466 10 h10 m62 0 h10 m0 0 h10 m92 0 h10 m0 0 h262 m-466 -10 v20 m476 0 v-20 m-476 20 v24 m476 0 v-24 m-476 24 q0 10 10 10 m456 0 q10 0 10 -10 m-466 10 h10 m48 0 h10 m0 0 h10 m56 0 h10 m0 0 h10 m62 0 h10 m0 0 h10 m64 0 h10 m0 0 h146 m-466 -10 v20 m476 0 v-20 m-476 20 v24 m476 0 v-24 m-476 24 q0 10 10 10 m456 0 q10 0 10 -10 m-466 10 h10 m72 0 h10 m20 0 h10 m138 0 h10 m0 0 h166 m-344 0 h20 m324 0 h20 m-364 0 q10 0 10 10 m344 0 q0 -10 10 -10 m-354 10 v24 m344 0 v-24 m-344 24 q0 10 10 10 m324 0 q10 0 10 -10 m-334 10 h10 m116 0 h10 m20 0 h10 m80 0 h10 m0 0 h48 m-168 0 h20 m148 0 h20 m-188 0 q10 0 10 10 m168 0 q0 -10 10 -10 m-178 10 v24 m168 0 v-24 m-168 24 q0 10 10 10 m148 0 q10 0 10 -10 m-158 10 h10 m128 0 h10 m-158 -10 v20 m168 0 v-20 m-168 20 v24 m168 0 v-24 m-168 24 q0 10 10 10 m148 0 q10 0 10 -10 m-158 10 h10 m54 0 h10 m0 0 h74 m-158 -10 v20 m168 0 v-20 m-168 20 v24 m168 0 v-24 m-168 24 q0 10 10 10 m148 0 q10 0 10 -10 m-158 10 h10 m58 0 h10 m0 0 h70 m-158 -10 v20 m168 0 v-20 m-168 20 v24 m168 0 v-24 m-168 24 q0 10 10 10 m148 0 q10 0 10 -10 m-158 10 h10 m54 0 h10 m0 0 h74 m-158 -10 v20 m168 0 v-20 m-168 20 v24 m168 0 v-24 m-168 24 q0 10 10 10 m148 0 q10 0 10 -10 m-158 10 h10 m56 0 h10 m0 0 h72 m63 -792 h-3"></path>
+         <polygon points="525 17 533 13 533 21"></polygon>
+         <polygon points="525 17 517 13 517 21"></polygon></svg><p>
          <div class="ebnf"><code>
                <div><a href="#enforcement_options" title="enforcement_options">enforcement_options</a></div>
                <div>         ::= 'FOREIGN' 'KEY' 'ON' ( 'UPDATE' | 'DELETE' )</div>
@@ -12344,7 +12366,9 @@
                <div>           | 'TRANSACTION'</div>
                <div>           | 'SELECT' 'IF' 'NOTHING'</div>
                <div>           | 'INSERT' 'SELECT'</div>
-               <div>           | 'TABLE' 'FUNCTION'</div></code></div>
+               <div>           | 'TABLE' 'FUNCTION'</div>
+               <div>           | 'NOT' 'NULL' 'AFTER' 'CHECK'</div>
+               <div>           | <a href="#ENCODE" title="ENCODE">ENCODE</a> ( <a href="#CONTEXT_COLUMN" title="CONTEXT_COLUMN">CONTEXT_COLUMN</a> | <a href="#CONTEXT_TYPE" title="CONTEXT_TYPE">CONTEXT_TYPE</a> ( 'INTEGER' | 'LONG_INTEGER' | 'REAL' | 'BOOL' | 'TEXT' | 'BLOB' ) )</div></code></div>
       </p>
       <p>referenced by:
          <ul>

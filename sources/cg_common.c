@@ -22,8 +22,6 @@ cql_data_defn( charbuf *_Nullable cg_declarations_output );
 cql_data_defn( charbuf *_Nullable cg_scratch_vars_output );
 cql_data_defn( charbuf *_Nullable cg_cleanup_output );
 cql_data_defn( charbuf *_Nullable cg_fragments_output );
-cql_data_defn( bool_t is_assembly_query );
-cql_data_defn( bool_t is_extension_fragment );
 
 // Prints a symbol name, along with any configured prefix, to the specified buffer.
 // Multiple CSTRs may be supplied to build the name, which will be concatenated

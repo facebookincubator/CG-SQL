@@ -2161,7 +2161,7 @@ begin
 end;
 
 -- TEST: create proc with a single-column identity attribute
--- + static cql_uint16 simple_identity_identity_columns[] = { 1,
+-- + cql_uint16 simple_identity_identity_columns[] = { 1,
 -- + // export: DECLARE PROC simple_identity () (id INTEGER NOT NULL, data INTEGER NOT NULL);
 @attribute(cql:identity=(id))
 create proc simple_identity()
@@ -2170,7 +2170,7 @@ begin
 end;
 
 -- TEST: create proc with a multi-column identity attribute
--- + static cql_uint16 complex_identity_identity_columns[] = { 2,
+-- + cql_uint16 complex_identity_identity_columns[] = { 2,
 @attribute(cql:identity=(col1, col2))
 create proc complex_identity()
 begin
@@ -2178,7 +2178,7 @@ begin
 end;
 
 -- TEST: create proc with a out cursor and identity column
--- + static cql_uint16 out_cursor_identity_identity_columns[] = { 1,
+-- + cql_uint16 out_cursor_identity_identity_columns[] = { 1,
 @attribute(cql:identity=(id))
 create proc out_cursor_identity()
 begin
@@ -2749,6 +2749,14 @@ begin
   select * from bar;
 end;
 
+-- TEST: a copy function will be generated
+-- + cql_code sproc_with_copy(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt)
+@attribute(cql:generate_copy)
+create proc sproc_with_copy()
+begin
+  select * from bar;
+end;
+
 
 -- TEST: no result set items should be generated at all
 -- - CQL_DATA_TYPE
@@ -2780,6 +2788,7 @@ end;
 create table vault_mixed_sensitive(
   id int not null primary key,
   name text @sensitive,
+  title text,
   type long @sensitive
 );
 
@@ -2787,12 +2796,14 @@ create table vault_mixed_sensitive(
 create table vault_non_sensitive(
   id int not null primary key,
   name text,
+  title text,
   type long
 );
 
 -- TEST: vault_sensitive attribute includes sensitive column (name) and non sensitive column (id)
 -- + CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
 -- + CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // name
+-- + CQL_DATA_TYPE_STRING, // title
 -- + CQL_DATA_TYPE_INT64, // type
 @attribute(cql:vault_sensitive=(id, name))
 create proc vault_sensitive_with_values_proc()
@@ -2803,6 +2814,7 @@ end;
 -- TEST: vault_sensitive attribute includes sensitive column (data) and non sensitive column (id)
 -- + CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
 -- + CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // name
+-- + CQL_DATA_TYPE_STRING, // title
 -- + CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_ENCODED, // type
 @attribute(cql:vault_sensitive)
 create proc vault_sensitive_with_no_values_proc()
@@ -2813,6 +2825,7 @@ end;
 -- TEST: vault union all a sensitive and non sensitive table
 -- + CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
 -- + CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // name
+-- + CQL_DATA_TYPE_STRING, // title
 -- + CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_ENCODED, // type
 @attribute(cql:vault_sensitive)
 create proc vault_union_all_table_proc()
@@ -2846,6 +2859,39 @@ create proc vault_cursor_proc()
 begin
   declare C cursor for select name from vault_mixed_sensitive;
   fetch c;
+end;
+
+-- TEST: vault_sensitive attribute includes encode context column (title) and sensitive column (id, name)
+-- + CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
+-- + CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // name
+-- + CQL_DATA_TYPE_STRING, // title
+-- + CQL_DATA_TYPE_INT64, // type
+@attribute(cql:vault_sensitive=(title, (id, name)))
+create proc vault_sensitive_with_context_and_sensitive_columns_proc()
+begin
+ select * from vault_mixed_sensitive;
+end;
+
+-- TEST: vault_sensitive attribute includes no encode context column and sensitive column (id, name)
+-- + CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
+-- + CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // name
+-- + CQL_DATA_TYPE_STRING, // title
+-- + CQL_DATA_TYPE_INT64, // type
+@attribute(cql:vault_sensitive=((id, name)))
+create proc vault_sensitive_with_no_context_and_sensitive_columns_proc()
+begin
+ select * from vault_mixed_sensitive;
+end;
+
+-- TEST: vault_sensitive attribute includes encode context column (title) and no sensitive column
+-- + CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
+-- + CQL_DATA_TYPE_STRING, // name
+-- + CQL_DATA_TYPE_STRING, // title
+-- + CQL_DATA_TYPE_INT64, // type
+@attribute(cql:vault_sensitive=(title, (id, name)))
+create proc vault_sensitive_with_context_and_no_sensitive_columns_proc()
+begin
+ select * from vault_non_sensitive;
 end;
 
 create table ext_test_table (
@@ -4016,33 +4062,19 @@ end;
 
 -- TEST: Verify that contracts are inserted where appropriate (and not inserted
 -- where not appropriate)
--- - cql_contract(a);
--- - cql_contract(b);
--- - cql_contract(c);
--- + cql_contract(d);
--- - cql_contract(*d);
--- - cql_contract(e);
--- + cql_contract(f);
--- - cql_contract(*f);
--- - cql_contract(g);
--- + cql_contract(h);
--- - cql_contract(*h);
--- + cql_contract(i);
--- - cql_contract(*i);
--- + cql_contract(j);
--- - cql_contract(*j);
--- + cql_contract(k);
--- - cql_contract(*k);
--- + cql_contract(l);
--- - cql_contract(*l);
--- + cql_contract(m);
--- - cql_contract(*m);
--- + cql_contract(n);
--- - cql_contract(*n);
--- + cql_contract(o);
--- - cql_contract(*o);
--- + cql_contract(p);
--- + cql_contract(*p);
+-- + cql_contract_argument_notnull((void *)d, 4);
+-- + cql_contract_argument_notnull((void *)f, 6);
+-- + cql_contract_argument_notnull((void *)h, 8);
+-- + cql_contract_argument_notnull((void *)i, 9);
+-- + cql_contract_argument_notnull((void *)j, 10);
+-- + cql_contract_argument_notnull((void *)k, 11);
+-- + cql_contract_argument_notnull((void *)l, 12);
+-- + cql_contract_argument_notnull((void *)m, 13);
+-- + cql_contract_argument_notnull((void *)n, 14);
+-- + cql_contract_argument_notnull((void *)o, 15);
+-- + cql_contract_argument_notnull_when_dereferenced((void *)p, 16);
+-- +11 cql_contract_argument_notnull
+-- +1 cql_contract_argument_notnull_when_dereferenced
 create proc exercise_contracts(
   a int,
   b int not null,
@@ -4065,32 +4097,72 @@ begin
 end;
 
 -- TEST: Contracts should be emitted for public procs
--- + cql_contract(t);
+-- + cql_contract_argument_notnull((void *)t, 1);
 create proc public_proc_with_a_contract(t text not null)
 begin
 end;
 
 -- TEST: Contracts should not be emitted for private procs
--- - cql_contract(t);
+-- - cql_contract_argument_notnull((void *)t, 1);
 @attribute(cql:private)
 create proc private_proc_without_a_contract(t text not null)
 begin
 end;
 
 -- TEST: Contracts should be emitted only in _fetch_results for result set procs
--- +1 cql_contract(t);
+-- +1 cql_contract_argument_notnull((void *)t, 1);
 create proc result_set_proc_with_contract_in_fetch_results(t text not null)
 begin
   select * from bar;
 end;
 
 -- TEST: Contracts should be emitted only in _fetch_results for out procs
--- +1 cql_contract(t);
+-- +1 cql_contract_argument_notnull((void *)t, 1);
 create proc out_proc_with_contract_in_fetch_results(t text not null)
 begin
   declare C cursor like bar;
   out C;
 end;
+
+-- TEST: The following tests do not compile without this enabled.
+@enforce_strict not null after check;
+
+-- TEST: The improving of nullable variables compiles to nothing in SQL.
+-- + "SELECT ? + 1"
+create proc nullability_improvements_are_erased_for_sql()
+begin
+  declare a int;
+  if a is not null then
+    select (a + 1) as b;
+  end if;
+end;
+
+-- TEST: The improving of nullable variables to be nonnull respects the 
+-- underlying nullable representation.
+-- + cql_nullable_int32 a;
+-- + cql_set_null(a);
+-- + cql_int32 b = 0;
+-- + b = a.value;
+-- + cql_set_notnull(a, 0);
+create proc nullability_improvements_do_not_change_access()
+begin
+  declare a int;
+  if a is not null then
+    let b := a;
+    set a := 0;
+  end if;
+end;
+
+-- TEST: We can turn this back off.
+@enforce_normal not null after check;
+
+-- TEST: a loose select statement generates no code (and will produce no errors)
+-- the errors are checked when this code is compiled in C.  If the code
+-- were generated there would be errors because the global proc
+-- doesn't have the statement out arg.  We also verify that
+-- no call to cql_prepare happens hence no select
+-- - cql_prepare
+select 1 x;
 
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------

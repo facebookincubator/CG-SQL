@@ -113,6 +113,7 @@ CQL_WARN_UNUSED cql_code assembly_core_fetch_results(sqlite3 *_Nonnull _db_, ass
     .col_offsets = assembly_core_col_offsets,
     .refs_count = 1,
     .refs_offset = assembly_core_refs_offset,
+    .encode_context_index = -1,
     .rowsize = sizeof(assembly_core_row),
     .crc = CRC_assembly_core,
     .perf_index = &assembly_core_perf_index,
@@ -122,7 +123,7 @@ CQL_WARN_UNUSED cql_code assembly_core_fetch_results(sqlite3 *_Nonnull _db_, ass
 
 // export: DECLARE PROC assembly_core (id_ INTEGER NOT NULL, name_ TEXT NOT NULL) (x INTEGER NOT NULL, y TEXT, z LONG_INT, flag BOOL);
 CQL_WARN_UNUSED cql_code assembly_core(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_int32 id_, cql_string_ref _Nonnull name_) {
-  cql_contract(name_);
+  cql_contract_argument_notnull((void *)name_, 2);
 
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;

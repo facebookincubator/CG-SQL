@@ -67,6 +67,11 @@
 static void parse_cmd(int argc, char **argv);
 static void print_dot(struct ast_node* node);
 static ast_node *file_literal(ast_node *);
+static void cql_exit_on_parse_errors();
+static void parse_cleanup();
+
+// Set to true upon a call to `yyerror`.
+static bool_t parse_error_occurred;
 
 int yylex();
 void yyerror(const char *s, ...);
@@ -85,7 +90,18 @@ void yyset_lineno(int);
 // and definitely more maintainable.
 
 #define YY_ERROR_ON_COLUMNS(x) \
-  if (x) yyerror("\nCursor columns not allowed in this form.\n")
+  if (x) yyerror("Cursor columns not allowed in this form.")
+
+// We insert calls to `cql_inferred_notnull` as part of a rewrite so we expect
+// to see it during semantic analysis, but it cannot be allowed to appear in a
+// program. It would be unsafe if it could: It coerces a value from a nullable
+// type to a nonnull type without any runtime check.
+
+#define YY_ERROR_ON_CQL_INFERRED_NOTNULL(x) \
+  EXTRACT_STRING(proc_name, x); \
+  if (!strcmp(proc_name, "cql_inferred_notnull")) { \
+    yyerror("Call to internal function is not allowed 'cql_inferred_notnull'"); \
+  }
 
 #ifdef CQL_AMALGAM
 static void cql_reset_globals(void);
@@ -133,8 +149,8 @@ static void cql_reset_globals(void);
 %right ASSIGN
 %left OR
 %left AND
-%left BETWEEN
 %left NOT
+%left BETWEEN
 %left NE NE_ '=' EQEQ LIKE NOT_LIKE GLOB MATCH REGEXP IN IS_NOT IS
 %left '<' '>' GE LE
 %left LS RS '&' '|'
@@ -153,7 +169,7 @@ static void cql_reset_globals(void);
 %token DESC INNER FCOUNT AUTOINCREMENT DISTINCT
 %token LIMIT OFFSET TEMP TRIGGER IF ALL CROSS USING RIGHT
 %token HIDDEN UNIQUE HAVING SET LET TO DISTINCTROW ENUM
-%token FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR DECLARE TYPE FETCH LOOP LEAVE CONTINUE FOR
+%token FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR DECLARE TYPE FETCH LOOP LEAVE CONTINUE FOR ENCODE CONTEXT_COLUMN CONTEXT_TYPE
 %token OPEN CLOSE ELSE_IF WHILE CALL TRY CATCH THROW RETURN
 %token SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
 %token CAST WITH RECURSIVE REPLACE IGNORE ADD COLUMN RENAME ALTER
@@ -248,6 +264,9 @@ static void cql_reset_globals(void);
 
 program:
   opt_stmt_list  {
+    if (parse_error_occurred) {
+      cql_exit_on_parse_errors();
+    }
     gen_init();
     if (options.semantic) {
       sem_main($opt_stmt_list);
@@ -804,11 +823,13 @@ raise_expr:
 
 call:
   name '(' arg_list ')' opt_filter_clause  {
+      YY_ERROR_ON_CQL_INFERRED_NOTNULL($name);
       struct ast_node *call_filter_clause = new_ast_call_filter_clause(NULL, $opt_filter_clause);
       struct ast_node *call_arg_list = new_ast_call_arg_list(call_filter_clause, $arg_list);
       $call = new_ast_call($name, call_arg_list);
   }
   | name '(' DISTINCT arg_list ')' opt_filter_clause  {
+      YY_ERROR_ON_CQL_INFERRED_NOTNULL($name);
       struct ast_node *call_filter_clause = new_ast_call_filter_clause(new_ast_distinct(), $opt_filter_clause);
       struct ast_node *call_arg_list = new_ast_call_arg_list(call_filter_clause, $arg_list);
       $call = new_ast_call($name, call_arg_list);
@@ -830,6 +851,11 @@ basic_expr:
   | '(' select_stmt IF NOTHING OR NULL_ expr ')'  { $basic_expr = new_ast_select_if_nothing_or_null_expr($select_stmt, $expr); }
   | '(' select_stmt IF NOTHING THROW')'  { $basic_expr = new_ast_select_if_nothing_throw_expr($select_stmt); }
   | EXISTS '(' select_stmt ')'  { $basic_expr = new_ast_exists_expr($select_stmt); }
+  | CASE expr[cond] case_list END  { $basic_expr = new_ast_case_expr($cond, new_ast_connector($case_list, NULL)); }
+  | CASE expr[cond1] case_list ELSE expr[cond2] END  { $basic_expr = new_ast_case_expr($cond1, new_ast_connector($case_list, $cond2));}
+  | CASE case_list END  { $basic_expr = new_ast_case_expr(NULL, new_ast_connector($case_list, NULL));}
+  | CASE case_list ELSE expr[cond] END  { $basic_expr = new_ast_case_expr(NULL, new_ast_connector($case_list, $cond));}
+  | CAST '(' expr[sexp] AS data_type_any ')'  { $basic_expr = new_ast_cast_expr($sexp, $data_type_any); }
   ;
 
 math_expr[result]:
@@ -844,53 +870,37 @@ math_expr[result]:
   | math_expr[lhs] '/' math_expr[rhs]  { $result = new_ast_div($lhs, $rhs); }
   | math_expr[lhs] '%' math_expr[rhs]  { $result = new_ast_mod($lhs, $rhs); }
   | '-' math_expr[rhs] %prec UMINUS  { $result = new_ast_uminus($rhs); }
+  | '~' math_expr[rhs]  { $result = new_ast_tilde($rhs); }
+  | NOT math_expr[rhs]  { $result = new_ast_not($rhs); }
+  | math_expr[lhs] '=' math_expr[rhs]  { $result = new_ast_eq($lhs, $rhs); }
+  | math_expr[lhs] EQEQ math_expr[rhs]  { $result = new_ast_eq($lhs, $rhs); }
+  | math_expr[lhs] '<' math_expr[rhs]  { $result = new_ast_lt($lhs, $rhs); }
+  | math_expr[lhs] '>' math_expr[rhs]  { $result = new_ast_gt($lhs, $rhs); }
+  | math_expr[lhs] NE math_expr[rhs]  { $result = new_ast_ne($lhs, $rhs); }
+  | math_expr[lhs] NE_ math_expr[rhs]  { $result = new_ast_ne($lhs, $rhs); }
+  | math_expr[lhs] GE math_expr[rhs]  { $result = new_ast_ge($lhs, $rhs); }
+  | math_expr[lhs] LE math_expr[rhs]  { $result = new_ast_le($lhs, $rhs); }
+  | math_expr[lhs] NOT IN '(' expr_list ')'  { $result = new_ast_not_in($lhs, $expr_list); }
+  | math_expr[lhs] NOT IN '(' select_stmt ')'  { $result = new_ast_not_in($lhs, $select_stmt); }
+  | math_expr[lhs] IN '(' expr_list ')'  { $result = new_ast_in_pred($lhs, $expr_list); }
+  | math_expr[lhs] IN '(' select_stmt ')'  { $result = new_ast_in_pred($lhs, $select_stmt); }
+  | math_expr[lhs] LIKE math_expr[rhs]  { $result = new_ast_like($lhs, $rhs); }
+  | math_expr[lhs] NOT_LIKE math_expr[rhs]  { $result = new_ast_not_like($lhs, $rhs); }
+  | math_expr[lhs] MATCH math_expr[rhs]  { $result = new_ast_match($lhs, $rhs); }
+  | math_expr[lhs] REGEXP math_expr[rhs]  { $result = new_ast_regexp($lhs, $rhs); }
+  | math_expr[lhs] GLOB math_expr[rhs]  { $result = new_ast_glob($lhs, $rhs); }
+  | math_expr[lhs] NOT BETWEEN math_expr[me1] AND math_expr[me2]  { $result = new_ast_not_between($lhs, new_ast_range($me1,$me2)); }
+  | math_expr[lhs] BETWEEN math_expr[me1] %prec BETWEEN AND math_expr[me2]  { $result = new_ast_between($lhs, new_ast_range($me1,$me2)); }
+  | math_expr[lhs] IS_NOT math_expr[rhs]  { $result = new_ast_is_not($lhs, $rhs); }
+  | math_expr[lhs] IS math_expr[rhs]  { $result = new_ast_is($lhs, $rhs); }
   | math_expr[lhs] CONCAT math_expr[rhs]  { $result = new_ast_concat($lhs, $rhs); }
   ;
 
 expr[result]:
-  basic_expr  { $result = $basic_expr; }
-  | expr[lhs] '&' expr[rhs]  { $result = new_ast_bin_and($lhs, $rhs); }
-  | expr[lhs] '|' expr[rhs]  { $result = new_ast_bin_or($lhs, $rhs); }
-  | expr[lhs] LS expr[rhs]  { $result = new_ast_lshift($lhs, $rhs); }
-  | expr[lhs] RS expr[rhs]  { $result = new_ast_rshift($lhs, $rhs); }
-  | expr[lhs] '+' expr[rhs]  { $result = new_ast_add($lhs, $rhs); }
-  | expr[lhs] '-' expr[rhs]  { $result = new_ast_sub($lhs, $rhs); }
-  | expr[lhs] '*' expr[rhs]  { $result = new_ast_mul($lhs, $rhs); }
-  | expr[lhs] '/' expr[rhs]  { $result = new_ast_div($lhs, $rhs); }
-  | expr[lhs] '%' expr[rhs]  { $result = new_ast_mod($lhs, $rhs); }
-  | '-' expr[rhs] %prec UMINUS  { $result = new_ast_uminus($rhs); }
-  | NOT expr[rhs]  { $result = new_ast_not($rhs); }
-  | '~' expr[rhs]  { $result = new_ast_tilde($rhs); }
-  | expr[lhs] COLLATE name  { $result = new_ast_collate($lhs, $name); }
+  math_expr { $result = $math_expr; }
   | expr[lhs] AND expr[rhs]  { $result = new_ast_and($lhs, $rhs); }
   | expr[lhs] OR expr[rhs]  { $result = new_ast_or($lhs, $rhs); }
-  | expr[lhs] '=' expr[rhs]  { $result = new_ast_eq($lhs, $rhs); }
-  | expr[lhs] EQEQ expr[rhs]  { $result = new_ast_eq($lhs, $rhs); }
-  | expr[lhs] '<' expr[rhs]  { $result = new_ast_lt($lhs, $rhs); }
-  | expr[lhs] '>' expr[rhs]  { $result = new_ast_gt($lhs, $rhs); }
-  | expr[lhs] NE expr[rhs]  { $result = new_ast_ne($lhs, $rhs); }
-  | expr[lhs] NE_ expr[rhs]  { $result = new_ast_ne($lhs, $rhs); }
-  | expr[lhs] GE expr[rhs]  { $result = new_ast_ge($lhs, $rhs); }
-  | expr[lhs] LE expr[rhs]  { $result = new_ast_le($lhs, $rhs); }
-  | expr[lhs] NOT IN '(' expr_list ')'  { $result = new_ast_not_in($lhs, $expr_list); }
-  | expr[lhs] NOT IN '(' select_stmt ')'  { $result = new_ast_not_in($lhs, $select_stmt); }
-  | expr[lhs] IN '(' expr_list ')'  { $result = new_ast_in_pred($lhs, $expr_list); }
-  | expr[lhs] IN '(' select_stmt ')'  { $result = new_ast_in_pred($lhs, $select_stmt); }
-  | expr[lhs] LIKE expr[rhs]  { $result = new_ast_like($lhs, $rhs); }
-  | expr[lhs] NOT_LIKE expr[rhs]  { $result = new_ast_not_like($lhs, $rhs); }
-  | expr[lhs] MATCH expr[rhs]  { $result = new_ast_match($lhs, $rhs); }
-  | expr[lhs] REGEXP expr[rhs]  { $result = new_ast_regexp($lhs, $rhs); }
-  | expr[lhs] GLOB expr[rhs]  { $result = new_ast_glob($lhs, $rhs); }
-  | expr[lhs] NOT BETWEEN math_expr[me1] AND math_expr[me2]  { $result = new_ast_not_between($lhs, new_ast_range($me1,$me2)); }
-  | expr[lhs] BETWEEN math_expr[me1] AND math_expr[me2]  { $result = new_ast_between($lhs, new_ast_range($me1,$me2)); }
-  | expr[lhs] IS_NOT expr[rhs]  { $result = new_ast_is_not($lhs, $rhs); }
-  | expr[lhs] IS expr[rhs]  { $result = new_ast_is($lhs, $rhs); }
-  | expr[lhs] CONCAT expr[rhs]  { $result = new_ast_concat($lhs, $rhs); }
-  | CASE expr[cond] case_list END  { $result = new_ast_case_expr($cond, new_ast_connector($case_list, NULL)); }
-  | CASE expr[cond1] case_list ELSE expr[cond2] END  { $result = new_ast_case_expr($cond1, new_ast_connector($case_list, $cond2));}
-  | CASE case_list END  { $result = new_ast_case_expr(NULL, new_ast_connector($case_list, NULL));}
-  | CASE case_list ELSE expr[cond] END  { $result = new_ast_case_expr(NULL, new_ast_connector($case_list, $cond));}
-  | CAST '(' expr[sexp] AS data_type_any ')'  { $result = new_ast_cast_expr($sexp, $data_type_any); }
+  | expr[lhs] COLLATE name  { $result = new_ast_collate($lhs, $name); }
   ;
 
 case_list[result]:
@@ -1541,8 +1551,14 @@ declare_stmt:
   ;
 
 call_stmt:
-  CALL name '(' ')'  { $call_stmt = new_ast_call_stmt($name, NULL); }
-  | CALL name '(' call_expr_list ')'  { $call_stmt = new_ast_call_stmt($name, $call_expr_list); }
+  CALL name '(' ')'  {
+      YY_ERROR_ON_CQL_INFERRED_NOTNULL($name);
+      $call_stmt = new_ast_call_stmt($name, NULL);
+  }
+  | CALL name '(' call_expr_list ')'  {
+      YY_ERROR_ON_CQL_INFERRED_NOTNULL($name);
+      $call_stmt = new_ast_call_stmt($name, $call_expr_list);
+  }
   ;
 
 while_stmt:
@@ -1842,6 +1858,14 @@ enforcement_options:
   | SELECT IF NOTHING { $enforcement_options = new_ast_opt(ENFORCE_SELECT_IF_NOTHING); }
   | INSERT SELECT { $enforcement_options = new_ast_opt(ENFORCE_INSERT_SELECT); }
   | TABLE FUNCTION { $enforcement_options = new_ast_opt(ENFORCE_TABLE_FUNCTION); }
+  | NOT NULL_ AFTER CHECK { $enforcement_options = new_ast_opt(ENFORCE_NOT_NULL_AFTER_CHECK); }
+  | ENCODE CONTEXT_COLUMN { $enforcement_options = new_ast_opt(ENFORCE_ENCODE_CONTEXT_COLUMN); }
+  | ENCODE CONTEXT_TYPE INTEGER { $enforcement_options = new_ast_opt(ENFORCE_ENCODE_CONTEXT_TYPE_INTEGER); }
+  | ENCODE CONTEXT_TYPE LONG_INTEGER { $enforcement_options = new_ast_opt(ENFORCE_ENCODE_CONTEXT_TYPE_LONG_INTEGER); }
+  | ENCODE CONTEXT_TYPE REAL { $enforcement_options = new_ast_opt(ENFORCE_ENCODE_CONTEXT_TYPE_REAL); }
+  | ENCODE CONTEXT_TYPE BOOL_ { $enforcement_options = new_ast_opt(ENFORCE_ENCODE_CONTEXT_TYPE_BOOL); }
+  | ENCODE CONTEXT_TYPE TEXT { $enforcement_options = new_ast_opt(ENFORCE_ENCODE_CONTEXT_TYPE_TEXT); }
+  | ENCODE CONTEXT_TYPE BLOB { $enforcement_options = new_ast_opt(ENFORCE_ENCODE_CONTEXT_TYPE_BLOB); }
   ;
 
 enforce_strict_stmt:
@@ -1874,11 +1898,14 @@ void yyerror(const char *format, ...) {
   va_start(args, format);
 
   CHARBUF_OPEN(err);
-  bprintf(&err, "Error at: %s:%d ", current_file, yylineno);
+  bprintf(&err, "Error at %s:%d : ", current_file, yylineno);
   vbprintf(&err, format, args);
+  bputc(&err, '\n');
   cql_emit_error(err.ptr);
   CHARBUF_CLOSE(err);
   va_end(args);
+
+  parse_error_occurred = true;
 }
 
 static unsigned long next_id = 0;
@@ -1966,8 +1993,6 @@ static void parse_cmd(int argc, char **argv) {
       a = gather_arg_params(a, argc, argv, &options.include_regions_count, &options.include_regions);
     } else if (strcmp(arg, "--exclude_regions") == 0) {
       a = gather_arg_params(a, argc, argv, &options.exclude_regions_count, &options.exclude_regions);
-    } else if (strcmp(arg, "--generate_copy") == 0) {
-      options.generate_copy = 1;
     } else if (strcmp(arg, "--cqlrt") == 0) {
       if (a + 1 < argc) {
         a++;
@@ -2086,10 +2111,8 @@ static void parse_cmd(int argc, char **argv) {
 
 static jmp_buf for_exit;
 static int32_t exit_code;
-static int32_t manual_syntax_errors;
 
 int cql_main(int argc, char **argv) {
-  manual_syntax_errors = 0;
   exit_code = 0;
   yylineno = 1;
 
@@ -2099,15 +2122,15 @@ int cql_main(int argc, char **argv) {
 
     if (options.run_unit_tests) {
       run_unit_tests();
-    } else if (yyparse() || manual_syntax_errors) {
-      cql_error("\nParse errors found, no further passes will run.\n");
-      cql_cleanup_and_exit(2);
+    } else if (yyparse()) {
+      cql_exit_on_parse_errors();
     }
   }
 
   cg_c_cleanup();
   sem_cleanup();
   ast_cleanup();
+  parse_cleanup();
   gen_cleanup();
   rt_cleanup();
 
@@ -2126,6 +2149,15 @@ int cql_main(int argc, char **argv) {
 // for why this has to be this way.  Note we do this in one line so that
 // we don't get bogus code coverage errors for not covering the trialing brace
 void cql_cleanup_and_exit(int32_t code) { exit_code = code; longjmp(for_exit, 1); }
+
+static void cql_exit_on_parse_errors() {
+  cql_error("Parse errors found, no further passes will run.\n");
+  cql_cleanup_and_exit(2);
+}
+
+static void parse_cleanup() {
+  parse_error_occurred = false;
+}
 
 static int32_t gather_arg_params(int32_t a, int32_t argc, char **argv, int *out_count, char ***out_args) {
   if (a + 1 < argc) {
