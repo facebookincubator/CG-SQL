@@ -6516,7 +6516,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Wed Jul 14 17:40:21 PDT 2021</p>
+<p>Snapshot as of Wed Jul 14 21:06:26 PDT 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -6525,7 +6525,7 @@ OR
 AND
 NOT
 BETWEEN
-&#39;&lt;&gt;&#39; &#39;!=&#39; &#39;=&#39; &#39;==&#39; LIKE NOT_LIKE GLOB MATCH REGEXP IN IS_NOT IS
+&#39;&lt;&gt;&#39; &#39;!=&#39; &#39;=&#39; &#39;==&#39; LIKE GLOB MATCH REGEXP IN IS_NOT IS
 &#39;&lt;&#39; &#39;&gt;&#39; &#39;&gt;=&#39; &#39;&lt;=&#39;
 &#39;&lt;&lt;&#39; &#39;&gt;&gt;&#39; &#39;&amp;&#39; &#39;|&#39;
 &#39;+&#39; &#39;-&#39;
@@ -7089,7 +7089,7 @@ math_expr:
   | math_expr &quot;IN&quot; &#39;(&#39; expr_list &#39;)&#39;
   | math_expr &quot;IN&quot; &#39;(&#39; select_stmt &#39;)&#39;
   | math_expr &quot;LIKE&quot; math_expr
-  | math_expr &quot;NOT LIKE&quot; math_expr
+  | math_expr &quot;NOT&quot; &quot;LIKE&quot; math_expr
   | math_expr &quot;MATCH&quot; math_expr
   | math_expr &quot;REGEXP&quot; math_expr
   | math_expr &quot;GLOB&quot; math_expr
@@ -9773,7 +9773,7 @@ select 1 where table_valued_func(5) = 3;</code></pre>
 </table>
 <p>– This source code is licensed under the MIT license found in the – LICENSE file in the root directory of this source tree. –&gt;</p>
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Wed Jul 14 17:40:22 PDT 2021</p>
+<p>Snapshot as of Wed Jul 14 21:06:28 PDT 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

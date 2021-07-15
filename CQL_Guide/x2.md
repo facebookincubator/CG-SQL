@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed Jul 14 17:40:21 PDT 2021
+Snapshot as of Wed Jul 14 21:06:26 PDT 2021
 
 ### Operators and Literals
 
@@ -26,7 +26,7 @@ OR
 AND
 NOT
 BETWEEN
-'<>' '!=' '=' '==' LIKE NOT_LIKE GLOB MATCH REGEXP IN IS_NOT IS
+'<>' '!=' '=' '==' LIKE GLOB MATCH REGEXP IN IS_NOT IS
 '<' '>' '>=' '<='
 '<<' '>>' '&' '|'
 '+' '-'
@@ -598,7 +598,7 @@ math_expr:
   | math_expr "IN" '(' expr_list ')'
   | math_expr "IN" '(' select_stmt ')'
   | math_expr "LIKE" math_expr
-  | math_expr "NOT LIKE" math_expr
+  | math_expr "NOT" "LIKE" math_expr
   | math_expr "MATCH" math_expr
   | math_expr "REGEXP" math_expr
   | math_expr "GLOB" math_expr
