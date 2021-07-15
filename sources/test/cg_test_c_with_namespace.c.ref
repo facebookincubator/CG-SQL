@@ -1,11 +1,14 @@
 
 #include "test_namespace/out/cg_test_c_with_namespace.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunknown-warning-option"
 #pragma clang diagnostic ignored "-Wbitwise-op-parentheses"
 #pragma clang diagnostic ignored "-Wshift-op-parentheses"
 #pragma clang diagnostic ignored "-Wlogical-not-parentheses"
 #pragma clang diagnostic ignored "-Wlogical-op-parentheses"
 #pragma clang diagnostic ignored "-Wliteral-conversion"
+#pragma clang diagnostic ignored "-Wunused-but-set-variable"
 extern CQL_WARN_UNUSED cql_code with_result_set(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code select_from_view(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code get_data(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_string_ref _Nonnull name_, cql_int32 id_);
@@ -14595,3 +14598,4 @@ cql_cleanup:
 }
 
 #undef _PROC_
+#pragma clang diagnostic pop
