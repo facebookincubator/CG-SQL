@@ -991,23 +991,23 @@ BEGIN_TEST(string_between_test)
   set s2 := "2";
   set s3 := "3";
 
-  EXPECT(s2 between s1 and s3);
-  EXPECT(not (s2 between s3 and s1));
-  EXPECT(1 + (s2 between s1 and s3) == 2);
+  EXPECT_SQL_TOO(s2 between s1 and s3);
+  EXPECT_SQL_TOO(not (s2 between s3 and s1));
+  EXPECT_SQL_TOO(1 + (s2 between s1 and s3) == 2);
 
-  EXPECT(n2 between n1 and n3);
-  EXPECT(not (n2 between n3 and n1));
+  EXPECT_SQL_TOO(n2 between n1 and n3);
+  EXPECT_SQL_TOO(not (n2 between n3 and n1));
 
   set n2 := null;
-  EXPECT((n2 between n1 and n3) is null);
+  EXPECT_SQL_TOO((n2 between n1 and n3) is null);
   set n2 := "2";
 
   set n1 := null;
-  EXPECT((n2 between n1 and n3) is null);
+  EXPECT_SQL_TOO((n2 between n1 and n3) is null);
   set n1 := "1";
 
   set n3 := null;
-  EXPECT((n2 between n1 and n3) is null);
+  EXPECT_SQL_TOO((n2 between n1 and n3) is null);
   set n3 := "3";
 END_TEST(string_between_test)
 
@@ -1196,19 +1196,17 @@ END_TEST(proc_loop_auto_fetch)
 BEGIN_TEST(coalesce)
   declare i integer;
   set i := null;
-  EXPECT(coalesce(i, i, 2) == 2); -- grab the not null last value
-  EXPECT(ifnull(i, 2) == 2); -- grab the not null last value
-  EXPECT((select coalesce(i, i, 2)) == 2); -- grab the not null last value
+  EXPECT_SQL_TOO(coalesce(i, i, 2) == 2); -- grab the not null last value
+  EXPECT_SQL_TOO(ifnull(i, 2) == 2); -- grab the not null last value
 
   set i:= 3;
-  EXPECT(coalesce(i, i, 2) == 3); -- grab the not null first value
-  EXPECT(ifnull(i, 2) == 3); -- grab the not null first value
-  EXPECT((select coalesce(i, i, 2)) == 3); -- grab the not null first value
+  EXPECT_SQL_TOO(coalesce(i, i, 2) == 3); -- grab the not null first value
+  EXPECT_SQL_TOO(ifnull(i, 2) == 3); -- grab the not null first value
 END_TEST(coalesce)
 
 BEGIN_TEST(printf_expression)
-EXPECT(printf("%d and %d", 12, 7) == "12 and 7"); -- loose printf ok
-EXPECT((select printf("%d and %d", 12, 7)) == "12 and 7"); -- sql printf ok
+  EXPECT(printf("%d and %d", 12, 7) == "12 and 7"); -- loose printf ok
+  EXPECT((select printf("%d and %d", 12, 7)) == "12 and 7"); -- sql printf ok
 END_TEST(printf_expression)
 
 BEGIN_TEST(case_with_null)
@@ -1363,26 +1361,26 @@ declare function set_add(_set object not null, _key text not null) bool not null
 declare function set_contains(_set object not null, _key text not null) bool not null;
 
 BEGIN_TEST(external_set)
- -- stress the create and copy semantics
- declare _set object not null;
- set _set := set_create();
- declare _set2 object not null;
- set _set2 := set_create();
- set _set := _set2; -- this is a copy
+  -- stress the create and copy semantics
+  declare _set object not null;
+  set _set := set_create();
+  declare _set2 object not null;
+  set _set2 := set_create();
+  set _set := _set2; -- this is a copy
 
- EXPECT(_set is not null);  -- successful create
- EXPECT(not set_contains(_set, "garbonzo")); -- initially empty
- EXPECT(set_add(_set, "garbonzo")); -- successful addition
- EXPECT(set_contains(_set, "garbonzo")); -- key added
- EXPECT(not set_add(_set, "garbonzo")); -- duplicate addition
+  EXPECT(_set is not null);  -- successful create
+  EXPECT(not set_contains(_set, "garbonzo")); -- initially empty
+  EXPECT(set_add(_set, "garbonzo")); -- successful addition
+  EXPECT(set_contains(_set, "garbonzo")); -- key added
+  EXPECT(not set_add(_set, "garbonzo")); -- duplicate addition
 END_TEST(external_set)
 
 BEGIN_TEST(object_notnull)
- declare _setNN object not null;
- declare _set object;
- set _set := set_create();
- set _setNN := ifnull_crash(_set);
- EXPECT(_set == _setNN); // should be the same pointer
+  declare _setNN object not null;
+  declare _set object;
+  set _set := set_create();
+  set _setNN := ifnull_crash(_set);
+  EXPECT(_set == _setNN); // should be the same pointer
 END_TEST(object_notnull)
 
 BEGIN_TEST(dummy_values)
@@ -2125,315 +2123,315 @@ BEGIN_TEST(nullable_test)
   set x9 := 9;
 
   set temp0 := 27;
-  EXPECT(x1+x2*x3+x4*x5 == temp0);
-  EXPECT(x1+x2/x2 == x2);
-  EXPECT(x1+x2/x2*x4 == x5);
-  EXPECT(x1+x2/x2*x4 == x5);
-  EXPECT(x1*x2+x3 == x5);
-  EXPECT(x1*x2+x6/x3 == x4);
-  EXPECT(x1*x2+x6/x3 == x4);
+  EXPECT_SQL_TOO(x1+x2*x3+x4*x5 == temp0);
+  EXPECT_SQL_TOO(x1+x2/x2 == x2);
+  EXPECT_SQL_TOO(x1+x2/x2*x4 == x5);
+  EXPECT_SQL_TOO(x1+x2/x2*x4 == x5);
+  EXPECT_SQL_TOO(x1*x2+x3 == x5);
+  EXPECT_SQL_TOO(x1*x2+x6/x3 == x4);
+  EXPECT_SQL_TOO(x1*x2+x6/x3 == x4);
   set temp0 := 25;
-  EXPECT(x2*x3*x4+x3/x3 == temp0);
+  EXPECT_SQL_TOO(x2*x3*x4+x3/x3 == temp0);
   set temp0 := -25;
-  EXPECT(-x5*x5 == temp0);
+  EXPECT_SQL_TOO(-x5*x5 == temp0);
   set temp0 := -20;
-  EXPECT(x5-x5*x5 == temp0);
+  EXPECT_SQL_TOO(x5-x5*x5 == temp0);
   set temp0 := 29;
-  EXPECT(x4+x5*x5 == temp0);
+  EXPECT_SQL_TOO(x4+x5*x5 == temp0);
   set temp0 := 25;
-  EXPECT(x4*x5+x5 == temp0);
+  EXPECT_SQL_TOO(x4*x5+x5 == temp0);
   set temp0 := 15;
-  EXPECT(x4*x4-x1 == temp0);
+  EXPECT_SQL_TOO(x4*x4-x1 == temp0);
   set temp0 := 10;
-  EXPECT(10-x4*x2 == x2);
+  EXPECT_SQL_TOO(10-x4*x2 == x2);
 
   set temp0 := 10;
 
   set temp1 := 40;
-  EXPECT(temp0<<x1+x1 == temp1);
+  EXPECT_SQL_TOO(temp0<<x1+x1 == temp1);
   set temp1 := 22;
-  EXPECT(x1+temp0<<x1 == temp1);
-  EXPECT(temp0<<x1-x1 == temp0);
+  EXPECT_SQL_TOO(x1+temp0<<x1 == temp1);
+  EXPECT_SQL_TOO(temp0<<x1-x1 == temp0);
   set temp1 := 80;
-  EXPECT(temp0<<x4-x1 == temp1);
+  EXPECT_SQL_TOO(temp0<<x4-x1 == temp1);
   set temp1 := 18;
-  EXPECT(temp0-x1<<x1 == temp1);
+  EXPECT_SQL_TOO(temp0-x1<<x1 == temp1);
 
-  EXPECT(temp0>>x3-x1 == x2);
+  EXPECT_SQL_TOO(temp0>>x3-x1 == x2);
   set temp1 := 11;
-  EXPECT(temp1-x1>>x1 == x5);
-  EXPECT(temp0>>x1+x1 == x2);
-  EXPECT(x1+temp0>>x1 == x5);
+  EXPECT_SQL_TOO(temp1-x1>>x1 == x5);
+  EXPECT_SQL_TOO(temp0>>x1+x1 == x2);
+  EXPECT_SQL_TOO(x1+temp0>>x1 == x5);
 
-  EXPECT(temp0&x1+x1 == x2);
-  EXPECT(x1+temp0&x1 == x1);
-  EXPECT(x1+temp0&x7 == x3);
-  EXPECT(temp0-x1&x7 == x1);
-  EXPECT(temp0-x4&x7 == x6);
+  EXPECT_SQL_TOO(temp0&x1+x1 == x2);
+  EXPECT_SQL_TOO(x1+temp0&x1 == x1);
+  EXPECT_SQL_TOO(x1+temp0&x7 == x3);
+  EXPECT_SQL_TOO(temp0-x1&x7 == x1);
+  EXPECT_SQL_TOO(temp0-x4&x7 == x6);
 
-  EXPECT(temp0|x1+x1 == temp0);
+  EXPECT_SQL_TOO(temp0|x1+x1 == temp0);
   set temp1 := 14;
-  EXPECT(temp0|x4 == temp1);
+  EXPECT_SQL_TOO(temp0|x4 == temp1);
   set temp1 := 15;
-  EXPECT(x1+temp0|x4 == temp1);
-  EXPECT(temp0-x1|x7 == temp1);
-  EXPECT(temp0-x3|x7 == x7);
+  EXPECT_SQL_TOO(x1+temp0|x4 == temp1);
+  EXPECT_SQL_TOO(temp0-x1|x7 == temp1);
+  EXPECT_SQL_TOO(temp0-x3|x7 == x7);
 
   set temp1 := 12;
 
-  EXPECT(x6&x4 == x4);
-  EXPECT(x6&x4|temp1 == temp1);
+  EXPECT_SQL_TOO(x6&x4 == x4);
+  EXPECT_SQL_TOO(x6&x4|temp1 == temp1);
   set temp2 := 14;
-  EXPECT(x6&x4|temp1|x2 == temp2);
-  EXPECT(x6&x4|temp1|x2|x2 == temp2);
+  EXPECT_SQL_TOO(x6&x4|temp1|x2 == temp2);
+  EXPECT_SQL_TOO(x6&x4|temp1|x2|x2 == temp2);
   set temp2 := 112;
-  EXPECT(x6&x4|temp1|x2|x2<<x3 == temp2);
+  EXPECT_SQL_TOO(x6&x4|temp1|x2|x2<<x3 == temp2);
   set temp2 := 56;
-  EXPECT(x6&x4|temp1|x2|x2<<x3>>x3<<x2 == temp2);
+  EXPECT_SQL_TOO(x6&x4|temp1|x2|x2<<x3>>x3<<x2 == temp2);
 
-  EXPECT(temp0 < temp0<<x1);
-  EXPECT(temp0 <= temp0<<x1);
+  EXPECT_SQL_TOO(temp0 < temp0<<x1);
+  EXPECT_SQL_TOO(temp0 <= temp0<<x1);
   set temp1 := 31;
-  EXPECT(x5 >= x0<<temp1);
-  EXPECT(x5 > x0<<temp1);
+  EXPECT_SQL_TOO(x5 >= x0<<temp1);
+  EXPECT_SQL_TOO(x5 > x0<<temp1);
   set temp1 := 16;
-  EXPECT(temp1>>x1 >= x4<<x1);
-  EXPECT(x4<<x1 <= temp1>>x1);
-  EXPECT(temp1>>x1 > x3<<x1);
-  EXPECT(temp1>>x1 >= x3<<x1);
-  EXPECT(temp1>>x1 <= x4<<x1);
+  EXPECT_SQL_TOO(temp1>>x1 >= x4<<x1);
+  EXPECT_SQL_TOO(x4<<x1 <= temp1>>x1);
+  EXPECT_SQL_TOO(temp1>>x1 > x3<<x1);
+  EXPECT_SQL_TOO(temp1>>x1 >= x3<<x1);
+  EXPECT_SQL_TOO(temp1>>x1 <= x4<<x1);
 
-  EXPECT(temp1&x8 <= x4|x8);
+  EXPECT_SQL_TOO(temp1&x8 <= x4|x8);
   set temp2 := 15;
-  EXPECT(temp1&8 < temp2);
-  EXPECT(x6 > x4|x5);
-  EXPECT(x6 >= x4|x5);
+  EXPECT_SQL_TOO(temp1&8 < temp2);
+  EXPECT_SQL_TOO(x6 > x4|x5);
+  EXPECT_SQL_TOO(x6 >= x4|x5);
 
-  EXPECT(x4&x5 <= x3|x4);
-  EXPECT(x4&x5 < x3|x4);
-  EXPECT(x4|x3 <= x3|x4);
-  EXPECT(x4&x5 <= x5&x4);
-  EXPECT(x4&x5 >= x5&x4);
+  EXPECT_SQL_TOO(x4&x5 <= x3|x4);
+  EXPECT_SQL_TOO(x4&x5 < x3|x4);
+  EXPECT_SQL_TOO(x4|x3 <= x3|x4);
+  EXPECT_SQL_TOO(x4&x5 <= x5&x4);
+  EXPECT_SQL_TOO(x4&x5 >= x5&x4);
 
-  EXPECT(x4&x5 >= x5&x4 > x0);
-  EXPECT(x4&x5 >= x5&x4 <= x1);
-  EXPECT(x4&x5 >= x5&x4 >= x1);
+  EXPECT_SQL_TOO(x4&x5 >= x5&x4 > x0);
+  EXPECT_SQL_TOO(x4&x5 >= x5&x4 <= x1);
+  EXPECT_SQL_TOO(x4&x5 >= x5&x4 >= x1);
   set temp1 := 100;
-  EXPECT(x3&temp0 <= temp1 <= x3&x2);
-  EXPECT((x3&temp0 <= temp1) <= x3&x2 == x3&temp0 <= temp1 <= x3&x2);
-  EXPECT(x5 > x3 > -x1 > x0);
+  EXPECT_SQL_TOO(x3&temp0 <= temp1 <= x3&x2);
+  EXPECT_SQL_TOO((x3&temp0 <= temp1) <= x3&x2 == x3&temp0 <= temp1 <= x3&x2);
+  EXPECT_SQL_TOO(x5 > x3 > -x1 > x0);
 
   set temp1 := 30;
-  EXPECT(x5 == x5);
-  EXPECT(x5 < x6 == x6 > x5);
-  EXPECT(x5 <= x6 == x6 >= x5);
-  EXPECT(x5 < x6 == x6 >= x5);
-  EXPECT(x5 <= x6 == x6 > x5);
-  EXPECT(x5 <= x6 == x1);
-  EXPECT(x1 == x5 < x6);
-  EXPECT(x1 == x5 <= x6);
-  EXPECT(x1 == x0 + x1);
-  EXPECT(x1 == x1 + x0 * x1);
-  EXPECT(x1 == x0 * x1 + x1);
-  EXPECT(x1 == x0 * -x1 + x1);
-  EXPECT(x1 + x1 == x3 - x1 == x1);
-  EXPECT(x1 + x1 == x3 - x1 != x0);
-  EXPECT(x1 + x1 == x3 - x1 != temp1);
+  EXPECT_SQL_TOO(x5 == x5);
+  EXPECT_SQL_TOO(x5 < x6 == x6 > x5);
+  EXPECT_SQL_TOO(x5 <= x6 == x6 >= x5);
+  EXPECT_SQL_TOO(x5 < x6 == x6 >= x5);
+  EXPECT_SQL_TOO(x5 <= x6 == x6 > x5);
+  EXPECT_SQL_TOO(x5 <= x6 == x1);
+  EXPECT_SQL_TOO(x1 == x5 < x6);
+  EXPECT_SQL_TOO(x1 == x5 <= x6);
+  EXPECT_SQL_TOO(x1 == x0 + x1);
+  EXPECT_SQL_TOO(x1 == x1 + x0 * x1);
+  EXPECT_SQL_TOO(x1 == x0 * x1 + x1);
+  EXPECT_SQL_TOO(x1 == x0 * -x1 + x1);
+  EXPECT_SQL_TOO(x1 + x1 == x3 - x1 == x1);
+  EXPECT_SQL_TOO(x1 + x1 == x3 - x1 != x0);
+  EXPECT_SQL_TOO(x1 + x1 == x3 - x1 != temp1);
 
-  EXPECT(x5 = x5);
-  EXPECT(x5 < x6 = x6 > x5);
-  EXPECT(x5 <= x6 = x6 >= x5);
-  EXPECT(x5 < x6 = x6 >= x5);
-  EXPECT(x5 <= x6 = x6 > x5);
-  EXPECT(x5 <= x6 = x1);
-  EXPECT(x1 = x5 < x6);
-  EXPECT(x1 = x5 <= x6);
-  EXPECT(x1 = x0 + x1);
-  EXPECT(x1 = x1 + x0 * x1);
-  EXPECT(x1 = x0 * x1 + x1);
-  EXPECT(x1 = x0 * -x1 + x1);
-  EXPECT(x1 + x1 = x3 - x1 = x1);
-  EXPECT(x1 + x1 = x3 - x1 <> x0);
-  EXPECT(x1 + x1 == x3 - x1 <> x0);
-  EXPECT(x1 + x1 = x3 - x1 <> temp1);
-  EXPECT(x1 + x1 == x3 - x1 <> temp1);
+  EXPECT_SQL_TOO(x5 = x5);
+  EXPECT_SQL_TOO(x5 < x6 = x6 > x5);
+  EXPECT_SQL_TOO(x5 <= x6 = x6 >= x5);
+  EXPECT_SQL_TOO(x5 < x6 = x6 >= x5);
+  EXPECT_SQL_TOO(x5 <= x6 = x6 > x5);
+  EXPECT_SQL_TOO(x5 <= x6 = x1);
+  EXPECT_SQL_TOO(x1 = x5 < x6);
+  EXPECT_SQL_TOO(x1 = x5 <= x6);
+  EXPECT_SQL_TOO(x1 = x0 + x1);
+  EXPECT_SQL_TOO(x1 = x1 + x0 * x1);
+  EXPECT_SQL_TOO(x1 = x0 * x1 + x1);
+  EXPECT_SQL_TOO(x1 = x0 * -x1 + x1);
+  EXPECT_SQL_TOO(x1 + x1 = x3 - x1 = x1);
+  EXPECT_SQL_TOO(x1 + x1 = x3 - x1 <> x0);
+  EXPECT_SQL_TOO(x1 + x1 == x3 - x1 <> x0);
+  EXPECT_SQL_TOO(x1 + x1 = x3 - x1 <> temp1);
+  EXPECT_SQL_TOO(x1 + x1 == x3 - x1 <> temp1);
 
   set temp1 := 30;
   declare temp_null integer;
   set temp_null := NULL;
 
-  EXPECT(x1 + x1 IS NULL == x0);
-  EXPECT(x1 + x1 IS NOT NULL == x1);
-  EXPECT(x1 + x1 IS NULL + x1 == x0);
-  EXPECT(x1 + x1 IS NOT NULL);
-  EXPECT((x1 + x1 IS NOT NULL) + x1 == x2);
-  EXPECT(x1 + x1 IS NOT NULL + x1 == x1);
-  EXPECT(x1 + NULL IS NULL);
-  EXPECT(NULL + x1 IS NULL);
-  EXPECT(NULL * x1 IS NULL);
-  EXPECT(NULL * x0 IS NULL);
-  EXPECT(x0 * NULL * x0 IS NULL);
-  EXPECT(NULL > x0 IS NULL);
-  EXPECT(NULL >= x1 IS NULL);
-  EXPECT(NULL < x2 IS NULL);
-  EXPECT(NULL <= x3 IS NULL);
-  EXPECT(x1 + NULL == x3 IS NULL);
-  EXPECT(x1 + NULL != x3 IS NULL);
-  EXPECT(x1 + NULL <> x3 IS NULL);
-  EXPECT(x1 = temp_null * x1 + x1 IS temp_null);
-  EXPECT(x1 = temp_null * -x1 + x1 IS temp_null);
-  EXPECT(x1 + temp_null = x3 - x1 = x1 IS temp_null);
-  EXPECT(x1 + temp_null = x3 - x1 <> x0 IS temp_null);
-  EXPECT(x1 + temp_null == x3 - x1 <> x0 IS temp_null);
-  EXPECT(x1 + temp_null = x3 - x1 <> temp1 IS temp_null);
-  EXPECT(x1 + temp_null == x3 - x1 <> temp1 IS temp_null);
-  EXPECT((temp_null IS NOT temp_null) == x0);
-  EXPECT(x1 + x1 IS NOT temp_null);
-  EXPECT(temp_null == x3 IS temp_null);
-  EXPECT(((temp_null == x3) IS temp_null) == x1);
-  EXPECT((temp_null == x3 IS temp_null) == x1);
-  EXPECT((temp_null == x3 IS temp_null) == x1);
-  EXPECT((temp_null == x3 IS temp_null) IS NOT temp_null);
-  EXPECT((x1 + temp_null == x3 IS NOT temp_null) == x0);
-  EXPECT((x1 + temp_null = x3 - x1 <> x0 IS NOT temp_null) == x0);
-  EXPECT((x1 + temp_null == x3 - x1 <> x0 IS NOT temp_null) == x0);
-  EXPECT((x1 + temp_null = x3 - x1 <> temp1 IS NOT temp_null) == x0);
+  EXPECT_SQL_TOO(x1 + x1 IS NULL == x0);
+  EXPECT_SQL_TOO(x1 + x1 IS NOT NULL == x1);
+  EXPECT_SQL_TOO(x1 + x1 IS NULL + x1 == x0);
+  EXPECT_SQL_TOO(x1 + x1 IS NOT NULL);
+  EXPECT_SQL_TOO((x1 + x1 IS NOT NULL) + x1 == x2);
+  EXPECT_SQL_TOO(x1 + x1 IS NOT NULL + x1 == x1);
+  EXPECT_SQL_TOO(x1 + NULL IS NULL);
+  EXPECT_SQL_TOO(NULL + x1 IS NULL);
+  EXPECT_SQL_TOO(NULL * x1 IS NULL);
+  EXPECT_SQL_TOO(NULL * x0 IS NULL);
+  EXPECT_SQL_TOO(x0 * NULL * x0 IS NULL);
+  EXPECT_SQL_TOO(NULL > x0 IS NULL);
+  EXPECT_SQL_TOO(NULL >= x1 IS NULL);
+  EXPECT_SQL_TOO(NULL < x2 IS NULL);
+  EXPECT_SQL_TOO(NULL <= x3 IS NULL);
+  EXPECT_SQL_TOO(x1 + NULL == x3 IS NULL);
+  EXPECT_SQL_TOO(x1 + NULL != x3 IS NULL);
+  EXPECT_SQL_TOO(x1 + NULL <> x3 IS NULL);
+  EXPECT_SQL_TOO(x1 = temp_null * x1 + x1 IS temp_null);
+  EXPECT_SQL_TOO(x1 = temp_null * -x1 + x1 IS temp_null);
+  EXPECT_SQL_TOO(x1 + temp_null = x3 - x1 = x1 IS temp_null);
+  EXPECT_SQL_TOO(x1 + temp_null = x3 - x1 <> x0 IS temp_null);
+  EXPECT_SQL_TOO(x1 + temp_null == x3 - x1 <> x0 IS temp_null);
+  EXPECT_SQL_TOO(x1 + temp_null = x3 - x1 <> temp1 IS temp_null);
+  EXPECT_SQL_TOO(x1 + temp_null == x3 - x1 <> temp1 IS temp_null);
+  EXPECT_SQL_TOO((temp_null IS NOT temp_null) == x0);
+  EXPECT_SQL_TOO(x1 + x1 IS NOT temp_null);
+  EXPECT_SQL_TOO(temp_null == x3 IS temp_null);
+  EXPECT_SQL_TOO(((temp_null == x3) IS temp_null) == x1);
+  EXPECT_SQL_TOO((temp_null == x3 IS temp_null) == x1);
+  EXPECT_SQL_TOO((temp_null == x3 IS temp_null) == x1);
+  EXPECT_SQL_TOO((temp_null == x3 IS temp_null) IS NOT temp_null);
+  EXPECT_SQL_TOO((x1 + temp_null == x3 IS NOT temp_null) == x0);
+  EXPECT_SQL_TOO((x1 + temp_null = x3 - x1 <> x0 IS NOT temp_null) == x0);
+  EXPECT_SQL_TOO((x1 + temp_null == x3 - x1 <> x0 IS NOT temp_null) == x0);
+  EXPECT_SQL_TOO((x1 + temp_null = x3 - x1 <> temp1 IS NOT temp_null) == x0);
 
   set temp0 := 25;
 
-  EXPECT(x2 * x3 IS x4 + x2);
-  EXPECT(x2 * x3 IS x4 + x2);
+  EXPECT_SQL_TOO(x2 * x3 IS x4 + x2);
+  EXPECT_SQL_TOO(x2 * x3 IS x4 + x2);
   set temp1 := 10;
-  EXPECT(temp1-x4*x2 IS x2);
-  EXPECT(temp0%x3/x2 IS x0);
-  EXPECT(temp0/x5%x2 IS x1);
-  EXPECT(temp0*x5%x2 IS x1);
-  EXPECT(temp0*x5%x4%x2 IS x1);
+  EXPECT_SQL_TOO(temp1-x4*x2 IS x2);
+  EXPECT_SQL_TOO(temp0%x3/x2 IS x0);
+  EXPECT_SQL_TOO(temp0/x5%x2 IS x1);
+  EXPECT_SQL_TOO(temp0*x5%x2 IS x1);
+  EXPECT_SQL_TOO(temp0*x5%x4%x2 IS x1);
   set temp1 := 24;
-  EXPECT(temp0-x5%x2 IS temp1);
+  EXPECT_SQL_TOO(temp0-x5%x2 IS temp1);
   set temp1 := 15;
-  EXPECT(temp1%x3-x2 IS -x2);
+  EXPECT_SQL_TOO(temp1%x3-x2 IS -x2);
   set temp2 := 30;
   set temp3 := 13;
-  EXPECT(temp1-temp2%x4 IS temp3);
-  EXPECT(temp1-temp2/x2 IS x0);
-  EXPECT(temp1/x5-x3 IS x0);
+  EXPECT_SQL_TOO(temp1-temp2%x4 IS temp3);
+  EXPECT_SQL_TOO(temp1-temp2/x2 IS x0);
+  EXPECT_SQL_TOO(temp1/x5-x3 IS x0);
   set temp3 := 72;
-  EXPECT(temp1*x5-x3 IS temp3);
+  EXPECT_SQL_TOO(temp1*x5-x3 IS temp3);
   set temp3 := 22;
-  EXPECT(x5*x5-x3 IS temp3);
+  EXPECT_SQL_TOO(x5*x5-x3 IS temp3);
   set temp3 := 26;
-  EXPECT(temp0+x5%x2 IS temp3);
-  EXPECT(temp1%x3+x2 IS x2);
+  EXPECT_SQL_TOO(temp0+x5%x2 IS temp3);
+  EXPECT_SQL_TOO(temp1%x3+x2 IS x2);
   set temp1 := 17;
   set temp2 := 30;
   set temp3 := 15;
-  EXPECT(temp3+temp2%x4 IS temp1);
+  EXPECT_SQL_TOO(temp3+temp2%x4 IS temp1);
   set temp1 := 30;
-  EXPECT(temp3+temp1/x2 IS temp1);
-  EXPECT(temp3/x5+x3 IS x6);
+  EXPECT_SQL_TOO(temp3+temp1/x2 IS temp1);
+  EXPECT_SQL_TOO(temp3/x5+x3 IS x6);
   set temp1 := 78;
-  EXPECT(temp3*x5+x3 IS temp1);
+  EXPECT_SQL_TOO(temp3*x5+x3 IS temp1);
   set temp1 := 28;
-  EXPECT(x5*x5+x3 IS temp1);
+  EXPECT_SQL_TOO(x5*x5+x3 IS temp1);
   set temp1 := 20;
   set temp2 := 12;
-  EXPECT(x5*temp2/x3 IS temp1);
-  EXPECT(x5*temp2/x3%x7 IS x6);
+  EXPECT_SQL_TOO(x5*temp2/x3 IS temp1);
+  EXPECT_SQL_TOO(x5*temp2/x3%x7 IS x6);
   set temp1 := 21;
   set temp2 := 12;
-  EXPECT(x9%temp2/x3*x7 IS temp1);
+  EXPECT_SQL_TOO(x9%temp2/x3*x7 IS temp1);
 
-  EXPECT(x1 IS x1 == x1 IS x1 == x1);
-  EXPECT(x5 > x6 IS x2 < x1);
-  EXPECT(x5 <= x6 IS x2 > x1);
-  EXPECT(x5 == x5 IS x2 > x1);
-  EXPECT(NULL IS NULL);
-  EXPECT(temp_null == x0 IS NULL);
-  EXPECT(NULL IS NULL == x1 != x0);
-  EXPECT(NULL IS NULL = x1 <> x0);
-  EXPECT(temp_null == temp_null IS NULL);
-  EXPECT(NULL IS (temp_null == x0));
-  EXPECT(NULL IS NOT NULL == x0);
-  EXPECT((NULL IS NOT NULL) == x0);
-  EXPECT(x5 > x2 IS NOT NULL);
-  EXPECT(NULL IS NOT x2 < x3);
-  EXPECT(NULL IS NULL + x1);
-  EXPECT(NULL IS x1 + NULL);
-  EXPECT(NULL IS x1 << NULL);
+  EXPECT_SQL_TOO(x1 IS x1 == x1 IS x1 == x1);
+  EXPECT_SQL_TOO(x5 > x6 IS x2 < x1);
+  EXPECT_SQL_TOO(x5 <= x6 IS x2 > x1);
+  EXPECT_SQL_TOO(x5 == x5 IS x2 > x1);
+  EXPECT_SQL_TOO(NULL IS NULL);
+  EXPECT_SQL_TOO(temp_null == x0 IS NULL);
+  EXPECT_SQL_TOO(NULL IS NULL == x1 != x0);
+  EXPECT_SQL_TOO(NULL IS NULL = x1 <> x0);
+  EXPECT_SQL_TOO(temp_null == temp_null IS NULL);
+  EXPECT_SQL_TOO(NULL IS (temp_null == x0));
+  EXPECT_SQL_TOO(NULL IS NOT NULL == x0);
+  EXPECT_SQL_TOO((NULL IS NOT NULL) == x0);
+  EXPECT_SQL_TOO(x5 > x2 IS NOT NULL);
+  EXPECT_SQL_TOO(NULL IS NOT x2 < x3);
+  EXPECT_SQL_TOO(NULL IS NULL + x1);
+  EXPECT_SQL_TOO(NULL IS x1 + NULL);
+  EXPECT_SQL_TOO(NULL IS x1 << NULL);
 
   declare one text;
   declare two text;
   set one := "1";
   set two := "2";
-  EXPECT(one IS two == x0);
-  EXPECT(one IS NULL == x0);
-  EXPECT(NULL IS one == x0);
+  EXPECT_SQL_TOO(one IS two == x0);
+  EXPECT_SQL_TOO(one IS NULL == x0);
+  EXPECT_SQL_TOO(NULL IS one == x0);
 
   -- Test IN
-  EXPECT(x3 IN (x1, x2) == x0);
-  EXPECT(x3 + x2 IN (x1, x5));
-  EXPECT(x3 / x3 IN (x1, x2));
-  EXPECT(x3 / x3 IN (x1, x2) IN (x1));
-  EXPECT(x1 IN (NULL, x1));
-  EXPECT(NOT (x1 IN (NULL, x5)));
-  EXPECT(NULL IS (NULL IN (x1)));
+  EXPECT_SQL_TOO(x3 IN (x1, x2) == x0);
+  EXPECT_SQL_TOO(x3 + x2 IN (x1, x5));
+  EXPECT_SQL_TOO(x3 / x3 IN (x1, x2));
+  EXPECT_SQL_TOO(x3 / x3 IN (x1, x2) IN (x1));
+  EXPECT_SQL_TOO(x1 IN (NULL, x1));
+  EXPECT(NOT (x1 IN (NULL, x5))); -- known difference between CQL and SQLite in IN
+  EXPECT_SQL_TOO(NULL IS (NULL IN (x1)));
 
   -- Test NOT IN
-  EXPECT(x1 NOT IN (x1, x2) == x0);
-  EXPECT(x3 NOT IN (x1, x2) == x1);
-  EXPECT(x3 + x2 NOT IN (x1, x2));
-  EXPECT(x3 / x1 NOT IN (x1, x2));
-  EXPECT(x3 / x1 NOT IN (x1, x2) IN (x1));
-  EXPECT(NOT (x1 NOT IN (NULL, x1)));
-  EXPECT(x1 NOT IN (NULL, x5));
-  EXPECT(NULL IS (NULL NOT IN (x1)));
+  EXPECT_SQL_TOO(x1 NOT IN (x1, x2) == x0);
+  EXPECT_SQL_TOO(x3 NOT IN (x1, x2) == x1);
+  EXPECT_SQL_TOO(x3 + x2 NOT IN (x1, x2));
+  EXPECT_SQL_TOO(x3 / x1 NOT IN (x1, x2));
+  EXPECT_SQL_TOO(x3 / x1 NOT IN (x1, x2) IN (x1));
+  EXPECT_SQL_TOO(NOT (x1 NOT IN (NULL, x1)));
+  EXPECT(x1 NOT IN (NULL, x5)); -- known difference between CQL and SQLite in IN
+  EXPECT_SQL_TOO(NULL IS (NULL NOT IN (x1)));
 
   declare x text;
   set x := NULL;
-  EXPECT((x IN ("foo", "goo")) IS NULL);
-  EXPECT((x NOT IN ("foo", "goo")) IS NULL);
+  EXPECT_SQL_TOO((x IN ("foo", "goo")) IS NULL);
+  EXPECT_SQL_TOO((x NOT IN ("foo", "goo")) IS NULL);
 
-  EXPECT(x3 + x3 AND x5);
-  EXPECT((x3 + x3 AND x0) == x0);
-  EXPECT((NULL AND x1) IS NULL);
-  EXPECT((NULL AND x1 = temp_null) IS NULL);
-  EXPECT(NOT (NULL AND x1 IS NULL));
-  EXPECT((NULL AND x0) == x0);
-  EXPECT(NOT (NULL AND x0));
-  EXPECT(x1 AND x0 == x0);
-  EXPECT(x1 AND x0 = x0);
-  EXPECT(x1 AND x1 != x0);
-  EXPECT(x1 AND x1 <> x0);
-  EXPECT(x5 IS x5 AND x2 IS x2);
-  EXPECT(x5 IS NOT NULL AND x2 IS x2);
-  EXPECT(x5 IS NOT NULL AND x2 IS x2);
-  EXPECT(x5 AND x0 + x1);
-  EXPECT(x5 AND x0 * x1 + x1);
-  EXPECT(x5 AND x0 >> x4 >= -x1);
+  EXPECT_SQL_TOO(x3 + x3 AND x5);
+  EXPECT_SQL_TOO((x3 + x3 AND x0) == x0);
+  EXPECT_SQL_TOO((NULL AND x1) IS NULL);
+  EXPECT_SQL_TOO((NULL AND x1 = temp_null) IS NULL);
+  EXPECT_SQL_TOO(NOT (NULL AND x1 IS NULL));
+  EXPECT_SQL_TOO((NULL AND x0) == x0);
+  EXPECT_SQL_TOO(NOT (NULL AND x0));
+  EXPECT_SQL_TOO(x1 AND x0 == x0);
+  EXPECT_SQL_TOO(x1 AND x0 = x0);
+  EXPECT_SQL_TOO(x1 AND x1 != x0);
+  EXPECT_SQL_TOO(x1 AND x1 <> x0);
+  EXPECT_SQL_TOO(x5 IS x5 AND x2 IS x2);
+  EXPECT_SQL_TOO(x5 IS NOT NULL AND x2 IS x2);
+  EXPECT_SQL_TOO(x5 IS NOT NULL AND x2 IS x2);
+  EXPECT_SQL_TOO(x5 AND x0 + x1);
+  EXPECT_SQL_TOO(x5 AND x0 * x1 + x1);
+  EXPECT_SQL_TOO(x5 AND x0 >> x4 >= -x1);
   set temp1 := 12;
-  EXPECT(x5 AND x0 | x4 & temp1);
-  EXPECT(x5 AND x6 / x3);
+  EXPECT_SQL_TOO(x5 AND x0 | x4 & temp1);
+  EXPECT_SQL_TOO(x5 AND x6 / x3);
   set temp1 := 25;
-  EXPECT((x5 AND temp1 % x5) == x0);
-  EXPECT(x5 AND x0 IN (x0));
+  EXPECT_SQL_TOO((x5 AND temp1 % x5) == x0);
+  EXPECT_SQL_TOO(x5 AND x0 IN (x0));
 
-  EXPECT((x0 OR x1 OR x1 AND x0 OR x0) != ((((x0 OR x1) OR x1) AND x0) OR x0));
-  EXPECT((x1 OR x1 AND x0 AND x1 AND x0) != ((((x1 OR x1) AND x0) AND x1) AND x0));
-  EXPECT((x0 OR x1 OR x1 AND x0 AND x1) != ((((x0 OR x1) OR x1) AND x0) AND x1));
-  EXPECT((x1 OR x1 OR x1 AND x0 AND x0) != ((((x1 OR x1) OR x1) AND x0) AND x0));
-  EXPECT((x1 OR x1 OR x1 AND x0 OR x0) != ((((x1 OR x1) OR x1) AND x0) OR x0));
-  EXPECT((x1 AND x1 AND x1 OR x1 AND x0) != ((((x1 AND x1) AND x1) OR x1) AND x0));
-  EXPECT((x1 OR x0 AND x0 AND x1 OR x0) != ((((x1 OR x0) AND x0) AND x1) OR x0));
-  EXPECT((x1 AND x1 OR x0 AND x0 AND x1) != ((((x1 AND x1) OR x0) AND x0) AND x1));
-  EXPECT((x1 OR x0 OR x0 OR x0 AND x0) != ((((x1 OR x0) OR x0) OR x0) AND x0));
-  EXPECT((x1 OR x0 AND x0 OR x1 AND x0) != ((((x1 OR x0) AND x0) OR x1) AND x0));
-  EXPECT((x1 OR x1 AND x1 AND x1 AND x0) != ((((x1 OR x1) AND x1) AND x1) AND x0));
-  EXPECT((x0 AND x0 OR x1 OR x0 AND x0) != ((((x0 AND x0) OR x1) OR x0) AND x0));
-  EXPECT((x0 OR x1 OR x1 AND x0 AND x0) != ((((x0 OR x1) OR x1) AND x0) AND x0));
-  EXPECT((x1 AND x1 AND x1 OR x0 AND x0) != ((((x1 AND x1) AND x1) OR x0) AND x0));
-  EXPECT((x1 OR x1 OR x1 AND x0 AND x1) != ((((x1 OR x1) OR x1) AND x0) AND x1));
-  EXPECT((x1 OR x0 OR x0 OR x0 AND x0) != ((((x1 OR x0) OR x0) OR x0) AND x0));
+  EXPECT_SQL_TOO((x0 OR x1 OR x1 AND x0 OR x0) != ((((x0 OR x1) OR x1) AND x0) OR x0));
+  EXPECT_SQL_TOO((x1 OR x1 AND x0 AND x1 AND x0) != ((((x1 OR x1) AND x0) AND x1) AND x0));
+  EXPECT_SQL_TOO((x0 OR x1 OR x1 AND x0 AND x1) != ((((x0 OR x1) OR x1) AND x0) AND x1));
+  EXPECT_SQL_TOO((x1 OR x1 OR x1 AND x0 AND x0) != ((((x1 OR x1) OR x1) AND x0) AND x0));
+  EXPECT_SQL_TOO((x1 OR x1 OR x1 AND x0 OR x0) != ((((x1 OR x1) OR x1) AND x0) OR x0));
+  EXPECT_SQL_TOO((x1 AND x1 AND x1 OR x1 AND x0) != ((((x1 AND x1) AND x1) OR x1) AND x0));
+  EXPECT_SQL_TOO((x1 OR x0 AND x0 AND x1 OR x0) != ((((x1 OR x0) AND x0) AND x1) OR x0));
+  EXPECT_SQL_TOO((x1 AND x1 OR x0 AND x0 AND x1) != ((((x1 AND x1) OR x0) AND x0) AND x1));
+  EXPECT_SQL_TOO((x1 OR x0 OR x0 OR x0 AND x0) != ((((x1 OR x0) OR x0) OR x0) AND x0));
+  EXPECT_SQL_TOO((x1 OR x0 AND x0 OR x1 AND x0) != ((((x1 OR x0) AND x0) OR x1) AND x0));
+  EXPECT_SQL_TOO((x1 OR x1 AND x1 AND x1 AND x0) != ((((x1 OR x1) AND x1) AND x1) AND x0));
+  EXPECT_SQL_TOO((x0 AND x0 OR x1 OR x0 AND x0) != ((((x0 AND x0) OR x1) OR x0) AND x0));
+  EXPECT_SQL_TOO((x0 OR x1 OR x1 AND x0 AND x0) != ((((x0 OR x1) OR x1) AND x0) AND x0));
+  EXPECT_SQL_TOO((x1 AND x1 AND x1 OR x0 AND x0) != ((((x1 AND x1) AND x1) OR x0) AND x0));
+  EXPECT_SQL_TOO((x1 OR x1 OR x1 AND x0 AND x1) != ((((x1 OR x1) OR x1) AND x0) AND x1));
+  EXPECT_SQL_TOO((x1 OR x0 OR x0 OR x0 AND x0) != ((((x1 OR x0) OR x0) OR x0) AND x0));
 
 END_TEST(nullable_test)
 

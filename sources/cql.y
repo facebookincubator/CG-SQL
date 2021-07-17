@@ -151,7 +151,7 @@ static void cql_reset_globals(void);
 %left AND
 %left NOT
 %left BETWEEN
-%left NE NE_ '=' EQEQ LIKE NOT_LIKE GLOB MATCH REGEXP IN IS_NOT IS
+%left NE NE_ '=' EQEQ LIKE GLOB MATCH REGEXP IN IS_NOT IS
 %left '<' '>' GE LE
 %left LS RS '&' '|'
 %left '+' '-'
@@ -166,7 +166,7 @@ static void cql_reset_globals(void);
 %token INSERT INTO VALUES VIEW SELECT QUERY_PLAN EXPLAIN OVER WINDOW FILTER PARTITION RANGE ROWS GROUPS
 %token AS CASE WHEN FROM THEN ELSE END LEFT SWITCH
 %token OUTER JOIN WHERE GROUP BY ORDER ASC
-%token DESC INNER FCOUNT AUTOINCREMENT DISTINCT
+%token DESC INNER AUTOINCREMENT DISTINCT
 %token LIMIT OFFSET TEMP TRIGGER IF ALL CROSS USING RIGHT
 %token HIDDEN UNIQUE HAVING SET LET TO DISTINCTROW ENUM
 %token FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR DECLARE TYPE FETCH LOOP LEAVE CONTINUE FOR ENCODE CONTEXT_COLUMN CONTEXT_TYPE
@@ -885,7 +885,7 @@ math_expr[result]:
   | math_expr[lhs] IN '(' expr_list ')'  { $result = new_ast_in_pred($lhs, $expr_list); }
   | math_expr[lhs] IN '(' select_stmt ')'  { $result = new_ast_in_pred($lhs, $select_stmt); }
   | math_expr[lhs] LIKE math_expr[rhs]  { $result = new_ast_like($lhs, $rhs); }
-  | math_expr[lhs] NOT_LIKE math_expr[rhs]  { $result = new_ast_not_like($lhs, $rhs); }
+  | math_expr[lhs] NOT LIKE math_expr[rhs]  { $result = new_ast_not_like($lhs, $rhs); }
   | math_expr[lhs] MATCH math_expr[rhs]  { $result = new_ast_match($lhs, $rhs); }
   | math_expr[lhs] REGEXP math_expr[rhs]  { $result = new_ast_regexp($lhs, $rhs); }
   | math_expr[lhs] GLOB math_expr[rhs]  { $result = new_ast_glob($lhs, $rhs); }

@@ -4782,7 +4782,7 @@ In addition, if there is some data migration that needs to happen at a particula
 
 `@create` declares that the annotated object first appeared in the indicated version, and at that time the migration proc needs to be executed to fill in default values, denormalize values, or whatever the case may be.
 
-`@delete` declares that the annotated object disappeared in the indicated version, and at that time the migration proc needs to be executed to clean up the contents, or potentially move them elsewhere. 
+`@delete` declares that the annotated object disappeared in the indicated version, and at that time the migration proc needs to be executed to clean up the contents, or potentially move them elsewhere.
 
 `@recreate` declares that the annotated object can be dropped and recreated when it changes, there is no need to preserve its contents during an upgrade. Such objects may be changed arbitrarily from version to version
 
@@ -4791,7 +4791,7 @@ In addition, if there is some data migration that needs to happen at a particula
 
 NOTE: all annotations are suppressed from generated SQL.  SQLite never sees them.
 
-NOTE: looking at the annotations it is possible to compute the logical schema at any version, especially the original schema -- it's what you get if you disregard all ```@delete``` entirely (don't delete) and then remove anything marked with ```@create``` directives. 
+NOTE: looking at the annotations it is possible to compute the logical schema at any version, especially the original schema -- it's what you get if you disregard all ```@delete``` entirely (don't delete) and then remove anything marked with ```@create``` directives.
 
 ### Allowable changes
 Not all migrations are possible in a sensible fashion, therefore CQL enforces certain limitations:
@@ -4866,7 +4866,7 @@ create table foo(
   name_2 text @create(6)
 );
 
--- much simpler table, lots of stuff added in v2.  
+-- much simpler table, lots of stuff added in v2.
 -- note v1 is the first new version and v0 is base version
 create table table2(
   id integer not null,
@@ -4934,19 +4934,34 @@ I've split the script into logical pieces to explain what's going on.
 ```
 
 Schema upgrade scripts need to see all the columns even the ones that would be logically deleted in normal mode.  This is so that things like `alter table add column` can refer to real columns and `drop table` can refer to a table that shouldn't even be visible.  Remember in CQL the declarations tell you the logical state of the universe and DLL mutations are expected to create that condition, so you should be dropping tables that are marked with `@delete`
-CQL stores the current state of the universe in this table.  
+CQL stores the current state of the universe in this table.
 
 ```sql
 -- schema crc -7714030317354747478
 ```
 The schema crc is computed by hashing all the schema declarations in canonical form.  That's everything in this next section.
 
+#### Facet Helpers
+
+CQL uses a set of four functions to manage a dictionary.  The implementation is in `cqlrt_common.c` but it's really
+just a simple hash table that maps from a string key to a number.  This functionality was added because over time
+the facets table can get pretty big and running a SQL query every time to read a single integer is not economical.
+
+```sql
+-- declare facet helpers--
+DECLARE facet_data TYPE LONG<facet_data> not null;
+DECLARE test_facets facet_data;
+DECLARE FUNCTION cql_facets_new() facet_data;
+DECLARE PROCEDURE cql_facets_delete(facets facet_data);
+DECLARE FUNCTION cql_facet_add(facets facet_data, facet TEXT NOT NULL, crc LONG NOT NULL) BOOL NOT NULL;
+DECLARE FUNCTION cql_facet_find(facets facet_data, facet TEXT NOT NULL) LONG NOT NULL;
+```
 
 #### Declaration Section
 Wherein all the necessary objects are declared...
 
 ```sql
--- declare sqlite_master -- 
+-- declare sqlite_master --
 CREATE TABLE sqlite_master (
   type TEXT NOT NULL,
   name TEXT NOT NULL,
@@ -4958,7 +4973,7 @@ CREATE TABLE sqlite_master (
 The `sqlite_master` table is built-in but it has to be introduced to CQL so that we can query it. Like all the other loose DDL declarations here there is no code generated for this.  We are simply declaring tables.  To create code you have to put the DDL in a proc.  Normally DDL in procs also declares the table but since we may need the original version of a table created and the final version declared we have `@schema_upgrade_script` to help avoid name conflicts.
 
 ```sql
--- declare full schema of tables and views to be upgraded -- 
+-- declare full schema of tables and views to be upgraded --
 CREATE TABLE foo(
   id INTEGER NOT NULL,
   rate LONG INT @DELETE(5),
@@ -5040,11 +5055,11 @@ NOTE: the prefix "test" was specified when this file was built so all the method
 #### Helper Procedures
 ```sql
 -- helper proc for testing for the presence of a column/type
-CREATE PROCEDURE test_check_column_exists(table_name TEXT NOT NULL, 
-                                          decl TEXT NOT NULL, 
+CREATE PROCEDURE test_check_column_exists(table_name TEXT NOT NULL,
+                                          decl TEXT NOT NULL,
                                           OUT present BOOL NOT NULL)
 BEGIN
-  SET present := (SELECT EXISTS(SELECT * FROM sqlite_master 
+  SET present := (SELECT EXISTS(SELECT * FROM sqlite_master
                   WHERE tbl_name = table_name AND sql GLOB decl));
 END;
 ```
@@ -5077,54 +5092,47 @@ BEGIN
 END;
 ```
 
-The `save_sql_schema_facets` procedure simply makes a snapshot of the current facets table.  Later we use 
+The `save_sql_schema_facets` procedure simply makes a snapshot of the current facets table.  Later we use
 this snapshot to report the differences by joining these tables.
 
 ```sql
 -- helper proc for setting the schema version of a facet
-CREATE PROCEDURE test_cql_set_facet_version(_facet TEXT NOT NULL, 
+CREATE PROCEDURE test_cql_set_facet_version(_facet TEXT NOT NULL,
                                             _version LONG INTEGER NOT NULL)
 BEGIN
-  INSERT OR REPLACE INTO test_cql_schema_facets (facet, version) 
+  INSERT OR REPLACE INTO test_cql_schema_facets (facet, version)
        VALUES(_facet, _version);
 END;
 
 -- helper proc for getting the schema version of a facet
-CREATE PROCEDURE test_cql_get_facet_version(_facet TEXT NOT NULL, 
+CREATE PROCEDURE test_cql_get_facet_version(_facet TEXT NOT NULL,
                                             out _version LONG INTEGER NOT NULL)
 BEGIN
   BEGIN TRY
-    SET _version := (SELECT version FROM test_cql_schema_facets 
-        WHERE facet = _facet LIMIT 1);
+    SET _version := (SELECT version FROM test_cql_schema_facets
+                       WHERE facet = _facet LIMIT 1 IF NOTHING -1);
   END TRY;
   BEGIN CATCH
-    SET _version := 0;
+    SET _version := -1;
   END CATCH;
 END;
 ```
-The two procs `cql_get_facet_version` and `cql_set_facet_version` do just what you would expect.  Note the use of `try` and `catch` to return a default value if the select fails.
+The two procedures `cql_get_facet_version` and `cql_set_facet_version` do just what you would expect.  Note the use of `try` and `catch` to return a default value if the select fails.
 
 There are two additional helper procedures that do essentially the same thing using a schema version index.  These two methods exist only to avoid unnecessary repeated string literals in the output file which cause bloat.
 
 ```sql
 -- helper proc for getting the schema version CRC for a version index
-CREATE PROCEDURE test_cql_get_version_crc(_v INTEGER NOT NULL, 
-                                          out _crc LONG INTEGER NOT NULL)
+CREATE PROCEDURE test_cql_get_version_crc(_v INTEGER NOT NULL, out _crc LONG INTEGER NOT NULL)
 BEGIN
-  BEGIN TRY
-    SET _crc := (SELECT version FROM test_cql_schema_facets 
-        WHERE facet = 'cql_schema_v'||_v LIMIT 1);
-  END TRY;
-  BEGIN CATCH
-    SET _crc := -1;
-  END CATCH;
+  SET _crc := cql_facet_find(test_facets, printf('cql_schema_v%d', _v));
 END;
 
 -- helper proc for setting the schema version CRC for a version index
-CREATE PROCEDURE test_cql_set_version_crc(_v INTEGER NOT NULL, 
+CREATE PROCEDURE test_cql_set_version_crc(_v INTEGER NOT NULL,
                                           _crc LONG INTEGER NOT NULL)
 BEGIN
-  INSERT OR REPLACE INTO test_cql_schema_facets (facet, version) 
+  INSERT OR REPLACE INTO test_cql_schema_facets (facet, version)
        VALUES('cql_schema_v'||_v, _crc);
 END;
 ```
@@ -5196,7 +5204,7 @@ NOTE: `USING TRANSACTION` when applied to a proc declaration simply means the pr
 
 
 #### Views
-```
+```sql
 -- drop all the views we know
 CREATE PROCEDURE test_cql_drop_all_views()
 BEGIN
@@ -5224,11 +5232,9 @@ NOTE: `dead_view` was not created, but we did try to drop it if it existed.
 
 ```sql
 -- drop all the indices that are deleted or changing
-CREATE PROCEDURE test_cql_drop_indices()
+CREATE PROCEDURE test_cql_drop_all_indices()
 BEGIN
-  DECLARE index_crc LONG INTEGER NOT NULL;
-  CALL test_cql_get_facet_version('index_still_present_index_crc', index_crc);
-  IF index_crc <> -6823087563145941851 THEN
+  IF cql_facet_find(test_facets, 'index_still_present_index_crc') != -6823087563145941851 THEN
     DROP INDEX IF EXISTS index_still_present;
   END IF;
   DROP INDEX IF EXISTS index_going_away;
@@ -5237,9 +5243,7 @@ END;
 -- create all the indices we need
 CREATE PROCEDURE test_cql_create_indices()
 BEGIN
-  DECLARE index_crc LONG INTEGER NOT NULL;
-  CALL test_cql_get_facet_version('index_still_present_index_crc', index_crc);
-  IF index_crc <> -6823087563145941851 THEN
+  IF cql_facet_find(test_facets, 'index_still_present_index_crc') != -6823087563145941851 THEN
     CREATE INDEX index_still_present ON table2 (name1, name2);
     CALL test_cql_set_facet_version('index_still_present_index_crc', -6823087563145941851);
   END IF;
@@ -5270,6 +5274,30 @@ END;
 
 Triggers are always dropped before migration begins and are re-instated quite late in the processing
 as we will see below.
+
+#### Caching the state of the facets
+
+To avoid selecting single rows out of the facets table repeatedly we introduce this procedure
+whose job is to harvest the facets table and store it in a dictionary.  The helpers that do this
+were declared above.  You've aleady seen usage of the facets in the
+code above.
+
+```sql
+CREATE PROCEDURE test_setup_facets()
+BEGIN
+  BEGIN TRY
+    SET test_facets := cql_facets_new();
+    DECLARE C CURSOR FOR SELECT * from test_cql_schema_facets;
+    LOOP FETCH C
+    BEGIN
+      LET added := cql_facet_add(test_facets, C.facet, C.version);
+    END;
+  END TRY;
+  BEGIN CATCH
+   -- if table doesn't exist we just have empty facets, that's ok
+  END CATCH;
+END;
+```
 
 #### Main Migration Script
 
@@ -5304,15 +5332,10 @@ These operations are done in `test_perform_needed_upgrades`
 That's it... the details are below.
 
 ```sql
-CREATE PROCEDURE test_perform_needed_upgrades()
+CREATE PROCEDURE test_perform_upgrade_steps()
 BEGIN
   DECLARE column_exists BOOL NOT NULL;
-  DECLARE facet_version LONG INTEGER NOT NULL;
   DECLARE schema_version LONG INTEGER NOT NULL;
-
-    -- save the current facets so we can diff them later --
-    CALL test_save_cql_schema_facets();
-
     -- dropping all views --
     CALL test_cql_drop_all_views();
 
@@ -5322,21 +5345,18 @@ BEGIN
     -- dropping condemned or changing triggers --
     CALL test_cql_drop_all_triggers();
 
-    -- fetch current schema version --
-    CALL test_cql_get_facet_version('cql_schema_version', schema_version);
-
     ---- install baseline schema if needed ----
 
-    IF schema_version == -1 THEN
-      CALL test_cql_drop_baseline_tables();
+    CALL test_cql_get_version_crc(0, schema_version);
+    IF schema_version != -9177754326374570163 THEN
       CALL test_cql_install_baseline_schema();
-      CALL test_cql_set_facet_version('cql_schema_version', 0);
+      CALL test_cql_set_version_crc(0, -9177754326374570163);
     END IF;
 
     ---- upgrade to schema version 2 ----
 
     CALL test_cql_get_version_crc(2, schema_version);
-    IF schema_version != 5380988243166701961 THEN
+    IF schema_version != -6840158498294659234 THEN
       -- altering table table2 to add column name1 TEXT;
 
       CALL test_check_column_exists('table2', '*[( ]name1 TEXT*', column_exists);
@@ -5366,24 +5386,22 @@ BEGIN
       END IF;
 
       -- data migration procedures
-      CALL test_cql_get_facet_version('CreateName1Proc', facet_version);
-      IF facet_version = 0 THEN
+      IF cql_facet_find(test_facets, 'CreateName1Proc') = -1 THEN
         CALL CreateName1Proc();
         CALL test_cql_set_facet_version('CreateName1Proc', 2);
       END IF;
-      CALL test_cql_get_facet_version('CreateName2Proc', facet_version);
-      IF facet_version = 0 THEN
+      IF cql_facet_find(test_facets, 'CreateName2Proc') = -1 THEN
         CALL CreateName2Proc();
         CALL test_cql_set_facet_version('CreateName2Proc', 2);
       END IF;
 
-      CALL test_cql_set_version_crc(2, 5380988243166701961);
+      CALL test_cql_set_version_crc(2, -6840158498294659234);
     END IF;
 
     ---- upgrade to schema version 3 ----
 
     CALL test_cql_get_version_crc(3, schema_version);
-    IF schema_version != -1945462407517765645 THEN
+    IF schema_version != -4851321700834943637 THEN
       -- creating table added_table
 
       CREATE TABLE IF NOT EXISTS added_table(
@@ -5391,13 +5409,13 @@ BEGIN
         name1 TEXT
       );
 
-      CALL test_cql_set_version_crc(3, -1945462407517765645);
+      CALL test_cql_set_version_crc(3, -4851321700834943637);
     END IF;
 
     ---- upgrade to schema version 4 ----
 
     CALL test_cql_get_version_crc(4, schema_version);
-    IF schema_version != -4889894059346952297 THEN
+    IF schema_version != -6096284368832554520 THEN
       -- altering table added_table to add column name2 TEXT;
 
       CALL test_check_column_exists('added_table', '*[( ]name2 TEXT*', column_exists);
@@ -5415,18 +5433,16 @@ BEGIN
       -- logical delete of column rate_2 from foo; -- no ddl
 
       -- data migration procedures
-      CALL test_cql_get_facet_version('CreateId2Proc', facet_version);
-      IF facet_version = 0 THEN
+      IF cql_facet_find(test_facets, 'CreateId2Proc') = -1 THEN
         CALL CreateId2Proc();
         CALL test_cql_set_facet_version('CreateId2Proc', 4);
       END IF;
-      CALL test_cql_get_facet_version('DeleteRate2Proc', facet_version);
-      IF facet_version = 0 THEN
+      IF cql_facet_find(test_facets, 'DeleteRate2Proc') = -1 THEN
         CALL DeleteRate2Proc();
         CALL test_cql_set_facet_version('DeleteRate2Proc', 4);
       END IF;
 
-      CALL test_cql_set_version_crc(4, -4889894059346952297);
+      CALL test_cql_set_version_crc(4, -6096284368832554520);
     END IF;
 
     ---- upgrade to schema version 5 ----
@@ -5468,6 +5484,24 @@ BEGIN
     CALL test_cql_create_all_triggers();
     CALL test_cql_set_facet_version('cql_schema_version', 6);
     CALL test_cql_set_facet_version('cql_schema_crc', -7714030317354747478);
+END;
+```
+
+We have one more helper that will look for evidence that we're trying
+to move backwards to a previous schema version.  This is not supported.
+This procedure also arranges for the original facet versions to be saved
+and it proceduces a difference in facets after the upgrade is done.
+
+```sql
+CREATE PROCEDURE test_perform_needed_upgrades()
+BEGIN
+  -- check for downgrade --
+  IF cql_facet_find(test_facets, 'cql_schema_version') > 6 THEN
+    SELECT 'downgrade detected' facet;
+  ELSE
+    -- save the current facets so we can diff them later --
+    CALL test_save_cql_schema_facets();
+    CALL test_perform_upgrade_steps();
 
     -- finally produce the list of differences
     SELECT T1.facet FROM
@@ -5475,6 +5509,7 @@ BEGIN
       LEFT OUTER JOIN test_cql_schema_facets_saved T2
         ON T1.facet = T2.facet
       WHERE T1.version is not T2.version;
+  END IF;
 END;
 ```
 
@@ -5495,8 +5530,17 @@ BEGIN
   CALL test_cql_get_facet_version('cql_schema_crc', schema_crc);
 
   IF schema_crc <> -7714030317354747478 THEN
-    -- save the current facets so we can diff them later --
-    CALL test_perform_needed_upgrades();
+    BEGIN TRY
+      CALL test_setup_facets();
+      CALL test_perform_needed_upgrades();
+    END TRY;
+    BEGIN CATCH
+      CALL cql_facets_delete(test_facets);
+      SET test_facets := 0;
+      THROW;
+    END CATCH;
+    CALL cql_facets_delete(test_facets);
+    SET test_facets := 0;
   ELSE
     -- some canonical result for no differences --
     SELECT 'no differences' facet;
@@ -5519,7 +5563,7 @@ BEGIN
 END;
 ```
 
-This entry point can be used any time you need the temp tables.  But normally it is 
+This entry point can be used any time you need the temp tables.  But normally it is
 automatically invoked.
 
 ```sql
@@ -8291,16 +8335,6 @@ Example:
 cql --in test.sql --nolines --cg foo.h foo.c
 ```
 
-### --generate_copy ...
-
-* Generate a C copy function for the resultset. Most of the stored procedures don't need to generate this thats why is optional.
-
-Example:
-
-```
-cql --in test.sql --cg foo.h foo.c --generate_copy
-```
-
 ### --global_proc name
 * any loose SQL statements not in a stored proc are gathered and put into a procedure of the given name
 * when generating a schema migrate script the global proc name is used as a prefix on all of the artifacts so that there can be several independent migrations linked into a single executable
@@ -8387,7 +8421,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed Jul 14 17:40:21 PDT 2021
+Snapshot as of Thu Jul 15 15:45:32 PDT 2021
 
 ### Operators and Literals
 
@@ -8400,7 +8434,7 @@ OR
 AND
 NOT
 BETWEEN
-'<>' '!=' '=' '==' LIKE NOT_LIKE GLOB MATCH REGEXP IN IS_NOT IS
+'<>' '!=' '=' '==' LIKE GLOB MATCH REGEXP IN IS_NOT IS
 '<' '>' '>=' '<='
 '<<' '>>' '&' '|'
 '+' '-'
@@ -8429,7 +8463,7 @@ DELETE INDEX FOREIGN REFERENCES CONSTRAINT UPSERT STATEMENT CONST
 INSERT INTO VALUES VIEW SELECT QUERY_PLAN EXPLAIN OVER WINDOW FILTER PARTITION RANGE ROWS GROUPS
 AS CASE WHEN FROM THEN ELSE END LEFT SWITCH
 OUTER JOIN WHERE GROUP BY ORDER ASC
-DESC INNER FCOUNT AUTOINCREMENT DISTINCT
+DESC INNER AUTOINCREMENT DISTINCT
 LIMIT OFFSET TEMP TRIGGER IF ALL CROSS USING RIGHT
 HIDDEN UNIQUE HAVING SET LET TO DISTINCTROW ENUM
 FUNC FUNCTION PROC PROCEDURE BEGIN_ OUT INOUT CURSOR DECLARE TYPE FETCH LOOP LEAVE CONTINUE FOR ENCODE CONTEXT_COLUMN CONTEXT_TYPE
@@ -8972,7 +9006,7 @@ math_expr:
   | math_expr "IN" '(' expr_list ')'
   | math_expr "IN" '(' select_stmt ')'
   | math_expr "LIKE" math_expr
-  | math_expr "NOT LIKE" math_expr
+  | math_expr "NOT" "LIKE" math_expr
   | math_expr "MATCH" math_expr
   | math_expr "REGEXP" math_expr
   | math_expr "GLOB" math_expr
@@ -9892,6 +9926,7 @@ The complete list (as of this writing) is:
   * `cql:private` the annotated procedure will be static in the generated C
     * Because the generated function is `static` it cannot be called from other modules and therefore will not go in any CQL exports file (that would be moot since you couldn't call it).
     * This attribute also implies `cql:suppress_result_set` since only CQL code in the same translation unit could possibly call it and hence the result set procedure is useless to other C code.
+  * `cql:generate_copy` the code generation for the annotated procedure will produce a `[procedure_name]_copy` function that can make complete or partial copies of its result set.
   * `cql:base_fragment=frag_name` used for base fragments (See Chapter 14)
   * `cql:extension_fragment=frag_name` used for extension fragments (See Chapter 14)
   * `cql:assembly_fragment=frag_name` used for assembly fragments (See Chapter 14)
@@ -13369,7 +13404,7 @@ CQL 0410 : unused, this was added to prevent merge conflicts at the end on liter
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Wed Jul 14 17:40:22 PDT 2021
+Snapshot as of Thu Jul 15 15:45:33 PDT 2021
 
 ### Rules
 

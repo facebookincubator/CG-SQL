@@ -1,11 +1,14 @@
 
 #include "out/cg_test_base_fragment_c.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunknown-warning-option"
 #pragma clang diagnostic ignored "-Wbitwise-op-parentheses"
 #pragma clang diagnostic ignored "-Wshift-op-parentheses"
 #pragma clang diagnostic ignored "-Wlogical-not-parentheses"
 #pragma clang diagnostic ignored "-Wlogical-op-parentheses"
 #pragma clang diagnostic ignored "-Wliteral-conversion"
+#pragma clang diagnostic ignored "-Wunused-but-set-variable"
 
 // The statement ending at line XXXX
 
@@ -36,3 +39,4 @@ BEGIN
     FROM assembly_non_core;
 END;
 */
+#pragma clang diagnostic pop

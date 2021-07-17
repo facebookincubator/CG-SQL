@@ -1,11 +1,14 @@
 
 #include "out/cg_test_assembly_query_c.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunknown-warning-option"
 #pragma clang diagnostic ignored "-Wbitwise-op-parentheses"
 #pragma clang diagnostic ignored "-Wshift-op-parentheses"
 #pragma clang diagnostic ignored "-Wlogical-not-parentheses"
 #pragma clang diagnostic ignored "-Wlogical-op-parentheses"
 #pragma clang diagnostic ignored "-Wliteral-conversion"
+#pragma clang diagnostic ignored "-Wunused-but-set-variable"
 extern CQL_WARN_UNUSED cql_code assembly_core(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_int32 id_, cql_string_ref _Nonnull name_);
 
 // The statement ending at line XXXX
@@ -152,3 +155,4 @@ cql_cleanup:
   return _rc_;
 }
 #undef _PROC_
+#pragma clang diagnostic pop

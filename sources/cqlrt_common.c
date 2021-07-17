@@ -838,6 +838,9 @@ void cql_copyoutrow(sqlite3 *_Nullable db, cql_result_set_ref _Nonnull result_se
     encode_context_type = meta->dataTypes[meta->encodeContextIndex];
     encode_context_field = cql_address_of_col(result_set, row, meta->encodeContextIndex, &encode_context_type);
   }
+  // sometimes the below usages resolve to do-noting macros and thus this gets
+  // considered as unused. So to always give it a "usage" cast it to void here.
+  (void)encode_context_field;
 
   for (cql_int32 column = 0; column < count; column++) {
     cql_int32 type = va_arg(args, cql_int32);

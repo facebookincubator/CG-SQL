@@ -139,7 +139,6 @@ s/[[:<:]]LOOP[[:>:]]/"LOOP"/g
 s/[[:<:]]MATCH[[:>:]]/"MATCH"/g
 s/[[:<:]]NOTHING[[:>:]]/"NOTHING"/g
 s/[[:<:]]NOT_DEFERRABLE[[:>:]]/"NOT DEFERRABLE"/g
-s/[[:<:]]NOT_LIKE[[:>:]]/"NOT LIKE"/g
 s/[[:<:]]NULL_[[:>:]]/"NULL"/g
 s/[[:<:]]OBJECT[[:>:]]/"OBJECT"/g
 s/[[:<:]]OF[[:>:]]/"OF"/g

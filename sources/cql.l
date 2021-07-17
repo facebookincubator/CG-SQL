@@ -159,7 +159,6 @@ THROW                        { return THROW; }
 TRY                          { return TRY; }
 CATCH                        { return CATCH; }
 LIKE                         { return LIKE; }
-NOT[ \t\n]+LIKE              { return NOT_LIKE; }
 MATCH                        { return MATCH; }
 REGEXP                       { return REGEXP; }
 GLOB                         { return GLOB; }
