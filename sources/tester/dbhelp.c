@@ -7,11 +7,14 @@
 
 #include "dbhelp.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunknown-warning-option"
 #pragma clang diagnostic ignored "-Wbitwise-op-parentheses"
 #pragma clang diagnostic ignored "-Wshift-op-parentheses"
 #pragma clang diagnostic ignored "-Wlogical-not-parentheses"
 #pragma clang diagnostic ignored "-Wlogical-op-parentheses"
 #pragma clang diagnostic ignored "-Wliteral-conversion"
+#pragma clang diagnostic ignored "-Wunused-but-set-variable"
 extern CQL_WARN_UNUSED cql_code dbhelp_source(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 
 
@@ -87,6 +90,8 @@ END;
 
 #define _PROC_ "dbhelp_prev_line"
 CQL_WARN_UNUSED cql_code dbhelp_prev_line(sqlite3 *_Nonnull _db_, cql_int32 line_, cql_int32 *_Nonnull prev) {
+  cql_contract_argument_notnull((void *)prev, 2);
+
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *_temp_stmt = NULL;
 
@@ -128,6 +133,8 @@ END;
 
 #define _PROC_ "dbhelp_add"
 CQL_WARN_UNUSED cql_code dbhelp_add(sqlite3 *_Nonnull _db_, cql_int32 line, cql_string_ref _Nonnull data) {
+  cql_contract_argument_notnull((void *)data, 2);
+
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *_temp_stmt = NULL;
 
@@ -159,6 +166,8 @@ END;
 
 #define _PROC_ "dbhelp_add_source"
 CQL_WARN_UNUSED cql_code dbhelp_add_source(sqlite3 *_Nonnull _db_, cql_int32 line, cql_string_ref _Nonnull data) {
+  cql_contract_argument_notnull((void *)data, 2);
+
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *_temp_stmt = NULL;
 
@@ -255,6 +264,10 @@ END;
 
 #define _PROC_ "dbhelp_find"
 CQL_WARN_UNUSED cql_code dbhelp_find(sqlite3 *_Nonnull _db_, cql_int32 line_, cql_string_ref _Nonnull pattern, cql_int32 *_Nonnull search_line, cql_int32 *_Nonnull found) {
+  cql_contract_argument_notnull((void *)pattern, 2);
+  cql_contract_argument_notnull((void *)search_line, 3);
+  cql_contract_argument_notnull((void *)found, 4);
+
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *_temp_stmt = NULL;
 
@@ -410,6 +423,7 @@ CQL_WARN_UNUSED cql_code dbhelp_source_fetch_results(sqlite3 *_Nonnull _db_, dbh
     .col_offsets = dbhelp_source_col_offsets,
     .refs_count = 1,
     .refs_offset = dbhelp_source_refs_offset,
+    .encode_context_index = -1,
     .rowsize = sizeof(dbhelp_source_row),
     .crc = CRC_dbhelp_source,
     .perf_index = &dbhelp_source_perf_index,
@@ -431,3 +445,4 @@ cql_cleanup:
   return _rc_;
 }
 #undef _PROC_
+#pragma clang diagnostic pop
