@@ -19396,8 +19396,11 @@ cql_noexport void sem_main(ast_node *ast) {
   EXPR_INIT(like, sem_binary_like, "LIKE");
   EXPR_INIT(not_like, sem_binary_like, "NOT LIKE");
   EXPR_INIT(match, sem_binary_match, "MATCH");
+  EXPR_INIT(not_match, sem_binary_match, "NOT MATCH");
   EXPR_INIT(regexp, sem_binary_match, "REGEXP");
+  EXPR_INIT(not_regexp, sem_binary_match, "NOT REGEXP");
   EXPR_INIT(glob, sem_binary_match, "GLOB");
+  EXPR_INIT(not_glob, sem_binary_match, "NOT GLOB");
   EXPR_INIT(in_pred, sem_expr_in_pred_or_not_in, "IN");
   EXPR_INIT(not_in, sem_expr_in_pred_or_not_in, "NOT IN");
   EXPR_INIT(cast_expr, sem_expr_cast, "CAST");

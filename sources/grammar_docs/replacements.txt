@@ -10,6 +10,9 @@ s/[[:<:]]NE[[:>:]]/"<>"/g
 s/[[:<:]]NE_[[:>:]]/"!="/g
 s/[[:<:]]NO[[:>:]]/"NO"/g
 s/[[:<:]]IS_NOT[[:>:]]/IS NOT/g
+s/[[:<:]]NOT_MATCH[[:>:]]/NOT MATCH/g
+s/[[:<:]]NOT_GLOB[[:>:]]/NOT GLOB/g
+s/[[:<:]]NOT_REGEXP[[:>:]]/NOT REGEXP/g
 s/[[:<:]]NOT_IN[[:>:]]/NOT IN/g
 s/[[:<:]]NOT_BETWEEN[[:>:]]/NOT BETWEEN/g
 s/[[:<:]]NOT_LIKE[[:>:]]/NOT LIKE/g

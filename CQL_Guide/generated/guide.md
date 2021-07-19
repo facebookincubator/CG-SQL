@@ -694,7 +694,8 @@ ASSIGNMENT:    :=
 LOGICAL_OR:    OR
 LOGICAL_AND:   AND
 LOGICAL_NOT:   NOT
-EQUALITY:      = == != <>  GLOB, MATCH, REGEXP, IS [NOT], [NOT] IN, [NOT] LIKE, [NOT] BETWEEN
+EQUALITY:      = == != <>  IS [NOT], [NOT] IN, [NOT] LIKE,
+               [NOT] MATCH, [NOT] GLOB, [NOT] BETWEEN
 INEQUALITY:    <  <=  >  >=
 BINARY:        << >> & |
 ADDITION:      + -
@@ -8421,7 +8422,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Fri Jul 16 21:21:00 PDT 2021
+Snapshot as of Mon Jul 19 14:24:37 PDT 2021
 
 ### Operators and Literals
 
@@ -8433,7 +8434,7 @@ ASSIGN
 OR
 AND
 NOT
-BETWEEN NOT_BETWEEN '<>' '!=' '=' '==' LIKE NOT_LIKE GLOB MATCH REGEXP IN NOT_IN IS_NOT IS
+BETWEEN NOT_BETWEEN '<>' '!=' '=' '==' LIKE NOT_LIKE GLOB NOT_GLOB MATCH NOT_MATCH REGEXP NOT_REGEXP IN NOT_IN IS_NOT IS
 '<' '>' '>=' '<='
 '<<' '>>' '&' '|'
 '+' '-'
@@ -9020,10 +9021,13 @@ math_expr:
   | math_expr "LIKE" math_expr
   | math_expr "NOT" "LIKE" math_expr
   | math_expr "MATCH" math_expr
+  | math_expr "NOT" "MATCH" math_expr
   | math_expr "REGEXP" math_expr
+  | math_expr "NOT" "REGEXP" math_expr
   | math_expr "GLOB" math_expr
-  | math_expr "NOT" "BETWEEN" math_expr "AND" math_expr
+  | math_expr "NOT" "GLOB" math_expr
   | math_expr "BETWEEN" math_expr "AND" math_expr
+  | math_expr "NOT" "BETWEEN" math_expr "AND" math_expr
   | math_expr "IS" "NOT" math_expr
   | math_expr "IS" math_expr
   | math_expr "||" math_expr
@@ -13416,7 +13420,7 @@ CQL 0410 : unused, this was added to prevent merge conflicts at the end on liter
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Fri Jul 16 21:21:00 PDT 2021
+Snapshot as of Mon Jul 19 14:24:37 PDT 2021
 
 ### Rules
 

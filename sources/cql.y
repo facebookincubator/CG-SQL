@@ -155,7 +155,7 @@ static void cql_reset_globals(void);
 %left OR
 %left AND
 %left NOT
-%left BETWEEN NOT_BETWEEN NE NE_ '=' EQEQ LIKE NOT_LIKE GLOB MATCH REGEXP IN NOT_IN IS_NOT IS
+%left BETWEEN NOT_BETWEEN NE NE_ '=' EQEQ LIKE NOT_LIKE GLOB NOT_GLOB MATCH NOT_MATCH REGEXP NOT_REGEXP IN NOT_IN IS_NOT IS
 %left '<' '>' GE LE
 %left LS RS '&' '|'
 %left '+' '-'
@@ -908,10 +908,13 @@ math_expr[result]:
   | math_expr[lhs] LIKE math_expr[rhs]  { $result = new_ast_like($lhs, $rhs); }
   | math_expr[lhs] NOT_LIKE math_expr[rhs] { $result = new_ast_not_like($lhs, $rhs); }
   | math_expr[lhs] MATCH math_expr[rhs]  { $result = new_ast_match($lhs, $rhs); }
+  | math_expr[lhs] NOT_MATCH math_expr[rhs] { $result = new_ast_not_match($lhs, $rhs); }
   | math_expr[lhs] REGEXP math_expr[rhs]  { $result = new_ast_regexp($lhs, $rhs); }
+  | math_expr[lhs] NOT_REGEXP math_expr[rhs] { $result = new_ast_not_regexp($lhs, $rhs); }
   | math_expr[lhs] GLOB math_expr[rhs]  { $result = new_ast_glob($lhs, $rhs); }
-  | math_expr[lhs] NOT_BETWEEN math_expr[me1] %prec BETWEEN AND math_expr[me2]  { $result = new_ast_not_between($lhs, new_ast_range($me1,$me2)); }
+  | math_expr[lhs] NOT_GLOB math_expr[rhs] { $result = new_ast_not_glob($lhs, $rhs); }
   | math_expr[lhs] BETWEEN math_expr[me1] %prec BETWEEN AND math_expr[me2]  { $result = new_ast_between($lhs, new_ast_range($me1,$me2)); }
+  | math_expr[lhs] NOT_BETWEEN math_expr[me1] %prec BETWEEN AND math_expr[me2]  { $result = new_ast_not_between($lhs, new_ast_range($me1,$me2)); }
   | math_expr[lhs] IS_NOT math_expr[rhs]  { $result = new_ast_is_not($lhs, $rhs); }
   | math_expr[lhs] IS math_expr[rhs]  { $result = new_ast_is($lhs, $rhs); }
   | math_expr[lhs] CONCAT math_expr[rhs]  { $result = new_ast_concat($lhs, $rhs); }

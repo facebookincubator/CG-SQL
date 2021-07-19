@@ -3602,8 +3602,11 @@ cql_noexport void gen_init() {
   EXPR_INIT(like, gen_binary, "LIKE", EXPR_PRI_EQUALITY);
   EXPR_INIT(not_like, gen_binary, "NOT LIKE", EXPR_PRI_EQUALITY);
   EXPR_INIT(match, gen_binary, "MATCH", EXPR_PRI_EQUALITY);
+  EXPR_INIT(not_match, gen_binary, "NOT MATCH", EXPR_PRI_EQUALITY);
   EXPR_INIT(regexp, gen_binary, "REGEXP", EXPR_PRI_EQUALITY);
+  EXPR_INIT(not_regexp, gen_binary, "NOT REGEXP", EXPR_PRI_EQUALITY);
   EXPR_INIT(glob, gen_binary, "GLOB", EXPR_PRI_EQUALITY);
+  EXPR_INIT(not_glob, gen_binary, "NOT GLOB", EXPR_PRI_EQUALITY);
   EXPR_INIT(in_pred, gen_expr_in_pred, "IN", EXPR_PRI_EQUALITY);
   EXPR_INIT(not_in, gen_expr_not_in, "NOT IN", EXPR_PRI_EQUALITY);
   EXPR_INIT(case_expr, gen_expr_case, "CASE", EXPR_PRI_ROOT);

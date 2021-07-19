@@ -161,8 +161,11 @@ TRY                          { return TRY; }
 CATCH                        { return CATCH; }
 NOT[ \t]+LIKE/[^A-Z_]        { return NOT_LIKE; }
 LIKE                         { return LIKE; }
+NOT[ \t]+MATCH/[^A-Z_]       { return NOT_MATCH; }
 MATCH                        { return MATCH; }
+NOT[ \t]+REGEXP/[^A-Z_]      { return NOT_REGEXP; }
 REGEXP                       { return REGEXP; }
+NOT[ \t]+GLOB/[^A-Z_]        { return NOT_GLOB; }
 GLOB                         { return GLOB; }
 NOT[ \t]+BETWEEN/[^A-Z_]     { return NOT_BETWEEN; }
 BETWEEN                      { return BETWEEN; }

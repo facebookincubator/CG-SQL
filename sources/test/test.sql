@@ -1464,6 +1464,23 @@ select not betweenas;
 -- this has to not match NOT DEFERRABLE
 select not deferrableas;
 
+-- parse the not variants
+select 'x' not match 'y';
+select 'x' not glob  'y';
+select 'x' not regexp  'y';
+
+-- this has to not match NOT MATCH
+select not matchas;
+
+-- this has to not match NOT GLOB
+select not globas;
+
+-- this has to not match NOT LIKE
+select not likeas;
+
+-- this has to not match NOT REGEXP
+select not regexpas;
+
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 
 # 1 "long/path/I/do/not/like"

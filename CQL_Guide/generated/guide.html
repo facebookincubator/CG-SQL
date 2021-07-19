@@ -1214,7 +1214,8 @@
 LOGICAL_OR:    OR
 LOGICAL_AND:   AND
 LOGICAL_NOT:   NOT
-EQUALITY:      = == != &lt;&gt;  GLOB, MATCH, REGEXP, IS [NOT], [NOT] IN, [NOT] LIKE, [NOT] BETWEEN
+EQUALITY:      = == != &lt;&gt;  IS [NOT], [NOT] IN, [NOT] LIKE,
+               [NOT] MATCH, [NOT] GLOB, [NOT] BETWEEN
 INEQUALITY:    &lt;  &lt;=  &gt;  &gt;=
 BINARY:        &lt;&lt; &gt;&gt; &amp; |
 ADDITION:      + -
@@ -6532,7 +6533,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Fri Jul 16 21:21:00 PDT 2021</p>
+<p>Snapshot as of Mon Jul 19 14:24:37 PDT 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -6540,7 +6541,7 @@ ASSIGN
 OR
 AND
 NOT
-BETWEEN NOT_BETWEEN &#39;&lt;&gt;&#39; &#39;!=&#39; &#39;=&#39; &#39;==&#39; LIKE NOT_LIKE GLOB MATCH REGEXP IN NOT_IN IS_NOT IS
+BETWEEN NOT_BETWEEN &#39;&lt;&gt;&#39; &#39;!=&#39; &#39;=&#39; &#39;==&#39; LIKE NOT_LIKE GLOB NOT_GLOB MATCH NOT_MATCH REGEXP NOT_REGEXP IN NOT_IN IS_NOT IS
 &#39;&lt;&#39; &#39;&gt;&#39; &#39;&gt;=&#39; &#39;&lt;=&#39;
 &#39;&lt;&lt;&#39; &#39;&gt;&gt;&#39; &#39;&amp;&#39; &#39;|&#39;
 &#39;+&#39; &#39;-&#39;
@@ -7119,10 +7120,13 @@ math_expr:
   | math_expr &quot;LIKE&quot; math_expr
   | math_expr &quot;NOT&quot; &quot;LIKE&quot; math_expr
   | math_expr &quot;MATCH&quot; math_expr
+  | math_expr &quot;NOT&quot; &quot;MATCH&quot; math_expr
   | math_expr &quot;REGEXP&quot; math_expr
+  | math_expr &quot;NOT&quot; &quot;REGEXP&quot; math_expr
   | math_expr &quot;GLOB&quot; math_expr
-  | math_expr &quot;NOT&quot; &quot;BETWEEN&quot; math_expr &quot;AND&quot; math_expr
+  | math_expr &quot;NOT&quot; &quot;GLOB&quot; math_expr
   | math_expr &quot;BETWEEN&quot; math_expr &quot;AND&quot; math_expr
+  | math_expr &quot;NOT&quot; &quot;BETWEEN&quot; math_expr &quot;AND&quot; math_expr
   | math_expr &quot;IS&quot; &quot;NOT&quot; math_expr
   | math_expr &quot;IS&quot; math_expr
   | math_expr &quot;||&quot; math_expr
@@ -9802,7 +9806,7 @@ select 1 where table_valued_func(5) = 3;</code></pre>
 </table>
 <p>– This source code is licensed under the MIT license found in the – LICENSE file in the root directory of this source tree. –&gt;</p>
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Fri Jul 16 21:21:00 PDT 2021</p>
+<p>Snapshot as of Mon Jul 19 14:24:37 PDT 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 
