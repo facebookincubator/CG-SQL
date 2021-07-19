@@ -143,21 +143,42 @@ static void cql_reset_globals(void);
 
 
 // NOTE the precedence declared here in the grammar MUST agree with the precedence
-// declared in ast.h EXPR_PRI_XXX or else badness ensues.
+// declared in ast.h EXPR_PRI_XXX or else badness ensues.  It must also agree
+// with the SQLite precedence shown below or badness ensues...
+
+// Don't try to remove the NOT_IN, IS_NOT, NOT_BETWEEN, or NOT_LIKE tokens
+// you can match the language with those but the precedence of NOT is wrong
+// so order of operations will be subtlely off.  There are now tests for this.
 
 %left UNION_ALL UNION INTERSECT EXCEPT
 %right ASSIGN
 %left OR
 %left AND
 %left NOT
-%left BETWEEN
-%left NE NE_ '=' EQEQ LIKE GLOB MATCH REGEXP IN IS_NOT IS
+%left BETWEEN NOT_BETWEEN NE NE_ '=' EQEQ LIKE NOT_LIKE GLOB MATCH REGEXP IN NOT_IN IS_NOT IS
 %left '<' '>' GE LE
 %left LS RS '&' '|'
 %left '+' '-'
 %left '*' '/' '%'
-%nonassoc UMINUS '~' COLLATE
 %left CONCAT
+%left COLLATE
+%right UMINUS '~'
+
+/* from the SQLite grammar  for comparison
+
+%left OR.
+%left AND.
+%right NOT.
+%left IS MATCH LIKE_KW BETWEEN IN ISNULL NOTNULL NE EQ.
+%left GT LE LT GE.
+%right ESCAPE.    (NYI in CQL)
+%left BITAND BITOR LSHIFT RSHIFT.
+%left PLUS MINUS.
+%left STAR SLASH REM.
+%left CONCAT.
+%left COLLATE.
+%right BITNOT.
+*/
 
 %token EXCLUDE_GROUP EXCLUDE_CURRENT_ROW EXCLUDE_TIES EXCLUDE_NO_OTHERS CURRENT_ROW UNBOUNDED PRECEDING FOLLOWING
 %token CREATE DROP TABLE WITHOUT ROWID PRIMARY KEY NULL_ DEFAULT CHECK AT_DUMMY_SEED VIRTUAL AT_EMIT_ENUMS
@@ -880,27 +901,27 @@ math_expr[result]:
   | math_expr[lhs] NE_ math_expr[rhs]  { $result = new_ast_ne($lhs, $rhs); }
   | math_expr[lhs] GE math_expr[rhs]  { $result = new_ast_ge($lhs, $rhs); }
   | math_expr[lhs] LE math_expr[rhs]  { $result = new_ast_le($lhs, $rhs); }
-  | math_expr[lhs] NOT IN '(' expr_list ')'  { $result = new_ast_not_in($lhs, $expr_list); }
-  | math_expr[lhs] NOT IN '(' select_stmt ')'  { $result = new_ast_not_in($lhs, $select_stmt); }
+  | math_expr[lhs] NOT_IN '(' expr_list ')'  { $result = new_ast_not_in($lhs, $expr_list); }
+  | math_expr[lhs] NOT_IN '(' select_stmt ')'  { $result = new_ast_not_in($lhs, $select_stmt); }
   | math_expr[lhs] IN '(' expr_list ')'  { $result = new_ast_in_pred($lhs, $expr_list); }
   | math_expr[lhs] IN '(' select_stmt ')'  { $result = new_ast_in_pred($lhs, $select_stmt); }
   | math_expr[lhs] LIKE math_expr[rhs]  { $result = new_ast_like($lhs, $rhs); }
-  | math_expr[lhs] NOT LIKE math_expr[rhs]  { $result = new_ast_not_like($lhs, $rhs); }
+  | math_expr[lhs] NOT_LIKE math_expr[rhs] { $result = new_ast_not_like($lhs, $rhs); }
   | math_expr[lhs] MATCH math_expr[rhs]  { $result = new_ast_match($lhs, $rhs); }
   | math_expr[lhs] REGEXP math_expr[rhs]  { $result = new_ast_regexp($lhs, $rhs); }
   | math_expr[lhs] GLOB math_expr[rhs]  { $result = new_ast_glob($lhs, $rhs); }
-  | math_expr[lhs] NOT BETWEEN math_expr[me1] AND math_expr[me2]  { $result = new_ast_not_between($lhs, new_ast_range($me1,$me2)); }
+  | math_expr[lhs] NOT_BETWEEN math_expr[me1] %prec BETWEEN AND math_expr[me2]  { $result = new_ast_not_between($lhs, new_ast_range($me1,$me2)); }
   | math_expr[lhs] BETWEEN math_expr[me1] %prec BETWEEN AND math_expr[me2]  { $result = new_ast_between($lhs, new_ast_range($me1,$me2)); }
   | math_expr[lhs] IS_NOT math_expr[rhs]  { $result = new_ast_is_not($lhs, $rhs); }
   | math_expr[lhs] IS math_expr[rhs]  { $result = new_ast_is($lhs, $rhs); }
   | math_expr[lhs] CONCAT math_expr[rhs]  { $result = new_ast_concat($lhs, $rhs); }
+  | math_expr[lhs] COLLATE name { $result = new_ast_collate($lhs, $name); }
   ;
 
 expr[result]:
   math_expr { $result = $math_expr; }
   | expr[lhs] AND expr[rhs]  { $result = new_ast_and($lhs, $rhs); }
   | expr[lhs] OR expr[rhs]  { $result = new_ast_or($lhs, $rhs); }
-  | expr[lhs] COLLATE name  { $result = new_ast_collate($lhs, $name); }
   ;
 
 case_list[result]:

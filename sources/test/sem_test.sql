@@ -16367,13 +16367,12 @@ select not 0 between -1 and 2;
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
 -- not is weaker than between, must keep parens
 -- + SELECT (NOT 0) BETWEEN -1 AND 2;
-select (not 0 ) between -1 and 2;
+select (not 0) between -1 and 2;
 
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
 -- not is weaker than between, no parens needed
 -- + SELECT NOT 0 BETWEEN -1 AND 2;
-select not (0  between -1 and 2);
-
+select not (0 between -1 and 2);
 
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
 -- between is weaker than =, don't need parens
@@ -16381,14 +16380,29 @@ select not (0  between -1 and 2);
 select 1=2 between 2 and 2;
 
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
--- between is weaker than =, keep the parens
+-- between is the same as =, but it binds left to right, keep the parens
 -- + SELECT 1 = (2 BETWEEN 2 AND 2);
 select 1=(2 between 2 and 2);
 
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
--- between is weaker than =, don't need the parens
+-- between is the same as =, but it binds left to right
 -- + SELECT 1 = 2 BETWEEN 2 AND 2;
 select (1=2) between 2 and 2;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- between is the same as =, but it binds left to right
+-- + SELECT 0 BETWEEN -2 AND -1 = 4;
+select 0 between -2 and -1 = 4;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- between is the same as =, but it binds left to right (no parens needed)
+-- + SELECT 0 BETWEEN -2 AND -1 = 4;
+select (0 between -2 and -1) = 4;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- between is the same as =, but it binds left to right
+-- + SELECT 0 BETWEEN -2 AND (-1 = 4);
+select 0 between -2 and (-1 = 4);
 
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
 -- no parens need to be added in the natural order (and its left associative)
@@ -16409,3 +16423,140 @@ select 0 between 0 and (3 between 2 and 3);
 -- no parens are needed for the left arg of the between range
 -- + SELECT 0 BETWEEN 1 BETWEEN 3 AND 4 AND (3 BETWEEN 2 AND 3);
 select 0 between (1 between 3 and 4) and (3 between 2 and 3);
+
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+---- TILDE is stronger than CONCAT
+-- + SELECT ~1 || 2;
+-- - Error
+select ~ 1||2;  --> -22
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+---- TILDE is stronger than CONCAT
+-- + SELECT ~1 || 2;
+-- - Error
+select (~ 1)||2; --> -22
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+---- TILDE is stronger than CONCAT , parens must stay
+-- + SELECT ~(1 || 2);
+-- + Error % string operand not allowed in '~'
+select ~ (1||2); --> -13
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+--- NEGATION is stronger than CONCAT, no parens generated
+-- SELECT -0 || 1;
+-- - Error
+select -0||1;  --> 01
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+--- NEGATION is stronger than CONCAT, parens can be removed
+-- SELECT -0 || 1;
+-- - Error
+select (-0)||1; --> 01
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+--- NEGATION is stronger than CONCAT, parens must stay
+-- + SELECT -(0 || 1);
+-- + Error % string operand not allowed in '-'
+select -(0||1); --> -1
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+--- COLLATE is stronger than CONCAT, parens must stay
+-- + SELECT 'x' || 'y' COLLATE foo;
+select 'x' || 'y'  collate foo;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+--- COLLATE is stronger than CONCAT, parens must stay
+-- + SELECT 'x' || 'y' COLLATE foo;
+select 'x' ||  ('y' collate foo);
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+--- COLLATE is stronger than CONCAT, parens must stay
+-- + SELECT ('x' || 'y') COLLATE foo;
+select ('x' || 'y') collate foo;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- not is weaker than not between, no parens needed
+-- + SELECT NOT 0 NOT BETWEEN -1 AND 2;
+select not 0 not between -1 and 2;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- not is weaker than not between, must keep parens
+-- + SELECT (NOT 0) NOT BETWEEN -1 AND 2;
+select (not 0 ) not between -1 and 2;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- not is weaker than not between, no parens needed
+-- + SELECT NOT 0 NOT BETWEEN -1 AND 2;
+select not (0  not between -1 and 2);
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- not between is weaker than =, don't need parens
+-- + SELECT 1 = 2 NOT BETWEEN 2 AND 2;
+select 1=2 not between 2 and 2;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- not between is the same as =, but it binds left to right, keep the parens
+-- + SELECT 1 = (2 NOT BETWEEN 2 AND 2);
+select 1=(2 not between 2 and 2);
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- not between is the same as =, but it binds left to right
+-- + SELECT 1 = 2 NOT BETWEEN 2 AND 2;
+select (1=2) not between 2 and 2;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- not between is the same as =, but it binds left to right
+-- + SELECT 0 NOT BETWEEN -2 AND -1 = 4;
+select 0 not between -2 and -1 = 4;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- not between is the same as =, but it binds left to right (no parens needed)
+-- + SELECT 0 NOT BETWEEN -2 AND -1 = 4;
+select (0 not between -2 and -1) = 4;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- not between is the same as =, but it binds left to right
+-- + SELECT 0 NOT BETWEEN -2 AND (-1 = 4);
+select 0 not between -2 and (-1 = 4);
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- no parens need to be added in the natural order (and its left associative)
+-- + SELECT 0 NOT BETWEEN 0 AND 3 NOT BETWEEN 2 AND 3;
+select 0 not between 0 and 3 not between 2 and 3;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- no parens are needed here, this is left associative, the parens are redundant
+-- + SELECT 0 NOT BETWEEN 0 AND 3 NOT BETWEEN 2 AND 3;
+select (0 not between 0 and 3) not between 2 and 3;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- must keep the parens on the right arg, not between is left associative
+-- + SELECT 0 NOT BETWEEN 0 AND (3 NOT BETWEEN 2 AND 3);
+select 0 not between 0 and (3 not between 2 and 3);
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- no parens are needed for the left arg of the not between range
+-- + SELECT 0 NOT BETWEEN 1 NOT BETWEEN 3 AND 4 AND (3 NOT BETWEEN 2 AND 3);
+select 0 not between (1 not between 3 and 4) and (3 not between 2 and 3);
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- no parens are needed becasuse NOT like is the same strength as = and left to right
+-- + SELECT 'x' NOT LIKE 'y' = 1;
+-- - Error
+select 'x' not like 'y' = 1;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- no parens are needed becasuse NOT like is the same strength as = and left to right
+-- + SELECT 'x' NOT LIKE 'y' = 1;
+-- - Error
+select ('x' not like 'y') = 1;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- parens must stay for the for the right arg because that's not the normal order
+-- this doesn't make sense semantically but it should still parse correctly
+-- hence the error but still good tree shape
+-- + SELECT 'x' NOT LIKE ('y' = 1);
+-- + Error % incompatible types in expression '='
+select 'x' not like ('y' = 1);

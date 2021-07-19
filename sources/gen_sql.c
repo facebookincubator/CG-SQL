@@ -1225,7 +1225,7 @@ static void gen_expr_between(ast_node *ast, CSTR op, int32_t pri, int32_t pri_ne
   gen_printf(" BETWEEN ");
   gen_expr(range->left, pri_new);
   gen_printf(" AND ");
-  gen_expr(range->right, pri_new + 1); // the usual rules for the right operator 
+  gen_expr(range->right, pri_new + 1); // the usual rules for the right operand (see gen_binary)
   if (pri_new < pri) gen_printf(")");
 }
 
@@ -1238,7 +1238,7 @@ static void gen_expr_not_between(ast_node *ast, CSTR op, int32_t pri, int32_t pr
   gen_printf(" NOT BETWEEN ");
   gen_expr(range->left, pri_new);
   gen_printf(" AND ");
-  gen_expr(range->right, pri_new);
+  gen_expr(range->right, pri_new + 1); // the usual rules for the right operand (see gen_binary)
   if (pri_new < pri) gen_printf(")");
 }
 
@@ -3576,7 +3576,7 @@ cql_noexport void gen_init() {
   EXPR_INIT(sub, gen_binary, "-", EXPR_PRI_ADD);
   EXPR_INIT(not, gen_unary, "NOT ", EXPR_PRI_NOT);
   EXPR_INIT(tilde, gen_unary, "~", EXPR_PRI_TILDE);
-  EXPR_INIT(collate, gen_binary, "COLLATE", EXPR_PRI_TILDE);
+  EXPR_INIT(collate, gen_binary, "COLLATE", EXPR_PRI_COLLATE);
   EXPR_INIT(uminus, gen_uminus, "-", EXPR_PRI_TILDE);
   EXPR_INIT(eq, gen_binary, "=", EXPR_PRI_EQUALITY);
   EXPR_INIT(lt, gen_binary, "<", EXPR_PRI_INEQUALITY);

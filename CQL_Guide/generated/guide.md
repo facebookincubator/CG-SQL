@@ -694,14 +694,14 @@ ASSIGNMENT:    :=
 LOGICAL_OR:    OR
 LOGICAL_AND:   AND
 LOGICAL_NOT:   NOT
-BETWEEN:       BETWEEN  NOT BETWEEN
-EQUALITY:      = == != <> IS, IS NOT, IN, NOT IN, LIKE, GLOB, MATCH, REGEXP
-INEQUALITY:    <   <=  >   >=
+EQUALITY:      = == != <>  GLOB, MATCH, REGEXP, IS [NOT], [NOT] IN, [NOT] LIKE, [NOT] BETWEEN
+INEQUALITY:    <  <=  >  >=
 BINARY:        << >> & |
 ADDITION:      + -
 MULIPLICATION: * / %
-BINARY_NOT:    ~
 CONCAT:        ||
+COLLATE:       COLLATE
+UNARY:         ~  -
 ```
 
 NOTE: the above is NOT the C binding order (!!!)  The Sqlite binding order is used in the language and parens are added in the C output as needed to force that order.   CQL's rewriting emits minimal parens in all outputs.  Different parens are often needed for SQL output.
@@ -8421,7 +8421,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu Jul 15 15:45:32 PDT 2021
+Snapshot as of Fri Jul 16 21:21:00 PDT 2021
 
 ### Operators and Literals
 
@@ -8433,14 +8433,26 @@ ASSIGN
 OR
 AND
 NOT
-BETWEEN
-'<>' '!=' '=' '==' LIKE GLOB MATCH REGEXP IN IS_NOT IS
+BETWEEN NOT_BETWEEN '<>' '!=' '=' '==' LIKE NOT_LIKE GLOB MATCH REGEXP IN NOT_IN IS_NOT IS
 '<' '>' '>=' '<='
 '<<' '>>' '&' '|'
 '+' '-'
 '*' '/' '%'
-UMINUS '~' COLLATE
 CONCAT
+COLLATE
+UMINUS '~'
+OR.
+AND.
+NOT.
+IS MATCH LIKE_KW BETWEEN IN ISNULL NOTNULL '<>' EQ.
+GT '<=' LT '>='.
+ESCAPE.    (NYI in CQL)
+BITAND BITOR LSHIFT RSHIFT.
+PLUS MINUS.
+STAR SLASH REM.
+CONCAT.
+COLLATE.
+BITNOT.
 ```
 NOTE: The above varies considerably from the C binding order!!!
 
@@ -9011,17 +9023,17 @@ math_expr:
   | math_expr "REGEXP" math_expr
   | math_expr "GLOB" math_expr
   | math_expr "NOT" "BETWEEN" math_expr "AND" math_expr
-  | math_expr "BETWEEN" math_expr  "AND" math_expr
-  | math_expr "IS NOT" math_expr
+  | math_expr "BETWEEN" math_expr "AND" math_expr
+  | math_expr "IS" "NOT" math_expr
   | math_expr "IS" math_expr
   | math_expr "||" math_expr
+  | math_expr "COLLATE" name
   ;
 
 expr:
   math_expr
   | expr "AND" expr
   | expr "OR" expr
-  | expr "COLLATE" name
   ;
 
 case_list:
@@ -13404,7 +13416,7 @@ CQL 0410 : unused, this was added to prevent merge conflicts at the end on liter
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Thu Jul 15 15:45:33 PDT 2021
+Snapshot as of Fri Jul 16 21:21:00 PDT 2021
 
 ### Rules
 

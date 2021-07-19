@@ -31,11 +31,11 @@ int a;
 
 %%
 
-CURRENT[ \t\n]+ROW                {return CURRENT_ROW; }
-EXCLUDE[ \t\n]+NO[ \t\n]+OTHERS   {return EXCLUDE_NO_OTHERS; }
-EXCLUDE[ \t\n]+CURRENT[ \t\n]+ROW {return EXCLUDE_CURRENT_ROW; }
-EXCLUDE[ \t\n]+GROUP              {return EXCLUDE_GROUP; }
-EXCLUDE[ \t\n]+TIES               {return EXCLUDE_TIES; }
+CURRENT[ \t]+ROW              {return CURRENT_ROW; }
+EXCLUDE[ \t]+NO[ \t]+OTHERS   {return EXCLUDE_NO_OTHERS; }
+EXCLUDE[ \t]+CURRENT[ \t]+ROW {return EXCLUDE_CURRENT_ROW; }
+EXCLUDE[ \t]+GROUP           {return EXCLUDE_GROUP; }
+EXCLUDE[ \t]+TIES            {return EXCLUDE_TIES; }
 UNBOUNDED                    { return UNBOUNDED; }
 PRECEDING                    { return PRECEDING; }
 FOLLOWING                    { return FOLLOWING; }
@@ -48,7 +48,7 @@ PARTITION                    { return PARTITION; }
 FILTER                       { return FILTER; }
 WINDOW                       { return WINDOW; }
 EXPLAIN                      { return EXPLAIN; }
-QUERY[ \t\n]+PLAN            { return QUERY_PLAN; }
+QUERY[ \t]+PLAN              { return QUERY_PLAN; }
 SELECT                       { return SELECT; }
 CAST                         { return CAST; }
 CREATE                       { return CREATE; }
@@ -64,7 +64,7 @@ WHILE                        { return WHILE; }
 CALL                         { return CALL; }
 EXISTS                       { return EXISTS; }
 UNION                        { return UNION; }
-UNION[ \t\n]+ALL             { return UNION_ALL; }
+UNION[ \t]+ALL               { return UNION_ALL; }
 INTERSECT                    { return INTERSECT; }
 EXCEPT                       { return EXCEPT; }
 NOT                          { return NOT; }
@@ -90,7 +90,7 @@ FOREIGN                      { return FOREIGN; }
 REAL                         { return REAL; }
 CASCADE                      { return CASCADE; }
 ON                           { return ON; }
-ON[ \t\n]+CONFLICT           { return ON_CONFLICT; }
+ON[ \t]+CONFLICT             { return ON_CONFLICT; }
 DO                           { return DO; }
 NOTHING                      { return NOTHING; }
 UPDATE                       { return UPDATE; }
@@ -129,7 +129,7 @@ OVER                         { return OVER; }
 ":="                         { return ASSIGN; }
 "=="                         { return EQEQ; }
 "||"                         { return CONCAT; }
-IS[ \t\n]+NOT                { return IS_NOT; }
+IS[ \t]+NOT/[^A-Z_]          { return IS_NOT; }
 IS                           { return IS; }
 AND                          { return AND; }
 ORDER                        { return ORDER; }
@@ -153,15 +153,18 @@ FUNCTION                     { return FUNCTION; }
 FUNC                         { return FUNC; }
 BEGIN                        { return BEGIN_; }
 IN                           { return IN; }
+NOT[ \t]+IN/[^A-Z_]          { return NOT_IN; }
 TO                           { return TO; }
 FOR                          { return FOR; }
 THROW                        { return THROW; }
 TRY                          { return TRY; }
 CATCH                        { return CATCH; }
+NOT[ \t]+LIKE/[^A-Z_]        { return NOT_LIKE; }
 LIKE                         { return LIKE; }
 MATCH                        { return MATCH; }
 REGEXP                       { return REGEXP; }
 GLOB                         { return GLOB; }
+NOT[ \t]+BETWEEN/[^A-Z_]     { return NOT_BETWEEN; }
 BETWEEN                      { return BETWEEN; }
 OUT                          { return OUT; }
 INOUT                        { return INOUT; }
@@ -221,7 +224,7 @@ RETURN                       { return RETURN; }
 @EMIT_ENUMS                  { return AT_EMIT_ENUMS; }
 DEFERRED                     { return DEFERRED; }
 DEFERRABLE                   { return DEFERRABLE; }
-NOT[ \t\n]DEFERRABLE         { return NOT_DEFERRABLE; }
+NOT[ \t]+DEFERRABLE/[^A-Z_]  { return NOT_DEFERRABLE; }
 IMMEDIATE                    { return IMMEDIATE; }
 EXCLUSIVE                    { return EXCLUSIVE; }
 RESTRICT                     { return RESTRICT; }
@@ -233,10 +236,10 @@ AFTER                        { return AFTER; }
 INSTEAD                      { return INSTEAD; }
 OF                           { return OF; }
 TRIGGER                      { return TRIGGER; }
-FOR[ \t\n]EACH[ \t\n]ROW     { return FOR_EACH_ROW; }
+FOR[ \t]+EACH[ \t]+ROW       { return FOR_EACH_ROW; }
 ENCODE                       { return ENCODE; }
-CONTEXT[ \t\n]COLUMN         { return CONTEXT_COLUMN; }
-CONTEXT[ \t\n]TYPE           { return CONTEXT_TYPE; }
+CONTEXT[ \t]+COLUMN          { return CONTEXT_COLUMN; }
+CONTEXT[ \t]+TYPE            { return CONTEXT_TYPE; }
 
 0x[0-9a-fA-F]+               { char *s = Strdup(yytext); yylval.sval = s; return strtoll(s+2, NULL, 16) <= 0x7fffffff ? INTLIT: LONGLIT; }
 0x[0-9a-fA-F]+L              { char *s = Strdup(yytext); s[strlen(s)-1] = 0; /* remove the L */ yylval.sval = s; return LONGLIT; }

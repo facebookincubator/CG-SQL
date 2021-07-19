@@ -1,5 +1,5 @@
-s/%prec UMINUS//g
-s/%prec BETWEEN//g
+s/ %prec UMINUS//g
+s/ %prec BETWEEN//g
 s/[[:<:]]CONCAT[[:>:]]/"||"/g
 s/[[:<:]]RS[[:>:]]/">>"/g
 s/[[:<:]]LS[[:>:]]/"<<"/g
@@ -9,6 +9,10 @@ s/[[:<:]]EQEQ[[:>:]]/"=="/g
 s/[[:<:]]NE[[:>:]]/"<>"/g
 s/[[:<:]]NE_[[:>:]]/"!="/g
 s/[[:<:]]NO[[:>:]]/"NO"/g
+s/[[:<:]]IS_NOT[[:>:]]/IS NOT/g
+s/[[:<:]]NOT_IN[[:>:]]/NOT IN/g
+s/[[:<:]]NOT_BETWEEN[[:>:]]/NOT BETWEEN/g
+s/[[:<:]]NOT_LIKE[[:>:]]/NOT LIKE/g
 s/[[:<:]]NOT[[:>:]]/"NOT"/g
 s/[[:<:]]ABORT[[:>:]]/"ABORT"/g
 s/[[:<:]]ACTION[[:>:]]/"ACTION"/g
@@ -123,7 +127,6 @@ s/[[:<:]]INTERSECT[[:>:]]/"INTERSECT"/g
 s/[[:<:]]INTLIT[[:>:]]/"integer-literal"/g
 s/[[:<:]]INTO[[:>:]]/"INTO"/g
 s/[[:<:]]IS[[:>:]]/"IS"/g
-s/[[:<:]]IS_NOT[[:>:]]/"IS NOT"/g
 s/[[:<:]]JOIN[[:>:]]/"JOIN"/g
 s/[[:<:]]KEY[[:>:]]/"KEY"/g
 s/[[:<:]]LEAVE[[:>:]]/"LEAVE"/g

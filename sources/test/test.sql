@@ -1431,6 +1431,39 @@ select 0 between 0 and 3 between 2 and 3; --  0
 select 0 between 0 and (3 between 2 and 3); -- 1
 select (0 between 0 and 3) between 2 and 3; -- 0
 
+-- parens cannot be removed
+select 4 || (3 * 2) || '3'; --> '463'
+
+-- no parens needed of (course)
+select 4 || 3 * 2 || '3'; --> 43 * 23 --> 989  [not semantically valid in CQL]
+
+-- parens can be removed
+select (4 || 3) * (2 || '3'); --> 43 * 23 --> 989  [not semantically valid in CQL]
+
+-- no parens needed
+select x * y collate foo;
+
+-- parens can be removed, collate stronger than *
+select x * (y collate foo);
+
+-- parens must stay
+select (x * y) collate foo;
+
+-- this has to not match NOT IN
+select not inas;
+
+-- this has to not match NOT LIKE
+select not likeas;
+
+-- this has to not match IS NOT
+select 1 is notas;
+
+-- this has to not match NOT BETWEEN
+select not betweenas;
+
+-- this has to not match NOT DEFERRABLE
+select not deferrableas;
+
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 
 # 1 "long/path/I/do/not/like"

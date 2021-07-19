@@ -1214,14 +1214,14 @@
 LOGICAL_OR:    OR
 LOGICAL_AND:   AND
 LOGICAL_NOT:   NOT
-BETWEEN:       BETWEEN  NOT BETWEEN
-EQUALITY:      = == != &lt;&gt; IS, IS NOT, IN, NOT IN, LIKE, GLOB, MATCH, REGEXP
-INEQUALITY:    &lt;   &lt;=  &gt;   &gt;=
+EQUALITY:      = == != &lt;&gt;  GLOB, MATCH, REGEXP, IS [NOT], [NOT] IN, [NOT] LIKE, [NOT] BETWEEN
+INEQUALITY:    &lt;  &lt;=  &gt;  &gt;=
 BINARY:        &lt;&lt; &gt;&gt; &amp; |
 ADDITION:      + -
 MULIPLICATION: * / %
-BINARY_NOT:    ~
-CONCAT:        ||</code></pre>
+CONCAT:        ||
+COLLATE:       COLLATE
+UNARY:         ~  -</code></pre>
 <p>NOTE: the above is NOT the C binding order (!!!) The Sqlite binding order is used in the language and parens are added in the C output as needed to force that order. CQL’s rewriting emits minimal parens in all outputs. Different parens are often needed for SQL output.</p>
 <h3 id="variables-columns-basic-types-and-nullability">Variables, Columns, Basic Types and Nullability</h3>
 <p>CQL needs type information for both variables in the code and columns in the database. Like SQL, CQL allows variables to hold a NULL value and just as in SQL the absence of <code>NOT NULL</code> implies that <code>NULL</code> is a legal value. Consider these examples:</p>
@@ -6532,7 +6532,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Thu Jul 15 15:45:32 PDT 2021</p>
+<p>Snapshot as of Fri Jul 16 21:21:00 PDT 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -6540,14 +6540,26 @@ ASSIGN
 OR
 AND
 NOT
-BETWEEN
-&#39;&lt;&gt;&#39; &#39;!=&#39; &#39;=&#39; &#39;==&#39; LIKE GLOB MATCH REGEXP IN IS_NOT IS
+BETWEEN NOT_BETWEEN &#39;&lt;&gt;&#39; &#39;!=&#39; &#39;=&#39; &#39;==&#39; LIKE NOT_LIKE GLOB MATCH REGEXP IN NOT_IN IS_NOT IS
 &#39;&lt;&#39; &#39;&gt;&#39; &#39;&gt;=&#39; &#39;&lt;=&#39;
 &#39;&lt;&lt;&#39; &#39;&gt;&gt;&#39; &#39;&amp;&#39; &#39;|&#39;
 &#39;+&#39; &#39;-&#39;
 &#39;*&#39; &#39;/&#39; &#39;%&#39;
-UMINUS &#39;~&#39; COLLATE
-CONCAT</code></pre>
+CONCAT
+COLLATE
+UMINUS &#39;~&#39;
+OR.
+AND.
+NOT.
+IS MATCH LIKE_KW BETWEEN IN ISNULL NOTNULL &#39;&lt;&gt;&#39; EQ.
+GT &#39;&lt;=&#39; LT &#39;&gt;=&#39;.
+ESCAPE.    (NYI in CQL)
+BITAND BITOR LSHIFT RSHIFT.
+PLUS MINUS.
+STAR SLASH REM.
+CONCAT.
+COLLATE.
+BITNOT.</code></pre>
 <p>NOTE: The above varies considerably from the C binding order!!!</p>
 <p>Literals:</p>
 <pre><code>ID  /* a name */
@@ -7110,17 +7122,17 @@ math_expr:
   | math_expr &quot;REGEXP&quot; math_expr
   | math_expr &quot;GLOB&quot; math_expr
   | math_expr &quot;NOT&quot; &quot;BETWEEN&quot; math_expr &quot;AND&quot; math_expr
-  | math_expr &quot;BETWEEN&quot; math_expr  &quot;AND&quot; math_expr
-  | math_expr &quot;IS NOT&quot; math_expr
+  | math_expr &quot;BETWEEN&quot; math_expr &quot;AND&quot; math_expr
+  | math_expr &quot;IS&quot; &quot;NOT&quot; math_expr
   | math_expr &quot;IS&quot; math_expr
   | math_expr &quot;||&quot; math_expr
+  | math_expr &quot;COLLATE&quot; name
   ;
 
 expr:
   math_expr
   | expr &quot;AND&quot; expr
   | expr &quot;OR&quot; expr
-  | expr &quot;COLLATE&quot; name
   ;
 
 case_list:
@@ -9790,7 +9802,7 @@ select 1 where table_valued_func(5) = 3;</code></pre>
 </table>
 <p>– This source code is licensed under the MIT license found in the – LICENSE file in the root directory of this source tree. –&gt;</p>
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Thu Jul 15 15:45:33 PDT 2021</p>
+<p>Snapshot as of Fri Jul 16 21:21:00 PDT 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 
