@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Mon Jul 19 14:24:37 PDT 2021
+Snapshot as of Mon Jul 19 18:40:08 PDT 2021
 
 ### Operators and Literals
 
@@ -33,18 +33,6 @@ BETWEEN NOT_BETWEEN '<>' '!=' '=' '==' LIKE NOT_LIKE GLOB NOT_GLOB MATCH NOT_MAT
 CONCAT
 COLLATE
 UMINUS '~'
-OR.
-AND.
-NOT.
-IS MATCH LIKE_KW BETWEEN IN ISNULL NOTNULL '<>' EQ.
-GT '<=' LT '>='.
-ESCAPE.    (NYI in CQL)
-BITAND BITOR LSHIFT RSHIFT.
-PLUS MINUS.
-STAR SLASH REM.
-CONCAT.
-COLLATE.
-BITNOT.
 ```
 NOTE: The above varies considerably from the C binding order!!!
 

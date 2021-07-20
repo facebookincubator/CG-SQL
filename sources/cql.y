@@ -166,18 +166,18 @@ static void cql_reset_globals(void);
 
 /* from the SQLite grammar  for comparison
 
-%left OR.
-%left AND.
-%right NOT.
-%left IS MATCH LIKE_KW BETWEEN IN ISNULL NOTNULL NE EQ.
-%left GT LE LT GE.
-%right ESCAPE.    (NYI in CQL)
-%left BITAND BITOR LSHIFT RSHIFT.
-%left PLUS MINUS.
-%left STAR SLASH REM.
-%left CONCAT.
-%left COLLATE.
-%right BITNOT.
+ left OR.
+ left AND.
+ right NOT.
+ left IS MATCH LIKE_KW BETWEEN IN ISNULL NOTNULL NE EQ.
+ left GT LE LT GE.
+ right ESCAPE.    (NYI in CQL)
+ left BITAND BITOR LSHIFT RSHIFT.
+ left PLUS MINUS.
+ left STAR SLASH REM.
+ left CONCAT.
+ left COLLATE.
+ right BITNOT.
 */
 
 %token EXCLUDE_GROUP EXCLUDE_CURRENT_ROW EXCLUDE_TIES EXCLUDE_NO_OTHERS CURRENT_ROW UNBOUNDED PRECEDING FOLLOWING

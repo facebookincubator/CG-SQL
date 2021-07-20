@@ -1711,35 +1711,22 @@ declare thing_type type thing;</code></pre>
 </tbody>
 </table>
 <h4 id="between-and-not-between">BETWEEN and NOT BETWEEN</h4>
-<p>These are a ternary type operation. The general forms are:</p>
+<p>These are ternary operations. The general forms are:</p>
 <div class="sourceCode" id="cb77"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a>  expr1 <span class="kw">BETWEEN</span> expr2 <span class="kw">AND</span> expr3</span>
 <span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a>  expr1 <span class="kw">NOT</span> <span class="kw">BETWEEN</span> expr2 <span class="kw">AND</span> expr3</span></code></pre></div>
-<p>Note that there is an inherent ambiguity in the language because <code>expr2</code> or <code>expr3</code> could be logical expressions that include <code>AND</code>. CQL resolves this ambiguity by insisting that <code>expr2</code> and <code>expr3</code> be “math expressions” in the grammar.</p>
-<p>“Math expressions” consist of:</p>
-<ul>
-<li>bitwise <code>&amp;</code> and <code>|</code></li>
-<li>bitwise left shift or right shift (<code>&lt;&lt;</code> and <code>&gt;&gt;</code>)</li>
-<li>addition (<code>+</code>)</li>
-<li>subtraction (<code>-</code>)</li>
-<li>multiplication (<code>*</code>)</li>
-<li>division (<code>/</code>)</li>
-<li>modulus (<code>%</code>)</li>
-<li>unary negation (<code>-</code>)</li>
-<li>literals</li>
-<li>any parenthesized expression</li>
-</ul>
-<p>Hence:</p>
+<p>Note that there is an inherent ambiguity in the language because <code>expr2</code> or <code>expr3</code> could be logical expressions that include <code>AND</code>. CQL resolves this ambiguity by insisting that <code>expr2</code> and <code>expr3</code> be “math expressions” in the grammar. These expressions may not have ungrouped <code>AND</code> or <code>OR</code> operators.</p>
+<p>Examples::</p>
 <div class="sourceCode" id="cb78"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- oh hell no (syntax error)</span></span>
 <span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a>a <span class="kw">between</span> <span class="dv">1</span> <span class="kw">and</span> <span class="dv">2</span> <span class="kw">and</span> <span class="dv">3</span>;</span>
 <span id="cb78-3"><a href="#cb78-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb78-4"><a href="#cb78-4" aria-hidden="true" tabindex="-1"></a><span class="co">-- all ok</span></span>
 <span id="cb78-5"><a href="#cb78-5" aria-hidden="true" tabindex="-1"></a>a <span class="kw">between</span> (<span class="dv">1</span> <span class="kw">and</span> <span class="dv">2</span>) <span class="kw">and</span> <span class="dv">3</span>;</span>
 <span id="cb78-6"><a href="#cb78-6" aria-hidden="true" tabindex="-1"></a>a <span class="kw">between</span> <span class="dv">1</span> <span class="kw">and</span> (<span class="dv">2</span> <span class="kw">and</span> <span class="dv">3</span>);</span>
-<span id="cb78-7"><a href="#cb78-7" aria-hidden="true" tabindex="-1"></a>a <span class="kw">between</span> <span class="dv">1</span> <span class="op">+</span> <span class="dv">2</span> <span class="kw">and</span> <span class="dv">12</span> <span class="op">/</span> <span class="dv">2</span>;</span></code></pre></div>
-<p>These considerations force the grammar to contain special rules for expressions after <code>BETWEEN</code>.</p>
+<span id="cb78-7"><a href="#cb78-7" aria-hidden="true" tabindex="-1"></a>a <span class="kw">between</span> <span class="dv">1</span> <span class="kw">and</span> b <span class="kw">between</span> c <span class="kw">and</span> d; <span class="co">-- binds left to right</span></span>
+<span id="cb78-8"><a href="#cb78-8" aria-hidden="true" tabindex="-1"></a>a <span class="kw">between</span> <span class="dv">1</span> <span class="op">+</span> <span class="dv">2</span> <span class="kw">and</span> <span class="dv">12</span> <span class="op">/</span> <span class="dv">2</span>;</span></code></pre></div>
 <h4 id="logical-not">Logical NOT</h4>
-<p>The one operand of logical not must be a numeric. <code>NOT 'x'</code> is illegal.</p>
-<h4 id="non-ordering-tests-like-glob-match-in-not-in-is-is-not">Non-ordering tests <code>!=</code>, <code>&lt;&gt;</code>, <code>=</code>, <code>==</code>, <code>LIKE</code>, <code>GLOB</code>, <code>MATCH</code>, <code>IN</code>, <code>NOT IN</code>, <code>IS</code>, <code>IS NOT</code></h4>
+<p>The one operand of logical <code>NOT</code> must be a numeric. <code>NOT 'x'</code> is illegal.</p>
+<h4 id="non-ordering-tests-like-glob-match-regexp-in-is-is-not">Non-ordering tests <code>!=</code>, <code>&lt;&gt;</code>, <code>=</code>, <code>==</code>, <code>LIKE</code>, <code>GLOB</code>, <code>MATCH</code>, <code>REGEXP</code>, <code>IN</code>, <code>IS</code>, <code>IS NOT</code></h4>
 <p>These operations do some non-ordered comparison of their two operands.</p>
 <ul>
 <li><code>IS</code> and <code>IS NOT</code> never return <code>NULL</code>, So for instance <code>X IS NOT NULL</code> gives the natural answer. <code>x IS y</code> is true if and only if: 1. both <code>x</code> and <code>y</code> are <code>NULL</code> or 2. if they are equal.</li>
@@ -1747,11 +1734,13 @@ declare thing_type type thing;</code></pre>
 <li><code>!=</code> and <code>&lt;&gt;</code> are equivalent as are <code>=</code> and <code>==</code></li>
 <li>strings and blobs compare equal based on their value, not their identity (i.e. not the string/blob pointer)</li>
 <li>objects compare equal based on their address, not their content (i.e. reference equality)</li>
-<li><code>MATCH</code> and <code>GLOB</code> only valid in SQL contexts, <code>LIKE</code> can be used in any context (a helper method to do <code>LIKE</code> in C is provided by SQLite, but not the others)</li>
+<li><code>MATCH</code>, <code>GLOB</code>, and <code>REGEXP</code> are only valid in SQL contexts, <code>LIKE</code> can be used in any context (a helper method to do <code>LIKE</code> in C is provided by SQLite, but not the others)</li>
+<li><code>MATCH</code>, <code>GLOB</code>, <code>REGEXP</code>, <code>LIKE</code>, and <code>IN</code> may be prefixed with <code>NOT</code> which reverses their value</li>
 </ul>
 <div class="sourceCode" id="cb79"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a> <span class="kw">NULL</span> <span class="kw">IS</span> <span class="kw">NULL</span>  <span class="co">-- this is true</span></span>
 <span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a>(<span class="kw">NULL</span> <span class="op">==</span> <span class="kw">NULL</span>) <span class="kw">IS</span> <span class="kw">NULL</span>  <span class="co">-- this is also true because NULL == NULL is not 1, it&#39;s NULL.</span></span>
-<span id="cb79-3"><a href="#cb79-3" aria-hidden="true" tabindex="-1"></a>(<span class="kw">NULL</span> <span class="op">!=</span> <span class="kw">NULL</span>) <span class="kw">IS</span> <span class="kw">NULL</span>  <span class="co">-- this is also true because NULL != NULL is not 0, it&#39;s also NULL.</span></span></code></pre></div>
+<span id="cb79-3"><a href="#cb79-3" aria-hidden="true" tabindex="-1"></a>(<span class="kw">NULL</span> <span class="op">!=</span> <span class="kw">NULL</span>) <span class="kw">IS</span> <span class="kw">NULL</span>  <span class="co">-- this is also true because NULL != NULL is not 0, it&#39;s also NULL.</span></span>
+<span id="cb79-4"><a href="#cb79-4" aria-hidden="true" tabindex="-1"></a><span class="st">&#39;xy&#39;</span> <span class="kw">NOT</span> <span class="kw">LIKE</span> <span class="st">&#39;z%&#39;</span>` <span class="co">-- this is true</span></span></code></pre></div>
 <h4 id="ordering-comparisons">Ordering comparisons &lt;, &gt;, &lt;=, &gt;=</h4>
 <p>These operators do the usual order comparison of their two operands.</p>
 <ul>
@@ -6533,7 +6522,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Mon Jul 19 14:24:37 PDT 2021</p>
+<p>Snapshot as of Mon Jul 19 18:40:08 PDT 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -6548,19 +6537,7 @@ BETWEEN NOT_BETWEEN &#39;&lt;&gt;&#39; &#39;!=&#39; &#39;=&#39; &#39;==&#39; LIK
 &#39;*&#39; &#39;/&#39; &#39;%&#39;
 CONCAT
 COLLATE
-UMINUS &#39;~&#39;
-OR.
-AND.
-NOT.
-IS MATCH LIKE_KW BETWEEN IN ISNULL NOTNULL &#39;&lt;&gt;&#39; EQ.
-GT &#39;&lt;=&#39; LT &#39;&gt;=&#39;.
-ESCAPE.    (NYI in CQL)
-BITAND BITOR LSHIFT RSHIFT.
-PLUS MINUS.
-STAR SLASH REM.
-CONCAT.
-COLLATE.
-BITNOT.</code></pre>
+UMINUS &#39;~&#39;</code></pre>
 <p>NOTE: The above varies considerably from the C binding order!!!</p>
 <p>Literals:</p>
 <pre><code>ID  /* a name */
@@ -9806,7 +9783,7 @@ select 1 where table_valued_func(5) = 3;</code></pre>
 </table>
 <p>– This source code is licensed under the MIT license found in the – LICENSE file in the root directory of this source tree. –&gt;</p>
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Mon Jul 19 14:24:37 PDT 2021</p>
+<p>Snapshot as of Mon Jul 19 18:40:08 PDT 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 
