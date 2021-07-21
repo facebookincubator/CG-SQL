@@ -8410,7 +8410,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Jul 20 22:20:21 PDT 2021
+Snapshot as of Tue Jul 20 22:25:02 PDT 2021
 
 ### Operators and Literals
 
@@ -8422,7 +8422,7 @@ ASSIGN
 OR
 AND
 NOT
-BETWEEN NOT_BETWEEN '<>' '!=' '=' '==' LIKE NOT_LIKE GLOB NOT_GLOB MATCH NOT_MATCH REGEXP NOT_REGEXP IN NOT_IN IS_NOT IS
+BETWEEN NOT_BETWEEN '<>' '!=' '=' '==' LIKE NOT_LIKE GLOB NOT_GLOB MATCH NOT_MATCH REGEXP NOT_REGEXP IN NOT_IN IS_NOT IS IS_TRUE IS_FALSE
 '<' '>' '>=' '<='
 '<<' '>>' '&' '|'
 '+' '-'
@@ -8981,6 +8981,8 @@ math_expr:
   | math_expr '*' math_expr
   | math_expr '/' math_expr
   | math_expr '%' math_expr
+  | math_expr "IS" "TRUE"
+  | math_expr "IS" "FALSE"
   | '-' math_expr
   | '~' math_expr
   | "NOT" math_expr
@@ -10241,24 +10243,6 @@ None of the unary math operators e.g. '-' and '~' allow objects as an operand.
 ### CQL0047: string operand not allowed in 'operator'
 
 None of the unary math operators e.g. '-' and '~' allow strings as an operand.
-
------
-
-### CQL0048: blob operand not allowed in 'NOT'
-
-The logical not operator only works on numbers.  Blobs are not allow as an operand.
-
------
-
-### CQL0049: object operand not allowed in 'NOT'
-
-The logical not operator only works on numbers.  Objects are not allow as an operand.
-
------
-
-### CQL0050: string operand not allowed in 'NOT'
-
-The logical not operator only works on numbers.  Strings are not allow as an operand.
 
 -----
 
@@ -13398,7 +13382,7 @@ CQL 0410 : unused, this was added to prevent merge conflicts at the end on liter
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue Jul 20 22:20:21 PDT 2021
+Snapshot as of Tue Jul 20 22:25:03 PDT 2021
 
 ### Rules
 

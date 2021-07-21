@@ -1595,6 +1595,14 @@ SELECT NOT likeas;
 
 SELECT NOT regexpas;
 
+SELECT 2 IS TRUE;
+
+SELECT 2 IS FALSE;
+
+SELECT 2 IS trueas;
+
+SELECT 2 IS falseas;
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

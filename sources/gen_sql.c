@@ -710,6 +710,13 @@ static void gen_unary(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   if (pri_new < pri) gen_printf(")");
 }
 
+static void gen_postfix(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+  if (pri_new < pri) gen_printf("(");
+  gen_expr(ast->left, pri_new);
+  gen_printf(" %s", op);
+  if (pri_new < pri) gen_printf(")");
+}
+
 static void gen_expr_const(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   gen_printf("CONST(");
   gen_expr(ast->left, pri_new);
@@ -3599,6 +3606,8 @@ cql_noexport void gen_init() {
   EXPR_INIT(with_select_stmt, gen_expr_select, "WITH...SELECT", EXPR_PRI_ROOT);
   EXPR_INIT(is, gen_binary, "IS", EXPR_PRI_EQUALITY);
   EXPR_INIT(is_not, gen_binary, "IS NOT", EXPR_PRI_EQUALITY);
+  EXPR_INIT(is_true, gen_postfix, "IS TRUE", EXPR_PRI_EQUALITY);
+  EXPR_INIT(is_false, gen_postfix, "IS FALSE", EXPR_PRI_EQUALITY);
   EXPR_INIT(like, gen_binary, "LIKE", EXPR_PRI_EQUALITY);
   EXPR_INIT(not_like, gen_binary, "NOT LIKE", EXPR_PRI_EQUALITY);
   EXPR_INIT(match, gen_binary, "MATCH", EXPR_PRI_EQUALITY);

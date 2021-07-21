@@ -12275,6 +12275,8 @@ void nullability_improvements_do_not_change_access(void) {
 
 }
 #undef _PROC_
+cql_bool true_test = 0;
+cql_bool false_test = 0;
 cql_int32 this_is_the_end = 0;
 
 // The statement ending at line XXXX
@@ -14550,6 +14552,34 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
       i2 = 1;
       break;
   }
+
+  // The statement ending at line XXXX
+
+  /*
+  LET true_test := 1 IS TRUE;
+  */
+  true_test = !!(1);
+
+  // The statement ending at line XXXX
+
+  /*
+  LET false_test := 0 IS FALSE;
+  */
+  false_test = !(0);
+
+  // The statement ending at line XXXX
+
+  /*
+  SET true_test := i0_nullable IS TRUE;
+  */
+  true_test = cql_is_nullable_true(i0_nullable.is_null, i0_nullable.value);
+
+  // The statement ending at line XXXX
+
+  /*
+  SET false_test := i0_nullable IS FALSE;
+  */
+  false_test = cql_is_nullable_false(i0_nullable.is_null, i0_nullable.value);
 
   // The statement ending at line XXXX
 

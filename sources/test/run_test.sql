@@ -2031,6 +2031,23 @@ BEGIN_TEST(equality_pri)
   EXPECT_SQL_TOO((x IN ("foo", "goo")) IS NULL);
   EXPECT_SQL_TOO((x NOT IN ("foo", "goo")) IS NULL);
 
+  -- Test IS TRUE and IS FALSE
+  EXPECT_SQL_TOO(1 is true);
+  EXPECT_SQL_TOO(0 is false);
+  EXPECT_SQL_TOO(not 0 is true);
+  EXPECT_SQL_TOO(not 1 is false);
+  EXPECT_SQL_TOO(not null is false);
+  EXPECT_SQL_TOO(not null is true);
+
+  -- priority of same
+  EXPECT_SQL_TOO(not (1>=0 is false));
+  EXPECT_SQL_TOO(not ((1>=0) is false));
+  EXPECT_SQL_TOO(1 >= (0 is false));
+
+  EXPECT_SQL_TOO((-1 > -2 is true));
+  EXPECT_SQL_TOO(((-1 > -2) is true));
+  EXPECT_SQL_TOO(not -1 > (-2 is true));
+
 END_TEST(equality_pri)
 
 BEGIN_TEST(between_pri)

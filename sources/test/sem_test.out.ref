@@ -1030,7 +1030,7 @@ The statement ending at line XXXX
 
 SELECT NOT 'x';
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -1137,7 +1137,7 @@ The statement ending at line XXXX
 
 SELECT -(NOT 'x');
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -2147,7 +2147,7 @@ The statement ending at line XXXX
 SELECT CASE NOT 'x' WHEN 1 THEN 0
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -2319,7 +2319,7 @@ The statement ending at line XXXX
 
 SELECT (NOT 'x') BETWEEN 1122 AND 3344;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -2489,7 +2489,7 @@ The statement ending at line XXXX
 
 SELECT (NOT 'x') NOT BETWEEN 1122 AND 3344;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -3039,7 +3039,7 @@ The statement ending at line XXXX
 
 SELECT ( SELECT NOT 'x' );
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -3254,7 +3254,7 @@ The statement ending at line XXXX
 
 SELECT (NOT 'x') IN (1, 'x');
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -3281,7 +3281,7 @@ The statement ending at line XXXX
 
 SELECT DISTINCT 1 IN (1, NOT 'x', 'y');
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -3671,7 +3671,7 @@ The statement ending at line XXXX
 CREATE VIEW MyView AS
 SELECT NOT 'x';
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {create_view_stmt}: err
   | {int 0}
@@ -3699,7 +3699,7 @@ The statement ending at line XXXX
 CREATE VIEW V AS
 SELECT NOT 'x';
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {create_view_stmt}: err
   | {int 0}
@@ -3880,7 +3880,7 @@ The statement ending at line XXXX
 
 CREATE INDEX index_5 ON foo (NOT 'x');
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {create_index_stmt}: err
   | {create_index_on_list}
@@ -3948,7 +3948,7 @@ The statement ending at line XXXX
 CREATE INDEX index_8 ON foo (id)
   WHERE NOT 'x';
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {create_index_stmt}: err
   | {create_index_on_list}
@@ -5066,7 +5066,7 @@ IF NOT 'x' THEN
   SELECT 1;
 END IF;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {if_stmt}: err
   | {cond_action}: err
@@ -5095,7 +5095,7 @@ IF 1 THEN
   SELECT NOT 'x';
 END IF;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {if_stmt}: err
   | {cond_action}: err
@@ -5126,7 +5126,7 @@ ELSE
   SELECT NOT 'x';
 END IF;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {if_stmt}: err
   | {cond_action}: integer notnull
@@ -5389,7 +5389,7 @@ SELECT id
   FROM foo
   GROUP BY id, NOT 'x';
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -5423,7 +5423,7 @@ SELECT id
   FROM foo
 ORDER BY id, NOT 'x';
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {select_stmt}: err
   | {select_core_list}: select: { id: integer notnull }
@@ -5540,6 +5540,74 @@ LET bool_x := 1;
   {let_stmt}: bool_x: bool notnull variable
   | {name bool_x}: bool_x: bool notnull variable
   | : bool notnull
+
+The statement ending at line XXXX
+
+SET bool_x := 1;
+
+  {assign}: bool_x: bool notnull variable
+  | {name bool_x}: bool_x: bool notnull variable
+  | : bool notnull
+
+The statement ending at line XXXX
+
+SET bool_x := CONST(1 / 0 IS TRUE);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {assign}: err
+  | {name bool_x}: bool_x: bool notnull variable
+  | {const}: err
+    | {is_true}: bool notnull
+      | {div}: integer notnull
+        | {int 1}: integer notnull
+        | {int 0}: integer notnull
+
+The statement ending at line XXXX
+
+SET bool_x := 0;
+
+  {assign}: bool_x: bool notnull variable
+  | {name bool_x}: bool_x: bool notnull variable
+  | : bool notnull
+
+The statement ending at line XXXX
+
+SET bool_x := 0;
+
+  {assign}: bool_x: bool notnull variable
+  | {name bool_x}: bool_x: bool notnull variable
+  | : bool notnull
+
+The statement ending at line XXXX
+
+SET bool_x := 1;
+
+  {assign}: bool_x: bool notnull variable
+  | {name bool_x}: bool_x: bool notnull variable
+  | : bool notnull
+
+The statement ending at line XXXX
+
+SET bool_x := 0;
+
+  {assign}: bool_x: bool notnull variable
+  | {name bool_x}: bool_x: bool notnull variable
+  | : bool notnull
+
+The statement ending at line XXXX
+
+SET bool_x := CONST(1 / 0 IS FALSE);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {assign}: err
+  | {name bool_x}: bool_x: bool notnull variable
+  | {const}: err
+    | {is_false}: bool notnull
+      | {div}: integer notnull
+        | {int 1}: integer notnull
+        | {int 0}: integer notnull
 
 The statement ending at line XXXX
 
@@ -5878,7 +5946,7 @@ The statement ending at line XXXX
 
 DECLARE my_cursor CURSOR FOR SELECT NOT 'x';
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {declare_cursor}: err
   | {name my_cursor}
@@ -6164,7 +6232,7 @@ BEGIN
   SELECT NOT 'X';
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {loop_stmt}: err
   | {fetch_stmt}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
@@ -6802,7 +6870,7 @@ The statement ending at line XXXX
 
 SET X := NOT 'x';
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {assign}: err
   | {name X}: X: integer variable
@@ -7273,7 +7341,7 @@ UPDATE foo
 SET id = 1
   WHERE NOT 'x';
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {update_stmt}: err
   | {name foo}: foo: { id: integer notnull primary_key autoinc }
@@ -7315,7 +7383,7 @@ SET id = 1
 ORDER BY NOT 'x'
 LIMIT 2;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {update_stmt}: err
   | {name foo}: foo: { id: integer notnull primary_key autoinc }
@@ -7439,7 +7507,7 @@ The statement ending at line XXXX
 UPDATE bar
 SET id = NOT 'x';
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {update_stmt}: err
   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
@@ -8786,7 +8854,7 @@ BEGIN
   SELECT NOT 'x';
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {while_stmt}: err
   | {name X}: X: integer variable
@@ -8893,7 +8961,7 @@ BEGIN CATCH
   THROW;
 END CATCH;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {trycatch_stmt}: err
   | {stmt_list}: err
@@ -8924,7 +8992,7 @@ BEGIN CATCH
   SELECT NOT 'x';
 END CATCH;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {trycatch_stmt}: err
   | {stmt_list}: ok
@@ -9427,7 +9495,7 @@ The statement ending at line XXXX
 
 DECLARE curs CURSOR FOR CALL bogus_call(NOT 'x');
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {declare_cursor}: err
   | {name curs}
@@ -9875,7 +9943,7 @@ SELECT *
   WHERE EXISTS (SELECT NOT 'x'
   FROM foo);
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -9921,7 +9989,7 @@ SELECT *
   WHERE NOT EXISTS (SELECT NOT 'x'
   FROM foo);
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -10538,7 +10606,7 @@ SELECT id
   INNER JOIN bar ON NOT 'x')
   INNER JOIN foo ON 1;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -10781,7 +10849,7 @@ The statement ending at line XXXX
 
 SELECT ifnull(NOT 'x', NOT 'hello');
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -12697,7 +12765,7 @@ The statement ending at line XXXX
 
 SELECT CAST(NOT 'x' AS INTEGER);
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -13477,7 +13545,7 @@ SELECT NOT 'x' AS A
 UNION ALL
 SELECT 1 AS A;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -13517,7 +13585,7 @@ SELECT 'x' AS A
 UNION ALL
 SELECT NOT 'x' AS A;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -14644,7 +14712,7 @@ WITH
 foo (a) AS (SELECT NOT 'x')
 SELECT 1;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {with_select_stmt}: err
   | {with}
@@ -14690,7 +14758,7 @@ WITH
 foo (a) AS (SELECT 1)
 SELECT NOT 'x';
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {with_select_stmt}: err
   | {with}
@@ -15183,7 +15251,7 @@ LIMIT 10)
 SELECT current
   FROM cnt;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {with_select_stmt}: err
   | {with_recursive}
@@ -15254,7 +15322,7 @@ SELECT NOT 'x')
 SELECT current
   FROM cnt;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {with_select_stmt}: err
   | {with_recursive}
@@ -15319,7 +15387,7 @@ SELECT current + 1
 LIMIT 10)
 SELECT NOT 'x';
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {with_select_stmt}: err
   | {with_recursive}
@@ -15923,7 +15991,7 @@ The statement ending at line XXXX
 
 SET real_result := simple_func(NOT 'xx');
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {assign}: err
   | {name real_result}: real_result: real variable
@@ -16042,7 +16110,7 @@ The statement ending at line XXXX
 
 SET X := NOT obj_var;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0049: object operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0046: object operand not allowed in 'NOT'
 
   {assign}: err
   | {name X}: X: integer variable
@@ -16683,7 +16751,7 @@ The statement ending at line XXXX
 
 CALL printf('%d', simple_func(NOT 'x'));
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {call_stmt}: err
   | {name printf}: ok
@@ -16936,7 +17004,7 @@ The statement ending at line XXXX
 
 SET a_string := goo_func(NOT 'x');
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {assign}: err
   | {name a_string}: a_string: text variable
@@ -16979,7 +17047,7 @@ The statement ending at line XXXX
 
 INSERT INTO foo(id) VALUES(NOT 'x');
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {insert_stmt}: err
   | {insert_normal}
@@ -18496,7 +18564,7 @@ The statement ending at line XXXX
 SELECT *
   FROM (SELECT NOT 'x' AS X);
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -18751,7 +18819,7 @@ The statement ending at line XXXX
 
 INSERT INTO bar(id, name, rate) VALUES(1, 'bazzle', 3) @DUMMY_SEED(NOT 'x');
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {insert_stmt}: err
   | {insert_normal}
@@ -18915,7 +18983,7 @@ The statement ending at line XXXX
 
 SET X := NOT blob_var;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0048: blob operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0045: blob operand not allowed in 'NOT'
 
   {assign}: err
   | {name X}: X: integer variable
@@ -20116,7 +20184,7 @@ BEGIN
   DECLARE C CURSOR FETCH FROM CALL declared_proc(NOT 'x');
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {create_proc_stmt}: err
   | {name invalid_proc_fetch_bogus_call}: err
@@ -20622,7 +20690,7 @@ BEGIN
   FETCH C() FROM VALUES() @DUMMY_SEED(NOT 'x');
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {create_proc_stmt}: err
   | {name fetch_values_bogus_seed_value}: err
@@ -20779,7 +20847,7 @@ BEGIN
   FETCH C(A, B) FROM VALUES(1, NOT 'x');
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {create_proc_stmt}: err
   | {name fetch_values_bogus_value}: err
@@ -21541,7 +21609,7 @@ The statement ending at line XXXX
 
 DECLARE some_cursor CURSOR LIKE SELECT 1 AS A, 2.5 AS B, NOT 'x' AS C;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {declare_cursor_like_select}: err
   | {name some_cursor}
@@ -22504,7 +22572,7 @@ BEGIN
   INSERT INTO bar(id, name, rate) VALUES(1, 'x', 2);
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {create_proc_stmt}: err
   | {name with_insert_bogus_cte}: err
@@ -22569,7 +22637,7 @@ BEGIN
   INSERT INTO bar(id, name, rate) VALUES(1, NOT 'x', 1);
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {create_proc_stmt}: err
   | {name with_insert_bogus_insert}: err
@@ -22748,7 +22816,7 @@ The statement ending at line XXXX
 
 INSERT INTO bar(id, name, rate) SELECT NOT 'x';
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {insert_stmt}: err
   | {insert_normal}
@@ -25683,7 +25751,7 @@ BEGIN
   SELECT RAISE(ROLLBACK, NOT 'x');
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {create_trigger_stmt}: err
   | {int 3}
@@ -38805,7 +38873,7 @@ The statement ending at line XXXX
 
 SELECT (NOT 'x') || 'plugh';
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -39495,7 +39563,7 @@ BEGIN
     FROM tvf(NOT 'x');
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {create_proc_stmt}: err
   | {name using_tvf_invalid_arg}: err
@@ -39790,7 +39858,7 @@ The statement ending at line XXXX
 
 SET ll := ( SELECT ptr(NOT 'x') );
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {assign}: err
   | {name ll}: ll: longint notnull variable
@@ -40986,7 +41054,7 @@ BEGIN
   ON CONFLICT (id) DO NOTHING;
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {create_proc_stmt}: err
   | {name with_upsert_cte_err}: err
@@ -41054,7 +41122,7 @@ BEGIN
   ON CONFLICT (id) DO NOTHING;
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {create_proc_stmt}: err
   | {name with_upsert_insert_err}: err
@@ -46229,7 +46297,7 @@ The statement ending at line XXXX
 
 SELECT (NOT 'x') COLLATE nocase;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -53817,7 +53885,7 @@ BEGIN
   END;
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {create_proc_stmt}: err
   | {name proc_savepoint_error_in_stmt_list}: err
@@ -59557,7 +59625,7 @@ The statement ending at line XXXX
 
 SET real_nn := ( SELECT NOT 'x' IF NOTHING 1.0 );
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {assign}: err
   | {name real_nn}: real_nn: real notnull variable
@@ -60449,7 +60517,7 @@ The statement ending at line XXXX
 
 LET bad_result := NOT 'x';
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {let_stmt}: err
   | {name bad_result}
@@ -60480,7 +60548,7 @@ SWITCH NOT 'x'
   WHEN 1 THEN NOTHING
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {switch_stmt}: err
   | {int 0}
@@ -60551,7 +60619,7 @@ SWITCH z
   WHEN NOT "x" THEN NOTHING
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {switch_stmt}: err
   | {int 0}
@@ -60571,7 +60639,7 @@ SWITCH z
     END IF;
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {switch_stmt}: err
   | {int 0}
@@ -61106,7 +61174,7 @@ BEGIN
   DECLARE OUT CALL out2_proc(NOT 'x', u, v);
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {create_proc_stmt}: err
   | {name decl_test_err}: err
@@ -61425,7 +61493,7 @@ The statement ending at line XXXX
 
 INSERT INTO with_kind USING SELECT NOT 'x', 3.5 AS cost, 4.8 AS value;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0050: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 
   {insert_stmt}: err
   | {insert_normal}
@@ -65611,4 +65679,156 @@ Error at test/sem_test.sql:XXXX : in eq : CQL0009: incompatible types in express
   | {select_orderby}
     | {select_limit}
       | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NOT 1 IS TRUE;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | {not}: bool notnull
+  |     |     | {is_true}: bool notnull
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NOT 1 IS TRUE;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | {not}: bool notnull
+  |     |     | {is_true}: bool notnull
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT (NOT 1) IS TRUE;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | {is_true}: bool notnull
+  |     |     | {not}: bool notnull
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 1 < 5 IS TRUE;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | {is_true}: bool notnull
+  |     |     | {lt}: bool notnull
+  |     |       | {int 1}: integer notnull
+  |     |       | {int 5}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 1 < 5 IS TRUE;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | {is_true}: bool notnull
+  |     |     | {lt}: bool notnull
+  |     |       | {int 1}: integer notnull
+  |     |       | {int 5}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 1 < (5 IS TRUE);
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | {lt}: bool notnull
+  |     |     | {int 1}: integer notnull
+  |     |     | {is_true}: bool notnull
+  |     |       | {int 5}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SET fal := 'x' IS TRUE;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'IS TRUE'
+
+  {assign}: err
+  | {name fal}: fal: bool notnull variable
+  | {is_true}: err
+    | {strlit 'x'}: text notnull
+
+The statement ending at line XXXX
+
+SET fal := (NOT 'x') IS FALSE;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
+
+  {assign}: err
+  | {name fal}: fal: bool notnull variable
+  | {is_false}: err
+    | {not}: err
+      | {strlit 'x'}: text notnull
 

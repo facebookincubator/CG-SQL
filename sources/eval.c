@@ -160,7 +160,7 @@ static void eval_format_real(double real, charbuf *output) {
 // of a calculation.  This function takes such a result and creates
 // a node.  The incoming expression is harvested for file and
 // line info and then replaced in the tree.  It's value is otherwise irrelevant
-// because the computation has already been done.  
+// because the computation has already been done.
 // The incoming evaluation result must not be an error node.
 cql_noexport ast_node *eval_set(ast_node *expr, eval_node *result) {
   Contract(result);
@@ -275,7 +275,7 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
     return; \
   } \
   \
-  if ((#op)[0] == '/' && eval_is_false(&right)) { \
+  if ((#op)[0] == '/' && is_result_false(&right)) { \
     /* special case to prevent divide by zero */ \
     result->sem_type = SEM_TYPE_ERROR; \
     return; \
@@ -311,7 +311,7 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
   Invariant(result->sem_type == core_type)
 
 // This is exactly like the standard binary operator macro except it is for
-// the operators that are not allowed to apply to real numbers.  e.g. 
+// the operators that are not allowed to apply to real numbers.  e.g.
 // bitwise and/or and left/right shift.
 #define BINARY_OP_NO_REAL(op) \
   eval_node left = {}; \
@@ -329,7 +329,7 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
     return; \
   } \
   \
-  if ((#op)[0] == '%' && eval_is_false(&right)) { \
+  if ((#op)[0] == '%' && is_result_false(&right)) { \
     /* special case to prevent divide by zero */ \
     result->sem_type = SEM_TYPE_ERROR; \
     return; \
@@ -417,7 +417,7 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
   Invariant(result->sem_type == SEM_TYPE_BOOL);
 
 // True if the node is a zero; not err, not NULL, an actual zero
-static bool_t eval_is_false(eval_node *result) {
+static bool_t is_result_false(eval_node *result) {
   // null is not false
   if (result->sem_type == SEM_TYPE_NULL || result->sem_type == SEM_TYPE_ERROR) {
     return false;
@@ -429,7 +429,7 @@ static bool_t eval_is_false(eval_node *result) {
 }
 
 // True if the node is not zero; not err, not NULL, an actual non-zero
-static bool_t eval_is_true(eval_node *result) {
+static bool_t result_is_true(eval_node *result) {
   // null/error is not true
   if (result->sem_type == SEM_TYPE_NULL || result->sem_type == SEM_TYPE_ERROR) {
     return false;
@@ -536,7 +536,7 @@ static void eval_is(ast_node *expr, eval_node *result) {
   sem_t core_type = eval_combined_type(&left, &right);
   eval_cast_to(&left, core_type);
   eval_cast_to(&right, core_type);
-  
+
   result->sem_type = SEM_TYPE_ERROR;
 
   switch (core_type) {
@@ -584,6 +584,30 @@ static void eval_not(ast_node *expr, eval_node *result) {
   eval_cast_to(result, SEM_TYPE_BOOL);
   Invariant(result->sem_type == SEM_TYPE_BOOL);  // set by the above
   result->bool_value = !result->bool_value;
+}
+
+// Is false has simple rules;  If the operand is an error it is unchanged
+// null becomes FALSE any other is converted to a bool and inverted
+static void eval_is_false(ast_node *expr, eval_node *result) {
+  eval(expr->left, result);
+  if (result->sem_type == SEM_TYPE_ERROR) {
+    return;
+  }
+
+  result->bool_value = is_result_false(result);
+  result->sem_type = SEM_TYPE_BOOL;
+}
+
+// Is true has simple rules;  If the operand is an error it is unchanged
+// null becomes FALSE any other is converted to a bool.
+static void eval_is_true(ast_node *expr, eval_node *result) {
+  eval(expr->left, result);
+  if (result->sem_type == SEM_TYPE_ERROR) {
+    return;
+  }
+
+  result->bool_value = result_is_true(result);
+  result->sem_type = SEM_TYPE_BOOL;
 }
 
 // The bitwise not operator is rather like the normal not with a few twists:
@@ -656,7 +680,7 @@ static void eval_uminus(ast_node *expr, eval_node *result) {
       result->sem_type = SEM_TYPE_INTEGER;
       // use ternary in case bool has a true value other than 1
       // this is clearer than writing -!!result->bool_value I think...
-      result->int32_value = result->bool_value ? -1 : 0;  
+      result->int32_value = result->bool_value ? -1 : 0;
       break;
   }
   Invariant(matched);
@@ -680,7 +704,7 @@ static void eval_and(ast_node *expr, eval_node *result) {
     return;
   }
 
-  if (eval_is_false(&left)) {
+  if (is_result_false(&left)) {
     result->sem_type = SEM_TYPE_BOOL;
     result->bool_value = 0;
     return;
@@ -693,7 +717,7 @@ static void eval_and(ast_node *expr, eval_node *result) {
     return;
   }
 
-  if (eval_is_false(&right)) {
+  if (is_result_false(&right)) {
     result->sem_type = SEM_TYPE_BOOL;
     result->bool_value = 0;
     return;
@@ -726,7 +750,7 @@ static void eval_or(ast_node *expr, eval_node *result) {
     return;
   }
 
-  if (eval_is_true(&left)) {
+  if (result_is_true(&left)) {
     result->sem_type = SEM_TYPE_BOOL;
     result->bool_value = 1;
     return;
@@ -739,7 +763,7 @@ static void eval_or(ast_node *expr, eval_node *result) {
     return;
   }
 
-  if (eval_is_true(&right)) {
+  if (result_is_true(&right)) {
     result->sem_type = SEM_TYPE_BOOL;
     result->bool_value = 1;
     return;
@@ -882,7 +906,7 @@ static void eval_case_expr(ast_node *ast, eval_node *result) {
         return;
       }
 
-      if (eval_is_true(&case_result)) {
+      if (result_is_true(&case_result)) {
         eval(then_expr, result);
         return;
       }
@@ -926,7 +950,7 @@ cql_noexport void eval_add_one(eval_node *result) {
 cql_noexport void eval_format_number(eval_node *result, charbuf *output) {
   Contract(result->sem_type != SEM_TYPE_ERROR);
   Contract(result->sem_type != SEM_TYPE_NULL);
- 
+
   uint32_t used = output->used;
 
   switch (result->sem_type) {
@@ -1001,6 +1025,8 @@ cql_noexport void eval_init() {
   EXPR_INIT(or);
   EXPR_INIT(is);
   EXPR_INIT(is_not);
+  EXPR_INIT(is_true);
+  EXPR_INIT(is_false);
   EXPR_INIT(cast_expr);
   EXPR_INIT(not);
   EXPR_INIT(tilde);

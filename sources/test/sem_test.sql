@@ -1462,6 +1462,48 @@ create table bad_constants_table(
 -- - Error
 let bool_x := const(1==1);
 
+-- TEST: 2 is true
+-- rewritten as "1"
+-- + SET bool_x := 1;
+-- - Error
+set bool_x := const(2 is true);
+
+-- TEST: eval error bubbles up
+-- + {assign}: err
+-- + SET bool_x := CONST(1 / 0 IS TRUE);
+-- + Error % evaluation of constant failed
+set bool_x := const(1/0 is true);
+
+-- TEST: true is not 2 --> this is true is an operator
+-- rewritten as "0"
+-- + SET bool_x := 0;
+-- - Error
+set bool_x := const(true is 2);
+
+-- TEST: null is not true
+-- rewritten as "0"
+-- + SET bool_x := 0;
+-- - Error
+set bool_x := const(null is true);
+
+-- TEST: 0 is false
+-- rewritten as "1"
+-- + SET bool_x := 1;
+-- - Error
+set bool_x := const(0 is false);
+
+-- TEST: null is not false
+-- rewritten as "0"
+-- + SET bool_x := 0;
+-- - Error
+set bool_x := const(null is false);
+
+-- TEST: eval error bubbles up
+-- + {assign}: err
+-- + SET bool_x := CONST(1 / 0 IS FALSE);
+-- + Error % evaluation of constant failed
+set bool_x := const(1/0 is false);
+
 -- TEST: internal const expression
 -- the internal const(1==1) is evaluated to a literal which then is used by the outer const
 -- the result must still be bool, this proves that we can correctly eval the type of
@@ -3821,25 +3863,25 @@ select const(1/0L);
 -- + {const}: err
 -- + Error % evaluation of constant failed
 -- +1 Error
-select const(1/not 1);
+select const(1 / not 1);
 
 -- TEST: divide by zero yields error in all forms (integer)
 -- + {const}: err
 -- + Error % evaluation of constant failed
 -- +1 Error
-select const(1%0);
+select const(1 % 0);
 
 -- TEST: divide by zero yields error in all forms (long)
 -- + {const}: err
 -- + Error % evaluation of constant failed
 -- +1 Error
-select const(1%0L);
+select const(1 % 0L);
 
 -- TEST: divide by zero yields error in all forms (bool)
 -- + {const}: err
 -- + Error % evaluation of constant failed
 -- +1 Error
-select const(1%not 1);
+select const(1 % not 1);
 
 -- TEST: variables not allowed in constant expressions (duh)
 -- + {const}: err
@@ -16575,3 +16617,51 @@ select ('x' not like 'y') = 1;
 -- + SELECT 'x' NOT LIKE ('y' = 1);
 -- + Error % incompatible types in expression '='
 select 'x' not like ('y' = 1);
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- no parens added
+-- + SELECT NOT 1 IS TRUE;
+-- - Error
+select NOT 1 is true;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- IS TRUE is stronger than NOT, parens can be removed
+-- - Error
+-- + SELECT NOT 1 IS TRUE;
+select NOT (1 is true);
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- IS TRUE is stronger than NOT, parens must stay
+-- - Error
+-- + SELECT (NOT 1) IS TRUE;
+select (NOT 1) is true;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- no parens added
+-- + SELECT 1 < 5 IS TRUE;
+-- - Error
+select 1 < 5 is true;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- IS TRUE is weaker than <, the parens can be removed
+-- - Error
+-- + SELECT 1 < 5 IS TRUE;
+select (1 < 5) is true;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- IS TRUE is weaker than <, the parens must stay
+-- + SELECT 1 < (5 IS TRUE);
+-- - Error
+select 1 < (5 is true);
+
+-- TEST: is true doesn't work on non numerics
+-- + {assign}: err
+-- + {is_true}: err
+-- + Error % string operand not allowed in 'IS TRUE'
+SET fal := 'x' is true;
+
+-- TEST: is false should fail on bogus args
+-- + {assign}: err
+-- + {is_false}: err
+-- + Error % string operand not allowed in 'NOT'
+SET fal := ( not 'x') is false;

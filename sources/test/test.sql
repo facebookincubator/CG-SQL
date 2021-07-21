@@ -1481,6 +1481,14 @@ select not likeas;
 -- this has to not match NOT REGEXP
 select not regexpas;
 
+-- new operators
+select 2 is true;
+select 2 is false;
+
+-- these should not parse as IS TRUE or IS FALSE
+select 2 is trueas;
+select 2 is falseas;
+
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 
 # 1 "long/path/I/do/not/like"

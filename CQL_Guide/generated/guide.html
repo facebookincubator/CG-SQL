@@ -401,9 +401,6 @@
 <li><a href="#cql0045-blob-operand-not-allowed-in-operator">CQL0045: blob operand not allowed in ‘operator’</a></li>
 <li><a href="#cql0046-object-operand-not-allowed-in-operator">CQL0046: object operand not allowed in ‘operator’</a></li>
 <li><a href="#cql0047-string-operand-not-allowed-in-operator">CQL0047: string operand not allowed in ‘operator’</a></li>
-<li><a href="#cql0048-blob-operand-not-allowed-in-not">CQL0048: blob operand not allowed in ‘NOT’</a></li>
-<li><a href="#cql0049-object-operand-not-allowed-in-not">CQL0049: object operand not allowed in ‘NOT’</a></li>
-<li><a href="#cql0050-string-operand-not-allowed-in-not">CQL0050: string operand not allowed in ‘NOT’</a></li>
 <li><a href="#cql0051-argument-can-only-be-used-in-count">CQL0051: argument can only be used in count(<em>) ’</em>’</a></li>
 <li><a href="#cql0052-select-cannot-be-used-with-no-from-clause">CQL0052: select * cannot be used with no FROM clause</a></li>
 <li><a href="#cql0053-select-table.-cannot-be-used-with-no-from-clause">CQL0053: select [table].* cannot be used with no FROM clause</a></li>
@@ -6522,7 +6519,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Tue Jul 20 22:20:21 PDT 2021</p>
+<p>Snapshot as of Tue Jul 20 22:25:02 PDT 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -6530,7 +6527,7 @@ ASSIGN
 OR
 AND
 NOT
-BETWEEN NOT_BETWEEN &#39;&lt;&gt;&#39; &#39;!=&#39; &#39;=&#39; &#39;==&#39; LIKE NOT_LIKE GLOB NOT_GLOB MATCH NOT_MATCH REGEXP NOT_REGEXP IN NOT_IN IS_NOT IS
+BETWEEN NOT_BETWEEN &#39;&lt;&gt;&#39; &#39;!=&#39; &#39;=&#39; &#39;==&#39; LIKE NOT_LIKE GLOB NOT_GLOB MATCH NOT_MATCH REGEXP NOT_REGEXP IN NOT_IN IS_NOT IS IS_TRUE IS_FALSE
 &#39;&lt;&#39; &#39;&gt;&#39; &#39;&gt;=&#39; &#39;&lt;=&#39;
 &#39;&lt;&lt;&#39; &#39;&gt;&gt;&#39; &#39;&amp;&#39; &#39;|&#39;
 &#39;+&#39; &#39;-&#39;
@@ -7081,6 +7078,8 @@ math_expr:
   | math_expr &#39;*&#39; math_expr
   | math_expr &#39;/&#39; math_expr
   | math_expr &#39;%&#39; math_expr
+  | math_expr &quot;IS&quot; &quot;TRUE&quot;
+  | math_expr &quot;IS&quot; &quot;FALSE&quot;
   | &#39;-&#39; math_expr
   | &#39;~&#39; math_expr
   | &quot;NOT&quot; math_expr
@@ -8153,15 +8152,6 @@ enforce_pop_stmt:
 <hr />
 <h3 id="cql0047-string-operand-not-allowed-in-operator">CQL0047: string operand not allowed in ‘operator’</h3>
 <p>None of the unary math operators e.g. ‘-’ and ‘~’ allow strings as an operand.</p>
-<hr />
-<h3 id="cql0048-blob-operand-not-allowed-in-not">CQL0048: blob operand not allowed in ‘NOT’</h3>
-<p>The logical not operator only works on numbers. Blobs are not allow as an operand.</p>
-<hr />
-<h3 id="cql0049-object-operand-not-allowed-in-not">CQL0049: object operand not allowed in ‘NOT’</h3>
-<p>The logical not operator only works on numbers. Objects are not allow as an operand.</p>
-<hr />
-<h3 id="cql0050-string-operand-not-allowed-in-not">CQL0050: string operand not allowed in ‘NOT’</h3>
-<p>The logical not operator only works on numbers. Strings are not allow as an operand.</p>
 <hr />
 <h3 id="cql0051-argument-can-only-be-used-in-count">CQL0051: argument can only be used in count(<em>) ’</em>’</h3>
 <p>The ’*’ special operator can only appear in the COUNT function. e.g. <code>select count(*) from some_table</code> It is not a valid function argument in any other context.</p>
@@ -9785,7 +9775,7 @@ select 1 where table_valued_func(5) = 3;</code></pre>
 </table>
 <p>– This source code is licensed under the MIT license found in the – LICENSE file in the root directory of this source tree. –&gt;</p>
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Tue Jul 20 22:20:21 PDT 2021</p>
+<p>Snapshot as of Tue Jul 20 22:25:03 PDT 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 
