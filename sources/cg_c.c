@@ -2080,7 +2080,7 @@ static void cg_id(ast_node *expr, charbuf *is_null, charbuf *value) {
   // map the logical @rc variable to the correct saved version
   if (!strcmp(name, "@rc")) {
     bprintf(value, "%s", rcthrown_current);
-    bprintf(is_null, "0", name);
+    bprintf(is_null, "0");
     rcthrown_used = 1;
     return;
   }

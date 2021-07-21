@@ -1512,6 +1512,21 @@ create table good_conversions(
   data real not null default const(1)
 );
 
+-- TRUE constant
+-- + {let_stmt}: tru: bool notnull variable
+-- - Error
+LET tru := true;
+
+-- FALSE constant
+-- + {let_stmt}: fal: bool notnull variable
+-- - Error
+LET fal := false;
+
+-- Use TRUE and FALSE in a const expr
+-- + {assign}: fal: bool notnull variable
+-- - Error
+SET fal := const(FALSE AND TRUE);
+
 -- TEST: verify the correct types are extracted, also cover the final select option
 -- - Error
 -- + {select_stmt}: select: { id: integer, flag: bool }

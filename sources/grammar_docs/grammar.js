@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Tue Jul 20 14:19:34 2021
+// Snapshot as of Tue Jul 20 22:20:21 2021
 
 
 const PREC = {
@@ -91,7 +91,7 @@ module.exports = grammar({
     data_type_any: $ => choice($.data_type_numeric, seq($.TEXT, optional($.opt_kind)), seq($.BLOB, optional($.opt_kind)), seq($.OBJECT, optional($.opt_kind)), seq($.OBJECT, '<', $.name, $.CURSOR, '>'), $.ID),
     data_type_with_options: $ => choice($.data_type_any, seq($.data_type_any, $.NOT, $.NULL), seq($.data_type_any, $.AT_SENSITIVE), seq($.data_type_any, $.AT_SENSITIVE, $.NOT, $.NULL), seq($.data_type_any, $.NOT, $.NULL, $.AT_SENSITIVE)),
     str_literal: $ => choice($.STR_LIT, $.C_STR_LIT),
-    num_literal: $ => choice($.INT_LIT, $.LONG_LIT, $.REAL_LIT),
+    num_literal: $ => choice($.INT_LIT, $.LONG_LIT, $.REAL_LIT, $.TRUE, $.FALSE),
     const_expr: $ => seq($.CONST, '(', $.expr, ')'),
     any_literal: $ => choice($.str_literal, $.num_literal, $.NULL, seq($.AT_FILE, '(', $.str_literal, ')'), $.AT_PROC, $.BLOB_LIT),
     raise_expr: $ => choice(seq($.RAISE, '(', $.IGNORE, ')'), seq($.RAISE, '(', $.ROLLBACK, ',', $.expr, ')'), seq($.RAISE, '(', $.ABORT, ',', $.expr, ')'), seq($.RAISE, '(', $.FAIL, ',', $.expr, ')')),
@@ -357,6 +357,8 @@ module.exports = grammar({
     LONG_INTEGER: $ => CI('long_integer'),
     BLOB: $ => CI('blob'),
     OBJECT: $ => CI('object'),
+    TRUE: $ => CI('true'),
+    FALSE: $ => CI('false'),
     CONST: $ => CI('const'),
     AT_FILE: $ => CI('@file'),
     AT_PROC: $ => CI('@proc'),

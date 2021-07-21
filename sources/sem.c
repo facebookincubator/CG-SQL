@@ -5089,7 +5089,7 @@ static sem_resolve sem_try_resolve_arguments(ast_node *ast, CSTR name, CSTR scop
   Contract(name);
   Contract(type_ptr);
 
-  if (!scope || strcmp(scope, "ARGUMENTS")) {
+  if (!scope || Strcasecmp(scope, "ARGUMENTS")) {
     return SEM_RESOLVE_CONTINUE;
   }
 

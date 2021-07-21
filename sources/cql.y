@@ -119,7 +119,7 @@ static void cql_reset_globals(void);
   char *sval;
 }
 
-%token <sval> ID
+%token <sval> ID TRUE_ FALSE_
 %token <sval> STRLIT CSTRLIT BLOBLIT
 %token <sval> INTLIT
 %token <ival> BOOL_
@@ -851,6 +851,8 @@ num_literal:
   INTLIT  { $num_literal = new_ast_num(NUM_INT, $INTLIT); }
   | LONGLIT  { $num_literal = new_ast_num(NUM_LONG, $LONGLIT); }
   | REALLIT  { $num_literal = new_ast_num(NUM_REAL, $REALLIT); }
+  | TRUE_ { $num_literal = new_ast_num(NUM_BOOL, "1"); }
+  | FALSE_ { $num_literal = new_ast_num(NUM_BOOL, "0"); }
   ;
 
 const_expr:

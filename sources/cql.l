@@ -69,6 +69,8 @@ INTERSECT                    { return INTERSECT; }
 EXCEPT                       { return EXCEPT; }
 NOT                          { return NOT; }
 NULL                         { return NULL_; }
+TRUE                         { return TRUE_; }
+FALSE                        { return FALSE_; }
 DEFAULT                      { return DEFAULT; }
 CHECK                        { return CHECK; }
 LET                          { return LET; }

@@ -5670,6 +5670,30 @@ CREATE TABLE good_conversions(
 
 The statement ending at line XXXX
 
+LET tru := 1;
+
+  {let_stmt}: tru: bool notnull variable
+  | {name tru}: tru: bool notnull variable
+  | : bool notnull
+
+The statement ending at line XXXX
+
+LET fal := 0;
+
+  {let_stmt}: fal: bool notnull variable
+  | {name fal}: fal: bool notnull variable
+  | : bool notnull
+
+The statement ending at line XXXX
+
+SET fal := 0;
+
+  {assign}: fal: bool notnull variable
+  | {name fal}: fal: bool notnull variable
+  | : bool notnull
+
+The statement ending at line XXXX
+
 SELECT DISTINCTROW id, flag
   FROM booly;
 
