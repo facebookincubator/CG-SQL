@@ -8410,7 +8410,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Mon Jul 19 18:40:08 PDT 2021
+Snapshot as of Tue Jul 20 14:19:33 PDT 2021
 
 ### Operators and Literals
 
@@ -8482,7 +8482,7 @@ opt_stmt_list:
 
 stmt_list:
   stmt ';'
-  | stmt ';' stmt_list
+  | stmt_list stmt ';'
   ;
 
 stmt:
@@ -13396,7 +13396,7 @@ CQL 0410 : unused, this was added to prevent merge conflicts at the end on liter
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Mon Jul 19 18:40:08 PDT 2021
+Snapshot as of Tue Jul 20 14:19:34 PDT 2021
 
 ### Rules
 

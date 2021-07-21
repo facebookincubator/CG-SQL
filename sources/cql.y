@@ -318,8 +318,39 @@ opt_stmt_list:
   ;
 
 stmt_list[result]:
-  stmt ';'  { $result = new_ast_stmt_list($stmt, NULL); $result->lineno = $stmt->lineno;}
-  | stmt ';' stmt_list[slist]  { $result = new_ast_stmt_list($stmt, $slist); $result->lineno = $stmt->lineno; }
+  stmt ';'  { 
+     // We're going to do this cheesy thing with the stmt_list structures so that we can
+     // code the stmt_list rules using left recursion.  We're doing this because it's
+     // possible that there could be a LOT of statements and this minimizes the use
+     // of the bison stack because reductions happen sooner with this pattern.  It does
+     // mean we have to do some weird stuff because we need to build the list so that the
+     // tail is on the right.  To accomplish this we take advantage of the fact that the
+     // parent pointer of the statement list is meaningless while it is unrooted.  It
+     // would always be null.  We store the tail of the statement list there so we know
+     // where to add new nodes on the right.  When the statement list is put into the tree
+     // the parent node is set as usual so nobody will know we did this and we don't
+     // have to add anything to the node for this one case.
+
+     // With this done we can handle several thousand statements without using much stack space.
+
+     $result = new_ast_stmt_list($stmt, NULL);
+     $result->lineno = $stmt->lineno;
+
+     // set up the tail pointer invariant to use later
+     $result->parent = $result;
+     }
+  | stmt_list[slist] stmt ';'  { 
+     ast_node *new_stmt = new_ast_stmt_list($stmt, NULL);
+     new_stmt->lineno = $stmt->lineno;
+
+     // use our tail pointer invariant so we can add at the tail without searching
+     ast_node *tail = $slist->parent;  
+     ast_set_right(tail, new_stmt);
+
+     // re-establish the tail invariant per the above
+     $slist->parent = new_stmt;
+     $result = $slist; 
+     }
   ;
 
 stmt:

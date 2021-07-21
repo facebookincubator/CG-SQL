@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Mon Jul 19 18:40:08 PDT 2021
+Snapshot as of Tue Jul 20 14:19:33 PDT 2021
 
 ### Operators and Literals
 
@@ -85,7 +85,7 @@ opt_stmt_list:
 
 stmt_list:
   stmt ';'
-  | stmt ';' stmt_list
+  | stmt_list stmt ';'
   ;
 
 stmt:
