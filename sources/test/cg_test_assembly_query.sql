@@ -6,7 +6,6 @@
  */
 
 -- test base table with combination of fields
-@attribute(bar_is_good=1)
 create table bar(
   id INTEGER NOT NULL,
   @attribute(collossal_cave='xyzzy')
@@ -65,7 +64,7 @@ end;
 -- + FROM plugin_one
 -- + FROM plugin_two
 @attribute(cql:assembly_fragment=assembly_core)
-CREATE PROC assembly_core (id_ INTEGER NOT NULL, name_ text not null)
+CREATE PROC assembly_core(id_ INTEGER NOT NULL, name_ text not null)
 begin
   with
     assembly_core (x, y, z) AS (SELECT 1, nullable("a"), nullable(3L)) -- this is stub for the core

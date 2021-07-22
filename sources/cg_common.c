@@ -29,7 +29,7 @@ cql_data_defn( charbuf *_Nullable cg_fragments_output );
 // The prefix will be included as specified.
 //
 // All input names are assumed to be in snake case already.
-cql_noexport void cg_sym_name(charbuf *_Nonnull output, CSTR _Nonnull symbol_prefix, CSTR _Nonnull name, ...)
+cql_noexport void cg_sym_name(cg_symbol_case symbol_case, charbuf *_Nonnull output, CSTR _Nonnull symbol_prefix, CSTR _Nonnull name, ...)
 {
   // Print the prefix first
   bprintf(output, symbol_prefix);
@@ -41,7 +41,7 @@ cql_noexport void cg_sym_name(charbuf *_Nonnull output, CSTR _Nonnull symbol_pre
   CSTR name_component = name;
 
   // Check the case configuration
-  switch (rt->symbol_case) {
+  switch (symbol_case) {
     case cg_symbol_case_snake:{
       // No need to modify it, everything in here is already snake case.
       do {
@@ -52,7 +52,7 @@ cql_noexport void cg_sym_name(charbuf *_Nonnull output, CSTR _Nonnull symbol_pre
     case cg_symbol_case_camel:
     case cg_symbol_case_pascal:{
       // Remove all underscores and uppercase each next character, along with the first if pascal case.
-      bool should_upper = (rt->symbol_case != cg_symbol_case_camel);
+      bool should_upper = (symbol_case != cg_symbol_case_camel);
       do {
         const size_t len = strlen(name_component);
         for (size_t i = 0; i != len; ++i) {

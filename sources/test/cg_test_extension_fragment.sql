@@ -6,7 +6,6 @@
  */
 
 -- test base table with combination of fields
-@attribute(bar_is_good=1)
 create table bar(
   id INTEGER NOT NULL,
   @attribute(collossal_cave='xyzzy')

@@ -24,9 +24,12 @@ copy_ref cg_requires_file.err
 copy_ref cg_test_assembly_query_c.c
 copy_ref cg_test_assembly_query_c.h
 copy_ref cg_test_assembly_query_java.out
+copy_ref cg_test_assembly_query_java_interface.out
+copy_ref cg_test_assembly_query_java_with_interface_param.out
 copy_ref cg_test_assembly_query_objc.out
 copy_ref cg_test_base_fragment_c.c
 copy_ref cg_test_base_fragment_c.h
+copy_ref cg_test_base_fragment_java_interface.out
 copy_ref cg_test_base_fragment_objc.out
 copy_ref cg_test_c.c
 copy_ref cg_test_c.h
@@ -39,6 +42,8 @@ copy_ref cg_test_exports.out
 copy_ref cg_test_extension_fragment_c.c
 copy_ref cg_test_extension_fragment_c.h
 copy_ref cg_test_extension_fragment_java.out
+copy_ref cg_test_extension_fragment_java_interface.out
+copy_ref cg_test_extension_fragment_java_with_interface_param.out
 copy_ref cg_test_extension_fragment_objc.out
 copy_ref cg_test_java.err
 copy_ref cg_test_java_not_nullable_proc.out
@@ -74,6 +79,7 @@ copy_ref inc_invalid_regions.err
 copy_ref invalid_arg.err
 copy_ref java_classname_missing.err
 copy_ref java_classname_noargs.err
+copy_ref java_fragment_interface_noargs.err
 copy_ref java_rt_filename_end_dot.err
 copy_ref java_rt_filename_end_slash.err
 copy_ref java_rt_filename_no_base.err
