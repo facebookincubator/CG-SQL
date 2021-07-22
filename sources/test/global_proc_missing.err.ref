@@ -1,1 +1,1 @@
---global_proc requires an additional proc name param
+--global_proc requires an additional param for the global proc name.

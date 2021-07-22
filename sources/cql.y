@@ -2017,6 +2017,8 @@ cql_data_defn( rtdata *rt );
 
 static int32_t gather_arg_params(int32_t a, int32_t argc, char **argv, int32_t *out_count, char ***out_args);
 
+static int32_t gather_arg_param(int32_t a, int32_t argc, char **argv, char **out_arg, const char *errmsg);
+
 static void parse_cmd(int argc, char **argv) {
 
   // default result type
@@ -2037,13 +2039,13 @@ static void parse_cmd(int argc, char **argv) {
     } else if (strcmp(arg, "--sem") == 0) {
       options.semantic = 1;
     } else if (strcmp(arg, "--compress") == 0) {
-        options.compress = 1;
+      options.compress = 1;
     } else if (strcmp(arg, "--run_unit_tests") == 0) {
-        options.run_unit_tests = 1;
+      options.run_unit_tests = 1;
     } else if (strcmp(arg, "--generate_exports") == 0) {
-        options.generate_exports = 1;
+      options.generate_exports = 1;
     } else if (strcmp(arg, "--generate_type_getters") == 0) {
-        options.generate_type_getters = 1;
+      options.generate_type_getters = 1;
     } else if (strcmp(arg, "--cg") == 0) {
       a = gather_arg_params(a, argc, argv, &options.file_names_count, &options.file_names);
       options.codegen = 1;
@@ -2053,26 +2055,12 @@ static void parse_cmd(int argc, char **argv) {
     } else if (strcmp(arg, "--exclude_regions") == 0) {
       a = gather_arg_params(a, argc, argv, &options.exclude_regions_count, &options.exclude_regions);
     } else if (strcmp(arg, "--cqlrt") == 0) {
-      if (a + 1 < argc) {
-        a++;
-        options.cqlrt = argv[a];
-      } else {
-        cql_error("--cqlrt requires an additional param for the name of the runtime header\n");
-        cql_cleanup_and_exit(1);
-      }
+      a = gather_arg_param(a, argc, argv, &options.cqlrt, "for the name of the runtime header");
     } else if (strcmp(arg, "--rt") == 0) {
-      if (a + 1 < argc) {
-        a++;
-        options.rt = argv[a];
-        rt = find_rtdata(options.rt);
-        if (!rt) {
-          cql_error("unknown cg runtime '%s'\n", options.rt);
-          cql_cleanup_and_exit(1);
-        }
-      } else {
-        fprintf(
-          stderr,
-          "--rt requires an additional runtime param (e.g. c, objc, java, json_schema)\n");
+      a = gather_arg_param(a, argc, argv, &options.rt, "(e.g. c, objc, java, jason_schema)");
+      rt = find_rtdata(options.rt);
+      if (!rt) {
+        cql_error("unknown cg runtime '%s'\n", options.rt);
         cql_cleanup_and_exit(1);
       }
     } else if (strcmp(arg, "--test") == 0) {
@@ -2080,61 +2068,26 @@ static void parse_cmd(int argc, char **argv) {
     } else if (strcmp(arg, "--dev") == 0) {
       options.dev = 1;
     } else if (strcmp(arg, "--in") == 0) {
-      if (a + 1 < argc) {
-        a++;
-        FILE *f = fopen(argv[a], "r");
-        if (!f) {
-          cql_error("unable to open '%s' for read\n", argv[a]);
-          cql_cleanup_and_exit(1);
-        }
-        yyset_in(f);
+      a = gather_arg_param(a, argc, argv, NULL, "for the file name");
+      FILE *f = fopen(argv[a], "r");
+      if (!f) {
+        cql_error("unable to open '%s' for read\n", argv[a]);
+        cql_cleanup_and_exit(1);
+      }
+      yyset_in(f);
 
-        current_file = argv[a];
-      } else {
-        cql_error("--in requires an additional file name param\n");
-        cql_cleanup_and_exit(1);
-      }
+      current_file = argv[a];
     } else if (strcmp(arg, "--global_proc") == 0) {
-      if (a + 1 < argc) {
-        a++;
-        global_proc_name = argv[a];
-      } else {
-        cql_error("--global_proc requires an additional proc name param\n");
-        cql_cleanup_and_exit(1);
-      }
+      a = gather_arg_param(a, argc, argv, NULL, "for the global proc name");
+      global_proc_name = argv[a];
     } else if (strcmp(arg, "--objc_c_include_path") == 0) {
-      if (a + 1 < argc) {
-        a++;
-        options.objc_c_include_path = argv[a];
-      } else {
-        cql_error("--objc_c_include_path requires an additional include path for a C header\n");
-        cql_cleanup_and_exit(1);
-      }
+      a = gather_arg_param(a, argc, argv, &options.objc_c_include_path, "for the include path of a C header");
     } else if (strcmp(arg, "--c_include_namespace") == 0) {
-      if (a + 1 < argc) {
-        a++;
-        options.c_include_namespace = argv[a];
-      } else {
-        cql_error("--c_include_namespace requires an additional C include namespace\n");
-        cql_cleanup_and_exit(1);
-      }
+      a = gather_arg_param(a, argc, argv, &options.c_include_namespace, "for the C include namespace");
     } else if (strcmp(arg, "--java_package_name") == 0) {
-      if (a + 1 < argc) {
-        a++;
-        options.java_package_name = argv[a];
-      } else {
-        cql_error("--java_package_name requires an additional Java package name\n");
-        cql_cleanup_and_exit(1);
-      }
-    }
-    else if (strcmp(arg, "--java_assembly_query_classname") == 0) {
-      if (a + 1 < argc) {
-        a++;
-        options.java_assembly_query_classname = argv[a];
-      } else {
-        cql_error("--java_assembly_query_classname requires an additional assembly query classname for extension fragment codegen\n");
-        cql_cleanup_and_exit(1);
-      }
+      a = gather_arg_param(a, argc, argv, &options.java_package_name, "for the Java package name");
+    } else if (strcmp(arg, "--java_assembly_query_classname") == 0) {
+      a = gather_arg_param(a, argc, argv, &options.java_assembly_query_classname, "for the assembly query classname for extension fragment Java codegen");
     } else {
       cql_error("unknown arg '%s'\n", argv[a]);
       cql_cleanup_and_exit(1);
@@ -2229,7 +2182,21 @@ static int32_t gather_arg_params(int32_t a, int32_t argc, char **argv, int *out_
     }
   } else {
     cql_error("%s requires additional arguments.\n", argv[a]);
-    exit(1);
+    cql_cleanup_and_exit(1);
+  }
+
+  return a;
+}
+
+static int32_t gather_arg_param(int32_t a, int32_t argc, char **argv, char **out_arg, const char *errmsg) {
+  if (a + 1 < argc) {
+    a++;
+    if (out_arg) {
+      *out_arg = argv[a];
+    }
+  } else {
+    cql_error("%s requires an additional param%s%s.\n", argv[a], errmsg ? " " : "", errmsg);
+    cql_cleanup_and_exit(1);
   }
 
   return a;
