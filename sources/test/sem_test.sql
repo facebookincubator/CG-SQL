@@ -16094,6 +16094,192 @@ begin
   end if;
 end;
 
+-- TEST: Improvements work for `ifnull_crash`.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer notnull variable
+-- - Error
+create proc improvements_work_for_ifnull_crash()
+begin
+  declare a int;
+  let x0 := ifnull_crash(a);
+  let x1 := a;
+end;
+
+-- TEST: Improvements work for `ifnull_crash` on cursor fields.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer notnull variable
+-- - Error
+create proc improvements_work_for_ifnull_crash_on_cursor_fields()
+begin
+  declare c cursor for select nullable(1) a;
+  fetch c;
+  let x0 := ifnull_crash(c.a);
+  let x1 := c.a;
+end;
+
+-- TEST: Improvements work for `ifnull_throw`.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer notnull variable
+-- - Error
+create proc improvements_work_for_ifnull_throw()
+begin
+  declare a int;
+  let x0 := ifnull_throw(a);
+  let x1 := a;
+end;
+
+-- TEST: Improvements work for `ifnull_throw` on cursor fields.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer notnull variable
+-- - Error
+create proc improvements_work_for_ifnull_throw_on_cursor_fields()
+begin
+  declare c cursor for select nullable(1) a;
+  fetch c;
+  let x0 := ifnull_throw(c.a);
+  let x1 := c.a;
+end;
+
+-- TEST: As with SET, all improvements resulting from attest_notnull functions
+-- are bounded by the nearest enclosing statement list (or some smaller
+-- expression therein).
+-- + {let_stmt}: b: integer variable
+-- + {let_stmt}: c: integer notnull variable
+-- + {let_stmt}: d: integer variable
+-- + {let_stmt}: e: integer notnull variable
+-- + {let_stmt}: f: integer variable
+-- - Error
+create proc improvements_added_by_attest_notnull_do_not_persist_outside_the_statement_list()
+begin
+  declare a int;
+  begin try
+    let b := a;
+    let dummy0 := ifnull_throw(a);
+    let c := a;
+  end try;
+  begin catch
+    let d := a;
+    let dummy1 := ifnull_crash(a);
+    let e := a;
+  end catch;
+  let f := a;
+end;
+
+-- Used in the following test.
+-- - Error
+create proc requires_notnull_in_returns_int(a int not null, out b int not null)
+begin
+end;
+
+-- TEST: Improvements to the right of an IN do not persist beyond the IN but can
+-- be used for later expressions within the IN.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- + {let_stmt}: x2: integer variable
+-- - Error
+create proc improvements_respect_short_circuiting_in()
+begin
+  declare a0 int;
+  declare a1 int;
+  declare a2 int;
+
+  let dummy := ifnull_crash(a0) in (a1, ifnull_crash(a2), requires_notnull_in_returns_int(a2));
+
+  -- nonnull as the improvement was in the needle and thus it persists
+  let x0 := a0;
+  -- nullable
+  let x1 := a1;
+  -- nullable as improvements in the right side of the IN do not persist after
+  -- the IN because the expressions might not have been evaluated
+  let x2 := a2;
+end;
+
+-- Used in the following tests.
+-- - Error
+create proc requires_notnull_ins_returns_bool(a int not null, b int not null, out c bool not null)
+begin
+end;
+
+-- TEST: Improvements made within the right side of a short-circuiting logical
+-- operator do not persist, but do work within the right side itself.
+-- + {name a0}: a0: integer inferred_notnull variable
+-- + {name a1}: a1: integer inferred_notnull variable
+-- + {name a2}: a2: integer inferred_notnull variable
+-- + {name a3}: a3: integer inferred_notnull variable
+-- + {let_stmt}: x0: integer variable
+-- + {let_stmt}: x1: integer notnull variable
+-- + {let_stmt}: x2: integer variable
+-- + {let_stmt}: x3: integer notnull variable
+-- - Error
+create proc improvements_respect_short_circuiting_logical_operators()
+begin
+  declare a0 int;
+  declare a1 int;
+  declare a2 int;
+  declare a3 int;
+
+  -- Check behavior for the right side of OR.
+  let dummy0 := 1 or requires_notnull_ins_returns_bool(ifnull_crash(a0), a0);
+  -- Check behavior for the left side of OR.
+  let dummy1 := requires_notnull_ins_returns_bool(ifnull_crash(a1), a1) or 1;
+  -- Check behavior for the right side of AND.
+  let dummy2 := 0 and requires_notnull_ins_returns_bool(ifnull_crash(a2), a2);
+  -- Check behavior for the left side of AND.
+  let dummy3 := requires_notnull_ins_returns_bool(ifnull_crash(a3), a3) and 0;
+
+  let x0 := a0; -- nullable
+  let x1 := a1; -- not null
+  let x2 := a2; -- nullable
+  let x3 := a3; -- not null
+end;
+
+-- TEST: Improvements made via attest_notnull and via conditionals interact
+-- properly in the presence of short-circuiting operators.
+-- + {name a0}: a0: integer inferred_notnull variable
+-- + {name a1}: a1: integer inferred_notnull variable
+-- + {name a2}: a2: integer inferred_notnull variable
+-- + {name a3}: a3: integer inferred_notnull variable
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer notnull variable
+-- + {let_stmt}: x2: integer variable
+-- + {let_stmt}: x3: integer notnull variable
+-- + {let_stmt}: x0_post: integer notnull variable
+-- + {let_stmt}: x1_post: integer variable
+-- + {let_stmt}: x2_post: integer variable
+-- + {let_stmt}: x3_post: integer variable
+-- - Error
+create proc improvements_within_conditionals_respect_short_circuiting()
+begin
+  declare a0 int;
+  declare a1 int;
+  declare a2 int;
+  declare a3 int;
+  if ifnull_crash(a0)
+    and (a1 is not null and requires_notnull_ins_returns_bool(ifnull_crash(a1), a1))
+    and requires_notnull_ins_returns_bool(ifnull_crash(a2), a2)
+    and a3 is not null
+  then
+    -- not null because the `a0` improvement that occurred via `ifnull_crash`
+    -- did not happen to the right of a short-circuiting operator
+    let x0 := a0; 
+    -- not null because `a1` was improved again via the `IF` after `a1` was
+    -- improved locally within the conditional expression via `ifnull_crash`
+    let x1 := a1;
+    -- nullable because the `a2` improvement happened via `ifnull_crash` to the
+    -- right of a short-circuiting operator; we could do better here, and this
+    -- would be done by explicitly allowing attest_notnull functions to improve
+    -- names within a conditional the same way we do with `IS NOT NULL`
+    let x2 := a2;
+    -- not null because `a3` was improved via the `IF` even though it was on the
+    -- right side of a short-circuiting `AND` operator
+    let x3 := a3;
+  end if;
+  let x0_post := a0; -- not null as the `a0` improvement safely persists
+  let x1_post := a1; -- nullable
+  let x2_post := a2; -- nullable
+  let x3_post := a3; -- nullable
+end;
+
 -- TEST: Improvements work on IN arguments.
 -- + {let_stmt}: x: integer notnull variable
 -- - Error
