@@ -342,8 +342,11 @@
 <li><a href="#global_proc-name">–global_proc name</a></li>
 <li><a href="#compress">–compress</a></li>
 <li><a href="#test">–test</a></li>
-<li><a href="#java_package_name">–java_package_name</a></li>
-<li><a href="#java_assembly_query_classname">–java_assembly_query_classname</a></li>
+<li><a href="#java_package_name-name">–java_package_name name</a></li>
+<li><a href="#java_assembly_query_classname-name">–java_assembly_query_classname name</a></li>
+<li><a href="#java_fragment_interface_mode">–java_fragment_interface_mode</a></li>
+<li><a href="#java_fragment_interfaces-interface">–java_fragment_interfaces interface</a></li>
+<li><a href="#java_imports-name">–java_imports name</a></li>
 <li><a href="#c_include_namespace">–c_include_namespace</a></li>
 <li><a href="#objc_c_include_path">–objc_c_include_path</a></li>
 <li><a href="#result-types-rt">Result Types (–rt *)</a></li>
@@ -386,9 +389,9 @@
 <li><a href="#cql0029-autoincrement-column-must-be-long_integer-primary-key-column-name">CQL0029: autoincrement column must be [LONG_]INTEGER PRIMARY KEY ‘column name’</a></li>
 <li><a href="#cql0030-a-column-attribute-was-specified-twice-on-the-same-column-column_name">CQL0030: a column attribute was specified twice on the same column ‘column_name’</a></li>
 <li><a href="#cql0031-column-cant-be-primary-key-and-also-unique-key-column">CQL0031: column can’t be primary key and also unique key ‘column’</a></li>
-<li><a href="#cql0032-created-columns-must-be-at-the-end-and-must-be-in-version-order-column">CQL0032: created columns must be at the end and must be in version order", ‘column’</a></li>
+<li><a href="#cql0032-created-columns-must-be-at-the-end-and-must-be-in-version-order-column">CQL0032: created columns must be at the end and must be in version order”, ‘column’</a></li>
 <li><a href="#cql0033-columns-in-a-table-marked-recreate-cannot-have-create-or-delete-column">CQL0033: columns in a table marked <span class="citation" data-cites="recreate">@recreate</span> cannot have <span class="citation" data-cites="create">@create</span> or <code>@delete</code>, ‘column’</a></li>
-<li><a href="#cql0035-column-delete-version-cant-be-column-create-version-column">CQL0035: column delete version can’t be &lt;= column create version", ‘column’</a></li>
+<li><a href="#cql0035-column-delete-version-cant-be-column-create-version-column">CQL0035: column delete version can’t be &lt;= column create version”, ‘column’</a></li>
 <li><a href="#cql0036-column-delete-version-cant-be-the-table-create-version-column">CQL0036: column delete version can’t be &lt;= the table create version ‘column’</a></li>
 <li><a href="#cql0037-column-delete-version-cant-be-the-table-delete-version">CQL0037: column delete version can’t be &gt;= the table delete version</a></li>
 <li><a href="#cql0038-column-create-version-cant-be-the-table-create-version-column">CQL0038: column create version can’t be <code>&lt;=</code> the table create version ‘column’</a></li>
@@ -638,8 +641,8 @@
 <li><a href="#cql0284-ad-hoc-schema-migration-directive-must-provide-a-procedure-to-run">CQL0284: ad hoc schema migration directive must provide a procedure to run</a></li>
 <li><a href="#cql0285-ad-hoc-schema-migration-directive-version-number-changed-proc_name">CQL0285: ad hoc schema migration directive version number changed ‘proc_name’</a></li>
 <li><a href="#cql0286-ad-hoc-schema-migration-directive-was-removed-this-is-not-allowed-proc_name">CQL0286: ad hoc schema migration directive was removed; this is not allowed ‘proc_name’</a></li>
-<li><a href="#cql0287-extensionassembly-fragment-must-add-stub">CQL0287: extension/assembly fragment must add stub "</a></li>
-<li><a href="#cql0288-extensionassembly-fragment-stub-for-base-cte-column-must-be">CQL0288: extension/assembly fragment stub for base CTE column must be "</a></li>
+<li><a href="#cql0287-extensionassembly-fragment-must-add-stub">CQL0287: extension/assembly fragment must add stub ”</a></li>
+<li><a href="#cql0288-extensionassembly-fragment-stub-for-base-cte-column-must-be">CQL0288: extension/assembly fragment stub for base CTE column must be ”</a></li>
 <li><a href="#cql0289-upsert-statement-are-forbidden-if-strict-upsert-statement-mode-is-enabled">CQL0289: upsert statement are forbidden if strict upsert statement mode is enabled</a></li>
 <li><a href="#cql0290-fragments-can-only-have-one-statement-in-the-statement-list-and-it-must-be-a-with..select">CQL0290: fragments can only have one statement in the statement list and it must be a WITH..SELECT</a></li>
 <li><a href="#cql0291-region-links-into-the-middle-of-a-deployable-region-you-must-point-to-the-root-of-deployable_region-not-into-the-middle-error_region">CQL0291: region links into the middle of a deployable region; you must point to the root of <code>&lt;deployable_region&gt;</code> not into the middle: <code>&lt;error_region&gt;</code></a></li>
@@ -661,7 +664,7 @@
 <li><a href="#cql0307-return-statement-should-be-in-a-procedure-and-not-at-the-top-level">CQL0307: return statement should be in a procedure and not at the top level</a></li>
 <li><a href="#cql0308-statement-should-be-the-last-thing-in-a-statement-list">CQL0308: statement should be the last thing in a statement list</a></li>
 <li><a href="#cql0309-new-table-must-be-added-with-createnumber-or-later-table_name">CQL0309: new table must be added with <span class="citation" data-cites="create">@create</span>([number]) or later ‘table_name’</a></li>
-<li><a href="#cql0310-new-column-must-be-added-with-createnumber-or-later-column_name">CQL0310: new column must be added with <span class="citation" data-cites="create">@create</span>([number]) or later" ‘column_name’</a></li>
+<li><a href="#cql0310-new-column-must-be-added-with-createnumber-or-later-column_name">CQL0310: new column must be added with <span class="citation" data-cites="create">@create</span>([number]) or later” ‘column_name’</a></li>
 <li><a href="#cql0311-cql0311-objects-deployment-region-changed-from-to-object_name">CQL0311: CQL0311: object’s deployment region changed from ‘<previous_region>’ to ‘<current_region>’ ‘object_name’</a></li>
 <li><a href="#cql0312-window-function-invocation-are-forbidden-if-strict-window-function-mode-is-enabled">CQL0312: window function invocation are forbidden if strict window function mode is enabled</a></li>
 <li><a href="#cql0313-blob-literals-may-only-appear-in-the-context-of-a-sql-statement">CQL0313: blob literals may only appear in the context of a SQL statement</a></li>
@@ -746,9 +749,9 @@
 <li><a href="#cql0396-versioning-attributes-may-not-be-used-on-ddl-inside-a-procedure">CQL0396: versioning attributes may not be used on DDL inside a procedure</a></li>
 <li><a href="#cql0397-object-is-an-orphan-because-its-table-is-deleted.-remove-rather-than-delete-object_name">CQL0397: object is an orphan because its table is deleted. Remove rather than <span class="citation" data-cites="delete">@delete</span> ‘object_name’</a></li>
 <li><a href="#cql0398-a-compound-select-cannot-be-ordered-by-the-result-of-an-expression">CQL0398: A compound select cannot be ordered by the result of an expression</a></li>
-<li><a href="#cql0400-encode-context-column-cant-be-sensitive">CQL0400: encode context column can’t be sensitive</a></li>
-<li><a href="#cql0402-encode-context-column-in-vault_senstive-attribute-must-match-the-specified-type-in-strict-mode">CQL0402: encode context column in vault_senstive attribute must match the specified type in strict mode</a></li>
+<li><a href="#cql0401-encode-context-column-must-be-specified-if-strict-encode-context-column-mode-is-enabled">CQL0401: encode context column must be specified if strict encode context column mode is enabled</a></li>
 </ul></li>
+<li><a href="#cql-0404-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0404 : unused, this was added to prevent merge conflicts at the end on literally every checkin</a></li>
 <li><a href="#cql-0405-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0405 : unused, this was added to prevent merge conflicts at the end on literally every checkin</a></li>
 <li><a href="#cql-0406-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0406 : unused, this was added to prevent merge conflicts at the end on literally every checkin</a></li>
 <li><a href="#cql-0407-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0407 : unused, this was added to prevent merge conflicts at the end on literally every checkin</a>
@@ -3261,7 +3264,7 @@ if (C_._has_row_) cql_bytebuf_append(&amp;_rows_, (const void *)&amp;C_, sizeof(
 <p>Create view analysis is very simple because the <code>select</code> analysis does the heavy lifting. All we have to do is validate that the view is unique, then validate the select statement.</p>
 <p>Additionally, views must not be allowed to have any NULL type columns, all nulls must be converted to some type with a CAST. e.g. <code>create view foo as select NULL n</code> is not valid. NULL is not a real storage type.</p>
 <h4 id="the-create-trigger-statement">The <code>CREATE TRIGGER</code> Statement</h4>
-<p>The create trigger statement is quite a beast, validations include: * the trigger name must be unique * For <code>insert</code> the “new.<em>" table is available in expressions/statement </em> For <code>delete</code> the”old.<em>" table is available in expressions/statements </em> For <code>update</code> both are available * If optional columns present in the <code>update</code>, they must be unique/valid * The <code>when</code> expression must evaluate to a numeric * The statement list must be error free with the usual rules plus new/old * The <code>raise</code> function may be used inside a trigger (NYI) * The table name must be a table (not a view) UNLESS the trigger type is <code>INSTEAD OF</code> * select statements inside the statement block do not count as returns for the procedure that includes the create trigger</p>
+<p>The create trigger statement is quite a beast, validations include: * the trigger name must be unique * For <code>insert</code> the “new.<em>” table is available in expressions/statement </em> For <code>delete</code> the”old.<em>” table is available in expressions/statements </em> For <code>update</code> both are available * If optional columns present in the <code>update</code>, they must be unique/valid * The <code>when</code> expression must evaluate to a numeric * The statement list must be error free with the usual rules plus new/old * The <code>raise</code> function may be used inside a trigger (NYI) * The table name must be a table (not a view) UNLESS the trigger type is <code>INSTEAD OF</code> * select statements inside the statement block do not count as returns for the procedure that includes the create trigger</p>
 <h4 id="the-drop-table-statement">The <code>DROP TABLE</code> Statement</h4>
 <p>This is the basic checking for the drop table statement: * the table must exist in some version * it has to be a table and not a view</p>
 <h4 id="the-drop-view-statement">The <code>DROP VIEW</code> Statement</h4>
@@ -6447,13 +6450,26 @@ end;</code></pre>
 <li>some of the output types can include extra diagnostics if <code>--test</code> is included</li>
 <li>that often makes the outputs badly formed so this is generally good for humans only</li>
 </ul>
-<h3 id="java_package_name">–java_package_name</h3>
+<h3 id="java_package_name-name">–java_package_name name</h3>
 <ul>
 <li>used by java code generators when they output a class. Allows to specify the name of package the class will be a part of</li>
 </ul>
-<h3 id="java_assembly_query_classname">–java_assembly_query_classname</h3>
+<h3 id="java_assembly_query_classname-name">–java_assembly_query_classname name</h3>
 <ul>
 <li>Fully qualified name of the parent class for the Java assembly. Used by java code generators when they output an extension fragment class.</li>
+</ul>
+<h3 id="java_fragment_interface_mode">–java_fragment_interface_mode</h3>
+<ul>
+<li>Sets the Java codegen mode to generate interfaces for base and extension fragments instead of classes.</li>
+</ul>
+<h3 id="java_fragment_interfaces-interface">–java_fragment_interfaces interface</h3>
+<ul>
+<li>Fully qualified name of the generated Java interfaces that an extension or assembly fragment implements. This should</li>
+<li>correspond to the base fragment and extension fragments that are referenced by the current fragment being generated.</li>
+</ul>
+<h3 id="java_imports-name">–java_imports name</h3>
+<ul>
+<li>Fully qualified name to import in the emitted java source.</li>
 </ul>
 <h3 id="c_include_namespace">–c_include_namespace</h3>
 <ul>
@@ -8092,7 +8108,7 @@ enforce_pop_stmt:
 <h3 id="cql0031-column-cant-be-primary-key-and-also-unique-key-column">CQL0031: column can’t be primary key and also unique key ‘column’</h3>
 <p>In a column definition, the column can only be marked with at most one of PRIMARY KEY or UNIQUE</p>
 <hr />
-<h3 id="cql0032-created-columns-must-be-at-the-end-and-must-be-in-version-order-column">CQL0032: created columns must be at the end and must be in version order", ‘column’</h3>
+<h3 id="cql0032-created-columns-must-be-at-the-end-and-must-be-in-version-order-column">CQL0032: created columns must be at the end and must be in version order”, ‘column’</h3>
 <p>The SQLite ALTER TABLE ADD COLUMN statement is used to add new columns to the schema. This statement puts the columns at the end of the table. In order to make the CQL schema align as closely as possible to the actual sqlite schema you will get you are required to add columns where SQLite will put them. This will help a lot if you ever connect to such a database and start doing <code>select * from &lt;somewhere with creates&gt;</code></p>
 <hr />
 <h3 id="cql0033-columns-in-a-table-marked-recreate-cannot-have-create-or-delete-column">CQL0033: columns in a table marked <span class="citation" data-cites="recreate">@recreate</span> cannot have <span class="citation" data-cites="create">@create</span> or <code>@delete</code>, ‘column’</h3>
@@ -8116,7 +8132,7 @@ enforce_pop_stmt:
 </tr>
 </tbody>
 </table>
-<h3 id="cql0035-column-delete-version-cant-be-column-create-version-column">CQL0035: column delete version can’t be &lt;= column create version", ‘column’</h3>
+<h3 id="cql0035-column-delete-version-cant-be-column-create-version-column">CQL0035: column delete version can’t be &lt;= column create version”, ‘column’</h3>
 <p>You can’t <code>@delete</code> a column in a version before it was even created. Probably there is a typo in one or both of the versions.</p>
 <hr />
 <h3 id="cql0036-column-delete-version-cant-be-the-table-create-version-column">CQL0036: column delete version can’t be &lt;= the table create version ‘column’</h3>
@@ -9219,9 +9235,9 @@ set x := y;</code></pre>
 <p>An <code>@schema_ad_hoc_migration</code> cannot be removed because it could cause inconsistencies on upgrade.</p>
 <p>You can change the body of the method if you need to but this is also not recommended because again there could be inconsistencies. However careful replacement and compensation is possible. This is like going to 110% on the reactor… possible, but not recommended.</p>
 <hr />
-<h3 id="cql0287-extensionassembly-fragment-must-add-stub">CQL0287: extension/assembly fragment must add stub "</h3>
+<h3 id="cql0287-extensionassembly-fragment-must-add-stub">CQL0287: extension/assembly fragment must add stub ”</h3>
 <hr />
-<h3 id="cql0288-extensionassembly-fragment-stub-for-base-cte-column-must-be">CQL0288: extension/assembly fragment stub for base CTE column must be "</h3>
+<h3 id="cql0288-extensionassembly-fragment-stub-for-base-cte-column-must-be">CQL0288: extension/assembly fragment stub for base CTE column must be ”</h3>
 <hr />
 <h3 id="cql0289-upsert-statement-are-forbidden-if-strict-upsert-statement-mode-is-enabled">CQL0289: upsert statement are forbidden if strict upsert statement mode is enabled</h3>
 <p><code>@enforce_strict</code> has been use to enable strict upsert statement enforcement. When enabled all sql statement should not use the upsert statement. This is because sqlite version running in some iOS and Android version is old. Upsert statement was added to sqlite in the version <strong>3.24.0 (2018-06-04)</strong>.</p>
@@ -9300,7 +9316,7 @@ set x := y;</code></pre>
 <p>The indicated table was newly added – it is not present in the previous schema. However the version number it was added at is in the past. The new table must appear at the current schema version or later. That version is provided in the error message.</p>
 <p>To fix this, change the <code>@create</code> annotation on the table to be at the indicated version or later.</p>
 <hr />
-<h3 id="cql0310-new-column-must-be-added-with-createnumber-or-later-column_name">CQL0310: new column must be added with <span class="citation" data-cites="create">@create</span>([number]) or later" ‘column_name’</h3>
+<h3 id="cql0310-new-column-must-be-added-with-createnumber-or-later-column_name">CQL0310: new column must be added with <span class="citation" data-cites="create">@create</span>([number]) or later” ‘column_name’</h3>
 <p>The indicated column was newly added – it is not present in the previous schema. However the version number it was added at is in the past. The new column must appear at the current schema version or later. That version is provided in the error message.</p>
 <p>To fix this, change the <code>@create</code> annotation on the table to be at the indicated version or later.</p>
 <hr />
@@ -9708,50 +9724,38 @@ select 1 where table_valued_func(5) = 3;</code></pre>
 <colgroup>
 <col style="width: 6%" />
 </colgroup>
+<thead>
+<tr class="header">
+<th>### CQL0399: table must leave <span class="citation" data-cites="recreate">@recreate</span> management with <span class="citation" data-cites="create">@create</span>(nn) or later ‘table_name’</th>
+</tr>
+</thead>
 <tbody>
 <tr class="odd">
-<td>### CQL0399: table must leave <span class="citation" data-cites="recreate">@recreate</span> management with <span class="citation" data-cites="create">@create</span>(nn) or later ‘table_name’</td>
+<td>### CQL0400: encode context column can’t be sensitive</td>
 </tr>
 <tr class="even">
-<td>The indicated table changed from <code>@recreate</code> to <code>@create</code> but it did so in a past schema version. The change must happen in the current schema version. That version is indicated by the value of nn.</td>
-</tr>
-<tr class="odd">
-<td>To fix this you can change the <code>@create</code> annotation so that it matches the number in this error message</td>
+<td>The encode context column will be used to encode sensitive fields, it can’t be exposed to encode functions</td>
 </tr>
 </tbody>
 </table>
-<h3 id="cql0400-encode-context-column-cant-be-sensitive">CQL0400: encode context column can’t be sensitive</h3>
-<p>The encode context column will be used to encode sensitive fields, it can’t be exposed to encode functions</p>
-<table style="width:7%;">
-<colgroup>
-<col style="width: 6%" />
-</colgroup>
-<tbody>
-<tr class="odd">
-<td>### CQL0401: encode context column must be specified if strict encode context column mode is enabled</td>
-</tr>
-<tr class="even">
-<td>encode context column must be specified in vault_senstive attribute with format: <span class="citation" data-cites="attribute">@attribute</span>(cql:vault_sensitive=(encode_context_col, (col1, col2, …))</td>
-</tr>
-</tbody>
-</table>
-<h3 id="cql0402-encode-context-column-in-vault_senstive-attribute-must-match-the-specified-type-in-strict-mode">CQL0402: encode context column in vault_senstive attribute must match the specified type in strict mode</h3>
-<p>encode context column must match the specified type in vault_senstive attribute with format: <span class="citation" data-cites="attribute">@attribute</span>(cql:vault_sensitive=(encode_context_col, (col1, col2, …))</p>
+<h3 id="cql0401-encode-context-column-must-be-specified-if-strict-encode-context-column-mode-is-enabled">CQL0401: encode context column must be specified if strict encode context column mode is enabled</h3>
+<p>encode context column must be specified in vault_senstive attribute with format: <span class="citation" data-cites="attribute">@attribute</span>(cql:vault_sensitive=(encode_context_col, (col1, col2, …))</p>
 <table style="width:7%;">
 <colgroup>
 <col style="width: 6%" />
 </colgroup>
 <thead>
 <tr class="header">
-<th>CQL 0403 : unused, this was added to prevent merge conflicts at the end on literally every checkin</th>
+<th>### CQL0402: encode context column in vault_senstive attribute must match the specified type in strict mode</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>CQL 0404 : unused, this was added to prevent merge conflicts at the end on literally every checkin</td>
+<td>CQL 0403 : unused, this was added to prevent merge conflicts at the end on literally every checkin</td>
 </tr>
 </tbody>
 </table>
+<h2 id="cql-0404-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0404 : unused, this was added to prevent merge conflicts at the end on literally every checkin</h2>
 <h2 id="cql-0405-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0405 : unused, this was added to prevent merge conflicts at the end on literally every checkin</h2>
 <h2 id="cql-0406-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0406 : unused, this was added to prevent merge conflicts at the end on literally every checkin</h2>
 <h2 id="cql-0407-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0407 : unused, this was added to prevent merge conflicts at the end on literally every checkin</h2>
