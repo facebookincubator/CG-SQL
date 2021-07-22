@@ -4746,6 +4746,12 @@ It seemed essential to be able to record changes to the schema over time so CQL 
 * generate compiler errors if you try to access columns that are deprecated
 * move from one version to another tracking schema facets that have to be added
 
+To use cql in this fashion, the sequence will be something like the below.  See Appendix 1 for command line details.
+
+```
+cql --in input.sql --rt schema_upgrade --cg schema_upgrader.sql --global_proc desired_upgrade_proc_name
+```
+
 ### Annotations
 
 There are three basic flavors of annotation
@@ -5748,7 +5754,7 @@ Example: Referring to the regions above you might do something like this
 
 ```bash
 
- # All of these also need a --global_proc param for the entry point but that's not relevant here
+# All of these also need a --global_proc param for the entry point but that's not relevant here
 cql --in schema.sql --cg shared.sql --rt schema_upgrade  --include_regions extra
 cql --in schema.sql --cg f1.cql --rt schema_upgrade --include_regions feature1 --exclude_regions extra
 cql --in schema.sql --cg f2.cql --rt schema_upgrade --include_regions feature2 --exclude_regions extra
@@ -6984,6 +6990,12 @@ So it's fairly easy to call from C/C++ test code or from CQL test code.
 -->
 To help facilitate additional tools that might want to depend on CQL input files further down the toolchain CQL includes a JSON output format for SQL DDL as well as stored procedure information, including special information for a single-statement DML.  "Single-statement DML" refers to those stored procedures that that consist of a single `insert`, `select`, `update`, or `delete`.   Even though such procedures are just one statement, good argument binding can create very powerful DML fragments that are re-usable.  Many CQL stored procedures are of this form (in practice maybe 95% are just one statement).
 
+To use cql in this fashion, the sequence will be something like the below.  See Appendix 1 for command line details.
+
+```
+cql --in input.sql --rt json_schema --cg out.json
+```
+
 Below are some examples of the JSON output taken from a CQL test file.  Note that the JSON has free text inserted into it as part of the test output, that obviously doesn't appear in the final output but it is especially illustrative here.  This example illustrates almost all the possible JSON fragments.
 
 ```
@@ -7921,13 +7933,6 @@ Some additional properties not mentioned above that are worth noting:
   * the `fromTables` key will give you an array of tables that were used the the `from` clause of a select or some other `select`-ish context in which you only read from the table
 * the `usesProcedures` key for a given proc has an array of the procedures it calls, this allows for complete dependency analysis if needed
 
-
-To use cql in this fashion:
-
-```
-cql --in input.sql --rt json_schema --cg out.json
-```
-
 NOTE: `@ATTRIBUTE` can be applied any number of times to the entities here, including the procedures (i.e. immediately before the `CREATE PROCEDURE`) .  Those attributes appear in the JSON in an optional `attributes` chunk.  Attributes are quite flexible (you can easily encode a lisp program in attributes if you were so inclined) so you can use them very effectively to annotate your CQL entities as needed for downstream tools.
 
 
@@ -8410,7 +8415,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Jul 20 22:25:02 PDT 2021
+Snapshot as of Wed Jul 21 19:48:52 PDT 2021
 
 ### Operators and Literals
 
@@ -13382,7 +13387,7 @@ CQL 0410 : unused, this was added to prevent merge conflicts at the end on liter
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue Jul 20 22:25:03 PDT 2021
+Snapshot as of Wed Jul 21 19:48:53 PDT 2021
 
 ### Rules
 
