@@ -4490,6 +4490,28 @@ static bool_t sem_unary_prep(ast_node *ast, sem_t *core_type, sem_t *combined_fl
   return true;
 }
 
+static bool_t sem_validate_numeric(ast_node *ast, sem_t core_type, CSTR op) {
+  if (is_blob(core_type)) {
+    report_error(ast->left, "CQL0045: blob operand not allowed in", op);
+    record_error(ast);
+    return false;
+  }
+
+  if (is_object(core_type)) {
+    report_error(ast->left, "CQL0046: object operand not allowed in", op);
+    record_error(ast);
+    return false;
+  }
+
+  if (is_text(core_type)) {
+    report_error(ast->left, "CQL0047: string operand not allowed in", op);
+    record_error(ast);
+    return false;
+  }
+
+  return true;
+}
+
 // The only unary math operators are '-' and '~'
 // Reference types are not allowed
 static void sem_unary_math(ast_node *ast, CSTR op) {
@@ -4498,21 +4520,7 @@ static void sem_unary_math(ast_node *ast, CSTR op) {
     return;
   }
 
-  if (is_blob(core_type)) {
-    report_error(ast->left, "CQL0045: blob operand not allowed in", op);
-    record_error(ast);
-    return;
-  }
-
-  if (is_object(core_type)) {
-    report_error(ast->left, "CQL0046: object operand not allowed in", op);
-    record_error(ast);
-    return;
-  }
-
-  if (is_text(core_type)) {
-    report_error(ast->left, "CQL0047: string operand not allowed in", op);
-    record_error(ast);
+  if (!sem_validate_numeric(ast, core_type, op)) {
     return;
   }
 
@@ -4545,27 +4553,28 @@ static void sem_unary_logical(ast_node *ast, CSTR op) {
     return;
   }
 
-  if (is_blob(core_type)) {
-    report_error(ast->left, "CQL0048: blob operand not allowed in", op);
-    record_error(ast);
-    return;
-  }
-
-  if (is_object(core_type)) {
-    report_error(ast->left, "CQL0049: object operand not allowed in", op);
-    record_error(ast);
-    return;
-  }
-
-  if (is_text(core_type)) {
-    report_error(ast->left, "CQL0050: string operand not allowed in", op);
-    record_error(ast);
+  if (!sem_validate_numeric(ast, core_type, op)) {
     return;
   }
 
   // For logical always returns a bool or null
   // the canonical example is NOT.
   ast->sem = new_sem(SEM_TYPE_BOOL | combined_flags);
+}
+
+// This is used for IS TRUE and IS FALSE
+static void sem_unary_is_true_or_false(ast_node *ast, CSTR op) {
+  sem_t core_type, combined_flags;
+  if (!sem_unary_prep(ast, &core_type, &combined_flags)) {
+    return;
+  }
+
+  if (!sem_validate_numeric(ast, core_type, op)) {
+    return;
+  }
+
+  // IS forms always return BOOL NOT NULL
+  ast->sem = new_sem(SEM_TYPE_BOOL | SEM_TYPE_NOTNULL | combined_flags);
 }
 
 // IS and IS NOT are special in that they return a not null boolean.
@@ -5089,7 +5098,7 @@ static sem_resolve sem_try_resolve_arguments(ast_node *ast, CSTR name, CSTR scop
   Contract(name);
   Contract(type_ptr);
 
-  if (!scope || strcmp(scope, "ARGUMENTS")) {
+  if (!scope || Strcasecmp(scope, "ARGUMENTS")) {
     return SEM_RESOLVE_CONTINUE;
   }
 
@@ -19369,6 +19378,8 @@ cql_noexport void sem_main(ast_node *ast) {
   EXPR_INIT(add, sem_binary_math, "+");
   EXPR_INIT(sub, sem_binary_math, "-");
   EXPR_INIT(not, sem_unary_logical, "NOT");
+  EXPR_INIT(is_true, sem_unary_is_true_or_false, "IS TRUE");
+  EXPR_INIT(is_false, sem_unary_is_true_or_false, "IS FALSE");
   EXPR_INIT(tilde, sem_unary_integer_math, "~");
   EXPR_INIT(uminus, sem_unary_math, "-");
   EXPR_INIT(eq, sem_binary_eq_or_ne, "=");
@@ -19396,8 +19407,11 @@ cql_noexport void sem_main(ast_node *ast) {
   EXPR_INIT(like, sem_binary_like, "LIKE");
   EXPR_INIT(not_like, sem_binary_like, "NOT LIKE");
   EXPR_INIT(match, sem_binary_match, "MATCH");
+  EXPR_INIT(not_match, sem_binary_match, "NOT MATCH");
   EXPR_INIT(regexp, sem_binary_match, "REGEXP");
+  EXPR_INIT(not_regexp, sem_binary_match, "NOT REGEXP");
   EXPR_INIT(glob, sem_binary_match, "GLOB");
+  EXPR_INIT(not_glob, sem_binary_match, "NOT GLOB");
   EXPR_INIT(in_pred, sem_expr_in_pred_or_not_in, "IN");
   EXPR_INIT(not_in, sem_expr_in_pred_or_not_in, "NOT IN");
   EXPR_INIT(cast_expr, sem_expr_cast, "CAST");

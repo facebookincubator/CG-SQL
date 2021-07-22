@@ -3029,6 +3029,16 @@ extern void nullability_improvements_do_not_change_access(void);
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
+extern cql_bool true_test;
+
+// The statement ending at line XXXX
+extern cql_bool false_test;
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
 extern cql_int32 this_is_the_end;
 
 // The statement ending at line XXXX

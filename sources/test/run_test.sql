@@ -254,10 +254,12 @@ END_TEST(between_operations)
 -- assorted not between combinations
 BEGIN_TEST(not_between_operations)
   EXPECT_SQL_TOO(3 not between 0 and 2);
-  EXPECT_SQL_TOO((not 1 not between 0 and 2) == 0);
+  EXPECT_SQL_TOO(not 1 not between 0 and 2);
   EXPECT_SQL_TOO(not (1 not between 0 and 2));
+  EXPECT_SQL_TOO((not 1) not between 0 and 2 == 0);
   EXPECT_SQL_TOO(1 not between 2 and 0);
-  EXPECT_SQL_TOO(not 3 not between 2 and 0);
+  EXPECT_SQL_TOO(0 == not 7 not between 5 and 6);
+  EXPECT_SQL_TOO(1 == (not 7) not between 5 and 6);
   EXPECT_SQL_TOO((null not between 0 and 2) is null);
   EXPECT_SQL_TOO((1 not between null and 2) is null);
   EXPECT_SQL_TOO((1 not between 0 and null) is null);
@@ -1728,8 +1730,22 @@ BEGIN_TEST(fetch_all_types_cursor_nullable)
 END_TEST(fetch_all_types_cursor_nullable)
 
 BEGIN_TEST(concat_pri)
-  -- concat is stronger than everything
-  EXPECT((SELECT 4 || (3 + 2) || '3' == '453'));
+  -- concat is weaker than ~
+  EXPECT('-22' == (SELECT ~1||2));
+  EXPECT('-22' == (SELECT (~1)||2));
+ 
+  -- if the order was otherwise we'd get a different result...
+  -- a semantic error actually
+  EXPECT(-13 == (SELECT ~CAST(1||2 as INTEGER)));
+
+  --- negation is stronger than CONCAT
+  EXPECT('01' == (select -0||1));
+  EXPECT('01' == (select (-0)||1));
+
+  -- if the order was otherwise we'd get a different result...
+  -- a semantic error actually
+  EXPECT(-1 == (select -CAST(0||1 as INTEGER)));
+
 END_TEST(concat_pri)
 
 -- Test precedence of multiply with (* / %) with add (+ -)
@@ -2015,14 +2031,38 @@ BEGIN_TEST(equality_pri)
   EXPECT_SQL_TOO((x IN ("foo", "goo")) IS NULL);
   EXPECT_SQL_TOO((x NOT IN ("foo", "goo")) IS NULL);
 
+  -- Test IS TRUE and IS FALSE
+  EXPECT_SQL_TOO(1 is true);
+  EXPECT_SQL_TOO(0 is false);
+  EXPECT_SQL_TOO(not 0 is true);
+  EXPECT_SQL_TOO(not 1 is false);
+  EXPECT_SQL_TOO(not null is false);
+  EXPECT_SQL_TOO(not null is true);
+
+  -- priority of same
+  EXPECT_SQL_TOO(not (1>=0 is false));
+  EXPECT_SQL_TOO(not ((1>=0) is false));
+  EXPECT_SQL_TOO(1 >= (0 is false));
+
+  EXPECT_SQL_TOO((-1 > -2 is true));
+  EXPECT_SQL_TOO(((-1 > -2) is true));
+  EXPECT_SQL_TOO(not -1 > (-2 is true));
+
 END_TEST(equality_pri)
 
 BEGIN_TEST(between_pri)
-  -- between is weaker than =
+  -- between is the same as = but binds left to right
 
   EXPECT_SQL_TOO(0 == (1=2 between 2 and 2));
   EXPECT_SQL_TOO(1 == (1=(2 between 2 and 2)));
   EXPECT_SQL_TOO(0 == ((1=2) between 2 and 2));
+
+  LET four := 4;
+
+  -- verifying binding when = is on the right, still left to right
+  EXPECT_SQL_TOO(0 == (0 between -2 and -1 = four));
+  EXPECT_SQL_TOO(0 == ((0 between -2 and -1) = four));
+  EXPECT_SQL_TOO(1 == (0 between -2 and (-1 = four)));
 
   -- not is weaker than between
   let neg := -1;
@@ -2048,27 +2088,27 @@ BEGIN_TEST(and_pri)
 
   EXPECT_SQL_TOO(3 + 3 AND 5);
   EXPECT_SQL_TOO((3 + 3 AND 0) == 0);
-  EXPECT_SQL_TOO((NULL AND 1) IS NULL);
-  EXPECT_SQL_TOO((NULL AND 1 = null_) IS NULL);
-  EXPECT_SQL_TOO(NOT (NULL AND 1 IS NULL));
-  EXPECT_SQL_TOO((NULL AND 0) == 0);
-  EXPECT_SQL_TOO(NOT (NULL AND 0));
-  EXPECT_SQL_TOO(1 AND 0 == 0);
-  EXPECT_SQL_TOO(1 AND 0 = 0);
-  EXPECT_SQL_TOO(1 AND 1 != 0);
-  EXPECT_SQL_TOO(1 AND 1 <> 0);
+  EXPECT_SQL_TOO((NULL AND true) IS NULL);
+  EXPECT_SQL_TOO((NULL AND true = null_) IS NULL);
+  EXPECT_SQL_TOO(NOT (NULL AND true IS NULL));
+  EXPECT_SQL_TOO((NULL AND false) == 0);
+  EXPECT_SQL_TOO(NOT (NULL AND false));
+  EXPECT_SQL_TOO(1 AND false == false);
+  EXPECT_SQL_TOO(1 AND false = false);
+  EXPECT_SQL_TOO(1 AND true != false);
+  EXPECT_SQL_TOO(1 AND true <> false);
   EXPECT_SQL_TOO(5 IS 5 AND 2 IS 2);
   EXPECT_SQL_TOO(5 IS NOT NULL AND 2 IS 2);
   EXPECT_SQL_TOO(5 IS NOT NULL AND 2 IS 2);
-  EXPECT_SQL_TOO(5 AND 0 + 1);
-  EXPECT_SQL_TOO(5 AND 0 * 1 + 1);
-  EXPECT_SQL_TOO(5 AND 0 >> 4 >= -1);
-  EXPECT_SQL_TOO(5 AND 0 | 4 & 12);
+  EXPECT_SQL_TOO(5 AND false + 1);
+  EXPECT_SQL_TOO(5 AND false * 1 + 1);
+  EXPECT_SQL_TOO(5 AND false >> 4 >= -1);
+  EXPECT_SQL_TOO(5 AND false | 4 & 12);
   EXPECT_SQL_TOO(5 AND 6 / 3);
-  EXPECT_SQL_TOO((5 AND 25 % 5) == 0);
-  EXPECT_SQL_TOO(5 AND 0 IN (0));
-  EXPECT_SQL_TOO(5 AND 1 NOT IN (0));
-  EXPECT_SQL_TOO(NOT(5 AND 0 NOT IN (0)));
+  EXPECT_SQL_TOO((5 AND 25 % 5) == false);
+  EXPECT_SQL_TOO(5 AND false IN (0));
+  EXPECT_SQL_TOO(5 AND true NOT IN (false));
+  EXPECT_SQL_TOO(NOT(5 AND false NOT IN (false)));
 END_TEST(and_pri)
 
 -- Test AND with OR

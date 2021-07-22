@@ -694,14 +694,15 @@ ASSIGNMENT:    :=
 LOGICAL_OR:    OR
 LOGICAL_AND:   AND
 LOGICAL_NOT:   NOT
-BETWEEN:       BETWEEN  NOT BETWEEN
-EQUALITY:      = == != <> IS, IS NOT, IN, NOT IN, LIKE, GLOB, MATCH, REGEXP
-INEQUALITY:    <   <=  >   >=
+EQUALITY:      = == != <>  IS [NOT], [NOT] IN, [NOT] LIKE,
+               [NOT] MATCH, [NOT] GLOB, [NOT] BETWEEN
+INEQUALITY:    <  <=  >  >=
 BINARY:        << >> & |
 ADDITION:      + -
 MULIPLICATION: * / %
-BINARY_NOT:    ~
 CONCAT:        ||
+COLLATE:       COLLATE
+UNARY:         ~  -
 ```
 
 NOTE: the above is NOT the C binding order (!!!)  The Sqlite binding order is used in the language and parens are added in the C output as needed to force that order.   CQL's rewriting emits minimal parens in all outputs.  Different parens are often needed for SQL output.
@@ -1426,28 +1427,15 @@ The truth table for logical `AND` is as follows:
 
 #### BETWEEN and NOT BETWEEN
 
-These are a ternary type operation.  The general forms are:
+These are ternary operations.  The general forms are:
 
 ```sql
   expr1 BETWEEN expr2 AND expr3
   expr1 NOT BETWEEN expr2 AND expr3
 ```
-Note that there is an inherent ambiguity in the language because `expr2` or `expr3` could be logical expressions that include `AND`. CQL resolves this ambiguity by insisting that `expr2` and `expr3` be "math expressions" in the grammar.
+Note that there is an inherent ambiguity in the language because `expr2` or `expr3` could be logical expressions that include `AND`. CQL resolves this ambiguity by insisting that `expr2` and `expr3` be "math expressions" in the grammar.  These expressions may not have ungrouped `AND` or `OR` operators.
 
-"Math expressions" consist of:
-
-* bitwise `&` and `|`
-* bitwise left shift or right shift (`<<` and `>>`)
-* addition (`+`)
-* subtraction (`-`)
-* multiplication (`*`)
-* division (`/`)
-* modulus (`%`)
-* unary negation (`-`)
-* literals
-* any parenthesized expression
-
-Hence:
+Examples::
 
 ```sql
 -- oh hell no (syntax error)
@@ -1456,16 +1444,15 @@ a between 1 and 2 and 3;
 -- all ok
 a between (1 and 2) and 3;
 a between 1 and (2 and 3);
+a between 1 and b between c and d; -- binds left to right
 a between 1 + 2 and 12 / 2;
 ```
-These considerations force the grammar to contain special rules for expressions after `BETWEEN`.
 
 #### Logical NOT
 
-The one operand of logical not must be a numeric.  `NOT 'x'` is illegal.
+The one operand of logical `NOT` must be a numeric.  `NOT 'x'` is illegal.
 
-
-#### Non-ordering tests `!=`, `<>`, `=`, `==`, `LIKE`, `GLOB`, `MATCH`, `IN`, `NOT IN`, `IS`, `IS NOT`
+#### Non-ordering tests `!=`, `<>`, `=`, `==`, `LIKE`, `GLOB`, `MATCH`, `REGEXP`, `IN`, `IS`, `IS NOT`
 
 These operations do some non-ordered comparison of their two operands.
 
@@ -1474,12 +1461,14 @@ These operations do some non-ordered comparison of their two operands.
 * `!=` and `<>` are equivalent as are `=` and `==`
 * strings and blobs compare equal based on their value, not their identity (i.e. not the string/blob pointer)
 * objects compare equal based on their address, not their content (i.e. reference equality)
-* `MATCH` and `GLOB` only valid in SQL contexts, `LIKE` can be used in any context (a helper method to do `LIKE` in C is provided by SQLite, but not the others)
+* `MATCH`, `GLOB`, and `REGEXP` are only valid in SQL contexts, `LIKE` can be used in any context (a helper method to do `LIKE` in C is provided by SQLite, but not the others)
+* `MATCH`, `GLOB`, `REGEXP`, `LIKE`, and `IN` may be prefixed with `NOT` which reverses their value
 
 ```sql
  NULL IS NULL  -- this is true
 (NULL == NULL) IS NULL  -- this is also true because NULL == NULL is not 1, it's NULL.
 (NULL != NULL) IS NULL  -- this is also true because NULL != NULL is not 0, it's also NULL.
+'xy' NOT LIKE 'z%'` -- this is true
 ```
 
 #### Ordering comparisons <, >, <=, >=
@@ -8421,7 +8410,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu Jul 15 15:45:32 PDT 2021
+Snapshot as of Tue Jul 20 22:25:02 PDT 2021
 
 ### Operators and Literals
 
@@ -8433,14 +8422,14 @@ ASSIGN
 OR
 AND
 NOT
-BETWEEN
-'<>' '!=' '=' '==' LIKE GLOB MATCH REGEXP IN IS_NOT IS
+BETWEEN NOT_BETWEEN '<>' '!=' '=' '==' LIKE NOT_LIKE GLOB NOT_GLOB MATCH NOT_MATCH REGEXP NOT_REGEXP IN NOT_IN IS_NOT IS IS_TRUE IS_FALSE
 '<' '>' '>=' '<='
 '<<' '>>' '&' '|'
 '+' '-'
 '*' '/' '%'
-UMINUS '~' COLLATE
 CONCAT
+COLLATE
+UMINUS '~'
 ```
 NOTE: The above varies considerably from the C binding order!!!
 
@@ -8493,7 +8482,7 @@ opt_stmt_list:
 
 stmt_list:
   stmt ';'
-  | stmt ';' stmt_list
+  | stmt_list stmt ';'
   ;
 
 stmt:
@@ -8930,6 +8919,8 @@ num_literal:
   "integer-literal"
   | "long-literal"
   | "real-literal"
+  | "TRUE"
+  | "FALSE"
   ;
 
 const_expr:
@@ -8990,6 +8981,8 @@ math_expr:
   | math_expr '*' math_expr
   | math_expr '/' math_expr
   | math_expr '%' math_expr
+  | math_expr "IS" "TRUE"
+  | math_expr "IS" "FALSE"
   | '-' math_expr
   | '~' math_expr
   | "NOT" math_expr
@@ -9008,20 +9001,23 @@ math_expr:
   | math_expr "LIKE" math_expr
   | math_expr "NOT" "LIKE" math_expr
   | math_expr "MATCH" math_expr
+  | math_expr "NOT" "MATCH" math_expr
   | math_expr "REGEXP" math_expr
+  | math_expr "NOT" "REGEXP" math_expr
   | math_expr "GLOB" math_expr
+  | math_expr "NOT" "GLOB" math_expr
+  | math_expr "BETWEEN" math_expr "AND" math_expr
   | math_expr "NOT" "BETWEEN" math_expr "AND" math_expr
-  | math_expr "BETWEEN" math_expr  "AND" math_expr
-  | math_expr "IS NOT" math_expr
+  | math_expr "IS" "NOT" math_expr
   | math_expr "IS" math_expr
   | math_expr "||" math_expr
+  | math_expr "COLLATE" name
   ;
 
 expr:
   math_expr
   | expr "AND" expr
   | expr "OR" expr
-  | expr "COLLATE" name
   ;
 
 case_list:
@@ -10247,24 +10243,6 @@ None of the unary math operators e.g. '-' and '~' allow objects as an operand.
 ### CQL0047: string operand not allowed in 'operator'
 
 None of the unary math operators e.g. '-' and '~' allow strings as an operand.
-
------
-
-### CQL0048: blob operand not allowed in 'NOT'
-
-The logical not operator only works on numbers.  Blobs are not allow as an operand.
-
------
-
-### CQL0049: object operand not allowed in 'NOT'
-
-The logical not operator only works on numbers.  Objects are not allow as an operand.
-
------
-
-### CQL0050: string operand not allowed in 'NOT'
-
-The logical not operator only works on numbers.  Strings are not allow as an operand.
 
 -----
 
@@ -13404,7 +13382,7 @@ CQL 0410 : unused, this was added to prevent merge conflicts at the end on liter
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Thu Jul 15 15:45:33 PDT 2021
+Snapshot as of Tue Jul 20 22:25:03 PDT 2021
 
 ### Rules
 

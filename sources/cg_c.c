@@ -1064,6 +1064,58 @@ static void cg_binary(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, 
   CHARBUF_CLOSE(result);
 }
 
+// code gen for expr IS FALSE
+// operands already known to be of the correct type so all we have to do is
+// check for nullable or not nullable and generate the appropriate code using
+// either the helper or just looking at the value
+static void cg_expr_is_false(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
+  Contract(is_ast_is_false(ast));
+  EXTRACT_ANY_NOTNULL(expr, ast->left);
+
+  sem_t sem_type_is_expr = expr->sem->sem_type;
+
+  // expr IS FALSE
+  bprintf(is_null, "0"); // the result of is false is never null
+
+  // we always put parens because ! is the highest binding, so we can use ROOT, the callee never needs parens
+  CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
+
+  if (is_nullable(sem_type_is_expr)) {
+    bprintf(value, "cql_is_nullable_false(%s, %s)", expr_is_null.ptr, expr_value.ptr);
+  }
+  else {
+    bprintf(value, "!(%s)", expr_value.ptr);
+  }
+
+  CG_POP_EVAL(expr);
+}
+
+// code gen for expr IS TRUE
+// operands already known to be of the correct type so all we have to do is
+// check for nullable or not nullable and generate the appropriate code using
+// either the helper or just looking at the value
+static void cg_expr_is_true(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
+  Contract(is_ast_is_true(ast));
+  EXTRACT_ANY_NOTNULL(expr, ast->left);
+
+  sem_t sem_type_is_expr = expr->sem->sem_type;
+
+  // expr IS TRUE
+  bprintf(is_null, "0"); // the result of is true is never null
+
+  // we always put parens because ! is the highest binding, so we can use ROOT, the callee never needs parens
+  CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT); 
+
+  if (is_nullable(sem_type_is_expr)) {
+    bprintf(value, "cql_is_nullable_true(%s, %s)", expr_is_null.ptr, expr_value.ptr);
+  }
+  else {
+    bprintf(value, "!!(%s)", expr_value.ptr);
+  }
+
+  CG_POP_EVAL(expr);
+}
+
 // The code-gen for is_null is one of the easiest.  The recursive call
 // produces is_null as one of the outputs.  Use that.  Our is_null result
 // is always zero because IS NULL is never, itself, null.
@@ -2080,7 +2132,7 @@ static void cg_id(ast_node *expr, charbuf *is_null, charbuf *value) {
   // map the logical @rc variable to the correct saved version
   if (!strcmp(name, "@rc")) {
     bprintf(value, "%s", rcthrown_current);
-    bprintf(is_null, "0", name);
+    bprintf(is_null, "0");
     rcthrown_used = 1;
     return;
   }
@@ -7064,8 +7116,10 @@ cql_noexport void cg_c_init(void) {
   EXPR_INIT(select_if_nothing_throw_expr, cg_expr_select_if_nothing_throw, "SELECT", C_EXPR_PRI_ROOT);
   EXPR_INIT(select_if_nothing_or_null_expr, cg_expr_select_if_nothing_or_null, "SELECT", C_EXPR_PRI_ROOT);
   EXPR_INIT(with_select_stmt, cg_expr_select, "WITH...SELECT", C_EXPR_PRI_ROOT);
-  EXPR_INIT(is, cg_expr_is, "IS NULL", C_EXPR_PRI_EQ_NE);
-  EXPR_INIT(is_not, cg_expr_is_not, "IS NOT NULL", C_EXPR_PRI_EQ_NE);
+  EXPR_INIT(is, cg_expr_is, "IS", C_EXPR_PRI_EQ_NE);
+  EXPR_INIT(is_not, cg_expr_is_not, "IS NOT", C_EXPR_PRI_EQ_NE);
+  EXPR_INIT(is_true, cg_expr_is_true, "IS TRUE", C_EXPR_PRI_EQ_NE);
+  EXPR_INIT(is_false, cg_expr_is_false, "IS FALSE", C_EXPR_PRI_EQ_NE);
   EXPR_INIT(like, cg_binary_compare, "LIKE", C_EXPR_PRI_EQ_NE);
   EXPR_INIT(not_like, cg_binary_compare, "LIKE", C_EXPR_PRI_EQ_NE);
   EXPR_INIT(in_pred, cg_expr_in_pred_or_not_in, "IN", C_EXPR_PRI_ROOT);

@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu Jul 15 15:45:32 PDT 2021
+Snapshot as of Tue Jul 20 22:25:02 PDT 2021
 
 ### Operators and Literals
 
@@ -25,14 +25,14 @@ ASSIGN
 OR
 AND
 NOT
-BETWEEN
-'<>' '!=' '=' '==' LIKE GLOB MATCH REGEXP IN IS_NOT IS
+BETWEEN NOT_BETWEEN '<>' '!=' '=' '==' LIKE NOT_LIKE GLOB NOT_GLOB MATCH NOT_MATCH REGEXP NOT_REGEXP IN NOT_IN IS_NOT IS IS_TRUE IS_FALSE
 '<' '>' '>=' '<='
 '<<' '>>' '&' '|'
 '+' '-'
 '*' '/' '%'
-UMINUS '~' COLLATE
 CONCAT
+COLLATE
+UMINUS '~'
 ```
 NOTE: The above varies considerably from the C binding order!!!
 
@@ -85,7 +85,7 @@ opt_stmt_list:
 
 stmt_list:
   stmt ';'
-  | stmt ';' stmt_list
+  | stmt_list stmt ';'
   ;
 
 stmt:
@@ -522,6 +522,8 @@ num_literal:
   "integer-literal"
   | "long-literal"
   | "real-literal"
+  | "TRUE"
+  | "FALSE"
   ;
 
 const_expr:
@@ -582,6 +584,8 @@ math_expr:
   | math_expr '*' math_expr
   | math_expr '/' math_expr
   | math_expr '%' math_expr
+  | math_expr "IS" "TRUE"
+  | math_expr "IS" "FALSE"
   | '-' math_expr
   | '~' math_expr
   | "NOT" math_expr
@@ -600,20 +604,23 @@ math_expr:
   | math_expr "LIKE" math_expr
   | math_expr "NOT" "LIKE" math_expr
   | math_expr "MATCH" math_expr
+  | math_expr "NOT" "MATCH" math_expr
   | math_expr "REGEXP" math_expr
+  | math_expr "NOT" "REGEXP" math_expr
   | math_expr "GLOB" math_expr
+  | math_expr "NOT" "GLOB" math_expr
+  | math_expr "BETWEEN" math_expr "AND" math_expr
   | math_expr "NOT" "BETWEEN" math_expr "AND" math_expr
-  | math_expr "BETWEEN" math_expr  "AND" math_expr
-  | math_expr "IS NOT" math_expr
+  | math_expr "IS" "NOT" math_expr
   | math_expr "IS" math_expr
   | math_expr "||" math_expr
+  | math_expr "COLLATE" name
   ;
 
 expr:
   math_expr
   | expr "AND" expr
   | expr "OR" expr
-  | expr "COLLATE" name
   ;
 
 case_list:

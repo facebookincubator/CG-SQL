@@ -1462,6 +1462,48 @@ create table bad_constants_table(
 -- - Error
 let bool_x := const(1==1);
 
+-- TEST: 2 is true
+-- rewritten as "1"
+-- + SET bool_x := 1;
+-- - Error
+set bool_x := const(2 is true);
+
+-- TEST: eval error bubbles up
+-- + {assign}: err
+-- + SET bool_x := CONST(1 / 0 IS TRUE);
+-- + Error % evaluation of constant failed
+set bool_x := const(1/0 is true);
+
+-- TEST: true is not 2 --> this is true is an operator
+-- rewritten as "0"
+-- + SET bool_x := 0;
+-- - Error
+set bool_x := const(true is 2);
+
+-- TEST: null is not true
+-- rewritten as "0"
+-- + SET bool_x := 0;
+-- - Error
+set bool_x := const(null is true);
+
+-- TEST: 0 is false
+-- rewritten as "1"
+-- + SET bool_x := 1;
+-- - Error
+set bool_x := const(0 is false);
+
+-- TEST: null is not false
+-- rewritten as "0"
+-- + SET bool_x := 0;
+-- - Error
+set bool_x := const(null is false);
+
+-- TEST: eval error bubbles up
+-- + {assign}: err
+-- + SET bool_x := CONST(1 / 0 IS FALSE);
+-- + Error % evaluation of constant failed
+set bool_x := const(1/0 is false);
+
 -- TEST: internal const expression
 -- the internal const(1==1) is evaluated to a literal which then is used by the outer const
 -- the result must still be bool, this proves that we can correctly eval the type of
@@ -1511,6 +1553,21 @@ create table bad_conversions(
 create table good_conversions(
   data real not null default const(1)
 );
+
+-- TRUE constant
+-- + {let_stmt}: tru: bool notnull variable
+-- - Error
+LET tru := true;
+
+-- FALSE constant
+-- + {let_stmt}: fal: bool notnull variable
+-- - Error
+LET fal := false;
+
+-- Use TRUE and FALSE in a const expr
+-- + {assign}: fal: bool notnull variable
+-- - Error
+SET fal := const(FALSE AND TRUE);
 
 -- TEST: verify the correct types are extracted, also cover the final select option
 -- - Error
@@ -3806,25 +3863,25 @@ select const(1/0L);
 -- + {const}: err
 -- + Error % evaluation of constant failed
 -- +1 Error
-select const(1/not 1);
+select const(1 / not 1);
 
 -- TEST: divide by zero yields error in all forms (integer)
 -- + {const}: err
 -- + Error % evaluation of constant failed
 -- +1 Error
-select const(1%0);
+select const(1 % 0);
 
 -- TEST: divide by zero yields error in all forms (long)
 -- + {const}: err
 -- + Error % evaluation of constant failed
 -- +1 Error
-select const(1%0L);
+select const(1 % 0L);
 
 -- TEST: divide by zero yields error in all forms (bool)
 -- + {const}: err
 -- + Error % evaluation of constant failed
 -- +1 Error
-select const(1%not 1);
+select const(1 % not 1);
 
 -- TEST: variables not allowed in constant expressions (duh)
 -- + {const}: err
@@ -16367,13 +16424,12 @@ select not 0 between -1 and 2;
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
 -- not is weaker than between, must keep parens
 -- + SELECT (NOT 0) BETWEEN -1 AND 2;
-select (not 0 ) between -1 and 2;
+select (not 0) between -1 and 2;
 
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
 -- not is weaker than between, no parens needed
 -- + SELECT NOT 0 BETWEEN -1 AND 2;
-select not (0  between -1 and 2);
-
+select not (0 between -1 and 2);
 
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
 -- between is weaker than =, don't need parens
@@ -16381,14 +16437,29 @@ select not (0  between -1 and 2);
 select 1=2 between 2 and 2;
 
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
--- between is weaker than =, keep the parens
+-- between is the same as =, but it binds left to right, keep the parens
 -- + SELECT 1 = (2 BETWEEN 2 AND 2);
 select 1=(2 between 2 and 2);
 
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
--- between is weaker than =, don't need the parens
+-- between is the same as =, but it binds left to right
 -- + SELECT 1 = 2 BETWEEN 2 AND 2;
 select (1=2) between 2 and 2;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- between is the same as =, but it binds left to right
+-- + SELECT 0 BETWEEN -2 AND -1 = 4;
+select 0 between -2 and -1 = 4;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- between is the same as =, but it binds left to right (no parens needed)
+-- + SELECT 0 BETWEEN -2 AND -1 = 4;
+select (0 between -2 and -1) = 4;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- between is the same as =, but it binds left to right
+-- + SELECT 0 BETWEEN -2 AND (-1 = 4);
+select 0 between -2 and (-1 = 4);
 
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
 -- no parens need to be added in the natural order (and its left associative)
@@ -16409,3 +16480,188 @@ select 0 between 0 and (3 between 2 and 3);
 -- no parens are needed for the left arg of the between range
 -- + SELECT 0 BETWEEN 1 BETWEEN 3 AND 4 AND (3 BETWEEN 2 AND 3);
 select 0 between (1 between 3 and 4) and (3 between 2 and 3);
+
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+---- TILDE is stronger than CONCAT
+-- + SELECT ~1 || 2;
+-- - Error
+select ~ 1||2;  --> -22
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+---- TILDE is stronger than CONCAT
+-- + SELECT ~1 || 2;
+-- - Error
+select (~ 1)||2; --> -22
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+---- TILDE is stronger than CONCAT , parens must stay
+-- + SELECT ~(1 || 2);
+-- + Error % string operand not allowed in '~'
+select ~ (1||2); --> -13
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+--- NEGATION is stronger than CONCAT, no parens generated
+-- SELECT -0 || 1;
+-- - Error
+select -0||1;  --> 01
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+--- NEGATION is stronger than CONCAT, parens can be removed
+-- SELECT -0 || 1;
+-- - Error
+select (-0)||1; --> 01
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+--- NEGATION is stronger than CONCAT, parens must stay
+-- + SELECT -(0 || 1);
+-- + Error % string operand not allowed in '-'
+select -(0||1); --> -1
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+--- COLLATE is stronger than CONCAT, parens must stay
+-- + SELECT 'x' || 'y' COLLATE foo;
+select 'x' || 'y'  collate foo;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+--- COLLATE is stronger than CONCAT, parens must stay
+-- + SELECT 'x' || 'y' COLLATE foo;
+select 'x' ||  ('y' collate foo);
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+--- COLLATE is stronger than CONCAT, parens must stay
+-- + SELECT ('x' || 'y') COLLATE foo;
+select ('x' || 'y') collate foo;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- not is weaker than not between, no parens needed
+-- + SELECT NOT 0 NOT BETWEEN -1 AND 2;
+select not 0 not between -1 and 2;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- not is weaker than not between, must keep parens
+-- + SELECT (NOT 0) NOT BETWEEN -1 AND 2;
+select (not 0 ) not between -1 and 2;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- not is weaker than not between, no parens needed
+-- + SELECT NOT 0 NOT BETWEEN -1 AND 2;
+select not (0  not between -1 and 2);
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- not between is weaker than =, don't need parens
+-- + SELECT 1 = 2 NOT BETWEEN 2 AND 2;
+select 1=2 not between 2 and 2;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- not between is the same as =, but it binds left to right, keep the parens
+-- + SELECT 1 = (2 NOT BETWEEN 2 AND 2);
+select 1=(2 not between 2 and 2);
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- not between is the same as =, but it binds left to right
+-- + SELECT 1 = 2 NOT BETWEEN 2 AND 2;
+select (1=2) not between 2 and 2;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- not between is the same as =, but it binds left to right
+-- + SELECT 0 NOT BETWEEN -2 AND -1 = 4;
+select 0 not between -2 and -1 = 4;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- not between is the same as =, but it binds left to right (no parens needed)
+-- + SELECT 0 NOT BETWEEN -2 AND -1 = 4;
+select (0 not between -2 and -1) = 4;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- not between is the same as =, but it binds left to right
+-- + SELECT 0 NOT BETWEEN -2 AND (-1 = 4);
+select 0 not between -2 and (-1 = 4);
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- no parens need to be added in the natural order (and its left associative)
+-- + SELECT 0 NOT BETWEEN 0 AND 3 NOT BETWEEN 2 AND 3;
+select 0 not between 0 and 3 not between 2 and 3;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- no parens are needed here, this is left associative, the parens are redundant
+-- + SELECT 0 NOT BETWEEN 0 AND 3 NOT BETWEEN 2 AND 3;
+select (0 not between 0 and 3) not between 2 and 3;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- must keep the parens on the right arg, not between is left associative
+-- + SELECT 0 NOT BETWEEN 0 AND (3 NOT BETWEEN 2 AND 3);
+select 0 not between 0 and (3 not between 2 and 3);
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- no parens are needed for the left arg of the not between range
+-- + SELECT 0 NOT BETWEEN 1 NOT BETWEEN 3 AND 4 AND (3 NOT BETWEEN 2 AND 3);
+select 0 not between (1 not between 3 and 4) and (3 not between 2 and 3);
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- no parens are needed becasuse NOT like is the same strength as = and left to right
+-- + SELECT 'x' NOT LIKE 'y' = 1;
+-- - Error
+select 'x' not like 'y' = 1;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- no parens are needed becasuse NOT like is the same strength as = and left to right
+-- + SELECT 'x' NOT LIKE 'y' = 1;
+-- - Error
+select ('x' not like 'y') = 1;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- parens must stay for the for the right arg because that's not the normal order
+-- this doesn't make sense semantically but it should still parse correctly
+-- hence the error but still good tree shape
+-- + SELECT 'x' NOT LIKE ('y' = 1);
+-- + Error % incompatible types in expression '='
+select 'x' not like ('y' = 1);
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- no parens added
+-- + SELECT NOT 1 IS TRUE;
+-- - Error
+select NOT 1 is true;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- IS TRUE is stronger than NOT, parens can be removed
+-- - Error
+-- + SELECT NOT 1 IS TRUE;
+select NOT (1 is true);
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- IS TRUE is stronger than NOT, parens must stay
+-- - Error
+-- + SELECT (NOT 1) IS TRUE;
+select (NOT 1) is true;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- no parens added
+-- + SELECT 1 < 5 IS TRUE;
+-- - Error
+select 1 < 5 is true;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- IS TRUE is weaker than <, the parens can be removed
+-- - Error
+-- + SELECT 1 < 5 IS TRUE;
+select (1 < 5) is true;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- IS TRUE is weaker than <, the parens must stay
+-- + SELECT 1 < (5 IS TRUE);
+-- - Error
+select 1 < (5 is true);
+
+-- TEST: is true doesn't work on non numerics
+-- + {assign}: err
+-- + {is_true}: err
+-- + Error % string operand not allowed in 'IS TRUE'
+SET fal := 'x' is true;
+
+-- TEST: is false should fail on bogus args
+-- + {assign}: err
+-- + {is_false}: err
+-- + Error % string operand not allowed in 'NOT'
+SET fal := ( not 'x') is false;

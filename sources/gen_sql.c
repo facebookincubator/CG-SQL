@@ -710,6 +710,13 @@ static void gen_unary(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   if (pri_new < pri) gen_printf(")");
 }
 
+static void gen_postfix(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+  if (pri_new < pri) gen_printf("(");
+  gen_expr(ast->left, pri_new);
+  gen_printf(" %s", op);
+  if (pri_new < pri) gen_printf(")");
+}
+
 static void gen_expr_const(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   gen_printf("CONST(");
   gen_expr(ast->left, pri_new);
@@ -1225,7 +1232,7 @@ static void gen_expr_between(ast_node *ast, CSTR op, int32_t pri, int32_t pri_ne
   gen_printf(" BETWEEN ");
   gen_expr(range->left, pri_new);
   gen_printf(" AND ");
-  gen_expr(range->right, pri_new + 1); // the usual rules for the right operator 
+  gen_expr(range->right, pri_new + 1); // the usual rules for the right operand (see gen_binary)
   if (pri_new < pri) gen_printf(")");
 }
 
@@ -1238,7 +1245,7 @@ static void gen_expr_not_between(ast_node *ast, CSTR op, int32_t pri, int32_t pr
   gen_printf(" NOT BETWEEN ");
   gen_expr(range->left, pri_new);
   gen_printf(" AND ");
-  gen_expr(range->right, pri_new);
+  gen_expr(range->right, pri_new + 1); // the usual rules for the right operand (see gen_binary)
   if (pri_new < pri) gen_printf(")");
 }
 
@@ -3576,7 +3583,7 @@ cql_noexport void gen_init() {
   EXPR_INIT(sub, gen_binary, "-", EXPR_PRI_ADD);
   EXPR_INIT(not, gen_unary, "NOT ", EXPR_PRI_NOT);
   EXPR_INIT(tilde, gen_unary, "~", EXPR_PRI_TILDE);
-  EXPR_INIT(collate, gen_binary, "COLLATE", EXPR_PRI_TILDE);
+  EXPR_INIT(collate, gen_binary, "COLLATE", EXPR_PRI_COLLATE);
   EXPR_INIT(uminus, gen_uminus, "-", EXPR_PRI_TILDE);
   EXPR_INIT(eq, gen_binary, "=", EXPR_PRI_EQUALITY);
   EXPR_INIT(lt, gen_binary, "<", EXPR_PRI_INEQUALITY);
@@ -3599,11 +3606,16 @@ cql_noexport void gen_init() {
   EXPR_INIT(with_select_stmt, gen_expr_select, "WITH...SELECT", EXPR_PRI_ROOT);
   EXPR_INIT(is, gen_binary, "IS", EXPR_PRI_EQUALITY);
   EXPR_INIT(is_not, gen_binary, "IS NOT", EXPR_PRI_EQUALITY);
+  EXPR_INIT(is_true, gen_postfix, "IS TRUE", EXPR_PRI_EQUALITY);
+  EXPR_INIT(is_false, gen_postfix, "IS FALSE", EXPR_PRI_EQUALITY);
   EXPR_INIT(like, gen_binary, "LIKE", EXPR_PRI_EQUALITY);
   EXPR_INIT(not_like, gen_binary, "NOT LIKE", EXPR_PRI_EQUALITY);
   EXPR_INIT(match, gen_binary, "MATCH", EXPR_PRI_EQUALITY);
+  EXPR_INIT(not_match, gen_binary, "NOT MATCH", EXPR_PRI_EQUALITY);
   EXPR_INIT(regexp, gen_binary, "REGEXP", EXPR_PRI_EQUALITY);
+  EXPR_INIT(not_regexp, gen_binary, "NOT REGEXP", EXPR_PRI_EQUALITY);
   EXPR_INIT(glob, gen_binary, "GLOB", EXPR_PRI_EQUALITY);
+  EXPR_INIT(not_glob, gen_binary, "NOT GLOB", EXPR_PRI_EQUALITY);
   EXPR_INIT(in_pred, gen_expr_in_pred, "IN", EXPR_PRI_EQUALITY);
   EXPR_INIT(not_in, gen_expr_not_in, "NOT IN", EXPR_PRI_EQUALITY);
   EXPR_INIT(case_expr, gen_expr_case, "CASE", EXPR_PRI_ROOT);

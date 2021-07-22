@@ -305,13 +305,21 @@ sqlite> select (~1)*3;
 sqlite> select ~(1*3);
 -4
 
------ between is weaker than equality
+----- between is equal to equality and left to right
 sqlite> select 1=2 between 2 and 2;
 0
 sqlite> select 1=(2 between 2 and 2);
 1
 sqlite> select (1=2) between 2 and 2;
 0
+
+sqlite> select 0 between -2 and -1 = 4;
+0
+sqlite> select (0 between -2 and -1) = 4;
+0
+sqlite> select 0 between -2 and (-1 = 4);
+1
+
 
 */
 
@@ -320,14 +328,32 @@ sqlite> select (1=2) between 2 and 2;
 #define EXPR_PRI_OR 1
 #define EXPR_PRI_AND 2
 #define EXPR_PRI_NOT 3
-#define EXPR_PRI_BETWEEN 4
+#define EXPR_PRI_BETWEEN 5  // between is the same as equality, left to right
 #define EXPR_PRI_EQUALITY 5
 #define EXPR_PRI_INEQUALITY 6
 #define EXPR_PRI_BINARY 7
 #define EXPR_PRI_ADD 8
 #define EXPR_PRI_MUL 9
-#define EXPR_PRI_TILDE 10
-#define EXPR_PRI_CONCAT 11
+#define EXPR_PRI_CONCAT 10
+#define EXPR_PRI_COLLATE 11
+#define EXPR_PRI_TILDE 12
+
+/* from the SQLite grammar
+
+%left OR.
+%left AND.
+%right NOT.
+%left IS MATCH LIKE_KW BETWEEN IN ISNULL NOTNULL NE EQ.
+%left GT LE LT GE.
+%right ESCAPE.    NYI in CQL
+%left BITAND BITOR LSHIFT RSHIFT.
+%left PLUS MINUS.
+%left STAR SLASH REM.
+%left CONCAT.
+%left COLLATE.
+%right BITNOT.
+
+*/
 
 // relevant C binding order
 #define C_EXPR_PRI_ROOT -999
@@ -653,6 +679,8 @@ AST(table_function)
 AST(table_join)
 AST(eq)
 AST(is_not)
+AST1(is_false)
+AST1(is_true)
 AST(ne)
 AST(le)
 AST(lt)
@@ -661,8 +689,11 @@ AST(ge)
 AST(like)
 AST(not_like)
 AST(match)
+AST(not_match)
 AST(regexp)
+AST(not_regexp)
 AST(glob)
+AST(not_glob)
 AST(not_in)
 AST(in_pred)
 AST(not_between)
