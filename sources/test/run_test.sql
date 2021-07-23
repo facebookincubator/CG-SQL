@@ -2048,6 +2048,29 @@ BEGIN_TEST(equality_pri)
   EXPECT_SQL_TOO(((-1 > -2) is true));
   EXPECT_SQL_TOO(not -1 > (-2 is true));
 
+  -- https://sqlite.org/forum/forumpost/70e78ad16a
+  --
+  -- sqlite> select false is true < false;
+  -- 1
+  -- sqlite> select sqlite_version();
+  -- 3.32.3
+  --
+  -- vs.
+  -- 
+  -- PostgreSQL> select false is true < false;
+  -- false
+  -- 
+  -- When CQL emits the it naturally adds parens around (false is true) because it binds weaker than <
+  -- which ensures the "correct" eval order even though SQLite would do it the other way.
+  -- CQL is like other SQL systems in that "is true" is an operator.  In SQLite the way it works is
+  -- that if the right operator of "IS" happens to the the literal "true" then you get "is true" behavior
+  -- this is wrong...  And hard to emulate.   CQL forces it the normal way with parens.
+  -- SQLite will see  "not ((false is true) < false)";
+  --
+  -- This may be fixed in future SQLites, but even if that happens the below will still pass.
+  --
+  EXPECT_SQL_TOO(not(false is true < false));
+
 END_TEST(equality_pri)
 
 BEGIN_TEST(between_pri)
