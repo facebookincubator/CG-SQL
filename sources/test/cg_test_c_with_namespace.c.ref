@@ -14584,6 +14584,34 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
 
   /*
+  SET true_test := 1 IS NOT TRUE;
+  */
+  true_test = !(1);
+
+  // The statement ending at line XXXX
+
+  /*
+  SET false_test := 0 IS NOT FALSE;
+  */
+  false_test = !!(0);
+
+  // The statement ending at line XXXX
+
+  /*
+  SET true_test := i0_nullable IS NOT TRUE;
+  */
+  true_test = !cql_is_nullable_true(i0_nullable.is_null, i0_nullable.value);
+
+  // The statement ending at line XXXX
+
+  /*
+  SET false_test := i0_nullable IS NOT FALSE;
+  */
+  false_test = !cql_is_nullable_false(i0_nullable.is_null, i0_nullable.value);
+
+  // The statement ending at line XXXX
+
+  /*
   LET this_is_the_end := 0xf00d;
   */
   this_is_the_end = 0xf00d;

@@ -1,1 +1,1 @@
---c_include_namespace requires an additional C include namespace
+--c_include_namespace requires an additional param for the C include namespace.

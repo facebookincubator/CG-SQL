@@ -156,7 +156,7 @@ stack_level--;
 
 #define CG_CHARBUF_OPEN_SYM_WITH_PREFIX(name, symbol_prefix, ...) \
 CHARBUF_OPEN(name); \
-cg_sym_name(&name, symbol_prefix, ##__VA_ARGS__, NULL)
+cg_sym_name(rt->symbol_case, &name, symbol_prefix, ##__VA_ARGS__, NULL)
 
 #define CG_CHARBUF_OPEN_SYM(name, ...) \
 CG_CHARBUF_OPEN_SYM_WITH_PREFIX(name, rt->symbol_prefix, ##__VA_ARGS__)
@@ -239,7 +239,7 @@ cql_data_decl( charbuf *_Nullable cg_fragments_output );
 // The prefix will be included as specified.
 //
 // All input names are assumed to be in snake case already.
-cql_noexport void cg_sym_name(charbuf *_Nonnull output, CSTR _Nonnull symbol_prefix, CSTR _Nonnull name, ...);
+cql_noexport void cg_sym_name(cg_symbol_case symbol_case, charbuf *_Nonnull output, CSTR _Nonnull symbol_prefix, CSTR _Nonnull name, ...);
 
 // Initializes all of the common buffers and sym tables.
 cql_noexport void cg_common_init(void);

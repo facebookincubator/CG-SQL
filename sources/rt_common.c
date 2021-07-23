@@ -154,27 +154,17 @@ static rtdata rt_java = {
   .cql_object_ref = "Object",
   .cql_string_ref = "String",
   .cql_result_set_get_count =
-    "public int getCount() {\n"
+    "%s {\n"
     "  return mResultSet.getCount();\n"
     "}\n\n",
   .cql_result_set_get_data =
-    "public %s %s(%s) {\n"
+    "%s {\n"
     "  return mResultSet.get%s(%s, %s);\n"
     "}\n\n",
   .cql_bool_nullable = "Boolean",
   .cql_int32_nullable = "Integer",
   .cql_int64_nullable = "Long",
   .cql_double_nullable = "Double",
-  .cql_java_tmp_class_def = "public final class %s extends CQLViewModel {\n\n",
-  .cql_java_tmp_class_constructor =
-    "public %s(CQLResultSet resultSet) {\n"
-    "  super(resultSet);\n"
-    "}\n\n",
-  .cql_java_tmp_getter_nullable =
-    "@Nullable\n"
-    "public %s %s(%s) {\n"
-    "  return mResultSet.get%s(%s, %s);\n"
-    "}\n\n",
   .cql_result_set_has_identity_columns =
     "@Override\n"
     "protected boolean hasIdentityColumns() {\n"

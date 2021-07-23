@@ -3903,12 +3903,12 @@ Among the things that are verified:
 * the projection of a select has unique column labels if they are used
 
 #### The `SELECT *` Statement
-Select * is special in that it creates its own struct type by assembling
-all the columns of all the tables in the selects join result.  CQL rewrites these statement into
-a select with the specific columns explicitly listed.  While this makes the program
-slightly bigger it means that logically deleted columns are never present in results
-because `SELECT *` won't select them and attempting to use a logically deleted
-column results in an error.
+`SELECT *` is special in that it creates its own struct type by assembling
+all the columns of all the tables in the select's join result.  CQL rewrites these
+column names into a new `SELECT` with the specific columns explicitly listed.
+While this makes the program slightly bigger it means that logically deleted columns
+are never present in results because `SELECT *` won't select them and attempting
+to use a logically deleted column results in an error.
 
 #### The `CREATE TABLE` Statement
 Unlike the other parts of DDL we actually deeply care about the tables.
@@ -4745,6 +4745,13 @@ It seemed essential to be able to record changes to the schema over time so CQL 
 * ensure columns are only added where they should be
 * generate compiler errors if you try to access columns that are deprecated
 * move from one version to another tracking schema facets that have to be added
+
+To use cql in this fashion, the sequence will be something like the below.  See Appendix 1 for command line details.
+
+```
+cql --in input.sql --rt schema_upgrade --cg schema_upgrader.sql \
+                   --global_proc desired_upgrade_proc_name
+```
 
 ### Annotations
 
@@ -5748,7 +5755,7 @@ Example: Referring to the regions above you might do something like this
 
 ```bash
 
- # All of these also need a --global_proc param for the entry point but that's not relevant here
+# All of these also need a --global_proc param for the entry point but that's not relevant here
 cql --in schema.sql --cg shared.sql --rt schema_upgrade  --include_regions extra
 cql --in schema.sql --cg f1.cql --rt schema_upgrade --include_regions feature1 --exclude_regions extra
 cql --in schema.sql --cg f2.cql --rt schema_upgrade --include_regions feature2 --exclude_regions extra
@@ -6984,6 +6991,12 @@ So it's fairly easy to call from C/C++ test code or from CQL test code.
 -->
 To help facilitate additional tools that might want to depend on CQL input files further down the toolchain CQL includes a JSON output format for SQL DDL as well as stored procedure information, including special information for a single-statement DML.  "Single-statement DML" refers to those stored procedures that that consist of a single `insert`, `select`, `update`, or `delete`.   Even though such procedures are just one statement, good argument binding can create very powerful DML fragments that are re-usable.  Many CQL stored procedures are of this form (in practice maybe 95% are just one statement).
 
+To use cql in this fashion, the sequence will be something like the below.  See Appendix 1 for command line details.
+
+```
+cql --in input.sql --rt json_schema --cg out.json
+```
+
 Below are some examples of the JSON output taken from a CQL test file.  Note that the JSON has free text inserted into it as part of the test output, that obviously doesn't appear in the final output but it is especially illustrative here.  This example illustrates almost all the possible JSON fragments.
 
 ```
@@ -7921,13 +7934,6 @@ Some additional properties not mentioned above that are worth noting:
   * the `fromTables` key will give you an array of tables that were used the the `from` clause of a select or some other `select`-ish context in which you only read from the table
 * the `usesProcedures` key for a given proc has an array of the procedures it calls, this allows for complete dependency analysis if needed
 
-
-To use cql in this fashion:
-
-```
-cql --in input.sql --rt json_schema --cg out.json
-```
-
 NOTE: `@ATTRIBUTE` can be applied any number of times to the entities here, including the procedures (i.e. immediately before the `CREATE PROCEDURE`) .  Those attributes appear in the JSON in an optional `attributes` chunk.  Attributes are quite flexible (you can easily encode a lisp program in attributes if you were so inclined) so you can use them very effectively to annotate your CQL entities as needed for downstream tools.
 
 
@@ -8339,13 +8345,22 @@ NOTE: different result types require a different number of output files with dif
 
 ### --test
 * some of the output types can include extra diagnostics if `--test` is included
-* that often makes the outputs badly formed so this is generally good for humans only
+* the test output often makes the outputs badly formed so this is generally good for humans only
 
-### --java_package_name
+### --java_package_name name
 * used by java code generators when they output a class. Allows to specify the name of package the class will be a part of
 
-### --java_assembly_query_classname
+### --java_assembly_query_classname name
 * Fully qualified name of the parent class for the Java assembly. Used by java code generators when they output an extension fragment class.
+
+### --java_fragment_interface_mode
+* Sets the Java codegen mode to generate interfaces for base and extension fragments instead of classes.
+
+### --java_fragment_interfaces interface
+* Fully qualified name of the generated Java interfaces that an extension or assembly fragment implements. This should correspond to the base fragment and extension fragments that are referenced by the current fragment being generated.
+
+### --java_imports name
+* Fully qualified name to import in the emitted java source.
 
 ### --c_include_namespace
 * for the C codegen runtimes, it determines the header namespace (as in #include <namespace/file.h) that the headers will have to be referred when included from other sources.
@@ -8410,7 +8425,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Jul 20 22:25:02 PDT 2021
+Snapshot as of Thu Jul 22 16:55:14 PDT 2021
 
 ### Operators and Literals
 
@@ -8422,7 +8437,7 @@ ASSIGN
 OR
 AND
 NOT
-BETWEEN NOT_BETWEEN '<>' '!=' '=' '==' LIKE NOT_LIKE GLOB NOT_GLOB MATCH NOT_MATCH REGEXP NOT_REGEXP IN NOT_IN IS_NOT IS IS_TRUE IS_FALSE
+BETWEEN NOT_BETWEEN '<>' '!=' '=' '==' LIKE NOT_LIKE GLOB NOT_GLOB MATCH NOT_MATCH REGEXP NOT_REGEXP IN NOT_IN IS_NOT IS IS_TRUE IS_FALSE IS_NOT_TRUE IS_NOT_FALSE
 '<' '>' '>=' '<='
 '<<' '>>' '&' '|'
 '+' '-'
@@ -8981,6 +8996,8 @@ math_expr:
   | math_expr '*' math_expr
   | math_expr '/' math_expr
   | math_expr '%' math_expr
+  | math_expr "IS" "NOT" "TRUE"
+  | math_expr "IS" "NOT" "FALSE"
   | math_expr "IS" "TRUE"
   | math_expr "IS" "FALSE"
   | '-' math_expr
@@ -13382,7 +13399,7 @@ CQL 0410 : unused, this was added to prevent merge conflicts at the end on liter
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue Jul 20 22:25:03 PDT 2021
+Snapshot as of Thu Jul 22 16:55:14 PDT 2021
 
 ### Rules
 

@@ -275,7 +275,7 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
     return; \
   } \
   \
-  if ((#op)[0] == '/' && is_result_false(&right)) { \
+  if ((#op)[0] == '/' && result_is_false(&right)) { \
     /* special case to prevent divide by zero */ \
     result->sem_type = SEM_TYPE_ERROR; \
     return; \
@@ -329,7 +329,7 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
     return; \
   } \
   \
-  if ((#op)[0] == '%' && is_result_false(&right)) { \
+  if ((#op)[0] == '%' && result_is_false(&right)) { \
     /* special case to prevent divide by zero */ \
     result->sem_type = SEM_TYPE_ERROR; \
     return; \
@@ -417,7 +417,7 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
   Invariant(result->sem_type == SEM_TYPE_BOOL);
 
 // True if the node is a zero; not err, not NULL, an actual zero
-static bool_t is_result_false(eval_node *result) {
+static bool_t result_is_false(eval_node *result) {
   // null is not false
   if (result->sem_type == SEM_TYPE_NULL || result->sem_type == SEM_TYPE_ERROR) {
     return false;
@@ -439,7 +439,6 @@ static bool_t result_is_true(eval_node *result) {
   eval_cast_to(&temp, SEM_TYPE_BOOL);
   return temp.bool_value;
 }
-
 
 // Having defined the helper macros all of the normal operators
 // are now just one of the standard expansions
@@ -594,7 +593,7 @@ static void eval_is_false(ast_node *expr, eval_node *result) {
     return;
   }
 
-  result->bool_value = is_result_false(result);
+  result->bool_value = result_is_false(result);
   result->sem_type = SEM_TYPE_BOOL;
 }
 
@@ -607,6 +606,42 @@ static void eval_is_true(ast_node *expr, eval_node *result) {
   }
 
   result->bool_value = result_is_true(result);
+  result->sem_type = SEM_TYPE_BOOL;
+}
+
+// Is not true has simple rules;  If the operand is an error it is unchanged
+// null becomes TRUE any other is converted to a bool and inverted
+static void eval_is_not_true(ast_node *expr, eval_node *result) {
+  eval(expr->left, result);
+  if (result->sem_type == SEM_TYPE_ERROR) {
+    return;
+  }
+
+  if (result->sem_type == SEM_TYPE_NULL) {
+    result->bool_value = 1;
+  }
+  else {
+    result->bool_value = !result_is_true(result);
+  }
+
+  result->sem_type = SEM_TYPE_BOOL;
+}
+
+// Is not false has simple rules;  If the operand is an error it is unchanged
+// null becomes TRUE any other is converted to a bool
+static void eval_is_not_false(ast_node *expr, eval_node *result) {
+  eval(expr->left, result);
+  if (result->sem_type == SEM_TYPE_ERROR) {
+    return;
+  }
+
+  if (result->sem_type == SEM_TYPE_NULL) {
+    result->bool_value = 1;
+  }
+  else {
+    result->bool_value = !result_is_false(result);
+  }
+
   result->sem_type = SEM_TYPE_BOOL;
 }
 
@@ -704,7 +739,7 @@ static void eval_and(ast_node *expr, eval_node *result) {
     return;
   }
 
-  if (is_result_false(&left)) {
+  if (result_is_false(&left)) {
     result->sem_type = SEM_TYPE_BOOL;
     result->bool_value = 0;
     return;
@@ -717,7 +752,7 @@ static void eval_and(ast_node *expr, eval_node *result) {
     return;
   }
 
-  if (is_result_false(&right)) {
+  if (result_is_false(&right)) {
     result->sem_type = SEM_TYPE_BOOL;
     result->bool_value = 0;
     return;
@@ -1027,6 +1062,8 @@ cql_noexport void eval_init() {
   EXPR_INIT(is_not);
   EXPR_INIT(is_true);
   EXPR_INIT(is_false);
+  EXPR_INIT(is_not_true);
+  EXPR_INIT(is_not_false);
   EXPR_INIT(cast_expr);
   EXPR_INIT(not);
   EXPR_INIT(tilde);

@@ -398,7 +398,7 @@ code_gen_java_test() {
     failed
   fi
 
-  echo running java codegen test for extension query fragment
+  echo running java codegen test for extension query fragment with class mode
   if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_extension_fragment_java.out" --in "${TEST_DIR}/cg_test_extension_java_fragment.sql" --rt java --java_package_name com.facebook.cqlviewmodels --java_assembly_query_classname com.facebook.cqlviewmodels.cg_test_assembly_query_java 2>"${OUT_DIR}/cg_test_java_ext_frag.err"
   then
     echo "ERROR:"
@@ -406,11 +406,51 @@ code_gen_java_test() {
     failed
   fi
 
-  echo running java codegen test for assembly query fragment
+  echo running java codegen test for assembly query fragment with class mode
   if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_assembly_query_java.out" --in "${TEST_DIR}/cg_test_assembly_query.sql" --rt java --java_package_name com.facebook.cqlviewmodels 2>"${OUT_DIR}/cg_test_java_asm_frag.err"
   then
     echo "ERROR:"
     cat "${OUT_DIR}/cg_test_java_asm_frag.err"
+    failed
+  fi
+
+  echo running java codegen test for base query fragment with interface mode
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_base_fragment_java_interface.out" --in "${TEST_DIR}/cg_test_base_java_fragment.sql" --rt java --java_package_name com.facebook.cqlviewmodels --java_fragment_interface_mode 2>"${OUT_DIR}/cg_test_java_base_frag_interface.err"
+  then
+    echo "ERROR:"
+    cat "${OUT_DIR}/cg_test_java_base_frag_interface.err"
+    failed
+  fi
+
+  echo running java codegen test for extension query fragment with interface mode
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_extension_fragment_java_interface.out" --in "${TEST_DIR}/cg_test_extension_java_fragment.sql" --rt java --java_package_name com.facebook.cqlviewmodels --java_fragment_interface_mode 2>"${OUT_DIR}/cg_test_java_ext_frag_interface.err"
+  then
+    echo "ERROR:"
+    cat "${OUT_DIR}/cg_test_java_ext_frag_interface.err"
+    failed
+  fi
+
+  echo running java codegen test for assembly query fragment with interface mode
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_assembly_query_java_interface.out" --in "${TEST_DIR}/cg_test_assembly_query.sql" --rt java --java_package_name com.facebook.cqlviewmodels --java_fragment_interface_mode 2>"${OUT_DIR}/cg_test_java_asm_frag_interface.err"
+  then
+    echo "ERROR:"
+    cat "${OUT_DIR}/cg_test_java_asm_frag_interface.err"
+    failed
+  fi
+
+  echo running java codegen test for extension query fragment with interface mode and interface param
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_extension_fragment_java_with_interface_param.out" --in "${TEST_DIR}/cg_test_extension_java_fragment.sql" --rt java --java_package_name com.facebook.cqlviewmodels --java_fragment_interface_mode --java_import com.facebook.cqlviewmodels.cg_test_base_fragment_java_interface --java_fragment_interface com.facebook.cqlviewmodels.cg_test_base_fragment_java_interface 2>"${OUT_DIR}/cg_test_java_ext_frag_with_interface_param.err"
+  then
+    echo "ERROR:"
+    cat "${OUT_DIR}/cg_test_java_ext_frag_with_interface_param.err"
+    failed
+  fi
+
+  echo running java codegen test for assembly query fragment with interface mode and interface param
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_assembly_query_java_with_interface_param.out" --in "${TEST_DIR}/cg_test_assembly_query.sql" --rt java --java_package_name com.facebook.cqlviewmodels --java_fragment_interface_mode --java_import com.facebook.cqlviewmodels.cg_test_extension_fragment_java_interface --java_fragment_interface com.facebook.cqlviewmodels.cg_test_extension_fragment_java_interface 2>"${OUT_DIR}/cg_test_java_asm_frag_with_interface_param.err"
+  then
+    echo "ERROR:"
+    cat "${OUT_DIR}/cg_test_java_with_interface_param.err"
     failed
   fi
 
@@ -422,21 +462,6 @@ code_gen_java_test() {
     failed
   fi
 
-  echo running java codegen test for out with object
-  if ${CQL} --test --cg "${OUT_DIR}/cg_test_java_out_object.out" --in "${TEST_DIR}/cg_test_out_object.sql" --rt java --java_package_name com.facebook.cqlviewmodels 2>"${OUT_DIR}/cg_test_java_obj_cursor.err"
-  then
-    echo 'cursor with object in it, this should have caused an error'
-    cat "${OUT_DIR}/cg_test_java_obj_cursor.err"
-    failed
-  fi
-
-  echo 'running missing --java_assembly_query_classname flag for extension fragment codegen test'
-  if ${CQL} --test --cg "${OUT_DIR}/__temp.out" --in "${TEST_DIR}/cg_test_extension_java_fragment.sql" --rt java --java_package_name com.facebook.cqlviewmodels 2>"${OUT_DIR}/java_classname_missing.err"
-  then
-    echo '--java_assembly_query_classname was missing, this should have caused an error'
-    failed
-  fi
-
   echo validating codegen
   echo "  computing diffs (empty if none)"
 
@@ -444,6 +469,11 @@ code_gen_java_test() {
   on_diff_exit cg_test_java_nullable_proc.out
   on_diff_exit cg_test_extension_fragment_java.out
   on_diff_exit cg_test_assembly_query_java.out
+  on_diff_exit cg_test_base_fragment_java_interface.out
+  on_diff_exit cg_test_extension_fragment_java_interface.out
+  on_diff_exit cg_test_assembly_query_java_interface.out
+  on_diff_exit cg_test_extension_fragment_java_with_interface_param.out
+  on_diff_exit cg_test_assembly_query_java_with_interface_param.out
   on_diff_exit cg_test_java_out_union.out
 }
 
@@ -618,7 +648,7 @@ assorted_errors_test() {
 
   if ${CQL} --cqlrt 2>"${OUT_DIR}/cqlrt_arg_missing.err"
   then
-    echo "failed to require a file arg  with --cqlrt"
+    echo "failed to require a file arg with --cqlrt"
     failed
   fi
 
@@ -985,6 +1015,15 @@ misc_cases() {
   fi
 
   on_diff_exit java_classname_noargs.err
+
+  echo 'running missing --java_fragment_interface args for extension fragment codegen test'
+  if ${CQL} --test --cg "${OUT_DIR}/__temp.out" --in "${TEST_DIR}/cg_test_extension_java_fragment.sql" --rt java --java_package_name com.facebook.cqlviewmodels --java_fragment_interface 2>"${OUT_DIR}/java_fragment_interface_noargs.err"
+  then
+    echo '--java_fragment_interface had no arguments, this should have caused an error'
+    failed
+  fi
+
+  on_diff_exit java_fragment_interface_noargs.err
 
   echo 'testing the generated from comments in non-test environment.'
   if ! ${CQL} --cg "${OUT_DIR}/cg_test_generated_from.h" "${OUT_DIR}/cg_test_generated_from.c" "${OUT_DIR}/cg_test_generated_from.out" --in "${TEST_DIR}/cg_test_generated_from.sql" 2>"${OUT_DIR}/cg_test_generated_from.err"

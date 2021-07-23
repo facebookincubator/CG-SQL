@@ -1,1 +1,1 @@
---java_assembly_query_classname requires an additional assembly query classname for extension fragment codegen
+--java_assembly_query_classname requires an additional param for the assembly query classname for extension fragment Java codegen.

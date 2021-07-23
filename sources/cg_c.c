@@ -1090,6 +1090,32 @@ static void cg_expr_is_false(ast_node *ast, CSTR op, charbuf *is_null, charbuf *
   CG_POP_EVAL(expr);
 }
 
+// code gen for expr IS NOT FALSE
+// operands already known to be of the correct type so all we have to do is
+// check for nullable or not nullable and generate the appropriate code using
+// either the helper or just looking at the value
+static void cg_expr_is_not_false(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
+  Contract(is_ast_is_not_false(ast));
+  EXTRACT_ANY_NOTNULL(expr, ast->left);
+
+  sem_t sem_type_is_expr = expr->sem->sem_type;
+
+  // expr IS NOT FALSE
+  bprintf(is_null, "0"); // the result of is false is never null
+
+  // we always put parens because ! is the highest binding, so we can use ROOT, the callee never needs parens
+  CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
+
+  if (is_nullable(sem_type_is_expr)) {
+    bprintf(value, "!cql_is_nullable_false(%s, %s)", expr_is_null.ptr, expr_value.ptr);
+  }
+  else {
+    bprintf(value, "!!(%s)", expr_value.ptr);
+  }
+
+  CG_POP_EVAL(expr);
+}
+
 // code gen for expr IS TRUE
 // operands already known to be of the correct type so all we have to do is
 // check for nullable or not nullable and generate the appropriate code using
@@ -1111,6 +1137,32 @@ static void cg_expr_is_true(ast_node *ast, CSTR op, charbuf *is_null, charbuf *v
   }
   else {
     bprintf(value, "!!(%s)", expr_value.ptr);
+  }
+
+  CG_POP_EVAL(expr);
+}
+
+// code gen for expr IS NOT TRUE
+// operands already known to be of the correct type so all we have to do is
+// check for nullable or not nullable and generate the appropriate code using
+// either the helper or just looking at the value
+static void cg_expr_is_not_true(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
+  Contract(is_ast_is_not_true(ast));
+  EXTRACT_ANY_NOTNULL(expr, ast->left);
+
+  sem_t sem_type_is_expr = expr->sem->sem_type;
+
+  // expr IS NOT TRUE
+  bprintf(is_null, "0"); // the result of is not true is never null
+
+  // we always put parens because ! is the highest binding, so we can use ROOT, the callee never needs parens
+  CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT); 
+
+  if (is_nullable(sem_type_is_expr)) {
+    bprintf(value, "!cql_is_nullable_true(%s, %s)", expr_is_null.ptr, expr_value.ptr);
+  }
+  else {
+    bprintf(value, "!(%s)", expr_value.ptr);
   }
 
   CG_POP_EVAL(expr);
@@ -7118,6 +7170,8 @@ cql_noexport void cg_c_init(void) {
   EXPR_INIT(with_select_stmt, cg_expr_select, "WITH...SELECT", C_EXPR_PRI_ROOT);
   EXPR_INIT(is, cg_expr_is, "IS", C_EXPR_PRI_EQ_NE);
   EXPR_INIT(is_not, cg_expr_is_not, "IS NOT", C_EXPR_PRI_EQ_NE);
+  EXPR_INIT(is_not_true, cg_expr_is_not_true, "IS NOT TRUE", C_EXPR_PRI_EQ_NE);
+  EXPR_INIT(is_not_false, cg_expr_is_not_false, "IS NOT FALSE", C_EXPR_PRI_EQ_NE);
   EXPR_INIT(is_true, cg_expr_is_true, "IS TRUE", C_EXPR_PRI_EQ_NE);
   EXPR_INIT(is_false, cg_expr_is_false, "IS FALSE", C_EXPR_PRI_EQ_NE);
   EXPR_INIT(like, cg_binary_compare, "LIKE", C_EXPR_PRI_EQ_NE);

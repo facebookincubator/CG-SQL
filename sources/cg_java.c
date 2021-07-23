@@ -8,6 +8,7 @@
 // Perform codegen of the various nodes to "Java".
 
 #include "cg_java.h"
+#include <stdint.h>
 
 #include "ast.h"
 #include "cg_common.h"
@@ -26,6 +27,14 @@ typedef struct cg_java_context {
   // column offsets
   uint32_t frag_col_offset_count;
 
+  // Table that maps a fragment name to the interfaces that the assembly will implement.  These
+  // are collected from the in-scope base and extension fragments that have been parsed before
+  // the assembly.
+  symtab *frag_assembly_interfaces;
+
+  // Table that maps a fragment name to the base interface that the extension will extend.
+  symtab *frag_extension_interfaces;
+
   // In the Java codegen pipeline, we support only one SP per codegen run. This is to accomodate
   // the fact that in Java we can only generate one top level public class per file
   uint32_t generated_proc_count;
@@ -38,7 +47,7 @@ static void cg_java_ext_col_offsets_in_asm(charbuf *body, uint32_t col_count_for
   bprintf(body,
           "private static final Map<Long, Integer> fragmentColOffsetsForCore = new HashMap<>();\n"
           "static {\n");
-  bprintf(body, java_context->frag_col_offsets_for_core->ptr);
+  bindent(body, java_context->frag_col_offsets_for_core, 2);
   bprintf(body,
           "}\n"
           "\n"
@@ -54,6 +63,14 @@ static void cg_java_ext_col_offsets_in_asm(charbuf *body, uint32_t col_count_for
           "\n");
 }
 
+static bool_t cg_java_frag_type_query_proc(uint32_t frag_type) {
+  return frag_type != FRAG_TYPE_BASE && frag_type != FRAG_TYPE_EXTENSION;
+}
+
+static void cg_java_getter_sig(charbuf *buf, CSTR return_type, CSTR name, CSTR params) {
+  bprintf(buf, "public %s %s(%s)", return_type, name, params);
+}
+
 static void cg_java_proc_result_set_getter(bool_t fetch_proc,
                                            CSTR name,
                                            CSTR col_name,
@@ -61,7 +78,7 @@ static void cg_java_proc_result_set_getter(bool_t fetch_proc,
                                            charbuf *java,
                                            sem_t sem_type,
                                            bool_t encode,
-                                           bool is_extension_fragment,
+                                           uint32_t frag_type,
                                            uint32_t col_count_for_base) {
   Contract(is_unitary(sem_type));
   sem_t core_type = core_type_of(sem_type);
@@ -69,17 +86,11 @@ static void cg_java_proc_result_set_getter(bool_t fetch_proc,
 
   bool_t notnull = is_not_nullable(sem_type);
 
-  CSTR tmp_func;
   CSTR return_type;
   CSTR field_type;
   CSTR prefix = "get_";
   CSTR nullable_prefix = notnull ? "" : "_nullable_";
-
-  if (notnull) {
-    tmp_func = rt->cql_result_set_get_data;
-  } else {
-    tmp_func = rt->cql_java_tmp_getter_nullable;
-  }
+  CSTR nullable_attr = notnull ? "" : "@Nullable\n";
 
   switch (core_type) {
     case SEM_TYPE_INTEGER:
@@ -136,25 +147,28 @@ static void cg_java_proc_result_set_getter(bool_t fetch_proc,
   CG_CHARBUF_OPEN_SYM(method_name, nullable_prefix, field_type);
 
   CHARBUF_OPEN(col_index);
-  if (is_extension_fragment && col >= col_count_for_base) {
+  if (!options.java_fragment_interface_mode && frag_type == FRAG_TYPE_EXTENSION && col >= col_count_for_base) {
     // extension fragment getter's column index is calculated using its col_index
     // and offset provided by the assembly query
-    bprintf(&col_index,
-            "%d + colOffset",
-            col);
-  }
-  else {
+    bprintf(&col_index, "%d + colOffset", col);
+  } else {
     bprintf(&col_index, "%d", col);
   }
-  bprintf(java,
-          tmp_func,
-          return_type,
-          col_name_camel.ptr,
-          // patternlint-disable-next-line prefer-sized-ints-in-msys
-          fetch_proc ? "" : "int row",
-          method_name.ptr,
-          fetch_proc ? "0" : "row",
-          col_index.ptr);
+
+  bprintf(java, nullable_attr);
+  CHARBUF_OPEN(getter_sig);
+  // patternlint-disable-next-line prefer-sized-ints-in-msys
+  cg_java_getter_sig(&getter_sig, return_type, col_name_camel.ptr, fetch_proc ? "" : "int row");
+  if (!options.java_fragment_interface_mode || cg_java_frag_type_query_proc(frag_type)) {
+    bprintf(java,
+            rt->cql_result_set_get_data,
+            getter_sig.ptr,
+            method_name.ptr,
+            fetch_proc ? "0" : "row",
+            col_index.ptr);
+  } else {
+    bprintf(java, "%s;\n\n", getter_sig.ptr);
+  }
 
   if (encode) {
     bprintf(java, "public %s %sIsEncoded() {\n", rt->cql_bool, col_name_camel.ptr);
@@ -162,6 +176,7 @@ static void cg_java_proc_result_set_getter(bool_t fetch_proc,
     bprintf(java, "}\n\n");
   }
 
+  CHARBUF_CLOSE(getter_sig);
   CHARBUF_CLOSE(col_index);
   CHARBUF_CLOSE(method_name);
   CHARBUF_CLOSE(col_name_camel);
@@ -171,8 +186,179 @@ static void no_op(CSTR _Nonnull name, ast_node *_Nonnull attr, void *_Nullable c
   return;
 }
 
+static void cg_java_validate_proc_count(cg_java_context *java_context, uint32_t frag_type) {
+  if (java_context->generated_proc_count == 1 && frag_type == FRAG_TYPE_NONE) {
+    // We've already generated a Java SP. More SPs are not allowed unless
+    // this is for either assembly query or fragments supplied for it
+    cql_error(
+        "The Java code generator only supports one stored procedure per file. "
+        "Multiple procedures were found while generating %s\n",
+        options.file_names[0]
+    );
+    cql_cleanup_and_exit(1);
+  }
+}
+
+static void cg_java_fragment_columns(CSTR name,
+                                     cg_java_context *java_context,
+                                     uint32_t frag_type,
+                                     uint32_t *count,
+                                     uint32_t *col_count_for_base) {
+  if (frag_type != FRAG_TYPE_NONE) {
+    // we already know the base compiled with no errors
+    ast_node *base_proc = find_base_fragment(base_fragment_name);
+    Invariant(base_proc);
+    Invariant(base_proc->sem);
+    Invariant(base_proc->sem->sptr);
+    *col_count_for_base = base_proc->sem->sptr->count;
+  }
+
+  // extension column getters are managed in extensions only so skip generating for assembly
+  *count = frag_type == FRAG_TYPE_ASSEMBLY ? *col_count_for_base : *count;
+
+  // We store number of columns for all extension fragments and use that to derive column offset for each of them
+  if (frag_type == FRAG_TYPE_EXTENSION) {
+    CHARBUF_OPEN(fragment_name);
+    bprintf(&fragment_name, "%s", name);
+    bprintf(java_context->frag_col_offsets_for_core,
+            "fragmentColOffsetsForCore.put(%lldL, %d);\n",
+            crc_charbuf(&fragment_name),
+            java_context->frag_col_offset_count);
+    CHARBUF_CLOSE(fragment_name);
+    java_context->frag_col_offset_count += *count - *col_count_for_base;
+  }
+}
+
+static void cg_java_write_implements_interface(charbuf *buf,
+                                               CSTR name,
+                                               cg_java_context *java_context,
+                                               uint32_t frag_type) {
+  Invariant(frag_type != FRAG_TYPE_NONE);
+
+  CHARBUF_OPEN(interfaces);
+
+  if (options.java_fragment_interfaces_count != 0) {
+    for (int32_t i = 0; i < options.java_fragment_interfaces_count; ++i) {
+      bprintf(&interfaces, "%s%s", i == 0 ? "" : ", ", options.java_fragment_interfaces[i]);
+    }
+  } else if (options.java_fragment_interface_mode && frag_type != FRAG_TYPE_NONE) {
+    Invariant(base_fragment_name);
+
+    // Get the interface buffers
+    charbuf *frag_extension_interface;
+    frag_extension_interface = symtab_ensure_charbuf(java_context->frag_extension_interfaces, base_fragment_name);
+    charbuf *frag_assembly_interface;
+    frag_assembly_interface = symtab_ensure_charbuf(java_context->frag_assembly_interfaces, base_fragment_name);
+
+    if (frag_type == FRAG_TYPE_BASE) {
+      // The current class name should be registered to both the extension and assembly interfaces.  There should
+      // be nothing in the interface buffers, as the base extension is the first declared semantically.
+      Invariant(frag_extension_interface->used == 1);
+      Invariant(frag_assembly_interface->used == 1);
+      cg_sym_name(cg_symbol_case_pascal, frag_extension_interface, "", name, NULL);
+      cg_sym_name(cg_symbol_case_pascal, frag_assembly_interface, "", name, NULL);
+    } else if (frag_type == FRAG_TYPE_EXTENSION) {
+      // The current class name should be registered to the assembly interface.  The base interface should already
+      // be included in this buffer, as it is the first declared.
+      Invariant(frag_assembly_interface->used > 1);
+      bprintf(frag_assembly_interface, ", ");
+      cg_sym_name(cg_symbol_case_pascal, frag_assembly_interface, "", name, NULL);
+
+      // This interface extends the base interface.
+      bprintf(&interfaces, "%s", frag_extension_interface->ptr);
+    } else if (frag_type == FRAG_TYPE_ASSEMBLY) {
+      // This interface extends the base interface.
+      bprintf(&interfaces, "%s", frag_assembly_interface->ptr);
+    }
+  }
+
+  if (interfaces.used > 1) {
+    bprintf(buf, " %s %s", frag_type == FRAG_TYPE_EXTENSION ? "extends" : "implements", interfaces.ptr);
+  }
+  CHARBUF_CLOSE(interfaces);
+}
+
+static void cg_java_write_imports(charbuf *buf, uint32_t frag_type) {
+  uint32_t used = buf->used;
+  if (options.java_imports_count != 0) {
+    for (int32_t i = 0; i < options.java_imports_count; ++i) {
+      bprintf(buf, "import %s;\n", options.java_imports[i]);
+    }
+  } else if (!options.java_fragment_interface_mode) {
+    if (frag_type == FRAG_TYPE_ASSEMBLY) {
+      bprintf(buf,
+              "import java.util.HashMap;\n"
+              "import java.util.Map;\n");
+    } else if (frag_type == FRAG_TYPE_EXTENSION) {
+      // in order to access method from the assembly class, we need to import
+      // Method to access them via reflection
+      bprintf(buf,
+              "import java.lang.reflect.InvocationTargetException;\n"
+              "import java.lang.reflect.Method;\n");
+    }
+  }
+  if (buf->used != used) {
+    bprintf(buf, "\n");
+  }
+}
+
+static void cg_java_write_fragment_class_accessors(charbuf *buf,
+                                                   CSTR name,
+                                                   uint32_t frag_type,
+                                                   cg_java_context *java_context,
+                                                   uint32_t col_count_for_base) {
+  if (frag_type == FRAG_TYPE_ASSEMBLY) {
+    cg_java_ext_col_offsets_in_asm(buf, col_count_for_base, java_context);
+    // if is an assembly query we need to expose the resultset to instantiate the fragments from it.
+    bprintf(buf, "public CQLResultSet toFragment() {\n");
+    bprintf(buf, "    return mResultSet;\n");
+    bprintf(buf, "}\n\n");
+  } else if (frag_type == FRAG_TYPE_EXTENSION && options.java_assembly_query_classname) {
+    // If we are emitting for extension fragment, its CRC is used to look up its column offset from assembly query
+    CHARBUF_OPEN(fragment_name);
+    bprintf(&fragment_name, "%s", name);
+    bprintf(buf, "private static final Long extensionCRC = %lldL;\n", crc_charbuf(&fragment_name));
+    CHARBUF_CLOSE(fragment_name);
+    // patternlint-disable-next-line prefer-sized-ints-in-msys
+    bprintf(buf, "private static int colOffset = -1;\n\n");
+    bprintf(buf,
+            "static {\n"
+            "    try {\n"
+            "        Class<?> c = Class.forName(\"%s\");\n"
+            "        Method getExtensionColOffset = c.getMethod(\"getExtensionColOffset\", Long.class);\n"
+            "        colOffset = (Integer)getExtensionColOffset.invoke(null, extensionCRC);\n"
+            "    } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException | "
+            "ClassNotFoundException e) {\n"
+            "       throw new RuntimeException(e);\n"
+            "    }\n"
+            "}\n\n",
+            options.java_assembly_query_classname);
+  }
+}
+
+static void cg_java_write_class_or_interface(charbuf *buf,
+                                             uint32_t frag_type,
+                                             charbuf *name,
+                                             charbuf *implements_interface,
+                                             charbuf *body) {
+  if (!options.java_fragment_interface_mode || cg_java_frag_type_query_proc(frag_type)) {
+    bprintf(buf,
+            "public final class %s extends CQLViewModel%s {\n\n",
+            name->ptr,
+            implements_interface->ptr);
+  } else {
+    bprintf(buf,
+            "public interface %s%s {\n\n",
+            name->ptr,
+            implements_interface->ptr);
+  }
+  bindent(buf, body, 2);
+  bprintf(buf, "}\n");
+}
+
 static void cg_java_proc_result_set(ast_node *ast, cg_java_context *java_context) {
   EXTRACT_MISC_ATTRS(ast, misc_attrs);
+  EXTRACT_STRING(name, ast->left);
 
   // if getters are suppressed the entire class is moot
   // if result set is suppressed the entire class is moot
@@ -193,145 +379,95 @@ static void cg_java_proc_result_set(ast_node *ast, cg_java_context *java_context
   init_encode_info(misc_attrs, &use_encode, &encode_context_column, encode_columns);
 
   uint32_t frag_type = find_fragment_attr_type(misc_attrs);
-  bool_t is_extension_fragment = frag_type == FRAG_TYPE_EXTENSION;
-  bool_t is_assembly_fragment = frag_type == FRAG_TYPE_ASSEMBLY;
+  bool_t is_query_proc = cg_java_frag_type_query_proc(frag_type);
+  cg_java_validate_proc_count(java_context, frag_type);
 
-  if (java_context->generated_proc_count == 1 && !is_assembly_fragment && !is_extension_fragment) {
-    // We've already generated a Java SP. More SPs are not allowed unless
-    // this is for either assembly query or fragments supplied for it
-    cql_error(
-            "The Java code generator only supports one stored procedure per file. "
-            "Multiple procedures were found while generating %s\n",
-            options.file_names[0]);
-    cql_cleanup_and_exit(1);
-  }
   Contract(is_ast_create_proc_stmt(ast));
   Contract(is_struct(ast->sem->sem_type));
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT(params, proc_params_stmts->left);
-  EXTRACT_STRING(name, ast->left);
   sem_struct *sptr = ast->sem->sptr;
 
+  uint32_t count = sptr->count;
   uint32_t col_count_for_base = 0;
-  if (frag_type != FRAG_TYPE_NONE) {
-    // we already know the base compiled with no errors
-    ast_node *base_proc = find_base_fragment(base_fragment_name);
-    Invariant(base_proc);
-    Invariant(base_proc->sem);
-    Invariant(base_proc->sem->sptr);
-    col_count_for_base = base_proc->sem->sptr->count;
+  if (!options.java_fragment_interface_mode) {
+    cg_java_fragment_columns(name, java_context, frag_type, &count, &col_count_for_base);
   }
 
-  // extension column getters are managed in extensions only so skip generating for assembly
-  uint32_t count = is_assembly_fragment ? col_count_for_base : sptr->count;
-
-  // We store number of columns for all extension fragments and use that to derive column offset for each of them
-  if (is_extension_fragment) {
-    CHARBUF_OPEN(fragment_name);
-    bprintf(&fragment_name, "%s", name);
-    bprintf(java_context->frag_col_offsets_for_core,
-            "  fragmentColOffsetsForCore.put(%lldL, %d);\n",
-            crc_charbuf(&fragment_name),
-            java_context->frag_col_offset_count);
-    CHARBUF_CLOSE(fragment_name);
-    java_context->frag_col_offset_count += count - col_count_for_base;
-  }
-
-  bool_t include_identity_columns = misc_attrs != NULL ? find_identity_columns(misc_attrs, no_op, NULL) != 0 : 0;
-
-  CHARBUF_OPEN(cg_java_output);
-  CHARBUF_OPEN(class_def);
   CHARBUF_OPEN(body);
   CHARBUF_OPEN(class_name);
   extract_base_path_without_extension(&class_name, options.file_names[0]);
 
-  CHARBUF_OPEN(close_bracket);
-
-  bprintf(&cg_java_output, "%s", rt->source_prefix);
-  bprintf(&cg_java_output, rt->source_wrapper_begin, options.java_package_name);
-  if (is_assembly_fragment) {
-    bprintf(&cg_java_output,
-            "import java.util.HashMap;\n"
-            "import java.util.Map;\n\n");
-  } else if (is_extension_fragment) {
-    // in order to access method from the assembly class, we need to import
-    // Method to access them via reflection
-    bprintf(&cg_java_output,
-            "import java.lang.reflect.InvocationTargetException;\n"
-            "import java.lang.reflect.Method;\n\n");
+  CHARBUF_OPEN(implements_interface);
+  if (options.java_fragment_interface_mode && frag_type != FRAG_TYPE_NONE) {
+    cg_java_write_implements_interface(&implements_interface, name, java_context, frag_type);
   }
 
   bool_t out_stmt_proc = has_out_stmt_result(ast);
 
-  bprintf(&class_def,
-          rt->cql_java_tmp_class_def,
-          class_name.ptr);
-
   // Stored procedure name constant does not make sense for extension fragments since the application layer
   // that coordinates access to them will be dealing with assembly
-  if (!is_extension_fragment) {
+  if (is_query_proc) {
     bprintf(&body, "public static final String STORED_PROCEDURE_NAME = \"%s\";\n\n", name);
   }
 
-  if (is_assembly_fragment) {
-    cg_java_ext_col_offsets_in_asm(&body, col_count_for_base, java_context);
-    // if is an assembly query we need to expose the resultset to instantiate the fragments from it.
-    bprintf(&body, "public CQLResultSet toFragment() {\n");
-    bprintf(&body, "    return mResultSet;\n");
-    bprintf(&body, "}\n\n");
-  } else if (is_extension_fragment && options.java_assembly_query_classname) {
-    // If we are emitting for extension fragment, its CRC is used to look up its column offset from assembly query
-    CHARBUF_OPEN(fragment_name);
-    bprintf(&fragment_name, "%s", name);
-    bprintf(&body, "private static final Long extensionCRC = %lldL;\n", crc_charbuf(&fragment_name));
-    CHARBUF_CLOSE(fragment_name);
-    // patternlint-disable-next-line prefer-sized-ints-in-msys
-    bprintf(&body, "private static int colOffset = -1;\n\n");
-    bprintf(&body,
-            "static {\n"
-            "    try {\n"
-            "        Class<?> c = Class.forName(\"%s\");\n"
-            "        Method getExtensionColOffset = c.getMethod(\"getExtensionColOffset\", Long.class);\n"
-            "        colOffset = (Integer)getExtensionColOffset.invoke(null, extensionCRC);\n"
-            "    } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException | "
-            "ClassNotFoundException e) {\n"
-            "       throw new RuntimeException(e);\n"
-            "    }\n"
-            "}\n\n",
-            options.java_assembly_query_classname);
+  if (!options.java_fragment_interface_mode) {
+    cg_java_write_fragment_class_accessors(&body, name, frag_type, java_context, col_count_for_base);
   }
 
-  bprintf(&body,
-          rt->cql_java_tmp_class_constructor,
-          class_name.ptr);
+  if (!options.java_fragment_interface_mode || is_query_proc) {
+    bprintf(&body,
+            "public %s(CQLResultSet resultSet) {\n"
+            "  super(resultSet);\n"
+            "}\n\n",
+            class_name.ptr);
+  }
 
   // For each field emit the _get_field method
   for (int32_t i = 0; i < count; i++) {
     sem_t sem_type = sptr->semtypes[i];
     CSTR col = sptr->names[i];
     bool_t encode = should_encode_col(col, sem_type, use_encode, encode_columns);
-    cg_java_proc_result_set_getter(out_stmt_proc, name, col, i, &body, sem_type, encode, is_extension_fragment, col_count_for_base);
+    cg_java_proc_result_set_getter(out_stmt_proc, name, col, i, &body, sem_type, encode, frag_type, col_count_for_base);
   }
 
-  bprintf(&body, "%s", rt->cql_result_set_get_count);
+  CG_CHARBUF_OPEN_SYM(get_count, "", "get_count");
+  CHARBUF_OPEN(get_count_sig);
+  cg_java_getter_sig(&get_count_sig, rt->cql_int32, get_count.ptr, "");
+  if (!options.java_fragment_interface_mode || is_query_proc) {
+    bprintf(&body, rt->cql_result_set_get_count, get_count_sig.ptr);
+  } else {
+    bprintf(&body, "%s;\n\n", get_count_sig.ptr);
+  }
 
   bool_t generate_copy = misc_attrs && exists_attribute_str(misc_attrs, "generate_copy");
   if (generate_copy) {
     bprintf(&body, rt->cql_result_set_copy, class_name.ptr, class_name.ptr);
   }
 
-  bprintf(&body, rt->cql_result_set_has_identity_columns, include_identity_columns ? "true" : "false");
-  bindent(&cg_java_output, &class_def, 0);
-  bindent(&cg_java_output, &body, 2);
-  bprintf(&cg_java_output, "}\n");
+  if (!options.java_fragment_interface_mode || is_query_proc) {
+    bool_t include_identity_columns = misc_attrs != NULL ? find_identity_columns(misc_attrs, no_op, NULL) != 0 : 0;
+    bprintf(&body, rt->cql_result_set_has_identity_columns, include_identity_columns ? "true" : "false");
+  }
+
+  CHARBUF_OPEN(cg_java_output);
+  bprintf(&cg_java_output, "%s", rt->source_prefix);
+  bprintf(&cg_java_output, rt->source_wrapper_begin, options.java_package_name);
+  cg_java_write_imports(&cg_java_output, frag_type);
+  cg_java_write_class_or_interface(&cg_java_output,
+                                   frag_type,
+                                   &class_name,
+                                   &implements_interface,
+                                   &body);
 
   cql_write_file(options.file_names[0], cg_java_output.ptr);
 
-  CHARBUF_CLOSE(close_bracket);
+  CHARBUF_CLOSE(cg_java_output);
+  CHARBUF_CLOSE(get_count_sig);
+  CHARBUF_CLOSE(get_count);
+  CHARBUF_CLOSE(implements_interface);
   CHARBUF_CLOSE(class_name);
   CHARBUF_CLOSE(body);
-  CHARBUF_CLOSE(class_def);
-  CHARBUF_CLOSE(cg_java_output);
 
   java_context->generated_proc_count++;
 
@@ -378,17 +514,21 @@ static void cg_java_stmt_list(ast_node *head, cg_java_context *java_context) {
   uint32_t frag_type = FRAG_TYPE_NONE;
   for (ast_node *ast = head; ast; ast = ast->right) {
     EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc_attrs, ast);
-    // skiping the base fragment getters since generating in each extension
-    // will cause collisions including two fragments headers
-    frag_type = find_fragment_attr_type(misc_attrs);
-    if (frag_type == FRAG_TYPE_BASE) {
-      continue;
+    if (!options.java_fragment_interface_mode) {
+      // skiping the base fragment getters since generating in each extension
+      // will cause collisions including two fragments headers
+      frag_type = find_fragment_attr_type(misc_attrs);
+      if (frag_type == FRAG_TYPE_BASE) {
+        continue;
+      }
     }
     cg_java_one_stmt(stmt, java_context);
   }
 
   // Final check to make sure valid parent assembly query classname if we are emitting for extension fragment
-  if (frag_type == FRAG_TYPE_EXTENSION && !options.java_assembly_query_classname) {
+  if (!options.java_fragment_interface_mode
+      && frag_type == FRAG_TYPE_EXTENSION
+      && !options.java_assembly_query_classname) {
     cql_error("assembly query classname not provided for extension fragment; no code gen.\n");
     cql_cleanup_and_exit(1);
   }
@@ -414,10 +554,16 @@ cql_noexport void cg_java_main(ast_node *head) {
   cg_java_init();
 
   // gen java code ....
+  symtab *frag_extension_interfaces = symtab_new();
+  symtab *frag_assembly_interfaces = symtab_new();
   CHARBUF_OPEN(frag_col_offsets_for_core);
   cg_java_context java_context = {
     .frag_col_offsets_for_core = &frag_col_offsets_for_core,
+    .frag_assembly_interfaces = frag_assembly_interfaces,
+    .frag_extension_interfaces = frag_extension_interfaces,
   };
   cg_java_stmt_list(head, &java_context);
   CHARBUF_CLOSE(frag_col_offsets_for_core);
+  symtab_delete(frag_assembly_interfaces);
+  symtab_delete(frag_extension_interfaces);
 }

@@ -131,6 +131,8 @@ OVER                         { return OVER; }
 ":="                         { return ASSIGN; }
 "=="                         { return EQEQ; }
 "||"                         { return CONCAT; }
+IS[ \t]+NOT[ \t]FALSE/[^A-Z_] { return IS_NOT_FALSE; }
+IS[ \t]+NOT[ \t]TRUE/[^A-Z_] { return IS_NOT_TRUE; }
 IS[ \t]+FALSE/[^A-Z_]        { return IS_FALSE; }
 IS[ \t]+TRUE/[^A-Z_]         { return IS_TRUE; }
 IS[ \t]+NOT/[^A-Z_]          { return IS_NOT; }

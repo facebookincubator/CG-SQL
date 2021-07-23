@@ -98,6 +98,11 @@ typedef struct cmd_options {
   char *java_class_under_test;
   char *java_package_name;
   char *java_assembly_query_classname;
+  char **java_fragment_interfaces;
+  int32_t java_fragment_interfaces_count;
+  bool_t java_fragment_interface_mode;
+  char **java_imports;
+  int32_t java_imports_count;
   char *cqlrt;
   bool_t dev;                           // option use to activate features in development or dev features
 } cmd_options;
@@ -166,7 +171,7 @@ typedef struct rtdata {
   // A string to add before any import file contents (include copyright, autgen comments, etc).
   const char *exports_prefix;
 
-  // The case to use for symbole.
+  // The case to use for symbols.
   cg_symbol_case symbol_case;
 
   // If enabled, generic type-based getters are used by the generated code, registering the callback function
@@ -503,16 +508,10 @@ typedef struct rtdata {
   const char *cql_int64_nullable;
   // The java type for a nullable double value.
   const char *cql_double_nullable;
-  // Template for the java class definition.
-  const char *cql_java_tmp_class_def;
   // Template for the java method hasIdentityColumns.
   const char *cql_result_set_has_identity_columns;
   // Template for the java method copy.
   const char *cql_result_set_copy;
-  // Template for the java class contructor.
-  const char *cql_java_tmp_class_constructor;
-  // Template for the java getter function return a nullable value.
-  const char *cql_java_tmp_getter_nullable;
 } rtdata;
 
 cql_data_decl( rtdata *rt );

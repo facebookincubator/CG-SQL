@@ -1,0 +1,20 @@
+
+package com.facebook.cqlviewmodels;
+
+import com.facebook.cgsql.CQLResultSet;
+import com.facebook.cgsql.CQLViewModel;
+import javax.annotation.Nullable;
+
+public interface cg_test_base_fragment_java_interface {
+
+  public int getX(int row);
+
+  @Nullable
+  public String getY(int row);
+
+  @Nullable
+  public Long getZ(int row);
+
+  public int getCount();
+
+}
