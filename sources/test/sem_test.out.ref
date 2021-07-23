@@ -66417,6 +66417,98 @@ Error at test/sem_test.sql:XXXX : in eq : CQL0009: incompatible types in express
 
 The statement ending at line XXXX
 
+SELECT (5 IS NULL) + 3;
+
+  {select_stmt}: select: { _anon: integer notnull }
+  | {select_core_list}: select: { _anon: integer notnull }
+  | | {select_core}: select: { _anon: integer notnull }
+  |   | {select_expr_list_con}: select: { _anon: integer notnull }
+  |     | {select_expr_list}: select: { _anon: integer notnull }
+  |     | | {select_expr}: integer notnull
+  |     |   | {add}: integer notnull
+  |     |     | {is}: bool notnull
+  |     |     | | {int 5}: integer notnull
+  |     |     | | {null}: null
+  |     |     | {int 3}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 5 IS NULL IS NULL;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | {is}: bool notnull
+  |     |     | {is}: bool notnull
+  |     |     | | {int 5}: integer notnull
+  |     |     | | {null}: null
+  |     |     | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT (5 IS NOT NULL) + 3;
+
+  {select_stmt}: select: { _anon: integer notnull }
+  | {select_core_list}: select: { _anon: integer notnull }
+  | | {select_core}: select: { _anon: integer notnull }
+  |   | {select_expr_list_con}: select: { _anon: integer notnull }
+  |     | {select_expr_list}: select: { _anon: integer notnull }
+  |     | | {select_expr}: integer notnull
+  |     |   | {add}: integer notnull
+  |     |     | {is_not}: bool notnull
+  |     |     | | {int 5}: integer notnull
+  |     |     | | {null}: null
+  |     |     | {int 3}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 5 IS NOT NULL IS NULL;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | {is}: bool notnull
+  |     |     | {is_not}: bool notnull
+  |     |     | | {int 5}: integer notnull
+  |     |     | | {null}: null
+  |     |     | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
 SELECT NOT 1 IS TRUE;
 
   {select_stmt}: select: { _anon: bool notnull }

@@ -6537,7 +6537,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Thu Jul 22 16:55:14 PDT 2021</p>
+<p>Snapshot as of Thu Jul 22 21:43:19 PDT 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -6546,6 +6546,7 @@ OR
 AND
 NOT
 BETWEEN NOT_BETWEEN &#39;&lt;&gt;&#39; &#39;!=&#39; &#39;=&#39; &#39;==&#39; LIKE NOT_LIKE GLOB NOT_GLOB MATCH NOT_MATCH REGEXP NOT_REGEXP IN NOT_IN IS_NOT IS IS_TRUE IS_FALSE IS_NOT_TRUE IS_NOT_FALSE
+ISNULL NOTNULL
 &#39;&lt;&#39; &#39;&gt;&#39; &#39;&gt;=&#39; &#39;&lt;=&#39;
 &#39;&lt;&lt;&#39; &#39;&gt;&gt;&#39; &#39;&amp;&#39; &#39;|&#39;
 &#39;+&#39; &#39;-&#39;
@@ -7098,6 +7099,8 @@ math_expr:
   | math_expr &#39;%&#39; math_expr
   | math_expr &quot;IS&quot; &quot;NOT&quot; &quot;TRUE&quot;
   | math_expr &quot;IS&quot; &quot;NOT&quot; &quot;FALSE&quot;
+  | math_expr &quot;ISNULL&quot;
+  | math_expr &quot;NOTNULL&quot;
   | math_expr &quot;IS&quot; &quot;TRUE&quot;
   | math_expr &quot;IS&quot; &quot;FALSE&quot;
   | &#39;-&#39; math_expr
@@ -9795,7 +9798,7 @@ select 1 where table_valued_func(5) = 3;</code></pre>
 </table>
 <p>– This source code is licensed under the MIT license found in the – LICENSE file in the root directory of this source tree. –&gt;</p>
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Thu Jul 22 16:55:14 PDT 2021</p>
+<p>Snapshot as of Thu Jul 22 21:43:22 PDT 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

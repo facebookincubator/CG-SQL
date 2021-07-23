@@ -9,6 +9,8 @@ s/[[:<:]]EQEQ[[:>:]]/"=="/g
 s/[[:<:]]NE[[:>:]]/"<>"/g
 s/[[:<:]]NE_[[:>:]]/"!="/g
 s/[[:<:]]NO[[:>:]]/"NO"/g
+s/[[:<:]]ISNULL[[:>:]]/"ISNULL"/g
+s/[[:<:]]NOTNULL[[:>:]]/"NOTNULL"/g
 s/[[:<:]]IS_NOT[[:>:]]/IS NOT/g
 s/[[:<:]]IS_TRUE[[:>:]]/IS TRUE_/g
 s/[[:<:]]IS_FALSE[[:>:]]/IS FALSE_/g

@@ -16843,6 +16843,30 @@ select ('x' not like 'y') = 1;
 select 'x' not like ('y' = 1);
 
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- conversion to IS NULL requires parens
+-- + SELECT (5 IS NULL) + 3;
+-- - Error
+select 5 isnull + 3;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- no parens needed left to right works
+-- + SELECT 5 IS NULL IS NULL;
+-- - Error
+select 5 isnull isnull;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- conversion to IS NOT NULL requires parens
+-- + SELECT (5 IS NOT NULL) + 3;
+-- - Error
+select 5 notnull + 3;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- no parens needed left to right works
+-- + SELECT 5 IS NOT NULL IS NULL;
+-- - Error
+select 5 notnull isnull;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
 -- no parens added
 -- + SELECT NOT 1 IS TRUE;
 -- - Error

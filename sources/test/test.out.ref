@@ -1611,6 +1611,12 @@ SELECT 2 IS NOT trueas;
 
 SELECT 2 IS NOT falseas;
 
+SELECT 1 IS NULL;
+
+SELECT NULL IS NULL;
+
+SELECT NULL IS NOT NULL;
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

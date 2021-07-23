@@ -156,6 +156,7 @@ static void cql_reset_globals(void);
 %left AND
 %left NOT
 %left BETWEEN NOT_BETWEEN NE NE_ '=' EQEQ LIKE NOT_LIKE GLOB NOT_GLOB MATCH NOT_MATCH REGEXP NOT_REGEXP IN NOT_IN IS_NOT IS IS_TRUE IS_FALSE IS_NOT_TRUE IS_NOT_FALSE
+%right ISNULL NOTNULL
 %left '<' '>' GE LE
 %left LS RS '&' '|'
 %left '+' '-'
@@ -925,6 +926,8 @@ math_expr[result]:
   | math_expr[lhs] '%' math_expr[rhs]  { $result = new_ast_mod($lhs, $rhs); }
   | math_expr[lhs] IS_NOT_TRUE  { $result = new_ast_is_not_true($lhs); }
   | math_expr[lhs] IS_NOT_FALSE  { $result = new_ast_is_not_false($lhs); }
+  | math_expr[lhs] ISNULL  { $result = new_ast_is($lhs, new_ast_null()); }
+  | math_expr[lhs] NOTNULL  { $result = new_ast_is_not($lhs, new_ast_null()); }
   | math_expr[lhs] IS_TRUE  { $result = new_ast_is_true($lhs); }
   | math_expr[lhs] IS_FALSE  { $result = new_ast_is_false($lhs); }
   | '-' math_expr[rhs] %prec UMINUS  { $result = new_ast_uminus($rhs); }
