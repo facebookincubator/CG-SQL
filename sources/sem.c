@@ -4714,7 +4714,7 @@ static void sem_select_star(ast_node *ast) {
         // Upgrade the inferred nonnull column so it has a proper NOT NULL type.
         type |= SEM_TYPE_NOTNULL;
         // Prevent this from propagating needlessly to keep --print clean.
-        type ^= SEM_TYPE_INFERRED_NOTNULL;
+        type &= u64_not(SEM_TYPE_INFERRED_NOTNULL);
       }
       sptr->names[field] = table->names[j];
       sptr->semtypes[field] = type;
@@ -6855,7 +6855,7 @@ static void sem_func_cql_inferred_notnull(ast_node *ast, uint32_t arg_count) {
   sem_func_attest_notnull(ast, arg_count, SEM_EXPR_CONTEXT_FLAGS);
   Invariant(ast->sem->sem_type & SEM_TYPE_INFERRED_NOTNULL);
   // Prevent this from propagating needlessly to keep --print clean.
-  ast->sem->sem_type ^= SEM_TYPE_INFERRED_NOTNULL;
+  ast->sem->sem_type &= u64_not(SEM_TYPE_INFERRED_NOTNULL);
 }
 
 // validate expression with cql_cursor_diff_xxx func is semantically correct.
