@@ -1481,13 +1481,19 @@ select not likeas;
 -- this has to not match NOT REGEXP
 select not regexpas;
 
--- new operators
+-- truthy operators
 select 2 is true;
 select 2 is false;
+select 2 is not true;
+select 2 is not false;
 
 -- these should not parse as IS TRUE or IS FALSE
 select 2 is trueas;
 select 2 is falseas;
+
+-- these should not parse as IS NOT TRUE or IS NOT FALSE
+select 2 is not trueas;
+select 2 is not falseas;
 
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 

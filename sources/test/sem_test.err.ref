@@ -127,6 +127,8 @@ Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant fai
 Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
 Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
 Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
 Error at test/sem_test.sql:XXXX : in null : CQL0013: cannot assign/copy possibly null expression to not null target 'default value'
 Error at test/sem_test.sql:XXXX : in num : CQL0242: lossy conversion from type 'REAL' in 2.200000e+00
 Error at test/sem_test.sql:XXXX : in str : CQL0197: duplicate variable name in the same scope 'X'

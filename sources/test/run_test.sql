@@ -2039,14 +2039,30 @@ BEGIN_TEST(equality_pri)
   EXPECT_SQL_TOO(not null is false);
   EXPECT_SQL_TOO(not null is true);
 
+  -- Test IS NOT TRUE and IS NOT FALSE
+  EXPECT_SQL_TOO(not 1 is not true);
+  EXPECT_SQL_TOO(not 0 is not false);
+  EXPECT_SQL_TOO(0 is not true);
+  EXPECT_SQL_TOO(1 is not false);
+  EXPECT_SQL_TOO(null is not false);
+  EXPECT_SQL_TOO(null is not true);
+
   -- priority of same
   EXPECT_SQL_TOO(not (1>=0 is false));
   EXPECT_SQL_TOO(not ((1>=0) is false));
   EXPECT_SQL_TOO(1 >= (0 is false));
 
-  EXPECT_SQL_TOO((-1 > -2 is true));
-  EXPECT_SQL_TOO(((-1 > -2) is true));
+  EXPECT_SQL_TOO(-1 > -2 is not false);
+  EXPECT_SQL_TOO((-1 > -2) is not false);
+  EXPECT_SQL_TOO(not -1 > (-2 is not false));
+
+  EXPECT_SQL_TOO(-1 > -2 is true);
+  EXPECT_SQL_TOO((-1 > -2) is true);
   EXPECT_SQL_TOO(not -1 > (-2 is true));
+
+  EXPECT_SQL_TOO(-5 > -2 is not true);
+  EXPECT_SQL_TOO((-5 > -2) is not true);
+  EXPECT_SQL_TOO(not -5 > (-2 is not true));
 
   -- https://sqlite.org/forum/forumpost/70e78ad16a
   --
@@ -2060,12 +2076,13 @@ BEGIN_TEST(equality_pri)
   -- PostgreSQL> select false is true < false;
   -- false
   -- 
-  -- When CQL emits the it naturally adds parens around (false is true) because it binds weaker than <
-  -- which ensures the "correct" eval order even though SQLite would do it the other way.
-  -- CQL is like other SQL systems in that "is true" is an operator.  In SQLite the way it works is
-  -- that if the right operator of "IS" happens to the the literal "true" then you get "is true" behavior
-  -- this is wrong...  And hard to emulate.   CQL forces it the normal way with parens.
-  -- SQLite will see  "not ((false is true) < false)";
+  -- When CQL emits this operator, it naturally adds parens around (false is true)
+  -- because is true binds weaker than < which ensures the "correct" eval order even
+  -- though SQLite would do it the other way.  CQL is like other SQL systems in that "is true"
+  -- is an operator.  In SQLite the way it works is that if the right operator of "IS" happens
+  -- to the the literal "true" then you get "is true" behavior.
+  -- This is wrong.  And hard to emulate.   CQL forces it the normal way with parens.
+  -- SQLite will see "not ((false is true) < false)";
   --
   -- This may be fixed in future SQLites, but even if that happens the below will still pass.
   --

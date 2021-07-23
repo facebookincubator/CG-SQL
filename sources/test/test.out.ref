@@ -1599,9 +1599,17 @@ SELECT 2 IS TRUE;
 
 SELECT 2 IS FALSE;
 
+SELECT 2 IS NOT TRUE;
+
+SELECT 2 IS NOT FALSE;
+
 SELECT 2 IS trueas;
 
 SELECT 2 IS falseas;
+
+SELECT 2 IS NOT trueas;
+
+SELECT 2 IS NOT falseas;
 
 SET file := 'path/I/do/not/like';
 

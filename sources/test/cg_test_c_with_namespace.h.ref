@@ -3039,6 +3039,14 @@ extern cql_bool false_test;
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
 extern cql_int32 this_is_the_end;
 
 // The statement ending at line XXXX

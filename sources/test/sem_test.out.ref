@@ -5551,6 +5551,14 @@ SET bool_x := 1;
 
 The statement ending at line XXXX
 
+SET bool_x := 0;
+
+  {assign}: bool_x: bool notnull variable
+  | {name bool_x}: bool_x: bool notnull variable
+  | : bool notnull
+
+The statement ending at line XXXX
+
 SET bool_x := CONST(1 / 0 IS TRUE);
 
 Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
@@ -5586,6 +5594,58 @@ SET bool_x := 1;
   {assign}: bool_x: bool notnull variable
   | {name bool_x}: bool_x: bool notnull variable
   | : bool notnull
+
+The statement ending at line XXXX
+
+SET bool_x := 1;
+
+  {assign}: bool_x: bool notnull variable
+  | {name bool_x}: bool_x: bool notnull variable
+  | : bool notnull
+
+The statement ending at line XXXX
+
+SET bool_x := 0;
+
+  {assign}: bool_x: bool notnull variable
+  | {name bool_x}: bool_x: bool notnull variable
+  | : bool notnull
+
+The statement ending at line XXXX
+
+SET bool_x := 1;
+
+  {assign}: bool_x: bool notnull variable
+  | {name bool_x}: bool_x: bool notnull variable
+  | : bool notnull
+
+The statement ending at line XXXX
+
+SET bool_x := CONST(1 / 0 IS NOT FALSE);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {assign}: err
+  | {name bool_x}: bool_x: bool notnull variable
+  | {const}: err
+    | {is_not_false}: bool notnull
+      | {div}: integer notnull
+        | {int 1}: integer notnull
+        | {int 0}: integer notnull
+
+The statement ending at line XXXX
+
+SET bool_x := CONST(1 / 0 IS NOT TRUE);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {assign}: err
+  | {name bool_x}: bool_x: bool notnull variable
+  | {const}: err
+    | {is_not_true}: bool notnull
+      | {div}: integer notnull
+        | {int 1}: integer notnull
+        | {int 0}: integer notnull
 
 The statement ending at line XXXX
 

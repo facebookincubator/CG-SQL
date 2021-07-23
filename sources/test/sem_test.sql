@@ -1468,6 +1468,12 @@ let bool_x := const(1==1);
 -- - Error
 set bool_x := const(2 is true);
 
+-- TEST: 2 is true
+-- rewritten as "0"
+-- + SET bool_x := 0;
+-- - Error
+set bool_x := const(2 is not true);
+
 -- TEST: eval error bubbles up
 -- + {assign}: err
 -- + SET bool_x := CONST(1 / 0 IS TRUE);
@@ -1486,11 +1492,43 @@ set bool_x := const(true is 2);
 -- - Error
 set bool_x := const(null is true);
 
+-- TEST: null is not true
+-- rewritten as "1"
+-- + SET bool_x := 1;
+-- - Error
+set bool_x := const(null is not true);
+
 -- TEST: 0 is false
 -- rewritten as "1"
 -- + SET bool_x := 1;
 -- - Error
 set bool_x := const(0 is false);
+
+-- TEST: 0 is not false
+-- rewritten as "0"
+-- + SET bool_x := 0;
+-- - Error
+set bool_x := const(0 is not false);
+
+-- TEST: null is not false
+-- rewritten as "1"
+-- + SET bool_x := 1;
+-- - Error
+set bool_x := const(null is not false);
+
+-- TEST: 1/0 is not false -> error
+-- not rewritten due to error
+-- + {assign}: err
+-- + SET bool_x := CONST(1 / 0 IS NOT FALSE);
+-- + Error % evaluation of constant failed
+set bool_x := const(1/0 is not false);
+
+-- TEST: 1/0 is not false -> error
+-- not rewritten due to error
+-- + {assign}: err
+-- + SET bool_x := CONST(1 / 0 IS NOT TRUE);
+-- + Error % evaluation of constant failed
+set bool_x := const(1/0 is not true);
 
 -- TEST: null is not false
 -- rewritten as "0"

@@ -4164,7 +4164,6 @@ end;
 -- - cql_prepare
 select 1 x;
 
-
 -- TEST: we should infer a bool not null variable and compute is true correctly
 -- + true_test = !!(1);
 let true_test := 1 is true;
@@ -4180,6 +4179,22 @@ set true_test := i0_nullable is true;
 -- TEST: we should infer a bool type and use the nullable version of the test
 -- + false_test = cql_is_nullable_false(i0_nullable.is_null, i0_nullable.value);
 set false_test := i0_nullable is false;
+
+-- TEST: we should infer a bool not null variable and compute is true correctly
+-- + true_test = !(1);
+set true_test := 1 is not true;
+
+-- TEST: we should infer a bool not null variable and compute is false correctly
+-- + false_test = !!(0);
+set false_test := 0 is not false;
+
+-- TEST: we should infer a bool type and use the nullable version of the test
+-- + true_test = !cql_is_nullable_true(i0_nullable.is_null, i0_nullable.value);
+set true_test := i0_nullable is not true;
+
+-- TEST: we should infer a bool type and use the nullable version of the test
+-- + false_test = !cql_is_nullable_false(i0_nullable.is_null, i0_nullable.value);
+set false_test := i0_nullable is not false;
 
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------

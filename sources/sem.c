@@ -19433,6 +19433,8 @@ cql_noexport void sem_main(ast_node *ast) {
   EXPR_INIT(add, sem_binary_math, "+");
   EXPR_INIT(sub, sem_binary_math, "-");
   EXPR_INIT(not, sem_unary_logical, "NOT");
+  EXPR_INIT(is_not_true, sem_unary_is_true_or_false, "IS NOT TRUE");
+  EXPR_INIT(is_not_false, sem_unary_is_true_or_false, "IS NOT FALSE");
   EXPR_INIT(is_true, sem_unary_is_true_or_false, "IS TRUE");
   EXPR_INIT(is_false, sem_unary_is_true_or_false, "IS FALSE");
   EXPR_INIT(tilde, sem_unary_integer_math, "~");

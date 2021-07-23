@@ -3903,12 +3903,12 @@ Among the things that are verified:
 * the projection of a select has unique column labels if they are used
 
 #### The `SELECT *` Statement
-Select * is special in that it creates its own struct type by assembling
-all the columns of all the tables in the selects join result.  CQL rewrites these statement into
-a select with the specific columns explicitly listed.  While this makes the program
-slightly bigger it means that logically deleted columns are never present in results
-because `SELECT *` won't select them and attempting to use a logically deleted
-column results in an error.
+`SELECT *` is special in that it creates its own struct type by assembling
+all the columns of all the tables in the select's join result.  CQL rewrites these
+column names into a new `SELECT` with the specific columns explicitly listed.
+While this makes the program slightly bigger it means that logically deleted columns
+are never present in results because `SELECT *` won't select them and attempting
+to use a logically deleted column results in an error.
 
 #### The `CREATE TABLE` Statement
 Unlike the other parts of DDL we actually deeply care about the tables.
@@ -4749,7 +4749,8 @@ It seemed essential to be able to record changes to the schema over time so CQL 
 To use cql in this fashion, the sequence will be something like the below.  See Appendix 1 for command line details.
 
 ```
-cql --in input.sql --rt schema_upgrade --cg schema_upgrader.sql --global_proc desired_upgrade_proc_name
+cql --in input.sql --rt schema_upgrade --cg schema_upgrader.sql \
+                   --global_proc desired_upgrade_proc_name
 ```
 
 ### Annotations
@@ -8344,7 +8345,7 @@ NOTE: different result types require a different number of output files with dif
 
 ### --test
 * some of the output types can include extra diagnostics if `--test` is included
-* that often makes the outputs badly formed so this is generally good for humans only
+* the test output often makes the outputs badly formed so this is generally good for humans only
 
 ### --java_package_name name
 * used by java code generators when they output a class. Allows to specify the name of package the class will be a part of
@@ -8356,8 +8357,7 @@ NOTE: different result types require a different number of output files with dif
 * Sets the Java codegen mode to generate interfaces for base and extension fragments instead of classes.
 
 ### --java_fragment_interfaces interface
-* Fully qualified name of the generated Java interfaces that an extension or assembly fragment implements. This should
-* correspond to the base fragment and extension fragments that are referenced by the current fragment being generated.
+* Fully qualified name of the generated Java interfaces that an extension or assembly fragment implements. This should correspond to the base fragment and extension fragments that are referenced by the current fragment being generated.
 
 ### --java_imports name
 * Fully qualified name to import in the emitted java source.
@@ -8425,7 +8425,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed Jul 21 19:48:52 PDT 2021
+Snapshot as of Thu Jul 22 16:55:14 PDT 2021
 
 ### Operators and Literals
 
@@ -8437,7 +8437,7 @@ ASSIGN
 OR
 AND
 NOT
-BETWEEN NOT_BETWEEN '<>' '!=' '=' '==' LIKE NOT_LIKE GLOB NOT_GLOB MATCH NOT_MATCH REGEXP NOT_REGEXP IN NOT_IN IS_NOT IS IS_TRUE IS_FALSE
+BETWEEN NOT_BETWEEN '<>' '!=' '=' '==' LIKE NOT_LIKE GLOB NOT_GLOB MATCH NOT_MATCH REGEXP NOT_REGEXP IN NOT_IN IS_NOT IS IS_TRUE IS_FALSE IS_NOT_TRUE IS_NOT_FALSE
 '<' '>' '>=' '<='
 '<<' '>>' '&' '|'
 '+' '-'
@@ -8996,6 +8996,8 @@ math_expr:
   | math_expr '*' math_expr
   | math_expr '/' math_expr
   | math_expr '%' math_expr
+  | math_expr "IS" "NOT" "TRUE"
+  | math_expr "IS" "NOT" "FALSE"
   | math_expr "IS" "TRUE"
   | math_expr "IS" "FALSE"
   | '-' math_expr
@@ -13397,7 +13399,7 @@ CQL 0410 : unused, this was added to prevent merge conflicts at the end on liter
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Wed Jul 21 19:48:53 PDT 2021
+Snapshot as of Thu Jul 22 16:55:14 PDT 2021
 
 ### Rules
 
