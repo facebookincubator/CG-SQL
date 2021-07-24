@@ -256,10 +256,12 @@ static void cql_reset_globals(void);
 %type <aval> close_stmt
 %type <aval> commit_trans_stmt commit_return_stmt
 %type <aval> continue_stmt
+%type <aval> control_stmt
 %type <aval> declare_stmt
 %type <aval> declare_enum_stmt enum_values enum_value emit_enums_stmt
 %type <aval> echo_stmt
 %type <aval> fetch_stmt fetch_values_stmt fetch_call_stmt from_shape
+%type <aval> guard_stmt
 %type <aval> if_stmt elseif_item elseif_list opt_else opt_elseif_list proc_savepoint_stmt
 %type <aval> leave_stmt return_stmt
 %type <aval> loop_stmt
@@ -397,6 +399,7 @@ any_stmt:
   | fetch_call_stmt
   | fetch_stmt
   | fetch_values_stmt
+  | guard_stmt
   | if_stmt
   | insert_stmt
   | leave_stmt
@@ -1761,6 +1764,18 @@ elseif_list[result]:
 opt_elseif_list:
   /* nil */  { $opt_elseif_list = NULL; }
   | elseif_list  { $opt_elseif_list = $elseif_list; }
+  ;
+
+control_stmt:
+  commit_return_stmt  { $control_stmt = new_ast_control_stmt($commit_return_stmt); }
+  | continue_stmt  { $control_stmt = new_ast_control_stmt($continue_stmt); }
+  | leave_stmt  { $control_stmt = new_ast_control_stmt($leave_stmt); }
+  | return_stmt  { $control_stmt = new_ast_control_stmt($return_stmt); }
+  | rollback_return_stmt  { $control_stmt = new_ast_control_stmt($rollback_return_stmt); }
+  | throw_stmt  { $control_stmt = new_ast_control_stmt($throw_stmt); }
+
+guard_stmt:
+  IF expr control_stmt  { $guard_stmt = new_ast_guard_stmt($expr, $control_stmt); }
   ;
 
 transaction_mode:

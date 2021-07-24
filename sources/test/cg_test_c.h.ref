@@ -133,6 +133,9 @@ extern cql_nullable_int32 side_effect2(void);
 extern void test(cql_int32 i);
 
 // The statement ending at line XXXX
+extern void proc_with_return_guard(cql_nullable_int32 a);
+
+// The statement ending at line XXXX
 
 // The statement ending at line XXXX
 

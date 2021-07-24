@@ -16586,6 +16586,160 @@ begin
   end if;
 end;
 
+-- TEST: A commit return guard can improve nullability.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- - Error
+create proc improvements_work_for_commit_return_guards(a int)
+begin
+  proc savepoint
+  begin
+    if 1 then
+      if a is null commit return;
+      let x0 := a;
+    end if;
+    let x1 := a;
+  end;
+end;
+
+-- TEST: A continue guard can improve nullability.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- - Error
+create proc improvements_work_for_continue_guards(a int)
+begin
+  while 1
+  begin
+    if a is null continue;
+    let x0 := a;
+  end;
+  let x1 := a;
+end;
+
+-- TEST: A leave guard can improve nullability.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- - Error
+create proc improvements_work_for_leave_guards(a int)
+begin
+  while 1
+  begin
+    if a is null leave;
+    let x0 := a;
+  end;
+  let x1 := a;
+end;
+
+-- TEST: A return guard can improve nullability.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- - Error
+create proc improvements_work_for_return_guards(a int)
+begin
+  if 1 then
+    if a is null return;
+    let x0 := a;
+  end if;
+  let x1 := a;
+end;
+
+-- TEST: A rollback return guard can improve nullability.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- - Error
+create proc improvements_work_for_rollback_return_guards(a int)
+begin
+  proc savepoint
+  begin
+    if 1 then
+      if a is null rollback return;
+      let x0 := a;
+    end if;
+    let x1 := a;
+  end;
+end;
+
+-- TEST: A throw guard can improve nullability.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- - Error
+create proc improvements_work_for_throw_guards(a int)
+begin
+  proc savepoint
+  begin
+    if 1 then
+      if a is null throw;
+      let x0 := a;
+    end if;
+    let x1 := a;
+  end;
+end;
+
+-- TEST: Guard improvements work for cursor fields.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- - Error
+create proc guard_improvements_work_for_cursor_fields()
+begin
+  declare c cursor for select nullable(1) a;
+  fetch c;
+  if 1 then
+    if c.a is null return;
+    let x0 := c.a;
+  end if;
+  let x1 := c.a;
+end;
+
+-- TEST: OR allows guards to introduce multiple improvements.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: y0: integer notnull variable
+-- + {let_stmt}: z0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- + {let_stmt}: y1: integer variable
+-- + {let_stmt}: z1: integer variable
+-- - Error
+create proc multiple_improvements_are_possible_via_one_guard(a int, b int, c int)
+begin
+  if 1 then
+    if a is null or b is null or c is null return;
+    let x0 := a;
+    let y0 := b;
+    let z0 := c;
+  end if;
+  let x1 := a;
+  let y1 := b;
+  let z1 := c;
+end;
+
+-- TEST: Checks not along the outermost spine of ORs result in no improvement.
+-- + {let_stmt}: x: integer variable
+-- + {let_stmt}: y: integer variable
+-- + {let_stmt}: z: integer variable
+-- - Error
+create proc guard_improvements_only_work_for_outermost_ors(a int, b int, c int)
+begin
+  if a is null and (b is null or c is null) return;
+  let x := a;
+  let y := b;
+  let z := c;
+end;
+
+-- TEST: Not explicitly using IS NULL results in no improvement.
+create proc guard_improvements_only_work_for_is_null(a int)
+begin
+  if not a return;
+  let x := a;
+end;
+
+-- TEST: Bad conditions in guards are handled as in if statements.
+-- + {if_stmt}: err
+-- + Error % name not found 'some_undefined_variable'
+-- +1 Error
+create proc guard_improvements_handle_semantic_issues_like_if()
+begin
+  if some_undefined_variable is null return;
+end;
+
 -- TEST: Disable flow-sensitive nullability.
 -- + @ENFORCE_NORMAL NOT NULL AFTER CHECK
 -- + {enforce_normal_stmt}: ok

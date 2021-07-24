@@ -441,6 +441,14 @@ if 3 not between 1 and 2 and 1 not in (2, 3) then
   delete from b;
 end if;
 
+-- guard statements
+if x is not null commit return;
+if x is not null continue;
+if x is not null leave;
+if x is not null return;
+if x is not null rollback return;
+if x is not null throw;
+
 -- this has to parse as unary minus and then postive 1
 select -1;
 

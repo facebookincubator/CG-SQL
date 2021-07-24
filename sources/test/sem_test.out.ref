@@ -65242,6 +65242,578 @@ END;
 
 The statement ending at line XXXX
 
+CREATE PROC improvements_work_for_commit_return_guards (a INTEGER)
+BEGIN
+  PROC SAVEPOINT
+  BEGIN
+    IF 1 THEN
+      IF a IS NULL THEN
+        COMMIT RETURN;
+      END IF;
+      LET x0 := a;
+    END IF;
+    LET x1 := a;
+  END;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name improvements_work_for_commit_return_guards}: ok dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: integer variable in
+    |   | {param_detail}: a: integer variable in
+    |     | {name a}: a: integer variable in
+    |     | {type_int}: integer
+    | {stmt_list}: ok
+      | {proc_savepoint_stmt}: ok
+        | {stmt_list}: ok
+          | {if_stmt}: integer notnull
+          | | {cond_action}: integer notnull
+          | | | {int 1}: integer notnull
+          | | | {stmt_list}: ok
+          | |   | {if_stmt}: bool notnull
+          | |   | | {cond_action}: bool notnull
+          | |   | | | {is}: bool notnull
+          | |   | | | | {name a}: a: integer variable in
+          | |   | | | | {null}: null
+          | |   | | | {stmt_list}: ok
+          | |   | |   | {commit_return_stmt}: ok
+          | |   | | {if_alt}: ok
+          | |   | {let_stmt}: x0: integer notnull variable
+          | |     | {name x0}: x0: integer notnull variable
+          | |     | {call}: a: integer notnull variable in
+          | |       | {name cql_inferred_notnull}: a: integer notnull variable in
+          | |       | {call_arg_list}
+          | |         | {call_filter_clause}
+          | |         | {arg_list}: ok
+          | |           | {name a}: a: integer inferred_notnull variable in
+          | | {if_alt}: ok
+          | {let_stmt}: x1: integer variable
+            | {name x1}: x1: integer variable
+            | {name a}: a: integer variable in
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_work_for_continue_guards (a INTEGER)
+BEGIN
+  WHILE 1
+  BEGIN
+    IF a IS NULL THEN
+      CONTINUE;
+    END IF;
+    LET x0 := a;
+  END;
+  LET x1 := a;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_work_for_continue_guards}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: integer variable in
+    |   | {param_detail}: a: integer variable in
+    |     | {name a}: a: integer variable in
+    |     | {type_int}: integer
+    | {stmt_list}: ok
+      | {while_stmt}: ok
+      | | {int 1}: integer notnull
+      | | {stmt_list}: ok
+      |   | {if_stmt}: bool notnull
+      |   | | {cond_action}: bool notnull
+      |   | | | {is}: bool notnull
+      |   | | | | {name a}: a: integer variable in
+      |   | | | | {null}: null
+      |   | | | {stmt_list}: ok
+      |   | |   | {continue_stmt}: ok
+      |   | | {if_alt}: ok
+      |   | {let_stmt}: x0: integer notnull variable
+      |     | {name x0}: x0: integer notnull variable
+      |     | {call}: a: integer notnull variable in
+      |       | {name cql_inferred_notnull}: a: integer notnull variable in
+      |       | {call_arg_list}
+      |         | {call_filter_clause}
+      |         | {arg_list}: ok
+      |           | {name a}: a: integer inferred_notnull variable in
+      | {let_stmt}: x1: integer variable
+        | {name x1}: x1: integer variable
+        | {name a}: a: integer variable in
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_work_for_leave_guards (a INTEGER)
+BEGIN
+  WHILE 1
+  BEGIN
+    IF a IS NULL THEN
+      LEAVE;
+    END IF;
+    LET x0 := a;
+  END;
+  LET x1 := a;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_work_for_leave_guards}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: integer variable in
+    |   | {param_detail}: a: integer variable in
+    |     | {name a}: a: integer variable in
+    |     | {type_int}: integer
+    | {stmt_list}: ok
+      | {while_stmt}: ok
+      | | {int 1}: integer notnull
+      | | {stmt_list}: ok
+      |   | {if_stmt}: bool notnull
+      |   | | {cond_action}: bool notnull
+      |   | | | {is}: bool notnull
+      |   | | | | {name a}: a: integer variable in
+      |   | | | | {null}: null
+      |   | | | {stmt_list}: ok
+      |   | |   | {leave_stmt}: ok
+      |   | | {if_alt}: ok
+      |   | {let_stmt}: x0: integer notnull variable
+      |     | {name x0}: x0: integer notnull variable
+      |     | {call}: a: integer notnull variable in
+      |       | {name cql_inferred_notnull}: a: integer notnull variable in
+      |       | {call_arg_list}
+      |         | {call_filter_clause}
+      |         | {arg_list}: ok
+      |           | {name a}: a: integer inferred_notnull variable in
+      | {let_stmt}: x1: integer variable
+        | {name x1}: x1: integer variable
+        | {name a}: a: integer variable in
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_work_for_return_guards (a INTEGER)
+BEGIN
+  IF 1 THEN
+    IF a IS NULL THEN
+      RETURN;
+    END IF;
+    LET x0 := a;
+  END IF;
+  LET x1 := a;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_work_for_return_guards}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: integer variable in
+    |   | {param_detail}: a: integer variable in
+    |     | {name a}: a: integer variable in
+    |     | {type_int}: integer
+    | {stmt_list}: ok
+      | {if_stmt}: integer notnull
+      | | {cond_action}: integer notnull
+      | | | {int 1}: integer notnull
+      | | | {stmt_list}: ok
+      | |   | {if_stmt}: bool notnull
+      | |   | | {cond_action}: bool notnull
+      | |   | | | {is}: bool notnull
+      | |   | | | | {name a}: a: integer variable in
+      | |   | | | | {null}: null
+      | |   | | | {stmt_list}: ok
+      | |   | |   | {return_stmt}: ok
+      | |   | | {if_alt}: ok
+      | |   | {let_stmt}: x0: integer notnull variable
+      | |     | {name x0}: x0: integer notnull variable
+      | |     | {call}: a: integer notnull variable in
+      | |       | {name cql_inferred_notnull}: a: integer notnull variable in
+      | |       | {call_arg_list}
+      | |         | {call_filter_clause}
+      | |         | {arg_list}: ok
+      | |           | {name a}: a: integer inferred_notnull variable in
+      | | {if_alt}: ok
+      | {let_stmt}: x1: integer variable
+        | {name x1}: x1: integer variable
+        | {name a}: a: integer variable in
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_work_for_rollback_return_guards (a INTEGER)
+BEGIN
+  PROC SAVEPOINT
+  BEGIN
+    IF 1 THEN
+      IF a IS NULL THEN
+        ROLLBACK RETURN;
+      END IF;
+      LET x0 := a;
+    END IF;
+    LET x1 := a;
+  END;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name improvements_work_for_rollback_return_guards}: ok dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: integer variable in
+    |   | {param_detail}: a: integer variable in
+    |     | {name a}: a: integer variable in
+    |     | {type_int}: integer
+    | {stmt_list}: ok
+      | {proc_savepoint_stmt}: ok
+        | {stmt_list}: ok
+          | {if_stmt}: integer notnull
+          | | {cond_action}: integer notnull
+          | | | {int 1}: integer notnull
+          | | | {stmt_list}: ok
+          | |   | {if_stmt}: bool notnull
+          | |   | | {cond_action}: bool notnull
+          | |   | | | {is}: bool notnull
+          | |   | | | | {name a}: a: integer variable in
+          | |   | | | | {null}: null
+          | |   | | | {stmt_list}: ok
+          | |   | |   | {rollback_return_stmt}: ok
+          | |   | | {if_alt}: ok
+          | |   | {let_stmt}: x0: integer notnull variable
+          | |     | {name x0}: x0: integer notnull variable
+          | |     | {call}: a: integer notnull variable in
+          | |       | {name cql_inferred_notnull}: a: integer notnull variable in
+          | |       | {call_arg_list}
+          | |         | {call_filter_clause}
+          | |         | {arg_list}: ok
+          | |           | {name a}: a: integer inferred_notnull variable in
+          | | {if_alt}: ok
+          | {let_stmt}: x1: integer variable
+            | {name x1}: x1: integer variable
+            | {name a}: a: integer variable in
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_work_for_throw_guards (a INTEGER)
+BEGIN
+  PROC SAVEPOINT
+  BEGIN
+    IF 1 THEN
+      IF a IS NULL THEN
+        THROW;
+      END IF;
+      LET x0 := a;
+    END IF;
+    LET x1 := a;
+  END;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name improvements_work_for_throw_guards}: ok dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: integer variable in
+    |   | {param_detail}: a: integer variable in
+    |     | {name a}: a: integer variable in
+    |     | {type_int}: integer
+    | {stmt_list}: ok
+      | {proc_savepoint_stmt}: ok
+        | {stmt_list}: ok
+          | {if_stmt}: integer notnull
+          | | {cond_action}: integer notnull
+          | | | {int 1}: integer notnull
+          | | | {stmt_list}: ok
+          | |   | {if_stmt}: bool notnull
+          | |   | | {cond_action}: bool notnull
+          | |   | | | {is}: bool notnull
+          | |   | | | | {name a}: a: integer variable in
+          | |   | | | | {null}: null
+          | |   | | | {stmt_list}: ok
+          | |   | |   | {throw_stmt}: ok
+          | |   | | {if_alt}: ok
+          | |   | {let_stmt}: x0: integer notnull variable
+          | |     | {name x0}: x0: integer notnull variable
+          | |     | {call}: a: integer notnull variable in
+          | |       | {name cql_inferred_notnull}: a: integer notnull variable in
+          | |       | {call_arg_list}
+          | |         | {call_filter_clause}
+          | |         | {arg_list}: ok
+          | |           | {name a}: a: integer inferred_notnull variable in
+          | | {if_alt}: ok
+          | {let_stmt}: x1: integer variable
+            | {name x1}: x1: integer variable
+            | {name a}: a: integer variable in
+
+The statement ending at line XXXX
+
+CREATE PROC guard_improvements_work_for_cursor_fields ()
+BEGIN
+  DECLARE c CURSOR FOR SELECT nullable(1) AS a;
+  FETCH c;
+  IF 1 THEN
+    IF c.a IS NULL THEN
+      RETURN;
+    END IF;
+    LET x0 := c.a;
+  END IF;
+  LET x1 := c.a;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name guard_improvements_work_for_cursor_fields}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor}: c: select: { a: integer } variable dml_proc
+      | | {name c}: c: select: { a: integer } variable dml_proc shape_storage
+      | | {select_stmt}: select: { a: integer }
+      |   | {select_core_list}: select: { a: integer }
+      |   | | {select_core}: select: { a: integer }
+      |   |   | {select_expr_list_con}: select: { a: integer }
+      |   |     | {select_expr_list}: select: { a: integer }
+      |   |     | | {select_expr}: a: integer
+      |   |     |   | {call}: integer
+      |   |     |   | | {name nullable}: integer
+      |   |     |   | | {call_arg_list}
+      |   |     |   |   | {call_filter_clause}
+      |   |     |   |   | {arg_list}: ok
+      |   |     |   |     | {int 1}: integer notnull
+      |   |     |   | {opt_as_alias}
+      |   |     |     | {name a}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_stmt}: c: select: { a: integer } variable dml_proc shape_storage
+      | | {name c}: c: select: { a: integer } variable dml_proc shape_storage
+      | {if_stmt}: integer notnull
+      | | {cond_action}: integer notnull
+      | | | {int 1}: integer notnull
+      | | | {stmt_list}: ok
+      | |   | {if_stmt}: bool notnull
+      | |   | | {cond_action}: bool notnull
+      | |   | | | {is}: bool notnull
+      | |   | | | | {dot}: c.a: integer variable
+      | |   | | | | | {name c}
+      | |   | | | | | {name a}
+      | |   | | | | {null}: null
+      | |   | | | {stmt_list}: ok
+      | |   | |   | {return_stmt}: ok
+      | |   | | {if_alt}: ok
+      | |   | {let_stmt}: x0: integer notnull variable
+      | |     | {name x0}: x0: integer notnull variable
+      | |     | {call}: c.a: integer notnull variable
+      | |       | {name cql_inferred_notnull}: c.a: integer notnull variable
+      | |       | {call_arg_list}
+      | |         | {call_filter_clause}
+      | |         | {arg_list}: ok
+      | |           | {dot}: c.a: integer inferred_notnull variable
+      | |             | {name c}
+      | |             | {name a}
+      | | {if_alt}: ok
+      | {let_stmt}: x1: integer variable
+        | {name x1}: x1: integer variable
+        | {dot}: c.a: integer variable
+          | {name c}
+          | {name a}
+
+The statement ending at line XXXX
+
+CREATE PROC multiple_improvements_are_possible_via_one_guard (a INTEGER, b INTEGER, c INTEGER)
+BEGIN
+  IF 1 THEN
+    IF a IS NULL OR b IS NULL OR c IS NULL THEN
+      RETURN;
+    END IF;
+    LET x0 := a;
+    LET y0 := b;
+    LET z0 := c;
+  END IF;
+  LET x1 := a;
+  LET y1 := b;
+  LET z1 := c;
+END;
+
+  {create_proc_stmt}: ok
+  | {name multiple_improvements_are_possible_via_one_guard}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: integer variable in
+    | | | {param_detail}: a: integer variable in
+    | |   | {name a}: a: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: b: integer variable in
+    |   | | {param_detail}: b: integer variable in
+    |   |   | {name b}: b: integer variable in
+    |   |   | {type_int}: integer
+    |   | {params}
+    |     | {param}: c: integer variable in
+    |       | {param_detail}: c: integer variable in
+    |         | {name c}: c: integer variable in
+    |         | {type_int}: integer
+    | {stmt_list}: ok
+      | {if_stmt}: integer notnull
+      | | {cond_action}: integer notnull
+      | | | {int 1}: integer notnull
+      | | | {stmt_list}: ok
+      | |   | {if_stmt}: bool notnull
+      | |   | | {cond_action}: bool notnull
+      | |   | | | {or}: bool notnull
+      | |   | | | | {or}: bool notnull
+      | |   | | | | | {is}: bool notnull
+      | |   | | | | | | {name a}: a: integer variable in
+      | |   | | | | | | {null}: null
+      | |   | | | | | {is}: bool notnull
+      | |   | | | |   | {name b}: b: integer variable in
+      | |   | | | |   | {null}: null
+      | |   | | | | {is}: bool notnull
+      | |   | | |   | {name c}: c: integer variable in
+      | |   | | |   | {null}: null
+      | |   | | | {stmt_list}: ok
+      | |   | |   | {return_stmt}: ok
+      | |   | | {if_alt}: ok
+      | |   | {let_stmt}: x0: integer notnull variable
+      | |   | | {name x0}: x0: integer notnull variable
+      | |   | | {call}: a: integer notnull variable in
+      | |   |   | {name cql_inferred_notnull}: a: integer notnull variable in
+      | |   |   | {call_arg_list}
+      | |   |     | {call_filter_clause}
+      | |   |     | {arg_list}: ok
+      | |   |       | {name a}: a: integer inferred_notnull variable in
+      | |   | {let_stmt}: y0: integer notnull variable
+      | |   | | {name y0}: y0: integer notnull variable
+      | |   | | {call}: b: integer notnull variable in
+      | |   |   | {name cql_inferred_notnull}: b: integer notnull variable in
+      | |   |   | {call_arg_list}
+      | |   |     | {call_filter_clause}
+      | |   |     | {arg_list}: ok
+      | |   |       | {name b}: b: integer inferred_notnull variable in
+      | |   | {let_stmt}: z0: integer notnull variable
+      | |     | {name z0}: z0: integer notnull variable
+      | |     | {call}: c: integer notnull variable in
+      | |       | {name cql_inferred_notnull}: c: integer notnull variable in
+      | |       | {call_arg_list}
+      | |         | {call_filter_clause}
+      | |         | {arg_list}: ok
+      | |           | {name c}: c: integer inferred_notnull variable in
+      | | {if_alt}: ok
+      | {let_stmt}: x1: integer variable
+      | | {name x1}: x1: integer variable
+      | | {name a}: a: integer variable in
+      | {let_stmt}: y1: integer variable
+      | | {name y1}: y1: integer variable
+      | | {name b}: b: integer variable in
+      | {let_stmt}: z1: integer variable
+        | {name z1}: z1: integer variable
+        | {name c}: c: integer variable in
+
+The statement ending at line XXXX
+
+CREATE PROC guard_improvements_only_work_for_outermost_ors (a INTEGER, b INTEGER, c INTEGER)
+BEGIN
+  IF a IS NULL AND (b IS NULL OR c IS NULL) THEN
+    RETURN;
+  END IF;
+  LET x := a;
+  LET y := b;
+  LET z := c;
+END;
+
+  {create_proc_stmt}: ok
+  | {name guard_improvements_only_work_for_outermost_ors}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: integer variable in
+    | | | {param_detail}: a: integer variable in
+    | |   | {name a}: a: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: b: integer variable in
+    |   | | {param_detail}: b: integer variable in
+    |   |   | {name b}: b: integer variable in
+    |   |   | {type_int}: integer
+    |   | {params}
+    |     | {param}: c: integer variable in
+    |       | {param_detail}: c: integer variable in
+    |         | {name c}: c: integer variable in
+    |         | {type_int}: integer
+    | {stmt_list}: ok
+      | {if_stmt}: bool notnull
+      | | {cond_action}: bool notnull
+      | | | {and}: bool notnull
+      | | | | {is}: bool notnull
+      | | | | | {name a}: a: integer variable in
+      | | | | | {null}: null
+      | | | | {or}: bool notnull
+      | | |   | {is}: bool notnull
+      | | |   | | {name b}: b: integer variable in
+      | | |   | | {null}: null
+      | | |   | {is}: bool notnull
+      | | |     | {name c}: c: integer variable in
+      | | |     | {null}: null
+      | | | {stmt_list}: ok
+      | |   | {return_stmt}: ok
+      | | {if_alt}: ok
+      | {let_stmt}: x: integer variable
+      | | {name x}: x: integer variable
+      | | {name a}: a: integer variable in
+      | {let_stmt}: y: integer variable
+      | | {name y}: y: integer variable
+      | | {name b}: b: integer variable in
+      | {let_stmt}: z: integer variable
+        | {name z}: z: integer variable
+        | {name c}: c: integer variable in
+
+The statement ending at line XXXX
+
+CREATE PROC guard_improvements_only_work_for_is_null (a INTEGER)
+BEGIN
+  IF NOT a THEN
+    RETURN;
+  END IF;
+  LET x := a;
+END;
+
+  {create_proc_stmt}: ok
+  | {name guard_improvements_only_work_for_is_null}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: integer variable in
+    |   | {param_detail}: a: integer variable in
+    |     | {name a}: a: integer variable in
+    |     | {type_int}: integer
+    | {stmt_list}: ok
+      | {if_stmt}: bool
+      | | {cond_action}: bool
+      | | | {not}: bool
+      | | | | {name a}: a: integer variable in
+      | | | {stmt_list}: ok
+      | |   | {return_stmt}: ok
+      | | {if_alt}: ok
+      | {let_stmt}: x: integer variable
+        | {name x}: x: integer variable
+        | {name a}: a: integer variable in
+
+The statement ending at line XXXX
+
+CREATE PROC guard_improvements_handle_semantic_issues_like_if ()
+BEGIN
+  IF some_undefined_variable IS NULL THEN
+    RETURN;
+  END IF;
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'some_undefined_variable'
+
+  {create_proc_stmt}: err
+  | {name guard_improvements_handle_semantic_issues_like_if}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {if_stmt}: err
+        | {cond_action}: err
+        | | {is}: err
+        | | | {name some_undefined_variable}: err
+        | | | {null}: null
+        | | {stmt_list}
+        |   | {return_stmt}
+        | {if_alt}
+
+The statement ending at line XXXX
+
 @ENFORCE_NORMAL NOT NULL AFTER CHECK;
 
   {enforce_normal_stmt}: ok

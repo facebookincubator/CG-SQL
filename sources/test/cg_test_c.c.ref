@@ -470,6 +470,34 @@ void test(cql_int32 i) {
 
 }
 #undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC proc_with_return_guard (a INTEGER)
+BEGIN
+  IF a IS NOT NULL THEN
+    RETURN;
+  END IF;
+  LET x := a;
+END;
+*/
+
+#define _PROC_ "proc_with_return_guard"
+// export: DECLARE PROC proc_with_return_guard (a INTEGER);
+void proc_with_return_guard(cql_nullable_int32 a) {
+  cql_nullable_int32 x;
+  cql_set_null(x);
+
+  if (!a.is_null) {
+    goto cql_cleanup; // return
+  }
+  cql_set_nullable(x, a.is_null, a.value);
+
+cql_cleanup:
+  ; // label requires some statement
+}
+#undef _PROC_
 cql_int32 _between_0_ = 0;
 cql_nullable_int32 _between_1_;
 cql_nullable_int32 _between_2_;

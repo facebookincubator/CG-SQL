@@ -153,7 +153,6 @@ static bool_t sem_validate_identical_text(ast_node *prev_def, ast_node *def, gen
 static bool_t sem_validate_identical_ddl(ast_node *cur, ast_node *prev);
 static void sem_setup_region_filters(void);
 static void sem_inside_create_proc_stmt(ast_node *ast);
-static void sem_one_stmt(ast_node *stmt);
 static void sem_declare_cursor_for_name(ast_node *ast);
 static sem_join * new_sem_join(uint32_t count);
 static void sem_validate_check_expr_for_table(ast_node *table, ast_node *expr, CSTR context);
@@ -11619,6 +11618,70 @@ static void sem_if_stmt(ast_node *ast) {
   // END IF
 }
 
+// Improvements for guard statements are dual to improvements for normal IF
+// statements: Guard statements improve ids and dots verified to be NULL via `IS
+// NULL` along the outermost spine of `OR` expressions, whereas IF statements
+// improve ids and dots verified to be nonnull via `IS NOT NULL` along the
+// outermost spine of `AND` expressions. For example, the following two
+// statements introduce the same improvements:
+//
+//   IF a IS NOT NULL AND b IS NOT NULL THEN
+//     -- `a` and `b` are improved here
+//   END IF;
+//
+//   IF a IS NULL OR b IS NULL RETURN;
+//   -- `a` and `b` are improved here
+//
+// Improvements resulting from guards persist until the end of the current
+// statement list as with improvements resulting from SET.
+static void sem_add_improvements_from_guard_condition(ast_node *ast) {
+  Contract(ast);
+  
+  if (is_ast_or(ast)) {
+    sem_add_improvements_from_guard_condition(ast->left);
+    sem_add_improvements_from_guard_condition(ast->right);
+    return;
+  }
+
+  if (is_ast_is(ast) && is_ast_null(ast->right)) {
+    EXTRACT_ANY_NOTNULL(expr, ast->left);
+    if (is_ast_id(expr)) {
+      EXTRACT_STRING(name, expr);
+      sem_set_notnull_improved(name, NULL);
+    } else if (is_ast_dot(expr)) {
+      EXTRACT_STRING(name, expr->right);
+      EXTRACT_STRING(scope, expr->left);
+      sem_set_notnull_improved(name, scope);
+    }
+  }
+}
+
+// Guard statements are a restricted form of IF statement where the current
+// block or procedure is exited when the guard condition is true. The valid
+// forms are as follows:
+//
+//   IF expr COMMIT RETURN;
+//   IF expr CONTINUE;
+//   IF expr LEAVE;
+//   IF expr RETURN;
+//   IF expr ROLLBACK RETURN;
+//   IF expr THROW;
+//
+//  As with IF statements, nullability improvements are possible.
+static void sem_guard_stmt(ast_node *ast) {
+  Contract(is_ast_guard_stmt(ast));
+
+  rewrite_guard_stmt_to_if_stmt(ast);
+  if (is_error(ast)) {
+    return;
+  }
+
+  EXTRACT(cond_action, ast->left);
+  EXTRACT_ANY_NOTNULL(expr, cond_action->left);
+
+  sem_add_improvements_from_guard_condition(expr);
+}
+
 // This is the delete analyzer, it sets up a joinscope for the table being
 // deleted and the validates the WHERE if present against that joinscope.
 // Additionally we verify that the table actually was defined and is not a view.
@@ -17795,7 +17858,7 @@ static void sem_declare_out_call_stmt(ast_node *ast) {
 // what the statement is yet (such as we're walking a statement list) this will
 // dispatch to the correct method.  Also, the top level statement captures
 // any errors.
-static void sem_one_stmt(ast_node *stmt) {
+cql_noexport void sem_one_stmt(ast_node *stmt) {
   CHARBUF_OPEN(errbuf);
   bool_t capture_now = options.print_ast && error_capture == NULL;
 
@@ -19278,6 +19341,7 @@ cql_noexport void sem_main(ast_node *ast) {
   symtab *syms = non_sql_stmts;
 
   STMT_INIT(if_stmt);
+  STMT_INIT(guard_stmt);
   STMT_INIT(while_stmt);
   STMT_INIT(switch_stmt);
   STMT_INIT(leave_stmt);

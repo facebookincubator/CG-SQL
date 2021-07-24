@@ -2186,6 +2186,18 @@ static void gen_if_stmt(ast_node *ast) {
   gen_printf("END IF");
 }
 
+static void gen_guard_stmt(ast_node *ast) {
+  Contract(is_ast_guard_stmt(ast));
+  EXTRACT_ANY_NOTNULL(expr, ast->left);
+  EXTRACT(control_stmt, ast->right);
+  EXTRACT_ANY_NOTNULL(stmt, control_stmt->left);
+
+  gen_printf("IF ");
+  gen_expr(expr, EXPR_PRI_ROOT);
+  gen_printf(" ");
+  gen_one_stmt(stmt);
+}
+
 static void gen_delete_stmt(ast_node *ast) {
   Contract(is_ast_delete_stmt(ast));
   EXTRACT_STRING(name, ast->left);
@@ -3487,6 +3499,7 @@ cql_noexport void gen_init() {
   gen_exprs = symtab_new();
 
   STMT_INIT(if_stmt);
+  STMT_INIT(guard_stmt);
   STMT_INIT(while_stmt);
   STMT_INIT(switch_stmt);
   STMT_INIT(leave_stmt);

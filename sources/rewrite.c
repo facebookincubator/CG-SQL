@@ -1363,3 +1363,23 @@ cql_noexport void rewrite_nullable_to_unsafe_notnull(ast_node *_Nonnull ast) {
 
   sem_expr(ast);
 }
+
+// Rewrites a guard statement of the form `IF expr stmt` to a regular if
+// statement of the form `IF expr THEN stmt END IF`.
+cql_noexport void rewrite_guard_stmt_to_if_stmt(ast_node *_Nonnull ast) {
+  Contract(is_ast_guard_stmt(ast));
+
+  AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
+
+  EXTRACT_ANY_NOTNULL(expr, ast->left);
+  EXTRACT(control_stmt, ast->right);
+  EXTRACT_ANY_NOTNULL(stmt, control_stmt->left);
+
+  ast->type = k_ast_if_stmt;
+  ast_set_left(ast, new_ast_cond_action(expr, new_ast_stmt_list(stmt, NULL)));
+  ast_set_right(ast, new_ast_if_alt(NULL, NULL));
+
+  AST_REWRITE_INFO_RESET();
+
+  sem_one_stmt(ast);
+}

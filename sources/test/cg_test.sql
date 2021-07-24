@@ -318,6 +318,16 @@ begin
   end if;
 end;
 
+-- TEST: guard statements are simply rewritten to if statements
+-- + if (!a.is_null) {
+-- + goto cql_cleanup; // return
+-- + cql_set_nullable(x, a.is_null, a.value);
+create proc proc_with_return_guard(a int)
+begin
+  if a is not null return;
+  let x := a;
+end;
+
 -- TEST: simple between
 -- + SET b2 := BETWEEN REWRITE _between_0_ := 1 CHECK (_between_0_ >= 0 AND _between_0_ <= 3);
 -- + _between_0_ = 1;
