@@ -62,7 +62,8 @@ static void eval_num(ast_node *expr, eval_node *result) {
     result->sem_type = SEM_TYPE_LONG_INTEGER;
     break;
 
-  case NUM_REAL:
+  default:
+    Invariant(num_type == NUM_REAL);  // nothing else left
     result->real_value = atof(lit);
     result->sem_type = SEM_TYPE_REAL;
     break;
@@ -98,7 +99,8 @@ cql_noexport void eval_cast_to(eval_node *result, sem_t sem_type) {
         case SEM_TYPE_BOOL:
           result->real_value = (double)!!result->bool_value;
           break;
-        case SEM_TYPE_LONG_INTEGER:
+        default:
+          Invariant(core_type_source == SEM_TYPE_LONG_INTEGER); // nothing else left
           result->real_value = (double)result->int64_value;
           break;
       }
@@ -111,7 +113,8 @@ cql_noexport void eval_cast_to(eval_node *result, sem_t sem_type) {
         case SEM_TYPE_BOOL:
           result->int64_value = (int64_t)!!result->bool_value;
           break;
-        case SEM_TYPE_INTEGER:
+        default:
+          Invariant(core_type_source == SEM_TYPE_INTEGER); // nothing else left
           result->int64_value = (int64_t)result->int32_value;
           break;
       }
@@ -124,12 +127,14 @@ cql_noexport void eval_cast_to(eval_node *result, sem_t sem_type) {
         case SEM_TYPE_BOOL:
           result->int32_value = (int32_t)!!result->bool_value;
           break;
-        case SEM_TYPE_LONG_INTEGER:
+        default:
+          Invariant(core_type_source == SEM_TYPE_LONG_INTEGER); // nothing else left
           result->int32_value = (int32_t)result->int64_value;
           break;
       }
       break;
-    case SEM_TYPE_BOOL:
+    default:
+      Invariant(core_type_target == SEM_TYPE_BOOL); // nothing else left
       switch (core_type_source) {
         case SEM_TYPE_REAL:
            result->bool_value = (result->real_value != 0);
@@ -137,7 +142,8 @@ cql_noexport void eval_cast_to(eval_node *result, sem_t sem_type) {
         case SEM_TYPE_INTEGER:
           result->bool_value = (result->int32_value != 0);
           break;
-        case SEM_TYPE_LONG_INTEGER:
+        default:
+          Invariant(core_type_source == SEM_TYPE_LONG_INTEGER); // nothing else left
           result->bool_value = (result->int64_value != 0);
           break;
       }
@@ -193,7 +199,8 @@ cql_noexport ast_node *eval_set(ast_node *expr, eval_node *result) {
     break;
     }
 
-  case SEM_TYPE_NULL:
+  default:
+    Invariant(core_type == SEM_TYPE_NULL); // nothing else left
     new_num = new_ast_null();
     break;
   }
@@ -238,13 +245,16 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
   else if (core_type_left == SEM_TYPE_INTEGER || core_type_right == SEM_TYPE_INTEGER) {
     result = SEM_TYPE_INTEGER;
   }
-  else if (core_type_left == SEM_TYPE_BOOL || core_type_right == SEM_TYPE_BOOL) {
+  else {
+    Invariant(core_type_left == SEM_TYPE_BOOL && core_type_right == SEM_TYPE_BOOL);
     result = SEM_TYPE_BOOL;
   }
 
   Invariant(result != SEM_TYPE_ERROR);
   return result;
 }
+
+#define DIV_TEST(x)
 
 // All the normal binary operators are handled the same way, only the operator actually varies.
 // The thing is the operator has to be lexically substituted in so that we get the correct
@@ -275,11 +285,13 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
     return; \
   } \
   \
-  if ((#op)[0] == '/' && result_is_false(&right)) { \
-    /* special case to prevent divide by zero */ \
-    result->sem_type = SEM_TYPE_ERROR; \
-    return; \
-  } \
+  DIV_TEST( \
+    if ((#op)[0] == '/' && result_is_false(&right)) { \
+      /* special case to prevent divide by zero */ \
+      result->sem_type = SEM_TYPE_ERROR; \
+      return; \
+    } \
+  ) \
   \
   sem_t core_type = eval_combined_type(&left, &right); \
   eval_cast_to(&left, core_type); \
@@ -302,7 +314,9 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
     result->bool_value = 0 != (left.bool_value op right.bool_value); \
     break; \
   \
-  case SEM_TYPE_REAL: \
+  default: \
+    /* this is all that's left */ \
+    Invariant(core_type == SEM_TYPE_REAL); \
     result->sem_type = SEM_TYPE_REAL; \
     result->real_value = (left.real_value op right.real_value); \
     break; \
@@ -329,11 +343,13 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
     return; \
   } \
   \
-  if ((#op)[0] == '%' && result_is_false(&right)) { \
-    /* special case to prevent divide by zero */ \
-    result->sem_type = SEM_TYPE_ERROR; \
-    return; \
-  } \
+  DIV_TEST( \
+    if ((#op)[0] == '%' && result_is_false(&right)) { \
+      /* special case to prevent divide by zero */ \
+      result->sem_type = SEM_TYPE_ERROR; \
+      return; \
+    } \
+  ) \
   sem_t core_type = eval_combined_type(&left, &right); \
   \
   eval_cast_to(&left, core_type); \
@@ -351,7 +367,9 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
     result->int64_value = (left.int64_value op right.int64_value); \
     break; \
   \
-  case SEM_TYPE_BOOL: \
+  default: \
+    /* this is all that's left */ \
+    Invariant(core_type == SEM_TYPE_BOOL); \
     result->sem_type = SEM_TYPE_BOOL; \
     result->bool_value = 0 != (left.bool_value op right.bool_value); \
     break; \
@@ -408,7 +426,9 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
     result->bool_value = 0 != (left.bool_value op right.bool_value); \
     break; \
   \
-  case SEM_TYPE_REAL: \
+  default: \
+    /* this is all that's left */ \
+    Invariant(core_type == SEM_TYPE_REAL); \
     result->sem_type = SEM_TYPE_BOOL; \
     result->bool_value = (left.real_value op right.real_value); \
     break; \
@@ -418,8 +438,10 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
 
 // True if the node is a zero; not err, not NULL, an actual zero
 static bool_t result_is_false(eval_node *result) {
+  Contract(result->sem_type != SEM_TYPE_ERROR);
+
   // null is not false
-  if (result->sem_type == SEM_TYPE_NULL || result->sem_type == SEM_TYPE_ERROR) {
+  if (result->sem_type == SEM_TYPE_NULL) {
     return false;
   }
 
@@ -430,8 +452,10 @@ static bool_t result_is_false(eval_node *result) {
 
 // True if the node is not zero; not err, not NULL, an actual non-zero
 static bool_t result_is_true(eval_node *result) {
+  Contract(result->sem_type != SEM_TYPE_ERROR);
+
   // null/error is not true
-  if (result->sem_type == SEM_TYPE_NULL || result->sem_type == SEM_TYPE_ERROR) {
+  if (result->sem_type == SEM_TYPE_NULL) {
     return false;
   }
 
@@ -455,6 +479,10 @@ static void eval_mul(ast_node *expr, eval_node *result) {
   BINARY_OP(*);
 }
 
+// add the divide by zero logic for / and %
+#undef DIV_TEST
+#define DIV_TEST(x) x
+
 // note: BINARY_OP has divide by zero logic
 static void eval_div(ast_node *expr, eval_node *result) {
   BINARY_OP(/);
@@ -464,6 +492,9 @@ static void eval_div(ast_node *expr, eval_node *result) {
 static void eval_mod(ast_node *expr, eval_node *result) {
   BINARY_OP_NO_REAL(%);
 }
+
+#undef DIV_TEST
+#define DIV_TEST(x)
 
 static void eval_eq(ast_node *expr, eval_node *result) {
   COMPARE_BINARY_OP(==);
@@ -520,11 +551,10 @@ static void eval_is(ast_node *expr, eval_node *result) {
   eval(expr->left, &left);
   eval(expr->right, &right);
 
-  if (left.sem_type == SEM_TYPE_ERROR || right.sem_type == SEM_TYPE_ERROR) { \
-    result->sem_type = SEM_TYPE_ERROR; \
+  if (left.sem_type == SEM_TYPE_ERROR || right.sem_type == SEM_TYPE_ERROR) { 
+    result->sem_type = SEM_TYPE_ERROR;
     return;
   }
-
 
   if (left.sem_type == SEM_TYPE_NULL || right.sem_type == SEM_TYPE_NULL) {
     result->sem_type = SEM_TYPE_BOOL;
@@ -554,7 +584,8 @@ static void eval_is(ast_node *expr, eval_node *result) {
       result->bool_value = 0 != (left.bool_value == right.bool_value);
       break;
 
-    case SEM_TYPE_REAL:
+    default:
+      Invariant(core_type == SEM_TYPE_REAL);  // nothing else left
       result->sem_type = SEM_TYPE_BOOL;
       result->bool_value = (left.real_value == right.real_value);
       break;
@@ -656,29 +687,25 @@ static void eval_tilde(ast_node *expr, eval_node *result) {
     return;
   }
 
-  // only the numeric cases left
-  bool matched = false;
+  // only the integer numeric cases are possible (~real is a semantic error)
 
   switch (result->sem_type) {
     case SEM_TYPE_INTEGER:
       result->int32_value = ~result->int32_value;
-      matched = true;
       break;
 
     case SEM_TYPE_LONG_INTEGER:
       result->int64_value = ~result->int64_value;
-      matched = true;
       break;
 
-    case SEM_TYPE_BOOL:
+    default:
+      Invariant(result->sem_type == SEM_TYPE_BOOL); //nothing else left
       result->sem_type = SEM_TYPE_INTEGER;
       // use ternary in case bool has a true value other than 1
       // this is clearer than writing ~!!result->bool_value I think...
       result->int32_value = result->bool_value ? ~1 : ~0;
-      matched = true;
       break;
   }
-  Invariant(matched);
 }
 
 // Unary minus (negation) is very much like bitwise not:
@@ -692,33 +719,28 @@ static void eval_uminus(ast_node *expr, eval_node *result) {
   }
 
   // only the numeric cases left
-  bool matched = false;
 
   switch (result->sem_type) {
     case SEM_TYPE_INTEGER:
-      matched = true;
       result->int32_value = -result->int32_value;
       break;
 
     case SEM_TYPE_LONG_INTEGER:
-      matched = true;
       result->int64_value = -result->int64_value;
       break;
 
     case SEM_TYPE_REAL:
-      matched = true;
       result->real_value = -result->real_value;
       break;
 
-    case SEM_TYPE_BOOL:
-      matched = true;
+    default:
+      Invariant(result->sem_type == SEM_TYPE_BOOL); //nothing else left
       result->sem_type = SEM_TYPE_INTEGER;
       // use ternary in case bool has a true value other than 1
       // this is clearer than writing -!!result->bool_value I think...
       result->int32_value = result->bool_value ? -1 : 0;
       break;
   }
-  Invariant(matched);
 }
 
 // logical AND is tricky because it has to follow the truth table and also
@@ -871,7 +893,8 @@ static bool eval_are_equal(eval_node *_left, eval_node *_right) {
       result = left.real_value == right.real_value;
       break;
 
-    case SEM_TYPE_BOOL:
+    default:
+      Invariant(left.sem_type == SEM_TYPE_BOOL); //nothing else left
       result = left.bool_value == right.bool_value;
       break;
   }
@@ -976,7 +999,8 @@ cql_noexport void eval_add_one(eval_node *result) {
       result->real_value++;
       break;
 
-    case SEM_TYPE_BOOL:
+    default:
+      Invariant(result->sem_type == SEM_TYPE_BOOL); //nothing else left
       result->bool_value = !result->bool_value;
       break;
   }
@@ -1001,7 +1025,8 @@ cql_noexport void eval_format_number(eval_node *result, charbuf *output) {
       eval_format_real(result->real_value, output);
       break;
 
-    case SEM_TYPE_BOOL:
+    default:
+      Invariant(result->sem_type == SEM_TYPE_BOOL); //nothing else left
       bprintf(output, "%d", !!result->bool_value);
       break;
   }

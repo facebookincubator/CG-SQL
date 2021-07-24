@@ -14188,6 +14188,29 @@ Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant fai
 
 The statement ending at line XXXX
 
+SELECT CONST(NOT x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {not}: bool
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
 SELECT CONST(CASE x WHEN 1 THEN 2
 END);
 
@@ -14326,6 +14349,94 @@ Error at test/sem_test.sql:XXXX : in tilde : CQL0001: operands must be an intege
 
 The statement ending at line XXXX
 
+SELECT CONST(~(1 / 0));
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {tilde}: integer notnull
+  |     |       | {div}: integer notnull
+  |     |         | {int 1}: integer notnull
+  |     |         | {int 0}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(-(1 / 0));
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {uminus}: integer notnull
+  |     |       | {div}: integer notnull
+  |     |         | {int 1}: integer notnull
+  |     |         | {int 0}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
 SELECT CONST(x = x);
 
 Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
@@ -14374,7 +14485,7 @@ Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant fai
 
 The statement ending at line XXXX
 
-SELECT CONST(x + x);
+SELECT CONST(x + 0);
 
 Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
 
@@ -14387,6 +14498,1672 @@ Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant fai
   |     |   | {const}: err
   |     |     | {add}: integer
   |     |       | {name x}: X: integer variable
+  |     |       | {int 0}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(0 + x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {add}: integer
+  |     |       | {int 0}: integer notnull
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 1;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | : bool notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(x - 0);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {sub}: integer
+  |     |       | {name x}: X: integer variable
+  |     |       | {int 0}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(0 - x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {sub}: integer
+  |     |       | {int 0}: integer notnull
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 1;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | : bool notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(x * 0);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {mul}: integer
+  |     |       | {name x}: X: integer variable
+  |     |       | {int 0}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(0 * x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {mul}: integer
+  |     |       | {int 0}: integer notnull
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 0;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | : bool notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(x / 1);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {div}: integer
+  |     |       | {name x}: X: integer variable
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1 / x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {div}: integer
+  |     |       | {int 1}: integer notnull
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 0;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | : bool notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(x % 1);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {mod}: integer
+  |     |       | {name x}: X: integer variable
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1 % x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {mod}: integer
+  |     |       | {int 1}: integer notnull
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 0;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | : bool notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(x = 1);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {eq}: bool
+  |     |       | {name x}: X: integer variable
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1 = x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {eq}: bool
+  |     |       | {int 1}: integer notnull
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 0;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | : bool notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(x <> 1);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {ne}: bool
+  |     |       | {name x}: X: integer variable
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1 <> x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {ne}: bool
+  |     |       | {int 1}: integer notnull
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 1;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | : bool notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(x <= 1);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {le}: bool
+  |     |       | {name x}: X: integer variable
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1 <= x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {le}: bool
+  |     |       | {int 1}: integer notnull
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 1;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | : bool notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(x >= 1);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {ge}: bool
+  |     |       | {name x}: X: integer variable
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1 >= x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {ge}: bool
+  |     |       | {int 1}: integer notnull
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 0;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | : bool notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(x > 1);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {gt}: bool
+  |     |       | {name x}: X: integer variable
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1 > x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {gt}: bool
+  |     |       | {int 1}: integer notnull
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 0;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | : bool notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(x < 1);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {lt}: bool
+  |     |       | {name x}: X: integer variable
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1 < x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {lt}: bool
+  |     |       | {int 1}: integer notnull
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 1;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | : bool notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(x << 1);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {lshift}: integer
+  |     |       | {name x}: X: integer variable
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1 << x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {lshift}: integer
+  |     |       | {int 1}: integer notnull
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 0;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | : bool notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(x >> 1);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {rshift}: integer
+  |     |       | {name x}: X: integer variable
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1 >> x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {rshift}: integer
+  |     |       | {int 1}: integer notnull
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 0;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | : bool notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(x | 1);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {bin_or}: integer
+  |     |       | {name x}: X: integer variable
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1 | x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {bin_or}: integer
+  |     |       | {int 1}: integer notnull
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 1;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | : bool notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(x & 1);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {bin_and}: integer
+  |     |       | {name x}: X: integer variable
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1 & x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {bin_and}: integer
+  |     |       | {int 1}: integer notnull
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 0;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | : bool notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(x IS 1);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {is}: bool notnull
+  |     |       | {name x}: X: integer variable
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1 IS x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {is}: bool notnull
+  |     |       | {int 1}: integer notnull
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(x IS NOT 1);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {is_not}: bool notnull
+  |     |       | {name x}: X: integer variable
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1 IS NOT x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {is_not}: bool notnull
+  |     |       | {int 1}: integer notnull
   |     |       | {name x}: X: integer variable
   |     | {select_from_etc}: ok
   |       | {select_where}

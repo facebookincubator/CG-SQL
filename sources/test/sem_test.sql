@@ -1582,7 +1582,7 @@ create table bad_conversions(
 -- + Error % lossy conversion from type 'REAL' in 2.200000e+00
 -- +1 Error
 create table bad_conversions(
-  data integer not null default const(1+1.2)
+  data integer not null default const(1 + 1.2)
 );
 
 -- TEST: allowable conversion, the constant becomes real
@@ -3921,6 +3921,12 @@ select const(1 % 0L);
 -- +1 Error
 select const(1 % not 1);
 
+-- TEST: not handles error prop
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(not x);
+
 -- TEST: variables not allowed in constant expressions (duh)
 -- + {const}: err
 -- + Error % evaluation of constant failed
@@ -3951,6 +3957,32 @@ select const(case when x then 2 end);
 -- +1 Error
 select const(~1.3);
 
+-- TEST: error should flow through
+-- + {const}: err
+-- + SELECT CONST(~(1 / 0));
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(~(1/0));
+
+-- TEST: error should flow through
+-- + {const}: err
+-- + SELECT CONST(-(1 / 0));
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(-(1/0));
+
+-- TEST: ~NULL
+-- ~NULL is null
+-- + SELECT NULL;
+-- - Error
+select const(~null);
+
+-- TEST: -NULL
+-- -NULL is null
+-- + SELECT NULL;
+-- - Error
+select const(-null);
+
 -- TEST: forcing errors in binary operators to make them prop:  comparison type
 -- + {const}: err
 -- + Error % evaluation of constant failed
@@ -3967,7 +3999,481 @@ select const(x is x);
 -- + {const}: err
 -- + Error % evaluation of constant failed
 -- +1 Error
-select const(x + x);
+select const(x + 0);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(0 + x);
+
+-- TEST: null handling for +
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(null + 0);
+
+-- TEST: null handling for +
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(0 + null);
+
+-- TEST: bool handling for +
+-- + {select_stmt}: select: { _anon: bool notnull }
+-- + SELECT 1;
+-- - Error
+select const(true + false);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x - 0);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(0 - x);
+
+-- TEST: null handling for -
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(null - 0);
+
+-- TEST: null handling for -
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(0 - null);
+
+-- TEST: bool handling for -
+-- + {select_stmt}: select: { _anon: bool notnull }
+-- + SELECT 1;
+-- - Error
+select const(true - false);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x * 0);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(0 * x);
+
+-- TEST: null handling for *
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(null * 0);
+
+-- TEST: null handling for *
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(0 * null);
+
+-- TEST: bool handling for *
+-- + {select_stmt}: select: { _anon: bool notnull }
+-- + SELECT 0;
+-- - Error
+select const(true * false);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x / 1);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1 / x);
+
+-- TEST: null handling for /
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(null / 1);
+
+-- TEST: null handling for /
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(1 / null);
+
+-- TEST: bool handling for /
+-- + {select_stmt}: select: { _anon: bool notnull }
+-- + SELECT 0;
+-- - Error
+select const(false / true);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x % 1);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1 % x);
+
+-- TEST: null handling for %
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(null % 1);
+
+-- TEST: null handling for %
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(1 % null);
+
+-- TEST: bool handling for %
+-- + {select_stmt}: select: { _anon: bool notnull }
+-- + SELECT 0;
+-- - Error
+select const(false % true);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x == 1);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1 == x);
+
+-- TEST: null handling for == (don't use a literal null)
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const((not null) == 0);
+
+-- TEST: null handling for == (don't use a literal null)
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(0 == not null);
+
+-- TEST: null handling for +
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(0 + null);
+
+-- TEST: bool handling for ==
+-- + {select_stmt}: select: { _anon: bool notnull }
+-- + SELECT 0;
+-- - Error
+select const(false == true);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x != 1);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1 != x);
+
+-- TEST: null handling for == (don't use a literal null)
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const((not null) != 0);
+
+-- TEST: null handling for != (don't use a literal null)
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(0 != not null);
+
+-- TEST: bool handling for !=
+-- + {select_stmt}: select: { _anon: bool notnull }
+-- + SELECT 1;
+-- - Error
+select const(false != true);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x <= 1);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1 <= x);
+
+-- TEST: null handling for <= (don't use a literal null)
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const((not null) <= 0);
+
+-- TEST: null handling for <= (don't use a literal null)
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(0 <= not null);
+
+-- TEST: bool handling for <=
+-- + {select_stmt}: select: { _anon: bool notnull }
+-- + SELECT 1;
+-- - Error
+select const(false <= true);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x >= 1);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1 >= x);
+
+-- TEST: null handling for >= (don't use a literal null)
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const((not null) >= 0);
+
+-- TEST: null handling for >= (don't use a literal null)
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(0 >= not null);
+
+-- TEST: bool handling for >=
+-- + {select_stmt}: select: { _anon: bool notnull }
+-- + SELECT 0;
+-- - Error
+select const(false >= true);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x > 1);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1 > x);
+
+-- TEST: null handling for >
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(null > 1);
+
+-- TEST: null handling for >
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(1 > null);
+
+-- TEST: bool handling for >
+-- + {select_stmt}: select: { _anon: bool notnull }
+-- + SELECT 0;
+-- - Error
+select const(false > true);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x < 1);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1 < x);
+
+-- TEST: null handling for <
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(null < 1);
+
+-- TEST: null handling for <
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(1 < null);
+
+-- TEST: bool handling for <
+-- + {select_stmt}: select: { _anon: bool notnull }
+-- + SELECT 1;
+-- - Error
+select const(false < true);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x << 1);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1 << x);
+
+-- TEST: null handling for <<
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(null << 0);
+
+-- TEST: null handling for <<
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(0 << null);
+
+-- TEST: bool handling for <<
+-- + {select_stmt}: select: { _anon: bool notnull }
+-- + SELECT 0;
+-- - Error
+select const(false << true);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x >> 1);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1 >> x);
+
+-- TEST: null handling for >>
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(null >> 0);
+
+-- TEST: null handling for >>
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(0 >> null);
+
+-- TEST: bool handling for >>
+-- + {select_stmt}: select: { _anon: bool notnull }
+-- + SELECT 0;
+-- - Error
+select const(false >> true);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x | 1);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1 | x);
+
+-- TEST: null handling for |
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(null | 0);
+
+-- TEST: null handling for |
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(0 | null);
+
+-- TEST: bool handling for |
+-- + {select_stmt}: select: { _anon: bool notnull }
+-- + SELECT 1;
+-- - Error
+select const(false | true);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x & 1);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1 & x);
+
+-- TEST: null handling for &
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(null & 0);
+
+-- TEST: null handling for &
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(0 & null);
+
+-- TEST: bool handling for &
+-- + {select_stmt}: select: { _anon: bool notnull }
+-- + SELECT 0;
+-- - Error
+select const(false & true);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x is 1);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1 is x);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x is not 1);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1 is not x);
 
 -- TEST: forcing errors in binary operators to make them prop:  and error in first arg
 -- + {const}: err
