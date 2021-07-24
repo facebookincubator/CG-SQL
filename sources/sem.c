@@ -5637,7 +5637,6 @@ static void sem_resolve_id_expr(ast_node *ast, CSTR name, CSTR scope) {
 
   // If we've made it here, it's safe and appropriate to do the rewrite.
   rewrite_nullable_to_unsafe_notnull(ast);
-  sem_expr(ast);
 }
 
 // Returns the *mutable* type (`sem_t *`) for a given (potentially qualified)

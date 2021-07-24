@@ -1360,4 +1360,6 @@ cql_noexport void rewrite_nullable_to_unsafe_notnull(ast_node *_Nonnull ast) {
   ast_set_right(ast, call_arg_list);
 
   AST_REWRITE_INFO_RESET();
+
+  sem_expr(ast);
 }
