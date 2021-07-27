@@ -13804,19 +13804,37 @@ select iif(an_int is null, 3, 2);
 -- TEST: test rewrite for IIF func with invalid argument count
 -- + {select_stmt}: err
 -- + Error % function got incorrect number of arguments 'iif'
--- + Error
+-- +1 Error
 select iif(an_int is null, 2, 3, 4);
 
--- TEST: test rewrite for IIF func with invalid argument count
+-- TEST: exercise iif analysis with a bad first argument
+-- + {select_stmt}: err
+-- + {name not_found}: err
+-- +1 Error
+select iif(not_found, 2, 3);
+
+-- TEST: exercise iif analysis with a bad second argument
+-- + {select_stmt}: err
+-- + {name not_found}: err
+-- +1 Error
+select iif(1, not_found, 3);
+
+-- TEST: exercise iif analysis with a bad third argument
+-- + {select_stmt}: err
+-- + {name not_found}: err
+-- +1 Error
+select iif(1, 2, not_found);
+
+-- TEST: test rewrite for IIF func with non-numeric first argument
 -- + {select_stmt}: err
 -- + Error % argument must be numeric 'iif'
--- + Error
+-- +1 Error
 select iif('x', 2, 3);
 
--- TEST: test rewrite for IIF func with invalid argument count
+-- TEST: test rewrite for IIF func with incompatible types
 -- + {select_stmt}: err
 -- + Error % incompatible types in expression 'iif'
--- + Error
+-- +1 Error
 select iif(an_int is null, 2, x'23');
 
 -- TEST: test rewrite for IIF func out of sql context

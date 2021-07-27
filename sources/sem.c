@@ -6926,7 +6926,11 @@ static void sem_func_cql_cursor_diff_val(ast_node *ast, uint32_t arg_count) {
   rewrite_cql_cursor_diff(ast, false);
 }
 
-static void sem_func_iif(ast_node *ast, uint32_t arg_count) {
+// This is a special function so we can take nonnull improvements into account.
+// If we were to treat this as a normal function, the second argument would be
+// initially checked without nonnull improvements and possibly fail erroneously
+// as a result.
+static special_func_kind sem_special_func_iif(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -6934,25 +6938,52 @@ static void sem_func_iif(ast_node *ast, uint32_t arg_count) {
   EXTRACT(arg_list, call_arg_list->right);
 
   if (!sem_validate_arg_count(ast, arg_count, 3)) {
-    return;
+    return SPECIAL_FUNC_KIND_IS_NOT_AGGREGATE;
   }
 
+  // Even though we're going to rewrite to a CASE expression and then perform
+  // type checking afterwards, we check types beforehand too so we can produce
+  // error messages that do not refer to the underlying rewrite.
+
   ast_node *arg1 = first_arg(arg_list);
+  sem_expr(arg1);
+  if (is_error(arg1)) {
+    record_error(ast);
+    return SPECIAL_FUNC_KIND_IS_NOT_AGGREGATE;
+  }
+
   if (!is_numeric(arg1->sem->sem_type)) {
     report_error(name_ast, "CQL0082: argument must be numeric", name);
     record_error(ast);
-    return;
+    return SPECIAL_FUNC_KIND_IS_NOT_AGGREGATE;
   }
 
+  // `arg1` can improve the type of `arg2`.
+  PUSH_NOTNULL_IMPROVEMENT_CONTEXT(arg1, NULL);
   ast_node *arg2 = second_arg(arg_list);
+  sem_expr(arg2);
+  if (is_error(arg2)) {
+    record_error(arg2);
+    return SPECIAL_FUNC_KIND_IS_NOT_AGGREGATE;
+  }
+  POP_NOTNULL_IMPROVEMENT_CONTEXT();
+
   ast_node *arg3 = third_arg(arg_list);
+  sem_expr(arg3);
+  if (is_error(arg3)) {
+    record_error(ast);
+    return SPECIAL_FUNC_KIND_IS_NOT_AGGREGATE;
+  }
+
   if (!sem_verify_compat(name_ast, arg2->sem->sem_type, arg3->sem->sem_type, name)) {
     record_error(ast);
-    return;
+    return SPECIAL_FUNC_KIND_IS_NOT_AGGREGATE;
   }
 
   // We have a iif function call, we rewrite the node to a case_expr node.
   rewrite_iif(ast);
+
+  return SPECIAL_FUNC_KIND_IS_NOT_AGGREGATE;
 }
 
 static void sem_func_upper(ast_node *ast, uint32_t arg_count) {
@@ -19438,7 +19469,6 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(abs);
   FUNC_INIT(instr);
   FUNC_INIT(coalesce);
-  FUNC_INIT(iif);
   FUNC_INIT(last_insert_rowid);
   FUNC_INIT(changes);
   FUNC_INIT(printf);
@@ -19473,6 +19503,7 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(cql_get_blob_size);
 
   SPECIAL_FUNC_INIT(count);
+  SPECIAL_FUNC_INIT(iif);
   SPECIAL_FUNC_INIT(ptr);
 
   SPECIAL_FUNC_INIT(cql_inferred_notnull);
