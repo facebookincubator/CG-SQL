@@ -2617,6 +2617,14 @@ end;
 -- + {star}: integer
 select count(*) from foo;
 
+-- TEST: verify that analysis of the special function `count` can deal with
+-- bogus arguments
+-- + {call}: err
+-- + {name this_does_not_exist}: err
+-- + Error % name not found 'this_does_not_exist'
+-- +1 Error
+select count(this_does_not_exist) from foo;
+
 -- TEST: try count distinct function
 -- - Error
 -- + {select_stmt}: select: { c: integer notnull }

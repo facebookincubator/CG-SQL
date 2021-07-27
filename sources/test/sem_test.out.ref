@@ -8391,6 +8391,36 @@ SELECT count(*)
 
 The statement ending at line XXXX
 
+SELECT count(this_does_not_exist)
+  FROM foo;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'this_does_not_exist'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name count}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: err
+  |     |         | {name this_does_not_exist}: err
+  |     | {select_from_etc}: TABLE { foo: foo }
+  |       | {table_or_subquery_list}: TABLE { foo: foo }
+  |       | | {table_or_subquery}: TABLE { foo: foo }
+  |       |   | {name foo}: TABLE { foo: foo }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
 SELECT count(DISTINCT id) AS c
   FROM foo;
 
