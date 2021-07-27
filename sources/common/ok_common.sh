@@ -86,6 +86,7 @@ copy_ref java_rt_filename_no_base.err
 copy_ref java_rt_many_procs.err
 copy_ref java_rt_no_package.err
 copy_ref java_rt_no_package_flag.err
+copy_ref java_rt_with_object.err
 copy_ref no_dasm_globals.err
 copy_ref objc_include_missing.err
 copy_ref objc_no_results.err
