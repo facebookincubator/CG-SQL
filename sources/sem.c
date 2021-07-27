@@ -198,6 +198,7 @@ struct enforcement_options {
   bool_t strict_not_null_after;       // variables should be treated as NOT NULL after an IS NOT NULL check
   bool_t strict_encode_context;       // encode context must be specified in @vault_sensitive
   bool_t strict_encode_context_type;  // the specified vault context column must be the specified data type
+  bool_t strict_is_true;              // IS TRUE, IS FALSE, etc. may not be used because of downlevel issues
 };
 
 static struct enforcement_options  enforcement;
@@ -4563,6 +4564,12 @@ static void sem_unary_logical(ast_node *ast, CSTR op) {
 
 // This is used for IS TRUE and IS FALSE
 static void sem_unary_is_true_or_false(ast_node *ast, CSTR op) {
+  if (enforcement.strict_is_true) {
+    report_error(ast, "CQL0403: operator may not be used because it is not supported on old versions of SQLite", op);
+    record_error(ast);
+    return;
+  }
+
   sem_t core_type, combined_flags;
   if (!sem_unary_prep(ast, &core_type, &combined_flags)) {
     return;
@@ -18560,33 +18567,37 @@ static void sem_enforcement_options(ast_node *ast, bool_t strict) {
       break;
 
     case ENFORCE_ENCODE_CONTEXT_TYPE_INTEGER:
-      enforcement.strict_encode_context_type= strict;
+      enforcement.strict_encode_context_type = strict;
       encode_context_type = SEM_TYPE_INTEGER;
       break;
 
     case ENFORCE_ENCODE_CONTEXT_TYPE_LONG_INTEGER:
-      enforcement.strict_encode_context_type= strict;
+      enforcement.strict_encode_context_type = strict;
       encode_context_type = SEM_TYPE_LONG_INTEGER;
       break;
 
     case ENFORCE_ENCODE_CONTEXT_TYPE_REAL:
-      enforcement.strict_encode_context_type= strict;
+      enforcement.strict_encode_context_type = strict;
       encode_context_type = SEM_TYPE_REAL;
       break;
 
     case ENFORCE_ENCODE_CONTEXT_TYPE_BOOL:
-      enforcement.strict_encode_context_type= strict;
+      enforcement.strict_encode_context_type = strict;
       encode_context_type = SEM_TYPE_BOOL;
       break;
 
     case ENFORCE_ENCODE_CONTEXT_TYPE_TEXT:
-      enforcement.strict_encode_context_type= strict;
+      enforcement.strict_encode_context_type = strict;
       encode_context_type = SEM_TYPE_TEXT;
       break;
 
     case ENFORCE_ENCODE_CONTEXT_TYPE_BLOB:
-      enforcement.strict_encode_context_type= strict;
+      enforcement.strict_encode_context_type = strict;
       encode_context_type = SEM_TYPE_BLOB;
+      break;
+
+    case ENFORCE_IS_TRUE:
+      enforcement.strict_is_true = strict;
       break;
 
     default:

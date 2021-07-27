@@ -1462,6 +1462,34 @@ create table bad_constants_table(
 -- - Error
 let bool_x := const(1==1);
 
+@enforce_strict is true;
+
+-- TEST: strict mode for is true disables is true
+-- + {assign}: err
+-- + Error % Operator may not be used because it is not supported on old versions of SQLite 'IS TRUE'
+-- +1 Error
+set bool_x := 1 is true;
+
+-- TEST: strict mode for is true disables is false
+-- + {assign}: err
+-- + Error % Operator may not be used because it is not supported on old versions of SQLite 'IS FALSE'
+-- +1 Error
+set bool_x := 1 is false;
+
+-- TEST: strict mode for is true disables is not true
+-- + {assign}: err
+-- + Error % Operator may not be used because it is not supported on old versions of SQLite 'IS NOT TRUE'
+-- +1 Error
+set bool_x := 1 is not true;
+
+-- TEST: strict mode for is true disables is not false
+-- + {assign}: err
+-- + Error % Operator may not be used because it is not supported on old versions of SQLite 'IS NOT FALSE'
+-- +1 Error
+set bool_x := 1 is not false;
+
+@enforce_normal is true;
+
 -- TEST: 2 is true
 -- rewritten as "1"
 -- + SET bool_x := 1;

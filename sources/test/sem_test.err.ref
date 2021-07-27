@@ -123,6 +123,10 @@ Error at test/sem_test.sql:XXXX : in str : CQL0150: expected numeric expression 
 Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in is_true : CQL0403: operator may not be used because it is not supported on old versions of SQLite 'IS TRUE'
+Error at test/sem_test.sql:XXXX : in is_false : CQL0403: operator may not be used because it is not supported on old versions of SQLite 'IS FALSE'
+Error at test/sem_test.sql:XXXX : in is_not_true : CQL0403: operator may not be used because it is not supported on old versions of SQLite 'IS NOT TRUE'
+Error at test/sem_test.sql:XXXX : in is_not_false : CQL0403: operator may not be used because it is not supported on old versions of SQLite 'IS NOT FALSE'
 Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
 Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
 Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed

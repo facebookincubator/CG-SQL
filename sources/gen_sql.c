@@ -3274,6 +3274,10 @@ static void gen_enforcement_options(ast_node *ast) {
       gen_printf("ENCODE CONTEXT TYPE BLOB");
       break;
 
+    case ENFORCE_IS_TRUE:
+      gen_printf("IS TRUE");
+      break;
+
     default:
       // this is all that's left
       Contract(option == ENFORCE_FK_ON_DELETE);

@@ -1629,6 +1629,8 @@ SELECT NULL IS NULL;
 
 SELECT NULL IS NOT NULL;
 
+@ENFORCE_STRICT IS TRUE;
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

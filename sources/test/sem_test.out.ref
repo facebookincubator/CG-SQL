@@ -5543,6 +5543,64 @@ LET bool_x := 1;
 
 The statement ending at line XXXX
 
+@ENFORCE_STRICT IS TRUE;
+
+  {enforce_strict_stmt}: ok
+  | {int 20}
+
+The statement ending at line XXXX
+
+SET bool_x := 1 IS TRUE;
+
+Error at test/sem_test.sql:XXXX : in is_true : CQL0403: operator may not be used because it is not supported on old versions of SQLite 'IS TRUE'
+
+  {assign}: err
+  | {name bool_x}: bool_x: bool notnull variable
+  | {is_true}: err
+    | {int 1}
+
+The statement ending at line XXXX
+
+SET bool_x := 1 IS FALSE;
+
+Error at test/sem_test.sql:XXXX : in is_false : CQL0403: operator may not be used because it is not supported on old versions of SQLite 'IS FALSE'
+
+  {assign}: err
+  | {name bool_x}: bool_x: bool notnull variable
+  | {is_false}: err
+    | {int 1}
+
+The statement ending at line XXXX
+
+SET bool_x := 1 IS NOT TRUE;
+
+Error at test/sem_test.sql:XXXX : in is_not_true : CQL0403: operator may not be used because it is not supported on old versions of SQLite 'IS NOT TRUE'
+
+  {assign}: err
+  | {name bool_x}: bool_x: bool notnull variable
+  | {is_not_true}: err
+    | {int 1}
+
+The statement ending at line XXXX
+
+SET bool_x := 1 IS NOT FALSE;
+
+Error at test/sem_test.sql:XXXX : in is_not_false : CQL0403: operator may not be used because it is not supported on old versions of SQLite 'IS NOT FALSE'
+
+  {assign}: err
+  | {name bool_x}: bool_x: bool notnull variable
+  | {is_not_false}: err
+    | {int 1}
+
+The statement ending at line XXXX
+
+@ENFORCE_NORMAL IS TRUE;
+
+  {enforce_normal_stmt}: ok
+  | {int 20}
+
+The statement ending at line XXXX
+
 SET bool_x := 1;
 
   {assign}: bool_x: bool notnull variable
