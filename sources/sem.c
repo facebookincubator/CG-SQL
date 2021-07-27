@@ -30,9 +30,6 @@
 #define NORMAL_CALL  0  // a normal procedure or function call
 #define PROC_AS_FUNC 1  // treating a proc like a function with the out-arg trick
 
-#define CANNOT_SHORT_CIRCUIT 0 // prepping a normal binary operator
-#define CAN_SHORT_CIRCUIT    1 // prepping a short-circuiting binary operator
-
 #define CQL_FROM_RECREATE "cql:from_recreate"
 #define CQL_MODULE_WARN "cql:module_must_not_be_deleted_see_docs_for_CQL0392"
 
@@ -4205,36 +4202,17 @@ static void sem_constraints(ast_node *table_ast, ast_node *col_key_list, coldef_
   table_items = NULL;
 }
 
-// All the binary ops do the same preparation, they analyze the left and the
+// All the binary ops do the same preparation, they evaluate the left and the
 // right expression, then they check those for errors.  Then they need
 // the types of those expressions and the combined_flags of the result.  This
 // does exactly that for its various callers.  Returns true if all is well.
-static bool_t sem_binary_prep(
-  ast_node *ast,
-  sem_t *core_type_left,
-  sem_t *core_type_right,
-  sem_t *combined_flags,
-  bool_t can_short_circuit)
-{
+static bool_t sem_binary_prep(ast_node *ast, sem_t *core_type_left, sem_t *core_type_right, sem_t *combined_flags) {
   EXTRACT_ANY_NOTNULL(left, ast->left);
   EXTRACT_ANY_NOTNULL(right, ast->right);
 
   // left op right
   sem_expr(left);
-  if (can_short_circuit) {
-    // We need to be careful with nullability improvements on the right side of
-    // expressions when they can short-circuit, e.g., `1 OR ifnull_crash(y)`
-    // must not result in an improved `y` because its nullability will never be
-    // checked. It is, however, correct to improve `y` in `x OR ifnull_crash(y)
-    // AND foo(y)` *only* for the call to `foo`. Creating a new nullability
-    // context for the right side of short-circuiting operators gives us exactly
-    // what we want.
-    PUSH_NOTNULL_IMPROVEMENT_CONTEXT(NULL, NULL);
-    sem_expr(right);
-    POP_NOTNULL_IMPROVEMENT_CONTEXT();
-  } else {
-    sem_expr(right);
-  }
+  sem_expr(right);
 
   if (is_error(left) || is_error(right)) {
     record_error(ast);
@@ -4258,7 +4236,7 @@ static bool_t sem_binary_prep(
 // Works for like and not like, and helper for match, glob, and regexp.
 static void sem_binary_like(ast_node *ast, CSTR op) {
   sem_t core_type_left, core_type_right, combined_flags;
-  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags, CANNOT_SHORT_CIRCUIT)) {
+  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags)) {
     return;
   }
 
@@ -4354,7 +4332,7 @@ static void sem_binary_match(ast_node *ast, CSTR op) {
 // holds both using the helper.  If any text, that's an error.
 static void sem_binary_math(ast_node *ast, CSTR op) {
   sem_t core_type_left, core_type_right, combined_flags;
-  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags, CANNOT_SHORT_CIRCUIT)) {
+  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags)) {
     return;
   }
 
@@ -4393,7 +4371,7 @@ static void sem_binary_integer_math(ast_node *ast, CSTR op) {
 // text type inputs result in an error.
 static void sem_binary_logical(ast_node *ast, CSTR op) {
   sem_t core_type_left, core_type_right, combined_flags;
-  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags, CAN_SHORT_CIRCUIT)) {
+  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags)) {
     return;
   }
 
@@ -4407,7 +4385,7 @@ static void sem_binary_logical(ast_node *ast, CSTR op) {
 static void sem_binary_eq_or_ne(ast_node *ast, CSTR op) {
   sem_t core_type_left, core_type_right, combined_flags;
 
-  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags, CANNOT_SHORT_CIRCUIT)) {
+  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags)) {
     return;
   }
 
@@ -4435,7 +4413,7 @@ static void sem_binary_eq_or_ne(ast_node *ast, CSTR op) {
 // that is compatible on the left or the right.
 static void sem_binary_compare(ast_node *ast, CSTR op) {
   sem_t core_type_left, core_type_right, combined_flags;
-  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags, CANNOT_SHORT_CIRCUIT)) {
+  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags)) {
     return;
   }
 
@@ -4602,7 +4580,7 @@ static void sem_unary_is_true_or_false(ast_node *ast, CSTR op) {
 static void sem_binary_is_or_is_not(ast_node *ast, CSTR op) {
   sem_t core_type_left, core_type_right, combined_flags;
 
-  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags, CANNOT_SHORT_CIRCUIT)) {
+  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags)) {
     return;
   }
 
@@ -6156,14 +6134,7 @@ static void sem_expr_in_pred_or_not_in(ast_node *ast, CSTR cstr) {
   if (is_ast_expr_list(ast->right)) {
     EXTRACT_NOTNULL(expr_list, ast->right);
 
-    // We push a new nullability context here because some of the expressions in
-    // the expression list may not be evaluated: `IN` short-circuits just like
-    // `AND` and `OR`. Even the first expression will not run when `needle` is
-    // NULL.
-    PUSH_NOTNULL_IMPROVEMENT_CONTEXT(NULL, NULL);
-
     // make sure the items are all of some comparable type
-    bool_t error = false;
     for (ast_node *item = expr_list; item; item = item->right) {
       ast_node *expr = item->left;
 
@@ -6171,31 +6142,23 @@ static void sem_expr_in_pred_or_not_in(ast_node *ast, CSTR cstr) {
       item->sem = expr->sem;
 
       if (is_error(expr)) {
-        error = true;
-        break;
+        record_error(ast);
+        return;
       }
 
       sem_t sem_type_current = expr->sem->sem_type;
       if (!sem_verify_compat(ast, sem_type_needed, sem_type_current, is_ast_in_pred(ast) ? "IN" : "NOT IN")) {
-        error = true;
-        break;
+        return;
       }
 
       sem_combine_kinds(expr, kind_needed);
       if (is_error(expr)) {
-        error = true;
-        break;
+        record_error(ast);
+        return;
       }
 
       combined_flags |= sensitive_flag(sem_type_current);
       sem_type_needed = sem_combine_types(sem_type_needed, sem_type_current);
-    }
-
-    POP_NOTNULL_IMPROVEMENT_CONTEXT();
-
-    if (error) {
-      record_error(ast);
-      return;
     }
   }
   else {
@@ -6808,24 +6771,6 @@ static void sem_func_attest_notnull(ast_node *ast, uint32_t arg_count, uint32_t 
     report_error(arg1, "CQL0344: argument must be a nullable type (but not constant NULL) in", name);
     record_error(ast);
     return;
-  }
-
-  // If `arg1` is an id or a dot, it's safe to improve the type of it in the
-  // code that follows because we'll either throw or crash if it's NULL.
-  //
-  // The improvement will only last until, at most, the end of the current
-  // statement list (as with improvements via SET). The fact that `ifnull_throw`
-  // may result in an exception that is later caught therefore poses no safety
-  // concerns: an improvement in the TRY will not be present in the CATCH, and
-  // an improvement in either the TRY or the CATCH will not be present after the
-  // TRY/CATCH block.
-  if (is_ast_id(arg1)) {
-    EXTRACT_STRING(arg1_name, arg1);
-    sem_set_notnull_improved(arg1_name, NULL);
-  } else if (is_ast_dot(arg1)) {
-    EXTRACT_STRING(arg1_name, arg1->right);
-    EXTRACT_STRING(arg1_scope, arg1->left);
-    sem_set_notnull_improved(arg1_name, arg1_scope);
   }
 
   ast->sem = arg1->sem;
@@ -18391,7 +18336,7 @@ static void sem_expr_select_if_nothing(ast_node *ast, CSTR op) {
   Contract(is_ast_select_if_nothing_expr(ast) || is_ast_select_if_nothing_or_null_expr(ast));
 
   sem_t core_type_left, core_type_right, combined_flags;
-  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags, CANNOT_SHORT_CIRCUIT)) {
+  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags)) {
     return;
   }
 
