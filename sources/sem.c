@@ -117,13 +117,17 @@ typedef struct notnull_improvement_item {
   struct notnull_improvement_item *next;
 } notnull_improvement_item;
 
-// If a function has been registered via `SPECIAL_FUNC_INIT`, the corresponding
-// analysis function must return whether or not the special function is also an
-// aggregate function.
-typedef enum {
-  SPECIAL_FUNC_KIND_IS_NOT_AGGREGATE,
-  SPECIAL_FUNC_KIND_IS_AGGREGATE
-} special_func_kind;
+// If a function has been registered via `FUNC_INIT`, its associated analysis
+// function must conform to the type `sem_func`. When called, its argument list
+// will have already been analyzed and verified to be free of errors.
+typedef void sem_func(ast_node *ast, uint32_t arg_count);
+
+// If a function has been registered via `SPECIAL_FUNC_INIT`, its associated
+// analysis function must conform to the type `sem_special_func`. When called,
+// it must do analysis of its own arguments as appropriate. It must also set
+// `*is_aggregate` to true if it should be treated as an aggregate function by
+// `sem_expr_call`; it will not be considered an aggregate function otherwise.
+typedef void sem_special_func(ast_node *ast, uint32_t arg_count, bool_t *is_aggregate);
 
 // forward references for mutual recursion cases
 static void sem_stmt_list(ast_node *root);
@@ -6342,33 +6346,33 @@ static bool_t sem_validate_sql_not_constraint(ast_node *ast) {
 }
 
 // You can count anything, you always get an integer
-static special_func_kind sem_special_func_count(ast_node *ast, uint32_t arg_count) {
+static void sem_special_func_count(ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
   Contract(is_ast_call(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
+  *is_aggregate = true;
+
   sem_arg_list(arg_list, IS_COUNT);
   if (arg_list && is_error(arg_list)) {
     record_error(ast);
-    return SPECIAL_FUNC_KIND_IS_AGGREGATE;
+    return;
   }
 
   if (!sem_validate_aggregate_context(ast)) {
-    return SPECIAL_FUNC_KIND_IS_AGGREGATE;
+    return;
   }
 
   if (!sem_validate_arg_count(ast, arg_count, 1)) {
-    return SPECIAL_FUNC_KIND_IS_AGGREGATE;
+    return;
   }
 
   sem_node *sem = first_arg(arg_list)->sem;
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_INTEGER | SEM_TYPE_NOTNULL | sensitive_flag(sem->sem_type));
 
   // ast->sem->name is not set here because e.g. sum(x) is not named "x"
-
-  return SPECIAL_FUNC_KIND_IS_AGGREGATE;
 }
 
 // You can min/max numerics and strings, you get what you started with.
@@ -6820,7 +6824,7 @@ static void sem_func_ifnull_crash(ast_node *ast, uint32_t arg_count) {
   sem_func_attest_notnull(ast, arg_count, SEM_EXPR_CONTEXT_NONE);
 }
 
-static special_func_kind sem_special_func_cql_inferred_notnull(ast_node *ast, uint32_t arg_count) {
+static void sem_special_func_cql_inferred_notnull(ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT_NOTNULL(arg_list, call_arg_list->right);
 
@@ -6840,8 +6844,6 @@ static special_func_kind sem_special_func_cql_inferred_notnull(ast_node *ast, ui
   Invariant(ast->sem->sem_type & SEM_TYPE_INFERRED_NOTNULL);
   // Prevent this from propagating needlessly to keep --print clean.
   ast->sem->sem_type &= u64_not(SEM_TYPE_INFERRED_NOTNULL);
-
-  return SPECIAL_FUNC_KIND_IS_NOT_AGGREGATE;
 }
 
 // validate expression with cql_cursor_diff_xxx func is semantically correct.
@@ -6930,7 +6932,7 @@ static void sem_func_cql_cursor_diff_val(ast_node *ast, uint32_t arg_count) {
 // If we were to treat this as a normal function, the second argument would be
 // initially checked without nonnull improvements and possibly fail erroneously
 // as a result.
-static special_func_kind sem_special_func_iif(ast_node *ast, uint32_t arg_count) {
+static void sem_special_func_iif(ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
   Contract(is_ast_call(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -6938,7 +6940,7 @@ static special_func_kind sem_special_func_iif(ast_node *ast, uint32_t arg_count)
   EXTRACT(arg_list, call_arg_list->right);
 
   if (!sem_validate_arg_count(ast, arg_count, 3)) {
-    return SPECIAL_FUNC_KIND_IS_NOT_AGGREGATE;
+    return;
   }
 
   // Even though we're going to rewrite to a CASE expression and then perform
@@ -6949,13 +6951,13 @@ static special_func_kind sem_special_func_iif(ast_node *ast, uint32_t arg_count)
   sem_expr(arg1);
   if (is_error(arg1)) {
     record_error(ast);
-    return SPECIAL_FUNC_KIND_IS_NOT_AGGREGATE;
+    return;
   }
 
   if (!is_numeric(arg1->sem->sem_type)) {
     report_error(name_ast, "CQL0082: argument must be numeric", name);
     record_error(ast);
-    return SPECIAL_FUNC_KIND_IS_NOT_AGGREGATE;
+    return;
   }
 
   // `arg1` can improve the type of `arg2`.
@@ -6964,7 +6966,7 @@ static special_func_kind sem_special_func_iif(ast_node *ast, uint32_t arg_count)
   sem_expr(arg2);
   if (is_error(arg2)) {
     record_error(arg2);
-    return SPECIAL_FUNC_KIND_IS_NOT_AGGREGATE;
+    return;
   }
   POP_NOTNULL_IMPROVEMENT_CONTEXT();
 
@@ -6972,18 +6974,16 @@ static special_func_kind sem_special_func_iif(ast_node *ast, uint32_t arg_count)
   sem_expr(arg3);
   if (is_error(arg3)) {
     record_error(ast);
-    return SPECIAL_FUNC_KIND_IS_NOT_AGGREGATE;
+    return;
   }
 
   if (!sem_verify_compat(name_ast, arg2->sem->sem_type, arg3->sem->sem_type, name)) {
     record_error(ast);
-    return SPECIAL_FUNC_KIND_IS_NOT_AGGREGATE;
+    return;
   }
 
   // We have a iif function call, we rewrite the node to a case_expr node.
   rewrite_iif(ast);
-
-  return SPECIAL_FUNC_KIND_IS_NOT_AGGREGATE;
 }
 
 static void sem_func_upper(ast_node *ast, uint32_t arg_count) {
@@ -7538,7 +7538,7 @@ static void sem_func_julianday(ast_node *ast, uint32_t arg_count) {
 // The "ptr" function is used to get the memory address of an object at runtime
 // as a LONG INT. This is useful when calling SQLite functions as they are
 // unable to deal with objects directly.
-static special_func_kind sem_special_func_ptr(ast_node *ast, uint32_t arg_count) {
+static void sem_special_func_ptr(ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
   Contract(is_ast_call(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -7549,22 +7549,20 @@ static special_func_kind sem_special_func_ptr(ast_node *ast, uint32_t arg_count)
   sem_arg_list(arg_list, IS_NOT_COUNT);
   if (arg_list && is_error(arg_list)) {
     record_error(ast);
-    return SPECIAL_FUNC_KIND_IS_NOT_AGGREGATE;
+    return;
   }
   POP_EXPR_CONTEXT();
 
   if (!sem_validate_arg_count(ast, arg_count, 1)) {
-    return SPECIAL_FUNC_KIND_IS_NOT_AGGREGATE;
+    return;
   }
 
   // this method is really only interesting for passing pointers around sql stuff
   if (!sem_validate_appear_inside_sql_stmt(ast)) {
-    return SPECIAL_FUNC_KIND_IS_NOT_AGGREGATE;
+    return;
   }
 
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL);
-
-  return SPECIAL_FUNC_KIND_IS_NOT_AGGREGATE;
 }
 
 // The "sensitive" function is used to take something that is
@@ -7979,15 +7977,14 @@ static void sem_expr_call(ast_node *ast, CSTR cstr) {
       record_error(ast);
       return;
     }
-    ((void (*)(ast_node*, uint32_t))entry->val)(ast, arg_count);
+    ((sem_func *)entry->val)(ast, arg_count);
     goto cleanup;
   }
 
   // check for special functions which do their own analysis of their arguments
   entry = symtab_find(builtin_special_funcs, name);
   if (entry) {
-    special_func_kind kind = ((special_func_kind (*)(ast_node*, uint32_t))entry->val)(ast, arg_count);
-    call_aggr_or_user_def_func = kind == SPECIAL_FUNC_KIND_IS_AGGREGATE;
+    ((sem_special_func *)entry->val)(ast, arg_count, &call_aggr_or_user_def_func);
     goto cleanup;
   }
 
@@ -19302,12 +19299,11 @@ cql_noexport void exit_on_validating_schema() {
 #define FUNC_INIT(x) symtab_add(builtin_funcs, #x, (void *)sem_func_ ## x)
 
 // A special function is one whose arguments require special treatment during
-// semantic analysis, for whatever reason. The `sem_special_func_*` procedure
-// that does the analysis must therefore be sure to analyze the argument list
-// appropriately: It will not be done beforehand as it is with functions
-// registered via `FUNC_INIT`. It must also return a value of type
-// `special_func_kind` that indicates whether or not the function should be
-// treated as an aggregate function.
+// semantic analysis, for whatever reason. The procedure that does the analysis
+// (of type `sem_special_func`) must therefore be sure to analyze its argument
+// list appropriately: It will not be done beforehand as it is with functions
+// registered via `FUNC_INIT`. It must also indicate if it is an aggregate
+// function so that `sem_expr_call` knows how to handle it.
 #undef SPECIAL_FUNC_INIT
 #define SPECIAL_FUNC_INIT(x) symtab_add(builtin_special_funcs, #x, (void *)sem_special_func_ ## x)
 
