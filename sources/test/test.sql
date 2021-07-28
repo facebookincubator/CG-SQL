@@ -1507,6 +1507,8 @@ select 1 isnull;
 select null isnull;
 select null notnull;
 
+declare proc printf no check;
+
 @enforce_strict is true;
 
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...

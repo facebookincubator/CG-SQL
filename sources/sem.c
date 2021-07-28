@@ -204,7 +204,6 @@ struct enforcement_options {
   bool_t strict_join;                 // only ANSI style joins may be used, "from A,B" is rejected
   bool_t strict_upsert_stmt;          // no upsert statement may be used
   bool_t strict_window_func;          // no window functions may be used
-  bool_t strict_procedure;            // no calls to undeclared procedures (like printf)
   bool_t strict_without_rowid;        // no WITHOUT ROWID may be used.
   bool_t strict_transaction;          // no transactions may be started, commited, aborted etc.
   bool_t strict_if_nothing;           // (select ..) expressions must include the if nothing form
@@ -457,6 +456,7 @@ static notnull_improvement_item *current_notnull_improvement_context;
 
 // These are the various symbol tables we need, they are stored super dumbly.
 static symtab *procs;
+static symtab *unchecked_procs;
 static symtab *proc_arg_info;
 static symtab *triggers;
 static symtab *upgrade_procs;
@@ -1760,6 +1760,15 @@ static bool_t add_proc(ast_node *ast, CSTR name) {
 
 cql_noexport ast_node *find_proc(CSTR name) {
   symtab_entry *entry = symtab_find(procs, name);
+  return entry ? (ast_node*)(entry->val) : NULL;
+}
+
+static bool_t add_unchecked_proc(ast_node *ast, CSTR name) {
+  return symtab_add(unchecked_procs, name, ast);
+}
+
+cql_noexport ast_node *find_unchecked_proc(CSTR name) {
+  symtab_entry *entry = symtab_find(unchecked_procs, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
@@ -15799,6 +15808,24 @@ cleanup:
    symtab_delete(names);
 }
 
+// Declares an external procedure that can be called with any combination of C args
+// this is intended for procedures like `printf` that cannot be readily described with
+// CQL strict types.
+static void sem_declare_proc_no_check_stmt(ast_node *ast) {
+ Contract(is_ast_declare_proc_no_check_stmt(ast));
+  EXTRACT_STRING(name, ast->left);
+
+  if (find_proc(name)) {
+    report_error(ast, "CQL0404: procedure cannot be both a normal procedure and an unchecked procedure", name);
+    record_error(ast);
+    return;
+  }
+
+  // it can be added more than once, no need to check the return code
+  add_unchecked_proc(ast, name);
+  record_ok(ast);
+}
+
 // There are three forms of this declaration:
 // 1.  a regular proc with no DML
 //    declare proc X(id integer);
@@ -15825,6 +15852,12 @@ static void sem_declare_proc_stmt(ast_node *ast) {
   Invariant(!locals);
 
   // CREATE PROC [name] ( [params] )
+
+  if (find_unchecked_proc(name)) {
+    report_error(ast, "CQL0404: procedure cannot be both a normal procedure and an unchecked procedure", name);
+    record_error(ast);
+    return;
+  }
 
   if (find_func(name)) {
     report_error(name_ast, "CQL0195: proc name conflicts with func name", name);
@@ -17074,8 +17107,8 @@ static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name) {
 
   ast_node *proc_stmt = find_proc(name);
 
-  if (enforcement.strict_procedure && !proc_stmt) {
-    report_error(ast, "CQL0323: calls to undeclared procedures are forbidden if strict procedure mode is enabled; declaration missing or typo", name);
+  if (!proc_stmt && !find_unchecked_proc(name)) {
+    report_error(ast, "CQL0323: calls to undeclared procedures are forbidden; declaration missing or typo", name);
     record_error(ast);
     return;
   }
@@ -18591,10 +18624,6 @@ static void sem_enforcement_options(ast_node *ast, bool_t strict) {
       enforcement.strict_window_func = strict;
       break;
 
-    case ENFORCE_PROCEDURE:
-      enforcement.strict_procedure = strict;
-      break;
-
     case ENFORCE_WITHOUT_ROWID:
       enforcement.strict_without_rowid = strict;
       break;
@@ -19333,6 +19362,7 @@ cql_noexport void sem_main(ast_node *ast) {
   builtin_special_funcs = symtab_new();
   funcs = symtab_new();
   procs = symtab_new();
+  unchecked_procs = symtab_new();
   proc_arg_info = symtab_new();
   enums = symtab_new();
   triggers = symtab_new();
@@ -19382,6 +19412,7 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(create_proc_stmt);
   STMT_INIT(declare_enum_stmt);
   STMT_INIT(declare_proc_stmt);
+  STMT_INIT(declare_proc_no_check_stmt);
   STMT_INIT(declare_func_stmt);
   STMT_INIT(declare_select_func_stmt);
   STMT_INIT(echo_stmt);
@@ -19647,6 +19678,7 @@ cql_noexport void sem_cleanup() {
   SYMTAB_CLEANUP(new_enums);
   SYMTAB_CLEANUP(non_sql_stmts);
   SYMTAB_CLEANUP(procs);
+  SYMTAB_CLEANUP(unchecked_procs);
   SYMTAB_CLEANUP(proc_arg_info);
   SYMTAB_CLEANUP(enums);
   SYMTAB_CLEANUP(schema_regions);

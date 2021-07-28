@@ -5,6 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+declare proc printf no check;
+declare proc puts no check;
+
 -- basic test table with an auto inc field
 create table foo(
   id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL

@@ -12,6 +12,8 @@ declare expectations integer not null;
 declare function get_outstanding_refs() integer not null;
 declare start_refs integer not null;
 declare end_refs integer not null;
+declare proc printf no check;
+declare proc exit no check;
 
 #define EXPECT(pred) call errcheck(pred, #pred, __LINE__)
 

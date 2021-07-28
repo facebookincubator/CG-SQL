@@ -7062,6 +7062,7 @@ cql_noexport void cg_c_init(void) {
   NO_OP_STMT_INIT(schema_ad_hoc_migration_stmt);
   NO_OP_STMT_INIT(declare_enum_stmt);
   NO_OP_STMT_INIT(declare_named_type);
+  NO_OP_STMT_INIT(declare_proc_no_check_stmt);
 
   STD_DML_STMT_INIT(begin_trans_stmt);
   STD_DML_STMT_INIT(commit_trans_stmt);

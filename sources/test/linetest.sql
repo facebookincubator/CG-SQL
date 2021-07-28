@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+declare proc printf no check;
+
 -- testing line numbers for simple statement boundaries, any statement will do
 -- something with no "interior" works best.
 create proc based_statements()

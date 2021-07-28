@@ -244,7 +244,7 @@ static void cql_reset_globals(void);
 %type <aval> data_type_any data_type_numeric data_type_with_options opt_kind
 
 /* proc stuff */
-%type <aval> create_proc_stmt declare_func_stmt declare_proc_stmt declare_out_call_stmt
+%type <aval> create_proc_stmt declare_func_stmt declare_proc_stmt declare_proc_no_check_stmt declare_out_call_stmt
 %type <aval> arg_expr arg_list inout param params
 
 /* statements */
@@ -379,6 +379,7 @@ any_stmt:
   | declare_enum_stmt
   | declare_func_stmt
   | declare_out_call_stmt
+  | declare_proc_no_check_stmt
   | declare_proc_stmt
   | declare_schema_region_stmt
   | declare_stmt
@@ -1546,6 +1547,10 @@ declare_func_stmt:
 procedure: PROC | PROCEDURE
   ;
 
+declare_proc_no_check_stmt:
+  DECLARE procedure name NO CHECK { $declare_proc_no_check_stmt = new_ast_declare_proc_no_check_stmt($name); }
+  ;
+
 declare_proc_stmt:
   DECLARE procedure name '(' params ')'  {
       ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_opt(PROC_FLAG_BASIC));
@@ -1931,7 +1936,6 @@ enforcement_options:
   | JOIN  { $enforcement_options = new_ast_opt(ENFORCE_STRICT_JOIN); }
   | UPSERT STATEMENT  { $enforcement_options = new_ast_opt(ENFORCE_UPSERT_STMT); }
   | WINDOW function  { $enforcement_options = new_ast_opt(ENFORCE_WINDOW_FUNC); }
-  | procedure  { $enforcement_options = new_ast_opt(ENFORCE_PROCEDURE); }
   | WITHOUT ROWID  { $enforcement_options = new_ast_opt(ENFORCE_WITHOUT_ROWID); }
   | TRANSACTION { $enforcement_options = new_ast_opt(ENFORCE_TRANSACTION); }
   | SELECT IF NOTHING { $enforcement_options = new_ast_opt(ENFORCE_SELECT_IF_NOTHING); }
@@ -1945,6 +1949,7 @@ enforcement_options:
   | ENCODE CONTEXT_TYPE BOOL_ { $enforcement_options = new_ast_opt(ENFORCE_ENCODE_CONTEXT_TYPE_BOOL); }
   | ENCODE CONTEXT_TYPE TEXT { $enforcement_options = new_ast_opt(ENFORCE_ENCODE_CONTEXT_TYPE_TEXT); }
   | ENCODE CONTEXT_TYPE BLOB { $enforcement_options = new_ast_opt(ENFORCE_ENCODE_CONTEXT_TYPE_BLOB); }
+  | procedure { $enforcement_options = new_ast_opt(ENFORCE_IS_TRUE); } /* tempo hack: let previous schema boil out the strict proc */
   | IS_TRUE { $enforcement_options = new_ast_opt(ENFORCE_IS_TRUE); }
   ;
 

@@ -5,6 +5,17 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+-- TEST: we'll be using printf in lots of places in the tests as an external proc
+-- + {declare_proc_no_check_stmt}: ok
+-- - Error
+DECLARE PROCEDURE printf NO CHECK;
+
+-- TEST: try to declare printf as a normal proc too
+-- + {declare_proc_stmt}: err
+-- + Error % procedure cannot be both a normal procedure and an unchecked procedure 'printf'
+-- +1 Error
+declare proc printf();
+
 -- TEST: basic test table with an auto inc field (implies not null)
 -- + create_table_stmt% foo: % id: integer notnull primary_key autoinc
 -- - Error
@@ -2421,6 +2432,8 @@ begin
   out C;
 end;
 
+declare proc anything no check;
+
 -- TEST: procedure call with arguments mixing in/out legally
 -- - Error
 -- + {create_proc_stmt}: ok
@@ -2493,12 +2506,6 @@ declare int_nn int not null;
 -- +1 Error
 -- + {assign}: err
 set int_nn := NULL;
-
--- TEST: call some method
--- - Error
--- + {call_stmt}: ok
--- + {name foo}: ok
-call foo();
 
 -- TEST: call external method with args
 -- - Error
@@ -2934,17 +2941,16 @@ end;
 -- - Error
 declare curs cursor for call with_result_set();
 
+-- TEST: bad args to the function -> error path
+-- + {declare_cursor}: err
+-- + Error % too many arguments provided to procedure 'with_result_set'
+-- +1 Error
+declare curs2 cursor for call with_result_set(1);
+
 -- TEST: bad invocation, needs cursor
 -- + Error % procedures with results can only be called using a cursor in global context 'with_result_set'
 -- {call_stmt}: err
 call with_result_set();
-
--- TEST: bad invocation, bogus method
--- + Error % string operand not allowed in 'NOT'
--- +1 Error
--- + {declare_cursor}: err
--- + {call_stmt}: err
-declare curs cursor for call bogus_call(not 'x');
 
 -- TEST: bad invocation, this method doesn't return a result set
 -- + Error % cursor requires a procedure that returns a result set via select 'curs'
@@ -3713,6 +3719,11 @@ LEFT OUTER JOIN CC3 C ON C.id3 == A.id1;
 -- + {params}: ok
 -- + {param}: id: integer variable in
 declare proc decl1(id integer);
+
+-- TEST: try to declare this as an unchecked proc also
+-- + Error % procedure cannot be both a normal procedure and an unchecked procedure 'decl1'
+-- +1 Error
+declare proc decl1 no check;
 
 -- TEST: declare procedure with DB params
 -- - Error
@@ -5993,6 +6004,27 @@ begin
   out C;
 end;
 
+-- needed for the next test
+declare QQ cursor like out_cursor_proc;
+
+-- TEST: force an error on the out cursor path, bad args
+-- {declare_cursor}: err
+-- + Error % too many arguments provided to procedure 'out_cursor_proc'
+-- +1 Error
+fetch QQ from call out_cursor_proc(1);
+
+-- we need this for the next test, it has the right shape but it's not an out proc
+create proc not_out_cursor_proc()
+begin
+  select 1 A, 2 B;
+end;
+
+-- TEST: force an error on the out cursor path, the proc isn't actually an out cursor proc
+-- {fetch_call_stmt}: err
+-- + Error % cursor requires a procedure that returns a cursor with OUT 'QQ'
+-- +1 Error
+fetch QQ from call not_out_cursor_proc();
+
 -- TEST: use non-fetched cursor for out statement
 -- + {create_proc_stmt}: err
 -- + {out_stmt}: err
@@ -6177,6 +6209,11 @@ begin
   declare C cursor fetch from call declared_proc(not 'x');
 end;
 
+-- a bogus proc for use in a later test
+create proc xyzzy()
+begin
+end;
+
 -- TEST: call a procedure that is just all wrong
 -- + {create_proc_stmt}: err
 -- + Error % cursor requires a procedure that returns a cursor with OUT 'C'
@@ -6291,20 +6328,6 @@ create proc fetch_from_call()
 begin
   declare C cursor like out_cursor_proc;
   fetch C from call out_cursor_proc();
-  out C;
-end;
-
--- TEST: fetch cursor from call to proc that doesn't exist
--- + {create_proc_stmt}: err
--- + {stmt_list}: err
--- + {fetch_call_stmt}: err
--- + {call_stmt}: err
--- + Error % cursor requires a procedure that returns a cursor with OUT 'C'
--- +1 Error
-create proc fetch_from_call_to_proc_that_does_not_exist()
-begin
-  declare C cursor like out_cursor_proc;
-  fetch C from call does_not_exist();
   out C;
 end;
 
@@ -12387,20 +12410,19 @@ create table bogus_reference_in_fk(
   foreign key(col2) references this_table_does_not_exist(col1) on update cascade on delete cascade
 ) @delete(1);
 
--- - Error
-@enforce_strict procedure;
-
 -- TEST: try to call an undeclared proc while in strict mode
--- + Error % calls to undeclared procedures are forbidden if strict procedure mode is enabled; declaration missing or typo 'some_external_thing'
+-- + Error % calls to undeclared procedures are forbidden; declaration missing or typo 'some_external_thing'
 -- +1 Error
 call some_external_thing();
 
+-- TEST: let this be usable
+-- + {declare_proc_no_check_stmt}: ok
 -- - Error
-@enforce_normal procedure;
+DECLARE PROC some_external_thing NO CHECK;
 
 -- TEST: same call in non stict mode -> fine
 -- - Error
-call some_external_thing();
+call some_external_thing('x', 5.0);
 
 -- a proc with a return type for use
 declare proc _stuff() (id integer, name text);

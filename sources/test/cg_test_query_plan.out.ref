@@ -1,3 +1,4 @@
+DECLARE PROC printf NO CHECK;
 
 -- The statement ending at line XXXX
 

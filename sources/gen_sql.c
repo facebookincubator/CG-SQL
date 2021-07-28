@@ -2704,6 +2704,13 @@ static void gen_typed_names(ast_node *ast) {
   }
 }
 
+static void gen_declare_proc_no_check_stmt(ast_node *ast) {
+  Contract(is_ast_declare_proc_no_check_stmt(ast));
+  EXTRACT_ANY_NOTNULL(proc_name, ast->left);
+  EXTRACT_STRING(name, proc_name);
+  gen_printf("DECLARE PROC %s NO CHECK", name);
+}
+
 static void gen_declare_proc_stmt(ast_node *ast) {
   Contract(is_ast_declare_proc_stmt(ast));
   EXTRACT_NOTNULL(proc_name_type, ast->left);
@@ -3218,10 +3225,6 @@ static void gen_enforcement_options(ast_node *ast) {
       gen_printf("WINDOW FUNCTION");
       break;
 
-    case ENFORCE_PROCEDURE:
-      gen_printf("PROCEDURE");
-      break;
-
     case ENFORCE_WITHOUT_ROWID:
       gen_printf("WITHOUT ROWID");
       break;
@@ -3551,6 +3554,7 @@ cql_noexport void gen_init() {
   STMT_INIT(declare_named_type);
   STMT_INIT(declare_value_cursor);
   STMT_INIT(declare_proc_stmt);
+  STMT_INIT(declare_proc_no_check_stmt);
   STMT_INIT(declare_func_stmt);
   STMT_INIT(declare_select_func_stmt);
   STMT_INIT(loop_stmt);
