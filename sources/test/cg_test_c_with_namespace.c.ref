@@ -365,6 +365,7 @@ cql_string_literal(_literal_13_T_various_lets, "T");
 cql_string_literal(_literal_14_NT_various_lets, "NT");
 cql_string_literal(_literal_15_ST_various_lets, "ST");
 cql_string_literal(_literal_16_foo_binary_ops_with_null, "foo");
+cql_string_literal(_literal_17_null_BigFormat, "null");
 
 // The statement ending at line XXXX
 
@@ -12305,6 +12306,1667 @@ void nullability_improvements_do_not_change_access(void) {
 #undef _PROC_
 cql_bool true_test = 0;
 cql_bool false_test = 0;
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC BigFormat ()
+BEGIN
+  DECLARE C CURSOR FOR SELECT *
+    FROM big_data;
+  LOOP FETCH C
+  BEGIN
+    LET s := printf('f1:%s|f2:%s|f3:%s|f4:%s|f5:%s|f6:%s|f7:%s|f8:%s|f9:%s|f10:%s|f11:%s|f12:%s|f13:%s|f14:%s|f15:%s|f16:%s|f17:%s|f18:%s|f19:%s|f20:%s|f21:%s|f22:%s|f23:%s|f24:%s|f25:%s|f26:%s|f27:%s|f28:%s|f29:%s|f30:%s|f31:%s|f32:%s|f33:%s|f34:%s|f35:%s|f36:%s|f38:%s|f39:%s|f40:%s|f41:%s|f42:%s|f43:%s|f44:%s|f45:%s|f46:%s|f47:%s|f48:%s|f49:%s|f50:%s|f51:%s|f52:%s|f53:%s|f54:%s|f55:%s|f56:%s|f57:%s|f58:%s|f59:%s|f60:%s|f61:%s|f62:%s|f63:%s|f64:%s|f65:%s|f66:%s|f67:%s|f68:%s|f69:%s|f70:%s|f71:%s|f72:%s|f73:%s|f74:%s|f75:%s', CASE WHEN C.f1 IS NULL THEN 'null'
+    ELSE printf('%lld', C.f1)
+    END, CASE WHEN C.f2 IS NULL THEN 'null'
+    ELSE printf('%d', C.f2)
+    END, CASE WHEN C.f3 IS NULL THEN 'null'
+    ELSE printf('%s', C.f3)
+    END, CASE WHEN C.f4 IS NULL THEN 'null'
+    ELSE printf('%s', C.f4)
+    END, CASE WHEN C.f5 IS NULL THEN 'null'
+    ELSE printf('%s', C.f5)
+    END, CASE WHEN C.f6 IS NULL THEN 'null'
+    ELSE printf('%s', C.f6)
+    END, CASE WHEN C.f7 IS NULL THEN 'null'
+    ELSE printf('%lld', C.f7)
+    END, CASE WHEN C.f8 IS NULL THEN 'null'
+    ELSE printf('%lld', C.f8)
+    END, CASE WHEN C.f9 IS NULL THEN 'null'
+    ELSE printf('%lld', C.f9)
+    END, CASE WHEN C.f10 IS NULL THEN 'null'
+    ELSE printf('%lld', C.f10)
+    END, CASE WHEN C.f11 IS NULL THEN 'null'
+    ELSE printf('%lld', C.f11)
+    END, CASE WHEN C.f12 IS NULL THEN 'null'
+    ELSE printf('%s', C.f12)
+    END, CASE WHEN C.f13 IS NULL THEN 'null'
+    ELSE printf('%d', C.f13)
+    END, CASE WHEN C.f14 IS NULL THEN 'null'
+    ELSE printf('%lld', C.f14)
+    END, CASE WHEN C.f15 IS NULL THEN 'null'
+    ELSE printf('%d', C.f15)
+    END, CASE WHEN C.f16 IS NULL THEN 'null'
+    ELSE printf('%d', C.f16)
+    END, CASE WHEN C.f17 IS NULL THEN 'null'
+    ELSE printf('%d', C.f17)
+    END, CASE WHEN C.f18 IS NULL THEN 'null'
+    ELSE printf('%s', C.f18)
+    END, CASE WHEN C.f19 IS NULL THEN 'null'
+    ELSE printf('%d', C.f19)
+    END, CASE WHEN C.f20 IS NULL THEN 'null'
+    ELSE printf('%s', C.f20)
+    END, CASE WHEN C.f21 IS NULL THEN 'null'
+    ELSE printf('%d', C.f21)
+    END, CASE WHEN C.f22 IS NULL THEN 'null'
+    ELSE printf('%s', C.f22)
+    END, CASE WHEN C.f23 IS NULL THEN 'null'
+    ELSE printf('%d', C.f23)
+    END, CASE WHEN C.f24 IS NULL THEN 'null'
+    ELSE printf('%lld', C.f24)
+    END, CASE WHEN C.f25 IS NULL THEN 'null'
+    ELSE printf('%s', C.f25)
+    END, CASE WHEN C.f26 IS NULL THEN 'null'
+    ELSE printf('%d', C.f26)
+    END, CASE WHEN C.f27 IS NULL THEN 'null'
+    ELSE printf('%d', C.f27)
+    END, CASE WHEN C.f28 IS NULL THEN 'null'
+    ELSE printf('%d', C.f28)
+    END, CASE WHEN C.f29 IS NULL THEN 'null'
+    ELSE printf('%s', C.f29)
+    END, CASE WHEN C.f30 IS NULL THEN 'null'
+    ELSE printf('%s', C.f30)
+    END, CASE WHEN C.f31 IS NULL THEN 'null'
+    ELSE printf('%s', C.f31)
+    END, CASE WHEN C.f32 IS NULL THEN 'null'
+    ELSE printf('%d', C.f32)
+    END, CASE WHEN C.f33 IS NULL THEN 'null'
+    ELSE printf('%lld', C.f33)
+    END, CASE WHEN C.f34 IS NULL THEN 'null'
+    ELSE printf('%d', C.f34)
+    END, CASE WHEN C.f35 IS NULL THEN 'null'
+    ELSE printf('%s', C.f35)
+    END, CASE WHEN C.f36 IS NULL THEN 'null'
+    ELSE printf('%s', C.f36)
+    END, CASE WHEN C.f38 IS NULL THEN 'null'
+    ELSE printf('%lld', C.f38)
+    END, CASE WHEN C.f39 IS NULL THEN 'null'
+    ELSE printf('%lld', C.f39)
+    END, CASE WHEN C.f40 IS NULL THEN 'null'
+    ELSE printf('%d', C.f40)
+    END, CASE WHEN C.f41 IS NULL THEN 'null'
+    ELSE printf('%d', C.f41)
+    END, CASE WHEN C.f42 IS NULL THEN 'null'
+    ELSE printf('%s', C.f42)
+    END, CASE WHEN C.f43 IS NULL THEN 'null'
+    ELSE printf('%s', C.f43)
+    END, CASE WHEN C.f44 IS NULL THEN 'null'
+    ELSE printf('%lld', C.f44)
+    END, CASE WHEN C.f45 IS NULL THEN 'null'
+    ELSE printf('%d', C.f45)
+    END, CASE WHEN C.f46 IS NULL THEN 'null'
+    ELSE printf('%lld', C.f46)
+    END, CASE WHEN C.f47 IS NULL THEN 'null'
+    ELSE printf('%d', C.f47)
+    END, CASE WHEN C.f48 IS NULL THEN 'null'
+    ELSE printf('%s', C.f48)
+    END, CASE WHEN C.f49 IS NULL THEN 'null'
+    ELSE printf('%lld', C.f49)
+    END, CASE WHEN C.f50 IS NULL THEN 'null'
+    ELSE printf('%s', C.f50)
+    END, CASE WHEN C.f51 IS NULL THEN 'null'
+    ELSE printf('%s', C.f51)
+    END, CASE WHEN C.f52 IS NULL THEN 'null'
+    ELSE printf('%lld', C.f52)
+    END, CASE WHEN C.f53 IS NULL THEN 'null'
+    ELSE printf('%d', C.f53)
+    END, CASE WHEN C.f54 IS NULL THEN 'null'
+    ELSE printf('%s', C.f54)
+    END, CASE WHEN C.f55 IS NULL THEN 'null'
+    ELSE printf('%lld', C.f55)
+    END, CASE WHEN C.f56 IS NULL THEN 'null'
+    ELSE printf('%lld', C.f56)
+    END, CASE WHEN C.f57 IS NULL THEN 'null'
+    ELSE printf('%s', C.f57)
+    END, CASE WHEN C.f58 IS NULL THEN 'null'
+    ELSE printf('%s', C.f58)
+    END, CASE WHEN C.f59 IS NULL THEN 'null'
+    ELSE printf('%d', C.f59)
+    END, CASE WHEN C.f60 IS NULL THEN 'null'
+    ELSE printf('%s', C.f60)
+    END, CASE WHEN C.f61 IS NULL THEN 'null'
+    ELSE printf('%d', C.f61)
+    END, CASE WHEN C.f62 IS NULL THEN 'null'
+    ELSE printf('%lld', C.f62)
+    END, CASE WHEN C.f63 IS NULL THEN 'null'
+    ELSE printf('%lld', C.f63)
+    END, CASE WHEN C.f64 IS NULL THEN 'null'
+    ELSE printf('%d', C.f64)
+    END, CASE WHEN C.f65 IS NULL THEN 'null'
+    ELSE printf('%lld', C.f65)
+    END, CASE WHEN C.f66 IS NULL THEN 'null'
+    ELSE printf('%d', C.f66)
+    END, CASE WHEN C.f67 IS NULL THEN 'null'
+    ELSE printf('%d', C.f67)
+    END, CASE WHEN C.f68 IS NULL THEN 'null'
+    ELSE printf('%d', C.f68)
+    END, CASE WHEN C.f69 IS NULL THEN 'null'
+    ELSE printf('%s', C.f69)
+    END, CASE WHEN C.f70 IS NULL THEN 'null'
+    ELSE printf('%f', C.f70)
+    END, CASE WHEN C.f71 IS NULL THEN 'null'
+    ELSE printf('%lld', C.f71)
+    END, CASE WHEN C.f72 IS NULL THEN 'null'
+    ELSE printf('%d', C.f72)
+    END, CASE WHEN C.f73 IS NULL THEN 'null'
+    ELSE printf('%d', C.f73)
+    END, CASE WHEN C.f74 IS NULL THEN 'null'
+    ELSE printf('%lld', C.f74)
+    END, CASE WHEN C.f75 IS NULL THEN 'null'
+    ELSE printf('%d', C.f75)
+    END);
+  END;
+END;
+*/
+
+#define _PROC_ "BigFormat"
+// export: DECLARE PROC BigFormat () USING TRANSACTION;
+
+typedef struct BigFormat_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int64 f1;
+  cql_int32 f2;
+  cql_nullable_int64 f7;
+  cql_int64 f8;
+  cql_int64 f9;
+  cql_int64 f10;
+  cql_int64 f11;
+  cql_bool f13;
+  cql_nullable_int64 f14;
+  cql_nullable_bool f15;
+  cql_int32 f16;
+  cql_int32 f17;
+  cql_nullable_int32 f19;
+  cql_nullable_int32 f21;
+  cql_nullable_int32 f23;
+  cql_int64 f24;
+  cql_bool f26;
+  cql_bool f27;
+  cql_bool f28;
+  cql_nullable_int32 f32;
+  cql_nullable_int64 f33;
+  cql_nullable_int32 f34;
+  cql_int64 f38;
+  cql_nullable_int64 f39;
+  cql_nullable_bool f40;
+  cql_bool f41;
+  cql_nullable_int64 f44;
+  cql_bool f45;
+  cql_nullable_int64 f46;
+  cql_int32 f47;
+  cql_nullable_int64 f49;
+  cql_nullable_int64 f52;
+  cql_int32 f53;
+  cql_int64 f55;
+  cql_int64 f56;
+  cql_nullable_int32 f59;
+  cql_nullable_int32 f61;
+  cql_nullable_int64 f62;
+  cql_nullable_int64 f63;
+  cql_nullable_int32 f64;
+  cql_int64 f65;
+  cql_int32 f66;
+  cql_int32 f67;
+  cql_nullable_int32 f68;
+  cql_nullable_double f70;
+  cql_nullable_int64 f71;
+  cql_nullable_int32 f72;
+  cql_nullable_int32 f73;
+  cql_nullable_int64 f74;
+  cql_nullable_int32 f75;
+  cql_string_ref _Nullable f3;
+  cql_string_ref _Nonnull f4;
+  cql_string_ref _Nullable f5;
+  cql_string_ref _Nullable f6;
+  cql_string_ref _Nullable f12;
+  cql_string_ref _Nullable f18;
+  cql_string_ref _Nullable f20;
+  cql_string_ref _Nullable f22;
+  cql_string_ref _Nullable f25;
+  cql_string_ref _Nullable f29;
+  cql_string_ref _Nullable f30;
+  cql_string_ref _Nullable f31;
+  cql_string_ref _Nullable f35;
+  cql_string_ref _Nullable f36;
+  cql_string_ref _Nullable f42;
+  cql_string_ref _Nullable f43;
+  cql_string_ref _Nullable f48;
+  cql_string_ref _Nullable f50;
+  cql_string_ref _Nullable f51;
+  cql_string_ref _Nullable f54;
+  cql_string_ref _Nullable f57;
+  cql_string_ref _Nullable f58;
+  cql_string_ref _Nullable f60;
+  cql_string_ref _Nullable f69;
+} BigFormat_C_row;
+
+#define BigFormat_C_refs_offset cql_offsetof(BigFormat_C_row, f3) // count = 24
+CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  sqlite3_stmt *C_stmt = NULL;
+  BigFormat_C_row C = { ._refs_count_ = 24, ._refs_offset_ = BigFormat_C_refs_offset };
+  cql_string_ref _tmp_text_1 = NULL;
+  cql_string_ref _tmp_text_2 = NULL;
+  cql_string_ref _tmp_text_3 = NULL;
+  cql_string_ref _tmp_text_4 = NULL;
+  cql_string_ref _tmp_text_5 = NULL;
+  cql_string_ref _tmp_text_6 = NULL;
+  cql_string_ref _tmp_text_7 = NULL;
+  cql_string_ref _tmp_text_8 = NULL;
+  cql_string_ref _tmp_text_9 = NULL;
+  cql_string_ref _tmp_text_10 = NULL;
+  cql_string_ref _tmp_text_11 = NULL;
+  cql_string_ref _tmp_text_12 = NULL;
+  cql_string_ref _tmp_text_13 = NULL;
+  cql_string_ref _tmp_text_14 = NULL;
+  cql_string_ref _tmp_text_15 = NULL;
+  cql_string_ref _tmp_text_16 = NULL;
+  cql_string_ref _tmp_text_17 = NULL;
+  cql_string_ref _tmp_text_18 = NULL;
+  cql_string_ref _tmp_text_19 = NULL;
+  cql_string_ref _tmp_text_20 = NULL;
+  cql_string_ref _tmp_text_21 = NULL;
+  cql_string_ref _tmp_text_22 = NULL;
+  cql_string_ref _tmp_text_23 = NULL;
+  cql_string_ref _tmp_text_24 = NULL;
+  cql_string_ref _tmp_text_25 = NULL;
+  cql_string_ref _tmp_text_26 = NULL;
+  cql_string_ref _tmp_text_27 = NULL;
+  cql_string_ref _tmp_text_28 = NULL;
+  cql_string_ref _tmp_text_29 = NULL;
+  cql_string_ref _tmp_text_30 = NULL;
+  cql_string_ref _tmp_text_31 = NULL;
+  cql_string_ref _tmp_text_32 = NULL;
+  cql_string_ref _tmp_text_33 = NULL;
+  cql_string_ref _tmp_text_34 = NULL;
+  cql_string_ref _tmp_text_35 = NULL;
+  cql_string_ref _tmp_text_36 = NULL;
+  cql_string_ref _tmp_text_37 = NULL;
+  cql_string_ref _tmp_text_38 = NULL;
+  cql_string_ref _tmp_text_39 = NULL;
+  cql_string_ref _tmp_text_40 = NULL;
+  cql_string_ref _tmp_text_41 = NULL;
+  cql_string_ref _tmp_text_42 = NULL;
+  cql_string_ref _tmp_text_43 = NULL;
+  cql_string_ref _tmp_text_44 = NULL;
+  cql_string_ref _tmp_text_45 = NULL;
+  cql_string_ref _tmp_text_46 = NULL;
+  cql_string_ref _tmp_text_47 = NULL;
+  cql_string_ref _tmp_text_48 = NULL;
+  cql_string_ref _tmp_text_49 = NULL;
+  cql_string_ref _tmp_text_50 = NULL;
+  cql_string_ref _tmp_text_51 = NULL;
+  cql_string_ref _tmp_text_52 = NULL;
+  cql_string_ref _tmp_text_53 = NULL;
+  cql_string_ref _tmp_text_54 = NULL;
+  cql_string_ref _tmp_text_55 = NULL;
+  cql_string_ref _tmp_text_56 = NULL;
+  cql_string_ref _tmp_text_57 = NULL;
+  cql_string_ref _tmp_text_58 = NULL;
+  cql_string_ref _tmp_text_59 = NULL;
+  cql_string_ref _tmp_text_60 = NULL;
+  cql_string_ref _tmp_text_61 = NULL;
+  cql_string_ref _tmp_text_62 = NULL;
+  cql_string_ref _tmp_text_63 = NULL;
+  cql_string_ref _tmp_text_64 = NULL;
+  cql_string_ref _tmp_text_65 = NULL;
+  cql_string_ref _tmp_text_66 = NULL;
+  cql_string_ref _tmp_text_67 = NULL;
+  cql_string_ref _tmp_text_68 = NULL;
+  cql_string_ref _tmp_text_69 = NULL;
+  cql_string_ref _tmp_text_70 = NULL;
+  cql_string_ref _tmp_text_71 = NULL;
+  cql_string_ref _tmp_text_72 = NULL;
+  cql_string_ref _tmp_text_73 = NULL;
+  cql_string_ref _tmp_text_74 = NULL;
+  cql_string_ref _tmp_text_75 = NULL;
+  cql_string_ref s = NULL;
+
+  _rc_ = cql_prepare(_db_, &C_stmt,
+    "SELECT f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29, f30, f31, f32, f33, f34, f35, f36, f38, f39, f40, f41, f42, f43, f44, f45, f46, f47, f48, f49, f50, f51, f52, f53, f54, f55, f56, f57, f58, f59, f60, f61, f62, f63, f64, f65, f66, f67, f68, f69, f70, f71, f72, f73, f74, f75 "
+      "FROM big_data");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  for (;;) {
+    _rc_ = sqlite3_step(C_stmt);
+    C._has_row_ = _rc_ == SQLITE_ROW;
+    cql_multifetch(_rc_, C_stmt, 74,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT64, &C.f1,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.f2,
+                   CQL_DATA_TYPE_STRING, &C.f3,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C.f4,
+                   CQL_DATA_TYPE_STRING, &C.f5,
+                   CQL_DATA_TYPE_STRING, &C.f6,
+                   CQL_DATA_TYPE_INT64, &C.f7,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT64, &C.f8,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT64, &C.f9,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT64, &C.f10,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT64, &C.f11,
+                   CQL_DATA_TYPE_STRING, &C.f12,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_BOOL, &C.f13,
+                   CQL_DATA_TYPE_INT64, &C.f14,
+                   CQL_DATA_TYPE_BOOL, &C.f15,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.f16,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.f17,
+                   CQL_DATA_TYPE_STRING, &C.f18,
+                   CQL_DATA_TYPE_INT32, &C.f19,
+                   CQL_DATA_TYPE_STRING, &C.f20,
+                   CQL_DATA_TYPE_INT32, &C.f21,
+                   CQL_DATA_TYPE_STRING, &C.f22,
+                   CQL_DATA_TYPE_INT32, &C.f23,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT64, &C.f24,
+                   CQL_DATA_TYPE_STRING, &C.f25,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_BOOL, &C.f26,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_BOOL, &C.f27,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_BOOL, &C.f28,
+                   CQL_DATA_TYPE_STRING, &C.f29,
+                   CQL_DATA_TYPE_STRING, &C.f30,
+                   CQL_DATA_TYPE_STRING, &C.f31,
+                   CQL_DATA_TYPE_INT32, &C.f32,
+                   CQL_DATA_TYPE_INT64, &C.f33,
+                   CQL_DATA_TYPE_INT32, &C.f34,
+                   CQL_DATA_TYPE_STRING, &C.f35,
+                   CQL_DATA_TYPE_STRING, &C.f36,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT64, &C.f38,
+                   CQL_DATA_TYPE_INT64, &C.f39,
+                   CQL_DATA_TYPE_BOOL, &C.f40,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_BOOL, &C.f41,
+                   CQL_DATA_TYPE_STRING, &C.f42,
+                   CQL_DATA_TYPE_STRING, &C.f43,
+                   CQL_DATA_TYPE_INT64, &C.f44,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_BOOL, &C.f45,
+                   CQL_DATA_TYPE_INT64, &C.f46,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.f47,
+                   CQL_DATA_TYPE_STRING, &C.f48,
+                   CQL_DATA_TYPE_INT64, &C.f49,
+                   CQL_DATA_TYPE_STRING, &C.f50,
+                   CQL_DATA_TYPE_STRING, &C.f51,
+                   CQL_DATA_TYPE_INT64, &C.f52,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.f53,
+                   CQL_DATA_TYPE_STRING, &C.f54,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT64, &C.f55,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT64, &C.f56,
+                   CQL_DATA_TYPE_STRING, &C.f57,
+                   CQL_DATA_TYPE_STRING, &C.f58,
+                   CQL_DATA_TYPE_INT32, &C.f59,
+                   CQL_DATA_TYPE_STRING, &C.f60,
+                   CQL_DATA_TYPE_INT32, &C.f61,
+                   CQL_DATA_TYPE_INT64, &C.f62,
+                   CQL_DATA_TYPE_INT64, &C.f63,
+                   CQL_DATA_TYPE_INT32, &C.f64,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT64, &C.f65,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.f66,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.f67,
+                   CQL_DATA_TYPE_INT32, &C.f68,
+                   CQL_DATA_TYPE_STRING, &C.f69,
+                   CQL_DATA_TYPE_DOUBLE, &C.f70,
+                   CQL_DATA_TYPE_INT64, &C.f71,
+                   CQL_DATA_TYPE_INT32, &C.f72,
+                   CQL_DATA_TYPE_INT32, &C.f73,
+                   CQL_DATA_TYPE_INT64, &C.f74,
+                   CQL_DATA_TYPE_INT32, &C.f75);
+    if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+    if (!C._has_row_) break;
+    {
+    do {
+      if (0) {
+        cql_set_string_ref(&_tmp_text_1, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%lld", C.f1);
+        cql_string_release(_tmp_text_2);
+        _tmp_text_2 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_1, _tmp_text_2);
+    } while (0);
+    do {
+      if (0) {
+        cql_set_string_ref(&_tmp_text_2, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%d", C.f2);
+        cql_string_release(_tmp_text_3);
+        _tmp_text_3 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_2, _tmp_text_3);
+    } while (0);
+    do {
+      if (!C.f3) {
+        cql_set_string_ref(&_tmp_text_3, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+      cql_alloc_cstr(_cstr_6, C.f3);
+        char *_printf_result = sqlite3_mprintf("%s", _cstr_6);
+      cql_free_cstr(_cstr_6, C.f3);
+        cql_string_release(_tmp_text_4);
+        _tmp_text_4 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_3, _tmp_text_4);
+    } while (0);
+    do {
+      if (!C.f4) {
+        cql_set_string_ref(&_tmp_text_4, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+      cql_alloc_cstr(_cstr_8, C.f4);
+        char *_printf_result = sqlite3_mprintf("%s", _cstr_8);
+      cql_free_cstr(_cstr_8, C.f4);
+        cql_string_release(_tmp_text_5);
+        _tmp_text_5 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_4, _tmp_text_5);
+    } while (0);
+    do {
+      if (!C.f5) {
+        cql_set_string_ref(&_tmp_text_5, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+      cql_alloc_cstr(_cstr_10, C.f5);
+        char *_printf_result = sqlite3_mprintf("%s", _cstr_10);
+      cql_free_cstr(_cstr_10, C.f5);
+        cql_string_release(_tmp_text_6);
+        _tmp_text_6 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_5, _tmp_text_6);
+    } while (0);
+    do {
+      if (!C.f6) {
+        cql_set_string_ref(&_tmp_text_6, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+      cql_alloc_cstr(_cstr_12, C.f6);
+        char *_printf_result = sqlite3_mprintf("%s", _cstr_12);
+      cql_free_cstr(_cstr_12, C.f6);
+        cql_string_release(_tmp_text_7);
+        _tmp_text_7 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_6, _tmp_text_7);
+    } while (0);
+    do {
+      if (C.f7.is_null) {
+        cql_set_string_ref(&_tmp_text_7, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%lld", C.f7.value);
+        cql_string_release(_tmp_text_8);
+        _tmp_text_8 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_7, _tmp_text_8);
+    } while (0);
+    do {
+      if (0) {
+        cql_set_string_ref(&_tmp_text_8, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%lld", C.f8);
+        cql_string_release(_tmp_text_9);
+        _tmp_text_9 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_8, _tmp_text_9);
+    } while (0);
+    do {
+      if (0) {
+        cql_set_string_ref(&_tmp_text_9, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%lld", C.f9);
+        cql_string_release(_tmp_text_10);
+        _tmp_text_10 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_9, _tmp_text_10);
+    } while (0);
+    do {
+      if (0) {
+        cql_set_string_ref(&_tmp_text_10, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%lld", C.f10);
+        cql_string_release(_tmp_text_11);
+        _tmp_text_11 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_10, _tmp_text_11);
+    } while (0);
+    do {
+      if (0) {
+        cql_set_string_ref(&_tmp_text_11, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%lld", C.f11);
+        cql_string_release(_tmp_text_12);
+        _tmp_text_12 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_11, _tmp_text_12);
+    } while (0);
+    do {
+      if (!C.f12) {
+        cql_set_string_ref(&_tmp_text_12, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+      cql_alloc_cstr(_cstr_19, C.f12);
+        char *_printf_result = sqlite3_mprintf("%s", _cstr_19);
+      cql_free_cstr(_cstr_19, C.f12);
+        cql_string_release(_tmp_text_13);
+        _tmp_text_13 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_12, _tmp_text_13);
+    } while (0);
+    do {
+      if (0) {
+        cql_set_string_ref(&_tmp_text_13, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%d", C.f13);
+        cql_string_release(_tmp_text_14);
+        _tmp_text_14 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_13, _tmp_text_14);
+    } while (0);
+    do {
+      if (C.f14.is_null) {
+        cql_set_string_ref(&_tmp_text_14, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%lld", C.f14.value);
+        cql_string_release(_tmp_text_15);
+        _tmp_text_15 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_14, _tmp_text_15);
+    } while (0);
+    do {
+      if (C.f15.is_null) {
+        cql_set_string_ref(&_tmp_text_15, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%d", C.f15.value);
+        cql_string_release(_tmp_text_16);
+        _tmp_text_16 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_15, _tmp_text_16);
+    } while (0);
+    do {
+      if (0) {
+        cql_set_string_ref(&_tmp_text_16, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%d", C.f16);
+        cql_string_release(_tmp_text_17);
+        _tmp_text_17 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_16, _tmp_text_17);
+    } while (0);
+    do {
+      if (0) {
+        cql_set_string_ref(&_tmp_text_17, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%d", C.f17);
+        cql_string_release(_tmp_text_18);
+        _tmp_text_18 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_17, _tmp_text_18);
+    } while (0);
+    do {
+      if (!C.f18) {
+        cql_set_string_ref(&_tmp_text_18, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+      cql_alloc_cstr(_cstr_26, C.f18);
+        char *_printf_result = sqlite3_mprintf("%s", _cstr_26);
+      cql_free_cstr(_cstr_26, C.f18);
+        cql_string_release(_tmp_text_19);
+        _tmp_text_19 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_18, _tmp_text_19);
+    } while (0);
+    do {
+      if (C.f19.is_null) {
+        cql_set_string_ref(&_tmp_text_19, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%d", C.f19.value);
+        cql_string_release(_tmp_text_20);
+        _tmp_text_20 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_19, _tmp_text_20);
+    } while (0);
+    do {
+      if (!C.f20) {
+        cql_set_string_ref(&_tmp_text_20, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+      cql_alloc_cstr(_cstr_29, C.f20);
+        char *_printf_result = sqlite3_mprintf("%s", _cstr_29);
+      cql_free_cstr(_cstr_29, C.f20);
+        cql_string_release(_tmp_text_21);
+        _tmp_text_21 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_20, _tmp_text_21);
+    } while (0);
+    do {
+      if (C.f21.is_null) {
+        cql_set_string_ref(&_tmp_text_21, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%d", C.f21.value);
+        cql_string_release(_tmp_text_22);
+        _tmp_text_22 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_21, _tmp_text_22);
+    } while (0);
+    do {
+      if (!C.f22) {
+        cql_set_string_ref(&_tmp_text_22, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+      cql_alloc_cstr(_cstr_32, C.f22);
+        char *_printf_result = sqlite3_mprintf("%s", _cstr_32);
+      cql_free_cstr(_cstr_32, C.f22);
+        cql_string_release(_tmp_text_23);
+        _tmp_text_23 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_22, _tmp_text_23);
+    } while (0);
+    do {
+      if (C.f23.is_null) {
+        cql_set_string_ref(&_tmp_text_23, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%d", C.f23.value);
+        cql_string_release(_tmp_text_24);
+        _tmp_text_24 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_23, _tmp_text_24);
+    } while (0);
+    do {
+      if (0) {
+        cql_set_string_ref(&_tmp_text_24, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%lld", C.f24);
+        cql_string_release(_tmp_text_25);
+        _tmp_text_25 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_24, _tmp_text_25);
+    } while (0);
+    do {
+      if (!C.f25) {
+        cql_set_string_ref(&_tmp_text_25, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+      cql_alloc_cstr(_cstr_36, C.f25);
+        char *_printf_result = sqlite3_mprintf("%s", _cstr_36);
+      cql_free_cstr(_cstr_36, C.f25);
+        cql_string_release(_tmp_text_26);
+        _tmp_text_26 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_25, _tmp_text_26);
+    } while (0);
+    do {
+      if (0) {
+        cql_set_string_ref(&_tmp_text_26, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%d", C.f26);
+        cql_string_release(_tmp_text_27);
+        _tmp_text_27 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_26, _tmp_text_27);
+    } while (0);
+    do {
+      if (0) {
+        cql_set_string_ref(&_tmp_text_27, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%d", C.f27);
+        cql_string_release(_tmp_text_28);
+        _tmp_text_28 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_27, _tmp_text_28);
+    } while (0);
+    do {
+      if (0) {
+        cql_set_string_ref(&_tmp_text_28, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%d", C.f28);
+        cql_string_release(_tmp_text_29);
+        _tmp_text_29 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_28, _tmp_text_29);
+    } while (0);
+    do {
+      if (!C.f29) {
+        cql_set_string_ref(&_tmp_text_29, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+      cql_alloc_cstr(_cstr_41, C.f29);
+        char *_printf_result = sqlite3_mprintf("%s", _cstr_41);
+      cql_free_cstr(_cstr_41, C.f29);
+        cql_string_release(_tmp_text_30);
+        _tmp_text_30 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_29, _tmp_text_30);
+    } while (0);
+    do {
+      if (!C.f30) {
+        cql_set_string_ref(&_tmp_text_30, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+      cql_alloc_cstr(_cstr_43, C.f30);
+        char *_printf_result = sqlite3_mprintf("%s", _cstr_43);
+      cql_free_cstr(_cstr_43, C.f30);
+        cql_string_release(_tmp_text_31);
+        _tmp_text_31 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_30, _tmp_text_31);
+    } while (0);
+    do {
+      if (!C.f31) {
+        cql_set_string_ref(&_tmp_text_31, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+      cql_alloc_cstr(_cstr_45, C.f31);
+        char *_printf_result = sqlite3_mprintf("%s", _cstr_45);
+      cql_free_cstr(_cstr_45, C.f31);
+        cql_string_release(_tmp_text_32);
+        _tmp_text_32 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_31, _tmp_text_32);
+    } while (0);
+    do {
+      if (C.f32.is_null) {
+        cql_set_string_ref(&_tmp_text_32, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%d", C.f32.value);
+        cql_string_release(_tmp_text_33);
+        _tmp_text_33 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_32, _tmp_text_33);
+    } while (0);
+    do {
+      if (C.f33.is_null) {
+        cql_set_string_ref(&_tmp_text_33, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%lld", C.f33.value);
+        cql_string_release(_tmp_text_34);
+        _tmp_text_34 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_33, _tmp_text_34);
+    } while (0);
+    do {
+      if (C.f34.is_null) {
+        cql_set_string_ref(&_tmp_text_34, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%d", C.f34.value);
+        cql_string_release(_tmp_text_35);
+        _tmp_text_35 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_34, _tmp_text_35);
+    } while (0);
+    do {
+      if (!C.f35) {
+        cql_set_string_ref(&_tmp_text_35, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+      cql_alloc_cstr(_cstr_50, C.f35);
+        char *_printf_result = sqlite3_mprintf("%s", _cstr_50);
+      cql_free_cstr(_cstr_50, C.f35);
+        cql_string_release(_tmp_text_36);
+        _tmp_text_36 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_35, _tmp_text_36);
+    } while (0);
+    do {
+      if (!C.f36) {
+        cql_set_string_ref(&_tmp_text_36, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+      cql_alloc_cstr(_cstr_52, C.f36);
+        char *_printf_result = sqlite3_mprintf("%s", _cstr_52);
+      cql_free_cstr(_cstr_52, C.f36);
+        cql_string_release(_tmp_text_37);
+        _tmp_text_37 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_36, _tmp_text_37);
+    } while (0);
+    do {
+      if (0) {
+        cql_set_string_ref(&_tmp_text_37, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%lld", C.f38);
+        cql_string_release(_tmp_text_38);
+        _tmp_text_38 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_37, _tmp_text_38);
+    } while (0);
+    do {
+      if (C.f39.is_null) {
+        cql_set_string_ref(&_tmp_text_38, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%lld", C.f39.value);
+        cql_string_release(_tmp_text_39);
+        _tmp_text_39 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_38, _tmp_text_39);
+    } while (0);
+    do {
+      if (C.f40.is_null) {
+        cql_set_string_ref(&_tmp_text_39, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%d", C.f40.value);
+        cql_string_release(_tmp_text_40);
+        _tmp_text_40 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_39, _tmp_text_40);
+    } while (0);
+    do {
+      if (0) {
+        cql_set_string_ref(&_tmp_text_40, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%d", C.f41);
+        cql_string_release(_tmp_text_41);
+        _tmp_text_41 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_40, _tmp_text_41);
+    } while (0);
+    do {
+      if (!C.f42) {
+        cql_set_string_ref(&_tmp_text_41, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+      cql_alloc_cstr(_cstr_58, C.f42);
+        char *_printf_result = sqlite3_mprintf("%s", _cstr_58);
+      cql_free_cstr(_cstr_58, C.f42);
+        cql_string_release(_tmp_text_42);
+        _tmp_text_42 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_41, _tmp_text_42);
+    } while (0);
+    do {
+      if (!C.f43) {
+        cql_set_string_ref(&_tmp_text_42, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+      cql_alloc_cstr(_cstr_60, C.f43);
+        char *_printf_result = sqlite3_mprintf("%s", _cstr_60);
+      cql_free_cstr(_cstr_60, C.f43);
+        cql_string_release(_tmp_text_43);
+        _tmp_text_43 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_42, _tmp_text_43);
+    } while (0);
+    do {
+      if (C.f44.is_null) {
+        cql_set_string_ref(&_tmp_text_43, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%lld", C.f44.value);
+        cql_string_release(_tmp_text_44);
+        _tmp_text_44 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_43, _tmp_text_44);
+    } while (0);
+    do {
+      if (0) {
+        cql_set_string_ref(&_tmp_text_44, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%d", C.f45);
+        cql_string_release(_tmp_text_45);
+        _tmp_text_45 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_44, _tmp_text_45);
+    } while (0);
+    do {
+      if (C.f46.is_null) {
+        cql_set_string_ref(&_tmp_text_45, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%lld", C.f46.value);
+        cql_string_release(_tmp_text_46);
+        _tmp_text_46 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_45, _tmp_text_46);
+    } while (0);
+    do {
+      if (0) {
+        cql_set_string_ref(&_tmp_text_46, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%d", C.f47);
+        cql_string_release(_tmp_text_47);
+        _tmp_text_47 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_46, _tmp_text_47);
+    } while (0);
+    do {
+      if (!C.f48) {
+        cql_set_string_ref(&_tmp_text_47, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+      cql_alloc_cstr(_cstr_66, C.f48);
+        char *_printf_result = sqlite3_mprintf("%s", _cstr_66);
+      cql_free_cstr(_cstr_66, C.f48);
+        cql_string_release(_tmp_text_48);
+        _tmp_text_48 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_47, _tmp_text_48);
+    } while (0);
+    do {
+      if (C.f49.is_null) {
+        cql_set_string_ref(&_tmp_text_48, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%lld", C.f49.value);
+        cql_string_release(_tmp_text_49);
+        _tmp_text_49 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_48, _tmp_text_49);
+    } while (0);
+    do {
+      if (!C.f50) {
+        cql_set_string_ref(&_tmp_text_49, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+      cql_alloc_cstr(_cstr_69, C.f50);
+        char *_printf_result = sqlite3_mprintf("%s", _cstr_69);
+      cql_free_cstr(_cstr_69, C.f50);
+        cql_string_release(_tmp_text_50);
+        _tmp_text_50 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_49, _tmp_text_50);
+    } while (0);
+    do {
+      if (!C.f51) {
+        cql_set_string_ref(&_tmp_text_50, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+      cql_alloc_cstr(_cstr_71, C.f51);
+        char *_printf_result = sqlite3_mprintf("%s", _cstr_71);
+      cql_free_cstr(_cstr_71, C.f51);
+        cql_string_release(_tmp_text_51);
+        _tmp_text_51 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_50, _tmp_text_51);
+    } while (0);
+    do {
+      if (C.f52.is_null) {
+        cql_set_string_ref(&_tmp_text_51, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%lld", C.f52.value);
+        cql_string_release(_tmp_text_52);
+        _tmp_text_52 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_51, _tmp_text_52);
+    } while (0);
+    do {
+      if (0) {
+        cql_set_string_ref(&_tmp_text_52, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%d", C.f53);
+        cql_string_release(_tmp_text_53);
+        _tmp_text_53 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_52, _tmp_text_53);
+    } while (0);
+    do {
+      if (!C.f54) {
+        cql_set_string_ref(&_tmp_text_53, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+      cql_alloc_cstr(_cstr_75, C.f54);
+        char *_printf_result = sqlite3_mprintf("%s", _cstr_75);
+      cql_free_cstr(_cstr_75, C.f54);
+        cql_string_release(_tmp_text_54);
+        _tmp_text_54 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_53, _tmp_text_54);
+    } while (0);
+    do {
+      if (0) {
+        cql_set_string_ref(&_tmp_text_54, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%lld", C.f55);
+        cql_string_release(_tmp_text_55);
+        _tmp_text_55 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_54, _tmp_text_55);
+    } while (0);
+    do {
+      if (0) {
+        cql_set_string_ref(&_tmp_text_55, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%lld", C.f56);
+        cql_string_release(_tmp_text_56);
+        _tmp_text_56 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_55, _tmp_text_56);
+    } while (0);
+    do {
+      if (!C.f57) {
+        cql_set_string_ref(&_tmp_text_56, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+      cql_alloc_cstr(_cstr_79, C.f57);
+        char *_printf_result = sqlite3_mprintf("%s", _cstr_79);
+      cql_free_cstr(_cstr_79, C.f57);
+        cql_string_release(_tmp_text_57);
+        _tmp_text_57 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_56, _tmp_text_57);
+    } while (0);
+    do {
+      if (!C.f58) {
+        cql_set_string_ref(&_tmp_text_57, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+      cql_alloc_cstr(_cstr_81, C.f58);
+        char *_printf_result = sqlite3_mprintf("%s", _cstr_81);
+      cql_free_cstr(_cstr_81, C.f58);
+        cql_string_release(_tmp_text_58);
+        _tmp_text_58 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_57, _tmp_text_58);
+    } while (0);
+    do {
+      if (C.f59.is_null) {
+        cql_set_string_ref(&_tmp_text_58, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%d", C.f59.value);
+        cql_string_release(_tmp_text_59);
+        _tmp_text_59 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_58, _tmp_text_59);
+    } while (0);
+    do {
+      if (!C.f60) {
+        cql_set_string_ref(&_tmp_text_59, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+      cql_alloc_cstr(_cstr_84, C.f60);
+        char *_printf_result = sqlite3_mprintf("%s", _cstr_84);
+      cql_free_cstr(_cstr_84, C.f60);
+        cql_string_release(_tmp_text_60);
+        _tmp_text_60 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_59, _tmp_text_60);
+    } while (0);
+    do {
+      if (C.f61.is_null) {
+        cql_set_string_ref(&_tmp_text_60, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%d", C.f61.value);
+        cql_string_release(_tmp_text_61);
+        _tmp_text_61 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_60, _tmp_text_61);
+    } while (0);
+    do {
+      if (C.f62.is_null) {
+        cql_set_string_ref(&_tmp_text_61, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%lld", C.f62.value);
+        cql_string_release(_tmp_text_62);
+        _tmp_text_62 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_61, _tmp_text_62);
+    } while (0);
+    do {
+      if (C.f63.is_null) {
+        cql_set_string_ref(&_tmp_text_62, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%lld", C.f63.value);
+        cql_string_release(_tmp_text_63);
+        _tmp_text_63 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_62, _tmp_text_63);
+    } while (0);
+    do {
+      if (C.f64.is_null) {
+        cql_set_string_ref(&_tmp_text_63, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%d", C.f64.value);
+        cql_string_release(_tmp_text_64);
+        _tmp_text_64 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_63, _tmp_text_64);
+    } while (0);
+    do {
+      if (0) {
+        cql_set_string_ref(&_tmp_text_64, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%lld", C.f65);
+        cql_string_release(_tmp_text_65);
+        _tmp_text_65 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_64, _tmp_text_65);
+    } while (0);
+    do {
+      if (0) {
+        cql_set_string_ref(&_tmp_text_65, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%d", C.f66);
+        cql_string_release(_tmp_text_66);
+        _tmp_text_66 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_65, _tmp_text_66);
+    } while (0);
+    do {
+      if (0) {
+        cql_set_string_ref(&_tmp_text_66, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%d", C.f67);
+        cql_string_release(_tmp_text_67);
+        _tmp_text_67 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_66, _tmp_text_67);
+    } while (0);
+    do {
+      if (C.f68.is_null) {
+        cql_set_string_ref(&_tmp_text_67, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%d", C.f68.value);
+        cql_string_release(_tmp_text_68);
+        _tmp_text_68 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_67, _tmp_text_68);
+    } while (0);
+    do {
+      if (!C.f69) {
+        cql_set_string_ref(&_tmp_text_68, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+      cql_alloc_cstr(_cstr_94, C.f69);
+        char *_printf_result = sqlite3_mprintf("%s", _cstr_94);
+      cql_free_cstr(_cstr_94, C.f69);
+        cql_string_release(_tmp_text_69);
+        _tmp_text_69 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_68, _tmp_text_69);
+    } while (0);
+    do {
+      if (C.f70.is_null) {
+        cql_set_string_ref(&_tmp_text_69, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%f", C.f70.value);
+        cql_string_release(_tmp_text_70);
+        _tmp_text_70 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_69, _tmp_text_70);
+    } while (0);
+    do {
+      if (C.f71.is_null) {
+        cql_set_string_ref(&_tmp_text_70, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%lld", C.f71.value);
+        cql_string_release(_tmp_text_71);
+        _tmp_text_71 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_70, _tmp_text_71);
+    } while (0);
+    do {
+      if (C.f72.is_null) {
+        cql_set_string_ref(&_tmp_text_71, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%d", C.f72.value);
+        cql_string_release(_tmp_text_72);
+        _tmp_text_72 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_71, _tmp_text_72);
+    } while (0);
+    do {
+      if (C.f73.is_null) {
+        cql_set_string_ref(&_tmp_text_72, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%d", C.f73.value);
+        cql_string_release(_tmp_text_73);
+        _tmp_text_73 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_72, _tmp_text_73);
+    } while (0);
+    do {
+      if (C.f74.is_null) {
+        cql_set_string_ref(&_tmp_text_73, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%lld", C.f74.value);
+        cql_string_release(_tmp_text_74);
+        _tmp_text_74 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_73, _tmp_text_74);
+    } while (0);
+    do {
+      if (C.f75.is_null) {
+        cql_set_string_ref(&_tmp_text_74, _literal_17_null_BigFormat);
+        break;
+      }
+      {
+        char *_printf_result = sqlite3_mprintf("%d", C.f75.value);
+        cql_string_release(_tmp_text_75);
+        _tmp_text_75 = cql_string_ref_new(_printf_result);
+        sqlite3_free(_printf_result);
+      }
+      cql_set_string_ref(&_tmp_text_74, _tmp_text_75);
+    } while (0);
+    cql_alloc_cstr(_cstr_4, _tmp_text_1);
+    cql_alloc_cstr(_cstr_5, _tmp_text_2);
+    cql_alloc_cstr(_cstr_7, _tmp_text_3);
+    cql_alloc_cstr(_cstr_9, _tmp_text_4);
+    cql_alloc_cstr(_cstr_11, _tmp_text_5);
+    cql_alloc_cstr(_cstr_13, _tmp_text_6);
+    cql_alloc_cstr(_cstr_14, _tmp_text_7);
+    cql_alloc_cstr(_cstr_15, _tmp_text_8);
+    cql_alloc_cstr(_cstr_16, _tmp_text_9);
+    cql_alloc_cstr(_cstr_17, _tmp_text_10);
+    cql_alloc_cstr(_cstr_18, _tmp_text_11);
+    cql_alloc_cstr(_cstr_20, _tmp_text_12);
+    cql_alloc_cstr(_cstr_21, _tmp_text_13);
+    cql_alloc_cstr(_cstr_22, _tmp_text_14);
+    cql_alloc_cstr(_cstr_23, _tmp_text_15);
+    cql_alloc_cstr(_cstr_24, _tmp_text_16);
+    cql_alloc_cstr(_cstr_25, _tmp_text_17);
+    cql_alloc_cstr(_cstr_27, _tmp_text_18);
+    cql_alloc_cstr(_cstr_28, _tmp_text_19);
+    cql_alloc_cstr(_cstr_30, _tmp_text_20);
+    cql_alloc_cstr(_cstr_31, _tmp_text_21);
+    cql_alloc_cstr(_cstr_33, _tmp_text_22);
+    cql_alloc_cstr(_cstr_34, _tmp_text_23);
+    cql_alloc_cstr(_cstr_35, _tmp_text_24);
+    cql_alloc_cstr(_cstr_37, _tmp_text_25);
+    cql_alloc_cstr(_cstr_38, _tmp_text_26);
+    cql_alloc_cstr(_cstr_39, _tmp_text_27);
+    cql_alloc_cstr(_cstr_40, _tmp_text_28);
+    cql_alloc_cstr(_cstr_42, _tmp_text_29);
+    cql_alloc_cstr(_cstr_44, _tmp_text_30);
+    cql_alloc_cstr(_cstr_46, _tmp_text_31);
+    cql_alloc_cstr(_cstr_47, _tmp_text_32);
+    cql_alloc_cstr(_cstr_48, _tmp_text_33);
+    cql_alloc_cstr(_cstr_49, _tmp_text_34);
+    cql_alloc_cstr(_cstr_51, _tmp_text_35);
+    cql_alloc_cstr(_cstr_53, _tmp_text_36);
+    cql_alloc_cstr(_cstr_54, _tmp_text_37);
+    cql_alloc_cstr(_cstr_55, _tmp_text_38);
+    cql_alloc_cstr(_cstr_56, _tmp_text_39);
+    cql_alloc_cstr(_cstr_57, _tmp_text_40);
+    cql_alloc_cstr(_cstr_59, _tmp_text_41);
+    cql_alloc_cstr(_cstr_61, _tmp_text_42);
+    cql_alloc_cstr(_cstr_62, _tmp_text_43);
+    cql_alloc_cstr(_cstr_63, _tmp_text_44);
+    cql_alloc_cstr(_cstr_64, _tmp_text_45);
+    cql_alloc_cstr(_cstr_65, _tmp_text_46);
+    cql_alloc_cstr(_cstr_67, _tmp_text_47);
+    cql_alloc_cstr(_cstr_68, _tmp_text_48);
+    cql_alloc_cstr(_cstr_70, _tmp_text_49);
+    cql_alloc_cstr(_cstr_72, _tmp_text_50);
+    cql_alloc_cstr(_cstr_73, _tmp_text_51);
+    cql_alloc_cstr(_cstr_74, _tmp_text_52);
+    cql_alloc_cstr(_cstr_76, _tmp_text_53);
+    cql_alloc_cstr(_cstr_77, _tmp_text_54);
+    cql_alloc_cstr(_cstr_78, _tmp_text_55);
+    cql_alloc_cstr(_cstr_80, _tmp_text_56);
+    cql_alloc_cstr(_cstr_82, _tmp_text_57);
+    cql_alloc_cstr(_cstr_83, _tmp_text_58);
+    cql_alloc_cstr(_cstr_85, _tmp_text_59);
+    cql_alloc_cstr(_cstr_86, _tmp_text_60);
+    cql_alloc_cstr(_cstr_87, _tmp_text_61);
+    cql_alloc_cstr(_cstr_88, _tmp_text_62);
+    cql_alloc_cstr(_cstr_89, _tmp_text_63);
+    cql_alloc_cstr(_cstr_90, _tmp_text_64);
+    cql_alloc_cstr(_cstr_91, _tmp_text_65);
+    cql_alloc_cstr(_cstr_92, _tmp_text_66);
+    cql_alloc_cstr(_cstr_93, _tmp_text_67);
+    cql_alloc_cstr(_cstr_95, _tmp_text_68);
+    cql_alloc_cstr(_cstr_96, _tmp_text_69);
+    cql_alloc_cstr(_cstr_97, _tmp_text_70);
+    cql_alloc_cstr(_cstr_98, _tmp_text_71);
+    cql_alloc_cstr(_cstr_99, _tmp_text_72);
+    cql_alloc_cstr(_cstr_100, _tmp_text_73);
+    cql_alloc_cstr(_cstr_101, _tmp_text_74);
+      char *_printf_result = sqlite3_mprintf("f1:%s|f2:%s|f3:%s|f4:%s|f5:%s|f6:%s|f7:%s|f8:%s|f9:%s|f10:%s|f11:%s|f12:%s|f13:%s|f14:%s|f15:%s|f16:%s|f17:%s|f18:%s|f19:%s|f20:%s|f21:%s|f22:%s|f23:%s|f24:%s|f25:%s|f26:%s|f27:%s|f28:%s|f29:%s|f30:%s|f31:%s|f32:%s|f33:%s|f34:%s|f35:%s|f36:%s|f38:%s|f39:%s|f40:%s|f41:%s|f42:%s|f43:%s|f44:%s|f45:%s|f46:%s|f47:%s|f48:%s|f49:%s|f50:%s|f51:%s|f52:%s|f53:%s|f54:%s|f55:%s|f56:%s|f57:%s|f58:%s|f59:%s|f60:%s|f61:%s|f62:%s|f63:%s|f64:%s|f65:%s|f66:%s|f67:%s|f68:%s|f69:%s|f70:%s|f71:%s|f72:%s|f73:%s|f74:%s|f75:%s", _cstr_4, _cstr_5, _cstr_7, _cstr_9, _cstr_11, _cstr_13, _cstr_14, _cstr_15, _cstr_16, _cstr_17, _cstr_18, _cstr_20, _cstr_21, _cstr_22, _cstr_23, _cstr_24, _cstr_25, _cstr_27, _cstr_28, _cstr_30, _cstr_31, _cstr_33, _cstr_34, _cstr_35, _cstr_37, _cstr_38, _cstr_39, _cstr_40, _cstr_42, _cstr_44, _cstr_46, _cstr_47, _cstr_48, _cstr_49, _cstr_51, _cstr_53, _cstr_54, _cstr_55, _cstr_56, _cstr_57, _cstr_59, _cstr_61, _cstr_62, _cstr_63, _cstr_64, _cstr_65, _cstr_67, _cstr_68, _cstr_70, _cstr_72, _cstr_73, _cstr_74, _cstr_76, _cstr_77, _cstr_78, _cstr_80, _cstr_82, _cstr_83, _cstr_85, _cstr_86, _cstr_87, _cstr_88, _cstr_89, _cstr_90, _cstr_91, _cstr_92, _cstr_93, _cstr_95, _cstr_96, _cstr_97, _cstr_98, _cstr_99, _cstr_100, _cstr_101);
+    cql_free_cstr(_cstr_4, _tmp_text_1);
+    cql_free_cstr(_cstr_5, _tmp_text_2);
+    cql_free_cstr(_cstr_7, _tmp_text_3);
+    cql_free_cstr(_cstr_9, _tmp_text_4);
+    cql_free_cstr(_cstr_11, _tmp_text_5);
+    cql_free_cstr(_cstr_13, _tmp_text_6);
+    cql_free_cstr(_cstr_14, _tmp_text_7);
+    cql_free_cstr(_cstr_15, _tmp_text_8);
+    cql_free_cstr(_cstr_16, _tmp_text_9);
+    cql_free_cstr(_cstr_17, _tmp_text_10);
+    cql_free_cstr(_cstr_18, _tmp_text_11);
+    cql_free_cstr(_cstr_20, _tmp_text_12);
+    cql_free_cstr(_cstr_21, _tmp_text_13);
+    cql_free_cstr(_cstr_22, _tmp_text_14);
+    cql_free_cstr(_cstr_23, _tmp_text_15);
+    cql_free_cstr(_cstr_24, _tmp_text_16);
+    cql_free_cstr(_cstr_25, _tmp_text_17);
+    cql_free_cstr(_cstr_27, _tmp_text_18);
+    cql_free_cstr(_cstr_28, _tmp_text_19);
+    cql_free_cstr(_cstr_30, _tmp_text_20);
+    cql_free_cstr(_cstr_31, _tmp_text_21);
+    cql_free_cstr(_cstr_33, _tmp_text_22);
+    cql_free_cstr(_cstr_34, _tmp_text_23);
+    cql_free_cstr(_cstr_35, _tmp_text_24);
+    cql_free_cstr(_cstr_37, _tmp_text_25);
+    cql_free_cstr(_cstr_38, _tmp_text_26);
+    cql_free_cstr(_cstr_39, _tmp_text_27);
+    cql_free_cstr(_cstr_40, _tmp_text_28);
+    cql_free_cstr(_cstr_42, _tmp_text_29);
+    cql_free_cstr(_cstr_44, _tmp_text_30);
+    cql_free_cstr(_cstr_46, _tmp_text_31);
+    cql_free_cstr(_cstr_47, _tmp_text_32);
+    cql_free_cstr(_cstr_48, _tmp_text_33);
+    cql_free_cstr(_cstr_49, _tmp_text_34);
+    cql_free_cstr(_cstr_51, _tmp_text_35);
+    cql_free_cstr(_cstr_53, _tmp_text_36);
+    cql_free_cstr(_cstr_54, _tmp_text_37);
+    cql_free_cstr(_cstr_55, _tmp_text_38);
+    cql_free_cstr(_cstr_56, _tmp_text_39);
+    cql_free_cstr(_cstr_57, _tmp_text_40);
+    cql_free_cstr(_cstr_59, _tmp_text_41);
+    cql_free_cstr(_cstr_61, _tmp_text_42);
+    cql_free_cstr(_cstr_62, _tmp_text_43);
+    cql_free_cstr(_cstr_63, _tmp_text_44);
+    cql_free_cstr(_cstr_64, _tmp_text_45);
+    cql_free_cstr(_cstr_65, _tmp_text_46);
+    cql_free_cstr(_cstr_67, _tmp_text_47);
+    cql_free_cstr(_cstr_68, _tmp_text_48);
+    cql_free_cstr(_cstr_70, _tmp_text_49);
+    cql_free_cstr(_cstr_72, _tmp_text_50);
+    cql_free_cstr(_cstr_73, _tmp_text_51);
+    cql_free_cstr(_cstr_74, _tmp_text_52);
+    cql_free_cstr(_cstr_76, _tmp_text_53);
+    cql_free_cstr(_cstr_77, _tmp_text_54);
+    cql_free_cstr(_cstr_78, _tmp_text_55);
+    cql_free_cstr(_cstr_80, _tmp_text_56);
+    cql_free_cstr(_cstr_82, _tmp_text_57);
+    cql_free_cstr(_cstr_83, _tmp_text_58);
+    cql_free_cstr(_cstr_85, _tmp_text_59);
+    cql_free_cstr(_cstr_86, _tmp_text_60);
+    cql_free_cstr(_cstr_87, _tmp_text_61);
+    cql_free_cstr(_cstr_88, _tmp_text_62);
+    cql_free_cstr(_cstr_89, _tmp_text_63);
+    cql_free_cstr(_cstr_90, _tmp_text_64);
+    cql_free_cstr(_cstr_91, _tmp_text_65);
+    cql_free_cstr(_cstr_92, _tmp_text_66);
+    cql_free_cstr(_cstr_93, _tmp_text_67);
+    cql_free_cstr(_cstr_95, _tmp_text_68);
+    cql_free_cstr(_cstr_96, _tmp_text_69);
+    cql_free_cstr(_cstr_97, _tmp_text_70);
+    cql_free_cstr(_cstr_98, _tmp_text_71);
+    cql_free_cstr(_cstr_99, _tmp_text_72);
+    cql_free_cstr(_cstr_100, _tmp_text_73);
+    cql_free_cstr(_cstr_101, _tmp_text_74);
+      cql_string_release(s);
+      s = cql_string_ref_new(_printf_result);
+      sqlite3_free(_printf_result);
+    }
+  }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_finalize_stmt(&C_stmt);
+  cql_teardown_row(C);
+  cql_string_release(s);
+  cql_string_release(_tmp_text_1);
+  cql_string_release(_tmp_text_2);
+  cql_string_release(_tmp_text_3);
+  cql_string_release(_tmp_text_4);
+  cql_string_release(_tmp_text_5);
+  cql_string_release(_tmp_text_6);
+  cql_string_release(_tmp_text_7);
+  cql_string_release(_tmp_text_8);
+  cql_string_release(_tmp_text_9);
+  cql_string_release(_tmp_text_10);
+  cql_string_release(_tmp_text_11);
+  cql_string_release(_tmp_text_12);
+  cql_string_release(_tmp_text_13);
+  cql_string_release(_tmp_text_14);
+  cql_string_release(_tmp_text_15);
+  cql_string_release(_tmp_text_16);
+  cql_string_release(_tmp_text_17);
+  cql_string_release(_tmp_text_18);
+  cql_string_release(_tmp_text_19);
+  cql_string_release(_tmp_text_20);
+  cql_string_release(_tmp_text_21);
+  cql_string_release(_tmp_text_22);
+  cql_string_release(_tmp_text_23);
+  cql_string_release(_tmp_text_24);
+  cql_string_release(_tmp_text_25);
+  cql_string_release(_tmp_text_26);
+  cql_string_release(_tmp_text_27);
+  cql_string_release(_tmp_text_28);
+  cql_string_release(_tmp_text_29);
+  cql_string_release(_tmp_text_30);
+  cql_string_release(_tmp_text_31);
+  cql_string_release(_tmp_text_32);
+  cql_string_release(_tmp_text_33);
+  cql_string_release(_tmp_text_34);
+  cql_string_release(_tmp_text_35);
+  cql_string_release(_tmp_text_36);
+  cql_string_release(_tmp_text_37);
+  cql_string_release(_tmp_text_38);
+  cql_string_release(_tmp_text_39);
+  cql_string_release(_tmp_text_40);
+  cql_string_release(_tmp_text_41);
+  cql_string_release(_tmp_text_42);
+  cql_string_release(_tmp_text_43);
+  cql_string_release(_tmp_text_44);
+  cql_string_release(_tmp_text_45);
+  cql_string_release(_tmp_text_46);
+  cql_string_release(_tmp_text_47);
+  cql_string_release(_tmp_text_48);
+  cql_string_release(_tmp_text_49);
+  cql_string_release(_tmp_text_50);
+  cql_string_release(_tmp_text_51);
+  cql_string_release(_tmp_text_52);
+  cql_string_release(_tmp_text_53);
+  cql_string_release(_tmp_text_54);
+  cql_string_release(_tmp_text_55);
+  cql_string_release(_tmp_text_56);
+  cql_string_release(_tmp_text_57);
+  cql_string_release(_tmp_text_58);
+  cql_string_release(_tmp_text_59);
+  cql_string_release(_tmp_text_60);
+  cql_string_release(_tmp_text_61);
+  cql_string_release(_tmp_text_62);
+  cql_string_release(_tmp_text_63);
+  cql_string_release(_tmp_text_64);
+  cql_string_release(_tmp_text_65);
+  cql_string_release(_tmp_text_66);
+  cql_string_release(_tmp_text_67);
+  cql_string_release(_tmp_text_68);
+  cql_string_release(_tmp_text_69);
+  cql_string_release(_tmp_text_70);
+  cql_string_release(_tmp_text_71);
+  cql_string_release(_tmp_text_72);
+  cql_string_release(_tmp_text_73);
+  cql_string_release(_tmp_text_74);
+  cql_string_release(_tmp_text_75);
+  return _rc_;
+}
+#undef _PROC_
 cql_int32 this_is_the_end = 0;
 
 // The statement ending at line XXXX

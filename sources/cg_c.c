@@ -719,7 +719,7 @@ static void cg_scratch_var(ast_node *ast, sem_t sem_type, charbuf *var, charbuf 
     }
 
     int32_t index = stack_level/64;
-    unsigned long long mask = 1LL << (stack_level % 64);
+    uint64_t mask = ((uint64_t)1) << (stack_level % 64);
 
     // Emit scratch if needed.
     if (!(usedmask[index] & mask)) {

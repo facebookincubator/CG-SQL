@@ -4209,6 +4209,168 @@ set true_test := i0_nullable is not true;
 -- + false_test = !cql_is_nullable_false(i0_nullable.is_null, i0_nullable.value);
 set false_test := i0_nullable is not false;
 
+CREATE TABLE big_data(
+  f1 LONG_INT NOT NULL,
+  f2 INTEGER NOT NULL,
+  f3 TEXT,
+  f4 TEXT NOT NULL,
+  f5 TEXT,
+  f6 TEXT,
+  f7 LONG_INT,
+  f8 LONG_INT NOT NULL,
+  f9 LONG_INT NOT NULL,
+  f10 LONG_INT NOT NULL,
+  f11 LONG_INT NOT NULL,
+  f12 TEXT @SENSITIVE,
+  f13 BOOL NOT NULL,
+  f14 LONG_INT,
+  f15 BOOL,
+  f16 INTEGER NOT NULL,
+  f17 INTEGER NOT NULL,
+  f18 TEXT,
+  f19 INTEGER,
+  f20 TEXT,
+  f21 INTEGER,
+  f22 TEXT,
+  f23 INTEGER,
+  f24 LONG_INT NOT NULL,
+  f25 TEXT,
+  f26 BOOL NOT NULL,
+  f27 BOOL NOT NULL,
+  f28 BOOL NOT NULL,
+  f29 TEXT,
+  f30 TEXT,
+  f31 TEXT,
+  f32 INTEGER,
+  f33 LONG_INT,
+  f34 INTEGER,
+  f35 TEXT,
+  f36 TEXT,
+  f38 LONG_INT NOT NULL,
+  f39 LONG_INT UNIQUE,
+  f40 BOOL,
+  f41 BOOL NOT NULL,
+  f42 TEXT,
+  f43 TEXT,
+  f44 LONG_INT,
+  f45 BOOL NOT NULL,
+  f46 LONG_INT,
+  f47 INTEGER NOT NULL,
+  f48 TEXT,
+  f49 LONG_INT,
+  f50 TEXT,
+  f51 TEXT,
+  f52 LONG_INT,
+  f53 INTEGER NOT NULL,
+  f54 TEXT,
+  f55 LONG_INT NOT NULL,
+  f56 LONG_INT NOT NULL,
+  f57 TEXT,
+  f58 TEXT,
+  f59 INTEGER,
+  f60 TEXT,
+  f61 INTEGER,
+  f62 LONG_INT,
+  f63 LONG_INT,
+  f64 INTEGER,
+  f65 LONG_INT NOT NULL,
+  f66 INTEGER NOT NULL,
+  f67 INTEGER NOT NULL,
+  f68 INTEGER,
+  f69 TEXT,
+  f70 REAL,
+  f71 LONG_INT,
+  f72 INTEGER,
+  f73 INTEGER,
+  f74 LONG_INT,
+  f75 INTEGER
+);
+
+-- TEST: lots of string temporaries create no errors
+-- +  cql_string_release(_tmp_text_1);
+-- +  cql_string_release(_tmp_text_2);
+-- +  cql_string_release(_tmp_text_3);
+-- +  cql_string_release(_tmp_text_4);
+-- +  cql_string_release(_tmp_text_5);
+-- +  cql_string_release(_tmp_text_6);
+-- +  cql_string_release(_tmp_text_7);
+-- +  cql_string_release(_tmp_text_8);
+-- +  cql_string_release(_tmp_text_9);
+-- +  cql_string_release(_tmp_text_10);
+-- +  cql_string_release(_tmp_text_11);
+-- +  cql_string_release(_tmp_text_12);
+-- +  cql_string_release(_tmp_text_13);
+-- +  cql_string_release(_tmp_text_14);
+-- +  cql_string_release(_tmp_text_15);
+-- +  cql_string_release(_tmp_text_16);
+-- +  cql_string_release(_tmp_text_17);
+-- +  cql_string_release(_tmp_text_18);
+-- +  cql_string_release(_tmp_text_19);
+-- +  cql_string_release(_tmp_text_20);
+-- +  cql_string_release(_tmp_text_21);
+-- +  cql_string_release(_tmp_text_22);
+-- +  cql_string_release(_tmp_text_23);
+-- +  cql_string_release(_tmp_text_24);
+-- +  cql_string_release(_tmp_text_25);
+-- +  cql_string_release(_tmp_text_26);
+-- +  cql_string_release(_tmp_text_27);
+-- +  cql_string_release(_tmp_text_28);
+-- +  cql_string_release(_tmp_text_29);
+-- +  cql_string_release(_tmp_text_30);
+-- +  cql_string_release(_tmp_text_31);
+-- +  cql_string_release(_tmp_text_32);
+-- +  cql_string_release(_tmp_text_33);
+-- +  cql_string_release(_tmp_text_34);
+-- +  cql_string_release(_tmp_text_35);
+-- +  cql_string_release(_tmp_text_36);
+-- +  cql_string_release(_tmp_text_37);
+-- +  cql_string_release(_tmp_text_38);
+-- +  cql_string_release(_tmp_text_39);
+-- +  cql_string_release(_tmp_text_40);
+-- +  cql_string_release(_tmp_text_41);
+-- +  cql_string_release(_tmp_text_42);
+-- +  cql_string_release(_tmp_text_43);
+-- +  cql_string_release(_tmp_text_44);
+-- +  cql_string_release(_tmp_text_45);
+-- +  cql_string_release(_tmp_text_46);
+-- +  cql_string_release(_tmp_text_47);
+-- +  cql_string_release(_tmp_text_48);
+-- +  cql_string_release(_tmp_text_49);
+-- +  cql_string_release(_tmp_text_50);
+-- +  cql_string_release(_tmp_text_51);
+-- +  cql_string_release(_tmp_text_52);
+-- +  cql_string_release(_tmp_text_53);
+-- +  cql_string_release(_tmp_text_54);
+-- +  cql_string_release(_tmp_text_55);
+-- +  cql_string_release(_tmp_text_56);
+-- +  cql_string_release(_tmp_text_57);
+-- +  cql_string_release(_tmp_text_58);
+-- +  cql_string_release(_tmp_text_59);
+-- +  cql_string_release(_tmp_text_60);
+-- +  cql_string_release(_tmp_text_61);
+-- +  cql_string_release(_tmp_text_62);
+-- +  cql_string_release(_tmp_text_63);
+-- +  cql_string_release(_tmp_text_64);
+-- +  cql_string_release(_tmp_text_65);
+-- +  cql_string_release(_tmp_text_66);
+-- +  cql_string_release(_tmp_text_67);
+-- +  cql_string_release(_tmp_text_68);
+-- +  cql_string_release(_tmp_text_69);
+-- +  cql_string_release(_tmp_text_70);
+-- +  cql_string_release(_tmp_text_71);
+-- +  cql_string_release(_tmp_text_72);
+-- +  cql_string_release(_tmp_text_73);
+-- +  cql_string_release(_tmp_text_74);
+-- +  cql_string_release(_tmp_text_75);
+CREATE PROC BigFormat ()
+BEGIN
+  DECLARE C CURSOR FOR SELECT * FROM big_data;
+  LOOP FETCH C
+  BEGIN
+    LET s := cql_cursor_format(C);
+  END;
+END;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------
