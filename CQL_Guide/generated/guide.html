@@ -677,7 +677,7 @@
 <li><a href="#cql0320-extension-fragment-cte-must-have-a-from-clause-and-no-other-top-level-clauses-frag_name">CQL0320: extension fragment CTE must have a FROM clause and no other top level clauses ‘frag_name’</a></li>
 <li><a href="#cql0321-migration-proc-not-allowed-on-object-object_name">CQL0321: migration proc not allowed on object ‘object_name’</a></li>
 <li><a href="#cql0322-fragment-parameters-must-be-exactly-arguments-procedure_name">CQL0322: fragment parameters must be exactly ‘[arguments]’ ‘procedure_name’</a></li>
-<li><a href="#cql0323-calls-to-undeclared-procedures-are-forbidden-if-strict-procedure-mode-is-enabled-declaration-missing-or-typo-procedure_name">CQL0323: calls to undeclared procedures are forbidden if strict procedure mode is enabled; declaration missing or typo ‘procedure_name’</a></li>
+<li><a href="#cql0323-calls-to-undeclared-procedures-are-forbidden-declaration-missing-or-typo-procedure">CQL0323: calls to undeclared procedures are forbidden; declaration missing or typo ‘procedure’</a></li>
 <li><a href="#cql0324-referenced-table-was-created-in-a-later-version-so-it-cannot-be-used-in-a-foreign-key-referenced_table">CQL0324: referenced table was created in a later version so it cannot be used in a foreign key ‘referenced_table’</a></li>
 <li><a href="#cql0325-ok_table_scan-attribute-must-be-a-name">CQL0325: ok_table_scan attribute must be a name</a></li>
 <li><a href="#cql0326-the-table-name-in-ok_table_scan-does-not-exist-table_name">CQL0326: the table name in ok_table_scan does not exist ‘table_name’</a></li>
@@ -751,9 +751,8 @@
 <li><a href="#cql0398-a-compound-select-cannot-be-ordered-by-the-result-of-an-expression">CQL0398: A compound select cannot be ordered by the result of an expression</a></li>
 <li><a href="#cql0400-encode-context-column-cant-be-sensitive">CQL0400: encode context column can’t be sensitive</a></li>
 <li><a href="#cql0402-encode-context-column-in-vault_senstive-attribute-must-match-the-specified-type-in-strict-mode">CQL0402: encode context column in vault_senstive attribute must match the specified type in strict mode</a></li>
+<li><a href="#cql0404-procedure-cannot-be-both-a-normal-procedure-and-an-unchecked-procedure-procedure_name">CQL0404: procedure cannot be both a normal procedure and an unchecked procedure, ‘procedure_name’</a></li>
 </ul></li>
-<li><a href="#cql-0405-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0405 : unused, this was added to prevent merge conflicts at the end on literally every checkin</a></li>
-<li><a href="#cql-0406-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0406 : unused, this was added to prevent merge conflicts at the end on literally every checkin</a></li>
 <li><a href="#cql-0407-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0407 : unused, this was added to prevent merge conflicts at the end on literally every checkin</a>
 <ul>
 <li><a href="#cql0408-encode-context-column-can-be-only-specified-once">CQL0408: encode context column can be only specified once</a></li>
@@ -6537,7 +6536,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Thu Jul 22 21:43:19 PDT 2021</p>
+<p>Snapshot as of Wed Jul 28 15:02:30 PDT 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -6624,6 +6623,7 @@ any_stmt:
   | declare_enum_stmt
   | declare_func_stmt
   | declare_out_call_stmt
+  | declare_proc_no_check_stmt
   | declare_proc_stmt
   | declare_schema_region_stmt
   | declare_stmt
@@ -6644,6 +6644,7 @@ any_stmt:
   | fetch_call_stmt
   | fetch_stmt
   | fetch_values_stmt
+  | guard_stmt
   | if_stmt
   | insert_stmt
   | leave_stmt
@@ -7616,6 +7617,10 @@ declare_func_stmt:
 procedure: &quot;PROC&quot; | &quot;PROCEDURE&quot;
   ;
 
+declare_proc_no_check_stmt:
+  &quot;DECLARE&quot; procedure name &quot;NO&quot; &quot;CHECK&quot;
+  ;
+
 declare_proc_stmt:
   &quot;DECLARE&quot; procedure name &#39;(&#39; params &#39;)&#39;
   | &quot;DECLARE&quot; procedure name &#39;(&#39; params &#39;)&#39; &#39;(&#39; typed_names &#39;)&#39;
@@ -7791,6 +7796,18 @@ opt_elseif_list:
   | elseif_list
   ;
 
+control_stmt:
+  commit_return_stmt
+  | continue_stmt
+  | leave_stmt
+  | return_stmt
+  | rollback_return_stmt
+  | throw_stmt
+
+guard_stmt:
+  &quot;IF&quot; expr control_stmt
+  ;
+
 transaction_mode:
   /* nil */
   | &quot;DEFERRED&quot;
@@ -7916,7 +7933,6 @@ enforcement_options:
   | &quot;JOIN&quot;
   | &quot;UPSERT&quot; &quot;STATEMENT&quot;
   | &quot;WINDOW&quot; function
-  | procedure
   | &quot;WITHOUT&quot; &quot;ROWID&quot;
   | &quot;TRANSACTION&quot;
   | &quot;SELECT&quot; &quot;IF&quot; &quot;NOTHING&quot;
@@ -7930,6 +7946,7 @@ enforcement_options:
   | ENCODE CONTEXT_TYPE &quot;BOOL&quot;
   | ENCODE CONTEXT_TYPE &quot;TEXT&quot;
   | ENCODE CONTEXT_TYPE &quot;BLOB&quot;
+  | &quot;IS&quot; &quot;TRUE&quot;
   ;
 
 enforce_strict_stmt:
@@ -8306,9 +8323,9 @@ enforce_pop_stmt:
 <hr />
 <h3 id="cql0070-incompatible-object-type-incompatible_type">CQL0070: incompatible object type ‘incompatible_type’</h3>
 <p>Two expressions of type object are holding a different object type e.g.</p>
-<pre><code>declare x object&lt;Foo&gt;;
-declare y object&lt;Bar&gt;;
-set x := y;</code></pre>
+<div class="sourceCode" id="cb390"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb390-1"><a href="#cb390-1" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span> x <span class="dt">object</span><span class="op">&lt;</span>Foo<span class="op">&gt;</span>;</span>
+<span id="cb390-2"><a href="#cb390-2" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span> y <span class="dt">object</span><span class="op">&lt;</span>Bar<span class="op">&gt;</span>;</span>
+<span id="cb390-3"><a href="#cb390-3" aria-hidden="true" tabindex="-1"></a><span class="kw">set</span> x <span class="op">:=</span> y;</span></code></pre></div>
 <p>Here the message would report that ‘Bar’ is incompatible. The message generally refers to the 2nd object type as the first one was ok by default then the second one caused the problem.</p>
 <hr />
 <h3 id="cql0071-first-operand-cannot-be-a-blob-in-betweennot-between">CQL0071: first operand cannot be a blob in ‘BETWEEN/NOT BETWEEN’</h3>
@@ -9387,10 +9404,12 @@ set x := y;</code></pre>
 <p>Recall that the code for the procedure that does the select comes from the assembly fragment, so its arguments are in some sense the only ones that matter. But the extension fragments are also allowed to use the arguments. Of course we must ensure that the extension fragments do not use any arguments that aren’t in the assembly, and so the only choice we have is to make sure the extensions conform to the base. And so for that to work the assembly also has to conform to the base. So the base fragment must define the args for all the other fragments.</p>
 <p>You could imagine a scheme where the extension fragments are allowed to use a subset of the parameters defined in the base but if that were the case you might have names that mean different things in different fragments and then you could get errors or different semantics when the fragments were assembled. To avoid all of these problems, and for simplicity, we demand that the arguments of all fragments match exactly.</p>
 <hr />
-<h3 id="cql0323-calls-to-undeclared-procedures-are-forbidden-if-strict-procedure-mode-is-enabled-declaration-missing-or-typo-procedure_name">CQL0323: calls to undeclared procedures are forbidden if strict procedure mode is enabled; declaration missing or typo ‘procedure_name’</h3>
-<p><code>@enforce_strict PROCEDURE</code> has been enabled. In this mode you may only call procedures that have a declaration. In <code>@enforce_normal PROCEDURE</code> mode, a call to an unknown proc is interpreted as a simple C call. This lets you call functions like <code>printf</code> in normal mode, even if they have a strange calling convention. Strict mode limits you to declared procedures and is generally safer.</p>
+<h3 id="cql0323-calls-to-undeclared-procedures-are-forbidden-declaration-missing-or-typo-procedure">CQL0323: calls to undeclared procedures are forbidden; declaration missing or typo ‘procedure’</h3>
 <p>If you get this error it means that there is a typo in the name of the procedure you are trying to call, or else the declaration for the procedure is totally missing. Maybe a necessary <code>#include</code> needs to be added to the compiland.</p>
-<p>If you really need to call a c runtime function, especially one with varargs, then you must temporarily switch back to <code>@enforce_normal</code> for procedures.</p>
+<p>Previously if you attempted to call an unknown CQL would produce a generic function call. If you need to do this, especially a functionwith varargs, then you must declare the function with something like:</p>
+<p><code>DECLARE PROCEDURE printf NO CHECK;</code></p>
+<p>This option only works for void functions. For more complex signatures check <code>DECLARE FUNCTION</code> and <code>DECLARE SELECT FUNCTION</code>. Usually these will require a simple wrapper to call from CQL.</p>
+<p>In all cases there must be some kind of declaration,to avoid mysterious linker failures or argument signature mismatches.</p>
 <hr />
 <h3 id="cql0324-referenced-table-was-created-in-a-later-version-so-it-cannot-be-used-in-a-foreign-key-referenced_table">CQL0324: referenced table was created in a later version so it cannot be used in a foreign key ‘referenced_table’</h3>
 <p>In a foreign key, we enforce the following rules: * <code>@recreate</code> tables can see any version they like, if the name is in scope that’s good enough * other tables may only “see” the same version or an earlier version.</p>
@@ -9560,25 +9579,25 @@ set x := y;</code></pre>
 <hr />
 <h3 id="cql0370-due-to-a-memory-leak-bug-in-old-sqlite-versions-the-select-part-of-an-insert-must-not-have-a-top-level-join-or-compound-operator.-use-with-and-a-cte-or-a-nested-select-to-work-around-this.">CQL0370: due to a memory leak bug in old SQLite versions, the select part of an insert must not have a top level join or compound operator. Use WITH and a CTE, or a nested select to work around this.</h3>
 <p>There is an unfortunate memory leak in older versions of SQLite (research pending on particular versions, but 3.28.0 has it). It causes this pattern to leak:</p>
-<pre><code>-- must be autoinc table
-create table x (
-  pk integer primary key autoincrement
-);
-
--- any join will do (this is a minimal repro)
-insert into x
-  select NULL pk from
-  (select 1) t1 inner join (select 1) t2;</code></pre>
+<div class="sourceCode" id="cb442"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb442-1"><a href="#cb442-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- must be autoinc table</span></span>
+<span id="cb442-2"><a href="#cb442-2" aria-hidden="true" tabindex="-1"></a><span class="kw">create</span> <span class="kw">table</span> x (</span>
+<span id="cb442-3"><a href="#cb442-3" aria-hidden="true" tabindex="-1"></a>  pk <span class="dt">integer</span> <span class="kw">primary</span> <span class="kw">key</span> autoincrement</span>
+<span id="cb442-4"><a href="#cb442-4" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb442-5"><a href="#cb442-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb442-6"><a href="#cb442-6" aria-hidden="true" tabindex="-1"></a><span class="co">-- any join will do (this is a minimal repro)</span></span>
+<span id="cb442-7"><a href="#cb442-7" aria-hidden="true" tabindex="-1"></a><span class="kw">insert</span> <span class="kw">into</span> x</span>
+<span id="cb442-8"><a href="#cb442-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">select</span> <span class="kw">NULL</span> pk <span class="kw">from</span></span>
+<span id="cb442-9"><a href="#cb442-9" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">select</span> <span class="dv">1</span>) t1 <span class="kw">inner</span> <span class="kw">join</span> (<span class="kw">select</span> <span class="dv">1</span>) t2;</span></code></pre></div>
 <p>You can workaround this with a couple of fairly simple rewrites. This form is probably the cleanest.</p>
-<pre><code>with
-cte (pk) as (select .. anything you need)
-insert into x
-  select * from cte;</code></pre>
+<div class="sourceCode" id="cb443"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb443-1"><a href="#cb443-1" aria-hidden="true" tabindex="-1"></a><span class="kw">with</span></span>
+<span id="cb443-2"><a href="#cb443-2" aria-hidden="true" tabindex="-1"></a>cte (pk) <span class="kw">as</span> (<span class="kw">select</span> <span class="op">..</span> anything you need)</span>
+<span id="cb443-3"><a href="#cb443-3" aria-hidden="true" tabindex="-1"></a><span class="kw">insert</span> <span class="kw">into</span> x</span>
+<span id="cb443-4"><a href="#cb443-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">select</span> <span class="op">*</span> <span class="kw">from</span> cte;</span></code></pre></div>
 <p>Simply wrapping your desired select in a nested select also suffices. So long as the top level is simple.</p>
-<pre><code>insert into x
-  select * from (
-    select anything you need....
-  );</code></pre>
+<div class="sourceCode" id="cb444"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb444-1"><a href="#cb444-1" aria-hidden="true" tabindex="-1"></a><span class="kw">insert</span> <span class="kw">into</span> x</span>
+<span id="cb444-2"><a href="#cb444-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">select</span> <span class="op">*</span> <span class="kw">from</span> (</span>
+<span id="cb444-3"><a href="#cb444-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">select</span> anything you need<span class="op">....</span></span>
+<span id="cb444-4"><a href="#cb444-4" aria-hidden="true" tabindex="-1"></a>  );</span></code></pre></div>
 <hr />
 <h3 id="cql0371-table-valued-function-used-in-a-leftrightcross-context-this-would-hit-a-sqlite-bug.-wrap-it-in-a-cte-instead.">CQL0371: table valued function used in a left/right/cross context; this would hit a SQLite bug. Wrap it in a CTE instead.</h3>
 <p>This error is generated by <code>@enforce_strict table function</code>. It is there to allow safe use of Table Valued Functions (TVFs) even though there was a bug in SQLite prior to v 3.31.0 when joining against them. The bug appears when the TVF is on the right of a left join. For example:</p>
@@ -9648,7 +9667,7 @@ insert into x
 <p>The <code>ALL VALUES</code> form of switch means that: * the <code>SWITCH</code> expression is an enumerated type * the <code>WHEN</code> cases will completely cover the values of the enum</p>
 <p>If you allow the <code>ELSE</code> form then <code>ALL VALUES</code> becomes meaningless because of course they are all covered. So with <code>ALL VALUES</code> there can be no <code>ELSE</code>.</p>
 <p>You can list items that have no action with this form:</p>
-<pre><code>   WHEN 10, 15 THEN NOTHING -- explicitly do nothing in these cases so they are still covered</code></pre>
+<div class="sourceCode" id="cb452"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb452-1"><a href="#cb452-1" aria-hidden="true" tabindex="-1"></a>   <span class="cf">WHEN</span> <span class="dv">10</span>, <span class="dv">15</span> <span class="cf">THEN</span> <span class="kw">NOTHING</span> <span class="co">-- explicitly do nothing in these cases so they are still covered</span></span></code></pre></div>
 <p>No code is generated for such cases.</p>
 <hr />
 <h3 id="cql0384-switch-statement-did-not-have-any-actual-statements-in-it">CQL0384: switch statement did not have any actual statements in it</h3>
@@ -9699,14 +9718,14 @@ insert into x
 <hr />
 <h3 id="cql0395-table-valued-functions-may-not-be-used-in-an-expression-context-function_name">CQL0395: table valued functions may not be used in an expression context ‘function_name’</h3>
 <p>A table valued function should be used like a table e.g.</p>
-<pre><code>-- this is right
-select * from table_valued_func(5);</code></pre>
+<div class="sourceCode" id="cb453"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb453-1"><a href="#cb453-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- this is right</span></span>
+<span id="cb453-2"><a href="#cb453-2" aria-hidden="true" tabindex="-1"></a><span class="kw">select</span> <span class="op">*</span> <span class="kw">from</span> table_valued_func(<span class="dv">5</span>);</span></code></pre></div>
 <p>Not like a value e.g.</p>
-<pre><code>-- this is wrong
-select table_valued_func(5);
-
--- this is also wrong
-select 1 where table_valued_func(5) = 3;</code></pre>
+<div class="sourceCode" id="cb454"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb454-1"><a href="#cb454-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- this is wrong</span></span>
+<span id="cb454-2"><a href="#cb454-2" aria-hidden="true" tabindex="-1"></a><span class="kw">select</span> table_valued_func(<span class="dv">5</span>);</span>
+<span id="cb454-3"><a href="#cb454-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb454-4"><a href="#cb454-4" aria-hidden="true" tabindex="-1"></a><span class="co">-- this is also wrong</span></span>
+<span id="cb454-5"><a href="#cb454-5" aria-hidden="true" tabindex="-1"></a><span class="kw">select</span> <span class="dv">1</span> <span class="kw">where</span> table_valued_func(<span class="dv">5</span>) <span class="op">=</span> <span class="dv">3</span>;</span></code></pre></div>
 <hr />
 <h3 id="cql0396-versioning-attributes-may-not-be-used-on-ddl-inside-a-procedure">CQL0396: versioning attributes may not be used on DDL inside a procedure</h3>
 <p>If you are putting DDL inside of a procedure then that is going to run regardless of any <code>@create</code>, <code>@delete</code>, or <code>@recreate</code> attributes;</p>
@@ -9762,19 +9781,34 @@ select 1 where table_valued_func(5) = 3;</code></pre>
 <colgroup>
 <col style="width: 6%" />
 </colgroup>
+<tbody>
+<tr class="odd">
+<td>### CQL0403: operator may not be used because it is not supported on old versions of SQLite, ‘operator’</td>
+</tr>
+<tr class="even">
+<td>The indicated operator has been suppressed with <code>@enforce_strict is true</code> because it is not available on older versions of sqlite.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="cql0404-procedure-cannot-be-both-a-normal-procedure-and-an-unchecked-procedure-procedure_name">CQL0404: procedure cannot be both a normal procedure and an unchecked procedure, ‘procedure_name’</h3>
+<p>The construct:</p>
+<div class="sourceCode" id="cb458"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb458-1"><a href="#cb458-1" aria-hidden="true" tabindex="-1"></a><span class="kw">DECLARE</span> <span class="kw">PROCEDURE</span> printf <span class="kw">NO</span> <span class="kw">CHECK</span>;</span></code></pre></div>
+<p>Is used to tell CQL about an external procedure that might take any combination of arguments. The canonical example is <code>printf</code>. All the arguments are converted from CQL types to basic C types when making the call (e.g. TEXT variables become temporary C strings). Once a procedure has been declared in this way it can’t then also be declared as a normal CQL procedure via <code>CREATE</code> or <code>DECLARE PROCEDURE</code>. Likewise a normal procedure can’t be redeclared with the <code>NO CHECK</code> pattern.</p>
+<table style="width:7%;">
+<colgroup>
+<col style="width: 6%" />
+</colgroup>
 <thead>
 <tr class="header">
-<th>CQL 0403 : unused, this was added to prevent merge conflicts at the end on literally every checkin</th>
+<th>CQL 0405 : unused, this was added to prevent merge conflicts at the end on literally every checkin</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>CQL 0404 : unused, this was added to prevent merge conflicts at the end on literally every checkin</td>
+<td>CQL 0406 : unused, this was added to prevent merge conflicts at the end on literally every checkin</td>
 </tr>
 </tbody>
 </table>
-<h2 id="cql-0405-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0405 : unused, this was added to prevent merge conflicts at the end on literally every checkin</h2>
-<h2 id="cql-0406-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0406 : unused, this was added to prevent merge conflicts at the end on literally every checkin</h2>
 <h2 id="cql-0407-unused-this-was-added-to-prevent-merge-conflicts-at-the-end-on-literally-every-checkin">CQL 0407 : unused, this was added to prevent merge conflicts at the end on literally every checkin</h2>
 <h3 id="cql0408-encode-context-column-can-be-only-specified-once">CQL0408: encode context column can be only specified once</h3>
 <p>The encode context column can be only specified once in <span class="citation" data-cites="vault_sensitive">@vault_sensitive</span> attribute</p>
@@ -9798,7 +9832,7 @@ select 1 where table_valued_func(5) = 3;</code></pre>
 </table>
 <p>– This source code is licensed under the MIT license found in the – LICENSE file in the root directory of this source tree. –&gt;</p>
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Thu Jul 22 21:43:22 PDT 2021</p>
+<p>Snapshot as of Wed Jul 28 15:02:31 PDT 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 
@@ -11287,166 +11321,166 @@ fetch C USING
 <p>Refer also to Appendix 8: CQL Best Practices.</p>
 <h3 id="common-schema">Common Schema</h3>
 <p>For these examples let’s create a couple of tables we might need for examples</p>
-<div class="sourceCode" id="cb460"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb460-1"><a href="#cb460-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> foo (</span>
-<span id="cb460-2"><a href="#cb460-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">id</span> <span class="dt">integer</span> <span class="kw">primary</span> <span class="kw">key</span>,</span>
-<span id="cb460-3"><a href="#cb460-3" aria-hidden="true" tabindex="-1"></a>    name text</span>
-<span id="cb460-4"><a href="#cb460-4" aria-hidden="true" tabindex="-1"></a>);</span>
-<span id="cb460-5"><a href="#cb460-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb460-6"><a href="#cb460-6" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> bar (</span>
-<span id="cb460-7"><a href="#cb460-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">id</span> <span class="dt">integer</span> <span class="kw">primary</span> <span class="kw">key</span>,</span>
-<span id="cb460-8"><a href="#cb460-8" aria-hidden="true" tabindex="-1"></a>    rate <span class="dt">real</span></span>
-<span id="cb460-9"><a href="#cb460-9" aria-hidden="true" tabindex="-1"></a>);</span></code></pre></div>
+<div class="sourceCode" id="cb461"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb461-1"><a href="#cb461-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> foo (</span>
+<span id="cb461-2"><a href="#cb461-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">id</span> <span class="dt">integer</span> <span class="kw">primary</span> <span class="kw">key</span>,</span>
+<span id="cb461-3"><a href="#cb461-3" aria-hidden="true" tabindex="-1"></a>    name text</span>
+<span id="cb461-4"><a href="#cb461-4" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb461-5"><a href="#cb461-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb461-6"><a href="#cb461-6" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> bar (</span>
+<span id="cb461-7"><a href="#cb461-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">id</span> <span class="dt">integer</span> <span class="kw">primary</span> <span class="kw">key</span>,</span>
+<span id="cb461-8"><a href="#cb461-8" aria-hidden="true" tabindex="-1"></a>    rate <span class="dt">real</span></span>
+<span id="cb461-9"><a href="#cb461-9" aria-hidden="true" tabindex="-1"></a>);</span></code></pre></div>
 <h3 id="declarations">Declarations</h3>
-<div class="sourceCode" id="cb461"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb461-1"><a href="#cb461-1" aria-hidden="true" tabindex="-1"></a><span class="kw">DECLARE</span> v <span class="dt">LONG</span> <span class="kw">NOT</span> <span class="kw">NULL</span>;</span>
-<span id="cb461-2"><a href="#cb461-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SET</span> v <span class="op">:=</span> <span class="dv">1</span>;</span></code></pre></div>
+<div class="sourceCode" id="cb462"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb462-1"><a href="#cb462-1" aria-hidden="true" tabindex="-1"></a><span class="kw">DECLARE</span> v <span class="dt">LONG</span> <span class="kw">NOT</span> <span class="kw">NULL</span>;</span>
+<span id="cb462-2"><a href="#cb462-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SET</span> v <span class="op">:=</span> <span class="dv">1</span>;</span></code></pre></div>
 <p>better</p>
-<div class="sourceCode" id="cb462"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb462-1"><a href="#cb462-1" aria-hidden="true" tabindex="-1"></a>LET v <span class="op">:=</span> 1L;  <span class="co">-- long literals have the L suffix like in C</span></span></code></pre></div>
+<div class="sourceCode" id="cb463"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb463-1"><a href="#cb463-1" aria-hidden="true" tabindex="-1"></a>LET v <span class="op">:=</span> 1L;  <span class="co">-- long literals have the L suffix like in C</span></span></code></pre></div>
 <p>Similarly</p>
-<div class="sourceCode" id="cb463"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb463-1"><a href="#cb463-1" aria-hidden="true" tabindex="-1"></a><span class="kw">DECLARE</span> v <span class="dt">REAL</span> <span class="kw">NOT</span> <span class="kw">NULL</span>;</span>
-<span id="cb463-2"><a href="#cb463-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SET</span> v <span class="op">:=</span> <span class="dv">1</span>;</span></code></pre></div>
+<div class="sourceCode" id="cb464"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb464-1"><a href="#cb464-1" aria-hidden="true" tabindex="-1"></a><span class="kw">DECLARE</span> v <span class="dt">REAL</span> <span class="kw">NOT</span> <span class="kw">NULL</span>;</span>
+<span id="cb464-2"><a href="#cb464-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SET</span> v <span class="op">:=</span> <span class="dv">1</span>;</span></code></pre></div>
 <p>better</p>
-<div class="sourceCode" id="cb464"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb464-1"><a href="#cb464-1" aria-hidden="true" tabindex="-1"></a>LET v <span class="op">:=</span> <span class="fl">1.0</span>; <span class="co">-- use scientific notation or add .0 to make a real literal</span></span></code></pre></div>
+<div class="sourceCode" id="cb465"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb465-1"><a href="#cb465-1" aria-hidden="true" tabindex="-1"></a>LET v <span class="op">:=</span> <span class="fl">1.0</span>; <span class="co">-- use scientific notation or add .0 to make a real literal</span></span></code></pre></div>
 <h3 id="casts">Casts</h3>
 <p>Redundant casts fatten the code and don’t really add anything to readability. Sometimems it’s necessary to cast NULL to a particular type so that you can be sure that generated result set has the right data type, but most of the casts below are not necessary.</p>
-<div class="sourceCode" id="cb465"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb465-1"><a href="#cb465-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
-<span id="cb465-2"><a href="#cb465-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(foo.<span class="kw">id</span> <span class="kw">as</span> <span class="dt">INTEGER</span>) <span class="kw">as</span> <span class="kw">id</span>,</span>
-<span id="cb465-3"><a href="#cb465-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(foo.name <span class="kw">as</span> TEXT) <span class="kw">as</span> name,</span>
-<span id="cb465-4"><a href="#cb465-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> <span class="dt">REAL</span>) <span class="kw">as</span> rate</span>
-<span id="cb465-5"><a href="#cb465-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> foo</span>
-<span id="cb465-6"><a href="#cb465-6" aria-hidden="true" tabindex="-1"></a><span class="kw">UNION</span> <span class="kw">ALL</span></span>
-<span id="cb465-7"><a href="#cb465-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
-<span id="cb465-8"><a href="#cb465-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(bar.<span class="kw">id</span> <span class="kw">as</span> <span class="dt">INTEGER</span>) <span class="kw">as</span> <span class="kw">id</span>,</span>
-<span id="cb465-9"><a href="#cb465-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> TEXT) <span class="kw">as</span> name,</span>
-<span id="cb465-10"><a href="#cb465-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(bar.rate <span class="kw">as</span> <span class="dt">REAL</span>) <span class="kw">as</span> rate</span>
-<span id="cb465-11"><a href="#cb465-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> bar</span></code></pre></div>
-<p>Better</p>
 <div class="sourceCode" id="cb466"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb466-1"><a href="#cb466-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
-<span id="cb466-2"><a href="#cb466-2" aria-hidden="true" tabindex="-1"></a>    foo.<span class="kw">id</span>,</span>
-<span id="cb466-3"><a href="#cb466-3" aria-hidden="true" tabindex="-1"></a>    foo.name,</span>
+<span id="cb466-2"><a href="#cb466-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(foo.<span class="kw">id</span> <span class="kw">as</span> <span class="dt">INTEGER</span>) <span class="kw">as</span> <span class="kw">id</span>,</span>
+<span id="cb466-3"><a href="#cb466-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(foo.name <span class="kw">as</span> TEXT) <span class="kw">as</span> name,</span>
 <span id="cb466-4"><a href="#cb466-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> <span class="dt">REAL</span>) <span class="kw">as</span> rate</span>
 <span id="cb466-5"><a href="#cb466-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> foo</span>
 <span id="cb466-6"><a href="#cb466-6" aria-hidden="true" tabindex="-1"></a><span class="kw">UNION</span> <span class="kw">ALL</span></span>
 <span id="cb466-7"><a href="#cb466-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
-<span id="cb466-8"><a href="#cb466-8" aria-hidden="true" tabindex="-1"></a>    bar.<span class="kw">id</span>,</span>
+<span id="cb466-8"><a href="#cb466-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(bar.<span class="kw">id</span> <span class="kw">as</span> <span class="dt">INTEGER</span>) <span class="kw">as</span> <span class="kw">id</span>,</span>
 <span id="cb466-9"><a href="#cb466-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> TEXT) <span class="kw">as</span> name,</span>
-<span id="cb466-10"><a href="#cb466-10" aria-hidden="true" tabindex="-1"></a>    bar.rate</span>
+<span id="cb466-10"><a href="#cb466-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(bar.rate <span class="kw">as</span> <span class="dt">REAL</span>) <span class="kw">as</span> rate</span>
 <span id="cb466-11"><a href="#cb466-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> bar</span></code></pre></div>
+<p>Better</p>
+<div class="sourceCode" id="cb467"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb467-1"><a href="#cb467-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb467-2"><a href="#cb467-2" aria-hidden="true" tabindex="-1"></a>    foo.<span class="kw">id</span>,</span>
+<span id="cb467-3"><a href="#cb467-3" aria-hidden="true" tabindex="-1"></a>    foo.name,</span>
+<span id="cb467-4"><a href="#cb467-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> <span class="dt">REAL</span>) <span class="kw">as</span> rate</span>
+<span id="cb467-5"><a href="#cb467-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> foo</span>
+<span id="cb467-6"><a href="#cb467-6" aria-hidden="true" tabindex="-1"></a><span class="kw">UNION</span> <span class="kw">ALL</span></span>
+<span id="cb467-7"><a href="#cb467-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb467-8"><a href="#cb467-8" aria-hidden="true" tabindex="-1"></a>    bar.<span class="kw">id</span>,</span>
+<span id="cb467-9"><a href="#cb467-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> TEXT) <span class="kw">as</span> name,</span>
+<span id="cb467-10"><a href="#cb467-10" aria-hidden="true" tabindex="-1"></a>    bar.rate</span>
+<span id="cb467-11"><a href="#cb467-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> bar</span></code></pre></div>
 <p>It’s possible to do the following to make this even cleaner:</p>
-<div class="sourceCode" id="cb467"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb467-1"><a href="#cb467-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- somewhere central</span></span>
-<span id="cb467-2"><a href="#cb467-2" aria-hidden="true" tabindex="-1"></a>#define NULL_TEXT <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> TEXT)</span>
-<span id="cb467-3"><a href="#cb467-3" aria-hidden="true" tabindex="-1"></a>#define NULL_REAL <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> <span class="dt">REAL</span>)</span>
-<span id="cb467-4"><a href="#cb467-4" aria-hidden="true" tabindex="-1"></a>#define NULL_INT <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> <span class="dt">INTEGER</span>)</span>
-<span id="cb467-5"><a href="#cb467-5" aria-hidden="true" tabindex="-1"></a>#define NULL_LONG <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> <span class="dt">LONG</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb468"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb468-1"><a href="#cb468-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- somewhere central</span></span>
+<span id="cb468-2"><a href="#cb468-2" aria-hidden="true" tabindex="-1"></a>#define NULL_TEXT <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> TEXT)</span>
+<span id="cb468-3"><a href="#cb468-3" aria-hidden="true" tabindex="-1"></a>#define NULL_REAL <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> <span class="dt">REAL</span>)</span>
+<span id="cb468-4"><a href="#cb468-4" aria-hidden="true" tabindex="-1"></a>#define NULL_INT <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> <span class="dt">INTEGER</span>)</span>
+<span id="cb468-5"><a href="#cb468-5" aria-hidden="true" tabindex="-1"></a>#define NULL_LONG <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> <span class="dt">LONG</span>)</span></code></pre></div>
 <p>Then you can write</p>
-<div class="sourceCode" id="cb468"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb468-1"><a href="#cb468-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
-<span id="cb468-2"><a href="#cb468-2" aria-hidden="true" tabindex="-1"></a>    foo.<span class="kw">id</span>,</span>
-<span id="cb468-3"><a href="#cb468-3" aria-hidden="true" tabindex="-1"></a>    foo.name,</span>
-<span id="cb468-4"><a href="#cb468-4" aria-hidden="true" tabindex="-1"></a>    NULL_REAL <span class="kw">as</span> rate</span>
-<span id="cb468-5"><a href="#cb468-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> foo</span>
-<span id="cb468-6"><a href="#cb468-6" aria-hidden="true" tabindex="-1"></a><span class="kw">UNION</span> <span class="kw">ALL</span></span>
-<span id="cb468-7"><a href="#cb468-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
-<span id="cb468-8"><a href="#cb468-8" aria-hidden="true" tabindex="-1"></a>    bar.<span class="kw">id</span>,</span>
-<span id="cb468-9"><a href="#cb468-9" aria-hidden="true" tabindex="-1"></a>    NULL_TEXT <span class="kw">as</span> name,</span>
-<span id="cb468-10"><a href="#cb468-10" aria-hidden="true" tabindex="-1"></a>    bar.rate</span>
-<span id="cb468-11"><a href="#cb468-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> bar</span></code></pre></div>
-<h4 id="booleans">Booleans</h4>
-<p>There are no boolean literals in the language, but it’s very easily to create one</p>
-<p>Poor:</p>
 <div class="sourceCode" id="cb469"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb469-1"><a href="#cb469-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
 <span id="cb469-2"><a href="#cb469-2" aria-hidden="true" tabindex="-1"></a>    foo.<span class="kw">id</span>,</span>
 <span id="cb469-3"><a href="#cb469-3" aria-hidden="true" tabindex="-1"></a>    foo.name,</span>
-<span id="cb469-4"><a href="#cb469-4" aria-hidden="true" tabindex="-1"></a>    NULL_REAL <span class="kw">as</span> rate,</span>
-<span id="cb469-5"><a href="#cb469-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(<span class="dv">1</span> <span class="kw">AS</span> BOOL) <span class="kw">as</span> has_name,  <span class="co">-- this is a bit artificial but you get the idea</span></span>
-<span id="cb469-6"><a href="#cb469-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(<span class="dv">0</span> <span class="kw">AS</span> BOOL) <span class="kw">as</span> has_rate</span>
-<span id="cb469-7"><a href="#cb469-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> foo</span>
-<span id="cb469-8"><a href="#cb469-8" aria-hidden="true" tabindex="-1"></a><span class="kw">UNION</span> <span class="kw">ALL</span></span>
-<span id="cb469-9"><a href="#cb469-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
-<span id="cb469-10"><a href="#cb469-10" aria-hidden="true" tabindex="-1"></a>    bar.<span class="kw">id</span>,</span>
-<span id="cb469-11"><a href="#cb469-11" aria-hidden="true" tabindex="-1"></a>    NULL_TEXT <span class="kw">as</span> name,</span>
-<span id="cb469-12"><a href="#cb469-12" aria-hidden="true" tabindex="-1"></a>    bar.rate,</span>
-<span id="cb469-13"><a href="#cb469-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(<span class="dv">0</span> <span class="kw">AS</span> BOOL) <span class="kw">as</span> has_name,</span>
-<span id="cb469-14"><a href="#cb469-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(<span class="dv">1</span> <span class="kw">AS</span> BOOL) <span class="kw">as</span> has_rate</span>
-<span id="cb469-15"><a href="#cb469-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> bar</span></code></pre></div>
+<span id="cb469-4"><a href="#cb469-4" aria-hidden="true" tabindex="-1"></a>    NULL_REAL <span class="kw">as</span> rate</span>
+<span id="cb469-5"><a href="#cb469-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> foo</span>
+<span id="cb469-6"><a href="#cb469-6" aria-hidden="true" tabindex="-1"></a><span class="kw">UNION</span> <span class="kw">ALL</span></span>
+<span id="cb469-7"><a href="#cb469-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb469-8"><a href="#cb469-8" aria-hidden="true" tabindex="-1"></a>    bar.<span class="kw">id</span>,</span>
+<span id="cb469-9"><a href="#cb469-9" aria-hidden="true" tabindex="-1"></a>    NULL_TEXT <span class="kw">as</span> name,</span>
+<span id="cb469-10"><a href="#cb469-10" aria-hidden="true" tabindex="-1"></a>    bar.rate</span>
+<span id="cb469-11"><a href="#cb469-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> bar</span></code></pre></div>
+<h4 id="booleans">Booleans</h4>
+<p>There are no boolean literals in the language, but it’s very easily to create one</p>
+<p>Poor:</p>
+<div class="sourceCode" id="cb470"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb470-1"><a href="#cb470-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb470-2"><a href="#cb470-2" aria-hidden="true" tabindex="-1"></a>    foo.<span class="kw">id</span>,</span>
+<span id="cb470-3"><a href="#cb470-3" aria-hidden="true" tabindex="-1"></a>    foo.name,</span>
+<span id="cb470-4"><a href="#cb470-4" aria-hidden="true" tabindex="-1"></a>    NULL_REAL <span class="kw">as</span> rate,</span>
+<span id="cb470-5"><a href="#cb470-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(<span class="dv">1</span> <span class="kw">AS</span> BOOL) <span class="kw">as</span> has_name,  <span class="co">-- this is a bit artificial but you get the idea</span></span>
+<span id="cb470-6"><a href="#cb470-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(<span class="dv">0</span> <span class="kw">AS</span> BOOL) <span class="kw">as</span> has_rate</span>
+<span id="cb470-7"><a href="#cb470-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> foo</span>
+<span id="cb470-8"><a href="#cb470-8" aria-hidden="true" tabindex="-1"></a><span class="kw">UNION</span> <span class="kw">ALL</span></span>
+<span id="cb470-9"><a href="#cb470-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb470-10"><a href="#cb470-10" aria-hidden="true" tabindex="-1"></a>    bar.<span class="kw">id</span>,</span>
+<span id="cb470-11"><a href="#cb470-11" aria-hidden="true" tabindex="-1"></a>    NULL_TEXT <span class="kw">as</span> name,</span>
+<span id="cb470-12"><a href="#cb470-12" aria-hidden="true" tabindex="-1"></a>    bar.rate,</span>
+<span id="cb470-13"><a href="#cb470-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(<span class="dv">0</span> <span class="kw">AS</span> BOOL) <span class="kw">as</span> has_name,</span>
+<span id="cb470-14"><a href="#cb470-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(<span class="dv">1</span> <span class="kw">AS</span> BOOL) <span class="kw">as</span> has_rate</span>
+<span id="cb470-15"><a href="#cb470-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> bar</span></code></pre></div>
 <p>Actually <code>CAST(0 AS BOOL)</code> is a pretty verbose way to make a bool constant. Much easier would be <code>0==1</code> but even that leaves an expression in the generated code. We can do better still with <code>const(0==1)</code> which forces the expression to be evaluated at compile time. This leads us to the usual definitions which are preferred.</p>
-<div class="sourceCode" id="cb470"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb470-1"><a href="#cb470-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- somewhere common</span></span>
-<span id="cb470-2"><a href="#cb470-2" aria-hidden="true" tabindex="-1"></a>#define <span class="kw">TRUE</span> const(<span class="dv">1</span><span class="op">==</span><span class="dv">1</span>)</span>
-<span id="cb470-3"><a href="#cb470-3" aria-hidden="true" tabindex="-1"></a>#define <span class="kw">FALSE</span> const(<span class="dv">1</span><span class="op">==</span><span class="dv">0</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb471"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb471-1"><a href="#cb471-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- somewhere common</span></span>
+<span id="cb471-2"><a href="#cb471-2" aria-hidden="true" tabindex="-1"></a>#define <span class="kw">TRUE</span> const(<span class="dv">1</span><span class="op">==</span><span class="dv">1</span>)</span>
+<span id="cb471-3"><a href="#cb471-3" aria-hidden="true" tabindex="-1"></a>#define <span class="kw">FALSE</span> const(<span class="dv">1</span><span class="op">==</span><span class="dv">0</span>)</span></code></pre></div>
 <p>This gives you the most economy, the code gen will be just 0/1. SQLite doesn’t care about the type but CQL will get the type information it needs to make the columns of type BOOL</p>
-<div class="sourceCode" id="cb471"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb471-1"><a href="#cb471-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
-<span id="cb471-2"><a href="#cb471-2" aria-hidden="true" tabindex="-1"></a>    foo.<span class="kw">id</span>,</span>
-<span id="cb471-3"><a href="#cb471-3" aria-hidden="true" tabindex="-1"></a>    foo.name,</span>
-<span id="cb471-4"><a href="#cb471-4" aria-hidden="true" tabindex="-1"></a>    NULL_REAL <span class="kw">as</span> rate,</span>
-<span id="cb471-5"><a href="#cb471-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">TRUE</span> <span class="kw">as</span> has_name,  <span class="co">-- this is a bit artificial but you get the idea</span></span>
-<span id="cb471-6"><a href="#cb471-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FALSE</span> <span class="kw">as</span> has_rate</span>
-<span id="cb471-7"><a href="#cb471-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> foo</span>
-<span id="cb471-8"><a href="#cb471-8" aria-hidden="true" tabindex="-1"></a><span class="kw">UNION</span> <span class="kw">ALL</span></span>
-<span id="cb471-9"><a href="#cb471-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
-<span id="cb471-10"><a href="#cb471-10" aria-hidden="true" tabindex="-1"></a>    bar.<span class="kw">id</span>,</span>
-<span id="cb471-11"><a href="#cb471-11" aria-hidden="true" tabindex="-1"></a>    NULL_TEXT <span class="kw">as</span> name,</span>
-<span id="cb471-12"><a href="#cb471-12" aria-hidden="true" tabindex="-1"></a>    bar.rate,</span>
-<span id="cb471-13"><a href="#cb471-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FALSE</span> <span class="kw">as</span> has_name,</span>
-<span id="cb471-14"><a href="#cb471-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">TRUE</span> <span class="kw">as</span> has_rate</span>
-<span id="cb471-15"><a href="#cb471-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> bar</span></code></pre></div>
+<div class="sourceCode" id="cb472"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb472-1"><a href="#cb472-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb472-2"><a href="#cb472-2" aria-hidden="true" tabindex="-1"></a>    foo.<span class="kw">id</span>,</span>
+<span id="cb472-3"><a href="#cb472-3" aria-hidden="true" tabindex="-1"></a>    foo.name,</span>
+<span id="cb472-4"><a href="#cb472-4" aria-hidden="true" tabindex="-1"></a>    NULL_REAL <span class="kw">as</span> rate,</span>
+<span id="cb472-5"><a href="#cb472-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">TRUE</span> <span class="kw">as</span> has_name,  <span class="co">-- this is a bit artificial but you get the idea</span></span>
+<span id="cb472-6"><a href="#cb472-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FALSE</span> <span class="kw">as</span> has_rate</span>
+<span id="cb472-7"><a href="#cb472-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> foo</span>
+<span id="cb472-8"><a href="#cb472-8" aria-hidden="true" tabindex="-1"></a><span class="kw">UNION</span> <span class="kw">ALL</span></span>
+<span id="cb472-9"><a href="#cb472-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb472-10"><a href="#cb472-10" aria-hidden="true" tabindex="-1"></a>    bar.<span class="kw">id</span>,</span>
+<span id="cb472-11"><a href="#cb472-11" aria-hidden="true" tabindex="-1"></a>    NULL_TEXT <span class="kw">as</span> name,</span>
+<span id="cb472-12"><a href="#cb472-12" aria-hidden="true" tabindex="-1"></a>    bar.rate,</span>
+<span id="cb472-13"><a href="#cb472-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FALSE</span> <span class="kw">as</span> has_name,</span>
+<span id="cb472-14"><a href="#cb472-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">TRUE</span> <span class="kw">as</span> has_rate</span>
+<span id="cb472-15"><a href="#cb472-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> bar</span></code></pre></div>
 <h3 id="boolean-expressions-and-casewhen">Boolean expressions and CASE/WHEN</h3>
 <p>It’s easy to get carried away with the power of <code>CASE</code> expressions, I’ve seen this kind of thing:</p>
-<div class="sourceCode" id="cb472"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb472-1"><a href="#cb472-1" aria-hidden="true" tabindex="-1"></a><span class="fu">CAST</span>(<span class="cf">CASE</span> <span class="cf">WHEN</span> foo.name <span class="kw">IS</span> <span class="kw">NULL</span> <span class="cf">THEN</span> <span class="dv">0</span> <span class="cf">ELSE</span> <span class="dv">1</span> <span class="cf">END</span> <span class="kw">AS</span> BOOL)</span></code></pre></div>
+<div class="sourceCode" id="cb473"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb473-1"><a href="#cb473-1" aria-hidden="true" tabindex="-1"></a><span class="fu">CAST</span>(<span class="cf">CASE</span> <span class="cf">WHEN</span> foo.name <span class="kw">IS</span> <span class="kw">NULL</span> <span class="cf">THEN</span> <span class="dv">0</span> <span class="cf">ELSE</span> <span class="dv">1</span> <span class="cf">END</span> <span class="kw">AS</span> BOOL)</span></code></pre></div>
 <p>But this is simply</p>
-<div class="sourceCode" id="cb473"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb473-1"><a href="#cb473-1" aria-hidden="true" tabindex="-1"></a>foo.name <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span></span></code></pre></div>
+<div class="sourceCode" id="cb474"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb474-1"><a href="#cb474-1" aria-hidden="true" tabindex="-1"></a>foo.name <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span></span></code></pre></div>
 <p>In general, if your case alternates are booleans a direct boolean expression would have served you better.</p>
 <h3 id="case-and-cast-and-null">CASE and CAST and NULL</h3>
 <p>Somtimes there’s clamping or filtering going on in a case statement</p>
-<div class="sourceCode" id="cb474"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb474-1"><a href="#cb474-1" aria-hidden="true" tabindex="-1"></a><span class="fu">CAST</span>(<span class="cf">CASE</span> <span class="cf">WHEN</span> foo.name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span> <span class="cf">THEN</span> foo.name <span class="cf">ELSE</span> <span class="kw">NULL</span> <span class="cf">END</span> <span class="kw">AS</span> TEXT)</span></code></pre></div>
+<div class="sourceCode" id="cb475"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb475-1"><a href="#cb475-1" aria-hidden="true" tabindex="-1"></a><span class="fu">CAST</span>(<span class="cf">CASE</span> <span class="cf">WHEN</span> foo.name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span> <span class="cf">THEN</span> foo.name <span class="cf">ELSE</span> <span class="kw">NULL</span> <span class="cf">END</span> <span class="kw">AS</span> TEXT)</span></code></pre></div>
 <p>Here the <code>CAST</code> is not needed at all so we could go to</p>
-<div class="sourceCode" id="cb475"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb475-1"><a href="#cb475-1" aria-hidden="true" tabindex="-1"></a><span class="cf">CASE</span> <span class="cf">WHEN</span> foo.name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span> <span class="cf">THEN</span> foo.name <span class="cf">ELSE</span> <span class="kw">NULL</span> <span class="cf">END</span></span></code></pre></div>
+<div class="sourceCode" id="cb476"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb476-1"><a href="#cb476-1" aria-hidden="true" tabindex="-1"></a><span class="cf">CASE</span> <span class="cf">WHEN</span> foo.name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span> <span class="cf">THEN</span> foo.name <span class="cf">ELSE</span> <span class="kw">NULL</span> <span class="cf">END</span></span></code></pre></div>
 <p><code>NULL</code> is already the default value for the <code>ELSE</code> clause so you never need <code>ELSE NULL</code></p>
 <p>So better:</p>
-<div class="sourceCode" id="cb476"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb476-1"><a href="#cb476-1" aria-hidden="true" tabindex="-1"></a><span class="cf">CASE</span> <span class="cf">WHEN</span> foo.name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span> <span class="cf">THEN</span> foo.name <span class="cf">END</span></span></code></pre></div>
+<div class="sourceCode" id="cb477"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb477-1"><a href="#cb477-1" aria-hidden="true" tabindex="-1"></a><span class="cf">CASE</span> <span class="cf">WHEN</span> foo.name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span> <span class="cf">THEN</span> foo.name <span class="cf">END</span></span></code></pre></div>
 <h3 id="filtering-out-nulls">Filtering out NULLs</h3>
 <p>Consider</p>
-<div class="sourceCode" id="cb477"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb477-1"><a href="#cb477-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span></span>
-<span id="cb477-2"><a href="#cb477-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span> foo</span>
-<span id="cb477-3"><a href="#cb477-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WHERE</span> foo.name <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">AND</span> foo.name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span>;</span></code></pre></div>
-<p>There’s no need to test for <code>NOT NULL</code> here, the boolean will result in <code>NULL</code> if <code>foo.name</code> is null which is not true so the <code>WHERE</code> test will fail.</p>
-<p>Better:</p>
 <div class="sourceCode" id="cb478"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb478-1"><a href="#cb478-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span></span>
 <span id="cb478-2"><a href="#cb478-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span> foo</span>
-<span id="cb478-3"><a href="#cb478-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WHERE</span> foo.name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span>;</span></code></pre></div>
+<span id="cb478-3"><a href="#cb478-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WHERE</span> foo.name <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">AND</span> foo.name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span>;</span></code></pre></div>
+<p>There’s no need to test for <code>NOT NULL</code> here, the boolean will result in <code>NULL</code> if <code>foo.name</code> is null which is not true so the <code>WHERE</code> test will fail.</p>
+<p>Better:</p>
+<div class="sourceCode" id="cb479"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb479-1"><a href="#cb479-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span></span>
+<span id="cb479-2"><a href="#cb479-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span> foo</span>
+<span id="cb479-3"><a href="#cb479-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WHERE</span> foo.name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span>;</span></code></pre></div>
 <h3 id="not-null-boolean-expressions">Not null boolean expressions</h3>
 <p>In this statement we do not want to have a null result for the boolean expression</p>
-<div class="sourceCode" id="cb479"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb479-1"><a href="#cb479-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span></span>
-<span id="cb479-2"><a href="#cb479-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">id</span>,</span>
-<span id="cb479-3"><a href="#cb479-3" aria-hidden="true" tabindex="-1"></a>    name,</span>
-<span id="cb479-4"><a href="#cb479-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(IFNULL(name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span>, <span class="dv">0</span>) <span class="kw">AS</span> BOOL) <span class="kw">AS</span> name_bigger_than_m</span>
-<span id="cb479-5"><a href="#cb479-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span> FOO;</span></code></pre></div>
-<p>So now we’ve made several mistakes. We could have used the usual <code>FALSE</code> defintion to avoid the cast. But even that would have left us with an IFNULL that’s harder to read. Here’s a much simpler formulation:</p>
 <div class="sourceCode" id="cb480"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb480-1"><a href="#cb480-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span></span>
 <span id="cb480-2"><a href="#cb480-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">id</span>,</span>
 <span id="cb480-3"><a href="#cb480-3" aria-hidden="true" tabindex="-1"></a>    name,</span>
-<span id="cb480-4"><a href="#cb480-4" aria-hidden="true" tabindex="-1"></a>    name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span> <span class="kw">IS</span> <span class="kw">TRUE</span> <span class="kw">AS</span> name_bigger_than_m</span>
+<span id="cb480-4"><a href="#cb480-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(IFNULL(name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span>, <span class="dv">0</span>) <span class="kw">AS</span> BOOL) <span class="kw">AS</span> name_bigger_than_m</span>
 <span id="cb480-5"><a href="#cb480-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span> FOO;</span></code></pre></div>
+<p>So now we’ve made several mistakes. We could have used the usual <code>FALSE</code> defintion to avoid the cast. But even that would have left us with an IFNULL that’s harder to read. Here’s a much simpler formulation:</p>
+<div class="sourceCode" id="cb481"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb481-1"><a href="#cb481-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span></span>
+<span id="cb481-2"><a href="#cb481-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">id</span>,</span>
+<span id="cb481-3"><a href="#cb481-3" aria-hidden="true" tabindex="-1"></a>    name,</span>
+<span id="cb481-4"><a href="#cb481-4" aria-hidden="true" tabindex="-1"></a>    name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span> <span class="kw">IS</span> <span class="kw">TRUE</span> <span class="kw">AS</span> name_bigger_than_m</span>
+<span id="cb481-5"><a href="#cb481-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span> FOO;</span></code></pre></div>
 <p>Even without the <code>TRUE</code> macro you could do <code>IS 1</code> above and still get a result of type <code>BOOL NOT NULL</code></p>
 <h3 id="using-is-when-it-makes-sense-to-do-so">Using <code>IS</code> when it makes sense to do so</h3>
 <p>This kind of boolean expression is also verbose for no reason</p>
-<div class="sourceCode" id="cb481"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb481-1"><a href="#cb481-1" aria-hidden="true" tabindex="-1"></a>    rate <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">AND</span> rate <span class="op">=</span> <span class="dv">20</span></span></code></pre></div>
+<div class="sourceCode" id="cb482"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb482-1"><a href="#cb482-1" aria-hidden="true" tabindex="-1"></a>    rate <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">AND</span> rate <span class="op">=</span> <span class="dv">20</span></span></code></pre></div>
 <p>In a <code>WHERE</code> clause probably <code>rate = 20</code> suffices but even if you really need a <code>NOT NULL BOOL</code> result the expression above is exactly what the <code>IS</code> operator is for. e.g.</p>
-<div class="sourceCode" id="cb482"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb482-1"><a href="#cb482-1" aria-hidden="true" tabindex="-1"></a>    rate <span class="kw">IS</span> <span class="dv">20</span></span></code></pre></div>
+<div class="sourceCode" id="cb483"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb483-1"><a href="#cb483-1" aria-hidden="true" tabindex="-1"></a>    rate <span class="kw">IS</span> <span class="dv">20</span></span></code></pre></div>
 <p>The <code>IS</code> operator is frequently avoided except for <code>IS NULL</code> and <code>IS NOT NULL</code> but it’s a general equality operator with the added semantic that it never returns <code>NULL</code>. <code>NULL IS NULL</code> is true. <code>NULL IS [anything not null]</code> is false.</p>
 <h3 id="left-joins-that-are-not-left-joins">Left joins that are not left joins</h3>
 <p>Consider</p>
-<div class="sourceCode" id="cb483"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb483-1"><a href="#cb483-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span> foo.<span class="kw">id</span>,</span>
-<span id="cb483-2"><a href="#cb483-2" aria-hidden="true" tabindex="-1"></a>         foo.name,</span>
-<span id="cb483-3"><a href="#cb483-3" aria-hidden="true" tabindex="-1"></a>         bar.rate</span>
-<span id="cb483-4"><a href="#cb483-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> foo</span>
-<span id="cb483-5"><a href="#cb483-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">LEFT</span> <span class="kw">JOIN</span> bar <span class="kw">ON</span> foo.<span class="kw">id</span> <span class="op">=</span> bar.<span class="kw">id</span></span>
-<span id="cb483-6"><a href="#cb483-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">WHERE</span> bar.rate <span class="op">&gt;</span> <span class="dv">5</span>;</span></code></pre></div>
-<p>This is no longer a left join because the <code>WHERE</code> clause demands a value for at least one column from <code>bar</code>.</p>
-<p>Better:</p>
 <div class="sourceCode" id="cb484"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb484-1"><a href="#cb484-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span> foo.<span class="kw">id</span>,</span>
 <span id="cb484-2"><a href="#cb484-2" aria-hidden="true" tabindex="-1"></a>         foo.name,</span>
 <span id="cb484-3"><a href="#cb484-3" aria-hidden="true" tabindex="-1"></a>         bar.rate</span>
 <span id="cb484-4"><a href="#cb484-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> foo</span>
-<span id="cb484-5"><a href="#cb484-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">INNER</span> <span class="kw">JOIN</span> bar <span class="kw">ON</span> foo.<span class="kw">id</span> <span class="op">=</span> bar.<span class="kw">id</span></span>
+<span id="cb484-5"><a href="#cb484-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">LEFT</span> <span class="kw">JOIN</span> bar <span class="kw">ON</span> foo.<span class="kw">id</span> <span class="op">=</span> bar.<span class="kw">id</span></span>
 <span id="cb484-6"><a href="#cb484-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">WHERE</span> bar.rate <span class="op">&gt;</span> <span class="dv">5</span>;</span></code></pre></div>
+<p>This is no longer a left join because the <code>WHERE</code> clause demands a value for at least one column from <code>bar</code>.</p>
+<p>Better:</p>
+<div class="sourceCode" id="cb485"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb485-1"><a href="#cb485-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span> foo.<span class="kw">id</span>,</span>
+<span id="cb485-2"><a href="#cb485-2" aria-hidden="true" tabindex="-1"></a>         foo.name,</span>
+<span id="cb485-3"><a href="#cb485-3" aria-hidden="true" tabindex="-1"></a>         bar.rate</span>
+<span id="cb485-4"><a href="#cb485-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> foo</span>
+<span id="cb485-5"><a href="#cb485-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">INNER</span> <span class="kw">JOIN</span> bar <span class="kw">ON</span> foo.<span class="kw">id</span> <span class="op">=</span> bar.<span class="kw">id</span></span>
+<span id="cb485-6"><a href="#cb485-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">WHERE</span> bar.rate <span class="op">&gt;</span> <span class="dv">5</span>;</span></code></pre></div>
 <h2 id="appendix-8-cql-best-practices">Appendix 8: CQL Best Practices</h2>
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.

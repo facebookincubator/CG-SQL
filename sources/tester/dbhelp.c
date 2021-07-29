@@ -26,7 +26,7 @@ extern CQL_WARN_UNUSED cql_code dbhelp_source(sqlite3 *_Nonnull _db_, sqlite3_st
 //
 
 
-// Generated from dbhelp.sql:38
+// Generated from dbhelp.sql:40
 
 /*
 CREATE PROC dbhelp_setup ()
@@ -72,7 +72,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:48
+// Generated from dbhelp.sql:50
 
 /*
 CREATE PROC dbhelp_prev_line (line_ INTEGER NOT NULL, OUT prev INTEGER NOT NULL)
@@ -122,7 +122,7 @@ CQL_WARN_UNUSED cql_code dbhelp_prev_line(sqlite3 *_Nonnull _db_, cql_int32 line
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:54
+// Generated from dbhelp.sql:56
 
 /*
 CREATE PROC dbhelp_add (line INTEGER NOT NULL, data TEXT NOT NULL)
@@ -155,7 +155,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:59
+// Generated from dbhelp.sql:61
 
 /*
 CREATE PROC dbhelp_add_source (line INTEGER NOT NULL, data TEXT NOT NULL)
@@ -188,7 +188,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:68
+// Generated from dbhelp.sql:70
 
 /*
 CREATE PROC dbhelp_dump_line (line_ INTEGER NOT NULL)
@@ -247,7 +247,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:76
+// Generated from dbhelp.sql:78
 
 /*
 CREATE PROC dbhelp_find (line_ INTEGER NOT NULL, pattern TEXT NOT NULL, OUT search_line INTEGER NOT NULL, OUT found INTEGER NOT NULL)
@@ -305,7 +305,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:85
+// Generated from dbhelp.sql:87
 
 /*
 CREATE PROC dbhelp_dump_source (line1 INTEGER NOT NULL, line2 INTEGER NOT NULL)
@@ -365,7 +365,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:90
+// Generated from dbhelp.sql:92
 
 /*
 CREATE PROC dbhelp_source ()

@@ -8425,7 +8425,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu Jul 22 21:43:19 PDT 2021
+Snapshot as of Wed Jul 28 15:02:30 PDT 2021
 
 ### Operators and Literals
 
@@ -8524,6 +8524,7 @@ any_stmt:
   | declare_enum_stmt
   | declare_func_stmt
   | declare_out_call_stmt
+  | declare_proc_no_check_stmt
   | declare_proc_stmt
   | declare_schema_region_stmt
   | declare_stmt
@@ -8544,6 +8545,7 @@ any_stmt:
   | fetch_call_stmt
   | fetch_stmt
   | fetch_values_stmt
+  | guard_stmt
   | if_stmt
   | insert_stmt
   | leave_stmt
@@ -9516,6 +9518,10 @@ declare_func_stmt:
 procedure: "PROC" | "PROCEDURE"
   ;
 
+declare_proc_no_check_stmt:
+  "DECLARE" procedure name "NO" "CHECK"
+  ;
+
 declare_proc_stmt:
   "DECLARE" procedure name '(' params ')'
   | "DECLARE" procedure name '(' params ')' '(' typed_names ')'
@@ -9691,6 +9697,18 @@ opt_elseif_list:
   | elseif_list
   ;
 
+control_stmt:
+  commit_return_stmt
+  | continue_stmt
+  | leave_stmt
+  | return_stmt
+  | rollback_return_stmt
+  | throw_stmt
+
+guard_stmt:
+  "IF" expr control_stmt
+  ;
+
 transaction_mode:
   /* nil */
   | "DEFERRED"
@@ -9816,7 +9834,6 @@ enforcement_options:
   | "JOIN"
   | "UPSERT" "STATEMENT"
   | "WINDOW" function
-  | procedure
   | "WITHOUT" "ROWID"
   | "TRANSACTION"
   | "SELECT" "IF" "NOTHING"
@@ -9830,6 +9847,7 @@ enforcement_options:
   | ENCODE CONTEXT_TYPE "BOOL"
   | ENCODE CONTEXT_TYPE "TEXT"
   | ENCODE CONTEXT_TYPE "BLOB"
+  | "IS" "TRUE"
   ;
 
 enforce_strict_stmt:
@@ -10521,7 +10539,7 @@ the scope you are trying to use it in.
 
 Two expressions of type object are holding a different object type e.g.
 
-```
+```sql
 declare x object<Foo>;
 declare y object<Bar>;
 set x := y;
@@ -12598,17 +12616,20 @@ You could imagine a scheme where the extension fragments are allowed to use a su
 
 -----
 
-### CQL0323: calls to undeclared procedures are forbidden if strict procedure mode is enabled; declaration missing or typo 'procedure_name'
-
-`@enforce_strict PROCEDURE` has been enabled.   In this mode you may only call procedures that have a declaration.
-In `@enforce_normal PROCEDURE` mode, a call to an unknown proc is interpreted as a simple C call.  This lets you call
-functions like `printf` in normal mode, even if they have a strange calling convention.  Strict mode limits you to declared procedures
-and is generally safer.
+### CQL0323: calls to undeclared procedures are forbidden; declaration missing or typo 'procedure'
 
 If you get this error it means that there is a typo in the name of the procedure you are trying to call, or else the declaration for the
 procedure is totally missing.  Maybe a necessary `#include` needs to be added to the compiland.
 
-If you really need to call a c runtime function, especially one with varargs, then you must temporarily switch back to `@enforce_normal` for procedures.
+Previously if you attempted to call an unknown CQL would produce a generic function call. If you need to do this, especially a functionwith varargs,
+then you must declare the function  with something like:
+
+`DECLARE PROCEDURE printf NO CHECK;`
+
+This option only works for void functions.  For more complex signatures check `DECLARE FUNCTION` and `DECLARE SELECT FUNCTION`.  Usually these will require a
+simple wrapper to call from CQL.
+
+In all cases there must be some kind of declaration,to avoid mysterious linker failures or argument signature mismatches.
 
 -----
 
@@ -13005,7 +13026,7 @@ get a build time failure from CQL rather than a run time failure from SQLite.
 
 There is an unfortunate memory leak in older versions of SQLite (research pending on particular versions, but 3.28.0 has it).  It causes this pattern to leak:
 
-```
+```sql
 -- must be autoinc table
 create table x (
   pk integer primary key autoincrement
@@ -13019,7 +13040,7 @@ insert into x
 
 You can workaround this with a couple of fairly simple rewrites.  This form is probably the cleanest.
 
-```
+```sql
 with
 cte (pk) as (select .. anything you need)
 insert into x
@@ -13028,7 +13049,7 @@ insert into x
 
 Simply wrapping your desired select in a nested select also suffices.  So long as the top level is simple.
 
-```
+```sql
 insert into x
   select * from (
     select anything you need....
@@ -13176,7 +13197,7 @@ course they are all covered.  So with `ALL VALUES` there can be no `ELSE`.
 
 You can list items that have no action with this form:
 
-```
+```sql
    WHEN 10, 15 THEN NOTHING -- explicitly do nothing in these cases so they are still covered
 ```
 
@@ -13281,14 +13302,14 @@ on every such operation which would be far too expensive.
 
 A table valued function should be used like a table e.g.
 
-```
+```sql
 -- this is right
 select * from table_valued_func(5);
 ```
 
 Not like a value e.g.
 
-```
+```sql
 -- this is wrong
 select table_valued_func(5);
 
@@ -13370,9 +13391,26 @@ encode context column must match the specified type in vault_senstive attribute 
 @attribute(cql:vault_sensitive=(encode_context_col, (col1, col2, ...))
 
 ----
-CQL 0403 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+### CQL0403: operator may not be used because it is not supported on old versions of SQLite, 'operator'
+
+The indicated operator has been suppressed with `@enforce_strict is true` because it is not available
+on older versions of sqlite.
+
 ----
-CQL 0404 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+### CQL0404: procedure cannot be both a normal procedure and an unchecked procedure, 'procedure_name'
+
+The construct:
+
+```sql
+DECLARE PROCEDURE printf NO CHECK;
+```
+
+Is used to tell CQL about an external procedure that might take any combination of arguments.  The canonical example is
+`printf`. All the arguments are converted from CQL types to basic C types when making the call (e.g. TEXT variables
+become temporary C strings).  Once a procedure has been declared in this way it can't then also be declared as a
+normal CQL procedure via `CREATE` or `DECLARE PROCEDURE`.  Likewise a normal procedure can't be redeclared with the `NO CHECK`
+pattern.
+
 ----
 CQL 0405 : unused, this was added to prevent merge conflicts at the end on literally every checkin
 ----
@@ -13402,7 +13440,7 @@ CQL 0410 : unused, this was added to prevent merge conflicts at the end on liter
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Thu Jul 22 21:43:22 PDT 2021
+Snapshot as of Wed Jul 28 15:02:31 PDT 2021
 
 ### Rules
 

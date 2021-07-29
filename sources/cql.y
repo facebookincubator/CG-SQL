@@ -1949,7 +1949,6 @@ enforcement_options:
   | ENCODE CONTEXT_TYPE BOOL_ { $enforcement_options = new_ast_opt(ENFORCE_ENCODE_CONTEXT_TYPE_BOOL); }
   | ENCODE CONTEXT_TYPE TEXT { $enforcement_options = new_ast_opt(ENFORCE_ENCODE_CONTEXT_TYPE_TEXT); }
   | ENCODE CONTEXT_TYPE BLOB { $enforcement_options = new_ast_opt(ENFORCE_ENCODE_CONTEXT_TYPE_BLOB); }
-  | procedure { $enforcement_options = new_ast_opt(ENFORCE_IS_TRUE); } /* tempo hack: let previous schema boil out the strict proc */
   | IS_TRUE { $enforcement_options = new_ast_opt(ENFORCE_IS_TRUE); }
   ;
 

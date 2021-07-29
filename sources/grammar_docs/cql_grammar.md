@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu Jul 22 21:43:19 PDT 2021
+Snapshot as of Wed Jul 28 15:02:30 PDT 2021
 
 ### Operators and Literals
 
@@ -112,6 +112,7 @@ any_stmt:
   | declare_enum_stmt
   | declare_func_stmt
   | declare_out_call_stmt
+  | declare_proc_no_check_stmt
   | declare_proc_stmt
   | declare_schema_region_stmt
   | declare_stmt
@@ -132,6 +133,7 @@ any_stmt:
   | fetch_call_stmt
   | fetch_stmt
   | fetch_values_stmt
+  | guard_stmt
   | if_stmt
   | insert_stmt
   | leave_stmt
@@ -1104,6 +1106,10 @@ declare_func_stmt:
 procedure: "PROC" | "PROCEDURE"
   ;
 
+declare_proc_no_check_stmt:
+  "DECLARE" procedure name "NO" "CHECK"
+  ;
+
 declare_proc_stmt:
   "DECLARE" procedure name '(' params ')'
   | "DECLARE" procedure name '(' params ')' '(' typed_names ')'
@@ -1279,6 +1285,18 @@ opt_elseif_list:
   | elseif_list
   ;
 
+control_stmt:
+  commit_return_stmt
+  | continue_stmt
+  | leave_stmt
+  | return_stmt
+  | rollback_return_stmt
+  | throw_stmt
+
+guard_stmt:
+  "IF" expr control_stmt
+  ;
+
 transaction_mode:
   /* nil */
   | "DEFERRED"
@@ -1404,7 +1422,6 @@ enforcement_options:
   | "JOIN"
   | "UPSERT" "STATEMENT"
   | "WINDOW" function
-  | procedure
   | "WITHOUT" "ROWID"
   | "TRANSACTION"
   | "SELECT" "IF" "NOTHING"
@@ -1418,6 +1435,7 @@ enforcement_options:
   | ENCODE CONTEXT_TYPE "BOOL"
   | ENCODE CONTEXT_TYPE "TEXT"
   | ENCODE CONTEXT_TYPE "BLOB"
+  | "IS" "TRUE"
   ;
 
 enforce_strict_stmt:
