@@ -794,6 +794,14 @@
 <li><a href="#control-flow">Control Flow</a></li>
 <li><a href="#manual-control-of-results">Manual Control of Results</a></li>
 </ul></li>
+<li><a href="#appendix-9-using-the-cql-amalgam">Appendix 9: Using the CQL Amalgam</a>
+<ul>
+<li><a href="#building-the-amalgam">Building the Amalgam</a></li>
+<li><a href="#testing-the-amalgam">Testing the Amalgam</a></li>
+<li><a href="#using-the-amalgam">Using the Amalgam</a></li>
+<li><a href="#cql-amalgam-options">CQL Amalgam Options</a></li>
+<li><a href="#other-notes">Other Notes</a></li>
+</ul></li>
 </ul>
 </nav>
 <!--- @generated -->
@@ -6536,7 +6544,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Wed Jul 28 15:02:30 PDT 2021</p>
+<p>Snapshot as of Thu Jul 29 14:24:50 PDT 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -9832,7 +9840,7 @@ enforce_pop_stmt:
 </table>
 <p>– This source code is licensed under the MIT license found in the – LICENSE file in the root directory of this source tree. –&gt;</p>
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Wed Jul 28 15:02:31 PDT 2021</p>
+<p>Snapshot as of Thu Jul 29 14:24:50 PDT 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 
@@ -11667,5 +11675,188 @@ fetch C USING
 <li><p>If you know you are producing exactly one row <code>OUT</code> is more economical than <code>SELECT</code></p></li>
 <li><p>If you need complete flexibility on what rows to produce (e.g. skip some, add extras, mutate some) then <code>OUT UNION</code> will give you that, use it only when needed, it’s more expensive than just <code>SELECT</code></p></li>
 </ul>
+<h2 id="appendix-9-using-the-cql-amalgam">Appendix 9: Using the CQL Amalgam</h2>
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
+<p>This is a brief discussion of the CQL Amalgam and its normal usage patterns.</p>
+<h3 id="building-the-amalgam">Building the Amalgam</h3>
+<p>The amalgam has to include the results of bison and flex, so a normal build must run first. The simplest way to build it starting from the <code>sources</code> directory is:</p>
+<div class="sourceCode" id="cb486"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb486-1"><a href="#cb486-1" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span></span>
+<span id="cb486-2"><a href="#cb486-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./make_amalgam.sh</span></span></code></pre></div>
+<p>The result goes in <code>out/cql_amalgam.c</code>. It can then be built using <code>cc</code> with whatever flags you might desire. With a few <code>-D</code> directives it can readily be compiled with Microsoft C and it also works with Emscripten (<code>emcc</code>) basically unchanged. Clang and Gcc of course also work.</p>
+<p>The standard test script <code>test.sh</code> builds the amalgam and attempts to compile it as well, this ensures that the amalgam can at least compile at all times.</p>
+<h3 id="testing-the-amalgam">Testing the Amalgam</h3>
+<p>Of course you can do whatever tests you might like by simply compiling the amalgam as is and then using it to compile things. But importantly the test script <code>test.sh</code> can test the amalgam build like so:</p>
+<div class="sourceCode" id="cb487"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb487-1"><a href="#cb487-1" aria-hidden="true" tabindex="-1"></a><span class="ex">test.sh</span> <span class="at">--use_amalgam</span></span></code></pre></div>
+<p>This runs all the normal tests using the binary built from the amalgam rather than the normal binary.</p>
+<p>Normal CQL development practices result in this happening pretty often so the amalgam tends to stay in good shape. The code largely works in either form with very few affordances for the amalgam build needed. Most developers don’t even think about the amalgam build flavor; to a first approximation “it just works”.</p>
+<h3 id="using-the-amalgam">Using the Amalgam</h3>
+<p>To use the amalgam you’ll want to do something like this:</p>
+<div class="sourceCode" id="cb488"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb488-1"><a href="#cb488-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#define CQL_IS_NOT_MAIN 1</span></span>
+<span id="cb488-2"><a href="#cb488-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb488-3"><a href="#cb488-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Suppresses a bunch of warnings because the code</span></span>
+<span id="cb488-4"><a href="#cb488-4" aria-hidden="true" tabindex="-1"></a><span class="co">// is in an #include context</span></span>
+<span id="cb488-5"><a href="#cb488-5" aria-hidden="true" tabindex="-1"></a><span class="co">// PR&#39;s to remove these are welcome :D</span></span>
+<span id="cb488-6"><a href="#cb488-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#pragma clang diagnostic ignored &quot;-Wnullability-completeness&quot;</span></span>
+<span id="cb488-7"><a href="#cb488-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb488-8"><a href="#cb488-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&quot;cql_amalgam.c&quot;</span></span>
+<span id="cb488-9"><a href="#cb488-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb488-10"><a href="#cb488-10" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> go_for_it<span class="op">(</span><span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>your_buffer<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb488-11"><a href="#cb488-11" aria-hidden="true" tabindex="-1"></a>  YY_BUFFER_STATE my_string_buffer <span class="op">=</span> yy_scan_string<span class="op">(</span>your_buffer<span class="op">);</span></span>
+<span id="cb488-12"><a href="#cb488-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb488-13"><a href="#cb488-13" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Note: &quot;--in&quot; is irrelevant because the scanner is</span></span>
+<span id="cb488-14"><a href="#cb488-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">// going to read from the buffer above.</span></span>
+<span id="cb488-15"><a href="#cb488-15" aria-hidden="true" tabindex="-1"></a>  <span class="co">//</span></span>
+<span id="cb488-16"><a href="#cb488-16" aria-hidden="true" tabindex="-1"></a>  <span class="co">// If you don&#39;t use yy_scan_string, you could use &quot;--in&quot;</span></span>
+<span id="cb488-17"><a href="#cb488-17" aria-hidden="true" tabindex="-1"></a>  <span class="co">// to get data from a file.</span></span>
+<span id="cb488-18"><a href="#cb488-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb488-19"><a href="#cb488-19" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int</span> argc <span class="op">=</span> <span class="dv">4</span><span class="op">;</span></span>
+<span id="cb488-20"><a href="#cb488-20" aria-hidden="true" tabindex="-1"></a>  <span class="dt">char</span> <span class="op">*</span>argv<span class="op">[]</span> <span class="op">=</span> <span class="op">{</span> <span class="st">&quot;cql&quot;</span><span class="op">,</span> <span class="st">&quot;--cg&quot;</span><span class="op">,</span> <span class="st">&quot;foo.h&quot;</span><span class="op">,</span> <span class="st">&quot;foo.c&quot;</span> <span class="op">};</span></span>
+<span id="cb488-21"><a href="#cb488-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb488-22"><a href="#cb488-22" aria-hidden="true" tabindex="-1"></a>  cql_main<span class="op">(</span>argc<span class="op">,</span> argv<span class="op">);</span></span>
+<span id="cb488-23"><a href="#cb488-23" aria-hidden="true" tabindex="-1"></a>  yy_delete_buffer<span class="op">(</span>my_string_buffer<span class="op">);</span></span>
+<span id="cb488-24"><a href="#cb488-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>So the general pattern is:</p>
+<ul>
+<li>predefine the options you want to use (see below)</li>
+<li>include the amalgam</li>
+<li>add any functions you want that will call the amalgam</li>
+</ul>
+<p>Most amalgam functions are <code>static</code> to avoid name conflicts. You will want to create your own public functions such as <code>go_for_it</code> above that use the amalgam in all the ways you desire.</p>
+<p>You’ll want to avoid calling any internal functions other than <code>cql_main</code> because they are liable to change.</p>
+<p>NOTE: The amalgam is C code not C++ code. Do not attempt to use it inside of an <code>extern "C"</code> block in a C++ file. It won’t build. If you want a C++ API expose the C functions you need and write a wrapper class.</p>
+<h3 id="cql-amalgam-options">CQL Amalgam Options</h3>
+<p>The amalgam includes the following useful <code>#ifdef</code> options to allow you to customize it.</p>
+<ul>
+<li>CQL_NO_SYSTEM_HEADERS</li>
+<li>CQL_NO_DIAGNOSTIC_BLOCK</li>
+<li>cql_emit_error</li>
+<li>cql_emit_output</li>
+<li>cql_open_file_for_write</li>
+<li>cql_write_file</li>
+</ul>
+<h4 id="cql_no_system_headers">CQL_NO_SYSTEM_HEADERS</h4>
+<p>The amalgam includes the normal <code>#include</code> directives needed to make it compile. Things like stdio and such. In your situation these headers may not be appropriate. If <code>CQL_NO_SYSTEM_HEADERS</code> is defined then the amalgam will not include anything; you can then add whatever headers you need before you include the amalgam.</p>
+<h4 id="cql_no_diagnostic_block">CQL_NO_DIAGNOSTIC_BLOCK</h4>
+<p>The amalgam includes a set of recommended directives for warnings to suppress and include. If you want to make other choices for these you can suppress the defaults by defining <code>CQL_NO_DIAGNOSTIC_BLOCK</code>; you can then add whatever diagnostic pragmas you want/need.</p>
+<h4 id="cql_emit_error">cql_emit_error</h4>
+<p>The amalgam uses <code>cql_emit_error</code> to write its messages to stderr. The documentation is included in the code which is attached here. If you want the error messages to go somewhere else, define <code>cql_emit_error</code> as the name of your error handling function. It should accept a <code>const char *</code> and record that string however you deem appropriate.</p>
+<div class="sourceCode" id="cb489"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb489-1"><a href="#cb489-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef cql_emit_error</span></span>
+<span id="cb489-2"><a href="#cb489-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb489-3"><a href="#cb489-3" aria-hidden="true" tabindex="-1"></a><span class="co">// CQL &quot;stderr&quot; outputs are emitted with this API.</span></span>
+<span id="cb489-4"><a href="#cb489-4" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
+<span id="cb489-5"><a href="#cb489-5" aria-hidden="true" tabindex="-1"></a><span class="co">// You can define it to be a method of your choice with</span></span>
+<span id="cb489-6"><a href="#cb489-6" aria-hidden="true" tabindex="-1"></a><span class="co">// &quot;#define cql_emit_error your_method&quot; and then your method</span></span>
+<span id="cb489-7"><a href="#cb489-7" aria-hidden="true" tabindex="-1"></a><span class="co">// will get the data instead. This will be whatever output the</span></span>
+<span id="cb489-8"><a href="#cb489-8" aria-hidden="true" tabindex="-1"></a><span class="co">// compiler would have emitted to to stderr.  This includes</span></span>
+<span id="cb489-9"><a href="#cb489-9" aria-hidden="true" tabindex="-1"></a><span class="co">// semantic errors or invalid argument combinations.  Note that</span></span>
+<span id="cb489-10"><a href="#cb489-10" aria-hidden="true" tabindex="-1"></a><span class="co">// CQL never emits error fragments with this API, you always</span></span>
+<span id="cb489-11"><a href="#cb489-11" aria-hidden="true" tabindex="-1"></a><span class="co">// get all the text of one error.  This is important if you</span></span>
+<span id="cb489-12"><a href="#cb489-12" aria-hidden="true" tabindex="-1"></a><span class="co">// are filtering or looking for particular errors in a test</span></span>
+<span id="cb489-13"><a href="#cb489-13" aria-hidden="true" tabindex="-1"></a><span class="co">// harness or some such.</span></span>
+<span id="cb489-14"><a href="#cb489-14" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
+<span id="cb489-15"><a href="#cb489-15" aria-hidden="true" tabindex="-1"></a><span class="co">// You must copy the memory if you intend to keep it. &quot;data&quot; will</span></span>
+<span id="cb489-16"><a href="#cb489-16" aria-hidden="true" tabindex="-1"></a><span class="co">// be freed.</span></span>
+<span id="cb489-17"><a href="#cb489-17" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
+<span id="cb489-18"><a href="#cb489-18" aria-hidden="true" tabindex="-1"></a><span class="co">// Note: you may use cql_cleanup_and_exit to force a failure from</span></span>
+<span id="cb489-19"><a href="#cb489-19" aria-hidden="true" tabindex="-1"></a><span class="co">// within this API but doing so might result in unexpected cleanup</span></span>
+<span id="cb489-20"><a href="#cb489-20" aria-hidden="true" tabindex="-1"></a><span class="co">// paths that have not been tested.</span></span>
+<span id="cb489-21"><a href="#cb489-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb489-22"><a href="#cb489-22" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> cql_emit_error<span class="op">(</span><span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>err<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb489-23"><a href="#cb489-23" aria-hidden="true" tabindex="-1"></a>  fprintf<span class="op">(</span>stderr<span class="op">,</span> <span class="st">&quot;%s&quot;</span><span class="op">,</span> err<span class="op">);</span></span>
+<span id="cb489-24"><a href="#cb489-24" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>error_capture<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb489-25"><a href="#cb489-25" aria-hidden="true" tabindex="-1"></a>    bprintf<span class="op">(</span>error_capture<span class="op">,</span> <span class="st">&quot;%s&quot;</span><span class="op">,</span> err<span class="op">);</span></span>
+<span id="cb489-26"><a href="#cb489-26" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb489-27"><a href="#cb489-27" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb489-28"><a href="#cb489-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb489-29"><a href="#cb489-29" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span></code></pre></div>
+<p>Typically you would <code>#define cql_emit_error your_error_function</code> before you include the amalgam and then define your_error_function elsewhere in that file (before or after the amalgam is included are both fine).</p>
+<h4 id="cql_emit_output">cql_emit_output</h4>
+<p>The amalgam uses <code>cql_emit_output</code> to write its messages to stdout. The documentation is included in the code which is attached here. If you want the standard output to go somewhere else, define <code>cql_emit_output</code> as the name of your output handling function. It should accept a <code>const char *</code> and record that string however you deem appropriate.</p>
+<div class="sourceCode" id="cb490"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb490-1"><a href="#cb490-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef cql_emit_output</span></span>
+<span id="cb490-2"><a href="#cb490-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb490-3"><a href="#cb490-3" aria-hidden="true" tabindex="-1"></a><span class="co">// CQL &quot;stdout&quot; outputs are emitted (in arbitrarily small pieces)</span></span>
+<span id="cb490-4"><a href="#cb490-4" aria-hidden="true" tabindex="-1"></a><span class="co">// with this API.</span></span>
+<span id="cb490-5"><a href="#cb490-5" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
+<span id="cb490-6"><a href="#cb490-6" aria-hidden="true" tabindex="-1"></a><span class="co">// You can define it to be a method of your choice with</span></span>
+<span id="cb490-7"><a href="#cb490-7" aria-hidden="true" tabindex="-1"></a><span class="co">// &quot;#define cql_emit_output your_method&quot; and then your method will</span></span>
+<span id="cb490-8"><a href="#cb490-8" aria-hidden="true" tabindex="-1"></a><span class="co">// get the data instead. This will be whatever output the</span></span>
+<span id="cb490-9"><a href="#cb490-9" aria-hidden="true" tabindex="-1"></a><span class="co">// compiler would have emitted to to stdout.  This is usually</span></span>
+<span id="cb490-10"><a href="#cb490-10" aria-hidden="true" tabindex="-1"></a><span class="co">// reformated CQL or semantic trees and such -- not the normal </span></span>
+<span id="cb490-11"><a href="#cb490-11" aria-hidden="true" tabindex="-1"></a><span class="co">// compiler output.</span></span>
+<span id="cb490-12"><a href="#cb490-12" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
+<span id="cb490-13"><a href="#cb490-13" aria-hidden="true" tabindex="-1"></a><span class="co">// You must copy the memory if you intend to keep it. &quot;data&quot; will</span></span>
+<span id="cb490-14"><a href="#cb490-14" aria-hidden="true" tabindex="-1"></a><span class="co">// be freed.</span></span>
+<span id="cb490-15"><a href="#cb490-15" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
+<span id="cb490-16"><a href="#cb490-16" aria-hidden="true" tabindex="-1"></a><span class="co">// Note: you may use cql_cleanup_and_exit to force a failure from</span></span>
+<span id="cb490-17"><a href="#cb490-17" aria-hidden="true" tabindex="-1"></a><span class="co">// within this API but doing so might result in unexpected cleanup</span></span>
+<span id="cb490-18"><a href="#cb490-18" aria-hidden="true" tabindex="-1"></a><span class="co">// paths that have not been tested.</span></span>
+<span id="cb490-19"><a href="#cb490-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb490-20"><a href="#cb490-20" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> cql_emit_output<span class="op">(</span><span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>msg<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb490-21"><a href="#cb490-21" aria-hidden="true" tabindex="-1"></a>  printf<span class="op">(</span><span class="st">&quot;%s&quot;</span><span class="op">,</span> msg<span class="op">);</span></span>
+<span id="cb490-22"><a href="#cb490-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb490-23"><a href="#cb490-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb490-24"><a href="#cb490-24" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span></code></pre></div>
+<p>Typically you would <code>#define cql_emit_output your_output_function</code> before you include the amalgam and then define your_error_function elsewhere in that file (before or after the amalgam is included are both fine).</p>
+<h4 id="cql_open_file_for_write">cql_open_file_for_write</h4>
+<p>If you still want normal file i/o for your output but you simply want to control the placement of the output (such as forcing it to be on some virtual drive) you can replace this function by defining <code>cql_open_file_for_write</code>.</p>
+<p>If all you need to do is control the origin of the <code>FILE *</code> that is written to, you can replace just this function.</p>
+<div class="sourceCode" id="cb491"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb491-1"><a href="#cb491-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef cql_open_file_for_write</span></span>
+<span id="cb491-2"><a href="#cb491-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb491-3"><a href="#cb491-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Not a normal integration point, the normal thing to do is</span></span>
+<span id="cb491-4"><a href="#cb491-4" aria-hidden="true" tabindex="-1"></a><span class="co">// replace cql_write_file but if all you need to do is adjust</span></span>
+<span id="cb491-5"><a href="#cb491-5" aria-hidden="true" tabindex="-1"></a><span class="co">// the path or something like that you could replace</span></span>
+<span id="cb491-6"><a href="#cb491-6" aria-hidden="true" tabindex="-1"></a><span class="co">// this method instead.  This presumes that a FILE * is still ok</span></span>
+<span id="cb491-7"><a href="#cb491-7" aria-hidden="true" tabindex="-1"></a><span class="co">// for your scenario.</span></span>
+<span id="cb491-8"><a href="#cb491-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb491-9"><a href="#cb491-9" aria-hidden="true" tabindex="-1"></a><span class="dt">FILE</span> <span class="op">*</span>_Nonnull cql_open_file_for_write<span class="op">(</span></span>
+<span id="cb491-10"><a href="#cb491-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>_Nonnull file_name<span class="op">)</span></span>
+<span id="cb491-11"><a href="#cb491-11" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb491-12"><a href="#cb491-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">FILE</span> <span class="op">*</span>file<span class="op">;</span></span>
+<span id="cb491-13"><a href="#cb491-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(!(</span>file <span class="op">=</span> fopen<span class="op">(</span>file_name<span class="op">,</span> <span class="st">&quot;w&quot;</span><span class="op">)))</span> <span class="op">{</span></span>
+<span id="cb491-14"><a href="#cb491-14" aria-hidden="true" tabindex="-1"></a>    cql_error<span class="op">(</span><span class="st">&quot;unable to open %s for write</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">,</span> file_name<span class="op">);</span></span>
+<span id="cb491-15"><a href="#cb491-15" aria-hidden="true" tabindex="-1"></a>    cql_cleanup_and_exit<span class="op">(</span><span class="dv">1</span><span class="op">);</span></span>
+<span id="cb491-16"><a href="#cb491-16" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb491-17"><a href="#cb491-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> file<span class="op">;</span></span>
+<span id="cb491-18"><a href="#cb491-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb491-19"><a href="#cb491-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb491-20"><a href="#cb491-20" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span></code></pre></div>
+<p>Typically you would <code>#define cql_open_file_for_write your_open_function</code> before you include the amalgam and then define your_open_function elsewhere in that file (before or after the amalgam is included are both fine).</p>
+<h4 id="cql_write_file">cql_write_file</h4>
+<p>The amalgam uses <code>cql_write_file</code> to write its compilation outputs to the file system. The documentation is included in the code which is attached here. If you want the compilation output to go somewhere else, define <code>cql_write_file</code> as the name of your output handling function. It should accept a <code>const char *</code> for the file name and another for the data to be written. You can then store those compilation results however you deem appropriate.</p>
+<div class="sourceCode" id="cb492"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb492-1"><a href="#cb492-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef cql_write_file</span></span>
+<span id="cb492-2"><a href="#cb492-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb492-3"><a href="#cb492-3" aria-hidden="true" tabindex="-1"></a><span class="co">// CQL code generation outputs are emitted in one &quot;gulp&quot; with this</span></span>
+<span id="cb492-4"><a href="#cb492-4" aria-hidden="true" tabindex="-1"></a><span class="co">// API. You can define it to be a method of your choice with</span></span>
+<span id="cb492-5"><a href="#cb492-5" aria-hidden="true" tabindex="-1"></a><span class="co">// &quot;#define cql_write_file your_method&quot; and then your method will</span></span>
+<span id="cb492-6"><a href="#cb492-6" aria-hidden="true" tabindex="-1"></a><span class="co">// get the filename and the data. This will be whatever output the</span></span>
+<span id="cb492-7"><a href="#cb492-7" aria-hidden="true" tabindex="-1"></a><span class="co">// compiler would have emitted to one of it&#39;s --cg arguments.</span></span>
+<span id="cb492-8"><a href="#cb492-8" aria-hidden="true" tabindex="-1"></a><span class="co">// You can then write it to a location of your choice.</span></span>
+<span id="cb492-9"><a href="#cb492-9" aria-hidden="true" tabindex="-1"></a><span class="co">// You must copy the memory if you intend to keep it. &quot;data&quot; will</span></span>
+<span id="cb492-10"><a href="#cb492-10" aria-hidden="true" tabindex="-1"></a><span class="co">// be freed.</span></span>
+<span id="cb492-11"><a href="#cb492-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb492-12"><a href="#cb492-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Note: you *may* use cql_cleanup_and_exit to force a failure </span></span>
+<span id="cb492-13"><a href="#cb492-13" aria-hidden="true" tabindex="-1"></a><span class="co">// from within this API.  That&#39;s a normal failure mode that is</span></span>
+<span id="cb492-14"><a href="#cb492-14" aria-hidden="true" tabindex="-1"></a><span class="co">// well-tested.</span></span>
+<span id="cb492-15"><a href="#cb492-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb492-16"><a href="#cb492-16" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> cql_write_file<span class="op">(</span></span>
+<span id="cb492-17"><a href="#cb492-17" aria-hidden="true" tabindex="-1"></a>  <span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>_Nonnull file_name<span class="op">,</span> </span>
+<span id="cb492-18"><a href="#cb492-18" aria-hidden="true" tabindex="-1"></a>  <span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>_Nonnull data<span class="op">)</span></span>
+<span id="cb492-19"><a href="#cb492-19" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb492-20"><a href="#cb492-20" aria-hidden="true" tabindex="-1"></a>  <span class="dt">FILE</span> <span class="op">*</span>file <span class="op">=</span> cql_open_file_for_write<span class="op">(</span>file_name<span class="op">);</span></span>
+<span id="cb492-21"><a href="#cb492-21" aria-hidden="true" tabindex="-1"></a>  fprintf<span class="op">(</span>file<span class="op">,</span> <span class="st">&quot;%s&quot;</span><span class="op">,</span> data<span class="op">);</span></span>
+<span id="cb492-22"><a href="#cb492-22" aria-hidden="true" tabindex="-1"></a>  fclose<span class="op">(</span>file<span class="op">);</span></span>
+<span id="cb492-23"><a href="#cb492-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb492-24"><a href="#cb492-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb492-25"><a href="#cb492-25" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span></code></pre></div>
+<p>Typically you would <code>#define cql_write_file your_write_function</code> before you include the amalgam and then define your_write_function elsewhere in that file (before or after the amalgam is included are both fine).</p>
+<h3 id="other-notes">Other Notes</h3>
+<p>The amalgam will use malloc/calloc for its allocations and it is designed to release all memory it allocated when cql_main returns control to you. Even in the face of error.</p>
+<p>Internal compilation errors result in an <code>assert</code> failure leading to an abort. This is not supposed to ever happen but there can always be bugs. Normal errors just prevent later phases of the compiler from running so you might not see file output, but rather just error output. In all cases things should be cleaned up.</p>
+<p>The compiler can be called repeatedly with no troubles, it re-initializes on each use. The compiler is not multi-threaded so if there is threading you should use some mutex arrangement to keep it safe. A thread-safe version would require extensive modifications.</p>
 </body>
 </html>

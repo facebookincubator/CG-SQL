@@ -2280,10 +2280,10 @@ static ast_node *file_literal(ast_node *ast) {
 #ifndef cql_emit_error
 
 // CQL "stderr" outputs are emitted with this API
-// You can refine it to be a method of your choice with
+// You can define it to be a method of your choice with
 // "#define cql_emit_error your_method" and then your method will get
 // the data instead. This will be whatever output the
-// compiler would have emitted to to stderr.  This includes compiler
+// compiler would have emitted to to stderr.  This includes semantic
 // errors or invalid argument combinations.  Note that CQL never
 // emits error fragments with this API, you always get all the text of
 // one error.  This is important if you are filtering or looking for
@@ -2306,10 +2306,10 @@ void cql_emit_error(const char *err) {
 #ifndef cql_emit_output
 
 // CQL "stdout" outputs are emitted (in arbitrarily small pieces) with this API
-// You can refine it to be a method of your choice with
+// You can define it to be a method of your choice with
 // "#define cql_emit_output your_method" and then your method will get
 // the data instead. This will be whatever output the
-// compiler would have emitted to to stdout.  This usually
+// compiler would have emitted to to stdout.  This is usually
 // reformated CQL or semantic trees and such -- not the normal compiler output.
 // You must copy the memory if you intend to keep it. "data" will be freed.
 
@@ -2359,7 +2359,7 @@ void cql_output(const char *format, ...)  {
 // but if all you need to do is adjust the path or something like that you could replace
 // this method instead.  This presumes that a FILE * is still ok for your scenario.
 
-FILE *_Nonnull cql_open_file_for_write(CSTR _Nonnull file_name) {
+FILE *_Nonnull cql_open_file_for_write(const char *_Nonnull file_name) {
   FILE *file;
   if (!(file = fopen(file_name, "w"))) {
     cql_error("unable to open %s for write\n", file_name);
@@ -2377,13 +2377,13 @@ FILE *_Nonnull cql_open_file_for_write(CSTR _Nonnull file_name) {
 // "#define cql_write_file your_method" and then your method will get
 // the filename and the data. This will be whatever output the
 // compiler would have emitted to one of it's --cg arguments. You can
-// then write it somewhere or duplicate the memory or whatever.  You
-// must copy the memory if you intend to keep it. "data" will be freed.
+// then write it to a location of your choice.
+// You must copy the memory if you intend to keep it. "data" will be freed.
 
 // Note: you *may* use cql_cleanup_and_exit to force a failure from within
 // this API.  That's a normal failure mode that is well-tested.
 
-void cql_write_file(CSTR _Nonnull file_name, CSTR _Nonnull data) {
+void cql_write_file(const char *_Nonnull file_name, const char *_Nonnull data) {
   FILE *file = cql_open_file_for_write(file_name);
   fprintf(file, "%s", data);
   fclose(file);
