@@ -2164,25 +2164,24 @@ static void gen_elseif_list(ast_node *ast) {
 
 static void gen_if_stmt(ast_node *ast) {
   Contract(is_ast_if_stmt(ast));
-  EXTRACT(cond_action, ast->left);
-  EXTRACT(if_alt, ast->right);
+  EXTRACT_NOTNULL(cond_action, ast->left);
+  EXTRACT_NOTNULL(if_alt, ast->right);
+  EXTRACT(elseif, if_alt->left);
+  EXTRACT_NAMED(elsenode, else, if_alt->right);
 
   gen_printf("IF ");
   gen_cond_action(cond_action);
-  if (if_alt) {
-    EXTRACT(elseif, if_alt->left);
-    EXTRACT_NAMED(elsenode, else, if_alt->right);
 
-    if (elseif) {
-      gen_elseif_list(elseif);
-    }
-
-    if (elsenode) {
-      gen_printf("ELSE\n");
-      EXTRACT(stmt_list, elsenode->left);
-      gen_stmt_list(stmt_list);
-    }
+  if (elseif) {
+    gen_elseif_list(elseif);
   }
+
+  if (elsenode) {
+    gen_printf("ELSE\n");
+    EXTRACT(stmt_list, elsenode->left);
+    gen_stmt_list(stmt_list);
+  }
+
   gen_printf("END IF");
 }
 

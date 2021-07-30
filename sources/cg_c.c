@@ -2803,7 +2803,7 @@ static void cg_elseif_list(ast_node *ast, ast_node *elsenode) {
 static void cg_if_stmt(ast_node *ast) {
   Contract(is_ast_if_stmt(ast));
 
-  EXTRACT(cond_action, ast->left);
+  EXTRACT_NOTNULL(cond_action, ast->left);
   EXTRACT_NOTNULL(if_alt, ast->right);
 
   // IF [cond_action] [if_alt]

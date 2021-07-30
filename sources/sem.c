@@ -11571,7 +11571,7 @@ static void sem_elseif_list(ast_node *head) {
 
   for (ast_node *ast = head; ast; ast = ast->right) {
     Contract(is_ast_elseif(ast));
-    EXTRACT(cond_action, ast->left);
+    EXTRACT_NOTNULL(cond_action, ast->left);
 
     // ELSE IF [cond_action]
     sem_cond_action(cond_action);
@@ -11591,8 +11591,8 @@ static void sem_elseif_list(ast_node *head) {
 // basically just calling out and marking errors up the stack as needed.
 static void sem_if_stmt(ast_node *ast) {
   Contract(is_ast_if_stmt(ast));
-  EXTRACT(cond_action, ast->left);
-  EXTRACT(if_alt, ast->right);
+  EXTRACT_NOTNULL(cond_action, ast->left);
+  EXTRACT_NOTNULL(if_alt, ast->right);
 
   // IF [cond_action]
   sem_cond_action(cond_action);
@@ -11601,36 +11601,34 @@ static void sem_if_stmt(ast_node *ast) {
     return;
   }
 
-  if (if_alt) {
-    EXTRACT(elseif, if_alt->left);
-    EXTRACT_NAMED(elsenode, else, if_alt->right);
+  EXTRACT(elseif, if_alt->left);
+  EXTRACT_NAMED(elsenode, else, if_alt->right);
 
-    if (elseif) {
-      sem_elseif_list(elseif);
-      if (is_error(elseif)) {
+  if (elseif) {
+    sem_elseif_list(elseif);
+    if (is_error(elseif)) {
+      record_error(ast);
+      record_error(if_alt);
+      return;
+    }
+  }
+
+  if (elsenode) {
+    // ELSE [stmt_list]
+    EXTRACT(stmt_list, elsenode->left);
+    if (stmt_list) {
+      sem_stmt_list(stmt_list);
+      if (is_error(stmt_list)) {
         record_error(ast);
+        record_error(elsenode);
         record_error(if_alt);
         return;
       }
     }
-
-    if (elsenode) {
-      // ELSE [stmt_list]
-      EXTRACT(stmt_list, elsenode->left);
-      if (stmt_list) {
-        sem_stmt_list(stmt_list);
-        if (is_error(stmt_list)) {
-          record_error(ast);
-          record_error(elsenode);
-          record_error(if_alt);
-          return;
-        }
-      }
-      record_ok(elsenode);
-    }
-
-    record_ok(if_alt);
+    record_ok(elsenode);
   }
+
+  record_ok(if_alt);
 
   ast->sem = cond_action->sem;
   // END IF
@@ -11694,7 +11692,7 @@ static void sem_guard_stmt(ast_node *ast) {
     return;
   }
 
-  EXTRACT(cond_action, ast->left);
+  EXTRACT_NOTNULL(cond_action, ast->left);
   EXTRACT_ANY_NOTNULL(expr, cond_action->left);
 
   sem_add_improvements_from_guard_condition(expr);
