@@ -8425,7 +8425,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu Jul 29 14:24:50 PDT 2021
+Snapshot as of Thu Jul 29 16:04:35 PDT 2021
 
 ### Operators and Literals
 
@@ -13440,7 +13440,7 @@ CQL 0410 : unused, this was added to prevent merge conflicts at the end on liter
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Thu Jul 29 14:24:50 PDT 2021
+Snapshot as of Thu Jul 29 16:04:35 PDT 2021
 
 ### Rules
 
@@ -15623,10 +15623,31 @@ The amalgam includes the following useful `#ifdef` options to allow you to custo
 
 * CQL_NO_SYSTEM_HEADERS
 * CQL_NO_DIAGNOSTIC_BLOCK
+* CQL_IS_NOT_MAIN
 * cql_emit_error
 * cql_emit_output
 * cql_open_file_for_write
 * cql_write_file
+
+#### CQL_IS_NOT_MAIN
+
+If this symbol is defined them `cql_main` will not be redefined to be `main`.
+
+As the comments in the source say:
+
+```C
+#ifndef CQL_IS_NOT_MAIN
+
+// Normally CQL is the main entry point.  If you are using CQL 
+// in an embedded fashion then you want to invoke its main at
+// some other time. If you define CQL_IS_NOT_MAIN then cql_main
+// is not renamed to main.  You call cql_main when you want.
+
+  #define cql_main main
+#endif
+```
+
+Set this symbol so that you own main and cql_main is called at your pleasure.
 
 #### CQL_NO_SYSTEM_HEADERS
 
