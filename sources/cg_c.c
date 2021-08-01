@@ -719,7 +719,7 @@ static void cg_scratch_var(ast_node *ast, sem_t sem_type, charbuf *var, charbuf 
     }
 
     int32_t index = stack_level/64;
-    unsigned long long mask = 1LL << (stack_level % 64);
+    uint64_t mask = ((uint64_t)1) << (stack_level % 64);
 
     // Emit scratch if needed.
     if (!(usedmask[index] & mask)) {
@@ -2803,7 +2803,7 @@ static void cg_elseif_list(ast_node *ast, ast_node *elsenode) {
 static void cg_if_stmt(ast_node *ast) {
   Contract(is_ast_if_stmt(ast));
 
-  EXTRACT(cond_action, ast->left);
+  EXTRACT_NOTNULL(cond_action, ast->left);
   EXTRACT_NOTNULL(if_alt, ast->right);
 
   // IF [cond_action] [if_alt]
@@ -7062,6 +7062,7 @@ cql_noexport void cg_c_init(void) {
   NO_OP_STMT_INIT(schema_ad_hoc_migration_stmt);
   NO_OP_STMT_INIT(declare_enum_stmt);
   NO_OP_STMT_INIT(declare_named_type);
+  NO_OP_STMT_INIT(declare_proc_no_check_stmt);
 
   STD_DML_STMT_INIT(begin_trans_stmt);
   STD_DML_STMT_INIT(commit_trans_stmt);

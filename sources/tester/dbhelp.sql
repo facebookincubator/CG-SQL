@@ -19,6 +19,8 @@
 @echo c, "//\n";
 @echo c, "\n";
 
+declare proc printf no check;
+
 -- setup the table and the index
 create procedure dbhelp_setup()
 begin

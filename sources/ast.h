@@ -76,7 +76,7 @@
 #define ENFORCE_STRICT_JOIN 3
 #define ENFORCE_UPSERT_STMT 4
 #define ENFORCE_WINDOW_FUNC 5
-#define ENFORCE_PROCEDURE 6
+// 6 is available
 #define ENFORCE_WITHOUT_ROWID 7
 #define ENFORCE_TRANSACTION 8
 #define ENFORCE_SELECT_IF_NOTHING 9
@@ -90,6 +90,7 @@
 #define ENFORCE_ENCODE_CONTEXT_TYPE_BOOL 17
 #define ENFORCE_ENCODE_CONTEXT_TYPE_TEXT 18
 #define ENFORCE_ENCODE_CONTEXT_TYPE_BLOB 19
+#define ENFORCE_IS_TRUE 20
 
 #define COMPOUND_OP_UNION 1
 #define COMPOUND_OP_UNION_ALL 2
@@ -785,6 +786,7 @@ AST(declare_enum_stmt)
 AST1(emit_enums_stmt)
 AST(enum_values)
 AST(enum_value)
+AST1(declare_proc_no_check_stmt)
 AST(declare_proc_stmt)
 AST(declare_func_stmt)
 AST(declare_select_func_stmt)
@@ -821,6 +823,8 @@ AST(if_alt)
 AST1(else)
 AST(elseif)
 AST(cond_action)
+AST1(control_stmt)
+AST(guard_stmt)
 AST1(open_stmt)
 AST1(close_stmt)
 AST1(out_stmt)

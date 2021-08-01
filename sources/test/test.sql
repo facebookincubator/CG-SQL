@@ -441,6 +441,14 @@ if 3 not between 1 and 2 and 1 not in (2, 3) then
   delete from b;
 end if;
 
+-- guard statements
+if x is not null commit return;
+if x is not null continue;
+if x is not null leave;
+if x is not null return;
+if x is not null rollback return;
+if x is not null throw;
+
 -- this has to parse as unary minus and then postive 1
 select -1;
 
@@ -1494,6 +1502,14 @@ select 2 is falseas;
 -- these should not parse as IS NOT TRUE or IS NOT FALSE
 select 2 is not trueas;
 select 2 is not falseas;
+
+select 1 isnull;
+select null isnull;
+select null notnull;
+
+declare proc printf no check;
+
+@enforce_strict is true;
 
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 

@@ -9,6 +9,7 @@
 -- we can tell what version it is on by inspecting the facet tables
 
 declare proc test_cql_get_facet_version(facet text not null, out version long not null) using transaction;
+declare proc printf no check;
 
 -- declare sqlite_master --
 create table sqlite_master (

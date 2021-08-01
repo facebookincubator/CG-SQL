@@ -1,3 +1,4 @@
+Error at test/sem_test.sql:XXXX : in declare_proc_stmt : CQL0404: procedure cannot be both a normal procedure and an unchecked procedure 'printf'
 Incompatible declarations found
 Error at test/sem_test.sql:XXXX : in create_table_stmt : CREATE TABLE foo(
   id INTEGER PRIMARY KEY AUTOINCREMENT
@@ -123,6 +124,10 @@ Error at test/sem_test.sql:XXXX : in str : CQL0150: expected numeric expression 
 Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in is_true : CQL0403: operator may not be used because it is not supported on old versions of SQLite 'IS TRUE'
+Error at test/sem_test.sql:XXXX : in is_false : CQL0403: operator may not be used because it is not supported on old versions of SQLite 'IS FALSE'
+Error at test/sem_test.sql:XXXX : in is_not_true : CQL0403: operator may not be used because it is not supported on old versions of SQLite 'IS NOT TRUE'
+Error at test/sem_test.sql:XXXX : in is_not_false : CQL0403: operator may not be used because it is not supported on old versions of SQLite 'IS NOT FALSE'
 Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
 Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
 Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
@@ -207,6 +212,7 @@ Error at test/sem_test.sql:XXXX : in call_stmt : CQL0212: too few arguments prov
 Error at test/sem_test.sql:XXXX : in call_stmt : CQL0213: procedure had errors, can't call 'proc3'
 Error at test/sem_test.sql:XXXX : in num : CQL0207: expected a variable name for out argument 'arg2'
 Error at test/sem_test.sql:XXXX : in num : CQL0207: expected a variable name for out argument 'arg3'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'this_does_not_exist'
 Error at test/sem_test.sql:XXXX : in call : CQL0304: DISTINCT may only be used with one explicit argument in an aggregate function 'count'
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'total'
 Error at test/sem_test.sql:XXXX : in star : CQL0051: argument can only be used in count(*) '*'
@@ -226,8 +232,8 @@ Error at test/sem_test.sql:XXXX : in select_stmt : CQL0057: in multiple select/o
 Error at test/sem_test.sql:XXXX : in select_stmt : CQL0062: in multiple select/out statements, all columns must be an exact type match (including nullability) (expected integer notnull; found integer) 'A'
 Error at test/sem_test.sql:XXXX : in select_stmt : CQL0058: in multiple select/out statements, all column names must be identical so they have unambiguous names 'B'
 Error at test/sem_test.sql:XXXX : in select_stmt : CQL0055: all columns in the select must have a name
+Error at test/sem_test.sql:XXXX : in call_stmt : CQL0235: too many arguments provided to procedure 'with_result_set'
 Error at test/sem_test.sql:XXXX : in call_stmt : CQL0214: procedures with results can only be called using a cursor in global context 'with_result_set'
-Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 Error at test/sem_test.sql:XXXX : in call_stmt : CQL0199: cursor requires a procedure that returns a result set via select 'curs'
 Error at test/sem_test.sql:XXXX : in opt_offset : CQL0015: expected numeric expression 'OFFSET'
 Error at test/sem_test.sql:XXXX : in call : CQL0081: aggregates only make sense if there is a FROM clause 'count'
@@ -295,6 +301,7 @@ Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in 
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'julianday'
 Error at test/sem_test.sql:XXXX : in cast_expr : CQL0073: CAST may only appear in the context of SQL statement
 Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in declare_proc_no_check_stmt : CQL0404: procedure cannot be both a normal procedure and an unchecked procedure 'decl1'
 Error at test/sem_test.sql:XXXX : in str : CQL0194: declared procedures must be top level 'yy'
 Incompatible declarations found
 Error at test/sem_test.sql:XXXX : in declare_proc_stmt : DECLARE PROC decl1 (id INTEGER)
@@ -324,7 +331,43 @@ Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant fai
 Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
 Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
 Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
 Error at test/sem_test.sql:XXXX : in tilde : CQL0001: operands must be an integer type, not real '~'
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
 Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
 Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
 Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
@@ -492,6 +535,8 @@ Error at test/sem_test.sql:XXXX : in call : CQL0087: no object/blob types are al
 Error at test/sem_test.sql:XXXX : in str : CQL0010: incompatible types in expression 'o1'
 Error at test/sem_test.sql:XXXX : in in_pred : CQL0078: [not] in (select ...) is only allowed inside of select lists, where, on, and having clauses
 Error at test/sem_test.sql:XXXX : in not_in : CQL0078: [not] in (select ...) is only allowed inside of select lists, where, on, and having clauses
+Error at test/sem_test.sql:XXXX : in call_stmt : CQL0235: too many arguments provided to procedure 'out_cursor_proc'
+Error at test/sem_test.sql:XXXX : in call_stmt : CQL0203: cursor requires a procedure that returns a cursor with OUT 'QQ'
 Error at test/sem_test.sql:XXXX : in out_stmt : CQL0223: the cursor was not fetched with the auto-fetch syntax 'fetch [cursor]' 'C'
 Error at test/sem_test.sql:XXXX : in out_stmt : CQL0058: in multiple select/out statements, all column names must be identical so they have unambiguous names 'C'
 Error at test/sem_test.sql:XXXX : in select_stmt : CQL0063: can't mix and match out, out union, or select/call for return values 'out_cursor_proc_mixed_cursor_select'
@@ -510,7 +555,6 @@ Error at test/sem_test.sql:XXXX : in call : CQL0235: too many arguments provided
 Error at test/sem_test.sql:XXXX : in call : CQL0091: Stored procs that deal with result sets or cursors cannot be invoked as functions 'out_cursor_proc'
 Error at test/sem_test.sql:XXXX : in param : CQL0211: last formal arg of procedure is not an out arg, cannot use proc as a function 'proc2'
 Error at test/sem_test.sql:XXXX : in call : CQL0090: Stored proc calls may not appear in the context of a SQL statement 'proc_with_output'
-Error at test/sem_test.sql:XXXX : in call_stmt : CQL0203: cursor requires a procedure that returns a cursor with OUT 'C'
 Error at test/sem_test.sql:XXXX : in call_stmt : CQL0235: too many arguments provided to procedure 'out_cursor_proc'
 Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'C'
 Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'C'
@@ -865,7 +909,7 @@ Error at test/sem_test.sql:XXXX : in select_stmt : CQL0251: fragment must end wi
 Error at test/sem_test.sql:XXXX : in select_stmt : CQL0251: fragment must end with exactly 'SELECT * FROM core'
 Error at test/sem_test.sql:XXXX : in select_stmt : CQL0251: fragment must end with exactly 'SELECT * FROM core'
 Error at test/sem_test.sql:XXXX : in fk_def : CQL0021: foreign key refers to non-existent table 'this_table_does_not_exist'
-Error at test/sem_test.sql:XXXX : in call_stmt : CQL0323: calls to undeclared procedures are forbidden if strict procedure mode is enabled; declaration missing or typo 'some_external_thing'
+Error at test/sem_test.sql:XXXX : in call_stmt : CQL0323: calls to undeclared procedures are forbidden; declaration missing or typo 'some_external_thing'
 Error at test/sem_test.sql:XXXX : in like : CQL0202: must be a cursor, proc, table, or view 'invalid_type_name'
 Error at test/sem_test.sql:XXXX : in dot : CQL0068: field not found in shape 'xyzzy'
 Error at test/sem_test.sql:XXXX : in fk_def : CQL0324: referenced table was created in a later version so it cannot be used in a foreign key 'from_the_future'
@@ -948,6 +992,9 @@ Error at test/sem_test.sql:XXXX : in str : CQL0348: collate applied to a non-tex
 Error at test/sem_test.sql:XXXX : in col_def : CQL0349: column definitions may not come after constraints 'id'
 Error at test/sem_test.sql:XXXX : in str : CQL0186: duplicate stored proc name 'test_insert_using'
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'iif'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'not_found'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'not_found'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'not_found'
 Error at test/sem_test.sql:XXXX : in str : CQL0082: argument must be numeric 'iif'
 Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expression 'iif'
 Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
@@ -1121,6 +1168,7 @@ The above must be identical.
 Error at test/sem_test.sql:XXXX : in str : CQL0103: duplicate table/view name 'foo'
 Error at test/sem_test.sql:XXXX : in str : CQL0210: proc out parameter: arg must be an exact type match (even nullability) (expected integer notnull; found integer) 'a'
 Error at test/sem_test.sql:XXXX : in str : CQL0013: cannot assign/copy possibly null expression to not null target 'a'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'some_undefined_variable'
 Error at test/sem_test.sql:XXXX : in concat : CQL0047: string operand not allowed in '~'
 Error at test/sem_test.sql:XXXX : in concat : CQL0047: string operand not allowed in '-'
 Error at test/sem_test.sql:XXXX : in eq : CQL0009: incompatible types in expression '='

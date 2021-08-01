@@ -753,6 +753,16 @@ assorted_errors_test() {
   fi
 
   on_diff_exit java_rt_filename_no_base.err
+
+# object reference in java proc
+
+  if ${CQL} --rt java --in "${TEST_DIR}/cg_test_with_object.sql" --cg "${OUT_DIR}/dummy.out" --java_package_name dummy 2>"${OUT_DIR}/java_rt_with_object.err"
+  then
+    echo "failed aborting a java rt codegen with an object param"
+    failed
+  fi
+
+  on_diff_exit java_rt_with_object.err
 }
 
 schema_migration_test() {

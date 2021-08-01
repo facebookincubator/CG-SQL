@@ -156,6 +156,7 @@ static void cql_reset_globals(void);
 %left AND
 %left NOT
 %left BETWEEN NOT_BETWEEN NE NE_ '=' EQEQ LIKE NOT_LIKE GLOB NOT_GLOB MATCH NOT_MATCH REGEXP NOT_REGEXP IN NOT_IN IS_NOT IS IS_TRUE IS_FALSE IS_NOT_TRUE IS_NOT_FALSE
+%right ISNULL NOTNULL
 %left '<' '>' GE LE
 %left LS RS '&' '|'
 %left '+' '-'
@@ -243,7 +244,7 @@ static void cql_reset_globals(void);
 %type <aval> data_type_any data_type_numeric data_type_with_options opt_kind
 
 /* proc stuff */
-%type <aval> create_proc_stmt declare_func_stmt declare_proc_stmt declare_out_call_stmt
+%type <aval> create_proc_stmt declare_func_stmt declare_proc_stmt declare_proc_no_check_stmt declare_out_call_stmt
 %type <aval> arg_expr arg_list inout param params
 
 /* statements */
@@ -255,10 +256,12 @@ static void cql_reset_globals(void);
 %type <aval> close_stmt
 %type <aval> commit_trans_stmt commit_return_stmt
 %type <aval> continue_stmt
+%type <aval> control_stmt
 %type <aval> declare_stmt
 %type <aval> declare_enum_stmt enum_values enum_value emit_enums_stmt
 %type <aval> echo_stmt
 %type <aval> fetch_stmt fetch_values_stmt fetch_call_stmt from_shape
+%type <aval> guard_stmt
 %type <aval> if_stmt elseif_item elseif_list opt_else opt_elseif_list proc_savepoint_stmt
 %type <aval> leave_stmt return_stmt
 %type <aval> loop_stmt
@@ -376,6 +379,7 @@ any_stmt:
   | declare_enum_stmt
   | declare_func_stmt
   | declare_out_call_stmt
+  | declare_proc_no_check_stmt
   | declare_proc_stmt
   | declare_schema_region_stmt
   | declare_stmt
@@ -396,6 +400,7 @@ any_stmt:
   | fetch_call_stmt
   | fetch_stmt
   | fetch_values_stmt
+  | guard_stmt
   | if_stmt
   | insert_stmt
   | leave_stmt
@@ -925,6 +930,8 @@ math_expr[result]:
   | math_expr[lhs] '%' math_expr[rhs]  { $result = new_ast_mod($lhs, $rhs); }
   | math_expr[lhs] IS_NOT_TRUE  { $result = new_ast_is_not_true($lhs); }
   | math_expr[lhs] IS_NOT_FALSE  { $result = new_ast_is_not_false($lhs); }
+  | math_expr[lhs] ISNULL  { $result = new_ast_is($lhs, new_ast_null()); }
+  | math_expr[lhs] NOTNULL  { $result = new_ast_is_not($lhs, new_ast_null()); }
   | math_expr[lhs] IS_TRUE  { $result = new_ast_is_true($lhs); }
   | math_expr[lhs] IS_FALSE  { $result = new_ast_is_false($lhs); }
   | '-' math_expr[rhs] %prec UMINUS  { $result = new_ast_uminus($rhs); }
@@ -1540,6 +1547,10 @@ declare_func_stmt:
 procedure: PROC | PROCEDURE
   ;
 
+declare_proc_no_check_stmt:
+  DECLARE procedure name NO CHECK { $declare_proc_no_check_stmt = new_ast_declare_proc_no_check_stmt($name); }
+  ;
+
 declare_proc_stmt:
   DECLARE procedure name '(' params ')'  {
       ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_opt(PROC_FLAG_BASIC));
@@ -1760,6 +1771,18 @@ opt_elseif_list:
   | elseif_list  { $opt_elseif_list = $elseif_list; }
   ;
 
+control_stmt:
+  commit_return_stmt  { $control_stmt = new_ast_control_stmt($commit_return_stmt); }
+  | continue_stmt  { $control_stmt = new_ast_control_stmt($continue_stmt); }
+  | leave_stmt  { $control_stmt = new_ast_control_stmt($leave_stmt); }
+  | return_stmt  { $control_stmt = new_ast_control_stmt($return_stmt); }
+  | rollback_return_stmt  { $control_stmt = new_ast_control_stmt($rollback_return_stmt); }
+  | throw_stmt  { $control_stmt = new_ast_control_stmt($throw_stmt); }
+
+guard_stmt:
+  IF expr control_stmt  { $guard_stmt = new_ast_guard_stmt($expr, $control_stmt); }
+  ;
+
 transaction_mode:
   /* nil */ { $transaction_mode = TRANS_DEFERRED; }
   | DEFERRED { $transaction_mode = TRANS_DEFERRED; }
@@ -1913,7 +1936,6 @@ enforcement_options:
   | JOIN  { $enforcement_options = new_ast_opt(ENFORCE_STRICT_JOIN); }
   | UPSERT STATEMENT  { $enforcement_options = new_ast_opt(ENFORCE_UPSERT_STMT); }
   | WINDOW function  { $enforcement_options = new_ast_opt(ENFORCE_WINDOW_FUNC); }
-  | procedure  { $enforcement_options = new_ast_opt(ENFORCE_PROCEDURE); }
   | WITHOUT ROWID  { $enforcement_options = new_ast_opt(ENFORCE_WITHOUT_ROWID); }
   | TRANSACTION { $enforcement_options = new_ast_opt(ENFORCE_TRANSACTION); }
   | SELECT IF NOTHING { $enforcement_options = new_ast_opt(ENFORCE_SELECT_IF_NOTHING); }
@@ -1927,6 +1949,7 @@ enforcement_options:
   | ENCODE CONTEXT_TYPE BOOL_ { $enforcement_options = new_ast_opt(ENFORCE_ENCODE_CONTEXT_TYPE_BOOL); }
   | ENCODE CONTEXT_TYPE TEXT { $enforcement_options = new_ast_opt(ENFORCE_ENCODE_CONTEXT_TYPE_TEXT); }
   | ENCODE CONTEXT_TYPE BLOB { $enforcement_options = new_ast_opt(ENFORCE_ENCODE_CONTEXT_TYPE_BLOB); }
+  | IS_TRUE { $enforcement_options = new_ast_opt(ENFORCE_IS_TRUE); }
   ;
 
 enforce_strict_stmt:
@@ -2257,10 +2280,10 @@ static ast_node *file_literal(ast_node *ast) {
 #ifndef cql_emit_error
 
 // CQL "stderr" outputs are emitted with this API
-// You can refine it to be a method of your choice with
+// You can define it to be a method of your choice with
 // "#define cql_emit_error your_method" and then your method will get
 // the data instead. This will be whatever output the
-// compiler would have emitted to to stderr.  This includes compiler
+// compiler would have emitted to to stderr.  This includes semantic
 // errors or invalid argument combinations.  Note that CQL never
 // emits error fragments with this API, you always get all the text of
 // one error.  This is important if you are filtering or looking for
@@ -2283,10 +2306,10 @@ void cql_emit_error(const char *err) {
 #ifndef cql_emit_output
 
 // CQL "stdout" outputs are emitted (in arbitrarily small pieces) with this API
-// You can refine it to be a method of your choice with
+// You can define it to be a method of your choice with
 // "#define cql_emit_output your_method" and then your method will get
 // the data instead. This will be whatever output the
-// compiler would have emitted to to stdout.  This usually
+// compiler would have emitted to to stdout.  This is usually
 // reformated CQL or semantic trees and such -- not the normal compiler output.
 // You must copy the memory if you intend to keep it. "data" will be freed.
 
@@ -2336,7 +2359,7 @@ void cql_output(const char *format, ...)  {
 // but if all you need to do is adjust the path or something like that you could replace
 // this method instead.  This presumes that a FILE * is still ok for your scenario.
 
-FILE *_Nonnull cql_open_file_for_write(CSTR _Nonnull file_name) {
+FILE *_Nonnull cql_open_file_for_write(const char *_Nonnull file_name) {
   FILE *file;
   if (!(file = fopen(file_name, "w"))) {
     cql_error("unable to open %s for write\n", file_name);
@@ -2354,13 +2377,13 @@ FILE *_Nonnull cql_open_file_for_write(CSTR _Nonnull file_name) {
 // "#define cql_write_file your_method" and then your method will get
 // the filename and the data. This will be whatever output the
 // compiler would have emitted to one of it's --cg arguments. You can
-// then write it somewhere or duplicate the memory or whatever.  You
-// must copy the memory if you intend to keep it. "data" will be freed.
+// then write it to a location of your choice.
+// You must copy the memory if you intend to keep it. "data" will be freed.
 
 // Note: you *may* use cql_cleanup_and_exit to force a failure from within
 // this API.  That's a normal failure mode that is well-tested.
 
-void cql_write_file(CSTR _Nonnull file_name, CSTR _Nonnull data) {
+void cql_write_file(const char *_Nonnull file_name, const char *_Nonnull data) {
   FILE *file = cql_open_file_for_write(file_name);
   fprintf(file, "%s", data);
   fclose(file);

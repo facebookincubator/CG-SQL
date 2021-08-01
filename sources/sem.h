@@ -280,6 +280,7 @@ cql_noexport ast_node *find_named_type(CSTR name);
 cql_noexport void record_error(ast_node *ast);
 cql_noexport void record_ok(ast_node *ast);
 cql_noexport void report_error(ast_node *ast, CSTR msg, CSTR subject);
+cql_noexport void sem_one_stmt(ast_node *ast);
 cql_noexport void sem_root_expr(ast_node *node, uint32_t expr_context);
 cql_noexport void sem_expr(ast_node *node);
 cql_noexport void sem_cursor(ast_node *ast);

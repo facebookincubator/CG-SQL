@@ -30,8 +30,8 @@
 #define NORMAL_CALL  0  // a normal procedure or function call
 #define PROC_AS_FUNC 1  // treating a proc like a function with the out-arg trick
 
-#define CANNOT_SHORT_CIRCUIT 0 // prepping a normal binary operator
-#define CAN_SHORT_CIRCUIT    1 // prepping a short-circuiting binary operator
+#define IS_NOT_COUNT 0  // analyzing the arguments of a normal function
+#define IS_COUNT     1  // analyzing the arguments of `count`
 
 #define CQL_FROM_RECREATE "cql:from_recreate"
 #define CQL_MODULE_WARN "cql:module_must_not_be_deleted_see_docs_for_CQL0392"
@@ -117,6 +117,18 @@ typedef struct notnull_improvement_item {
   struct notnull_improvement_item *next;
 } notnull_improvement_item;
 
+// If a function has been registered via `FUNC_INIT`, its associated analysis
+// function must conform to the type `sem_func`. When called, its argument list
+// will have already been analyzed and verified to be free of errors.
+typedef void sem_func(ast_node *ast, uint32_t arg_count);
+
+// If a function has been registered via `SPECIAL_FUNC_INIT`, its associated
+// analysis function must conform to the type `sem_special_func`. When called,
+// it must do analysis of its own arguments as appropriate. It must also set
+// `*is_aggregate` to true if it should be treated as an aggregate function by
+// `sem_expr_call`; it will not be considered an aggregate function otherwise.
+typedef void sem_special_func(ast_node *ast, uint32_t arg_count, bool_t *is_aggregate);
+
 // forward references for mutual recursion cases
 static void sem_stmt_list(ast_node *root);
 static void sem_select(ast_node *node);
@@ -153,7 +165,6 @@ static bool_t sem_validate_identical_text(ast_node *prev_def, ast_node *def, gen
 static bool_t sem_validate_identical_ddl(ast_node *cur, ast_node *prev);
 static void sem_setup_region_filters(void);
 static void sem_inside_create_proc_stmt(ast_node *ast);
-static void sem_one_stmt(ast_node *stmt);
 static void sem_declare_cursor_for_name(ast_node *ast);
 static sem_join * new_sem_join(uint32_t count);
 static void sem_validate_check_expr_for_table(ast_node *table, ast_node *expr, CSTR context);
@@ -193,7 +204,6 @@ struct enforcement_options {
   bool_t strict_join;                 // only ANSI style joins may be used, "from A,B" is rejected
   bool_t strict_upsert_stmt;          // no upsert statement may be used
   bool_t strict_window_func;          // no window functions may be used
-  bool_t strict_procedure;            // no calls to undeclared procedures (like printf)
   bool_t strict_without_rowid;        // no WITHOUT ROWID may be used.
   bool_t strict_transaction;          // no transactions may be started, commited, aborted etc.
   bool_t strict_if_nothing;           // (select ..) expressions must include the if nothing form
@@ -202,6 +212,7 @@ struct enforcement_options {
   bool_t strict_not_null_after;       // variables should be treated as NOT NULL after an IS NOT NULL check
   bool_t strict_encode_context;       // encode context must be specified in @vault_sensitive
   bool_t strict_encode_context_type;  // the specified vault context column must be the specified data type
+  bool_t strict_is_true;              // IS TRUE, IS FALSE, etc. may not be used because of downlevel issues
 };
 
 static struct enforcement_options  enforcement;
@@ -445,11 +456,13 @@ static notnull_improvement_item *current_notnull_improvement_context;
 
 // These are the various symbol tables we need, they are stored super dumbly.
 static symtab *procs;
+static symtab *unchecked_procs;
 static symtab *proc_arg_info;
 static symtab *triggers;
 static symtab *upgrade_procs;
 static symtab *ad_hoc_migrates;
 static symtab *builtin_funcs;
+static symtab *builtin_special_funcs;
 static symtab *funcs;
 static symtab *exprs;
 static symtab *tables;
@@ -1747,6 +1760,15 @@ static bool_t add_proc(ast_node *ast, CSTR name) {
 
 cql_noexport ast_node *find_proc(CSTR name) {
   symtab_entry *entry = symtab_find(procs, name);
+  return entry ? (ast_node*)(entry->val) : NULL;
+}
+
+static bool_t add_unchecked_proc(ast_node *ast, CSTR name) {
+  return symtab_add(unchecked_procs, name, ast);
+}
+
+cql_noexport ast_node *find_unchecked_proc(CSTR name) {
+  symtab_entry *entry = symtab_find(unchecked_procs, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
@@ -4206,36 +4228,17 @@ static void sem_constraints(ast_node *table_ast, ast_node *col_key_list, coldef_
   table_items = NULL;
 }
 
-// All the binary ops do the same preparation, they analyze the left and the
+// All the binary ops do the same preparation, they evaluate the left and the
 // right expression, then they check those for errors.  Then they need
 // the types of those expressions and the combined_flags of the result.  This
 // does exactly that for its various callers.  Returns true if all is well.
-static bool_t sem_binary_prep(
-  ast_node *ast,
-  sem_t *core_type_left,
-  sem_t *core_type_right,
-  sem_t *combined_flags,
-  bool_t can_short_circuit)
-{
+static bool_t sem_binary_prep(ast_node *ast, sem_t *core_type_left, sem_t *core_type_right, sem_t *combined_flags) {
   EXTRACT_ANY_NOTNULL(left, ast->left);
   EXTRACT_ANY_NOTNULL(right, ast->right);
 
   // left op right
   sem_expr(left);
-  if (can_short_circuit) {
-    // We need to be careful with nullability improvements on the right side of
-    // expressions when they can short-circuit, e.g., `1 OR ifnull_crash(y)`
-    // must not result in an improved `y` because its nullability will never be
-    // checked. It is, however, correct to improve `y` in `x OR ifnull_crash(y)
-    // AND foo(y)` *only* for the call to `foo`. Creating a new nullability
-    // context for the right side of short-circuiting operators gives us exactly
-    // what we want.
-    PUSH_NOTNULL_IMPROVEMENT_CONTEXT(NULL, NULL);
-    sem_expr(right);
-    POP_NOTNULL_IMPROVEMENT_CONTEXT();
-  } else {
-    sem_expr(right);
-  }
+  sem_expr(right);
 
   if (is_error(left) || is_error(right)) {
     record_error(ast);
@@ -4259,7 +4262,7 @@ static bool_t sem_binary_prep(
 // Works for like and not like, and helper for match, glob, and regexp.
 static void sem_binary_like(ast_node *ast, CSTR op) {
   sem_t core_type_left, core_type_right, combined_flags;
-  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags, CANNOT_SHORT_CIRCUIT)) {
+  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags)) {
     return;
   }
 
@@ -4355,7 +4358,7 @@ static void sem_binary_match(ast_node *ast, CSTR op) {
 // holds both using the helper.  If any text, that's an error.
 static void sem_binary_math(ast_node *ast, CSTR op) {
   sem_t core_type_left, core_type_right, combined_flags;
-  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags, CANNOT_SHORT_CIRCUIT)) {
+  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags)) {
     return;
   }
 
@@ -4394,7 +4397,7 @@ static void sem_binary_integer_math(ast_node *ast, CSTR op) {
 // text type inputs result in an error.
 static void sem_binary_logical(ast_node *ast, CSTR op) {
   sem_t core_type_left, core_type_right, combined_flags;
-  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags, CAN_SHORT_CIRCUIT)) {
+  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags)) {
     return;
   }
 
@@ -4408,7 +4411,7 @@ static void sem_binary_logical(ast_node *ast, CSTR op) {
 static void sem_binary_eq_or_ne(ast_node *ast, CSTR op) {
   sem_t core_type_left, core_type_right, combined_flags;
 
-  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags, CANNOT_SHORT_CIRCUIT)) {
+  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags)) {
     return;
   }
 
@@ -4436,7 +4439,7 @@ static void sem_binary_eq_or_ne(ast_node *ast, CSTR op) {
 // that is compatible on the left or the right.
 static void sem_binary_compare(ast_node *ast, CSTR op) {
   sem_t core_type_left, core_type_right, combined_flags;
-  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags, CANNOT_SHORT_CIRCUIT)) {
+  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags)) {
     return;
   }
 
@@ -4586,6 +4589,12 @@ static void sem_unary_logical(ast_node *ast, CSTR op) {
 
 // This is used for IS TRUE and IS FALSE
 static void sem_unary_is_true_or_false(ast_node *ast, CSTR op) {
+  if (enforcement.strict_is_true) {
+    report_error(ast, "CQL0403: operator may not be used because it is not supported on old versions of SQLite", op);
+    record_error(ast);
+    return;
+  }
+
   sem_t core_type, combined_flags;
   if (!sem_unary_prep(ast, &core_type, &combined_flags)) {
     return;
@@ -4603,7 +4612,7 @@ static void sem_unary_is_true_or_false(ast_node *ast, CSTR op) {
 static void sem_binary_is_or_is_not(ast_node *ast, CSTR op) {
   sem_t core_type_left, core_type_right, combined_flags;
 
-  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags, CANNOT_SHORT_CIRCUIT)) {
+  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags)) {
     return;
   }
 
@@ -4714,7 +4723,7 @@ static void sem_select_star(ast_node *ast) {
         // Upgrade the inferred nonnull column so it has a proper NOT NULL type.
         type |= SEM_TYPE_NOTNULL;
         // Prevent this from propagating needlessly to keep --print clean.
-        type ^= SEM_TYPE_INFERRED_NOTNULL;
+        type &= u64_not(SEM_TYPE_INFERRED_NOTNULL);
       }
       sptr->names[field] = table->names[j];
       sptr->semtypes[field] = type;
@@ -5637,7 +5646,6 @@ static void sem_resolve_id_expr(ast_node *ast, CSTR name, CSTR scope) {
 
   // If we've made it here, it's safe and appropriate to do the rewrite.
   rewrite_nullable_to_unsafe_notnull(ast);
-  sem_expr(ast);
 }
 
 // Returns the *mutable* type (`sem_t *`) for a given (potentially qualified)
@@ -6158,14 +6166,7 @@ static void sem_expr_in_pred_or_not_in(ast_node *ast, CSTR cstr) {
   if (is_ast_expr_list(ast->right)) {
     EXTRACT_NOTNULL(expr_list, ast->right);
 
-    // We push a new nullability context here because some of the expressions in
-    // the expression list may not be evaluated: `IN` short-circuits just like
-    // `AND` and `OR`. Even the first expression will not run when `needle` is
-    // NULL.
-    PUSH_NOTNULL_IMPROVEMENT_CONTEXT(NULL, NULL);
-
     // make sure the items are all of some comparable type
-    bool_t error = false;
     for (ast_node *item = expr_list; item; item = item->right) {
       ast_node *expr = item->left;
 
@@ -6173,31 +6174,23 @@ static void sem_expr_in_pred_or_not_in(ast_node *ast, CSTR cstr) {
       item->sem = expr->sem;
 
       if (is_error(expr)) {
-        error = true;
-        break;
+        record_error(ast);
+        return;
       }
 
       sem_t sem_type_current = expr->sem->sem_type;
       if (!sem_verify_compat(ast, sem_type_needed, sem_type_current, is_ast_in_pred(ast) ? "IN" : "NOT IN")) {
-        error = true;
-        break;
+        return;
       }
 
       sem_combine_kinds(expr, kind_needed);
       if (is_error(expr)) {
-        error = true;
-        break;
+        record_error(ast);
+        return;
       }
 
       combined_flags |= sensitive_flag(sem_type_current);
       sem_type_needed = sem_combine_types(sem_type_needed, sem_type_current);
-    }
-
-    POP_NOTNULL_IMPROVEMENT_CONTEXT();
-
-    if (error) {
-      record_error(ast);
-      return;
     }
   }
   else {
@@ -6362,12 +6355,20 @@ static bool_t sem_validate_sql_not_constraint(ast_node *ast) {
 }
 
 // You can count anything, you always get an integer
-static void sem_aggr_func_count(ast_node *ast, uint32_t arg_count) {
+static void sem_special_func_count(ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
   Contract(is_ast_call(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
+
+  *is_aggregate = true;
+
+  sem_arg_list(arg_list, IS_COUNT);
+  if (arg_list && is_error(arg_list)) {
+    record_error(ast);
+    return;
+  }
 
   if (!sem_validate_aggregate_context(ast)) {
     return;
@@ -6812,24 +6813,6 @@ static void sem_func_attest_notnull(ast_node *ast, uint32_t arg_count, uint32_t 
     return;
   }
 
-  // If `arg1` is an id or a dot, it's safe to improve the type of it in the
-  // code that follows because we'll either throw or crash if it's NULL.
-  //
-  // The improvement will only last until, at most, the end of the current
-  // statement list (as with improvements via SET). The fact that `ifnull_throw`
-  // may result in an exception that is later caught therefore poses no safety
-  // concerns: an improvement in the TRY will not be present in the CATCH, and
-  // an improvement in either the TRY or the CATCH will not be present after the
-  // TRY/CATCH block.
-  if (is_ast_id(arg1)) {
-    EXTRACT_STRING(arg1_name, arg1);
-    sem_set_notnull_improved(arg1_name, NULL);
-  } else if (is_ast_dot(arg1)) {
-    EXTRACT_STRING(arg1_name, arg1->right);
-    EXTRACT_STRING(arg1_scope, arg1->left);
-    sem_set_notnull_improved(arg1_name, arg1_scope);
-  }
-
   ast->sem = arg1->sem;
   sem_add_flags(ast, SEM_TYPE_NOTNULL); // note this makes a copy
   name_ast->sem = ast->sem;
@@ -6850,12 +6833,26 @@ static void sem_func_ifnull_crash(ast_node *ast, uint32_t arg_count) {
   sem_func_attest_notnull(ast, arg_count, SEM_EXPR_CONTEXT_NONE);
 }
 
-static void sem_func_cql_inferred_notnull(ast_node *ast, uint32_t arg_count) {
+static void sem_special_func_cql_inferred_notnull(ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT_NOTNULL(arg_list, call_arg_list->right);
+
+  // Since we're checking a call to `cql_inferred_notnull`, its arguments have
+  // already been rewritten and we don't want to do it again. Setting
+  // `is_analyzing_notnull_rewrite` prevents that.
+  is_analyzing_notnull_rewrite = true;
+  sem_arg_list(arg_list, IS_NOT_COUNT);
+  is_analyzing_notnull_rewrite = false;
+
+  // Our argument is just a reference to something already analyzed previously,
+  // so we could not have possibly failed.
+  Invariant(!is_error(arg_list));
+
   // This compiles to nothing for SQLite so we can allow all contexts.
   sem_func_attest_notnull(ast, arg_count, SEM_EXPR_CONTEXT_FLAGS);
   Invariant(ast->sem->sem_type & SEM_TYPE_INFERRED_NOTNULL);
   // Prevent this from propagating needlessly to keep --print clean.
-  ast->sem->sem_type ^= SEM_TYPE_INFERRED_NOTNULL;
+  ast->sem->sem_type &= u64_not(SEM_TYPE_INFERRED_NOTNULL);
 }
 
 // validate expression with cql_cursor_diff_xxx func is semantically correct.
@@ -6940,7 +6937,11 @@ static void sem_func_cql_cursor_diff_val(ast_node *ast, uint32_t arg_count) {
   rewrite_cql_cursor_diff(ast, false);
 }
 
-static void sem_func_iif(ast_node *ast, uint32_t arg_count) {
+// This is a special function so we can take nonnull improvements into account.
+// If we were to treat this as a normal function, the second argument would be
+// initially checked without nonnull improvements and possibly fail erroneously
+// as a result.
+static void sem_special_func_iif(ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
   Contract(is_ast_call(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -6951,15 +6952,40 @@ static void sem_func_iif(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
+  // Even though we're going to rewrite to a CASE expression and then perform
+  // type checking afterwards, we check types beforehand too so we can produce
+  // error messages that do not refer to the underlying rewrite.
+
   ast_node *arg1 = first_arg(arg_list);
+  sem_expr(arg1);
+  if (is_error(arg1)) {
+    record_error(ast);
+    return;
+  }
+
   if (!is_numeric(arg1->sem->sem_type)) {
     report_error(name_ast, "CQL0082: argument must be numeric", name);
     record_error(ast);
     return;
   }
 
+  // `arg1` can improve the type of `arg2`.
+  PUSH_NOTNULL_IMPROVEMENT_CONTEXT(arg1, NULL);
   ast_node *arg2 = second_arg(arg_list);
+  sem_expr(arg2);
+  if (is_error(arg2)) {
+    record_error(arg2);
+    return;
+  }
+  POP_NOTNULL_IMPROVEMENT_CONTEXT();
+
   ast_node *arg3 = third_arg(arg_list);
+  sem_expr(arg3);
+  if (is_error(arg3)) {
+    record_error(ast);
+    return;
+  }
+
   if (!sem_verify_compat(name_ast, arg2->sem->sem_type, arg3->sem->sem_type, name)) {
     record_error(ast);
     return;
@@ -7521,12 +7547,20 @@ static void sem_func_julianday(ast_node *ast, uint32_t arg_count) {
 // The "ptr" function is used to get the memory address of an object at runtime
 // as a LONG INT. This is useful when calling SQLite functions as they are
 // unable to deal with objects directly.
-static void sem_func_ptr(ast_node *ast, uint32_t arg_count) {
+static void sem_special_func_ptr(ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
   Contract(is_ast_call(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
+
+  PUSH_EXPR_CONTEXT(SEM_EXPR_CONTEXT_TABLE_FUNC);
+  sem_arg_list(arg_list, IS_NOT_COUNT);
+  if (arg_list && is_error(arg_list)) {
+    record_error(ast);
+    return;
+  }
+  POP_EXPR_CONTEXT();
 
   if (!sem_validate_arg_count(ast, arg_count, 1)) {
     return;
@@ -7930,10 +7964,6 @@ static void sem_expr_call(ast_node *ast, CSTR cstr) {
   uint32_t arg_count = 0;
   for (ast_node *item = arg_list; item; item = item->right) arg_count++;
 
-  // The count function is allowed to use '*'
-  bool_t is_count_function = !Strcasecmp("count", name);
-  bool_t is_ptr_function = !Strcasecmp("ptr", name);
-
   // In any aggregate function that takes a single argument, that argument can be preceded by the keyword DISTINCT
   if (distinct && (arg_count != 1 || is_ast_star(first_arg(arg_list)))) {
     report_error(ast, "CQL0304: DISTINCT may only be used with one explicit argument in an aggregate function", name);
@@ -7950,34 +7980,20 @@ static void sem_expr_call(ast_node *ast, CSTR cstr) {
       call_aggr_or_user_def_func = 1;
     }
   }
-
   if (entry) {
-    if (is_ptr_function) {
-      PUSH_EXPR_CONTEXT(SEM_EXPR_CONTEXT_TABLE_FUNC);
-      sem_arg_list(arg_list, is_count_function);
-      if (arg_list && is_error(arg_list)) {
-        record_error(ast);
-        return;
-      }
-      POP_EXPR_CONTEXT();
+    sem_arg_list(arg_list, IS_NOT_COUNT);
+    if (arg_list && is_error(arg_list)) {
+      record_error(ast);
+      return;
     }
-    else {
-      if (!Strcasecmp("cql_inferred_notnull", name)) {
-        // If we're checking a call to `cql_inferred_notnull`, its arguments
-        // have already been rewritten and we don't want to do it again. Setting
-        // `is_analyzing_notnull_rewrite` prevents that.
-        is_analyzing_notnull_rewrite = true;
-        sem_arg_list(arg_list, is_count_function);
-        is_analyzing_notnull_rewrite = false;
-      } else {
-        sem_arg_list(arg_list, is_count_function);
-      }
-      if (arg_list && is_error(arg_list)) {
-        record_error(ast);
-        return;
-      }
-    }
-    ((void (*)(ast_node*, uint32_t))entry->val)(ast, arg_count);
+    ((sem_func *)entry->val)(ast, arg_count);
+    goto cleanup;
+  }
+
+  // check for special functions which do their own analysis of their arguments
+  entry = symtab_find(builtin_special_funcs, name);
+  if (entry) {
+    ((sem_special_func *)entry->val)(ast, arg_count, &call_aggr_or_user_def_func);
     goto cleanup;
   }
 
@@ -11555,7 +11571,7 @@ static void sem_elseif_list(ast_node *head) {
 
   for (ast_node *ast = head; ast; ast = ast->right) {
     Contract(is_ast_elseif(ast));
-    EXTRACT(cond_action, ast->left);
+    EXTRACT_NOTNULL(cond_action, ast->left);
 
     // ELSE IF [cond_action]
     sem_cond_action(cond_action);
@@ -11575,8 +11591,8 @@ static void sem_elseif_list(ast_node *head) {
 // basically just calling out and marking errors up the stack as needed.
 static void sem_if_stmt(ast_node *ast) {
   Contract(is_ast_if_stmt(ast));
-  EXTRACT(cond_action, ast->left);
-  EXTRACT(if_alt, ast->right);
+  EXTRACT_NOTNULL(cond_action, ast->left);
+  EXTRACT_NOTNULL(if_alt, ast->right);
 
   // IF [cond_action]
   sem_cond_action(cond_action);
@@ -11585,39 +11601,101 @@ static void sem_if_stmt(ast_node *ast) {
     return;
   }
 
-  if (if_alt) {
-    EXTRACT(elseif, if_alt->left);
-    EXTRACT_NAMED(elsenode, else, if_alt->right);
+  EXTRACT(elseif, if_alt->left);
+  EXTRACT_NAMED(elsenode, else, if_alt->right);
 
-    if (elseif) {
-      sem_elseif_list(elseif);
-      if (is_error(elseif)) {
+  if (elseif) {
+    sem_elseif_list(elseif);
+    if (is_error(elseif)) {
+      record_error(ast);
+      record_error(if_alt);
+      return;
+    }
+  }
+
+  if (elsenode) {
+    // ELSE [stmt_list]
+    EXTRACT(stmt_list, elsenode->left);
+    if (stmt_list) {
+      sem_stmt_list(stmt_list);
+      if (is_error(stmt_list)) {
         record_error(ast);
+        record_error(elsenode);
         record_error(if_alt);
         return;
       }
     }
-
-    if (elsenode) {
-      // ELSE [stmt_list]
-      EXTRACT(stmt_list, elsenode->left);
-      if (stmt_list) {
-        sem_stmt_list(stmt_list);
-        if (is_error(stmt_list)) {
-          record_error(ast);
-          record_error(elsenode);
-          record_error(if_alt);
-          return;
-        }
-      }
-      record_ok(elsenode);
-    }
-
-    record_ok(if_alt);
+    record_ok(elsenode);
   }
+
+  record_ok(if_alt);
 
   ast->sem = cond_action->sem;
   // END IF
+}
+
+// Improvements for guard statements are dual to improvements for normal IF
+// statements: Guard statements improve ids and dots verified to be NULL via `IS
+// NULL` along the outermost spine of `OR` expressions, whereas IF statements
+// improve ids and dots verified to be nonnull via `IS NOT NULL` along the
+// outermost spine of `AND` expressions. For example, the following two
+// statements introduce the same improvements:
+//
+//   IF a IS NOT NULL AND b IS NOT NULL THEN
+//     -- `a` and `b` are improved here
+//   END IF;
+//
+//   IF a IS NULL OR b IS NULL RETURN;
+//   -- `a` and `b` are improved here
+//
+// Improvements resulting from guards persist until the end of the current
+// statement list as with improvements resulting from SET.
+static void sem_add_improvements_from_guard_condition(ast_node *ast) {
+  Contract(ast);
+  
+  if (is_ast_or(ast)) {
+    sem_add_improvements_from_guard_condition(ast->left);
+    sem_add_improvements_from_guard_condition(ast->right);
+    return;
+  }
+
+  if (is_ast_is(ast) && is_ast_null(ast->right)) {
+    EXTRACT_ANY_NOTNULL(expr, ast->left);
+    if (is_ast_id(expr)) {
+      EXTRACT_STRING(name, expr);
+      sem_set_notnull_improved(name, NULL);
+    } else if (is_ast_dot(expr)) {
+      EXTRACT_STRING(name, expr->right);
+      EXTRACT_STRING(scope, expr->left);
+      sem_set_notnull_improved(name, scope);
+    }
+  }
+}
+
+// Guard statements are a restricted form of IF statement where the current
+// block or procedure is exited when the guard condition is true. The valid
+// forms are as follows:
+//
+//   IF expr COMMIT RETURN;
+//   IF expr CONTINUE;
+//   IF expr LEAVE;
+//   IF expr RETURN;
+//   IF expr ROLLBACK RETURN;
+//   IF expr THROW;
+//
+//  As with IF statements, nullability improvements are possible.
+static void sem_guard_stmt(ast_node *ast) {
+  Contract(is_ast_guard_stmt(ast));
+
+  rewrite_guard_stmt_to_if_stmt(ast);
+  if (is_error(ast)) {
+    return;
+  }
+
+  EXTRACT_NOTNULL(cond_action, ast->left);
+  EXTRACT_ANY_NOTNULL(expr, cond_action->left);
+
+  sem_add_improvements_from_guard_condition(expr);
 }
 
 // This is the delete analyzer, it sets up a joinscope for the table being
@@ -15728,6 +15806,24 @@ cleanup:
    symtab_delete(names);
 }
 
+// Declares an external procedure that can be called with any combination of C args
+// this is intended for procedures like `printf` that cannot be readily described with
+// CQL strict types.
+static void sem_declare_proc_no_check_stmt(ast_node *ast) {
+ Contract(is_ast_declare_proc_no_check_stmt(ast));
+  EXTRACT_STRING(name, ast->left);
+
+  if (find_proc(name)) {
+    report_error(ast, "CQL0404: procedure cannot be both a normal procedure and an unchecked procedure", name);
+    record_error(ast);
+    return;
+  }
+
+  // it can be added more than once, no need to check the return code
+  add_unchecked_proc(ast, name);
+  record_ok(ast);
+}
+
 // There are three forms of this declaration:
 // 1.  a regular proc with no DML
 //    declare proc X(id integer);
@@ -15754,6 +15850,12 @@ static void sem_declare_proc_stmt(ast_node *ast) {
   Invariant(!locals);
 
   // CREATE PROC [name] ( [params] )
+
+  if (find_unchecked_proc(name)) {
+    report_error(ast, "CQL0404: procedure cannot be both a normal procedure and an unchecked procedure", name);
+    record_error(ast);
+    return;
+  }
 
   if (find_func(name)) {
     report_error(name_ast, "CQL0195: proc name conflicts with func name", name);
@@ -17003,8 +17105,8 @@ static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name) {
 
   ast_node *proc_stmt = find_proc(name);
 
-  if (enforcement.strict_procedure && !proc_stmt) {
-    report_error(ast, "CQL0323: calls to undeclared procedures are forbidden if strict procedure mode is enabled; declaration missing or typo", name);
+  if (!proc_stmt && !find_unchecked_proc(name)) {
+    report_error(ast, "CQL0323: calls to undeclared procedures are forbidden; declaration missing or typo", name);
     record_error(ast);
     return;
   }
@@ -17796,7 +17898,7 @@ static void sem_declare_out_call_stmt(ast_node *ast) {
 // what the statement is yet (such as we're walking a statement list) this will
 // dispatch to the correct method.  Also, the top level statement captures
 // any errors.
-static void sem_one_stmt(ast_node *stmt) {
+cql_noexport void sem_one_stmt(ast_node *stmt) {
   CHARBUF_OPEN(errbuf);
   bool_t capture_now = options.print_ast && error_capture == NULL;
 
@@ -18329,7 +18431,7 @@ static void sem_expr_select_if_nothing(ast_node *ast, CSTR op) {
   Contract(is_ast_select_if_nothing_expr(ast) || is_ast_select_if_nothing_or_null_expr(ast));
 
   sem_t core_type_left, core_type_right, combined_flags;
-  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags, CANNOT_SHORT_CIRCUIT)) {
+  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags)) {
     return;
   }
 
@@ -18520,10 +18622,6 @@ static void sem_enforcement_options(ast_node *ast, bool_t strict) {
       enforcement.strict_window_func = strict;
       break;
 
-    case ENFORCE_PROCEDURE:
-      enforcement.strict_procedure = strict;
-      break;
-
     case ENFORCE_WITHOUT_ROWID:
       enforcement.strict_without_rowid = strict;
       break;
@@ -18553,33 +18651,37 @@ static void sem_enforcement_options(ast_node *ast, bool_t strict) {
       break;
 
     case ENFORCE_ENCODE_CONTEXT_TYPE_INTEGER:
-      enforcement.strict_encode_context_type= strict;
+      enforcement.strict_encode_context_type = strict;
       encode_context_type = SEM_TYPE_INTEGER;
       break;
 
     case ENFORCE_ENCODE_CONTEXT_TYPE_LONG_INTEGER:
-      enforcement.strict_encode_context_type= strict;
+      enforcement.strict_encode_context_type = strict;
       encode_context_type = SEM_TYPE_LONG_INTEGER;
       break;
 
     case ENFORCE_ENCODE_CONTEXT_TYPE_REAL:
-      enforcement.strict_encode_context_type= strict;
+      enforcement.strict_encode_context_type = strict;
       encode_context_type = SEM_TYPE_REAL;
       break;
 
     case ENFORCE_ENCODE_CONTEXT_TYPE_BOOL:
-      enforcement.strict_encode_context_type= strict;
+      enforcement.strict_encode_context_type = strict;
       encode_context_type = SEM_TYPE_BOOL;
       break;
 
     case ENFORCE_ENCODE_CONTEXT_TYPE_TEXT:
-      enforcement.strict_encode_context_type= strict;
+      enforcement.strict_encode_context_type = strict;
       encode_context_type = SEM_TYPE_TEXT;
       break;
 
     case ENFORCE_ENCODE_CONTEXT_TYPE_BLOB:
-      enforcement.strict_encode_context_type= strict;
+      enforcement.strict_encode_context_type = strict;
       encode_context_type = SEM_TYPE_BLOB;
+      break;
+
+    case ENFORCE_IS_TRUE:
+      enforcement.strict_is_true = strict;
       break;
 
     default:
@@ -19223,6 +19325,15 @@ cql_noexport void exit_on_validating_schema() {
 #undef FUNC_INIT
 #define FUNC_INIT(x) symtab_add(builtin_funcs, #x, (void *)sem_func_ ## x)
 
+// A special function is one whose arguments require special treatment during
+// semantic analysis, for whatever reason. The procedure that does the analysis
+// (of type `sem_special_func`) must therefore be sure to analyze its argument
+// list appropriately: It will not be done beforehand as it is with functions
+// registered via `FUNC_INIT`. It must also indicate if it is an aggregate
+// function so that `sem_expr_call` knows how to handle it.
+#undef SPECIAL_FUNC_INIT
+#define SPECIAL_FUNC_INIT(x) symtab_add(builtin_special_funcs, #x, (void *)sem_special_func_ ## x)
+
 #undef AGGR_FUNC_INIT
 #define AGGR_FUNC_INIT(x) symtab_add(builtin_aggregated_funcs, #x, (void *)sem_aggr_func_ ## x)
 
@@ -19246,8 +19357,10 @@ cql_noexport void sem_main(ast_node *ast) {
 
   exprs = symtab_new();
   builtin_funcs = symtab_new();
+  builtin_special_funcs = symtab_new();
   funcs = symtab_new();
   procs = symtab_new();
+  unchecked_procs = symtab_new();
   proc_arg_info = symtab_new();
   enums = symtab_new();
   triggers = symtab_new();
@@ -19279,6 +19392,7 @@ cql_noexport void sem_main(ast_node *ast) {
   symtab *syms = non_sql_stmts;
 
   STMT_INIT(if_stmt);
+  STMT_INIT(guard_stmt);
   STMT_INIT(while_stmt);
   STMT_INIT(switch_stmt);
   STMT_INIT(leave_stmt);
@@ -19296,6 +19410,7 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(create_proc_stmt);
   STMT_INIT(declare_enum_stmt);
   STMT_INIT(declare_proc_stmt);
+  STMT_INIT(declare_proc_no_check_stmt);
   STMT_INIT(declare_func_stmt);
   STMT_INIT(declare_select_func_stmt);
   STMT_INIT(echo_stmt);
@@ -19360,7 +19475,6 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(proc_savepoint_stmt);
   STMT_INIT(emit_enums_stmt);
 
-  AGGR_FUNC_INIT(count);
   AGGR_FUNC_INIT(max);
   AGGR_FUNC_INIT(min);
   AGGR_FUNC_INIT(sum);
@@ -19380,7 +19494,6 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(abs);
   FUNC_INIT(instr);
   FUNC_INIT(coalesce);
-  FUNC_INIT(iif);
   FUNC_INIT(last_insert_rowid);
   FUNC_INIT(changes);
   FUNC_INIT(printf);
@@ -19393,7 +19506,6 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(ifnull_throw);
   FUNC_INIT(nullable);
   FUNC_INIT(sensitive);
-  FUNC_INIT(ptr);
   FUNC_INIT(substr);
   FUNC_INIT(row_number);
   FUNC_INIT(rank);
@@ -19414,7 +19526,12 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(length);
 
   FUNC_INIT(cql_get_blob_size);
-  FUNC_INIT(cql_inferred_notnull);
+
+  SPECIAL_FUNC_INIT(count);
+  SPECIAL_FUNC_INIT(iif);
+  SPECIAL_FUNC_INIT(ptr);
+
+  SPECIAL_FUNC_INIT(cql_inferred_notnull);
 
   EXPR_INIT(num, sem_expr_num, "NUM");
   EXPR_INIT(str, sem_expr_str, "STR");
@@ -19546,6 +19663,7 @@ cql_noexport void sem_cleanup() {
   SYMTAB_CLEANUP(assembly_fragments);
   SYMTAB_CLEANUP(base_fragments);
   SYMTAB_CLEANUP(builtin_funcs);
+  SYMTAB_CLEANUP(builtin_special_funcs)
   SYMTAB_CLEANUP(current_region_image);
   SYMTAB_CLEANUP(exprs);
   SYMTAB_CLEANUP(extension_fragments);
@@ -19558,6 +19676,7 @@ cql_noexport void sem_cleanup() {
   SYMTAB_CLEANUP(new_enums);
   SYMTAB_CLEANUP(non_sql_stmts);
   SYMTAB_CLEANUP(procs);
+  SYMTAB_CLEANUP(unchecked_procs);
   SYMTAB_CLEANUP(proc_arg_info);
   SYMTAB_CLEANUP(enums);
   SYMTAB_CLEANUP(schema_regions);

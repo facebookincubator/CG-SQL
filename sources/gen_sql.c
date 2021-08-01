@@ -2164,26 +2164,37 @@ static void gen_elseif_list(ast_node *ast) {
 
 static void gen_if_stmt(ast_node *ast) {
   Contract(is_ast_if_stmt(ast));
-  EXTRACT(cond_action, ast->left);
-  EXTRACT(if_alt, ast->right);
+  EXTRACT_NOTNULL(cond_action, ast->left);
+  EXTRACT_NOTNULL(if_alt, ast->right);
+  EXTRACT(elseif, if_alt->left);
+  EXTRACT_NAMED(elsenode, else, if_alt->right);
 
   gen_printf("IF ");
   gen_cond_action(cond_action);
-  if (if_alt) {
-    EXTRACT(elseif, if_alt->left);
-    EXTRACT_NAMED(elsenode, else, if_alt->right);
 
-    if (elseif) {
-      gen_elseif_list(elseif);
-    }
-
-    if (elsenode) {
-      gen_printf("ELSE\n");
-      EXTRACT(stmt_list, elsenode->left);
-      gen_stmt_list(stmt_list);
-    }
+  if (elseif) {
+    gen_elseif_list(elseif);
   }
+
+  if (elsenode) {
+    gen_printf("ELSE\n");
+    EXTRACT(stmt_list, elsenode->left);
+    gen_stmt_list(stmt_list);
+  }
+
   gen_printf("END IF");
+}
+
+static void gen_guard_stmt(ast_node *ast) {
+  Contract(is_ast_guard_stmt(ast));
+  EXTRACT_ANY_NOTNULL(expr, ast->left);
+  EXTRACT(control_stmt, ast->right);
+  EXTRACT_ANY_NOTNULL(stmt, control_stmt->left);
+
+  gen_printf("IF ");
+  gen_expr(expr, EXPR_PRI_ROOT);
+  gen_printf(" ");
+  gen_one_stmt(stmt);
 }
 
 static void gen_delete_stmt(ast_node *ast) {
@@ -2690,6 +2701,13 @@ static void gen_typed_names(ast_node *ast) {
 
     ast = ast->right;
   }
+}
+
+static void gen_declare_proc_no_check_stmt(ast_node *ast) {
+  Contract(is_ast_declare_proc_no_check_stmt(ast));
+  EXTRACT_ANY_NOTNULL(proc_name, ast->left);
+  EXTRACT_STRING(name, proc_name);
+  gen_printf("DECLARE PROC %s NO CHECK", name);
 }
 
 static void gen_declare_proc_stmt(ast_node *ast) {
@@ -3206,10 +3224,6 @@ static void gen_enforcement_options(ast_node *ast) {
       gen_printf("WINDOW FUNCTION");
       break;
 
-    case ENFORCE_PROCEDURE:
-      gen_printf("PROCEDURE");
-      break;
-
     case ENFORCE_WITHOUT_ROWID:
       gen_printf("WITHOUT ROWID");
       break;
@@ -3260,6 +3274,10 @@ static void gen_enforcement_options(ast_node *ast) {
 
     case ENFORCE_ENCODE_CONTEXT_TYPE_BLOB:
       gen_printf("ENCODE CONTEXT TYPE BLOB");
+      break;
+
+    case ENFORCE_IS_TRUE:
+      gen_printf("IS TRUE");
       break;
 
     default:
@@ -3487,6 +3505,7 @@ cql_noexport void gen_init() {
   gen_exprs = symtab_new();
 
   STMT_INIT(if_stmt);
+  STMT_INIT(guard_stmt);
   STMT_INIT(while_stmt);
   STMT_INIT(switch_stmt);
   STMT_INIT(leave_stmt);
@@ -3534,6 +3553,7 @@ cql_noexport void gen_init() {
   STMT_INIT(declare_named_type);
   STMT_INIT(declare_value_cursor);
   STMT_INIT(declare_proc_stmt);
+  STMT_INIT(declare_proc_no_check_stmt);
   STMT_INIT(declare_func_stmt);
   STMT_INIT(declare_select_func_stmt);
   STMT_INIT(loop_stmt);

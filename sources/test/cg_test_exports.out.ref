@@ -1,5 +1,6 @@
 
 DECLARE PROC test (i INTEGER NOT NULL);
+DECLARE PROC proc_with_return_guard (a INTEGER);
 DECLARE PROC out_test (OUT i INTEGER NOT NULL, OUT ii INTEGER);
 DECLARE PROC outparm_test (OUT foo INTEGER NOT NULL) USING TRANSACTION;
 DECLARE PROC throwing () USING TRANSACTION;
@@ -195,4 +196,5 @@ DECLARE PROC result_set_proc_with_contract_in_fetch_results (t TEXT NOT NULL) (i
 DECLARE PROC out_proc_with_contract_in_fetch_results (t TEXT NOT NULL) OUT (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
 DECLARE PROC nullability_improvements_are_erased_for_sql () (b INTEGER NOT NULL);
 DECLARE PROC nullability_improvements_do_not_change_access ();
+DECLARE PROC BigFormat () USING TRANSACTION;
 DECLARE PROC end_proc ();

@@ -2,6 +2,25 @@
 
 The statement ending at line XXXX
 
+DECLARE PROC printf NO CHECK;
+
+  {declare_proc_no_check_stmt}: ok
+  | {name printf}
+
+The statement ending at line XXXX
+
+DECLARE PROC printf ();
+
+Error at test/sem_test.sql:XXXX : in declare_proc_stmt : CQL0404: procedure cannot be both a normal procedure and an unchecked procedure 'printf'
+
+  {declare_proc_stmt}: err
+  | {proc_name_type}
+  | | {name printf}
+  | | {int 0}
+  | {proc_params_stmts}
+
+The statement ending at line XXXX
+
 CREATE TABLE foo(
   id INTEGER PRIMARY KEY AUTOINCREMENT
 );
@@ -5543,6 +5562,64 @@ LET bool_x := 1;
 
 The statement ending at line XXXX
 
+@ENFORCE_STRICT IS TRUE;
+
+  {enforce_strict_stmt}: ok
+  | {int 20}
+
+The statement ending at line XXXX
+
+SET bool_x := 1 IS TRUE;
+
+Error at test/sem_test.sql:XXXX : in is_true : CQL0403: operator may not be used because it is not supported on old versions of SQLite 'IS TRUE'
+
+  {assign}: err
+  | {name bool_x}: bool_x: bool notnull variable
+  | {is_true}: err
+    | {int 1}
+
+The statement ending at line XXXX
+
+SET bool_x := 1 IS FALSE;
+
+Error at test/sem_test.sql:XXXX : in is_false : CQL0403: operator may not be used because it is not supported on old versions of SQLite 'IS FALSE'
+
+  {assign}: err
+  | {name bool_x}: bool_x: bool notnull variable
+  | {is_false}: err
+    | {int 1}
+
+The statement ending at line XXXX
+
+SET bool_x := 1 IS NOT TRUE;
+
+Error at test/sem_test.sql:XXXX : in is_not_true : CQL0403: operator may not be used because it is not supported on old versions of SQLite 'IS NOT TRUE'
+
+  {assign}: err
+  | {name bool_x}: bool_x: bool notnull variable
+  | {is_not_true}: err
+    | {int 1}
+
+The statement ending at line XXXX
+
+SET bool_x := 1 IS NOT FALSE;
+
+Error at test/sem_test.sql:XXXX : in is_not_false : CQL0403: operator may not be used because it is not supported on old versions of SQLite 'IS NOT FALSE'
+
+  {assign}: err
+  | {name bool_x}: bool_x: bool notnull variable
+  | {is_not_false}: err
+    | {int 1}
+
+The statement ending at line XXXX
+
+@ENFORCE_NORMAL IS TRUE;
+
+  {enforce_normal_stmt}: ok
+  | {int 20}
+
+The statement ending at line XXXX
+
 SET bool_x := 1;
 
   {assign}: bool_x: bool notnull variable
@@ -7795,6 +7872,13 @@ END;
 
 The statement ending at line XXXX
 
+DECLARE PROC anything NO CHECK;
+
+  {declare_proc_no_check_stmt}: ok
+  | {name anything}
+
+The statement ending at line XXXX
+
 CREATE PROC proc4 (IN arg1 INTEGER, OUT arg2 TEXT, INOUT arg3 REAL)
 BEGIN
   CALL anything(arg1, arg3);
@@ -8083,13 +8167,6 @@ Error at test/sem_test.sql:XXXX : in null : CQL0013: cannot assign/copy possibly
 
 The statement ending at line XXXX
 
-CALL foo();
-
-  {call_stmt}: ok
-  | {name foo}: ok
-
-The statement ending at line XXXX
-
 CALL printf('Hello, world');
 
   {call_stmt}: ok
@@ -8320,6 +8397,36 @@ SELECT count(*)
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
   |     |         | {star}: integer
+  |     | {select_from_etc}: TABLE { foo: foo }
+  |       | {table_or_subquery_list}: TABLE { foo: foo }
+  |       | | {table_or_subquery}: TABLE { foo: foo }
+  |       |   | {name foo}: TABLE { foo: foo }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT count(this_does_not_exist)
+  FROM foo;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'this_does_not_exist'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name count}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: err
+  |     |         | {name this_does_not_exist}: err
   |     | {select_from_etc}: TABLE { foo: foo }
   |       | {table_or_subquery_list}: TABLE { foo: foo }
   |       | | {table_or_subquery}: TABLE { foo: foo }
@@ -9544,26 +9651,25 @@ DECLARE curs CURSOR FOR CALL with_result_set();
 
 The statement ending at line XXXX
 
+DECLARE curs2 CURSOR FOR CALL with_result_set(1);
+
+Error at test/sem_test.sql:XXXX : in call_stmt : CQL0235: too many arguments provided to procedure 'with_result_set'
+
+  {declare_cursor}: err
+  | {name curs2}
+  | {call_stmt}: err
+    | {name with_result_set}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+    | {expr_list}: ok
+      | {int 1}
+
+The statement ending at line XXXX
+
 CALL with_result_set();
 
 Error at test/sem_test.sql:XXXX : in call_stmt : CQL0214: procedures with results can only be called using a cursor in global context 'with_result_set'
 
   {call_stmt}: err
   | {name with_result_set}
-
-The statement ending at line XXXX
-
-DECLARE curs CURSOR FOR CALL bogus_call(NOT 'x');
-
-Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
-
-  {declare_cursor}: err
-  | {name curs}
-  | {call_stmt}: err
-    | {name bogus_call}: ok
-    | {expr_list}: err
-      | {not}: err
-        | {strlit 'x'}: text notnull
 
 The statement ending at line XXXX
 
@@ -13014,6 +13120,15 @@ DECLARE PROC decl1 (id INTEGER);
 
 The statement ending at line XXXX
 
+DECLARE PROC decl1 NO CHECK;
+
+Error at test/sem_test.sql:XXXX : in declare_proc_no_check_stmt : CQL0404: procedure cannot be both a normal procedure and an unchecked procedure 'decl1'
+
+  {declare_proc_no_check_stmt}: err
+  | {name decl1}
+
+The statement ending at line XXXX
+
 DECLARE PROC decl2 (id INTEGER) USING TRANSACTION;
 
   {declare_proc_stmt}: ok dml_proc
@@ -14188,6 +14303,29 @@ Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant fai
 
 The statement ending at line XXXX
 
+SELECT CONST(NOT x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {not}: bool
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
 SELECT CONST(CASE x WHEN 1 THEN 2
 END);
 
@@ -14326,6 +14464,94 @@ Error at test/sem_test.sql:XXXX : in tilde : CQL0001: operands must be an intege
 
 The statement ending at line XXXX
 
+SELECT CONST(~(1 / 0));
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {tilde}: integer notnull
+  |     |       | {div}: integer notnull
+  |     |         | {int 1}: integer notnull
+  |     |         | {int 0}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(-(1 / 0));
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {uminus}: integer notnull
+  |     |       | {div}: integer notnull
+  |     |         | {int 1}: integer notnull
+  |     |         | {int 0}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
 SELECT CONST(x = x);
 
 Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
@@ -14374,7 +14600,7 @@ Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant fai
 
 The statement ending at line XXXX
 
-SELECT CONST(x + x);
+SELECT CONST(x + 0);
 
 Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
 
@@ -14387,6 +14613,1672 @@ Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant fai
   |     |   | {const}: err
   |     |     | {add}: integer
   |     |       | {name x}: X: integer variable
+  |     |       | {int 0}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(0 + x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {add}: integer
+  |     |       | {int 0}: integer notnull
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 1;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | : bool notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(x - 0);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {sub}: integer
+  |     |       | {name x}: X: integer variable
+  |     |       | {int 0}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(0 - x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {sub}: integer
+  |     |       | {int 0}: integer notnull
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 1;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | : bool notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(x * 0);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {mul}: integer
+  |     |       | {name x}: X: integer variable
+  |     |       | {int 0}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(0 * x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {mul}: integer
+  |     |       | {int 0}: integer notnull
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 0;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | : bool notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(x / 1);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {div}: integer
+  |     |       | {name x}: X: integer variable
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1 / x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {div}: integer
+  |     |       | {int 1}: integer notnull
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 0;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | : bool notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(x % 1);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {mod}: integer
+  |     |       | {name x}: X: integer variable
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1 % x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {mod}: integer
+  |     |       | {int 1}: integer notnull
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 0;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | : bool notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(x = 1);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {eq}: bool
+  |     |       | {name x}: X: integer variable
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1 = x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {eq}: bool
+  |     |       | {int 1}: integer notnull
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 0;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | : bool notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(x <> 1);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {ne}: bool
+  |     |       | {name x}: X: integer variable
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1 <> x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {ne}: bool
+  |     |       | {int 1}: integer notnull
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 1;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | : bool notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(x <= 1);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {le}: bool
+  |     |       | {name x}: X: integer variable
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1 <= x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {le}: bool
+  |     |       | {int 1}: integer notnull
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 1;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | : bool notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(x >= 1);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {ge}: bool
+  |     |       | {name x}: X: integer variable
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1 >= x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {ge}: bool
+  |     |       | {int 1}: integer notnull
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 0;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | : bool notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(x > 1);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {gt}: bool
+  |     |       | {name x}: X: integer variable
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1 > x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {gt}: bool
+  |     |       | {int 1}: integer notnull
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 0;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | : bool notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(x < 1);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {lt}: bool
+  |     |       | {name x}: X: integer variable
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1 < x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {lt}: bool
+  |     |       | {int 1}: integer notnull
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 1;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | : bool notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(x << 1);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {lshift}: integer
+  |     |       | {name x}: X: integer variable
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1 << x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {lshift}: integer
+  |     |       | {int 1}: integer notnull
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 0;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | : bool notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(x >> 1);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {rshift}: integer
+  |     |       | {name x}: X: integer variable
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1 >> x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {rshift}: integer
+  |     |       | {int 1}: integer notnull
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 0;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | : bool notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(x | 1);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {bin_or}: integer
+  |     |       | {name x}: X: integer variable
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1 | x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {bin_or}: integer
+  |     |       | {int 1}: integer notnull
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 1;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | : bool notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(x & 1);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {bin_and}: integer
+  |     |       | {name x}: X: integer variable
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1 & x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {bin_and}: integer
+  |     |       | {int 1}: integer notnull
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT NULL;
+
+  {select_stmt}: select: { _anon: null }
+  | {select_core_list}: select: { _anon: null }
+  | | {select_core}: select: { _anon: null }
+  |   | {select_expr_list_con}: select: { _anon: null }
+  |     | {select_expr_list}: select: { _anon: null }
+  |     | | {select_expr}: null
+  |     |   | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 0;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | : bool notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(x IS 1);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {is}: bool notnull
+  |     |       | {name x}: X: integer variable
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1 IS x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {is}: bool notnull
+  |     |       | {int 1}: integer notnull
+  |     |       | {name x}: X: integer variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(x IS NOT 1);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {is_not}: bool notnull
+  |     |       | {name x}: X: integer variable
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1 IS NOT x);
+
+Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {is_not}: bool notnull
+  |     |       | {int 1}: integer notnull
   |     |       | {name x}: X: integer variable
   |     | {select_from_etc}: ok
   |       | {select_where}
@@ -19585,6 +21477,72 @@ END;
 
 The statement ending at line XXXX
 
+DECLARE QQ CURSOR LIKE out_cursor_proc;
+
+  {declare_cursor_like_name}: QQ: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+  | {name QQ}: QQ: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+  | {like}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+    | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+
+The statement ending at line XXXX
+
+FETCH QQ FROM CALL out_cursor_proc(1);
+
+Error at test/sem_test.sql:XXXX : in call_stmt : CQL0235: too many arguments provided to procedure 'out_cursor_proc'
+
+  {fetch_call_stmt}: err
+  | {name QQ}
+  | {call_stmt}: err
+    | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+    | {expr_list}: ok
+      | {int 1}
+
+The statement ending at line XXXX
+
+CREATE PROC not_out_cursor_proc ()
+BEGIN
+  SELECT 1 AS A, 2 AS B;
+END;
+
+  {create_proc_stmt}: select: { A: integer notnull, B: integer notnull } dml_proc
+  | {name not_out_cursor_proc}: select: { A: integer notnull, B: integer notnull } dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {select_stmt}: select: { A: integer notnull, B: integer notnull }
+        | {select_core_list}: select: { A: integer notnull, B: integer notnull }
+        | | {select_core}: select: { A: integer notnull, B: integer notnull }
+        |   | {select_expr_list_con}: select: { A: integer notnull, B: integer notnull }
+        |     | {select_expr_list}: select: { A: integer notnull, B: integer notnull }
+        |     | | {select_expr}: A: integer notnull
+        |     | | | {int 1}: integer notnull
+        |     | | | {opt_as_alias}
+        |     | |   | {name A}
+        |     | | {select_expr_list}
+        |     |   | {select_expr}: B: integer notnull
+        |     |     | {int 2}: integer notnull
+        |     |     | {opt_as_alias}
+        |     |       | {name B}
+        |     | {select_from_etc}: ok
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+FETCH QQ FROM CALL not_out_cursor_proc();
+
+Error at test/sem_test.sql:XXXX : in call_stmt : CQL0203: cursor requires a procedure that returns a cursor with OUT 'QQ'
+
+  {fetch_call_stmt}: err
+  | {name QQ}
+  | {call_stmt}: err
+    | {name not_out_cursor_proc}: select: { A: integer notnull, B: integer notnull } dml_proc
+
+The statement ending at line XXXX
+
 CREATE PROC out_cursor_proc_not_shape_storage ()
 BEGIN
   DECLARE a, b INTEGER NOT NULL;
@@ -20260,6 +22218,16 @@ Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed i
 
 The statement ending at line XXXX
 
+CREATE PROC xyzzy ()
+BEGIN
+END;
+
+  {create_proc_stmt}: ok
+  | {name xyzzy}: ok
+  | {proc_params_stmts}
+
+The statement ending at line XXXX
+
 CREATE PROC invalid_proc_fetch ()
 BEGIN
   DECLARE C CURSOR FETCH FROM CALL xyzzy();
@@ -20579,32 +22547,6 @@ END;
       | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
       | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
-      | {out_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-
-The statement ending at line XXXX
-
-CREATE PROC fetch_from_call_to_proc_that_does_not_exist ()
-BEGIN
-  DECLARE C CURSOR LIKE out_cursor_proc;
-  FETCH C FROM CALL does_not_exist();
-  OUT C;
-END;
-
-Error at test/sem_test.sql:XXXX : in call_stmt : CQL0203: cursor requires a procedure that returns a cursor with OUT 'C'
-
-  {create_proc_stmt}: err
-  | {name fetch_from_call_to_proc_that_does_not_exist}: err
-  | {proc_params_stmts}
-    | {stmt_list}: err
-      | {declare_cursor_like_name}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-      | | {like}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
-      | {fetch_call_stmt}: err
-      | | {name C}
-      | | {call_stmt}: err
-      |   | {name does_not_exist}: ok
       | {out_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
         | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
 
@@ -48239,33 +50181,30 @@ Error at test/sem_test.sql:XXXX : in fk_def : CQL0021: foreign key refers to non
 
 The statement ending at line XXXX
 
-@ENFORCE_STRICT PROCEDURE;
-
-  {enforce_strict_stmt}: ok
-  | {int 6}
-
-The statement ending at line XXXX
-
 CALL some_external_thing();
 
-Error at test/sem_test.sql:XXXX : in call_stmt : CQL0323: calls to undeclared procedures are forbidden if strict procedure mode is enabled; declaration missing or typo 'some_external_thing'
+Error at test/sem_test.sql:XXXX : in call_stmt : CQL0323: calls to undeclared procedures are forbidden; declaration missing or typo 'some_external_thing'
 
   {call_stmt}: err
   | {name some_external_thing}
 
 The statement ending at line XXXX
 
-@ENFORCE_NORMAL PROCEDURE;
+DECLARE PROC some_external_thing NO CHECK;
 
-  {enforce_normal_stmt}: ok
-  | {int 6}
+  {declare_proc_no_check_stmt}: ok
+  | {name some_external_thing}
 
 The statement ending at line XXXX
 
-CALL some_external_thing();
+CALL some_external_thing('x', 5.0);
 
   {call_stmt}: ok
   | {name some_external_thing}: ok
+  | {expr_list}: ok
+    | {strlit 'x'}: text notnull
+    | {expr_list}
+      | {dbl 5.0}: real notnull
 
 The statement ending at line XXXX
 
@@ -53780,15 +55719,105 @@ Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect numbe
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
-  |     |         | {is}: bool notnull
-  |     |         | | {name an_int}: an_int: integer variable
-  |     |         | | {null}: null
+  |     |         | {is}
+  |     |         | | {name an_int}
+  |     |         | | {null}
+  |     |         | {arg_list}
+  |     |           | {int 2}
+  |     |           | {arg_list}
+  |     |             | {int 3}
+  |     |             | {arg_list}
+  |     |               | {int 4}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT iif(not_found, 2, 3);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'not_found'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name iif}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {name not_found}: err
+  |     |         | {arg_list}
+  |     |           | {int 2}
+  |     |           | {arg_list}
+  |     |             | {int 3}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT iif(1, not_found, 3);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'not_found'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}
+  |     |   | {call}
+  |     |     | {name iif}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {int 1}: integer notnull
+  |     |         | {arg_list}
+  |     |           | {name not_found}: err
+  |     |           | {arg_list}
+  |     |             | {int 3}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT iif(1, 2, not_found);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'not_found'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name iif}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {int 1}: integer notnull
   |     |         | {arg_list}
   |     |           | {int 2}: integer notnull
   |     |           | {arg_list}
-  |     |             | {int 3}: integer notnull
-  |     |             | {arg_list}
-  |     |               | {int 4}: integer notnull
+  |     |             | {name not_found}: err
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -53816,9 +55845,9 @@ Error at test/sem_test.sql:XXXX : in str : CQL0082: argument must be numeric 'ii
   |     |       | {arg_list}: ok
   |     |         | {strlit 'x'}: text notnull
   |     |         | {arg_list}
-  |     |           | {int 2}: integer notnull
+  |     |           | {int 2}
   |     |           | {arg_list}
-  |     |             | {int 3}: integer notnull
+  |     |             | {int 3}
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -63441,681 +65470,6 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_for_ifnull_crash ()
-BEGIN
-  DECLARE a INTEGER;
-  LET x0 := ifnull_crash(a);
-  LET x1 := a;
-END;
-
-  {create_proc_stmt}: ok
-  | {name improvements_work_for_ifnull_crash}: ok
-  | {proc_params_stmts}
-    | {stmt_list}: ok
-      | {declare_vars_type}: integer
-      | | {name_list}: a: integer variable
-      | | | {name a}: a: integer variable
-      | | {type_int}: integer
-      | {let_stmt}: x0: integer notnull variable
-      | | {name x0}: x0: integer notnull variable
-      | | {call}: a: integer notnull variable
-      |   | {name ifnull_crash}: a: integer notnull variable
-      |   | {call_arg_list}
-      |     | {call_filter_clause}
-      |     | {arg_list}: ok
-      |       | {name a}: a: integer variable
-      | {let_stmt}: x1: integer notnull variable
-        | {name x1}: x1: integer notnull variable
-        | {call}: a: integer notnull variable
-          | {name cql_inferred_notnull}: a: integer notnull variable
-          | {call_arg_list}
-            | {call_filter_clause}
-            | {arg_list}: ok
-              | {name a}: a: integer inferred_notnull variable
-
-The statement ending at line XXXX
-
-CREATE PROC improvements_work_for_ifnull_crash_on_cursor_fields ()
-BEGIN
-  DECLARE c CURSOR FOR SELECT nullable(1) AS a;
-  FETCH c;
-  LET x0 := ifnull_crash(c.a);
-  LET x1 := c.a;
-END;
-
-  {create_proc_stmt}: ok dml_proc
-  | {name improvements_work_for_ifnull_crash_on_cursor_fields}: ok dml_proc
-  | {proc_params_stmts}
-    | {stmt_list}: ok
-      | {declare_cursor}: c: select: { a: integer } variable dml_proc
-      | | {name c}: c: select: { a: integer } variable dml_proc shape_storage
-      | | {select_stmt}: select: { a: integer }
-      |   | {select_core_list}: select: { a: integer }
-      |   | | {select_core}: select: { a: integer }
-      |   |   | {select_expr_list_con}: select: { a: integer }
-      |   |     | {select_expr_list}: select: { a: integer }
-      |   |     | | {select_expr}: a: integer
-      |   |     |   | {call}: integer
-      |   |     |   | | {name nullable}: integer
-      |   |     |   | | {call_arg_list}
-      |   |     |   |   | {call_filter_clause}
-      |   |     |   |   | {arg_list}: ok
-      |   |     |   |     | {int 1}: integer notnull
-      |   |     |   | {opt_as_alias}
-      |   |     |     | {name a}
-      |   |     | {select_from_etc}: ok
-      |   |       | {select_where}
-      |   |         | {select_groupby}
-      |   |           | {select_having}
-      |   | {select_orderby}
-      |     | {select_limit}
-      |       | {select_offset}
-      | {fetch_stmt}: c: select: { a: integer } variable dml_proc shape_storage
-      | | {name c}: c: select: { a: integer } variable dml_proc shape_storage
-      | {let_stmt}: x0: integer notnull variable
-      | | {name x0}: x0: integer notnull variable
-      | | {call}: c.a: integer notnull variable
-      |   | {name ifnull_crash}: c.a: integer notnull variable
-      |   | {call_arg_list}
-      |     | {call_filter_clause}
-      |     | {arg_list}: ok
-      |       | {dot}: c.a: integer variable
-      |         | {name c}
-      |         | {name a}
-      | {let_stmt}: x1: integer notnull variable
-        | {name x1}: x1: integer notnull variable
-        | {call}: c.a: integer notnull variable
-          | {name cql_inferred_notnull}: c.a: integer notnull variable
-          | {call_arg_list}
-            | {call_filter_clause}
-            | {arg_list}: ok
-              | {dot}: c.a: integer inferred_notnull variable
-                | {name c}
-                | {name a}
-
-The statement ending at line XXXX
-
-CREATE PROC improvements_work_for_ifnull_throw ()
-BEGIN
-  DECLARE a INTEGER;
-  LET x0 := ifnull_throw(a);
-  LET x1 := a;
-END;
-
-  {create_proc_stmt}: ok dml_proc
-  | {name improvements_work_for_ifnull_throw}: ok dml_proc
-  | {proc_params_stmts}
-    | {stmt_list}: ok
-      | {declare_vars_type}: integer
-      | | {name_list}: a: integer variable
-      | | | {name a}: a: integer variable
-      | | {type_int}: integer
-      | {let_stmt}: x0: integer notnull variable
-      | | {name x0}: x0: integer notnull variable
-      | | {call}: a: integer notnull variable
-      |   | {name ifnull_throw}: a: integer notnull variable
-      |   | {call_arg_list}
-      |     | {call_filter_clause}
-      |     | {arg_list}: ok
-      |       | {name a}: a: integer variable
-      | {let_stmt}: x1: integer notnull variable
-        | {name x1}: x1: integer notnull variable
-        | {call}: a: integer notnull variable
-          | {name cql_inferred_notnull}: a: integer notnull variable
-          | {call_arg_list}
-            | {call_filter_clause}
-            | {arg_list}: ok
-              | {name a}: a: integer inferred_notnull variable
-
-The statement ending at line XXXX
-
-CREATE PROC improvements_work_for_ifnull_throw_on_cursor_fields ()
-BEGIN
-  DECLARE c CURSOR FOR SELECT nullable(1) AS a;
-  FETCH c;
-  LET x0 := ifnull_throw(c.a);
-  LET x1 := c.a;
-END;
-
-  {create_proc_stmt}: ok dml_proc
-  | {name improvements_work_for_ifnull_throw_on_cursor_fields}: ok dml_proc
-  | {proc_params_stmts}
-    | {stmt_list}: ok
-      | {declare_cursor}: c: select: { a: integer } variable dml_proc
-      | | {name c}: c: select: { a: integer } variable dml_proc shape_storage
-      | | {select_stmt}: select: { a: integer }
-      |   | {select_core_list}: select: { a: integer }
-      |   | | {select_core}: select: { a: integer }
-      |   |   | {select_expr_list_con}: select: { a: integer }
-      |   |     | {select_expr_list}: select: { a: integer }
-      |   |     | | {select_expr}: a: integer
-      |   |     |   | {call}: integer
-      |   |     |   | | {name nullable}: integer
-      |   |     |   | | {call_arg_list}
-      |   |     |   |   | {call_filter_clause}
-      |   |     |   |   | {arg_list}: ok
-      |   |     |   |     | {int 1}: integer notnull
-      |   |     |   | {opt_as_alias}
-      |   |     |     | {name a}
-      |   |     | {select_from_etc}: ok
-      |   |       | {select_where}
-      |   |         | {select_groupby}
-      |   |           | {select_having}
-      |   | {select_orderby}
-      |     | {select_limit}
-      |       | {select_offset}
-      | {fetch_stmt}: c: select: { a: integer } variable dml_proc shape_storage
-      | | {name c}: c: select: { a: integer } variable dml_proc shape_storage
-      | {let_stmt}: x0: integer notnull variable
-      | | {name x0}: x0: integer notnull variable
-      | | {call}: c.a: integer notnull variable
-      |   | {name ifnull_throw}: c.a: integer notnull variable
-      |   | {call_arg_list}
-      |     | {call_filter_clause}
-      |     | {arg_list}: ok
-      |       | {dot}: c.a: integer variable
-      |         | {name c}
-      |         | {name a}
-      | {let_stmt}: x1: integer notnull variable
-        | {name x1}: x1: integer notnull variable
-        | {call}: c.a: integer notnull variable
-          | {name cql_inferred_notnull}: c.a: integer notnull variable
-          | {call_arg_list}
-            | {call_filter_clause}
-            | {arg_list}: ok
-              | {dot}: c.a: integer inferred_notnull variable
-                | {name c}
-                | {name a}
-
-The statement ending at line XXXX
-
-CREATE PROC improvements_added_by_attest_notnull_do_not_persist_outside_the_statement_list ()
-BEGIN
-  DECLARE a INTEGER;
-  BEGIN TRY
-    LET b := a;
-    LET dummy0 := ifnull_throw(a);
-    LET c := a;
-  END TRY;
-  BEGIN CATCH
-    LET d := a;
-    LET dummy1 := ifnull_crash(a);
-    LET e := a;
-  END CATCH;
-  LET f := a;
-END;
-
-  {create_proc_stmt}: ok dml_proc
-  | {name improvements_added_by_attest_notnull_do_not_persist_outside_the_statement_list}: ok dml_proc
-  | {proc_params_stmts}
-    | {stmt_list}: ok
-      | {declare_vars_type}: integer
-      | | {name_list}: a: integer variable
-      | | | {name a}: a: integer variable
-      | | {type_int}: integer
-      | {trycatch_stmt}: ok
-      | | {stmt_list}: ok
-      | | | {let_stmt}: b: integer variable
-      | | | | {name b}: b: integer variable
-      | | | | {name a}: a: integer variable
-      | | | {let_stmt}: dummy0: integer notnull variable
-      | | | | {name dummy0}: dummy0: integer notnull variable
-      | | | | {call}: a: integer notnull variable
-      | | |   | {name ifnull_throw}: a: integer notnull variable
-      | | |   | {call_arg_list}
-      | | |     | {call_filter_clause}
-      | | |     | {arg_list}: ok
-      | | |       | {name a}: a: integer variable
-      | | | {let_stmt}: c: integer notnull variable
-      | |   | {name c}: c: integer notnull variable
-      | |   | {call}: a: integer notnull variable
-      | |     | {name cql_inferred_notnull}: a: integer notnull variable
-      | |     | {call_arg_list}
-      | |       | {call_filter_clause}
-      | |       | {arg_list}: ok
-      | |         | {name a}: a: integer inferred_notnull variable
-      | | {stmt_list}: ok
-      |   | {let_stmt}: d: integer variable
-      |   | | {name d}: d: integer variable
-      |   | | {name a}: a: integer variable
-      |   | {let_stmt}: dummy1: integer notnull variable
-      |   | | {name dummy1}: dummy1: integer notnull variable
-      |   | | {call}: a: integer notnull variable
-      |   |   | {name ifnull_crash}: a: integer notnull variable
-      |   |   | {call_arg_list}
-      |   |     | {call_filter_clause}
-      |   |     | {arg_list}: ok
-      |   |       | {name a}: a: integer variable
-      |   | {let_stmt}: e: integer notnull variable
-      |     | {name e}: e: integer notnull variable
-      |     | {call}: a: integer notnull variable
-      |       | {name cql_inferred_notnull}: a: integer notnull variable
-      |       | {call_arg_list}
-      |         | {call_filter_clause}
-      |         | {arg_list}: ok
-      |           | {name a}: a: integer inferred_notnull variable
-      | {let_stmt}: f: integer variable
-        | {name f}: f: integer variable
-        | {name a}: a: integer variable
-
-The statement ending at line XXXX
-
-CREATE PROC requires_notnull_in_returns_int (a INTEGER NOT NULL, OUT b INTEGER NOT NULL)
-BEGIN
-END;
-
-  {create_proc_stmt}: ok
-  | {name requires_notnull_in_returns_int}: ok
-  | {proc_params_stmts}
-    | {params}: ok
-      | {param}: a: integer notnull variable in
-      | | {param_detail}: a: integer notnull variable in
-      |   | {name a}: a: integer notnull variable in
-      |   | {notnull}: integer notnull
-      |     | {type_int}: integer
-      | {params}
-        | {param}: b: integer notnull variable out
-          | {out}
-          | {param_detail}: b: integer notnull variable out
-            | {name b}: b: integer notnull variable out
-            | {notnull}: integer notnull
-              | {type_int}: integer
-
-The statement ending at line XXXX
-
-CREATE PROC improvements_respect_short_circuiting_in ()
-BEGIN
-  DECLARE a0 INTEGER;
-  DECLARE a1 INTEGER;
-  DECLARE a2 INTEGER;
-  LET dummy := ifnull_crash(a0) IN (a1, ifnull_crash(a2), requires_notnull_in_returns_int(a2));
-  LET x0 := a0;
-  LET x1 := a1;
-  LET x2 := a2;
-END;
-
-  {create_proc_stmt}: ok
-  | {name improvements_respect_short_circuiting_in}: ok
-  | {proc_params_stmts}
-    | {stmt_list}: ok
-      | {declare_vars_type}: integer
-      | | {name_list}: a0: integer variable
-      | | | {name a0}: a0: integer variable
-      | | {type_int}: integer
-      | {declare_vars_type}: integer
-      | | {name_list}: a1: integer variable
-      | | | {name a1}: a1: integer variable
-      | | {type_int}: integer
-      | {declare_vars_type}: integer
-      | | {name_list}: a2: integer variable
-      | | | {name a2}: a2: integer variable
-      | | {type_int}: integer
-      | {let_stmt}: dummy: bool notnull variable
-      | | {name dummy}: dummy: bool notnull variable
-      | | {in_pred}: bool notnull
-      |   | {call}: a0: integer notnull variable
-      |   | | {name ifnull_crash}: a0: integer notnull variable
-      |   | | {call_arg_list}
-      |   |   | {call_filter_clause}
-      |   |   | {arg_list}: ok
-      |   |     | {name a0}: a0: integer variable
-      |   | {expr_list}: a1: integer variable
-      |     | {name a1}: a1: integer variable
-      |     | {expr_list}: a2: integer notnull variable
-      |       | {call}: a2: integer notnull variable
-      |       | | {name ifnull_crash}: a2: integer notnull variable
-      |       | | {call_arg_list}
-      |       |   | {call_filter_clause}
-      |       |   | {arg_list}: ok
-      |       |     | {name a2}: a2: integer variable
-      |       | {expr_list}: integer notnull
-      |         | {call}: integer notnull
-      |           | {name requires_notnull_in_returns_int}
-      |           | {call_arg_list}
-      |             | {call_filter_clause}
-      |             | {arg_list}: ok
-      |               | {call}: a2: integer notnull variable
-      |                 | {name cql_inferred_notnull}: a2: integer notnull variable
-      |                 | {call_arg_list}
-      |                   | {call_filter_clause}
-      |                   | {arg_list}: ok
-      |                     | {name a2}: a2: integer inferred_notnull variable
-      | {let_stmt}: x0: integer notnull variable
-      | | {name x0}: x0: integer notnull variable
-      | | {call}: a0: integer notnull variable
-      |   | {name cql_inferred_notnull}: a0: integer notnull variable
-      |   | {call_arg_list}
-      |     | {call_filter_clause}
-      |     | {arg_list}: ok
-      |       | {name a0}: a0: integer inferred_notnull variable
-      | {let_stmt}: x1: integer variable
-      | | {name x1}: x1: integer variable
-      | | {name a1}: a1: integer variable
-      | {let_stmt}: x2: integer variable
-        | {name x2}: x2: integer variable
-        | {name a2}: a2: integer variable
-
-The statement ending at line XXXX
-
-CREATE PROC requires_notnull_ins_returns_bool (a INTEGER NOT NULL, b INTEGER NOT NULL, OUT c BOOL NOT NULL)
-BEGIN
-END;
-
-  {create_proc_stmt}: ok
-  | {name requires_notnull_ins_returns_bool}: ok
-  | {proc_params_stmts}
-    | {params}: ok
-      | {param}: a: integer notnull variable in
-      | | {param_detail}: a: integer notnull variable in
-      |   | {name a}: a: integer notnull variable in
-      |   | {notnull}: integer notnull
-      |     | {type_int}: integer
-      | {params}
-        | {param}: b: integer notnull variable in
-        | | {param_detail}: b: integer notnull variable in
-        |   | {name b}: b: integer notnull variable in
-        |   | {notnull}: integer notnull
-        |     | {type_int}: integer
-        | {params}
-          | {param}: c: bool notnull variable out
-            | {out}
-            | {param_detail}: c: bool notnull variable out
-              | {name c}: c: bool notnull variable out
-              | {notnull}: bool notnull
-                | {type_bool}: bool
-
-The statement ending at line XXXX
-
-CREATE PROC improvements_respect_short_circuiting_logical_operators ()
-BEGIN
-  DECLARE a0 INTEGER;
-  DECLARE a1 INTEGER;
-  DECLARE a2 INTEGER;
-  DECLARE a3 INTEGER;
-  LET dummy0 := 1 OR requires_notnull_ins_returns_bool(ifnull_crash(a0), a0);
-  LET dummy1 := requires_notnull_ins_returns_bool(ifnull_crash(a1), a1) OR 1;
-  LET dummy2 := 0 AND requires_notnull_ins_returns_bool(ifnull_crash(a2), a2);
-  LET dummy3 := requires_notnull_ins_returns_bool(ifnull_crash(a3), a3) AND 0;
-  LET x0 := a0;
-  LET x1 := a1;
-  LET x2 := a2;
-  LET x3 := a3;
-END;
-
-  {create_proc_stmt}: ok
-  | {name improvements_respect_short_circuiting_logical_operators}: ok
-  | {proc_params_stmts}
-    | {stmt_list}: ok
-      | {declare_vars_type}: integer
-      | | {name_list}: a0: integer variable
-      | | | {name a0}: a0: integer variable
-      | | {type_int}: integer
-      | {declare_vars_type}: integer
-      | | {name_list}: a1: integer variable
-      | | | {name a1}: a1: integer variable
-      | | {type_int}: integer
-      | {declare_vars_type}: integer
-      | | {name_list}: a2: integer variable
-      | | | {name a2}: a2: integer variable
-      | | {type_int}: integer
-      | {declare_vars_type}: integer
-      | | {name_list}: a3: integer variable
-      | | | {name a3}: a3: integer variable
-      | | {type_int}: integer
-      | {let_stmt}: dummy0: bool notnull variable
-      | | {name dummy0}: dummy0: bool notnull variable
-      | | {or}: bool notnull
-      |   | {int 1}: integer notnull
-      |   | {call}: bool notnull
-      |     | {name requires_notnull_ins_returns_bool}
-      |     | {call_arg_list}
-      |       | {call_filter_clause}
-      |       | {arg_list}: ok
-      |         | {call}: a0: integer notnull variable
-      |         | | {name ifnull_crash}: a0: integer notnull variable
-      |         | | {call_arg_list}
-      |         |   | {call_filter_clause}
-      |         |   | {arg_list}: ok
-      |         |     | {name a0}: a0: integer variable
-      |         | {arg_list}
-      |           | {call}: a0: integer notnull variable
-      |             | {name cql_inferred_notnull}: a0: integer notnull variable
-      |             | {call_arg_list}
-      |               | {call_filter_clause}
-      |               | {arg_list}: ok
-      |                 | {name a0}: a0: integer inferred_notnull variable
-      | {let_stmt}: dummy1: bool notnull variable
-      | | {name dummy1}: dummy1: bool notnull variable
-      | | {or}: bool notnull
-      |   | {call}: bool notnull
-      |   | | {name requires_notnull_ins_returns_bool}
-      |   | | {call_arg_list}
-      |   |   | {call_filter_clause}
-      |   |   | {arg_list}: ok
-      |   |     | {call}: a1: integer notnull variable
-      |   |     | | {name ifnull_crash}: a1: integer notnull variable
-      |   |     | | {call_arg_list}
-      |   |     |   | {call_filter_clause}
-      |   |     |   | {arg_list}: ok
-      |   |     |     | {name a1}: a1: integer variable
-      |   |     | {arg_list}
-      |   |       | {call}: a1: integer notnull variable
-      |   |         | {name cql_inferred_notnull}: a1: integer notnull variable
-      |   |         | {call_arg_list}
-      |   |           | {call_filter_clause}
-      |   |           | {arg_list}: ok
-      |   |             | {name a1}: a1: integer inferred_notnull variable
-      |   | {int 1}: integer notnull
-      | {let_stmt}: dummy2: bool notnull variable
-      | | {name dummy2}: dummy2: bool notnull variable
-      | | {and}: bool notnull
-      |   | {int 0}: integer notnull
-      |   | {call}: bool notnull
-      |     | {name requires_notnull_ins_returns_bool}
-      |     | {call_arg_list}
-      |       | {call_filter_clause}
-      |       | {arg_list}: ok
-      |         | {call}: a2: integer notnull variable
-      |         | | {name ifnull_crash}: a2: integer notnull variable
-      |         | | {call_arg_list}
-      |         |   | {call_filter_clause}
-      |         |   | {arg_list}: ok
-      |         |     | {name a2}: a2: integer variable
-      |         | {arg_list}
-      |           | {call}: a2: integer notnull variable
-      |             | {name cql_inferred_notnull}: a2: integer notnull variable
-      |             | {call_arg_list}
-      |               | {call_filter_clause}
-      |               | {arg_list}: ok
-      |                 | {name a2}: a2: integer inferred_notnull variable
-      | {let_stmt}: dummy3: bool notnull variable
-      | | {name dummy3}: dummy3: bool notnull variable
-      | | {and}: bool notnull
-      |   | {call}: bool notnull
-      |   | | {name requires_notnull_ins_returns_bool}
-      |   | | {call_arg_list}
-      |   |   | {call_filter_clause}
-      |   |   | {arg_list}: ok
-      |   |     | {call}: a3: integer notnull variable
-      |   |     | | {name ifnull_crash}: a3: integer notnull variable
-      |   |     | | {call_arg_list}
-      |   |     |   | {call_filter_clause}
-      |   |     |   | {arg_list}: ok
-      |   |     |     | {name a3}: a3: integer variable
-      |   |     | {arg_list}
-      |   |       | {call}: a3: integer notnull variable
-      |   |         | {name cql_inferred_notnull}: a3: integer notnull variable
-      |   |         | {call_arg_list}
-      |   |           | {call_filter_clause}
-      |   |           | {arg_list}: ok
-      |   |             | {name a3}: a3: integer inferred_notnull variable
-      |   | {int 0}: integer notnull
-      | {let_stmt}: x0: integer variable
-      | | {name x0}: x0: integer variable
-      | | {name a0}: a0: integer variable
-      | {let_stmt}: x1: integer notnull variable
-      | | {name x1}: x1: integer notnull variable
-      | | {call}: a1: integer notnull variable
-      |   | {name cql_inferred_notnull}: a1: integer notnull variable
-      |   | {call_arg_list}
-      |     | {call_filter_clause}
-      |     | {arg_list}: ok
-      |       | {name a1}: a1: integer inferred_notnull variable
-      | {let_stmt}: x2: integer variable
-      | | {name x2}: x2: integer variable
-      | | {name a2}: a2: integer variable
-      | {let_stmt}: x3: integer notnull variable
-        | {name x3}: x3: integer notnull variable
-        | {call}: a3: integer notnull variable
-          | {name cql_inferred_notnull}: a3: integer notnull variable
-          | {call_arg_list}
-            | {call_filter_clause}
-            | {arg_list}: ok
-              | {name a3}: a3: integer inferred_notnull variable
-
-The statement ending at line XXXX
-
-CREATE PROC improvements_within_conditionals_respect_short_circuiting ()
-BEGIN
-  DECLARE a0 INTEGER;
-  DECLARE a1 INTEGER;
-  DECLARE a2 INTEGER;
-  DECLARE a3 INTEGER;
-  IF ifnull_crash(a0) AND (a1 IS NOT NULL AND requires_notnull_ins_returns_bool(ifnull_crash(a1), a1)) AND requires_notnull_ins_returns_bool(ifnull_crash(a2), a2) AND a3 IS NOT NULL THEN
-    LET x0 := a0;
-    LET x1 := a1;
-    LET x2 := a2;
-    LET x3 := a3;
-  END IF;
-  LET x0_post := a0;
-  LET x1_post := a1;
-  LET x2_post := a2;
-  LET x3_post := a3;
-END;
-
-  {create_proc_stmt}: ok
-  | {name improvements_within_conditionals_respect_short_circuiting}: ok
-  | {proc_params_stmts}
-    | {stmt_list}: ok
-      | {declare_vars_type}: integer
-      | | {name_list}: a0: integer variable
-      | | | {name a0}: a0: integer variable
-      | | {type_int}: integer
-      | {declare_vars_type}: integer
-      | | {name_list}: a1: integer variable
-      | | | {name a1}: a1: integer variable
-      | | {type_int}: integer
-      | {declare_vars_type}: integer
-      | | {name_list}: a2: integer variable
-      | | | {name a2}: a2: integer variable
-      | | {type_int}: integer
-      | {declare_vars_type}: integer
-      | | {name_list}: a3: integer variable
-      | | | {name a3}: a3: integer variable
-      | | {type_int}: integer
-      | {if_stmt}: bool notnull
-      | | {cond_action}: bool notnull
-      | | | {and}: bool notnull
-      | | | | {and}: bool notnull
-      | | | | | {and}: bool notnull
-      | | | | | | {call}: a0: integer notnull variable
-      | | | | | | | {name ifnull_crash}: a0: integer notnull variable
-      | | | | | | | {call_arg_list}
-      | | | | | |   | {call_filter_clause}
-      | | | | | |   | {arg_list}: ok
-      | | | | | |     | {name a0}: a0: integer variable
-      | | | | | | {and}: bool notnull
-      | | | | |   | {is_not}: bool notnull
-      | | | | |   | | {name a1}: a1: integer variable
-      | | | | |   | | {null}: null
-      | | | | |   | {call}: bool notnull
-      | | | | |     | {name requires_notnull_ins_returns_bool}
-      | | | | |     | {call_arg_list}
-      | | | | |       | {call_filter_clause}
-      | | | | |       | {arg_list}: ok
-      | | | | |         | {call}: a1: integer notnull variable
-      | | | | |         | | {name ifnull_crash}: a1: integer notnull variable
-      | | | | |         | | {call_arg_list}
-      | | | | |         |   | {call_filter_clause}
-      | | | | |         |   | {arg_list}: ok
-      | | | | |         |     | {name a1}: a1: integer variable
-      | | | | |         | {arg_list}
-      | | | | |           | {call}: a1: integer notnull variable
-      | | | | |             | {name cql_inferred_notnull}: a1: integer notnull variable
-      | | | | |             | {call_arg_list}
-      | | | | |               | {call_filter_clause}
-      | | | | |               | {arg_list}: ok
-      | | | | |                 | {name a1}: a1: integer inferred_notnull variable
-      | | | | | {call}: bool notnull
-      | | | |   | {name requires_notnull_ins_returns_bool}
-      | | | |   | {call_arg_list}
-      | | | |     | {call_filter_clause}
-      | | | |     | {arg_list}: ok
-      | | | |       | {call}: a2: integer notnull variable
-      | | | |       | | {name ifnull_crash}: a2: integer notnull variable
-      | | | |       | | {call_arg_list}
-      | | | |       |   | {call_filter_clause}
-      | | | |       |   | {arg_list}: ok
-      | | | |       |     | {name a2}: a2: integer variable
-      | | | |       | {arg_list}
-      | | | |         | {call}: a2: integer notnull variable
-      | | | |           | {name cql_inferred_notnull}: a2: integer notnull variable
-      | | | |           | {call_arg_list}
-      | | | |             | {call_filter_clause}
-      | | | |             | {arg_list}: ok
-      | | | |               | {name a2}: a2: integer inferred_notnull variable
-      | | | | {is_not}: bool notnull
-      | | |   | {name a3}: a3: integer variable
-      | | |   | {null}: null
-      | | | {stmt_list}: ok
-      | |   | {let_stmt}: x0: integer notnull variable
-      | |   | | {name x0}: x0: integer notnull variable
-      | |   | | {call}: a0: integer notnull variable
-      | |   |   | {name cql_inferred_notnull}: a0: integer notnull variable
-      | |   |   | {call_arg_list}
-      | |   |     | {call_filter_clause}
-      | |   |     | {arg_list}: ok
-      | |   |       | {name a0}: a0: integer inferred_notnull variable
-      | |   | {let_stmt}: x1: integer notnull variable
-      | |   | | {name x1}: x1: integer notnull variable
-      | |   | | {call}: a1: integer notnull variable
-      | |   |   | {name cql_inferred_notnull}: a1: integer notnull variable
-      | |   |   | {call_arg_list}
-      | |   |     | {call_filter_clause}
-      | |   |     | {arg_list}: ok
-      | |   |       | {name a1}: a1: integer inferred_notnull variable
-      | |   | {let_stmt}: x2: integer variable
-      | |   | | {name x2}: x2: integer variable
-      | |   | | {name a2}: a2: integer variable
-      | |   | {let_stmt}: x3: integer notnull variable
-      | |     | {name x3}: x3: integer notnull variable
-      | |     | {call}: a3: integer notnull variable
-      | |       | {name cql_inferred_notnull}: a3: integer notnull variable
-      | |       | {call_arg_list}
-      | |         | {call_filter_clause}
-      | |         | {arg_list}: ok
-      | |           | {name a3}: a3: integer inferred_notnull variable
-      | | {if_alt}: ok
-      | {let_stmt}: x0_post: integer notnull variable
-      | | {name x0_post}: x0_post: integer notnull variable
-      | | {call}: a0: integer notnull variable
-      |   | {name cql_inferred_notnull}: a0: integer notnull variable
-      |   | {call_arg_list}
-      |     | {call_filter_clause}
-      |     | {arg_list}: ok
-      |       | {name a0}: a0: integer inferred_notnull variable
-      | {let_stmt}: x1_post: integer variable
-      | | {name x1_post}: x1_post: integer variable
-      | | {name a1}: a1: integer variable
-      | {let_stmt}: x2_post: integer variable
-      | | {name x2_post}: x2_post: integer variable
-      | | {name a2}: a2: integer variable
-      | {let_stmt}: x3_post: integer variable
-        | {name x3_post}: x3_post: integer variable
-        | {name a3}: a3: integer variable
-
-The statement ending at line XXXX
-
 CREATE PROC improvements_work_for_in_args (a INTEGER)
 BEGIN
   IF a IS NOT NULL THEN
@@ -65239,6 +66593,578 @@ END;
         |         | {select_limit}
         |           | {select_offset}
         | {if_alt}: ok
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_work_for_commit_return_guards (a INTEGER)
+BEGIN
+  PROC SAVEPOINT
+  BEGIN
+    IF 1 THEN
+      IF a IS NULL THEN
+        COMMIT RETURN;
+      END IF;
+      LET x0 := a;
+    END IF;
+    LET x1 := a;
+  END;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name improvements_work_for_commit_return_guards}: ok dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: integer variable in
+    |   | {param_detail}: a: integer variable in
+    |     | {name a}: a: integer variable in
+    |     | {type_int}: integer
+    | {stmt_list}: ok
+      | {proc_savepoint_stmt}: ok
+        | {stmt_list}: ok
+          | {if_stmt}: integer notnull
+          | | {cond_action}: integer notnull
+          | | | {int 1}: integer notnull
+          | | | {stmt_list}: ok
+          | |   | {if_stmt}: bool notnull
+          | |   | | {cond_action}: bool notnull
+          | |   | | | {is}: bool notnull
+          | |   | | | | {name a}: a: integer variable in
+          | |   | | | | {null}: null
+          | |   | | | {stmt_list}: ok
+          | |   | |   | {commit_return_stmt}: ok
+          | |   | | {if_alt}: ok
+          | |   | {let_stmt}: x0: integer notnull variable
+          | |     | {name x0}: x0: integer notnull variable
+          | |     | {call}: a: integer notnull variable in
+          | |       | {name cql_inferred_notnull}: a: integer notnull variable in
+          | |       | {call_arg_list}
+          | |         | {call_filter_clause}
+          | |         | {arg_list}: ok
+          | |           | {name a}: a: integer inferred_notnull variable in
+          | | {if_alt}: ok
+          | {let_stmt}: x1: integer variable
+            | {name x1}: x1: integer variable
+            | {name a}: a: integer variable in
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_work_for_continue_guards (a INTEGER)
+BEGIN
+  WHILE 1
+  BEGIN
+    IF a IS NULL THEN
+      CONTINUE;
+    END IF;
+    LET x0 := a;
+  END;
+  LET x1 := a;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_work_for_continue_guards}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: integer variable in
+    |   | {param_detail}: a: integer variable in
+    |     | {name a}: a: integer variable in
+    |     | {type_int}: integer
+    | {stmt_list}: ok
+      | {while_stmt}: ok
+      | | {int 1}: integer notnull
+      | | {stmt_list}: ok
+      |   | {if_stmt}: bool notnull
+      |   | | {cond_action}: bool notnull
+      |   | | | {is}: bool notnull
+      |   | | | | {name a}: a: integer variable in
+      |   | | | | {null}: null
+      |   | | | {stmt_list}: ok
+      |   | |   | {continue_stmt}: ok
+      |   | | {if_alt}: ok
+      |   | {let_stmt}: x0: integer notnull variable
+      |     | {name x0}: x0: integer notnull variable
+      |     | {call}: a: integer notnull variable in
+      |       | {name cql_inferred_notnull}: a: integer notnull variable in
+      |       | {call_arg_list}
+      |         | {call_filter_clause}
+      |         | {arg_list}: ok
+      |           | {name a}: a: integer inferred_notnull variable in
+      | {let_stmt}: x1: integer variable
+        | {name x1}: x1: integer variable
+        | {name a}: a: integer variable in
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_work_for_leave_guards (a INTEGER)
+BEGIN
+  WHILE 1
+  BEGIN
+    IF a IS NULL THEN
+      LEAVE;
+    END IF;
+    LET x0 := a;
+  END;
+  LET x1 := a;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_work_for_leave_guards}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: integer variable in
+    |   | {param_detail}: a: integer variable in
+    |     | {name a}: a: integer variable in
+    |     | {type_int}: integer
+    | {stmt_list}: ok
+      | {while_stmt}: ok
+      | | {int 1}: integer notnull
+      | | {stmt_list}: ok
+      |   | {if_stmt}: bool notnull
+      |   | | {cond_action}: bool notnull
+      |   | | | {is}: bool notnull
+      |   | | | | {name a}: a: integer variable in
+      |   | | | | {null}: null
+      |   | | | {stmt_list}: ok
+      |   | |   | {leave_stmt}: ok
+      |   | | {if_alt}: ok
+      |   | {let_stmt}: x0: integer notnull variable
+      |     | {name x0}: x0: integer notnull variable
+      |     | {call}: a: integer notnull variable in
+      |       | {name cql_inferred_notnull}: a: integer notnull variable in
+      |       | {call_arg_list}
+      |         | {call_filter_clause}
+      |         | {arg_list}: ok
+      |           | {name a}: a: integer inferred_notnull variable in
+      | {let_stmt}: x1: integer variable
+        | {name x1}: x1: integer variable
+        | {name a}: a: integer variable in
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_work_for_return_guards (a INTEGER)
+BEGIN
+  IF 1 THEN
+    IF a IS NULL THEN
+      RETURN;
+    END IF;
+    LET x0 := a;
+  END IF;
+  LET x1 := a;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_work_for_return_guards}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: integer variable in
+    |   | {param_detail}: a: integer variable in
+    |     | {name a}: a: integer variable in
+    |     | {type_int}: integer
+    | {stmt_list}: ok
+      | {if_stmt}: integer notnull
+      | | {cond_action}: integer notnull
+      | | | {int 1}: integer notnull
+      | | | {stmt_list}: ok
+      | |   | {if_stmt}: bool notnull
+      | |   | | {cond_action}: bool notnull
+      | |   | | | {is}: bool notnull
+      | |   | | | | {name a}: a: integer variable in
+      | |   | | | | {null}: null
+      | |   | | | {stmt_list}: ok
+      | |   | |   | {return_stmt}: ok
+      | |   | | {if_alt}: ok
+      | |   | {let_stmt}: x0: integer notnull variable
+      | |     | {name x0}: x0: integer notnull variable
+      | |     | {call}: a: integer notnull variable in
+      | |       | {name cql_inferred_notnull}: a: integer notnull variable in
+      | |       | {call_arg_list}
+      | |         | {call_filter_clause}
+      | |         | {arg_list}: ok
+      | |           | {name a}: a: integer inferred_notnull variable in
+      | | {if_alt}: ok
+      | {let_stmt}: x1: integer variable
+        | {name x1}: x1: integer variable
+        | {name a}: a: integer variable in
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_work_for_rollback_return_guards (a INTEGER)
+BEGIN
+  PROC SAVEPOINT
+  BEGIN
+    IF 1 THEN
+      IF a IS NULL THEN
+        ROLLBACK RETURN;
+      END IF;
+      LET x0 := a;
+    END IF;
+    LET x1 := a;
+  END;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name improvements_work_for_rollback_return_guards}: ok dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: integer variable in
+    |   | {param_detail}: a: integer variable in
+    |     | {name a}: a: integer variable in
+    |     | {type_int}: integer
+    | {stmt_list}: ok
+      | {proc_savepoint_stmt}: ok
+        | {stmt_list}: ok
+          | {if_stmt}: integer notnull
+          | | {cond_action}: integer notnull
+          | | | {int 1}: integer notnull
+          | | | {stmt_list}: ok
+          | |   | {if_stmt}: bool notnull
+          | |   | | {cond_action}: bool notnull
+          | |   | | | {is}: bool notnull
+          | |   | | | | {name a}: a: integer variable in
+          | |   | | | | {null}: null
+          | |   | | | {stmt_list}: ok
+          | |   | |   | {rollback_return_stmt}: ok
+          | |   | | {if_alt}: ok
+          | |   | {let_stmt}: x0: integer notnull variable
+          | |     | {name x0}: x0: integer notnull variable
+          | |     | {call}: a: integer notnull variable in
+          | |       | {name cql_inferred_notnull}: a: integer notnull variable in
+          | |       | {call_arg_list}
+          | |         | {call_filter_clause}
+          | |         | {arg_list}: ok
+          | |           | {name a}: a: integer inferred_notnull variable in
+          | | {if_alt}: ok
+          | {let_stmt}: x1: integer variable
+            | {name x1}: x1: integer variable
+            | {name a}: a: integer variable in
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_work_for_throw_guards (a INTEGER)
+BEGIN
+  PROC SAVEPOINT
+  BEGIN
+    IF 1 THEN
+      IF a IS NULL THEN
+        THROW;
+      END IF;
+      LET x0 := a;
+    END IF;
+    LET x1 := a;
+  END;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name improvements_work_for_throw_guards}: ok dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: integer variable in
+    |   | {param_detail}: a: integer variable in
+    |     | {name a}: a: integer variable in
+    |     | {type_int}: integer
+    | {stmt_list}: ok
+      | {proc_savepoint_stmt}: ok
+        | {stmt_list}: ok
+          | {if_stmt}: integer notnull
+          | | {cond_action}: integer notnull
+          | | | {int 1}: integer notnull
+          | | | {stmt_list}: ok
+          | |   | {if_stmt}: bool notnull
+          | |   | | {cond_action}: bool notnull
+          | |   | | | {is}: bool notnull
+          | |   | | | | {name a}: a: integer variable in
+          | |   | | | | {null}: null
+          | |   | | | {stmt_list}: ok
+          | |   | |   | {throw_stmt}: ok
+          | |   | | {if_alt}: ok
+          | |   | {let_stmt}: x0: integer notnull variable
+          | |     | {name x0}: x0: integer notnull variable
+          | |     | {call}: a: integer notnull variable in
+          | |       | {name cql_inferred_notnull}: a: integer notnull variable in
+          | |       | {call_arg_list}
+          | |         | {call_filter_clause}
+          | |         | {arg_list}: ok
+          | |           | {name a}: a: integer inferred_notnull variable in
+          | | {if_alt}: ok
+          | {let_stmt}: x1: integer variable
+            | {name x1}: x1: integer variable
+            | {name a}: a: integer variable in
+
+The statement ending at line XXXX
+
+CREATE PROC guard_improvements_work_for_cursor_fields ()
+BEGIN
+  DECLARE c CURSOR FOR SELECT nullable(1) AS a;
+  FETCH c;
+  IF 1 THEN
+    IF c.a IS NULL THEN
+      RETURN;
+    END IF;
+    LET x0 := c.a;
+  END IF;
+  LET x1 := c.a;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name guard_improvements_work_for_cursor_fields}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor}: c: select: { a: integer } variable dml_proc
+      | | {name c}: c: select: { a: integer } variable dml_proc shape_storage
+      | | {select_stmt}: select: { a: integer }
+      |   | {select_core_list}: select: { a: integer }
+      |   | | {select_core}: select: { a: integer }
+      |   |   | {select_expr_list_con}: select: { a: integer }
+      |   |     | {select_expr_list}: select: { a: integer }
+      |   |     | | {select_expr}: a: integer
+      |   |     |   | {call}: integer
+      |   |     |   | | {name nullable}: integer
+      |   |     |   | | {call_arg_list}
+      |   |     |   |   | {call_filter_clause}
+      |   |     |   |   | {arg_list}: ok
+      |   |     |   |     | {int 1}: integer notnull
+      |   |     |   | {opt_as_alias}
+      |   |     |     | {name a}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_stmt}: c: select: { a: integer } variable dml_proc shape_storage
+      | | {name c}: c: select: { a: integer } variable dml_proc shape_storage
+      | {if_stmt}: integer notnull
+      | | {cond_action}: integer notnull
+      | | | {int 1}: integer notnull
+      | | | {stmt_list}: ok
+      | |   | {if_stmt}: bool notnull
+      | |   | | {cond_action}: bool notnull
+      | |   | | | {is}: bool notnull
+      | |   | | | | {dot}: c.a: integer variable
+      | |   | | | | | {name c}
+      | |   | | | | | {name a}
+      | |   | | | | {null}: null
+      | |   | | | {stmt_list}: ok
+      | |   | |   | {return_stmt}: ok
+      | |   | | {if_alt}: ok
+      | |   | {let_stmt}: x0: integer notnull variable
+      | |     | {name x0}: x0: integer notnull variable
+      | |     | {call}: c.a: integer notnull variable
+      | |       | {name cql_inferred_notnull}: c.a: integer notnull variable
+      | |       | {call_arg_list}
+      | |         | {call_filter_clause}
+      | |         | {arg_list}: ok
+      | |           | {dot}: c.a: integer inferred_notnull variable
+      | |             | {name c}
+      | |             | {name a}
+      | | {if_alt}: ok
+      | {let_stmt}: x1: integer variable
+        | {name x1}: x1: integer variable
+        | {dot}: c.a: integer variable
+          | {name c}
+          | {name a}
+
+The statement ending at line XXXX
+
+CREATE PROC multiple_improvements_are_possible_via_one_guard (a INTEGER, b INTEGER, c INTEGER)
+BEGIN
+  IF 1 THEN
+    IF a IS NULL OR b IS NULL OR c IS NULL THEN
+      RETURN;
+    END IF;
+    LET x0 := a;
+    LET y0 := b;
+    LET z0 := c;
+  END IF;
+  LET x1 := a;
+  LET y1 := b;
+  LET z1 := c;
+END;
+
+  {create_proc_stmt}: ok
+  | {name multiple_improvements_are_possible_via_one_guard}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: integer variable in
+    | | | {param_detail}: a: integer variable in
+    | |   | {name a}: a: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: b: integer variable in
+    |   | | {param_detail}: b: integer variable in
+    |   |   | {name b}: b: integer variable in
+    |   |   | {type_int}: integer
+    |   | {params}
+    |     | {param}: c: integer variable in
+    |       | {param_detail}: c: integer variable in
+    |         | {name c}: c: integer variable in
+    |         | {type_int}: integer
+    | {stmt_list}: ok
+      | {if_stmt}: integer notnull
+      | | {cond_action}: integer notnull
+      | | | {int 1}: integer notnull
+      | | | {stmt_list}: ok
+      | |   | {if_stmt}: bool notnull
+      | |   | | {cond_action}: bool notnull
+      | |   | | | {or}: bool notnull
+      | |   | | | | {or}: bool notnull
+      | |   | | | | | {is}: bool notnull
+      | |   | | | | | | {name a}: a: integer variable in
+      | |   | | | | | | {null}: null
+      | |   | | | | | {is}: bool notnull
+      | |   | | | |   | {name b}: b: integer variable in
+      | |   | | | |   | {null}: null
+      | |   | | | | {is}: bool notnull
+      | |   | | |   | {name c}: c: integer variable in
+      | |   | | |   | {null}: null
+      | |   | | | {stmt_list}: ok
+      | |   | |   | {return_stmt}: ok
+      | |   | | {if_alt}: ok
+      | |   | {let_stmt}: x0: integer notnull variable
+      | |   | | {name x0}: x0: integer notnull variable
+      | |   | | {call}: a: integer notnull variable in
+      | |   |   | {name cql_inferred_notnull}: a: integer notnull variable in
+      | |   |   | {call_arg_list}
+      | |   |     | {call_filter_clause}
+      | |   |     | {arg_list}: ok
+      | |   |       | {name a}: a: integer inferred_notnull variable in
+      | |   | {let_stmt}: y0: integer notnull variable
+      | |   | | {name y0}: y0: integer notnull variable
+      | |   | | {call}: b: integer notnull variable in
+      | |   |   | {name cql_inferred_notnull}: b: integer notnull variable in
+      | |   |   | {call_arg_list}
+      | |   |     | {call_filter_clause}
+      | |   |     | {arg_list}: ok
+      | |   |       | {name b}: b: integer inferred_notnull variable in
+      | |   | {let_stmt}: z0: integer notnull variable
+      | |     | {name z0}: z0: integer notnull variable
+      | |     | {call}: c: integer notnull variable in
+      | |       | {name cql_inferred_notnull}: c: integer notnull variable in
+      | |       | {call_arg_list}
+      | |         | {call_filter_clause}
+      | |         | {arg_list}: ok
+      | |           | {name c}: c: integer inferred_notnull variable in
+      | | {if_alt}: ok
+      | {let_stmt}: x1: integer variable
+      | | {name x1}: x1: integer variable
+      | | {name a}: a: integer variable in
+      | {let_stmt}: y1: integer variable
+      | | {name y1}: y1: integer variable
+      | | {name b}: b: integer variable in
+      | {let_stmt}: z1: integer variable
+        | {name z1}: z1: integer variable
+        | {name c}: c: integer variable in
+
+The statement ending at line XXXX
+
+CREATE PROC guard_improvements_only_work_for_outermost_ors (a INTEGER, b INTEGER, c INTEGER)
+BEGIN
+  IF a IS NULL AND (b IS NULL OR c IS NULL) THEN
+    RETURN;
+  END IF;
+  LET x := a;
+  LET y := b;
+  LET z := c;
+END;
+
+  {create_proc_stmt}: ok
+  | {name guard_improvements_only_work_for_outermost_ors}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: integer variable in
+    | | | {param_detail}: a: integer variable in
+    | |   | {name a}: a: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: b: integer variable in
+    |   | | {param_detail}: b: integer variable in
+    |   |   | {name b}: b: integer variable in
+    |   |   | {type_int}: integer
+    |   | {params}
+    |     | {param}: c: integer variable in
+    |       | {param_detail}: c: integer variable in
+    |         | {name c}: c: integer variable in
+    |         | {type_int}: integer
+    | {stmt_list}: ok
+      | {if_stmt}: bool notnull
+      | | {cond_action}: bool notnull
+      | | | {and}: bool notnull
+      | | | | {is}: bool notnull
+      | | | | | {name a}: a: integer variable in
+      | | | | | {null}: null
+      | | | | {or}: bool notnull
+      | | |   | {is}: bool notnull
+      | | |   | | {name b}: b: integer variable in
+      | | |   | | {null}: null
+      | | |   | {is}: bool notnull
+      | | |     | {name c}: c: integer variable in
+      | | |     | {null}: null
+      | | | {stmt_list}: ok
+      | |   | {return_stmt}: ok
+      | | {if_alt}: ok
+      | {let_stmt}: x: integer variable
+      | | {name x}: x: integer variable
+      | | {name a}: a: integer variable in
+      | {let_stmt}: y: integer variable
+      | | {name y}: y: integer variable
+      | | {name b}: b: integer variable in
+      | {let_stmt}: z: integer variable
+        | {name z}: z: integer variable
+        | {name c}: c: integer variable in
+
+The statement ending at line XXXX
+
+CREATE PROC guard_improvements_only_work_for_is_null (a INTEGER)
+BEGIN
+  IF NOT a THEN
+    RETURN;
+  END IF;
+  LET x := a;
+END;
+
+  {create_proc_stmt}: ok
+  | {name guard_improvements_only_work_for_is_null}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: integer variable in
+    |   | {param_detail}: a: integer variable in
+    |     | {name a}: a: integer variable in
+    |     | {type_int}: integer
+    | {stmt_list}: ok
+      | {if_stmt}: bool
+      | | {cond_action}: bool
+      | | | {not}: bool
+      | | | | {name a}: a: integer variable in
+      | | | {stmt_list}: ok
+      | |   | {return_stmt}: ok
+      | | {if_alt}: ok
+      | {let_stmt}: x: integer variable
+        | {name x}: x: integer variable
+        | {name a}: a: integer variable in
+
+The statement ending at line XXXX
+
+CREATE PROC guard_improvements_handle_semantic_issues_like_if ()
+BEGIN
+  IF some_undefined_variable IS NULL THEN
+    RETURN;
+  END IF;
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'some_undefined_variable'
+
+  {create_proc_stmt}: err
+  | {name guard_improvements_handle_semantic_issues_like_if}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {if_stmt}: err
+        | {cond_action}: err
+        | | {is}: err
+        | | | {name some_undefined_variable}: err
+        | | | {null}: null
+        | | {stmt_list}
+        |   | {return_stmt}
+        | {if_alt}
 
 The statement ending at line XXXX
 
@@ -66407,6 +68333,98 @@ Error at test/sem_test.sql:XXXX : in eq : CQL0009: incompatible types in express
   |     |     | {eq}: err
   |     |       | {strlit 'y'}: text notnull
   |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT (5 IS NULL) + 3;
+
+  {select_stmt}: select: { _anon: integer notnull }
+  | {select_core_list}: select: { _anon: integer notnull }
+  | | {select_core}: select: { _anon: integer notnull }
+  |   | {select_expr_list_con}: select: { _anon: integer notnull }
+  |     | {select_expr_list}: select: { _anon: integer notnull }
+  |     | | {select_expr}: integer notnull
+  |     |   | {add}: integer notnull
+  |     |     | {is}: bool notnull
+  |     |     | | {int 5}: integer notnull
+  |     |     | | {null}: null
+  |     |     | {int 3}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 5 IS NULL IS NULL;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | {is}: bool notnull
+  |     |     | {is}: bool notnull
+  |     |     | | {int 5}: integer notnull
+  |     |     | | {null}: null
+  |     |     | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT (5 IS NOT NULL) + 3;
+
+  {select_stmt}: select: { _anon: integer notnull }
+  | {select_core_list}: select: { _anon: integer notnull }
+  | | {select_core}: select: { _anon: integer notnull }
+  |   | {select_expr_list_con}: select: { _anon: integer notnull }
+  |     | {select_expr_list}: select: { _anon: integer notnull }
+  |     | | {select_expr}: integer notnull
+  |     |   | {add}: integer notnull
+  |     |     | {is_not}: bool notnull
+  |     |     | | {int 5}: integer notnull
+  |     |     | | {null}: null
+  |     |     | {int 3}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 5 IS NOT NULL IS NULL;
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | {is}: bool notnull
+  |     |     | {is_not}: bool notnull
+  |     |     | | {int 5}: integer notnull
+  |     |     | | {null}: null
+  |     |     | {null}: null
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}

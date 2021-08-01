@@ -5,6 +5,17 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+-- TEST: we'll be using printf in lots of places in the tests as an external proc
+-- + {declare_proc_no_check_stmt}: ok
+-- - Error
+DECLARE PROCEDURE printf NO CHECK;
+
+-- TEST: try to declare printf as a normal proc too
+-- + {declare_proc_stmt}: err
+-- + Error % procedure cannot be both a normal procedure and an unchecked procedure 'printf'
+-- +1 Error
+declare proc printf();
+
 -- TEST: basic test table with an auto inc field (implies not null)
 -- + create_table_stmt% foo: % id: integer notnull primary_key autoinc
 -- - Error
@@ -1462,6 +1473,34 @@ create table bad_constants_table(
 -- - Error
 let bool_x := const(1==1);
 
+@enforce_strict is true;
+
+-- TEST: strict mode for is true disables is true
+-- + {assign}: err
+-- + Error % Operator may not be used because it is not supported on old versions of SQLite 'IS TRUE'
+-- +1 Error
+set bool_x := 1 is true;
+
+-- TEST: strict mode for is true disables is false
+-- + {assign}: err
+-- + Error % Operator may not be used because it is not supported on old versions of SQLite 'IS FALSE'
+-- +1 Error
+set bool_x := 1 is false;
+
+-- TEST: strict mode for is true disables is not true
+-- + {assign}: err
+-- + Error % Operator may not be used because it is not supported on old versions of SQLite 'IS NOT TRUE'
+-- +1 Error
+set bool_x := 1 is not true;
+
+-- TEST: strict mode for is true disables is not false
+-- + {assign}: err
+-- + Error % Operator may not be used because it is not supported on old versions of SQLite 'IS NOT FALSE'
+-- +1 Error
+set bool_x := 1 is not false;
+
+@enforce_normal is true;
+
 -- TEST: 2 is true
 -- rewritten as "1"
 -- + SET bool_x := 1;
@@ -1582,7 +1621,7 @@ create table bad_conversions(
 -- + Error % lossy conversion from type 'REAL' in 2.200000e+00
 -- +1 Error
 create table bad_conversions(
-  data integer not null default const(1+1.2)
+  data integer not null default const(1 + 1.2)
 );
 
 -- TEST: allowable conversion, the constant becomes real
@@ -2393,6 +2432,8 @@ begin
   out C;
 end;
 
+declare proc anything no check;
+
 -- TEST: procedure call with arguments mixing in/out legally
 -- - Error
 -- + {create_proc_stmt}: ok
@@ -2465,12 +2506,6 @@ declare int_nn int not null;
 -- +1 Error
 -- + {assign}: err
 set int_nn := NULL;
-
--- TEST: call some method
--- - Error
--- + {call_stmt}: ok
--- + {name foo}: ok
-call foo();
 
 -- TEST: call external method with args
 -- - Error
@@ -2588,6 +2623,14 @@ end;
 -- + {name count}: integer notnull
 -- + {star}: integer
 select count(*) from foo;
+
+-- TEST: verify that analysis of the special function `count` can deal with
+-- bogus arguments
+-- + {call}: err
+-- + {name this_does_not_exist}: err
+-- + Error % name not found 'this_does_not_exist'
+-- +1 Error
+select count(this_does_not_exist) from foo;
 
 -- TEST: try count distinct function
 -- - Error
@@ -2898,17 +2941,16 @@ end;
 -- - Error
 declare curs cursor for call with_result_set();
 
+-- TEST: bad args to the function -> error path
+-- + {declare_cursor}: err
+-- + Error % too many arguments provided to procedure 'with_result_set'
+-- +1 Error
+declare curs2 cursor for call with_result_set(1);
+
 -- TEST: bad invocation, needs cursor
 -- + Error % procedures with results can only be called using a cursor in global context 'with_result_set'
 -- {call_stmt}: err
 call with_result_set();
-
--- TEST: bad invocation, bogus method
--- + Error % string operand not allowed in 'NOT'
--- +1 Error
--- + {declare_cursor}: err
--- + {call_stmt}: err
-declare curs cursor for call bogus_call(not 'x');
 
 -- TEST: bad invocation, this method doesn't return a result set
 -- + Error % cursor requires a procedure that returns a result set via select 'curs'
@@ -3678,6 +3720,11 @@ LEFT OUTER JOIN CC3 C ON C.id3 == A.id1;
 -- + {param}: id: integer variable in
 declare proc decl1(id integer);
 
+-- TEST: try to declare this as an unchecked proc also
+-- + Error % procedure cannot be both a normal procedure and an unchecked procedure 'decl1'
+-- +1 Error
+declare proc decl1 no check;
+
 -- TEST: declare procedure with DB params
 -- - Error
 -- + {declare_proc_stmt}: ok dml_proc
@@ -3921,6 +3968,12 @@ select const(1 % 0L);
 -- +1 Error
 select const(1 % not 1);
 
+-- TEST: not handles error prop
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(not x);
+
 -- TEST: variables not allowed in constant expressions (duh)
 -- + {const}: err
 -- + Error % evaluation of constant failed
@@ -3951,6 +4004,32 @@ select const(case when x then 2 end);
 -- +1 Error
 select const(~1.3);
 
+-- TEST: error should flow through
+-- + {const}: err
+-- + SELECT CONST(~(1 / 0));
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(~(1/0));
+
+-- TEST: error should flow through
+-- + {const}: err
+-- + SELECT CONST(-(1 / 0));
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(-(1/0));
+
+-- TEST: ~NULL
+-- ~NULL is null
+-- + SELECT NULL;
+-- - Error
+select const(~null);
+
+-- TEST: -NULL
+-- -NULL is null
+-- + SELECT NULL;
+-- - Error
+select const(-null);
+
 -- TEST: forcing errors in binary operators to make them prop:  comparison type
 -- + {const}: err
 -- + Error % evaluation of constant failed
@@ -3967,7 +4046,481 @@ select const(x is x);
 -- + {const}: err
 -- + Error % evaluation of constant failed
 -- +1 Error
-select const(x + x);
+select const(x + 0);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(0 + x);
+
+-- TEST: null handling for +
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(null + 0);
+
+-- TEST: null handling for +
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(0 + null);
+
+-- TEST: bool handling for +
+-- + {select_stmt}: select: { _anon: bool notnull }
+-- + SELECT 1;
+-- - Error
+select const(true + false);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x - 0);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(0 - x);
+
+-- TEST: null handling for -
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(null - 0);
+
+-- TEST: null handling for -
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(0 - null);
+
+-- TEST: bool handling for -
+-- + {select_stmt}: select: { _anon: bool notnull }
+-- + SELECT 1;
+-- - Error
+select const(true - false);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x * 0);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(0 * x);
+
+-- TEST: null handling for *
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(null * 0);
+
+-- TEST: null handling for *
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(0 * null);
+
+-- TEST: bool handling for *
+-- + {select_stmt}: select: { _anon: bool notnull }
+-- + SELECT 0;
+-- - Error
+select const(true * false);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x / 1);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1 / x);
+
+-- TEST: null handling for /
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(null / 1);
+
+-- TEST: null handling for /
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(1 / null);
+
+-- TEST: bool handling for /
+-- + {select_stmt}: select: { _anon: bool notnull }
+-- + SELECT 0;
+-- - Error
+select const(false / true);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x % 1);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1 % x);
+
+-- TEST: null handling for %
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(null % 1);
+
+-- TEST: null handling for %
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(1 % null);
+
+-- TEST: bool handling for %
+-- + {select_stmt}: select: { _anon: bool notnull }
+-- + SELECT 0;
+-- - Error
+select const(false % true);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x == 1);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1 == x);
+
+-- TEST: null handling for == (don't use a literal null)
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const((not null) == 0);
+
+-- TEST: null handling for == (don't use a literal null)
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(0 == not null);
+
+-- TEST: null handling for +
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(0 + null);
+
+-- TEST: bool handling for ==
+-- + {select_stmt}: select: { _anon: bool notnull }
+-- + SELECT 0;
+-- - Error
+select const(false == true);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x != 1);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1 != x);
+
+-- TEST: null handling for == (don't use a literal null)
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const((not null) != 0);
+
+-- TEST: null handling for != (don't use a literal null)
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(0 != not null);
+
+-- TEST: bool handling for !=
+-- + {select_stmt}: select: { _anon: bool notnull }
+-- + SELECT 1;
+-- - Error
+select const(false != true);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x <= 1);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1 <= x);
+
+-- TEST: null handling for <= (don't use a literal null)
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const((not null) <= 0);
+
+-- TEST: null handling for <= (don't use a literal null)
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(0 <= not null);
+
+-- TEST: bool handling for <=
+-- + {select_stmt}: select: { _anon: bool notnull }
+-- + SELECT 1;
+-- - Error
+select const(false <= true);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x >= 1);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1 >= x);
+
+-- TEST: null handling for >= (don't use a literal null)
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const((not null) >= 0);
+
+-- TEST: null handling for >= (don't use a literal null)
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(0 >= not null);
+
+-- TEST: bool handling for >=
+-- + {select_stmt}: select: { _anon: bool notnull }
+-- + SELECT 0;
+-- - Error
+select const(false >= true);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x > 1);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1 > x);
+
+-- TEST: null handling for >
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(null > 1);
+
+-- TEST: null handling for >
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(1 > null);
+
+-- TEST: bool handling for >
+-- + {select_stmt}: select: { _anon: bool notnull }
+-- + SELECT 0;
+-- - Error
+select const(false > true);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x < 1);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1 < x);
+
+-- TEST: null handling for <
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(null < 1);
+
+-- TEST: null handling for <
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(1 < null);
+
+-- TEST: bool handling for <
+-- + {select_stmt}: select: { _anon: bool notnull }
+-- + SELECT 1;
+-- - Error
+select const(false < true);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x << 1);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1 << x);
+
+-- TEST: null handling for <<
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(null << 0);
+
+-- TEST: null handling for <<
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(0 << null);
+
+-- TEST: bool handling for <<
+-- + {select_stmt}: select: { _anon: bool notnull }
+-- + SELECT 0;
+-- - Error
+select const(false << true);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x >> 1);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1 >> x);
+
+-- TEST: null handling for >>
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(null >> 0);
+
+-- TEST: null handling for >>
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(0 >> null);
+
+-- TEST: bool handling for >>
+-- + {select_stmt}: select: { _anon: bool notnull }
+-- + SELECT 0;
+-- - Error
+select const(false >> true);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x | 1);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1 | x);
+
+-- TEST: null handling for |
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(null | 0);
+
+-- TEST: null handling for |
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(0 | null);
+
+-- TEST: bool handling for |
+-- + {select_stmt}: select: { _anon: bool notnull }
+-- + SELECT 1;
+-- - Error
+select const(false | true);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x & 1);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1 & x);
+
+-- TEST: null handling for &
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(null & 0);
+
+-- TEST: null handling for &
+-- + {select_stmt}: select: { _anon: null }
+-- + SELECT NULL;
+-- - Error
+select const(0 & null);
+
+-- TEST: bool handling for &
+-- + {select_stmt}: select: { _anon: bool notnull }
+-- + SELECT 0;
+-- - Error
+select const(false & true);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x is 1);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1 is x);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(x is not 1);
+
+-- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + {const}: err
+-- + Error % evaluation of constant failed
+-- +1 Error
+select const(1 is not x);
 
 -- TEST: forcing errors in binary operators to make them prop:  and error in first arg
 -- + {const}: err
@@ -5451,6 +6004,27 @@ begin
   out C;
 end;
 
+-- needed for the next test
+declare QQ cursor like out_cursor_proc;
+
+-- TEST: force an error on the out cursor path, bad args
+-- {declare_cursor}: err
+-- + Error % too many arguments provided to procedure 'out_cursor_proc'
+-- +1 Error
+fetch QQ from call out_cursor_proc(1);
+
+-- we need this for the next test, it has the right shape but it's not an out proc
+create proc not_out_cursor_proc()
+begin
+  select 1 A, 2 B;
+end;
+
+-- TEST: force an error on the out cursor path, the proc isn't actually an out cursor proc
+-- {fetch_call_stmt}: err
+-- + Error % cursor requires a procedure that returns a cursor with OUT 'QQ'
+-- +1 Error
+fetch QQ from call not_out_cursor_proc();
+
 -- TEST: use non-fetched cursor for out statement
 -- + {create_proc_stmt}: err
 -- + {out_stmt}: err
@@ -5635,6 +6209,11 @@ begin
   declare C cursor fetch from call declared_proc(not 'x');
 end;
 
+-- a bogus proc for use in a later test
+create proc xyzzy()
+begin
+end;
+
 -- TEST: call a procedure that is just all wrong
 -- + {create_proc_stmt}: err
 -- + Error % cursor requires a procedure that returns a cursor with OUT 'C'
@@ -5749,20 +6328,6 @@ create proc fetch_from_call()
 begin
   declare C cursor like out_cursor_proc;
   fetch C from call out_cursor_proc();
-  out C;
-end;
-
--- TEST: fetch cursor from call to proc that doesn't exist
--- + {create_proc_stmt}: err
--- + {stmt_list}: err
--- + {fetch_call_stmt}: err
--- + {call_stmt}: err
--- + Error % cursor requires a procedure that returns a cursor with OUT 'C'
--- +1 Error
-create proc fetch_from_call_to_proc_that_does_not_exist()
-begin
-  declare C cursor like out_cursor_proc;
-  fetch C from call does_not_exist();
   out C;
 end;
 
@@ -11845,20 +12410,19 @@ create table bogus_reference_in_fk(
   foreign key(col2) references this_table_does_not_exist(col1) on update cascade on delete cascade
 ) @delete(1);
 
--- - Error
-@enforce_strict procedure;
-
 -- TEST: try to call an undeclared proc while in strict mode
--- + Error % calls to undeclared procedures are forbidden if strict procedure mode is enabled; declaration missing or typo 'some_external_thing'
+-- + Error % calls to undeclared procedures are forbidden; declaration missing or typo 'some_external_thing'
 -- +1 Error
 call some_external_thing();
 
+-- TEST: let this be usable
+-- + {declare_proc_no_check_stmt}: ok
 -- - Error
-@enforce_normal procedure;
+DECLARE PROC some_external_thing NO CHECK;
 
 -- TEST: same call in non stict mode -> fine
 -- - Error
-call some_external_thing();
+call some_external_thing('x', 5.0);
 
 -- a proc with a return type for use
 declare proc _stuff() (id integer, name text);
@@ -13262,19 +13826,37 @@ select iif(an_int is null, 3, 2);
 -- TEST: test rewrite for IIF func with invalid argument count
 -- + {select_stmt}: err
 -- + Error % function got incorrect number of arguments 'iif'
--- + Error
+-- +1 Error
 select iif(an_int is null, 2, 3, 4);
 
--- TEST: test rewrite for IIF func with invalid argument count
+-- TEST: exercise iif analysis with a bad first argument
+-- + {select_stmt}: err
+-- + {name not_found}: err
+-- +1 Error
+select iif(not_found, 2, 3);
+
+-- TEST: exercise iif analysis with a bad second argument
+-- + {select_stmt}: err
+-- + {name not_found}: err
+-- +1 Error
+select iif(1, not_found, 3);
+
+-- TEST: exercise iif analysis with a bad third argument
+-- + {select_stmt}: err
+-- + {name not_found}: err
+-- +1 Error
+select iif(1, 2, not_found);
+
+-- TEST: test rewrite for IIF func with non-numeric first argument
 -- + {select_stmt}: err
 -- + Error % argument must be numeric 'iif'
--- + Error
+-- +1 Error
 select iif('x', 2, 3);
 
--- TEST: test rewrite for IIF func with invalid argument count
+-- TEST: test rewrite for IIF func with incompatible types
 -- + {select_stmt}: err
 -- + Error % incompatible types in expression 'iif'
--- + Error
+-- +1 Error
 select iif(an_int is null, 2, x'23');
 
 -- TEST: test rewrite for IIF func out of sql context
@@ -16132,192 +16714,6 @@ begin
   end if;
 end;
 
--- TEST: Improvements work for `ifnull_crash`.
--- + {let_stmt}: x0: integer notnull variable
--- + {let_stmt}: x1: integer notnull variable
--- - Error
-create proc improvements_work_for_ifnull_crash()
-begin
-  declare a int;
-  let x0 := ifnull_crash(a);
-  let x1 := a;
-end;
-
--- TEST: Improvements work for `ifnull_crash` on cursor fields.
--- + {let_stmt}: x0: integer notnull variable
--- + {let_stmt}: x1: integer notnull variable
--- - Error
-create proc improvements_work_for_ifnull_crash_on_cursor_fields()
-begin
-  declare c cursor for select nullable(1) a;
-  fetch c;
-  let x0 := ifnull_crash(c.a);
-  let x1 := c.a;
-end;
-
--- TEST: Improvements work for `ifnull_throw`.
--- + {let_stmt}: x0: integer notnull variable
--- + {let_stmt}: x1: integer notnull variable
--- - Error
-create proc improvements_work_for_ifnull_throw()
-begin
-  declare a int;
-  let x0 := ifnull_throw(a);
-  let x1 := a;
-end;
-
--- TEST: Improvements work for `ifnull_throw` on cursor fields.
--- + {let_stmt}: x0: integer notnull variable
--- + {let_stmt}: x1: integer notnull variable
--- - Error
-create proc improvements_work_for_ifnull_throw_on_cursor_fields()
-begin
-  declare c cursor for select nullable(1) a;
-  fetch c;
-  let x0 := ifnull_throw(c.a);
-  let x1 := c.a;
-end;
-
--- TEST: As with SET, all improvements resulting from attest_notnull functions
--- are bounded by the nearest enclosing statement list (or some smaller
--- expression therein).
--- + {let_stmt}: b: integer variable
--- + {let_stmt}: c: integer notnull variable
--- + {let_stmt}: d: integer variable
--- + {let_stmt}: e: integer notnull variable
--- + {let_stmt}: f: integer variable
--- - Error
-create proc improvements_added_by_attest_notnull_do_not_persist_outside_the_statement_list()
-begin
-  declare a int;
-  begin try
-    let b := a;
-    let dummy0 := ifnull_throw(a);
-    let c := a;
-  end try;
-  begin catch
-    let d := a;
-    let dummy1 := ifnull_crash(a);
-    let e := a;
-  end catch;
-  let f := a;
-end;
-
--- Used in the following test.
--- - Error
-create proc requires_notnull_in_returns_int(a int not null, out b int not null)
-begin
-end;
-
--- TEST: Improvements to the right of an IN do not persist beyond the IN but can
--- be used for later expressions within the IN.
--- + {let_stmt}: x0: integer notnull variable
--- + {let_stmt}: x1: integer variable
--- + {let_stmt}: x2: integer variable
--- - Error
-create proc improvements_respect_short_circuiting_in()
-begin
-  declare a0 int;
-  declare a1 int;
-  declare a2 int;
-
-  let dummy := ifnull_crash(a0) in (a1, ifnull_crash(a2), requires_notnull_in_returns_int(a2));
-
-  -- nonnull as the improvement was in the needle and thus it persists
-  let x0 := a0;
-  -- nullable
-  let x1 := a1;
-  -- nullable as improvements in the right side of the IN do not persist after
-  -- the IN because the expressions might not have been evaluated
-  let x2 := a2;
-end;
-
--- Used in the following tests.
--- - Error
-create proc requires_notnull_ins_returns_bool(a int not null, b int not null, out c bool not null)
-begin
-end;
-
--- TEST: Improvements made within the right side of a short-circuiting logical
--- operator do not persist, but do work within the right side itself.
--- + {name a0}: a0: integer inferred_notnull variable
--- + {name a1}: a1: integer inferred_notnull variable
--- + {name a2}: a2: integer inferred_notnull variable
--- + {name a3}: a3: integer inferred_notnull variable
--- + {let_stmt}: x0: integer variable
--- + {let_stmt}: x1: integer notnull variable
--- + {let_stmt}: x2: integer variable
--- + {let_stmt}: x3: integer notnull variable
--- - Error
-create proc improvements_respect_short_circuiting_logical_operators()
-begin
-  declare a0 int;
-  declare a1 int;
-  declare a2 int;
-  declare a3 int;
-
-  -- Check behavior for the right side of OR.
-  let dummy0 := 1 or requires_notnull_ins_returns_bool(ifnull_crash(a0), a0);
-  -- Check behavior for the left side of OR.
-  let dummy1 := requires_notnull_ins_returns_bool(ifnull_crash(a1), a1) or 1;
-  -- Check behavior for the right side of AND.
-  let dummy2 := 0 and requires_notnull_ins_returns_bool(ifnull_crash(a2), a2);
-  -- Check behavior for the left side of AND.
-  let dummy3 := requires_notnull_ins_returns_bool(ifnull_crash(a3), a3) and 0;
-
-  let x0 := a0; -- nullable
-  let x1 := a1; -- not null
-  let x2 := a2; -- nullable
-  let x3 := a3; -- not null
-end;
-
--- TEST: Improvements made via attest_notnull and via conditionals interact
--- properly in the presence of short-circuiting operators.
--- + {name a0}: a0: integer inferred_notnull variable
--- + {name a1}: a1: integer inferred_notnull variable
--- + {name a2}: a2: integer inferred_notnull variable
--- + {name a3}: a3: integer inferred_notnull variable
--- + {let_stmt}: x0: integer notnull variable
--- + {let_stmt}: x1: integer notnull variable
--- + {let_stmt}: x2: integer variable
--- + {let_stmt}: x3: integer notnull variable
--- + {let_stmt}: x0_post: integer notnull variable
--- + {let_stmt}: x1_post: integer variable
--- + {let_stmt}: x2_post: integer variable
--- + {let_stmt}: x3_post: integer variable
--- - Error
-create proc improvements_within_conditionals_respect_short_circuiting()
-begin
-  declare a0 int;
-  declare a1 int;
-  declare a2 int;
-  declare a3 int;
-  if ifnull_crash(a0)
-    and (a1 is not null and requires_notnull_ins_returns_bool(ifnull_crash(a1), a1))
-    and requires_notnull_ins_returns_bool(ifnull_crash(a2), a2)
-    and a3 is not null
-  then
-    -- not null because the `a0` improvement that occurred via `ifnull_crash`
-    -- did not happen to the right of a short-circuiting operator
-    let x0 := a0; 
-    -- not null because `a1` was improved again via the `IF` after `a1` was
-    -- improved locally within the conditional expression via `ifnull_crash`
-    let x1 := a1;
-    -- nullable because the `a2` improvement happened via `ifnull_crash` to the
-    -- right of a short-circuiting operator; we could do better here, and this
-    -- would be done by explicitly allowing attest_notnull functions to improve
-    -- names within a conditional the same way we do with `IS NOT NULL`
-    let x2 := a2;
-    -- not null because `a3` was improved via the `IF` even though it was on the
-    -- right side of a short-circuiting `AND` operator
-    let x3 := a3;
-  end if;
-  let x0_post := a0; -- not null as the `a0` improvement safely persists
-  let x1_post := a1; -- nullable
-  let x2_post := a2; -- nullable
-  let x3_post := a3; -- nullable
-end;
-
 -- TEST: Improvements work on IN arguments.
 -- + {let_stmt}: x: integer notnull variable
 -- - Error
@@ -16586,6 +16982,160 @@ begin
   end if;
 end;
 
+-- TEST: A commit return guard can improve nullability.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- - Error
+create proc improvements_work_for_commit_return_guards(a int)
+begin
+  proc savepoint
+  begin
+    if 1 then
+      if a is null commit return;
+      let x0 := a;
+    end if;
+    let x1 := a;
+  end;
+end;
+
+-- TEST: A continue guard can improve nullability.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- - Error
+create proc improvements_work_for_continue_guards(a int)
+begin
+  while 1
+  begin
+    if a is null continue;
+    let x0 := a;
+  end;
+  let x1 := a;
+end;
+
+-- TEST: A leave guard can improve nullability.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- - Error
+create proc improvements_work_for_leave_guards(a int)
+begin
+  while 1
+  begin
+    if a is null leave;
+    let x0 := a;
+  end;
+  let x1 := a;
+end;
+
+-- TEST: A return guard can improve nullability.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- - Error
+create proc improvements_work_for_return_guards(a int)
+begin
+  if 1 then
+    if a is null return;
+    let x0 := a;
+  end if;
+  let x1 := a;
+end;
+
+-- TEST: A rollback return guard can improve nullability.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- - Error
+create proc improvements_work_for_rollback_return_guards(a int)
+begin
+  proc savepoint
+  begin
+    if 1 then
+      if a is null rollback return;
+      let x0 := a;
+    end if;
+    let x1 := a;
+  end;
+end;
+
+-- TEST: A throw guard can improve nullability.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- - Error
+create proc improvements_work_for_throw_guards(a int)
+begin
+  proc savepoint
+  begin
+    if 1 then
+      if a is null throw;
+      let x0 := a;
+    end if;
+    let x1 := a;
+  end;
+end;
+
+-- TEST: Guard improvements work for cursor fields.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- - Error
+create proc guard_improvements_work_for_cursor_fields()
+begin
+  declare c cursor for select nullable(1) a;
+  fetch c;
+  if 1 then
+    if c.a is null return;
+    let x0 := c.a;
+  end if;
+  let x1 := c.a;
+end;
+
+-- TEST: OR allows guards to introduce multiple improvements.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: y0: integer notnull variable
+-- + {let_stmt}: z0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- + {let_stmt}: y1: integer variable
+-- + {let_stmt}: z1: integer variable
+-- - Error
+create proc multiple_improvements_are_possible_via_one_guard(a int, b int, c int)
+begin
+  if 1 then
+    if a is null or b is null or c is null return;
+    let x0 := a;
+    let y0 := b;
+    let z0 := c;
+  end if;
+  let x1 := a;
+  let y1 := b;
+  let z1 := c;
+end;
+
+-- TEST: Checks not along the outermost spine of ORs result in no improvement.
+-- + {let_stmt}: x: integer variable
+-- + {let_stmt}: y: integer variable
+-- + {let_stmt}: z: integer variable
+-- - Error
+create proc guard_improvements_only_work_for_outermost_ors(a int, b int, c int)
+begin
+  if a is null and (b is null or c is null) return;
+  let x := a;
+  let y := b;
+  let z := c;
+end;
+
+-- TEST: Not explicitly using IS NULL results in no improvement.
+create proc guard_improvements_only_work_for_is_null(a int)
+begin
+  if not a return;
+  let x := a;
+end;
+
+-- TEST: Bad conditions in guards are handled as in if statements.
+-- + {if_stmt}: err
+-- + Error % name not found 'some_undefined_variable'
+-- +1 Error
+create proc guard_improvements_handle_semantic_issues_like_if()
+begin
+  if some_undefined_variable is null return;
+end;
+
 -- TEST: Disable flow-sensitive nullability.
 -- + @ENFORCE_NORMAL NOT NULL AFTER CHECK
 -- + {enforce_normal_stmt}: ok
@@ -16841,6 +17391,30 @@ select ('x' not like 'y') = 1;
 -- + SELECT 'x' NOT LIKE ('y' = 1);
 -- + Error % incompatible types in expression '='
 select 'x' not like ('y' = 1);
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- conversion to IS NULL requires parens
+-- + SELECT (5 IS NULL) + 3;
+-- - Error
+select 5 isnull + 3;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- no parens needed left to right works
+-- + SELECT 5 IS NULL IS NULL;
+-- - Error
+select 5 isnull isnull;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- conversion to IS NOT NULL requires parens
+-- + SELECT (5 IS NOT NULL) + 3;
+-- - Error
+select 5 notnull + 3;
+
+-- TEST: order of operations, verifying gen_sql agrees with tree parse
+-- no parens needed left to right works
+-- + SELECT 5 IS NOT NULL IS NULL;
+-- - Error
+select 5 notnull isnull;
 
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
 -- no parens added

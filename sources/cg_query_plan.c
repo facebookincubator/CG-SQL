@@ -513,6 +513,8 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   schema_stmts = &schema_stmts_buf;
   CHARBUF_OPEN(output_buf);
 
+  bprintf(&output_buf, "DECLARE PROC printf NO CHECK;\n");
+
   gen_sql_callbacks callbacks;
   init_gen_sql_callbacks(&callbacks);
   callbacks.variables_callback = &variables_callback;
