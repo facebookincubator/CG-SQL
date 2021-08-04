@@ -1127,6 +1127,30 @@ json_schema_test() {
   echo validating json codegen
   echo "  computing diffs (empty if none)"
   on_diff_exit cg_test_json_schema.out
+
+  # test empty file case
+  echo "" >"${OUT_DIR}/__temp"
+  if  ! ${CQL} --cg "${OUT_DIR}/__temp.out" --in "${OUT_DIR}/__temp" --rt json_schema 2>"${OUT_DIR}/cg_test_json_schema.err"
+  then
+    cat cg_test_json_schema.err
+    echo non-test JSON output failed
+    failed
+  fi
+
+  echo "checking for well formed empty JSON using python"
+  if ! common/json_check.py <"${OUT_DIR}/__temp.out" >/dev/null
+  then
+    echo empty json is badly formed -- see "${OUT_DIR}/__temp.out"
+    failed
+  fi
+
+  echo "checking for CQL empty JSON grammar conformance"
+  if ! out/json_test <"${OUT_DIR}/__temp.out" >"${OUT_DIR}/json_errors.txt"
+  then
+    echo "empty json did not pass grammar check (see ${OUT_DIR}/__temp.out)"
+    cat "${OUT_DIR}/json_errors.txt"
+    failed
+  fi
 }
 
 test_helpers_test() {

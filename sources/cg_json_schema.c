@@ -2052,6 +2052,7 @@ static void cg_json_stmt_list(charbuf *output, ast_node *head) {
   CHARBUF_OPEN(delete_buf);
   CHARBUF_OPEN(general_buf);
   CHARBUF_OPEN(general_inserts_buf);
+  CHARBUF_OPEN(attributes_buf);
 
   queries = &query_buf;
   inserts = &insert_buf;
@@ -2066,8 +2067,15 @@ static void cg_json_stmt_list(charbuf *output, ast_node *head) {
       cg_json_create_proc(stmt, misc_attrs);
     }
     else if (is_ast_declare_vars_type(stmt)) {
-      cg_json_declare_vars_type(output, stmt, misc_attrs);
+      cg_json_declare_vars_type(&attributes_buf, stmt, misc_attrs);
     }
+  }
+
+  if (attributes_buf.used > 1) {
+    bprintf(output, "%s", attributes_buf.ptr);
+  }
+  else {
+    bprintf(output, "\"attributes\" : [\n],\n");
   }
 
   bprintf(output, "\"queries\" : [\n");
@@ -2094,6 +2102,7 @@ static void cg_json_stmt_list(charbuf *output, ast_node *head) {
   bindent(output, general, 2);
   bprintf(output, "\n]");
 
+  CHARBUF_CLOSE(attributes_buf);
   CHARBUF_CLOSE(general_inserts_buf);
   CHARBUF_CLOSE(general_buf);
   CHARBUF_CLOSE(delete_buf);
