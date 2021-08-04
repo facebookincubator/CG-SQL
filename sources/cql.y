@@ -870,7 +870,7 @@ any_literal:
   | NULL_  { $any_literal = new_ast_null(); }
   | AT_FILE '(' str_literal ')'  { $any_literal = file_literal($str_literal); }
   | AT_PROC  { $any_literal = new_ast_str("@PROC"); }
-  | BLOBLIT  { $any_literal = new_astb($BLOBLIT); }
+  | BLOBLIT  { $any_literal = new_ast_blob($BLOBLIT); }
   ;
 
 raise_expr:

@@ -216,7 +216,7 @@ cql_noexport ast_node *_Nonnull new_ast_num(int32_t type, const char *_Nonnull v
 cql_noexport ast_node *_Nonnull new_ast_opt(int32_t value);
 cql_noexport ast_node *_Nonnull new_ast_str(const char *_Nonnull value);
 cql_noexport ast_node *_Nonnull new_ast_cstr(const char *_Nonnull value);
-cql_noexport ast_node *_Nonnull new_astb(const char *_Nonnull value);
+cql_noexport ast_node *_Nonnull new_ast_blob(const char *_Nonnull value);
 
 cql_noexport ast_node *_Nonnull copy_ast_tree(ast_node *_Nonnull node);
 
