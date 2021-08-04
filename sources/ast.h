@@ -224,19 +224,21 @@ cql_noexport bool_t is_ast_int(ast_node *_Nullable node);
 cql_noexport bool_t is_ast_str(ast_node *_Nullable node);
 cql_noexport bool_t is_ast_num(ast_node *_Nullable node);
 cql_noexport bool_t is_ast_blob(ast_node *_Nullable node);
-cql_noexport bool_t is_ast_strlit(ast_node *_Nullable node);
-cql_noexport bool_t is_ast_id(ast_node *_Nullable node);
-cql_noexport bool_t is_ast_proclit(ast_node *_Nullable node);
-cql_noexport bool_t is_ast_at_rc(ast_node *_Nullable node);
-cql_noexport bool_t is_ast_primitive(ast_node *_Nullable  node);
-cql_noexport bool_t ast_has_left(ast_node *_Nullable node);
-cql_noexport bool_t ast_has_right(ast_node *_Nullable enode);
-cql_noexport bool_t is_ast_proc(ast_node *_Nullable node);
-cql_noexport bool_t is_ast_region(ast_node *_Nonnull ast);
+
+cql_noexport bool_t is_strlit(ast_node *_Nullable node);
+cql_noexport bool_t is_id(ast_node *_Nullable node);
+cql_noexport bool_t is_proclit(ast_node *_Nullable node);
+cql_noexport bool_t is_at_rc(ast_node *_Nullable node);
+cql_noexport bool_t is_primitive(ast_node *_Nullable  node);
+cql_noexport bool_t is_proc(ast_node *_Nullable node);
+cql_noexport bool_t is_region(ast_node *_Nonnull ast);
 
 cql_noexport ast_node *_Nullable get_proc_params(ast_node *_Nonnull ast);
 cql_noexport ast_node *_Nonnull get_proc_name(ast_node *_Nonnull ast);
 cql_noexport ast_node *_Nullable get_func_params(ast_node *_Nonnull func_stmt);
+
+cql_noexport bool_t ast_has_left(ast_node *_Nullable node);
+cql_noexport bool_t ast_has_right(ast_node *_Nullable enode);
 
 cql_noexport void ast_set_right(ast_node *_Nonnull parent, ast_node *_Nullable right);
 cql_noexport void ast_set_left(ast_node *_Nonnull parent, ast_node *_Nullable left);

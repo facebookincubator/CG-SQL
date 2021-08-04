@@ -211,7 +211,7 @@ static void cg_json_attr_value(charbuf *output, ast_node *ast) {
   else if (is_ast_str(ast)) {
     EXTRACT_STRING(str, ast);
 
-    if (is_ast_strlit(ast)) {
+    if (is_strlit(ast)) {
       // note str is the lexeme, so it is still quoted and escaped
       CHARBUF_OPEN(str1);
       CHARBUF_OPEN(str2);

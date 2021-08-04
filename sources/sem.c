@@ -5017,7 +5017,7 @@ static void sem_update_proc_type_for_select(ast_node *ast) {
   Invariant(is_struct(ast->sem->sem_type));
 
   // Sanity check the state, the current proc is a proc.
-  Invariant(is_ast_proc(current_proc));
+  Invariant(is_proc(current_proc));
   EXTRACT_STRING(name, current_proc->left);
 
   // It's at least got an OK record
@@ -5615,7 +5615,7 @@ static void sem_resolve_id_with_type(ast_node *ast, CSTR name, CSTR scope, sem_t
 // into `ast` if successful, or reporting and recording an error for `ast` if
 // not.
 static void sem_resolve_id(ast_node *ast, CSTR name, CSTR scope) {
-  Contract(is_ast_id(ast) || is_ast_dot(ast));
+  Contract(is_id(ast) || is_ast_dot(ast));
   Contract(name);
 
   // We have no use for `type` and simply throw it away.
@@ -5626,7 +5626,7 @@ static void sem_resolve_id(ast_node *ast, CSTR name, CSTR scope) {
 // Like `sem_resolve_id`, but specific to expression contexts (where nullability
 // improvements are applicable).
 static void sem_resolve_id_expr(ast_node *ast, CSTR name, CSTR scope) {
-  Contract(is_ast_id(ast) || is_ast_dot(ast));
+  Contract(is_id(ast) || is_ast_dot(ast));
   Contract(name);
 
   // Perform resolution, as for ids and dots outside of expressions.
@@ -7922,7 +7922,7 @@ static void sem_user_func(ast_node *ast, ast_node *user_func) {
 //  * in code-gen we will create a temporary for it, semantic analysis doesn't care
 static void sem_proc_as_func(ast_node *ast, ast_node *proc) {
   Contract(is_ast_call(ast));
-  Contract(is_ast_proc(proc));
+  Contract(is_proc(proc));
 
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -9411,7 +9411,7 @@ static bool_t sem_select_orderby_with_simple_ordering_only(ast_node *ast) {
     if (is_ast_num(expr)) {
       continue;
     }
-    if (is_ast_id(expr)) {
+    if (is_id(expr)) {
       continue;
     }
     report_error(expr, "CQL0398: A compound select cannot be ordered by the result of an expression", NULL);
@@ -11541,13 +11541,13 @@ static void sem_add_notnull_improvements(ast_node* ast, ast_node* select_expr_li
     return;
   }
 
-  if (!is_ast_id(ast->left) && !is_ast_dot(ast->left)) {
+  if (!is_id(ast->left) && !is_ast_dot(ast->left)) {
     return;
   }
 
   ast_node *id_or_dot = ast->left;
 
-  if (is_ast_id(id_or_dot)) {
+  if (is_id(id_or_dot)) {
     EXTRACT_STRING(name, id_or_dot);
     // If we have `select_expr_list`, we should not improve `name` if the id
     // also appears as an alias in the expression list. This is because `name`
@@ -11722,7 +11722,7 @@ static void sem_add_improvements_from_guard_condition(ast_node *ast) {
 
   if (is_ast_is(ast) && is_ast_null(ast->right)) {
     EXTRACT_ANY_NOTNULL(expr, ast->left);
-    if (is_ast_id(expr)) {
+    if (is_id(expr)) {
       EXTRACT_STRING(name, expr);
       sem_set_notnull_improved(name, NULL);
     } else if (is_ast_dot(expr)) {
@@ -12543,7 +12543,7 @@ static void sem_insert_stmt(ast_node *ast) {
 // Recursively goes through all the node to find the root select_stmt with SELECT token and
 // check whether or not it has WHERE clause.
 static bool_t is_root_select_stmt_has_opt_where_node (ast_node *ast, int32_t *select_count) {
-  if (!ast || is_ast_primitive(ast)) {
+  if (!ast || is_primitive(ast)) {
     return false;
   }
 
@@ -13863,7 +13863,7 @@ static bool_t sem_autotest_dummy_test(
              ok = core_type == SEM_TYPE_REAL;
            }
         }
-        else if (is_ast_strlit(misc_attr_value)) {
+        else if (is_strlit(misc_attr_value)) {
            // a string literal is ok for any text column
            ok = core_type == SEM_TYPE_TEXT;
         }
@@ -14786,7 +14786,7 @@ static void replace_fragment_name(ast_node *node, CSTR base_name, CSTR new_name)
       extension_node->value = new_name;
     }
   }
-  if (is_ast_primitive(node)) {
+  if (is_primitive(node)) {
     return;
   }
 
@@ -15715,7 +15715,7 @@ static void sem_replace_seen_enum_values(ast_node *ast, symtab *names) {
   Contract(ast);
 
   // we're lookign only for unqualified names
-  if (is_ast_dot(ast) || is_ast_strlit(ast)) {
+  if (is_ast_dot(ast) || is_strlit(ast)) {
      return;
   }
 
@@ -16972,7 +16972,7 @@ static bool_t sem_verify_no_duplicate_regions(ast_node *region_list) {
 // variable was expected.
 static void sem_arg_out(ast_node *arg, CSTR param_name) {
   bool_t success = false;
-  if (is_ast_id(arg)) {
+  if (is_id(arg)) {
     EXTRACT_STRING(name, arg);
     sem_resolve_id(arg, name, NULL);
     sem_unset_notnull_improved(name, NULL);
@@ -17197,7 +17197,7 @@ static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name) {
 
   // If known proc, do additional validation
   if (proc_stmt) {
-    Contract(is_ast_proc(proc_stmt));
+    Contract(is_proc(proc_stmt));
     EXTRACT_NOTNULL(proc_params_stmts, proc_stmt->right);
     EXTRACT(params, proc_params_stmts->left);
 
@@ -18190,14 +18190,14 @@ static void sem_expr_blob(ast_node *ast, CSTR cstr) {
 static void sem_expr_str(ast_node *ast, CSTR cstr) {
   Contract(is_ast_str(ast));
   EXTRACT_STRING(str, ast);
-  if (is_ast_strlit(ast)) {
+  if (is_strlit(ast)) {
     // note str is the lexeme, so it is still quoted and escaped
     ast->sem = new_sem(SEM_TYPE_TEXT | SEM_TYPE_NOTNULL);
   }
-  else if (is_ast_proclit(ast)) {
+  else if (is_proclit(ast)) {
     sem_expr_proclit(ast);
   }
-  else if (is_ast_at_rc(ast)) {
+  else if (is_at_rc(ast)) {
     sem_expr_at_rc(ast);
   }
   else {
@@ -18839,7 +18839,7 @@ static bool_t verify_schema_region_out_of_proc(ast_node *ast) {
 // Checks to see if a given region has any links that peek into the middle of an owned
 // Section; these are illegal
 static void sem_validate_region_links(ast_node *ast) {
-  Contract(is_ast_region(ast));
+  Contract(is_region(ast));
   EXTRACT_STRING(name, ast->left);
 
   EXTRACT(region_list, ast->right);
@@ -18876,7 +18876,7 @@ static void sem_validate_region_links(ast_node *ast) {
 //  * the region name is unique
 //  * the dependencies (if any) are unique and exist
 static void sem_declare_schema_region_stmt(ast_node *ast) {
-  Contract(is_ast_region(ast));
+  Contract(is_region(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT(region_list, ast->right);
 
@@ -19161,7 +19161,7 @@ static void sem_begin_schema_region_stmt(ast_node * ast) {
   }
 
   // Get the canonical name of the region (case adjusted)
-  Contract(is_ast_region(region));
+  Contract(is_region(region));
   EXTRACT_STRING(region_name, region->left);
 
   // we already know we are not in a region
