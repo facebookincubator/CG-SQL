@@ -50693,6 +50693,57 @@ CALL some_external_thing('x', 5.0);
 
 The statement ending at line XXXX
 
+LET result_of_some_external_thing := some_external_thing('x', 5.0);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0405: procedure of an unknown type used in an expression 'some_external_thing'
+
+  {let_stmt}: err
+  | {name result_of_some_external_thing}
+  | {call}: err
+    | {name some_external_thing}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {strlit 'x'}
+        | {arg_list}
+          | {dbl 5.0}
+
+The statement ending at line XXXX
+
+DECLARE FUNC some_external_thing (t TEXT, r REAL) INTEGER;
+
+  {declare_func_stmt}: integer
+  | {name some_external_thing}: integer
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: t: text variable in
+    | | | {param_detail}: t: text variable in
+    | |   | {name t}: t: text variable in
+    | |   | {type_text}: text
+    | | {params}
+    |   | {param}: r: real variable in
+    |     | {param_detail}: r: real variable in
+    |       | {name r}: r: real variable in
+    |       | {type_real}: real
+    | {type_int}: integer
+
+The statement ending at line XXXX
+
+LET result_of_some_external_thing := some_external_thing('x', 5.0);
+
+  {let_stmt}: result_of_some_external_thing: integer variable
+  | {name result_of_some_external_thing}: result_of_some_external_thing: integer variable
+  | {call}: integer
+    | {name some_external_thing}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {strlit 'x'}: text notnull
+        | {arg_list}
+          | {dbl 5.0}: real notnull
+
+The statement ending at line XXXX
+
 DECLARE PROC _stuff () (id INTEGER, name TEXT);
 
   {declare_proc_stmt}: _stuff: { id: integer, name: text } dml_proc

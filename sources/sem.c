@@ -8065,6 +8065,14 @@ static void sem_expr_call(ast_node *ast, CSTR cstr) {
     goto cleanup;
   }
 
+  // check for an attempt to use an unchecked proc in an expression context
+  ast_node *unchecked_proc = find_unchecked_proc(name);
+  if (unchecked_proc) {
+    report_error(name_ast, "CQL0405: procedure of an unknown type used in an expression", name);
+    record_error(ast);
+    return;
+  }
+
   report_error(name_ast, "CQL0094: function not yet implemented", name);
   record_error(ast);
   return;
@@ -17129,7 +17137,7 @@ static void sem_validate_args_vs_formals(ast_node *ast, CSTR name, ast_node *arg
 //   * signatures of procedures that we know in full:
 //     * call foo();
 //     * declare cursor for call foo();
-//   * some external call to some outside function we don't known
+//   * some external call to some outside function we don't know
 //     * e.g. call printf('hello, world\n');
 //
 // The cursor form can be used if and only if the procedure has a loose select

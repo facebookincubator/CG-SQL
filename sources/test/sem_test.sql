@@ -12539,6 +12539,27 @@ DECLARE PROC some_external_thing NO CHECK;
 -- - Error
 call some_external_thing('x', 5.0);
 
+-- TEST: unchecked procs cannot be used in expressions (unless re-declared with
+-- DECLARE FUNCTION or DECLARE SELECT FUNCTION)
+-- + {call}: err
+-- + Error % procedure of an unknown type used in an expression
+--   'some_external_thing' +1 Error
+let result_of_some_external_thing := some_external_thing('x', 5.0);
+
+-- TEST: re-declare an unchecked proc with DECLARE FUNCTION
+-- + {declare_func_stmt}: integer
+-- + {param}: t: text variable in
+-- + {param}: r: real variable in
+-- + {type_int}: integer
+-- - Error
+declare function some_external_thing(t text, r real) int;
+
+-- TEST: works fine after re-declaring
+-- + {let_stmt}: result_of_some_external_thing: integer variable
+-- + {call}: integer
+-- - Error
+let result_of_some_external_thing := some_external_thing('x', 5.0);
+
 -- a proc with a return type for use
 declare proc _stuff() (id integer, name text);
 
