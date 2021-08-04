@@ -66,43 +66,43 @@ cql_noexport bool_t is_ast_blob(ast_node *node) {
   return node && (node->type == k_ast_blob);
 }
 
-cql_noexport bool_t is_at_rc(ast_node *node) {
+cql_noexport bool_t is_ast_at_rc(ast_node *node) {
   return is_ast_str(node) && !Strcasecmp("@RC", ((str_ast_node*)node)->value);
 }
 
-cql_noexport bool_t is_proclit(ast_node *node) {
+cql_noexport bool_t is_ast_proclit(ast_node *node) {
   return is_ast_str(node) && !Strcasecmp("@proc", ((str_ast_node*)node)->value);
 }
 
-cql_noexport bool_t is_strlit(ast_node *node) {
+cql_noexport bool_t is_ast_strlit(ast_node *node) {
   return is_ast_str(node) && ((str_ast_node *)node)->value[0] == '\'';
 }
 
-cql_noexport bool_t is_id(ast_node *node) {
+cql_noexport bool_t is_ast_id(ast_node *node) {
   return is_ast_str(node) && ((str_ast_node *)node)->value[0] != '\'';
 }
 
-cql_noexport bool_t is_primitive(ast_node *node) {
+cql_noexport bool_t is_ast_primitive(ast_node *node) {
   return is_ast_num(node) || is_ast_str(node) || is_ast_blob(node) || is_ast_int(node);
 }
 
-cql_noexport bool_t is_proc(ast_node *node) {
+cql_noexport bool_t is_ast_proc(ast_node *node) {
   return is_ast_create_proc_stmt(node) || is_ast_declare_proc_stmt(node);
 }
 
-cql_noexport bool_t is_region(ast_node *ast) {
+cql_noexport bool_t is_ast_region(ast_node *ast) {
   return is_ast_declare_schema_region_stmt(ast) || is_ast_declare_deployable_region_stmt(ast);
 }
 
 cql_noexport bool_t ast_has_left(ast_node *node) {
-  if (is_primitive(node)) {
+  if (is_ast_primitive(node)) {
     return false;
   }
   return (node->left != NULL);
 }
 
 cql_noexport bool_t ast_has_right(ast_node *node) {
-  if (is_primitive(node)) {
+  if (is_ast_primitive(node)) {
     return false;
   }
   return (node->right != NULL);
@@ -243,7 +243,7 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
 
   if (is_ast_str(node)) {
     cql_output("%s", padbuffer);
-    if (is_strlit(node)) {
+    if (is_ast_strlit(node)) {
       cql_output("{strlit %s}", ((struct str_ast_node *)node)->value);
     }
     else {

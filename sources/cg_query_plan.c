@@ -175,7 +175,7 @@ static void cg_qp_create_proc_stmt(ast_node *ast) {
 }
 
 static void cg_qp_one_stmt(ast_node *stmt) {
-  if (!stmt || is_primitive(stmt)) {
+  if (!stmt || is_ast_primitive(stmt)) {
     return;
   }
 

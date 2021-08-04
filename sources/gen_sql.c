@@ -876,7 +876,7 @@ static void gen_expr_str(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_str(ast));
   EXTRACT_STRING(str, ast);
 
-  if (is_strlit(ast)) {
+  if (is_ast_strlit(ast)) {
     str_ast_node *asts = (str_ast_node *)ast;
     if (!asts->cstr_literal || for_sqlite()) {
       // Note: str is the lexeme, so it is either still quoted and escaped

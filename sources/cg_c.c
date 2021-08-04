@@ -2493,7 +2493,7 @@ static void cg_expr_str(ast_node *expr, CSTR op, charbuf *is_null, charbuf *valu
   // String could be an id, or a literal -- literals start with single quote.
   Contract(is_ast_str(expr));
   EXTRACT_STRING(str, expr);
-  if (is_strlit(expr)) {
+  if (is_ast_strlit(expr)) {
     // Note str is the lexeme, so it is still quoted and escaped.
     cg_string_literal(str, value);
     bprintf(is_null, "0");
@@ -5077,7 +5077,7 @@ static void cg_emit_external_arglist(ast_node *arg_list, charbuf *prep, charbuf 
     EXTRACT_ANY(arg, item->left);
     sem_t sem_type_arg = arg->sem->sem_type;
 
-    if (is_strlit(arg)) {
+    if (is_ast_strlit(arg)) {
       // special case, don't make a string object for string literals that are going to
       // external methods like printf
       CHARBUF_OPEN(quoted);
@@ -5845,7 +5845,7 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
   // Emit a helpful comment for top level statements.
   if (stmt_nesting_level == 1) {
     charbuf *out = cg_main_output;
-    if (is_ast_declare_vars_type(stmt) || is_proc(stmt) || is_ast_echo_stmt(stmt)) {
+    if (is_ast_declare_vars_type(stmt) || is_ast_proc(stmt) || is_ast_echo_stmt(stmt)) {
       out = cg_declarations_output;
     }
 

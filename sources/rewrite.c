@@ -1337,12 +1337,12 @@ cql_noexport void rewrite_data_type_if_needed(ast_node *ast) {
 
 // Wraps an id or dot in a call to cql_inferred_notnull.
 cql_noexport void rewrite_nullable_to_unsafe_notnull(ast_node *_Nonnull ast) {
-  Contract(is_id(ast) || is_ast_dot(ast));
+  Contract(is_ast_id(ast) || is_ast_dot(ast));
 
   AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
 
   ast_node *id_or_dot;
-  if (is_id(ast)) {
+  if (is_ast_id(ast)) {
     EXTRACT_STRING(name, ast);
     id_or_dot = new_ast_str(name);
   } else {
