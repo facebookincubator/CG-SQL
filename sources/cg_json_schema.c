@@ -1300,12 +1300,12 @@ static void cg_json_views(charbuf *output) {
     cg_json_projection(output, select_stmt);
     cg_fragment_with_params(output, "select", select_stmt, gen_one_stmt);
     END_INDENT(view);
-    bprintf(output, "\n}");
+    bprintf(output, "\n}\n");
     i++;
   }
 
   END_INDENT(views);
-  bprintf(output, "\n]");
+  bprintf(output, "]");
 }
 
 static void cg_json_table_indices(list_item *head, charbuf *output) {

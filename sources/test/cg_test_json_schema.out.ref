@@ -1607,6 +1607,7 @@
       "select" : "SELECT id, name FROM Foo",
       "selectArgs" : [  ]
     }
+
     The statement ending at line XXXX
 
     CREATE VIEW MyView AS
@@ -1634,6 +1635,7 @@
       "select" : "SELECT id, name FROM Foo",
       "selectArgs" : [  ]
     }
+
     The statement ending at line XXXX
 
     CREATE VIEW MyOtherView AS
@@ -1661,6 +1663,7 @@
       "select" : "SELECT id, name FROM Foo",
       "selectArgs" : [  ]
     }
+
     The statement ending at line XXXX
 
     @ATTRIBUTE(my_attribute=('any', ('tree', 'of'), 'values'))
@@ -1700,6 +1703,7 @@
       "select" : "SELECT id, name FROM Foo",
       "selectArgs" : [  ]
     }
+
     The statement ending at line XXXX
 
     CREATE VIEW ADeletedView AS
@@ -1728,6 +1732,7 @@
       "select" : "SELECT id, name FROM Foo",
       "selectArgs" : [  ]
     }
+
     The statement ending at line XXXX
 
     CREATE VIEW ADeletedViewWithMigrationProc AS
@@ -1757,6 +1762,7 @@
       "select" : "SELECT id, name FROM Foo",
       "selectArgs" : [  ]
     }
+
     The statement ending at line XXXX
 
     CREATE VIEW my_view AS
