@@ -44201,6 +44201,491 @@ Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect numbe
 
 The statement ending at line XXXX
 
+SELECT replace('a', 'b');
+
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'replace'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name replace}: err
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit 'a'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {strlit 'b'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT replace('a', 'b', 'c', 'd');
+
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'replace'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name replace}: err
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit 'a'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {strlit 'b'}: text notnull
+  |     |           | {arg_list}
+  |     |             | {strlit 'c'}: text notnull
+  |     |             | {arg_list}
+  |     |               | {strlit 'd'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+LET dummy := replace('a', 'b', 'c');
+
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'replace'
+
+  {let_stmt}: err
+  | {name dummy}
+  | {call}: err
+    | {name replace}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {strlit 'a'}: text notnull
+        | {arg_list}
+          | {strlit 'b'}: text notnull
+          | {arg_list}
+            | {strlit 'c'}: text notnull
+
+The statement ending at line XXXX
+
+SELECT replace(0, 'b', 'c');
+
+Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'replace'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name replace}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {int 0}: integer notnull
+  |     |         | {arg_list}
+  |     |           | {strlit 'b'}: text notnull
+  |     |           | {arg_list}
+  |     |             | {strlit 'c'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT replace('a', 0, 'c');
+
+Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'replace'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name replace}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit 'a'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {int 0}: integer notnull
+  |     |           | {arg_list}
+  |     |             | {strlit 'c'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT replace('a', 'b', 0);
+
+Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'replace'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name replace}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit 'a'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {strlit 'b'}: text notnull
+  |     |           | {arg_list}
+  |     |             | {int 0}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT replace('a', 'b', 'c');
+
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name replace}: text notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit 'a'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {strlit 'b'}: text notnull
+  |     |           | {arg_list}
+  |     |             | {strlit 'c'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT replace(nullable('a'), 'b', 'c');
+
+  {select_stmt}: select: { _anon: text }
+  | {select_core_list}: select: { _anon: text }
+  | | {select_core}: select: { _anon: text }
+  |   | {select_expr_list_con}: select: { _anon: text }
+  |     | {select_expr_list}: select: { _anon: text }
+  |     | | {select_expr}: text
+  |     |   | {call}: text
+  |     |     | {name replace}: text
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {call}: text
+  |     |         | | {name nullable}: text
+  |     |         | | {call_arg_list}
+  |     |         |   | {call_filter_clause}
+  |     |         |   | {arg_list}: ok
+  |     |         |     | {strlit 'a'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {strlit 'b'}: text notnull
+  |     |           | {arg_list}
+  |     |             | {strlit 'c'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT replace('a', nullable('b'), 'c');
+
+  {select_stmt}: select: { _anon: text }
+  | {select_core_list}: select: { _anon: text }
+  | | {select_core}: select: { _anon: text }
+  |   | {select_expr_list_con}: select: { _anon: text }
+  |     | {select_expr_list}: select: { _anon: text }
+  |     | | {select_expr}: text
+  |     |   | {call}: text
+  |     |     | {name replace}: text
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit 'a'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {call}: text
+  |     |           | | {name nullable}: text
+  |     |           | | {call_arg_list}
+  |     |           |   | {call_filter_clause}
+  |     |           |   | {arg_list}: ok
+  |     |           |     | {strlit 'b'}: text notnull
+  |     |           | {arg_list}
+  |     |             | {strlit 'c'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT replace('a', 'b', nullable('c'));
+
+  {select_stmt}: select: { _anon: text }
+  | {select_core_list}: select: { _anon: text }
+  | | {select_core}: select: { _anon: text }
+  |   | {select_expr_list_con}: select: { _anon: text }
+  |     | {select_expr_list}: select: { _anon: text }
+  |     | | {select_expr}: text
+  |     |   | {call}: text
+  |     |     | {name replace}: text
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit 'a'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {strlit 'b'}: text notnull
+  |     |           | {arg_list}
+  |     |             | {call}: text
+  |     |               | {name nullable}: text
+  |     |               | {call_arg_list}
+  |     |                 | {call_filter_clause}
+  |     |                 | {arg_list}: ok
+  |     |                   | {strlit 'c'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT replace(NULL, 'b', 'c');
+
+Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'replace'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name replace}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {null}: null
+  |     |         | {arg_list}
+  |     |           | {strlit 'b'}: text notnull
+  |     |           | {arg_list}
+  |     |             | {strlit 'c'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT replace('a', NULL, 'c');
+
+Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'replace'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name replace}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit 'a'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {null}: null
+  |     |           | {arg_list}
+  |     |             | {strlit 'c'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT replace('a', 'b', NULL);
+
+Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'replace'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name replace}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit 'a'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {strlit 'b'}: text notnull
+  |     |           | {arg_list}
+  |     |             | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT replace(sensitive('a'), 'b', 'c');
+
+  {select_stmt}: select: { _anon: text notnull sensitive }
+  | {select_core_list}: select: { _anon: text notnull sensitive }
+  | | {select_core}: select: { _anon: text notnull sensitive }
+  |   | {select_expr_list_con}: select: { _anon: text notnull sensitive }
+  |     | {select_expr_list}: select: { _anon: text notnull sensitive }
+  |     | | {select_expr}: text notnull sensitive
+  |     |   | {call}: text notnull sensitive
+  |     |     | {name replace}: text notnull sensitive
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {call}: text notnull sensitive
+  |     |         | | {name sensitive}: text notnull sensitive
+  |     |         | | {call_arg_list}
+  |     |         |   | {call_filter_clause}
+  |     |         |   | {arg_list}: ok
+  |     |         |     | {strlit 'a'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {strlit 'b'}: text notnull
+  |     |           | {arg_list}
+  |     |             | {strlit 'c'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT replace('a', sensitive('b'), 'c');
+
+  {select_stmt}: select: { _anon: text notnull sensitive }
+  | {select_core_list}: select: { _anon: text notnull sensitive }
+  | | {select_core}: select: { _anon: text notnull sensitive }
+  |   | {select_expr_list_con}: select: { _anon: text notnull sensitive }
+  |     | {select_expr_list}: select: { _anon: text notnull sensitive }
+  |     | | {select_expr}: text notnull sensitive
+  |     |   | {call}: text notnull sensitive
+  |     |     | {name replace}: text notnull sensitive
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit 'a'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {call}: text notnull sensitive
+  |     |           | | {name sensitive}: text notnull sensitive
+  |     |           | | {call_arg_list}
+  |     |           |   | {call_filter_clause}
+  |     |           |   | {arg_list}: ok
+  |     |           |     | {strlit 'b'}: text notnull
+  |     |           | {arg_list}
+  |     |             | {strlit 'c'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT replace('a', 'b', sensitive('c'));
+
+  {select_stmt}: select: { _anon: text notnull sensitive }
+  | {select_core_list}: select: { _anon: text notnull sensitive }
+  | | {select_core}: select: { _anon: text notnull sensitive }
+  |   | {select_expr_list_con}: select: { _anon: text notnull sensitive }
+  |     | {select_expr_list}: select: { _anon: text notnull sensitive }
+  |     | | {select_expr}: text notnull sensitive
+  |     |   | {call}: text notnull sensitive
+  |     |     | {name replace}: text notnull sensitive
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit 'a'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {strlit 'b'}: text notnull
+  |     |           | {arg_list}
+  |     |             | {call}: text notnull sensitive
+  |     |               | {name sensitive}: text notnull sensitive
+  |     |               | {call_arg_list}
+  |     |                 | {call_filter_clause}
+  |     |                 | {arg_list}: ok
+  |     |                   | {strlit 'c'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
 @SCHEMA_AD_HOC_MIGRATION(5, MyAdHocMigration);
 
   {schema_ad_hoc_migration_stmt}: ok @create(5)
@@ -53772,10 +54257,10 @@ DECLARE kind_string TEXT<surname>;
 
 The statement ending at line XXXX
 
-SET a_string := ( SELECT substr(kind_string, 2, 3) );
+SET kind_string := ( SELECT substr(kind_string, 2, 3) );
 
-  {assign}: a_string: text variable
-  | {name a_string}: a_string: text variable
+  {assign}: kind_string: text<surname> variable
+  | {name kind_string}: kind_string: text<surname> variable
   | {select_stmt}: _anon: text<surname>
     | {select_core_list}: select: { _anon: text<surname> }
     | | {select_core}: select: { _anon: text<surname> }
@@ -53792,6 +54277,36 @@ SET a_string := ( SELECT substr(kind_string, 2, 3) );
     |     |           | {int 2}: integer notnull
     |     |           | {arg_list}
     |     |             | {int 3}: integer notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET kind_string := ( SELECT replace(kind_string, 'b', 'c') );
+
+  {assign}: kind_string: text<surname> variable
+  | {name kind_string}: kind_string: text<surname> variable
+  | {select_stmt}: _anon: text<surname>
+    | {select_core_list}: select: { _anon: text<surname> }
+    | | {select_core}: select: { _anon: text<surname> }
+    |   | {select_expr_list_con}: select: { _anon: text<surname> }
+    |     | {select_expr_list}: select: { _anon: text<surname> }
+    |     | | {select_expr}: text<surname>
+    |     |   | {call}: text<surname>
+    |     |     | {name replace}: text<surname>
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {name kind_string}: kind_string: text<surname> variable
+    |     |         | {arg_list}
+    |     |           | {strlit 'b'}: text notnull
+    |     |           | {arg_list}
+    |     |             | {strlit 'c'}: text notnull
     |     | {select_from_etc}: ok
     |       | {select_where}
     |         | {select_groupby}

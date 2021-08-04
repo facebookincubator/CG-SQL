@@ -10850,6 +10850,121 @@ begin
   select substr('x', 1, 2, 4);
 end;
 
+-- TEST: The replace function requires exactly three arguments, not two.
+-- + {select_stmt}: err
+-- + {call}: err
+-- + Error % function got incorrect number of arguments 'replace'
+-- +1 Error
+select replace('a', 'b');
+
+-- TEST: The replace function requires exactly three arguments, not four.
+-- + {select_stmt}: err
+-- + {call}: err
+-- + Error % function got incorrect number of arguments 'replace'
+-- +1 Error
+select replace('a', 'b', 'c', 'd');
+
+-- TEST: The replace function can only be used in SQL.
+-- + {call}: err
+-- Error % function may not appear in this context 'replace'
+-- +1 Error
+let dummy := replace('a', 'b', 'c');
+
+-- TEST: The first argument to replace must be a string.
+-- + {select_stmt}: err
+-- + {call}: err
+-- + Error % all arguments must be strings 'replace'
+-- +1 Error
+select replace(0, 'b', 'c');
+
+-- TEST: The second argument to replace must be a string.
+-- + {select_stmt}: err
+-- + {call}: err
+-- + Error % all arguments must be strings 'replace'
+-- +1 Error
+select replace('a', 0, 'c');
+
+-- TEST: The third argument to replace must be a string.
+-- + {select_stmt}: err
+-- + {call}: err
+-- + Error % all arguments must be strings 'replace'
+-- +1 Error
+select replace('a', 'b', 0);
+
+-- TEST: The replace function has a TEXT NOT NULL result type if ALL of its
+-- arguments are nonnull.
+-- + {select_stmt}: select: { _anon: text notnull }
+-- + {call}: text notnull
+-- + {name replace}: text notnull
+-- - Error
+select replace('a', 'b', 'c');
+
+-- TEST: The replace function has a nullable TEXT result type if its first
+-- argument is nullable.
+-- + {select_stmt}: select: { _anon: text }
+-- + {call}: text
+-- + {name replace}: text
+-- - Error
+select replace(nullable('a'), 'b', 'c');
+
+-- TEST: The replace function has a nullable TEXT result type if its second
+-- argument is nullable.
+-- + {select_stmt}: select: { _anon: text }
+-- + {call}: text
+-- + {name replace}: text
+-- - Error
+select replace('a', nullable('b'), 'c');
+
+-- TEST: The replace function has a nullable TEXT result type if its third
+-- argument is nullable.
+-- + {select_stmt}: select: { _anon: text }
+-- + {call}: text
+-- + {name replace}: text
+-- - Error
+select replace('a', 'b', nullable('c'));
+
+-- TEST: The first argument to replace must not be the literal NULL.
+-- + {select_stmt}: err
+-- + {call}: err
+-- + Error % all arguments must be strings 'replace'
+-- +1 Error
+select replace(null, 'b', 'c');
+
+-- TEST: The second argument to replace must not be the literal NULL.
+-- + {select_stmt}: err
+-- + {call}: err
+-- + Error % all arguments must be strings 'replace'
+-- +1 Error
+select replace('a', null, 'c');
+
+-- TEST: The third argument to replace must not be the literal NULL.
+-- + {select_stmt}: err
+-- + {call}: err
+-- + Error % all arguments must be strings 'replace'
+-- +1 Error
+select replace('a', 'b', null);
+
+-- TEST: The result of replace is sensitive if its first argument is sensitive.
+-- + {select_stmt}: select: { _anon: text notnull sensitive }
+-- + {call}: text notnull sensitive
+-- + {name replace}: text notnull sensitive
+-- - Error
+select replace(sensitive('a'), 'b', 'c');
+
+-- TEST: The result of replace is sensitive if its second argument is sensitive.
+-- + {select_stmt}: select: { _anon: text notnull sensitive }
+-- + {call}: text notnull sensitive
+-- + {name replace}: text notnull sensitive
+-- - Error
+select replace('a', sensitive('b'), 'c');
+
+-- TEST: The result of replace is sensitive if its third argument is sensitive.
+-- + {select_stmt}: select: { _anon: text notnull sensitive }
+-- + {call}: text notnull sensitive
+-- + {name replace}: text notnull sensitive
+-- - Error
+select replace('a', 'b', sensitive('c'));
+
 -- TEST: create ad hoc version migration -- success
 -- + {schema_ad_hoc_migration_stmt}: ok
 -- + {version_annotation}
@@ -13316,7 +13431,13 @@ declare kind_string text<surname>;
 -- + {select_stmt}: _anon: text<surname>
 -- + {name kind_string}: kind_string: text<surname> variable
 -- - Error
-set a_string := (select substr(kind_string, 2, 3));
+set kind_string := (select substr(kind_string, 2, 3));
+
+-- TEST: replace preserves kind
+-- + {select_stmt}: _anon: text<surname>
+-- + {name kind_string}: kind_string: text<surname> variable
+-- - Error
+set kind_string := (select replace(kind_string, 'b', 'c'));
 
 -- TEST: verify that kind is preserved
 -- + {select_stmt}: _anon: text<surname>

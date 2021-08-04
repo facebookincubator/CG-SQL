@@ -20,8 +20,6 @@ create table sqlite_master (
   sql text
 );
 
-declare select function replace(str text, pat text, replacement text) text;
-
 create proc validate_transition()
 begin
   let version := cast(test_cql_get_facet_version("cql_schema_version") as integer);

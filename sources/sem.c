@@ -7178,6 +7178,59 @@ static void sem_func_substr(ast_node *ast, uint32_t arg_count) {
   ast->sem->kind = arg1->sem->kind;
 }
 
+// Validates SQLite's replace(input, find, replace_with) function.
+static void sem_func_replace(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  // All three arguments must be provided.
+  if (!sem_validate_arg_count(ast, arg_count, 3)) {
+    return;
+  }
+
+  // The replace function can only appear in SQL.
+  if (!sem_validate_appear_inside_sql_stmt(ast)) {
+    return;
+  }
+
+  ast_node *input = first_arg(arg_list);
+  sem_t input_type = input->sem->sem_type;
+
+  ast_node *find = second_arg(arg_list);
+  sem_t find_type = find->sem->sem_type;
+
+  ast_node *replace_with = third_arg(arg_list);
+  sem_t replace_with_type = replace_with->sem->sem_type;
+
+  // All arguments must be strings.
+  if (!is_text(input_type) || !is_text(find_type) || !is_text(replace_with_type)) {
+    report_error(ast, "CQL0085: all arguments must be strings", name);
+    record_error(ast);
+    return;
+  }
+
+  // The result is a string.
+  sem_t sem_type = SEM_TYPE_TEXT;
+  
+  // The result is nonnull only if all of the arguments are nonnull.
+  if (is_not_nullable(input_type) && is_not_nullable(find_type) && is_not_nullable(replace_with_type)) {
+    sem_type |= SEM_TYPE_NOTNULL;
+  }
+
+  // The result is sensitive if any of the arguments are sensitive. 
+  sem_type |= sensitive_flag(input->sem->sem_type);
+  sem_type |= sensitive_flag(find->sem->sem_type);
+  sem_type |= sensitive_flag(replace_with->sem->sem_type);
+
+  name_ast->sem = ast->sem = new_sem(sem_type);
+
+  // The result has the same kind as the input argument.
+  ast->sem->kind = input->sem->kind;  
+}
+
 // generic function to do basic validation for builtin window functions.
 static void sem_validate_window_func(
   ast_node *ast,
@@ -19507,6 +19560,7 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(nullable);
   FUNC_INIT(sensitive);
   FUNC_INIT(substr);
+  FUNC_INIT(replace);
   FUNC_INIT(row_number);
   FUNC_INIT(rank);
   FUNC_INIT(dense_rank);
