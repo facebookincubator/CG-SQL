@@ -1,0 +1,555 @@
+
+{
+  "tables" : [
+
+    The statement ending at line XXXX
+
+    CREATE TABLE bar(
+      id INTEGER NOT NULL,
+      @ATTRIBUTE(collossal_cave='xyzzy')
+      name TEXT,
+      rate LONG_INT,
+      type INTEGER,
+      size REAL @CREATE(2)
+    )
+
+    {
+      "name" : "bar",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "columns" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "name",
+          "attributes" : [
+            {
+              "name" : "collossal_cave",
+              "value" : "xyzzy"
+            }
+          ],
+          "type" : "text",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "rate",
+          "type" : "long",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "type",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "size",
+          "type" : "real",
+          "isNotNull" : 0,
+          "isAdded" : 1,
+          "addedVersion" : 2,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
+      ]
+    },
+
+    The statement ending at line XXXX
+
+    CREATE TABLE foo(
+      id TEXT PRIMARY KEY NOT NULL,
+      name TEXT,
+      col INTEGER
+    )
+
+    {
+      "name" : "foo",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "columns" : [
+        {
+          "name" : "id",
+          "type" : "text",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 1,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "name",
+          "type" : "text",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "col",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [ "id" ],
+      "primaryKeySortOrders" : [ "" ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
+      ]
+    },
+
+    The statement ending at line XXXX
+
+    CREATE TABLE plugin_table(
+      id INTEGER PRIMARY KEY,
+      name TEXT,
+      flag BOOL,
+      timestamp_ms LONG_INT NOT NULL DEFAULT 0
+    )
+
+    {
+      "name" : "plugin_table",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "columns" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 1,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "name",
+          "type" : "text",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "flag",
+          "type" : "bool",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "timestamp_ms",
+          "type" : "long",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "defaultValue" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [ "id" ],
+      "primaryKeySortOrders" : [ "" ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
+      ]
+    }
+  ],
+  "virtualTables" : [
+  ],
+  "views" : [
+  ],
+  "indices" : [
+  ],
+  "triggers" : [
+  ],
+  "attributes" : [
+  ],
+  "queries" : [
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:base_fragment=assembly_core)
+    CREATE PROC base_fragment (id_ INTEGER NOT NULL, name_ TEXT NOT NULL)
+    BEGIN
+    WITH
+    assembly_core (x, y, z) AS (SELECT id, name, rate
+      FROM bar
+      WHERE id = id_)
+    SELECT *
+      FROM assembly_core;
+    END
+
+    {
+      "name" : "base_fragment",
+      "definedInFile" : "cg_test_extension_fragment.sql",
+      "args" : [
+        {
+          "name" : "id_",
+          "argOrigin" : "id_",
+          "type" : "integer",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "name_",
+          "argOrigin" : "name_",
+          "type" : "text",
+          "isNotNull" : 1
+        }
+      ],
+      "fromTables" : [ "bar" ],
+      "usesTables" : [ "bar" ],
+      "attributes" : [
+        {
+          "name" : "cql:base_fragment",
+          "value" : "assembly_core"
+        }
+      ],
+      "projection" : [
+        {
+          "name" : "x",
+          "type" : "integer",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "y",
+          "type" : "text",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "z",
+          "type" : "long",
+          "isNotNull" : 0
+        }
+      ],
+      "statement" : "WITH assembly_core (x, y, z) AS (SELECT id, name, rate FROM bar WHERE id = ?) SELECT x, y, z FROM assembly_core",
+      "statementArgs" : [ "id_" ]
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:extension_fragment=assembly_core)
+    CREATE PROC extension_fragment_one (id_ INTEGER NOT NULL, name_ TEXT NOT NULL)
+    BEGIN
+    WITH
+    assembly_core (x, y, z) AS (SELECT 1, nullable("a"), nullable(3L)),
+    plugin_one (x, y, z) AS (SELECT *
+      FROM assembly_core
+    UNION ALL
+    SELECT 1 AS x, "b" AS y, 7L AS z)
+    SELECT *
+      FROM plugin_one;
+    END
+
+    {
+      "name" : "extension_fragment_one",
+      "definedInFile" : "cg_test_extension_fragment.sql",
+      "args" : [
+        {
+          "name" : "id_",
+          "argOrigin" : "id_",
+          "type" : "integer",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "name_",
+          "argOrigin" : "name_",
+          "type" : "text",
+          "isNotNull" : 1
+        }
+      ],
+      "usesTables" : [  ],
+      "attributes" : [
+        {
+          "name" : "cql:extension_fragment",
+          "value" : "assembly_core"
+        }
+      ],
+      "projection" : [
+        {
+          "name" : "x",
+          "type" : "integer",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "y",
+          "type" : "text",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "z",
+          "type" : "long",
+          "isNotNull" : 0
+        }
+      ],
+      "statement" : "WITH assembly_core (x, y, z) AS (SELECT 1, 'a', 3), plugin_one (x, y, z) AS (SELECT x, y, z FROM assembly_core UNION ALL SELECT 1 AS x, 'b' AS y, 7 AS z) SELECT x, y, z FROM plugin_one",
+      "statementArgs" : [  ]
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:base_fragment=assembly_non_core)
+    CREATE PROC second_base_fragment (name_ TEXT NOT NULL)
+    BEGIN
+    WITH
+    assembly_non_core (a, b, c) AS (SELECT id, name, col
+      FROM foo
+      WHERE name = name_)
+    SELECT *
+      FROM assembly_non_core;
+    END
+
+    {
+      "name" : "second_base_fragment",
+      "definedInFile" : "cg_test_extension_fragment.sql",
+      "args" : [
+        {
+          "name" : "name_",
+          "argOrigin" : "name_",
+          "type" : "text",
+          "isNotNull" : 1
+        }
+      ],
+      "fromTables" : [ "foo" ],
+      "usesTables" : [ "foo" ],
+      "attributes" : [
+        {
+          "name" : "cql:base_fragment",
+          "value" : "assembly_non_core"
+        }
+      ],
+      "projection" : [
+        {
+          "name" : "a",
+          "type" : "text",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "b",
+          "type" : "text",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "c",
+          "type" : "integer",
+          "isNotNull" : 0
+        }
+      ],
+      "statement" : "WITH assembly_non_core (a, b, c) AS (SELECT id, name, col FROM foo WHERE name = ?) SELECT a, b, c FROM assembly_non_core",
+      "statementArgs" : [ "name_" ]
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:extension_fragment=assembly_core)
+    CREATE PROC extension_fragment_two (id_ INTEGER NOT NULL, name_ TEXT NOT NULL)
+    BEGIN
+    WITH
+    assembly_core (x, y, z) AS (SELECT 1, nullable("a"), nullable(3L)),
+    plugin_two (x, y, z, flag) AS (SELECT assembly_core.*, plugin_table.flag
+      FROM assembly_core
+      LEFT OUTER JOIN plugin_table ON plugin_table.name = assembly_core.y AND plugin_table.id = id_)
+    SELECT *
+      FROM plugin_two;
+    END
+
+    {
+      "name" : "extension_fragment_two",
+      "definedInFile" : "cg_test_extension_fragment.sql",
+      "args" : [
+        {
+          "name" : "id_",
+          "argOrigin" : "id_",
+          "type" : "integer",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "name_",
+          "argOrigin" : "name_",
+          "type" : "text",
+          "isNotNull" : 1
+        }
+      ],
+      "fromTables" : [ "plugin_table" ],
+      "usesTables" : [ "plugin_table" ],
+      "attributes" : [
+        {
+          "name" : "cql:extension_fragment",
+          "value" : "assembly_core"
+        }
+      ],
+      "projection" : [
+        {
+          "name" : "x",
+          "type" : "integer",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "y",
+          "type" : "text",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "z",
+          "type" : "long",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "flag",
+          "type" : "bool",
+          "isNotNull" : 0
+        }
+      ],
+      "statement" : "WITH assembly_core (x, y, z) AS (SELECT 1, 'a', 3), plugin_two (x, y, z, flag) AS (SELECT assembly_core.x, assembly_core.y, assembly_core.z, plugin_table.flag FROM assembly_core LEFT OUTER JOIN plugin_table ON plugin_table.name = assembly_core.y AND plugin_table.id = ?) SELECT x, y, z, flag FROM plugin_two",
+      "statementArgs" : [ "id_" ]
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:extension_fragment=assembly_non_core)
+    CREATE PROC extension_fragment_three (name_ TEXT NOT NULL)
+    BEGIN
+    WITH
+    assembly_non_core (a, b, c) AS (SELECT "a", nullable("x"), nullable(1)),
+    plugin_three (a, b, c, d) AS (SELECT assembly_non_core.*, plugin_table.timestamp_ms
+      FROM assembly_non_core
+      LEFT OUTER JOIN plugin_table ON plugin_table.name = assembly_non_core.b AND plugin_table.name = name_)
+    SELECT *
+      FROM plugin_three;
+    END
+
+    {
+      "name" : "extension_fragment_three",
+      "definedInFile" : "cg_test_extension_fragment.sql",
+      "args" : [
+        {
+          "name" : "name_",
+          "argOrigin" : "name_",
+          "type" : "text",
+          "isNotNull" : 1
+        }
+      ],
+      "fromTables" : [ "plugin_table" ],
+      "usesTables" : [ "plugin_table" ],
+      "attributes" : [
+        {
+          "name" : "cql:extension_fragment",
+          "value" : "assembly_non_core"
+        }
+      ],
+      "projection" : [
+        {
+          "name" : "a",
+          "type" : "text",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "b",
+          "type" : "text",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "c",
+          "type" : "integer",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "d",
+          "type" : "long",
+          "isNotNull" : 0
+        }
+      ],
+      "statement" : "WITH assembly_non_core (a, b, c) AS (SELECT 'a', 'x', 1), plugin_three (a, b, c, d) AS (SELECT assembly_non_core.a, assembly_non_core.b, assembly_non_core.c, plugin_table.timestamp_ms FROM assembly_non_core LEFT OUTER JOIN plugin_table ON plugin_table.name = assembly_non_core.b AND plugin_table.name = ?) SELECT a, b, c, d FROM plugin_three",
+      "statementArgs" : [ "name_" ]
+    }
+  ],
+  "inserts" : [
+
+  ],
+  "generalInserts" : [
+
+  ],
+  "updates" : [
+
+  ],
+  "deletes" : [
+
+  ],
+  "general" : [
+
+  ],
+  "regions" : [
+  ],
+  "adHocMigrationProcs" : [
+  ],
+  "enums" : [
+  ],
+  "tableUsers" : {
+    "bar" : [ "base_fragment" ],
+    "foo" : [ "second_base_fragment" ],
+    "plugin_table" : [ "extension_fragment_two", "extension_fragment_three" ]
+  }
+}
