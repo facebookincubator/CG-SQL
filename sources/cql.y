@@ -1772,12 +1772,12 @@ opt_elseif_list:
   ;
 
 control_stmt:
-  commit_return_stmt  { $control_stmt = new_ast_control_stmt($commit_return_stmt); }
-  | continue_stmt  { $control_stmt = new_ast_control_stmt($continue_stmt); }
-  | leave_stmt  { $control_stmt = new_ast_control_stmt($leave_stmt); }
-  | return_stmt  { $control_stmt = new_ast_control_stmt($return_stmt); }
-  | rollback_return_stmt  { $control_stmt = new_ast_control_stmt($rollback_return_stmt); }
-  | throw_stmt  { $control_stmt = new_ast_control_stmt($throw_stmt); }
+  commit_return_stmt  { $control_stmt = $commit_return_stmt; }
+  | continue_stmt  { $control_stmt = $continue_stmt; }
+  | leave_stmt  { $control_stmt = $leave_stmt; }
+  | return_stmt  { $control_stmt = $return_stmt; }
+  | rollback_return_stmt  { $control_stmt = $rollback_return_stmt; }
+  | throw_stmt  { $control_stmt = $throw_stmt; }
 
 guard_stmt:
   IF expr control_stmt  { $guard_stmt = new_ast_guard_stmt($expr, $control_stmt); }

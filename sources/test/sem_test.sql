@@ -17278,6 +17278,122 @@ begin
   if some_undefined_variable is null return;
 end;
 
+-- TEST: Improvements work for IFs that follow the guard pattern.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: y0: integer notnull variable
+-- + {let_stmt}: z0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- + {let_stmt}: y1: integer variable
+-- + {let_stmt}: z1: integer variable
+-- - Error
+create proc improvements_work_for_guard_pattern_ifs()
+begin
+  declare a int;
+  declare b int;
+  declare c int;
+  if 1 then  
+    if a is null or b is null or c is null then
+      return;
+    end if;
+    let x0 := a;
+    let y0 := b;
+    let z0 := c;
+  end if;
+  let x1 := a;
+  let y1 := b;
+  let z1 := c;
+end;
+
+-- TEST: Improvements work for IFs that follow the guard pattern when statements
+-- are present before the control statement.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: y0: integer notnull variable
+-- + {let_stmt}: z0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- + {let_stmt}: y1: integer variable
+-- + {let_stmt}: z1: integer variable
+-- - Error
+create proc improvements_work_for_guard_pattern_ifs_with_preceding_statements()
+begin
+  declare a int;
+  declare b int;
+  declare c int;
+  if 1 then  
+    if a is null or b is null or c is null then
+      call printf("Hello, world!\n");
+      return;
+    end if;
+    let x0 := a;
+    let y0 := b;
+    let z0 := c;
+  end if;
+  let x1 := a;
+  let y1 := b;
+  let z1 := c;
+end;
+
+-- TEST: Improvements work for IFs that follow the guard pattern even if they
+-- set the variable that's going to be improved after END IF to NULL.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- - Error
+create proc improvements_work_for_guard_pattern_ifs_that_set_the_id_to_null()
+begin
+  declare a int;
+  if 1 then  
+    if a is null then
+      set a := null;
+      return;
+    end if;
+    let x0 := a;
+  end if;
+  let x1 := a;
+end;
+
+-- TEST: Improvements do not work for IFs that would be following the guard
+-- pattern if not for the presence of ELSE.
+-- + {let_stmt}: x: integer variable
+-- - Error
+create proc improvements_do_not_work_for_guard_like_ifs_with_else()
+begin
+  declare a int;
+  if a is null then
+    return;
+  else
+    -- We could set `a` to null here, hence we can't improve it after END IF.
+  end if;
+  let x := a; -- nullable
+end;
+
+-- TEST: Improvements do not work for IFs that would be following the guard
+-- pattern if not for the presence of ELSE IF.
+-- + {let_stmt}: x: integer variable
+-- - Error
+create proc improvements_do_not_work_for_guard_like_ifs_with_else_if()
+begin
+  declare a int;
+  if a is null then
+    return;
+  else if 1 then
+    -- We could set `a` to null here, hence we can't improve it after END IF.
+  end if;
+  let x := a; -- nullable
+end;
+
+-- TEST: Improvements do not work for IS NULL checks after the first branch.
+-- + {let_stmt}: x: integer variable
+-- - Error
+create proc improvements_do_not_work_for_is_null_checks_in_else_ifs()
+begin
+  declare a int;
+  if 0 then
+    return;
+  else if a is null then
+    return;
+  end if;
+  let x := a; -- nullable
+end;
+
 -- TEST: Disable flow-sensitive nullability.
 -- + @ENFORCE_NORMAL NOT NULL AFTER CHECK
 -- + {enforce_normal_stmt}: ok

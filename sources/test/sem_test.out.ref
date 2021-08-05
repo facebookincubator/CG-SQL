@@ -67734,6 +67734,351 @@ Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'some_undefin
 
 The statement ending at line XXXX
 
+CREATE PROC improvements_work_for_guard_pattern_ifs ()
+BEGIN
+  DECLARE a INTEGER;
+  DECLARE b INTEGER;
+  DECLARE c INTEGER;
+  IF 1 THEN
+    IF a IS NULL OR b IS NULL OR c IS NULL THEN
+      RETURN;
+    END IF;
+    LET x0 := a;
+    LET y0 := b;
+    LET z0 := c;
+  END IF;
+  LET x1 := a;
+  LET y1 := b;
+  LET z1 := c;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_work_for_guard_pattern_ifs}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: b: integer variable
+      | | | {name b}: b: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: c: integer variable
+      | | | {name c}: c: integer variable
+      | | {type_int}: integer
+      | {if_stmt}: integer notnull
+      | | {cond_action}: integer notnull
+      | | | {int 1}: integer notnull
+      | | | {stmt_list}: ok
+      | |   | {if_stmt}: bool notnull
+      | |   | | {cond_action}: bool notnull
+      | |   | | | {or}: bool notnull
+      | |   | | | | {or}: bool notnull
+      | |   | | | | | {is}: bool notnull
+      | |   | | | | | | {name a}: a: integer variable
+      | |   | | | | | | {null}: null
+      | |   | | | | | {is}: bool notnull
+      | |   | | | |   | {name b}: b: integer variable
+      | |   | | | |   | {null}: null
+      | |   | | | | {is}: bool notnull
+      | |   | | |   | {name c}: c: integer variable
+      | |   | | |   | {null}: null
+      | |   | | | {stmt_list}: ok
+      | |   | |   | {return_stmt}: ok
+      | |   | | {if_alt}: ok
+      | |   | {let_stmt}: x0: integer notnull variable
+      | |   | | {name x0}: x0: integer notnull variable
+      | |   | | {call}: a: integer notnull variable
+      | |   |   | {name cql_inferred_notnull}: a: integer notnull variable
+      | |   |   | {call_arg_list}
+      | |   |     | {call_filter_clause}
+      | |   |     | {arg_list}: ok
+      | |   |       | {name a}: a: integer inferred_notnull variable
+      | |   | {let_stmt}: y0: integer notnull variable
+      | |   | | {name y0}: y0: integer notnull variable
+      | |   | | {call}: b: integer notnull variable
+      | |   |   | {name cql_inferred_notnull}: b: integer notnull variable
+      | |   |   | {call_arg_list}
+      | |   |     | {call_filter_clause}
+      | |   |     | {arg_list}: ok
+      | |   |       | {name b}: b: integer inferred_notnull variable
+      | |   | {let_stmt}: z0: integer notnull variable
+      | |     | {name z0}: z0: integer notnull variable
+      | |     | {call}: c: integer notnull variable
+      | |       | {name cql_inferred_notnull}: c: integer notnull variable
+      | |       | {call_arg_list}
+      | |         | {call_filter_clause}
+      | |         | {arg_list}: ok
+      | |           | {name c}: c: integer inferred_notnull variable
+      | | {if_alt}: ok
+      | {let_stmt}: x1: integer variable
+      | | {name x1}: x1: integer variable
+      | | {name a}: a: integer variable
+      | {let_stmt}: y1: integer variable
+      | | {name y1}: y1: integer variable
+      | | {name b}: b: integer variable
+      | {let_stmt}: z1: integer variable
+        | {name z1}: z1: integer variable
+        | {name c}: c: integer variable
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_work_for_guard_pattern_ifs_with_preceding_statements ()
+BEGIN
+  DECLARE a INTEGER;
+  DECLARE b INTEGER;
+  DECLARE c INTEGER;
+  IF 1 THEN
+    IF a IS NULL OR b IS NULL OR c IS NULL THEN
+      CALL printf("Hello, world!\n");
+      RETURN;
+    END IF;
+    LET x0 := a;
+    LET y0 := b;
+    LET z0 := c;
+  END IF;
+  LET x1 := a;
+  LET y1 := b;
+  LET z1 := c;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_work_for_guard_pattern_ifs_with_preceding_statements}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: b: integer variable
+      | | | {name b}: b: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: c: integer variable
+      | | | {name c}: c: integer variable
+      | | {type_int}: integer
+      | {if_stmt}: integer notnull
+      | | {cond_action}: integer notnull
+      | | | {int 1}: integer notnull
+      | | | {stmt_list}: ok
+      | |   | {if_stmt}: bool notnull
+      | |   | | {cond_action}: bool notnull
+      | |   | | | {or}: bool notnull
+      | |   | | | | {or}: bool notnull
+      | |   | | | | | {is}: bool notnull
+      | |   | | | | | | {name a}: a: integer variable
+      | |   | | | | | | {null}: null
+      | |   | | | | | {is}: bool notnull
+      | |   | | | |   | {name b}: b: integer variable
+      | |   | | | |   | {null}: null
+      | |   | | | | {is}: bool notnull
+      | |   | | |   | {name c}: c: integer variable
+      | |   | | |   | {null}: null
+      | |   | | | {stmt_list}: ok
+      | |   | |   | {call_stmt}: ok
+      | |   | |   | | {name printf}: ok
+      | |   | |   | | {expr_list}: ok
+      | |   | |   |   | {strlit 'Hello, world!
+'}: text notnull
+      | |   | |   | {return_stmt}: ok
+      | |   | | {if_alt}: ok
+      | |   | {let_stmt}: x0: integer notnull variable
+      | |   | | {name x0}: x0: integer notnull variable
+      | |   | | {call}: a: integer notnull variable
+      | |   |   | {name cql_inferred_notnull}: a: integer notnull variable
+      | |   |   | {call_arg_list}
+      | |   |     | {call_filter_clause}
+      | |   |     | {arg_list}: ok
+      | |   |       | {name a}: a: integer inferred_notnull variable
+      | |   | {let_stmt}: y0: integer notnull variable
+      | |   | | {name y0}: y0: integer notnull variable
+      | |   | | {call}: b: integer notnull variable
+      | |   |   | {name cql_inferred_notnull}: b: integer notnull variable
+      | |   |   | {call_arg_list}
+      | |   |     | {call_filter_clause}
+      | |   |     | {arg_list}: ok
+      | |   |       | {name b}: b: integer inferred_notnull variable
+      | |   | {let_stmt}: z0: integer notnull variable
+      | |     | {name z0}: z0: integer notnull variable
+      | |     | {call}: c: integer notnull variable
+      | |       | {name cql_inferred_notnull}: c: integer notnull variable
+      | |       | {call_arg_list}
+      | |         | {call_filter_clause}
+      | |         | {arg_list}: ok
+      | |           | {name c}: c: integer inferred_notnull variable
+      | | {if_alt}: ok
+      | {let_stmt}: x1: integer variable
+      | | {name x1}: x1: integer variable
+      | | {name a}: a: integer variable
+      | {let_stmt}: y1: integer variable
+      | | {name y1}: y1: integer variable
+      | | {name b}: b: integer variable
+      | {let_stmt}: z1: integer variable
+        | {name z1}: z1: integer variable
+        | {name c}: c: integer variable
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_work_for_guard_pattern_ifs_that_set_the_id_to_null ()
+BEGIN
+  DECLARE a INTEGER;
+  IF 1 THEN
+    IF a IS NULL THEN
+      SET a := NULL;
+      RETURN;
+    END IF;
+    LET x0 := a;
+  END IF;
+  LET x1 := a;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_work_for_guard_pattern_ifs_that_set_the_id_to_null}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {if_stmt}: integer notnull
+      | | {cond_action}: integer notnull
+      | | | {int 1}: integer notnull
+      | | | {stmt_list}: ok
+      | |   | {if_stmt}: bool notnull
+      | |   | | {cond_action}: bool notnull
+      | |   | | | {is}: bool notnull
+      | |   | | | | {name a}: a: integer variable
+      | |   | | | | {null}: null
+      | |   | | | {stmt_list}: ok
+      | |   | |   | {assign}: a: integer variable
+      | |   | |   | | {name a}: a: integer variable
+      | |   | |   | | {null}: null
+      | |   | |   | {return_stmt}: ok
+      | |   | | {if_alt}: ok
+      | |   | {let_stmt}: x0: integer notnull variable
+      | |     | {name x0}: x0: integer notnull variable
+      | |     | {call}: a: integer notnull variable
+      | |       | {name cql_inferred_notnull}: a: integer notnull variable
+      | |       | {call_arg_list}
+      | |         | {call_filter_clause}
+      | |         | {arg_list}: ok
+      | |           | {name a}: a: integer inferred_notnull variable
+      | | {if_alt}: ok
+      | {let_stmt}: x1: integer variable
+        | {name x1}: x1: integer variable
+        | {name a}: a: integer variable
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_do_not_work_for_guard_like_ifs_with_else ()
+BEGIN
+  DECLARE a INTEGER;
+  IF a IS NULL THEN
+    RETURN;
+  ELSE
+  END IF;
+  LET x := a;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_do_not_work_for_guard_like_ifs_with_else}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {if_stmt}: bool notnull
+      | | {cond_action}: bool notnull
+      | | | {is}: bool notnull
+      | | | | {name a}: a: integer variable
+      | | | | {null}: null
+      | | | {stmt_list}: ok
+      | |   | {return_stmt}: ok
+      | | {if_alt}: ok
+      |   | {else}: ok
+      | {let_stmt}: x: integer variable
+        | {name x}: x: integer variable
+        | {name a}: a: integer variable
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_do_not_work_for_guard_like_ifs_with_else_if ()
+BEGIN
+  DECLARE a INTEGER;
+  IF a IS NULL THEN
+    RETURN;
+  ELSE IF 1 THEN
+  END IF;
+  LET x := a;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_do_not_work_for_guard_like_ifs_with_else_if}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {if_stmt}: bool notnull
+      | | {cond_action}: bool notnull
+      | | | {is}: bool notnull
+      | | | | {name a}: a: integer variable
+      | | | | {null}: null
+      | | | {stmt_list}: ok
+      | |   | {return_stmt}: ok
+      | | {if_alt}: ok
+      |   | {elseif}: integer notnull
+      |     | {cond_action}: integer notnull
+      |       | {int 1}: integer notnull
+      | {let_stmt}: x: integer variable
+        | {name x}: x: integer variable
+        | {name a}: a: integer variable
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_do_not_work_for_is_null_checks_in_else_ifs ()
+BEGIN
+  DECLARE a INTEGER;
+  IF 0 THEN
+    RETURN;
+  ELSE IF a IS NULL THEN
+    RETURN;
+  END IF;
+  LET x := a;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_do_not_work_for_is_null_checks_in_else_ifs}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {if_stmt}: integer notnull
+      | | {cond_action}: integer notnull
+      | | | {int 0}: integer notnull
+      | | | {stmt_list}: ok
+      | |   | {return_stmt}: ok
+      | | {if_alt}: ok
+      |   | {elseif}: bool notnull
+      |     | {cond_action}: bool notnull
+      |       | {is}: bool notnull
+      |       | | {name a}: a: integer variable
+      |       | | {null}: null
+      |       | {stmt_list}: ok
+      |         | {return_stmt}: ok
+      | {let_stmt}: x: integer variable
+        | {name x}: x: integer variable
+        | {name a}: a: integer variable
+
+The statement ending at line XXXX
+
 @ENFORCE_NORMAL NOT NULL AFTER CHECK;
 
   {enforce_normal_stmt}: ok
