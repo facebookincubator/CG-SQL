@@ -2762,10 +2762,127 @@ begin
   select * from bar;
 end;
 
+
 -- TEST: a copy function will be generated
 -- + cql_code sproc_with_copy(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt)
 @attribute(cql:generate_copy)
 create proc sproc_with_copy()
+begin
+  select * from bar;
+end;
+
+-- TEST: emit an object result set with setters with not null values
+-- + extern void emit_object_with_setters_set_o(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_object_ref _Nonnull new_value) {
+-- +   cql_contract_argument_notnull((void *)new_value, 2);
+-- +   cql_result_set_set_object_col((cql_result_set_ref)result_set, 0, 0, new_value);
+-- + extern void emit_object_with_setters_set_x(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_object_ref _Nonnull new_value) {
+-- +   cql_contract_argument_notnull((void *)new_value, 2);
+-- +   cql_result_set_set_object_col((cql_result_set_ref)result_set, 0, 1, new_value);
+-- + extern void emit_object_with_setters_set_i(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_int32 new_value) {
+-- +   cql_nullable_int32 new_value_;
+-- +   cql_set_notnull(new_value_, new_value);
+-- +   cql_result_set_set_int32_col((cql_result_set_ref)result_set, 0, 2, new_value_);
+-- + extern void emit_object_with_setters_set_l(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_int64 new_value) {
+-- +   cql_nullable_int64 new_value_;
+-- +   cql_set_notnull(new_value_, new_value);
+-- +   cql_result_set_set_int64_col((cql_result_set_ref)result_set, 0, 3, new_value_);
+-- + extern void emit_object_with_setters_set_b(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_bool new_value) {
+-- +   cql_nullable_bool new_value_;
+-- +   cql_set_notnull(new_value_, new_value);
+-- +   cql_result_set_set_bool_col((cql_result_set_ref)result_set, 0, 4, new_value_);
+-- + extern void emit_object_with_setters_set_d(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_double new_value) {
+-- +   cql_nullable_double new_value_;
+-- +   cql_set_notnull(new_value_, new_value);
+-- +   cql_result_set_set_double_col((cql_result_set_ref)result_set, 0, 5, new_value_);
+-- + extern void emit_object_with_setters_set_t(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_string_ref _Nonnull new_value) {
+-- +   cql_contract_argument_notnull((void *)new_value, 2);
+-- +   cql_result_set_set_string_col((cql_result_set_ref)result_set, 0, 6, new_value);
+-- + extern void emit_object_with_setters_set_bl(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_blob_ref _Nonnull new_value) {
+-- +   cql_contract_argument_notnull((void *)new_value, 2);
+-- +   cql_result_set_set_blob_col((cql_result_set_ref)result_set, 0, 7, new_value);
+@attribute(cql:emit_setters)
+create proc emit_object_with_setters(
+  o object not null,
+  x object not null,
+  i integer not null,
+  l long not null,
+  b bool not null,
+  d real not null,
+  t text not null,
+  bl blob not null)
+begin
+  declare C cursor like emit_object_with_setters arguments;
+  fetch C from arguments;
+  out C;
+end;
+
+-- TEST: emit an object result set with setters with nullable values
+-- + extern void emit_setters_with_nullables_set_o(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_object_ref _Nullable new_value) {
+-- +   cql_result_set_set_object_col((cql_result_set_ref)result_set, 0, 0, new_value);
+-- + extern void emit_setters_with_nullables_set_x(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_object_ref _Nullable new_value) {
+-- +   cql_result_set_set_object_col((cql_result_set_ref)result_set, 0, 1, new_value);
+-- + extern void emit_setters_with_nullables_set_i_value(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_int32 new_value) {
+-- +   cql_nullable_int32 new_value_;
+-- +   cql_set_notnull(new_value_, new_value);
+-- +   cql_result_set_set_int32_col((cql_result_set_ref)result_set, 0, 2, new_value_);
+-- + extern void emit_setters_with_nullables_set_i_to_null(emit_setters_with_nullables_result_set_ref _Nonnull result_set) {
+-- +   cql_nullable_int32 new_value_;
+-- +   cql_set_null(new_value_);
+-- +   cql_set_notnull(new_value_, new_value);
+-- +   cql_result_set_set_int32_col((cql_result_set_ref)result_set, 0, 2, new_value_);
+-- + extern void emit_setters_with_nullables_set_l_value(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_int64 new_value) {
+-- +   cql_nullable_int64 new_value_;
+-- +   cql_set_notnull(new_value_, new_value);
+-- +   cql_result_set_set_int64_col((cql_result_set_ref)result_set, 0, 3, new_value_);
+-- + extern void emit_setters_with_nullables_set_l_to_null(emit_setters_with_nullables_result_set_ref _Nonnull result_set) {
+-- +   cql_nullable_int64 new_value_;
+-- +   cql_set_null(new_value_);
+-- +   cql_result_set_set_int64_col((cql_result_set_ref)result_set, 0, 3, new_value_);
+-- + extern void emit_setters_with_nullables_set_b_value(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_bool new_value) {
+-- +   cql_nullable_bool new_value_;
+-- +   cql_set_notnull(new_value_, new_value);
+-- +   cql_result_set_set_bool_col((cql_result_set_ref)result_set, 0, 4, new_value_);
+-- + extern void emit_setters_with_nullables_set_b_to_null(emit_setters_with_nullables_result_set_ref _Nonnull result_set) {
+-- +   cql_nullable_bool new_value_;
+-- +   cql_set_null(new_value_);
+-- +   cql_result_set_set_bool_col((cql_result_set_ref)result_set, 0, 4, new_value_);
+-- + extern void emit_setters_with_nullables_set_d_value(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_double new_value) {
+-- +   cql_nullable_double new_value_;
+-- +   cql_set_notnull(new_value_, new_value);
+-- +   cql_result_set_set_double_col((cql_result_set_ref)result_set, 0, 5, new_value_);
+-- + extern void emit_setters_with_nullables_set_d_to_null(emit_setters_with_nullables_result_set_ref _Nonnull result_set) {
+-- +   cql_nullable_double new_value_;
+-- +   cql_set_null(new_value_);
+-- +   cql_result_set_set_double_col((cql_result_set_ref)result_set, 0, 5, new_value_);
+-- + extern void emit_setters_with_nullables_set_t(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_string_ref _Nullable new_value) {
+-- +   cql_result_set_set_string_col((cql_result_set_ref)result_set, 0, 6, new_value);
+-- + extern void emit_setters_with_nullables_set_bl(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_blob_ref _Nullable new_value) {
+-- +  cql_result_set_set_blob_col((cql_result_set_ref)result_set, 0, 7, new_value);
+@attribute(cql:emit_setters)
+create proc emit_setters_with_nullables(
+  o object,
+  x object,
+  i integer,
+  l long,
+  b bool,
+  d real,
+  t text,
+  bl blob)
+begin
+  declare C cursor like emit_setters_with_nullables arguments;
+  fetch C from arguments;
+  out C;
+end;
+
+
+-- TEST: emit an object result set not out and setters
+-- + extern void no_out_with_setters_set_id(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 new_value)
+-- + extern void no_out_with_setters_set_name(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row, cql_string_ref _Nullable new_value)
+-- + extern void no_out_with_setters_set_rate_value(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row, cql_int64 new_value)
+-- + extern void no_out_with_setters_set_type_value(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 new_value)
+-- + extern void no_out_with_setters_set_size_value(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row, cql_double new_value)
+@attribute(cql:emit_setters)
+create proc no_out_with_setters()
 begin
   select * from bar;
 end;
@@ -4150,7 +4267,7 @@ begin
   end if;
 end;
 
--- TEST: The improving of nullable variables to be nonnull respects the 
+-- TEST: The improving of nullable variables to be nonnull respects the
 -- underlying nullable representation.
 -- + cql_nullable_int32 a;
 -- + cql_set_null(a);

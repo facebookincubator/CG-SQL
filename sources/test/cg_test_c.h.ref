@@ -1794,6 +1794,125 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   row2)
 
 // The statement ending at line XXXX
+#define CRC_emit_object_with_setters -4441973732237463644L
+
+extern cql_string_ref _Nonnull emit_object_with_setters_stored_procedure_name;
+
+#define emit_object_with_setters_data_types_count 8
+
+#ifndef result_set_type_decl_emit_object_with_setters_result_set
+#define result_set_type_decl_emit_object_with_setters_result_set 1
+cql_result_set_type_decl(emit_object_with_setters_result_set, emit_object_with_setters_result_set_ref);
+#endif
+extern cql_object_ref _Nonnull emit_object_with_setters_get_o(emit_object_with_setters_result_set_ref _Nonnull result_set);
+extern void emit_object_with_setters_set_o(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_object_ref _Nonnull new_value);
+extern cql_object_ref _Nonnull emit_object_with_setters_get_x(emit_object_with_setters_result_set_ref _Nonnull result_set);
+extern void emit_object_with_setters_set_x(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_object_ref _Nonnull new_value);
+extern cql_int32 emit_object_with_setters_get_i(emit_object_with_setters_result_set_ref _Nonnull result_set);
+extern void emit_object_with_setters_set_i(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_int32 new_value);
+extern cql_int64 emit_object_with_setters_get_l(emit_object_with_setters_result_set_ref _Nonnull result_set);
+extern void emit_object_with_setters_set_l(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_int64 new_value);
+extern cql_bool emit_object_with_setters_get_b(emit_object_with_setters_result_set_ref _Nonnull result_set);
+extern void emit_object_with_setters_set_b(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_bool new_value);
+extern cql_double emit_object_with_setters_get_d(emit_object_with_setters_result_set_ref _Nonnull result_set);
+extern void emit_object_with_setters_set_d(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_double new_value);
+extern cql_string_ref _Nonnull emit_object_with_setters_get_t(emit_object_with_setters_result_set_ref _Nonnull result_set);
+extern void emit_object_with_setters_set_t(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_string_ref _Nonnull new_value);
+extern cql_blob_ref _Nonnull emit_object_with_setters_get_bl(emit_object_with_setters_result_set_ref _Nonnull result_set);
+extern void emit_object_with_setters_set_bl(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_blob_ref _Nonnull new_value);
+extern cql_int32 emit_object_with_setters_result_count(emit_object_with_setters_result_set_ref _Nonnull result_set);
+extern void emit_object_with_setters_fetch_results( emit_object_with_setters_result_set_ref _Nullable *_Nonnull result_set, cql_object_ref _Nonnull o, cql_object_ref _Nonnull x, cql_int32 i, cql_int64 l, cql_bool b, cql_double d, cql_string_ref _Nonnull t, cql_blob_ref _Nonnull bl);
+#define emit_object_with_setters_hash(result_set) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), 0)
+#define emit_object_with_setters_equal(rs1, rs2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  0, \
+  (cql_result_set_ref)(rs2), \
+  0)
+
+// The statement ending at line XXXX
+#define CRC_emit_setters_with_nullables -2553042968957586047L
+
+extern cql_string_ref _Nonnull emit_setters_with_nullables_stored_procedure_name;
+
+#define emit_setters_with_nullables_data_types_count 8
+
+#ifndef result_set_type_decl_emit_setters_with_nullables_result_set
+#define result_set_type_decl_emit_setters_with_nullables_result_set 1
+cql_result_set_type_decl(emit_setters_with_nullables_result_set, emit_setters_with_nullables_result_set_ref);
+#endif
+extern cql_object_ref _Nullable emit_setters_with_nullables_get_o(emit_setters_with_nullables_result_set_ref _Nonnull result_set);
+extern void emit_setters_with_nullables_set_o(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_object_ref _Nullable new_value);
+extern cql_object_ref _Nullable emit_setters_with_nullables_get_x(emit_setters_with_nullables_result_set_ref _Nonnull result_set);
+extern void emit_setters_with_nullables_set_x(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_object_ref _Nullable new_value);
+extern cql_bool emit_setters_with_nullables_get_i_is_null(emit_setters_with_nullables_result_set_ref _Nonnull result_set);
+extern cql_int32 emit_setters_with_nullables_get_i_value(emit_setters_with_nullables_result_set_ref _Nonnull result_set);
+extern void emit_setters_with_nullables_set_i_value(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_int32 new_value);
+extern void emit_setters_with_nullables_set_i_to_null(emit_setters_with_nullables_result_set_ref _Nonnull result_set);
+extern cql_bool emit_setters_with_nullables_get_l_is_null(emit_setters_with_nullables_result_set_ref _Nonnull result_set);
+extern cql_int64 emit_setters_with_nullables_get_l_value(emit_setters_with_nullables_result_set_ref _Nonnull result_set);
+extern void emit_setters_with_nullables_set_l_value(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_int64 new_value);
+extern void emit_setters_with_nullables_set_l_to_null(emit_setters_with_nullables_result_set_ref _Nonnull result_set);
+extern cql_bool emit_setters_with_nullables_get_b_is_null(emit_setters_with_nullables_result_set_ref _Nonnull result_set);
+extern cql_bool emit_setters_with_nullables_get_b_value(emit_setters_with_nullables_result_set_ref _Nonnull result_set);
+extern void emit_setters_with_nullables_set_b_value(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_bool new_value);
+extern void emit_setters_with_nullables_set_b_to_null(emit_setters_with_nullables_result_set_ref _Nonnull result_set);
+extern cql_bool emit_setters_with_nullables_get_d_is_null(emit_setters_with_nullables_result_set_ref _Nonnull result_set);
+extern cql_double emit_setters_with_nullables_get_d_value(emit_setters_with_nullables_result_set_ref _Nonnull result_set);
+extern void emit_setters_with_nullables_set_d_value(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_double new_value);
+extern void emit_setters_with_nullables_set_d_to_null(emit_setters_with_nullables_result_set_ref _Nonnull result_set);
+extern cql_string_ref _Nullable emit_setters_with_nullables_get_t(emit_setters_with_nullables_result_set_ref _Nonnull result_set);
+extern void emit_setters_with_nullables_set_t(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_string_ref _Nullable new_value);
+extern cql_blob_ref _Nullable emit_setters_with_nullables_get_bl(emit_setters_with_nullables_result_set_ref _Nonnull result_set);
+extern void emit_setters_with_nullables_set_bl(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_blob_ref _Nullable new_value);
+extern cql_int32 emit_setters_with_nullables_result_count(emit_setters_with_nullables_result_set_ref _Nonnull result_set);
+extern void emit_setters_with_nullables_fetch_results( emit_setters_with_nullables_result_set_ref _Nullable *_Nonnull result_set, cql_object_ref _Nullable o, cql_object_ref _Nullable x, cql_nullable_int32 i, cql_nullable_int64 l, cql_nullable_bool b, cql_nullable_double d, cql_string_ref _Nullable t, cql_blob_ref _Nullable bl);
+#define emit_setters_with_nullables_hash(result_set) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), 0)
+#define emit_setters_with_nullables_equal(rs1, rs2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  0, \
+  (cql_result_set_ref)(rs2), \
+  0)
+
+// The statement ending at line XXXX
+#define CRC_no_out_with_setters 4417184966231195868L
+
+extern cql_string_ref _Nonnull no_out_with_setters_stored_procedure_name;
+
+#define no_out_with_setters_data_types_count 5
+
+#ifndef result_set_type_decl_no_out_with_setters_result_set
+#define result_set_type_decl_no_out_with_setters_result_set 1
+cql_result_set_type_decl(no_out_with_setters_result_set, no_out_with_setters_result_set_ref);
+#endif
+extern cql_int32 no_out_with_setters_get_id(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row);
+extern void no_out_with_setters_set_id(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 new_value);
+extern cql_string_ref _Nullable no_out_with_setters_get_name(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row);
+extern void no_out_with_setters_set_name(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row, cql_string_ref _Nullable new_value);
+extern cql_bool no_out_with_setters_get_rate_is_null(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int64 no_out_with_setters_get_rate_value(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row);
+extern void no_out_with_setters_set_rate_value(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row, cql_int64 new_value);
+extern void no_out_with_setters_set_rate_to_null(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool no_out_with_setters_get_type_is_null(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 no_out_with_setters_get_type_value(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row);
+extern void no_out_with_setters_set_type_value(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 new_value);
+extern void no_out_with_setters_set_type_to_null(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool no_out_with_setters_get_size_is_null(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double no_out_with_setters_get_size_value(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row);
+extern void no_out_with_setters_set_size_value(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row, cql_double new_value);
+extern void no_out_with_setters_set_size_to_null(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 no_out_with_setters_result_count(no_out_with_setters_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code no_out_with_setters_fetch_results(sqlite3 *_Nonnull _db_, no_out_with_setters_result_set_ref _Nullable *_Nonnull result_set);
+#define no_out_with_setters_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define no_out_with_setters_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
 
 // The statement ending at line XXXX
 extern CQL_WARN_UNUSED cql_code early_out_rc_cleared(sqlite3 *_Nonnull _db_, cql_nullable_int32 *_Nonnull x);

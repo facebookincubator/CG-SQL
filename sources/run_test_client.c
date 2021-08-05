@@ -160,7 +160,7 @@ cql_code run_client(sqlite3 *db) {
   E(!cql_outstanding_refs,
     "outstanding refs in test_cql_bytebuf_alloc_over_bytebuf_exp_growth_cap: %d\n",
     cql_outstanding_refs);
-  
+
   SQL_E(test_cql_contract_argument_notnull_tripwires(db));
   E(!cql_outstanding_refs,
     "outstanding refs in test_cql_contract_argument_notnull_tripwires: %d\n",
@@ -1335,7 +1335,9 @@ cql_code test_all_column_fetchers(sqlite3 *db) {
           // bool
           E(cql_result_set_get_bool_col(rs, row, col) == row,
             "expected bool did not match seed data, row %d, col %d\n", row, col);
-          cql_result_set_set_bool_col(rs, row, col, !row);
+          cql_nullable_bool new_value;
+          cql_set_notnull(new_value, !row);
+          cql_result_set_set_bool_col(rs, row, col, new_value);
           E(cql_result_set_get_bool_col(rs, row, col) == !row,
             "expected bool did not match seed data, row %d, col %d\n", !row, col);
           break;
@@ -1344,7 +1346,9 @@ cql_code test_all_column_fetchers(sqlite3 *db) {
           // int32
           E(cql_result_set_get_int32_col(rs, row, col) == row,
             "expected int32 did not match seed data, row %d, col %d\n", row, col);
-          cql_result_set_set_int32_col(rs, row, col, row + 19);
+          cql_nullable_int32 new_value;
+          cql_set_notnull(new_value, row + 19);
+          cql_result_set_set_int32_col(rs, row, col, new_value);
           E(cql_result_set_get_int32_col(rs, row, col) == row + 19,
             "expected int32 did not match seed data, row %d, col %d\n", row + 19, col);
           break;
@@ -1353,7 +1357,9 @@ cql_code test_all_column_fetchers(sqlite3 *db) {
           // int64
           E(cql_result_set_get_int64_col(rs, row, col) == row,
             "expected int64 did not match seed data, row %d, col %d\n", row, col);
-          cql_result_set_set_int64_col(rs, row, col, row + 29);
+          cql_nullable_int64 new_value;
+          cql_set_notnull(new_value, row + 29);
+          cql_result_set_set_int64_col(rs, row, col, new_value);
           E(cql_result_set_get_int64_col(rs, row, col) == row + 29,
             "expected int64 did not match seed data, row %d, col %d\n", row + 29, col);
           break;
@@ -1362,7 +1368,9 @@ cql_code test_all_column_fetchers(sqlite3 *db) {
           // double
           E(cql_result_set_get_double_col(rs, row, col) == row,
             "expected double did not match seed data, row %d, col %d\n", row, col);
-          cql_result_set_set_double_col(rs, row, col, row + 39);
+          cql_nullable_double new_value;
+          cql_set_notnull(new_value, row + 39);
+          cql_result_set_set_double_col(rs, row, col, new_value);
           E(cql_result_set_get_double_col(rs, row, col) == row + 39,
             "expected double did not match seed data, row %d, col %d\n", row + 39, col);
           break;
@@ -1412,6 +1420,39 @@ cql_code test_all_column_fetchers(sqlite3 *db) {
       }
     }
   }
+
+  // check nullability setters
+  cql_int32 row = 0;
+  // bool
+  E(load_all_types_table_get_b0_is_null(result_set, row) == true, "b0 expected to be null at 0\n");
+  load_all_types_table_set_b0_value(result_set, row, true);
+  E(load_all_types_table_get_b0_is_null(result_set, row) == false, "b0 expected not to be null at 0\n");
+  load_all_types_table_set_b0_to_null(result_set, row);
+  E(load_all_types_table_get_b0_is_null(result_set, row) == true, "b0 expected to be null after _to_null\n");
+
+  // int32
+  cql_int32 new_int32 = 10;
+  E(load_all_types_table_get_i0_is_null(result_set, row) == true, "i0 expected to be null at 0\n");
+  load_all_types_table_set_i0_value(result_set, row, new_int32);
+  E(load_all_types_table_get_i0_is_null(result_set, row) == false, "i0 expected not to be null at 0\n");
+  load_all_types_table_set_i0_to_null(result_set, row);
+  E(load_all_types_table_get_i0_is_null(result_set, row) == true, "i0 expected to be null after _to_null\n");
+
+  // int64
+  cql_int64 new_int64 = 99;
+  E(load_all_types_table_get_l0_is_null(result_set, row) == true, "l0 expected to be null at 0\n");
+  load_all_types_table_set_l0_value(result_set, row, new_int64);
+  E(load_all_types_table_get_l0_is_null(result_set, row) == false, "l0 expected not to be null at 0\n");
+  load_all_types_table_set_l0_to_null(result_set, row);
+  E(load_all_types_table_get_l0_is_null(result_set, row) == true, "l0 expected to be null after _to_null\n");
+
+  // double
+  cql_double new_double = 200;
+  E(load_all_types_table_get_d0_is_null(result_set, row) == true, "d0 expected to be null at 0\n");
+  load_all_types_table_set_d0_value(result_set, row, new_double);
+  E(load_all_types_table_get_d0_is_null(result_set, row) == false, "d0 expected not to be null at 0\n");
+  load_all_types_table_set_d0_to_null(result_set, row);
+  E(load_all_types_table_get_d0_is_null(result_set, row) == true, "d0 expected to be null after _to_null\n");
 
   cql_result_set_release(result_set);
 
@@ -1610,7 +1651,7 @@ cql_code test_cql_contract_argument_notnull_tripwires(sqlite3 *db) {
 
   // Allow `cql_contract_argument_notnull` to call `cql_tripwire` again.
   cql_contract_argument_notnull_tripwire_jmp_buf = NULL;
-  
+
   cql_string_release(string);
 
   tests_passed++;

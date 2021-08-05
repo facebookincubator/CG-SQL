@@ -271,3 +271,36 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   row1, \
   (cql_result_set_ref)(rs2), \
   row2)
+
+// The statement ending at line XXXX
+#define CRC_emit_object_with_setters -4441973732237463644L
+
+extern cql_string_ref _Nonnull emit_object_with_setters_stored_procedure_name;
+
+#define emit_object_with_setters_data_types_count 1
+
+extern uint8_t emit_object_with_setters_data_types[emit_object_with_setters_data_types_count];
+
+#ifndef result_set_type_decl_emit_object_with_setters_result_set
+#define result_set_type_decl_emit_object_with_setters_result_set 1
+cql_result_set_type_decl(emit_object_with_setters_result_set, emit_object_with_setters_result_set_ref);
+#endif
+
+static inline cql_object_ref _Nonnull emit_object_with_setters_get_o(emit_object_with_setters_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_object_col((cql_result_set_ref)result_set, 0, 0);
+}
+
+static inline void emit_object_with_setters_set_o(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_object_ref _Nonnull new_value) {
+  cql_contract_argument_notnull((void *)new_value, 2);
+  cql_result_set_set_object_col((cql_result_set_ref)result_set, 0, 0, new_value);
+}
+
+extern cql_int32 emit_object_with_setters_result_count(emit_object_with_setters_result_set_ref _Nonnull result_set);
+extern void emit_object_with_setters_fetch_results( emit_object_with_setters_result_set_ref _Nullable *_Nonnull result_set, cql_object_ref _Nonnull o);
+#define emit_object_with_setters_hash(result_set) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), 0)
+#define emit_object_with_setters_equal(rs1, rs2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  0, \
+  (cql_result_set_ref)(rs2), \
+  0)

@@ -19,6 +19,14 @@ typedef struct emit_object_result_set_row {
 } emit_object_result_set_row;
 extern CQL_WARN_UNUSED cql_code sproc_copy_func(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 
+typedef struct emit_object_with_setters_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_object_ref _Nonnull o;
+} emit_object_with_setters_row;
+extern void emit_object_with_setters(cql_object_ref _Nonnull o, emit_object_with_setters_row *_Nonnull _result_);
+
 // The statement ending at line XXXX
 
 /*
@@ -337,6 +345,83 @@ CQL_WARN_UNUSED cql_code sproc_copy_func(sqlite3 *_Nonnull _db_, sqlite3_stmt *_
 cql_cleanup:
   if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
   return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:emit_setters)
+CREATE PROC emit_object_with_setters (o OBJECT NOT NULL)
+BEGIN
+  DECLARE C CURSOR LIKE emit_object_with_setters ARGUMENTS;
+  FETCH C(o) FROM VALUES(o);
+  OUT C;
+END;
+*/
+
+#define _PROC_ "emit_object_with_setters"
+
+#define emit_object_with_setters_refs_offset cql_offsetof(emit_object_with_setters_row, o) // count = 1
+static int32_t emit_object_with_setters_perf_index;
+
+cql_string_literal(emit_object_with_setters_stored_procedure_name, "emit_object_with_setters");
+
+uint8_t emit_object_with_setters_data_types[emit_object_with_setters_data_types_count] = {
+  CQL_DATA_TYPE_OBJECT | CQL_DATA_TYPE_NOT_NULL, // o
+};
+
+static cql_uint16 emit_object_with_setters_col_offsets[] = { 1,
+  cql_offsetof(emit_object_with_setters_row, o)
+};
+
+cql_int32 emit_object_with_setters_result_count(emit_object_with_setters_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+void emit_object_with_setters_fetch_results( emit_object_with_setters_result_set_ref _Nullable *_Nonnull result_set, cql_object_ref _Nonnull o) {
+  cql_profile_start(CRC_emit_object_with_setters, &emit_object_with_setters_perf_index);
+  *result_set = NULL;
+  emit_object_with_setters_row *row = (emit_object_with_setters_row *)calloc(1, sizeof(emit_object_with_setters_row));
+  emit_object_with_setters(o, row);
+  cql_fetch_info info = {
+    .rc = SQLITE_OK,
+    .data_types = emit_object_with_setters_data_types,
+    .col_offsets = emit_object_with_setters_col_offsets,
+    .refs_count = 1,
+    .refs_offset = emit_object_with_setters_refs_offset,
+    .encode_context_index = -1,
+    .rowsize = sizeof(emit_object_with_setters_row),
+    .crc = CRC_emit_object_with_setters,
+    .perf_index = &emit_object_with_setters_perf_index,
+  };
+  cql_one_row_result(&info, (char *)row, row->_has_row_, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC emit_object_with_setters (o OBJECT NOT NULL) OUT (o OBJECT NOT NULL);
+
+typedef struct emit_object_with_setters_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_object_ref _Nonnull o;
+} emit_object_with_setters_C_row;
+
+#define emit_object_with_setters_C_refs_offset cql_offsetof(emit_object_with_setters_C_row, o) // count = 1
+void emit_object_with_setters(cql_object_ref _Nonnull o, emit_object_with_setters_row *_Nonnull _result_) {
+  cql_contract_argument_notnull((void *)o, 1);
+
+  memset(_result_, 0, sizeof(*_result_));
+  emit_object_with_setters_C_row C = { ._refs_count_ = 1, ._refs_offset_ = emit_object_with_setters_C_refs_offset };
+
+  C._has_row_ = 1;
+  cql_set_object_ref(&C.o, o);
+  _result_->_has_row_ = C._has_row_;
+  _result_->_refs_count_ = 1;
+  _result_->_refs_offset_ = emit_object_with_setters_refs_offset;
+  cql_set_object_ref(&_result_->o, C.o);
+
+  cql_teardown_row(C);
 }
 #undef _PROC_
 #pragma clang diagnostic pop
