@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Thu Jul 29 16:04:35 2021
+// Snapshot as of Tue Aug  3 04:06:08 2021
 
 
 const PREC = {
@@ -97,7 +97,18 @@ module.exports = grammar({
     raise_expr: $ => choice(seq($.RAISE, '(', $.IGNORE, ')'), seq($.RAISE, '(', $.ROLLBACK, ',', $.expr, ')'), seq($.RAISE, '(', $.ABORT, ',', $.expr, ')'), seq($.RAISE, '(', $.FAIL, ',', $.expr, ')')),
     call: $ => choice(seq($.name, '(', optional($.arg_list), ')', optional($.opt_filter_clause)), seq($.name, '(', $.DISTINCT, optional($.arg_list), ')', optional($.opt_filter_clause))),
     basic_expr: $ => choice($.name, $.AT_RC, seq($.name, '.', $.name), $.any_literal, $.const_expr, seq('(', $.expr, ')'), $.call, $.window_func_inv, $.raise_expr, seq('(', $.select_stmt, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.expr, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.OR, $.NULL, $.expr, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.THROW, ')'), seq($.EXISTS, '(', $.select_stmt, ')'), seq($.CASE, $.expr, $.case_list, $.END), seq($.CASE, $.expr, $.case_list, $.ELSE, $.expr, $.END), seq($.CASE, $.case_list, $.END), seq($.CASE, $.case_list, $.ELSE, $.expr, $.END), seq($.CAST, '(', $.expr, $.AS, $.data_type_any, ')')),
-    math_expr: $ => prec.left(choice($.basic_expr, seq($.math_expr, '&', $.math_expr), seq($.math_expr, '|', $.math_expr), seq($.math_expr, "<<", $.math_expr), seq($.math_expr, ">>", $.math_expr), seq($.math_expr, '+', $.math_expr), seq($.math_expr, '-', $.math_expr), seq($.math_expr, '*', $.math_expr), seq($.math_expr, '/', $.math_expr), seq($.math_expr, '%', $.math_expr), seq($.math_expr, $.IS, $.NOT, $.TRUE), seq($.math_expr, $.IS, $.NOT, $.FALSE), seq($.math_expr, $.ISNULL), seq($.math_expr, $.NOTNULL), seq($.math_expr, $.IS, $.TRUE), seq($.math_expr, $.IS, $.FALSE), seq('-', $.math_expr), seq('~', $.math_expr), seq($.NOT, $.math_expr), seq($.math_expr, '=', $.math_expr), seq($.math_expr, "==", $.math_expr), seq($.math_expr, '<', $.math_expr), seq($.math_expr, '>', $.math_expr), seq($.math_expr, "<>", $.math_expr), seq($.math_expr, "!=", $.math_expr), seq($.math_expr, ">=", $.math_expr), seq($.math_expr, "<=", $.math_expr), seq($.math_expr, $.NOT, $.IN, '(', $.expr_list, ')'), seq($.math_expr, $.NOT, $.IN, '(', $.select_stmt, ')'), seq($.math_expr, $.IN, '(', $.expr_list, ')'), seq($.math_expr, $.IN, '(', $.select_stmt, ')'), seq($.math_expr, $.LIKE, $.math_expr), seq($.math_expr, $.NOT, $.LIKE, $.math_expr), seq($.math_expr, $.MATCH, $.math_expr), seq($.math_expr, $.NOT, $.MATCH, $.math_expr), seq($.math_expr, $.REGEXP, $.math_expr), seq($.math_expr, $.NOT, $.REGEXP, $.math_expr), seq($.math_expr, $.GLOB, $.math_expr), seq($.math_expr, $.NOT, $.GLOB, $.math_expr), seq($.math_expr, $.BETWEEN, $.math_expr, $.AND, $.math_expr), seq($.math_expr, $.NOT, $.BETWEEN, $.math_expr, $.AND, $.math_expr), seq($.math_expr, $.IS, $.NOT, $.math_expr), seq($.math_expr, $.IS, $.math_expr), seq($.math_expr, "||", $.math_expr), seq($.math_expr, $.COLLATE, $.name))),
+    IS_NOT_TRUE: $ => prec.left(1, seq(CI('is'), CI('not'), CI('true'))),
+    IS_NOT_FALSE: $ => prec.left(1, seq(CI('is'), CI('not'), CI('false'))),
+    IS_TRUE: $ => prec.left(1, seq(CI('is'), CI('true'))),
+    IS_FALSE: $ => prec.left(1, seq(CI('is'), CI('false'))),
+    NOT_IN: $ => prec.left(1, seq(CI('not'), CI('in'))),
+    NOT_LIKE: $ => prec.left(1, seq(CI('not'), CI('like'))),
+    NOT_MATCH: $ => prec.left(1, seq(CI('not'), CI('match'))),
+    NOT_REGEXP: $ => prec.left(1, seq(CI('not'), CI('regexp'))),
+    NOT_GLOB: $ => prec.left(1, seq(CI('not'), CI('glob'))),
+    NOT_BETWEEN: $ => prec.left(1, seq(CI('not'), CI('between'))),
+    IS_NOT: $ => prec.left(1, seq(CI('is'), CI('not'))),
+    math_expr: $ => prec.left(choice($.basic_expr, seq($.math_expr, '&', $.math_expr), seq($.math_expr, '|', $.math_expr), seq($.math_expr, "<<", $.math_expr), seq($.math_expr, ">>", $.math_expr), seq($.math_expr, '+', $.math_expr), seq($.math_expr, '-', $.math_expr), seq($.math_expr, '*', $.math_expr), seq($.math_expr, '/', $.math_expr), seq($.math_expr, '%', $.math_expr), seq($.math_expr, $.IS_NOT_TRUE), seq($.math_expr, $.IS_NOT_FALSE), seq($.math_expr, $.ISNULL), seq($.math_expr, $.NOTNULL), seq($.math_expr, $.IS_TRUE), seq($.math_expr, $.IS_FALSE), seq('-', $.math_expr), seq('~', $.math_expr), seq($.NOT, $.math_expr), seq($.math_expr, '=', $.math_expr), seq($.math_expr, "==", $.math_expr), seq($.math_expr, '<', $.math_expr), seq($.math_expr, '>', $.math_expr), seq($.math_expr, "<>", $.math_expr), seq($.math_expr, "!=", $.math_expr), seq($.math_expr, ">=", $.math_expr), seq($.math_expr, "<=", $.math_expr), seq($.math_expr, $.NOT_IN, '(', $.expr_list, ')'), seq($.math_expr, $.NOT_IN, '(', $.select_stmt, ')'), seq($.math_expr, $.IN, '(', $.expr_list, ')'), seq($.math_expr, $.IN, '(', $.select_stmt, ')'), seq($.math_expr, $.LIKE, $.math_expr), seq($.math_expr, $.NOT_LIKE, $.math_expr), seq($.math_expr, $.MATCH, $.math_expr), seq($.math_expr, $.NOT_MATCH, $.math_expr), seq($.math_expr, $.REGEXP, $.math_expr), seq($.math_expr, $.NOT_REGEXP, $.math_expr), seq($.math_expr, $.GLOB, $.math_expr), seq($.math_expr, $.NOT_GLOB, $.math_expr), seq($.math_expr, $.BETWEEN, $.math_expr, $.AND, $.math_expr), seq($.math_expr, $.NOT_BETWEEN, $.math_expr, $.AND, $.math_expr), seq($.math_expr, $.IS_NOT, $.math_expr), seq($.math_expr, $.IS, $.math_expr), seq($.math_expr, "||", $.math_expr), seq($.math_expr, $.COLLATE, $.name))),
     expr: $ => prec.left(choice($.math_expr, seq($.expr, $.AND, $.expr), seq($.expr, $.OR, $.expr))),
     case_list: $ => choice(seq($.WHEN, $.expr, $.THEN, $.expr), seq($.WHEN, $.expr, $.THEN, $.expr, $.case_list)),
     arg_expr: $ => choice('*', $.expr, $.shape_arguments),
@@ -253,7 +264,8 @@ module.exports = grammar({
     trigger_operation: $ => choice($.DELETE, $.INSERT, seq($.UPDATE, optional($.opt_of))),
     opt_of: $ => seq($.OF, $.name_list),
     trigger_action: $ => seq(optional($.opt_foreachrow), optional($.opt_when_expr), $.BEGIN, $.trigger_stmts, $.END),
-    opt_foreachrow: $ => seq($.FOR, $.EACH, $.ROW),
+    FOR_EACH_ROW: $ => prec.left(1, seq(CI('for'), CI('each'), CI('row'))),
+    opt_foreachrow: $ => $.FOR_EACH_ROW,
     opt_when_expr: $ => seq($.WHEN, $.expr),
     trigger_stmts: $ => choice($.trigger_stmt, seq($.trigger_stmt, $.trigger_stmts)),
     trigger_stmt: $ => choice(seq($.trigger_update_stmt, ';'), seq($.trigger_insert_stmt, ';'), seq($.trigger_delete_stmt, ';'), seq($.trigger_select_stmt, ';')),
@@ -261,7 +273,9 @@ module.exports = grammar({
     trigger_insert_stmt: $ => $.insert_stmt,
     trigger_delete_stmt: $ => $.delete_stmt,
     trigger_update_stmt: $ => $.basic_update_stmt,
-    enforcement_options: $ => choice(seq($.FOREIGN, $.KEY, $.ON, $.UPDATE), seq($.FOREIGN, $.KEY, $.ON, $.DELETE), $.JOIN, seq($.UPSERT, $.STATEMENT), seq($.WINDOW, $.function), seq($.WITHOUT, $.ROWID), $.TRANSACTION, seq($.SELECT, $.IF, $.NOTHING), seq($.INSERT, $.SELECT), seq($.TABLE, $.FUNCTION), seq($.NOT, $.NULL, $.AFTER, $.CHECK), seq($.ENCODE, $.CONTEXT_COLUMN), seq($.ENCODE, $.CONTEXT_TYPE, $.INTEGER), seq($.ENCODE, $.CONTEXT_TYPE, $.LONG_INTEGER), seq($.ENCODE, $.CONTEXT_TYPE, $.REAL), seq($.ENCODE, $.CONTEXT_TYPE, $.BOOL), seq($.ENCODE, $.CONTEXT_TYPE, $.TEXT), seq($.ENCODE, $.CONTEXT_TYPE, $.BLOB), seq($.IS, $.TRUE)),
+    CONTEXT_COLUMN: $ => prec.left(1, seq(CI('context'), CI('column'))),
+    CONTEXT_TYPE: $ => prec.left(1, seq(CI('context'), CI('type'))),
+    enforcement_options: $ => choice(seq($.FOREIGN, $.KEY, $.ON, $.UPDATE), seq($.FOREIGN, $.KEY, $.ON, $.DELETE), $.JOIN, seq($.UPSERT, $.STATEMENT), seq($.WINDOW, $.function), seq($.WITHOUT, $.ROWID), $.TRANSACTION, seq($.SELECT, $.IF, $.NOTHING), seq($.INSERT, $.SELECT), seq($.TABLE, $.FUNCTION), seq($.NOT, $.NULL, $.AFTER, $.CHECK), seq($.ENCODE, $.CONTEXT_COLUMN), seq($.ENCODE, $.CONTEXT_TYPE, $.INTEGER), seq($.ENCODE, $.CONTEXT_TYPE, $.LONG_INTEGER), seq($.ENCODE, $.CONTEXT_TYPE, $.REAL), seq($.ENCODE, $.CONTEXT_TYPE, $.BOOL), seq($.ENCODE, $.CONTEXT_TYPE, $.TEXT), seq($.ENCODE, $.CONTEXT_TYPE, $.BLOB), $.IS_TRUE),
     enforce_strict_stmt: $ => seq($.AT_ENFORCE_STRICT, $.enforcement_options),
     enforce_normal_stmt: $ => seq($.AT_ENFORCE_NORMAL, $.enforcement_options),
     enforce_reset_stmt: $ => $.AT_ENFORCE_RESET,
@@ -375,7 +389,6 @@ module.exports = grammar({
     END: $ => CI('end'),
     ELSE: $ => CI('else'),
     CAST: $ => CI('cast'),
-    IS: $ => CI('is'),
     ISNULL: $ => CI('isnull'),
     NOTNULL: $ => CI('notnull'),
     IN: $ => CI('in'),
@@ -384,6 +397,7 @@ module.exports = grammar({
     GLOB: $ => CI('glob'),
     BETWEEN: $ => CI('between'),
     AND: $ => CI('and'),
+    IS: $ => CI('is'),
     WHEN: $ => CI('when'),
     THEN: $ => CI('then'),
     WITH: $ => CI('with'),
@@ -467,10 +481,9 @@ module.exports = grammar({
     AFTER: $ => CI('after'),
     INSTEAD: $ => CI('instead'),
     OF: $ => CI('of'),
-    EACH: $ => CI('each'),
-    ROW: $ => CI('row'),
     UPSERT: $ => CI('upsert'),
     STATEMENT: $ => CI('statement'),
+    ENCODE: $ => CI('encode'),
     AT_ENFORCE_STRICT: $ => CI('@enforce_strict'),
     AT_ENFORCE_NORMAL: $ => CI('@enforce_normal'),
     AT_ENFORCE_RESET: $ => CI('@enforce_reset'),
