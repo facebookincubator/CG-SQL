@@ -96,4 +96,5 @@ s/[[:<:]]CHECK_EXPR_ARGS[[:>:]]/'"checkExprArgs"' ':'/g
 s/[[:<:]]CHECK_EXPRESSIONS[[:>:]]/'"checkExpressions"' ':'/g
 s/[[:<:]]MODULE[[:>:]]/'"module"' ':'/g
 s/[[:<:]]MODULE_ARGS[[:>:]]/'"moduleArgs"' ':'/g
+s/[[:<:]]CRC[[:>:]]/'"crc"' ':'/g
 s/[ ][ ]*$//

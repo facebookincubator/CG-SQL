@@ -20,6 +20,7 @@
 #include "symtab.h"
 #include "encoders.h"
 #include "eval.h"
+#include "cg_common.h"
 
 static void cg_fragment_with_params(charbuf *output, CSTR frag, ast_node *ast, gen_func fn);
 static void cg_fragment_with_params_raw(charbuf *output, CSTR frag, ast_node *ast, gen_func fn);
@@ -63,6 +64,22 @@ typedef struct json_context {
 
 // magic string to sanity check the context cuz we're paranoid
 static char cookie_str[] = "cookie";
+
+// compute the CRC for an arbitary statement
+static llint_t crc_stmt(ast_node *stmt) {
+  CHARBUF_OPEN(temp);
+
+  // Format the text with full annotations, this text isn't going to SQLite but it should capture
+  // all aspects of the table/view/index/trigger including annotations.
+  gen_sql_callbacks callbacks;
+  init_gen_sql_callbacks(&callbacks);
+  gen_set_output_buffer(&temp);
+  gen_statement_with_callbacks(stmt, &callbacks);
+  llint_t result = (llint_t)crc_charbuf(&temp);
+
+  CHARBUF_CLOSE(temp);
+  return result;
+}
 
 static void add_name_to_output(charbuf* output, CSTR table_name) {
   Contract(output);
@@ -335,6 +352,7 @@ static void cg_json_ad_hoc_migration_procs(charbuf* output) {
     bprintf(output, "{\n");
     BEGIN_INDENT(t, 2);
     bprintf(output, "\"name\" : \"%s\",\n", name);
+    bprintf(output, "\"CRC\" : \"%lld\",\n", crc_stmt(ast));
 
     if (misc_attrs) {
       cg_json_misc_attrs(output, misc_attrs);
@@ -977,6 +995,7 @@ static void cg_json_indices(charbuf *output) {
 
     bool_t is_deleted = ast->sem->delete_version > 0;
     bprintf(output, "\"name\" : \"%s\"", index_name);
+    bprintf(output, ",\n\"CRC\" : \"%lld\"", crc_stmt(ast));
     bprintf(output, ",\n\"table\" : \"%s\"", table_name);
     bprintf(output, ",\n\"isUnique\" : %d", !!(flags & INDEX_UNIQUE));
     bprintf(output, ",\n\"ifNotExists\" : %d", !!(flags & INDEX_IFNE));
@@ -1078,6 +1097,7 @@ static void cg_json_triggers(charbuf *output) {
 
     bool_t is_deleted = ast->sem->delete_version > 0;
     bprintf(output, "\"name\" : \"%s\"", trigger_name);
+    bprintf(output, ",\n\"CRC\" : \"%lld\"", crc_stmt(ast));
     bprintf(output, ",\n\"target\" : \"%s\"", table_name);
     bprintf(output, ",\n\"isTemp\" : %d", !!(flags & TRIGGER_IS_TEMP));
     bprintf(output, ",\n\"ifNotExists\" : %d", !!(flags & TRIGGER_IF_NOT_EXISTS));
@@ -1282,6 +1302,7 @@ static void cg_json_views(charbuf *output) {
     bool_t is_deleted = ast->sem->delete_version > 0;
     BEGIN_INDENT(view, 2);
     bprintf(output, "\"name\" : \"%s\"", name);
+    bprintf(output, ",\n\"CRC\" : \"%lld\"", crc_stmt(ast));
     bprintf(output, ",\n\"isTemp\" : %d", !!(flags & VIEW_IS_TEMP));
     bprintf(output, ",\n\"isDeleted\" : %d", is_deleted);
     if (is_deleted) {
@@ -1374,6 +1395,7 @@ static void cg_json_table(charbuf *output, ast_node *ast) {
   bool_t is_deleted = ast->sem->delete_version > 0;
 
   bprintf(output, "\"name\" : \"%s\"", name);
+  bprintf(output, ",\n\"CRC\" : \"%lld\"", crc_stmt(ast));
   bprintf(output, ",\n\"isTemp\" : %d", !!temp);
   bprintf(output, ",\n\"ifNotExists\" : %d", !!if_not_exist);
   bprintf(output, ",\n\"withoutRowid\" : %d", !!no_rowid);

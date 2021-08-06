@@ -8430,7 +8430,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu Aug  5 13:07:17 PDT 2021
+Snapshot as of Thu Aug  5 17:38:25 PDT 2021
 
 ### Operators and Literals
 
@@ -13466,7 +13466,7 @@ CQL 0410 : unused, this was added to prevent merge conflicts at the end on liter
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Thu Aug  5 13:07:17 PDT 2021
+Snapshot as of Thu Aug  5 17:38:26 PDT 2021
 
 ### Rules
 
@@ -13503,6 +13503,7 @@ tables: table | table ',' tables
 
 table: '{'
        '"name"' ':' STRING_LITERAL ','
+       '"crc"' ':' STRING_LITERAL ','
        '"isTemp"' ':' BOOL_LITERAL ','
        '"ifNotExists"' ':' BOOL_LITERAL ','
        '"withoutRowid"' ':' BOOL_LITERAL ','
@@ -13536,6 +13537,7 @@ virtual_tables: virtual_table | virtual_table ',' virtual_tables
 
 virtual_table: '{'
        '"name"' ':' STRING_LITERAL ','
+       '"crc"' ':' STRING_LITERAL ','
        '"isTemp"' ':' '0' ','
        '"ifNotExists"' ':' BOOL_LITERAL ','
        '"withoutRowid"' ':' '0' ','
@@ -13762,6 +13764,7 @@ views: view | view ',' views
 
 view:  '{'
        '"name"' ':' STRING_LITERAL ','
+       '"crc"' ':' STRING_LITERAL ','
        '"isTemp"' ':' BOOL_LITERAL ','
        '"isDeleted"' ':' BOOL_LITERAL ','
        opt_deleted_version
@@ -13802,6 +13805,7 @@ indices: index  | index ',' indices
 
 index: '{'
         '"name"' ':' STRING_LITERAL ','
+        '"crc"' ':' STRING_LITERAL ','
         '"table"' ':' STRING_LITERAL ','
         '"isUnique"' ':' BOOL_LITERAL ','
         '"ifNotExists"' ':' BOOL_LITERAL ','
@@ -13826,6 +13830,7 @@ triggers: trigger | trigger ',' triggers
 
 trigger: '{'
           '"name"' ':' STRING_LITERAL ','
+          '"crc"' ':' STRING_LITERAL ','
           '"target"' ':' STRING_LITERAL ','
           '"isTemp"' ':' BOOL_LITERAL ','
           '"ifNotExists"' ':' BOOL_LITERAL ','
@@ -14096,6 +14101,7 @@ ad_hoc_migrations: ad_hoc_migration | ad_hoc_migration ',' ad_hoc_migrations
 
 ad_hoc_migration: '{'
                   '"name"' ':' STRING_LITERAL ','
+                  '"crc"' ':' STRING_LITERAL ','
                   opt_attributes
                   '"version"' ':' any_integer
                   '}'

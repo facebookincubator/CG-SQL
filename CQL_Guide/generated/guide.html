@@ -6545,7 +6545,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Thu Aug 5 13:07:17 PDT 2021</p>
+<p>Snapshot as of Thu Aug 5 17:38:25 PDT 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -9853,7 +9853,7 @@ enforce_pop_stmt:
 </table>
 <p>– This source code is licensed under the MIT license found in the – LICENSE file in the root directory of this source tree. –&gt;</p>
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Thu Aug 5 13:07:17 PDT 2021</p>
+<p>Snapshot as of Thu Aug 5 17:38:26 PDT 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 
@@ -9887,6 +9887,7 @@ tables: table | table &#39;,&#39; tables
 
 table: &#39;{&#39;
        &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+       &#39;&quot;crc&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
        &#39;&quot;isTemp&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
        &#39;&quot;ifNotExists&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
        &#39;&quot;withoutRowid&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
@@ -9920,6 +9921,7 @@ virtual_tables: virtual_table | virtual_table &#39;,&#39; virtual_tables
 
 virtual_table: &#39;{&#39;
        &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+       &#39;&quot;crc&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
        &#39;&quot;isTemp&quot;&#39; &#39;:&#39; &#39;0&#39; &#39;,&#39;
        &#39;&quot;ifNotExists&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
        &#39;&quot;withoutRowid&quot;&#39; &#39;:&#39; &#39;0&#39; &#39;,&#39;
@@ -10146,6 +10148,7 @@ views: view | view &#39;,&#39; views
 
 view:  &#39;{&#39;
        &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+       &#39;&quot;crc&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
        &#39;&quot;isTemp&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
        &#39;&quot;isDeleted&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
        opt_deleted_version
@@ -10186,6 +10189,7 @@ indices: index  | index &#39;,&#39; indices
 
 index: &#39;{&#39;
         &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+        &#39;&quot;crc&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
         &#39;&quot;table&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
         &#39;&quot;isUnique&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
         &#39;&quot;ifNotExists&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
@@ -10210,6 +10214,7 @@ triggers: trigger | trigger &#39;,&#39; triggers
 
 trigger: &#39;{&#39;
           &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+          &#39;&quot;crc&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
           &#39;&quot;target&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
           &#39;&quot;isTemp&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
           &#39;&quot;ifNotExists&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
@@ -10480,6 +10485,7 @@ ad_hoc_migrations: ad_hoc_migration | ad_hoc_migration &#39;,&#39; ad_hoc_migrat
 
 ad_hoc_migration: &#39;{&#39;
                   &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+                  &#39;&quot;crc&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
                   opt_attributes
                   &#39;&quot;version&quot;&#39; &#39;:&#39; any_integer
                   &#39;}&#39;

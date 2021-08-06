@@ -15,6 +15,7 @@
 
     {
       "name" : "bar",
+      "CRC" : "2542524075739883912",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
@@ -100,6 +101,7 @@
 
     {
       "name" : "foo",
+      "CRC" : "1403860687684039075",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
@@ -159,6 +161,7 @@
 
     {
       "name" : "plugin_table",
+      "CRC" : "-2051914315616988076",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,

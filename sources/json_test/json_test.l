@@ -28,6 +28,7 @@ int fileno(FILE *);
 
 %%
 
+\"crc\"[ \t]*:                   { return CRC; }
 \"tables\"[ \t]*:                { return TABLES; }
 \"virtualTables\"[ \t]*:         { return VIRTUAL_TABLES; }
 \"name\"[ \t]*:                  { return NAME; }

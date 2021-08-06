@@ -11,6 +11,7 @@
 
     {
       "name" : "Foo",
+      "CRC" : "3234492599048457151",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
@@ -61,6 +62,7 @@
 
     {
       "name" : "T2",
+      "CRC" : "2021161013616617031",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
@@ -97,6 +99,7 @@
 
     {
       "name" : "T3",
+      "CRC" : "-6018250782949692794",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
@@ -142,6 +145,7 @@
 
     {
       "name" : "T4",
+      "CRC" : "-2149692277469775074",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
@@ -202,6 +206,7 @@
 
     {
       "name" : "T5",
+      "CRC" : "7011436198022389765",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
@@ -275,6 +280,7 @@
 
     {
       "name" : "T6",
+      "CRC" : "5029268292057128035",
       "isTemp" : 1,
       "ifNotExists" : 1,
       "withoutRowid" : 1,
@@ -317,6 +323,7 @@
 
     {
       "name" : "T7a",
+      "CRC" : "-2088996992437173714",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
@@ -355,6 +362,7 @@
 
     {
       "name" : "T7b",
+      "CRC" : "-2469711812733478801",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
@@ -395,6 +403,7 @@
 
     {
       "name" : "T8a",
+      "CRC" : "5732684105687845792",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
@@ -433,6 +442,7 @@
 
     {
       "name" : "T8b",
+      "CRC" : "8157465532859044321",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
@@ -483,6 +493,7 @@
 
     {
       "name" : "T9",
+      "CRC" : "6457405878864377226",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
@@ -604,6 +615,7 @@
 
     {
       "name" : "T10",
+      "CRC" : "7375818750484623977",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
@@ -703,6 +715,7 @@
 
     {
       "name" : "T11",
+      "CRC" : "-5566162567054761315",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
@@ -779,6 +792,7 @@
 
     {
       "name" : "T12",
+      "CRC" : "3766894366359324473",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
@@ -854,6 +868,7 @@
 
     {
       "name" : "T12a",
+      "CRC" : "5622280100769593650",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
@@ -920,6 +935,7 @@
 
     {
       "name" : "T12b",
+      "CRC" : "2984315676194087904",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
@@ -976,6 +992,7 @@
 
     {
       "name" : "with_fk_on_columns",
+      "CRC" : "711224124431262369",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
@@ -1046,6 +1063,7 @@
 
     {
       "name" : "recreated_in_a_group",
+      "CRC" : "-3666809099812167695",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
@@ -1084,6 +1102,7 @@
 
     {
       "name" : "radioactive",
+      "CRC" : "4798964007804907379",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
@@ -1132,6 +1151,7 @@
 
     {
       "name" : "T1",
+      "CRC" : "5967026926312045155",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
@@ -1178,6 +1198,7 @@
 
     {
       "name" : "with_collate_and_check",
+      "CRC" : "2442132863554757907",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
@@ -1218,6 +1239,7 @@
 
     {
       "name" : "with_check_constraints",
+      "CRC" : "3264027466860092402",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
@@ -1260,6 +1282,7 @@
 
     {
       "name" : "with_unnamed_check_constraints",
+      "CRC" : "4543876486311618263",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
@@ -1302,6 +1325,7 @@
 
     {
       "name" : "with_from_recreate",
+      "CRC" : "772447308169098338",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
@@ -1354,6 +1378,7 @@
 
     {
       "name" : "a_virtual_table",
+      "CRC" : "3010990788603065896",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
@@ -1410,6 +1435,7 @@
 
     {
       "name" : "a_second_virtual_table",
+      "CRC" : "-8286429800647299700",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
@@ -1461,6 +1487,7 @@
 
     {
       "name" : "a_third_virtual_table",
+      "CRC" : "-6640301384858104825",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
@@ -1523,6 +1550,7 @@
 
     {
       "name" : "a_deleted_virtual_table",
+      "CRC" : "-4336016932503752576",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
@@ -1587,6 +1615,7 @@
 
     {
       "name" : "region_0_view",
+      "CRC" : "-263622307595949124",
       "isTemp" : 0,
       "isDeleted" : 0,
       "region" : "region0",
@@ -1617,6 +1646,7 @@
     ,
     {
       "name" : "MyView",
+      "CRC" : "5545408966671198580",
       "isTemp" : 0,
       "isDeleted" : 0,
       "projection" : [
@@ -1645,6 +1675,7 @@
     ,
     {
       "name" : "MyOtherView",
+      "CRC" : "3780930254538624223",
       "isTemp" : 0,
       "isDeleted" : 0,
       "projection" : [
@@ -1675,6 +1706,7 @@
     ,
     {
       "name" : "MyViewWithAttributes",
+      "CRC" : "-9082436836613299712",
       "isTemp" : 0,
       "isDeleted" : 0,
       "attributes" : [
@@ -1713,6 +1745,7 @@
     ,
     {
       "name" : "ADeletedView",
+      "CRC" : "5607046996685579612",
       "isTemp" : 0,
       "isDeleted" : 1,
       "deletedVersion" : 1,
@@ -1742,6 +1775,7 @@
     ,
     {
       "name" : "ADeletedViewWithMigrationProc",
+      "CRC" : "4784911562823482846",
       "isTemp" : 0,
       "isDeleted" : 1,
       "deletedVersion" : 1,
@@ -1772,6 +1806,7 @@
     ,
     {
       "name" : "my_view",
+      "CRC" : "7283511863245639543",
       "isTemp" : 0,
       "isDeleted" : 0,
       "projection" : [
@@ -1803,6 +1838,7 @@
 
     {
       "name" : "region_0_index",
+      "CRC" : "2270517184909940129",
       "table" : "Foo",
       "isUnique" : 0,
       "ifNotExists" : 0,
@@ -1819,6 +1855,7 @@
     ,
     {
       "name" : "MyIndex",
+      "CRC" : "7091245658213937265",
       "table" : "Foo",
       "isUnique" : 1,
       "ifNotExists" : 1,
@@ -1833,6 +1870,7 @@
     ,
     {
       "name" : "MyOtherIndex",
+      "CRC" : "3161354011846440424",
       "table" : "Foo",
       "isUnique" : 0,
       "ifNotExists" : 0,
@@ -1847,6 +1885,7 @@
     ,
     {
       "name" : "MyExpressionIndex",
+      "CRC" : "3858854878338302551",
       "table" : "Foo",
       "isUnique" : 0,
       "ifNotExists" : 0,
@@ -1862,6 +1901,7 @@
     ,
     {
       "name" : "MyPartialIndex",
+      "CRC" : "1187239216548262958",
       "table" : "Foo",
       "isUnique" : 0,
       "ifNotExists" : 0,
@@ -1877,6 +1917,7 @@
     ,
     {
       "name" : "YetAnotherIndex",
+      "CRC" : "4293273887123709068",
       "table" : "Foo",
       "isUnique" : 0,
       "ifNotExists" : 0,
@@ -1894,6 +1935,7 @@
     ,
     {
       "name" : "MyIndexWithAttributes",
+      "CRC" : "2565375927787521812",
       "table" : "Foo",
       "isUnique" : 0,
       "ifNotExists" : 0,
@@ -1928,6 +1970,7 @@
 
     {
       "name" : "trigger1",
+      "CRC" : "3355530896228449101",
       "target" : "Foo",
       "isTemp" : 1,
       "ifNotExists" : 1,
@@ -1953,6 +1996,7 @@
     ,
     {
       "name" : "trigger2",
+      "CRC" : "4421779506610101095",
       "target" : "Foo",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -1980,6 +2024,7 @@
     ,
     {
       "name" : "trigger3",
+      "CRC" : "6621399856062205043",
       "target" : "MyView",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -2005,6 +2050,7 @@
     ,
     {
       "name" : "trigger4",
+      "CRC" : "-1284736029247950871",
       "target" : "MyView",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -2028,6 +2074,7 @@
     ,
     {
       "name" : "trigger7",
+      "CRC" : "-1792117196069418879",
       "target" : "Foo",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -2066,6 +2113,7 @@
     ,
     {
       "name" : "trigger8",
+      "CRC" : "-5222056699539277017",
       "target" : "Foo",
       "isTemp" : 1,
       "ifNotExists" : 1,
@@ -2101,6 +2149,7 @@
     ,
     {
       "name" : "trigger5",
+      "CRC" : "8733152794063697691",
       "target" : "Foo",
       "isTemp" : 1,
       "ifNotExists" : 1,
@@ -2124,6 +2173,7 @@
     ,
     {
       "name" : "trigger6",
+      "CRC" : "3668347380138017048",
       "target" : "Foo",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -3413,6 +3463,7 @@
 
     {
       "name" : "ad_hoc_migration_proc_1",
+      "CRC" : "2961780581540367911",
       "version" : 1
     }
     The statement ending at line XXXX
@@ -3422,6 +3473,7 @@
     ,
     {
       "name" : "ad_hoc_migration_proc_2",
+      "CRC" : "4180308921907099499",
       "version" : 2
     }
     The statement ending at line XXXX
@@ -3433,6 +3485,7 @@
     ,
     {
       "name" : "ad_hoc_migration_proc_3",
+      "CRC" : "3815791288465678255",
       "attributes" : [
         {
           "name" : "my_attribute",
