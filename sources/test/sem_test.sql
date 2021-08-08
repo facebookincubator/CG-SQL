@@ -10850,6 +10850,121 @@ begin
   select substr('x', 1, 2, 4);
 end;
 
+-- TEST: The replace function requires exactly three arguments, not two.
+-- + {select_stmt}: err
+-- + {call}: err
+-- + Error % function got incorrect number of arguments 'replace'
+-- +1 Error
+select replace('a', 'b');
+
+-- TEST: The replace function requires exactly three arguments, not four.
+-- + {select_stmt}: err
+-- + {call}: err
+-- + Error % function got incorrect number of arguments 'replace'
+-- +1 Error
+select replace('a', 'b', 'c', 'd');
+
+-- TEST: The replace function can only be used in SQL.
+-- + {call}: err
+-- Error % function may not appear in this context 'replace'
+-- +1 Error
+let dummy := replace('a', 'b', 'c');
+
+-- TEST: The first argument to replace must be a string.
+-- + {select_stmt}: err
+-- + {call}: err
+-- + Error % all arguments must be strings 'replace'
+-- +1 Error
+select replace(0, 'b', 'c');
+
+-- TEST: The second argument to replace must be a string.
+-- + {select_stmt}: err
+-- + {call}: err
+-- + Error % all arguments must be strings 'replace'
+-- +1 Error
+select replace('a', 0, 'c');
+
+-- TEST: The third argument to replace must be a string.
+-- + {select_stmt}: err
+-- + {call}: err
+-- + Error % all arguments must be strings 'replace'
+-- +1 Error
+select replace('a', 'b', 0);
+
+-- TEST: The replace function has a TEXT NOT NULL result type if ALL of its
+-- arguments are nonnull.
+-- + {select_stmt}: select: { _anon: text notnull }
+-- + {call}: text notnull
+-- + {name replace}: text notnull
+-- - Error
+select replace('a', 'b', 'c');
+
+-- TEST: The replace function has a nullable TEXT result type if its first
+-- argument is nullable.
+-- + {select_stmt}: select: { _anon: text }
+-- + {call}: text
+-- + {name replace}: text
+-- - Error
+select replace(nullable('a'), 'b', 'c');
+
+-- TEST: The replace function has a nullable TEXT result type if its second
+-- argument is nullable.
+-- + {select_stmt}: select: { _anon: text }
+-- + {call}: text
+-- + {name replace}: text
+-- - Error
+select replace('a', nullable('b'), 'c');
+
+-- TEST: The replace function has a nullable TEXT result type if its third
+-- argument is nullable.
+-- + {select_stmt}: select: { _anon: text }
+-- + {call}: text
+-- + {name replace}: text
+-- - Error
+select replace('a', 'b', nullable('c'));
+
+-- TEST: The first argument to replace must not be the literal NULL.
+-- + {select_stmt}: err
+-- + {call}: err
+-- + Error % all arguments must be strings 'replace'
+-- +1 Error
+select replace(null, 'b', 'c');
+
+-- TEST: The second argument to replace must not be the literal NULL.
+-- + {select_stmt}: err
+-- + {call}: err
+-- + Error % all arguments must be strings 'replace'
+-- +1 Error
+select replace('a', null, 'c');
+
+-- TEST: The third argument to replace must not be the literal NULL.
+-- + {select_stmt}: err
+-- + {call}: err
+-- + Error % all arguments must be strings 'replace'
+-- +1 Error
+select replace('a', 'b', null);
+
+-- TEST: The result of replace is sensitive if its first argument is sensitive.
+-- + {select_stmt}: select: { _anon: text notnull sensitive }
+-- + {call}: text notnull sensitive
+-- + {name replace}: text notnull sensitive
+-- - Error
+select replace(sensitive('a'), 'b', 'c');
+
+-- TEST: The result of replace is sensitive if its second argument is sensitive.
+-- + {select_stmt}: select: { _anon: text notnull sensitive }
+-- + {call}: text notnull sensitive
+-- + {name replace}: text notnull sensitive
+-- - Error
+select replace('a', sensitive('b'), 'c');
+
+-- TEST: The result of replace is sensitive if its third argument is sensitive.
+-- + {select_stmt}: select: { _anon: text notnull sensitive }
+-- + {call}: text notnull sensitive
+-- + {name replace}: text notnull sensitive
+-- - Error
+select replace('a', 'b', sensitive('c'));
+
 -- TEST: create ad hoc version migration -- success
 -- + {schema_ad_hoc_migration_stmt}: ok
 -- + {version_annotation}
@@ -12424,6 +12539,27 @@ DECLARE PROC some_external_thing NO CHECK;
 -- - Error
 call some_external_thing('x', 5.0);
 
+-- TEST: unchecked procs cannot be used in expressions (unless re-declared with
+-- DECLARE FUNCTION or DECLARE SELECT FUNCTION)
+-- + {call}: err
+-- + Error % procedure of an unknown type used in an expression
+--   'some_external_thing' +1 Error
+let result_of_some_external_thing := some_external_thing('x', 5.0);
+
+-- TEST: re-declare an unchecked proc with DECLARE FUNCTION
+-- + {declare_func_stmt}: integer
+-- + {param}: t: text variable in
+-- + {param}: r: real variable in
+-- + {type_int}: integer
+-- - Error
+declare function some_external_thing(t text, r real) int;
+
+-- TEST: works fine after re-declaring
+-- + {let_stmt}: result_of_some_external_thing: integer variable
+-- + {call}: integer
+-- - Error
+let result_of_some_external_thing := some_external_thing('x', 5.0);
+
 -- a proc with a return type for use
 declare proc _stuff() (id integer, name text);
 
@@ -13316,7 +13452,13 @@ declare kind_string text<surname>;
 -- + {select_stmt}: _anon: text<surname>
 -- + {name kind_string}: kind_string: text<surname> variable
 -- - Error
-set a_string := (select substr(kind_string, 2, 3));
+set kind_string := (select substr(kind_string, 2, 3));
+
+-- TEST: replace preserves kind
+-- + {select_stmt}: _anon: text<surname>
+-- + {name kind_string}: kind_string: text<surname> variable
+-- - Error
+set kind_string := (select replace(kind_string, 'b', 'c'));
 
 -- TEST: verify that kind is preserved
 -- + {select_stmt}: _anon: text<surname>
@@ -17134,6 +17276,122 @@ end;
 create proc guard_improvements_handle_semantic_issues_like_if()
 begin
   if some_undefined_variable is null return;
+end;
+
+-- TEST: Improvements work for IFs that follow the guard pattern.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: y0: integer notnull variable
+-- + {let_stmt}: z0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- + {let_stmt}: y1: integer variable
+-- + {let_stmt}: z1: integer variable
+-- - Error
+create proc improvements_work_for_guard_pattern_ifs()
+begin
+  declare a int;
+  declare b int;
+  declare c int;
+  if 1 then  
+    if a is null or b is null or c is null then
+      return;
+    end if;
+    let x0 := a;
+    let y0 := b;
+    let z0 := c;
+  end if;
+  let x1 := a;
+  let y1 := b;
+  let z1 := c;
+end;
+
+-- TEST: Improvements work for IFs that follow the guard pattern when statements
+-- are present before the control statement.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: y0: integer notnull variable
+-- + {let_stmt}: z0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- + {let_stmt}: y1: integer variable
+-- + {let_stmt}: z1: integer variable
+-- - Error
+create proc improvements_work_for_guard_pattern_ifs_with_preceding_statements()
+begin
+  declare a int;
+  declare b int;
+  declare c int;
+  if 1 then  
+    if a is null or b is null or c is null then
+      call printf("Hello, world!\n");
+      return;
+    end if;
+    let x0 := a;
+    let y0 := b;
+    let z0 := c;
+  end if;
+  let x1 := a;
+  let y1 := b;
+  let z1 := c;
+end;
+
+-- TEST: Improvements work for IFs that follow the guard pattern even if they
+-- set the variable that's going to be improved after END IF to NULL.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- - Error
+create proc improvements_work_for_guard_pattern_ifs_that_set_the_id_to_null()
+begin
+  declare a int;
+  if 1 then  
+    if a is null then
+      set a := null;
+      return;
+    end if;
+    let x0 := a;
+  end if;
+  let x1 := a;
+end;
+
+-- TEST: Improvements do not work for IFs that would be following the guard
+-- pattern if not for the presence of ELSE.
+-- + {let_stmt}: x: integer variable
+-- - Error
+create proc improvements_do_not_work_for_guard_like_ifs_with_else()
+begin
+  declare a int;
+  if a is null then
+    return;
+  else
+    -- We could set `a` to null here, hence we can't improve it after END IF.
+  end if;
+  let x := a; -- nullable
+end;
+
+-- TEST: Improvements do not work for IFs that would be following the guard
+-- pattern if not for the presence of ELSE IF.
+-- + {let_stmt}: x: integer variable
+-- - Error
+create proc improvements_do_not_work_for_guard_like_ifs_with_else_if()
+begin
+  declare a int;
+  if a is null then
+    return;
+  else if 1 then
+    -- We could set `a` to null here, hence we can't improve it after END IF.
+  end if;
+  let x := a; -- nullable
+end;
+
+-- TEST: Improvements do not work for IS NULL checks after the first branch.
+-- + {let_stmt}: x: integer variable
+-- - Error
+create proc improvements_do_not_work_for_is_null_checks_in_else_ifs()
+begin
+  declare a int;
+  if 0 then
+    return;
+  else if a is null then
+    return;
+  end if;
+  let x := a; -- nullable
 end;
 
 -- TEST: Disable flow-sensitive nullability.

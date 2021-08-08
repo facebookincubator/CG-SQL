@@ -216,7 +216,7 @@ cql_noexport ast_node *_Nonnull new_ast_num(int32_t type, const char *_Nonnull v
 cql_noexport ast_node *_Nonnull new_ast_opt(int32_t value);
 cql_noexport ast_node *_Nonnull new_ast_str(const char *_Nonnull value);
 cql_noexport ast_node *_Nonnull new_ast_cstr(const char *_Nonnull value);
-cql_noexport ast_node *_Nonnull new_astb(const char *_Nonnull value);
+cql_noexport ast_node *_Nonnull new_ast_blob(const char *_Nonnull value);
 
 cql_noexport ast_node *_Nonnull copy_ast_tree(ast_node *_Nonnull node);
 
@@ -823,7 +823,6 @@ AST(if_alt)
 AST1(else)
 AST(elseif)
 AST(cond_action)
-AST1(control_stmt)
 AST(guard_stmt)
 AST1(open_stmt)
 AST1(close_stmt)

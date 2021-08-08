@@ -94,6 +94,13 @@ static rtdata rt_c = {
   .cql_result_set_get_blob = "cql_result_set_get_blob_col",
   .cql_result_set_get_is_null = "cql_result_set_get_is_null_col",
   .cql_result_set_get_is_encoded = "cql_result_set_get_is_encoded_col",
+  .cql_result_set_set_bool = "cql_result_set_set_bool_col",
+  .cql_result_set_set_double = "cql_result_set_set_double_col",
+  .cql_result_set_set_int32 = "cql_result_set_set_int32_col",
+  .cql_result_set_set_int64 = "cql_result_set_set_int64_col",
+  .cql_result_set_set_string = "cql_result_set_set_string_col",
+  .cql_result_set_set_object = "cql_result_set_set_object_col",
+  .cql_result_set_set_blob = "cql_result_set_set_blob_col",
 };
 
 static rtdata rt_objc = {

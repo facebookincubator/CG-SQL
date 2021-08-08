@@ -184,8 +184,9 @@ static sem_t *find_mutable_type_for_global_cursor_field(CSTR name, CSTR cursor_n
 static bool_t sem_is_notnull_improved(CSTR name, CSTR scope);
 static void sem_set_notnull_improved(CSTR name, CSTR scope);
 static void sem_unset_notnull_improved(CSTR name, CSTR scope);
-static void sem_add_notnull_improvements(ast_node *expr, ast_node *select_expr_list);
-static void sem_remove_notnull_improvements();
+static void sem_unset_notnull_improvement_items(notnull_improvement_item *item);
+static void sem_set_notnull_improvements_for_true_condition(ast_node *expr, ast_node *select_expr_list);
+static void sem_set_notnull_improvements_for_false_condition(ast_node *ast);
 
 static void lazy_free_symtab(void *syms) {
   symtab_delete(syms);
@@ -386,19 +387,18 @@ static notnull_improvement_item *notnull_improved_globals;
 // unset all improvements within a given context when it ends.
 static notnull_improvement_item *current_notnull_improvement_context;
 
-// Pushes a new context for nullability improvements with improvements gathered
-// from `cond`, restricted by an optional `select_expr_list`. It is valid to
-// pass NULL for `cond` simply to create a new context.
-#define PUSH_NOTNULL_IMPROVEMENT_CONTEXT(cond, select_expr_list) \
+// Pushes a new context for nullability improvements. All improvements set while
+// the context is active will be unset at the corresponding
+// `POP_NOTNULL_IMPROVEMENT_CONTEXT`.
+#define PUSH_NOTNULL_IMPROVEMENT_CONTEXT() \
   notnull_improvement_item *saved_notnull_improvement_context = \
     current_notnull_improvement_context; \
-  current_notnull_improvement_context = NULL; \
-  sem_add_notnull_improvements(cond, select_expr_list);
+  current_notnull_improvement_context = NULL;
 
 // Unsets all improvements made within the current context and reverts to the
 // previous context.
 #define POP_NOTNULL_IMPROVEMENT_CONTEXT() \
-  sem_remove_notnull_improvements(); \
+  sem_unset_notnull_improvement_items(current_notnull_improvement_context); \
   current_notnull_improvement_context = saved_notnull_improvement_context;
 
 // Push a context that stops us from searching further up.
@@ -5757,7 +5757,8 @@ static void sem_case_list(ast_node *head, sem_t sem_type_required_for_when, CSTR
       return;
     }
 
-    PUSH_NOTNULL_IMPROVEMENT_CONTEXT(case_expr, NULL);
+    PUSH_NOTNULL_IMPROVEMENT_CONTEXT();
+    sem_set_notnull_improvements_for_true_condition(case_expr, NULL);
     sem_expr(then_expr);
     POP_NOTNULL_IMPROVEMENT_CONTEXT();
 
@@ -6970,14 +6971,15 @@ static void sem_special_func_iif(ast_node *ast, uint32_t arg_count, bool_t *is_a
   }
 
   // `arg1` can improve the type of `arg2`.
-  PUSH_NOTNULL_IMPROVEMENT_CONTEXT(arg1, NULL);
+  PUSH_NOTNULL_IMPROVEMENT_CONTEXT();
+  sem_set_notnull_improvements_for_true_condition(arg1, NULL);
   ast_node *arg2 = second_arg(arg_list);
   sem_expr(arg2);
+  POP_NOTNULL_IMPROVEMENT_CONTEXT();
   if (is_error(arg2)) {
     record_error(arg2);
     return;
   }
-  POP_NOTNULL_IMPROVEMENT_CONTEXT();
 
   ast_node *arg3 = third_arg(arg_list);
   sem_expr(arg3);
@@ -7176,6 +7178,59 @@ static void sem_func_substr(ast_node *ast, uint32_t arg_count) {
 
   // preserve the string 'kind' even though it's a substring (that seems the most sensible)
   ast->sem->kind = arg1->sem->kind;
+}
+
+// Validates SQLite's replace(input, find, replace_with) function.
+static void sem_func_replace(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  // All three arguments must be provided.
+  if (!sem_validate_arg_count(ast, arg_count, 3)) {
+    return;
+  }
+
+  // The replace function can only appear in SQL.
+  if (!sem_validate_appear_inside_sql_stmt(ast)) {
+    return;
+  }
+
+  ast_node *input = first_arg(arg_list);
+  sem_t input_type = input->sem->sem_type;
+
+  ast_node *find = second_arg(arg_list);
+  sem_t find_type = find->sem->sem_type;
+
+  ast_node *replace_with = third_arg(arg_list);
+  sem_t replace_with_type = replace_with->sem->sem_type;
+
+  // All arguments must be strings.
+  if (!is_text(input_type) || !is_text(find_type) || !is_text(replace_with_type)) {
+    report_error(ast, "CQL0085: all arguments must be strings", name);
+    record_error(ast);
+    return;
+  }
+
+  // The result is a string.
+  sem_t sem_type = SEM_TYPE_TEXT;
+  
+  // The result is nonnull only if all of the arguments are nonnull.
+  if (is_not_nullable(input_type) && is_not_nullable(find_type) && is_not_nullable(replace_with_type)) {
+    sem_type |= SEM_TYPE_NOTNULL;
+  }
+
+  // The result is sensitive if any of the arguments are sensitive. 
+  sem_type |= sensitive_flag(input->sem->sem_type);
+  sem_type |= sensitive_flag(find->sem->sem_type);
+  sem_type |= sensitive_flag(replace_with->sem->sem_type);
+
+  name_ast->sem = ast->sem = new_sem(sem_type);
+
+  // The result has the same kind as the input argument.
+  ast->sem->kind = input->sem->kind;  
 }
 
 // generic function to do basic validation for builtin window functions.
@@ -8012,6 +8067,14 @@ static void sem_expr_call(ast_node *ast, CSTR cstr) {
     goto cleanup;
   }
 
+  // check for an attempt to use an unchecked proc in an expression context
+  ast_node *unchecked_proc = find_unchecked_proc(name);
+  if (unchecked_proc) {
+    report_error(name_ast, "CQL0405: procedure of an unknown type used in an expression", name);
+    record_error(ast);
+    return;
+  }
+
   report_error(name_ast, "CQL0094: function not yet implemented", name);
   record_error(ast);
   return;
@@ -8451,17 +8514,22 @@ static void sem_select_expr_list_with_opt_where(ast_node *ast, ast_node *opt_whe
   Contract(is_ast_select_expr_list(ast));
   Contract(!opt_where || is_ast_opt_where(opt_where));
 
-  ast_node *where_cond = opt_where ? opt_where->left : NULL;
+  PUSH_NOTNULL_IMPROVEMENT_CONTEXT();
 
-  // We pass `ast`, the `select_expr_list`, when pushing the context so that
-  // any aliases can be excluded from the possible improvements. We must do
-  // this because the aliases are in scope for the where clause (and so may be
-  // referenced there), but not in scope for the selection expression list
-  // we're about to check. As such, trying to look up an alias and improve it
-  // here might actually improve a variable with the same name in an enclosing
-  // scope.
-  PUSH_NOTNULL_IMPROVEMENT_CONTEXT(where_cond, ast);
+  ast_node *where_cond = opt_where ? opt_where->left : NULL;
+  if (where_cond) {
+    // We pass `ast`, the `select_expr_list`, when setting improvements so that
+    // any aliases can be excluded from the possible improvements. We must do
+    // this because the aliases are in scope for the where clause (and so may be
+    // referenced there), but not in scope for the selection expression list
+    // we're about to check. As such, trying to look up an alias and improve it
+    // here might actually improve a variable with the same name in an enclosing
+    // scope.
+    sem_set_notnull_improvements_for_true_condition(where_cond, ast);
+  }
+
   sem_select_expr_list(ast);
+
   POP_NOTNULL_IMPROVEMENT_CONTEXT();
 }
 
@@ -9152,13 +9220,16 @@ static void sem_select_expr_list_con(ast_node *ast) {
         ast->sem = select_expr_list->sem;
         ast->sem->used_symbols = used_symbols;
 
-        ast_node *where_cond = opt_where ? opt_where->left : NULL;
+        PUSH_NOTNULL_IMPROVEMENT_CONTEXT();
 
-        // Push improvements for the resulting columns. We don't pass
-        // `select_expr_list` here because we want to include the aliases when
-        // improving, unlike in `sem_select_expr_list_with_opt_where` where
-        // the aliases were not in scope for the select expressions.
-        PUSH_NOTNULL_IMPROVEMENT_CONTEXT(where_cond, NULL);
+        ast_node *where_cond = opt_where ? opt_where->left : NULL;
+        if (where_cond) {
+          // Set improvements for the resulting columns. We don't pass
+          // `select_expr_list` here because we want to include the aliases when
+          // improving, unlike in `sem_select_expr_list_with_opt_where` where
+          // the aliases were not in scope for the select expressions.
+          sem_set_notnull_improvements_for_true_condition(where_cond, NULL);
+        }
 
         sem_struct *sptr = ast->sem->sptr;
         for (int32_t i = 0; i < sptr->count; i++) {
@@ -11388,10 +11459,13 @@ static void sem_set_notnull_improved(CSTR name, CSTR scope) {
     return;
   }
 
-  // It's very important that we return NULL if something is already improved or
-  // does not need to be, else `sem_add_notnull_improvements` will push it onto
-  // the list of added improvements and `sem_remove_notnull_improvements` will
-  // inappropriately remove it too soon.
+  // It's very important that we return NULL if something is already improved:
+  // Setting a new improvement within the current context implies that it will
+  // be unset when the current context ends, hence setting it when it already
+  // set in an enclosing context would cause it to be unset prematurely. It's
+  // also important that we do not set an improvement for a something that is
+  // NOT NULL because we don't want to be wrapping nonnull things with calls to
+  // `cql_inferred_notnull` (as it requires a nullable argument).
   if (*type & (SEM_TYPE_INFERRED_NOTNULL | SEM_TYPE_NOTNULL)) {
     return;
   }
@@ -11448,28 +11522,31 @@ static void sem_unset_notnull_improved(CSTR name, CSTR scope) {
   // be done if we re-unset them later.
 }
 
-// Given an optional expression `ast` containing possibly AND-linked IS NOT NULL
-// subexpressions, set all of the applicable nullability improvements and add
-// them to `added` so the caller can remove them later. If the optional
-// `select_expr_list` is provided, any aliases within it will be excluded when
-// improving ids.
-static void sem_add_notnull_improvements(ast_node* ast, ast_node* select_expr_list)
-{
-  Contract(!select_expr_list || is_ast_select_expr_list(select_expr_list));
-
-  // If we have no AST, either because we recursed on NULL or because a new
-  // context was pushed without a conditional expression to analyze, we can just
-  // stop here.
-  if (!ast) {
-    return;
+// Unsets nonnull improvements for all items in the list provided.
+static void sem_unset_notnull_improvement_items(notnull_improvement_item *item) {
+  for (notnull_improvement_item *head = item; head; head = head->next) {
+    *head->type &= u64_not(SEM_TYPE_INFERRED_NOTNULL);
   }
+}
+
+// Given a conditional expression `ast` containing possibly AND-linked IS NOT
+// NULL subexpressions, set all of the applicable improvements within the
+// current nullability context. If the optional `select_expr_list` is provided,
+// any aliases within it will be excluded when improving ids. Generally
+// speaking, calls to this function should be bounded by a new nullability
+// context corresponding to the portion of the program for which the condition
+// `ast` must be be true.
+static void sem_set_notnull_improvements_for_true_condition(ast_node* ast, ast_node* select_expr_list)
+{
+  Contract(ast);
+  Contract(!select_expr_list || is_ast_select_expr_list(select_expr_list));
 
   // We include all improvements along the outermost spine of AND expressions.
   if (is_ast_and(ast)) {
     Invariant(ast->left);
     Invariant(ast->right);
-    sem_add_notnull_improvements(ast->left, select_expr_list);
-    sem_add_notnull_improvements(ast->right, select_expr_list);
+    sem_set_notnull_improvements_for_true_condition(ast->left, select_expr_list);
+    sem_set_notnull_improvements_for_true_condition(ast->right, select_expr_list);
     return;
   }
 
@@ -11516,15 +11593,40 @@ static void sem_add_notnull_improvements(ast_node* ast, ast_node* select_expr_li
   }
 }
 
-// The converse to `sem_add_notnull_improvements`, this unsets nullability
-// improvements given a list of previously added improvements and sets `*items`
-// to NULL;
-static void sem_remove_notnull_improvements() {
-  for (notnull_improvement_item *item = current_notnull_improvement_context; item; item = item->next) {
-    *item->type &= u64_not(SEM_TYPE_INFERRED_NOTNULL);
+// Improvements for known-false conditions are dual to improvements for
+// known-true conditions: Known-false conditions improve ids and dots verified
+// to be NULL via `IS NULL` along the outermost spine of `OR` expressions,
+// whereas known-true conditions improve ids and dots verified to be nonnull via
+// `IS NOT NULL` along the outermost spine of `AND` expressions. For example,
+// the following two statements introduce the same improvements:
+//
+//   IF a IS NOT NULL AND b IS NOT NULL THEN
+//     -- `a` and `b` are improved here because we know the condition is true
+//   END IF;
+//
+//   IF a IS NULL OR b IS NULL RETURN;
+//   -- `a` and `b` are improved here because we know the condition is false
+//   -- since we must not have returned if we got this far
+static void sem_set_notnull_improvements_for_false_condition(ast_node *ast) {
+  Contract(ast);
+
+  if (is_ast_or(ast)) {
+    sem_set_notnull_improvements_for_false_condition(ast->left);
+    sem_set_notnull_improvements_for_false_condition(ast->right);
+    return;
   }
 
-  current_notnull_improvement_context = NULL;
+  if (is_ast_is(ast) && is_ast_null(ast->right)) {
+    EXTRACT_ANY_NOTNULL(expr, ast->left);
+    if (is_ast_id(expr)) {
+      EXTRACT_STRING(name, expr);
+      sem_set_notnull_improved(name, NULL);
+    } else if (is_ast_dot(expr)) {
+      EXTRACT_STRING(name, expr->right);
+      EXTRACT_STRING(scope, expr->left);
+      sem_set_notnull_improved(name, scope);
+    }
+  }
 }
 
 // This is the [expression] then [statements] part of an IF or ELSE IF
@@ -11550,7 +11652,8 @@ static void sem_cond_action(ast_node *ast) {
   }
 
   if (stmt_list) {
-    PUSH_NOTNULL_IMPROVEMENT_CONTEXT(expr, NULL);
+    PUSH_NOTNULL_IMPROVEMENT_CONTEXT();
+    sem_set_notnull_improvements_for_true_condition(expr, NULL);
     sem_stmt_list(stmt_list);
     POP_NOTNULL_IMPROVEMENT_CONTEXT();
     if (is_error(stmt_list)) {
@@ -11582,6 +11685,46 @@ static void sem_elseif_list(ast_node *head) {
     }
     ast->sem = cond_action->sem;
   }
+}
+
+// Returns the first statement in a list of statements while taking attributes
+// into account.
+static ast_node *first_stmt_in_stmt_list(ast_node *ast) {
+  Contract(is_ast_stmt_list(ast));
+
+  EXTRACT_ANY_NOTNULL(stmt_or_stmt_and_attr, ast->left);
+
+  if (is_ast_stmt_and_attr(stmt_or_stmt_and_attr)) {
+    EXTRACT_ANY_NOTNULL(stmt, stmt_or_stmt_and_attr->right);
+    return stmt;
+  }
+
+  return stmt_or_stmt_and_attr;
+}
+
+// Returns true if `ast` is a type of control statement, else false.
+static bool_t is_control_stmt(ast_node *ast) {
+  return is_ast_commit_return_stmt(ast)
+    || is_ast_continue_stmt(ast)
+    || is_ast_leave_stmt(ast)
+    || is_ast_return_stmt(ast)
+    || is_ast_rollback_return_stmt(ast)
+    || is_ast_throw_stmt(ast);
+}
+
+// Given a `stmt_list`, perform a shallow search and return true if the
+// statement list directly contains a control statement, else return false.
+static bool_t stmt_list_contains_control_stmt(ast_node *ast) {
+  Contract(is_ast_stmt_list(ast));
+
+  for (ast_node *head = ast; head; head = head->right) {
+    ast_node *stmt = first_stmt_in_stmt_list(head);
+    if (is_control_stmt(stmt)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 // The top level if node links the initial cond_action with a possible
@@ -11632,42 +11775,21 @@ static void sem_if_stmt(ast_node *ast) {
 
   ast->sem = cond_action->sem;
   // END IF
-}
 
-// Improvements for guard statements are dual to improvements for normal IF
-// statements: Guard statements improve ids and dots verified to be NULL via `IS
-// NULL` along the outermost spine of `OR` expressions, whereas IF statements
-// improve ids and dots verified to be nonnull via `IS NOT NULL` along the
-// outermost spine of `AND` expressions. For example, the following two
-// statements introduce the same improvements:
-//
-//   IF a IS NOT NULL AND b IS NOT NULL THEN
-//     -- `a` and `b` are improved here
-//   END IF;
-//
-//   IF a IS NULL OR b IS NULL RETURN;
-//   -- `a` and `b` are improved here
-//
-// Improvements resulting from guards persist until the end of the current
-// statement list as with improvements resulting from SET.
-static void sem_add_improvements_from_guard_condition(ast_node *ast) {
-  Contract(ast);
-  
-  if (is_ast_or(ast)) {
-    sem_add_improvements_from_guard_condition(ast->left);
-    sem_add_improvements_from_guard_condition(ast->right);
-    return;
-  }
-
-  if (is_ast_is(ast) && is_ast_null(ast->right)) {
-    EXTRACT_ANY_NOTNULL(expr, ast->left);
-    if (is_ast_id(expr)) {
-      EXTRACT_STRING(name, expr);
-      sem_set_notnull_improved(name, NULL);
-    } else if (is_ast_dot(expr)) {
-      EXTRACT_STRING(name, expr->right);
-      EXTRACT_STRING(scope, expr->left);
-      sem_set_notnull_improved(name, scope);
+  // Check for use of the guard pattern, i.e., an IF with only a THEN block that
+  // concludes with a control statement. If this IF follows the guard pattern,
+  // then we can add improvements for the statements that follow due to the fact
+  // that the condition must have been false.
+  //
+  // NOTE: The reason that no `elseif` or `elsenode` can be present for this to
+  // be safe is that, if the THEN condition were false, those branches would
+  // run, and they could do something that would invalidate the improvements
+  // we're about to make (e.g., by setting something to NULL).
+  if (!elseif && !elsenode) {
+    EXTRACT(stmt_list, cond_action->right);
+    if (stmt_list && stmt_list_contains_control_stmt(stmt_list)) {
+      EXTRACT_ANY_NOTNULL(cond_expr, cond_action->left);
+      sem_set_notnull_improvements_for_false_condition(cond_expr);
     }
   }
 }
@@ -11686,16 +11808,10 @@ static void sem_add_improvements_from_guard_condition(ast_node *ast) {
 //  As with IF statements, nullability improvements are possible.
 static void sem_guard_stmt(ast_node *ast) {
   Contract(is_ast_guard_stmt(ast));
+  EXTRACT_ANY_NOTNULL(control_stmt, ast->right);
+  Invariant(is_control_stmt(control_stmt));
 
   rewrite_guard_stmt_to_if_stmt(ast);
-  if (is_error(ast)) {
-    return;
-  }
-
-  EXTRACT_NOTNULL(cond_action, ast->left);
-  EXTRACT_ANY_NOTNULL(expr, cond_action->left);
-
-  sem_add_improvements_from_guard_condition(expr);
 }
 
 // This is the delete analyzer, it sets up a joinscope for the table being
@@ -17076,7 +17192,7 @@ static void sem_validate_args_vs_formals(ast_node *ast, CSTR name, ast_node *arg
 //   * signatures of procedures that we know in full:
 //     * call foo();
 //     * declare cursor for call foo();
-//   * some external call to some outside function we don't known
+//   * some external call to some outside function we don't know
 //     * e.g. call printf('hello, world\n');
 //
 // The cursor form can be used if and only if the procedure has a loose select
@@ -18026,17 +18142,13 @@ static void sem_stmt_list(ast_node *head) {
 
   // For any list of statements, any improvements made within cannot be assumed
   // to be valid afterwards. We therefore need to create a new context.
-  PUSH_NOTNULL_IMPROVEMENT_CONTEXT(NULL, NULL);
+  PUSH_NOTNULL_IMPROVEMENT_CONTEXT();
   sem_stmt_level++;
 
   bool_t error = false;
   for (ast_node *ast = head; ast; ast = ast->right) {
-    ast_node *stmt = ast->left;
-    if (is_ast_stmt_and_attr(stmt)) {
-      stmt = stmt->right;
-    }
+    ast_node *stmt = first_stmt_in_stmt_list(ast);
     sem_one_stmt(stmt);
-
     if (is_error(stmt)) {
       error = true;
     }
@@ -19507,6 +19619,7 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(nullable);
   FUNC_INIT(sensitive);
   FUNC_INIT(substr);
+  FUNC_INIT(replace);
   FUNC_INIT(row_number);
   FUNC_INIT(rank);
   FUNC_INIT(dense_rank);

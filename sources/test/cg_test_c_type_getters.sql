@@ -133,3 +133,15 @@ create proc sproc_copy_func()
 begin
   select * from foo;
 end;
+-- TEST: emit an object result set with type setters
+-- + static inline cql_object_ref _Nonnull emit_object_with_setters_get_o(emit_object_with_setters_result_set_ref _Nonnull result_set) {
+-- +  return cql_result_set_get_object_col((cql_result_set_ref)result_set, 0, 0);
+-- + static inline void emit_object_with_setters_set_o(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_object_ref _Nonnull new_value) {
+-- +  cql_result_set_set_object_col((cql_result_set_ref)result_set, 0, 0, new_value);
+@attribute(cql:emit_setters)
+create proc emit_object_with_setters(o object not null)
+begin
+  declare C cursor like emit_object_with_setters arguments;
+  fetch C from arguments;
+  out C;
+end;

@@ -321,7 +321,7 @@ opt_stmt_list:
   ;
 
 stmt_list[result]:
-  stmt ';'  { 
+  stmt ';'  {
      // We're going to do this cheesy thing with the stmt_list structures so that we can
      // code the stmt_list rules using left recursion.  We're doing this because it's
      // possible that there could be a LOT of statements and this minimizes the use
@@ -342,17 +342,17 @@ stmt_list[result]:
      // set up the tail pointer invariant to use later
      $result->parent = $result;
      }
-  | stmt_list[slist] stmt ';'  { 
+  | stmt_list[slist] stmt ';'  {
      ast_node *new_stmt = new_ast_stmt_list($stmt, NULL);
      new_stmt->lineno = $stmt->lineno;
 
      // use our tail pointer invariant so we can add at the tail without searching
-     ast_node *tail = $slist->parent;  
+     ast_node *tail = $slist->parent;
      ast_set_right(tail, new_stmt);
 
      // re-establish the tail invariant per the above
      $slist->parent = new_stmt;
-     $result = $slist; 
+     $result = $slist;
      }
   ;
 
@@ -870,7 +870,7 @@ any_literal:
   | NULL_  { $any_literal = new_ast_null(); }
   | AT_FILE '(' str_literal ')'  { $any_literal = file_literal($str_literal); }
   | AT_PROC  { $any_literal = new_ast_str("@PROC"); }
-  | BLOBLIT  { $any_literal = new_astb($BLOBLIT); }
+  | BLOBLIT  { $any_literal = new_ast_blob($BLOBLIT); }
   ;
 
 raise_expr:
@@ -1772,12 +1772,12 @@ opt_elseif_list:
   ;
 
 control_stmt:
-  commit_return_stmt  { $control_stmt = new_ast_control_stmt($commit_return_stmt); }
-  | continue_stmt  { $control_stmt = new_ast_control_stmt($continue_stmt); }
-  | leave_stmt  { $control_stmt = new_ast_control_stmt($leave_stmt); }
-  | return_stmt  { $control_stmt = new_ast_control_stmt($return_stmt); }
-  | rollback_return_stmt  { $control_stmt = new_ast_control_stmt($rollback_return_stmt); }
-  | throw_stmt  { $control_stmt = new_ast_control_stmt($throw_stmt); }
+  commit_return_stmt  { $control_stmt = $commit_return_stmt; }
+  | continue_stmt  { $control_stmt = $continue_stmt; }
+  | leave_stmt  { $control_stmt = $leave_stmt; }
+  | return_stmt  { $control_stmt = $return_stmt; }
+  | rollback_return_stmt  { $control_stmt = $rollback_return_stmt; }
+  | throw_stmt  { $control_stmt = $throw_stmt; }
 
 guard_stmt:
   IF expr control_stmt  { $guard_stmt = new_ast_guard_stmt($expr, $control_stmt); }

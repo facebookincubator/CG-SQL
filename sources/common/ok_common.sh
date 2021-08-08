@@ -26,10 +26,12 @@ copy_ref cg_test_assembly_query_c.h
 copy_ref cg_test_assembly_query_java.out
 copy_ref cg_test_assembly_query_java_interface.out
 copy_ref cg_test_assembly_query_java_with_interface_param.out
+copy_ref cg_test_assembly_query_json.out
 copy_ref cg_test_assembly_query_objc.out
 copy_ref cg_test_base_fragment_c.c
 copy_ref cg_test_base_fragment_c.h
 copy_ref cg_test_base_fragment_java_interface.out
+copy_ref cg_test_base_fragment_json.h
 copy_ref cg_test_base_fragment_objc.out
 copy_ref cg_test_c.c
 copy_ref cg_test_c.h
@@ -44,6 +46,7 @@ copy_ref cg_test_extension_fragment_c.h
 copy_ref cg_test_extension_fragment_java.out
 copy_ref cg_test_extension_fragment_java_interface.out
 copy_ref cg_test_extension_fragment_java_with_interface_param.out
+copy_ref cg_test_extension_fragment_json.out
 copy_ref cg_test_extension_fragment_objc.out
 copy_ref cg_test_java.err
 copy_ref cg_test_java_not_nullable_proc.out
@@ -57,7 +60,8 @@ copy_ref cg_test_json_schema.out
 copy_ref cg_test_objc.out
 copy_ref cg_test_objc.err
 copy_ref cg_test_query_plan.out
-copy_ref cg_test_query_plan_js.out
+# query plan diff temporarily disbled until SQLite 3.32 changes are sorted out
+# copy_ref cg_test_query_plan_js.out
 copy_ref cg_test_schema_partial_upgrade.out
 copy_ref cg_test_schema_partial_upgrade.err
 copy_ref cg_test_schema_prev.out

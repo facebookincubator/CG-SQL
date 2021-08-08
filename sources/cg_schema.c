@@ -126,12 +126,12 @@ static void cg_schema_end_version(charbuf *output, charbuf *upgrade, charbuf *pe
   }
 
   if (upgrade->used > 1) {
-    int64_t upgrade_crc = (int64_t)crc_charbuf(upgrade);
+    llint_t upgrade_crc = (llint_t)crc_charbuf(upgrade);
     bprintf(output, "    ---- upgrade to schema version %d ----\n\n", vers);
     bprintf(output, "    CALL %s_cql_get_version_crc(%d, schema_version);\n", global_proc_name, vers);
     bprintf(output, "    IF schema_version != %lld THEN\n", (llint_t)upgrade_crc);
     bprintf(output, "%s", upgrade->ptr);
-    bprintf(output, "      CALL %s_cql_set_version_crc(%d, %lld);\n", global_proc_name, vers, (llint_t)upgrade_crc);
+    bprintf(output, "      CALL %s_cql_set_version_crc(%d, %lld);\n", global_proc_name, vers, upgrade_crc);
     bprintf(output, "    END IF;\n\n");
   }
 
@@ -783,15 +783,15 @@ static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *c
     gen_statement_with_callbacks(ast, &callbacks);
     bprintf(&make_index, ";\n");
 
-    crc_t index_crc = crc_charbuf(&make_index);
+    llint_t index_crc = (llint_t)crc_charbuf(&make_index);
 
-    bprintf(&drop, "  IF cql_facet_find(%s_facets, '%s_index_crc') != %lld THEN\n", global_proc_name, index_name, (llint_t)index_crc);
+    bprintf(&drop, "  IF cql_facet_find(%s_facets, '%s_index_crc') != %lld THEN\n", global_proc_name, index_name, index_crc);
     bprintf(&drop, "    DROP INDEX IF EXISTS %s;\n", index_name);
     bprintf(&drop, "  END IF;\n");
 
-    bprintf(&create, "  IF cql_facet_find(%s_facets, '%s_index_crc') != %lld THEN\n", global_proc_name, index_name, (llint_t)index_crc);
+    bprintf(&create, "  IF cql_facet_find(%s_facets, '%s_index_crc') != %lld THEN\n", global_proc_name, index_name, index_crc);
     bindent(&create, &make_index, 4);
-    bprintf(&create, "    CALL %s_cql_set_facet_version('%s_index_crc', %lld);\n", global_proc_name, index_name, (llint_t)index_crc);
+    bprintf(&create, "    CALL %s_cql_set_facet_version('%s_index_crc', %lld);\n", global_proc_name, index_name, index_crc);
     bprintf(&create, "  END IF;\n");
 
     CHARBUF_CLOSE(make_index);
@@ -965,7 +965,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   cg_generate_schema_by_mode(&all_schema, SCHEMA_TO_UPGRADE);
 
   // compute the master CRC using schema and migration scripts
-  int64_t schema_crc = (int64_t)crc_charbuf(&all_schema);
+  llint_t schema_crc = (llint_t)crc_charbuf(&all_schema);
 
   CHARBUF_CLOSE(all_schema);
 
@@ -980,7 +980,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&decls, "-- no columns will be considered hidden in this script\n");
   bprintf(&decls, "-- DDL in procs will not count as declarations\n");
   bprintf(&decls, "@SCHEMA_UPGRADE_SCRIPT;\n\n");
-  bprintf(&decls, "-- schema crc %lld\n\n", (llint_t)schema_crc);
+  bprintf(&decls, "-- schema crc %lld\n\n", schema_crc);
 
   cg_schema_emit_facet_functions(&decls);
   cg_schema_emit_sqlite_master(&decls);
@@ -1029,12 +1029,12 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   }
 
   if (baseline.used > 1) {
-    int64_t baseline_crc = (int64_t)crc_charbuf(&baseline);
+    llint_t baseline_crc = (llint_t)crc_charbuf(&baseline);
     bprintf(&main, "    ---- install baseline schema if needed ----\n\n");
     bprintf(&main, "    CALL %s_cql_get_version_crc(0, schema_version);\n", global_proc_name);
-    bprintf(&main, "    IF schema_version != %lld THEN\n", (llint_t)baseline_crc);
+    bprintf(&main, "    IF schema_version != %lld THEN\n", baseline_crc);
     bprintf(&main, "      CALL %s_cql_install_baseline_schema();\n", global_proc_name);
-    bprintf(&main, "      CALL %s_cql_set_version_crc(0, %lld);\n", global_proc_name, (llint_t)baseline_crc);
+    bprintf(&main, "      CALL %s_cql_set_version_crc(0, %lld);\n", global_proc_name, baseline_crc);
     bprintf(&main, "    END IF;\n\n");
   }
 
@@ -1205,7 +1205,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   }
 
   bprintf(&main, "    CALL %s_cql_set_facet_version('cql_schema_version', %d);\n", global_proc_name, prev_version);
-  bprintf(&main, "    CALL %s_cql_set_facet_version('cql_schema_crc', %lld);\n", global_proc_name, (llint_t)schema_crc);
+  bprintf(&main, "    CALL %s_cql_set_facet_version('cql_schema_crc', %lld);\n", global_proc_name, schema_crc);
   bprintf(&main, "END;\n\n");
 
   bprintf(&main, "@attribute(cql:private)\n");

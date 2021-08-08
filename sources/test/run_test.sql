@@ -1733,7 +1733,7 @@ BEGIN_TEST(concat_pri)
   -- concat is weaker than ~
   EXPECT('-22' == (SELECT ~1||2));
   EXPECT('-22' == (SELECT (~1)||2));
- 
+
   -- if the order was otherwise we'd get a different result...
   -- a semantic error actually
   EXPECT(-13 == (SELECT ~CAST(1||2 as INTEGER)));
@@ -2072,10 +2072,10 @@ BEGIN_TEST(equality_pri)
   -- 3.32.3
   --
   -- vs.
-  -- 
+  --
   -- PostgreSQL> select false is true < false;
   -- false
-  -- 
+  --
   -- When CQL emits this operator, it naturally adds parens around (false is true)
   -- because is true binds weaker than < which ensures the "correct" eval order even
   -- though SQLite would do it the other way.  CQL is like other SQL systems in that "is true"
@@ -2780,6 +2780,7 @@ BEGIN_TEST(read_partially_encode_with_encode_context_cursor)
  EXPECT(C.z IS 'context');
 END_TEST(read_partially_encode_with_encode_context_cursor)
 
+@attribute(cql:emit_setters)
 create procedure load_all_types_table()
 begin
   create table all_types_table(

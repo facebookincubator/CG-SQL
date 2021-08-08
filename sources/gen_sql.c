@@ -2188,8 +2188,7 @@ static void gen_if_stmt(ast_node *ast) {
 static void gen_guard_stmt(ast_node *ast) {
   Contract(is_ast_guard_stmt(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
-  EXTRACT(control_stmt, ast->right);
-  EXTRACT_ANY_NOTNULL(stmt, control_stmt->left);
+  EXTRACT_ANY_NOTNULL(stmt, ast->right);
 
   gen_printf("IF ");
   gen_expr(expr, EXPR_PRI_ROOT);

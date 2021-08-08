@@ -1082,6 +1082,33 @@ misc_cases() {
   on_diff_exit parse_test_cql_inferred_notnull.err
 }
 
+json_validate() {
+  sql_file=$1
+  echo "checking for valid JSON formatting of ${sql_file} (test mode disabled)"
+  cc -E -x c "${sql_file}" >"${OUT_DIR}/__temp"
+  if  ! ${CQL} --cg "${OUT_DIR}/__temp.out" --in "${OUT_DIR}/__temp" --rt json_schema 2>"${OUT_DIR}/cg_test_json_schema.err"
+  then
+    cat cg_test_json_schema.err
+    echo "non-test JSON output failed for ${sql_file}"
+    failed
+  fi
+
+  echo checking for well formed JSON using python
+  if ! common/json_check.py <"${OUT_DIR}/__temp.out" >/dev/null
+  then
+    echo "json is badly formed for ${sql_file} -- see ${OUT_DIR}/__temp.out"
+    failed
+  fi
+
+  echo checking for CQL JSON grammar conformance
+  if ! out/json_test <"${OUT_DIR}/__temp.out" >"${OUT_DIR}/json_errors.txt"
+  then
+    echo "json did not pass grammar check for ${sql_file} (see ${OUT_DIR}/__temp.out)"
+    cat "${OUT_DIR}/json_errors.txt"
+    failed
+  fi
+}
+
 json_schema_test() {
   echo '--------------------------------- STAGE 11 -- JSON SCHEMA TEST'
   echo running json schema test
@@ -1100,29 +1127,44 @@ json_schema_test() {
     failed
   fi
 
-  echo "checking for valid JSON formatting (test mode disabled)"
-  cc -E -x c "${TEST_DIR}/cg_test_json_schema.sql" >"${OUT_DIR}/__temp"
-  if  ! ${CQL} --cg "${OUT_DIR}/__temp.out" --in "${OUT_DIR}/__temp" --rt json_schema 2>"${OUT_DIR}/cg_test_json_schema.err"
+  json_validate "${TEST_DIR}/cg_test_json_schema.sql"
+
+  echo running json codegen test for an empty file
+  echo "" >"${OUT_DIR}/__temp"
+  json_validate "${OUT_DIR}/__temp"
+
+  echo running json codegen test for base query fragment
+  cc -E -x c "${TEST_DIR}/cg_test_base_fragment.sql" >"${OUT_DIR}/__temp"
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_base_fragment_json.out" --in "${OUT_DIR}/__temp" --rt json_schema 2>"${OUT_DIR}/cg_test_json.err"
   then
-    cat cg_test_json_schema.err
-    echo non-test JSON output failed
+    echo "ERROR:"
+    cat "${OUT_DIR}/cg_test_json.err"
     failed
   fi
 
-  echo "checking for well formed JSON using python"
-  if ! common/json_check.py <"${OUT_DIR}/__temp.out" >/dev/null
+  json_validate "${TEST_DIR}/cg_test_base_fragment.sql"
+
+  echo running json codegen test for extension query fragment
+  cc -E -x c "${TEST_DIR}/cg_test_extension_fragment.sql" >"${OUT_DIR}/__temp"
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_extension_fragment_json.out" --in "${OUT_DIR}/__temp" --rt json_schema 2>"${OUT_DIR}/cg_test_json.err"
   then
-    echo json is badly formed -- see "${OUT_DIR}/__temp.out"
+    echo "ERROR:"
+    cat "${OUT_DIR}/cg_test_json.err"
     failed
   fi
 
-  echo "checking for CQL JSON grammar conformance"
-  if ! out/json_test <"${OUT_DIR}/__temp.out" >"${OUT_DIR}/json_errors.txt"
+  json_validate "${TEST_DIR}/cg_test_extension_fragment.sql"
+
+  echo running json codegen test for assembly query fragment
+  cc -E -x c "${TEST_DIR}/cg_test_assembly_query.sql" >"${OUT_DIR}/__temp"
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_assembly_query_json.out" --in "${OUT_DIR}/__temp" --rt json_schema 2>"${OUT_DIR}/cg_test_json.err"
   then
-    echo "json did not pass grammar check (see ${OUT_DIR}/__temp.out)"
-    cat "${OUT_DIR}/json_errors.txt"
+    echo "ERROR:"
+    cat "${OUT_DIR}/cg_test_json.err"
     failed
   fi
+
+  json_validate "${TEST_DIR}/cg_test_assembly_query.sql"
 
   echo validating json codegen
   echo "  computing diffs (empty if none)"

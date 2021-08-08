@@ -44201,6 +44201,491 @@ Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect numbe
 
 The statement ending at line XXXX
 
+SELECT replace('a', 'b');
+
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'replace'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name replace}: err
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit 'a'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {strlit 'b'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT replace('a', 'b', 'c', 'd');
+
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'replace'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name replace}: err
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit 'a'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {strlit 'b'}: text notnull
+  |     |           | {arg_list}
+  |     |             | {strlit 'c'}: text notnull
+  |     |             | {arg_list}
+  |     |               | {strlit 'd'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+LET dummy := replace('a', 'b', 'c');
+
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'replace'
+
+  {let_stmt}: err
+  | {name dummy}
+  | {call}: err
+    | {name replace}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {strlit 'a'}: text notnull
+        | {arg_list}
+          | {strlit 'b'}: text notnull
+          | {arg_list}
+            | {strlit 'c'}: text notnull
+
+The statement ending at line XXXX
+
+SELECT replace(0, 'b', 'c');
+
+Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'replace'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name replace}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {int 0}: integer notnull
+  |     |         | {arg_list}
+  |     |           | {strlit 'b'}: text notnull
+  |     |           | {arg_list}
+  |     |             | {strlit 'c'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT replace('a', 0, 'c');
+
+Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'replace'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name replace}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit 'a'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {int 0}: integer notnull
+  |     |           | {arg_list}
+  |     |             | {strlit 'c'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT replace('a', 'b', 0);
+
+Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'replace'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name replace}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit 'a'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {strlit 'b'}: text notnull
+  |     |           | {arg_list}
+  |     |             | {int 0}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT replace('a', 'b', 'c');
+
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name replace}: text notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit 'a'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {strlit 'b'}: text notnull
+  |     |           | {arg_list}
+  |     |             | {strlit 'c'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT replace(nullable('a'), 'b', 'c');
+
+  {select_stmt}: select: { _anon: text }
+  | {select_core_list}: select: { _anon: text }
+  | | {select_core}: select: { _anon: text }
+  |   | {select_expr_list_con}: select: { _anon: text }
+  |     | {select_expr_list}: select: { _anon: text }
+  |     | | {select_expr}: text
+  |     |   | {call}: text
+  |     |     | {name replace}: text
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {call}: text
+  |     |         | | {name nullable}: text
+  |     |         | | {call_arg_list}
+  |     |         |   | {call_filter_clause}
+  |     |         |   | {arg_list}: ok
+  |     |         |     | {strlit 'a'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {strlit 'b'}: text notnull
+  |     |           | {arg_list}
+  |     |             | {strlit 'c'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT replace('a', nullable('b'), 'c');
+
+  {select_stmt}: select: { _anon: text }
+  | {select_core_list}: select: { _anon: text }
+  | | {select_core}: select: { _anon: text }
+  |   | {select_expr_list_con}: select: { _anon: text }
+  |     | {select_expr_list}: select: { _anon: text }
+  |     | | {select_expr}: text
+  |     |   | {call}: text
+  |     |     | {name replace}: text
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit 'a'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {call}: text
+  |     |           | | {name nullable}: text
+  |     |           | | {call_arg_list}
+  |     |           |   | {call_filter_clause}
+  |     |           |   | {arg_list}: ok
+  |     |           |     | {strlit 'b'}: text notnull
+  |     |           | {arg_list}
+  |     |             | {strlit 'c'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT replace('a', 'b', nullable('c'));
+
+  {select_stmt}: select: { _anon: text }
+  | {select_core_list}: select: { _anon: text }
+  | | {select_core}: select: { _anon: text }
+  |   | {select_expr_list_con}: select: { _anon: text }
+  |     | {select_expr_list}: select: { _anon: text }
+  |     | | {select_expr}: text
+  |     |   | {call}: text
+  |     |     | {name replace}: text
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit 'a'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {strlit 'b'}: text notnull
+  |     |           | {arg_list}
+  |     |             | {call}: text
+  |     |               | {name nullable}: text
+  |     |               | {call_arg_list}
+  |     |                 | {call_filter_clause}
+  |     |                 | {arg_list}: ok
+  |     |                   | {strlit 'c'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT replace(NULL, 'b', 'c');
+
+Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'replace'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name replace}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {null}: null
+  |     |         | {arg_list}
+  |     |           | {strlit 'b'}: text notnull
+  |     |           | {arg_list}
+  |     |             | {strlit 'c'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT replace('a', NULL, 'c');
+
+Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'replace'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name replace}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit 'a'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {null}: null
+  |     |           | {arg_list}
+  |     |             | {strlit 'c'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT replace('a', 'b', NULL);
+
+Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'replace'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name replace}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit 'a'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {strlit 'b'}: text notnull
+  |     |           | {arg_list}
+  |     |             | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT replace(sensitive('a'), 'b', 'c');
+
+  {select_stmt}: select: { _anon: text notnull sensitive }
+  | {select_core_list}: select: { _anon: text notnull sensitive }
+  | | {select_core}: select: { _anon: text notnull sensitive }
+  |   | {select_expr_list_con}: select: { _anon: text notnull sensitive }
+  |     | {select_expr_list}: select: { _anon: text notnull sensitive }
+  |     | | {select_expr}: text notnull sensitive
+  |     |   | {call}: text notnull sensitive
+  |     |     | {name replace}: text notnull sensitive
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {call}: text notnull sensitive
+  |     |         | | {name sensitive}: text notnull sensitive
+  |     |         | | {call_arg_list}
+  |     |         |   | {call_filter_clause}
+  |     |         |   | {arg_list}: ok
+  |     |         |     | {strlit 'a'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {strlit 'b'}: text notnull
+  |     |           | {arg_list}
+  |     |             | {strlit 'c'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT replace('a', sensitive('b'), 'c');
+
+  {select_stmt}: select: { _anon: text notnull sensitive }
+  | {select_core_list}: select: { _anon: text notnull sensitive }
+  | | {select_core}: select: { _anon: text notnull sensitive }
+  |   | {select_expr_list_con}: select: { _anon: text notnull sensitive }
+  |     | {select_expr_list}: select: { _anon: text notnull sensitive }
+  |     | | {select_expr}: text notnull sensitive
+  |     |   | {call}: text notnull sensitive
+  |     |     | {name replace}: text notnull sensitive
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit 'a'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {call}: text notnull sensitive
+  |     |           | | {name sensitive}: text notnull sensitive
+  |     |           | | {call_arg_list}
+  |     |           |   | {call_filter_clause}
+  |     |           |   | {arg_list}: ok
+  |     |           |     | {strlit 'b'}: text notnull
+  |     |           | {arg_list}
+  |     |             | {strlit 'c'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT replace('a', 'b', sensitive('c'));
+
+  {select_stmt}: select: { _anon: text notnull sensitive }
+  | {select_core_list}: select: { _anon: text notnull sensitive }
+  | | {select_core}: select: { _anon: text notnull sensitive }
+  |   | {select_expr_list_con}: select: { _anon: text notnull sensitive }
+  |     | {select_expr_list}: select: { _anon: text notnull sensitive }
+  |     | | {select_expr}: text notnull sensitive
+  |     |   | {call}: text notnull sensitive
+  |     |     | {name replace}: text notnull sensitive
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit 'a'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {strlit 'b'}: text notnull
+  |     |           | {arg_list}
+  |     |             | {call}: text notnull sensitive
+  |     |               | {name sensitive}: text notnull sensitive
+  |     |               | {call_arg_list}
+  |     |                 | {call_filter_clause}
+  |     |                 | {arg_list}: ok
+  |     |                   | {strlit 'c'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
 @SCHEMA_AD_HOC_MIGRATION(5, MyAdHocMigration);
 
   {schema_ad_hoc_migration_stmt}: ok @create(5)
@@ -50208,6 +50693,57 @@ CALL some_external_thing('x', 5.0);
 
 The statement ending at line XXXX
 
+LET result_of_some_external_thing := some_external_thing('x', 5.0);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0405: procedure of an unknown type used in an expression 'some_external_thing'
+
+  {let_stmt}: err
+  | {name result_of_some_external_thing}
+  | {call}: err
+    | {name some_external_thing}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {strlit 'x'}
+        | {arg_list}
+          | {dbl 5.0}
+
+The statement ending at line XXXX
+
+DECLARE FUNC some_external_thing (t TEXT, r REAL) INTEGER;
+
+  {declare_func_stmt}: integer
+  | {name some_external_thing}: integer
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: t: text variable in
+    | | | {param_detail}: t: text variable in
+    | |   | {name t}: t: text variable in
+    | |   | {type_text}: text
+    | | {params}
+    |   | {param}: r: real variable in
+    |     | {param_detail}: r: real variable in
+    |       | {name r}: r: real variable in
+    |       | {type_real}: real
+    | {type_int}: integer
+
+The statement ending at line XXXX
+
+LET result_of_some_external_thing := some_external_thing('x', 5.0);
+
+  {let_stmt}: result_of_some_external_thing: integer variable
+  | {name result_of_some_external_thing}: result_of_some_external_thing: integer variable
+  | {call}: integer
+    | {name some_external_thing}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {strlit 'x'}: text notnull
+        | {arg_list}
+          | {dbl 5.0}: real notnull
+
+The statement ending at line XXXX
+
 DECLARE PROC _stuff () (id INTEGER, name TEXT);
 
   {declare_proc_stmt}: _stuff: { id: integer, name: text } dml_proc
@@ -53772,10 +54308,10 @@ DECLARE kind_string TEXT<surname>;
 
 The statement ending at line XXXX
 
-SET a_string := ( SELECT substr(kind_string, 2, 3) );
+SET kind_string := ( SELECT substr(kind_string, 2, 3) );
 
-  {assign}: a_string: text variable
-  | {name a_string}: a_string: text variable
+  {assign}: kind_string: text<surname> variable
+  | {name kind_string}: kind_string: text<surname> variable
   | {select_stmt}: _anon: text<surname>
     | {select_core_list}: select: { _anon: text<surname> }
     | | {select_core}: select: { _anon: text<surname> }
@@ -53792,6 +54328,36 @@ SET a_string := ( SELECT substr(kind_string, 2, 3) );
     |     |           | {int 2}: integer notnull
     |     |           | {arg_list}
     |     |             | {int 3}: integer notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET kind_string := ( SELECT replace(kind_string, 'b', 'c') );
+
+  {assign}: kind_string: text<surname> variable
+  | {name kind_string}: kind_string: text<surname> variable
+  | {select_stmt}: _anon: text<surname>
+    | {select_core_list}: select: { _anon: text<surname> }
+    | | {select_core}: select: { _anon: text<surname> }
+    |   | {select_expr_list_con}: select: { _anon: text<surname> }
+    |     | {select_expr_list}: select: { _anon: text<surname> }
+    |     | | {select_expr}: text<surname>
+    |     |   | {call}: text<surname>
+    |     |     | {name replace}: text<surname>
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {name kind_string}: kind_string: text<surname> variable
+    |     |         | {arg_list}
+    |     |           | {strlit 'b'}: text notnull
+    |     |           | {arg_list}
+    |     |             | {strlit 'c'}: text notnull
     |     | {select_from_etc}: ok
     |       | {select_where}
     |         | {select_groupby}
@@ -67165,6 +67731,351 @@ Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'some_undefin
         | | {stmt_list}
         |   | {return_stmt}
         | {if_alt}
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_work_for_guard_pattern_ifs ()
+BEGIN
+  DECLARE a INTEGER;
+  DECLARE b INTEGER;
+  DECLARE c INTEGER;
+  IF 1 THEN
+    IF a IS NULL OR b IS NULL OR c IS NULL THEN
+      RETURN;
+    END IF;
+    LET x0 := a;
+    LET y0 := b;
+    LET z0 := c;
+  END IF;
+  LET x1 := a;
+  LET y1 := b;
+  LET z1 := c;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_work_for_guard_pattern_ifs}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: b: integer variable
+      | | | {name b}: b: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: c: integer variable
+      | | | {name c}: c: integer variable
+      | | {type_int}: integer
+      | {if_stmt}: integer notnull
+      | | {cond_action}: integer notnull
+      | | | {int 1}: integer notnull
+      | | | {stmt_list}: ok
+      | |   | {if_stmt}: bool notnull
+      | |   | | {cond_action}: bool notnull
+      | |   | | | {or}: bool notnull
+      | |   | | | | {or}: bool notnull
+      | |   | | | | | {is}: bool notnull
+      | |   | | | | | | {name a}: a: integer variable
+      | |   | | | | | | {null}: null
+      | |   | | | | | {is}: bool notnull
+      | |   | | | |   | {name b}: b: integer variable
+      | |   | | | |   | {null}: null
+      | |   | | | | {is}: bool notnull
+      | |   | | |   | {name c}: c: integer variable
+      | |   | | |   | {null}: null
+      | |   | | | {stmt_list}: ok
+      | |   | |   | {return_stmt}: ok
+      | |   | | {if_alt}: ok
+      | |   | {let_stmt}: x0: integer notnull variable
+      | |   | | {name x0}: x0: integer notnull variable
+      | |   | | {call}: a: integer notnull variable
+      | |   |   | {name cql_inferred_notnull}: a: integer notnull variable
+      | |   |   | {call_arg_list}
+      | |   |     | {call_filter_clause}
+      | |   |     | {arg_list}: ok
+      | |   |       | {name a}: a: integer inferred_notnull variable
+      | |   | {let_stmt}: y0: integer notnull variable
+      | |   | | {name y0}: y0: integer notnull variable
+      | |   | | {call}: b: integer notnull variable
+      | |   |   | {name cql_inferred_notnull}: b: integer notnull variable
+      | |   |   | {call_arg_list}
+      | |   |     | {call_filter_clause}
+      | |   |     | {arg_list}: ok
+      | |   |       | {name b}: b: integer inferred_notnull variable
+      | |   | {let_stmt}: z0: integer notnull variable
+      | |     | {name z0}: z0: integer notnull variable
+      | |     | {call}: c: integer notnull variable
+      | |       | {name cql_inferred_notnull}: c: integer notnull variable
+      | |       | {call_arg_list}
+      | |         | {call_filter_clause}
+      | |         | {arg_list}: ok
+      | |           | {name c}: c: integer inferred_notnull variable
+      | | {if_alt}: ok
+      | {let_stmt}: x1: integer variable
+      | | {name x1}: x1: integer variable
+      | | {name a}: a: integer variable
+      | {let_stmt}: y1: integer variable
+      | | {name y1}: y1: integer variable
+      | | {name b}: b: integer variable
+      | {let_stmt}: z1: integer variable
+        | {name z1}: z1: integer variable
+        | {name c}: c: integer variable
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_work_for_guard_pattern_ifs_with_preceding_statements ()
+BEGIN
+  DECLARE a INTEGER;
+  DECLARE b INTEGER;
+  DECLARE c INTEGER;
+  IF 1 THEN
+    IF a IS NULL OR b IS NULL OR c IS NULL THEN
+      CALL printf("Hello, world!\n");
+      RETURN;
+    END IF;
+    LET x0 := a;
+    LET y0 := b;
+    LET z0 := c;
+  END IF;
+  LET x1 := a;
+  LET y1 := b;
+  LET z1 := c;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_work_for_guard_pattern_ifs_with_preceding_statements}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: b: integer variable
+      | | | {name b}: b: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: c: integer variable
+      | | | {name c}: c: integer variable
+      | | {type_int}: integer
+      | {if_stmt}: integer notnull
+      | | {cond_action}: integer notnull
+      | | | {int 1}: integer notnull
+      | | | {stmt_list}: ok
+      | |   | {if_stmt}: bool notnull
+      | |   | | {cond_action}: bool notnull
+      | |   | | | {or}: bool notnull
+      | |   | | | | {or}: bool notnull
+      | |   | | | | | {is}: bool notnull
+      | |   | | | | | | {name a}: a: integer variable
+      | |   | | | | | | {null}: null
+      | |   | | | | | {is}: bool notnull
+      | |   | | | |   | {name b}: b: integer variable
+      | |   | | | |   | {null}: null
+      | |   | | | | {is}: bool notnull
+      | |   | | |   | {name c}: c: integer variable
+      | |   | | |   | {null}: null
+      | |   | | | {stmt_list}: ok
+      | |   | |   | {call_stmt}: ok
+      | |   | |   | | {name printf}: ok
+      | |   | |   | | {expr_list}: ok
+      | |   | |   |   | {strlit 'Hello, world!
+'}: text notnull
+      | |   | |   | {return_stmt}: ok
+      | |   | | {if_alt}: ok
+      | |   | {let_stmt}: x0: integer notnull variable
+      | |   | | {name x0}: x0: integer notnull variable
+      | |   | | {call}: a: integer notnull variable
+      | |   |   | {name cql_inferred_notnull}: a: integer notnull variable
+      | |   |   | {call_arg_list}
+      | |   |     | {call_filter_clause}
+      | |   |     | {arg_list}: ok
+      | |   |       | {name a}: a: integer inferred_notnull variable
+      | |   | {let_stmt}: y0: integer notnull variable
+      | |   | | {name y0}: y0: integer notnull variable
+      | |   | | {call}: b: integer notnull variable
+      | |   |   | {name cql_inferred_notnull}: b: integer notnull variable
+      | |   |   | {call_arg_list}
+      | |   |     | {call_filter_clause}
+      | |   |     | {arg_list}: ok
+      | |   |       | {name b}: b: integer inferred_notnull variable
+      | |   | {let_stmt}: z0: integer notnull variable
+      | |     | {name z0}: z0: integer notnull variable
+      | |     | {call}: c: integer notnull variable
+      | |       | {name cql_inferred_notnull}: c: integer notnull variable
+      | |       | {call_arg_list}
+      | |         | {call_filter_clause}
+      | |         | {arg_list}: ok
+      | |           | {name c}: c: integer inferred_notnull variable
+      | | {if_alt}: ok
+      | {let_stmt}: x1: integer variable
+      | | {name x1}: x1: integer variable
+      | | {name a}: a: integer variable
+      | {let_stmt}: y1: integer variable
+      | | {name y1}: y1: integer variable
+      | | {name b}: b: integer variable
+      | {let_stmt}: z1: integer variable
+        | {name z1}: z1: integer variable
+        | {name c}: c: integer variable
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_work_for_guard_pattern_ifs_that_set_the_id_to_null ()
+BEGIN
+  DECLARE a INTEGER;
+  IF 1 THEN
+    IF a IS NULL THEN
+      SET a := NULL;
+      RETURN;
+    END IF;
+    LET x0 := a;
+  END IF;
+  LET x1 := a;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_work_for_guard_pattern_ifs_that_set_the_id_to_null}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {if_stmt}: integer notnull
+      | | {cond_action}: integer notnull
+      | | | {int 1}: integer notnull
+      | | | {stmt_list}: ok
+      | |   | {if_stmt}: bool notnull
+      | |   | | {cond_action}: bool notnull
+      | |   | | | {is}: bool notnull
+      | |   | | | | {name a}: a: integer variable
+      | |   | | | | {null}: null
+      | |   | | | {stmt_list}: ok
+      | |   | |   | {assign}: a: integer variable
+      | |   | |   | | {name a}: a: integer variable
+      | |   | |   | | {null}: null
+      | |   | |   | {return_stmt}: ok
+      | |   | | {if_alt}: ok
+      | |   | {let_stmt}: x0: integer notnull variable
+      | |     | {name x0}: x0: integer notnull variable
+      | |     | {call}: a: integer notnull variable
+      | |       | {name cql_inferred_notnull}: a: integer notnull variable
+      | |       | {call_arg_list}
+      | |         | {call_filter_clause}
+      | |         | {arg_list}: ok
+      | |           | {name a}: a: integer inferred_notnull variable
+      | | {if_alt}: ok
+      | {let_stmt}: x1: integer variable
+        | {name x1}: x1: integer variable
+        | {name a}: a: integer variable
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_do_not_work_for_guard_like_ifs_with_else ()
+BEGIN
+  DECLARE a INTEGER;
+  IF a IS NULL THEN
+    RETURN;
+  ELSE
+  END IF;
+  LET x := a;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_do_not_work_for_guard_like_ifs_with_else}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {if_stmt}: bool notnull
+      | | {cond_action}: bool notnull
+      | | | {is}: bool notnull
+      | | | | {name a}: a: integer variable
+      | | | | {null}: null
+      | | | {stmt_list}: ok
+      | |   | {return_stmt}: ok
+      | | {if_alt}: ok
+      |   | {else}: ok
+      | {let_stmt}: x: integer variable
+        | {name x}: x: integer variable
+        | {name a}: a: integer variable
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_do_not_work_for_guard_like_ifs_with_else_if ()
+BEGIN
+  DECLARE a INTEGER;
+  IF a IS NULL THEN
+    RETURN;
+  ELSE IF 1 THEN
+  END IF;
+  LET x := a;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_do_not_work_for_guard_like_ifs_with_else_if}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {if_stmt}: bool notnull
+      | | {cond_action}: bool notnull
+      | | | {is}: bool notnull
+      | | | | {name a}: a: integer variable
+      | | | | {null}: null
+      | | | {stmt_list}: ok
+      | |   | {return_stmt}: ok
+      | | {if_alt}: ok
+      |   | {elseif}: integer notnull
+      |     | {cond_action}: integer notnull
+      |       | {int 1}: integer notnull
+      | {let_stmt}: x: integer variable
+        | {name x}: x: integer variable
+        | {name a}: a: integer variable
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_do_not_work_for_is_null_checks_in_else_ifs ()
+BEGIN
+  DECLARE a INTEGER;
+  IF 0 THEN
+    RETURN;
+  ELSE IF a IS NULL THEN
+    RETURN;
+  END IF;
+  LET x := a;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_do_not_work_for_is_null_checks_in_else_ifs}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {if_stmt}: integer notnull
+      | | {cond_action}: integer notnull
+      | | | {int 0}: integer notnull
+      | | | {stmt_list}: ok
+      | |   | {return_stmt}: ok
+      | | {if_alt}: ok
+      |   | {elseif}: bool notnull
+      |     | {cond_action}: bool notnull
+      |       | {is}: bool notnull
+      |       | | {name a}: a: integer variable
+      |       | | {null}: null
+      |       | {stmt_list}: ok
+      |         | {return_stmt}: ok
+      | {let_stmt}: x: integer variable
+        | {name x}: x: integer variable
+        | {name a}: a: integer variable
 
 The statement ending at line XXXX
 

@@ -1813,6 +1813,213 @@ static inline BOOL CGBSprocWithCopyRowEqual(CGBSprocWithCopy *resultSet1, int32_
   return CGCSprocWithCopyRowEqual(CGCSprocWithCopyFromCGBSprocWithCopy(resultSet1), row1, CGCSprocWithCopyFromCGBSprocWithCopy(resultSet2), row2);
 }
 
+@class CGBEmitObjectWithSetters;
+
+static inline CGBEmitObjectWithSetters *CGBEmitObjectWithSettersFromCGCEmitObjectWithSetters(CGCEmitObjectWithSettersResultSetRef resultSet)
+{
+  return (__bridge CGBEmitObjectWithSetters *)resultSet;
+}
+
+static inline CGCEmitObjectWithSettersResultSetRef CGCEmitObjectWithSettersFromCGBEmitObjectWithSetters(CGBEmitObjectWithSetters *resultSet)
+{
+  return (__bridge CGCEmitObjectWithSettersResultSetRef)resultSet;
+}
+
+static inline NSObject * CGBEmitObjectWithSettersGetO(CGBEmitObjectWithSetters *resultSet)
+{
+  CGCEmitObjectWithSettersResultSetRef cResultSet = CGCEmitObjectWithSettersFromCGBEmitObjectWithSetters(resultSet);
+  return (__bridge NSObject *)CGCEmitObjectWithSettersGetO(cResultSet);
+}
+
+static inline NSObject * CGBEmitObjectWithSettersGetX(CGBEmitObjectWithSetters *resultSet)
+{
+  CGCEmitObjectWithSettersResultSetRef cResultSet = CGCEmitObjectWithSettersFromCGBEmitObjectWithSetters(resultSet);
+  return (__bridge NSObject *)CGCEmitObjectWithSettersGetX(cResultSet);
+}
+
+static inline int32_t CGBEmitObjectWithSettersGetI(CGBEmitObjectWithSetters *resultSet)
+{
+  CGCEmitObjectWithSettersResultSetRef cResultSet = CGCEmitObjectWithSettersFromCGBEmitObjectWithSetters(resultSet);
+  return CGCEmitObjectWithSettersGetI(cResultSet);
+}
+
+static inline int64_t CGBEmitObjectWithSettersGetL(CGBEmitObjectWithSetters *resultSet)
+{
+  CGCEmitObjectWithSettersResultSetRef cResultSet = CGCEmitObjectWithSettersFromCGBEmitObjectWithSetters(resultSet);
+  return CGCEmitObjectWithSettersGetL(cResultSet);
+}
+
+static inline BOOL CGBEmitObjectWithSettersGetB(CGBEmitObjectWithSetters *resultSet)
+{
+  CGCEmitObjectWithSettersResultSetRef cResultSet = CGCEmitObjectWithSettersFromCGBEmitObjectWithSetters(resultSet);
+  return CGCEmitObjectWithSettersGetB(cResultSet) ? YES : NO;
+}
+
+static inline double CGBEmitObjectWithSettersGetD(CGBEmitObjectWithSetters *resultSet)
+{
+  CGCEmitObjectWithSettersResultSetRef cResultSet = CGCEmitObjectWithSettersFromCGBEmitObjectWithSetters(resultSet);
+  return CGCEmitObjectWithSettersGetD(cResultSet);
+}
+
+static inline NSString *CGBEmitObjectWithSettersGetT(CGBEmitObjectWithSetters *resultSet)
+{
+  CGCEmitObjectWithSettersResultSetRef cResultSet = CGCEmitObjectWithSettersFromCGBEmitObjectWithSetters(resultSet);
+  return (__bridge NSString *)CGCEmitObjectWithSettersGetT(cResultSet);
+}
+
+static inline NSData *CGBEmitObjectWithSettersGetBl(CGBEmitObjectWithSetters *resultSet)
+{
+  CGCEmitObjectWithSettersResultSetRef cResultSet = CGCEmitObjectWithSettersFromCGBEmitObjectWithSetters(resultSet);
+  return (__bridge NSData *)CGCEmitObjectWithSettersGetBl(cResultSet);
+}
+
+static inline int32_t CGBEmitObjectWithSettersResultCount(CGBEmitObjectWithSetters *resultSet)
+{
+  return CGCEmitObjectWithSettersResultCount(CGCEmitObjectWithSettersFromCGBEmitObjectWithSetters(resultSet));
+}
+
+static inline NSUInteger CGBEmitObjectWithSettersHash(CGBEmitObjectWithSetters *resultSet)
+{
+  return CGCEmitObjectWithSettersHash(CGCEmitObjectWithSettersFromCGBEmitObjectWithSetters(resultSet));
+}
+
+static inline BOOL CGBEmitObjectWithSettersEqual(CGBEmitObjectWithSetters *resultSet1, CGBEmitObjectWithSetters *resultSet2)
+{
+  return CGCEmitObjectWithSettersEqual(CGCEmitObjectWithSettersFromCGBEmitObjectWithSetters(resultSet1), CGCEmitObjectWithSettersFromCGBEmitObjectWithSetters(resultSet2));
+}
+
+@class CGBEmitSettersWithNullables;
+
+static inline CGBEmitSettersWithNullables *CGBEmitSettersWithNullablesFromCGCEmitSettersWithNullables(CGCEmitSettersWithNullablesResultSetRef resultSet)
+{
+  return (__bridge CGBEmitSettersWithNullables *)resultSet;
+}
+
+static inline CGCEmitSettersWithNullablesResultSetRef CGCEmitSettersWithNullablesFromCGBEmitSettersWithNullables(CGBEmitSettersWithNullables *resultSet)
+{
+  return (__bridge CGCEmitSettersWithNullablesResultSetRef)resultSet;
+}
+
+static inline NSObject *_Nullable CGBEmitSettersWithNullablesGetO(CGBEmitSettersWithNullables *resultSet)
+{
+  CGCEmitSettersWithNullablesResultSetRef cResultSet = CGCEmitSettersWithNullablesFromCGBEmitSettersWithNullables(resultSet);
+  return (__bridge NSObject *)CGCEmitSettersWithNullablesGetO(cResultSet);
+}
+
+static inline NSObject *_Nullable CGBEmitSettersWithNullablesGetX(CGBEmitSettersWithNullables *resultSet)
+{
+  CGCEmitSettersWithNullablesResultSetRef cResultSet = CGCEmitSettersWithNullablesFromCGBEmitSettersWithNullables(resultSet);
+  return (__bridge NSObject *)CGCEmitSettersWithNullablesGetX(cResultSet);
+}
+
+static inline NSNumber *_Nullable CGBEmitSettersWithNullablesGetI(CGBEmitSettersWithNullables *resultSet)
+{
+  CGCEmitSettersWithNullablesResultSetRef cResultSet = CGCEmitSettersWithNullablesFromCGBEmitSettersWithNullables(resultSet);
+  return CGCEmitSettersWithNullablesGetIIsNull(cResultSet) ? nil : @(CGCEmitSettersWithNullablesGetIValue(cResultSet));
+}
+
+static inline NSNumber *_Nullable CGBEmitSettersWithNullablesGetL(CGBEmitSettersWithNullables *resultSet)
+{
+  CGCEmitSettersWithNullablesResultSetRef cResultSet = CGCEmitSettersWithNullablesFromCGBEmitSettersWithNullables(resultSet);
+  return CGCEmitSettersWithNullablesGetLIsNull(cResultSet) ? nil : @(CGCEmitSettersWithNullablesGetLValue(cResultSet));
+}
+
+static inline NSNumber *_Nullable CGBEmitSettersWithNullablesGetB(CGBEmitSettersWithNullables *resultSet)
+{
+  CGCEmitSettersWithNullablesResultSetRef cResultSet = CGCEmitSettersWithNullablesFromCGBEmitSettersWithNullables(resultSet);
+  return CGCEmitSettersWithNullablesGetBIsNull(cResultSet) ? nil : @(CGCEmitSettersWithNullablesGetBValue(cResultSet));
+}
+
+static inline NSNumber *_Nullable CGBEmitSettersWithNullablesGetD(CGBEmitSettersWithNullables *resultSet)
+{
+  CGCEmitSettersWithNullablesResultSetRef cResultSet = CGCEmitSettersWithNullablesFromCGBEmitSettersWithNullables(resultSet);
+  return CGCEmitSettersWithNullablesGetDIsNull(cResultSet) ? nil : @(CGCEmitSettersWithNullablesGetDValue(cResultSet));
+}
+
+static inline NSString *_Nullable CGBEmitSettersWithNullablesGetT(CGBEmitSettersWithNullables *resultSet)
+{
+  CGCEmitSettersWithNullablesResultSetRef cResultSet = CGCEmitSettersWithNullablesFromCGBEmitSettersWithNullables(resultSet);
+  return (__bridge NSString *)CGCEmitSettersWithNullablesGetT(cResultSet);
+}
+
+static inline NSData *_Nullable CGBEmitSettersWithNullablesGetBl(CGBEmitSettersWithNullables *resultSet)
+{
+  CGCEmitSettersWithNullablesResultSetRef cResultSet = CGCEmitSettersWithNullablesFromCGBEmitSettersWithNullables(resultSet);
+  return (__bridge NSData *)CGCEmitSettersWithNullablesGetBl(cResultSet);
+}
+
+static inline int32_t CGBEmitSettersWithNullablesResultCount(CGBEmitSettersWithNullables *resultSet)
+{
+  return CGCEmitSettersWithNullablesResultCount(CGCEmitSettersWithNullablesFromCGBEmitSettersWithNullables(resultSet));
+}
+
+static inline NSUInteger CGBEmitSettersWithNullablesHash(CGBEmitSettersWithNullables *resultSet)
+{
+  return CGCEmitSettersWithNullablesHash(CGCEmitSettersWithNullablesFromCGBEmitSettersWithNullables(resultSet));
+}
+
+static inline BOOL CGBEmitSettersWithNullablesEqual(CGBEmitSettersWithNullables *resultSet1, CGBEmitSettersWithNullables *resultSet2)
+{
+  return CGCEmitSettersWithNullablesEqual(CGCEmitSettersWithNullablesFromCGBEmitSettersWithNullables(resultSet1), CGCEmitSettersWithNullablesFromCGBEmitSettersWithNullables(resultSet2));
+}
+
+@class CGBNoOutWithSetters;
+
+static inline CGBNoOutWithSetters *CGBNoOutWithSettersFromCGCNoOutWithSetters(CGCNoOutWithSettersResultSetRef resultSet)
+{
+  return (__bridge CGBNoOutWithSetters *)resultSet;
+}
+
+static inline CGCNoOutWithSettersResultSetRef CGCNoOutWithSettersFromCGBNoOutWithSetters(CGBNoOutWithSetters *resultSet)
+{
+  return (__bridge CGCNoOutWithSettersResultSetRef)resultSet;
+}
+
+static inline int32_t CGBNoOutWithSettersGetId(CGBNoOutWithSetters *resultSet, int32_t row)
+{
+  CGCNoOutWithSettersResultSetRef cResultSet = CGCNoOutWithSettersFromCGBNoOutWithSetters(resultSet);
+  return CGCNoOutWithSettersGetId(cResultSet, row);
+}
+
+static inline NSString *_Nullable CGBNoOutWithSettersGetName(CGBNoOutWithSetters *resultSet, int32_t row)
+{
+  CGCNoOutWithSettersResultSetRef cResultSet = CGCNoOutWithSettersFromCGBNoOutWithSetters(resultSet);
+  return (__bridge NSString *)CGCNoOutWithSettersGetName(cResultSet, row);
+}
+
+static inline NSNumber *_Nullable CGBNoOutWithSettersGetRate(CGBNoOutWithSetters *resultSet, int32_t row)
+{
+  CGCNoOutWithSettersResultSetRef cResultSet = CGCNoOutWithSettersFromCGBNoOutWithSetters(resultSet);
+  return CGCNoOutWithSettersGetRateIsNull(cResultSet, row) ? nil : @(CGCNoOutWithSettersGetRateValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBNoOutWithSettersGetType(CGBNoOutWithSetters *resultSet, int32_t row)
+{
+  CGCNoOutWithSettersResultSetRef cResultSet = CGCNoOutWithSettersFromCGBNoOutWithSetters(resultSet);
+  return CGCNoOutWithSettersGetTypeIsNull(cResultSet, row) ? nil : @(CGCNoOutWithSettersGetTypeValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBNoOutWithSettersGetSize(CGBNoOutWithSetters *resultSet, int32_t row)
+{
+  CGCNoOutWithSettersResultSetRef cResultSet = CGCNoOutWithSettersFromCGBNoOutWithSetters(resultSet);
+  return CGCNoOutWithSettersGetSizeIsNull(cResultSet, row) ? nil : @(CGCNoOutWithSettersGetSizeValue(cResultSet, row));
+}
+
+static inline int32_t CGBNoOutWithSettersResultCount(CGBNoOutWithSetters *resultSet)
+{
+  return CGCNoOutWithSettersResultCount(CGCNoOutWithSettersFromCGBNoOutWithSetters(resultSet));
+}
+
+static inline NSUInteger CGBNoOutWithSettersRowHash(CGBNoOutWithSetters *resultSet, int32_t row)
+{
+  return CGCNoOutWithSettersRowHash(CGCNoOutWithSettersFromCGBNoOutWithSetters(resultSet), row);
+}
+
+static inline BOOL CGBNoOutWithSettersRowEqual(CGBNoOutWithSetters *resultSet1, int32_t row1, CGBNoOutWithSetters *resultSet2, int32_t row2)
+{
+  return CGCNoOutWithSettersRowEqual(CGCNoOutWithSettersFromCGBNoOutWithSetters(resultSet1), row1, CGCNoOutWithSettersFromCGBNoOutWithSetters(resultSet2), row2);
+}
+
 @class CGBVaultSensitiveWithValuesProc;
 
 static inline CGBVaultSensitiveWithValuesProc *CGBVaultSensitiveWithValuesProcFromCGCVaultSensitiveWithValuesProc(CGCVaultSensitiveWithValuesProcResultSetRef resultSet)

@@ -44,7 +44,7 @@ void yyset_lineno(int);
 %token INT_LITERAL
 %token LONG_LITERAL
 %token REAL_LITERAL
-%token TABLES VIRTUAL_TABLES MODULE MODULE_ARGS
+%token TABLES CRC VIRTUAL_TABLES MODULE MODULE_ARGS
 %token NAME ARG_ORIGIN IS_TEMP IS_VIRTUAL IF_NOT_EXISTS WITHOUT_ROWID IS_ADDED IS_DELETED IS_RECREATED REGION DEPLOYED_IN_REGION
 %token ADDED_VERSION DELETED_VERSION ADDED_MIGRATION_PROC DELETED_MIGRATION_PROC RECREATE_GROUP_NAME
 %token COLUMNS
@@ -97,6 +97,7 @@ tables: table | table ',' tables
 
 table: '{'
        NAME STRING_LITERAL ','
+       CRC STRING_LITERAL ','
        IS_TEMP BOOL_LITERAL ','
        IF_NOT_EXISTS BOOL_LITERAL ','
        WITHOUT_ROWID BOOL_LITERAL ','
@@ -130,6 +131,7 @@ virtual_tables: virtual_table | virtual_table ',' virtual_tables
 
 virtual_table: '{'
        NAME STRING_LITERAL ','
+       CRC STRING_LITERAL ','
        IS_TEMP '0' ','
        IF_NOT_EXISTS BOOL_LITERAL ','
        WITHOUT_ROWID '0' ','
@@ -356,6 +358,7 @@ views: view | view ',' views
 
 view:  '{'
        NAME STRING_LITERAL ','
+       CRC STRING_LITERAL ','
        IS_TEMP BOOL_LITERAL ','
        IS_DELETED BOOL_LITERAL ','
        opt_deleted_version
@@ -396,6 +399,7 @@ indices: index  | index ',' indices
 
 index: '{'
         NAME STRING_LITERAL ','
+        CRC STRING_LITERAL ','
         TABLE STRING_LITERAL ','
         IS_UNIQUE BOOL_LITERAL ','
         IF_NOT_EXISTS BOOL_LITERAL ','
@@ -420,6 +424,7 @@ triggers: trigger | trigger ',' triggers
 
 trigger: '{'
           NAME STRING_LITERAL ','
+          CRC STRING_LITERAL ','
           TARGET STRING_LITERAL ','
           IS_TEMP BOOL_LITERAL ','
           IF_NOT_EXISTS BOOL_LITERAL ','
@@ -690,6 +695,7 @@ ad_hoc_migrations: ad_hoc_migration | ad_hoc_migration ',' ad_hoc_migrations
 
 ad_hoc_migration: '{'
                   NAME STRING_LITERAL ','
+                  CRC STRING_LITERAL ','
                   opt_attributes
                   VERSION any_integer
                   '}'

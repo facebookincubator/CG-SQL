@@ -1130,7 +1130,7 @@ static void cg_expr_is_true(ast_node *ast, CSTR op, charbuf *is_null, charbuf *v
   bprintf(is_null, "0"); // the result of is true is never null
 
   // we always put parens because ! is the highest binding, so we can use ROOT, the callee never needs parens
-  CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT); 
+  CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
 
   if (is_nullable(sem_type_is_expr)) {
     bprintf(value, "cql_is_nullable_true(%s, %s)", expr_is_null.ptr, expr_value.ptr);
@@ -1156,7 +1156,7 @@ static void cg_expr_is_not_true(ast_node *ast, CSTR op, charbuf *is_null, charbu
   bprintf(is_null, "0"); // the result of is not true is never null
 
   // we always put parens because ! is the highest binding, so we can use ROOT, the callee never needs parens
-  CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT); 
+  CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
 
   if (is_nullable(sem_type_is_expr)) {
     bprintf(value, "!cql_is_nullable_true(%s, %s)", expr_is_null.ptr, expr_value.ptr);
@@ -5966,9 +5966,9 @@ static void cg_data_type(charbuf *buffer, bool_t encode, sem_t sem_type) {
   }
 }
 
-// All the data you need to make a getter...
+// All the data you need to make a getter or setter...
 // there's a lot of it and most of it is the same for all cases
-typedef struct getter_info {
+typedef struct function_info {
   CSTR name;
   CSTR col;
   int32_t col_index;
@@ -5983,7 +5983,7 @@ typedef struct getter_info {
   CSTR value_suffix;
   uint32_t frag_type;
   bool_t is_private;
-} getter_info;
+} function_info;
 
 // Using the information above we emit a column getter.  The essence of this
 // is to reach into the data field of the result set and index the requested row
@@ -5997,7 +5997,7 @@ typedef struct getter_info {
 //     the getter in the master query
 //   * for normal rowsets it's foo->data[i].column
 //   * for single row result sets it's just foo->data->column; there is only the one row
-static void cg_proc_result_set_getter(getter_info *info) {
+static void cg_proc_result_set_getter(function_info *info) {
   charbuf *h = info->headers;
   charbuf *d = info->defs;
   sem_t sem_type = info->ret_type;
@@ -6097,7 +6097,7 @@ cleanup:
 //     the getter in the master query
 //   * for normal rowsets it's something like cql_result_set_get_bool(result_set, row, column)
 //   * for single row result sets it's just cql_result_set_get_bool(result_set, 0, column)
-static void cg_proc_result_set_type_based_getter(getter_info *_Nonnull info)
+static void cg_proc_result_set_type_based_getter(function_info *_Nonnull info)
 {
   charbuf *h = info->headers;
   charbuf *d = info->defs;
@@ -6231,6 +6231,144 @@ cleanup:
   CHARBUF_CLOSE(func_decl);
   CHARBUF_CLOSE(col_getter_sym);
   CHARBUF_CLOSE(symbol_prefix);
+}
+
+#define DO_EMIT_SET_NULL true
+#define DONT_EMIT_SET_NULL false
+#define DO_USE_INLINE true
+#define DONT_USE_INLINE false
+
+// This function generate a inline or export version of a setter by using the function_info
+// passed in
+// * 1) We need to compute the name of the setter and also its visibility
+// * 2) We check if the function is setnull type using is_set_null parameter and if true we emit new typed
+//      temp new_value_ var and we emit cql_set_null(new_value_), if is not a setnull funtion we emit a
+//      cql_set_notnull(new_value_, new_value). We do this only for types
+//        - cql_nullable_bool
+//        - cql_nullable_double
+//        - cql_nullable_int32
+//        - cql_nullable_int64
+//      otherwize we skip this step.
+// * 3) Using the correct resultset setter we emit the final set to mutate the resultset: cql_result_set_set_<type>
+// Examples:
+// using is_set_null = false.
+// extern void query_set_x(query_result_set_ref _Nonnull result_set, cql_int32 new_value) {
+//  cql_nullable_int32 new_value_;
+//  cql_set_notnull(new_value_, new_value);
+//  cql_result_set_set_int32_col((cql_result_set_ref)result_set, 0, 2, new_value_);
+// }
+// using is_set_null = true.
+// extern void query_set_x_to_null(query_result_set_ref _Nonnull result_set) {
+//  cql_nullable_int32 new_value_;
+//  cql_set_null(new_value_);
+//  cql_result_set_set_int32_col((cql_result_set_ref)result_set, 0, 2, new_value_);
+// }
+// use_inline arg is about the function visibility, on true will generate a static inline function
+// vs a extern function on false
+static void cg_proc_result_set_setter(function_info *_Nonnull info, bool_t use_inline, bool_t is_set_null)
+{
+  charbuf *h = info->headers;
+  charbuf *d = info->defs;
+  charbuf *out = NULL;
+
+  CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
+    col_getter_sym,
+    rt->symbol_prefix,
+    info->name,
+    "_set_",
+    info->col,
+    info->sym_suffix);
+
+  CHARBUF_OPEN(var_decl);
+
+  if (!is_set_null) {
+    cg_var_decl(&var_decl, info->ret_type, "new_value", CG_VAR_DECL_PROTO);
+  }
+
+  CHARBUF_OPEN(func_decl);
+  if (use_inline) {
+    bprintf(&func_decl, "static inline void %s", col_getter_sym.ptr);
+  } else {
+    bprintf(&func_decl, "%svoid %s", rt->symbol_visibility, col_getter_sym.ptr);
+  }
+  bprintf(&func_decl, "(%s _Nonnull result_set", info->result_set_ref_type);
+
+  // a procedure that uses OUT gives exactly one row, so no index in the API
+  if (!info->uses_out) {
+    bprintf(&func_decl, ", %s row", rt->cql_int32);
+  }
+
+  if (use_inline) {
+    out = h;
+  } else {
+    if (is_set_null) {
+      bprintf(h, "%s);\n", func_decl.ptr);
+    } else {
+      bprintf(h, "%s, %s);\n", func_decl.ptr, var_decl.ptr);
+    }
+    out = d;
+  }
+
+  if (is_set_null) {
+    bprintf(out, "\n%s) {\n", func_decl.ptr);
+  } else {
+    bprintf(out, "\n%s, %s) {\n", func_decl.ptr, var_decl.ptr);
+  }
+
+  CSTR row = info->uses_out ? "0" : "row";
+  bool_t is_ref = info->name_type == SEM_TYPE_TEXT || info->name_type == SEM_TYPE_OBJECT || info->name_type == SEM_TYPE_BLOB;
+  if (is_ref && is_not_nullable(info->ret_type)) {
+    bprintf(out, "  cql_contract_argument_notnull((void *)new_value, 2);\n");
+  }
+
+  bool_t generate_nullable_wrapper = !options.generate_type_getters;
+
+  switch (info->name_type) {
+    case SEM_TYPE_BOOL:
+      if (generate_nullable_wrapper) {
+        bprintf(out, "  cql_nullable_bool new_value_;\n");
+        bprintf(out, "  %s;\n", is_set_null ? "cql_set_null(new_value_)" : "cql_set_notnull(new_value_, new_value)");
+      }
+      bprintf(out, "  %s", rt->cql_result_set_set_bool);
+      break;
+    case SEM_TYPE_REAL:
+      if (generate_nullable_wrapper) {
+        bprintf(out, "  cql_nullable_double new_value_;\n");
+        bprintf(out, "  %s;\n", is_set_null ? "cql_set_null(new_value_)" : "cql_set_notnull(new_value_, new_value)");
+      }
+      bprintf(out, "  %s", rt->cql_result_set_set_double);
+      break;
+    case SEM_TYPE_INTEGER:
+      if (generate_nullable_wrapper) {
+        bprintf(out, "  cql_nullable_int32 new_value_;\n");
+        bprintf(out, "  %s;\n", is_set_null ? "cql_set_null(new_value_)" : "cql_set_notnull(new_value_, new_value)");
+      }
+      bprintf(out, "  %s", rt->cql_result_set_set_int32);
+      break;
+    case SEM_TYPE_LONG_INTEGER:
+      if (generate_nullable_wrapper) {
+        bprintf(out, "  cql_nullable_int64 new_value_;\n");
+        bprintf(out, "  %s;\n", is_set_null ? "cql_set_null(new_value_)" : "cql_set_notnull(new_value_, new_value)");
+      }
+      bprintf(out, "  %s", rt->cql_result_set_set_int64);
+      break;
+    case SEM_TYPE_TEXT:
+      bprintf(out, "  %s", rt->cql_result_set_set_string);
+      break;
+    case SEM_TYPE_BLOB:
+      bprintf(out, "  %s", rt->cql_result_set_set_blob);
+      break;
+    case SEM_TYPE_OBJECT:
+      bprintf(out, "  %s", rt->cql_result_set_set_object);
+      break;
+  }
+
+  bprintf(out, "((cql_result_set_ref)result_set, %s, %d, new_value%s);\n", row, info->col_index, !is_ref && generate_nullable_wrapper ? "_" : "");
+  bprintf(out, "}\n");
+
+  CHARBUF_CLOSE(func_decl);
+  CHARBUF_CLOSE(var_decl);
+  CHARBUF_CLOSE(col_getter_sym);
 }
 
 // Write out the autodrop info into the stream
@@ -6472,6 +6610,8 @@ static void cg_proc_result_set(ast_node *ast) {
 
   // the index of the encode context column, -1 represents not found
   int16_t encode_context_index = -1;
+  // we may want the setters.
+  bool_t emit_setters = misc_attrs && exists_attribute_str(misc_attrs, "emit_setters");
 
   // For each field emit the _get_field method
   for (int32_t i = 0; i < count; i++) {
@@ -6498,7 +6638,7 @@ static void cg_proc_result_set(ast_node *ast) {
     sem_t core_type = core_type_of(sem_type);
     bool_t col_is_nullable = is_nullable(sem_type);
 
-    getter_info info = {
+    function_info info = {
       .name = name,
       .col = col,
       .col_index = i,
@@ -6543,6 +6683,9 @@ static void cg_proc_result_set(ast_node *ast) {
         info.name_type = core_type;
         info.sym_suffix = NULL;
         cg_proc_result_set_type_based_getter(&info);
+        if (emit_setters) {
+          cg_proc_result_set_setter(&info, DO_USE_INLINE, DONT_EMIT_SET_NULL);
+        }
       }
     }
     else if (col_is_nullable && is_numeric(sem_type)) {
@@ -6555,12 +6698,26 @@ static void cg_proc_result_set(ast_node *ast) {
       info.sym_suffix = "_value";
       info.value_suffix = ".value";
       cg_proc_result_set_getter(&info);
+
+      if (emit_setters) {
+        info.name_type = core_type;
+        cg_proc_result_set_setter(&info, DONT_USE_INLINE, DONT_EMIT_SET_NULL);
+
+        // set null setter
+        info.sym_suffix = "_to_null";
+        cg_proc_result_set_setter(&info, DONT_USE_INLINE, DO_EMIT_SET_NULL);
+      }
     }
     else {
       info.ret_type = sem_type;
       info.sym_suffix = NULL;
       info.value_suffix = NULL;
       cg_proc_result_set_getter(&info);
+
+      if (emit_setters) {
+        info.name_type = core_type;
+        cg_proc_result_set_setter(&info, DONT_USE_INLINE, DONT_EMIT_SET_NULL);
+      }
     }
 
     if (use_encode && sensitive_flag(sem_type)) {

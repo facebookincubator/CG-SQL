@@ -176,7 +176,7 @@ cql_noexport ast_node *new_ast_num(int32_t num_type, CSTR value) {
   return (ast_node *)nast;
 }
 
-cql_noexport ast_node *new_astb(CSTR value) {
+cql_noexport ast_node *new_ast_blob(CSTR value) {
   Contract(current_file && yylineno > 0);
   str_ast_node *sast = _ast_pool_new(str_ast_node);
   sast->type = k_ast_blob;
@@ -665,7 +665,7 @@ cql_noexport ast_node *copy_ast_tree(ast_node *_Nonnull node) {
     new_node = new_ast_opt(value);
   } else if (is_ast_blob(node)) {
     EXTRACT_BLOBTEXT(value, node);
-    new_node = new_astb(value);
+    new_node = new_ast_blob(value);
   } else if (is_ast_str(node)) {
     EXTRACT_STRING(value, node);
     new_node = new_ast_str(value);

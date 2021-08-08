@@ -322,7 +322,7 @@ $ ./hello
 Hello, world
 ```
 
-The cql runtime can be anywhere you want it to be, and of course the usual C seperate compilation methods
+The cql runtime can be anywhere you want it to be, and of course the usual C separate compilation methods
 can be applied. More on that later.
 
 But actually, that program doesn't quite work yet.  If you run it, you'll get an error result code, not the message
@@ -419,7 +419,7 @@ The presence of `(select ...)` indicates to the CQL compiler that parenthesized 
 SQLite for evaluation according to the SQLite rules.  The expression is statically checked at compile time to
 ensure that it has exactly one result column. In this case the `*` is just column `t`, and actually it would have
 be clearer to use `t` directly here but then there wouldn't have a reason to talk about `*` and multiple columns.
-At run time, the `select` query must return exactly one row or an error code will be returned.  It's not uncommmon
+At run time, the `select` query must return exactly one row or an error code will be returned.  It's not uncommon
 to see `(select ... limit 1)` to force the issue.  But that still leaves the possibility of zero rows, which would
 be an error.  We'll talk about more flexible ways to read from the database later.
 
@@ -470,7 +470,7 @@ Lastly we have:
 This is not strictly necessary because the database is in memory anyway and the program is about to exit but there
 it is for illustration.
 
-Now the Data Manipulation Langauge (i.e. insert and select here; and henceforth DML) and the DDL might fail for various reasons.  If that happens the proc will `goto` a cleanup handler and return the failed return code instead of running the rest of the code.  Any temporary memory allocations will be freed and any pending
+Now the Data Manipulation Language (i.e. insert and select here; and henceforth DML) and the DDL might fail for various reasons.  If that happens the proc will `goto` a cleanup handler and return the failed return code instead of running the rest of the code.  Any temporary memory allocations will be freed and any pending
 SQLite statements will be finalized.  More on that later when we discuss error handling.
 
 With that we have a much more complicated program that prints "Hello, world"
@@ -690,19 +690,19 @@ CQL evaluation rules are designed to be as similar as possible but some variance
 ### Order of Evaluation
 
 ```
-ASSIGNMENT:    :=
-LOGICAL_OR:    OR
-LOGICAL_AND:   AND
-LOGICAL_NOT:   NOT
-EQUALITY:      = == != <>  IS [NOT], [NOT] IN, [NOT] LIKE,
-               [NOT] MATCH, [NOT] GLOB, [NOT] BETWEEN
-INEQUALITY:    <  <=  >  >=
-BINARY:        << >> & |
-ADDITION:      + -
-MULIPLICATION: * / %
-CONCAT:        ||
-COLLATE:       COLLATE
-UNARY:         ~  -
+ASSIGNMENT:     :=
+LOGICAL_OR:     OR
+LOGICAL_AND:    AND
+LOGICAL_NOT:    NOT
+EQUALITY:       = == != <>  IS [NOT], [NOT] IN, [NOT] LIKE,
+                [NOT] MATCH, [NOT] GLOB, [NOT] BETWEEN
+INEQUALITY:     <  <=  >  >=
+BINARY:         << >> & |
+ADDITION:       + -
+MULTIPLICATION: * / %
+CONCAT:         ||
+COLLATE:        COLLATE
+UNARY:          ~  -
 ```
 
 NOTE: the above is NOT the C binding order (!!!)  The Sqlite binding order is used in the language and parens are added in the C output as needed to force that order.   CQL's rewriting emits minimal parens in all outputs.  Different parens are often needed for SQL output.
@@ -863,7 +863,7 @@ see later.  You can now write something like this:
 
 ```
 declare enum business_type integer (
-  restuarant,
+  restaurant,
   laundromat,
   corner_store = 11+3  /* math added for demo purposes only */
 );
@@ -922,7 +922,7 @@ enum business_type {
 };
 ```
 
-Note that C does not allow for floating point enumertions, so in case of floating point values such as:
+Note that C does not allow for floating point enumerations, so in case of floating point values such as:
 
 ```
 declare enum floating real (
@@ -1018,7 +1018,7 @@ declare thing_type type thing;
 ```
 
 Enumerations always get "not null" in addition to their base type.  Enumerations also have a unique "kind" associated,
-specfically the above enum has type `integer<thing> not null`.  The rules for type kind are described below.
+specifically the above enum has type `integer<thing> not null`.  The rules for type kind are described below.
 
 ### Type Kinds
 
@@ -1489,7 +1489,7 @@ And notably the `&` operator has the same binding strength as the `|` operator s
 this is utterly unlike most systems.  Many parenthesis are likely to be needed to get the usual "or of ands" patterns codified correctly.  Likewise the shift operators `<<` and `>>` are the same strength as `&` and `|` which is very atypical. Consider:
 
 ```sql
-x & 1 << 7;    -- probably doesn't mean what you think (this is not ambigous, it's well defined, but unlike C)
+x & 1 << 7;    -- probably doesn't mean what you think (this is not ambiguous, it's well defined, but unlike C)
 (x & 1) << 7;   -- means the same as the above
 x & (1 << 7)   -- probably what you intended
 ```
@@ -1734,7 +1734,7 @@ In general: if the predicate of a `WHERE` or `HAVING` clause is sensitive then a
 
 Similarly when performing joins, if the column specified in the `USING` clause is sensitive or the predicate of the `ON` clause is sensitive then the result of the join is considered to be all sensitive columns (even if the columns were not sensitive in the schema).
 
-Likewise a sensitive expression in `LIMIT` or `OFFSET` will result in 100% sensitive columns as these can be used in a `WHERE`-ish way.  There is no reasonble defense against using `LIMIT` and testing for the presence or absence of a row as a way to wash away sensitivity so that is a weakness, but the rules that are present are likely to be very helpful.
+Likewise a sensitive expression in `LIMIT` or `OFFSET` will result in 100% sensitive columns as these can be used in a `WHERE`-ish way.  There is no reasonable defense against using `LIMIT` and testing for the presence or absence of a row as a way to wash away sensitivity so that is a weakness, but the rules that are present are likely to be very helpful.
 
 ```sql
 -- join with ON
@@ -3812,7 +3812,7 @@ and only more modern versions of SQLite even support it.
 
 ### Notes on Builtin Functions
 
-Some of the SQLite builtin functions are hard-coded,  these are the functions that have semantics that are not readily captured with a simple prototype.  Other SQLite functions can be declared wtih `declare select funtion ...` and then used.
+Some of the SQLite builtin functions are hard-coded,  these are the functions that have semantics that are not readily captured with a simple prototype.  Other SQLite functions can be declared with `declare select function ...` and then used.
 
 CQL's hard-coded builtin list includes:
 
@@ -3844,6 +3844,7 @@ CQL's hard-coded builtin list includes:
  * datetime
  * julianday
  * substr
+ * replace
  * trim
  * ltrim
  * rtrim
@@ -4441,17 +4442,21 @@ old columns.  Those columns truly exist at that schema version.
 #### The `@ENFORCE_STRICT` Statement
 Switch to strict mode for the indicated item, the choices are
 
-  * "FOREIGN KEY ON UPDATE" indicates there must be some "ON UPDATE" action in every FK
-  * "FOREIGN KEY ON DELETE" indicates there must be some "ON DELETE" action in every FK
+  * "FOREIGN KEY ON DELETE" indicates there must be some `ON DELETE` action in every FK
+  * "FOREIGN KEY ON UPDATE" indicates there must be some `ON UPDATE` action in every FK
+  * "INSERT SELECT" indicates that insert with `SELECT` for values may not include top level joins (avoiding a SQLite bug)
+  * "IS TRUE" indicates that `IS TRUE` `IS FALSE` `IS NOT TRUE` `IS NOT FALSE` may not be used (*)
   * "JOIN" indicates only ANSI style joins may be used, "from A,B" is rejected
-  * "UPSERT" indicates no upsert statement may be used (probably targeting downlevel SQLite)
-  * "WINDOW FUNCTION" incdicates no window functions may be used (probably targeting downlevel SQLite)
   * "PROCEDURE" indicates no calls to undeclared procedures (like loose printf calls)
-  * "WITHOUT ROWID" inciates WITHOUT ROWID may not be used
-  * "TRANSACTION" indicates no transactions may be started, committed, or aborted
   * "SELECT IF NOTHING" indicates `(select ...)` expressions must include an `IF NOTHING` clause if they have a `FROM` part
-  * "INSERT SELECT" indicates that insert with select for values may not include top level joins (avoiding a SQLite bug)
   * "TABLE FUNCTIONS" indicates table valued functions cannot be used on left/right joins (avoiding a SQLite bug)
+  * "TRANSACTION" indicates no transactions may be started, committed, or aborted
+  * "UPSERT" indicates no upsert statement may be used (*)
+  * "WINDOW FUNCTION" indicates no window functions may be used (*)
+  * "WITHOUT ROWID" indicates `WITHOUT ROWID` may not be used
+
+The items marked with * are present so that features can be disabled to target downlevel versions of SQLite
+that may not have those features.
 
 See the grammar details for exact syntax.
 
@@ -8425,7 +8430,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu Jul 29 16:04:35 PDT 2021
+Snapshot as of Thu Aug  5 17:38:25 PDT 2021
 
 ### Operators and Literals
 
@@ -8999,12 +9004,12 @@ math_expr:
   | math_expr '*' math_expr
   | math_expr '/' math_expr
   | math_expr '%' math_expr
-  | math_expr "IS" "NOT" "TRUE"
-  | math_expr "IS" "NOT" "FALSE"
+  | math_expr "IS NOT TRUE"
+  | math_expr "IS NOT FALSE"
   | math_expr "ISNULL"
   | math_expr "NOTNULL"
-  | math_expr "IS" "TRUE"
-  | math_expr "IS" "FALSE"
+  | math_expr "IS TRUE"
+  | math_expr "IS FALSE"
   | '-' math_expr
   | '~' math_expr
   | "NOT" math_expr
@@ -9016,21 +9021,21 @@ math_expr:
   | math_expr "!=" math_expr
   | math_expr ">=" math_expr
   | math_expr "<=" math_expr
-  | math_expr "NOT" "IN" '(' expr_list ')'
-  | math_expr "NOT" "IN" '(' select_stmt ')'
+  | math_expr "NOT IN" '(' expr_list ')'
+  | math_expr "NOT IN" '(' select_stmt ')'
   | math_expr "IN" '(' expr_list ')'
   | math_expr "IN" '(' select_stmt ')'
   | math_expr "LIKE" math_expr
-  | math_expr "NOT" "LIKE" math_expr
+  | math_expr "NOT LIKE" math_expr
   | math_expr "MATCH" math_expr
-  | math_expr "NOT" "MATCH" math_expr
+  | math_expr "NOT MATCH" math_expr
   | math_expr "REGEXP" math_expr
-  | math_expr "NOT" "REGEXP" math_expr
+  | math_expr "NOT REGEXP" math_expr
   | math_expr "GLOB" math_expr
-  | math_expr "NOT" "GLOB" math_expr
+  | math_expr "NOT GLOB" math_expr
   | math_expr "BETWEEN" math_expr "AND" math_expr
-  | math_expr "NOT" "BETWEEN" math_expr "AND" math_expr
-  | math_expr "IS" "NOT" math_expr
+  | math_expr "NOT BETWEEN" math_expr "AND" math_expr
+  | math_expr "IS NOT" math_expr
   | math_expr "IS" math_expr
   | math_expr "||" math_expr
   | math_expr "COLLATE" name
@@ -9792,7 +9797,7 @@ trigger_action:
 
 opt_foreachrow:
   /* nil */
-  | "FOR" "EACH" "ROW"
+  | "FOR EACH ROW"
   ;
 
 opt_when_expr:
@@ -9840,14 +9845,14 @@ enforcement_options:
   | "INSERT" "SELECT"
   | "TABLE" "FUNCTION"
   | "NOT" "NULL" "AFTER" "CHECK"
-  | ENCODE CONTEXT_COLUMN
-  | ENCODE CONTEXT_TYPE "INTEGER"
-  | ENCODE CONTEXT_TYPE "LONG_INTEGER"
-  | ENCODE CONTEXT_TYPE "REAL"
-  | ENCODE CONTEXT_TYPE "BOOL"
-  | ENCODE CONTEXT_TYPE "TEXT"
-  | ENCODE CONTEXT_TYPE "BLOB"
-  | "IS" "TRUE"
+  | "ENCODE" "CONTEXT COLUMN"
+  | "ENCODE" "CONTEXT TYPE" "INTEGER"
+  | "ENCODE" "CONTEXT TYPE" "LONG_INTEGER"
+  | "ENCODE" "CONTEXT TYPE" "REAL"
+  | "ENCODE" "CONTEXT TYPE" "BOOL"
+  | "ENCODE" "CONTEXT TYPE" "TEXT"
+  | "ENCODE" "CONTEXT TYPE" "BLOB"
+  | "IS TRUE"
   ;
 
 enforce_strict_stmt:
@@ -10099,7 +10104,7 @@ The table part of a CREATE INDEX statement was not a valid table name.
 
 ### CQL0020: duplicate constraint name in table 'constraint_name'
 
-A table contains two contraints with the same name.
+A table contains two constraints with the same name.
 
 ------
 
@@ -12110,7 +12115,7 @@ Two or more extension fragments share the same name.
 -----
 
 ### CQL0267: extension fragments of same base fragment share the same cte column
-Two or more extension fragments which have the same base fragments share the same name for one of their unique columns. E.g. the base table is `core(x,y)` and one extension table is `plugin_one(x,y,z)` and antoher is `plugin_two(x,y,z)`.
+Two or more extension fragments which have the same base fragments share the same name for one of their unique columns. E.g. the base table is `core(x,y)` and one extension table is `plugin_one(x,y,z)` and another is `plugin_two(x,y,z)`.
 Here, z in both extension fragments share the same name but may refer to different values.
 
 -----
@@ -12594,7 +12599,7 @@ end;
 
 In the extension fragment form that uses `LEFT OUTER JOIN` to add columns you cannot include top level restrictions/changes like `WHERE`, `ORDER BY`, `LIMIT` and so forth.  Any of these would remove or reorder the rows from the core fragment and that is not allowed, you can only add columns.  Hence you must have a `FROM` clause and you can have no other top level clauses.  You can use any clauses you like in a nested select to get your additional columns.
 
-Note: you could potentially add rows with a `LEFT OUTER JOIN` and a generous `ON` clause. That's allowed but not recommended. The `ON` clause can't be forbidden because it's essentail in the normal case.
+Note: you could potentially add rows with a `LEFT OUTER JOIN` and a generous `ON` clause. That's allowed but not recommended. The `ON` clause can't be forbidden because it's essential in the normal case.
 
 -----
 
@@ -12602,7 +12607,7 @@ Note: you could potentially add rows with a `LEFT OUTER JOIN` and a generous `ON
 
 The indicated name is an index or a trigger. These objects may not have a migration script associated with them when they are deleted.
 
-The reason for this is that both these types of objects are attached to a table and the table itself might be deleted.  If the table is deleted it becomes impossible to express even a tombstone for the deleted trigger or index without getting errors.  As a conseqence the index/trigger must be completely removed.  But if there had been a migration procedure on it then some upgrade sequences would have run it, but others would not (anyone who upgraded after the table was deleted would not get the migration procedure).  To avoid this problem, migration procedures are not allowed on indices and triggers.
+The reason for this is that both these types of objects are attached to a table and the table itself might be deleted.  If the table is deleted it becomes impossible to express even a tombstone for the deleted trigger or index without getting errors.  As a consequence the index/trigger must be completely removed.  But if there had been a migration procedure on it then some upgrade sequences would have run it, but others would not (anyone who upgraded after the table was deleted would not get the migration procedure).  To avoid this problem, migration procedures are not allowed on indices and triggers.
 
 -----
 
@@ -12621,7 +12626,7 @@ You could imagine a scheme where the extension fragments are allowed to use a su
 If you get this error it means that there is a typo in the name of the procedure you are trying to call, or else the declaration for the
 procedure is totally missing.  Maybe a necessary `#include` needs to be added to the compiland.
 
-Previously if you attempted to call an unknown CQL would produce a generic function call. If you need to do this, especially a functionwith varargs,
+Previously if you attempted to call an unknown CQL would produce a generic function call. If you need to do this, especially a function with varargs,
 then you must declare the function  with something like:
 
 `DECLARE PROCEDURE printf NO CHECK;`
@@ -12721,7 +12726,7 @@ in order to get a assembled query that makes sense the row-adding form must alwa
 were added.  Hence all of these fragments must come before any of the LEFT OUTER JOIN form.
 
 If you get this error, you should re-order your fragments such that the UNION ALL form comes before any
-LEFT OUTER JOIN fragments.  The offendeding fragment is named in the error.
+LEFT OUTER JOIN fragments.  The offending fragment is named in the error.
 
 -----
 
@@ -12852,7 +12857,7 @@ for now.  This can be relaxed later if that proves to be a mistake.  For now, on
 ### CQL0349: column definitions may not come after constraints 'column_name'
 
 In a CREATE TABLE statement, the indicated column name came after a constraint.  SQLite expects all the column definitions
-to come before any constraint defintions.  You must move the offending column defintion above the constraints.
+to come before any constraint definitions.  You must move the offending column definition above the constraints.
 
 ----
 
@@ -13109,7 +13114,7 @@ select foo from bar where baz if nothing null
 
 ### CQL0373: Comparing against NULL always yields NULL; use IS and IS NOT instead.
 
-Attepting to check if some value `x` is NULL via `x = NULL` or `x == NULL`, or isn't NULL via `x <> NULL` or `x != NULL`, will always produce NULL regardless of the value of `x`. Instead, use `x IS NULL` or `x IS NOT NULL` to get the expected boolean result.
+Attempting to check if some value `x` is NULL via `x = NULL` or `x == NULL`, or isn't NULL via `x <> NULL` or `x != NULL`, will always produce NULL regardless of the value of `x`. Instead, use `x IS NULL` or `x IS NOT NULL` to get the expected boolean result.
 
 ----
 
@@ -13237,7 +13242,7 @@ in any `WHEN` clause.  All members must be specified when `ALL VALUES` is used.
 
 In a `SWITCH` statement with `ALL VALUES` specified the errant integer value appeared in
 in a `WHEN` clause.  This value is not part of the members of the enum.  Note that enum members
-that begin with '_' are ignored as they are, by convention, consdiered to be pseudo-members.
+that begin with '_' are ignored as they are, by convention, considered to be pseudo-members.
 e.g. in `declare enum v integer (v0 = 0, v1 =1, v2 =2, _count = 3)` `_count` is a pseudo-member.
 
 The errant entry should probably be removed. Alternatively, `ALL VALUES` isn't appropriate as the
@@ -13381,13 +13386,13 @@ The encode context column will be used to encode sensitive fields, it can't be e
 ----
 ### CQL0401: encode context column must be specified if strict encode context column mode is enabled
 
-encode context column must be specified in vault_senstive attribute with format:
+encode context column must be specified in vault_sensitive attribute with format:
 @attribute(cql:vault_sensitive=(encode_context_col, (col1, col2, ...))
 
 ----
-### CQL0402: encode context column in vault_senstive attribute must match the specified type in strict mode
+### CQL0402: encode context column in vault_sensitive attribute must match the specified type in strict mode
 
-encode context column must match the specified type in vault_senstive attribute with format:
+encode context column must match the specified type in vault_sensitive attribute with format:
 @attribute(cql:vault_sensitive=(encode_context_col, (col1, col2, ...))
 
 ----
@@ -13412,7 +13417,28 @@ normal CQL procedure via `CREATE` or `DECLARE PROCEDURE`.  Likewise a normal pro
 pattern.
 
 ----
-CQL 0405 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+
+### CQL0405: procedure of an unknown type used in an expression 'procedure_name'
+
+If a procedure has no known type—that is, it was originally declared with `NO
+CHECK`, and has not been subsequently re-declared with `DECLARE FUNCTION` or
+`DECLARE SELECT FUNCTION`—it is not possible to use it in an expression. You
+must either declare the type before using it or call the procedure outside of an
+expression via a `CALL` statement:
+
+```sql
+DECLARE PROCEDURE some_external_proc NO CHECK;
+
+-- This works even though `some_external_proc` has no known type
+-- because we're using a CALL statement.
+CALL some_external_proc("Hello!");
+
+DECLARE FUNCTION some_external_proc(t TEXT NOT NULL) INT NOT NULL;
+
+-- Now that we've declared the type, we can use it in an expression.
+let result := some_external_proc("Hello!");
+```
+
 ----
 CQL 0406 : unused, this was added to prevent merge conflicts at the end on literally every checkin
 ----
@@ -13440,7 +13466,7 @@ CQL 0410 : unused, this was added to prevent merge conflicts at the end on liter
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Thu Jul 29 16:04:35 PDT 2021
+Snapshot as of Thu Aug  5 17:38:26 PDT 2021
 
 ### Rules
 
@@ -13477,6 +13503,7 @@ tables: table | table ',' tables
 
 table: '{'
        '"name"' ':' STRING_LITERAL ','
+       '"crc"' ':' STRING_LITERAL ','
        '"isTemp"' ':' BOOL_LITERAL ','
        '"ifNotExists"' ':' BOOL_LITERAL ','
        '"withoutRowid"' ':' BOOL_LITERAL ','
@@ -13510,6 +13537,7 @@ virtual_tables: virtual_table | virtual_table ',' virtual_tables
 
 virtual_table: '{'
        '"name"' ':' STRING_LITERAL ','
+       '"crc"' ':' STRING_LITERAL ','
        '"isTemp"' ':' '0' ','
        '"ifNotExists"' ':' BOOL_LITERAL ','
        '"withoutRowid"' ':' '0' ','
@@ -13736,6 +13764,7 @@ views: view | view ',' views
 
 view:  '{'
        '"name"' ':' STRING_LITERAL ','
+       '"crc"' ':' STRING_LITERAL ','
        '"isTemp"' ':' BOOL_LITERAL ','
        '"isDeleted"' ':' BOOL_LITERAL ','
        opt_deleted_version
@@ -13776,6 +13805,7 @@ indices: index  | index ',' indices
 
 index: '{'
         '"name"' ':' STRING_LITERAL ','
+        '"crc"' ':' STRING_LITERAL ','
         '"table"' ':' STRING_LITERAL ','
         '"isUnique"' ':' BOOL_LITERAL ','
         '"ifNotExists"' ':' BOOL_LITERAL ','
@@ -13800,6 +13830,7 @@ triggers: trigger | trigger ',' triggers
 
 trigger: '{'
           '"name"' ':' STRING_LITERAL ','
+          '"crc"' ':' STRING_LITERAL ','
           '"target"' ':' STRING_LITERAL ','
           '"isTemp"' ':' BOOL_LITERAL ','
           '"ifNotExists"' ':' BOOL_LITERAL ','
@@ -14070,6 +14101,7 @@ ad_hoc_migrations: ad_hoc_migration | ad_hoc_migration ',' ad_hoc_migrations
 
 ad_hoc_migration: '{'
                   '"name"' ':' STRING_LITERAL ','
+                  '"crc"' ':' STRING_LITERAL ','
                   opt_attributes
                   '"version"' ':' any_integer
                   '}'
@@ -15621,9 +15653,9 @@ NOTE: The amalgam is C code not C++ code.  Do not attempt to use it inside of an
 
 The amalgam includes the following useful `#ifdef` options to allow you to customize it.
 
+* CQL_IS_NOT_MAIN
 * CQL_NO_SYSTEM_HEADERS
 * CQL_NO_DIAGNOSTIC_BLOCK
-* CQL_IS_NOT_MAIN
 * cql_emit_error
 * cql_emit_output
 * cql_open_file_for_write
@@ -15631,14 +15663,14 @@ The amalgam includes the following useful `#ifdef` options to allow you to custo
 
 #### CQL_IS_NOT_MAIN
 
-If this symbol is defined them `cql_main` will not be redefined to be `main`.
+If this symbol is defined then `cql_main` will not be redefined to be `main`.
 
 As the comments in the source say:
 
 ```C
 #ifndef CQL_IS_NOT_MAIN
 
-// Normally CQL is the main entry point.  If you are using CQL 
+// Normally CQL is the main entry point.  If you are using CQL
 // in an embedded fashion then you want to invoke its main at
 // some other time. If you define CQL_IS_NOT_MAIN then cql_main
 // is not renamed to main.  You call cql_main when you want.

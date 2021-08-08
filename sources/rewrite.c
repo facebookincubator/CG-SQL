@@ -1372,8 +1372,7 @@ cql_noexport void rewrite_guard_stmt_to_if_stmt(ast_node *_Nonnull ast) {
   AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
 
   EXTRACT_ANY_NOTNULL(expr, ast->left);
-  EXTRACT(control_stmt, ast->right);
-  EXTRACT_ANY_NOTNULL(stmt, control_stmt->left);
+  EXTRACT_ANY_NOTNULL(stmt, ast->right);
 
   ast->type = k_ast_if_stmt;
   ast_set_left(ast, new_ast_cond_action(expr, new_ast_stmt_list(stmt, NULL)));
