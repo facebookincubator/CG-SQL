@@ -83,8 +83,19 @@ EOF
 echo '```' >>cql_grammar.md
 
 echo "### Statement/Type Keywords" >>cql_grammar.md
+
 echo '```' >>cql_grammar.md
-grep "%token [^<]" <../cql.y | sed "s/%token //" >>cql_grammar.md
+cat ../cql.y | \
+  grep '%token [^<]' |       # Get only the lines starting with %token
+  sed 's/%token //g' |       # Remove '%token ' from the start of each line
+  tr ' ' '\n' |              # Put each token on a new line
+  sed -f replacements.txt |  # Apply our usual replacements
+  sort |                     # Sort the tokens
+  tr '\n' ' ' |              # Group all tokens into a single line
+  grep '' |                  # Restore the trailing newline
+  fold -w 60 -s |            # Rewrap to a 60-column width
+  sed 's/ $//' |             # Remove trailing spaces left by fold
+  cat >> cql_grammar.md      # Append to cql_grammar.md
 echo '```' >>cql_grammar.md
 
 cat <<EOF  >>cql_grammar.md
