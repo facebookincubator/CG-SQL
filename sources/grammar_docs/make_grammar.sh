@@ -85,12 +85,16 @@ echo '```' >>cql_grammar.md
 echo "### Statement/Type Keywords" >>cql_grammar.md
 
 echo '```' >>cql_grammar.md
-cat ../cql.y | \
+cat ../cql.y |
   grep '%token [^<]' |       # Get only the lines starting with %token
   sed 's/%token //g' |       # Remove '%token ' from the start of each line
   tr ' ' '\n' |              # Put each token on a new line
   sed -f replacements.txt |  # Apply our usual replacements
   sort |                     # Sort the tokens
+  uniq |                     # Remove duplicates resulting from explicit string
+                             # declarations (e.g., `%token NULL_ "NULL"`)
+  grep '^"[A-Z@]' |          # Filter out operators present due to explicit
+                             # string declarations (e.g., `%token EQEQ "=="`)
   tr '\n' ' ' |              # Group all tokens into a single line
   grep '' |                  # Restore the trailing newline
   fold -w 60 -s |            # Rewrap to a 60-column width
