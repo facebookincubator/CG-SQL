@@ -1487,11 +1487,13 @@ void cql_result_set_set_int32_col(cql_result_set_ref _Nonnull result_set, cql_in
   }
 }
 
+/*
 static void __attribute__((unused)) cql_result_set_set_int32_col_not_null(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_int32 new_value) {
   cql_nullable_int32 new_value_;
   cql_set_notnull(new_value_, new_value);
   cql_result_set_set_int32_col(result_set, row, col, new_value_);
 }
+*/
 
 // This is the helper method that reads an int64 out of a rowset at a particular row and column.
 // The same helper is used for reading the value from a nullable or not nullable value, so the address helper
@@ -1521,11 +1523,13 @@ void cql_result_set_set_int64_col(cql_result_set_ref _Nonnull result_set, cql_in
   }
 }
 
+/*
 static void __attribute__((unused)) cql_result_set_set_int64_col_not_null(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_int64 new_value) {
   cql_nullable_int64 new_value_;
   cql_set_notnull(new_value_, new_value);
   cql_result_set_set_int64_col(result_set, row, col, new_value_);
 }
+*/
 
 // This is the helper method that reads a double out of a rowset at a particular row and column.
 // The same helper is used for reading the value from a nullable or not nullable value, so the address helper
@@ -1555,11 +1559,13 @@ void cql_result_set_set_double_col(cql_result_set_ref _Nonnull result_set, cql_i
   }
 }
 
+/*
 static void __attribute__((unused)) cql_result_set_set_double_col_not_null(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_double new_value) {
   cql_nullable_double new_value_;
   cql_set_notnull(new_value_, new_value);
   cql_result_set_set_double_col(result_set, row, col, new_value_);
 }
+*/
 
 // This is the helper method that reads an bool out of a rowset at a particular row and column.
 // The same helper is used for reading the value from a nullable or not nullable value, so the address helper
@@ -1589,11 +1595,13 @@ void cql_result_set_set_bool_col(cql_result_set_ref _Nonnull result_set, cql_int
   }
 }
 
+/*
 static void __attribute__((unused)) cql_result_set_set_bool_col_not_null(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_bool new_value) {
   cql_nullable_bool new_value_;
   cql_set_notnull(new_value_, new_value);
   cql_result_set_set_bool_col(result_set, row, col, new_value_);
 }
+*/
 
 // This is the helper method that reads a string out of a rowset at a particular row and column.
 // The same helper is used for reading the value from a nullable or not nullable value, so the address helper
