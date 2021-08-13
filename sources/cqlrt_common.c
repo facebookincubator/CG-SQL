@@ -1487,7 +1487,10 @@ void cql_result_set_set_int32_col(cql_result_set_ref _Nonnull result_set, cql_in
   }
 }
 
-static void __attribute__((unused)) cql_result_set_set_int32_col_not_null(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_int32 new_value) {
+// This is the helper method that writes a cql_int32 into a rowset at a particular row and column.
+// This helper wraps the new int32 in to a cql_nullable_int32 then we can forward
+// the set to cql_result_set_set_int32_col
+void cql_result_set_set_int32_col_not_null(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_int32 new_value) {
   cql_nullable_int32 new_value_;
   cql_set_notnull(new_value_, new_value);
   cql_result_set_set_int32_col(result_set, row, col, new_value_);
@@ -1521,7 +1524,10 @@ void cql_result_set_set_int64_col(cql_result_set_ref _Nonnull result_set, cql_in
   }
 }
 
-static void __attribute__((unused)) cql_result_set_set_int64_col_not_null(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_int64 new_value) {
+// This is the helper method that writes a cql_int64 into a rowset at a particular row and column.
+// This helper wraps the new int64 in to a cql_nullable_int64 then we can forward
+// the set to cql_result_set_set_int64_col
+void cql_result_set_set_int64_col_not_null(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_int64 new_value) {
   cql_nullable_int64 new_value_;
   cql_set_notnull(new_value_, new_value);
   cql_result_set_set_int64_col(result_set, row, col, new_value_);
@@ -1555,7 +1561,10 @@ void cql_result_set_set_double_col(cql_result_set_ref _Nonnull result_set, cql_i
   }
 }
 
-static void __attribute__((unused)) cql_result_set_set_double_col_not_null(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_double new_value) {
+// This is the helper method that writes a double into a rowset at a particular row and column.
+// This helper wraps the new double in to a cql_nullable_double then we can forward
+// the set to cql_result_set_set_double_col
+void cql_result_set_set_double_col_not_null(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_double new_value) {
   cql_nullable_double new_value_;
   cql_set_notnull(new_value_, new_value);
   cql_result_set_set_double_col(result_set, row, col, new_value_);
@@ -1589,7 +1598,10 @@ void cql_result_set_set_bool_col(cql_result_set_ref _Nonnull result_set, cql_int
   }
 }
 
-static void __attribute__((unused)) cql_result_set_set_bool_col_not_null(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_bool new_value) {
+// This is the helper method that writes a bool into a rowset at a particular row and column.
+// This helper wraps the new cql_bool in to a cql_nullable_bool then we can forward
+// the set to cql_result_set_set_bool_col
+void cql_result_set_set_bool_col_not_null(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_bool new_value) {
   cql_nullable_bool new_value_;
   cql_set_notnull(new_value_, new_value);
   cql_result_set_set_bool_col(result_set, row, col, new_value_);
