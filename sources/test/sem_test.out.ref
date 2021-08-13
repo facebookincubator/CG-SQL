@@ -310,6 +310,81 @@ SELECT T1.id, name
 
 The statement ending at line XXXX
 
+SELECT *
+  FROM foo AS T1
+  LEFT JOIN foo AS T2;
+
+  {select_stmt}: select: { id: integer notnull, id: integer }
+  | {select_core_list}: select: { id: integer notnull, id: integer }
+  | | {select_core}: select: { id: integer notnull, id: integer }
+  |   | {select_expr_list_con}: select: { id: integer notnull, id: integer }
+  |     | {select_expr_list}: select: { id: integer notnull, id: integer }
+  |     | | {star}: select: { id: integer notnull, id: integer }
+  |     | {select_from_etc}: JOIN { T1: foo, T2: foo }
+  |       | {join_clause}: JOIN { T1: foo, T2: foo }
+  |       | | {table_or_subquery}: TABLE { T1: foo }
+  |       | | | {name foo}: TABLE { T1: foo }
+  |       | | | {opt_as_alias}
+  |       | |   | {name T1}
+  |       | | {join_target_list}
+  |       |   | {join_target}: JOIN { T1: foo, T2: foo }
+  |       |     | {int 5}
+  |       |     | {table_join}
+  |       |       | {table_or_subquery}: TABLE { T2: foo }
+  |       |         | {name foo}: TABLE { T2: foo }
+  |       |         | {opt_as_alias}
+  |       |           | {name T2}
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT *
+  FROM foo AS T1
+  CROSS JOIN foo AS T2 ON T1.id = T2.id;
+
+  {select_stmt}: select: { id: integer notnull, id: integer notnull }
+  | {select_core_list}: select: { id: integer notnull, id: integer notnull }
+  | | {select_core}: select: { id: integer notnull, id: integer notnull }
+  |   | {select_expr_list_con}: select: { id: integer notnull, id: integer notnull }
+  |     | {select_expr_list}: select: { id: integer notnull, id: integer notnull }
+  |     | | {star}: select: { id: integer notnull, id: integer notnull }
+  |     | {select_from_etc}: JOIN { T1: foo, T2: foo }
+  |       | {join_clause}: JOIN { T1: foo, T2: foo }
+  |       | | {table_or_subquery}: TABLE { T1: foo }
+  |       | | | {name foo}: TABLE { T1: foo }
+  |       | | | {opt_as_alias}
+  |       | |   | {name T1}
+  |       | | {join_target_list}
+  |       |   | {join_target}: JOIN { T1: foo, T2: foo }
+  |       |     | {int 2}
+  |       |     | {table_join}
+  |       |       | {table_or_subquery}: TABLE { T2: foo }
+  |       |       | | {name foo}: TABLE { T2: foo }
+  |       |       | | {opt_as_alias}
+  |       |       |   | {name T2}
+  |       |       | {join_cond}: JOIN { T1: foo, T2: foo }
+  |       |         | {on}: bool notnull
+  |       |         | {eq}: bool notnull
+  |       |           | {dot}: id: integer notnull
+  |       |           | | {name T1}
+  |       |           | | {name id}
+  |       |           | {dot}: id: integer notnull
+  |       |             | {name T2}
+  |       |             | {name id}
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
 SELECT name
   FROM foo,
 bar;
@@ -10689,12 +10764,12 @@ SELECT *
   FROM payload1
   CROSS JOIN payload2 USING (id);
 
-  {select_stmt}: select: { id: integer, data1: integer, id: integer, data2: integer }
-  | {select_core_list}: select: { id: integer, data1: integer, id: integer, data2: integer }
-  | | {select_core}: select: { id: integer, data1: integer, id: integer, data2: integer }
-  |   | {select_expr_list_con}: select: { id: integer, data1: integer, id: integer, data2: integer }
-  |     | {select_expr_list}: select: { id: integer, data1: integer, id: integer, data2: integer }
-  |     | | {star}: select: { id: integer, data1: integer, id: integer, data2: integer }
+  {select_stmt}: select: { id: integer notnull, data1: integer notnull, id: integer notnull, data2: integer notnull }
+  | {select_core_list}: select: { id: integer notnull, data1: integer notnull, id: integer notnull, data2: integer notnull }
+  | | {select_core}: select: { id: integer notnull, data1: integer notnull, id: integer notnull, data2: integer notnull }
+  |   | {select_expr_list_con}: select: { id: integer notnull, data1: integer notnull, id: integer notnull, data2: integer notnull }
+  |     | {select_expr_list}: select: { id: integer notnull, data1: integer notnull, id: integer notnull, data2: integer notnull }
+  |     | | {star}: select: { id: integer notnull, data1: integer notnull, id: integer notnull, data2: integer notnull }
   |     | {select_from_etc}: JOIN { payload1: payload1, payload2: payload2 }
   |       | {join_clause}: JOIN { payload1: payload1, payload2: payload2 }
   |       | | {table_or_subquery}: TABLE { payload1: payload1 }
@@ -63000,83 +63075,15 @@ Error at test/sem_test.sql:XXXX : in join_target : CQL0371: table valued functio
 The statement ending at line XXXX
 
 SELECT *
-  FROM tvf(1)
-  CROSS JOIN foo;
-
-Error at test/sem_test.sql:XXXX : in join_target : CQL0371: table valued function used in a left/right/cross context; this would hit a SQLite bug.  Wrap it in a CTE instead.
-
-  {select_stmt}: err
-  | {select_core_list}: err
-  | | {select_core}: err
-  |   | {select_expr_list_con}: err
-  |     | {select_expr_list}: err
-  |     | | {star}
-  |     | {select_from_etc}: err
-  |       | {join_clause}: err
-  |       | | {table_or_subquery}: TABLE { tvf: select } table_valued_function
-  |       | | | {table_function}: TABLE { tvf: select } table_valued_function
-  |       | |   | {name tvf}: TABLE { tvf: select } table_valued_function
-  |       | |   | {arg_list}
-  |       | |     | {int 1}: integer notnull
-  |       | | {join_target_list}
-  |       |   | {join_target}: err
-  |       |     | {int 2}
-  |       |     | {table_join}
-  |       |       | {table_or_subquery}: TABLE { foo: foo }
-  |       |         | {name foo}: TABLE { foo: foo }
-  |       | {select_where}
-  |         | {select_groupby}
-  |           | {select_having}
-  | {select_orderby}
-    | {select_limit}
-      | {select_offset}
-
-The statement ending at line XXXX
-
-SELECT *
-  FROM foo
-  CROSS JOIN tvf(1);
-
-Error at test/sem_test.sql:XXXX : in join_target : CQL0371: table valued function used in a left/right/cross context; this would hit a SQLite bug.  Wrap it in a CTE instead.
-
-  {select_stmt}: err
-  | {select_core_list}: err
-  | | {select_core}: err
-  |   | {select_expr_list_con}: err
-  |     | {select_expr_list}: err
-  |     | | {star}
-  |     | {select_from_etc}: err
-  |       | {join_clause}: err
-  |       | | {table_or_subquery}: TABLE { foo: foo }
-  |       | | | {name foo}: TABLE { foo: foo }
-  |       | | {join_target_list}
-  |       |   | {join_target}: err
-  |       |     | {int 2}
-  |       |     | {table_join}
-  |       |       | {table_or_subquery}: TABLE { tvf: select } table_valued_function
-  |       |         | {table_function}: TABLE { tvf: select } table_valued_function
-  |       |           | {name tvf}: TABLE { tvf: select } table_valued_function
-  |       |           | {arg_list}
-  |       |             | {int 1}: integer notnull
-  |       | {select_where}
-  |         | {select_groupby}
-  |           | {select_having}
-  | {select_orderby}
-    | {select_limit}
-      | {select_offset}
-
-The statement ending at line XXXX
-
-SELECT *
   FROM foo AS T1
   CROSS JOIN foo AS T2;
 
-  {select_stmt}: select: { id: integer, id: integer }
-  | {select_core_list}: select: { id: integer, id: integer }
-  | | {select_core}: select: { id: integer, id: integer }
-  |   | {select_expr_list_con}: select: { id: integer, id: integer }
-  |     | {select_expr_list}: select: { id: integer, id: integer }
-  |     | | {star}: select: { id: integer, id: integer }
+  {select_stmt}: select: { id: integer notnull, id: integer notnull }
+  | {select_core_list}: select: { id: integer notnull, id: integer notnull }
+  | | {select_core}: select: { id: integer notnull, id: integer notnull }
+  |   | {select_expr_list_con}: select: { id: integer notnull, id: integer notnull }
+  |     | {select_expr_list}: select: { id: integer notnull, id: integer notnull }
+  |     | | {star}: select: { id: integer notnull, id: integer notnull }
   |     | {select_from_etc}: JOIN { T1: foo, T2: foo }
   |       | {join_clause}: JOIN { T1: foo, T2: foo }
   |       | | {table_or_subquery}: TABLE { T1: foo }

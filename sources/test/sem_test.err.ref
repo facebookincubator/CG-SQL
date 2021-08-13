@@ -1130,8 +1130,6 @@ Error at test/sem_test.sql:XXXX : in select_stmt : CQL0370: due to a memory leak
 Error at test/sem_test.sql:XXXX : in select_stmt : CQL0370: due to a memory leak bug in old SQLite versions, the select part of an insert must not have a top level join or compound operator. Use WITH and a CTE, or a nested select to work around this.
 Error at test/sem_test.sql:XXXX : in join_target : CQL0371: table valued function used in a left/right/cross context; this would hit a SQLite bug.  Wrap it in a CTE instead.
 Error at test/sem_test.sql:XXXX : in join_target : CQL0371: table valued function used in a left/right/cross context; this would hit a SQLite bug.  Wrap it in a CTE instead.
-Error at test/sem_test.sql:XXXX : in join_target : CQL0371: table valued function used in a left/right/cross context; this would hit a SQLite bug.  Wrap it in a CTE instead.
-Error at test/sem_test.sql:XXXX : in join_target : CQL0371: table valued function used in a left/right/cross context; this would hit a SQLite bug.  Wrap it in a CTE instead.
 Error at test/sem_test.sql:XXXX : in let_stmt : CQL0056: NULL expression has no type to imply the declaration of variable 'null_is_no_good'
 Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 Error at test/sem_test.sql:XXXX : in str : CQL0197: duplicate variable name in the same scope 'created_obj'

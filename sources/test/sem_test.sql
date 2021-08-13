@@ -89,6 +89,18 @@ from foo AS T1
 inner join bar AS T2 ON T1.id = T2.id
 where rate > 0;
 
+-- TEST: left join still creates new nullable columns with no join condition
+-- this is necessary because "T2" might be empty
+-- + {select_stmt}: select: { id: integer notnull, id: integer }
+-- - Error
+select * from foo T1 left join foo T2;
+
+-- TEST: cross join does not create new nullable columns with join condition
+-- cross is the same as inner in SQLite, only reordering optimization is suppressed
+-- + {select_stmt}: select: { id: integer notnull, id: integer notnull }
+-- - Error
+select * from foo T1 cross join foo T2 on T1.id = T2.id;
+
 -- TEST: alternate join syntax
 -- + select: { name: text }
 -- + {select_from_etc}: JOIN { foo: foo, bar: bar }
@@ -3168,7 +3180,7 @@ select * from payload1 left outer join payload2 using (id);
 select * from payload1 right outer join payload2 using (id);
 
 -- TEST: both parts nullable due to cross join
--- + {select_stmt}: select: { id: integer, data1: integer, id: integer, data2: integer }
+-- + select: { id: integer notnull, data1: integer notnull, id: integer notnull, data2: integer notnull }
 -- - Error
 select * from payload1 cross join payload2 using (id);
 
@@ -15977,25 +15989,14 @@ select * from foo inner join tvf(1);
 select * from foo left join tvf(1);
 
 -- TEST: TVF on left of right join is an error
+-- note SQLite doesn't support right join yet so this won't ever run
 -- + {select_stmt}: err
 -- + Error % table valued function used in a left/right/cross context; this would hit a SQLite bug.  Wrap it in a CTE instead.
 -- +1 Error
 select * from tvf(1) right join foo;
 
--- TEST: TVF on left of cross join is an error
--- + {select_stmt}: err
--- + Error % table valued function used in a left/right/cross context; this would hit a SQLite bug.  Wrap it in a CTE instead.
--- +1 Error
-select * from tvf(1) cross join foo;
-
--- TEST: TVF on right of cross join is an error
--- + {select_stmt}: err
--- + Error % table valued function used in a left/right/cross context; this would hit a SQLite bug.  Wrap it in a CTE instead.
--- +1 Error
-select * from foo cross join tvf(1);
-
 -- TEST: non TVF cross join is ok
--- + {select_stmt}: select: { id: integer, id: integer }
+-- + {select_stmt}: select: { id: integer notnull, id: integer notnull }
 -- - Error
 select * from foo T1 cross join foo T2;
 

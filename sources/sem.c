@@ -2652,7 +2652,8 @@ static void join_tables(ast_node *t1, ast_node *t2, ast_node *result, int32_t jo
      bool_t error = false;
      switch (join_type) {
        case JOIN_CROSS:
-         error = t1_tvf || t2_tvf;
+         // cross is the same as INNER in SQLITE (only optimization differences to suppress optimization)
+         // there is no full outer join
          break;
        case JOIN_LEFT_OUTER:
        case JOIN_LEFT:
@@ -2660,6 +2661,8 @@ static void join_tables(ast_node *t1, ast_node *t2, ast_node *result, int32_t jo
          break;
        case JOIN_RIGHT_OUTER:
        case JOIN_RIGHT:
+         // sqlite doesn't actually have right join; attempting to use it will net you syntax errors
+         // CQL is forward looking in this regard...
          error = t1_tvf;
          break;
      }
@@ -2700,21 +2703,25 @@ static void join_tables(ast_node *t1, ast_node *t2, ast_node *result, int32_t jo
 
   switch (join_type) {
     case JOIN_INNER:
-      strip_left = strip_right = 0;
-      break;
     case JOIN_CROSS:
-      strip_left = strip_right = SEM_TYPE_NOTNULL;
+      // cross join is the same as inner join in SQLite
+      // the only difference is the optimizer declines to reorder cross joins as a hint
+      // there is no full outer join
+      strip_left = strip_right = 0;
       break;
     case JOIN_LEFT_OUTER:
     case JOIN_LEFT:
+      // Note: left outer join can result in not nulls even if there is no join condition
+      // because the table on the right might be empty
       strip_left = 0;
       strip_right = SEM_TYPE_NOTNULL;
       break;
     case JOIN_RIGHT_OUTER:
     case JOIN_RIGHT:
+      // Note: SQLite doesn' have right join yet so this is forward looking
       strip_left = SEM_TYPE_NOTNULL;
       strip_right = 0;
-       break;
+      break;
   }
 
   // Now just copy over the names and the tables.
