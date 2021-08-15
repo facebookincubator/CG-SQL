@@ -43,58 +43,84 @@ cql_noexport void gen_to_stdout(ast_node *_Nullable ast, gen_func fn);
 // in any case the output you provide is emitted
 typedef bool_t (*_Nullable gen_sql_callback)(struct ast_node *_Nonnull ast, void *_Nullable context, charbuf *_Nonnull output);
 
-// The three mode to alter the generated cql slightly.
+// These modes control the overall style of the output
 enum gen_sql_mode {
-  gen_mode_echo,            // Print everything in the sql statement
-  gen_mode_sql,             // Print only statement valid to sqlite. e.g: annotation is not valid to sqlite
-  gen_mode_no_annotations   // Equivalent to gen_mode_echo without all the CQL annotations except:
-                            //   - sensentive_attr node
-                            //   - note: statements that start with @ are not annotations. like @ECHO @SCHEMA_UPGRADE_SCRIPT, ...
+  gen_mode_echo,          // Prints everything in the original, with standard whitespace and parentheses
+  gen_mode_sql,           // Prints the AST formatted for SQLite consumption, omits anything CQL specific
+  gen_mode_no_annotations // Equivalent to gen_mode_echo without versioning attributes or generic attribues
+                          // * @create, @delete, @recreate, and @attribute are removed
+                          // * statements like @echo are not affected, nor is the type specifier @sensitive
 };
 
-// Callbacks allow you to alter the generated sql slightly
-// this in particular lets you suppress some columns and record the use of variables
-// so that SQL can be changed to include '?' for variables and columns added
-// in later versions of the schema can be suppressed in create table statements.
-//  This is pretty generalizable.
+// Callbacks allow you to significantly alter the generated sql, see the particular flags below.
 typedef struct gen_sql_callbacks {
+  // Each time a local/global variable is encountered in the AST, this callback is invoked
+  // this is to allow the varialbe reference to be noted and replaced with ? in the generated SQL
   gen_sql_callback _Nullable variables_callback;
   void *_Nullable variables_context;
+
+  // Each time a column definition is emitted this callback is invoked, it may choose to
+  // suppress that column.  This is used to remove columns that were added in later schema
+  // versions from the baseline schema.
   gen_sql_callback _Nullable col_def_callback;
   void *_Nullable col_def_context;
+
+  // This callback is used to expland the * in select * or select T.*
   gen_sql_callback _Nullable star_callback;
   void *_Nullable star_context;
+
+  // This callback is used to force the "IF NOT EXISTS" form of DDL statements when generating
+  // schema upgrade steps.  e.g. a "CREATE TABLE Foo declarations get "IF NOT EXISTS" added
+  // to them in upgrade steps.
   gen_sql_callback _Nullable if_not_exists_callback;
   void *_Nullable if_not_exists_context;
+
+  // If true, hex literals are converted to decimal.  This is for JSON which does not support hex literals.
   bool_t convert_hex;
+
+  // If true casts like "CAST(NULL as TEXT)" are reduced to just NULL.  The type information is not needed
+  // by SQLite so it just wasts space.
   bool_t minify_casts;
+
+  // If true then unused aliases in select statements are elided to save space.  This is safe because
+  // CQL always binds the top level select statement by ordinal anyway.
   bool_t minify_aliases;
 
   // mode to print cql statement: gen_mode_echo, gen_mode_sql, gen_mode_no_annotations.
   // gen_mode_sql mode causes the AS part of virtual table to be suppressed
   enum gen_sql_mode mode;
 
-  // If CQL finds a column such as this
-  // create table foo(x long int primary key autoincrement)
+  // If CQL finds a column such as 'x' below'
   //
-  // that column must be converted to
-  // create table foo(x interger primary key autoincrement)
+  // create table foo(
+  //   x long_int primary key autoincrement
+  // );
   //
-  // SQLite mandates that autoincrement must be exactly as the above
-  // however, it is also the case that in SQLite integers can store
-  // 64 bit values.  So sending "integer" to sqlite while keeping
-  // the sense that the column is to be treated as 64 bits in CQL works
+  // that column must be converted to this form:
+  //
+  // create table foo(
+  //   x integer primary key autoincrement
+  // );
+  //
+  // This is because SQLite mandates that autoincrement must be exactly
+  // in the second example above however, it is also the case that in SQLite
+  // an integer can store a 64 bit value.  So sending "integer" to SQLite while
+  // keeping the sense that the column is to be treated as 64 bits in CQL works
   // just fine.
   //
-  // However, when we are emitted CQL (rather than SQL) we want to keep
-  // the original long int type and not do the mapping so that things
-  // like FK type checking don't give bogus errors.  This flag is for that
-  // purpose.  It tells us that the target isn't SQLite and we don't need
-  // to do the mapping (yet). Indeed, we shouldn't, or the types will be
-  // messed up.
+  // However, when we are emitting CQL (rather than SQL) we want to keep
+  // the original long_int type so as not to lose fidelity when processing
+  // schema for other semantic checks (such as matching FK data types).
+  //
+  // This flag is for that purpose: It tells us that the target isn't SQLite
+  // and we don't need to do the mapping (yet). Indeed, we shouldn't, or the
+  // types will be messed up.
   //
   // In short, if CQL is going to process the output again, use this flag
-  // to control the autoincrement transform.
+  // to control the autoincrement transform.  It might be possible to fold
+  // this flag with the mode flag but it's sufficiently wierd that this
+  // extra documention and special handling is probably worth the extra
+  // boolean storage.
   bool_t long_to_int_conv;
 } gen_sql_callbacks;
 

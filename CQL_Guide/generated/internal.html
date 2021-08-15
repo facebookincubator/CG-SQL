@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>CQL Internals</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      word-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">CQL Internals</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#cql-internals-guide">CQL Internals Guide</a></li>
+<li><a href="#lexical-analysis-parsing-and-the-abstract-syntax-tree">Lexical Analysis, Parsing, and the Abstract Syntax Tree</a>
+<ul>
+<li><a href="#lexical-analysis">Lexical Analysis</a></li>
+<li><a href="#parsing-and-the-abstract-syntax-tree">Parsing and the Abstract Syntax Tree</a></li>
+<li><a href="#examples">Examples</a></li>
+<li><a href="#ast-definitions">AST definitions</a></li>
+</ul></li>
+<li><a href="#echoing-the-ast">Echoing the AST</a>
+<ul>
+<li><a href="#configuring-the-output-with-callbacks-and-flags">Configuring the Output with Callbacks and Flags</a></li>
+<li><a href="#invoking-the-generator">Invoking the Generator</a></li>
+<li><a href="#generator-internals">Generator Internals</a></li>
+</ul></li>
+</ul>
+</nav>
+<!--- @generated -->
+<h2 id="cql-internals-guide">CQL Internals Guide</h2>
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
+<p>The following is a summary of the implementation theory of the CQL compiler. This is an adjuct to the Guide proper, which describes the language, and to a lesser extent the code that the compiler generates.</p>
+<p>The actual code is heavily commented, so it’s better to read the code to see the details of how any particular operation happens rather than try to guess from the language specification or from this overview. However, some things, like general principles, really are nowhere, or everywhere, in the codebase and its important to understand how things hang together.</p>
+<p>If you choose to go on adventures in the source code, especially if you aren’t already familiar with compilers and how they are typically built, this is a good place to start.</p>
+<h2 id="lexical-analysis-parsing-and-the-abstract-syntax-tree">Lexical Analysis, Parsing, and the Abstract Syntax Tree</h2>
+<p>The CQL compiler uses a very standard lex+yacc parser, though to be more precise it’s flex+bison. The grammar is a large subset of the SQLite dialect of SQL augmented with control flow and compiler directives. As a consequence its a useful asset in and of itself – if you’re looking for an economical SQL grammar you could do a lot worse than start with the one CQL uses. The grammar is of course in the usual <code>.y</code> format that bison consumes but its also extracted into more readable versions for use in the railroad diagram and the documentation. Any of those sources would be a good starting place for a modest SQL project.</p>
+<h3 id="lexical-analysis">Lexical Analysis</h3>
+<p>Inside of <code>cql.l</code> you’ll find the formal defintion of all the lexemes. There are many that correspond to the various tokens needed to parse the SQL language. There’s no need to dicsuss the approximately 150 such tokens but the following points are of general interest:</p>
+<ul>
+<li>the lexer expects plain text files, and all the lexemes are defined in plain ASCII only, however
+<ul>
+<li>the presence of UTF8 characters in places where any text is legal (such as string literals) should just work</li>
+</ul></li>
+<li>all of the lexemes are case-insensitive
+<ul>
+<li>this means only vanilla ASCII insensitivity, no attempt is made to understand more complex code points</li>
+</ul></li>
+<li>multi-word lexemes typically are defined with an expression like this: <code>IS[ \t]+NOT[ \t]+FALSE/[^A-Z_]</code>
+<ul>
+<li>in most cases, to avoid ambiguity, and to get order of operations correct, the entire word sequence is one lexeme</li>
+<li>only spaces and tabs are allowed between the words</li>
+<li>the token ends on non-identifier characters, so the text “X IS NOT FALSEY” must become the lexemes { <code>X</code>, <code>IS_NOT</code>, <code>FALSEY</code> } and not { <code>X</code>, <code>IS_NOT_FALSE</code>, <code>Y</code> }
+<ul>
+<li>the latter would result in the longest lexeme so without the trailing qualifier and hence would be preferred, hence where a contuation is possible the trailing context must be specified in multi=word lexemes</li>
+</ul></li>
+<li>Note: a quick reading shows this isn’t done completely consistently and that should be fixed</li>
+</ul></li>
+<li>there is special processing needed to lex <code>/* ... */</code> comments correctly</li>
+<li>there are token types for each of the sorts of literals that can be encountered, special care is taken to keep the literals in string form so that no precision is lost
+<ul>
+<li>integer literals are compared against 0x7fffffff and if greater they automatically become long literals even if they are not marekd with the trailing <code>L</code> as in <code>1L</code></li>
+<li>string literals include the quotation marks in the lexeme text which distinguishes them from identifiers, they are otherwise encoded similarly</li>
+</ul></li>
+<li>the character class <code>[-+&amp;~|^/%*(),.;!&lt;&gt;:=]</code> produces single character tokens for identifiers, other non-matching single characters (e.g. <code>'$'</code> produce an error)</li>
+<li>line directives <code>^#\ [0-9]+\ \"[^"]*\".*</code> get special processing so that pre-processed input does not lose file and line number fidelity</li>
+</ul>
+<h3 id="parsing-and-the-abstract-syntax-tree">Parsing and the Abstract Syntax Tree</h3>
+<p>Inside of <code>cql.y</code> you will find the token declarations, precededence rules, and all of the productions in the overall grammar. The grammar processing does as little as possible in that stage to create an abstract syntax tree. AST itself is a simple binary tree; where nodes might require more than just left and right children to specify things fully, additional nodes are used in the tree shape rather than introducy n-ary nodes. This means the tree is sometimes bigger but generally not very much bigger. The benefit is that the AST can always be walked generically as a binary tree, so if you need to find all the <code>table_factor</code> nodes it is easy to do so without having to worry about how every kind of node expands. If new node types come along the generic walkers can go through those as well. All of the grammar productions simply make one or more AST nodes and link them together so that in the end there is a single root for the entire program.</p>
+<p>There are 4 kinds of ast nodes, they all begin with the following 5 fields, these represent the AST base type if you like.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>  <span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>_Nonnull type<span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">struct</span> sem_node <span class="op">*</span>_Nullable sem<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">struct</span> ast_node <span class="op">*</span>_Nullable parent<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int32_t</span> lineno<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>_Nonnull filename<span class="op">;</span></span></code></pre></div>
+<ul>
+<li><code>type</code> – a string literal that uniquely identifies the node type
+<ul>
+<li>the string literal is compared for identity (it’s an exact pointer match) you don’t <code>strcmp</code> it</li>
+</ul></li>
+<li><code>sem</code> – begins as <code>NULL</code> this is where the semantic type goes once semantic processing happens</li>
+<li><code>parent</code> – the parent node in the AST (not often used but sometimes indispensible)</li>
+<li><code>lineno</code> – the line number of the file that had the text that led to this AST (useful for errors)</li>
+<li><code>filename</code> – the name of the file that had the text that led to this AST (useful for errors)
+<ul>
+<li>this string is durable, should not be mutated, and is shared between MANY nodes</li>
+</ul></li>
+</ul>
+<h4 id="generic-ast-node">Generic AST node</h4>
+<div class="sourceCode" id="cb2"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">struct</span> ast_node <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">...</span> the common fields</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">struct</span> ast_node <span class="op">*</span>_Nullable left<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">struct</span> ast_node <span class="op">*</span>_Nullable right<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> ast_node<span class="op">;</span></span></code></pre></div>
+<p>This node gives the tree its shape, this is is how all the expression operators and statments get encoded. An example says this more clearly</p>
+<pre><code>SET X := 1 + 3;
+
+  {assign}
+  | {name X}
+  | {add}
+    | {int 1}
+    | {int 3}</code></pre>
+<p>In the above “assign” and “add” are the generic nodes. Node that these can be leaves but often are not.</p>
+<p>Note that in the above the node type was directly printed (because it’s a meaningful name). Likewise, the type needs no decoding when viewing the AST in a debugger. Simply printing the node with something like <code>p *ast</code> in lldb will show you all the node fields and the type in a human readable fashion.</p>
+<h4 id="grammar-code-node">Grammar Code Node</h4>
+<div class="sourceCode" id="cb4"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">struct</span> int_ast_node <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">...</span> the common fields</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int64_t</span> value<span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> int_ast_node<span class="op">;</span></span></code></pre></div>
+<p>This kind of node holds an integer that quantifies some kind of choice in the grammar. Note that this does NOT hold numeric literals (see below). The file <code>ast.h</code> includes many <code>#define</code> constants such as:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>define JOIN_INNER <span class="dv">1</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>define JOIN_CROSS <span class="dv">2</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>define JOIN_LEFT_OUTER <span class="dv">3</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>define JOIN_RIGHT_OUTER <span class="dv">4</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>define JOIN_LEFT <span class="dv">5</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>define JOIN_RIGHT <span class="dv">6</span></span></code></pre></div>
+<p>The integer here is one of those values. It can be a bitmask, or an enumeration. In this statement:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> x</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> a</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">LEFT</span> <span class="kw">OUTER</span> <span class="kw">JOIN</span> b;</span></code></pre></div>
+<p>a part of the AST will look like this:</p>
+<pre><code>| {join_clause}
+| | {table_or_subquery}
+| | | {name a}
+| | {join_target_list}
+|   | {join_target}
+|     | {int 3}
+|     | {table_join}
+|       | {table_or_subquery}
+|         | {name b}</code></pre>
+<p>The <code>{int 3}</code> ia an int_ast_node and it corresponds to <code>JOIN_LEFT_OUTER</code>.</p>
+<p>This node type is always a leaf.</p>
+<h4 id="string-node">String Node</h4>
+<div class="sourceCode" id="cb8"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">struct</span> str_ast_node <span class="op">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">...</span> the common fields</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>_Nullable value<span class="op">;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  bool_t cstr_literal<span class="op">;</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> str_ast_node<span class="op">;</span></span></code></pre></div>
+<ul>
+<li><code>value</code> – the text of the string</li>
+<li><code>cstr_literal</code> – true if the string was specified using “C” syntax (see below)</li>
+</ul>
+<p>This node type holds: * string literals * blob literals * identifiers</p>
+<p>CQL supports C style string literals with C style escapes such as <code>"foo\n"</code>. These are normalized into the SQL version of the same literal so that SQLite will see a literal it understands. However, if the origin of the string was the C string form (i.e. <code>"foo"</code> rather than <code>'bar'</code>) then the <code>cstr_literal</code> boolean flag will be set. When echoing the program back as plain text, the C string will be converted back to the C form for display. This means, for instance, that the comments in the output C correspond to the original string format even though the code that gets set to SQLite is always in SQL format.</p>
+<p>Identifiers can be distinguised from string literals because the quotation marks are stil in the string.</p>
+<p>This node type is always a leaf.</p>
+<h4 id="number-node">Number Node</h4>
+<div class="sourceCode" id="cb9"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">struct</span> num_ast_node <span class="op">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">...</span> the common fields</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int32_t</span> num_type<span class="op">;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>_Nullable value<span class="op">;</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> num_ast_node<span class="op">;</span></span></code></pre></div>
+<ul>
+<li><code>num_type</code> the kind of numeric</li>
+<li><code>value</code> the text of the number</li>
+</ul>
+<p>All numerics are stored as strings so that there is no loss of precision. This is important because it is entirely possible that the CQL compiler is build with a different floating point library, or different integer sizes, than the target system. As a result CQL does not evaluate anything outside of an explicit <code>const()</code> expression. This avoids integer overflows at compile time or loss of floating point precesion; Constants in the text of the output are emitted byte-for-byte as they appeared in the source code.</p>
+<p>This node type is always a leaf.</p>
+<h3 id="examples">Examples</h3>
+<h4 id="example-1-a-let-statement-and-expression">Example 1: A let statement and expression</h4>
+<pre><code>LET x := 1 + (3 - 2);
+
+  {let_stmt}
+  | {name x}
+  | {add}
+    | {int 1}
+    | {sub}
+      | {int 3}
+      | {int 2}</code></pre>
+<p>Note that there are no parentheses in the AST but it exactly and authoritatively captures the precedence with its shape. This means, among other things, that when CQL echos its input, any redundant parentheses will be gone.</p>
+<h4 id="example-2-an-ifelse-construct">Example 2: An if/else construct</h4>
+<pre><code>IF x THEN
+  LET x := 1.5e7;
+ELSE IF y THEN
+  LET y := &#39;that&#39;;
+ELSE
+  LET z := &quot;this&quot;;
+END IF;
+
+  {if_stmt}
+  | {cond_action}
+  | | {name x}
+  | | {stmt_list}
+  |   | {let_stmt}
+  |     | {name x}
+  |     | {dbl 1.5e7}
+  | {if_alt}
+    | {elseif}
+    | | {cond_action}
+    |   | {name y}
+    |   | {stmt_list}
+    |     | {let_stmt}
+    |       | {name y}
+    |       | {strlit &#39;that&#39;}
+    | {else}
+      | {stmt_list}
+        | {let_stmt}
+          | {name z}
+          | {strlit &#39;this&#39;}</code></pre>
+<p>Note that the string “this” was normalized to ‘this’ (which was trivial in this case) but rest assured that <code>cstr_literal</code> was set. This is shown because the text of the statement came out with double quotes. The text above was not the input to the compiler, the compiler was actually given this text</p>
+<pre><code>if x then let x := 1.5e7; else if y then let y := &#39;that&#39;; else let z := &quot;this&quot;; end if;</code></pre>
+<p>And it was normalized into what you see as part of the output. We’ll talk about this output echoing in coming sections, but as you can see, the compiler can be used as a SQL normalizer/beautifier.</p>
+<h4 id="example-3-a-select-statement">Example 3: A select statement</h4>
+<pre><code>SELECT *
+  FROM foo
+  INNER JOIN bar
+  WHERE foo.x = 1
+LIMIT 3;
+
+  {select_stmt}
+  | {select_core_list}
+  | | {select_core}
+  |   | {select_expr_list_con}
+  |     | {select_expr_list}
+  |     | | {star}
+  |     | {select_from_etc}
+  |       | {join_clause}
+  |       | | {table_or_subquery}
+  |       | | | {name foo}
+  |       | | {join_target_list}
+  |       |   | {join_target}
+  |       |     | {int 1}
+  |       |     | {table_join}
+  |       |       | {table_or_subquery}
+  |       |         | {name bar}
+  |       | {select_where}
+  |         | {opt_where}
+  |         | | {eq}
+  |         |   | {dot}
+  |         |   | | {name foo}
+  |         |   | | {name x}
+  |         |   | {int 1}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {opt_limit}
+      | | {int 3}
+      | {select_offset}</code></pre>
+<p>As you can see the trees rapidly get more complex. The select statement has many optional pieces and so the AST actually has places in its skeleton where these could go but are abasent (e.g. group by, having, order, and offset are all missing).</p>
+<p>The shape of the AST is self evident.</p>
+<p>The compiler can produce these diagrams in ‘dot’ format which makes pretty pictures but the reality is that for non-trivial examples that pictures are so large as to be unreadable whereas the simple text format remains readable even up to several hundred lines of output and is readily searchable, and diffable. The test suites for semantic analysis do pattern matching on the text of the AST to verify correctness.</p>
+<p>We’ll discuss semantic analysis in later sections.</p>
+<h3 id="ast-definitions">AST definitions</h3>
+<p><code>ast.h</code> defines the all the tree types mentioned above. There are helper methods to create AST nodes with type safety. It includes helper functions for the various leaf types mentioned above but also for the various “normal” types. These are specified using the AST macros <code>AST</code>, <code>AST1</code>, and <code>AST0</code></p>
+<p>Examples:</p>
+<pre><code>AST0(star)
+AST1(not)
+AST(or)</code></pre>
+<p>This says that:</p>
+<ul>
+<li>the <code>star</code> AST node (used in <code>select *</code>) is a leaf, it has 0 children
+<ul>
+<li>this means the left and right nodes will always be <code>NULL</code></li>
+</ul></li>
+<li>the <code>not</code> AST node (used in <code>select NOT x</code>) is unary
+<ul>
+<li>this means only the left node is populated, the right is always <code>NULL</code></li>
+<li>node many unary nodes have optional children, so the left node might still be <code>NULL</code></li>
+</ul></li>
+<li>the <code>or</code> AST node (used in <code>select x OR y</code>) is binary
+<ul>
+<li>this means both its left and right children are populated</li>
+<li>note that some binary nodes have optional children, so left or right still might be <code>NULL</code></li>
+</ul></li>
+</ul>
+<p>At present there are about 300 unique AST node types.</p>
+<h2 id="echoing-the-ast">Echoing the AST</h2>
+<p>The first set of features that were built after parsing was the ability to echo back the parse tree as SQL again. This all happens in <code>gen_sql.c</code> and since it has to be able to echo back any tree it often has the best and simplest examples of how to crack the AST for a particular type of node.</p>
+<p>There are several reasons why we might want to echo the SQL but the inescapable one is this: any hunk of SQL that appears as part of a CQL program (i.e. DDL/DML rather than control flow like IF/WHILE) has to go to SQLite and SQLite expects it to be plain text. So the AST must be reformatted as plain text that is exactly equivalent to the input. The process of parsing removes extra white space and parentheses and instead some standard formatting (including indenting) is applied to the output text. This has the effect of normalizing the input and potentially beautifying it as well if it was particularly poorly formatted initially.</p>
+<p>To see these features you need only run cql with no arguments, by default it reads stdin, makes the AST, and then emits the normalized formatted text. If there are no syntax errors, the input and the output should be equivalent. And here is where we start to see some of the extra demands.</p>
+<p>CQL includes a lot of versioning directives like <code>@create(...)</code> <code>@delete(...)</code> and so forth. SQLite should never see these things when the DDL for SQLite is emitted. But when echoing the input they should be included. Additionally, any local or global variables in a SQL statement should be replaced with <code>?</code> in the text that goes to SQLite and then followed up with binding instructions. We’ll cover the binding more in the section code generation, but importantly this also has to significantly alter the desired outcome. As a result the standard formatter includes extensive configurably to get these results.</p>
+<h3 id="configuring-the-output-with-callbacks-and-flags">Configuring the Output with Callbacks and Flags</h3>
+<p>Some of these features, like variable binding, require a callback to formatter’s client to get a notification, these callbacks along with a few control variables decide exactly how the output will be created. The control structure is <code>struct gen_sql_callbacks</code>, described below. It’s quite flexible so it ends up not changing very often. It includes the various callbacks (all of which are optional) and each callback gets a ‘context’ pointer. This is some <code>void *</code> value that you provide which will be given to your function along with the AST pointer relevant to the call. The callback also gets the current output buffer so it can choose to emit something (like ‘?’ into the stream)</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">// signature for a callback, you get your context plus the ast</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="co">// if you return true then the normal output is suppressed</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co">// in any case the output you provide is emitted</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> bool_t <span class="op">(*</span>_Nullable gen_sql_callback<span class="op">)(</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">struct</span> ast_node <span class="op">*</span>_Nonnull ast<span class="op">,</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">void</span> <span class="op">*</span>_Nullable context<span class="op">,</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  charbuf <span class="op">*</span>_Nonnull output</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="op">);</span></span></code></pre></div>
+<p>The meaning of the <code>bool_t</code> return value varies depend on which callback it is.</p>
+<p>The coarsest control is provided by the generation mode. It is one of these values.</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">// These modes control the overall style of the output</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> gen_sql_mode <span class="op">{</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  gen_mode_echo<span class="op">,</span>          <span class="co">// Prints everything in the original, with standard whitespace and parentheses</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  gen_mode_sql<span class="op">,</span>           <span class="co">// Prints the AST formatted for SQLite consumption, omits anything CQL specific</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  gen_mode_no_annotations <span class="co">// Equivalent to gen_mode_echo without versioning attributes or generic attribues</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>                          <span class="co">// * @create, @delete, @recreate, and @attribute are removed</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>                          <span class="co">// * statements like @echo are not affected, nor is the type specifier @sensitive</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<p>The actual callbacks structure is optional, if it is null then you get full echo of the AST with no changes. Otherwise the callbacks and flags alter the behavior somewhat.</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Callbacks allow you to significantly alter the generated sql, see the particular flags below.</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">struct</span> gen_sql_callbacks <span class="op">{</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Each time a local/global variable is encountered in the AST, this callback is invoked</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">// this is to allow the varialbe reference to be noted and replaced with ? in the generated SQL</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  gen_sql_callback _Nullable variables_callback<span class="op">;</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">void</span> <span class="op">*</span>_Nullable variables_context<span class="op">;</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Each time a column definition is emitted this callback is invoked, it may choose to</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">// suppress that column.  This is used to remove columns that were added in later schema</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">// versions from the baseline schema.</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>  gen_sql_callback _Nullable col_def_callback<span class="op">;</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">void</span> <span class="op">*</span>_Nullable col_def_context<span class="op">;</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">// This callback is used to expland the * in select * or select T.*</span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>  gen_sql_callback _Nullable star_callback<span class="op">;</span></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>  <span class="dt">void</span> <span class="op">*</span>_Nullable star_context<span class="op">;</span></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>  <span class="co">// This callback is used to force the &quot;IF NOT EXISTS&quot; form of DDL statements when generating</span></span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>  <span class="co">// schema upgrade steps.  e.g. a &quot;CREATE TABLE Foo declarations get &quot;IF NOT EXISTS&quot; added</span></span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>  <span class="co">// to them in upgrade steps.</span></span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>  gen_sql_callback _Nullable if_not_exists_callback<span class="op">;</span></span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>  <span class="dt">void</span> <span class="op">*</span>_Nullable if_not_exists_context<span class="op">;</span></span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a>  <span class="co">// If true, hex literals are converted to decimal.  This is for JSON which does not support hex literals.</span></span>
+<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a>  bool_t convert_hex<span class="op">;</span></span>
+<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a>  <span class="co">// If true casts like &quot;CAST(NULL as TEXT)&quot; are reduced to just NULL.  The type information is not needed</span></span>
+<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a>  <span class="co">// by SQLite so it just wasts space.</span></span>
+<span id="cb17-29"><a href="#cb17-29" aria-hidden="true" tabindex="-1"></a>  bool_t minify_casts<span class="op">;</span></span>
+<span id="cb17-30"><a href="#cb17-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-31"><a href="#cb17-31" aria-hidden="true" tabindex="-1"></a>  <span class="co">// If true then unused aliases in select statements are elided to save space.  This is safe because</span></span>
+<span id="cb17-32"><a href="#cb17-32" aria-hidden="true" tabindex="-1"></a>  <span class="co">// CQL always binds the top level select statement by ordinal anyway.</span></span>
+<span id="cb17-33"><a href="#cb17-33" aria-hidden="true" tabindex="-1"></a>  bool_t minify_aliases<span class="op">;</span></span>
+<span id="cb17-34"><a href="#cb17-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-35"><a href="#cb17-35" aria-hidden="true" tabindex="-1"></a>  <span class="co">// mode to print cql statement: gen_mode_echo, gen_mode_sql, gen_mode_no_annotations.</span></span>
+<span id="cb17-36"><a href="#cb17-36" aria-hidden="true" tabindex="-1"></a>  <span class="co">// gen_mode_sql mode causes the AS part of virtual table to be suppressed</span></span>
+<span id="cb17-37"><a href="#cb17-37" aria-hidden="true" tabindex="-1"></a>  <span class="kw">enum</span> gen_sql_mode mode<span class="op">;</span></span>
+<span id="cb17-38"><a href="#cb17-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-39"><a href="#cb17-39" aria-hidden="true" tabindex="-1"></a>  <span class="co">// If CQL finds a column such as &#39;x&#39; below&#39;</span></span>
+<span id="cb17-40"><a href="#cb17-40" aria-hidden="true" tabindex="-1"></a>  <span class="co">//</span></span>
+<span id="cb17-41"><a href="#cb17-41" aria-hidden="true" tabindex="-1"></a>  <span class="co">// create table foo(</span></span>
+<span id="cb17-42"><a href="#cb17-42" aria-hidden="true" tabindex="-1"></a>  <span class="co">//   x long_int primary key autoincrement</span></span>
+<span id="cb17-43"><a href="#cb17-43" aria-hidden="true" tabindex="-1"></a>  <span class="co">// );</span></span>
+<span id="cb17-44"><a href="#cb17-44" aria-hidden="true" tabindex="-1"></a>  <span class="co">//</span></span>
+<span id="cb17-45"><a href="#cb17-45" aria-hidden="true" tabindex="-1"></a>  <span class="co">// that column must be converted to this form:</span></span>
+<span id="cb17-46"><a href="#cb17-46" aria-hidden="true" tabindex="-1"></a>  <span class="co">//</span></span>
+<span id="cb17-47"><a href="#cb17-47" aria-hidden="true" tabindex="-1"></a>  <span class="co">// create table foo(</span></span>
+<span id="cb17-48"><a href="#cb17-48" aria-hidden="true" tabindex="-1"></a>  <span class="co">//   x integer primary key autoincrement</span></span>
+<span id="cb17-49"><a href="#cb17-49" aria-hidden="true" tabindex="-1"></a>  <span class="co">// );</span></span>
+<span id="cb17-50"><a href="#cb17-50" aria-hidden="true" tabindex="-1"></a>  <span class="co">//</span></span>
+<span id="cb17-51"><a href="#cb17-51" aria-hidden="true" tabindex="-1"></a>  <span class="co">// This is because SQLite mandates that autoincrement must be exactly</span></span>
+<span id="cb17-52"><a href="#cb17-52" aria-hidden="true" tabindex="-1"></a>  <span class="co">// in the second example above however, it is also the case that in SQLite</span></span>
+<span id="cb17-53"><a href="#cb17-53" aria-hidden="true" tabindex="-1"></a>  <span class="co">// an integer can store a 64 bit value.  So sending &quot;integer&quot; to SQLite while</span></span>
+<span id="cb17-54"><a href="#cb17-54" aria-hidden="true" tabindex="-1"></a>  <span class="co">// keeping the sense that the column is to be treated as 64 bits in CQL works</span></span>
+<span id="cb17-55"><a href="#cb17-55" aria-hidden="true" tabindex="-1"></a>  <span class="co">// just fine.</span></span>
+<span id="cb17-56"><a href="#cb17-56" aria-hidden="true" tabindex="-1"></a>  <span class="co">//</span></span>
+<span id="cb17-57"><a href="#cb17-57" aria-hidden="true" tabindex="-1"></a>  <span class="co">// However, when we are emitting CQL (rather than SQL) we want to keep</span></span>
+<span id="cb17-58"><a href="#cb17-58" aria-hidden="true" tabindex="-1"></a>  <span class="co">// the original long_int type so as not to lose fidelity when processing</span></span>
+<span id="cb17-59"><a href="#cb17-59" aria-hidden="true" tabindex="-1"></a>  <span class="co">// schema for other semantic checks (such as matching FK data types).</span></span>
+<span id="cb17-60"><a href="#cb17-60" aria-hidden="true" tabindex="-1"></a>  <span class="co">//</span></span>
+<span id="cb17-61"><a href="#cb17-61" aria-hidden="true" tabindex="-1"></a>  <span class="co">// This flag is for that purpose: It tells us that the target isn&#39;t SQLite</span></span>
+<span id="cb17-62"><a href="#cb17-62" aria-hidden="true" tabindex="-1"></a>  <span class="co">// and we don&#39;t need to do the mapping (yet). Indeed, we shouldn&#39;t, or the</span></span>
+<span id="cb17-63"><a href="#cb17-63" aria-hidden="true" tabindex="-1"></a>  <span class="co">// types will be messed up.</span></span>
+<span id="cb17-64"><a href="#cb17-64" aria-hidden="true" tabindex="-1"></a>  <span class="co">//</span></span>
+<span id="cb17-65"><a href="#cb17-65" aria-hidden="true" tabindex="-1"></a>  <span class="co">// In short, if CQL is going to process the output again, use this flag</span></span>
+<span id="cb17-66"><a href="#cb17-66" aria-hidden="true" tabindex="-1"></a>  <span class="co">// to control the autoincrement transform.  It might be possible to fold</span></span>
+<span id="cb17-67"><a href="#cb17-67" aria-hidden="true" tabindex="-1"></a>  <span class="co">// this flag with the mode flag but it&#39;s sufficiently wierd that this</span></span>
+<span id="cb17-68"><a href="#cb17-68" aria-hidden="true" tabindex="-1"></a>  <span class="co">// extra documention and special handling is probably worth the extra</span></span>
+<span id="cb17-69"><a href="#cb17-69" aria-hidden="true" tabindex="-1"></a>  <span class="co">// boolean storage.</span></span>
+<span id="cb17-70"><a href="#cb17-70" aria-hidden="true" tabindex="-1"></a>  bool_t long_to_int_conv<span class="op">;</span></span>
+<span id="cb17-71"><a href="#cb17-71" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> gen_sql_callbacks<span class="op">;</span></span></code></pre></div>
+<p>Each callback can be best understood by reading the source, so we’ll avoid trying to precisely define it here. But it is helpful to give the jist of these options.</p>
+<ul>
+<li><code>mode</code> : one of the three enum modes that control overall behavior</li>
+<li><code>variables_callback</code> : invoked when a variable appears in the SQL, the caller can record the specific variable and then use it for binding</li>
+<li><code>col_def_callback</code> : when creating the “baseline” schema you don’t want column defintions from later schema to be included, this gives you a chance to suppress them</li>
+<li><code>star_callback</code> : normally the <code>*</code> in <code>select *</code> or <code>select T.*</code> is expanded when emitting for SQLite, this callback does the expansion when appropriate</li>
+<li><code>if_not_exists_callback</code> : when generating DDL for schema upgrade you typically want to force <code>IF NOT EXISTS</code> to be added to the schema even if it wasn’t present in the declaration, this callback lets you do that</li>
+<li><code>convert_hex</code> : hex constants are converted to decimal if true, used when emitting JSON because it doesn’t understand hex constants</li>
+<li><code>minify_casts</code> : minification conversts casts like <code>CAST(NULL AS TEXT)</code> to just <code>NULL</code> – the former is only useful for type information, SQLite does need to see it</li>
+<li><code>minify_aliases</code> : unused column aliases as in <code>select foo.x as some_really_long_alias</code> can be removed from the output when targetting SQLite top save space</li>
+</ul>
+<h3 id="invoking-the-generator">Invoking the Generator</h3>
+<p>There are several generation functions but they all follow a similar pattern, the differences are essentially what fragment of the AST they expect to begin on. We’ll just cover one here.</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>cql_noexport <span class="dt">void</span> gen_statement_with_callbacks<span class="op">(</span>ast_node <span class="op">*</span>_Nonnull ast<span class="op">,</span> gen_sql_callbacks <span class="op">*</span>_Nullable _callbacks<span class="op">);</span></span></code></pre></div>
+<p>This has the typical signature * <code>ast</code> : the part of the tree to print * <code>_callbacks</code> : the optional callbacks described above</p>
+<p>To use these you’ll need</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>cql_noexport <span class="dt">void</span> gen_init<span class="op">(</span><span class="dt">void</span><span class="op">);</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>cql_noexport <span class="dt">void</span> gen_cleanup<span class="op">(</span><span class="dt">void</span><span class="op">);</span></span></code></pre></div>
+<p>You’ll want to call <code>gen_init()</code> one time before doing any generation. That sets up the necessary tables. When you’re done use <code>gen_cleanup()</code> to release any memory that was allocated in setup. You don’t have to do the cleanup step if the process is going to exit anyway, but because of the amalgam options, <code>cql_main()</code> assumes it might be called again and so it tidies things up rather than leak.</p>
+<p>With the one time initialization in place there are these preliminaries.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>cql_noexport <span class="dt">void</span> init_gen_sql_callbacks<span class="op">(</span>gen_sql_callbacks <span class="op">*</span>_Nullable callbacks<span class="op">);</span></span></code></pre></div>
+<p>Use <code>init_gen_sql_callbacks</code> to fill in your callback structure with the normal defaults. This give you normal echo for SQL by default. To get full echo, <code>NULL</code> callback may be used. And of course other options are possible.</p>
+<p>Finally,</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>cql_noexport <span class="dt">void</span> gen_set_output_buffer<span class="op">(</span><span class="kw">struct</span> charbuf <span class="op">*</span>_Nonnull buffer<span class="op">);</span></span></code></pre></div>
+<p>Use this before the call to <code>gen_&lt;something&gt;_with_callbacks</code> to redirect the output into a growable character buffer of your choice.</p>
+<p>The buffers can then be written where they are needed. Maybe into a C string literal for compiler output, or into a comment, or just right back to stdout.</p>
+<p>There are a few simplified versions of this sequence like this one:</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>cql_noexport <span class="dt">void</span> gen_stmt_list_to_stdout<span class="op">(</span>ast_node <span class="op">*</span>_Nullable ast<span class="op">);</span></span></code></pre></div>
+<p>This does <code>NULL</code> callbacks and emits directly to stdout with no extra steps. The extra wiring is done for you.</p>
+<h3 id="generator-internals">Generator Internals</h3>
+<p>The generator has to be able to walk the entire tree and emit plain text, and in many areas the tree is very flexible so we want a simple dynamic dispatch mechanism that can call the right formatting function from anyplace in the tree.</p>
+<p>It turns out two different signatures are needed to do this properly, one for formatting statements and the other for expressions. The difference being that expressions have to concern themselves with the precedence of the various operators so that parentheses can be correctly re-inserted into the output.</p>
+<p>To do this there are two symbol tables that map from a AST node type string to a formatting function. They are initialized with a series of statements similar to these:</p>
+<h4 id="generating-expressions">Generating Expressions</h4>
+<div class="sourceCode" id="cb23"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>cql_noexport <span class="dt">void</span> gen_init<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  gen_stmts <span class="op">=</span> symtab_new<span class="op">();</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  gen_exprs <span class="op">=</span> symtab_new<span class="op">();</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  STMT_INIT<span class="op">(</span>if_stmt<span class="op">);</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>  <span class="op">...</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>  EXPR_INIT<span class="op">(</span>mul<span class="op">,</span> gen_binary<span class="op">,</span> <span class="st">&quot;*&quot;</span><span class="op">,</span> EXPR_PRI_MUL<span class="op">);</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>  EXPR_INIT<span class="op">(</span>div<span class="op">,</span> gen_binary<span class="op">,</span> <span class="st">&quot;/&quot;</span><span class="op">,</span> EXPR_PRI_MUL<span class="op">);</span></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>  EXPR_INIT<span class="op">(</span>mod<span class="op">,</span> gen_binary<span class="op">,</span> <span class="st">&quot;%&quot;</span><span class="op">,</span> EXPR_PRI_MUL<span class="op">);</span></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>  EXPR_INIT<span class="op">(</span>add<span class="op">,</span> gen_binary<span class="op">,</span> <span class="st">&quot;+&quot;</span><span class="op">,</span> EXPR_PRI_ADD<span class="op">);</span></span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>  EXPR_INIT<span class="op">(</span>sub<span class="op">,</span> gen_binary<span class="op">,</span> <span class="st">&quot;-&quot;</span><span class="op">,</span> EXPR_PRI_ADD<span class="op">);</span></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>  EXPR_INIT<span class="op">(</span>not<span class="op">,</span> gen_unary<span class="op">,</span> <span class="st">&quot;NOT &quot;</span><span class="op">,</span> EXPR_PRI_NOT<span class="op">);</span></span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>  EXPR_INIT<span class="op">(</span>tilde<span class="op">,</span> gen_unary<span class="op">,</span> <span class="st">&quot;~&quot;</span><span class="op">,</span> EXPR_PRI_TILDE<span class="op">);</span></span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>  <span class="op">...</span></span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>These statements populate the symbol tables. * For statements, the entry maps <code>if_stmt</code> to the function <code>gen_if_stmt</code> * For expressions, the entry maps <code>mul</code> to <code>gen_binary</code> including the metadata "*" and <code>EXPR_PRI_MUL</code></p>
+<p>As you can see (nearly) all binary operators are handled identically as are all unary operators. Let’s look at those two in detail.</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> gen_binary<span class="op">(</span>ast_node <span class="op">*</span>ast<span class="op">,</span> CSTR op<span class="op">,</span> <span class="dt">int32_t</span> pri<span class="op">,</span> <span class="dt">int32_t</span> pri_new<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">// We add parens if our priority is less than the parent prioirty</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">// meaning something like this:</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">// * we&#39;re a + node, our parent is a * node</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">// * we need parens because the tree specifies that the + happens before the *</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">//</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Also, grouping of equal operators is left to right</span></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">// so for so if our right child is the same precendence as us</span></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">// that means there were parens there in the original expression</span></span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">// e.g.  3+(4-7);</span></span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>  <span class="co">// effectively it&#39;s like we&#39;re one binding strength higher for our right child</span></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>  <span class="co">// so we call it with pri_new + 1.  If it&#39;s equal to us it must emit parens</span></span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>pri_new <span class="op">&lt;</span> pri<span class="op">)</span> gen_printf<span class="op">(</span><span class="st">&quot;(&quot;</span><span class="op">);</span></span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a>  gen_expr<span class="op">(</span>ast<span class="op">-&gt;</span>left<span class="op">,</span> pri_new<span class="op">);</span></span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a>  gen_printf<span class="op">(</span><span class="st">&quot; %s &quot;</span><span class="op">,</span> op<span class="op">);</span></span>
+<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a>  gen_expr<span class="op">(</span>ast<span class="op">-&gt;</span>right<span class="op">,</span> pri_new <span class="op">+</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>pri_new <span class="op">&lt;</span> pri<span class="op">)</span> gen_printf<span class="op">(</span><span class="st">&quot;)&quot;</span><span class="op">);</span></span>
+<span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The convention gives us: * <code>ast</code> : pointer to the current AST node * <code>op</code> : the text of the operator (<code>CSTR</code> is simply <code>const char *</code>) * <code>pri</code> : the binding strength of the node above us * <code>pri_new</code> : the binding strength of this node (the new node)</p>
+<p>So generically, if our binding strength is weaker than the context we are contained in, then we must wrap the current node in parentheses to preserve order of operations. See the comment for more details.</p>
+<p>With parens taken care of, we emit the left expression, the operator, and the right expression.</p>
+<p>And as you can see below, unary operators are much the same.</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> gen_unary<span class="op">(</span>ast_node <span class="op">*</span>ast<span class="op">,</span> CSTR op<span class="op">,</span> <span class="dt">int32_t</span> pri<span class="op">,</span> <span class="dt">int32_t</span> pri_new<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>pri_new <span class="op">&lt;</span> pri<span class="op">)</span> gen_printf<span class="op">(</span><span class="st">&quot;(&quot;</span><span class="op">);</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  gen_printf<span class="op">(</span><span class="st">&quot;%s&quot;</span><span class="op">,</span> op<span class="op">);</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  gen_expr<span class="op">(</span>ast<span class="op">-&gt;</span>left<span class="op">,</span> pri_new<span class="op">);</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>pri_new <span class="op">&lt;</span> pri<span class="op">)</span> gen_printf<span class="op">(</span><span class="st">&quot;)&quot;</span><span class="op">);</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>There are special case formatters for some of the postfix operators and other cases that are special like <code>CASE... WHEN... THEN... ELSE... END</code> but they operate on the same principles down to the leaf nodes.</p>
+<h4 id="generating-statements">Generating Statements</h4>
+<p>With no binding strenght to worry about, statement processing is quite a bit simpler.</p>
+<p>Here’s the code for the <code>IF</code> statement mentioned above.</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> gen_if_stmt<span class="op">(</span>ast_node <span class="op">*</span>ast<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  Contract<span class="op">(</span>is_ast_if_stmt<span class="op">(</span>ast<span class="op">));</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  EXTRACT_NOTNULL<span class="op">(</span>cond_action<span class="op">,</span> ast<span class="op">-&gt;</span>left<span class="op">);</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  EXTRACT_NOTNULL<span class="op">(</span>if_alt<span class="op">,</span> ast<span class="op">-&gt;</span>right<span class="op">);</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>  EXTRACT<span class="op">(</span>elseif<span class="op">,</span> if_alt<span class="op">-&gt;</span>left<span class="op">);</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>  EXTRACT_NAMED<span class="op">(</span>elsenode<span class="op">,</span> <span class="cf">else</span><span class="op">,</span> if_alt<span class="op">-&gt;</span>right<span class="op">);</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>  gen_printf<span class="op">(</span><span class="st">&quot;IF &quot;</span><span class="op">);</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>  gen_cond_action<span class="op">(</span>cond_action<span class="op">);</span></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>elseif<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>    gen_elseif_list<span class="op">(</span>elseif<span class="op">);</span></span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>elsenode<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a>    gen_printf<span class="op">(</span><span class="st">&quot;ELSE</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a>    EXTRACT<span class="op">(</span>stmt_list<span class="op">,</span> elsenode<span class="op">-&gt;</span>left<span class="op">);</span></span>
+<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a>    gen_stmt_list<span class="op">(</span>stmt_list<span class="op">);</span></span>
+<span id="cb26-19"><a href="#cb26-19" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb26-20"><a href="#cb26-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-21"><a href="#cb26-21" aria-hidden="true" tabindex="-1"></a>  gen_printf<span class="op">(</span><span class="st">&quot;END IF&quot;</span><span class="op">);</span></span>
+<span id="cb26-22"><a href="#cb26-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>There is a general boiler plate sort of recursive form to all of these, they follow the same basic shape. These patterns are designed to make it impossible to walk the tree incorrectly, so if the tree shape changes because of a grammar change, you get immediate concrete failures were the tree walk has to change. Since there are test cases to cover every tree shape you can always be sure you have it exactly right if the macros do not force assertion failures.</p>
+<ul>
+<li>use <code>Contract</code> to assert that the node we are given is the type we expect</li>
+<li>use <code>EXTRACT</code> macros (detailed below) to get the tree parts you want starting from your root</li>
+<li>use <code>gen_printf</code> to emit the constant pieces of the statement</li>
+<li>use recursion to print sub fragments (like the IF condition in this case)</li>
+<li>test the tree fragments where optional peices are present, emit them as needed</li>
+</ul>
+<p>It might be instructive to include <code>gen_cond_action</code>, it is entirely unremarkable</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> gen_cond_action<span class="op">(</span>ast_node <span class="op">*</span>ast<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  Contract<span class="op">(</span>is_ast_cond_action<span class="op">(</span>ast<span class="op">));</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  EXTRACT<span class="op">(</span>stmt_list<span class="op">,</span> ast<span class="op">-&gt;</span>right<span class="op">);</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  gen_root_expr<span class="op">(</span>ast<span class="op">-&gt;</span>left<span class="op">);</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>  gen_printf<span class="op">(</span><span class="st">&quot; THEN</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>  gen_stmt_list<span class="op">(</span>stmt_list<span class="op">);</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>A <code>cond_action</code> node has an expression on the left and a statement list on the right it can appear in the base <code>IF x THEN y</code> part of the <code>IF</code> or as <code>ELSE IF x THEN y</code>. Either case is formatted the same.</p>
+<h4 id="extraction-macros">Extraction Macros</h4>
+<p>These macros are used by all the parts of CQL that walk the AST. They are designed to make it impossible for you to get the tree shape wrong without immediately failing. We do not ever want to walk off the tree in some exotic way and then continue to several levels of recursion before things go wrong. CQL locks this down by checking the node type at every step – any problems are found immediately exactly at the extraction site and can be quickly corrected. Again 100% coverage of all the tree shapes makes this rock solid, so CQL never compromises on 100% code coverage. The standard macros all appear in this example:</p>
+<ul>
+<li><code>EXTRACT_NOTNULL(cond_action, ast-&gt;left);</code>
+<ul>
+<li>read ast-&gt;left, assert that it is of type <code>cond_action</code>, it must not be NULL</li>
+<li>declare a local variable named <code>cond_action</code> to hold the result</li>
+</ul></li>
+<li><code>EXTRACT_NOTNULL(if_alt, ast-&gt;right);</code>
+<ul>
+<li>read ast-&gt;right, assert that it is of type <code>if_alt</code>, it must not be NULL</li>
+<li>declare a local variable named <code>if_alt</code> to hold the result</li>
+</ul></li>
+<li><code>EXTRACT(elseif, if_alt-&gt;left);</code>
+<ul>
+<li>read <code>if_alt-&gt;left</code>, assert that it is either NULL or else of type <code>elseif</code></li>
+<li>declare a variable named <code>elseif</code> to hold the result</li>
+</ul></li>
+<li><code>EXTRACT_NAMED(elsenode, else, if_alt-&gt;right);</code>
+<ul>
+<li>read <code>if_alt-&gt;right</code>, assert that it is either NULL or else of type <code>else</code></li>
+<li>declare a variable named <code>elsenode</code> to hold the result</li>
+<li>note that we can’t use a variable named <code>else</code> because <code>else</code> is a keyword in C</li>
+</ul></li>
+</ul>
+<p>Other options:</p>
+<ul>
+<li><code>EXTRACT_NAMED_NOTNULL</code> : like the <code>NAMED</code> variant</li>
+<li><code>EXTRACT_ANY</code> : if the tree type is not known (e.g. expr-&gt;left could be any expression type)</li>
+<li><code>EXTRACT_ANY_NOTNULL</code> : as above but not optional</li>
+</ul>
+<p>The <code>ANY</code> variants are usually redispatched with something like <code>gen_expr</code> that uses the name table again and that will check thet type or else they are checked with ad hoc logic immediately if it’s perhaps one of two or three variations. In all cases the idea is to force a failure very quickly. <code>gen_root_expr()</code> for instance in the <code>if_cond</code> example will fail immediately if the node is not an expression type.</p>
+<p>Because of the clear use of <code>EXTRACT</code>, the <code>gen_</code> family of functions are often the best/fastest way to understand the shape of the AST. You can dump a few sample and look at the <code>gen_</code> function and quickly see exactly what the options are authoritatively. As a result it’s very normal to paste the extraction code from a <code>gen_</code> into a new/needed semantic analysis or code-generation functions which we will come to in later sections.</p>
+</body>
+</html>
