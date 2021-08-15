@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>CQL Internals</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style type="text/css">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(title);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">CQL Internals</h1>
+</header>
+<nav id="TOC">
+<ul>
+<li><a href="#cql-internals-guide">CQL Internals Guide</a></li>
+<li><a href="#lexical-analysis-parsing-and-the-abstract-syntax-tree">Lexical Analysis, Parsing, and the Abstract Syntax Tree</a><ul>
+<li><a href="#lexical-analysis">Lexical Analysis</a></li>
+<li><a href="#parsing-and-the-abstract-syntax-tree">Parsing and the Abstract Syntax Tree</a></li>
+<li><a href="#examples">Examples</a></li>
+<li><a href="#ast-definitions">AST definitions</a></li>
+</ul></li>
+</ul>
+</nav>
+<!--- @generated -->
+<h2 id="cql-internals-guide">CQL Internals Guide</h2>
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
+<p>The following is a summary of the implementation theory of the CQL compiler. This is an adjuct to the Guide proper, which describes the language, and to a lesser extent the code that the compiler generates.</p>
+<p>The actual code is heavily commented, so it’s better to read the code to see the details of how any particular operation happens rather than try to guess from the language specification or from this overview. However, some things, like general principles, really are nowhere, or everywhere, in the codebase and its important to understand how things hang together.</p>
+<p>If you choose to go on adventures in the source code, especially if you aren’t already familiar with compilers and how they are typically built, this is a good place to start.</p>
+<h2 id="lexical-analysis-parsing-and-the-abstract-syntax-tree">Lexical Analysis, Parsing, and the Abstract Syntax Tree</h2>
+<p>The CQL compiler uses a very standard lex+yacc parser, though to be more precise it’s flex+bison. The grammar is a large subset of the SQLite dialect of SQL augmented with control flow and compiler directives. As a consequence its a useful asset in and of itself – if you’re looking for an economical SQL grammar you could do a lot worse than start with the one CQL uses. The grammar is of course in the usual <code>.y</code> format that bison consumes but its also extracted into more readable versions for use in the railroad diagram and the documentation. Any of those sources would be a good starting place for a modest SQL project.</p>
+<h3 id="lexical-analysis">Lexical Analysis</h3>
+<p>Inside of <code>cql.l</code> you’ll find the formal defintion of all the lexemes. There are many that correspond to the various tokens needed to parse the SQL language. There’s no need to dicsuss the approximately 150 such tokens but the following points are of general interest:</p>
+<ul>
+<li>the lexer expects plain text files, and all the lexemes are defined in plain ASCII only, however
+<ul>
+<li>the presence of UTF8 characters in places where any text is legal (such as string literals) should just work</li>
+</ul></li>
+<li>all of the lexemes are case-insensitive
+<ul>
+<li>this means only vanilla ASCII insensitivity, no attempt is made to understand more complex code points</li>
+</ul></li>
+<li>multi-word lexemes typically are defined with an expression like this: <code>IS[ \t]+NOT[ \t]+FALSE/[^A-Z_]</code>
+<ul>
+<li>in most cases, to avoid ambiguity, and to get order of operations correct, the entire word sequence is one lexeme</li>
+<li>only spaces and tabs are allowed between the words</li>
+<li>the token ends on non-identifier characters, so the text “X IS NOT FALSEY” must become the lexemes { <code>X</code>, <code>IS_NOT</code>, <code>FALSEY</code> } and not { <code>X</code>, <code>IS_NOT_FALSE</code>, <code>Y</code> }
+<ul>
+<li>the latter would result in the longest lexeme so without the trailing qualifier and hence would be preferred, hence where a contuation is possible the trailing context must be specified in multi=word lexemes</li>
+</ul></li>
+<li>Note: a quick reading shows this isn’t done completely consistently and that should be fixed</li>
+</ul></li>
+<li>there is special processing needed to lex <code>/* ... */</code> comments correctly</li>
+<li>there are token types for each of the sorts of literals that can be encountered, special care is taken to keep the literals in string form so that no precision is lost
+<ul>
+<li>integer literals are compared against 0x7fffffff and if greater they automatically become long literals even if they are not marekd with the trailing <code>L</code> as in <code>1L</code></li>
+<li>string literals include the quotation marks in the lexeme text which distinguishes them from identifiers, they are otherwise encoded similarly</li>
+</ul></li>
+<li>the character class <code>[-+&amp;~|^/%*(),.;!&lt;&gt;:=]</code> produces single character tokens for identifiers, other non-matching single characters (e.g. <code>'$'</code> produce an error)</li>
+<li>line directives <code>^#\ [0-9]+\ \"[^"]*\".*</code> get special processing so that pre-processed input does not lose file and line number fidelity</li>
+</ul>
+<h3 id="parsing-and-the-abstract-syntax-tree">Parsing and the Abstract Syntax Tree</h3>
+<p>Inside of <code>cql.y</code> you will find the token declarations, precededence rules, and all of the productions in the overall grammar. The grammar processing does as little as possible in that stage to create an abstract syntax tree. AST itself is a simple binary tree; where nodes might require more than just left and right children to specify things fully, additional nodes are used in the tree shape rather than introducy n-ary nodes. This means the tree is sometimes bigger but generally not very much bigger. The benefit is that the AST can always be walked generically as a binary tree, so if you need to find all the <code>table_factor</code> nodes it is easy to do so without having to worry about how every kind of node expands. If new node types come along the generic walkers can go through those as well. All of the grammar productions simply make one or more AST nodes and link them together so that in the end there is a single root for the entire program.</p>
+<p>There are 4 kinds of ast nodes, they all begin with the following 5 fields, these represent the AST base type if you like.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb1-1" title="1">  <span class="dt">const</span> <span class="dt">char</span> *_Nonnull type;</a>
+<a class="sourceLine" id="cb1-2" title="2">  <span class="kw">struct</span> sem_node *_Nullable sem;</a>
+<a class="sourceLine" id="cb1-3" title="3">  <span class="kw">struct</span> ast_node *_Nullable parent;</a>
+<a class="sourceLine" id="cb1-4" title="4">  <span class="dt">int32_t</span> lineno;</a>
+<a class="sourceLine" id="cb1-5" title="5">  <span class="dt">const</span> <span class="dt">char</span> *_Nonnull filename;</a></code></pre></div>
+<ul>
+<li><code>type</code> – a string literal that uniquely identifies the node type
+<ul>
+<li>the string literal is compared for identity (it’s an exact pointer match) you don’t <code>strcmp</code> it</li>
+</ul></li>
+<li><code>sem</code> – begins as <code>NULL</code> this is where the semantic type goes once semantic processing happens</li>
+<li><code>parent</code> – the parent node in the AST (not often used but sometimes indispensible)</li>
+<li><code>lineno</code> – the line number of the file that had the text that led to this AST (useful for errors)</li>
+<li><code>filename</code> – the name of the file that had the text that led to this AST (useful for errors)
+<ul>
+<li>this string is durable, should not be mutated, and is shared between MANY nodes</li>
+</ul></li>
+</ul>
+<h4 id="generic-ast-node">Generic AST node</h4>
+<div class="sourceCode" id="cb2"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb2-1" title="1"><span class="kw">typedef</span> <span class="kw">struct</span> ast_node {</a>
+<a class="sourceLine" id="cb2-2" title="2">  ... the common fields</a>
+<a class="sourceLine" id="cb2-3" title="3">  <span class="kw">struct</span> ast_node *_Nullable left;</a>
+<a class="sourceLine" id="cb2-4" title="4">  <span class="kw">struct</span> ast_node *_Nullable right;</a>
+<a class="sourceLine" id="cb2-5" title="5">} ast_node;</a></code></pre></div>
+<p>This node gives the tree its shape, this is is how all the expression operators and statments get encoded. An example says this more clearly</p>
+<pre><code>SET X := 1 + 3;
+
+  {assign}
+  | {name X}
+  | {add}
+    | {int 1}
+    | {int 3}</code></pre>
+<p>In the above “assign” and “add” are the generic nodes. Node that these can be leaves but often are not.</p>
+<p>Note that in the above the node type was directly printed (because it’s a meaningful name). Likewise, the type needs no decoding when viewing the AST in a debugger. Simply printing the node with something like <code>p *ast</code> in lldb will show you all the node fields and the type in a human readable fashion.</p>
+<h4 id="grammar-code-node">Grammar Code Node</h4>
+<div class="sourceCode" id="cb4"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb4-1" title="1"><span class="kw">typedef</span> <span class="kw">struct</span> int_ast_node {</a>
+<a class="sourceLine" id="cb4-2" title="2">  ... the common fields</a>
+<a class="sourceLine" id="cb4-3" title="3">  <span class="dt">int64_t</span> value;</a>
+<a class="sourceLine" id="cb4-4" title="4">} int_ast_node;</a></code></pre></div>
+<p>This kind of node holds an integer that quantifies some kind of choice in the grammar. Note that this does NOT hold numeric literals (see below). The file <code>ast.h</code> includes many <code>#define</code> constants such as:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb5-1" title="1">define JOIN_INNER <span class="dv">1</span></a>
+<a class="sourceLine" id="cb5-2" title="2">define JOIN_CROSS <span class="dv">2</span></a>
+<a class="sourceLine" id="cb5-3" title="3">define JOIN_LEFT_OUTER <span class="dv">3</span></a>
+<a class="sourceLine" id="cb5-4" title="4">define JOIN_RIGHT_OUTER <span class="dv">4</span></a>
+<a class="sourceLine" id="cb5-5" title="5">define JOIN_LEFT <span class="dv">5</span></a>
+<a class="sourceLine" id="cb5-6" title="6">define JOIN_RIGHT <span class="dv">6</span></a></code></pre></div>
+<p>The integer here is one of those values. It can be a bitmask, or an enumeration. In this statement:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb6-1" title="1"><span class="kw">SELECT</span> x</a>
+<a class="sourceLine" id="cb6-2" title="2">  <span class="kw">FROM</span> a</a>
+<a class="sourceLine" id="cb6-3" title="3">  <span class="kw">LEFT</span> <span class="kw">OUTER</span> <span class="kw">JOIN</span> b;</a></code></pre></div>
+<p>a part of the AST will look like this:</p>
+<pre><code>| {join_clause}
+| | {table_or_subquery}
+| | | {name a}
+| | {join_target_list}
+|   | {join_target}
+|     | {int 3}
+|     | {table_join}
+|       | {table_or_subquery}
+|         | {name b}</code></pre>
+<p>The <code>{int 3}</code> ia an int_ast_node and it corresponds to <code>JOIN_LEFT_OUTER</code>.</p>
+<p>This node type is always a leaf.</p>
+<h4 id="string-node">String Node</h4>
+<div class="sourceCode" id="cb8"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb8-1" title="1"><span class="kw">typedef</span> <span class="kw">struct</span> str_ast_node {</a>
+<a class="sourceLine" id="cb8-2" title="2">  ... the common fields</a>
+<a class="sourceLine" id="cb8-3" title="3">  <span class="dt">const</span> <span class="dt">char</span> *_Nullable value;</a>
+<a class="sourceLine" id="cb8-4" title="4">  bool_t cstr_literal;</a>
+<a class="sourceLine" id="cb8-5" title="5">} str_ast_node;</a></code></pre></div>
+<ul>
+<li><code>value</code> – the text of the string</li>
+<li><code>cstr_literal</code> – true if the string was specified using “C” syntax (see below)</li>
+</ul>
+<p>This node type holds: * string literals * blob literals * identifiers</p>
+<p>CQL supports C style string literals with C style escapes such as <code>"foo\n"</code>. These are normalized into the SQL version of the same literal so that SQLite will see a literal it understands. However, if the origin of the string was the C string form (i.e. <code>"foo"</code> rather than <code>'bar'</code>) then the <code>cstr_literal</code> boolean flag will be set. When echoing the program back as plain text, the C string will be converted back to the C form for display. This means, for instance, that the comments in the output C correspond to the original string format even though the code that gets set to SQLite is always in SQL format.</p>
+<p>Identifiers can be distinguised from string literals because the quotation marks are stil in the string.</p>
+<p>This node type is always a leaf.</p>
+<h4 id="number-node">Number Node</h4>
+<div class="sourceCode" id="cb9"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb9-1" title="1"><span class="kw">typedef</span> <span class="kw">struct</span> num_ast_node {</a>
+<a class="sourceLine" id="cb9-2" title="2">  ... the common fields</a>
+<a class="sourceLine" id="cb9-3" title="3">  <span class="dt">int32_t</span> num_type;</a>
+<a class="sourceLine" id="cb9-4" title="4">  <span class="dt">const</span> <span class="dt">char</span> *_Nullable value;</a>
+<a class="sourceLine" id="cb9-5" title="5">} num_ast_node;</a></code></pre></div>
+<ul>
+<li><code>num_type</code> the kind of numeric</li>
+<li><code>value</code> the text of the number</li>
+</ul>
+<p>All numerics are stored as strings so that there is no loss of precision. This is important because it is entirely possible that the CQL compiler is build with a different floating point library, or different integer sizes, than the target system. As a result CQL does not evaluate anything outside of an explicit <code>const()</code> expression. This avoids integer overflows at compile time or loss of floating point precesion; Constants in the text of the output are emitted byte-for-byte as they appeared in the source code.</p>
+<p>This node type is always a leaf.</p>
+<h3 id="examples">Examples</h3>
+<h4 id="example-1-a-let-statement-and-expression">Example 1: A let statement and expression</h4>
+<pre><code>LET x := 1 + (3 - 2);
+
+  {let_stmt}
+  | {name x}
+  | {add}
+    | {int 1}
+    | {sub}
+      | {int 3}
+      | {int 2}</code></pre>
+<p>Note that there are no parentheses in the AST but it exactly and authoritatively captures the precedence with its shape.<br />
+This means, among other things, that when CQL echos its input, any redundant parentheses will be gone.</p>
+<h4 id="example-2-an-ifelse-construct">Example 2: An if/else construct</h4>
+<pre><code>IF x THEN
+  LET x := 1.5e7;
+ELSE IF y THEN
+  LET y := &#39;that&#39;;
+ELSE
+  LET z := &quot;this&quot;;
+END IF;
+
+  {if_stmt}
+  | {cond_action}
+  | | {name x}
+  | | {stmt_list}
+  |   | {let_stmt}
+  |     | {name x}
+  |     | {dbl 1.5e7}
+  | {if_alt}
+    | {elseif}
+    | | {cond_action}
+    |   | {name y}
+    |   | {stmt_list}
+    |     | {let_stmt}
+    |       | {name y}
+    |       | {strlit &#39;that&#39;}
+    | {else}
+      | {stmt_list}
+        | {let_stmt}
+          | {name z}
+          | {strlit &#39;this&#39;}</code></pre>
+<p>Note that the string “this” was normalized to ‘this’ (which was trivial in this case) but rest assured that <code>cstr_literal</code> was set. This is shown because the text of the statement came out with double quotes. The text above was not the input to the compiler, the compiler was actually given this text</p>
+<pre><code>if x then let x := 1.5e7; else if y then let y := &#39;that&#39;; else let z := &quot;this&quot;; end if;</code></pre>
+<p>And it was normalized into what you see as part of the output. We’ll talk about this output echoing in coming sections, but as you can see, the compiler can be used as a SQL normalizer/beautifier.</p>
+<h4 id="example-3-a-select-statement">Example 3: A select statement</h4>
+<pre><code>SELECT *
+  FROM foo
+  INNER JOIN bar
+  WHERE foo.x = 1
+LIMIT 3;
+
+  {select_stmt}
+  | {select_core_list}
+  | | {select_core}
+  |   | {select_expr_list_con}
+  |     | {select_expr_list}
+  |     | | {star}
+  |     | {select_from_etc}
+  |       | {join_clause}
+  |       | | {table_or_subquery}
+  |       | | | {name foo}
+  |       | | {join_target_list}
+  |       |   | {join_target}
+  |       |     | {int 1}
+  |       |     | {table_join}
+  |       |       | {table_or_subquery}
+  |       |         | {name bar}
+  |       | {select_where}
+  |         | {opt_where}
+  |         | | {eq}
+  |         |   | {dot}
+  |         |   | | {name foo}
+  |         |   | | {name x}
+  |         |   | {int 1}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {opt_limit}
+      | | {int 3}
+      | {select_offset}</code></pre>
+<p>As you can see the trees rapidly get more complex. The select statement has many optional pieces and so the AST actually has places in its skeleton where these could go but are abasent (e.g. group by, having, order, and offset are all missing).</p>
+<p>The shape of the AST is self evident.</p>
+<p>The compiler can produce these diagrams in ‘dot’ format which makes pretty pictures but the reality is that for non-trivial examples that pictures are so large as to be unreadable whereas the simple text format remains readable even up to several hundred lines of output and is readily searchable, and diffable. The test suites for semantic analysis do pattern matching on the text of the AST to verify correctness.</p>
+<p>We’ll discuss semantic analysis in later sections.</p>
+<h3 id="ast-definitions">AST definitions</h3>
+<p><code>ast.h</code> defines the all the tree types mentioned above. There are helper methods to create AST nodes with type safety. It includes helper functions for the various leaf types mentioned above but also for the various “normal” types. These are specified using the AST macros <code>AST</code>, <code>AST1</code>, and <code>AST0</code></p>
+<p>Examples:</p>
+<pre><code>AST0(star)
+AST1(not)
+AST(or)</code></pre>
+<p>This says that:</p>
+<ul>
+<li>the <code>star</code> AST node (used in <code>select *</code>) is a leaf, it has 0 children
+<ul>
+<li>this means the left and right nodes will always be <code>NULL</code></li>
+</ul></li>
+<li>the <code>not</code> AST node (used in <code>select NOT x</code>) is unary
+<ul>
+<li>this means only the left node is populated, the right is always <code>NULL</code></li>
+<li>node many unary nodes have optional children, so the left node might still be <code>NULL</code></li>
+</ul></li>
+<li>the <code>or</code> AST node (used in <code>select x OR y</code>) is binary
+<ul>
+<li>this means both its left and right children are populated</li>
+<li>note that some binary nodes have optional children, so left or right still might be <code>NULL</code></li>
+</ul></li>
+</ul>
+<p>At present there are about 300 unique AST node types.</p>
+</body>
+</html>

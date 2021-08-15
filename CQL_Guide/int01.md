@@ -9,7 +9,6 @@ sidebar_label: "CQL Internals Guide"
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-
 The following is a summary of the implementation theory of the CQL compiler.  This is
 an adjuct to the Guide proper, which describes the language, and to a lesser extent
 the code that the compiler generates.
@@ -22,7 +21,7 @@ or everywhere, in the codebase and its important to understand how things hang t
 If you choose to go on adventures in the source code, especially if you aren't already familiar
 with compilers and how they are typically built, this is a good place to start.
 
-### Lexical Analysis, Parsing, and the Abstract Syntax Tree
+## Lexical Analysis, Parsing, and the Abstract Syntax Tree
 
 The CQL compiler uses a very standard lex+yacc parser, though to be more precise it's flex+bison.
 The grammar is a large subset of the SQLite dialect of SQL augmented with control flow and compiler
@@ -32,7 +31,7 @@ of course in the usual `.y` format that bison consumes but its also extracted in
 versions for use in the railroad diagram and the documentation.  Any of those sources would be
 a good starting place for a modest SQL project.
 
-#### Lexical Analysis
+### Lexical Analysis
 
 Inside of `cql.l` you'll find the formal defintion of all the lexemes.  There are many that correspond to the
 various tokens needed to parse the SQL language.  There's no need to dicsuss the approximately 150 such tokens
@@ -55,7 +54,7 @@ but the following points are of general interest:
 * the character class `[-+&~|^/%*(),.;!<>:=]` produces single character tokens for identifiers, other non-matching single characters (e.g. `'$'` produce an error)
 * line directives `^#\ [0-9]+\ \"[^"]*\".*` get special processing so that pre-processed input does not lose file and line number fidelity
 
-#### Parsing and the Abstract Syntax Tree
+### Parsing and the Abstract Syntax Tree
 
 Inside of `cql.y` you will find the token declarations, precededence rules, and all of the productions in the overall grammar. The grammar processing
 does as little as possible in that stage to create an abstract syntax tree.  AST itself is a simple binary tree;  where nodes might require more than just
@@ -83,7 +82,7 @@ There are 4 kinds of ast nodes, they all begin with the following 5 fields, thes
 * `filename` -- the name of the file that had the text that led to this AST (useful for errors)
   * this string is durable, should not be mutated, and is shared between MANY nodes
 
-##### Generic AST node
+#### Generic AST node
 
 ```C
 typedef struct ast_node {
@@ -111,7 +110,7 @@ Note that in the above the node type was directly printed (because it's a meanin
 when viewing the AST in a debugger.  Simply printing the node with something like `p *ast` in lldb will show you
 all the node fields and the type in a human readable fashion.
 
-##### Grammar Code Node
+#### Grammar Code Node
 
 ```C
 typedef struct int_ast_node {
@@ -124,12 +123,12 @@ This kind of node holds an integer that quantifies some kind of choice in the gr
 The file `ast.h` includes many `#define` constants such as:
 
 ```C
-#define JOIN_INNER 1
-#define JOIN_CROSS 2
-#define JOIN_LEFT_OUTER 3
-#define JOIN_RIGHT_OUTER 4
-#define JOIN_LEFT 5
-#define JOIN_RIGHT 6
+define JOIN_INNER 1
+define JOIN_CROSS 2
+define JOIN_LEFT_OUTER 3
+define JOIN_RIGHT_OUTER 4
+define JOIN_LEFT 5
+define JOIN_RIGHT 6
 ```
 
 The integer here is one of those values.  It can be a bitmask, or an enumeration.  In this statement:
@@ -157,7 +156,7 @@ The `{int 3}` ia an int_ast_node and it corresponds to `JOIN_LEFT_OUTER`.
 
 This node type is always a leaf.
 
-##### String Node
+#### String Node
 
 ```C
 typedef struct str_ast_node {
@@ -185,7 +184,7 @@ Identifiers can be distinguised from string literals because the quotation marks
 
 This node type is always a leaf.
 
-##### Number Node
+#### Number Node
 
 ```C
 typedef struct num_ast_node {
@@ -205,9 +204,9 @@ of floating point precesion;  Constants in the text of the output are emitted by
 
 This node type is always a leaf.
 
-#### Examples
+### Examples
 
-##### Example 1: A let statement and expression
+#### Example 1: A let statement and expression
 
 ```
 LET x := 1 + (3 - 2);
@@ -223,7 +222,7 @@ LET x := 1 + (3 - 2);
 Note that there are no parentheses in the AST but it exactly and authoritatively captures the precedence with its shape.  
 This means, among other things, that when CQL echos its input, any redundant parentheses will be gone.
 
-##### Example 2: An if/else construct
+#### Example 2: An if/else construct
 
 ```
 IF x THEN
@@ -266,7 +265,7 @@ if x then let x := 1.5e7; else if y then let y := 'that'; else let z := "this"; 
 And it was normalized into what you see as part of the output.  We'll talk about this output echoing in coming sections,
 but as you can see, the compiler can be used as a SQL normalizer/beautifier.
 
-##### Example 3: A select statement
+#### Example 3: A select statement
 
 ```
 SELECT *
@@ -320,7 +319,7 @@ suites for semantic analysis do pattern matching on the text of the AST to verif
 
 We'll discuss semantic analysis in later sections.
 
-#### AST definitions
+### AST definitions
 
 `ast.h` defines the all the tree types mentioned above.  There are helper methods to create AST nodes
 with type safety.  It includes helper functions for the various leaf types mentioned above
