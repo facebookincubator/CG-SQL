@@ -46,9 +46,9 @@ typedef bool_t (*_Nullable gen_sql_callback)(struct ast_node *_Nonnull ast, void
 // The three mode to alter the generated cql slightly.
 enum gen_sql_mode {
   gen_mode_echo,            // Print everything in the sql statement
-  gen_mode_sql,             // Print only statement valid to sqlite. e.g: annotation is not valid to sqlite
+  gen_mode_sql,             // Print only ast portions valid to sqlite. e.g: annotations are not valid to sqlite
   gen_mode_no_annotations   // Equivalent to gen_mode_echo without all the CQL annotations except:
-                            //   - sensentive_attr node
+                            //   - sensentive_attr node (this is part of the type)
                             //   - note: statements that start with @ are not annotations. like @ECHO @SCHEMA_UPGRADE_SCRIPT, ...
 };
 
