@@ -921,7 +921,282 @@ static void sem_while_stmt(ast_node *ast) {
 
 Note: the while expression is one of the loop constructs which means `LEAVE` and `CONTINUE` are legal inside it, the `loop_depth` global tracks the fact that we are in a loop so that `LEAVE` and `CONTINUE` can report errors if we are not.
 
-`SEM_EXPR_CONTEXT_NONE` means we are not in any SQL context. More on expression contexts later.  For now all you need to know is that some expression types are only valid in some parts of a SQL statement (e.g. aggregate functions can't appear in a `LIMIT` clause) and so there is always a context for any numeric expression.  `NONE` means
-it isn't any SQL context, it's a loose expression.
-
 It's not hard to imagine that `sem_stmt_list` will basically walk the AST, pulling out statements and dispatching them using the `STMT_INIT` tables previously discussed.  Hence you could land right back in `sem_while_stmt` for a nested `WHILE`.  It's turtles all the way down.
+
+If `SEM_EXPR_CONTEXT_NONE` is a mystery, don't worry it's covered in the next section.
+
+### Expression Contexts
+
+It turns out that in the SQL language some expression types are only valid in some parts of a SQL statement (e.g. aggregate functions can't appear in a `LIMIT` clause) and so there is always a context for any numeric expression.  When a new root expression is being evaluated, it sets the xpression context according to the caller.
+
+The expression contexts are as follows:
+
+```C
+#define SEM_EXPR_CONTEXT_NONE           0x0001
+#define SEM_EXPR_CONTEXT_SELECT_LIST    0x0002
+#define SEM_EXPR_CONTEXT_WHERE          0x0004
+#define SEM_EXPR_CONTEXT_ON             0x0008
+#define SEM_EXPR_CONTEXT_HAVING         0x0010
+#define SEM_EXPR_CONTEXT_ORDER_BY       0x0020
+#define SEM_EXPR_CONTEXT_GROUP_BY       0x0040
+#define SEM_EXPR_CONTEXT_LIMIT          0x0080
+#define SEM_EXPR_CONTEXT_OFFSET         0x0100
+#define SEM_EXPR_CONTEXT_TABLE_FUNC     0x0200
+#define SEM_EXPR_CONTEXT_WINDOW         0x0400
+#define SEM_EXPR_CONTEXT_WINDOW_FILTER  0x0800
+#define SEM_EXPR_CONTEXT_CONSTRAINT     0x1000
+```
+
+The idea here is simple, you set the context bit that correponds to the current context such as `SEM_EXPR_CONTEXT_WHERE` if the expression is in
+the `WHERE` clause.  The validators check this context, in particular anything that is only available in some contexts has a bit-mask of
+the context bits where it can be used.  It checks the possibilities against the current context with one bitwise "and" operation. A zero result
+indicates that the operation is not valid in the current context.
+
+This bitwise "and" is performed by one of these two helper macros which makes the usage a little clearer
+
+```C
+#define CURRENT_EXPR_CONTEXT_IS(x)  (!!(current_expr_context & (x)))
+#define CURRENT_EXPR_CONTEXT_IS_NOT(x)  (!(current_expr_context & (x)))
+```
+
+#### Expression Context Example : Concat
+
+The concatenation operator `||` is challenging to successfully emulate because it does many different kinds of
+numeric conversions automatically.  Rather than perenially getting this wrong, we simply do not support
+this operator in a context where SQLite isn't going to be doing the concatenation.  So typically you
+use "printf" instead to get your formatting done outside of a SQL state.  The check for this is very simple
+and it happens of course in `sem_concat`.
+
+```C
+  if (CURRENT_EXPR_CONTEXT_IS(SEM_EXPR_CONTEXT_NONE)) {
+    report_error(ast, "CQL0241: CONCAT may only appear in the context of a SQL statement", NULL);
+    record_error(ast);
+    return;
+  }
+```
+
+#### Expression Context Example : IN
+
+A slightly more complex example happens processing the `IN` operator.  This operator has two forms,
+the form with an expression list, which can be used anywhere, and the form with a select statement.
+The latter form can only appear in some sections of SQL and not at all in loose expressions.  For
+instance, that form may not appear in the `LIMIT` or `OFFSET` sections of a SQLite statement.
+
+We use this construct to get all the bits we like.
+
+```C
+    uint32_t valid = SEM_EXPR_CONTEXT_SELECT_LIST
+                    |SEM_EXPR_CONTEXT_WHERE
+                    |SEM_EXPR_CONTEXT_ON
+                    |SEM_EXPR_CONTEXT_HAVING
+                    |SEM_EXPR_CONTEXT_TABLE_FUNC;
+
+    if (CURRENT_EXPR_CONTEXT_IS_NOT(valid)) {
+      report_error( ast, "CQL0078: [not] in (select ...) is only allowed inside "
+                         "of select lists, where, on, and having clauses", NULL);
+      record_error(ast);
+      return;
+    }
+```
+
+If the reader is interested in a simple learning exercise, run down the purpose of `SEM_EXPR_CONTEXT_TABLE_FUNC`, it's simple
+but important and it only has one use case so it's easy to find.
+
+### Name Resolution
+
+We've gotten pretty far without talking about the elephant in the room: name resolution.
+
+Like SQL, many statements in CQL have names in positions where the type of the name is completely unambiguous.  For instance
+nobody could be confused what sort of symbol `Foo` is in `DROP INDEX Foo;`
+
+These are the easiest name resolutions, and there are a lot in this form.  Let's do an example
+
+#### Example: Index Name Resolution
+
+```C
+// This is the basic checking for the drop index statement
+// * the index must exist (have been declared) in some version
+// * it could be deleted now, that's ok, but the name has to be valid
+static void sem_drop_index_stmt(ast_node *ast) {
+  Contract(is_ast_drop_index_stmt(ast));
+  EXTRACT_ANY_NOTNULL(name_ast, ast->right);
+  EXTRACT_STRING(name, name_ast);
+
+  ast_node *index_ast = find_usable_index(name, name_ast,  "CQL0112: index in drop statement was not declared");
+  if (!index_ast) {
+    record_error(ast);
+    return;
+  }
+
+  record_ok(ast);
+}
+```
+
+Well, this is interesting.  But what's going on with `find_usable_index` what is usable?  Why aren't we just looking up the index
+name in some name table and that's it.  Let's have a look at the details:
+
+```C
+// returns the node only if it exists and is not restricted by the schema region.
+static ast_node *find_usable_index(CSTR name, ast_node *err_target, CSTR msg) {
+  ast_node *index_ast = find_index(name);
+  if (!index_ast) {
+    report_error(err_target, msg, name);
+    return NULL;
+  }
+
+  if (!sem_validate_object_ast_in_current_region(name, index_ast, err_target, msg)) {
+    return NULL;
+  }
+
+  return index_ast;
+}
+```
+
+We haven't discussed schema regions yet but what you need to know about them for now is this:  any piece of schema can be
+in a region and these can be nested.  A region may depend on other regions.  If this is done then the region may only
+use schema parts that are in its dependencies (transitively).  The point of this is that you might have a rather large
+schema and you probably don't want any peice of code to use any piece of schema.  You can use regions to ensure that
+the code for feature "X" doesn't try to use schema designed exclusively for feature "Y".
+
+So now `usable` simply means, we can find the name in the symbol table for indices that's `find_index` and it is
+accessible by the current region.
+
+If we had used an example requiring a table or a column the same considerations would apply however additionally
+tables can be deprecated with `@delete` so we might need additional checks to make sure we're talking about
+a table, not a table's tombstone.
+
+In short, these cases just require looking up the entity and verifying that it's accessible in the current context.
+
+#### Flexible Name Resolution
+
+The "hard case" for name resolution is where the name is occuring in an expression.  Such a name might mean a lot
+of things.  It could be a global variable, a local variable, an argument, a table column, a field in a cursor, and
+others.  The general name resolution goes through several phases looking for the name.  Each phase can either report
+an affirmative success or error (in which case the search stops), or it may simply report that the name was not found
+but the search should continue.
+
+We can demystify this a bit by looking at the two most common ways to get this done.
+
+```C
+// Resolves a (potentially qualified) identifier, writing semantic information
+// into `ast` if successful, or reporting and recording an error for `ast` if
+// not.
+static void sem_resolve_id(ast_node *ast, CSTR name, CSTR scope) {
+  Contract(is_id(ast) || is_ast_dot(ast));
+  Contract(name);
+
+  // We have no use for `type` and simply throw it away.
+  sem_t *type = NULL;
+  sem_resolve_id_with_type(ast, name, scope, &type);
+}
+```
+
+The name resolver works on either a vanilla name (e.g. `x`) or a scoped name (e.g. `T1.x`).  The name and scope are provided.
+The `ast` parameter is used only as a place to report errors, there is no further cracking of the ast needed to resolve
+the name.  As you can see `sem_resolve_id` just calls the more general function `sem_resolve_id_with_type` and is used
+in the most common case where you don't need the sematic type info for the identifier.
+
+Let's move on to the "real" resolver.
+
+```C
+// This function is responsible for resolving both unqualified identifiers (ids)
+// and qualified identifiers (dots). It performs the following two roles:
+//
+// - If an optional `ast` is provided, it works the same way most semantic
+//   analysis functions work: semantic information will be written into into the
+//   ast, errors will be reported to the user, and errors will be recorded in
+//   the AST.
+//
+// - `*typr_ptr` will be set to mutable type (`sem_t *`) in the current
+//   environment if the identifier successfully resolves to a type. (There are,
+//   unfortunately, a few exceptions in which a type will be successfully
+//   resolved and yet `*typr_ptr` will not be set. These include when a cursor
+//   in an expression position, when the expression is `rowid` (or similar), and
+//   when the id resolves to an enum case. The reason no mutable type is
+//   returned in these cases is that a new type is allocated as part of semantic
+//   analysis, and there exists no single, stable type in the environment to
+//   which a pointer could be returned. This is a limitation of this function,
+//   albeit one that's currently not problematic.)
+//
+//  Resolution is attempted in the order that the `sem_try_resolve_*` functions
+//  appear in the `resolver` array. Each takes the same arguments: An (optional)
+//  AST, a mandatory name, an optional scope, and mandatory type pointer. If the
+//  identifier provided to one of these resolvers is resolved successfully, *or*
+//  if the correct resolver was found but there was an error in the program,
+//  `SEM_RESOLVE_STOP` is returned and resolution is complete, succesful or not.
+//  If a resolver is tried and it determines that it is not the correct resolver
+//  for the identifier in question, `SEM_RESOLVE_CONTINUE` is returned and the
+//  next resolver is tried.
+//
+// This function should not be called directly. If one is interested in
+// performing semantic analysis, call `sem_resolve_id` (or, if within an
+// expression, `sem_resolve_id_expr`). Alternatively, if one wants to get a
+// mutable type from the environment, call `find_mutable_type`.
+static void sem_resolve_id_with_type(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+  Contract(name);
+  Contract(type_ptr);
+
+  *type_ptr = NULL;
+
+  sem_resolve (*resolver[])(ast_node *ast, CSTR, CSTR, sem_t **) = {
+    sem_try_resolve_arguments,
+    sem_try_resolve_column,
+    sem_try_resolve_rowid,
+    sem_try_resolve_cursor_as_expression,
+    sem_try_resolve_variable,
+    sem_try_resolve_enum,
+    sem_try_resolve_cursor_field,
+    sem_try_resolve_arg_bundle,
+  };
+
+  for (uint32_t i = 0; i < sizeof(resolver) / sizeof(void *); i++) {
+    if (resolver[i](ast, name, scope, type_ptr) == SEM_RESOLVE_STOP) {
+      return;
+    }
+  }
+
+  report_resolve_error(ast, "CQL0069: name not found", name);
+  record_resolve_error(ast);
+}
+```
+
+A lot is well described in the comments, but already we can see the structure.  There are "mini-resolvers"
+which are attempted in order
+
+* `sem_try_resolve_arguments` : an argument in the argument list
+* `sem_try_resolve_column` : a column name (possibly scoped)
+* `sem_try_resolve_rowid` : the virtual rowid column (possibly scoped)
+* `sem_try_resolve_cursor_as_expression` : use of a cursor as a boolean, the bool is true if the cursor has data
+* `sem_try_resolve_variable` : local or global variables
+* `sem_try_resolve_enum` : the constant value of an enum (must be scoped)
+* `sem_try_resolve_cursor_field` : a field in a cursor (must be scoped)
+* `sem_try_resolve_arg_bundle` : a field in an argument bundle (must be scoped)
+
+These all use this enum to communicate progress:
+
+```C
+// All `sem_try_resolve_*` functions return either `SEM_RESOLVE_CONTINUE` to
+// indicate that another resolver should be tried, or `SEM_RESOLVE_STOP` to
+// indicate that the correct resolver was found. Continuing implies that no
+// failure has (yet) occurred, but stopping implies neither success nor failure.
+typedef enum {
+  SEM_RESOLVE_CONTINUE = 0,
+  SEM_RESOLVE_STOP = 1
+} sem_resolve;
+```
+
+Each of these mini-resolvers will have a series of rules, for example `sem_try_resolve_cursor_field` is going to have to do
+something like this:
+
+* if there is no scope it can't be a cursor field, return `CONTINUE`
+* if the scope is not the name of a cursor, return `CONTINUE`
+* if the name is a field in the cursor, return `STOP` with success
+* else, report that the name is not a valid member of the cursor, and return `STOP` with an error
+
+All the mini-resolvers are similarly structured:
+
+* if it's not my case, return `CONTINUE`
+* if it is my case return `STOP` with an error as appropriate
+
+Some of the resolvers have quite a few steps but any one resolver is only about a screenful of code
+and it does one job.
