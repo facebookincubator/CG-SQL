@@ -45,7 +45,7 @@ typedef struct sem_node {
   struct sem_join *jptr;            // encoded join if any
   int32_t create_version;           // create version if any (really only for tables and columns)
   int32_t delete_version;           // create version if any (really only for tables and columns)
-  bool_t  recreate;                 // for tables only, true if marked @create
+  bool_t recreate;                  // for tables only, true if marked @recreate
   CSTR recreate_group_name;         // for tables only, the name of the recreate gruop if they are in one
   CSTR region;                      // the schema region, if applicable, null means unscoped (default)
   symtab *used_symbols;             // for select statements, we need to know which of the ids in the select list was used if any

@@ -2503,9 +2503,12 @@ error:
 }
 
 // This verifies that the types are compatible and that it's ok to assign
-// the expression to the variable.  In practice that means the variable
-// must be nullable if the expression is nullable.  Here ast is used only
-// to get the line number.
+// the expression to the variable.  In practice that means:
+// * the variable type core type and kind must be compatible with the expression core type and kind
+// * the variable must be nullable if the expression is nullable
+// * the variable must be sensitive if the assignment is sensitive
+// * the variable type must be bigger than the expression type
+// Here ast is used only to give a place to put any errors.
 static bool_t sem_verify_assignment(ast_node *ast, sem_t sem_type_needed, sem_t sem_type_found, CSTR var_name) {
   if (!sem_verify_compat(ast, sem_type_needed, sem_type_found, var_name)) {
     return false;
@@ -7223,13 +7226,13 @@ static void sem_func_replace(ast_node *ast, uint32_t arg_count) {
 
   // The result is a string.
   sem_t sem_type = SEM_TYPE_TEXT;
-  
+
   // The result is nonnull only if all of the arguments are nonnull.
   if (is_not_nullable(input_type) && is_not_nullable(find_type) && is_not_nullable(replace_with_type)) {
     sem_type |= SEM_TYPE_NOTNULL;
   }
 
-  // The result is sensitive if any of the arguments are sensitive. 
+  // The result is sensitive if any of the arguments are sensitive.
   sem_type |= sensitive_flag(input->sem->sem_type);
   sem_type |= sensitive_flag(find->sem->sem_type);
   sem_type |= sensitive_flag(replace_with->sem->sem_type);
@@ -7237,7 +7240,7 @@ static void sem_func_replace(ast_node *ast, uint32_t arg_count) {
   name_ast->sem = ast->sem = new_sem(sem_type);
 
   // The result has the same kind as the input argument.
-  ast->sem->kind = input->sem->kind;  
+  ast->sem->kind = input->sem->kind;
 }
 
 // generic function to do basic validation for builtin window functions.
@@ -19771,6 +19774,7 @@ cql_noexport void sem_main(ast_node *ast) {
   sem_setup_region_filters();
 }
 
+// This method frees all the global state of the semantic analyzer
 cql_noexport void sem_cleanup() {
   eval_cleanup();
 

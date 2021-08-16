@@ -1,7 +1,7 @@
 ---
 id: int01
-title: "CQL Internals Guide"
-sidebar_label: "CQL Internals Guide"
+title: "CQL Internals Guide: Part 1"
+sidebar_label: "CQL Internals Guide: Part 1"
 ---
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
@@ -9,6 +9,8 @@ sidebar_label: "CQL Internals Guide"
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+### Overview
+
 The following is a summary of the implementation theory of the CQL compiler.  This is
 an adjuct to the Guide proper, which describes the language, and to a lesser extent
 the code that the compiler generates.
@@ -727,6 +729,7 @@ Other options:
   * `EXTRACT_NAMED_NOTNULL` : like the `NAMED` variant
   * `EXTRACT_ANY` : if the tree type is not known (e.g. expr->left could be any expression type)
   * `EXTRACT_ANY_NOTNULL` : as above but not optional
+  * `EXTRACT_NUM_TYPE` : extracts the num_type field from a numeric AST node
 
 The `ANY` variants are usually redispatched with something like `gen_expr` that uses the name table again and that will check thet type or
 else they are checked with ad hoc logic immediately if it's perhaps one of two or three variations.  In all cases the idea is to force

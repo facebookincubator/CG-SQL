@@ -1,0 +1,927 @@
+---
+id: int02
+title: "CQL Internals Guide: Part 2"
+sidebar_label: "CQL Internals Guide: Part 2"
+---
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
+### Overview
+
+Part 2 continues with a discussion of the essentials of the semantic analysis pass of the CQL compiler.
+As in the previous sections, the goal here is not to go over every single rule but rather to give
+a sense of how semantic analysis happens in general, the core strategies and implementation choices
+so that when reading the code you have an idea how smaller pieces would fit into the whole. To accomplish
+this various key data structures will be explained in detail as well as selected examples of their use.
+
+## Semantic Analysis
+
+The overall goal of the semantic analysis pass is to verify that a correct program has been submitted
+to the compiler. The compiler does this by "decorating" the AST with semantic information.  This information
+is mainly concerned about the "types" of the various things in the program.  A key function of the semantic
+analyzer, the primary "weapon" in computing these types if you will, is name resolution.  The semantic analyzer
+decides what any given name means in any context and then uses that meaning, which is itself based on the
+AST constructs that came before, to compute types and then check those types for errors.
+
+Broadly speaking the errors that can be discovered are of these forms:
+
+  * mentioned names do not exist
+    * e.g. using a variable or table or column without declaring it
+  * mentioned names are not unique or are ambiguous
+    * e.g. table names need to be unique or aliased when joining tables
+  * operands are not compatible with each other or with the operation
+    * e.g. you can't add a string to a real
+    * e.g. you can't do the '%' operation on a real
+    * e.g. the expression in a `WHERE` clause must be numeric
+    * e.g. the first argument to `printf` must be a string literal.
+    * e.g. you can't assign a long value to an integer variable
+    * e.g. you can't assign a possibly null result to a not-null variable
+  * there are too many or two few operands for an operation
+    * e.g. an `INSERT` statement must include sufficiently many columns and no extras
+    * e.g. a function or procedure call must have the correct number of operands
+  * an operation is happening in a context where it is not allowed
+    * e.g. use of aggregate functions in the `WHERE` clause
+    * e.g. use of unique SQLite functions outside of a SQL statement
+
+There are several hundred possible errors, no attempt will be made to cover them all here but we will
+talk about how errors are created, recorded, and reported.
+
+### The Base Data Structures
+
+First recall that every AST node has this field in it:
+
+```C
+struct sem_node *_Nullable sem;
+```
+
+This is the pointer to the semantic information for that node. Semantic analysis happens immediately
+after parsing and before any of the code-generators run.  Importantly code generators never run
+if semantic analysis reported any errors.  Before we get into the shape of the semantic node, we
+should start with the fundamental unit of type info `sem_t` which is usually stored in a variable
+called `sem_type`.
+
+```C
+typedef uint64_t sem_t;
+```
+
+The low order bits of a `sem_t` encode the core type and indeed there is an helper macro
+to extract the core type from a `sem_t`.
+
+```C
+// Strips out all the flag bits and gives you the base/core type.
+cql_noexport sem_t core_type_of(sem_t sem_type) {
+  return sem_type & SEM_TYPE_CORE;
+}
+```
+
+The core bits are as follows:
+
+```C
+#define SEM_TYPE_NULL 0         // the subtree is a null literal (not just nullable)
+#define SEM_TYPE_BOOL 1         // the subtree is a bool
+#define SEM_TYPE_INTEGER 2      // the subtree is an integer
+#define SEM_TYPE_LONG_INTEGER 3 // the subtree is a long integer
+#define SEM_TYPE_REAL 4         // the subtree is a real
+#define SEM_TYPE_TEXT 5         // the subtree is a text type
+#define SEM_TYPE_BLOB 6         // the subtree is a blob type
+#define SEM_TYPE_OBJECT 7       // the subtree is any object type
+#define SEM_TYPE_STRUCT 8       // the subtree is a table/view
+#define SEM_TYPE_JOIN 9         // the subtree is a join
+#define SEM_TYPE_ERROR 10       // marks the subtree as having a problem
+#define SEM_TYPE_OK 11          // sentinel for ok but no type info
+#define SEM_TYPE_PENDING 12     // sentinel for type calculation in flight
+#define SEM_TYPE_REGION 13      // the ast is a schema region
+#define SEM_TYPE_CORE 0xff      // bit mask for the core types
+
+#define SEM_TYPE_MAX_UNITARY (SEM_TYPE_OBJECT+1) // the last unitary type
+```
+
+These break into a few categories:
+* `NULL` to `OBJECT` are the "unitary" types, these are the types that a single simple variable can be
+  * a column can be any of these except `OBJECT` or `NULL`
+  * the `NULL` type begins only from the `NULL` literal which has no type
+  * instance of say a `TEXT` column might have a `NULL` value but they are known to be `TEXT`
+* `STRUCT` indicates that the object has many fields, like a table, or a cursor
+* `JOIN` indicates that the object is the concatenation of many `STRUCT` types
+  * e.g. `T1 inner join T2` is a `JOIN` type with `T1` and `T2` being the parts
+  * a `JOIN` can be flattend to `STRUCT` but this is typically not done
+  * the type of a `SELECT` statement will be a `STRUCT` representing the columns that were selected which in turn came from the `JOIN` that was the `FROM` clause
+* `ERROR` indicates that the subtree had an error, it will have been already reported, this generally cascades up the AST to the root
+* `OK` indicates that there is no type information but there was no problem, for instance a correct `IF` statement will resolve to simply `OK` (no error)
+* `PENDING` is used sometimes while a type computation is in progress, it doesn't appear in the AST but has its own unique value so as to not conflict with any others
+* `REGION` used to identify AST fragments that correspond to schema regions (see the Guide for mor info on regions)
+* `CORE` is the mask for the core parts, `0xf` would do the job but for easy reading in the debugger we use `0xff`
+  * new core types are not added very often, adding a new one is usually a sign that you are doing something wrong
+
+
+The core type can be modified by various flags.  The flags in principle can be combined in any way but in practice many combinations make no sense.
+for instance, `HAS_DEFAULT` is for table columns and `CREATE_FUNC` is for function declarations. There is no one object that could require both of these.
+
+The full list as of this writing is as follows:
+
+```C
+#define SEM_TYPE_NOTNULL               _64(0x0100) // set if and only if null is not possible
+#define SEM_TYPE_HAS_DEFAULT           _64(0x0200) // set for table columns with a default
+#define SEM_TYPE_AUTOINCREMENT         _64(0x0400) // set for table columns with autoinc
+#define SEM_TYPE_VARIABLE              _64(0x0800) // set for variables and parameters
+#define SEM_TYPE_IN_PARAMETER          _64(0x1000) // set for in parameters (can mix with below)
+#define SEM_TYPE_OUT_PARAMETER         _64(0x2000) // set for out paramters (can mix with above)
+#define SEM_TYPE_DML_PROC              _64(0x4000) // set for stored procs that have DML/DDL
+#define SEM_TYPE_HAS_SHAPE_STORAGE     _64(0x8000) // set for a cursor with simplified fetch syntax
+#define SEM_TYPE_CREATE_FUNC          _64(0x10000) // set for a function that returns a created object +1 ref
+#define SEM_TYPE_SELECT_FUNC          _64(0x20000) // set for a sqlite UDF function declaration
+#define SEM_TYPE_DELETED              _64(0x40000) // set for columns that are not visible in the current schema version
+#define SEM_TYPE_VALIDATED            _64(0x80000) // set if item has already been validated against previous schema
+#define SEM_TYPE_USES_OUT            _64(0x100000) // set if proc has a one rowresult using the OUT statement
+#define SEM_TYPE_USES_OUT_UNION      _64(0x200000) // set if proc uses the OUT UNION form for multi row result
+#define SEM_TYPE_PK                  _64(0x400000) // set if column is a primary key
+#define SEM_TYPE_FK                  _64(0x800000) // set if column is a foreign key
+#define SEM_TYPE_UK                 _64(0x1000000) // set if column is a unique key
+#define SEM_TYPE_VALUE_CURSOR       _64(0x2000000) // set only if SEM_TYPE_HAS_SHAPE_STORAGE is set and the cursor has no statement
+#define SEM_TYPE_SENSITIVE          _64(0x4000000) // set if the object is privacy sensitive
+#define SEM_TYPE_DEPLOYABLE         _64(0x8000000) // set if the object is a deployable region
+#define SEM_TYPE_BOXED             _64(0x10000000) // set if a cursor's lifetime is managed by a box object
+#define SEM_TYPE_HAS_CHECK         _64(0x20000000) // set for table column with a "check" clause
+#define SEM_TYPE_HAS_COLLATE       _64(0x40000000) // set for table column with a "collate" clause
+#define SEM_TYPE_INFERRED_NOTNULL  _64(0x80000000) // set if inferred to not be nonnull (but was originally nullable)
+#define SEM_TYPE_VIRTUAL          _64(0x100000000) // set if and only if this is a virtual table
+#define SEM_TYPE_HIDDEN_COL       _64(0x200000000) // set if and only if hidden column on a virtual table
+#define SEM_TYPE_TVF              _64(0x400000000) // set if and only table node is a table valued function
+#define SEM_TYPE_IMPLICIT         _64(0x800000000) // set if and only the variable was declare implicitly (via declare out)
+#define SEM_TYPE_CALLS_OUT_UNION _64(0x1000000000) // set if proc calls an out union proc for
+```
+
+Going over the meaning of all of the above is again beyond the scope of this document, some of them are very specialized and essentially the validation
+requires a bit of storage in the tree to do its job so that storage is provided with a bit.  However two flag bits are especially important and
+are computed almost everywhere `sem_t` is used.  These are `SEM_TYPE_NOTNULL` and `SEM_TYPE_SENSITIVE`.
+
+* `SEM_TYPE_NOTNULL` indicates that the marked item is known to be `NOT NULL`, probably because it was declared as such or directly derived from a not null item
+  * Typically when two operands are combined both must be marked `NOT NULL` for the result to still be NOT NULL (there are exceptions like `COALESCE`)
+  * Values that might be null cannot be assigned to targets that must be not null
+* `SEM_TYPE_SENSITIVE` indicates that the marked item is some kind of PII or other sensitive data.
+  * Any time a sensitive item is combined with some other piece of data the result is a new sensitive piece of data, there are very few ways to "get rid" of the sensitive bit.  It corresponds to the presence of `@sensitive` in the data type declaration.
+  * Values that are sensitive cannot be assigned to targets that are not also marked sensitive
+
+The semantic node `sem_node` carries all the possible semantic info we might need, the `sem_type` holds the flags above and tells us how to interpret it.
+There are many fields, we'll talk about some of the most important ones here to give you a sense of how things hang together.
+
+Note that `CSTR` is simply an alias for `const char *`.
+
+```C
+typedef struct sem_node {
+  sem_t sem_type;                   // core type plus flags
+  CSTR name;                        // for named expressions in select columns etc.
+  CSTR kind;                        // the Foo in object<Foo>, not a variable or column name
+  CSTR error;                       // error text for test output, not used otherwise
+  struct sem_struct *sptr;          // encoded struct if any
+  struct sem_join *jptr;            // encoded join if any
+  int32_t create_version;           // create version if any (really only for tables and columns)
+  int32_t delete_version;           // create version if any (really only for tables and columns)
+  bool_t recreate;                  // for tables only, true if marked @recreate
+  CSTR recreate_group_name;         // for tables only, the name of the recreate gruop if they are in one
+  CSTR region;                      // the schema region, if applicable, null means unscoped (default)
+  symtab *used_symbols;             // for select statements, we need to know which of the ids in the select list was used if any
+  list_item *index_list;            // for tables we need the list of indices that use this table (so we can recreate them together if needed)
+  struct eval_node *value;          // for enum values we have to store the evaluated constant value of each member of the enum
+} sem_node;
+```
+
+* `sem_type` : already discussed above, this tells you how to interpret everything else
+* `name` : variables, columns, etc. have a canonical name, when a name case-insenstively resolves, the canonical name is stored here
+  * typically you want to emit the canonical variable name (e.g. `FoO` and `fOO` might both resolve to `foo` if that is how it was declared)
+* `kind` : in CQL any type can be discriminated as in `declare foo real<meters>`, the kind here is `meters`
+  * expressions of the same core type (e.g. `real`) are incompatible if they have a `kind` and the `kind` does not match
+  * e.g. you can't assign if you have `bar real<liters>` then `set foo := bar;` is an error even though both are `real`.
+* `sptr` : if the item's core type is `SEM_TYPE_STRUCT` then this is populated, see below
+* `jptr` : if the item's core type is `SEM_TYPE_JOIN` then this is populated, see below
+
+If the object is a structure type then this is simply an array of names, kinds, and semantic types.  In fact the semantic types will be all be unitary possibly modified by `NOT_NULL` or `SENSITIVE` but none of the other flags apply.  A single `sptr` directly corresponds to the notion of a `shape` in the analyzer.  Shapes come from anything
+that looks like a table, such as a cursor, or the result of a `SELECT` statement.
+
+```C
+// for tables and views and the result of a select
+
+typedef struct sem_struct {
+  CSTR struct_name;               // struct name
+  uint32_t count;                 // count of fields
+  CSTR *names;                    // field names
+  CSTR *kinds;                    // the "kind" text of each column, if any, e.g. integer<foo> foo is the kind
+  sem_t *semtypes;                // typecode for each field
+} sem_struct;
+```
+
+If the object is a join type (such as the parts of the `FROM` clause) then the `jptr` field will be populated. This is nothing more than a named list of struct types.
+
+```C
+// for the data type of (parts of) the FROM clause
+// sometimes I refer to as a "joinscope"
+
+typedef struct sem_join {
+  uint32_t count;                 // count of table/views in the join
+  CSTR *names;                    // names of the table/view
+  struct sem_struct **tables;     // struct type of each table/view
+} sem_join;
+```
+
+With these building blocks we can represent the type of anything in the CQL language.
+
+### Initiating Semantic Analysis
+
+The semantic analysis pass runs much the same way as the AST emitter.  In `sem.c` there is the essential function `sem_main`. It suffices
+to call `sem_main` on the root of your AST, that is expect to be a `stmt_list` node.
+
+```C
+// This method loads up the global symbol tables in either empty state or
+// with the appropriate tokens ready to go.  Using our own symbol tables for
+// dispatch saves us a lot of if/else string comparison verbosity.
+cql_noexport void sem_main(ast_node *ast) {
+  // restore all globals and statics we own
+  sem_cleanup();
+  eval_init();
+  ...
+}
+```
+
+As you can see, `sem_main` begins by reseting all the state.  You can of course do this yourself after calling `sem_main` (when you're done with the results).
+
+`sem_main` sets a variety of useful and public global variables that describe the results of the analysis.  The ones in `sem.h` are part of the contract and
+you should feel free to use them in a downstream code-generator.  Other items are internal and should be avoided.  These are typically defined statically in `sem.c`.
+
+The cleanup has this structure:
+
+```C
+// This method frees all the global state of the semantic analyzer
+cql_noexport void sem_cleanup() {
+  eval_cleanup();
+
+  BYTEBUF_CLEANUP(deployable_validations);
+  BYTEBUF_CLEANUP(recreate_annotations);
+  BYTEBUF_CLEANUP(schema_annotations);
+
+  SYMTAB_CLEANUP(funcs);
+  SYMTAB_CLEANUP(globals);
+  SYMTAB_CLEANUP(indices);
+  SYMTAB_CLEANUP(locals);
+  ...
+
+  // these are getting zeroed so that leaksanitizer will not count those objects as reachable from a global root.
+
+  all_ad_hoc_list = NULL;
+  all_functions_list = NULL;
+    ...
+```
+
+`sem_main` of course has to walk the AST and it does so in much the same way as we saw in `gen_sql.c` there are a set of symbol tables
+whose key is an ast type and whose value is a function plus arguments to dispatch (effectively a lambda).  The semantic analyzer doesn't
+have to think about things like "should I emit parentheses" so the signature of each type of lambda can be quite a bit simpler.  We'll
+go over each kind with some examples.
+
+First we have the non-sql statements, these are basic flow control or other things that SQLite will never see directly.
+
+```C
+  symtab *syms = non_sql_stmts;
+
+  STMT_INIT(if_stmt);
+  STMT_INIT(while_stmt);
+  STMT_INIT(switch_stmt);
+  STMT_INIT(leave_stmt);
+  ...
+```
+
+Here `STMT_INIT` creates a binding between (e.g.) the AST type `if_stmt` and the function `sem_if_stmt`.  This lets us dispatch any part of the AST
+directly.
+
+Next we have the SQL statements.  These get analyzed in the same way as the others, and with functions that have the same signature, however,
+if you use one of these it means that procedure that contained this statement must get a database connection in order to run.  This changes
+its signature and causes the `SEM_TYPE_DML_PROC` flag bit to be set on it.
+
+```C
+  syms = sql_stmts;
+
+  STMT_INIT(create_table_stmt);
+  STMT_INIT(drop_table_stmt);
+  STMT_INIT(create_index_stmt);
+  STMT_INIT(create_view_stmt);
+  STMT_INIT(select_stmt);
+  STMT_INIT(delete_stmt);
+  STMT_INIT(update_stmt);
+  STMT_INIT(insert_stmt);
+  ...
+```
+
+Again `STMT_INIT` creates a binding between (e.g.) the AST type `delete_stmt` and the function `sem_delete_stmt`.  This lets us dispatch any part of the AST
+directly.
+
+Next we have expression types, these are set up with `EXPR_INIT`.  Many of the operators require exactly the same kinds of verification so in order to be
+able to share the code, the expression analysis functions get an extra argument for the operator in question.  Typically the string of the operator
+is only needed so make a good quality error message and validation is otherwise identical.  Here are some samples...
+
+```C
+  EXPR_INIT(num, sem_expr_num, "NUM");
+  EXPR_INIT(str, sem_expr_str, "STR");
+  EXPR_INIT(blob, sem_expr_blob, "BLB");
+  EXPR_INIT(null, sem_expr_null, "NULL");
+  EXPR_INIT(dot, sem_expr_dot, "DOT");
+  EXPR_INIT(const, sem_expr_const, "CONST");
+  EXPR_INIT(mul, sem_binary_math, "*");
+  EXPR_INIT(mod, sem_binary_integer_math, "%");
+  EXPR_INIT(not, sem_unary_logical, "NOT");
+  EXPR_INIT(is_true, sem_unary_is_true_or_false, "IS TRUE");
+  EXPR_INIT(tilde, sem_unary_integer_math, "~");
+  EXPR_INIT(uminus, sem_unary_math, "-");
+```
+
+Looking at the very first entry as an example we see that `EXPR_INIT` creates a mapping between the AST type `num` and the analysis function `sem_expr_num` and that function will get the text `"NUM"` as an extra argument.
+
+Let's quickly go over this list as these are the most important analyzers
+
+* `sem_expr_num` : analyzes any numeric constant
+* `sem_expr_str` : analyzes any string literal or identifier
+* `sem_expr_blob` : analyzes any blob literal
+* `sem_expr_null` : analyzes the NULL literal (and nothing else)
+* `sem_expr_dot` : analyzes a compound name like `T1.id`
+* `sem_expr_const` : analyzes a `const(...)` expression, doing the constant evaluation
+* `sem_binary_math` : analyzes any normal binary math operator like '+', '-', '/' etc.
+* `sem_binary_integer_math` : analyzes any binary math operator where the operands must be integers like '%' or '|'
+* `sem_unary_logical` : analyzes any unary logical operator (the result is a bool), this is really only `NOT`
+* `sem_unary_is_true_or_false` : analyzes any of the `IS TRUE`, `IS FALSE`, family of postfix unary operators
+* `sem_unary_integer_math` : any unary operator where the operand must be an integer, this is really only `~`
+* `sem_unary_math` : any math unary, presently only unary negation (but in the future unary `+` too)
+
+The final plentiful group of associations are for builtin functions, like these.
+
+```C
+  FUNC_INIT(changes);
+  FUNC_INIT(printf);
+  FUNC_INIT(strftime);
+  FUNC_INIT(date);
+  FUNC_INIT(time);
+```
+
+Each of these is dispatched when a function call is found in the tree.  By way of example `FUNC_INIT(changes)` causes the `changes` function to map to `sem__func_changes`.
+
+There are a few other similar macros for more exotic cases but the general pattern should be clear now.  We these in place it's very easy to traverse arbitary statement lists and arbitary expressions with sub expressions and have the correct function be called without having large `switch` blocks all over.
+
+### Semantic Errors
+
+Some of the following examples will show the handling of semantic errors more precisely but the theory is pretty simple.  Each of these analyzers that has
+been registered is responsible for putting an appropriate `sem_node` into the AST it was invoked on.  The caller will look to see if that `sem_node`
+is of type `SEM_TYPE_ERROR` using `is_error(ast)`.  If it is the caller will mark its own AST as errant using `record_error(ast)` and this continues all
+the way up the tree.  The net of this is that wherever you begin semantic analysis you can know if there were any problems by checking for an error at the
+top of the tree you provided.
+
+At the point of the initial error, the analyzer is expected to also call `report_error` providing a suitable message.  This will be logged to stderr.  In test mode it is also stored in the AST so that verification steps can confirm that errors were reported at exactly the right place.
+
+If there is no error, then either a suitable `sem_node` is created or else at minimum `record_ok(ast)` is used to place the shared "OK" type on the node.
+The OK type indicates no type information but no errors either.  "OK" is helpful for statements that don't involve expressions like `DROP TABLE Foo`.
+
+### The Primitive Types
+
+Perhaps the simplest analysis of all happens at the leaves of the AST.  By way of example, here is the code for expression nodes of type `num`, the numeric literals.
+
+```C
+// Expression type for numeric primitives
+static void sem_expr_num(ast_node *ast, CSTR cstr) {
+  Contract(is_ast_num(ast));
+  EXTRACT_NUM_TYPE(num_type, ast);
+  switch (num_type) {
+  case NUM_BOOL:
+    ast->sem = new_sem(SEM_TYPE_BOOL | SEM_TYPE_NOTNULL);
+    break;
+
+  case NUM_INT:
+    ast->sem = new_sem(SEM_TYPE_INTEGER | SEM_TYPE_NOTNULL);
+    break;
+
+  case NUM_LONG:
+    ast->sem = new_sem(SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL);
+    break;
+
+  default:
+    // this is all that's left
+    Contract(num_type == NUM_REAL);
+    ast->sem = new_sem(SEM_TYPE_REAL | SEM_TYPE_NOTNULL);
+    break;
+  }
+}
+```
+
+As you can see the code simply looks at the AST node, confirming first that it is a `num` node.  Then it extract the `num_type`.
+`ast->sem` is set to a semantic node of the matching type adding in `SEM_TYPE_NOTNULL` because literals are never null.
+
+The `new_sem` function is used to make an empty `sem_node` with the `sem_type` filled in as specified.  Nothing can go wrong creating a literal so there are no failure modes.
+
+It doesn't get much simpler unless maybe...
+
+```C
+// Expression type for constant NULL
+static void sem_expr_null(ast_node *ast, CSTR cstr) {
+  Contract(is_ast_null(ast));
+  // null literal
+  ast->sem = new_sem(SEM_TYPE_NULL);
+}
+```
+
+### Unary Operators
+
+Let's dive in to a simple case -- the unary operators.  There are comparatively few and there isn't much code required to handle them all.
+
+
+```C
+// The only unary math operators are '-' and '~'
+// Reference types are not allowed
+static void sem_unary_math(ast_node *ast, CSTR op) {
+  sem_t core_type, combined_flags;
+  if (!sem_unary_prep(ast, &core_type, &combined_flags)) {
+    return;
+  }
+
+  if (!sem_validate_numeric(ast, core_type, op)) {
+    return;
+  }
+
+  // The result of unary math promotes to integer.  Basically this converts
+  // bool to integer.  Long integer and Real stay as they are.  Text is
+  // already ruled out.
+  sem_t sem_type_result = sem_combine_types(
+      (SEM_TYPE_INTEGER | SEM_TYPE_NOTNULL),
+      (core_type | combined_flags));
+
+  ast->sem = new_sem(sem_type_result);
+  ast->sem->kind = ast->left->sem->kind;
+
+  // note ast->sem->name is NOT propogated because SQLite doesn't let you refer to
+  // the column 'x' in 'select -x' -- the column name is actually '-x' which is useless
+  // so we have no name once you apply unary math (unless you use 'as')
+  // hence ast->sem->name = ast->left->sem->name is WRONG here and it is not missing on accident
+}
+```
+
+*Unary Prep*
+
+OK already we need to pause, there is a "prep" pattern here common to most of the shared operators.
+This takes care of most of the normal error handling which is the same for all the unary operators.
+The same pattern happens in binary operators.  Let's take a look at that function.
+
+```C
+// The unary operators all have a similar prep to the binary.  We need
+// to visit the left side (it's always the left node even if the operator goes on the right)
+// if that's ok then we need the combined_flags and core type.  There is only
+// the one.  Returns true if everything is ok.
+static bool_t sem_unary_prep(ast_node *ast, sem_t *core_type, sem_t *combined_flags) {
+  // op left | left op
+  sem_expr(ast->left);
+
+  if (is_error(ast->left)) {
+    *core_type = SEM_TYPE_ERROR;
+    *combined_flags = 0;
+    record_error(ast);
+    return false;
+  }
+
+  sem_node *sem = ast->left->sem;
+  sem_t sem_type = sem->sem_type;
+
+  *core_type = core_type_of(sem_type);
+  *combined_flags = not_nullable_flag(sem_type) | sensitive_flag(sem_type);
+
+  Invariant(is_unitary(*core_type));
+  return true;
+}
+```
+
+Reviewing the steps:
+
+* first evaluate the operand, it will be in `ast->left`
+* if that's an error, just return the error code from the prep steps
+* now that it's not an error, pull the core type out of the operand
+* pull the not nullable and sensitive flag bits out of the operand
+* return a boolean indicating the presence of an error or not for convenience
+
+This is useful setup for all the unary operators, and as we'll see, the binary operator case has a similar prep step.
+
+*Back to Unary Processing*
+
+Looking at the overall step we see:
+
+* `sem_unary_prep` : verifies that the operand is not an error, and gets its core type and flag bits
+* `sem_validate_numeric` : verifies that the operand is a numeric type
+* `sem_combine_types` : creates the smallest type that holds two compatible types
+   * by combining with integer not null we ensure that the resulting type is at least as big as an integer
+   * if the argument is of type `long` or `real` then it will be the bigger type and the resulting type will be `long` or `real`
+   * in short, `bool` is promoted to `int`, everything else stays the same
+   * `sem_combine_types` also combines the nullability and sensitivity appropriately
+* a new `sem_node` is created of the combined type
+  * the type kind of the operand is preserved (e.g. the `meters` in `real<meters>`)
+  * any column alias or variable name is not preserved, the value is now anonymous
+
+These primitives are designed to combine well, for instance, consider `sem_unary_integer_math`, the steps are
+
+```C
+static void sem_unary_integer_math(ast_node *ast, CSTR op) {
+  sem_unary_math(ast, op);
+  sem_reject_real(ast, op);
+}
+```
+
+* `sem_unary_math` : do all the above
+* `sem_reject_real` : report/record an error if the type is `real` otherwise do nothing
+
+Note that in all cases the `op` string simply gets pushed down to the place where the errors happen.  Let's take a quick look at one of
+the sources of errors in the above.  Here's the numeric validator:
+
+```C
+static bool_t sem_validate_numeric(ast_node *ast, sem_t core_type, CSTR op) {
+  if (is_blob(core_type)) {
+    report_error(ast->left, "CQL0045: blob operand not allowed in", op);
+    record_error(ast);
+    return false;
+  }
+
+  if (is_object(core_type)) {
+    report_error(ast->left, "CQL0046: object operand not allowed in", op);
+    record_error(ast);
+    return false;
+  }
+
+  if (is_text(core_type)) {
+    report_error(ast->left, "CQL0047: string operand not allowed in", op);
+    record_error(ast);
+    return false;
+  }
+
+  return true;
+}
+```
+
+This is pretty much dumb as rocks.  The non-numeric types are blob, object, and text.  There is a custom error for each type (it could have been shared
+but specific error messages seem to help users).  This code doesn't know it's context, but all it needs is `op` to tell it what the numeric-only
+operator was and it can produce a nice error message.  It leaves an error in the AST using `record_error` and so its caller can simply `return`
+if anything goes wrong.
+
+It's not hard to guess how `sem_reject_real` works:
+
+```C
+// Some math operators like << >> & | % only make sense on integers
+// This function does the extra checking to ensure they do not get real values
+// as arguments.  It's a post-pass after the normal math checks.
+static void sem_reject_real(ast_node *ast, CSTR op) {
+  if (!is_error(ast)) {
+    sem_t core_type = core_type_of(ast->sem->sem_type);
+    if (core_type == SEM_TYPE_REAL) {
+      report_error(ast, "CQL0001: operands must be an integer type, not real", op);
+      record_error(ast);
+    }
+  }
+}
+```
+
+* if the AST node isn't already an error, and it is of type real, report an error
+* it assumes the type is already known to be numeric
+* the pre-check for errors is to avoid double reporting if something has already gone wrong, the core type will be `SEM_TYPE_ERROR`
+
+### Binary Operators
+
+#### Binary Prep
+
+The code pretty much speaks for itself, we'll walk through it
+
+```C
+// All the binary ops do the same preparation, they evaluate the left and the
+// right expression, then they check those for errors.  Then they need
+// the types of those expressions and the combined_flags of the result.  This
+// does exactly that for its various callers.  Returns true if all is well.
+static bool_t sem_binary_prep(ast_node *ast, sem_t *core_type_left, sem_t *core_type_right, sem_t *combined_flags) {
+  EXTRACT_ANY_NOTNULL(left, ast->left);
+  EXTRACT_ANY_NOTNULL(right, ast->right);
+
+  // left op right
+  sem_expr(left);
+  sem_expr(right);
+
+  if (is_error(left) || is_error(right)) {
+    record_error(ast);
+    *core_type_left = SEM_TYPE_ERROR;
+    *core_type_right = SEM_TYPE_ERROR;
+    *combined_flags = 0;
+    return false;
+  }
+
+  *core_type_left = core_type_of(left->sem->sem_type);
+  *core_type_right = core_type_of(right->sem->sem_type);
+  *combined_flags = combine_flags(left->sem->sem_type, right->sem->sem_type);
+
+  Invariant(is_unitary(*core_type_left));
+  Invariant(is_unitary(*core_type_right));
+
+  return true;
+}
+```
+
+* `sem_expr` is used to recursively walk the left and right nodes
+* `is_error` checks if either had errors, if so, simply propogate the error
+* extract the left and right core types
+* combine nullability and sensitivity flags
+
+These are the standard prep steps, the caller now has the core types of left and right plus combined flags on a silver platter.
+
+#### Example: Is or Is Not
+
+This analyzer is the simplest of all the binaries
+
+```C
+// IS and IS NOT are special in that they return a not null boolean.
+static void sem_binary_is_or_is_not(ast_node *ast, CSTR op) {
+  sem_t core_type_left, core_type_right, combined_flags;
+
+  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags)) {
+    return;
+  }
+
+  if (!sem_verify_compat(ast, core_type_left, core_type_right, op)) {
+    return;
+  }
+
+  // the result of is or is not is always a bool and never null
+  ast->sem = new_sem(SEM_TYPE_BOOL | SEM_TYPE_NOTNULL | sensitive_flag(combined_flags));
+}
+```
+
+* `sem_binary_prep` checks for errors in the left or right
+* `sem_verify_compat` ensures that left and right operands are type compatible (discussed later)
+* the result is always of type `bool not null`
+
+If either step goes wrong the error will naturally propogate.
+
+#### Example: Binary Math
+
+This is the general worker for binary math operations, the most common operations like '+', '-', '*' and so forth.
+
+```C
+// For all math operations, we combine the types and yield the type that
+// holds both using the helper.  If any text, that's an error.
+static void sem_binary_math(ast_node *ast, CSTR op) {
+  sem_t core_type_left, core_type_right, combined_flags;
+  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags)) {
+    return;
+  }
+
+  if (error_any_object(ast, core_type_left, core_type_right, op)) {
+    return;
+  }
+
+  if (error_any_blob_types(ast, core_type_left, core_type_right, op)) {
+    return;
+  }
+
+  if (error_any_text_types(ast, core_type_left, core_type_right, op)) {
+    return;
+  }
+
+  sem_t core_type = sem_combine_types(core_type_left, core_type_right);
+
+  CSTR kind = sem_combine_kinds(ast->right, ast->left->sem->kind);
+  if (is_error(ast->right)) {
+    record_error(ast);
+    return;
+  }
+
+  ast->sem = new_sem(core_type | combined_flags);
+  ast->sem->kind = kind;
+}
+```
+
+* `sem_binary_prep` checks for errors on the left or right
+* `error_any_object` reports an error if the left or right is of type object
+* `error_any_blob_types` reports an error if the left or right is of type blob
+* `error_any_text_types` reports an error if the left or right is of type text
+* `sem_combine_type` computes the combined type, the smallest numeric type that holds both left and right
+  * note the operands are now known to be numeric
+  * the three type error checkers give nice right errors about the left or right operand
+* `sem_combine_kinds` tries to create a single type `kind` for both operands
+  * if their `kind` is incompatible, records an error on the right
+* `new_sem` creates a `sem_node` with the combined type, flags, and then the `kind` is set.
+
+At this point it might help to look a few more of the base validators, they are very unremarkable.
+
+#### Example Validator: error_any_object
+
+```C
+// If either of the types is an object then produce an error on the ast.
+static bool_t error_any_object(ast_node *ast, sem_t core_type_left, sem_t core_type_right, CSTR op) {
+  if (is_object(core_type_left)) {
+    report_error(ast->left, "CQL0002: left operand cannot be an object in", op);
+    record_error(ast);
+    return true;
+  }
+
+  if (is_object(core_type_right)) {
+    report_error(ast->right, "CQL0003: right operand cannot be an object in", op);
+    record_error(ast);
+    return true;
+  }
+
+  return false;
+}
+```
+
+* `is_object` checks a `sem_type` against `SEM_TYPE_OBJECT`
+* if left or right is an object an appropraite error is generated
+* there is no strong convention about returning `true` if ok or `true` if error, it's pretty ad hoc
+  * this doesn't seem to cause a lot of problems
+
+#### Example Validator: sem_combine_kinds
+
+```C
+// Here we check that type<Foo> only combines with type<Foo> or type.
+// If there is a current object type, then the next item must match
+// If there is no such type, then an object type that arrives becomes the required type
+// if they ever don't match record an error
+static CSTR sem_combine_kinds_general(ast_node *ast, CSTR kleft, CSTR kright) {
+  if (kright) {
+    if (kleft) {
+      if (strcmp(kleft, kright)) {
+        CSTR errmsg = dup_printf("CQL0070: expressions of different kinds can't be mixed: '%s' vs. '%s'", kright, kleft);
+        report_error(ast, errmsg, NULL);
+        record_error(ast);
+      }
+    }
+    return kright;
+  }
+
+  return kleft;
+}
+
+// helper to crack the ast nodes first and then call the normal comparisons
+static CSTR sem_combine_kinds(ast_node *ast, CSTR kright) {
+  CSTR kleft = ast->sem->kind;
+  return sem_combine_kinds_general(ast, kleft, kright);
+}
+```
+
+* `sem_combine_kinds` uses the worker `sem_combine_kinds_general` after extracting the `kind` from the left node
+  * usually you already have one `kind` and you want to know if another `kind` is compatible hence this helper
+* `sem_combine_kinds_general` applies the general rules
+  * NULL + NULL => NULL
+  * NULL + x  => x
+  * x + NULL => x
+  * x + x => x
+  * x + y => error if x != y
+* this is one of the rare functions that creates a dynamic error message
+
+
+#### Example Validator : is_numeric_compat
+
+This helper is frequently called several times in the course of other semantic checks.
+This one produces no errors, that's up to the caller. Often there is a numeric path
+and a non-numeric path so this helper can't create the errors.
+
+```C
+cql_noexport bool_t is_numeric_compat(sem_t sem_type) {
+  sem_type = core_type_of(sem_type);
+  return sem_type >= SEM_TYPE_NULL && sem_type <= SEM_TYPE_REAL;
+}
+```
+
+It operates by checking the core type for the numeric range.  Note that `NULL` is compatible with numerics
+because expressions like `NULL + 2` have meaning in SQL.
+
+#### Example Validator : sem_combine_types
+
+```C
+// The second workhorse of semantic analysis, given two types that
+// are previously known to be compatible, it returns the smallest type
+// that holds both.  If either is nullable the result is nullable.
+// Note: in the few cases where that isn't true the normal algorithm for
+// nullablity result must be overrided (see coalesce for instance).
+static sem_t sem_combine_types(sem_t sem_type_1, sem_t sem_type_2) {
+  ...
+}
+```
+
+This beast is rather lengthy but unremarkable. It follows these rules:
+* text is only compatible with text
+* object is only compatible with object
+* blob is only compatible with blob
+* numerics are only compatible with any other numerics
+  * NULL promotes the other operand, whatever it is
+  * bool promotes to integer
+  * integer promotes to long integer
+  * long integer promotes to real
+  * the combined type is the smallest numeric type according to the promotion rules
+
+Some examples might be helpful:
+
+* 1 + 2L  ->  long
+* false + 3.1 -> real
+* 2L + 3.1 -> real
+* true + 2 -> integer
+* 'x' + 1 -> not compatible
+
+Note that `sem_combine_types` assumes the types have already been checked for compatiblitiy and will use `Contract` to enforce
+this.  You should be using other helpers like `is_numeric_compat` and friends to ensure the types agree before computing
+the combined type.  A list of values that must be compatible with each other (e.g. in `needle IN (haystack)`) can be
+checked using `sem_verify_compat` repeatedly.
+
+#### Example Validator : sem_verify_assignment
+
+The `sem_verify_assignment` function is use any time there is something like a logical `assignment` going on.  There are
+two important cases:
+
+* `SET x := y` : an actual assignment
+* `call foo(x)` : the expression `x` must be "assignable" to the formal variable for the argument of `foo`
+
+This is a lot like normal binary operator compatibility with one extra rule.  The expression must not be a bigger type than the target.
+i.e. you cannot assign a `long` to an `integer`.
+
+```C
+// This verifies that the types are compatible and that it's ok to assign
+// the expression to the variable.  In practice that means:
+// * the variable type core type and kind must be compatible with the expression core type and kind
+// * the variable must be nullable if the expression is nullable
+// * the variable must be sensitive if the assignment is sensitive
+// * the variable type must be bigger than the expression type
+// Here ast is used only to give a place to put any errors.
+static bool_t sem_verify_assignment(ast_node *ast, sem_t sem_type_needed, sem_t sem_type_found, CSTR var_name) {
+  if (!sem_verify_compat(ast, sem_type_needed, sem_type_found, var_name)) {
+    return false;
+  }
+
+  if (!sem_verify_safeassign(ast, sem_type_needed, sem_type_found, var_name)) {
+    return false;
+  }
+
+  if (is_nullable(sem_type_found) && is_not_nullable(sem_type_needed)) {
+    report_error(ast, "CQL0013: cannot assign/copy possibly null expression to not null target", var_name);
+    return false;
+  }
+
+  if (sensitive_flag(sem_type_found) && !sensitive_flag(sem_type_needed)) {
+    report_error(ast, "CQL0014: cannot assign/copy sensitive expression to non-sensitive target", var_name);
+    return false;
+  }
+
+  return true;
+}
+```
+
+* `sem_verify_compat` checks for standard type compatibility between the left and the right
+* `sem_verify_safeassign` checks that if the types are different the right operand is the smaller
+* nullability checks ensure you aren't trying to assign a nullable value to a not null variable
+* sensitivity checks ensure you aren't trying to assign a sensitive value to a not sensitive variable
+
+### Simple Statement Validation
+
+With the expression building blocks, most of the usual kind of language statements become quite simple to check
+for correctness.  It's probably easiest to illustrate this with an example, let's look at validation for
+the `WHILE` statement.
+
+```C
+// While semantic analysis is super simple.
+//  * the condition must be numeric
+//  * the statement list must be error-free
+//  * loop_depth is increased allowing the use of interior leave/continue
+static void sem_while_stmt(ast_node *ast) {
+  Contract(is_ast_while_stmt(ast));
+  EXTRACT_ANY_NOTNULL(expr, ast->left);
+  EXTRACT(stmt_list, ast->right);
+
+  // WHILE [expr] BEGIN [stmt_list] END
+
+  sem_numeric_expr(expr, ast, "WHILE", SEM_EXPR_CONTEXT_NONE);
+
+  if (is_error(expr)) {
+    record_error(ast);
+    return;
+  }
+
+  if (stmt_list) {
+    loop_depth++;
+
+    sem_stmt_list(stmt_list);
+
+    loop_depth--;
+
+    if (is_error(stmt_list)) {
+      record_error(ast);
+      return;
+    }
+  }
+
+  record_ok(ast);
+}
+```
+
+* first we pull out the tree parts we need using `EXTRACT` macros
+* the loop expression verified to be numeric
+* then the statement list is recursively validated
+
+Note: the while expression is one of the loop constructs which means `LEAVE` and `CONTINUE` are legal inside it, the `loop_depth` global tracks the fact that we are in a loop so that `LEAVE` and `CONTINUE` can report errors if we are not.
+
+`SEM_EXPR_CONTEXT_NONE` means we are not in any SQL context. More on expression contexts later.  For now all you need to know is that some expression types are only valid in some parts of a SQL statement (e.g. aggregate functions can't appear in a `LIMIT` clause) and so there is always a context for any numeric expression.  `NONE` means
+it isn't any SQL context, it's a loose expression.
+
+It's not hard to imagine that `sem_stmt_list` will basically walk the AST, pulling out statements and dispatching them using the `STMT_INIT` tables previously discussed.  Hence you could land right back in `sem_while_stmt` for a nested `WHILE`.  It's turtles all the way down.
