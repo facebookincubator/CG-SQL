@@ -391,6 +391,7 @@
 <li><a href="#cql0031-column-cant-be-primary-key-and-also-unique-key-column">CQL0031: column can’t be primary key and also unique key ‘column’</a></li>
 <li><a href="#cql0032-created-columns-must-be-at-the-end-and-must-be-in-version-order-column">CQL0032: created columns must be at the end and must be in version order", ‘column’</a></li>
 <li><a href="#cql0033-columns-in-a-table-marked-recreate-cannot-have-create-or-delete-column">CQL0033: columns in a table marked <span class="citation" data-cites="recreate">@recreate</span> cannot have <span class="citation" data-cites="create">@create</span> or <code>@delete</code>, ‘column’</a></li>
+<li><a href="#cql0034-createdelete-version-numbers-can-only-be-applied-to-columns-that-are-nullable-or-have-a-default-value-column">CQL0034: create/delete version numbers can only be applied to columns that are nullable or have a default value ‘column’</a></li>
 <li><a href="#cql0035-column-delete-version-cant-be-column-create-version-column">CQL0035: column delete version can’t be &lt;= column create version", ‘column’</a></li>
 <li><a href="#cql0036-column-delete-version-cant-be-the-table-create-version-column">CQL0036: column delete version can’t be &lt;= the table create version ‘column’</a></li>
 <li><a href="#cql0037-column-delete-version-cant-be-the-table-delete-version">CQL0037: column delete version can’t be &gt;= the table delete version</a></li>
@@ -737,6 +738,7 @@
 <li><a href="#cql0383-switch-all-values-is-useless-with-an-else-clause">CQL0383: switch … ALL VALUES is useless with an ELSE clause</a></li>
 <li><a href="#cql0384-switch-statement-did-not-have-any-actual-statements-in-it">CQL0384: switch statement did not have any actual statements in it</a></li>
 <li><a href="#cql0385-when-clauses-contain-duplicate-values-value">CQL0385: WHEN clauses contain duplicate values ‘value’</a></li>
+<li><a href="#cql0386-switch-all-values-is-used-but-the-switch-expression-is-not-an-enum-type">CQL0386: SWITCH … ALL VALUES is used but the switch expression is not an enum type</a></li>
 <li><a href="#cql0387-a-value-exists-in-the-enum-that-is-not-present-in-the-switch-enum_member">CQL0387: a value exists in the enum that is not present in the switch ‘enum_member’</a></li>
 <li><a href="#cql0388-a-value-exists-in-the-switch-that-is-not-present-in-the-enum-numeric_value">CQL0388: a value exists in the switch that is not present in the enum ‘numeric_value’</a></li>
 <li><a href="#cql0389-declare-out-requires-that-the-procedure-be-already-declared">CQL0389: DECLARE OUT requires that the procedure be already declared</a></li>
@@ -749,11 +751,17 @@
 <li><a href="#cql0396-versioning-attributes-may-not-be-used-on-ddl-inside-a-procedure">CQL0396: versioning attributes may not be used on DDL inside a procedure</a></li>
 <li><a href="#cql0397-object-is-an-orphan-because-its-table-is-deleted.-remove-rather-than-delete-object_name">CQL0397: object is an orphan because its table is deleted. Remove rather than <span class="citation" data-cites="delete">@delete</span> ‘object_name’</a></li>
 <li><a href="#cql0398-a-compound-select-cannot-be-ordered-by-the-result-of-an-expression">CQL0398: A compound select cannot be ordered by the result of an expression</a></li>
+<li><a href="#cql0399-table-must-leave-recreate-management-with-createnn-or-later-table_name">CQL0399: table must leave <span class="citation" data-cites="recreate">@recreate</span> management with <span class="citation" data-cites="create">@create</span>(nn) or later ‘table_name’</a></li>
 <li><a href="#cql0400-encode-context-column-cant-be-sensitive">CQL0400: encode context column can’t be sensitive</a></li>
+<li><a href="#cql0401-encode-context-column-must-be-specified-if-strict-encode-context-column-mode-is-enabled">CQL0401: encode context column must be specified if strict encode context column mode is enabled</a></li>
 <li><a href="#cql0402-encode-context-column-in-vault_sensitive-attribute-must-match-the-specified-type-in-strict-mode">CQL0402: encode context column in vault_sensitive attribute must match the specified type in strict mode</a></li>
+<li><a href="#cql0403-operator-may-not-be-used-because-it-is-not-supported-on-old-versions-of-sqlite-operator">CQL0403: operator may not be used because it is not supported on old versions of SQLite, ‘operator’</a></li>
 <li><a href="#cql0404-procedure-cannot-be-both-a-normal-procedure-and-an-unchecked-procedure-procedure_name">CQL0404: procedure cannot be both a normal procedure and an unchecked procedure, ‘procedure_name’</a></li>
 <li><a href="#cql0405-procedure-of-an-unknown-type-used-in-an-expression-procedure_name">CQL0405: procedure of an unknown type used in an expression ‘procedure_name’</a></li>
 <li><a href="#cql0408-encode-context-column-can-be-only-specified-once">CQL0408: encode context column can be only specified once</a></li>
+</ul></li>
+<li><a href="#appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</a>
+<ul>
 <li><a href="#rules-1">Rules</a></li>
 </ul></li>
 <li><a href="#appendix-6-cql-in-20-minutes">Appendix 6: CQL In 20 Minutes</a></li>
@@ -8159,25 +8167,12 @@ enforce_pop_stmt:
 <hr />
 <h3 id="cql0033-columns-in-a-table-marked-recreate-cannot-have-create-or-delete-column">CQL0033: columns in a table marked <span class="citation" data-cites="recreate">@recreate</span> cannot have <span class="citation" data-cites="create">@create</span> or <code>@delete</code>, ‘column’</h3>
 <p>If the table is using the <code>@recreate</code> plan then you can add and remove columns (and other things freely) you don’t need to mark columns with <code>@create</code> or <code>@delete</code> just add/remove them. This error prevents the build up of useless annotations.</p>
-<table style="width:8%;">
-<colgroup>
-<col style="width: 8%" />
-</colgroup>
-<tbody>
-<tr class="odd">
-<td>### CQL0034: create/delete version numbers can only be applied to columns that are nullable or have a default value ‘column’</td>
-</tr>
-<tr class="even">
-<td>Any new column added to a schema must have a default value or be nullable so that its initial state is clear and so that all existing insert statements do not have to be updated to include it. Either make the column nullable or give it a default value.</td>
-</tr>
-<tr class="odd">
-<td>Similarly, any column being deleted must be nullable or have a default value. The column can’t actually be deleted (not all versions of SQLite support this) so it will only be “deprecated”. But if the column is not null and has no default then it would be impossible to write a correct insert statement for the table with the deleted column.</td>
-</tr>
-<tr class="even">
-<td>As a consequence you can neither add nor remove columns that are not null and have no default.</td>
-</tr>
-</tbody>
-</table>
+<hr />
+<h3 id="cql0034-createdelete-version-numbers-can-only-be-applied-to-columns-that-are-nullable-or-have-a-default-value-column">CQL0034: create/delete version numbers can only be applied to columns that are nullable or have a default value ‘column’</h3>
+<p>Any new column added to a schema must have a default value or be nullable so that its initial state is clear and so that all existing insert statements do not have to be updated to include it. Either make the column nullable or give it a default value.</p>
+<p>Similarly, any column being deleted must be nullable or have a default value. The column can’t actually be deleted (not all versions of SQLite support this) so it will only be “deprecated”. But if the column is not null and has no default then it would be impossible to write a correct insert statement for the table with the deleted column.</p>
+<p>As a consequence you can neither add nor remove columns that are not null and have no default.</p>
+<hr />
 <h3 id="cql0035-column-delete-version-cant-be-column-create-version-column">CQL0035: column delete version can’t be &lt;= column create version", ‘column’</h3>
 <p>You can’t <code>@delete</code> a column in a version before it was even created. Probably there is a typo in one or both of the versions.</p>
 <hr />
@@ -9648,21 +9643,10 @@ enforce_pop_stmt:
 <p>CQL found a redundant select operation (e.g., <code>set x := (select NULL);</code>).</p>
 <p>There is no need to write a select expression that always evaluates to NULL. Simply use NULL instead (e.g., <code>set x := NULL;</code>).</p>
 <hr />
-<table style="width:7%;">
-<colgroup>
-<col style="width: 6%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th>CQL 0375 : unused, this was added to prevent merge conflicts at the end on literally every checkin</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>CQL 0376 : unused, this was added to prevent merge conflicts at the end on literally every checkin</td>
-</tr>
-</tbody>
-</table>
+<p>CQL 0375 : unused, this was added to prevent merge conflicts at the end on literally every checkin</p>
+<hr />
+<p>CQL 0376 : unused, this was added to prevent merge conflicts at the end on literally every checkin</p>
+<hr />
 <h3 id="cql0377-table-transitioning-from-recreate-to-create-must-use-createnncqlfrom_recreate-table-name">CQL0377: table transitioning from <code>@recreate</code> to <code>@create</code> must use <code>@create(nn,cql:from_recreate)</code> ‘table name’</h3>
 <p>The indicated table is moving from <code>@recreate</code> to <code>@create</code> meaning it will now be schema managed in an upgradable fashion. When this happens end-user databases might have some stale version of the table from a previous installation. This stale version must get a one-time cleanup in order to ensure that the now current schema is correctly applied. The <code>cql:from_recreate</code> annotation does this. It is required because otherwise there would be no record that this table “used to be recreate” and therefore might have an old version still in the database.</p>
 <p>A correct table might look something like this:</p>
@@ -9699,19 +9683,10 @@ enforce_pop_stmt:
 <hr />
 <h3 id="cql0385-when-clauses-contain-duplicate-values-value">CQL0385: WHEN clauses contain duplicate values ‘value’</h3>
 <p>In a <code>SWITCH</code> statement all of the values in the <code>WHEN</code> clauses must be unique. The indicated errant entry is a duplicate.</p>
-<table style="width:7%;">
-<colgroup>
-<col style="width: 6%" />
-</colgroup>
-<tbody>
-<tr class="odd">
-<td>### CQL0386: SWITCH … ALL VALUES is used but the switch expression is not an enum type</td>
-</tr>
-<tr class="even">
-<td>In a <code>SWITCH</code> statement with <code>ALL VALUES</code> specified the switch expression was not an enumerated type. <code>ALL VALUES</code> is used to ensure that there is a case for every value of an enumerated type so this switch cannot be so checked. Either correct the expression, or remove <code>ALL VALUES</code>.</td>
-</tr>
-</tbody>
-</table>
+<hr />
+<h3 id="cql0386-switch-all-values-is-used-but-the-switch-expression-is-not-an-enum-type">CQL0386: SWITCH … ALL VALUES is used but the switch expression is not an enum type</h3>
+<p>In a <code>SWITCH</code> statement with <code>ALL VALUES</code> specified the switch expression was not an enumerated type. <code>ALL VALUES</code> is used to ensure that there is a case for every value of an enumerated type so this switch cannot be so checked. Either correct the expression, or remove <code>ALL VALUES</code>.</p>
+<hr />
 <h3 id="cql0387-a-value-exists-in-the-enum-that-is-not-present-in-the-switch-enum_member">CQL0387: a value exists in the enum that is not present in the switch ‘enum_member’</h3>
 <p>In a <code>SWITCH</code> statement with <code>ALL VALUES</code> specified the errant enum member did not appear in any <code>WHEN</code> clause. All members must be specified when <code>ALL VALUES</code> is used.</p>
 <hr />
@@ -9768,52 +9743,23 @@ enforce_pop_stmt:
 <div class="sourceCode" id="cb456"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb456-1"><a href="#cb456-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> x, y <span class="kw">FROM</span> t0 <span class="kw">UNION</span> <span class="kw">ALL</span> <span class="kw">select</span> x, y <span class="kw">FROM</span> t1 <span class="kw">ORDER</span> <span class="kw">BY</span> <span class="dv">2</span></span></code></pre></div>
 <p>This seemingly equivalent version containing an arbitrary expression, however, is not:</p>
 <div class="sourceCode" id="cb457"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb457-1"><a href="#cb457-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> x, y <span class="kw">FROM</span> t0 <span class="kw">UNION</span> <span class="kw">ALL</span> <span class="kw">select</span> x, y <span class="kw">FROM</span> t1 <span class="kw">ORDER</span> <span class="kw">BY</span> <span class="dv">1</span> <span class="op">+</span> <span class="dv">1</span>;</span></code></pre></div>
-<table style="width:7%;">
-<colgroup>
-<col style="width: 6%" />
-</colgroup>
-<tbody>
-<tr class="odd">
-<td>### CQL0399: table must leave <span class="citation" data-cites="recreate">@recreate</span> management with <span class="citation" data-cites="create">@create</span>(nn) or later ‘table_name’</td>
-</tr>
-<tr class="even">
-<td>The indicated table changed from <code>@recreate</code> to <code>@create</code> but it did so in a past schema version. The change must happen in the current schema version. That version is indicated by the value of nn.</td>
-</tr>
-<tr class="odd">
-<td>To fix this you can change the <code>@create</code> annotation so that it matches the number in this error message</td>
-</tr>
-</tbody>
-</table>
+<hr />
+<h3 id="cql0399-table-must-leave-recreate-management-with-createnn-or-later-table_name">CQL0399: table must leave <span class="citation" data-cites="recreate">@recreate</span> management with <span class="citation" data-cites="create">@create</span>(nn) or later ‘table_name’</h3>
+<p>The indicated table changed from <code>@recreate</code> to <code>@create</code> but it did so in a past schema version. The change must happen in the current schema version. That version is indicated by the value of nn.</p>
+<p>To fix this you can change the <code>@create</code> annotation so that it matches the number in this error message</p>
+<hr />
 <h3 id="cql0400-encode-context-column-cant-be-sensitive">CQL0400: encode context column can’t be sensitive</h3>
 <p>The encode context column will be used to encode sensitive fields, it can’t be exposed to encode functions</p>
-<table style="width:7%;">
-<colgroup>
-<col style="width: 6%" />
-</colgroup>
-<tbody>
-<tr class="odd">
-<td>### CQL0401: encode context column must be specified if strict encode context column mode is enabled</td>
-</tr>
-<tr class="even">
-<td>encode context column must be specified in vault_sensitive attribute with format: <span class="citation" data-cites="attribute">@attribute</span>(cql:vault_sensitive=(encode_context_col, (col1, col2, …))</td>
-</tr>
-</tbody>
-</table>
+<hr />
+<h3 id="cql0401-encode-context-column-must-be-specified-if-strict-encode-context-column-mode-is-enabled">CQL0401: encode context column must be specified if strict encode context column mode is enabled</h3>
+<p>encode context column must be specified in vault_sensitive attribute with format: <span class="citation" data-cites="attribute">@attribute</span>(cql:vault_sensitive=(encode_context_col, (col1, col2, …))</p>
+<hr />
 <h3 id="cql0402-encode-context-column-in-vault_sensitive-attribute-must-match-the-specified-type-in-strict-mode">CQL0402: encode context column in vault_sensitive attribute must match the specified type in strict mode</h3>
 <p>encode context column must match the specified type in vault_sensitive attribute with format: <span class="citation" data-cites="attribute">@attribute</span>(cql:vault_sensitive=(encode_context_col, (col1, col2, …))</p>
-<table style="width:7%;">
-<colgroup>
-<col style="width: 6%" />
-</colgroup>
-<tbody>
-<tr class="odd">
-<td>### CQL0403: operator may not be used because it is not supported on old versions of SQLite, ‘operator’</td>
-</tr>
-<tr class="even">
-<td>The indicated operator has been suppressed with <code>@enforce_strict is true</code> because it is not available on older versions of sqlite.</td>
-</tr>
-</tbody>
-</table>
+<hr />
+<h3 id="cql0403-operator-may-not-be-used-because-it-is-not-supported-on-old-versions-of-sqlite-operator">CQL0403: operator may not be used because it is not supported on old versions of SQLite, ‘operator’</h3>
+<p>The indicated operator has been suppressed with <code>@enforce_strict is true</code> because it is not available on older versions of sqlite.</p>
+<hr />
 <h3 id="cql0404-procedure-cannot-be-both-a-normal-procedure-and-an-unchecked-procedure-procedure_name">CQL0404: procedure cannot be both a normal procedure and an unchecked procedure, ‘procedure_name’</h3>
 <p>The construct:</p>
 <div class="sourceCode" id="cb458"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb458-1"><a href="#cb458-1" aria-hidden="true" tabindex="-1"></a><span class="kw">DECLARE</span> <span class="kw">PROCEDURE</span> printf <span class="kw">NO</span> <span class="kw">CHECK</span>;</span></code></pre></div>
@@ -9831,42 +9777,24 @@ enforce_pop_stmt:
 <span id="cb459-8"><a href="#cb459-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb459-9"><a href="#cb459-9" aria-hidden="true" tabindex="-1"></a><span class="co">-- Now that we&#39;ve declared the type, we can use it in an expression.</span></span>
 <span id="cb459-10"><a href="#cb459-10" aria-hidden="true" tabindex="-1"></a>let result <span class="op">:=</span> some_external_proc(<span class="ot">&quot;Hello!&quot;</span>);</span></code></pre></div>
-<table style="width:7%;">
-<colgroup>
-<col style="width: 6%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th>CQL 0406 : unused, this was added to prevent merge conflicts at the end on literally every checkin</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>CQL 0407 : unused, this was added to prevent merge conflicts at the end on literally every checkin</td>
-</tr>
-</tbody>
-</table>
+<hr />
+<p>CQL 0406 : unused, this was added to prevent merge conflicts at the end on literally every checkin</p>
+<hr />
+<p>CQL 0407 : unused, this was added to prevent merge conflicts at the end on literally every checkin</p>
+<hr />
 <h3 id="cql0408-encode-context-column-can-be-only-specified-once">CQL0408: encode context column can be only specified once</h3>
 <p>The encode context column can be only specified once in <span class="citation" data-cites="vault_sensitive">@vault_sensitive</span> attribute</p>
-<table style="width:7%;">
-<colgroup>
-<col style="width: 6%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th>CQL 0409 : unused, this was added to prevent merge conflicts at the end on literally every checkin</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>CQL 0410 : unused, this was added to prevent merge conflicts at the end on literally every checkin</td>
-</tr>
-<tr class="even">
-<td>## Appendix 5: JSON Schema Grammar &lt;!— – Copyright (c) Facebook, Inc. and its affiliates.</td>
-</tr>
-</tbody>
-</table>
-<p>– This source code is licensed under the MIT license found in the – LICENSE file in the root directory of this source tree. –&gt;</p>
+<hr />
+<p>CQL 0409 : unused, this was added to prevent merge conflicts at the end on literally every checkin</p>
+<hr />
+<p>CQL 0410 : unused, this was added to prevent merge conflicts at the end on literally every checkin</p>
+<h2 id="appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</h2>
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
 <p>Snapshot as of Sun Aug 15 11:41:14 PDT 2021</p>
 <h3 id="rules-1">Rules</h3>

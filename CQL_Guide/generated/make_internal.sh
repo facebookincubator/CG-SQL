@@ -4,7 +4,6 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-rm -f internal.md
 (echo -n "<!--- @" ; echo "generated -->") >internal.tmp
 for f in ../int*.md
 do
@@ -16,4 +15,3 @@ sed -e '/^id:/d' -e '/^sidebar_label:/d' -e 's/^title: "\(.*\)"/## \1/' -e '/^--
 rm internal.tmp
 
 pandoc --toc -s -f markdown -t html --metadata title="CQL Internals" internal.md -o internal.html
-rm internal.md

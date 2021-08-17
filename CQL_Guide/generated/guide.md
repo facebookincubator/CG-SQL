@@ -10210,6 +10210,7 @@ If the table is using the `@recreate` plan then you can add and remove columns (
 This error prevents the build up of useless annotations.
 
 -----
+
 ### CQL0034: create/delete version numbers can only be applied to columns that are nullable or have a default value 'column'
 
 Any new column added to a schema must have a default value or be nullable so that its initial state is clear
@@ -13141,10 +13142,12 @@ There is no need to write a select expression that always evaluates to NULL. Sim
 
 ----
 
-----
 CQL 0375 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+
 ----
+
 CQL 0376 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+
 ----
 
 ### CQL0377: table transitioning from `@recreate` to `@create` must use `@create(nn,cql:from_recreate)` 'table name'
@@ -13238,6 +13241,7 @@ In a `SWITCH` statement all of the values in the `WHEN` clauses must be unique. 
 errant entry is a duplicate.
 
 ----
+
 ### CQL0386: SWITCH ... ALL VALUES is used but the switch expression is not an enum type
 
 In a `SWITCH` statement with `ALL VALUES` specified the switch expression was not an enumerated type.
@@ -13386,6 +13390,7 @@ SELECT x, y FROM t0 UNION ALL select x, y FROM t1 ORDER BY 1 + 1;
 ```
 
 ----
+
 ### CQL0399: table must leave @recreate management with @create(nn) or later 'table_name'
 
 The indicated table changed from `@recreate` to `@create` but it did so in a past schema version.  The change
@@ -13394,29 +13399,34 @@ must happen in the current schema version.  That version is indicated by the val
 To fix this you can change the `@create` annotation so that it matches the number in this error message
 
 ----
+
 ### CQL0400: encode context column can't be sensitive
 
 The encode context column will be used to encode sensitive fields, it can't be exposed to encode functions
 
 ----
+
 ### CQL0401: encode context column must be specified if strict encode context column mode is enabled
 
 encode context column must be specified in vault_sensitive attribute with format:
 @attribute(cql:vault_sensitive=(encode_context_col, (col1, col2, ...))
 
 ----
+
 ### CQL0402: encode context column in vault_sensitive attribute must match the specified type in strict mode
 
 encode context column must match the specified type in vault_sensitive attribute with format:
 @attribute(cql:vault_sensitive=(encode_context_col, (col1, col2, ...))
 
 ----
+
 ### CQL0403: operator may not be used because it is not supported on old versions of SQLite, 'operator'
 
 The indicated operator has been suppressed with `@enforce_strict is true` because it is not available
 on older versions of sqlite.
 
 ----
+
 ### CQL0404: procedure cannot be both a normal procedure and an unchecked procedure, 'procedure_name'
 
 The construct:
@@ -13455,9 +13465,13 @@ let result := some_external_proc("Hello!");
 ```
 
 ----
+
 CQL 0406 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+
 ----
+
 CQL 0407 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+
 ----
 
 ### CQL0408: encode context column can be only specified once
@@ -13465,8 +13479,11 @@ CQL 0407 : unused, this was added to prevent merge conflicts at the end on liter
 The encode context column can be only specified once in @vault_sensitive attribute
 
 ----
+
 CQL 0409 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+
 ----
+
 CQL 0410 : unused, this was added to prevent merge conflicts at the end on literally every checkin
 
 
