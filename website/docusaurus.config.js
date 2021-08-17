@@ -33,7 +33,7 @@ module.exports = {
           position: 'left',
         },
         {
-          to: 'cql-internals/int01',
+          to: 'cql-guide/int01',
           label: 'CQL Internals',
           position: 'left',
         },
@@ -117,17 +117,6 @@ module.exports = {
         path: '../CQL_Guide',
         routeBasePath: 'cql-guide',
         sidebarPath: require.resolve('./sidebarsGuide.js'),
-        showLastUpdateAuthor: true,
-        showLastUpdateTime: true,
-      },
-    ],
-    [
-      '@docusaurus/plugin-content-docs',
-      {
-        id: 'cql-internals',
-        path: '../CQL_Guide',
-        routeBasePath: 'cql-internals',
-        sidebarPath: require.resolve('./sidebarsInternal.js'),
         showLastUpdateAuthor: true,
         showLastUpdateTime: true,
       },
