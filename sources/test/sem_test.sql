@@ -17395,6 +17395,55 @@ begin
   let x := a; -- nullable
 end;
 
+-- TEST: Later branches are improved via the assumption that earlier branches
+-- must not have been taken.
+-- + {let_stmt}: x0: integer variable
+-- + {let_stmt}: y0: integer variable
+-- + {let_stmt}: z0: integer variable
+-- + {let_stmt}: x1: integer notnull variable
+-- + {let_stmt}: y1: integer variable
+-- + {let_stmt}: z1: integer variable
+-- + {let_stmt}: x2: integer notnull variable
+-- + {let_stmt}: y2: integer variable
+-- + {let_stmt}: z2: integer variable
+-- + {let_stmt}: x3: integer notnull variable
+-- + {let_stmt}: y3: integer notnull variable
+-- + {let_stmt}: z3: integer notnull variable
+-- + {let_stmt}: x4: integer variable
+-- + {let_stmt}: y4: integer variable
+-- + {let_stmt}: z4: integer variable
+create proc false_conditions_of_earlier_branches_improve_later_branches()
+begin
+  declare a int;
+  declare b int;
+  declare c int;
+
+  if a is null then
+    let x0 := a;
+    let y0 := b;
+    let z0 := c;
+  else if 0 then
+    -- `a` is improved here
+    let x1 := a;
+    let y1 := b;
+    let z1 := c;
+  else if b is null or c is null then
+    -- `a` is still improved here
+    let x2 := a;
+    let y2 := b;
+    let z2 := c;
+  else
+    -- `a`, `b`, and `c` are improved here
+    let x3 := a;
+    let y3 := b;
+    let z3 := c;
+  end if;
+
+  let x4 := a;
+  let y4 := b;
+  let z4 := c;
+end;
+
 -- TEST: Disable flow-sensitive nullability.
 -- + @ENFORCE_NORMAL NOT NULL AFTER CHECK
 -- + {enforce_normal_stmt}: ok

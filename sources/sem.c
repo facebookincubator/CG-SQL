@@ -11663,6 +11663,7 @@ static void sem_cond_action(ast_node *ast) {
 
   if (stmt_list) {
     PUSH_NOTNULL_IMPROVEMENT_CONTEXT();
+    // Add improvements for `stmt_list` where `expr` must be true.
     sem_set_notnull_improvements_for_true_condition(expr, NULL);
     sem_stmt_list(stmt_list);
     POP_NOTNULL_IMPROVEMENT_CONTEXT();
@@ -11670,6 +11671,11 @@ static void sem_cond_action(ast_node *ast) {
       record_error(ast);
       return;
     }
+    // If a later branch will be taken, `expr` must be false. Add its negative
+    // improvements to the context created in `sem_if_stmt` so that all later
+    // branches will be improved by the OR-linked spine of IS NULL checks in
+    // `expr`.
+    sem_set_notnull_improvements_for_false_condition(expr);
   }
 
   ast->sem = expr->sem;
@@ -11747,6 +11753,14 @@ static void sem_if_stmt(ast_node *ast) {
   EXTRACT_NOTNULL(cond_action, ast->left);
   EXTRACT_NOTNULL(if_alt, ast->right);
 
+  // Each branch gets its own improvement context in `sem_cond_action` where its
+  // condition is known to be true. In addition to those contexts, we create one
+  // more for the entire set of branches. This outer context holds all of the
+  // negative improvements that result from the knowledge that, if a given
+  // branch's statements are being evaluated, all previous branches' conditions
+  // must have been false.
+  PUSH_NOTNULL_IMPROVEMENT_CONTEXT();
+
   // IF [cond_action]
   sem_cond_action(cond_action);
   if (is_error(cond_action)) {
@@ -11785,6 +11799,8 @@ static void sem_if_stmt(ast_node *ast) {
 
   ast->sem = cond_action->sem;
   // END IF
+  
+  POP_NOTNULL_IMPROVEMENT_CONTEXT();
 
   // Check for use of the guard pattern, i.e., an IF with only a THEN block that
   // concludes with a control statement. If this IF follows the guard pattern,
