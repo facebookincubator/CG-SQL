@@ -1,12 +1,12 @@
 <!--- @generated -->
-## CQL Internals Guide: Part 1
+## Part 1: Lexing, Parsing, and the AST
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-### Overview
+### Preface
 
 The following is a summary of the implementation theory of the CQL compiler.  This is
 an adjuct to the Guide proper, which describes the language, and to a lesser extent
@@ -20,7 +20,7 @@ or everywhere, in the codebase and its important to understand how things hang t
 If you choose to go on adventures in the source code, especially if you aren't already familiar
 with compilers and how they are typically built, this is a good place to start.
 
-## Lexical Analysis, Parsing, and the Abstract Syntax Tree
+## General Structure
 
 The CQL compiler uses a very standard lex+yacc parser, though to be more precise it's flex+bison.
 The grammar is a large subset of the SQLite dialect of SQL augmented with control flow and compiler
@@ -738,7 +738,7 @@ it's very normal to paste the extraction code from a `gen_` into a new/needed se
 will come to in later sections.
 
 
-## CQL Internals Guide: Part 2
+## Part 2: Semantic Analysis
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
 --
@@ -2265,5 +2265,263 @@ By way of example, you'll see these two patterns in the code:
 * `PUSH_JOIN_BLOCK` causes the name search to stop, nothing deeper in the stack is searched
 * in this case we do not allow `LIMIT` expressions to see any joinscopes, they may not use any columns.
    * even if the `LIMIT` clause is appearing in a subquery it can't refer to columns in the parent query.
+
+### Schema Regions
+
+We touched briefly on schema regions earlier in this section.  The purpose and language for regions
+is described more fully in [Chapter 10](https://cgsql.dev/cql-guide/ch10#schema-regions) of the Guide.
+In this section we'll deal with how they are implemented and what you should expect to see in the code.
+
+When a region declaration is found this method is used.
+
+```C
+// A schema region is an partitioning of the schema such that it
+// only uses objects in the same partition or one of its declared
+// dependencies.  One schema region may be upgraded independently
+// from any others (assuming they happen such that dependents are done first).
+// Here we validate:
+//  * the region name is unique
+//  * the dependencies (if any) are unique and exist
+static void sem_declare_schema_region_stmt(ast_node *ast)  { ... }
+```
+
+The general rules are described in the comment, but effectively it accumulates the list of
+this regions dependencies.  Sometimes these are called the antecedent regions.  Since
+a region can only depend on other regions that have already been declared, it's not possible
+to make any cycles.  Regions are declared before you put anything into them.
+
+Pieces of schema or procedures (or anything really) can go into a region by putting it
+in a begin/end pair for the name region.
+
+```sql
+@begin_schema_region your_region;
+  -- your stuff
+@end_schema_region;
+```
+
+Now whatever happens to be in "your stuff" is:
+
+* limited to seeing only the things that `your_region` is allowed to see and
+* contributes its contents to `your_region` thereby limiting how others will be able to use "your stuff"
+
+To see how this happens, let's have a look at `sem_begin_schema_region_stmt`
+
+```C
+// Entering a schema region makes all the objects that follow part of that
+// region.  It also means that all the contained objects must refer to
+// only pieces of schema that are in the same region or a dependent region.
+// Here we validate that region we are entering is in fact a valid region
+// and that there isn't already a schema region.
+static void sem_begin_schema_region_stmt(ast_node * ast) {
+  Contract(is_ast_begin_schema_region_stmt(ast));
+  EXTRACT_STRING(name, ast->left);
+
+  // @BEGIN_SCHEMA_REGION name
+
+  if (!verify_schema_region_out_of_proc(ast)) {
+    record_error(ast);
+    return;
+  }
+
+  if (current_region) {
+    report_error(ast, "CQL0246: schema regions do not nest; end the current region before starting a new one", NULL);
+    record_error(ast);
+    return;
+  }
+
+  ast_node *region = find_region(name);
+  if (!region) {
+    report_error(ast->left, "CQL0244: unknown schema region", name);
+    record_error(ast);
+    return;
+  }
+
+  // Get the canonical name of the region (case adjusted)
+  Contract(is_region(region));
+  EXTRACT_STRING(region_name, region->left);
+
+  // we already know we are not in a region
+  Invariant(!current_region_image);
+  current_region_image = symtab_new();
+  sem_accumulate_public_region_image(current_region_image, region_name);
+
+  // this is the one and only text pointer value for this region
+  current_region = region_name;
+  record_ok(ast);
+}
+```
+
+We see these basic steps:
+
+* `EXTRACT` the region name
+* `verify_schema_region_out_of_proc` makes sure we are out of any procedure (we have to be at the top level)
+  * errors if in a procedure
+* `current_region` is tested to make sure we are not already in a region (no nesting)
+  * errors if already in a region
+* `find_region` is used to find the region AST by name
+  * errors if the region name isn't valid
+* `EXTRACT` is used again to get the canoncial name of the region
+  * you could say `@begin_schema_region YoUr_ReGION;` we want the canonical name `your_region` as it was declared
+*  `symtab_new` creates a new symbol table `current_region_image`
+* `sem_accumulate_public_region_image` populates `current_region_image` by recursively walking this region adding the names of all the regions we find along the way
+  * note the regions form a DAG so we might find the same name twice, we can stop if we find a region that is already in the symbol table
+* `current_region` is set to the now new current region
+
+Now we're all set up.
+* We can use `current_region` to set the region name in the `sem_node` of anything we encounter
+* We can use `current_region_image` to quickly see if we are allowed to use any given region (if it's in the table we can use it)
+
+Recall that at the end of `sem_create_table_stmt` we do this:
+
+```C
+  ast->sem = new_sem(SEM_TYPE_STRUCT);
+  ast->sem->sptr = sptr;
+  ast->sem->jptr = sem_join_from_sem_struct(sptr);
+  ast->sem->region = current_region;
+```
+
+Which should make a lot more sense now.
+
+When doing the symmetric check in `sem_validate_object_ast_in_current_region` we see this pattern:
+
+```C
+// Validate whether or not an object is usable with a schema region. The object
+// can only be a table, view, trigger or index.
+static bool_t sem_validate_object_ast_in_current_region(
+  CSTR name,
+  ast_node *table_ast,
+  ast_node *err_target,
+  CSTR msg)
+{
+  // We're in a non-region therefore no validation needed because non-region stmt
+  // can reference schema in any region.
+  if (!current_region) {
+    return true;
+  }
+
+  if (table_ast->sem && table_ast->sem->region) {
+    // if we have a current region then the image is always computed!
+    Invariant(current_region_image);
+    if (!symtab_find(current_region_image, table_ast->sem->region)) {
+      // The target region is not accessible from this region
+      ...
+      return false;
+    }
+  } else {
+    // while in schema region '%s', accessing an object that isn't in a region is invalid
+    ...
+    return false;
+  }
+
+  return true;
+}
+```
+
+I've elided some of the code here, but only the part that generates error messages.  The essential logic is:
+
+* if we are not in a region we can access anything
+* if we're in a region then...
+  * the thing we're trying to access must also be in a region, and
+  * that region must be in `current_region_image`
+  * otherwise, we can't access it
+
+This is enough to do all the region validation we need.
+
+### Results of Semantic Analysis
+
+Semantic Analysis leaves a lot of global state ready for the remaining stages to harvest.  If the state
+is defined in `sem.h` then it's ok to harvest.  We'll highlight some of the most important things you
+can use.  These are heavily used in the code generators.
+
+```C
+cql_data_decl( struct list_item *all_tables_list );
+cql_data_decl( struct list_item *all_functions_list );
+cql_data_decl( struct list_item *all_views_list );
+cql_data_decl( struct list_item *all_indices_list );
+cql_data_decl( struct list_item *all_triggers_list );
+cql_data_decl( struct list_item *all_regions_list );
+cql_data_decl( struct list_item *all_ad_hoc_list );
+cql_data_decl( struct list_item *all_select_functions_list );
+cql_data_decl( struct list_item *all_enums_list );
+```
+
+These linked lists are authoritiative, they let you easily enumerate all the objects of the specified type.  If you
+wanted to do some validation of all indices you could simply walk the all indices list.
+
+```C
+cql_noexport ast_node *find_proc(CSTR name);
+cql_noexport ast_node *find_region(CSTR name);
+cql_noexport ast_node *find_func(CSTR name);
+cql_noexport ast_node *find_table_or_view_even_deleted(CSTR name);
+cql_noexport ast_node *find_enum(CSTR name);
+```
+
+These functions give you access to the core name tables (which are still valid!) so that you can look up procedures, functions,
+tables, etc. by name.
+
+Finally, information about all the schema annotations is invaluable for building schema upgraders.  These
+two buffers hold dense arrays of annotation records as shown below.
+
+```C
+cql_data_decl( bytebuf *schema_annotations );
+cql_data_decl( bytebuf *recreate_annotations );
+
+typedef struct recreate_annotation {
+  CSTR target_name;               // the name of the target
+  CSTR group_name;                // group name or "" if no group (not null, safe to sort)
+  ast_node *target_ast;           // top level target (table, view, or index)
+  ast_node *annotation_ast;       // the actual annotation
+  int32_t ordinal;                // when sorting we want to use the original order (reversed actually) within a group
+} recreate_annotation;
+
+typedef struct schema_annotation {
+  int32_t version;                // the version number (always > 0)
+  ast_node *target_ast;           // top level target (table, view, or index)
+  CSTR target_name;               // the name of the target
+  uint32_t annotation_type;       // one of the codes below for the type of annotation
+  ast_node *annotation_ast;       // the actual annotation
+  int32_t column_ordinal;         // -1 if not a column
+  ast_node *column_ast;           // a particular column if column annotation
+} schema_annotation;
+
+// Note: schema annotations are processed in the indicated order: the numbers matter
+#define SCHEMA_ANNOTATION_INVALID 0
+#define SCHEMA_ANNOTATION_FIRST 1
+#define SCHEMA_ANNOTATION_CREATE_TABLE 1
+#define SCHEMA_ANNOTATION_CREATE_COLUMN 2
+#define SCHEMA_ANNOTATION_DELETE_TRIGGER 3
+#define SCHEMA_ANNOTATION_DELETE_VIEW 4
+#define SCHEMA_ANNOTATION_DELETE_INDEX 5
+#define SCHEMA_ANNOTATION_DELETE_COLUMN 6
+#define SCHEMA_ANNOTATION_DELETE_TABLE 7
+#define SCHEMA_ANNOTATION_AD_HOC 8
+#define SCHEMA_ANNOTATION_LAST 8
+```
+
+And of course, each "back end" is provided with the root of the AST so that it can also search
+and/or walk the AST in its own manner.  We will see examples of this in later sections.
+
+### Recap
+
+At present, there are nearly 20000 lines in `sem.c` and it would no doubt take more than 20000 lines of text
+to explain what they all do, and that would be more imprecise than the source code, and probably less
+readable.  `sem.c` includes over 4000 lines of comments, and probably should have more.  While there
+is a lot of code there it's very readable and I encourage you to do so to get your answers.
+
+The point of this part of the Internals Guide isn't to fully explain all 400+ error checks in about
+as many semantic error checking functions, it's to showcase the key concepts shared by all of them. Things like:
+
+* errors are reported largely in the AST and percolate up
+* expressions and statements have general purpose dispatch logic for continuing a statement walk
+* EXTRACT macros are used to keep the tree walk on track and correct in the face of changes
+* regions are used for visibility
+* versioning contributes to visibility
+* nullability and sensitivity are tracked throughout using type bits
+* type kind is managed by a simple string in the `sem_node` payload
+* the three main payloads are
+  * `sem_node` for basic info, and
+  * `sem_struct` or `sem_join` for the non-unitary types
+
+This isn't everything but it would leave you well armed to begin your own exploration of `sem.c`.
 
 

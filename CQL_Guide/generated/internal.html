@@ -217,11 +217,11 @@
 </header>
 <nav id="TOC" role="doc-toc">
 <ul>
-<li><a href="#cql-internals-guide-part-1">CQL Internals Guide: Part 1</a>
+<li><a href="#part-1-lexing-parsing-and-the-ast">Part 1: Lexing, Parsing, and the AST</a>
 <ul>
-<li><a href="#overview">Overview</a></li>
+<li><a href="#preface">Preface</a></li>
 </ul></li>
-<li><a href="#lexical-analysis-parsing-and-the-abstract-syntax-tree">Lexical Analysis, Parsing, and the Abstract Syntax Tree</a>
+<li><a href="#general-structure">General Structure</a>
 <ul>
 <li><a href="#lexical-analysis">Lexical Analysis</a></li>
 <li><a href="#parsing-and-the-abstract-syntax-tree">Parsing and the Abstract Syntax Tree</a></li>
@@ -234,9 +234,9 @@
 <li><a href="#invoking-the-generator">Invoking the Generator</a></li>
 <li><a href="#generator-internals">Generator Internals</a></li>
 </ul></li>
-<li><a href="#cql-internals-guide-part-2">CQL Internals Guide: Part 2</a>
+<li><a href="#part-2-semantic-analysis">Part 2: Semantic Analysis</a>
 <ul>
-<li><a href="#overview-1">Overview</a></li>
+<li><a href="#overview">Overview</a></li>
 </ul></li>
 <li><a href="#semantic-analysis">Semantic Analysis</a>
 <ul>
@@ -252,22 +252,25 @@
 <li><a href="#name-resolution">Name Resolution</a></li>
 <li><a href="#structure-types-and-the-notion-of-shapes">Structure types and the notion of Shapes</a></li>
 <li><a href="#join-types">Join Types</a></li>
+<li><a href="#schema-regions">Schema Regions</a></li>
+<li><a href="#results-of-semantic-analysis">Results of Semantic Analysis</a></li>
+<li><a href="#recap">Recap</a></li>
 </ul></li>
 </ul>
 </nav>
 <!--- @generated -->
-<h2 id="cql-internals-guide-part-1">CQL Internals Guide: Part 1</h2>
+<h2 id="part-1-lexing-parsing-and-the-ast">Part 1: Lexing, Parsing, and the AST</h2>
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-<h3 id="overview">Overview</h3>
+<h3 id="preface">Preface</h3>
 <p>The following is a summary of the implementation theory of the CQL compiler. This is an adjuct to the Guide proper, which describes the language, and to a lesser extent the code that the compiler generates.</p>
 <p>The actual code is heavily commented, so it’s better to read the code to see the details of how any particular operation happens rather than try to guess from the language specification or from this overview. However, some things, like general principles, really are nowhere, or everywhere, in the codebase and its important to understand how things hang together.</p>
 <p>If you choose to go on adventures in the source code, especially if you aren’t already familiar with compilers and how they are typically built, this is a good place to start.</p>
-<h2 id="lexical-analysis-parsing-and-the-abstract-syntax-tree">Lexical Analysis, Parsing, and the Abstract Syntax Tree</h2>
+<h2 id="general-structure">General Structure</h2>
 <p>The CQL compiler uses a very standard lex+yacc parser, though to be more precise it’s flex+bison. The grammar is a large subset of the SQLite dialect of SQL augmented with control flow and compiler directives. As a consequence its a useful asset in and of itself – if you’re looking for an economical SQL grammar you could do a lot worse than start with the one CQL uses. The grammar is of course in the usual <code>.y</code> format that bison consumes but its also extracted into more readable versions for use in the railroad diagram and the documentation. Any of those sources would be a good starting place for a modest SQL project.</p>
 <h3 id="lexical-analysis">Lexical Analysis</h3>
 <p>Inside of <code>cql.l</code> you’ll find the formal defintion of all the lexemes. There are many that correspond to the various tokens needed to parse the SQL language. There’s no need to dicsuss the approximately 150 such tokens but the following points are of general interest:</p>
@@ -756,14 +759,14 @@ AST(or)</code></pre>
 </ul>
 <p>The <code>ANY</code> variants are usually redispatched with something like <code>gen_expr</code> that uses the name table again and that will check thet type or else they are checked with ad hoc logic immediately if it’s perhaps one of two or three variations. In all cases the idea is to force a failure very quickly. <code>gen_root_expr()</code> for instance in the <code>if_cond</code> example will fail immediately if the node is not an expression type.</p>
 <p>Because of the clear use of <code>EXTRACT</code>, the <code>gen_</code> family of functions are often the best/fastest way to understand the shape of the AST. You can dump a few sample and look at the <code>gen_</code> function and quickly see exactly what the options are authoritatively. As a result it’s very normal to paste the extraction code from a <code>gen_</code> into a new/needed semantic analysis or code-generation functions which we will come to in later sections.</p>
-<h2 id="cql-internals-guide-part-2">CQL Internals Guide: Part 2</h2>
+<h2 id="part-2-semantic-analysis">Part 2: Semantic Analysis</h2>
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-<h3 id="overview-1">Overview</h3>
+<h3 id="overview">Overview</h3>
 <p>Part 2 continues with a discussion of the essentials of the semantic analysis pass of the CQL compiler. As in the previous sections, the goal here is not to go over every single rule but rather to give a sense of how semantic analysis happens in general, the core strategies and implementation choices so that when reading the code you have an idea how smaller pieces would fit into the whole. To accomplish this various key data structures will be explained in detail as well as selected examples of their use.</p>
 <h2 id="semantic-analysis">Semantic Analysis</h2>
 <p>The overall goal of the semantic analysis pass is to verify that a correct program has been submitted to the compiler. The compiler does this by “decorating” the AST with semantic information. This information is mainly concerned about the “types” of the various things in the program. A key function of the semantic analyzer, the primary “weapon” in computing these types if you will, is name resolution. The semantic analyzer decides what any given name means in any context and then uses that meaning, which is itself based on the AST constructs that came before, to compute types and then check those types for errors.</p>
@@ -1913,5 +1916,215 @@ AST(or)</code></pre>
 <li>even if the <code>LIMIT</code> clause is appearing in a subquery it can’t refer to columns in the parent query.</li>
 </ul></li>
 </ul>
+<h3 id="schema-regions">Schema Regions</h3>
+<p>We touched briefly on schema regions earlier in this section. The purpose and language for regions is described more fully in <a href="https://cgsql.dev/cql-guide/ch10#schema-regions">Chapter 10</a> of the Guide. In this section we’ll deal with how they are implemented and what you should expect to see in the code.</p>
+<p>When a region declaration is found this method is used.</p>
+<div class="sourceCode" id="cb80"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="co">// A schema region is an partitioning of the schema such that it</span></span>
+<span id="cb80-2"><a href="#cb80-2" aria-hidden="true" tabindex="-1"></a><span class="co">// only uses objects in the same partition or one of its declared</span></span>
+<span id="cb80-3"><a href="#cb80-3" aria-hidden="true" tabindex="-1"></a><span class="co">// dependencies.  One schema region may be upgraded independently</span></span>
+<span id="cb80-4"><a href="#cb80-4" aria-hidden="true" tabindex="-1"></a><span class="co">// from any others (assuming they happen such that dependents are done first).</span></span>
+<span id="cb80-5"><a href="#cb80-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Here we validate:</span></span>
+<span id="cb80-6"><a href="#cb80-6" aria-hidden="true" tabindex="-1"></a><span class="co">//  * the region name is unique</span></span>
+<span id="cb80-7"><a href="#cb80-7" aria-hidden="true" tabindex="-1"></a><span class="co">//  * the dependencies (if any) are unique and exist</span></span>
+<span id="cb80-8"><a href="#cb80-8" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> sem_declare_schema_region_stmt<span class="op">(</span>ast_node <span class="op">*</span>ast<span class="op">)</span>  <span class="op">{</span> <span class="op">...</span> <span class="op">}</span></span></code></pre></div>
+<p>The general rules are described in the comment, but effectively it accumulates the list of this regions dependencies. Sometimes these are called the antecedent regions. Since a region can only depend on other regions that have already been declared, it’s not possible to make any cycles. Regions are declared before you put anything into them.</p>
+<p>Pieces of schema or procedures (or anything really) can go into a region by putting it in a begin/end pair for the name region.</p>
+<div class="sourceCode" id="cb81"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a><span class="ot">@begin_schema_region your_region;</span></span>
+<span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- your stuff</span></span>
+<span id="cb81-3"><a href="#cb81-3" aria-hidden="true" tabindex="-1"></a><span class="ot">@end_schema_region;</span></span></code></pre></div>
+<p>Now whatever happens to be in “your stuff” is:</p>
+<ul>
+<li>limited to seeing only the things that <code>your_region</code> is allowed to see and</li>
+<li>contributes its contents to <code>your_region</code> thereby limiting how others will be able to use “your stuff”</li>
+</ul>
+<p>To see how this happens, let’s have a look at <code>sem_begin_schema_region_stmt</code></p>
+<div class="sourceCode" id="cb82"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Entering a schema region makes all the objects that follow part of that</span></span>
+<span id="cb82-2"><a href="#cb82-2" aria-hidden="true" tabindex="-1"></a><span class="co">// region.  It also means that all the contained objects must refer to</span></span>
+<span id="cb82-3"><a href="#cb82-3" aria-hidden="true" tabindex="-1"></a><span class="co">// only pieces of schema that are in the same region or a dependent region.</span></span>
+<span id="cb82-4"><a href="#cb82-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Here we validate that region we are entering is in fact a valid region</span></span>
+<span id="cb82-5"><a href="#cb82-5" aria-hidden="true" tabindex="-1"></a><span class="co">// and that there isn&#39;t already a schema region.</span></span>
+<span id="cb82-6"><a href="#cb82-6" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> sem_begin_schema_region_stmt<span class="op">(</span>ast_node <span class="op">*</span> ast<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb82-7"><a href="#cb82-7" aria-hidden="true" tabindex="-1"></a>  Contract<span class="op">(</span>is_ast_begin_schema_region_stmt<span class="op">(</span>ast<span class="op">));</span></span>
+<span id="cb82-8"><a href="#cb82-8" aria-hidden="true" tabindex="-1"></a>  EXTRACT_STRING<span class="op">(</span>name<span class="op">,</span> ast<span class="op">-&gt;</span>left<span class="op">);</span></span>
+<span id="cb82-9"><a href="#cb82-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb82-10"><a href="#cb82-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">// @BEGIN_SCHEMA_REGION name</span></span>
+<span id="cb82-11"><a href="#cb82-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb82-12"><a href="#cb82-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(!</span>verify_schema_region_out_of_proc<span class="op">(</span>ast<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb82-13"><a href="#cb82-13" aria-hidden="true" tabindex="-1"></a>    record_error<span class="op">(</span>ast<span class="op">);</span></span>
+<span id="cb82-14"><a href="#cb82-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb82-15"><a href="#cb82-15" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb82-16"><a href="#cb82-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb82-17"><a href="#cb82-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>current_region<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb82-18"><a href="#cb82-18" aria-hidden="true" tabindex="-1"></a>    report_error<span class="op">(</span>ast<span class="op">,</span> <span class="st">&quot;CQL0246: schema regions do not nest; end the current region before starting a new one&quot;</span><span class="op">,</span> NULL<span class="op">);</span></span>
+<span id="cb82-19"><a href="#cb82-19" aria-hidden="true" tabindex="-1"></a>    record_error<span class="op">(</span>ast<span class="op">);</span></span>
+<span id="cb82-20"><a href="#cb82-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb82-21"><a href="#cb82-21" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb82-22"><a href="#cb82-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb82-23"><a href="#cb82-23" aria-hidden="true" tabindex="-1"></a>  ast_node <span class="op">*</span>region <span class="op">=</span> find_region<span class="op">(</span>name<span class="op">);</span></span>
+<span id="cb82-24"><a href="#cb82-24" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(!</span>region<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb82-25"><a href="#cb82-25" aria-hidden="true" tabindex="-1"></a>    report_error<span class="op">(</span>ast<span class="op">-&gt;</span>left<span class="op">,</span> <span class="st">&quot;CQL0244: unknown schema region&quot;</span><span class="op">,</span> name<span class="op">);</span></span>
+<span id="cb82-26"><a href="#cb82-26" aria-hidden="true" tabindex="-1"></a>    record_error<span class="op">(</span>ast<span class="op">);</span></span>
+<span id="cb82-27"><a href="#cb82-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb82-28"><a href="#cb82-28" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb82-29"><a href="#cb82-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb82-30"><a href="#cb82-30" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Get the canonical name of the region (case adjusted)</span></span>
+<span id="cb82-31"><a href="#cb82-31" aria-hidden="true" tabindex="-1"></a>  Contract<span class="op">(</span>is_region<span class="op">(</span>region<span class="op">));</span></span>
+<span id="cb82-32"><a href="#cb82-32" aria-hidden="true" tabindex="-1"></a>  EXTRACT_STRING<span class="op">(</span>region_name<span class="op">,</span> region<span class="op">-&gt;</span>left<span class="op">);</span></span>
+<span id="cb82-33"><a href="#cb82-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb82-34"><a href="#cb82-34" aria-hidden="true" tabindex="-1"></a>  <span class="co">// we already know we are not in a region</span></span>
+<span id="cb82-35"><a href="#cb82-35" aria-hidden="true" tabindex="-1"></a>  Invariant<span class="op">(!</span>current_region_image<span class="op">);</span></span>
+<span id="cb82-36"><a href="#cb82-36" aria-hidden="true" tabindex="-1"></a>  current_region_image <span class="op">=</span> symtab_new<span class="op">();</span></span>
+<span id="cb82-37"><a href="#cb82-37" aria-hidden="true" tabindex="-1"></a>  sem_accumulate_public_region_image<span class="op">(</span>current_region_image<span class="op">,</span> region_name<span class="op">);</span></span>
+<span id="cb82-38"><a href="#cb82-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb82-39"><a href="#cb82-39" aria-hidden="true" tabindex="-1"></a>  <span class="co">// this is the one and only text pointer value for this region</span></span>
+<span id="cb82-40"><a href="#cb82-40" aria-hidden="true" tabindex="-1"></a>  current_region <span class="op">=</span> region_name<span class="op">;</span></span>
+<span id="cb82-41"><a href="#cb82-41" aria-hidden="true" tabindex="-1"></a>  record_ok<span class="op">(</span>ast<span class="op">);</span></span>
+<span id="cb82-42"><a href="#cb82-42" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>We see these basic steps:</p>
+<ul>
+<li><code>EXTRACT</code> the region name</li>
+<li><code>verify_schema_region_out_of_proc</code> makes sure we are out of any procedure (we have to be at the top level)
+<ul>
+<li>errors if in a procedure</li>
+</ul></li>
+<li><code>current_region</code> is tested to make sure we are not already in a region (no nesting)
+<ul>
+<li>errors if already in a region</li>
+</ul></li>
+<li><code>find_region</code> is used to find the region AST by name
+<ul>
+<li>errors if the region name isn’t valid</li>
+</ul></li>
+<li><code>EXTRACT</code> is used again to get the canoncial name of the region
+<ul>
+<li>you could say <code>@begin_schema_region YoUr_ReGION;</code> we want the canonical name <code>your_region</code> as it was declared</li>
+</ul></li>
+<li><code>symtab_new</code> creates a new symbol table <code>current_region_image</code></li>
+<li><code>sem_accumulate_public_region_image</code> populates <code>current_region_image</code> by recursively walking this region adding the names of all the regions we find along the way
+<ul>
+<li>note the regions form a DAG so we might find the same name twice, we can stop if we find a region that is already in the symbol table</li>
+</ul></li>
+<li><code>current_region</code> is set to the now new current region</li>
+</ul>
+<p>Now we’re all set up. * We can use <code>current_region</code> to set the region name in the <code>sem_node</code> of anything we encounter * We can use <code>current_region_image</code> to quickly see if we are allowed to use any given region (if it’s in the table we can use it)</p>
+<p>Recall that at the end of <code>sem_create_table_stmt</code> we do this:</p>
+<div class="sourceCode" id="cb83"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a>  ast<span class="op">-&gt;</span>sem <span class="op">=</span> new_sem<span class="op">(</span>SEM_TYPE_STRUCT<span class="op">);</span></span>
+<span id="cb83-2"><a href="#cb83-2" aria-hidden="true" tabindex="-1"></a>  ast<span class="op">-&gt;</span>sem<span class="op">-&gt;</span>sptr <span class="op">=</span> sptr<span class="op">;</span></span>
+<span id="cb83-3"><a href="#cb83-3" aria-hidden="true" tabindex="-1"></a>  ast<span class="op">-&gt;</span>sem<span class="op">-&gt;</span>jptr <span class="op">=</span> sem_join_from_sem_struct<span class="op">(</span>sptr<span class="op">);</span></span>
+<span id="cb83-4"><a href="#cb83-4" aria-hidden="true" tabindex="-1"></a>  ast<span class="op">-&gt;</span>sem<span class="op">-&gt;</span>region <span class="op">=</span> current_region<span class="op">;</span></span></code></pre></div>
+<p>Which should make a lot more sense now.</p>
+<p>When doing the symmetric check in <code>sem_validate_object_ast_in_current_region</code> we see this pattern:</p>
+<div class="sourceCode" id="cb84"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Validate whether or not an object is usable with a schema region. The object</span></span>
+<span id="cb84-2"><a href="#cb84-2" aria-hidden="true" tabindex="-1"></a><span class="co">// can only be a table, view, trigger or index.</span></span>
+<span id="cb84-3"><a href="#cb84-3" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> bool_t sem_validate_object_ast_in_current_region<span class="op">(</span></span>
+<span id="cb84-4"><a href="#cb84-4" aria-hidden="true" tabindex="-1"></a>  CSTR name<span class="op">,</span></span>
+<span id="cb84-5"><a href="#cb84-5" aria-hidden="true" tabindex="-1"></a>  ast_node <span class="op">*</span>table_ast<span class="op">,</span></span>
+<span id="cb84-6"><a href="#cb84-6" aria-hidden="true" tabindex="-1"></a>  ast_node <span class="op">*</span>err_target<span class="op">,</span></span>
+<span id="cb84-7"><a href="#cb84-7" aria-hidden="true" tabindex="-1"></a>  CSTR msg<span class="op">)</span></span>
+<span id="cb84-8"><a href="#cb84-8" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb84-9"><a href="#cb84-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">// We&#39;re in a non-region therefore no validation needed because non-region stmt</span></span>
+<span id="cb84-10"><a href="#cb84-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">// can reference schema in any region.</span></span>
+<span id="cb84-11"><a href="#cb84-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(!</span>current_region<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb84-12"><a href="#cb84-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> true<span class="op">;</span></span>
+<span id="cb84-13"><a href="#cb84-13" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb84-14"><a href="#cb84-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb84-15"><a href="#cb84-15" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>table_ast<span class="op">-&gt;</span>sem <span class="op">&amp;&amp;</span> table_ast<span class="op">-&gt;</span>sem<span class="op">-&gt;</span>region<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb84-16"><a href="#cb84-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">// if we have a current region then the image is always computed!</span></span>
+<span id="cb84-17"><a href="#cb84-17" aria-hidden="true" tabindex="-1"></a>    Invariant<span class="op">(</span>current_region_image<span class="op">);</span></span>
+<span id="cb84-18"><a href="#cb84-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>symtab_find<span class="op">(</span>current_region_image<span class="op">,</span> table_ast<span class="op">-&gt;</span>sem<span class="op">-&gt;</span>region<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb84-19"><a href="#cb84-19" aria-hidden="true" tabindex="-1"></a>      <span class="co">// The target region is not accessible from this region</span></span>
+<span id="cb84-20"><a href="#cb84-20" aria-hidden="true" tabindex="-1"></a>      <span class="op">...</span></span>
+<span id="cb84-21"><a href="#cb84-21" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> false<span class="op">;</span></span>
+<span id="cb84-22"><a href="#cb84-22" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb84-23"><a href="#cb84-23" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb84-24"><a href="#cb84-24" aria-hidden="true" tabindex="-1"></a>    <span class="co">// while in schema region &#39;%s&#39;, accessing an object that isn&#39;t in a region is invalid</span></span>
+<span id="cb84-25"><a href="#cb84-25" aria-hidden="true" tabindex="-1"></a>    <span class="op">...</span></span>
+<span id="cb84-26"><a href="#cb84-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> false<span class="op">;</span></span>
+<span id="cb84-27"><a href="#cb84-27" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb84-28"><a href="#cb84-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb84-29"><a href="#cb84-29" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> true<span class="op">;</span></span>
+<span id="cb84-30"><a href="#cb84-30" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>I’ve elided some of the code here, but only the part that generates error messages. The essential logic is:</p>
+<ul>
+<li>if we are not in a region we can access anything</li>
+<li>if we’re in a region then…
+<ul>
+<li>the thing we’re trying to access must also be in a region, and</li>
+<li>that region must be in <code>current_region_image</code></li>
+<li>otherwise, we can’t access it</li>
+</ul></li>
+</ul>
+<p>This is enough to do all the region validation we need.</p>
+<h3 id="results-of-semantic-analysis">Results of Semantic Analysis</h3>
+<p>Semantic Analysis leaves a lot of global state ready for the remaining stages to harvest. If the state is defined in <code>sem.h</code> then it’s ok to harvest. We’ll highlight some of the most important things you can use. These are heavily used in the code generators.</p>
+<div class="sourceCode" id="cb85"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a>cql_data_decl<span class="op">(</span> <span class="kw">struct</span> list_item <span class="op">*</span>all_tables_list <span class="op">);</span></span>
+<span id="cb85-2"><a href="#cb85-2" aria-hidden="true" tabindex="-1"></a>cql_data_decl<span class="op">(</span> <span class="kw">struct</span> list_item <span class="op">*</span>all_functions_list <span class="op">);</span></span>
+<span id="cb85-3"><a href="#cb85-3" aria-hidden="true" tabindex="-1"></a>cql_data_decl<span class="op">(</span> <span class="kw">struct</span> list_item <span class="op">*</span>all_views_list <span class="op">);</span></span>
+<span id="cb85-4"><a href="#cb85-4" aria-hidden="true" tabindex="-1"></a>cql_data_decl<span class="op">(</span> <span class="kw">struct</span> list_item <span class="op">*</span>all_indices_list <span class="op">);</span></span>
+<span id="cb85-5"><a href="#cb85-5" aria-hidden="true" tabindex="-1"></a>cql_data_decl<span class="op">(</span> <span class="kw">struct</span> list_item <span class="op">*</span>all_triggers_list <span class="op">);</span></span>
+<span id="cb85-6"><a href="#cb85-6" aria-hidden="true" tabindex="-1"></a>cql_data_decl<span class="op">(</span> <span class="kw">struct</span> list_item <span class="op">*</span>all_regions_list <span class="op">);</span></span>
+<span id="cb85-7"><a href="#cb85-7" aria-hidden="true" tabindex="-1"></a>cql_data_decl<span class="op">(</span> <span class="kw">struct</span> list_item <span class="op">*</span>all_ad_hoc_list <span class="op">);</span></span>
+<span id="cb85-8"><a href="#cb85-8" aria-hidden="true" tabindex="-1"></a>cql_data_decl<span class="op">(</span> <span class="kw">struct</span> list_item <span class="op">*</span>all_select_functions_list <span class="op">);</span></span>
+<span id="cb85-9"><a href="#cb85-9" aria-hidden="true" tabindex="-1"></a>cql_data_decl<span class="op">(</span> <span class="kw">struct</span> list_item <span class="op">*</span>all_enums_list <span class="op">);</span></span></code></pre></div>
+<p>These linked lists are authoritiative, they let you easily enumerate all the objects of the specified type. If you wanted to do some validation of all indices you could simply walk the all indices list.</p>
+<div class="sourceCode" id="cb86"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a>cql_noexport ast_node <span class="op">*</span>find_proc<span class="op">(</span>CSTR name<span class="op">);</span></span>
+<span id="cb86-2"><a href="#cb86-2" aria-hidden="true" tabindex="-1"></a>cql_noexport ast_node <span class="op">*</span>find_region<span class="op">(</span>CSTR name<span class="op">);</span></span>
+<span id="cb86-3"><a href="#cb86-3" aria-hidden="true" tabindex="-1"></a>cql_noexport ast_node <span class="op">*</span>find_func<span class="op">(</span>CSTR name<span class="op">);</span></span>
+<span id="cb86-4"><a href="#cb86-4" aria-hidden="true" tabindex="-1"></a>cql_noexport ast_node <span class="op">*</span>find_table_or_view_even_deleted<span class="op">(</span>CSTR name<span class="op">);</span></span>
+<span id="cb86-5"><a href="#cb86-5" aria-hidden="true" tabindex="-1"></a>cql_noexport ast_node <span class="op">*</span>find_enum<span class="op">(</span>CSTR name<span class="op">);</span></span></code></pre></div>
+<p>These functions give you access to the core name tables (which are still valid!) so that you can look up procedures, functions, tables, etc. by name.</p>
+<p>Finally, information about all the schema annotations is invaluable for building schema upgraders. These two buffers hold dense arrays of annotation records as shown below.</p>
+<div class="sourceCode" id="cb87"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a>cql_data_decl<span class="op">(</span> bytebuf <span class="op">*</span>schema_annotations <span class="op">);</span></span>
+<span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a>cql_data_decl<span class="op">(</span> bytebuf <span class="op">*</span>recreate_annotations <span class="op">);</span></span>
+<span id="cb87-3"><a href="#cb87-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb87-4"><a href="#cb87-4" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">struct</span> recreate_annotation <span class="op">{</span></span>
+<span id="cb87-5"><a href="#cb87-5" aria-hidden="true" tabindex="-1"></a>  CSTR target_name<span class="op">;</span>               <span class="co">// the name of the target</span></span>
+<span id="cb87-6"><a href="#cb87-6" aria-hidden="true" tabindex="-1"></a>  CSTR group_name<span class="op">;</span>                <span class="co">// group name or &quot;&quot; if no group (not null, safe to sort)</span></span>
+<span id="cb87-7"><a href="#cb87-7" aria-hidden="true" tabindex="-1"></a>  ast_node <span class="op">*</span>target_ast<span class="op">;</span>           <span class="co">// top level target (table, view, or index)</span></span>
+<span id="cb87-8"><a href="#cb87-8" aria-hidden="true" tabindex="-1"></a>  ast_node <span class="op">*</span>annotation_ast<span class="op">;</span>       <span class="co">// the actual annotation</span></span>
+<span id="cb87-9"><a href="#cb87-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int32_t</span> ordinal<span class="op">;</span>                <span class="co">// when sorting we want to use the original order (reversed actually) within a group</span></span>
+<span id="cb87-10"><a href="#cb87-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> recreate_annotation<span class="op">;</span></span>
+<span id="cb87-11"><a href="#cb87-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb87-12"><a href="#cb87-12" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">struct</span> schema_annotation <span class="op">{</span></span>
+<span id="cb87-13"><a href="#cb87-13" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int32_t</span> version<span class="op">;</span>                <span class="co">// the version number (always &gt; 0)</span></span>
+<span id="cb87-14"><a href="#cb87-14" aria-hidden="true" tabindex="-1"></a>  ast_node <span class="op">*</span>target_ast<span class="op">;</span>           <span class="co">// top level target (table, view, or index)</span></span>
+<span id="cb87-15"><a href="#cb87-15" aria-hidden="true" tabindex="-1"></a>  CSTR target_name<span class="op">;</span>               <span class="co">// the name of the target</span></span>
+<span id="cb87-16"><a href="#cb87-16" aria-hidden="true" tabindex="-1"></a>  <span class="dt">uint32_t</span> annotation_type<span class="op">;</span>       <span class="co">// one of the codes below for the type of annotation</span></span>
+<span id="cb87-17"><a href="#cb87-17" aria-hidden="true" tabindex="-1"></a>  ast_node <span class="op">*</span>annotation_ast<span class="op">;</span>       <span class="co">// the actual annotation</span></span>
+<span id="cb87-18"><a href="#cb87-18" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int32_t</span> column_ordinal<span class="op">;</span>         <span class="co">// -1 if not a column</span></span>
+<span id="cb87-19"><a href="#cb87-19" aria-hidden="true" tabindex="-1"></a>  ast_node <span class="op">*</span>column_ast<span class="op">;</span>           <span class="co">// a particular column if column annotation</span></span>
+<span id="cb87-20"><a href="#cb87-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> schema_annotation<span class="op">;</span></span>
+<span id="cb87-21"><a href="#cb87-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb87-22"><a href="#cb87-22" aria-hidden="true" tabindex="-1"></a><span class="co">// Note: schema annotations are processed in the indicated order: the numbers matter</span></span>
+<span id="cb87-23"><a href="#cb87-23" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_INVALID 0</span></span>
+<span id="cb87-24"><a href="#cb87-24" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_FIRST 1</span></span>
+<span id="cb87-25"><a href="#cb87-25" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_CREATE_TABLE 1</span></span>
+<span id="cb87-26"><a href="#cb87-26" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_CREATE_COLUMN 2</span></span>
+<span id="cb87-27"><a href="#cb87-27" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_DELETE_TRIGGER 3</span></span>
+<span id="cb87-28"><a href="#cb87-28" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_DELETE_VIEW 4</span></span>
+<span id="cb87-29"><a href="#cb87-29" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_DELETE_INDEX 5</span></span>
+<span id="cb87-30"><a href="#cb87-30" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_DELETE_COLUMN 6</span></span>
+<span id="cb87-31"><a href="#cb87-31" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_DELETE_TABLE 7</span></span>
+<span id="cb87-32"><a href="#cb87-32" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_AD_HOC 8</span></span>
+<span id="cb87-33"><a href="#cb87-33" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_LAST 8</span></span></code></pre></div>
+<p>And of course, each “back end” is provided with the root of the AST so that it can also search and/or walk the AST in its own manner. We will see examples of this in later sections.</p>
+<h3 id="recap">Recap</h3>
+<p>At present, there are nearly 20000 lines in <code>sem.c</code> and it would no doubt take more than 20000 lines of text to explain what they all do, and that would be more imprecise than the source code, and probably less readable. <code>sem.c</code> includes over 4000 lines of comments, and probably should have more. While there is a lot of code there it’s very readable and I encourage you to do so to get your answers.</p>
+<p>The point of this part of the Internals Guide isn’t to fully explain all 400+ error checks in about as many semantic error checking functions, it’s to showcase the key concepts shared by all of them. Things like:</p>
+<ul>
+<li>errors are reported largely in the AST and percolate up</li>
+<li>expressions and statements have general purpose dispatch logic for continuing a statement walk</li>
+<li>EXTRACT macros are used to keep the tree walk on track and correct in the face of changes</li>
+<li>regions are used for visibility</li>
+<li>versioning contributes to visibility</li>
+<li>nullability and sensitivity are tracked throughout using type bits</li>
+<li>type kind is managed by a simple string in the <code>sem_node</code> payload</li>
+<li>the three main payloads are
+<ul>
+<li><code>sem_node</code> for basic info, and</li>
+<li><code>sem_struct</code> or <code>sem_join</code> for the non-unitary types</li>
+</ul></li>
+</ul>
+<p>This isn’t everything but it would leave you well armed to begin your own exploration of <code>sem.c</code>.</p>
 </body>
 </html>

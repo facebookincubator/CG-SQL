@@ -1,7 +1,7 @@
 ---
 id: int01
-title: "CQL Internals Guide: Part 1"
-sidebar_label: "CQL Internals Guide: Part 1"
+title: "Part 1: Lexing, Parsing, and the AST"
+sidebar_label: "Part 1: Lexing, Parsing, and the AST"
 ---
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
@@ -9,7 +9,7 @@ sidebar_label: "CQL Internals Guide: Part 1"
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-### Overview
+### Preface
 
 The following is a summary of the implementation theory of the CQL compiler.  This is
 an adjuct to the Guide proper, which describes the language, and to a lesser extent
@@ -23,7 +23,7 @@ or everywhere, in the codebase and its important to understand how things hang t
 If you choose to go on adventures in the source code, especially if you aren't already familiar
 with compilers and how they are typically built, this is a good place to start.
 
-## Lexical Analysis, Parsing, and the Abstract Syntax Tree
+## General Structure
 
 The CQL compiler uses a very standard lex+yacc parser, though to be more precise it's flex+bison.
 The grammar is a large subset of the SQLite dialect of SQL augmented with control flow and compiler
