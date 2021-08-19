@@ -47,7 +47,7 @@ OBJECTS = $O/cql.y.o $O/cql.o $O/ast.o $O/gen_sql.o $O/sem.o $O/list.o $O/bytebu
           $O/cg_common.o $O/cg_c.o $O/cg_java.o $O/cg_objc.o $O/symtab.o $O/compat.o \
           $O/cg_schema.o $O/crc64xz.o $O/cg_json_schema.o $O/cg_test_helpers.o $O/encoders.o \
           $O/unit_tests.o $O/cg_query_plan.o ${O}/minipool.o $O/cg_udf.o $O/rt.o $O/eval.o \
-          $O/rewrite.o
+          $O/rewrite.o $O/printf.o
 
 OBJECTS+=$(ADDITIONAL_OBJECTS)
 
@@ -90,7 +90,7 @@ $O/cg_schema.o: cg_schema.h cql.h sem.h ast.h list.h symtab.h cg_common.h crc64x
 
 $O/cg_json_schema.o: cg_json_schema.h cql.h sem.h ast.h list.h symtab.h cg_common.h crc64xz.h
 
-$O/sem.o: sem.c sem.h ast.h list.h charbuf.h cql.h bytebuf.h rewrite.h
+$O/sem.o: sem.c sem.h ast.h list.h charbuf.h cql.h bytebuf.h rewrite.h encoders.h printf.h
 
 $O/list.o: list.c list.h ast.h cql.h
 
@@ -117,6 +117,8 @@ $O/cg_udf.o: cg_udf.c cg_udf.h cg_common.h ast.h sem.h charbuf.h list.h cql.h as
 $O/eval.o: eval.c eval.h
 
 $O/rewrite.o: rewrite.h sem.h ast.h
+
+$0/printf.o: printf.c printf.h ast.h cql.h sem.h
 
 $O/symtab.o: symtab.c symtab.h bytebuf.h
 

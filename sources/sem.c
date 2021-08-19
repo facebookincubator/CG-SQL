@@ -26,6 +26,8 @@
 #include "symtab.h"
 #include "eval.h"
 #include "rewrite.h"
+#include "encoders.h"
+#include "printf.h"
 
 #define NORMAL_CALL  0  // a normal procedure or function call
 #define PROC_AS_FUNC 1  // treating a proc like a function with the out-arg trick
@@ -7802,9 +7804,68 @@ static void sem_func_cql_cursor_format(ast_node *ast, uint32_t arg_count) {
   return;
 }
 
+// Given an already analyzed argument list and a string literal containing a
+// format string, verify that the format string is valid and that the arguments
+// provided match up appropriately. Returns `true` if successful, else `false`.
+static bool_t sem_validate_args_for_format(ast_node *arg_list, ast_node *format_strlit, CSTR context) {
+  Contract(is_strlit(format_strlit));
+  Contract(!arg_list || is_ast_arg_list(arg_list));
 
-// The printf function converts its arguments to a string.  There must be
-// a format string and of course it must be text.
+  bool_t success = true;
+
+  // We need to initialize the `printf_iterator` with the decoded format string
+  // (i.e., absent the quotes in the literal itself).
+  EXTRACT_STRING(encoded_format_string, format_strlit);
+  CHARBUF_OPEN(format_string);
+  cg_decode_string_literal(encoded_format_string, &format_string);
+
+  // Allocate space for a `printf_iterator`, then initialize it with
+  // `format_strlit` (so any errors in the format string itself will report the
+  // location of the string literal) and the decoded format string.
+  printf_iterator *iterator = minipool_alloc(ast_pool, (uint32_t)sizeof_printf_iterator);
+  printf_iterator_init(iterator, format_strlit, format_string.ptr);
+
+  // Iterate over the arguments, checking them against the format string (and
+  // validating the format string itself) as we go.
+  for (ast_node *arg_item = arg_list; arg_item; arg_item = arg_item->right) {
+    sem_t sem_type = printf_iterator_next(iterator);
+    if (sem_type == SEM_TYPE_ERROR) {
+      success = false;
+      goto cleanup;
+    }
+    if (sem_type == SEM_TYPE_OK) {
+      report_error(arg_list, "CQL9011: more arguments provided than expected by format string", context);
+      success = false;
+      goto cleanup;
+    }
+    ast_node *arg = arg_item->left;
+    if (!sem_verify_assignment(arg, sem_type, core_type_of(arg->sem->sem_type), context)) {
+      success = false;
+      goto cleanup;
+    }
+  }
+
+  // We're out of arguments. Verify that we're out of substitutions too and that
+  // no errors are lurking later in the format string.
+  sem_t sem_type = printf_iterator_next(iterator);
+  if (sem_type == SEM_TYPE_ERROR) {
+    success = false;
+    goto cleanup;
+  }
+  if (sem_type != SEM_TYPE_OK) {
+    report_error(arg_list, "CQL9012: fewer arguments provided than expected by format string", context);
+    success = false;
+    goto cleanup;
+  }
+
+cleanup:
+  CHARBUF_CLOSE(format_string);
+
+  return success;
+}
+
+// The printf function converts its arguments to a string. It must be called
+// with a string literal containing the format string as its first argument.
 static void sem_func_printf(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
@@ -7820,34 +7881,32 @@ static void sem_func_printf(ast_node *ast, uint32_t arg_count) {
 
   // printf can appear reasonably in most places, notably not as a LIMIT or OFFSET
   if (!sem_validate_function_context(ast,
-          SEM_EXPR_CONTEXT_SELECT_LIST |
-          SEM_EXPR_CONTEXT_ON |
-          SEM_EXPR_CONTEXT_HAVING |
-          SEM_EXPR_CONTEXT_WHERE |
-          SEM_EXPR_CONTEXT_GROUP_BY |
-          SEM_EXPR_CONTEXT_ORDER_BY |
-          SEM_EXPR_CONTEXT_CONSTRAINT |
-          SEM_EXPR_CONTEXT_TABLE_FUNC |
-          SEM_EXPR_CONTEXT_NONE)) {
-            return;
-  }
-
-  sem_t sem_type = first_arg(arg_list)->sem->sem_type;
-  if (!is_text(sem_type)) {
-    report_error(ast, "CQL0086: first argument must be a string in function", name);
-    record_error(ast);
+        SEM_EXPR_CONTEXT_SELECT_LIST |
+        SEM_EXPR_CONTEXT_ON |
+        SEM_EXPR_CONTEXT_HAVING |
+        SEM_EXPR_CONTEXT_WHERE |
+        SEM_EXPR_CONTEXT_GROUP_BY |
+        SEM_EXPR_CONTEXT_ORDER_BY |
+        SEM_EXPR_CONTEXT_CONSTRAINT |
+        SEM_EXPR_CONTEXT_TABLE_FUNC |
+        SEM_EXPR_CONTEXT_NONE))
+  {
     return;
   }
 
-  // no object types in the arg list
-  for (ast_node *item = arg_list; item; item = item->right) {
-    EXTRACT_ANY(expr, item->left);
-    if (is_object(expr->sem->sem_type) || is_blob(expr->sem->sem_type)) {
-      report_error(ast, "CQL0087: no object/blob types are allowed in arguments for function", name);
-      record_error(ast);
-      record_error(arg_list);
-      return;
-    }
+  // Verify that the first argument is a string literal.
+  ast_node *format_strlit = first_arg(arg_list);
+  if (!is_strlit(format_strlit)) {
+    report_error(ast, "CQL9010: first argument must be a string literal", name);
+    record_error(ast);
+    return;
+  }
+  
+  // Verify that the arguments are appropriate for the format string provided. 
+  ast_node *args_for_format = arg_list->right;
+  if (!sem_validate_args_for_format(args_for_format, format_strlit, name)) {
+    record_error(ast);
+    return;
   }
 
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_TEXT | SEM_TYPE_NOTNULL);

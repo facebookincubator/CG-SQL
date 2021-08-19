@@ -35,6 +35,7 @@ process_headers() {
   cat "compat.h"
   cat "rewrite.h"
   cat "rt.h"
+  cat "printf.h"
 
   process_extra_h_files
 }
@@ -60,6 +61,7 @@ process_c_files() {
   cat "gen_sql.c"
   cat "list.c"
   cat "minipool.c"
+  cat "printf.c"
   cat "rt.c"
   cat "rt_common.c"
   cat "rewrite.c"

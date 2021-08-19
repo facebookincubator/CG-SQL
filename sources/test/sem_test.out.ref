@@ -11501,34 +11501,6 @@ SET a_string := printf('Hello');
 
 The statement ending at line XXXX
 
-SET a_string := printf();
-
-Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'printf'
-
-  {assign}: err
-  | {name a_string}: a_string: text variable
-  | {call}: err
-    | {name printf}: err
-    | {call_arg_list}
-      | {call_filter_clause}
-
-The statement ending at line XXXX
-
-SET a_string := printf(7);
-
-Error at test/sem_test.sql:XXXX : in call : CQL0086: first argument must be a string in function 'printf'
-
-  {assign}: err
-  | {name a_string}: a_string: text variable
-  | {call}: err
-    | {name printf}
-    | {call_arg_list}
-      | {call_filter_clause}
-      | {arg_list}: ok
-        | {int 7}: integer notnull
-
-The statement ending at line XXXX
-
 SELECT 1
   FROM (SELECT 1)
 LIMIT printf('%s %d', 'x', 5) = 'x';
@@ -18415,23 +18387,6 @@ Error at test/sem_test.sql:XXXX : in not_between : CQL0012: incompatible types i
 
 The statement ending at line XXXX
 
-SET a_string := printf('Foo', obj_var);
-
-Error at test/sem_test.sql:XXXX : in call : CQL0087: no object/blob types are allowed in arguments for function 'printf'
-
-  {assign}: err
-  | {name a_string}: a_string: text variable
-  | {call}: err
-    | {name printf}
-    | {call_arg_list}
-      | {call_filter_clause}
-      | {arg_list}: err
-        | {strlit 'Foo'}: text notnull
-        | {arg_list}
-          | {name obj_var}: obj_var: object variable
-
-The statement ending at line XXXX
-
 DECLARE FUNC creater_func () CREATE OBJECT NOT NULL;
 
   {declare_func_stmt}: object notnull create_func
@@ -21339,23 +21294,6 @@ Error at test/sem_test.sql:XXXX : in not_between : CQL0012: incompatible types i
     | {range}
       | {int 1}: integer notnull
       | {name blob_var}: blob_var: blob variable
-
-The statement ending at line XXXX
-
-SET a_string := printf('Foo', blob_var);
-
-Error at test/sem_test.sql:XXXX : in call : CQL0087: no object/blob types are allowed in arguments for function 'printf'
-
-  {assign}: err
-  | {name a_string}: a_string: text variable
-  | {call}: err
-    | {name printf}
-    | {call_arg_list}
-      | {call_filter_clause}
-      | {arg_list}: err
-        | {strlit 'Foo'}: text notnull
-        | {arg_list}
-          | {name blob_var}: blob_var: blob variable
 
 The statement ending at line XXXX
 
@@ -69641,4 +69579,1543 @@ Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed i
   | {is_false}: err
     | {not}: err
       | {strlit 'x'}: text notnull
+
+The statement ending at line XXXX
+
+SELECT printf();
+
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'printf'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name printf}: err
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf(a_string);
+
+Error at test/sem_test.sql:XXXX : in call : CQL9010: first argument must be a string literal 'printf'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name printf}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {name a_string}: a_string: text variable
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%d %f", 0, 0.0, "str");
+
+Error at test/sem_test.sql:XXXX : in arg_list : CQL9011: more arguments provided than expected by format string 'printf'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name printf}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%d %f'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {int 0}: integer notnull
+  |     |           | {arg_list}
+  |     |             | {dbl 0.0}: real notnull
+  |     |             | {arg_list}
+  |     |               | {strlit 'str'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%d %f %s", 0, 0.0);
+
+Error at test/sem_test.sql:XXXX : in arg_list : CQL9012: fewer arguments provided than expected by format string 'printf'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name printf}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%d %f %s'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {int 0}: integer notnull
+  |     |           | {arg_list}
+  |     |             | {dbl 0.0}: real notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf('Hello!\n');
+
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name printf}: text notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit 'Hello!\n'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("Hello %% there %%!\n");
+
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name printf}: text notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit 'Hello %% there %%!
+'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%s %s", "hello", 42);
+
+Error at test/sem_test.sql:XXXX : in num : CQL0009: incompatible types in expression 'printf'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name printf}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%s %s'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {strlit 'hello'}: text notnull
+  |     |           | {arg_list}
+  |     |             | {int 42}: err
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%d", 0L);
+
+Error at test/sem_test.sql:XXXX : in num : CQL0242: lossy conversion from type 'LONG_INT' in 0L
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name printf}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%d'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {longint 0}: longint notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%s %d", NULL, NULL);
+
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name printf}: text notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%s %d'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {null}: null
+  |     |           | {arg_list}
+  |     |             | {null}: null
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%d %i %u %f %e %E %g %G %x %X %o %s", 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0, "str");
+
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name printf}: text notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%d %i %u %f %e %E %g %G %x %X %o %s'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {int 0}: integer notnull
+  |     |           | {arg_list}
+  |     |             | {int 0}: integer notnull
+  |     |             | {arg_list}
+  |     |               | {int 0}: integer notnull
+  |     |               | {arg_list}
+  |     |                 | {dbl 0.0}: real notnull
+  |     |                 | {arg_list}
+  |     |                   | {dbl 0.0}: real notnull
+  |     |                   | {arg_list}
+  |     |                     | {dbl 0.0}: real notnull
+  |     |                     | {arg_list}
+  |     |                       | {dbl 0.0}: real notnull
+  |     |                       | {arg_list}
+  |     |                         | {dbl 0.0}: real notnull
+  |     |                         | {arg_list}
+  |     |                           | {int 0}: integer notnull
+  |     |                           | {arg_list}
+  |     |                             | {int 0}: integer notnull
+  |     |                             | {arg_list}
+  |     |                               | {int 0}: integer notnull
+  |     |                               | {arg_list}
+  |     |                                 | {strlit 'str'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%c", "x");
+
+Error at test/sem_test.sql:XXXX : in str : CQL9005: type specifier not allowed in CQL 'c'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name printf}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%c'}: err
+  |     |         | {arg_list}
+  |     |           | {strlit 'x'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%p", 0x123456789L);
+
+Error at test/sem_test.sql:XXXX : in str : CQL9005: type specifier not allowed in CQL 'p'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name printf}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%p'}: err
+  |     |         | {arg_list}
+  |     |           | {longint 0x123456789}: longint notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%n", 0x123456789L);
+
+Error at test/sem_test.sql:XXXX : in str : CQL9005: type specifier not allowed in CQL 'n'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name printf}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%n'}: err
+  |     |         | {arg_list}
+  |     |           | {longint 0x123456789}: longint notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%q", "hello");
+
+Error at test/sem_test.sql:XXXX : in str : CQL9005: type specifier not allowed in CQL 'q'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name printf}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%q'}: err
+  |     |         | {arg_list}
+  |     |           | {strlit 'hello'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%Q", "hello");
+
+Error at test/sem_test.sql:XXXX : in str : CQL9005: type specifier not allowed in CQL 'Q'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name printf}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%Q'}: err
+  |     |         | {arg_list}
+  |     |           | {strlit 'hello'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%w", "hello");
+
+Error at test/sem_test.sql:XXXX : in str : CQL9005: type specifier not allowed in CQL 'w'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name printf}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%w'}: err
+  |     |         | {arg_list}
+  |     |           | {strlit 'hello'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%lld %lli %llu %llx %llX %llo", 0L, 0L, 0L, 0L, 0L, 0L);
+
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name printf}: text notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%lld %lli %llu %llx %llX %llo'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {longint 0}: longint notnull
+  |     |           | {arg_list}
+  |     |             | {longint 0}: longint notnull
+  |     |             | {arg_list}
+  |     |               | {longint 0}: longint notnull
+  |     |               | {arg_list}
+  |     |                 | {longint 0}: longint notnull
+  |     |                 | {arg_list}
+  |     |                   | {longint 0}: longint notnull
+  |     |                   | {arg_list}
+  |     |                     | {longint 0}: longint notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%ld", 0L);
+
+Error at test/sem_test.sql:XXXX : in str : CQL9003: 'l' length specifier has no effect; consider 'll' instead
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name printf}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%ld'}: err
+  |     |         | {arg_list}
+  |     |           | {longint 0}: longint notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%lls", "hello");
+
+Error at test/sem_test.sql:XXXX : in str : CQL9008: type specifier cannot be combined with length specifier 's'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name printf}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%lls'}: err
+  |     |         | {arg_list}
+  |     |           | {strlit 'hello'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%12d %12i %12u %12f %12e %12E %12g %12G %12x %12X %12o %12s", 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0, "str");
+
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name printf}: text notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%12d %12i %12u %12f %12e %12E %12g %12G %12x %12X %12o %12s'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {int 0}: integer notnull
+  |     |           | {arg_list}
+  |     |             | {int 0}: integer notnull
+  |     |             | {arg_list}
+  |     |               | {int 0}: integer notnull
+  |     |               | {arg_list}
+  |     |                 | {dbl 0.0}: real notnull
+  |     |                 | {arg_list}
+  |     |                   | {dbl 0.0}: real notnull
+  |     |                   | {arg_list}
+  |     |                     | {dbl 0.0}: real notnull
+  |     |                     | {arg_list}
+  |     |                       | {dbl 0.0}: real notnull
+  |     |                       | {arg_list}
+  |     |                         | {dbl 0.0}: real notnull
+  |     |                         | {arg_list}
+  |     |                           | {int 0}: integer notnull
+  |     |                           | {arg_list}
+  |     |                             | {int 0}: integer notnull
+  |     |                             | {arg_list}
+  |     |                               | {int 0}: integer notnull
+  |     |                               | {arg_list}
+  |     |                                 | {strlit 'str'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%*s %*f", 10, "hello", 20, 3.14);
+
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name printf}: text notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%*s %*f'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {int 10}: integer notnull
+  |     |           | {arg_list}
+  |     |             | {strlit 'hello'}: text notnull
+  |     |             | {arg_list}
+  |     |               | {int 20}: integer notnull
+  |     |               | {arg_list}
+  |     |                 | {dbl 3.14}: real notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%10*s", 10, "hello");
+
+Error at test/sem_test.sql:XXXX : in str : CQL9006: unrecognized type specifier '*'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name printf}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%10*s'}: err
+  |     |         | {arg_list}
+  |     |           | {int 10}: integer notnull
+  |     |           | {arg_list}
+  |     |             | {strlit 'hello'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%*10s", 10, "hello");
+
+Error at test/sem_test.sql:XXXX : in str : CQL9006: unrecognized type specifier '1'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name printf}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%*10s'}: err
+  |     |         | {arg_list}
+  |     |           | {int 10}: integer notnull
+  |     |           | {arg_list}
+  |     |             | {strlit 'hello'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%*", 10);
+
+Error at test/sem_test.sql:XXXX : in str : CQL9009: incomplete substitution in format string
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name printf}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%*'}: err
+  |     |         | {arg_list}
+  |     |           | {int 10}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%.12d %.12i %.12u %.12f %.12e %.12E %.12g %.12G %.12x %.12X %.12o %.12s", 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0, "str");
+
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name printf}: text notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%.12d %.12i %.12u %.12f %.12e %.12E %.12g %.12G %.12x %.12X %.12o %.12s'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {int 0}: integer notnull
+  |     |           | {arg_list}
+  |     |             | {int 0}: integer notnull
+  |     |             | {arg_list}
+  |     |               | {int 0}: integer notnull
+  |     |               | {arg_list}
+  |     |                 | {dbl 0.0}: real notnull
+  |     |                 | {arg_list}
+  |     |                   | {dbl 0.0}: real notnull
+  |     |                   | {arg_list}
+  |     |                     | {dbl 0.0}: real notnull
+  |     |                     | {arg_list}
+  |     |                       | {dbl 0.0}: real notnull
+  |     |                       | {arg_list}
+  |     |                         | {dbl 0.0}: real notnull
+  |     |                         | {arg_list}
+  |     |                           | {int 0}: integer notnull
+  |     |                           | {arg_list}
+  |     |                             | {int 0}: integer notnull
+  |     |                             | {arg_list}
+  |     |                               | {int 0}: integer notnull
+  |     |                               | {arg_list}
+  |     |                                 | {strlit 'str'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%9.12d %9.12i %9.12u %9.12f %9.12e %9.12E %9.12g %9.12G %9.12x %9.12X %9.12o %9.12s", 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0, "str");
+
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name printf}: text notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%9.12d %9.12i %9.12u %9.12f %9.12e %9.12E %9.12g %9.12G %9.12x %9.12X %9.12o %9.12s'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {int 0}: integer notnull
+  |     |           | {arg_list}
+  |     |             | {int 0}: integer notnull
+  |     |             | {arg_list}
+  |     |               | {int 0}: integer notnull
+  |     |               | {arg_list}
+  |     |                 | {dbl 0.0}: real notnull
+  |     |                 | {arg_list}
+  |     |                   | {dbl 0.0}: real notnull
+  |     |                   | {arg_list}
+  |     |                     | {dbl 0.0}: real notnull
+  |     |                     | {arg_list}
+  |     |                       | {dbl 0.0}: real notnull
+  |     |                       | {arg_list}
+  |     |                         | {dbl 0.0}: real notnull
+  |     |                         | {arg_list}
+  |     |                           | {int 0}: integer notnull
+  |     |                           | {arg_list}
+  |     |                             | {int 0}: integer notnull
+  |     |                             | {arg_list}
+  |     |                               | {int 0}: integer notnull
+  |     |                               | {arg_list}
+  |     |                                 | {strlit 'str'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%-16d %-16i %-16u %-16f %-16e %-16E %-16g %-16G %-16x %-16X %-16o %-16s", 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0, "str");
+
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name printf}: text notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%-16d %-16i %-16u %-16f %-16e %-16E %-16g %-16G %-16x %-16X %-16o %-16s'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {int 0}: integer notnull
+  |     |           | {arg_list}
+  |     |             | {int 0}: integer notnull
+  |     |             | {arg_list}
+  |     |               | {int 0}: integer notnull
+  |     |               | {arg_list}
+  |     |                 | {dbl 0.0}: real notnull
+  |     |                 | {arg_list}
+  |     |                   | {dbl 0.0}: real notnull
+  |     |                   | {arg_list}
+  |     |                     | {dbl 0.0}: real notnull
+  |     |                     | {arg_list}
+  |     |                       | {dbl 0.0}: real notnull
+  |     |                       | {arg_list}
+  |     |                         | {dbl 0.0}: real notnull
+  |     |                         | {arg_list}
+  |     |                           | {int 0}: integer notnull
+  |     |                           | {arg_list}
+  |     |                             | {int 0}: integer notnull
+  |     |                             | {arg_list}
+  |     |                               | {int 0}: integer notnull
+  |     |                               | {arg_list}
+  |     |                                 | {strlit 'str'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%-s", "hello");
+
+Error at test/sem_test.sql:XXXX : in str : CQL9002: width required when using flag in substitution '-'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name printf}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%-s'}: err
+  |     |         | {arg_list}
+  |     |           | {strlit 'hello'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%--10s", "hello");
+
+Error at test/sem_test.sql:XXXX : in str : CQL9000: duplicate flag in substitution '-'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name printf}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%--10s'}: err
+  |     |         | {arg_list}
+  |     |           | {strlit 'hello'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%+d %+i", 42, -100);
+
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name printf}: text notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%+d %+i'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {int 42}: integer notnull
+  |     |           | {arg_list}
+  |     |             | {uminus}: integer notnull
+  |     |               | {int 100}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%+u", 42);
+
+Error at test/sem_test.sql:XXXX : in str : CQL9007: type specifier combined with inappropriate flags 'u'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name printf}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%+u'}: err
+  |     |         | {arg_list}
+  |     |           | {int 42}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("% d % i", 42, -100);
+
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name printf}: text notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '% d % i'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {int 42}: integer notnull
+  |     |           | {arg_list}
+  |     |             | {uminus}: integer notnull
+  |     |               | {int 100}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("% u", 42);
+
+Error at test/sem_test.sql:XXXX : in str : CQL9007: type specifier combined with inappropriate flags 'u'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name printf}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '% u'}: err
+  |     |         | {arg_list}
+  |     |           | {int 42}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%+ u", 42);
+
+Error at test/sem_test.sql:XXXX : in str : CQL9001: cannot combine '+' flag with space flag
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name printf}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%+ u'}: err
+  |     |         | {arg_list}
+  |     |           | {int 42}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%!lld", 0);
+
+Error at test/sem_test.sql:XXXX : in str : CQL9004: length specifier cannot be combined with '!' flag
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name printf}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%!lld'}: err
+  |     |         | {arg_list}
+  |     |           | {int 0}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%09d", 42);
+
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name printf}: text notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%09d'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {int 42}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%09s", "hello");
+
+Error at test/sem_test.sql:XXXX : in str : CQL9007: type specifier combined with inappropriate flags 's'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name printf}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%09s'}: err
+  |     |         | {arg_list}
+  |     |           | {strlit 'hello'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%0d", 42);
+
+Error at test/sem_test.sql:XXXX : in str : CQL9002: width required when using flag in substitution '0'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name printf}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%0d'}: err
+  |     |         | {arg_list}
+  |     |           | {int 42}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%#g %#G %#o %#x %#X", 0.0, 0.0, 00, 0x0, 0x0);
+
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name printf}: text notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%#g %#G %#o %#x %#X'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {dbl 0.0}: real notnull
+  |     |           | {arg_list}
+  |     |             | {dbl 0.0}: real notnull
+  |     |             | {arg_list}
+  |     |               | {int 00}: integer notnull
+  |     |               | {arg_list}
+  |     |                 | {int 0x0}: integer notnull
+  |     |                 | {arg_list}
+  |     |                   | {int 0x0}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%#s", "hello");
+
+Error at test/sem_test.sql:XXXX : in str : CQL9007: type specifier combined with inappropriate flags 's'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name printf}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%#s'}: err
+  |     |         | {arg_list}
+  |     |           | {strlit 'hello'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%,d %,i", 0, 0);
+
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name printf}: text notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%,d %,i'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {int 0}: integer notnull
+  |     |           | {arg_list}
+  |     |             | {int 0}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%,u", 0);
+
+Error at test/sem_test.sql:XXXX : in str : CQL9007: type specifier combined with inappropriate flags 'u'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name printf}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%,u'}: err
+  |     |         | {arg_list}
+  |     |           | {int 0}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%!f %!e %!E %!g %!G %!s", 0.0, 0.0, 0.0, 0.0, 0.0, "str");
+
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name printf}: text notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%!f %!e %!E %!g %!G %!s'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {dbl 0.0}: real notnull
+  |     |           | {arg_list}
+  |     |             | {dbl 0.0}: real notnull
+  |     |             | {arg_list}
+  |     |               | {dbl 0.0}: real notnull
+  |     |               | {arg_list}
+  |     |                 | {dbl 0.0}: real notnull
+  |     |                 | {arg_list}
+  |     |                   | {dbl 0.0}: real notnull
+  |     |                   | {arg_list}
+  |     |                     | {strlit 'str'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%!d", 0);
+
+Error at test/sem_test.sql:XXXX : in str : CQL9007: type specifier combined with inappropriate flags 'd'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name printf}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%!d'}: err
+  |     |         | {arg_list}
+  |     |           | {int 0}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%-+0,10d %, 0-7lli", 0, 0);
+
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name printf}: text notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%-+0,10d %, 0-7lli'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {int 0}: integer notnull
+  |     |           | {arg_list}
+  |     |             | {int 0}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%0-7llu %-042u", 0, 0);
+
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name printf}: text notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%0-7llu %-042u'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {int 0}: integer notnull
+  |     |           | {arg_list}
+  |     |             | {int 0}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%-0#!8f %!#-016e %0!#-12E %!0#-24g %-0!#100G", 0.0, 0.0, 0.0, 0.0, 0.0);
+
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name printf}: text notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%-0#!8f %!#-016e %0!#-12E %!0#-24g %-0!#100G'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {dbl 0.0}: real notnull
+  |     |           | {arg_list}
+  |     |             | {dbl 0.0}: real notnull
+  |     |             | {arg_list}
+  |     |               | {dbl 0.0}: real notnull
+  |     |               | {arg_list}
+  |     |                 | {dbl 0.0}: real notnull
+  |     |                 | {arg_list}
+  |     |                   | {dbl 0.0}: real notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%#0-32o %-#016x %0-#24X", 00, 0x0, 0x0);
+
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name printf}: text notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%#0-32o %-#016x %0-#24X'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {int 00}: integer notnull
+  |     |           | {arg_list}
+  |     |             | {int 0x0}: integer notnull
+  |     |             | {arg_list}
+  |     |               | {int 0x0}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%-!8s %!-16s", "hello", "world");
+
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name printf}: text notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%-!8s %!-16s'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {strlit 'hello'}: text notnull
+  |     |           | {arg_list}
+  |     |             | {strlit 'world'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT printf("%%s%%%-#123.0194llX%%%.241o.%!.32s% -0,14.234llds%#-!1.000E", 0x0, 00, "str", 0, 0.0);
+
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name printf}: text notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%%s%%%-#123.0194llX%%%.241o.%!.32s% -0,14.234llds%#-!1.000E'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {int 0x0}: integer notnull
+  |     |           | {arg_list}
+  |     |             | {int 00}: integer notnull
+  |     |             | {arg_list}
+  |     |               | {strlit 'str'}: text notnull
+  |     |               | {arg_list}
+  |     |                 | {int 0}: integer notnull
+  |     |                 | {arg_list}
+  |     |                   | {dbl 0.0}: real notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
 

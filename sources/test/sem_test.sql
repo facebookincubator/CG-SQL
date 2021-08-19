@@ -3365,18 +3365,6 @@ select printf('%s %d', 'x', 5);
 -- - Error
 set a_string := printf('Hello');
 
--- TEST: printf needs at least one arg
--- + Error % function got incorrect number of arguments 'printf'
--- + {name printf}: err
--- + {assign}: err
-set a_string := printf();
-
--- TEST: printf first arg must be a string
--- + Error % first argument must be a string in function 'printf'
--- + {call}: err
--- {assign}: err
-set a_string := printf(7);
-
 -- TEST: printf is not ok in a limit
 -- + Error % function may not appear in this context 'printf'
 -- + {opt_limit}: err
@@ -4990,13 +4978,6 @@ set X := 2 not between obj_var and 3;
 -- +1 Error
 set X := 2 not between 1 and obj_var;
 
--- TEST: printf cannot have any object arguments
--- + {call}: err
--- + {name printf}
--- + Error % no object/blob types are allowed in arguments for function 'printf'
--- +1 Error
-set a_string := printf('Foo', obj_var);
-
 -- TEST: make a function that creates an not null object
 -- + {name creater_func}: object notnull create_func
 -- - Error
@@ -5961,14 +5942,6 @@ set X := 2 not between blob_var and 3;
 -- + Error % incompatible types in expression 'NOT BETWEEN'
 -- +1 Error
 set X := 2 not between 1 and blob_var;
-
--- TEST: printf cannot have any blob arguments
--- + {call}: err
--- + {name printf}
--- + Error % no object/blob types are allowed in arguments for function 'printf'
--- +1 Error
-set a_string := printf('Foo', blob_var);
-
 
 -- TEST: try to fetch into object variables
 -- + {fetch_stmt}: err
@@ -17771,3 +17744,287 @@ SET fal := 'x' is true;
 -- + {is_false}: err
 -- + Error % string operand not allowed in 'NOT'
 SET fal := ( not 'x') is false;
+
+-- TEST: printf must be called with at least one argument
+-- + {select_expr}: err
+-- + Error % function got incorrect number of arguments 'printf'
+-- +1 Error
+select printf();
+
+-- TEST: printf requires a string literal for its first argument
+-- + {select_expr}: err
+-- + Error % first argument must be a string literal 'printf'
+-- +1 Error
+select printf(a_string);
+
+-- TEST: printf disallows excess arguments
+-- + {select_expr}: err
+-- + Error % more arguments provided than expected by format string 'printf'
+-- +1 Error
+select printf("%d %f", 0, 0.0, "str");
+
+-- TEST: printf disallows insufficient arguments
+-- + {select_expr}: err
+-- + Error % fewer arguments provided than expected by format string 'printf'
+-- +1 Error
+select printf("%d %f %s", 0, 0.0);
+
+-- TEST: printf works with no substitutions
+-- + {select_expr}: text notnull
+-- - Error
+select printf('Hello!\n');
+
+-- TEST: printf understands '%%' requires no arguments
+-- + {select_expr}: text notnull
+-- - Error
+select printf("Hello %% there %%!\n");
+
+-- TEST: printf disallows arguments of the wrong type
+-- + {select_expr}: err
+-- + Error % incompatible types in expression 'printf'
+-- +1 Error
+select printf("%s %s", "hello", 42);
+
+-- TEST: printf disallows loss of precision
+-- + {select_expr}: err
+-- + Error % lossy conversion from type 'LONG_INT' in 0L
+-- +1 Error
+select printf("%d", 0L);
+
+-- TEST: printf allows null arguments
+-- + {select_expr}: text notnull
+-- - Error
+select printf("%s %d", null, null);
+
+-- TEST: printf allows all sensible type specifiers
+-- + {select_expr}: text notnull
+-- - Error
+select printf("%d %i %u %f %e %E %g %G %x %X %o %s", 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0, "str");
+
+-- TEST: printf does not allow %c
+-- + {select_expr}: err
+-- + Error % type specifier not allowed in CQL 'c'
+-- +1 Error
+select printf("%c", "x");
+
+-- TEST: printf does not allow %p
+-- + {select_expr}: err
+-- + Error % type specifier not allowed in CQL 'p'
+-- +1 Error
+select printf("%p", 0x123456789L);
+
+-- TEST: printf does not allow %n
+-- + {select_expr}: err
+-- + Error % type specifier not allowed in CQL 'n'
+-- +1 Error
+select printf("%n", 0x123456789L);
+
+-- TEST: printf does not allow %q
+-- + {select_expr}: err
+-- + Error % type specifier not allowed in CQL 'q'
+-- +1 Error
+select printf("%q", "hello");
+
+-- TEST: printf does not allow %Q
+-- + {select_expr}: err
+-- + Error % type specifier not allowed in CQL 'Q'
+-- +1 Error
+select printf("%Q", "hello");
+
+-- TEST: printf does not allow %w
+-- + {select_expr}: err
+-- + Error % type specifier not allowed in CQL 'w'
+-- +1 Error
+select printf("%w", "hello");
+
+-- TEST: printf allows 'll' with all integer type specifiers
+-- + {select_expr}: text notnull
+-- - Error
+select printf("%lld %lli %llu %llx %llX %llo", 0L, 0L, 0L, 0L, 0L, 0L);
+
+-- TEST: printf disallows the use of the 'l'
+-- + {select_expr}: err
+-- + Error % 'l' length specifier has no effect; consider 'll' instead
+-- +1 Error
+select printf("%ld", 0L);
+
+-- TEST: printf disallows use of 'll' with non-integer type specifiers
+-- + {select_expr}: err
+-- + Error % type specifier cannot be combined with length specifier 's'
+-- +1 Error
+select printf("%lls", "hello");
+
+-- TEST: printf allows numeric widths for all type specifiers
+-- + {select_expr}: text notnull
+-- - Error
+select printf("%12d %12i %12u %12f %12e %12E %12g %12G %12x %12X %12o %12s", 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0, "str");
+
+-- TEST: printf allows use of the '*' width and verifies that an integer
+-- argument is provided for the width
+-- + {select_expr}: text notnull
+-- - Error
+select printf("%*s %*f", 10, "hello", 20, 3.14);
+
+-- TEST: printf disallows following a numeric width with '*'
+-- + {select_expr}: err
+-- Error % unrecognized type specifier '*'
+-- +1 Error
+select printf("%10*s", 10, "hello");
+
+-- TEST: printf disallows following '*' with a numeric width
+-- + {select_expr}: err
+-- Error % unrecognized type specifier '1'
+-- +1 Error
+select printf("%*10s", 10, "hello");
+
+-- TEST: printf disallows incomplete substitutions containing '*'
+-- + {select_expr}: err
+-- + Error % incomplete substitution in format string
+-- +1 Error
+select printf("%*", 10);
+
+-- TEST: printf allows a precision to be specified for all type specifiers
+-- + {select_expr}: text notnull
+-- - Error
+select printf("%.12d %.12i %.12u %.12f %.12e %.12E %.12g %.12G %.12x %.12X %.12o %.12s", 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0, "str");
+
+-- TEST: printf allows a width and precision to be specified together for all type specifiers
+-- + {select_expr}: text notnull
+-- - Error
+select printf("%9.12d %9.12i %9.12u %9.12f %9.12e %9.12E %9.12g %9.12G %9.12x %9.12X %9.12o %9.12s", 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0, "str");
+
+-- TEST: printf allows '-' to be used with all type specifiers
+-- + {select_expr}: text notnull
+-- - Error
+select printf("%-16d %-16i %-16u %-16f %-16e %-16E %-16g %-16G %-16x %-16X %-16o %-16s", 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0, "str");
+
+-- TEST: printf requires that '-' be used with a width
+-- + {select_expr}: err
+-- + Error % width required when using flag in substitution '-'
+-- +1 Error
+select printf("%-s", "hello");
+
+-- TEST: printf disallows the same flag appearing twice
+-- + {select_expr}: err
+-- + Error % duplicate flag in substitution '-'
+-- +1 Error
+select printf("%--10s", "hello");
+
+-- TEST: printf allows '+' for signed numeric type specifiers
+-- + {select_expr}: text notnull
+-- - Error
+select printf("%+d %+i", 42, -100);
+
+-- TEST: printf disallows '+' for other type specifiers
+-- + {select_expr}: err
+-- + Error % type specifier combined with inappropriate flags 'u'
+-- +1 Error
+select printf("%+u", 42);
+
+-- TEST: printf allows the space flag for signed numeric type specifiers
+-- + {select_expr}: text notnull
+-- - Error
+select printf("% d % i", 42, -100);
+
+-- TEST: printf disallows the space flag for other type specifiers
+-- + {select_expr}: err
+-- + Error % type specifier combined with inappropriate flags 'u'
+-- +1 Error
+select printf("% u", 42);
+
+-- TEST: printf disallows the '+' and space flags being used together
+-- + {select_expr}: err
+-- + Error % cannot combine '+' flag with space flag
+-- +1 Error
+select printf("%+ u", 42);
+
+-- TEST: printf disallows combining a length specifier and the '!' flag
+-- + {select_expr}: err
+-- + Error % length specifier cannot be combined with '!' flag
+-- +1 Error
+select printf("%!lld", 0);
+
+-- TEST: printf allows the '0' flag with numeric type specifiers
+-- + {select_expr}: text notnull
+-- - Error
+select printf("%09d", 42);
+
+-- TEST: printf disallows the '0' flag with non-numeric type specifiers
+-- + {select_expr}: err
+-- + Error % type specifier combined with inappropriate flags 's'
+-- +1 Error
+select printf("%09s", "hello");
+
+-- TEST: printf requires that '0' be used with a width
+-- + {select_expr}: err
+-- + Error % width required when using flag in substitution '0'
+-- +1 Error
+select printf("%0d", 42);
+
+-- TEST: printf allows the '#' flag with the appropriate type specifiers
+-- + {select_expr}: text notnull
+-- - Error
+select printf("%#g %#G %#o %#x %#X", 0.0, 0.0, 00, 0x0, 0x0);
+
+-- TEST: printf disallows the '#' flag with other type specifiers
+-- + {select_expr}: err
+-- + Error % type specifier combined with inappropriate flags 's'
+-- +1 Error
+select printf("%#s", "hello");
+
+-- TEST: printf allows the ',' flag with signed integer type specifiers
+-- + {select_expr}: text notnull
+-- - Error
+select printf("%,d %,i", 0, 0);
+
+-- TEST: printf disallows the ',' flag with other type specifiers
+-- + {select_expr}: err
+-- + Error % type specifier combined with inappropriate flags 'u'
+-- +1 Error
+select printf("%,u", 0);
+
+-- TEST: printf allows the '!' flag with floating point and string type
+-- specifiers
+-- + {select_expr}: text notnull
+-- - Error
+select printf("%!f %!e %!E %!g %!G %!s", 0.0, 0.0, 0.0, 0.0, 0.0, "str");
+
+-- TEST: printf disallows the '!' flag with other type specifiers
+-- + {select_expr}: err
+-- + Error % type specifier combined with inappropriate flags 'd'
+-- +1 Error
+select printf("%!d", 0);
+
+-- TEST: printf allows all valid combinations of flags for signed integer type
+-- specifiers
+-- + {select_expr}: text notnull
+-- - Error
+select printf("%-+0,10d %, 0-7lli", 0, 0);
+
+-- TEST: printf allows all valid combinations of flags for the unsigned integer
+-- type specifier
+-- + {select_expr}: text notnull
+-- - Error
+select printf("%0-7llu %-042u", 0, 0);
+
+-- TEST: printf allows all valid combinations of flags for floating point type
+-- specifiers
+-- + {select_expr}: text notnull
+-- - Error
+select printf("%-0#!8f %!#-016e %0!#-12E %!0#-24g %-0!#100G", 0.0, 0.0, 0.0, 0.0, 0.0);
+
+-- TEST: printf allows all valid combinations of flags for hex and octal type
+-- specifiers
+-- + {select_expr}: text notnull
+-- - Error
+select printf("%#0-32o %-#016x %0-#24X", 00, 0x0, 0x0);
+
+-- TEST: printf allows all valid combinations of flags for the string specifier
+-- + {select_expr}: text notnull
+-- - Error
+select printf("%-!8s %!-16s", "hello", "world");
+
+-- TEST: printf even allows this
+-- + {select_expr}: text notnull
+-- - Error
+select printf("%%s%%%-#123.0194llX%%%.241o.%!.32s% -0,14.234llds%#-!1.000E", 0x0, 00, "str", 0, 0.0);
