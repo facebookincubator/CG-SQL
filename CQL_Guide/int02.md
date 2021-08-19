@@ -9,13 +9,13 @@ sidebar_label: "Part 2: Semantic Analysis"
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-### Overview
+### Preface
 
 Part 2 continues with a discussion of the essentials of the semantic analysis pass of the CQL compiler.
 As in the previous sections, the goal here is not to go over every single rule but rather to give
-a sense of how semantic analysis happens in general, the core strategies and implementation choices
-so that when reading the code you have an idea how smaller pieces would fit into the whole. To accomplish
-this various key data structures will be explained in detail as well as selected examples of their use.
+a sense of how semantic analysis happens in general -- the core strategies and implementation choices --
+so that when reading the code you have an idea how smaller pieces fit into the whole. To accomplish
+this, various key data structures will be explained in detail as well as selected examples of their use.
 
 ## Semantic Analysis
 
@@ -1786,4 +1786,4 @@ as many semantic error checking functions, it's to showcase the key concepts sha
   * `sem_node` for basic info, and
   * `sem_struct` or `sem_join` for the non-unitary types
 
-This isn't everything but it would leave you well armed to begin your own exploration of `sem.c`.
+This isn't everything but it should leave you well armed to begin your own exploration of `sem.c`.
