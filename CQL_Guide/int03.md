@@ -776,3 +776,137 @@ in many other contexts.  It can use `x` as the result variable!  The `SET` codeg
 that the value it's supposed to set is already in `x` so it does nothing and everything just
 works out.  The price of this is a call to `is_assignment_target_reusable` and then some
 logic to handle the case where `x` is an out argument (hence call by reference, hence needs to be used as `*x`).
+
+### Basic Control Flow Patterns
+
+To get a sense of how the compiler generates code for statements, we can look at some of the easiest cases.
+
+```C
+// "While" suffers from the same problem as IF and as a consequence
+// generating while (expression) would not generalize.
+// The overall pattern for while has to look like this:
+//
+//  for (;;) {
+//    prep statements;
+//    condition = final expression;
+//    if (!condition) break;
+//
+//    statements;
+//  }
+//
+// Note that while can have leave and continue substatements which have to map
+// to break and continue.   That means other top level statements that aren't loops
+// must not create a C loop construct or break/continue would have the wrong target.
+static void cg_while_stmt(ast_node *ast) {
+  Contract(is_ast_while_stmt(ast));
+  EXTRACT_ANY_NOTNULL(expr, ast->left);
+  EXTRACT(stmt_list, ast->right);
+  sem_t sem_type = expr->sem->sem_type;
+
+  // WHILE [expr] BEGIN [stmt_list] END
+
+  bprintf(cg_main_output, "for (;;) {\n");
+
+  CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
+
+  if (is_nullable(sem_type)) {
+    bprintf(cg_main_output, "if (!cql_is_nullable_true(%s, %s)) break;\n", expr_is_null.ptr, expr_value.ptr);
+  }
+  else {
+    bprintf(cg_main_output, "if (!(%s)) break;\n", expr_value.ptr);
+  }
+
+  bool_t loop_saved = cg_in_loop;
+  cg_in_loop = true;
+
+  CG_POP_EVAL(expr);
+
+  cg_stmt_list(stmt_list);
+
+  bprintf(cg_main_output, "}\n");
+
+  cg_in_loop = loop_saved;
+}
+```
+
+The comment before the `cg_while_stmt` actually says it pretty clearly; the issue is
+that the expression in the while statement might actually require many C statements
+to evaluate.  There are many cases of this sort of thing, but the simplest is
+probably when any nullable types are in that expression.  A particular example
+illustrates this pretty clearly.
+
+```C
+CREATE PROC p ()
+BEGIN
+  DECLARE x INTEGER NOT NULL;
+  SET x := 1;
+  WHILE x < 5
+  BEGIN
+    SET x := x + 1;
+  END;
+END;
+*/
+
+void p(void) {
+  cql_int32 x = 0;
+
+  x = 1;
+  for (;;) {
+  /* in trickier cases there would be code right here */
+  if (!(x < 5)) break;
+    x = x + 1;
+  }
+}
+```
+
+In this case, the `while` pattern could have been used because the condition is simply `x < 5` so this whole pattern is
+overkill.  But consider this program just a tiny bit different.
+
+```C
+/*
+CREATE PROC p ()
+BEGIN
+  DECLARE x INTEGER;  -- x is nullable
+  SET x := 1;
+  WHILE x < 5
+  BEGIN
+    SET x := x + 1;
+  END;
+END;
+*/
+
+void p(void) {
+  cql_nullable_int32 x;
+  cql_set_null(x);
+  cql_nullable_bool _tmp_n_bool_0;
+  cql_set_null(_tmp_n_bool_0);
+
+  cql_set_notnull(x, 1);
+  for (;;) {
+  cql_set_nullable(_tmp_n_bool_0, x.is_null, x.value < 5);
+  if (!cql_is_nullable_true(_tmp_n_bool_0.is_null, _tmp_n_bool_0.value)) break;
+    cql_set_nullable(x, x.is_null, x.value + 1);
+  }
+}
+```
+
+Even for this small little case, the nullable arithmetic macros have to be used to keep `x` up to date.
+The result of `x < 5` is of type "bool" rather than "bool not null" so a temporary variable captures
+the result of the expression.  This is an easy case but similar things happen if the expression
+includes `CASE...WHEN...` or `IN` constructs.  There are many other cases.
+
+So with this in mind, let's reconsider what `cg_while_stmt` is doing:
+
+* we start the `for` statement in the output
+  * there's a bprintf for that
+* we evaluate the while expression, the details will be in `is_null` and `value`
+  * we use CG_PUSH_EVAL for that
+* if the result is nullable there is a helper macro `cql_is_nullable_true` that tells us if the value is not null and true
+* if the result is not nullable we can use `expr_value.ptr` directly
+* we make a note that we're in a loop (this matters for statement cleanup, more on that later)
+* we recurse to do more statements with `cg_stmt_list`
+* finally we end the `for` that we began
+
+This kind of structure is common to all the control flow cases.  Generally, we have to deal with the
+fact that CQL expressions become C statements so we use a more general flow control strategy. But with this
+in mind, it's easy to imagine how `IF` `LOOP` and `SWITCH` are handled.
