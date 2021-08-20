@@ -1105,3 +1105,329 @@ or something like that.
 This entire mechanism is built with basically just a few state variables that nest.  There is no complicated stack walking
 or anything like that.  All the code has to do is chain the error labels together and let users create new catch blocks
 with new error labels.  All that together gives you very flexible try/catch behaviour.
+
+### String Literals
+
+Before we move on to more complex statements we have to discuss string literals a little bit.  We've mentioned before
+that the compiler is going to generate something like this:
+
+```C
+cql_string_literal(_literal_1_test_p, "test");
+```
+
+To create a reference counted object `_literal_1_test_p` that it can use.  Now we're going to talk about how
+the text `"test"` was created and how that gets more complicated.
+
+The first thing to remember is that the generator creates C programs.  That means
+no matter what kind of literal we might be processing it's ending up encoded as a C string for the C
+compiler.  The C compiler will be the first thing the decodes the text the generator produces and
+puts the byte we need into the final programs data segment or whereever.  That means if we have
+SQL format strings that need to go to SQLite they will be twice-encoded, the SQL string is escaped
+as needed for SQLite and *that* is escaped again for the C compiler.
+
+An example might make this clearer consider the following SQL:
+
+```SQL
+  SELECT '"x''y"' AS a, "'y'\n" AS b;
+```
+
+The generated text for this statement will be:
+
+```C
+  "SELECT '\"x''y\"', '''y''\n'"
+```
+
+Let's review that in some detail:
+
+* the first string "a" is a standard SQL string
+  * it is represented unchanged in the AST, it is *not* unescaped
+  * even the outer single quotes are preserved, CQL has no need to change it at all
+  * when we emit it into our output it will be read by the C compiler, so
+  * at that time it is escaped *again* into C format
+    * the double quotes which required no escaping in SQL become `\"`
+  * the single quote character requires no escape but there are still two of them because SQLite will also process this string
+
+* the second string "b" is a C formatted string literal
+  * SQLite doesn't support this format or its escapes, therefore
+  * as discussed in [Part 1](https://cgsql.dev/cql-guide/int01), it is decoded to plain text, then re-encoded as a SQL escaped string
+  * internal newlines do not require escaping in SQL, they are in the string as the newline character not '\n' or anything like that
+    * to be completely precise the byte value 0x0a is in the string unescaped
+  * internal single quotes don't require escaping in C, these have to be doubled in a SQL string
+  * the outer double quotes are removed and replaced by single quoates during this process
+  * the AST now has a valid SQL formatted string possibly with weird characters in it
+  * as before, this string has to be formatted for the C compiler so now it has to be escaped again
+  * the single quotes require no further processing, though now there are quite a few of them
+  * the embedded newline is converted to the escape sequence "\n" so we're back to sort of where we started
+    * the C compiler will convert this back to the byte 0x0a which is what ends up in the data segment
+
+In the above example we were making one overall string for the `SELECT` statement so the outer double quotes
+are around the whole statement.  That was just for the convenience of this example.  If the literals had
+been in some other loose context then individual strings would be produced the same way.  Except, not so fast,
+not every string literal is heading for SQLite.  Some are just making regular strings.  In that case even
+if they are destined for SQLite they will go as bound arguments to a statement not in the text of the SQL.
+That means *those* strings do not need SQL escaping.
+
+Consider:
+
+```SQL
+  LET a := '"x''y"';
+  LET b := "'y'\n";
+```
+
+To do those assignments we need:
+
+```C
+cql_string_literal(_literal_1_x_y_p, "\"x'y\"");
+cql_string_literal(_literal_2_y_p, "'y'\n");
+```
+
+In both of these cases the steps are:
+
+* unescape the escaped SQL string in the AST to plain text
+  * removing the outer single quotes of course
+* re-escape the plain text (which might include newlines and such) as a C string
+  * emit that text, including its outer double quotes
+
+Trivia: the name of the string literal variables include a fragment of the string to make them a little easier to spot.
+
+`encoders.h` has the encoding functions
+* `cg_decode_string_literal`
+* `cg_encode_string_literal`
+* `cg_encode_c_string_literal`
+* `cg_decode_c_string_literal`
+
+As well as similar functions for single characters to make all this possible.  Pretty much every combination
+of encoding and re-encoding happens in some path through the code generator.
+
+### Executing SQLite Statements
+
+By way of example let's consider a pretty simple piece of SQL we might want to run.
+
+```SQL
+CREATE TABLE foo(id INTEGER, t TEXT);
+
+CREATE PROC p (id_ INTEGER, t_ TEXT)
+BEGIN
+  UPDATE foo
+  SET t = t_
+    WHERE id = id_;
+END;
+```
+
+To make this happen we're going to have to do the following things:
+ * create a string literal with the statement we need
+ * the references to `id_` and `t_` have to be replaced with `?`
+ * we prepare that statement
+ * we bind the values of `id_` and `t_`
+ * we `step` the statement
+ * we `finalize` the statement
+ * suitable error checks have to be done at each stage
+
+That's quite a bit of code and it's easy to forget a step, this is an area where CQL shines.  The
+code we had to write in CQL was very clear and all the error checking is implicit.
+
+This is the generated code.  We'll walk through it and discuss how it is created.
+
+```C
+CQL_WARN_UNUSED cql_code p(
+  sqlite3 *_Nonnull _db_,
+  cql_nullable_int32 id_,
+  cql_string_ref _Nullable t_)
+{
+  cql_code _rc_ = SQLITE_OK;
+  sqlite3_stmt *_temp_stmt = NULL;
+
+  _rc_ = cql_prepare(_db_, &_temp_stmt,
+    "UPDATE foo "
+    "SET t = ? "
+      "WHERE id = ?");
+  cql_multibind(&_rc_, _db_, &_temp_stmt, 2,
+                CQL_DATA_TYPE_INT32, &id_,
+                CQL_DATA_TYPE_STRING, t_);
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = sqlite3_step(_temp_stmt);
+  if (_rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+  cql_finalize_stmt(&_temp_stmt);
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_finalize_stmt(&_temp_stmt);
+  return _rc_;
+}
+```
+* the functions signature includes the hidden `_db_` parameter plus the two arguments
+* we need a hidden `_rc_` variable to hold the result codes from SQLite
+* we need a scratch `sqlite3_stmt *` named `_temp_stmt` to talk to SQLite
+  * when this is created, the cleanup section gets `cql_finalize_stmt(&_temp_stmt);`
+  * `cql_finalize_stmt` sets the statement to null and does nothing if it's already null
+* the string `"INSERT INTO foo(id, t) VALUES(?, ?)"` is created from the AST
+  * recall that we have `variables_callback` as an option, it's used here to track the variables and replace them with `?`
+  * more on this shortly
+* `cql_multibind` is used to bind the values of `id_` and `t_`
+  * this is just a varargs version of the normal SQLite binding functions, it's only done this way to save space
+  * only one error check is needed for any binding failure
+  * the type of binding is encoded very economically
+  * the "2" here refers to two arguments
+* the usual error processing happens with `cql_error_trace` and `goto cql_cleanup`
+* the statment is executed with `sqlite3_step`
+* temporary statements are finalized immediately with `cql_finalize_stmt`
+  * in this case its redundant because the code is going to fall through to cleanup anyway
+  * in general there could be many statements and we want to finalize immediately
+  * this is an optimization opportunity, procedures with just one statement are very common
+
+Most of these steps are actually hard coded.  There is no variability in the sequence
+after the `multibind` call, so that's just boiler-plate the compiler can inject.
+
+We don't want to declare `_temp_stmt` over and over so there's a flag that records
+whether it has already been declared in the current procedure.
+
+```C
+// Emit a declaration for the temporary statement _temp_stmt_ if we haven't
+// already done so.  Also emit the cleanup once.
+static void ensure_temp_statement() {
+  if (!temp_statement_emitted) {
+    bprintf(cg_declarations_output, "sqlite3_stmt *_temp_stmt = NULL;\n");
+    bprintf(cg_cleanup_output, "  cql_finalize_stmt(&_temp_stmt);\n");
+    temp_statement_emitted = 1;
+  }
+}
+```
+
+This is a great example of how, no matter where the processing happens to be,
+the generator can emit things into the various sections.  Here it adds
+a declaration and an cleanup with no concern about what else might be going on.
+
+So most of the above is just boiler-plate, the tricky part is:
+ * getting the text of the SQL
+ * binding the variables
+
+All of this is the business of this function:
+
+```C
+// This is the most important function for sqlite access;  it does the heavy
+// lifting of generating the C code to prepare and bind a SQL statement.
+// If cg_exec is true (CG_EXEC) then the statement is executed immediately
+// and finalized.  No results are expected.  To accomplish this we do the following:
+//   * figure out the name of the statement, either it's given to us
+//     or we're using the temp statement
+//   * call get_statement_with_callback to get the text of the SQL from the AST
+//     * the callback will give us all the variables to bind
+//     * count the variables so we know what column numbers to use (the list is backwards!)
+//   * if CG_EXEC and no variables we can use the simpler sqlite3_exec form
+//   * bind any variables
+//   * if there are variables CG_EXEC will step and finalize
+static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_flags)
+{
+  ...
+}
+```
+
+The core of this function looks like this:
+
+```C
+  gen_sql_callbacks callbacks;
+  init_gen_sql_callbacks(&callbacks);
+  callbacks.variables_callback = cg_capture_variables;
+  callbacks.variables_context = &vars;
+  // ... more flags
+
+  CHARBUF_OPEN(temp);
+  gen_set_output_buffer(&temp);
+  gen_statement_with_callbacks(stmt, &callbacks);
+```
+
+It's set up the callbacks for variables and it calls the echoing function on the buffer.  We've
+talked about `gen_statement_with_callbacks` in  [Part 1](https://cgsql.dev/cql-guide/int01).
+
+Let's take a look at that callback function:
+
+```
+// This is the callback method handed to the gen_ method that creates SQL for us
+// it will call us every time it finds a variable that needs to be bound.  That
+// variable is replaced by ? in the SQL output.  We end up with a list of variables
+// to bind on a silver platter (but in reverse order).
+static bool_t cg_capture_variables(ast_node *ast, void *context, charbuf *buffer) {
+  list_item **head = (list_item**)context;
+  add_item_to_list(head, ast);
+
+  bprintf(buffer, "?");
+  return true;
+}
+```
+
+The `context` variable was set to be `vars`, we convert it back to the correct type
+and add the current ast to that list.  `add_item_to_list` always puts things at the
+head so the list will be in reverse order.
+
+With this done, we're pretty much set.  We'll produce the statement with a sequence
+like this one (there are a couple of variations, but this is the most general)
+
+```C
+  bprintf(cg_main_output, "_rc_ = cql_prepare(_db_, %s%s_stmt,\n  ", amp, stmt_name);
+  cg_pretty_quote_plaintext(temp.ptr, cg_main_output, PRETTY_QUOTE_C | PRETTY_QUOTE_MULTI_LINE);
+  bprintf(cg_main_output, ");\n");
+```
+
+`cg_pretty_quote_plaintext` is one of the C string encoding formats, it could have been just the regular C string encoding
+but that would have been a bit wasteful and it wouldn't have looked as nice.  This function does a little transform.
+
+The normal echo of the update statement in question looks like this:
+
+```
+  UPDATE foo
+  SET t = ?
+    WHERE id = ?;
+```
+
+Note that it has indenting and newlines embedded in it.  The standard encoding of that would look like this:
+
+```C
+"  UPDATE foo\n  SET t = ?\n    WHERE id = ?;"
+```
+
+That surely works, but it's wasteful and ugly. The pretty format instead produces:
+
+```C
+    "UPDATE foo "
+    "SET t = ? "
+      "WHERE id = ?"
+```
+
+So, the newlines are gone from the string (they aren't needed), instead the string literal was broken into lines for readability.
+The indenting is gone from the string, instead the string fragments are indented.  So what you get is a string literal that
+reads nicely but doesn't have unnecessary whitespace for SQLite.  Obviously you can't use pretty-quoted literals in all cases,
+it's exclusively for SQLite formatting.
+
+All that's left to do is bind the arguments.  Remember that arg list is in reverse order:
+
+```C
+  uint32_t count = 0;
+  for (list_item *item = vars; item; item = item->next, count++) ;
+
+  // ...
+
+  reverse_list(&vars);
+
+  if (count) {
+    bprintf(cg_main_output, "cql_multibind(&_rc_, _db_, %s%s_stmt, %d", amp, stmt_name, count);
+
+    // Now emit the binding args for each variable
+    for (list_item *item = vars; item; item = item->next)  {
+      Contract(item->ast->sem->name);
+      bprintf(cg_main_output, ",\n              ");
+      cg_bind_column(item->ast->sem->sem_type, item->ast->sem->name);
+    }
+
+    bprintf(cg_main_output, ");\n");
+  }
+```
+
+* first compute the count, we don't need to bind if there are no variables
+* `reverse_list` does exactly what is sounds like (finally a real-world use-case for reverse-list-in-place)
+* `cg_bind_column` creates one line of the var-args output: column type and variable name
+  * the type and name information is right there on the `AST` in the `sem_node`
+
+And that's it.  With those few helpers we can bind any SQLite statement the same way.  All of the
+`DDL_STMT_INIT` and `DML_STMT_INIT` statements are completely implemented by this path.
+
+Next we'll talk about the cases where some data comes back from SQLite.
