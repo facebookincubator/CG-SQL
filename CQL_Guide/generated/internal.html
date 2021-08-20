@@ -265,6 +265,8 @@
 <li><a href="#launching-the-code-generator">Launching the Code Generator</a></li>
 <li><a href="#character-buffers-and-byte-buffers">Character Buffers and Byte Buffers</a></li>
 <li><a href="#expressions">Expressions</a></li>
+<li><a href="#basic-control-flow-patterns">Basic Control Flow Patterns</a></li>
+<li><a href="#cleanup-and-errors">Cleanup and Errors</a></li>
 </ul></li>
 </ul>
 </nav>
@@ -2615,5 +2617,276 @@ CG_USE_RESULT_VAR();</code></pre>
 <p>The idea is that if the generator is doing an assignment like:</p>
 <div class="sourceCode" id="cb124"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb124-1"><a href="#cb124-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SET</span> x <span class="op">:=</span> a <span class="op">+</span> b;</span></code></pre></div>
 <p>Then the code generator doesn’t need a scratch variable to hold the result of the expression <code>a + b</code> like it would in many other contexts. It can use <code>x</code> as the result variable! The <code>SET</code> codegen will discover that the value it’s supposed to set is already in <code>x</code> so it does nothing and everything just works out. The price of this is a call to <code>is_assignment_target_reusable</code> and then some logic to handle the case where <code>x</code> is an out argument (hence call by reference, hence needs to be used as <code>*x</code>).</p>
+<h3 id="basic-control-flow-patterns">Basic Control Flow Patterns</h3>
+<p>To get a sense of how the compiler generates code for statements, we can look at some of the easiest cases.</p>
+<div class="sourceCode" id="cb125"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb125-1"><a href="#cb125-1" aria-hidden="true" tabindex="-1"></a><span class="co">// &quot;While&quot; suffers from the same problem as IF and as a consequence</span></span>
+<span id="cb125-2"><a href="#cb125-2" aria-hidden="true" tabindex="-1"></a><span class="co">// generating while (expression) would not generalize.</span></span>
+<span id="cb125-3"><a href="#cb125-3" aria-hidden="true" tabindex="-1"></a><span class="co">// The overall pattern for while has to look like this:</span></span>
+<span id="cb125-4"><a href="#cb125-4" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
+<span id="cb125-5"><a href="#cb125-5" aria-hidden="true" tabindex="-1"></a><span class="co">//  for (;;) {</span></span>
+<span id="cb125-6"><a href="#cb125-6" aria-hidden="true" tabindex="-1"></a><span class="co">//    prep statements;</span></span>
+<span id="cb125-7"><a href="#cb125-7" aria-hidden="true" tabindex="-1"></a><span class="co">//    condition = final expression;</span></span>
+<span id="cb125-8"><a href="#cb125-8" aria-hidden="true" tabindex="-1"></a><span class="co">//    if (!condition) break;</span></span>
+<span id="cb125-9"><a href="#cb125-9" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
+<span id="cb125-10"><a href="#cb125-10" aria-hidden="true" tabindex="-1"></a><span class="co">//    statements;</span></span>
+<span id="cb125-11"><a href="#cb125-11" aria-hidden="true" tabindex="-1"></a><span class="co">//  }</span></span>
+<span id="cb125-12"><a href="#cb125-12" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
+<span id="cb125-13"><a href="#cb125-13" aria-hidden="true" tabindex="-1"></a><span class="co">// Note that while can have leave and continue substatements which have to map</span></span>
+<span id="cb125-14"><a href="#cb125-14" aria-hidden="true" tabindex="-1"></a><span class="co">// to break and continue.   That means other top level statements that aren&#39;t loops</span></span>
+<span id="cb125-15"><a href="#cb125-15" aria-hidden="true" tabindex="-1"></a><span class="co">// must not create a C loop construct or break/continue would have the wrong target.</span></span>
+<span id="cb125-16"><a href="#cb125-16" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> cg_while_stmt<span class="op">(</span>ast_node <span class="op">*</span>ast<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb125-17"><a href="#cb125-17" aria-hidden="true" tabindex="-1"></a>  Contract<span class="op">(</span>is_ast_while_stmt<span class="op">(</span>ast<span class="op">));</span></span>
+<span id="cb125-18"><a href="#cb125-18" aria-hidden="true" tabindex="-1"></a>  EXTRACT_ANY_NOTNULL<span class="op">(</span>expr<span class="op">,</span> ast<span class="op">-&gt;</span>left<span class="op">);</span></span>
+<span id="cb125-19"><a href="#cb125-19" aria-hidden="true" tabindex="-1"></a>  EXTRACT<span class="op">(</span>stmt_list<span class="op">,</span> ast<span class="op">-&gt;</span>right<span class="op">);</span></span>
+<span id="cb125-20"><a href="#cb125-20" aria-hidden="true" tabindex="-1"></a>  sem_t sem_type <span class="op">=</span> expr<span class="op">-&gt;</span>sem<span class="op">-&gt;</span>sem_type<span class="op">;</span></span>
+<span id="cb125-21"><a href="#cb125-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb125-22"><a href="#cb125-22" aria-hidden="true" tabindex="-1"></a>  <span class="co">// WHILE [expr] </span><span class="re">BEGIN</span><span class="co"> [stmt_list] </span><span class="re">END</span></span>
+<span id="cb125-23"><a href="#cb125-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb125-24"><a href="#cb125-24" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(</span>cg_main_output<span class="op">,</span> <span class="st">&quot;for (;;) {</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb125-25"><a href="#cb125-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb125-26"><a href="#cb125-26" aria-hidden="true" tabindex="-1"></a>  CG_PUSH_EVAL<span class="op">(</span>expr<span class="op">,</span> C_EXPR_PRI_ROOT<span class="op">);</span></span>
+<span id="cb125-27"><a href="#cb125-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb125-28"><a href="#cb125-28" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>is_nullable<span class="op">(</span>sem_type<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb125-29"><a href="#cb125-29" aria-hidden="true" tabindex="-1"></a>    bprintf<span class="op">(</span>cg_main_output<span class="op">,</span> <span class="st">&quot;if (!cql_is_nullable_true(%s, %s)) break;</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">,</span> expr_is_null<span class="op">.</span>ptr<span class="op">,</span> expr_value<span class="op">.</span>ptr<span class="op">);</span></span>
+<span id="cb125-30"><a href="#cb125-30" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb125-31"><a href="#cb125-31" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb125-32"><a href="#cb125-32" aria-hidden="true" tabindex="-1"></a>    bprintf<span class="op">(</span>cg_main_output<span class="op">,</span> <span class="st">&quot;if (!(%s)) break;</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">,</span> expr_value<span class="op">.</span>ptr<span class="op">);</span></span>
+<span id="cb125-33"><a href="#cb125-33" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb125-34"><a href="#cb125-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb125-35"><a href="#cb125-35" aria-hidden="true" tabindex="-1"></a>  bool_t loop_saved <span class="op">=</span> cg_in_loop<span class="op">;</span></span>
+<span id="cb125-36"><a href="#cb125-36" aria-hidden="true" tabindex="-1"></a>  cg_in_loop <span class="op">=</span> true<span class="op">;</span></span>
+<span id="cb125-37"><a href="#cb125-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb125-38"><a href="#cb125-38" aria-hidden="true" tabindex="-1"></a>  CG_POP_EVAL<span class="op">(</span>expr<span class="op">);</span></span>
+<span id="cb125-39"><a href="#cb125-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb125-40"><a href="#cb125-40" aria-hidden="true" tabindex="-1"></a>  cg_stmt_list<span class="op">(</span>stmt_list<span class="op">);</span></span>
+<span id="cb125-41"><a href="#cb125-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb125-42"><a href="#cb125-42" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(</span>cg_main_output<span class="op">,</span> <span class="st">&quot;}</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb125-43"><a href="#cb125-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb125-44"><a href="#cb125-44" aria-hidden="true" tabindex="-1"></a>  cg_in_loop <span class="op">=</span> loop_saved<span class="op">;</span></span>
+<span id="cb125-45"><a href="#cb125-45" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The comment before the <code>cg_while_stmt</code> actually says it pretty clearly; the issue is that the expression in the while statement might actually require many C statements to evaluate. There are many cases of this sort of thing, but the simplest is probably when any nullable types are in that expression. A particular example illustrates this pretty clearly.</p>
+<div class="sourceCode" id="cb126"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb126-1"><a href="#cb126-1" aria-hidden="true" tabindex="-1"></a>CREATE PROC p <span class="op">()</span></span>
+<span id="cb126-2"><a href="#cb126-2" aria-hidden="true" tabindex="-1"></a>BEGIN</span>
+<span id="cb126-3"><a href="#cb126-3" aria-hidden="true" tabindex="-1"></a>  DECLARE x INTEGER NOT NULL<span class="op">;</span></span>
+<span id="cb126-4"><a href="#cb126-4" aria-hidden="true" tabindex="-1"></a>  SET x <span class="op">:=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb126-5"><a href="#cb126-5" aria-hidden="true" tabindex="-1"></a>  WHILE x <span class="op">&lt;</span> <span class="dv">5</span></span>
+<span id="cb126-6"><a href="#cb126-6" aria-hidden="true" tabindex="-1"></a>  BEGIN</span>
+<span id="cb126-7"><a href="#cb126-7" aria-hidden="true" tabindex="-1"></a>    SET x <span class="op">:=</span> x <span class="op">+</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb126-8"><a href="#cb126-8" aria-hidden="true" tabindex="-1"></a>  END<span class="op">;</span></span>
+<span id="cb126-9"><a href="#cb126-9" aria-hidden="true" tabindex="-1"></a>END<span class="op">;</span></span>
+<span id="cb126-10"><a href="#cb126-10" aria-hidden="true" tabindex="-1"></a><span class="op">*/</span></span>
+<span id="cb126-11"><a href="#cb126-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb126-12"><a href="#cb126-12" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> p<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb126-13"><a href="#cb126-13" aria-hidden="true" tabindex="-1"></a>  cql_int32 x <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb126-14"><a href="#cb126-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb126-15"><a href="#cb126-15" aria-hidden="true" tabindex="-1"></a>  x <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb126-16"><a href="#cb126-16" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> <span class="op">(;;)</span> <span class="op">{</span></span>
+<span id="cb126-17"><a href="#cb126-17" aria-hidden="true" tabindex="-1"></a>  <span class="co">/* in trickier cases there would be code right here */</span></span>
+<span id="cb126-18"><a href="#cb126-18" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(!(</span>x <span class="op">&lt;</span> <span class="dv">5</span><span class="op">))</span> <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb126-19"><a href="#cb126-19" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> x <span class="op">+</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb126-20"><a href="#cb126-20" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb126-21"><a href="#cb126-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>In this case, the <code>while</code> pattern could have been used because the condition is simply <code>x &lt; 5</code> so this whole pattern is overkill. But consider this program just a tiny bit different.</p>
+<div class="sourceCode" id="cb127"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb127-1"><a href="#cb127-1" aria-hidden="true" tabindex="-1"></a><span class="co">/*</span></span>
+<span id="cb127-2"><a href="#cb127-2" aria-hidden="true" tabindex="-1"></a><span class="co">CREATE PROC p ()</span></span>
+<span id="cb127-3"><a href="#cb127-3" aria-hidden="true" tabindex="-1"></a><span class="re">BEGIN</span></span>
+<span id="cb127-4"><a href="#cb127-4" aria-hidden="true" tabindex="-1"></a><span class="co">  DECLARE x INTEGER;  -- x is nullable</span></span>
+<span id="cb127-5"><a href="#cb127-5" aria-hidden="true" tabindex="-1"></a><span class="co">  SET x := 1;</span></span>
+<span id="cb127-6"><a href="#cb127-6" aria-hidden="true" tabindex="-1"></a><span class="co">  WHILE x &lt; 5</span></span>
+<span id="cb127-7"><a href="#cb127-7" aria-hidden="true" tabindex="-1"></a><span class="co">  </span><span class="re">BEGIN</span></span>
+<span id="cb127-8"><a href="#cb127-8" aria-hidden="true" tabindex="-1"></a><span class="co">    SET x := x + 1;</span></span>
+<span id="cb127-9"><a href="#cb127-9" aria-hidden="true" tabindex="-1"></a><span class="co">  </span><span class="re">END</span><span class="co">;</span></span>
+<span id="cb127-10"><a href="#cb127-10" aria-hidden="true" tabindex="-1"></a><span class="re">END</span><span class="co">;</span></span>
+<span id="cb127-11"><a href="#cb127-11" aria-hidden="true" tabindex="-1"></a><span class="co">*/</span></span>
+<span id="cb127-12"><a href="#cb127-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb127-13"><a href="#cb127-13" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> p<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb127-14"><a href="#cb127-14" aria-hidden="true" tabindex="-1"></a>  cql_nullable_int32 x<span class="op">;</span></span>
+<span id="cb127-15"><a href="#cb127-15" aria-hidden="true" tabindex="-1"></a>  cql_set_null<span class="op">(</span>x<span class="op">);</span></span>
+<span id="cb127-16"><a href="#cb127-16" aria-hidden="true" tabindex="-1"></a>  cql_nullable_bool _tmp_n_bool_0<span class="op">;</span></span>
+<span id="cb127-17"><a href="#cb127-17" aria-hidden="true" tabindex="-1"></a>  cql_set_null<span class="op">(</span>_tmp_n_bool_0<span class="op">);</span></span>
+<span id="cb127-18"><a href="#cb127-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb127-19"><a href="#cb127-19" aria-hidden="true" tabindex="-1"></a>  cql_set_notnull<span class="op">(</span>x<span class="op">,</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb127-20"><a href="#cb127-20" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> <span class="op">(;;)</span> <span class="op">{</span></span>
+<span id="cb127-21"><a href="#cb127-21" aria-hidden="true" tabindex="-1"></a>  cql_set_nullable<span class="op">(</span>_tmp_n_bool_0<span class="op">,</span> x<span class="op">.</span>is_null<span class="op">,</span> x<span class="op">.</span>value <span class="op">&lt;</span> <span class="dv">5</span><span class="op">);</span></span>
+<span id="cb127-22"><a href="#cb127-22" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(!</span>cql_is_nullable_true<span class="op">(</span>_tmp_n_bool_0<span class="op">.</span>is_null<span class="op">,</span> _tmp_n_bool_0<span class="op">.</span>value<span class="op">))</span> <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb127-23"><a href="#cb127-23" aria-hidden="true" tabindex="-1"></a>    cql_set_nullable<span class="op">(</span>x<span class="op">,</span> x<span class="op">.</span>is_null<span class="op">,</span> x<span class="op">.</span>value <span class="op">+</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb127-24"><a href="#cb127-24" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb127-25"><a href="#cb127-25" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Even for this small little case, the nullable arithmetic macros have to be used to keep <code>x</code> up to date. The result of <code>x &lt; 5</code> is of type “bool” rather than “bool not null” so a temporary variable captures the result of the expression. This is an easy case but similar things happen if the expression includes <code>CASE...WHEN...</code> or <code>IN</code> constructs. There are many other cases.</p>
+<p>So with this in mind, let’s reconsider what <code>cg_while_stmt</code> is doing:</p>
+<ul>
+<li>we start the <code>for</code> statement in the output
+<ul>
+<li>there’s a bprintf for that</li>
+</ul></li>
+<li>we evaluate the while expression, the details will be in <code>is_null</code> and <code>value</code>
+<ul>
+<li>we use CG_PUSH_EVAL for that</li>
+</ul></li>
+<li>if the result is nullable there is a helper macro <code>cql_is_nullable_true</code> that tells us if the value is not null and true</li>
+<li>if the result is not nullable we can use <code>expr_value.ptr</code> directly</li>
+<li>we make a note that we’re in a loop (this matters for statement cleanup, more on that later)</li>
+<li>we recurse to do more statements with <code>cg_stmt_list</code></li>
+<li>finally we end the <code>for</code> that we began</li>
+</ul>
+<p>This kind of structure is common to all the control flow cases. Generally, we have to deal with the fact that CQL expressions become C statements so we use a more general flow control strategy. But with this in mind, it’s easy to imagine how <code>IF</code> <code>LOOP</code> and <code>SWITCH</code> are handled.</p>
+<h3 id="cleanup-and-errors">Cleanup and Errors</h3>
+<p>There are a number of places where things can go wrong when running a CQL procedure. The most common sources are: (1) SQLite APIs, almost all of which can fail, and, (2) calling other procedures which also might fail. Here’s a very simple example:</p>
+<div class="sourceCode" id="cb128"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb128-1"><a href="#cb128-1" aria-hidden="true" tabindex="-1"></a><span class="co">/*</span></span>
+<span id="cb128-2"><a href="#cb128-2" aria-hidden="true" tabindex="-1"></a><span class="co">DECLARE PROC something_that_might_fail (arg TEXT) USING TRANSACTION;</span></span>
+<span id="cb128-3"><a href="#cb128-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb128-4"><a href="#cb128-4" aria-hidden="true" tabindex="-1"></a><span class="co">CREATE PROC p ()</span></span>
+<span id="cb128-5"><a href="#cb128-5" aria-hidden="true" tabindex="-1"></a><span class="re">BEGIN</span></span>
+<span id="cb128-6"><a href="#cb128-6" aria-hidden="true" tabindex="-1"></a><span class="co">  LET arg := &quot;test&quot;;</span></span>
+<span id="cb128-7"><a href="#cb128-7" aria-hidden="true" tabindex="-1"></a><span class="co">  CALL something_that_might_fail(arg);</span></span>
+<span id="cb128-8"><a href="#cb128-8" aria-hidden="true" tabindex="-1"></a><span class="re">END</span><span class="co">;</span></span>
+<span id="cb128-9"><a href="#cb128-9" aria-hidden="true" tabindex="-1"></a><span class="co">*/</span></span>
+<span id="cb128-10"><a href="#cb128-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb128-11"><a href="#cb128-11" aria-hidden="true" tabindex="-1"></a>cql_string_literal<span class="op">(</span>_literal_1_test_p<span class="op">,</span> <span class="st">&quot;test&quot;</span><span class="op">);</span></span>
+<span id="cb128-12"><a href="#cb128-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb128-13"><a href="#cb128-13" aria-hidden="true" tabindex="-1"></a>CQL_WARN_UNUSED cql_code p<span class="op">(</span>sqlite3 <span class="op">*</span>_Nonnull _db_<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb128-14"><a href="#cb128-14" aria-hidden="true" tabindex="-1"></a>  cql_code _rc_ <span class="op">=</span> SQLITE_OK<span class="op">;</span></span>
+<span id="cb128-15"><a href="#cb128-15" aria-hidden="true" tabindex="-1"></a>  cql_string_ref arg <span class="op">=</span> NULL<span class="op">;</span></span>
+<span id="cb128-16"><a href="#cb128-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb128-17"><a href="#cb128-17" aria-hidden="true" tabindex="-1"></a>  cql_set_string_ref<span class="op">(&amp;</span>arg<span class="op">,</span> _literal_1_test_p<span class="op">);</span></span>
+<span id="cb128-18"><a href="#cb128-18" aria-hidden="true" tabindex="-1"></a>  _rc_ <span class="op">=</span> something_that_might_fail<span class="op">(</span>_db_<span class="op">,</span> arg<span class="op">);</span></span>
+<span id="cb128-19"><a href="#cb128-19" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>_rc_ <span class="op">!=</span> SQLITE_OK<span class="op">)</span> <span class="op">{</span> cql_error_trace<span class="op">();</span> <span class="cf">goto</span> cql_cleanup<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb128-20"><a href="#cb128-20" aria-hidden="true" tabindex="-1"></a>  _rc_ <span class="op">=</span> SQLITE_OK<span class="op">;</span></span>
+<span id="cb128-21"><a href="#cb128-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb128-22"><a href="#cb128-22" aria-hidden="true" tabindex="-1"></a>cql_cleanup<span class="op">:</span></span>
+<span id="cb128-23"><a href="#cb128-23" aria-hidden="true" tabindex="-1"></a>  cql_string_release<span class="op">(</span>arg<span class="op">);</span></span>
+<span id="cb128-24"><a href="#cb128-24" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> _rc_<span class="op">;</span></span>
+<span id="cb128-25"><a href="#cb128-25" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Let’s look at this carefully:</p>
+<ul>
+<li>first, we had to declare <code>something_that_might_fail</code>
+<ul>
+<li>the declaration includes <code>USING TRANSACTION</code> indicating the procedure uses the database</li>
+<li>we didn’t provide the definition, that will lead to a link time error but we’re ignoring that for now</li>
+</ul></li>
+<li>there is a string literal named <code>_literal_1_test_p</code> that is auto-created
+<ul>
+<li><code>cql_string_literal</code> can expand into a variety of things, whatever you want “make a string literal” to mean</li>
+<li>its defined in <code>cqlrt.h</code> and it’s designed to be replaced</li>
+</ul></li>
+<li><code>cql_set_string_ref(&amp;arg, _literal_1_test_p);</code> is expected to “retain” the string (+1 ref count)</li>
+<li><code>cql_cleanup</code> is the exit label, this code will run for sure
+<ul>
+<li>cleanup statements are accumulated by writing to <code>cg_cleanup_output</code> which usually writes to the <code>proc_cleanup</code> buffer</li>
+<li>because cleanup is in its own buffer you can add to it freely whenever a new declaration that requires cleanup arises</li>
+<li>in this case the declaration of the string literal caused the <code>C</code> variable <code>arg</code> to be created and also the cleanup code</li>
+</ul></li>
+<li>now we call <code>something_that_might_fail</code> passing it our database pointer and the argument</li>
+<li>the hidden <code>_db_</code> pointer is passed to all procedures that use the database</li>
+<li>these are also the ones that can fail</li>
+<li>any failed return code (not <code>SQLITE_OK</code>) causes two things
+<ul>
+<li>the <code>cql_error_trace()</code> macro is invoked (this macro typically expands to nothing)</li>
+<li>the code stops what it’s doing and runs the cleanup code via <code>goto cql_cleanup;</code></li>
+</ul></li>
+</ul>
+<p>The essential sequence is this one:</p>
+<div class="sourceCode" id="cb129"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb129-1"><a href="#cb129-1" aria-hidden="true" tabindex="-1"></a> <span class="cf">if</span> <span class="op">(</span>_rc_ <span class="op">!=</span> SQLITE_OK<span class="op">)</span> <span class="op">{</span> cql_error_trace<span class="op">();</span> <span class="cf">goto</span> cql_cleanup<span class="op">;</span> <span class="op">}</span></span></code></pre></div>
+<p>The C code generator uses this pattern all over to check if anything went wrong and to exit with an error code. Extensive logging can be very expensive but in debug builds, it’s quite normal for <code>cql_error_trace</code> to expand into something like <code>fprintf(stderr, "error %d in %s %s:%d\n", _rc_, _PROC_, __FILE__, __LINE_)</code> which probably a lot more logging than you want in a production build but great if you’re debugging. Recall that CQL generates <code>#define _PROC_ "p"</code> before every procedure.</p>
+<p>This pattern generalizes well and indeed if we use the exception handling pattern, we get a lot of control. Let’s generalize this a tiny bit.</p>
+<div class="sourceCode" id="cb130"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb130-1"><a href="#cb130-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> PROC p (<span class="kw">OUT</span> success BOOL <span class="kw">NOT</span> <span class="kw">NULL</span>)</span>
+<span id="cb130-2"><a href="#cb130-2" aria-hidden="true" tabindex="-1"></a><span class="cf">BEGIN</span></span>
+<span id="cb130-3"><a href="#cb130-3" aria-hidden="true" tabindex="-1"></a>  LET arg <span class="op">:=</span> <span class="ot">&quot;test&quot;</span>;</span>
+<span id="cb130-4"><a href="#cb130-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">BEGIN</span> TRY</span>
+<span id="cb130-5"><a href="#cb130-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">CALL</span> something_that_might_fail(arg);</span>
+<span id="cb130-6"><a href="#cb130-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SET</span> success <span class="op">:=</span> <span class="dv">1</span>;</span>
+<span id="cb130-7"><a href="#cb130-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">END</span> TRY;</span>
+<span id="cb130-8"><a href="#cb130-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">BEGIN</span> CATCH</span>
+<span id="cb130-9"><a href="#cb130-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SET</span> success <span class="op">:=</span> <span class="dv">0</span>;</span>
+<span id="cb130-10"><a href="#cb130-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">END</span> CATCH;</span>
+<span id="cb130-11"><a href="#cb130-11" aria-hidden="true" tabindex="-1"></a><span class="cf">END</span>;</span></code></pre></div>
+<p>CQL doesn’t have complicated exception objects or anything like that, exceptions are just simple control flow. Here’s the code for the above:</p>
+<div class="sourceCode" id="cb131"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb131-1"><a href="#cb131-1" aria-hidden="true" tabindex="-1"></a>CQL_WARN_UNUSED cql_code p<span class="op">(</span>sqlite3 <span class="op">*</span>_Nonnull _db_<span class="op">,</span> cql_bool <span class="op">*</span>_Nonnull success<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb131-2"><a href="#cb131-2" aria-hidden="true" tabindex="-1"></a>  cql_contract_argument_notnull<span class="op">((</span><span class="dt">void</span> <span class="op">*)</span>success<span class="op">,</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb131-3"><a href="#cb131-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb131-4"><a href="#cb131-4" aria-hidden="true" tabindex="-1"></a>  cql_code _rc_ <span class="op">=</span> SQLITE_OK<span class="op">;</span></span>
+<span id="cb131-5"><a href="#cb131-5" aria-hidden="true" tabindex="-1"></a>  cql_string_ref arg <span class="op">=</span> NULL<span class="op">;</span></span>
+<span id="cb131-6"><a href="#cb131-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb131-7"><a href="#cb131-7" aria-hidden="true" tabindex="-1"></a>  <span class="op">*</span>success <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> <span class="co">// set out arg to non-garbage</span></span>
+<span id="cb131-8"><a href="#cb131-8" aria-hidden="true" tabindex="-1"></a>  cql_set_string_ref<span class="op">(&amp;</span>arg<span class="op">,</span> _literal_1_test_p<span class="op">);</span></span>
+<span id="cb131-9"><a href="#cb131-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">// try</span></span>
+<span id="cb131-10"><a href="#cb131-10" aria-hidden="true" tabindex="-1"></a>  <span class="op">{</span></span>
+<span id="cb131-11"><a href="#cb131-11" aria-hidden="true" tabindex="-1"></a>    _rc_ <span class="op">=</span> something_that_might_fail<span class="op">(</span>_db_<span class="op">,</span> arg<span class="op">);</span></span>
+<span id="cb131-12"><a href="#cb131-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_rc_ <span class="op">!=</span> SQLITE_OK<span class="op">)</span> <span class="op">{</span> cql_error_trace<span class="op">();</span> <span class="cf">goto</span> catch_start_1<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb131-13"><a href="#cb131-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>success <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb131-14"><a href="#cb131-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">goto</span> catch_end_1<span class="op">;</span></span>
+<span id="cb131-15"><a href="#cb131-15" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb131-16"><a href="#cb131-16" aria-hidden="true" tabindex="-1"></a>  catch_start_1<span class="op">:</span> <span class="op">{</span></span>
+<span id="cb131-17"><a href="#cb131-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>success <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb131-18"><a href="#cb131-18" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb131-19"><a href="#cb131-19" aria-hidden="true" tabindex="-1"></a>  catch_end_1<span class="op">:;</span></span>
+<span id="cb131-20"><a href="#cb131-20" aria-hidden="true" tabindex="-1"></a>  _rc_ <span class="op">=</span> SQLITE_OK<span class="op">;</span></span>
+<span id="cb131-21"><a href="#cb131-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb131-22"><a href="#cb131-22" aria-hidden="true" tabindex="-1"></a>  cql_string_release<span class="op">(</span>arg<span class="op">);</span></span>
+<span id="cb131-23"><a href="#cb131-23" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> _rc_<span class="op">;</span></span>
+<span id="cb131-24"><a href="#cb131-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The code is nearly the same. Let’s look at the essential differences:</p>
+<ul>
+<li>If there is an error, the code hits <code>goto catch_start_1</code></li>
+<li>If the try block succeeds, the code hits <code>goto catch_end_1</code></li>
+<li>both branches set the <code>success</code> out parameter</li>
+<li>we added that out argument, CQL generated an error check to ensure that arg 1 is not null
+<ul>
+<li><code>cql_contract_argument_notnull((void *)success, 1)</code>, the 1 means arg 1</li>
+<li>the hidden <code>_db_</code> arg doesn’t count</li>
+</ul></li>
+</ul>
+<p>How does this happen? <code>cg_trycatch_helper</code></p>
+<div class="sourceCode" id="cb132"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb132-1"><a href="#cb132-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Very little magic is needed to do try/catch in our context.  The error</span></span>
+<span id="cb132-2"><a href="#cb132-2" aria-hidden="true" tabindex="-1"></a><span class="co">// handlers for all the sqlite calls check _rc_ and if it&#39;s an error they</span></span>
+<span id="cb132-3"><a href="#cb132-3" aria-hidden="true" tabindex="-1"></a><span class="co">// &quot;goto&quot; the current error target.  That target is usually CQL_CLEANUP_DEFAULT_LABEL.</span></span>
+<span id="cb132-4"><a href="#cb132-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Inside the try block, the cleanup handler is changed to the catch block.</span></span>
+<span id="cb132-5"><a href="#cb132-5" aria-hidden="true" tabindex="-1"></a><span class="co">// The catch block puts it back.  Otherwise, generate nested statements as usual.</span></span>
+<span id="cb132-6"><a href="#cb132-6" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> cg_trycatch_helper<span class="op">(</span>ast_node <span class="op">*</span>try_list<span class="op">,</span> ast_node <span class="op">*</span>try_extras<span class="op">,</span> ast_node <span class="op">*</span>catch_list<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb132-7"><a href="#cb132-7" aria-hidden="true" tabindex="-1"></a>  CHARBUF_OPEN<span class="op">(</span>catch_start<span class="op">);</span></span>
+<span id="cb132-8"><a href="#cb132-8" aria-hidden="true" tabindex="-1"></a>  CHARBUF_OPEN<span class="op">(</span>catch_end<span class="op">);</span></span>
+<span id="cb132-9"><a href="#cb132-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb132-10"><a href="#cb132-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">// We need unique labels for this block</span></span>
+<span id="cb132-11"><a href="#cb132-11" aria-hidden="true" tabindex="-1"></a>  <span class="op">++</span>catch_block_count<span class="op">;</span></span>
+<span id="cb132-12"><a href="#cb132-12" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(&amp;</span>catch_start<span class="op">,</span> <span class="st">&quot;catch_start_%d&quot;</span><span class="op">,</span> catch_block_count<span class="op">);</span></span>
+<span id="cb132-13"><a href="#cb132-13" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(&amp;</span>catch_end<span class="op">,</span> <span class="st">&quot;catch_end_%d&quot;</span><span class="op">,</span> catch_block_count<span class="op">);</span></span>
+<span id="cb132-14"><a href="#cb132-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb132-15"><a href="#cb132-15" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Divert the error target.</span></span>
+<span id="cb132-16"><a href="#cb132-16" aria-hidden="true" tabindex="-1"></a>  CSTR saved_error_target <span class="op">=</span> error_target<span class="op">;</span></span>
+<span id="cb132-17"><a href="#cb132-17" aria-hidden="true" tabindex="-1"></a>  bool_t saved_error_target_used <span class="op">=</span> error_target_used<span class="op">;</span></span>
+<span id="cb132-18"><a href="#cb132-18" aria-hidden="true" tabindex="-1"></a>  error_target <span class="op">=</span> catch_start<span class="op">.</span>ptr<span class="op">;</span></span>
+<span id="cb132-19"><a href="#cb132-19" aria-hidden="true" tabindex="-1"></a>  error_target_used <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb132-20"><a href="#cb132-20" aria-hidden="true" tabindex="-1"></a> <span class="op">...</span></span></code></pre></div>
+<p>All of the error handling does goto <code>error_target</code> whatever that is. The try/catch pattern simply changes the current error target. The rest of the code is just to save the current error target and to create unique labels for the the control flow.</p>
+<p>The important notion is that, if anything goes wrong, whatever it is, the generator simply does a <code>goto error_target</code> and that will either hit the catch block or else go to cleanup.</p>
+<p>The <code>THROW</code> operation illustrates this well:</p>
+<div class="sourceCode" id="cb133"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb133-1"><a href="#cb133-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Convert _rc_ into an error code.  If it already is one keep it.</span></span>
+<span id="cb133-2"><a href="#cb133-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Then go to the current error target.</span></span>
+<span id="cb133-3"><a href="#cb133-3" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> cg_throw_stmt<span class="op">(</span>ast_node <span class="op">*</span>ast<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb133-4"><a href="#cb133-4" aria-hidden="true" tabindex="-1"></a>  Contract<span class="op">(</span>is_ast_throw_stmt<span class="op">(</span>ast<span class="op">));</span></span>
+<span id="cb133-5"><a href="#cb133-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb133-6"><a href="#cb133-6" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(</span>cg_main_output<span class="op">,</span> <span class="st">&quot;_rc_ = cql_best_error(%s);</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">,</span> rcthrown_current<span class="op">);</span></span>
+<span id="cb133-7"><a href="#cb133-7" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(</span>cg_main_output<span class="op">,</span> <span class="st">&quot;goto %s;</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">,</span> error_target<span class="op">);</span></span>
+<span id="cb133-8"><a href="#cb133-8" aria-hidden="true" tabindex="-1"></a>  error_target_used <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb133-9"><a href="#cb133-9" aria-hidden="true" tabindex="-1"></a>  rcthrown_used <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb133-10"><a href="#cb133-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>first we make sure <em>rc</em> has some kind of error in it either <code>rcthrown_current</code> or else <code>SQLITE_ERROR</code></li>
+<li>then we goto the current error target</li>
+<li><code>error_target_used</code> tracks whether there were any possible errors, this is just to avoid C compiler errors about unused labels.
+<ul>
+<li>if the label is not used it won’t be emitted</li>
+<li>the code never jump back to an error label so we’ll always know if it was used before we need to emit it</li>
+</ul></li>
+</ul>
+<p>Note: every catch block captures the value of <code>_rc_</code> in a local variable whose name is in <code>rcthrown_current</code>. This is the current failing result code accessible by <code>@RC</code> in CQL.</p>
+<p>A catch block can therefore do stuff like:</p>
+<div class="sourceCode" id="cb134"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb134-1"><a href="#cb134-1" aria-hidden="true" tabindex="-1"></a><span class="cf">IF</span> @RC <span class="op">=</span> <span class="dv">1</span> <span class="cf">THEN</span></span>
+<span id="cb134-2"><a href="#cb134-2" aria-hidden="true" tabindex="-1"></a>  THROW;</span>
+<span id="cb134-3"><a href="#cb134-3" aria-hidden="true" tabindex="-1"></a><span class="cf">ELSE</span></span>
+<span id="cb134-4"><a href="#cb134-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">call</span> attempt_retry();</span>
+<span id="cb134-5"><a href="#cb134-5" aria-hidden="true" tabindex="-1"></a><span class="cf">END</span> <span class="cf">IF</span>;</span></code></pre></div>
+<p>or something like that.</p>
+<p>This entire mechanism is built with basically just a few state variables that nest. There is no complicated stack walking or anything like that. All the code has to do is chain the error labels together and let users create new catch blocks with new error labels. All that together gives you very flexible try/catch behaviour.</p>
 </body>
 </html>

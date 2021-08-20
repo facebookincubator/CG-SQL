@@ -910,3 +910,198 @@ So with this in mind, let's reconsider what `cg_while_stmt` is doing:
 This kind of structure is common to all the control flow cases.  Generally, we have to deal with the
 fact that CQL expressions become C statements so we use a more general flow control strategy. But with this
 in mind, it's easy to imagine how `IF` `LOOP` and `SWITCH` are handled.
+
+### Cleanup and Errors
+
+There are a number of places where things can go wrong when running a CQL procedure.  The most
+common sources are: (1) SQLite APIs, almost all of which can fail, and, (2) calling other procedures
+which also might fail.  Here's a very simple example:
+
+```C
+/*
+DECLARE PROC something_that_might_fail (arg TEXT) USING TRANSACTION;
+
+CREATE PROC p ()
+BEGIN
+  LET arg := "test";
+  CALL something_that_might_fail(arg);
+END;
+*/
+
+cql_string_literal(_literal_1_test_p, "test");
+
+CQL_WARN_UNUSED cql_code p(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_string_ref arg = NULL;
+
+  cql_set_string_ref(&arg, _literal_1_test_p);
+  _rc_ = something_that_might_fail(_db_, arg);
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_string_release(arg);
+  return _rc_;
+}
+```
+
+Let's look at this carefully:
+
+* first, we had to declare `something_that_might_fail`
+  * the declaration includes `USING TRANSACTION` indicating the procedure uses the database
+  * we didn't provide the definition, that will lead to a link time error but we're ignoring that for now
+* there is a string literal named `_literal_1_test_p` that is auto-created
+  * `cql_string_literal` can expand into a variety of things, whatever you want "make a string literal" to mean
+  * its defined in `cqlrt.h` and it's designed to be replaced
+* `cql_set_string_ref(&arg, _literal_1_test_p);` is expected to "retain" the string (+1 ref count)
+* `cql_cleanup` is the exit label, this code will run for sure
+  * cleanup statements are accumulated by writing to `cg_cleanup_output` which usually writes to the `proc_cleanup` buffer
+  * because cleanup is in its own buffer you can add to it freely whenever a new declaration that requires cleanup arises
+  * in this case the declaration of the string literal caused the `C` variable `arg` to be created and also the cleanup code
+*  now we call `something_that_might_fail` passing it our database pointer and the argument
+  * the hidden `_db_` pointer is passed to all procedures that use the database
+  * these are also the ones that can fail
+* any failed return code (not `SQLITE_OK`) causes two things
+  * the `cql_error_trace()` macro is invoked (this macro typically expands to nothing)
+  * the code stops what it's doing and runs the cleanup code via `goto cql_cleanup;`
+
+The essential sequence is this one:
+
+```C
+ if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+```
+
+The C code generator uses this pattern all over to check if anything went wrong and to exit with an error code.
+Extensive logging can be very expensive but in debug builds, it's quite normal for `cql_error_trace` to expand
+into something like `fprintf(stderr, "error %d in %s %s:%d\n", _rc_, _PROC_, __FILE__, __LINE_)` which probably
+a lot more logging than you want in a production build but great if you're debugging.  Recall that CQL generates
+`#define _PROC_ "p"` before every procedure.
+
+This pattern generalizes well and indeed if we use the exception handling pattern, we get a lot of control.
+Let's generalize this a tiny bit.
+
+```SQL
+CREATE PROC p (OUT success BOOL NOT NULL)
+BEGIN
+  LET arg := "test";
+  BEGIN TRY
+    CALL something_that_might_fail(arg);
+    SET success := 1;
+  END TRY;
+  BEGIN CATCH
+    SET success := 0;
+  END CATCH;
+END;
+```
+
+CQL doesn't have complicated exception objects or anything like that, exceptions are just simple
+control flow.  Here's the code for the above:
+
+```C
+CQL_WARN_UNUSED cql_code p(sqlite3 *_Nonnull _db_, cql_bool *_Nonnull success) {
+  cql_contract_argument_notnull((void *)success, 1);
+
+  cql_code _rc_ = SQLITE_OK;
+  cql_string_ref arg = NULL;
+
+  *success = 0; // set out arg to non-garbage
+  cql_set_string_ref(&arg, _literal_1_test_p);
+  // try
+  {
+    _rc_ = something_that_might_fail(_db_, arg);
+    if (_rc_ != SQLITE_OK) { cql_error_trace(); goto catch_start_1; }
+    *success = 1;
+    goto catch_end_1;
+  }
+  catch_start_1: {
+    *success = 0;
+  }
+  catch_end_1:;
+  _rc_ = SQLITE_OK;
+
+  cql_string_release(arg);
+  return _rc_;
+}
+```
+
+The code is nearly the same.  Let's look at the essential differences:
+
+* If there is an error, the code hits `goto catch_start_1`
+* If the try block succeeds, the code hits `goto catch_end_1`
+* both branches set the `success` out parameter
+* we added that out argument, CQL generated an error check to ensure that arg 1 is not null
+  * `cql_contract_argument_notnull((void *)success, 1)`, the 1 means arg 1
+  * the hidden `_db_` arg doesn't count
+
+How does this happen?  `cg_trycatch_helper`
+
+```C
+// Very little magic is needed to do try/catch in our context.  The error
+// handlers for all the sqlite calls check _rc_ and if it's an error they
+// "goto" the current error target.  That target is usually CQL_CLEANUP_DEFAULT_LABEL.
+// Inside the try block, the cleanup handler is changed to the catch block.
+// The catch block puts it back.  Otherwise, generate nested statements as usual.
+static void cg_trycatch_helper(ast_node *try_list, ast_node *try_extras, ast_node *catch_list) {
+  CHARBUF_OPEN(catch_start);
+  CHARBUF_OPEN(catch_end);
+
+  // We need unique labels for this block
+  ++catch_block_count;
+  bprintf(&catch_start, "catch_start_%d", catch_block_count);
+  bprintf(&catch_end, "catch_end_%d", catch_block_count);
+
+  // Divert the error target.
+  CSTR saved_error_target = error_target;
+  bool_t saved_error_target_used = error_target_used;
+  error_target = catch_start.ptr;
+  error_target_used = 0;
+ ...
+```
+All of the error handling does goto `error_target` whatever that is.  The
+try/catch pattern simply changes the current error target.  The rest of
+the code is just to save the current error target and to create unique
+labels for the the control flow.
+
+The important notion is that, if anything goes wrong, whatever it is,
+the generator simply does a `goto error_target` and that will either
+hit the catch block or else go to cleanup.
+
+The `THROW` operation illustrates this well:
+
+```C
+// Convert _rc_ into an error code.  If it already is one keep it.
+// Then go to the current error target.
+static void cg_throw_stmt(ast_node *ast) {
+  Contract(is_ast_throw_stmt(ast));
+
+  bprintf(cg_main_output, "_rc_ = cql_best_error(%s);\n", rcthrown_current);
+  bprintf(cg_main_output, "goto %s;\n", error_target);
+  error_target_used = 1;
+  rcthrown_used = 1;
+}
+```
+
+* first we make sure _rc_ has some kind of error in it either `rcthrown_current` or else `SQLITE_ERROR`
+* then we goto the current error target
+* `error_target_used` tracks whether there were any possible errors, this is just to avoid C compiler errors about unused labels.
+  * if the label is not used it won't be emitted
+  * the code never jump back to an error label so we'll always know if it was used before we need to emit it
+
+Note: every catch block captures the value of `_rc_` in a local variable whose name is in `rcthrown_current`.
+This is the current failing result code accessible by `@RC` in CQL.
+
+A catch block can therefore do stuff like:
+
+```sql
+IF @RC = 1 THEN
+  THROW;
+ELSE
+  call attempt_retry();
+END IF;
+```
+
+or something like that.
+
+This entire mechanism is built with basically just a few state variables that nest.  There is no complicated stack walking
+or anything like that.  All the code has to do is chain the error labels together and let users create new catch blocks
+with new error labels.  All that together gives you very flexible try/catch behaviour.
