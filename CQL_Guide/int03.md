@@ -45,6 +45,149 @@ functions.  This all happens in `cg_c.c`.  From a big picture perspective, these
 There are some very important building blocks used to solve these problems we will start with those, then move to
 a discussion of each of the essential kinds of code generation that we have to do to get working programs.
 
+### Launching the Code Generator
+
+Once semantic analysis is done all of the code generators have the same contract: they
+have a main function like `cg_c_main` for the C code generator.  It gets the root of
+the AST and it can use the public interface of the semantic analyzer to get additional
+information.  See [Part 2](https://cgsql.dev/cql-guide/int02) for those details.
+
+```C
+// Main entry point for code-gen.  This will set up the buffers for the global
+// variables and any loose calls or DML.  Any code that needs to run in the
+// global scope will be added to the global_proc.  This is the only codegen
+// error that is possible.  If you need global code and you don't have a global
+// proc then you can't proceed.  Semantic analysis doƒesn't want to know that stuff.
+// Otherwise all we do is set up the most general buffers for the global case and
+// spit out a function with the correct name.
+cql_noexport void cg_c_main(ast_node *head) { ... }
+```
+
+In addition to initializing its scratch storage, the main entry point also sets up a
+symbol table for AST dispatch just like the `gen_` and `sem_` functions do.  Here
+are some samples from that table with the most common options:
+
+```C
+  DDL_STMT_INIT(drop_table_stmt);
+  DDL_STMT_INIT(drop_view_stmt);
+  DDL_STMT_INIT(create_table_stmt);
+  DDL_STMT_INIT(create_view_stmt);
+```
+The DDL (Data Definition Lanaguage) statements all get the same handling:  The text of the statement
+is generated from the AST. Any variables are bound and then the statement is executed.  The work
+is done with `cg_bound_sql_statement` which will be discussed later.
+
+```C
+// Straight up DDL invocation.  The ast has the statement, execute it!
+// We don't minify the aliases because DDL can have views and the view column names
+// can be referred to in users of the view.  Loose select statements can have
+// no external references to column aliases.
+static void cg_any_ddl_stmt(ast_node *ast) {
+  cg_bound_sql_statement(NULL, ast, CG_EXEC|CG_NO_MINIFY_ALIASES);
+}
+```
+
+DML (Data Manipulation Language) statements are declared similarly:
+
+```
+  STD_DML_STMT_INIT(begin_trans_stmt);
+  STD_DML_STMT_INIT(commit_trans_stmt);
+  STD_DML_STMT_INIT(rollback_trans_stmt);
+  STD_DML_STMT_INIT(savepoint_stmt);
+  STD_DML_STMT_INIT(delete_stmt);
+```
+
+They are handled by `cg_std_dml_exec_stmt`; the processing is identical to
+DDL except `CG_MINIFY_ALIASES` is specified.  This allows the code generator
+to remove unused column aliases in select statements to save space.
+
+```
+// Straight up DML invocation.  The ast has the statement, execute it!
+static void cg_std_dml_exec_stmt(ast_node *ast) {
+  cg_bound_sql_statement(NULL, ast, CG_EXEC|CG_MINIFY_ALIASES);
+}
+```
+
+Note that this flag difference only matters for the `create view` statement
+but for symmetry all the DDL is handled with one macro and all the DML
+with the second macro.
+
+Next, the easiest case... there are a bunch of statements that create
+no code-gen at all.  These are type defintions that are interesting
+only to the semantic analyzer or other control statements.  Some examples:
+
+```C
+  NO_OP_STMT_INIT(declare_enum_stmt);
+  NO_OP_STMT_INIT(declare_named_type);
+```
+
+Next, the general purpose statement handler.  This creates a mapping
+from the `if_stmt` AST node to `cg_if_stmt`.
+
+```C
+  STMT_INIT(if_stmt);
+  STMT_INIT(switch_stmt);
+  STMT_INIT(while_stmt);
+  STMT_INIT(assign);
+```
+
+The next group is the expressions, with precedence and operator specified. There is a lot of code sharing
+as you can see from this sample:
+
+```C
+  EXPR_INIT(num, cg_expr_num, "num", C_EXPR_PRI_ROOT);
+  EXPR_INIT(str, cg_expr_str, "STR", C_EXPR_PRI_ROOT);
+  EXPR_INIT(null, cg_expr_null, "NULL", C_EXPR_PRI_ROOT);
+  EXPR_INIT(dot, cg_expr_dot, "DOT", C_EXPR_PRI_ROOT);
+
+  EXPR_INIT(mul, cg_binary, "*", C_EXPR_PRI_MUL);
+  EXPR_INIT(div, cg_binary, "/", C_EXPR_PRI_MUL);
+  EXPR_INIT(mod, cg_binary, "%", C_EXPR_PRI_MUL);
+  EXPR_INIT(add, cg_binary, "+", C_EXPR_PRI_ADD);
+  EXPR_INIT(sub, cg_binary, "-", C_EXPR_PRI_ADD);
+  EXPR_INIT(not, cg_unary, "!", C_EXPR_PRI_UNARY);
+  EXPR_INIT(tilde, cg_unary, "~", C_EXPR_PRI_UNARY);
+  EXPR_INIT(uminus, cg_unary, "-", C_EXPR_PRI_UNARY);
+```
+
+Most (not all) of the binary operators are handled with one function `cg_binary` and likewise
+most unary operators are handled with `cg_unary`.
+
+Note: the precedence constants are the `C_EXPR_PRI_*` flavor because parentheses will be
+generated based on the C rules at this point.  Importantly, the AST still, and always
+has the user-specified order of operations encoded in it, there's no change there.  The
+only thing that changes is where parentheses are needed to get the desired result.  Parens
+may need to be added and some that were present in the original text might no longer be needed.
+
+e.g.
+```SQL
+CREATE PROC p ()
+BEGIN
+  /* NOT is weaker than + */
+  LET x := (NOT 1) + (NOT 2);
+  SET x := NOT 1 + 2;
+END;
+```
+
+```C
+void p(void) {
+  cql_bool x = 0;
+
+  /* ! is stronger than + */
+  x = ! 1 + ! 2;
+  x = ! (1 + 2);
+}
+```
+
+Finally, many built-in functions need special codegen.
+
+```C
+  FUNC_INIT(coalesce);
+  FUNC_INIT(printf);
+```
+
+`FUNC_INIT(coalesce)` creates a mapping between the function name `coalesce` and the generator `cg_func_coalesce`.
+
 ### Character Buffers and Byte Buffers
 
 The first kind of text output that CQL could produce was the AST echoing.  This was original done directly with `fprintf` but
@@ -409,8 +552,9 @@ static void cg_expr_null(ast_node *expr, CSTR op, charbuf *is_null, charbuf *val
 }
 ```
 
-Now this may be looking familiar.  The signature of the code generator is very much like the signature of the semantic
-analyzer for the same AST fragment.
+Now this may be looking familiar: the signature of the code generator is something very much like the
+signature of the the `gen_` functions in the echoing code.  That's really because in some sense
+the echoing code is like a very simple code generator itself.
 
 * `expr` : the AST we are generating code for
 * `op` : the relevant operator if any (operators share code)
@@ -419,16 +563,17 @@ analyzer for the same AST fragment.
 * `pri` : the binding strength of the node above this one
 * `pri_new` : the binding strength of this node
 
-`pri` and `pri_new` work exactly like they did in the echoing code (Part 1), they are used to allow the codegen
-to decide if it needs to emit parentheses.  Note that the binding strengths now will be the C binding strengths
-NOT the SQL binding strengths.  The placement of parens frequently has to change because the order of operations
-is different in C.  For instance in SQL `NOT` is very weak but in C logical not (`!`) is very strong.
+This particular generator is going to produce `"NULL"` for the `value` and `"1"` for the `is_null` expression.
 
-This particular generator is going to produce `"NULL"` for the value and `"1"` for the is_null expression.
+`is_null` and `value` are the chief outputs, and the caller will use these to create its own expression results
+with recursive logic.  But the expression logic can also write into the statement stream, and as we'll see,
+it does.
 
-The caller will use these to create its own expression results.
+`pri` and `pri_new` work exactly like they did in the echoing code (see [Part 1](https://cgsql.dev/cql-guide/int01)),
+they are used to allow the code generator to decide if it needs to emit parentheses.  But recall that the binding strengths
+now will be the C binding strengths NOT the SQL binding strengths (discussed above).
 
-Let's look at one of the simplest examples, this is the `IS NULL` operator handled by `cg_expr_is_null`
+Let's look at one of the simplest operators: the `IS NULL` operator handled by `cg_expr_is_null`
 
 ```C
 // The code-gen for is_null is one of the easiest.  The recursive call

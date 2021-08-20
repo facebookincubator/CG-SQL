@@ -236,7 +236,7 @@
 </ul></li>
 <li><a href="#part-2-semantic-analysis">Part 2: Semantic Analysis</a>
 <ul>
-<li><a href="#overview">Overview</a></li>
+<li><a href="#preface-1">Preface</a></li>
 </ul></li>
 <li><a href="#semantic-analysis">Semantic Analysis</a>
 <ul>
@@ -256,6 +256,16 @@
 <li><a href="#results-of-semantic-analysis">Results of Semantic Analysis</a></li>
 <li><a href="#recap">Recap</a></li>
 </ul></li>
+<li><a href="#part-3-c-code-generation">Part 3: C Code Generation</a>
+<ul>
+<li><a href="#preface-2">Preface</a></li>
+</ul></li>
+<li><a href="#c-code-generation">C Code Generation</a>
+<ul>
+<li><a href="#launching-the-code-generator">Launching the Code Generator</a></li>
+<li><a href="#character-buffers-and-byte-buffers">Character Buffers and Byte Buffers</a></li>
+<li><a href="#expressions">Expressions</a></li>
+</ul></li>
 </ul>
 </nav>
 <!--- @generated -->
@@ -268,68 +278,70 @@
 -->
 <h3 id="preface">Preface</h3>
 <p>The following is a summary of the implementation theory of the CQL compiler. This is an adjuct to the Guide proper, which describes the language, and to a lesser extent the code that the compiler generates.</p>
-<p>The actual code is heavily commented, so it’s better to read the code to see the details of how any particular operation happens rather than try to guess from the language specification or from this overview. However, some things, like general principles, really are nowhere, or everywhere, in the codebase and its important to understand how things hang together.</p>
-<p>If you choose to go on adventures in the source code, especially if you aren’t already familiar with compilers and how they are typically built, this is a good place to start.</p>
+<p>The actual code is heavily commented, so it’s better to read the code to see the details of how any particular operation happens rather than try to guess from the language specification or from this overview. However, some things, like general principles, really are nowhere (or everywhere) in the codebase and it’s important to understand how things hang together.</p>
+<p>If you choose to go on adventures in the source code, especially if you aren’t already familiar with compilers and how they are typically built, this document is a good place to start.</p>
 <h2 id="general-structure">General Structure</h2>
-<p>The CQL compiler uses a very standard lex+yacc parser, though to be more precise it’s flex+bison. The grammar is a large subset of the SQLite dialect of SQL augmented with control flow and compiler directives. As a consequence its a useful asset in and of itself – if you’re looking for an economical SQL grammar you could do a lot worse than start with the one CQL uses. The grammar is of course in the usual <code>.y</code> format that bison consumes but its also extracted into more readable versions for use in the railroad diagram and the documentation. Any of those sources would be a good starting place for a modest SQL project.</p>
+<p>The CQL compiler uses a very standard lex+yacc parser, though to be more precise it’s flex+bison. The grammar is a large subset of the SQLite dialect of SQL augmented with control flow and compiler directives. As a consequence, it’s a useful asset in-and-of-itself. If you’re looking for an economical SQL grammar, you could do a lot worse than start with the one CQL uses. The grammar is of course in the usual <code>.y</code> format that bison consumes but it’s also extracted into more readable versions for use in the railroad diagram and the Guide documentation. Any of those sources would be a good starting place for a modest SQL project in need of a grammar.</p>
 <h3 id="lexical-analysis">Lexical Analysis</h3>
-<p>Inside of <code>cql.l</code> you’ll find the formal defintion of all the lexemes. There are many that correspond to the various tokens needed to parse the SQL language. There’s no need to dicsuss the approximately 150 such tokens but the following points are of general interest:</p>
+<p>Inside of <code>cql.l</code> you’ll find the formal defintion of all the tokens. These of course correspond to the various tokens needed to parse the SQL language, plus a few more of the CQL control flow extensions. There’s no need to discuss the approximately 150 such tokens, but the following points are of general interest:</p>
 <ul>
-<li>the lexer expects plain text files, and all the lexemes are defined in plain ASCII only, however
+<li>the lexer expects plain text files, and all the tokens are defined in plain ASCII only, however
 <ul>
 <li>the presence of UTF8 characters in places where any text is legal (such as string literals) should just work</li>
 </ul></li>
-<li>all of the lexemes are case-insensitive
+<li>all of the tokens are case-insensitive
 <ul>
-<li>this means only vanilla ASCII insensitivity, no attempt is made to understand more complex code points</li>
+<li>this means only vanilla ASCII insensitivity, no attempt is made to understand more complex UNICODE code-points</li>
 </ul></li>
-<li>multi-word lexemes typically are defined with an expression like this: <code>IS[ \t]+NOT[ \t]+FALSE/[^A-Z_]</code>
+<li>multi-word tokens typically are defined with an expression like this: <code>IS[ \t]+NOT[ \t]+FALSE/[^A-Z_]</code>
 <ul>
-<li>in most cases, to avoid ambiguity, and to get order of operations correct, the entire word sequence is one lexeme</li>
+<li>in most cases, to avoid ambiguity, and to get order of operations correct, the entire word sequence is one token</li>
 <li>only spaces and tabs are allowed between the words</li>
-<li>the token ends on non-identifier characters, so the text “X IS NOT FALSEY” must become the lexemes { <code>X</code>, <code>IS_NOT</code>, <code>FALSEY</code> } and not { <code>X</code>, <code>IS_NOT_FALSE</code>, <code>Y</code> }
+<li>the token ends on non-identifier characters, so the text “X IS NOT FALSEY” must become the tokens { <code>X</code>, <code>IS_NOT</code>, <code>FALSEY</code> } and not { <code>X</code>, <code>IS_NOT_FALSE</code>, <code>Y</code> }
 <ul>
-<li>the latter would result in the longest lexeme so without the trailing qualifier and hence would be preferred, hence where a contuation is possible the trailing context must be specified in multi=word lexemes</li>
+<li>the second option is actually the longest token, so without the trailing qualifier it would be preferred</li>
+<li>hence, where a continuation is possible, the trailing context must be specified in multi=word tokens</li>
+<li>a quick reading shows this isn’t done completely consistently and that should be fixed…</li>
 </ul></li>
-<li>Note: a quick reading shows this isn’t done completely consistently and that should be fixed</li>
 </ul></li>
 <li>there is special processing needed to lex <code>/* ... */</code> comments correctly</li>
-<li>there are token types for each of the sorts of literals that can be encountered, special care is taken to keep the literals in string form so that no precision is lost
+<li>there are token types for each of the sorts of literals that can be encountered
 <ul>
-<li>integer literals are compared against 0x7fffffff and if greater they automatically become long literals even if they are not marekd with the trailing <code>L</code> as in <code>1L</code></li>
-<li>string literals include the quotation marks in the lexeme text which distinguishes them from identifiers, they are otherwise encoded similarly</li>
+<li>special care is taken to keep the literals in string form so that no precision is lost</li>
+<li>integer literals are compared against 0x7fffffff and if greater they automatically become long literals even if they are not marked with the trailing <code>L</code> as in <code>1L</code></li>
+<li>string literals include the quotation marks in the token text which distinguishes them from identifiers, they are otherwise encoded similarly</li>
 </ul></li>
-<li>the character class <code>[-+&amp;~|^/%*(),.;!&lt;&gt;:=]</code> produces single character tokens for identifiers, other non-matching single characters (e.g. <code>'$'</code> produce an error)</li>
+<li>the character class <code>[-+&amp;~|^/%*(),.;!&lt;&gt;:=]</code> produces single character tokens for operators, other non-matching single characters (e.g. <code>'$'</code> produce an error)</li>
 <li>line directives <code>^#\ [0-9]+\ \"[^"]*\".*</code> get special processing so that pre-processed input does not lose file and line number fidelity</li>
 </ul>
 <h3 id="parsing-and-the-abstract-syntax-tree">Parsing and the Abstract Syntax Tree</h3>
-<p>Inside of <code>cql.y</code> you will find the token declarations, precededence rules, and all of the productions in the overall grammar. The grammar processing does as little as possible in that stage to create an abstract syntax tree. AST itself is a simple binary tree; where nodes might require more than just left and right children to specify things fully, additional nodes are used in the tree shape rather than introducy n-ary nodes. This means the tree is sometimes bigger but generally not very much bigger. The benefit is that the AST can always be walked generically as a binary tree, so if you need to find all the <code>table_factor</code> nodes it is easy to do so without having to worry about how every kind of node expands. If new node types come along the generic walkers can go through those as well. All of the grammar productions simply make one or more AST nodes and link them together so that in the end there is a single root for the entire program.</p>
-<p>There are 4 kinds of ast nodes, they all begin with the following 5 fields, these represent the AST base type if you like.</p>
+<p>Inside of <code>cql.y</code> you will find the token declarations, precedence rules, and all of the productions in the overall grammar. The grammar processing does as little as possible in that stage to create an abstract syntax tree (AST). The AST itself is a simple binary tree; where nodes might require more than just left and right children to specify the syntax fully, additional nodes are used in the tree shape rather than introduce n-ary nodes. This means the tree is sometimes bigger, but generally not very much bigger. The benefit of this choice is that the AST can always be walked generically as a binary tree, so if you need to find all the <code>table_factor</code> nodes it is easy to do so without having to worry about how every kind of node expands. If new node types come along the generic walkers can go through those new nodes as well. All of the grammar productions simply make one or more AST nodes and link them together so that in the end there is a single root for the entire program in a binary tree.</p>
+<p>There are 4 kinds of AST nodes, they all begin with the following five fields, these represent the AST “base type” if you like.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>  <span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>_Nonnull type<span class="op">;</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">struct</span> sem_node <span class="op">*</span>_Nullable sem<span class="op">;</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">struct</span> ast_node <span class="op">*</span>_Nullable parent<span class="op">;</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int32_t</span> lineno<span class="op">;</span></span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>_Nonnull filename<span class="op">;</span></span></code></pre></div>
 <ul>
-<li><code>type</code> – a string literal that uniquely identifies the node type
+<li><code>type</code> : a string literal that uniquely identifies the node type
 <ul>
-<li>the string literal is compared for identity (it’s an exact pointer match) you don’t <code>strcmp</code> it</li>
+<li>the string literal is compared for identity (it’s an exact pointer match) you don’t <code>strcmp</code> types</li>
 </ul></li>
-<li><code>sem</code> – begins as <code>NULL</code> this is where the semantic type goes once semantic processing happens</li>
-<li><code>parent</code> – the parent node in the AST (not often used but sometimes indispensible)</li>
-<li><code>lineno</code> – the line number of the file that had the text that led to this AST (useful for errors)</li>
-<li><code>filename</code> – the name of the file that had the text that led to this AST (useful for errors)
+<li><code>sem</code> : begins as <code>NULL</code> this is where the semantic type goes once semantic processing happens</li>
+<li><code>parent</code> : the parent node in the AST (not often used but sometimes indispensible)</li>
+<li><code>lineno</code> : the line number of the file that had the text that led to this AST (useful for errors)</li>
+<li><code>filename</code> : the name of the file that had the text that led to this AST (useful for errors)
 <ul>
 <li>this string is durable, should not be mutated, and is shared between MANY nodes</li>
 </ul></li>
 </ul>
-<h4 id="generic-ast-node">Generic AST node</h4>
+<h4 id="the-generic-binary-ast-node-ast_node">The Generic Binary AST node <code>ast_node</code></h4>
 <div class="sourceCode" id="cb2"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">struct</span> ast_node <span class="op">{</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">...</span> the common fields</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">struct</span> ast_node <span class="op">*</span>_Nullable left<span class="op">;</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">struct</span> ast_node <span class="op">*</span>_Nullable right<span class="op">;</span></span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> ast_node<span class="op">;</span></span></code></pre></div>
-<p>This node gives the tree its shape, this is is how all the expression operators and statments get encoded. An example says this more clearly</p>
+<p>This node gives the tree its shape, this is is how all the expression operators and statments get encoded. An example shows this more clearly:</p>
 <pre><code>SET X := 1 + 3;
 
   {assign}
@@ -337,21 +349,21 @@
   | {add}
     | {int 1}
     | {int 3}</code></pre>
-<p>In the above “assign” and “add” are the generic nodes. Node that these can be leaves but often are not.</p>
-<p>Note that in the above the node type was directly printed (because it’s a meaningful name). Likewise, the type needs no decoding when viewing the AST in a debugger. Simply printing the node with something like <code>p *ast</code> in lldb will show you all the node fields and the type in a human readable fashion.</p>
-<h4 id="grammar-code-node">Grammar Code Node</h4>
+<p>In the above “assign” and “add” are the generic nodes. Note that this node type can be a leaf but usually is not. The other types are always leaves.</p>
+<p>Note that in the above output, the node <code>type</code> was directly printed (because it’s a meaningful name). Likewise, the type needs no decoding when viewing the AST in a debugger. Simply printing the node with something like <code>p *ast</code> in lldb will show you all the node fields and the type in a human readable fashion.</p>
+<h4 id="the-grammar-code-node-int_ast_node">The Grammar Code Node <code>int_ast_node</code></h4>
 <div class="sourceCode" id="cb4"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">struct</span> int_ast_node <span class="op">{</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">...</span> the common fields</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int64_t</span> value<span class="op">;</span></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> int_ast_node<span class="op">;</span></span></code></pre></div>
-<p>This kind of node holds an integer that quantifies some kind of choice in the grammar. Note that this does NOT hold numeric literals (see below). The file <code>ast.h</code> includes many <code>#define</code> constants such as:</p>
+<p>This kind of node holds an integer that quantifies some kind of choice in the grammar. Note that this does NOT hold numeric literals (see below). The file <code>ast.h</code> includes many <code>#define</code> constants for this purpose such as:</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>define JOIN_INNER <span class="dv">1</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>define JOIN_CROSS <span class="dv">2</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>define JOIN_LEFT_OUTER <span class="dv">3</span></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>define JOIN_RIGHT_OUTER <span class="dv">4</span></span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>define JOIN_LEFT <span class="dv">5</span></span>
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>define JOIN_RIGHT <span class="dv">6</span></span></code></pre></div>
-<p>The integer here is one of those values. It can be a bitmask, or an enumeration. In this statement:</p>
+<p>The integer for this fragment will be one of those defined values. It can be a bitmask, or an enumeration. In this statement:</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> x</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> a</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">LEFT</span> <span class="kw">OUTER</span> <span class="kw">JOIN</span> b;</span></code></pre></div>
@@ -365,36 +377,36 @@
 |     | {table_join}
 |       | {table_or_subquery}
 |         | {name b}</code></pre>
-<p>The <code>{int 3}</code> ia an int_ast_node and it corresponds to <code>JOIN_LEFT_OUTER</code>.</p>
+<p>The <code>{int 3}</code> above is an <code>int_ast_node</code> and it corresponds to <code>JOIN_LEFT_OUTER</code>.</p>
 <p>This node type is always a leaf.</p>
-<h4 id="string-node">String Node</h4>
+<h4 id="the-string-node-str_ast_node">The String Node <code>str_ast_node</code></h4>
 <div class="sourceCode" id="cb8"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">struct</span> str_ast_node <span class="op">{</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">...</span> the common fields</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>_Nullable value<span class="op">;</span></span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  bool_t cstr_literal<span class="op">;</span></span>
 <span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> str_ast_node<span class="op">;</span></span></code></pre></div>
-<ul>
-<li><code>value</code> – the text of the string</li>
-<li><code>cstr_literal</code> – true if the string was specified using “C” syntax (see below)</li>
-</ul>
 <p>This node type holds: * string literals * blob literals * identifiers</p>
-<p>CQL supports C style string literals with C style escapes such as <code>"foo\n"</code>. These are normalized into the SQL version of the same literal so that SQLite will see a literal it understands. However, if the origin of the string was the C string form (i.e. <code>"foo"</code> rather than <code>'bar'</code>) then the <code>cstr_literal</code> boolean flag will be set. When echoing the program back as plain text, the C string will be converted back to the C form for display. This means, for instance, that the comments in the output C correspond to the original string format even though the code that gets set to SQLite is always in SQL format.</p>
-<p>Identifiers can be distinguised from string literals because the quotation marks are stil in the string.</p>
+<ul>
+<li><code>value</code> : the text of the string</li>
+<li><code>cstr_literal</code> : true if the string was specified using “C” syntax (see below)</li>
+</ul>
+<p>CQL supports C style string literals with C style escapes such as <code>"foo\n"</code>. These are normalized into the SQL version of the same literal so that SQLite will see a literal it understands. However, if the origin of the string was the C string form (i.e. like <code>"foo"</code> rather than <code>'bar'</code>) then the <code>cstr_literal</code> boolean flag will be set. When echoing the program back as plain text, the C string will be converted back to the C form for display to a user. But when providing the string to Sqlite, it’s in SQL format.</p>
+<p>Identifiers can be distinguised from string literals because the quotation marks (always <code>''</code>) are still in the string.</p>
 <p>This node type is always a leaf.</p>
-<h4 id="number-node">Number Node</h4>
+<h4 id="the-number-node-num_ast_node">The Number Node <code>num_ast_node</code></h4>
 <div class="sourceCode" id="cb9"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">struct</span> num_ast_node <span class="op">{</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">...</span> the common fields</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int32_t</span> num_type<span class="op">;</span></span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>_Nullable value<span class="op">;</span></span>
 <span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> num_ast_node<span class="op">;</span></span></code></pre></div>
 <ul>
-<li><code>num_type</code> the kind of numeric</li>
-<li><code>value</code> the text of the number</li>
+<li><code>num_type</code> : the kind of numeric</li>
+<li><code>value</code> : the text of the number</li>
 </ul>
-<p>All numerics are stored as strings so that there is no loss of precision. This is important because it is entirely possible that the CQL compiler is build with a different floating point library, or different integer sizes, than the target system. As a result CQL does not evaluate anything outside of an explicit <code>const()</code> expression. This avoids integer overflows at compile time or loss of floating point precesion; Constants in the text of the output are emitted byte-for-byte as they appeared in the source code.</p>
+<p>All numerics are stored as strings so that there is no loss of precision. This is important because it is entirely possible that the CQL compiler is built with a different floating point library, than the target system, or different integer sizes. As a result CQL does not evaluate anything outside of an explicit <code>const(...)</code> expression. This policy avoids integer overflows at compile time or loss of floating point precesion. Constants in the text of the output are emitted byte-for-byte as they appeared in the source code.</p>
 <p>This node type is always a leaf.</p>
 <h3 id="examples">Examples</h3>
-<h4 id="example-1-a-let-statement-and-expression">Example 1: A let statement and expression</h4>
+<h4 id="example-1-a-let-statement-and-expression">Example 1: A LET statement and expression</h4>
 <pre><code>LET x := 1 + (3 - 2);
 
   {let_stmt}
@@ -405,7 +417,7 @@
       | {int 3}
       | {int 2}</code></pre>
 <p>Note that there are no parentheses in the AST but it exactly and authoritatively captures the precedence with its shape. This means, among other things, that when CQL echos its input, any redundant parentheses will be gone.</p>
-<h4 id="example-2-an-ifelse-construct">Example 2: An if/else construct</h4>
+<h4 id="example-2-an-ifelse-construct">Example 2: An IF/ELSE construct</h4>
 <pre><code>IF x THEN
   LET x := 1.5e7;
 ELSE IF y THEN
@@ -436,8 +448,8 @@ END IF;
           | {strlit &#39;this&#39;}</code></pre>
 <p>Note that the string “this” was normalized to ‘this’ (which was trivial in this case) but rest assured that <code>cstr_literal</code> was set. This is shown because the text of the statement came out with double quotes. The text above was not the input to the compiler, the compiler was actually given this text</p>
 <pre><code>if x then let x := 1.5e7; else if y then let y := &#39;that&#39;; else let z := &quot;this&quot;; end if;</code></pre>
-<p>And it was normalized into what you see as part of the output. We’ll talk about this output echoing in coming sections, but as you can see, the compiler can be used as a SQL normalizer/beautifier.</p>
-<h4 id="example-3-a-select-statement">Example 3: A select statement</h4>
+<p>And it was normalized into what you see as part of the output. We’ll talk about this output echoing in coming sections. As you can see, the compiler can be used as a SQL normalizer/beautifier.</p>
+<h4 id="example-3-a-select-statement">Example 3: A SELECT statement</h4>
 <pre><code>SELECT *
   FROM foo
   INNER JOIN bar
@@ -474,12 +486,12 @@ LIMIT 3;
       | {opt_limit}
       | | {int 3}
       | {select_offset}</code></pre>
-<p>As you can see the trees rapidly get more complex. The select statement has many optional pieces and so the AST actually has places in its skeleton where these could go but are abasent (e.g. group by, having, order, and offset are all missing).</p>
-<p>The shape of the AST is self evident.</p>
-<p>The compiler can produce these diagrams in ‘dot’ format which makes pretty pictures but the reality is that for non-trivial examples that pictures are so large as to be unreadable whereas the simple text format remains readable even up to several hundred lines of output and is readily searchable, and diffable. The test suites for semantic analysis do pattern matching on the text of the AST to verify correctness.</p>
-<p>We’ll discuss semantic analysis in later sections.</p>
+<p>As you can see the trees rapidly get more complex. The <code>SELECT</code> statement has many optional pieces and so the AST actually has places in its skeleton where these could go but are absent (e.g. <code>GROUP BY</code>, <code>HAVING</code>, <code>ORDER BY</code>, and <code>OFFSET</code> are all missing).</p>
+<p>The shape of the AST is largely self evident from the above, but you can easily cross check it against what’s in <code>cql.y</code> for details and then look at <code>gen_sql.c</code> for decoding tips (discussed below).</p>
+<p>The compiler can produce these diagrams in ‘dot’ format which makes pretty pictures, but the reality is that for non-trivial examples those pictures are so large as to be unreadable whereas the simple text format remains readable even up to several hundred lines of output. The text is also readily searchable, and diffable. The test suites for semantic analysis do pattern matching on the text of the AST to verify correctness.</p>
+<p>We’ll discuss semantic analysis in <a href="https://cgsql.dev/cql-guide/int02">Part 2</a>.</p>
 <h3 id="ast-definitions">AST definitions</h3>
-<p><code>ast.h</code> defines the all the tree types mentioned above. There are helper methods to create AST nodes with type safety. It includes helper functions for the various leaf types mentioned above but also for the various “normal” types. These are specified using the AST macros <code>AST</code>, <code>AST1</code>, and <code>AST0</code></p>
+<p><code>ast.h</code> defines all the tree types mentioned above. There are helper methods to create AST nodes with type safety. It includes helper functions for the various leaf types mentioned above but also for the various “normal” types. These are specified using the AST macros <code>AST</code>, <code>AST1</code>, and <code>AST0</code>.</p>
 <p>Examples:</p>
 <pre><code>AST0(star)
 AST1(not)
@@ -503,12 +515,13 @@ AST(or)</code></pre>
 </ul>
 <p>At present there are about 300 unique AST node types.</p>
 <h2 id="echoing-the-ast">Echoing the AST</h2>
-<p>The first set of features that were built after parsing was the ability to echo back the parse tree as SQL again. This all happens in <code>gen_sql.c</code> and since it has to be able to echo back any tree it often has the best and simplest examples of how to crack the AST for a particular type of node.</p>
-<p>There are several reasons why we might want to echo the SQL but the inescapable one is this: any hunk of SQL that appears as part of a CQL program (i.e. DDL/DML rather than control flow like IF/WHILE) has to go to SQLite and SQLite expects it to be plain text. So the AST must be reformatted as plain text that is exactly equivalent to the input. The process of parsing removes extra white space and parentheses and instead some standard formatting (including indenting) is applied to the output text. This has the effect of normalizing the input and potentially beautifying it as well if it was particularly poorly formatted initially.</p>
-<p>To see these features you need only run cql with no arguments, by default it reads stdin, makes the AST, and then emits the normalized formatted text. If there are no syntax errors, the input and the output should be equivalent. And here is where we start to see some of the extra demands.</p>
-<p>CQL includes a lot of versioning directives like <code>@create(...)</code> <code>@delete(...)</code> and so forth. SQLite should never see these things when the DDL for SQLite is emitted. But when echoing the input they should be included. Additionally, any local or global variables in a SQL statement should be replaced with <code>?</code> in the text that goes to SQLite and then followed up with binding instructions. We’ll cover the binding more in the section code generation, but importantly this also has to significantly alter the desired outcome. As a result the standard formatter includes extensive configurably to get these results.</p>
+<p>The first set of features that were built (after parsing) provided the ability to echo back the parse tree as SQL again. This all happens in <code>gen_sql.c</code>. Since this code has to be able to echo back any tree, it often has the best and simplest examples of how to crack the AST for any particular type of node you might be interested in.</p>
+<p>There are several reasons why we might want to echo the SQL, but the inescapable one is this: any hunk of SQL that appears as part of a CQL program (i.e. DDL/DML rather than control flow like <code>IF</code>/<code>WHILE</code>) has to go to SQLite and SQLite expects that code to be plain text. So the AST must be reformatted as plain text that is exactly equivalent to the original input. The process of parsing removes extra white space and parentheses, so to get something that looks reasonable some standard formatting (including indenting) is applied to the output text. This has the effect of normalizing the input and potentially beautifying it as well (especially if it was poorly formatted initially).</p>
+<p>To see these features you need only run cql with no arguments, by default it reads <code>stdin</code>, makes the AST, and then emits the normalized, formatted text. If there are no syntax errors, the input and the output should be equivalent.</p>
+<p>Standard formatting is essential, but CQL also has a number of extra demands.</p>
+<p>CQL includes a lot of versioning directives like <code>@create(...)</code> <code>@delete(...)</code> and so forth. SQLite should never see these things when the DDL for SQLite is emitted. But when echoing the input they should be included. Additionally, any local or global variables in a SQL statement should be replaced with <code>?</code> in the text that goes to SQLite and then followed up with binding instructions. We’ll cover the binding more in the section code generation, but importantly this also has to significantly alter the output. As a result the standard formatter includes extensive configurably to get these various results.</p>
 <h3 id="configuring-the-output-with-callbacks-and-flags">Configuring the Output with Callbacks and Flags</h3>
-<p>Some of these features, like variable binding, require a callback to formatter’s client to get a notification, these callbacks along with a few control variables decide exactly how the output will be created. The control structure is <code>struct gen_sql_callbacks</code>, described below. It’s quite flexible so it ends up not changing very often. It includes the various callbacks (all of which are optional) and each callback gets a ‘context’ pointer. This is some <code>void *</code> value that you provide which will be given to your function along with the AST pointer relevant to the call. The callback also gets the current output buffer so it can choose to emit something (like ‘?’ into the stream)</p>
+<p>Some of these features, like variable binding, require a callback to the formatter’s client. The client gets a notification, along with a few control variables, and it can then decide exactly what goes in the output The control structure is <code>struct gen_sql_callbacks</code>, and it is described below. This structure includes the various callbacks (all of which are optional) and each callback gets a ‘context’ pointer of its choice. The context pointer is some arbitrary <code>void *</code> value that you provide, which will be given to your function along with the AST pointer relevant to the call. The callback also gets the current output buffer so it can choose to emit something (like ‘?’) into the stream.</p>
 <div class="sourceCode" id="cb15"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">// signature for a callback, you get your context plus the ast</span></span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="co">// if you return true then the normal output is suppressed</span></span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co">// in any case the output you provide is emitted</span></span>
@@ -518,7 +531,7 @@ AST(or)</code></pre>
 <span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  charbuf <span class="op">*</span>_Nonnull output</span>
 <span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="op">);</span></span></code></pre></div>
 <p>The meaning of the <code>bool_t</code> return value varies depend on which callback it is.</p>
-<p>The coarsest control is provided by the generation mode. It is one of these values.</p>
+<p>The coarsest control is provided by the generation mode. It is one of these values:</p>
 <div class="sourceCode" id="cb16"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">// These modes control the overall style of the output</span></span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> gen_sql_mode <span class="op">{</span></span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  gen_mode_echo<span class="op">,</span>          <span class="co">// Prints everything in the original, with standard whitespace and parentheses</span></span>
@@ -527,7 +540,7 @@ AST(or)</code></pre>
 <span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>                          <span class="co">// * @create, @delete, @recreate, and @attribute are removed</span></span>
 <span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>                          <span class="co">// * statements like @echo are not affected, nor is the type specifier @sensitive</span></span>
 <span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
-<p>The actual callbacks structure is optional, if it is null then you get full echo of the AST with no changes. Otherwise the callbacks and flags alter the behavior somewhat.</p>
+<p>The actual callbacks structure is optional, if it is <code>NULL</code> then a full echo of the AST with no changes will be produced. Otherwise the callbacks and flags alter the behavior of the echoer somewhat.</p>
 <div class="sourceCode" id="cb17"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Callbacks allow you to significantly alter the generated sql, see the particular flags below.</span></span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">struct</span> gen_sql_callbacks <span class="op">{</span></span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Each time a local/global variable is encountered in the AST, this callback is invoked</span></span>
@@ -606,32 +619,36 @@ AST(or)</code></pre>
 <li><code>col_def_callback</code> : when creating the “baseline” schema you don’t want column defintions from later schema to be included, this gives you a chance to suppress them</li>
 <li><code>star_callback</code> : normally the <code>*</code> in <code>select *</code> or <code>select T.*</code> is expanded when emitting for SQLite, this callback does the expansion when appropriate</li>
 <li><code>if_not_exists_callback</code> : when generating DDL for schema upgrade you typically want to force <code>IF NOT EXISTS</code> to be added to the schema even if it wasn’t present in the declaration, this callback lets you do that</li>
-<li><code>convert_hex</code> : hex constants are converted to decimal if true, used when emitting JSON because it doesn’t understand hex constants</li>
-<li><code>minify_casts</code> : minification conversts casts like <code>CAST(NULL AS TEXT)</code> to just <code>NULL</code> – the former is only useful for type information, SQLite does need to see it</li>
-<li><code>minify_aliases</code> : unused column aliases as in <code>select foo.x as some_really_long_alias</code> can be removed from the output when targetting SQLite top save space</li>
+<li><code>convert_hex</code> : if true, hex constants are converted to decimal; used when emitting JSON because JSON doesn’t understand hex constants</li>
+<li><code>minify_casts</code> : minification converts casts like <code>CAST(NULL AS TEXT)</code> to just <code>NULL</code> – the former is only useful for type information, SQLite does need to see it</li>
+<li><code>minify_aliases</code> : unused column aliases as in <code>select foo.x as some_really_long_alias</code> can be removed from the output when targetting SQLite to save space</li>
 </ul>
 <h3 id="invoking-the-generator">Invoking the Generator</h3>
 <p>There are several generation functions but they all follow a similar pattern, the differences are essentially what fragment of the AST they expect to begin on. We’ll just cover one here.</p>
 <div class="sourceCode" id="cb18"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>cql_noexport <span class="dt">void</span> gen_statement_with_callbacks<span class="op">(</span>ast_node <span class="op">*</span>_Nonnull ast<span class="op">,</span> gen_sql_callbacks <span class="op">*</span>_Nullable _callbacks<span class="op">);</span></span></code></pre></div>
-<p>This has the typical signature * <code>ast</code> : the part of the tree to print * <code>_callbacks</code> : the optional callbacks described above</p>
-<p>To use these you’ll need</p>
+<p>This has the typical signature for all these generators:</p>
+<ul>
+<li><code>ast</code> : the part of the tree to print</li>
+<li><code>_callbacks</code> : the optional callbacks described above</li>
+</ul>
+<p>To use these you’ll need to these functions as well.</p>
 <div class="sourceCode" id="cb19"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>cql_noexport <span class="dt">void</span> gen_init<span class="op">(</span><span class="dt">void</span><span class="op">);</span></span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>cql_noexport <span class="dt">void</span> gen_cleanup<span class="op">(</span><span class="dt">void</span><span class="op">);</span></span></code></pre></div>
-<p>You’ll want to call <code>gen_init()</code> one time before doing any generation. That sets up the necessary tables. When you’re done use <code>gen_cleanup()</code> to release any memory that was allocated in setup. You don’t have to do the cleanup step if the process is going to exit anyway, but because of the amalgam options, <code>cql_main()</code> assumes it might be called again and so it tidies things up rather than leak.</p>
-<p>With the one time initialization in place there are these preliminaries.</p>
+<p>You’ll want to call <code>gen_init()</code> one time before doing any generation. That sets up the necessary tables. When you’re done use <code>gen_cleanup()</code> to release any memory that was allocated in setup. You don’t have to do the cleanup step if the process is going to exit anyway, however, because of the amalgam options, <code>cql_main()</code> assumes it might be called again and so it tidies things up rather than risk leaking.</p>
+<p>With the one time initialization in place there are these preliminaries:</p>
 <div class="sourceCode" id="cb20"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>cql_noexport <span class="dt">void</span> init_gen_sql_callbacks<span class="op">(</span>gen_sql_callbacks <span class="op">*</span>_Nullable callbacks<span class="op">);</span></span></code></pre></div>
-<p>Use <code>init_gen_sql_callbacks</code> to fill in your callback structure with the normal defaults. This give you normal echo for SQL by default. To get full echo, <code>NULL</code> callback may be used. And of course other options are possible.</p>
+<p>Use <code>init_gen_sql_callbacks</code> to fill in your callback structure with the normal defaults. This give you normal echo for SQL by default. To get a full echo, a <code>NULL</code> callback may be used. And of course other options are possible.</p>
 <p>Finally,</p>
 <div class="sourceCode" id="cb21"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>cql_noexport <span class="dt">void</span> gen_set_output_buffer<span class="op">(</span><span class="kw">struct</span> charbuf <span class="op">*</span>_Nonnull buffer<span class="op">);</span></span></code></pre></div>
 <p>Use this before the call to <code>gen_&lt;something&gt;_with_callbacks</code> to redirect the output into a growable character buffer of your choice.</p>
-<p>The buffers can then be written where they are needed. Maybe into a C string literal for compiler output, or into a comment, or just right back to stdout.</p>
+<p>The buffers can then be written where they are needed. Maybe further processed into a C string literal for compiler output, or into a C style comment, or just right back to stdout.</p>
 <p>There are a few simplified versions of this sequence like this one:</p>
 <div class="sourceCode" id="cb22"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>cql_noexport <span class="dt">void</span> gen_stmt_list_to_stdout<span class="op">(</span>ast_node <span class="op">*</span>_Nullable ast<span class="op">);</span></span></code></pre></div>
-<p>This does <code>NULL</code> callbacks and emits directly to stdout with no extra steps. The extra wiring is done for you.</p>
+<p>This uses <code>NULL</code> for the callbacks and emits directly to stdout with no extra steps. The extra wiring is done for you.</p>
 <h3 id="generator-internals">Generator Internals</h3>
-<p>The generator has to be able to walk the entire tree and emit plain text, and in many areas the tree is very flexible so we want a simple dynamic dispatch mechanism that can call the right formatting function from anyplace in the tree.</p>
-<p>It turns out two different signatures are needed to do this properly, one for formatting statements and the other for expressions. The difference being that expressions have to concern themselves with the precedence of the various operators so that parentheses can be correctly re-inserted into the output.</p>
-<p>To do this there are two symbol tables that map from a AST node type string to a formatting function. They are initialized with a series of statements similar to these:</p>
+<p>The generator has to be able to walk the entire tree and emit plain text, and in many areas the tree is very flexible so we want a simple dynamic dispatch mechanism that can call the right formatting function from anywhere in the tree.</p>
+<p>It turns out two different signatures are needed to do this properly, one for formatting statements and the other for expressions – the difference being that expressions have to concern themselves with the precedence of the various operators so that parentheses can be correctly (re)inserted into the output.</p>
+<p>To do this there are two symbol tables that map from an AST node type string to a formatting function. They are initialized with a series of statements similar to these:</p>
 <h4 id="generating-expressions">Generating Expressions</h4>
 <div class="sourceCode" id="cb23"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>cql_noexport <span class="dt">void</span> gen_init<span class="op">()</span> <span class="op">{</span></span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  gen_stmts <span class="op">=</span> symtab_new<span class="op">();</span></span>
@@ -649,8 +666,8 @@ AST(or)</code></pre>
 <span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>  EXPR_INIT<span class="op">(</span>tilde<span class="op">,</span> gen_unary<span class="op">,</span> <span class="st">&quot;~&quot;</span><span class="op">,</span> EXPR_PRI_TILDE<span class="op">);</span></span>
 <span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>  <span class="op">...</span></span>
 <span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
-<p>These statements populate the symbol tables. * For statements, the entry maps <code>if_stmt</code> to the function <code>gen_if_stmt</code> * For expressions, the entry maps <code>mul</code> to <code>gen_binary</code> including the metadata "*" and <code>EXPR_PRI_MUL</code></p>
-<p>As you can see (nearly) all binary operators are handled identically as are all unary operators. Let’s look at those two in detail.</p>
+<p>These statements populate the symbol tables. * For statements, the entry maps <code>if_stmt</code> to the function <code>gen_if_stmt</code> * For expressions, the entry maps <code>mul</code> to <code>gen_binary</code> including the metadata <code>"*"</code> and <code>EXPR_PRI_MUL</code></p>
+<p>As you can see, nearly all binary operators are handled identically as are all unary operators. Let’s look at those two in detail.</p>
 <div class="sourceCode" id="cb24"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> gen_binary<span class="op">(</span>ast_node <span class="op">*</span>ast<span class="op">,</span> CSTR op<span class="op">,</span> <span class="dt">int32_t</span> pri<span class="op">,</span> <span class="dt">int32_t</span> pri_new<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">// We add parens if our priority is less than the parent prioirty</span></span>
@@ -672,7 +689,7 @@ AST(or)</code></pre>
 <span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>pri_new <span class="op">&lt;</span> pri<span class="op">)</span> gen_printf<span class="op">(</span><span class="st">&quot;)&quot;</span><span class="op">);</span></span>
 <span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <p>The convention gives us: * <code>ast</code> : pointer to the current AST node * <code>op</code> : the text of the operator (<code>CSTR</code> is simply <code>const char *</code>) * <code>pri</code> : the binding strength of the node above us * <code>pri_new</code> : the binding strength of this node (the new node)</p>
-<p>So generically, if our binding strength is weaker than the context we are contained in, then we must wrap the current node in parentheses to preserve order of operations. See the comment for more details.</p>
+<p>So generically, if the binding strength of the current opereator <code>pri_new</code> is weaker than the context it is contained in <code>pri</code>, then parentheses are required to preserve order of operations. See the comment for more details.</p>
 <p>With parens taken care of, we emit the left expression, the operator, and the right expression.</p>
 <p>And as you can see below, unary operators are much the same.</p>
 <div class="sourceCode" id="cb25"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> gen_unary<span class="op">(</span>ast_node <span class="op">*</span>ast<span class="op">,</span> CSTR op<span class="op">,</span> <span class="dt">int32_t</span> pri<span class="op">,</span> <span class="dt">int32_t</span> pri_new<span class="op">)</span> <span class="op">{</span></span>
@@ -683,7 +700,7 @@ AST(or)</code></pre>
 <span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <p>There are special case formatters for some of the postfix operators and other cases that are special like <code>CASE... WHEN... THEN... ELSE... END</code> but they operate on the same principles down to the leaf nodes.</p>
 <h4 id="generating-statements">Generating Statements</h4>
-<p>With no binding strenght to worry about, statement processing is quite a bit simpler.</p>
+<p>With no binding strength to worry about, statement processing is quite a bit simpler.</p>
 <p>Here’s the code for the <code>IF</code> statement mentioned above.</p>
 <div class="sourceCode" id="cb26"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> gen_if_stmt<span class="op">(</span>ast_node <span class="op">*</span>ast<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  Contract<span class="op">(</span>is_ast_if_stmt<span class="op">(</span>ast<span class="op">));</span></span>
@@ -707,7 +724,8 @@ AST(or)</code></pre>
 <span id="cb26-20"><a href="#cb26-20" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb26-21"><a href="#cb26-21" aria-hidden="true" tabindex="-1"></a>  gen_printf<span class="op">(</span><span class="st">&quot;END IF&quot;</span><span class="op">);</span></span>
 <span id="cb26-22"><a href="#cb26-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
-<p>There is a general boiler plate sort of recursive form to all of these, they follow the same basic shape. These patterns are designed to make it impossible to walk the tree incorrectly, so if the tree shape changes because of a grammar change, you get immediate concrete failures were the tree walk has to change. Since there are test cases to cover every tree shape you can always be sure you have it exactly right if the macros do not force assertion failures.</p>
+<p>There is a general boiler plate sort of recursive form to all of these, they follow the same basic shape. These patterns are designed to make it impossible to walk the tree incorrectly. If the tree shape changes because of a grammar change, you get immediate concrete failures were the tree walk has to change. Since there are test cases to cover every tree shape you can always be sure you have it exactly right if the macros do not force assertion failures.</p>
+<p>The steps were:</p>
 <ul>
 <li>use <code>Contract</code> to assert that the node we are given is the type we expect</li>
 <li>use <code>EXTRACT</code> macros (detailed below) to get the tree parts you want starting from your root</li>
@@ -715,7 +733,7 @@ AST(or)</code></pre>
 <li>use recursion to print sub fragments (like the IF condition in this case)</li>
 <li>test the tree fragments where optional peices are present, emit them as needed</li>
 </ul>
-<p>It might be instructive to include <code>gen_cond_action</code>, it is entirely unremarkable</p>
+<p>It might be instructive to include <code>gen_cond_action</code>, it is entirely unremarkable:</p>
 <div class="sourceCode" id="cb27"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> gen_cond_action<span class="op">(</span>ast_node <span class="op">*</span>ast<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  Contract<span class="op">(</span>is_ast_cond_action<span class="op">(</span>ast<span class="op">));</span></span>
 <span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  EXTRACT<span class="op">(</span>stmt_list<span class="op">,</span> ast<span class="op">-&gt;</span>right<span class="op">);</span></span>
@@ -726,7 +744,7 @@ AST(or)</code></pre>
 <span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <p>A <code>cond_action</code> node has an expression on the left and a statement list on the right it can appear in the base <code>IF x THEN y</code> part of the <code>IF</code> or as <code>ELSE IF x THEN y</code>. Either case is formatted the same.</p>
 <h4 id="extraction-macros">Extraction Macros</h4>
-<p>These macros are used by all the parts of CQL that walk the AST. They are designed to make it impossible for you to get the tree shape wrong without immediately failing. We do not ever want to walk off the tree in some exotic way and then continue to several levels of recursion before things go wrong. CQL locks this down by checking the node type at every step – any problems are found immediately exactly at the extraction site and can be quickly corrected. Again 100% coverage of all the tree shapes makes this rock solid, so CQL never compromises on 100% code coverage. The standard macros all appear in this example:</p>
+<p>These macros are used by all the parts of CQL that walk the AST. They are designed to make it impossible for you to get the tree shape wrong without immediately failing. We do not ever want to walk off the tree in some exotic way and then continue to several levels of recursion before things go wrong. CQL locks this down by checking the node type at every step – any problems are found immediately, exactly at the extraction site, and can be quickly corrected. Again 100% coverage of all the tree shapes makes this rock solid, so CQL never compromises on 100% code coverage. The most common macros all appear in this example:</p>
 <ul>
 <li><code>EXTRACT_NOTNULL(cond_action, ast-&gt;left);</code>
 <ul>
@@ -753,12 +771,12 @@ AST(or)</code></pre>
 <p>Other options:</p>
 <ul>
 <li><code>EXTRACT_NAMED_NOTNULL</code> : like the <code>NAMED</code> variant</li>
-<li><code>EXTRACT_ANY</code> : if the tree type is not known (e.g. expr-&gt;left could be any expression type)</li>
+<li><code>EXTRACT_ANY</code> : if the tree type is not known (e.g. <code>expr-&gt;left</code> could be any expression type)</li>
 <li><code>EXTRACT_ANY_NOTNULL</code> : as above but not optional</li>
 <li><code>EXTRACT_NUM_TYPE</code> : extracts the num_type field from a numeric AST node</li>
 </ul>
-<p>The <code>ANY</code> variants are usually redispatched with something like <code>gen_expr</code> that uses the name table again and that will check thet type or else they are checked with ad hoc logic immediately if it’s perhaps one of two or three variations. In all cases the idea is to force a failure very quickly. <code>gen_root_expr()</code> for instance in the <code>if_cond</code> example will fail immediately if the node is not an expression type.</p>
-<p>Because of the clear use of <code>EXTRACT</code>, the <code>gen_</code> family of functions are often the best/fastest way to understand the shape of the AST. You can dump a few sample and look at the <code>gen_</code> function and quickly see exactly what the options are authoritatively. As a result it’s very normal to paste the extraction code from a <code>gen_</code> into a new/needed semantic analysis or code-generation functions which we will come to in later sections.</p>
+<p>The <code>ANY</code> variants are usually re-dispatched with something like <code>gen_expr</code> that uses the name table again (and that will check the type) or else extracted value is checked with ad hoc logic immediately after extraction if it’s perhaps one of two or three variations. In all cases the idea is to force a failure very quickly. <code>gen_root_expr()</code> for instance in the <code>if_cond</code> example will fail immediately if the node it gets is not an expression type.</p>
+<p>Because of the clear use of <code>EXTRACT</code>, the <code>gen_</code> family of functions are often the best/fastest way to understand the shape of the AST. You can dump a few sample and look at the <code>gen_</code> function and quickly see exactly what the options are authoritatively. As a result it’s very normal to paste the extraction code from a <code>gen_</code> function into a new/needed semantic analysis or code-generation functions.</p>
 <h2 id="part-2-semantic-analysis">Part 2: Semantic Analysis</h2>
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
@@ -766,8 +784,8 @@ AST(or)</code></pre>
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-<h3 id="overview">Overview</h3>
-<p>Part 2 continues with a discussion of the essentials of the semantic analysis pass of the CQL compiler. As in the previous sections, the goal here is not to go over every single rule but rather to give a sense of how semantic analysis happens in general, the core strategies and implementation choices so that when reading the code you have an idea how smaller pieces would fit into the whole. To accomplish this various key data structures will be explained in detail as well as selected examples of their use.</p>
+<h3 id="preface-1">Preface</h3>
+<p>Part 2 continues with a discussion of the essentials of the semantic analysis pass of the CQL compiler. As in the previous sections, the goal here is not to go over every single rule but rather to give a sense of how semantic analysis happens in general – the core strategies and implementation choices – so that when reading the code you have an idea how smaller pieces fit into the whole. To accomplish this, various key data structures will be explained in detail as well as selected examples of their use.</p>
 <h2 id="semantic-analysis">Semantic Analysis</h2>
 <p>The overall goal of the semantic analysis pass is to verify that a correct program has been submitted to the compiler. The compiler does this by “decorating” the AST with semantic information. This information is mainly concerned about the “types” of the various things in the program. A key function of the semantic analyzer, the primary “weapon” in computing these types if you will, is name resolution. The semantic analyzer decides what any given name means in any context and then uses that meaning, which is itself based on the AST constructs that came before, to compute types and then check those types for errors.</p>
 <p>Broadly speaking the errors that can be discovered are of these forms:</p>
@@ -2125,6 +2143,477 @@ AST(or)</code></pre>
 <li><code>sem_struct</code> or <code>sem_join</code> for the non-unitary types</li>
 </ul></li>
 </ul>
-<p>This isn’t everything but it would leave you well armed to begin your own exploration of <code>sem.c</code>.</p>
+<p>This isn’t everything but it should leave you well armed to begin your own exploration of <code>sem.c</code>.</p>
+<h2 id="part-3-c-code-generation">Part 3: C Code Generation</h2>
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
+<h3 id="preface-2">Preface</h3>
+<p>Part 3 continues with a discussion of the essentials of the C code generation pass of the CQL compiler. As in the previous sections, the goal here is not to go over every detail of code generation but rather to give a sense of how codegen happens in general – the core strategies and implementation choices – so that when reading the code you have an idea how smaller pieces would fit into the whole. To accomplish this, various key data structures will be explained in detail as well as selected examples of their use.</p>
+<h2 id="c-code-generation">C Code Generation</h2>
+<p>There are several key pieces of C code that we have to generate to make working CQL procedures using C functions. This all happens in <code>cg_c.c</code>. From a big picture perspective, these are the essential problems:</p>
+<ul>
+<li>we have to compile SQL expressions into C
+<ul>
+<li>including expressions with variables that are nullable</li>
+<li>including SQL expressions that are highly complex like <code>CASE..WHEN..THEN..END</code> and <code>IN (..)</code></li>
+</ul></li>
+<li>we have to generate control flow for things like <code>IF</code>, <code>WHILE</code> and, <code>SWITCH</code></li>
+<li>we have to make result sets
+<ul>
+<li>including the code to slurp up all the rows from a SQL statement into an array of values</li>
+<li>we want to do this very economically</li>
+</ul></li>
+<li>we have to be able to create the text for every SQLite statement and bind any variables to it</li>
+<li>we have to check every SQLite API for errors and throw exceptions consistently and deal with them
+<ul>
+<li>including constructs that allow users to handle exceptions, such as <code>TRY/CATCH</code></li>
+</ul></li>
+<li>we have to track any reference types carefully so that retain/release pairs are done consistently
+<ul>
+<li>even in the presence of SQLite errors or other exceptions</li>
+</ul></li>
+<li>we have to produce a <code>.h</code> and a <code>.c</code> file for the C compiler
+<ul>
+<li>contributions to these files could come from various places</li>
+<li>the <code>.c</code> file will itself have various sections and we might need to contribute to them at various points in the compilation</li>
+</ul></li>
+<li>we want to do this all in one pass over the AST</li>
+<li>we get to assume that the program is error free, codegen never runs unless semantic analysis reports zero errors
+<ul>
+<li>so nothing can be wrong by the time the codegen pass runs, we never detect errors here</li>
+<li>sometimes we add <code>Contract</code> and <code>Invariant</code> statements to <code>cg.c</code> that make our assumptions clear and prevent regressions</li>
+</ul></li>
+</ul>
+<p>There are some very important building blocks used to solve these problems we will start with those, then move to a discussion of each of the essential kinds of code generation that we have to do to get working programs.</p>
+<h3 id="launching-the-code-generator">Launching the Code Generator</h3>
+<p>Once semantic analysis is done all of the code generators have the same contract: they have a main function like <code>cg_c_main</code> for the C code generator. It gets the root of the AST and it can use the public interface of the semantic analyzer to get additional information. See <a href="https://cgsql.dev/cql-guide/int02">Part 2</a> for those details.</p>
+<div class="sourceCode" id="cb88"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Main entry point for code-gen.  This will set up the buffers for the global</span></span>
+<span id="cb88-2"><a href="#cb88-2" aria-hidden="true" tabindex="-1"></a><span class="co">// variables and any loose calls or DML.  Any code that needs to run in the</span></span>
+<span id="cb88-3"><a href="#cb88-3" aria-hidden="true" tabindex="-1"></a><span class="co">// global scope will be added to the global_proc.  This is the only codegen</span></span>
+<span id="cb88-4"><a href="#cb88-4" aria-hidden="true" tabindex="-1"></a><span class="co">// error that is possible.  If you need global code and you don&#39;t have a global</span></span>
+<span id="cb88-5"><a href="#cb88-5" aria-hidden="true" tabindex="-1"></a><span class="co">// proc then you can&#39;t proceed.  Semantic analysis doƒesn&#39;t want to know that stuff.</span></span>
+<span id="cb88-6"><a href="#cb88-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Otherwise all we do is set up the most general buffers for the global case and</span></span>
+<span id="cb88-7"><a href="#cb88-7" aria-hidden="true" tabindex="-1"></a><span class="co">// spit out a function with the correct name.</span></span>
+<span id="cb88-8"><a href="#cb88-8" aria-hidden="true" tabindex="-1"></a>cql_noexport <span class="dt">void</span> cg_c_main<span class="op">(</span>ast_node <span class="op">*</span>head<span class="op">)</span> <span class="op">{</span> <span class="op">...</span> <span class="op">}</span></span></code></pre></div>
+<p>In addition to initializing its scratch storage, the main entry point also sets up a symbol table for AST dispatch just like the <code>gen_</code> and <code>sem_</code> functions do. Here are some samples from that table with the most common options:</p>
+<div class="sourceCode" id="cb89"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a>  DDL_STMT_INIT<span class="op">(</span>drop_table_stmt<span class="op">);</span></span>
+<span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a>  DDL_STMT_INIT<span class="op">(</span>drop_view_stmt<span class="op">);</span></span>
+<span id="cb89-3"><a href="#cb89-3" aria-hidden="true" tabindex="-1"></a>  DDL_STMT_INIT<span class="op">(</span>create_table_stmt<span class="op">);</span></span>
+<span id="cb89-4"><a href="#cb89-4" aria-hidden="true" tabindex="-1"></a>  DDL_STMT_INIT<span class="op">(</span>create_view_stmt<span class="op">);</span></span></code></pre></div>
+<p>The DDL (Data Definition Lanaguage) statements all get the same handling: The text of the statement is generated from the AST. Any variables are bound and then the statement is executed. The work is done with <code>cg_bound_sql_statement</code> which will be discussed later.</p>
+<div class="sourceCode" id="cb90"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb90-1"><a href="#cb90-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Straight up DDL invocation.  The ast has the statement, execute it!</span></span>
+<span id="cb90-2"><a href="#cb90-2" aria-hidden="true" tabindex="-1"></a><span class="co">// We don&#39;t minify the aliases because DDL can have views and the view column names</span></span>
+<span id="cb90-3"><a href="#cb90-3" aria-hidden="true" tabindex="-1"></a><span class="co">// can be referred to in users of the view.  Loose select statements can have</span></span>
+<span id="cb90-4"><a href="#cb90-4" aria-hidden="true" tabindex="-1"></a><span class="co">// no external references to column aliases.</span></span>
+<span id="cb90-5"><a href="#cb90-5" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> cg_any_ddl_stmt<span class="op">(</span>ast_node <span class="op">*</span>ast<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb90-6"><a href="#cb90-6" aria-hidden="true" tabindex="-1"></a>  cg_bound_sql_statement<span class="op">(</span>NULL<span class="op">,</span> ast<span class="op">,</span> CG_EXEC<span class="op">|</span>CG_NO_MINIFY_ALIASES<span class="op">);</span></span>
+<span id="cb90-7"><a href="#cb90-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>DML (Data Manipulation Language) statements are declared similarly:</p>
+<pre><code>  STD_DML_STMT_INIT(begin_trans_stmt);
+  STD_DML_STMT_INIT(commit_trans_stmt);
+  STD_DML_STMT_INIT(rollback_trans_stmt);
+  STD_DML_STMT_INIT(savepoint_stmt);
+  STD_DML_STMT_INIT(delete_stmt);</code></pre>
+<p>They are handled by <code>cg_std_dml_exec_stmt</code>; the processing is identical to DDL except <code>CG_MINIFY_ALIASES</code> is specified. This allows the code generator to remove unused column aliases in select statements to save space.</p>
+<pre><code>// Straight up DML invocation.  The ast has the statement, execute it!
+static void cg_std_dml_exec_stmt(ast_node *ast) {
+  cg_bound_sql_statement(NULL, ast, CG_EXEC|CG_MINIFY_ALIASES);
+}</code></pre>
+<p>Note that this flag difference only matters for the <code>create view</code> statement but for symmetry all the DDL is handled with one macro and all the DML with the second macro.</p>
+<p>Next, the easiest case… there are a bunch of statements that create no code-gen at all. These are type defintions that are interesting only to the semantic analyzer or other control statements. Some examples:</p>
+<div class="sourceCode" id="cb93"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a>  NO_OP_STMT_INIT<span class="op">(</span>declare_enum_stmt<span class="op">);</span></span>
+<span id="cb93-2"><a href="#cb93-2" aria-hidden="true" tabindex="-1"></a>  NO_OP_STMT_INIT<span class="op">(</span>declare_named_type<span class="op">);</span></span></code></pre></div>
+<p>Next, the general purpose statement handler. This creates a mapping from the <code>if_stmt</code> AST node to <code>cg_if_stmt</code>.</p>
+<div class="sourceCode" id="cb94"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a>  STMT_INIT<span class="op">(</span>if_stmt<span class="op">);</span></span>
+<span id="cb94-2"><a href="#cb94-2" aria-hidden="true" tabindex="-1"></a>  STMT_INIT<span class="op">(</span>switch_stmt<span class="op">);</span></span>
+<span id="cb94-3"><a href="#cb94-3" aria-hidden="true" tabindex="-1"></a>  STMT_INIT<span class="op">(</span>while_stmt<span class="op">);</span></span>
+<span id="cb94-4"><a href="#cb94-4" aria-hidden="true" tabindex="-1"></a>  STMT_INIT<span class="op">(</span>assign<span class="op">);</span></span></code></pre></div>
+<p>The next group is the expressions, with precedence and operator specified. There is a lot of code sharing as you can see from this sample:</p>
+<div class="sourceCode" id="cb95"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a>  EXPR_INIT<span class="op">(</span>num<span class="op">,</span> cg_expr_num<span class="op">,</span> <span class="st">&quot;num&quot;</span><span class="op">,</span> C_EXPR_PRI_ROOT<span class="op">);</span></span>
+<span id="cb95-2"><a href="#cb95-2" aria-hidden="true" tabindex="-1"></a>  EXPR_INIT<span class="op">(</span>str<span class="op">,</span> cg_expr_str<span class="op">,</span> <span class="st">&quot;STR&quot;</span><span class="op">,</span> C_EXPR_PRI_ROOT<span class="op">);</span></span>
+<span id="cb95-3"><a href="#cb95-3" aria-hidden="true" tabindex="-1"></a>  EXPR_INIT<span class="op">(</span>null<span class="op">,</span> cg_expr_null<span class="op">,</span> <span class="st">&quot;NULL&quot;</span><span class="op">,</span> C_EXPR_PRI_ROOT<span class="op">);</span></span>
+<span id="cb95-4"><a href="#cb95-4" aria-hidden="true" tabindex="-1"></a>  EXPR_INIT<span class="op">(</span>dot<span class="op">,</span> cg_expr_dot<span class="op">,</span> <span class="st">&quot;DOT&quot;</span><span class="op">,</span> C_EXPR_PRI_ROOT<span class="op">);</span></span>
+<span id="cb95-5"><a href="#cb95-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb95-6"><a href="#cb95-6" aria-hidden="true" tabindex="-1"></a>  EXPR_INIT<span class="op">(</span>mul<span class="op">,</span> cg_binary<span class="op">,</span> <span class="st">&quot;*&quot;</span><span class="op">,</span> C_EXPR_PRI_MUL<span class="op">);</span></span>
+<span id="cb95-7"><a href="#cb95-7" aria-hidden="true" tabindex="-1"></a>  EXPR_INIT<span class="op">(</span>div<span class="op">,</span> cg_binary<span class="op">,</span> <span class="st">&quot;/&quot;</span><span class="op">,</span> C_EXPR_PRI_MUL<span class="op">);</span></span>
+<span id="cb95-8"><a href="#cb95-8" aria-hidden="true" tabindex="-1"></a>  EXPR_INIT<span class="op">(</span>mod<span class="op">,</span> cg_binary<span class="op">,</span> <span class="st">&quot;%&quot;</span><span class="op">,</span> C_EXPR_PRI_MUL<span class="op">);</span></span>
+<span id="cb95-9"><a href="#cb95-9" aria-hidden="true" tabindex="-1"></a>  EXPR_INIT<span class="op">(</span>add<span class="op">,</span> cg_binary<span class="op">,</span> <span class="st">&quot;+&quot;</span><span class="op">,</span> C_EXPR_PRI_ADD<span class="op">);</span></span>
+<span id="cb95-10"><a href="#cb95-10" aria-hidden="true" tabindex="-1"></a>  EXPR_INIT<span class="op">(</span>sub<span class="op">,</span> cg_binary<span class="op">,</span> <span class="st">&quot;-&quot;</span><span class="op">,</span> C_EXPR_PRI_ADD<span class="op">);</span></span>
+<span id="cb95-11"><a href="#cb95-11" aria-hidden="true" tabindex="-1"></a>  EXPR_INIT<span class="op">(</span>not<span class="op">,</span> cg_unary<span class="op">,</span> <span class="st">&quot;!&quot;</span><span class="op">,</span> C_EXPR_PRI_UNARY<span class="op">);</span></span>
+<span id="cb95-12"><a href="#cb95-12" aria-hidden="true" tabindex="-1"></a>  EXPR_INIT<span class="op">(</span>tilde<span class="op">,</span> cg_unary<span class="op">,</span> <span class="st">&quot;~&quot;</span><span class="op">,</span> C_EXPR_PRI_UNARY<span class="op">);</span></span>
+<span id="cb95-13"><a href="#cb95-13" aria-hidden="true" tabindex="-1"></a>  EXPR_INIT<span class="op">(</span>uminus<span class="op">,</span> cg_unary<span class="op">,</span> <span class="st">&quot;-&quot;</span><span class="op">,</span> C_EXPR_PRI_UNARY<span class="op">);</span></span></code></pre></div>
+<p>Most (not all) of the binary operators are handled with one function <code>cg_binary</code> and likewise most unary operators are handled with <code>cg_unary</code>.</p>
+<p>Note: the precedence constants are the <code>C_EXPR_PRI_*</code> flavor because parentheses will be generated based on the C rules at this point. Importantly, the AST still, and always has the user-specified order of operations encoded in it, there’s no change there. The only thing that changes is where parentheses are needed to get the desired result. Parens may need to be added and some that were present in the original text might no longer be needed.</p>
+<p>e.g.</p>
+<div class="sourceCode" id="cb96"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> PROC p ()</span>
+<span id="cb96-2"><a href="#cb96-2" aria-hidden="true" tabindex="-1"></a><span class="cf">BEGIN</span></span>
+<span id="cb96-3"><a href="#cb96-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">/* NOT is weaker than + */</span></span>
+<span id="cb96-4"><a href="#cb96-4" aria-hidden="true" tabindex="-1"></a>  LET x <span class="op">:=</span> (<span class="kw">NOT</span> <span class="dv">1</span>) <span class="op">+</span> (<span class="kw">NOT</span> <span class="dv">2</span>);</span>
+<span id="cb96-5"><a href="#cb96-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SET</span> x <span class="op">:=</span> <span class="kw">NOT</span> <span class="dv">1</span> <span class="op">+</span> <span class="dv">2</span>;</span>
+<span id="cb96-6"><a href="#cb96-6" aria-hidden="true" tabindex="-1"></a><span class="cf">END</span>;</span></code></pre></div>
+<div class="sourceCode" id="cb97"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> p<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb97-2"><a href="#cb97-2" aria-hidden="true" tabindex="-1"></a>  cql_bool x <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb97-3"><a href="#cb97-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb97-4"><a href="#cb97-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">/* ! is stronger than + */</span></span>
+<span id="cb97-5"><a href="#cb97-5" aria-hidden="true" tabindex="-1"></a>  x <span class="op">=</span> <span class="op">!</span> <span class="dv">1</span> <span class="op">+</span> <span class="op">!</span> <span class="dv">2</span><span class="op">;</span></span>
+<span id="cb97-6"><a href="#cb97-6" aria-hidden="true" tabindex="-1"></a>  x <span class="op">=</span> <span class="op">!</span> <span class="op">(</span><span class="dv">1</span> <span class="op">+</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb97-7"><a href="#cb97-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Finally, many built-in functions need special codegen.</p>
+<div class="sourceCode" id="cb98"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb98-1"><a href="#cb98-1" aria-hidden="true" tabindex="-1"></a>  FUNC_INIT<span class="op">(</span>coalesce<span class="op">);</span></span>
+<span id="cb98-2"><a href="#cb98-2" aria-hidden="true" tabindex="-1"></a>  FUNC_INIT<span class="op">(</span>printf<span class="op">);</span></span></code></pre></div>
+<p><code>FUNC_INIT(coalesce)</code> creates a mapping between the function name <code>coalesce</code> and the generator <code>cg_func_coalesce</code>.</p>
+<h3 id="character-buffers-and-byte-buffers">Character Buffers and Byte Buffers</h3>
+<p>The first kind of text output that CQL could produce was the AST echoing. This was original done directly with <code>fprintf</code> but that was not flexible enough as the output had to be captured to be emitted into other places like comments or the text of SQL statements to go to SQLite. This forces that pass to use character buffers, which we touched on in Part 1. Code generation has a more profound dependency on character buffers – they are literally all over <code>cg_c.c</code> and we need to go over how hey are used.</p>
+<p>The public interace is in <code>charbuf.h</code> and it’s really quite simple. You allocate a <code>charbuf</code> and then you can <code>bprintf</code> into it. Let’s be a bit more specific:</p>
+<div class="sourceCode" id="cb99"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#define CHARBUF_INTERNAL_SIZE 1024</span></span>
+<span id="cb99-2"><a href="#cb99-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define CHARBUF_GROWTH_SIZE 1024</span></span>
+<span id="cb99-3"><a href="#cb99-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb99-4"><a href="#cb99-4" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">struct</span> charbuf</span>
+<span id="cb99-5"><a href="#cb99-5" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb99-6"><a href="#cb99-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">char</span> <span class="op">*</span>ptr<span class="op">;</span>      <span class="co">// pointer to stored data, if any</span></span>
+<span id="cb99-7"><a href="#cb99-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">uint32_t</span> used<span class="op">;</span>  <span class="co">// bytes used in current buffer</span></span>
+<span id="cb99-8"><a href="#cb99-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">uint32_t</span> max<span class="op">;</span>   <span class="co">// max bytes in current buffer</span></span>
+<span id="cb99-9"><a href="#cb99-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb99-10"><a href="#cb99-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">// builtin buffer storage</span></span>
+<span id="cb99-11"><a href="#cb99-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">char</span> internal<span class="op">[</span>CHARBUF_INTERNAL_SIZE<span class="op">];</span></span>
+<span id="cb99-12"><a href="#cb99-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> charbuf<span class="op">;</span></span>
+<span id="cb99-13"><a href="#cb99-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb99-14"><a href="#cb99-14" aria-hidden="true" tabindex="-1"></a>cql_data_decl<span class="op">(</span> <span class="dt">int32_t</span> charbuf_open_count <span class="op">);</span></span>
+<span id="cb99-15"><a href="#cb99-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb99-16"><a href="#cb99-16" aria-hidden="true" tabindex="-1"></a>cql_noexport <span class="dt">void</span> bopen<span class="op">(</span>charbuf<span class="op">*</span> b<span class="op">);</span></span>
+<span id="cb99-17"><a href="#cb99-17" aria-hidden="true" tabindex="-1"></a>cql_noexport <span class="dt">void</span> bclose<span class="op">(</span>charbuf <span class="op">*</span>b<span class="op">);</span></span>
+<span id="cb99-18"><a href="#cb99-18" aria-hidden="true" tabindex="-1"></a>cql_noexport <span class="dt">void</span> bprintf<span class="op">(</span>charbuf <span class="op">*</span>b<span class="op">,</span> <span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>format<span class="op">,</span> <span class="op">...);</span></span></code></pre></div>
+<p>The typical pattern goes something like this:</p>
+<div class="sourceCode" id="cb100"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb100-1"><a href="#cb100-1" aria-hidden="true" tabindex="-1"></a>  charbuf foo<span class="op">;</span></span>
+<span id="cb100-2"><a href="#cb100-2" aria-hidden="true" tabindex="-1"></a>  bopen<span class="op">(&amp;</span>foo<span class="op">);</span></span>
+<span id="cb100-3"><a href="#cb100-3" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(&amp;</span>foo<span class="op">,</span> <span class="st">&quot;Hello %s</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">,</span> <span class="st">&quot;World&quot;</span><span class="op">);</span></span>
+<span id="cb100-4"><a href="#cb100-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">// do something with foo.ptr</span></span>
+<span id="cb100-5"><a href="#cb100-5" aria-hidden="true" tabindex="-1"></a>  bclose<span class="op">(&amp;</span>foo<span class="op">);</span></span></code></pre></div>
+<p>Note that <code>charbuf</code> includes <code>CHARBUF_INTERNAL_SIZE</code> of storage that does not have to be allocated with <code>malloc</code> and it doesn’t grow very aggressively. This reflects that fact that most <code>charbuf</code> instances are very small. Of course a <code>charbuf</code> could go on the heap if it needs to outlive the function it appears in, but this is exceedingly rare.</p>
+<p>To make sure buffers are consistently closed (and this is a problem because there are often a lot of them. They are allocated with these simple helper macros.</p>
+<div class="sourceCode" id="cb101"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb101-1"><a href="#cb101-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#define CHARBUF_OPEN(x) \</span></span>
+<span id="cb101-2"><a href="#cb101-2" aria-hidden="true" tabindex="-1"></a><span class="pp">  int32_t __saved_charbuf_count##x = charbuf_open_count; \</span></span>
+<span id="cb101-3"><a href="#cb101-3" aria-hidden="true" tabindex="-1"></a><span class="pp">  charbuf x; \</span></span>
+<span id="cb101-4"><a href="#cb101-4" aria-hidden="true" tabindex="-1"></a><span class="pp">  bopen(&amp;x)</span></span>
+<span id="cb101-5"><a href="#cb101-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb101-6"><a href="#cb101-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#define CHARBUF_CLOSE(x) \</span></span>
+<span id="cb101-7"><a href="#cb101-7" aria-hidden="true" tabindex="-1"></a><span class="pp">  bclose(&amp;x); \</span></span>
+<span id="cb101-8"><a href="#cb101-8" aria-hidden="true" tabindex="-1"></a><span class="pp">  Invariant(__saved_charbuf_count##x == charbuf_open_count)</span></span></code></pre></div>
+<p>the earlier example would be written more properly:</p>
+<div class="sourceCode" id="cb102"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb102-1"><a href="#cb102-1" aria-hidden="true" tabindex="-1"></a>  CHARBUF_OPEN<span class="op">(</span>foo<span class="op">);</span></span>
+<span id="cb102-2"><a href="#cb102-2" aria-hidden="true" tabindex="-1"></a>    bprintf<span class="op">(&amp;</span>foo<span class="op">,</span> <span class="st">&quot;Hello %s</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">,</span> <span class="st">&quot;World&quot;</span><span class="op">);</span></span>
+<span id="cb102-3"><a href="#cb102-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// do something with foo.ptr</span></span>
+<span id="cb102-4"><a href="#cb102-4" aria-hidden="true" tabindex="-1"></a>  CHARBUF_CLOSE<span class="op">(</span>foo<span class="op">);</span></span></code></pre></div>
+<p>If you forget to close a buffer the count will get messed up and the next close will trigger an assertion failure.</p>
+<p>It’s normal to create several buffers in the course of doing code generation. In fact some of these buffers become “globally” visible and get swapped out as needed. For instance this kind of chaining is normal. Inside of <code>cg_create_proc_stmt</code> there is these sequence:</p>
+<p>Make new buffers…</p>
+<div class="sourceCode" id="cb103"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb103-1"><a href="#cb103-1" aria-hidden="true" tabindex="-1"></a>  CHARBUF_OPEN<span class="op">(</span>proc_fwd_ref<span class="op">);</span></span>
+<span id="cb103-2"><a href="#cb103-2" aria-hidden="true" tabindex="-1"></a>  CHARBUF_OPEN<span class="op">(</span>proc_body<span class="op">);</span></span>
+<span id="cb103-3"><a href="#cb103-3" aria-hidden="true" tabindex="-1"></a>  CHARBUF_OPEN<span class="op">(</span>proc_locals<span class="op">);</span></span>
+<span id="cb103-4"><a href="#cb103-4" aria-hidden="true" tabindex="-1"></a>  CHARBUF_OPEN<span class="op">(</span>proc_cleanup<span class="op">);</span></span></code></pre></div>
+<p>Save what we got…</p>
+<div class="sourceCode" id="cb104"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb104-1"><a href="#cb104-1" aria-hidden="true" tabindex="-1"></a>  charbuf <span class="op">*</span>saved_main <span class="op">=</span> cg_main_output<span class="op">;</span></span>
+<span id="cb104-2"><a href="#cb104-2" aria-hidden="true" tabindex="-1"></a>  charbuf <span class="op">*</span>saved_decls <span class="op">=</span> cg_declarations_output<span class="op">;</span></span>
+<span id="cb104-3"><a href="#cb104-3" aria-hidden="true" tabindex="-1"></a>  charbuf <span class="op">*</span>saved_scratch <span class="op">=</span> cg_scratch_vars_output<span class="op">;</span></span>
+<span id="cb104-4"><a href="#cb104-4" aria-hidden="true" tabindex="-1"></a>  charbuf <span class="op">*</span>saved_cleanup <span class="op">=</span> cg_cleanup_output<span class="op">;</span></span>
+<span id="cb104-5"><a href="#cb104-5" aria-hidden="true" tabindex="-1"></a>  charbuf <span class="op">*</span>saved_fwd_ref <span class="op">=</span> cg_fwd_ref_output<span class="op">;</span></span></code></pre></div>
+<p>Switch to the new…</p>
+<div class="sourceCode" id="cb105"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb105-1"><a href="#cb105-1" aria-hidden="true" tabindex="-1"></a>  cg_fwd_ref_output <span class="op">=</span> <span class="op">&amp;</span>proc_fwd_ref<span class="op">;</span></span>
+<span id="cb105-2"><a href="#cb105-2" aria-hidden="true" tabindex="-1"></a>  cg_main_output <span class="op">=</span> <span class="op">&amp;</span>proc_body<span class="op">;</span></span>
+<span id="cb105-3"><a href="#cb105-3" aria-hidden="true" tabindex="-1"></a>  cg_declarations_output <span class="op">=</span> <span class="op">&amp;</span>proc_locals<span class="op">;</span></span>
+<span id="cb105-4"><a href="#cb105-4" aria-hidden="true" tabindex="-1"></a>  cg_scratch_vars_output <span class="op">=</span> <span class="op">&amp;</span>proc_locals<span class="op">;</span></span>
+<span id="cb105-5"><a href="#cb105-5" aria-hidden="true" tabindex="-1"></a>  cg_cleanup_output <span class="op">=</span> <span class="op">&amp;</span>proc_cleanup<span class="op">;</span></span></code></pre></div>
+<p>And of course the code puts the original values back when it’s done and closes the buffers.</p>
+<p>This means that while processing a procedure the codegen that declares say scratch variables, which would go to <code>cg_scratch_vars_output</code> is going to target the <code>proc_locals</code> buffer which will be emitted before the <code>body</code>. By the time <code>cg_stmt_list</code> is invoked the <code>cg_main_output</code> variable will be pointing to the procedure body, thus any statements will go into there rather than being acculated at the global level – it’s possible to have code that is not in a procedure (see <a href="https://cgsql.dev/cql-guide/x1#--global_proc-name"><code>--global_proc</code></a>).</p>
+<p>But in general, it’s very useful to have different buffers going on at the same time. New local variables or scratch variables can be added to their own buffer which goes before the code runs. New cleanup steps that are necessary can be added to the cleanup output which will appear at the end. The final function combines all of these pieces with maybe some glue. Everything works like this, <code>IF</code> statements, expressions, all of it.</p>
+<p>One interesting but unexpected feature of <code>charbuf</code> is that it provides helper methods for indenting buffer by whatever amount you like. This turns out to be invaluable in creating well formatted C code because of course you want (e.g.) the body of an <code>if</code> statement to be indented. CQL tries to create well formatted code that is readable by humans as much as possible.</p>
+<h4 id="byte-buffers">Byte Buffers</h4>
+<p>These are less commonly used but there is a peer to <code>charbuf</code> creatively called <code>bytebuf</code>. This gives you a growable binary buffer. It’s often used to hold arrays of structures. Interestingly, <code>cg_c.c</code> doesn’t currently consume byte buffers, the presence of <code>bytebuf.c</code> actually came late to the CQL compiler. However the CQL runtime <code>cqlrt.c</code> (and <code>cqlrt_common.c</code>) provide <code>cql_bytebuf_open</code>, <code>cql_bytebuf_alloc</code> and, <code>cql_bytebuf_close</code> which are akin to the <code>charbuf</code> methods. These functions are used in the generated code to create result sets at runtime. The <code>bytebuf</code> was so useful that it found its way back from the runtime into the compiler itself, and is used by other code-generators like the schema upgrader. The semantic analyzer also uses it to help with query fragments and to track the various upgrade annotations.</p>
+<p>Both <code>charbuf</code> and <code>bytebuf</code> are simple enough that they don’t need discussion. It’s easier to just read the code and the comments.</p>
+<h3 id="expressions">Expressions</h3>
+<p>Many of the output needs of CQL stemmed from the base case of creating expressions. A simple CQL expression like</p>
+<div class="sourceCode" id="cb106"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb106-1"><a href="#cb106-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SET</span> x <span class="op">:=</span> x <span class="op">+</span> y;</span></code></pre></div>
+<p>seems innocuous enough, we’d like this to compile to this code:</p>
+<div class="sourceCode" id="cb107"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb107-1"><a href="#cb107-1" aria-hidden="true" tabindex="-1"></a>  x <span class="op">=</span> x <span class="op">+</span> y<span class="op">;</span></span></code></pre></div>
+<p>And indeed, it might. Here’s some actual output from the compiler:</p>
+<div class="sourceCode" id="cb108"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb108-1"><a href="#cb108-1" aria-hidden="true" tabindex="-1"></a><span class="co">/*</span></span>
+<span id="cb108-2"><a href="#cb108-2" aria-hidden="true" tabindex="-1"></a><span class="co">CREATE PROC p ()</span></span>
+<span id="cb108-3"><a href="#cb108-3" aria-hidden="true" tabindex="-1"></a><span class="re">BEGIN</span></span>
+<span id="cb108-4"><a href="#cb108-4" aria-hidden="true" tabindex="-1"></a><span class="co">  DECLARE x, y INTEGER NOT NULL;</span></span>
+<span id="cb108-5"><a href="#cb108-5" aria-hidden="true" tabindex="-1"></a><span class="co">  SET x := x + y;</span></span>
+<span id="cb108-6"><a href="#cb108-6" aria-hidden="true" tabindex="-1"></a><span class="re">END</span><span class="co">;</span></span>
+<span id="cb108-7"><a href="#cb108-7" aria-hidden="true" tabindex="-1"></a><span class="co">*/</span></span>
+<span id="cb108-8"><a href="#cb108-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb108-9"><a href="#cb108-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#define _PROC_ &quot;p&quot;</span></span>
+<span id="cb108-10"><a href="#cb108-10" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> p<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb108-11"><a href="#cb108-11" aria-hidden="true" tabindex="-1"></a>  cql_int32 x <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb108-12"><a href="#cb108-12" aria-hidden="true" tabindex="-1"></a>  cql_int32 y <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb108-13"><a href="#cb108-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb108-14"><a href="#cb108-14" aria-hidden="true" tabindex="-1"></a>  x <span class="op">=</span> x <span class="op">+</span> y<span class="op">;</span></span>
+<span id="cb108-15"><a href="#cb108-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb108-16"><a href="#cb108-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb108-17"><a href="#cb108-17" aria-hidden="true" tabindex="-1"></a><span class="pp">#undef _PROC_</span></span></code></pre></div>
+<p>(*) the output above was created by using <code>out/cql --in x --cg x.h x.c --nolines</code> to avoid all the # directives</p>
+<p>Looks easy enough. And indeed if all expressions were like this, you could do expression compilation pretty simply – every binary operator would look something like this:</p>
+<ul>
+<li>recurse left</li>
+<li>emit infix operator</li>
+<li>recurse right</li>
+</ul>
+<p>This would sort of build up your expressions inside out and your final buffer after all the recursion was done would have the whole expression.</p>
+<p>This doesn’t work at all. To illustrate what goes wrong, we only have to change the test case a tiny bit. The result is telling:</p>
+<div class="sourceCode" id="cb109"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb109-1"><a href="#cb109-1" aria-hidden="true" tabindex="-1"></a><span class="co">/*</span></span>
+<span id="cb109-2"><a href="#cb109-2" aria-hidden="true" tabindex="-1"></a><span class="co">CREATE PROC p ()</span></span>
+<span id="cb109-3"><a href="#cb109-3" aria-hidden="true" tabindex="-1"></a><span class="re">BEGIN</span></span>
+<span id="cb109-4"><a href="#cb109-4" aria-hidden="true" tabindex="-1"></a><span class="co">  DECLARE x, y INTEGER;</span></span>
+<span id="cb109-5"><a href="#cb109-5" aria-hidden="true" tabindex="-1"></a><span class="co">  SET x := x + y;</span></span>
+<span id="cb109-6"><a href="#cb109-6" aria-hidden="true" tabindex="-1"></a><span class="re">END</span><span class="co">;</span></span>
+<span id="cb109-7"><a href="#cb109-7" aria-hidden="true" tabindex="-1"></a><span class="co">*/</span></span>
+<span id="cb109-8"><a href="#cb109-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb109-9"><a href="#cb109-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#define _PROC_ &quot;p&quot;</span></span>
+<span id="cb109-10"><a href="#cb109-10" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> p<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb109-11"><a href="#cb109-11" aria-hidden="true" tabindex="-1"></a>  cql_nullable_int32 x<span class="op">;</span></span>
+<span id="cb109-12"><a href="#cb109-12" aria-hidden="true" tabindex="-1"></a>  cql_set_null<span class="op">(</span>x<span class="op">);</span></span>
+<span id="cb109-13"><a href="#cb109-13" aria-hidden="true" tabindex="-1"></a>  cql_nullable_int32 y<span class="op">;</span></span>
+<span id="cb109-14"><a href="#cb109-14" aria-hidden="true" tabindex="-1"></a>  cql_set_null<span class="op">(</span>y<span class="op">);</span></span>
+<span id="cb109-15"><a href="#cb109-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb109-16"><a href="#cb109-16" aria-hidden="true" tabindex="-1"></a>  cql_combine_nullables<span class="op">(</span>x<span class="op">,</span> x<span class="op">.</span>is_null<span class="op">,</span> y<span class="op">.</span>is_null<span class="op">,</span> x<span class="op">.</span>value <span class="op">+</span> y<span class="op">.</span>value<span class="op">);</span></span>
+<span id="cb109-17"><a href="#cb109-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb109-18"><a href="#cb109-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb109-19"><a href="#cb109-19" aria-hidden="true" tabindex="-1"></a><span class="pp">#undef _PROC_</span></span></code></pre></div>
+<p>All that’s happened in the above is that <code>x</code> and <code>y</code> became nullable variables, that is the <code>NOT NULL</code> was removed from the declaration. This makes all the difference in the world, and this is a fairly easy case. The problem is that nullable value types like cql_nullable_int32 have an integer and a boolean and these don’t flow into expressions that use operators like <code>+</code>, <code>-</code>, <code>/</code> and so forth. This means that even simple expressions involving nullable types actually expand into several statements. And, in general, these statements need a place to put their temporary results to accumulate the answer, so scratch variables are required to make all this work.</p>
+<p>Here’s a more realistic example:</p>
+<div class="sourceCode" id="cb110"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb110-1"><a href="#cb110-1" aria-hidden="true" tabindex="-1"></a><span class="co">/*</span></span>
+<span id="cb110-2"><a href="#cb110-2" aria-hidden="true" tabindex="-1"></a><span class="co">CREATE PROC combine (x INTEGER, y INTEGER, OUT result INTEGER)</span></span>
+<span id="cb110-3"><a href="#cb110-3" aria-hidden="true" tabindex="-1"></a><span class="re">BEGIN</span></span>
+<span id="cb110-4"><a href="#cb110-4" aria-hidden="true" tabindex="-1"></a><span class="co">  SET result := 5 * x + 3 * y;</span></span>
+<span id="cb110-5"><a href="#cb110-5" aria-hidden="true" tabindex="-1"></a><span class="re">END</span><span class="co">;</span></span>
+<span id="cb110-6"><a href="#cb110-6" aria-hidden="true" tabindex="-1"></a><span class="co">*/</span></span>
+<span id="cb110-7"><a href="#cb110-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb110-8"><a href="#cb110-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#define _PROC_ &quot;combine&quot;</span></span>
+<span id="cb110-9"><a href="#cb110-9" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> combine<span class="op">(</span>cql_nullable_int32 x<span class="op">,</span> cql_nullable_int32 y<span class="op">,</span> cql_nullable_int32 <span class="op">*</span>_Nonnull result<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb110-10"><a href="#cb110-10" aria-hidden="true" tabindex="-1"></a>  cql_contract_argument_notnull<span class="op">((</span><span class="dt">void</span> <span class="op">*)</span>result<span class="op">,</span> <span class="dv">3</span><span class="op">);</span></span>
+<span id="cb110-11"><a href="#cb110-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb110-12"><a href="#cb110-12" aria-hidden="true" tabindex="-1"></a>  cql_nullable_int32 _tmp_n_int_1<span class="op">;</span></span>
+<span id="cb110-13"><a href="#cb110-13" aria-hidden="true" tabindex="-1"></a>  cql_set_null<span class="op">(</span>_tmp_n_int_1<span class="op">);</span></span>
+<span id="cb110-14"><a href="#cb110-14" aria-hidden="true" tabindex="-1"></a>  cql_nullable_int32 _tmp_n_int_2<span class="op">;</span></span>
+<span id="cb110-15"><a href="#cb110-15" aria-hidden="true" tabindex="-1"></a>  cql_set_null<span class="op">(</span>_tmp_n_int_2<span class="op">);</span></span>
+<span id="cb110-16"><a href="#cb110-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb110-17"><a href="#cb110-17" aria-hidden="true" tabindex="-1"></a>  cql_set_null<span class="op">(*</span>result<span class="op">);</span> <span class="co">// set out arg to non-garbage</span></span>
+<span id="cb110-18"><a href="#cb110-18" aria-hidden="true" tabindex="-1"></a>  cql_set_nullable<span class="op">(</span>_tmp_n_int_1<span class="op">,</span> x<span class="op">.</span>is_null<span class="op">,</span> <span class="dv">5</span> <span class="op">*</span> x<span class="op">.</span>value<span class="op">);</span></span>
+<span id="cb110-19"><a href="#cb110-19" aria-hidden="true" tabindex="-1"></a>  cql_set_nullable<span class="op">(</span>_tmp_n_int_2<span class="op">,</span> y<span class="op">.</span>is_null<span class="op">,</span> <span class="dv">3</span> <span class="op">*</span> y<span class="op">.</span>value<span class="op">);</span></span>
+<span id="cb110-20"><a href="#cb110-20" aria-hidden="true" tabindex="-1"></a>  cql_combine_nullables<span class="op">(*</span>result<span class="op">,</span> _tmp_n_int_1<span class="op">.</span>is_null<span class="op">,</span> _tmp_n_int_2<span class="op">.</span>is_null<span class="op">,</span> _tmp_n_int_1<span class="op">.</span>value <span class="op">+</span> _tmp_n_int_2<span class="op">.</span>value<span class="op">);</span></span>
+<span id="cb110-21"><a href="#cb110-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb110-22"><a href="#cb110-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb110-23"><a href="#cb110-23" aria-hidden="true" tabindex="-1"></a><span class="pp">#undef _PROC_</span></span>
+<span id="cb110-24"><a href="#cb110-24" aria-hidden="true" tabindex="-1"></a><span class="pp">#pragma clang diagnostic pop</span></span></code></pre></div>
+<ul>
+<li><code>_tmp_n_int_1</code> holds the product of x and 5, it’s null if <code>x.is_null</code> is true</li>
+<li><code>_tmp_n_int_2</code> holds the product of y and 3, it’s null if <code>y.is_null</code> is true</li>
+<li><code>*result</code> holds the answer, it’s null if either of <code>_tmp_n_int_1.is_null</code>, <code>_tmp_n_int_2.is_null</code> is true
+<ul>
+<li>otherwise it’s <code>_tmp_n_int_1.value + _tmp_n_int_2.value</code></li>
+</ul></li>
+</ul>
+<p>So, in general, we need to emit arbitarily many statements in the course of evaluating even simple looking expressions and we need good mechanisms to manage that. This is what we’ll talk about in the coming sections.</p>
+<h4 id="managing-scratch-variables">Managing Scratch Variables</h4>
+<p>The function that actually assigns scratch variables is <code>cg_scratch_var</code></p>
+<div class="sourceCode" id="cb111"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb111-1"><a href="#cb111-1" aria-hidden="true" tabindex="-1"></a><span class="co">// The scratch variable helper uses the given sem_type and the current</span></span>
+<span id="cb111-2"><a href="#cb111-2" aria-hidden="true" tabindex="-1"></a><span class="co">// stack level to create a temporary variable name for that type at that level.</span></span>
+<span id="cb111-3"><a href="#cb111-3" aria-hidden="true" tabindex="-1"></a><span class="co">// If the variable does not already have a declaration (as determined by the masks)</span></span>
+<span id="cb111-4"><a href="#cb111-4" aria-hidden="true" tabindex="-1"></a><span class="co">// then a declaration is added to the scratch_vars section.  This is one of the root</span></span>
+<span id="cb111-5"><a href="#cb111-5" aria-hidden="true" tabindex="-1"></a><span class="co">// ways of getting an .is_null and .value back.  Note that not null variables always</span></span>
+<span id="cb111-6"><a href="#cb111-6" aria-hidden="true" tabindex="-1"></a><span class="co">// have a .is_null of &quot;0&quot; which becomes important when deciding how to assign</span></span>
+<span id="cb111-7"><a href="#cb111-7" aria-hidden="true" tabindex="-1"></a><span class="co">// one result to another.  Everything stays uniform.</span></span>
+<span id="cb111-8"><a href="#cb111-8" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> cg_scratch_var<span class="op">(</span>ast_node <span class="op">*</span>ast<span class="op">,</span> sem_t sem_type<span class="op">,</span> charbuf <span class="op">*</span>var<span class="op">,</span> charbuf <span class="op">*</span>is_null<span class="op">,</span> charbuf <span class="op">*</span>value<span class="op">)</span></span></code></pre></div>
+<p>The signature is a bit unexpected so we’ll go over this, some of this will make more sense as we learn about expressions generally but this is as good an introduction as any.</p>
+<ul>
+<li><code>ast</code> holds a reference to a variable we want to assign to, this is normally <code>NULL</code> for scratch variables, it’s not null for the <code>RESULT</code> macros which we’ll study later, so for now ignore this</li>
+<li><code>sem_type</code> holds the type of the variable we need, it must be a unitary type, optionally with <code>SEM_TYPE_NOTNULL</code> set</li>
+<li><code>var</code> is a character buffer that will get the name of the variable</li>
+<li><code>is_null</code> is a character buffer that will get the <code>is_null</code> expression for this variable (more below)</li>
+<li><code>value</code> is a character buffer that will get the <code>value</code> expression for this variable (more below)</li>
+</ul>
+<p>And this is a good time to talk about <code>is_null</code> and <code>value</code> because they will be everywhere.</p>
+<p>Every expression evaluation in the C code generator has two essential results, the text that corresponds to the current value so far (e.g. "(1+2)*3“) and the text for the current expression that will tell you if the result is null, this could be as simple as”0" for a expression that is known to be not null. So let’s make this a little more concrete:</p>
+<p>Suppose you ask for a scratch not null integer we get results like this:</p>
+<ul>
+<li><code>var</code>: <code>"_tmp_n_int_1"</code></li>
+<li><code>is_null</code>: <code>"0"</code></li>
+<li><code>value</code>: <code>"_tmp_n_int_1"</code></li>
+</ul>
+<p>Meaning: if you want the value, use the text "_tmp_n_int_1" if you want to know if the variable is null, use the text “0” Note: many parts of <code>cg_c.c</code> special case an <code>is_null</code> value of <code>"0"</code> to make better code because such a thing is known to be not null at compile time.</p>
+<p>Now let’s suppose you ask for a scratch nullable integer, we get results like this:</p>
+<ul>
+<li><code>var</code>: <code>"_tmp_int_1"</code></li>
+<li><code>is_null</code>: <code>"_tmp_int_1.is_null"</code></li>
+<li><code>value</code>: <code>"_tmp_int_1.value"</code></li>
+</ul>
+<p>So again, you have exactly the text you need to test for null and the test you need to get the value.</p>
+<p>Additional notes:</p>
+<ul>
+<li>scratch variables can be re-used, they are on a “stack”</li>
+<li>a bitmask is used to track which scratch variables have aleady had a declaration emitted, so they are only declared once</li>
+<li>the variable name is based on the current value of the <code>stack_level</code> variable which is increased in a push/pop fashion as temporaries come in and out of scope</li>
+<li>this strategy isn’t perfect, but the C compiler can consolidate locals even if the CQL codegen is not perfect so it ends up being not so bad</li>
+<li>importantly there is one stacklevel variable for all temporaries not one stacklevel for every type of temporary, this seemed like a reasonable simplification</li>
+</ul>
+<h4 id="allocating-scratch-variables">Allocating Scratch Variables</h4>
+<p>The most common reason for a scratch variable is that a temporary is needed for some part of the computation. The most common reason for a temporary variable is to hold an intermediate result of a computation involving nullable arithmetic.</p>
+<p>These temporaries are created with <code>CG_PUSH_TEMP</code> which simply creates the three <code>charbuf</code> variables you need and then asks for a scratch variable of the type you need. The variables follow a simple naming convention. The stack level is increased.</p>
+<div class="sourceCode" id="cb112"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb112-1"><a href="#cb112-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Create buffers for a temporary variable.  Use cg_scratch_var to fill in the buffers</span></span>
+<span id="cb112-2"><a href="#cb112-2" aria-hidden="true" tabindex="-1"></a><span class="co">// with the text needed to refer to the variable.  cg_scratch_var picks the name</span></span>
+<span id="cb112-3"><a href="#cb112-3" aria-hidden="true" tabindex="-1"></a><span class="co">// based on stack level-and type.</span></span>
+<span id="cb112-4"><a href="#cb112-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#define CG_PUSH_TEMP(name, sem_type) \</span></span>
+<span id="cb112-5"><a href="#cb112-5" aria-hidden="true" tabindex="-1"></a><span class="pp">CHARBUF_OPEN(name); \</span></span>
+<span id="cb112-6"><a href="#cb112-6" aria-hidden="true" tabindex="-1"></a><span class="pp">CHARBUF_OPEN(name##_is_null); \</span></span>
+<span id="cb112-7"><a href="#cb112-7" aria-hidden="true" tabindex="-1"></a><span class="pp">CHARBUF_OPEN(name##_value); \</span></span>
+<span id="cb112-8"><a href="#cb112-8" aria-hidden="true" tabindex="-1"></a><span class="pp">cg_scratch_var(NULL, sem_type, &amp;name, &amp;name##_is_null, &amp;name##_value); \</span></span>
+<span id="cb112-9"><a href="#cb112-9" aria-hidden="true" tabindex="-1"></a><span class="pp">stack_level++;</span></span></code></pre></div>
+<p>Symetrically, <code>CG_POP_TEMP</code> releases the charbufs and restores the stack level. As with the other macros, these are designed to make it impossible to forget to free your buffers or get the stack wrong. In fact, the stack is checked at strategic places to ensure its back to baseline. You can always just snapshot <code>stacklevel</code>, do some work that should be clean, and then add an <code>Invariant</code> that <code>stacklevel</code> is back to where it was.</p>
+<div class="sourceCode" id="cb113"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb113-1"><a href="#cb113-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Release the buffers for the temporary, restore the stack level.</span></span>
+<span id="cb113-2"><a href="#cb113-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define CG_POP_TEMP(name) \</span></span>
+<span id="cb113-3"><a href="#cb113-3" aria-hidden="true" tabindex="-1"></a><span class="pp">CHARBUF_CLOSE(name##_value); \</span></span>
+<span id="cb113-4"><a href="#cb113-4" aria-hidden="true" tabindex="-1"></a><span class="pp">CHARBUF_CLOSE(name##_is_null); \</span></span>
+<span id="cb113-5"><a href="#cb113-5" aria-hidden="true" tabindex="-1"></a><span class="pp">CHARBUF_CLOSE(name); \</span></span>
+<span id="cb113-6"><a href="#cb113-6" aria-hidden="true" tabindex="-1"></a><span class="pp">stack_level--;</span></span></code></pre></div>
+<h4 id="recursing-sub-expressions">Recursing Sub-expressions</h4>
+<p>Now that we understand that we can create scratch variables as needed, it’s time to take a look at the typical evaluation patterns and how the evaluation works within that pattern. This is everywhere in <code>cg_c.c</code>.</p>
+<p>So let’s look at an actual evaluator, the simplest of them all, this one does code generation for the <code>NULL</code> literal.</p>
+<div class="sourceCode" id="cb114"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb114-1"><a href="#cb114-1" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> cg_expr_null<span class="op">(</span>ast_node <span class="op">*</span>expr<span class="op">,</span> CSTR op<span class="op">,</span> charbuf <span class="op">*</span>is_null<span class="op">,</span> charbuf <span class="op">*</span>value<span class="op">,</span> <span class="dt">int32_t</span> pri<span class="op">,</span> <span class="dt">int32_t</span> pri_new<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb114-2"><a href="#cb114-2" aria-hidden="true" tabindex="-1"></a>  Contract<span class="op">(</span>is_ast_null<span class="op">(</span>expr<span class="op">));</span></span>
+<span id="cb114-3"><a href="#cb114-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">// null literal</span></span>
+<span id="cb114-4"><a href="#cb114-4" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(</span>value<span class="op">,</span> <span class="st">&quot;NULL&quot;</span><span class="op">);</span></span>
+<span id="cb114-5"><a href="#cb114-5" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(</span>is_null<span class="op">,</span> <span class="st">&quot;1&quot;</span><span class="op">);</span></span>
+<span id="cb114-6"><a href="#cb114-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Now this may be looking familiar: the signature of the code generator is something very much like the signature of the the <code>gen_</code> functions in the echoing code. That’s really because in some sense the echoing code is like a very simple code generator itself.</p>
+<ul>
+<li><code>expr</code> : the AST we are generating code for</li>
+<li><code>op</code> : the relevant operator if any (operators share code)</li>
+<li><code>is_null</code> : a <code>charbuf</code> into which we can write the <code>is_null</code> expression text</li>
+<li><code>value</code> : a <code>charbuf</code> into which we can write the <code>value</code> expression text</li>
+<li><code>pri</code> : the binding strength of the node above this one</li>
+<li><code>pri_new</code> : the binding strength of this node</li>
+</ul>
+<p>This particular generator is going to produce <code>"NULL"</code> for the <code>value</code> and <code>"1"</code> for the <code>is_null</code> expression.</p>
+<p><code>is_null</code> and <code>value</code> are the chief outputs, and the caller will use these to create its own expression results with recursive logic. But the expression logic can also write into the statement stream, and as we’ll see, it does.</p>
+<p><code>pri</code> and <code>pri_new</code> work exactly like they did in the echoing code (see <a href="https://cgsql.dev/cql-guide/int01">Part 1</a>), they are used to allow the code generator to decide if it needs to emit parentheses. But recall that the binding strengths now will be the C binding strengths NOT the SQL binding strengths (discussed above).</p>
+<p>Let’s look at one of the simplest operators: the <code>IS NULL</code> operator handled by <code>cg_expr_is_null</code></p>
+<div class="sourceCode" id="cb115"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb115-1"><a href="#cb115-1" aria-hidden="true" tabindex="-1"></a><span class="co">// The code-gen for is_null is one of the easiest.  The recursive call</span></span>
+<span id="cb115-2"><a href="#cb115-2" aria-hidden="true" tabindex="-1"></a><span class="co">// produces is_null as one of the outputs.  Use that.  Our is_null result</span></span>
+<span id="cb115-3"><a href="#cb115-3" aria-hidden="true" tabindex="-1"></a><span class="co">// is always zero because IS NULL is never, itself, null.</span></span>
+<span id="cb115-4"><a href="#cb115-4" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> cg_expr_is_null<span class="op">(</span>ast_node <span class="op">*</span>expr<span class="op">,</span> charbuf <span class="op">*</span>is_null<span class="op">,</span> charbuf <span class="op">*</span>value<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb115-5"><a href="#cb115-5" aria-hidden="true" tabindex="-1"></a>  sem_t sem_type_expr <span class="op">=</span> expr<span class="op">-&gt;</span>sem<span class="op">-&gt;</span>sem_type<span class="op">;</span></span>
+<span id="cb115-6"><a href="#cb115-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb115-7"><a href="#cb115-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">// expr IS NULL</span></span>
+<span id="cb115-8"><a href="#cb115-8" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(</span>is_null<span class="op">,</span> <span class="st">&quot;0&quot;</span><span class="op">);</span> <span class="co">// the result of is null is never null</span></span>
+<span id="cb115-9"><a href="#cb115-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb115-10"><a href="#cb115-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">// The fact that this is not constant not null for not null reference types reflects</span></span>
+<span id="cb115-11"><a href="#cb115-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">// the weird state of affairs with uninitualized reference variables which</span></span>
+<span id="cb115-12"><a href="#cb115-12" aria-hidden="true" tabindex="-1"></a>  <span class="co">// must be null even if they are typed not null.</span></span>
+<span id="cb115-13"><a href="#cb115-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb115-14"><a href="#cb115-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>is_not_nullable<span class="op">(</span>sem_type_expr<span class="op">)</span> <span class="op">&amp;&amp;</span> <span class="op">!</span>is_ref_type<span class="op">(</span>sem_type_expr<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb115-15"><a href="#cb115-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Note, sql has no side-effects so we can fold this away.</span></span>
+<span id="cb115-16"><a href="#cb115-16" aria-hidden="true" tabindex="-1"></a>    bprintf<span class="op">(</span>value<span class="op">,</span> <span class="st">&quot;0&quot;</span><span class="op">);</span></span>
+<span id="cb115-17"><a href="#cb115-17" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb115-18"><a href="#cb115-18" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb115-19"><a href="#cb115-19" aria-hidden="true" tabindex="-1"></a>    CG_PUSH_EVAL<span class="op">(</span>expr<span class="op">,</span> C_EXPR_PRI_ROOT<span class="op">);</span></span>
+<span id="cb115-20"><a href="#cb115-20" aria-hidden="true" tabindex="-1"></a>    bprintf<span class="op">(</span>value<span class="op">,</span> <span class="st">&quot;%s&quot;</span><span class="op">,</span> expr_is_null<span class="op">.</span>ptr<span class="op">);</span></span>
+<span id="cb115-21"><a href="#cb115-21" aria-hidden="true" tabindex="-1"></a>    CG_POP_EVAL<span class="op">(</span>expr<span class="op">);</span></span>
+<span id="cb115-22"><a href="#cb115-22" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb115-23"><a href="#cb115-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>So walking through this: * the result of <code>IS NULL</code> is never null, so we can immediately put “0” into the <code>is_null</code> buffer * if the operand is a not-null numeric type then the result of <code>IS NULL</code> is <code>0</code> * if the operand might actually be null then * use <code>CG_PUSH_EVAL</code> to recursively do codegen for it * copy its <code>expr_is_null</code> text into our <code>value</code> text</p>
+<p>Note: the code reveals one of the big CQL secrets that not null reference variables can be null… C has the same issue with <code>_Nonnull</code> globals.</p>
+<p>Now let’s look at those helper macros, they are pretty simple:</p>
+<div class="sourceCode" id="cb116"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb116-1"><a href="#cb116-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Make a temporary buffer for the evaluation results using the canonical naming convention</span></span>
+<span id="cb116-2"><a href="#cb116-2" aria-hidden="true" tabindex="-1"></a><span class="co">// burn the stack slot so that any type and numbered temporary that was needed</span></span>
+<span id="cb116-3"><a href="#cb116-3" aria-hidden="true" tabindex="-1"></a><span class="co">// won&#39;t be re-used until this scope is over.</span></span>
+<span id="cb116-4"><a href="#cb116-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#define CG_PUSH_EVAL(expr, pri) \</span></span>
+<span id="cb116-5"><a href="#cb116-5" aria-hidden="true" tabindex="-1"></a><span class="pp">CHARBUF_OPEN(expr##_is_null); \</span></span>
+<span id="cb116-6"><a href="#cb116-6" aria-hidden="true" tabindex="-1"></a><span class="pp">CHARBUF_OPEN(expr##_value); \</span></span>
+<span id="cb116-7"><a href="#cb116-7" aria-hidden="true" tabindex="-1"></a><span class="pp">cg_expr(expr, &amp;expr##_is_null, &amp;expr##_value, pri); \</span></span>
+<span id="cb116-8"><a href="#cb116-8" aria-hidden="true" tabindex="-1"></a><span class="pp">stack_level++;</span></span></code></pre></div>
+<p>The push macro simply creates buffers to hold the <code>is_null</code> and <code>value</code> results, then it calls <code>cg_expr</code> to dispatch the indicated expression. The <code>pri</code> value provided to this macro represents the binding strength that the callee should assume its parent has. Usually this is your <code>pri_new</code> value but often you can use <code>C_EXPR_PRI_ROOT</code> if you know that, because of your current context, the callee will never need parentheses.</p>
+<p>How do we know this here? It seems like the operand of <code>IS NULL</code> could be anything surely it might need parentheses? Let’s consider:</p>
+<ul>
+<li>if the operand is of not null numeric type then we aren’t even going to evaluate it, we’re on the easy “no it’s not null” path</li>
+<li>if the operand is nullable then the only place the answer can be stored is in a scratch variable and its <code>is_null</code> expression will be exactly like <code>var.is_null</code></li>
+<li>if the operand is a reference type, there are no operators that combine reference types to get more reference types, so again the result must be in a variable, and is <code>is_null</code> expression will be like <code>!var</code></li>
+</ul>
+<p>None of these require further wrapping regardless of what is above this node in the tree because of he strength of the <code>.</code> and <code>!</code> operators.</p>
+<p>Other cases are usually simpler, such as “no parentheses need to be added by the child node becasue it will be used as the argument to a helper function so there will always be parens hard-coded anyway”. However these things need to be carefully tested hence the huge variety of codegen tests.</p>
+<p>Note that after calling <code>cg_expr</code> the stack level was artificially increased. We’ll get to that in the next section. For now, looking at <code>POP_EVAL</code> we can see it’s very straightforward:</p>
+<div class="sourceCode" id="cb117"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb117-1"><a href="#cb117-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Close the buffers used for the above.  Return the stack level to its original state.</span></span>
+<span id="cb117-2"><a href="#cb117-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Numbered scratch variables are re-used as though they were a stack.</span></span>
+<span id="cb117-3"><a href="#cb117-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#define CG_POP_EVAL(expr) \</span></span>
+<span id="cb117-4"><a href="#cb117-4" aria-hidden="true" tabindex="-1"></a><span class="pp">CHARBUF_CLOSE(expr##_value); \</span></span>
+<span id="cb117-5"><a href="#cb117-5" aria-hidden="true" tabindex="-1"></a><span class="pp">CHARBUF_CLOSE(expr##_is_null); \</span></span>
+<span id="cb117-6"><a href="#cb117-6" aria-hidden="true" tabindex="-1"></a><span class="pp">stack_level--;</span></span></code></pre></div>
+<p><code>CG_POP_EVAL</code> simply closes the buffers and restores the stack.</p>
+<h4 id="result-variables">Result Variables</h4>
+<p>When recursion happens in the codegen, the common place that the result will be found is in a temporary variable – the generated code will use one or more statements to arrange for the correct answer to be in that variable. To do this, the codegen needs to first get the name of a suitable result variable of a suitable type. This is the “other” reason for making scratch variables.</p>
+<p>There are three macros that make this pretty simple. The first is <code>CG_RESERVE_RESULT_VAR</code></p>
+<div class="sourceCode" id="cb118"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb118-1"><a href="#cb118-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Make a scratch variable to hold the final result of an evaluation.</span></span>
+<span id="cb118-2"><a href="#cb118-2" aria-hidden="true" tabindex="-1"></a><span class="co">// It may or may not be used.  It should be the first thing you put</span></span>
+<span id="cb118-3"><a href="#cb118-3" aria-hidden="true" tabindex="-1"></a><span class="co">// so that it is on the top of your stack.  This only saves the slot.</span></span>
+<span id="cb118-4"><a href="#cb118-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#define CG_RESERVE_RESULT_VAR(ast, sem_type) \</span></span>
+<span id="cb118-5"><a href="#cb118-5" aria-hidden="true" tabindex="-1"></a><span class="pp">int32_t stack_level_reserved = stack_level; \</span></span>
+<span id="cb118-6"><a href="#cb118-6" aria-hidden="true" tabindex="-1"></a><span class="pp">sem_t sem_type_reserved = sem_type; \</span></span>
+<span id="cb118-7"><a href="#cb118-7" aria-hidden="true" tabindex="-1"></a><span class="pp">ast_node *ast_reserved = ast; \</span></span>
+<span id="cb118-8"><a href="#cb118-8" aria-hidden="true" tabindex="-1"></a><span class="pp">CHARBUF_OPEN(result_var); \</span></span>
+<span id="cb118-9"><a href="#cb118-9" aria-hidden="true" tabindex="-1"></a><span class="pp">CHARBUF_OPEN(result_var_is_null); \</span></span>
+<span id="cb118-10"><a href="#cb118-10" aria-hidden="true" tabindex="-1"></a><span class="pp">CHARBUF_OPEN(result_var_value); \</span></span>
+<span id="cb118-11"><a href="#cb118-11" aria-hidden="true" tabindex="-1"></a><span class="pp">stack_level++;</span></span></code></pre></div>
+<p>If this looks a lot like <code>PUSH_TEMP</code> that shouldn’t be surprising. The name of the variable and the expression parts always go into <code>charbuf</code> variables named <code>result_var</code> <code>result_var_is_null</code> and <code>result_var_value</code> but the scratch variable isn’t actually allocated! However – we burn the stack_level as though it had been allocated. What’s up with that?</p>
+<p>The name might be a clue, this macro reserves stack level slot for the result variable, it’s used if you might need a result variable, but you might not. When you want it we can artificially move the stack level back to this spot where the slot was burned, allocate the scratch variable, and then put the stack back. The <code>CG_USE_RESULT_VAR</code> macro does exactly that.</p>
+<div class="sourceCode" id="cb119"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb119-1"><a href="#cb119-1" aria-hidden="true" tabindex="-1"></a><span class="co">// If the result variable is going to be used, this writes its name</span></span>
+<span id="cb119-2"><a href="#cb119-2" aria-hidden="true" tabindex="-1"></a><span class="co">// and .value and .is_null into the is_null and value fields.</span></span>
+<span id="cb119-3"><a href="#cb119-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#define CG_USE_RESULT_VAR() \</span></span>
+<span id="cb119-4"><a href="#cb119-4" aria-hidden="true" tabindex="-1"></a><span class="pp">int32_t stack_level_now = stack_level; \</span></span>
+<span id="cb119-5"><a href="#cb119-5" aria-hidden="true" tabindex="-1"></a><span class="pp">stack_level = stack_level_reserved; \</span></span>
+<span id="cb119-6"><a href="#cb119-6" aria-hidden="true" tabindex="-1"></a><span class="pp">cg_scratch_var(ast_reserved, sem_type_reserved, &amp;result_var, &amp;result_var_is_null, &amp;result_var_value); \</span></span>
+<span id="cb119-7"><a href="#cb119-7" aria-hidden="true" tabindex="-1"></a><span class="pp">stack_level = stack_level_now; \</span></span>
+<span id="cb119-8"><a href="#cb119-8" aria-hidden="true" tabindex="-1"></a><span class="pp">Invariant(result_var.used &gt; 1); \</span></span>
+<span id="cb119-9"><a href="#cb119-9" aria-hidden="true" tabindex="-1"></a><span class="pp">bprintf(is_null, &quot;%s&quot;, result_var_is_null.ptr); \</span></span>
+<span id="cb119-10"><a href="#cb119-10" aria-hidden="true" tabindex="-1"></a><span class="pp">bprintf(value, &quot;%s&quot;, result_var_value.ptr)</span></span></code></pre></div>
+<p>Once the code generator decides that it will in fact be using a result variable to represent the answer, then the <code>is_null</code> and <code>value</code> buffers can be immediately populated to whatever the values were for the result variable. That text will be correct regardless of what codegen is used to populate the variable.</p>
+<p>There is a simpler macro that reserves and uses the result variable in one step, it’s very common. The “reserve” pattern is only necessary when there are some paths that need a result variable and some that don’t.</p>
+<pre><code>// This does reserve and use in one step
+#define CG_SETUP_RESULT_VAR(ast, sem_type) \
+CG_RESERVE_RESULT_VAR(ast, sem_type); \
+CG_USE_RESULT_VAR();</code></pre>
+<p>And now armed with this knowledge we can go back to a previous mystery, let’s look at <code>CG_PUSH_EVAL</code> again</p>
+<div class="sourceCode" id="cb121"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb121-1"><a href="#cb121-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Make a temporary buffer for the evaluation results using the canonical naming convention</span></span>
+<span id="cb121-2"><a href="#cb121-2" aria-hidden="true" tabindex="-1"></a><span class="co">// burn the stack slot so that any type and numbered temporary that was needed</span></span>
+<span id="cb121-3"><a href="#cb121-3" aria-hidden="true" tabindex="-1"></a><span class="co">// won&#39;t be re-used until this scope is over.</span></span>
+<span id="cb121-4"><a href="#cb121-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#define CG_PUSH_EVAL(expr, pri) \</span></span>
+<span id="cb121-5"><a href="#cb121-5" aria-hidden="true" tabindex="-1"></a><span class="pp">CHARBUF_OPEN(expr##_is_null); \</span></span>
+<span id="cb121-6"><a href="#cb121-6" aria-hidden="true" tabindex="-1"></a><span class="pp">CHARBUF_OPEN(expr##_value); \</span></span>
+<span id="cb121-7"><a href="#cb121-7" aria-hidden="true" tabindex="-1"></a><span class="pp">cg_expr(expr, &amp;expr##_is_null, &amp;expr##_value, pri); \</span></span>
+<span id="cb121-8"><a href="#cb121-8" aria-hidden="true" tabindex="-1"></a><span class="pp">stack_level++;</span></span></code></pre></div>
+<p>The reason that <code>CG_PUSH_EVAL</code> includes <code>stack_level++</code> is that it is entirely possible, even likely, that the result of <code>cg_expr</code> is in a result variable. The convention is that if the codegen requires a result variable it is allocated <em>first</em> before any other temporaries. This is why there is a way to reserve a variable that you <em>might</em> need. When the codegen is complete, and before anything else happens, <code>stack_level</code> is increased so that the temporary that is holding the result will not be re-used! Any other temporaries are available but the result is still live. This might be easy to get wrong but the macros make it easy to get it right.</p>
+<p>Now, armed with the knowledge that there a result variables and temporary variables and both come from the scratch variable we can resolve the last mystery we left hanging. Why does the scratch variable API accept an AST pointer?</p>
+<p>The only place that pointer can be not null is in the <code>CG_USE_RESULT_VAR</code> macro, it was this line:</p>
+<pre><code>cg_scratch_var(ast_reserved, sem_type_reserved, &amp;result_var, &amp;result_var_is_null, &amp;result_var_value);</code></pre>
+<p>And <code>ast_reserved</code> refers to the AST that we are trying to evaluate. There’s an important special case that we want to optimize that saves a lot of scratch variables. It’s handled by this code in <code>cg_scratch_var</code>:</p>
+<div class="sourceCode" id="cb123"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb123-1"><a href="#cb123-1" aria-hidden="true" tabindex="-1"></a>  <span class="co">// try to avoid creating a scratch variable if we can use the target of an assignment in flight.</span></span>
+<span id="cb123-2"><a href="#cb123-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>is_assignment_target_reusable<span class="op">(</span>ast<span class="op">,</span> sem_type<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb123-3"><a href="#cb123-3" aria-hidden="true" tabindex="-1"></a>    Invariant<span class="op">(</span>ast <span class="op">&amp;&amp;</span> ast<span class="op">-&gt;</span>parent <span class="op">&amp;&amp;</span> ast<span class="op">-&gt;</span>parent<span class="op">-&gt;</span>left<span class="op">);</span></span>
+<span id="cb123-4"><a href="#cb123-4" aria-hidden="true" tabindex="-1"></a>    EXTRACT_ANY_NOTNULL<span class="op">(</span>name_ast<span class="op">,</span> ast<span class="op">-&gt;</span>parent<span class="op">-&gt;</span>left<span class="op">);</span></span>
+<span id="cb123-5"><a href="#cb123-5" aria-hidden="true" tabindex="-1"></a>    EXTRACT_STRING<span class="op">(</span>name<span class="op">,</span> name_ast<span class="op">);</span></span>
+<span id="cb123-6"><a href="#cb123-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>is_out_parameter<span class="op">(</span>name_ast<span class="op">-&gt;</span>sem<span class="op">-&gt;</span>sem_type<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb123-7"><a href="#cb123-7" aria-hidden="true" tabindex="-1"></a>      bprintf<span class="op">(</span>var<span class="op">,</span> <span class="st">&quot;*%s&quot;</span><span class="op">,</span> name<span class="op">);</span></span>
+<span id="cb123-8"><a href="#cb123-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb123-9"><a href="#cb123-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb123-10"><a href="#cb123-10" aria-hidden="true" tabindex="-1"></a>      bprintf<span class="op">(</span>var<span class="op">,</span> <span class="st">&quot;%s&quot;</span><span class="op">,</span> name<span class="op">);</span></span>
+<span id="cb123-11"><a href="#cb123-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb123-12"><a href="#cb123-12" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span></code></pre></div>
+<p>The idea is that if the generator is doing an assignment like:</p>
+<div class="sourceCode" id="cb124"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb124-1"><a href="#cb124-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SET</span> x <span class="op">:=</span> a <span class="op">+</span> b;</span></code></pre></div>
+<p>Then the code generator doesn’t need a scratch variable to hold the result of the expression <code>a + b</code> like it would in many other contexts. It can use <code>x</code> as the result variable! The <code>SET</code> codegen will discover that the value it’s supposed to set is already in <code>x</code> so it does nothing and everything just works out. The price of this is a call to <code>is_assignment_target_reusable</code> and then some logic to handle the case where <code>x</code> is an out argument (hence call by reference, hence needs to be used as <code>*x</code>).</p>
 </body>
 </html>

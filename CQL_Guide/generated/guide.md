@@ -8430,7 +8430,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Aug 17 18:05:40 PDT 2021
+Snapshot as of Thu Aug 19 10:57:53 PDT 2021
 
 ### Operators and Literals
 
@@ -10668,15 +10668,13 @@ The `strftime` function does complex data formatting.  All the arguments are str
 
 -----
 
-### CQL0086: first argument must be a string in function 'printf'
+### CQL0086: first argument must be a string in function 'function'
 
-The first argument of `printf` is the formatting string.  The other arguments are variable and many complex conversions will apply.
+The first argument of the function is the formatting string.  The other arguments are variable and many complex conversions will apply.
 
 -----
 
-### CQL0087: no object/blob types are allowed in arguments for function 'printf'
-
-The `printf` has no meaningful conversions for blobs.  Object references are entirely unsupported.
+### CQL0087 available for re-use
 
 -----
 
@@ -13486,6 +13484,107 @@ CQL 0409 : unused, this was added to prevent merge conflicts at the end on liter
 
 CQL 0410 : unused, this was added to prevent merge conflicts at the end on literally every checkin
 
+----
+
+### CQL9000: duplicate flag in substitution 'flag'
+
+The same flag cannot be used more than once per substitution within a format
+string.
+
+----
+
+### CQL9001: cannot combine '+' flag with space flag
+
+It is not sensible to use both the `+` flag and the space flag within the same
+substitution (e.g., `%+ d`) as it is equivalent to just using the `+` flag
+(e.g., `%+d`).
+
+
+----
+
+### CQL9002: width required when using flag in substitution 'flag'
+
+The flag used (`-` or `0`) for a substitution within a format string does not
+make sense unless accompanied by a width (e.g., `%-10d`).
+
+----
+
+### CQL9003: 'l' length specifier has no effect; consider 'll' instead
+
+The use of the `l` length specifier within a format string, e.g. `%ld`, has no
+effect in SQLite. If the argument is to be a `LONG`, use `ll` instead (e.g.,
+`%lld`). If the argument is to be an `INTEGER`, simply omit the length specifier
+entirely (e.g., `%d`).
+
+----
+
+### CQL9004: length specifier cannot be combined with '!' flag
+
+Length specifiers are only for use with integer type specifiers (e.g. `%lld`)
+and the `!` flag is only for use with non-integer type specifiers (e.g. `%!10s`
+and `%!f`). It therefore makes no sense to use both within the same
+substitution.
+
+----
+
+### CQL9005: type specifier not allowed in CQL 'type_specifier'
+
+The type specifier used is accepted by SQLite, but it would be either useless or
+unsafe if used within the context of CQL.
+
+----
+
+### CQL9006: unrecognized type specifier 'type_specifier'
+
+The type specifier used within the format string is not known to SQLite.
+
+----
+
+### CQL9007: type specifier combined with inappropriate flags 'type_specifier'
+
+The type specifier provided does not make sense given one or more flags that
+appear within the same substitution. For example, it makes no sense to have a
+substitution like `%+u`: the `+` indicates the sign of the number will be shown,
+while the `u` indicates the number will be shown as an unsigned integer.
+
+----
+
+### CQL9008: type specifier cannot be combined with length specifier 'type_specifier'
+
+The type specifier provided cannot be used with a length specifier. For example,
+`%lls` makes no sense because `ll` only makes sense with integer types and `s`
+is a type specifier for strings.
+
+----
+
+### CQL9009: incomplete substitution in format string
+
+The format string ends with a substitution that is incomplete. This can be the
+case if a format string ends with a `%` (e.g., `"%d %s %"`). If the intent is to
+have a literal `%` printed, use `%%` instead (e.g., "%d %s %%"`).
+
+----
+
+### CQL9010: first argument must be a string literal 'function'
+
+The first argument to the function must be a string literal.
+
+----
+
+### CQL9011: more arguments provided than expected by format string 'function'
+
+More arguments were provided to the function than its format string indicates
+are necessary. The most likely cause for this problem is that the format string
+is missing a substitution.
+
+----
+
+### CQL9012: fewer arguments provided than expected by format string 'function'
+
+Fewer arguments were provided to the function than its format string indicates
+are necessary. The most likely cause for this problem is that an argument was
+accidentally omitted.
+
 
 
 ## Appendix 5: JSON Schema Grammar
@@ -13498,7 +13597,7 @@ CQL 0410 : unused, this was added to prevent merge conflicts at the end on liter
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue Aug 17 18:05:40 PDT 2021
+Snapshot as of Thu Aug 19 10:57:54 PDT 2021
 
 ### Rules
 

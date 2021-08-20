@@ -5551,6 +5551,9 @@ static void cg_call_stmt_with_cursor(ast_node *ast, CSTR cursor_name) {
 }
 
 // Straight up DDL invocation.  The ast has the statement, execute it!
+// We don't minify the aliases because DDL can have views and the view column names
+// can be referred to in users of the view.  Loose select statements can have
+// no external references to column aliases.
 static void cg_any_ddl_stmt(ast_node *ast) {
   cg_bound_sql_statement(NULL, ast, CG_EXEC|CG_NO_MINIFY_ALIASES);
 }

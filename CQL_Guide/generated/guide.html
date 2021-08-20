@@ -440,8 +440,8 @@
 <li><a href="#cql0083-argument-must-be-numeric-sum">CQL0083: argument must be numeric ‘SUM’</a></li>
 <li><a href="#cql0084-second-argument-must-be-a-string-in-function-group_concat">CQL0084: second argument must be a string in function ‘group_concat’</a></li>
 <li><a href="#cql0085-all-arguments-must-be-strings-strftime">CQL0085: all arguments must be strings ‘strftime’</a></li>
-<li><a href="#cql0086-first-argument-must-be-a-string-in-function-printf">CQL0086: first argument must be a string in function ‘printf’</a></li>
-<li><a href="#cql0087-no-objectblob-types-are-allowed-in-arguments-for-function-printf">CQL0087: no object/blob types are allowed in arguments for function ‘printf’</a></li>
+<li><a href="#cql0086-first-argument-must-be-a-string-in-function-function">CQL0086: first argument must be a string in function ‘function’</a></li>
+<li><a href="#cql0087-available-for-re-use">CQL0087 available for re-use</a></li>
 <li><a href="#cql0088-user-function-may-not-appear-in-the-context-of-a-sql-statement-function_name">CQL0088: User function may not appear in the context of a SQL statement ‘function_name’</a></li>
 <li><a href="#cql0089-user-function-may-only-appear-in-the-context-of-a-sql-statement-function_name">CQL0089: User function may only appear in the context of a SQL statement ‘function_name’</a></li>
 <li><a href="#cql0090-stored-proc-calls-may-not-appear-in-the-context-of-a-sql-statement-proc_name">CQL0090: Stored proc calls may not appear in the context of a SQL statement ‘proc_name’</a></li>
@@ -759,6 +759,19 @@
 <li><a href="#cql0404-procedure-cannot-be-both-a-normal-procedure-and-an-unchecked-procedure-procedure_name">CQL0404: procedure cannot be both a normal procedure and an unchecked procedure, ‘procedure_name’</a></li>
 <li><a href="#cql0405-procedure-of-an-unknown-type-used-in-an-expression-procedure_name">CQL0405: procedure of an unknown type used in an expression ‘procedure_name’</a></li>
 <li><a href="#cql0408-encode-context-column-can-be-only-specified-once">CQL0408: encode context column can be only specified once</a></li>
+<li><a href="#cql9000-duplicate-flag-in-substitution-flag">CQL9000: duplicate flag in substitution ‘flag’</a></li>
+<li><a href="#cql9001-cannot-combine-flag-with-space-flag">CQL9001: cannot combine ‘+’ flag with space flag</a></li>
+<li><a href="#cql9002-width-required-when-using-flag-in-substitution-flag">CQL9002: width required when using flag in substitution ‘flag’</a></li>
+<li><a href="#cql9003-l-length-specifier-has-no-effect-consider-ll-instead">CQL9003: ‘l’ length specifier has no effect; consider ‘ll’ instead</a></li>
+<li><a href="#cql9004-length-specifier-cannot-be-combined-with-flag">CQL9004: length specifier cannot be combined with ‘!’ flag</a></li>
+<li><a href="#cql9005-type-specifier-not-allowed-in-cql-type_specifier">CQL9005: type specifier not allowed in CQL ‘type_specifier’</a></li>
+<li><a href="#cql9006-unrecognized-type-specifier-type_specifier">CQL9006: unrecognized type specifier ‘type_specifier’</a></li>
+<li><a href="#cql9007-type-specifier-combined-with-inappropriate-flags-type_specifier">CQL9007: type specifier combined with inappropriate flags ‘type_specifier’</a></li>
+<li><a href="#cql9008-type-specifier-cannot-be-combined-with-length-specifier-type_specifier">CQL9008: type specifier cannot be combined with length specifier ‘type_specifier’</a></li>
+<li><a href="#cql9009-incomplete-substitution-in-format-string">CQL9009: incomplete substitution in format string</a></li>
+<li><a href="#cql9010-first-argument-must-be-a-string-literal-function">CQL9010: first argument must be a string literal ‘function’</a></li>
+<li><a href="#cql9011-more-arguments-provided-than-expected-by-format-string-function">CQL9011: more arguments provided than expected by format string ‘function’</a></li>
+<li><a href="#cql9012-fewer-arguments-provided-than-expected-by-format-string-function">CQL9012: fewer arguments provided than expected by format string ‘function’</a></li>
 </ul></li>
 <li><a href="#appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</a>
 <ul>
@@ -6553,7 +6566,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Tue Aug 17 18:05:40 PDT 2021</p>
+<p>Snapshot as of Thu Aug 19 10:57:53 PDT 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -8394,11 +8407,10 @@ enforce_pop_stmt:
 <h3 id="cql0085-all-arguments-must-be-strings-strftime">CQL0085: all arguments must be strings ‘strftime’</h3>
 <p>The <code>strftime</code> function does complex data formatting. All the arguments are strings. See the sqlite documentation for more details on the options (there are many).</p>
 <hr />
-<h3 id="cql0086-first-argument-must-be-a-string-in-function-printf">CQL0086: first argument must be a string in function ‘printf’</h3>
-<p>The first argument of <code>printf</code> is the formatting string. The other arguments are variable and many complex conversions will apply.</p>
+<h3 id="cql0086-first-argument-must-be-a-string-in-function-function">CQL0086: first argument must be a string in function ‘function’</h3>
+<p>The first argument of the function is the formatting string. The other arguments are variable and many complex conversions will apply.</p>
 <hr />
-<h3 id="cql0087-no-objectblob-types-are-allowed-in-arguments-for-function-printf">CQL0087: no object/blob types are allowed in arguments for function ‘printf’</h3>
-<p>The <code>printf</code> has no meaningful conversions for blobs. Object references are entirely unsupported.</p>
+<h3 id="cql0087-available-for-re-use">CQL0087 available for re-use</h3>
 <hr />
 <h3 id="cql0088-user-function-may-not-appear-in-the-context-of-a-sql-statement-function_name">CQL0088: User function may not appear in the context of a SQL statement ‘function_name’</h3>
 <p>External C functions declared with <code>declare function ...</code> are not for use in sqlite. They may not appear inside statements.</p>
@@ -9788,6 +9800,45 @@ enforce_pop_stmt:
 <p>CQL 0409 : unused, this was added to prevent merge conflicts at the end on literally every checkin</p>
 <hr />
 <p>CQL 0410 : unused, this was added to prevent merge conflicts at the end on literally every checkin</p>
+<hr />
+<h3 id="cql9000-duplicate-flag-in-substitution-flag">CQL9000: duplicate flag in substitution ‘flag’</h3>
+<p>The same flag cannot be used more than once per substitution within a format string.</p>
+<hr />
+<h3 id="cql9001-cannot-combine-flag-with-space-flag">CQL9001: cannot combine ‘+’ flag with space flag</h3>
+<p>It is not sensible to use both the <code>+</code> flag and the space flag within the same substitution (e.g., <code>%+ d</code>) as it is equivalent to just using the <code>+</code> flag (e.g., <code>%+d</code>).</p>
+<hr />
+<h3 id="cql9002-width-required-when-using-flag-in-substitution-flag">CQL9002: width required when using flag in substitution ‘flag’</h3>
+<p>The flag used (<code>-</code> or <code>0</code>) for a substitution within a format string does not make sense unless accompanied by a width (e.g., <code>%-10d</code>).</p>
+<hr />
+<h3 id="cql9003-l-length-specifier-has-no-effect-consider-ll-instead">CQL9003: ‘l’ length specifier has no effect; consider ‘ll’ instead</h3>
+<p>The use of the <code>l</code> length specifier within a format string, e.g. <code>%ld</code>, has no effect in SQLite. If the argument is to be a <code>LONG</code>, use <code>ll</code> instead (e.g., <code>%lld</code>). If the argument is to be an <code>INTEGER</code>, simply omit the length specifier entirely (e.g., <code>%d</code>).</p>
+<hr />
+<h3 id="cql9004-length-specifier-cannot-be-combined-with-flag">CQL9004: length specifier cannot be combined with ‘!’ flag</h3>
+<p>Length specifiers are only for use with integer type specifiers (e.g. <code>%lld</code>) and the <code>!</code> flag is only for use with non-integer type specifiers (e.g. <code>%!10s</code> and <code>%!f</code>). It therefore makes no sense to use both within the same substitution.</p>
+<hr />
+<h3 id="cql9005-type-specifier-not-allowed-in-cql-type_specifier">CQL9005: type specifier not allowed in CQL ‘type_specifier’</h3>
+<p>The type specifier used is accepted by SQLite, but it would be either useless or unsafe if used within the context of CQL.</p>
+<hr />
+<h3 id="cql9006-unrecognized-type-specifier-type_specifier">CQL9006: unrecognized type specifier ‘type_specifier’</h3>
+<p>The type specifier used within the format string is not known to SQLite.</p>
+<hr />
+<h3 id="cql9007-type-specifier-combined-with-inappropriate-flags-type_specifier">CQL9007: type specifier combined with inappropriate flags ‘type_specifier’</h3>
+<p>The type specifier provided does not make sense given one or more flags that appear within the same substitution. For example, it makes no sense to have a substitution like <code>%+u</code>: the <code>+</code> indicates the sign of the number will be shown, while the <code>u</code> indicates the number will be shown as an unsigned integer.</p>
+<hr />
+<h3 id="cql9008-type-specifier-cannot-be-combined-with-length-specifier-type_specifier">CQL9008: type specifier cannot be combined with length specifier ‘type_specifier’</h3>
+<p>The type specifier provided cannot be used with a length specifier. For example, <code>%lls</code> makes no sense because <code>ll</code> only makes sense with integer types and <code>s</code> is a type specifier for strings.</p>
+<hr />
+<h3 id="cql9009-incomplete-substitution-in-format-string">CQL9009: incomplete substitution in format string</h3>
+<p>The format string ends with a substitution that is incomplete. This can be the case if a format string ends with a <code>%</code> (e.g., <code>"%d %s %"</code>). If the intent is to have a literal <code>%</code> printed, use <code>%%</code> instead (e.g., “%d %s %%”`).</p>
+<hr />
+<h3 id="cql9010-first-argument-must-be-a-string-literal-function">CQL9010: first argument must be a string literal ‘function’</h3>
+<p>The first argument to the function must be a string literal.</p>
+<hr />
+<h3 id="cql9011-more-arguments-provided-than-expected-by-format-string-function">CQL9011: more arguments provided than expected by format string ‘function’</h3>
+<p>More arguments were provided to the function than its format string indicates are necessary. The most likely cause for this problem is that the format string is missing a substitution.</p>
+<hr />
+<h3 id="cql9012-fewer-arguments-provided-than-expected-by-format-string-function">CQL9012: fewer arguments provided than expected by format string ‘function’</h3>
+<p>Fewer arguments were provided to the function than its format string indicates are necessary. The most likely cause for this problem is that an argument was accidentally omitted.</p>
 <h2 id="appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</h2>
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
@@ -9796,7 +9847,7 @@ enforce_pop_stmt:
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Tue Aug 17 18:05:40 PDT 2021</p>
+<p>Snapshot as of Thu Aug 19 10:57:54 PDT 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 
