@@ -1430,4 +1430,539 @@ All that's left to do is bind the arguments.  Remember that arg list is in rever
 And that's it.  With those few helpers we can bind any SQLite statement the same way.  All of the
 `DDL_STMT_INIT` and `DML_STMT_INIT` statements are completely implemented by this path.
 
-Next we'll talk about the cases where some data comes back from SQLite.
+### Reading Single Values
+
+In many cases you need just one value
+
+```SQL
+CREATE PROC p (id_ INTEGER NOT NULL, OUT t_ TEXT)
+BEGIN
+  SET t_ := ( SELECT t
+    FROM foo
+    WHERE id = id_ );
+END;
+```
+
+This is going to be very similar to the examples we've seen so far:
+
+```C
+CQL_WARN_UNUSED cql_code p(sqlite3 *_Nonnull _db_, cql_int32 id_, cql_string_ref _Nullable *_Nonnull t_) {
+  cql_contract_argument_notnull((void *)t_, 2);
+
+  cql_code _rc_ = SQLITE_OK;
+  cql_string_ref _tmp_text_0 = NULL;
+  sqlite3_stmt *_temp_stmt = NULL;
+
+  *(void **)t_ = NULL; // set out arg to non-garbage
+  _rc_ = cql_prepare(_db_, &_temp_stmt,
+    "SELECT t "
+      "FROM foo "
+      "WHERE id = ?");
+  cql_multibind(&_rc_, _db_, &_temp_stmt, 1,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, id_);
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = sqlite3_step(_temp_stmt);
+  if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
+    cql_column_string_ref(_temp_stmt, 0, &_tmp_text_0);
+  cql_finalize_stmt(&_temp_stmt);
+  cql_set_string_ref(&*t_, _tmp_text_0);
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_string_release(_tmp_text_0);
+  cql_finalize_stmt(&_temp_stmt);
+  return _rc_;
+}
+```
+
+* `_db_` : incoming arg for a procedure that uses the database same as always, check
+* `*(void **)t_ = NULL;` : out args are always set to NULL on entry, note, there is no `release` here
+   * argument is assumed to be garbage, that's the ABI
+   * if argument is non-garbage caller must release it first, that's the ABI
+* `_rc_` : same as always, check
+* `_tmp_text_0` : new temporary text, including cleanup (this could have been avoided)
+* `_temp_stmt` : as before, including cleanup
+* `cql_prepare` : same as always, check
+* `cql_multibind` : just one integer bound this time
+* `sqlite3_step` : as before, we're stepping once, this time we want the data
+* `if (_rc_ != SQLITE_ROW)` new error check and goto cleanup if no row
+  * this is the same as the `IF NOTHING THROW` variant of construct, that's the default
+* `cql_column_string_ref` : reads one string from `_temp_stmt`
+* `cql_finalize_stmt` : as before
+* `cql_set_string_ref(&*t_, _tmp_text_0)` : copy the temporary string to the out arg
+  * includes retain, out arg is NULL so `cql_set_string_ref` will do no release
+  * if this were (e.g.) running in a loop, the out arg would not be null and there would be a release, as expected
+  * if something else had previously set the out arg, again, there would be a release as expected
+
+There are variations of this form such as:
+
+```SQL
+CREATE PROC p (id_ INTEGER NOT NULL, OUT t_ TEXT)
+BEGIN
+  SET t_ := ( SELECT t
+    FROM foo
+    WHERE id = id_
+    IF NOTHING '');
+END;
+```
+
+This simply changes the handling of the case where there is no row.  The that part of the code
+ends up looking like this:
+
+```C
+  if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+  if (_rc_ == SQLITE_ROW) {
+    cql_column_string_ref(_temp_stmt, 0, &_tmp_text_1);
+    cql_set_string_ref(&_tmp_text_0, _tmp_text_1);
+  }
+  else {
+    cql_set_string_ref(&_tmp_text_0, _literal_1_p);
+  }
+```
+
+* any error code leads to cleanup
+* `SQLITE_ROW` : leads to the same fetch as before
+* `SQLITE_DONE` : leads to the no row case which sets `_tmp_text_0` to the empty string
+  * `cql_string_literal(_literal_1_p, "");` is included as a data declaration
+
+There is also the `IF NOTHING OR NULL` variant which is left as an exercise to the reader.
+You can find all the flavors in `cg_c.c` in the this function:
+
+```C
+// This is a nested select expression.  To evaluate we will
+//  * prepare a temporary to hold the result
+//  * generate the bound SQL statement
+//  * extract the exactly one argument into the result variable
+//    which is of exactly the right type
+//  * use that variable as the result.
+// The helper methods take care of sqlite error management.
+static void cg_expr_select(...
+```
+
+This handles all of the `(select ...)` expressions and it has the usual expression handler
+syntax. Another great example of a CQL expressions that might require many C statements
+to implement.
+
+### Reading Rows With Cursors
+
+This section is about the cases where we are expecting results back from SQLite.  By results here
+I mean the results of some kind of query, not like a return code.  SQLite does this by giving
+you a `sqlite3_stmt *` which you can then use like a cursor to read out a bunch of rows.  So
+it should be no surprise that CQL cursors map directly to SQLite statements.
+
+Most of the code to get a statement we've already seen before, we only saw the `_temp_stmt`
+case and we did very little with it.  Let's look at the code for something a little bit more
+general and we'll see how little it takes to generalize.
+
+First, let's look at how a CQL cursor is initialized:
+
+```SQL
+CREATE PROC p ()
+BEGIN
+  DECLARE C CURSOR FOR SELECT 1 AS x, 2 AS y;
+END;
+```
+
+Now in this case there can only be one row in the result, but it would be no different if there were more.
+
+Here's the C code:
+
+```C
+CQL_WARN_UNUSED cql_code p(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  sqlite3_stmt *C_stmt = NULL;
+  cql_bool _C_has_row_ = 0;
+
+  _rc_ = cql_prepare(_db_, &C_stmt,
+    "SELECT 1, 2");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_finalize_stmt(&C_stmt);
+  return _rc_;
+}
+```
+
+Let's look over that code very carefully and see what is necessary to make it happen.
+
+* `_db_` : incoming arg for a procedure that uses the database same as always, check
+* `_rc_` : same as always, check
+* `C_stmt` : we need to generate this instead of using `_temp_stmt`
+  * `cql_finalize_stmt(&C_stmt)` in cleanup, just like `_temp_stmt`
+* `cql_prepare` : same as always, check
+* `cql_multibind` : could have been binding, not none needed here, but same as always anyway, check
+* no step, no finalize (until cleanup) : that boiler-plate is removed
+
+And that's it, we now have a statement in `C_stmt` ready to go.  We'll see later that `_C_has_row_`
+will track whether or not the cursor has any data in it.
+
+How do we make this happen?  Well you could look at `cg_declare_cursor` and your eye might hurt at
+first.  The truth is there are many kinds of cursors in CQL and this method handles all of them.
+We're going to go over the various flavors but for now we're only discussing the so-called
+"statement cursor", so named because it simply holds a SQLite statement.  This was the
+first, and for a while only, type of cursor added to the CQL language.
+
+OK so how do we make a statement cursor.  It's once again `cg_bound_sql_statement` just like so:
+
+```C
+cg_bound_sql_statement(cursor_name, select_stmt, CG_PREPARE|CG_MINIFY_ALIASES);
+```
+
+The entire difference is that the first argument is the cursor name rather than NULL.  If you
+pass NULL it means use the temporary statement.
+
+And you'll notice that even in this simple example the SQLite text was altered a bit:
+the text that went to SQLite was `"SELECT 1, 2"` -- that's CG_MINIFY_ALIASES at work.
+SQLite didn't need to see those column aliases, it makes no difference in the result.
+Column aliases are often long and numerous.  Even in this simple example we saved 4 bytes.
+But the entire query was only 12 bytes long (including trailing null) so that's 25%.
+It's not a huge savings in general but it's something.
+
+The other flag `CG_PREPARE` tells the binder that it should not step or finalize the query.
+The alternative is `CG_EXEC` (which was used in the previous section for the `UPDATE` example).
+
+### Fetching Data From Cursors
+
+The first cursor reading primitive that was implemented as `FETCH [cursor] INTO [variables]` and
+it's the simplest to understand so let's start there.
+
+We change the example just a bit:
+
+```SQL
+CREATE PROC p ()
+BEGIN
+  DECLARE x INTEGER NOT NULL;
+  DECLARE y INTEGER NOT NULL;
+  DECLARE C CURSOR FOR SELECT 1 AS x, 2 AS y;
+  FETCH C INTO x, y;
+END;
+```
+
+For simplicity I will only include the code that is added.  The rest is the same.
+
+```C
+  cql_int32 x = 0;
+  cql_int32 y = 0;
+
+  // same as before
+
+  _rc_ = sqlite3_step(C_stmt);
+  _C_has_row_ = _rc_ == SQLITE_ROW;
+  cql_multifetch(_rc_, C_stmt, 2,
+                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &x,
+                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &y);
+  if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+```
+
+Do to the `FETCH` we do the following:
+
+* step the cursor
+* set the `_C_has_row_` variable so to indicate if we got a row or not
+* use the varargs `cql_multifetch` to read 2 columns from the cursor
+  * this helper simply uses the usual `sqlite3_*_column` functions to read the data out
+  * again, we do it this way so that there is less error checking needed in the generated code
+  * also, there are fewer function calls so the code is overall smaller
+  * trivia: `multibind` and `multifetch` are totally references to _The Fifth Element_
+    * hence, they should be pronouced like Leeloo saying "multipass"
+* `multifetch` uses the varargs to clobber the contents of the target variables if there is no row according to `_rc_`
+* `multifetch` uses the `CQL_DATA_TYPE_NOT_NULL` to decide if it should ask SQLite first if the column is null
+
+So now this begs the question, in the CQL, how do you know if a row was fetched or not?
+
+The answer is, you can use the cursor name like a boolean.  Let's complicate this up a little more.
+
+```SQL
+DECLARE PROCEDURE printf NO CHECK;
+
+CREATE PROC p ()
+BEGIN
+  DECLARE x INTEGER NOT NULL;
+  DECLARE y INTEGER NOT NULL;
+  DECLARE C CURSOR FOR SELECT 1 AS x, 2 AS y;
+  FETCH C INTO x, y;
+  WHILE C
+  BEGIN
+    CALL printf("%d, %d\n", x, y);
+    FETCH C INTO x, y;
+  END;
+END;
+```
+
+Again here is what is now added, we've seen the `WHILE` pattern before:
+
+```C
+  for (;;) {
+  if (!(_C_has_row_)) break;
+    printf("%d, %d\n", x, y);
+    _rc_ = sqlite3_step(C_stmt);
+    _C_has_row_ = _rc_ == SQLITE_ROW;
+    cql_multifetch(_rc_, C_stmt, 2,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &x,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &y);
+    if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+  }
+```
+
+So, if you use the cursors name in an ordinary expression that is converted to a reference to
+the boolean `_C_has_row_`.  Within the loop we're going to print some data and then fetch the next row.
+The internal fetch is of course the same as the first.
+
+The next improvement that was added to the language was the `LOOP` statement.  Let's take a look:
+
+```SQL
+BEGIN
+  DECLARE x INTEGER NOT NULL;
+  DECLARE y INTEGER NOT NULL;
+  DECLARE C CURSOR FOR SELECT 1 AS x, 2 AS y;
+  LOOP FETCH C INTO x, y
+  BEGIN
+    CALL printf("%d, %d\n", x, y);
+  END;
+END;
+```
+
+The generated code is very similar:
+
+```C
+  for (;;) {
+    _rc_ = sqlite3_step(C_stmt);
+    _C_has_row_ = _rc_ == SQLITE_ROW;
+    cql_multifetch(_rc_, C_stmt, 2,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &x,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &y);
+    if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+    if (!_C_has_row_) break;
+    printf("%d, %d\n", x, y);
+  }
+```
+
+This is done by:
+
+* emit the `for (;;) {` to start the loop
+* generate the `FETCH` just as if it was standalone
+* emit `if (!_C_has_row_) break;` (with the correct cursor name)
+* use `cg_stmt_list` to emit the internal statement list (`CALL printf` in this case)
+* close the loop with `}` and we're done
+
+### Cursors With Storage
+
+We now come to the big motivating reasons for having the notion of shapes in the CQL langauge.
+This particular case was the first such example in the language and it's very commonly
+used and saves you a lot of typing.  Like the other examples it's only sugar in that
+it doesn't give you any new language powers you didn't have, but it does give clarity
+and maintenance advantages.  And it's just a lot less to type.
+
+Let's go back to one of the earlier examples, but write it the modern way:
+
+```SQL
+CREATE PROC p ()
+BEGIN
+  DECLARE C CURSOR FOR SELECT 1 AS x, 2 AS y;
+  FETCH C;
+END;
+```
+
+And the generated C code:
+
+```C
+typedef struct p_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 x;
+  cql_int32 y;
+} p_C_row;
+
+CQL_WARN_UNUSED cql_code p(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  sqlite3_stmt *C_stmt = NULL;
+  p_C_row C = { 0 };
+
+  _rc_ = cql_prepare(_db_, &C_stmt,
+    "SELECT 1, 2");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = sqlite3_step(C_stmt);
+  C._has_row_ = _rc_ == SQLITE_ROW;
+  cql_multifetch(_rc_, C_stmt, 2,
+                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.x,
+                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.y);
+  if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_finalize_stmt(&C_stmt);
+  return _rc_;
+}
+```
+
+Let's look at what's different here:
+
+* `struct p_C_row` has been created, it contains:
+  * `_has_row_` for the cursor
+  * `x` and `y` the data fields
+  * `_refs_count` the number of reference fields in the cursor (0 in this case)
+  * `_refs_offset` the offset of the references fields (they always go at the end)
+  * because the references are together a cursor with lots of reference fields can be cleaned up easily
+* in the generated code the variable `C` refers to the current data that has been fetched
+  * convenient for debugging `p C` in lldb shows you the row
+* references to `x` and `y` became `C.x` and `C.y`
+* references to `_C_has_row_` became `C._has_row_`
+
+That's pretty much it.  The beauty of this is that you can't get the declarations of your locals wrong
+and you don't have to list them all no matter how big the data is.  If the data shape changes the
+cursor change automatically changes to accomodate it.  Everything is still statically typed.
+
+Now lets look at the loop pattern:
+
+
+```SQL
+CREATE PROC p ()
+BEGIN
+  DECLARE C CURSOR FOR SELECT 1 AS x, 2 AS y;
+  LOOP FETCH C
+  BEGIN
+    CALL printf("%d, %d\n", C.x, C.y);
+  END;
+END;
+```
+
+Note that the columns of the cursor were defined by the column aliases of the `SELECT`.
+
+```C
+  for (;;) {
+    _rc_ = sqlite3_step(C_stmt);
+    C._has_row_ = _rc_ == SQLITE_ROW;
+    cql_multifetch(_rc_, C_stmt, 2,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.x,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.y);
+    if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+    if (!C._has_row_) break;
+    printf("%d, %d\n", C.x, C.y);
+  }
+```
+
+The loop is basically the same except `x` and `y` have been replaced with `C.x` and `C.y`
+and again `_C_has_row_` is now `C._has_row_`.
+
+The code generator knows that it should allocate storage for the `C` cursor if it has
+the flag `SEM_TYPE_HAS_SHAPE_STORAGE` on it. The semantic analyzer adds that flag
+if it ever finds `FETCH C` with no `INTO` part.
+
+Finally let's look at an example with cleanup required.  We'll just change the test case a tiny bit.
+
+```SQL
+CREATE PROC p ()
+BEGIN
+  DECLARE C CURSOR FOR SELECT 1 AS x, "2" AS y;
+  LOOP FETCH C
+  BEGIN
+    CALL printf("%d, %s\n", C.x, C.y);
+  END;
+END;
+```
+
+The `x` column is now text.  We'll get this code which will be studied below:
+
+```
+typedef struct p_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 y;
+  cql_string_ref _Nonnull x;
+} p_C_row;
+
+#define p_C_refs_offset cql_offsetof(p_C_row, x) // count = 1
+
+CQL_WARN_UNUSED cql_code p(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  sqlite3_stmt *C_stmt = NULL;
+  p_C_row C = { ._refs_count_ = 1, ._refs_offset_ = p_C_refs_offset };
+
+  _rc_ = cql_prepare(_db_, &C_stmt,
+    "SELECT '1', 2");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  for (;;) {
+    _rc_ = sqlite3_step(C_stmt);
+    C._has_row_ = _rc_ == SQLITE_ROW;
+    cql_multifetch(_rc_, C_stmt, 2,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C.x,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.y);
+    if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+    if (!C._has_row_) break;
+    cql_alloc_cstr(_cstr_1, C.x);
+    printf("%s, %d\n", _cstr_1, C.y);
+    cql_free_cstr(_cstr_1, C.x);
+  }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_finalize_stmt(&C_stmt);
+  cql_teardown_row(C);
+  return _rc_;
+}
+```
+
+It's very similar to what we had before, let's quickly review the differences.
+
+```C
+typedef struct p_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 y;
+  cql_string_ref _Nonnull x;
+} p_C_row;
+
+#define p_C_refs_offset cql_offsetof(p_C_row, x) // count = 1
+```
+
+* `x` is now `cql_string_ref _Nonnull x;` rather than `cql_int32`
+* `x` has moved to the end (because it's a reference type)
+* the offset of the first ref is computed in a constant
+
+Recall the reference types are always at the end and together.
+
+```C
+  p_C_row C = { ._refs_count_ = 1, ._refs_offset_ = p_C_refs_offset };
+```
+
+* `p_C_row` is now initialized to to ref count 1 and refs offset `p_C_refs_offset` defined above
+
+```C
+  cql_multifetch(_rc_, C_stmt, 2,
+                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C.x,
+                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.y);
+```
+
+* C.x is now of type string
+
+```C
+    cql_alloc_cstr(_cstr_1, C.x);
+    printf("%s, %d\n", _cstr_1, C.y);
+    cql_free_cstr(_cstr_1, C.x);
+```
+
+* C.x has to be converted to a C style string before it can be used with `printf` as a `%s` argument
+
+```C
+  cql_teardown_row(C);
+```
+
+* the cleanup section has to include code to teardown the cursor, this will release all of its reference variables in bulk
+  * remember we know the count, and the offset of the first one -- that's all we need to do them all
+
+With these primitives we can easily create cursors of any shape and load them up with data.  We don't have to
+redundantly declare locals that match the shape of our select statements which is both error prone and
+a hassle.
+
+All of this is actually very easy for the code-generator.  The semantic analysis phase knows if the cursor needs
+shape storage.  And it also recognizes when a variable reference like `C.x` happens, the variable references are
+re-written in the AST so that the code-generator doesn't even have to know there was a cursor reference, from
+its perspective the variable IS `C.x` (which it sort of is).  The code generator does have to create the
+storage for the cursor but it knows it should do so because the cursor variable is marked with `SEM_TYPE_HAS_SHAPE_STORAGE`.
+A cursor without this marking only gets its statement (but not always as we'll see later) and its `_cursor_has_row_`
+hidden variable.
+
+### Coming Soon: Value Cursors
