@@ -4924,7 +4924,7 @@ void p(void) {
    * there are no error checks because `q` can't fail!
 * some code that would use `C` is absent for this sample, it would go where the comment is
 * the cleanup label is missing because there are no error cases, emitting the label would just cause warnings
-  * warnings are often escalated to errors in production builds...
+  * such warnings are often escalated to errors in production builds...
 * `cql_teardown_row(C)` is needed as always,
    * even though there is no cleanup label the `teardown` is in the cleanup section
    * the `teardown` was added as usual when `C` was declared
@@ -4934,6 +4934,478 @@ procedures can move structures from one to another.  As we saw, the source of va
 may or may not be the database.  Value cursors are frequently invaluable in test code
 as they can easily hold mock rows based on any kind of computation.
 
-### Next: Result Sets and OUT UNION
+### Result Sets
+
+In addition to returning a single row into a value cursor, or returning a statement to consume with a statement cursor,
+it's possible to generate a result set.  So far the samples have included `@attribute(cql:private)` to suppress that
+code.  This pattern is intended to let regular C code access the data so `private` suppresses it.
+
+Let's consider a simple example, this example returns only one row but the mechanism works for any number of rows,
+we're just using this form because it's what we've used so far and its simple.  Let's begin:
+
+```SQL
+CREATE PROC p ()
+BEGIN
+  SELECT "1" AS x, 2 AS y;
+END;
+```
+
+The core generated function is this one:
+
+```C
+CQL_WARN_UNUSED cql_code p(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT '1', 2");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+```
+
+We've seen this before, it creates the SQLite statement.  But that isn't all the code that was generated, 
+let's have a look at what else we got in our outputs:
+
+```C
+CQL_WARN_UNUSED cql_code p_fetch_results(
+  sqlite3 *_Nonnull _db_,
+  p_result_set_ref _Nullable *_Nonnull result_set)
+{
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_p, &p_perf_index);
+  cql_code rc = p(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = p_data_types,
+    .col_offsets = p_col_offsets,
+    .refs_count = 1,
+    .refs_offset = p_refs_offset,
+    .encode_context_index = -1,
+    .rowsize = sizeof(p_row),
+    .crc = CRC_p,
+    .perf_index = &p_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+```
+
+`p_fetch_results` does two main things:
+
+* `cql_code rc = p(_db_, &stmt)` : it calls the underlying function to get the statement
+* `cql_fetch_all_results` : it calls a standard helper to read all the results from the statement and put them into `result_set`
+  * to do the fetch, it sets up a `cql_fetch_info` for this result set, this has all the information needed to do the fetch
+  * the intent here is that even a complex fetch with lots of columns can be done economically, and
+  * the code that does the fetching is shared
+
+Let's look at the things that are needed to load up that `info` structure.
+
+```C
+typedef struct p_row {
+  cql_int32 y;
+  cql_string_ref _Nonnull x;
+} p_row;
+
+uint8_t p_data_types[p_data_types_count] = {
+  CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_NOT_NULL, // x
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // y
+};
+
+#define p_refs_offset cql_offsetof(p_row, x) // count = 1
+
+static cql_uint16 p_col_offsets[] = { 2,
+  cql_offsetof(p_row, x),
+  cql_offsetof(p_row, y)
+};
+```
+
+* `p_row` : the row structure for this result set, same as always, reference types last
+* `p_data_types` : an array with the data types encoded as bytes
+* `p_refs_offset` : the offset of the first reference type
+* `p_col_offsets` : this is the offset of each column within the row structure
+  * these are in column order, not offset order
+
+Code generation creates a `.c` file and a `.h` file, we haven't talked much about the `.h`
+because it's mostly prototypes for the functions in the `.c` file.  But in this case we have
+a few more interesting things.  We need just two of them:
+
+```C
+#define CRC_p -6643602732498616851L
+
+#define p_data_types_count 2
+```
+
+Now we're armed to discuss loading the `info` structure:
+
+* `.rc` : the fetcher needs to know if `p` was successful, it won't read from the statement if it wasn't
+* `.db` : the database handle, the fetcher needs this to call SQLite APIs
+* `.stmt` : the statement that came from `p` that is to be enumerated
+* `.data_types` : types of the columns, this tells the fetcher what columns to read to the statement in what order
+* `.col_offsets` : the column offsets, this tells the fetcher were to store the column data within each row
+* `.refs_count` : the number of references in the row, this is needed to tear down the rows in the result set when it is released
+* `.refs_offset` : the first reference offset, as usual this tells the fetcher where the references that need to be released are
+* `.encode_context_index` : it's possible to have sensitive fields encoded, this identifies an optional column that will be combined with the sensitive data
+. `.rowsize` : the size of `p_row`, this is needed to allocate rows in a growable buffer
+* `.crc` : this is a CRC of the code of `p`, it's used to uniquely identify `p` economically, performance logging APIs typically use this CRC in a begin/end logging pair
+* `.perf_index` : performance data for stored procedures is typically stored in an array of stats, CQL provides storage for the index for each procedure
+
+With this data (which is in the end pretty small) the `cql_fetch_all_results` can do all the things it needs to do:
+
+* `cql_profile_start` has already been called, it can call `cql_profile_end` once the data is fetched
+  * `cql_profile_start` and `_end` do nothing by default, but those macros can be defined to log performance data however you like
+* it can allocate a `bytebuf` with `cql_bytebuf_open` and then grow it with `cql_bytebuf_alloc`
+  * in the end all the rows are in one contiguous block of storage
+* `cql_multifetch_meta` is used to read each row from the result set, it's similar to `cql_multifetch`
+  * the `meta` version uses `data_types` and `column_offsets` instead of varargs but is otherwise the same
+  * the first member of the `col_offsets` array is the count of columns
+
+With this background, `cql_fetch_all_results` should be very approachable.  There's a good bit of work but it's all very simple.
+
+```C
+// By the time we get here, a CQL stored proc has completed execution and there is
+// now a statement (or an error result).  This function iterates the rows that
+// come out of the statement using the fetch info to describe the shape of the
+// expected results.  All of this code is shared so that the cost of any given
+// stored procedure is minimized.  Even the error handling is consolidated.
+cql_code cql_fetch_all_results(
+  cql_fetch_info *_Nonnull info,
+  cql_result_set_ref _Nullable *_Nonnull result_set) {...}
+```
+
+The core of that function looks like this:
+
+```C
+  ...
+  cql_bytebuf_open(&b);
+  ...
+  for (;;) {
+    rc = sqlite3_step(stmt);
+    if (rc == SQLITE_DONE) break;
+    if (rc != SQLITE_ROW) goto cql_error;
+    count++;
+    row = cql_bytebuf_alloc(&b, rowsize);
+    memset(row, 0, rowsize);
+
+    cql_multifetch_meta((char *)row, info);
+  }
+  ...
+  cql_profile_stop(info->crc, info->perf_index);
+  ...
+```
+
+* `cql_bytebuf_open` : open the buffer, get ready to start appending rows
+* `sqlite3_step` : keep reading while we get `SQLITE_ROW`, stop on `SQLITE_DONE`
+* `cql_bytebuf_alloc` : allocate a new row in the buffer
+* `memset` : zero the row
+* `cql_multifetch_meta` : read the data from the the statement into the row
+* `cql_profile_stop` : signals that processing is done and profiling can stop
+* if all goes well, `SQLITE_OK` is returned as usual
+
+The remaining logic is largely about checking for errors and tearing down the result set
+if anything goes wrong.  There is not very much to it, and it's worth a read.
+
+Now recall that the way `cql_fetch_all_results` was used, was as follows:
+
+```C
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set)
+```
+
+And `result_set` was the out-argument for the the `p_fetch_results` method.
+
+So `p_fetch_results` is used to get that result set.  But what can you do with it?
+Well, the result set contains copy of all the selected data, ready to use in with a C-friendly API.
+The interface is in the generated `.h` file.  Let's look at that now, it's the final piece of the puzzle.
+
+```C
+#ifndef result_set_type_decl_p_result_set
+#define result_set_type_decl_p_result_set 1
+cql_result_set_type_decl(p_result_set, p_result_set_ref);
+#endif
+
+extern cql_string_ref _Nonnull p_get_x(p_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 p_get_y(p_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 p_result_count(p_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code p_fetch_results(sqlite3 *_Nonnull _db_, p_result_set_ref _Nullable *_Nonnull result_set);
+
+#define p_row_hash(result_set, row) cql_result_set_get_meta( \
+  (cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+
+#define p_row_equal(rs1, row1, rs2, row2) \
+  cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+    (cql_result_set_ref)(rs1), \
+    row1, \
+    (cql_result_set_ref)(rs2), \
+```
+
+* `cql_result_set_type_decl` : declares `p_result_set_ref`
+  * to avoid being defined more than once, the declaration is protected by `#ifndef result_set_type_decl_p_result_set`
+* `p_get_x`, `p_get_y` : allow access to the named fields of the result set at any given row
+* `p_result_count` :  provides the count of rows in the result set
+* `p_fetch_results` : the declaration of the fetcher (previously discussed)
+* `p_row_hash` : provides a hash of any given row, useful for detecting changes between result sets
+* `p_row_equal` : tests two rows in two results sets of the same shape for equality
+
+The getters are defined very simply:
+
+```C
+cql_string_ref _Nonnull p_get_x(p_result_set_ref _Nonnull result_set, cql_int32 row) {
+  p_row *data = (p_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].x;
+}
+
+cql_int32 p_get_y(p_result_set_ref _Nonnull result_set, cql_int32 row) {
+  p_row *data = (p_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].y;
+}
+```
+
+The `p_row` is exactly the right size, and of course the right shape, the final access looks something like `data[row].x`.
+
+#### Result Sets from the OUT statement
+
+Recalling this earlier example:
+
+```SQL
+CREATE PROC q ()
+BEGIN
+  DECLARE C CURSOR LIKE SELECT "1" AS x, 2 AS y;
+  FETCH C USING
+   "foo" x,
+   3 y;
+  OUT C;
+END;
+```
+
+The original example had `@attribute(cql:private)` to suppress the result set, but normally a one-row result is
+is generated from such a method.  The C API is almost identical.  However, there count is always 0 or 1.
+
+The getters do not have the row number:
+
+```C
+extern cql_string_ref _Nonnull q_get_x(q_result_set_ref _Nonnull result_set);
+extern cql_int32 q_get_y(q_result_set_ref _Nonnull result_set);
+```
+
+The actual getters are nearly the same as well
+
+```C
+cql_string_ref _Nonnull q_get_x(q_result_set_ref _Nonnull result_set) {
+  q_row *data = (q_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data->x;
+}
+
+cql_int32 q_get_y(q_result_set_ref _Nonnull result_set) {
+  q_row *data = (q_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data->y;
+}
+```
+
+Basically `data[row].x` just became `data->x` and the rest is nearly the same.
+Virtually all the code for this is shared.
+
+You can find all this and more in `cg_c.c` by looking here:
+
+```C
+// If a stored procedure generates a result set then we need to do some extra work
+// to create the C friendly rowset creating and accessing helpers.  If stored
+// proc "foo" creates a row set then we need to:
+//  * emit a struct "foo_row" that has the shape of each row
+//    * this isn't used by the client code but we use it in our code-gen
+//  * emit a function "foo_fetch_results" that will call "foo" and read the rows
+//    from the statement created by "foo".
+//    * this method will construct a result set object via cql_result_create and store the data
+//    * the remaining functions use cql_result_set_get_data and _get_count to get the data back out
+//  * for each named column emit a function "foo_get_[column-name]" which
+//    gets that column out of the rowset for the indicated row number.
+//  * prototypes for the above go into the main output header file
+static void cg_proc_result_set(ast_node *ast)
+```
+
+There are many variations in that function to handle the cases mentioned so far, but they are
+substantially similar to each other with a lot of shared code.  There is one last variation
+we should talk about and that is the `OUT UNION` form.  It is the most flexible of them all.
+
+#### Result Sets from the OUT UNION statement
+
+The `OUT` statement, allows the programmer to produce a result set that has exactly one row,
+`OUT UNION` instead accumulates rows.  This is very much like writing your own `fetcher` procedure
+with your own logic.  The data could come from the database, by, for instance, enumerating
+a cursor.  Or it can come from some computation or a mix of both.  Here's a very simple example:
+
+```SQL
+CREATE PROC q ()
+BEGIN
+  DECLARE C CURSOR LIKE SELECT 1 AS x;
+  LET i := 0;
+  WHILE i < 5
+  BEGIN
+    FETCH C(x) FROM VALUES(i);
+    OUT UNION C;
+    SET i := i + 1;
+  END;
+END;
+```
+
+Let's look at the code for the above, it will be very similar to other examples we've seen so far:
+
+```C
+typedef struct q_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 x;
+} q_C_row;
+void q_fetch_results(q_result_set_ref _Nullable *_Nonnull _result_set_) {
+  cql_bytebuf _rows_;
+  cql_bytebuf_open(&_rows_);
+  *_result_set_ = NULL;
+  q_C_row C = { 0 };
+  cql_int32 i = 0;
+
+  cql_profile_start(CRC_q, &q_perf_index);
+  i = 0;
+  for (;;) {
+  if (!(i < 5)) break;
+    C._has_row_ = 1;
+    C.x = i;
+    cql_retain_row(C);
+    if (C._has_row_) cql_bytebuf_append(&_rows_, (const void *)&C, sizeof(C));
+    i = i + 1;
+  }
+
+  cql_results_from_data(SQLITE_OK, &_rows_, &q_info, (cql_result_set_ref *)_result_set_);
+}
+```
+
+* `q_C_row` : the shape of the cursor, as always
+* `_rows_` : the `bytebuf` that will hold our data
+* `cql_bytebuf_open(&_rows_);` : initializes the buffer
+* `cql_profile_start(CRC_q, &q_perf_index);` : start profiling as before
+* `for (;;)` : the while pattern as before
+* `C.x = i;` : loads the cursor
+* `cql_retain_row(C);` : retains any references in the cursor (there are none)
+  * we're about to copy the cursor into the buffer so all refs need to be +1
+* `cql_bytebuf_append` : append the the cursor's bytes into the buffer
+* the loop does its repetitions until finally
+* `cql_results_from_data` : used instead of `cql_fetch_all_results` because all the data is already prepared
+  * in this particular example there is nothing to go wrong so it always gets `SQLITE_OK`
+  * in a more complicated example, `cql_results_from_data` frees any partly created result set in case of error
+  * `cql_results_from_data` also performs any encoding of sensitive data that might be needed
+* `q_info` : created as before, but it can be static as it's always the same now
+
+Importantly, when using `OUT UNION` the codegen only produces `q_fetch_results`, there is no `q`.
+If you try to call `q` from CQL you will instead call `q_fetch_results`. But since
+many results as possible, a cursor is needed to make the call.
+
+Here's an example, here `p` calls the `q` method above:
+
+```SQL
+CREATE PROC p (OUT s INTEGER NOT NULL)
+BEGIN
+  DECLARE C CURSOR FOR CALL q();
+  LOOP FETCH C
+  BEGIN
+    SET s := s + C.x;
+  END;
+END;
+```
+
+And the relevant code for this is as follows:
+
+```C
+typedef struct p_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 x;
+} p_C_row;
+
+CQL_WARN_UNUSED cql_code p(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull s) {
+  cql_contract_argument_notnull((void *)s, 1);
+
+  cql_code _rc_ = SQLITE_OK;
+  q_result_set_ref C_result_set_ = NULL;
+  cql_int32 C_row_num_ = 0;
+  cql_int32 C_row_count_ = 0;
+  p_C_row C = { 0 };
+
+  *s = 0; // set out arg to non-garbage
+  q_fetch_results(&C_result_set_);
+  C_row_num_ = C_row_count_ = -1;
+  C_row_count_ = cql_result_set_get_count((cql_result_set_ref)C_result_set_);
+  for (;;) {
+    C_row_num_++;
+    C._has_row_ = C_row_num_ < C_row_count_;
+    cql_copyoutrow(NULL, (cql_result_set_ref)C_result_set_, C_row_num_, 1,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.x);
+    if (!C._has_row_) break;
+    *s = (*s) + C.x;
+  }
+  _rc_ = SQLITE_OK;
+
+  cql_object_release(C_result_set_);
+  return _rc_;
+}
+```
+
+* `p_C_row` : the cursor row as always
+* `cql_contract_argument_notnull((void *)s, 1)` : verify that the out arg pointer is not null
+* `C_result_set_` : this will hold the result set from `q_fetch_results`
+* `C_row_num_` : the current row number being processed in the result set
+* `C_row_count_` : the total number of rows in the result set
+* other locals are intialized as usual
+* `*s = 0;` : set the out arg to non-garbage as usual
+* `q_fetch_results` : get the result set from `q_fetch_results`
+  * in this case no database access was required so this API can't fail
+  * `C_row_num` : set to -1
+  * `C_row_count` : set to the row count
+* `cql_copyoutrow` : copies one row from the result set into the cursor
+* `*s = (*s) + C.x;` : computes the sum
+* `cql_object_release` : the result set is torn down
+* if there are any reference fields in the cursor there would have been a `cql_teardown_row(C)`
+
+In short, this is another form of cursor, it's a value cursor, so it has no statement but
+it also needs a result set, a count and an index to go with it so that it can enumerate the result set.
+
+In the AST it looks like this:
+
+```
+{name C}: C: select: { x: integer notnull } variable shape_storage uses_out_union
+```
+
+This implies we have the semantic flags: `SEM_TYPE_STRUCT`, `SEM_TYPE_VARIABLE`, `SEM_TYPE_HAS_SHAPE_STORAGE`, and `SEM_TYPE_USES_OUT_UNION`.
+
+The difference is of course the presence of `SEM_TYPE_USES_OUT_UNION`.
+
+This is the last of the cursor forms and the final complication of `cg_proc_result_set`.
+
+### Recap
+
+At present `cg_c.c` is a little over 7400 lines of code, maybe 1500 of those lines are comments.   So `cg_c.c` is actually quite a
+bit smaller and simpler than `sem.c` (roughly 1/3 the size).  It is, however, the most complex of the code generators by far.
+Part 3 of the internals guide has come out a lot larger than Part 2 but that's mainly because there are a few more cases worth
+discussing in detail and the code examples of Part 3 are bigger than the AST examples of Part 2.
+
+Topics covered included:
+
+* compiling expressions into C, including nullable types
+* techniques used to generate control flow
+* creation of result sets, including:
+   * various helpers to do the reading economically
+   * the use of `cql_bytebuf` to manage the memory
+* create the text for SQLite statements and binding variables to that text
+* error management, and how it relates to `TRY` and `CATCH` blocks
+* use of cleanup sections to ensure that references and SQLite statement lifetime is always correct
+* the contents of the `.c` and `.h` files and the key sections in them
+* the use of `charbuf` to create and assemble fragments
+
+As with the other parts, this is not a complete discussion of the code but a useful survey that
+should enable readers enough context to understand `cg_c.c` and the runtime helpers in `cqlrt.c`
+and `cqlrt_common.c`.  Good luck in your personal exploration.
 
 
