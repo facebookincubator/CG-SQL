@@ -247,7 +247,7 @@ typedef struct sem_node {
 
 * `sem_type` : already discussed above, this tells you how to interpret everything else
 * `name` : variables, columns, etc. have a canonical name, when a name case-insenstively resolves, the canonical name is stored here
-  * typically later passes emit the canonical variable name everywhere 
+  * typically later passes emit the canonical variable name everywhere
   * e.g. `FoO` and `fOO` might both resolve to an object declared as `foo`, we always emit `foo` in codegen
 * `kind` : in CQL any type can be discriminated as in `declare foo real<meters>`, the kind here is `meters`
   * two expressions of the same core type (e.g. `real`) are incompatible if they have a `kind` and the `kind` does not match
@@ -288,7 +288,7 @@ With these building blocks we can represent the type of anything in the CQL lang
 ### Initiating Semantic Analysis
 
 The semantic analysis pass runs much the same way as the AST emitter.  In `sem.c` there is the essential function `sem_main`. It suffices
-to call `sem_main` on the root of your AST. That root node is expect to be a `stmt_list` node.
+to call `sem_main` on the root of the AST. That root node is expected to be a `stmt_list` node.
 
 ```C
 // This method loads up the global symbol tables in either empty state or
@@ -305,7 +305,7 @@ cql_noexport void sem_main(ast_node *ast) {
 As you can see, `sem_main` begins by reseting all the global state.  You can of course do this yourself after calling `sem_main` (when you're done with the results).
 
 `sem_main` sets a variety of useful and public global variables that describe the results of the analysis.  The ones in `sem.h` are part of the contract and
-you should feel free to use them in a downstream code-generator.  Other items are internal and should be avoided. 
+you should feel free to use them in a downstream code-generator.  Other items are internal and should be avoided.
 The internal items are typically defined statically in `sem.c`. The essential outputs will be described in the last section of this part.
 
 The cleanup has this structure:
@@ -393,8 +393,8 @@ is only needed to make a good quality error message with validation being otherw
 ```
 
 Looking at the very first entry as an example, we see that `EXPR_INIT` creates a mapping between the AST type `num`
-and the analysis function `sem_expr_num` and that function will get the text `"NUM"` as an extra argument.  
-As it happens `sem_expr_num` doesn't need the extra argument, but `sem_binary_math` certainly needs the `"*"` 
+and the analysis function `sem_expr_num` and that function will get the text `"NUM"` as an extra argument.
+As it happens `sem_expr_num` doesn't need the extra argument, but `sem_binary_math` certainly needs the `"*"`
 as that function handles a large number of binary operators.
 
 Let's quickly go over this list as these are the most important analyzers:
@@ -437,7 +437,7 @@ is of type `SEM_TYPE_ERROR` using `is_error(ast)`.  If it is, the caller will ma
 the way up the tree.  The net of this is that wherever you begin semantic analysis, you can know if there were any problems by checking for an error at the
 top of the tree you provided.
 
-At the point of the initial error, the analyzer is expected to also call `report_error` providing a suitable message.  This will be logged to `stderr`.  
+At the point of the initial error, the analyzer is expected to also call `report_error` providing a suitable message.  This will be logged to `stderr`.
 In test mode it is also stored in the AST so that verification steps can confirm that errors were reported at exactly the right place.
 
 If there are no errors, then a suitable `sem_node` is created for the resulting type or else, at minimum, `record_ok(ast)` is used to place the shared "OK" type on the node.
@@ -863,8 +863,8 @@ cql_noexport bool_t is_numeric_compat(sem_t sem_type) {
 }
 ```
 
-`is_numeric_compat` operates by checking the core type for the numeric range.  
-Note that `NULL` is compatible with numerics because expressions like `NULL + 2` 
+`is_numeric_compat` operates by checking the core type for the numeric range.
+Note that `NULL` is compatible with numerics because expressions like `NULL + 2`
 have meaning in SQL.  The type of that expression is nullable integer and
 the result is `NULL`.
 
@@ -999,10 +999,10 @@ static void sem_while_stmt(ast_node *ast) {
 * `sem_numeric_expr` : verifies the loop expression is numeric
 * `sem_stmt_list` : recursively validates the body of the loop
 
-Note: the while expression is one of the loop constructs which means `LEAVE` and `CONTINUE` are legal inside it. 
+Note: the while expression is one of the loop constructs which means `LEAVE` and `CONTINUE` are legal inside it.
 The `loop_depth` global tracks the fact that we are in a loop so that analysis for `LEAVE` and `CONTINUE` can report errors if we are not.
 
-It's not hard to imagine that `sem_stmt_list` will basically walk the AST, pulling out statements and dispatching them using the `STMT_INIT` tables previously discussed.  
+It's not hard to imagine that `sem_stmt_list` will basically walk the AST, pulling out statements and dispatching them using the `STMT_INIT` tables previously discussed.
 You might land right back in `sem_while_stmt` for a nested `WHILE` -- it's turtles all the way down.
 
 If `SEM_EXPR_CONTEXT_NONE` is a mystery, don't worry it's covered in the next section.
@@ -1032,7 +1032,7 @@ The expression contexts are as follows:
 The idea here is simple, when calling a root expression, the analyzer provides the context value that has the bit that correponds to the current context.
 For instance, the expression being validated in is the `WHERE` clause, the code will provide `SEM_EXPR_CONTEXT_WHERE`.
 The inner validators check this context, in particular anything that is only available in some contexts has a bit-mask of that is the union
-of the context bits where it can be used.  The validator can check those possibilities against the current context with one bitwise "and" operation. 
+of the context bits where it can be used.  The validator can check those possibilities against the current context with one bitwise "and" operation.
 A zero result indicates that the operation is not valid in the current context.
 
 This bitwise "and" is performed by one of these two helper macros which makes the usage a little clearer:
@@ -1135,12 +1135,12 @@ static ast_node *find_usable_index(CSTR name, ast_node *err_target, CSTR msg) {
 }
 ```
 
-We haven't discussed schema regions yet but what you need to know about them for now is this:  
-* any object can be in a region. 
+We haven't discussed schema regions yet but what you need to know about them for now is this:
+* any object can be in a region.
 * a region may depend on other regions
 
-If an object is in a region, then it may only use schema parts that are in 
-the same region, or the region's dependencies (transitively).  
+If an object is in a region, then it may only use schema parts that are in
+the same region, or the region's dependencies (transitively).
 
 The point of this is that you might have a rather large schema and you probably don't want any peice
 of code to use any piece of schema.  You can use regions to ensure that the code for feature "X" doesn't
@@ -1160,7 +1160,7 @@ In short, these simple cases just require looking up the entity and verifying th
 #### Flexible Name Resolution
 
 The "hard case" for name resolution is where the name is occuring in an expression.  Such a name can refer to
-all manner of things. It could be a global variable, a local variable, an argument, a table column, a field in a cursor, 
+all manner of things. It could be a global variable, a local variable, an argument, a table column, a field in a cursor,
 and others.  The general name resolver goes through several phases looking for the name.  Each phase can either report
 an affirmative success or error (in which case the search stops), or it may simply report that the name was not found
 but the search should continue.
@@ -1463,7 +1463,7 @@ Briefly `sem_find_likeable_ast` does these steps:
 * if the right is the name of a procedure with a structure result, use that shape
 * if it's none of these, produce an error
 
-This is the primary source of shape reuse.  Let's look at how we might use that.  
+This is the primary source of shape reuse.  Let's look at how we might use that.
 
 Suppose we want to write a procedure that inserts a row into the table `Foo`, we could certainly list the columns of `Foo` as arguments like this:
 
@@ -1681,7 +1681,7 @@ We see these basic steps:
 Now we're all set up.
 
 * We can use `current_region` to set the `region` in the `sem_node` of anything we encounter
-* We can use `current_region_image` to quickly see if we are allowed to use any given region 
+* We can use `current_region_image` to quickly see if we are allowed to use any given region
   * if it's in the symbol table we can use it
 
 Recall that at the end of `sem_create_table_stmt` we do this:

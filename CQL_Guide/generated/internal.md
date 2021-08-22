@@ -758,14 +758,14 @@ it's very normal to paste the extraction code from a `gen_` function into a new/
 Part 2 continues with a discussion of the essentials of the semantic analysis pass of the CQL compiler.
 As in the previous sections, the goal here is not to go over every single rule but rather to give
 a sense of how semantic analysis happens in general -- the core strategies and implementation choices --
-so that when reading the code you have an idea how smaller pieces fit into the whole. To accomplish
+so that when reading the code you will have an idea how smaller pieces fit into the whole. To accomplish
 this, various key data structures will be explained in detail as well as selected examples of their use.
 
 ## Semantic Analysis
 
 The overall goal of the semantic analysis pass is to verify that a correct program has been submitted
 to the compiler. The compiler does this by "decorating" the AST with semantic information.  This information
-is mainly concerned about the "types" of the various things in the program.  A key function of the semantic
+is mainly concerned with the "types" of the various things in the program.  A key function of the semantic
 analyzer, the primary "weapon" in computing these types if you will, is name resolution.  The semantic analyzer
 decides what any given name means in any context and then uses that meaning, which is itself based on the
 AST constructs that came before, to compute types and then check those types for errors.
@@ -774,12 +774,13 @@ Broadly speaking the errors that can be discovered are of these forms:
 
   * mentioned names do not exist
     * e.g. using a variable or table or column without declaring it
-  * mentioned names are not unique or are ambiguous
-    * e.g. table names need to be unique or aliased when joining tables
-  * operands are not compatible with each other or with the operation
+  * mentioned names are not unique, or are ambiguous
+    * e.g. every view must have a unique name
+    * e.g. table names need to be unique, or aliased when joining tables
+  * operands are not compatible with each other or with the intended operation
     * e.g. you can't add a string to a real
-    * e.g. you can't do the '%' operation on a real
-    * e.g. the expression in a `WHERE` clause must be numeric
+    * e.g. you can't do the `%` operation on a real
+    * e.g. the expression in a `WHERE` clause must result in a numeric
     * e.g. the first argument to `printf` must be a string literal.
     * e.g. you can't assign a long value to an integer variable
     * e.g. you can't assign a possibly null result to a not-null variable
@@ -795,7 +796,8 @@ talk about how errors are created, recorded, and reported.
 
 ### Decorated AST examples
 
-Recalling the AST output from Part 1, this is what it looks like with semantic information attached.
+Recalling the AST output from [Part 1](https://cgsql.dev/cql-guide/int01), this is what that same tree
+looks like with semantic information attached.
 
 ```
 LET X := 1 + 3;
@@ -848,7 +850,7 @@ struct sem_node *_Nullable sem;
 ```
 
 This is the pointer to the semantic information for that node. Semantic analysis happens immediately
-after parsing and before any of the code-generators run.  Importantly code generators never run
+after parsing and before any of the code-generators run.  Importantly, code generators never run
 if semantic analysis reported any errors.  Before we get into the shape of the semantic node, we
 should start with the fundamental unit of type info `sem_t` which is usually stored in a variable
 called `sem_type`.
@@ -857,7 +859,7 @@ called `sem_type`.
 typedef uint64_t sem_t;
 ```
 
-The low order bits of a `sem_t` encode the core type and indeed there is an helper macro
+The low order bits of a `sem_t` encode the core type and indeed there is an helper function
 to extract the core type from a `sem_t`.
 
 ```C
@@ -892,23 +894,28 @@ The core bits are as follows:
 These break into a few categories:
 * `NULL` to `OBJECT` are the "unitary" types, these are the types that a single simple variable can be
   * a column can be any of these except `OBJECT` or `NULL`
-  * the `NULL` type begins only from the `NULL` literal which has no type
-  * instance of say a `TEXT` column might have a `NULL` value but they are known to be `TEXT`
+  * the `NULL` type comes only from the `NULL` literal which has no type
+  * instances of say a `TEXT` column might have a `NULL` value but they are known to be `TEXT`
 * `STRUCT` indicates that the object has many fields, like a table, or a cursor
 * `JOIN` indicates that the object is the concatenation of many `STRUCT` types
   * e.g. `T1 inner join T2` is a `JOIN` type with `T1` and `T2` being the parts
-  * a `JOIN` can be flattend to `STRUCT` but this is typically not done
-  * the type of a `SELECT` statement will be a `STRUCT` representing the columns that were selected which in turn came from the `JOIN` that was the `FROM` clause
-* `ERROR` indicates that the subtree had an error, it will have been already reported, this generally cascades up the AST to the root
-* `OK` indicates that there is no type information but there was no problem, for instance a correct `IF` statement will resolve to simply `OK` (no error)
-* `PENDING` is used sometimes while a type computation is in progress, it doesn't appear in the AST but has its own unique value so as to not conflict with any others
-* `REGION` used to identify AST fragments that correspond to schema regions (see the Guide for mor info on regions)
+  * a `JOIN` could be flattened to `STRUCT`, but this is typically not done
+  * the type of a `SELECT` statement will be a `STRUCT` representing the expressions that were selected
+  * those expressions in turn used columns from the `JOIN` that was the `FROM` clause
+* `ERROR` indicates that the subtree had an error
+  * the error will have been already reported
+  * the error type generally cascades up the AST to the root
+* `OK` indicates that there is no type information but there was no problem
+  * e.g. a correct `IF` statement will resolve to simply `OK` (no error)
+* `PENDING` is used sometimes while a type computation is in progress
+  * this type doesn't appear in the AST, but has its own unique value so as to not conflict with any others
+* `REGION` is used to identify AST fragments that correspond to schema regions
+   * see [Chapter 10](https://cgsql.dev/cql-guide/ch10) of the Guide for more information on regions
 * `CORE` is the mask for the core parts, `0xf` would do the job but for easy reading in the debugger we use `0xff`
   * new core types are not added very often, adding a new one is usually a sign that you are doing something wrong
 
-
 The core type can be modified by various flags.  The flags in principle can be combined in any way but in practice many combinations make no sense.
-for instance, `HAS_DEFAULT` is for table columns and `CREATE_FUNC` is for function declarations. There is no one object that could require both of these.
+For instance, `HAS_DEFAULT` is for table columns and `CREATE_FUNC` is for function declarations. There is no one object that could require both of these.
 
 The full list as of this writing is as follows:
 
@@ -944,21 +951,24 @@ The full list as of this writing is as follows:
 #define SEM_TYPE_CALLS_OUT_UNION _64(0x1000000000) // set if proc calls an out union proc for
 ```
 
-Going over the meaning of all of the above is again beyond the scope of this document, some of them are very specialized and essentially the validation
-requires a bit of storage in the tree to do its job so that storage is provided with a bit.  However two flag bits are especially important and
+Note: `_64(x)` expands to either a trailing `L` or a trailing `LL` depending on the bitness of the compiler, whichever yields an `int64_t`.
+
+Going over the meaning of all of the above is again beyond the scope of this document; some of the flags are very specialized and essentially the validation
+just requires a bit of storage in the tree to do its job so that storage is provided with a flag.  However two flag bits are especially important and
 are computed almost everywhere `sem_t` is used.  These are `SEM_TYPE_NOTNULL` and `SEM_TYPE_SENSITIVE`.
 
-* `SEM_TYPE_NOTNULL` indicates that the marked item is known to be `NOT NULL`, probably because it was declared as such or directly derived from a not null item
-  * Typically when two operands are combined both must be marked `NOT NULL` for the result to still be NOT NULL (there are exceptions like `COALESCE`)
-  * Values that might be null cannot be assigned to targets that must be not null
+* `SEM_TYPE_NOTNULL` indicates that the marked item is known to be `NOT NULL`, probably because it was declared as such, or directly derived from a not null item
+  * Typically when two operands are combined both must be marked `NOT NULL` for the result to still be `NOT NULL` (there are exceptions like `COALESCE`)
+  * Values that might be null cannot be assigned to targets that must not be null
 * `SEM_TYPE_SENSITIVE` indicates that the marked item is some kind of PII or other sensitive data.
-  * Any time a sensitive item is combined with some other piece of data the result is a new sensitive piece of data, there are very few ways to "get rid" of the sensitive bit.  It corresponds to the presence of `@sensitive` in the data type declaration.
-  * Values that are sensitive cannot be assigned to targets that are not also marked sensitive
+  * Any time a sensitive operand is combined with another operand the resulting type is sensitive
+  * There are very few ways to "get rid" of the sensitive bit -- it corresponds to the presence of `@sensitive` in the data type declaration.
+  * Values that are sensitive cannot be assigned to targets that are not marked sensitive
 
-The semantic node `sem_node` carries all the possible semantic info we might need, the `sem_type` holds the flags above and tells us how to interpret it.
+The semantic node `sem_node` carries all the possible semantic info we might need, the `sem_type` holds the flags above and tells us how to interpret the rest of the node.
 There are many fields, we'll talk about some of the most important ones here to give you a sense of how things hang together.
 
-Note that `CSTR` is simply an alias for `const char *`.
+Note that `CSTR` is simply an alias for `const char *`.  `CSTR` is used extensively in the codebase for brevity.
 
 ```C
 typedef struct sem_node {
@@ -981,14 +991,15 @@ typedef struct sem_node {
 
 * `sem_type` : already discussed above, this tells you how to interpret everything else
 * `name` : variables, columns, etc. have a canonical name, when a name case-insenstively resolves, the canonical name is stored here
-  * typically you want to emit the canonical variable name (e.g. `FoO` and `fOO` might both resolve to `foo` if that is how it was declared)
+  * typically later passes emit the canonical variable name everywhere
+  * e.g. `FoO` and `fOO` might both resolve to an object declared as `foo`, we always emit `foo` in codegen
 * `kind` : in CQL any type can be discriminated as in `declare foo real<meters>`, the kind here is `meters`
-  * expressions of the same core type (e.g. `real`) are incompatible if they have a `kind` and the `kind` does not match
-  * e.g. you can't assign if you have `bar real<liters>` then `set foo := bar;` is an error even though both are `real`.
+  * two expressions of the same core type (e.g. `real`) are incompatible if they have a `kind` and the `kind` does not match
+  * e.g. if you have `bar real<liters>` then `set foo := bar;` is an error even though both are `real` because `foo` above is `real<meters>`
 * `sptr` : if the item's core type is `SEM_TYPE_STRUCT` then this is populated, see below
 * `jptr` : if the item's core type is `SEM_TYPE_JOIN` then this is populated, see below
 
-If the object is a structure type then this is simply an array of names, kinds, and semantic types.  In fact the semantic types will be all be unitary possibly modified by `NOT_NULL` or `SENSITIVE` but none of the other flags apply.  A single `sptr` directly corresponds to the notion of a `shape` in the analyzer.  Shapes come from anything
+If the object is a structure type then this is simply an array of names, kinds, and semantic types.  In fact the semantic types will be all be unitary, possibly modified by `NOT_NULL` or `SENSITIVE` but none of the other flags apply.  A single `sptr` directly corresponds to the notion of a "shape" in the analyzer.  Shapes come from anything
 that looks like a table, such as a cursor, or the result of a `SELECT` statement.
 
 ```C
@@ -1021,7 +1032,7 @@ With these building blocks we can represent the type of anything in the CQL lang
 ### Initiating Semantic Analysis
 
 The semantic analysis pass runs much the same way as the AST emitter.  In `sem.c` there is the essential function `sem_main`. It suffices
-to call `sem_main` on the root of your AST, that is expect to be a `stmt_list` node.
+to call `sem_main` on the root of the AST. That root node is expected to be a `stmt_list` node.
 
 ```C
 // This method loads up the global symbol tables in either empty state or
@@ -1035,10 +1046,11 @@ cql_noexport void sem_main(ast_node *ast) {
 }
 ```
 
-As you can see, `sem_main` begins by reseting all the state.  You can of course do this yourself after calling `sem_main` (when you're done with the results).
+As you can see, `sem_main` begins by reseting all the global state.  You can of course do this yourself after calling `sem_main` (when you're done with the results).
 
 `sem_main` sets a variety of useful and public global variables that describe the results of the analysis.  The ones in `sem.h` are part of the contract and
-you should feel free to use them in a downstream code-generator.  Other items are internal and should be avoided.  These are typically defined statically in `sem.c`.
+you should feel free to use them in a downstream code-generator.  Other items are internal and should be avoided.
+The internal items are typically defined statically in `sem.c`. The essential outputs will be described in the last section of this part.
 
 The cleanup has this structure:
 
@@ -1063,9 +1075,10 @@ cql_noexport void sem_cleanup() {
   all_functions_list = NULL;
     ...
 ```
+This basically deallocates everything and resets all the globals to `NULL`.
 
-`sem_main` of course has to walk the AST and it does so in much the same way as we saw in `gen_sql.c` there are a set of symbol tables
-whose key is an ast type and whose value is a function plus arguments to dispatch (effectively a lambda).  The semantic analyzer doesn't
+`sem_main` of course has to walk the AST and it does so in much the same way as we saw in `gen_sql.c`. There is a series of symbol tables
+whose key is an AST type and whose value is a function plus arguments to dispatch (effectively a lambda).  The semantic analyzer doesn't
 have to think about things like "should I emit parentheses" so the signature of each type of lambda can be quite a bit simpler.  We'll
 go over each kind with some examples.
 
@@ -1082,11 +1095,11 @@ First we have the non-sql statements, these are basic flow control or other thin
 ```
 
 Here `STMT_INIT` creates a binding between (e.g.) the AST type `if_stmt` and the function `sem_if_stmt`.  This lets us dispatch any part of the AST
-directly.
+to its handler directly.
 
 Next we have the SQL statements.  These get analyzed in the same way as the others, and with functions that have the same signature, however,
-if you use one of these it means that procedure that contained this statement must get a database connection in order to run.  This changes
-its signature and causes the `SEM_TYPE_DML_PROC` flag bit to be set on it.
+if you use one of these it means that procedure that contained this statement must get a database connection in order to run.  Use of the database
+will require the procedure's signature to change; this is recorded by the setting the `SEM_TYPE_DML_PROC` flag bit to be set on the procedures AST node.
 
 ```C
   syms = sql_stmts;
@@ -1102,12 +1115,11 @@ its signature and causes the `SEM_TYPE_DML_PROC` flag bit to be set on it.
   ...
 ```
 
-Again `STMT_INIT` creates a binding between (e.g.) the AST type `delete_stmt` and the function `sem_delete_stmt`.  This lets us dispatch any part of the AST
-directly.
+Again `STMT_INIT` creates a binding between (e.g.) the AST type `delete_stmt` and the function `sem_delete_stmt` so we can dispatch to the handler.
 
-Next we have expression types, these are set up with `EXPR_INIT`.  Many of the operators require exactly the same kinds of verification so in order to be
+Next we have expression types, these are set up with `EXPR_INIT`.  Many of the operators require exactly the same kinds of verification, so in order to be
 able to share the code, the expression analysis functions get an extra argument for the operator in question.  Typically the string of the operator
-is only needed so make a good quality error message and validation is otherwise identical.  Here are some samples...
+is only needed to make a good quality error message with validation being otherwise identical.  Here are some samples...
 
 ```C
   EXPR_INIT(num, sem_expr_num, "NUM");
@@ -1124,9 +1136,12 @@ is only needed so make a good quality error message and validation is otherwise 
   EXPR_INIT(uminus, sem_unary_math, "-");
 ```
 
-Looking at the very first entry as an example we see that `EXPR_INIT` creates a mapping between the AST type `num` and the analysis function `sem_expr_num` and that function will get the text `"NUM"` as an extra argument.
+Looking at the very first entry as an example, we see that `EXPR_INIT` creates a mapping between the AST type `num`
+and the analysis function `sem_expr_num` and that function will get the text `"NUM"` as an extra argument.
+As it happens `sem_expr_num` doesn't need the extra argument, but `sem_binary_math` certainly needs the `"*"`
+as that function handles a large number of binary operators.
 
-Let's quickly go over this list as these are the most important analyzers
+Let's quickly go over this list as these are the most important analyzers:
 
 * `sem_expr_num` : analyzes any numeric constant
 * `sem_expr_str` : analyzes any string literal or identifier
@@ -1138,10 +1153,10 @@ Let's quickly go over this list as these are the most important analyzers
 * `sem_binary_integer_math` : analyzes any binary math operator where the operands must be integers like '%' or '|'
 * `sem_unary_logical` : analyzes any unary logical operator (the result is a bool), this is really only `NOT`
 * `sem_unary_is_true_or_false` : analyzes any of the `IS TRUE`, `IS FALSE`, family of postfix unary operators
-* `sem_unary_integer_math` : any unary operator where the operand must be an integer, this is really only `~`
-* `sem_unary_math` : any math unary, presently only unary negation (but in the future unary `+` too)
+* `sem_unary_integer_math` : analyzes any unary operator where the operand must be an integer, this is really only `~`
+* `sem_unary_math` : analyzes any any math unary operator, presently only negation (but in the future unary `+` too)
 
-The final plentiful group of associations are for builtin functions, like these.
+The last group of normal associations are for builtin functions, like these:
 
 ```C
   FUNC_INIT(changes);
@@ -1151,22 +1166,26 @@ The final plentiful group of associations are for builtin functions, like these.
   FUNC_INIT(time);
 ```
 
-Each of these is dispatched when a function call is found in the tree.  By way of example `FUNC_INIT(changes)` causes the `changes` function to map to `sem__func_changes`.
+Each of these is dispatched when a function call is found in the tree.  By way of example `FUNC_INIT(changes)`
+causes the `changes` function to map to `sem_func_changes` for validation.
 
-There are a few other similar macros for more exotic cases but the general pattern should be clear now.  We these in place it's very easy to traverse arbitary statement lists and arbitary expressions with sub expressions and have the correct function be called without having large `switch` blocks all over.
+There are a few other similar macros for more exotic cases but the general pattern should be clear now.  With these in place
+it's very easy to traverse arbitary statement lists and arbitary expressions with sub expressions and have the correct function
+invoked without having large `switch` blocks all over.
 
 ### Semantic Errors
 
-Some of the following examples will show the handling of semantic errors more precisely but the theory is pretty simple.  Each of these analyzers that has
-been registered is responsible for putting an appropriate `sem_node` into the AST it was invoked on.  The caller will look to see if that `sem_node`
-is of type `SEM_TYPE_ERROR` using `is_error(ast)`.  If it is the caller will mark its own AST as errant using `record_error(ast)` and this continues all
-the way up the tree.  The net of this is that wherever you begin semantic analysis you can know if there were any problems by checking for an error at the
+Some of the following examples will show the handling of semantic errors more precisely but the theory is pretty simple.  Each of the analyzers that has
+been registered is responsible for putting an appropriate `sem_node` into the AST it is invoked on.  The caller will look to see if that `sem_node`
+is of type `SEM_TYPE_ERROR` using `is_error(ast)`.  If it is, the caller will mark its own AST as errant using `record_error(ast)` and this continues all
+the way up the tree.  The net of this is that wherever you begin semantic analysis, you can know if there were any problems by checking for an error at the
 top of the tree you provided.
 
-At the point of the initial error, the analyzer is expected to also call `report_error` providing a suitable message.  This will be logged to stderr.  In test mode it is also stored in the AST so that verification steps can confirm that errors were reported at exactly the right place.
+At the point of the initial error, the analyzer is expected to also call `report_error` providing a suitable message.  This will be logged to `stderr`.
+In test mode it is also stored in the AST so that verification steps can confirm that errors were reported at exactly the right place.
 
-If there is no error, then either a suitable `sem_node` is created or else at minimum `record_ok(ast)` is used to place the shared "OK" type on the node.
-The OK type indicates no type information but no errors either.  "OK" is helpful for statements that don't involve expressions like `DROP TABLE Foo`.
+If there are no errors, then a suitable `sem_node` is created for the resulting type or else, at minimum, `record_ok(ast)` is used to place the shared "OK" type on the node.
+The "OK" type indicates no type information, but no errors either.  "OK" is helpful for statements that don't involve expressions like `DROP TABLE Foo`.
 
 ### The Primitive Types
 
@@ -1199,8 +1218,8 @@ static void sem_expr_num(ast_node *ast, CSTR cstr) {
 }
 ```
 
-As you can see the code simply looks at the AST node, confirming first that it is a `num` node.  Then it extract the `num_type`.
-`ast->sem` is set to a semantic node of the matching type adding in `SEM_TYPE_NOTNULL` because literals are never null.
+As you can see the code simply looks at the AST node, confirming first that it is a `num` node.  Then it extracts the `num_type`.
+Then `ast->sem` is set to a semantic node of the matching type adding in `SEM_TYPE_NOTNULL` because literals are never null.
 
 The `new_sem` function is used to make an empty `sem_node` with the `sem_type` filled in as specified.  Nothing can go wrong creating a literal so there are no failure modes.
 
@@ -1215,10 +1234,13 @@ static void sem_expr_null(ast_node *ast, CSTR cstr) {
 }
 ```
 
+It's hard to get simpiler than doing semantic analysis of the `NULL` literal.  Its code should be clear with no further explaination needed.
+
 ### Unary Operators
 
-Let's dive in to a simple case -- the unary operators.  There are comparatively few and there isn't much code required to handle them all.
+Let's dive in to a simple case that does require some analysis -- the unary operators.  There are comparatively few and there isn't much code required to handle them all.
 
+Here's the code for the unary math operators:
 
 ```C
 // The only unary math operators are '-' and '~'
@@ -1252,9 +1274,9 @@ static void sem_unary_math(ast_node *ast, CSTR op) {
 
 *Unary Prep*
 
-OK already we need to pause, there is a "prep" pattern here common to most of the shared operators.
-This takes care of most of the normal error handling which is the same for all the unary operators.
-The same pattern happens in binary operators.  Let's take a look at that function.
+OK already we need to pause, there is a "prep" pattern here common to most of the shared operators that we should discuss.
+The prep step takes care of most of the normal error handling which is the same for all the unary operators
+and same pattern happens in binary operators.  Let's take a look at `sem_unary_prep`.
 
 ```C
 // The unary operators all have a similar prep to the binary.  We need
@@ -1285,30 +1307,31 @@ static bool_t sem_unary_prep(ast_node *ast, sem_t *core_type, sem_t *combined_fl
 
 Reviewing the steps:
 
-* first evaluate the operand, it will be in `ast->left`
-* if that's an error, just return the error code from the prep steps
-* now that it's not an error, pull the core type out of the operand
-* pull the not nullable and sensitive flag bits out of the operand
-* return a boolean indicating the presence of an error or not for convenience
+* first we analyze the operand, it will be in `ast->left`
+* if that's an error, we just return the error code from the prep steps
+* now that it's not an error, we pull the core type out of the operand
+* then we pull the not nullable and sensitive flag bits out of the operand
+* finally return a boolean indicating the presence of an error (or not) for convenience
 
-This is useful setup for all the unary operators, and as we'll see, the binary operator case has a similar prep step.
+This is useful setup for all the unary operators, and as we'll see, the binary operators have a similar prep step.
 
 *Back to Unary Processing*
 
-Looking at the overall step we see:
+Looking at the overall steps we see:
 
 * `sem_unary_prep` : verifies that the operand is not an error, and gets its core type and flag bits
 * `sem_validate_numeric` : verifies that the operand is a numeric type
+  * recall these are the math unary operators, so the operand must be numeric
 * `sem_combine_types` : creates the smallest type that holds two compatible types
-   * by combining with integer not null we ensure that the resulting type is at least as big as an integer
-   * if the argument is of type `long` or `real` then it will be the bigger type and the resulting type will be `long` or `real`
+   * by combining with "integer not null" we ensure that the resulting type is at least as big as an integer
+   * if the argument is of type `long` or `real` then it will be the bigger type and the resulting type will be `long` or `real` as appropriate
    * in short, `bool` is promoted to `int`, everything else stays the same
    * `sem_combine_types` also combines the nullability and sensitivity appropriately
-* a new `sem_node` is created of the combined type
-  * the type kind of the operand is preserved (e.g. the `meters` in `real<meters>`)
+* a new `sem_node` of the combined type is created
+  * the type "kind" of the operand is preserved (e.g. the `meters` in `real<meters>`)
   * any column alias or variable name is not preserved, the value is now anonymous
 
-These primitives are designed to combine well, for instance, consider `sem_unary_integer_math`, the steps are
+These primitives are designed to combine well, for instance, consider `sem_unary_integer_math`
 
 ```C
 static void sem_unary_integer_math(ast_node *ast, CSTR op) {
@@ -1317,8 +1340,10 @@ static void sem_unary_integer_math(ast_node *ast, CSTR op) {
 }
 ```
 
-* `sem_unary_math` : do all the above
-* `sem_reject_real` : report/record an error if the type is `real` otherwise do nothing
+The steps are:
+
+* `sem_unary_math` : do the sequence we just discussed
+* `sem_reject_real` : report/record an error if the result type is `real` otherwise do nothing
 
 Note that in all cases the `op` string simply gets pushed down to the place where the errors happen.  Let's take a quick look at one of
 the sources of errors in the above.  Here's the numeric validator:
@@ -1347,9 +1372,9 @@ static bool_t sem_validate_numeric(ast_node *ast, sem_t core_type, CSTR op) {
 }
 ```
 
-This is pretty much dumb as rocks.  The non-numeric types are blob, object, and text.  There is a custom error for each type (it could have been shared
-but specific error messages seem to help users).  This code doesn't know it's context, but all it needs is `op` to tell it what the numeric-only
-operator was and it can produce a nice error message.  It leaves an error in the AST using `record_error` and so its caller can simply `return`
+That function is pretty much dumb as rocks.  The non-numeric types are blob, object, and text.  There is a custom error for each type (it could have been shared
+but specific error messages seem to help users).  This code doesn't know its context, but all it needs is `op` to tell it what the numeric-only
+operator was and it can produce a nice error message.  It leaves an error in the AST using `record_error`, its caller can then simply `return`
 if anything goes wrong.
 
 It's not hard to guess how `sem_reject_real` works:
@@ -1369,15 +1394,16 @@ static void sem_reject_real(ast_node *ast, CSTR op) {
 }
 ```
 
-* if the AST node isn't already an error, and it is of type real, report an error
+* if the AST node isn't already an error, and the node is of type "real", report an error
 * it assumes the type is already known to be numeric
-* the pre-check for errors is to avoid double reporting if something has already gone wrong, the core type will be `SEM_TYPE_ERROR`
+* the pre-check for errors is to avoid double reporting; if something has already gone wrong, the core type will be `SEM_TYPE_ERROR`
+  * no new error recording is needed in that case, obviously an error was already recorded
 
 ### Binary Operators
 
 #### Binary Prep
 
-The code pretty much speaks for itself, we'll walk through it
+With the knowledge we have so far, this code pretty much speaks for itself, but we'll walk through it.
 
 ```C
 // All the binary ops do the same preparation, they evaluate the left and the
@@ -1411,12 +1437,14 @@ static bool_t sem_binary_prep(ast_node *ast, sem_t *core_type_left, sem_t *core_
 }
 ```
 
-* `sem_expr` is used to recursively walk the left and right nodes
-* `is_error` checks if either had errors, if so, simply propogate the error
+* `sem_expr` : used to recursively walk the left and right nodes
+* `is_error` : checks if either side had errors, if so, simply propogate the error
 * extract the left and right core types
 * combine nullability and sensitivity flags
 
-These are the standard prep steps, the caller now has the core types of left and right plus combined flags on a silver platter.
+And that's it!  These are the standard prep steps for all binary operators. With this done,
+the caller has the core types of the left and right operands plus combined flags on a silver platter
+and one check is needed to detect if anything went wrong.
 
 #### Example: Is or Is Not
 
@@ -1440,8 +1468,8 @@ static void sem_binary_is_or_is_not(ast_node *ast, CSTR op) {
 }
 ```
 
-* `sem_binary_prep` checks for errors in the left or right
-* `sem_verify_compat` ensures that left and right operands are type compatible (discussed later)
+* `sem_binary_prep` : checks for errors in the left or right
+* `sem_verify_compat` : ensures that left and right operands are type compatible (discussed later)
 * the result is always of type `bool not null`
 
 If either step goes wrong the error will naturally propogate.
@@ -1484,16 +1512,18 @@ static void sem_binary_math(ast_node *ast, CSTR op) {
 }
 ```
 
-* `sem_binary_prep` checks for errors on the left or right
-* `error_any_object` reports an error if the left or right is of type object
-* `error_any_blob_types` reports an error if the left or right is of type blob
-* `error_any_text_types` reports an error if the left or right is of type text
-* `sem_combine_type` computes the combined type, the smallest numeric type that holds both left and right
+Let's have a look at those steps:
+
+* `sem_binary_prep` : checks for errors on the left or right
+* `error_any_object` : reports an error if the left or right is of type object
+* `error_any_blob_types` : reports an error if the left or right is of type blob
+* `error_any_text_types` : reports an error if the left or right is of type text
+* `sem_combine_type` : computes the combined type, the smallest numeric type that holds both left and right
   * note the operands are now known to be numeric
-  * the three type error checkers give nice right errors about the left or right operand
-* `sem_combine_kinds` tries to create a single type `kind` for both operands
+  * the three type error checkers give nice tight errors about the left or right operand
+* `sem_combine_kinds` : tries to create a single type `kind` for both operands
   * if their `kind` is incompatible, records an error on the right
-* `new_sem` creates a `sem_node` with the combined type, flags, and then the `kind` is set.
+* `new_sem` : creates a `sem_node` with the combined type, flags, and then the `kind` is set.
 
 At this point it might help to look a few more of the base validators, they are very unremarkable.
 
@@ -1518,9 +1548,9 @@ static bool_t error_any_object(ast_node *ast, sem_t core_type_left, sem_t core_t
 }
 ```
 
-* `is_object` checks a `sem_type` against `SEM_TYPE_OBJECT`
-* if left or right is an object an appropraite error is generated
-* there is no strong convention about returning `true` if ok or `true` if error, it's pretty ad hoc
+* `is_object` : checks a `sem_type` against `SEM_TYPE_OBJECT`
+  * if the left or right child is an object an appropraite error is generated
+* there is no strong convention about returning `true` if ok, or `true` if error, it's pretty ad hoc
   * this doesn't seem to cause a lot of problems
 
 #### Example Validator: sem_combine_kinds
@@ -1552,14 +1582,14 @@ static CSTR sem_combine_kinds(ast_node *ast, CSTR kright) {
 }
 ```
 
-* `sem_combine_kinds` uses the worker `sem_combine_kinds_general` after extracting the `kind` from the left node
+* `sem_combine_kinds` : uses the worker `sem_combine_kinds_general` after extracting the `kind` from the left node
   * usually you already have one `kind` and you want to know if another `kind` is compatible hence this helper
-* `sem_combine_kinds_general` applies the general rules
+* `sem_combine_kinds_general` : applies the general rules for "kind" strings:
   * NULL + NULL => NULL
   * NULL + x  => x
   * x + NULL => x
   * x + x => x
-  * x + y => error if x != y
+  * x + y => error (if x != y)
 * this is one of the rare functions that creates a dynamic error message
 
 
@@ -1567,7 +1597,8 @@ static CSTR sem_combine_kinds(ast_node *ast, CSTR kright) {
 
 This helper is frequently called several times in the course of other semantic checks.
 This one produces no errors, that's up to the caller. Often there is a numeric path
-and a non-numeric path so this helper can't create the errors.
+and a non-numeric path so this helper can't create the errors as it doesn't yet know
+if anything bad has happened.  Most of the `is_something` functions are the same way.
 
 ```C
 cql_noexport bool_t is_numeric_compat(sem_t sem_type) {
@@ -1576,8 +1607,10 @@ cql_noexport bool_t is_numeric_compat(sem_t sem_type) {
 }
 ```
 
-It operates by checking the core type for the numeric range.  Note that `NULL` is compatible with numerics
-because expressions like `NULL + 2` have meaning in SQL.
+`is_numeric_compat` operates by checking the core type for the numeric range.
+Note that `NULL` is compatible with numerics because expressions like `NULL + 2`
+have meaning in SQL.  The type of that expression is nullable integer and
+the result is `NULL`.
 
 #### Example Validator : sem_combine_types
 
@@ -1588,7 +1621,7 @@ because expressions like `NULL + 2` have meaning in SQL.
 // Note: in the few cases where that isn't true the normal algorithm for
 // nullablity result must be overrided (see coalesce for instance).
 static sem_t sem_combine_types(sem_t sem_type_1, sem_t sem_type_2) {
-  ...
+  ... too much code ... summary below
 }
 ```
 
@@ -1596,12 +1629,12 @@ This beast is rather lengthy but unremarkable. It follows these rules:
 * text is only compatible with text
 * object is only compatible with object
 * blob is only compatible with blob
-* numerics are only compatible with any other numerics
-  * NULL promotes the other operand, whatever it is
-  * bool promotes to integer
-  * integer promotes to long integer
-  * long integer promotes to real
-  * the combined type is the smallest numeric type according to the promotion rules
+* numerics are only compatible with other numerics and NULL
+  * NULL promotes the other operand, whatever it is (might still be NULL)
+  * bool promotes to integer if needed
+  * integer promotes to long integer if needed
+  * long integer promotes to real if needed
+  * the combined type is the smallest numeric type that holds left and right according to the above
 
 Some examples might be helpful:
 
@@ -1618,14 +1651,15 @@ checked using `sem_verify_compat` repeatedly.
 
 #### Example Validator : sem_verify_assignment
 
-The `sem_verify_assignment` function is use any time there is something like a logical `assignment` going on.  There are
+The `sem_verify_assignment` function is used any time there is something like a logical `assignment` going on.  There are
 two important cases:
 
 * `SET x := y` : an actual assignment
 * `call foo(x)` : the expression `x` must be "assignable" to the formal variable for the argument of `foo`
 
-This is a lot like normal binary operator compatibility with one extra rule.  The expression must not be a bigger type than the target.
-i.e. you cannot assign a `long` to an `integer`.
+This is a lot like normal binary operator compatibility with one extra rule: the source expression must
+not be a bigger type than the target.  e.g. you cannot assign a `long` to an `integer`, nor pass a long
+expression to a function that has an integer parameter.
 
 ```C
 // This verifies that the types are compatible and that it's ok to assign
@@ -1658,8 +1692,8 @@ static bool_t sem_verify_assignment(ast_node *ast, sem_t sem_type_needed, sem_t 
 }
 ```
 
-* `sem_verify_compat` checks for standard type compatibility between the left and the right
-* `sem_verify_safeassign` checks that if the types are different the right operand is the smaller
+* `sem_verify_compat` : checks for standard type compatibility between the left and the right
+* `sem_verify_safeassign` : checks that if the types are different the right operand is the smaller
 * nullability checks ensure you aren't trying to assign a nullable value to a not null variable
 * sensitivity checks ensure you aren't trying to assign a sensitive value to a not sensitive variable
 
@@ -1705,19 +1739,21 @@ static void sem_while_stmt(ast_node *ast) {
 }
 ```
 
-* first we pull out the tree parts we need using `EXTRACT` macros
-* the loop expression verified to be numeric
-* then the statement list is recursively validated
+* `EXTRACT*` : pulls out the tree parts we need
+* `sem_numeric_expr` : verifies the loop expression is numeric
+* `sem_stmt_list` : recursively validates the body of the loop
 
-Note: the while expression is one of the loop constructs which means `LEAVE` and `CONTINUE` are legal inside it, the `loop_depth` global tracks the fact that we are in a loop so that `LEAVE` and `CONTINUE` can report errors if we are not.
+Note: the while expression is one of the loop constructs which means `LEAVE` and `CONTINUE` are legal inside it.
+The `loop_depth` global tracks the fact that we are in a loop so that analysis for `LEAVE` and `CONTINUE` can report errors if we are not.
 
-It's not hard to imagine that `sem_stmt_list` will basically walk the AST, pulling out statements and dispatching them using the `STMT_INIT` tables previously discussed.  Hence you could land right back in `sem_while_stmt` for a nested `WHILE`.  It's turtles all the way down.
+It's not hard to imagine that `sem_stmt_list` will basically walk the AST, pulling out statements and dispatching them using the `STMT_INIT` tables previously discussed.
+You might land right back in `sem_while_stmt` for a nested `WHILE` -- it's turtles all the way down.
 
 If `SEM_EXPR_CONTEXT_NONE` is a mystery, don't worry it's covered in the next section.
 
 ### Expression Contexts
 
-It turns out that in the SQL language some expression types are only valid in some parts of a SQL statement (e.g. aggregate functions can't appear in a `LIMIT` clause) and so there is always a context for any numeric expression.  When a new root expression is being evaluated, it sets the xpression context according to the caller.
+It turns out that in the SQL language some expression types are only valid in some parts of a SQL statement (e.g. aggregate functions can't appear in a `LIMIT` clause) and so there is always a context for any numeric expression.  When a new root expression is being evaluated, it sets the expression context per the caller's specification.
 
 The expression contexts are as follows:
 
@@ -1737,12 +1773,13 @@ The expression contexts are as follows:
 #define SEM_EXPR_CONTEXT_CONSTRAINT     0x1000
 ```
 
-The idea here is simple, you set the context bit that correponds to the current context such as `SEM_EXPR_CONTEXT_WHERE` if the expression is in
-the `WHERE` clause.  The validators check this context, in particular anything that is only available in some contexts has a bit-mask of
-the context bits where it can be used.  It checks the possibilities against the current context with one bitwise "and" operation. A zero result
-indicates that the operation is not valid in the current context.
+The idea here is simple, when calling a root expression, the analyzer provides the context value that has the bit that correponds to the current context.
+For instance, the expression being validated in is the `WHERE` clause, the code will provide `SEM_EXPR_CONTEXT_WHERE`.
+The inner validators check this context, in particular anything that is only available in some contexts has a bit-mask of that is the union
+of the context bits where it can be used.  The validator can check those possibilities against the current context with one bitwise "and" operation.
+A zero result indicates that the operation is not valid in the current context.
 
-This bitwise "and" is performed by one of these two helper macros which makes the usage a little clearer
+This bitwise "and" is performed by one of these two helper macros which makes the usage a little clearer:
 
 ```C
 #define CURRENT_EXPR_CONTEXT_IS(x)  (!!(current_expr_context & (x)))
@@ -1752,9 +1789,9 @@ This bitwise "and" is performed by one of these two helper macros which makes th
 #### Expression Context Example : Concat
 
 The concatenation operator `||` is challenging to successfully emulate because it does many different kinds of
-numeric conversions automatically.  Rather than perenially getting this wrong, we simply do not support
-this operator in a context where SQLite isn't going to be doing the concatenation.  So typically you
-use "printf" instead to get your formatting done outside of a SQL state.  The check for this is very simple
+numeric to string conversions automatically.  Rather than perenially getting this wrong, we simply do not support
+this operator in a context where SQLite isn't going to be doing the concatenation.  So typically users
+use "printf" instead to get formatting done outside of a SQL context.  The check for invalid use of `||` is very simple
 and it happens of course in `sem_concat`.
 
 ```C
@@ -1768,11 +1805,11 @@ and it happens of course in `sem_concat`.
 #### Expression Context Example : IN
 
 A slightly more complex example happens processing the `IN` operator.  This operator has two forms,
-the form with an expression list, which can be used anywhere, and the form with a select statement.
-The latter form can only appear in some sections of SQL and not at all in loose expressions.  For
+the form with an expression list, which can be used anywhere, and the form with a `SELECT` statement.
+The latter form can only appear in some sections of SQL, and not at all in loose expressions.  For
 instance, that form may not appear in the `LIMIT` or `OFFSET` sections of a SQLite statement.
 
-We use this construct to get all the bits we like.
+We use this construct to do the validation:
 
 ```C
     uint32_t valid = SEM_EXPR_CONTEXT_SELECT_LIST
@@ -1789,17 +1826,17 @@ We use this construct to get all the bits we like.
     }
 ```
 
-If the reader is interested in a simple learning exercise, run down the purpose of `SEM_EXPR_CONTEXT_TABLE_FUNC`, it's simple
-but important and it only has one use case so it's easy to find.
+If the reader is interested in a simple learning exercise, run down the purpose of `SEM_EXPR_CONTEXT_TABLE_FUNC` -- it's simple,
+but important, and it only has one use case so it's easy to find.
 
 ### Name Resolution
 
 We've gotten pretty far without talking about the elephant in the room: name resolution.
 
 Like SQL, many statements in CQL have names in positions where the type of the name is completely unambiguous.  For instance
-nobody could be confused what sort of symbol `Foo` is in `DROP INDEX Foo;`
+nobody could be confused what sort of symbol `Foo` is in `DROP INDEX Foo`.
 
-These are the easiest name resolutions, and there are a lot in this form.  Let's do an example
+This type, with a clear name category, are the easiest name resolutions, and there are a lot in this form.  Let's do an example.
 
 #### Example: Index Name Resolution
 
@@ -1822,8 +1859,8 @@ static void sem_drop_index_stmt(ast_node *ast) {
 }
 ```
 
-Well, this is interesting.  But what's going on with `find_usable_index` what is usable?  Why aren't we just looking up the index
-name in some name table and that's it.  Let's have a look at the details:
+Well, this is interesting.  But what's going on with `find_usable_index`? What is usable?  Why aren't we just looking up the index
+name in some name table? Let's have a look at the details of `find_usable_index`.
 
 ```C
 // returns the node only if it exists and is not restricted by the schema region.
@@ -1842,30 +1879,37 @@ static ast_node *find_usable_index(CSTR name, ast_node *err_target, CSTR msg) {
 }
 ```
 
-We haven't discussed schema regions yet but what you need to know about them for now is this:  any piece of schema can be
-in a region and these can be nested.  A region may depend on other regions.  If this is done then the region may only
-use schema parts that are in its dependencies (transitively).  The point of this is that you might have a rather large
-schema and you probably don't want any peice of code to use any piece of schema.  You can use regions to ensure that
-the code for feature "X" doesn't try to use schema designed exclusively for feature "Y".
+We haven't discussed schema regions yet but what you need to know about them for now is this:
+* any object can be in a region.
+* a region may depend on other regions
 
-So now `usable` simply means, we can find the name in the symbol table for indices that's `find_index` and it is
-accessible by the current region.
+If an object is in a region, then it may only use schema parts that are in
+the same region, or the region's dependencies (transitively).
 
-If we had used an example requiring a table or a column the same considerations would apply however additionally
-tables can be deprecated with `@delete` so we might need additional checks to make sure we're talking about
-a table, not a table's tombstone.
+The point of this is that you might have a rather large schema and you probably don't want any peice
+of code to use any piece of schema.  You can use regions to ensure that the code for feature "X" doesn't
+try to use schema designed exclusively for feature "Y".  That "X" code probably has no business even
+knowing of the existence of "Y" schema.
 
-In short, these cases just require looking up the entity and verifying that it's accessible in the current context.
+So now `usable` simply means this:
+* `find_index` can find the name in the symbol table for indices
+* the found index is accessible in the current region
+
+If we had used an example that was looking up a table name, the same region considerations would apply,
+however, additionally tables can be deprecated with `@delete` so there would be additional checks to make
+sure we're talking about a live table and not a table's tombstone.
+
+In short, these simple cases just require looking up the entity and verifying that it's accessible in the current context.
 
 #### Flexible Name Resolution
 
-The "hard case" for name resolution is where the name is occuring in an expression.  Such a name might mean a lot
-of things.  It could be a global variable, a local variable, an argument, a table column, a field in a cursor, and
-others.  The general name resolution goes through several phases looking for the name.  Each phase can either report
+The "hard case" for name resolution is where the name is occuring in an expression.  Such a name can refer to
+all manner of things. It could be a global variable, a local variable, an argument, a table column, a field in a cursor,
+and others.  The general name resolver goes through several phases looking for the name.  Each phase can either report
 an affirmative success or error (in which case the search stops), or it may simply report that the name was not found
 but the search should continue.
 
-We can demystify this a bit by looking at the two most common ways to get this done.
+We can demystify this a bit by looking at the most common way to get name resolution done.
 
 ```C
 // Resolves a (potentially qualified) identifier, writing semantic information
@@ -1882,11 +1926,11 @@ static void sem_resolve_id(ast_node *ast, CSTR name, CSTR scope) {
 ```
 
 The name resolver works on either a vanilla name (e.g. `x`) or a scoped name (e.g. `T1.x`).  The name and scope are provided.
-The `ast` parameter is used only as a place to report errors, there is no further cracking of the ast needed to resolve
+The `ast` parameter is used only as a place to report errors, there is no further cracking of the AST needed to resolve
 the name.  As you can see `sem_resolve_id` just calls the more general function `sem_resolve_id_with_type` and is used
-in the most common case where you don't need the sematic type info for the identifier.
+in the most common case where you don't need to be able to mutate the sematic type info for the identifier.  That's the 99% case.
 
-Let's move on to the "real" resolver.
+So let's move on to the "real" resolver.
 
 ```C
 // This function is responsible for resolving both unqualified identifiers (ids)
@@ -1950,8 +1994,8 @@ static void sem_resolve_id_with_type(ast_node *ast, CSTR name, CSTR scope, sem_t
 }
 ```
 
-A lot is well described in the comments, but already we can see the structure.  There are "mini-resolvers"
-which are attempted in order
+This function is well described in its own comments.  We can easily see the "mini-resolvers"
+which attempt to find the name in order:
 
 * `sem_try_resolve_arguments` : an argument in the argument list
 * `sem_try_resolve_column` : a column name (possibly scoped)
@@ -1978,22 +2022,22 @@ typedef enum {
 Each of these mini-resolvers will have a series of rules, for example `sem_try_resolve_cursor_field` is going to have to do
 something like this:
 
-* if there is no scope it can't be a cursor field, return `CONTINUE`
+* if there is no scope, it can't be a cursor field, return `CONTINUE`
 * if the scope is not the name of a cursor, return `CONTINUE`
 * if the name is a field in the cursor, return `STOP` with success
 * else, report that the name is not a valid member of the cursor, and return `STOP` with an error
 
-All the mini-resolvers are similarly structured:
+All the mini-resolvers are similarly structured, generically:
 
 * if it's not my case, return `CONTINUE`
-* if it is my case return `STOP` with an error as appropriate
+* if it is my case return `STOP` (maybe with an error)
 
-Some of the resolvers have quite a few steps but any one resolver is only about a screenful of code
+Some of the mini-resolvers have quite a few steps but any one mini-resolver is only about a screenful of code
 and it does one job.
 
 ### Structure types and the notion of Shapes
 
-Earlier we discussed `SEM_TYPE_STRUCT` briefly and recall the basic notion of the `structure` type
+Earlier we discussed `SEM_TYPE_STRUCT` briefly. Recall the basic notion of the `structure` type:
 
 ```C
 // for tables and views and the result of a select
@@ -2068,21 +2112,21 @@ that goes.
   ast->sem->region = current_region;
 ```
 
-* `new_sem_struct` makes a struct to hold the result, we already have the count of columns and the table name
-* `symtab_new` is going to gives us a scratch symbol table so we can check for duplicate column names
+* `new_sem_struct` : makes a struct to hold the result, we already have the count of columns and the table name
+* `symtab_new` : is going to gives us a scratch symbol table so we can check for duplicate column names
 * we walk all the items in the table and use `is_ast_col_def(def)` to find the column definitions
-* `Invariant(def->sem->name)` claims that we must have already computed the semantic info for the column and it has its name populated
+* `Invariant(def->sem->name)` : claims that we must have already computed the semantic info for the column and it has its name populated
   * this was done earlier
-* `symtab_add(columns, def->sem->name, NULL)` adds a nil entry under the column name, if this fails we have a duplicate column
+* `symtab_add(columns, def->sem->name, NULL)` : adds a nil entry under the column name, if this fails we have a duplicate column
   * in which case we report errors and stop
-* `is_deleted` tells us if the column was marked with `@delete` in which case it no longer counts as part of the table
+* `is_deleted` : tells us if the column was marked with `@delete` in which case it no longer counts as part of the table
 * if all this is good we set the `names`, `kinds`, and `semtypes` from the column definition's semnatic info
-* `symtab_delete` cleans up the temporary symbol table
-* and finally we create a `sem_node` of type `SEM_TYPE_STRUCT` and fill it in
-* `sem_join_from_sem_struct` will be discussed shortly, but it creates a jptr with one table in it
+* `symtab_delete` : cleans up the temporary symbol table
+* `new_sem` : creates a `sem_node` of type `SEM_TYPE_STRUCT` which is filled in
+  * `sem_join_from_sem_struct` will be discussed shortly, but it creates a `jptr` with one table in it
 
-Structure types are often rooted in the shape of a table, but other things can create a structure type.  For instance, the
-columns of a view, or any select statement are also described by a structure type and are therefore valid "shapes".  The
+Structure types often come from the shape of a table, but other things can create a structure type.  For instance, the
+columns of a view, or any select statement, are also described by a structure type and are therefore valid "shapes".  The
 return type of a procedure usually comes from a `SELECT` statement so the procedure too can be the source of a shape.
 The arguments of a procedure form a shape.  The fields of a cursor form a shape.  You can even have a named subset
 of the arguments of a procedure and use them like a shape. All of these things are described by structure types.
@@ -2143,15 +2187,15 @@ static void sem_declare_cursor_like_name(ast_node *ast) {
 }
 ```
 
-* `EXTRACT` the pieces we need from the AST
-* `sem_verify_legal_variable_name` makes sure the cursor name is unique and doesn't hide a table name
-* `sem_find_likeable_ast` searches for something with a suitable name that has a shape
-* re-use the semantic type of what we found in the name node
-* make a new `sem_node` for the cursor variable
-* use the `sptr` from the discovered shape for the type
+* `EXTRACT` : gets the pieces we need from the AST
+* `sem_verify_legal_variable_name` : makes sure the cursor name is unique and doesn't hide a table name
+* `sem_find_likeable_ast` : searches for something with a suitable name that has a shape
+* we populate the name node with the  semantic type that we found
+* `new_sem` : makes a new `sem_node` for the cursor variable with `SEM_TYPE_STRUCT`
+  * set the `sptr` field using the discovered shape
 
-Note: `name_ast->sem` isn't actually interesting but it is helpful for debugging and if the AST is printed it
-shows the original unmodified semantic type on those nodes.
+Note: `name_ast->sem` isn't actually used for anything but it is helpful for debugging. If the AST is printed it
+shows the original unmodified semantic type which can be helpful.
 
 Briefly `sem_find_likeable_ast` does these steps:
 
@@ -2163,8 +2207,9 @@ Briefly `sem_find_likeable_ast` does these steps:
 * if the right is the name of a procedure with a structure result, use that shape
 * if it's none of these, produce an error
 
-This is the primary source of shape reuse.  Let's look at how we might use that.  Suppose we want to write a procedure
-that inserts a row into the table `Foo`.  We could certainly list the columns of `Foo` as arguments like this:
+This is the primary source of shape reuse.  Let's look at how we might use that.
+
+Suppose we want to write a procedure that inserts a row into the table `Foo`, we could certainly list the columns of `Foo` as arguments like this:
 
 ```SQL
 CREATE PROC InsertIntoFoo(id integer, t text, r real, b blob)
@@ -2173,9 +2218,9 @@ BEGIN
 END;
 ```
 
-That is going to get a lot less exciting when there are lots of columns and it will be increasingly a maintenance headach.
+But that approach is going to get a lot less exciting when there are lots of columns and it will be increasingly a maintenance headache.
 
-Compare with
+Compare that with the following:
 
 ```SQL
 CREATE PROC InsertIntoFoo(row LIKE Foo)
@@ -2184,12 +2229,12 @@ BEGIN
 END;
 ```
 
-These two things compile into the same code.  The semantic analyzer expands the `(row LIKE Foo)` into
+Those two versions of `InsertIntoFoo` compile into the same code.  The semantic analyzer expands the `(row LIKE Foo)` into
 `(row_id integer, row_t text, row_r real, row_b blob)` and then replaces `FROM row` with
 `(row_id, row_t, row_r, row_b)`.  In both case it simply looked up the shape using `sem_find_likeable_ast`
 and then altered the AST to the canonical pattern.  This kind of "shape sugar" is all over CQL and
 greatly increases maintainability while eliminating common errors.  The most common operation is simply
-to expland a "shape" into a list of arguments or columns (maybe with or without type).  SQLite doesn't
+to expland a "shape" into a list of arguments or columns (maybe with or without type names).  SQLite doesn't
 know any of this shape magic so by the time SQLite sees the code it has to look "normal" -- the shapes
 are all resolved.
 
@@ -2208,18 +2253,19 @@ typedef struct sem_join {
 } sem_join;
 ```
 
-This is an array of named structure types, which is exactly what you get when you do something like this
+This is an array of named structure types, which is exactly what you get when you do something like this:
 
 ```SQL
 select * from T1 INNER JOIN T2;
 ```
 
-The result has all of the columns of T1 and all of the columns of T2.  They can be referred to with scoped
+The result has all of the columns of `T1` and all of the columns of `T2`.  They can be referred to with scoped
 names like `T1.x` which means "find the `sptr` corresponding to the name `T1` then within that structure
 find the column named `x`".  In general, when we join, we take a `jptr` on the left and concatenate it
-with a `jptr` on the right.  And for all this to work we have to start somewhere, usually single tables.
+with a `jptr` on the right.  For all this to work we have to start somewhere, usually single tables.
+
 As we saw when we make a table we use `sem_join_from_sem_struct` to make its initial `jptr`.  Let's
-have a look at that now.
+have a look at that now:
 
 ```C
 // Create a base join type from a single struct.
@@ -2232,27 +2278,28 @@ static sem_join *sem_join_from_sem_struct(sem_struct *sptr) {
 }
 ```
 
-It doesn't get much simpler than the above:
+It doesn't get much simpler than the above, here are the steps briefly:
 
-* `new_sem_join` gives us an empty `sem_join` with room for 1 table
+* `new_sem_join` : gives us an empty `sem_join` with room for 1 table
 * we use the struct name for the name and the table's `sptr` for the shape
-* `new_sem_struct_strip_table_flags` copies the table's `sptr` keeping only the essential flags
+* `new_sem_struct_strip_table_flags` : copies the table's `sptr` keeping only the essential flags
   * `SEM_TYPE_HIDDEN_COL`
   * `SEM_FLAG_NOTNULL`
   * `SEM_FLAG_SENSITIVE`
 
-The other flags (e.g. `SEM_TYPE_PK`) have no value in doing type checking and were only needed to help validate the table itself.  They
-would be harmless but they would also contaminate all of the debug output so they are stripped.  As a result the type of columns
-as they appear in say `SELECT` statements is simpler than how they appear in a `CREATE TABLE` statement.
+The other flags (e.g. `SEM_TYPE_PK`) have no value in doing type checking and were only needed to help validate the table itself.
+Those extra flags would be harmless but they would also contaminate all of the debug output, so they are stripped.  As a result
+the type of columns as they appear in say `SELECT` statements is simpler than how they appear in a `CREATE TABLE` statement.
 
-When we need to create a new join type we simply (*) make a new join type that is the concatenation of the left and right parts of the join.
+When we need to create a new join type we simply (*) make a new `sem_join` that is the concatenation of the left and right sides of the join
+operation.
 
-* some join types change the nullability of columns like `LEFT JOIN` so we have to handle that too
-* the names of the table in the new joinscope have to be unique so there is also error checking to do
+* some join types change the nullability of columns like `LEFT JOIN`, so we have to handle that too
+* the names of the tables in the new concatenated joinscope have to be unambiguous so there is also error checking to do
 * but basically it's just a concat...
 
 Importantly, we call the thing a "joinscope" because it creates a namespace.  When we are evaluating names inside of the `FROM` clause or
-even later in say a `WHERE` clause, the joinscope that we have created so far controls the same of `table.column` combinations you can
+even later in say a `WHERE` clause, the joinscope that we have created so far controls the `table.column` combinations you can
 use in expressions.  This changes again when there is a subquery, so the joinscopes can be pushed and popped as needed.
 
 By way of example, you'll see these two patterns in the code:
@@ -2262,16 +2309,16 @@ By way of example, you'll see these two patterns in the code:
   error = sem_select_orderby(select_orderby);
   POP_JOIN();
 ```
-* use the `jptr` from the `FROM` clause to put things back in scope for the `ORDER BY` clause
 
+* `PUSH_JOIN` : use the `jptr` from the `FROM` clause to put things back in scope for the `ORDER BY` clause
 
 ```C
   PUSH_JOIN_BLOCK();
   sem_numeric_expr(ast->left, ast, "LIMIT", SEM_EXPR_CONTEXT_LIMIT);
   POP_JOIN();
 ```
-* `PUSH_JOIN_BLOCK` causes the name search to stop, nothing deeper in the stack is searched
-* in this case we do not allow `LIMIT` expressions to see any joinscopes, they may not use any columns.
+* `PUSH_JOIN_BLOCK` : causes the name search to stop, nothing deeper in the stack is searched
+* in this case we do not allow `LIMIT` expressions to see any joinscopes, they may not use any columns
    * even if the `LIMIT` clause is appearing in a subquery it can't refer to columns in the parent query.
 
 ### Schema Regions
@@ -2280,7 +2327,7 @@ We touched briefly on schema regions earlier in this section.  The purpose and l
 is described more fully in [Chapter 10](https://cgsql.dev/cql-guide/ch10#schema-regions) of the Guide.
 In this section we'll deal with how they are implemented and what you should expect to see in the code.
 
-When a region declaration is found this method is used.
+When a region declaration is found this method is used:
 
 ```C
 // A schema region is an partitioning of the schema such that it
@@ -2294,12 +2341,12 @@ static void sem_declare_schema_region_stmt(ast_node *ast)  { ... }
 ```
 
 The general rules are described in the comment, but effectively it accumulates the list of
-this regions dependencies.  Sometimes these are called the antecedent regions.  Since
-a region can only depend on other regions that have already been declared, it's not possible
-to make any cycles.  Regions are declared before you put anything into them.
+the declared region's dependencies.  Sometimes these are called the antecedent regions.  Since
+a region can only depend on regions that have already been declared, it's not possible
+to make any cycles. Regions are declared before you put anything into them.
 
-Pieces of schema or procedures (or anything really) can go into a region by putting it
-in a begin/end pair for the name region.
+Pieces of schema or procedures (or anything really) can go into a region by putting that code
+inside a begin/end pair for the named region.  Like so:
 
 ```sql
 @begin_schema_region your_region;
@@ -2309,10 +2356,10 @@ in a begin/end pair for the name region.
 
 Now whatever happens to be in "your stuff" is:
 
-* limited to seeing only the things that `your_region` is allowed to see and
+* limited to seeing only the things that `your_region` is allowed to see, and
 * contributes its contents to `your_region` thereby limiting how others will be able to use "your stuff"
 
-To see how this happens, let's have a look at `sem_begin_schema_region_stmt`
+To see how this happens, let's have a look at `sem_begin_schema_region_stmt`.
 
 ```C
 // Entering a schema region makes all the objects that follow part of that
@@ -2361,23 +2408,25 @@ static void sem_begin_schema_region_stmt(ast_node * ast) {
 
 We see these basic steps:
 
-* `EXTRACT` the region name
-* `verify_schema_region_out_of_proc` makes sure we are out of any procedure (we have to be at the top level)
+* `EXTRACT` : gets the region name
+* `verify_schema_region_out_of_proc` : makes sure we are out of any procedure (we have to be at the top level)
   * errors if in a procedure
-* `current_region` is tested to make sure we are not already in a region (no nesting)
+* `current_region` : is tested to make sure we are not already in a region (no nesting)
   * errors if already in a region
-* `find_region` is used to find the region AST by name
+* `find_region` : is used to find the region AST by name
   * errors if the region name isn't valid
-* `EXTRACT` is used again to get the canoncial name of the region
-  * you could say `@begin_schema_region YoUr_ReGION;` we want the canonical name `your_region` as it was declared
-*  `symtab_new` creates a new symbol table `current_region_image`
-* `sem_accumulate_public_region_image` populates `current_region_image` by recursively walking this region adding the names of all the regions we find along the way
-  * note the regions form a DAG so we might find the same name twice, we can stop if we find a region that is already in the symbol table
-* `current_region` is set to the now new current region
+* `EXTRACT` : is used again to get the canonical name of the region
+  * you could write `@begin_schema_region YoUr_ReGION;` but we want the canonical name `your_region`, as it was declared
+*  `symtab_new` : creates a new symbol table `current_region_image`
+* `sem_accumulate_public_region_image` : populates `current_region_image` by recursively walking this region adding the names of all the regions we find along the way
+  * note the regions form a DAG so we might find the same name twice, we can stop if we find a region that is already in the image symbol table
+* `current_region` : set it to the now new current region
 
 Now we're all set up.
-* We can use `current_region` to set the region name in the `sem_node` of anything we encounter
-* We can use `current_region_image` to quickly see if we are allowed to use any given region (if it's in the table we can use it)
+
+* We can use `current_region` to set the `region` in the `sem_node` of anything we encounter
+* We can use `current_region_image` to quickly see if we are allowed to use any given region
+  * if it's in the symbol table we can use it
 
 Recall that at the end of `sem_create_table_stmt` we do this:
 
@@ -2388,7 +2437,7 @@ Recall that at the end of `sem_create_table_stmt` we do this:
   ast->sem->region = current_region;
 ```
 
-Which should make a lot more sense now.
+That should make a lot more sense now.
 
 When doing the symmetric check in `sem_validate_object_ast_in_current_region` we see this pattern:
 
@@ -2438,8 +2487,8 @@ This is enough to do all the region validation we need.
 ### Results of Semantic Analysis
 
 Semantic Analysis leaves a lot of global state ready for the remaining stages to harvest.  If the state
-is defined in `sem.h` then it's ok to harvest.  We'll highlight some of the most important things you
-can use.  These are heavily used in the code generators.
+is defined in `sem.h` then it's ok to harvest.  Here we'll highlight some of the most important things you
+can use in later passes.  These are heavily used in the code generators.
 
 ```C
 cql_data_decl( struct list_item *all_tables_list );
@@ -2453,8 +2502,8 @@ cql_data_decl( struct list_item *all_select_functions_list );
 cql_data_decl( struct list_item *all_enums_list );
 ```
 
-These linked lists are authoritiative, they let you easily enumerate all the objects of the specified type.  If you
-wanted to do some validation of all indices you could simply walk the all indices list.
+These linked lists are authoritiative, they let you easily enumerate all the objects of the specified type.  For
+instance, if you wanted to do some validation of all indices you could simply walk `all_indices_list`.
 
 ```C
 cql_noexport ast_node *find_proc(CSTR name);
@@ -2521,11 +2570,11 @@ as many semantic error checking functions, it's to showcase the key concepts sha
 
 * errors are reported largely in the AST and percolate up
 * expressions and statements have general purpose dispatch logic for continuing a statement walk
-* EXTRACT macros are used to keep the tree walk on track and correct in the face of changes
+* `EXTRACT` macros are used to keep the tree walk on track and correct in the face of changes
 * regions are used for visibility
 * versioning contributes to visibility
 * nullability and sensitivity are tracked throughout using type bits
-* type kind is managed by a simple string in the `sem_node` payload
+* type "kind" is managed by a simple string in the `sem_node` payload
 * the three main payloads are
   * `sem_node` for basic info, and
   * `sem_struct` or `sem_join` for the non-unitary types
@@ -2545,7 +2594,7 @@ This isn't everything but it should leave you well armed to begin your own explo
 Part 3 continues with a discussion of the essentials of the C code generation pass of the CQL compiler.
 As in the previous sections, the goal here is not to go over every detail of code generation but rather to give
 a sense of how codegen happens in general -- the core strategies and implementation choices --
-so that when reading the code you have an idea how smaller pieces would fit into the whole. To accomplish
+so that when reading the code you will have an idea how smaller pieces would fit into the whole. To accomplish
 this, various key data structures will be explained in detail as well as selected examples of their use.
 
 ## C Code Generation
@@ -2566,19 +2615,19 @@ functions.  This all happens in `cg_c.c`.  From a big picture perspective, these
 * we have to track any reference types carefully so that retain/release pairs are done consistently
   * even in the presence of SQLite errors or other exceptions
 * we have to produce a `.h` and a `.c` file for the C compiler
-  * contributions to these files could come from various places
+  * contributions to these files could come from various places, not necessarily in order
   * the `.c` file will itself have various sections and we might need to contribute to them at various points in the compilation
 * we want to do this all in one pass over the AST
-* we get to assume that the program is error free, codegen never runs unless semantic analysis reports zero errors
+* we get to assume that the program is error-free -- codegen never runs unless semantic analysis reports zero errors
   * so nothing can be wrong by the time the codegen pass runs, we never detect errors here
-  * sometimes we add `Contract` and `Invariant` statements to `cg.c` that make our assumptions clear and prevent regressions
+  * sometimes we add `Contract` and `Invariant` statements to `cg.c` to make our assumptions clear and to prevent regressions
 
-There are some very important building blocks used to solve these problems we will start with those, then move to
+There are some very important building blocks used to solve these problems: we will start with those, then move to
 a discussion of each of the essential kinds of code generation that we have to do to get working programs.
 
 ### Launching the Code Generator
 
-Once semantic analysis is done all of the code generators have the same contract: they
+Once semantic analysis is done, all of the code generators have the same contract: they
 have a main function like `cg_c_main` for the C code generator.  It gets the root of
 the AST and it can use the public interface of the semantic analyzer to get additional
 information.  See [Part 2](https://cgsql.dev/cql-guide/int02) for those details.
@@ -2628,9 +2677,9 @@ DML (Data Manipulation Language) statements are declared similarly:
   STD_DML_STMT_INIT(delete_stmt);
 ```
 
-They are handled by `cg_std_dml_exec_stmt`; the processing is identical to
+The DML statements are handled by `cg_std_dml_exec_stmt`; the processing is identical to
 DDL except `CG_MINIFY_ALIASES` is specified.  This allows the code generator
-to remove unused column aliases in select statements to save space.
+to remove unused column aliases in `SELECT` statements to save space.
 
 ```
 // Straight up DML invocation.  The ast has the statement, execute it!
@@ -2639,21 +2688,21 @@ static void cg_std_dml_exec_stmt(ast_node *ast) {
 }
 ```
 
-Note that this flag difference only matters for the `create view` statement
+Note that this flag difference only matters for the `CREATE VIEW` statement
 but for symmetry all the DDL is handled with one macro and all the DML
 with the second macro.
 
 Next, the easiest case... there are a bunch of statements that create
-no code-gen at all.  These are type defintions that are interesting
-only to the semantic analyzer or other control statements.  Some examples:
+no code-gen at all.  These statements are type definitions that are interesting
+only to the semantic analyzer, or other control statements.  Some examples:
 
 ```C
   NO_OP_STMT_INIT(declare_enum_stmt);
   NO_OP_STMT_INIT(declare_named_type);
 ```
 
-Next, the general purpose statement handler.  This creates a mapping
-from the `if_stmt` AST node to `cg_if_stmt`.
+Next, the general purpose statement handler.  `STMT_INIT` creates mappings
+such as the `if_stmt` AST node mapping to `cg_if_stmt`.
 
 ```C
   STMT_INIT(if_stmt);
@@ -2662,8 +2711,8 @@ from the `if_stmt` AST node to `cg_if_stmt`.
   STMT_INIT(assign);
 ```
 
-The next group is the expressions, with precedence and operator specified. There is a lot of code sharing
-as you can see from this sample:
+The next group of declarations arethe expressions, with precedence and operator specified.
+There is a lot of code sharing between AST types as you can see from this sample:
 
 ```C
   EXPR_INIT(num, cg_expr_num, "num", C_EXPR_PRI_ROOT);
@@ -2684,13 +2733,14 @@ as you can see from this sample:
 Most (not all) of the binary operators are handled with one function `cg_binary` and likewise
 most unary operators are handled with `cg_unary`.
 
-Note: the precedence constants are the `C_EXPR_PRI_*` flavor because parentheses will be
-generated based on the C rules at this point.  Importantly, the AST still, and always
-has the user-specified order of operations encoded in it, there's no change there.  The
-only thing that changes is where parentheses are needed to get the desired result.  Parens
-may need to be added and some that were present in the original text might no longer be needed.
+Note: the precedence constants are the `C_EXPR_PRI_*` flavor because, naturally, parentheses
+will be generated based on the C rules during C codegen.  Importantly, the AST still, and always,
+authoritatively encodes the user-specified order of operations -- there's no change there.  The
+only thing that changes is where parentheses are needed to get the desired result.  Some parens
+may need to be added, and some that were present in the original text might no longer be needed.
 
-e.g.
+Here are some helpful examples:
+
 ```SQL
 CREATE PROC p ()
 BEGIN
@@ -2710,7 +2760,7 @@ void p(void) {
 }
 ```
 
-Finally, many built-in functions need special codegen.
+Finally, many built-in functions need special codegen, such as:
 
 ```C
   FUNC_INIT(coalesce);
@@ -2721,13 +2771,14 @@ Finally, many built-in functions need special codegen.
 
 ### Character Buffers and Byte Buffers
 
-The first kind of text output that CQL could produce was the AST echoing.  This was original done directly with `fprintf` but
-that was not flexible enough as the output had to be captured to be emitted into other places like comments or the text of
-SQL statements to go to SQLite.  This forces that pass to use character buffers, which we touched on in Part 1.  Code generation
-has a more profound dependency on character buffers -- they are literally all over `cg_c.c` and we need to go over how hey are used.
+The first kind of text output that CQL could produce was the AST echoing.  This was originally done directly with `fprintf` but
+that was never going to be flexible enough -- we have to be able to emitt that output into other places like comments, or the text of
+SQL statements.  This need forces that pass to use character buffers, which we touched on in Part 1.  C Code generation
+has a more profound dependency on character buffers -- they are literally all over `cg_c.c` and we need to go over how they are used
+if we're going to understand the codegen passes.
 
-The public interace is in `charbuf.h` and it's really quite simple.  You allocate a `charbuf` and then you can `bprintf` into it.
-Let's be a bit more specific:
+The public  interface for `charbuf` is in `charbuf.h` and it's really quite simple.  You allocate a `charbuf` and then you can
+`bprintf` into it. Let's be a bit more specific:
 
 ```C
 #define CHARBUF_INTERNAL_SIZE 1024
@@ -2762,13 +2813,13 @@ The typical pattern goes something like this:
 
 Note that `charbuf` includes `CHARBUF_INTERNAL_SIZE` of storage that does not
 have to be allocated with `malloc` and it doesn't grow very aggressively.
-This reflects that fact that most `charbuf` instances are very small.
+This economy reflects that fact that most `charbuf` instances are very small.
 Of course a `charbuf` could go on the heap if it needs to outlive
 the function it appears in, but this is exceedingly rare.
 
-To make sure buffers are consistently closed (and this is a problem because
-there are often a lot of them.  They are allocated with these simple helper
-macros.
+To make sure buffers are consistently closed -- and this is a problem because
+there are often a lot of them -- they are allocated with these simple helper
+macros:
 
 ```C
 #define CHARBUF_OPEN(x) \
@@ -2781,7 +2832,7 @@ macros.
   Invariant(__saved_charbuf_count##x == charbuf_open_count)
 ```
 
-the earlier example would be written more properly:
+The earlier example would be written more properly:
 
 ```C
   CHARBUF_OPEN(foo);
@@ -2793,8 +2844,8 @@ the earlier example would be written more properly:
 If you forget to close a buffer the count will get messed up and the next close will trigger an assertion failure.
 
 It's normal to create several buffers in the course of doing code generation.  In fact some of these buffers
-become "globally" visible and get swapped out as needed.  For instance this kind of chaining is normal.
-Inside of `cg_create_proc_stmt` there is these sequence:
+become "globally" visible and get swapped out as needed.  For instance, the kind of chaining we see
+inside of `cg_create_proc_stmt` is normal, here is the sequence:
 
 Make new buffers...
 ```C
@@ -2804,7 +2855,7 @@ Make new buffers...
   CHARBUF_OPEN(proc_cleanup);
 ```
 
-Save what we got...
+Save the current buffer pointers...
 ```C
   charbuf *saved_main = cg_main_output;
   charbuf *saved_decls = cg_declarations_output;
@@ -2813,7 +2864,7 @@ Save what we got...
   charbuf *saved_fwd_ref = cg_fwd_ref_output;
 ```
 
-Switch to the new...
+Switch to the new buffers...
 ```C
   cg_fwd_ref_output = &proc_fwd_ref;
   cg_main_output = &proc_body;
@@ -2822,56 +2873,60 @@ Switch to the new...
   cg_cleanup_output = &proc_cleanup;
 ```
 
-And of course the code puts the original values back when it's done and closes the buffers.
+And of course the code puts the original values back when it's done and then closes what it opened.
 
 This means that while processing a procedure the codegen that declares say scratch variables,
-which would go to `cg_scratch_vars_output` is going to target the `proc_locals` buffer
-which will be emitted before the `body`.  By the time `cg_stmt_list` is invoked the
+which would go to `cg_scratch_vars_output`, is going to target the `proc_locals` buffer
+which will be emitted before the `proc_body`.  By the time `cg_stmt_list` is invoked the
 `cg_main_output` variable will be pointing to the procedure body, thus any statements
-will go into there rather than being acculated at the global level -- it's possible to
-have code that is not in a procedure (see [`--global_proc`](https://cgsql.dev/cql-guide/x1#--global_proc-name)).
+will go into there rather than being acculated at the global level.
 
-But in general, it's very useful to have different buffers going on at the same time.  New local variables
-or scratch variables can be added to their own buffer which goes before the code runs.  New cleanup
-steps that are necessary can be added to the cleanup output which will appear at the end.  The final
-function combines all of these pieces with maybe some glue.  Everything works like this, `IF` statements,
-expressions, all of it.
+Note: it's possible to have code that is not in a procedure (see [`--global_proc`](https://cgsql.dev/cql-guide/x1#--global_proc-name)).
+
+In general, it's very useful to have different buffers open at the same time.  New local variables
+or scratch variables can be added to their own buffer. New cleanup steps that are necessary can be added to
+`cg_cleanup_output` which will appear at the end of a procedure. The final steps of procedure codegen
+combines all of these pieces plus a little glue to make a working procedure.
+
+All codegen works like this -- statements, expressions, all of it.
 
 One interesting but unexpected feature of `charbuf` is that it provides helper methods for indenting
-buffer by whatever amount you like.  This turns out to be invaluable in creating well formatted C
-code because of course you want (e.g.) the body of an `if` statement to be indented.  CQL tries to create
+a buffer by whatever amount you like.  This turns out to be invaluable in creating well formatted C
+code because of course we want (e.g.) the body of an `if` statement to be indented.  CQL tries to create
 well formatted code that is readable by humans as much as possible.
 
 #### Byte Buffers
 
-These are less commonly used but there is a peer to `charbuf` creatively called `bytebuf`.  This gives you
-a growable binary buffer.  It's often used to hold arrays of structures.  Interestingly, `cg_c.c` doesn't
-currently consume byte buffers, the presence of `bytebuf.c` actually came late to the CQL compiler. However
-the CQL runtime `cqlrt.c` (and `cqlrt_common.c`) provide `cql_bytebuf_open`, `cql_bytebuf_alloc` and,
-`cql_bytebuf_close` which are akin to the `charbuf` methods.  These functions are used in the generated
-code to create result sets at runtime.  The `bytebuf` was so useful that it found its way back from the
-runtime into the compiler itself, and is used by other code-generators like the schema upgrader.   The
-semantic analyzer also uses it to help with query fragments and to track the various upgrade annotations.
+The byte buffers type, creatively called `bytebuf` is less commonly used.  It is a peer to `charbuf`
+and provides a growable binary buffer.  `bytebuf` is often used to hold arrays of structures.
+Interestingly, `cg_c.c` doesn't currently consume byte buffers, the presence of `bytebuf.c` actually
+came late to the CQL compiler. However the CQL runtime `cqlrt.c` (and `cqlrt_common.c`) provide
+`cql_bytebuf_open`, `cql_bytebuf_alloc` and, `cql_bytebuf_close` which are akin to the `charbuf` methods.
+These functions *are* used in the generated code to create result sets at runtime.
 
-Both `charbuf` and `bytebuf` are simple enough that they don't need discussion. It's easier to just read
-the code and the comments.
+`bytebuf` was so useful that it found its way back from the runtime into the compiler itself, and is used by
+other code-generators like the schema upgrader.   The semantic analyzer also uses it to help with query
+fragments and to track the various upgrade annotations.
+
+Both `charbuf` and `bytebuf` are simple enough that they don't need special discussion. Surveying
+their code and comments is an excellent exercise for the reader.
 
 ### Expressions
 
-Many of the output needs of CQL stemmed from the base case of creating expressions.  A simple CQL
-expression like
+Many of the output needs of CQL stemmed from the base case of creating the code for CQL expressions.
+A simple CQL expression like:
 
 ```sql
   SET x := x + y;
 ````
 
-seems innocuous enough, we'd like this to compile to this code:
+seems innocuous enough, and we'd like that expression to compile to this code:
 
 ```C
   x = x + y;
 ```
 
-And indeed, it might.  Here's some actual output from the compiler:
+And indeed, it does.  Here's some actual output from the compiler:
 
 ```C
 /*
@@ -2893,10 +2948,10 @@ void p(void) {
 #undef _PROC_
 ```
 
-(*) the output above was created by using `out/cql --in x --cg x.h x.c --nolines` to avoid all the # directives
+(*) the output above was created by using `out/cql --in x --cg x.h x.c --nolines` to avoid all the `#` directives
 
-Looks easy enough.  And indeed if all expressions were like this, you could do expression compilation pretty simply --
-every binary operator would look something like this:
+That expression looks easy enough. And indeed if all expressions were like this, we could do expression compilation
+pretty simply -- every binary operator would look something like this:
 
 * recurse left
 * emit infix operator
@@ -2905,8 +2960,9 @@ every binary operator would look something like this:
 This would sort of build up your expressions inside out and your final buffer after all the recursion was done would have
 the whole expression.
 
-This doesn't work at all.  To illustrate what goes wrong, we only have to change the test case a tiny bit.  The result
-is telling:
+This doesn't work at all.
+
+To illustrate what goes wrong, we only have to change the test case a tiny bit.  The result is telling:
 
 ```C
 /*
@@ -2930,12 +2986,22 @@ void p(void) {
 #undef _PROC_
 ```
 
-All that's happened in the above is that `x` and `y` became nullable variables, that is the `NOT NULL` was
-removed from the declaration.  This makes all the difference in the world, and this is a fairly easy case.
-The problem is that nullable value types like cql_nullable_int32 have an integer and a boolean and these
-don't flow into expressions that use operators like `+`, `-`, `/` and so forth.  This means that even
-simple expressions involving nullable types actually expand into several statements.  And, in general,
-these statements need a place to put their temporary results to accumulate the answer, so scratch variables
+In this new example above, `x` and `y` became nullable variables i.e. the `NOT NULL` was
+removed from their declarations -- this makes all the difference in the world.
+
+Let's take a quick look at `cql_nullable_int32` and we'll see the crux of the problem immediately:
+
+```C
+typedef struct cql_nullable_int32 {
+ cql_bool is_null;
+ cql_int32 value;
+} cql_nullable_int32;
+```
+
+The problem is that nullable value types like `cql_nullable_int32` have both their `value` field
+and a boolean `is_null` and these don't flow into expressions that use operators like `+`, `-`, `/` and so forth.
+This means that even simple expressions involving nullable types actually expand into several statements.  And, in general,
+these statements need a place to put their temporary results to accumulate the correct answer, so scratch variables
 are required to make all this work.
 
 Here's a more realistic example:
@@ -2967,9 +3033,9 @@ void combine(cql_nullable_int32 x, cql_nullable_int32 y, cql_nullable_int32 *_No
 #pragma clang diagnostic pop
 ```
 
-* `_tmp_n_int_1` holds the product of x and 5, it's null if `x.is_null` is true
-* `_tmp_n_int_2` holds the product of y and 3, it's null if `y.is_null` is true
-* `*result` holds the answer, it's null if either of `_tmp_n_int_1.is_null`, `_tmp_n_int_2.is_null` is true
+* `_tmp_n_int_1` : holds the product of x and 5, it's null if `x.is_null` is true
+* `_tmp_n_int_2` : holds the product of y and 3, it's null if `y.is_null` is true
+* `*result` : holds the answer, it's null if either of `_tmp_n_int_1.is_null`, `_tmp_n_int_2.is_null` is true
    * otherwise it's `_tmp_n_int_1.value + _tmp_n_int_2.value`
 
 So, in general, we need to emit arbitarily many statements in the course of evaluating even simple looking expressions
@@ -2990,82 +3056,93 @@ The function that actually assigns scratch variables is `cg_scratch_var`
 static void cg_scratch_var(ast_node *ast, sem_t sem_type, charbuf *var, charbuf *is_null, charbuf *value)
 ```
 
-The signature is a bit unexpected so we'll go over this, some of this will make more
-sense as we learn about expressions generally but this is as good an introduction as any.
+The signature is a bit unexpected so we'll go over it, some of below will make more
+sense as we learn about expressions generally, but this is as good an introduction as any.
 
-* `ast` holds a reference to a variable we want to assign to, this is normally `NULL` for scratch variables, it's not null for the `RESULT` macros which we'll study later, so for now ignore this
-* `sem_type` holds the type of the variable we need, it must be a unitary type, optionally with `SEM_TYPE_NOTNULL` set
-* `var` is a character buffer that will get the name of the variable
-* `is_null` is a character buffer that will get the `is_null` expression for this variable (more below)
-* `value` is a character buffer that will get the `value` expression for this variable (more below)
+* `ast` : holds a reference to a variable we want to assign to
+  * this argument is normally `NULL` for scratch variables
+  * `ast` is not null for the `RESULT` macros which we'll study later
+  * for now, we can basically ignore this argument
+* `sem_type` : holds the type of the variable we need
+  * it must be a unitary type, optionally with `SEM_TYPE_NOTNULL` set
+* `var` : a character buffer that will get the name of the variable
+* `is_null` : a character buffer that will get the `is_null` expression for this variable (more below)
+* `value` : a character buffer that will get the `value` expression for this variable (more below)
 
 And this is a good time to talk about `is_null` and `value` because they will be everywhere.
 
-Every expression evaluation in the C code generator has two essential results, the text that corresponds to the current
-value so far (e.g. "(1+2)*3") and the text for the current expression that will tell you if the result is null,
-this could be as simple as "0" for a expression that is known to be not null.  So let's make this a little more concrete:
+The codegen for expressions in the C code generator produces two results:
+* the text that corresponds to the current value so far (e.g. "(1+2)*3"), and,
+* the text that will tell you if the current value is null
+  * this could be as simple as "0" for an expression that is known to be not null
 
-Suppose you ask for a scratch not null integer we get results like this:
+Let's make this a little more concrete:
+
+Suppose we ask for a scratch "not null integer", we get results like this:
 
 * `var`:  `"_tmp_n_int_1"`
 * `is_null`: `"0"`
 * `value`: `"_tmp_n_int_1"`
 
-Meaning: if you want the value, use the text "_tmp_n_int_1" if you want to know if the variable is null, use the text "0"
+Meaning: if we want the value, use the text `"_tmp_n_int_1"` if we want to know if the variable is null, we use the text `"0"`
+
 Note: many parts of `cg_c.c` special case an `is_null` value of `"0"` to make better code because such a thing is known to
 be not null at compile time.
 
-Now let's suppose you ask for a scratch nullable integer, we get results like this:
+Now let's suppose we ask for a scratch nullable integer, we get results like this:
 
 * `var`:  `"_tmp_int_1"`
 * `is_null`: `"_tmp_int_1.is_null"`
 * `value`: `"_tmp_int_1.value"`
 
-So again, you have exactly the text you need to test for null and the test you need to get the value.
+So again, we have exactly the text we need to test for null, and the test we need to get the value.
 
 Additional notes:
 
 * scratch variables can be re-used, they are on a "stack"
 * a bitmask is used to track which scratch variables have aleady had a declaration emitted, so they are only declared once
 * the variable name is based on the current value of the `stack_level` variable which is increased in a push/pop fashion as temporaries come in and out of scope
-* this strategy isn't perfect, but the C compiler can consolidate locals even if the CQL codegen is not perfect so it ends up being not so bad
-* importantly there is one stacklevel variable for all temporaries not one stacklevel for every type of temporary, this seemed like a reasonable simplification
+  * this strategy isn't perfect, but the C compiler can consolidate locals even if the CQL codegen is not perfect so it ends up being not so bad
+  * importantly, there is one `stack_level` variable for all temporaries not one `stack_level` for every type of temporary, this seemed like a reasonable simplification
 
 
 #### Allocating Scratch Variables
 
-The most common reason for a scratch variable is that a temporary is needed for some part of the computation.
-The most common reason for a temporary variable is to hold an intermediate result of a computation involving
-nullable arithmetic.
+The most common reason to create a "scratch" variable is that a temporary variable is needed for some part of the computation.
+The most common reason for a temporary variable is to hold an intermediate result of a computation involving nullable arithmetic.
 
-These temporaries are created with `CG_PUSH_TEMP` which simply creates the three `charbuf` variables you need and then asks for a
-scratch variable of the type you need.  The variables follow a simple naming convention.  The stack level is increased.
+These temporaries are created with `CG_PUSH_TEMP` which simply creates the three `charbuf` variables needed and then asks for a
+scratch variable of the required type.  The variables follow a simple naming convention.  The stack level is increased after
+each temporary is allocated.
 
 ```C
 // Create buffers for a temporary variable.  Use cg_scratch_var to fill in the buffers
 // with the text needed to refer to the variable.  cg_scratch_var picks the name
 // based on stack level-and type.
 #define CG_PUSH_TEMP(name, sem_type) \
-CHARBUF_OPEN(name); \
-CHARBUF_OPEN(name##_is_null); \
-CHARBUF_OPEN(name##_value); \
-cg_scratch_var(NULL, sem_type, &name, &name##_is_null, &name##_value); \
-stack_level++;
+  CHARBUF_OPEN(name); \
+  CHARBUF_OPEN(name##_is_null); \
+  CHARBUF_OPEN(name##_value); \
+  cg_scratch_var(NULL, sem_type, &name, &name##_is_null, &name##_value); \
+  stack_level++;
 ```
 
-Symetrically, `CG_POP_TEMP` releases the charbufs and restores the stack level.  As with the other macros, these are designed to
-make it impossible to forget to free your buffers or get the stack wrong.  In fact, the stack is checked at strategic places
-to ensure its back to baseline.  You can always just snapshot `stacklevel`, do some work that should be clean, and then
-add an `Invariant` that `stacklevel` is back to where it was.
+Symmetrically, `CG_POP_TEMP` closes the `charbuf` variables and restores the stack level.
 
 ```C
 // Release the buffers for the temporary, restore the stack level.
 #define CG_POP_TEMP(name) \
-CHARBUF_CLOSE(name##_value); \
-CHARBUF_CLOSE(name##_is_null); \
-CHARBUF_CLOSE(name); \
-stack_level--;
+  CHARBUF_CLOSE(name##_value); \
+  CHARBUF_CLOSE(name##_is_null); \
+  CHARBUF_CLOSE(name); \
+  stack_level--;
 ```
+
+As with the other `PUSH/POP` `OPEN/CLOSE` macro types, these macros are designed to make it impossible
+to forget to free the buffers, or to get the stack level wrong.  The stack level can be (and is) checked
+at strategic places to ensure it's back to baseline -- this is easy because the code can always just
+snapshot `stack_level`, do some work that should be clean, and then check that `stack_level` is back to
+ where it's supposed to be with an `Invariant`.
 
 #### Recursing Sub-expressions
 
@@ -3075,7 +3152,14 @@ and how the evaluation works within that pattern.  This is everywhere in `cg_c.c
 So let's look at an actual evaluator, the simplest of them all, this one does code generation for the `NULL` literal.
 
 ```C
-static void cg_expr_null(ast_node *expr, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_expr_null(
+  ast_node *expr,
+  CSTR op,
+  charbuf *is_null,
+  charbuf *value,
+  int32_t pri,
+  int32_t pri_new)
+{
   Contract(is_ast_null(expr));
   // null literal
   bprintf(value, "NULL");
@@ -3085,7 +3169,7 @@ static void cg_expr_null(ast_node *expr, CSTR op, charbuf *is_null, charbuf *val
 
 Now this may be looking familiar: the signature of the code generator is something very much like the
 signature of the the `gen_` functions in the echoing code.  That's really because in some sense
-the echoing code is like a very simple code generator itself.
+the echoing code is a very simple code generator itself.
 
 * `expr` : the AST we are generating code for
 * `op` : the relevant operator if any (operators share code)
@@ -3097,14 +3181,17 @@ the echoing code is like a very simple code generator itself.
 This particular generator is going to produce `"NULL"` for the `value` and `"1"` for the `is_null` expression.
 
 `is_null` and `value` are the chief outputs, and the caller will use these to create its own expression results
-with recursive logic.  But the expression logic can also write into the statement stream, and as we'll see,
-it does.
+with recursive logic.  But the expression logic can also write into the statement stream, the cleanup stream,
+even into the header file stream, and as we'll see, it does.
 
 `pri` and `pri_new` work exactly like they did in the echoing code (see [Part 1](https://cgsql.dev/cql-guide/int01)),
 they are used to allow the code generator to decide if it needs to emit parentheses.  But recall that the binding strengths
 now will be the C binding strengths NOT the SQL binding strengths (discussed above).
 
 Let's look at one of the simplest operators: the `IS NULL` operator handled by `cg_expr_is_null`
+
+Note: this code has a simpler signature because it's actually part of codegen for `cg_expr_is` which
+has the general contract.
 
 ```C
 // The code-gen for is_null is one of the easiest.  The recursive call
@@ -3132,14 +3219,14 @@ static void cg_expr_is_null(ast_node *expr, charbuf *is_null, charbuf *value) {
 }
 ```
 
-So walking through this:
+So walking through the above:
 * the result of `IS NULL` is never null, so we can immediately put "0" into the `is_null` buffer
 * if the operand is a not-null numeric type then the result of `IS NULL` is `0`
 * if the operand might actually be null then
   * use `CG_PUSH_EVAL` to recursively do codegen for it
   * copy its `expr_is_null` text into our `value` text
 
-Note: the code reveals one of the big CQL secrets that not null reference variables can be null...  C has the same issue with `_Nonnull` globals.
+Note: the code reveals one of the big CQL secrets -- that not null reference variables can be null...  C has the same issue with `_Nonnull` globals.
 
 Now let's look at those helper macros, they are pretty simple:
 
@@ -3148,23 +3235,26 @@ Now let's look at those helper macros, they are pretty simple:
 // burn the stack slot so that any type and numbered temporary that was needed
 // won't be re-used until this scope is over.
 #define CG_PUSH_EVAL(expr, pri) \
-CHARBUF_OPEN(expr##_is_null); \
-CHARBUF_OPEN(expr##_value); \
-cg_expr(expr, &expr##_is_null, &expr##_value, pri); \
-stack_level++;
-````
+  CHARBUF_OPEN(expr##_is_null); \
+  CHARBUF_OPEN(expr##_value); \
+  cg_expr(expr, &expr##_is_null, &expr##_value, pri); \
+  stack_level++;
+```
 
 The push macro simply creates buffers to hold the `is_null` and `value` results, then it calls `cg_expr` to dispatch the indicated expression.
-The `pri` value provided to this macro represents the binding strength that the callee should assume its parent has.  Usually this is your `pri_new`
-value but often you can use `C_EXPR_PRI_ROOT` if you know that, because of your current context, the callee will never need parentheses.
+The `pri` value provided to this macro represents the binding strength that the callee should assume its parent has.  Usually this is the `pri_new` of the caller.
+but often `C_EXPR_PRI_ROOT` can be used if the current context implies that the callee will never need parentheses.
 
-How do we know this here? It seems like the operand of `IS NULL` could be anything surely it might need parentheses?  Let's consider:
+How do we know that parens are not needed here? It seems like the operand of `IS NULL` could be anything, surely it might need parentheses?  Let's consider:
 
 * if the operand is of not null numeric type then we aren't even going to evaluate it, we're on the easy "no it's not null" path
+  * no parens there
 * if the operand is nullable then the only place the answer can be stored is in a scratch variable and its `is_null` expression will be exactly like `var.is_null`
+  * no parens there
 * if the operand is a reference type, there are no operators that combine reference types to get more reference types, so again the result must be in a variable, and is `is_null` expression will be like `!var`
+  * no parens there
 
-None of these require further wrapping regardless of what is above this node in the tree because of he strength of the `.` and `!` operators.
+So, none of these require further wrapping regardless of what is above the `IS NULL` node in the tree because of the high strength of the `.` and `!` operators.
 
 Other cases are usually simpler, such as "no parentheses need to be added by the child node becasue it will be used as the argument to a helper
 function so there will always be parens hard-coded anyway".  However these things need to be carefully tested hence the huge variety of codegen tests.
@@ -3181,13 +3271,13 @@ CHARBUF_CLOSE(expr##_is_null); \
 stack_level--;
 ```
 
-`CG_POP_EVAL` simply closes the buffers and restores the stack.
+`CG_POP_EVAL` simply closes the buffers and restores the stack level.
 
 #### Result Variables
 
-When recursion happens in the codegen, the common place that the result will be found is
-in a temporary variable -- the generated code will use one or more statements to arrange for the correct
-answer to be in that variable.  To do this, the codegen needs to first get the name of a suitable
+When recursion happens in the codegen, a common place that the result will be found is
+in a temporary variable i.e. the generated code will use one or more statements to arrange for the correct
+answer to be in a variable.  To do this, the codegen needs to first get the name of a
 result variable of a suitable type.  This is the "other" reason for making scratch variables.
 
 There are three macros that make this pretty simple.  The first is `CG_RESERVE_RESULT_VAR`
@@ -3197,88 +3287,89 @@ There are three macros that make this pretty simple.  The first is `CG_RESERVE_R
 // It may or may not be used.  It should be the first thing you put
 // so that it is on the top of your stack.  This only saves the slot.
 #define CG_RESERVE_RESULT_VAR(ast, sem_type) \
-int32_t stack_level_reserved = stack_level; \
-sem_t sem_type_reserved = sem_type; \
-ast_node *ast_reserved = ast; \
-CHARBUF_OPEN(result_var); \
-CHARBUF_OPEN(result_var_is_null); \
-CHARBUF_OPEN(result_var_value); \
-stack_level++;
+  int32_t stack_level_reserved = stack_level; \
+  sem_t sem_type_reserved = sem_type; \
+  ast_node *ast_reserved = ast; \
+  CHARBUF_OPEN(result_var); \
+  CHARBUF_OPEN(result_var_is_null); \
+  CHARBUF_OPEN(result_var_value); \
+  stack_level++;
 ```
 
 If this looks a lot like `PUSH_TEMP` that shouldn't be surprising.  The name of the variable
-and the expression parts always go into `charbuf` variables named `result_var` `result_var_is_null` and `result_var_value`
+and the expression parts always go into `charbuf` variables named `result_var`, `result_var_is_null`, and `result_var_value`
 but the scratch variable isn't actually allocated!  However -- we burn the stack_level as though it had been
-allocated.  What's up with that?
+allocated.
 
-The name might be a clue, this macro reserves stack level slot for the result variable, it's used if you might
-need a result variable, but you might not.  When you want it we can artificially move the stack level back
-to this spot where the slot was burned, allocate the scratch variable, and then put the stack back.
-The `CG_USE_RESULT_VAR` macro does exactly that.
+The name of the macro provides a clue: this macro reserves a slot for the result variable, it's used if the codegen might
+need a result variable, but it might not.  If/when the result variable is needed, it we can artificially move the stack level
+back to the reserved spot, allocate the scratch variable, and then put the stack level back.
+
+The `CG_USE_RESULT_VAR` macro does exactly this operation.
 
 ```C
 // If the result variable is going to be used, this writes its name
 // and .value and .is_null into the is_null and value fields.
 #define CG_USE_RESULT_VAR() \
-int32_t stack_level_now = stack_level; \
-stack_level = stack_level_reserved; \
-cg_scratch_var(ast_reserved, sem_type_reserved, &result_var, &result_var_is_null, &result_var_value); \
-stack_level = stack_level_now; \
-Invariant(result_var.used > 1); \
-bprintf(is_null, "%s", result_var_is_null.ptr); \
-bprintf(value, "%s", result_var_value.ptr)
+  int32_t stack_level_now = stack_level; \
+  stack_level = stack_level_reserved; \
+  cg_scratch_var(ast_reserved, sem_type_reserved, &result_var, &result_var_is_null, &result_var_value); \
+  stack_level = stack_level_now; \
+  Invariant(result_var.used > 1); \
+  bprintf(is_null, "%s", result_var_is_null.ptr); \
+  bprintf(value, "%s", result_var_value.ptr)
 ```
 
 Once the code generator decides that it will in fact be using a result variable to represent the answer, then
 the `is_null` and `value` buffers can be immediately populated to whatever the values were
 for the result variable.  That text will be correct regardless of what codegen is used
-to populate the variable.
+to populate the variable.  The variable is the result.
 
-There is a simpler macro that reserves and uses the result variable in one step, it's very common.  The
-"reserve" pattern is only necessary when there are some paths that need a result variable and some
+There is a simpler macro that reserves and uses the result variable in one step, it's used frequently.
+The "reserve" pattern is only necessary when there are some paths that need a result variable and some
 that don't.
 
-```
+```C
 // This does reserve and use in one step
 #define CG_SETUP_RESULT_VAR(ast, sem_type) \
-CG_RESERVE_RESULT_VAR(ast, sem_type); \
-CG_USE_RESULT_VAR();
+  CG_RESERVE_RESULT_VAR(ast, sem_type); \
+  CG_USE_RESULT_VAR();
 ```
 
-And now armed with this knowledge we can go back to a previous mystery, let's look at `CG_PUSH_EVAL` again
+And now armed with this knowledge we can go back to a previous mystery, let's look at `CG_PUSH_EVAL` again:
 
 ```C
 // Make a temporary buffer for the evaluation results using the canonical naming convention
 // burn the stack slot so that any type and numbered temporary that was needed
 // won't be re-used until this scope is over.
 #define CG_PUSH_EVAL(expr, pri) \
-CHARBUF_OPEN(expr##_is_null); \
-CHARBUF_OPEN(expr##_value); \
-cg_expr(expr, &expr##_is_null, &expr##_value, pri); \
-stack_level++;
-````
+  CHARBUF_OPEN(expr##_is_null); \
+  CHARBUF_OPEN(expr##_value); \
+  cg_expr(expr, &expr##_is_null, &expr##_value, pri); \
+  stack_level++;
+```
 
 The reason that `CG_PUSH_EVAL` includes `stack_level++` is that it is entirely possible, even likely,
 that the result of `cg_expr` is in a result variable.  The convention is that if the codegen
-requires a result variable it is allocated *first* before any other temporaries.  This is why
+requires a result variable it is allocated *first*, before any other temporaries.  This is why
 there is a way to reserve a variable that you *might* need.  When the codegen is complete,
-and before anything else happens, `stack_level` is increased so that the temporary that is
-holding the result will not be re-used!  Any other temporaries are available but the result
-is still live.  This might be easy to get wrong but the macros make it easy to get it right.
+and before anything else happens, `stack_level` is increased so that if a temporary is
+holding the result, it will not be re-used!  Any other temporaries are available, but the result
+is still live.  The macros make it easy to get this stack convention consistently correct.
 
-Now, armed with the knowledge that there a result variables and temporary variables and both
-come from the scratch variable we can resolve the last mystery we left hanging.  Why does
+Now, armed with the knowledge that there are result variables and temporary variables and both
+come from the scratch variables we can resolve the last mystery we left hanging.  Why does
 the scratch variable API accept an AST pointer?
 
-The only place that pointer can be not null is in the `CG_USE_RESULT_VAR` macro, it was
+The only place that AST pointer can be not null is in the `CG_USE_RESULT_VAR` macro, it was
 this line:
 
-```
+```C
 cg_scratch_var(ast_reserved, sem_type_reserved, &result_var, &result_var_is_null, &result_var_value);
 ```
 
 And `ast_reserved` refers to the AST that we are trying to evaluate.  There's an important
-special case that we want to optimize that saves a lot of scratch variables.  It's handled
+special case that we want to optimize that saves a lot of scratch variables.  That case is handled
 by this code in `cg_scratch_var`:
 
 ```C
@@ -3360,13 +3451,13 @@ static void cg_while_stmt(ast_node *ast) {
 }
 ```
 
-The comment before the `cg_while_stmt` actually says it pretty clearly; the issue is
-that the expression in the while statement might actually require many C statements
-to evaluate.  There are many cases of this sort of thing, but the simplest is
-probably when any nullable types are in that expression.  A particular example
-illustrates this pretty clearly.
+The comment before the `cg_while_stmt` actually describes the situation pretty clearly;
+the issue with this codegen is that the expression in the while statement might actually
+require many C statements to evaluate.  There are many cases of this sort of thing, but the
+simplest is probably when any nullable types are in that expression.  A particular example
+illustrates this pretty clearly:
 
-```C
+```SQL
 CREATE PROC p ()
 BEGIN
   DECLARE x INTEGER NOT NULL;
@@ -3376,8 +3467,11 @@ BEGIN
     SET x := x + 1;
   END;
 END;
-*/
+```
 
+which generates:
+
+```C
 void p(void) {
   cql_int32 x = 0;
 
@@ -3390,11 +3484,10 @@ void p(void) {
 }
 ```
 
-In this case, the `while` pattern could have been used because the condition is simply `x < 5` so this whole pattern is
-overkill.  But consider this program just a tiny bit different.
+In this case, a `while` statement could have been used because the condition is simply `x < 5`
+so this more general pattern is overkill.  But consider this program, just a tiny bit different:
 
-```C
-/*
+```SQL
 CREATE PROC p ()
 BEGIN
   DECLARE x INTEGER;  -- x is nullable
@@ -3404,8 +3497,11 @@ BEGIN
     SET x := x + 1;
   END;
 END;
-*/
+```
 
+which produces:
+
+```C
 void p(void) {
   cql_nullable_int32 x;
   cql_set_null(x);
@@ -3422,9 +3518,9 @@ void p(void) {
 ```
 
 Even for this small little case, the nullable arithmetic macros have to be used to keep `x` up to date.
-The result of `x < 5` is of type "bool" rather than "bool not null" so a temporary variable captures
-the result of the expression.  This is an easy case but similar things happen if the expression
-includes `CASE...WHEN...` or `IN` constructs.  There are many other cases.
+The result of `x < 5` is of type `BOOL` rather than `BOOL NOT NULL` so a temporary variable captures
+the result of the expression.  This is an easy case, but similar things happen if the expression
+includes e.g. `CASE...WHEN...` or `IN` constructs.  There are many other cases.
 
 So with this in mind, let's reconsider what `cg_while_stmt` is doing:
 
@@ -3439,8 +3535,9 @@ So with this in mind, let's reconsider what `cg_while_stmt` is doing:
 * finally we end the `for` that we began
 
 This kind of structure is common to all the control flow cases.  Generally, we have to deal with the
-fact that CQL expressions become C statements so we use a more general flow control strategy. But with this
-in mind, it's easy to imagine how `IF` `LOOP` and `SWITCH` are handled.
+fact that CQL expressions often become C statements so we use a more general flow control strategy.
+But with this in mind, it's easy to imagine how the `IF`, `LOOP`, and `SWITCH` switch statements are
+handled.
 
 ### Cleanup and Errors
 
@@ -3448,8 +3545,7 @@ There are a number of places where things can go wrong when running a CQL proced
 common sources are: (1) SQLite APIs, almost all of which can fail, and, (2) calling other procedures
 which also might fail.  Here's a very simple example:
 
-```C
-/*
+```SQL
 DECLARE PROC something_that_might_fail (arg TEXT) USING TRANSACTION;
 
 CREATE PROC p ()
@@ -3457,8 +3553,11 @@ BEGIN
   LET arg := "test";
   CALL something_that_might_fail(arg);
 END;
-*/
+```
 
+Which generates:
+
+```C
 cql_string_literal(_literal_1_test_p, "test");
 
 CQL_WARN_UNUSED cql_code p(sqlite3 *_Nonnull _db_) {
@@ -3476,25 +3575,25 @@ cql_cleanup:
 }
 ```
 
-Let's look at this carefully:
+Let's look at those fragments carefully:
 
 * first, we had to declare `something_that_might_fail`
-  * the declaration includes `USING TRANSACTION` indicating the procedure uses the database
-  * we didn't provide the definition, that will lead to a link time error but we're ignoring that for now
+  * the declaration included `USING TRANSACTION` indicating the procedure uses the database
+  * we didn't provide the procedure definition, this is like an `extern ... foo(...);` declaration
 * there is a string literal named `_literal_1_test_p` that is auto-created
   * `cql_string_literal` can expand into a variety of things, whatever you want "make a string literal" to mean
-  * its defined in `cqlrt.h` and it's designed to be replaced
+  * it's defined in `cqlrt.h` and it's designed to be replaced
 * `cql_set_string_ref(&arg, _literal_1_test_p);` is expected to "retain" the string (+1 ref count)
-* `cql_cleanup` is the exit label, this code will run for sure
+* `cql_cleanup` is the exit label, this cleanup code will run on all exit paths
   * cleanup statements are accumulated by writing to `cg_cleanup_output` which usually writes to the `proc_cleanup` buffer
   * because cleanup is in its own buffer you can add to it freely whenever a new declaration that requires cleanup arises
-  * in this case the declaration of the string literal caused the `C` variable `arg` to be created and also the cleanup code
+  * in this case the declaration of the string variable caused the `C` variable `arg` to be created and also the cleanup code
 *  now we call `something_that_might_fail` passing it our database pointer and the argument
   * the hidden `_db_` pointer is passed to all procedures that use the database
-  * these are also the ones that can fail
-* any failed return code (not `SQLITE_OK`) causes two things
+  * these procedures are also the ones that can fail
+* any failed return code (not `SQLITE_OK`) causes two things:
   * the `cql_error_trace()` macro is invoked (this macro typically expands to nothing)
-  * the code stops what it's doing and runs the cleanup code via `goto cql_cleanup;`
+  * the code is redirected to the cleanup block via `goto cql_cleanup;`
 
 The essential sequence is this one:
 
@@ -3502,14 +3601,14 @@ The essential sequence is this one:
  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 ```
 
-The C code generator uses this pattern all over to check if anything went wrong and to exit with an error code.
-Extensive logging can be very expensive but in debug builds, it's quite normal for `cql_error_trace` to expand
-into something like `fprintf(stderr, "error %d in %s %s:%d\n", _rc_, _PROC_, __FILE__, __LINE_)` which probably
+The C code generator consistently uses this pattern to check if anything went wrong and to exit with an error code.
+Extensive logging can be very expensive, but in debug builds it's quite normal for `cql_error_trace` to expand
+into something like `fprintf(stderr, "error %d in %s %s:%d\n", _rc_, _PROC_, __FILE__, __LINE_)` which is probably
 a lot more logging than you want in a production build but great if you're debugging.  Recall that CQL generates
-`#define _PROC_ "p"` before every procedure.
+something like `#define _PROC_ "p"` before every procedure.
 
-This pattern generalizes well and indeed if we use the exception handling pattern, we get a lot of control.
-Let's generalize this a tiny bit.
+This error pattern generalizes well and indeed if we use the exception handling pattern, we get a lot of control.
+Let's generalize this example a tiny bit:
 
 ```SQL
 CREATE PROC p (OUT success BOOL NOT NULL)
@@ -3555,16 +3654,16 @@ CQL_WARN_UNUSED cql_code p(sqlite3 *_Nonnull _db_, cql_bool *_Nonnull success) {
 }
 ```
 
-The code is nearly the same.  Let's look at the essential differences:
+The code in this case is nearly the same as the previous example.  Let's look at the essential differences:
 
-* If there is an error, the code hits `goto catch_start_1`
-* If the try block succeeds, the code hits `goto catch_end_1`
-* both branches set the `success` out parameter
-* we added that out argument, CQL generated an error check to ensure that arg 1 is not null
-  * `cql_contract_argument_notnull((void *)success, 1)`, the 1 means arg 1
-  * the hidden `_db_` arg doesn't count
+* If there is an error, `goto catch_start_1` will run
+* If the try block succeeds, `goto catch_end_1` will run
+* both the `TRY` and `CATCH` branches set the `success` out parameter
+* since an out argument was added, CQL generated an error check to ensure that `success` is not null
+  * `cql_contract_argument_notnull((void *)success, 1)`, the 1 means "argument 1" and will appear in the error message if this test fails
+  * the hidden `_db_` argument doesn't count for error message purposes, so `success` is still the first argument
 
-How does this happen?  `cg_trycatch_helper`
+How does this happen?  Let's look at `cg_trycatch_helper` which does this work:
 
 ```C
 // Very little magic is needed to do try/catch in our context.  The error
@@ -3588,10 +3687,12 @@ static void cg_trycatch_helper(ast_node *try_list, ast_node *try_extras, ast_nod
   error_target_used = 0;
  ...
 ```
-All of the error handling does goto `error_target` whatever that is.  The
+
+The secret is the `error_target` global variable.
+All of the error handling will emit a goto `error_target` statement. The
 try/catch pattern simply changes the current error target.  The rest of
-the code is just to save the current error target and to create unique
-labels for the the control flow.
+the code in the helper is just to save the current error target and to
+create unique labels for the try/catch block.
 
 The important notion is that, if anything goes wrong, whatever it is,
 the generator simply does a `goto error_target` and that will either
@@ -3612,14 +3713,14 @@ static void cg_throw_stmt(ast_node *ast) {
 }
 ```
 
-* first we make sure _rc_ has some kind of error in it either `rcthrown_current` or else `SQLITE_ERROR`
-* then we goto the current error target
-* `error_target_used` tracks whether there were any possible errors, this is just to avoid C compiler errors about unused labels.
+* first we make sure `_rc_` has some kind of error in it, either `rcthrown_current` or else `SQLITE_ERROR`
+* then we go to the current error target
+* `error_target_used` tracks whether if the error label was used, this is just to avoid C compiler errors about unused labels.
   * if the label is not used it won't be emitted
-  * the code never jump back to an error label so we'll always know if it was used before we need to emit it
+  * the code never jumps back to an error label, so we'll always know if the label was used before we need to emit it
 
 Note: every catch block captures the value of `_rc_` in a local variable whose name is in `rcthrown_current`.
-This is the current failing result code accessible by `@RC` in CQL.
+This captured value is the current failing result code accessible by `@RC` in CQL.
 
 A catch block can therefore do stuff like:
 
@@ -3631,10 +3732,1208 @@ ELSE
 END IF;
 ```
 
-or something like that.
-
 This entire mechanism is built with basically just a few state variables that nest.  There is no complicated stack walking
 or anything like that.  All the code has to do is chain the error labels together and let users create new catch blocks
-with new error labels.  All that together gives you very flexible try/catch behaviour.
+with new error labels.  All that together gives you very flexible try/catch behaviour with very little overhead.
+
+### String Literals
+
+Before we move on to more complex statements we have to discuss string literals a little bit.  We've mentioned before
+that the compiler is going to generate something like this:
+
+```C
+cql_string_literal(_literal_1_test_p, "test");
+```
+
+To create a reference counted object `_literal_1_test_p` that it can use.  Now we're going to talk about how
+the text `"test"` was created and how that gets more complicated.
+
+The first thing to remember is that the generator creates C programs.  That means
+no matter what kind of literal we might be processing it's ending up encoded as a C string for the C
+compiler.  The C compiler will be the first thing the decodes the text the generator produces and
+puts the byte we need into the final programs data segment or whereever.  That means if we have
+SQL format strings that need to go to SQLite they will be twice-encoded, the SQL string is escaped
+as needed for SQLite and *that* is escaped again for the C compiler.
+
+An example might make this clearer consider the following SQL:
+
+```SQL
+  SELECT '"x''y"' AS a, "'y'\n" AS b;
+```
+
+The generated text for this statement will be:
+
+```C
+  "SELECT '\"x''y\"', '''y''\n'"
+```
+
+Let's review that in some detail:
+
+* the first string "a" is a standard SQL string
+  * it is represented unchanged in the AST, it is *not* unescaped
+  * even the outer single quotes are preserved, CQL has no need to change it at all
+  * when we emit it into our output it will be read by the C compiler, so
+  * at that time it is escaped *again* into C format
+    * the double quotes which required no escaping in SQL become `\"`
+  * the single quote character requires no escape but there are still two of them because SQLite will also process this string
+
+* the second string "b" is a C formatted string literal
+  * SQLite doesn't support this format or its escapes, therefore
+  * as discussed in [Part 1](https://cgsql.dev/cql-guide/int01), it is decoded to plain text, then re-encoded as a SQL escaped string
+  * internal newlines do not require escaping in SQL, they are in the string as the newline character not '\n' or anything like that
+    * to be completely precise the byte value 0x0a is in the string unescaped
+  * internal single quotes don't require escaping in C, these have to be doubled in a SQL string
+  * the outer double quotes are removed and replaced by single quoates during this process
+  * the AST now has a valid SQL formatted string possibly with weird characters in it
+  * as before, this string has to be formatted for the C compiler so now it has to be escaped again
+  * the single quotes require no further processing, though now there are quite a few of them
+  * the embedded newline is converted to the escape sequence "\n" so we're back to sort of where we started
+    * the C compiler will convert this back to the byte 0x0a which is what ends up in the data segment
+
+In the above example we were making one overall string for the `SELECT` statement so the outer double quotes
+are around the whole statement.  That was just for the convenience of this example.  If the literals had
+been in some other loose context then individual strings would be produced the same way.  Except, not so fast,
+not every string literal is heading for SQLite.  Some are just making regular strings.  In that case even
+if they are destined for SQLite they will go as bound arguments to a statement not in the text of the SQL.
+That means *those* strings do not need SQL escaping.
+
+Consider:
+
+```SQL
+  LET a := '"x''y"';
+  LET b := "'y'\n";
+```
+
+To do those assignments we need:
+
+```C
+cql_string_literal(_literal_1_x_y_p, "\"x'y\"");
+cql_string_literal(_literal_2_y_p, "'y'\n");
+```
+
+In both of these cases the steps are:
+
+* unescape the escaped SQL string in the AST to plain text
+  * removing the outer single quotes of course
+* re-escape the plain text (which might include newlines and such) as a C string
+  * emit that text, including its outer double quotes
+
+Trivia: the name of the string literal variables include a fragment of the string to make them a little easier to spot.
+
+`encoders.h` has the encoding functions
+* `cg_decode_string_literal`
+* `cg_encode_string_literal`
+* `cg_encode_c_string_literal`
+* `cg_decode_c_string_literal`
+
+As well as similar functions for single characters to make all this possible.  Pretty much every combination
+of encoding and re-encoding happens in some path through the code generator.
+
+### Executing SQLite Statements
+
+By way of example let's consider a pretty simple piece of SQL we might want to run.
+
+```SQL
+CREATE TABLE foo(id INTEGER, t TEXT);
+
+CREATE PROC p (id_ INTEGER, t_ TEXT)
+BEGIN
+  UPDATE foo
+  SET t = t_
+    WHERE id = id_;
+END;
+```
+
+To make this happen we're going to have to do the following things:
+ * create a string literal with the statement we need
+ * the references to `id_` and `t_` have to be replaced with `?`
+ * we prepare that statement
+ * we bind the values of `id_` and `t_`
+ * we `step` the statement
+ * we `finalize` the statement
+ * suitable error checks have to be done at each stage
+
+That's quite a bit of code and it's easy to forget a step, this is an area where CQL shines.  The
+code we had to write in CQL was very clear and all the error checking is implicit.
+
+This is the generated code.  We'll walk through it and discuss how it is created.
+
+```C
+CQL_WARN_UNUSED cql_code p(
+  sqlite3 *_Nonnull _db_,
+  cql_nullable_int32 id_,
+  cql_string_ref _Nullable t_)
+{
+  cql_code _rc_ = SQLITE_OK;
+  sqlite3_stmt *_temp_stmt = NULL;
+
+  _rc_ = cql_prepare(_db_, &_temp_stmt,
+    "UPDATE foo "
+    "SET t = ? "
+      "WHERE id = ?");
+  cql_multibind(&_rc_, _db_, &_temp_stmt, 2,
+                CQL_DATA_TYPE_INT32, &id_,
+                CQL_DATA_TYPE_STRING, t_);
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = sqlite3_step(_temp_stmt);
+  if (_rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+  cql_finalize_stmt(&_temp_stmt);
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_finalize_stmt(&_temp_stmt);
+  return _rc_;
+}
+```
+* the functions signature includes the hidden `_db_` parameter plus the two arguments
+* we need a hidden `_rc_` variable to hold the result codes from SQLite
+* we need a scratch `sqlite3_stmt *` named `_temp_stmt` to talk to SQLite
+  * when this is created, the cleanup section gets `cql_finalize_stmt(&_temp_stmt);`
+  * `cql_finalize_stmt` sets the statement to null and does nothing if it's already null
+* the string `"INSERT INTO foo(id, t) VALUES(?, ?)"` is created from the AST
+  * recall that we have `variables_callback` as an option, it's used here to track the variables and replace them with `?`
+  * more on this shortly
+* `cql_multibind` is used to bind the values of `id_` and `t_`
+  * this is just a varargs version of the normal SQLite binding functions, it's only done this way to save space
+  * only one error check is needed for any binding failure
+  * the type of binding is encoded very economically
+  * the "2" here refers to two arguments
+* the usual error processing happens with `cql_error_trace` and `goto cql_cleanup`
+* the statment is executed with `sqlite3_step`
+* temporary statements are finalized immediately with `cql_finalize_stmt`
+  * in this case its redundant because the code is going to fall through to cleanup anyway
+  * in general there could be many statements and we want to finalize immediately
+  * this is an optimization opportunity, procedures with just one statement are very common
+
+Most of these steps are actually hard coded.  There is no variability in the sequence
+after the `multibind` call, so that's just boiler-plate the compiler can inject.
+
+We don't want to declare `_temp_stmt` over and over so there's a flag that records
+whether it has already been declared in the current procedure.
+
+```C
+// Emit a declaration for the temporary statement _temp_stmt_ if we haven't
+// already done so.  Also emit the cleanup once.
+static void ensure_temp_statement() {
+  if (!temp_statement_emitted) {
+    bprintf(cg_declarations_output, "sqlite3_stmt *_temp_stmt = NULL;\n");
+    bprintf(cg_cleanup_output, "  cql_finalize_stmt(&_temp_stmt);\n");
+    temp_statement_emitted = 1;
+  }
+}
+```
+
+This is a great example of how, no matter where the processing happens to be,
+the generator can emit things into the various sections.  Here it adds
+a declaration and an cleanup with no concern about what else might be going on.
+
+So most of the above is just boiler-plate, the tricky part is:
+ * getting the text of the SQL
+ * binding the variables
+
+All of this is the business of this function:
+
+```C
+// This is the most important function for sqlite access;  it does the heavy
+// lifting of generating the C code to prepare and bind a SQL statement.
+// If cg_exec is true (CG_EXEC) then the statement is executed immediately
+// and finalized.  No results are expected.  To accomplish this we do the following:
+//   * figure out the name of the statement, either it's given to us
+//     or we're using the temp statement
+//   * call get_statement_with_callback to get the text of the SQL from the AST
+//     * the callback will give us all the variables to bind
+//     * count the variables so we know what column numbers to use (the list is backwards!)
+//   * if CG_EXEC and no variables we can use the simpler sqlite3_exec form
+//   * bind any variables
+//   * if there are variables CG_EXEC will step and finalize
+static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_flags)
+{
+  ...
+}
+```
+
+The core of this function looks like this:
+
+```C
+  gen_sql_callbacks callbacks;
+  init_gen_sql_callbacks(&callbacks);
+  callbacks.variables_callback = cg_capture_variables;
+  callbacks.variables_context = &vars;
+  // ... more flags
+
+  CHARBUF_OPEN(temp);
+  gen_set_output_buffer(&temp);
+  gen_statement_with_callbacks(stmt, &callbacks);
+```
+
+It's set up the callbacks for variables and it calls the echoing function on the buffer.  We've
+talked about `gen_statement_with_callbacks` in  [Part 1](https://cgsql.dev/cql-guide/int01).
+
+Let's take a look at that callback function:
+
+```
+// This is the callback method handed to the gen_ method that creates SQL for us
+// it will call us every time it finds a variable that needs to be bound.  That
+// variable is replaced by ? in the SQL output.  We end up with a list of variables
+// to bind on a silver platter (but in reverse order).
+static bool_t cg_capture_variables(ast_node *ast, void *context, charbuf *buffer) {
+  list_item **head = (list_item**)context;
+  add_item_to_list(head, ast);
+
+  bprintf(buffer, "?");
+  return true;
+}
+```
+
+The `context` variable was set to be `vars`, we convert it back to the correct type
+and add the current ast to that list.  `add_item_to_list` always puts things at the
+head so the list will be in reverse order.
+
+With this done, we're pretty much set.  We'll produce the statement with a sequence
+like this one (there are a couple of variations, but this is the most general)
+
+```C
+  bprintf(cg_main_output, "_rc_ = cql_prepare(_db_, %s%s_stmt,\n  ", amp, stmt_name);
+  cg_pretty_quote_plaintext(temp.ptr, cg_main_output, PRETTY_QUOTE_C | PRETTY_QUOTE_MULTI_LINE);
+  bprintf(cg_main_output, ");\n");
+```
+
+`cg_pretty_quote_plaintext` is one of the C string encoding formats, it could have been just the regular C string encoding
+but that would have been a bit wasteful and it wouldn't have looked as nice.  This function does a little transform.
+
+The normal echo of the update statement in question looks like this:
+
+```
+  UPDATE foo
+  SET t = ?
+    WHERE id = ?;
+```
+
+Note that it has indenting and newlines embedded in it.  The standard encoding of that would look like this:
+
+```C
+"  UPDATE foo\n  SET t = ?\n    WHERE id = ?;"
+```
+
+That surely works, but it's wasteful and ugly. The pretty format instead produces:
+
+```C
+    "UPDATE foo "
+    "SET t = ? "
+      "WHERE id = ?"
+```
+
+So, the newlines are gone from the string (they aren't needed), instead the string literal was broken into lines for readability.
+The indenting is gone from the string, instead the string fragments are indented.  So what you get is a string literal that
+reads nicely but doesn't have unnecessary whitespace for SQLite.  Obviously you can't use pretty-quoted literals in all cases,
+it's exclusively for SQLite formatting.
+
+All that's left to do is bind the arguments.  Remember that arg list is in reverse order:
+
+```C
+  uint32_t count = 0;
+  for (list_item *item = vars; item; item = item->next, count++) ;
+
+  // ...
+
+  reverse_list(&vars);
+
+  if (count) {
+    bprintf(cg_main_output, "cql_multibind(&_rc_, _db_, %s%s_stmt, %d", amp, stmt_name, count);
+
+    // Now emit the binding args for each variable
+    for (list_item *item = vars; item; item = item->next)  {
+      Contract(item->ast->sem->name);
+      bprintf(cg_main_output, ",\n              ");
+      cg_bind_column(item->ast->sem->sem_type, item->ast->sem->name);
+    }
+
+    bprintf(cg_main_output, ");\n");
+  }
+```
+
+* first compute the count, we don't need to bind if there are no variables
+* `reverse_list` does exactly what is sounds like (finally a real-world use-case for reverse-list-in-place)
+* `cg_bind_column` creates one line of the var-args output: column type and variable name
+  * the type and name information is right there on the `AST` in the `sem_node`
+
+And that's it.  With those few helpers we can bind any SQLite statement the same way.  All of the
+`DDL_STMT_INIT` and `DML_STMT_INIT` statements are completely implemented by this path.
+
+### Reading Single Values
+
+In many cases you need just one value
+
+```SQL
+CREATE PROC p (id_ INTEGER NOT NULL, OUT t_ TEXT)
+BEGIN
+  SET t_ := ( SELECT t
+    FROM foo
+    WHERE id = id_ );
+END;
+```
+
+This is going to be very similar to the examples we've seen so far:
+
+```C
+CQL_WARN_UNUSED cql_code p(sqlite3 *_Nonnull _db_, cql_int32 id_, cql_string_ref _Nullable *_Nonnull t_) {
+  cql_contract_argument_notnull((void *)t_, 2);
+
+  cql_code _rc_ = SQLITE_OK;
+  cql_string_ref _tmp_text_0 = NULL;
+  sqlite3_stmt *_temp_stmt = NULL;
+
+  *(void **)t_ = NULL; // set out arg to non-garbage
+  _rc_ = cql_prepare(_db_, &_temp_stmt,
+    "SELECT t "
+      "FROM foo "
+      "WHERE id = ?");
+  cql_multibind(&_rc_, _db_, &_temp_stmt, 1,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, id_);
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = sqlite3_step(_temp_stmt);
+  if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
+    cql_column_string_ref(_temp_stmt, 0, &_tmp_text_0);
+  cql_finalize_stmt(&_temp_stmt);
+  cql_set_string_ref(&*t_, _tmp_text_0);
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_string_release(_tmp_text_0);
+  cql_finalize_stmt(&_temp_stmt);
+  return _rc_;
+}
+```
+
+* `_db_` : incoming arg for a procedure that uses the database same as always, check
+* `*(void **)t_ = NULL;` : out args are always set to NULL on entry, note, there is no `release` here
+   * argument is assumed to be garbage, that's the ABI
+   * if argument is non-garbage caller must release it first, that's the ABI
+* `_rc_` : same as always, check
+* `_tmp_text_0` : new temporary text, including cleanup (this could have been avoided)
+* `_temp_stmt` : as before, including cleanup
+* `cql_prepare` : same as always, check
+* `cql_multibind` : just one integer bound this time
+* `sqlite3_step` : as before, we're stepping once, this time we want the data
+* `if (_rc_ != SQLITE_ROW)` new error check and goto cleanup if no row
+  * this is the same as the `IF NOTHING THROW` variant of construct, that's the default
+* `cql_column_string_ref` : reads one string from `_temp_stmt`
+* `cql_finalize_stmt` : as before
+* `cql_set_string_ref(&*t_, _tmp_text_0)` : copy the temporary string to the out arg
+  * includes retain, out arg is NULL so `cql_set_string_ref` will do no release
+  * if this were (e.g.) running in a loop, the out arg would not be null and there would be a release, as expected
+  * if something else had previously set the out arg, again, there would be a release as expected
+
+There are variations of this form such as:
+
+```SQL
+CREATE PROC p (id_ INTEGER NOT NULL, OUT t_ TEXT)
+BEGIN
+  SET t_ := ( SELECT t
+    FROM foo
+    WHERE id = id_
+    IF NOTHING '');
+END;
+```
+
+This simply changes the handling of the case where there is no row.  The that part of the code
+ends up looking like this:
+
+```C
+  if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+  if (_rc_ == SQLITE_ROW) {
+    cql_column_string_ref(_temp_stmt, 0, &_tmp_text_1);
+    cql_set_string_ref(&_tmp_text_0, _tmp_text_1);
+  }
+  else {
+    cql_set_string_ref(&_tmp_text_0, _literal_1_p);
+  }
+```
+
+* any error code leads to cleanup
+* `SQLITE_ROW` : leads to the same fetch as before
+* `SQLITE_DONE` : leads to the no row case which sets `_tmp_text_0` to the empty string
+  * `cql_string_literal(_literal_1_p, "");` is included as a data declaration
+
+There is also the `IF NOTHING OR NULL` variant which is left as an exercise to the reader.
+You can find all the flavors in `cg_c.c` in the this function:
+
+```C
+// This is a nested select expression.  To evaluate we will
+//  * prepare a temporary to hold the result
+//  * generate the bound SQL statement
+//  * extract the exactly one argument into the result variable
+//    which is of exactly the right type
+//  * use that variable as the result.
+// The helper methods take care of sqlite error management.
+static void cg_expr_select(...
+```
+
+This handles all of the `(select ...)` expressions and it has the usual expression handler
+syntax. Another great example of a CQL expressions that might require many C statements
+to implement.
+
+### Reading Rows With Cursors
+
+This section is about the cases where we are expecting results back from SQLite.  By results here
+I mean the results of some kind of query, not like a return code.  SQLite does this by giving
+you a `sqlite3_stmt *` which you can then use like a cursor to read out a bunch of rows.  So
+it should be no surprise that CQL cursors map directly to SQLite statements.
+
+Most of the code to get a statement we've already seen before, we only saw the `_temp_stmt`
+case and we did very little with it.  Let's look at the code for something a little bit more
+general and we'll see how little it takes to generalize.
+
+First, let's look at how a CQL cursor is initialized:
+
+```SQL
+CREATE PROC p ()
+BEGIN
+  DECLARE C CURSOR FOR SELECT 1 AS x, 2 AS y;
+END;
+```
+
+Now in this case there can only be one row in the result, but it would be no different if there were more.
+
+Here's the C code:
+
+```C
+CQL_WARN_UNUSED cql_code p(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  sqlite3_stmt *C_stmt = NULL;
+  cql_bool _C_has_row_ = 0;
+
+  _rc_ = cql_prepare(_db_, &C_stmt,
+    "SELECT 1, 2");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_finalize_stmt(&C_stmt);
+  return _rc_;
+}
+```
+
+Let's look over that code very carefully and see what is necessary to make it happen.
+
+* `_db_` : incoming arg for a procedure that uses the database same as always, check
+* `_rc_` : same as always, check
+* `C_stmt` : we need to generate this instead of using `_temp_stmt`
+  * `cql_finalize_stmt(&C_stmt)` in cleanup, just like `_temp_stmt`
+* `cql_prepare` : same as always, check
+* `cql_multibind` : could have been binding, not none needed here, but same as always anyway, check
+* no step, no finalize (until cleanup) : that boiler-plate is removed
+
+And that's it, we now have a statement in `C_stmt` ready to go.  We'll see later that `_C_has_row_`
+will track whether or not the cursor has any data in it.
+
+How do we make this happen?  Well you could look at `cg_declare_cursor` and your eye might hurt at
+first.  The truth is there are many kinds of cursors in CQL and this method handles all of them.
+We're going to go over the various flavors but for now we're only discussing the so-called
+"statement cursor", so named because it simply holds a SQLite statement.  This was the
+first, and for a while only, type of cursor added to the CQL language.
+
+OK so how do we make a statement cursor.  It's once again `cg_bound_sql_statement` just like so:
+
+```C
+cg_bound_sql_statement(cursor_name, select_stmt, CG_PREPARE|CG_MINIFY_ALIASES);
+```
+
+The entire difference is that the first argument is the cursor name rather than NULL.  If you
+pass NULL it means use the temporary statement.
+
+And you'll notice that even in this simple example the SQLite text was altered a bit:
+the text that went to SQLite was `"SELECT 1, 2"` -- that's CG_MINIFY_ALIASES at work.
+SQLite didn't need to see those column aliases, it makes no difference in the result.
+Column aliases are often long and numerous.  Even in this simple example we saved 4 bytes.
+But the entire query was only 12 bytes long (including trailing null) so that's 25%.
+It's not a huge savings in general but it's something.
+
+The other flag `CG_PREPARE` tells the binder that it should not step or finalize the query.
+The alternative is `CG_EXEC` (which was used in the previous section for the `UPDATE` example).
+
+### Fetching Data From Cursors
+
+The first cursor reading primitive that was implemented as `FETCH [cursor] INTO [variables]` and
+it's the simplest to understand so let's start there.
+
+We change the example just a bit:
+
+```SQL
+CREATE PROC p ()
+BEGIN
+  DECLARE x INTEGER NOT NULL;
+  DECLARE y INTEGER NOT NULL;
+  DECLARE C CURSOR FOR SELECT 1 AS x, 2 AS y;
+  FETCH C INTO x, y;
+END;
+```
+
+For simplicity I will only include the code that is added.  The rest is the same.
+
+```C
+  cql_int32 x = 0;
+  cql_int32 y = 0;
+
+  // same as before
+
+  _rc_ = sqlite3_step(C_stmt);
+  _C_has_row_ = _rc_ == SQLITE_ROW;
+  cql_multifetch(_rc_, C_stmt, 2,
+                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &x,
+                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &y);
+  if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+```
+
+Do to the `FETCH` we do the following:
+
+* step the cursor
+* set the `_C_has_row_` variable so to indicate if we got a row or not
+* use the varargs `cql_multifetch` to read 2 columns from the cursor
+  * this helper simply uses the usual `sqlite3_*_column` functions to read the data out
+  * again, we do it this way so that there is less error checking needed in the generated code
+  * also, there are fewer function calls so the code is overall smaller
+  * trivia: `multibind` and `multifetch` are totally references to _The Fifth Element_
+    * hence, they should be pronouced like Leeloo saying "multipass"
+* `multifetch` uses the varargs to clobber the contents of the target variables if there is no row according to `_rc_`
+* `multifetch` uses the `CQL_DATA_TYPE_NOT_NULL` to decide if it should ask SQLite first if the column is null
+
+So now this begs the question, in the CQL, how do you know if a row was fetched or not?
+
+The answer is, you can use the cursor name like a boolean.  Let's complicate this up a little more.
+
+```SQL
+DECLARE PROCEDURE printf NO CHECK;
+
+CREATE PROC p ()
+BEGIN
+  DECLARE x INTEGER NOT NULL;
+  DECLARE y INTEGER NOT NULL;
+  DECLARE C CURSOR FOR SELECT 1 AS x, 2 AS y;
+  FETCH C INTO x, y;
+  WHILE C
+  BEGIN
+    CALL printf("%d, %d\n", x, y);
+    FETCH C INTO x, y;
+  END;
+END;
+```
+
+Again here is what is now added, we've seen the `WHILE` pattern before:
+
+```C
+  for (;;) {
+  if (!(_C_has_row_)) break;
+    printf("%d, %d\n", x, y);
+    _rc_ = sqlite3_step(C_stmt);
+    _C_has_row_ = _rc_ == SQLITE_ROW;
+    cql_multifetch(_rc_, C_stmt, 2,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &x,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &y);
+    if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+  }
+```
+
+So, if you use the cursors name in an ordinary expression that is converted to a reference to
+the boolean `_C_has_row_`.  Within the loop we're going to print some data and then fetch the next row.
+The internal fetch is of course the same as the first.
+
+The next improvement that was added to the language was the `LOOP` statement.  Let's take a look:
+
+```SQL
+BEGIN
+  DECLARE x INTEGER NOT NULL;
+  DECLARE y INTEGER NOT NULL;
+  DECLARE C CURSOR FOR SELECT 1 AS x, 2 AS y;
+  LOOP FETCH C INTO x, y
+  BEGIN
+    CALL printf("%d, %d\n", x, y);
+  END;
+END;
+```
+
+The generated code is very similar:
+
+```C
+  for (;;) {
+    _rc_ = sqlite3_step(C_stmt);
+    _C_has_row_ = _rc_ == SQLITE_ROW;
+    cql_multifetch(_rc_, C_stmt, 2,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &x,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &y);
+    if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+    if (!_C_has_row_) break;
+    printf("%d, %d\n", x, y);
+  }
+```
+
+This is done by:
+
+* emit the `for (;;) {` to start the loop
+* generate the `FETCH` just as if it was standalone
+* emit `if (!_C_has_row_) break;` (with the correct cursor name)
+* use `cg_stmt_list` to emit the internal statement list (`CALL printf` in this case)
+* close the loop with `}` and we're done
+
+### Cursors With Storage
+
+We now come to the big motivating reasons for having the notion of shapes in the CQL langauge.
+This particular case was the first such example in the language and it's very commonly
+used and saves you a lot of typing.  Like the other examples it's only sugar in that
+it doesn't give you any new language powers you didn't have, but it does give clarity
+and maintenance advantages.  And it's just a lot less to type.
+
+Let's go back to one of the earlier examples, but write it the modern way:
+
+```SQL
+CREATE PROC p ()
+BEGIN
+  DECLARE C CURSOR FOR SELECT 1 AS x, 2 AS y;
+  FETCH C;
+END;
+```
+
+And the generated C code:
+
+```C
+typedef struct p_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 x;
+  cql_int32 y;
+} p_C_row;
+
+CQL_WARN_UNUSED cql_code p(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  sqlite3_stmt *C_stmt = NULL;
+  p_C_row C = { 0 };
+
+  _rc_ = cql_prepare(_db_, &C_stmt,
+    "SELECT 1, 2");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = sqlite3_step(C_stmt);
+  C._has_row_ = _rc_ == SQLITE_ROW;
+  cql_multifetch(_rc_, C_stmt, 2,
+                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.x,
+                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.y);
+  if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_finalize_stmt(&C_stmt);
+  return _rc_;
+}
+```
+
+Let's look at what's different here:
+
+* `struct p_C_row` has been created, it contains:
+  * `_has_row_` for the cursor
+  * `x` and `y` the data fields
+  * `_refs_count` the number of reference fields in the cursor (0 in this case)
+  * `_refs_offset` the offset of the references fields (they always go at the end)
+  * because the references are together a cursor with lots of reference fields can be cleaned up easily
+* in the generated code the variable `C` refers to the current data that has been fetched
+  * convenient for debugging `p C` in lldb shows you the row
+* references to `x` and `y` became `C.x` and `C.y`
+* references to `_C_has_row_` became `C._has_row_`
+
+That's pretty much it.  The beauty of this is that you can't get the declarations of your locals wrong
+and you don't have to list them all no matter how big the data is.  If the data shape changes the
+cursor change automatically changes to accomodate it.  Everything is still statically typed.
+
+Now lets look at the loop pattern:
+
+
+```SQL
+CREATE PROC p ()
+BEGIN
+  DECLARE C CURSOR FOR SELECT 1 AS x, 2 AS y;
+  LOOP FETCH C
+  BEGIN
+    CALL printf("%d, %d\n", C.x, C.y);
+  END;
+END;
+```
+
+Note that the columns of the cursor were defined by the column aliases of the `SELECT`.
+
+```C
+  for (;;) {
+    _rc_ = sqlite3_step(C_stmt);
+    C._has_row_ = _rc_ == SQLITE_ROW;
+    cql_multifetch(_rc_, C_stmt, 2,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.x,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.y);
+    if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+    if (!C._has_row_) break;
+    printf("%d, %d\n", C.x, C.y);
+  }
+```
+
+The loop is basically the same except `x` and `y` have been replaced with `C.x` and `C.y`
+and again `_C_has_row_` is now `C._has_row_`.
+
+The code generator knows that it should allocate storage for the `C` cursor if it has
+the flag `SEM_TYPE_HAS_SHAPE_STORAGE` on it. The semantic analyzer adds that flag
+if it ever finds `FETCH C` with no `INTO` part.
+
+Finally let's look at an example with cleanup required.  We'll just change the test case a tiny bit.
+
+```SQL
+CREATE PROC p ()
+BEGIN
+  DECLARE C CURSOR FOR SELECT 1 AS x, "2" AS y;
+  LOOP FETCH C
+  BEGIN
+    CALL printf("%d, %s\n", C.x, C.y);
+  END;
+END;
+```
+
+The `x` column is now text.  We'll get this code which will be studied below:
+
+```
+typedef struct p_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 y;
+  cql_string_ref _Nonnull x;
+} p_C_row;
+
+#define p_C_refs_offset cql_offsetof(p_C_row, x) // count = 1
+
+CQL_WARN_UNUSED cql_code p(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  sqlite3_stmt *C_stmt = NULL;
+  p_C_row C = { ._refs_count_ = 1, ._refs_offset_ = p_C_refs_offset };
+
+  _rc_ = cql_prepare(_db_, &C_stmt,
+    "SELECT '1', 2");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  for (;;) {
+    _rc_ = sqlite3_step(C_stmt);
+    C._has_row_ = _rc_ == SQLITE_ROW;
+    cql_multifetch(_rc_, C_stmt, 2,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C.x,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.y);
+    if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+    if (!C._has_row_) break;
+    cql_alloc_cstr(_cstr_1, C.x);
+    printf("%s, %d\n", _cstr_1, C.y);
+    cql_free_cstr(_cstr_1, C.x);
+  }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_finalize_stmt(&C_stmt);
+  cql_teardown_row(C);
+  return _rc_;
+}
+```
+
+It's very similar to what we had before, let's quickly review the differences.
+
+```C
+typedef struct p_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 y;
+  cql_string_ref _Nonnull x;
+} p_C_row;
+
+#define p_C_refs_offset cql_offsetof(p_C_row, x) // count = 1
+```
+
+* `x` is now `cql_string_ref _Nonnull x;` rather than `cql_int32`
+* `x` has moved to the end (because it's a reference type)
+* the offset of the first ref is computed in a constant
+
+Recall the reference types are always at the end and together.
+
+```C
+  p_C_row C = { ._refs_count_ = 1, ._refs_offset_ = p_C_refs_offset };
+```
+
+* `p_C_row` is now initialized to to ref count 1 and refs offset `p_C_refs_offset` defined above
+
+```C
+  cql_multifetch(_rc_, C_stmt, 2,
+                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C.x,
+                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.y);
+```
+
+* C.x is now of type string
+
+```C
+    cql_alloc_cstr(_cstr_1, C.x);
+    printf("%s, %d\n", _cstr_1, C.y);
+    cql_free_cstr(_cstr_1, C.x);
+```
+
+* C.x has to be converted to a C style string before it can be used with `printf` as a `%s` argument
+
+```C
+  cql_teardown_row(C);
+```
+
+* the cleanup section has to include code to teardown the cursor, this will release all of its reference variables in bulk
+  * remember we know the count, and the offset of the first one -- that's all we need to do them all
+
+With these primitives we can easily create cursors of any shape and load them up with data.  We don't have to
+redundantly declare locals that match the shape of our select statements which is both error prone and
+a hassle.
+
+All of this is actually very easy for the code-generator.  The semantic analysis phase knows if the cursor needs
+shape storage.  And it also recognizes when a variable reference like `C.x` happens, the variable references are
+re-written in the AST so that the code-generator doesn't even have to know there was a cursor reference, from
+its perspective the variable IS `C.x` (which it sort of is).  The code generator does have to create the
+storage for the cursor but it knows it should do so because the cursor variable is marked with `SEM_TYPE_HAS_SHAPE_STORAGE`.
+A cursor without this marking only gets its statement (but not always as we'll see later) and its `_cursor_has_row_`
+hidden variable.
+
+### Flowing SQLite Statements Between Procedures
+
+Earlier we saw that we can get a cursor from a SQLite `SELECT` statement.  The cursor is used to iterate
+over the `sqlite3_stmt *` that SQLite provides to us.  This process can be done between procedures.  Here's a
+simple example:
+
+```SQL
+@ATTRIBUTE(cql:private)
+CREATE PROC q ()
+BEGIN
+  SELECT "1" AS x, 2 AS y;
+END;
+```
+
+This is the first example of a procedure that return a result set that we've seen.  The wiring for this is
+very simple.
+
+```C
+static CQL_WARN_UNUSED cql_code q(
+  sqlite3 *_Nonnull _db_,
+  sqlite3_stmt *_Nullable *_Nonnull _result_stmt)
+{
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT '1', 2");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+```
+
+First note that there are now *two* hidden parameters to `q`:
+
+* `_db_` : the database pointer as usual,
+* `_result_stmt` : the statement produced by this procedure
+
+The rest of the code is just like any other bound SQL statement.  Note that if
+`_result_stmt` isn't otherwise set by the code it will be initialized to a statement
+that will return zero rows.
+
+All of this is pretty much old news except for the new hidden variable.  Note let's look how we might use
+this.  We can write a procedure that calls `q`, like so:
+
+```SQL
+CREATE PROC p ()
+BEGIN
+  DECLARE C CURSOR FOR CALL q();
+  FETCH C;
+END;
+```
+
+This generates:
+
+```C
+CQL_WARN_UNUSED cql_code p(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  sqlite3_stmt *C_stmt = NULL;
+  p_C_row C = { ._refs_count_ = 1, ._refs_offset_ = p_C_refs_offset };
+
+  _rc_ = q(_db_, &C_stmt);
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = sqlite3_step(C_stmt);
+  C._has_row_ = _rc_ == SQLITE_ROW;
+  cql_multifetch(_rc_, C_stmt, 2,
+                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C.x,
+                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.y);
+  if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_finalize_stmt(&C_stmt);
+  cql_teardown_row(C);
+  return _rc_;
+}
+```
+
+All of the above is *exactly* the same as the previous cases where we got
+data from the database except that instead of using `cql_prepare` the
+compiler produced `_rc_ = q(_db_, &C_stmt);`  That function call gives us,
+of course, a ready-to-use `sqlite3_stmt *` which we can then step, and
+use to fetch values.  The shape of the cursor `C` is determined by the
+result type of procedure `q` -- hence they always match.
+
+If q was in some other module, it could be declared with:
+
+```SQL
+DECLARE PROC q () (x TEXT NOT NULL, y INTEGER NOT NULL);
+```
+
+This is a procedure that takes no arguments and returns a result with the indicated shape.
+
+CQL can generate this declaration for you if you add `--generate_exports` to the command line.  Note
+that in this case `q` was marked with `@attribute(cql:private)` which caused `q` to be `static`
+in the output. Hence it can't be called outside this translation unit and `--generate_exports`
+won't provide the declaration.
+
+If the private annotation were removed, the full exports for this file would be:
+
+```SQL
+DECLARE PROC q () (x TEXT NOT NULL, y INTEGER NOT NULL);
+DECLARE PROC p () USING TRANSACTION;
+```
+
+And these would allow calling both procedures from elsewhere.  Simply `#include` the exports file.
+
+There is a special function in the echoing code that can emit a procedure that was created in the
+form that is needed to declare it, this is `gen_declare_proc_from_create_proc`.
+
+### Value Cursors
+
+Once CQL had the ability to fetch rows into a cursor with no need to declare all the locals
+it was clear that it could benefit from the ability to save a copy of any given row. That is
+basic cursor operations seemed like they should be part of the calculus of CQL.  Here's a
+simple sample program that illustrates this.
+
+```SQL
+CREATE PROC p ()
+BEGIN
+  DECLARE C CURSOR FOR SELECT "1" AS x, 2 AS y;
+  FETCH C;
+  DECLARE D CURSOR LIKE C;
+  FETCH D from C;
+END;
+```
+
+We already have a good idea what is going to happen with `C` in this program.  Let's look at the
+generated code focusing just on the parts that involve `D`.
+
+First there is a row defintion for `D`. Unsurprisingly it is exactly the samea as the one for `C`.
+This must be the case since we specified `D CURSOR LIKE C`.
+
+```C
+typedef struct p_D_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 y;
+  cql_string_ref _Nonnull x;
+} p_D_row;
+
+#define p_D_refs_offset cql_offsetof(p_D_row, x) // count = 1
+```
+
+Then the `D` cursor variables will be needed:
+
+```C
+p_D_row D = { ._refs_count_ = 1, ._refs_offset_ = p_D_refs_offset };
+```
+
+The above also implies the cleanup code:
+
+```C
+  cql_teardown_row(D);
+```
+
+finally, we fetch `D` from `C`.  That's just some assignments:
+
+```C
+  D._has_row_ = 1;
+  cql_set_string_ref(&D.x, C.x);
+  D.y = C.y;
+```
+
+Importantly, there is no `D_stmt` variable.  `D` is *not* a statement cursor like `C`, it's
+a so-called "value" cursor.  In that it can only hold values.
+
+A value cursor can actually be loaded from anywhere, it just holds data.  You don't
+loop over it (attempts to do so will result in errors).
+
+The general syntax for loading such a cursor is something like this:
+
+```SQL
+ FETCH D(x, y) FROM VALUES(C.x, C.y);
+```
+
+And indeed the form `FETCH D FROM C` was rewritten automatically into the general form.
+The short form is just sugar.
+
+Once loaded, `D.x` and `D.y` can be used as always.  The data type of `D` is similar to `C`.
+
+The AST would report:
+
+```
+{declare_cursor_like_name}: D: select: { x: text notnull, y: integer notnull }
+   variable shape_storage value_cursor
+```
+
+meaning `D` has the flags `SEM_TYPE_STRUCT`, `SEM_TYPE_VARIABLE`, `SEM_TYPE_HAS_SHAPE_STORAGE`, and `SEM_TYPE_VALUE_CURSOR`.
+That last flag indicates that there is no statement for this cursor, it's just values. And all such cursors must have
+`SEM_TYPE_HAS_SHAPE_STORAGE` -- if they had no statement and no storage they would be -- nothing.
+
+Value cursors are enormously helpful and there is sugar for loading them from all kinds of sources with a shape.
+These forms are described more properly in [Chapter 5](https://cgsql.dev/cql-guide/ch05) of the Guide but they
+all end up going through the general form, making the codegen considerably simpler. There are many examples where the semantic
+analyzer rewrites a sugar form to a canonical form to keep the codegen from forking into dozens of special cases
+and most of them have to do with shapes and cursors.
+
+### Returning Value Cursors
+
+Let's look at an example that is similar to the previous one:
+
+```SQL
+@ATTRIBUTE(cql:private)
+CREATE PROC q ()
+BEGIN
+  DECLARE C CURSOR LIKE SELECT "1" AS x, 2 AS y;
+  FETCH C USING
+   "foo" x,
+   3 y;
+  OUT C;
+END;
+
+CREATE PROC p ()
+BEGIN
+  DECLARE C CURSOR FETCH FROM CALL q();
+  -- do something with C
+END;
+```
+
+Let's discuss some of what is above, first looking at `q`:
+
+* `DECLARE C CURSOR LIKE SELECT "1" AS x, 2 AS y;` : this makes an empty value cursor
+  * note the shape is `LIKE` the indicated `SELECT`, the `SELECT` does not actually run
+* `FETCH ... USING` : this form is sugar, it lets you put the column names `x` and `y` adjacent to the values but is otherwise equivalent to the canonical form
+  * `FETCH C(x, y) FROM VALUES("foo", 3);` is the canonical form
+  * codegen only ever sees the canonical form
+* `OUT C` is new, we'll cover this shortly
+
+Now let's look at the C for `q`
+
+```C
+typedef struct q_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 y;
+  cql_string_ref _Nonnull x;
+} q_row;
+
+#define q_refs_offset cql_offsetof(q_row, x) // count = 1
+
+cql_string_literal(_literal_1_foo_q, "foo");
+
+typedef struct q_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 y;
+  cql_string_ref _Nonnull x;
+} q_C_row;
+
+#define q_C_refs_offset cql_offsetof(q_C_row, x) // count = 1
+
+static void q(q_row *_Nonnull _result_) {
+  memset(_result_, 0, sizeof(*_result_));
+  q_C_row C = { ._refs_count_ = 1, ._refs_offset_ = q_C_refs_offset };
+
+  C._has_row_ = 1;
+  cql_set_string_ref(&C.x, _literal_1_foo_q);
+  C.y = 3;
+  _result_->_has_row_ = C._has_row_;
+  _result_->_refs_count_ = 1;
+  _result_->_refs_offset_ = q_refs_offset;
+  cql_set_string_ref(&_result_->x, C.x);
+  _result_->y = C.y;
+
+  cql_teardown_row(C);
+}
+```
+
+* the `_result_` variable is clobbed with zeros, it is assumed to be junk coming in
+  * if it had valid data, the caller is expected to use `cql_teardown_row` to clean it up *before* calling
+* `q_row` : this is new, this is the structure type for the result of `q`
+  * it's exactly the same shape as C
+  * it has its own `q_refs_offset` like other shapes
+* `q_C_row` : this is the same old same old row structure for cursor C
+* `static void q(q_row *_Nonnull _result_)` : q now accepts a q_row to fill in!
+  * note that `q` does not have the `_db_` parameter, it doesn't use the database!
+  * it is entirely possible to fill value cursors from non-database sources, e.g. constants, math, whatever
+* `C` : the value cursor is declared as usual
+* `C.x` and `C.y` are loaded, this resolves the `FETCH` statement
+* the `_result_` fields are copied from `C`, this resolves the `OUT` statement
+* `C` can be torn down
+* there is no cleanup label, there are no error cases, nothing can go wrong!
+
+
+The net of all this is that we have loaded a value cursor that was passed in to the procedure via
+a hidden argument and it has retained references as appropriate.
+
+Now let's look at `p`:
+
+```C
+typedef struct p_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 y;
+  cql_string_ref _Nonnull x;
+} p_C_row;
+
+#define p_C_refs_offset cql_offsetof(p_C_row, x) // count = 1
+void p(void) {
+  p_C_row C = { ._refs_count_ = 1, ._refs_offset_ = p_C_refs_offset };
+
+  cql_teardown_row(C);
+  q((q_row *)&C); // q_row identical to cursor type
+
+  // usually you do something with C at this point
+
+  cql_teardown_row(C);
+}
+```
+
+* `p_C_row` : the cursor type for `C` in the procedure `p` is defined
+* `p_C_refs_offset` : the refs offset for `C` in `p` as usual
+* `C = {...}` : the usual initialization for a cursor with shape
+  * note that `C` is a value cursor, so it has no `C_stmt`
+* `cql_teardown_row(C)` : releases any references in C, there are none
+  * this pattern is general purpose, the call to `q` might be in a loop or something
+  * in this instance the teardown here is totally redundant, but harmless
+* `q((q_row *)&C)` : fetch `C` by calling `q`
+   * `p_C_row` has been constructed to be exactly the same as `q_row` so this cast is safe
+   * there are no error checks because `q` can't fail!
+* some code that would use `C` is absent for this sample, it would go where the comment is
+* the cleanup label is missing because there are no error cases, emitting the label would just cause warnings
+  * warnings are often escalated to errors in production builds...
+* `cql_teardown_row(C)` is needed as always,
+   * even though there is no cleanup label the `teardown` is in the cleanup section
+   * the `teardown` was added as usual when `C` was declared
+
+So with just normal value cursor codegen we can pretty easily create a situation where
+procedures can move structures from one to another.  As we saw, the source of value cursors
+may or may not be the database.  Value cursors are frequently invaluable in test code
+as they can easily hold mock rows based on any kind of computation.
+
+### Next: Result Sets and OUT UNION
 
 
