@@ -55,11 +55,11 @@ $O/%.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $O/flex_tested:
-	common/test_flex.sh $(LEX)
+	common/test_flex.sh "$(LEX)"
 	touch $O/flex_tested
 
 $O/bison_tested: $O/flex_tested
-	common/test_bison.sh $(YACC)
+	common/test_bison.sh "$(YACC)"
 	touch $O/bison_tested
 
 $O/cql: $O/bison_tested $(OBJECTS) $(SQLITE_OBJ)

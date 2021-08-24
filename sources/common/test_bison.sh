@@ -7,9 +7,11 @@
 # Checking for the super common case of the XCode version of Bison
 # This could be generalized obviously... but this one deserves special treatment
 
+echo "Testing bison version of " "$1"
+$1 -V
 if [ -n "$($1 -V | grep ' 2[.]3')" ] ; then
  echo Bison 2.3 detected, this is too old.  Use brew install bison to update. See README.md
- exit 1
+ exit 91
 fi
 
 exit 0

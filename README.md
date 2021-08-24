@@ -19,12 +19,14 @@ This puts the result in `out/cql`
 
 
 ### Requirements
-The default bison on Mac is quite old (v2.3).  You'll need to replace it. The Build
-produces an error if this is happening.  You can get a more recent bison like this:
+The default bison and flex on Mac are quite old.  You'll need to replace them. The Build
+produces an error if this is happening.  You can get a more recent versions like this:
 
 ```
   brew install bison
   brew link bison --force
+  brew install flex
+  brew link flex --force
 ```
 
 The default SQLite on Ubuntu systems is also fairly old.  Some of the tests (particularly
