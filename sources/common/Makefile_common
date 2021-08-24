@@ -54,7 +54,11 @@ OBJECTS+=$(ADDITIONAL_OBJECTS)
 $O/%.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$O/bison_tested:
+$O/flex_tested:
+	common/test_flex.sh $(LEX)
+	touch $O/flex_tested
+
+$O/bison_tested: $O/flex_tested
 	common/test_bison.sh $(YACC)
 	touch $O/bison_tested
 
