@@ -29,13 +29,19 @@ int a;
 #pragma clang diagnostic ignored "-Wconversion"
 %}
 
+stop [^A-Z_0-9]
+sp [ \t]+
+hex [0-9A-F]
+d [0-9]
+
 %%
 
-CURRENT[ \t]+ROW              {return CURRENT_ROW; }
-EXCLUDE[ \t]+NO[ \t]+OTHERS   {return EXCLUDE_NO_OTHERS; }
-EXCLUDE[ \t]+CURRENT[ \t]+ROW {return EXCLUDE_CURRENT_ROW; }
-EXCLUDE[ \t]+GROUP           {return EXCLUDE_GROUP; }
-EXCLUDE[ \t]+TIES            {return EXCLUDE_TIES; }
+EXCLUDE{sp}NO{sp}OTHERS/{stop}   { return EXCLUDE_NO_OTHERS; }
+EXCLUDE{sp}CURRENT{sp}ROW/{stop} { return EXCLUDE_CURRENT_ROW; }
+EXCLUDE{sp}GROUP/{stop}          { return EXCLUDE_GROUP; }
+EXCLUDE{sp}TIES/{stop}           { return EXCLUDE_TIES; }
+
+CURRENT{sp}ROW/{stop}        { return CURRENT_ROW; }
 UNBOUNDED                    { return UNBOUNDED; }
 PRECEDING                    { return PRECEDING; }
 FOLLOWING                    { return FOLLOWING; }
@@ -48,7 +54,7 @@ PARTITION                    { return PARTITION; }
 FILTER                       { return FILTER; }
 WINDOW                       { return WINDOW; }
 EXPLAIN                      { return EXPLAIN; }
-QUERY[ \t]+PLAN              { return QUERY_PLAN; }
+QUERY{sp}PLAN/{stop}         { return QUERY_PLAN; }
 SELECT                       { return SELECT; }
 CAST                         { return CAST; }
 CREATE                       { return CREATE; }
@@ -64,7 +70,7 @@ WHILE                        { return WHILE; }
 CALL                         { return CALL; }
 EXISTS                       { return EXISTS; }
 UNION                        { return UNION; }
-UNION[ \t]+ALL               { return UNION_ALL; }
+UNION{sp}ALL/{stop}          { return UNION_ALL; }
 INTERSECT                    { return INTERSECT; }
 EXCEPT                       { return EXCEPT; }
 NOT                          { return NOT; }
@@ -92,7 +98,7 @@ FOREIGN                      { return FOREIGN; }
 REAL                         { return REAL; }
 CASCADE                      { return CASCADE; }
 ON                           { return ON; }
-ON[ \t]+CONFLICT             { return ON_CONFLICT; }
+ON{sp}CONFLICT/{stop}        { return ON_CONFLICT; }
 DO                           { return DO; }
 NOTHING                      { return NOTHING; }
 UPDATE                       { return UPDATE; }
@@ -131,11 +137,11 @@ OVER                         { return OVER; }
 ":="                         { return ASSIGN; }
 "=="                         { return EQEQ; }
 "||"                         { return CONCAT; }
-IS[ \t]+NOT[ \t]FALSE/[^A-Z_] { return IS_NOT_FALSE; }
-IS[ \t]+NOT[ \t]TRUE/[^A-Z_] { return IS_NOT_TRUE; }
-IS[ \t]+FALSE/[^A-Z_]        { return IS_FALSE; }
-IS[ \t]+TRUE/[^A-Z_]         { return IS_TRUE; }
-IS[ \t]+NOT/[^A-Z_]          { return IS_NOT; }
+IS{sp}NOT{sp}FALSE/{stop}    { return IS_NOT_FALSE; }
+IS{sp}NOT{sp}TRUE/{stop}     { return IS_NOT_TRUE; }
+IS{sp}FALSE/{stop}           { return IS_FALSE; }
+IS{sp}TRUE/{stop}            { return IS_TRUE; }
+IS{sp}NOT/{stop}             { return IS_NOT; }
 ISNULL                       { return ISNULL; }
 NOTNULL                      { return NOTNULL; }
 IS                           { return IS; }
@@ -161,21 +167,21 @@ FUNCTION                     { return FUNCTION; }
 FUNC                         { return FUNC; }
 BEGIN                        { return BEGIN_; }
 IN                           { return IN; }
-NOT[ \t]+IN/[^A-Z_]          { return NOT_IN; }
+NOT{sp}IN/{stop}             { return NOT_IN; }
 TO                           { return TO; }
 FOR                          { return FOR; }
 THROW                        { return THROW; }
 TRY                          { return TRY; }
 CATCH                        { return CATCH; }
-NOT[ \t]+LIKE/[^A-Z_]        { return NOT_LIKE; }
+NOT{sp}LIKE/{stop}           { return NOT_LIKE; }
 LIKE                         { return LIKE; }
-NOT[ \t]+MATCH/[^A-Z_]       { return NOT_MATCH; }
+NOT{sp}MATCH/{stop}          { return NOT_MATCH; }
 MATCH                        { return MATCH; }
-NOT[ \t]+REGEXP/[^A-Z_]      { return NOT_REGEXP; }
+NOT{sp}REGEXP/{stop}         { return NOT_REGEXP; }
 REGEXP                       { return REGEXP; }
-NOT[ \t]+GLOB/[^A-Z_]        { return NOT_GLOB; }
+NOT{sp}GLOB/{stop}           { return NOT_GLOB; }
 GLOB                         { return GLOB; }
-NOT[ \t]+BETWEEN/[^A-Z_]     { return NOT_BETWEEN; }
+NOT{sp}BETWEEN/{stop}        { return NOT_BETWEEN; }
 BETWEEN                      { return BETWEEN; }
 OUT                          { return OUT; }
 INOUT                        { return INOUT; }
@@ -187,7 +193,7 @@ LEAVE                        { return LEAVE; }
 CONTINUE                     { return CONTINUE; }
 OPEN                         { return OPEN; }
 CLOSE                        { return CLOSE; }
-ELSE[ \t]+IF/[^A-Z_0-9]      { return ELSE_IF; }
+ELSE{sp}IF/{stop}            { return ELSE_IF; }
 SAVEPOINT                    { return SAVEPOINT; }
 ROLLBACK                     { return ROLLBACK; }
 RAISE                        { return RAISE; }
@@ -235,7 +241,7 @@ RETURN                       { return RETURN; }
 @EMIT_ENUMS                  { return AT_EMIT_ENUMS; }
 DEFERRED                     { return DEFERRED; }
 DEFERRABLE                   { return DEFERRABLE; }
-NOT[ \t]+DEFERRABLE/[^A-Z_]  { return NOT_DEFERRABLE; }
+NOT{sp}DEFERRABLE/{stop}     { return NOT_DEFERRABLE; }
 IMMEDIATE                    { return IMMEDIATE; }
 EXCLUSIVE                    { return EXCLUSIVE; }
 RESTRICT                     { return RESTRICT; }
@@ -247,30 +253,30 @@ AFTER                        { return AFTER; }
 INSTEAD                      { return INSTEAD; }
 OF                           { return OF; }
 TRIGGER                      { return TRIGGER; }
-FOR[ \t]+EACH[ \t]+ROW       { return FOR_EACH_ROW; }
+FOR{sp}EACH{sp}ROW/{stop}    { return FOR_EACH_ROW; }
 ENCODE                       { return ENCODE; }
-CONTEXT[ \t]+COLUMN          { return CONTEXT_COLUMN; }
-CONTEXT[ \t]+TYPE            { return CONTEXT_TYPE; }
+CONTEXT{sp}COLUMN/{stop}     { return CONTEXT_COLUMN; }
+CONTEXT{sp}TYPE/{stop}       { return CONTEXT_TYPE; }
 
-0x[0-9a-fA-F]+               { char *s = Strdup(yytext); yylval.sval = s; return strtoll(s+2, NULL, 16) <= 0x7fffffff ? INTLIT: LONGLIT; }
-0x[0-9a-fA-F]+L              { char *s = Strdup(yytext); s[strlen(s)-1] = 0; /* remove the L */ yylval.sval = s; return LONGLIT; }
-[0-9]+                       { char *s = Strdup(yytext); yylval.sval = s; return atoll(s) <= 0x7fffffff ? INTLIT: LONGLIT; }
-[0-9]+L                      { char *s = Strdup(yytext); s[strlen(s)-1] = 0; /* remove the L */ yylval.sval = s; return LONGLIT; }
+0x{hex}+                     { char *s = Strdup(yytext); yylval.sval = s; return strtoll(s+2, NULL, 16) <= 0x7fffffff ? INTLIT: LONGLIT; }
+0x{hex}+L                    { char *s = Strdup(yytext); s[strlen(s)-1] = 0; /* remove the L */ yylval.sval = s; return LONGLIT; }
+{d}+                         { char *s = Strdup(yytext); yylval.sval = s; return atoll(s) <= 0x7fffffff ? INTLIT: LONGLIT; }
+{d}+L                        { char *s = Strdup(yytext); s[strlen(s)-1] = 0; /* remove the L */ yylval.sval = s; return LONGLIT; }
 
-([0-9]+"."[0-9]*|"."[0-9]+)(E("+"|"-")?[0-9]+)? { yylval.sval = Strdup(yytext); return REALLIT; }
+({d}+"."{d}*|"."{d}+)(E("+"|"-")?{d}+)? { yylval.sval = Strdup(yytext); return REALLIT; }
 
 \"(\\.|[^\\"\n])*\"          { yylval.sval = Strdup(yytext); return CSTRLIT; }
 '(''|[^'\n])*'               { yylval.sval = Strdup(yytext); return STRLIT; }
-X'([0-9a-fA-F][0-9a-fA-F])*' { yylval.sval = Strdup(yytext); return BLOBLIT; }
+X'({hex}{hex})*'             { yylval.sval = Strdup(yytext); return BLOBLIT; }
 [-+&~|^/%*(),.;!<>:=]        { return yytext[0]; }
-[_A-Za-z][A-Za-z0-9_]*       { yylval.sval = Strdup(yytext); return ID; }
+[_A-Z][A-Z0-9_]*             { yylval.sval = Strdup(yytext); return ID; }
 
 [ \t\n]                      ;
 \-\-.*                       ;
 
 .                            { yyerror("Unexpected %s\n", yytext); }
 
-^#\ [0-9]+\ \"[^"]*\".*      { line_directive(yytext); }
+^#\ {d}+\ \"[^"]*\".*        { line_directive(yytext); }
 
 "/*"                         { // sqlite supports C style comments... ignore those
                                int c1 = 0, c2 = input();
