@@ -1,0 +1,28 @@
+-- RUN test/cql_amalgam_test_success.sql:
+CREATE TABLE t(
+  a TEXT,
+  b INTEGER
+);
+
+SELECT a, b
+  FROM t;
+
+-- RUN test/cql_amalgam_test_semantic_error.sql:
+CREATE TABLE t(
+  a TEXT,
+  b INTEGER
+);
+
+SELECT bogus
+  FROM t;
+
+-- RUN test/cql_amalgam_test_syntax_error.sql:
+
+-- RUN test/cql_amalgam_test_success.sql:
+CREATE TABLE t(
+  a TEXT,
+  b INTEGER
+);
+
+SELECT a, b
+  FROM t;

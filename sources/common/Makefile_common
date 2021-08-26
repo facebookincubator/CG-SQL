@@ -223,3 +223,8 @@ $O/json_test: json_test/json_test.y json_test/json_test.l
 	$(CC) -c $(CFLAGS) -o $O/json_test.o $O/json_test.c
 	$(CC) -c $(CFLAGS) -o $O/json_test.y.o $O/json_test.y.c
 	$(CC) $(CFLAGS) -o $O/json_test $O/json_test.y.o $O/json_test.o
+
+amalgam_test:
+	bash make_amalgam.sh
+	$(CC) $(CFLAGS) -o $O/amalgam_test.o -c $T/amalgam_test.c
+	$(CC) $(CFLAGS) -o $O/amalgam_test $O/amalgam_test.o

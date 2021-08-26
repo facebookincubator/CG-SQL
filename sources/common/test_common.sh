@@ -99,6 +99,14 @@ building() {
     failed
   fi
 
+  echo building cql amalgam test
+  if ! do_make amalgam_test >"${OUT_DIR}/build.out" 2>"${OUT_DIR}/build.err"
+  then
+    echo build cql amalgam test failed:
+    cat "${OUT_DIR}/build.err"
+    failed
+  fi
+
   echo building cql-verify
   if ! (do_make cql-verify) 2>"${OUT_DIR}/build.err"
   then
@@ -1419,6 +1427,20 @@ line_number_test() {
   fi
 }
 
+amalgam_test() {
+  echo '--------------------------------- STAGE 17 -- TEST AMALGAM'
+
+  if ! ("./${OUT_DIR}/amalgam_test" "${TEST_DIR}/cql_amalgam_test_success.sql" "${TEST_DIR}/cql_amalgam_test_semantic_error.sql" "${TEST_DIR}/cql_amalgam_test_syntax_error.sql" >"${OUT_DIR}/cql_amalgam_test.out" 2>"${OUT_DIR}/cql_amalgam_test.err")
+  then
+    cat "${OUT_DIR}/cql_amalgam_test.err"
+    echo CQL amalgam tests failed
+    failed
+  fi
+
+  on_diff_exit cql_amalgam_test.out
+  on_diff_exit cql_amalgam_test.err
+}
+
 # add other stages before this one
 
 unit_tests() {
@@ -1471,6 +1493,7 @@ run_test
 upgrade_test
 query_plan_test
 line_number_test
+amalgam_test
 signatures_test
 extra_tests
 
