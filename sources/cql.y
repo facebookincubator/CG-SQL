@@ -77,6 +77,7 @@ int yylex();
 void yyerror(const char *s, ...);
 void yyset_in(FILE *);
 void yyset_lineno(int);
+void yyrestart(FILE *);
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wsign-conversion"
@@ -2112,6 +2113,15 @@ static void parse_cmd(int argc, char **argv) {
         cql_cleanup_and_exit(1);
       }
       yyset_in(f);
+      // reset the scanner to point to the newly input file (yyset_in(f)). Otherwise the scanner
+      // might continue to point to the input file from the previous run in case there are still
+      // a stream to read.
+      // Usually when the parser encouter a syntax error, it stops reading the input file.
+      // On the next run the scanner will want to continue and finish from where it stops
+      // before moving to the file of the current run.
+      // Therefore it's important to always do this because we're in a new run and should ignore
+      // previous run because a result were already produced for that prevous run.
+      yyrestart(f);
 
       current_file = argv[a];
     } else if (strcmp(arg, "--global_proc") == 0) {

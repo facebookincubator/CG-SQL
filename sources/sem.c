@@ -12221,12 +12221,10 @@ static void sem_update_cursor_stmt(ast_node *ast) {
     return;
   }
 
-  // count values, find end of the value list
-  ast_node *insert_list_tail = NULL;
+  // count values
   uint32_t cols = 0;
 
   for (ast_node *item = insert_list; item; item = item->right) {
-    insert_list_tail = item;
     cols++;
   }
 
