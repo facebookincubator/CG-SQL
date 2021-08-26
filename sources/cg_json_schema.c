@@ -1317,6 +1317,7 @@ static void cg_json_views(charbuf *output) {
       bprintf(output, ",\n\"deletedVersion\" : %d", ast->sem->delete_version);
       cg_json_deleted_migration_proc(output, view_and_attrs);
     }
+
     if (ast->sem->region) {
       cg_json_emit_region_info(output, ast);
     }
@@ -1328,6 +1329,7 @@ static void cg_json_views(charbuf *output) {
 
     cg_json_projection(output, select_stmt);
     cg_fragment_with_params(output, "select", select_stmt, gen_one_stmt);
+    cg_json_dependencies(output, ast);
     END_INDENT(view);
     bprintf(output, "\n}\n");
     i++;

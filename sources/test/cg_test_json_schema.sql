@@ -555,11 +555,16 @@ create index MyIndexWithAttributes on Foo(id);
 -- + "name" : "name",
 -- + "type" : "text",
 -- + "isNotNull" : 0
+-- + "fromTables" : [ "Foo" ],
+-- + "usesTables" : [ "Foo" ]
 create view MyView as select * from Foo;
 
 -- TEST: a second view, forces comma handling, caught by JSON parse test in test.sh
 -- +  CREATE VIEW MyOtherView AS
-create view MyOtherView as select * from Foo;
+-- + "fromTables" : [ "Foo" ],
+-- + "usesViews" : [ "MyView" ],
+-- + "usesTables" : [ "Foo" ]
+create view MyOtherView as select * from MyView;
 
 -- TEST: a view with attributes
 -- + @ATTRIBUTE(my_attribute=('any', ('tree', 'of'), 'values'))

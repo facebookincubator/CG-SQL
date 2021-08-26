@@ -366,7 +366,8 @@ view:  '{'
        opt_attributes
        projection
        SELECT STRING_LITERAL ','
-       SELECT_ARGS '[' ']'
+       SELECT_ARGS '[' ']' ','
+       dependencies
        '}'
   ;
 
