@@ -5,6 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_SEM)
+
+// stubs to avoid link errors, 
+
+cql_noexport void sem_main(ast_node *head) {}
+cql_noexport void sem_cleanup() {}
+cql_noexport void print_sem_type(struct sem_node *sem) {}
+
+#else
+
 // Perform semantic analysis of the various nodes and validate type correctness
 // the semantic nodes contain enough information that code can be generated
 // include, importantly, data about the shape of any given select statement
@@ -44,22 +54,6 @@
 
 static symtab *non_sql_stmts;
 static symtab *sql_stmts;
-
-// When validating against the previous schema we need to make sure all these items
-// have been validated.  Any that are found in the old schema must match appropriately
-// and any that are not found must have suitable @create markers.
-cql_data_defn( list_item *all_tables_list );
-cql_data_defn( list_item *all_functions_list );
-cql_data_defn( list_item *all_views_list );
-cql_data_defn( list_item *all_indices_list );
-cql_data_defn( list_item *all_triggers_list );
-cql_data_defn( list_item *all_regions_list );
-cql_data_defn( list_item *all_ad_hoc_list );
-cql_data_defn( list_item *all_select_functions_list );
-cql_data_defn( list_item *all_enums_list );
-cql_data_defn( bool_t use_encode );
-cql_data_defn( CSTR _Nullable encode_context_column );
-cql_data_defn( symtab *encode_columns );
 
 // Note: initialized statics are moot because in amalgam mode the code
 // will not be reloaded... you have to re-initialize all statics in the cleanup function
@@ -311,12 +305,6 @@ static int32_t sem_stmt_level;
 // for making unique names of between temporaries
 static int32_t between_count;
 
-// If creating debug/test output, we will hold errors for a given statement in this buffer.
-cql_data_defn( charbuf *error_capture );
-
-// The flags for the global proc (which has no ast node) this is what captures loose statements
-cql_data_defn( sem_t global_proc_flags );
-
 // If we are nested in a loop/while.
 static int32_t loop_depth;
 
@@ -339,9 +327,6 @@ static int32_t schema_upgrade_version;
 // In a schema upgrade script we don't hide tables and we don't use create statements
 // in procs as declarations.
 static bool_t schema_upgrade_script;
-
-// If there is a current proc, it's root ast.
-cql_data_defn(ast_node *current_proc);
 
 // The current schema region if any, these do not nest
 static CSTR current_region;
@@ -488,12 +473,6 @@ static symtab *misc_attributes;
 static ast_node *current_table_ast;
 static CSTR current_table_name;
 
-cql_data_defn( symtab *schema_regions );
-
-// These are the symbol tables with the accumulated included/excluded regions
-cql_data_defn( symtab *included_regions );
-cql_data_defn( symtab *excluded_regions );
-
 // during previous schema validations when we hit the previous section we have to
 // save these, they the new schema for later comparison
 static symtab *new_regions;
@@ -513,10 +492,6 @@ typedef struct cte_state {
 
 // top of the cte chain
 static cte_state *cte_cur;
-
-// all the schema annotations
-cql_data_defn( bytebuf *schema_annotations );
-cql_data_defn( bytebuf *recreate_annotations );
 
 // If the current context is a upsert statement
 static bool_t in_upsert;
@@ -1188,29 +1163,6 @@ static bool_t is_join(sem_t sem_type) {
 
 cql_noexport bool_t is_numeric_expr(ast_node *expr) {
   return is_numeric_compat(expr->sem->sem_type);
-}
-
-cql_noexport bool_t is_select_stmt(ast_node *ast) {
-  return is_ast_select_stmt(ast) ||
-         is_ast_explain_stmt(ast) ||
-         is_ast_with_select_stmt(ast);
-}
-
-cql_noexport bool_t is_delete_stmt(ast_node *ast) {
-  return is_ast_delete_stmt(ast) ||
-         is_ast_with_delete_stmt(ast);
-}
-
-cql_noexport bool_t is_update_stmt(ast_node *ast) {
-  return is_ast_update_stmt(ast) ||
-         is_ast_with_update_stmt(ast);
-}
-
-cql_noexport bool_t is_insert_stmt(ast_node *ast) {
-  return is_ast_insert_stmt(ast) ||
-         is_ast_with_insert_stmt(ast) ||
-         is_ast_upsert_stmt(ast) ||
-         is_ast_with_upsert_stmt(ast);
 }
 
 cql_noexport bool_t is_autotest_dummy_table(CSTR name) {
@@ -19934,3 +19886,41 @@ cql_noexport void sem_cleanup() {
   notnull_improved_globals = NULL;
   current_notnull_improvement_context = NULL;
 }
+
+#endif
+
+// When validating against the previous schema we need to make sure all these items
+// have been validated.  Any that are found in the old schema must match appropriately
+// and any that are not found must have suitable @create markers.
+cql_data_defn( list_item *all_tables_list );
+cql_data_defn( list_item *all_functions_list );
+cql_data_defn( list_item *all_views_list );
+cql_data_defn( list_item *all_indices_list );
+cql_data_defn( list_item *all_triggers_list );
+cql_data_defn( list_item *all_regions_list );
+cql_data_defn( list_item *all_ad_hoc_list );
+cql_data_defn( list_item *all_select_functions_list );
+cql_data_defn( list_item *all_enums_list );
+cql_data_defn( bool_t use_encode );
+cql_data_defn( CSTR _Nullable encode_context_column );
+cql_data_defn( symtab *encode_columns );
+
+// If creating debug/test output, we will hold errors for a given statement in this buffer.
+cql_data_defn( charbuf *error_capture );
+
+// The flags for the global proc (which has no ast node) this is what captures loose statements
+cql_data_defn( sem_t global_proc_flags );
+
+// If there is a current proc, it's root ast.
+cql_data_defn(ast_node *current_proc);
+
+cql_data_defn( symtab *schema_regions );
+
+// These are the symbol tables with the accumulated included/excluded regions
+cql_data_defn( symtab *included_regions );
+cql_data_defn( symtab *excluded_regions );
+
+// all the schema annotations
+cql_data_defn( bytebuf *schema_annotations );
+cql_data_defn( bytebuf *recreate_annotations );
+

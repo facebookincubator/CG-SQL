@@ -5,6 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_TEST_HELPERS)
+
+// stubs to avoid link errors
+cql_noexport void cg_test_helpers_main(ast_node *head) {}
+
+#else
+
 // Given a procedure, we can create a temp table that has the exact shape as the proc
 // We can then insert and select from the temp table to fake a result set
 // This file performs codegen for those procedures
@@ -1164,3 +1171,5 @@ cql_noexport void cg_test_helpers_main(ast_node *head) {
   helper_flags = 0;
   write_to_file = 0;
 }
+
+#endif

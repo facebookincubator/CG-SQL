@@ -5,6 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_SEM)
+
+// stubs to avoid link errors (none needed)
+
+#else
+
 #include "printf.h"
 
 // Declares the single-character C string `name` given a character `c`.
@@ -474,3 +480,5 @@ cql_noexport sem_t printf_iterator_next(printf_iterator *iterator) {
     iterator->format_string++;
   }
 }
+
+#endif

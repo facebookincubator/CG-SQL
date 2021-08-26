@@ -94,6 +94,29 @@ cql_noexport bool_t is_region(ast_node *ast) {
   return is_ast_declare_schema_region_stmt(ast) || is_ast_declare_deployable_region_stmt(ast);
 }
 
+cql_noexport bool_t is_select_stmt(ast_node *ast) {
+  return is_ast_select_stmt(ast) ||
+         is_ast_explain_stmt(ast) ||
+         is_ast_with_select_stmt(ast);
+}
+
+cql_noexport bool_t is_delete_stmt(ast_node *ast) {
+  return is_ast_delete_stmt(ast) ||
+         is_ast_with_delete_stmt(ast);
+}
+
+cql_noexport bool_t is_update_stmt(ast_node *ast) {
+  return is_ast_update_stmt(ast) ||
+         is_ast_with_update_stmt(ast);
+}
+
+cql_noexport bool_t is_insert_stmt(ast_node *ast) {
+  return is_ast_insert_stmt(ast) ||
+         is_ast_with_insert_stmt(ast) ||
+         is_ast_upsert_stmt(ast) ||
+         is_ast_with_upsert_stmt(ast);
+}
+
 cql_noexport bool_t ast_has_left(ast_node *node) {
   if (is_primitive(node)) {
     return false;
@@ -613,10 +636,14 @@ cql_noexport void print_ast(ast_node *node, ast_node *parent, int32_t pad, bool_
         gen_one_stmt_to_stdout(stmt);
         cql_output("\n");
 
+#if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_SEM)
+        // sem off, nothing to print here
+#else
         // print any error text
         if (stmt->sem && stmt->sem->sem_type == SEM_TYPE_ERROR && stmt->sem->error) {
           cql_output("%s\n", stmt->sem->error);
         }
+#endif
       }
     }
     print_ast_type(node);
@@ -677,3 +704,5 @@ cql_noexport ast_node *copy_ast_tree(ast_node *_Nonnull node) {
   Invariant(new_node);
   return new_node;
 }
+
+

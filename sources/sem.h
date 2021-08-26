@@ -7,6 +7,18 @@
 
 #pragma once
 
+typedef uint64_t sem_t;
+
+#if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_SEM)
+
+// minimal stuff goes here
+
+cql_noexport void sem_main(ast_node *node);
+cql_noexport void sem_cleanup(void);
+cql_noexport void print_sem_type(struct sem_node *sem);
+
+#else
+
 #include "cql.h"
 #include "ast.h"
 #include "bytebuf.h"
@@ -33,7 +45,6 @@
 
 // @lint-ignore-every LINEWRAP
 
-typedef uint64_t sem_t;
 #define sem_not(x) u64_not(x)
 
 typedef struct sem_node {
@@ -103,9 +114,6 @@ typedef struct schema_annotation {
 #define SCHEMA_ANNOTATION_AD_HOC 8
 #define SCHEMA_ANNOTATION_LAST 8
 
-cql_data_decl( bytebuf *schema_annotations );
-cql_data_decl( bytebuf *recreate_annotations );
-
 #define SEM_TYPE_NULL 0         // the subtree is a null literal (not just nullable)
 #define SEM_TYPE_BOOL 1         // the subtree is a bool
 #define SEM_TYPE_INTEGER 2      // the subtree is an integer
@@ -173,8 +181,6 @@ cql_data_decl( bytebuf *recreate_annotations );
 #define CURRENT_EXPR_CONTEXT_IS(x)  (!!(current_expr_context & (x)))
 #define CURRENT_EXPR_CONTEXT_IS_NOT(x)  (!(current_expr_context & (x)))
 
-#define has_hex_prefix(s) (s[0] == '0' && (s[1] == 'x' || s[1] == 'X'))
-
 cql_noexport sem_t core_type_of(sem_t sem_type);
 cql_noexport sem_t sensitive_flag(sem_t sem_type);
 cql_noexport CSTR coretype_string(sem_t sem_type);
@@ -209,10 +215,6 @@ cql_noexport bool_t is_object(sem_t sem_type);
 cql_noexport bool_t is_ref_type(sem_t sem_type);
 cql_noexport bool_t is_nullable(sem_t sem_type);
 cql_noexport bool_t is_null_type(sem_t sem_type);
-cql_noexport bool_t is_select_stmt(ast_node *ast);
-cql_noexport bool_t is_delete_stmt(ast_node *ast);
-cql_noexport bool_t is_insert_stmt(ast_node *ast);
-cql_noexport bool_t is_update_stmt(ast_node *ast);
 cql_noexport bool_t has_result_set(ast_node *ast);
 cql_noexport bool_t has_out_stmt_result(ast_node *ast);
 cql_noexport bool_t has_out_union_call(ast_node *ast);
@@ -246,6 +248,34 @@ cql_noexport sem_t find_column_type(CSTR table_name, CSTR column_name);
 cql_noexport void init_encode_info(ast_node *misc_attrs, bool_t *use_encode_arg, CSTR *encode_context_column_arg, symtab *encode_columns_arg);
 cql_noexport bool_t should_encode_col(CSTR col, sem_t sem_type, bool_t use_encode_arg, symtab *encode_columns_arg);
 
+#define LIKEABLE_FOR_ARGS   1
+#define LIKEABLE_FOR_VALUES 2
+
+cql_noexport ast_node *sem_find_likeable_ast(ast_node *like_ast, int32_t likeable_for);
+cql_noexport ast_node *sem_find_likeable_from_var_type(ast_node *var);
+cql_noexport ast_node *find_named_type(CSTR name);
+
+cql_noexport void record_error(ast_node *ast);
+cql_noexport void record_ok(ast_node *ast);
+cql_noexport void report_error(ast_node *ast, CSTR msg, CSTR subject);
+cql_noexport void sem_one_stmt(ast_node *ast);
+cql_noexport void sem_root_expr(ast_node *node, uint32_t expr_context);
+cql_noexport void sem_expr(ast_node *node);
+cql_noexport void sem_cursor(ast_node *ast);
+cql_noexport ast_node *find_arg_bundle(CSTR name);
+cql_noexport bool_t add_arg_bundle(ast_node *ast, CSTR name);
+cql_noexport void sem_add_flags(ast_node *ast, sem_t flags);
+cql_noexport ast_node *first_arg(ast_node *arg_list);
+cql_noexport ast_node *second_arg(ast_node *arg_list);
+cql_noexport ast_node *third_arg(ast_node *arg_list);
+cql_noexport void sem_verify_no_anon_no_null_columns(ast_node *ast);
+cql_noexport void sem_any_shape(ast_node *ast);
+
+#endif
+
+cql_data_decl( bytebuf *schema_annotations );
+cql_data_decl( bytebuf *recreate_annotations );
+
 cql_data_decl( struct list_item *all_tables_list );
 cql_data_decl( struct list_item *all_functions_list );
 cql_data_decl( struct list_item *all_views_list );
@@ -270,25 +300,3 @@ cql_data_decl( symtab *included_regions );
 cql_data_decl( symtab *excluded_regions );
 cql_data_decl( sem_t global_proc_flags );
 
-#define LIKEABLE_FOR_ARGS   1
-#define LIKEABLE_FOR_VALUES 2
-
-cql_noexport ast_node *sem_find_likeable_ast(ast_node *like_ast, int32_t likeable_for);
-cql_noexport ast_node *sem_find_likeable_from_var_type(ast_node *var);
-cql_noexport ast_node *find_named_type(CSTR name);
-
-cql_noexport void record_error(ast_node *ast);
-cql_noexport void record_ok(ast_node *ast);
-cql_noexport void report_error(ast_node *ast, CSTR msg, CSTR subject);
-cql_noexport void sem_one_stmt(ast_node *ast);
-cql_noexport void sem_root_expr(ast_node *node, uint32_t expr_context);
-cql_noexport void sem_expr(ast_node *node);
-cql_noexport void sem_cursor(ast_node *ast);
-cql_noexport ast_node *find_arg_bundle(CSTR name);
-cql_noexport bool_t add_arg_bundle(ast_node *ast, CSTR name);
-cql_noexport void sem_add_flags(ast_node *ast, sem_t flags);
-cql_noexport ast_node *first_arg(ast_node *arg_list);
-cql_noexport ast_node *second_arg(ast_node *arg_list);
-cql_noexport ast_node *third_arg(ast_node *arg_list);
-cql_noexport void sem_verify_no_anon_no_null_columns(ast_node *ast);
-cql_noexport void sem_any_shape(ast_node *ast);

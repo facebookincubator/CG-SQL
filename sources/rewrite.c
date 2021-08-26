@@ -5,10 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// Perform semantic analysis of the various nodes and validate type correctness
-// the semantic nodes contain enough information that code can be generated
-// include, importantly, data about the shape of any given select statement
-// and the type of any expression.
+#if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_SEM)
+
+// stubs to avoid link errors (none needed)
+
+#else
+
+// Most of the functions that rewrite the AST have been hoisted out of sem.c and are here
+// Rewrites always happen during semantic analysis so this is really part of that phase.
 
 #include <stdint.h>
 #include <stdio.h>
@@ -1382,3 +1386,5 @@ cql_noexport void rewrite_guard_stmt_to_if_stmt(ast_node *_Nonnull ast) {
 
   sem_one_stmt(ast);
 }
+
+#endif

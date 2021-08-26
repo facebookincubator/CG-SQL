@@ -7,6 +7,12 @@
 
 #pragma once
 
+#if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_SEM)
+
+// minimal stuff goes here
+
+#else
+
 #include "ast.h"
 #include "bytebuf.h"
 #include "symtab.h"
@@ -37,3 +43,5 @@ cql_noexport void rewrite_data_type_if_needed(ast_node *_Nonnull ast);
 cql_noexport void rewrite_right_col_def_type_attrs_if_needed(ast_node *_Nonnull ast);
 cql_noexport void rewrite_nullable_to_unsafe_notnull(ast_node *_Nonnull ast);
 cql_noexport void rewrite_guard_stmt_to_if_stmt(ast_node *_Nonnull ast);
+
+#endif

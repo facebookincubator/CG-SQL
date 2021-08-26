@@ -5,6 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_SEM)
+
+// minimal stuff goes here (none at this point)
+
+#else
+
 //
 // A `printf_iterator` allows for analysis of SQLite printf format strings. It
 // should be used in the following manner:
@@ -55,3 +61,5 @@ cql_noexport void printf_iterator_init(printf_iterator *iterator, ast_node *form
 // In the lattermost two cases, parsing is finished and `printf_iterator_next`
 // must not be called again.
 cql_noexport sem_t printf_iterator_next(printf_iterator *iterator);
+
+#endif

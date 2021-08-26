@@ -5,6 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+
+#if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_JSON)
+
+// stubs to avoid link errors
+cql_noexport void cg_json_schema_main(ast_node *head) {}
+
+#else
+
 // Perform codegen of the various nodes to json schema format
 
 #include "cg_json_schema.h"
@@ -2214,3 +2222,4 @@ cql_noexport void cg_json_schema_main(ast_node *head) {
 
   SYMTAB_CLEANUP(tables_to_procs);
 }
+#endif
