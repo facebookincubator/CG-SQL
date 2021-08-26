@@ -19,7 +19,7 @@ create table bar(
 
 @attribute(cql:identity=(intcol, longcol))
 @attribute(cql:vault_sensitive=(blobcol, textcol))
-@attribute(cql:encode_custom_type_on)
+@attribute(cql:custom_type_for_encoded_column)
 create proc non_empty_proc()
 begin
   select * from bar;

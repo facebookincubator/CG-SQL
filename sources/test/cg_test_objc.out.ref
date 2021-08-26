@@ -6,6 +6,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class CGOEncodedString;
+
 @class CGBWithResultSet;
 
 static inline CGBWithResultSet *CGBWithResultSetFromCGCWithResultSet(CGCWithResultSetResultSetRef resultSet)
@@ -2038,10 +2040,10 @@ static inline int32_t CGBVaultSensitiveWithValuesProcGetId(CGBVaultSensitiveWith
   return CGCVaultSensitiveWithValuesProcGetId(cResultSet, row);
 }
 
-static inline NSString *_Nullable CGBVaultSensitiveWithValuesProcGetName(CGBVaultSensitiveWithValuesProc *resultSet, int32_t row)
+static inline CGOEncodedString *_Nullable CGBVaultSensitiveWithValuesProcGetName(CGBVaultSensitiveWithValuesProc *resultSet, int32_t row)
 {
   CGCVaultSensitiveWithValuesProcResultSetRef cResultSet = CGCVaultSensitiveWithValuesProcFromCGBVaultSensitiveWithValuesProc(resultSet);
-  return (__bridge NSString *)CGCVaultSensitiveWithValuesProcGetName(cResultSet, row);
+  return (__bridge CGOEncodedString *)CGCVaultSensitiveWithValuesProcGetName(cResultSet, row);
 }
 
 static inline NSString *_Nullable CGBVaultSensitiveWithValuesProcGetTitle(CGBVaultSensitiveWithValuesProc *resultSet, int32_t row)

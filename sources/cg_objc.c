@@ -27,6 +27,9 @@ static charbuf *objc_extension_header = NULL;
 
 static uint32_t objc_frag_type;
 
+// Whether a text column in the result set of a proc is encoded
+static bool_t is_string_column_encoded = 0;
+
 static void cg_objc_proc_result_set_c_getter(
   bool_t fetch_proc,
   charbuf *buffer,
@@ -62,7 +65,9 @@ static void cg_objc_proc_result_set_getter(
   CSTR c_convert,
   uint32_t col,
   sem_t sem_type,
-  charbuf *output)
+  charbuf *output,
+  bool_t encode,
+  bool_t custom_type_for_encoded_column)
 {
   Contract(is_unitary(sem_type));
   sem_t core_type = core_type_of(sem_type);
@@ -70,10 +75,10 @@ static void cg_objc_proc_result_set_getter(
   Contract(cg_main_output);
 
   bool_t nullable = is_nullable(sem_type);
-  CSTR return_type;
+  CHARBUF_OPEN(return_type);
   CSTR return_type_separator = "";
 
-  CSTR value_convert_begin = "";
+  CHARBUF_OPEN(value_convert_begin);
   CSTR value_convert_end = "";
   CSTR c_getter_suffix = "";
 
@@ -103,61 +108,73 @@ static void cg_objc_proc_result_set_getter(
       case SEM_TYPE_LONG_INTEGER:
       case SEM_TYPE_REAL:
       case SEM_TYPE_BOOL:
-        return_type = "NSNumber *_Nullable";
+        bprintf(&return_type, "%s", "NSNumber *_Nullable");
         return_type_separator = " ";
-        value_convert_begin = "@(";
+         bprintf(&value_convert_begin, "%s", "@(");
         value_convert_end = ")";
         c_getter_suffix = "_value";
         cg_objc_proc_result_set_c_getter(fetch_proc, &value, name, col_name, "_is_null", is_private);
         bprintf(&value, " ? nil : ");
         break;
       case SEM_TYPE_BLOB:
-        return_type = "NSData *_Nullable";
+        bprintf(&return_type, "%s_Nullable", rt->cql_blob_ref);
         return_type_separator = " ";
-        value_convert_begin = "(__bridge NSData *)";
+        bprintf(&value_convert_begin, "(__bridge %s)", rt->cql_blob_ref);
         break;
       case SEM_TYPE_TEXT:
-        return_type = "NSString *_Nullable";
+        if (encode && custom_type_for_encoded_column && !fetch_proc) {
+          is_string_column_encoded = 1;
+          bprintf(&return_type, "%s *_Nullable", rt->cql_string_ref_encode);
+          bprintf(&value_convert_begin, "(__bridge %s *)", rt->cql_string_ref_encode);
+        } else {
+          bprintf(&return_type, "%s_Nullable", rt->cql_string_ref);
+          bprintf(&value_convert_begin, "(__bridge %s)", rt->cql_string_ref);
+        }
         return_type_separator = " ";
-        value_convert_begin = "(__bridge NSString *)";
         break;
       case SEM_TYPE_OBJECT:
-        return_type = "NSObject *_Nullable";
+        bprintf(&return_type, "%s_Nullable", rt->cql_object_ref);
         return_type_separator = " ";
-        value_convert_begin = "(__bridge NSObject *)";
+        bprintf(&value_convert_begin, "(__bridge %s)", rt->cql_object_ref);
         break;
     }
   } else {
     switch (core_type) {
       case SEM_TYPE_INTEGER:
         return_type_separator = " ";
-        return_type = rt->cql_int32;
+        bprintf(&return_type, "%s", rt->cql_int32);
         break;
       case SEM_TYPE_LONG_INTEGER:
         return_type_separator = " ";
-        return_type = rt->cql_int64;
+        bprintf(&return_type, "%s", rt->cql_int64);
         break;
       case SEM_TYPE_REAL:
         return_type_separator = " ";
-        return_type = rt->cql_double;
+        bprintf(&return_type, "%s", rt->cql_double);
         break;
       case SEM_TYPE_BOOL:
         return_type_separator = " ";
-        return_type = rt->cql_bool;
+        bprintf(&return_type, "%s", rt->cql_bool);
         value_convert_end = " ? YES : NO";
         break;
       case SEM_TYPE_TEXT:
-        return_type = rt->cql_string_ref;
-        value_convert_begin = "(__bridge NSString *)";
+        if (encode && custom_type_for_encoded_column && !fetch_proc) {
+          is_string_column_encoded = 1;
+          bprintf(&return_type, "%s", rt->cql_string_ref_encode);
+          bprintf(&value_convert_begin, "(__bridge %s *)", rt->cql_string_ref_encode);
+        } else {
+          bprintf(&return_type, "%s", rt->cql_string_ref);
+          bprintf(&value_convert_begin, "(__bridge %s)", rt->cql_string_ref);
+        }
         break;
       case SEM_TYPE_BLOB:
-        return_type = rt->cql_blob_ref;
-        value_convert_begin = "(__bridge NSData *)";
+        bprintf(&return_type, "%s", rt->cql_blob_ref);
+        bprintf(&value_convert_begin, "(__bridge %s)", rt->cql_blob_ref);
         break;
       case SEM_TYPE_OBJECT:
-        return_type = rt->cql_object_ref;
+        bprintf(&return_type, "%s", rt->cql_object_ref);
         return_type_separator = " ";
-        value_convert_begin = "(__bridge NSObject *)";
+        bprintf(&value_convert_begin, "(__bridge %s)", rt->cql_object_ref);
         break;
     }
   }
@@ -189,13 +206,13 @@ static void cg_objc_proc_result_set_getter(
 
   if (fetch_proc) {
     bprintf(&value, "%s%s(cResultSet)%s",
-            value_convert_begin,
+            value_convert_begin.ptr,
             c_getter.ptr,
             value_convert_end);
   }
   else {
     bprintf(&value, "%s%s(cResultSet, row)%s",
-            value_convert_begin,
+            value_convert_begin.ptr,
             c_getter.ptr,
             value_convert_end);
   }
@@ -206,7 +223,7 @@ static void cg_objc_proc_result_set_getter(
     CG_CHARBUF_OPEN_SYM(objc_parent_name, base_fragment_name);
     bprintf(output,
             "\nstatic inline %s%s%s(%s *resultSet, %s row)\n",
-            return_type,
+            return_type.ptr,
             return_type_separator,
             objc_getter.ptr,
             objc_parent_name.ptr,
@@ -218,7 +235,7 @@ static void cg_objc_proc_result_set_getter(
     if (fetch_proc) {
       bprintf(output,
               "\nstatic inline %s%s%s(%s *resultSet)\n",
-              return_type,
+              return_type.ptr,
               return_type_separator,
               objc_getter.ptr,
               objc_name);
@@ -226,7 +243,7 @@ static void cg_objc_proc_result_set_getter(
     else {
       bprintf(output,
               "\nstatic inline %s%s%s(%s *resultSet, %s row)\n",
-              return_type,
+              return_type.ptr,
               return_type_separator,
               objc_getter.ptr,
               objc_name,
@@ -243,6 +260,8 @@ static void cg_objc_proc_result_set_getter(
   CHARBUF_CLOSE(symbol_prefix);
   CHARBUF_CLOSE(impl_symbol_prefix);
   CHARBUF_CLOSE(value);
+  CHARBUF_CLOSE(value_convert_begin);
+  CHARBUF_CLOSE(return_type);
 }
 
 static void cg_objc_proc_result_set(ast_node *ast) {
@@ -276,6 +295,7 @@ static void cg_objc_proc_result_set(ast_node *ast) {
     Contract(base_fragment_name);
   }
 
+  bool_t custom_type_for_encoded_column = !!exists_attribute_str(misc_attrs, "custom_type_for_encoded_column");
   CSTR c_result_set_name = is_ext ? base_fragment_name : name;
   charbuf *h = is_ext ? objc_extension_header : cg_header_output;
 
@@ -335,7 +355,9 @@ static void cg_objc_proc_result_set(ast_node *ast) {
       c_convert.ptr,
       i,
       sem_type,
-      h);
+      h,
+      should_encode_col(col, sem_type, use_encode, encode_columns),
+      custom_type_for_encoded_column);
   }
 
   if (use_encode) {
@@ -532,6 +554,7 @@ static void cg_objc_init(void) {
 // Main entry point for code-gen.
 cql_noexport void cg_objc_main(ast_node *head) {
   Invariant(options.file_names_count == 1);
+  Invariant(is_string_column_encoded == 0);
   if (!options.objc_c_include_path) {
     cql_error("The C header path must be provided as argument (use --objc_c_include_path)\n");
     cql_cleanup_and_exit(1);
@@ -554,6 +577,10 @@ cql_noexport void cg_objc_main(ast_node *head) {
 
   bprintf(&header_file, "%s", rt->header_wrapper_begin);
 
+  if (is_string_column_encoded) {
+    bprintf(&header_file, "\n@class %s;\n", rt->cql_string_ref_encode);
+  }
+
   bprintf(&header_file, "%s", cg_header_output->ptr);
   bprintf(&header_file, "%s", rt->header_wrapper_end);
 
@@ -566,4 +593,5 @@ cql_noexport void cg_objc_main(ast_node *head) {
 
   // reset globals so they don't interfere with leaksan
   objc_extension_header = NULL;
+  is_string_column_encoded = 0;
 }

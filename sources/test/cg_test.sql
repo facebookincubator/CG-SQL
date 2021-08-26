@@ -2936,6 +2936,7 @@ create table vault_non_sensitive(
 -- + CQL_DATA_TYPE_STRING, // title
 -- + CQL_DATA_TYPE_INT64, // type
 @attribute(cql:vault_sensitive=(id, name))
+@attribute(cql:custom_type_for_encoded_column)
 create proc vault_sensitive_with_values_proc()
 begin
  select * from vault_mixed_sensitive;

@@ -119,6 +119,7 @@ static rtdata rt_objc = {
   .generate_type_getters = 1,
   .generate_equality_macros = 1,
   .symbol_prefix = RT_SYM_PREFIX,
+  .object_prefix = RT_OBJC_PREFIX,
   .impl_symbol_prefix = RT_IMPL_SYMBOL_PREFIX,
   .cql_hash_code = "NSUInteger",
   .cql_bool = "BOOL",
@@ -129,6 +130,8 @@ static rtdata rt_objc = {
   .cql_blob_ref = "NSData *",
   .cql_object_ref = "NSObject *",
   .cql_string_ref = "NSString *",
+  .cql_string_ref_encode = RT_OBJC_PREFIX "EncodedString",
+  .cql_string_ref_encode_include = "",
   .cql_result_set_note_ownership_transferred = "cql_result_set_note_ownership_transferred",
 };
 
@@ -152,6 +155,7 @@ static rtdata rt_java = {
   .register_proc_name = RT_REGISTER_PROC_NAME,
   .proc_should_generate_copy = RT_SHOULD_GENERATE_COPY,
   .symbol_prefix = "",
+  .object_prefix = "",
   .impl_symbol_prefix = "",
   .cql_hash_code = "long",
   .cql_bool = "boolean",

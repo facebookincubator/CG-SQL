@@ -7,7 +7,7 @@
 
 /* this is a demo procedure, it's rather silly... */
 @attribute(cql:vault_sensitive)
-@attribute(cql:encode_custom_type_on)
+@attribute(cql:custom_type_for_encoded_column)
 create proc Sample()
 begin
   /* add the table we will be using */

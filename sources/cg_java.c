@@ -78,7 +78,7 @@ static void cg_java_proc_result_set_getter(bool_t fetch_proc,
                                            charbuf *java,
                                            sem_t sem_type,
                                            bool_t encode,
-                                           bool_t encode_custom_type_on,
+                                           bool_t custom_type_for_encoded_column,
                                            uint32_t frag_type,
                                            uint32_t col_count_for_base) {
   Contract(is_unitary(sem_type));
@@ -105,7 +105,7 @@ static void cg_java_proc_result_set_getter(bool_t fetch_proc,
 
     case SEM_TYPE_TEXT:
       nullable_prefix = "";
-      if (encode && encode_custom_type_on) {
+      if (encode && custom_type_for_encoded_column) {
         return_type = rt->cql_string_ref_encode;
         field_type = rt->cql_string_ref_encode;
       } else {
@@ -384,7 +384,7 @@ static void cg_java_proc_result_set(ast_node *ast, cg_java_context *java_context
   encode_columns = symtab_new();
   init_encode_info(misc_attrs, &use_encode, &encode_context_column, encode_columns);
 
-  bool_t encode_custom_type_on = !!exists_attribute_str(misc_attrs, "encode_custom_type_on");
+  bool_t custom_type_for_encoded_column = !!exists_attribute_str(misc_attrs, "custom_type_for_encoded_column");
   uint32_t frag_type = find_fragment_attr_type(misc_attrs);
   bool_t is_query_proc = cg_java_frag_type_query_proc(frag_type);
   cg_java_validate_proc_count(java_context, frag_type);
@@ -436,7 +436,7 @@ static void cg_java_proc_result_set(ast_node *ast, cg_java_context *java_context
     sem_t sem_type = sptr->semtypes[i];
     CSTR col = sptr->names[i];
     bool_t encode = should_encode_col(col, sem_type, use_encode, encode_columns);
-    is_string_column_encoded += encode_custom_type_on && encode && core_type_of(sem_type) == SEM_TYPE_TEXT;
+    is_string_column_encoded += custom_type_for_encoded_column && encode && core_type_of(sem_type) == SEM_TYPE_TEXT;
     cg_java_proc_result_set_getter(
         out_stmt_proc,
         name,
@@ -445,7 +445,7 @@ static void cg_java_proc_result_set(ast_node *ast, cg_java_context *java_context
         &body,
         sem_type,
         encode,
-        encode_custom_type_on,
+        custom_type_for_encoded_column,
         frag_type,
         col_count_for_base);
   }
