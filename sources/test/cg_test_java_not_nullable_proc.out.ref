@@ -4,6 +4,7 @@ package com.facebook.cqlviewmodels;
 import com.facebook.cgsql.CQLResultSet;
 import com.facebook.cgsql.CQLViewModel;
 import javax.annotation.Nullable;
+import com.facebook.cgsql.EncodedString;
 
 public final class cg_test_java_not_nullable_proc extends CQLViewModel {
 
@@ -29,8 +30,12 @@ public final class cg_test_java_not_nullable_proc extends CQLViewModel {
     return mResultSet.getBoolean(row, 3);
   }
 
-  public String getTextcol(int row) {
-    return mResultSet.getString(row, 4);
+  public EncodedString getTextcol(int row) {
+    return mResultSet.getEncodedString(row, 4);
+  }
+
+  public boolean getTextcolIsEncoded() {
+    return mResultSet.getIsEncoded(4);
   }
 
   public byte[] getBlobcol(int row) {

@@ -77,6 +77,13 @@ public final class CQLResultSet {
     return getString(result_set_ref, row, column);
   }
 
+  public EncodedString getEncodedString(int row, int column) {
+    if (isNull(row, column)) {
+      return null;
+    }
+    return new EncodedString(getString(row, column));
+  }
+
   public double getDouble(int row, int column) {
     return getDouble(result_set_ref, row, column);
   }

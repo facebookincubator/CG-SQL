@@ -143,7 +143,9 @@ static rtdata rt_java = {
     "package %s;\n\n"
     "import " RT_JAVA_RT_PACKAGE ".CQLResultSet;\n"
     "import " RT_JAVA_RT_PACKAGE ".CQLViewModel;\n"
-    "import javax.annotation.Nullable;\n\n",
+    "import javax.annotation.Nullable;"
+    "%s"
+    "\n\n",
   .symbol_case = cg_symbol_case_camel,
   .generate_type_getters = 1,
   .generate_equality_macros = 1,
@@ -160,6 +162,9 @@ static rtdata rt_java = {
   .cql_blob_ref = "byte[]",
   .cql_object_ref = "Object",
   .cql_string_ref = "String",
+  .cql_string_ref_encode = "EncodedString",
+  .cql_string_ref_encode_include =
+    "\nimport " RT_JAVA_RT_PACKAGE ".EncodedString;",
   .cql_result_set_get_count =
     "%s {\n"
     "  return mResultSet.getCount();\n"

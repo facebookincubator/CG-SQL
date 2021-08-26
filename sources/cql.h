@@ -191,6 +191,9 @@ typedef struct rtdata {
   // Provides a chance to add some extra definitions to the result set type, specify if extra stuff needed.
   bool_t (*result_set_type_decl_extra)(struct charbuf *output, CSTR sym, CSTR ref);
 
+  // prefix for custom object
+  const char *object_prefix;
+
   // Prefix for public symbol.
   const char *symbol_prefix;
 
@@ -261,6 +264,12 @@ typedef struct rtdata {
   // @return A string object of the type defined by cql_string_ref.
   // cql_string_ref cql_string_ref_new(const char *cstr);
   const char *cql_string_ref_new;
+
+  // The encode type for a string object.
+  const char *cql_string_ref_encode;
+
+  // The include library for the encode type for a string object.
+  const char *cql_string_ref_encode_include;
 
   // Declare a const string literal object.  This must be a global object and will be executed in the global context.
   // NOTE: This MUST be implemented as a macro, as it both declares and assigns the value.

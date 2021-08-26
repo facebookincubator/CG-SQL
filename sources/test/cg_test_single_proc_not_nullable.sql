@@ -13,12 +13,13 @@ create table bar(
   longcol LONG INT NOT NULL,
   realcol REAL NOT NULL,
   boolcol BOOL NOT NULL,
-  textcol TEXT NOT NULL,
+  textcol TEXT NOT NULL @sensitive,
   blobcol BLOB NOT NULL @sensitive
 );
 
 @attribute(cql:identity=(intcol, longcol))
-@attribute(cql:vault_sensitive=(blobcol))
+@attribute(cql:vault_sensitive=(blobcol, textcol))
+@attribute(cql:encode_custom_type_on)
 create proc non_empty_proc()
 begin
   select * from bar;

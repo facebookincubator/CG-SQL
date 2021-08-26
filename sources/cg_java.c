@@ -78,6 +78,7 @@ static void cg_java_proc_result_set_getter(bool_t fetch_proc,
                                            charbuf *java,
                                            sem_t sem_type,
                                            bool_t encode,
+                                           bool_t encode_custom_type_on,
                                            uint32_t frag_type,
                                            uint32_t col_count_for_base) {
   Contract(is_unitary(sem_type));
@@ -104,8 +105,13 @@ static void cg_java_proc_result_set_getter(bool_t fetch_proc,
 
     case SEM_TYPE_TEXT:
       nullable_prefix = "";
-      return_type = rt->cql_string_ref;
-      field_type = rt->cql_string_ref;
+      if (encode && encode_custom_type_on) {
+        return_type = rt->cql_string_ref_encode;
+        field_type = rt->cql_string_ref_encode;
+      } else {
+        return_type = rt->cql_string_ref;
+        field_type = rt->cql_string_ref;
+      }
       break;
 
     case SEM_TYPE_LONG_INTEGER:
@@ -378,6 +384,7 @@ static void cg_java_proc_result_set(ast_node *ast, cg_java_context *java_context
   encode_columns = symtab_new();
   init_encode_info(misc_attrs, &use_encode, &encode_context_column, encode_columns);
 
+  bool_t encode_custom_type_on = !!exists_attribute_str(misc_attrs, "encode_custom_type_on");
   uint32_t frag_type = find_fragment_attr_type(misc_attrs);
   bool_t is_query_proc = cg_java_frag_type_query_proc(frag_type);
   cg_java_validate_proc_count(java_context, frag_type);
@@ -423,12 +430,24 @@ static void cg_java_proc_result_set(ast_node *ast, cg_java_context *java_context
             class_name.ptr);
   }
 
+  bool_t is_string_column_encoded = false;
   // For each field emit the _get_field method
   for (int32_t i = 0; i < count; i++) {
     sem_t sem_type = sptr->semtypes[i];
     CSTR col = sptr->names[i];
     bool_t encode = should_encode_col(col, sem_type, use_encode, encode_columns);
-    cg_java_proc_result_set_getter(out_stmt_proc, name, col, i, &body, sem_type, encode, frag_type, col_count_for_base);
+    is_string_column_encoded += encode_custom_type_on && encode && core_type_of(sem_type) == SEM_TYPE_TEXT;
+    cg_java_proc_result_set_getter(
+        out_stmt_proc,
+        name,
+        col,
+        i,
+        &body,
+        sem_type,
+        encode,
+        encode_custom_type_on,
+        frag_type,
+        col_count_for_base);
   }
 
   CG_CHARBUF_OPEN_SYM(get_count, "", "get_count");
@@ -451,8 +470,9 @@ static void cg_java_proc_result_set(ast_node *ast, cg_java_context *java_context
   }
 
   CHARBUF_OPEN(cg_java_output);
+  CSTR custom_class_import = is_string_column_encoded ? rt->cql_string_ref_encode_include : "";
   bprintf(&cg_java_output, "%s", rt->source_prefix);
-  bprintf(&cg_java_output, rt->source_wrapper_begin, options.java_package_name);
+  bprintf(&cg_java_output, rt->source_wrapper_begin, options.java_package_name, custom_class_import);
   cg_java_write_imports(&cg_java_output, frag_type);
   cg_java_write_class_or_interface(&cg_java_output,
                                    frag_type,

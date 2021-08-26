@@ -7,6 +7,7 @@
 
 /* this is a demo procedure, it's rather silly... */
 @attribute(cql:vault_sensitive)
+@attribute(cql:encode_custom_type_on)
 create proc Sample()
 begin
   /* add the table we will be using */
@@ -14,7 +15,8 @@ begin
     name text,
     age integer @sensitive,
     thing real,
-    bytes blob);
+    bytes blob,
+    key text @sensitive);
 
   /* insert some data */
   declare i integer not null;
@@ -26,7 +28,7 @@ begin
      * your sqlite is very old you won't have that and we don't want the
      * JNI test to fail just because of a printf
      */
-    insert into my_data values("name_"||i, i, i, cast("blob_"||i as blob));
+    insert into my_data values("name_"||i, i, i, cast("blob_"||i as blob), "code");
     set i := i + 1;
   end;
 

@@ -80,7 +80,7 @@ cat <<EOF >__tmp1
 EOF
 
 cat __tmp1 com_facebook_cgsql_CQLResultSet.h >__tmp2
-mv __tmp2 com_facebook_cgsql_CQLResultSet.h 
+mv __tmp2 com_facebook_cgsql_CQLResultSet.h
 
 cat __tmp1 TestResult.h >__tmp2
 mv __tmp2 TestResult.h
@@ -97,11 +97,11 @@ ${CC} -o libCQLResultSet.${SUFFIX} -shared com_facebook_cgsql_CQLResultSet.o ../
 
 echo making .class files
 
-javac CGSQLMain.java TestResult.java com/facebook/cgsql/CQLResultSet.java com/facebook/cgsql/CQLViewModel.java sample/Sample.java 
+javac CGSQLMain.java TestResult.java com/facebook/cgsql/CQLResultSet.java com/facebook/cgsql/CQLViewModel.java com/facebook/cgsql/EncodedString.java sample/Sample.java
 
 echo "executing"
 LIBPATH=.
-java -Djava.library.path=${LIBPATH} CGSQLMain TestResult com/facebook/cgsql/CQLResultSet CQLViewModel sample/Sample 
+java -Djava.library.path=${LIBPATH} CGSQLMain TestResult com/facebook/cgsql/CQLResultSet CQLViewModel sample/Sample
 
 echo "run clean.sh to remove build artifacts"
 echo "done"
