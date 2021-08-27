@@ -129,7 +129,7 @@ static void cg_objc_proc_result_set_getter(
         bprintf(&value_convert_begin, "(__bridge %s)", rt->cql_blob_ref);
         break;
       case SEM_TYPE_TEXT:
-        if (encode && custom_type_for_encoded_column && !fetch_proc) {
+        if (encode && custom_type_for_encoded_column) {
           is_string_column_encoded = 1;
           bprintf(&return_type, "%s *_Nullable", rt->cql_string_ref_encode);
           bprintf(&value_convert_begin, "(__bridge %s *)", rt->cql_string_ref_encode);
@@ -165,7 +165,7 @@ static void cg_objc_proc_result_set_getter(
         value_convert_end = " ? YES : NO";
         break;
       case SEM_TYPE_TEXT:
-        if (encode && custom_type_for_encoded_column && !fetch_proc) {
+        if (encode && custom_type_for_encoded_column) {
           is_string_column_encoded = 1;
           bprintf(&return_type, "%s", rt->cql_string_ref_encode);
           bprintf(&value_convert_begin, "(__bridge %s *)", rt->cql_string_ref_encode);

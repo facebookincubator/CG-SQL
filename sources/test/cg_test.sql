@@ -2922,6 +2922,13 @@ create table vault_mixed_sensitive(
   type long @sensitive
 );
 
+create table vault_mixed_not_nullable_sensitive(
+  id int not null primary key,
+  name text not null @sensitive,
+  title text not null,
+  type long not null @sensitive
+);
+
 -- TEST: helper table
 create table vault_non_sensitive(
   id int not null primary key,
@@ -2940,6 +2947,18 @@ create table vault_non_sensitive(
 create proc vault_sensitive_with_values_proc()
 begin
  select * from vault_mixed_sensitive;
+end;
+
+-- TEST: vault_sensitive attribute includes sensitive column (name) and non sensitive column (id)
+-- + CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
+-- + CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_ENCODED, // name
+-- + CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_NOT_NULL, // title
+-- + CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_NOT_NULL, // type
+@attribute(cql:vault_sensitive=(id, name))
+@attribute(cql:custom_type_for_encoded_column)
+create proc vault_not_nullable_sensitive_with_values_proc()
+begin
+ select * from vault_mixed_not_nullable_sensitive;
 end;
 
 -- TEST: vault_sensitive attribute includes sensitive column (data) and non sensitive column (id)
