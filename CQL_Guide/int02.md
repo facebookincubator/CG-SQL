@@ -181,7 +181,7 @@ The full list as of this writing is as follows:
 #define SEM_TYPE_AUTOINCREMENT         _64(0x0400) // set for table columns with autoinc
 #define SEM_TYPE_VARIABLE              _64(0x0800) // set for variables and parameters
 #define SEM_TYPE_IN_PARAMETER          _64(0x1000) // set for in parameters (can mix with below)
-#define SEM_TYPE_OUT_PARAMETER         _64(0x2000) // set for out paramters (can mix with above)
+#define SEM_TYPE_OUT_PARAMETER         _64(0x2000) // set for out parameters (can mix with above)
 #define SEM_TYPE_DML_PROC              _64(0x4000) // set for stored procs that have DML/DDL
 #define SEM_TYPE_HAS_SHAPE_STORAGE     _64(0x8000) // set for a cursor with simplified fetch syntax
 #define SEM_TYPE_CREATE_FUNC          _64(0x10000) // set for a function that returns a created object +1 ref
@@ -237,7 +237,7 @@ typedef struct sem_node {
   int32_t create_version;           // create version if any (really only for tables and columns)
   int32_t delete_version;           // create version if any (really only for tables and columns)
   bool_t recreate;                  // for tables only, true if marked @recreate
-  CSTR recreate_group_name;         // for tables only, the name of the recreate gruop if they are in one
+  CSTR recreate_group_name;         // for tables only, the name of the recreate group if they are in one
   CSTR region;                      // the schema region, if applicable, null means unscoped (default)
   symtab *used_symbols;             // for select statements, we need to know which of the ids in the select list was used if any
   list_item *index_list;            // for tables we need the list of indices that use this table (so we can recreate them together if needed)
@@ -246,7 +246,7 @@ typedef struct sem_node {
 ```
 
 * `sem_type` : already discussed above, this tells you how to interpret everything else
-* `name` : variables, columns, etc. have a canonical name, when a name case-insenstively resolves, the canonical name is stored here
+* `name` : variables, columns, etc. have a canonical name, when a name case-insensitivity resolves, the canonical name is stored here
   * typically later passes emit the canonical variable name everywhere
   * e.g. `FoO` and `fOO` might both resolve to an object declared as `foo`, we always emit `foo` in codegen
 * `kind` : in CQL any type can be discriminated as in `declare foo real<meters>`, the kind here is `meters`
@@ -302,7 +302,7 @@ cql_noexport void sem_main(ast_node *ast) {
 }
 ```
 
-As you can see, `sem_main` begins by reseting all the global state.  You can of course do this yourself after calling `sem_main` (when you're done with the results).
+As you can see, `sem_main` begins by resetting all the global state.  You can of course do this yourself after calling `sem_main` (when you're done with the results).
 
 `sem_main` sets a variety of useful and public global variables that describe the results of the analysis.  The ones in `sem.h` are part of the contract and
 you should feel free to use them in a downstream code-generator.  Other items are internal and should be avoided.
@@ -426,7 +426,7 @@ Each of these is dispatched when a function call is found in the tree.  By way o
 causes the `changes` function to map to `sem_func_changes` for validation.
 
 There are a few other similar macros for more exotic cases but the general pattern should be clear now.  With these in place
-it's very easy to traverse arbitary statement lists and arbitary expressions with sub expressions and have the correct function
+it's very easy to traverse arbitrary statement lists and arbitrary expressions with sub expressions and have the correct function
 invoked without having large `switch` blocks all over.
 
 ### Semantic Errors
@@ -490,7 +490,7 @@ static void sem_expr_null(ast_node *ast, CSTR cstr) {
 }
 ```
 
-It's hard to get simpiler than doing semantic analysis of the `NULL` literal.  Its code should be clear with no further explaination needed.
+It's hard to get simpler than doing semantic analysis of the `NULL` literal.  Its code should be clear with no further explanation needed.
 
 ### Unary Operators
 
@@ -521,7 +521,7 @@ static void sem_unary_math(ast_node *ast, CSTR op) {
   ast->sem = new_sem(sem_type_result);
   ast->sem->kind = ast->left->sem->kind;
 
-  // note ast->sem->name is NOT propogated because SQLite doesn't let you refer to
+  // note ast->sem->name is NOT propagated because SQLite doesn't let you refer to
   // the column 'x' in 'select -x' -- the column name is actually '-x' which is useless
   // so we have no name once you apply unary math (unless you use 'as')
   // hence ast->sem->name = ast->left->sem->name is WRONG here and it is not missing on accident
@@ -694,7 +694,7 @@ static bool_t sem_binary_prep(ast_node *ast, sem_t *core_type_left, sem_t *core_
 ```
 
 * `sem_expr` : used to recursively walk the left and right nodes
-* `is_error` : checks if either side had errors, if so, simply propogate the error
+* `is_error` : checks if either side had errors, if so, simply propagate the error
 * extract the left and right core types
 * combine nullability and sensitivity flags
 
@@ -728,7 +728,7 @@ static void sem_binary_is_or_is_not(ast_node *ast, CSTR op) {
 * `sem_verify_compat` : ensures that left and right operands are type compatible (discussed later)
 * the result is always of type `bool not null`
 
-If either step goes wrong the error will naturally propogate.
+If either step goes wrong the error will naturally propagate.
 
 #### Example: Binary Math
 
@@ -805,7 +805,7 @@ static bool_t error_any_object(ast_node *ast, sem_t core_type_left, sem_t core_t
 ```
 
 * `is_object` : checks a `sem_type` against `SEM_TYPE_OBJECT`
-  * if the left or right child is an object an appropraite error is generated
+  * if the left or right child is an object an appropriate error is generated
 * there is no strong convention about returning `true` if ok, or `true` if error, it's pretty ad hoc
   * this doesn't seem to cause a lot of problems
 
@@ -875,7 +875,7 @@ the result is `NULL`.
 // are previously known to be compatible, it returns the smallest type
 // that holds both.  If either is nullable the result is nullable.
 // Note: in the few cases where that isn't true the normal algorithm for
-// nullablity result must be overrided (see coalesce for instance).
+// nullablity result must be overridden (see coalesce for instance).
 static sem_t sem_combine_types(sem_t sem_type_1, sem_t sem_type_2) {
   ... too much code ... summary below
 }
@@ -900,7 +900,7 @@ Some examples might be helpful:
 * true + 2 -> integer
 * 'x' + 1 -> not compatible
 
-Note that `sem_combine_types` assumes the types have already been checked for compatiblitiy and will use `Contract` to enforce
+Note that `sem_combine_types` assumes the types have already been checked for compatibility and will use `Contract` to enforce
 this.  You should be using other helpers like `is_numeric_compat` and friends to ensure the types agree before computing
 the combined type.  A list of values that must be compatible with each other (e.g. in `needle IN (haystack)`) can be
 checked using `sem_verify_compat` repeatedly.
@@ -1029,7 +1029,7 @@ The expression contexts are as follows:
 #define SEM_EXPR_CONTEXT_CONSTRAINT     0x1000
 ```
 
-The idea here is simple, when calling a root expression, the analyzer provides the context value that has the bit that correponds to the current context.
+The idea here is simple, when calling a root expression, the analyzer provides the context value that has the bit that corresponds to the current context.
 For instance, the expression being validated in is the `WHERE` clause, the code will provide `SEM_EXPR_CONTEXT_WHERE`.
 The inner validators check this context, in particular anything that is only available in some contexts has a bit-mask of that is the union
 of the context bits where it can be used.  The validator can check those possibilities against the current context with one bitwise "and" operation.
@@ -1045,7 +1045,7 @@ This bitwise "and" is performed by one of these two helper macros which makes th
 #### Expression Context Example : Concat
 
 The concatenation operator `||` is challenging to successfully emulate because it does many different kinds of
-numeric to string conversions automatically.  Rather than perenially getting this wrong, we simply do not support
+numeric to string conversions automatically.  Rather than perennially getting this wrong, we simply do not support
 this operator in a context where SQLite isn't going to be doing the concatenation.  So typically users
 use "printf" instead to get formatting done outside of a SQL context.  The check for invalid use of `||` is very simple
 and it happens of course in `sem_concat`.
@@ -1142,7 +1142,7 @@ We haven't discussed schema regions yet but what you need to know about them for
 If an object is in a region, then it may only use schema parts that are in
 the same region, or the region's dependencies (transitively).
 
-The point of this is that you might have a rather large schema and you probably don't want any peice
+The point of this is that you might have a rather large schema and you probably don't want any piece
 of code to use any piece of schema.  You can use regions to ensure that the code for feature "X" doesn't
 try to use schema designed exclusively for feature "Y".  That "X" code probably has no business even
 knowing of the existence of "Y" schema.
@@ -1159,7 +1159,7 @@ In short, these simple cases just require looking up the entity and verifying th
 
 #### Flexible Name Resolution
 
-The "hard case" for name resolution is where the name is occuring in an expression.  Such a name can refer to
+The "hard case" for name resolution is where the name is occurring in an expression.  Such a name can refer to
 all manner of things. It could be a global variable, a local variable, an argument, a table column, a field in a cursor,
 and others.  The general name resolver goes through several phases looking for the name.  Each phase can either report
 an affirmative success or error (in which case the search stops), or it may simply report that the name was not found
@@ -1213,7 +1213,7 @@ So let's move on to the "real" resolver.
 //  AST, a mandatory name, an optional scope, and mandatory type pointer. If the
 //  identifier provided to one of these resolvers is resolved successfully, *or*
 //  if the correct resolver was found but there was an error in the program,
-//  `SEM_RESOLVE_STOP` is returned and resolution is complete, succesful or not.
+//  `SEM_RESOLVE_STOP` is returned and resolution is complete, successful or not.
 //  If a resolver is tried and it determines that it is not the correct resolver
 //  for the identifier in question, `SEM_RESOLVE_CONTINUE` is returned and the
 //  next resolver is tried.
@@ -1288,7 +1288,7 @@ All the mini-resolvers are similarly structured, generically:
 * if it's not my case, return `CONTINUE`
 * if it is my case return `STOP` (maybe with an error)
 
-Some of the mini-resolvers have quite a few steps but any one mini-resolver is only about a screenful of code
+Some of the mini-resolvers have quite a few steps, but any one mini-resolver is only about a screenful of code
 and it does one job.
 
 ### Structure types and the notion of Shapes
