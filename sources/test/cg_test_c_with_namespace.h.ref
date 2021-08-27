@@ -1952,39 +1952,6 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
 extern void vault_sensitive_with_values_proc_set_encoding(cql_int32 col, cql_bool encode);
 
 // The statement ending at line XXXX
-#define CRC_vault_not_nullable_sensitive_with_values_proc 2847045691334571163L
-
-extern cql_string_ref _Nonnull vault_not_nullable_sensitive_with_values_proc_stored_procedure_name;
-
-#define vault_not_nullable_sensitive_with_values_proc_data_types_count 4
-
-#ifndef result_set_type_decl_vault_not_nullable_sensitive_with_values_proc_result_set
-#define result_set_type_decl_vault_not_nullable_sensitive_with_values_proc_result_set 1
-cql_result_set_type_decl(vault_not_nullable_sensitive_with_values_proc_result_set, vault_not_nullable_sensitive_with_values_proc_result_set_ref);
-#endif
-extern cql_int32 vault_not_nullable_sensitive_with_values_proc_get_id(vault_not_nullable_sensitive_with_values_proc_result_set_ref _Nonnull result_set, cql_int32 row);
-extern cql_string_ref _Nonnull vault_not_nullable_sensitive_with_values_proc_get_name(vault_not_nullable_sensitive_with_values_proc_result_set_ref _Nonnull result_set, cql_int32 row);
-
-#define vault_not_nullable_sensitive_with_values_proc_get_name_is_encoded(rs) \
-  cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 1)
-extern cql_string_ref _Nonnull vault_not_nullable_sensitive_with_values_proc_get_title(vault_not_nullable_sensitive_with_values_proc_result_set_ref _Nonnull result_set, cql_int32 row);
-extern cql_int64 vault_not_nullable_sensitive_with_values_proc_get_type(vault_not_nullable_sensitive_with_values_proc_result_set_ref _Nonnull result_set, cql_int32 row);
-
-#define vault_not_nullable_sensitive_with_values_proc_get_type_is_encoded(rs) \
-  cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, 3)
-extern cql_int32 vault_not_nullable_sensitive_with_values_proc_result_count(vault_not_nullable_sensitive_with_values_proc_result_set_ref _Nonnull result_set);
-extern CQL_WARN_UNUSED cql_code vault_not_nullable_sensitive_with_values_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_not_nullable_sensitive_with_values_proc_result_set_ref _Nullable *_Nonnull result_set);
-#define vault_not_nullable_sensitive_with_values_proc_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
-#define vault_not_nullable_sensitive_with_values_proc_row_equal(rs1, row1, rs2, row2) \
-cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
-  (cql_result_set_ref)(rs1), \
-  row1, \
-  (cql_result_set_ref)(rs2), \
-  row2)
-
-extern void vault_not_nullable_sensitive_with_values_proc_set_encoding(cql_int32 col, cql_bool encode);
-
-// The statement ending at line XXXX
 #define CRC_vault_sensitive_with_no_values_proc -2359302084369840114L
 
 extern cql_string_ref _Nonnull vault_sensitive_with_no_values_proc_stored_procedure_name;

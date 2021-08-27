@@ -127,7 +127,6 @@ DECLARE PROC no_out_with_setters () (id INTEGER NOT NULL, name TEXT, rate LONG_I
 DECLARE PROC lotsa_columns_no_result_set () (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
 DECLARE PROC early_out_rc_cleared (OUT x INTEGER) USING TRANSACTION;
 DECLARE PROC vault_sensitive_with_values_proc () (id INTEGER NOT NULL, name TEXT @SENSITIVE, title TEXT, type LONG_INT @SENSITIVE);
-DECLARE PROC vault_not_nullable_sensitive_with_values_proc () (id INTEGER NOT NULL, name TEXT NOT NULL @SENSITIVE, title TEXT NOT NULL, type LONG_INT NOT NULL @SENSITIVE);
 DECLARE PROC vault_sensitive_with_no_values_proc () (id INTEGER NOT NULL, name TEXT @SENSITIVE, title TEXT, type LONG_INT @SENSITIVE);
 DECLARE PROC vault_union_all_table_proc () (id INTEGER NOT NULL, name TEXT @SENSITIVE, title TEXT, type LONG_INT @SENSITIVE);
 DECLARE PROC vault_alias_column_proc () (alias_name TEXT @SENSITIVE);

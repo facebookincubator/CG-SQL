@@ -2083,67 +2083,6 @@ static inline BOOL CGBVaultSensitiveWithValuesProcRowEqual(CGBVaultSensitiveWith
   return CGCVaultSensitiveWithValuesProcRowEqual(CGCVaultSensitiveWithValuesProcFromCGBVaultSensitiveWithValuesProc(resultSet1), row1, CGCVaultSensitiveWithValuesProcFromCGBVaultSensitiveWithValuesProc(resultSet2), row2);
 }
 
-@class CGBVaultNotNullableSensitiveWithValuesProc;
-
-static inline CGBVaultNotNullableSensitiveWithValuesProc *CGBVaultNotNullableSensitiveWithValuesProcFromCGCVaultNotNullableSensitiveWithValuesProc(CGCVaultNotNullableSensitiveWithValuesProcResultSetRef resultSet)
-{
-  return (__bridge CGBVaultNotNullableSensitiveWithValuesProc *)resultSet;
-}
-
-static inline CGCVaultNotNullableSensitiveWithValuesProcResultSetRef CGCVaultNotNullableSensitiveWithValuesProcFromCGBVaultNotNullableSensitiveWithValuesProc(CGBVaultNotNullableSensitiveWithValuesProc *resultSet)
-{
-  return (__bridge CGCVaultNotNullableSensitiveWithValuesProcResultSetRef)resultSet;
-}
-
-static inline int32_t CGBVaultNotNullableSensitiveWithValuesProcGetId(CGBVaultNotNullableSensitiveWithValuesProc *resultSet, int32_t row)
-{
-  CGCVaultNotNullableSensitiveWithValuesProcResultSetRef cResultSet = CGCVaultNotNullableSensitiveWithValuesProcFromCGBVaultNotNullableSensitiveWithValuesProc(resultSet);
-  return CGCVaultNotNullableSensitiveWithValuesProcGetId(cResultSet, row);
-}
-
-static inline CGOEncodedStringCGBVaultNotNullableSensitiveWithValuesProcGetName(CGBVaultNotNullableSensitiveWithValuesProc *resultSet, int32_t row)
-{
-  CGCVaultNotNullableSensitiveWithValuesProcResultSetRef cResultSet = CGCVaultNotNullableSensitiveWithValuesProcFromCGBVaultNotNullableSensitiveWithValuesProc(resultSet);
-  return (__bridge CGOEncodedString *)CGCVaultNotNullableSensitiveWithValuesProcGetName(cResultSet, row);
-}
-
-static inline NSString *CGBVaultNotNullableSensitiveWithValuesProcGetTitle(CGBVaultNotNullableSensitiveWithValuesProc *resultSet, int32_t row)
-{
-  CGCVaultNotNullableSensitiveWithValuesProcResultSetRef cResultSet = CGCVaultNotNullableSensitiveWithValuesProcFromCGBVaultNotNullableSensitiveWithValuesProc(resultSet);
-  return (__bridge NSString *)CGCVaultNotNullableSensitiveWithValuesProcGetTitle(cResultSet, row);
-}
-
-static inline int64_t CGBVaultNotNullableSensitiveWithValuesProcGetType(CGBVaultNotNullableSensitiveWithValuesProc *resultSet, int32_t row)
-{
-  CGCVaultNotNullableSensitiveWithValuesProcResultSetRef cResultSet = CGCVaultNotNullableSensitiveWithValuesProcFromCGBVaultNotNullableSensitiveWithValuesProc(resultSet);
-  return CGCVaultNotNullableSensitiveWithValuesProcGetType(cResultSet, row);
-}
-
-static inline BOOL CGBVaultNotNullableSensitiveWithValuesProcGetNameIsEncoded(CGBVaultNotNullableSensitiveWithValuesProc *resultSet)
-{
-  return CGCVaultNotNullableSensitiveWithValuesProcGetNameIsEncoded(CGCVaultNotNullableSensitiveWithValuesProcFromCGBVaultNotNullableSensitiveWithValuesProc(resultSet));
-}
-
-static inline void CGBVaultNotNullableSensitiveWithValuesProcSetEncoding(int32_t col, BOOL encode)
-{
-  return CGCVaultNotNullableSensitiveWithValuesProcSetEncoding(col, encode);
-}
-
-static inline int32_t CGBVaultNotNullableSensitiveWithValuesProcResultCount(CGBVaultNotNullableSensitiveWithValuesProc *resultSet)
-{
-  return CGCVaultNotNullableSensitiveWithValuesProcResultCount(CGCVaultNotNullableSensitiveWithValuesProcFromCGBVaultNotNullableSensitiveWithValuesProc(resultSet));
-}
-
-static inline NSUInteger CGBVaultNotNullableSensitiveWithValuesProcRowHash(CGBVaultNotNullableSensitiveWithValuesProc *resultSet, int32_t row)
-{
-  return CGCVaultNotNullableSensitiveWithValuesProcRowHash(CGCVaultNotNullableSensitiveWithValuesProcFromCGBVaultNotNullableSensitiveWithValuesProc(resultSet), row);
-}
-
-static inline BOOL CGBVaultNotNullableSensitiveWithValuesProcRowEqual(CGBVaultNotNullableSensitiveWithValuesProc *resultSet1, int32_t row1, CGBVaultNotNullableSensitiveWithValuesProc *resultSet2, int32_t row2)
-{
-  return CGCVaultNotNullableSensitiveWithValuesProcRowEqual(CGCVaultNotNullableSensitiveWithValuesProcFromCGBVaultNotNullableSensitiveWithValuesProc(resultSet1), row1, CGCVaultNotNullableSensitiveWithValuesProcFromCGBVaultNotNullableSensitiveWithValuesProc(resultSet2), row2);
-}
-
 @class CGBVaultSensitiveWithNoValuesProc;
 
 static inline CGBVaultSensitiveWithNoValuesProc *CGBVaultSensitiveWithNoValuesProcFromCGCVaultSensitiveWithNoValuesProc(CGCVaultSensitiveWithNoValuesProcResultSetRef resultSet)
