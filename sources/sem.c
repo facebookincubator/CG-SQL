@@ -6508,6 +6508,61 @@ static void sem_aggr_func_min_or_max(ast_node *ast, uint32_t arg_count) {
   // the new node is does not keep any of the names of the members, just the net type
 }
 
+// You can round real numbers, you may  specify a precision
+static void sem_func_round(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  // round can only appear inside of SQL
+  if (!sem_validate_appear_inside_sql_stmt(ast)) {
+    return;
+  }
+
+  // if no args then fail the arg count test...
+  if (arg_count == 0) {
+    sem_validate_arg_count(ast, arg_count, 1);
+    return;
+  }
+
+  // if too many args
+  if (arg_count > 2) {
+    sem_validate_arg_count(ast, arg_count, 2);
+    return;
+  }
+
+  sem_node *sem = first_arg(arg_list)->sem;
+  sem_t sem_type = sem->sem_type;
+  sem_t core_type = core_type_of(sem_type);
+
+  if (core_type != SEM_TYPE_REAL) {
+    report_error(ast, "CQL0087: first argument must be of type real", name);
+    record_error(ast);
+    return;
+  }
+
+  sem_t combined_flags = not_nullable_flag(sem_type) | sensitive_flag(sem_type);
+
+  if (arg_count == 2) {
+    ast_node *arg2 = second_arg(arg_list);
+    if (!is_numeric_expr(arg2)) {
+      report_error(name_ast, "CQL0082: second argument must be numeric", name);
+      record_error(ast);
+      return;
+    }
+    sem_reject_real(arg2, "ROUND argument 2");
+    if (is_error(arg2)) {
+      record_error(ast);
+      return;
+    }
+    combined_flags = combine_flags(sem_type, arg2->sem->sem_type);
+  }
+
+  name_ast->sem = ast->sem = new_sem(SEM_TYPE_LONG_INTEGER | combined_flags);
+}
+
 // Min and Max are the same validation
 static void sem_aggr_func_max(ast_node *ast, uint32_t arg_count) {
   sem_aggr_func_min_or_max(ast, arg_count);
@@ -12714,9 +12769,10 @@ static void sem_column_spec_and_values(ast_node *ast, ast_node *table_ast) {
     }
 
     if (enforcement.strict_insert_select && sem_select_stmt_is_mixed_results(select_stmt)) {
-      report_error(select_stmt, "CQL0370: due to a memory leak bug in old SQLite versions, "
-                                "the select part of an insert must not have a top level join or compound operator. "
-                                "Use WITH and a CTE, or a nested select to work around this.", NULL);
+      report_error(select_stmt,
+        "CQL0370: due to a memory leak bug in old SQLite versions, "
+        "the select part of an insert must not have a top level join or compound operator. "
+        "Use WITH and a CTE, or a nested select to work around this.", NULL);
       record_error(select_stmt);
       record_error(ast);
       return;
@@ -19967,6 +20023,7 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(cql_cursor_format);
   FUNC_INIT(char);
   FUNC_INIT(abs);
+  FUNC_INIT(round);
   FUNC_INIT(instr);
   FUNC_INIT(coalesce);
   FUNC_INIT(last_insert_rowid);

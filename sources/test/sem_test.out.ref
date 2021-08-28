@@ -8859,6 +8859,359 @@ Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect numbe
 
 The statement ending at line XXXX
 
+SET X := ( SELECT round() );
+
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'round'
+
+  {assign}: err
+  | {name X}: X: integer variable
+  | {select_stmt}: err
+    | {select_core_list}: err
+    | | {select_core}: err
+    |   | {select_expr_list_con}: err
+    |     | {select_expr_list}: err
+    |     | | {select_expr}: err
+    |     |   | {call}: err
+    |     |     | {name round}: err
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET X := round();
+
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'round'
+
+  {assign}: err
+  | {name X}: X: integer variable
+  | {call}: err
+    | {name round}
+    | {call_arg_list}
+      | {call_filter_clause}
+
+The statement ending at line XXXX
+
+SET X := ( SELECT round(1, 2, 3) );
+
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'round'
+
+  {assign}: err
+  | {name X}: X: integer variable
+  | {select_stmt}: err
+    | {select_core_list}: err
+    | | {select_core}: err
+    |   | {select_expr_list_con}: err
+    |     | {select_expr_list}: err
+    |     | | {select_expr}: err
+    |     |   | {call}: err
+    |     |     | {name round}: err
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {int 1}: integer notnull
+    |     |         | {arg_list}
+    |     |           | {int 2}: integer notnull
+    |     |           | {arg_list}
+    |     |             | {int 3}: integer notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET X := ( SELECT round(1.5, 'x') );
+
+Error at test/sem_test.sql:XXXX : in str : CQL0082: second argument must be numeric 'round'
+
+  {assign}: err
+  | {name X}: X: integer variable
+  | {select_stmt}: err
+    | {select_core_list}: err
+    | | {select_core}: err
+    |   | {select_expr_list_con}: err
+    |     | {select_expr_list}: err
+    |     | | {select_expr}: err
+    |     |   | {call}: err
+    |     |     | {name round}
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {dbl 1.5}: real notnull
+    |     |         | {arg_list}
+    |     |           | {strlit 'x'}: text notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET X := ( SELECT round(1, 2) );
+
+Error at test/sem_test.sql:XXXX : in call : CQL0087: first argument must be of type real 'round'
+
+  {assign}: err
+  | {name X}: X: integer variable
+  | {select_stmt}: err
+    | {select_core_list}: err
+    | | {select_core}: err
+    |   | {select_expr_list_con}: err
+    |     | {select_expr_list}: err
+    |     | | {select_expr}: err
+    |     |   | {call}: err
+    |     |     | {name round}
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {int 1}: integer notnull
+    |     |         | {arg_list}
+    |     |           | {int 2}: integer notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+LET ll := ( SELECT round(1.0, 2) );
+
+  {let_stmt}: ll: longint notnull variable
+  | {name ll}: ll: longint notnull variable
+  | {select_stmt}: _anon: longint notnull
+    | {select_core_list}: select: { _anon: longint notnull }
+    | | {select_core}: select: { _anon: longint notnull }
+    |   | {select_expr_list_con}: select: { _anon: longint notnull }
+    |     | {select_expr_list}: select: { _anon: longint notnull }
+    |     | | {select_expr}: longint notnull
+    |     |   | {call}: longint notnull
+    |     |     | {name round}: longint notnull
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {dbl 1.0}: real notnull
+    |     |         | {arg_list}
+    |     |           | {int 2}: integer notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET ll := ( SELECT round(1.0) );
+
+  {assign}: ll: longint notnull variable
+  | {name ll}: ll: longint notnull variable
+  | {select_stmt}: _anon: longint notnull
+    | {select_core_list}: select: { _anon: longint notnull }
+    | | {select_core}: select: { _anon: longint notnull }
+    |   | {select_expr_list_con}: select: { _anon: longint notnull }
+    |     | {select_expr_list}: select: { _anon: longint notnull }
+    |     | | {select_expr}: longint notnull
+    |     |   | {call}: longint notnull
+    |     |     | {name round}: longint notnull
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {dbl 1.0}: real notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+LET NLL := ( SELECT round(nullable(1.0)) );
+
+  {let_stmt}: NLL: longint variable
+  | {name NLL}: NLL: longint variable
+  | {select_stmt}: _anon: longint
+    | {select_core_list}: select: { _anon: longint }
+    | | {select_core}: select: { _anon: longint }
+    |   | {select_expr_list_con}: select: { _anon: longint }
+    |     | {select_expr_list}: select: { _anon: longint }
+    |     | | {select_expr}: longint
+    |     |   | {call}: longint
+    |     |     | {name round}: longint
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {call}: real
+    |     |           | {name nullable}: real
+    |     |           | {call_arg_list}
+    |     |             | {call_filter_clause}
+    |     |             | {arg_list}: ok
+    |     |               | {dbl 1.0}: real notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET NLL := ( SELECT round(1.0, nullable(1)) );
+
+  {assign}: NLL: longint variable
+  | {name NLL}: NLL: longint variable
+  | {select_stmt}: _anon: longint
+    | {select_core_list}: select: { _anon: longint }
+    | | {select_core}: select: { _anon: longint }
+    |   | {select_expr_list_con}: select: { _anon: longint }
+    |     | {select_expr_list}: select: { _anon: longint }
+    |     | | {select_expr}: longint
+    |     |   | {call}: longint
+    |     |     | {name round}: longint
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {dbl 1.0}: real notnull
+    |     |         | {arg_list}
+    |     |           | {call}: integer
+    |     |             | {name nullable}: integer
+    |     |             | {call_arg_list}
+    |     |               | {call_filter_clause}
+    |     |               | {arg_list}: ok
+    |     |                 | {int 1}: integer notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+LET SNL := ( SELECT round(sensitive(nullable(1.0))) );
+
+  {let_stmt}: SNL: longint variable sensitive
+  | {name SNL}: SNL: longint variable sensitive
+  | {select_stmt}: _anon: longint sensitive
+    | {select_core_list}: select: { _anon: longint sensitive }
+    | | {select_core}: select: { _anon: longint sensitive }
+    |   | {select_expr_list_con}: select: { _anon: longint sensitive }
+    |     | {select_expr_list}: select: { _anon: longint sensitive }
+    |     | | {select_expr}: longint sensitive
+    |     |   | {call}: longint sensitive
+    |     |     | {name round}: longint sensitive
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {call}: real sensitive
+    |     |           | {name sensitive}: real sensitive
+    |     |           | {call_arg_list}
+    |     |             | {call_filter_clause}
+    |     |             | {arg_list}: ok
+    |     |               | {call}: real
+    |     |                 | {name nullable}: real
+    |     |                 | {call_arg_list}
+    |     |                   | {call_filter_clause}
+    |     |                   | {arg_list}: ok
+    |     |                     | {dbl 1.0}: real notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET SNL := ( SELECT round(nullable(1.0), sensitive(1)) );
+
+  {assign}: SNL: longint variable sensitive
+  | {name SNL}: SNL: longint variable sensitive
+  | {select_stmt}: _anon: longint sensitive
+    | {select_core_list}: select: { _anon: longint sensitive }
+    | | {select_core}: select: { _anon: longint sensitive }
+    |   | {select_expr_list_con}: select: { _anon: longint sensitive }
+    |     | {select_expr_list}: select: { _anon: longint sensitive }
+    |     | | {select_expr}: longint sensitive
+    |     |   | {call}: longint sensitive
+    |     |     | {name round}: longint sensitive
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {call}: real
+    |     |         | | {name nullable}: real
+    |     |         | | {call_arg_list}
+    |     |         |   | {call_filter_clause}
+    |     |         |   | {arg_list}: ok
+    |     |         |     | {dbl 1.0}: real notnull
+    |     |         | {arg_list}
+    |     |           | {call}: integer notnull sensitive
+    |     |             | {name sensitive}: integer notnull sensitive
+    |     |             | {call_arg_list}
+    |     |               | {call_filter_clause}
+    |     |               | {arg_list}: ok
+    |     |                 | {int 1}: integer notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET ll := ( SELECT round(1.0, 2.0) );
+
+Error at test/sem_test.sql:XXXX : in num : CQL0001: operands must be an integer type, not real 'ROUND argument 2'
+
+  {assign}: err
+  | {name ll}: ll: longint notnull variable
+  | {select_stmt}: err
+    | {select_core_list}: err
+    | | {select_core}: err
+    |   | {select_expr_list_con}: err
+    |     | {select_expr_list}: err
+    |     | | {select_expr}: err
+    |     |   | {call}: err
+    |     |     | {name round}
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {dbl 1.0}: real notnull
+    |     |         | {arg_list}
+    |     |           | {dbl 2.0}: err
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
 SET X := ( SELECT avg(1, 2)
   FROM foo );
 
@@ -20611,16 +20964,6 @@ SELECT *
     | {delete_attr}
       | {version_annotation}
         | {int 2}
-
-The statement ending at line XXXX
-
-DECLARE ll LONG_INT NOT NULL;
-
-  {declare_vars_type}: longint notnull
-  | {name_list}: ll: longint notnull variable
-  | | {name ll}: ll: longint notnull variable
-  | {notnull}: longint notnull
-    | {type_long}: longint
 
 The statement ending at line XXXX
 

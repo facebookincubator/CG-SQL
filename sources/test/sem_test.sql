@@ -2723,6 +2723,77 @@ set X := (select count(1,2) from foo);
 -- + {assign}: err
 set X := (select max() from foo);
 
+-- TEST: bogus number of arguments in round
+-- + Error % function got incorrect number of arguments 'round'
+-- +1 Error
+-- + {call}: err
+-- + {assign}: err
+set X := (select round());
+
+-- TEST: round outside of normal context
+-- + Error % function may not appear in this context 'round'
+-- +1 Error
+-- + {call}: err
+-- + {assign}: err
+set X := round();
+
+-- TEST: bogus number of arguments in round
+-- + Error % function got incorrect number of arguments 'round'
+-- +1 Error
+-- + {call}: err
+-- + {assign}: err
+set X := (select round(1,2,3));
+
+-- TEST: round second arg not numeric
+-- + Error % second argument must be numeric 'round'
+-- +1 Error
+-- + {call}: err
+-- + {assign}: err
+set X := (select round(1.5,'x'));
+
+-- TEST: round must get a real arg in position 1
+-- + Error % first argument must be of type real 'round'
+-- +1 Error
+-- + {call}: err
+-- + {assign}: err
+set X := (select round(1,2));
+
+-- TEST: round must get a real arg in position 1
+-- + {let_stmt}: ll: longint notnull variable
+-- - Error
+let ll := (select round(1.0,2));
+
+-- TEST: correct round double not null convered to long not null
+-- + {assign}: ll: longint notnull variable
+-- - Error
+set ll := (select round(1.0));
+
+-- TEST: round Nullability is preserved
+-- + {let_stmt}: NLL: longint variable
+-- - Error
+let NLL := (select round(nullable(1.0)));
+
+-- TEST: round Nullability is preserved
+-- + {assign}: NLL: longint variable
+-- - Error
+set NLL := (select round(1.0, nullable(1)));
+
+-- TEST: round Sensitivity is preserved
+-- + {let_stmt}: SNL: longint variable sensitive
+-- - Error
+let SNL := (select round(sensitive(nullable(1.0))));
+
+-- TEST: round Sensitivity is preserved
+-- + {assign}: SNL: longint variable sensitive
+-- - Error
+set SNL := (select round(nullable(1.0), sensitive(1)));
+
+-- TEST: The precision must be a numeric type but not real
+-- + {assign}: err
+-- + Error % operands must be an integer type, not real 'ROUND argument 2'
+-- +1 Error
+set ll := (select round(1.0, 2.0));
+
 -- TEST: bogus number of arguments in average
 -- + Error % function got incorrect number of arguments 'avg'
 -- +1 Error
@@ -5676,9 +5747,6 @@ select * from (select not 'x' X);
 -- + {delete_attr}
 -- - Error
 create view view_with_version as select * from bar @delete(2);
-
--- long int variable
-declare ll long integer not null;
 
 -- TEST: use a long literal
 -- + {longint 3147483647}: longint notnull
