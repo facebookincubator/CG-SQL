@@ -108,10 +108,35 @@ static bytebuf *deployable_validations;
 // used both for unsetting improvements when the scope of an improvement ends
 // and for keeping track of improvements that require special treatment (i.e.,
 // improvements of globals must be unset at every CALL).
-typedef struct notnull_improvement_item {
+typedef struct notnull_improvement_context_item {
   sem_t *type;
-  struct notnull_improvement_item *next;
-} notnull_improvement_item;
+  struct notnull_improvement_context_item *next;
+} notnull_improvement_context_item;
+
+// A `notnull_improvement_context` is simply a list of context items.
+typedef notnull_improvement_context_item *notnull_improvement_context;
+
+// Indicates whether an improvement was set or unset within a
+// `notnull_improvement_history_item`.
+typedef enum {
+  NOTNULL_IMPROVEMENT_DELTA_WAS_SET,
+  NOTNULL_IMPROVEMENT_DELTA_WAS_UNSET,
+} notnull_improvement_delta;
+
+// A list node used to record a nullability improvement or un-improvement. These
+// can be later replayed in the order opposite of that in which they originally
+// occurred with the converse action being taken at each step, thus restoring
+// the original state of the world before any improvements or un-improvements
+// were made. In essence, they are nothing more than a
+// `notnull_improvement_context_item` with a `notnull_improvement_delta`.
+typedef struct notnull_improvement_history_item {
+  sem_t *type;
+  notnull_improvement_delta delta;
+  struct notnull_improvement_history_item *next;
+} notnull_improvement_history_item;
+
+// A `notnull_improvement_history` is simply a list of history items.
+typedef notnull_improvement_history_item *notnull_improvement_history;
 
 // If a function has been registered via `FUNC_INIT`, its associated analysis
 // function must conform to the type `sem_func`. When called, its argument list
@@ -180,7 +205,8 @@ static sem_t *find_mutable_type_for_global_cursor_field(CSTR name, CSTR cursor_n
 static bool_t sem_is_notnull_improved(CSTR name, CSTR scope);
 static void sem_set_notnull_improved(CSTR name, CSTR scope);
 static void sem_unset_notnull_improved(CSTR name, CSTR scope);
-static void sem_unset_notnull_improvement_items(notnull_improvement_item *item);
+static void sem_unset_notnull_improvements_in_context(notnull_improvement_context context);
+static void sem_revert_notnull_improvement_history(notnull_improvement_history history);
 static void sem_set_notnull_improvements_for_true_condition(ast_node *expr, ast_node *select_expr_list);
 static void sem_set_notnull_improvements_for_false_condition(ast_node *ast);
 
@@ -360,10 +386,10 @@ static CSTR annotation_target;
 static bool_t is_analyzing_notnull_rewrite;
 
 // This keeps track of all global variables that may currently be improved to be
-// NOT NULL. We need this because we must unimprove all such variables before
+// NOT NULL. We need this because we must un-improve all such variables before
 // every CALL (because we don't do interprocedural analysis and cannot know
 // which globals may have been set to NULL).
-static notnull_improvement_item *notnull_improved_globals;
+static notnull_improvement_context global_notnull_improvement_context;
 
 // This is the context into which any nonnull improvements made will be
 // recorded. Each context holds all of the improvements that were made while it
@@ -372,21 +398,81 @@ static notnull_improvement_item *notnull_improved_globals;
 // remain in whichever context was the current context when it was first set.
 // This is okay because the goal of maintaining contexts is merely to be able to
 // unset all improvements within a given context when it ends.
-static notnull_improvement_item *current_notnull_improvement_context;
+static notnull_improvement_context current_notnull_improvement_context;
+
+// This is the history into which all nonnull improvements *and* un-improvements
+// made will be recorded when `contingent_notnull_improvement_context_depth` is
+// greater than zero (i.e., whenever a contingent improvement context is in
+// effect). It is used to restore the state of the world to what it was at the
+// moment the current contingent improvement context was pushed.
+static notnull_improvement_history_item *current_notnull_improvement_history;
+
+// Tracks whether or not the current nonnull improvement context, if any, is
+// contingent (i.e., may or may not be entered depending upon the truth of some
+// condition). The sole reason for tracking this is to be able to assert that a
+// contignent context is not pushed when the current context is already
+// contingent. The reason for asserting this is that contingent contexts are
+// meant to be used for branches within a conditional (e.g., the 'x', 'y', and
+// 'z' statement lists in 'IF cond THEN x ELSE IF y ELSE z END IF') and should
+// always be within a non-contingent context that encapsulates the entire set of
+// branches (as that context gathers all of the un-improvements that result
+// within any of the branches so that re-improvements resulting from history
+// reverts can be un-set appropriately when the non-contingent context is
+// eventually popped).
+static bool_t is_current_notnull_improvement_context_contingent = false;
+
+// Tracks how many contingent notnull improvement contexts are currently in
+// effect. This allows us the optimization of not recording items into the
+// history when `contingent_notnull_improvement_context_depth` is 0 as they
+// would not be of any future use.
+static uint32_t contingent_notnull_improvement_context_depth = 0;
 
 // Pushes a new context for nullability improvements. All improvements set while
 // the context is active will be unset at the corresponding
 // `POP_NOTNULL_IMPROVEMENT_CONTEXT`.
 #define PUSH_NOTNULL_IMPROVEMENT_CONTEXT() \
-  notnull_improvement_item *saved_notnull_improvement_context = \
+  notnull_improvement_context_item *saved_notnull_improvement_context = \
     current_notnull_improvement_context; \
-  current_notnull_improvement_context = NULL;
+  current_notnull_improvement_context = NULL; \
+  bool_t saved_is_current_notnull_improvement_context_contingent = \
+    is_current_notnull_improvement_context_contingent; \
+  is_current_notnull_improvement_context_contingent = false;
 
-// Unsets all improvements made within the current context and reverts to the
+// Un-sets all improvements made within the current context and reverts to the
 // previous context.
 #define POP_NOTNULL_IMPROVEMENT_CONTEXT() \
-  sem_unset_notnull_improvement_items(current_notnull_improvement_context); \
-  current_notnull_improvement_context = saved_notnull_improvement_context;
+  sem_unset_notnull_improvements_in_context(current_notnull_improvement_context); \
+  current_notnull_improvement_context = saved_notnull_improvement_context; \
+  is_current_notnull_improvement_context_contingent = \
+    saved_is_current_notnull_improvement_context_contingent;
+
+// Similar to `PUSH_NOTNULL_IMPROVEMENT_CONTEXT`, but used for contexts that
+// will only be entered at runtime if some condition is true. This is used for
+// each branch in an IF (and soon CASE and IIF) to allow any improvements and
+// un-improvements made within to be reverted, and the original state of the
+// world restored, before checking the next branch. This must only be used when
+// the current context is not contingent; see
+// `is_current_notnull_improvement_context_contingent`.
+#define PUSH_CONTINGENT_NOTNULL_IMPROVEMENT_CONTEXT() \
+  notnull_improvement_history_item *saved_notnull_improvement_history = \
+    current_notnull_improvement_history; \
+  current_notnull_improvement_history = NULL; \
+  contingent_notnull_improvement_context_depth++; \
+  is_current_notnull_improvement_context_contingent = true;
+
+// Pops the current contingent improvement context, reverting all improvements
+// and un-improvements made within, and reverts to the previous context. Should
+// no contingent contexts remain after the pop, an invariant enforces that
+// `current_notnull_improvement_history` is NULL (which must be the case because
+// we never record history when a contingent context is not in effect).
+#define POP_CONTINGENT_NOTNULL_IMPROVEMENT_CONTEXT() \
+  sem_revert_notnull_improvement_history(current_notnull_improvement_history); \
+  current_notnull_improvement_history = saved_notnull_improvement_history; \
+  contingent_notnull_improvement_context_depth--; \
+  if (contingent_notnull_improvement_context_depth == 0) { \
+    Invariant(!current_notnull_improvement_history); \
+  } \
+  is_current_notnull_improvement_context_contingent = false;
 
 // Push a context that stops us from searching further up.
 #define PUSH_JOIN_BLOCK() \
@@ -11506,10 +11592,10 @@ static void sem_set_notnull_improved(CSTR name, CSTR scope) {
 
   if (is_global) {
     // Since this is a global, record it as such.
-    notnull_improvement_item *global_item = _ast_pool_new(notnull_improvement_item);
+    notnull_improvement_context_item *global_item = _ast_pool_new(notnull_improvement_context_item);
     global_item->type = type;
-    global_item->next = notnull_improved_globals;
-    notnull_improved_globals = global_item;
+    global_item->next = global_notnull_improvement_context;
+    global_notnull_improvement_context = global_item;
     // TODO: Since we do not yet have hazards in place for calls, it's not
     // safe to actually do the improvement.
     return;
@@ -11520,10 +11606,20 @@ static void sem_set_notnull_improved(CSTR name, CSTR scope) {
 
   // Add it to the current context so that it can be unset when the context
   // ends.
-  notnull_improvement_item *item = _ast_pool_new(notnull_improvement_item);
+  notnull_improvement_context_item *item = _ast_pool_new(notnull_improvement_context_item);
   item->type = type;
   item->next = current_notnull_improvement_context;
   current_notnull_improvement_context = item;
+
+  // Also add it to the history if a contingent context is in effect so that it
+  // can be later reverted.
+  if (contingent_notnull_improvement_context_depth > 0) {
+    notnull_improvement_history_item *history_item = _ast_pool_new(notnull_improvement_history_item);
+    history_item->type = type;
+    history_item->delta = NOTNULL_IMPROVEMENT_DELTA_WAS_SET;
+    history_item->next = current_notnull_improvement_history;
+    current_notnull_improvement_history = history_item;
+  }
 }
 
 // This needs to be called for everything that is no longer safe to consider NOT
@@ -11533,20 +11629,146 @@ static void sem_unset_notnull_improved(CSTR name, CSTR scope) {
   Contract(name);
 
   sem_t *type = find_mutable_type(name, scope);
-  if (type) {
-    *type &= u64_not(SEM_TYPE_INFERRED_NOTNULL);
-  }
+  // There is no case in which we ever attempt to unset something that doesn't
+  // have a mutable type: Such a name/scope pair would've never been improved to
+  // begin with, and no hazard (e.g., SET or OUT args) allows something for
+  // which `find_mutable_type` will return NULL (e.g., an enum case, 'rowid', or
+  // a cursor in an expression position).
+  Invariant(type);
 
-  // Unlike in `sem_set_notnull_improved`, we do not bother updating
-  // `current_notnull_improvement_context`. Since the entire purpose of keeping
-  // the list of current improvements is to be able to unset them, no harm will
-  // be done if we re-unset them later.
+  // As in `sem_unset_notnull_improvements_in_context`, it is critical that we
+  // do not unset an improvement if it is not currently set; see the comments
+  // within `sem_unset_notnull_improvements_in_context` for details.
+  if (*type & SEM_TYPE_INFERRED_NOTNULL) {
+    *type &= u64_not(SEM_TYPE_INFERRED_NOTNULL);
+    // If a contingent context is active, we record this in the history so it
+    // can be later reverted.
+    if (contingent_notnull_improvement_context_depth > 0) {
+      notnull_improvement_history_item *history_item = _ast_pool_new(notnull_improvement_history_item);
+      history_item->type = type;
+      history_item->delta = NOTNULL_IMPROVEMENT_DELTA_WAS_UNSET;
+      history_item->next = current_notnull_improvement_history;
+      current_notnull_improvement_history = history_item;
+    }
+  }
 }
 
 // Unsets nonnull improvements for all items in the list provided.
-static void sem_unset_notnull_improvement_items(notnull_improvement_item *item) {
-  for (notnull_improvement_item *head = item; head; head = head->next) {
-    *head->type &= u64_not(SEM_TYPE_INFERRED_NOTNULL);
+static void sem_unset_notnull_improvements_in_context(notnull_improvement_context context) {
+  Contract(!is_current_notnull_improvement_context_contingent);
+
+  for (notnull_improvement_context_item *head = context; head; head = head->next) {
+    // Is it very important that we only unset improvements that are currently
+    // set. Doing otherwise would result in an invalid history, and reverting
+    // said invalid history would result in things being re-improved
+    // inappropriately. Suppose we have this code:
+    //
+    //   IF b IS NULL RETURN;
+    //   -- 'b' is nonnull here
+    //   IF ... THEN
+    //     IF a IS NOT NULL THEN
+    //       -- 'a' is nonnull here due to the condition
+    //       SET b := NULL;
+    //     END IF;
+    //     -- 'a' is un-improved here because the THEN branch above ended
+    //     -- 'b' is nullable here because it was un-improved at the above SET
+    //   ELSE
+    //     -- 'a' is nullable here as its un-improvement was not reverted
+    //     -- 'b' is nonnull here as its un-improvement was reverted
+    //   END IF;
+    //   -- 'b' is nullable here due to the SET
+    //
+    // At the end of the outer THEN branch, both 'a' and 'b' will have been
+    // un-improved, the former at the end of the inner THEN branch, and the
+    // latter by the SET. Within the ELSE branch though, it is critical that we
+    // re-improve 'b' (because it was already improved at the start of the outer
+    // IF), yet even more critical that we not re-improve 'a' (because it was
+    // not already improved at the start of the previous branch, and so
+    // re-improving it would be unsafe).
+    //
+    // The timeline above plays out as follows:
+    //
+    //   01. 'b' is improved in initial context C0.
+    //   02. Context C1 is pushed for the outer IF.
+    //   03. Contingent context C2 is pushed for the outer THEN.
+    //   04. Context C3 is pushed for the inner IF.
+    //   05. Contingent context C4 is pushed for the inner THEN.
+    //   06. 'a' is improved due to the condition which generates a history item
+    //       in C4 and a context item in C3.
+    //   07. 'b' is un-improved due to the SET which generates a history item in
+    //       C4.
+    //   08. Contingent context C4 is reverted, un-improving 'a' and
+    //       re-improving 'b' (which generates a context item in C3).
+    //   09. Context C3 is unset, with the context item added in step 06 for 'a'
+    //       being ignored (as 'a' is already unset) and the context item added
+    //       in step 08 for 'b' resulting in 'b' being unset (which generates a
+    //       history item in C2).
+    //   10. Contingent context C2 is reverted, re-re-improving 'b' (which
+    //       generates a context item in C1) due to the history item generated
+    //       by C3 in step 09.
+    //   11. Contingent context C5 is pushed for the ELSE.
+    //   12. Contingent context C5 is reverted for the ELSE, to no effect.
+    //   13. Context C1 is popped, re-un-improving 'b' due to the context item
+    //       generated by C2 in step 10.
+    //
+    // Suppose, however, that we generated a history item in C2 by unsetting 'a'
+    // (which was already unset) in step 09. This would've caused 'a' to be
+    // re-improved in step 10 which would've caused it to be nonnull in the
+    // ELSE, which is unsafe.
+    if (*head->type & SEM_TYPE_INFERRED_NOTNULL) {
+      *head->type &= u64_not(SEM_TYPE_INFERRED_NOTNULL);
+      // If a contingent context is active, we record this in the history so it
+      // can be later reverted.
+      if (contingent_notnull_improvement_context_depth > 0) {
+        notnull_improvement_history_item *history_item = _ast_pool_new(notnull_improvement_history_item);
+        history_item->type = head->type;
+        history_item->delta = NOTNULL_IMPROVEMENT_DELTA_WAS_UNSET;
+        history_item->next = current_notnull_improvement_history;
+        current_notnull_improvement_history = history_item;
+      }
+    }
+  }
+}
+
+// Given a history, play it back in reverse, performing the opposite of what
+// originally occurred at each step. The result will be the state of the world
+// before any of the improvements and un-improvements were made. For any
+// previous un-improvement that is re-improved by the reversal, that
+// re-improvement will be recorded in the current nonnull improvemnet context so
+// that it can be re-unimproved when said context is eventually popped.
+//
+// An example of a full timeline might look like this:
+//
+//   1. A nonnull improvement context is pushed while some variable x is
+//      presently improved.
+//   2. A contingent nonnull improvement context is pushed.
+//   3. Some variable x is unimproved due to it being set to null.
+//   4. The contingent nonnull improvement context is popped and x is restored
+//      to its previous improved state, bringing us back to the state of the
+//      world as it was in step 1.
+//   5. Additional contingent contexts are pushed and popped.
+//   6. The improvement context pushed in step 1 is popped, and x is again
+//      unimproved because it was unimproved in step 3 within the inner
+//      contingent context pushed in step 2.
+static void sem_revert_notnull_improvement_history(notnull_improvement_history_item *history) {
+  Contract(is_current_notnull_improvement_context_contingent);
+  Contract(contingent_notnull_improvement_context_depth > 0);
+
+  for (notnull_improvement_history_item *history_item = history; history_item; history_item = history_item->next) {
+    switch (history_item->delta) {
+      case NOTNULL_IMPROVEMENT_DELTA_WAS_SET:
+        *history_item->type &= u64_not(SEM_TYPE_INFERRED_NOTNULL);
+        break;
+      case NOTNULL_IMPROVEMENT_DELTA_WAS_UNSET:
+        *history_item->type |= SEM_TYPE_INFERRED_NOTNULL;
+        // Record this in the nearest enclosing non-contingent context so that
+        // it can be re-unset when said context is popped.
+        notnull_improvement_context_item *item = _ast_pool_new(notnull_improvement_context_item);
+        item->type = history_item->type;
+        item->next = current_notnull_improvement_context;
+        current_notnull_improvement_context = item;
+        break;
+    }
   }
 }
 
@@ -11779,11 +12001,11 @@ static void sem_cond_action(ast_node *ast) {
   }
 
   if (stmt_list) {
-    PUSH_NOTNULL_IMPROVEMENT_CONTEXT();
+    PUSH_CONTINGENT_NOTNULL_IMPROVEMENT_CONTEXT();
     // Add improvements for `stmt_list` where `expr` must be true.
     sem_set_notnull_improvements_for_true_condition(expr, NULL);
     sem_stmt_list(stmt_list);
-    POP_NOTNULL_IMPROVEMENT_CONTEXT();
+    POP_CONTINGENT_NOTNULL_IMPROVEMENT_CONTEXT();
     if (is_error(stmt_list)) {
       record_error(ast);
       return;
@@ -19989,8 +20211,11 @@ cql_noexport void sem_cleanup() {
   current_table_ast = NULL;
   local_types = NULL;
   is_analyzing_notnull_rewrite = false;
-  notnull_improved_globals = NULL;
+  global_notnull_improvement_context = NULL;
   current_notnull_improvement_context = NULL;
+  current_notnull_improvement_history = NULL;
+  is_current_notnull_improvement_context_contingent = false;
+  contingent_notnull_improvement_context_depth = 0;
 }
 
 #endif
@@ -20029,4 +20254,3 @@ cql_data_defn( symtab *excluded_regions );
 // all the schema annotations
 cql_data_defn( bytebuf *schema_annotations );
 cql_data_defn( bytebuf *recreate_annotations );
-
