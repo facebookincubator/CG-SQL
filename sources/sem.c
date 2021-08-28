@@ -1742,7 +1742,7 @@ static ast_node *find_ad_hoc_migrate(CSTR name) {
 }
 
 // Wrappers for the region table
-ast_node *find_region(CSTR name) {
+cql_noexport ast_node *find_region(CSTR name) {
   symtab_entry *entry = symtab_find(schema_regions, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
@@ -5579,7 +5579,7 @@ static void sem_resolve_id_with_type(ast_node *ast, CSTR name, CSTR scope, sem_t
 // into `ast` if successful, or reporting and recording an error for `ast` if
 // not.
 static void sem_resolve_id(ast_node *ast, CSTR name, CSTR scope) {
-  Contract(is_id(ast) || is_ast_dot(ast));
+  Contract(is_id_or_dot(ast));
   Contract(name);
 
   // We have no use for `type` and simply throw it away.
@@ -5590,7 +5590,7 @@ static void sem_resolve_id(ast_node *ast, CSTR name, CSTR scope) {
 // Like `sem_resolve_id`, but specific to expression contexts (where nullability
 // improvements are applicable).
 static void sem_resolve_id_expr(ast_node *ast, CSTR name, CSTR scope) {
-  Contract(is_id(ast) || is_ast_dot(ast));
+  Contract(is_id_or_dot(ast));
   Contract(name);
 
   // Perform resolution, as for ids and dots outside of expressions.
@@ -11550,6 +11550,97 @@ static void sem_unset_notnull_improvement_items(notnull_improvement_item *item) 
   }
 }
 
+// Looks up the user-defined function or proc and, if it exists, returns its
+// parameters, if any.
+static ast_node *find_params(CSTR name) {
+  Contract(name);
+
+  // We check for functions first, then procs, as in `sem_expr_call`, to ensure
+  // we get the right one.
+
+  ast_node *func = find_func(name);
+  if (func) {
+    return get_func_params(func);
+  }
+
+  ast_node *proc = find_proc(name);
+  if (proc) {
+    return get_proc_params(proc);
+  }
+
+  return NULL;
+}
+
+// Given an arbitrary expression, perform a deep traveral and call
+// `sem_unset_notnull_improved` on all identifiers that are used as OUT or INOUT
+// arguments. This function is used to ensure that any identifers that would've
+// otherwise been improved by `sem_set_notnull_improvements_for_true_condition`
+// or `sem_set_notnull_improvements_for_false_condition` are not improved if
+// they're later used as an OUT or INOUT argument within the same conditional.
+// For example:
+//
+//   IF requires_out_arg_returns_bool(x) AND x IS NOT NULL THEN
+//     -- x CAN be improved here because the IS NOT NULL check occurs after
+//     -- the call to requires_out_arg_returns_bool.
+//   END IF;
+//
+//   IF x IS NOT NULL AND requires_out_arg_returns_bool(x) THEN
+//     -- x CANNOT be improved here because requires_out_arg_returns_bool may
+//     -- have set x to FALSE.
+//   END IF;
+static void sem_unset_notnull_improvements_for_out_args(ast_node *ast) {
+  Contract(ast);
+
+  if (is_ast_call(ast)) {
+    // `ast` is a call, so one or more of its arguments may be an identifier
+    // passed as an OUT argument.
+    EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+    EXTRACT_STRING(name, name_ast)
+    ast_node *params = find_params(name);
+    if (!params) {
+      // We either aren't calling a user-defined function or a procedure, or we
+      // are but it has no parameters. Either way, we're not going to have any
+      // OUT parameters, so we can just continue our traveral through any
+      // arguments that might be present.
+      if (ast_has_right(ast)) {
+        sem_unset_notnull_improvements_for_out_args(ast->right);
+      }
+      return;
+    }
+    EXTRACT_NOTNULL(call_arg_list, ast->right);
+    EXTRACT(arg_list, call_arg_list->right);
+    // We loop over the arguments, comparing them to the parameters as we go to
+    // see if any identifiers are being passed as OUT arguments.
+    for (ast_node *item = arg_list; item; item = item->right, params = params->right) {
+      EXTRACT_ANY_NOTNULL(arg, item->left);
+      EXTRACT_NOTNULL(param, params->left);
+      if (is_out_parameter(param->sem->sem_type)) {
+        // Since we've already analyzed this part of the AST, we know that the
+        // argument must be an identifier if its being passed as an OUT
+        // argument.
+        Invariant(is_id(arg));
+        EXTRACT_STRING(id, arg);
+        // Unset any improvement in effect for the identifier.
+        sem_unset_notnull_improved(id, NULL);
+      } else {
+        // Continue our search within the argument itself.
+        sem_unset_notnull_improvements_for_out_args(arg);
+      }
+    }
+    // We've already searched all of the arguments at this point, so we're done.
+    return;
+  }
+
+  // Since `ast` isn't an atom and it's not a call expression, our search simply
+  // continues within.
+  if (ast_has_left(ast)) {
+    sem_unset_notnull_improvements_for_out_args(ast->left);
+  }
+  if (ast_has_right(ast)) {
+    sem_unset_notnull_improvements_for_out_args(ast->right);
+  }
+}
+
 // Given a conditional expression `ast` containing possibly AND-linked IS NOT
 // NULL subexpressions, set all of the applicable improvements within the
 // current nullability context. If the optional `select_expr_list` is provided,
@@ -11566,19 +11657,23 @@ static void sem_set_notnull_improvements_for_true_condition(ast_node* ast, ast_n
   if (is_ast_and(ast)) {
     Invariant(ast->left);
     Invariant(ast->right);
+    // We recurse over the left branch first, then the right, in keeping with
+    // the order of evaluation of the expressions at runtime. This is critical
+    // for ensuring that calls to `sem_unset_notnull_improvements_for_out_args`
+    // occur after any improvements have already been made for identifiers that
+    // are later used as OUT arguments within the same conditional, thus
+    // allowing said improvements to be reversed.
     sem_set_notnull_improvements_for_true_condition(ast->left, select_expr_list);
     sem_set_notnull_improvements_for_true_condition(ast->right, select_expr_list);
     return;
   }
 
-  // We want exactly `s IS NOT NULL`, but if and only if `s` is nullable. Only
-  // taking the nullable expressions makes it easy to toggle nullability off and
-  // back on later.
-  if (!(is_ast_is_not(ast) && is_ast_null(ast->right))) {
-    return;
-  }
-
-  if (!is_id(ast->left) && !is_ast_dot(ast->left)) {
+  // We improve only in case of `x IS NOT NULL` where `x` is an id or dot.
+  if (!is_ast_is_not(ast) || !is_ast_null(ast->right) || !is_id_or_dot(ast->left)) {
+    // Since this isn't the type of expression for which an improvement can be
+    // made, we simply search it for any identifiers we may have just improved
+    // that need to be unimproved because they're later passed as OUT arguments.
+    sem_unset_notnull_improvements_for_out_args(ast);
     return;
   }
 
@@ -11632,21 +11727,32 @@ static void sem_set_notnull_improvements_for_false_condition(ast_node *ast) {
   Contract(ast);
 
   if (is_ast_or(ast)) {
+    // As in `sem_set_notnull_improvements_for_true_condition`, we make sure to
+    // recurse through the left side first in keeping with the order of
+    // evaluation at runtime.
     sem_set_notnull_improvements_for_false_condition(ast->left);
     sem_set_notnull_improvements_for_false_condition(ast->right);
     return;
   }
 
-  if (is_ast_is(ast) && is_ast_null(ast->right)) {
-    EXTRACT_ANY_NOTNULL(expr, ast->left);
-    if (is_id(expr)) {
-      EXTRACT_STRING(name, expr);
-      sem_set_notnull_improved(name, NULL);
-    } else if (is_ast_dot(expr)) {
-      EXTRACT_STRING(name, expr->right);
-      EXTRACT_STRING(scope, expr->left);
-      sem_set_notnull_improved(name, scope);
-    }
+  // We improve only in case of `x IS NULL` where `x` is an id or dot.
+  if (!is_ast_is(ast) || !is_ast_null(ast->right) || !is_id_or_dot(ast->left)) {
+    // Since this isn't the type of expression for which an improvement can be
+    // made, we simply search it for any identifiers we may have just improved
+    // that need to be unimproved because they're later passed as OUT arguments.
+    sem_unset_notnull_improvements_for_out_args(ast);
+    return;
+  }
+
+  EXTRACT_ANY_NOTNULL(expr, ast->left);
+  if (is_id(expr)) {
+    EXTRACT_STRING(name, expr);
+    sem_set_notnull_improved(name, NULL);
+  } else {
+    Invariant(is_ast_dot(expr));
+    EXTRACT_STRING(name, expr->right);
+    EXTRACT_STRING(scope, expr->left);
+    sem_set_notnull_improved(name, scope);
   }
 }
 

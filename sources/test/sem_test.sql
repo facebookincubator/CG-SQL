@@ -17417,6 +17417,107 @@ begin
   let z4 := c;
 end;
 
+-- Used in the following test.
+create proc requires_out_returns_bool(out a integer, out b bool)
+begin
+end;
+
+-- TEST: Improvements are not made for identifiers that are later used as OUT
+-- (or INOUT) arguments within the same true conditional.
+-- + {let_stmt}: x: integer variable
+-- + {let_stmt}: y: integer notnull variable
+-- + {let_stmt}: z: integer notnull variable
+-- - Error
+create proc improvements_respect_out_args_in_true_conditions()
+begin
+  declare a int;
+  declare b int;
+  declare c int;
+
+  if a is not null and requires_out_returns_bool(a) then
+    -- nullable because `requires_out_returns_bool` may have set `a` to false
+    let x := a;
+  end if;
+
+  if requires_out_returns_bool(b) and b is not null then
+    -- nonnull because the null check was performed after the mutation
+    let y := b;
+  end if;
+
+  if c is not null and requires_out_returns_bool(c) and c is not null then
+    -- nonnull because a second null check was performed after the mutation
+    let z := c;
+  end if;
+end;
+
+-- TEST: Improvements are not made for identifiers that are later used as OUT
+-- (or INOUT) arguments within the same false conditional.
+-- + {let_stmt}: x: integer variable
+-- + {let_stmt}: y: integer notnull variable
+-- + {let_stmt}: z: integer notnull variable
+-- - Error
+create proc improvements_respect_out_args_in_false_conditions()
+begin
+  declare a int;
+  declare b int;
+  declare c int;
+
+  if a is null or requires_out_returns_bool(a) then
+    let dummy0 := 0;
+  else
+    -- nullable because `requires_out_returns_bool` may have set `a` to false
+    let x := a;
+  end if;
+
+  if requires_out_returns_bool(b) or b is null then
+    let dummy1 := 0;
+  else
+    -- nonnull because the null check was performed after the mutation
+    let y := b;
+  end if;
+
+  if c is null or requires_out_returns_bool(c) or c is null then
+    let dummy2 := 0;
+  else
+    -- nonnull because a second null check was performed after the mutation
+    let z := c;
+  end if;
+end;
+
+-- TEST: Improvements are not made for identifiers that are later used as OUT
+-- (or INOUT) arguments within the same false conditional for guards.
+-- + {let_stmt}: x: integer variable
+-- + {let_stmt}: y: integer notnull variable
+-- + {let_stmt}: z: integer notnull variable
+-- - Error
+create proc improvements_respect_out_args_in_false_conditions_for_guards()
+begin
+  declare a int;
+  declare b int;
+  declare c int;
+
+  if a is null or requires_out_returns_bool(a) then
+    return;
+  end if;
+
+  -- nullable because `requires_out_returns_bool` may have set `a` to false
+  let x := a;
+
+  if requires_out_returns_bool(b) or b is null then
+    return;
+  end if;
+
+  -- nonnull because the null check was performed after the mutation
+  let y := b;
+
+  if c is null or requires_out_returns_bool(c) or c is null then
+    return;
+  end if;
+
+  -- nonnull because a second null check was performed after the mutation
+  let z := c;
+end;
+
 -- TEST: Disable flow-sensitive nullability.
 -- + @ENFORCE_NORMAL NOT NULL AFTER CHECK
 -- + {enforce_normal_stmt}: ok

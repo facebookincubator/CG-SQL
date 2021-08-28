@@ -65,7 +65,7 @@ cql_noexport bool_t is_ast_str(ast_node *node) {
 cql_noexport bool_t is_ast_blob(ast_node *node) {
   return node && (node->type == k_ast_blob);
 }
-
+  
 cql_noexport bool_t is_at_rc(ast_node *node) {
   return is_ast_str(node) && !Strcasecmp("@RC", ((str_ast_node*)node)->value);
 }
@@ -80,6 +80,10 @@ cql_noexport bool_t is_strlit(ast_node *node) {
 
 cql_noexport bool_t is_id(ast_node *node) {
   return is_ast_str(node) && ((str_ast_node *)node)->value[0] != '\'';
+}
+
+cql_noexport bool_t is_id_or_dot(ast_node *node) {
+  return is_id(node) || is_ast_dot(node);
 }
 
 cql_noexport bool_t is_primitive(ast_node *node) {
@@ -349,7 +353,7 @@ cql_noexport ast_node *get_proc_name(ast_node *ast) {
 
 // Helper function to get the parameters node out of the ast for a func.
 cql_noexport ast_node *get_func_params(ast_node *func_stmt) {
-  Contract(is_ast_declare_func_stmt(func_stmt));
+  Contract(is_ast_declare_func_stmt(func_stmt) || is_ast_declare_select_func_stmt(func_stmt));
   EXTRACT_NOTNULL(func_params_return, func_stmt->right);
   EXTRACT(params, func_params_return->left);
   return params;
