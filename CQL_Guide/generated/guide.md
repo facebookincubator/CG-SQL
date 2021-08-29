@@ -8431,7 +8431,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Sat Aug 28 16:14:52 PDT 2021
+Snapshot as of Sun Aug 29 00:23:48 PDT 2021
 
 ### Operators and Literals
 
@@ -13600,7 +13600,7 @@ accidentally omitted.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Sat Aug 28 16:14:52 PDT 2021
+Snapshot as of Sun Aug 29 00:23:48 PDT 2021
 
 ### Rules
 

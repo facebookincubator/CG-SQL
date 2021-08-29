@@ -4292,13 +4292,201 @@ cql_cleanup:
 </ul></li>
 </ul>
 <p>Test coverage is maintained at 100% line coverage (sometimes there are a few hours when it drops to 99.9% or something like that but this never lasts). Branch coverage is not especially targetted but is nonethless quite high. To see the true branch coverage you have to build the compiler with the asserts (Contract and Invariant) off. Last time it was measured, it was well over 80%.</p>
+<p>To start the tests you should run <code>test.sh</code>, this launches <code>common/test_common.sh</code> to do the work. This structure allows anyone to make their own harness that launches the common test passes and adds their own extra tests, or passes in additional flags. <code>test.sh</code> itself uses <code>make</code> to build the compiler.</p>
+<p>To get the coverage report, use <code>cov.sh</code> which in turn launches <code>test.sh</code> with suitable flags and then assembles the coverage report using <code>gcovr</code>.</p>
 <h3 id="parse-tests">Parse Tests</h3>
-<p>…</p>
+<p>Looking at <code>test/test_common.sh</code> we find the source for the most basic test. This is entirely unremarkable stuff.</p>
+<div class="sourceCode" id="cb215"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb215-1"><a href="#cb215-1" aria-hidden="true" tabindex="-1"></a><span class="fu">basic_test()</span> <span class="kw">{</span></span>
+<span id="cb215-2"><a href="#cb215-2" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">&#39;--------------------------------- STAGE 2 -- BASIC PARSING TEST&#39;</span></span>
+<span id="cb215-3"><a href="#cb215-3" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> running <span class="st">&quot;</span><span class="va">${TEST_DIR}</span><span class="st">/test.sql&quot;</span></span>
+<span id="cb215-4"><a href="#cb215-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="ot">! </span><span class="va">${CQL}</span> <span class="at">--dev</span> <span class="at">--in</span> <span class="st">&quot;</span><span class="va">${TEST_DIR}</span><span class="st">/test.sql&quot;</span> <span class="op">&gt;</span><span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/test.out&quot;</span></span>
+<span id="cb215-5"><a href="#cb215-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">then</span></span>
+<span id="cb215-6"><a href="#cb215-6" aria-hidden="true" tabindex="-1"></a>   <span class="bu">echo</span> basic parsing test failed</span>
+<span id="cb215-7"><a href="#cb215-7" aria-hidden="true" tabindex="-1"></a>   <span class="ex">failed</span></span>
+<span id="cb215-8"><a href="#cb215-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">fi</span></span>
+<span id="cb215-9"><a href="#cb215-9" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">&quot;  computing diffs (empty if none)&quot;</span></span>
+<span id="cb215-10"><a href="#cb215-10" aria-hidden="true" tabindex="-1"></a>  <span class="ex">on_diff_exit</span> test.out</span>
+<span id="cb215-11"><a href="#cb215-11" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span></code></pre></div>
+<ul>
+<li>it’s “STAGE 2” because “STAGE 1” was the build</li>
+<li>all it tries to do is run the compiler over <code>test/test.sql</code></li>
+<li>if there are errors the test fails</li>
+<li>if there are any differences between <code>test.out</code> and <code>test.out.ref</code> the test fails</li>
+</ul>
+<p>That’s it.</p>
 <h3 id="sematic-tests">Sematic Tests</h3>
-<p>…</p>
+<p>The semantic tests are not much different but this is where the pattern matching comes in.</p>
+<p>First let’s look at the shell script:</p>
+<div class="sourceCode" id="cb216"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb216-1"><a href="#cb216-1" aria-hidden="true" tabindex="-1"></a><span class="fu">semantic_test()</span> <span class="kw">{</span></span>
+<span id="cb216-2"><a href="#cb216-2" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">&#39;--------------------------------- STAGE 4 -- SEMANTIC ANALYSIS TEST&#39;</span></span>
+<span id="cb216-3"><a href="#cb216-3" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> running semantic analysis test</span>
+<span id="cb216-4"><a href="#cb216-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="ot">! </span><span class="ex">sem_check</span> <span class="at">--sem</span> <span class="at">--print</span> <span class="at">--dev</span> <span class="at">--in</span> <span class="st">&quot;</span><span class="va">${TEST_DIR}</span><span class="st">/sem_test.sql&quot;</span> <span class="op">&gt;</span><span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/sem_test.out&quot;</span> <span class="dv">2</span><span class="op">&gt;</span><span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/sem_test.err&quot;</span></span>
+<span id="cb216-5"><a href="#cb216-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">then</span></span>
+<span id="cb216-6"><a href="#cb216-6" aria-hidden="true" tabindex="-1"></a>     <span class="bu">echo</span> <span class="st">&quot;CQL semantic analysis returned unexpected error code&quot;</span></span>
+<span id="cb216-7"><a href="#cb216-7" aria-hidden="true" tabindex="-1"></a>     <span class="fu">cat</span> <span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/sem_test.err&quot;</span></span>
+<span id="cb216-8"><a href="#cb216-8" aria-hidden="true" tabindex="-1"></a>     <span class="ex">failed</span></span>
+<span id="cb216-9"><a href="#cb216-9" aria-hidden="true" tabindex="-1"></a>  <span class="cf">fi</span></span>
+<span id="cb216-10"><a href="#cb216-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb216-11"><a href="#cb216-11" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> validating output trees</span>
+<span id="cb216-12"><a href="#cb216-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="ot">! </span><span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/cql-verify&quot;</span> <span class="st">&quot;</span><span class="va">${TEST_DIR}</span><span class="st">/sem_test.sql&quot;</span> <span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/sem_test.out&quot;</span></span>
+<span id="cb216-13"><a href="#cb216-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">then</span></span>
+<span id="cb216-14"><a href="#cb216-14" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> failed verification</span>
+<span id="cb216-15"><a href="#cb216-15" aria-hidden="true" tabindex="-1"></a>    <span class="ex">failed</span></span>
+<span id="cb216-16"><a href="#cb216-16" aria-hidden="true" tabindex="-1"></a>  <span class="cf">fi</span></span>
+<span id="cb216-17"><a href="#cb216-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb216-18"><a href="#cb216-18" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> running dev semantic analysis test</span>
+<span id="cb216-19"><a href="#cb216-19" aria-hidden="true" tabindex="-1"></a>  <span class="ex">...</span> same thing again for sem_test_dev.sql</span>
+<span id="cb216-20"><a href="#cb216-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb216-21"><a href="#cb216-21" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">&quot;  computing diffs (empty if none)&quot;</span></span>
+<span id="cb216-22"><a href="#cb216-22" aria-hidden="true" tabindex="-1"></a>  <span class="ex">on_diff_exit</span> sem_test.out</span>
+<span id="cb216-23"><a href="#cb216-23" aria-hidden="true" tabindex="-1"></a>  <span class="ex">on_diff_exit</span> sem_test.err</span>
+<span id="cb216-24"><a href="#cb216-24" aria-hidden="true" tabindex="-1"></a>  <span class="ex">...</span> same thing again for sem_test_dev.out and .err</span>
+<span id="cb216-25"><a href="#cb216-25" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span></code></pre></div>
+<p>There are basically 3 steps:</p>
+<ul>
+<li>run the compiler over <code>test/sem_test.sql</code>
+<ul>
+<li>fail if this generates no errors (yes you read that right, see below)</li>
+</ul></li>
+<li>do the pattern matching on the output to ensure the patterns match (discussed below)
+<ul>
+<li>fail if the output is not consistent with the patterns</li>
+</ul></li>
+<li>compare the reference output for the AST and the errors
+<ul>
+<li>fail if there are any differences</li>
+</ul></li>
+</ul>
+<p>In the first step the compiler MUST produce an error code, let’s look at <code>sem_check</code> to see why:</p>
+<div class="sourceCode" id="cb217"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb217-1"><a href="#cb217-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sem_check()</span> <span class="kw">{</span></span>
+<span id="cb217-2"><a href="#cb217-2" aria-hidden="true" tabindex="-1"></a>  <span class="va">${CQL}</span> <span class="st">&quot;</span><span class="va">$@</span><span class="st">&quot;</span></span>
+<span id="cb217-3"><a href="#cb217-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="bu">[</span> <span class="st">&quot;</span><span class="va">$?</span><span class="st">&quot;</span> <span class="ot">-ne</span> <span class="st">&quot;1&quot;</span> <span class="bu">]</span></span>
+<span id="cb217-4"><a href="#cb217-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">then</span></span>
+<span id="cb217-5"><a href="#cb217-5" aria-hidden="true" tabindex="-1"></a>     <span class="bu">echo</span> <span class="st">&#39;All semantic analysis checks have errors in the test&#39;</span></span>
+<span id="cb217-6"><a href="#cb217-6" aria-hidden="true" tabindex="-1"></a>     <span class="bu">echo</span> <span class="st">&#39;the normal return code is &quot;1&quot; -- any other return code is bad news&#39;</span></span>
+<span id="cb217-7"><a href="#cb217-7" aria-hidden="true" tabindex="-1"></a>     <span class="bu">echo</span> <span class="st">&#39;A return code of zero indicates we reported success in the face of errors&#39;</span></span>
+<span id="cb217-8"><a href="#cb217-8" aria-hidden="true" tabindex="-1"></a>     <span class="bu">echo</span> <span class="st">&#39;A return code other than 1 indicates an unexpected fatal error of some type&#39;</span></span>
+<span id="cb217-9"><a href="#cb217-9" aria-hidden="true" tabindex="-1"></a>     <span class="cf">return</span> <span class="dv">1</span></span>
+<span id="cb217-10"><a href="#cb217-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">fi</span></span>
+<span id="cb217-11"><a href="#cb217-11" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span></code></pre></div>
+<p>In short <code>sem_test.sql</code> is FULL of semantic errors, that’s part of the test. If the compiler reports success something is <em>seriously</em> wrong.</p>
+<p>In the next phase we’re doing to do some pattern matching, let’s look at a couple of examples to illustrate how this works. The program <code>tester</code> actually does all this and that program is itself written in (mostly) CQL which is cute.</p>
+<p>Here’s a very simple example:</p>
+<div class="sourceCode" id="cb218"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb218-1"><a href="#cb218-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- </span><span class="al">TEST</span><span class="co">: we&#39;ll be using printf in lots of places in the tests as an external proc</span></span>
+<span id="cb218-2"><a href="#cb218-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- + {declare_proc_no_check_stmt}: ok</span></span>
+<span id="cb218-3"><a href="#cb218-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- - Error</span></span>
+<span id="cb218-4"><a href="#cb218-4" aria-hidden="true" tabindex="-1"></a><span class="kw">DECLARE</span> <span class="kw">PROCEDURE</span> printf <span class="kw">NO</span> <span class="kw">CHECK</span>;</span></code></pre></div>
+<p>The code under test is of course <code>DECLARE PROCEDURE printf NO CHECK</code>. The patterns happen immediately before this code. Let’s look at each line:</p>
+<ul>
+<li><code>-- TEST: etc.</code> : this is just a comment, it means nothing and serves no purpose other than documentation</li>
+<li><code>-- + {declare_proc_no_check_stmt}: ok</code> : the comment stats with <code>" + "</code>, this is a trigger
+<ul>
+<li>the test output from the statement under test must include indicated text</li>
+<li>this happens to be the text for the AST of <code>declare_proc_no_check_stmt</code> after semantic success</li>
+<li>there is no type info hence the <code>ok</code> designation (recall <code>SEM_TYPE_OK</code>)</li>
+</ul></li>
+<li><code>-- Error</code> : the comment starts with <code>" - "</code>, this is a trigger
+<ul>
+<li>the test output from the statement under test must NOT include indicated text</li>
+<li>in this case that means no reported erros</li>
+</ul></li>
+</ul>
+<p>Easy enough. Now does this happen?</p>
+<p>The test output includes:</p>
+<ul>
+<li>text like “The statement ending at line XXXX” where XXXX is appropriate line number</li>
+<li>an echo of the statement that was analyzed (after any rewrites)</li>
+<li>the AST of that statement including semantic type info that was computed</li>
+</ul>
+<p>Using the value of XXXX the tester searches the test file in this case <code>sem_test.sql</code>, it extracts the test patterns that happen AFTER the previous XXXX value for the previous statement and up to the indicated line number. This is The Price Is Right algorithm where you read up to the designated lines without going over.</p>
+<p>Each pattern is matched, or not matched, using the SQL <code>LIKE</code> or <code>NOT LIKE</code> operator. In case of errors the tester writes out the actual output and the expected patterns having all this information handy.</p>
+<p>The line numbers are all changed to literally “XXXX” after this pass so that the difference in later passes is not a cascade of of trivial line number changes in otherwise identical output.</p>
+<p>Let’s look at another example:</p>
+<div class="sourceCode" id="cb219"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb219-1"><a href="#cb219-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- </span><span class="al">TEST</span><span class="co">: create a table using type discrimation: kinds</span></span>
+<span id="cb219-2"><a href="#cb219-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- + {create_table_stmt}: with_kind: { id: integer&lt;some_key&gt;, cost: real&lt;dollars&gt;, value: real&lt;dollars&gt; }</span></span>
+<span id="cb219-3"><a href="#cb219-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- + {col_def}: id: integer&lt;some_key&gt;</span></span>
+<span id="cb219-4"><a href="#cb219-4" aria-hidden="true" tabindex="-1"></a><span class="co">-- + {col_def}: cost: real&lt;dollars&gt;</span></span>
+<span id="cb219-5"><a href="#cb219-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- + {col_def}: value: real&lt;dollars&gt;</span></span>
+<span id="cb219-6"><a href="#cb219-6" aria-hidden="true" tabindex="-1"></a><span class="co">-- - Error</span></span>
+<span id="cb219-7"><a href="#cb219-7" aria-hidden="true" tabindex="-1"></a><span class="kw">create</span> <span class="kw">table</span> with_kind(</span>
+<span id="cb219-8"><a href="#cb219-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span> <span class="dt">integer</span><span class="op">&lt;</span>some_key<span class="op">&gt;</span>,</span>
+<span id="cb219-9"><a href="#cb219-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">cost</span> <span class="dt">real</span><span class="op">&lt;</span>dollars<span class="op">&gt;</span>,</span>
+<span id="cb219-10"><a href="#cb219-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">value</span> <span class="dt">real</span><span class="op">&lt;</span>dollars<span class="op">&gt;</span></span>
+<span id="cb219-11"><a href="#cb219-11" aria-hidden="true" tabindex="-1"></a>);</span></code></pre></div>
+<p>This reads pretty easily now:</p>
+<ul>
+<li><code>{create_table_stmt}</code> : the struct type of the table must be an exact match for what is expected</li>
+<li><code>{col_def}</code> : there are 3 different <code>{col_def}</code> nodes, one for each column</li>
+<li><code>- Error</code> : there are no reported errors</li>
+</ul>
+<p>So there are no errors reported nor are there any in the AST. At least the part of the AST that was checked. The AST actually had other stuff too but it’s normal to just test the “essential” stuff. There are many tests that try many variations and we don’t want to check every fact in every case of every test.</p>
+<p>If you want to see the whole AST output for this, it’s easy enough. It’s sitting in <code>sem_test.out.ref</code></p>
+<pre><code>The statement ending at line XXXX
+
+CREATE TABLE with_kind(
+  id INTEGER&lt;some_key&gt;,
+  cost REAL&lt;dollars&gt;,
+  value REAL&lt;dollars&gt;
+);
+
+  {create_table_stmt}: with_kind: { id: integer&lt;some_key&gt;, cost: real&lt;dollars&gt;, value: real&lt;dollars&gt; }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name with_kind}
+  | {col_key_list}
+    | {col_def}: id: integer&lt;some_key&gt;
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer&lt;some_key&gt;
+    |       | {name some_key}
+    | {col_key_list}
+      | {col_def}: cost: real&lt;dollars&gt;
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |     | {name cost}
+      |     | {type_real}: real&lt;dollars&gt;
+      |       | {name dollars}
+      | {col_key_list}
+        | {col_def}: value: real&lt;dollars&gt;
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name value}
+              | {type_real}: real&lt;dollars&gt;
+                | {name dollars}</code></pre>
+<p>As you can see there was potentially a lot more than could have been verified but those view key lines were selected because their correctness really implies the rest. In fact just the <code>{create_table_stmt}</code> line really was enough to know that everthing was fine.</p>
+<p>Let’s look at one more example, this time on that is checking for errors. Many tests check for errors because correctly reporting errors is the primary job of <code>sem.c</code>. It’s fair to say that there are more tests for error cases than there are for correct cases because there are a lot more ways to write code incorrectly than correctly. Here’s the test:</p>
+<div class="sourceCode" id="cb221"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb221-1"><a href="#cb221-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- </span><span class="al">TEST</span><span class="co">: join with bogus ON expression type</span></span>
+<span id="cb221-2"><a href="#cb221-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- + Error % expected numeric expression &#39;ON&#39;</span></span>
+<span id="cb221-3"><a href="#cb221-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- +1 Error</span></span>
+<span id="cb221-4"><a href="#cb221-4" aria-hidden="true" tabindex="-1"></a><span class="co">-- + {select_stmt}: err</span></span>
+<span id="cb221-5"><a href="#cb221-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- + {on}: err</span></span>
+<span id="cb221-6"><a href="#cb221-6" aria-hidden="true" tabindex="-1"></a><span class="kw">select</span> <span class="op">*</span> <span class="kw">from</span> foo</span>
+<span id="cb221-7"><a href="#cb221-7" aria-hidden="true" tabindex="-1"></a><span class="kw">inner</span> <span class="kw">join</span> bar <span class="kw">as</span> T2 <span class="kw">on</span> <span class="st">&#39;v&#39;</span></span>
+<span id="cb221-8"><a href="#cb221-8" aria-hidden="true" tabindex="-1"></a><span class="kw">where</span> <span class="st">&#39;w&#39;</span></span>
+<span id="cb221-9"><a href="#cb221-9" aria-hidden="true" tabindex="-1"></a><span class="kw">having</span> <span class="st">&#39;x&#39;</span></span>
+<span id="cb221-10"><a href="#cb221-10" aria-hidden="true" tabindex="-1"></a><span class="kw">limit</span> <span class="st">&#39;y&#39;</span>;</span></code></pre></div>
+<ul>
+<li><code>+ Error % expected numeric expression 'ON'</code> : there must be a reported Error message with the indicated error text</li>
+<li><code>+1 Error</code> : this indicates that there must be <em>exactly</em> 1 match for the pattern “Error” (i.e. exactly one error)
+<ul>
+<li>note that there are several problems with the test statement but error processing is supposed to stop after the first</li>
+</ul></li>
+<li><code>-- + {on}: err</code> : verifies that the ON clause was marked as being in error</li>
+<li><code>-- + {select_stmt}: err</code> : verifies that the error correctly propogated up to the top level statement</li>
+</ul>
+<p>Note that the patterns can be in any order and every pattern is matched against the whole input so for instance:</p>
+<pre><code>-- + {on}: err
+-- + {on}: err</code></pre>
+<p>The above does not imply that there are two such <code>{on}</code> nodes. The second line will match the same text as the first. To to enforce that there were exactly two matches you use:</p>
+<pre><code>-- +2 {on}: err</code></pre>
+<p>There is no syntax for “at least two matches” though one could easily be added. So far it hasn’t been especially necessary.</p>
+<p>As we’ll see this simple pattern is used in many other tests. All that is required for it work is output with lines of the form “The statement ending at line XXXX”</p>
+<p>The <code>sem_test_dev.sql</code> test file is a set of tests that are run with the <code>--dev</code> flag passed to CQL. This is the mode where certain statements that are prohibited in production code are verified. This file is very small indeed and the exact prohibitions are left as an exercise to the reader.</p>
 <h3 id="code-generation-tests">Code Generation Tests</h3>
-<p>…</p>
+<p>[Examples to come but the short answer is that it’s just like the semantic tests except we’re scanning codegen instead of an AST. The same patterns work in the same way for the same reason]</p>
 <h3 id="run-tests">Run Tests</h3>
-<p>…</p>
+<p>Coming soon.</p>
 </body>
 </html>
